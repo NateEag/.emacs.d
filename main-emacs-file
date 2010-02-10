@@ -17,20 +17,6 @@
 ;; somewhere in the ~/Library directory on OS X).
 (global-font-lock-mode 1)
 
-;; Customized keybindings follow.
-
-;; I like autocompleting things, but I don't like Meta-/ as a keystroke.
-;; Meta-RET, which is apparently what that mess down there means, is better,
-;; though ideally, I think I'd like it to be Control-RET. That binding, though,
-;; seems to be nearly impossible for me to get, so for now I'll not have it.
-;; DEBUG I should really move to one of those clever does-it-all Tab functions,
-;; but this is here for the moment.
-(global-set-key "" 'dabbrev-expand)
-
-;; I'd much rather have a sane way to goto-line than be able to easily change
-;; my font settings...
-(global-set-key "\M-g" 'goto-line)
-
 ;; The next few chunks of code tell a long, sad story about my relationship
 ;; with ASCII character 9 (a.k.a the Tab character). Once, we were the closest
 ;; of friends, but one day, I decided I hated it... Thus, the current
@@ -88,8 +74,14 @@
 
 (defun initialize-auto-complete-python ()
   "Loads and configures auto-complete for Python hacking."
-  (require 'auto-complete)
+  (ac-general-setup)
   (ac-ropemacs-setup))
+
+(defun ac-general-setup ()
+  "My basic configuration for autocomplete.el. Call this to activate it."
+  (require 'auto-complete)
+  (global-auto-complete-mode t)
+  (setq ac-dwim t))
 
 ;; A very hacked-up version of the rope support from auto-complete-config.el.
 ;; I should probably seriously consider creating a distinct elisp file for
@@ -127,3 +119,10 @@
   (initialize-yasnippet)
   (initialize-auto-complete-python))
 (add-hook 'python-mode-hook 'load-python-mode-accessories)
+
+;; Customized keybindings follow.
+
+;; I'd much rather have a sane way to goto-line than be able to easily change
+;; my font settings...
+(global-set-key "\M-g" 'goto-line)
+

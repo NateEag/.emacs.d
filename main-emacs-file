@@ -86,9 +86,27 @@
   (pymacs-load "ropemacs" "rope-")
   (setq ropemacs-enable-autoimport t))
 
-(defun initialize-auto-complete ()
-  "Loads and configures auto-complete."
-  (require 'auto-complete))
+(defun initialize-auto-complete-python ()
+  "Loads and configures auto-complete for Python hacking."
+  (require 'auto-complete)
+  (ac-ropemacs-setup))
+
+;; A very hacked-up version of the rope support from auto-complete-config.el.
+;; I should probably seriously consider creating a distinct elisp file for
+;; managing my autocomplete support...
+(defun ac-ropemacs-setup ()
+  (defvar ac-ropemacs-completions-cache nil)
+  (defvar ac-source-ropemacs
+    '((init
+       . (lambda ()
+           (setq ac-ropemacs-completions-cache
+                 (mapcar
+                  (lambda (completion)
+                    (concat ac-prefix completion))
+                  (ignore-errors
+                    (rope-completions))))))
+      (candidates . ac-ropemacs-completions-cache)))
+  (setq ac-omni-completion-sources '(("\\." ac-source-ropemacs))))
 
 ;; Initializing yasnippet
 ; Note that we don't map tab to yasnippet, since I'm planning to hack up the
@@ -107,5 +125,5 @@
   (initialize-pymacs)
   (initialize-rope)
   (initialize-yasnippet)
-  (initialize-auto-complete))
+  (initialize-auto-complete-python))
 (add-hook 'python-mode-hook 'load-python-mode-accessories)

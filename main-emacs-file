@@ -1,0 +1,63 @@
+;; Nate Eagleson's .emacs file.
+
+;; Just symlink ~/.emacs to ~/.emacs.d/main-emacs-file, and I should be good
+;; to go.
+
+;; This is the first import, so there's probably some dumb stuff in here.
+;; I've never taken Emacs all that seriously up to this point - I've finally
+;; decided to buckle down and start using it semi-seriously.
+
+;; If, for some reason, you've found a copy of this and would like to speak
+;; to the creator (for instance, to point out much more elegant and correct
+;; ways of doing things), try nate@ishness.net.
+
+;; Note that I use aquamacs, so if I ever have to move to a different
+;; emacs distribution, I'll have to be certain to pull the non-Aquamacs
+;; modifications I've made from the Aquamacs preferences.el file (stored
+;; somewhere in the ~/Library directory on OS X).
+(global-font-lock-mode 1)
+
+;; Customized keybindings follow.
+
+;; I like autocompleting things, but I don't like Meta-/ as a keystroke.
+;; Meta-RET, which is apparently what that mess down there means, is better,
+;; though ideally, I think I'd like it to be Control-RET. That binding, though,
+;; seems to be nearly impossible for me to get, so for now I'll not have it.
+;; DEBUG I should really move to one of those clever does-it-all Tab functions,
+;; but this is here for the moment.
+(global-set-key "" 'dabbrev-expand)
+
+;; I'd much rather have a sane way to goto-line than be able to easily change
+;; my font settings...
+(global-set-key "\M-g" 'goto-line)
+
+;; The next few chunks of code tell a long, sad story about my relationship
+;; with ASCII character 9 (a.k.a the Tab character). Once, we were the closest
+;; of friends, but one day, I decided I hated it... Thus, the current
+;; incarnation of my .emacs file. The goal is to ensure that it never occurs
+;; in any source file I edit.
+(setq indent-tabs-mode nil)
+
+(setq c-mode-common-hook
+      (function (lambda ()
+                  (setq indent-tabs-mode nil)
+                  (setq c-indent-level 4)
+                  (setq c-tab-always-indent))))
+
+(setq javascript-mode-hook 
+      (function (lambda ()
+                (setq indent-tabs-mode nil))))
+
+(setq text-mode-hook
+      (function (lambda ()
+		  (setq indent-tabs-mode-nil))))
+
+;; I was having some trouble with TRAMP freezing under Aquamacs - this seems
+;; to have solved it, at the cost of slower file saving (my method was SSH).
+;; This is commented out, as I no longer use TRAMP, preferring the faster
+;; (and cooler) sshfs.
+;;(setq tramp-chunksize 5000)
+;;(setq tramp-verbose 8)
+
+;; Everyone likes narrow-to-region.
+(put 'narrow-to-region 'disabled nil)

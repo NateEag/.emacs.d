@@ -86,6 +86,10 @@
   (pymacs-load "ropemacs" "rope-")
   (setq ropemacs-enable-autoimport t))
 
+(defun initialize-auto-complete ()
+  "Loads and configures auto-complete."
+  (require 'auto-complete))
+
 ;; Initializing yasnippet
 ; Note that we don't map tab to yasnippet, since I'm planning to hack up the
 ; ultimate tab-handling function... If I can snag it from someone else, that'd
@@ -102,5 +106,6 @@
   "Loads all the libraries/tools I want to have when I'm in python-mode."
   (initialize-pymacs)
   (initialize-rope)
-  (initialize-yasnippet))
+  (initialize-yasnippet)
+  (initialize-auto-complete))
 (add-hook 'python-mode-hook 'load-python-mode-accessories)

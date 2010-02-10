@@ -52,12 +52,55 @@
       (function (lambda ()
 		  (setq indent-tabs-mode-nil))))
 
-;; I was having some trouble with TRAMP freezing under Aquamacs - this seems
-;; to have solved it, at the cost of slower file saving (my method was SSH).
-;; This is commented out, as I no longer use TRAMP, preferring the faster
-;; (and cooler) sshfs.
-;;(setq tramp-chunksize 5000)
-;;(setq tramp-verbose 8)
-
 ;; Everyone likes narrow-to-region.
 (put 'narrow-to-region 'disabled nil)
+
+;; Include third-party libraries.
+(add-to-list 'load-path "~/.emacs.d/libraries")
+(progn (cd "~/.emacs.d/libraries")
+       (normal-top-level-add-subdirs-to-load-path))
+
+;; Include the modes directory.
+(add-to-list 'load-path "~/.emacs.d/modes")
+
+;; I use python-mode.el, with the TQS-coloration patch applied.
+(setq auto-mode-alist (cons '("\\.py$" . python-mode) auto-mode-alist))
+(setq interpreter-mode-alist
+      (cons '("python" . python-mode) interpreter-mode-alist))
+(autoload 'python-mode "python-mode" "Python editing mode." t)
+
+;; Functions for lazy-loading libraries. Perfect for attaching to mode-hooks.
+;; DEBUG I'm totally new to elisp - how much should I worry about making sure
+;; that these don't do redundant work if called multiple times (say I load
+;; yasnippet once for python-mode, and once for c-mode)?
+(defun initialize-pymacs ()
+  "Loads and configures pymacs the way I like."
+  (autoload 'pymacs-apply "pymacs")
+  (autoload 'pymacs-call "pymacs")
+  (autoload 'pymacs-eval "pymacs" nil t)
+  (autoload 'pymacs-exec "pymacs" nil t)
+  (autoload 'pymacs-load "pymacs" nil t))
+
+(defun initialize-rope ()
+  "Loads and configures rope as I like to use it."
+  (pymacs-load "ropemacs" "rope-")
+  (setq ropemacs-enable-autoimport t))
+
+;; Initializing yasnippet
+; Note that we don't map tab to yasnippet, since I'm planning to hack up the
+; ultimate tab-handling function... If I can snag it from someone else, that'd
+; be plenty satisfactory.
+(defun initialize-yasnippet ()
+  "Loads and configures yasnippet the way I want it."
+  (require 'yasnippet)
+  (setq yas/trigger-key (kbd "C-c <kp-multiply>"))
+  (yas/initialize)
+  (yas/load-directory "~/.emacs.d/snippets"))
+
+;; Loading my python-mode accessories only when python-mode kicks in.
+(defun load-python-mode-accessories ()
+  "Loads all the libraries/tools I want to have when I'm in python-mode."
+  (initialize-pymacs)
+  (initialize-rope)
+  (initialize-yasnippet))
+(add-hook 'python-mode-hook 'load-python-mode-accessories)

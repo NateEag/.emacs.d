@@ -74,19 +74,28 @@
 
 (defun initialize-auto-complete-python ()
   "Loads and configures auto-complete for Python hacking."
-  (ac-general-setup)
-  (ac-ropemacs-setup))
+  (ac-personal-setup)
+  (ac-ropemacs-init)
+  (setq ac-sources (append (list 'ac-source-ropemacs) ac-sources)))
 
-(defun ac-general-setup ()
+(defun ac-personal-setup ()
   "My basic configuration for autocomplete.el. Call this to activate it."
+  (interactive)
   (require 'auto-complete)
   (global-auto-complete-mode t)
-  (setq ac-dwim t))
+  ;; TODO ac-dwim is pretty good, but I feel like I should be able to shift-tab
+  ;; to go backwards through the completion list. Dunno why I think that, I just
+  ;; tried to do it.
+  (setq ac-dwim t)
+  (setq ac-auto-start t)
+  (auto-complete-mode t))
 
-;; A very hacked-up version of the rope support from auto-complete-config.el.
+;; A hacked-up version of the rope support from auto-complete-config.el.
 ;; I should probably seriously consider creating a distinct elisp file for
 ;; managing my autocomplete support...
-(defun ac-ropemacs-setup ()
+;; This is finally starting to work. I can't autocomplete from . expressions,
+;; which I know rope supports, but let's take it one step at a time.
+(defun ac-ropemacs-init ()
   (defvar ac-ropemacs-completions-cache nil)
   (defvar ac-source-ropemacs
     '((init
@@ -97,8 +106,7 @@
                     (concat ac-prefix completion))
                   (ignore-errors
                     (rope-completions))))))
-      (candidates . ac-ropemacs-completions-cache)))
-  (setq ac-omni-completion-sources '(("\\." ac-source-ropemacs))))
+      (candidates . ac-ropemacs-completions-cache))))
 
 ;; Initializing yasnippet
 ; Note that we don't map tab to yasnippet, since I'm planning to hack up the

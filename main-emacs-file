@@ -76,18 +76,15 @@
   "Loads and configures auto-complete for Python hacking."
   (ac-personal-setup)
   (ac-ropemacs-init)
-  (setq ac-sources (append (list 'ac-source-ropemacs) ac-sources)))
+  (setq ac-sources '(ac-source-ropemacs)))
 
 (defun ac-personal-setup ()
   "My basic configuration for autocomplete.el. Call this to activate it."
   (interactive)
   (require 'auto-complete)
   (global-auto-complete-mode t)
-  ;; TODO ac-dwim is pretty good, but I feel like I should be able to shift-tab
-  ;; to go backwards through the completion list. Dunno why I think that, I just
-  ;; tried to do it.
+  (setq ac-auto-start nil)
   (setq ac-dwim t)
-  (setq ac-auto-start t)
   (auto-complete-mode t))
 
 ;; A hacked-up version of the rope support from auto-complete-config.el.

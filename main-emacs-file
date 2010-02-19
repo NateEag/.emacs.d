@@ -83,15 +83,14 @@
   (interactive)
   (require 'auto-complete)
   (global-auto-complete-mode t)
-  (setq ac-auto-start nil)
+  (setq ac-auto-start 3)
   (setq ac-dwim t)
+  (define-key ac-mode-map (kbd "M-TAB") 'auto-complete)
   (auto-complete-mode t))
 
 ;; A hacked-up version of the rope support from auto-complete-config.el.
 ;; I should probably seriously consider creating a distinct elisp file for
 ;; managing my autocomplete support...
-;; This is finally starting to work. I can't autocomplete from . expressions,
-;; which I know rope supports, but let's take it one step at a time.
 (defun ac-ropemacs-init ()
   (defvar ac-ropemacs-completions-cache nil)
   (defvar ac-source-ropemacs
@@ -103,7 +102,11 @@
                     (concat ac-prefix completion))
                   (ignore-errors
                     (rope-completions))))))
-      (candidates . ac-ropemacs-completions-cache))))
+      (candidates . ac-ropemacs-completions-cache)
+      ;; Adding this incantation does appear to make autocompleting from .s work,
+      ;; but it appears to prevent us from completing anything not starting with
+      ;; a dot. Commit and continue, I suppose.
+      (prefix . c-dot))))
 
 ;; Initializing yasnippet
 ; Note that we don't map tab to yasnippet, since I'm planning to hack up the

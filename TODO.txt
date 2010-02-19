@@ -8,7 +8,7 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -Fix auto-complete.el in Aquamacs. I'm not sure why everything chunks, nor why line heights change when it activates/deactivates, but it'd be really nice to get it working. A simple test case is probably the first step...
 
--Get ropemode/auto-complete.el completing .-expressions. I know ropemode can do it, so it seems like it should be a pretty simple change to get this working.
+-Get ropemode/auto-complete.el completing .-expressions. I know ropemode can do it, so it seems like it should be a pretty simple change to get this working. A bit of aimless reading on the Emacs wiki makes me think ac-omni-completion-sources might relate to this somehow. I'm not quite sure, but I keep seeing comments about that and .- and -> expressions in C, so it seems that it might relate somehow.
 
 -Get tab behaving properly. That means calling yasnippet/code-completion as appropriate, indentation when appropriate, retaining minibuffer autocompletion, and Shift-Tab cycling backwards through autocompletions (sometimes you go too far, eh?).
 

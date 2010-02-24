@@ -24,6 +24,9 @@
 ;; in any source file I edit.
 (setq indent-tabs-mode nil)
 
+;; DEBUG Rather than calling the mode hooks here, I ought to make these
+;; functions which I then register with a general mode-hook for each mode
+;; I use.
 (setq c-mode-common-hook
       (function (lambda ()
                   (setq indent-tabs-mode nil)
@@ -36,7 +39,8 @@
 
 (setq text-mode-hook
       (function (lambda ()
-		  (setq indent-tabs-mode-nil))))
+		  (setq indent-tabs-mode nil)
+		  (setq sentence-end-double-space nil))))
 
 ;; Everyone likes narrow-to-region.
 (put 'narrow-to-region 'disabled nil)
@@ -106,7 +110,7 @@
       ;; Adding this incantation does appear to make autocompleting from .s work,
       ;; but it appears to prevent us from completing anything not starting with
       ;; a dot. Commit and continue, I suppose.
-      (prefix . c-dot))))
+      )))
 
 ;; Initializing yasnippet
 ; Note that we don't map tab to yasnippet, since I'm planning to hack up the

@@ -10,6 +10,8 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -Get ropemode/auto-complete.el completing .-expressions. I know ropemode can do it, so it seems like it should be a pretty simple change to get this working. Some progress made here, but I don't really understand why what I have even comes close to working.
 
+-Figure out why using rope to rename things re-loads Python mode and all my related hooks for every buffer it impacts. See if it's possible to fix that. It's annoying, and it's not immediately obvious to me why it does that.
+
 -Get tab behaving properly. That means calling yasnippet/code-completion as appropriate, indentation when appropriate, retaining minibuffer autocompletion, and Shift-Tab cycling backwards through autocompletions (sometimes you go too far, eh?).
 
 -Get yasnippet working. For now, it's okay if I don't use tab as the keybinding - that's some sweet-looking software, and I really want to start integrating it into my workflow. Yeah, I'll go crazy when I'm stuck on systems that don't have it, but it looks really neat. (Hmmm, interesting thought - I'd probably start to forget the details of syntax for snippets I relied on extensively. How much help from your editor is too much?)

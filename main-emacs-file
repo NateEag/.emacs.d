@@ -87,9 +87,10 @@
   (interactive)
   (require 'auto-complete)
   (global-auto-complete-mode t)
-  (setq ac-auto-start 3)
-  (setq ac-dwim t)
-  (define-key ac-mode-map (kbd "M-TAB") 'auto-complete)
+  (setq ac-auto-start nil)
+  (setq ac-trigger-key "TAB")
+;;  (setq ac-dwim t)
+;;  (define-key ac-mode-map (kbd "M-TAB") 'auto-complete)
   (auto-complete-mode t))
 
 ;; A hacked-up version of the rope support from auto-complete-config.el.
@@ -137,4 +138,3 @@
 ;; I'd much rather have a sane way to goto-line than be able to easily change
 ;; my font settings...
 (global-set-key "\M-g" 'goto-line)
-

@@ -6,13 +6,13 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -It might be interesting to experiment with semantic-coding commands. This idea was inspired by thinking about yasnippet, and how basically, it's used to cut down on boilerplate. Boilerplate is semi-language-specific, but it's really got more to do with individual programmers' styles - there are common idioms, but everyone tends to have their own. So, might it be interesting to build some interface to a collection of snippets that's basically "Do this idiom for the current language"? Block-comment's one emacs already has, but there are lots: debug output, while loop/for loop, if/else, if/elif/else, new class, new function, etc... This whole idea isn't entirely unrelated to refactoring, actually.
 
--Fix auto-complete.el in Aquamacs. I'm not sure why everything chunks, nor why line heights change when it activates/deactivates, but it'd be really nice to get it working. A simple test case is probably the first step...
+-Fix auto-complete.el in Aquamacs. I'm not sure why everything chunks, nor why line heights change when it activates/deactivates, but it'd be really nice to get it working. A simple test case is probably the first step... Okay, this is apparently an Aquamacs bug. It works in the 2.0 preview. I may try using aforementioned 2.0 preview and seeing how it does.
 
 -Get ropemode/auto-complete.el completing .-expressions. I know ropemode can do it, so it seems like it should be a pretty simple change to get this working. Some progress made here, but I don't really understand why what I have even comes close to working.
 
 -Figure out why using rope to rename things re-loads Python mode and all my related hooks for every buffer it impacts. See if it's possible to fix that. It's annoying, and it's not immediately obvious to me why it does that.
 
--Get tab behaving properly. That means calling yasnippet/code-completion as appropriate, indentation when appropriate, retaining minibuffer autocompletion, and Shift-Tab cycling backwards through autocompletions (sometimes you go too far, eh?).
+-Get tab behaving properly. That means calling yasnippet/code-completion as appropriate, indentation when appropriate, retaining minibuffer autocompletion, and Shift-Tab cycling backwards through autocompletions (I really want that, for reasons I don't quite understand).
 
 -Get yasnippet working. For now, it's okay if I don't use tab as the keybinding - that's some sweet-looking software, and I really want to start integrating it into my workflow. Yeah, I'll go crazy when I'm stuck on systems that don't have it, but it looks really neat. (Hmmm, interesting thought - I'd probably start to forget the details of syntax for snippets I relied on extensively. How much help from your editor is too much?)
 

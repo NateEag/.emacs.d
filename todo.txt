@@ -6,6 +6,8 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -It might be interesting to experiment with semantic-coding commands. This idea was inspired by thinking about yasnippet, and how basically, it's used to cut down on boilerplate. Boilerplate is semi-language-specific, but it's really got more to do with individual programmers' styles - there are common idioms, but everyone tends to have their own. So, might it be interesting to build some interface to a collection of snippets that's basically "Do this idiom for the current language"? Block-comment's one emacs already has, but there are lots: debug output, while loop/for loop, if/else, if/elif/else, new class, new function, etc... This whole idea isn't entirely unrelated to refactoring, actually.
 
+-A specific semantic-coding idea: have a command that lets you invert string delimiters. Sometimes you realize mid-stream that you used the wrong ones, and as long as your string is still valid, the editor should be able to find your delimiters and invert them. Now you can keep on cranking.
+
 -Get ropemode/auto-complete.el completing .-expressions. I know ropemode can do it, so it seems like it should be a pretty simple change to get this working. Some progress made here, but I don't really understand why what I have even comes close to working. EDIT: I reverted the change that made it kinda work, because it was so darn slow.
 
 -See whether rope supports any kind of intelligent argument list fetching. If it does, it might be possible to write a parameter suggestion tool. Obviously, this is a big one, and not something I'm likely to really tackle.

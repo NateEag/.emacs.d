@@ -132,18 +132,18 @@
   (defvar ac-ropemacs-completions-cache nil)
   (defvar ac-source-ropemacs
     '((init
-       . (lambda ()
-           (setq ac-ropemacs-completions-cache
-                 (mapcar
-                  (lambda (completion)
-                    (concat ac-prefix completion))
-                  (ignore-errors
-                    (rope-completions))))))
+       . (fill-ac-ropemacs-completions-cache))
       (candidates . ac-ropemacs-completions-cache)
-      ;; Adding this incantation does appear to make autocompleting from .s work,
-      ;; but it appears to prevent us from completing anything not starting with
-      ;; a dot. Commit and continue, I suppose.
-      )))
+      ;; Setting prefix regex so that we autocomplete valid Python identifiers
+      ;;  and immediately after .s.
+      (prefix . "\\([_a-zA-Z0-9]+\\)\\|\\."))))
+
+(defun fill-ac-ropemacs-completions-cache ()
+  (setq ac-ropemacs-completions-cache
+      (mapcar
+          (lambda (completion)
+      	          (concat ac-prefix completion))
+          	  (ignore-errors (rope-completions)))))
 
 ;; Initializing yasnippet
 ; Note that we don't map tab to yasnippet, since I'm planning to hack up the

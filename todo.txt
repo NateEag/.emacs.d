@@ -8,7 +8,7 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -A specific semantic-coding idea: have a command that lets you invert string delimiters. Sometimes you realize mid-stream that you used the wrong ones, and as long as your string is still valid, the editor should be able to find your delimiters and invert them. Now you can keep on cranking.
 
--Get ropemode/auto-complete.el completing .-expressions. I know ropemode can do it, so it seems like it should be a pretty simple change to get this working. Some progress made here, but I don't really understand why what I have even comes close to working. EDIT: I reverted the change that made it kinda work, because it was so darn slow.
+-Get ropemode/auto-complete.el completing .-expressions. WOOOO ANOTHER FEATURE DOWN!!! (of course, testing on a fifteen-line file doesn't really tell us how usable it'll be in practice...) Anywho, next likely target on the python-mode front is abusing rope-mode and overlays to pop up info on functions inline (only on request of course). That'd be a serious undertaking.
 
 -See whether rope supports any kind of intelligent argument list fetching. If it does, it might be possible to write a parameter suggestion tool. Obviously, this is a big one, and not something I'm likely to really tackle.
 

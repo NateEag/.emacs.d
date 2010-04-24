@@ -12,7 +12,7 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -See whether rope supports any kind of intelligent argument list fetching. If it does, it might be possible to write a parameter suggestion tool. Obviously, this is a big one, and not something I'm likely to really tackle.
 
--Figure out why using rope to rename things re-loads Python mode and all my related hooks for every buffer it impacts. See if it's possible to fix that. It's annoying, and it's not immediately obvious to me why it does that. I think this has to do with my python-mode hook - python-mode needs to be re-loaded after a change because rope does the work on the file on-disk. It seems I should rewrite my hooks so that initializations only happen if they haven't happened yet in an emacs session.
+-Figure out why using rope to rename things re-loads Python mode and all my related hooks for every buffer it impacts. This was indeed because of the stupid manner in which I'd written my python-mode hooks, and I've rewritten them to not do so much excessive work. This problem is SOLVED! woooooo!
 
 -There should be a command in python-mode to break a comma-separated list of values to one-per-line, with proper indentation. I find myself doing this relatively often.
 

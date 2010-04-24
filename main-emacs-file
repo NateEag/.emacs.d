@@ -60,42 +60,74 @@
 (autoload 'python-mode "python-mode" "Python editing mode." t)
 
 ;; Functions for lazy-loading libraries. Perfect for attaching to mode-hooks.
-;; DEBUG I'm totally new to elisp - how much should I worry about making sure
-;; that these don't do redundant work if called multiple times (say I load
-;; yasnippet once for python-mode, and once for c-mode)?
+(defvar pymacs-initialized nil)
 (defun initialize-pymacs ()
-  "Loads and configures pymacs the way I like."
+  "Load pymacs if it is not already loaded."
+  (if (not pymacs-initialized)
+      (do-initialize-pymacs)))
+
+(defun do-initialize-pymacs ()
+  "Does the work of loading pymacs."
   (autoload 'pymacs-apply "pymacs")
   (autoload 'pymacs-call "pymacs")
   (autoload 'pymacs-eval "pymacs" nil t)
   (autoload 'pymacs-exec "pymacs" nil t)
-  (autoload 'pymacs-load "pymacs" nil t))
+  (autoload 'pymacs-load "pymacs" nil t)
+  ; Set the flag saying "It's been loaded."
+  (setq pymacs-initialized 't))
 
+(defvar rope-initialized nil)
 (defun initialize-rope ()
   "Loads and configures rope as I like to use it."
-  (pymacs-load "ropemacs" "rope-")
-  (setq ropemacs-enable-autoimport t))
+  (if (not rope-initialized)
+      (do-rope-initialize)))
 
+(defun do-rope-initialize ()
+  "Does the work of loading rope."
+  (pymacs-load "ropemacs" "rope-")
+  (setq ropemacs-enable-autoimport t)
+  (setq rope-initialized 't))
+
+(defvar auto-complete-python-initialized nil)
 (defun initialize-auto-complete-python ()
   "Loads and configures auto-complete for Python hacking."
+  (if (not auto-complete-python-initialized)
+        (do-initialize-auto-complete-python)
+      ;; If we've already initialized autocomplete, then we only need to set up
+      ;; ropemode completions.
+      ;; DEBUG I'm not exactly sure why I have to do this for every buffer.
+      (setq ac-sources '(ac-source-ropemacs))))
+
+(defun do-initialize-auto-complete-python ()
+  "Sets up auto-completion for python buffers."
   (ac-personal-setup)
   (ac-ropemacs-init)
-  (setq ac-sources '(ac-source-ropemacs)))
+  (setq ac-sources '(ac-source-ropemacs))
+  (setq auto-complete-python-initialized 't))
 
+(defvar ac-initialized nil)
 (defun ac-personal-setup ()
   "My basic configuration for autocomplete.el. Call this to activate it."
   (interactive)
+  (if (not ac-initialized)
+      (do-ac-personal-setup)))
+
+(defun do-ac-personal-setup ()
   (require 'auto-complete)
   (global-auto-complete-mode t)
   (setq ac-auto-start nil)
   (setq ac-trigger-key "TAB")
 ;;  (setq ac-dwim t)
 ;;  (define-key ac-mode-map (kbd "M-TAB") 'auto-complete)
-  (auto-complete-mode t))
+  (auto-complete-mode t)
+  (setq ac-initialized 't))
 
 ;; A hacked-up version of the rope support from auto-complete-config.el.
 ;; I should probably seriously consider creating a distinct elisp file for
 ;; managing my autocomplete support...
+;; DEBUG This works, but it's slow. I should really see what I can figure out
+;; about speeding it up.
+;; Also, don't forget that I sort of wanted .-completions.
 (defun ac-ropemacs-init ()
   (defvar ac-ropemacs-completions-cache nil)
   (defvar ac-source-ropemacs

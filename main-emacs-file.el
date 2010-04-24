@@ -73,7 +73,6 @@
   (autoload 'pymacs-eval "pymacs" nil t)
   (autoload 'pymacs-exec "pymacs" nil t)
   (autoload 'pymacs-load "pymacs" nil t)
-  ; Set the flag saying "It's been loaded."
   (setq pymacs-initialized 't))
 
 (defvar rope-initialized nil)
@@ -122,12 +121,10 @@
   (auto-complete-mode t)
   (setq ac-initialized 't))
 
-;; A hacked-up version of the rope support from auto-complete-config.el.
-;; I should probably seriously consider creating a distinct elisp file for
-;; managing my autocomplete support...
+;; A hacked-up version of the rope support from auto-complete-config.el,
+;; since it doesn't work any more.
 ;; DEBUG This works, but it's slow. I should really see what I can figure out
 ;; about speeding it up.
-;; Also, don't forget that I sort of wanted .-completions.
 (defun ac-ropemacs-init ()
   (defvar ac-ropemacs-completions-cache nil)
   (defvar ac-source-ropemacs

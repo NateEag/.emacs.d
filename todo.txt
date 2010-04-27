@@ -8,11 +8,9 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -A specific semantic-coding idea: have a command that lets you invert string delimiters. Sometimes you realize mid-stream that you used the wrong ones, and as long as your string is still valid, the editor should be able to find your delimiters and invert them. Now you can keep on cranking.
 
--Get ropemode/auto-complete.el completing .-expressions. WOOOO ANOTHER FEATURE DOWN!!! (of course, testing on a fifteen-line file doesn't really tell us how usable it'll be in practice...) Anywho, next likely target on the python-mode front is abusing rope-mode and overlays to pop up info on functions inline (only on request of course). That'd be a serious undertaking.
-
 -See whether rope supports any kind of intelligent argument list fetching. If it does, it might be possible to write a parameter suggestion tool. Obviously, this is a big one, and not something I'm likely to really tackle.
 
--Figure out why using rope to rename things re-loads Python mode and all my related hooks for every buffer it impacts. This was indeed because of the stupid manner in which I'd written my python-mode hooks, and I've rewritten them to not do so much excessive work. This problem is SOLVED! woooooo!
+-Get ropemode to be more effective. A lot of expressions that seem completable aren't. Sometimes this is probably for very valid reasons (not wanting to evaluate every darned statement in the proejct), but it doesn't seem like knowing what the current "self" is would be impossibly hard. This is serious rope development, and possibly not in sync with what the rope crew would like to do. Let's call it a pipe-dream.
 
 -There should be a command in python-mode to break a comma-separated list of values to one-per-line, with proper indentation. I find myself doing this relatively often.
 
@@ -29,3 +27,9 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 -It should speak RTF fluently. I don't care so much about fancy formats, as those should be converted, but RTF is a pretty convenient format that allows you a surprising amount of control without being too crazy. If you're prepping stuff for basic printing, or sending to not-hardcore-power-users, RTF works beautifully, and I don't see why I should have to leave my main editor for working with this stuff. Yes, I know there's enriched-mode, but that's not exactly standard for word processors. Oh yeah - there is this, which looks pretty unmaintained, but it might be a starting point: http://savannah.nongnu.org/projects/emacs-rtf/ A little inspection indicates that the author isn't very far, it's probably abandoned, and uselessly inefficient. I suspect I'd be best off rolling my own...
 
 -A mode in which English grammatical rules are automatically applied to anything that looks like a sentence. For instance, when I refactor a sentence, it ought to know that the first word gets capitalized. That might be the only thing I actually want, come to think of it...
+
+=====Solved Tasks====
+
+-Get ropemode/auto-complete.el completing .-expressions. WOOOO ANOTHER FEATURE DOWN!!! (of course, testing on a fifteen-line file doesn't really tell us how usable it'll be in practice...) Anywho, next likely target on the python-mode front is abusing rope-mode and overlays to pop up info on functions inline (only on request of course). That'd be a serious undertaking.
+
+-Figure out why using rope to rename things re-loads Python mode and all my related hooks for every buffer it impacts. This was indeed because of the stupid manner in which I'd written my python-mode hooks, and I've rewritten them to not do so much excessive work. This problem is SOLVED! woooooo!

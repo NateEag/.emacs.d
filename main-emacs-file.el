@@ -42,6 +42,10 @@
 		  (setq indent-tabs-mode nil)
 		  (setq sentence-end-double-space nil))))
 
+(setq php-mode-hook
+      (function (lambda ()
+		  (setq c-indent-level 4))))
+
 ;; Everyone likes narrow-to-region.
 (put 'narrow-to-region 'disabled nil)
 

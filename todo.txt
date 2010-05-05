@@ -16,6 +16,10 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -There should be a command in python-mode to break a comma-separated list of values to one-per-line, with proper indentation. I find myself doing this relatively often.
 
+-Autocompletion should not be invoked if there is whitespace directly before point (python mode).
+
+-Autocompletion should display the whole string that would be inserted, not just the remainder of it (and then insert only what's needed to complete it). Not sure why that bugs me, but I swear it was doing that at some point during my project.
+
 -Get tab behaving properly. That means calling yasnippet/code-completion as appropriate, indentation when appropriate, retaining minibuffer autocompletion, and Shift-Tab cycling backwards through autocompletions (I really want that, for reasons I don't quite understand).
 
 -Get yasnippet working. For now, it's okay if I don't use tab as the keybinding - that's some sweet-looking software, and I really want to start integrating it into my workflow. Yeah, I'll go crazy when I'm stuck on systems that don't have it, but it looks really neat. (Hmmm, interesting thought - I'd probably start to forget the details of syntax for snippets I relied on extensively. How much help from your editor is too much?)

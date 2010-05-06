@@ -120,8 +120,8 @@
   (global-auto-complete-mode t)
   (setq ac-auto-start nil)
   (setq ac-trigger-key "TAB")
-;;  (setq ac-dwim t)
-;;  (define-key ac-mode-map (kbd "M-TAB") 'auto-complete)
+  (define-key ac-completing-map "\C-n" 'ac-next)
+  (define-key ac-completing-map "\C-p" 'ac-previous)
   (auto-complete-mode t)
   (setq ac-initialized 't))
 
@@ -137,7 +137,7 @@
       (candidates . ac-ropemacs-completions-cache)
       ;; Setting prefix regex so that we autocomplete valid Python identifiers
       ;;  and immediately after .s.
-      (prefix . "\\([_a-zA-Z0-9]+\\)\\|\\."))))
+      (prefix . "\\([_a-zA-Z0-9]+[.]?\\)"))))
 
 (defun fill-ac-ropemacs-completions-cache ()
   (setq ac-ropemacs-completions-cache

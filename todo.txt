@@ -16,8 +16,6 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -There should be a command in python-mode to break a comma-separated list of values to one-per-line, with proper indentation. I find myself doing this relatively often.
 
--Autocompletion should not be invoked if there is whitespace directly before point (python mode).
-
 -Autocompletion should display the whole string that would be inserted, not just the remainder of it (and then insert only what's needed to complete it). Not sure why that bugs me, but I swear it was doing that at some point during my project.
 
 -autocomplete.el should have a toggle that makes scrolling to the bottom of the list scroll the list downward, and scrolling to the top upward, for when more than list-length completions are possible. It'd be very convenient.
@@ -36,8 +34,12 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -A mode in which English grammatical rules are automatically applied to anything that looks like a sentence. For instance, when I refactor a sentence, it ought to know that the first word gets capitalized. That might be the only thing I actually want, come to think of it...
 
+-I'd really like a code folding minor-mode - just lets you hide/show blocks of code, by saying basically "fold at this line" and "unfold at this line". Something as naive as indentation level might work, but there are obviously problems with that - alternately, you could probably do something clever with the syntax parsers that most major-modes define (you'd probably want a mechanism to let a major-mode deal with what's a code-foldable line and what is not - otherwise, the weirder modes like js2-mode couldn't really work with it).
+
 =====Solved Tasks====
 
--Get ropemode/auto-complete.el completing .-expressions. WOOOO ANOTHER FEATURE DOWN!!! (of course, testing on a fifteen-line file doesn't really tell us how usable it'll be in practice...) Anywho, next likely target on the python-mode front is abusing rope-mode and overlays to pop up info on functions inline (only on request of course). That'd be a serious undertaking.
+-Get ropemode/auto-complete.el completing .-expressions. WOOOO ANOTHER FEATURE DOWN!!! (of course, testing on a fifteen-line file doesn't really tell us how usable it'll be in practice...) Anywho, next really big target on the python-mode front is probably abusing rope-mode and overlays to pop up info on functions inline (only on request of course - args and suchnot). That'd be a serious undertaking.
 
 -Figure out why using rope to rename things re-loads Python mode and all my related hooks for every buffer it impacts. This was indeed because of the stupid manner in which I'd written my python-mode hooks, and I've rewritten them to not do so much excessive work. This problem is SOLVED! woooooo!
+
+-Autocompletion should not be invoked if there is whitespace directly before point (python mode).

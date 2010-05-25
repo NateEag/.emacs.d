@@ -24,9 +24,9 @@
 ;; in any source file I edit.
 (setq indent-tabs-mode nil)
 
-;; I like my frames to be 80x24. In theory, this should make that happen.
+;; I like my frames to be 80 characters wide. In theory, this should make
+;; that happen.
 (add-to-list 'default-frame-alist '(width . 80))
-(add-to-list 'default-frame-alist '(height . 24))
 
 ;; DEBUG Rather than calling the mode hooks here, I ought to make these
 ;; functions which I then register with a general mode-hook for each mode

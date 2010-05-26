@@ -28,6 +28,9 @@
 ;; that happen.
 (add-to-list 'default-frame-alist '(width . 80))
 
+;; I also like my paragraph width to be 79 or less.
+(setq default-fill-column 79)
+
 ;; DEBUG Rather than calling the mode hooks here, I ought to make these
 ;; functions which I then register with a general mode-hook for each mode
 ;; I use.

@@ -3,25 +3,25 @@
 ;; Just symlink ~/.emacs to ~/.emacs.d/main-emacs-file, and I should be good
 ;; to go.
 
-;; This is the first import, so there's probably some dumb stuff in here.
-;; I've never taken Emacs all that seriously up to this point - I've finally
-;; decided to buckle down and start using it semi-seriously.
+;; This is the first import, so there's probably some dumb stuff in here. I've
+;; never taken Emacs all that seriously up to this point - I've finally decided
+;; to buckle down and start using it semi-seriously.
 
-;; If, for some reason, you've found a copy of this and would like to speak
-;; to the creator (for instance, to point out much more elegant and correct
-;; ways of doing things), try nate@ishness.net.
+;; If, for some reason, you've found a copy of this and would like to speak to
+;; the creator (for instance, to point out much more elegant and correct ways
+;; of doing things), try nate@ishness.net.
 
-;; Note that I use aquamacs, so if I ever have to move to a different
-;; emacs distribution, I'll have to be certain to pull the non-Aquamacs
-;; modifications I've made from the Aquamacs preferences.el file (stored
-;; somewhere in the ~/Library directory on OS X).
+;; Note that I use aquamacs, so if I ever have to move to a different emacs
+;; distribution, I'll have to be certain to pull the non-Aquamacs modifications
+;; I've made from the Aquamacs preferences.el file (stored somewhere in the
+;; ~/Library directory on OS X).
 (global-font-lock-mode 1)
 
 ;; The next few chunks of code tell a long, sad story about my relationship
 ;; with ASCII character 9 (a.k.a the Tab character). Once, we were the closest
 ;; of friends, but one day, I decided I hated it... Thus, the current
-;; incarnation of my .emacs file. The goal is to ensure that it never occurs
-;; in any source file I edit.
+;; incarnation of my .emacs file. The goal is to ensure that it never occurs in
+;; any source file I edit.
 (setq indent-tabs-mode nil)
 
 ;; I like my frames to be 80 characters wide. In theory, this should make
@@ -30,6 +30,9 @@
 
 ;; I also like my paragraph width to be 79 or less.
 (setq default-fill-column 79)
+
+;; I hate double-spaces between my sentences.
+(setq sentence-end-double-space nil)
 
 ;; DEBUG Rather than calling the mode hooks here, I ought to make these
 ;; functions which I then register with a general mode-hook for each mode
@@ -46,8 +49,7 @@
 
 (setq text-mode-hook
       (function (lambda ()
-		  (setq indent-tabs-mode nil)
-		  (setq sentence-end-double-space nil))))
+		  (setq indent-tabs-mode nil))))
 
 (setq php-mode-hook
       (function (lambda ()

@@ -25,7 +25,10 @@
 ;; any source file I edit.
 (setq indent-tabs-mode nil)
 
-;; Global keybindings.
+;; GNU-style indentation on C-like languages is stupid. Linux style is much
+;; more sane.
+(setq c-default-style "linux"
+      c-basic-offset 4)
 
 ;; I'd much rather have a sane way to goto-line than be able to easily change
 ;; my font settings...

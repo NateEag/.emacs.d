@@ -16,9 +16,9 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -There should be a command in python-mode to break a comma-separated list of values to one-per-line, with proper indentation. I find myself doing this relatively often.
 
--Autocompletion should display the whole string that would be inserted, not just the remainder of it (and then insert only what's needed to complete it). Not sure why that bugs me, but I swear it was doing that at some point when I was working on getting it to work...
+-Autocompletion should display the whole string that would be inserted, not just the remainder of it (and then insert only what's needed to complete it). Not sure why that bugs me, but I swear it was doing that at some point when I was working on getting it to work... This is weird now - it displays a character or two from the existing string, plus everything it would add.
 
--Figure out a way to make rope-completions faster. It's the source of that half-second delay before anything happens after I ask for auto-completion, and it honestly slows me down. I can usually finish typing the expression faster than I can auto-complete it.
+-Figure out a way to make rope-completions faster. It's the source of that half-second delay before anything happens after I ask for auto-completion, and it honestly slows me down. I can usually finish typing the expression faster than I can auto-complete it. I've improved this some by the simple expedient of byte-compiling pymacs.el, but still things like wx.<TAB> chug for fifty seconds or so before suggesting completions. I realize that's abusive, given just how many names are in that namespace, but it does seem like it should be possible to keep a pretty static analysis of system-wide packages, and that completions on names that correlate to those packages shouldn't be so slow. It feels like it's doing dynamic analysis of the 'wx' package, but once it's been imported, shouldn't we be able to just check whether the module on disk has updated, and if not, need no more dynamic analysis? I should probably ask/bug-report this on the mailing list.
 
 -autocomplete.el should have a toggle that makes scrolling to the bottom of the list scroll the list downward, and scrolling to the top upward, for when more than list-length completions are possible. It'd be very convenient.
 

@@ -11,10 +11,11 @@
 ;; the creator (for instance, to point out much more elegant and correct ways
 ;; of doing things), try nate@ishness.net.
 
-;; Note that I use aquamacs, so if I ever have to move to a different emacs
-;; distribution, I'll have to be certain to pull the non-Aquamacs modifications
-;; I've made from the Aquamacs preferences.el file (stored somewhere in the
-;; ~/Library directory on OS X).
+;;;;;;;;;;;;;;;;;;;;;
+;; Global Preferences
+;;;;;;;;;;;;;;;;;;;;;
+
+;; Everyone likes syntax coloration.
 (global-font-lock-mode 1)
 
 ;; The next few chunks of code tell a long, sad story about my relationship
@@ -24,38 +25,13 @@
 ;; any source file I edit.
 (setq indent-tabs-mode nil)
 
-;; I like my frames to be 80 characters wide. In theory, this should make
-;; that happen.
-(add-to-list 'default-frame-alist '(width . 80))
+;; Global keybindings.
 
-;; I also like my paragraph width to be 79 or less.
-(setq default-fill-column 79)
+;; I'd much rather have a sane way to goto-line than be able to easily change
+;; my font settings...
+(global-set-key "\M-g" 'goto-line)
 
-;; I hate double-spaces between my sentences.
-(setq sentence-end-double-space nil)
-
-;; DEBUG Rather than calling the mode hooks here, I ought to make these
-;; functions which I then register with a general mode-hook for each mode
-;; I use.
-(setq c-mode-common-hook
-      (function (lambda ()
-                  (setq indent-tabs-mode nil)
-                  (setq c-indent-level 4)
-                  (setq c-tab-always-indent))))
-
-(setq javascript-mode-hook 
-      (function (lambda ()
-                (setq indent-tabs-mode nil))))
-
-(setq text-mode-hook
-      (function (lambda ()
-		  (setq indent-tabs-mode nil))))
-
-(setq php-mode-hook
-      (function (lambda ()
-		  (setq c-indent-level 4))))
-
-;; Everyone likes narrow-to-region.
+;; Everyone likes narrow-to-region. (Though I don't use it much these days.)
 (put 'narrow-to-region 'disabled nil)
 
 ;; Include third-party libraries.
@@ -63,8 +39,14 @@
 (progn (cd "~/.emacs.d/libraries")
        (normal-top-level-add-subdirs-to-load-path))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Major mode setup and registration.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; Include the modes directory.
 (add-to-list 'load-path "~/.emacs.d/modes")
+
+;; Python mode.
 
 ;; I use python-mode.el, with the TQS-coloration patch applied.
 (setq auto-mode-alist (cons '("\\.py$" . python-mode) auto-mode-alist))
@@ -72,7 +54,8 @@
       (cons '("python" . python-mode) interpreter-mode-alist))
 (autoload 'python-mode "python-mode" "Python editing mode." t)
 
-;; Functions for lazy-loading libraries. Perfect for attaching to mode-hooks.
+;; The somewhat-convoluted setup for ropemacs/autocomplete.el integration
+;; in python-mode follows.
 (defvar pymacs-initialized nil)
 (defun initialize-pymacs ()
   "Load pymacs if it is not already loaded."
@@ -155,6 +138,19 @@
       	          (concat ac-prefix completion))
           	  (ignore-errors (rope-completions)))))
 
+
+;; JavaScript Mode.
+
+;; For Javascript, I currently use an old build of Karl Langstrom's
+;; javascript.el.
+(when (locate-library "javascript")
+  (autoload 'javascript-mode "javascript" nil t)
+  (add-to-list 'auto-mode-alist '("\\.js\\'" . javascript-mode)))
+
+(setq javascript-mode-hook 
+      (function (lambda ()
+                (setq indent-tabs-mode nil))))
+
 ;; Initializing yasnippet
 ; Note that we don't map tab to yasnippet, since I'm planning to hack up the
 ; ultimate tab-handling function... If I can snag it from someone else, that'd
@@ -174,9 +170,3 @@
   (initialize-yasnippet)
   (initialize-auto-complete-python))
 (add-hook 'python-mode-hook 'load-python-mode-accessories)
-
-;; Customized keybindings follow.
-
-;; I'd much rather have a sane way to goto-line than be able to easily change
-;; my font settings...
-(global-set-key "\M-g" 'goto-line)

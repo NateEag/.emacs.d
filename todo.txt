@@ -10,7 +10,7 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -A specific semantic-coding idea: have a command that lets you invert string delimiters. Sometimes you realize mid-stream that you used the wrong ones, and as long as your string is still valid, the editor should be able to find your delimiters and invert them. Now you can keep on cranking.
 
--See whether rope supports any kind of intelligent argument list fetching. If it does, it might be possible to write a parameter suggestion tool. Obviously, this is a big one, and not something I'm likely to really tackle.
+-See whether rope supports any kind of intelligent argument list fetching. If it does, it might be possible to write a parameter suggestion tool. Obviously, this is a big one, and not something I'm likely to really tackle. Well, maybe it's not as tough as I think - might be able to incorporate some cleverness between YASnippet and ropemacs so that there's a YASnippet for *current Python function args*, and it tabs you through each one? 
 
 -Get ropemode to be more effective. A lot of expressions that seem completable aren't. Sometimes this is probably for very valid reasons (not wanting to evaluate every darned statement in the proejct), but it doesn't seem like knowing what the current "self" is would be impossibly hard. This is serious rope development, and possibly not in sync with what the rope crew would like to do. Let's call it a pipe-dream.
 

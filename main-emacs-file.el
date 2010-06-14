@@ -24,6 +24,7 @@
 ;; incarnation of my .emacs file. The goal is to ensure that it never occurs in
 ;; any source file I edit.
 (setq indent-tabs-mode nil)
+(setq-default indent-tabs-mode nil)
 
 ;; GNU-style indentation on C-like languages is stupid. Linux style is much
 ;; more sane.

@@ -38,6 +38,10 @@
 ;; Everyone likes narrow-to-region. (Though I don't use it much these days.)
 (put 'narrow-to-region 'disabled nil)
 
+;; Default frames to a width of 80 chars.
+;; DEBUG Whether this works on Aquamacs I don't know.
+(add-to-list 'default-frame-alist '(width . 80))
+
 ;; Include third-party libraries.
 (add-to-list 'load-path "~/.emacs.d/libraries")
 (progn (cd "~/.emacs.d/libraries")

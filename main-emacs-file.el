@@ -39,8 +39,10 @@
 (put 'narrow-to-region 'disabled nil)
 
 ;; Default frames to a width of 80 chars.
-;; DEBUG Whether this works on Aquamacs I don't know.
 (add-to-list 'default-frame-alist '(width . 80))
+
+;; Default fill-column should be 79.
+(setq-default fill-column 79)
 
 ;; Include third-party libraries.
 (add-to-list 'load-path "~/.emacs.d/libraries")

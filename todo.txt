@@ -14,7 +14,9 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -See whether rope supports any kind of intelligent argument list fetching. If it does, it might be possible to write a parameter suggestion tool. Obviously, this is a big one, and not something I'm likely to really tackle. Well, maybe it's not as tough as I think - might be able to incorporate some cleverness between YASnippet and ropemacs so that there's a YASnippet for *current Python function args*, and it tabs you through each one? 
 
--Get ropemode to be more effective. A lot of expressions that seem completable aren't. Sometimes this is probably for very valid reasons (not wanting to evaluate every darned statement in the proejct), but it doesn't seem like knowing what the current "self" is would be impossibly hard. This is serious rope development, and possibly not in sync with what the rope crew would like to do. Let's call it a pipe-dream.
+-Make python autocompletion via rope/autocomplete more efficient. Right now it's too slow to really be usable, because I can type faster than it can complete, most of the time.
+
+-Get ropemode to be more effective. A lot of expressions that seem completable aren't. Sometimes this is probably for very valid reasons (not wanting to evaluate every darned statement in the project), but it doesn't seem like knowing what the current "self" is would be impossibly hard. This is serious rope development, and possibly not in sync with what the rope crew would like to do. Let's call it a pipe-dream.
 
 -There should be a command in python-mode to break a comma-separated list of values to one-per-line, with proper indentation. I find myself doing this relatively often.
 

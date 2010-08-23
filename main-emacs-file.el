@@ -26,6 +26,9 @@
 (setq indent-tabs-mode nil)
 (setq-default indent-tabs-mode nil)
 
+;; I do not use double-spaces after sentences. Neither should you.
+(setq sentence-end-double-space nil)
+
 ;; GNU-style indentation on C-like languages is stupid. Linux style is much
 ;; more sane.
 (setq c-default-style "linux"

@@ -47,6 +47,10 @@
 ;; Default fill-column should be 79.
 (setq-default fill-column 79)
 
+;; I like to know what line/column I'm in, always.
+(line-number-mode 1)
+(column-number-mode 1)
+
 ;; Include third-party libraries.
 (add-to-list 'load-path "~/.emacs.d/libraries")
 (progn (cd "~/.emacs.d/libraries")

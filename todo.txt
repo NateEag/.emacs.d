@@ -2,6 +2,8 @@ Until I get my task tracker semi-workable, I'm going to keep the list of things 
 
 Note that a lot of these aren't emacs-specific - they're just things I wish my editor would do. elisp is Turing-complete, though, even if it's not a great language overall...
 
+-Figure out how to use this repository as my Emacs configuration on Windows. Right now I'm limping by on standard Emacs, and it's annoying.
+
 -I really want a block-comment-mode. Basically, when I'm writing block comments, I shouldn't need to worry about when to line-wrap and where to break. It's like plain text, more or less. It needs not to interfere when I'm customizing indentation, but basically, I should be able to say "start a block comment", and it should flow/wrap my text for me, with whatever syntax is used for block comments by the current major-mode. (In python-mode, something similar should be done for docstrings.) Further research shows that auto-fill-mode comes close to this - sounds like it can't handle reflowing a paragraph very well at all, and also like it's 'always-on', while I'd like this to be active only in comment-only lines. Still, even if I wind up writing my own variation, starting off with the auto-fill-mode code would seem to be reasonable. Okay, auto-fill sorta works-ish, but not really. Probably, a few hours hacking on some hybrid of http://www.emacswiki.org/emacs/RefillMode and http://www.emacswiki.org/emacs/FillingComments, and thinking about how to get it to recognize things like docstrings in Python's case would give me what I want.
 
 -I'd also like context-sensitive paragraph filling. That is, in most cases, my fill-column value is 79, but if I'm in a Python docstring, fill-column should be 72.
@@ -27,6 +29,8 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 -Get tab behaving properly. That means calling yasnippet/code-completion as appropriate, indentation when appropriate, retaining minibuffer autocompletion, and Shift-Tab cycling backwards through autocompletions (I really want that, for reasons I don't quite understand).
 
 -Get yasnippet working. For now, it's okay if I don't use tab as the keybinding - that's some sweet-looking software, and I really want to start integrating it into my workflow. Yeah, I'll go crazy when I'm stuck on systems that don't have it, but it looks really neat. (Hmmm, interesting thought - I'd probably start to forget the details of syntax for snippets I relied on extensively. How much help from your editor is too much?)
+
+-Get/write a diff/patch-viewing mode that doesn't suck.
 
 -This is long-term, since my task tracker doesn't exist yet, but I'd like to hack up a basic minor-mode for it, if it ever gets far enough for that to be useful. Subtle hints when a name/block has annotations (toggleable, of course), easy keystroke to view the associated annotation/task, easy way to create annotations/attach existing annotations to some code... I should probably do this in elisp, not because it's the right thing from an engineering perspective, but because it would force me to learn a lot about the language. It'd be annoying to have to do all the work again in elisp, though, and there is Pymacs...
 

@@ -8,6 +8,8 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -I'd also like context-sensitive paragraph filling. That is, in most cases, my fill-column value is 79, but if I'm in a Python docstring, fill-column should be 72.
 
+-I'd like to display the current named block in my modeline. So, in Python, if I'm editing method foobar of class Testing, my modeline would have  'Block: Testing.foobar' in it. Problem is that it could easily extend past the number of characters I have available in the modeline; a variable that sets how many characters it will use would do the job, though.
+
 -Find/use a PHP mode that isn't teh suck. The Aquamacs default is awful.
 
 -It might be interesting to experiment with semantic-coding commands. This idea was inspired by thinking about yasnippet, and how basically, it's used to cut down on boilerplate. Boilerplate is semi-language-specific, but it's really got more to do with individual programmers' styles - there are common idioms, but everyone tends to have their own. So, might it be interesting to build some interface to a collection of snippets that's basically "Do this idiom for the current language"? Block-comment's one emacs already has, but there are lots: debug output, while loop/for loop, if/else, if/elif/else, new class, new function, etc... This whole idea isn't entirely unrelated to refactoring, actually.

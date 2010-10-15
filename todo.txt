@@ -12,6 +12,10 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -Find/use a PHP mode that isn't teh suck. The Aquamacs default is awful.
 
+-Figure out/steal/write a good cross-file find-and-replace. I can see why so many guys just use a Perl one-liner, but being able to do this from inside your editor is pretty convenient.
+
+-I'd like some convenient shortcut for 'Move forward one name-delimiter.' For instance, in standard Python, '_' separates words inside names. In other languages, HumpsOfTheCamelCase do so. Either way, Meta-f and Meta-b include in-name words as distinct entities in some modes but not in others, and I'd like a sane, consistent way to deal with that sort of cursor movement.
+
 -It might be interesting to experiment with semantic-coding commands. This idea was inspired by thinking about yasnippet, and how basically, it's used to cut down on boilerplate. Boilerplate is semi-language-specific, but it's really got more to do with individual programmers' styles - there are common idioms, but everyone tends to have their own. So, might it be interesting to build some interface to a collection of snippets that's basically "Do this idiom for the current language"? Block-comment's one emacs already has, but there are lots: debug output, while loop/for loop, if/else, if/elif/else, new class, new function, etc... This whole idea isn't entirely unrelated to refactoring, actually.
 
 -A specific semantic-coding idea: have a command that lets you invert string delimiters. Sometimes you realize mid-stream that you used the wrong ones, and as long as your string is still valid, the editor should be able to find your delimiters and invert them. Now you can keep on cranking.

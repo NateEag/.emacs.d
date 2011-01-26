@@ -8,9 +8,11 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -I'd also like context-sensitive paragraph filling. That is, in most cases, my fill-column value is 79, but if I'm in a Python docstring, fill-column should be 72.
 
--I'd like to display the current named block in my modeline. So, in Python, if I'm editing method foobar of class Testing, my modeline would have  'Block: Testing.foobar' in it. Problem is that it could easily extend past the number of characters I have available in the modeline; a variable that sets how many characters it will use would do the job, though.
+-I'd like to display the current named block in my modeline. So, in Python, if I'm editing method foobar of class Testing, my modeline would have 'Block: Testing.foobar' in it. Problem is that it could easily extend past the number of characters I have available in the modeline; a variable that sets how many characters it will use would do the job, though.
 
 -Find/use a PHP mode that isn't teh suck. The Aquamacs default is awful.
+
+-I'd like emacs to autodetect the indentation format of a file, and override my preference if it doesn't match. There is a mode built to do exactly that, it seems: http://git.savannah.gnu.org/gitweb/?p=dtrt-indent.git;a=blob_plain;f=dtrt-indent.el;hb=HEAD Consider integrating it some year when I have the time.
 
 -Figure out/steal/write a good cross-file find-and-replace. I can see why so many guys just use a Perl one-liner, but being able to do this from inside your editor is pretty convenient.
 
@@ -23,6 +25,8 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 -See whether rope supports any kind of intelligent argument list fetching. If it does, it might be possible to write a parameter suggestion tool. Obviously, this is a big one, and not something I'm likely to really tackle. Well, maybe it's not as tough as I think - might be able to incorporate some cleverness between YASnippet and ropemacs so that there's a YASnippet for *current Python function args*, and it tabs you through each one? Actually, yeah - if nothing else, it might be possible to generate a new snippet based on what we're getting from ropemacs, so the yasnippet "jump to next dynamic field" behavior would basically let us fill in args while seeing what the original values were. I haven't actually started using YASnippet yet, so perhaps that's beyond the bounds of what it's capable of.
 
 -Get ropemode to be more effective. A lot of expressions that seem completable aren't. Sometimes this is probably for very valid reasons (not wanting to evaluate every darned statement in the project), but it doesn't seem like knowing what the current "self" is would be impossibly hard. This is serious rope development, and possibly not in sync with what the rope crew would like to do. Let's call it a pipe-dream.
+
+-Write/request a better interface for rope-find-occurrences. It just gives you a buffer telling you where it shows up (and includes the def statement for a function, which seems a bit funky to me) - it ought to be simple to hop directly to it, eh?
 
 -There should be a command in python-mode to break a comma-separated list of values to one-per-line, with proper indentation. I find myself doing this relatively often.
 

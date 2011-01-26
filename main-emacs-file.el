@@ -76,6 +76,7 @@
 (defvar pymacs-initialized nil)
 (defun initialize-pymacs ()
   "Load pymacs if it is not already loaded."
+  (interactive)
   (if (not pymacs-initialized)
       (do-initialize-pymacs)))
 

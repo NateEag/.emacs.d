@@ -56,12 +56,23 @@
 (progn (cd "~/.emacs.d/libraries")
        (normal-top-level-add-subdirs-to-load-path))
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Major mode setup and registration.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Include the modes directory.
 (add-to-list 'load-path "~/.emacs.d/modes")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Minor mode setup and registration.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; smart-dash-mode saves a lot of stupid SHIFT-ing in languages that favor
+;; underscore as a word separator.
+(require 'smart-dash)
+;; Add PHP to smart-dash's list of modes that need C-style treatment of ->.
+(setq smart-dash-c-modes (cons 'php-mode smart-dash-c-modes))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Major mode setup and registration.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Python mode.
 
@@ -156,6 +167,27 @@
       	          (concat ac-prefix completion))
           	  (ignore-errors (rope-completions)))))
 
+;; Load my python-mode accessories only when python-mode kicks in.
+(defun load-python-mode-accessories ()
+  "Loads all the libraries/tools I want to have when I'm in python-mode."
+  (initialize-pymacs)
+  (initialize-rope)
+  (initialize-yasnippet)
+  (initialize-auto-complete-python)
+  (smart-dash-mode))
+(add-hook 'python-mode-hook 'load-python-mode-accessories)
+
+;; PHP Mode.
+
+;; I use php-mode, and I kinda hate it - but I have neither the skills nor the
+;; time to write a better one, so I try to be grateful that I have anything
+;; that handles PHP at all.
+(setq auto-mode-alist (cons '("\\.php$" . php-mode) auto-mode-alist))
+(autoload 'php-mode "php-mode" "PHP editing mode." t)
+
+(defun load-php-mode-accessories ()
+  (smart-dash-mode t))
+(add-hook 'php-mode-hook 'load-php-mode-accessories)
 
 ;; JavaScript Mode.
 
@@ -179,12 +211,3 @@
   (setq yas/trigger-key (kbd "C-c <kp-multiply>"))
   (yas/initialize)
   (yas/load-directory "~/.emacs.d/snippets"))
-
-;; Loading my python-mode accessories only when python-mode kicks in.
-(defun load-python-mode-accessories ()
-  "Loads all the libraries/tools I want to have when I'm in python-mode."
-  (initialize-pymacs)
-  (initialize-rope)
-  (initialize-yasnippet)
-  (initialize-auto-complete-python))
-(add-hook 'python-mode-hook 'load-python-mode-accessories)

@@ -51,18 +51,23 @@
 (line-number-mode 1)
 (column-number-mode 1)
 
+;; I generally prefer to strip trailing whitespace on saves.
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
+
 ;; Include third-party libraries.
 (add-to-list 'load-path "~/.emacs.d/libraries")
 (progn (cd "~/.emacs.d/libraries")
        (normal-top-level-add-subdirs-to-load-path))
 
-
-;; Include the modes directory.
-(add-to-list 'load-path "~/.emacs.d/modes")
+;; Loade the revbufs command.
+(require 'revbufs)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Minor mode setup and registration.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; Include the modes directory.
+(add-to-list 'load-path "~/.emacs.d/modes")
 
 ;; smart-dash-mode saves a lot of stupid SHIFT-ing in languages that favor
 ;; underscore as a word separator.
@@ -197,9 +202,14 @@
   (autoload 'javascript-mode "javascript" nil t)
   (add-to-list 'auto-mode-alist '("\\.js\\'" . javascript-mode)))
 
-(setq javascript-mode-hook 
+(defun javascript-mode-hook
       (function (lambda ()
-                (setq indent-tabs-mode nil))))
+                (setq indent-tabs-mode nil)
+                (smart-dash-mode t))))
+(defadvice javascript-mode (after load-smart-dash-mode)
+  "Load smart dash mode, since javascript-mode doesn't have a hook."
+  (smart-dash-mode t))
+(ad-activate 'javascript-mode)
 
 ;; Initializing yasnippet
 ; Note that we don't map tab to yasnippet, since I'm planning to hack up the

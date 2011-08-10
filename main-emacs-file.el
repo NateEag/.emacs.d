@@ -85,6 +85,13 @@
 ;; Major mode setup and registration.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Shell script mode.
+
+(defun load-shell-mode-accessories ()
+  (interactive)
+  (smart-dash-mode t))
+(add-hook 'sh-mode-hook 'load-shell-mode-accessories)
+
 ;; Python mode.
 
 ;; I use python-mode.el, with the TQS-coloration patch applied.

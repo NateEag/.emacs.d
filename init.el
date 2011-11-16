@@ -85,6 +85,12 @@
 ;; Major mode setup and registration.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; SQL mode.
+(defun load-sql-mode-accessories ()
+  (interactive)
+  (smart-dash-mode t))
+(add-hook 'sql-mode-hook 'load-sql-mode-accessories)
+
 ;; Shell script mode.
 
 (defun load-shell-mode-accessories ()
@@ -192,7 +198,7 @@
   (initialize-rope)
   (initialize-yasnippet)
   (initialize-auto-complete-python)
-  (smart-dash-mode))
+  (smart-dash-mode t))
 (add-hook 'python-mode-hook 'load-python-mode-accessories)
 
 ;; PHP Mode.

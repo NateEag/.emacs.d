@@ -315,7 +315,7 @@ See `php-beginning-of-defun'."
   (set (make-local-variable 'c-opt-cpp-prefix) php-tags-key)
 
   (c-set-offset 'cpp-macro 0)
-  
+
 ;;   (c-lang-defconst c-block-stmt-1-kwds php php-block-stmt-1-kwds)
 ;;   (c-lang-defvar c-block-stmt-1-kwds (c-lang-const c-block-stmt-1-kwds))
   (set (make-local-variable 'c-block-stmt-1-key) php-block-stmt-1-key)
@@ -1014,7 +1014,7 @@ current `tags-file-name'."
     ;; thereby excluding it from unknown-symbol checks later
     ;; FIX to handle implementing multiple
     ;; currently breaks on "class Foo implements Bar, Baz"
-    '("\\<\\(new\\|extends\\|implements\\)\\s-+\\$?\\(\\sw+\\)"
+    '("\\<\\(new\\|clone\\|extends\\|implements\\)\\s-+\\$?\\(\\sw+\\)"
       (1 font-lock-keyword-face) (2 font-lock-type-face))
 
     ;; function declaration

@@ -74,6 +74,22 @@
 ;; Add PHP to smart-dash's list of modes that need C-style treatment of ->.
 (setq smart-dash-c-modes (cons 'php-mode smart-dash-c-modes))
 
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Random functions worth having around.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+;; From http://www.stringify.com/2006/apr/24/rename/
+(defun move-current-buffer ()
+  (interactive)
+  (if (not (buffer-file-name))
+      (call-interactively 'rename-buffer)
+    (let ((file (buffer-file-name)))
+      (with-temp-buffer
+        (set-buffer (dired-noselect file))
+        (dired-do-rename)
+        (kill-buffer nil))))
+  nil)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Major mode setup and registration.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

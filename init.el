@@ -1,12 +1,5 @@
 ;; Nate Eagleson's .emacs file.
 
-;; Just symlink ~/.emacs to ~/.emacs.d/main-emacs-file, and I should be good
-;; to go.
-
-;; This is the first import, so there's probably some dumb stuff in here. I've
-;; never taken Emacs all that seriously up to this point - I've finally decided
-;; to buckle down and start using it semi-seriously.
-
 ;; If, for some reason, you've found a copy of this and would like to speak to
 ;; the creator (for instance, to point out much more elegant and correct ways
 ;; of doing things), try nate@ishness.net.

@@ -149,17 +149,12 @@
 (defun initialize-auto-complete-python ()
   "Loads and configures auto-complete for Python hacking."
   (if (not auto-complete-python-initialized)
-        (do-initialize-auto-complete-python)
-      ;; If we've already initialized autocomplete, then we only need to set up
-      ;; ropemode completions.
-      ;; DEBUG I'm not exactly sure why I have to do this for every buffer.
-      (setq ac-sources '(ac-source-ropemacs))))
+      (do-initialize-auto-complete-python)))
 
 (defun do-initialize-auto-complete-python ()
   "Sets up auto-completion for python buffers."
   (ac-personal-setup)
   (ac-ropemacs-init)
-  (setq ac-sources '(ac-source-ropemacs))
   (setq auto-complete-python-initialized 't))
 
 (defvar ac-initialized nil)
@@ -179,19 +174,29 @@
   (auto-complete-mode t)
   (setq ac-initialized 't))
 
-;; A hacked-up version of the rope support from auto-complete-config.el,
-;; since it doesn't work any more.
-;; DEBUG This works, but it's slow. I should really see what I can figure out
-;; about speeding it up.
+;; Mostly based on code from
+;; https://github.com/gabrielelanaro/emacs-for-python/blob/master/epy-completion.el
+;; with some shades of the old auto-complete-config.el still hanging on.
+;; Hybridization brought on by perceived performance enhancement (but I might
+;; just be crazy).
 (defun ac-ropemacs-init ()
   (defvar ac-ropemacs-completions-cache nil)
-  (defvar ac-source-ropemacs
+
+  (ac-define-source ropemacs
     '((init
        . (fill-ac-ropemacs-completions-cache))
       (candidates . ac-ropemacs-completions-cache)
-      ;; Setting prefix regex so that we autocomplete valid Python identifiers
-      ;;  and immediately after .s.
-      (prefix . "\\([_a-zA-Z0-9]+[.]?\\)"))))
+      (prefix . "[_a-zA-Z0-9]+")))
+
+  (ac-define-source ropemacs-dot
+    '((init
+       . (fill-ac-ropemacs-completions-cache))
+      (candidates . ac-ropemacs-completions-cache)
+      (prefix . c-dot)
+      (requires . 0)))
+
+  (setq ac-sources (append '(ac-source-ropemacs
+                             ac-source-ropemacs-dot) ac-sources)))
 
 (defun fill-ac-ropemacs-completions-cache ()
   (setq ac-ropemacs-completions-cache

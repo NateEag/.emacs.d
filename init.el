@@ -74,6 +74,10 @@
 ;; Add PHP to smart-dash's list of modes that need C-style treatment of ->.
 (setq smart-dash-c-modes (cons 'php-mode smart-dash-c-modes))
 
+;; Trying this out to see how I like it.
+(require 'autopair)
+(autopair-global-mode)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Random functions worth having around.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -255,3 +259,4 @@
   (yas/initialize)
   (yas/load-directory "~/.emacs.d/snippets"))
 (initialize-yasnippet)
+

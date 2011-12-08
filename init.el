@@ -166,9 +166,11 @@
 
 (defun do-ac-personal-setup ()
   (require 'auto-complete)
+  (require 'auto-complete-config)
   (global-auto-complete-mode t)
   (setq ac-auto-start nil)
   (setq ac-trigger-key "TAB")
+  (add-to-list 'ac-sources 'ac-source-yasnippet)
   (define-key ac-completing-map "\C-n" 'ac-next)
   (define-key ac-completing-map "\C-p" 'ac-previous)
   (auto-complete-mode t)
@@ -210,7 +212,6 @@
   "Loads all the libraries/tools I want to have when I'm in python-mode."
   (initialize-pymacs)
   (initialize-rope)
-  (initialize-yasnippet)
   (initialize-auto-complete-python)
   (smart-dash-mode t))
 (add-hook 'python-mode-hook 'load-python-mode-accessories)
@@ -245,12 +246,12 @@
 (ad-activate 'javascript-mode)
 
 ;; Initializing yasnippet
-; Note that we don't map tab to yasnippet, since I'm planning to hack up the
-; ultimate tab-handling function... If I can snag it from someone else, that'd
-; be plenty satisfactory.
 (defun initialize-yasnippet ()
-  "Loads and configures yasnippet the way I want it."
+  "Loads and configures yasnippet."
   (require 'yasnippet)
-  (setq yas/trigger-key (kbd "C-c <kp-multiply>"))
+  ;; Optimally, I would have this bound to Tab, and avoid autocomplete
+  ;; triggering, somehow...
+  (setq yas/trigger-key (kbd "C-c y"))
   (yas/initialize)
   (yas/load-directory "~/.emacs.d/snippets"))
+(initialize-yasnippet)

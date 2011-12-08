@@ -20,8 +20,6 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -I'd like some convenient shortcut for 'Move forward one name-delimiter.' For instance, in standard Python, '_' separates words inside names. In other languages, HumpsOfTheCamelCase do so. Either way, Meta-f and Meta-b include in-name words as distinct entities in some modes but not in others, and I'd like a sane, consistent way to deal with that sort of cursor movement.
 
--It might be interesting to experiment with semantic-coding commands. This idea was inspired by thinking about yasnippet, and how basically, it's used to cut down on boilerplate. Boilerplate is semi-language-specific, but it's really got more to do with individual programmers' styles - there are common idioms, but everyone tends to have their own. So, might it be interesting to build some interface to a collection of snippets that's basically "Do this idiom for the current language"? Block-comment's one emacs already has, but there are lots: debug output, while loop/for loop, if/else, if/elif/else, new class, new function, etc... This whole idea isn't entirely unrelated to refactoring, actually.
-
 -A specific semantic-coding idea: have a command that lets you invert string delimiters. Sometimes you realize mid-stream that you used the wrong ones, and as long as your string is still valid, the editor should be able to find your delimiters and invert them. Now you can keep on cranking.
 
 -See whether rope supports any kind of intelligent argument list fetching. If it does, it might be possible to write a parameter suggestion tool. Obviously, this is a big one, and not something I'm likely to really tackle. Well, maybe it's not as tough as I think - might be able to incorporate some cleverness between YASnippet and ropemacs so that there's a YASnippet for *current Python function args*, and it tabs you through each one? Actually, yeah - if nothing else, it might be possible to generate a new snippet based on what we're getting from ropemacs, so the yasnippet "jump to next dynamic field" behavior would basically let us fill in args while seeing what the original values were. I haven't actually started using YASnippet yet, so perhaps that's beyond the bounds of what it's capable of.
@@ -32,15 +30,9 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -There should be a command in python-mode to break a comma-separated list of values to one-per-line, with proper indentation. I find myself doing this relatively often.
 
--Autocompletion should display the whole string that would be inserted, not just the remainder of it (and then insert only what's needed to complete it). Not sure why that bugs me, but I swear it was doing that at some point when I was working on getting it to work... This is weird now - it displays a character or two from the existing string, plus everything it would add.
-
 -Figure out a way to make rope-completions faster. It's the source of that half-second delay before anything happens after I ask for auto-completion, and it honestly slows me down. I can usually finish typing the expression faster than I can auto-complete it. I've improved this some by the simple expedient of byte-compiling pymacs.el, but still things like wx.<TAB> chug for fifty seconds or so before suggesting completions. I realize that's abusive, given just how many names are in that namespace, but it does seem like it should be possible to keep a pretty static analysis of system-wide packages, and that completions on names that correlate to those packages shouldn't be so slow. It feels like it's doing dynamic analysis of the 'wx' package, but once it's been imported, shouldn't we be able to just check whether the module on disk has updated, and if not, need no more dynamic analysis? I should probably ask/bug-report this on the mailing list.
 
--autocomplete.el should have a toggle that makes scrolling to the bottom of the list scroll the list downward, and scrolling to the top upward, for when more than list-length completions are possible. It'd be very convenient.
-
 -Get tab behaving properly. That means calling yasnippet/code-completion as appropriate, indentation when appropriate, retaining minibuffer autocompletion, and Shift-Tab cycling backwards through autocompletions (I really want that, for reasons I don't quite understand).
-
--Get yasnippet working. For now, it's okay if I don't use tab as the keybinding - that's some sweet-looking software, and I really want to start integrating it into my workflow. Yeah, I'll go crazy when I'm stuck on systems that don't have it, but it looks really neat. (Hmmm, interesting thought - I'd probably start to forget the details of syntax for snippets I relied on extensively. How much help from your editor is too much?)
 
 -Get/write a diff/patch-viewing mode that doesn't suck.
 

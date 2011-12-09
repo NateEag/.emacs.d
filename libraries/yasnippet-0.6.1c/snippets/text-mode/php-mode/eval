@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : eval(...)
+# --
+eval(${code_str})$0

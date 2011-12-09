@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : session_save_path(...)
+# --
+session_save_path(${[string path]})$0

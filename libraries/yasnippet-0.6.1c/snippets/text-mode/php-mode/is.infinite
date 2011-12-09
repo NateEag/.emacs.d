@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : is_infinite(...)
+# --
+is_infinite(${val})$0

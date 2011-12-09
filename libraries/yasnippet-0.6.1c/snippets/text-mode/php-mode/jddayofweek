@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : jddayofweek(...)
+# --
+jddayofweek(${julianday[, int mode]})$0

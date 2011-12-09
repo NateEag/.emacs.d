@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : gmdate(...)
+# --
+gmdate(${format[, int timestamp]})$0

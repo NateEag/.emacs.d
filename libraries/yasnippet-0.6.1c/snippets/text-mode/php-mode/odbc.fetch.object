@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : odbc_fetch_object(...)
+# --
+odbc_fetch_object(${result[, int rownumber]})$0

@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : bin2hex(...)
+# --
+bin2hex(${str})$0

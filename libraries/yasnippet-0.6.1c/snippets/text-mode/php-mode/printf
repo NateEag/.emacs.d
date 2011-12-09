@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : printf(...)
+# --
+printf(${format[, mixed args]})$0

@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : imap_mail_copy(..., ..., ...)
+# --
+imap_mail_copy(${imap_stream}, ${msglist}, ${mbox[, int options]})$0

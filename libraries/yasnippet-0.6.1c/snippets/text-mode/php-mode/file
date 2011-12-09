@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : file(...)
+# --
+file(${filename[, int use_include_path]})$0

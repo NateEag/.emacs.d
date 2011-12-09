@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : system(...)
+# --
+system(${command[, int &return_var]})$0

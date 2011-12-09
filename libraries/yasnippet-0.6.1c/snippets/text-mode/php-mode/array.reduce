@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : array_reduce(..., ...)
+# --
+array_reduce(${input}, ${function[, int initial]})$0

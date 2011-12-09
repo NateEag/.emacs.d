@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : mysql_fetch_lengths(...)
+# --
+mysql_fetch_lengths(${result})$0

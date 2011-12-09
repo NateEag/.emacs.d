@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : imap_fetchheader(..., ...)
+# --
+imap_fetchheader(${imap_stream}, ${msgno[, int options]})$0

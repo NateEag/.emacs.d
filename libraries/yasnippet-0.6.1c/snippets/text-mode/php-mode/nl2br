@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : nl2br(...)
+# --
+nl2br(${string})$0

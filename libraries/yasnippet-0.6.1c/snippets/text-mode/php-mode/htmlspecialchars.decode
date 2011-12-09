@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : htmlspecialchars_decode(...)
+# --
+htmlspecialchars_decode(${string[, int quote_style]})$0

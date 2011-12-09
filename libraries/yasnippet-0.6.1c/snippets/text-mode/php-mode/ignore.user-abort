@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : ignore_user_abort(...)
+# --
+ignore_user_abort(${[bool setting]})$0

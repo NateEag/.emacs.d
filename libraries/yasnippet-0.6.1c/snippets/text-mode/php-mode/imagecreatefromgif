@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : imagecreatefromgif(...)
+# --
+imagecreatefromgif(${filename})$0

@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : odbc_rollback(...)
+# --
+odbc_rollback(${connection_id})$0

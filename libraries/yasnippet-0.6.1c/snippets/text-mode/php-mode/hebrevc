@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : hebrevc(...)
+# --
+hebrevc(${hebrew_text[, int max_chars_per_line]})$0

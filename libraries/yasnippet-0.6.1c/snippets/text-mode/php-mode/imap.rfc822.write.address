@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : imap_rfc822_write_address(..., ..., ...)
+# --
+imap_rfc822_write_address(${mailbox}, ${host}, ${personal})$0

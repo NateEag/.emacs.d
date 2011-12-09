@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : ftp_rename(..., ..., ...)
+# --
+ftp_rename(${ftp_stream}, ${oldname}, ${newname})$0

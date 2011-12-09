@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : mysql_select_db(...)
+# --
+mysql_select_db(${database_name[, resource link_identifier]})$0

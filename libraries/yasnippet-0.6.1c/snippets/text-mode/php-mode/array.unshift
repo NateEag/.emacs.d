@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : array_unshift(..., ...)
+# --
+array_unshift(${&array}, ${var[, mixed ...]})$0

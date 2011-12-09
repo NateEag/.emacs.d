@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : imagecolormatch(..., ...)
+# --
+imagecolormatch(${image1}, ${image2})$0

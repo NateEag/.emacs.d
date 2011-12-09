@@ -1,0 +1,6 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : if (...) {...}
+# --
+if (${condition}) {
+   $0
+}

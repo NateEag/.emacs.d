@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : session_set_save_handler(..., ..., ..., ..., ..., ...)
+# --
+session_set_save_handler(${open}, ${close}, ${read}, ${write}, ${destroy}, ${gc})$0

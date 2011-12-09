@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : disk_free_space(...)
+# --
+disk_free_space(${directory})$0

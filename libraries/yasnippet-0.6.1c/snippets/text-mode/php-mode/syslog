@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : syslog(..., ...)
+# --
+syslog(${priority}, ${message})$0

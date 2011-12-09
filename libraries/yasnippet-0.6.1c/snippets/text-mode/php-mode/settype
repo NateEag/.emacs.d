@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : settype(..., ...)
+# --
+settype(${&var}, ${type})$0

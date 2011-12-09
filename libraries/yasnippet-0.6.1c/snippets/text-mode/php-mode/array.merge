@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : array_merge(...)
+# --
+array_merge(${array1[, array array2]})$0

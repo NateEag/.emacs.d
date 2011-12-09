@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : imagecopyresized(..., ..., ..., ..., ..., ..., ..., ..., ..., ...)
+# --
+imagecopyresized(${dst_image}, ${src_image}, ${dst_x}, ${dst_y}, ${src_x}, ${src_y}, ${dst_w}, ${dst_h}, ${src_w}, ${src_h})$0

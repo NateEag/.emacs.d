@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : ezmlm_hash(...)
+# --
+ezmlm_hash(${addr})$0

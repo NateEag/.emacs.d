@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : mysql_client_encoding(...)
+# --
+mysql_client_encoding(${[resource link_identifier]})$0

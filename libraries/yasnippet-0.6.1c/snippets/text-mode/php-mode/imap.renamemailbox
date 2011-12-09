@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : imap_renamemailbox(..., ..., ...)
+# --
+imap_renamemailbox(${imap_stream}, ${old_mbox}, ${new_mbox})$0

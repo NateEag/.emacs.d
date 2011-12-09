@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : imagechar(..., ..., ..., ..., ..., ...)
+# --
+imagechar(${image}, ${font}, ${x}, ${y}, ${c}, ${color})$0

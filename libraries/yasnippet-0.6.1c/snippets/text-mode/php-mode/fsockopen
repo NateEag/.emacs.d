@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : fsockopen(...)
+# --
+fsockopen(${target[, int port]})$0

@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : file_get_contents(...)
+# --
+file_get_contents(${filename[, bool use_include_path]})$0

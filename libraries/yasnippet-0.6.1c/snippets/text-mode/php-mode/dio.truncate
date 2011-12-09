@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : dio_truncate(..., ...)
+# --
+dio_truncate(${fd}, ${offset})$0

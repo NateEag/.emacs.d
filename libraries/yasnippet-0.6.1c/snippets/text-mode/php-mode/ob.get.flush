@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : ob_get_flush()
+# --
+ob_get_flush()$0

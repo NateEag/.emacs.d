@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : ftp_rawlist(..., ...)
+# --
+ftp_rawlist(${ftp_stream}, ${directory[, bool recursive]})$0

@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : ftp_get(..., ..., ..., ...)
+# --
+ftp_get(${ftp_stream}, ${local_file}, ${remote_file}, ${mode[, int resumepos]})$0

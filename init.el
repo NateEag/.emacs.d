@@ -76,7 +76,7 @@
 
 ;; Trying this out to see how I like it.
 (require 'autopair)
-(autopair-global-mode)
+(autopair-global-mode t)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Random functions worth having around.

@@ -147,34 +147,25 @@
 (defun initialize-rope ()
   "Loads and configures rope as I like to use it."
   (if (not rope-initialized)
-      (do-rope-initialize)))
-
-(defun do-rope-initialize ()
-  "Does the work of loading rope."
-  (pymacs-load "ropemacs" "rope-")
-  (setq ropemacs-enable-autoimport t)
-  (setq rope-initialized 't))
+      ((lambda ()
+        (pymacs-load "ropemacs" "rope-")
+        (setq ropemacs-enable-autoimport t)
+        (setq rope-initialized 't)))))
 
 (defvar auto-complete-python-initialized nil)
+(defvar ac-initialized nil)
 (defun initialize-auto-complete-python ()
   "Loads and configures auto-complete for Python hacking."
-  (if (not auto-complete-python-initialized)
-      (do-initialize-auto-complete-python)))
+  (if (not ac-initialized)
+      (ac-personal-setup))
 
-(defun do-initialize-auto-complete-python ()
-  "Sets up auto-completion for python buffers."
-  (ac-personal-setup)
   (ac-ropemacs-init)
-  (setq auto-complete-python-initialized 't))
+  (setq ac-sources (append '(ac-source-ropemacs
+                             ac-source-ropemacs-dot) ac-sources)))
 
-(defvar ac-initialized nil)
 (defun ac-personal-setup ()
   "My basic configuration for autocomplete.el. Call this to activate it."
   (interactive)
-  (if (not ac-initialized)
-      (do-ac-personal-setup)))
-
-(defun do-ac-personal-setup ()
   (require 'auto-complete)
   (require 'auto-complete-config)
   (global-auto-complete-mode t)
@@ -186,11 +177,12 @@
   (auto-complete-mode t)
   (setq ac-initialized 't))
 
-;; Mostly based on code from
+;; Mostly based on
 ;; https://github.com/gabrielelanaro/emacs-for-python/blob/master/epy-completion.el
 ;; with some shades of the old auto-complete-config.el still hanging on.
-;; Hybridization brought on by perceived performance enhancement (but I might
-;; just be crazy).
+;; Hybridization brought on by vague feeling that it used to run faster than
+;; Gabriel's code when I tried his (but I might well just be crazy, and I know
+;; virtually nothing about elisp).
 (defun ac-ropemacs-init ()
   (defvar ac-ropemacs-completions-cache nil)
 
@@ -205,10 +197,7 @@
        . (fill-ac-ropemacs-completions-cache))
       (candidates . ac-ropemacs-completions-cache)
       (prefix . c-dot)
-      (requires . 0)))
-
-  (setq ac-sources (append '(ac-source-ropemacs
-                             ac-source-ropemacs-dot) ac-sources)))
+      (requires . 0))))
 
 (defun fill-ac-ropemacs-completions-cache ()
   (setq ac-ropemacs-completions-cache

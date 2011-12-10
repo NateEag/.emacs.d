@@ -223,7 +223,10 @@
   (initialize-pymacs)
   (initialize-rope)
   (initialize-auto-complete-python)
-  (smart-dash-mode t))
+  (smart-dash-mode t)
+  (setq autopair-handle-action-fns
+        (list #'autopair-default-handle-action
+              #'autopair-python-triple-quote-action)))
 (add-hook 'python-mode-hook 'load-python-mode-accessories)
 
 ;; PHP Mode.
@@ -246,10 +249,6 @@
   (autoload 'javascript-mode "javascript" nil t)
   (add-to-list 'auto-mode-alist '("\\.js\\'" . javascript-mode)))
 
-(defun javascript-mode-hook
-      (function (lambda ()
-                (setq indent-tabs-mode nil)
-                (smart-dash-mode t))))
 (defadvice javascript-mode (after load-smart-dash-mode)
   "Load smart dash mode, since javascript-mode doesn't have a hook."
   (smart-dash-mode t))

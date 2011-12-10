@@ -1,9 +1,11 @@
 #contributor : Andrew Gwozdziewycz <web@apgwoz.com>
 #name : if (...) {...} else { ... }
 # --
-if (${condition}) {
+if (${condition})
+{
    ${consequent}
 }
-else {
+else
+{
    $0
 }

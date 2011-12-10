@@ -1,7 +1,8 @@
 #contributor : Andrew Gwozdziewycz <web@apgwoz.com>
 #name : switch (...) {...}
 # --
-switch (${on}) {
+switch (${on})
+{
   $0
   default:
 }

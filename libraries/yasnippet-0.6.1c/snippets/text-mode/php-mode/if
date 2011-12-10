@@ -1,6 +1,7 @@
 #contributor : Andrew Gwozdziewycz <web@apgwoz.com>
 #name : if (...) {...}
 # --
-if (${condition}) {
+if (${condition})
+{
    $0
 }

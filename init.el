@@ -58,7 +58,13 @@
 (progn (cd "~/.emacs.d/libraries")
        (normal-top-level-add-subdirs-to-load-path))
 
-;; Loade the revbufs command.
+;; We like auto-compiling .el files to bytecode whenever they're loaded.
+;; Note that byte-code-cache.el apparently will break on Windows, so I might
+;; want to apply a patch to it, since I do sometimes get stuck on Windows.
+;; See http://www.emacswiki.org/emacs/AutoRecompile#toc3
+(require 'byte-code-cache)
+
+;; Load the revbufs command.
 (require 'revbufs)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

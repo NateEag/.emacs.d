@@ -253,8 +253,6 @@
 (defun initialize-yasnippet ()
   "Loads and configures yasnippet."
   (require 'yasnippet)
-  ;; Optimally, I would have this bound to Tab, and avoid autocomplete
-  ;; triggering, somehow...
   (setq yas/trigger-key (kbd "C-c y"))
   (yas/initialize)
   (yas/load-directory "~/.emacs.d/snippets"))

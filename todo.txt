@@ -2,9 +2,13 @@ Until I get my task tracker semi-workable, I'm going to keep the list of things 
 
 Note that a lot of these aren't emacs-specific - they're just things I wish my editor would do. elisp is Turing-complete, though, even if it's not a great language overall...
 
--Figure out how to use this repository as my Emacs configuration on Windows. Right now I'm limping by on standard Emacs, and it's annoying.
-
 -It would be really sweet to get yasnippet's bracket placement to do the Right Thing based on major-mode, placing them on the newline or on the same line intelligently. I'm guessing that can be achieved by applying elisp to the templates. This was inspired by making changes to the php-mode snippets to do bracket placement the way I like. Someone's done some work that was approved of by another guy on the yasnippet blog, and they've said any extensions would not be accepted into yasnippet: http://comments.gmane.org/gmane.emacs.yasnippet.devel/403
+
+-I'd like yasnippets for JavaScript.
+
+-I should probably go back and store my custom yasnippets somewhere other than the default yasnippet locale - set mine up to override the defaults.
+
+-I would like my sql-mode to do a better job with font-lock. It does very poorly at dealing with strings that have embedded quotes.
 
 -I should probably consider getting a better JS environment going. Having a JS interpreter available to me in Emacs could be mighty handy. This page has some info on how to get a decent environment up and running: http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/
 
@@ -49,11 +53,3 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 -A mode in which English grammatical rules are automatically applied to anything that looks like a sentence. For instance, when I refactor a sentence, it ought to know that the first word gets capitalized. That might be the only thing I actually want, come to think of it...
 
 -I'd really like a code folding minor-mode - just lets you hide/show blocks of code, by saying basically "fold at this line" and "unfold at this line". Something as naive as indentation level might work, but there are obviously problems with that - alternately, you could probably do something clever with the syntax parsers that most major-modes define (you'd probably want a mechanism to let a major-mode deal with what's a code-foldable line and what is not - otherwise, the weirder modes like js2-mode couldn't really work with it). Consider whether http://www.emacswiki.org/emacs/HideShow might have some good input.
-
-=====Solved Tasks====
-
--Get ropemode/auto-complete.el completing .-expressions. WOOOO ANOTHER FEATURE DOWN!!! (of course, testing on a fifteen-line file doesn't really tell us how usable it'll be in practice...) Anywho, next really big target on the python-mode front is probably abusing rope-mode and overlays to pop up info on functions inline (only on request of course - args and suchnot). That'd be a serious undertaking.
-
--Figure out why using rope to rename things re-loads Python mode and all my related hooks for every buffer it impacts. This was indeed because of the stupid manner in which I'd written my python-mode hooks, and I've rewritten them to not do so much excessive work. This problem is SOLVED! woooooo!
-
--Autocompletion should not be invoked if there is whitespace directly before point (python mode).

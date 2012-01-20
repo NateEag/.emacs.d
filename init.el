@@ -117,6 +117,11 @@
   (smart-dash-mode t))
 (add-hook 'sh-mode-hook 'load-shell-mode-accessories)
 
+;; reStructuredText mode.
+(require 'rst)
+(setq auto-mode-alist '(("\\.rst$" . rst-mode)
+                        ("\\.rest$" . rst-mode)))
+
 ;; Python mode.
 
 ;; I use python-mode.el, with the TQS-coloration patch applied.

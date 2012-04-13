@@ -58,6 +58,14 @@
 (progn (cd "~/.emacs.d/libraries")
        (normal-top-level-add-subdirs-to-load-path))
 
+;; The uniquify package is a better way to handle files that have the same name.
+(require 'uniquify)
+(setq
+  uniquify-buffer-name-style 'post-forward
+  uniquify-separator ":"
+  uniquify-after-kill-buffer-p t
+  uniquify-ignore-buffers-re "^\\*")
+
 ;; We like auto-compiling .el files to bytecode whenever they're loaded.
 ;; Note that byte-code-cache.el apparently will break on Windows, so I might
 ;; want to apply a patch to it, since I do sometimes get stuck on Windows.

@@ -55,3 +55,5 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 -I'd really like a code folding minor-mode - just lets you hide/show blocks of code, by saying basically "fold at this line" and "unfold at this line". Something as naive as indentation level might work, but there are obviously problems with that - alternately, you could probably do something clever with the syntax parsers that most major-modes define (you'd probably want a mechanism to let a major-mode deal with what's a code-foldable line and what is not - otherwise, the weirder modes like js2-mode couldn't really work with it). Consider whether http://www.emacswiki.org/emacs/HideShow might have some good input.
 
 -When saving files to non-existent directories, instead of failing with the error "directory does not exist", I'd like it if Emacs would ask "Path {string here} does not exist; create it?"
+
+-` should be treated as an autopaired character by default. It's usually used as a delimiter.

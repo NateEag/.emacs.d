@@ -1,30 +1,24 @@
-;; Nate Eagleson's .emacs file.
+;; Nate Eagleson's Emacs config.
 
-;; If, for some reason, you've found a copy of this and would like to speak to
-;; the creator (for instance, to point out much more elegant and correct ways
-;; of doing things), try nate@ishness.net.
 
-;;;;;;;;;;;;;;;;;;;;;
 ;; Global Preferences
-;;;;;;;;;;;;;;;;;;;;;
 
 ;; Everyone likes syntax coloration.
 (global-font-lock-mode 1)
 
-;; The next few chunks of code tell a long, sad story about my relationship
-;; with ASCII character 9 (a.k.a the Tab character). Once, we were the closest
-;; of friends, but one day, I decided I hated it... Thus, the current
-;; incarnation of my .emacs file. The goal is to ensure that it never occurs in
-;; any source file I edit.
-(setq indent-tabs-mode nil)
-(setq-default indent-tabs-mode nil)
-
 ;; I do not use double-spaces after sentences. Neither should you.
 (setq sentence-end-double-space nil)
 
-;; I dislike using tabs for indentation, but adhering to project styles is
-;; more important than my personal likes and dislikes. Therefore, here are my
-;; default settings for tab-indented code.
+;; I dislike using tabs for indentation. A programmer should think about
+;; his code's formatting, and different settings for tab-width will screw with
+;; it. Spaces preserve formatting consistently across platforms. Thus, we
+;; eliminate tabs with aggression here.
+(setq indent-tabs-mode nil)
+(setq-default indent-tabs-mode nil)
+
+;; That said, adhering to project styles is more important than my personal
+;; preferences. Therefore, here are some tab-related settings, for when I'm
+;; editing code that uses Tab for indentation.
 (setq-default tab-width 4)
 (setq tab-stop-list '(4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120))
 
@@ -34,7 +28,7 @@
       c-basic-offset 4)
 
 ;; I'd much rather have a sane way to goto-line than be able to easily change
-;; my font settings...
+;; my font settings.
 (global-set-key "\M-g" 'goto-line)
 
 ;; Everyone likes narrow-to-region. (Though I don't use it much these days.)
@@ -61,7 +55,7 @@
 (progn (cd "~/.emacs.d/libraries")
        (normal-top-level-add-subdirs-to-load-path))
 
-;; The uniquify package is a better way to handle files that have the same name.
+;; The uniquify package names buffers uniquely and readably.
 (require 'uniquify)
 (setq
   uniquify-buffer-name-style 'post-forward
@@ -78,9 +72,8 @@
 ;; Load the revbufs command.
 (require 'revbufs)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; Minor mode setup and registration.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; Include the modes directory.
 (add-to-list 'load-path "~/.emacs.d/modes")
@@ -88,17 +81,17 @@
 ;; smart-dash-mode saves a lot of stupid SHIFT-ing in languages that favor
 ;; underscore as a word separator.
 (require 'smart-dash)
-;; Add PHP to smart-dash's list of modes that need C-style treatment of ->.
 (setq smart-dash-c-modes (cons 'php-mode smart-dash-c-modes))
 
-;; Trying this out to see how I like it.
+;; Automatic insertion/deletion of paired characters. Not flawless, but much
+;; better than just typing.
 (require 'autopair)
 (autopair-global-mode t)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-;; Random functions worth having around.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+;; Random functions worth having around.
+
+;; Move the current buffer to a new location on disk, then rename the buffer.
 ;; From http://www.stringify.com/2006/apr/24/rename/
 (defun move-current-buffer ()
   (interactive)
@@ -111,9 +104,8 @@
         (kill-buffer nil))))
   nil)
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 ;; Major mode setup and registration.
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 ;; SQL mode.
 (defun load-sql-mode-accessories ()
@@ -267,4 +259,3 @@
   (yas/initialize)
   (yas/load-directory "~/.emacs.d/snippets"))
 (initialize-yasnippet)
-

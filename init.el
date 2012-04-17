@@ -50,6 +50,9 @@
 (line-number-mode 1)
 (column-number-mode 1)
 
+;; Do not break hardlinks on save.
+(setq backup-by-copying-when-linked 1)
+
 ;; I generally prefer to strip trailing whitespace on saves.
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 

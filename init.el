@@ -44,8 +44,18 @@
 (line-number-mode 1)
 (column-number-mode 1)
 
-;; Do not break hardlinks on save.
-(setq backup-by-copying-when-linked 1)
+;; Save setup.
+;; Create autosave dir if it doesn't exist.
+(make-directory "~/.emacs.d/autosaves/" t)
+(setq
+   backup-by-copying t      ; Don't clobber symlinks.
+   backup-by-copying-when-linked t    ; Don't break multiple hardlinks.
+   backup-directory-alist
+    '(("." . "~/.emacs.d/autosaves"))    ; Don't litter the filesystem.
+   delete-old-versions t    ; Delete old backups silently.
+   kept-new-versions 2
+   kept-old-versions 2
+   version-control t)       ; use versioned backups
 
 ;; I generally prefer to strip trailing whitespace on saves.
 (add-hook 'before-save-hook 'delete-trailing-whitespace)

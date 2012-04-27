@@ -26,7 +26,7 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -I'd like some convenient shortcut for 'Move forward one name-delimiter.' For instance, in standard Python, '_' separates words inside names. In other languages, HumpsOfTheCamelCase do so. Either way, Meta-f and Meta-b include in-name words as distinct entities in some modes but not in others, and I'd like a sane, consistent way to deal with that sort of cursor movement.
 
--A specific semantic-coding idea: have a command that lets you invert string delimiters. Sometimes you realize mid-stream that you used the wrong ones, and as long as your string is still valid, the editor should be able to find your delimiters and invert them. Now you can keep on cranking.
+-A command that lets you invert delimiters. Sometimes you realize mid-stream that you used the wrong ones, and as long as point is between them and there are no duplicates, the editor should be able to find the nearest delimiters and change them. Now you can keep on cranking.
 
 -See whether rope supports any kind of intelligent argument list fetching. If it does, it might be possible to write a parameter suggestion tool. Obviously, this is a big one, and not something I'm likely to really tackle. Well, maybe it's not as tough as I think - might be able to incorporate some cleverness between YASnippet and ropemacs so that there's a YASnippet for *current Python function args*, and it tabs you through each one? Actually, yeah - if nothing else, it might be possible to generate a new snippet based on what we're getting from ropemacs, so the yasnippet "jump to next dynamic field" behavior would basically let us fill in args while seeing what the original values were. I haven't actually started using YASnippet yet, so perhaps that's beyond the bounds of what it's capable of. Evidence that this is achievable (though it's for R, not Python): http://www.svenhartenstein.de/Software/R-autoyas
 
@@ -57,3 +57,7 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 -When saving files to non-existent directories, instead of failing with the error "directory does not exist", I'd like it if Emacs would ask "Path {string here} does not exist; create it?"
 
 -` should be treated as an autopaired character by default. It's usually used as a delimiter.
+
+-My underscore/hyphen translation mode should know that '.-' should always be interpreted as '._', as that's a common idiom in Python.
+
+-Consider moving init.el's slow operations into some module that only executes after Emacs has been live for a while and there's been no input. That could speed up launch times significantly.

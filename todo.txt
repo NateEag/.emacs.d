@@ -60,4 +60,4 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 
 -My underscore/hyphen translation mode should know that '.-' should always be interpreted as '._', as that's a common idiom in Python.
 
--Consider moving init.el's slow operations into some module that only executes after Emacs has been live for a while and there's been no input. That could speed up launch times significantly.
+-Figure out how to make Emacs launch faster, particularly on the command-line. I hate having to wait a second or two just to do a quick edit in a tiny file.

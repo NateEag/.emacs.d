@@ -82,10 +82,11 @@
 ;; Load the revbufs command.
 (require 'revbufs)
 
+;; DEBUG Consider moving these to their own file.
 ;; Insert the current date in ISO format.
 (defun insert-date (prefix)
     "Insert the current date. With prefix-argument, use dd-mm-YYYY format. With
-   two prefix arguments, write out the day and month name."
+     two prefix arguments, write out the day and month name."
     (interactive "P")
     (let ((format (cond
                    ((not prefix) "%Y-%m-%d")
@@ -93,6 +94,17 @@
                    ((equal prefix '(16)) "%B %d, %Y"))))
       (insert (format-time-string format))))
 (global-set-key (kbd "C-c d") 'insert-date)
+
+;; Insert the current time.
+(defun insert-time (prefix)
+    "Insert current time. With prefix-argument, use a full timestamp in 24-hour
+     format."
+    (interactive "P")
+    (let ((format (cond
+                   ((not prefix) "%l:%M %p")
+                   ((equal prefix '(4)) "%Y-%m-%d %H:%m:%s"))))
+      (insert (format-time-string format))))
+(global-set-key (kbd "C-c t") 'insert-time)
 
 ;; Minor mode setup and registration.
 

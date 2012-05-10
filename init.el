@@ -280,3 +280,8 @@
   (yas/initialize)
   (yas/load-directory "~/.emacs.d/snippets"))
 (initialize-yasnippet)
+
+;; If we're running in a window system, start an emacs server, so emacsclient
+;; can connect to this instance.
+(if window-system
+    (server-start))

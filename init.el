@@ -83,7 +83,7 @@
 (require 'revbufs)
 
 ;; DEBUG Consider moving these to their own file.
-;; Insert the current date in ISO format.
+;; Insert the current date.
 (defun insert-date (prefix)
     "Insert the current date. With prefix-argument, use dd-mm-YYYY format. With
      two prefix arguments, write out the day and month name."
@@ -145,6 +145,7 @@
   (interactive)
   (smart-dash-mode t))
 (add-hook 'sql-mode-hook 'load-sql-mode-accessories)
+(setq auto-mode-alist (cons '("\\.sql$" . sql-mode) auto-mode-alist))
 
 ;; Shell script mode.
 
@@ -155,8 +156,8 @@
 
 ;; reStructuredText mode.
 (require 'rst)
-(setq auto-mode-alist '(("\\.rst$" . rst-mode)
-                        ("\\.rest$" . rst-mode)))
+(setq auto-mode-alist (cons '("\\.rst$" . rst-mode) auto-mode-alist))
+(setq auto-mode-alist (cons '("\\.rest$" . rst-mode) auto-mode-alist))
 
 ;; Python mode.
 

@@ -44,7 +44,10 @@
 (line-number-mode 1)
 (column-number-mode 1)
 
-;; Save setup.
+;; Yay for highlighting parentheses!
+(show-paren-mode 1)
+
+;; Autosave's defaults are not very nice. Here, we fix them.
 ;; Create autosave dir if it doesn't exist.
 (make-directory "~/.emacs.d/autosaves/" t)
 (setq

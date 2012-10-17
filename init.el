@@ -57,6 +57,13 @@
    kept-old-versions 2
    version-control t)       ; use versioned backups
 
+;; Tramp provides secure remote editing, via SFTP/SSH.
+;; We don't load it by default, but we do config it. To load it, just do
+;; (require 'tramp)
+(setq tramp-default-method "scp")
+(if (eq system-type 'windows-nt)
+    (setq tramp-default-method "plink"))
+
 ;; I generally prefer to strip trailing whitespace on saves.
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 
@@ -77,12 +84,13 @@
 ;; Note that byte-code-cache.el apparently will break on Windows, so I might
 ;; want to apply a patch to it, since I do sometimes get stuck on Windows.
 ;; See http://www.emacswiki.org/emacs/AutoRecompile#toc3
-(require 'byte-code-cache)
+(if (not (eq system-type 'windows-nt))
+    (require 'byte-code-cache))
 
 ;; Load the revbufs command.
 (require 'revbufs)
 
-;; DEBUG Consider moving these to their own file.
+;; GRIPE Consider moving these to their own file.
 ;; Insert the current date.
 (defun insert-date (prefix)
     "Insert the current date. With prefix-argument, use dd-mm-YYYY format. With
@@ -300,7 +308,7 @@
   (require 'yasnippet)
   (setq yas/trigger-key (kbd "C-c y"))
   (yas/initialize)
-  (yas/load-directory "~/.emacs.d/snippets"))
+  (yas/load-directory "~/.emacs.d/libraries/yasnippet-0.6.1c/snippets"))
 (initialize-yasnippet)
 
 ;; If we're running in a window system, start an emacs server, so emacsclient

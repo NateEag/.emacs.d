@@ -3,16 +3,17 @@
 
 ;; Global Preferences
 
+;; Make sure my .emacs.d is on the load path.
+(add-to-list 'load-path "~/.emacs.d")
+
 ;; Everyone likes syntax coloration.
 (global-font-lock-mode 1)
 
 ;; I do not use double-spaces after sentences. Neither should you.
 (setq sentence-end-double-space nil)
 
-;; I dislike using tabs for indentation. A programmer should think about
-;; his code's formatting, and different settings for tab-width will screw with
-;; it. Spaces preserve formatting consistently across platforms. Thus, we
-;; eliminate tabs with aggression here.
+;; I dislike using tabs for indentation. Spaces are a less complex way to
+;; indent.
 (setq indent-tabs-mode nil)
 (setq-default indent-tabs-mode nil)
 
@@ -66,6 +67,18 @@
 (setq tramp-default-method "scp")
 (if (eq system-type 'windows-nt)
     (setq tramp-default-method "plink"))
+;; Normally I want to load remote directory variable files. This can cause
+;; efficiency problems, but I currently only use Emacs to edit remotely in a
+;; dev environment. I may need to think this through more carefully
+;; Enable directory local variables with remote files. This facilitates both
+;; the (dir-locals-set-class-variables ...)(dir-locals-set-directory-class ...)
+;; and the dir-locals.el approaches.
+(defadvice hack-dir-local-variables (around my-remote-dir-local-variables)
+  "Allow directory local variables with remote files, by temporarily redefining
+     `file-remote-p' to return nil unconditionally."
+  (flet ((file-remote-p (&rest) nil))
+    ad-do-it))
+(ad-activate 'hack-dir-local-variables)
 
 ;; I generally prefer to strip trailing whitespace on saves.
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
@@ -318,3 +331,15 @@
 ;; can connect to this instance.
 (if window-system
     (server-start))
+(custom-set-variables
+  ;; custom-set-variables was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ '(safe-local-variable-values (quote ((eval highlight-regexp "^ *")))))
+(custom-set-faces
+  ;; custom-set-faces was added by Custom.
+  ;; If you edit it by hand, you could mess it up, so be careful.
+  ;; Your init file should contain only one such instance.
+  ;; If there is more than one, they won't work right.
+ )

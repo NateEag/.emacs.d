@@ -176,7 +176,9 @@
 ;; SQL mode.
 (defun load-sql-mode-accessories ()
   (interactive)
-  (smart-dash-mode t))
+  (smart-dash-mode t)
+  (when (locate-library "sql-indent")
+    (load-library "sql-indent")))
 (add-hook 'sql-mode-hook 'load-sql-mode-accessories)
 (setq auto-mode-alist (cons '("\\.sql$" . sql-mode) auto-mode-alist))
 

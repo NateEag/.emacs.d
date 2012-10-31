@@ -20,7 +20,7 @@ Note that a lot of these aren't emacs-specific - they're just things I wish my e
 wrap them to an appropriate width, choosing break positions based on the
 current language's syntax table.
 
--I'd like to display the current named block in my modeline. So, in Python, if I'm editing method foobar of class Testing, my modeline would have 'Block: Testing.foobar' in it. Problem is that it could easily extend past the number of characters I have available in the modeline; a variable that sets how many characters it will use would do the job, though.
+-I'd like to display the current named block in my modeline. So, in Python, if I'm editing method foobar of class Testing, my modeline would have 'Block: Testing.foobar' in it. Problem is that it could easily extend past the number of characters I have available in the modeline; a variable that sets how many characters it will use would do the job, though. To do this: http://www.masteringemacs.org/articles/2011/11/19/which-function-mode/
 
 -Find/use a PHP mode that isn't teh suck. The Aquamacs default is awful. Further research indicates that this is a common complaint: http://www.emacswiki.org/emacs-pt/PhpMode
 

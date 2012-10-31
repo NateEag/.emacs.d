@@ -331,8 +331,9 @@
 
 ;; If we're running in a window system, start an emacs server, so emacsclient
 ;; can connect to this instance.
-(if window-system
+(when (display-graphic-p)
     (server-start))
+
 (custom-set-variables
   ;; custom-set-variables was added by Custom.
   ;; If you edit it by hand, you could mess it up, so be careful.

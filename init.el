@@ -80,6 +80,10 @@
     ad-do-it))
 (ad-activate 'hack-dir-local-variables)
 
+;; Show current function in modeline.
+(require 'which-func)
+(add-to-list 'which-func-modes 'python-mode 'php-mode)
+
 ;; I generally prefer to strip trailing whitespace on saves.
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 

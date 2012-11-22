@@ -1,7 +1,3 @@
-Until I get my task tracker semi-workable, I'm going to keep the list of things I wish my emacs rig did as a simple TODO file.
-
-Note that a lot of these aren't emacs-specific - they're just things I wish my editor would do. elisp is Turing-complete, though, even if it's not a great language overall...
-
 -It would be really sweet to get yasnippet's bracket placement to do the Right Thing based on major-mode, placing them on the newline or on the same line intelligently. I'm guessing that can be achieved by applying elisp to the templates. This was inspired by making changes to the php-mode snippets to do bracket placement the way I like. Someone's done some work that was approved of by another guy on the yasnippet blog, and they've said any extensions would not be accepted into yasnippet: http://comments.gmane.org/gmane.emacs.yasnippet.devel/403
 
 -I'd like yasnippets for JavaScript.

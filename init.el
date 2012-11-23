@@ -158,6 +158,18 @@
 (require 'autopair)
 (autopair-global-mode t)
 
+;; Use more readable colors for diff-mode.
+(defun update-diff-colors ()
+  "update the colors for diff faces"
+  (set-face-attribute 'diff-added nil
+                      :foreground "darkgreen" :background "grey80")
+  (set-face-attribute 'diff-removed nil
+                      :foreground "darkred" :background "grey80")
+  (set-face-attribute 'diff-changed nil
+                      :foreground "darkgreen" :background "grey80"))
+(eval-after-load "diff-mode"
+  '(update-diff-colors))
+
 
 ;; Random functions worth having around.
 

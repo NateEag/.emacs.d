@@ -40,8 +40,6 @@ current language's syntax table.
 
 -Get tab behaving properly. That means calling yasnippet/code-completion as appropriate, indentation when appropriate, retaining minibuffer autocompletion, and Shift-Tab cycling backwards through autocompletions (I really want that, for reasons I don't quite understand). Looks like this page on the EmacsWiki summarizes most of the options: http://www.emacswiki.org/emacs/TabCompletion
 
--Get standard (red and green) font-lock settings for diff-mode.el.
-
 -This is long-term, since my task tracker doesn't exist yet, but I'd like to hack up a basic minor-mode for it, if it ever gets far enough for that to be useful. Subtle hints when a name/block has annotations (toggleable, of course), easy keystroke to view the associated annotation/task, easy way to create annotations/attach existing annotations to some code... I should probably do this in elisp, not because it's the right thing from an engineering perspective, but because it would force me to learn a lot about the language. It'd be annoying to have to do all the work again in elisp, though, and there is Pymacs...
 
 -When I'm yanking something into an indented block, python-mode ought to assume that I want it indented to that block's depth and adjust the leading whitespace for each line accordingly. This applies to indentation in general; it might work in most modes, for all I know. With Python, there's the perennial problem of no delimiters; it's not necessarily right to go to the highest possible indentation on a newline. For yanking, though, I'll bet it's the right call most of the time. If it's not, you're just an indent command away from having the right depth.

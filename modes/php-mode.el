@@ -2,16 +2,19 @@
 
 ;; Copyright (C) 1999, 2000, 2001, 2003, 2004 Turadg Aleahmad
 ;;               2008 Aaron S. Hawley
+;;               2011, 2012 Eric James Michael Ritz
 
-;; Maintainer: Aaron S. Hawley <ashawley at users.sourceforge.net>
-;; Author: Turadg Aleahmad, 1999-2004
+;; Maintainer: Eric James Michael Ritz <lobbyjones at gmail dot com>
+;; Original Author: Turadg Aleahmad, 1999-2004
 ;; Keywords: php languages oop
 ;; Created: 1999-05-17
-;; Modified: 2008-11-04
-;; X-URL:   http://php-mode.sourceforge.net/
+;; X-URL:   https://github.com/ejmr/php-mode
 
-(defconst php-mode-version-number "1.5.0"
+(defconst php-mode-version-number "1.7"
   "PHP Mode version number.")
+
+(defconst php-mode-modified "2012-10-15"
+  "PHP Mode build date.")
 
 ;;; License
 
@@ -51,56 +54,16 @@
 
 ;;; Commentary:
 
-;; PHP mode is a major mode for editing PHP 3 and 4 source code.  It's
-;; an extension of C mode; thus it inherits all C mode's navigation
-;; functionality.  But it colors according to the PHP grammar and indents
-;; according to the PEAR coding guidelines.  It also includes a couple
-;; handy IDE-type features such as documentation search and a source
-;; and class browser.
-
-;;; Contributors: (in chronological order)
-
-;; Juanjo, Torsten Martinsen, Vinai Kopp, Sean Champ, Doug Marcey,
-;; Kevin Blake, Rex McMaster, Mathias Meyer, Boris Folgmann, Roland
-;; Rosenfeld, Fred Yankowski, Craig Andrews, John Keller, Ryan
-;; Sammartino, ppercot, Valentin Funk, Stig Bakken, Gregory Stark,
-;; Chris Morris, Nils Rennebarth, Gerrit Riessen, Eric Mc Sween,
-;; Ville Skytta, Giacomo Tesio, Lennart Borgman, Stefan Monnier,
-;; Aaron S. Hawley, Ian Eure, Bill Lovett, Dias Badekas, David House
-
-;;; Changelog:
-
-;; 1.5
-;;   Support function keywords like public, private and the ampersand
-;;   character for function-based commands.  Support abstract, final,
-;;   static, public, private and protected keywords in Imenu.  Fix
-;;   reversed order of Imenu entries.  Use font-lock-preprocessor-face
-;;   for PHP and ASP tags.  Make php-mode-modified a literal value
-;;   rather than a computed string.  Add date and time constants of
-;;   PHP. (Dias Badekas) Fix false syntax highlighting of keywords
-;;   because of underscore character.  Change HTML indentation warning
-;;   to match only HTML at the beginning of the line.  Fix
-;;   byte-compiler warnings.  Clean-up whitespace and audited style
-;;   consistency of code.  Remove conditional bindings and XEmacs code
-;;   that likely does nothing.
-;;
-;; 1.4
-;;   Updated GNU GPL to version 3.  Ported to Emacs 22 (CC mode
-;;   5.31). M-x php-mode-version shows version.  Provide end-of-defun
-;;   beginning-of-defun functionality. Support add-log library.
-;;   Fix __CLASS__ constant (Ian Eure).  Allow imenu to see visibility
-;;   declarations -- "private", "public", "protected". (Bill Lovett)
-;;
-;; 1.3
-;;   Changed the definition of # using a tip from Stefan
-;;   Monnier to correct highlighting and indentation. (Lennart Borgman)
-;;   Changed the highlighting of the HTML part. (Lennart Borgman)
-;;
-;; See the ChangeLog file included with the source package.
-
+;; PHP mode is a major mode for editing PHP source code.  It's an
+;; extension of C mode; thus it inherits all C mode's navigation
+;; functionality.  But it colors according to the PHP grammar and
+;; indents according to the PEAR coding guidelines.  It also includes
+;; a couple handy IDE-type features such as documentation search and a
+;; source and class browser.
 
 ;;; Code:
 
+(require 'add-log)
 (require 'speedbar)
 (require 'font-lock)
 (require 'cc-mode)
@@ -108,28 +71,42 @@
 (require 'custom)
 (require 'etags)
 (eval-when-compile
-  (require 'regexp-opt))
+  (require 'regexp-opt)
+  (defvar c-vsemi-status-unknown-p)
+  (defvar syntax-propertize-via-font-lock))
+(require 'flymake)
 
 ;; Local variables
+;;;###autoload
 (defgroup php nil
   "Major mode `php-mode' for editing PHP code."
   :prefix "php-"
   :group 'languages)
+
+(defcustom php-executable "/usr/bin/php"
+  "The location of the PHP executable."
+  :type 'string
+  :group 'php)
 
 (defcustom php-default-face 'default
   "Default face in `php-mode' buffers."
   :type 'face
   :group 'php)
 
+(defcustom php-function-call-face 'default
+  "Default face for function calls in `php-mode' buffers."
+  :type 'face
+  :group 'php)
+
 (defcustom php-speedbar-config t
   "When set to true automatically configures Speedbar to observe PHP files.
-Ignores php-file patterns option; fixed to expression \"\\.\\(inc\\|php[s34]?\\)\""
+Ignores php-file patterns option; fixed to expression \"\\.\\(inc\\|php[s345]?\\)\""
   :type 'boolean
   :set (lambda (sym val)
          (set-default sym val)
          (if (and val (boundp 'speedbar))
              (speedbar-add-supported-extension
-              "\\.\\(inc\\|php[s34]?\\|phtml\\)")))
+              "\\.\\(inc\\|php[s345]?\\|phtml\\)")))
   :group 'php)
 
 (defcustom php-mode-speedbar-open nil
@@ -139,24 +116,61 @@ Turning this on will open it whenever `php-mode' is loaded."
   :set (lambda (sym val)
          (set-default sym val)
          (when val
-           (speedbar 1)))
+             (speedbar 1)))
   :group 'php)
 
+(defun php-create-regexp-for-method (type)
+  "Accepts a `type' of function as a string, e.g. 'public' or 'private',
+and returns a regexp that will match that type of function."
+  (concat
+   ;; Initial space with possible 'abstract' or 'final' keywords
+   "^\\s-*\\(?:\\(?:abstract\\|final\\)\\s-+\\)?"
+   ;; The function type
+   type
+   ;; Is it static?
+   "\\s-+\\(?:static\\s-+\\)?"
+   ;; Make sure 'function' comes next with some space after
+   "function\\s-+"
+   ;; Capture the name as the first group and the regexp and make sure
+   ;; by the end we see the opening parenthesis for the parameters.
+   "\\(\\(?:\\sw\\|\\s_\\)+\\)\\s-*("))
+
+(defun php-create-regexp-for-classlike (type)
+  "Accepts a `type' of a 'classlike' object as a string, such as
+'class' or 'interface', and returns a regexp as a string which
+can be used to match against definitions for that classlike."
+  (concat
+   ;; First see if 'abstract' or 'final' appear, although really these
+   ;; are not valid for all values of `type' that the function
+   ;; accepts.
+   "^\\s-*\\(?:\\(?:abstract\\|final\\)\\s-+\\)?"
+   ;; The classlike type
+   type
+   ;; Its name, which is the first captured group in the regexp.  We
+   ;; allow backslashes in the name to handle namespaces, but again
+   ;; this is not necessarily correct for all values of `type'.
+   "\\s-+\\(\\(?:\\sw\\|\\\\\\|\\s_\\)+\\)"))
+
 (defvar php-imenu-generic-expression
-  '(
-    ("Private Methods"
-     "^\\s-*\\(?:\\(?:abstract\\|final\\)\\s-+\\)?private\\s-+\\(?:static\\s-+\\)?function\\s-+\\(\\(?:\\sw\\|\\s_\\)+\\)\\s-*(" 1)
-    ("Protected Methods"
-     "^\\s-*\\(?:\\(?:abstract\\|final\\)\\s-+\\)?protected\\s-+\\(?:static\\s-+\\)?function\\s-+\\(\\(?:\\sw\\|\\s_\\)+\\)\\s-*(" 1)
-    ("Public Methods"
-     "^\\s-*\\(?:\\(?:abstract\\|final\\)\\s-+\\)?public\\s-+\\(?:static\\s-+\\)?function\\s-+\\(\\(?:\\sw\\|\\s_\\)+\\)\\s-*(" 1)
-    ("Classes"
-     "^\\s-*class\\s-+\\(\\(?:\\sw\\|\\s_\\)+\\)\\s-*" 1)
-    ("All Functions"
-     "^\\s-*\\(?:\\(?:abstract\\|final\\|private\\|protected\\|public\\|static\\)\\s-+\\)*function\\s-+\\(\\(?:\\sw\\|\\s_\\)+\\)\\s-*(" 1)
-    )
-  "Imenu generic expression for PHP Mode.  See `imenu-generic-expression'."
-  )
+  `(("Namespaces"
+    ,(php-create-regexp-for-classlike "namespace") 1)
+   ("Classes"
+    ,(php-create-regexp-for-classlike "class") 1)
+   ("Interfaces"
+    ,(php-create-regexp-for-classlike "interface") 1)
+   ("Traits"
+    ,(php-create-regexp-for-classlike "trait") 1)
+   ("Private Methods"
+    ,(php-create-regexp-for-method "private") 1)
+   ("Protected Methods"
+    ,(php-create-regexp-for-method "protected")  1)
+   ("Public Methods"
+    ,(php-create-regexp-for-method "public") 1)
+   ("Anonymous Functions"
+    "\\<\\(\\(?:\\sw\\|\\s_\\)+\\)\\s-*=\\s-*function\\s-*(" 1)
+   ("Named Functions"
+    "^\\s-*function\\s-+\\(\\(?:\\sw\\|\\s_\\)+\\)\\s-*(" 1))
+ "Imenu generic expression for PHP Mode. See `imenu-generic-expression'.")
 
 (defcustom php-manual-url "http://www.php.net/manual/en/"
   "URL at which to find PHP manual.
@@ -180,7 +194,10 @@ You can replace \"en\" with your ISO language code."
   :group 'php)
 
 ;;;###autoload
-(defcustom php-file-patterns '("\\.php[s34]?\\'" "\\.phtml\\'" "\\.inc\\'")
+(add-to-list 'interpreter-mode-alist (cons "php" 'php-mode))
+
+;;;###autoload
+(defcustom php-file-patterns '("\\.php[s345t]?\\'" "\\.phtml\\'" "\\.inc\\'")
   "List of file patterns for which to automatically invoke `php-mode'."
   :type '(repeat (regexp :tag "Pattern"))
   :set (lambda (sym val)
@@ -207,16 +224,22 @@ You can replace \"en\" with your ISO language code."
 Turning this on will force PEAR rules on all PHP files."
   :type 'boolean
   :group 'php)
-
-(defconst php-mode-modified "2008-11-04"
-  "PHP Mode build date.")
 
+(defcustom php-mode-warn-if-mumamo-off t
+  "Warn once per buffer if you try to indent a buffer without
+mumamo-mode turned on. Detects if there are any HTML tags in the
+buffer before warning, but this is is not very smart; e.g. if you
+have any tags inside a PHP string, it will be fooled."
+  :type '(choice (const :tag "Warg" t) (const "Don't warn" nil))
+  :group 'php)
+
+
 (defun php-mode-version ()
   "Display string describing the version of PHP mode."
   (interactive)
   (message "PHP mode %s of %s"
            php-mode-version-number php-mode-modified))
-
+
 (defconst php-beginning-of-defun-regexp
   "^\\s-*\\(?:\\(?:abstract\\|final\\|private\\|protected\\|public\\|static\\)\\s-+\\)*function\\s-+&?\\(\\(?:\\sw\\|\\s_\\)+\\)\\s-*("
   "Regular expression for a PHP function.")
@@ -239,7 +262,7 @@ Implements PHP version of `beginning-of-defun-function'."
         (if (eq opoint (point))
             (re-search-forward php-beginning-of-defun-regexp
                                nil 'noerror))
-        (setq arg (1+ arg))))))
+	(setq arg (1+ arg))))))
 
 (defun php-end-of-defun (&optional arg)
   "Move the end of the ARGth PHP function from point.
@@ -251,47 +274,112 @@ See `php-beginning-of-defun'."
 
 
 (defvar php-warned-bad-indent nil)
-(make-variable-buffer-local 'php-warned-bad-indent)
 
 ;; Do it but tell it is not good if html tags in buffer.
 (defun php-check-html-for-indentation ()
   (let ((html-tag-re "^\\s-*</?\\sw+.*?>")
         (here (point)))
-    (if (not (or (re-search-forward html-tag-re (line-end-position) t)
-                 (re-search-backward html-tag-re (line-beginning-position) t)))
-        t
+    (goto-char (line-beginning-position))
+    (if (or (when (boundp 'mumamo-multi-major-mode) mumamo-multi-major-mode)
+            ;; Fix-me: no idea how to check for mmm or multi-mode
+            (save-match-data
+              (not (or (re-search-forward html-tag-re (line-end-position) t)
+                       (re-search-backward html-tag-re (line-beginning-position) t)))))
+        (progn
+          (goto-char here)
+          t)
       (goto-char here)
       (setq php-warned-bad-indent t)
-      (lwarn 'php-indent :warning
-             "\n\t%s\n\t%s\n\t%s\n"
-             "Indentation fails badly with mixed HTML and PHP."
-             "Look for an Emacs Lisp library that supports \"multiple"
-             "major modes\" like mumamo, mmm-mode or multi-mode.")
-      nil)))
+      (let* ((known-multi-libs '(("mumamo" mumamo (lambda () (nxhtml-mumamo)))
+                                 ("mmm-mode" mmm-mode (lambda () (mmm-mode 1)))
+                                 ("multi-mode" multi-mode (lambda () (multi-mode 1)))))
+             (known-names (mapcar (lambda (lib) (car lib)) known-multi-libs))
+             (available-multi-libs (delq nil
+                                         (mapcar
+                                          (lambda (lib)
+                                            (when (locate-library (car lib)) lib))
+                                          known-multi-libs)))
+             (available-names (mapcar (lambda (lib) (car lib)) available-multi-libs))
+             (base-msg
+              (concat
+               "Indentation fails badly with mixed HTML/PHP in the HTML part in
+pla�n `php-mode'.  To get indentation to work you must use an
+Emacs library that supports 'multiple major modes' in a buffer.
+Parts of the buffer will then be in `php-mode' and parts in for
+example `html-mode'.  Known such libraries are:\n\t"
+               (mapconcat 'identity known-names ", ")
+               "\n"
+               (if available-multi-libs
+                   (concat
+                    "You have these available in your `load-path':\n\t"
+                    (mapconcat 'identity available-names ", ")
+                    "\n\n"
+                    "Do you want to turn any of those on? ")
+                 "You do not have any of those in your `load-path'.")))
+             (is-using-multi
+              (catch 'is-using
+                (dolist (lib available-multi-libs)
+                  (when (and (boundp (cadr lib))
+                             (symbol-value (cadr lib)))
+                    (throw 'is-using t))))))
+        (unless is-using-multi
+          (if available-multi-libs
+              (if (not (y-or-n-p base-msg))
+                  (message "Did not do indentation, but you can try again now if you want")
+                (let* ((name
+                        (if (= 1 (length available-multi-libs))
+                            (car available-names)
+                          ;; Minibuffer window is more than one line, fix that first:
+                          (message "")
+                          (completing-read "Choose multiple major mode support library: "
+                                           available-names nil t
+                                           (car available-names)
+                                           '(available-names . 1)
+                                           )))
+                       (mode (when name
+                               (caddr (assoc name available-multi-libs)))))
+                  (when mode
+                    ;; Minibuffer window is more than one line, fix that first:
+                    (message "")
+                    (load name)
+                    (funcall mode))))
+            (lwarn 'php-indent :warning base-msg)))
+        nil))))
 
 (defun php-cautious-indent-region (start end &optional quiet)
-  (if (or php-warned-bad-indent
+  (if (or (not php-mode-warn-if-mumamo-off)
+          php-warned-bad-indent
           (php-check-html-for-indentation))
       (funcall 'c-indent-region start end quiet)))
 
 (defun php-cautious-indent-line ()
-  (if (or php-warned-bad-indent
+  (if (or (not php-mode-warn-if-mumamo-off)
+          php-warned-bad-indent
           (php-check-html-for-indentation))
-      (funcall 'c-indent-line)))
-
+      (let ((here (point))
+            doit)
+        (move-beginning-of-line nil)
+        ;; Don't indent heredoc end mark
+        (save-match-data
+          (unless (looking-at "[a-zA-Z0-9_]+;\n")
+            (setq doit t)))
+        (goto-char here)
+        (when doit
+          (funcall 'c-indent-line)))))
+
 (defconst php-tags '("<?php" "?>" "<?" "<?="))
 (defconst php-tags-key (regexp-opt php-tags))
 
 (defconst php-block-stmt-1-kwds '("do" "else" "finally" "try"))
 (defconst php-block-stmt-2-kwds
-  '("for" "if" "while" "switch" "foreach" "elseif" "catch all"))
+  '("for" "if" "while" "switch" "foreach" "elseif"  "catch all"))
 
 (defconst php-block-stmt-1-key
   (regexp-opt php-block-stmt-1-kwds))
 (defconst php-block-stmt-2-key
   (regexp-opt php-block-stmt-2-kwds))
 
-(defconst php-class-decl-kwds '("class" "interface"))
+(defconst php-class-decl-kwds '("class" "interface" "trait" "namespace"))
 
 (defconst php-class-key
   (concat
@@ -300,36 +388,76 @@ See `php-beginning-of-defun'."
    "\\(\\s-+extends\\s-+" (c-lang-const c-symbol-key c) "\\)?" ;; Name of superclass.
    "\\(\\s-+implements\\s-+[^{]+{\\)?")) ;; List of any adopted protocols.
 
+
+(defun php-c-at-vsemi-p (&optional pos)
+  "Return t on html lines (including php region border), otherwise nil.
+POS is a position on the line in question.
+
+This is was done due to the problem reported here:
+
+  URL `https://answers.launchpad.net/nxhtml/+question/43320'"
+  (setq pos (or pos (point)))
+  (let ((here (point))
+        ret)
+  (save-match-data
+    (goto-char pos)
+    (beginning-of-line)
+    (setq ret (looking-at
+               (rx
+                (or (seq
+                     bol
+                     (0+ space)
+                     "<"
+                     (in "a-z\\?"))
+                    (seq
+                     (0+ not-newline)
+                     (in "a-z\\?")
+                     ">"
+                     (0+ space)
+                     eol))))))
+  (goto-char here)
+  ret))
+
+(defun php-c-vsemi-status-unknown-p ()
+  "See `php-c-at-vsemi-p'."
+  )
+
+(defun php-lineup-arglist-intro (langelem)
+  (save-excursion
+    (goto-char (cdr langelem))
+    (vector (+ (current-column) c-basic-offset))))
+
+(defun php-lineup-arglist-close (langelem)
+  (save-excursion
+    (goto-char (cdr langelem))
+    (vector (current-column))))
+
+(c-set-offset 'arglist-intro 'php-lineup-arglist-intro)
+(c-set-offset 'arglist-close 'php-lineup-arglist-close)
+
 ;;;###autoload
 (define-derived-mode php-mode c-mode "PHP"
   "Major mode for editing PHP code.\n\n\\{php-mode-map}"
   (c-add-language 'php-mode 'c-mode)
 
-;; PHP doesn't have C-style macros.
-;; HACK: Overwrite this syntax with rules to match <?php and others.
-;;   (c-lang-defconst c-opt-cpp-start php php-tags-key)
-;;   (c-lang-defvar c-opt-cpp-start (c-lang-const c-opt-cpp-start))
+  ;; PHP doesn't have C-style macros.
+  ;; HACK: Overwrite this syntax with rules to match <?php and others.
   (set (make-local-variable 'c-opt-cpp-start) php-tags-key)
-;;   (c-lang-defconst c-opt-cpp-start php php-tags-key)
-;;   (c-lang-defvar c-opt-cpp-start (c-lang-const c-opt-cpp-start))
   (set (make-local-variable 'c-opt-cpp-prefix) php-tags-key)
 
-  (c-set-offset 'cpp-macro 0)
+  ;; These settings ensure that chained method calls line up correctly
+  ;; over multiple lines.
+  (c-set-offset 'topmost-intro-cont 'c-lineup-cascaded-calls)
+  (c-set-offset 'statement-cont 'c-lineup-cascaded-calls)
+  (c-set-offset 'brace-list-entry 'c-lineup-cascaded-calls)
 
-;;   (c-lang-defconst c-block-stmt-1-kwds php php-block-stmt-1-kwds)
-;;   (c-lang-defvar c-block-stmt-1-kwds (c-lang-const c-block-stmt-1-kwds))
   (set (make-local-variable 'c-block-stmt-1-key) php-block-stmt-1-key)
-
-;;   (c-lang-defconst c-block-stmt-2-kwds php php-block-stmt-2-kwds)
-;;   (c-lang-defvar c-block-stmt-2-kwds (c-lang-const c-block-stmt-2-kwds))
   (set (make-local-variable 'c-block-stmt-2-key) php-block-stmt-2-key)
 
   ;; Specify that cc-mode recognize Javadoc comment style
   (set (make-local-variable 'c-doc-comment-style)
-       '((php-mode . javadoc)))
+    '((php-mode . javadoc)))
 
-;;   (c-lang-defconst c-class-decl-kwds
-;;     php php-class-decl-kwds)
   (set (make-local-variable 'c-class-key) php-class-key)
 
   (make-local-variable 'font-lock-defaults)
@@ -339,20 +467,24 @@ See `php-beginning-of-defun'."
            ;; Comment-out the next line if the font-coloring is too
            ;; extreme/ugly for you.
            php-font-lock-keywords-3)
-          nil                               ; KEYWORDS-ONLY
-          t                                 ; CASE-FOLD
-          (("_" . "w"))                    ; SYNTAX-ALIST
-          nil))                             ; SYNTAX-BEGIN
+          nil                ; KEYWORDS-ONLY
+          t                  ; CASE-FOLD
+          (("_" . "w"))      ; SYNTAX-ALIST
+          nil))              ; SYNTAX-BEGIN
 
-  ;; Electric behaviour must be turned off, they do not work since
-  ;; they can not find the correct syntax in embedded PHP.
-  ;;
-  ;; Seems to work with narrowing so let it be on if the user prefers it.
-  ;;(setq c-electric-flag nil)
+  (modify-syntax-entry ?_    "_" php-mode-syntax-table)
+  (modify-syntax-entry ?`    "\"" php-mode-syntax-table)
+  (modify-syntax-entry ?\"   "\"" php-mode-syntax-table)
+
+  (set (make-local-variable 'syntax-propertize-via-font-lock)
+       '(("\\(\"\\)\\(\\\\.\\|[^\"\n\\]\\)*\\(\"\\)" (1 "\"") (3 "\""))
+	 ("\\(\'\\)\\(\\\\.\\|[^\'\n\\]\\)*\\(\'\\)" (1 "\"") (3 "\""))))
 
   (setq font-lock-maximum-decoration t
-        case-fold-search t              ; PHP vars are case-sensitive
         imenu-generic-expression php-imenu-generic-expression)
+
+  ;; PHP vars are case-sensitive
+  (setq case-fold-search t)
 
   ;; Do not force newline at end of file.  Such newlines can cause
   ;; trouble if the PHP file is included in another file before calls
@@ -379,7 +511,11 @@ See `php-beginning-of-defun'."
   (setq indent-line-function 'php-cautious-indent-line)
   (setq indent-region-function 'php-cautious-indent-region)
   (setq c-special-indent-hook nil)
+  (setq c-at-vsemi-p-fn 'php-c-at-vsemi-p)
+  (setq c-vsemi-status-unknown-p 'php-c-vsemi-status-unknown-p)
 
+  (set (make-local-variable 'syntax-begin-function)
+       'c-beginning-of-syntax)
   (set (make-local-variable 'beginning-of-defun-function)
        'php-beginning-of-defun)
   (set (make-local-variable 'end-of-defun-function)
@@ -425,23 +561,24 @@ for \\[find-tag] (which see)."
         completion
         (php-functions (php-completion-table)))
     (if (not pattern) (message "Nothing to complete")
-      (search-backward pattern)
-      (setq beg (point))
-      (forward-char (length pattern))
-      (setq completion (try-completion pattern php-functions nil))
-      (cond ((eq completion t))
-            ((null completion)
-             (message "Can't find completion for \"%s\"" pattern)
-             (ding))
-            ((not (string= pattern completion))
-             (delete-region beg (point))
-             (insert completion))
-            (t
-             (message "Making completion list...")
-             (with-output-to-temp-buffer "*Completions*"
-               (display-completion-list
-                (all-completions pattern php-functions)))
-             (message "Making completion list...%s" "done"))))))
+        (if (not (search-backward pattern nil t))
+            (message "Can't complete here")
+          (setq beg (point))
+          (forward-char (length pattern))
+          (setq completion (try-completion pattern php-functions nil))
+          (cond ((eq completion t))
+                ((null completion)
+                 (message "Can't find completion for \"%s\"" pattern)
+                 (ding))
+                ((not (string= pattern completion))
+                 (delete-region beg (point))
+                 (insert completion))
+                (t
+                 (message "Making completion list...")
+                 (with-output-to-temp-buffer "*Completions*"
+                   (display-completion-list
+                    (all-completions pattern php-functions)))
+                 (message "Making completion list...%s" "done")))))))
 
 (defun php-completion-table ()
   "Build variable `php-completion-table' on demand.
@@ -476,8 +613,7 @@ current `tags-file-name'."
 (defun php-build-table-from-file (filename)
   (let ((table (make-vector 1022 0))
         (buf (find-file-noselect filename)))
-    (save-excursion
-      (set-buffer buf)
+    (with-current-buffer buf
       (goto-char (point-min))
       (while (re-search-forward
               "^\\([-a-zA-Z0-9_.]+\\)\n"
@@ -528,8 +664,7 @@ current `tags-file-name'."
   (let* ((tagname (php-get-pattern))
          (buf (find-tag-noselect tagname nil nil))
          arglist)
-    (save-excursion
-      (set-buffer buf)
+    (with-current-buffer buf
       (goto-char (point-min))
       (when (re-search-forward
              (format "function\\s-+%s\\s-*(\\([^{]*\\))" tagname)
@@ -540,11 +675,36 @@ current `tags-file-name'."
         (message "Arglist for %s: %s" tagname arglist)
         (message "Unknown function: %s" tagname))))
 
+(defun php-search-local-documentation ()
+  "Search the local PHP documentation (i.e. in `php-manual-path')
+for the word at point.  The function returns t if the requested
+documentation exists, and nil otherwise."
+  (interactive)
+  (flet ((php-function-file-for (name)
+                                (expand-file-name
+                                 (format "function.%s.html"
+                                         (replace-regexp-in-string "_" "-" name))
+                                 php-manual-path)))
+    (let ((doc-file (php-function-file-for (current-word))))
+      (and (file-exists-p doc-file)
+           (browse-url doc-file)
+           t))))
+
 ;; Define function documentation function
 (defun php-search-documentation ()
-  "Search PHP documentation for the word at point."
+  "Search PHP documentation for the word at point.  If
+`php-manual-path' has a non-empty string value then the command
+will first try searching the local documentation.  If the
+requested documentation does not exist it will fallback to
+searching the PHP website."
   (interactive)
-  (browse-url (concat php-search-url (current-word t))))
+  (flet ((php-search-web-documentation ()
+                                       (browse-url (concat php-search-url (current-word)))))
+    (if (and (stringp php-manual-path)
+             (not (string= php-manual-path "")))
+        (or (php-search-local-documentation)
+            (php-search-web-documentation))
+      (php-search-web-documentation))))
 
 ;; Define function for browsing manual
 (defun php-browse-manual ()
@@ -571,21 +731,54 @@ current `tags-file-name'."
 (define-key php-mode-map
   '[(control .)]
   'php-show-arglist)
+
+;; Use the Emacs standard indentation binding. This may upset c-mode
+;; which does not follow this at the moment, but I see no better
+;; choice.
+(define-key php-mode-map [?\t] 'indent-for-tab-command)
 
 (defconst php-constants
   (eval-when-compile
     (regexp-opt
      '(;; core constants
-       "__LINE__" "__FILE__"
-       "__FUNCTION__" "__CLASS__" "__METHOD__"
+       "__LINE__" "__FILE__" "__DIR__"
+       "__FUNCTION__" "__CLASS__" "__TRAIT__" "__METHOD__"
+       "__NAMESPACE__"
+       "__COMPILER_HALT_OFFSET__"
        "PHP_OS" "PHP_VERSION"
+       "PHP_MINOR_VERSION" "PHP_MAJOR_VERSION" "PHP_RELEASE_VERSION"
+       "PHP_VERSION_ID" "PHP_EXTRA_VERSION"
        "TRUE" "FALSE" "NULL"
        "E_ERROR" "E_NOTICE" "E_PARSE" "E_WARNING" "E_ALL" "E_STRICT"
        "E_USER_ERROR" "E_USER_WARNING" "E_USER_NOTICE"
+       "E_CORE_ERROR" "E_CORE_WARNING"
+       "E_COMPILE_ERROR" "E_COMPILE_WARNING"
+       "E_DEPRECATED" "E_USER_DEPRECATED"
        "DEFAULT_INCLUDE_PATH" "PEAR_INSTALL_DIR" "PEAR_EXTENSION_DIR"
        "PHP_BINDIR" "PHP_LIBDIR" "PHP_DATADIR" "PHP_SYSCONFDIR"
        "PHP_LOCALSTATEDIR" "PHP_CONFIG_FILE_PATH"
        "PHP_EOL"
+       "PHP_ZTS"
+       "PHP_DEBUG"
+       "PHP_MAXPATHLEN"
+       "PHP_SAPI"
+       "PHP_INT_MAX" "PHP_INT_SIZE"
+       "PHP_EXTENSION_DIR"
+       "PHP_PREFIX"
+       "PHP_MANDIR"
+       "PHP_CONFIG_FILE_SCAN_DIR"
+
+       "PHP_WINDOWS_VERSION_MAJOR"
+       "PHP_WINDOWS_VERSION_MINOR"
+       "PHP_WINDOWS_VERSION_BUILD"
+       "PHP_WINDOWS_VERSION_PLATFORM"
+       "PHP_WINDOWS_VERSION_SP_MAJOR"
+       "PHP_WINDOWS_VERSION_SP_MINOR"
+       "PHP_WINDOWS_VERSION_SUITEMASK"
+       "PHP_WINDOWS_VERSION_PRODUCTTYPE"
+       "PHP_WINDOWS_NT_DOMAIN_CONTROLLER"
+       "PHP_WINDOWS_NT_SERVER"
+       "PHP_WINDOWS_NT_WORKSTATION"
 
        ;; date and time constants
        "DATE_ATOM" "DATE_COOKIE" "DATE_ISO8601"
@@ -594,359 +787,241 @@ current `tags-file-name'."
        "DATE_RSS" "DATE_W3C"
 
        ;; from ext/standard:
-       "EXTR_OVERWRITE" "EXTR_SKIP" "EXTR_PREFIX_SAME"
-       "EXTR_PREFIX_ALL" "EXTR_PREFIX_INVALID" "SORT_ASC" "SORT_DESC"
-       "SORT_REGULAR" "SORT_NUMERIC" "SORT_STRING" "ASSERT_ACTIVE"
-       "ASSERT_CALLBACK" "ASSERT_BAIL" "ASSERT_WARNING"
-       "ASSERT_QUIET_EVAL" "CONNECTION_ABORTED" "CONNECTION_NORMAL"
-       "CONNECTION_TIMEOUT" "M_E" "M_LOG2E" "M_LOG10E" "M_LN2"
-       "M_LN10" "M_PI" "M_PI_2" "M_PI_4" "M_1_PI" "M_2_PI"
-       "M_2_SQRTPI" "M_SQRT2" "M_SQRT1_2" "CRYPT_SALT_LENGTH"
-       "CRYPT_STD_DES" "CRYPT_EXT_DES" "CRYPT_MD5" "CRYPT_BLOWFISH"
-       "DIRECTORY_SEPARATOR" "SEEK_SET" "SEEK_CUR" "SEEK_END"
-       "LOCK_SH" "LOCK_EX" "LOCK_UN" "LOCK_NB" "HTML_SPECIALCHARS"
-       "HTML_ENTITIES" "ENT_COMPAT" "ENT_QUOTES" "ENT_NOQUOTES"
-       "INFO_GENERAL" "INFO_CREDITS" "INFO_CONFIGURATION"
-       "INFO_ENVIRONMENT" "INFO_VARIABLES" "INFO_LICENSE" "INFO_ALL"
-       "CREDITS_GROUP" "CREDITS_GENERAL" "CREDITS_SAPI"
-       "CREDITS_MODULES" "CREDITS_DOCS" "CREDITS_FULLPAGE"
-       "CREDITS_QA" "CREDITS_ALL" "PHP_OUTPUT_HANDLER_START"
-       "PHP_OUTPUT_HANDLER_CONT" "PHP_OUTPUT_HANDLER_END"
-       "STR_PAD_LEFT" "STR_PAD_RIGHT" "STR_PAD_BOTH"
-       "PATHINFO_DIRNAME" "PATHINFO_BASENAME" "PATHINFO_EXTENSION"
-       "CHAR_MAX" "LC_CTYPE" "LC_NUMERIC" "LC_TIME" "LC_COLLATE"
-       "LC_MONETARY" "LC_ALL" "LC_MESSAGES" "LOG_EMERG" "LOG_ALERT"
-       "LOG_CRIT" "LOG_ERR" "LOG_WARNING" "LOG_NOTICE" "LOG_INFO"
-       "LOG_DEBUG" "LOG_KERN" "LOG_USER" "LOG_MAIL" "LOG_DAEMON"
-       "LOG_AUTH" "LOG_SYSLOG" "LOG_LPR" "LOG_NEWS" "LOG_UUCP"
-       "LOG_CRON" "LOG_AUTHPRIV" "LOG_LOCAL0" "LOG_LOCAL1"
-       "LOG_LOCAL2" "LOG_LOCAL3" "LOG_LOCAL4" "LOG_LOCAL5"
-       "LOG_LOCAL6" "LOG_LOCAL7" "LOG_PID" "LOG_CONS" "LOG_ODELAY"
-       "LOG_NDELAY" "LOG_NOWAIT" "LOG_PERROR"
+       "EXTR_OVERWRITE"
+       "EXTR_PREFIX_SAME"
+       "EXTR_PREFIX_INVALID"
+       "EXTR_IF_EXISTS"
+       "SORT_DESC"
+       "SORT_NUMERIC"
+       "CASE_LOWER"
+       "COUNT_NORMAL"
+       "ASSERT_ACTIVE"
+       "ASSERT_BAIL"
+       "ASSERT_QUIET_EVAL"
+       "CONNECTION_NORMAL"
+       "INI_USER"
+       "INI_SYSTEM"
+       "M_E"
+       "M_LOG10E"
+       "M_LN10"
+       "M_PI_2"
+       "M_1_PI"
+       "M_2_SQRTPI"
+       "M_SQRT1_2"
+       "CRYPT_STD_DES"
+       "CRYPT_MD5"
+       "DIRECTORY_SEPARATOR"
+       "SEEK_CUR"
+       "LOCK_SH"
+       "LOCK_UN"
+       "HTML_SPECIALCHARS"
+       "ENT_COMPAT"
+       "ENT_NOQUOTES"
+       "INFO_CREDITS"
+       "INFO_MODULES"
+       "INFO_VARIABLES"
+       "INFO_ALL"
+       "CREDITS_GENERAL"
+       "CREDITS_MODULES"
+       "CREDITS_FULLPAGE"
+       "CREDITS_ALL"
+       "STR_PAD_RIGHT"
+       "PATHINFO_DIRNAME"
+       "PATHINFO_EXTENSION"
+       "CHAR_MAX"
+       "LC_NUMERIC"
+       "LC_COLLATE"
+       "LC_ALL"
+       "ABDAY_1"
+       "ABDAY_3"
+       "ABDAY_5"
+       "ABDAY_7"
+       "DAY_2"
+       "DAY_4"
+       "DAY_6"
+       "ABMON_1"
+       "ABMON_3"
+       "ABMON_5"
+       "ABMON_7"
+       "ABMON_9"
+       "ABMON_11"
+       "MON_1"
+       "MON_3"
+       "MON_5"
+       "MON_7"
+       "MON_9"
+       "MON_11"
+       "AM_STR"
+       "D_T_FMT"
+       "T_FMT"
+       "ERA"
+       "ERA_D_T_FMT"
+       "ERA_T_FMT"
+       "INT_CURR_SYMBOL"
+       "CRNCYSTR"
+       "MON_THOUSANDS_SEP"
+       "POSITIVE_SIGN"
+       "INT_FRAC_DIGITS"
+       "P_CS_PRECEDES"
+       "N_CS_PRECEDES"
+       "P_SIGN_POSN"
+       "DECIMAL_POINT"
+       "THOUSANDS_SEP"
+       "GROUPING"
+       "NOEXPR"
+       "NOSTR"
+       "LOG_EMERG"
+       "LOG_CRIT"
+       "LOG_WARNING"
+       "LOG_INFO"
+       "LOG_KERN"
+       "LOG_MAIL"
+       "LOG_AUTH"
+       "LOG_LPR"
+       "LOG_UUCP"
+       "LOG_AUTHPRIV"
+       "LOG_LOCAL1"
+       "LOG_LOCAL3"
+       "LOG_LOCAL5"
+       "LOG_LOCAL7"
+       "LOG_CONS"
+       "LOG_NDELAY"
+       "LOG_PERROR"
 
-       ;; Disabled by default because they slow buffer loading
-       ;; If you have use for them, uncomment the strings
-       ;; that you want colored.
-       ;; To compile, you may have to increase 'max-specpdl-size'
+       ; Filter constants
+       "INPUT_POST"
+       "INPUT_GET"
+       "INPUT_COOKIE"
+       "INPUT_ENV"
+       "INPUT_SERVER"
+       "INPUT_SESSION"
+       "INPUT_REQUEST"
+       "FILTER_FLAG_NONE"
+       "FILTER_REQUIRE_SCALAR"
+       "FILTER_REQUIRE_ARRAY"
+       "FILTER_FORCE_ARRAY"
+       "FILTER_NULL_ON_FAILURE"
+       "FILTER_VALIDATE_INT"
+       "FILTER_VALIDATE_BOOLEAN"
+       "FILTER_VALIDATE_FLOAT"
+       "FILTER_VALIDATE_REGEXP"
+       "FILTER_VALIDATE_URL"
+       "FILTER_VALIDATE_EMAIL"
+       "FILTER_VALIDATE_IP"
+       "FILTER_DEFAULT"
+       "FILTER_UNSAFE_RAW"
+       "FILTER_SANITIZE_STRING"
+       "FILTER_SANITIZE_STRIPPED"
+       "FILTER_SANITIZE_ENCODED"
+       "FILTER_SANITIZE_SPECIAL_CHARS"
+       "FILTER_SANITIZE_EMAIL"
+       "FILTER_SANITIZE_URL"
+       "FILTER_SANITIZE_NUMBER_INT"
+       "FILTER_SANITIZE_NUMBER_FLOAT"
+       "FILTER_SANITIZE_MAGIC_QUOTES"
+       "FILTER_CALLBACK"
+       "FILTER_FLAG_ALLOW_OCTAL"
+       "FILTER_FLAG_ALLOW_HEX"
+       "FILTER_FLAG_STRIP_LOW"
+       "FILTER_FLAG_STRIP_HIGH"
+       "FILTER_FLAG_ENCODE_LOW"
+       "FILTER_FLAG_ENCODE_HIGH"
+       "FILTER_FLAG_ENCODE_AMP"
+       "FILTER_FLAG_NO_ENCODE_QUOTES"
+       "FILTER_FLAG_EMPTY_STRING_NULL"
+       "FILTER_FLAG_ALLOW_FRACTION"
+       "FILTER_FLAG_ALLOW_THOUSAND"
+       "FILTER_FLAG_ALLOW_SCIENTIFIC"
+       "FILTER_FLAG_PATH_REQUIRED"
+       "FILTER_FLAG_QUERY_REQUIRED"
+       "FILTER_FLAG_IPV4"
+       "FILTER_FLAG_IPV6"
+       "FILTER_FLAG_NO_RES_RANGE"
+       "FILTER_FLAG_NO_PRIV_RANGE"
 
-       ;; from other bundled extensions:
-;        "CAL_EASTER_TO_xxx" "VT_NULL" "VT_EMPTY" "VT_UI1" "VT_I2"
-;        "VT_I4" "VT_R4" "VT_R8" "VT_BOOL" "VT_ERROR" "VT_CY" "VT_DATE"
-;        "VT_BSTR" "VT_DECIMAL" "VT_UNKNOWN" "VT_DISPATCH" "VT_VARIANT"
-;        "VT_I1" "VT_UI2" "VT_UI4" "VT_INT" "VT_UINT" "VT_ARRAY"
-;        "VT_BYREF" "CP_ACP" "CP_MACCP" "CP_OEMCP" "CP_SYMBOL"
-;        "CP_THREAD_ACP" "CP_UTF7" "CP_UTF8" "CPDF_PM_NONE"
-;        "CPDF_PM_OUTLINES" "CPDF_PM_THUMBS" "CPDF_PM_FULLSCREEN"
-;        "CPDF_PL_SINGLE" "CPDF_PL_1COLUMN" "CPDF_PL_2LCOLUMN"
-;        "CPDF_PL_2RCOLUMN" "CURLOPT_PORT" "CURLOPT_FILE"
-;        "CURLOPT_INFILE" "CURLOPT_INFILESIZE" "CURLOPT_URL"
-;        "CURLOPT_PROXY" "CURLOPT_VERBOSE" "CURLOPT_HEADER"
-;        "CURLOPT_HTTPHEADER" "CURLOPT_NOPROGRESS" "CURLOPT_NOBODY"
-;        "CURLOPT_FAILONERROR" "CURLOPT_UPLOAD" "CURLOPT_POST"
-;        "CURLOPT_FTPLISTONLY" "CURLOPT_FTPAPPEND" "CURLOPT_NETRC"
-;        "CURLOPT_FOLLOWLOCATION" "CURLOPT_FTPASCII" "CURLOPT_PUT"
-;        "CURLOPT_MUTE" "CURLOPT_USERPWD" "CURLOPT_PROXYUSERPWD"
-;        "CURLOPT_RANGE" "CURLOPT_TIMEOUT" "CURLOPT_POSTFIELDS"
-;        "CURLOPT_REFERER" "CURLOPT_USERAGENT" "CURLOPT_FTPPORT"
-;        "CURLOPT_LOW_SPEED_LIMIT" "CURLOPT_LOW_SPEED_TIME"
-;        "CURLOPT_RESUME_FROM" "CURLOPT_COOKIE" "CURLOPT_SSLCERT"
-;        "CURLOPT_SSLCERTPASSWD" "CURLOPT_WRITEHEADER"
-;        "CURLOPT_COOKIEFILE" "CURLOPT_SSLVERSION"
-;        "CURLOPT_TIMECONDITION" "CURLOPT_TIMEVALUE"
-;        "CURLOPT_CUSTOMREQUEST" "CURLOPT_STDERR" "CURLOPT_TRANSFERTEXT"
-;        "CURLOPT_RETURNTRANSFER" "CURLOPT_QUOTE" "CURLOPT_POSTQUOTE"
-;        "CURLOPT_INTERFACE" "CURLOPT_KRB4LEVEL"
-;        "CURLOPT_HTTPPROXYTUNNEL" "CURLOPT_FILETIME"
-;        "CURLOPT_WRITEFUNCTION" "CURLOPT_READFUNCTION"
-;        "CURLOPT_PASSWDFUNCTION" "CURLOPT_HEADERFUNCTION"
-;        "CURLOPT_MAXREDIRS" "CURLOPT_MAXCONNECTS" "CURLOPT_CLOSEPOLICY"
-;        "CURLOPT_FRESH_CONNECT" "CURLOPT_FORBID_REUSE"
-;        "CURLOPT_RANDOM_FILE" "CURLOPT_EGDSOCKET"
-;        "CURLOPT_CONNECTTIMEOUT" "CURLOPT_SSL_VERIFYPEER"
-;        "CURLOPT_CAINFO" "CURLOPT_BINARYTRANSER"
-;        "CURLCLOSEPOLICY_LEAST_RECENTLY_USED" "CURLCLOSEPOLICY_OLDEST"
-;        "CURLINFO_EFFECTIVE_URL" "CURLINFO_HTTP_CODE"
-;        "CURLINFO_HEADER_SIZE" "CURLINFO_REQUEST_SIZE"
-;        "CURLINFO_TOTAL_TIME" "CURLINFO_NAMELOOKUP_TIME"
-;        "CURLINFO_CONNECT_TIME" "CURLINFO_PRETRANSFER_TIME"
-;        "CURLINFO_SIZE_UPLOAD" "CURLINFO_SIZE_DOWNLOAD"
-;        "CURLINFO_SPEED_DOWNLOAD" "CURLINFO_SPEED_UPLOAD"
-;        "CURLINFO_FILETIME" "CURLE_OK" "CURLE_UNSUPPORTED_PROTOCOL"
-;        "CURLE_FAILED_INIT" "CURLE_URL_MALFORMAT"
-;        "CURLE_URL_MALFORMAT_USER" "CURLE_COULDNT_RESOLVE_PROXY"
-;        "CURLE_COULDNT_RESOLVE_HOST" "CURLE_COULDNT_CONNECT"
-;        "CURLE_FTP_WEIRD_SERVER_REPLY" "CURLE_FTP_ACCESS_DENIED"
-;        "CURLE_FTP_USER_PASSWORD_INCORRECT"
-;        "CURLE_FTP_WEIRD_PASS_REPLY" "CURLE_FTP_WEIRD_USER_REPLY"
-;        "CURLE_FTP_WEIRD_PASV_REPLY" "CURLE_FTP_WEIRD_227_FORMAT"
-;        "CURLE_FTP_CANT_GET_HOST" "CURLE_FTP_CANT_RECONNECT"
-;        "CURLE_FTP_COULDNT_SET_BINARY" "CURLE_PARTIAL_FILE"
-;        "CURLE_FTP_COULDNT_RETR_FILE" "CURLE_FTP_WRITE_ERROR"
-;        "CURLE_FTP_QUOTE_ERROR" "CURLE_HTTP_NOT_FOUND"
-;        "CURLE_WRITE_ERROR" "CURLE_MALFORMAT_USER"
-;        "CURLE_FTP_COULDNT_STOR_FILE" "CURLE_READ_ERROR"
-;        "CURLE_OUT_OF_MEMORY" "CURLE_OPERATION_TIMEOUTED"
-;        "CURLE_FTP_COULDNT_SET_ASCII" "CURLE_FTP_PORT_FAILED"
-;        "CURLE_FTP_COULDNT_USE_REST" "CURLE_FTP_COULDNT_GET_SIZE"
-;        "CURLE_HTTP_RANGE_ERROR" "CURLE_HTTP_POST_ERROR"
-;        "CURLE_SSL_CONNECT_ERROR" "CURLE_FTP_BAD_DOWNLOAD_RESUME"
-;        "CURLE_FILE_COULDNT_READ_FILE" "CURLE_LDAP_CANNOT_BIND"
-;        "CURLE_LDAP_SEARCH_FAILED" "CURLE_LIBRARY_NOT_FOUND"
-;        "CURLE_FUNCTION_NOT_FOUND" "CURLE_ABORTED_BY_CALLBACK"
-;        "CURLE_BAD_FUNCTION_ARGUMENT" "CURLE_BAD_CALLING_ORDER"
-;        "CURLE_HTTP_PORT_FAILED" "CURLE_BAD_PASSWORD_ENTERED"
-;        "CURLE_TOO_MANY_REDIRECTS" "CURLE_UNKOWN_TELNET_OPTION"
-;        "CURLE_TELNET_OPTION_SYNTAX" "CURLE_ALREADY_COMPLETE"
-;        "DBX_MYSQL" "DBX_ODBC" "DBX_PGSQL" "DBX_MSSQL" "DBX_PERSISTENT"
-;        "DBX_RESULT_INFO" "DBX_RESULT_INDEX" "DBX_RESULT_ASSOC"
-;        "DBX_CMP_TEXT" "DBX_CMP_NUMBER" "XML_ELEMENT_NODE"
-;        "XML_ATTRIBUTE_NODE" "XML_TEXT_NODE" "XML_CDATA_SECTION_NODE"
-;        "XML_ENTITY_REF_NODE" "XML_ENTITY_NODE" "XML_PI_NODE"
-;        "XML_COMMENT_NODE" "XML_DOCUMENT_NODE" "XML_DOCUMENT_TYPE_NODE"
-;        "XML_DOCUMENT_FRAG_NODE" "XML_NOTATION_NODE"
-;        "XML_HTML_DOCUMENT_NODE" "XML_DTD_NODE" "XML_ELEMENT_DECL_NODE"
-;        "XML_ATTRIBUTE_DECL_NODE" "XML_ENTITY_DECL_NODE"
-;        "XML_NAMESPACE_DECL_NODE" "XML_GLOBAL_NAMESPACE"
-;        "XML_LOCAL_NAMESPACE" "XML_ATTRIBUTE_CDATA" "XML_ATTRIBUTE_ID"
-;        "XML_ATTRIBUTE_IDREF" "XML_ATTRIBUTE_IDREFS"
-;        "XML_ATTRIBUTE_ENTITY" "XML_ATTRIBUTE_NMTOKEN"
-;        "XML_ATTRIBUTE_NMTOKENS" "XML_ATTRIBUTE_ENUMERATION"
-;        "XML_ATTRIBUTE_NOTATION" "XPATH_UNDEFINED" "XPATH_NODESET"
-;        "XPATH_BOOLEAN" "XPATH_NUMBER" "XPATH_STRING" "XPATH_POINT"
-;        "XPATH_RANGE" "XPATH_LOCATIONSET" "XPATH_USERS" "FBSQL_ASSOC"
-;        "FBSQL_NUM" "FBSQL_BOTH" "FDFValue" "FDFStatus" "FDFFile"
-;        "FDFID" "FDFFf" "FDFSetFf" "FDFClearFf" "FDFFlags" "FDFSetF"
-;        "FDFClrF" "FDFAP" "FDFAS" "FDFAction" "FDFAA" "FDFAPRef"
-;        "FDFIF" "FDFEnter" "FDFExit" "FDFDown" "FDFUp" "FDFFormat"
-;        "FDFValidate" "FDFKeystroke" "FDFCalculate"
-;        "FRIBIDI_CHARSET_UTF8" "FRIBIDI_CHARSET_8859_6"
-;        "FRIBIDI_CHARSET_8859_8" "FRIBIDI_CHARSET_CP1255"
-;        "FRIBIDI_CHARSET_CP1256" "FRIBIDI_CHARSET_ISIRI_3342"
-;        "FTP_ASCII" "FTP_BINARY" "FTP_IMAGE" "FTP_TEXT" "IMG_GIF"
-;        "IMG_JPG" "IMG_JPEG" "IMG_PNG" "IMG_WBMP" "IMG_COLOR_TILED"
-;        "IMG_COLOR_STYLED" "IMG_COLOR_BRUSHED"
-;        "IMG_COLOR_STYLEDBRUSHED" "IMG_COLOR_TRANSPARENT"
-;        "IMG_ARC_ROUNDED" "IMG_ARC_PIE" "IMG_ARC_CHORD"
-;        "IMG_ARC_NOFILL" "IMG_ARC_EDGED" "GMP_ROUND_ZERO"
-;        "GMP_ROUND_PLUSINF" "GMP_ROUND_MINUSINF" "HW_ATTR_LANG"
-;        "HW_ATTR_NR" "HW_ATTR_NONE" "IIS_READ" "IIS_WRITE"
-;        "IIS_EXECUTE" "IIS_SCRIPT" "IIS_ANONYMOUS" "IIS_BASIC"
-;        "IIS_NTLM" "NIL" "OP_DEBUG" "OP_READONLY" "OP_ANONYMOUS"
-;        "OP_SHORTCACHE" "OP_SILENT" "OP_PROTOTYPE" "OP_HALFOPEN"
-;        "OP_EXPUNGE" "OP_SECURE" "CL_EXPUNGE" "FT_UID" "FT_PEEK"
-;        "FT_NOT" "FT_INTERNAL" "FT_PREFETCHTEXT" "ST_UID" "ST_SILENT"
-;        "ST_SET" "CP_UID" "CP_MOVE" "SE_UID" "SE_FREE" "SE_NOPREFETCH"
-;        "SO_FREE" "SO_NOSERVER" "SA_MESSAGES" "SA_RECENT" "SA_UNSEEN"
-;        "SA_UIDNEXT" "SA_UIDVALIDITY" "SA_ALL" "LATT_NOINFERIORS"
-;        "LATT_NOSELECT" "LATT_MARKED" "LATT_UNMARKED" "SORTDATE"
-;        "SORTARRIVAL" "SORTFROM" "SORTSUBJECT" "SORTTO" "SORTCC"
-;        "SORTSIZE" "TYPETEXT" "TYPEMULTIPART" "TYPEMESSAGE"
-;        "TYPEAPPLICATION" "TYPEAUDIO" "TYPEIMAGE" "TYPEVIDEO"
-;        "TYPEOTHER" "ENC7BIT" "ENC8BIT" "ENCBINARY" "ENCBASE64"
-;        "ENCQUOTEDPRINTABLE" "ENCOTHER" "INGRES_ASSOC" "INGRES_NUM"
-;        "INGRES_BOTH" "IBASE_DEFAULT" "IBASE_TEXT" "IBASE_UNIXTIME"
-;        "IBASE_READ" "IBASE_COMMITTED" "IBASE_CONSISTENCY"
-;        "IBASE_NOWAIT" "IBASE_TIMESTAMP" "IBASE_DATE" "IBASE_TIME"
-;        "LDAP_DEREF_NEVER" "LDAP_DEREF_SEARCHING" "LDAP_DEREF_FINDING"
-;        "LDAP_DEREF_ALWAYS" "LDAP_OPT_DEREF" "LDAP_OPT_SIZELIMIT"
-;        "LDAP_OPT_TIMELIMIT" "LDAP_OPT_PROTOCOL_VERSION"
-;        "LDAP_OPT_ERROR_NUMBER" "LDAP_OPT_REFERRALS" "LDAP_OPT_RESTART"
-;        "LDAP_OPT_HOST_NAME" "LDAP_OPT_ERROR_STRING"
-;        "LDAP_OPT_MATCHED_DN" "LDAP_OPT_SERVER_CONTROLS"
-;        "LDAP_OPT_CLIENT_CONTROLS" "GSLC_SSL_NO_AUTH"
-;        "GSLC_SSL_ONEWAY_AUTH" "GSLC_SSL_TWOWAY_AUTH" "MCAL_SUNDAY"
-;        "MCAL_MONDAY" "MCAL_TUESDAY" "MCAL_WEDNESDAY" "MCAL_THURSDAY"
-;        "MCAL_FRIDAY" "MCAL_SATURDAY" "MCAL_JANUARY" "MCAL_FEBRUARY"
-;        "MCAL_MARCH" "MCAL_APRIL" "MCAL_MAY" "MCAL_JUNE" "MCAL_JULY"
-;        "MCAL_AUGUST" "MCAL_SEPTEMBER" "MCAL_OCTOBER" "MCAL_NOVEMBER"
-;        "MCAL_RECUR_NONE" "MCAL_RECUR_DAILY" "MCAL_RECUR_WEEKLY"
-;        "MCAL_RECUR_MONTHLY_MDAY" "MCAL_RECUR_MONTHLY_WDAY"
-;        "MCAL_RECUR_YEARLY" "MCAL_M_SUNDAY" "MCAL_M_MONDAY"
-;        "MCAL_M_TUESDAY" "MCAL_M_WEDNESDAY" "MCAL_M_THURSDAY"
-;        "MCAL_M_FRIDAY" "MCAL_M_SATURDAY" "MCAL_M_WEEKDAYS"
-;        "MCAL_M_WEEKEND" "MCAL_M_ALLDAYS" "MCRYPT_" "MCRYPT_"
-;        "MCRYPT_ENCRYPT" "MCRYPT_DECRYPT" "MCRYPT_DEV_RANDOM"
-;        "MCRYPT_DEV_URANDOM" "MCRYPT_RAND" "SWFBUTTON_HIT"
-;        "SUNFUNCS_RET_STRING" "SUNFUNCS_RET_DOUBLE"
-;        "SWFBUTTON_DOWN" "SWFBUTTON_OVER" "SWFBUTTON_UP"
-;        "SWFBUTTON_MOUSEUPOUTSIDE" "SWFBUTTON_DRAGOVER"
-;        "SWFBUTTON_DRAGOUT" "SWFBUTTON_MOUSEUP" "SWFBUTTON_MOUSEDOWN"
-;        "SWFBUTTON_MOUSEOUT" "SWFBUTTON_MOUSEOVER"
-;        "SWFFILL_RADIAL_GRADIENT" "SWFFILL_LINEAR_GRADIENT"
-;        "SWFFILL_TILED_BITMAP" "SWFFILL_CLIPPED_BITMAP"
-;        "SWFTEXTFIELD_HASLENGTH" "SWFTEXTFIELD_NOEDIT"
-;        "SWFTEXTFIELD_PASSWORD" "SWFTEXTFIELD_MULTILINE"
-;        "SWFTEXTFIELD_WORDWRAP" "SWFTEXTFIELD_DRAWBOX"
-;        "SWFTEXTFIELD_NOSELECT" "SWFTEXTFIELD_HTML"
-;        "SWFTEXTFIELD_ALIGN_LEFT" "SWFTEXTFIELD_ALIGN_RIGHT"
-;        "SWFTEXTFIELD_ALIGN_CENTER" "SWFTEXTFIELD_ALIGN_JUSTIFY"
-;        "UDM_FIELD_URLID" "UDM_FIELD_URL" "UDM_FIELD_CONTENT"
-;        "UDM_FIELD_TITLE" "UDM_FIELD_KEYWORDS" "UDM_FIELD_DESC"
-;        "UDM_FIELD_DESCRIPTION" "UDM_FIELD_TEXT" "UDM_FIELD_SIZE"
-;        "UDM_FIELD_RATING" "UDM_FIELD_SCORE" "UDM_FIELD_MODIFIED"
-;        "UDM_FIELD_ORDER" "UDM_FIELD_CRC" "UDM_FIELD_CATEGORY"
-;        "UDM_PARAM_PAGE_SIZE" "UDM_PARAM_PAGE_NUM"
-;        "UDM_PARAM_SEARCH_MODE" "UDM_PARAM_CACHE_MODE"
-;        "UDM_PARAM_TRACK_MODE" "UDM_PARAM_PHRASE_MODE"
-;        "UDM_PARAM_CHARSET" "UDM_PARAM_STOPTABLE"
-;        "UDM_PARAM_STOP_TABLE" "UDM_PARAM_STOPFILE"
-;        "UDM_PARAM_STOP_FILE" "UDM_PARAM_WEIGHT_FACTOR"
-;        "UDM_PARAM_WORD_MATCH" "UDM_PARAM_MAX_WORD_LEN"
-;        "UDM_PARAM_MAX_WORDLEN" "UDM_PARAM_MIN_WORD_LEN"
-;        "UDM_PARAM_MIN_WORDLEN" "UDM_PARAM_ISPELL_PREFIXES"
-;        "UDM_PARAM_ISPELL_PREFIX" "UDM_PARAM_PREFIXES"
-;        "UDM_PARAM_PREFIX" "UDM_PARAM_CROSS_WORDS"
-;        "UDM_PARAM_CROSSWORDS" "UDM_LIMIT_CAT" "UDM_LIMIT_URL"
-;        "UDM_LIMIT_TAG" "UDM_LIMIT_LANG" "UDM_LIMIT_DATE"
-;        "UDM_PARAM_FOUND" "UDM_PARAM_NUM_ROWS" "UDM_PARAM_WORDINFO"
-;        "UDM_PARAM_WORD_INFO" "UDM_PARAM_SEARCHTIME"
-;        "UDM_PARAM_SEARCH_TIME" "UDM_PARAM_FIRST_DOC"
-;        "UDM_PARAM_LAST_DOC" "UDM_MODE_ALL" "UDM_MODE_ANY"
-;        "UDM_MODE_BOOL" "UDM_MODE_PHRASE" "UDM_CACHE_ENABLED"
-;        "UDM_CACHE_DISABLED" "UDM_TRACK_ENABLED" "UDM_TRACK_DISABLED"
-;        "UDM_PHRASE_ENABLED" "UDM_PHRASE_DISABLED"
-;        "UDM_CROSS_WORDS_ENABLED" "UDM_CROSSWORDS_ENABLED"
-;        "UDM_CROSS_WORDS_DISABLED" "UDM_CROSSWORDS_DISABLED"
-;        "UDM_PREFIXES_ENABLED" "UDM_PREFIX_ENABLED"
-;        "UDM_ISPELL_PREFIXES_ENABLED" "UDM_ISPELL_PREFIX_ENABLED"
-;        "UDM_PREFIXES_DISABLED" "UDM_PREFIX_DISABLED"
-;        "UDM_ISPELL_PREFIXES_DISABLED" "UDM_ISPELL_PREFIX_DISABLED"
-;        "UDM_ISPELL_TYPE_AFFIX" "UDM_ISPELL_TYPE_SPELL"
-;        "UDM_ISPELL_TYPE_DB" "UDM_ISPELL_TYPE_SERVER" "UDM_MATCH_WORD"
-;        "UDM_MATCH_BEGIN" "UDM_MATCH_SUBSTR" "UDM_MATCH_END"
-;        "MSQL_ASSOC" "MSQL_NUM" "MSQL_BOTH" "MYSQL_ASSOC" "MYSQL_NUM"
-;        "MYSQL_BOTH" "MYSQL_USE_RESULT" "MYSQL_STORE_RESULT"
-;        "OCI_DEFAULT" "OCI_DESCRIBE_ONLY" "OCI_COMMIT_ON_SUCCESS"
-;        "OCI_EXACT_FETCH" "SQLT_BFILEE" "SQLT_CFILEE" "SQLT_CLOB"
-;        "SQLT_BLOB" "SQLT_RDD" "OCI_B_SQLT_NTY" "OCI_SYSDATE"
-;        "OCI_B_BFILE" "OCI_B_CFILEE" "OCI_B_CLOB" "OCI_B_BLOB"
-;        "OCI_B_ROWID" "OCI_B_CURSOR" "OCI_B_BIN" "OCI_ASSOC" "OCI_NUM"
-;        "OCI_BOTH" "OCI_RETURN_NULLS" "OCI_RETURN_LOBS"
-;        "OCI_DTYPE_FILE" "OCI_DTYPE_LOB" "OCI_DTYPE_ROWID" "OCI_D_FILE"
-;        "OCI_D_LOB" "OCI_D_ROWID" "ODBC_TYPE" "ODBC_BINMODE_PASSTHRU"
-;        "ODBC_BINMODE_RETURN" "ODBC_BINMODE_CONVERT" "SQL_ODBC_CURSORS"
-;        "SQL_CUR_USE_DRIVER" "SQL_CUR_USE_IF_NEEDED" "SQL_CUR_USE_ODBC"
-;        "SQL_CONCURRENCY" "SQL_CONCUR_READ_ONLY" "SQL_CONCUR_LOCK"
-;        "SQL_CONCUR_ROWVER" "SQL_CONCUR_VALUES" "SQL_CURSOR_TYPE"
-;        "SQL_CURSOR_FORWARD_ONLY" "SQL_CURSOR_KEYSET_DRIVEN"
-;        "SQL_CURSOR_DYNAMIC" "SQL_CURSOR_STATIC" "SQL_KEYSET_SIZE"
-;        "SQL_CHAR" "SQL_VARCHAR" "SQL_LONGVARCHAR" "SQL_DECIMAL"
-;        "SQL_NUMERIC" "SQL_BIT" "SQL_TINYINT" "SQL_SMALLINT"
-;        "SQL_INTEGER" "SQL_BIGINT" "SQL_REAL" "SQL_FLOAT" "SQL_DOUBLE"
-;        "SQL_BINARY" "SQL_VARBINARY" "SQL_LONGVARBINARY" "SQL_DATE"
-;        "SQL_TIME" "SQL_TIMESTAMP" "SQL_TYPE_DATE" "SQL_TYPE_TIME"
-;        "SQL_TYPE_TIMESTAMP" "SQL_BEST_ROWID" "SQL_ROWVER"
-;        "SQL_SCOPE_CURROW" "SQL_SCOPE_TRANSACTION" "SQL_SCOPE_SESSION"
-;        "SQL_NO_NULLS" "SQL_NULLABLE" "SQL_INDEX_UNIQUE"
-;        "SQL_INDEX_ALL" "SQL_ENSURE" "SQL_QUICK"
-;        "X509_PURPOSE_SSL_CLIENT" "X509_PURPOSE_SSL_SERVER"
-;        "X509_PURPOSE_NS_SSL_SERVER" "X509_PURPOSE_SMIME_SIGN"
-;        "X509_PURPOSE_SMIME_ENCRYPT" "X509_PURPOSE_CRL_SIGN"
-;        "X509_PURPOSE_ANY" "PKCS7_DETACHED" "PKCS7_TEXT"
-;        "PKCS7_NOINTERN" "PKCS7_NOVERIFY" "PKCS7_NOCHAIN"
-;        "PKCS7_NOCERTS" "PKCS7_NOATTR" "PKCS7_BINARY" "PKCS7_NOSIGS"
-;        "OPENSSL_PKCS1_PADDING" "OPENSSL_SSLV23_PADDING"
-;        "OPENSSL_NO_PADDING" "OPENSSL_PKCS1_OAEP_PADDING"
-;        "ORA_BIND_INOUT" "ORA_BIND_IN" "ORA_BIND_OUT"
-;        "ORA_FETCHINTO_ASSOC" "ORA_FETCHINTO_NULLS"
-;        "PREG_PATTERN_ORDER" "PREG_SET_ORDER" "PREG_SPLIT_NO_EMPTY"
-;        "PREG_SPLIT_DELIM_CAPTURE"
-;        "PGSQL_ASSOC" "PGSQL_NUM" "PGSQL_BOTH"
-;        "PRINTER_COPIES" "PRINTER_MODE" "PRINTER_TITLE"
-;        "PRINTER_DEVICENAME" "PRINTER_DRIVERVERSION"
-;        "PRINTER_RESOLUTION_Y" "PRINTER_RESOLUTION_X" "PRINTER_SCALE"
-;        "PRINTER_BACKGROUND_COLOR" "PRINTER_PAPER_LENGTH"
-;        "PRINTER_PAPER_WIDTH" "PRINTER_PAPER_FORMAT"
-;        "PRINTER_FORMAT_CUSTOM" "PRINTER_FORMAT_LETTER"
-;        "PRINTER_FORMAT_LEGAL" "PRINTER_FORMAT_A3" "PRINTER_FORMAT_A4"
-;        "PRINTER_FORMAT_A5" "PRINTER_FORMAT_B4" "PRINTER_FORMAT_B5"
-;        "PRINTER_FORMAT_FOLIO" "PRINTER_ORIENTATION"
-;        "PRINTER_ORIENTATION_PORTRAIT" "PRINTER_ORIENTATION_LANDSCAPE"
-;        "PRINTER_TEXT_COLOR" "PRINTER_TEXT_ALIGN" "PRINTER_TA_BASELINE"
-;        "PRINTER_TA_BOTTOM" "PRINTER_TA_TOP" "PRINTER_TA_CENTER"
-;        "PRINTER_TA_LEFT" "PRINTER_TA_RIGHT" "PRINTER_PEN_SOLID"
-;        "PRINTER_PEN_DASH" "PRINTER_PEN_DOT" "PRINTER_PEN_DASHDOT"
-;        "PRINTER_PEN_DASHDOTDOT" "PRINTER_PEN_INVISIBLE"
-;        "PRINTER_BRUSH_SOLID" "PRINTER_BRUSH_CUSTOM"
-;        "PRINTER_BRUSH_DIAGONAL" "PRINTER_BRUSH_CROSS"
-;        "PRINTER_BRUSH_DIAGCROSS" "PRINTER_BRUSH_FDIAGONAL"
-;        "PRINTER_BRUSH_HORIZONTAL" "PRINTER_BRUSH_VERTICAL"
-;        "PRINTER_FW_THIN" "PRINTER_FW_ULTRALIGHT" "PRINTER_FW_LIGHT"
-;        "PRINTER_FW_NORMAL" "PRINTER_FW_MEDIUM" "PRINTER_FW_BOLD"
-;        "PRINTER_FW_ULTRABOLD" "PRINTER_FW_HEAVY" "PRINTER_ENUM_LOCAL"
-;        "PRINTER_ENUM_NAME" "PRINTER_ENUM_SHARED"
-;        "PRINTER_ENUM_DEFAULT" "PRINTER_ENUM_CONNECTIONS"
-;        "PRINTER_ENUM_NETWORK" "PRINTER_ENUM_REMOTE" "PSPELL_FAST"
-;        "PSPELL_NORMAL" "PSPELL_BAD_SPELLERS" "PSPELL_RUN_TOGETHER"
-;        "SID" "SID" "AF_UNIX" "AF_INET" "SOCK_STREAM" "SOCK_DGRAM"
-;        "SOCK_RAW" "SOCK_SEQPACKET" "SOCK_RDM" "MSG_OOB" "MSG_WAITALL"
-;        "MSG_PEEK" "MSG_DONTROUTE" "SO_DEBUG" "SO_REUSEADDR"
-;        "SO_KEEPALIVE" "SO_DONTROUTE" "SO_LINGER" "SO_BROADCAST"
-;        "SO_OOBINLINE" "SO_SNDBUF" "SO_RCVBUF" "SO_SNDLOWAT"
-;        "SO_RCVLOWAT" "SO_SNDTIMEO" "SO_RCVTIMEO" "SO_TYPE" "SO_ERROR"
-;        "SOL_SOCKET" "PHP_NORMAL_READ" "PHP_BINARY_READ"
-;        "PHP_SYSTEM_READ" "SOL_TCP" "SOL_UDP" "MOD_COLOR" "MOD_MATRIX"
-;        "TYPE_PUSHBUTTON" "TYPE_MENUBUTTON" "BSHitTest" "BSDown"
-;        "BSOver" "BSUp" "OverDowntoIdle" "IdletoOverDown"
-;        "OutDowntoIdle" "OutDowntoOverDown" "OverDowntoOutDown"
-;        "OverUptoOverDown" "OverUptoIdle" "IdletoOverUp" "ButtonEnter"
-;        "ButtonExit" "MenuEnter" "MenuExit" "XML_ERROR_NONE"
-;        "XML_ERROR_NO_MEMORY" "XML_ERROR_SYNTAX"
-;        "XML_ERROR_NO_ELEMENTS" "XML_ERROR_INVALID_TOKEN"
-;        "XML_ERROR_UNCLOSED_TOKEN" "XML_ERROR_PARTIAL_CHAR"
-;        "XML_ERROR_TAG_MISMATCH" "XML_ERROR_DUPLICATE_ATTRIBUTE"
-;        "XML_ERROR_JUNK_AFTER_DOC_ELEMENT" "XML_ERROR_PARAM_ENTITY_REF"
-;        "XML_ERROR_UNDEFINED_ENTITY" "XML_ERROR_RECURSIVE_ENTITY_REF"
-;        "XML_ERROR_ASYNC_ENTITY" "XML_ERROR_BAD_CHAR_REF"
-;        "XML_ERROR_BINARY_ENTITY_REF"
-;        "XML_ERROR_ATTRIBUTE_EXTERNAL_ENTITY_REF"
-;        "XML_ERROR_MISPLACED_XML_PI" "XML_ERROR_UNKNOWN_ENCODING"
-;        "XML_ERROR_INCORRECT_ENCODING"
-;        "XML_ERROR_UNCLOSED_CDATA_SECTION"
-;        "XML_ERROR_EXTERNAL_ENTITY_HANDLING" "XML_OPTION_CASE_FOLDING"
-;        "XML_OPTION_TARGET_ENCODING" "XML_OPTION_SKIP_TAGSTART"
-;        "XML_OPTION_SKIP_WHITE" "YPERR_BADARGS" "YPERR_BADDB"
-;        "YPERR_BUSY" "YPERR_DOMAIN" "YPERR_KEY" "YPERR_MAP"
-;        "YPERR_NODOM" "YPERR_NOMORE" "YPERR_PMAP" "YPERR_RESRC"
-;        "YPERR_RPC" "YPERR_YPBIND" "YPERR_YPERR" "YPERR_YPSERV"
-;        "YPERR_VERS" "FORCE_GZIP" "FORCE_DEFLATE"
-
-       ;; PEAR constants
-;        "PEAR_ERROR_RETURN" "PEAR_ERROR_PRINT" "PEAR_ERROR_TRIGGER"
-;        "PEAR_ERROR_DIE" "PEAR_ERROR_CALLBACK" "OS_WINDOWS" "OS_UNIX"
-;        "PEAR_OS" "DB_OK" "DB_ERROR" "DB_ERROR_SYNTAX"
-;        "DB_ERROR_CONSTRAINT" "DB_ERROR_NOT_FOUND"
-;        "DB_ERROR_ALREADY_EXISTS" "DB_ERROR_UNSUPPORTED"
-;        "DB_ERROR_MISMATCH" "DB_ERROR_INVALID" "DB_ERROR_NOT_CAPABLE"
-;        "DB_ERROR_TRUNCATED" "DB_ERROR_INVALID_NUMBER"
-;        "DB_ERROR_INVALID_DATE" "DB_ERROR_DIVZERO"
-;        "DB_ERROR_NODBSELECTED" "DB_ERROR_CANNOT_CREATE"
-;        "DB_ERROR_CANNOT_DELETE" "DB_ERROR_CANNOT_DROP"
-;        "DB_ERROR_NOSUCHTABLE" "DB_ERROR_NOSUCHFIELD"
-;        "DB_ERROR_NEED_MORE_DATA" "DB_ERROR_NOT_LOCKED"
-;        "DB_ERROR_VALUE_COUNT_ON_ROW" "DB_ERROR_INVALID_DSN"
-;        "DB_ERROR_CONNECT_FAILED" "DB_WARNING" "DB_WARNING_READ_ONLY"
-;        "DB_PARAM_SCALAR" "DB_PARAM_OPAQUE" "DB_BINMODE_PASSTHRU"
-;        "DB_BINMODE_RETURN" "DB_BINMODE_CONVERT" "DB_FETCHMODE_DEFAULT"
-;        "DB_FETCHMODE_ORDERED" "DB_FETCHMODE_ASSOC"
-;        "DB_FETCHMODE_FLIPPED" "DB_GETMODE_ORDERED" "DB_GETMODE_ASSOC"
-;        "DB_GETMODE_FLIPPED" "DB_TABLEINFO_ORDER"
-;        "DB_TABLEINFO_ORDERTABLE" "DB_TABLEINFO_FULL"
-
-       )))
+       ;; IMAP constants
+       "NIL"
+       "OP_DEBUG"
+       "OP_READONLY"
+       "OP_ANONYMOUS"
+       "OP_SHORTCACHE"
+       "OP_SILENT"
+       "OP_PROTOTYPE"
+       "OP_HALFOPEN"
+       "OP_EXPUNGE"
+       "OP_SECURE"
+       "CL_EXPUNGE"
+       "FT_UID"
+       "FT_PEEK"
+       "FT_NOT"
+       "FT_INTERNAL"
+       "FT_PREFETCHTEXT"
+       "ST_UID"
+       "ST_SILENT"
+       "ST_SET"
+       "CP_UID"
+       "CP_MOVE"
+       "SE_UID"
+       "SE_FREE"
+       "SE_NOPREFETCH"
+       "SO_FREE"
+       "SO_NOSERVER"
+       "SA_MESSAGES"
+       "SA_RECENT"
+       "SA_UNSEEN"
+       "SA_UIDNEXT"
+       "SA_UIDVALIDITY"
+       "SA_ALL"
+       "LATT_NOINFERIORS"
+       "LATT_NOSELECT"
+       "LATT_MARKED"
+       "LATT_UNMARKED"
+       "SORTDATE"
+       "SORTARRIVAL"
+       "SORTFROM"
+       "SORTSUBJECT"
+       "SORTTO"
+       "SORTCC"
+       "SORTSIZE"
+       "TYPETEXT"
+       "TYPEMULTIPART"
+       "TYPEMESSAGE"
+       "TYPEAPPLCATION"
+       "TYPEAUDIO"
+       "TYPEIMAGE"
+       "TYPEVIDEO"
+       "TYPEOTHER"
+       "ENC7BIT"
+       "ENC8BIT"
+       "ENCBINARY"
+       "ENCBASE64"
+       "ENCQUOTEDPRINTABLE"
+       "ENCOTHER"
+       "IMAP_OPENTIMEOUT"
+       "IMAP_READTIMEOUT"
+       "IMAP_WRITETIMEOUT"
+       "IMAP_CLOSETIMEOUT"
+       "LATT_REFERRAL"
+       "LATT_HASCHILDREN"
+       "LATT_HASNOCHILDREN"
+       "TYPEMODEL"
+       "IMAP_GC_ELT"
+       "IMAP_GC_ENV"
+       "IMAP_GC_TEXTS")))
   "PHP constants.")
 
 (defconst php-keywords
   (eval-when-compile
     (regexp-opt
      ;; "class", "new" and "extends" get special treatment
-     ;; "case" and "default" get special treatment elsewhere
-     '("and" "as" "break" "continue" "declare" "do" "echo" "else" "elseif"
+     ;; "case" gets special treatment elsewhere
+     '("and" "break" "continue" "declare" "default" "die" "do" "echo" "else" "elseif"
        "endfor" "endforeach" "endif" "endswitch" "endwhile" "exit"
        "extends" "for" "foreach" "global" "if" "include" "include_once"
-       "next" "or" "require" "require_once" "return" "static" "switch"
+       "or" "require" "require_once" "return" "return new" "static" "switch"
        "then" "var" "while" "xor" "throw" "catch" "try"
-       "instanceof" "catch all" "finally")))
+       "instanceof" "catch all" "finally" "insteadof" "use" "as"
+       "clone")))
   "PHP keywords.")
 
 (defconst php-identifier
@@ -966,10 +1041,11 @@ current `tags-file-name'."
     (regexp-opt '("_GET" "_POST" "_COOKIE" "_SESSION" "_ENV" "GLOBALS"
                   "_SERVER" "_FILES" "_REQUEST")))
   "PHP superglobal variables.")
-
+
 ;; Set up font locking
 (defconst php-font-lock-keywords-1
   (list
+   '("#.*" . font-lock-comment-face)
    ;; Fontify constants
    (cons
     (concat "[^_$]?\\<\\(" php-constants "\\)\\>[^_]?")
@@ -989,7 +1065,7 @@ current `tags-file-name'."
           (1 font-lock-constant-face)))
 
    ;; treat 'print' as keyword only when not used like a function name
-   '("\\<print\\s-*(" . php-default-face)
+   '("\\<print\\s-*(" . php-function-call-face)
    '("\\<print\\>" . font-lock-keyword-face)
 
    ;; Fontify PHP tag
@@ -1007,15 +1083,37 @@ current `tags-file-name'."
    php-font-lock-keywords-1
    (list
 
-    ;; class declaration
-    '("\\<\\(class\\|interface\\)\\s-+\\(\\sw+\\)?"
+    ;; namespace, class, interface, and trait declarations
+    '("\\<\\(namespace\\|class\\|interface\\|trait\\)\\s-+\\(\\(?:\\sw\\|\\\\\\)+\\)?"
       (1 font-lock-keyword-face) (2 font-lock-type-face nil t))
+
     ;; handle several words specially, to include following word,
     ;; thereby excluding it from unknown-symbol checks later
     ;; FIX to handle implementing multiple
     ;; currently breaks on "class Foo implements Bar, Baz"
-    '("\\<\\(new\\|clone\\|extends\\|implements\\)\\s-+\\$?\\(\\sw+\\)"
-      (1 font-lock-keyword-face) (2 font-lock-type-face))
+    '("\\<\\(new\\|extends\\|implements\\)\\s-+\\$?\\(\\(:?\\sw\\|\\\\\\)+\\)"
+      (1 font-lock-keyword-face) (2 font-lock-type-face nil t))
+
+    ;; instanceof operator
+    '("\\<instanceof\\s-+\\([^$]\\(:?\\sw\\|\\\\\\)+\\)"
+      (1 font-lock-type-face nil t))
+
+    ;; namespace imports
+    '("\\<\\(use\\)\\s-+\\(\\(?:\\sw\\|\\(?:,\s-?\\)\\|\\\\\\)+\\)"
+      (1 font-lock-keyword-face)
+      (2 font-lock-type-face))
+
+    ;; namespace imports with aliases
+    '("\\<\\(use\\)\\s-+\\(\\(?:\\sw\\|\\\\\\)+\\)\\s-+\\(as\\)\\s-+\\(\\(?:\\sw\\|\\\\\\)+\\)"
+      (1 font-lock-keyword-face)
+      (2 font-lock-type-face)
+      (3 font-lock-keyword-face)
+      (4 font-lock-type-face))
+
+    ;; constants
+    '("\\<\\(const\\)\\s-+\\(\\sw+\\)"
+      (1 font-lock-keyword-face)
+      (2 font-lock-type-face))
 
     ;; function declaration
     '("\\<\\(function\\)\\s-+&?\\(\\sw+\\)\\s-*("
@@ -1043,11 +1141,6 @@ current `tags-file-name'."
   (append
    php-font-lock-keywords-2
    (list
-
-    ;; <word> or </word> for HTML
-    ;;'("</?\\sw+[^> ]*>" . font-lock-constant-face)
-    ;;'("</?\\sw+[^>]*" . font-lock-constant-face)
-    ;;'("<!DOCTYPE" . font-lock-constant-face)
     '("</?[a-z!:]+" . font-lock-constant-face)
 
     ;; HTML >
@@ -1056,13 +1149,6 @@ current `tags-file-name'."
     ;; HTML tags
     '("\\(<[a-z]+\\)[[:space:]]+\\([a-z:]+=\\)[^>]*?" (1 font-lock-constant-face) (2 font-lock-constant-face) )
     '("\"[[:space:]]+\\([a-z:]+=\\)" (1 font-lock-constant-face))
-
-    ;; HTML entities
-    ;;'("&\\w+;" . font-lock-variable-name-face)
-
-    ;; warn about '$' immediately after ->
-    '("\\$\\sw+->\\s-*\\(\\$\\)\\(\\sw+\\)"
-      (1 font-lock-warning-face) (2 php-default-face))
 
     ;; warn about $word.word -- it could be a valid concatenation,
     ;; but without any spaces we'll assume $word->word was meant.
@@ -1077,26 +1163,114 @@ current `tags-file-name'."
       1 font-lock-type-face)
 
     ;; PHP5: function declarations may contain classes as parameters type
-    `(,(concat "[(,]\\s-*\\(\\sw+\\)\\s-+&?\\$\\sw+\\>")
+    `("[(,]\\(?:\\s-\\|\n\\)*\\(\\(?:\\sw\\|\\\\\\)+\\)\\s-+&?\\$\\sw+\\>"
       1 font-lock-type-face)
 
     ;; Fontify variables and function calls
     '("\\$\\(this\\|that\\)\\W" (1 font-lock-constant-face nil nil))
+
+    ;; $_GET & co
     `(,(concat "\\$\\(" php-superglobals "\\)\\W")
-      (1 font-lock-constant-face nil nil)) ;; $_GET & co
-    '("\\$\\(\\sw+\\)" (1 font-lock-variable-name-face)) ;; $variable
-    '("->\\(\\sw+\\)" (1 font-lock-variable-name-face t t)) ;; ->variable
-    '("->\\(\\sw+\\)\\s-*(" . (1 php-default-face t t)) ;; ->function_call
-    '("\\(\\sw+\\)::\\sw+\\s-*(?" . (1 font-lock-type-face)) ;; class::member
-    '("::\\(\\sw+\\>[^(]\\)" . (1 php-default-face)) ;; class::constant
-    '("\\<\\sw+\\s-*[[(]" . php-default-face) ;; word( or word[
-    '("\\<[0-9]+" . php-default-face) ;; number (also matches word)
+      (1 font-lock-constant-face nil nil))
+
+    ;; $variable
+    '("\\$\\(\\sw+\\)" (1 font-lock-variable-name-face))
+
+    ;; ->variable
+    '("->\\(\\sw+\\)" (1 font-lock-variable-name-face t t))
+
+    ;; ->function_call
+    '("->\\(\\sw+\\)\\s-*(" . (1 php-function-call-face t t))
+
+    ;; class::member
+    '("\\(\\(\\sw\\|\\\\\\)+\\)::\\sw+\\s-*(?" . (1 font-lock-type-face))
+
+    ;; class::constant
+    '("::\\(\\(?:\\sw\\|\\s_\\)+\\>\\)[^(]" . (1 font-lock-constant-face))
+
+    ;; using a trait in a class
+    '("\\<use\\s-+\\(\\sw+\\)\\s-*;" . (1 font-lock-type-face))
+
+    ;; word(
+    '("\\<\\(\\sw+\\s-*\\)(" . (1 php-function-call-face))
+
+    ;; word[
+    '("\\<\\(\\sw+\\s-*\\)\\[" . (1 php-default-face))
+
+    ;; number (also matches word)
+    '("\\<[0-9]+" . php-default-face)
 
     ;; Warn on any words not already fontified
-    '("\\<\\sw+\\>" . font-lock-warning-face)
+    '("\\<\\sw+\\>" . font-lock-warning-face)))
 
-    ))
   "Gauchy level highlighting for PHP mode.")
+
+
+
+;;; Provide support for Flymake so that users can see warnings and
+;;; errors in real-time as they write code.
+
+(defun flymake-php-init ()
+  (let* ((temp-file (flymake-init-create-temp-buffer-copy
+                     'flymake-create-temp-inplace))
+         (local-file (file-relative-name
+                      temp-file
+                      (file-name-directory buffer-file-name))))
+    (list php-executable (list "-f" local-file "-l"))))
+
+(add-to-list 'flymake-allowed-file-name-masks
+             '("\\.php[345s]?$"
+               flymake-php-init
+               flymake-simple-cleanup
+               flymake-get-real-file-name))
+
+(add-to-list 'flymake-err-line-patterns
+             '("\\(Parse\\|Fatal\\) error: \\(.*?\\) in \\(.*?\\) on line \\([0-9]+\\)" 3 4 nil 2))
+
+
+(defun php-send-region (start end)
+  "Send the region between `start' and `end' to PHP for execution.
+The output will appear in the buffer *PHP*."
+  (interactive "r")
+  (let ((php-buffer (get-buffer-create "*PHP*"))
+        (code (buffer-substring start end)))
+    ;; Calling 'php -r' will fail if we send it code that starts with
+    ;; '<?php', which is likely.  So we run the code through this
+    ;; function to check for that prefix and remove it.
+    (flet ((clean-php-code (code)
+                           (if (string-prefix-p "<?php" code t)
+                               (substring code 5)
+                             code)))
+      (call-process "php" nil php-buffer nil "-r" (clean-php-code code)))))
+
+(define-key php-mode-map "\C-c\C-r" 'php-send-region)
+
+
+(defface php-annotations-annotation-face '((t . (:inherit 'font-lock-constant-face)))
+  "Face used to highlight annotations.")
+
+(defconst php-annotations-re "\\(\\s-\\|{\\)\\(@[[:alpha:]]+\\)")
+
+(defmacro php-annotations-inside-comment-p (pos)
+  "Return non-nil if POS is inside a comment."
+  `(eq (get-char-property ,pos 'face) 'font-lock-comment-face))
+
+(defun php-annotations-font-lock-find-annotation (limit)
+  (let ((match
+	 (catch 'match
+	   (save-match-data
+	     (while (re-search-forward php-annotations-re limit t)
+	       (when (php-annotations-inside-comment-p (match-beginning 0))
+		 (goto-char (match-end 0))
+		 (throw 'match (match-data))))))))
+    (when match
+      (set-match-data match)
+      t)))
+
+(eval-after-load 'php-mode
+  '(font-lock-add-keywords 'php-mode '((php-annotations-font-lock-find-annotation (2 'php-annotations-annotation-face t)))))
+
+
 
 (provide 'php-mode)
 

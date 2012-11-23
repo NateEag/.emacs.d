@@ -300,16 +300,22 @@
 (add-hook 'python-mode-hook 'load-python-mode-accessories)
 
 ;; PHP Mode.
-
-;; I use php-mode, and I kinda hate it - but I have neither the skills nor the
-;; time to write a better one, so I try to be grateful that I have anything
-;; that handles PHP at all.
 (setq auto-mode-alist (cons '("\\.php$" . php-mode) auto-mode-alist))
 (autoload 'php-mode "php-mode" "PHP editing mode." t)
 
 (defun load-php-mode-accessories ()
   (smart-dash-mode t))
 (add-hook 'php-mode-hook 'load-php-mode-accessories)
+
+;; Web mode.
+;; For editing web templates of various stripes.
+;;(autoload 'web-mode "web-mode" "Web template editing mode")
+;; The following is a workaround since prog-mode expects Emacs version 23.
+;; DEBUG Really, this mode shouldn't be loaded at all on versions < 23, since
+;; it won't work.
+(unless (fboundp 'prog-mode) (defalias 'prog-mode 'fundamental-mode))
+(require 'web-mode)
+(add-to-list 'auto-mode-alist '("\\.tmpl\\'" . web-mode))
 
 ;; JavaScript Mode.
 

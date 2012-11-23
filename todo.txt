@@ -40,7 +40,7 @@ current language's syntax table.
 
 -Get tab behaving properly. That means calling yasnippet/code-completion as appropriate, indentation when appropriate, retaining minibuffer autocompletion, and Shift-Tab cycling backwards through autocompletions (I really want that, for reasons I don't quite understand). Looks like this page on the EmacsWiki summarizes most of the options: http://www.emacswiki.org/emacs/TabCompletion
 
--Get/write a diff/patch-viewing mode that doesn't suck. On better acquaintance with Emacs, I think all I really want here are some sane font-lock settings for diff-mode.el.
+-Get standard (red and green) font-lock settings for diff-mode.el.
 
 -This is long-term, since my task tracker doesn't exist yet, but I'd like to hack up a basic minor-mode for it, if it ever gets far enough for that to be useful. Subtle hints when a name/block has annotations (toggleable, of course), easy keystroke to view the associated annotation/task, easy way to create annotations/attach existing annotations to some code... I should probably do this in elisp, not because it's the right thing from an engineering perspective, but because it would force me to learn a lot about the language. It'd be annoying to have to do all the work again in elisp, though, and there is Pymacs...
 
@@ -56,6 +56,6 @@ current language's syntax table.
 
 -` should be treated as an autopaired character by default. It's usually used as a delimiter.
 
--My underscore/hyphen translation mode should know that in Python mode, '.-' should be interpreted as '._', as it's a common idiom.
+-My smart-dash-mode should know that in Python mode, '.-' should be interpreted as '._', as it's the only valid possibility. I think that's true in almost any mode, actually, isn't it?
 
 -Figure out how to make Emacs launch faster. I hate having to wait several seconds to do a quick edit in a tiny file. I've mitigated this some by integrating emacs server and emacsclient into my workflow, but I'd still like to see this improved for command-line usage.

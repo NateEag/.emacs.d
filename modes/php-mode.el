@@ -10,10 +10,10 @@
 ;; Created: 1999-05-17
 ;; X-URL:   https://github.com/ejmr/php-mode
 
-(defconst php-mode-version-number "1.7"
+(defconst php-mode-version-number "1.8"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2012-10-15"
+(defconst php-mode-modified "2012-11-28"
   "PHP Mode build date.")
 
 ;;; License
@@ -63,18 +63,15 @@
 
 ;;; Code:
 
-(require 'add-log)
-(require 'speedbar)
 (require 'font-lock)
 (require 'cc-mode)
 (require 'cc-langs)
 (require 'custom)
-(require 'etags)
 (eval-when-compile
+  (require 'cl)
   (require 'regexp-opt)
   (defvar c-vsemi-status-unknown-p)
   (defvar syntax-propertize-via-font-lock))
-(require 'flymake)
 
 ;; Local variables
 ;;;###autoload
@@ -303,7 +300,7 @@ See `php-beginning-of-defun'."
              (base-msg
               (concat
                "Indentation fails badly with mixed HTML/PHP in the HTML part in
-pla�n `php-mode'.  To get indentation to work you must use an
+plain `php-mode'.  To get indentation to work you must use an
 Emacs library that supports 'multiple major modes' in a buffer.
 Parts of the buffer will then be in `php-mode' and parts in for
 example `html-mode'.  Known such libraries are:\n\t"
@@ -435,6 +432,19 @@ This is was done due to the problem reported here:
 (c-set-offset 'arglist-intro 'php-lineup-arglist-intro)
 (c-set-offset 'arglist-close 'php-lineup-arglist-close)
 
+(defun php-unindent-closure ()
+  (let ((syntax (mapcar 'car c-syntactic-context)))
+    (if (and (member 'arglist-cont-nonempty syntax)
+             (or
+              (member 'statement-block-intro syntax)
+              (member 'brace-list-intro syntax)
+              (member 'brace-list-close syntax)
+              (member 'block-close syntax)))
+        (save-excursion
+          (beginning-of-line)
+          (delete-char (* (cl-count 'arglist-cont-nonempty syntax)
+                          c-basic-offset))))))
+
 ;;;###autoload
 (define-derived-mode php-mode c-mode "PHP"
   "Major mode for editing PHP code.\n\n\\{php-mode-map}"
@@ -475,6 +485,8 @@ This is was done due to the problem reported here:
   (modify-syntax-entry ?_    "_" php-mode-syntax-table)
   (modify-syntax-entry ?`    "\"" php-mode-syntax-table)
   (modify-syntax-entry ?\"   "\"" php-mode-syntax-table)
+  (modify-syntax-entry ?#    "< b" php-mode-syntax-table)
+  (modify-syntax-entry ?\n   "> b" php-mode-syntax-table)
 
   (set (make-local-variable 'syntax-propertize-via-font-lock)
        '(("\\(\"\\)\\(\\\\.\\|[^\"\n\\]\\)*\\(\"\\)" (1 "\"") (3 "\""))
@@ -510,7 +522,7 @@ This is was done due to the problem reported here:
 
   (setq indent-line-function 'php-cautious-indent-line)
   (setq indent-region-function 'php-cautious-indent-region)
-  (setq c-special-indent-hook nil)
+  (add-hook 'c-special-indent-hook 'php-unindent-closure)
   (setq c-at-vsemi-p-fn 'php-c-at-vsemi-p)
   (setq c-vsemi-status-unknown-p 'php-c-vsemi-status-unknown-p)
 
@@ -1045,7 +1057,7 @@ searching the PHP website."
 ;; Set up font locking
 (defconst php-font-lock-keywords-1
   (list
-   '("#.*" . font-lock-comment-face)
+
    ;; Fontify constants
    (cons
     (concat "[^_$]?\\<\\(" php-constants "\\)\\>[^_]?")

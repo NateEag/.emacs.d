@@ -32,8 +32,10 @@
 ;; my font settings.
 (global-set-key "\M-g" 'goto-line)
 
-;; Everyone likes narrow-to-region. (Though I don't use it much these days.)
+;; Enable useful functions that are disabled by default.
 (put 'narrow-to-region 'disabled nil)
+(put 'upcase-region 'disabled nil)
+(put 'downcase-region 'disabled nil)
 
 ;; Default frames to a width of 80 chars.
 (add-to-list 'default-frame-alist '(width . 80))

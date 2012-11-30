@@ -319,15 +319,23 @@
   (smart-dash-mode t))
 (add-hook 'php-mode-hook 'load-php-mode-accessories)
 
+;; The following are workarounds since web-mode expects Emacs >= 23.
+;; Sadly, they are still not enough to quite make it work.
+(unless (fboundp 'prog-mode) (defalias 'prog-mode 'fundamental-mode))
+(defun my-string-match-p (regexp string &optional start)
+  "Same as `string-match' except this function does not change the match data."
+  (let ((inhibit-changing-match-data t))
+(string-match regexp string start)))
+
+(when (not (fboundp 'string-match-p))
+  (fset 'string-match-p (symbol-function 'my-string-match-p)))
+
 ;; Web mode.
 ;; For editing web templates of various stripes.
 ;;(autoload 'web-mode "web-mode" "Web template editing mode")
-;; The following is a workaround since prog-mode expects Emacs version 23.
-;; DEBUG Really, this mode shouldn't be loaded at all on versions < 23, since
-;; it won't work.
-(unless (fboundp 'prog-mode) (defalias 'prog-mode 'fundamental-mode))
 (require 'web-mode)
 (add-to-list 'auto-mode-alist '("\\.tmpl\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode))
 
 ;; JavaScript Mode.
 

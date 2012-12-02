@@ -319,8 +319,9 @@
   (smart-dash-mode t))
 (add-hook 'php-mode-hook 'load-php-mode-accessories)
 
-;; The following are workarounds since web-mode expects Emacs >= 23.
-;; Sadly, they are still not enough to quite make it work.
+;; The following are workarounds since web-mode expects Emacs >= 23, and OS X's
+;; built-in Emacs is v. 22. Sadly, they are still not enough to quite make it
+;; work.
 (unless (fboundp 'prog-mode) (defalias 'prog-mode 'fundamental-mode))
 (defun my-string-match-p (regexp string &optional start)
   "Same as `string-match' except this function does not change the match data."

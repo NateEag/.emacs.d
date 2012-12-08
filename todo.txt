@@ -2,6 +2,8 @@
 
 -I'd like yasnippets for JavaScript.
 
+-Make < and > be autopaired in web-mode.
+
 -I should probably go back and store my custom yasnippets somewhere other than the default yasnippet locale - set mine up to override the defaults.
 
 -I would like my sql-mode to do a better job with font-lock. It does very poorly at dealing with strings that have backslashed quotes.

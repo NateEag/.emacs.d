@@ -212,6 +212,11 @@
 (setq auto-mode-alist (cons '("\\.rst$" . rst-mode) auto-mode-alist))
 (setq auto-mode-alist (cons '("\\.rest$" . rst-mode) auto-mode-alist))
 
+;; Markdown mode.
+(autoload 'markdown-mode "markdown-mode.el")
+(setq auto-mode-alist
+  (cons '("\\.md" . markdown-mode) auto-mode-alist))
+
 ;; Python mode.
 
 ;; I use python-mode.el, with the TQS-coloration patch applied.

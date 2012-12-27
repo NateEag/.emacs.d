@@ -1,19 +1,17 @@
-;;; php-mode.el --- major mode for editing PHP code
+;;; php-mode.el --- Major mode for editing PHP code
 
 ;; Copyright (C) 1999, 2000, 2001, 2003, 2004 Turadg Aleahmad
 ;;               2008 Aaron S. Hawley
 ;;               2011, 2012 Eric James Michael Ritz
 
-;; Maintainer: Eric James Michael Ritz <lobbyjones at gmail dot com>
-;; Original Author: Turadg Aleahmad, 1999-2004
-;; Keywords: php languages oop
-;; Created: 1999-05-17
-;; X-URL:   https://github.com/ejmr/php-mode
+;;; Author: Eric James Michael Ritz
+;;; URL: https://github.com/ejmr/php-mode
+;;; Version: 1.9
 
 (defconst php-mode-version-number "1.9"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2012-12-14"
+(defconst php-mode-modified "2012-12-20"
   "PHP Mode build date.")
 
 ;;; License
@@ -69,10 +67,16 @@
 (require 'custom)
 (require 'flymake)
 (eval-when-compile
-  (require 'cl)
+  (unless (require 'cl-lib nil t)
+    (require 'cl))
   (require 'regexp-opt)
   (defvar c-vsemi-status-unknown-p)
   (defvar syntax-propertize-via-font-lock))
+
+;;; Emacs 24.3 obsoletes flet in favor of cl-flet.  So if we are not
+;;; using that version then we revert to using flet.
+(unless (fboundp 'cl-flet)
+  (defalias 'cl-flet 'flet))
 
 ;; Local variables
 ;;;###autoload
@@ -276,7 +280,8 @@ code and modules."
   (set (make-local-variable 'c-basic-offset) 4)
   (set (make-local-variable 'indent-tabs-mode) nil)
   (c-set-offset 'block-open '-)
-  (c-set-offset 'block-close 0))
+  (c-set-offset 'block-close 0)
+  (c-set-offset 'statement-cont '+))
 
 (defun php-enable-drupal-coding-style ()
   "Makes php-mode use coding styles that are preferable for
@@ -291,7 +296,8 @@ working with Drupal."
   (c-set-offset 'case-label '+)
   (c-set-offset 'arglist-close 0)
   (c-set-offset 'arglist-intro '+)
-  (c-set-offset 'arglist-cont-nonempty 'c-lineup-math))
+  (c-set-offset 'arglist-cont-nonempty 'c-lineup-math)
+  (c-set-offset 'statement-cont '+))
 
 (defun php-enable-wordpress-coding-style ()
   "Makes php-mode use coding styles that are preferable for
@@ -307,7 +313,8 @@ working with Wordpress."
   (c-set-offset 'case-label 2)
   (c-set-offset 'arglist-close 0)
   (c-set-offset 'defun-close 0)
-  (c-set-offset 'defun-block-intro tab-width))
+  (c-set-offset 'defun-block-intro tab-width)
+  (c-set-offset 'statement-cont '+))
 
 
 (defun php-mode-version ()
@@ -780,7 +787,7 @@ current `tags-file-name'."
 for the word at point.  The function returns t if the requested
 documentation exists, and nil otherwise."
   (interactive)
-  (flet ((php-function-file-for (name)
+  (cl-flet ((php-function-file-for (name)
                                 (expand-file-name
                                  (format "function.%s.html"
                                          (replace-regexp-in-string "_" "-" name))
@@ -798,7 +805,7 @@ will first try searching the local documentation.  If the
 requested documentation does not exist it will fallback to
 searching the PHP website."
   (interactive)
-  (flet ((php-search-web-documentation ()
+  (cl-flet ((php-search-web-documentation ()
                                        (browse-url (concat php-search-url (current-word)))))
     (if (and (stringp php-manual-path)
              (not (string= php-manual-path "")))
@@ -1387,7 +1394,7 @@ The output will appear in the buffer *PHP*."
     ;; Calling 'php -r' will fail if we send it code that starts with
     ;; '<?php', which is likely.  So we run the code through this
     ;; function to check for that prefix and remove it.
-    (flet ((clean-php-code (code)
+    (cl-flet ((clean-php-code (code)
                            (if (string-prefix-p "<?php" code t)
                                (substring code 5)
                              code)))

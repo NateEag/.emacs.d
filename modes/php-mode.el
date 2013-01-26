@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 1999, 2000, 2001, 2003, 2004 Turadg Aleahmad
 ;;               2008 Aaron S. Hawley
-;;               2011, 2012 Eric James Michael Ritz
+;;               2011, 2012, 2013 Eric James Michael Ritz
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
@@ -11,7 +11,7 @@
 (defconst php-mode-version-number "1.9"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2012-12-20"
+(defconst php-mode-modified "2013-01-27"
   "PHP Mode build date.")
 
 ;;; License
@@ -255,8 +255,8 @@ This variable can take one of the following symbol values:
 
 `WordPress' - use coding styles preferred for working with WordPress projects."
   :type '(choice (const :tag "PEAR" pear)
-				 (const :tag "Drupal" drupal)
-				 (const :tag "WordPress" wordpress))
+                                 (const :tag "Drupal" drupal)
+                                 (const :tag "WordPress" wordpress))
   :group 'php
   :set 'php-mode-custom-coding-style-set
   :initialize 'custom-initialize-default)
@@ -265,56 +265,69 @@ This variable can take one of the following symbol values:
   (set         sym value)
   (set-default sym value)
   (cond ((eq value 'pear)
-  		 (php-enable-pear-coding-style))
-		((eq value 'drupal)
-  		 (php-enable-drupal-coding-style))
-		((eq value 'wordpress)
-		 (php-enable-wordpress-coding-style))))
+                 (php-enable-pear-coding-style))
+                ((eq value 'drupal)
+                 (php-enable-drupal-coding-style))
+                ((eq value 'wordpress)
+                 (php-enable-wordpress-coding-style))))
 
 
+
+(c-add-style
+ "pear"
+ '((c-basic-offset . 4)
+   (c-offsets-alist . ((block-open . -)
+                       (block-close . 0)
+                       (statement-cont . +)))))
+
 (defun php-enable-pear-coding-style ()
   "Sets up php-mode to use the coding styles preferred for PEAR
 code and modules."
   (interactive)
-  (set (make-local-variable 'tab-width) 4)
-  (set (make-local-variable 'c-basic-offset) 4)
-  (set (make-local-variable 'indent-tabs-mode) nil)
-  (c-set-offset 'block-open '-)
-  (c-set-offset 'block-close 0)
-  (c-set-offset 'statement-cont '+))
+  (setq tab-width 4
+        indent-tabs-mode nil)
+  (c-set-style "pear"))
+
+(c-add-style
+ "drupal"
+ '((c-basic-offset . 2)
+   (c-offsets-alist . ((case-label . +)
+                       (arglist-close . 0)
+                       (arglist-intro . +)
+                       (arglist-cont-nonempty . c-lineup-math)
+                       (statement-cont . +)))))
 
 (defun php-enable-drupal-coding-style ()
   "Makes php-mode use coding styles that are preferable for
 working with Drupal."
   (interactive)
-  (setq tab-width 2)
-  (setq c-basic-offset 2)
-  (setq indent-tabs-mode nil)
-  (setq fill-column 78)
-  (setq show-trailing-whitespace t)
+  (setq tab-width 2
+        indent-tabs-mode nil
+        fill-column 78
+        show-trailing-whitespace t)
   (add-hook 'before-save-hook 'delete-trailing-whitespace)
-  (c-set-offset 'case-label '+)
-  (c-set-offset 'arglist-close 0)
-  (c-set-offset 'arglist-intro '+)
-  (c-set-offset 'arglist-cont-nonempty 'c-lineup-math)
-  (c-set-offset 'statement-cont '+))
+  (c-set-style "drupal"))
+
+(c-add-style
+ "wordpress"
+ '((c-basic-offset . 4)
+   (c-offsets-alist . ((arglist-cont . 0)
+                       (arglist-intro . +)
+                       (case-label . 2)
+                       (arglist-close . 0)
+                       (defun-close . 0)
+                       (defun-block-intro . +)
+                       (statement-cont . +)))))
 
 (defun php-enable-wordpress-coding-style ()
   "Makes php-mode use coding styles that are preferable for
 working with Wordpress."
   (interactive)
-  (setq indent-tabs-mode t)
-  (setq fill-column 78)
-  (setq tab-width 4)
-  (setq c-basic-offset tab-width)
-  (setq c-indent-comments-syntactically-p t)
-  (c-set-offset 'arglist-cont 0)
-  (c-set-offset 'arglist-intro '+)
-  (c-set-offset 'case-label 2)
-  (c-set-offset 'arglist-close 0)
-  (c-set-offset 'defun-close 0)
-  (c-set-offset 'defun-block-intro tab-width)
-  (c-set-offset 'statement-cont '+))
+  (setq indent-tabs-mode t
+        fill-column 78
+        tab-width 4
+        c-indent-comments-syntactically-p t)
+  (c-set-style "wordpress"))
 
 
 (defun php-mode-version ()
@@ -345,7 +358,7 @@ Implements PHP version of `beginning-of-defun-function'."
         (if (eq opoint (point))
             (re-search-forward php-beginning-of-defun-regexp
                                nil 'noerror))
-	(setq arg (1+ arg))))))
+        (setq arg (1+ arg))))))
 
 (defun php-end-of-defun (&optional arg)
   "Move the end of the ARGth PHP function from point.
@@ -545,7 +558,6 @@ This is was done due to the problem reported here:
   ;; These settings ensure that chained method calls line up correctly
   ;; over multiple lines.
   (c-set-offset 'topmost-intro-cont 'c-lineup-cascaded-calls)
-  (c-set-offset 'statement-cont 'c-lineup-cascaded-calls)
   (c-set-offset 'brace-list-entry 'c-lineup-cascaded-calls)
 
   (set (make-local-variable 'c-block-stmt-1-key) php-block-stmt-1-key)
@@ -577,7 +589,7 @@ This is was done due to the problem reported here:
 
   (set (make-local-variable 'syntax-propertize-via-font-lock)
        '(("\\(\"\\)\\(\\\\.\\|[^\"\n\\]\\)*\\(\"\\)" (1 "\"") (3 "\""))
-	 ("\\(\'\\)\\(\\\\.\\|[^\'\n\\]\\)*\\(\'\\)" (1 "\"") (3 "\""))))
+         ("\\(\'\\)\\(\\\\.\\|[^\'\n\\]\\)*\\(\'\\)" (1 "\"") (3 "\""))))
 
   (setq font-lock-maximum-decoration t
         imenu-generic-expression php-imenu-generic-expression)
@@ -604,11 +616,11 @@ This is was done due to the problem reported here:
              nil t)
 
   (cond ((eq php-mode-coding-style 'pear)
-  		 (run-hooks 'php-mode-pear-hook))
-  		((eq php-mode-coding-style 'drupal)
-  		 (run-hooks 'php-mode-drupal-hook))
-  		((eq php-mode-coding-style 'wordpress)
-  		 (run-hooks 'php-mode-wordpress-hook)))
+                 (run-hooks 'php-mode-pear-hook))
+                ((eq php-mode-coding-style 'drupal)
+                 (run-hooks 'php-mode-drupal-hook))
+                ((eq php-mode-coding-style 'wordpress)
+                 (run-hooks 'php-mode-wordpress-hook)))
 
   (if (or php-mode-force-pear
           (and (stringp buffer-file-name)
@@ -893,6 +905,12 @@ searching the PHP website."
        "DATE_RFC2822" "DATE_RFC3339"
        "DATE_RSS" "DATE_W3C"
 
+       ;; upload error message constants
+       "UPLOAD_ERR_CANT_WRITE" "UPLOAD_ERR_EXTENSION"
+       "UPLOAD_ERR_FORM_SIZE" "UPLOAD_ERR_INI_SIZE"
+       "UPLOAD_ERR_NO_FILE" "UPLOAD_ERR_NO_TMP_DIR"
+       "UPLOAD_ERR_OK" "UPLOAD_ERR_PARTIAL"
+
        ;; from ext/standard:
        "EXTR_OVERWRITE"
        "EXTR_PREFIX_SAME"
@@ -923,7 +941,15 @@ searching the PHP website."
        "LOCK_UN"
        "HTML_SPECIALCHARS"
        "ENT_COMPAT"
+       "ENT_QUOTES"
        "ENT_NOQUOTES"
+       "ENT_IGNORE"
+       "ENT_SUBSTITUTE"
+       "ENT_DISALLOWED"
+       "ENT_HTML401"
+       "ENT_XML1"
+       "ENT_XHTML"
+       "ENT_HTML5"
        "INFO_CREDITS"
        "INFO_MODULES"
        "INFO_VARIABLES"
@@ -1050,6 +1076,251 @@ searching the PHP website."
        "PASSWORD_DEFAULT"
        "PASSWORD_BCRYPT"
 
+       ;; cURL constants
+       "CURLOPT_AUTOREFERER"
+       "CURLOPT_COOKIESESSION"
+       "CURLOPT_DNS_USE_GLOBAL_CACHE"
+       "CURLOPT_DNS_CACHE_TIMEOUT"
+       "CURLOPT_FTP_SSL"
+       "CURLFTPSSL_TRY"
+       "CURLFTPSSL_ALL"
+       "CURLFTPSSL_CONTROL"
+       "CURLFTPSSL_NONE"
+       "CURLOPT_PRIVATE"
+       "CURLOPT_FTPSSLAUTH"
+       "CURLOPT_PORT"
+       "CURLOPT_FILE"
+       "CURLOPT_INFILE"
+       "CURLOPT_INFILESIZE"
+       "CURLOPT_URL"
+       "CURLOPT_PROXY"
+       "CURLOPT_VERBOSE"
+       "CURLOPT_HEADER"
+       "CURLOPT_HTTPHEADER"
+       "CURLOPT_NOPROGRESS"
+       "CURLOPT_NOBODY"
+       "CURLOPT_FAILONERROR"
+       "CURLOPT_UPLOAD"
+       "CURLOPT_POST"
+       "CURLOPT_FTPLISTONLY"
+       "CURLOPT_FTPAPPEND"
+       "CURLOPT_FTP_CREATE_MISSING_DIRS"
+       "CURLOPT_NETRC"
+       "CURLOPT_FOLLOWLOCATION"
+       "CURLOPT_FTPASCII"
+       "CURLOPT_PUT"
+       "CURLOPT_MUTE"
+       "CURLOPT_USERPWD"
+       "CURLOPT_PROXYUSERPWD"
+       "CURLOPT_RANGE"
+       "CURLOPT_TIMEOUT"
+       "CURLOPT_TIMEOUT_MS"
+       "CURLOPT_TCP_NODELAY"
+       "CURLOPT_POSTFIELDS"
+       "CURLOPT_PROGRESSFUNCTION"
+       "CURLOPT_REFERER"
+       "CURLOPT_USERAGENT"
+       "CURLOPT_FTPPORT"
+       "CURLOPT_FTP_USE_EPSV"
+       "CURLOPT_LOW_SPEED_LIMIT"
+       "CURLOPT_LOW_SPEED_TIME"
+       "CURLOPT_RESUME_FROM"
+       "CURLOPT_COOKIE"
+       "CURLOPT_SSLCERT"
+       "CURLOPT_SSLCERTPASSWD"
+       "CURLOPT_WRITEHEADER"
+       "CURLOPT_SSL_VERIFYHOST"
+       "CURLOPT_COOKIEFILE"
+       "CURLOPT_SSLVERSION"
+       "CURLOPT_TIMECONDITION"
+       "CURLOPT_TIMEVALUE"
+       "CURLOPT_CUSTOMREQUEST"
+       "CURLOPT_STDERR"
+       "CURLOPT_TRANSFERTEXT"
+       "CURLOPT_RETURNTRANSFER"
+       "CURLOPT_QUOTE"
+       "CURLOPT_POSTQUOTE"
+       "CURLOPT_INTERFACE"
+       "CURLOPT_KRB4LEVEL"
+       "CURLOPT_HTTPPROXYTUNNEL"
+       "CURLOPT_FILETIME"
+       "CURLOPT_WRITEFUNCTION"
+       "CURLOPT_READFUNCTION"
+       "CURLOPT_PASSWDFUNCTION"
+       "CURLOPT_HEADERFUNCTION"
+       "CURLOPT_MAXREDIRS"
+       "CURLOPT_MAXCONNECTS"
+       "CURLOPT_CLOSEPOLICY"
+       "CURLOPT_FRESH_CONNECT"
+       "CURLOPT_FORBID_REUSE"
+       "CURLOPT_RANDOM_FILE"
+       "CURLOPT_EGDSOCKET"
+       "CURLOPT_CONNECTTIMEOUT"
+       "CURLOPT_CONNECTTIMEOUT_MS"
+       "CURLOPT_SSL_VERIFYPEER"
+       "CURLOPT_CAINFO"
+       "CURLOPT_CAPATH"
+       "CURLOPT_COOKIEJAR"
+       "CURLOPT_SSL_CIPHER_LIST"
+       "CURLOPT_BINARYTRANSFER"
+       "CURLOPT_NOSIGNAL"
+       "CURLOPT_PROXYTYPE"
+       "CURLOPT_BUFFERSIZE"
+       "CURLOPT_HTTPGET"
+       "CURLOPT_HTTP_VERSION"
+       "CURLOPT_SSLKEY"
+       "CURLOPT_SSLKEYTYPE"
+       "CURLOPT_SSLKEYPASSWD"
+       "CURLOPT_SSLENGINE"
+       "CURLOPT_SSLENGINE_DEFAULT"
+       "CURLOPT_SSLCERTTYPE"
+       "CURLOPT_CRLF"
+       "CURLOPT_ENCODING"
+       "CURLOPT_PROXYPORT"
+       "CURLOPT_UNRESTRICTED_AUTH"
+       "CURLOPT_FTP_USE_EPRT"
+       "CURLOPT_HTTP200ALIASES"
+       "CURLOPT_HTTPAUTH"
+       "CURLAUTH_BASIC"
+       "CURLAUTH_DIGEST"
+       "CURLAUTH_GSSNEGOTIATE"
+       "CURLAUTH_NTLM"
+       "CURLAUTH_ANY"
+       "CURLAUTH_ANYSAFE"
+       "CURLOPT_PROXYAUTH"
+       "CURLOPT_MAX_RECV_SPEED_LARGE"
+       "CURLOPT_MAX_SEND_SPEED_LARGE"
+       "CURLCLOSEPOLICY_LEAST_RECENTLY_USED"
+       "CURLCLOSEPOLICY_LEAST_TRAFFIC"
+       "CURLCLOSEPOLICY_SLOWEST"
+       "CURLCLOSEPOLICY_CALLBACK"
+       "CURLCLOSEPOLICY_OLDEST"
+       "CURLINFO_PRIVATE"
+       "CURLINFO_EFFECTIVE_URL"
+       "CURLINFO_HTTP_CODE"
+       "CURLINFO_HEADER_OUT"
+       "CURLINFO_HEADER_SIZE"
+       "CURLINFO_REQUEST_SIZE"
+       "CURLINFO_TOTAL_TIME"
+       "CURLINFO_NAMELOOKUP_TIME"
+       "CURLINFO_CONNECT_TIME"
+       "CURLINFO_PRETRANSFER_TIME"
+       "CURLINFO_SIZE_UPLOAD"
+       "CURLINFO_SIZE_DOWNLOAD"
+       "CURLINFO_SPEED_DOWNLOAD"
+       "CURLINFO_SPEED_UPLOAD"
+       "CURLINFO_FILETIME"
+       "CURLINFO_SSL_VERIFYRESULT"
+       "CURLINFO_CONTENT_LENGTH_DOWNLOAD"
+       "CURLINFO_CONTENT_LENGTH_UPLOAD"
+       "CURLINFO_STARTTRANSFER_TIME"
+       "CURLINFO_CONTENT_TYPE"
+       "CURLINFO_REDIRECT_TIME"
+       "CURLINFO_REDIRECT_COUNT"
+       "CURL_TIMECOND_IFMODSINCE"
+       "CURL_TIMECOND_IFUNMODSINCE"
+       "CURL_TIMECOND_LASTMOD"
+       "CURL_VERSION_IPV6"
+       "CURL_VERSION_KERBEROS4"
+       "CURL_VERSION_SSL"
+       "CURL_VERSION_LIBZ"
+       "CURLVERSION_NOW"
+       "CURLE_OK"
+       "CURLE_UNSUPPORTED_PROTOCOL"
+       "CURLE_FAILED_INIT"
+       "CURLE_URL_MALFORMAT"
+       "CURLE_URL_MALFORMAT_USER"
+       "CURLE_COULDNT_RESOLVE_PROXY"
+       "CURLE_COULDNT_RESOLVE_HOST"
+       "CURLE_COULDNT_CONNECT"
+       "CURLE_FTP_WEIRD_SERVER_REPLY"
+       "CURLE_FTP_ACCESS_DENIED"
+       "CURLE_FTP_USER_PASSWORD_INCORRECT"
+       "CURLE_FTP_WEIRD_PASS_REPLY"
+       "CURLE_FTP_WEIRD_USER_REPLY"
+       "CURLE_FTP_WEIRD_PASV_REPLY"
+       "CURLE_FTP_WEIRD_227_FORMAT"
+       "CURLE_FTP_CANT_GET_HOST"
+       "CURLE_FTP_CANT_RECONNECT"
+       "CURLE_FTP_COULDNT_SET_BINARY"
+       "CURLE_PARTIAL_FILE"
+       "CURLE_FTP_COULDNT_RETR_FILE"
+       "CURLE_FTP_WRITE_ERROR"
+       "CURLE_FTP_QUOTE_ERROR"
+       "CURLE_HTTP_NOT_FOUND"
+       "CURLE_WRITE_ERROR"
+       "CURLE_MALFORMAT_USER"
+       "CURLE_FTP_COULDNT_STOR_FILE"
+       "CURLE_READ_ERROR"
+       "CURLE_OUT_OF_MEMORY"
+       "CURLE_OPERATION_TIMEOUTED"
+       "CURLE_FTP_COULDNT_SET_ASCII"
+       "CURLE_FTP_PORT_FAILED"
+       "CURLE_FTP_COULDNT_USE_REST"
+       "CURLE_FTP_COULDNT_GET_SIZE"
+       "CURLE_HTTP_RANGE_ERROR"
+       "CURLE_HTTP_POST_ERROR"
+       "CURLE_SSL_CONNECT_ERROR"
+       "CURLE_FTP_BAD_DOWNLOAD_RESUME"
+       "CURLE_FILE_COULDNT_READ_FILE"
+       "CURLE_LDAP_CANNOT_BIND"
+       "CURLE_LDAP_SEARCH_FAILED"
+       "CURLE_LIBRARY_NOT_FOUND"
+       "CURLE_FUNCTION_NOT_FOUND"
+       "CURLE_ABORTED_BY_CALLBACK"
+       "CURLE_BAD_FUNCTION_ARGUMENT"
+       "CURLE_BAD_CALLING_ORDER"
+       "CURLE_HTTP_PORT_FAILED"
+       "CURLE_BAD_PASSWORD_ENTERED"
+       "CURLE_TOO_MANY_REDIRECTS"
+       "CURLE_UNKNOWN_TELNET_OPTION"
+       "CURLE_TELNET_OPTION_SYNTAX"
+       "CURLE_OBSOLETE"
+       "CURLE_SSL_PEER_CERTIFICATE"
+       "CURLE_GOT_NOTHING"
+       "CURLE_SSL_ENGINE_NOTFOUND"
+       "CURLE_SSL_ENGINE_SETFAILED"
+       "CURLE_SEND_ERROR"
+       "CURLE_RECV_ERROR"
+       "CURLE_SHARE_IN_USE"
+       "CURLE_SSL_CERTPROBLEM"
+       "CURLE_SSL_CIPHER"
+       "CURLE_SSL_CACERT"
+       "CURLE_BAD_CONTENT_ENCODING"
+       "CURLE_LDAP_INVALID_URL"
+       "CURLE_FILESIZE_EXCEEDED"
+       "CURLE_FTP_SSL_FAILED"
+       "CURLFTPAUTH_DEFAULT"
+       "CURLFTPAUTH_SSL"
+       "CURLFTPAUTH_TLS"
+       "CURLPROXY_HTTP"
+       "CURLPROXY_SOCKS5"
+       "CURL_NETRC_OPTIONAL"
+       "CURL_NETRC_IGNORED"
+       "CURL_NETRC_REQUIRED"
+       "CURL_HTTP_VERSION_NONE"
+       "CURL_HTTP_VERSION_1_0"
+       "CURL_HTTP_VERSION_1_1"
+       "CURLM_CALL_MULTI_PERFORM"
+       "CURLM_OK"
+       "CURLM_BAD_HANDLE"
+       "CURLM_BAD_EASY_HANDLE"
+       "CURLM_OUT_OF_MEMORY"
+       "CURLM_INTERNAL_ERROR"
+       "CURLMSG_DONE"
+       "CURLOPT_KEYPASSWD"
+       "CURLOPT_SSH_AUTH_TYPES"
+       "CURLOPT_SSH_HOST_PUBLIC_KEY_MD5"
+       "CURLOPT_SSH_PRIVATE_KEYFILE"
+       "CURLOPT_SSH_PUBLIC_KEYFILE"
+       "CURLSSH_AUTH_ANY"
+       "CURLSSH_AUTH_DEFAULT"
+       "CURLSSH_AUTH_HOST"
+       "CURLSSH_AUTH_KEYBOARD"
+       "CURLSSH_AUTH_NONE"
+       "CURLSSH_AUTH_PASSWORD"
+       "CURLSSH_AUTH_PUBLICKEY"
+
        ;; IMAP constants
        "NIL"
        "OP_DEBUG"
@@ -1166,7 +1437,6 @@ searching the PHP website."
        "return"
        "static"
        "switch"
-       "then"
        "throw"
        "try"
        "unset"
@@ -1333,11 +1603,11 @@ searching the PHP website."
     ;; $variable
     '("\\$\\(\\sw+\\)" (1 font-lock-variable-name-face))
 
+    ;; ->function_call
+    '("->\\(\\sw+\\)\\s-*(" (1 php-function-call-face t t))
+
     ;; ->variable
     '("->\\(\\sw+\\)" (1 font-lock-variable-name-face t t))
-
-    ;; ->function_call
-    '("->\\(\\sw+\\)\\s-*(" . (1 php-function-call-face t t))
 
     ;; class::member
     '("\\(\\(\\sw\\|\\\\\\)+\\)::\\sw+\\s-*(?" . (1 font-lock-type-face))
@@ -1410,16 +1680,17 @@ The output will appear in the buffer *PHP*."
 
 (defmacro php-annotations-inside-comment-p (pos)
   "Return non-nil if POS is inside a comment."
-  `(eq (get-char-property ,pos 'face) 'font-lock-comment-face))
+  `(or (eq (get-char-property ,pos 'face) 'font-lock-comment-face)
+       (eq (get-char-property ,pos 'face) 'font-lock-comment-delimiter-face)))
 
 (defun php-annotations-font-lock-find-annotation (limit)
   (let ((match
-	 (catch 'match
-	   (save-match-data
-	     (while (re-search-forward php-annotations-re limit t)
-	       (when (php-annotations-inside-comment-p (match-beginning 0))
-		 (goto-char (match-end 0))
-		 (throw 'match (match-data))))))))
+         (catch 'match
+           (save-match-data
+             (while (re-search-forward php-annotations-re limit t)
+               (when (php-annotations-inside-comment-p (match-beginning 0))
+                 (goto-char (match-end 0))
+                 (throw 'match (match-data))))))))
     (when match
       (set-match-data match)
       t)))

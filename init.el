@@ -106,8 +106,8 @@
 ;; Note that byte-code-cache.el apparently will break on Windows, so I might
 ;; want to apply a patch to it, since I do sometimes get stuck on Windows.
 ;; See http://www.emacswiki.org/emacs/AutoRecompile#toc3
-(if (not (eq system-type 'windows-nt))
-    (require 'byte-code-cache))
+;; (if (not (eq system-type 'windows-nt))
+;;     (require 'byte-code-cache))
 
 ;; Load the revbufs command.
 (require 'revbufs)

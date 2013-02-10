@@ -326,6 +326,7 @@
 ;; Trying to get sql-mode working inside php-mode, because that would be handy.
 ;; There are many issues with it, but the current one is that sql-mode appears
 ;; to be seeing the single quotes as defining a string.
+(set-face-background 'mmm-default-submode-face nil)
 (mmm-add-classes
  '((embedded-sql
     :submode sql-mode

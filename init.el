@@ -149,6 +149,7 @@
 
 ;; Include the modes directory.
 (add-to-list 'load-path "~/.emacs.d/modes")
+(add-to-list 'load-path "~/.emacs.d/modes/mmm-mode")
 
 ;; smart-dash-mode saves a lot of stupid SHIFT-ing in languages that favor
 ;; underscore as a word separator.
@@ -317,6 +318,21 @@
         (list #'autopair-default-handle-action
               #'autopair-python-triple-quote-action)))
 (add-hook 'python-mode-hook 'load-python-mode-accessories)
+
+;; Multi-mode mode, which I use on rare-ish occasions.
+(require 'mmm-auto)
+(setq mmm-global-mode 'maybe)
+
+;; Trying to get sql-mode working inside php-mode, because that would be handy.
+;; There are many issues with it, but the current one is that sql-mode appears
+;; to be seeing the single quotes as defining a string.
+(mmm-add-classes
+ '((embedded-sql
+    :submode sql-mode
+    :front "$\\(sql\\|query\\) = \""
+    :back "\";"
+    :face mmm-code-submode-face)))
+(mmm-add-mode-ext-class 'php-mode "\\.php$" 'embedded-sql)
 
 ;; PHP Mode.
 (setq auto-mode-alist (cons '("\\.php$" . php-mode) auto-mode-alist))

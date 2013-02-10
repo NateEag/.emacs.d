@@ -14,7 +14,8 @@ function do_nothing() {
             FROM SomeTable
                  JOIN SomeOtherTable
                       ON SomeTable.id = SomeOtherTable.some_table_id
-";
+            WHERE SomeTable.title = :title";
+    var_dump($sql);
 
     $query = "SELECT
 			      *
@@ -22,5 +23,8 @@ function do_nothing() {
 			      Foobar
 				  JOIN Foobaz
 				      ON Foobar.foo = Foobaz.faz
-			  WHERE Foobaz.faz IS NOT NULL";
+			  WHERE Foobaz.faz IS NOT NULL
+              GROUP BY Foobar.author";
 }
+
+do_nothing();

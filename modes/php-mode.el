@@ -6,12 +6,12 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;;; Version: 1.9
+;;; Version: 1.10
 
-(defconst php-mode-version-number "1.9"
+(defconst php-mode-version-number "1.10"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2013-01-27"
+(defconst php-mode-modified "2013-02-06"
   "PHP Mode build date.")
 
 ;;; License
@@ -204,11 +204,8 @@ You can replace \"en\" with your ISO language code."
   :type '(repeat (regexp :tag "Pattern"))
   :set (lambda (sym val)
          (set-default sym val)
-         (let ((php-file-patterns-temp val))
-           (while php-file-patterns-temp
-             (add-to-list 'auto-mode-alist
-                          (cons (car php-file-patterns-temp) 'php-mode))
-             (setq php-file-patterns-temp (cdr php-file-patterns-temp)))))
+         (mapc (lambda (i) (add-to-list 'auto-mode-alist (cons i 'php-mode)))
+               val))
   :group 'php)
 
 (defcustom php-mode-hook nil
@@ -545,6 +542,30 @@ This is was done due to the problem reported here:
             (delete-char (* (funcall count-func 'arglist-cont-nonempty syntax)
                             c-basic-offset)))))))
 
+(defvar php-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map [menu-bar php]
+      (cons "PHP" (make-sparse-keymap "PHP")))
+
+    (define-key map [menu-bar php complete-function]
+      '("Complete function name" . php-complete-function))
+    (define-key map [menu-bar php browse-manual]
+      '("Browse manual" . php-browse-manual))
+    (define-key map [menu-bar php search-documentation]
+      '("Search documentation" . php-search-documentation))
+
+    (define-key map [(control c) (control f)] 'php-search-documentation)
+    (define-key map [(meta tab)] 'php-complete-function)
+    (define-key map [(control c) (control m)] 'php-browse-manual)
+    (define-key map [(control .)] 'php-show-arglist)
+    (define-key map [(control c) (control r)] 'php-send-region)
+    ;; Use the Emacs standard indentation binding. This may upset c-mode
+    ;; which does not follow this at the moment, but I see no better
+    ;; choice.
+    (define-key map [tab] 'indent-for-tab-command)
+    map)
+  "Keymap for `php-mode'")
+
 ;;;###autoload
 (define-derived-mode php-mode c-mode "PHP"
   "Major mode for editing PHP code.\n\n\\{php-mode-map}"
@@ -647,22 +668,6 @@ This is was done due to the problem reported here:
        "^\\s-*function\\s-+&?\\s-*\\(\\(\\sw\\|\\s_\\)+\\)\\s-*")
   (set (make-local-variable 'add-log-current-defun-header-regexp)
        php-beginning-of-defun-regexp))
-
-;; Make a menu keymap (with a prompt string)
-;; and make it the menu bar item's definition.
-(define-key php-mode-map [menu-bar] (make-sparse-keymap))
-(define-key php-mode-map [menu-bar php]
-  (cons "PHP" (make-sparse-keymap "PHP")))
-
-;; Define specific subcommands in this menu.
-(define-key php-mode-map [menu-bar php complete-function]
-  '("Complete function name" . php-complete-function))
-(define-key php-mode-map
-  [menu-bar php browse-manual]
-  '("Browse manual" . php-browse-manual))
-(define-key php-mode-map
-  [menu-bar php search-documentation]
-  '("Search documentation" . php-search-documentation))
 
 ;; Define function name completion function
 (defvar php-completion-table nil
@@ -831,30 +836,6 @@ searching the PHP website."
   (interactive)
   (browse-url php-manual-url))
 
-;; Define shortcut
-(define-key php-mode-map
-  "\C-c\C-f"
-  'php-search-documentation)
-
-;; Define shortcut
-(define-key php-mode-map
-  [(meta tab)]
-  'php-complete-function)
-
-;; Define shortcut
-(define-key php-mode-map
-  "\C-c\C-m"
-  'php-browse-manual)
-
-;; Define shortcut
-(define-key php-mode-map
-  '[(control .)]
-  'php-show-arglist)
-
-;; Use the Emacs standard indentation binding. This may upset c-mode
-;; which does not follow this at the moment, but I see no better
-;; choice.
-(define-key php-mode-map [?\t] 'indent-for-tab-command)
 
 (defconst php-constants
   (eval-when-compile
@@ -1413,6 +1394,7 @@ searching the PHP website."
        "else"
        "elseif"
        "empty"
+       "encoding"
        "endfor"
        "endforeach"
        "endif"
@@ -1437,6 +1419,7 @@ searching the PHP website."
        "return"
        "static"
        "switch"
+       "ticks"
        "throw"
        "try"
        "unset"
@@ -1481,7 +1464,7 @@ searching the PHP website."
 
    ;; Fontify keywords and targets, and case default tags.
    (list "\\<\\(break\\|case\\|continue\\)\\>\\s-+\\(-?\\sw+\\)?"
-         '(1 font-lock-keyword-face) '(2 font-lock-constant-face t t))
+         '(1 font-lock-keyword-face) '(2 font-lock-constant-face keep t))
    ;; This must come after the one for keywords and targets.
    '(":" ("^\\s-+\\(\\sw+\\)\\s-+\\s-+$"
           (beginning-of-line) (end-of-line)
@@ -1604,10 +1587,10 @@ searching the PHP website."
     '("\\$\\(\\sw+\\)" (1 font-lock-variable-name-face))
 
     ;; ->function_call
-    '("->\\(\\sw+\\)\\s-*(" (1 php-function-call-face t t))
+    '("->\\(\\sw+\\)\\s-*(" (1 php-function-call-face keep t))
 
     ;; ->variable
-    '("->\\(\\sw+\\)" (1 font-lock-variable-name-face t t))
+    '("->\\(\\sw+\\)" (1 font-lock-variable-name-face keep t))
 
     ;; class::member
     '("\\(\\(\\sw\\|\\\\\\)+\\)::\\sw+\\s-*(?" . (1 font-lock-type-face))
@@ -1669,8 +1652,6 @@ The output will appear in the buffer *PHP*."
                                (substring code 5)
                              code)))
       (call-process "php" nil php-buffer nil "-r" (clean-php-code code)))))
-
-(define-key php-mode-map "\C-c\C-r" 'php-send-region)
 
 
 (defface php-annotations-annotation-face '((t . (:inherit 'font-lock-constant-face)))

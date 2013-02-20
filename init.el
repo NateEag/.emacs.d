@@ -336,6 +336,7 @@
 (mmm-add-mode-ext-class 'php-mode "\\.php$" 'embedded-sql)
 
 ;; PHP Mode.
+(add-to-list 'load-path "~/.emacs.d/php-mode")
 (setq auto-mode-alist (cons '("\\.php$" . php-mode) auto-mode-alist))
 (autoload 'php-mode "php-mode" "PHP editing mode." t)
 

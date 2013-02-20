@@ -357,6 +357,7 @@
 
 ;; Web mode.
 ;; For editing web templates of various stripes.
+(add-to-list 'load-path "~/.emacs.d/web-mode")
 (autoload 'web-mode "web-mode" "Web template editing mode")
 (require 'web-mode)
 (add-to-list 'auto-mode-alist '("\\.tmpl\\'" . web-mode))

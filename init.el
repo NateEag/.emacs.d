@@ -319,7 +319,7 @@
 (add-hook 'python-mode-hook 'load-python-mode-accessories)
 
 ;; Include my PHP editing settings.
-(load "php-mode-init.el")
+(require 'php-mode-init)
 
 ;; Multi-mode mode, which I use on rare-ish occasions.
 (require 'mmm-auto)

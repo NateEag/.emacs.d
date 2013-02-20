@@ -24,3 +24,6 @@
 (defun load-php-mode-accessories ()
   (smart-dash-mode t))
 (add-hook 'php-mode-hook 'load-php-mode-accessories)
+
+;; Make this requireable.
+(provide 'php-mode-init)

@@ -4,18 +4,26 @@
 (setq auto-mode-alist (cons '("\\.php$" . php-mode) auto-mode-alist))
 (autoload 'php-mode "php-mode" "PHP editing mode." t)
 
+(setq php-sql-mmm-submode-enabled nil)
+(defun php-sql-mmm-submode ()
+  "Provides a very minimal embedding of SQL in PHP, via mmm-mode."
+  (when (not php-sql-mmm-submode-enabled)
+    (require 'mmm-auto)
+    (set-face-background 'mmm-default-submode-face nil)
+    (mmm-add-classes
+     '((embedded-sql
+        :submode sql-mode
+        :front "$\\(sql\\|query\\) = \""
+        :back "\";"
+        :face mmm-code-submode-face)))
+    (mmm-add-mode-ext-class 'php-mode "\\.php$" 'embedded-sql)
+    (setq php-sql-mmm-submode-enabled t)))
+
 (defun load-php-mode-accessories ()
-  ;; Trying to get sql-mode working inside php-mode, because that would be
-  ;; handy.
-  (require 'mmm-auto)
-  (set-face-background 'mmm-default-submode-face nil)
-  (mmm-add-classes
-   '((embedded-sql
-      :submode sql-mode
-      :front "$\\(sql\\|query\\) = \""
-      :back "\";"
-      :face mmm-code-submode-face)))
-  (mmm-add-mode-ext-class 'php-mode "\\.php$" 'embedded-sql)
+  "Load my particular tweaks for php-mode."
+  (interactive)
+  ;; Initialize my php-sql submode.
+  (php-sql-mmm-submode)
 
   ;; Everyone loves smart-dash mode.
   (require 'smart-dash)

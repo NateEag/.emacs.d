@@ -318,12 +318,12 @@
               #'autopair-python-triple-quote-action)))
 (add-hook 'python-mode-hook 'load-python-mode-accessories)
 
+;; Multi-mode mode, which I use on rare-ish occasions.
+(require 'mmm-mode)
+(setq mmm-global-mode 'maybe)
+
 ;; Include my PHP editing settings.
 (require 'php-mode-init)
-
-;; Multi-mode mode, which I use on rare-ish occasions.
-(require 'mmm-auto)
-(setq mmm-global-mode 'maybe)
 
 ;; The following are workarounds since web-mode expects Emacs >= 23, and OS X's
 ;; built-in Emacs is v. 22. Sadly, they are still not enough to quite make it

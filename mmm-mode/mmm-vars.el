@@ -1,9 +1,9 @@
 ;;; mmm-vars.el --- Variables for MMM Mode
 
 ;; Copyright (C) 2000, 2004 by Michael Abraham Shulman
+;; Copyright (C) 2012, 2013 by Dmitry Gutov
 
 ;; Author: Michael Abraham Shulman <viritrilbia@users.sourceforge.net>
-;; Version: $Id: mmm-vars.el,v 1.57 2004/11/19 02:33:36 alanshutko Exp $
 
 ;;{{{ GPL
 
@@ -131,7 +131,6 @@
     font-lock-syntax-table
     font-lock-mark-block-function       ; Override this?
     font-lock-syntactic-keywords
-    indent-line-function
     parse-sexp-ignore-comments  ; Fixes indentation in PHP-mode?
     ;; Can be different in different buffers
     (c-basic-offset

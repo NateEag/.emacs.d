@@ -1,10 +1,11 @@
 ;; Nate Eagleson's Emacs config.
 
-
 ;; Global Preferences
 
 ;; Make sure my .emacs.d is on the load path.
 (add-to-list 'load-path "~/.emacs.d")
+(progn (cd "~/.emacs.d")
+       (normal-top-level-add-subdirs-to-load-path))
 
 ;; Everyone likes syntax coloration.
 (global-font-lock-mode 1)
@@ -149,7 +150,6 @@
 
 ;; Include the modes directory.
 (add-to-list 'load-path "~/.emacs.d/modes")
-(add-to-list 'load-path "~/.emacs.d/modes/mmm-mode")
 
 ;; smart-dash-mode saves a lot of stupid SHIFT-ing in languages that favor
 ;; underscore as a word separator.

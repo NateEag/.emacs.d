@@ -3,7 +3,6 @@
 ;; Copyright (C) 2000 by Michael Abraham Shulman
 
 ;; Author: Michael Abraham Shulman <mas@kurukshetra.cjb.net>
-;; Version: $Id: mmm-auto.el,v 1.22 2004/11/19 02:33:36 alanshutko Exp $
 
 ;;{{{ GPL
 
@@ -67,7 +66,7 @@
 (defvar mmm-autoloaded-classes
   '((mason "mmm-mason" nil)
     (myghty "mmm-myghty" nil)
-    (embedded-css "mmm-sample" nil)
+    (html-css "mmm-sample" nil)
     (html-js "mmm-sample" nil)
     (here-doc "mmm-sample" nil)
     (embperl "mmm-sample" nil)

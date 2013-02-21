@@ -1,6 +1,6 @@
 ;;; mmm-erb.el --- ERB templates editing support
 
-;; Copyright (C) 2012 by Dmitry Gutov
+;; Copyright (C) 2012, 2013 by Dmitry Gutov
 
 ;; Author: Dmitry Gutov <dgutov@yandex.ru>
 
@@ -25,8 +25,8 @@
 
 ;;; Commentary:
 
-;; This file contains definitions of JavaScript, CSS, ERB and EJS submode
-;; classes, and well as support functions for proper indentation.
+;; This file contains definitions of ERB and EJS submode classes, and well as
+;; support functions for proper indentation.
 
 ;; Usage:
 
@@ -61,36 +61,6 @@
 (require 'mmm-vars)
 (require 'mmm-region)
 
-(mmm-add-group
- 'html-js
- '((js-script-cdata
-    :submode js-mode
-    :face mmm-code-submode-face
-    :front "<script[^>]*>[ \t\n]*\\(//\\)?<!\\[CDATA\\[[ \t]*\n?"
-    :back "[ \t]*\\(//\\)?]]>[ \t\n]*</script>")
-   (js-script
-    :submode js-mode
-    :face mmm-code-submode-face
-    :front "<script[^>]*>[ \t]*\n?"
-    :back "[ \t]*</script>"
-    :insert ((?j js-tag nil @ "<script type=\"text/javascript\">\n"
-                 @ "" _ "" @ "\n</script>" @)))))
-
-(mmm-add-group
- 'html-css
- '((css-cdata
-    :submode css-mode
-    :face mmm-code-submode-face
-    :front "<style[^>]*>[ \t\n]*\\(//\\)?<!\\[CDATA\\[[ \t]*\n?"
-    :back "[ \t]*\\(//\\)?]]>[ \t\n]*</style>")
-   (css
-    :submode css-mode
-    :face mmm-code-submode-face
-    :front "<style[^>]*>[ \t]*\n?"
-    :back "[ \t]*</style>"
-    :insert ((?c css-tag nil @ "<style type=\"text/css\">\n"
-                 @ "" _ "" @ "\n</style>" @)))))
-
 (mmm-add-classes
  '((erb :submode ruby-mode :front "<%[#=]?" :back "-?%>"
         :match-face (("<%#" . mmm-comment-submode-face)
@@ -109,19 +79,10 @@
                  (?= ejs-expression nil @ "<%=" @ " " _ " " @ "%>" @))
         :creation-hook mmm-erb-mark-as-special)))
 
-(pushnew '(indent-line-function buffer) mmm-save-local-variables)
-
 ;;;###autoload
 (define-derived-mode html-erb-mode html-mode "ERB-HTML"
   (setq sgml-unclosed-tags nil) ; Simplifies indentation logic.
-  (add-hook 'mmm-html-erb-mode-hook 'mmm-erb-process-submode nil t)
-  (add-hook 'mmm-ruby-mode-submode-hook 'mmm-erb-process-submode nil t)
-  (add-hook 'mmm-css-mode-submode-hook 'mmm-erb-process-submode nil t)
-  (add-hook 'mmm-js-mode-submode-hook 'mmm-erb-process-submode nil t))
-
-(defun mmm-erb-process-submode ()
-  "Hook function to run after primary or submode major mode function."
-  (setq indent-line-function 'mmm-erb-indent-line))
+  (set (make-local-variable 'mmm-indent-line-function) 'mmm-erb-indent-line))
 
 (defun mmm-erb-mark-as-special ()
   "Hook function to run in ERB and EJS tag regions."
@@ -136,6 +97,12 @@
     (if (and mmm-current-overlay mmm-current-submode
              (< (overlay-start mmm-current-overlay) (point-at-bol)))
         ;; Region starts before the current line (and contains indentation).
+        ;; If it starts on the current line, then either first part of the line
+        ;; is in primary mode, or we're on the first line of a script or style
+        ;; tag contents. In the latter case, better to also indent it according
+        ;; to the primary mode (as text): `js-indent-line' ignores narrowing,
+        ;; gets confused by the angle bracket on the previous line and thus
+        ;; breaks our "top level" heuristic.
         (mmm-erb-indent-line-submode)
       (mmm-erb-indent-line-primary))
     (when (> offset 0) (forward-char offset))))
@@ -245,7 +212,7 @@
         ((re-search-forward " *{ *" limit t) 'open)))
 
 (defun mmm-erb-orig-indent-function (mode)
-  (cadr (assoc 'indent-line-function (get mode 'mmm-local-variables))))
+  (get mode 'mmm-indent-line-function))
 
 (defvar mmm-erb-offset-var-alist
   '((html-erb-mode . sgml-basic-offset)
@@ -257,9 +224,7 @@
 
 ;;;###autoload
 (define-derived-mode nxml-web-mode nxml-mode "nXML-Web"
-  (add-hook 'mmm-nxml-web-mode-hook 'mmm-erb-process-submode nil t)
-  (add-hook 'mmm-css-mode-submode-hook 'mmm-erb-process-submode nil t)
-  (add-hook 'mmm-js-mode-submode-hook 'mmm-erb-process-submode nil t))
+  (set (make-local-variable 'mmm-indent-line-function) 'mmm-erb-indent-line))
 
 (provide 'mmm-erb)
 

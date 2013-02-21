@@ -1,9 +1,9 @@
 ;;; mmm-region.el --- Manipulating and behavior of MMM submode regions
 
 ;; Copyright (C) 2000 by Michael Abraham Shulman
+;; Copyright (C) 2012, 2013 by Dmitry Gutov
 
 ;; Author: Michael Abraham Shulman <viritrilbia@users.sourceforge.net>
-;; Version: $Id: mmm-region.el,v 1.38 2003/06/19 11:24:04 viritrilbia Exp $
 
 ;;{{{ GPL
 
@@ -511,7 +511,8 @@ is non-nil, don't quit if the info is already there."
                          font-lock-beginning-of-syntax-function))
                 (put mode 'mmm-syntax-propertize-function
                      (and (boundp 'syntax-propertize-function)
-                          syntax-propertize-function)))
+                          syntax-propertize-function))
+                (put mode 'mmm-indent-line-function indent-line-function))
               ;; Get variables
               (setq global-vars (mmm-get-locals 'global)
                     buffer-vars (mmm-get-locals 'buffer)
@@ -602,6 +603,10 @@ Return \((VAR VALUE) ...).  In some cases, VAR will be of the form
   "Get the value of the local variable VAR saved for MODE and OVL, if any."
   (cadr (assq var (mmm-get-saved-local-variables ovl mode))))
 
+;; FIXME: It's too easy to accidentally pass nil as MODE here.
+;; We probably should call this from `mmm-set-current-pair', and not
+;; rely on its callers to default to the primary mode when appropriate.
+;; Also, incorporate the opmimization from `mmm-fontify-region-list'.
 (defun mmm-set-local-variables (mode ovl)
   "Set all the local variables saved for MODE and OVL.
 Looks up global, buffer and region saves.  When MODE is nil, just
@@ -818,10 +823,27 @@ of the REGIONS covers START to STOP."
                           (font-lock-fontify-syntactic-keywords-region beg end)))))))
               (mmm-regions-in start stop))
       (mmm-set-current-pair saved-mode saved-ovl)
-      (mmm-set-local-variables saved-mode saved-ovl))))
+      (mmm-set-local-variables (or saved-mode mmm-primary-mode) saved-ovl))))
 
 ;;}}}
+;;{{{ Indentation
 
+(defvar mmm-indent-line-function 'mmm-indent-line
+  "The function to call to indent inside a primary mode region.
+This will be the value of `indent-line-function' for the whole
+buffer. It's supposed to delegate to the appropriate submode's
+indentation function. See `mmm-indent-line' as the starting point.")
+
+(defun mmm-indent-line ()
+  (interactive)
+  (funcall
+    (save-excursion
+      (back-to-indentation)
+      (mmm-update-submode-region)
+      (get (or mmm-current-submode mmm-primary-mode)
+           'mmm-indent-line-function))))
+
+;;}}}
 (provide 'mmm-region)
 
 ;;; mmm-region.el ends here

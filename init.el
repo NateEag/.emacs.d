@@ -318,10 +318,6 @@
               #'autopair-python-triple-quote-action)))
 (add-hook 'python-mode-hook 'load-python-mode-accessories)
 
-;; Multi-mode mode, which I use on rare-ish occasions.
-(require 'mmm-mode)
-(setq mmm-global-mode 'maybe)
-
 ;; Include my PHP editing settings.
 (require 'php-mode-init)
 

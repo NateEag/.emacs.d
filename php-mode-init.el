@@ -4,11 +4,13 @@
 (setq auto-mode-alist (cons '("\\.php$" . php-mode) auto-mode-alist))
 (autoload 'php-mode "php-mode" "PHP editing mode." t)
 
+(require 'mmm-auto)
+(setq mmm-global-mode 'maybe)
+
 (setq php-sql-mmm-submode-enabled nil)
 (defun php-sql-mmm-submode ()
   "Provides a very minimal embedding of SQL in PHP, via mmm-mode."
   (when (not php-sql-mmm-submode-enabled)
-    (require 'mmm-auto)
     (set-face-background 'mmm-default-submode-face nil)
     (mmm-add-classes
      '((embedded-sql
@@ -22,6 +24,7 @@
 (defun load-php-mode-accessories ()
   "Load my particular tweaks for php-mode."
   (interactive)
+
   ;; Initialize my php-sql submode.
   (php-sql-mmm-submode)
 

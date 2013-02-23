@@ -4,6 +4,12 @@
 
 -Make < and > be autopaired in web-mode.
 
+-My SQL-in-PHP code does not work with queries that involve concatenation, which some do (especially in crappy legacy codebases). See my email inbox for an example.
+
+-Figure out why php-mode will not fill comments that begin with //. I'm guessing it has to do with php-mode deriving from c-mode, but perhaps not.
+
+-Figure out why constants in php-mode display in red if they're followed by a dot. Concatenation with constants is perfectly valid syntax.
+
 -I should probably go back and store my custom yasnippets somewhere other than the default yasnippet locale - set mine up to override the defaults.
 
 -I would like my sql-mode to do a better job with font-lock. It does very poorly at dealing with strings that have backslashed quotes.

@@ -204,7 +204,7 @@
 (add-hook 'sh-mode-hook 'load-shell-mode-accessories)
 
 ;; reStructuredText mode.
-(require 'rst)
+(autoload 'rst-mode "rst-mode.el")
 (setq auto-mode-alist (cons '("\\.rst$" . rst-mode) auto-mode-alist))
 (setq auto-mode-alist (cons '("\\.rest$" . rst-mode) auto-mode-alist))
 

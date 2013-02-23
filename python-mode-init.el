@@ -1,10 +1,6 @@
 ;; Set up Python mode.
 ;; (This is rather involved, and in desperate need of an overhaul.)
 
-;; Show current function in modeline.
-(require 'which-func)
-(add-to-list 'which-func-modes 'python-mode)
-
 ;; I use python-mode.el, with the TQS-coloration patch applied.
 (setq auto-mode-alist (cons '("\\.py$" . python-mode) auto-mode-alist))
 (setq interpreter-mode-alist

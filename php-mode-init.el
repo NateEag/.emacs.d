@@ -7,6 +7,8 @@
 (require 'mmm-auto)
 (setq mmm-global-mode 'maybe)
 
+(autoload 'comment-auto-fill "comment-auto-fill.el")
+
 (setq php-sql-mmm-submode-enabled nil)
 (defun php-sql-mmm-submode ()
   "Provides a very minimal embedding of SQL in PHP, via mmm-mode."
@@ -31,7 +33,10 @@
   ;; Everyone loves smart-dash mode.
   (require 'smart-dash)
   (setq smart-dash-c-modes (cons 'php-mode smart-dash-c-modes))
-  (smart-dash-mode t))
+  (smart-dash-mode t)
+
+  ;; Auto-fill comments, because life without auto-filled comments is annoying.
+  (comment-auto-fill))
 (add-hook 'php-mode-hook 'load-php-mode-accessories)
 
 ;; Make this requireable.

@@ -7,6 +7,10 @@
       (cons '("python" . python-mode) interpreter-mode-alist))
 (autoload 'python-mode "python-mode" "Python editing mode." t)
 
+;; When necessary, pull in auto-filling of comments.
+;; I'd actually really like to get auto-filling of docstrings, wrapping at
+(autoload 'comment-auto-fill "comment-auto-fill.el")
+
 ;; The somewhat-convoluted setup for ropemacs/autocomplete.el integration
 ;; in python-mode follows.
 (defvar pymacs-initialized nil)
@@ -84,6 +88,7 @@
   (initialize-rope)
   (initialize-auto-complete-python)
   (smart-dash-mode t)
+  (comment-auto-fill)
   (setq autopair-handle-action-fns
         (list #'autopair-default-handle-action
               #'autopair-python-triple-quote-action)))

@@ -184,6 +184,9 @@
         (kill-buffer nil))))
   nil)
 
+;; Autoload lame hack for auto-filling comments so I can use it in various
+;; modes.
+(autoload 'comment-auto-fill "comment-auto-fill.el")
 
 ;; Major mode setup and registration.
 
@@ -191,6 +194,7 @@
 (defun load-sql-mode-accessories ()
   (interactive)
   (smart-dash-mode t)
+  (comment-auto-fill)
   (when (locate-library "sql-indent")
     (load-library "sql-indent")))
 (add-hook 'sql-mode-hook 'load-sql-mode-accessories)
@@ -200,6 +204,7 @@
 
 (defun load-shell-mode-accessories ()
   (interactive)
+  (comment-auto-fill)
   (smart-dash-mode t))
 (add-hook 'sh-mode-hook 'load-shell-mode-accessories)
 
@@ -234,7 +239,6 @@
 ;; For editing web templates of various stripes.
 (add-to-list 'load-path "~/.emacs.d/web-mode")
 (autoload 'web-mode "web-mode" "Web template editing mode")
-(require 'web-mode)
 (add-to-list 'auto-mode-alist '("\\.tmpl\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode))
 
@@ -248,7 +252,8 @@
 
 (defadvice javascript-mode (after load-smart-dash-mode)
   "Load smart dash mode, since javascript-mode doesn't have a hook."
-  (smart-dash-mode t))
+  (smart-dash-mode t)
+  (comment-auto-fill))
 (ad-activate 'javascript-mode)
 
 ;; Initializing yasnippet

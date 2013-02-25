@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : session_cache_limiter(...)
-# --
-session_cache_limiter(${[string cache_limiter]})$0

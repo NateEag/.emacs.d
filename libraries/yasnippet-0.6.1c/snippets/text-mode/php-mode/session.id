@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : session_id(...)
-# --
-session_id(${[string id]})$0

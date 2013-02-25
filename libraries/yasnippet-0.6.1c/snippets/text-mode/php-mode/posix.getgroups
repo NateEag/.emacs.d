@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : posix_getgroups()
-# --
-posix_getgroups()$0

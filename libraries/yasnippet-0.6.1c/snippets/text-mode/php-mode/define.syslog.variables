@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : define_syslog_variables()
-# --
-define_syslog_variables()$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : odbc_next_result(...)
-# --
-odbc_next_result(${result_id})$0

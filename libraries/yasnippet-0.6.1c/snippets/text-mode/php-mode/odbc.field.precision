@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : odbc_field_precision(..., ...)
-# --
-odbc_field_precision(${result_id}, ${field_number})$0

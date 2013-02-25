@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mysql_field_seek(..., ...)
-# --
-mysql_field_seek(${result}, ${field_offset})$0

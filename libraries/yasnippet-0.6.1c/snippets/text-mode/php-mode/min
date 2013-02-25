@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : min(..., ...)
-# --
-min(${arg1}, ${arg2[, number ...]})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_fetch_overview(..., ...)
-# --
-imap_fetch_overview(${imap_stream}, ${sequence[, int options]})$0

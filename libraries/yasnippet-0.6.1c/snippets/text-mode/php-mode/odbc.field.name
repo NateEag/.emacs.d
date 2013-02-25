@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : odbc_field_name(..., ...)
-# --
-odbc_field_name(${result_id}, ${field_number})$0

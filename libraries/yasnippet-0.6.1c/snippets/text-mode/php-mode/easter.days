@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : easter_days(...)
-# --
-easter_days(${[int year]})$0

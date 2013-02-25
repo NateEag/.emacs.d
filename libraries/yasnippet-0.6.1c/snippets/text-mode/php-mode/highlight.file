@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : highlight_file(...)
-# --
-highlight_file(${filename[, bool return]})$0

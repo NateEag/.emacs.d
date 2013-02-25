@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : pcntl_wexitstatus(...)
-# --
-pcntl_wexitstatus(${status})$0

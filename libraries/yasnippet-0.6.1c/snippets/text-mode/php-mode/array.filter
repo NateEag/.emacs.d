@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : array_filter(...)
-# --
-array_filter(${input[, callback callback]})$0

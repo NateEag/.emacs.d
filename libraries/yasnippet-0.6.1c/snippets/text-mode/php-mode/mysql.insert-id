@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mysql_insert_id(...)
-# --
-mysql_insert_id(${[resource link_identifier]})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : posix_getrlimit()
-# --
-posix_getrlimit()$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mysql_connect(...)
-# --
-mysql_connect(${[string server]})$0

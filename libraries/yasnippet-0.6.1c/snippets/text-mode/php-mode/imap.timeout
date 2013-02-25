@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_timeout(...)
-# --
-imap_timeout(${timeout_type[, int timeout]})$0

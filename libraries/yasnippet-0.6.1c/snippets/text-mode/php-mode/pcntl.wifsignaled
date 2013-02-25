@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : pcntl_wifsignaled(...)
-# --
-pcntl_wifsignaled(${status})$0

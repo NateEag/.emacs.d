@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : create_function(..., ...)
-# --
-create_function(${args}, ${code})$0

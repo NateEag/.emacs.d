@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imagecolorclosest(..., ..., ..., ...)
-# --
-imagecolorclosest(${image}, ${red}, ${green}, ${blue})$0

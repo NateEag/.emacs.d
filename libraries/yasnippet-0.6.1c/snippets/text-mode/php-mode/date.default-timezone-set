@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : date_default_timezone_set(...)
-# --
-date_default_timezone_set(${timezone_identifier})$0

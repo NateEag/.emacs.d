@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : cal_from_jd(..., ...)
-# --
-cal_from_jd(${jd}, ${calendar})$0

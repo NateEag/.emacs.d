@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : odbc_num_rows(...)
-# --
-odbc_num_rows(${result_id})$0

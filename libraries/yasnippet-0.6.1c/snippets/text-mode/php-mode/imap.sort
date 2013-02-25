@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_sort(..., ..., ...)
-# --
-imap_sort(${stream}, ${criteria}, ${reverse[, int options]})$0

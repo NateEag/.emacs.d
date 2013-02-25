@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : session_cache_expire(...)
-# --
-session_cache_expire(${[int new_cache_expire]})$0

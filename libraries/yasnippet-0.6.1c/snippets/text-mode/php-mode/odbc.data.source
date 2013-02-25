@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : odbc_data_source(..., ...)
-# --
-odbc_data_source(${connection_id}, ${fetch_type})$0

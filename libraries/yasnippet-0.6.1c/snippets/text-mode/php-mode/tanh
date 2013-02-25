@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : tanh(...)
-# --
-tanh(${arg})$0

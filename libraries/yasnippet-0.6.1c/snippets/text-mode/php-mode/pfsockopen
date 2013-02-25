@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : pfsockopen(...)
-# --
-pfsockopen(${hostname[, int port]})$0

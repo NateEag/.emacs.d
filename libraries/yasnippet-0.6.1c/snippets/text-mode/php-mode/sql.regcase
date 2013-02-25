@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : sql_regcase(...)
-# --
-sql_regcase(${string})$0

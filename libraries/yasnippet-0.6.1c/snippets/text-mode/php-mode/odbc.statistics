@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : odbc_statistics(..., ..., ..., ..., ..., ...)
-# --
-odbc_statistics(${connection_id}, ${qualifier}, ${owner}, ${table_name}, ${unique}, ${accuracy})$0

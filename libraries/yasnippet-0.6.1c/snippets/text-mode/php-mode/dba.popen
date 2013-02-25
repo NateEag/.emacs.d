@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : dba_popen(..., ...)
-# --
-dba_popen(${path}, ${mode[, string handler]})$0

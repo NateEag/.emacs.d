@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : array_intersect_assoc(..., ...)
-# --
-array_intersect_assoc(${array1}, ${array2[, array ...]})$0

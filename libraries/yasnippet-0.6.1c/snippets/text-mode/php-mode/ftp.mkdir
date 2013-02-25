@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : ftp_mkdir(..., ...)
-# --
-ftp_mkdir(${ftp_stream}, ${directory})$0

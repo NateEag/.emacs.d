@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : odbc_execute(...)
-# --
-odbc_execute(${result_id[, array parameters_array]})$0

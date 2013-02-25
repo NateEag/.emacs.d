@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : php_check_syntax(...)
-# --
-php_check_syntax(${file_name[, string &error_message]})$0

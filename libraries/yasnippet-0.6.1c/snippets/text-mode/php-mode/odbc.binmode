@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : odbc_binmode(..., ...)
-# --
-odbc_binmode(${result_id}, ${mode})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mysql_create_db(...)
-# --
-mysql_create_db(${database_name[, resource link_identifier]})$0

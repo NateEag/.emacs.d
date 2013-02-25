@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : headers_sent(...)
-# --
-headers_sent(${[string &file]})$0

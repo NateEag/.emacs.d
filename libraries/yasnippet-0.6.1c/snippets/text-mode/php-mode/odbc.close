@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : odbc_close(...)
-# --
-odbc_close(${connection_id})$0

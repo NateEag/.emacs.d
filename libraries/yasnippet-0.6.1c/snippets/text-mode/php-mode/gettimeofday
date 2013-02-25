@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : gettimeofday(...)
-# --
-gettimeofday(${[bool return_float]})$0

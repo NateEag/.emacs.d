@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : md5(...)
-# --
-md5(${str[, bool raw_output]})$0

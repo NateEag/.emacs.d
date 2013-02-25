@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : eregi_replace(..., ..., ...)
-# --
-eregi_replace(${pattern}, ${replacement}, ${string})$0

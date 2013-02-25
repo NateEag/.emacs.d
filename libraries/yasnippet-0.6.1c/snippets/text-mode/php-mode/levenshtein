@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : levenshtein(..., ...)
-# --
-levenshtein(${str1}, ${str2[, int cost_ins, int cost_rep, int cost_del]})$0

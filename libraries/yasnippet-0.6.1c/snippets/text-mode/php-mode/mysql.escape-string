@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mysql_escape_string(...)
-# --
-mysql_escape_string(${unescaped_string})$0

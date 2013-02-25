@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : chmod(..., ...)
-# --
-chmod(${filename}, ${mode})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imagecolorexactalpha(..., ..., ..., ..., ...)
-# --
-imagecolorexactalpha(${image}, ${red}, ${green}, ${blue}, ${alpha})$0

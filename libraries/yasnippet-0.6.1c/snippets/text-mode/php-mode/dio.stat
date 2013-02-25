@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : dio_stat(...)
-# --
-dio_stat(${fd})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : getimagesize(...)
-# --
-getimagesize(${filename[, array &imageinfo]})$0

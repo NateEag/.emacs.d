@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : ob_end_clean()
-# --
-ob_end_clean()$0

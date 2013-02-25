@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : cal_info(...)
-# --
-cal_info(${[int calendar]})$0

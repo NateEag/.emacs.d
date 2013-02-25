@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : base64_decode(...)
-# --
-base64_decode(${encoded_data})$0

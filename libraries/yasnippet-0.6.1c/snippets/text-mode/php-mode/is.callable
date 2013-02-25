@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : is_callable(...)
-# --
-is_callable(${var[, bool syntax_only]})$0

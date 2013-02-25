@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : session_unregister(...)
-# --
-session_unregister(${name})$0

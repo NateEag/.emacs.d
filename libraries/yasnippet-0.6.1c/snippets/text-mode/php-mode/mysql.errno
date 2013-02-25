@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mysql_errno(...)
-# --
-mysql_errno(${[resource link_identifier]})$0

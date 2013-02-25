@@ -1,8 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : switch (...) {...}
-# --
-switch (${on})
-{
-  $0
-  default:
-}

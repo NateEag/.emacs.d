@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : posix_setuid(...)
+# --
+posix_setuid(${uid})$0

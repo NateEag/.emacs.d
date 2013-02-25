@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : ftp_fput(..., ..., ..., ...)
+# --
+ftp_fput(${ftp_stream}, ${remote_file}, ${handle}, ${mode[, int startpos]})$0

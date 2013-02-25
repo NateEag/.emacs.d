@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : dio_fcntl(..., ...)
+# --
+dio_fcntl(${fd}, ${cmd[, mixed args]})$0

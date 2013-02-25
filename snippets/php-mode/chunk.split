@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : chunk_split(...)
+# --
+chunk_split(${body[, int chunklen]})$0

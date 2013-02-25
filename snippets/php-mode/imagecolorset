@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : imagecolorset(..., ..., ..., ..., ...)
+# --
+imagecolorset(${image}, ${index}, ${red}, ${green}, ${blue})$0

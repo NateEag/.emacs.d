@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : max(..., ...)
+# --
+max(${arg1}, ${arg2[, number ...]})$0

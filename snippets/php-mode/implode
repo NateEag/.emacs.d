@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : implode(..., ...)
+# --
+implode(${glue}, ${pieces})$0

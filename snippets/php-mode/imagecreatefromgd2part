@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : imagecreatefromgd2part(..., ..., ..., ..., ...)
+# --
+imagecreatefromgd2part(${filename}, ${srcX}, ${srcY}, ${width}, ${height})$0

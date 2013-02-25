@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : mysqli_server_init(...)
+# --
+mysqli_server_init(${[array server]})$0

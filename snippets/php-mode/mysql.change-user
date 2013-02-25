@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : mysql_change_user(..., ...)
+# --
+mysql_change_user(${user}, ${password[, string database]})$0

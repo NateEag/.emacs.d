@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : cal_to_jd(..., ..., ..., ...)
+# --
+cal_to_jd(${calendar}, ${month}, ${day}, ${year})$0

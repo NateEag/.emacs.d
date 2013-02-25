@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : imap_setacl(..., ..., ..., ...)
+# --
+imap_setacl(${stream_id}, ${mailbox}, ${id}, ${rights})$0

@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : posix_mkfifo(..., ...)
+# --
+posix_mkfifo(${pathname}, ${mode})$0

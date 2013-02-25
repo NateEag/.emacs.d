@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : imap_createmailbox(..., ...)
+# --
+imap_createmailbox(${imap_stream}, ${mbox})$0

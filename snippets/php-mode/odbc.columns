@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : odbc_columns(...)
+# --
+odbc_columns(${connection_id[, string qualifier]})$0

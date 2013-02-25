@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : ftp_site(..., ...)
+# --
+ftp_site(${ftp_stream}, ${command})$0

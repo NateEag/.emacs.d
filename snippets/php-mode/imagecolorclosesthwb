@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : imagecolorclosesthwb(..., ..., ..., ...)
+# --
+imagecolorclosesthwb(${image}, ${red}, ${green}, ${blue})$0

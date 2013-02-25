@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : imap_8bit(...)
+# --
+imap_8bit(${string})$0

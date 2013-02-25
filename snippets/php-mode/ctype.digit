@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : ctype_digit(...)
+# --
+ctype_digit(${text})$0

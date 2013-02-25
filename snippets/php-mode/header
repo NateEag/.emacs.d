@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : header(...)
+# --
+header(${string[, bool replace]})$0

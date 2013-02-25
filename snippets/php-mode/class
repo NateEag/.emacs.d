@@ -1,0 +1,8 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : class ... 
+# --
+class ${class_name} {
+   public function __construct() {
+      $0
+   }
+}

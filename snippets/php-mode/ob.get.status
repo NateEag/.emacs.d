@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : ob_get_status(...)
+# --
+ob_get_status(${[bool full_status=FALSE]})$0

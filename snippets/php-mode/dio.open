@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : dio_open(..., ...)
+# --
+dio_open(${filename}, ${flags[, int mode]})$0

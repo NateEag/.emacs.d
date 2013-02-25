@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : imap_status(..., ..., ...)
+# --
+imap_status(${imap_stream}, ${mailbox}, ${options})$0

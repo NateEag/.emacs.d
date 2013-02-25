@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : odbc_autocommit(...)
+# --
+odbc_autocommit(${connection_id[, bool OnOff]})$0

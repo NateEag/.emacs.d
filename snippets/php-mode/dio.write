@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : dio_write(..., ...)
+# --
+dio_write(${fd}, ${data[, int len]})$0

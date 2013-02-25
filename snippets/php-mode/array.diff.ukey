@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : array_diff_ukey(..., ...)
+# --
+array_diff_ukey(${array1}, ${array2[, array ..., callback key_compare_func]})$0

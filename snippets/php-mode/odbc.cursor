@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : odbc_cursor(...)
+# --
+odbc_cursor(${result_id})$0

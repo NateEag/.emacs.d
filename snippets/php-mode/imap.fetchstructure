@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : imap_fetchstructure(..., ...)
+# --
+imap_fetchstructure(${imap_stream}, ${msg_number[, int options]})$0

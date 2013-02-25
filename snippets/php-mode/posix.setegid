@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : posix_setegid(...)
+# --
+posix_setegid(${gid})$0

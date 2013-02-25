@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : array_reverse(...)
+# --
+array_reverse(${array[, bool preserve_keys]})$0

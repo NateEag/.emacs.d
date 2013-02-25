@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : money_format(..., ...)
+# --
+money_format(${format}, ${number})$0

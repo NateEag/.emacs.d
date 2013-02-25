@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : odbc_field_scale(..., ...)
+# --
+odbc_field_scale(${result_id}, ${field_number})$0

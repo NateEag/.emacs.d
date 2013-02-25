@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : imap_qprint(...)
+# --
+imap_qprint(${string})$0

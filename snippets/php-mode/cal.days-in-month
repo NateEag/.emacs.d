@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : cal_days_in_month(..., ..., ...)
+# --
+cal_days_in_month(${calendar}, ${month}, ${year})$0

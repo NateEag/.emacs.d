@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : mysql_data_seek(..., ...)
+# --
+mysql_data_seek(${result}, ${row_number})$0

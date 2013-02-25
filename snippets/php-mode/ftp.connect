@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : ftp_connect(...)
+# --
+ftp_connect(${host[, int port]})$0

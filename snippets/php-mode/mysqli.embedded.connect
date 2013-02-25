@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : mysqli_embedded_connect(...)
+# --
+mysqli_embedded_connect(${[string dbname]})$0

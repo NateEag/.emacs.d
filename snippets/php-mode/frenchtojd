@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : frenchtojd(..., ..., ...)
+# --
+frenchtojd(${month}, ${day}, ${year})$0

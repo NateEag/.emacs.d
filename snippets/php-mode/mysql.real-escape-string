@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : mysql_real_escape_string(...)
+# --
+mysql_real_escape_string(${unescaped_string[, resource link_identifier]})$0

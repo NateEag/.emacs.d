@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : odbc_free_result(...)
+# --
+odbc_free_result(${result_id})$0

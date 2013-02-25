@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : odbc_procedures(...)
+# --
+odbc_procedures(${connection_id[, string qualifier, string owner, string name]})$0

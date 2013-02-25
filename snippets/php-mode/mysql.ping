@@ -1,0 +1,4 @@
+#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
+#name : mysql_ping(...)
+# --
+mysql_ping(${[resource link_identifier]})$0

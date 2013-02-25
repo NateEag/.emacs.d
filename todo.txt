@@ -1,20 +1,24 @@
 -It would be really sweet to get yasnippet's bracket placement to do the Right Thing based on major-mode, placing them on the newline or on the same line intelligently. I'm guessing that can be achieved by applying elisp to the templates. This was inspired by making changes to the php-mode snippets to do bracket placement the way I like. Someone's done some work that was approved of by another guy on the yasnippet blog, and they've said any extensions would not be accepted into yasnippet: http://comments.gmane.org/gmane.emacs.yasnippet.devel/403
 
+-Get tab behaving properly. That means calling yasnippet/code-completion as appropriate, indentation when appropriate, retaining minibuffer autocompletion, and Shift-Tab cycling backwards through autocompletions (I really want that, for reasons I don't quite understand). Looks like this page on the EmacsWiki summarizes most of the options: http://www.emacswiki.org/emacs/TabCompletion
+
+-I should probably go back and store my custom yasnippets somewhere other than the default yasnippet locale - set mine up to override the defaults.
+
 -I'd like yasnippets for JavaScript.
 
 -Make < and > be autopaired in web-mode.
 
 -My SQL-in-PHP code does not work with queries that involve concatenation, which some do (especially in crappy legacy codebases). See my email inbox for an example.
 
+-I should probably consider getting a better JS environment going. Having a JS interpreter available to me in Emacs could be mighty handy. This page has some info on how to get a decent environment up and running: http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/
+
 -Figure out why php-mode will not fill comments that begin with //. I'm guessing it has to do with php-mode deriving from c-mode, but perhaps not.
 
 -Figure out why constants in php-mode display in red if they're followed by a dot. Concatenation with constants is perfectly valid syntax.
 
--I should probably go back and store my custom yasnippets somewhere other than the default yasnippet locale - set mine up to override the defaults.
+-Figure out how to make Emacs launch faster. I hate having to wait several seconds to do a quick edit in a tiny file. I've mitigated this some by integrating emacs server and emacsclient into my workflow, but I'd still like to see this improved for command-line usage. Reworking my config to autoload instead of require would probably help significantly.
 
--I would like my sql-mode to do a better job with font-lock. It does very poorly at dealing with strings that have backslashed quotes.
-
--I should probably consider getting a better JS environment going. Having a JS interpreter available to me in Emacs could be mighty handy. This page has some info on how to get a decent environment up and running: http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/
+-I would like my sql-mode to do a better job with font-lock. It does very poorly at dealing with strings that have backslashed quotes. Could this be solved by some regex-tweaking?
 
 -I'd also like context-sensitive paragraph filling. That is, in comments, my fill-column value is 79, but if I'm in a Python docstring, fill-column should be 72. Apparently this is fixed in a Jan. 2013 commit to python-mode.el.
 
@@ -38,8 +42,6 @@
 
 -Figure out a way to make rope-completions faster. It's the source of that half-second delay before anything happens after I ask for auto-completion, and it honestly slows me down. I can usually finish typing the expression faster than I can auto-complete it. I've improved this some by the simple expedient of byte-compiling pymacs.el, but still things like wx.<TAB> chug for fifty seconds or so before suggesting completions. I realize that's abusive, given just how many names are in that namespace, but it does seem like it should be possible to keep a pretty static analysis of system-wide packages, and that completions on names that correlate to those packages shouldn't be so slow. It feels like it's doing dynamic analysis of the 'wx' package, but once it's been imported, shouldn't we be able to just check whether the module on disk has updated, and if not, need no more dynamic analysis? I should probably ask/bug-report this on the mailing list.
 
--Get tab behaving properly. That means calling yasnippet/code-completion as appropriate, indentation when appropriate, retaining minibuffer autocompletion, and Shift-Tab cycling backwards through autocompletions (I really want that, for reasons I don't quite understand). Looks like this page on the EmacsWiki summarizes most of the options: http://www.emacswiki.org/emacs/TabCompletion
-
 -This is long-term, since my task tracker doesn't exist yet, but I'd like to hack up a basic minor-mode for it, if it ever gets far enough for that to be useful. Subtle hints when a name/block has annotations (toggleable, of course), easy keystroke to view the associated annotation/task, easy way to create annotations/attach existing annotations to some code... I should probably do this in elisp, not because it's the right thing from an engineering perspective, but because it would force me to learn a lot about the language. It'd be annoying to have to do all the work again in elisp, though, and there is Pymacs...
 
 -When I'm yanking something into an indented block, python-mode ought to assume that I want it indented to that block's depth and adjust the leading whitespace for each line accordingly. This applies to indentation in general; it might work in most modes, for all I know. With Python, there's the perennial problem of no delimiters; it's not necessarily right to go to the highest possible indentation on a newline. For yanking, though, I'll bet it's the right call most of the time. If it's not, you're just an indent command away from having the right depth.
@@ -55,5 +57,3 @@
 -` should be treated as an autopaired character by default. It's usually used as a delimiter.
 
 -My smart-dash-mode should know that in Python mode, '.-' should be interpreted as '._', as it's the only valid possibility. I think that's true in almost any mode, actually, isn't it?
-
--Figure out how to make Emacs launch faster. I hate having to wait several seconds to do a quick edit in a tiny file. I've mitigated this some by integrating emacs server and emacsclient into my workflow, but I'd still like to see this improved for command-line usage.

@@ -256,14 +256,13 @@
   (comment-auto-fill))
 (ad-activate 'javascript-mode)
 
-;; Initializing yasnippet
-(defun initialize-yasnippet ()
-  "Loads and configures yasnippet."
-  (require 'yasnippet)
-  (setq yas/trigger-key (kbd "C-c y"))
-  (yas/initialize)
-  (yas/load-directory "~/.emacs.d/libraries/yasnippet-0.6.1c/snippets"))
-(initialize-yasnippet)
+;; Initialize yasnippet
+(add-to-list 'load-path
+              "~/.emacs.d/yasnippet")
+(require 'yasnippet)
+(setq yas-root-directory "~/.emacs.d/snippets")
+(yas-load-directory yas-root-directory)
+(yas-global-mode 1)
 
 ;; If we're running in a window system, start an emacs server, so emacsclient
 ;; can connect to this instance.

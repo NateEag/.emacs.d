@@ -208,15 +208,25 @@
   (smart-dash-mode t))
 (add-hook 'sh-mode-hook 'load-shell-mode-accessories)
 
+;; Text-editing modes of various stripes.
+(defun text-mode-init ()
+  "Configuration that is shared across my various text modes."
+  (auto-fill-mode t))
+
+;; Everyone needs text-mode.
+(add-hook 'text-mode-hook 'text-mode-init)
+
 ;; reStructuredText mode.
 (autoload 'rst-mode "rst-mode.el")
 (setq auto-mode-alist (cons '("\\.rst$" . rst-mode) auto-mode-alist))
 (setq auto-mode-alist (cons '("\\.rest$" . rst-mode) auto-mode-alist))
+(add-hook 'rst-mode-hook 'text-mode-init)
 
 ;; Markdown mode.
 (autoload 'markdown-mode "markdown-mode.el")
 (setq auto-mode-alist
   (cons '("\\.md" . markdown-mode) auto-mode-alist))
+(add-hook 'markdown-mode-hook 'text-mode-init)
 
 ;; Python mode.
 (require 'python-mode-init)

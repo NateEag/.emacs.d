@@ -216,6 +216,16 @@
 ;; Everyone needs text-mode.
 (add-hook 'text-mode-hook 'text-mode-init)
 
+;; Commit message mode.
+(autoload 'git-commit-mode "git-commit")
+(defun git-commit-mode-hook ()
+  "My settings for writing commit messages."
+  (auto-fill-mode t)
+  (setq fill-column 72)
+  (turn-on-flyspell))
+(add-hook 'git-commit-mode-hook 'git-commit-mode-hook)
+(add-to-list 'auto-mode-alist '("COMMIT_EDITMSG$" . git-commit-mode))
+
 ;; reStructuredText mode.
 (autoload 'rst-mode "rst-mode.el")
 (setq auto-mode-alist (cons '("\\.rst$" . rst-mode) auto-mode-alist))

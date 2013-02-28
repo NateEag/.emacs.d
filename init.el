@@ -64,6 +64,10 @@
    kept-old-versions 2
    version-control t)       ; use versioned backups
 
+;; Save minibuffer data between sessions.
+(setq savehist-file "~/.emacs.d/tmp/savehist")
+(savehist-mode t)
+
 ;; Tramp provides secure remote editing, via SFTP/SSH.
 ;; We don't load it by default, but we do config it. To load it, just do
 ;; (require 'tramp)

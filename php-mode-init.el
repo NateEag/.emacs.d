@@ -9,6 +9,8 @@
 
 (autoload 'comment-auto-fill "comment-auto-fill.el")
 
+(autoload 'hs-minor-mode-init "hs-minor-mode-init.el")
+
 (setq php-sql-mmm-submode-enabled nil)
 (defun php-sql-mmm-submode ()
   "Provides a very minimal embedding of SQL in PHP, via mmm-mode."
@@ -36,7 +38,10 @@
   (smart-dash-mode t)
 
   ;; Auto-fill comments, because life without auto-filled comments is annoying.
-  (comment-auto-fill))
+  (comment-auto-fill)
+
+  ;; Everyone loves code folding.
+  (hs-minor-mode-init))
 (add-hook 'php-mode-hook 'load-php-mode-accessories)
 
 ;; Make this requireable.

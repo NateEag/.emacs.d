@@ -127,10 +127,16 @@ activate it if the current major mode is listed in
 ;; necessary.  It takes all buffer-inspection and buffer-modification
 ;; functions as arguments so that it can be used both to edit the
 ;; actual buffer and to edit the isearch-string.
+;; GRIPE Nate Eagleson has edited this function. The regex now contains several
+;; characters that a dash sign almost never follows (usually due to syntax
+;; rules) in the languages he mostly uses (Python, PHP, and JS), but which an
+;; underscore may (as they're sometimes used to indicate variable privacy).
+;; This is a hack, but it works. Someday someone should think about a sane way
+;; to do this.
 (defun smart-dash-do-insert (insertf deletef bobpf char-before-f regcodepf)
   (let ((ident-re (if smart-dash-c-mode
-                      "[A-Za-z0-9]"
-                    "[A-Za-z0-9_]")))
+                      "[A-Za-z0-9>:$.]"
+                    "[A-Za-z0-9_>:$.]")))
     (if (and (funcall regcodepf)
              (not (funcall bobpf)))
         (cond ((string-match ident-re (string (funcall char-before-f)))
@@ -159,7 +165,7 @@ If `smart-dash-c-mode' is activated, also replace __ with --."
                         'smart-dash-in-regular-code-p))
 
 (defun smart-dash-insert-dash ()
-  "Insert a dash regardless of the preceeding character."
+  "Insert a dash regardless of the preceding character."
   (interactive)
   (insert ?-))
 

@@ -8,6 +8,10 @@
 
 -Make < and > be autopaired in web-mode.
 
+-Get smart-dash-mode to realize that in PHP, a dash after '->', '::', or '$' should be an underscore. Something similar should be done for Python and '.'.
+
+-Get smart-dash-mode to work inside yasnippet fields.
+
 -My SQL-in-PHP code does not work with queries that involve concatenation, which some do (especially in crappy legacy codebases). See my email inbox for an example.
 
 -I should probably consider getting a better JS environment going. Having a JS interpreter available to me in Emacs could be mighty handy. This page has some info on how to get a decent environment up and running: http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/
@@ -15,6 +19,8 @@
 -Figure out why php-mode will not fill comments that begin with //. I'm guessing it has to do with php-mode deriving from c-mode, but perhaps not.
 
 -Figure out why constants in php-mode display in red if they're followed by a dot. Concatenation with constants is perfectly valid syntax.
+
+-Figure out why php-mode highlights parent as a keyword in $this->parent. It's a bug - $parent is highlighted correctly.
 
 -Figure out how to make Emacs launch faster. I hate having to wait several seconds to do a quick edit in a tiny file. I've mitigated this some by integrating emacs server and emacsclient into my workflow, but I'd still like to see this improved for command-line usage. Reworking my config to autoload instead of require would probably help significantly.
 

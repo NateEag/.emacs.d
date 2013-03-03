@@ -11,6 +11,8 @@
 
 (autoload 'hs-minor-mode-init "hs-minor-mode-init.el")
 
+(autoload 'yasnippet-init "yasnippet-init.el")
+
 (setq php-sql-mmm-submode-enabled nil)
 (defun php-sql-mmm-submode ()
   "Provides a very minimal embedding of SQL in PHP, via mmm-mode."
@@ -41,7 +43,11 @@
   (comment-auto-fill)
 
   ;; Everyone loves code folding.
-  (hs-minor-mode-init))
+  (hs-minor-mode-init)
+
+  ;; Who doesn't like yasnippet?
+  (yasnippet-init)
+  (yas-minor-mode))
 (add-hook 'php-mode-hook 'load-php-mode-accessories)
 
 ;; Make this requireable.

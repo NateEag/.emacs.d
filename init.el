@@ -280,14 +280,6 @@
   (comment-auto-fill))
 (ad-activate 'javascript-mode)
 
-;; Initialize yasnippet
-(add-to-list 'load-path
-              "~/.emacs.d/yasnippet")
-(require 'yasnippet)
-(setq yas-root-directory "~/.emacs.d/snippets")
-(yas-load-directory yas-root-directory)
-(yas-global-mode 1)
-
 ;; If we're running in a window system, start an emacs server, so emacsclient
 ;; can connect to this instance.
 (when (display-graphic-p)

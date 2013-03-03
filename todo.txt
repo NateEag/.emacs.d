@@ -2,8 +2,6 @@
 
 -Get tab behaving properly. That means calling yasnippet/code-completion as appropriate, indentation when appropriate, retaining minibuffer autocompletion, and Shift-Tab cycling backwards through autocompletions (I really want that, for reasons I don't quite understand). Looks like this page on the EmacsWiki summarizes most of the options: http://www.emacswiki.org/emacs/TabCompletion
 
--Get yasnippet to lazy-load. It slows start down significantly.
-
 -I should probably go back and store my custom yasnippets somewhere other than the default yasnippet locale - set mine up to override the defaults.
 
 -I'd like yasnippets for JavaScript.

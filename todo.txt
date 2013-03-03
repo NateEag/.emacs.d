@@ -10,8 +10,6 @@
 
 -Look into binding Shift-Enter to whatever Meta-J is bound to.
 
--See if refill-mode can be sanely used in comments. If so, well, that'd be downright awesome.
-
 -Figure out why auto-pair-mode only works some of the time in php-mode. [], '', and () all have been known to exhibit breakage.
 
 -Make < and > be autopaired in web-mode.

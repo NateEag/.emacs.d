@@ -1,63 +1,178 @@
--It would be really sweet to get yasnippet's bracket placement to do the Right Thing based on major-mode, placing them on the newline or on the same line intelligently. I'm guessing that can be achieved by applying elisp to the templates. This was inspired by making changes to the php-mode snippets to do bracket placement the way I like. Someone's done some work that was approved of by another guy on the yasnippet blog, and they've said any extensions would not be accepted into yasnippet: http://comments.gmane.org/gmane.emacs.yasnippet.devel/403
+-It would be really sweet to get yasnippet's bracket placement to do the Right
+ Thing based on major-mode, placing them on the newline or on the same line
+ intelligently. I'm guessing that can be achieved by applying elisp to the
+ templates. This was inspired by making changes to the php-mode snippets to do
+ bracket placement the way I like. Someone's done some work that was approved
+ of by another guy on the yasnippet blog, and they've said any extensions would
+ not be accepted into yasnippet:
+ http://comments.gmane.org/gmane.emacs.yasnippet.devel/403
 
--Get tab behaving properly. That means calling yasnippet/code-completion as appropriate, indentation when appropriate, retaining minibuffer autocompletion, and Shift-Tab cycling backwards through autocompletions (I really want that, for reasons I don't quite understand). Looks like this page on the EmacsWiki summarizes most of the options: http://www.emacswiki.org/emacs/TabCompletion
+-Get tab behaving properly. That means call auto-complete if there's
+ completable text before point, yasnippet if complete(able|d) text matches a
+ snippet name, and indentation otherwise. It should retain minibuffer
+ autocompletion, and Shift-Tab should cycle backwards through autocompletions
+ (I really want that, for reasons I don't quite understand). Looks like this
+ page on the EmacsWiki summarizes most of the options:
+ http://www.emacswiki.org/emacs/TabCompletion
 
--I should probably go back and store my custom yasnippets somewhere other than the default yasnippet locale - set mine up to override the defaults.
+-I should probably go back and store my custom yasnippets somewhere other than
+ the default yasnippet locale - set mine up to override the defaults.
 
 -I'd like yasnippets for JavaScript.
 
 -Look into binding Shift-Enter to whatever Meta-J is bound to.
 
--Figure out why auto-pair-mode only works some of the time in php-mode. [], '', and () all have been known to exhibit breakage.
+-Figure out why auto-pair-mode only works some of the time in php-mode. [], '',
+ and () all have been known to exhibit breakage.
 
 -Make < and > be autopaired in web-mode.
 
--` should be treated as an autopaired character by default. It's usually used as a delimiter.
+-` should be treated as an autopaired character by default. It's usually used
+ as a delimiter.
 
 -Get smart-dash-mode to work inside yasnippet fields.
 
--Figure out why php-mode will not fill comments that begin with //. I'm guessing it has to do with php-mode deriving from c-mode, but perhaps not.
+-Figure out why php-mode will not fill comments that begin with //. I'm
+ guessing it has to do with php-mode deriving from c-mode, but perhaps not.
 
--Figure out why constants in php-mode display in red if they're followed by a dot. Concatenation with constants is perfectly valid syntax.
+-Figure out why constants in php-mode display in red if they're followed by a
+ dot. Concatenation with constants is perfectly valid syntax.
 
--Figure out why php-mode highlights parent as a keyword in $this->parent. It's a bug - $parent is highlighted correctly.
+-Figure out why php-mode highlights parent as a keyword in $this->parent. It's
+ a bug - $parent is highlighted correctly.
 
--I should probably consider getting a better JS environment going. Having a JS interpreter available to me in Emacs could be mighty handy. This page has some info on how to get a decent environment up and running: http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/
+-I should probably consider getting a better JS environment going. Having a JS
+ interpreter available to me in Emacs could be mighty handy. This page has some
+ info on how to get a decent environment up and running:
+ http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/
 
--My SQL-in-PHP code does not work with queries that involve concatenation, which some do (especially in crappy legacy codebases). See my email inbox for an example.
+-My SQL-in-PHP code does not work with queries that involve concatenation,
+ which some do (especially in crappy legacy codebases). See my email inbox for
+ an example.
 
--I would like my sql-mode to do a better job with font-lock. It does very poorly at dealing with strings that have backslashed quotes. Could this be solved by some regex-tweaking? Scuttlebutt on the net suggests that there's a toggleable setting.
+-I would like my sql-mode to do a better job with font-lock. It does very
+ poorly at dealing with strings that have backslashed quotes. Could this be
+ solved by some regex-tweaking? Scuttlebutt on the net suggests that there's a
+ toggleable setting.
 
--I'd also like context-sensitive paragraph filling. That is, in comments, my fill-column value is 79, but if I'm in a Python docstring, fill-column should be 72. Apparently this is fixed in a Jan. 2013 commit to python-mode.el.
+-I'd also like context-sensitive paragraph filling. That is, in comments, my
+ fill-column value is 79, but if I'm in a Python docstring, fill-column should
+ be 72. Apparently this is fixed in a Jan. 2013 commit to python-mode.el.
 
--I'd like to display the current named block in my modeline. So, in Python, if I'm editing method foobar of class Testing, my modeline would have 'Block: Testing.foobar' in it. Problem is that it could easily extend past the number of characters I have available in the modeline; a variable that sets how many characters it will use would do the job, though. To do this: http://www.masteringemacs.org/articles/2011/11/19/which-function-mode/
+-I'd like to display the current named block in my modeline. So, in Python, if
+ I'm editing method foobar of class Testing, my modeline would have 'Block:
+ Testing.foobar' in it. Problem is that it could easily extend past the number
+ of characters I have available in the modeline; a variable that sets how many
+ characters it will use would do the job, though. To do this:
+ http://www.masteringemacs.org/articles/2011/11/19/which-function-mode/
 
--I'd like emacs to autodetect the indentation format of a file, and override my preference if it doesn't match. There is a mode built to do exactly that, it seems: http://git.savannah.gnu.org/gitweb/?p=dtrt-indent.git;a=blob_plain;f=dtrt-indent.el;hb=HEAD Consider integrating it some year when I have the time.
+-I'd like emacs to autodetect the indentation format of a file, and override my
+ preference if it doesn't match. There is a mode built to do exactly that, it
+ seems:
+ http://git.savannah.gnu.org/gitweb/?p=dtrt-indent.git;a=blob_plain;f=dtrt-indent.el;hb=HEAD
+ Consider integrating it some year when I have the time.
 
--Figure out/steal/write a good cross-file find-and-replace. I can see why so many guys just use a Perl one-liner (which I have), but being able to do this from inside your editor is pretty convenient, especially if you want to do query-replace.
+-Figure out/steal/write a good cross-file find-and-replace. I can see why so
+ many guys just use a Perl one-liner (which I have), but being able to do this
+ from inside your editor is pretty convenient, especially if you want to do
+ query-replace.
 
--I'd like some convenient shortcut for 'Move forward one name-delimiter.' For instance, in standard Python, '_' separates words inside names. In other languages, HumpsOfTheCamelCase do so. Either way, Meta-f and Meta-b include in-name words as distinct entities in some modes but not in others, and I'd like a sane, consistent way to deal with that sort of cursor movement.
+-I'd like some convenient shortcut for 'Move forward one name-delimiter.' For
+ instance, in standard Python, '_' separates words inside names. In other
+ languages, HumpsOfTheCamelCase do so. Either way, Meta-f and Meta-b include
+ in-name words as distinct entities in some modes but not in others, and I'd
+ like a sane, consistent way to deal with that sort of cursor movement.
 
--A command that lets you invert delimiters. Sometimes you realize mid-stream that you used the wrong ones, and as long as point is between them and there are no duplicates, the editor should be able to find the nearest delimiters and change them. Now you can keep on cranking.
+-A command that lets you invert delimiters. Sometimes you realize mid-stream
+ that you used the wrong ones, and as long as point is between them and there
+ are no duplicates, the editor should be able to find the nearest delimiters
+ and change them. Now you can keep on cranking.
 
--See whether rope supports any kind of intelligent argument list fetching. If it does, it might be possible to write a parameter suggestion tool. Obviously, this is a big one, and not something I'm likely to really tackle. Well, maybe it's not as tough as I think - might be able to incorporate some cleverness between YASnippet and ropemacs so that there's a YASnippet for *current Python function args*, and it tabs you through each one? Actually, yeah - if nothing else, it might be possible to generate a new snippet based on what we're getting from ropemacs, so the yasnippet "jump to next dynamic field" behavior would basically let us fill in args while seeing what the original values were. I haven't actually started using YASnippet yet, so perhaps that's beyond the bounds of what it's capable of. Evidence that this is achievable (though it's for R, not Python): http://www.svenhartenstein.de/Software/R-autoyas
+-See whether rope supports any kind of intelligent argument list fetching. If
+ it does, it might be possible to write a parameter suggestion tool. Obviously,
+ this is a big one, and not something I'm likely to really tackle. Well, maybe
+ it's not as tough as I think - might be able to incorporate some cleverness
+ between YASnippet and ropemacs so that there's a YASnippet for *current Python
+ function args*, and it tabs you through each one? Actually, yeah - if nothing
+ else, it might be possible to generate a new snippet based on what we're
+ getting from ropemacs, so the yasnippet "jump to next dynamic field" behavior
+ would basically let us fill in args while seeing what the original values
+ were. I haven't actually started using YASnippet yet, so perhaps that's beyond
+ the bounds of what it's capable of. Evidence that this is achievable (though
+ it's for R, not Python): http://www.svenhartenstein.de/Software/R-autoyas
 
--Get ropemode to be more effective. A lot of expressions that seem completable aren't. Sometimes this is probably for very valid reasons (not wanting to evaluate every darned statement in the project), but it doesn't seem like knowing what the current "self" is would be impossibly hard. This is serious rope development, and possibly not in sync with what the rope crew would like to do. Let's call it a pipe-dream.
+-Get ropemode to be more effective. A lot of expressions that seem completable
+ aren't. Sometimes this is probably for very valid reasons (not wanting to
+ evaluate every darned statement in the project), but it doesn't seem like
+ knowing what the current "self" is would be impossibly hard. This is serious
+ rope development, and possibly not in sync with what the rope crew would like
+ to do. Let's call it a pipe-dream.
 
--Write/request a better interface for rope-find-occurrences. It just gives you a buffer telling you where it shows up (and includes the def statement for a function, which seems a bit funky to me) - it ought to be simple to hop directly to it, eh?
+-Write/request a better interface for rope-find-occurrences. It just gives you
+ a buffer telling you where it shows up (and includes the def statement for a
+ function, which seems a bit funky to me) - it ought to be simple to hop
+ directly to it, eh?
 
--There should be a command in python-mode to break a comma-separated list of values to one-per-line, with proper indentation. I find myself doing this relatively often.
+-There should be a command in python-mode to break a comma-separated list of
+ values to one-per-line, with proper indentation. I find myself doing this
+ relatively often.
 
--Figure out a way to make rope-completions faster. It's the source of that half-second delay before anything happens after I ask for auto-completion, and it honestly slows me down. I can usually finish typing the expression faster than I can auto-complete it. I've improved this some by the simple expedient of byte-compiling pymacs.el, but still things like wx.<TAB> chug for fifty seconds or so before suggesting completions. I realize that's abusive, given just how many names are in that namespace, but it does seem like it should be possible to keep a pretty static analysis of system-wide packages, and that completions on names that correlate to those packages shouldn't be so slow. It feels like it's doing dynamic analysis of the 'wx' package, but once it's been imported, shouldn't we be able to just check whether the module on disk has updated, and if not, need no more dynamic analysis? I should probably ask/bug-report this on the mailing list.
+-Figure out a way to make rope-completions faster. It's the source of that
+ half-second delay before anything happens after I ask for auto-completion, and
+ it honestly slows me down. I can usually finish typing the expression faster
+ than I can auto-complete it. I've improved this some by the simple expedient
+ of byte-compiling pymacs.el, but still things like wx.<TAB> chug for fifty
+ seconds or so before suggesting completions. I realize that's abusive, given
+ just how many names are in that namespace, but it does seem like it should be
+ possible to keep a pretty static analysis of system-wide packages, and that
+ completions on names that correlate to those packages shouldn't be so slow. It
+ feels like it's doing dynamic analysis of the 'wx' package, but once it's been
+ imported, shouldn't we be able to just check whether the module on disk has
+ updated, and if not, need no more dynamic analysis? I should probably
+ ask/bug-report this on the mailing list.
 
--This is long-term, since my task tracker doesn't exist yet, but I'd like to hack up a basic minor-mode for it, if it ever gets far enough for that to be useful. Subtle hints when a name/block has annotations (toggleable, of course), easy keystroke to view the associated annotation/task, easy way to create annotations/attach existing annotations to some code... I should probably do this in elisp, not because it's the right thing from an engineering perspective, but because it would force me to learn a lot about the language. It'd be annoying to have to do all the work again in elisp, though, and there is Pymacs...
+-This is long-term, since my task tracker doesn't exist yet, but I'd like to
+ hack up a basic minor-mode for it, if it ever gets far enough for that to be
+ useful. Subtle hints when a name/block has annotations (toggleable, of
+ course), easy keystroke to view the associated annotation/task, easy way to
+ create annotations/attach existing annotations to some code... I should
+ probably do this in elisp, not because it's the right thing from an
+ engineering perspective, but because it would force me to learn a lot about
+ the language. It'd be annoying to have to do all the work again in elisp,
+ though, and there is Pymacs...
 
--When I'm yanking something into an indented block, python-mode ought to assume that I want it indented to that block's depth and adjust the leading whitespace for each line accordingly. This applies to indentation in general; it might work in most modes, for all I know. With Python, there's the perennial problem of no delimiters; it's not necessarily right to go to the highest possible indentation on a newline. For yanking, though, I'll bet it's the right call most of the time. If it's not, you're just an indent command away from having the right depth.
+-When I'm yanking something into an indented block, python-mode ought to assume
+ that I want it indented to that block's depth and adjust the leading
+ whitespace for each line accordingly. This applies to indentation in general;
+ it might work in most modes, for all I know. With Python, there's the
+ perennial problem of no delimiters; it's not necessarily right to go to the
+ highest possible indentation on a newline. For yanking, though, I'll bet it's
+ the right call most of the time. If it's not, you're just an indent command
+ away from having the right depth.
 
--Frequently, especially when writing prose, I find my fingers doing the dance any given editor requires to swap elements in a comma-separated list. Seems like that shouldn't require too many keystrokes. I'm sure Emacs can do this with a bit of hacking, and maybe it already does...
+-Frequently, especially when writing prose, I find my fingers doing the dance
+ any given editor requires to swap elements in a comma-separated list. Seems
+ like that shouldn't require too many keystrokes. I'm sure Emacs can do this
+ with a bit of hacking, and maybe it already does...
 
--It should speak RTF fluently. I don't care so much about fancy formats, as those should be converted, but RTF is a pretty convenient format that allows you a surprising amount of control without being too crazy. If you're prepping stuff for basic printing, or sending to not-hardcore-power-users, RTF works beautifully, and I don't see why I should have to leave my main editor for working with this stuff. Yes, I know there's enriched-mode, but that's not exactly standard for word processors. Oh yeah - there is this, which looks pretty unmaintained, but it might be a starting point: http://savannah.nongnu.org/projects/emacs-rtf/ A little inspection indicates that the author isn't very far, it's probably abandoned, and uselessly inefficient. I suspect I'd be best off rolling my own...
+-It should speak RTF fluently. I don't care so much about fancy formats, as
+ those should be converted, but RTF is a pretty convenient format that allows
+ you a surprising amount of control without being too crazy. If you're prepping
+ stuff for basic printing, or sending to not-hardcore-power-users, RTF works
+ beautifully, and I don't see why I should have to leave my main editor for
+ working with this stuff. Yes, I know there's enriched-mode, but that's not
+ exactly standard for word processors. Oh yeah - there is this, which looks
+ pretty unmaintained, but it might be a starting point:
+ http://savannah.nongnu.org/projects/emacs-rtf/ A little inspection indicates
+ that the author isn't very far, it's probably abandoned, and uselessly
+ inefficient. I suspect I'd be best off rolling my own...
 
--A mode in which English grammatical rules are automatically applied to anything that looks like a sentence. For instance, when I refactor a sentence, it ought to know that the first word gets capitalized. That might be the only thing I actually want, come to think of it...
+-A mode in which English grammatical rules are automatically applied to
+ anything that looks like a sentence. For instance, when I refactor a sentence,
+ it ought to know that the first word gets capitalized. That might be the only
+ thing I actually want, come to think of it...
 
--I'd really like a code folding minor-mode - just lets you hide/show blocks of code, by saying basically "fold at this line" and "unfold at this line". Something as naive as indentation level might work, but there are obviously problems with that - alternately, you could probably do something clever with the syntax parsers that most major-modes define (you'd probably want a mechanism to let a major-mode deal with what's a code-foldable line and what is not - otherwise, the weirder modes like js2-mode couldn't really work with it). Consider whether http://www.emacswiki.org/emacs/HideShow might have some good input.
+-I'd really like a code folding minor-mode - just lets you hide/show blocks of
+ code, by saying basically "fold at this line" and "unfold at this line".
+ I have started playing with hide/show mode, and it's not perfect, but it does
+ more or less what I want for now.

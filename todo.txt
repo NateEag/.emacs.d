@@ -28,8 +28,6 @@
 
 -I would like my sql-mode to do a better job with font-lock. It does very poorly at dealing with strings that have backslashed quotes. Could this be solved by some regex-tweaking? Scuttlebutt on the net suggests that there's a toggleable setting.
 
--Figure out how to make Emacs launch faster. I hate having to wait several seconds to do a quick edit in a tiny file. I've mitigated this some by integrating emacs server and emacsclient into my workflow, but I'd still like to see this improved for command-line usage. Reworking my config to autoload instead of require would probably help significantly.
-
 -I'd also like context-sensitive paragraph filling. That is, in comments, my fill-column value is 79, but if I'm in a Python docstring, fill-column should be 72. Apparently this is fixed in a Jan. 2013 commit to python-mode.el.
 
 -I'd like to display the current named block in my modeline. So, in Python, if I'm editing method foobar of class Testing, my modeline would have 'Block: Testing.foobar' in it. Problem is that it could easily extend past the number of characters I have available in the modeline; a variable that sets how many characters it will use would do the job, though. To do this: http://www.masteringemacs.org/articles/2011/11/19/which-function-mode/

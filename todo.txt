@@ -1,3 +1,11 @@
+-The PHP function/method snippets should have a header comment by default. For
+ every parameter you add, an @param line should be inserted in the header
+ comment.
+
+-I should have Twig/Django snippets. 'block' is the obvious one, but probably
+ snippets for all the major bits of syntax would be handy, and someone out
+ there must have written such things.
+
 -It would be really sweet to get yasnippet's bracket placement to do the Right
  Thing based on major-mode, placing them on the newline or on the same line
  intelligently. I'm guessing that can be achieved by applying elisp to the
@@ -26,6 +34,12 @@
  and () all have been known to exhibit breakage.
 
 -Make < and > be autopaired in web-mode.
+
+-Adjust my indentation level in web-mode to 4.
+
+-Figure out how to turn the faked autopair behavior in web-mode off, since I
+ use the real deal. Either that, or turn autopair off for template syntaxes in
+ web-mode. Not sure which would be better.
 
 -` should be treated as an autopaired character by default. It's usually used
  as a delimiter.

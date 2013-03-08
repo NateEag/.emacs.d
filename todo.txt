@@ -33,14 +33,6 @@
 -Figure out why auto-pair-mode only works some of the time in php-mode. [], '',
  and () all have been known to exhibit breakage.
 
--Make < and > be autopaired in web-mode.
-
--Adjust my indentation level in web-mode to 4.
-
--Figure out how to turn the faked autopair behavior in web-mode off, since I
- use the real deal. Either that, or turn autopair off for template syntaxes in
- web-mode. Not sure which would be better.
-
 -` should be treated as an autopaired character by default. It's usually used
  as a delimiter.
 

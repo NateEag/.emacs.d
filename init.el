@@ -155,11 +155,6 @@
 ;; underscore as a word separator.
 (require 'smart-dash)
 
-;; Automatic insertion/deletion of paired characters. Not flawless, but much
-;; better than just typing.
-(require 'autopair)
-(autopair-global-mode t)
-
 ;; Use more readable colors for diff-mode.
 (defun update-diff-colors ()
   "update the colors for diff faces"

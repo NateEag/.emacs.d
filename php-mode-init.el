@@ -13,6 +13,8 @@
 
 (autoload 'yasnippet-init "yasnippet-init.el")
 
+(autoload 'autopair-init "autopair-init.el")
+
 (setq php-sql-mmm-submode-enabled nil)
 (defun php-sql-mmm-submode ()
   "Provides a very minimal embedding of SQL in PHP, via mmm-mode."
@@ -47,7 +49,10 @@
 
   ;; Who doesn't like yasnippet?
   (yasnippet-init)
-  (yas-minor-mode))
+  (yas-minor-mode)
+
+  ;; auto-pairs ftw
+  (autopair-init))
 (add-hook 'php-mode-hook 'load-php-mode-accessories)
 
 ;; Make this requireable.

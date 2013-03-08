@@ -237,6 +237,10 @@
   (cons '("\\.md" . markdown-mode) auto-mode-alist))
 (add-hook 'markdown-mode-hook 'text-mode-init)
 
+;; Emacs Lisp mode.
+(autoload 'emacs-lisp-init "emacs-lisp-init.el")
+(add-hook 'emacs-lisp-mode-hook 'emacs-lisp-init)
+
 ;; Python mode.
 (require 'python-mode-init)
 

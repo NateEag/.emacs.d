@@ -38,6 +38,9 @@
 
 -Get smart-dash-mode to work inside yasnippet fields.
 
+-web-mode should be able to indent plain text between a pair of tags on
+ distinct lines. It can't.
+
 -Figure out why php-mode will not fill comments that begin with //. I'm
  guessing it has to do with php-mode deriving from c-mode, but perhaps not.
 

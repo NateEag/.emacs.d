@@ -17,11 +17,16 @@
 (add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.twig\\'" . web-mode))
 
+(autoload 'autopair-init "autopair-init.el")
+
 (defun web-mode-init ()
   "My web-mode config."
   (setq web-mode-markup-indent-offset 4)
   (setq web-mode-css-indent-offset 4)
-  (setq web-mode-code-indent-offset 4))
+  (setq web-mode-code-indent-offset 4)
+
+  (autopair-init)
+  (push ?{ (getf autopair-dont-pair :code)))
 
 (add-hook 'web-mode-hook 'web-mode-init)
 

@@ -33,9 +33,6 @@
 -Figure out why auto-pair-mode only works some of the time in php-mode. [], '',
  and () all have been known to exhibit breakage.
 
--` should be treated as an autopaired character by default. It's usually used
- as a delimiter.
-
 -Get smart-dash-mode to work inside yasnippet fields.
 
 -web-mode should be able to indent plain text between a pair of tags on

@@ -46,10 +46,9 @@
 (defun initialize-auto-complete-python ()
   "Loads and configures auto-complete for Python hacking."
 
-  (require 'auto-complete-init)
+  (autoload 'auto-complete-init "auto-complete-init.el")
 
-  (if (not ac-initialized)
-      (ac-personal-setup))
+  (auto-complete-init)
 
   (ac-ropemacs-init)
   (setq ac-sources (append '(ac-source-ropemacs

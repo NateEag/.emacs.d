@@ -15,6 +15,8 @@
 
 (autoload 'autopair-init "autopair-init.el")
 
+(autoload 'auto-complete-init "auto-complete-init.el")
+
 (setq php-sql-mmm-submode-enabled nil)
 (defun php-sql-mmm-submode ()
   "Provides a very minimal embedding of SQL in PHP, via mmm-mode."
@@ -52,7 +54,13 @@
   (yas-minor-mode)
 
   ;; auto-pairs ftw
-  (autopair-init))
+  (autopair-init)
+
+  ;; Autocompletion for everyone!
+  (auto-complete-init)
+  (auto-complete-tab-noconflict)
+)
+
 (add-hook 'php-mode-hook 'load-php-mode-accessories)
 
 ;; Make this requireable.

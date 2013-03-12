@@ -11,7 +11,7 @@
 (defconst php-mode-version-number "1.10"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2013-02-15"
+(defconst php-mode-modified "2013-03-11"
   "PHP Mode build date.")
 
 ;;; License
@@ -1527,8 +1527,9 @@ searching the PHP website."
       (1 font-lock-keyword-face)
       (2 font-lock-function-name-face nil t))
 
-    ;; class hierarchy
-    '("\\<\\(self\\|parent\\)\\>" (1 font-lock-constant-face nil nil))
+    ;; self and parent uses in class contexts
+    '("\\<\\(self\\)\\(?:::\\)" (1 font-lock-constant-face nil nil))
+    '("\\<\\(parent\\)\\(?:::\\|\\s-*(\\)" (1 font-lock-constant-face nil nil))
 
     ;; method and variable features
     '("\\<\\(private\\|protected\\|public\\)\\s-+\\$?\\sw+"

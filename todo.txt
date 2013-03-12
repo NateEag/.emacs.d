@@ -33,10 +33,17 @@
 -Figure out why auto-pair-mode only works some of the time in php-mode. [], '',
  and () all have been known to exhibit breakage.
 
--Get smart-dash-mode to work inside yasnippet fields.
+-Get smart-dash-mode to work inside yasnippet fields. It works, but the
+ "convert _ to - when it is followed by a >" does not.
+
+-Get smart-dash-mode to be active in web-mode, but _only_ in template
+ expressions and JS, since dash is a common delimiter for HTML identifiers like
+ IDs and names. That might be tricky.
 
 -web-mode should be able to indent plain text between a pair of tags on
  distinct lines. It can't.
+
+-web-mode should treat {# as an auto-pair character, at least for Twig.
 
 -Figure out why php-mode will not fill comments that begin with //. I'm
  guessing it has to do with php-mode deriving from c-mode, but perhaps not.

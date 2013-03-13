@@ -58,8 +58,7 @@
 
   ;; Autocompletion for everyone!
   (auto-complete-init)
-  (auto-complete-tab-noconflict)
-)
+  (add-to-list 'ac-sources 'ac-source-yasnippet))
 
 (add-hook 'php-mode-hook 'load-php-mode-accessories)
 

@@ -16,9 +16,9 @@
         (setq ac-auto-start nil)
         (custom-set-variables
          '(ac-trigger-key "TAB"))
-        (add-to-list 'ac-sources 'ac-source-yasnippet)
         (define-key ac-completing-map "\C-n" 'ac-next)
         (define-key ac-completing-map "\C-p" 'ac-previous)
 
         (setq ac-initialized t)))
+  (auto-complete-tab-noconflict)
   (auto-complete-mode t))

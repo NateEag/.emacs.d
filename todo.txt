@@ -26,6 +26,9 @@
 -I should probably go back and store my custom yasnippets somewhere other than
  the default yasnippet locale - set mine up to override the defaults.
 
+-I should bind yas-expand to some semi-reasonable value, so that in situations
+ when I want to call it directly, I can. I have used C-c y in the past.
+
 -I'd like yasnippets for JavaScript.
 
 -Look into binding Shift-Enter to whatever Meta-J is bound to.
@@ -39,6 +42,12 @@
 -Get smart-dash-mode to be active in web-mode, but _only_ in template
  expressions and JS, since dash is a common delimiter for HTML identifiers like
  IDs and names. That might be tricky.
+
+-I should try turning on comment-autofill in web-mode.
+
+-web-mode highlights "{% set num_rows = top_level_categories|length // 3 %}" as
+ if it contains a comment, due to JS syntax, but it does not. That may be hard
+ to solve.
 
 -web-mode should be able to indent plain text between a pair of tags on
  distinct lines. It can't.

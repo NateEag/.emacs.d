@@ -26,9 +26,6 @@
 -I should probably go back and store my custom yasnippets somewhere other than
  the default yasnippet locale - set mine up to override the defaults.
 
--I should bind yas-expand to some semi-reasonable value, so that in situations
- when I want to call it directly, I can. I have used C-c y in the past.
-
 -I'd like yasnippets for JavaScript.
 
 -Look into binding Shift-Enter to whatever Meta-J is bound to.

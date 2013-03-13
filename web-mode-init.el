@@ -19,12 +19,15 @@
 
 (autoload 'autopair-init "autopair-init.el")
 
+(autoload 'comment-auto-fill "comment-auto-fill.el")
+
 (defun web-mode-init ()
   "My web-mode config."
   (setq web-mode-markup-indent-offset 4)
   (setq web-mode-css-indent-offset 4)
   (setq web-mode-code-indent-offset 4)
 
+  (comment-auto-fill)
   (autopair-init)
   (push ?{ (getf autopair-dont-pair :code)))
 

@@ -29,8 +29,6 @@
  expressions and JS, since dash is a common delimiter for HTML identifiers like
  IDs and names. That might be tricky.
 
--I should try turning on comment-autofill in web-mode.
-
 -web-mode highlights "{% set num_rows = top_level_categories|length // 3 %}" as
  if it contains a comment, due to JS syntax, but it does not. That may be hard
  to solve.

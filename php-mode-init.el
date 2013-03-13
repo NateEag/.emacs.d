@@ -43,7 +43,6 @@
   (setq smart-dash-c-modes (cons 'php-mode smart-dash-c-modes))
   (smart-dash-mode t)
 
-  ;; Auto-fill comments, because life without auto-filled comments is annoying.
   (comment-auto-fill)
 
   ;; Everyone loves code folding.

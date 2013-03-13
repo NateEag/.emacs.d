@@ -15,17 +15,6 @@
  not be accepted into yasnippet:
  http://comments.gmane.org/gmane.emacs.yasnippet.devel/403
 
--Get tab behaving properly. That means call auto-complete if there's
- completable text before point, yasnippet if complete(able|d) text matches a
- snippet name, and indentation otherwise. It should retain minibuffer
- autocompletion, and Shift-Tab should cycle backwards through autocompletions
- (I really want that, for reasons I don't quite understand). Looks like this
- page on the EmacsWiki summarizes most of the options:
- http://www.emacswiki.org/emacs/TabCompletion
-
--I should probably go back and store my custom yasnippets somewhere other than
- the default yasnippet locale - set mine up to override the defaults.
-
 -I'd like yasnippets for JavaScript.
 
 -Look into binding Shift-Enter to whatever Meta-J is bound to.
@@ -33,8 +22,8 @@
 -Figure out why auto-pair-mode only works some of the time in php-mode. [], '',
  and () all have been known to exhibit breakage.
 
--Get smart-dash-mode to work inside yasnippet fields. It works, but the
- "convert _ to - when it is followed by a >" does not.
+-Get smart-dash-mode to work inside yasnippet fields. It works, but converting
+ _ to - when it is followed by > does not.
 
 -Get smart-dash-mode to be active in web-mode, but _only_ in template
  expressions and JS, since dash is a common delimiter for HTML identifiers like
@@ -54,9 +43,6 @@
 
 -Figure out why constants in php-mode display in red if they're followed by a
  dot. Concatenation with constants is perfectly valid syntax.
-
--Figure out why php-mode highlights parent as a keyword in $this->parent. It's
- a bug - $parent is highlighted correctly.
 
 -I should probably consider getting a better JS environment going. Having a JS
  interpreter available to me in Emacs could be mighty handy. This page has some

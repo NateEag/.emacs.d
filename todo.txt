@@ -33,6 +33,9 @@
  if it contains a comment, due to JS syntax, but it does not. That may be hard
  to solve.
 
+-web-mode should have some useful idea of what fill-paragraph means. If you
+ fill inside Twig expressions, it mangles them rather horribly.
+
 -web-mode should be able to indent plain text between a pair of tags on
  distinct lines. It can't.
 

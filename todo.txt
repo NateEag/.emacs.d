@@ -39,11 +39,19 @@
 -web-mode should be able to indent plain text between a pair of tags on
  distinct lines. It can't.
 
+-Try turning on auto-complete in web-mode. It may or may not work out well.
+
 -Figure out why php-mode will not fill comments that begin with //. I'm
  guessing it has to do with php-mode deriving from c-mode, but perhaps not.
 
 -Figure out why constants in php-mode display in red if they're followed by a
  dot. Concatenation with constants is perfectly valid syntax.
+
+-Consider setting up PHP_CS with flymake:
+ https://github.com/illusori/emacs-flymake-phpcs
+
+-If particularly bored, try getting GEBEN set up for debugging PHP. I'm
+ uncertain whether this would actually be worth the effort.
 
 -I should probably consider getting a better JS environment going. Having a JS
  interpreter available to me in Emacs could be mighty handy. This page has some

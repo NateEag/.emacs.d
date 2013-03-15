@@ -18,6 +18,7 @@
          '(ac-trigger-key "TAB"))
         (define-key ac-completing-map "\C-n" 'ac-next)
         (define-key ac-completing-map "\C-p" 'ac-previous)
+        (setq ac-dwim t)
 
         (setq ac-initialized t)))
   (auto-complete-tab-noconflict)

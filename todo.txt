@@ -39,16 +39,35 @@
 -web-mode should be able to indent plain text between a pair of tags on
  distinct lines. It can't.
 
--Try turning on auto-complete in web-mode. It may or may not work out well.
+-Make Tab always complete the next-biggest possible chunk in auto-complete, and
+ get RET doing what the docs claim it does (choose the current selection
+ aggressively)..
+
+-Get flymake set up with emacs-flymake-cursor (make sure this is the current
+ fork): https://github.com/illusori/emacs-flymake-cursor
+
+-Set up PHP_CS with flymake: https://github.com/illusori/emacs-flymake-phpcs
+
+-Turn on auto-complete in web-mode.
+
+-Find a workaround that will let me use auto-complete in a yasnippet tab field.
+ A keybinding other than Tab for auto-complete would work, but it might be
+ possible to bind something clever to Tab that picks which maneuver to do based
+ on whether there are any characters before point *and* whether autocompletion
+ has been invoked before while in this field. or something like that.
+
+-Get a tagfile generator working for PHP projects on OS X and Windows.
+
+-Find a way to make PHP tagfiles pay attention to namespaces. That could well
+ be a huge project, involving changes to low-level source code.
+ possibly-relevant GitHub repo (for Vim, but perhaps adaptable?):
+ https://github.com/arnaud-lb/vim-php-namespace
 
 -Figure out why php-mode will not fill comments that begin with //. I'm
  guessing it has to do with php-mode deriving from c-mode, but perhaps not.
 
 -Figure out why constants in php-mode display in red if they're followed by a
  dot. Concatenation with constants is perfectly valid syntax.
-
--Consider setting up PHP_CS with flymake:
- https://github.com/illusori/emacs-flymake-phpcs
 
 -If particularly bored, try getting GEBEN set up for debugging PHP. I'm
  uncertain whether this would actually be worth the effort.

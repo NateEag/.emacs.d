@@ -1,0 +1,63 @@
+PHP_CodeSniffer plugin for Emacs Flymake mode
+=============================================
+
+Flymake mode is an Emacs mode that allows you to run continuous
+syntax checks against the current buffer "While U Type".
+
+PHP_CodeSniffer is a static analysis tool for PHP that can be
+configured to produce a wide range of warnings and errors
+according to various customizable coding standards.
+
+Emacs-flymake-phpcs glues the two together, giving you continuous
+static analysis as you edit.
+
+Setup
+-----
+
+You will also need PHP_CodeSniffer installed, this can be installed
+via PEAR or you can get the most recent from SVN here:
+
+ * http://svn.php.net/repository/pear/packages/PHP_CodeSniffer/trunk
+
+Once you have PHP_CodeSniffer installed you can install
+flymake-phpcs.el somewhere in your emacs load-path and add
+something like the following to your .emacs:
+
+```lisp
+;; If flymake_phpcs isn't found correctly, specify the full path
+(setq flymake-phpcs-command "~/projects/emacs-flymake-phpcs/bin/flymake_phpcs")
+
+;; Customize the coding standard checked by phpcs
+(setq flymake-phpcs-standard
+  "~/projects/devtools/php_codesniffer/MyCompanyStandard")
+
+;; Show the name of sniffs in warnings (eg show
+;; "Generic.CodeAnalysis.VariableAnalysis.UnusedVariable" in an unused
+;; variable warning)
+(setq flymake-phpcs-show-rule t)
+
+(require 'flymake-phpcs)
+```
+
+Have fun.
+
+See Also
+--------
+
+If you want undefined and unused variable warnings, you might be
+interested in my PHP_CodeSniffer-VariableAnalysis plugin:
+
+ * https://github.com/illusori/PHP_Codesniffer-VariableAnalysis
+
+You might also be interested in my patched version of flymake.el
+which contains fixes and enhancements that can be used by flymake-phpcs.el,
+you can grab it from here:
+
+ *  https://github.com/illusori/emacs-flymake
+
+Known Issues & Bugs
+-------------------
+
+ * flymake-phpcs-standard file-name expansion is triggered by presence
+   of a / in the value, which isn't portable across OSes that use other
+   directory delimiters.

@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+#  Wrapper around phpcs for Emacs flymake since flymake dislikes phpcs' exit code.
+
+showhelp() {
+    echo "flymake_phpcs [-h] <source-file> [<phpcs-arguments>]
+
+Run phpcs and \"php -l\" on <source-file> in a manner appropriate for use by Emacs flymake-phpcs.el.
+
+    -h                Display this help.
+    <source-file>     The source file to run the checks on.
+    <phpcs-arguments> Any additional argments on the commandline will be passed to phpcs.";
+    exit 0;
+}
+
+FILE_NAME="$1"
+shift
+
+# Run with --report=emacs so we can use this for compile-mode too.
+phpcs --report=emacs "$FILE_NAME" $*
+
+# Run php -l too for good measure.
+php -l -f "$FILE_NAME"
+
+exit 0

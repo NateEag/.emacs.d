@@ -1,0 +1,4 @@
+*.elc
+README
+flymake-phpcs-*.tar
+flymake-phpcs-pkg.el

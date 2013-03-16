@@ -10,6 +10,12 @@
 ;; Everyone likes syntax coloration.
 (global-font-lock-mode 1)
 
+;; I like seeing my selections.
+(setq transient-mark-mode 1)
+
+;; The emacs startup message is a needless annoyance.
+(setq inhibit-startup-message t)
+
 ;; I do not use double-spaces after sentences. Neither should you.
 (setq sentence-end-double-space nil)
 

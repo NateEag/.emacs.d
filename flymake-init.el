@@ -5,16 +5,15 @@
 ;; Extension that lets you see flymake's output without using a mouse.
 (require 'flymake-cursor)
 
-(setq flymake-initialized nil)
 (defun flymake-init ()
   (interactive)
-  (if (not flymake-initialized)
-      (progn
-        ;; Put flymake working files in a single location.
-        (setq temporary-file-directory "~/.emacs.d/tmp/")
-        (setq flymake-run-in-place nil)
+  ;; Put flymake working files in a single location.
+  (setq temporary-file-directory "~/.emacs.d/tmp/")
+  (setq flymake-run-in-place nil)
 
-        ;; Keep it from running too aggressively.
-        (setq flymake-no-changes-timeout 3)
-        (setq flymake-initialized t)))
+  ;; Keep it from running too aggressively.
+  (setq flymake-no-changes-timeout 3)
+  (setq flymake-initialized t)
+
+  ;; Turn it on.
   (flymake-mode))

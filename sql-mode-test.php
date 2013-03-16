@@ -26,5 +26,3 @@ function do_nothing() {
 			  WHERE Foobaz.faz IS NOT NULL
               GROUP BY Foobar.author";
 }
-
-do_nothing();

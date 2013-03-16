@@ -17,6 +17,10 @@
 
 -I'd like yasnippets for JavaScript.
 
+-turn on autopair in JavaScript.
+
+-turn on autocomplete in JavaScript.
+
 -Look into binding Shift-Enter to whatever Meta-J is bound to.
 
 -Figure out why auto-pair-mode only works some of the time in php-mode. [], '',
@@ -43,11 +47,6 @@
  get RET doing what the docs claim it does (choose the current selection
  aggressively)..
 
--Get flymake set up with emacs-flymake-cursor (make sure this is the current
- fork): https://github.com/illusori/emacs-flymake-cursor
-
--Set up PHP_CS with flymake: https://github.com/illusori/emacs-flymake-phpcs
-
 -Turn on auto-complete in web-mode.
 
 -Find a workaround that will let me use auto-complete in a yasnippet tab field.
@@ -57,6 +56,9 @@
  has been invoked before while in this field. or something like that.
 
 -Get a tagfile generator working for PHP projects on OS X and Windows.
+
+-Make php-mode indent an array's closing paren on its own line correctly for
+ PSR-2.
 
 -Find a way to make PHP tagfiles pay attention to namespaces. That could well
  be a huge project, involving changes to low-level source code.

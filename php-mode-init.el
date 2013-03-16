@@ -17,9 +17,12 @@
 
 (autoload 'auto-complete-init "auto-complete-init.el")
 
+(autoload 'flymake-php-setup "flymake-php-setup.el")
+
 (setq php-sql-mmm-submode-enabled nil)
 (defun php-sql-mmm-submode ()
   "Provides a very minimal embedding of SQL in PHP, via mmm-mode."
+  (interactive)
   (when (not php-sql-mmm-submode-enabled)
     (set-face-background 'mmm-default-submode-face nil)
     (mmm-add-classes
@@ -57,7 +60,11 @@
 
   ;; Autocompletion for everyone!
   (auto-complete-init)
-  (add-to-list 'ac-sources 'ac-source-yasnippet))
+  (add-to-list 'ac-sources 'ac-source-yasnippet)
+
+  ;; Yay for syntax checking/linting!
+  (flymake-php-setup)
+  )
 
 (add-hook 'php-mode-hook 'load-php-mode-accessories)
 

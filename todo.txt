@@ -17,10 +17,6 @@
 
 -I'd like yasnippets for JavaScript.
 
--turn on autopair in JavaScript.
-
--turn on autocomplete in JavaScript.
-
 -Look into binding Shift-Enter to whatever Meta-J is bound to.
 
 -Figure out why auto-pair-mode only works some of the time in php-mode. [], '',

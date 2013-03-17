@@ -258,22 +258,9 @@
 (require 'web-mode-init)
 
 ;; JavaScript Mode.
-
-;; For Javascript, I currently use an old build of Karl Langstrom's
-;; javascript.el.
-(when (locate-library "javascript")
-  (autoload 'javascript-mode "javascript" nil t)
-  (add-to-list 'auto-mode-alist '("\\.js\\'" . javascript-mode)))
-
-(autoload 'autopair-init "autopair-init.el")
-(autoload 'auto-complete-init "auto-complete-init.el")
-(defadvice javascript-mode (after load-smart-dash-mode)
-  "Load smart dash mode, since javascript-mode doesn't have a hook."
-  (smart-dash-mode t)
-  (comment-auto-fill)
-  (autopair-init)
-  (auto-complete-init))
-(ad-activate 'javascript-mode)
+(autoload 'js-mode-init "js-mode-init.el")
+(add-hook 'js-mode-hook 'js-mode-init)
+(add-to-list 'auto-mode-alist '("\\.js\\'" . js-mode))
 
 ;; If we're running in a window system, start an emacs server, so emacsclient
 ;; can connect to this instance.

@@ -31,13 +31,15 @@
 
 -web-mode highlights "{% set num_rows = top_level_categories|length // 3 %}" as
  if it contains a comment, due to JS syntax, but it does not. That may be hard
- to solve.
+ to solve. Bug reported: https://github.com/fxbois/web-mode/issues/41
 
 -web-mode should have some useful idea of what fill-paragraph means. If you
- fill inside Twig expressions, it mangles them rather horribly.
+ fill inside Twig comments, it mangles them rather horribly. Bug reported:
+ https://github.com/fxbois/web-mode/issues/42
 
 -web-mode should be able to indent plain text between a pair of tags on
- distinct lines. It can't.
+ distinct lines. It can't. Bug reported:
+ https://github.com/fxbois/web-mode/issues/43
 
 -Make Tab always complete the next-biggest possible chunk in auto-complete, and
  get RET doing what the docs claim it does (choose the current selection
@@ -59,7 +61,7 @@
 -Find a way to make PHP tagfiles pay attention to namespaces. That could well
  be a huge project, involving changes to low-level source code.
  possibly-relevant GitHub repo (for Vim, but perhaps adaptable?):
- https://github.com/arnaud-lb/vim-php-namespace
+ https://github.com/vim-php/phptags
 
 -Figure out why php-mode will not fill comments that begin with //. I'm
  guessing it has to do with php-mode deriving from c-mode, but perhaps not.

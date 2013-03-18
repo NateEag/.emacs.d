@@ -21,6 +21,8 @@
 
 (autoload 'comment-auto-fill "comment-auto-fill.el")
 
+(autoload 'auto-complete-init "auto-complete-init.el")
+
 (defun web-mode-init ()
   "My web-mode config."
   (setq web-mode-markup-indent-offset 4)
@@ -28,8 +30,11 @@
   (setq web-mode-code-indent-offset 4)
 
   (comment-auto-fill)
+
   (autopair-init)
-  (push ?{ (getf autopair-dont-pair :code)))
+  (push ?{ (getf autopair-dont-pair :code))
+
+  (auto-complete-init))
 
 (add-hook 'web-mode-hook 'web-mode-init)
 

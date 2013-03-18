@@ -45,8 +45,6 @@
  get RET doing what the docs claim it does (choose the current selection
  aggressively)..
 
--Turn on auto-complete in web-mode.
-
 -Find a workaround that will let me use auto-complete in a yasnippet tab field.
  A keybinding other than Tab for auto-complete would work, but it might be
  possible to bind something clever to Tab that picks which maneuver to do based
@@ -55,13 +53,13 @@
 
 -Get a tagfile generator working for PHP projects on OS X and Windows.
 
--Make php-mode indent an array's closing paren on its own line correctly for
- PSR-2.
-
 -Find a way to make PHP tagfiles pay attention to namespaces. That could well
  be a huge project, involving changes to low-level source code.
  possibly-relevant GitHub repo (for Vim, but perhaps adaptable?):
  https://github.com/vim-php/phptags
+
+-Make php-mode indent an array's closing paren on its own line correctly for
+ PSR-2.
 
 -Figure out why php-mode will not fill comments that begin with //. I'm
  guessing it has to do with php-mode deriving from c-mode, but perhaps not.

@@ -25,9 +25,11 @@
 
 (defun web-mode-init ()
   "My web-mode config."
+
   (setq web-mode-markup-indent-offset 4)
   (setq web-mode-css-indent-offset 4)
   (setq web-mode-code-indent-offset 4)
+  (setq web-mode-indent-style 2)
 
   (comment-auto-fill)
 

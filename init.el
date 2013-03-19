@@ -214,9 +214,11 @@
 (add-hook 'sh-mode-hook 'load-shell-mode-accessories)
 
 ;; Text-editing modes of various stripes.
+(autoload 'autopair-init "autopair-mode-init.el")
 (defun text-mode-init ()
   "Configuration that is shared across my various text modes."
-  (auto-fill-mode t))
+  (auto-fill-mode t)
+  (autopair-init))
 
 ;; Everyone needs text-mode.
 (add-hook 'text-mode-hook 'text-mode-init)

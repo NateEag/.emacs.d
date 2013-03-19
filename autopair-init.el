@@ -1,7 +1,7 @@
 (defun autopair-init ()
   "My setup for autopair.el."
   (require 'autopair)
-  (autopair-mode)
+  (autopair-mode t)
 
   ;; In my experience, languages that don't pair backtick are pretty rare.
   (push '(?`)

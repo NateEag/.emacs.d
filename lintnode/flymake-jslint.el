@@ -72,8 +72,12 @@ Uses `lintnode-node-program' and `lintnode-location'."
                              (mapconcat 'identity (mapcar 'symbol-name lintnode-jslint-excludes) ",")))
 		(lintnode-includes (if (not lintnode-jslint-includes)
                                ""
-                             (mapconcat 'identity (mapcar 'symbol-name lintnode-jslint-includes) ","))))
-					   
+                             (mapconcat 'identity (mapcar 'symbol-name
+  lintnode-jslint-includes) ",")))
+        (lintnode-jslint-set (if (not lintnode-jslint-includes)
+                               ""
+                             (mapconcat 'identity (mapcar 'symbol-name lintnode-jslint-set) ","))))
+
     (start-process "lintnode-server" "*lintnode*"
                    lintnode-node-program
                    lintnode-location
@@ -115,7 +119,7 @@ Uses `lintnode-node-program' and `lintnode-location'."
     (list "curl" (list "--form" (format "source=<%s" local-file)
                        "--form" (format "filename=%s" local-file)
                        ;; FIXME: For some reason squid hates this curl invocation.
-                       "--proxy" ""
+                       ;"--proxy" ""
                        jslint-url))))
 
 (setq flymake-allowed-file-name-masks

@@ -1,6 +1,9 @@
 ;; Nate Eagleson's Emacs config.
 
-;; Global Preferences
+;; General preferences.
+
+;; It is good to know when errors happen, and to be ready to get data on them.
+(setq debug-on-error t)
 
 ;; Make sure my .emacs.d is on the load path.
 (add-to-list 'load-path "~/.emacs.d")

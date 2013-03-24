@@ -2,8 +2,10 @@
 ;; an external compiler.
 ;; I'm hoping to set up several of my major modes to use it, long-term.
 (require 'flymake)
+
 ;; Extension that lets you see flymake's output without using a mouse.
-(require 'flymake-cursor)
+(eval-after-load 'flymake '(require 'flymake-cursor))
+(setq flymake-cursor-auto-enable t)
 
 (defun flymake-init ()
   (interactive)
@@ -16,4 +18,5 @@
   (setq flymake-initialized t)
 
   ;; Turn it on.
-  (flymake-mode))
+  (flymake-mode 1)
+  (flymake-cursor-mode 1))

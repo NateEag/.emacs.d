@@ -77,6 +77,11 @@
 (setq savehist-file "~/.emacs.d/tmp/savehist")
 (savehist-mode t)
 
+;; Load Windows-specific tweaks to environment, if we're running Windows.
+(autoload 'set-windows-env "set-windows-env.el")
+(if (eq system-type 'windows-nt)
+    (set-windows-env))
+
 ;; Tramp provides secure remote editing, via SFTP/SSH.
 ;; We don't load it by default, but we do config it. To load it, just do
 ;; (require 'tramp)

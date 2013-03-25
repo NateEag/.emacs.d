@@ -2,18 +2,18 @@
 
 (require 'smart-dash)
 
+(setq lintnode-location "~/.emacs.d/lintnode")
+(setq lintnode-autostart t)
+
 (add-to-list 'load-path "~/.emacs.d/lintnode")
 (require 'flymake-jslint)
 
-(autoload 'flymake-init "flymake-init.el")
+;; GRIPE Starting lintnode here is a lame hack and guaranteed to fail if
+;; node.js is not installed, but it solves the problem of the lintnode server
+;; not starting in time for the first JS buffer opened to work.
+(lintnode-start)
 
-;; DEBUG When this is uncommented, flymake-lintnode works the first time I load
-;; it. When it isn't, it fails the first time. I suspect this means that the
-;; first time, it's trying to call the node.js process before it's finished
-;; starting up.
-;;(setq flymake-log-level 3)
-(setq lintnode-location "~/.emacs.d/lintnode")
-(setq lintnode-autostart t)
+(autoload 'flymake-init "flymake-init.el")
 
 (defun js-mode-init ()
   (interactive)

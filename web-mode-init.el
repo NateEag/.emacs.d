@@ -19,8 +19,6 @@
 
 (autoload 'autopair-init "autopair-init.el")
 
-(autoload 'comment-auto-fill "comment-auto-fill.el")
-
 (autoload 'auto-complete-init "auto-complete-init.el")
 
 (defun web-mode-init ()

@@ -29,17 +29,11 @@
  expressions and JS, since dash is a common delimiter for HTML identifiers like
  IDs and names. That might be tricky.
 
--web-mode highlights "{% set num_rows = top_level_categories|length // 3 %}" as
- if it contains a comment, due to JS syntax, but it does not. That may be hard
- to solve. Bug reported: https://github.com/fxbois/web-mode/issues/41
-
--web-mode should have some useful idea of what fill-paragraph means. If you
- fill inside Twig comments, it mangles them rather horribly. Bug reported:
- https://github.com/fxbois/web-mode/issues/42
-
--web-mode should be able to indent plain text between a pair of tags on
- distinct lines. It can't. Bug reported:
- https://github.com/fxbois/web-mode/issues/43
+-I would like an auto-complete source for existing files that is based on a
+ per-project 'docroot/static' variable. I would like that source to be
+ activated when I am working in a template and have entered an href="/..." or a
+ src="/...". Actually, it might work better if it was just activated for any
+ string beginning with '/'.
 
 -Find a better CSS mode. Ideally something that supports SCSS, probably.
 

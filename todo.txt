@@ -35,6 +35,10 @@
  src="/...". Actually, it might work better if it was just activated for any
  string beginning with '/'.
 
+-Get flymake to deactivate/reactivate intelligently for the current edited
+ line. If your cursor is on a line you have been editing, you probably don't
+ want highlights yet.
+
 -Find a better CSS mode. Ideally something that supports SCSS, probably.
 
 -Fix comment filling and comment auto-filling in CSS mode.
@@ -42,6 +46,8 @@
 -It would be truly awesome to find a way to get even a semi-reliable list of
  places a particular CSS rule is used. I suppose that's really a more
  appropriate tool for something else.
+
+-when I move to emacs 24, pull in rainbow-mode.
 
 -Make Tab always complete the next-biggest possible chunk in auto-complete, and
  get RET doing what the docs claim it does (choose the current selection

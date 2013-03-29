@@ -28,6 +28,7 @@
   (setq web-mode-css-indent-offset 4)
   (setq web-mode-code-indent-offset 4)
   (setq web-mode-indent-style 2)
+  (setq web-mode-prefer-server-commenting t)
 
   (comment-auto-fill)
 

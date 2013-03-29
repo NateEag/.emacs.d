@@ -5,7 +5,7 @@
 ;; =========================================================================
 ;; This work is sponsored by KerniX : Digital Agency (Web & Mobile) in Paris
 ;; =========================================================================
-;; Version: 5.0.6
+;; Version: 5.0.7
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -34,7 +34,7 @@
 
 (defgroup web-mode nil
   "Major mode for editing web templates: HTML files embedding client parts (CSS/JavaScript) and server blocs (PHP, JSP, ASP, Django/Twig, Smarty, etc.)."
-  :version "5.0.6"
+  :version "5.0.7"
   :group 'languages)
 
 (defgroup web-mode-faces nil
@@ -60,6 +60,11 @@
 (defcustom web-mode-disable-css-colorization (not (display-graphic-p))
   "In a CSS block, do not set background according to the color: #xxx, rgb(x,x,x)."
   :type 'boolean
+  :group 'web-mode)
+
+(defcustom web-mode-prefer-server-commenting nil
+  "Prefer server commenting."
+  :type 'bool
   :group 'web-mode)
 
 (defcustom web-mode-disable-auto-pairing (not (display-graphic-p))
@@ -232,6 +237,8 @@
     ("erb"       . ("eruby" "ember" "erubis"))
     ("velocity"  . ("cheetah"))
     ("blade"     . ())
+    ("jsp"       . ())
+    ("asp"       . ("aspx"))
     ("ctemplate" . ("mustache" "handlebars" "hapax" "ngtemplate")))
   "Engine name aliases")
 
@@ -459,7 +466,9 @@
         (setq web-mode-engine "php"))
        ((string-match-p "\\.as[cp]x?\\'" buff-name)
         (setq web-mode-engine "asp"))
-       ((string-match-p "\\.\\(djhtml\\|tmpl\\|twig\\|dtl\\)\\'" buff-name)
+       ((string-match-p "twig" buff-name)
+        (setq web-mode-engine "django"))
+       ((string-match-p "\\.\\(djhtml\\|tmpl\\|dtl\\)\\'" buff-name)
         (setq web-mode-engine "django"))
        ((string-match-p "\\.ftl\\'" buff-name)
         (setq web-mode-engine "freemarker"))
@@ -501,7 +510,7 @@
       (setq web-mode-server-blocks-regexp "<\\?\\|<%[#-!@]?\\|[<[]/?[#@][-]?\\|[$#]{\\|{[#{%]\\|^%."))
      )
 
-;;    (message "engine=%S regexp=%S" web-mode-engine web-mode-server-blocks-regexp)
+   (message "engine=%S regexp=%S" web-mode-engine web-mode-server-blocks-regexp)
 
     (setq fill-paragraph-function 'web-mode-fill-paragraph
           font-lock-fontify-buffer-function 'web-mode-scan-buffer
@@ -509,7 +518,7 @@
           font-lock-unfontify-buffer-function 'web-mode-scan-buffer
           imenu-case-fold-search t
           imenu-create-index-function 'web-mode-imenu-index
-          imenu-generic-expression web-mode-imenu-generic-expression
+;;          imenu-generic-expression web-mode-imenu-generic-expression
           indent-line-function 'web-mode-indent-line
           indent-tabs-mode nil
           require-final-newline nil)
@@ -525,24 +534,17 @@
 
     ))
 
-(defvar web-mode-imenu-generic-expression
-  `(("Id"   " id=\"\\([[:alnum:]_-]+\\)\\1\"" 1)
-    ("Name" " name=\"\\([[:alnum:]_-]+\\)\\1\"" 1))
-  "Imenu generic expression for Web Mode.")
-
-;;(defvar html-imenu-regexp
-;;  "\\s-*<h\\([1-9]\\)[^\n<>]*>\\(<[^\n<>]*>\\)*\\s-*\\([^\n<>]*\\)"
-;;  "*A regular expression matching a head line to be added to the menu.
-;;The first `match-string' should be a number from 1-9.
-;;The second `match-string' matches extra tags and is ignored.
-;;The third `match-string' will be the used in the menu.")
+;; (defvar web-mode-imenu-generic-expression
+;;   `(("Id"   " id=\"\\([[:alnum:]_-]+\\)\\1\"" 1)
+;;     ("Name" " name=\"\\([[:alnum:]_-]+\\)\\1\"" 1))
+;;   "Imenu generic expression for Web Mode.")
 
 (defun web-mode-imenu-index ()
   "Return a table of contents."
   (let (toc-index)
     (save-excursion
       (goto-char (point-min))
-      (while (re-search-forward "<\\(h[1-9]\\)" nil t)
+      (while (re-search-forward "<h\\([1-9]\\)\\([^>]*\\)>\\([^<]*\\)" nil t)
 	(setq toc-index
 	      (cons (cons (concat (make-string
 				   (* 2 (1- (string-to-number (match-string 1))))
@@ -551,7 +553,6 @@
 			  (line-beginning-position))
 		    toc-index))))
     (nreverse toc-index)))
-
 
 (defun web-mode-scan-buffer ()
   "Scan entine buffer."
@@ -2875,7 +2876,7 @@ point is at the beginning of the line."
        "endautoescape" "endblock" "endcache" "endcall" "endembed" "endfilter"
        "endfor" "endif" "endifchanged" "endifequal" "endifnotequal"
        "endmacro" "endrandom" "endraw"
-       "endsandbox" "endspaceless" "endtrans" "endwith"
+       "endsandbox" "endset" "endspaceless" "endtrans" "endwith"
        "extends" "false" "filter" "firstof" "flush" "for" "from"
        "if" "ifchanged" "ifequal" "ifnotequal" "ignore" "import" "in" "include" "is"
        "load" "macro" "missing" "none" "not" "now" "or" "pluralize"
@@ -2956,7 +2957,6 @@ point is at the beginning of the line."
 (defconst web-mode-django-expr-font-lock-keywords
   (list
    '("{{\\|}}" 0 'web-mode-preprocessor-face)
-   '("\\<\\(set\\)\\>" 1 'web-mode-keyword-face)
    (cons (concat "\\<\\(" web-mode-django-filters "\\)\\>") '(1 'web-mode-function-name-face t t))
    '("[[:alnum:]_]+" 0 'web-mode-variable-name-face)
    ))
@@ -3168,8 +3168,11 @@ point is at the beginning of the line."
   "Comment or uncomment line(s) at point."
   (interactive)
   (unless pos
-    (back-to-indentation)
-    (setq pos (point)))
+    (if mark-active
+        (setq pos (region-beginning))
+      (back-to-indentation)
+      (setq pos (point)))
+    )
   (if (web-mode-is-comment)
       (web-mode-uncomment pos)
     (web-mode-comment pos))
@@ -3180,17 +3183,16 @@ point is at the beginning of the line."
   (interactive)
   (unless pos (setq pos (point)))
   (save-excursion
-    (let (type sel beg end)
+    (let (type sel beg end tmp)
 
       (if mark-active
           (progn
             (setq beg (region-beginning)
                   end (region-end))
+;;            (message "beg=%S end=%S" beg end)
             (setq type (web-mode-line-type beg))
-            ;;            (message "(%d)->(%d)" (region-beginning) (region-end))
             )
         (setq type (web-mode-line-type (line-beginning-position)))
-        ;;        (message "type=%S" type)
         (if (string= type "html")
             (progn
               (back-to-indentation)
@@ -3202,8 +3204,17 @@ point is at the beginning of the line."
               end (region-end))
         ); if
 
-      ;;      (message "type=%s" type)
+      (when (> (point) (mark))
+;;        (message "exchange")
+        (exchange-point-and-mark))
 
+
+      (if (eq (char-before end) ?\n)
+          (setq end (1- end)))
+
+;;     (message "type=%S beg=%S end=%S" type beg end)
+
+;;      (setq sel (buffer-substring-no-properties beg end))
       (setq sel (web-mode-trim (buffer-substring-no-properties beg end)))
       ;;      (message "[type=%s] sel=%s" type sel)
       (delete-region beg end)
@@ -3212,13 +3223,32 @@ point is at the beginning of the line."
       (cond
 
        ((string= type "html")
-        (web-mode-insert-and-indent (concat "<!-- " sel " -->"))
+
+        (cond
+         ((and web-mode-prefer-server-commenting (string= web-mode-engine "django"))
+          (web-mode-insert-and-indent (concat "{# " sel " #}"))
+          )
+         ((and web-mode-prefer-server-commenting (string= web-mode-engine "erb"))
+          (web-mode-insert-and-indent (concat "<%# " sel " %>"))
+          )
+         ((and web-mode-prefer-server-commenting (string= web-mode-engine "asp"))
+          (web-mode-insert-and-indent (concat "<%-- " sel " --%>"))
+          )
+         ((and web-mode-prefer-server-commenting (string= web-mode-engine "smarty"))
+          (web-mode-insert-and-indent (concat "{* " sel " *}"))
+          )
+         ((and web-mode-prefer-server-commenting (string= web-mode-engine "blade"))
+          (web-mode-insert-and-indent (concat "{{-- " sel " --}}"))
+          )
+         (t
+          (web-mode-insert-and-indent (concat "<!-- " sel " -->"))
+          )
+         )
+
         )
 
-;;       ((or (string= type "php") (string= type "script") (string= type "style"))
        ((member type '("php" "script" "style"))
-        (web-mode-insert-and-indent (concat "/* " sel " */"))
-        )
+        (web-mode-insert-and-indent (concat "/* " sel " */")))
 
        (t
         (web-mode-insert-and-indent (concat "/* " sel " */")))

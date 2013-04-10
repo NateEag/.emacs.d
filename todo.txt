@@ -1,3 +1,9 @@
+-Activate commit-message mode when editing tag messages.
+
+-Add gitconfig mode. http://www.emacswiki.org/emacs/gitconfig-mode.el
+
+-Figure out a good set of rules for activating conf-mode.
+
 -It would be really sweet to get yasnippet's bracket placement to do the Right
  Thing based on major-mode, placing them on the newline or on the same line
  intelligently. I'm guessing that can be achieved by applying elisp to the

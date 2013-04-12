@@ -103,8 +103,6 @@
  info on how to get a decent environment up and running:
  http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/
 
--Activate js-mode for filenames ending in .json.
-
 -My SQL-in-PHP code does not work with queries that involve concatenation,
  which some do (especially in crappy legacy codebases). See my email inbox for
  an example.

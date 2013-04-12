@@ -271,6 +271,7 @@
 (autoload 'js-mode-init "js-mode-init.el")
 (add-hook 'js-mode-hook 'js-mode-init)
 (add-to-list 'auto-mode-alist '("\\.js\\'" . js-mode))
+(add-to-list 'auto-mode-alist '("\\.json\\'" . js-mode))
 
 ;; If we're running in a window system, start an emacs server, so emacsclient
 ;; can connect to this instance.

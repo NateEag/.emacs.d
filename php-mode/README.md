@@ -45,9 +45,13 @@ PHP mode treats underscores as ‘symbol constituents’ (in Emacs terminology) 
 
 PHP mode will align method calls over multiple lines anchored around the `->` operator, e.g.:
 
-    $object->foo()
-           ->bar()
-           ->baz();
+```php
+$object->foo()
+       ->bar()
+       ->baz();
+```
+
+**Note:** Alignment will only work if you use one of the coding styles described below.  PHP mode uses [CC mode][] for indentation.  If you use any indentation style other than those described under the *Coding Styles* section then the method alignment above is not guaranteed to work.
 
 ### Nested Array Formatting ###
 
@@ -68,7 +72,7 @@ $results = Post::model()->find(
 Anonymous functions such as
 
 ```php
-$greet = function($name) { … };
+$greet = function($name) { ... };
 ```
 
 will now appear on Imenu; in this case the name will be `$greet`.
@@ -124,13 +128,48 @@ The annotations are the lines that begin with the `@` character, and php-mode wi
 
 ### Coding Styles ###
 
-By default php-mode tries to provide a reasonable style for indentation and formatting.  However, it provides other options suited for particular projects which you may find useful.  These coding styles are available through three functions:
+By default php-mode tries to provide a reasonable style for indentation and formatting.  However, it provides other options suited for particular projects which you may find useful.  These coding styles are available through these functions:
 
 1. `php-enable-pear-coding-style`
 2. `php-enable-drupal-coding-style`
 3. `php-enable-wordpress-coding-style`
+4. `php-enable-symfony2-coding-style`
 
-They will help format your code for PEAR projects, or work on the Drupal and WordPress software, respectively.  You may enable any of them by default by running `M-x customize-group <RET> php` and looking for the ‘PHP Mode Coding Style’ option.
+They will help format your code for PEAR projects, or work on Drupal, WordPress, and Symfony2 software, respectively.  You may enable any of them by default by running `M-x customize-group <RET> php` and looking for the ‘PHP Mode Coding Style’ option.
+
+#### Symfony2 Style ####
+
+With this style method call chains can be formatted with indented continuation and a hanging semi-colon:
+
+```php
+    $user1
+        ->setCreateDate(new \DateTime('2007-05-07 01:34:45'))
+        ->setLastDate(new \DateTime('2012-08-18 19:03:02'))
+        ->setUsername('jay')
+    ;
+```
+
+This style is used widely throughout Symfony2 source code even if it is not explicitly mentioned in their conventions documents.
+
+### Extra Constants ###
+
+If you commonly use a framework or library that defines a set of constants then you may wish to customize the value of `php-extra-constants`.  It is a list of strings that PHP mode will treat as additional constants, i.e. providing them the same level syntax highlighting that PHP mode uses for built-in constants.
+
+### Avoid HTML Template Compatibility ###
+
+Many developers use PHP Mode to edit pure PHP scripts (e.g. files with only PHP and no HTML). A basic compatibility layer with HTML has historically been part of PHP Mode but it does not work perfectly and can cause some bad side effects such as slowness and incorrect font locking.  Configuring the `php-template-compatibility` property with a `nil` will cancel any attempt of HTML compatibility.  [Web Mode](http://web-mode.org/) is a great alternative to PHP Mode if you need to work with PHP scripts that do contain HTML and other markup.
+
+### Subword Mode ###
+
+GNU Emacs comes with [Subword Mode][], a minor mode that allows you to navigate the parts of a [camelCase][] as if they were separate words.  For example, PHP Mode treats the variable `$fooBarBaz` as a whole name by default.  But if you enable Subword Mode then Emacs will treat the variable name as three separate words, and therefore word-related commands (e.g. `M-f`, `M-b`, `M-d`) will only affect the camelCase part of the name under the cursor.
+
+If you want to always use Subword Mode for PHP files then you can add this to your Emacs configuration:
+
+```lisp
+(add-hook 'php-mode-hook (lambda () (subword-mode 1)))
+```
+
+The key-binding `C-c C-w` will also toggle Subword Mode on and off.
 
 
 How to Contribute
@@ -218,8 +257,16 @@ In chronological order:
 46. [Michael Dwyer](https://github.com/kalifg)
 47. [Daniel Hackney](https://github.com/haxney)
 48. [Nate Eagleson](https://github.com/NateEag)
+49. [Steve Purcell](https://github.com/purcell)
+50. TatriX
+51. [François-Xavier Bois](https://github.com/fxbois)
+52. [James Laver](https://github.com/jjl)
+52. [Jacek Wysocki](https://github.com/exu)
 
 
 
 [wiki]: https://github.com/ejmr/php-mode/wiki
 [ert]: http://www.gnu.org/software/emacs/manual/html_node/ert/index.html
+[cc mode]: https://www.gnu.org/software/emacs/manual/html_mono/ccmode.html
+[Subword Mode]: https://www.gnu.org/software/emacs/manual/html_node/ccmode/Subword-Movement.html
+[camelCase]: http://en.wikipedia.org/wiki/Camel_case

@@ -65,18 +65,26 @@ be processed."
                        answers))))
      answers)))
 
-(defmacro* with-php-mode-test ((file &optional &key style indent magic) &rest body)
+(defmacro* with-php-mode-test ((file &key style indent magic) &rest body)
   "Set up environment for testing `php-mode'.
 Execute BODY in a temporary buffer containing the contents of
 FILE, in `php-mode'. Optional keyword `:style' can be used to set
-the coding style to one of `pear', `drupal', or `wordpress'."
+the coding style to one of the following:
+
+1. `pear'
+2. `drupal'
+3. `wordpress'
+4. `symfony2'
+
+Using any other symbol for STYLE results in undefined behavior."
   (declare (indent 1))
   `(with-temp-buffer
      (insert-file-contents (expand-file-name ,file php-mode-test-dir))
      ,(case style
         (pear '(php-enable-pear-coding-style))
         (drupal '(php-enable-drupal-coding-style))
-        (wordpress '(php-enable-wordpress-coding-style)))
+        (wordpress '(php-enable-wordpress-coding-style))
+        (symfony2 '(php-enable-symfony2-coding-style)))
      (php-mode)
      (font-lock-fontify-buffer)
      ,(if indent
@@ -107,7 +115,6 @@ have a string face."
 
 (ert-deftest php-mode-test-issue-14 ()
   "Array indentation."
-  :expected-result :failed
   (with-php-mode-test ("issue-14.php" :indent t :magic t)))
 
 (ert-deftest php-mode-test-issue-16 ()
@@ -125,13 +132,12 @@ Gets the face of the text after the comma."
 
 (ert-deftest php-mode-test-issue-19 ()
   "Alignment of arrow operators."
-  :expected-result :failed
   (with-php-mode-test ("issue-19.php" :indent t)
-    (while (re-search-forward "^\\s-*\\$object->")
+    (while (search-forward "$object->" (point-max) t)
       ;; Point is just after `->'
       (let ((col (current-column)))
         (search-forward "->")
-        (should (eq (current-column) col))))))
+        (should (= (current-column) col))))))
 
 (ert-deftest php-mode-test-issue-21 ()
   "Font locking multi-line string."
@@ -177,3 +183,29 @@ The closing brace and parenthesis should be at column 0."
 If the bug has been fixed, indenting the buffer should not cause
 an error."
   (with-php-mode-test ("issue-42.php" :indent t)))
+
+(ert-deftest php-mode-test-issue-73 ()
+  "The `delete-indentation' function should work properly for PHP.
+ This means modifying the logic of `fixup-whitespace' so that it
+ eliminates spaces before ',', ';', '->' amd '::' and after '->' and
+ '::'."
+  (with-php-mode-test ("issue-73.php")
+    (when (search-forward "# Correct" nil t)
+      (forward-line 1)
+      (let ((correct-line (thing-at-point 'line)))
+        (while (search-forward "# Test" nil t)
+          (forward-line 1)
+          (let ((current-line (line-number-at-pos)))
+            (catch 'eob
+              (while (not (looking-at-p "$"))
+                (unless (zerop (forward-line 1))
+                  (throw 'eob t))))
+            (forward-line -1)
+            (while (not (eq (line-number-at-pos) current-line))
+              (delete-indentation))
+            (beginning-of-line)
+            (should (string= (thing-at-point 'line) correct-line))))))))
+
+(ert-deftest php-mode-test-issue-99 ()
+  "Proper indentation for 'foreach' statements without braces."
+  (with-php-mode-test ("issue-99.php" :indent t :magic t)))

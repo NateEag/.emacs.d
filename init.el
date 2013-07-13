@@ -101,8 +101,15 @@
     ad-do-it))
 (ad-activate 'hack-dir-local-variables)
 
-;; I generally prefer to strip trailing whitespace on saves.
-(add-hook 'before-save-hook 'delete-trailing-whitespace)
+;; I generally prefer to strip trailing whitespace on saves, but not when I'm
+;; editing diffs, where whitespace is crucial. If I ever start using another
+;; file format where trailing whitespace matters, this might need upgrading,
+;; but for now, this hack should do the job.
+(defun maybe-delete-trailing-whitespace ()
+  "Delete trailing whitespace if the current buffer's filename allows it."
+  (unless (string-match "\\.*.\\(patch\\|diff\\)" (buffer-file-name))
+      (delete-trailing-whitespace)))
+(add-hook 'before-save-hook 'maybe-delete-trailing-whitespace)
 
 ;; Include third-party libraries.
 (add-to-list 'load-path "~/.emacs.d/libraries")
@@ -169,7 +176,8 @@
 ;; underscore as a word separator.
 (require 'smart-dash)
 
-;; Use more readable colors for diff-mode.
+
+;; Set up diff-mode.
 (defun update-diff-colors ()
   "update the colors for diff faces"
   (set-face-attribute 'diff-added nil
@@ -178,6 +186,7 @@
                       :foreground "darkred" :background "grey80")
   (set-face-attribute 'diff-changed nil
                       :foreground "darkgreen" :background "grey80"))
+
 (eval-after-load "diff-mode"
   '(update-diff-colors))
 

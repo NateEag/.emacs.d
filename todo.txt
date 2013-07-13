@@ -38,9 +38,6 @@
 
 -Look into binding Shift-Enter to whatever Meta-J is bound to.
 
--Do *not* activate strip-trailing-whitespace-on-save in diff-mode. You can
- destroy diffs with it.
-
 -Figure out why auto-pair-mode only works some of the time in php-mode. [], '',
  and () all have been known to exhibit breakage.
 

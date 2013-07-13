@@ -17,6 +17,9 @@
  every parameter you add, an @param line should be inserted in the header
  comment.
 
+-Get ejmr's php-auto-snippets package working, to save me many lookups of
+ which order PHP thinks *this* array function's args go in...
+
 -I should have Twig/Django snippets. 'block' is the obvious one, but probably
  snippets for all the major bits of syntax would be handy, and someone out
  there must have written such things.
@@ -30,7 +33,13 @@
 
 -I'd like yasnippets for JavaScript.
 
+-Similarly, bash snippets would be nice:
+ https://github.com/bmaland/yasnippet-sh-mode
+
 -Look into binding Shift-Enter to whatever Meta-J is bound to.
+
+-Do *not* activate strip-trailing-whitespace-on-save in diff-mode. You can
+ destroy diffs with it.
 
 -Figure out why auto-pair-mode only works some of the time in php-mode. [], '',
  and () all have been known to exhibit breakage.
@@ -50,7 +59,9 @@
 
 -Get flymake to deactivate/reactivate intelligently for the current edited
  line. If your cursor is on a line you have been editing, you probably don't
- want highlights yet.
+ want highlights until you save or move to a different line.
+
+-Once moved to Emacs 24, consider replacing flymake with flycheck.
 
 -Find a better CSS mode. Ideally something that supports SCSS, probably.
 
@@ -75,9 +86,12 @@
  on whether there are any characters before point *and* whether autocompletion
  has been invoked before while in this field. or something like that.
 
+-Get filepath autocompletion working in buffers. Some hints: http://superuser.com/questions/67170/how-do-i-complete-file-paths-in-emacs
+
 -I would like an Emacs command to insert newlines between commas in the
  highlighted region, then indent lines. I find myself doing this manually
- relatively often.
+ relatively often. A simple bit of code combining a backward search for a
+ delimiter ('(' or '{', in almost all cases) with a forward search for ',' and whatever Meta-J is bound to should do it.
 
 -Get a tagfile generator working for PHP projects on OS X and Windows.
 
@@ -157,6 +171,8 @@
  were. I haven't actually started using YASnippet yet, so perhaps that's beyond
  the bounds of what it's capable of. Evidence that this is achievable (though
  it's for R, not Python): http://www.svenhartenstein.de/Software/R-autoyas
+
+-Try replacing ropemode with jedi: https://github.com/tkf/emacs-jedi
 
 -Get ropemode to be more effective. A lot of expressions that seem completable
  aren't. Sometimes this is probably for very valid reasons (not wanting to

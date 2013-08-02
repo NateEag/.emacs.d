@@ -1,8 +1,4 @@
--Activate commit-message mode when editing tag messages.
-
 -Add gitconfig mode. http://www.emacswiki.org/emacs/gitconfig-mode.el
-
--Figure out a good set of rules for activating conf-mode.
 
 -It would be really sweet to get yasnippet's bracket placement to do the Right
  Thing based on major-mode, placing them on the newline or on the same line
@@ -85,8 +81,8 @@
 
 -Get filepath autocompletion working in buffers. Some hints: http://superuser.com/questions/67170/how-do-i-complete-file-paths-in-emacs
 
--I would like an Emacs command to insert newlines between commas in the
- highlighted region, then indent lines. I find myself doing this manually
+-I would like an Emacs command to insert newlines between parameters in the
+ current function call (or data structure definition), then reindent. I find myself doing this manually
  relatively often. A simple bit of code combining a backward search for a
  delimiter ('(' or '{', in almost all cases) with a forward search for ',' and whatever Meta-J is bound to should do it.
 
@@ -96,9 +92,6 @@
  be a huge project, involving changes to low-level source code.
  possibly-relevant GitHub repo (for Vim, but perhaps adaptable?):
  https://github.com/vim-php/phptags
-
--Make php-mode indent an array's closing paren on its own line correctly for
- PSR-2.
 
 -Figure out why php-mode will not fill comments that begin with //. I'm
  guessing it has to do with php-mode deriving from c-mode, but perhaps not.
@@ -114,9 +107,14 @@
  info on how to get a decent environment up and running:
  http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/
 
--My SQL-in-PHP code does not work with queries that involve concatenation,
- which some do (especially in crappy legacy codebases). See my email inbox for
- an example.
+-sql-mode appears to be a far more powerful beast than I had ever really
+ appreciated. I should look into setting up and learning the server
+ interaction components, which could make my life so much less painful. Of
+ particular note is http://www.emacswiki.org/emacs/SqlWithPlaceholders.
+
+-My SQL-in-PHP code does not work with queries that are built using
+ concatenation, which some do (especially in crappy legacy codebases). See my
+ email inbox for examples.
 
 -I would like my sql-mode to do a better job with font-lock. It does very
  poorly at dealing with strings that have backslashed quotes. Could this be
@@ -126,6 +124,9 @@
 -I'd also like context-sensitive paragraph filling. That is, in comments, my
  fill-column value is 79, but if I'm in a Python docstring, fill-column should
  be 72. Apparently this is fixed in a Jan. 2013 commit to python-mode.el.
+
+-Figure out what the best way to save/restore my Emacs sessions is. Ideally,
+ find a solution that lets me save/restore buffer state for a whole directory.
 
 -I'd like to display the current named block in my modeline. So, in Python, if
  I'm editing method foobar of class Testing, my modeline would have 'Block:
@@ -156,6 +157,8 @@
  are no duplicates, the editor should be able to find the nearest delimiters
  and change them. Now you can keep on cranking.
 
+-Try replacing ropemode with jedi: https://github.com/tkf/emacs-jedi
+
 -See whether rope supports any kind of intelligent argument list fetching. If
  it does, it might be possible to write a parameter suggestion tool. Obviously,
  this is a big one, and not something I'm likely to really tackle. Well, maybe
@@ -168,8 +171,6 @@
  were. I haven't actually started using YASnippet yet, so perhaps that's beyond
  the bounds of what it's capable of. Evidence that this is achievable (though
  it's for R, not Python): http://www.svenhartenstein.de/Software/R-autoyas
-
--Try replacing ropemode with jedi: https://github.com/tkf/emacs-jedi
 
 -Get ropemode to be more effective. A lot of expressions that seem completable
  aren't. Sometimes this is probably for very valid reasons (not wanting to

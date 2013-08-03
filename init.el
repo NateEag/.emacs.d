@@ -105,6 +105,9 @@
 ;; editing diffs, where whitespace is crucial. If I ever start using another
 ;; file format where trailing whitespace matters, this might need upgrading,
 ;; but for now, this hack should do the job.
+;; I originally tried to remove the delete-trailing-whitespace hook when
+;; loading diff-mode, but for some reason, that only worked when I removed it
+;; globally. I'm guessing before-save-hook is not a buffer-local variable.
 (defun maybe-delete-trailing-whitespace ()
   "Delete trailing whitespace if the current buffer's filename allows it."
   (unless (string-match "\\.*.\\(patch\\|diff\\)" (buffer-file-name))
@@ -192,6 +195,27 @@
 
 
 ;; Random functions worth having around.
+
+;; GRIPE If I just generalized a tiny bit, I could probably make this work in a
+;; lot more languages than just PHP, since comma for separator is a really
+;; common idiom, and it'd be easy to accept different delimiters.
+(defun wrap-args ()
+  "Split function arg/array contents to multiple lines in PHP code."
+  (interactive)
+  (let ((close-paren-pos (search-forward ")" nil 't))
+        (open-paren-pos (search-backward "(" nil 't)))
+
+    (goto-char (- close-paren-pos 1))
+    (insert "\n")
+    (setq close-paren-pos (+ close-paren-pos 1))
+
+    (goto-char (+ open-paren-pos 1))
+    (insert "\n")
+
+    (while (search-forward "," close-paren-pos 't)
+      (insert "\n")
+      (setq close-paren-pos (+ close-paren-pos 1)))
+    (indent-region open-paren-pos (+ close-paren-pos 1))))
 
 ;; Move the current buffer to a new location on disk, then rename the buffer.
 ;; From http://www.stringify.com/2006/apr/24/rename/

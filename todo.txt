@@ -81,11 +81,6 @@
 
 -Get filepath autocompletion working in buffers. Some hints: http://superuser.com/questions/67170/how-do-i-complete-file-paths-in-emacs
 
--I would like an Emacs command to insert newlines between parameters in the
- current function call (or data structure definition), then reindent. I find myself doing this manually
- relatively often. A simple bit of code combining a backward search for a
- delimiter ('(' or '{', in almost all cases) with a forward search for ',' and whatever Meta-J is bound to should do it.
-
 -Get a tagfile generator working for PHP projects on OS X and Windows.
 
 -Find a way to make PHP tagfiles pay attention to namespaces. That could well

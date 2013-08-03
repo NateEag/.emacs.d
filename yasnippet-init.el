@@ -11,6 +11,7 @@
         (add-to-list 'load-path
               "~/.emacs.d/yasnippet")
         (yas-load-directory yas-root-directory)
+        (yas-load-directory "~/.emacs.d/my-snippets")
         ;; Change default keybinding, because I usually want to use YASnippet
         ;; through auto-complete.el.
         (define-key yas-minor-mode-map (kbd "C-c y") 'yas-expand)

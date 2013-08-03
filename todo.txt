@@ -99,8 +99,7 @@
 
 -I should probably consider getting a better JS environment going. Having a JS
  interpreter available to me in Emacs could be mighty handy. This page has some
- info on how to get a decent environment up and running:
- http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/
+ info on how to get a decent environment up and running: http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/
 
 -sql-mode appears to be a far more powerful beast than I had ever really
  appreciated. I should look into setting up and learning the server
@@ -115,6 +114,8 @@
  poorly at dealing with strings that have backslashed quotes. Could this be
  solved by some regex-tweaking? Scuttlebutt on the net suggests that there's a
  toggleable setting.
+
+-I should enable the rst-mode yasnippets when in rst-mode.
 
 -I'd also like context-sensitive paragraph filling. That is, in comments, my
  fill-column value is 79, but if I'm in a Python docstring, fill-column should

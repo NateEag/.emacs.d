@@ -259,7 +259,11 @@
 (defun text-mode-init ()
   "Configuration that is shared across my various text modes."
   (auto-fill-mode t)
-  (autopair-init))
+  (autopair-init)
+
+  ;; I occasionally want to use yasnippet in text mode.
+  (yasnippet-init)
+  (yas-minor-mode))
 
 ;; Everyone needs text-mode.
 (add-hook 'text-mode-hook 'text-mode-init)

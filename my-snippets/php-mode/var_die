@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: var_die
+# key: var_die
+# binding: direct-keybinding
+# --
+var_dump($1); die;

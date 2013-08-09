@@ -38,6 +38,9 @@
 (setq c-default-style "linux"
       c-basic-offset 4)
 
+;; I don't like to type 'yes' when I could just type 'y'.
+(defalias 'yes-or-no-p 'y-or-n-p)
+
 ;; I'd much rather have a sane way to goto-line than be able to easily change
 ;; my font settings.
 (global-set-key "\M-g" 'goto-line)

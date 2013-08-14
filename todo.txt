@@ -9,6 +9,10 @@
  not be accepted into yasnippet:
  http://comments.gmane.org/gmane.emacs.yasnippet.devel/403
 
+-Get a tagfile generator working for PHP projects on OS X and Windows. If it
+ doesn't support namespaces there's no point, so this vim plugin is probably
+ my best bet: https://github.com/vim-php/phptags
+
 -The PHP function/method snippets should have a header comment by default. For
  every parameter you add, an @param line should be inserted in the header
  comment.
@@ -80,13 +84,6 @@
  has been invoked before while in this field. or something like that.
 
 -Get filepath autocompletion working in buffers. Some hints: http://superuser.com/questions/67170/how-do-i-complete-file-paths-in-emacs
-
--Get a tagfile generator working for PHP projects on OS X and Windows.
-
--Find a way to make PHP tagfiles pay attention to namespaces. That could well
- be a huge project, involving changes to low-level source code.
- possibly-relevant GitHub repo (for Vim, but perhaps adaptable?):
- https://github.com/vim-php/phptags
 
 -Figure out why php-mode will not fill comments that begin with //. I'm
  guessing it has to do with php-mode deriving from c-mode, but perhaps not.

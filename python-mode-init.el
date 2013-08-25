@@ -86,9 +86,12 @@
 ;; Load my python-mode accessories only when python-mode kicks in.
 (defun load-python-mode-accessories ()
   "Loads all the libraries/tools I want to have when I'm in python-mode."
-  (initialize-pymacs)
-  (initialize-rope)
-  (initialize-auto-complete-python)
+  ;; GRIPE Commenting these out because they're just breaking things.
+  ;; I'm hoping to ditch it for Jedi soon anyway, as I work on moving to Emacs
+  ;; 24.
+  ;; (initialize-pymacs)
+  ;; (initialize-rope)
+  ;; (initialize-auto-complete-python)
   (smart-dash-mode t)
   (comment-auto-fill)
   (autopair-init)

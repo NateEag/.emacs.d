@@ -8,6 +8,9 @@
 (add-to-list 'load-path "~/.emacs.d/lintnode")
 (require 'flymake-jslint)
 
+(add-to-list 'load-path "~/.emacs.d/tern-mode/emacs")
+(autoload 'tern-mode "tern.el" nil t)
+
 ;; GRIPE Starting lintnode here is a lame hack and guaranteed to fail if
 ;; node.js is not installed, but it solves the problem of the lintnode server
 ;; not starting in time for the first JS buffer opened to work.
@@ -22,4 +25,5 @@
   (autopair-init)
   (auto-complete-init)
   (flymake-init)
-  (lintnode-hook))
+  (lintnode-hook)
+  (tern-mode 't))

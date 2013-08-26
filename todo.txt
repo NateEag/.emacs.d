@@ -100,10 +100,8 @@
  info on how to get a decent environment up and running:
 http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/
 
--Integrate TernJS into my JS mode, for JS autocompletion, func arg hinting,
- refactoring, and jump-to-defition. Sadly, I cannot do this until I have
- upgraded to Emacs 24, which is yet another argument for doing that:
- http://ternjs.net/
+-Get tern-mode's auto-complete.el integration working, because that would just
+ be awesome.
 
 -sql-mode appears to be a far more powerful beast than I had ever really
  appreciated. I should look into setting up and learning the server

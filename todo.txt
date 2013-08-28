@@ -157,46 +157,11 @@ http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editin
  are no duplicates, the editor should be able to find the nearest delimiters
  and change them. Now you can keep on cranking.
 
--Try replacing ropemode with jedi: https://github.com/tkf/emacs-jedi
+-Figure out why jedi's jump-to-definition doesn't work until after I've tried
+ to autocomplete something.
 
--See whether rope supports any kind of intelligent argument list fetching. If
- it does, it might be possible to write a parameter suggestion tool. Obviously,
- this is a big one, and not something I'm likely to really tackle. Well, maybe
- it's not as tough as I think - might be able to incorporate some cleverness
- between YASnippet and ropemacs so that there's a YASnippet for *current Python
- function args*, and it tabs you through each one? Actually, yeah - if nothing
- else, it might be possible to generate a new snippet based on what we're
- getting from ropemacs, so the yasnippet "jump to next dynamic field" behavior
- would basically let us fill in args while seeing what the original values
- were. I haven't actually started using YASnippet yet, so perhaps that's beyond
- the bounds of what it's capable of. Evidence that this is achievable (though
- it's for R, not Python): http://www.svenhartenstein.de/Software/R-autoyas
-
--Get ropemode to be more effective. A lot of expressions that seem completable
- aren't. Sometimes this is probably for very valid reasons (not wanting to
- evaluate every darned statement in the project), but it doesn't seem like
- knowing what the current "self" is would be impossibly hard. This is serious
- rope development, and possibly not in sync with what the rope crew would like
- to do. Let's call it a pipe-dream.
-
--Write/request a better interface for rope-find-occurrences. It just gives you
- a buffer telling you where it shows up (and includes the def statement for a
- function, which seems a bit funky to me) - it ought to be simple to hop
- directly to it, eh?
-
--Figure out a way to make rope-completions faster. It's the source of that
- half-second delay before anything happens after I ask for auto-completion, and
- it honestly slows me down. I can usually finish typing the expression faster
- than I can auto-complete it. I've improved this some by the simple expedient
- of byte-compiling pymacs.el, but still things like wx.<TAB> chug for fifty
- seconds or so before suggesting completions. I realize that's abusive, given
- just how many names are in that namespace, but it does seem like it should be
- possible to keep a pretty static analysis of system-wide packages, and that
- completions on names that correlate to those packages shouldn't be so slow. It
- feels like it's doing dynamic analysis of the 'wx' package, but once it's been
- imported, shouldn't we be able to just check whether the module on disk has
- updated, and if not, need no more dynamic analysis? I should probably
- ask/bug-report this on the mailing list.
+-Think about whether I should pull ropemode back into python-mode; I never
+ really used the refactoring tools, but maybe I should.
 
 -This is long-term, since my task tracker doesn't exist yet, but I'd like to
  hack up a basic minor-mode for it, if it ever gets far enough for that to be

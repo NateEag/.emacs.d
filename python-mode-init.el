@@ -14,6 +14,8 @@
 
 (autoload 'autopair-init "autopair-init.el")
 
+(autoload 'auto-complete-init "auto-complete-init.el")
+
 ;; Load Jedi. Note that for this to work, you'll have to install Jedi in a
 ;; virtualenv, using the Makefile.
 (autoload 'emacs-epc-init "emacs-epc-init.el") ;; Need epc for jedi.
@@ -26,10 +28,12 @@
   (smart-dash-mode t)
   (comment-auto-fill)
   (autopair-init)
+  (auto-complete-init)
   (setq autopair-handle-action-fns
         (list #'autopair-default-handle-action
               #'autopair-python-triple-quote-action))
   (emacs-epc-init)
+  (setq jedi:setup-keys t)
   (jedi:setup)
   (setq jedi:complete-on-dot t))
 (add-hook 'python-mode-hook 'load-python-mode-accessories)

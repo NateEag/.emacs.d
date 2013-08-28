@@ -157,11 +157,8 @@ http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editin
  are no duplicates, the editor should be able to find the nearest delimiters
  and change them. Now you can keep on cranking.
 
--Get my expected keybindings working with jedi (C-n, C-p for navigating list,
- tab for autocomplete rather than C-c .).
-
--Try upgrading auto-complete.el to see if it solves the ugly UI when my jedi
- dropdown is really wide.
+-Figure out why jedi's jump-to-definition doesn't work until after I've tried
+ to autocomplete something.
 
 -Think about whether I should pull ropemode back into python-mode; I never
  really used the refactoring tools, but maybe I should.

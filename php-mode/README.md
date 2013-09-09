@@ -1,7 +1,7 @@
 PHP Mode for GNU Emacs
 ======================
 
-This updates php-mode with features to make it more friendly to use with PHP 5.4 and later.  This fork builds on the work of:
+This updates PHP Mode with features to make it more friendly to use with PHP 5.4 and later.  This fork builds on the work of:
 
 1. Turadg Aleahmad (Original Author)
 
@@ -9,17 +9,25 @@ This updates php-mode with features to make it more friendly to use with PHP 5.4
 
 3. Lennart Borgman
 
-All contributors listed below improved PHP mode as well.
+All contributors listed below improved PHP Mode as well.
 
-Please email any bugs or feature requests to `lobbyjones at gmail dot com` or submit them as Issues on the [Github page](https://github.com/ejmr/php-mode).  Also please include the output of `php-mode-version` in bug reports.
+Please email any bugs or feature requests to `lobbyjones at gmail dot com` or submit them as Issues on the [GitHub page](https://github.com/ejmr/php-mode).  Also please include the output of `php-mode-version` in bug reports.  [There is a changelog for previous versions.](./Changelog.md)
 
-**Note:** [There is a changelog for previous versions.](./Changelog.md)
+
+Installation
+------------
+
+If you are using GNU Emacs 24 or later then you can use its [package][] feature to install PHP Mode from [MELPA][].  *The [Marmalade][] package repository only has the original PHP Mode from 2004.*
+
+If you are using an older version of Emacs, or if you simply do not wish to use the package manager, then all you need to do is download the `php-mode.el` file, place it inside your `load-path`, and optionally add `(require 'php-mode)` to your Emacs configuration to automatically enable PHP Mode whenever you open a PHP file.
 
 
 Status
 ------
 
-[The php-mode wiki][wiki] describes the plan for the next release and I update it to mark off issues when they are complete.  However, there is no hard date set for each release.  Serious bugs I try to resolve as soon as possibe.  But lately I have been lax when it comes to finishing feature requests, so my apologies.  That said, php-mode is in no way a dead project by any means, even if updates are sometimes sparse.
+[The PHP Mode wiki][wiki] describes the plan for the next release and I update it to mark off issues when they are complete.  Serious bugs I try to resolve as soon as possibe.  But feature requests tend to take more time, so my apologies.
+
+I am currently looking for someone willing to take over as the maintainer of PHP Mode starting in 2014.  Please see [this discussion](https://github.com/ejmr/php-mode/issues/109) for details.
 
 
 Features
@@ -27,7 +35,7 @@ Features
 
 ### New Keywords ###
 
-Now php-mode supports syntax highlighting for new keywords which PHP 5.4 introduced, e.g. those related to traits, such as `insteadof`.  Also supported are the older keywords `clone` and `default`.
+Now PHP Mode supports syntax highlighting for new keywords which PHP 5.4 introduced, e.g. those related to traits, such as `insteadof`.  Also supported are the older keywords `clone` and `default`.
 
 ### Constants ###
 
@@ -39,11 +47,11 @@ Traits, interfaces, and namespaces now appear under Imenu listings. Fontificatio
 
 ### Treatment of Underscores ###
 
-PHP mode treats underscores as ‘symbol constituents’ (in Emacs terminology) so that you can use keys like `M-f` and `M-b` to move through the individual parts of a variable name like `$foo_bar_baz`.
+PHP Mode treats underscores as ‘symbol constituents’ (in Emacs terminology) so that you can use keys like `M-f` and `M-b` to move through the individual parts of a variable name like `$foo_bar_baz`.
 
 ### Chained Method Calls ###
 
-PHP mode will align method calls over multiple lines anchored around the `->` operator, e.g.:
+PHP Mode will align method calls over multiple lines anchored around the `->` operator, e.g.:
 
 ```php
 $object->foo()
@@ -51,7 +59,7 @@ $object->foo()
        ->baz();
 ```
 
-**Note:** Alignment will only work if you use one of the coding styles described below.  PHP mode uses [CC mode][] for indentation.  If you use any indentation style other than those described under the *Coding Styles* section then the method alignment above is not guaranteed to work.
+**Note:** Alignment will only work if you use one of the coding styles described below.  PHP Mode uses [CC mode][] for indentation.  If you use any indentation style other than those described under the *Coding Styles* section then the method alignment above is not guaranteed to work.
 
 ### Nested Array Formatting ###
 
@@ -83,7 +91,7 @@ By customizing the variable `php-executable` you can enable Flymake mode in orde
 
 ### Search Local Documentation ###
 
-The key command `C-c C-f` will search the PHP website for documentation on the word under the cursor.  However, if you have a [local copy of the PHP documentation](http://us2.php.net/download-docs.php) then php-mode will try searching that documentation first.  All you need to do is customize the variable `php-manual-path` and give it the path to your copy of the documentation.  If php-mode cannot find something locally then it will still fallback on searching the PHP website.
+The key command `C-c C-f` will search the PHP website for documentation on the word under the cursor.  However, if you have a [local copy of the PHP documentation](http://us2.php.net/download-docs.php) then PHP Mode will try searching that documentation first.  All you need to do is customize the variable `php-manual-path` and give it the path to your copy of the documentation.  If PHP Mode cannot find something locally then it will still fallback on searching the PHP website.
 
 ### Executing Regions of PHP ###
 
@@ -124,11 +132,11 @@ class Product
 }
 ```
 
-The annotations are the lines that begin with the `@` character, and php-mode will give these special highlighting to help them stand out.
+The annotations are the lines that begin with the `@` character, and PHP Mode will give these special highlighting to help them stand out.
 
 ### Coding Styles ###
 
-By default php-mode tries to provide a reasonable style for indentation and formatting.  However, it provides other options suited for particular projects which you may find useful.  These coding styles are available through these functions:
+By default PHP Mode tries to provide a reasonable style for indentation and formatting.  However, it provides other options suited for particular projects which you may find useful.  These coding styles are available through these functions:
 
 1. `php-enable-pear-coding-style`
 2. `php-enable-drupal-coding-style`
@@ -153,7 +161,11 @@ This style is used widely throughout Symfony2 source code even if it is not expl
 
 ### Extra Constants ###
 
-If you commonly use a framework or library that defines a set of constants then you may wish to customize the value of `php-extra-constants`.  It is a list of strings that PHP mode will treat as additional constants, i.e. providing them the same level syntax highlighting that PHP mode uses for built-in constants.
+If you commonly use a framework or library that defines a set of constants then you may wish to customize the value of `php-extra-constants`.  It is a list of strings that PHP Mode will treat as additional constants, i.e. providing them the same level syntax highlighting that PHP Mode uses for built-in constants.
+
+### Web Mode Constants and Keywords ###
+
+If you use [Web Mode][] then PHP Mode will attempt to use any additional PHP constants and keywords that Web Mode allows you to define.
 
 ### Avoid HTML Template Compatibility ###
 
@@ -171,15 +183,19 @@ If you want to always use Subword Mode for PHP files then you can add this to yo
 
 The key-binding `C-c C-w` will also toggle Subword Mode on and off.
 
+### Amaka Support ###
+
+Viewing and editing build scripts for [Amaka](http://trashofmasters.github.io/amaka/) will automatically enable PHP Mode.
+
 
 How to Contribute
 -----------------
 
-All contributions to php-mode are welcome.  But please try to do the following when sending improvements or bug fixes:
+All contributions to PHP Mode are welcome.  But please try to do the following when sending improvements or bug fixes:
 
-1. Add your name to the list of ‘Contributors’ in this `README.md` file if it is not there already.  If you have a Github page then please link your name to it, so people can see your other work.
+1. Add your name to the list of ‘Contributors’ in this `README.md` file if it is not there already.  If you have a GitHub page then please link your name to it, so people can see your other work.
 
-2. If your contribution addresses an issue on the Github project page then include a single line like `Github-issue: 16` with the appropriate issue number.
+2. If your contribution addresses an issue on the GitHub project page then include a single line like `GitHub-Issue: 16` with the appropriate issue number.
 
 3. Make sure to update the constant `php-mode-modified`.
 
@@ -187,15 +203,15 @@ All contributions to php-mode are welcome.  But please try to do the following w
 
 5. Open the `php-mode-test.el` file and [run all of the tests](http://www.gnu.org/software/emacs/manual/html_node/ert/Running-Tests-Interactively.html#Running-Tests-Interactively) to ensure they still pass as expected.  Sometimes we expect for a test to fail, and those unit tests have the appropriate configuration so their failure will not raise any warnings.  You can use the `run-tests.sh` script to run all tests from a terminal, which is also useful in conjunction with [`git bisect run`](http://git-scm.com/book/en/Git-Tools-Debugging-with-Git).
 
-6. Send me a pull request here on Github.  Or if you do not have a Github account then email the patches to me at `lobbyjones at gmail dot com`.  Please try to make sure the patches are acceptable input to the comand `git am`.  Please note that even if you send a pull request it is very likely that I will *not* simply merge your branch through Github; I prefer to go through commits and cherry-pick them so I can review the commit messages and sign-off on them.  You can see which commits I did or did not merge by using the [`git-cherry`](http://www.kernel.org/pub/software/scm/git/docs/git-cherry.html) command.
+6. Send me a pull request here on GitHub.  Or if you do not have a GitHub account then email the patches to me at `lobbyjones at gmail dot com`.  Please try to make sure the patches are acceptable input to the comand `git am`.  Please note that even if you send a pull request it is very likely that I will *not* simply merge your branch through GitHub; I prefer to go through commits and cherry-pick them so I can review the commit messages and sign-off on them.  You can see which commits I did or did not merge by using the [`git-cherry`](http://www.kernel.org/pub/software/scm/git/docs/git-cherry.html) command.
 
-If you are fixing a bug related to a Github issue, then first of all, thank you for the help improving php-mode.  Second, there is a `tests/` directory which contains PHP scripts for issues (although not all of them).  Please consider adding a test script to that directory that documents the expected behavior and provides code that allows others to see if said behavior works properly.  Then create a unit test within `php-mode-test.el` using [ERT][]. Please try to follow the format of the existing tests.
+If you are fixing a bug related to a GitHub issue, then first of all, thank you for the help improving PHP Mode.  Second, there is a `tests/` directory which contains PHP scripts for issues (although not all of them).  Please consider adding a test script to that directory that documents the expected behavior and provides code that allows others to see if said behavior works properly.  Then create a unit test within `php-mode-test.el` using [ERT][]. Please try to follow the format of the existing tests.
 
 
 The Wiki
 --------
 
-The Github project page has a [wiki][] that you should feel free to edit.  The wiki lists the features and bugs that are on plan to include in upcoming versions of php-mode.  It is also a place to add any tips to make the mode more useful.
+The GitHub project page has a [wiki][] that you should feel free to edit.  The wiki lists the features and bugs that are on plan to include in upcoming versions of PHP Mode.  It is also a place to add any tips to make the mode more useful.
 
 
 License
@@ -242,7 +258,7 @@ In chronological order:
 31. [Bill Lovett](https://github.com/lovett)
 32. Dias Badekas
 33. David House
-34. [Tom Willemsen](https://github.com/ryuslash)
+34. [Tom Willemse](https://github.com/ryuslash)
 35. [Olaf the Viking](https://github.com/olavTHEviking)
 36. [Maël Nison](https://github.com/arcanis)
 37. [flack](https://github.com/flack)
@@ -262,6 +278,8 @@ In chronological order:
 51. [François-Xavier Bois](https://github.com/fxbois)
 52. [James Laver](https://github.com/jjl)
 52. [Jacek Wysocki](https://github.com/exu)
+53. [Jon Dufrense](https://github.com/jdufresne)
+54. [Andrei Chițu](https://github.com/achitu)
 
 
 
@@ -270,3 +288,7 @@ In chronological order:
 [cc mode]: https://www.gnu.org/software/emacs/manual/html_mono/ccmode.html
 [Subword Mode]: https://www.gnu.org/software/emacs/manual/html_node/ccmode/Subword-Movement.html
 [camelCase]: http://en.wikipedia.org/wiki/Camel_case
+[package]: https://www.gnu.org/software/emacs/manual/html_node/emacs/Packages.html
+[MELPA]: http://melpa.milkbox.net/
+[Marmalade]: http://marmalade-repo.org/
+[Web Mode]: http://web-mode.org/

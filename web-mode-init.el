@@ -10,8 +10,6 @@
   (fset 'string-match-p (symbol-function 'my-string-match-p)))
 
 ;; Actually load and configure web-mode.
-(add-to-list 'load-path "~/.emacs.d/web-mode")
-
 (autoload 'web-mode "web-mode" "Web template editing mode")
 (add-to-list 'auto-mode-alist '("\\.tmpl\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode))

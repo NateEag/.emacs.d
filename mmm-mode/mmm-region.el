@@ -485,13 +485,16 @@ which is set here as well.  See `mmm-save-local-variables'.  If FORCE
 is non-nil, don't quit if the info is already there."
   (let ((buffer-entry (assq mode mmm-buffer-saved-locals))
         (region-entry (assq mode mmm-region-saved-locals-defaults))
-        global-vars buffer-vars region-vars)
+        global-vars buffer-vars region-vars
+        ;; http://debbugs.gnu.org/13836
+        buffer-file-truename)
     (unless (and (not force)
                  (get mode 'mmm-local-variables)
                  buffer-entry
                  region-entry)
       (let ((temp-buffer (mmm-make-temp-buffer (current-buffer)
                                                mmm-temp-buffer-name))
+            (filename (buffer-file-name))
             (mmm-in-temp-buffer t))
         (unwind-protect
             (with-current-buffer temp-buffer
@@ -518,7 +521,6 @@ is non-nil, don't quit if the info is already there."
                     buffer-vars (mmm-get-locals 'buffer)
                     region-vars (mmm-get-locals 'region))
               (put mode 'mmm-mode-name mode-name))
-          (set-buffer-modified-p nil)
           (kill-buffer temp-buffer)))
       (put mode 'mmm-local-variables global-vars)
       (if buffer-entry
@@ -619,6 +621,21 @@ the region ones."
                 (set (car var) (cadr var))))
           (mmm-get-saved-local-variables mode ovl)))
 
+;; Used for debugging.
+(defun mmm-diff-local-variables (mode ovl)
+  (let (res)
+    (mapc (lambda (var)
+            (let ((current-value (if (consp (car var))
+                                     (funcall (caar var))
+                                   (symbol-value (car var)))))
+              (unless (equal current-value (cadr var))
+                (push
+                 (message "var: %s, current: %s, saved: %s" (car var)
+                          current-value (cadr var))
+                 res))))
+          (mmm-get-saved-local-variables mode ovl))
+    res))
+
 (defun mmm-get-saved-local-variables (mode ovl)
   (append (get mode 'mmm-local-variables)
           (cdr (assq mode mmm-buffer-saved-locals))
@@ -693,13 +710,18 @@ region and mode for the previous position."
 (defun mmm-submode-changes-in (start stop)
   "Return a list of all submode-change positions from START to STOP.
 The list is sorted in order of increasing buffer position."
-  (sort (remove-duplicates
-         (list* start stop
-                (mapcan #'(lambda (ovl)
-                            `(,(overlay-start ovl)
-                              ,(overlay-end ovl)))
-                        (mmm-overlays-overlapping start stop))))
-        #'<))
+  (let ((changes (sort (remove-duplicates
+                        (mapcan #'(lambda (ovl)
+                                    `(,(overlay-start ovl)
+                                      ,(overlay-end ovl)))
+                                (mmm-overlays-overlapping start stop)))
+                       #'<)))
+    (when (or (not changes) (< start (car changes)))
+      (push start changes))
+    (let ((last (last changes)))
+      (when (> stop (car last))
+        (setcdr last (list stop))))
+    changes))
 
 (defun mmm-regions-in (start stop)
   "Return a list of regions of the form (MODE BEG END OVL) whose disjoint
@@ -789,14 +811,22 @@ of the REGIONS covers START to STOP."
 
 (defun mmm-beginning-of-syntax ()
   (goto-char
-   (let ((ovl (mmm-overlay-at (point)))
+   (let ((ovl (mmm-overlay-at (point) 'beg))
          (func (get (or mmm-current-submode mmm-primary-mode)
                     'mmm-beginning-of-syntax-function)))
      (max (if ovl (overlay-start ovl) (point-min))
           (if func (progn (funcall func) (point)) (point-min))
           (point-min)))))
 
+(defvar mmm-after-syntax-propertize-functions nil
+  "List of functions to call after applying `syntax-table' text
+properties to a submode region. It is passed four arguments: the
+region overlay, the submode and the bounds of the region.")
+
 (defun mmm-syntax-propertize-function (start stop)
+  "Composite function that applies `syntax-table' text properties.
+It iterates over all submode regions between START and STOP and
+calls each respective submode's `syntax-propertize-function'."
   (let ((saved-mode mmm-current-submode)
         (saved-ovl  mmm-current-overlay))
     (mmm-save-changed-local-variables
@@ -806,21 +836,24 @@ of the REGIONS covers START to STOP."
                   (let* ((mode (car elt))
                          (func (get mode 'mmm-syntax-propertize-function))
                          (beg (cadr elt)) (end (caddr elt))
-                         (ovl (cadddr elt)))
+                         (ovl (cadddr elt))
+                         syntax-ppss-cache
+                         syntax-ppss-last)
                     (goto-char beg)
                     (mmm-set-current-pair mode ovl)
                     (mmm-set-local-variables mode mmm-current-overlay)
                     (save-restriction
-                      (if mmm-current-overlay
-                          (narrow-to-region (overlay-start mmm-current-overlay)
-                                            (overlay-end mmm-current-overlay))
-                        (narrow-to-region beg end))
+                      (when mmm-current-overlay
+                        (narrow-to-region (overlay-start mmm-current-overlay)
+                                          (overlay-end mmm-current-overlay)))
                       (cond
                        (func
                         (funcall func beg end))
                        (font-lock-syntactic-keywords
                         (let ((syntax-propertize-function nil))
-                          (font-lock-fontify-syntactic-keywords-region beg end)))))))
+                          (font-lock-fontify-syntactic-keywords-region beg end))))
+                      (run-hook-with-args 'mmm-after-syntax-propertize-functions
+                                          mmm-current-overlay mode beg end))))
               (mmm-regions-in start stop))
       (mmm-set-current-pair saved-mode saved-ovl)
       (mmm-set-local-variables (or saved-mode mmm-primary-mode) saved-ovl))))

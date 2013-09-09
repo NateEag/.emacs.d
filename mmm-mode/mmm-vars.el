@@ -288,7 +288,7 @@
     abbrev-mode
     local-abbrev-table
     ;; And finally the syntax table and local map.
-    ((syntax-table . set-syntax-table))
+    ((syntax-table . set-syntax-table) buffer)
     ((current-local-map . use-local-map) buffer)
     paragraph-separate
     paragraph-start
@@ -553,12 +553,12 @@ which will always be available."
                                          (fboundp))))))
 
 (defun mmm-add-to-major-mode-preferences (language mode &optional default)
-  "Set the preferred major mode for LANGUAGE to MODE.
-This sets the value of `mmm-major-mode-preferences'.  If DEFAULT is
-nil or unsupplied, MODE is added at the front of the list of modes for
-LANGUAGE.  If DEFAULT is non-nil, then it is added at the end.  This
-may be used by packages to ensure that some mode is present, but not
-override any user-specified mode."
+  "Add major mode MODE as acceptable for LANGUAGE.
+This sets the value of `mmm-major-mode-preferences'. If DEFAULT
+is non-nil, MODE is added at the front of the list of modes for
+LANGUAGE. Otherwise, it is added at the end. This may be used by
+packages to ensure that some mode is present, but not override
+any user-specified mode."
   (let ((pair (assq language mmm-major-mode-preferences)))
     (if pair
         ;; Existing mode preferences
@@ -997,6 +997,7 @@ PRIVATE, if supplied and non-nil, means that this class is a private
 or internal class, usually one invoked by another class via :classes,
 and is not for the user to see.")
 
+;;;###autoload
 (defun mmm-add-classes (classes)
   "Add the submode classes CLASSES to `mmm-classes-alist'."
   (dolist (class classes)
@@ -1026,7 +1027,7 @@ The CLASSES are all made private, i.e. non-user-visible."
 ;;}}}
 ;;{{{ Version Number
 
-(defconst mmm-version "0.4.8"
+(defconst mmm-version "0.5.1"
   "Current version of MMM Mode.")
 
 (defun mmm-version ()

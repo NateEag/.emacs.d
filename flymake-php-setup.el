@@ -16,5 +16,5 @@
 
   (setq flymake-phpcs-standard
         "~/.emacs.d/php-cs-1.4.4/CodeSniffer/Standards/PSR2")
-  (setq flymake-phpcs-command "~/.emacs.d/flymake-phpcs/bin/flymake_phpcs")
+  (setq flymake-phpcs-command "~/.emacs.d/site-lisp/flymake-phpcs/bin/flymake_phpcs")
   (require 'flymake-phpcs))

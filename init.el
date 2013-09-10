@@ -5,10 +5,20 @@
 ;; It is good to know when errors happen, and to be ready to get data on them.
 (setq debug-on-error t)
 
-;; Make sure my .emacs.d is on the load path.
+;; Add appropriate files to beginning of load-path.
 (add-to-list 'load-path "~/.emacs.d")
-(progn (cd "~/.emacs.d")
-       (normal-top-level-add-subdirs-to-load-path))
+(let ((default-directory "~/.emacs.d"))
+  (setq load-path
+        (append
+         (let ((load-path (copy-sequence load-path)))
+           (normal-top-level-add-subdirs-to-load-path))
+         load-path)))
+(let ((default-directory "~/.emacs.d/site-lisp"))
+  (setq load-path
+        (append
+         (let ((load-path (copy-sequence load-path)))
+           (normal-top-level-add-subdirs-to-load-path))
+         load-path)))
 
 ;; Everyone likes syntax coloration.
 (global-font-lock-mode 1)

@@ -8,7 +8,7 @@
 (add-to-list 'load-path "~/.emacs.d/lintnode")
 (require 'flymake-jslint)
 
-(add-to-list 'load-path "~/.emacs.d/tern-mode/emacs")
+(add-to-list 'load-path "~/.emacs.d/site-lisp/tern-mode/emacs")
 (autoload 'tern-mode "tern.el" nil t)
 
 ;; GRIPE Starting lintnode here is a lame hack and guaranteed to fail if

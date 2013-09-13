@@ -19,7 +19,6 @@
 ;; Load Jedi. Note that for this to work, you'll have to install Jedi in a
 ;; virtualenv, using the Makefile.
 (autoload 'emacs-epc-init "emacs-epc-init.el") ;; Need epc for jedi.
-(add-to-list 'load-path "~/.emacs.d/emacs-jedi")
 (autoload 'jedi:setup "jedi" nil t)
 
 ;; Load my python-mode accessories only when python-mode kicks in.

@@ -5,20 +5,25 @@
 ;; It is good to know when errors happen, and to be ready to get data on them.
 (setq debug-on-error t)
 
-;; Add appropriate files to beginning of load-path.
+;; Add appropriate directories to load-path.
+(defun add-subdirs-to-front-of-load-path (path)
+  "Add directories beneath path to the beginning of load-path."
+  (let ((default-directory path))
+    (setq load-path
+          (append
+           (let ((load-path (copy-sequence load-path)))
+                (normal-top-level-add-subdirs-to-load-path))
+                 load-path))))
+
+(add-subdirs-to-front-of-load-path "~/.emacs.d/site-lisp")
 (add-to-list 'load-path "~/.emacs.d")
-(let ((default-directory "~/.emacs.d"))
-  (setq load-path
-        (append
-         (let ((load-path (copy-sequence load-path)))
-           (normal-top-level-add-subdirs-to-load-path))
-         load-path)))
-(let ((default-directory "~/.emacs.d/site-lisp"))
-  (setq load-path
-        (append
-         (let ((load-path (copy-sequence load-path)))
-           (normal-top-level-add-subdirs-to-load-path))
-         load-path)))
+
+;; GRIPE These two dirs should be merged into site-lisp.
+(add-to-list 'load-path "~/.emacs.d/libraries")
+(progn (cd "~/.emacs.d/libraries")
+       (normal-top-level-add-subdirs-to-load-path))
+(add-to-list 'load-path "~/.emacs.d/modes")
+
 
 ;; Everyone likes syntax coloration.
 (global-font-lock-mode 1)
@@ -127,10 +132,6 @@
       (delete-trailing-whitespace)))
 (add-hook 'before-save-hook 'maybe-delete-trailing-whitespace)
 
-;; Include third-party libraries.
-(add-to-list 'load-path "~/.emacs.d/libraries")
-(progn (cd "~/.emacs.d/libraries")
-       (normal-top-level-add-subdirs-to-load-path))
 
 ;; The uniquify package names buffers uniquely and readably.
 (require 'uniquify)
@@ -184,9 +185,6 @@
 (define-key global-map "\M-Q" 'unfill-paragraph)
 
 ;; Minor mode setup and registration.
-
-;; Include the modes directory.
-(add-to-list 'load-path "~/.emacs.d/modes")
 
 ;; smart-dash-mode saves a lot of stupid SHIFT-ing in languages that favor
 ;; underscore as a word separator.

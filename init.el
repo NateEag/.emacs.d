@@ -2,8 +2,9 @@
 
 ;; General preferences.
 
-;; It is good to know when errors happen, and to be ready to get data on them.
-(setq debug-on-error t)
+;; Sometimes you want to debug when there are errors, but not nearly as often
+;; as I believed at the first.
+;(setq debug-on-error t)
 
 ;; Add appropriate directories to load-path.
 (defun add-subdirs-to-front-of-load-path (path)

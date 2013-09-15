@@ -1,4 +1,10 @@
--Add gitconfig mode. http://www.emacswiki.org/emacs/gitconfig-mode.el
+-Get PHP tags working reliably. Since there is no good PHP tags solution for
+ emacs, the best bet is probably using the PHP 5.3 vim tagging solution I found
+ in combination with vtags (which, dating from 2006, may not work with Emacs
+ 24)
+
+-Research PHP parsing tools/infrastructure that might be adapted to an Emacs
+ plugin for code comprehension/refactoring/etc.
 
 -It would be really sweet to get yasnippet's bracket placement to do the Right
  Thing based on major-mode, placing them on the newline or on the same line
@@ -9,28 +15,12 @@
  not be accepted into yasnippet:
  http://comments.gmane.org/gmane.emacs.yasnippet.devel/403
 
--Get a tagfile generator working for PHP projects on OS X and Windows. It
- turns out I was wrong about namespaces mattering much at all, so all I really
- have to do now is figure out a good strategy for when to render tags files,
- and whether I can do it portably.
-
 -The PHP function/method snippets should have a header comment by default. For
  every parameter you add, an @param line should be inserted in the header
  comment.
 
 -Get ejmr's php-auto-snippets package working, to save me many lookups of
  which order PHP thinks *this* array function's args go in...
-
--I should have Twig/Django snippets. 'block' is the obvious one, but probably
- snippets for all the major bits of syntax would be handy, and someone out
- there must have written such things.
-
--Write/get a PHP snippet for array keyval. '$key’ => $val,
-
--Write/get a PHP snippet for constructors. Really, this should just be a part
- of a class snippet. The point is that it would save a lot of typing to have
- one in the style of the Python one, especially since args should be
- initialized at the class level.
 
 -I'd like yasnippets for JavaScript.
 
@@ -49,28 +39,6 @@
  expressions and JS, since dash is a common delimiter for HTML identifiers like
  IDs and names. That might be tricky.
 
--I would like an auto-complete source for existing files that is based on a
- per-project 'docroot/static' variable. I would like that source to be
- activated when I am working in a template and have entered an href="/..." or a
- src="/...". Actually, it might work better if it was just activated for any
- string beginning with '/'.
-
--Get flymake to deactivate/reactivate intelligently for the current edited
- line. If your cursor is on a line you have been editing, you probably don't
- want highlights until you save or move to a different line.
-
--Once moved to Emacs 24, consider replacing flymake with flycheck.
-
--Find a better CSS mode. Ideally something that supports SCSS, probably.
-
--Fix comment filling and comment auto-filling in CSS mode.
-
--It would be truly awesome to find a way to get even a semi-reliable list of
- places a particular CSS rule is used. I suppose that's really a more
- appropriate tool for something else.
-
--when I move to emacs 24, pull in rainbow-mode.
-
 -Make Tab always complete the next-biggest possible chunk in auto-complete, and
  get RET doing what the docs claim it does (choose the current selection
  aggressively)..
@@ -84,7 +52,46 @@
  on whether there are any characters before point *and* whether autocompletion
  has been invoked before while in this field. or something like that.
 
+-I should have Twig/Django snippets. 'block' is the obvious one, but probably
+ snippets for all the major bits of syntax would be handy, and someone out
+ there must have written such things.
+
+-Write/get a PHP snippet for array keyval. '$key’ => $val,
+
+-Write/get a PHP snippet for constructors. Really, this should just be a part
+ of a class snippet. The point is that it would save a lot of typing to have
+ one in the style of the Python one, especially since args should be
+ initialized at the class level.
+
+-Get flymake to deactivate/reactivate intelligently for the current edited
+ line. If your cursor is on a line you have been editing, you probably don't
+ want highlights until you save or move to a different line.
+
+-Once moved to Emacs 24, consider replacing flymake with flycheck.
+
+-My SQL-in-PHP code does not work with queries that are built using
+ concatenation, which some do (especially in crappy legacy codebases). See my
+ email inbox for examples.
+
+-Add gitconfig mode. http://www.emacswiki.org/emacs/gitconfig-mode.el
+
+-Find a better CSS mode. Ideally something that supports SCSS, probably.
+
+-Fix comment filling and comment auto-filling in CSS mode.
+
+-It would be truly awesome to find a way to get even a semi-reliable list of
+ places a particular CSS rule is used. I suppose that's really a more
+ appropriate tool for something else.
+
+-when I move to emacs 24, pull in rainbow-mode.
+
 -Get filepath autocompletion working in buffers. Some hints: http://superuser.com/questions/67170/how-do-i-complete-file-paths-in-emacs
+
+-I would like an auto-complete source for existing files that is based on a
+ per-project 'docroot/static' variable. I would like that source to be
+ activated when I am working in a template and have entered an href="/..." or a
+ src="/...". Actually, it might work better if it was just activated for any
+ string beginning with '/'.
 
 -Figure out why php-mode will not fill comments that begin with //. I'm
  guessing it has to do with php-mode deriving from c-mode, but perhaps not.
@@ -98,19 +105,16 @@
 -I should probably consider getting a better JS environment going. Having a JS
  interpreter available to me in Emacs could be mighty handy. This page has some
  info on how to get a decent environment up and running:
-http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/
+ http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/
 
--Get tern-mode's auto-complete.el integration working, because that would just
- be awesome.
+-Figure out why tern-mode crashes regularly on opening a .js file. It may have
+ been a result of moving it into site-lisp somehow? My first few tests with it
+ were far more reliable.
 
 -sql-mode appears to be a far more powerful beast than I had ever really
  appreciated. I should look into setting up and learning the server
  interaction components, which could make my life so much less painful. Of
  particular note is http://www.emacswiki.org/emacs/SqlWithPlaceholders.
-
--My SQL-in-PHP code does not work with queries that are built using
- concatenation, which some do (especially in crappy legacy codebases). See my
- email inbox for examples.
 
 -Look into sql-mode-driven autocompletion. It might be useful.
 
@@ -162,16 +166,6 @@ http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editin
 
 -Think about whether I should pull ropemode back into python-mode; I never
  really used the refactoring tools, but maybe I should.
-
--This is long-term, since my task tracker doesn't exist yet, but I'd like to
- hack up a basic minor-mode for it, if it ever gets far enough for that to be
- useful. Subtle hints when a name/block has annotations (toggleable, of
- course), easy keystroke to view the associated annotation/task, easy way to
- create annotations/attach existing annotations to some code... I should
- probably do this in elisp, not because it's the right thing from an
- engineering perspective, but because it would force me to learn a lot about
- the language. It'd be annoying to have to do all the work again in elisp,
- though, and there is Pymacs...
 
 -When I'm yanking something into an indented block, python-mode ought to assume
  that I want it indented to that block's depth and adjust the leading

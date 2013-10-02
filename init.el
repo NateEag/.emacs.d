@@ -263,7 +263,8 @@
 (defun load-shell-mode-accessories ()
   (interactive)
   (comment-auto-fill)
-  (smart-dash-mode t))
+  (smart-dash-mode t)
+  (autopair-init))
 (add-hook 'sh-mode-hook 'load-shell-mode-accessories)
 
 ;; Text-editing modes of various stripes.

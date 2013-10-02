@@ -32,6 +32,9 @@
 -Figure out why auto-pair-mode only works some of the time in php-mode. [], '',
  and () all have been known to exhibit breakage.
 
+-File bug reports and/or patches on smart-dash-mode for the following
+ complaints and the one hack I've already made to it.
+
 -Get smart-dash-mode to work inside yasnippet fields. It works, but converting
  _ to - when it is followed by > does not.
 
@@ -42,9 +45,6 @@
 -Make Tab always complete the next-biggest possible chunk in auto-complete, and
  get RET doing what the docs claim it does (choose the current selection
  aggressively)..
-
--Make auto-complete see typing an underscore via smart-dash-mode as typing a
- regular underscore. For some reason, it does not.
 
 -Find a workaround that will let me use auto-complete in a yasnippet tab field.
  A keybinding other than Tab for auto-complete would work, but it might be

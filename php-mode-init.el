@@ -38,7 +38,9 @@
   (interactive)
 
   ;; Initialize my php-sql submode.
-  (php-sql-mmm-submode)
+  ;; Commented, because it breaks even worse than it used to under Emacs 24.
+  ;; :(
+  ;; (php-sql-mmm-submode)
 
   ;; Everyone loves smart-dash mode.
   (require 'smart-dash)

@@ -54,6 +54,10 @@
 (setq c-default-style "linux"
       c-basic-offset 4)
 
+;; Most of the time, I want Unix-style line endings, and UTF-8 is generally a
+;; good thing.
+(setq-default buffer-file-coding-system 'utf-8-unix)
+
 ;; I don't like to type 'yes' when I could just type 'y'.
 (defalias 'yes-or-no-p 'y-or-n-p)
 

@@ -41,7 +41,11 @@
  complaints and the one hack I've already made to it.
 
 -Get smart-dash-mode to work inside yasnippet fields. It works, but converting
- _ to - when it is followed by > does not.
+ _ to - when it is followed by > does not. Research shows that this happens
+ because of of a c-mode-common-hook yasnippet installs to "disable c-electric-*
+ serial command in YAS fields". I guess I should file a bug report with the
+ author and see what he'd recommend doing. Seems like this should be default
+ behavior that yasnippet lets you opt out of.
 
 -Get smart-dash-mode to be active in web-mode, but _only_ in template
  expressions and JS, since dash is a common delimiter for HTML identifiers like
@@ -56,6 +60,10 @@
  possible to bind something clever to Tab that picks which maneuver to do based
  on whether there are any characters before point *and* whether autocompletion
  has been invoked before while in this field. or something like that.
+
+-Look into adding expand-region. It sounds like it could be pretty handy for
+ selecting a range with less typing.
+ https://github.com/magnars/expand-region.el
 
 -I should have Twig/Django snippets. 'block' is the obvious one, but probably
  snippets for all the major bits of syntax would be handy, and someone out

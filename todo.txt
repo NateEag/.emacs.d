@@ -37,16 +37,6 @@
 -Figure out why auto-pair-mode only works some of the time in php-mode. [], '',
  and () all have been known to exhibit breakage.
 
--File bug reports and/or patches on smart-dash-mode for the following
- complaints and the one hack I've already made to it.
-
--Get smart-dash-mode to work inside yasnippet fields. It works, but converting
- _ to - when it is followed by > does not. Research shows that this happens
- because of of a c-mode-common-hook yasnippet installs to "disable c-electric-*
- serial command in YAS fields". I guess I should file a bug report with the
- author and see what he'd recommend doing. Seems like this should be default
- behavior that yasnippet lets you opt out of.
-
 -Get smart-dash-mode to be active in web-mode, but _only_ in template
  expressions and JS, since dash is a common delimiter for HTML identifiers like
  IDs and names. That might be tricky.

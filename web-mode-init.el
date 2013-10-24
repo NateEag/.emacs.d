@@ -28,7 +28,9 @@
   (setq web-mode-indent-style 2)
   (setq web-mode-prefer-server-commenting t)
 
-  (comment-auto-fill)
+  ;; DEBUG Until such time as comment-auto-fill actually works, I am disabling
+  ;; it.
+  ;;(comment-auto-fill)
 
   (autopair-init)
   (push ?{ (getf autopair-dont-pair :code))

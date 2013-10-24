@@ -20,24 +20,20 @@
     return data.modules[name] || (data.modules[name] = new infer.AVal);
   }
 
+  var WG_DEFAULT_EXPORT = 95;
+
   function buildWrappingScope(parent, origin, node) {
     var scope = new infer.Scope(parent);
     scope.node = node;
     infer.cx().definitions.node.require.propagate(scope.defProp("require"));
     var module = new infer.Obj(infer.cx().definitions.node.Module.getProp("prototype").getType());
     module.propagate(scope.defProp("module"));
-    var exports = new infer.Obj(true, "exports", origin);
+    var exports = new infer.Obj(true, "exports");
+    module.origin = exports.origin = origin;
     exports.propagate(scope.defProp("exports"));
-    exports.propagate(module.defProp("exports"));
+    var moduleExports = scope.exports = module.defProp("exports");
+    exports.propagate(moduleExports, WG_DEFAULT_EXPORT);
     return scope;
-  }
-
-  function exportsFromScope(scope) {
-    var mType = scope.getProp("module").getType(), exportsVal = mType && mType.getProp("exports");
-    if (!(exportsVal instanceof infer.AVal) || exportsVal.isEmpty())
-      return scope.getProp("exports");
-    else
-      return exportsVal.types[exportsVal.types.length - 1];
   }
 
   function resolveModule(server, name) {
@@ -69,7 +65,7 @@
       } else {
         // If the module resolves to a file that doesn't exist, then it is likely a node.js stdlib
         // module that is not predefined below.
-        if (fs.existsSync(file) && path.extname(file) != ".node") server.addFile(file);
+        if (fs.existsSync(file) && /^(\.js)?$/.test(path.extname(file))) server.addFile(file);
         return data.modules[file] = data.modules[name] = new infer.AVal;
       }
     };
@@ -94,12 +90,29 @@
     if (data.options.modules && data.options.modules.hasOwnProperty(name)) {
       var scope = buildWrappingScope(cx.topScope, name);
       infer.def.load(data.options.modules[name], scope);
-      result = data.modules[name] = exportsFromScope(scope);
+      result = data.modules[name] = scope.exports;
     } else {
       result = resolveModule(server, name, data.currentFile);
     }
     return argNodes[0].required = result;
   });
+
+  function preCondenseReach(state) {
+    var mods = infer.cx().parent._node.modules;
+    var node = state.roots["!node"] = new infer.Obj(null);
+    for (var name in mods) {
+      var prop = node.defProp(name.replace(/\./g, "`"));
+      mods[name].propagate(prop);
+      prop.origin = mods[name].origin;
+    }
+  }
+
+  function postLoadDef(data) {
+    var cx = infer.cx(), mods = cx.definitions[data["!name"]]["!node"];
+    var data = cx.parent._node;
+    if (mods) for (var name in mods.props)
+      mods.props[name].propagate(getModule(data, name.replace(/`/g, ".")))
+  }
 
   tern.registerPlugin("node", function(server, options) {
     server._node = {
@@ -116,14 +129,16 @@
 
     server.on("afterLoad", function(file) {
       this._node.currentFile = null;
-      exportsFromScope(file.scope).propagate(getModule(this._node, file.name));
+      file.scope.exports.propagate(getModule(this._node, file.name));
     });
 
     server.on("reset", function() {
       this._node.modules = Object.create(null);
     });
 
-    return {defs: defs};
+    return {defs: defs,
+            passes: {preCondenseReach: preCondenseReach,
+                     postLoadDef: postLoadDef}};
   });
 
   tern.defineQueryType("node_exports", {
@@ -2496,7 +2511,7 @@
         INSPECT_MAX_BYTES: "number",
         SlowBuffer: "Buffer"
       },
-      module: "?",
+      module: {},
       timers: {
         setTimeout: {
           "!type": "fn(callback: fn(), ms: number) -> timers.Timer",

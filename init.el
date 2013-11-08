@@ -96,6 +96,9 @@
    kept-old-versions 2
    version-control t)       ; use versioned backups
 
+;; Back up files even when using version control.
+(setq vc-make-backup-files t)
+
 ;; Save minibuffer data between sessions.
 (setq savehist-file "~/.emacs.d/tmp/savehist")
 (savehist-mode t)

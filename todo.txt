@@ -3,11 +3,29 @@
  in combination with vtags (which, dating from 2006, may not work with Emacs
  24)
 
+-Move to package.el for managing libraries (except those that aren't available
+ that way). Installing all dependencies by hand is starting to get old.
+
+-Add https://github.com/skeeto/skewer-mode to my Emacs setup. It lets you
+ live-edit CSS and JS against a browser window, which could be incredibly
+ awesome.
+
 -Research PHP parsing tools/infrastructure that might be adapted to an Emacs
  plugin for code comprehension/refactoring/etc.
 
 -Research adapting the PDT infrastructure could be adapted for use in
  Emacs. http://projects.eclipse.org/projects/tools.pdt
+
+-Calling a function mid-if-snippet in php-mode closes the snippet early. It
+ seems to be caused by autopair matching the closing parenthesis when I type
+ the opening one. See if I can come up with a workaround, or maybe whether the
+ other mode I was thinking of trying doesn't have this issue.
+
+-Find a workaround that will let me use auto-complete in a yasnippet tab field.
+ A keybinding other than Tab for auto-complete would work, but it might be
+ possible to bind something clever to Tab that picks which maneuver to do based
+ on whether there are any characters before point *and* whether autocompletion
+ has been invoked before while in this field. or something like that.
 
 -It would be really sweet to get yasnippet's bracket placement to do the Right
  Thing based on major-mode, placing them on the newline or on the same line
@@ -45,12 +63,6 @@
  get RET doing what the docs claim it does (choose the current selection
  aggressively)..
 
--Find a workaround that will let me use auto-complete in a yasnippet tab field.
- A keybinding other than Tab for auto-complete would work, but it might be
- possible to bind something clever to Tab that picks which maneuver to do based
- on whether there are any characters before point *and* whether autocompletion
- has been invoked before while in this field. or something like that.
-
 -Look into adding expand-region. It sounds like it could be pretty handy for
  selecting a range with less typing.
  https://github.com/magnars/expand-region.el
@@ -81,9 +93,10 @@
 
 -Add gitconfig mode. http://www.emacswiki.org/emacs/gitconfig-mode.el
 
--Find a better CSS mode. Ideally something that supports SCSS, probably.
+-Find a better CSS mode. Ideally something that supports SCSS, probably. Maybe https://github.com/antonj/scss-mode.
 
--Fix comment filling and comment auto-filling in CSS mode.
+-Fix comment filling and comment auto-filling in CSS mode (and web-mode). I
+ think it might be an issue in sh-mode too?
 
 -It would be truly awesome to find a way to get even a semi-reliable list of
  places a particular CSS rule is used. I suppose that's really a more

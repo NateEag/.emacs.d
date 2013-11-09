@@ -6,12 +6,13 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;;; Version: 1.12
+;; Version: 20131029.1345
+;;; X-Original-Version: 1.12
 
 (defconst php-mode-version-number "1.12"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2013-09-16"
+(defconst php-mode-modified "2013-10-29"
   "PHP Mode build date.")
 
 ;;; License
@@ -1904,7 +1905,7 @@ The output will appear in the buffer *PHP*."
 
 ;;;###autoload
 (dolist (pattern '("\\.php[s345t]?\\'" "\\.phtml\\'" "Amkfile" "\\.amk$"))
-  (add-to-list 'auto-mode-alist `(,pattern . php-mode)))
+  (add-to-list 'auto-mode-alist `(,pattern . php-mode) t))
 
 (provide 'php-mode)
 

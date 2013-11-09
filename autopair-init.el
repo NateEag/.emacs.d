@@ -9,4 +9,6 @@
   (push '(?`)
         (getf autopair-extra-pairs :string))
   (push '(?`)
-        (getf autopair-extra-pairs :code)))
+        (getf autopair-extra-pairs :code))
+
+  (diminish 'autopair-mode))

@@ -54,7 +54,6 @@
 
   ;; Who doesn't like yasnippet?
   (yasnippet-init)
-  (yas-minor-mode)
 
   ;; auto-pairs ftw
   (autopair-init)

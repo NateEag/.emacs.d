@@ -25,4 +25,6 @@
 
   (require 'yasnippet)
 
-  (yasnippet-config))
+  (yasnippet-config)
+  (yas-minor-mode)
+  (diminish 'yas-minor-mode))

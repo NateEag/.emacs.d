@@ -253,6 +253,18 @@
 ;; modes.
 (autoload 'comment-auto-fill "comment-auto-fill.el")
 
+
+;; Experimenting with the infamous package.el, so I can see how to integrate it
+;; with my setup.
+(require 'package)
+(setq package-user-dir "~/.emacs.d/elpa/")
+(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
+(add-to-list 'package-archives '("marmalade" .
+                                 "http://marmalade-repo.org/packages/"))
+(add-to-list 'package-archives '("melpa" .
+                                 "http://melpa.milkbox.net/packages/"))
+
+
 ;; Major mode setup and registration.
 
 ;; SQL mode.
@@ -282,8 +294,7 @@
   (autopair-init)
 
   ;; I occasionally want to use yasnippet in text mode.
-  (yasnippet-init)
-  (yas-minor-mode))
+  (yasnippet-init))
 
 ;; Everyone needs text-mode.
 (add-hook 'text-mode-hook 'text-mode-init)

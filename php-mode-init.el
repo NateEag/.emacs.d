@@ -6,8 +6,6 @@
 (require 'mmm-auto)
 (setq mmm-global-mode 'maybe)
 
-(autoload 'comment-auto-fill "comment-auto-fill.el")
-
 (autoload 'hs-minor-mode-init "hs-minor-mode-init.el")
 
 (autoload 'yasnippet-init "yasnippet-init.el")

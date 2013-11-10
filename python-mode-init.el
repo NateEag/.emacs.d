@@ -10,8 +10,6 @@
 ;; When necessary, pull in auto-filling of comments.
 ;; I'd actually really like to get auto-filling of docstrings, wrapping at
 ;; 72 chars, but one step at a time.
-(autoload 'comment-auto-fill "comment-auto-fill.el")
-
 (autoload 'autopair-init "autopair-init.el")
 
 (autoload 'auto-complete-init "auto-complete-init.el")

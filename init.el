@@ -300,7 +300,6 @@
 (add-hook 'text-mode-hook 'text-mode-init)
 
 ;; Commit message mode.
-(autoload 'git-commit-mode "git-commit")
 (defun git-commit-mode-hook ()
   "My settings for writing commit messages."
   (auto-fill-mode t)

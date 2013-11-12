@@ -72,9 +72,9 @@
  expressions and JS, since dash is a common delimiter for HTML identifiers like
  IDs and names. That might be tricky.
 
--Make Tab always complete the next-biggest possible chunk in auto-complete, and
- get RET doing what the docs claim it does (choose the current selection
- aggressively)..
+-Make Tab always complete the next-biggest possible chunk in auto-complete.
+ This is probably not too important - I think I've mostly learned to live
+ without it.
 
 -Look into adding expand-region. It sounds like it could be pretty handy for
  selecting a range with less typing.
@@ -125,9 +125,6 @@
  src="/...". Actually, it might work better if it was just activated for any
  string beginning with '/'.
 
--Figure out why php-mode will not fill comments that begin with //. I'm
- guessing it has to do with php-mode deriving from c-mode, but perhaps not.
-
 -Figure out why constants in php-mode display in red if they're followed by a
  dot. Concatenation with constants is perfectly valid syntax.
 
@@ -138,10 +135,6 @@
  interpreter available to me in Emacs could be mighty handy. This page has some
  info on how to get a decent environment up and running:
  http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/
-
--Figure out why tern-mode crashes regularly on opening a .js file. It may have
- been a result of moving it into site-lisp somehow? My first few tests with it
- were far more reliable.
 
 -sql-mode appears to be a far more powerful beast than I had ever really
  appreciated. I should look into setting up and learning the server

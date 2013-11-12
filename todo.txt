@@ -3,13 +3,6 @@
  in combination with vtags (which, dating from 2006, may not work with Emacs
  24)
 
--Move to package.el for managing libraries (except those that aren't available
- that way). Installing all dependencies by hand is starting to get old.
-
--Add https://github.com/skeeto/skewer-mode to my Emacs setup. It lets you
- live-edit CSS and JS against a browser window, which could be incredibly
- awesome.
-
 -Research PHP parsing tools/infrastructure that might be adapted to an Emacs
  plugin for code comprehension/refactoring/etc.
 

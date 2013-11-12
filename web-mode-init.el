@@ -28,6 +28,8 @@
   (setq web-mode-indent-style 2)
   (setq web-mode-prefer-server-commenting t)
 
+  (skewer-html-mode)
+
   (comment-auto-fill)
 
   (autopair-init)

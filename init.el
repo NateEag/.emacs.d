@@ -330,6 +330,13 @@
 ;; Include my PHP editing settings.
 (require 'php-mode-init)
 
+;; Tweak CSS mode a bit.
+;; Note that for skewer-mode to be useful, you'll need to first call
+;; the function (run-skewer). The following bookmarklet can then be used to
+;; skewer-ify a page:
+;; javascript:(function(){var d=document;var s=d.createElement('script');s.src='http://localhost:8080/skewer';d.body.appendChild(s);})()
+(add-hook 'css-mode-hook 'skewer-css-mode)
+
 ;; Web mode.
 ;; For editing web templates of various stripes.
 (require 'web-mode-init)

@@ -27,6 +27,7 @@
   (flymake-init)
   (lintnode-hook)
   (tern-mode 't)
+  (skewer-mode)
   (eval-after-load 'tern
     '(progn
        (require 'tern-auto-complete)

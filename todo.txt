@@ -1,3 +1,23 @@
+-Add support to skewer-css-mode for reloading a stylesheet from the filesystem
+ (and clearing all received CSS snippets), so that even with tangled legacy
+ stylesheets, you can work without worrying about precedence rules. Ask to
+ reload the current stylesheet, and the following occurs:
+     * emacs saves the current stylesheet
+     * skewer finds the corresponding link tag, which is the one with the
+       longest href that the buffer's filepath ends with.
+     * skewer swaps that link tag for a placeholder node
+     * skewer removes all css chunks that it has inserted (from that
+       stylesheet?)
+     * skewer swaps the link tag with the placeholder, thus reloading the
+       stylesheet.
+ If the link tag can't be found, fall back to inserting it as a style tag.
+ You could do the same trick with JS, but it probably wouldn't be very
+ useful there.
+
+-Find a way to auto-include skewer on page refresh without having to include it
+ in a codebase. I'm thinking a Chrome plugin for "refresh and load
+ bookmarklet", or something along those lines.
+
 -Get PHP tags working reliably. Since there is no good PHP tags solution for
  emacs, the best bet is probably using the PHP 5.3 vim tagging solution I found
  in combination with vtags (which, dating from 2006, may not work with Emacs

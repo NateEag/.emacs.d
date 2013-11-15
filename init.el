@@ -308,6 +308,9 @@
 (add-hook 'git-commit-mode-hook 'git-commit-mode-hook)
 (add-to-list 'auto-mode-alist '("COMMIT_EDITMSG$" . git-commit-mode))
 
+;; Set up gitconfig mode.
+(add-to-list 'auto-mode-alist '(".gitconfig$" . gitconfig-mode))
+
 ;; reStructuredText mode.
 (autoload 'rst-mode "rst-mode.el")
 (setq auto-mode-alist (cons '("\\.rst$" . rst-mode) auto-mode-alist))

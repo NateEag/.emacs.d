@@ -13,6 +13,10 @@
  If the link tag can't be found, fall back to inserting it as a style tag.
  You could do the same trick with JS, but it probably wouldn't be very
  useful there.
+ N.B.: I have written this, tested it, and made a pull request, but the author
+ thinks it may not belong in his repo. I'm trying to figure out how to turn it
+ into a package for submission to MELPA. Think I shall call this tiny package
+ "skewer-reload-stylesheet".
 
 -Find a way to auto-include skewer on page refresh without having to include it
  in a codebase. I'm thinking a Chrome plugin for "refresh and load

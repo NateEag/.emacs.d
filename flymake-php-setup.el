@@ -4,8 +4,6 @@
 ;; crash Flymake's PHP support.
 ; error_reporting = E_ERROR|E_COMPILE_ERROR|E_CORE_ERROR|E_PARSE
 
-(autoload 'flymake-init "flymake-init.el")
-
 (defun flymake-php-setup ()
   (interactive)
 

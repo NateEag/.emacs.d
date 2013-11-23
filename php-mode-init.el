@@ -1,20 +1,7 @@
 ;; Emacs config for editing PHP.
 
-(setq auto-mode-alist (cons '("\\.php$" . php-mode) auto-mode-alist))
-(autoload 'php-mode "php-mode" "PHP editing mode." t)
-
 (require 'mmm-auto)
 (setq mmm-global-mode 'maybe)
-
-(autoload 'hs-minor-mode-init "hs-minor-mode-init.el")
-
-(autoload 'yasnippet-init "yasnippet-init.el")
-
-(autoload 'autopair-init "autopair-init.el")
-
-(autoload 'auto-complete-init "auto-complete-init.el")
-
-(autoload 'flymake-php-setup "flymake-php-setup.el")
 
 (setq php-sql-mmm-submode-enabled nil)
 (defun php-sql-mmm-submode ()
@@ -63,8 +50,6 @@
   ;; Yay for syntax checking/linting!
   (flymake-php-setup)
   )
-
-(add-hook 'php-mode-hook 'load-php-mode-accessories)
 
 ;; Make this requireable.
 (provide 'php-mode-init)

@@ -38,6 +38,9 @@
  the opening one. See if I can come up with a workaround, or maybe whether the
  other mode I was thinking of trying doesn't have this issue.
 
+-Look into https://github.com/mbunkus/mo-git-blame. Git blame on a file in
+ emacs, which could save time.
+
 -Find a workaround that will let me use auto-complete in a yasnippet tab field.
  A keybinding other than Tab for auto-complete would work, but it might be
  possible to bind something clever to Tab that picks which maneuver to do based

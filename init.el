@@ -353,6 +353,7 @@
 ;; For editing web templates of various stripes.
 (add-to-list 'auto-mode-alist '("\\.tmpl\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.htm\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.twig\\'" . web-mode))
 (add-hook 'web-mode-hook 'web-mode-init)
 

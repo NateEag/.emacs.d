@@ -1,3 +1,4 @@
+
 ;; My JavaScript mode setup.
 
 (require 'smart-dash)
@@ -7,6 +8,7 @@
 
 (add-to-list 'load-path "~/.emacs.d/lintnode")
 (require 'flymake-jslint)
+(setq lintnode-jslint-excludes (list 'vars))
 
 ;; GRIPE Starting lintnode here is a lame hack and guaranteed to fail if
 ;; node.js is not installed, but it solves the problem of the lintnode server

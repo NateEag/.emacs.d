@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: require_once
+# key: require_once
+# binding: direct-keybinding
+# contributor: Nate Eagleson
+# --
+require_once '$1';

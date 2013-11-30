@@ -48,8 +48,7 @@
   (add-to-list 'ac-sources 'ac-source-yasnippet)
 
   ;; Yay for syntax checking/linting!
-  (flymake-php-setup)
-  )
+  (flymake-php-setup))
 
 ;; Make this requireable.
 (provide 'php-mode-init)

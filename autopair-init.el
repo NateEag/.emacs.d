@@ -1,5 +1,6 @@
 (defun autopair-init ()
   "My setup for autopair.el."
+
   (require 'autopair)
   (autopair-mode t)
 
@@ -9,4 +10,6 @@
   (push '(?`)
         (getf autopair-extra-pairs :string))
   (push '(?`)
-        (getf autopair-extra-pairs :code)))
+        (getf autopair-extra-pairs :code))
+
+  (diminish 'autopair-mode))

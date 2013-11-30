@@ -1,3 +1,4 @@
+
 ;; My JavaScript mode setup.
 
 (require 'smart-dash)
@@ -7,13 +8,12 @@
 
 (add-to-list 'load-path "~/.emacs.d/lintnode")
 (require 'flymake-jslint)
+(setq lintnode-jslint-excludes (list 'vars))
 
 ;; GRIPE Starting lintnode here is a lame hack and guaranteed to fail if
 ;; node.js is not installed, but it solves the problem of the lintnode server
 ;; not starting in time for the first JS buffer opened to work.
 (lintnode-start)
-
-(autoload 'flymake-init "flymake-init.el")
 
 (defun js-mode-init ()
   (interactive)
@@ -22,4 +22,10 @@
   (autopair-init)
   (auto-complete-init)
   (flymake-init)
-  (lintnode-hook))
+  (lintnode-hook)
+  (tern-mode 't)
+  (skewer-mode)
+  (eval-after-load 'tern
+    '(progn
+       (require 'tern-auto-complete)
+       (tern-ac-setup))))

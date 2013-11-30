@@ -2,13 +2,30 @@
 
 ;; General preferences.
 
-;; It is good to know when errors happen, and to be ready to get data on them.
-(setq debug-on-error t)
+;; Sometimes you want to debug when there are errors, but not nearly as often
+;; as I believed at the first.
+;(setq debug-on-error t)
 
-;; Make sure my .emacs.d is on the load path.
+;; Add appropriate directories to load-path.
+(defun add-subdirs-to-front-of-load-path (path)
+  "Add directories beneath path to the beginning of load-path."
+  (let ((default-directory path))
+    (setq load-path
+          (append
+           (let ((load-path (copy-sequence load-path)))
+                (normal-top-level-add-subdirs-to-load-path))
+                 load-path))))
+
+(add-subdirs-to-front-of-load-path "~/.emacs.d/site-lisp")
 (add-to-list 'load-path "~/.emacs.d")
-(progn (cd "~/.emacs.d")
+
+;; GRIPE These two dirs should be merged into site-lisp.
+(add-to-list 'load-path "~/.emacs.d/libraries")
+(progn (cd "~/.emacs.d/libraries")
        (normal-top-level-add-subdirs-to-load-path))
+(add-to-list 'load-path "~/.emacs.d/modes")
+
+(add-to-list 'load-path "~/.emacs.d/site-lisp/tern-mode/emacs")
 
 ;; Everyone likes syntax coloration.
 (global-font-lock-mode 1)
@@ -37,6 +54,10 @@
 ;; more sane.
 (setq c-default-style "linux"
       c-basic-offset 4)
+
+;; Most of the time, I want Unix-style line endings, and UTF-8 is generally a
+;; good thing.
+(setq-default buffer-file-coding-system 'utf-8-unix)
 
 ;; I don't like to type 'yes' when I could just type 'y'.
 (defalias 'yes-or-no-p 'y-or-n-p)
@@ -76,12 +97,18 @@
    kept-old-versions 2
    version-control t)       ; use versioned backups
 
+;; Back up files even when using version control.
+(setq vc-make-backup-files t)
+
 ;; Save minibuffer data between sessions.
 (setq savehist-file "~/.emacs.d/tmp/savehist")
 (savehist-mode t)
 
+;; Set up manually-maintained autoloads. Mostly defines mode hooks.
+(require 'nateeag-autoloads-init)
+(nateeag-autoloads-init)
+
 ;; Load Windows-specific tweaks to environment, if we're running Windows.
-(autoload 'set-windows-env "set-windows-env.el")
 (if (eq system-type 'windows-nt)
     (set-windows-env))
 
@@ -117,10 +144,6 @@
       (delete-trailing-whitespace)))
 (add-hook 'before-save-hook 'maybe-delete-trailing-whitespace)
 
-;; Include third-party libraries.
-(add-to-list 'load-path "~/.emacs.d/libraries")
-(progn (cd "~/.emacs.d/libraries")
-       (normal-top-level-add-subdirs-to-load-path))
 
 ;; The uniquify package names buffers uniquely and readably.
 (require 'uniquify)
@@ -174,9 +197,6 @@
 (define-key global-map "\M-Q" 'unfill-paragraph)
 
 ;; Minor mode setup and registration.
-
-;; Include the modes directory.
-(add-to-list 'load-path "~/.emacs.d/modes")
 
 ;; smart-dash-mode saves a lot of stupid SHIFT-ing in languages that favor
 ;; underscore as a word separator.
@@ -233,9 +253,16 @@
         (kill-buffer nil))))
   nil)
 
-;; Autoload lame hack for auto-filling comments so I can use it in various
-;; modes.
-(autoload 'comment-auto-fill "comment-auto-fill.el")
+;; Experimenting with the infamous package.el, so I can see how to integrate it
+;; with my setup.
+(require 'package)
+(setq package-user-dir "~/.emacs.d/elpa/")
+(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
+(add-to-list 'package-archives '("marmalade" .
+                                 "http://marmalade-repo.org/packages/"))
+(add-to-list 'package-archives '("melpa" .
+                                 "http://melpa.milkbox.net/packages/"))
+
 
 ;; Major mode setup and registration.
 
@@ -254,25 +281,28 @@
 (defun load-shell-mode-accessories ()
   (interactive)
   (comment-auto-fill)
-  (smart-dash-mode t))
+  (smart-dash-mode t)
+  (autopair-init))
 (add-hook 'sh-mode-hook 'load-shell-mode-accessories)
 
 ;; Text-editing modes of various stripes.
-(autoload 'autopair-init "autopair-mode-init.el")
 (defun text-mode-init ()
   "Configuration that is shared across my various text modes."
   (auto-fill-mode t)
   (autopair-init)
 
   ;; I occasionally want to use yasnippet in text mode.
-  (yasnippet-init)
-  (yas-minor-mode))
+  (yasnippet-init))
 
 ;; Everyone needs text-mode.
 (add-hook 'text-mode-hook 'text-mode-init)
 
+;; lilypond-mode - ripped from
+(add-to-list 'auto-mode-alist '("\\.ly$" . LilyPond-mode))
+(add-to-list 'auto-mode-alist '("\\.ily$" . LilyPond-mode))
+(add-hook 'LilyPond-mode-hook (lambda () (turn-on-font-lock)))
+
 ;; Commit message mode.
-(autoload 'git-commit-mode "git-commit")
 (defun git-commit-mode-hook ()
   "My settings for writing commit messages."
   (auto-fill-mode t)
@@ -281,34 +311,53 @@
 (add-hook 'git-commit-mode-hook 'git-commit-mode-hook)
 (add-to-list 'auto-mode-alist '("COMMIT_EDITMSG$" . git-commit-mode))
 
+;; Set up gitconfig mode.
+(add-to-list 'auto-mode-alist '(".gitconfig$" . gitconfig-mode))
+
 ;; reStructuredText mode.
-(autoload 'rst-mode "rst-mode.el")
 (setq auto-mode-alist (cons '("\\.rst$" . rst-mode) auto-mode-alist))
 (setq auto-mode-alist (cons '("\\.rest$" . rst-mode) auto-mode-alist))
 (add-hook 'rst-mode-hook 'text-mode-init)
 
 ;; Markdown mode.
-(autoload 'markdown-mode "markdown-mode.el")
 (setq auto-mode-alist
   (cons '("\\.md" . markdown-mode) auto-mode-alist))
 (add-hook 'markdown-mode-hook 'text-mode-init)
 
 ;; Emacs Lisp mode.
-(autoload 'emacs-lisp-init "emacs-lisp-init.el")
 (add-hook 'emacs-lisp-mode-hook 'emacs-lisp-init)
 
 ;; Python mode.
+(setq auto-mode-alist (cons '("\\.py$" . python-mode) auto-mode-alist))
+(setq interpreter-mode-alist
+      (cons '("python" . python-mode) interpreter-mode-alist))
+(add-hook 'python-mode-hook 'load-python-mode-accessories)
+
 (require 'python-mode-init)
 
 ;; Include my PHP editing settings.
+(setq auto-mode-alist (cons '("\\.php$" . php-mode) auto-mode-alist))
+(add-hook 'php-mode-hook 'load-php-mode-accessories)
+
 (require 'php-mode-init)
+
+;; Tweak CSS mode a bit.
+;; Note that for skewer-mode to be useful, you'll need to first call
+;; the function (run-skewer). The following bookmarklet can then be used to
+;; skewer-ify a page:
+;; javascript:(function(){var d=document;var s=d.createElement('script');s.src='http://localhost:8081/skewer';d.body.appendChild(s);})()ema
+(setq httpd-port 8081)
+(add-hook 'css-mode-hook 'skewer-css-mode)
 
 ;; Web mode.
 ;; For editing web templates of various stripes.
-(require 'web-mode-init)
+(add-to-list 'auto-mode-alist '("\\.tmpl\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.htm\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.twig\\'" . web-mode))
+(add-hook 'web-mode-hook 'web-mode-init)
 
 ;; JavaScript Mode.
-(autoload 'js-mode-init "js-mode-init.el")
 (add-hook 'js-mode-hook 'js-mode-init)
 (add-to-list 'auto-mode-alist '("\\.js\\'" . js-mode))
 (add-to-list 'auto-mode-alist '("\\.json\\'" . js-mode))
@@ -319,15 +368,15 @@
     (server-start))
 
 (custom-set-variables
-  ;; custom-set-variables was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
- '(safe-local-variable-values (quote ((eval highlight-regexp "^ *"))))
- '(php-mode-custom-coding-style "Symfony2"))
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(php-mode-custom-coding-style "Symfony2")
+ '(safe-local-variable-values (quote ((eval highlight-regexp "^ *")))))
 (custom-set-faces
-  ;; custom-set-faces was added by Custom.
-  ;; If you edit it by hand, you could mess it up, so be careful.
-  ;; Your init file should contain only one such instance.
-  ;; If there is more than one, they won't work right.
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  )

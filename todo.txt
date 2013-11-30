@@ -1,4 +1,58 @@
--Add gitconfig mode. http://www.emacswiki.org/emacs/gitconfig-mode.el
+-Add support to skewer-css-mode for reloading a stylesheet from the filesystem
+ (and clearing all received CSS snippets), so that even with tangled legacy
+ stylesheets, you can work without worrying about precedence rules. Ask to
+ reload the current stylesheet, and the following occurs:
+     * emacs saves the current stylesheet
+     * skewer finds the corresponding link tag, which is the one with the
+       longest href that the buffer's filepath ends with.
+     * skewer swaps that link tag for a placeholder node
+     * skewer removes all css chunks that it has inserted (from that
+       stylesheet?)
+     * skewer swaps the link tag with the placeholder, thus reloading the
+       stylesheet.
+ If the link tag can't be found, fall back to inserting it as a style tag.
+ You could do the same trick with JS, but it probably wouldn't be very
+ useful there.
+ N.B.: I have written this, tested it, and made a pull request, but the author
+ thinks it may not belong in his repo. I'm trying to figure out how to turn it
+ into a package for submission to MELPA. Think I shall call this tiny package
+ "skewer-reload-stylesheet".
+
+-Make Tab try yasnippet if there are no autocompletions - having to chord keys
+ to trigger yasnippet directly is getting old. relevant links:
+ http://truongtx.me/2013/01/06/config-yasnippet-and-autocomplete-on-emacs/
+
+-Fix yasnippet not expanding fields on the first snippet insertion in a PHP
+ buffer.
+
+-Find a way to auto-include skewer on page refresh without having to include it
+ in a codebase. I'm thinking a Chrome plugin for "refresh and load
+ bookmarklet", or something along those lines.
+
+-Get PHP tags working reliably. Since there is no good PHP tags solution for
+ emacs, the best bet is probably using the PHP 5.3 vim tagging solution I found
+ in combination with vtags (which, dating from 2006, may not work with Emacs
+ 24)
+
+-Research PHP parsing tools/infrastructure that might be adapted to an Emacs
+ plugin for code comprehension/refactoring/etc.
+
+-Research adapting the PDT infrastructure could be adapted for use in
+ Emacs. http://projects.eclipse.org/projects/tools.pdt
+
+-Calling a function mid-if-snippet in php-mode closes the snippet early. It
+ seems to be caused by autopair matching the closing parenthesis when I type
+ the opening one. See if I can come up with a workaround, or maybe whether the
+ other mode I was thinking of trying doesn't have this issue.
+
+-Look into https://github.com/mbunkus/mo-git-blame. Git blame on a file in
+ emacs, which could save time.
+
+-Find a workaround that will let me use auto-complete in a yasnippet tab field.
+ A keybinding other than Tab for auto-complete would work, but it might be
+ possible to bind something clever to Tab that picks which maneuver to do based
+ on whether there are any characters before point *and* whether autocompletion
+ has been invoked before while in this field. or something like that.
 
 -It would be really sweet to get yasnippet's bracket placement to do the Right
  Thing based on major-mode, placing them on the newline or on the same line
@@ -9,16 +63,36 @@
  not be accepted into yasnippet:
  http://comments.gmane.org/gmane.emacs.yasnippet.devel/403
 
--Get a tagfile generator working for PHP projects on OS X and Windows. If it
- doesn't support namespaces there's no point, so this vim plugin is probably
- my best bet: https://github.com/vim-php/phptags
-
 -The PHP function/method snippets should have a header comment by default. For
  every parameter you add, an @param line should be inserted in the header
  comment.
 
 -Get ejmr's php-auto-snippets package working, to save me many lookups of
  which order PHP thinks *this* array function's args go in...
+
+-I'd like yasnippets for JavaScript.
+
+-Similarly, bash snippets would be nice:
+ https://github.com/bmaland/yasnippet-sh-mode
+
+-Look into binding Shift-Enter to whatever Meta-J is bound to.
+
+-Try smartparens instead of auto-pair-mode, as it appears to perhaps be better: https://github.com/Fuco1/smartparens
+
+-Figure out why auto-pair-mode only works some of the time in php-mode. [], '',
+ and () all have been known to exhibit breakage.
+
+-Get smart-dash-mode to be active in web-mode, but _only_ in template
+ expressions and JS, since dash is a common delimiter for HTML identifiers like
+ IDs and names. That might be tricky.
+
+-Make Tab always complete the next-biggest possible chunk in auto-complete.
+ This is probably not too important - I think I've mostly learned to live
+ without it.
+
+-Look into adding expand-region. It sounds like it could be pretty handy for
+ selecting a range with less typing.
+ https://github.com/magnars/expand-region.el
 
 -I should have Twig/Django snippets. 'block' is the obvious one, but probably
  snippets for all the major bits of syntax would be handy, and someone out
@@ -31,38 +105,25 @@
  one in the style of the Python one, especially since args should be
  initialized at the class level.
 
--I'd like yasnippets for JavaScript.
-
--Similarly, bash snippets would be nice:
- https://github.com/bmaland/yasnippet-sh-mode
-
--Look into binding Shift-Enter to whatever Meta-J is bound to.
-
--Figure out why auto-pair-mode only works some of the time in php-mode. [], '',
- and () all have been known to exhibit breakage.
-
--Get smart-dash-mode to work inside yasnippet fields. It works, but converting
- _ to - when it is followed by > does not.
-
--Get smart-dash-mode to be active in web-mode, but _only_ in template
- expressions and JS, since dash is a common delimiter for HTML identifiers like
- IDs and names. That might be tricky.
-
--I would like an auto-complete source for existing files that is based on a
- per-project 'docroot/static' variable. I would like that source to be
- activated when I am working in a template and have entered an href="/..." or a
- src="/...". Actually, it might work better if it was just activated for any
- string beginning with '/'.
-
 -Get flymake to deactivate/reactivate intelligently for the current edited
  line. If your cursor is on a line you have been editing, you probably don't
  want highlights until you save or move to a different line.
 
 -Once moved to Emacs 24, consider replacing flymake with flycheck.
 
--Find a better CSS mode. Ideally something that supports SCSS, probably.
+-My SQL-in-PHP code does not work with queries that are built using
+ concatenation, which some do (especially in crappy legacy codebases). See my
+ email inbox for examples.
 
--Fix comment filling and comment auto-filling in CSS mode.
+-Debug mmm-mode, php-mode, and sql-mode enough to uncomment my sql-mode
+ embedding in php-mode.
+
+-Add gitconfig mode. http://www.emacswiki.org/emacs/gitconfig-mode.el
+
+-Find a better CSS mode. Ideally something that supports SCSS, probably. Maybe https://github.com/antonj/scss-mode.
+
+-Fix comment filling and comment auto-filling in CSS mode (and web-mode). I
+ think it might be an issue in sh-mode too?
 
 -It would be truly awesome to find a way to get even a semi-reliable list of
  places a particular CSS rule is used. I suppose that's really a more
@@ -70,23 +131,13 @@
 
 -when I move to emacs 24, pull in rainbow-mode.
 
--Make Tab always complete the next-biggest possible chunk in auto-complete, and
- get RET doing what the docs claim it does (choose the current selection
- aggressively)..
-
--Make auto-complete see typing an underscore via smart-dash-mode as typing a
- regular underscore. For some reason, it does not.
-
--Find a workaround that will let me use auto-complete in a yasnippet tab field.
- A keybinding other than Tab for auto-complete would work, but it might be
- possible to bind something clever to Tab that picks which maneuver to do based
- on whether there are any characters before point *and* whether autocompletion
- has been invoked before while in this field. or something like that.
-
 -Get filepath autocompletion working in buffers. Some hints: http://superuser.com/questions/67170/how-do-i-complete-file-paths-in-emacs
 
--Figure out why php-mode will not fill comments that begin with //. I'm
- guessing it has to do with php-mode deriving from c-mode, but perhaps not.
+-I would like an auto-complete source for existing files that is based on a
+ per-project 'docroot/static' variable. I would like that source to be
+ activated when I am working in a template and have entered an href="/..." or a
+ src="/...". Actually, it might work better if it was just activated for any
+ string beginning with '/'.
 
 -Figure out why constants in php-mode display in red if they're followed by a
  dot. Concatenation with constants is perfectly valid syntax.
@@ -96,16 +147,15 @@
 
 -I should probably consider getting a better JS environment going. Having a JS
  interpreter available to me in Emacs could be mighty handy. This page has some
- info on how to get a decent environment up and running: http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/
+ info on how to get a decent environment up and running:
+ http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/
 
 -sql-mode appears to be a far more powerful beast than I had ever really
  appreciated. I should look into setting up and learning the server
  interaction components, which could make my life so much less painful. Of
  particular note is http://www.emacswiki.org/emacs/SqlWithPlaceholders.
 
--My SQL-in-PHP code does not work with queries that are built using
- concatenation, which some do (especially in crappy legacy codebases). See my
- email inbox for examples.
+-Look into sql-mode-driven autocompletion. It might be useful.
 
 -I would like my sql-mode to do a better job with font-lock. It does very
  poorly at dealing with strings that have backslashed quotes. Could this be
@@ -150,56 +200,11 @@
  are no duplicates, the editor should be able to find the nearest delimiters
  and change them. Now you can keep on cranking.
 
--Try replacing ropemode with jedi: https://github.com/tkf/emacs-jedi
+-Figure out why jedi's jump-to-definition doesn't work until after I've tried
+ to autocomplete something.
 
--See whether rope supports any kind of intelligent argument list fetching. If
- it does, it might be possible to write a parameter suggestion tool. Obviously,
- this is a big one, and not something I'm likely to really tackle. Well, maybe
- it's not as tough as I think - might be able to incorporate some cleverness
- between YASnippet and ropemacs so that there's a YASnippet for *current Python
- function args*, and it tabs you through each one? Actually, yeah - if nothing
- else, it might be possible to generate a new snippet based on what we're
- getting from ropemacs, so the yasnippet "jump to next dynamic field" behavior
- would basically let us fill in args while seeing what the original values
- were. I haven't actually started using YASnippet yet, so perhaps that's beyond
- the bounds of what it's capable of. Evidence that this is achievable (though
- it's for R, not Python): http://www.svenhartenstein.de/Software/R-autoyas
-
--Get ropemode to be more effective. A lot of expressions that seem completable
- aren't. Sometimes this is probably for very valid reasons (not wanting to
- evaluate every darned statement in the project), but it doesn't seem like
- knowing what the current "self" is would be impossibly hard. This is serious
- rope development, and possibly not in sync with what the rope crew would like
- to do. Let's call it a pipe-dream.
-
--Write/request a better interface for rope-find-occurrences. It just gives you
- a buffer telling you where it shows up (and includes the def statement for a
- function, which seems a bit funky to me) - it ought to be simple to hop
- directly to it, eh?
-
--Figure out a way to make rope-completions faster. It's the source of that
- half-second delay before anything happens after I ask for auto-completion, and
- it honestly slows me down. I can usually finish typing the expression faster
- than I can auto-complete it. I've improved this some by the simple expedient
- of byte-compiling pymacs.el, but still things like wx.<TAB> chug for fifty
- seconds or so before suggesting completions. I realize that's abusive, given
- just how many names are in that namespace, but it does seem like it should be
- possible to keep a pretty static analysis of system-wide packages, and that
- completions on names that correlate to those packages shouldn't be so slow. It
- feels like it's doing dynamic analysis of the 'wx' package, but once it's been
- imported, shouldn't we be able to just check whether the module on disk has
- updated, and if not, need no more dynamic analysis? I should probably
- ask/bug-report this on the mailing list.
-
--This is long-term, since my task tracker doesn't exist yet, but I'd like to
- hack up a basic minor-mode for it, if it ever gets far enough for that to be
- useful. Subtle hints when a name/block has annotations (toggleable, of
- course), easy keystroke to view the associated annotation/task, easy way to
- create annotations/attach existing annotations to some code... I should
- probably do this in elisp, not because it's the right thing from an
- engineering perspective, but because it would force me to learn a lot about
- the language. It'd be annoying to have to do all the work again in elisp,
- though, and there is Pymacs...
+-Think about whether I should pull ropemode back into python-mode; I never
+ really used the refactoring tools, but maybe I should.
 
 -When I'm yanking something into an indented block, python-mode ought to assume
  that I want it indented to that block's depth and adjust the leading

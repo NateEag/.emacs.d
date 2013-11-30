@@ -7,11 +7,13 @@
 
   (if (not yasnippet-config-run)
       (progn
-        (setq yas-root-directory "~/.emacs.d/snippets")
-        (add-to-list 'load-path
-              "~/.emacs.d/yasnippet")
-        (yas-load-directory yas-root-directory)
+        ;; old-school snippets, because it has the php-mode snippets.
+        (add-to-list 'yas-snippet-dirs "~/.emacs.d/snippets")
+        (yas-load-directory "~/.emacs.d/snippets")
+
+        (add-to-list 'yas-snippet-dirs "~/.emacs.d/my-snippets")
         (yas-load-directory "~/.emacs.d/my-snippets")
+
         ;; Change default keybinding, because I usually want to use YASnippet
         ;; through auto-complete.el.
         (define-key yas-minor-mode-map (kbd "C-c y") 'yas-expand)

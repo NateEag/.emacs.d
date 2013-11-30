@@ -22,9 +22,6 @@
  to trigger yasnippet directly is getting old. relevant links:
  http://truongtx.me/2013/01/06/config-yasnippet-and-autocomplete-on-emacs/
 
--Figure out how to get Emacs to update ac-yasnippet-sources after refreshing
- snippet definitions.
-
 -Fix yasnippet not expanding fields on the first snippet insertion in a PHP
  buffer.
 

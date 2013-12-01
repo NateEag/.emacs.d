@@ -14,10 +14,11 @@
         (add-to-list 'yas-snippet-dirs "~/.emacs.d/my-snippets")
         (yas-load-directory "~/.emacs.d/my-snippets")
 
-        ;; Change default keybinding, because I usually want to use YASnippet
-        ;; through auto-complete.el.
-        (define-key yas-minor-mode-map (kbd "C-c y") 'yas-expand)
-        (define-key yas-minor-mode-map (kbd "TAB") nil)
+        ;; GRIPE For reasons I don't understand, I need this invocation in
+        ;; order to avoid a never-ending recursion of defining keybindings. I
+        ;; think it's some interaction between yasnippet and auto-complete, but
+        ;; I'm not really sure.
+        (define-key yas-minor-mode-map (kbd "TAB") 'yas-expand)
         (define-key yas-minor-mode-map [(tab)] nil)
 
         (setq yasnippet-config-run t))))

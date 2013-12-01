@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : exec(...)
-# --
-exec(${command[, array &output]})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_getmailboxes(..., ..., ...)
-# --
-imap_getmailboxes(${imap_stream}, ${ref}, ${pattern})$0

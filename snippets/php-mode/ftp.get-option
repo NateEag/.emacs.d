@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : ftp_get_option(..., ...)
-# --
-ftp_get_option(${ftp_stream}, ${option})$0

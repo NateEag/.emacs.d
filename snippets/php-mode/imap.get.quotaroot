@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_get_quotaroot(..., ...)
-# --
-imap_get_quotaroot(${imap_stream}, ${quota_root})$0

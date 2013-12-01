@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_bodystruct(..., ..., ...)
-# --
-imap_bodystruct(${stream_id}, ${msg_no}, ${section})$0

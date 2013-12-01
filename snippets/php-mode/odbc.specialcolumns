@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : odbc_specialcolumns(..., ..., ..., ..., ..., ..., ...)
-# --
-odbc_specialcolumns(${connection_id}, ${type}, ${qualifier}, ${owner}, ${table}, ${scope}, ${nullable})$0

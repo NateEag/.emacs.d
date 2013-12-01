@@ -1,6 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : case ...: ... break;
-# --
-case ${condition}:
-  $0
-  break;

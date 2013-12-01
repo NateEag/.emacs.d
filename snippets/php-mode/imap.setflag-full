@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_setflag_full(..., ..., ...)
-# --
-imap_setflag_full(${stream}, ${sequence}, ${flag[, string options]})$0

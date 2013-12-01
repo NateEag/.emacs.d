@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imagecolordeallocate(..., ...)
-# --
-imagecolordeallocate(${image}, ${color})$0

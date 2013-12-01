@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : session_set_cookie_params(...)
-# --
-session_set_cookie_params(${lifetime[, string path]})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : dba_replace(..., ..., ...)
-# --
-dba_replace(${key}, ${value}, ${handle})$0

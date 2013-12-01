@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : html_entity_decode(...)
-# --
-html_entity_decode(${string[, int quote_style]})$0

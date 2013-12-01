@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_close(...)
-# --
-imap_close(${imap_stream[, int flag]})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : session_module_name(...)
-# --
-session_module_name(${[string module]})$0

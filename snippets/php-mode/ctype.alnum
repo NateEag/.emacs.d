@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : ctype_alnum(...)
-# --
-ctype_alnum(${text})$0

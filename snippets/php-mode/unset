@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : unset(...)
-# --
-unset(${var[, mixed var]})$0

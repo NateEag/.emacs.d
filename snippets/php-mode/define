@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : define(..., ...)
-# --
-define(${name}, ${value[, bool case_insensitive]})$0

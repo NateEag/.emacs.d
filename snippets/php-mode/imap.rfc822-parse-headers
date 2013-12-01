@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_rfc822_parse_headers(...)
-# --
-imap_rfc822_parse_headers(${headers[, string defaulthost]})$0

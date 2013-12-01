@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : pcntl_signal(..., ...)
-# --
-pcntl_signal(${signo}, ${handle[, bool restart_syscalls]})$0

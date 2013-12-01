@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : ftp_exec(..., ...)
-# --
-ftp_exec(${ftp_stream}, ${command})$0

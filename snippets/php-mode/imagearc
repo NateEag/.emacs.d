@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imagearc(..., ..., ..., ..., ..., ..., ..., ...)
-# --
-imagearc(${image}, ${cx}, ${cy}, ${w}, ${h}, ${s}, ${e}, ${color})$0

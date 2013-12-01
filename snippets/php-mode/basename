@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : basename(...)
-# --
-basename(${path[, string suffix]})$0

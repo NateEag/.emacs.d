@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : rand(...)
-# --
-rand(${[int min, int max]})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mysql_free_result(...)
-# --
-mysql_free_result(${result})$0

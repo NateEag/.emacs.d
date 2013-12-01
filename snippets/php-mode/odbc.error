@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : odbc_error(...)
-# --
-odbc_error(${[resource connection_id]})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : rad2deg(...)
-# --
-rad2deg(${number})$0

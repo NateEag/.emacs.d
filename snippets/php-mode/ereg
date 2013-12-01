@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : ereg(..., ...)
-# --
-ereg(${pattern}, ${string[, array &regs]})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : dba_fetch(..., ...)
-# --
-dba_fetch(${key}, ${handle})$0

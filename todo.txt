@@ -27,8 +27,7 @@
 
 -Get ejmr's php-auto-snippets package working, to save me many lookups of
  which order PHP thinks *this* array function's args go in. For this to be
- useful, I need to solve its conflict with my existing php-mode snippets. Maybe
- just ditch my snippets, and only keep the ac-sources?
+ useful, I need to solve its conflict with my existing php-mode snippets.
 
 -Teach php-auto-snippets about third-party code. It's pretty feasible to
  support an option for requiring files, and maybe setting that per-project via

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : number_format(...)
-# --
-number_format(${number[, int decimals]})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : parse_str(...)
-# --
-parse_str(${str[, array &arr]})$0

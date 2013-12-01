@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : array_splice(..., ...)
-# --
-array_splice(${&input}, ${offset[, int length]})$0

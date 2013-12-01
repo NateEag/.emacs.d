@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imageconvolution(..., ..., ..., ...)
-# --
-imageconvolution(${image}, ${matrix3x3}, ${div}, ${offset})$0

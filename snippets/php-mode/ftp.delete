@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : ftp_delete(..., ...)
-# --
-ftp_delete(${ftp_stream}, ${path})$0

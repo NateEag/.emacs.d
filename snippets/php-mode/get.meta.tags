@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : get_meta_tags(...)
-# --
-get_meta_tags(${filename[, bool use_include_path]})$0

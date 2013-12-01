@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imagealphablending(..., ...)
-# --
-imagealphablending(${image}, ${blendmode})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : array_pad(..., ..., ...)
-# --
-array_pad(${input}, ${pad_size}, ${pad_value})$0

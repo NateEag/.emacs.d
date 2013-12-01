@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : posix_mknod(..., ...)
-# --
-posix_mknod(${pathname}, ${mode[, int major]})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : time_sleep_until(...)
-# --
-time_sleep_until(${timestamp})$0

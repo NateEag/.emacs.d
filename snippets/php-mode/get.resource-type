@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : get_resource_type(...)
-# --
-get_resource_type(${handle})$0

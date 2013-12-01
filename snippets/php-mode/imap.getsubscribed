@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_getsubscribed(..., ..., ...)
-# --
-imap_getsubscribed(${imap_stream}, ${ref}, ${pattern})$0

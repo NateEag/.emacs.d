@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : vprintf(..., ...)
-# --
-vprintf(${format}, ${args})$0

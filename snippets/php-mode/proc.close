@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : proc_close(...)
-# --
-proc_close(${process})$0

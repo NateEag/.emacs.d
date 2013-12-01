@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mysql_field_type(..., ...)
-# --
-mysql_field_type(${result}, ${field_offset})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : explode(..., ...)
-# --
-explode(${separator}, ${string[, int limit]})$0

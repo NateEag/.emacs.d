@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : ftp_nlist(..., ...)
-# --
-ftp_nlist(${ftp_stream}, ${directory})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mail(..., ..., ...)
-# --
-mail(${to}, ${subject}, ${message[, string additional_headers]})$0

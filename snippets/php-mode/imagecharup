@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imagecharup(..., ..., ..., ..., ..., ...)
-# --
-imagecharup(${image}, ${font}, ${x}, ${y}, ${c}, ${color})$0

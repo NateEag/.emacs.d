@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : ltrim(...)
-# --
-ltrim(${str[, string charlist]})$0

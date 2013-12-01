@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : function_exists(...)
-# --
-function_exists(${function_name})$0

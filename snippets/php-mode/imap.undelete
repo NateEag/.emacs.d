@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_undelete(..., ...)
-# --
-imap_undelete(${imap_stream}, ${msg_number[, int flags]})$0

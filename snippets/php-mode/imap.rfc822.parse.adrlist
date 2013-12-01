@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_rfc822_parse_adrlist(..., ...)
-# --
-imap_rfc822_parse_adrlist(${address}, ${default_host})$0

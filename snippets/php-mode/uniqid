@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : uniqid(...)
-# --
-uniqid(${[string prefix]})$0

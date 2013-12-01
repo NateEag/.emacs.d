@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : ftp_nb_continue(...)
-# --
-ftp_nb_continue(${ftp_stream})$0

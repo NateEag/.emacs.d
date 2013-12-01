@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : odbc_tableprivileges(..., ..., ..., ...)
-# --
-odbc_tableprivileges(${connection_id}, ${qualifier}, ${owner}, ${name})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_num_recent(...)
-# --
-imap_num_recent(${imap_stream})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : proc_open(..., ..., ...)
-# --
-proc_open(${cmd}, ${descriptorspec}, ${&pipes[, string cwd]})$0

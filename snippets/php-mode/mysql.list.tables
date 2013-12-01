@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mysql_list_tables(...)
-# --
-mysql_list_tables(${database[, resource link_identifier]})$0

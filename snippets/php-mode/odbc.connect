@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : odbc_connect(..., ..., ...)
-# --
-odbc_connect(${dsn}, ${user}, ${password[, int cursor_type]})$0

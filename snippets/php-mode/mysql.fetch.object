@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mysql_fetch_object(...)
-# --
-mysql_fetch_object(${result})$0

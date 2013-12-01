@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : odbc_procedurecolumns(...)
-# --
-odbc_procedurecolumns(${connection_id[, string qualifier, string owner, string proc, string column]})$0

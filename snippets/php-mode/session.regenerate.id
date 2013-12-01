@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : session_regenerate_id(...)
-# --
-session_regenerate_id(${[bool delete_old_session]})$0

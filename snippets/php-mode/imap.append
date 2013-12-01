@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_append(..., ..., ...)
-# --
-imap_append(${imap_stream}, ${mbox}, ${message[, string options]})$0

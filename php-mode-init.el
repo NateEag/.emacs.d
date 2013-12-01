@@ -45,7 +45,11 @@
 
   ;; Autocompletion for everyone!
   (auto-complete-init)
+  (add-to-list 'ac-sources 'ac-source-dictionary)
   (add-to-list 'ac-sources 'ac-source-yasnippet)
+
+  (require 'php-auto-yasnippets)
+  (define-key php-mode-map (kbd "C-c C-y") 'yas/create-php-snippet)
 
   ;; Yay for syntax checking/linting!
   (flymake-php-setup))

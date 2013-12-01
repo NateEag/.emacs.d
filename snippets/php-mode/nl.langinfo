@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : nl_langinfo(...)
-# --
-nl_langinfo(${item})$0

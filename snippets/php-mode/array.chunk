@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : array_chunk(..., ...)
-# --
-array_chunk(${input}, ${size[, bool preserve_keys]})$0

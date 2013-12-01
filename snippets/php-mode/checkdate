@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : checkdate(..., ..., ...)
-# --
-checkdate(${month}, ${day}, ${year})$0

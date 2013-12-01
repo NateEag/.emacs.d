@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_mail_compose(..., ...)
-# --
-imap_mail_compose(${envelope}, ${body})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_expunge(...)
-# --
-imap_expunge(${imap_stream})$0

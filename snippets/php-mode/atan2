@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : atan2(..., ...)
-# --
-atan2(${y}, ${x})$0

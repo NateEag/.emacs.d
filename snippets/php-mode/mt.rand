@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mt_rand(...)
-# --
-mt_rand(${[int min, int max]})$0

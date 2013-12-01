@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_headers(...)
-# --
-imap_headers(${imap_stream})$0

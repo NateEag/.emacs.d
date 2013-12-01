@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mysql_drop_db(...)
-# --
-mysql_drop_db(${database_name[, resource link_identifier]})$0

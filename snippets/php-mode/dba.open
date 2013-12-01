@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : dba_open(..., ...)
-# --
-dba_open(${path}, ${mode[, string handler]})$0

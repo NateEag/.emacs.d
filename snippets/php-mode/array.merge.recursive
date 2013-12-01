@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : array_merge_recursive(...)
-# --
-array_merge_recursive(${array1[, array ...]})$0

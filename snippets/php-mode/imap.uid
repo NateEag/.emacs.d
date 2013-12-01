@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_uid(..., ...)
-# --
-imap_uid(${imap_stream}, ${msgno})$0

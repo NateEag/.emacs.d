@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : count_chars(...)
-# --
-count_chars(${string[, int mode]})$0

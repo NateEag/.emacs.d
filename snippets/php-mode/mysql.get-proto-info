@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mysql_get_proto_info(...)
-# --
-mysql_get_proto_info(${[resource link_identifier]})$0

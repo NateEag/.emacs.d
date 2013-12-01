@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : array_search(..., ...)
-# --
-array_search(${needle}, ${haystack[, bool strict]})$0

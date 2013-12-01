@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : session_is_registered(...)
-# --
-session_is_registered(${name})$0

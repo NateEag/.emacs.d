@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : get_browser(...)
-# --
-get_browser(${[string user_agent]})$0

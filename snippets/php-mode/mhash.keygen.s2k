@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mhash_keygen_s2k(..., ..., ..., ...)
-# --
-mhash_keygen_s2k(${hash}, ${password}, ${salt}, ${bytes})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : microtime(...)
-# --
-microtime(${[bool get_as_float]})$0

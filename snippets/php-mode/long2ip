@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : long2ip(...)
-# --
-long2ip(${proper_address})$0

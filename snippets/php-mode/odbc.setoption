@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : odbc_setoption(..., ..., ..., ...)
-# --
-odbc_setoption(${id}, ${function}, ${option}, ${param})$0

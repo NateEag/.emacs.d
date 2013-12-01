@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : get_html_translation_table(...)
-# --
-get_html_translation_table(${[int table]})$0

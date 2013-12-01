@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : pack(...)
-# --
-pack(${format[, mixed args]})$0

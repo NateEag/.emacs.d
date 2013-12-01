@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : ftp_ssl_connect(...)
-# --
-ftp_ssl_connect(${host[, int port]})$0

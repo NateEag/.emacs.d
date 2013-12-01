@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_ping(...)
-# --
-imap_ping(${imap_stream})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : array_map(..., ...)
-# --
-array_map(${callback}, ${arr1[, array ...]})$0

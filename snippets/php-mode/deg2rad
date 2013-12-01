@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : deg2rad(...)
-# --
-deg2rad(${number})$0

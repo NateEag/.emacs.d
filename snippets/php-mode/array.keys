@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : array_keys(...)
-# --
-array_keys(${input[, mixed search_value]})$0

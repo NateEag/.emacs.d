@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imagecolorsforindex(..., ...)
-# --
-imagecolorsforindex(${image}, ${index})$0

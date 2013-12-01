@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_utf8(...)
-# --
-imap_utf8(${mime_encoded_text})$0

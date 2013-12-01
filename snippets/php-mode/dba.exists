@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : dba_exists(..., ...)
-# --
-dba_exists(${key}, ${handle})$0

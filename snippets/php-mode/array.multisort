@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : array_multisort(...)
-# --
-array_multisort(${ar1[, mixed arg]})$0

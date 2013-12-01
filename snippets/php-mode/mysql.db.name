@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mysql_db_name(..., ...)
-# --
-mysql_db_name(${result}, ${row[, mixed field]})$0

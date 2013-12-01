@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_delete(..., ...)
-# --
-imap_delete(${imap_stream}, ${msg_number[, int options]})$0

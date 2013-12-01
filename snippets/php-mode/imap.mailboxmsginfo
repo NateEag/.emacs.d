@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_mailboxmsginfo(...)
-# --
-imap_mailboxmsginfo(${imap_stream})$0

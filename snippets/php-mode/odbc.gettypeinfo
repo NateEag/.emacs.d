@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : odbc_gettypeinfo(...)
-# --
-odbc_gettypeinfo(${connection_id[, int data_type]})$0

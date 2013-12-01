@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : openlog(..., ..., ...)
-# --
-openlog(${ident}, ${option}, ${facility})$0

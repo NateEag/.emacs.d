@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : dba_handlers(...)
-# --
-dba_handlers(${[bool full_info]})$0

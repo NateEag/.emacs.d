@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : inet_ntop(...)
-# --
-inet_ntop(${in_addr})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mysql_db_query(..., ...)
-# --
-mysql_db_query(${database}, ${query[, resource link_identifier]})$0

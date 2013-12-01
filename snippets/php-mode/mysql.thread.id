@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mysql_thread_id(...)
-# --
-mysql_thread_id(${[resource link_identifier]})$0

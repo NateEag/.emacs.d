@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : unregister_tick_function(...)
-# --
-unregister_tick_function(${function_name})$0

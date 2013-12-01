@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : posix_getgid()
-# --
-posix_getgid()$0

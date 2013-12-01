@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : mysql_close(...)
-# --
-mysql_close(${[resource link_identifier]})$0

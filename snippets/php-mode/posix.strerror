@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : posix_strerror(...)
-# --
-posix_strerror(${errno})$0

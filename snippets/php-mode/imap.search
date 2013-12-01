@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_search(..., ...)
-# --
-imap_search(${imap_stream}, ${criteria[, int options]})$0

@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_reopen(..., ...)
-# --
-imap_reopen(${imap_stream}, ${mailbox[, int options]})$0

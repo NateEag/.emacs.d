@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : imap_deletemailbox(..., ...)
-# --
-imap_deletemailbox(${imap_stream}, ${mbox})$0

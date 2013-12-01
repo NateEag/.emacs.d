@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : setlocale(..., ...)
-# --
-setlocale(${category}, ${locale[, string ...]})$0

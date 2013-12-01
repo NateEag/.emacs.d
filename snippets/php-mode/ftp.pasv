@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : ftp_pasv(..., ...)
-# --
-ftp_pasv(${ftp_stream}, ${pasv})$0

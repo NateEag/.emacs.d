@@ -1,4 +1,0 @@
-#contributor : Andrew Gwozdziewycz <web@apgwoz.com>
-#name : inet_pton(...)
-# --
-inet_pton(${address})$0

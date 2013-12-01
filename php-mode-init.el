@@ -1,5 +1,29 @@
 ;; Emacs config for editing PHP.
 
+;; GRIPE Should I get this working, it probably doesn't belong here.
+(defun insert-func-and-auto-yasnippet ()
+  "Insert the selected function name then insert its auto-snippet."
+  (ac-expand)
+  ;; DEBUG Do we need to handle classes? For the moment, I don't think it's
+  ;; necessary.
+  (yas/create-php-snippet nil))
+
+(ac-define-source php-auto-yasnippets
+  ;; DEBUG not sure what 'depends' does - it's used in the yasnippet ac source,
+  ;; though, so I just mirrored it blindly.
+  '((depends yasnippet)
+    (depends php-auto-yasnippets)
+    ;; DEBUG This will need to change - people will want to customize their
+    ;; list of PHP callables.
+    (candidates . ac-buffer-dictionary)
+    (action . insert-func-and-auto-yasnippet)
+    ;; Since these trigger yasnippet, I think it makes sense to use the
+    ;; yasnippet face.
+    (candidate-face . ac-yasnippet-candidate-face)
+    (selection-face . ac-yasnippet-selection-face)
+    ;; For 'PHP', and to distinguish from regular yasnippet functions.
+    (symbol . "p")))
+
 (require 'mmm-auto)
 (setq mmm-global-mode 'maybe)
 
@@ -47,6 +71,7 @@
   (auto-complete-init)
   (add-to-list 'ac-sources 'ac-source-dictionary)
   (add-to-list 'ac-sources 'ac-source-yasnippet)
+  (add-to-list 'ac-sources 'ac-source-php-auto-yasnippets)
 
   (require 'php-auto-yasnippets)
   (define-key php-mode-map (kbd "C-c C-y") 'yas/create-php-snippet)

@@ -25,9 +25,9 @@
 -Fix yasnippet not expanding fields on the first snippet insertion in a PHP
  buffer. Only seems to happen on Windows box...
 
--Get ejmr's php-auto-snippets package working, to save me many lookups of
- which order PHP thinks *this* array function's args go in. For this to be
- useful, I need to solve its conflict with my existing php-mode snippets.
+-Talk to ejmr about how best to provide my php-auto-yasnippets ac-source to the
+ world at large. I think a lot of people might appreciate it. Maybe just bundle
+ it in php-auto-yasnippets?
 
 -Teach php-auto-snippets about third-party code. It's pretty feasible to
  support an option for requiring files, and maybe setting that per-project via

@@ -337,9 +337,7 @@
 
 ;; Include my PHP editing settings.
 (setq auto-mode-alist (cons '("\\.php$" . php-mode) auto-mode-alist))
-(add-hook 'php-mode-hook 'load-php-mode-accessories)
-
-(require 'php-mode-init)
+(add-hook 'php-mode-hook 'php-mode-init)
 
 ;; Tweak CSS mode a bit.
 ;; Note that for skewer-mode to be useful, you'll need to first call

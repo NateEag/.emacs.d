@@ -14,6 +14,7 @@ are for modes that didn't come with autoloading."
   (autoload 'flymake-init "flymake-init.el")
   (autoload 'hs-minor-mode-init "hs-minor-mode-init.el")
   (autoload 'yasnippet-init "yasnippet-init.el")
+  (autoload 'php-mode-init "php-mode-init.el")
   (autoload 'flymake-php-setup "flymake-php-setup.el")
   (autoload 'emacs-epc-init "emacs-epc-init.el") ;; Need epc for jedi.
   (autoload 'jedi:setup "jedi" nil t)

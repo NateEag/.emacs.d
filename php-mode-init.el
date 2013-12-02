@@ -54,8 +54,6 @@
   ;; Autocompletion for everyone!
   (auto-complete-init)
   (add-to-list 'ac-sources 'ac-source-dictionary)
-  (add-to-list 'ac-sources 'ac-source-yasnippet)
-
   (ac-define-source php-auto-yasnippets
                     ;; DEBUG not sure what 'depends' does - it's used in the
                     ;; yasnippet ac source, though, so I just mirrored it
@@ -76,6 +74,8 @@
                       (symbol . "p")))
 
   (add-to-list 'ac-sources 'ac-source-php-auto-yasnippets)
+  (add-to-list 'ac-sources 'ac-source-yasnippet)
+
 
   (require 'php-auto-yasnippets)
   (define-key php-mode-map (kbd "C-c C-y") 'yas/create-php-snippet)

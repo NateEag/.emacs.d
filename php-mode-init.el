@@ -53,7 +53,6 @@
 
   ;; Autocompletion for everyone!
   (auto-complete-init)
-  (add-to-list 'ac-sources 'ac-source-dictionary)
   (ac-define-source php-auto-yasnippets
                     ;; DEBUG not sure what 'depends' does - it's used in the
                     ;; yasnippet ac source, though, so I just mirrored it

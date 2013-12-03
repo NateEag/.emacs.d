@@ -61,7 +61,8 @@
                       (depends php-auto-yasnippets)
                       ;; DEBUG This will need to change - people will want to
                       ;; customize their list of PHP callables, since the
-                      ;; auto-complete buffer is
+                      ;; auto-complete dictionary is not very up-to-date (and
+                      ;; also contains keywords, which we don't want).
                       (candidates . ac-buffer-dictionary)
                       (action . insert-func-and-auto-yasnippet)
                       ;; Since these trigger yasnippet, I think it makes sense

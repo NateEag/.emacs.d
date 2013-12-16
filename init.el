@@ -39,8 +39,7 @@
 ;; I do not use double-spaces after sentences. Neither should you.
 (setq sentence-end-double-space nil)
 
-;; I dislike using tabs for indentation. Spaces are a less complex way to
-;; indent.
+;; I dislike using tabs for indentation. Spaces are a simpler way to indent.
 (setq indent-tabs-mode nil)
 (setq-default indent-tabs-mode nil)
 

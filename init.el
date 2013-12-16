@@ -359,6 +359,10 @@
 (add-to-list 'auto-mode-alist '("\\.js\\'" . js-mode))
 (add-to-list 'auto-mode-alist '("\\.json\\'" . js-mode))
 
+;; xml-mode
+;; IIS's 'config' files are actually XML.
+(add-to-list 'auto-mode-alist '("web.config$" . xml-mode))
+
 ;; If we're running in a window system, start an emacs server, so emacsclient
 ;; can connect to this instance.
 (when (display-graphic-p)

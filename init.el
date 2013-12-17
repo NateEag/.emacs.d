@@ -85,16 +85,28 @@
 
 ;; Autosave's defaults are not very nice. Here, we fix them.
 ;; Create autosave dir if it doesn't exist.
-(make-directory "~/.emacs.d/autosaves/" t)
+(setq my-autosaves-dir (expand-file-name "~/.emacs.d/autosaves/"))
+(make-directory my-autosaves-dir t)
 (setq
-   backup-by-copying t      ; Don't clobber symlinks.
-   backup-by-copying-when-linked t    ; Don't break multiple hardlinks.
+   ; Don't clobber symlinks.
+   backup-by-copying t
+
+   ; Don't break multiple hardlinks.
+   backup-by-copying-when-linked t
+   ; Don't litter the filesystem with backups *or* autosaves.
    backup-directory-alist
-    '(("." . "~/.emacs.d/autosaves"))    ; Don't litter the filesystem.
-   delete-old-versions t    ; Delete old backups silently.
+    `(("." . ,my-autosaves-dir))
+
+   auto-save-file-name-transforms
+   `((".*" ,(concat my-autosaves-dir "\\1") t))
+
+   ; Delete old backups silently.
+   delete-old-versions t
    kept-new-versions 2
    kept-old-versions 2
-   version-control t)       ; use versioned backups
+
+   ; use versioned backups
+   version-control t)
 
 ;; Back up files even when using version control.
 (setq vc-make-backup-files t)

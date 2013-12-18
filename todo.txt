@@ -29,9 +29,9 @@
  world at large. I think a lot of people might appreciate it. Maybe just bundle
  it in php-auto-yasnippets?
 
--Teach php-auto-snippets about third-party code. It's pretty feasible to
- support an option for requiring files, and maybe setting that per-project via
- .dir-locals, which would let you register autoloaders pretty easily.
+-See if there's a way to add a git-merge hook that will reload updated files in
+ any live emacs daemon instance. Since I share my config across multiple
+ machines, this would make my life better.
 
 -Get PHP tags working reliably. Since there is no good PHP tags solution for
  emacs, the best bet is probably using the PHP 5.3 vim tagging solution I found

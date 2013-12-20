@@ -44,6 +44,9 @@
 -Research adapting the PDT infrastructure could be adapted for use in
  Emacs. http://projects.eclipse.org/projects/tools.pdt
 
+-Figure out why auto-pair-mode only works some of the time in php-mode. [], '',
+ and () all have been known to exhibit breakage.
+
 -Calling a function mid-if-snippet in php-mode closes the snippet early. It
  seems to be caused by autopair matching the closing parenthesis when I type
  the opening one. See if I can come up with a workaround, or maybe whether the
@@ -77,11 +80,6 @@
  https://github.com/bmaland/yasnippet-sh-mode
 
 -Look into binding Shift-Enter to whatever Meta-J is bound to.
-
--Try smartparens instead of auto-pair-mode, as it appears to perhaps be better: https://github.com/Fuco1/smartparens
-
--Figure out why auto-pair-mode only works some of the time in php-mode. [], '',
- and () all have been known to exhibit breakage.
 
 -Get smart-dash-mode to be active in web-mode, but _only_ in template
  expressions and JS, since dash is a common delimiter for HTML identifiers like

@@ -49,7 +49,9 @@
   (yasnippet-init)
 
   ;; auto-pairs ftw
-  (autopair-init)
+  ;; I'm giving smartparens a try.
+  ;;(autopair-init)
+  (smartparens-mode)
 
   ;; Autocompletion for everyone!
   (auto-complete-init)

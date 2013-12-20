@@ -31,7 +31,8 @@
 
 -See if there's a way to add a git-merge hook that will reload updated files in
  any live emacs daemon instance. Since I share my config across multiple
- machines, this would make my life better.
+ machines, this would make my life better. emacsclient accepts an 'eval'
+ argument, so that could probably be abused into doing the job.
 
 -Get PHP tags working reliably. Since there is no good PHP tags solution for
  emacs, the best bet is probably using the PHP 5.3 vim tagging solution I found

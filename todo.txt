@@ -29,6 +29,9 @@
  world at large. I think a lot of people might appreciate it. Maybe just bundle
  it in php-auto-yasnippets?
 
+-Recompile/delete .elcs for updated .el files after merge/pull, and probably in
+ post-commit too.
+
 -Get PHP tags working reliably. Since there is no good PHP tags solution for
  emacs, the best bet is probably using the PHP 5.3 vim tagging solution I found
  in combination with vtags (which, dating from 2006, may not work with Emacs

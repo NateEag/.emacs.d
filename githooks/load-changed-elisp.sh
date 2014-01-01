@@ -6,10 +6,7 @@
 # This is probably only useful after git pull, to load latest config changes
 # into a long-running instance.
 
-prev_head=$1
-new_head=$2
-
-updated_files=$(git diff --name-only --diff-filter=[ACM] $prev_head $new_head | grep '\.el$')
+updated_files=$(git diff --name-only --diff-filter=[ACM] $1 $2 | grep '\.el$')
 for file in $updated_files
 do
     emacsclient --eval "(load-file \"~/.emacs.d/$file\")"

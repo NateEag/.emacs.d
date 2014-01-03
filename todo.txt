@@ -29,8 +29,10 @@
  world at large. I think a lot of people might appreciate it. Maybe just bundle
  it in php-auto-yasnippets?
 
--Recompile/delete .elcs for updated .el files after merge/pull, and probably in
- post-commit too.
+-Add a timer to emacs, so I have a basic mechanism to keep me from spending too
+ long running down rabbit trails, a bit like the pomodoro technique. Sounds
+ like tea-timer is the common package, as seen in this guy's .emacs.d:
+ https://github.com/jespada/emacs/blob/master/.emacs.d/tea-time.el
 
 -Get PHP tags working reliably. Since there is no good PHP tags solution for
  emacs, the best bet is probably using the PHP 5.3 vim tagging solution I found

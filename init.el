@@ -119,6 +119,12 @@
 (require 'nateeag-autoloads-init)
 (nateeag-autoloads-init)
 
+;; Tweak exec-path to include binaries in this repo.
+(setq exec-path
+      (append
+       exec-path
+       (list "~/.emacs.d/php-cs-1.4.4/scripts")))
+
 ;; Load Windows-specific tweaks to environment, if we're running Windows.
 (if (eq system-type 'windows-nt)
     (set-windows-env))
@@ -269,8 +275,6 @@
 (require 'package)
 (setq package-user-dir "~/.emacs.d/elpa/")
 (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
-(add-to-list 'package-archives '("marmalade" .
-                                 "http://marmalade-repo.org/packages/"))
 (add-to-list 'package-archives '("melpa" .
                                  "http://melpa.milkbox.net/packages/"))
 

@@ -83,7 +83,12 @@
   (define-key php-mode-map (kbd "C-c C-y") 'yas/create-php-snippet)
 
   ;; Yay for syntax checking/linting!
-  (flymake-php-setup))
+  ; Trying flycheck instead of flymake.
+  ;(flymake-php-setup)
+  (flycheck-mode t)
+  (setq flycheck-phpcs-standard "PSR2")
+  (setq flycheck-php-phpcs-executable "phpcs")
+  )
 
 ;; Make this requireable.
 (provide 'php-mode-init)

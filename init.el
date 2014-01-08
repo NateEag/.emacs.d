@@ -1,10 +1,24 @@
 ;; Nate Eagleson's Emacs config.
 
-;; General preferences.
+;;; General preferences.
 
-;; Not sure what this'll do on a system that doesn't have Anonymous Pro
-;; installed...
-(set-face-attribute 'default nil :font "Anonymous Pro-14")
+;; Set up my default font. Work in progress.
+(defun my-get-default-font-size ()
+  "Return a good(?) size for my default font based on monitor resolution."
+
+  (if (> (display-pixel-width) 1280)
+      14
+    12))
+
+(defun my-get-default-font ()
+  "Return a string specifying my default font."
+
+  (setq my-font-size (my-set-default-font-size))
+  ;; Not sure what this'll result in on a system without Anonymous Pro...
+  (setq my-default-font (concat "Anonymous Pro-"
+                                (number-to-string my-font-size))))
+
+(set-face-attribute 'default nil :font (my-get-default-font))
 
 ;; Sometimes you want to debug when there are errors, but not nearly as often
 ;; as I believed at the first.

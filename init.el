@@ -2,6 +2,10 @@
 
 ;; General preferences.
 
+;; Not sure what this'll do on a system that doesn't have Anonymous Pro
+;; installed...
+(set-face-attribute 'default nil :font "Anonymous Pro-14")
+
 ;; Sometimes you want to debug when there are errors, but not nearly as often
 ;; as I believed at the first.
 ;(setq debug-on-error t)

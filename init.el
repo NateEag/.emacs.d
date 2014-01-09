@@ -13,7 +13,7 @@
 (defun my-get-default-font ()
   "Return a string specifying my default font."
 
-  (setq my-font-size (my-set-default-font-size))
+  (setq my-font-size (my-get-default-font-size))
   ;; Not sure what this'll result in on a system without Anonymous Pro...
   (setq my-default-font (concat "Anonymous Pro-"
                                 (number-to-string my-font-size))))

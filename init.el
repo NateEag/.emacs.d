@@ -410,7 +410,7 @@
 
 ;; If we're running in a window system, start an emacs server, so emacsclient
 ;; can connect to this instance.
-(when (display-graphic-p)
+(when (and (not (server-running-p)) (display-graphic-p))
     (server-start))
 
 (setq custom-file "~/.emacs.d/custom.el")

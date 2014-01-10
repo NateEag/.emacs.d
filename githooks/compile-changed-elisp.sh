@@ -1,7 +1,10 @@
 #! /bin/bash
 
-updated_files=$(git diff --name-only --diff-filter=[ACM] $1 $2 | grep '\.el$')
-for file in $updated_files
+file_list=$(git diff --name-only --diff-filter=[ACM] $1 $2 | grep '\.el$')
+updated_files=''
+for file in $file_list
 do
-    emacs -batch -f batch-byte-compile "~/.emacs.d/$file"
+    updated_files+=$(echo "~/.emacs.d/$file")' '
 done
+
+emacs -batch -l init.el -f batch-byte-compile $updated_files

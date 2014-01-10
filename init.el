@@ -10,15 +10,22 @@
       14
     12))
 
+(defun my-get-default-font-name ()
+  "Return the name of my preferred font."
+  "Anonymous Pro")
+
 (defun my-get-default-font ()
   "Return a string specifying my default font."
 
   (setq my-font-size (my-get-default-font-size))
-  ;; Not sure what this'll result in on a system without Anonymous Pro...
-  (setq my-default-font (concat "Anonymous Pro-"
+  (setq my-default-font (concat (my-get-default-font-name) "-"
                                 (number-to-string my-font-size))))
 
-(set-face-attribute 'default nil :font (my-get-default-font))
+;; Do not set a font if it is not available - keeps us from crashing in a
+;; font-free setting.
+(if (member (my-get-default-font-name) (font-family-list))
+    (set-face-attribute 'default nil :font (my-get-default-font)))
+
 
 ;; Sometimes you want to debug when there are errors, but not nearly as often
 ;; as I believed at the first.
@@ -162,7 +169,7 @@
 (defadvice hack-dir-local-variables (around my-remote-dir-local-variables)
   "Allow directory local variables with remote files, by temporarily redefining
      `file-remote-p' to return nil unconditionally."
-  (flet ((file-remote-p (&rest) nil))
+  (cl-flet ((file-remote-p (&rest) nil))
     ad-do-it))
 (ad-activate 'hack-dir-local-variables)
 
@@ -288,13 +295,16 @@
         (kill-buffer nil))))
   nil)
 
-;; Experimenting with the infamous package.el, so I can see how to integrate it
-;; with my setup.
+;; Set up the package library per my desires.
 (require 'package)
 (setq package-user-dir "~/.emacs.d/elpa/")
 (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
 (add-to-list 'package-archives '("melpa" .
                                  "http://melpa.milkbox.net/packages/"))
+
+;; Explicitly call package-initialize so that modes which trigger on start
+;; (like emacs-lisp-mode) don't cause horkage when running in batch mode.
+(package-initialize)
 
 
 ;; Major mode setup and registration.

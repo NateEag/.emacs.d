@@ -34,6 +34,10 @@
  like tea-timer is the common package, as seen in this guy's .emacs.d:
  https://github.com/jespada/emacs/blob/master/.emacs.d/tea-time.el
 
+-As a simple exercise to start learning macros, try implementing PHP's
+ "defaulting" ternary operator behavior. The example I emailed myself was
+ (setq (default (= 3 foo) (5)), where 'default' is the macro, presumably.
+
 -Get PHP tags working reliably. Since there is no good PHP tags solution for
  emacs, the best bet is probably using the PHP 5.3 vim tagging solution I found
  in combination with vtags (which, dating from 2006, may not work with Emacs

@@ -58,6 +58,9 @@
 ;; I like seeing my selections.
 (setq transient-mark-mode 1)
 
+;; STOP THE RINGING
+(setq visible-bell 1)
+
 ;; The emacs startup message is a needless annoyance.
 (setq inhibit-startup-message t)
 

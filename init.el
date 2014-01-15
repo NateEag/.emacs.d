@@ -317,6 +317,8 @@
   (interactive)
   (smart-dash-mode t)
   (comment-auto-fill)
+  (auto-complete-init)
+  (setq ac-sources '(ac-source-words-in-same-mode-buffers))
   (when (locate-library "sql-indent")
     (load-library "sql-indent")))
 (add-hook 'sql-mode-hook 'load-sql-mode-accessories)

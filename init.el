@@ -415,6 +415,7 @@
 
 ;; If we're running in a window system, start an emacs server, so emacsclient
 ;; can connect to this instance.
+(require 'server)
 (when (and (not (server-running-p)) (display-graphic-p))
     (server-start))
 

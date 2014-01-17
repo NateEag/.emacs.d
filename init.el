@@ -26,10 +26,13 @@
 (if (member (my-get-default-font-name) (font-family-list))
     (set-face-attribute 'default nil :font (my-get-default-font)))
 
-
 ;; Sometimes you want to debug when there are errors, but not nearly as often
 ;; as I believed at the first.
 ;(setq debug-on-error t)
+
+;; I'd rather have regexes available when I search. Sorry, RMS.
+(global-set-key (kbd "C-s") 'isearch-forward-regexp)
+(global-set-key (kbd "C-r") 'isearch-backward-regexp)
 
 ;; Add appropriate directories to load-path.
 (defun add-subdirs-to-front-of-load-path (path)

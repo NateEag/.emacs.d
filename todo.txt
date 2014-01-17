@@ -71,6 +71,11 @@
  on whether there are any characters before point *and* whether autocompletion
  has been invoked before while in this field. or something like that.
 
+-auto-complete and smart-dash-mode don't get along well. If I insert an
+ underscore by typing a '-' while smart-dash-mode is active, it breaks
+ smart-dash-mode. I think auto-complete must be assuming that any
+ non-literal-insertion function call should end completion?
+
 -It would be really sweet to get yasnippet's bracket placement to do the Right
  Thing based on major-mode, placing them on the newline or on the same line
  intelligently. I'm guessing that can be achieved by applying elisp to the

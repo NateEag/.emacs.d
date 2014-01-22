@@ -353,6 +353,9 @@
 (add-to-list 'auto-mode-alist '("\\.ily$" . LilyPond-mode))
 (add-hook 'LilyPond-mode-hook (lambda () (turn-on-font-lock)))
 
+;; Turn off default vc-mode, because I never use it.
+(setq vc-handled-backends)
+
 ;; Commit message mode.
 (defun git-commit-mode-hook ()
   "My settings for writing commit messages."

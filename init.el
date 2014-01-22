@@ -396,7 +396,7 @@
 ;; skewer-ify a page:
 ;; javascript:(function(){var d=document;var s=d.createElement('script');s.src='http://localhost:8081/skewer';d.body.appendChild(s);})()ema
 (setq httpd-port 8081)
-(add-hook 'css-mode-hook 'skewer-css-mode)
+(add-hook 'css-mode-hook 'skewer-reload-stylesheets-mode)
 
 ;; Web mode.
 ;; For editing web templates of various stripes.

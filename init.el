@@ -67,6 +67,9 @@
 ;; The emacs startup message is a needless annoyance.
 (setq inhibit-startup-message t)
 
+;; The toolbar is an even more needless annoyance.
+(tool-bar-mode nil)
+
 ;; I do not use double-spaces after sentences. Neither should you.
 (setq sentence-end-double-space nil)
 

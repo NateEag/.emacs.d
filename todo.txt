@@ -1,23 +1,3 @@
--Add support to skewer-css-mode for reloading a stylesheet from the filesystem
- (and clearing all received CSS snippets), so that even with tangled legacy
- stylesheets, you can work without worrying about precedence rules. Ask to
- reload the current stylesheet, and the following occurs:
-     * emacs saves the current stylesheet
-     * skewer finds the corresponding link tag, which is the one with the
-       longest href that the buffer's filepath ends with.
-     * skewer swaps that link tag for a placeholder node
-     * skewer removes all css chunks that it has inserted (from that
-       stylesheet?)
-     * skewer swaps the link tag with the placeholder, thus reloading the
-       stylesheet.
- If the link tag can't be found, fall back to inserting it as a style tag.
- You could do the same trick with JS, but it probably wouldn't be very
- useful there.
- N.B.: I have written this, tested it, and made a pull request, but the author
- thinks it may not belong in his repo. I'm trying to figure out how to turn it
- into a package for submission to MELPA. Think I shall call this tiny package
- "skewer-reload-stylesheet".
-
 -Find a way to auto-include skewer on page refresh without having to include it
  in a codebase. I'm thinking a Chrome plugin for "refresh and load
  bookmarklet", or something along those lines.
@@ -28,6 +8,11 @@
 -Talk to ejmr about how best to provide my php-auto-yasnippets ac-source to the
  world at large. I think a lot of people might appreciate it. Maybe just bundle
  it in php-auto-yasnippets?
+
+-auto-complete and smart-dash-mode don't get along well. If I insert an
+ underscore by typing a '-' while smart-dash-mode is active, it breaks
+ smart-dash-mode. I think auto-complete must be assuming that any
+ non-literal-insertion function call should end completion?
 
 -Add a timer to emacs, so I have a basic mechanism to keep me from spending too
  long running down rabbit trails, a bit like the pomodoro technique. Sounds
@@ -60,21 +45,21 @@
 -Calling a function mid-if-snippet in php-mode closes the snippet early. It
  seems to be caused by autopair matching the closing parenthesis when I type
  the opening one. See if I can come up with a workaround, or maybe whether the
- other mode I was thinking of trying doesn't have this issue.
+ other mode I was thinking of trying doesn't have this issue. smartparens does
+ indeed avoid this problem, but it has issues too. I'll have to look into them
+ someday.
 
 -Look into https://github.com/mbunkus/mo-git-blame. Git blame on a file in
  emacs, which could save time.
+
+-Consider using auto-revert-tail-mode when I need to keep an eye on a log file
+ while programming.
 
 -Find a workaround that will let me use auto-complete in a yasnippet tab field.
  A keybinding other than Tab for auto-complete would work, but it might be
  possible to bind something clever to Tab that picks which maneuver to do based
  on whether there are any characters before point *and* whether autocompletion
  has been invoked before while in this field. or something like that.
-
--auto-complete and smart-dash-mode don't get along well. If I insert an
- underscore by typing a '-' while smart-dash-mode is active, it breaks
- smart-dash-mode. I think auto-complete must be assuming that any
- non-literal-insertion function call should end completion?
 
 -It would be really sweet to get yasnippet's bracket placement to do the Right
  Thing based on major-mode, placing them on the newline or on the same line

@@ -211,13 +211,6 @@
   uniquify-after-kill-buffer-p t
   uniquify-ignore-buffers-re "^\\*")
 
-;; We like auto-compiling .el files to bytecode whenever they're loaded.
-;; Note that byte-code-cache.el apparently will break on Windows, so I might
-;; want to apply a patch to it, since I do sometimes get stuck on Windows.
-;; See http://www.emacswiki.org/emacs/AutoRecompile#toc3
-;; (if (not (eq system-type 'windows-nt))
-;;     (require 'byte-code-cache))
-
 ;; Load the revbufs command.
 (require 'revbufs)
 

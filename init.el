@@ -153,6 +153,13 @@
 (require 'nateeag-autoloads-init)
 (nateeag-autoloads-init)
 
+;; Set up exec-path to inherit values from the shell.
+(when (memq window-system '(mac ns))
+  ;; DEBUG This should Just Work with autoloading, installed from MELPA as it
+  ;; is, but it doesn't actually seem to. Why not?
+  (require 'exec-path-from-shell)
+  (exec-path-from-shell-initialize))
+
 ;; Tweak exec-path to include binaries in this repo.
 (setq exec-path
       (append

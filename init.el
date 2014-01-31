@@ -144,6 +144,12 @@
 ;; Back up files even when using version control.
 (setq vc-make-backup-files t)
 
+;; Force a backup every time we save a file.
+;; Does it get this every time I save now?
+(defun force-buffer-backup ()
+  (setq buffer-backed-up nil))
+(add-hook 'before-save-hook 'force-buffer-backup)
+
 ;; Save minibuffer data between sessions.
 (setq savehist-file "~/.emacs.d/tmp/savehist")
 (savehist-mode t)

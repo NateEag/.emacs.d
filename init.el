@@ -134,10 +134,9 @@
    auto-save-file-name-transforms
    `((".*" ,(concat my-autosaves-dir "\\1") t))
 
-   ; Delete old backups silently.
-   delete-old-versions t
-   kept-new-versions 2
-   kept-old-versions 2
+   ;; Never auto-delete backups, so the backup-walker package is as useful as
+   ;; possible.
+   delete-old-versions -1
 
    ; use versioned backups
    version-control t)

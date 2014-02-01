@@ -274,10 +274,11 @@
 
 ;; Minor mode setup and registration.
 
+(diminish 'auto-revert-mode)
+
 ;; smart-dash-mode saves a lot of stupid SHIFT-ing in languages that favor
 ;; underscore as a word separator.
 (require 'smart-dash)
-
 
 ;; Set up diff-mode.
 (defun update-diff-colors ()

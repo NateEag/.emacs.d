@@ -1,5 +1,16 @@
 ;; Nate Eagleson's Emacs config.
 
+;; Set up the package library per my desires.
+(require 'package)
+(setq package-user-dir "~/.emacs.d/elpa/")
+(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
+(add-to-list 'package-archives '("melpa" .
+                                 "http://melpa.milkbox.net/packages/"))
+
+;; Explicitly call package-initialize so that modes which trigger on start
+;; (like emacs-lisp-mode) don't cause horkage when running in batch mode.
+(package-initialize)
+
 ;;; General preferences.
 
 ;; Set up my default font. Work in progress.
@@ -308,18 +319,6 @@
         (dired-do-rename)
         (kill-buffer nil))))
   nil)
-
-;; Set up the package library per my desires.
-(require 'package)
-(setq package-user-dir "~/.emacs.d/elpa/")
-(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
-(add-to-list 'package-archives '("melpa" .
-                                 "http://melpa.milkbox.net/packages/"))
-
-;; Explicitly call package-initialize so that modes which trigger on start
-;; (like emacs-lisp-mode) don't cause horkage when running in batch mode.
-(package-initialize)
-
 
 ;; Major mode setup and registration.
 

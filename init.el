@@ -161,6 +161,15 @@
   (setq buffer-backed-up nil))
 (add-hook 'before-save-hook 'force-buffer-backup)
 
+;; Activate undo-tree-mode globally and diminish it.
+;;
+;; It seems to me that undo-tree-mode and backup-walker might be good candidates
+;; for merging somehow - they're like two sides of the same coin. I'll need a
+;; lot more hands-on experience with both to have any idea how that would look
+;; in practice.
+(global-undo-tree-mode)
+(diminish 'undo-tree-mode)
+
 ;; Save minibuffer data between sessions.
 (setq savehist-file "~/.emacs.d/tmp/savehist")
 (savehist-mode t)

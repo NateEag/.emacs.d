@@ -373,6 +373,9 @@
 ;; Turn off default vc-mode, because I never use it.
 (setq vc-handled-backends)
 
+;; Custom keybinding for magit.
+(global-set-key (kbd "C-c g") 'magit-status)
+
 ;; Commit message mode.
 (defun git-commit-mode-hook ()
   "My settings for writing commit messages."

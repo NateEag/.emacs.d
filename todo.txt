@@ -1,3 +1,7 @@
+-My 'load updated elisp' hook should only run if there's a running emacs server
+ instance. Otherwise, as I've just discovered, I wind up popping a bunch of
+ windows via emacsclient. Oops.
+
 -Find a way to auto-include skewer on page refresh without having to include it
  in a codebase. I'm thinking a Chrome plugin for "refresh and load
  bookmarklet", or something along those lines.

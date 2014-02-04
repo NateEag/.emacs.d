@@ -274,6 +274,12 @@
 
 ;; Minor mode setup and registration.
 
+;; Some experiments *seem* to indicate that this shouldn't ever bite me. I'm
+;; turning it on and hoping that's the case.
+;; I've mainly turned it on globally because I can't figure out a better way to
+;; diminish auto-revert-mode in git-managed buffers now that I have magit
+;; installed.
+(global-auto-revert-mode)
 (diminish 'auto-revert-mode)
 
 ;; smart-dash-mode saves a lot of stupid SHIFT-ing in languages that favor

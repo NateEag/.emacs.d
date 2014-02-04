@@ -4,7 +4,6 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(ac-trigger-key "TAB")
- '(php-executable "/Program Files (x86)/PHP/php")
  '(php-mode-custom-coding-style "Symfony2")
  '(safe-local-variable-values (quote ((eval highlight-regexp "^ *")))))
 (custom-set-faces

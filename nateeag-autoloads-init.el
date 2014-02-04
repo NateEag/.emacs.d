@@ -23,9 +23,14 @@ are for modes that didn't come with autoloading."
   (autoload 'rst-mode "rst-mode.el")
   (autoload 'markdown-mode "markdown-mode.el")
   (autoload 'tern-mode "tern.el" nil t)
+
   ;; I use python-mode.el, with the TQS-coloration patch applied.
   ;; I should probably try installing the latest version and seeing how it
   ;; holds up.
-  (autoload 'python-mode "python-mode" "Python editing mode." t))
+  (autoload 'python-mode "python-mode" "Python editing mode." t)
+
+  ;; tea-time's autoloads, despite being installed from MELPA, don't seem to
+  ;; work. Therefore...
+  (autoload 'tea-timer "tea-time.el"))
 
 (provide 'nateeag-autoloads-init)

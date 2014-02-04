@@ -18,11 +18,6 @@
  smart-dash-mode. I think auto-complete must be assuming that any
  non-literal-insertion function call should end completion?
 
--Add a timer to emacs, so I have a basic mechanism to keep me from spending too
- long running down rabbit trails, a bit like the pomodoro technique. Sounds
- like tea-timer is the common package, as seen in this guy's .emacs.d:
- https://github.com/jespada/emacs/blob/master/.emacs.d/tea-time.el
-
 -As a simple exercise to start learning macros, try implementing PHP's
  "defaulting" ternary operator behavior. The example I emailed myself was
  (setq (default (= 3 foo) (5)), where 'default' is the macro, presumably.

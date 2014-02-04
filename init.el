@@ -81,6 +81,9 @@
 ;; The toolbar is an even more needless annoyance.
 (tool-bar-mode -1)
 
+;; I don't really use the menus, either.
+(menu-bar-mode -1)
+
 ;; I do not use double-spaces after sentences. Neither should you.
 (setq sentence-end-double-space nil)
 

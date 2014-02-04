@@ -17,7 +17,7 @@
 (defun my-get-default-font-size ()
   "Return a good(?) size for my default font based on monitor resolution."
 
-  (if (> (display-pixel-width) 1280)
+  (if (>= (display-pixel-width) 1280)
       14
     12))
 

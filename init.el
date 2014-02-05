@@ -414,9 +414,10 @@
 (setq auto-mode-alist (cons '("\\.py$" . python-mode) auto-mode-alist))
 (setq interpreter-mode-alist
       (cons '("python" . python-mode) interpreter-mode-alist))
-(add-hook 'python-mode-hook 'load-python-mode-accessories)
+(add-hook 'python-mode-hook 'python-mode-accessories-init)
 
-(require 'python-mode-init)
+;; DEBUG I cannot get this to autoload, and I don't know why.
+(require 'python-mode-accessories-init)
 
 ;; Include my PHP editing settings.
 (setq auto-mode-alist (cons '("\\.php$" . php-mode) auto-mode-alist))

@@ -1,7 +1,7 @@
 ;; Set up Python mode.
 
 ;; Load my python-mode accessories only when python-mode kicks in.
-(defun load-python-mode-accessories ()
+(defun python-mode-accessories-init ()
   "Loads all the libraries/tools I want to have when I'm in python-mode."
   (smart-dash-mode t)
   (comment-auto-fill)
@@ -18,4 +18,4 @@
   (jedi:setup)
   (setq jedi:complete-on-dot t))
 
-(provide 'python-mode-init)
+(provide 'python-mode-accessories-init)

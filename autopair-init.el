@@ -2,7 +2,7 @@
   "My setup for autopair.el."
 
   (require 'autopair)
-  (autopair-mode t)
+  (autopair-mode)
 
   ;; In my experience, languages that don't pair backtick are pretty rare.
   (push '(?`)

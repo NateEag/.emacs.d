@@ -239,3 +239,7 @@
  code, by saying basically "fold at this line" and "unfold at this line".
  I have started playing with hide/show mode, and it's not perfect, but it does
  more or less what I want for now.
+
+-It might be nice to store all byte-compiled files in a single byte-cache
+ folder. It's probably not worth much hassle, though, since I have hooks
+ generating them and they're gitignored.

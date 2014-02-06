@@ -56,6 +56,7 @@
                  load-path))))
 
 (add-subdirs-to-front-of-load-path "~/.emacs.d/site-lisp")
+(add-to-list 'load-path "~/.emacs.d/site-lisp")
 (add-to-list 'load-path "~/.emacs.d")
 
 ;; GRIPE These two dirs should be merged into site-lisp.

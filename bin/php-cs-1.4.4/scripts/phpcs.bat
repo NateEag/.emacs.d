@@ -13,4 +13,4 @@ REM @license   https://github.com/squizlabs/PHP_CodeSniffer/blob/master/licence.
 REM @version   CVS: $Id: phpcs.bat,v 1.3 2007-11-04 22:02:16 squiz Exp $
 REM @link      http://pear.php.net/package/PHP_CodeSniffer
 
-"php" -d auto_append_file="" -d auto_prepend_file="" -d include_path="'%HOMEPATH%\.emacs.d\php-cs-1.4.4'" -f "%HOMEPATH%\.emacs.d\php-cs-1.4.4\scripts\phpcs" -- %*
+"php" -d auto_append_file="" -d auto_prepend_file="" -d include_path="'%HOMEPATH%\.emacs.d\bin\php-cs-1.4.4'" -f "%HOMEPATH%\.emacs.d\bin\php-cs-1.4.4\scripts\phpcs" -- %*

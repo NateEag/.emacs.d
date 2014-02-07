@@ -185,7 +185,7 @@
 (setq exec-path
       (append
        exec-path
-       (list "~/.emacs.d/php-cs-1.4.4/scripts")))
+       (list "~/.emacs.d/bin/php-cs-1.4.4/scripts")))
 
 ;; Load Windows-specific tweaks to environment, if we're running Windows.
 (if (eq system-type 'windows-nt)

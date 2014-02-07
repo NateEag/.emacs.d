@@ -59,14 +59,6 @@
 (add-to-list 'load-path "~/.emacs.d/site-lisp")
 (add-to-list 'load-path "~/.emacs.d")
 
-;; GRIPE These two dirs should be merged into site-lisp.
-(add-to-list 'load-path "~/.emacs.d/libraries")
-(progn (cd "~/.emacs.d/libraries")
-       (normal-top-level-add-subdirs-to-load-path))
-(add-to-list 'load-path "~/.emacs.d/modes")
-
-(add-to-list 'load-path "~/.emacs.d/site-lisp/tern-mode/emacs")
-
 ;; Everyone likes syntax coloration.
 (global-font-lock-mode 1)
 

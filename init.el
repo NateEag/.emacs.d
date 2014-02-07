@@ -240,9 +240,6 @@
   uniquify-after-kill-buffer-p t
   uniquify-ignore-buffers-re "^\\*")
 
-;; Load the revbufs command.
-(require 'revbufs)
-
 ;; GRIPE Consider moving these to their own file.
 ;; Insert the current date.
 (defun insert-date (prefix)

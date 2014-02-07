@@ -10,10 +10,9 @@
   (setq autopair-handle-action-fns
         (list #'autopair-default-handle-action
               #'autopair-python-triple-quote-action))
-  (emacs-epc-init)
 
-  ;; Initialize Jedi. Note that for this to work, you'll have to install Jedi in a
-  ;; virtualenv, using the Makefile.
+  ;; Initialize Jedi. Note that for this to work, you'll have to install Jedi
+  ;; in a virtualenv, using the Makefile.
   (setq jedi:setup-keys t)
   (jedi:setup)
   (setq jedi:complete-on-dot t))

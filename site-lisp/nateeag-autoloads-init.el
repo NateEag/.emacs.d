@@ -16,8 +16,6 @@ are for modes that didn't come with autoloading."
   (autoload 'yasnippet-init "yasnippet-init.el")
   (autoload 'php-mode-init "php-mode-init.el")
   (autoload 'flymake-php-setup "flymake-php-setup.el")
-  (autoload 'emacs-epc-init "emacs-epc-init.el") ;; Need epc for jedi.
-  (autoload 'jedi:setup "jedi" nil t)
 
   (autoload 'LilyPond-mode "lilypond-mode" "LilyPond Editing Mode" t)
   (autoload 'rst-mode "rst-mode.el")

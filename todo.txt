@@ -2,6 +2,11 @@
  instance. Otherwise, as I've just discovered, I wind up popping a bunch of
  windows via emacsclient. Oops.
 
+-I should add a post-commit/post-merge hook to remove .elcs for files that have
+ been deleted or moved. Otherwise, I run into the issue where the .elc in the
+ old path loads before the actual file in the new location, because it's found
+ first by the search through load-path...
+
 -Find a way to auto-include skewer on page refresh without having to include it
  in a codebase. I'm thinking a Chrome plugin for "refresh and load
  bookmarklet", or something along those lines.

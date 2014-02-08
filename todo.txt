@@ -7,6 +7,15 @@
  old path loads before the actual file in the new location, because it's found
  first by the search through load-path...
 
+-auto-complete and smart-dash-mode don't get along well. If I insert an
+ underscore by typing a '-' while smart-dash-mode is active, it breaks
+ smart-dash-mode. I think auto-complete must be assuming that any
+ non-literal-insertion function call should end completion?
+
+-Pull in pick-backup and write a little glue to integrate it with
+ backup-walker. Maybe it could replace backup-walker? Try it and see.
+ http://nschum.de/src/emacs/pick-backup/
+
 -Find a way to auto-include skewer on page refresh without having to include it
  in a codebase. I'm thinking a Chrome plugin for "refresh and load
  bookmarklet", or something along those lines.
@@ -18,11 +27,6 @@
  world at large. I think a lot of people might appreciate it. Maybe just bundle
  it in php-auto-yasnippets?
 
--auto-complete and smart-dash-mode don't get along well. If I insert an
- underscore by typing a '-' while smart-dash-mode is active, it breaks
- smart-dash-mode. I think auto-complete must be assuming that any
- non-literal-insertion function call should end completion?
-
 -As a simple exercise to start learning macros, try implementing PHP's
  "defaulting" ternary operator behavior. The example I emailed myself was
  (setq (default (= 3 foo) (5)), where 'default' is the macro, presumably.
@@ -31,6 +35,20 @@
  work - would it be feasible to automatically *change* major mode for the whole
  file, based on whether the cursor's between a certain regex pair? Might give a
  lot of the benefits of mmm-mode without so much of the suffering.
+
+-I'd like emacs to autodetect the indentation format of a file, and override my
+ preference if it doesn't match. There is a mode built to do exactly that, it
+ seems:
+ http://git.savannah.gnu.org/gitweb/?p=dtrt-indent.git;a=blob_plain;f=dtrt-indent.el;hb=HEAD
+ Consider integrating it some year when I have the time. I tried this once and
+ it didn't work for me - guess-style might be better?
+ http://nschum.de/src/emacs/guess-style/
+
+-kill-ring-search could come in handy occasionally.
+ http://nschum.de/src/emacs/kill-ring-search/
+
+-If I ever start using multiple windows more seriously, window-numbering-mode
+ might be handy. http://nschum.de/src/emacs/window-numbering-mode/
 
 -Get PHP tags working reliably. Since there is no good PHP tags solution for
  emacs, the best bet is probably using the PHP 5.3 vim tagging solution I found
@@ -180,12 +198,6 @@
  of characters I have available in the modeline; a variable that sets how many
  characters it will use would do the job, though. To do this:
  http://www.masteringemacs.org/articles/2011/11/19/which-function-mode/
-
--I'd like emacs to autodetect the indentation format of a file, and override my
- preference if it doesn't match. There is a mode built to do exactly that, it
- seems:
- http://git.savannah.gnu.org/gitweb/?p=dtrt-indent.git;a=blob_plain;f=dtrt-indent.el;hb=HEAD
- Consider integrating it some year when I have the time.
 
 -Figure out/steal/write a good cross-file find-and-replace. I can see why so
  many guys just use a Perl one-liner (which I have), but being able to do this

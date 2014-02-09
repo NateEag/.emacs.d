@@ -1,7 +1,3 @@
--My 'load updated elisp' hook should only run if there's a running emacs server
- instance. Otherwise, as I've just discovered, I wind up popping a bunch of
- windows via emacsclient. Oops.
-
 -I should add a post-commit/post-merge hook to remove .elcs for files that have
  been deleted or moved. Otherwise, I run into the issue where the .elc in the
  old path loads before the actual file in the new location, because it's found

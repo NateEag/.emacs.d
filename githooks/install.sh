@@ -14,3 +14,6 @@ chmod +x $git_dir/hooks/load-changed-elisp.sh
 
 cp $githooks_dir/compile-changed-elisp.sh $git_dir/hooks/compile-changed-elisp.sh
 chmod +x $git_dir/hooks/compile-changed-elisp.sh
+
+cp $githooks_dir/rm-stale-bytecode-files.sh $git_dir/hooks/rm-stale-bytecode-files.sh
+chmod +x $git_dir/hooks/rm-stale-bytecode-files.sh

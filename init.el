@@ -271,6 +271,7 @@
 
 ;; Let's see if I like Helm better than pressing TAB all the time.
 (helm-mode)
+(diminish 'helm-mode)
 
 ;; Set up diff-mode.
 (defun update-diff-colors ()

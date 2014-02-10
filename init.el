@@ -41,10 +41,6 @@
 ;; as I believed at the first.
 ;(setq debug-on-error t)
 
-;; I'd rather have regexes available when I search. Sorry, RMS.
-(global-set-key (kbd "C-s") 'isearch-forward-regexp)
-(global-set-key (kbd "C-r") 'isearch-backward-regexp)
-
 ;; Add appropriate directories to load-path.
 (defun add-subdirs-to-front-of-load-path (path)
   "Add directories beneath path to the beginning of load-path."
@@ -101,10 +97,6 @@
 
 ;; I don't like to type 'yes' when I could just type 'y'.
 (defalias 'yes-or-no-p 'y-or-n-p)
-
-;; I'd much rather have a sane way to goto-line than be able to easily change
-;; my font settings.
-(global-set-key "\M-g" 'goto-line)
 
 ;; Enable useful functions that are disabled by default.
 (put 'narrow-to-region 'disabled nil)
@@ -243,7 +235,6 @@
                    ((equal prefix '(4)) "%d.%m.%Y")
                    ((equal prefix '(16)) "%B %d, %Y"))))
       (insert (format-time-string format))))
-(global-set-key (kbd "C-c d") 'insert-date)
 
 ;; Insert the current time.
 (defun insert-time (prefix)
@@ -254,7 +245,6 @@
                    ((not prefix) "%l:%M %p")
                    ((equal prefix '(4)) "%Y-%m-%d %H:%m:%s"))))
       (insert (format-time-string format))))
-(global-set-key (kbd "C-c t") 'insert-time)
 
 ;;; Stefan Monnier <foo at acm.org>. It is the opposite of fill-paragraph
 (defun unfill-paragraph ()
@@ -278,6 +268,9 @@
 ;; smart-dash-mode saves a lot of stupid SHIFT-ing in languages that favor
 ;; underscore as a word separator.
 (require 'smart-dash)
+
+;; Let's see if I like Helm better than pressing TAB all the time.
+(helm-mode)
 
 ;; Set up diff-mode.
 (defun update-diff-colors ()
@@ -372,9 +365,6 @@
 ;; Turn off default vc-mode, because I never use it.
 (setq vc-handled-backends)
 
-;; Custom keybinding for magit.
-(global-set-key (kbd "C-c g") 'magit-status)
-
 ;; Commit message mode.
 (defun git-commit-mode-hook ()
   "My settings for writing commit messages."
@@ -449,3 +439,28 @@
 
 (setq custom-file "~/.emacs.d/custom.el")
 (load custom-file)
+
+;;; My global keybindings, now that everything's loaded and defined.
+
+;; Keybindings outside the "reserved for user" namespace (C-c <key>). These are
+;; prone to stomp on keybindings from core or third-party packages (usually on
+;; purpose).
+
+;; I'd much rather have a sane way to goto-line than be able to easily change
+;; my font settings.
+(global-set-key "\M-g" 'goto-line)
+
+;; I'd rather have regexes available when I search. Sorry, RMS.
+;; Also, my Windows box at work has C-M-s bound OS-wide to pop a pointless
+;; dialog box telling me something about HP.
+(global-set-key (kbd "C-s") 'isearch-forward-regexp)
+(global-set-key (kbd "C-r") 'isearch-backward-regexp)
+
+;; Global keybindings inside the "reserved for user" namespace.
+
+;; g is for git, which is oh so much fun.
+(global-set-key (kbd "C-c g") 'magit-status)
+
+;; Dates and times are handy to be able to insert.
+(global-set-key (kbd "C-c d") 'insert-date)
+(global-set-key (kbd "C-c t") 'insert-time)

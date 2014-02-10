@@ -429,6 +429,7 @@
 (add-to-list 'auto-mode-alist '("\\.twig\\'" . web-mode))
 (add-hook 'web-mode-hook 'web-mode-init)
 (add-hook 'web-mode-hook 'emmet-mode)
+(add-hook 'web-mode-hook 'ac-emmet-html-setup)
 
 ;; JavaScript Mode.
 (add-hook 'js-mode-hook 'js-mode-init)

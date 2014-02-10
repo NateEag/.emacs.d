@@ -1,8 +1,3 @@
--I should add a post-commit/post-merge hook to remove .elcs for files that have
- been deleted or moved. Otherwise, I run into the issue where the .elc in the
- old path loads before the actual file in the new location, because it's found
- first by the search through load-path...
-
 -auto-complete and smart-dash-mode don't get along well. If I insert an
  underscore by typing a '-' while smart-dash-mode is active, it breaks
  smart-dash-mode. I think auto-complete must be assuming that any
@@ -18,10 +13,6 @@
 
 -Fix yasnippet not expanding fields on the first snippet insertion in a PHP
  buffer. Only seems to happen on Windows box...
-
--Talk to ejmr about how best to provide my php-auto-yasnippets ac-source to the
- world at large. I think a lot of people might appreciate it. Maybe just bundle
- it in php-auto-yasnippets?
 
 -As a simple exercise to start learning macros, try implementing PHP's
  "defaulting" ternary operator behavior. The example I emailed myself was

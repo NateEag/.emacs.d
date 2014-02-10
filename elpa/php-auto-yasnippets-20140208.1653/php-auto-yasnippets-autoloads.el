@@ -4,7 +4,7 @@
 
 
 ;;;### (autoloads (yas/create-php-snippet yas/initialize) "php-auto-yasnippets"
-;;;;;;  "php-auto-yasnippets.el" (21146 54819 0 0))
+;;;;;;  "php-auto-yasnippets.el" (21240 11003 0 0))
 ;;; Generated autoloads from php-auto-yasnippets.el
 
 (autoload 'yas/initialize "php-auto-yasnippets" "\
@@ -25,8 +25,8 @@ of a method for that class.
 
 ;;;***
 
-;;;### (autoloads nil nil ("php-auto-yasnippets-pkg.el") (21146 54819
-;;;;;;  299472 0))
+;;;### (autoloads nil nil ("php-auto-yasnippets-pkg.el") (21240 11003
+;;;;;;  969902 0))
 
 ;;;***
 

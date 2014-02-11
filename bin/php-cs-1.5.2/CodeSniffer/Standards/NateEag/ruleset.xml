@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<ruleset name="NateEag">
+    <description>My personal coding standard, which is basically PSR-2 with a few additional sniffs loaded.</description>
+
+
+    <!-- Include the whole PSR2 standard. -->
+    <rule ref="PSR2" />
+
+    <!-- Catch undeclared variables. -->
+    <rule ref="Generic.CodeAnalysis.VariableAnalysis">
+        <properties>
+            <property name="eolChar" value="\n"/>
+        </properties>
+    </rule>
+</ruleset>

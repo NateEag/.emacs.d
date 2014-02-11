@@ -60,7 +60,7 @@
   ; Trying flycheck instead of flymake.
   ;(flymake-php-setup)
   (flycheck-mode t)
-  (setq flycheck-phpcs-standard "PSR2")
+  (setq flycheck-phpcs-standard "NateEag")
   (setq flycheck-php-phpcs-executable "phpcs")
   )
 

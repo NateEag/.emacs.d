@@ -45,6 +45,7 @@
   ;; auto-pairs ftw
   ;; I'm giving smartparens a try.
   ;;(autopair-init)
+  (smartparens-init)
   (smartparens-mode)
 
   ;; Autocompletion for everyone!

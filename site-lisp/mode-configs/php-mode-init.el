@@ -54,7 +54,6 @@
   (payas/ac-setup)
   (add-to-list 'ac-sources 'ac-source-yasnippet)
 
-
   (require 'php-auto-yasnippets)
   (define-key php-mode-map (kbd "C-c C-y") 'yas/create-php-snippet)
 

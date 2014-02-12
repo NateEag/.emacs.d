@@ -6,7 +6,7 @@
  '(ac-trigger-commands-on-completing (quote (delete-backward-char backward-delete-char backward-delete-char-untabify autopair-backspace paredit-backward-delete paredit-backward-delete-word smart-dash-insert)))
  '(ac-trigger-key "TAB")
  '(php-mode-custom-coding-style "Symfony2")
- '(safe-local-variable-values (quote ((eval highlight-regexp "^ *")))))
+ '(safe-local-variable-values (quote ((eval guess-style-guess-all) (eval highlight-regexp "^ *")))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

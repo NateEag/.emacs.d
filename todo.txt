@@ -20,14 +20,6 @@
  file, based on whether the cursor's between a certain regex pair? Might give a
  lot of the benefits of mmm-mode without so much of the suffering.
 
--I'd like emacs to autodetect the indentation format of a file, and override my
- preference if it doesn't match. There is a mode built to do exactly that, it
- seems:
- http://git.savannah.gnu.org/gitweb/?p=dtrt-indent.git;a=blob_plain;f=dtrt-indent.el;hb=HEAD
- Consider integrating it some year when I have the time. I tried this once and
- it didn't work for me - guess-style might be better?
- http://nschum.de/src/emacs/guess-style/
-
 -kill-ring-search could come in handy occasionally.
  http://nschum.de/src/emacs/kill-ring-search/
 

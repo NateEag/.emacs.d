@@ -23,6 +23,11 @@ are for modes that didn't come with autoloading."
   (autoload 'markdown-mode "markdown-mode.el")
   (autoload 'tern-mode "tern.el" nil t)
 
+  ;; Autoloads for guess-style.
+  (autoload 'guess-style-set-variable "guess-style" nil t)
+  (autoload 'guess-style-guess-variable "guess-style")
+  (autoload 'guess-style-guess-all "guess-style" nil t)
+
   ;; I use python-mode.el, with the TQS-coloration patch applied.
   ;; I should probably try installing the latest version and seeing how it
   ;; holds up.

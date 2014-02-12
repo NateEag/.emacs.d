@@ -1,7 +1,4 @@
--auto-complete and smart-dash-mode don't get along well. If I insert an
- underscore by typing a '-' while smart-dash-mode is active, it breaks
- smart-dash-mode. I think auto-complete must be assuming that any
- non-literal-insertion function call should end completion?
+-Make a PR to auto-complete for supporting smart-dash-mode.
 
 -Pull in pick-backup and write a little glue to integrate it with
  backup-walker. Maybe it could replace backup-walker? Try it and see.
@@ -125,8 +122,6 @@
 
 -Debug mmm-mode, php-mode, and sql-mode enough to uncomment my sql-mode
  embedding in php-mode.
-
--Add gitconfig mode. http://www.emacswiki.org/emacs/gitconfig-mode.el
 
 -Find a better CSS mode. Ideally something that supports SCSS, probably. Maybe https://github.com/antonj/scss-mode.
 

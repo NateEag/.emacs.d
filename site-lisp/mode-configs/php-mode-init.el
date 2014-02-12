@@ -50,6 +50,7 @@
 
   ;; Autocompletion for everyone!
   (auto-complete-init)
+  (setq ac-sources nil)
   (payas/ac-setup)
   (add-to-list 'ac-sources 'ac-source-yasnippet)
 

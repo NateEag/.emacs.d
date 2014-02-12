@@ -7,12 +7,11 @@
 
   (if (not yasnippet-config-run)
       (progn
-        ;; old-school snippets, because it has the php-mode snippets.
-        (add-to-list 'yas-snippet-dirs "~/.emacs.d/snippets")
-        (yas-load-directory "~/.emacs.d/snippets")
-
-        (add-to-list 'yas-snippet-dirs "~/.emacs.d/my-snippets")
-        (yas-load-directory "~/.emacs.d/my-snippets")
+        ;; Load all snippets.
+        ;; GRIPE It would be nice to lazy-load these. I think there's a package
+        ;; for that somewhere...
+        (dolist (elt yas-snippet-dirs)
+          (yas-load-directory elt))
 
         ;; GRIPE For reasons I don't understand, I need this invocation in
         ;; order to avoid a never-ending recursion of defining keybindings. I
@@ -26,8 +25,6 @@
 (defun yasnippet-init ()
   "Load yasnippet and get things set up the way I like."
 
-  (require 'yasnippet)
-
-  (yasnippet-config)
   (yas-minor-mode)
-  (diminish 'yas-minor-mode))
+  (diminish 'yas-minor-mode)
+  (yasnippet-config))

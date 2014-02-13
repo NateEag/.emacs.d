@@ -149,6 +149,16 @@
   (setq buffer-backed-up nil))
 (add-hook 'before-save-hook 'force-buffer-backup)
 
+;; Yoinked from Emacs Prelude:
+;; https://github.com/bbatsov/prelude/blob/master/modules/prelude-emacs-lisp.el
+(defun recompile-elc-on-save ()
+  "Recompile your elc when saving an elisp file."
+
+  (when (file-exists-p (byte-compile-dest-file buffer-file-name))
+    (emacs-lisp-byte-compile)))
+
+(add-hook 'after-save-hook 'recompile-elc-on-save)
+
 ;; Activate undo-tree-mode globally and diminish it.
 ;;
 ;; It seems to me that undo-tree-mode and backup-walker might be good candidates

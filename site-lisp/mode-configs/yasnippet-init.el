@@ -7,11 +7,9 @@
 
   (if (not yasnippet-config-run)
       (progn
-        ;; Load all snippets.
-        ;; GRIPE It would be nice to lazy-load these. I think there's a package
-        ;; for that somewhere...
+        ;; Set up all snippet dirs to lazy-load.
         (dolist (elt yas-snippet-dirs)
-          (yas-load-directory elt))
+          (yas-load-directory elt t))
 
         ;; GRIPE For reasons I don't understand, I need this invocation in
         ;; order to avoid a never-ending recursion of defining keybindings. I

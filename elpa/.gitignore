@@ -1,0 +1,7 @@
+# There's no point in putting the readmes we download while browsing packages
+# under version control.
+*-readme.txt
+
+# Jedi's python env, too, should not be dealt with via git. Actual Python
+# binaries in my .emacs.d is something I haven't quite reconciled myself to yet.
+jedi-*/env

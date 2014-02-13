@@ -177,7 +177,8 @@
 (setq exec-path
       (append
        exec-path
-       (list "~/.emacs.d/bin/php-cs-1.5.2/scripts")))
+       (list "~/.emacs.d/bin/php-cs-1.5.2/scripts"
+             "~/.emacs.d/bin/flake8-env/bin")))
 
 ;; Load Windows-specific tweaks to environment, if we're running Windows.
 (if (eq system-type 'windows-nt)

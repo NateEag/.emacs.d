@@ -15,6 +15,8 @@
   ;; in a virtualenv, using the Makefile.
   (setq jedi:setup-keys t)
   (jedi:setup)
-  (setq jedi:complete-on-dot t))
+  (setq jedi:complete-on-dot t)
+
+  (flycheck-mode))
 
 (provide 'python-mode-accessories-init)

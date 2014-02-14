@@ -39,14 +39,14 @@
   ;; Everyone loves code folding.
   (hs-minor-mode-init)
 
-  ;; Who doesn't like yasnippet?
-  (yasnippet-init)
-
   ;; auto-pairs ftw
   ;; I'm giving smartparens a try.
   ;;(autopair-init)
   (smartparens-init)
   (smartparens-mode)
+
+  ;; Who doesn't like yasnippet?
+  (yasnippet-init)
 
   ;; Autocompletion for everyone!
   (auto-complete-init)
@@ -54,6 +54,7 @@
   (payas/ac-setup)
   (add-to-list 'ac-sources 'ac-source-yasnippet)
 
+  ;; w00t for auto-yasnippets!
   (require 'php-auto-yasnippets)
   (define-key php-mode-map (kbd "C-c C-y") 'yas/create-php-snippet)
 
@@ -62,8 +63,7 @@
   ;(flymake-php-setup)
   (flycheck-mode t)
   (setq flycheck-phpcs-standard "NateEag")
-  (setq flycheck-php-phpcs-executable "phpcs")
-  )
+  (setq flycheck-php-phpcs-executable "phpcs"))
 
 ;; Make this requireable.
 (provide 'php-mode-init)

@@ -8,9 +8,7 @@
   (if (not yasnippet-config-run)
       (progn
         ;; Set up all snippet dirs to lazy-load.
-        (dolist (elt yas-snippet-dirs)
-          (yas-load-directory elt t))
-
+        (yas-reload-all)
         ;; GRIPE For reasons I don't understand, I need this invocation in
         ;; order to avoid a never-ending recursion of defining keybindings. I
         ;; think it's some interaction between yasnippet and auto-complete, but

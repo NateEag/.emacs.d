@@ -11,6 +11,7 @@
   (interactive)
   (require 'auto-complete)
   (require 'auto-complete-config)
+  (ac-config-default)
   (if (not ac-initialized)
       (progn
         (global-auto-complete-mode t)

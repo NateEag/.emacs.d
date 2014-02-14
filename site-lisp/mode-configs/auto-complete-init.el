@@ -15,6 +15,10 @@
   (if (not ac-initialized)
       (progn
         (global-auto-complete-mode t)
+        ;; DEBUG This should be set by the package, but that feature doesn't
+        ;; seem to be working. I don't know why not, but for now I'm just
+        ;; hacking it.
+        (add-to-list 'ac-dictionary-directories "~/.emacs.d/elpa/auto-complete-20140208.653/dict")
         (setq ac-auto-start nil)
         (custom-set-variables
          '(ac-trigger-key "TAB"))

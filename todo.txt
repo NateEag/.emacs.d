@@ -8,9 +8,6 @@
  in a codebase. I'm thinking a Chrome plugin for "refresh and load
  bookmarklet", or something along those lines.
 
--Fix yasnippet not expanding fields on the first snippet insertion in a PHP
- buffer. Only seems to happen on Windows box...
-
 -As a simple exercise to start learning macros, try implementing PHP's
  "defaulting" ternary operator behavior. The example I emailed myself was
  (setq (default (= 3 foo) (5)), where 'default' is the macro, presumably.

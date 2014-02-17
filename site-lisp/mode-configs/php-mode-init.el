@@ -4,21 +4,20 @@
 ;; in a long time, so there's no point wasting time on loading it.
 ;; (require 'mmm-auto)
 ;; (setq mmm-global-mode 'maybe)
-
-(setq php-sql-mmm-submode-enabled nil)
-(defun php-sql-mmm-submode ()
-  "Provides a very minimal embedding of SQL in PHP, via mmm-mode."
-  (interactive)
-  (when (not php-sql-mmm-submode-enabled)
-    (set-face-background 'mmm-default-submode-face nil)
-    (mmm-add-classes
-     '((embedded-sql
-        :submode sql-mode
-        :front "$\\(sql\\|query\\) = \""
-        :back "\";"
-        :face mmm-code-submode-face)))
-    (mmm-add-mode-ext-class 'php-mode "\\.php$" 'embedded-sql)
-    (setq php-sql-mmm-submode-enabled t)))
+;; (setq php-sql-mmm-submode-enabled nil)
+;; (defun php-sql-mmm-submode ()
+;;   "Provides a very minimal embedding of SQL in PHP, via mmm-mode."
+;;   (interactive)
+;;   (when (not php-sql-mmm-submode-enabled)
+;;     (set-face-background 'mmm-default-submode-face nil)
+;;     (mmm-add-classes
+;;      '((embedded-sql
+;;         :submode sql-mode
+;;         :front "$\\(sql\\|query\\) = \""
+;;         :back "\";"
+;;         :face mmm-code-submode-face)))
+;;     (mmm-add-mode-ext-class 'php-mode "\\.php$" 'embedded-sql)
+;;     (setq php-sql-mmm-submode-enabled t)))
 
 (defun php-mode-init ()
   "Load my particular tweaks for php-mode."
@@ -53,14 +52,13 @@
   (setq ac-sources nil)
   (payas/ac-setup)
   (add-to-list 'ac-sources 'ac-source-yasnippet)
+  (add-to-list 'ac-sources 'ac-source-words-in-same-mode-buffers)
 
   ;; w00t for auto-yasnippets!
   (require 'php-auto-yasnippets)
   (define-key php-mode-map (kbd "C-c C-y") 'yas/create-php-snippet)
 
-  ;; Yay for syntax checking/linting!
-  ; Trying flycheck instead of flymake.
-  ;(flymake-php-setup)
+  ;; Yay for squiggly red lines!
   (flycheck-mode t)
   (setq flycheck-phpcs-standard "NateEag")
   (setq flycheck-php-phpcs-executable "phpcs"))

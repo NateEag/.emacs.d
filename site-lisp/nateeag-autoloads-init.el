@@ -15,7 +15,6 @@ are for modes that didn't come with autoloading."
   (autoload 'hs-minor-mode-init "hs-minor-mode-init.el")
   (autoload 'yasnippet-init "yasnippet-init.el")
   (autoload 'php-mode-init "php-mode-init.el")
-  (autoload 'flymake-php-setup "flymake-php-setup.el")
   (autoload 'smartparens-init "smartparens-init.el")
 
   (autoload 'LilyPond-mode "lilypond-mode" "LilyPond Editing Mode" t)

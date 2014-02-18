@@ -50,7 +50,7 @@
 		(:keywords quote
 			   ("coffeescript" "major" "mode")))])
  (company .
-	  [(0 6 14)
+	  [(0 7)
 	   nil "Modular in-buffer completion framework" tar
 	   ((:keywords quote
 		       ("abbrev" "convenience" "matching"))
@@ -140,7 +140,7 @@
 	   ((:url . "http://elpa.gnu.org/packages/flylisp.html")
 	    (:keywords quote nil))])
  (ggtags .
-	 [(0 7 8)
+	 [(0 7 9)
 	  ((emacs
 	    (24)))
 	  "emacs frontend to GNU Global source code tagging system" single
@@ -249,7 +249,7 @@
 	    ((:url . "http://elpa.gnu.org/packages/omn-mode.html")
 	     (:keywords quote nil))])
  (org .
-      [(20140210)
+      [(20140217)
        nil "Outline-based notes management and organizer" tar nil])
  (quarter-plane .
 		[(0 1)

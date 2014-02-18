@@ -28,11 +28,17 @@
  in combination with vtags (which, dating from 2006, may not work with Emacs
  24)
 
--Research PHP parsing tools/infrastructure that might be adapted to an Emacs
- plugin for code comprehension/refactoring/etc.
+-Look into emacs-eclim for intelligent PHP support. Might take some elisp
+ hacking, but I think that's all it would take, apart from installing Eclipse
+ bits. https://github.com/senny/emacs-eclim
 
--Research adapting the PDT infrastructure could be adapted for use in
- Emacs. http://projects.eclipse.org/projects/tools.pdt
+-Research PHP parsing tools/infrastructure that might be adapted to an Emacs
+ plugin for code comprehension/refactoring/etc. If eclim works out, I might not
+ need anything else.
+
+-If I ever have to go back to programming Java, try using emacs-eclim for
+ auto-complete and jump-to-def. It should let me stay in Emacs while getting
+ Eclipse's most useful features.
 
 -Figure out why auto-pair-mode only works some of the time in php-mode. [], '',
  and () all have been known to exhibit breakage.

@@ -15,6 +15,8 @@
   (yas-minor-mode)
   (yas-activate-extra-mode 'php-mode)
 
+  (emmet-mode)
+
   (autopair-init)
   (push ?{ (getf autopair-dont-pair :code))
 

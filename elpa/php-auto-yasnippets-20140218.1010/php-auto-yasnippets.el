@@ -4,7 +4,7 @@
 ;;
 ;; Author: Eric James Michael Ritz
 ;; URL: https://github.com/ejmr/php-auto-yasnippets
-;; Version: 2.2.0
+;; Version: 2.2.1
 ;; Package-Requires: ((php-mode "1.11") (yasnippet "0.8.0"))
 ;;
 ;;
@@ -85,7 +85,7 @@
 ;;; This section defines constants the package uses as well as any
 ;;; global variables which the user may wish to change.
 
-(defconst php-auto-yasnippet-version "2.2.0"
+(defconst php-auto-yasnippet-version "2.2.1"
   "The version number for the php-auto-yasnippet package.")
 
 (defvar php-auto-yasnippet-php-program
@@ -135,7 +135,7 @@ It's probably best to set this per-project via .dir-locals.")
        '((depends yasnippet)
          ;; TODO The php-mode dictionary contains a few things (keywords and
          ;; the like) that should not be included
-         (candidates . ac-buffer-dictionary)
+         (candidates . (ac-mode-dictionary 'php-mode))
          (action . payas/ac-insert-func-and-create-snippet)
 
          ;; Since these trigger yasnippet, use the yasnippet face.

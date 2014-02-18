@@ -4,7 +4,7 @@
 
 
 ;;;### (autoloads (emmet-preview emmet-expand-yas emmet-mode emmet-expand-line)
-;;;;;;  "emmet-mode" "emmet-mode.el" (21228 31475 0 0))
+;;;;;;  "emmet-mode" "emmet-mode.el" (21251 38997 0 0))
 ;;; Generated autoloads from emmet-mode.el
 
 (autoload 'emmet-expand-line "emmet-mode" "\
@@ -55,7 +55,7 @@ accept it or skip it.
 
 ;;;***
 
-;;;### (autoloads nil nil ("emmet-mode-pkg.el") (21228 31475 808793
+;;;### (autoloads nil nil ("emmet-mode-pkg.el") (21251 38997 828000
 ;;;;;;  0))
 
 ;;;***

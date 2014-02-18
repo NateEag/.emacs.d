@@ -3,11 +3,11 @@
 ;; Copyright (C) 2013-     Shin Aoyama
 ;; Copyright (C) 2009-2012 Chris Done
 
-;; Version: 20130915.1708
-;; X-Original-Version: 1.0.5
+;; Version: 20140218.836
+;; X-Original-Version: 1.0.6
 ;; Author: Shin Aoyama <smihica@gmail.com>
-;; URL: https://github.com/smihica/emmet
-;; Last-Updated: 2013-09-16 Mon
+;; URL: https://github.com/smihica/emmet-mode
+;; Last-Updated: 2014-02-19 Wed
 ;; Keywords: convenience
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -1406,932 +1406,932 @@ tbl) tbl)
 tbl) tbl)
 (puthash "css" (let ((tbl (make-hash-table :test 'equal)))
 (puthash "vendorPrefixesProperties" (let ((tbl (make-hash-table :test 'equal)))
-(puthash "text-fill-color" (vector 
+(puthash "text-fill-color" (vector
 "webkit"
 )
  tbl)
-(puthash "ime-mode" (vector 
+(puthash "ime-mode" (vector
 "ms"
 )
  tbl)
-(puthash "grid-layer" (vector 
+(puthash "grid-layer" (vector
 "ms"
 )
  tbl)
-(puthash "user-drag" (vector 
+(puthash "user-drag" (vector
 "webkit"
 )
  tbl)
-(puthash "mask-image" (vector 
+(puthash "mask-image" (vector
 "webkit"
 )
  tbl)
-(puthash "font-feature-settings" (vector 
+(puthash "font-feature-settings" (vector
 "moz"
 "ms"
 )
  tbl)
-(puthash "outline-radius-topleft" (vector 
+(puthash "outline-radius-topleft" (vector
 "moz"
 )
  tbl)
-(puthash "mask-box-image-slice" (vector 
+(puthash "mask-box-image-slice" (vector
 "webkit"
 )
  tbl)
-(puthash "background-composite" (vector 
+(puthash "background-composite" (vector
 "webkit"
 )
  tbl)
-(puthash "text-underline-position" (vector 
+(puthash "text-underline-position" (vector
 "ms"
 )
  tbl)
-(puthash "hyphenate-limit-chars" (vector 
+(puthash "hyphenate-limit-chars" (vector
 "ms"
 )
  tbl)
-(puthash "marquee-speed" (vector 
+(puthash "marquee-speed" (vector
 "o"
 )
  tbl)
-(puthash "input-required" (vector 
+(puthash "input-required" (vector
 "o"
 )
  tbl)
-(puthash "color-correction" (vector 
+(puthash "color-correction" (vector
 "webkit"
 )
  tbl)
-(puthash "background-size" (vector 
+(puthash "background-size" (vector
 "webkit"
 )
  tbl)
-(puthash "background-origin" (vector 
+(puthash "background-origin" (vector
 "webkit"
 )
  tbl)
-(puthash "wrap-through" (vector 
+(puthash "wrap-through" (vector
 "ms"
 )
  tbl)
-(puthash "text-emphasis-position" (vector 
+(puthash "text-emphasis-position" (vector
 "webkit"
 )
  tbl)
-(puthash "user-select" (vector 
+(puthash "user-select" (vector
 "webkit"
 "moz"
 "ms"
 )
  tbl)
-(puthash "dashboard-region" (vector 
+(puthash "dashboard-region" (vector
 "webkit"
 "o"
 )
  tbl)
-(puthash "accesskey" (vector 
+(puthash "accesskey" (vector
 "o"
 )
  tbl)
-(puthash "scrollbar-track-color" (vector 
+(puthash "scrollbar-track-color" (vector
 "ms"
 )
  tbl)
-(puthash "grid-columns" (vector 
+(puthash "grid-columns" (vector
 "ms"
 )
  tbl)
-(puthash "text-stroke-width" (vector 
+(puthash "text-stroke-width" (vector
 "webkit"
 )
  tbl)
-(puthash "link-source" (vector 
+(puthash "link-source" (vector
 "o"
 )
  tbl)
-(puthash "scrollbar-arrow-color" (vector 
+(puthash "scrollbar-arrow-color" (vector
 "ms"
 )
  tbl)
-(puthash "border-radius" (vector 
+(puthash "border-radius" (vector
 "webkit"
 "moz"
 )
  tbl)
-(puthash "text-stroke-color" (vector 
+(puthash "text-stroke-color" (vector
 "webkit"
 )
  tbl)
-(puthash "box-shadow" (vector 
-"webkit"
-"moz"
-)
- tbl)
-(puthash "flow-into" (vector 
-"ms"
-)
- tbl)
-(puthash "scrollbar-highlight-color" (vector 
-"ms"
-)
- tbl)
-(puthash "border-left-colors" (vector 
-"moz"
-)
- tbl)
-(puthash "word-wrap" (vector 
-"ms"
-)
- tbl)
-(puthash "text-emphasis-color" (vector 
-"webkit"
-)
- tbl)
-(puthash "hyphens" (vector 
-"webkit"
-"moz"
-"ms"
-)
- tbl)
-(puthash "marquee-direction" (vector 
-"webkit"
-)
- tbl)
-(puthash "column-rule-width" (vector 
+(puthash "box-shadow" (vector
 "webkit"
 "moz"
 )
  tbl)
-(puthash "box-lines" (vector 
-"webkit"
+(puthash "flow-into" (vector
 "ms"
 )
  tbl)
-(puthash "column-break-inside" (vector 
-"webkit"
-)
- tbl)
-(puthash "scroll-snap-points-x" (vector 
+(puthash "scrollbar-highlight-color" (vector
 "ms"
 )
  tbl)
-(puthash "grid-row-align" (vector 
-"ms"
-)
- tbl)
-(puthash "force-broken-image-icon" (vector 
+(puthash "border-left-colors" (vector
 "moz"
 )
  tbl)
-(puthash "animation-fill-mode" (vector 
-"webkit"
-"moz"
-"o"
-)
- tbl)
-(puthash "box-line-progression" (vector 
+(puthash "word-wrap" (vector
 "ms"
 )
  tbl)
-(puthash "mask-size" (vector 
+(puthash "text-emphasis-color" (vector
 "webkit"
 )
  tbl)
-(puthash "scroll-boundary-left" (vector 
-"ms"
-)
- tbl)
-(puthash "text-combine" (vector 
-"webkit"
-)
- tbl)
-(puthash "grid-column-align" (vector 
-"ms"
-)
- tbl)
-(puthash "perspective-origin" (vector 
+(puthash "hyphens" (vector
 "webkit"
 "moz"
 "ms"
 )
  tbl)
-(puthash "overflow-style" (vector 
-"ms"
-)
- tbl)
-(puthash "mask-position" (vector 
+(puthash "marquee-direction" (vector
 "webkit"
 )
  tbl)
-(puthash "content-zoom-chaining" (vector 
-"ms"
-)
- tbl)
-(puthash "column-span" (vector 
-"webkit"
-)
- tbl)
-(puthash "border-fit" (vector 
-"webkit"
-)
- tbl)
-(puthash "outline-radius-topright" (vector 
-"moz"
-)
- tbl)
-(puthash "tab-size" (vector 
-"moz"
-"o"
-)
- tbl)
-(puthash "layout-grid-type" (vector 
-"ms"
-)
- tbl)
-(puthash "mask-clip" (vector 
-"webkit"
-)
- tbl)
-(puthash "column-gap" (vector 
+(puthash "column-rule-width" (vector
 "webkit"
 "moz"
 )
  tbl)
-(puthash "text-security" (vector 
-"webkit"
-)
- tbl)
-(puthash "text-align-last" (vector 
-"ms"
-)
- tbl)
-(puthash "svg-shadow" (vector 
-"webkit"
-)
- tbl)
-(puthash "accelerator" (vector 
-"ms"
-)
- tbl)
-(puthash "locale" (vector 
-"webkit"
-)
- tbl)
-(puthash "line-clamp" (vector 
-"webkit"
-)
- tbl)
-(puthash "column-count" (vector 
-"webkit"
-"moz"
-)
- tbl)
-(puthash "line-box-contain" (vector 
-"webkit"
-)
- tbl)
-(puthash "line-break" (vector 
+(puthash "box-lines" (vector
 "webkit"
 "ms"
 )
  tbl)
-(puthash "transform-style" (vector 
-"webkit"
-"moz"
-"ms"
-)
- tbl)
-(puthash "perspective" (vector 
-"webkit"
-"moz"
-"ms"
-)
- tbl)
-(puthash "orient" (vector 
-"moz"
-)
- tbl)
-(puthash "float-edge" (vector 
-"moz"
-)
- tbl)
-(puthash "image-region" (vector 
-"moz"
-)
- tbl)
-(puthash "mask-box-image-width" (vector 
+(puthash "column-break-inside" (vector
 "webkit"
 )
  tbl)
-(puthash "background-inline-policy" (vector 
+(puthash "scroll-snap-points-x" (vector
+"ms"
+)
+ tbl)
+(puthash "grid-row-align" (vector
+"ms"
+)
+ tbl)
+(puthash "force-broken-image-icon" (vector
 "moz"
 )
  tbl)
-(puthash "user-modify" (vector 
-"webkit"
-"moz"
-)
- tbl)
-(puthash "content-zoom-snap-type" (vector 
-"ms"
-)
- tbl)
-(puthash "outline-radius-bottomright" (vector 
-"moz"
-)
- tbl)
-(puthash "wrap-margin" (vector 
-"ms"
-)
- tbl)
-(puthash "transform-origin-z" (vector 
-"ms"
-)
- tbl)
-(puthash "mask-box-image" (vector 
-"webkit"
-)
- tbl)
-(puthash "scroll-chaining" (vector 
-"ms"
-)
- tbl)
-(puthash "grid-row" (vector 
-"ms"
-)
- tbl)
-(puthash "nbsp-mode" (vector 
-"webkit"
-)
- tbl)
-(puthash "mask-box-image-source" (vector 
-"webkit"
-)
- tbl)
-(puthash "font-language-override" (vector 
-"moz"
-)
- tbl)
-(puthash "animation-delay" (vector 
+(puthash "animation-fill-mode" (vector
 "webkit"
 "moz"
 "o"
 )
  tbl)
-(puthash "hyphenate-character" (vector 
+(puthash "box-line-progression" (vector
+"ms"
+)
+ tbl)
+(puthash "mask-size" (vector
 "webkit"
 )
  tbl)
-(puthash "box-flex-group" (vector 
+(puthash "scroll-boundary-left" (vector
+"ms"
+)
+ tbl)
+(puthash "text-combine" (vector
 "webkit"
 )
  tbl)
-(puthash "border-image" (vector 
+(puthash "grid-column-align" (vector
+"ms"
+)
+ tbl)
+(puthash "perspective-origin" (vector
+"webkit"
+"moz"
+"ms"
+)
+ tbl)
+(puthash "overflow-style" (vector
+"ms"
+)
+ tbl)
+(puthash "mask-position" (vector
+"webkit"
+)
+ tbl)
+(puthash "content-zoom-chaining" (vector
+"ms"
+)
+ tbl)
+(puthash "column-span" (vector
+"webkit"
+)
+ tbl)
+(puthash "border-fit" (vector
+"webkit"
+)
+ tbl)
+(puthash "outline-radius-topright" (vector
+"moz"
+)
+ tbl)
+(puthash "tab-size" (vector
+"moz"
+"o"
+)
+ tbl)
+(puthash "layout-grid-type" (vector
+"ms"
+)
+ tbl)
+(puthash "mask-clip" (vector
+"webkit"
+)
+ tbl)
+(puthash "column-gap" (vector
+"webkit"
+"moz"
+)
+ tbl)
+(puthash "text-security" (vector
+"webkit"
+)
+ tbl)
+(puthash "text-align-last" (vector
+"ms"
+)
+ tbl)
+(puthash "svg-shadow" (vector
+"webkit"
+)
+ tbl)
+(puthash "accelerator" (vector
+"ms"
+)
+ tbl)
+(puthash "locale" (vector
+"webkit"
+)
+ tbl)
+(puthash "line-clamp" (vector
+"webkit"
+)
+ tbl)
+(puthash "column-count" (vector
+"webkit"
+"moz"
+)
+ tbl)
+(puthash "line-box-contain" (vector
+"webkit"
+)
+ tbl)
+(puthash "line-break" (vector
+"webkit"
+"ms"
+)
+ tbl)
+(puthash "transform-style" (vector
+"webkit"
+"moz"
+"ms"
+)
+ tbl)
+(puthash "perspective" (vector
+"webkit"
+"moz"
+"ms"
+)
+ tbl)
+(puthash "orient" (vector
+"moz"
+)
+ tbl)
+(puthash "float-edge" (vector
+"moz"
+)
+ tbl)
+(puthash "image-region" (vector
+"moz"
+)
+ tbl)
+(puthash "mask-box-image-width" (vector
+"webkit"
+)
+ tbl)
+(puthash "background-inline-policy" (vector
+"moz"
+)
+ tbl)
+(puthash "user-modify" (vector
+"webkit"
+"moz"
+)
+ tbl)
+(puthash "content-zoom-snap-type" (vector
+"ms"
+)
+ tbl)
+(puthash "outline-radius-bottomright" (vector
+"moz"
+)
+ tbl)
+(puthash "wrap-margin" (vector
+"ms"
+)
+ tbl)
+(puthash "transform-origin-z" (vector
+"ms"
+)
+ tbl)
+(puthash "mask-box-image" (vector
+"webkit"
+)
+ tbl)
+(puthash "scroll-chaining" (vector
+"ms"
+)
+ tbl)
+(puthash "grid-row" (vector
+"ms"
+)
+ tbl)
+(puthash "nbsp-mode" (vector
+"webkit"
+)
+ tbl)
+(puthash "mask-box-image-source" (vector
+"webkit"
+)
+ tbl)
+(puthash "font-language-override" (vector
+"moz"
+)
+ tbl)
+(puthash "animation-delay" (vector
 "webkit"
 "moz"
 "o"
 )
  tbl)
-(puthash "highlight" (vector 
+(puthash "hyphenate-character" (vector
 "webkit"
 )
  tbl)
-(puthash "marquee-repetition" (vector 
+(puthash "box-flex-group" (vector
 "webkit"
 )
  tbl)
-(puthash "grid-column" (vector 
-"ms"
-)
- tbl)
-(puthash "box-align" (vector 
-"webkit"
-"moz"
-"ms"
-)
- tbl)
-(puthash "user-input" (vector 
-"moz"
-)
- tbl)
-(puthash "animation-duration" (vector 
+(puthash "border-image" (vector
 "webkit"
 "moz"
 "o"
 )
  tbl)
-(puthash "transform-origin-y" (vector 
+(puthash "highlight" (vector
+"webkit"
+)
+ tbl)
+(puthash "marquee-repetition" (vector
+"webkit"
+)
+ tbl)
+(puthash "grid-column" (vector
 "ms"
 )
  tbl)
-(puthash "box-ordinal-group" (vector 
+(puthash "box-align" (vector
 "webkit"
 "moz"
 "ms"
 )
  tbl)
-(puthash "box-orient" (vector 
-"webkit"
-"moz"
-"ms"
-)
- tbl)
-(puthash "stack-sizing" (vector 
+(puthash "user-input" (vector
 "moz"
 )
  tbl)
-(puthash "transition" (vector 
+(puthash "animation-duration" (vector
 "webkit"
 "moz"
-"ms"
 "o"
 )
  tbl)
-(puthash "text-size-adjust" (vector 
-"moz"
+(puthash "transform-origin-y" (vector
 "ms"
 )
  tbl)
-(puthash "filter" (vector 
-"ms"
-)
- tbl)
-(puthash "content-zoom-boundary" (vector 
-"ms"
-)
- tbl)
-(puthash "layout-grid-char" (vector 
-"ms"
-)
- tbl)
-(puthash "perspective-origin-x" (vector 
-"ms"
-)
- tbl)
-(puthash "perspective-origin-y" (vector 
-"ms"
-)
- tbl)
-(puthash "column-rule-color" (vector 
-"webkit"
-"moz"
-)
- tbl)
-(puthash "high-contrast-adjust" (vector 
-"ms"
-)
- tbl)
-(puthash "text-justify" (vector 
-"ms"
-)
- tbl)
-(puthash "text-decoration-color" (vector 
-"moz"
-)
- tbl)
-(puthash "block-progression" (vector 
-"ms"
-)
- tbl)
-(puthash "border-horizontal-spacing" (vector 
-"webkit"
-)
- tbl)
-(puthash "wrap-flow" (vector 
-"ms"
-)
- tbl)
-(puthash "margin-before-collapse" (vector 
-"webkit"
-)
- tbl)
-(puthash "table-baseline" (vector 
-"o"
-)
- tbl)
-(puthash "background-clip" (vector 
-"webkit"
-"moz"
-)
- tbl)
-(puthash "interpolation-mode" (vector 
-"ms"
-)
- tbl)
-(puthash "scroll-snap-type" (vector 
-"ms"
-)
- tbl)
-(puthash "text-emphasis-style" (vector 
-"webkit"
-)
- tbl)
-(puthash "flow-from" (vector 
-"ms"
-)
- tbl)
-(puthash "backface-visibility" (vector 
+(puthash "box-ordinal-group" (vector
 "webkit"
 "moz"
 "ms"
 )
  tbl)
-(puthash "transform" (vector 
+(puthash "box-orient" (vector
+"webkit"
+"moz"
+"ms"
+)
+ tbl)
+(puthash "stack-sizing" (vector
+"moz"
+)
+ tbl)
+(puthash "transition" (vector
 "webkit"
 "moz"
 "ms"
 "o"
 )
  tbl)
-(puthash "column-break-after" (vector 
-"webkit"
-)
- tbl)
-(puthash "mask-composite" (vector 
-"webkit"
-)
- tbl)
-(puthash "layout-grid" (vector 
+(puthash "text-size-adjust" (vector
+"moz"
 "ms"
 )
  tbl)
-(puthash "column-width" (vector 
+(puthash "filter" (vector
+"ms"
+)
+ tbl)
+(puthash "content-zoom-boundary" (vector
+"ms"
+)
+ tbl)
+(puthash "layout-grid-char" (vector
+"ms"
+)
+ tbl)
+(puthash "perspective-origin-x" (vector
+"ms"
+)
+ tbl)
+(puthash "perspective-origin-y" (vector
+"ms"
+)
+ tbl)
+(puthash "column-rule-color" (vector
 "webkit"
 "moz"
 )
  tbl)
-(puthash "scrollbar-base-color" (vector 
+(puthash "high-contrast-adjust" (vector
 "ms"
 )
  tbl)
-(puthash "window-shadow" (vector 
+(puthash "text-justify" (vector
+"ms"
+)
+ tbl)
+(puthash "text-decoration-color" (vector
 "moz"
 )
  tbl)
-(puthash "object-fit" (vector 
+(puthash "block-progression" (vector
+"ms"
+)
+ tbl)
+(puthash "border-horizontal-spacing" (vector
+"webkit"
+)
+ tbl)
+(puthash "wrap-flow" (vector
+"ms"
+)
+ tbl)
+(puthash "margin-before-collapse" (vector
+"webkit"
+)
+ tbl)
+(puthash "table-baseline" (vector
 "o"
 )
  tbl)
-(puthash "text-decorations-in-effect" (vector 
+(puthash "background-clip" (vector
+"webkit"
+"moz"
+)
+ tbl)
+(puthash "interpolation-mode" (vector
+"ms"
+)
+ tbl)
+(puthash "scroll-snap-type" (vector
+"ms"
+)
+ tbl)
+(puthash "text-emphasis-style" (vector
 "webkit"
 )
  tbl)
-(puthash "box-flex" (vector 
+(puthash "flow-from" (vector
+"ms"
+)
+ tbl)
+(puthash "backface-visibility" (vector
 "webkit"
 "moz"
 "ms"
 )
  tbl)
-(puthash "hyphenate-limit-after" (vector 
-"webkit"
-)
- tbl)
-(puthash "animation-play-state" (vector 
-"webkit"
-"moz"
-"o"
-)
- tbl)
-(puthash "transition-delay" (vector 
-"webkit"
-"moz"
-"ms"
-"o"
-)
- tbl)
-(puthash "input-format" (vector 
-"o"
-)
- tbl)
-(puthash "mask-attachment" (vector 
-"webkit"
-)
- tbl)
-(puthash "scroll-boundary-right" (vector 
-"ms"
-)
- tbl)
-(puthash "animation-iteration-count" (vector 
-"webkit"
-"moz"
-"o"
-)
- tbl)
-(puthash "link" (vector 
-"o"
-)
- tbl)
-(puthash "content-zoom-boundary-max" (vector 
-"ms"
-)
- tbl)
-(puthash "text-decoration-style" (vector 
-"moz"
-)
- tbl)
-(puthash "text-autospace" (vector 
-"ms"
-)
- tbl)
-(puthash "mask-origin" (vector 
-"webkit"
-)
- tbl)
-(puthash "user-focus" (vector 
-"moz"
-)
- tbl)
-(puthash "border-bottom-colors" (vector 
-"moz"
-)
- tbl)
-(puthash "scroll-boundary-top" (vector 
-"ms"
-)
- tbl)
-(puthash "content-zooming" (vector 
-"ms"
-)
- tbl)
-(puthash "appearance" (vector 
-"webkit"
-"moz"
-)
- tbl)
-(puthash "scroll-snap-x" (vector 
-"ms"
-)
- tbl)
-(puthash "marquee-loop" (vector 
-"o"
-)
- tbl)
-(puthash "column-rule-style" (vector 
-"webkit"
-"moz"
-)
- tbl)
-(puthash "marquee-increment" (vector 
-"webkit"
-)
- tbl)
-(puthash "behavior" (vector 
-"ms"
-)
- tbl)
-(puthash "box-pack" (vector 
-"webkit"
-"moz"
-"ms"
-)
- tbl)
-(puthash "animation-direction" (vector 
-"webkit"
-"moz"
-"o"
-)
- tbl)
-(puthash "scrollbar-darkshadow-color" (vector 
-"ms"
-)
- tbl)
-(puthash "animation-timing-function" (vector 
-"webkit"
-"moz"
-"o"
-)
- tbl)
-(puthash "text-blink" (vector 
-"moz"
-)
- tbl)
-(puthash "scroll-boundary-bottom" (vector 
-"ms"
-)
- tbl)
-(puthash "mask-box-image-repeat" (vector 
-"webkit"
-)
- tbl)
-(puthash "text-orientation" (vector 
-"webkit"
-)
- tbl)
-(puthash "grid-column-span" (vector 
-"ms"
-)
- tbl)
-(puthash "binding" (vector 
-"moz"
-)
- tbl)
-(puthash "transform-origin" (vector 
+(puthash "transform" (vector
 "webkit"
 "moz"
 "ms"
 "o"
 )
  tbl)
-(puthash "text-decoration-line" (vector 
+(puthash "column-break-after" (vector
+"webkit"
+)
+ tbl)
+(puthash "mask-composite" (vector
+"webkit"
+)
+ tbl)
+(puthash "layout-grid" (vector
+"ms"
+)
+ tbl)
+(puthash "column-width" (vector
+"webkit"
 "moz"
 )
  tbl)
-(puthash "animation-name" (vector 
+(puthash "scrollbar-base-color" (vector
+"ms"
+)
+ tbl)
+(puthash "window-shadow" (vector
+"moz"
+)
+ tbl)
+(puthash "object-fit" (vector
+"o"
+)
+ tbl)
+(puthash "text-decorations-in-effect" (vector
+"webkit"
+)
+ tbl)
+(puthash "box-flex" (vector
+"webkit"
+"moz"
+"ms"
+)
+ tbl)
+(puthash "hyphenate-limit-after" (vector
+"webkit"
+)
+ tbl)
+(puthash "animation-play-state" (vector
 "webkit"
 "moz"
 "o"
 )
  tbl)
-(puthash "marquee-dir" (vector 
-"o"
-)
- tbl)
-(puthash "content-zoom-snap" (vector 
-"ms"
-)
- tbl)
-(puthash "border-top-colors" (vector 
-"moz"
-)
- tbl)
-(puthash "border-vertical-spacing" (vector 
-"webkit"
-)
- tbl)
-(puthash "grid-rows" (vector 
-"ms"
-)
- tbl)
-(puthash "box-reflect" (vector 
-"webkit"
-)
- tbl)
-(puthash "hyphenate-limit-before" (vector 
-"webkit"
-)
- tbl)
-(puthash "mask-box-image-outset" (vector 
-"webkit"
-)
- tbl)
-(puthash "outline-radius-bottomleft" (vector 
-"moz"
-)
- tbl)
-(puthash "text-overflow" (vector 
-"ms"
-)
- tbl)
-(puthash "border-right-colors" (vector 
-"moz"
-)
- tbl)
-(puthash "layout-flow" (vector 
-"ms"
-)
- tbl)
-(puthash "box-direction" (vector 
-"webkit"
-"moz"
-"ms"
-)
- tbl)
-(puthash "animation" (vector 
-"webkit"
-"o"
-)
- tbl)
-(puthash "hyphenate-limit-lines" (vector 
-"ms"
-)
- tbl)
-(puthash "scrollbar-face-color" (vector 
-"ms"
-)
- tbl)
-(puthash "column-break-before" (vector 
-"webkit"
-)
- tbl)
-(puthash "content-zoom-snap-points" (vector 
-"ms"
-)
- tbl)
-(puthash "grid-row-span" (vector 
-"ms"
-)
- tbl)
-(puthash "touch-action" (vector 
-"ms"
-)
- tbl)
-(puthash "marquee-style" (vector 
-"webkit"
-"o"
-)
- tbl)
-(puthash "margin-after-collapse" (vector 
-"webkit"
-)
- tbl)
-(puthash "text-kashida-space" (vector 
-"ms"
-)
- tbl)
-(puthash "scrollbar-shadow-color" (vector 
-"ms"
-)
- tbl)
-(puthash "object-position" (vector 
-"o"
-)
- tbl)
-(puthash "hyphenate-limit-zone" (vector 
-"ms"
-)
- tbl)
-(puthash "scroll-snap-y" (vector 
-"ms"
-)
- tbl)
-(puthash "transform-origin-x" (vector 
-"ms"
-)
- tbl)
-(puthash "transition-property" (vector 
+(puthash "transition-delay" (vector
 "webkit"
 "moz"
 "ms"
 "o"
 )
  tbl)
-(puthash "word-break" (vector 
-"ms"
+(puthash "input-format" (vector
+"o"
 )
  tbl)
-(puthash "scroll-snap-points-y" (vector 
-"ms"
-)
- tbl)
-(puthash "scroll-boundary" (vector 
-"ms"
-)
- tbl)
-(puthash "mask-repeat" (vector 
+(puthash "mask-attachment" (vector
 "webkit"
 )
  tbl)
-(puthash "writing-mode" (vector 
+(puthash "scroll-boundary-right" (vector
+"ms"
+)
+ tbl)
+(puthash "animation-iteration-count" (vector
 "webkit"
+"moz"
+"o"
+)
+ tbl)
+(puthash "link" (vector
+"o"
+)
+ tbl)
+(puthash "content-zoom-boundary-max" (vector
 "ms"
 )
  tbl)
-(puthash "layout-grid-mode" (vector 
+(puthash "text-decoration-style" (vector
+"moz"
+)
+ tbl)
+(puthash "text-autospace" (vector
 "ms"
 )
  tbl)
-(puthash "background-position-y" (vector 
+(puthash "mask-origin" (vector
+"webkit"
+)
+ tbl)
+(puthash "user-focus" (vector
+"moz"
+)
+ tbl)
+(puthash "border-bottom-colors" (vector
+"moz"
+)
+ tbl)
+(puthash "scroll-boundary-top" (vector
 "ms"
 )
  tbl)
-(puthash "scroll-rails" (vector 
+(puthash "content-zooming" (vector
 "ms"
 )
  tbl)
-(puthash "content-zoom-boundary-min" (vector 
-"ms"
-)
- tbl)
-(puthash "background-position-x" (vector 
-"ms"
-)
- tbl)
-(puthash "box-sizing" (vector 
+(puthash "appearance" (vector
 "webkit"
 "moz"
 )
  tbl)
-(puthash "transition-duration" (vector 
+(puthash "scroll-snap-x" (vector
+"ms"
+)
+ tbl)
+(puthash "marquee-loop" (vector
+"o"
+)
+ tbl)
+(puthash "column-rule-style" (vector
+"webkit"
+"moz"
+)
+ tbl)
+(puthash "marquee-increment" (vector
+"webkit"
+)
+ tbl)
+(puthash "behavior" (vector
+"ms"
+)
+ tbl)
+(puthash "box-pack" (vector
+"webkit"
+"moz"
+"ms"
+)
+ tbl)
+(puthash "animation-direction" (vector
+"webkit"
+"moz"
+"o"
+)
+ tbl)
+(puthash "scrollbar-darkshadow-color" (vector
+"ms"
+)
+ tbl)
+(puthash "animation-timing-function" (vector
+"webkit"
+"moz"
+"o"
+)
+ tbl)
+(puthash "text-blink" (vector
+"moz"
+)
+ tbl)
+(puthash "scroll-boundary-bottom" (vector
+"ms"
+)
+ tbl)
+(puthash "mask-box-image-repeat" (vector
+"webkit"
+)
+ tbl)
+(puthash "text-orientation" (vector
+"webkit"
+)
+ tbl)
+(puthash "grid-column-span" (vector
+"ms"
+)
+ tbl)
+(puthash "binding" (vector
+"moz"
+)
+ tbl)
+(puthash "transform-origin" (vector
 "webkit"
 "moz"
 "ms"
 "o"
 )
  tbl)
-(puthash "rtl-ordering" (vector 
-"webkit"
+(puthash "text-decoration-line" (vector
+"moz"
 )
  tbl)
-(puthash "layout-grid-line" (vector 
+(puthash "animation-name" (vector
+"webkit"
+"moz"
+"o"
+)
+ tbl)
+(puthash "marquee-dir" (vector
+"o"
+)
+ tbl)
+(puthash "content-zoom-snap" (vector
 "ms"
 )
  tbl)
-(puthash "font-smoothing" (vector 
+(puthash "border-top-colors" (vector
+"moz"
+)
+ tbl)
+(puthash "border-vertical-spacing" (vector
 "webkit"
 )
  tbl)
-(puthash "transition-timing-function" (vector 
+(puthash "grid-rows" (vector
+"ms"
+)
+ tbl)
+(puthash "box-reflect" (vector
+"webkit"
+)
+ tbl)
+(puthash "hyphenate-limit-before" (vector
+"webkit"
+)
+ tbl)
+(puthash "mask-box-image-outset" (vector
+"webkit"
+)
+ tbl)
+(puthash "outline-radius-bottomleft" (vector
+"moz"
+)
+ tbl)
+(puthash "text-overflow" (vector
+"ms"
+)
+ tbl)
+(puthash "border-right-colors" (vector
+"moz"
+)
+ tbl)
+(puthash "layout-flow" (vector
+"ms"
+)
+ tbl)
+(puthash "box-direction" (vector
+"webkit"
+"moz"
+"ms"
+)
+ tbl)
+(puthash "animation" (vector
+"webkit"
+"o"
+)
+ tbl)
+(puthash "hyphenate-limit-lines" (vector
+"ms"
+)
+ tbl)
+(puthash "scrollbar-face-color" (vector
+"ms"
+)
+ tbl)
+(puthash "column-break-before" (vector
+"webkit"
+)
+ tbl)
+(puthash "content-zoom-snap-points" (vector
+"ms"
+)
+ tbl)
+(puthash "grid-row-span" (vector
+"ms"
+)
+ tbl)
+(puthash "touch-action" (vector
+"ms"
+)
+ tbl)
+(puthash "marquee-style" (vector
+"webkit"
+"o"
+)
+ tbl)
+(puthash "margin-after-collapse" (vector
+"webkit"
+)
+ tbl)
+(puthash "text-kashida-space" (vector
+"ms"
+)
+ tbl)
+(puthash "scrollbar-shadow-color" (vector
+"ms"
+)
+ tbl)
+(puthash "object-position" (vector
+"o"
+)
+ tbl)
+(puthash "hyphenate-limit-zone" (vector
+"ms"
+)
+ tbl)
+(puthash "scroll-snap-y" (vector
+"ms"
+)
+ tbl)
+(puthash "transform-origin-x" (vector
+"ms"
+)
+ tbl)
+(puthash "transition-property" (vector
+"webkit"
+"moz"
+"ms"
+"o"
+)
+ tbl)
+(puthash "word-break" (vector
+"ms"
+)
+ tbl)
+(puthash "scroll-snap-points-y" (vector
+"ms"
+)
+ tbl)
+(puthash "scroll-boundary" (vector
+"ms"
+)
+ tbl)
+(puthash "mask-repeat" (vector
+"webkit"
+)
+ tbl)
+(puthash "writing-mode" (vector
+"webkit"
+"ms"
+)
+ tbl)
+(puthash "layout-grid-mode" (vector
+"ms"
+)
+ tbl)
+(puthash "background-position-y" (vector
+"ms"
+)
+ tbl)
+(puthash "scroll-rails" (vector
+"ms"
+)
+ tbl)
+(puthash "content-zoom-boundary-min" (vector
+"ms"
+)
+ tbl)
+(puthash "background-position-x" (vector
+"ms"
+)
+ tbl)
+(puthash "box-sizing" (vector
+"webkit"
+"moz"
+)
+ tbl)
+(puthash "transition-duration" (vector
+"webkit"
+"moz"
+"ms"
+"o"
+)
+ tbl)
+(puthash "rtl-ordering" (vector
+"webkit"
+)
+ tbl)
+(puthash "layout-grid-line" (vector
+"ms"
+)
+ tbl)
+(puthash "font-smoothing" (vector
+"webkit"
+)
+ tbl)
+(puthash "transition-timing-function" (vector
 "webkit"
 "moz"
 "ms"
@@ -2339,7 +2339,7 @@ tbl) tbl)
 )
  tbl)
 tbl) tbl)
-(puthash "unitlessProperties" (vector 
+(puthash "unitlessProperties" (vector
 "z-index"
 "line-height"
 "opacity"
@@ -2367,7 +2367,7 @@ tbl) tbl)
 (puthash "s" "solid" tbl)
 (puthash "t" "transparent" tbl)
 tbl) tbl)
-(puthash "keywords" (vector 
+(puthash "keywords" (vector
 "auto"
 "inherit"
 )
@@ -3338,8 +3338,20 @@ tbl))
             (replace-regexp-in-string "\n" (concat "\n" first-col)
                                       (replace-regexp-in-string "    " tab markup)))))
 
+(defvar emmet-use-css-transform nil
+  "When true, transform Emmet snippets into CSS, instead of the usual HTML.")
+(make-variable-buffer-local 'emmet-use-css-transform)
+
+(defvar emmet-css-major-modes
+  '(css-mode
+    scss-mode
+    sass-mode
+    less-mode
+    less-css-mode)
+  "Major modes that use emmet for CSS, rather than HTML.")
+
 (defun emmet-transform (input)
-  (if (memq major-mode '(css-mode scss-mode sass-mode))
+  (if emmet-use-css-transform
       (emmet-css-transform input)
     (emmet-html-transform input)))
 
@@ -3395,6 +3407,11 @@ For more information see `emmet-mode'."
     (define-key emmet-mode-keymap (kbd "C-j") 'emmet-expand-line)
     (define-key emmet-mode-keymap (kbd "<C-return>") 'emmet-expand-line)))
 
+(defun emmet-after-hook ()
+  "Initialize Emmet's buffer-local variables."
+  (if (memq major-mode emmet-css-major-modes)
+      (setq emmet-use-css-transform t)))
+
 ;;;###autoload
 (define-minor-mode emmet-mode
   "Minor mode for writing HTML and CSS markup.
@@ -3417,7 +3434,8 @@ Home page URL `http://www.emacswiki.org/emacs/Emmet'.
 
 See also `emmet-expand-line'."
   :lighter " Emmet"
-  :keymap emmet-mode-keymap)
+  :keymap emmet-mode-keymap
+  :after-hook (emmet-after-hook))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Emmet yasnippet integration

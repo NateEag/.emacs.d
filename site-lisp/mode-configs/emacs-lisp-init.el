@@ -1,7 +1,7 @@
 (defun emacs-lisp-init ()
   "My emacs lisp editing config."
 
-  (autopair-init)
+  (smartparens-init)
   (comment-auto-fill)
   (elisp-slime-nav-mode)
   (diminish 'elisp-slime-nav-mode)

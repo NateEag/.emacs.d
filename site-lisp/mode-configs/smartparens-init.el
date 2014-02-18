@@ -33,4 +33,5 @@
 
   ;; '{' is almost always a block delimiter, so let's try turning this on
   ;; pseudo-globally.
-  (sp-pair "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET"))))
+  (sp-pair "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
+  (smartparens-mode))

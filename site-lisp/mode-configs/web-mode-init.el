@@ -12,6 +12,9 @@
 
   (comment-auto-fill)
 
+  (yas-minor-mode)
+  (yas-activate-extra-mode 'php-mode)
+
   (autopair-init)
   (push ?{ (getf autopair-dont-pair :code))
 

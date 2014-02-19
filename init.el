@@ -364,6 +364,8 @@
   (smartparens-init)
 
   ;; I occasionally want to use yasnippet in text mode.
+  ;; DEBUG I wonder if this is why I get a bunch of irrelevant snippet tables
+  ;; in php-mode? Would php-mode call text-mode hooks?
   (yasnippet-init))
 
 ;; Everyone needs text-mode.

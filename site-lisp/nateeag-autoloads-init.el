@@ -17,6 +17,10 @@ are for modes that didn't come with autoloading."
   (autoload 'php-mode-init "php-mode-init.el")
   (autoload 'smartparens-init "smartparens-init.el")
 
+  ;; Autoloads for eclim preferences and eclimd.
+  ;; eclimd should have come with autoloads, in principle, but it didn't.
+  (autoload 'start-eclimd "eclimd.el" nil t)
+
   (autoload 'LilyPond-mode "lilypond-mode" "LilyPond Editing Mode" t)
   (autoload 'rst-mode "rst-mode.el")
   (autoload 'markdown-mode "markdown-mode.el")

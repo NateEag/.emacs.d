@@ -442,6 +442,8 @@
 ;; IIS's 'config' files are actually XML.
 (add-to-list 'auto-mode-alist '("web.config$" . xml-mode))
 (setq nxml-child-indent 4)
+(setq nxml-slash-auto-complete-flag t)
+(add-hook 'nxml-mode-hook 'emmet-mode)
 
 ;; If we're running in a window system, start an emacs server, so emacsclient
 ;; can connect to this instance.

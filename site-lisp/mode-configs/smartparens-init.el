@@ -14,7 +14,7 @@
 
   (interactive)
 
-  (require 'smartparens)
+  (diminish 'smartparens-mode)
 
   ;; do not autoinsert ' pair if the point is preceded by word.  This
   ;; will handle the situation when ' is used as a contraction symbol in
@@ -33,5 +33,4 @@
 
   ;; '{' is almost always a block delimiter, so let's try turning this on
   ;; pseudo-globally.
-  (sp-pair "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET")))
-  (smartparens-mode))
+  (sp-pair "{" nil :post-handlers '((my-create-newline-and-enter-sexp "RET"))))

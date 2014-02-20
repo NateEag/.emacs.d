@@ -2,7 +2,13 @@
 
 -Pull in pick-backup and write a little glue to integrate it with
  backup-walker. Maybe it could replace backup-walker? Try it and see.
+ All I really want here is the ability to diff a backup against the current
+ version of the file.
  http://nschum.de/src/emacs/pick-backup/
+
+-Generate autoloads for my mode configs (and other code I've hacked up myself)
+ from autoload cookie comments, rather than maintaining them manually. Might
+ fit well into my commit hook setup?
 
 -Find a way to auto-include skewer on page refresh without having to include it
  in a codebase. I'm thinking a Chrome plugin for "refresh and load

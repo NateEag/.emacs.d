@@ -16,6 +16,7 @@ are for modes that didn't come with autoloading."
   (autoload 'yasnippet-init "yasnippet-init.el")
   (autoload 'php-mode-init "php-mode-init.el")
   (autoload 'smartparens-init "smartparens-init.el")
+  (autoload 'emmet-mode-init "emmet-mode-init.el")
 
   (autoload 'LilyPond-mode "lilypond-mode" "LilyPond Editing Mode" t)
   (autoload 'rst-mode "rst-mode.el")

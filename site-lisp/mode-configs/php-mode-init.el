@@ -38,17 +38,15 @@
   ;; Everyone loves code folding.
   (hs-minor-mode-init)
 
-  ;; auto-pairs ftw
-  ;; I'm giving smartparens a try.
-  ;;(autopair-init)
-  (smartparens-init)
+  ;; After a battle with auto-pair-mode, which served me well for a good long
+  ;; time, smartparens has won the throne.
   (smartparens-mode)
 
   ;; Who doesn't like yasnippet?
-  (yasnippet-init)
+  (yas-minor-mode)
 
   ;; Autocompletion for everyone!
-  (auto-complete-init)
+  (auto-complete-mode)
   (setq ac-sources nil)
   (payas/ac-setup)
   (add-to-list 'ac-sources 'ac-source-yasnippet)

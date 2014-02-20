@@ -7,14 +7,14 @@
 
 (setq ac-initialized nil)
 (defun auto-complete-init ()
-  "My basic configuration for autocomplete.el. Call this to activate it."
+  "My basic configuration for autocomplete.el."
+
   (interactive)
   (require 'auto-complete)
   (require 'auto-complete-config)
-  (ac-config-default)
+  ;; (ac-config-default)
   (if (not ac-initialized)
       (progn
-        (global-auto-complete-mode t)
         ;; DEBUG This should be set by the package, but that feature doesn't
         ;; seem to be working. I don't know why not, but for now I'm just
         ;; hacking it.
@@ -27,5 +27,4 @@
         (setq ac-dwim t)
 
         (setq ac-initialized t)))
-  (auto-complete-tab-noconflict)
-  (auto-complete-mode t))
+  (auto-complete-tab-noconflict))

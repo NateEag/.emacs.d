@@ -144,7 +144,6 @@
 (setq vc-make-backup-files t)
 
 ;; Force a backup every time we save a file.
-;; Does it get this every time I save now?
 (defun force-buffer-backup ()
   (setq buffer-backed-up nil))
 (add-hook 'before-save-hook 'force-buffer-backup)
@@ -158,15 +157,6 @@
     (emacs-lisp-byte-compile)))
 
 (add-hook 'after-save-hook 'recompile-elc-on-save)
-
-;; Activate undo-tree-mode globally and diminish it.
-;;
-;; It seems to me that undo-tree-mode and backup-walker might be good candidates
-;; for merging somehow - they're like two sides of the same coin. I'll need a
-;; lot more hands-on experience with both to have any idea how that would look
-;; in practice.
-(global-undo-tree-mode)
-(diminish 'undo-tree-mode)
 
 ;; Save minibuffer data between sessions.
 (setq savehist-file "~/.emacs.d/tmp/savehist")
@@ -235,69 +225,6 @@
   uniquify-after-kill-buffer-p t
   uniquify-ignore-buffers-re "^\\*")
 
-;; GRIPE Consider moving these to their own file.
-;; Insert the current date.
-(defun insert-date (prefix)
-    "Insert the current date. With prefix-argument, use dd-mm-YYYY format. With
-     two prefix arguments, write out the day and month name."
-    (interactive "P")
-    (let ((format (cond
-                   ((not prefix) "%Y-%m-%d")
-                   ((equal prefix '(4)) "%d.%m.%Y")
-                   ((equal prefix '(16)) "%B %d, %Y"))))
-      (insert (format-time-string format))))
-
-;; Insert the current time.
-(defun insert-time (prefix)
-    "Insert current time. With prefix-argument, use a full timestamp in 24-hour
-     format."
-    (interactive "P")
-    (let ((format (cond
-                   ((not prefix) "%l:%M %p")
-                   ((equal prefix '(4)) "%Y-%m-%d %H:%m:%s"))))
-      (insert (format-time-string format))))
-
-;;; Stefan Monnier <foo at acm.org>. It is the opposite of fill-paragraph
-(defun unfill-paragraph ()
-  "Takes a multi-line paragraph and makes it into a single line of text."
-  (interactive)
-  (let ((fill-column (point-max)))
-    (fill-paragraph nil)))
-;; Handy key definition
-(define-key global-map "\M-Q" 'unfill-paragraph)
-
-;; Minor mode setup and registration.
-
-;; Some experiments *seem* to indicate that this shouldn't ever bite me. I'm
-;; turning it on and hoping that's the case.
-;; I've mainly turned it on globally because I can't figure out a better way to
-;; diminish auto-revert-mode in git-managed buffers now that I have magit
-;; installed.
-(global-auto-revert-mode)
-(diminish 'auto-revert-mode)
-
-;; smart-dash-mode saves a lot of stupid SHIFT-ing in languages that favor
-;; underscore as a word separator.
-(require 'smart-dash)
-
-;; Let's see if I like Helm better than pressing TAB all the time.
-(helm-mode)
-(diminish 'helm-mode)
-
-;; Set up diff-mode.
-(defun update-diff-colors ()
-  "update the colors for diff faces"
-  (set-face-attribute 'diff-added nil
-                      :foreground "darkgreen" :background "grey80")
-  (set-face-attribute 'diff-removed nil
-                      :foreground "darkred" :background "grey80")
-  (set-face-attribute 'diff-changed nil
-                      :foreground "darkgreen" :background "grey80"))
-
-(eval-after-load "diff-mode"
-  '(update-diff-colors))
-
-
 ;; Random functions worth having around.
 
 ;; GRIPE If I just generalized a tiny bit, I could probably make this work in a
@@ -334,6 +261,78 @@
         (kill-buffer nil))))
   nil)
 
+;; GRIPE Consider moving these to their own file.
+;; Insert the current date.
+(defun insert-date (prefix)
+    "Insert the current date. With prefix-argument, use dd-mm-YYYY format. With
+     two prefix arguments, write out the day and month name."
+    (interactive "P")
+    (let ((format (cond
+                   ((not prefix) "%Y-%m-%d")
+                   ((equal prefix '(4)) "%d.%m.%Y")
+                   ((equal prefix '(16)) "%B %d, %Y"))))
+      (insert (format-time-string format))))
+
+;; Insert the current time.
+(defun insert-time (prefix)
+    "Insert current time. With prefix-argument, use a full timestamp in 24-hour
+     format."
+    (interactive "P")
+    (let ((format (cond
+                   ((not prefix) "%l:%M %p")
+                   ((equal prefix '(4)) "%Y-%m-%d %H:%m:%s"))))
+      (insert (format-time-string format))))
+
+;;; Stefan Monnier <foo at acm.org>. It is the opposite of fill-paragraph
+(defun unfill-paragraph ()
+  "Takes a multi-line paragraph and makes it into a single line of text."
+  (interactive)
+  (let ((fill-column (point-max)))
+    (fill-paragraph nil)))
+;; Handy key definition
+(define-key global-map "\M-Q" 'unfill-paragraph)
+
+;; Minor mode setup and registration.
+
+;; Activate undo-tree-mode globally and diminish it.
+;;
+;; It seems to me that undo-tree-mode and backup-walker might be good candidates
+;; for merging somehow - they're like two sides of the same coin. I'll need a
+;; lot more hands-on experience with both to have any idea how that would look
+;; in practice.
+(global-undo-tree-mode)
+(diminish 'undo-tree-mode)
+
+;; Some experiments *seem* to indicate that this shouldn't ever bite me. I'm
+;; turning it on and hoping that's the case.
+;; I've mainly turned it on globally because I can't figure out a better way to
+;; diminish auto-revert-mode in git-managed buffers now that I have magit
+;; installed.
+(global-auto-revert-mode)
+(diminish 'auto-revert-mode)
+
+;; smart-dash-mode saves a lot of stupid SHIFT-ing in languages that favor
+;; underscore as a word separator.
+(require 'smart-dash)
+
+;; Let's see if I like Helm better than pressing TAB all the time.
+(helm-mode)
+(diminish 'helm-mode)
+
+;; Run yasnippet customizations when it's started.
+(add-hook 'yas-minor-mode-hook 'yasnippet-init)
+
+;; Run smartparens customizations when it's started.
+(add-hook 'smartparens-enabled-hook 'smartparens-init)
+
+;; Run auto-complete customizations when it's started.
+(add-hook 'auto-complete-mode-hook 'auto-complete-init)
+
+;; Run emmet-mode customizations when it's started.
+(eval-after-load 'emmet-mode
+  '(emmet-mode-init))
+
+
 ;; Major mode setup and registration.
 
 ;; SQL mode.
@@ -341,7 +340,7 @@
   (interactive)
   (smart-dash-mode t)
   (comment-auto-fill)
-  (auto-complete-init)
+  (auto-complete-mode)
   (setq ac-sources '(ac-source-words-in-same-mode-buffers))
   (when (locate-library "sql-indent")
     (load-library "sql-indent")))
@@ -361,17 +360,17 @@
 (defun text-mode-init ()
   "Configuration that is shared across my various text modes."
   (auto-fill-mode t)
-  (smartparens-init)
+  (smartparens-mode)
 
   ;; I occasionally want to use yasnippet in text mode.
   ;; DEBUG I wonder if this is why I get a bunch of irrelevant snippet tables
   ;; in php-mode? Would php-mode call text-mode hooks?
-  (yasnippet-init))
+  (yas-minor-mode))
 
 ;; Everyone needs text-mode.
 (add-hook 'text-mode-hook 'text-mode-init)
 
-;; lilypond-mode - ripped from
+;; lilypond-mode - ripped from the lilypond repo.
 (add-to-list 'auto-mode-alist '("\\.ly$" . LilyPond-mode))
 (add-to-list 'auto-mode-alist '("\\.ily$" . LilyPond-mode))
 (add-hook 'LilyPond-mode-hook (lambda () (turn-on-font-lock)))
@@ -432,8 +431,6 @@
 (add-to-list 'auto-mode-alist '("\\.htm\\'" . web-mode))
 (add-to-list 'auto-mode-alist '("\\.twig\\'" . web-mode))
 (add-hook 'web-mode-hook 'web-mode-init)
-(add-hook 'web-mode-hook 'emmet-mode)
-(add-hook 'web-mode-hook 'ac-emmet-html-setup)
 
 ;; JavaScript Mode.
 (add-hook 'js-mode-hook 'js-mode-init)
@@ -445,7 +442,7 @@
 (add-to-list 'auto-mode-alist '("web.config$" . xml-mode))
 (setq nxml-child-indent 4)
 (setq nxml-slash-auto-complete-flag t)
-(add-hook 'nxml-mode-hook 'emmet-mode)
+(add-hook 'nxml-mode-hook (lambda () (emmet-mode t)))
 
 ;; If we're running in a window system, start an emacs server, so emacsclient
 ;; can connect to this instance.

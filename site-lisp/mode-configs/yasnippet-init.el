@@ -19,8 +19,7 @@
         (setq yasnippet-config-run t))))
 
 (defun yasnippet-init ()
-  "Load yasnippet and get things set up the way I like."
+  "Get yasnippet set up the way I like."
 
-  (yas-minor-mode)
   (diminish 'yas-minor-mode)
   (yasnippet-config))

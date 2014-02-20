@@ -15,11 +15,9 @@
   (yas-minor-mode)
   (yas-activate-extra-mode 'php-mode)
 
-  (emmet-mode)
+  (smartparens-mode)
 
-  (autopair-init)
-  (push ?{ (getf autopair-dont-pair :code))
-
-  (auto-complete-init))
+  (auto-complete-mode)
+  (emmet-mode))
 
 (provide 'web-mode-init)

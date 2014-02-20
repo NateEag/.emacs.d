@@ -5,11 +5,8 @@
   "Loads all the libraries/tools I want to have when I'm in python-mode."
   (smart-dash-mode t)
   (comment-auto-fill)
-  (autopair-init)
-  (auto-complete-init)
-  (setq autopair-handle-action-fns
-        (list #'autopair-default-handle-action
-              #'autopair-python-triple-quote-action))
+  (smartparens-mode)
+  (auto-complete-mode)
 
   ;; Initialize Jedi. Note that for this to work, you'll have to install Jedi
   ;; in a virtualenv, using the Makefile.

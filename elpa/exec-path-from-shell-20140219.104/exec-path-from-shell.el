@@ -1,11 +1,11 @@
 ;;; exec-path-from-shell.el --- Get environment variables such as $PATH from the shell
 
-;; Copyright (C) 2012 Steve Purcell
+;; Copyright (C) 2012-2014 Steve Purcell
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: environment
 ;; URL: https://github.com/purcell/exec-path-from-shell
-;; Version: 20131205.1210
+;; Version: 20140219.104
 ;; X-Original-Version: DEV
 
 ;; This file is not part of GNU Emacs.
@@ -147,7 +147,7 @@ variables such as `exec-path'."
   (setenv name value)
   (when (string-equal "PATH" name)
     (setq eshell-path-env value
-          exec-path (parse-colon-path value))))
+          exec-path (append (parse-colon-path value) (list exec-directory)))))
 
 ;;;###autoload
 (defun exec-path-from-shell-copy-envs (names)

@@ -474,3 +474,9 @@
 ;; Dates and times are handy to be able to insert.
 (global-set-key (kbd "C-c d") 'insert-date)
 (global-set-key (kbd "C-c t") 'insert-time)
+
+;; Switch buffers/find likely files via Helm.
+;; DEBUG Ideally, I'd be able to just type filenames and find them, whether
+;; they're open buffers or not. Adding one of the helm git packages might get
+;; me close - I guess I'll have to try that some time.
+(global-set-key (kbd "C-c b") 'helm-for-files)

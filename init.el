@@ -17,6 +17,14 @@
 (defun my-get-default-font-size ()
   "Return a good(?) size for my default font based on monitor resolution."
 
+  ;; A snippet something like the following should let me calculate my
+  ;; monitor's DPI. Try that later.
+  ;; (let ((display-dpi (/ (display-pixel-width) (display-mm-width))))
+  ;;   (if display-dpi
+  ;;       (progn
+  ;;         )
+  ;;       ))
+
   (if (>= (display-pixel-width) 1280)
       14
     12))
@@ -25,17 +33,22 @@
   "Return the name of my preferred font."
   "Anonymous Pro")
 
-(defun my-get-default-font ()
+(defun my-get-default-font (&optional size)
   "Return a string specifying my default font."
 
-  (setq my-font-size (my-get-default-font-size))
+  (setq my-font-size (if size size (my-get-default-font-size)))
   (setq my-default-font (concat (my-get-default-font-name) "-"
                                 (number-to-string my-font-size))))
 
-;; Do not set a font if it is not available - keeps us from crashing in a
-;; font-free setting.
-(if (member (my-get-default-font-name) (font-family-list))
-    (set-face-attribute 'default nil :font (my-get-default-font)))
+(defun my-set-default-font (&optional size)
+  "Set my default font, if possible, optionally at point size `size`."
+
+  ;; Do not set a font if it is not available - keeps us from crashing in a
+  ;; font-free setting.
+  (if (member (my-get-default-font-name) (font-family-list))
+      (set-frame-font (my-get-default-font size) nil t)))
+
+(my-set-default-font)
 
 ;; Sometimes you want to debug when there are errors, but not nearly as often
 ;; as I believed at the first.

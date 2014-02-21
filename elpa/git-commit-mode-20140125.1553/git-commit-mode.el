@@ -6,7 +6,7 @@
 ;; Authors: Sebastian Wiesner <lunaryorn@gmail.com>
 ;;	Florian Ragwitz <rafl@debian.org>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
-;; Version: 20131031.1351
+;; Version: 20140125.1553
 ;; X-Original-Version: 0.14.0
 ;; Homepage: https://github.com/magit/git-modes
 ;; Keywords: convenience vc git
@@ -70,7 +70,7 @@
 ;;;; Variables
 
 (defgroup git-commit nil
-  "Mode for editing git commit messages"
+  "Edit Git commit messages."
   :prefix "git-commit-"
   :group 'tools)
 
@@ -118,7 +118,7 @@ and `git-commit-abort'."
 ;;;; Faces
 
 (defgroup git-commit-faces nil
-  "Faces for highlighting git commit messages"
+  "Faces for highlighting Git commit messages."
   :prefix "git-commit-"
   :group 'git-commit
   :group 'faces)
@@ -197,10 +197,10 @@ default comments in git commit messages"
     (define-key map (kbd "C-c M-s") 'git-commit-save-message)
     (define-key map (kbd "M-p")     'git-commit-prev-message)
     (define-key map (kbd "M-n")     'git-commit-next-message)
-    (define-key map [remap server-edit]         'git-commit-commit)
-    (define-key map [remap kill-buffer]         'git-commit-abort)
-    (define-key map [remap ido-kill-buffer]     'git-commit-abort)
-    (define-key map [remap ibuffer-kill-buffer] 'git-commit-abort)
+    (define-key map [remap server-edit]          'git-commit-commit)
+    (define-key map [remap kill-buffer]          'git-commit-abort)
+    (define-key map [remap ido-kill-buffer]      'git-commit-abort)
+    (define-key map [remap iswitchb-kill-buffer] 'git-commit-abort)
     ;; Old bindings to avoid confusion
     (define-key map (kbd "C-c C-x s") 'git-commit-signoff)
     (define-key map (kbd "C-c C-x a") 'git-commit-ack)
@@ -291,6 +291,10 @@ Return t, if the commit was successful, or nil otherwise."
   "Abort the commit.
 The commit message is saved to the kill ring."
   (interactive)
+  (when (< emacs-major-version 24)
+    ;; Emacsclient doesn't exit with non-zero when -error is used.
+    ;; Instead cause Git to error out by feeding it an empty file.
+    (erase-buffer))
   (save-buffer)
   (run-hooks 'git-commit-kill-buffer-hook)
   (remove-hook 'kill-buffer-hook 'server-kill-buffer t)
@@ -317,7 +321,9 @@ The commit message is saved to the kill ring."
 (defun git-commit-save-message ()
   "Save current message to `log-edit-comment-ring'."
   (interactive)
-  (let ((message (buffer-string)))
+  (let ((message (buffer-substring
+                  (point-min)
+                  (git-commit-find-pseudo-header-position))))
     (when (and (string-match "^\\s-*\\sw" message)
                (or (ring-empty-p log-edit-comment-ring)
                    (not (ring-member log-edit-comment-ring message))))
@@ -328,14 +334,15 @@ The commit message is saved to the kill ring."
 With a numeric prefix ARG, go back ARG comments."
   (interactive "*p")
   (git-commit-save-message)
-  (log-edit-previous-comment arg))
+  (save-restriction
+    (narrow-to-region (point-min) (git-commit-find-pseudo-header-position))
+    (log-edit-previous-comment arg)))
 
 (defun git-commit-next-message (arg)
   "Cycle forward through message history, after saving current message.
 With a numeric prefix ARG, go forward ARG comments."
   (interactive "*p")
-  (git-commit-save-message)
-  (log-edit-next-comment arg))
+  (git-commit-prev-message (- arg)))
 
 ;;; Headers
 
@@ -347,17 +354,14 @@ before any trailing comments git or the user might have
 inserted."
   (save-excursion
     (goto-char (point-max))
-    (if (not (re-search-backward "^\\S<.+$" nil t))
-        ;; no comment lines anywhere before end-of-buffer, so we
-        ;; want to insert right there
-        (point-max)
-      ;; there's some comments at the end, so we want to insert before
-      ;; those; keep going until we find the first non-empty line
-      ;; NOTE: if there is no newline at the end of (point),
-      ;; (forward-line 1) will take us to (point-at-eol).
-      (if (eq (point-at-bol) (point-at-eol)) (re-search-backward "^.+$" nil t))
-      (forward-line 1)
-      (point))))
+    (if (re-search-backward "^[^#\n]" nil t)
+        ;; we found last non-empty non-comment line, headers go after
+        (forward-line 1)
+      ;; there's only blanks & comments, headers go before comments
+      (goto-char (point-min))
+      (and (re-search-forward "^#" nil t) (forward-line 0)))
+    (skip-chars-forward "\n")
+    (point)))
 
 (defun git-commit-determine-pre-for-pseudo-header ()
   "Find the characters to insert before the pseudo header.

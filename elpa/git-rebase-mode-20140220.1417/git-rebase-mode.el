@@ -5,7 +5,7 @@
 
 ;; Author: Phil Jackson <phil@shellarchive.co.uk>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
-;; Version: 20140125.1553
+;; Version: 20140220.1417
 ;; X-Original-Version: 0.14.0
 ;; Homepage: https://github.com/magit/git-modes
 ;; Keywords: convenience vc git
@@ -253,7 +253,7 @@ connection."
   (when (and (not (eq (char-after (point-at-bol)) ?#))
              (git-rebase-looking-at-action-or-exec))
     (beginning-of-line)
-    (let ((buffer-read-only nil))
+    (let ((inhibit-read-only t))
       (insert "#"))
     (forward-line)))
 

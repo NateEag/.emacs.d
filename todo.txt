@@ -10,13 +10,25 @@
  from autoload cookie comments, rather than maintaining them manually. Might
  fit well into my commit hook setup?
 
+-Speed up compile githook. I'm currently loading my init file, but I think all
+ I really need for compilation to work is my load-path, right? Another
+ alternative would be to not compile my init-file, since it's the only one that
+ crashes without the load-path (I think). The Emacs manual recommends against
+ compiling the init file, but I'd have to add special cases in the hook and in
+ my savehook.
+
+-Move my one-off variable customizations into custom.el (at least the ones that
+ don't need any documentation of why they are what they are).
+
+-Move my custom font setters into an autoloaded file.
+
 -Find a way to auto-include skewer on page refresh without having to include it
  in a codebase. I'm thinking a Chrome plugin for "refresh and load
  bookmarklet", or something along those lines.
 
 -As a simple exercise to start learning macros, try implementing PHP's
  "defaulting" ternary operator behavior. The example I emailed myself was
- (setq (default (= 3 foo) (5)), where 'default' is the macro, presumably.
+ (setq (default (= 3 foo) 5)), where 'default' is the macro, presumably.
 
 -Possible lame hack for working in some of the horrible PHP files we have at
  work - would it be feasible to automatically *change* major mode for the whole
@@ -48,13 +60,6 @@
 
 -Figure out why auto-pair-mode only works some of the time in php-mode. [], '',
  and () all have been known to exhibit breakage.
-
--Calling a function mid-if-snippet in php-mode closes the snippet early. It
- seems to be caused by autopair matching the closing parenthesis when I type
- the opening one. See if I can come up with a workaround, or maybe whether the
- other mode I was thinking of trying doesn't have this issue. smartparens does
- indeed avoid this problem, but it has issues too. I'll have to look into them
- someday.
 
 -Look into https://github.com/mbunkus/mo-git-blame. Git blame on a file in
  emacs, which could save time.
@@ -133,8 +138,6 @@
  places a particular CSS rule is used. I suppose that's really a more
  appropriate tool for something else.
 
--when I move to emacs 24, pull in rainbow-mode.
-
 -Get filepath autocompletion working in buffers. Some hints: http://superuser.com/questions/67170/how-do-i-complete-file-paths-in-emacs
 
 -I would like an auto-complete source for existing files that is based on a
@@ -142,9 +145,6 @@
  activated when I am working in a template and have entered an href="/..." or a
  src="/...". Actually, it might work better if it was just activated for any
  string beginning with '/'.
-
--Figure out why constants in php-mode display in red if they're followed by a
- dot. Concatenation with constants is perfectly valid syntax.
 
 -If particularly bored, try getting GEBEN set up for debugging PHP. I'm
  uncertain whether this would actually be worth the effort.

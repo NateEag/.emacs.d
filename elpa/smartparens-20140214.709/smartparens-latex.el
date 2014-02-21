@@ -1,6 +1,6 @@
 ;;; smartparens-latex.el --- Additional configuration for (La)TeX based modes.
 
-;; Copyright (C) 2013 Matus Goljer
+;; Copyright (C) 2013-2014 Matus Goljer
 
 ;; Author: Matus Goljer <matus.goljer@gmail.com>
 ;; Maintainer: Matus Goljer <matus.goljer@gmail.com>
@@ -70,17 +70,23 @@
       (looking-at-p "\\sw"))))
 
 (defun sp-latex-point-after-backslash (id action context)
-  "Return t if point follows two backslashes, nil otherwise.
+  "Return t if point follows a backslash, nil otherwise.
 This predicate is only tested on \"insert\" action."
   (when (eq action 'insert)
-    (looking-back (concat "\\\\" (regexp-quote id)))))
+    (let ((trigger (sp-get-pair id :trigger)))
+      (looking-back (concat "\\\\" (regexp-quote (if trigger trigger id)))))))
+
+(add-to-list 'sp-navigate-skip-match
+             '((tex-mode plain-tex-mode latex-mode) . sp--backslash-skip-match))
 
 (sp-with-modes '(
                  tex-mode
                  plain-tex-mode
                  latex-mode
                  )
-  (sp-local-pair "`" "'" :skip-match 'sp-latex-skip-match-apostrophe)
+  (sp-local-pair "`" "'"
+                 :skip-match 'sp-latex-skip-match-apostrophe
+                 :unless '(sp-latex-point-after-backslash))
   ;; math modes, yay.  The :actions are provided automatically if
   ;; these pairs do not have global definitions.
   (sp-local-pair "$" "$")
@@ -93,7 +99,9 @@ This predicate is only tested on \"insert\" action."
 
   ;; quote should insert ``'' instead of double quotes.  If we ever
   ;; need to insert ", C-q is our friend.
-  (sp-local-pair "``" "''" :trigger "\"")
+  (sp-local-pair "``" "''"
+                 :trigger "\""
+                 :unless '(sp-latex-point-after-backslash))
 
   ;; add the prefix function sticking to {} pair
   (sp-local-pair "{" nil :prefix "\\\\\\(\\sw\\|\\s_\\)*")
@@ -101,17 +109,17 @@ This predicate is only tested on \"insert\" action."
   ;; pairs for big brackets.  Needs more research on what pairs are
   ;; useful to add here.  Post suggestions if you know some.
   (sp-local-pair "\\left(" "\\right)"
-		 :trigger "\\l("
-		 :when '(sp-in-math-p)
-		 :post-handlers '(sp-latex-insert-spaces-inside-pair))
+                 :trigger "\\l("
+                 :when '(sp-in-math-p)
+                 :post-handlers '(sp-latex-insert-spaces-inside-pair))
   (sp-local-pair "\\left[" "\\right]"
-		 :trigger "\\l["
-		 :when '(sp-in-math-p)
-		 :post-handlers '(sp-latex-insert-spaces-inside-pair))
+                 :trigger "\\l["
+                 :when '(sp-in-math-p)
+                 :post-handlers '(sp-latex-insert-spaces-inside-pair))
   (sp-local-pair "\\left\\{" "\\right\\}"
-		 :trigger "\\l{"
-		 :when '(sp-in-math-p)
-		 :post-handlers '(sp-latex-insert-spaces-inside-pair))
+                 :trigger "\\l{"
+                 :when '(sp-in-math-p)
+                 :post-handlers '(sp-latex-insert-spaces-inside-pair))
   (sp-local-pair "\\bigl(" "\\bigr)" :post-handlers '(sp-latex-insert-spaces-inside-pair))
   (sp-local-pair "\\biggl(" "\\biggr)" :post-handlers '(sp-latex-insert-spaces-inside-pair))
   (sp-local-pair "\\Bigl(" "\\Bigr)" :post-handlers '(sp-latex-insert-spaces-inside-pair))

@@ -1,6 +1,6 @@
 ;;; smartparens-ruby.el --- Additional configuration for Ruby based modes.
 
-;; Copyright (C) 2013 Jean-Louis Giordano
+;; Copyright (C) 2013-2014 Jean-Louis Giordano
 
 ;; Author: Jean-Louis Giordano <jean-louis@jawaninja.com>
 ;; Maintainer: Matus Goljer <matus.goljer@gmail.com>
@@ -257,8 +257,8 @@
 (sp-with-modes '(ruby-mode enh-ruby-mode)
   (sp-local-pair "do" "end"
                  :when '(("SPC" "RET" "<evil-ret>"))
-                 :unless '(sp-ruby-in-string-or-word-p)
-                 :actions '(insert)
+                 :unless '(sp-ruby-in-string-or-word-p sp-in-comment-p)
+                 :actions '(insert navigate)
                  :pre-handlers '(sp-ruby-pre-handler)
                  :post-handlers '(sp-ruby-block-post-handler)
                  :skip-match 'sp-ruby-skip-method-p
@@ -271,8 +271,8 @@
 
   (sp-local-pair "begin" "end"
                  :when '(("SPC" "RET" "<evil-ret>"))
-                 :unless '(sp-ruby-in-string-or-word-p)
-                 :actions '(insert)
+                 :unless '(sp-ruby-in-string-or-word-p sp-in-comment-p)
+                 :actions '(insert navigate)
                  :pre-handlers '(sp-ruby-pre-handler)
                  :post-handlers '(sp-ruby-block-post-handler)
                  :skip-match 'sp-ruby-skip-method-p
@@ -280,8 +280,8 @@
 
   (sp-local-pair "def" "end"
                  :when '(("SPC" "RET" "<evil-ret>"))
-                 :unless '(sp-ruby-in-string-or-word-p)
-                 :actions '(insert)
+                 :unless '(sp-ruby-in-string-or-word-p sp-in-comment-p)
+                 :actions '(insert navigate)
                  :pre-handlers '(sp-ruby-pre-handler)
                  :post-handlers '(sp-ruby-def-post-handler)
                  :skip-match 'sp-ruby-skip-method-p
@@ -289,8 +289,8 @@
 
   (sp-local-pair "class" "end"
                  :when '(("SPC" "RET" "<evil-ret>"))
-                 :unless '(sp-ruby-in-string-or-word-p)
-                 :actions '(insert)
+                 :unless '(sp-ruby-in-string-or-word-p sp-in-comment-p)
+                 :actions '(insert navigate)
                  :pre-handlers '(sp-ruby-pre-handler)
                  :post-handlers '(sp-ruby-def-post-handler)
                  :skip-match 'sp-ruby-skip-method-p
@@ -298,8 +298,8 @@
 
   (sp-local-pair "module" "end"
                  :when '(("SPC" "RET" "<evil-ret>"))
-                 :unless '(sp-ruby-in-string-or-word-p)
-                 :actions '(insert)
+                 :unless '(sp-ruby-in-string-or-word-p sp-in-comment-p)
+                 :actions '(insert navigate)
                  :pre-handlers '(sp-ruby-pre-handler)
                  :post-handlers '(sp-ruby-def-post-handler)
                  :skip-match 'sp-ruby-skip-method-p
@@ -307,8 +307,8 @@
 
   (sp-local-pair "case" "end"
                  :when '(("SPC" "RET" "<evil-ret>"))
-                 :unless '(sp-ruby-in-string-or-word-p)
-                 :actions '(insert)
+                 :unless '(sp-ruby-in-string-or-word-p sp-in-comment-p)
+                 :actions '(insert navigate)
                  :pre-handlers '(sp-ruby-pre-handler)
                  :post-handlers '(sp-ruby-def-post-handler)
                  :skip-match 'sp-ruby-skip-method-p
@@ -316,16 +316,16 @@
 
   (sp-local-pair "for" "end"
                  :when '(("SPC" "RET" "<evil-ret>"))
-                 :unless '(sp-ruby-in-string-or-word-p)
-                 :actions '(insert)
+                 :unless '(sp-ruby-in-string-or-word-p sp-in-comment-p)
+                 :actions '(insert navigate)
                  :pre-handlers '(sp-ruby-pre-handler)
                  :post-handlers '(sp-ruby-def-post-handler)
                  :skip-match 'sp-ruby-skip-inline-match-p)
 
   (sp-local-pair "if" "end"
                  :when '(("SPC" "RET" "<evil-ret>"))
-                 :unless '(sp-ruby-in-string-word-or-inline-p)
-                 :actions '(insert)
+                 :unless '(sp-ruby-in-string-word-or-inline-p sp-in-comment-p)
+                 :actions '(insert navigate)
                  :pre-handlers '(sp-ruby-pre-handler)
                  :post-handlers '(sp-ruby-def-post-handler)
                  :skip-match 'sp-ruby-skip-inline-match-p
@@ -333,8 +333,8 @@
 
   (sp-local-pair "unless" "end"
                  :when '(("SPC" "RET" "<evil-ret>"))
-                 :unless '(sp-ruby-in-string-word-or-inline-p)
-                 :actions '(insert)
+                 :unless '(sp-ruby-in-string-word-or-inline-p sp-in-comment-p)
+                 :actions '(insert navigate)
                  :pre-handlers '(sp-ruby-pre-handler)
                  :post-handlers '(sp-ruby-def-post-handler)
                  :skip-match 'sp-ruby-skip-inline-match-p
@@ -342,8 +342,8 @@
 
   (sp-local-pair "while" "end"
                  :when '(("SPC" "RET" "<evil-ret>"))
-                 :unless '(sp-ruby-in-string-word-or-inline-p)
-                 :actions '(insert)
+                 :unless '(sp-ruby-in-string-word-or-inline-p sp-in-comment-p)
+                 :actions '(insert navigate)
                  :pre-handlers '(sp-ruby-pre-handler)
                  :post-handlers '(sp-ruby-def-post-handler)
                  :skip-match 'sp-ruby-skip-inline-match-p
@@ -351,8 +351,8 @@
 
   (sp-local-pair "until" "end"
                  :when '(("SPC" "RET" "<evil-ret>"))
-                 :unless '(sp-ruby-in-string-word-or-inline-p)
-                 :actions '(insert)
+                 :unless '(sp-ruby-in-string-word-or-inline-p sp-in-comment-p)
+                 :actions '(insert navigate)
                  :pre-handlers '(sp-ruby-pre-handler)
                  :post-handlers '(sp-ruby-def-post-handler)
                  :skip-match 'sp-ruby-skip-inline-match-p

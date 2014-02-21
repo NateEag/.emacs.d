@@ -363,7 +363,7 @@
   (interactive)
   (comment-auto-fill)
   (smart-dash-mode t)
-  (autopair-init))
+  (smartparens-mode))
 (add-hook 'sh-mode-hook 'load-shell-mode-accessories)
 
 ;; Text-editing modes of various stripes.

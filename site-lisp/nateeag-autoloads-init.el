@@ -4,7 +4,6 @@
 These are mostly for lazy-loading registration of mode hooks, but a few of them
 are for modes that didn't come with autoloading."
 
-  (autoload 'autopair-init "autopair-init.el")
   (autoload 'auto-complete-init "auto-complete-init.el")
   (autoload 'web-mode-init "web-mode-init.el")
   (autoload 'set-windows-env "set-windows-env.el")

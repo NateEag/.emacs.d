@@ -3767,6 +3767,16 @@ See URL `https://github.com/stubbornella/csslint'."
      (flycheck-find-in-buffer flycheck-d-module-re)
      module-file)))
 
+(flycheck-def-option-var flycheck-dmd-include-path nil d-dmd
+  "A list of include directories for dmd.
+
+The value of this variable is a list of strings, where each
+string is a directory to add to the include path of dmd.
+Relative paths are relative to the file being checked."
+  :type '(repeat (directory :tag "Include directory"))
+  :safe #'flycheck-string-list-p
+  :package-version '(flycheck . "0.18"))
+
 (flycheck-define-checker d-dmd
   "A D syntax checker using the DMD compiler.
 
@@ -3774,10 +3784,12 @@ See URL `http://dlang.org/'."
   :command ("dmd" "-debug" "-o-"
                   "-wi" ; Compilation will continue even if there are warnings
                   (eval (s-concat "-I" (flycheck-d-base-directory)))
+                  (option-list "-I" flycheck-dmd-include-path s-prepend)
                   source)
   :error-patterns
   ((error line-start (file-name) "(" line "): Error: " (message) line-end)
-   (warning line-start (file-name) "(" line "): " (or "Warning" "Deprecation") ": " (message) line-end))
+   (warning line-start (file-name) "(" line "): "
+            (or "Warning" "Deprecation") ": " (message) line-end))
   :modes d-mode)
 
 (flycheck-define-checker elixir
@@ -4639,6 +4651,8 @@ See URL `http://pypi.python.org/pypi/pylint'."
   :command ("pylint" "-r" "n"
             "--msg-template" "{path}:{line}:{column}:{C}:{msg} ({msg_id})"
             (config-file "--rcfile=" flycheck-pylintrc)
+            ;; Need `source-inplace' for relative imports (e.g. `from .foo
+            ;; import bar'), see https://github.com/flycheck/flycheck/issues/280
             source-inplace)
   :error-patterns
   ((error line-start (file-name) ":" line ":" column ":"
@@ -4802,11 +4816,23 @@ See URL `http://jruby.org/'."
   :modes (enh-ruby-mode ruby-mode)
   :next-checkers ((warnings-only . ruby-rubylint)))
 
+(flycheck-def-option-var flycheck-rust-library-path nil rust
+  "A list of library directories for Rust.
+
+The value of this variable is a list of strings, where each
+string is a directory to add to the library path of Rust.
+Relative paths are relative to the file being checked."
+  :type '(repeat (directory :tag "Library directory"))
+  :safe #'flycheck-string-list-p
+  :package-version '(flycheck . "0.18"))
+
 (flycheck-define-checker rust
   "A Rust syntax checker using Rust compiler.
 
 See URL `http://rust-lang.org'."
-  :command ("rustc" "--no-trans" source-inplace)
+  :command ("rustc" "--lib" "--no-trans"
+            (option-list "-L" flycheck-rust-library-path s-prepend)
+            source-inplace)
   :error-patterns
   ((error line-start (file-name) ":" line ":" column ": "
           (one-or-more digit) ":" (one-or-more digit) " error: "

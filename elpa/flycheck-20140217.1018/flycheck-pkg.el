@@ -1,4 +1,4 @@
-(define-package "flycheck" "20140211.315" "On-the-fly syntax checking (Flymake done right)"
+(define-package "flycheck" "20140217.1018" "On-the-fly syntax checking (Flymake done right)"
   '((s "1.9.0")
     (dash "2.4.0")
     (f "0.11.0")

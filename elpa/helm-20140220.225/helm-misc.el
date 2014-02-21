@@ -29,6 +29,13 @@
   :group 'helm-misc
   :type 'string)
 
+(defcustom helm-mini-default-sources '(helm-source-buffers-list
+                                       helm-source-recentf
+                                       helm-source-buffer-not-found)
+  "Default sources list used in `helm-mini'."
+  :group 'helm-misc
+  :type '(repeat (choice symbol)))
+
 (defface helm-time-zone-current
     '((t (:foreground "green")))
   "Face used to colorize current time in `helm-world-time'."
@@ -261,11 +268,10 @@ It is added to `extended-command-history'.
     (insert candidate)))
 
 (defvar helm-source-comint-input-ring
-  '((name . "Shell history")
+  '((name . "Comint history")
     (candidates . (lambda ()
                     (with-helm-current-buffer
-                      (cl-loop for i across (cddr comint-input-ring)
-                               collect i))))
+                      (ring-elements comint-input-ring))))
     (action . helm-comint-input-ring-action))
   "Source that provide helm completion against `comint-input-ring'.")
 
@@ -364,10 +370,7 @@ It is added to `extended-command-history'.
   (interactive)
   (require 'helm-files)
   (let ((helm-ff-transformer-show-only-basename nil))
-    (helm-other-buffer '(helm-source-buffers-list
-                         helm-source-recentf
-                         helm-source-buffer-not-found)
-                       "*helm mini*")))
+    (helm-other-buffer helm-mini-default-sources "*helm mini*")))
 
 ;;;###autoload
 (defun helm-minibuffer-history ()
@@ -379,13 +382,13 @@ It is added to `extended-command-history'.
 
 ;;;###autoload
 (defun helm-comint-input-ring ()
-  "Predefined `helm' that provide completion of `shell' history."
+  "Predefined `helm' that provide completion of `comint' history."
   (interactive)
-  (when (eq major-mode 'shell-mode)
+  (when (derived-mode-p 'comint-mode)
     (helm :sources 'helm-source-comint-input-ring
           :input (buffer-substring-no-properties (comint-line-beginning-position)
                                                  (point-at-eol))
-          :buffer "*helm shell history*")))
+          :buffer "*helm comint history*")))
 
 
 (provide 'helm-misc)

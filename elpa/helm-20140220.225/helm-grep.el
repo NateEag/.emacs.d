@@ -266,6 +266,11 @@ It is intended to use as a let-bound variable, DON'T set this globaly.")
                      ((and (file-directory-p i)
                            helm-grep-in-recurse)
                       (list (expand-file-name i)))
+                     ((and (file-directory-p i)
+                           ;; ack-grep accept directory [1].
+                           (not (helm-grep-use-ack-p)))
+                      (file-expand-wildcards
+                       (concat (file-name-as-directory (expand-file-name i)) "*") t))
                      ;; Candidate is a file or wildcard and we use recursion, use the
                      ;; current directory instead of candidate.
                      ((and (or (file-exists-p i) (string-match "[*]" i))
@@ -679,8 +684,9 @@ Special commands:
 (defun helm-grep-hack-types ()
   "Return a list of known ack-grep types."
   (with-temp-buffer
-    (call-process helm-ack-grep-executable nil t nil
-                  "--help" "types")
+    ;; "--help-types" works with both 1.96 and 2.1+, while
+    ;; "--help types" works only with 1.96 Issue #422
+    (call-process helm-ack-grep-executable nil t nil "--help-types")
     (goto-char (point-min))
     (cl-loop while (re-search-forward
                     "^ *--\\(\\[no\\]\\)\\([^. ]+\\) *\\(.*\\)" nil t)
@@ -769,7 +775,7 @@ You can give more than one arg separated by space.
 e.g *.el *.py *.tex.
 If you are using ack-grep, you will be prompted for --type
 instead.
-If prompt is empty '--exclude `grep-find-ignored-files'' is used instead.
+If prompt is empty '--exclude `grep-find-ignored-files' is used instead.
 ZGREP when non--nil use zgrep instead, without prompting for a choice
 in recurse, search being made on `helm-zgrep-file-extension-regexp'."
   (when (and (helm-grep-use-ack-p)

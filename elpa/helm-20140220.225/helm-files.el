@@ -400,7 +400,9 @@ Don't set it directly, use instead `helm-ff-auto-update-initial-value'.")
     (init . (lambda ()
               (setq helm-ff-auto-update-flag
                     helm-ff-auto-update-initial-value)
-              (set (make-local-variable 'helm-in-file-completion-p) t)))
+              (with-helm-temp-hook 'helm-after-initialize-hook
+                (with-helm-buffer  
+                  (set (make-local-variable 'helm-in-file-completion-p) t))))) 
     (candidates . helm-find-files-get-candidates)
     (filtered-candidate-transformer . helm-ff-sort-candidates)
     (filter-one-by-one . helm-ff-filter-candidate-one-by-one)
@@ -1268,7 +1270,12 @@ expand to this directory."
            (input (cond ((string= match "/./") default-directory)
                         ((string= helm-pattern "/../") "/")
                         (t (expand-file-name
-                            (helm-substitute-in-filename helm-pattern))))))
+                            (helm-substitute-in-filename helm-pattern)
+                            ;; [Windows] On UNC paths "/" expand to current machine,
+                            ;; so use the root of current Drive. (i.e "C:/")
+                            (and (memq system-type '(windows-nt ms-dos))
+                                 (getenv "SystemDrive")) ; nil on Unix.
+                            )))))
       (if (file-directory-p input)
           (setq helm-ff-default-directory
                 (setq input (file-name-as-directory input)))
@@ -1284,12 +1291,13 @@ On windows system substitute from start up to \"/[a-z]:/\"."
   (with-temp-buffer
     (insert fname)
     (goto-char (point-min))
+    (skip-chars-forward "//") ;; Avoid infloop in UNC paths Issue #424
     (if (re-search-forward "~/\\|//\\|/[[:alpha:]]:/" nil t)
         (let ((match (match-string 0)))
-          (if (or (string= match "//")
-                  (string-match-p "/[[:alpha:]]:/" match))
-              (goto-char (1+ (match-beginning 0)))
-              (goto-char (match-beginning 0)))
+          (goto-char (if (or (string= match "//")
+                             (string-match-p "/[[:alpha:]]:/" match))
+                         (1+ (match-beginning 0))
+                         (match-beginning 0)))
           (buffer-substring-no-properties (point) (point-at-eol)))
         fname)))
 
@@ -1569,7 +1577,7 @@ Note that only directories are saved here."
                  ;; and we don't want to introduce duplicates.
                  (add-to-history 'file-name-history
                                  (abbreviate-file-name sel)))))))
-(add-hook 'helm-after-action-hook 'helm-files-save-file-name-history)
+(add-hook 'helm-exit-minibuffer-hook 'helm-files-save-file-name-history)
 
 (defun helm-ff-valid-symlink-p (file)
   (file-exists-p (file-truename file)))
@@ -2111,7 +2119,7 @@ Find inside `require' and `declare-function' sexp."
 ;;; Handle copy, rename, symlink, relsymlink and hardlink from helm.
 ;;
 ;;
-(defvar helm-async-be-async)
+(defvar dired-async-be-async)
 (cl-defun helm-dired-action (candidate
                              &key action follow (files (dired-get-marked-files)))
   "Execute ACTION on FILES to CANDIDATE.
@@ -2135,8 +2143,8 @@ Argument FOLLOW when non--nil specify to follow FILES to destination."
                       (not (file-directory-p candidate))))
         ;; When FOLLOW is enabled, disable helm-async.
         ;; If it is globally disabled use this nil value.
-        (helm-async-be-async (and (boundp 'helm-async-be-async)
-                                  helm-async-be-async
+        (dired-async-be-async (and (boundp 'dired-async-be-async)
+                                  dired-async-be-async
                                   (not follow))))
     (dired-create-files
      fn (symbol-name action) files
@@ -2393,9 +2401,12 @@ Else return ACTIONS unmodified."
 ;;
 ;;
 (defvar helm-source-file-name-history
-  '((name . "File Name History")
+  `((name . "File Name History")
     (candidates . file-name-history)
-    (type . file)))
+    (persistent-action . ignore)
+    (filtered-candidate-transformer . helm-file-name-history-transformer)
+    (action . ,(cdr (helm-get-actions-from-type
+                     helm-source-locate)))))
 
 (defvar helm-source--ff-file-name-history
   '((name . "File name history")

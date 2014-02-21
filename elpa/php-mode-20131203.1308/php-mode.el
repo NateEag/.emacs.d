@@ -6,7 +6,7 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Version: 20131203.1608
+;; Version: 20131203.1308
 ;;; X-Original-Version: 1.12
 
 (defconst php-mode-version-number "1.13"

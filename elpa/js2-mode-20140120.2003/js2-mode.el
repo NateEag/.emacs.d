@@ -1,13 +1,13 @@
 ;;; js2-mode.el --- Improved JavaScript editing mode
 
-;; Copyright (C) 2009, 2011-2013  Free Software Foundation, Inc.
+;; Copyright (C) 2009, 2011-2014  Free Software Foundation, Inc.
 
 ;; Author: Steve Yegge <steve.yegge@gmail.com>
 ;;         mooz <stillpedant@gmail.com>
 ;;         Dmitry Gutov <dgutov@yandex.ru>
 ;; URL:  https://github.com/mooz/js2-mode/
 ;;       http://code.google.com/p/js2-mode/
-;; Version: 20131106
+;; Version: 20140114
 ;; Keywords: languages, javascript
 ;; Package-Requires: ((emacs "24.1"))
 
@@ -1048,6 +1048,11 @@ in large files.")
 (defface js2-function-param
   '((t :foreground "SeaGreen"))
   "Face used to highlight function parameters in javascript."
+  :group 'js2-mode)
+
+(defface js2-function-call
+  '((t :inherit default))
+  "Face used to highlight function name in calls."
   :group 'js2-mode)
 
 (defface js2-instance-member
@@ -7176,7 +7181,6 @@ leaving a statement, an expression, or a function definition."
         (max-specpdl-size (max max-specpdl-size 3000))
         (case-fold-search nil)
         ast)
-    (message nil)  ; clear any error message from previous parse
     (with-current-buffer (or buf (current-buffer))
       (setq js2-scanned-comments nil
             js2-parsed-errors nil
@@ -8861,6 +8865,7 @@ Returns the list in reverse order.  Consumes the right-paren token."
             pn (make-js2-new-node :pos pos
                                   :target target
                                   :len (- end pos)))
+      (js2-highlight-function-call (js2-current-token))
       (js2-node-add-children pn target)
       (when (js2-match-token js2-LP)
         ;; Add the arguments to pn, if any are supplied.
@@ -8898,9 +8903,9 @@ Returns an expression tree that includes PN, the parent node."
        ((= tt js2-LB)
         (setq pn (js2-parse-element-get pn)))
        ((= tt js2-LP)
+        (js2-unget-token)
         (if allow-call-syntax
             (setq pn (js2-parse-function-call pn))
-          (js2-unget-token)
           (setq continue nil)))
        (t
         (js2-unget-token)
@@ -8952,7 +8957,13 @@ Last token parsed must be `js2-RB'."
                            (js2-elem-get-node-element pn))
     pn))
 
+(defun js2-highlight-function-call (token)
+  (when (eq (js2-token-type token) js2-NAME)
+    (js2-record-face 'js2-function-call token)))
+
 (defun js2-parse-function-call (pn)
+  (js2-highlight-function-call (js2-current-token))
+  (js2-get-token)
   (let (args
         (pos (js2-node-pos pn)))
     (setq pn (make-js2-call-node :pos pos
@@ -9605,7 +9616,7 @@ of continued expressions.")
                     (syntax-ppss (point))))
       (cond ((nth 3 parse)
              (re-search-forward
-              (concat "\\([^\\]\\|^\\)" (string (nth 3 parse)))
+              (concat "\\(\\=\\|[^\\]\\|^\\)" (string (nth 3 parse)))
               (save-excursion (end-of-line) (point)) t))
             ((nth 7 parse)
              (forward-line))

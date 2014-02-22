@@ -486,10 +486,15 @@
 (global-set-key (kbd "C-c t") 'insert-time)
 
 ;; Switch buffers/find likely files via Helm.
-;; DEBUG Ideally, I'd be able to just type filenames and find them, whether
-;; they're open buffers or not. Adding one of the helm git packages might get
-;; me close - I guess I'll have to try that some time.
-(global-set-key (kbd "C-c b") 'helm-for-files)
+(defun my-helm-for-files ()
+  "Try to make it painless to open files/swap buffers."
+  (interactive)
+  (helm :sources '(helm-source-buffers-list
+                   helm-git-files:modified-source
+                   helm-git-files:untracked-source
+                   helm-git-files:all-source
+                   helm-source-recentf)))
+(global-set-key (kbd "C-c b") 'my-helm-for-files)
 
 ;; Search through buffers with helm-swoop.
 (global-set-key (kbd "C-c s") 'helm-swoop)

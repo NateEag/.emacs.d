@@ -491,6 +491,9 @@
 ;; me close - I guess I'll have to try that some time.
 (global-set-key (kbd "C-c b") 'helm-for-files)
 
+;; Search through buffers with helm-swoop.
+(global-set-key (kbd "C-c s") 'helm-swoop)
+
 ;; Bindings for moving between errors. Flycheck by default, then other modes
 ;; involving error navigation will have to override them.
 (global-set-key (kbd "C-c e n") 'flycheck-next-error)

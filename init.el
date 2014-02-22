@@ -490,3 +490,8 @@
 ;; they're open buffers or not. Adding one of the helm git packages might get
 ;; me close - I guess I'll have to try that some time.
 (global-set-key (kbd "C-c b") 'helm-for-files)
+
+;; Bindings for moving between errors. Flycheck by default, then other modes
+;; involving error navigation will have to override them.
+(global-set-key (kbd "C-c e n") 'flycheck-next-error)
+(global-set-key (kbd "C-c e p") 'flycheck-previous-error)

@@ -15,19 +15,15 @@
 
 ;; Set up my default font. Work in progress.
 (defun my-get-default-font-size ()
-  "Return a good(?) size for my default font based on monitor resolution."
+  "Return a good size for my default font based on monitor's pixel density."
 
-  ;; A snippet something like the following should let me calculate my
-  ;; monitor's DPI. Try that later.
-  ;; (let ((display-dpi (/ (display-pixel-width) (display-mm-width))))
-  ;;   (if display-dpi
-  ;;       (progn
-  ;;         )
-  ;;       ))
-
-  (if (>= (display-pixel-width) 1280)
-      14
-    12))
+  (let ((my-display-pixel-width (display-pixel-width))
+        (my-display-mm-width (display-mm-width)))
+    (if (or (not my-display-pixel-width)
+            (not my-display-mm-width)
+            (< (/ (display-pixel-width) (display-mm-width)) 3))
+        12
+      14)))
 
 (defun my-get-default-font-name ()
   "Return the name of my preferred font."

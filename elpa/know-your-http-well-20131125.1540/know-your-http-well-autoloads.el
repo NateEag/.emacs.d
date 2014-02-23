@@ -4,7 +4,7 @@
 
 
 ;;;### (autoloads (http-header) "http-headers" "http-headers.el"
-;;;;;;  (21134 12888 0 0))
+;;;;;;  (21258 2263 0 0))
 ;;; Generated autoloads from http-headers.el
 
 (autoload 'http-header "http-headers" "\
@@ -15,7 +15,7 @@ Display the meaning of an HTTP header
 ;;;***
 
 ;;;### (autoloads (http-method) "http-methods" "http-methods.el"
-;;;;;;  (21134 12888 0 0))
+;;;;;;  (21258 2263 0 0))
 ;;; Generated autoloads from http-methods.el
 
 (autoload 'http-method "http-methods" "\
@@ -26,7 +26,7 @@ Display the meaning of an HTTP method
 ;;;***
 
 ;;;### (autoloads (http-relation) "http-relations" "http-relations.el"
-;;;;;;  (21134 12888 0 0))
+;;;;;;  (21258 2263 0 0))
 ;;; Generated autoloads from http-relations.el
 
 (autoload 'http-relation "http-relations" "\
@@ -37,7 +37,7 @@ Display the meaning of an HTTP relation
 ;;;***
 
 ;;;### (autoloads (http-status-code) "http-status-codes" "http-status-codes.el"
-;;;;;;  (21134 12888 0 0))
+;;;;;;  (21258 2263 0 0))
 ;;; Generated autoloads from http-status-codes.el
 
 (autoload 'http-status-code "http-status-codes" "\
@@ -48,7 +48,7 @@ Display the meaning of an HTTP status code or phrase
 ;;;***
 
 ;;;### (autoloads nil nil ("know-your-http-well-pkg.el" "know-your-http-well.el")
-;;;;;;  (21134 12888 394000 0))
+;;;;;;  (21258 2264 950 0))
 
 ;;;***
 

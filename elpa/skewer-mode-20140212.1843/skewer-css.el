@@ -1,4 +1,4 @@
-;;; skewer-css.el --- skewer support for live-interaction CSS
+;;; skewer-css.el --- skewer support for live-interaction CSS -*- lexical-binding: t; -*-
 
 ;; This is free and unencumbered software released into the public domain.
 
@@ -31,12 +31,12 @@
 (defun skewer-css-beginning-of-rule ()
   "Move to the beginning of the current rule and return point."
   (skewer-css-end-of-rule)
-  (let ((end (re-search-backward "{")))
-    (when (re-search-backward "[}/]" nil 'start)
-      (forward-char))
-    (re-search-forward "[^ \t\n]")
-    (backward-char)
-    (point)))
+  (re-search-backward "{")
+  (when (re-search-backward "[}/]" nil 'start)
+    (forward-char))
+  (re-search-forward "[^ \t\n]")
+  (backward-char)
+  (point))
 
 (defun skewer-css-end-of-rule ()
   "Move to the end of the current rule and return point."
@@ -106,6 +106,11 @@
   (interactive)
   (skewer-css (buffer-substring-no-properties (point-min) (point-max))))
 
+(defun skewer-css-clear-all ()
+  "Remove *all* Skewer-added styles from the document."
+  (interactive)
+  (skewer-eval nil nil :type "cssClearAll"))
+
 ;; Minor mode definition
 
 (defvar skewer-css-mode-map
@@ -113,7 +118,8 @@
     (prog1 map
       (define-key map (kbd "C-x C-e") 'skewer-css-eval-current-declaration)
       (define-key map (kbd "C-M-x") 'skewer-css-eval-current-rule)
-      (define-key map (kbd "C-c C-k") 'skewer-css-eval-buffer)))
+      (define-key map (kbd "C-c C-k") 'skewer-css-eval-buffer)
+      (define-key map (kbd "C-c C-c") 'skewer-css-clear-all)))
   "Keymap for skewer-css-mode.")
 
 ;;;###autoload

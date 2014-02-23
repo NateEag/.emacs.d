@@ -4,8 +4,9 @@
 
 ;; Author: Christopher Wellons <wellons@nullprogram.com>
 ;; URL: https://github.com/skeeto/emacs-http-server
-;; Version: 20130908.1604
-;; X-Original-Version: 1.4.4
+;; Version: 20140123.1243
+;; X-Original-Version: 1.4.5
+;; Package-Requires: ((cl-lib "0.3"))
 
 ;;; Commentary:
 
@@ -95,6 +96,8 @@
 
 ;;; History:
 
+;; Version 1.4.5: fixes
+;;   * Update to cl-lib from cl
 ;; Version 1.4.4: features
 ;;   * Common Lisp &key-like defservlet* argument support
 ;;   * Fix up some defservlet* usage warnings.
@@ -124,7 +127,7 @@
 
 ;;; Code:
 
-(require 'cl)
+(require 'cl-lib)
 (require 'pp)
 (require 'url-util)
 
@@ -318,7 +321,7 @@ instance per Emacs instance."
   (setq string (concat (process-get proc :previous-string) string))
   (let* ((request (httpd-parse string))
          (content-length (cadr (assoc "Content-Length" request)))
-         (uri (cadar request))
+         (uri (cl-cadar request))
          (content (cadr (assoc "Content" request)))
          (parsed-uri (httpd-parse-uri (concat uri)))
          (uri-path (nth 0 parsed-uri))
@@ -361,6 +364,10 @@ instance per Emacs instance."
 
 (defvar httpd-current-proc nil
   "The process object currently in use.")
+
+(defvar httpd--header-sent nil
+  "Buffer-local variable indicating if the header has been sent.")
+(make-variable-buffer-local 'httpd--header-sent)
 
 (defun httpd-resolve-proc (proc)
   "Return the correct process to use. This handles `httpd-current-proc'."
@@ -406,19 +413,19 @@ A servlet that says hello,
   (declare (indent defun))
   (let ((proc-sym (make-symbol "proc"))
         (fname (intern (concat "httpd/" (symbol-name name)))))
-    `(defun ,fname (,proc-sym ,@path-query-request &rest ,(gensym))
+    `(defun ,fname (,proc-sym ,@path-query-request &rest ,(cl-gensym))
        (with-httpd-buffer ,proc-sym ,(httpd--stringify mime)
          ,@body))))
 
 (defun httpd-parse-endpoint (symbol)
   "Parse an endpoint definition template for use with `defservlet*'."
-  (loop for item in (split-string (symbol-name symbol) "/")
-        for n upfrom 0
-        when (eql (aref item 0) ?:)
-        collect (cons (intern (substring item 1)) n) into vars
-        else collect item into path
-        finally (return
-                 (values (intern (mapconcat #'identity path "/")) vars))))
+  (cl-loop for item in (split-string (symbol-name symbol) "/")
+           for n upfrom 0
+           when (eql (aref item 0) ?:)
+           collect (cons (intern (substring item 1)) n) into vars
+           else collect item into path
+           finally (return
+                    (cl-values (intern (mapconcat #'identity path "/")) vars))))
 
 (defvar httpd-path nil
   "Anaphoric variable for `defservlet*'.")
@@ -459,42 +466,46 @@ The original path, query, and request can be accessed by the
 anaphoric special variables `httpd-path', `httpd-query', and
 `httpd-request'."
   (declare (indent defun))
-  (let ((path-lexical (gensym))
-        (query-lexical (gensym))
-        (request-lexical (gensym)))
-    (multiple-value-bind (path vars) (httpd-parse-endpoint endpoint)
+  (let ((path-lexical (cl-gensym))
+        (query-lexical (cl-gensym))
+        (request-lexical (cl-gensym)))
+    (cl-multiple-value-bind (path vars) (httpd-parse-endpoint endpoint)
       `(defservlet ,path ,mime (,path-lexical ,query-lexical ,request-lexical)
          (let ((httpd-path ,path-lexical)
                (httpd-query ,query-lexical)
                (httpd-request ,request-lexical)
                (httpd-split-path (split-string
                                   (substring ,path-lexical 1) "/")))
-           (let ,(loop for (var . pos) in vars
-                       for extract =
-                       `(httpd-unhex (nth ,pos httpd-split-path))
-                       collect (list var extract))
-             (let ,(loop for arg in args
-                         for has-default = (listp arg)
-                         for has-default-p = (and has-default
-                                                  (= 3 (length arg)))
-                         for arg-name = (symbol-name
-                                         (if has-default (first arg) arg))
-                         when has-default collect
-                         (list (first arg)
-                               `(let ((value (assoc ,arg-name httpd-query)))
-                                  (if value (second value) ,(second arg))))
-                         else collect
-                         (list arg `(second (assoc ,arg-name httpd-query)))
-                         when has-default-p collect
-                         (list (third arg)
-                               `(not (null (assoc ,arg-name httpd-query)))))
+           (let ,(cl-loop for (var . pos) in vars
+                          for extract =
+                          `(httpd-unhex (nth ,pos httpd-split-path))
+                          collect (list var extract))
+             (let ,(cl-loop for arg in args
+                            for has-default = (listp arg)
+                            for has-default-p = (and has-default
+                                                     (= 3 (length arg)))
+                            for arg-name = (symbol-name
+                                            (if has-default (cl-first arg) arg))
+                            when has-default collect
+                            (list (cl-first arg)
+                                  `(let ((value (assoc ,arg-name httpd-query)))
+                                     (if value
+                                         (cl-second value)
+                                       ,(cl-second arg))))
+                            else collect
+                            (list arg `(cl-second
+                                        (assoc ,arg-name httpd-query)))
+                            when has-default-p collect
+                            (list (cl-third arg)
+                                  `(not (null (assoc ,arg-name httpd-query)))))
                ,@body)))))))
 
-(font-lock-add-keywords 'emacs-lisp-mode
-  '(("(\\<\\(defservlet\\*?\\)\\> +\\([^ ()]+\\) +\\([^ ()]+\\)"
-     (1 'font-lock-keyword-face)
-     (2 'font-lock-function-name-face)
-     (3 'font-lock-type-face))))
+(font-lock-add-keywords
+ 'emacs-lisp-mode
+ '(("(\\<\\(defservlet\\*?\\)\\> +\\([^ ()]+\\) +\\([^ ()]+\\)"
+    (1 'font-lock-keyword-face)
+    (2 'font-lock-function-name-face)
+    (3 'font-lock-type-face))))
 
 (defmacro httpd-def-file-servlet (name root)
   "Defines a servlet that serves files from ROOT under the route NAME.
@@ -572,8 +583,8 @@ variable/value pairs, and the third is the fragment."
   (let ((clean (expand-file-name (httpd-clean-path path) (or root httpd-root))))
     (if (file-directory-p clean)
         (let* ((dir (file-name-as-directory clean))
-               (indexes (mapcar* (apply-partially 'concat dir) httpd-indexes))
-               (existing (remove-if-not 'file-exists-p indexes)))
+               (indexes (cl-mapcar (apply-partially 'concat dir) httpd-indexes))
+               (existing (cl-remove-if-not 'file-exists-p indexes)))
           (or (car existing) dir))
       clean)))
 
@@ -581,10 +592,12 @@ variable/value pairs, and the third is the fragment."
   "Determine the servlet to be executed for URI-PATH."
   (if (not httpd-servlets)
       'httpd/
-    (flet ((cat (x) (concat "httpd/" (mapconcat 'identity (reverse x) "/"))))
+    (cl-labels ((cat (x)
+                  (concat "httpd/" (mapconcat 'identity (reverse x) "/"))))
       (let ((parts (cdr (split-string (directory-file-name uri-path) "/"))))
         (or
-         (find-if 'fboundp (mapcar 'intern-soft (maplist 'cat (reverse parts))))
+         (cl-find-if 'fboundp (mapcar 'intern-soft
+                                      (cl-maplist #'cat (reverse parts))))
          'httpd/)))))
 
 (defun httpd-serve-root (proc root uri-path &optional request)
@@ -609,10 +622,6 @@ variable/value pairs, and the third is the fragment."
 
 ;; Data sending functions
 
-(defvar httpd--header-sent nil
-  "Buffer-local variable indicating if the header has been sent.")
-(make-variable-buffer-local 'httpd--header-sent)
-
 (defun httpd-send-header (proc mime status &rest header-keys)
   "Send an HTTP header with given MIME type and STATUS, followed
 by the current buffer. If PROC is T use the `httpd-current-proc'
@@ -631,11 +640,11 @@ Extra headers can be sent by supplying them like keywords, i.e.
       (setf httpd--header-sent t)
       (with-temp-buffer
         (insert (format "HTTP/1.1 %d %s\r\n" status status-str))
-        (loop for (header value) on header-keys by #'cddr
-              for header-name = (substring (symbol-name header) 1)
-              for value-name = (format "%s" value)
-              collect (cons header-name value-name) into extras
-              finally (setf headers (nconc headers extras)))
+        (cl-loop for (header value) on header-keys by #'cddr
+                 for header-name = (substring (symbol-name header) 1)
+                 for value-name = (format "%s" value)
+                 collect (cons header-name value-name) into extras
+                 finally (setf headers (nconc headers extras)))
         (dolist (header headers)
           (insert (format "%s: %s\r\n" (car header) (cdr header))))
         (insert "\r\n")

@@ -11,41 +11,6 @@
 ;; (like emacs-lisp-mode) don't cause horkage when running in batch mode.
 (package-initialize)
 
-;;; General preferences.
-
-;; Set up my default font. Work in progress.
-(defun my-get-default-font-size ()
-  "Return a good size for my default font based on monitor's pixel density."
-
-  (let ((my-display-pixel-width (display-pixel-width))
-        (my-display-mm-width (display-mm-width)))
-    (if (or (not my-display-pixel-width)
-            (not my-display-mm-width)
-            (< (/ (display-pixel-width) (display-mm-width)) 3))
-        12
-      14)))
-
-(defun my-get-default-font-name ()
-  "Return the name of my preferred font."
-  "Anonymous Pro")
-
-(defun my-get-default-font (&optional size)
-  "Return a string specifying my default font."
-
-  (setq my-font-size (if size size (my-get-default-font-size)))
-  (setq my-default-font (concat (my-get-default-font-name) "-"
-                                (number-to-string my-font-size))))
-
-(defun my-set-default-font (&optional size)
-  "Set my default font, if possible, optionally at point size `size`."
-
-  ;; Do not set a font if it is not available - keeps us from crashing in a
-  ;; font-free setting.
-  (if (member (my-get-default-font-name) (font-family-list))
-      (set-frame-font (my-get-default-font size) nil t)))
-
-(my-set-default-font)
-
 ;; Sometimes you want to debug when there are errors, but not nearly as often
 ;; as I believed at the first.
 ;(setq debug-on-error t)
@@ -63,6 +28,16 @@
 (add-subdirs-to-front-of-load-path "~/.emacs.d/site-lisp")
 (add-to-list 'load-path "~/.emacs.d/site-lisp")
 (add-to-list 'load-path "~/.emacs.d")
+
+;; Set up manually-maintained autoloads. Mostly defines mode hooks.
+(require 'nateeag-autoloads-init)
+(nateeag-autoloads-init)
+
+
+;;; General preferences.
+
+;; Set up my default font.
+(my-set-default-font)
 
 ;; Everyone likes syntax coloration.
 (global-font-lock-mode 1)
@@ -170,10 +145,6 @@
 ;; Save minibuffer data between sessions.
 (setq savehist-file "~/.emacs.d/tmp/savehist")
 (savehist-mode t)
-
-;; Set up manually-maintained autoloads. Mostly defines mode hooks.
-(require 'nateeag-autoloads-init)
-(nateeag-autoloads-init)
 
 ;; Set up exec-path to inherit values from the shell.
 (when (memq window-system '(mac ns))
@@ -325,11 +296,23 @@
 (helm-mode)
 (diminish 'helm-mode)
 
+(require 'helm-git-files)
+(defun my-helm-for-files ()
+  "Try to make it painless to open files/swap buffers."
+  (interactive)
+  (helm :sources '(helm-source-buffers-list
+                   helm-git-files:modified-source
+                   helm-git-files:untracked-source
+                   helm-git-files:all-source
+                   helm-source-recentf)))
+
 ;; Run yasnippet customizations when it's started.
-(add-hook 'yas-minor-mode-hook 'yasnippet-init)
+(eval-after-load 'yasnippet
+  '(yasnippet-init))
 
 ;; Run smartparens customizations when it's started.
-(add-hook 'smartparens-enabled-hook 'smartparens-init)
+(eval-after-load 'smartparens
+  '(smartparens-init))
 
 ;; Run auto-complete customizations when it's started.
 (add-hook 'auto-complete-mode-hook 'auto-complete-init)
@@ -478,6 +461,14 @@
 
 ;; Global keybindings inside the "reserved for user" namespace.
 
+;; Switch buffers/find likely files via Helm.
+(global-set-key (kbd "C-c b") 'my-helm-for-files)
+
+;; Bindings for moving between errors. Flycheck by default, then other modes
+;; involving error navigation will have to override them.
+(global-set-key (kbd "C-c e n") 'flycheck-next-error)
+(global-set-key (kbd "C-c e p") 'flycheck-previous-error)
+
 ;; g is for git, which is oh so much fun.
 (global-set-key (kbd "C-c g") 'magit-status)
 
@@ -485,21 +476,5 @@
 (global-set-key (kbd "C-c d") 'insert-date)
 (global-set-key (kbd "C-c t") 'insert-time)
 
-;; Switch buffers/find likely files via Helm.
-(defun my-helm-for-files ()
-  "Try to make it painless to open files/swap buffers."
-  (interactive)
-  (helm :sources '(helm-source-buffers-list
-                   helm-git-files:modified-source
-                   helm-git-files:untracked-source
-                   helm-git-files:all-source
-                   helm-source-recentf)))
-(global-set-key (kbd "C-c b") 'my-helm-for-files)
-
 ;; Search through buffers with helm-swoop.
 (global-set-key (kbd "C-c s") 'helm-swoop)
-
-;; Bindings for moving between errors. Flycheck by default, then other modes
-;; involving error navigation will have to override them.
-(global-set-key (kbd "C-c e n") 'flycheck-next-error)
-(global-set-key (kbd "C-c e p") 'flycheck-previous-error)

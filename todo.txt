@@ -17,6 +17,8 @@
  compiling the init file, but I'd have to add special cases in the hook and in
  my savehook.
 
+-Add a post-checkout hook, so elisp gets recompiled when I change branches.
+
 -Move my one-off variable customizations into custom.el (at least the ones that
  don't need any documentation of why they are what they are).
 

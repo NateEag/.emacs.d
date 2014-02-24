@@ -233,10 +233,11 @@
 	      ((:keywords quote nil)
 	       (:url . "http://elpa.gnu.org/packages/notes-mode.html"))])
  (num3-mode .
-	    [(1 1)
+	    [(1 2)
 	     nil "highlight groups of digits in long numbers" single
 	     ((:url . "http://elpa.gnu.org/packages/num3-mode.html")
-	      (:keywords quote nil))])
+	      (:keywords quote
+			 ("faces" "minor-mode")))])
  (oauth2 .
 	 [(0 10)
 	  nil "OAuth 2.0 Authorization Protocol" single
@@ -249,7 +250,7 @@
 	    ((:url . "http://elpa.gnu.org/packages/omn-mode.html")
 	     (:keywords quote nil))])
  (org .
-      [(20140217)
+      [(20140224)
        nil "Outline-based notes management and organizer" tar nil])
  (quarter-plane .
 		[(0 1)
@@ -346,7 +347,7 @@
 		   ((:keywords quote nil)
 		    (:url . "http://elpa.gnu.org/packages/uni-confusables.html"))])
  (vlf .
-      [(1 4)
+      [(1 5)
        nil "View Large Files" tar
        ((:keywords quote
 		   ("large files" "utilities"))

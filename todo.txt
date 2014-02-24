@@ -1,5 +1,10 @@
 -Make a PR to auto-complete for supporting smart-dash-mode.
 
+-Add an after-revert-hook to reload helm-git-file's cache for any containing
+ repo if necessary. Seems like this should be a simple thing to do, though if
+ you have a lot of buffers open from that repo it might get expensive... Think
+ about this, anyway.
+
 -Pull in pick-backup and write a little glue to integrate it with
  backup-walker. Maybe it could replace backup-walker? Try it and see.
  All I really want here is the ability to diff a backup against the current

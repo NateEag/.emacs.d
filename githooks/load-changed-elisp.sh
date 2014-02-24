@@ -7,7 +7,7 @@
 # into a long-running instance.
 
 emacs --batch --eval "(require 'server)" \
-    --eval "(if (not (server-running-p)) (kill-emacs 1))"
+    --eval "(if (not (eq (server-running-p) t)) (kill-emacs 1))"
 is_server_running=$?
 if [ $is_server_running -eq 0 ]; then
     updated_files=$(git diff --name-only --diff-filter=[ACM] $1 $2 | grep '\.el$')

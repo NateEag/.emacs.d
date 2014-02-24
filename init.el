@@ -296,6 +296,8 @@
 (helm-mode)
 (diminish 'helm-mode)
 
+;; DEBUG The first time this runs in a repo, I don't see any git-ls-files
+;; results. I think it's probably just taking a while to run git-ls-files?
 (require 'helm-git-files)
 (defun my-helm-for-files ()
   "Try to make it painless to open files/swap buffers."
@@ -437,7 +439,7 @@
 ;; If we're running in a window system, start an emacs server, so emacsclient
 ;; can connect to this instance.
 (require 'server)
-(when (and (not (server-running-p)) (display-graphic-p))
+(when (and (display-graphic-p) (not (eq t (server-running-p))))
     (server-start))
 
 (setq custom-file "~/.emacs.d/custom.el")
@@ -464,8 +466,8 @@
 ;; Switch buffers/find likely files via Helm.
 (global-set-key (kbd "C-c b") 'my-helm-for-files)
 
-;; Bindings for moving between errors. Flycheck by default, then other modes
-;; involving error navigation will have to override them.
+;; Bindings for moving between errors. Flycheck by default, then modes
+;; that use other error detection tools will have to override them.
 (global-set-key (kbd "C-c e n") 'flycheck-next-error)
 (global-set-key (kbd "C-c e p") 'flycheck-previous-error)
 

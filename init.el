@@ -204,6 +204,27 @@
 
 ;; Random functions worth having around.
 
+;; This is a first step towards a function I have wished I had before.
+;; I don't want to have to think or type to say "change which kind of string
+;; delimiters I'm using".
+(defun my-change-string-delimiters ()
+  "Change the delimiters surrounding point."
+  (interactive)
+  (save-excursion
+    (let ((end-delim-pos (search-forward "\"" nil t))
+          (start-delim-pos (search-backward "\"" nil t 2)))
+      (if (and start-delim-pos end-delim-pos)
+          (progn
+            (goto-char start-delim-pos)
+            (delete-forward-char 1)
+            (insert "'")
+
+            (goto-char (- end-delim-pos 1))
+            (delete-forward-char 1)
+            (insert "'"))
+        (message "Could not find both delimiters."))
+      )))
+
 ;; GRIPE If I just generalized a tiny bit, I could probably make this work in a
 ;; lot more languages than just PHP, since comma for separator is a really
 ;; common idiom, and it'd be easy to accept different delimiters.

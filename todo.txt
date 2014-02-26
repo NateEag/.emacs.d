@@ -3,6 +3,8 @@
 -Make a wrapper around untabify/tabify so that they re-guess the file's style
  after they've been run.
 
+-elisp-related hooks should only run on '.el' files.
+
 -Add an after-revert-hook to reload helm-git-file's cache for any containing
  repo if necessary. Seems like this should be a simple thing to do, though if
  you have a lot of buffers open from that repo it might get expensive... Think

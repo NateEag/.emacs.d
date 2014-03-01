@@ -565,7 +565,10 @@ ACTION must be an action supported by `helm-dired-action'."
 
 (defun helm-find-files-grep (_candidate)
   "Default action to grep files from `helm-find-files'."
-  (helm-do-grep-1 (helm-marked-candidates :with-wildcard t) helm-current-prefix-arg))
+  (apply 'run-with-idle-timer 0.01 nil
+         #'helm-do-grep-1
+         (helm-marked-candidates :with-wildcard t)
+         helm-current-prefix-arg))
 
 (defun helm-ff-zgrep (_candidate)
   "Default action to zgrep files from `helm-find-files'."
@@ -2255,14 +2258,14 @@ Ask to kill buffers associated with that file, too."
 
 (defun helm-delete-marked-files (_ignore)
   (let* ((files (helm-marked-candidates :with-wildcard t))
-         (len (length files))
-         (buf (get-buffer-create helm-marked-buffer-name)))
+         (len (length files)))
     (with-helm-display-marked-candidates
-      buf (mapcar #'(lambda (f)
-                      (if (file-directory-p f)
-                          (concat (helm-basename f) "/")
-                          (helm-basename f)))
-                  files)
+      helm-marked-buffer-name
+      (mapcar #'(lambda (f)
+                  (if (file-directory-p f)
+                      (concat (helm-basename f) "/")
+                      (helm-basename f)))
+              files)
       (if (not (y-or-n-p (format "Delete *%s File(s)" len)))
           (message "(No deletions performed)")
           (cl-dolist (i files)

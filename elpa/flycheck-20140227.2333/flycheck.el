@@ -508,7 +508,8 @@ checker*.
 
 This variable is a normal hook."
   :group 'flycheck
-  :type 'hook)
+  :type 'hook
+  :risky t)
 
 (defcustom flycheck-before-syntax-check-hook nil
   "Functions to run before each syntax check.
@@ -4346,8 +4347,12 @@ See URL `https://github.com/nzakas/eslint'."
   "A JavaScript syntax and style checker using Closure Linter.
 
 See URL `https://developers.google.com/closure/utilities'."
-  :command ("gjslint" (config-file "--flagfile" flycheck-gjslintrc) source)
-  :error-patterns ((error line-start "Line " line ", " (message) line-end))
+  :command ("gjslint" "--unix_mode"
+            (config-file "--flagfile" flycheck-gjslintrc)
+            source)
+  :error-patterns ((error line-start
+                          (file-name) ":" line ":" (message)
+                          line-end))
   :modes (js-mode js2-mode js3-mode))
 
 (flycheck-define-checker json-jsonlint
@@ -4685,7 +4690,9 @@ part of a Sphinx project."
   "A ReStructuredText (RST) syntax checker using Docutils.
 
 See URL `http://docutils.sourceforge.net/'."
-  :command ("rst2pseudoxml.py" "--report=2" "--halt=5" source)
+  ;; We need to use source-inplace to properly resolve relative paths in
+  ;; include:: directives
+  :command ("rst2pseudoxml.py" "--report=2" "--halt=5" source-inplace)
   :error-patterns
   ((warning line-start (file-name) ":" line ": (WARNING/2) " (message) line-end)
    (error line-start

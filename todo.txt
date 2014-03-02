@@ -70,9 +70,6 @@
  auto-complete and jump-to-def. It should let me stay in Emacs while getting
  Eclipse's most useful features.
 
--Figure out why auto-pair-mode only works some of the time in php-mode. [], '',
- and () all have been known to exhibit breakage.
-
 -Look into https://github.com/mbunkus/mo-git-blame. Git blame on a file in
  emacs, which could save time.
 
@@ -108,10 +105,6 @@
 -Get smart-dash-mode to be active in web-mode, but _only_ in template
  expressions and JS, since dash is a common delimiter for HTML identifiers like
  IDs and names. That might be tricky.
-
--Make Tab always complete the next-biggest possible chunk in auto-complete.
- This is probably not too important - I think I've mostly learned to live
- without it.
 
 -Look into adding expand-region. It sounds like it could be pretty handy for
  selecting a range with less typing.

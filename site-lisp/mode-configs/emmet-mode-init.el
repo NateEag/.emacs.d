@@ -1,10 +1,6 @@
 (defun emmet-mode-init ()
   "Configure emmet-mode the way I like it."
 
-  ;; Start emmet.
-  ;; I prefer to call my mode setups as mode hooks, but emmet doesn't have
-  ;; one, so instead we just wrapper it
-
   ;; Don't override the built-in C-j binding, because I use it.
   (define-key emmet-mode-keymap (kbd "C-j") nil)
 

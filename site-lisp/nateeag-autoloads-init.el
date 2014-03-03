@@ -16,6 +16,7 @@ are for modes that didn't come with autoloading."
   (autoload 'php-mode-init "php-mode-init.el")
   (autoload 'smartparens-init "smartparens-init.el")
   (autoload 'emmet-mode-init "emmet-mode-init.el")
+  (autoload 'css-mode-init "css-mode-init.el")
 
   ;; Autoloads for eclim preferences and eclimd.
   ;; eclimd should have come with autoloads, in principle, but it didn't.

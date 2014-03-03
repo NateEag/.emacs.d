@@ -27,7 +27,6 @@
 
 (add-subdirs-to-front-of-load-path "~/.emacs.d/site-lisp")
 (add-to-list 'load-path "~/.emacs.d/site-lisp")
-(add-to-list 'load-path "~/.emacs.d")
 
 ;; Set up manually-maintained autoloads. Mostly defines mode hooks.
 (require 'nateeag-autoloads-init)

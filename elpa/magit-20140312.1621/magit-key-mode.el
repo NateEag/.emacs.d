@@ -230,14 +230,14 @@
       ("f" "Fixup"  magit-commit-fixup)
       ("s" "Squash" magit-commit-squash))
      (switches
-      ("-r" "Replace the tip of current branch" "--amend")
-      ("-R" "Claim authorship and reset author date" "--reset-author")
       ("-a" "Stage all modified and deleted files" "--all")
       ("-e" "Allow empty commit" "--allow-empty")
       ("-v" "Show diff of changes to be committed" "--verbose")
       ("-n" "Bypass git hooks" "--no-verify")
-      ("-s" "Add Signed-off-by line" "--signoff"))
+      ("-s" "Add Signed-off-by line" "--signoff")
+      ("-R" "Claim authorship and reset author date" "--reset-author"))
      (arguments
+      ("=A" "Override the author" "--author=" read-from-minibuffer)
       ("=S" "Sign using gpg" "--gpg-sign=" magit-read-gpg-secret-key)))
 
     (merging
@@ -276,7 +276,7 @@
       ("-D" "use current timestamp for author date" "--ignore-date")
       ("-b" "pass -b flag to git-mailinfo" "--keep-non-patch"))
      (arguments
-      ("=p" "format the patch(es) are in" "--patch-format")))
+      ("=p" "format the patch(es) are in" "--patch-format=" read-from-minibuffer)))
 
     (submodule
      (man-page "git-submodule")

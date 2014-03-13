@@ -26,11 +26,25 @@
   "System related helm library."
   :group 'helm)
 
+(defun helm-top-command-set-fn (var _value)
+  (set var
+       (cl-case system-type
+         (darwin "env COLUMNS=%s ps -axo pid,user,pri,nice,ucomm,tty,start,vsz,%%cpu,%%mem,etime,command")
+         (t      "env COLUMNS=%s top -b -n 1"))))
+
 (defcustom helm-top-command "env COLUMNS=%s top -b -n 1"
   "Top command used to display output of top.
+To use top command, a version supporting batch mode (-b option) is needed.
+On Mac OSX top command doesn't support this, so ps command
+is used by default instead.
+If you modify this the number and order of elements displayed
+should be the same as top command to have the sort commands
+working properly, that is 12 elements with the 2 first being
+PID and USER and the last 4 being %CPU, %MEM, TIME and COMMAND.
 A format string where %s will be replaced with `frame-width'."
   :group 'helm-sys
-  :type 'string)
+  :type 'string
+  :set  'helm-top-command-set-fn)
 
 
 ;;; Top (process)
@@ -74,7 +88,19 @@ Show actions only on line starting by a PID."
     (cond ((string-match "^ *[0-9]+" disp)
            (list '("kill (SIGTERM)" . (lambda (pid) (helm-top-sh "TERM" pid)))
                  '("kill (SIGKILL)" . (lambda (pid) (helm-top-sh "KILL" pid)))
-                 '("Copy PID" . (lambda (pid) (kill-new pid)))))
+                 '("kill (SIGINT)" .  (lambda (pid) (helm-top-sh "INT" pid)))
+                 '("kill (Choose signal)"
+                   . (lambda (pid)
+                       (helm-top-sh
+                        (helm-comp-read (format "Kill [%s] with signal: " pid)
+                                        '("ALRM" "HUP" "INT" "KILL" "PIPE" "POLL"
+                                          "PROF" "TERM" "USR1" "USR2" "VTALRM"
+                                          "STKFLT" "PWR" "WINCH" "CHLD" "URG"
+                                          "TSTP" "TTIN" "TTOU" "STOP" "CONT"
+                                          "ABRT" "FPE" "ILL" "QUIT" "SEGV"
+                                          "TRAP" "SYS" "EMT" "BUS" "XCPU" "XFSZ")
+                                        :must-match t)
+                        pid)))))
           (t actions))))
 
 (defun helm-top-sh (sig pid)
@@ -112,7 +138,9 @@ Show actions only on line starting by a PID."
        (cl-loop for c in candidates
                 if (string-match "^ *[0-9]+" c) collect c into pid-cands
                 else collect c into header-cands
-                finally return (append (butlast header-cands)
+                finally return (append (if (cdr header-cands)
+                                           (butlast header-cands)
+                                           header-cands)
                                        (sort pid-cands helm-top-sort-fn)))
        candidates)
    source))

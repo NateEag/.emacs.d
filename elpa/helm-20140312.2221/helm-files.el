@@ -486,7 +486,7 @@ ACTION must be an action supported by `helm-dired-action'."
          helm-split-window-in-side-p
          (parg   helm-current-prefix-arg)
          helm-display-source-at-screen-top ; prevent setting window-start.
-         helm-ff-auto-update-flag
+         helm-ff-auto-update-initial-value
          (dest   (with-helm-display-marked-candidates
                    helm-marked-buffer-name
                    (mapcar #'(lambda (f)
@@ -565,7 +565,7 @@ ACTION must be an action supported by `helm-dired-action'."
 
 (defun helm-find-files-grep (_candidate)
   "Default action to grep files from `helm-find-files'."
-  (apply 'run-with-idle-timer 0.01 nil
+  (apply 'run-with-timer 0.01 nil
          #'helm-do-grep-1
          (helm-marked-candidates :with-wildcard t)
          helm-current-prefix-arg))
@@ -1354,6 +1354,8 @@ purpose."
         (reg "\\`/\\([^[/:]+\\|[^/]+]\\):.*:")
         cur-method tramp-name)
     (cond ((string= pattern "") "")
+          ((string-match pattern "\\`[.]\\{1,2\\}/\\'")
+           (expand-file-name pattern))
           ((string-match ".*\\(~?/?[.]\\{1\\}/\\)\\'" pattern)
            (expand-file-name default-directory))
           ((and (string-match ".*\\(~//\\|//\\)\\'" pattern)

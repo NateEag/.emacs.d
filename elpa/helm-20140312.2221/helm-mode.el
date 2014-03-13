@@ -694,9 +694,8 @@ Keys description:
          (helm-mp-highlight-delay nil)
          ;; Be sure we don't erase the underlying minibuffer if some.
          (helm-ff-auto-update-initial-value
-          (unless (null helm-ff-auto-update-flag)
-            (and helm-ff-auto-update-initial-value
-                 (not (minibuffer-window-active-p (minibuffer-window))))))
+          (and helm-ff-auto-update-initial-value
+               (not (minibuffer-window-active-p (minibuffer-window)))))
          helm-full-frame
          (hist (and history (helm-comp-read-get-candidates
                              history nil nil alistp)))
@@ -938,13 +937,10 @@ Can be used as value for `completion-in-region-function'."
     (when result
       (delete-region (if (and file-comp-p
                               (save-excursion
-                                (re-search-backward
-                                 "~?/"
-                                 (previous-single-property-change
-                                  (point) 'read-only) t)))
+                                (re-search-backward "~?/" start t)))
                          (match-end 0) start)
                      end)
-      (insert result))))
+      (insert (shell-quote-argument result)))))
 
 (defun helm-mode--in-file-completion-p (target candidate)
   (when (and candidate target)

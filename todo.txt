@@ -1,7 +1,14 @@
+-See if my Emacs crashes can be reproduced by leaving old byte-compiled files
+ on my load-path alongside newer versions of the same file, a la updating a
+ library from MELPA then pulling that down to a different clone of the repo. It
+ occurred to me today that my current setup does this, and it seems like a
+ candidate for crashiness.
+
 -Make a PR to auto-complete for supporting smart-dash-mode.
 
 -Make a wrapper around untabify/tabify so that they re-guess the file's style
- after they've been run.
+ after they've been run. I guess actually I want to advise the functions
+ whenever style guessing is triggered.
 
 -elisp-related hooks should only run on '.el' files.
 
@@ -10,11 +17,13 @@
  you have a lot of buffers open from that repo it might get expensive... Think
  about this, anyway.
 
--Pull in pick-backup and write a little glue to integrate it with
- backup-walker. Maybe it could replace backup-walker? Try it and see.
- All I really want here is the ability to diff a backup against the current
- version of the file.
- http://nschum.de/src/emacs/pick-backup/
+-Add a command to backup-walker to ediff against the current file.
+
+-Get smart-dash-mode to be active in web-mode, but _only_ in template
+ expressions and JS, since dash is a common delimiter for HTML identifiers like
+ IDs and names. Probably means writing a wrapper around smart-dash-mode's
+ internal function and choosing which function to call based on the current
+ language.
 
 -Generate autoloads for my mode configs (and other code I've hacked up myself)
  from autoload cookie comments, rather than maintaining them manually. Might
@@ -31,8 +40,6 @@
 
 -Move my one-off variable customizations into custom.el (at least the ones that
  don't need any documentation of why they are what they are).
-
--Move my custom font setters into an autoloaded file.
 
 -Find a way to auto-include skewer on page refresh without having to include it
  in a codebase. I'm thinking a Chrome plugin for "refresh and load
@@ -101,10 +108,6 @@
  https://github.com/bmaland/yasnippet-sh-mode
 
 -Look into binding Shift-Enter to whatever Meta-J is bound to.
-
--Get smart-dash-mode to be active in web-mode, but _only_ in template
- expressions and JS, since dash is a common delimiter for HTML identifiers like
- IDs and names. That might be tricky.
 
 -Look into adding expand-region. It sounds like it could be pretty handy for
  selecting a range with less typing.

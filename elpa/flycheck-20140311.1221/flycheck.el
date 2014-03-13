@@ -3803,13 +3803,13 @@ See URL `http://elixir-lang.org/'."
                                         ; warning.
             source)
   :error-patterns
+  ;; Elixir compiler errors
   ((error line-start "** (" (zero-or-more not-newline) ") "
           (file-name) ":" line ": " (message) line-end)
-   (warning line-start
-            (file-name) ":"
-            line ": "
-            (message)
-            line-end))
+   ;; Warnings from Elixir >= 0.12.4
+   (warning line-start (file-name) ":" line ": warning:" (message) line-end)
+   ;; Warnings from older Elixir versions
+   (warning line-start (file-name) ":" line ": " (message) line-end))
   :modes elixir-mode)
 
 (defconst flycheck-this-emacs-executable
@@ -4561,14 +4561,12 @@ See URL `http://www.puppet-lint.com/'."
   ;; Puppet's autoload directory layout.  For instance, a class foo::bar is
   ;; required to be in a file foo/bar.pp.  Any other place, such as a Flycheck
   ;; temporary file will cause an error.
-  :command ("puppet-lint" "--with-filename" source-original)
+  :command ("puppet-lint"
+            "--log-format" "%{path}:%{linenumber}:%{kind}: %{message} (%{check})"
+            source-original)
   :error-patterns
-  ((warning line-start
-            (file-name) " - WARNING: " (message) " on line " line
-            line-end)
-   (error line-start
-          (file-name) " - ERROR: " (message) " on line " line
-          line-end))
+  ((warning line-start (file-name) ":" line ":warning: " (message) line-end)
+   (error line-start (file-name) ":" line ":error: " (message) line-end))
   :modes puppet-mode
   ;; Since we check the original file, we can only use this syntax checker if
   ;; the buffer is actually linked to a file, and if it is not modified.

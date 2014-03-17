@@ -576,9 +576,14 @@ See documentation of `completing-read' and `all-completions' for details."
          (any-args        (append def-args (list str-command buf-name)))
          helm-completion-mode-start-message ; Be quiet
          helm-completion-mode-quit-message
-         (minibuffer-completion-table collection)
-         (minibuffer-completion-predicate predicate)
          ;; Be sure this pesty *completion* buffer doesn't popup.
+         ;; Note: `minibuffer-with-setup-hook' may setup a lambda
+         ;; calling `minibuffer-completion-help' or other minibuffer
+         ;; functions we DONT WANT here, in these cases removing the hook
+         ;; (a symbol) have no effect. Issue #448.
+         ;; But because `minibuffer-completion-table' and
+         ;; `minibuffer-completion-predicate' are not bound
+         ;; anymore here, these functions should have no effect now.
          (minibuffer-setup-hook (remove 'minibuffer-completion-help
                                         minibuffer-setup-hook))
          ;; Disable hack that could be used before `completing-read'.
@@ -921,9 +926,9 @@ Can be used as value for `completion-in-region-function'."
                          input)
                         (t (concat input " ")))
                   :buffer buf-name
-                  :fc-transformer (append (list (lambda (candidates _source)
-                                                  (sort candidates 'helm-generic-sort-fn)))
-                                          (list 'helm-cr-default-transformer))
+                  :fc-transformer (append (list 'helm-cr-default-transformer)
+                                          (list (lambda (candidates _source)
+                                                  (sort candidates 'helm-generic-sort-fn))))
                   :exec-when-only-one t
                   :quit-when-no-cand
                   #'(lambda ()
@@ -940,7 +945,9 @@ Can be used as value for `completion-in-region-function'."
                                 (re-search-backward "~?/" start t)))
                          (match-end 0) start)
                      end)
-      (insert (shell-quote-argument result)))))
+      (insert (if file-comp-p
+                  (shell-quote-argument result)
+                  result)))))
 
 (defun helm-mode--in-file-completion-p (target candidate)
   (when (and candidate target)

@@ -1169,7 +1169,7 @@ If prefix numeric arg is given go ARG level down."
                (setq helm-ff-last-expanded helm-pattern))
               ((and cur-cand (file-exists-p cur-cand))
                (setq helm-ff-last-expanded cur-cand)))
-        (helm-set-pattern new-pattern)
+        (helm-set-pattern new-pattern helm-suspend-update-flag)
         (with-helm-after-update-hook (helm-ff-retrieve-last-expanded))
         (helm-check-minibuffer-input)))))
 
@@ -1574,7 +1574,8 @@ Note that only directories are saved here."
       (let ((mkd (helm-marked-candidates :with-wildcard t))
             (history-delete-duplicates t))
         (cl-loop for sel in mkd
-                 when (and (file-exists-p sel)
+                 when (and sel
+                           (file-exists-p sel)
                            (not (file-directory-p sel)))
                  do
                  ;; we use `abbreviate-file-name' here because

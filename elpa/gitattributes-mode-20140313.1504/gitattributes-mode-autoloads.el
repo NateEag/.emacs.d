@@ -4,7 +4,7 @@
 
 
 ;;;### (autoloads (gitattributes-mode) "gitattributes-mode" "gitattributes-mode.el"
-;;;;;;  (21228 32219 0 0))
+;;;;;;  (21286 63408 0 0))
 ;;; Generated autoloads from gitattributes-mode.el
 
 (autoload 'gitattributes-mode "gitattributes-mode" "\
@@ -17,8 +17,8 @@ A major mode for editing .gitattributes files.
 
 ;;;***
 
-;;;### (autoloads nil nil ("gitattributes-mode-pkg.el") (21228 32219
-;;;;;;  172476 0))
+;;;### (autoloads nil nil ("gitattributes-mode-pkg.el") (21286 63408
+;;;;;;  785000 0))
 
 ;;;***
 

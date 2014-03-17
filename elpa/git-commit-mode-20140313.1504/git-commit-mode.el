@@ -2,11 +2,13 @@
 
 ;; Copyright (c) 2010-2012  Florian Ragwitz
 ;; Copyright (c) 2012-2013  Sebastian Wiesner
+;; Copyright (C) 2010-2014  The Magit Project Developers
 
-;; Authors: Sebastian Wiesner <lunaryorn@gmail.com>
+;; Authors: Jonas Bernoulli <jonas@bernoul.li>
+;;	Sebastian Wiesner <lunaryorn@gmail.com>
 ;;	Florian Ragwitz <rafl@debian.org>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
-;; Version: 20140305.540
+;; Version: 20140313.1504
 ;; X-Original-Version: 0.14.0
 ;; Homepage: https://github.com/magit/git-modes
 ;; Keywords: convenience vc git
@@ -311,6 +313,7 @@ The commit message is saved to the kill ring."
             (when (buffer-live-p buffer)
               (kill-buffer buffer)))
         (kill-buffer))))
+  (accept-process-output nil 0.1)
   (message (concat "Commit aborted."
                    (when (memq 'git-commit-save-message
                                git-commit-kill-buffer-hook)

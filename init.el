@@ -203,6 +203,17 @@
 
 ;; Random functions worth having around.
 
+;; Tweaked from http://nullprogram.com/blog/2010/10/06/.
+(defun set-window-width (n)
+  "Set the current window's width."
+  (adjust-window-trailing-edge
+   (selected-window)
+   (- n (window-width)) t))
+
+(defun make-cur-window-80-cols ()
+  (interactive)
+  (set-window-width 80))
+
 ;; This is a first step towards a function I have wished I had before.
 ;; I don't want to have to think or type to say "change which kind of string
 ;; delimiters I'm using".

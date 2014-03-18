@@ -202,7 +202,8 @@
  instance, in standard Python, '_' separates words inside names. In other
  languages, HumpsOfTheCamelCase do so. Either way, Meta-f and Meta-b include
  in-name words as distinct entities in some modes but not in others, and I'd
- like a sane, consistent way to deal with that sort of cursor movement.
+ like a sane, consistent way to deal with that sort of cursor movement. ...and
+ a few years later, I have learned that subword-mode will let you do this.
 
 -A command that lets you invert delimiters. Sometimes you realize mid-stream
  that you used the wrong ones, and as long as point is between them and there

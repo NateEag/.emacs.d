@@ -237,7 +237,7 @@ Set it to nil if you don't want this limit."
   :group 'helm
   :type '(choice (const :tag "Disabled" nil) integer))
 
-(defcustom helm-idle-delay 0.1
+(defcustom helm-idle-delay 0.01
   "Be idle for this many seconds, before updating in delayed sources.
 This is useful for sources involving heavy operations
 \(like launching external programs\), so that candidates
@@ -250,7 +250,7 @@ Be sure to know what you are doing when modifying this."
   :group 'helm
   :type 'float)
 
-(defcustom helm-input-idle-delay 0.1
+(defcustom helm-input-idle-delay 0.01
   "Be idle for this many seconds, before updating.
 
 Unlike `helm-idle-delay', it is also effective for non-delayed sources.
@@ -1614,6 +1614,10 @@ in source."
   "The internal helm function called by `helm'.
 For ANY-SOURCES ANY-INPUT ANY-PROMPT ANY-RESUME ANY-PRESELECT ANY-BUFFER and
 ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
+  ;; Activate the advice for `tramp-read-passwd'.
+  (if (fboundp 'advice-add)
+      (advice-add 'tramp-read-passwd :around #'helm--advice-tramp-read-passwd)
+      (ad-activate 'tramp-read-passwd))
   (catch 'exit ; `exit-minibuffer' use this tag on exit.
     (helm-log (concat "[Start session] " (make-string 41 ?+)))
     (helm-log-eval any-prompt any-preselect
@@ -1661,6 +1665,9 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
               (helm-restore-position-on-quit)
               (helm-log (concat "[End session (quit)] " (make-string 34 ?-)))
               nil))
+        (if (fboundp 'advice-add)
+            (advice-remove 'tramp-read-passwd #'helm--advice-tramp-read-passwd)
+            (ad-deactivate 'tramp-read-passwd))
         (helm-log-eval (setq helm-alive-p nil))
         (setq overriding-local-map old-overridding-local-map)
         (setq helm-alive-p nil)
@@ -2098,7 +2105,7 @@ For ANY-PRESELECT ANY-RESUME ANY-KEYMAP ANY-DEFAULT ANY-HISTORY, See `helm'."
                     (minibuffer-with-setup-hook
                         #'(lambda ()
                             (setq timer (run-with-idle-timer
-                                         (max helm-input-idle-delay 0.01) 'repeat
+                                         (max helm-input-idle-delay 0.001) 'repeat
                                          #'(lambda ()
                                              ;; Stop updating when in persistent action
                                              ;; or when `helm-suspend-update-flag' is
@@ -2140,21 +2147,24 @@ This can be useful for e.g writing quietly a complex regexp."
                "Helm update suspended!"
                "Helm update reenabled!")))
 
-(defadvice tramp-read-passwd (around disable-helm-update activate)
+(defadvice tramp-read-passwd (around disable-helm-update)
+  ;; Suspend update when prompting for a tramp password.
+  (setq helm-suspend-update-flag t)
+  (let (stimers)
+    (unwind-protect
+         (progn
+           (setq stimers (with-timeout-suspend))
+           ad-do-it)
+      (with-timeout-unsuspend stimers)
+      (setq helm-suspend-update-flag nil))))
+
+(defun helm--advice-tramp-read-passwd (old--fn &rest args)
   ;; Suspend update when prompting for a tramp password.
   (setq helm-suspend-update-flag t)
   (unwind-protect
-       ad-do-it
+       ;; No need to suspend timer in emacs-24.4
+       (apply old--fn args)
     (setq helm-suspend-update-flag nil)))
-
-;; Use this once `defadvice' will be made obsolete.
-;; (defun helm--advice-tramp-read-passwd (old--fn &rest args)
-;;   ;; Suspend update when prompting for a tramp password.
-;;   (setq helm-suspend-update-flag t)
-;;   (unwind-protect
-;;        (apply old--fn args)
-;;     (setq helm-suspend-update-flag nil)))
-;; (advice-add 'tramp-read-passwd :around #'helm--advice-tramp-read-passwd)
 
 (defun helm-maybe-update-keymap ()
   "Handle differents keymaps in multiples sources.
@@ -2292,7 +2302,8 @@ Helm plug-ins are realized by this function."
 (defmacro helm-while-no-input (&rest body)
   "Same as `while-no-input' but without testing with `input-pending-p'."
   (declare (debug t) (indent 0))
-  (let ((catch-sym (make-symbol "input")))
+  (let ((catch-sym (make-symbol "input"))
+        inhibit-quit)
     `(with-local-quit
        (catch ',catch-sym
 	 (let ((throw-on-input ',catch-sym))
@@ -2536,13 +2547,23 @@ and `helm-pattern'."
         (mapc #'(lambda (m)
                   (helm-insert-match m 'insert source))
               matches)
-      (let ((start (point)) separate)
-        (cl-dolist (match matches)
-          (if separate
-              (helm-insert-candidate-separator)
-            (setq separate t))
-          (helm-insert-match match 'insert source))
-        (put-text-property start (point) 'helm-multiline t)))))
+        (let ((start (point)) separate)
+          (cl-dolist (match matches)
+            (if separate
+                (helm-insert-candidate-separator)
+                (setq separate t))
+            (helm-insert-match match 'insert source))
+          (put-text-property start (point) 'helm-multiline t)))))
+
+(defmacro helm--maybe-use-while-no-input (&rest body)
+  "Wrap BODY in `helm-while-no-input' unless initializing a remote connection."
+  `(progn
+     (if (and (file-remote-p helm-pattern)
+              (not (file-remote-p helm-pattern nil t)))
+         ;; Tramp will ask for passwd, don't use `helm-while-no-input'.
+         ,@body
+         (helm-log "Using here `helm-while-no-input'")
+         (helm-while-no-input ,@body))))
 
 (cl-defun helm-process-delayed-sources (delayed-sources &optional preselect source)
   "Process helm DELAYED-SOURCES.
@@ -2556,26 +2577,26 @@ when emacs is idle for `helm-idle-delay'."
     (with-current-buffer (helm-buffer-get)
       (save-excursion
         (goto-char (point-max))
-        (helm-while-no-input
-          (cl-loop with matches = (cl-loop for src in delayed-sources
-                                           collect (helm-compute-matches src))
-                   unless matches do (cl-return)
-                   for src in delayed-sources
-                   for mtc in matches
-                   do (helm-render-source src mtc)))
+        (cl-loop with matches = (helm--maybe-use-while-no-input
+                                 (cl-loop for src in delayed-sources
+                                          collect (helm-compute-matches src)))
+                 when (eq matches t) do (setq matches nil)
+                 for src in delayed-sources
+                 for mtc in matches
+                 do (helm-render-source src mtc))
         (when (and (not (helm-empty-buffer-p))
                    ;; No selection yet.
                    (= (overlay-start helm-selection-overlay)
                       (overlay-end helm-selection-overlay)))
           (helm-update-move-first-line 'without-hook)))
-      (when preselect (helm-preselect preselect source))
       (save-excursion
         (goto-char (point-min))
         (helm-log-run-hook 'helm-update-hook))
       (setq helm-force-updating-p nil)
       (unless (assoc 'candidates-process source)
         (helm-display-mode-line (helm-get-current-source))
-        (helm-log-run-hook 'helm-after-update-hook)))))
+        (helm-log-run-hook 'helm-after-update-hook))
+      (when preselect (helm-preselect preselect source)))))
 
 
 ;;; Core: helm-update
@@ -2601,7 +2622,8 @@ is done on whole `helm-buffer' and not on current source."
       (unwind-protect
            (helm-while-no-input
             ;; Iterate over all the sources
-            (cl-loop for source in (cl-remove-if-not 'helm-update-source-p (helm-get-sources))
+             (cl-loop for source in (cl-remove-if-not
+                                     'helm-update-source-p (helm-get-sources))
                      if (helm-delayed-source-p source)
                      ;; Delayed sources just get collected for later
                      ;; processing
@@ -2657,7 +2679,7 @@ is done on whole `helm-buffer' and not on current source."
              ;; to helm-input-idle-delay
              ;; otherwise use value of helm-input-idle-delay
              ;; or 0.01 if == to 0.
-             (max helm-idle-delay helm-input-idle-delay 0.01) nil
+             (max helm-idle-delay helm-input-idle-delay 0.001) nil
              'helm-process-delayed-sources delayed-sources preselect source)))
         (helm-log "end update")))))
 

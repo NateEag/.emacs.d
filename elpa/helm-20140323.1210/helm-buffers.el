@@ -242,7 +242,7 @@ See `ido-make-buffer-list' for more infos."
                           'face face2)))))
 
 (defun helm-buffer--details (buffer &optional details)
-  (let* ((mode (with-current-buffer buffer (symbol-name major-mode)))
+  (let* ((mode (with-current-buffer buffer (format-mode-line mode-name)))
          (buf (get-buffer buffer))
          (size (propertize (helm-buffer-size buf)
                            'face 'helm-buffer-size))
@@ -361,7 +361,7 @@ Should be called after others transformers i.e (boring buffers)."
   (if (string-match "\\`!" pattern)
       (not (string-match (substring pattern 1) candidate))
       (string-match pattern candidate)))
-  
+
 (defun helm-buffer-match-major-mode (candidate)
   "Match maybe buffer by major-mode.
 If you give a major-mode or partial major-mode,
@@ -376,7 +376,7 @@ with name matching pattern."
          (buf  (get-buffer cand)))
     (when buf
       (with-current-buffer buf
-        (let ((mjm   (symbol-name major-mode))
+        (let ((mjm   (format-mode-line mode-name))
               (split (split-string helm-pattern)))
           (cond ((string-match "^@" helm-pattern)
                  (or (helm-buffers-match-inside cand split)

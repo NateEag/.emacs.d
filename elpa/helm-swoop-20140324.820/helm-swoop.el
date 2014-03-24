@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2013 by Shingo Fukuyama
 
-;; Version: 20140315.529
+;; Version: 20140324.820
 ;; X-Original-Version: 1.4
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
@@ -79,8 +79,7 @@
 
 ;;; Code:
 
-(eval-when-compile (require 'cl))
-
+(require 'cl-lib)
 (require 'helm)
 (require 'helm-utils)
 
@@ -160,6 +159,16 @@
   (lambda () (thing-at-point 'symbol))
   "This function can pre-input keywords when helm-swoop invoked")
 
+(defun helm-swoop-pre-input-optimize ($query)
+  (when $query
+    (let (($regexp (list '("\+" . "\\\\+")
+                         '("\*" . "\\\\*")
+                         '("\#" . "\\\\#"))))
+      (mapc (lambda ($r)
+              (setq $query (replace-regexp-in-string (car $r) (cdr $r) $query)))
+            $regexp)
+      $query)))
+
 (defsubst helm-swoop--goto-line ($line)
   (goto-char (point-min))
   (forward-line (1- $line)))
@@ -170,6 +179,7 @@
 (defsubst helm-swoop--delete-overlay ($identity &optional $beg $end)
   (or $beg (setq $beg (point-min)))
   (or $end (setq $end (point-max)))
+  (overlay-recenter $end)
   (mapc (lambda ($o)
           (if (overlay-get $o $identity)
               (delete-overlay $o)))
@@ -245,6 +255,7 @@
                 ;; For caret begging match
                 (if (string-match "^\\^\\[0\\-9\\]\\+\\.\\(.+\\)" $wd)
                     (setq $wd (concat "^" (match-string 1 $wd))))
+                (overlay-recenter (point-max))
                 (while (re-search-forward $wd nil t)
                   (setq $o (make-overlay (match-beginning 0) (match-end 0)))
                   (overlay-put $o 'face 'helm-swoop-target-word-face)
@@ -532,8 +543,9 @@ If $linum is number, lines are separated by $linum"
                            (region-beginning) (region-end))))
                  (if (string-match "\n" $st)
                      (message "Multi line region is not allowed")
-                   (setq $query $st))))
-              ((setq $query (funcall helm-swoop-pre-input-function)))
+                   (setq $query (helm-swoop-pre-input-optimize $st)))))
+              ((setq $query (helm-swoop-pre-input-optimize
+                             (funcall helm-swoop-pre-input-function))))
               (t (setq $query "")))
         ;; First behavior
         (helm-swoop--recenter)
@@ -1048,8 +1060,11 @@ Last selected buffers will be applied to helm-multi-swoop.
                      (region-beginning) (region-end))))
            (if (string-match "\n" $st)
                (message "Multi line region is not allowed")
-             (setq helm-multi-swoop-query $st))))
-        ((setq helm-multi-swoop-query (funcall helm-swoop-pre-input-function)))
+             (setq helm-multi-swoop-query
+                   (helm-swoop-pre-input-optimize $st)))))
+        ((setq helm-multi-swoop-query
+               (helm-swoop-pre-input-optimize
+                (funcall helm-swoop-pre-input-function))))
         (t (setq helm-multi-swoop-query "")))
   (if (equal current-prefix-arg '(4))
       (helm-multi-swoop--exec nil
@@ -1074,8 +1089,11 @@ Last selected buffers will be applied to helm-multi-swoop.
                      (region-beginning) (region-end))))
            (if (string-match "\n" $st)
                (message "Multi line region is not allowed")
-             (setq helm-multi-swoop-query $st))))
-        ((setq helm-multi-swoop-query (funcall helm-swoop-pre-input-function)))
+             (setq helm-multi-swoop-query
+                   (helm-swoop-pre-input-optimize $st)))))
+        ((setq helm-multi-swoop-query
+               (helm-swoop-pre-input-optimize
+                (funcall helm-swoop-pre-input-function))))
         (t (setq helm-multi-swoop-query "")))
   (helm-multi-swoop--exec nil
                           :$query helm-multi-swoop-query
@@ -1139,6 +1157,7 @@ Last selected buffers will be applied to helm-multi-swoop.
         (save-excursion
           (goto-char (point-min))
           (let (($beg (point)) $end)
+            (overlay-recenter (point-max))
             (while (setq $beg (text-property-any $beg (point-max)
                                               'face 'helm-source-header))
               (setq $end (next-single-property-change $beg 'face))

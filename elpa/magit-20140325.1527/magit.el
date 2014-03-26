@@ -257,7 +257,8 @@ aborts and returns that value."
   :group 'magit-process
   :type 'string)
 
-(defcustom magit-git-standard-options '("--no-pager")
+(defcustom magit-git-standard-options
+  '("--no-pager" "-c" "core.preloadindex=true")
   "Standard options when running Git.
 Be careful what you add here, especially if you are using
 tramp to connect to servers with ancient Git versions."
@@ -265,10 +266,10 @@ tramp to connect to servers with ancient Git versions."
   :type '(repeat string))
 
 (defcustom magit-gitk-executable
-  (or (eq system-type 'windows-nt)
-      (let ((exe (expand-file-name
-                  "gitk" (file-name-nondirectory magit-git-executable))))
-        (and (file-executable-p exe) exe))
+  (or (and (eq system-type 'windows-nt)
+           (let ((exe (expand-file-name
+                       "gitk" (file-name-nondirectory magit-git-executable))))
+             (and (file-executable-p exe) exe)))
       (executable-find "gitk") "gitk")
   "The Gitk executable."
   :group 'magit-process
@@ -428,7 +429,21 @@ a carefully crafted index."
   :type 'boolean)
 
 (defcustom magit-revert-item-confirm t
-  "Require acknowledgment before reverting an item."
+  "Whether to require confirmation before reverting hunks.
+If you disable this, consider enabling `magit-revert-backup'
+instead."
+  :group 'magit
+  :type 'boolean)
+
+(defcustom magit-revert-backup nil
+  "Whether to backup a hunk before reverting it.
+The hunk is stored in \".git/magit/reverted.diff\" and can be
+applied using `magit-revert-undo'.  Older hunks are available
+in the same directory as numbered backup files and have to be
+applied manually.  Only individual hunks are backed up; when
+a complete file is reverted (which requires confirmation) no
+backup is created."
+  :package-version '(magit . "2.1.0")
   :group 'magit
   :type 'boolean)
 
@@ -2154,11 +2169,12 @@ Return nil if the previously checked out branch no longer exists."
 (defun magit-get-current-tag (&optional with-distance-p)
   "Return the closest tag reachable from \"HEAD\".
 
-If optional WITH-DISTANCE-P is non-nil then return (TAG COMMITS
-DIRTY) where COMMITS is the number of commits in \"HEAD\" but not
-in TAG and DIRTY is t if there are uncommitted changes, nil
-otherwise."
-  (let ((tag (magit-git-string "describe" "--long" "--tags" "--dirty")))
+If optional WITH-DISTANCE-P is non-nil then return (TAG COMMITS),
+if it is `dirty' return (TAG COMMIT DIRTY). COMMITS is the number
+of commits in \"HEAD\" but not in TAG and DIRTY is t if there are
+uncommitted changes, nil otherwise."
+  (let ((tag (magit-git-string "describe" "--long" "--tags"
+                               (and (eq with-distance-p 'dirty) "--dirty"))))
     (save-match-data
       (when tag
         (string-match
@@ -4839,6 +4855,18 @@ working tree."
   (magit-assert-one-parent commit "revert")
   (magit-run-git "revert" "--no-commit" commit))
 
+(defconst magit-revert-backup-file "magit/reverted.diff")
+
+(defun magit-revert-undo ()
+  "Re-apply the previously reverted hunk.
+Also see option `magit-revert-backup'."
+  (interactive)
+  (let ((file (magit-git-dir magit-revert-backup-file)))
+    (if (file-readable-p file)
+        (magit-run-git "apply" file)
+      (user-error "No backups exist"))
+    (magit-refresh)))
+
 ;;;;; Apply Core
 
 (defun magit-discard-diff (diff stagedp)
@@ -4895,6 +4923,7 @@ member of ARGS, or to the working file otherwise."
                       hunk (member "--reverse" args)
                       (region-beginning) (region-end) buf)
                    (magit-insert-hunk-item-patch hunk buf))
+                 (magit-revert-backup buf args)
                  (magit-run-git-with-input
                   buf "apply" args "--ignore-space-change" "-"))
         (kill-buffer buf)))))
@@ -4949,6 +4978,18 @@ member of ARGS, or to the working file otherwise."
                (line-beginning-position) (line-beginning-position 2))))
     (with-current-buffer buf
       (insert text))))
+
+(defun magit-revert-backup (buffer args)
+  (when (and magit-revert-backup (member "--reverse" args))
+    (with-current-buffer buffer
+      (let ((buffer-file-name (magit-git-dir magit-revert-backup-file))
+            (make-backup-files t)
+            (backup-directory-alist nil)
+            (version-control t)
+            (kept-old-versions 0)
+            (kept-new-versions 10))
+        (make-directory (file-name-directory buffer-file-name) t)
+        (save-buffer 16)))))
 
 ;;;; Visit
 
@@ -5445,7 +5486,8 @@ With two prefix args, remove ignored files as well."
     (when p
       (setf (cdr p) (plist-put (cdr p) prop value))
       (magit-write-rewrite-info info)
-      (magit-refresh))))
+      (magit-refresh))
+    t))
 
 (add-hook 'magit-apply-hook 'magit-rewrite-apply)
 (put  'magit-rewrite-apply 'magit-section-action-context [commit pending])
@@ -5539,9 +5581,12 @@ With two prefix args, remove ignored files as well."
            (commit (car first-unused)))
       (cond ((not first-unused)
              (magit-rewrite-stop t))
-            ((magit-cherry-pick-commit commit)
+            ((magit-git-success "cherry-pick" commit)
              (magit-rewrite-set-commit-property commit 'used t)
-             (magit-rewrite-finish-step))))))
+             (magit-rewrite-finish-step))
+            (t
+             (magit-refresh)
+             (error "Could not apply %s" commit))))))
 
 ;;;;; Fetching
 
@@ -5616,7 +5661,7 @@ user because of prefix arguments are not saved with git config."
         (magit-run-git-async
          "pull" magit-custom-options
          (and choose-remote chosen-branch-remote)
-         (and choose-branch
+         (and (or choose-remote choose-branch)
               (list (format "refs/heads/%s:refs/remotes/%s/%s"
                             chosen-branch-merge-name
                             chosen-branch-remote

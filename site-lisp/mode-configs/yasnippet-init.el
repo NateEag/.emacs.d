@@ -14,6 +14,7 @@
         ;; think it's some interaction between yasnippet and auto-complete, but
         ;; I'm not really sure.
         (define-key yas-minor-mode-map (kbd "TAB") 'yas-expand)
+        (define-key yas-minor-mode-map (kbd "C-c y") 'yas-expand)
         (define-key yas-minor-mode-map [(tab)] nil)
 
         (setq yasnippet-config-run t))))

@@ -1071,7 +1071,7 @@ The checksum is copied to kill-ring."
         (not helm-ff-transformer-show-only-basename))
   (let ((target (if helm-ff-transformer-show-only-basename
                     (helm-basename candidate) candidate)))
-    (helm-force-update target)))
+    (helm-force-update (regexp-quote target))))
 
 (defun helm-ff-run-toggle-basename ()
   (interactive)
@@ -1334,7 +1334,7 @@ purpose."
           ((and (string-match ".*\\(~//\\|//\\)\\'" pattern)
                 (not (string-match helm-ff-url-regexp helm-pattern)))
            (expand-file-name "/")) ; Expand to "/" or "c:/"
-          ((string-match "\\`~/\\|.*/~/\\'" pattern)
+          ((string-match "\\`\\(~/\\|.*/~/\\)\\'" pattern)
            (expand-file-name "~/"))
           ;; Match "/method:maybe_hostname:"
           ((and (string-match reg pattern)
@@ -1364,7 +1364,7 @@ purpose."
           ;; `helm-ff-auto-update-flag' is enabled to avoid quick expansion.
           ((and (file-accessible-directory-p pattern)
                 helm-ff-auto-update-flag)
-           (file-name-as-directory pattern))
+           (file-name-as-directory (expand-file-name pattern)))
           ;; Return PATTERN unchanged.
           (t pattern))))
 
@@ -1544,7 +1544,7 @@ Note that only directories are saved here."
          (append helm-files-save-history-extra-sources
                  helm-file-completion-sources)))
     (when (or force (helm-file-completion-source-p))
-      (let ((mkd (helm-marked-candidates :with-wildcard t))
+      (let ((mkd (helm-marked-candidates))
             (history-delete-duplicates t))
         (cl-loop for sel in mkd
                  when (and sel
@@ -2695,7 +2695,7 @@ This is the starting point for nearly all actions you can do on files."
                             (if helm-ff-transformer-show-only-basename
                                 (helm-basename it) it))))
     (set-text-properties 0 (length input) nil input)
-    (helm-find-files-1 input presel)))
+    (helm-find-files-1 input (and presel (regexp-quote presel)))))
 
 ;;;###autoload
 (defun helm-for-files ()

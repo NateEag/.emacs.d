@@ -1116,7 +1116,7 @@ existing Helm function names."
     (setq helm-source-filter sources)
     (helm-log-eval helm-source-filter)
     ;; Use force-update to run init/update functions.
-    (helm-force-update cur-disp-sel)))
+    (helm-force-update (regexp-quote cur-disp-sel))))
 
 (defun helm-set-sources (sources &optional no-init no-update)
   "Set SOURCES during `helm' invocation.
@@ -1622,7 +1622,7 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
     (helm-log (concat "[Start session] " (make-string 41 ?+)))
     (helm-log-eval any-prompt any-preselect
                    any-buffer any-keymap any-default)
-    (let ((old-overridding-local-map overriding-local-map)
+    (let ((old-overriding-local-map overriding-local-map)
           ;; #163 no cursor in minibuffer in <=Emacs-24.2.
           ;; This is not needed in emacs-24.3+
           (cursor-in-echo-area t)
@@ -1658,7 +1658,7 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
                      (helm-cleanup)))
                  (prog1 (unless helm-quit
                           (with-helm-temp-hook 'helm-cleanup-hook
-                            (setq overriding-local-map old-overridding-local-map))
+                            (setq overriding-local-map old-overriding-local-map))
                           (helm-execute-selection-action))
                    (helm-log (concat "[End session] " (make-string 41 ?-)))))
              (quit
@@ -1669,7 +1669,7 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
             (advice-remove 'tramp-read-passwd #'helm--advice-tramp-read-passwd)
             (ad-deactivate 'tramp-read-passwd))
         (helm-log-eval (setq helm-alive-p nil))
-        (setq overriding-local-map old-overridding-local-map)
+        (setq overriding-local-map old-overriding-local-map)
         (setq helm-alive-p nil)
         (setq helm-in-file-completion-p nil)
         (and old--cua (cua-mode 1))
@@ -1956,18 +1956,33 @@ For ANY-RESUME ANY-INPUT ANY-DEFAULT and ANY-SOURCES See `helm'."
     (and m (set list-var (delq (car m) (symbol-value list-var))))
     (push elt (symbol-value list-var))))
 
+(defun helm--current-buffer ()
+  "[internal] Return `current-buffer' BEFORE `helm-buffer' is initialized.
+Note that this will return the minibuffer in use after helm have started,
+so to get the buffer where helm started while in a helm session,
+use `helm-current-buffer'.
+It is intended to use this only in `helm-initial-setup'."
+  (if (minibuffer-window-active-p (minibuffer-window))
+      ;; If minibuffer is active be sure to use it's buffer
+      ;; as `helm-current-buffer', this allow to use helm
+      ;; from an already active minibuffer (M-: etc...)
+      (window-buffer (active-minibuffer-window))
+      ;; Fix Issue #456
+      ;; Use this instead of `current-buffer' to ensure
+      ;; helm session started in helm-mode from a completing-read
+      ;; Use really the buffer where we started and not the one
+      ;; where the completing-read is wrapped. i.e
+      ;; (with-current-buffer SOME-OTHER-BUFFER (completing-read [...])
+      (window-buffer (with-selected-window (minibuffer-window)
+                       (minibuffer-selected-window)))))
+
 (defun helm-initial-setup (any-default)
   "Initialize helm settings and set up the helm buffer."
   (helm-log-run-hook 'helm-before-initialize-hook)
   (setq helm-current-prefix-arg nil)
   (setq helm-suspend-update-flag nil)
   (setq helm-delayed-init-executed nil)
-  (setq helm-current-buffer
-        (if (minibuffer-window-active-p (minibuffer-window))
-            ;; If minibuffer is active be sure to use it's buffer
-            ;; as `helm-current-buffer'.
-            (window-buffer (active-minibuffer-window))
-            (current-buffer)))
+  (setq helm-current-buffer (helm--current-buffer))
   (setq helm-buffer-file-name buffer-file-name)
   (setq helm-issued-errors nil)
   (setq helm-compiled-sources nil)
@@ -3438,8 +3453,7 @@ to a list of forms.\n\n")
           (goto-char (point-min))
           (forward-line 1))
       (let ((start (point)))
-        (or (search-forward candidate-or-regexp nil t)
-            (re-search-forward candidate-or-regexp nil t)
+        (or (re-search-forward candidate-or-regexp nil t)
             (goto-char start))))
     (forward-line 0) ; Avoid scrolling right on long lines.
     (helm-mark-current-line)))

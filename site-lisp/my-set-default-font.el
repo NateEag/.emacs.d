@@ -25,6 +25,7 @@
 (defun my-set-default-font (&optional size)
   "Set my default font, if possible, optionally at point size `size`."
 
+  (interactive)
   ;; Do not set a font if it is not available - keeps us from crashing in a
   ;; font-free setting.
   (if (member (my-get-default-font-name) (font-family-list))

@@ -5,7 +5,7 @@
 ;; Author: Sebastian Wiesner <lunaryorn@gmail.com>
 ;; URL: https://flycheck.readthedocs.org
 ;; Keywords: convenience languages tools
-;; Version: 0.18-cvs
+;; Version: 0.19-cvs
 ;; Package-Requires: ((s "1.9.0") (dash "2.4.0") (f "0.11.0") (pkg-info "0.4") (cl-lib "0.3") (emacs "24.1"))
 
 ;; This file is not part of GNU Emacs.
@@ -482,8 +482,8 @@ nil
      `completing-read' has a very simple and primitive UI, and
      does not offer flex matching.  This is the default setting,
      though, to match Emacs' defaults.  With this system, you may
-     want enable `icomplete-mode' to improve the display of
-     completion candidates at least."
+     want enable option `icomplete-mode' to improve the display
+     of completion candidates at least."
   :group 'flycheck
   :type '(choice (const :tag "IDO" ido)
                  (const :tag "Grizzl" grizzl)
@@ -3661,7 +3661,10 @@ See URL `http://clang.llvm.org/'."
             ;; with quotes
             source-inplace)
   :error-patterns
-  ((info line-start (file-name) ":" line ":" column
+  ((error line-start
+          (message "In file included from") " " (file-name) ":" line ":"
+          line-end)
+   (info line-start (file-name) ":" line ":" column
             ": note: " (message) line-end)
    (warning line-start (file-name) ":" line ":" column
             ": warning: " (message) line-end)
@@ -3939,7 +3942,7 @@ For any other non-nil value, always initialize packages."
   :package-version '(flycheck . "0.14"))
 
 (defun flycheck-option-emacs-lisp-package-initialize (value)
-  "Option filter for `flycheck-emacs-lisp-initialize-packages'."
+  "Option VALUE filter for `flycheck-emacs-lisp-initialize-packages'."
   (when (eq value 'auto)
     (setq value (flycheck-in-user-emacs-directory-p (buffer-file-name))))
   ;; Return the function name, if packages shall be initialized, otherwise
@@ -3960,7 +3963,7 @@ This variable has no effect, if
   :package-version '(flycheck . "0.14"))
 
 (defun flycheck-option-emacs-lisp-package-user-dir (value)
-  "Option filter for `flycheck-emacs-lisp-package-user-dir'."
+  "Option VALUE filter for `flycheck-emacs-lisp-package-user-dir'."
   (unless value
     ;; Inherit the package directory from our Emacs session
     (setq value package-user-dir))

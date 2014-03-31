@@ -10,4 +10,4 @@
   ;; active, then auto-complete if it's active, and indents if nothing else
   ;; succeeded.
   (yas-minor-mode t)
-  (define-key emmet-mode-keymap (kbd "C-c e") 'emmet-expand-yas))
+  (define-key emmet-mode-keymap (kbd "C-c j") 'emmet-expand-yas))

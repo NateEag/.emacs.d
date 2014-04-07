@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2013 by Shingo Fukuyama
 
-;; Version: 20140324.820
+;; Version: 20140404.2206
 ;; X-Original-Version: 1.4
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
@@ -392,7 +392,7 @@ If $linum is number, lines are separated by $linum"
       (let (($i 1))
         (insert (format "%s " $i))
         (while (re-search-forward "\n" nil t)
-          (incf $i)
+          (cl-incf $i)
           (insert (format "%s " $i)))
         ;; Delete empty lines
         (unless $linum
@@ -476,6 +476,12 @@ If $linum is number, lines are separated by $linum"
   (ad-activate 'helm-next-line)
   (ad-disable-advice 'helm-previous-line 'around 'helm-swoop-previous-line)
   (ad-activate 'helm-previous-line)
+  (ad-disable-advice 'helm-move--next-line-fn 'around
+                     'helm-multi-swoop-next-line-cycle)
+  (ad-activate 'helm-move--next-line-fn)
+  (ad-disable-advice 'helm-move--previous-line-fn 'around
+                     'helm-multi-swoop-previous-line-cycle)
+  (ad-activate 'helm-move--previous-line-fn)
   (remove-hook 'helm-update-hook 'helm-swoop--pattern-match)
   (remove-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position)
   (setq helm-swoop-last-query helm-pattern)
@@ -533,6 +539,9 @@ If $linum is number, lines are separated by $linum"
         (ad-activate 'helm-move--previous-line-fn)
         (add-hook 'helm-update-hook 'helm-swoop--pattern-match)
         (add-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position t)
+        (unless (and (symbolp 'helm-match-plugin-mode)
+                     (symbol-value 'helm-match-plugin-mode))
+          (helm-match-plugin-mode 1))
         (cond ($query
                (if (string-match
                     "\\(\\^\\[0\\-9\\]\\+\\.\\)\\(.*\\)" $query)
@@ -767,7 +776,7 @@ If $linum is number, lines are separated by $linum"
     (with-current-buffer helm-swoop-edit-target-buffer
       ;; Replace from the end of buffer
       (save-excursion
-      (loop for ($k . $v) in $list
+      (cl-loop for ($k . $v) in $list
             do (progn
                  (goto-char (point-min))
                  (delete-region (point-at-bol $k) (point-at-eol $k))
@@ -962,6 +971,9 @@ If $linum is number, lines are separated by $linum"
           (ad-activate 'helm-move--previous-line-fn)
           (add-hook 'helm-update-hook 'helm-swoop--pattern-match)
           (add-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position t)
+          (unless (and (symbolp 'helm-match-plugin-mode)
+                       (symbol-value 'helm-match-plugin-mode))
+            (helm-match-plugin-mode 1))
           (setq helm-swoop-line-overlay
                 (make-overlay (point) (point)))
           (overlay-put helm-swoop-line-overlay
@@ -1286,7 +1298,7 @@ Last selected buffers will be applied to helm-multi-swoop.
             (with-current-buffer (car $x)
               (unless buffer-read-only
                 (save-excursion
-                  (loop for ($k . $v) in (cdr $x)
+                  (cl-loop for ($k . $v) in (cdr $x)
                         do (progn
                              (goto-char (point-min))
                              (delete-region (point-at-bol $k) (point-at-eol $k))

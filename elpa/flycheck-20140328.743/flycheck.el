@@ -37,10 +37,11 @@
 ;;; Code:
 
 (eval-when-compile
-  (require 'jka-compr)      ; For JKA workarounds in `flycheck-temp-file-system'
+  (require 'cl-lib)         ; `cl-defstruct'
   (require 'compile)        ; Compile Mode integration
-  (require 'sh-script)      ; `sh-shell' for sh checker predicates
   (require 'package)        ; Tell Emacs about package-user-dir
+  (require 'sh-script)      ; `sh-shell' for sh checker predicates
+  (require 'jka-compr)      ; For JKA workarounds in `flycheck-temp-file-system'
 )
 
 (require 's)
@@ -49,7 +50,6 @@
 
 (require 'tabulated-list)        ; To list errors
 (require 'rx)                    ; Regexp fanciness in `flycheck-define-checker'
-(require 'cl-lib)                ; `cl-defstruct'
 (require 'help-mode)             ; `define-button-type'
 (require 'find-func)             ; `find-function-regexp-alist'
 
@@ -1302,21 +1302,19 @@ FILE-NAME is nil, return `default-directory'."
 Return the checker as symbol, or nil if no checker was
 chosen."
   (let* ((candidates (-map #'symbol-name (flycheck-defined-checkers)))
-         (input (cl-case flycheck-completion-system
-                  (ido
-                   (ido-completing-read prompt candidates nil 'require-match
-                                        nil 'read-flycheck-checker-history))
-                  (grizzl
-                   (if (and (fboundp 'grizzl-make-index)
-                            (fboundp 'grizzl-completing-read))
-                       (->> candidates
-                         grizzl-make-index
-                         (grizzl-completing-read prompt))
-                     (user-error "Please install Grizzl from \
+         (input (pcase flycheck-completion-system
+                  (`ido (ido-completing-read prompt candidates nil
+                                             'require-match nil
+                                             'read-flycheck-checker-history))
+                  (`grizzl (if (and (fboundp 'grizzl-make-index)
+                                    (fboundp 'grizzl-completing-read))
+                               (->> candidates
+                                 grizzl-make-index
+                                 (grizzl-completing-read prompt))
+                             (user-error "Please install Grizzl from \
 https://github.com/d11wtq/grizzl.")))
-                  (otherwise
-                   (completing-read prompt candidates nil 'require-match
-                                    nil 'read-flycheck-checker-history)))))
+                  (_ (completing-read prompt candidates nil 'require-match
+                                      nil 'read-flycheck-checker-history)))))
     (if (string= input "")
         (user-error "No syntax checker entered")
       (intern input))))
@@ -3438,12 +3436,20 @@ _EVENT is ignored."
         (with-current-buffer buffer
           (setq flycheck-current-process nil)
           (flycheck-report-status "")
-          (when flycheck-mode
-            (condition-case err
-                (flycheck-finish-syntax-check checker exit-status files output)
+          (condition-case err
+              (pcase (process-status process)
+                (`signal
+                 ;; The process was killed, so let's just delete all overlays,
+                 ;; and report a bad state
+                 (flycheck-delete-marked-overlays)
+                 (flycheck-report-status "-"))
+                (`exit
+                 (when flycheck-mode
+                   (flycheck-finish-syntax-check checker exit-status
+                                                 files output))))
               (error
                (flycheck-report-error)
-               (signal (car err) (cdr err))))))))))
+               (signal (car err) (cdr err)))))))))
 
 (defun flycheck-start-checker (checker)
   "Start a syntax CHECKER."
@@ -3489,7 +3495,9 @@ _EVENT is ignored."
 (defun flycheck-stop-checker ()
   "Stop any syntax checker for the current buffer."
   (when (flycheck-running-p)
-    (interrupt-process flycheck-current-process)))
+    ;; Killing the current process will force the sentinel, which does the
+    ;; cleanup
+    (kill-process flycheck-current-process)))
 
 
 ;;;; Syntax checker executable
@@ -3654,9 +3662,9 @@ See URL `http://clang.llvm.org/'."
             (option-list "-D" flycheck-clang-definitions s-prepend)
             (option-list "-I" flycheck-clang-include-path)
             "-x" (eval
-                  (cl-case major-mode
-                    (c++-mode "c++")
-                    (c-mode "c")))
+                  (pcase major-mode
+                    (`c++-mode "c++")
+                    (`c-mode "c")))
             ;; We must stay in the same directory, to properly resolve #include
             ;; with quotes
             source-inplace)
@@ -4254,7 +4262,10 @@ See URL `http://www.haskell.org/ghc/'."
                          flycheck-ghc-no-user-package-database)
             (option-list "-package-db" flycheck-ghc-package-databases)
             (option-list "-i" flycheck-ghc-search-path s-prepend)
-            source)
+            ;; Force GHC to treat the file as Haskell file, even if it doesn't
+            ;; have an extension.  Otherwise GHC would fail on files without an
+            ;; extension
+            "-x" "hs" source)
   :error-patterns
   ((warning line-start (file-name) ":" line ":" column ":"
             (or " " "\n    ") "Warning:" (optional "\n")

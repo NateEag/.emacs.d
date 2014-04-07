@@ -16,6 +16,17 @@
 
   (diminish 'smartparens-mode)
 
+  ;; Turn off quote auto-escaping, because it does the wrong thing in too many
+  ;; circumstances.
+  ;;
+  ;; For instance, it shouldn't auto-escape double quotes in a single-quoted
+  ;; string.
+  ;;
+  ;; I also find it annoying when I'm at EOL and manually insert a closing and
+  ;; it's automatically turned into a pair of escaped quotes. That one's not so
+  ;; soluble, but it bothers me more than it helps me.
+  (setq sp-autoescape-string-quote nil)
+
   ;; do not autoinsert ' pair if the point is preceded by word.  This
   ;; will handle the situation when ' is used as a contraction symbol in
   ;; natural language.  Nil for second argument means to keep the

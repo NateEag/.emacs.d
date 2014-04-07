@@ -398,7 +398,6 @@ Don't set it directly, use instead `helm-ff-auto-update-initial-value'.")
     (persistent-help . "Hit1 Expand Candidate, Hit2 or (C-u) Find file")
     (mode-line . helm-ff-mode-line-string)
     (volatile)
-    (delayed)
     (keymap . ,helm-find-files-map)
     (nohighlight)
     (candidate-number-limit . 9999)
@@ -2151,7 +2150,8 @@ Argument FOLLOW when non--nil specify to follow FILES to destination."
                    (helm-find-files-1 (file-name-directory target)
                                       (if helm-ff-transformer-show-only-basename
                                           (helm-basename target) target))
-                   (helm-find-files-1 (expand-file-name candidate))))
+                   (helm-find-files-1 (file-name-as-directory
+                                       (expand-file-name candidate)))))
           (setq helm-ff-cand-to-mark nil))))))
 
 (defun helm-get-dest-fnames-from-list (flist dest-cand rename-dir-flag)

@@ -193,6 +193,14 @@ Creating buffers
 When creating a new buffer use \\[universal-argument] to choose a mode for your buffer in a list.
 This list is customizable, see `helm-buffers-favorite-modes'.
 
+Killing buffers
+
+You have a command to kill buffer(s) and quit emacs and a command to kill buffers one by one
+\(no marked\) without quitting helm.
+You can run this persistent kill buffer command either with the regular
+`helm-execute-persistent-action' called with a prefix arg (C-u C-z) or with its specific command
+`helm-buffer-run-kill-persistent' see binding below.
+
 Meaning of colors and prefixes for buffers:
 
 Remote buffers are prefixed with '@'.
@@ -215,6 +223,7 @@ Italic     => A non--file buffer.
 \\[helm-buffer-revert-persistent]\t\t->Revert buffer without quitting.
 \\[helm-buffer-save-persistent]\t\t->Save buffer without quitting.
 \\[helm-buffer-run-kill-buffers]\t\t->Delete marked buffers and quit.
+\\[helm-buffer-run-kill-persistent]\t\t->Delete buffer without quitting helm.
 \\[helm-toggle-all-marks]\t\t->Toggle all marks.
 \\[helm-mark-all]\t\t->Mark all.
 \\[helm-toggle-buffers-details]\t\t->Toggle details.
@@ -241,6 +250,11 @@ Italic     => A non--file buffer.
 - Enter `/' at end of pattern to quickly reach root of your file system.
 
 - Enter `./' at end of pattern to quickly reach `default-directory' (initial start of session).
+  If you are in `default-directory' move cursor on top.
+
+- Enter `../' at end of pattern will reach upper directory, moving cursor on top.
+  NOTE: This different to using `C-l' in that `C-l' don't move cursor on top but stay on previous
+  subdir name.
 
 - You can complete with partial basename (start on third char entered)
 
@@ -261,7 +275,7 @@ Italic     => A non--file buffer.
   preventing you to do so, in this case just hit C-<backspace> and then <backspace>.
   NOTE: On a terminal C-<backspace> may not work, use in this case C-c <backspace>.
 
-- You can create a new directory an a new file at the same time, just write the path in prompt
+- You can create a new directory and a new file at the same time, just write the path in prompt
   and press <RET>.
   e.g You can create \"~/new/newnew/newnewnew/my_newfile.txt\".
 
@@ -332,12 +346,50 @@ Italic     => A non--file buffer.
 ;;
 (defvar helm-read-file-name-help-message
   "== Helm read file name ==\
-
 \nTips:
-\n- When you want to delete backward characters to e.g creating a new file or directory,
+\n- Enter `~/' at end of pattern to quickly reach home directory.
+
+- Enter `/' at end of pattern to quickly reach root of your file system.
+
+- Enter `./' at end of pattern to quickly reach `default-directory' (initial start of session).
+  If you are in `default-directory' move cursor on top.
+
+- Enter `../' at end of pattern will reach upper directory, moving cursor on top.
+  NOTE: This different to using `C-l' in that `C-l' don't move cursor on top but stay on previous
+  subdir name.
+
+- You can complete with partial basename (start on third char entered)
+
+    e.g \"fob\" or \"fbr\" will complete \"foobar\"
+    but \"fb\" will wait for a third char for completing.
+
+Persistent actions:
+
+By default `helm-read-file-name' use the persistent actions of `helm-find-files'.
+
+- Use `C-u C-z' to watch an image.
+
+- `C-z' on a filename will expand in helm-buffer to this filename.
+  Second hit on `C-z' will display buffer filename.
+  Third hit on `C-z' will kill buffer filename.
+  NOTE: `C-u C-z' will display buffer directly.
+
+- To browse images directories turn on `helm-follow-mode' and navigate with arrow keys.
+
+- When you want to delete backward characters to e.g creating a new file or directory,
   autoupdate may keep updating to an existent directory
   preventing you to do so, in this case just hit C-<backspace> and then <backspace>.
+  This should not needed when copying/renaming files because autoupdate is disabled
+  by default in this case.
   NOTE: On a terminal C-<backspace> may not work, use in this case C-c <backspace>.
+
+- You can create a new directory and a new file at the same time, just write the path in prompt
+  and press <RET>.
+  e.g You can create \"~/new/newnew/newnewnew/my_newfile.txt\".
+
+- To create a new directory, add a \"/\" at end of new name and press <RET>.
+
+- To create a new file just write the filename not ending with \"/\".
 
 \nSpecific commands for helm-read-file-name:
 \\<helm-read-file-map>
@@ -1269,6 +1321,11 @@ HELM-ATTRIBUTE should be a symbol."
 
   See `helm-follow-mode' for more infos")
 
+(helm-document-attribute 'follow-delay "optional"
+  "  `helm-follow-mode' will execute persistent-action after this delay.
+Otherwise value of `helm-follow-input-idle-delay' is used if non--nil,
+If none of these are found fallback to `helm-input-idle-delay'.")
+
 (helm-document-attribute 'allow-dups "optional"
   "  Allow helm collecting duplicates candidates.")
 
@@ -1283,6 +1340,9 @@ HELM-ATTRIBUTE should be a symbol."
   If used with `filtered-candidate-transformer' or `candidates-transformer'
   these functions should treat the candidates transformed by the `filter-one-by-one'
   function in consequence.")
+
+(helm-document-attribute 'nomark "optional"
+  "  Don't allow marking candidates when this attribute is present.")
 
 (provide 'helm-help)
 

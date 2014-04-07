@@ -1622,7 +1622,7 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
     (helm-log (concat "[Start session] " (make-string 41 ?+)))
     (helm-log-eval any-prompt any-preselect
                    any-buffer any-keymap any-default)
-    (let ((old-overriding-local-map overriding-local-map)
+    (let ((old-overriding-local-map overriding-terminal-local-map)
           ;; #163 no cursor in minibuffer in <=Emacs-24.2.
           ;; This is not needed in emacs-24.3+
           (cursor-in-echo-area t)
@@ -1635,6 +1635,7 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
       ;; cua-mode overhide local helm bindings.
       ;; disable this stupid thing if enabled.
       (and cua-mode (cua-mode -1))
+      (add-hook 'post-command-hook 'helm--maybe-update-keymap)
       (unwind-protect
            (condition-case _v
                (let (;; `helm-source-name' is non-nil
@@ -1658,18 +1659,19 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
                      (helm-cleanup)))
                  (prog1 (unless helm-quit
                           (with-helm-temp-hook 'helm-cleanup-hook
-                            (setq overriding-local-map old-overriding-local-map))
+                            (setq overriding-terminal-local-map old-overriding-local-map))
                           (helm-execute-selection-action))
                    (helm-log (concat "[End session] " (make-string 41 ?-)))))
              (quit
               (helm-restore-position-on-quit)
               (helm-log (concat "[End session (quit)] " (make-string 34 ?-)))
               nil))
+        (remove-hook 'post-command-hook 'helm--maybe-update-keymap)
         (if (fboundp 'advice-add)
             (advice-remove 'tramp-read-passwd #'helm--advice-tramp-read-passwd)
             (ad-deactivate 'tramp-read-passwd))
         (helm-log-eval (setq helm-alive-p nil))
-        (setq overriding-local-map old-overriding-local-map)
+        (setq overriding-terminal-local-map old-overriding-local-map)
         (setq helm-alive-p nil)
         (setq helm-in-file-completion-p nil)
         (and old--cua (cua-mode 1))
@@ -2073,7 +2075,7 @@ For ANY-PRESELECT ANY-RESUME ANY-KEYMAP ANY-DEFAULT ANY-HISTORY, See `helm'."
       ;; or helm arg, otherwise use global value of `helm-map'.
       ;; This map will be used as a `minibuffer-local-map'.
       ;; Maybe it will be overriden when changing source
-      ;; by `helm-maybe-update-keymap'.
+      ;; by `helm--maybe-update-keymap'.
       ;; Note that helm-map have been made buffer-local
       ;; in `helm-create-helm-buffer'.
       (setq helm-map (or src-keymap any-keymap helm-map))
@@ -2165,6 +2167,7 @@ This can be useful for e.g writing quietly a complex regexp."
 (defadvice tramp-read-passwd (around disable-helm-update)
   ;; Suspend update when prompting for a tramp password.
   (setq helm-suspend-update-flag t)
+  (setq overriding-terminal-local-map nil)
   (let (stimers)
     (unwind-protect
          (progn
@@ -2176,21 +2179,24 @@ This can be useful for e.g writing quietly a complex regexp."
 (defun helm--advice-tramp-read-passwd (old--fn &rest args)
   ;; Suspend update when prompting for a tramp password.
   (setq helm-suspend-update-flag t)
+  (setq overriding-terminal-local-map nil)
   (unwind-protect
        ;; No need to suspend timer in emacs-24.4
        (apply old--fn args)
     (setq helm-suspend-update-flag nil)))
 
-(defun helm-maybe-update-keymap ()
+(defun helm--maybe-update-keymap ()
   "Handle differents keymaps in multiples sources.
-This function is meant to be run in `helm-move-selection-after-hook'.
-It will override `helm-map' with the keymap attribute of current source
-if some when multiples sources are present."
-  (with-helm-window
-    (let* ((source (helm-get-current-source))
-           (kmap (and (listp source) ; Check if source is empty.
-                      (assoc-default 'keymap source))))
-      (when kmap (setq overriding-local-map kmap)))))
+
+It will override `helm-map' with the local map of current source.
+If no map is found in current source do nothing (keep previous map)."
+  (with-helm-buffer
+    (helm-aif (assoc-default 'keymap (helm-get-current-source))
+        ;; Fix #466; we use here set-transient-map
+        ;; to not overhide other minor-mode-map's.
+        (if (fboundp 'set-transient-map)
+            (set-transient-map it)
+            (set-temporary-overlay-map it)))))
 
 
 ;; Core: clean up
@@ -2580,6 +2586,15 @@ and `helm-pattern'."
          (helm-log "Using here `helm-while-no-input'")
          (helm-while-no-input ,@body))))
 
+(defun helm--compute-sources (src-list)
+  (cl-loop with matches = (helm--maybe-use-while-no-input
+                           (cl-loop for src in src-list
+                                    collect (helm-compute-matches src)))
+           when (eq matches t) do (setq matches nil)
+           for src in src-list
+           for mtc in matches
+           do (helm-render-source src mtc)))
+
 (cl-defun helm-process-delayed-sources (delayed-sources &optional preselect source)
   "Process helm DELAYED-SOURCES.
 Move selection to string or regexp PRESELECT if non--nil.
@@ -2592,13 +2607,7 @@ when emacs is idle for `helm-idle-delay'."
     (with-current-buffer (helm-buffer-get)
       (save-excursion
         (goto-char (point-max))
-        (cl-loop with matches = (helm--maybe-use-while-no-input
-                                 (cl-loop for src in delayed-sources
-                                          collect (helm-compute-matches src)))
-                 when (eq matches t) do (setq matches nil)
-                 for src in delayed-sources
-                 for mtc in matches
-                 do (helm-render-source src mtc))
+        (helm--compute-sources delayed-sources)
         (when (and (not (helm-empty-buffer-p))
                    ;; No selection yet.
                    (= (overlay-start helm-selection-overlay)
@@ -2632,37 +2641,29 @@ is done on whole `helm-buffer' and not on current source."
   (with-current-buffer (helm-buffer-get)
     (set (make-local-variable 'helm-input-local) helm-pattern)
     (let (normal-sources
-          normal-sources-candidates
           delayed-sources)
       (unwind-protect
-           (helm-while-no-input
-            ;; Iterate over all the sources
+           (progn
+             ;; Iterate over all the sources
              (cl-loop for source in (cl-remove-if-not
                                      'helm-update-source-p (helm-get-sources))
-                     if (helm-delayed-source-p source)
-                     ;; Delayed sources just get collected for later
-                     ;; processing
-                     collect source into ds
-                     else
-                     ;; Normal sources also get their matching
-                     ;; candidates collected here, before erasing the
-                     ;; current contents of the helm buffer, so that
-                     ;; their computation doesn't delay the redraw of
-                     ;; the helm buffer and doesn't trigger flicker
-                     collect source into ns and
-                     collect (helm-compute-matches source) into nsc
-                     ;; Export the variables from cl-loop
-                     finally (setq delayed-sources ds
-                                   normal-sources ns
-                                   normal-sources-candidates nsc))
-            ;; Finally the helm buffer can be erased
-            (erase-buffer)
-            ;; Render all the sources into the helm buffer using the
-            ;; candidates calculated before the erase
-            (cl-loop for source in normal-sources
-                     for candidates in normal-sources-candidates
-                     do
-                     (helm-render-source source candidates)))
+                      if (helm-delayed-source-p source)
+                      ;; Delayed sources just get collected for later
+                      ;; processing
+                      collect source into ds
+                      else
+                      ;; Collect the normal sources
+                      collect source into ns
+                      ;; Export the variables from cl-loop
+                      finally (setq delayed-sources ds
+                                    normal-sources ns))
+             (erase-buffer)
+             ;; Render all the sources into the helm buffer after
+             ;; calculating all candidates.
+             ;; Candidates must be computed AFTER erasing buffer
+             ;; even if it cause flickering; Doing so avoid
+             ;; unexpected results when executing actions.
+             (helm--compute-sources normal-sources))
         (helm-log-eval
          (mapcar (lambda (s) (assoc-default 'name s)) delayed-sources))
         (cond ((and preselect delayed-sources normal-sources)
@@ -2699,7 +2700,8 @@ is done on whole `helm-buffer' and not on current source."
         (helm-log "end update")))))
 
 ;; Update keymap after updating.
-(add-hook 'helm-after-update-hook 'helm-maybe-update-keymap)
+;; Putting this in a hook allow users to disable it.
+(add-hook 'helm-after-update-hook 'helm--maybe-update-keymap)
 
 (defun helm-update-source-p (source)
   "Whether SOURCE need updating or not."
@@ -3157,20 +3159,20 @@ Key arg DIRECTION can be one of:
         (when (helm-get-previous-header-pos)
           (helm-mark-current-line))
         (helm-display-mode-line (helm-get-current-source))
-        (helm-maybe-update-keymap)
         (helm-log-run-hook 'helm-move-selection-after-hook)))))
 
 (defun helm-move--previous-multi-line-fn ()
   (forward-line -1)
-  (helm-skip-header-and-separator-line 'previous)
-  (let ((header-pos (helm-get-previous-header-pos))
-        (separator-pos (helm-get-previous-candidate-separator-pos)))
-    (when header-pos
-      (goto-char (if (or (null separator-pos)
-                         (< separator-pos header-pos))
-                     header-pos
-                     separator-pos))
-      (forward-line 1))))
+  (unless (helm-pos-header-line-p)
+    (helm-skip-header-and-separator-line 'previous)
+    (let ((header-pos (helm-get-previous-header-pos))
+          (separator-pos (helm-get-previous-candidate-separator-pos)))
+      (when header-pos
+        (goto-char (if (or (null separator-pos)
+                           (< separator-pos header-pos))
+                       header-pos
+                       separator-pos))
+        (forward-line 1)))))
 
 (defun helm-move--previous-line-fn ()
   (if (not (helm-pos-multiline-p))
@@ -3180,8 +3182,12 @@ Key arg DIRECTION can be one of:
              (helm-pos-header-line-p))
     (forward-line 1)
     (helm-move--end-of-source)
-    (and (save-excursion (forward-line -1) (helm-pos-multiline-p))
-         (helm-move--previous-multi-line-fn))))
+    ;; We are at end of helm-buffer
+    ;; check if last candidate is a multiline candidate
+    ;; and jump to it
+    (when (and (eobp)
+               (save-excursion (forward-line -1) (helm-pos-multiline-p)))
+      (helm-move--previous-multi-line-fn))))
 
 (defun helm-move--next-multi-line-fn ()
   (let ((header-pos (helm-get-next-header-pos))
@@ -4206,11 +4212,14 @@ Argument ACTION if present will be used as second argument of `display-buffer'."
   "Toggle helm visible mark at point."
   (interactive)
   (with-helm-window
-    (helm-aif (helm-this-visible-mark)
-        (helm-delete-visible-mark it)
-      (helm-make-visible-mark))
-    (unless (helm-end-of-source-p)
-      (helm-next-line))))
+    (let ((nomark (assq 'nomark (helm-get-current-source))))
+      (if nomark
+          (message "Marking not allowed in this source")
+          (helm-aif (helm-this-visible-mark)
+              (helm-delete-visible-mark it)
+            (helm-make-visible-mark))
+          (unless (helm-end-of-source-p)
+            (helm-next-line))))))
 
 ;;;###autoload
 (defun helm-mark-all ()
@@ -4218,39 +4227,42 @@ Argument ACTION if present will be used as second argument of `display-buffer'."
   (interactive)
   (require 'helm-files)
   (with-helm-window
-    (save-excursion
-      (goto-char (helm-get-previous-header-pos))
-      (helm-next-line)
-      (let* ((next-head (helm-get-next-header-pos))
-             (end       (and next-head
-                             (save-excursion
-                               (goto-char next-head)
-                               (forward-line -1)
-                               (point))))
-             (maxpoint  (or end (point-max))))
-        (while (< (point) maxpoint)
+    (let ((nomark (assq 'nomark (helm-get-current-source))))
+      (if nomark
+          (message "Marking not allowed in this source")
+          (save-excursion
+            (goto-char (helm-get-previous-header-pos))
+            (helm-next-line)
+            (let* ((next-head (helm-get-next-header-pos))
+                   (end       (and next-head
+                                   (save-excursion
+                                     (goto-char next-head)
+                                     (forward-line -1)
+                                     (point))))
+                   (maxpoint  (or end (point-max))))
+              (while (< (point) maxpoint)
+                (helm-mark-current-line)
+                (let* ((prefix (get-text-property (point-at-bol) 'display))
+                       (cand   (helm-get-selection))
+                       (bn     (and (helm-file-completion-source-p)
+                                    (helm-basename cand)))
+                       (src    (assoc-default 'name (helm-get-current-source))))
+                  (when (and (not (helm-this-visible-mark))
+                             (not (or (string= prefix "[?]")
+                                      (string= prefix "[@]"))))
+                    ;; Don't mark possibles directories ending with . or ..
+                    ;; autosave files/links and non--existent file.
+                    (unless
+                        (and (or (helm-file-completion-source-p)
+                                 (equal src "Files from Current Directory"))
+                             (or (string-match "^[.]?#.*#?$\\|[^#]*[.]\\{1,2\\}$" bn)
+                                 ;; We need to test here when not using a transformer
+                                 ;; that tag prefix (i.e on tramp)
+                                 (not (file-exists-p cand))))
+                      (helm-make-visible-mark))))
+                (forward-line 1) (end-of-line))))
           (helm-mark-current-line)
-          (let* ((prefix (get-text-property (point-at-bol) 'display))
-                 (cand   (helm-get-selection))
-                 (bn     (and (helm-file-completion-source-p)
-                              (helm-basename cand)))
-                 (src    (assoc-default 'name (helm-get-current-source))))
-            (when (and (not (helm-this-visible-mark))
-                       (not (or (string= prefix "[?]")
-                                (string= prefix "[@]"))))
-              ;; Don't mark possibles directories ending with . or ..
-              ;; autosave files/links and non--existent file.
-              (unless
-                  (and (or (helm-file-completion-source-p)
-                           (equal src "Files from Current Directory"))
-                       (or (string-match "^[.]?#.*#?$\\|[^#]*[.]\\{1,2\\}$" bn)
-                           ;; We need to test here when not using a transformer
-                           ;; that tag prefix (i.e on tramp)
-                           (not (file-exists-p cand))))
-                (helm-make-visible-mark))))
-          (forward-line 1) (end-of-line))))
-    (helm-mark-current-line)
-    (message "%s candidates marked" (length helm-marked-candidates))))
+          (message "%s candidates marked" (length helm-marked-candidates))))))
 
 ;;;###autoload
 (defun helm-unmark-all ()
@@ -4441,17 +4453,24 @@ This will enable `helm-follow-mode' automatically in `helm-source-buffers-list'.
       (when (and helm-follow-mode-persistent sym)
         (set (car `(,sym)) src)))))
 
+(defvar helm-follow-input-idle-delay nil
+  "`helm-follow-mode' will execute its persistent action after this delay.
+Note that if the `follow-delay' attr is present in source,
+it will take precedence on this.")
 (defun helm-follow-execute-persistent-action-maybe ()
   "Execute persistent action in mode `helm-follow-mode'.
 This happen after `helm-input-idle-delay' secs."
-  (and (not (get-buffer-window helm-action-buffer 'visible))
-       (eq (assoc-default 'follow (helm-get-current-source)) 1)
-       (sit-for (and helm-input-idle-delay
-                     (max helm-input-idle-delay 0.01)))
-       (helm-window)
-       (helm-get-selection)
-       (save-excursion
-         (helm-execute-persistent-action))))
+  (let ((src (helm-get-current-source)))
+    (and (not (get-buffer-window helm-action-buffer 'visible))
+         (eq (assoc-default 'follow src) 1)
+         (sit-for (or (assoc-default 'follow-delay src)
+                      helm-follow-input-idle-delay
+                      (and helm-input-idle-delay
+                           (max helm-input-idle-delay 0.01))))
+         (helm-window)
+         (helm-get-selection)
+         (save-excursion
+           (helm-execute-persistent-action)))))
 
 
 (provide 'helm)

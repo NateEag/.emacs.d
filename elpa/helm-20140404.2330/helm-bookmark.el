@@ -87,7 +87,7 @@
 
 (defvar helm-bookmarks-cache nil)
 (defvar helm-source-bookmarks
-  `((name . "Bookmarks")
+  '((name . "Bookmarks")
     (init . (lambda ()
               (require 'bookmark)
               (setq helm-bookmark-mode-line-string
@@ -126,10 +126,16 @@
   "Toggle bookmark location visibility."
   (interactive)
   (with-helm-alive-p
-    (let ((real (helm-get-selection helm-buffer)))
+    (let* ((real (helm-get-selection helm-buffer))
+           (trunc (if (> (string-width real) bookmark-bmenu-file-column)
+                      (helm-substring real bookmark-bmenu-file-column)
+                      real)))
       (setq helm-bookmark-show-location (not helm-bookmark-show-location))
-      (helm-update (if helm-bookmark-show-location
-                       (bookmark-location real) real)))))
+      (helm-force-update (if helm-bookmark-show-location
+                             (concat (regexp-quote trunc)
+                                     " +"
+                                     (regexp-quote (bookmark-location real)))
+                             real)))))
 
 (defun helm-bookmark-jump (candidate)
   "Jump to bookmark from keyboard."
@@ -705,7 +711,7 @@ words from the buffer into the new bookmark name."
   "Delete bookmark from keyboard."
   (interactive)
   (with-helm-alive-p
-    (when (y-or-n-p "Delete bookmark?")
+    (when (y-or-n-p "Delete bookmark(s)?")
       (helm-quit-and-execute-action 'helm-delete-marked-bookmarks))))
 
 (defun helm-bookmark-get-bookmark-from-name (bmk)

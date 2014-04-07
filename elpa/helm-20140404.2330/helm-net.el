@@ -85,11 +85,28 @@ a personal url, see your settings on duckduckgo."
   :type 'string
   :group 'helm-net)
 
+(defcustom helm-wikipedia-suggest-url
+  "http://en.wikipedia.org/w/api.php?action=opensearch&search="
+  "Url used for looking up Wikipedia suggestions."
+  :type 'string
+  :group 'helm-net)
+
 (defcustom helm-search-suggest-action-wikipedia-url
   "https://en.wikipedia.org/wiki/Special:Search?search=%s"
   "The Wikipedia search url.
 This is a format string, don't forget the `%s'."
   :type 'string
+  :group 'helm-net)
+
+(defcustom helm-wikipedia-summary-url
+  "http://en.wikipedia.org/w/api.php?action=parse&format=json&prop=text&section=0&page="
+  "URL for getting the summary of a Wikipedia topic."
+  :type 'string
+  :group 'helm-net)
+
+(defcustom helm-wikipedia-follow-delay 2
+  "Delay before wikipedia summary popup."
+  :type 'number
   :group 'helm-net)
 
 (defcustom helm-search-suggest-action-youtube-url
@@ -271,6 +288,7 @@ Return an alist with elements like (data . number_results)."
     (action . ,(cons '("Google Search" . helm-google-suggest-action)
                      helm-search-suggest-additional-actions))
     (volatile)
+    (keymap . ,helm-map)
     (requires-pattern . 3)))
 
 (defun helm-google-suggest-emacs-lisp ()
@@ -311,10 +329,130 @@ Return an alist with elements like (data . number_results)."
                            (url-hexify-string candidate))))
 
 (defvar helm-source-yahoo-suggest
-  '((name . "Yahoo Suggest")
+  `((name . "Yahoo Suggest")
     (candidates . helm-yahoo-suggest-set-candidates)
     (action . (("Yahoo Search" . helm-yahoo-suggest-action)))
     (volatile)
+    (keymap . ,helm-map)
+    (requires-pattern . 3)))
+
+;;; Wikipedia suggestions
+;;
+;;
+(declare-function json-read-from-string "json" (string))
+(defun helm-wikipedia-suggest-fetch ()
+  "Fetch Wikipedia suggestions and return them as a list."
+  (require 'json)
+  (let ((request (concat helm-wikipedia-suggest-url
+                         (url-hexify-string helm-pattern))))
+    (if helm-google-suggest-use-curl-p
+        (with-temp-buffer
+          (call-process "curl" nil t nil request)
+          (helm-wikipedia--parse-buffer))
+        (with-current-buffer
+            (url-retrieve-synchronously request)
+          (helm-wikipedia--parse-buffer)))))
+
+(defun helm-wikipedia--parse-buffer ()
+  (goto-char (point-min))
+  (when (re-search-forward "^\\[.+\\[\\(.*\\)\\]\\]" nil t)
+    (cl-loop for i across (aref (json-read-from-string (match-string 0)) 1)
+             collect i into result
+             finally return (or result
+                                (append
+                                 result
+                                 (list (cons (format "Search for '%s' on wikipedia"
+                                                     helm-pattern)
+                                             helm-pattern)))))))
+
+(defvar helm-wikipedia--summary-cache (make-hash-table :test 'equal))
+(defun helm-wikipedia-persistent-action (candidate)
+  (unless (string= (format "Search for '%s' on wikipedia"
+                           helm-pattern)
+                   (helm-get-selection nil t))
+    (message "Fetching summary from Wikipedia...")
+    (let ((buf (get-buffer-create "*helm wikipedia summary*"))
+          result mess)
+      (while (progn
+               (setq result (or (gethash candidate helm-wikipedia--summary-cache)
+                                (puthash candidate
+                                         (prog1
+                                             (helm-wikipedia-fetch-summary candidate)
+                                           (setq mess "Done"))
+                                         helm-wikipedia--summary-cache)))
+               (when (and result
+                          (listp result))
+                 (setq candidate (cdr result))
+                 (message "Redirected to %s" candidate)
+                 t)))
+      (if (not result)
+          (message "Error when getting summary.")
+          (with-current-buffer buf
+            (erase-buffer)
+            (setq cursor-type nil)
+            (insert result)
+            (fill-region (point-min) (point-max))
+            (goto-char (point-min)))
+          (display-buffer buf)
+          (message mess)))))
+
+
+(defun helm-wikipedia-fetch-summary (input)
+  (let* ((request (concat helm-wikipedia-summary-url (url-hexify-string input))))
+    (if helm-google-suggest-use-curl-p
+        (with-temp-buffer
+          (call-process "curl" nil t nil request)
+          (helm-wikipedia--parse-summary))
+        (with-current-buffer
+            (url-retrieve-synchronously request)
+          (helm-wikipedia--parse-summary)))))
+
+
+(defun helm-wikipedia--parse-summary ()
+  (goto-char (point-min))
+  (when (search-forward "{" nil t)
+    (let ((result (cdr (assoc '*
+                              (assoc 'text
+                                     (assoc 'parse
+                                            (json-read-from-string
+                                             (buffer-substring-no-properties
+                                              (1- (point)) (point-max)))))))))
+      (when result
+        (if (string-match "<span class=\"redirectText\"><a href=[^>]+>\\([^<]+\\)" result)
+            (cons 'redirect (match-string 1 result))
+
+            ;; find the beginning of the summary text in the result
+
+            ;; check if there is a table before the summary and skip that
+            (when (or (string-match "</table>\\(\n<div.*?</div>\\)?\n<p>" result)
+                      ;; otherwise just find the first paragraph
+                      (string-match "<p>" result))
+              ;; remove cruft and do a simple formatting 
+              (replace-regexp-in-string
+               "Cite error: .*" ""
+               (replace-regexp-in-string
+                "&#160;" ""
+                (replace-regexp-in-string
+                 "\\[[^\]]+\\]" ""
+                 (replace-regexp-in-string
+                  "<[^>]*>" ""
+                  (replace-regexp-in-string
+                   "</p>\n<p>" "\n\n"
+                   (substring result (match-end 0)))))))))))))
+
+
+(defvar helm-source-wikipedia-suggest
+  `((name . "Wikipedia Suggest")
+    (candidates . helm-wikipedia-suggest-fetch)
+    (action . (("Wikipedia" . (lambda (candidate)
+                                (helm-search-suggest-perform-additional-action
+                                 helm-search-suggest-action-wikipedia-url
+                                 candidate)))))
+    (persistent-action . helm-wikipedia-persistent-action)
+    (volatile)
+    (keymap . ,helm-map)
+    (follow . 1)
+    (follow-delay . ,helm-wikipedia-follow-delay)
     (requires-pattern . 3)))
 
 
@@ -441,6 +579,13 @@ Return an alist with elements like (data . number_results)."
   "Preconfigured `helm' for Yahoo searching with Yahoo suggest."
   (interactive)
   (helm-other-buffer 'helm-source-yahoo-suggest "*helm yahoo*"))
+
+;;;###autoload
+(defun helm-wikipedia-suggest ()
+  "Preconfigured `helm' for Wikipedia lookup with Wikipedia suggest."
+  (interactive)
+  (helm :sources 'helm-source-wikipedia-suggest
+        :buffer "*helm wikipedia*"))
 
 
 (provide 'helm-net)

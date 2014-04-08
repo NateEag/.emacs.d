@@ -17,6 +17,9 @@
  you have a lot of buffers open from that repo it might get expensive... Think
  about this, anyway.
 
+-Add a command to backup-walker to revert to the selected backup file. 'r'
+ would be a good keybinding.
+
 -Add a command to backup-walker to ediff against the current file.
 
 -Get smart-dash-mode to be active in web-mode, but _only_ in template
@@ -24,6 +27,9 @@
  IDs and names. Probably means writing a wrapper around smart-dash-mode's
  internal function and choosing which function to call based on the current
  language.
+
+-File feature request to flycheck for being able to run checkers while in
+ web-mode. May well get rejected, because supporting this would be pretty hard.
 
 -Generate autoloads for my mode configs (and other code I've hacked up myself)
  from autoload cookie comments, rather than maintaining them manually. Might
@@ -88,6 +94,13 @@
  possible to bind something clever to Tab that picks which maneuver to do based
  on whether there are any characters before point *and* whether autocompletion
  has been invoked before while in this field. or something like that.
+
+-php-mode should not move sigils when swapping words with M-t.
+ $this_thing => thing_$this is not what we want.
+
+-glasses-mode looks handy, but when I used 'bold' as the face and set
+ glasses-separator to nil, it made existing underscores vanish. Should probably
+ make a bug report.
 
 -It would be really sweet to get yasnippet's bracket placement to do the Right
  Thing based on major-mode, placing them on the newline or on the same line

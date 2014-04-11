@@ -49,10 +49,12 @@
   (auto-complete-mode)
   (setq ac-sources nil)
   (payas/ac-setup)
-  (add-to-list 'ac-sources 'ac-source-yasnippet)
-  (add-to-list 'ac-sources 'ac-source-words-in-same-mode-buffers)
+  (add-to-list 'ac-sources 'ac-source-yasnippet t)
+  (add-to-list 'ac-sources 'ac-source-words-in-same-mode-buffers t)
 
   ;; w00t for auto-yasnippets!
+  ;; (In principle the autocomplete setup should usually handle the job, but
+  ;; if I ever use this with end-user code, this might be necessary)
   (require 'php-auto-yasnippets)
   (define-key php-mode-map (kbd "C-c C-y") 'yas/create-php-snippet)
 

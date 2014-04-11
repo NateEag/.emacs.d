@@ -10,4 +10,4 @@
       (add-to-list 'exec-path "c:/Program Files (x86)/Git/bin"))
 
   ;; This is where PHP lives on my work machine.
-  (setq php-executable "/Program Files (x86)/PHP/php"))
+  (setq php-executable "/Program Files (x86)/iis express/PHP/v5.4/php"))

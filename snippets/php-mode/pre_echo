@@ -1,0 +1,6 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: pre_echo
+# key: pre_echo
+# binding: direct-keybinding
+# --
+echo '<pre>' . $0 . '</pre>'; die;

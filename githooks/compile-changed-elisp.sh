@@ -7,4 +7,4 @@ do
     updated_files+=$(echo "~/.emacs.d/$file")' '
 done
 
-emacs -batch -l init.el -f batch-byte-compile $updated_files
+emacs -batch -l site-lisp/nateeag-load-path.el -f batch-byte-compile $updated_files

@@ -35,13 +35,6 @@
  from autoload cookie comments, rather than maintaining them manually. Might
  fit well into my commit hook setup?
 
--Speed up compile githook. I'm currently loading my init file, but I think all
- I really need for compilation to work is my load-path, right? Another
- alternative would be to not compile my init-file, since it's the only one that
- crashes without the load-path (I think). The Emacs manual recommends against
- compiling the init file, but I'd have to add special cases in the hook and in
- my savehook.
-
 -Add a post-checkout hook, so elisp gets recompiled when I change branches.
 
 -Move my one-off variable customizations into custom.el (at least the ones that

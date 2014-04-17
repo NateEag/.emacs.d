@@ -48,8 +48,8 @@
   ;; Autocompletion for everyone!
   (auto-complete-mode)
   (setq ac-sources nil)
-  (payas/ac-setup)
-  (add-to-list 'ac-sources 'ac-source-yasnippet t)
+  (add-to-list 'ac-sources 'ac-source-yasnippet)
+  (add-to-list 'ac-sources 'ac-source-php-auto-yasnippets t)
   (add-to-list 'ac-sources 'ac-source-words-in-same-mode-buffers t)
 
   ;; w00t for auto-yasnippets!

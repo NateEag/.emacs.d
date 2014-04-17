@@ -8,6 +8,10 @@
   (setq web-mode-indent-style 2)
   (setq web-mode-prefer-server-commenting t)
 
+  (setq web-mode-style-padding 0)
+  (setq web-mode-script-padding 0)
+  (setq web-mode-block-padding 0)
+
   (skewer-html-mode)
 
   (comment-auto-fill)

@@ -1,10 +1,10 @@
 ;;; php-auto-yasnippets-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-
+(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads (yas/create-php-snippet yas/initialize) "php-auto-yasnippets"
-;;;;;;  "php-auto-yasnippets.el" (21251 45367 0 0))
+;;;### (autoloads nil "php-auto-yasnippets" "php-auto-yasnippets.el"
+;;;;;;  (21329 22221 0 0))
 ;;; Generated autoloads from php-auto-yasnippets.el
 
 (autoload 'yas/initialize "php-auto-yasnippets" "\
@@ -25,16 +25,14 @@ of a method for that class.
 
 ;;;***
 
-;;;### (autoloads nil nil ("php-auto-yasnippets-pkg.el") (21251 45367
-;;;;;;  762000 0))
+;;;### (autoloads nil nil ("php-auto-yasnippets-pkg.el") (21329 22221
+;;;;;;  90000 0))
 
 ;;;***
 
-(provide 'php-auto-yasnippets-autoloads)
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
-;; coding: utf-8
 ;; End:
 ;;; php-auto-yasnippets-autoloads.el ends here

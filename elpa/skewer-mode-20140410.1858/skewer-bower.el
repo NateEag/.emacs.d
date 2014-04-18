@@ -62,10 +62,11 @@ them from hitting the network frequently.")
 (defun skewer-bower-refresh ()
   "Update the package listing and packages synchronously."
   (interactive)
+  (cl-declare (special url-http-end-of-headers))
   (setf skewer-bower-refreshed nil)
   (with-current-buffer
       (url-retrieve-synchronously (concat skewer-bower-endpoint "/packages"))
-    (re-search-forward "\r?\n\r?\n")
+    (setf (point) url-http-end-of-headers)
     (setf skewer-bower-packages
           (cl-sort
            (cl-loop for package across (json-read)
@@ -154,29 +155,42 @@ if no configuration could be found."
 (defun skewer-bower-prompt-package ()
   "Prompt for a package and version from the user."
   (when (null skewer-bower-packages) (skewer-bower-refresh))
+  ;; ido-completing-read bug workaround:
+  (when (> (length skewer-bower-history) 32)
+    (setf skewer-bower-history (cl-subseq skewer-bower-history 0 16)))
   (let* ((packages (mapcar #'car skewer-bower-packages))
-         (selection (cl-delete-duplicates
-                     (append skewer-bower-history packages) :from-end t))
+         (selection (nconc skewer-bower-history packages))
          (package (completing-read "Library: " selection nil t nil
                                    'skewer-bower-history))
-         (versions (skewer-bower-package-versions package))
-         (version (completing-read "Version: " (reverse versions))))
+         (versions (reverse (skewer-bower-package-versions package)))
+         (version (completing-read "Version: " versions
+                                   nil t nil nil (car versions))))
     (list package version)))
 
+(defun skewer-bower--js-p (filename)
+  "Return non-nil if FILENAME looks like JavaScript."
+  (string-match "\\.js$" filename))
+
 (defun skewer-bower-guess-main (package version config)
-  "Attempt to determine the main entrypoint from a potentially
+  "Attempt to determine the main entrypoints from a potentially
 incomplete or incorrect bower configuration. Returns nil if
 guessing failed."
-  (cl-find-if (apply-partially #'skewer-bower-git-show package version)
-              (remove nil (list (cdr (assoc 'main config))
-                                (concat package ".js")
-                                package))))
+  (let ((check (apply-partially #'skewer-bower-git-show package version))
+        (main (cdr (assoc 'main config))))
+    (cond ((and (vectorp main) (cl-some check main))
+           (cl-coerce (cl-remove-if-not #'skewer-bower--js-p main) 'list))
+          ((and (stringp main) (funcall check main))
+           (list main))
+          ((funcall check (concat package ".js"))
+           (list (concat package ".js")))
+          ((funcall check package)
+           (list package)))))
 
 ;;;###autoload
 (defun skewer-bower-load (package &optional version)
   "Dynamically load a library from bower into the current page."
   (interactive (skewer-bower-prompt-package))
-  (let* ((config (skewer-bower-get-config package))
+  (let* ((config (skewer-bower-get-config package version))
          (deps (cdr (assoc 'dependencies config)))
          (main (skewer-bower-guess-main package version config)))
     (when (null main)
@@ -184,8 +198,9 @@ guessing failed."
              package version))
     (cl-loop for (dep . version) in deps
              do (skewer-bower-load (format "%s" dep) version))
-    (let ((path (skewer-bowser--path package version main)))
-      (skewer-eval path nil :type "script"))))
+    (cl-loop for entrypoint in main
+             for path = (skewer-bowser--path package version entrypoint)
+             do (skewer-eval path nil :type "script"))))
 
 (defservlet skewer/bower application/javascript (path)
   "Serve a script from the local bower repository cache."

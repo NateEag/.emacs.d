@@ -1,26 +1,11 @@
 ;; Nate Eagleson's Emacs config.
 
-;; Set up the package library per my desires.
-(require 'package)
-(setq package-user-dir "~/.emacs.d/elpa/")
-(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
-(add-to-list 'package-archives '("melpa" .
-                                 "http://melpa.milkbox.net/packages/"))
-
-;; Explicitly call package-initialize so that modes which trigger on start
-;; (like emacs-lisp-mode) don't cause horkage when running in batch mode.
-(package-initialize)
-
 ;; Sometimes you want to debug when there are errors, but not nearly as often
 ;; as I believed at the first.
 ;(setq debug-on-error t)
 
+;; Set up my load path and a few other core things.
 (load-file "~/.emacs.d/site-lisp/nateeag-load-path.el")
-
-;; Set up manually-maintained autoloads. Mostly defines mode hooks.
-(require 'nateeag-autoloads-init)
-(nateeag-autoloads-init)
-
 
 ;;; General preferences.
 

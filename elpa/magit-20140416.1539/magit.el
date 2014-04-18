@@ -279,17 +279,20 @@ tramp to connect to servers with ancient Git versions."
 (defcustom magit-emacsclient-executable
   (ignore-errors
     (shell-quote-argument
-     (let ((version (format "%s.%s"
-                            emacs-major-version
-                            emacs-minor-version)))
-       (or (let ((exec-path (list (expand-file-name "bin" invocation-directory)
-                                  invocation-directory)))
-             (or (executable-find (format "emacsclient-%s" version))
-                 (executable-find (format "emacsclient-%s.exe" version))
-                 (executable-find "emacsclient")
-                 (executable-find "emacsclient.exe")))
-           (executable-find (format "emacsclient-%s" version))
+     (let ((version
+            (format "%s.%s" emacs-major-version emacs-minor-version)))
+       (or (and (eq system-type 'darwin)
+                (let ((exec-path
+                       (list (expand-file-name "bin" invocation-directory))))
+                  (executable-find "emacsclient")))
+           (executable-find (format "emacsclient%s"   version))
+           (executable-find (format "emacsclient-%s"   version))
+           (executable-find (format "emacsclient%s.exe" version))
            (executable-find (format "emacsclient-%s.exe" version))
+           (executable-find (format "emacsclient%s"   emacs-major-version))
+           (executable-find (format "emacsclient-%s"   emacs-major-version))
+           (executable-find (format "emacsclient%s.exe" emacs-major-version))
+           (executable-find (format "emacsclient-%s.exe" emacs-major-version))
            (executable-find "emacsclient")
            (executable-find "emacsclient.exe")))))
   "The Emacsclient executable.
@@ -741,7 +744,6 @@ manager but it will be used in more places in the future."
     magit-insert-bisect-log
     magit-insert-stashes
     magit-insert-untracked-files
-    magit-insert-pending-changes
     magit-insert-pending-commits
     magit-insert-unstaged-changes
     magit-insert-staged-changes
@@ -961,10 +963,20 @@ The function is called with one argument, the propertized graph
 of a single line in as a string.  It has to return the formatted
 string.  This option can also be nil, in which case the graph is
 inserted as is."
-  :package-version '(magit . "2.0.0")
+  :package-version '(magit . "2.1.0")
   :group 'magit-log
   :type '(choice (const :tag "insert as is" nil)
+                 (function-item magit-log-format-unicode-graph)
                  function))
+
+(defcustom magit-log-format-unicode-graph-alist
+  '((?/ . ?╱) (?| . ?│) (?\\ . ?╲) (?* . ?◆) (?o . ?◇))
+  "Alist used by `magit-log-format-unicode-graph' to translate chars."
+  :package-version '(magit . "2.1.0")
+  :group 'magit-log
+  :type '(repeat (cons :format "%v\n"
+                       (character :format "replace %v ")
+                       (character :format "with %v"))))
 
 (defcustom magit-log-show-gpg-status nil
   "Display signature verification information as part of the log."
@@ -1115,25 +1127,28 @@ t          ask if --set-upstream should be used.
 
 ;;;; Custom Faces
 
-(defface magit-header
-  '((t :inherit header-line))
-  "Face for generic header lines.
-
-Many Magit faces inherit from this one by default."
-  :group 'magit-faces)
-
 (defface magit-section-title
-  '((t :inherit magit-header))
+  '((t :inherit header-line))
   "Face for section titles."
   :group 'magit-faces)
 
 (defface magit-branch
-  '((t :inherit magit-header))
+  '((((class color) (background light))
+     :background "Grey85"
+     :foreground "LightSkyBlue4")
+    (((class color) (background dark))
+     :background "Grey13"
+     :foreground "LightSkyBlue1"))
   "Face for branches."
   :group 'magit-faces)
 
 (defface magit-tag
-  '((t :inherit magit-header))
+  '((((class color) (background light))
+     :background "LemonChiffon1"
+     :foreground "goldenrod4")
+    (((class color) (background dark))
+     :background "LemonChiffon1"
+     :foreground "goldenrod4"))
   "Face for tags."
   :group 'magit-faces)
 
@@ -1469,13 +1484,13 @@ Many Magit faces inherit from this one by default."
   :group 'magit-faces)
 
 (defface magit-process-ok
-  '((t :inherit magit-header
+  '((t :inherit magit-section-title
        :foreground "green"))
   "Face for zero exit-status."
   :group 'magit-faces)
 
 (defface magit-process-ng
-  '((t :inherit magit-header
+  '((t :inherit magit-section-title
        :foreground "red"))
   "Face for non-zero exit-status."
   :group 'magit-faces)
@@ -1880,7 +1895,7 @@ Unless optional argument KEEP-EMPTY-LINES is t, trim all empty lines."
         (insert string)
         (let ((ov (make-overlay start (point) nil t)))
           (overlay-put ov 'face face)
-          (overlay-put ov 'priority 10)
+          ;; (overlay-put ov 'priority 10)
           (overlay-put ov 'evaporate t)))
     (insert (propertize string 'face face)))
   (apply #'insert args))
@@ -1889,7 +1904,7 @@ Unless optional argument KEEP-EMPTY-LINES is t, trim all empty lines."
   (if magit-use-overlays
       (let ((ov (make-overlay start end nil t)))
         (overlay-put ov 'face face)
-        (overlay-put ov 'priority 10)
+        ;; (overlay-put ov 'priority 10)
         (overlay-put ov 'evaporate t))
     (put-text-property start end 'face face)))
 
@@ -2765,7 +2780,6 @@ With a prefix argument also expand it." title)
 (magit-define-section-jumper staged    "Staged changes")
 (magit-define-section-jumper unpulled  "Unpulled commits")
 (magit-define-section-jumper unpushed  "Unpushed commits")
-(magit-define-section-jumper pending   "Pending commits")
 (magit-define-section-jumper diffstats "Diffstats")
 
 ;;;;; Section Hooks
@@ -3712,7 +3726,7 @@ of the Windows \"Powershell\"."
   (if magit-process-quote-curly-braces
       (mapcar (apply-partially 'replace-regexp-in-string
                                "{\\([0-9]+\\)}" "\\\\{\\1\\\\}")
-              args)
+              (magit-flatten-onelevel args))
     args))
 
 ;;;; Mode Api
@@ -4048,7 +4062,8 @@ the current repository."
                    (not (string-prefix-p gitdir file))
                    (member (file-relative-name file topdir) tracked)
                    (let ((auto-revert-mode t))
-                     (auto-revert-handler))))))))))
+                     (auto-revert-handler)
+                     (run-hooks 'magit-revert-buffer-hook))))))))))
 
 ;;; (misplaced)
 ;;;; Diff Options
@@ -4400,14 +4415,6 @@ can be used to override this."
                       "\n")))))
       (insert "\n"))))
 
-(defun magit-insert-pending-changes ()
-  (let* ((info (magit-read-rewrite-info))
-         (orig (cadr (assq 'orig info))))
-    (when orig
-      (magit-git-insert-section (pending-changes "Pending changes:")
-          #'magit-wash-diffs
-        "diff" (magit-diff-U-arg) "-R" orig))))
-
 (defun magit-insert-unstaged-changes ()
   (let ((magit-current-diff-range (cons 'index 'working))
         (magit-diff-options (copy-sequence magit-diff-options)))
@@ -4471,17 +4478,17 @@ can be used to override this."
   (insert "\n"))
 
 (defun magit-insert-status-local-line ()
-  (magit-insert-line-section (line)
-    (concat "Local: "
-            (propertize (or (magit-get-current-branch) "(detached)")
-                        'face 'magit-branch)
-            " " (abbreviate-file-name default-directory))))
+  (let ((branch (or (magit-get-current-branch) "(detached)")))
+    (magit-insert-line-section (branch branch)
+      (concat "Local: "
+              (propertize branch 'face 'magit-branch)
+              " " (abbreviate-file-name default-directory)))))
 
 (defun magit-insert-status-remote-line ()
   (let* ((branch  (magit-get-current-branch))
          (tracked (magit-get-tracked-branch branch)))
     (when tracked
-      (magit-insert-line-section (line)
+      (magit-insert-line-section (branch tracked)
         (concat "Remote: "
                 (and (magit-get-boolean "branch" branch "rebase") "onto ")
                 (magit-format-tracked-line tracked branch))))))
@@ -5081,7 +5088,7 @@ return the buffer, without displaying it."
        (hunk   (setq section parent))
        (diff   (setq section it)))
      (if section
-         (setq rev  (cadr (magit-diff-range section))
+         (setq rev  (car (magit-diff-range section))
                file (magit-section-info section))
        (unless rev
          (setq rev (magit-get-current-branch))))
@@ -5588,6 +5595,23 @@ With two prefix args, remove ignored files as well."
              (magit-refresh)
              (error "Could not apply %s" commit))))))
 
+(defun magit-rewrite-diff-pending ()
+  (interactive)
+  (let* ((info (magit-read-rewrite-info))
+         (orig (cadr (assq 'orig info))))
+    (if orig
+        (magit-diff orig nil "-R")
+      (user-error "No rewrite in progress"))))
+
+(defun magit-rewrite-diff-pending-transition ()
+  (interactive)
+  (message "Please remove magit-insert-pending-changes from your magit-status-sections-hook, or move to magit-rewrite-diff-pending"))
+
+(define-obsolete-function-alias
+  'magit-insert-pending-changes 'magit-rewrite-diff-pending-transition
+  "382351845e"
+  "https://github.com/magit/magit/commit/382351845eca2425713f640f9bb55756c9ddf723")
+
 ;;;;; Fetching
 
 ;;;###autoload
@@ -5993,7 +6017,8 @@ depending on the value of option `magit-commit-squash-commit'.
                           (or (and (re-search-forward "^\\* " nil t)
                                    (match-beginning 0))
                               (progn (point-max)
-                                     (forward-comment -1000))))))
+                                     (forward-comment -1000)
+                                     (point))))))
              (cond ((re-search-forward
                      (format "(.*\\<%s\\>.*):" (regexp-quote fun))
                      limit t)
@@ -6448,6 +6473,21 @@ Other key binding:
                  (magit-wash-log-line 'long abbrev))))))
       (forward-line)))
   t)
+
+(defun magit-log-format-unicode-graph (string)
+  "Translate ascii characters to unicode characters.
+Whether that actually is an improvment depends on the unicode
+support of the font in use.  The translation is done using the
+alist in `magit-log-format-unicode-graph-alist'."
+  (replace-regexp-in-string
+   "[/|\\*o ]"
+   (lambda (str)
+     (propertize
+      (string (or (cdr (assq (aref str 0)
+                             magit-log-format-unicode-graph-alist))
+                  (aref str 0)))
+      'face (get-text-property 0 'face str)))
+   string))
 
 (defun magit-format-log-margin (&optional author date)
   (when magit-log-show-margin
@@ -7062,7 +7102,7 @@ If there is no commit at point, then prompt for one."
               magit-highlight-indentation
               (cdr (cl-find-if (lambda (pair)
                                  (string-match-p (car pair) default-directory))
-                               (default-value magit-highlight-indentation)
+                               (default-value 'magit-highlight-indentation)
                                :from-end t))))))
       (when (and magit-highlight-trailing-whitespace
                  (looking-at (concat prefix ".*\\([ \t]+\\)$")))
@@ -7327,7 +7367,7 @@ from the parent keymap `magit-mode-map' are also available.")
           (append (mapcar (lambda (remote)
                             (save-excursion
                               (when (re-search-forward
-                                     (concat "^  remotes/" remote) nil t)
+                                     (format "^  remotes/%s/" remote) nil t)
                                 (beginning-of-line)
                                 (point-marker))))
                           remotes)
@@ -7406,15 +7446,16 @@ Non-interactively DIRECTORY is always (re-)initialized."
                       (format "%s is a repository.  Create another in %s? "
                               top dir)))))
          (user-error "Abort")
-       dir)))
+       (list dir))))
   (magit-run-git "init" (expand-file-name directory)))
 
 (defun magit-copy-item-as-kill ()
   "Copy sha1 of commit at point into kill ring."
   (interactive)
   (magit-section-action copy (info)
-    (commit (kill-new info)
-            (message "%s" info))))
+    ((branch commit file diff)
+     (kill-new info)
+     (message "%s" info))))
 
 (defun magit-ignore-item (edit &optional local)
   "Ignore the item at point.

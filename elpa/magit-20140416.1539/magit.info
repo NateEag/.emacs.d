@@ -1,4 +1,4 @@
-This is /tmp/magit28064rGz/magit-20140325.1527/magit.info, produced by
+This is /tmp/magit25353Z8U/magit-20140416.1539/magit.info, produced by
 makeinfo version 4.13 from /home/melpa/melpa/working/magit/magit.texi.
 
 INFO-DIR-SECTION Emacs
@@ -332,10 +332,6 @@ to do something more useful by customizing the
 `magit-commit-all-when-nothing-staged' variable.  One choice is to
 instruct the subsequent `C-c C-c' to commit all changes.  Another
 choice is stage everything at the time of hitting `c c'.
-
-   You can type `C-c C-a' in the buffer with the change description to
-toggle a flag that determines whether the next commit will _amend_ the
-current commit in HEAD.
 
    Typing `M-n' or `M-p' will cycle through the
 `log-edit-comment-ring', which will have your previous log messages.
@@ -894,13 +890,14 @@ File: magit.info,  Node: Submodules,  Next: Bisecting,  Prev: Pushing and Pullin
 *************
 
 `o u'
-     Update the submodules, with a prefix argument it will initializing.
+     Update the submodules, with a prefix argument it will also
+     initialize them.
 
 `o i'
      Initialize the submodules.
 
 `o b'
-     Update and initialize the submodules in one go.
+     Update and initialize the submodules in one go (same as C-u o u).
 
 `o s'
      Synchronizes submodules' remote URL configuration setting to the
@@ -1527,34 +1524,34 @@ Node: Sections4361
 Node: Status6911
 Node: Untracked files9650
 Node: Staging and Committing10855
-Node: History14261
-Node: Reflogs17443
-Node: Commit Buffer17847
-Node: Diffing19173
-Node: Tagging20160
-Node: Resetting20610
-Node: Stashing22134
-Node: Branches and Remotes23205
-Node: Branches Popup24026
-Node: Remotes Popup25288
-Node: Branches in the Branch Manager25639
-Node: Remotes in the Branch Manager26811
-Node: Wazzup27372
-Node: Merging28165
-Node: Rebasing29215
-Node: Interactive Rebasing30041
-Node: Rewriting31336
-Node: Pushing and Pulling34645
-Node: Submodules36575
-Node: Bisecting36992
-Node: Finding commits not merged upstream38227
-Node: Using Magit Extensions39493
-Node: Activating extensions39789
-Node: Interfacing with Subversion41174
-Node: Interfacing with Topgit41774
-Node: Interfacing with StGit42812
-Node: Using Git Directly43781
-Node: GNU Free Documentation License44169
+Node: History14094
+Node: Reflogs17276
+Node: Commit Buffer17680
+Node: Diffing19006
+Node: Tagging19993
+Node: Resetting20443
+Node: Stashing21967
+Node: Branches and Remotes23038
+Node: Branches Popup23859
+Node: Remotes Popup25121
+Node: Branches in the Branch Manager25472
+Node: Remotes in the Branch Manager26644
+Node: Wazzup27205
+Node: Merging27998
+Node: Rebasing29048
+Node: Interactive Rebasing29874
+Node: Rewriting31169
+Node: Pushing and Pulling34478
+Node: Submodules36408
+Node: Bisecting36856
+Node: Finding commits not merged upstream38091
+Node: Using Magit Extensions39357
+Node: Activating extensions39653
+Node: Interfacing with Subversion41038
+Node: Interfacing with Topgit41638
+Node: Interfacing with StGit42676
+Node: Using Git Directly43645
+Node: GNU Free Documentation License44033
 
 End Tag Table
 

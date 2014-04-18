@@ -1,3 +1,28 @@
+;; Handle a few things that I want to do almost all the time, so that I can
+;; write scripts in batch mode correctly.
+
+;; Set up the package library per my desires.
+(require 'package)
+(setq package-user-dir "~/.emacs.d/elpa/")
+(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
+(add-to-list 'package-archives '("melpa" .
+                                 "http://melpa.milkbox.net/packages/"))
+(package-initialize)
+
+;; Set up my load-path reasonably.
+(defun add-subdirs-to-front-of-load-path (path)
+  "Add directories beneath path to the beginning of load-path."
+  (let ((default-directory path))
+    (setq load-path
+          (append
+           (let ((load-path (copy-sequence load-path)))
+                (normal-top-level-add-subdirs-to-load-path))
+                 load-path))))
+
+(add-subdirs-to-front-of-load-path "~/.emacs.d/site-lisp")
+(add-to-list 'load-path "~/.emacs.d/site-lisp")
+
+;; Set up manually-maintained autoloads.
 (defun nateeag-autoloads-init ()
   "Define Nate Eagleson's manually-maintained autoloads.
 
@@ -44,4 +69,4 @@ are for modes that didn't come with autoloading."
   ;; work. Therefore...
   (autoload 'tea-timer "tea-time.el"))
 
-(provide 'nateeag-autoloads-init)
+(nateeag-autoloads-init)

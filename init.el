@@ -5,7 +5,7 @@
 ;(setq debug-on-error t)
 
 ;; Set up my load path and a few other core things.
-(load-file "~/.emacs.d/site-lisp/nateeag-load-path.el")
+(load-file "~/.emacs.d/site-lisp/bootstrap.el")
 
 ;;; General preferences.
 

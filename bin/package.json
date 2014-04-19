@@ -1,0 +1,7 @@
+{
+    "name": "nateeag-emacs-node-packages",
+    "version": "0.0.1",
+    "dependencies": {
+        "jshint": "2.5.0"
+    }
+}

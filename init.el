@@ -124,11 +124,14 @@
   (exec-path-from-shell-initialize))
 
 ;; Tweak exec-path to include binaries in this repo.
+;; GRIPE I should see if I can get it so I only need to include the bin/
+;; dir in this list...
 (setq exec-path
       (append
        exec-path
        (list "~/.emacs.d/bin/php-cs-1.5.2/scripts"
-             "~/.emacs.d/bin/flake8-env/bin")))
+             "~/.emacs.d/bin/flake8-env/bin"
+             "~/.emacs.d/bin/node_modules/.bin")))
 
 ;; Load Windows-specific tweaks to environment, if we're running Windows.
 (if (eq system-type 'windows-nt)

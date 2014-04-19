@@ -429,9 +429,11 @@
 (add-hook 'web-mode-hook 'web-mode-init)
 
 ;; JavaScript Mode.
+(add-hook 'js2-mode-hook 'js-mode-init)
 (add-hook 'js-mode-hook 'js-mode-init)
 (add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
-(add-to-list 'auto-mode-alist '("\\.json\\'" . js2-mode))
+;; js2-mode works poorly for me on composer.json files.
+(add-to-list 'auto-mode-alist '("\\.json\\'" . js-mode))
 
 ;; xml-mode
 ;; IIS's 'config' files are actually XML.

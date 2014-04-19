@@ -151,6 +151,11 @@
 -Fix comment filling and comment auto-filling in CSS mode (and web-mode). I
  think it might be an issue in sh-mode too?
 
+-Figure out how to make smartparens interact nicely with web-mode. '{{' and
+ '{%' don't work right when both are on, but I don't see a way to ban
+ multi-character sequences from smartparens, and I don't want to lose pairing
+ braces in CSS and JS.
+
 -It would be truly awesome to find a way to get even a semi-reliable list of
  places a particular CSS rule is used. I suppose that's really a more
  appropriate tool for something else.

@@ -38,10 +38,8 @@
 (setq-default indent-tabs-mode nil)
 
 ;; That said, adhering to project styles is more important than my personal
-;; preferences. Therefore, here are some tab-related settings, for when I'm
-;; editing code that uses Tab for indentation.
+;; preferences. Most of the Tab-using projects I work on have this tab-width.
 (setq-default tab-width 4)
-(setq tab-stop-list '(4 8 12 16 20 24 28 32 36 40 44 48 52 56 60 64 68 72 76 80 84 88 92 96 100 104 108 112 116 120))
 
 ;; GNU-style indentation on C-like languages is stupid. Linux style is much
 ;; more sane.

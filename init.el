@@ -352,7 +352,8 @@
   (interactive)
   (comment-auto-fill)
   (smart-dash-mode t)
-  (smartparens-mode))
+  (smartparens-mode)
+  (auto-complete-mode))
 (add-hook 'sh-mode-hook 'load-shell-mode-accessories)
 
 ;; Text-editing modes of various stripes.

@@ -1,3 +1,38 @@
+-Get smart-dash-mode to be active in web-mode, but _only_ in template
+ expressions and JS, since dash is a common delimiter for HTML identifiers like
+ IDs and names. Probably means writing a wrapper around smart-dash-mode's
+ internal function and choosing which function to call based on the current
+ language.
+
+-Finish the dynamic completion source chooser for web-mode.
+
+-File feature request to flycheck for being able to run checkers while in
+ web-mode. May well get rejected, because supporting this would be pretty hard.
+
+-Find a way to auto-include skewer on page refresh without having to include it
+ in a codebase. I'm thinking a Chrome plugin for "refresh and load
+ bookmarklet", or something along those lines.
+
+-I'd like yasnippets for JavaScript. I don't much like the defaults.
+
+-Find a better CSS mode. Ideally something that supports SCSS, probably. Maybe
+ https://github.com/antonj/scss-mode. Actually, I just saw someone suggest
+ using web-mode for CSS, and it occurs to me that might actually work out okay
+ (though probably not if I start using SCSS).
+
+-Figure out how to make smartparens interact nicely with web-mode. '{{' and
+ '{%' don't work right when both are on, but I don't see a way to ban
+ multi-character sequences from smartparens, and I don't want to lose pairing
+ braces in CSS and JS.
+
+-I would like an auto-complete source for existing files that is based on a
+ per-project 'docroot/static' variable. I would like that source to be
+ activated when I am working in a template and have entered an href="/..." or a
+ src="/...". Actually, it might work better if it was just activated for any
+ string beginning with '/'.
+
+-Use jshint/flycheck for style-checking JS files.
+
 -See if my Emacs crashes can be reproduced by leaving old byte-compiled files
  on my load-path alongside newer versions of the same file, a la updating a
  library from MELPA then pulling that down to a different clone of the repo. It
@@ -10,8 +45,6 @@
  after they've been run. I guess actually I want to advise the functions
  whenever style guessing is triggered.
 
--elisp-related hooks should only run on '.el' files.
-
 -Add an after-revert-hook to reload helm-git-file's cache for any containing
  repo if necessary. Seems like this should be a simple thing to do, though if
  you have a lot of buffers open from that repo it might get expensive... Think
@@ -22,15 +55,6 @@
 
 -Add a command to backup-walker to ediff against the current file.
 
--Get smart-dash-mode to be active in web-mode, but _only_ in template
- expressions and JS, since dash is a common delimiter for HTML identifiers like
- IDs and names. Probably means writing a wrapper around smart-dash-mode's
- internal function and choosing which function to call based on the current
- language.
-
--File feature request to flycheck for being able to run checkers while in
- web-mode. May well get rejected, because supporting this would be pretty hard.
-
 -Generate autoloads for my mode configs (and other code I've hacked up myself)
  from autoload cookie comments, rather than maintaining them manually. Might
  fit well into my commit hook setup?
@@ -39,10 +63,6 @@
 
 -Move my one-off variable customizations into custom.el (at least the ones that
  don't need any documentation of why they are what they are).
-
--Find a way to auto-include skewer on page refresh without having to include it
- in a codebase. I'm thinking a Chrome plugin for "refresh and load
- bookmarklet", or something along those lines.
 
 -As a simple exercise to start learning macros, try implementing PHP's
  "defaulting" ternary operator behavior. The example I emailed myself was
@@ -108,8 +128,6 @@
  every parameter you add, an @param line should be inserted in the header
  comment.
 
--I'd like yasnippets for JavaScript.
-
 -Similarly, bash snippets would be nice:
  https://github.com/bmaland/yasnippet-sh-mode
 
@@ -143,38 +161,13 @@
 -Debug mmm-mode, php-mode, and sql-mode enough to uncomment my sql-mode
  embedding in php-mode.
 
--Find a better CSS mode. Ideally something that supports SCSS, probably. Maybe
- https://github.com/antonj/scss-mode. Actually, I just saw someone suggest
- using web-mode for CSS, and it occurs to me that might actually work out okay
- (though probably not if I start using SCSS).
-
 -Fix comment filling and comment auto-filling in CSS mode (and web-mode). I
  think it might be an issue in sh-mode too?
 
--Figure out how to make smartparens interact nicely with web-mode. '{{' and
- '{%' don't work right when both are on, but I don't see a way to ban
- multi-character sequences from smartparens, and I don't want to lose pairing
- braces in CSS and JS.
-
--It would be truly awesome to find a way to get even a semi-reliable list of
- places a particular CSS rule is used. I suppose that's really a more
- appropriate tool for something else.
-
 -Get filepath autocompletion working in buffers. Some hints: http://superuser.com/questions/67170/how-do-i-complete-file-paths-in-emacs
-
--I would like an auto-complete source for existing files that is based on a
- per-project 'docroot/static' variable. I would like that source to be
- activated when I am working in a template and have entered an href="/..." or a
- src="/...". Actually, it might work better if it was just activated for any
- string beginning with '/'.
 
 -If particularly bored, try getting GEBEN set up for debugging PHP. I'm
  uncertain whether this would actually be worth the effort.
-
--I should probably consider getting a better JS environment going. Having a JS
- interpreter available to me in Emacs could be mighty handy. This page has some
- info on how to get a decent environment up and running:
- http://blog.deadpansincerity.com/2011/05/setting-up-emacs-as-a-javascript-editing-environment-for-fun-and-profit/
 
 -sql-mode appears to be a far more powerful beast than I had ever really
  appreciated. I should look into setting up and learning the server

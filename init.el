@@ -154,6 +154,24 @@
     ad-do-it))
 (ad-activate 'hack-dir-local-variables)
 
+;; Make changing tabs re-guess the file's indentation style.
+(defadvice untabify (after reguess-style-untabify
+                           (start end  &optional _arg))
+  "Re-guess file's indentation style after untabifying."
+  (guess-style-guess-all))
+
+(defadvice tabify (after reguess-style-tabify
+                           (start end  &optional _arg))
+  "Re-guess file's indentation style after tabifying."
+  (guess-style-guess-all))
+
+(ad-activate 'untabify)
+(ad-enable-advice 'untabify 'after 'reguess-style-untabify)
+
+(ad-activate 'tabify)
+(ad-enable-advice 'tabify 'after 'reguess-style-tabify)
+
+
 ;; I generally prefer to strip trailing whitespace on saves, but not when I'm
 ;; editing diffs, where whitespace is crucial. If I ever start using another
 ;; file format where trailing whitespace matters, this might need upgrading,

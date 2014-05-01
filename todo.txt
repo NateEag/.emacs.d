@@ -144,11 +144,9 @@
  one in the style of the Python one, especially since args should be
  initialized at the class level.
 
--Get flymake to deactivate/reactivate intelligently for the current edited
+-Get flycheck to deactivate/reactivate intelligently for the current edited
  line. If your cursor is on a line you have been editing, you probably don't
  want highlights until you save or move to a different line.
-
--Once moved to Emacs 24, consider replacing flymake with flycheck.
 
 -My SQL-in-PHP code does not work with queries that are built using
  concatenation, which some do (especially in crappy legacy codebases). See my

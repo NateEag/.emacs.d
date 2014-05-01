@@ -35,7 +35,6 @@ are for modes that didn't come with autoloading."
   (autoload 'comment-auto-fill "comment-auto-fill.el")
   (autoload 'emacs-lisp-init "emacs-lisp-init.el")
   (autoload 'js-mode-init "js-mode-init.el")
-  (autoload 'flymake-init "flymake-init.el")
   (autoload 'hs-minor-mode-init "hs-minor-mode-init.el")
   (autoload 'yasnippet-init "yasnippet-init.el")
   (autoload 'php-mode-init "php-mode-init.el")

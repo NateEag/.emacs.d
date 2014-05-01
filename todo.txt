@@ -31,8 +31,6 @@
  src="/...". Actually, it might work better if it was just activated for any
  string beginning with '/'.
 
--Use jshint/flycheck for style-checking JS files.
-
 -See if my Emacs crashes can be reproduced by leaving old byte-compiled files
  on my load-path alongside newer versions of the same file, a la updating a
  library from MELPA then pulling that down to a different clone of the repo. It

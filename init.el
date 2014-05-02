@@ -355,6 +355,7 @@
   (interactive)
   (smart-dash-mode t)
   (comment-auto-fill)
+  (smartparens-mode)
   (yas-minor-mode)
   (auto-complete-mode)
   (setq ac-sources '(ac-source-yasnippet ac-source-words-in-same-mode-buffers))

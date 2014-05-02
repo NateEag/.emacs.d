@@ -1,0 +1,8 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: fk
+# key: fk
+# expand-env: ((yas-indent-line 'fixed) (yas-wrap-around-region 'nil))
+# binding: direct-keybinding
+# --
+FOREIGN KEY ($1)
+    REFERENCES $2 ($0)

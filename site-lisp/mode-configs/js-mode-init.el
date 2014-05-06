@@ -3,9 +3,11 @@
 
   (interactive)
   (smart-dash-mode t)
-  (comment-auto-fill)
-  (smartparens-mode)
+  (comment-auto-fill t)
+  (smartparens-mode t)
+  (yas-minor-mode t)
   (auto-complete-mode t)
+  (setq ac-sources '(ac-source-yasnippet))
   (skewer-mode)
   (flycheck-mode)
 

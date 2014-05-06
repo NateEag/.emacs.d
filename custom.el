@@ -7,6 +7,8 @@
    (quote
     (delete-backward-char backward-delete-char backward-delete-char-untabify autopair-backspace paredit-backward-delete paredit-backward-delete-word smart-dash-insert)))
  '(ac-trigger-key "TAB")
+ '(js2-mode-show-parse-errors nil)
+ '(js2-mode-show-strict-warnings nil)
  '(php-mode-custom-coding-style "Symfony2")
  '(safe-local-variable-values
    (quote

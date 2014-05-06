@@ -9,6 +9,7 @@
  '(ac-trigger-key "TAB")
  '(js2-mode-show-parse-errors nil)
  '(js2-mode-show-strict-warnings nil)
+ '(php-mode-coding-style (quote symfony2))
  '(php-mode-custom-coding-style "Symfony2")
  '(safe-local-variable-values
    (quote

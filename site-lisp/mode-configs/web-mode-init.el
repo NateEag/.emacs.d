@@ -1,4 +1,19 @@
 ;; Configure web-mode.
+
+(defun web-mode-smart-dash-insert ()
+  "A wrapper around smart-dash-mode for use with web-mode."
+  ;; Only be smart about dashes in languages where it makes sense.
+  (if (member (web-mode-language-at-pos) (list "html" "css"))
+      (self-insert-command)
+    (smart-dash-do-insert)))
+
+(defun web-mode-install-smart-dash-insert ()
+  "When called, override smart-dash-mode's usual keybinding for '-'."
+  (let ((map smart-dash-mode-keymap))
+    (make-local-variable 'smart-dash-mode-keymap)
+    (setq smart-dash-mode-keymap (copy-keymap map)))
+  (define-key smart-dash-mode-keymap "-" 'web-mode-smart-dash-insert))
+
 (defun web-mode-init ()
   "My web-mode config."
 
@@ -22,6 +37,9 @@
   (smartparens-mode)
 
   (auto-complete-mode)
-  (emmet-mode))
+  (emmet-mode)
+  (setq smart-dash-c-modes (cons 'web-mode smart-dash-c-modes))
+  (smart-dash-mode)
+  (web-mode-install-smart-dash-insert))
 
 (provide 'web-mode-init)

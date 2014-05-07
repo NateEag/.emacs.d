@@ -1,9 +1,3 @@
--Get smart-dash-mode to be active in web-mode, but _only_ in template
- expressions and JS, since dash is a common delimiter for HTML identifiers like
- IDs and names. Probably means writing a wrapper around smart-dash-mode's
- internal function and choosing which function to call based on the current
- language.
-
 -Finish the dynamic completion source chooser for web-mode.
 
 -File feature request to flycheck for being able to run checkers while in

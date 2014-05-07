@@ -45,5 +45,4 @@ when pushing config changes between multiple machines.
 site-lisp/ - elisp packages I maintain manually. Some are not available via
 package.el, while others are my own little hackjobs.
 
-snippets/ - my personal yasnippets, used as an extension to the default
-yasnippet collection.
+snippets/ - my personal yasnippets, used to augment the base snippet collection.

@@ -1,11 +1,11 @@
-;;; f.el --- Modern API for working with files and directories
+;;; f.el --- Modern API for working with files and directories -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2013 Johan Andersson
 
 ;; Author: Johan Andersson <johan.rejeep@gmail.com>
 ;; Maintainer: Johan Andersson <johan.rejeep@gmail.com>
-;; Version: 20131225.721
-;; X-Original-Version: 0.15.0
+;; Version: 20140220.21
+;; X-Original-Version: 0.16.2
 ;; Keywords: files, directories
 ;; URL: http://github.com/rejeep/f.el
 ;; Package-Requires: ((s "1.7.0") (dash "2.2.0"))
@@ -31,8 +31,30 @@
 
 ;;; Code:
 
+
+
 (require 's)
 (require 'dash)
+
+(put 'f-guard-error 'error-conditions '(error f-guard-error))
+(put 'f-guard-error 'error-message "Destructive operation outside sandbox")
+
+(defvar f--guard-paths nil
+  "List of allowed paths to modify when guarded.
+
+Do not modify this variable.")
+
+(defmacro f--destructive (path &rest body)
+  "If PATH is allowed to be modified, yield BODY.
+
+If PATH is not allowed to be modified, throw error."
+  (declare (indent 1))
+  `(if f--guard-paths
+       (if (--any? (or (f-same? it ,path)
+                       (f-ancestor-of? it ,path)) f--guard-paths)
+           (progn ,@body)
+         (signal 'f-guard-error (list ,path f--guard-paths)))
+     ,@body))
 
 
 ;;;; Paths
@@ -104,10 +126,9 @@
 
 Some functions, such as `call-process' requires there to be an
 ending slash."
-  (if (or (not (f-dir? path))
-          (s-ends-with? (f-path-separator) path))
-      path
-    (s-concat path (f-path-separator))))
+  (if (f-dir? path)
+      (file-name-as-directory path)
+    path))
 
 (defun f-full (path)
   "Return absolute path to PATH, with ending slash."
@@ -179,14 +200,15 @@ TEXT with.  PATH is a file name to write to."
   "Write binary DATA to PATH.
 
 DATA is a unibyte string.  PATH is a file name to write to."
-  (unless (f-unibyte-string-p data)
-    (signal 'wrong-type-argument (list 'f-unibyte-string-p data)))
-  (let ((file-coding-system-alist nil)
-        (coding-system-for-write 'binary))
-    (with-temp-file path
-      (setq buffer-file-coding-system 'binary)
-      (set-buffer-multibyte nil)
-      (insert data))))
+  (f--destructive path
+    (unless (f-unibyte-string-p data)
+      (signal 'wrong-type-argument (list 'f-unibyte-string-p data)))
+    (let ((file-coding-system-alist nil)
+          (coding-system-for-write 'binary))
+      (with-temp-file path
+        (setq buffer-file-coding-system 'binary)
+        (set-buffer-multibyte nil)
+        (insert data)))))
 
 
 ;;;; Destructive
@@ -195,39 +217,53 @@ DATA is a unibyte string.  PATH is a file name to write to."
   "Create directories DIRS."
   (let (path)
     (-each
-     dirs
-     (lambda (dir)
-       (setq path (f-expand dir path))
-       (unless (f-directory? path)
-         (make-directory path))))))
+        dirs
+      (lambda (dir)
+        (setq path (f-expand dir path))
+        (unless (f-directory? path)
+          (f--destructive path (make-directory path)))))))
 
 (defun f-delete (path &optional force)
   "Delete PATH, which can be file or directory.
 
 If FORCE is t, a directory will be deleted recursively."
-  (if (or (f-file? path) (f-symlink? path))
-      (delete-file path)
-    (delete-directory path force)))
+  (f--destructive path
+    (if (or (f-file? path) (f-symlink? path))
+        (delete-file path)
+      (delete-directory path force))))
 
 (defun f-symlink (source path)
   "Create a symlink to `source` from `path`."
-  (make-symbolic-link source path))
+  (f--destructive path (make-symbolic-link source path)))
 
 (defun f-move (from to)
   "Move or rename FROM to TO."
-  (rename-file from to t))
+  (f--destructive to (rename-file from to t)))
 
 (defun f-copy (from to)
-  "Copy file or directory."
-  (if (f-file? from)
-      (copy-file from to)
-    (copy-directory from to)))
+  "Copy file or directory FROM to TO."
+  (f--destructive to
+    (if (f-file? from)
+        (copy-file from to)
+      ;; The behavior of `copy-directory' differs between Emacs 23 and
+      ;; 24 in that in Emacs 23, the contents of `from' is copied to
+      ;; `to', while in Emacs 24 the directory `from' is copied to
+      ;; `to'. We want the Emacs 24 behavior.
+      (if (> emacs-major-version 23)
+          (copy-directory from to)
+        (if (f-dir? to)
+            (progn
+              (apply 'f-mkdir (f-split to))
+              (let ((new-to (f-expand (f-filename from) to)))
+                (copy-directory from new-to)))
+          (copy-directory from to))))))
 
 (defun f-touch (path)
   "Update PATH last modification date or create if it does not exist."
-  (if (f-file? path)
-      (set-file-times path)
-    (f-write-bytes "" path)))
+  (f--destructive path
+    (if (f-file? path)
+        (set-file-times path)
+      (f-write-bytes "" path))))
 
 
 ;;;; Predicates
@@ -302,18 +338,14 @@ false otherwise."
 (defun f-ancestor-of? (path-a path-b)
   "Return t if PATH-A is ancestor of PATH-B."
   (unless (f-same? path-a path-b)
-    (not (null (f-traverse-upwards
-                (lambda (path)
-                  (f-same? path path-a))
-                path-b)))))
+    (s-starts-with? (f-full path-a)
+                    (f-full path-b))))
 
 (defun f-descendant-of? (path-a path-b)
   "Return t if PATH-A is desendant of PATH-B."
   (unless (f-same? path-a path-b)
-    (not (null (f-traverse-upwards
-                (lambda (path)
-                  (f-same? path path-b))
-                path-a)))))
+    (s-starts-with? (f-full path-b)
+                    (f-full path-a))))
 
 
 ;;;; Stats
@@ -467,6 +499,17 @@ returned."
 (defun f-root ()
   "Return absolute root."
   (f-traverse-upwards 'f-root?))
+
+(defmacro f-with-sandbox (path-or-paths &rest body)
+  "Only allow PATH-OR-PATHS and decendants to be modified in BODY."
+  (declare (indent 1))
+  `(let ((paths (if (listp ,path-or-paths)
+                    ,path-or-paths
+                  (list ,path-or-paths))))
+     (unwind-protect
+         (let ((f--guard-paths paths))
+           ,@body)
+       (setq f--guard-paths nil))))
 
 (provide 'f)
 

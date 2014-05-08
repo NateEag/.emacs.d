@@ -45,6 +45,8 @@
 (defvar epc:debug-out nil)
 (defvar epc:debug-buffer "*epc log*")
 
+(defvar epc:mngr)
+
 ;;(setq epc:debug-out t)
 ;;(setq epc:debug-out nil)
 
@@ -392,7 +394,7 @@ failure."
       (let ((port-str (with-current-buffer process-buffer
                           (buffer-string))))
         (cond
-         ((string-match "^[0-9]+$" port-str)
+         ((string-match "^[ \n\r]*[0-9]+[ \n\r]*$" port-str)
           (setq port (string-to-number port-str)
                 cont nil))
          ((< 0 (length port-str))
@@ -856,7 +858,7 @@ Restart process."
           (deferred:nextc it
             (lambda (ret) (message "Result : %S" ret)))
           (deferred:error it
-            (lambda (err) (message "Error : %S" ret))))))))
+            (lambda (err) (message "Error : %S" err))))))))
 
 (defun epc:define-keymap (keymap-list &optional prefix)
   "[internal] Keymap utility."

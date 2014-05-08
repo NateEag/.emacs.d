@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2013 by Shingo Fukuyama
 
-;; Version: 20140404.2206
+;; Version: 20140502.913
 ;; X-Original-Version: 1.4
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
@@ -301,15 +301,16 @@ This function needs to call after latest helm-swoop-line-overlay set."
            ($num (when (string-match "^[0-9]+" $key)
                    (string-to-number (match-string 0 $key)))))
       ;; Synchronizing line position
-      (with-selected-window helm-swoop-synchronizing-window
-        (progn
-          (helm-swoop--goto-line $num)
-          (with-current-buffer helm-swoop-target-buffer
-            (delete-overlay helm-swoop-line-overlay)
-            (helm-swoop--target-line-overlay-move))
-          (helm-swoop--recenter)))
-      (setq helm-swoop-last-line-info
-            (cons helm-swoop-target-buffer $num)))))
+      (when (and $key $num)
+        (with-selected-window helm-swoop-synchronizing-window
+          (progn
+            (helm-swoop--goto-line $num)
+            (with-current-buffer helm-swoop-target-buffer
+              (delete-overlay helm-swoop-line-overlay)
+              (helm-swoop--target-line-overlay-move))
+            (helm-swoop--recenter)))
+        (setq helm-swoop-last-line-info
+              (cons helm-swoop-target-buffer $num))))))
 
 (defun helm-swoop--nearest-line ($target $list)
   "Return the nearest number of $target out of $list."
@@ -344,7 +345,7 @@ This function needs to call after latest helm-swoop-line-overlay set."
   (with-helm-window
     (let (($p (point-min)) $list $bound
           $nearest-line $target-point
-          ($buf (buffer-name (car helm-swoop-last-line-info))))
+          ($buf (rx-to-string (buffer-name (car helm-swoop-last-line-info)) t)))
       (save-excursion
         (goto-char $p)
         (while (if $p (setq $p (re-search-forward (concat "^" $buf "$") nil t)))
@@ -593,6 +594,7 @@ If $linum is number, lines are separated by $linum"
   (let (($query (if isearch-regexp
                     isearch-string
                   (regexp-quote isearch-string))))
+    (isearch-exit)
     (helm-swoop :$query $query)))
 ;; When doing isearch, hand the word over to helm-swoop
 (define-key isearch-mode-map (kbd "M-i") 'helm-swoop-from-isearch)
@@ -1119,6 +1121,7 @@ Last selected buffers will be applied to helm-multi-swoop.
   (let (($query (if isearch-regexp
                     isearch-string
                   (regexp-quote isearch-string))))
+    (isearch-exit)
     (helm-multi-swoop-all $query)))
 ;; When doing isearch, hand the word over to helm-swoop
 ;; (define-key isearch-mode-map (kbd "C-x M-i") 'helm-multi-swoop-all-from-isearch)

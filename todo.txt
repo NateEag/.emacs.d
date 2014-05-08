@@ -56,11 +56,6 @@
  "defaulting" ternary operator behavior. The example I emailed myself was
  (setq (default (= 3 foo) 5)), where 'default' is the macro, presumably.
 
--Possible lame hack for working in some of the horrible PHP files we have at
- work - would it be feasible to automatically *change* major mode for the whole
- file, based on whether the cursor's between a certain regex pair? Might give a
- lot of the benefits of mmm-mode without so much of the suffering.
-
 -kill-ring-search could come in handy occasionally.
  http://nschum.de/src/emacs/kill-ring-search/
 

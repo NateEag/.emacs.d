@@ -5,6 +5,10 @@
  hook from any mode-hooks that don't already trigger prog-mode-hook (probably
  most of them).
 
+-Make comment auto-fill work in js2-mode. At present, it auto-fills but without
+ a prefix. It has a built-in function for comment filling; maybe I can override
+ the usual auto-fill function with that somehow?
+
 -File feature request to flycheck for being able to run checkers while in
  web-mode. May well get rejected, because supporting this would be pretty hard.
 

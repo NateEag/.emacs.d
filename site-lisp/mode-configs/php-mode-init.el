@@ -61,7 +61,10 @@
   ;; Yay for squiggly red lines!
   (flycheck-mode t)
   (setq flycheck-phpcs-standard "NateEag")
-  (setq flycheck-php-phpcs-executable "phpcs"))
+  (setq flycheck-php-phpcs-executable "phpcs")
+
+  ;; Do the right thing when I press RET (I hope?).
+  (local-set-key (kbd "RET") (key-binding (kbd "M-j"))))
 
 ;; Make this requireable.
 (provide 'php-mode-init)

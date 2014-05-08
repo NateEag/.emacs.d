@@ -5,6 +5,11 @@
  hook from any mode-hooks that don't already trigger prog-mode-hook (probably
  most of them).
 
+-Check why focus-mode resizes frame slightly on Windows.
+
+-Check why focus-mode applies the big-fringe mode to all frames. Happen
+ anywhere other than Windows?
+
 -Make comment auto-fill work in js2-mode. At present, it auto-fills but without
  a prefix. It has a built-in function for comment filling; maybe I can override
  the usual auto-fill function with that somehow?

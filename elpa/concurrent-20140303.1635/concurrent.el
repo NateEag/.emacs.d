@@ -3,7 +3,7 @@
 ;; Copyright (C) 2010, 2011, 2012  SAKURAI Masashi
 
 ;; Author: SAKURAI Masashi <m.sakurai at kiwanami.net>
-;; Version: 20130914.536
+;; Version: 20140303.1635
 ;; X-Original-Version: 0.3.1
 ;; Keywords: deferred, async, concurrent
 ;; Package-Requires: ((deferred "0.3.1"))
@@ -67,7 +67,7 @@
                (push i ret))))
     (nreverse ret)))
 
-(defun cc:generator-line (line)
+(defun cc:generator-line (chain line)
   "[internal] Return a macro expansion to execute the sexp LINE
 asynchronously."
   (cond
@@ -105,7 +105,7 @@ means calling callback function CALLBACK."
        (setq ,chain ,waiter)
        ,@(loop for i in body
                collect
-               (cc:generator-line i))
+               (cc:generator-line chain i))
        (lambda () (deferred:callback ,waiter)))))
 
 

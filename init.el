@@ -12,6 +12,10 @@
 ;; Set up my default font.
 (my-set-default-font)
 
+;; Let's try out the solarized theme. In theory, it should be easier on my
+;; eyes...
+(load-theme 'solarized-light t)
+
 ;; Everyone likes syntax coloration.
 (global-font-lock-mode 1)
 

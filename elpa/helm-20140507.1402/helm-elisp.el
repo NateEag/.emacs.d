@@ -617,18 +617,21 @@ First call indent, second complete symbol, third complete fname."
   "Variable.")
 
 (defun helm-sexp-eval (cand)
-  (condition-case err
-      (eval (read cand))
-    (error (message "Evaluating gave an error: %S" err)
-           nil)))
+  (let ((sexp (read cand)))
+    (condition-case err
+        (if (> (length (remove nil sexp)) 1)
+            (eval sexp)
+          (apply 'call-interactively sexp))
+      (error (message "Evaluating gave an error: %S" err)
+             nil))))
 
 (define-helm-type-attribute 'sexp
     '((action
        ("Eval" . helm-sexp-eval)
        ("Edit and eval" .
         (lambda (cand)
-          (let ((minibuffer-setup-hook
-                 (cons (lambda () (insert cand)) minibuffer-setup-hook)))
+          (minibuffer-with-setup-hook
+              (lambda () (insert cand))
             (call-interactively #'eval-expression)))))
       (persistent-action . helm-sexp-eval))
   "Sexp.")
@@ -697,7 +700,12 @@ First call indent, second complete symbol, third complete fname."
 ;;
 (defvar helm-source-complex-command-history
   '((name . "Complex Command History")
-    (candidates . (lambda () (mapcar 'prin1-to-string command-history)))
+    (candidates . (lambda ()
+                    ;; Use cdr to avoid adding
+                    ;; `helm-complex-command-history' here.
+                    (cl-loop for i in command-history
+                          unless (equal i '(helm-complex-command-history))
+                          collect (prin1-to-string i))))
     (type . sexp)))
 
 ;;;###autoload

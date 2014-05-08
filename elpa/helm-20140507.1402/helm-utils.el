@@ -334,6 +334,25 @@ even is \" -b\" is specified."
        (replace-regexp-in-string " -b\\'" "" helm-pattern)
        candidate))))
 
+(defun helm--mapconcat-candidate (candidate)
+  "Transform string CANDIDATE in regexp.
+e.g helm.el$
+    => \"[^h]*h[^e]*e[^l]*l[^m]*m[^.]*[.][^e]*e[^l]*l$\"
+    ^helm.el$
+    => \"helm[.]el$\"."
+  (let ((ls (split-string candidate "" t)))
+    (if (string= "^" (car ls))
+        (mapconcat (lambda (c)
+                     (if (string= c ".")
+                         (concat "[" c "]") c))
+                   (cdr ls) "")
+      (mapconcat (lambda (c)
+                   (cond ((string= c ".")
+                          (concat "[^" c "]*" (concat "[" c "]")))
+                         ((string= c "$") c)
+                         (t (concat "[^" c "]*" c))))
+                 ls ""))))
+
 (defun helm-skip-entries (seq regexp-list)
   "Remove entries which matches one of REGEXP-LIST from SEQ."
   (cl-loop for i in seq
@@ -872,26 +891,11 @@ directory, open this directory."
 ;; Internal
 (defvar helm-yank-point nil)
 
-(defun helm-insert-in-minibuffer (word &optional replace follow)
-  "Insert WORD in minibuffer.
-If REPLACE is non--nil, remove the actual content of minibuffer
-and replace it with WORD, otherwise WORD is appended.
-Argument FOLLOW is used to notify if we are in `helm-follow-mode'.
-If it is the case (i.e FOLLOW non--nil) function have no effect
-and return nil.
-See `helm-find-files-persistent-action' for usage."
-  (unless follow
-    (with-current-buffer (window-buffer (minibuffer-window))
-      (delete-minibuffer-contents)
-      (set-text-properties 0 (length word) nil word)
-      (insert (concat (if replace "" helm-pattern) word)))))
-
 ;;;###autoload
 (defun helm-yank-text-at-point ()
-  "Yank text at point in invocation buffer into minibuffer.
-
-`helm-yank-symbol-first' controls whether the first yank grabs
-the entire symbol."
+  "Yank text at point in `helm-current-buffer' into minibuffer.
+If `helm-yank-symbol-first' is non--nil the first yank
+grabs the entire symbol."
   (interactive)
   (with-helm-current-buffer
     (let ((fwd-fn (if helm-yank-symbol-first
@@ -901,11 +905,12 @@ the entire symbol."
       (save-excursion
         (goto-char helm-yank-point)
         (funcall fwd-fn 1)
-        (helm-insert-in-minibuffer
-         (replace-regexp-in-string
-          "\\`\n" ""
-          (buffer-substring-no-properties
-           helm-yank-point (point))))
+        (helm-set-pattern
+         (concat
+          helm-pattern (replace-regexp-in-string
+                        "\\`\n" ""
+                        (buffer-substring-no-properties
+                         helm-yank-point (point)))))
         (setq helm-yank-point (point))))))
 
 (defun helm-reset-yank-point ()

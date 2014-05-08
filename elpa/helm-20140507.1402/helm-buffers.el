@@ -59,6 +59,13 @@ When disabled (nil) use the longest buffer-name length found."
   :group 'helm-buffers
   :type 'boolean)
 
+(defcustom helm-buffers-fuzzy-matching nil
+  "Fuzzy matching buffer names when non--nil.
+Only buffer names are fuzzy matched when this is enabled,
+`major-mode' matching is not affected by this."
+  :group 'helm-buffers
+  :type 'boolean)
+
 
 ;;; Faces
 ;;
@@ -87,7 +94,7 @@ When disabled (nil) use the longest buffer-name length found."
 (defface helm-buffer-directory
     '((t (:foreground "DarkRed" :background "LightGray")))
   "Face used for directories in `helm-buffers-list'."
-  :group 'helm-files)
+  :group 'helm-buffers)
 
 
 ;;; Buffers keymap
@@ -359,9 +366,13 @@ Should be called after others transformers i.e (boring buffers)."
                                   thereis (numberp i))))))))
 
 (defun helm-buffer--match-pattern (pattern candidate)
+  (let ((fun (if helm-buffers-fuzzy-matching
+                 #'helm--mapconcat-candidate
+               #'identity)))
   (if (string-match "\\`!" pattern)
-      (not (string-match (substring pattern 1) candidate))
-    (string-match pattern candidate)))
+      (not (string-match (funcall fun (substring pattern 1))
+                         candidate))
+    (string-match (funcall fun pattern) candidate))))
 
 (defun helm-buffer-match-major-mode (candidate)
   "Match maybe buffer by major-mode.

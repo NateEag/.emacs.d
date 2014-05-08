@@ -55,6 +55,7 @@ Each time \"<f5> q\" is pressed the next function is executed, if you wait
 More than 2 seconds, next hit will run again the first function and so on."
   (define-key keymap key (helm-make-multi-command functions delay)))
 
+;;;###autoload
 (defmacro helm-multi-key-defun (name docstring funs &optional delay)
   "Define NAME as a multi-key command running FUNS.
 After DELAY seconds the FUNS list is reinitialised.
@@ -108,6 +109,52 @@ Run each function of FUNCTIONS list in turn when called within DELAY seconds."
 First call run `helm-toggle-resplit-window',
 second call within 0.5s run `helm-swap-windows'."
   '(helm-toggle-resplit-window helm-swap-windows) 1)
+
+;;;###autoload
+(defmacro helm-define-key-with-subkeys (map key subkey command
+                                        &optional other-subkeys menu exit-fn)
+  "Allow defining a KEY without having to type its prefix again on next calls.
+Arg MAP is the keymap to use, SUBKEY is the initial long keybinding to
+call COMMAND.
+Arg OTHER-SUBKEYS is an unquoted alist specifying other short keybindings
+to use once started.
+e.g:
+
+\(helm-define-key-with-subkeys global-map
+      \(kbd \"C-x v n\") ?n 'git-gutter:next-hunk ((?p 'git-gutter:previous-hunk))\)
+
+
+In this example, `C-x v n' will run `git-gutter:next-hunk' subsequent hit on \"n\"
+will run this command again and subsequent hit on \"p\" will run `git-gutter:previous-hunk'.
+
+Arg MENU is a string to display in minibuffer to describe SUBKEY and OTHER-SUBKEYS.
+Arg EXIT-FN specify a function to run on exit.
+
+Any other keys pressed run their assigned command defined in MAP and exit the loop."
+
+  (let ((other-keys (and other-subkeys
+                         (cl-loop for (x . y) in other-subkeys
+                               collect (list x (list 'call-interactively y) t)))))
+    `(define-key ,map ,key
+       #'(lambda ()
+           (interactive)
+           (unwind-protect
+                (progn
+                  (call-interactively ,command)
+                  (while (let ((input (read-key ,menu)) kb com)
+                           (cl-case input
+                             (,subkey (call-interactively ,command) t)
+                             ,@other-keys
+                             (t (setq kb  (this-command-keys-vector))
+                                (setq com (lookup-key ,map kb))
+                                (if (commandp com)
+                                    (call-interactively com)
+                                  (setq unread-command-events
+                                        (nconc (mapcar 'identity
+                                                       (this-single-command-raw-keys))
+                                               unread-command-events)))
+                                nil)))))
+             (and ,exit-fn (funcall ,exit-fn)))))))
 
 
 ;;; Keymap
@@ -701,7 +748,8 @@ when `helm' is keyboard-quitted.")
   "Marked candadates.  List of \(source . real\) pair.")
 (defvar helm-in-file-completion-p nil)
 (defvar helm--mode-line-display-prefarg nil)
-(defvar helm--temp-follow-flag nil)
+(defvar helm--temp-follow-flag nil
+  "[INTERNAL] A simple flag to notify persistent action we are following.")
 
 
 ;; Utility: logging
@@ -1637,7 +1685,6 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
       ;; cua-mode overhide local helm bindings.
       ;; disable this stupid thing if enabled.
       (and cua-mode (cua-mode -1))
-      (add-hook 'post-command-hook 'helm--maybe-update-keymap)
       (unwind-protect
            (condition-case _v
                (let (;; `helm-source-name' is non-nil
@@ -1651,6 +1698,7 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
                    (helm-initialize any-resume any-input
                                     any-default any-sources)
                    (helm-display-buffer helm-buffer)
+                   (add-hook 'post-command-hook 'helm--maybe-update-keymap)
                    (helm-log "show prompt")
                    (unwind-protect
                         (helm-read-pattern-maybe
@@ -3316,9 +3364,11 @@ Key arg DIRECTION can be one of:
 
 (defun helm--follow-action (arg)
   (let ((helm--temp-follow-flag t))
-    (if (> arg 0)
-        (helm-next-line)
-      (helm-previous-line))
+    (when (or (eq last-command 'helm-follow-action-forward)
+              (eq last-command 'helm-follow-action-backward))
+      (if (> arg 0)
+          (helm-next-line)
+        (helm-previous-line)))
     (helm-execute-persistent-action)))
 
 (defun helm-follow-action-forward ()
@@ -3364,17 +3414,17 @@ don't exit and send message 'no match'."
   (interactive)
   (let* ((empty-buffer-p (with-current-buffer helm-buffer
                            (eq (point-min) (point-max))))
-         (unknow (and (not empty-buffer-p)
-                      (string= (get-text-property
-                                0 'display (helm-get-selection nil 'withprop))
-                               "[?]"))))
-    (cond ((and (or empty-buffer-p unknow)
+         (unknown (and (not empty-buffer-p)
+                       (string= (get-text-property
+                                 0 'display (helm-get-selection nil 'withprop))
+                                "[?]"))))
+    (cond ((and (or empty-buffer-p unknown)
                 (eq minibuffer-completion-confirm 'confirm))
            (setq helm-minibuffer-confirm-state
                  'confirm)
            (setq minibuffer-completion-confirm nil)
            (minibuffer-message " [confirm]"))
-          ((and (or empty-buffer-p unknow)
+          ((and (or empty-buffer-p unknown)
                 (eq minibuffer-completion-confirm t))
            (minibuffer-message " [No match]"))
           (t
@@ -4214,10 +4264,22 @@ Argument ACTION if present will be used as second argument of `display-buffer'."
         (delq overlay helm-visible-mark-overlays)))
 
 (defun helm-make-visible-mark ()
-  (let ((o (make-overlay (point-at-bol)
-                         (if (helm-pos-multiline-p)
-                             (helm-get-next-candidate-separator-pos)
-                           (1+ (point-at-eol))))))
+  (let* ((hp (helm-get-next-header-pos))
+         (mp (helm-get-next-candidate-separator-pos))
+         (o (make-overlay (point-at-bol)
+                          (if (helm-pos-multiline-p)
+                              (or
+                               ;; Be sure we don't catch
+                               ;; the separator of next source.
+                               (and hp mp (< mp hp) mp)
+                               ;; The separator found is in next source
+                               ;; we are at last cand, so use the header pos.
+                               (and hp mp (< hp mp) hp)
+                               ;; A single source, just try next separator.
+                               mp
+                               ;; No more separator go to eob.
+                               (point-max))
+                            (1+ (point-at-eol))))))
     (overlay-put o 'face   'helm-visible-mark)
     (overlay-put o 'source (assoc-default 'name (helm-get-current-source)))
     (overlay-put o 'string (buffer-substring (overlay-start o) (overlay-end o)))
@@ -4337,7 +4399,8 @@ When key WITH-WILDCARD is specified try to expand a wilcard if some."
                                   (condition-case nil
                                       (file-expand-wildcards elm t)
                                     (error nil)))))
-                   (or c (list elm))) into cands
+                   (or c (list elm)))
+          into cands
           finally do (prog1 (cl-return cands) (helm-log-eval cands)))))
 
 (defun helm-current-source-name= (name)

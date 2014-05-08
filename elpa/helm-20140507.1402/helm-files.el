@@ -327,6 +327,8 @@ WARNING: Setting this to nil is unsafe and can cause deletion of a whole tree."
     (define-key map (kbd "C-h C-b")       'helm-send-bug-report-from-helm)
     (define-key map (kbd "C-x @")         'helm-ff-run-find-file-as-root)
     (define-key map (kbd "C-c @")         'helm-ff-run-insert-org-link)
+    (helm-define-key-with-subkeys map (kbd "DEL") ?\d 'helm-ff-delete-char-backward
+                                  nil nil 'helm-ff-delete-char-backward--exit-fn)
     (when helm-ff-lynx-style-map
       (define-key map (kbd "<left>")      'helm-find-files-down-one-level)
       (define-key map (kbd "<right>")     'helm-execute-persistent-action))
@@ -343,6 +345,8 @@ WARNING: Setting this to nil is unsafe and can cause deletion of a whole tree."
     (define-key map (kbd "C-c h")         'helm-ff-file-name-history)
     (define-key map (kbd "C-<backspace>") 'helm-ff-run-toggle-auto-update)
     (define-key map (kbd "C-c ?")         'helm-read-file-name-help)
+    (helm-define-key-with-subkeys map (kbd "DEL") ?\d 'helm-ff-delete-char-backward
+                                  nil nil 'helm-ff-delete-char-backward--exit-fn)
     (when helm-ff-lynx-style-map
       (define-key map (kbd "<left>")      'helm-find-files-down-one-level)
       (define-key map (kbd "<right>")     'helm-execute-persistent-action)
@@ -366,6 +370,7 @@ WARNING: Setting this to nil is unsafe and can cause deletion of a whole tree."
 (defvar helm-ff-auto-update-flag nil
   "Internal, flag to turn on/off auto-update in `helm-find-files'.
 Don't set it directly, use instead `helm-ff-auto-update-initial-value'.")
+(defvar helm-ff-auto-update--state nil)
 (defvar helm-ff-last-expanded nil
   "Store last expanded directory or file.")
 (defvar helm-ff-default-directory nil)
@@ -388,6 +393,8 @@ Don't set it directly, use instead `helm-ff-auto-update-initial-value'.")
     (init . (lambda ()
               (setq helm-ff-auto-update-flag
                     helm-ff-auto-update-initial-value)
+              (setq helm-ff-auto-update--state
+                    helm-ff-auto-update-flag)
               (with-helm-temp-hook 'helm-after-initialize-hook
                 (with-helm-buffer  
                   (set (make-local-variable 'helm-in-file-completion-p) t))))) 
@@ -763,7 +770,7 @@ Default METHOD is rename."
                      (copy    'copy-file)
                      (symlink 'make-symbolic-link)
                      (rename  'rename-file)
-                     (t (error "Error: Unknow method %s" method)))))
+                     (t (error "Error: Unknown method %s" method)))))
     (make-directory tmp-dir)
     (unwind-protect
          (progn
@@ -815,6 +822,7 @@ See `helm-ff-serial-rename-1'."
 
 (defun helm-ff-toggle-auto-update (_candidate)
   (setq helm-ff-auto-update-flag (not helm-ff-auto-update-flag))
+  (setq helm-ff-auto-update--state helm-ff-auto-update-flag)
   (message "[Auto expansion %s]"
            (if helm-ff-auto-update-flag "enabled" "disabled")))
 
@@ -823,6 +831,17 @@ See `helm-ff-serial-rename-1'."
   (with-helm-alive-p
     (helm-attrset 'toggle-auto-update '(helm-ff-toggle-auto-update . never-split))
     (helm-execute-persistent-action 'toggle-auto-update)))
+
+(defun helm-ff-delete-char-backward ()
+  "Disable helm find files auto update and delete char backward."
+  (interactive)
+  (setq helm-ff-auto-update-flag nil)
+  (call-interactively
+   (lookup-key (current-global-map)
+               (read-kbd-macro "DEL"))))
+
+(defun helm-ff-delete-char-backward--exit-fn ()
+  (setq helm-ff-auto-update-flag helm-ff-auto-update--state))
 
 (defun helm-ff-run-switch-to-history ()
   "Run Switch to history action from `helm-source-find-files'."
@@ -1050,19 +1069,20 @@ Same as `dired-do-print' but for helm."
 Provide completion on different algorithms to use on Emacs24.
 On Emacs23 only 'sha1' is available.
 The checksum is copied to kill-ring."
-  (let ((algo-list (and (fboundp 'secure-hash)
-                        '(md5 sha1 sha224 sha256 sha384 sha512))))
+  (let ((algo (and (fboundp 'secure-hash)
+                   (intern
+                    (helm-comp-read
+                     "Algorithm: "
+                     '(md5 sha1 sha224
+                       sha256 sha384 sha512))))))
     (kill-new
-     (if algo-list
+     (if algo
          (with-temp-buffer
            (insert-file-contents-literally file)
-           (secure-hash (intern
-                         (helm-comp-read
-                          "Algorithm: " algo-list))
-                        (buffer-string)))
+           (secure-hash algo (current-buffer)))
        (with-temp-buffer
          (insert-file-contents-literally file)
-         (sha1 (buffer-string)))))
+         (sha1 (current-buffer)))))
     (message "Checksum copied to kill-ring.")))
 
 (defun helm-ff-toggle-basename (candidate)
@@ -1312,7 +1332,7 @@ purpose."
     (when (and (helm-file-completion-source-p)
                (helm-ff-invalid-tramp-name-p cand) ; Check candidate.
                (helm-ff-invalid-tramp-name-p)) ; check helm-pattern.
-      (error "Error: Unknow file or directory `%s'" cand))))
+      (error "Error: Unknown file or directory `%s'" cand))))
 (add-hook 'helm-before-action-hook 'helm-ff-before-action-hook-fn)
 
 (cl-defun helm-ff-invalid-tramp-name-p (&optional (pattern helm-pattern))
@@ -1476,7 +1496,7 @@ systems."
   "Maybe return FNAME with it's basename modified as a regexp.
 This happen only when `helm-ff-smart-completion' is enabled.
 This provide a similar behavior as `ido-enable-flex-matching'.
-See also `helm-ff-mapconcat-candidate'.
+See also `helm--mapconcat-candidate'.
 If FNAME is an url returns it unmodified.
 When FNAME contain a space fallback to match-plugin.
 If basename contain one or more space fallback to match-plugin.
@@ -1504,28 +1524,9 @@ If FNAME is a valid directory name,return FNAME unchanged."
                    (replace-regexp-in-string "[*]" "[*]" bn)))
           (t
            (setq bn (if (> (length bn) 2) ; wait 3nd char before concating.
-                        (helm-ff-mapconcat-candidate bn)
+                        (helm--mapconcat-candidate bn)
                       (concat ".*" bn)))
            (concat (regexp-quote bd) bn)))))
-
-(defun helm-ff-mapconcat-candidate (candidate)
-  "Transform string CANDIDATE in regexp.
-e.g helm.el$
-    => \"[^h]*h[^e]*e[^l]*l[^m]*m[^.]*[.][^e]*e[^l]*l$\"
-    ^helm.el$
-    => \"helm[.]el$\"."
-  (let ((ls (split-string candidate "" t)))
-    (if (string= "^" (car ls))
-        (mapconcat (lambda (c)
-                     (if (string= c ".")
-                         (concat "[" c "]") c))
-                   (cdr ls) "")
-      (mapconcat (lambda (c)
-                   (cond ((string= c ".")
-                          (concat "[^" c "]*" (concat "[" c "]")))
-                         ((string= c "$") c)
-                         (t (concat "[^" c "]*" c))))
-                 ls ""))))
 
 (defun helm-dir-is-dot (dir)
   (string-match "\\(?:/\\|\\`\\)\\.\\{1,2\\}\\'" dir))
@@ -1892,9 +1893,6 @@ If a prefix arg is given or `helm-follow-mode' is on open file."
          (new-pattern   (helm-get-selection))
          (num-lines-buf (with-current-buffer helm-buffer
                           (count-lines (point-min) (point-max))))
-         ;; `helm-insert-in-minibuffer' don't expand correctly fnames
-         ;; (#Bugfix cursor coming back at bol).
-         ;; So use a function using `minibuffer-window' instead.
          (insert-in-minibuffer #'(lambda (fname)
                                    (with-selected-window (minibuffer-window)
                                      (unless follow

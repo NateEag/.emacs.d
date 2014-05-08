@@ -23,6 +23,8 @@
 (require 'helm-info)
 (require 'helm-adaptative)
 
+(declare-function addressbook-bookmark-edit "ext:addressbook-bookmark.el" (bookmark))
+
 
 (defgroup helm-bookmark nil
   "Predefined configurations for `helm.el'."
@@ -110,9 +112,10 @@
                         (helm-substring i bookmark-bmenu-file-column)
                       i)
         for sep = (make-string (- (+ bookmark-bmenu-file-column 2)
-                                  (length trunc)) ? )
+                                  (length trunc))
+                               ? )
         if helm-bookmark-show-location
-        collect (cons (concat trunc sep loc) i)
+        collect (cons (concat trunc sep (if (listp loc) (car loc) loc)) i)
         else collect i))
 
 (defun helm-bookmark-match-fn (candidate)
@@ -129,12 +132,14 @@
     (let* ((real (helm-get-selection helm-buffer))
            (trunc (if (> (string-width real) bookmark-bmenu-file-column)
                       (helm-substring real bookmark-bmenu-file-column)
-                    real)))
+                    real))
+           (loc (bookmark-location real)))
       (setq helm-bookmark-show-location (not helm-bookmark-show-location))
       (helm-force-update (if helm-bookmark-show-location
                              (concat (regexp-quote trunc)
                                      " +"
-                                     (regexp-quote (bookmark-location real)))
+                                     (regexp-quote
+                                      (if (listp loc) (car loc) loc)))
                            real)))))
 
 (defun helm-bookmark-jump (candidate)
@@ -583,7 +588,8 @@ Work both with standard Emacs bookmarks and bookmark-extensions.el."
           do (setq trunc (concat "*" (if helm-bookmark-show-location trunc i)))
           for sep = (and helm-bookmark-show-location
                          (make-string (- (+ bookmark-bmenu-file-column 2)
-                                         (string-width trunc)) ? ))
+                                         (string-width trunc))
+                                      ? ))
           for bmk = (cond ( ;; info buffers
                            isinfo
                            (propertize trunc 'face 'helm-bookmark-info
@@ -621,17 +627,33 @@ Work both with standard Emacs bookmarks and bookmark-extensions.el."
                            (propertize trunc 'face 'helm-bookmark-file
                                        'help-echo isfile)))
           collect (if helm-bookmark-show-location
-                      (cons (concat bmk sep loc) i)
+                      (cons (concat bmk sep (if (listp loc) (car loc) loc))
+                            i)
                     (cons bmk i)))))
 
 (defun helm-bookmark-edit-bookmark (bookmark-name)
   "Edit bookmark's name and file name, and maybe save them.
 BOOKMARK-NAME is the current (old) name of the bookmark to be renamed."
+  (let ((bmk (helm-bookmark-get-bookmark-from-name bookmark-name))
+        (handler (bookmark-prop-get bookmark-name 'handler)))
+    (if (eq handler 'addressbook-bookmark-jump)
+        (addressbook-bookmark-edit
+         (assoc bmk bookmark-alist))
+      (helm-bookmark-edit-bookmark-1 bookmark-name handler))))
+
+(defun helm-bookmark-edit-bookmark-1 (bookmark-name handler)
   (let* ((bookmark-fname (bookmark-get-filename bookmark-name))
          (bookmark-loc   (bookmark-prop-get bookmark-name 'location))
          (new-name       (read-from-minibuffer "Name: " bookmark-name))
          (new-loc        (read-from-minibuffer "FileName or Location: "
-                                               (or bookmark-fname bookmark-loc))))
+                                               (or bookmark-fname
+                                                   (if (consp bookmark-loc)
+                                                       (car bookmark-loc)
+                                                     bookmark-loc))))
+         (docid           (and (eq handler 'mu4e-bookmark-jump)
+                               (read-number "Docid: " (cdr bookmark-loc)))))
+    (when docid
+      (setq new-loc (cons new-loc docid)))
     (when (and (not (equal new-name "")) (not (equal new-loc ""))
                (y-or-n-p "Save changes? "))
       (if bookmark-fname
@@ -716,13 +738,9 @@ words from the buffer into the new bookmark name."
 
 (defun helm-bookmark-get-bookmark-from-name (bmk)
   "Return bookmark name even if it is a bookmark with annotation.
-e.g prepended with *.
-Return nil if bmk is not a valid bookmark."
-  (let ((bookmark (replace-regexp-in-string "\*" "" bmk)))
-    (if (assoc bookmark bookmark-alist)
-        bookmark
-      (when (assoc bmk bookmark-alist)
-        bmk))))
+e.g prepended with *."
+  (let ((bookmark (replace-regexp-in-string "\\*" "" bmk)))
+    (if (assoc bookmark bookmark-alist) bookmark bmk)))
 
 (defun helm-delete-marked-bookmarks (_ignore)
   "Delete this bookmark or all marked bookmarks."
@@ -767,7 +785,8 @@ only if external library addressbook-bookmark.el is available."
                                'helm-source-bookmark-set))
         :prompt "Search Bookmark: "
         :buffer "*helm filtered bookmarks*"
-        :default (buffer-name helm-current-buffer)))
+        :default (list (thing-at-point 'symbol)
+                       (buffer-name helm-current-buffer))))
 
 (provide 'helm-bookmark)
 

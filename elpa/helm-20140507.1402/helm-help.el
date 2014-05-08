@@ -227,7 +227,7 @@ Italic     => A non--file buffer.
 \\[helm-toggle-all-marks]\t\t->Toggle all marks.
 \\[helm-mark-all]\t\t->Mark all.
 \\[helm-toggle-buffers-details]\t\t->Toggle details.
-\\[helm-buffers-toggle-show-hidden-buffers]\t\t->Show hidden buffers. 
+\\[helm-buffers-toggle-show-hidden-buffers]\t\t->Show hidden buffers.
 \\[helm-buffer-help]\t\t->Display this help.
 \n== Helm Map ==
 \\{helm-map}")
@@ -272,9 +272,7 @@ Italic     => A non--file buffer.
   You can also use `helm-follow-action-forward' and `helm-follow-action-backward'
   (`C-<down' and `C-<left>').
 
-- When you want to delete backward characters to e.g creating a new file or directory,
-  autoupdate may keep updating to an existent directory
-  preventing you to do so, in this case just hit C-<backspace> and then <backspace>.
+- You can turn off/on (toggle) autoupdate completion at any moment with `C-DEL'.
   NOTE: On a terminal C-<backspace> may not work, use in this case C-c <backspace>.
 
 - You can create a new directory and a new file at the same time, just write the path in prompt
@@ -596,7 +594,7 @@ But you can also pass an argument or more after 'candidate_file' like this:
 
 e.g <command> file1 file2 ...
 
-Call `helm-find-files-eshell-command-on-file' with one prefix-arg 
+Call `helm-find-files-eshell-command-on-file' with one prefix-arg
 Otherwise you can pass one prefix-arg from the command selection buffer.
 
 With two prefix-arg before starting or from the command selection buffer
@@ -627,7 +625,7 @@ is called once for each file like this:
   "== Helm ido virtual buffers Map ==\
 \nSpecific commands for ido virtuals buffers:
 \\<helm-buffers-ido-virtual-map>
-\\[helm-ff-run-switch-other-window]\t\t->Switch other window. 
+\\[helm-ff-run-switch-other-window]\t\t->Switch other window.
 \\[helm-ff-run-switch-other-frame]\t\t->Switch other frame.
 \\[helm-ff-run-grep]\t\t->Grep file.
 \\[helm-ff-run-zgrep]\t\t->Zgrep file.
@@ -656,8 +654,8 @@ is called once for each file like this:
 \\[helm-goto-next-file]\t->Next Buffer.
 \\[helm-goto-precedent-file]\t\t->Precedent Buffer.
 \\[helm-yank-text-at-point]\t\t->Yank Text at point in minibuffer.
-\\[helm-m-occur-run-goto-line-ow]\t\t->Goto line in other window.
-\\[helm-m-occur-run-goto-line-of]\t\t->Goto line in new frame.
+\\[helm-moccur-run-goto-line-ow]\t\t->Goto line in other window.
+\\[helm-moccur-run-goto-line-of]\t\t->Goto line in new frame.
 \\[helm-grep-run-save-buffer]\t\t->Save to a `grep-mode' enabled buffer.
 \\[helm-moccur-help]\t\t->Show this help.
 \n== Helm Map ==
@@ -761,6 +759,65 @@ the amount of prefix args entered.
   (let ((helm-help-message helm-M-x-help-message))
     (helm-help)))
 
+;;; helm-imenu
+;;
+;;
+(defvar helm-imenu-help-message
+  "== Helm imenu ==\
+\nHelm imenu tips:
+
+\nSpecific commands for Helm imenu:
+\\<helm-imenu-map>
+\\[helm-imenu-help]\t->Show this help.
+\n== Helm Map ==
+\\{helm-map}")
+
+;;;###autoload
+(defun helm-imenu-help ()
+  (interactive)
+  (let ((helm-help-message helm-imenu-help-message))
+    (helm-help)))
+
+;;; helm-colors
+;;
+;;
+(defvar helm-colors-help-message
+  "== Helm colors ==\
+\nSpecific commands for Helm colors:
+\\<helm-color-map>
+\\[helm-color-run-insert-name]\t\tInsert the entry'name.
+\\[helm-color-run-kill-name]\t\tKill the entry's name.
+\\[helm-color-run-insert-rgb]\t\tInsert entry in RGB format.
+\\[helm-color-run-kill-rgb]\t\tKill entry in RGB format.
+\\[helm-color-help]\t\tShow this help.
+\n== Helm Map ==
+\\{helm-map}")
+
+;;;###autoload
+(defun helm-color-help ()
+  (interactive)
+  (let ((helm-help-message helm-colors-help-message))
+    (helm-help)))
+
+;;; helm semantic
+;;
+;;
+(defvar helm-semantic-help-message
+  "== Helm semantic ==\
+\nHelm semantic tips:
+
+\nSpecific commands for Helm semantic:
+\\<helm-semantic-map>
+\\[helm-semantic-help]\t->Show this help.
+\n== Helm Map ==
+\\{helm-map}")
+
+;;;###autoload
+(defun helm-semantic-help ()
+  (interactive)
+  (let ((helm-help-message helm-semantic-help-message))
+    (helm-help)))
+
 
 ;;; Mode line strings
 ;;
@@ -776,6 +833,15 @@ the amount of prefix args entered.
 \\[helm-select-2nd-action-or-end-of-line]/\
 \\[helm-select-3rd-action]:NthAct"
     "String displayed in mode-line in `helm-source-buffers-list'"))
+
+;;;###autoload
+(defvar helm-color-mode-line-string
+  '("Colors" "\
+\\<helm-color-map>\
+\\[helm-color-help]:Help/\
+\\[helm-color-run-insert-name]:Insert name/\
+\\[helm-color-run-insert-rgb]:Insert RGB/\
+with shift: Kill"))
 
 ;;;###autoload
 (defvar helm-buffers-ido-virtual-mode-line-string
@@ -954,6 +1020,28 @@ the amount of prefix args entered.
 (defvar helm-M-x-mode-line "\
 \\<helm-M-x-map>\
 \\[helm-M-x-help]:Help \
+\\<helm-map>\
+\\[helm-select-action]:Act \
+\\[helm-exit-minibuffer]/\
+\\[helm-select-2nd-action-or-end-of-line]/\
+\\[helm-select-3rd-action]:NthAct \
+\\[helm-toggle-suspend-update]:Tog.suspend")
+
+;;;###autoload
+(defvar helm-imenu-mode-line "\
+\\<helm-imenu-map>\
+\\[helm-imenu-help]:Help \
+\\<helm-map>\
+\\[helm-select-action]:Act \
+\\[helm-exit-minibuffer]/\
+\\[helm-select-2nd-action-or-end-of-line]/\
+\\[helm-select-3rd-action]:NthAct \
+\\[helm-toggle-suspend-update]:Tog.suspend")
+
+;;;###autoload
+(defvar helm-semantic-mode-line "\
+\\<helm-semantic-map>\
+\\[helm-semantic-help]:Help \
 \\<helm-map>\
 \\[helm-select-action]:Act \
 \\[helm-exit-minibuffer]/\
@@ -1319,7 +1407,7 @@ HELM-ATTRIBUTE should be a symbol."
   filename:candidate-containing-the-word-filename
 
   What you want is to ignore \"filename\" part and match only
-  \"candidate-containing-the-word-filename\" 
+  \"candidate-containing-the-word-filename\"
 
   So give a function matching only the part of candidate after \":\"
 

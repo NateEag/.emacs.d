@@ -112,7 +112,8 @@ Show global bindings and local bindings according to current `major-mode'."
                                  cand (propertize
                                        key
                                        'face 'helm-M-x-key))))
-                cand) into ls
+                cand)
+          into ls
           finally return
           (sort ls #'helm-generic-sort-fn))))
 
@@ -179,13 +180,14 @@ You can get help on each command by persistent action."
     (setq this-command sym-com
           ;; Handle C-x z (repeat) Issue #322
           real-this-command sym-com)
-    ;; This ugly construct is to save history even on error.
-    (unless helm-M-x-always-save-history
-      (call-interactively sym-com))
-    (setq extended-command-history
-          (cons command (delete command history)))
-    (when helm-M-x-always-save-history
-      (call-interactively sym-com))))
+    (let ((prefix-arg current-prefix-arg))
+      ;; This ugly construct is to save history even on error.
+      (unless helm-M-x-always-save-history
+        (command-execute sym-com 'record))
+      (setq extended-command-history
+            (cons command (delete command history)))
+      (when helm-M-x-always-save-history
+        (command-execute sym-com 'record)))))
 
 (provide 'helm-command)
 

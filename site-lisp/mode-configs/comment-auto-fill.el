@@ -4,5 +4,3 @@
   "Call to activate auto-filling comments for the current buffer."
   (setq-local comment-auto-fill-only-comments t)
   (auto-fill-mode 1))
-
-(provide 'comment-auto-fill)

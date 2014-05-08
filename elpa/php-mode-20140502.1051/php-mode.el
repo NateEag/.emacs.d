@@ -6,13 +6,13 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Version: 20140402.920
+;; Version: 20140502.1051
 ;;; X-Original-Version: 1.13.1
 
 (defconst php-mode-version-number "1.13.1"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2013-12-03"
+(defconst php-mode-modified "2014-05-03"
   "PHP Mode build date.")
 
 ;;; License
@@ -973,7 +973,12 @@ documentation exists, and nil otherwise."
                                  php-manual-path)))
     (let ((doc-file (php-function-file-for (current-word))))
       (and (file-exists-p doc-file)
-           (browse-url doc-file)
+           ;; Some browsers require the file:// prefix.  Others do not
+           ;; seem to care.  But it should never be incorrect to use
+           ;; the prefix.
+           (browse-url (if (string-prefix-p "file://" doc-file)
+                           doc-file
+                         (concat "file://" doc-file)))
            t))))
 
 ;; Define function documentation function

@@ -7,10 +7,12 @@
    (quote
     (delete-backward-char backward-delete-char backward-delete-char-untabify autopair-backspace paredit-backward-delete paredit-backward-delete-word smart-dash-insert)))
  '(ac-trigger-key "TAB")
+ '(custom-safe-themes
+   (quote
+    ("d677ef584c6dfc0697901a44b885cc18e206f05114c8a3b7fde674fce6180879" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" default)))
  '(js2-mode-show-parse-errors nil)
  '(js2-mode-show-strict-warnings nil)
  '(php-mode-coding-style (quote symfony2))
- '(php-mode-custom-coding-style "Symfony2")
  '(safe-local-variable-values
    (quote
     ((php-auto-yasnippet-required-files

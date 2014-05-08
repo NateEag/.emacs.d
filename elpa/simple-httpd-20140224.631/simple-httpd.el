@@ -4,7 +4,7 @@
 
 ;; Author: Christopher Wellons <wellons@nullprogram.com>
 ;; URL: https://github.com/skeeto/emacs-http-server
-;; Version: 20140123.1243
+;; Version: 20140224.631
 ;; X-Original-Version: 1.4.5
 ;; Package-Requires: ((cl-lib "0.3"))
 
@@ -526,14 +526,18 @@ actually serve up files."
 
 ;; Request parsing
 
+(defun httpd--normalize-header (header)
+  "Destructively capitalize the components of HEADER."
+  (mapconcat #'capitalize (split-string header "-") "-"))
+
 (defun httpd-parse (string)
   "Parse client http header into alist."
   (let* ((lines (split-string string "[\n\r]+"))
          (req (list (split-string (car lines))))
          (post (cadr (split-string string "\r\n\r\n"))))
     (dolist (line (butlast (cdr lines)))
-      (push (list (car (split-string line ": "))
-                  (mapconcat 'identity
+      (push (list (httpd--normalize-header (car (split-string line ": ")))
+                  (mapconcat #'identity
                              (cdr (split-string line ": ")) ": ")) req))
     (push (list "Content" post) req)
     (reverse req)))

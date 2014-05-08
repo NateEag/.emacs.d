@@ -5,8 +5,8 @@
 ;; Author: Sebastian Wiesner <lunaryorn@gmail.com>
 ;; Maintainer: Johan Andersson <johan.rejeep@gmail.com>
 ;;     Sebastian Wiesner <lunaryorn@gmail.com>
-;; Version: 20140102.211
-;; X-Original-Version: 0.5-cvs
+;; Version: 20140405.51
+;; X-Original-Version: 0.7-cvs
 ;; Package-Requires: ((cl-lib "0.3"))
 ;; Keywords: convenience
 ;; URL: http://github.com/cask/epl
@@ -95,7 +95,11 @@
 
 ;; `epl-find-upgrades' finds all upgradable packages.
 
+;; `epl-built-in-p' return true if package is built-in to Emacs.
+
 ;;; Package operations
+
+;; `epl-install-file' installs a package file.
 
 ;; `epl-package-install' installs a package.
 
@@ -116,7 +120,7 @@ defined as function."
   (and (fboundp 'package-desc-p) (package-desc-p package)))
 
 
-;;;; Package directory
+;;; Package directory
 (defun epl-package-dir ()
   "Get the directory of packages."
   package-user-dir)
@@ -131,7 +135,7 @@ defined as function."
   (epl-initialize))
 
 
-;;;; Package system management
+;;; Package system management
 (defvar epl--load-path-before-initialize nil
   "Remember the load path for `epl-reset'.")
 
@@ -162,7 +166,7 @@ package archives and reset the package directory."
   (epl-change-package-dir (epl-default-package-dir)))
 
 
-;;;; Package structures
+;;; Package structures
 (cl-defstruct (epl-requirement
                (:constructor epl-requirement-create))
   "Structure describing a requirement.
@@ -384,7 +388,7 @@ typically ends with -pkg.el."
                    summary)))))))
 
 
-;;;; Package database access
+;;; Package database access
 (defun epl-package-installed-p (package)
   "Determine whether a PACKAGE is installed.
 
@@ -492,8 +496,12 @@ packages."
                 upgrades))))
     (nreverse upgrades)))
 
+(defalias 'epl-built-in-p 'package-built-in-p)
+
 
-;;;; Package operations
+;;; Package operations
+
+(defalias 'epl-install-file 'package-install-file)
 
 (defun epl-package-install (package &optional force)
   "Install a PACKAGE.
@@ -528,7 +536,12 @@ PACKAGE is a `epl-package' object to delete."
       (let ((name (symbol-name (epl-package-name package)))
             (version (epl-package-version-string package)))
         (with-no-warnings
-          (package-delete name version))))))
+          (package-delete name version))
+        ;; Legacy package.el does not remove the deleted package
+        ;; from the `package-alist', so we do it manually here.
+        (let ((pkg (assq (epl-package-name package) package-alist)))
+          (when pkg
+            (setq package-alist (delq pkg package-alist))))))))
 
 (defun epl-upgrade (&optional packages preserve-obsolete)
   "Upgrade PACKAGES.

@@ -17,32 +17,55 @@ knew some of its shortcuts fairly well, and I needed to learn something well.
 A year or two into the project, I realized my dream editor had been sitting in
 my lap all along, if only I'd tried to learn it.
 
+
+Why Emacs (or: Hokey Religions and Ancient Weapons)
+===================================================
+
+Like all art forms, programming has technique.
+
+Despite the grumbling from the graphical language crowd, most programming comes
+down to entering, reading, and changing plain text in files. Thus, a programmer
+should manipulate text fluidly and effortlessly, the way a pianist plays
+arpeggios and scales.
+
+Changing editors for each language, therefore, is a horrible burden. Eclipse
+for Java, PyCharm for Python, Sublime for JavaScript... The act of editing a
+program in any one of these is different. Rather, the editor should change for
+each language, so that the fundamental acts of programming remain unchanged.
+
+For that purpose, Emacs reigns supreme.
+
 It is Turing-complete, it has been honed over decades to a razor-sharp edge, it
-runs almost everywhere, and it slowly molds itself to my workflow without the
-overhead of recompiling or even restarting.
+runs almost everywhere, and I can mold it to myself without recompiling or even
+turning it off.
 
-Since I have only used it seriously for a few years, I know there is much I am
-missing. Still, you may find a few useful things in here.
+I am no master, but if you look, you may find things of use to you,
+particularly for PHP, HTML templates, and CSS. Python and JavaScript see some
+use too, but are not what they could be.
 
-If you have a moment, glance at todo.txt and send me the two-line patches that
-address desires I didn't know Emacs already had built-in. I've found some of
-those myself, and wouldn't mind finding more.
+Examine todo.txt and tell me about entries that can be resolved by turning on
+existing features. I've found some myself, and would not mind finding more.
 
 Layout
 ======
 
-bin/ - external programs for use by Emacs extensions like flycheck. At present
-this contains only interpretable source code, no true binaries, so installing
-system-wide tools like Python and node.js is still necessary.
+bin/ - external programs for use by Emacs extensions like flycheck and tern. At
+present this contains only interpretable source code, no true binaries, so
+installing system-wide tools like Python and node.js is still necessary. Should
+probably be renamed lib/, with bin/ containing just binaries that reference lib/.
 
 elpa/ - elisp packages installed via package.el. I keep this under version
 control so that I can always return to a known-good state if an upgrade has
-unwanted effects, and so my configuration is less dependent on third-party services.
+unwanted effects, and so my configuration is less dependent on third-party
+services.
 
 githooks/ - a few git hooks to aid in hacking on this config, mostly useful
 when pushing config changes between multiple machines.
 
-site-lisp/ - elisp packages I maintain manually. Some are not available via
-package.el, while others are my own little hackjobs.
+init.el - where the magic begins.
 
-snippets/ - my personal yasnippets, used to augment the base snippet collection.
+site-lisp/ - elisp packages I maintain manually. Some are not available via
+package.el, others are my own little hackjobs, and probably some never got
+moved.
+
+snippets/ - my personal yasnippets, augmenting the base yasnippet collection.

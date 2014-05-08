@@ -249,6 +249,10 @@
  I have started playing with hide/show mode, and it's not perfect, but it does
  more or less what I want for now.
 
+-Consider auto-compile as an alternative to my current githooks setup. It might
+ be less prone to edge cases (like screwups after a rebase).
+ https://github.com/tarsius/auto-compile/blob/master/auto-compile.el
+
 -It might be nice to store all byte-compiled files in a single byte-cache
  folder. It's probably not worth much hassle, though, since I have hooks
  generating them and they're gitignored.

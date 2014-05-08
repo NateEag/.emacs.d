@@ -637,6 +637,48 @@ This variable is a normal hook."
   :package-version '(flycheck . "0.15")
   :group 'flycheck-faces)
 
+(defvar flycheck-command-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "c" 'flycheck-buffer)
+    (define-key map "C" 'flycheck-clear)
+    (define-key map (kbd "C-c") 'flycheck-compile)
+    (define-key map "n" 'flycheck-next-error)
+    (define-key map "p" 'flycheck-previous-error)
+    (define-key map "l" 'flycheck-list-errors)
+    (define-key map (kbd "C-w") 'flycheck-copy-messages-as-kill)
+    (define-key map "/" 'flycheck-google-messages)
+    (define-key map "s" 'flycheck-select-checker)
+    (define-key map "e" 'flycheck-set-checker-executable)
+    (define-key map "?" 'flycheck-describe-checker)
+    (define-key map "i" 'flycheck-info)
+    (define-key map "V" 'flycheck-version)
+    map)
+  "Keymap of Flycheck interactive commands.")
+
+(defcustom flycheck-keymap-prefix (kbd "C-c !")
+  "Prefix for key bindings of Flycheck.
+
+Changing this variable outside Customize does not have any
+effect.  To change the keymap prefix from Lisp, you need to
+explicitly re-define the prefix key:
+
+    (define-key flycheck-mode-map flycheck-keymap-prefix nil)
+    (setq flycheck-keymap-prefix (kbd \"C-c f\"))
+    (define-key flycheck-mode-map flycheck-keymap-prefix
+                flycheck-command-map)
+
+Please note that Flycheck's manual documents the default
+keybindings.  Changing this variable is at your own risk."
+  :group 'flycheck
+  :type 'string
+  :risky t
+  :set
+  (lambda (variable key)
+    (when (and (boundp variable) (boundp 'flycheck-mode-map))
+      (define-key flycheck-mode-map (symbol-value variable) nil)
+      (define-key flycheck-mode-map key flycheck-command-map))
+    (set-default variable key)))
+
 
 ;;; Minor mode definition
 ;;;###autoload
@@ -647,22 +689,8 @@ This variable is a normal hook."
   "The mode line lighter of variable `flycheck-mode'.")
 
 (defvar flycheck-mode-map
-  (let ((map (make-sparse-keymap))
-        (pmap (make-sparse-keymap)))
-    (define-key pmap "c" 'flycheck-buffer)
-    (define-key pmap "C" 'flycheck-clear)
-    (define-key pmap (kbd "C-c") 'flycheck-compile)
-    (define-key pmap "n" 'flycheck-next-error)
-    (define-key pmap "p" 'flycheck-previous-error)
-    (define-key pmap "l" 'flycheck-list-errors)
-    (define-key pmap (kbd "C-w") 'flycheck-copy-messages-as-kill)
-    (define-key pmap "/" 'flycheck-google-messages)
-    (define-key pmap "s" 'flycheck-select-checker)
-    (define-key pmap "e" 'flycheck-set-checker-executable)
-    (define-key pmap "?" 'flycheck-describe-checker)
-    (define-key pmap "i" 'flycheck-info)
-    (define-key pmap "V" 'flycheck-version)
-    (define-key map (kbd "C-c !") pmap)
+  (let ((map (make-sparse-keymap)))
+    (define-key map flycheck-keymap-prefix flycheck-command-map)
     map)
   "Keymap of `flycheck-mode'.")
 
@@ -4252,16 +4280,16 @@ is added to the GHC search path via `-i'."
 
 See URL `http://www.haskell.org/ghc/'."
   :command ("ghc" "-Wall" "-fno-code"
+            (option-flag "-no-user-package-db"
+                         flycheck-ghc-no-user-package-database)
+            (option-list "-package-db" flycheck-ghc-package-databases)
+            (option-list "-i" flycheck-ghc-search-path s-prepend)
             ;; Include the parent directory of the current module tree, to
             ;; properly resolve local imports
             (eval (concat
                    "-i"
                    (flycheck-module-root-directory
                     (flycheck-find-in-buffer flycheck-haskell-module-re))))
-            (option-flag "-no-user-package-db"
-                         flycheck-ghc-no-user-package-database)
-            (option-list "-package-db" flycheck-ghc-package-databases)
-            (option-list "-i" flycheck-ghc-search-path s-prepend)
             ;; Force GHC to treat the file as Haskell file, even if it doesn't
             ;; have an extension.  Otherwise GHC would fail on files without an
             ;; extension

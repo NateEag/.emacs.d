@@ -11,7 +11,7 @@
   :variable bzg-big-fringe-mode
   :group 'editing-basics
   (if (not bzg-big-fringe-mode)
-      (set-fringe-style nil)
+      (set-fringe-mode nil)
     (set-fringe-mode
      (/ (- (frame-pixel-width)
            (* 100 (frame-char-width)))

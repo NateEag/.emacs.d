@@ -223,11 +223,11 @@
       (if (and start-delim-pos end-delim-pos)
           (progn
             (goto-char start-delim-pos)
-            (delete-forward-char 1)
+            (delete-char 1)
             (insert "'")
 
             (goto-char (- end-delim-pos 1))
-            (delete-forward-char 1)
+            (delete-char 1)
             (insert "'"))
         (message "Could not find both delimiters."))
       )))

@@ -28,29 +28,14 @@
   ;; :(
   ;; (php-sql-mmm-submode)
 
-  ;; Everyone loves smart-dash mode.
-  (require 'smart-dash)
-  (setq smart-dash-c-modes (cons 'php-mode smart-dash-c-modes))
-  (smart-dash-mode t)
+  ;; Activate programming settings.
+  (my-prog-mode-init)
 
-  (comment-auto-fill)
+  ;; Make sure php-mode is in my smart-dash-c-modes.
+  (setq smart-dash-c-modes (cons 'php-mode smart-dash-c-modes))
 
   ;; Everyone loves code folding.
   (hs-minor-mode-init)
-
-  ;; After a battle with auto-pair-mode, which served me well for a good long
-  ;; time, smartparens has won the throne.
-  (smartparens-mode)
-
-  ;; Who doesn't like yasnippet?
-  (yas-minor-mode)
-
-  ;; Autocompletion for everyone!
-  (auto-complete-mode)
-  (setq ac-sources nil)
-  (add-to-list 'ac-sources 'ac-source-yasnippet)
-  (add-to-list 'ac-sources 'ac-source-php-auto-yasnippets t)
-  (add-to-list 'ac-sources 'ac-source-words-in-same-mode-buffers t)
 
   ;; w00t for auto-yasnippets!
   ;; (In principle the autocomplete setup should usually handle the job, but
@@ -58,13 +43,15 @@
   (require 'php-auto-yasnippets)
   (define-key php-mode-map (kbd "C-c C-y") 'yas/create-php-snippet)
 
-  ;; Yay for squiggly red lines!
-  (flycheck-mode t)
-  (setq flycheck-phpcs-standard "NateEag")
-  (setq flycheck-php-phpcs-executable "phpcs")
+  ;; Set ac-sources.
+  (setq ac-sources nil)
+  (add-to-list 'ac-sources 'ac-source-yasnippet)
+  (add-to-list 'ac-sources 'ac-source-php-auto-yasnippets t)
+  (add-to-list 'ac-sources 'ac-source-words-in-same-mode-buffers t)
 
-  ;; Do the right thing when I press RET (I hope?).
-  (local-set-key (kbd "RET") (key-binding (kbd "M-j"))))
+  ;; Yay for squiggly red lines!
+  (setq flycheck-phpcs-standard "NateEag")
+  (setq flycheck-php-phpcs-executable "phpcs"))
 
 ;; Make this requireable.
 (provide 'php-mode-init)

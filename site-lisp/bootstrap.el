@@ -41,6 +41,7 @@ are for modes that didn't come with autoloading."
   (autoload 'smartparens-init "smartparens-init.el")
   (autoload 'emmet-mode-init "emmet-mode-init.el")
   (autoload 'css-mode-init "css-mode-init.el")
+  (autoload 'smart-dash-mode "smart-dash.el" "Smart Dash mode")
 
   ;; Autoloads for eclim preferences and eclimd.
   ;; eclimd should have come with autoloads, in principle, but it didn't.

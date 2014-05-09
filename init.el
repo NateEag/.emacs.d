@@ -316,10 +316,6 @@
 (global-auto-revert-mode)
 (diminish 'auto-revert-mode)
 
-;; smart-dash-mode saves a lot of stupid SHIFT-ing in languages that favor
-;; underscore as a word separator.
-(require 'smart-dash)
-
 ;; Let's see if I like Helm better than pressing TAB all the time.
 (helm-mode)
 (diminish 'helm-mode)
@@ -335,6 +331,40 @@
                    helm-git-files:untracked-source
                    helm-git-files:all-source
                    helm-source-recentf)))
+
+
+(defun my-prog-mode-init ()
+  "General setup for programming modes."
+
+  ;; Auto-fill comments, but not code.
+  (comment-auto-fill)
+
+  ;; Smartparens beat auto-pair after a long, hard struggle.
+  (smartparens-mode t)
+  (diminish 'smartparens-mode)
+
+  ;; yasnippet is a powerful library for inserting snippets.
+  (yas-minor-mode t)
+
+  ;; Everyone loves autocompletion.
+  (auto-complete-mode t)
+  (setq ac-sources (list ac-source-yasnippet
+                         ac-source-words-in-same-mode-buffers))
+  (diminish 'auto-complete-mode)
+
+  ;; Pressing RET should do newline-then-indent, and continue any comment we
+  ;; happen to be in.
+  (local-set-key (kbd "RET") (key-binding (kbd "M-j")))
+
+  ;; Flycheck does on-the-fly syntax checking, if the appropriate tools are
+  ;; installed.
+  (flycheck-mode t)
+
+  ;; Turn on smart-dash-mode if it's not a bad idea in our current mode.
+  (if (not (member major-mode '(emacs-lisp-mode css-mode)))
+      (progn
+        (smart-dash-mode)
+        (diminish 'smart-dash-mode))))
 
 ;; Run yasnippet customizations when it's started.
 (eval-after-load 'yasnippet

@@ -73,10 +73,14 @@
 -If I ever start using multiple windows more seriously, window-numbering-mode
  might be handy. http://nschum.de/src/emacs/window-numbering-mode/
 
--Get PHP tags working reliably. Since there is no good PHP tags solution for
- emacs, the best bet is probably using the PHP 5.3 vim tagging solution I found
- in combination with vtags (which, dating from 2006, may not work with Emacs
- 24)
+-Get PHP tags working well. After months of finding nothing that really worked,
+ I got an email from a random netizen pointing me to pfff, a tool Facebook
+ wrote in OCaml for analyzing php. You can compile stags from it, a command for
+ making vim or emacs tagfiles. Try it out at work and see how it does. If it
+ can tag everything relatively quickly, it might be worth a private githook or
+ three to rebuild the TAGS file and tell Emacs "reload this tags file!" when
+ it's done. A really clever monkey might even hack up a Frankenstein
+ auto-completion rig cross-breeding tag completion with php-auto-yasnippet.
 
 -Look into emacs-eclim for intelligent PHP support. Might take some elisp
  hacking, but I think that's all it would take, apart from installing Eclipse

@@ -1,11 +1,19 @@
-;; Nate Eagleson's Emacs config.
+;;; package --- Nate Eagleson's Emacs config.
+
+;;; Commentary:
+
+;; I use Emacs as my primary text editor. This is my init file.
+;;
+;; See readme.rst for more infoo.
+
+;;; Code:
 
 ;; Sometimes you want to debug when there are errors, but not nearly as often
 ;; as I believed at the first.
 ;(setq debug-on-error t)
 
 ;; Set up my load path and a few other core things.
-(load-file "~/.emacs.d/site-lisp/bootstrap.el")
+(load-file (concat user-emacs-directory "site-lisp/bootstrap.el"))
 
 ;;; General preferences.
 
@@ -80,7 +88,7 @@
 
 ;; Autosave's defaults are not very nice. Here, we fix them.
 ;; Create autosave dir if it doesn't exist.
-(setq my-autosaves-dir (expand-file-name "~/.emacs.d/autosaves/"))
+(setq my-autosaves-dir (make-emacs-dir-path "autosaves/"))
 (make-directory my-autosaves-dir t)
 (setq
    ; Don't clobber symlinks.
@@ -121,7 +129,7 @@
 (add-hook 'after-save-hook 'recompile-elc-on-save)
 
 ;; Save minibuffer data between sessions.
-(setq savehist-file "~/.emacs.d/tmp/savehist")
+(setq savehist-file (make-emacs-dir-path "tmp/savehist"))
 (savehist-mode t)
 
 ;; Set up exec-path to inherit values from the shell.
@@ -134,9 +142,9 @@
 (setq exec-path
       (append
        exec-path
-       (list "~/.emacs.d/bin/php-cs-1.5.2/scripts"
-             "~/.emacs.d/bin/flake8-env/bin"
-             "~/.emacs.d/bin/node_modules/.bin")))
+       (list (make-emacs-dir-path "bin/php-cs-1.5.2/scripts")
+             (make-emacs-dir-path "bin/flake8-env/bin")
+             (make-emacs-dir-path "bin/node_modules/.bin"))))
 
 ;; Load Windows-specific tweaks to environment, if we're running Windows.
 (if (eq system-type 'windows-nt)
@@ -509,7 +517,7 @@
 (when (and (display-graphic-p) (not (eq t (server-running-p))))
     (server-start))
 
-(setq custom-file "~/.emacs.d/custom.el")
+(setq custom-file (make-emacs-dir-path "custom.el"))
 (load custom-file)
 
 ;;; My global keybindings, now that everything's loaded and defined.

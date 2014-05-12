@@ -1,9 +1,13 @@
 ;; Handle a few things that I want to do almost all the time, so that I can
 ;; write scripts in batch mode correctly.
 
+(defun make-emacs-dir-path (path)
+  "Return path with `user-emacs-directory' prepended."
+  (concat user-emacs-directory path))
+
 ;; Set up the package library per my desires.
 (require 'package)
-(setq package-user-dir "~/.emacs.d/elpa/")
+(setq package-user-dir (make-emacs-dir-path "elpa/"))
 (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
 (add-to-list 'package-archives '("melpa" .
                                  "http://melpa.milkbox.net/packages/"))
@@ -19,8 +23,8 @@
                 (normal-top-level-add-subdirs-to-load-path))
                  load-path))))
 
-(add-subdirs-to-front-of-load-path "~/.emacs.d/site-lisp")
-(add-to-list 'load-path "~/.emacs.d/site-lisp")
+(add-subdirs-to-front-of-load-path (make-emacs-dir-path "site-lisp"))
+(add-to-list 'load-path (make-emacs-dir-path "site-lisp"))
 
 ;; Set up manually-maintained autoloads.
 (defun nateeag-autoloads-init ()

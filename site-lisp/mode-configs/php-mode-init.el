@@ -31,9 +31,6 @@
   ;; Activate programming settings.
   (my-prog-mode-init)
 
-  ;; Make sure php-mode is in my smart-dash-c-modes.
-  (setq smart-dash-c-modes (cons 'php-mode smart-dash-c-modes))
-
   ;; Everyone loves code folding.
   (hs-minor-mode-init)
 

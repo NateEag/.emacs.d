@@ -75,6 +75,9 @@
 ;; Yay for highlighting parentheses!
 (show-paren-mode 1)
 
+;; Tell smart-dash-mode to turn on C-like workarounds for PHP.
+(setq smart-dash-c-modes (cons 'php-mode smart-dash-c-modes))
+
 ;; Autosave's defaults are not very nice. Here, we fix them.
 ;; Create autosave dir if it doesn't exist.
 (setq my-autosaves-dir (expand-file-name "~/.emacs.d/autosaves/"))

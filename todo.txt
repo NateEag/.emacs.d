@@ -1,5 +1,7 @@
 -Finish the dynamic completion source chooser for web-mode.
 
+-Find/replace instances of "~/.emacs.d" with the user-emacs-directory variable.
+
 -Move my general programming customizations (like binding M-j to RET, turning
  on comment-auto-fill, etc) into a prog-mode-hook, and call that prog-mode
  hook from any mode-hooks that don't already trigger prog-mode-hook (probably

@@ -3,7 +3,7 @@
 
   (my-prog-mode-init)
 
-  (elisp-slime-nav-mode t)
+  (turn-on-elisp-slime-nav-mode)
   (diminish 'elisp-slime-nav-mode)
   (ac-emacs-lisp-mode-setup)
   (eldoc-mode t))

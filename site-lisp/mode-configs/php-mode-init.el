@@ -40,7 +40,10 @@
   (require 'php-auto-yasnippets)
   (define-key php-mode-map (kbd "C-c C-y") 'yas/create-php-snippet)
 
-  ;; Set ac-sources.
+  ;; Set up ac-sources. We have to call payas/ac-setup to make sure the
+  ;; ac-source-php-auto-yasnippets is defined, but we don't want it to be the
+  ;; first source...
+  (payas/ac-setup)
   (setq ac-sources nil)
   (add-to-list 'ac-sources 'ac-source-yasnippet)
   (add-to-list 'ac-sources 'ac-source-php-auto-yasnippets t)

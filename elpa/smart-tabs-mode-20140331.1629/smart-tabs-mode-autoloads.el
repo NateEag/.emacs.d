@@ -1,13 +1,10 @@
 ;;; smart-tabs-mode-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-
+(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads (smart-tabs-add-language-support smart-tabs-insinuate
-;;;;;;  smart-tabs-advice smart-tabs-mode-enable smart-tabs-mode
-;;;;;;  smart-tabs-create-language-advice smart-tabs-create-advice-list
-;;;;;;  smart-tabs-when) "smart-tabs-mode" "smart-tabs-mode.el" (21236
-;;;;;;  24138 0 0))
+;;;### (autoloads nil "smart-tabs-mode" "smart-tabs-mode.el" (21361
+;;;;;;  38533 0 0))
 ;;; Generated autoloads from smart-tabs-mode.el
 
 (autoload 'smart-tabs-when "smart-tabs-mode" "\
@@ -65,16 +62,9 @@ Add support for a language not already in the `smart-tabs-insinuate-alist'.
 
 ;;;***
 
-;;;### (autoloads nil nil ("smart-tabs-mode-pkg.el") (21236 24138
-;;;;;;  512947 0))
-
-;;;***
-
-(provide 'smart-tabs-mode-autoloads)
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
-;; coding: utf-8
 ;; End:
 ;;; smart-tabs-mode-autoloads.el ends here

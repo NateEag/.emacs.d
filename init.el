@@ -415,6 +415,7 @@
 
   (my-prog-mode-init))
 (add-hook 'sh-mode-hook 'load-shell-mode-accessories)
+(add-to-list 'auto-mode-alist '("\\.bats$" . sh-mode))
 
 ;; Text-editing modes of various stripes.
 (defun text-mode-init ()

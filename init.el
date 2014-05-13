@@ -83,9 +83,6 @@
 ;; Yay for highlighting parentheses!
 (show-paren-mode 1)
 
-;; Tell smart-dash-mode to turn on C-like workarounds for PHP.
-(setq smart-dash-c-modes (cons 'php-mode smart-dash-c-modes))
-
 ;; Autosave's defaults are not very nice. Here, we fix them.
 ;; Create autosave dir if it doesn't exist.
 (setq my-autosaves-dir (make-emacs-dir-path "autosaves/"))
@@ -375,7 +372,9 @@
   (if (not (member major-mode '(emacs-lisp-mode css-mode)))
       (progn
         (smart-dash-mode)
-        (diminish 'smart-dash-mode))))
+        (diminish 'smart-dash-mode)
+        (if (not (member 'php-mode 'smart-dash-c-modes))
+            (add-to-list 'smart-dash-c-modes 'php-mode)))))
 
 ;; Run yasnippet customizations when it's started.
 (eval-after-load 'yasnippet

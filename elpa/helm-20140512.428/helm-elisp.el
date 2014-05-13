@@ -380,19 +380,16 @@ First call indent, second complete symbol, third complete fname."
   (require 'helm-help)
   (with-current-buffer (helm-candidate-buffer 'global)
     (goto-char (point-min))
-    (when (and default (stringp default)
-               ;; Some defaults args result as
-               ;; (symbol-name nil) == "nil".
-               ;; e.g debug-on-entry.
-               (not (string= default "nil"))
-               (funcall test (intern default)))
-      (insert (concat default "\n")))
-    (cl-loop with all = (all-completions "" obarray test)
-          for sym in all
-          for s = (intern sym)
-          unless (or (and default (string= sym default))
-                     (keywordp s))
-          do (insert (concat sym "\n")))))
+    (let ((default-symbol (and (stringp default)
+                               (intern-soft default))))
+      (when (and default-symbol (funcall test default-symbol))
+        (insert (concat default "\n")))
+      (cl-loop with all = (all-completions "" obarray test)
+            for sym in all
+            for s = (intern sym)
+            unless (or (and default (string= sym default))
+                       (keywordp s))
+            do (insert (concat sym "\n"))))))
 
 (defun helm-def-source--emacs-variables (&optional default)
   `((name . "Variables")
@@ -619,9 +616,8 @@ First call indent, second complete symbol, third complete fname."
 (defun helm-sexp-eval (cand)
   (let ((sexp (read cand)))
     (condition-case err
-        (if (> (length (remove nil sexp)) 1)
-            (eval sexp)
-          (apply 'call-interactively sexp))
+        (apply #'funcall-interactively (car sexp)
+               (mapcar (lambda (e) (eval e t)) (cdr sexp)))
       (error (message "Evaluating gave an error: %S" err)
              nil))))
 

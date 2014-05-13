@@ -4,7 +4,7 @@
 
 ;; I use Emacs as my primary text editor. This is my init file.
 ;;
-;; See readme.rst for more infoo.
+;; See readme.rst for more info.
 
 ;;; Code:
 
@@ -554,3 +554,6 @@
 
 ;; Search through buffers with helm-swoop.
 (global-set-key (kbd "C-c s") 'helm-swoop)
+
+(provide 'init)
+;;; init.el ends here

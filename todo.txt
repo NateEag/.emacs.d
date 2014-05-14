@@ -18,6 +18,10 @@
  in a codebase. I'm thinking a Chrome plugin for "refresh and load
  bookmarklet", or something along those lines.
 
+-Find a way to load skewer in Chrome from an HTTPS page. Starting Chrome with
+ the --allow-insecure-content flag might work, but I don't see how to test that
+ on Windows. It sure would be annoying if I couldn't solve this.
+
 -I'd like yasnippets for JavaScript. I don't much like the defaults.
 
 -Find a better CSS mode. Ideally something that supports SCSS, probably. Maybe

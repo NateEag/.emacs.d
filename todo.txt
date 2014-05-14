@@ -25,6 +25,10 @@
  using web-mode for CSS, and it occurs to me that might actually work out okay
  (though probably not if I start using SCSS).
 
+-Check out tagedit: https://github.com/magnars/tagedit, and consider
+ integrating it with web-mode and xml-mode. Since I've never really learned to
+ use paredit, it might not be much help, but it seems interesting.
+
 -Figure out how to make smartparens interact nicely with web-mode. '{{' and
  '{%' don't work right when both are on, but I don't see a way to ban
  multi-character sequences from smartparens, and I don't want to lose pairing

@@ -63,6 +63,9 @@
 -Move my one-off variable customizations into custom.el (at least the ones that
  don't need any documentation of why they are what they are).
 
+-Use my new add-auto-mode function to set up my auto-mode-alist patterns. It's
+ more readable.
+
 -As a simple exercise to start learning macros, try implementing PHP's
  "defaulting" ternary operator behavior. The example I emailed myself was
  (setq (default (= 3 foo) 5)), where 'default' is the macro, presumably.

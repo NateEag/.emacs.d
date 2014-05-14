@@ -208,6 +208,13 @@
 
 ;; Random functions worth having around.
 
+;; From http://stackoverflow.com/a/17859480/1128957
+(defun add-auto-mode (mode &rest patterns)
+  "Add filename `patterns' to `auto-mode-alist' for MODE."
+  (mapc (lambda (pattern)
+          (add-to-list 'auto-mode-alist (cons pattern mode)))
+        patterns))
+
 ;; Tweaked from http://nullprogram.com/blog/2010/10/06/.
 (defun set-window-width (n)
   "Set the current window's width."
@@ -487,10 +494,9 @@
 
 ;; Web mode.
 ;; For editing web templates of various stripes.
-(add-to-list 'auto-mode-alist '("\\.tmpl\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.htm\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.twig\\'" . web-mode))
+(add-auto-mode 'web-mode
+               "*html*" "*twig*" "*tmpl*"
+               "/\\(views\\|templates\\|include\\)/.*\\.php$")
 (add-hook 'web-mode-hook 'web-mode-init)
 
 ;; JavaScript Mode.

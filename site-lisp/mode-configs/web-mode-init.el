@@ -37,7 +37,13 @@
   (smartparens-mode)
 
   (auto-complete-mode)
+
   (emmet-mode)
+
+  (require 'tagedit)
+  (tagedit-add-paredit-like-keybindings)
+  (tagedit-mode 1)
+
   (setq smart-dash-c-modes (cons 'web-mode smart-dash-c-modes))
   (smart-dash-mode)
   (web-mode-install-smart-dash-insert))

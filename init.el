@@ -495,7 +495,7 @@
 ;; Web mode.
 ;; For editing web templates of various stripes.
 (add-auto-mode 'web-mode
-               "*html*" "*twig*" "*tmpl*"
+               ".*html.*" ".*twig.*" ".*tmpl.*"
                "/\\(views\\|templates\\|include\\)/.*\\.php$")
 (add-hook 'web-mode-hook 'web-mode-init)
 

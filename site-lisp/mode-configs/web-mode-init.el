@@ -44,8 +44,38 @@
   (tagedit-add-paredit-like-keybindings)
   (tagedit-mode 1)
 
+  ;; See if we can hack in support for tagedit at all... web-mode seems like it
+  ;; must already have most of these covered in some way.
+  (set (make-local-variable 'te/skip-tag-forward-fn)
+       'web-mode-element-end)
+
+  (set (make-local-variable 'te/skip-tag-backward-fn)
+       'web-mode-element-beginning)
+
+  (set (make-local-variable 'te/empty-tag-p-fn)
+       'web-mode-element-is-void)
+
+  (set (make-local-variable 'te/current-tag-fn)
+       'web-mode-te-current-tag-fn)
+
   (setq smart-dash-c-modes (cons 'web-mode smart-dash-c-modes))
   (smart-dash-mode)
   (web-mode-install-smart-dash-insert))
+
+(defun web-mode-te-current-tag-fn ()
+  ""
+  ;; (ignore-errors
+  ;;   (save-excursions
+  ;;    (let* (ctx (web-mode-tags-pos))
+  ;;      )
+  ;;    `((:beg . ,(web-mode-tag-beginning-position))
+  ;;      (:end . ,(web-mode-tag-end-position))
+  ;;      ;; String from beginning position + 1 to first space.
+  ;;      ;; Regexp search for [ >] should do it, in conjunction with
+  ;;      ;; buffer-substring-no-properties.
+  ;;      (:name . ,)
+  ;;      ;; Check whether character two before (web-mode-tag-end-position) is /.
+  ;;      (:self-closing . ,self-closing))))
+  )
 
 (provide 'web-mode-init)

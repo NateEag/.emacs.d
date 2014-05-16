@@ -1,11 +1,17 @@
-;; Configure web-mode.
+;;; web-mode-init.el -- Configure web-mode for my personal use.
 
+;;; Commentary:
+
+;; web-mode is a major-mode for editing HTML templates. Here, I define my
+;; mode-hook for it.
+
+;;; Code:
 (defun web-mode-smart-dash-insert ()
   "A wrapper around smart-dash-mode for use with web-mode."
   ;; Only be smart about dashes in languages where it makes sense.
   (if (member (web-mode-language-at-pos) (list "html" "css"))
       (self-insert-command)
-    (smart-dash-do-insert)))
+    (smart-dash-insert)))
 
 (defun web-mode-install-smart-dash-insert ()
   "When called, override smart-dash-mode's usual keybinding for '-'."
@@ -79,3 +85,4 @@
   )
 
 (provide 'web-mode-init)
+;;; web-mode-init.el ends here

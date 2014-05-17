@@ -34,6 +34,18 @@
  multi-character sequences from smartparens, and I don't want to lose pairing
  braces in CSS and JS.
 
+-Add keybindings for scrolling completion window by a full window-ful. C-v and
+ M-v are the obvious ones. Useful when you're digging through something like wx
+ or the JDK looking for a class that might apply.
+
+-Make a PR to auto-complete for supporting smart-dash-mode.
+
+-Find a workaround that will let me use auto-complete in a yasnippet tab field.
+ A keybinding other than Tab for auto-complete would work, but it might be
+ possible to bind something clever to Tab that picks which maneuver to do based
+ on whether there are any characters before point *and* whether autocompletion
+ has been invoked before while in this field. or something like that.
+
 -I would like an auto-complete source for existing files that is based on a
  per-project 'docroot/static' variable. I would like that source to be
  activated when I am working in a template and have entered an href="/..." or a
@@ -45,8 +57,6 @@
  library from MELPA then pulling that down to a different clone of the repo. It
  occurred to me today that my current setup does this, and it seems like a
  candidate for crashiness.
-
--Make a PR to auto-complete for supporting smart-dash-mode.
 
 -Add an after-revert-hook to reload helm-git-file's cache for any containing
  repo if necessary. Seems like this should be a simple thing to do, though if
@@ -106,12 +116,6 @@
 
 -Consider using auto-revert-tail-mode when I need to keep an eye on a log file
  while programming.
-
--Find a workaround that will let me use auto-complete in a yasnippet tab field.
- A keybinding other than Tab for auto-complete would work, but it might be
- possible to bind something clever to Tab that picks which maneuver to do based
- on whether there are any characters before point *and* whether autocompletion
- has been invoked before while in this field. or something like that.
 
 -php-mode should not move sigils when swapping words with M-t.
  $this_thing => thing_$this is not what we want.

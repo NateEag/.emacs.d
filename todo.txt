@@ -221,6 +221,10 @@
  are no duplicates, the editor should be able to find the nearest delimiters
  and change them. Now you can keep on cranking.
 
+-Set up jedi to load virtualenvs for the current project. See
+ http://stackoverflow.com/questions/21246218/how-can-i-make-emacs-jedi-use-project-specific-virtualenvs
+ for more details.
+
 -Look into anaconda-mode. It appears to be a wrapper around Jedi that might add
  a bit more intelligence, or something? Popped up in list-packages today.
 

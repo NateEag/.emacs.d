@@ -253,7 +253,7 @@
 		 ((:url . "http://elpa.gnu.org/packages/quarter-plane.html")
 		  (:keywords "convenience" "wp"))])
  (queue .
-	[(0 1)
+	[(0 1 1)
 	 nil "Queue data structure" single
 	 ((:url . "http://www.dr-qubit.org/emacs.php")
 	  (:keywords "extensions" "data structures" "queue"))])

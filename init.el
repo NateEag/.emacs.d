@@ -375,6 +375,9 @@
   ;; installed.
   (flycheck-mode t)
 
+  ;; Everyone likes spell-checking.
+  (flyspell-prog-mode)
+
   ;; Turn on smart-dash-mode if it's not a bad idea in our current mode.
   (if (not (member major-mode '(emacs-lisp-mode css-mode)))
       (progn

@@ -330,6 +330,7 @@
 ;; installed.
 (global-auto-revert-mode)
 (diminish 'auto-revert-mode)
+(diminish 'magit-auto-revert-mode)
 
 ;; Let's see if I like Helm better than pressing TAB all the time.
 (helm-mode)
@@ -377,6 +378,7 @@
 
   ;; Everyone likes spell-checking.
   (flyspell-prog-mode)
+  (diminish 'flyspell-mode)
 
   ;; Turn on smart-dash-mode if it's not a bad idea in our current mode.
   (if (not (member major-mode '(emacs-lisp-mode css-mode)))

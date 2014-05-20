@@ -1,9 +1,18 @@
+;;; emacs-lisp-init.el -- configure emacs-lisp-mode the way I like.
+
+;;; Commentary:
+;;;
+;;; Defines a hook function suitable for use as an emacs-lisp-mode-hook.
+
+;;; Code:
 (defun emacs-lisp-init ()
-  "My emacs lisp editing config."
+  "Hook function for `emacs-lisp-mode'."
 
   (my-prog-mode-init)
 
   (turn-on-elisp-slime-nav-mode)
   (diminish 'elisp-slime-nav-mode)
   (ac-emacs-lisp-mode-setup)
-  (eldoc-mode t))
+  (eldoc-mode t)
+  (diminish 'eldoc-mode))
+;;; emacs-lisp-init.el ends here

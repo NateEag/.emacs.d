@@ -330,7 +330,9 @@
 ;; installed.
 (global-auto-revert-mode)
 (diminish 'auto-revert-mode)
-(diminish 'magit-auto-revert-mode)
+
+(add-hook 'magit-auto-revert-mode-hook
+          (lambda () (diminish 'magit-auto-revert-mode)))
 
 ;; Let's see if I like Helm better than pressing TAB all the time.
 (helm-mode)

@@ -6,6 +6,7 @@
   "My mode hook for JS editing modes."
 
   (interactive)
+  (setq normal-auto-fill-function 'c-do-auto-fill)
   (comment-auto-fill)
   (smart-dash-mode t)
   (smartparens-mode t)
@@ -14,6 +15,10 @@
   (setq ac-sources '(ac-source-yasnippet))
   (skewer-mode)
   (flycheck-mode)
+
+  ;; Since I've bound C-r to regex searching, I'll use C-M-r to mean
+  ;; 'refactor'.
+  (js2r-add-keybindings-with-prefix "C-M-r")
 
   (tern-mode 't)
   (eval-after-load 'tern

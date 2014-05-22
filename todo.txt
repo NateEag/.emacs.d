@@ -1,4 +1,21 @@
+-Make comment auto-fill work in js2-mode. At present, it auto-fills but without
+ a prefix. It has a built-in function for comment filling; maybe I can override
+ the usual auto-fill function with that somehow?
+
+-Finish getting tagedit to work with web-mode.
+
 -Finish the dynamic completion source chooser for web-mode.
+
+-Write a general-case ac-source for Tern.js. Right now I have to press M-Tab to
+ trigger top-level completions, and I'd like to just press Tab. emacs-eclim
+ might be a good place to rip off the basic idea from, since it depends on an
+ external process to get completions.
+
+-Add php-auto-yasnippet-style function params to tern.js.
+
+-Get Jedi to prefer virtualenvs in the current project directory. Project
+ directory is probably just 'parent folder for this buffer that contains a
+ .git/ folder'.
 
 -Move my general programming customizations (like binding M-j to RET, turning
  on comment-auto-fill, etc) into a prog-mode-hook, and call that prog-mode
@@ -6,10 +23,6 @@
  most of them).
 
 -Check why focus-mode resizes frame slightly on Windows.
-
--Make comment auto-fill work in js2-mode. At present, it auto-fills but without
- a prefix. It has a built-in function for comment filling; maybe I can override
- the usual auto-fill function with that somehow?
 
 -File feature request to flycheck for being able to run checkers while in
  web-mode. May well get rejected, because supporting this would be pretty hard.

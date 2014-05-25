@@ -70,19 +70,20 @@
 
 (defun web-mode-te-current-tag-fn ()
   ""
-  ;; (ignore-errors
-  ;;   (save-excursions
-  ;;    (let* (ctx (web-mode-tags-pos))
-  ;;      )
-  ;;    `((:beg . ,(web-mode-tag-beginning-position))
-  ;;      (:end . ,(web-mode-tag-end-position))
-  ;;      ;; String from beginning position + 1 to first space.
-  ;;      ;; Regexp search for [ >] should do it, in conjunction with
-  ;;      ;; buffer-substring-no-properties.
-  ;;      (:name . ,)
-  ;;      ;; Check whether character two before (web-mode-tag-end-position) is /.
-  ;;      (:self-closing . ,self-closing))))
-  )
+  (ignore-errors
+    (save-excursion
+     (let* ((beg (web-mode-element-beginning-position))
+            ;; web-mode's end-position gets the position of the closing >,
+            ;; while tagedit expects the position *after* it.
+            (end (+ 1 (web-mode-element-end-position)))
+            (name (get-text-property (point) 'tag-name))
+            (self-closing (if (web-mode-element-is-void name)
+                              :t
+                            :f)))
+       `((:name . ,name)
+         (:self-closing . ,self-closing)
+         (:beg . ,beg)
+         (:end . ,end))))))
 
 (provide 'web-mode-init)
 ;;; web-mode-init.el ends here

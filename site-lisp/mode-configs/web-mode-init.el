@@ -53,10 +53,11 @@
   ;; See if we can hack in support for tagedit at all... web-mode seems like it
   ;; must already have most of these covered in some way.
   (set (make-local-variable 'te/skip-tag-forward-fn)
-       'web-mode-element-end)
+       'web-mode-te-skip-tag-forward-fn)
 
+  ;; Similarly
   (set (make-local-variable 'te/skip-tag-backward-fn)
-       'web-mode-element-beginning)
+       'web-mode-te-skip-tag-backward-fn)
 
   (set (make-local-variable 'te/empty-tag-p-fn)
        'web-mode-element-is-void)
@@ -68,15 +69,32 @@
   (smart-dash-mode)
   (web-mode-install-smart-dash-insert))
 
+(defun web-mode-te-skip-tag-forward-fn ()
+  "Move to end of current (or next) tag.
+
+web-mode's nearest equivalent that I could find only handles current tag.
+Hence this wrapper."
+  (skip-syntax-forward " <")
+  (web-mode-element-end))
+
+(defun web-mode-te-skip-tag-backward-fn ()
+  "Move to beginning of current (or previous) tag.
+
+web-mode's nearest equivalent that I could find only handles current tag.
+Hence this wrapper."
+  (skip-syntax-backward " >")
+  (backward-char 1)
+  (web-mode-element-beginning))
+
 (defun web-mode-te-current-tag-fn ()
-  ""
+  "Return current tag alist for tagedit."
   (ignore-errors
     (save-excursion
      (let* ((beg (web-mode-element-beginning-position))
             ;; web-mode's end-position gets the position of the closing >,
             ;; while tagedit expects the position *after* it.
             (end (+ 1 (web-mode-element-end-position)))
-            (name (get-text-property (point) 'tag-name))
+            (name (get-text-property beg 'tag-name))
             (self-closing (if (web-mode-element-is-void name)
                               :t
                             :f)))

@@ -554,6 +554,8 @@
 
 ;; Bindings for moving between errors. Flycheck by default, then modes
 ;; that use other error detection tools will have to override them.
+;; GRIPE I should probably set C-c e as flycheck's prefix key, so all the
+;; bindings work right. Not sure how to do that.
 (global-set-key (kbd "C-c e n") 'flycheck-next-error)
 (global-set-key (kbd "C-c e p") 'flycheck-previous-error)
 
@@ -566,6 +568,9 @@
 
 ;; Search through buffers with helm-swoop.
 (global-set-key (kbd "C-c s") 'helm-swoop)
+
+;; Expand-region lets you select delimited regions quickly.
+(global-set-key (kbd "C-c r") 'er/expand-region)
 
 (provide 'init)
 ;;; init.el ends here

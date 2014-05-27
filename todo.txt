@@ -156,10 +156,6 @@
 
 -Look into binding Shift-Enter to whatever Meta-J is bound to.
 
--Look into adding expand-region. It sounds like it could be pretty handy for
- selecting a range with less typing.
- https://github.com/magnars/expand-region.el
-
 -I should have Twig/Django snippets. 'block' is the obvious one, but probably
  snippets for all the major bits of syntax would be handy, and someone out
  there must have written such things.

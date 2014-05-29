@@ -160,7 +160,7 @@
 	 ((ascii-art-to-unicode
 	   (1 5))
 	  (xpm
-	   (1 0 0))
+	   (1 0 1))
 	  (cl-lib
 	   (0 5)))
 	 "play GNU Go in a buffer" tar

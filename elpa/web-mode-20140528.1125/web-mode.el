@@ -3,7 +3,7 @@
 
 ;; Copyright 2011-2014 François-Xavier Bois
 
-;; Version: 9.0.13
+;; Version: 9.0.16
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -37,6 +37,7 @@
 ;; Code goes here
 
 ;;todo :
+;;       web-mode-part|block-extra-keywords
 ;;       web-mode-surround : chaque ligne est entourée par un open et un close tag
 ;;       tester web-mode avec un fond blanc
 ;;       web-mode-extra-constants
@@ -50,7 +51,7 @@
 ;;todo : passer les content-types en symboles
 ;;todo : tester shortcut A -> pour pomme
 
-(defconst web-mode-version "9.0.13"
+(defconst web-mode-version "9.0.16"
   "Web Mode version.")
 
 (defgroup web-mode nil
@@ -715,7 +716,7 @@ The *first* thing between '\\(' '\\)' will be extracted as tag content
     ("go"               . "\\.go\\(html\\|tmpl\\)\\'")
     ("handlebars"       . "\\(handlebars\\|.\\hbs\\'\\)")
     ("jsp"              . "\\.[gj]sp\\'")
-    ("mako"             . "\\.mako\\'")
+    ("mako"             . "\\.mako?\\'")
     ("mason"            . "\\.mas\\'")
     ("mojolicious"      . "mojolicious\\|\\.epl\\'")
     ("mustache"         . "\\.mustache\\'")
@@ -1834,7 +1835,6 @@ The *first* thing between '\\(' '\\)' will be extracted as tag content
     ;;--------------------------------------------------------------------------
     ;; "C-c letter"  are reserved for users
 
-
     (define-key map (kbd "C-c C-a b") 'web-mode-attribute-beginning)
     (define-key map (kbd "C-c C-a e") 'web-mode-attribute-end)
     (define-key map (kbd "C-c C-a s") 'web-mode-attribute-select)
@@ -2476,7 +2476,7 @@ The *first* thing between '\\(' '\\)' will be extracted as tag content
            ((member sub2 '("<%" "</"))
             (setq closing-string ">"
                   delim-open "</?%"
-                  delim-close ">"))
+                  delim-close "/?>"))
            ((string= sub2 "${")
             (setq closing-string "}"
                   delim-open "${"
@@ -3354,11 +3354,11 @@ The *first* thing between '\\(' '\\)' will be extracted as tag content
 
        ((string= web-mode-engine "erb")
         (cond
-         ((web-mode-block-starts-with "else" reg-beg)
+         ((web-mode-block-starts-with "else\\|when" reg-beg)
           (setq controls (append controls (list (cons 'inside "ctrl")))))
          ((web-mode-block-starts-with "end" reg-beg)
           (setq controls (append controls (list (cons 'close "ctrl")))))
-         ((web-mode-block-starts-with ".* do \\|for\\|if\\|unless" reg-beg)
+         ((web-mode-block-starts-with ".* do \\|for\\|if\\|unless\\|case" reg-beg)
           (setq controls (append controls (list (cons 'open "ctrl")))))
          )
         ) ; erb
@@ -3799,19 +3799,21 @@ The *first* thing between '\\(' '\\)' will be extracted as tag content
 (defun web-mode-scan-mako-block-comments (reg-beg reg-end)
   "Scan extra"
   (save-excursion
-    (let (beg end)
+    (let (beg end (continue t))
       (goto-char reg-beg)
-      (while (and (< (point) reg-end)
+      (while (and continue
+                  (< (point) reg-end)
                   (re-search-forward "<%doc>" reg-end t))
         (goto-char (match-beginning 0))
         (setq beg (point))
-        (when (re-search-forward "</%doc>" reg-end t)
+        (if (not (re-search-forward "</%doc>" reg-end t))
+            (setq continue nil)
           (setq end (point))
           (remove-text-properties beg end web-mode-scan-properties)
           (add-text-properties beg end '(block-side t block-token comment))
           (put-text-property beg (1+ beg) 'block-beg t)
           (put-text-property (1- end) end 'block-end t)
-          ) ;when
+          ) ;if
         ) ;while
       )))
 

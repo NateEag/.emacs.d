@@ -138,9 +138,8 @@ It's probably best to set this per-project via .dir-locals.")
   "Add ac-source-php-auto-yasnippets to ac-sources."
   (interactive)
 
-  (require 'auto-complete)
   (ac-define-source php-auto-yasnippets
-    '((depends yasnippet)
+    '((depends yasnippet auto-complete)
       ;; TODO The php-mode dictionary contains a few things (keywords and
       ;; the like) that should not be included
       (candidates . (ac-mode-dictionary 'php-mode))

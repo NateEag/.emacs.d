@@ -988,7 +988,11 @@ setting affect all the navigation and manipulation functions
 where it make sense.
 
 Also, special handling of strings is enabled, where the whole
-string delimited with \"\" is considered as one token."
+string delimited with \"\" is considered as one token.
+
+WARNING: This is a legacy setting and changing its value to NIL
+may break many things.  It is kept only for backward
+compatibility and will be removed in the next major release."
   :type 'boolean
   :group 'smartparens)
 
@@ -6084,7 +6088,7 @@ Examples:
          (when (and (not in-comment)
                     (sp-point-in-comment))
            (goto-char (,comment-bound (sp-get-comment-bounds))))
-         (,forward-fn 1)))))
+         (when (not ,eob-test) (,forward-fn 1))))))
 
 (defun sp-skip-forward-to-symbol (&optional stop-at-string stop-after-string stop-inside-string)
   "Skip whitespace and comments moving forward.

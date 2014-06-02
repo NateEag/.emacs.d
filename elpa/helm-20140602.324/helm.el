@@ -543,6 +543,12 @@ This happen when using `helm-next/previous-line'."
   "Face for action lines in the helm action buffer."
   :group 'helm)
 
+(defface helm-prefarg
+    '((((background dark)) :foreground "green")
+      (((background light)) :foreground "red"))
+  "Face for showing prefix arg in mode-line."
+  :group 'helm)
+
 
 ;;; Variables.
 ;;
@@ -1674,7 +1680,8 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
                    any-buffer any-keymap any-default)
     (let ((old-overriding-local-map overriding-terminal-local-map)
           ;; #163 no cursor in minibuffer in <=Emacs-24.2.
-          ;; This is not needed in emacs-24.3+
+          ;; Apart this bug in <=24.2, this is needed for
+          ;; messages in minibuffer on top of helm prompt. 
           (cursor-in-echo-area t)
           (non-essential t)
           (old--cua cua-mode)
@@ -2116,6 +2123,7 @@ For ANY-PRESELECT ANY-RESUME ANY-KEYMAP ANY-DEFAULT ANY-HISTORY, See `helm'."
                            ;; Needed for resuming. 
                            (assoc-default 'history src)))
            (timer nil)
+           blink-matching-paren
            (first-src (car helm-sources))
            (source-delayed-p (or (assq 'delayed src)
                                  (assq 'delayed (if (symbolp first-src)
@@ -2246,7 +2254,7 @@ If no map is found in current source do nothing (keep previous map)."
         ;; to not overhide other minor-mode-map's.
         (if (fboundp 'set-transient-map)
             (set-transient-map it)
-          (set-temporary-overlay-map it)))))
+            (set-temporary-overlay-map it)))))
 
 
 ;; Core: clean up
@@ -3143,10 +3151,9 @@ Possible value of DIRECTION are 'next or 'previous."
                                                                   current-prefix-arg))))
                                (unless (= arg 1)
                                  (propertize (format "[prefarg:%s] " arg)
-                                             'face '((:foreground "green")))))))
+                                             'face 'helm-prefarg)))))
                     (:eval (helm-show-candidate-number
-                            (when (listp helm-mode-line-string)
-                              (car-safe helm-mode-line-string))))
+                            (car-safe helm-mode-line-string)))
                     " " helm-mode-line-string-real " -%-")
               helm-mode-line-string-real
               (substitute-command-keys (if (listp helm-mode-line-string)
@@ -3156,7 +3163,8 @@ Possible value of DIRECTION are 'next or 'previous."
     ;; Setup header-line.
     (let* ((hlstr (helm-interpret-value
                    (and (listp source)
-                        (assoc-default 'header-line source)) source))
+                        (assoc-default 'header-line source))
+                   source))
            (hlend (make-string (max 0 (- (window-width) (length hlstr))) ? )))
       (setq header-line-format
             (propertize (concat " " hlstr hlend) 'face 'helm-header))))

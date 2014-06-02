@@ -171,6 +171,14 @@ If you enter a space and a pattern prefixed by \"@\" helm will search for text m
 this pattern INSIDE the buffer (i.e not in the name of buffer).
 NOTE that if you enter your pattern prefixed with \"@\" but escaped, helm will search a buffer
 matching \"@pattern\" but will not search inside.
+If you prefix the beginning of pattern with \"/\" the match will occur on directory name
+of buffer, it is interesting to narrow down to one directory for example, subsequent string
+entered after a space will match on buffer-name only.
+Note that negation is not supported for matching on buffer-file-name.
+
+Note that if `helm-buffers-fuzzy-matching' is non--nil you will have
+fuzzy matching on buffer names (not on buffer-file-name matching and major-mode though).
+
 
 e.g
 
@@ -187,6 +195,11 @@ helm will look for lisp mode buffers starting by \"helm\" and have \"moc\" in th
 if I enter in pattern prompt:
 \"*!lisp !helm\"
 helm will narrow down to buffers that are not in \"lisp\" mode and that do not match \"helm\"
+
+if I enter in pattern prompt:
+/helm/ w3
+helm will narrow down to buffers that are in any \"helm\" subdirectory and matching w3.
+
 
 Creating buffers
 
@@ -656,7 +669,6 @@ is called once for each file like this:
 \\[helm-yank-text-at-point]\t\t->Yank Text at point in minibuffer.
 \\[helm-moccur-run-goto-line-ow]\t\t->Goto line in other window.
 \\[helm-moccur-run-goto-line-of]\t\t->Goto line in new frame.
-\\[helm-grep-run-save-buffer]\t\t->Save to a `grep-mode' enabled buffer.
 \\[helm-moccur-help]\t\t->Show this help.
 \n== Helm Map ==
 \\{helm-map}")

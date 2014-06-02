@@ -1,11 +1,11 @@
 ;;; solarized.el --- Solarized for Emacs.
 
-;; Copyright (C) 2011-2013 Bozhidar Batsov
+;; Copyright (C) 2011-2014 Bozhidar Batsov
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; Author: Thomas Frössman <thomasf@jossystem.se>
 ;; URL: http://github.com/bbatsov/solarized-emacs
-;; Version: 1.0.0
+;; Version: 1.1.0
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -286,8 +286,8 @@ customize the resulting theme."
      `(cursor ((,class (:foreground ,base03 :background ,base0
                                     :inverse-video t))))
      `(mouse ((,class (:foreground ,base03 :background ,base0
-                   :inverse-video t))))
-     `(escape-glyph-face ((,class (:foreground ,red))))
+                                   :inverse-video t))))
+     `(escape-glyph ((,class (:foreground ,violet))))     
      `(fringe ((,class (:foreground ,s-fringe-fg :background ,s-fringe-bg))))
      `(highlight ((,class (:background ,base02))))
      `(link ((,class (:foreground ,yellow :underline t :weight bold))))
@@ -297,7 +297,7 @@ customize the resulting theme."
      `(error ((,class (:foreground ,orange))))
      `(lazy-highlight ((,class (:foreground ,base03 :background ,yellow
                                             :weight normal))))
-     `(escape-glyph ((,class (:foreground ,violet))))
+     
 
      ;; compilation
      `(compilation-column-face ((,class (:foreground ,cyan :underline nil))))
@@ -610,14 +610,21 @@ customize the resulting theme."
 
      ;; custom
      `(custom-face-tag ((,class (:inherit ,s-variable-pitch :height ,solarized-height-plus-3
-                                          :foreground ,violet :weight bold))))
+                                          :foreground ,violet :weight normal))))
      `(custom-variable-tag ((,class (:inherit ,s-variable-pitch
                                               :foreground ,cyan :height ,solarized-height-plus-3))))
      `(custom-comment-tag ((,class (:foreground ,base01))))
      `(custom-group-tag ((,class (:inherit ,s-variable-pitch :foreground ,blue :height ,solarized-height-plus-3))))
      `(custom-group-tag-1 ((,class (:inherit ,s-variable-pitch :foreground ,red :height ,solarized-height-plus-3))))
      `(custom-state ((,class (:foreground ,green))))
-
+     `(custom-button ((,class (:background ,base02 :foreground ,base1
+                                           :box (:line-width 2 :style released-button)))))
+     `(custom-button-mouse ((,class (:background ,base01 :foreground ,base02
+                                                 :box (:line-width 2 :style released-button)))))
+     `(custom-button-pressed ((,class (:background ,base01 :foreground ,base1
+                                                   :box (:line-width 2 :style pressed-button)))))
+     `(custom-button-unraised ((,class (:inherit underline))))
+     `(custom-button-pressed-unraised ((,class (:inherit custom-button-unraised :foreground ,magenta))))
      ;; diff
      `(diff-added ((,class (:foreground ,green :background nil))))
      `(diff-changed ((,class (:foreground ,blue :background nil))))
@@ -959,19 +966,34 @@ customize the resulting theme."
      `(helm-swoop-target-line-block-face ((,class (:foreground unspecified :background ,base02))))
      `(helm-swoop-target-word-face ((,class (:foreground ,magenta :background unspecified))))
 
-     ;; hi-lock-mode
-     `(hi-yellow ((,class (:foreground ,yellow-lc :background ,yellow-hc))))
-     `(hi-pink ((,class (:foreground ,magenta-lc :background ,magenta-hc))))
-     `(hi-green ((,class (:foreground ,green-lc :background ,green-hc))))
-     `(hi-blue ((,class (:foreground ,blue-lc :background ,blue-hc))))
-     `(hi-black-b ((,class (:foreground ,base1 :background ,base03
-                                        :weight bold))))
-     `(hi-blue-b ((,class (:foreground ,blue-lc :weight bold))))
-     `(hi-green-b ((,class (:foreground ,green-lc :weight bold))))
-     `(hi-red-b ((,class (:foreground ,red :weight bold))))
-     `(hi-black-hb ((,class (:foreground ,base1 :background ,base03
-                                         :weight bold))))
 
+     
+     ;; hi-lock-mode
+     `(hi-yellow ((,class (:foreground ,(solarized-color-blend yellow base1 0.5)
+                                       :background,(solarized-color-blend yellow base03 0.15)))))
+     `(hi-pink ((,class (:foreground ,(solarized-color-blend magenta base1 0.5)
+                                       :background,(solarized-color-blend magenta base03 0.15)))))
+     `(hi-green ((,class (:foreground ,(solarized-color-blend green base1 0.5)
+                                       :background,(solarized-color-blend green base03 0.15)))))
+     `(hi-blue ((,class (:foreground ,(solarized-color-blend blue base1 0.5)
+                                       :background,(solarized-color-blend blue base03 0.15)))))
+     `(hi-black-b ((,class (:foreground ,base1
+                                        :background ,base03
+                                        :weight bold))))
+     `(hi-blue-b ((,class (:weight bold
+                                   :foreground ,(solarized-color-blend cyan base1 0.7)
+                                   :background ,(solarized-color-blend cyan base03 0.2)))))
+     `(hi-green-b ((,class (:weight bold
+                           :foreground ,(solarized-color-blend green base1 0.7)
+                           :background ,(solarized-color-blend green base03 0.2)))))
+     `(hi-red-b ((,class (:weight bold
+                                  :foreground ,(solarized-color-blend red base1 0.7)
+                                  :background ,(solarized-color-blend red base03 0.2)))))
+     `(hi-black-hb ((,class (:weight bold
+                                     :foreground ,base1
+                                     :background ,base02))))
+    
+     
      ;; highlight-changes
      `(highlight-changes ((,class (:foreground ,orange))))
      `(highlight-changes-delete ((,class (:foreground ,red :underline t))))
@@ -980,6 +1002,10 @@ customize the resulting theme."
      `(highlight-indentation-face ((,class (:background ,base02))))
      `(highlight-indentation-current-column-face((,class (:background ,base02))))
 
+     ;; highlight-symbol
+     `(highlight-symbol-face ((,class (:foreground ,magenta
+                                                   :background unspecified))))
+     
      ;; hl-line-mode
      `(hl-line ((,class (:background ,base02))))
      `(hl-line-face ((,class (:background ,base02))))
@@ -992,29 +1018,35 @@ customize the resulting theme."
      `(ido-indicator ((,class (:background ,red :foreground ,base03 :width condensed))))
      `(ido-virtual ((,class (:foreground ,cyan))))
 
-     ;;info+
+     ;; info
+     `(info-title-1 ((,class (:foreground ,base1 :weight bold))))
+     `(info-title-2 ((,class (:foreground ,base1 :weight bold))))
+     `(info-title-3 ((,class (:weight bold))))
+     `(info-title-4 ((,class (:weight bold))))
+     `(info-node ((,class (:foreground ,base1 :slant italic :weight bold))))
+     `(info-header-node ((,class (:inherit info-node))))
+     `(info-header-xref ((,class (:inherit info-xref))))
+     `(info-index-match ((,class (:inherit match))))
+     `(info-menu-header ((,class (:inherit variable-pitch :weight bold))))
+     `(info-menu-star ((,class (:foreground ,orange))))
+     `(info-xref ((,class (:inherit link))))
+     `(info-xref-visited ((,class (:inherit (link-visited info-xref)))))
+
+     ;; info+
      `(info-file
        ((,class (:foreground ,yellow :background ,base02))))
      `(info-menu
-       ((,class (:foreground ,yellow :background ,base02))))
+       ((,class (:foreground ,violet :background ,base02))))
      `(info-quoted-name
        ((,class (:foreground ,green :inherit font-lock-string-face))))
      `(info-string
-       ((,class (:foreground ,orange :inherit font-lock-string-face))))
+       ((,class (:foreground ,cyan :inherit font-lock-string-face))))
      `(info-single-quote
-       ((,class (:foreground ,red :inherit font-lock-string-face))))
+       ((,class (:foreground ,cyan :inherit font-lock-string-face))))
      `(info-quoted-name
        ((,class (:foreground ,orange :inherit font-lock-string-face))))
      `(info-string
        ((,class (:foreground ,blue :inherit font-lock-string-face))))
-     `(info-title-1
-       ((,class (:foreground ,red :weight bold))))
-     `(info-title-2
-       ((,class (:foreground ,blue :weight bold))))
-     `(info-title-3
-       ((,class (:weight bold))))
-     `(info-title-4
-       ((,class (:weight bold))))
      `(info-command-ref-item
        ((,class (:foreground ,green :background ,base02))))
      `(info-constant-ref-item
@@ -1643,26 +1675,25 @@ customize the resulting theme."
      `(table-cell ((,class (:foreground ,base0 :background ,base02))))
 
      ;; term
-     `(term-color-black ((t (:foreground ,base03
+     `(term ((t ( :background ,base03
+                              :foreground ,base0))))
+     `(term-color-black ((t (:foreground ,base02
                                          :background ,base02))))
      `(term-color-red ((t (:foreground ,red
-                                       :background ,red-d))))
+                                       :background ,red))))
      `(term-color-green ((t (:foreground ,green
-                                         :background ,green-d))))
+                                         :background ,green))))
      `(term-color-yellow ((t (:foreground ,yellow
-                                          :background ,yellow-d))))
+                                          :background ,yellow))))
      `(term-color-blue ((t (:foreground ,blue
-                                        :background ,blue-d))))
+                                        :background ,blue))))
      `(term-color-magenta ((t (:foreground ,magenta
-                                           :background ,magenta-d))))
+                                           :background ,magenta))))
      `(term-color-cyan ((t (:foreground ,cyan
-                                        :background ,cyan-d))))
-     `(term-color-white ((t (:foreground ,base00
-                                         :background ,base0))))
-     '(term-default-fg-color ((t (:inherit term-color-white))))
-     '(term-default-bg-color ((t (:inherit term-color-black))))
-
-
+                                        :background ,cyan))))
+     `(term-color-white ((t (:foreground ,base2
+                                         :background ,base2))))
+     
      ;; tooltip. (NOTE: This setting has no effect on the os widgets for me
      ;; zencoding uses this)
      `(tooltip ((,class (:background ,yellow-lc :foreground ,yellow-hc
@@ -1719,7 +1750,7 @@ customize the resulting theme."
      `(w3m-tab-unselected-unseen ((,class (:background ,base02 :foreground ,violet))))
 
      ;; web-mode
-     `(web-mode-builtin-face ((,class (:foreground ,red))))
+     `(web-mode-builtin-face ((,class (:inherit font-lock-builtin-face))))
      `(web-mode-comment-face ((,class (:foreground ,base01))))
      `(web-mode-constant-face ((,class (:foreground ,blue :weight bold))))
      `(web-mode-current-element-highlight-face ((,class
@@ -1764,6 +1795,17 @@ customize the resulting theme."
      `(web-mode-symbol-face ((,class (:foreground ,yellow))))
      `(web-mode-whitespace-face ((,class (:background ,red))))
      `(web-mode-html-tag-bracket-face ((,class (:foreground ,base01))))
+     `(web-mode-block-delimiter-face ((,class (:inherit font-lock-preprocessor-face))))
+     `(web-mode-css-comment-face ((,class (:inherit web-mode-comment-face))))
+     `(web-mode-css-variable-face ((,class (:inherit web-mode-variable-name-face :slant italic))))
+     `(web-mode-error-face ((,class (:background ,red))))
+     `(web-mode-function-call-face ((,class (:inherit font-lock-function-name-face))))
+     `(web-mode-html-attr-custom-face ((,class (:inherit web-mode-html-attr-name-face))))
+     `(web-mode-html-attr-engine-face ((,class (:inherit web-mode-html-attr-custom-face))))
+     `(web-mode-html-attr-equal-face ((,class (:inherit web-mode-html-attr-name-face))))
+     `(web-mode-html-tag-custom-face ((,class (:inherit web-mode-html-tag-face))))
+     `(web-mode-javascript-comment-face ((,class (:inherit web-mode-comment-face))))
+     `(web-mode-json-comment-face ((,class (:inherit web-mode-comment-face))))
 
      ;; weather-metno
      `(weather-metno-date ((,class (:foreground ,yellow :height ,solarized-height-plus-3))))
@@ -1849,6 +1891,9 @@ customize the resulting theme."
      `(yascroll:thumb-fringe
        ((,class (:foreground ,base01 :background ,base01))))
 
+     ;; yasnippet
+     `(yas-field-highlight-face ((,class (:inherit secondary-selection))))
+
      ;; zencoding
      `(zencoding-preview-input ((,class (:background ,base02 :box ,base1))))
 
@@ -1869,8 +1914,8 @@ customize the resulting theme."
 
     (custom-theme-set-variables
      theme-name
-     `(ansi-color-names-vector [,base03 ,red ,green ,yellow
-                                              ,blue ,magenta ,cyan ,base0])
+     `(ansi-color-names-vector [,base02 ,red ,green ,yellow
+                                              ,blue ,magenta ,cyan ,base00])
 
      ;; compilation
      `(compilation-message-face 'default)
@@ -1890,6 +1935,12 @@ customize the resulting theme."
      ;; highlight-changes
      `(highlight-changes-colors '(,magenta ,violet))
 
+     ;; highlight-symbol
+     `(highlight-symbol-foreground-color ,base1)
+     `(highlight-symbol-colors
+       (--map (solarized-color-blend it ,base03 0.25)
+              '(,yellow ,cyan ,red ,violet ,green ,orange ,blue)))
+                 
      ;; highlight-tail
      `(highlight-tail-colors
        '((,base02 . 0)(,green-lc . 20)(,cyan-lc . 30)(,blue-lc . 50)
@@ -1897,7 +1948,11 @@ customize the resulting theme."
 
      ;; smartrep
      `(smartrep-mode-line-active-bg (solarized-color-blend ,green ,s-mode-line-bg 0.2))
-     
+
+     ;; term 
+     `(term-default-fg-color ,base0) ;; @deprecated24.3
+     `(term-default-bg-color ,base03) ;; @deprecated24.3
+
      ;; vc
      `(vc-annotate-color-map
        '((20 . ,red)
@@ -1931,6 +1986,11 @@ customize the resulting theme."
                      ,magenta-d ,magenta
                      ,cyan-d ,cyan
                      ,base0 ,base00)))
+     ;; xterm-color
+     `(xterm-color-names [,base02 ,red ,green ,yellow
+                                  ,blue ,magenta ,cyan ,base2])
+     `(xterm-color-names-bright [,base03 ,orange ,base01 ,base00
+                                         ,base0 ,violet ,base1 ,base3])
 
     ;; call chained theme function
     (when childtheme (funcall childtheme))))

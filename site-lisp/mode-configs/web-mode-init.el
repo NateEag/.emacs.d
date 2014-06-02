@@ -3,9 +3,11 @@
 ;;; Commentary:
 
 ;; web-mode is a major-mode for editing HTML templates. Here, I define my
-;; mode-hook for it.
+;; mode-hook for it, and several supporting functions for libraries that
+;; don't work with it seamlessly out-of-the-box.
 
 ;;; Code:
+
 (defun web-mode-smart-dash-insert ()
   "A wrapper around smart-dash-mode for use with web-mode."
   ;; Only be smart about dashes in languages where it makes sense.
@@ -19,6 +21,38 @@
     (make-local-variable 'smart-dash-mode-keymap)
     (setq smart-dash-mode-keymap (copy-keymap map)))
   (define-key smart-dash-mode-keymap "-" 'web-mode-smart-dash-insert))
+
+(defvar web-mode-before-auto-complete-hooks nil
+  "List of functions to run before triggering the auto-complete library.
+
+Auto-complete sources will sometimes need some tweaking to work
+nicely with web-mode. This hook gives users the chance to adjust
+the environment as needed for ac-sources, right before they're used.")
+
+(add-hook 'web-mode-before-auto-complete-hooks
+          '(lambda ()
+             (let ((web-mode-cur-language
+                    (plist-get (web-mode-point-context (point)) :language)))
+               (if (string= web-mode-cur-language "php")
+                   (yas-activate-extra-mode 'php-mode)
+                 (yas-deactivate-extra-mode 'php-mode))
+               (if (string= web-mode-cur-language "css")
+                   (setq emmet-use-css-transform t)
+                 (setq emmet-use-css-transform nil))
+               )))
+
+(defvar web-mode-ac-sources-alist nil
+  "alist mapping language names as string to auto-complete sources for that language.")
+
+(defun web-mode-trigger-ac ()
+  "Adjust ac-sources based on current context."
+  (interactive)
+  (run-hooks 'web-mode-before-auto-complete-hooks)
+  (let ((new-web-mode-ac-sources
+         (assoc (plist-get (web-mode-point-context (point)) :language)
+                web-mode-ac-sources-alist)))
+    (setq ac-sources (cdr new-web-mode-ac-sources)))
+  (ac-start))
 
 (defun web-mode-init ()
   "My web-mode config."
@@ -45,6 +79,17 @@
   (auto-complete-mode)
 
   (emmet-mode)
+
+  (define-key web-mode-map (kbd "<C-tab>") 'web-mode-trigger-ac)
+
+  (setq web-mode-ac-sources-alist
+        '(("php" . (ac-source-php-auto-yasnippets ac-source-yasnippet))
+          ("html" . (ac-source-emmet-html-aliases ac-source-emmet-html-snippets))
+          ;; DEBUG It would be nice to have an ac-source for CSS property names
+          ;; as well as values. Since auto-complete already has the alist
+          ;; mapping property names to legal values, I should add one that uses
+          ;; the keys and issue a merge request.
+          ("css" . (ac-source-css-property))))
 
   (require 'tagedit)
   (tagedit-add-paredit-like-keybindings)

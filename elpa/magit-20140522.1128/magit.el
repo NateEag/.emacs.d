@@ -17,7 +17,7 @@
 
 ;; Keywords: vc tools
 ;; Package: magit
-;; Package-Requires: ((emacs "23.2") (cl-lib "0.3") (git-commit-mode "0.14.0") (git-rebase-mode "0.14.0"))
+;; Package-Requires: ((cl-lib "0.3") (git-commit-mode "0.14.0") (git-rebase-mode "0.14.0"))
 
 ;; Magit requires at least GNU Emacs 23.2 and Git 1.7.2.5.
 ;; These are the versions shipped by Debian oldstable (6.0, Squeeze).
@@ -252,7 +252,11 @@ aborts and returns that value."
                           (file-executable-p alt))
                      alt
                    exe)))))
-      (executable-find "git") "git")
+      ;; When the only cost is finding the executable, then it it
+      ;; better not to cache the full path.  It might not be installed
+      ;; in the same location on machines whose repositories are
+      ;; accessed using Tramp.
+      "git")
   "The Git executable used by Magit."
   :group 'magit-process
   :type 'string)
@@ -282,9 +286,15 @@ tramp to connect to servers with ancient Git versions."
      (let ((version
             (format "%s.%s" emacs-major-version emacs-minor-version)))
        (or (and (eq system-type 'darwin)
-                (let ((exec-path
-                       (list (expand-file-name "bin" invocation-directory))))
-                  (executable-find "emacsclient")))
+                (let ((emacsapp
+                       ;; /Application/Emacs.app/Contents/MacOS/bin/emacsclient
+                       (expand-file-name "bin/emacsclient" invocation-directory))
+                      (homebrew
+                       ;; /usr/local/Cellar/emacs/VERSION/bin/emacsclient
+                       (expand-file-name "../../../bin/emacsclient"
+                                         invocation-directory)))
+                  (or (and (file-executable-p emacsapp) emacsapp)
+                      (and (file-executable-p homebrew) homebrew))))
            (executable-find (format "emacsclient%s"   version))
            (executable-find (format "emacsclient-%s"   version))
            (executable-find (format "emacsclient%s.exe" version))
@@ -1825,7 +1835,7 @@ Read `completing-read' documentation for the meaning of the argument."
                                id-str
                              (epg-decode-dn id-obj))))))
                (epg-list-keys (epg-make-context epa-protocol) nil t))))
-    (magit-completing-read prompt keys nil t nil 'magit-gpg-secret-key-hist
+    (magit-completing-read prompt keys nil nil nil 'magit-gpg-secret-key-hist
                            (car (or magit-gpg-secret-key-hist keys)))))
 
 ;;;; Various Utilities
@@ -7103,7 +7113,7 @@ If there is no commit at point, then prompt for one."
                                (default-value 'magit-highlight-indentation)
                                :from-end t))))))
       (when (and magit-highlight-trailing-whitespace
-                 (looking-at (concat prefix ".*\\([ \t]+\\)$")))
+                 (looking-at (concat prefix ".*?\\([ \t]+\\)$")))
         (magit-put-face-property (match-beginning 1) (match-end 1)
                                  'magit-whitespace-warning-face))
       (when (or (and (eq indent 'tabs)

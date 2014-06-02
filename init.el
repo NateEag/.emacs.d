@@ -554,10 +554,12 @@
 
 ;; Change flycheck's prefix-key to "C-c e". Code is taken from a docstring in
 ;; flycheck.
-(define-key flycheck-mode-map flycheck-keymap-prefix nil)
-(setq flycheck-keymap-prefix (kbd "C-c e"))
-(define-key flycheck-mode-map flycheck-keymap-prefix
-  flycheck-command-map)
+(eval-after-load 'flycheck
+  '(progn
+      (define-key flycheck-mode-map flycheck-keymap-prefix nil)
+      (setq flycheck-keymap-prefix (kbd "C-c e"))
+      (define-key flycheck-mode-map flycheck-keymap-prefix
+        flycheck-command-map)))
 
 ;; g is for git, which is oh so much fun.
 (global-set-key (kbd "C-c g") 'magit-status)

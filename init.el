@@ -378,12 +378,19 @@
   ;; installed.
   (flycheck-mode t)
 
+  ;; For programming, it's convenient if your editor guesses indentation styles
+  ;; automatically.
+  (guess-style-guess-all)
+
   ;; Everyone likes spell-checking.
   (flyspell-prog-mode)
   (diminish 'flyspell-mode)
 
   ;; Turn on smart-dash-mode if it's not a bad idea in our current mode.
-  (if (not (member major-mode '(emacs-lisp-mode css-mode)))
+  (if (not (member major-mode '(emacs-lisp-mode
+                                lisp-mode
+                                lisp-interaction-mode
+                                css-mode)))
       (progn
         (smart-dash-mode)
         (diminish 'smart-dash-mode)

@@ -1,7 +1,18 @@
-;; Emacs config for editing PHP.
+;;; php-mode-init - Nate Eagleson's php-mode configuration.
 
-;; Used to use this for highlighting SQL in PHP string, but that hasn't worked
-;; in a long time, so there's no point wasting time on loading it.
+;;; Commentary:
+;;;
+;;; Emacs is not a first-class environment for editing PHP. php-mode has some
+;;; neat features, but really good jump-to-def and context-aware auto-complete
+;;; are, as far as I know, an unsolved problem.
+;;;
+;;; Still, this setup eases many of the pain points of writing PHP.
+
+
+;;; Code:
+
+;; Used to use this for highlighting SQL in PHP strings, but it hasn't worked
+;; in a long time, so there's no point wasting time on defining it.
 ;; (require 'mmm-auto)
 ;; (setq mmm-global-mode 'maybe)
 ;; (setq php-sql-mmm-submode-enabled nil)

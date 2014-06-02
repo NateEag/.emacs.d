@@ -552,12 +552,12 @@
 ;; Switch buffers/find likely files via Helm.
 (global-set-key (kbd "C-c b") 'my-helm-for-files)
 
-;; Bindings for moving between errors. Flycheck by default, then modes
-;; that use other error detection tools will have to override them.
-;; GRIPE I should probably set C-c e as flycheck's prefix key, so all the
-;; bindings work right. Not sure how to do that.
-(global-set-key (kbd "C-c e n") 'flycheck-next-error)
-(global-set-key (kbd "C-c e p") 'flycheck-previous-error)
+;; Change flycheck's prefix-key to "C-c e". Code is taken from a docstring in
+;; flycheck.
+(define-key flycheck-mode-map flycheck-keymap-prefix nil)
+(setq flycheck-keymap-prefix (kbd "C-c e"))
+(define-key flycheck-mode-map flycheck-keymap-prefix
+  flycheck-command-map)
 
 ;; g is for git, which is oh so much fun.
 (global-set-key (kbd "C-c g") 'magit-status)

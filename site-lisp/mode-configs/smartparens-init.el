@@ -68,6 +68,12 @@
 
   (diminish 'smartparens-mode)
 
+  ;; Highlighting is cute, but I don't find it actually makes my life any
+  ;; simpler.
+  (setq sp-highlight-pair-overlay nil)
+  (setq sp-highlight-wrap-overlay nil)
+  (setq sp-highlight-wrap-tag-overlay nil)
+
   ;; Turn off quote auto-escaping, because it does the wrong thing in too many
   ;; circumstances.
   ;;

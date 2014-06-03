@@ -83,6 +83,15 @@
 ;; Yay for highlighting parentheses!
 (show-paren-mode 1)
 
+;; If the matching line for a paren is offscreen, show the matching line in the
+;; minibuffer.
+(defadvice show-paren-function (after my-echo-paren-matching-line activate)
+  "If a matching paren is off-screen, echo the matching line."
+  (when (char-equal (char-syntax (char-before (point))) ?\))
+    (let ((matching-text (blink-matching-open)))
+      (when matching-text
+        (message matching-text)))))
+
 ;; Autosave's defaults are not very nice. Here, we fix them.
 ;; Create autosave dir if it doesn't exist.
 (setq my-autosaves-dir (make-emacs-dir-path "autosaves/"))

@@ -13,6 +13,8 @@ virtualenv $bin_dir/flake8-env
 
 source $bin_dir/flake8-env/bin/activate
 
-easy_install-2.6 pip
+# Recent versions of virtualenv auto-install pip, but for a sufficiently old
+# version you may need to uncomment this.
+#easy_install pip
 
 pip install flake8

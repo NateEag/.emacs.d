@@ -1,0 +1,7 @@
+#! /bin/bash
+
+# Simple wrapper around phpcs command installed in lib/.
+#
+# Exists only to keep my exec-path simpler.
+project_dir=$(dirname $0)/..
+$project_dir/lib/php-cs-1.5.2/scripts/phpcs "$@"

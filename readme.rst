@@ -49,15 +49,18 @@ existing features. I've found some myself, and would not mind finding more.
 Layout
 ======
 
-bin/ - external programs for use by Emacs extensions like flycheck and tern. At
-present this contains only interpretable source code, no true binaries, so
-installing system-wide tools like Python and node.js is still necessary. Should
-probably be renamed lib/, with bin/ containing just binaries that reference lib/.
+bin/ - external programs for use by Emacs extensions like flycheck and tern.
+Mostly just shell script wrappers that pass everything to the actual binaries
+in lib/, so they work on platforms where symlinks aren't reliable or available.
 
 elpa/ - elisp packages installed via package.el. I keep this under version
 control so that I can always return to a known-good state if an upgrade has
 unwanted effects, and so my configuration is less dependent on third-party
 services.
+
+lib/ - source and/or scripts for installing third-party programs this config
+utilizes. I don't want actual binaries in here if I can help it, hence the
+installer scripts.
 
 githooks/ - a few git hooks to aid in hacking on this config, mostly useful
 when pushing config changes between multiple machines.

@@ -148,9 +148,7 @@
 (setq exec-path
       (append
        exec-path
-       (list (make-emacs-dir-path "bin/php-cs-1.5.2/scripts")
-             (make-emacs-dir-path "bin/flake8-env/bin")
-             (make-emacs-dir-path "bin/node_modules/.bin"))))
+       (list (make-emacs-dir-path "bin"))))
 
 ;; Load Windows-specific tweaks to environment, if we're running Windows.
 (if (eq system-type 'windows-nt)

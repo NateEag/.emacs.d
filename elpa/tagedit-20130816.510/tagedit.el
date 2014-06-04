@@ -990,7 +990,7 @@ This happens when you press refill-paragraph.")
   (unless (te/empty-tag tag)
     (save-excursion
       (goto-char (te/get tag :end))
-      (backward-sexp)
+      (search-backward "</" nil t)
       (skip-syntax-backward " >")
       (if (looking-back ">")
           (progn

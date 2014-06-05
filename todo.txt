@@ -77,6 +77,10 @@
  you have a lot of buffers open from that repo it might get expensive... Think
  about this, anyway.
 
+-Look into find-file-in-repository as an alternative to my git-ls-files helm
+ plugin, since it handles repos other than git.
+ http://melpa.milkbox.net/#/find-file-in-repository
+
 -Add a command to backup-walker to revert to the selected backup file. 'r'
  would be a good keybinding.
 

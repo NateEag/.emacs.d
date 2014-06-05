@@ -1,4 +1,4 @@
-;;; php-mode-init - Nate Eagleson's php-mode configuration.
+;;; php-mode-init --- Nate Eagleson's php-mode configuration.
 
 ;;; Commentary:
 ;;;

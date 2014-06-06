@@ -183,21 +183,21 @@
 (ad-activate 'hack-dir-local-variables)
 
 ;; Make changing tabs re-guess the file's indentation style.
-(defadvice untabify (after reguess-style-untabify
+(defadvice untabify (after untabify-set-indent-tabs-mode
                            (start end  &optional _arg))
-  "Re-guess file's indentation style after untabifying."
-  (guess-style-guess-all))
+  "Set indent-tabs-mode after untabifying."
+  (setq indent-tabs-mode nil))
 
-(defadvice tabify (after reguess-style-tabify
+(defadvice tabify (after tabify-set-indent-tabs-mode
                            (start end  &optional _arg))
   "Re-guess file's indentation style after tabifying."
-  (guess-style-guess-all))
+  (setq indent-tabs-mode t))
 
 (ad-activate 'untabify)
-(ad-enable-advice 'untabify 'after 'reguess-style-untabify)
+(ad-enable-advice 'untabify 'after 'untabify-set-indent-tabs-mode)
 
 (ad-activate 'tabify)
-(ad-enable-advice 'tabify 'after 'reguess-style-tabify)
+(ad-enable-advice 'tabify 'after 'tabify-set-indent-tabs-mode)
 
 
 ;; I generally prefer to strip trailing whitespace on saves, but not when I'm

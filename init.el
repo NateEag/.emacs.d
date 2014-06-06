@@ -136,6 +136,9 @@
 
 (add-hook 'after-save-hook 'recompile-elc-on-save)
 
+;; If a file looks scripty and it isn't executable at save time, make it so.
+(add-hook 'after-save-hook 'executable-make-buffer-file-executable-if-script-p)
+
 ;; Save minibuffer data between sessions.
 (setq savehist-file (make-emacs-dir-path "tmp/savehist"))
 (savehist-mode t)

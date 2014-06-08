@@ -30,6 +30,10 @@
 ;; I like seeing my selections.
 (setq transient-mark-mode 1)
 
+;; For some reason, I really like blinky cursors.
+(setq blink-cursor-blinks 0)
+(blink-cursor-mode 1)
+
 ;; STOP THE RINGING
 (setq visible-bell 1)
 

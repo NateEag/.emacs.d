@@ -32,7 +32,7 @@ the environment as needed for ac-sources, right before they're used.")
 (add-hook 'web-mode-before-auto-complete-hooks
           '(lambda ()
              (let ((web-mode-cur-language
-                    (plist-get (web-mode-point-context (point)) :language)))
+                    (web-mode-language-at-pos)))
                (if (string= web-mode-cur-language "php")
                    (yas-activate-extra-mode 'php-mode)
                  (yas-deactivate-extra-mode 'php-mode))

@@ -80,11 +80,6 @@ the environment as needed for ac-sources, right before they're used.")
 
   (emmet-mode)
 
-  ;; Prototype of web-mode context-aware auto-complete config.
-  ;; If we can move the "before completion starts" hook into auto-complete,
-  ;; we'd only need to set up web-mode-ac-sources-alist.
-  (custom-set-variables '(web-mode-ac-trigger-key "TAB"))
-  (auto-complete-tab-noconflict)
   (setq web-mode-ac-sources-alist
         '(("php" . (ac-source-php-auto-yasnippets ac-source-yasnippet))
           ("html" . (ac-source-emmet-html-aliases ac-source-emmet-html-snippets))

@@ -1,17 +1,19 @@
--Make comment auto-fill work in js2-mode. At present, it auto-fills but without
- a prefix. It has a built-in function for comment filling; maybe I can override
- the usual auto-fill function with that somehow?
-
--Finish getting tagedit to work with web-mode.
-
--Finish the dynamic completion source chooser for web-mode.
-
 -Write a general-case ac-source for Tern.js. Right now I have to press M-Tab to
  trigger top-level completions, and I'd like to just press Tab. emacs-eclim
  might be a good place to rip off the basic idea from, since it depends on an
  external process to get completions.
 
 -Add php-auto-yasnippet-style function params to tern.js.
+
+-Make comment auto-fill work in js2-mode. At present, it auto-fills but without
+ a prefix. It has a built-in function for comment filling; maybe I can override
+ the usual auto-fill function with that somehow?
+
+-Finish getting tagedit to work with web-mode.
+
+-Add CSS property name auto-completion source.
+
+-Finish the dynamic completion source chooser for web-mode.
 
 -Get Jedi to prefer virtualenvs in the current project directory. Project
  directory is probably just 'parent folder for this buffer that contains a

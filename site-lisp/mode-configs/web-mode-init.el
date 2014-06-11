@@ -44,15 +44,45 @@ the environment as needed for ac-sources, right before they're used.")
 (defvar web-mode-ac-sources-alist nil
   "alist mapping language names as string to auto-complete sources for that language.")
 
-(defun web-mode-trigger-ac ()
-  "Adjust ac-sources based on current context."
-  (interactive)
-  (run-hooks 'web-mode-before-auto-complete-hooks)
-  (let ((new-web-mode-ac-sources
-         (assoc (plist-get (web-mode-point-context (point)) :language)
-                web-mode-ac-sources-alist)))
-    (setq ac-sources (cdr new-web-mode-ac-sources)))
-  (ac-start))
+(defcustom web-mode-ac-trigger-key nil
+  "Non-nil means `auto-complete' will start by typing this key.
+It will first set ac-sources based on the current context."
+  :type '(choice (const :tag "None" nil)
+                 (string :tag "Key"))
+  :group 'auto-complete
+  :set (lambda (symbol value)
+         (set-default symbol value)
+         (when (and value
+                    (fboundp 'ac-set-trigger-key))
+           (web-mode-ac-set-trigger-key value))))
+
+(defun web-mode-ac-set-trigger-key (key)
+  "Set `ac-trigger-key' to `KEY'."
+  ;; Remove old mapping
+  (when web-mode-ac-trigger-key
+    (define-key ac-mode-map (read-kbd-macro ac-trigger-key) nil))
+
+  ;; Make new mapping
+  (setq web-mode-ac-trigger-key key)
+  (when key
+    (define-key
+      ac-mode-map
+      (read-kbd-macro key)
+      'web-mode-ac-trigger-key-command)))
+
+(defun web-mode-ac-trigger-key-command (&optional force)
+  "Trigger auto-complete if relevant. Else, fallback to prev keybinding."
+  (interactive "P")
+  (let (started)
+    (when (or force (ac-trigger-command-p last-command))
+        (run-hooks 'web-mode-before-auto-complete-hooks)
+        (let ((new-web-mode-ac-sources
+               (assoc (plist-get (web-mode-point-context (point)) :language)
+                      web-mode-ac-sources-alist)))
+          (setq ac-sources (cdr new-web-mode-ac-sources)))
+      (setq started (auto-complete-1 :triggered 'trigger-key)))
+    (unless started
+      (ac-fallback-command 'web-mode-ac-trigger-key-command))))
 
 (defun web-mode-init ()
   "My web-mode config."
@@ -80,8 +110,11 @@ the environment as needed for ac-sources, right before they're used.")
 
   (emmet-mode)
 
-  (define-key web-mode-map (kbd "<C-tab>") 'web-mode-trigger-ac)
-
+  ;; Prototype of web-mode context-aware auto-complete config.
+  ;; If we can move the "before completion starts" hook into auto-complete,
+  ;; we'd only need to set up web-mode-ac-sources-alist.
+  (custom-set-variables '(web-mode-ac-trigger-key "TAB"))
+  (auto-complete-tab-noconflict)
   (setq web-mode-ac-sources-alist
         '(("php" . (ac-source-php-auto-yasnippets ac-source-yasnippet))
           ("html" . (ac-source-emmet-html-aliases ac-source-emmet-html-snippets))

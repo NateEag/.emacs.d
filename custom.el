@@ -19,7 +19,8 @@
     ((php-auto-yasnippet-required-files
       (list "~/github/gitlist/vendor/autoload.php"))
      (eval guess-style-guess-all)
-     (eval highlight-regexp "^ *")))))
+     (eval highlight-regexp "^ *"))))
+ '(smart-dash-c-modes (quote (c-mode c++-mode objc-mode php-mode web-mode))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

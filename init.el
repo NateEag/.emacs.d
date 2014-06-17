@@ -409,9 +409,7 @@
                                 css-mode)))
       (progn
         (smart-dash-mode)
-        (diminish 'smart-dash-mode)
-        (if (not (member 'php-mode 'smart-dash-c-modes))
-            (add-to-list 'smart-dash-c-modes 'php-mode)))))
+        (diminish 'smart-dash-mode))))
 
 ;; Run yasnippet customizations when it's started.
 (eval-after-load 'yasnippet

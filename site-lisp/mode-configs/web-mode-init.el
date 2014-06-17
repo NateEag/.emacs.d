@@ -108,7 +108,6 @@ the environment as needed for ac-sources, right before they're used.")
   (set (make-local-variable 'te/current-tag-fn)
        'web-mode-te-current-tag-fn)
 
-  (setq smart-dash-c-modes (cons 'web-mode smart-dash-c-modes))
   (smart-dash-mode)
   (web-mode-install-smart-dash-insert))
 

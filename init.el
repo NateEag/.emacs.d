@@ -600,5 +600,11 @@
 ;; Expand-region lets you select delimited regions quickly.
 (global-set-key (kbd "C-c r") 'er/expand-region)
 
+
+;; Just for grins, see how long starting up took.
+(add-hook 'after-init-hook
+          (lambda ()
+            (message (emacs-init-time))))
+
 (provide 'init)
 ;;; init.el ends here

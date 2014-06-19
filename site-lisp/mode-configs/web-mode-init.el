@@ -50,7 +50,7 @@ the environment as needed for ac-sources, right before they're used.")
       (progn
         (run-hooks 'web-mode-before-auto-complete-hooks)
         (let ((new-web-mode-ac-sources
-               (assoc (plist-get (web-mode-point-context (point)) :language)
+               (assoc (web-mode-language-at-pos)
                       web-mode-ac-sources-alist)))
           (setq ac-sources (cdr new-web-mode-ac-sources))))))
 

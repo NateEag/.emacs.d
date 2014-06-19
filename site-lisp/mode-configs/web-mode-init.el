@@ -29,18 +29,6 @@ Auto-complete sources will sometimes need some tweaking to work
 nicely with web-mode. This hook gives users the chance to adjust
 the environment as needed for ac-sources, right before they're used.")
 
-(add-hook 'web-mode-before-auto-complete-hooks
-          '(lambda ()
-             (let ((web-mode-cur-language
-                    (web-mode-language-at-pos)))
-               (if (string= web-mode-cur-language "php")
-                   (yas-activate-extra-mode 'php-mode)
-                 (yas-deactivate-extra-mode 'php-mode))
-               (if (string= web-mode-cur-language "css")
-                   (setq emmet-use-css-transform t)
-                 (setq emmet-use-css-transform nil))
-               )))
-
 (defvar web-mode-ac-sources-alist nil
   "alist mapping language names as string to auto-complete sources for that language.")
 
@@ -79,6 +67,18 @@ the environment as needed for ac-sources, right before they're used.")
   (auto-complete-mode)
 
   (emmet-mode)
+
+  (add-hook 'web-mode-before-auto-complete-hooks
+            '(lambda ()
+               (let ((web-mode-cur-language
+                      (web-mode-language-at-pos)))
+                 (if (string= web-mode-cur-language "php")
+                     (yas-activate-extra-mode 'php-mode)
+                   (yas-deactivate-extra-mode 'php-mode))
+                 (if (string= web-mode-cur-language "css")
+                     (setq emmet-use-css-transform t)
+                   (setq emmet-use-css-transform nil))
+                 )))
 
   (setq web-mode-ac-sources-alist
         '(("php" . (ac-source-php-auto-yasnippets ac-source-yasnippet))

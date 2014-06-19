@@ -434,7 +434,6 @@
 
   (my-prog-mode-init)
 
-  (setq ac-sources '(ac-source-yasnippet ac-source-words-in-same-mode-buffers))
   (when (locate-library "sql-indent")
     (load-library "sql-indent")))
 (add-hook 'sql-mode-hook 'load-sql-mode-accessories)

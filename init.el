@@ -426,17 +426,14 @@
 (eval-after-load 'emmet-mode
   '(emmet-mode-init))
 
-
 ;; Major mode setup and registration.
 
 ;; SQL mode.
 (defun load-sql-mode-accessories ()
   (interactive)
-  (smart-dash-mode t)
-  (comment-auto-fill)
-  (smartparens-mode)
-  (yas-minor-mode)
-  (auto-complete-mode)
+
+  (my-prog-mode-init)
+
   (setq ac-sources '(ac-source-yasnippet ac-source-words-in-same-mode-buffers))
   (when (locate-library "sql-indent")
     (load-library "sql-indent")))

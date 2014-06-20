@@ -125,6 +125,9 @@
 ;; Back up files even when using version control.
 (setq vc-make-backup-files t)
 
+;; Turn off default vc-mode, because I never use it.
+(setq vc-handled-backends nil)
+
 ;; Force a backup every time we save a file.
 (defun force-buffer-backup ()
   (setq buffer-backed-up nil))
@@ -152,8 +155,6 @@
   (exec-path-from-shell-initialize))
 
 ;; Tweak exec-path to include binaries in this repo.
-;; GRIPE I should see if I can get it so I only need to include the bin/
-;; dir in this list...
 (setq exec-path
       (append
        exec-path
@@ -230,38 +231,6 @@
   (mapc (lambda (pattern)
           (add-to-list 'auto-mode-alist (cons pattern mode)))
         patterns))
-
-;; Tweaked from http://nullprogram.com/blog/2010/10/06/.
-(defun set-window-width (n)
-  "Set the current window's width."
-  (adjust-window-trailing-edge
-   (selected-window)
-   (- n (window-width)) t))
-
-(defun make-cur-window-80-cols ()
-  (interactive)
-  (set-window-width 80))
-
-;; This is a first step towards a function I have wished I had before.
-;; I don't want to have to think or type to say "change which kind of string
-;; delimiters I'm using".
-(defun my-change-string-delimiters ()
-  "Change the delimiters surrounding point."
-  (interactive)
-  (save-excursion
-    (let ((end-delim-pos (search-forward "\"" nil t))
-          (start-delim-pos (search-backward "\"" nil t 2)))
-      (if (and start-delim-pos end-delim-pos)
-          (progn
-            (goto-char start-delim-pos)
-            (delete-char 1)
-            (insert "'")
-
-            (goto-char (- end-delim-pos 1))
-            (delete-char 1)
-            (insert "'"))
-        (message "Could not find both delimiters."))
-      )))
 
 ;; GRIPE If I just generalized a tiny bit, I could probably make this work in a
 ;; lot more languages than just PHP, since comma for separator is a really
@@ -350,7 +319,7 @@
 (add-hook 'magit-auto-revert-mode-hook
           (lambda () (diminish 'magit-auto-revert-mode)))
 
-;; Let's see if I like Helm better than pressing TAB all the time.
+;; After a few months, I can definitively say that Helm beats pressing Tab.
 (helm-mode)
 (diminish 'helm-mode)
 
@@ -365,7 +334,6 @@
                    helm-git-files:untracked-source
                    helm-git-files:all-source
                    helm-source-recentf)))
-
 
 (defun my-prog-mode-init ()
   "General setup for programming modes."
@@ -466,9 +434,6 @@
 (add-to-list 'auto-mode-alist '("\\.ly$" . LilyPond-mode))
 (add-to-list 'auto-mode-alist '("\\.ily$" . LilyPond-mode))
 (add-hook 'LilyPond-mode-hook (lambda () (turn-on-font-lock)))
-
-;; Turn off default vc-mode, because I never use it.
-(setq vc-handled-backends)
 
 ;; Commit message mode.
 (defun git-commit-mode-hook ()

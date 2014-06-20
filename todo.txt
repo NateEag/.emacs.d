@@ -30,10 +30,6 @@
  hook from any mode-hooks that don't already trigger prog-mode-hook (probably
  most of them).
 
--Figure out why the 'once' yasnippet from c-mode overrides my 'require_once'
- yasnippet in php-mode. I assume it has to do with underscores, but it really
- isn't the behavior I expected.
-
 -Check why focus-mode resizes frame slightly on Windows.
 
 -File feature request to flycheck for being able to run checkers while in

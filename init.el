@@ -408,12 +408,7 @@
 (setq auto-mode-alist (cons '("\\.sql$" . sql-mode) auto-mode-alist))
 
 ;; Shell script mode.
-
-(defun load-shell-mode-accessories ()
-  (interactive)
-
-  (my-prog-mode-init))
-(add-hook 'sh-mode-hook 'load-shell-mode-accessories)
+(add-hook 'sh-mode-hook 'my-prog-mode-init)
 (add-to-list 'auto-mode-alist '("\\.bats$" . sh-mode))
 
 ;; Text-editing modes of various stripes.
@@ -423,8 +418,6 @@
   (smartparens-mode)
 
   ;; I occasionally want to use yasnippet in text mode.
-  ;; DEBUG I wonder if this is why I get a bunch of irrelevant snippet tables
-  ;; in php-mode? Would php-mode call text-mode hooks?
   (yas-minor-mode))
 
 ;; Everyone needs text-mode.

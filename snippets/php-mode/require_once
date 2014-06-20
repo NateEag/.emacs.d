@@ -4,4 +4,4 @@
 # binding: direct-keybinding
 # contributor: Nate Eagleson
 # --
-require_once ${1:__DIR__ . }'$2';
+require_once ${1:\$_SERVER['DOCUMENT_ROOT'] . }'$0';

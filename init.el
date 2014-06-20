@@ -128,10 +128,26 @@
 ;; Turn off default vc-mode, because I never use it.
 (setq vc-handled-backends nil)
 
-;; Force a backup every time we save a file.
+;;; Save-related hooks.
+
 (defun force-buffer-backup ()
+  "Force a backup every time we save a file."
+
   (setq buffer-backed-up nil))
 (add-hook 'before-save-hook 'force-buffer-backup)
+
+;; I generally prefer to strip trailing whitespace on saves, but not when I'm
+;; editing diffs, where whitespace is crucial. If I ever start using another
+;; file format where trailing whitespace matters, this might need upgrading,
+;; but for now, this hack should do the job.
+;; I originally tried to remove the delete-trailing-whitespace hook when
+;; loading diff-mode, but for some reason, that only worked when I removed it
+;; globally. I'm guessing before-save-hook is not a buffer-local variable.
+(defun maybe-delete-trailing-whitespace ()
+  "Delete trailing whitespace if the current buffer's filename allows it."
+  (unless (string-match "\\.*.\\(patch\\|diff\\)" (buffer-file-name))
+      (delete-trailing-whitespace)))
+(add-hook 'before-save-hook 'maybe-delete-trailing-whitespace)
 
 ;; Yoinked from Emacs Prelude:
 ;; https://github.com/bbatsov/prelude/blob/master/modules/prelude-emacs-lisp.el
@@ -199,21 +215,6 @@
 
 (ad-activate 'tabify)
 (ad-enable-advice 'tabify 'after 'tabify-set-indent-tabs-mode)
-
-
-;; I generally prefer to strip trailing whitespace on saves, but not when I'm
-;; editing diffs, where whitespace is crucial. If I ever start using another
-;; file format where trailing whitespace matters, this might need upgrading,
-;; but for now, this hack should do the job.
-;; I originally tried to remove the delete-trailing-whitespace hook when
-;; loading diff-mode, but for some reason, that only worked when I removed it
-;; globally. I'm guessing before-save-hook is not a buffer-local variable.
-(defun maybe-delete-trailing-whitespace ()
-  "Delete trailing whitespace if the current buffer's filename allows it."
-  (unless (string-match "\\.*.\\(patch\\|diff\\)" (buffer-file-name))
-      (delete-trailing-whitespace)))
-(add-hook 'before-save-hook 'maybe-delete-trailing-whitespace)
-
 
 ;; The uniquify package names buffers uniquely and readably.
 (require 'uniquify)

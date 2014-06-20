@@ -11,7 +11,8 @@
 
 -Finish getting tagedit to work with web-mode.
 
--Add CSS property name auto-completion source.
+-Add CSS property name auto-completion source. There's a web-mode issue I'm
+ involved in that has a solution for this.
 
 -Finish the dynamic completion source chooser for web-mode.
 
@@ -28,6 +29,10 @@
  on comment-auto-fill, etc) into a prog-mode-hook, and call that prog-mode
  hook from any mode-hooks that don't already trigger prog-mode-hook (probably
  most of them).
+
+-Figure out why the 'once' yasnippet from c-mode overrides my 'require_once'
+ yasnippet in php-mode. I assume it has to do with underscores, but it really
+ isn't the behavior I expected.
 
 -Check why focus-mode resizes frame slightly on Windows.
 

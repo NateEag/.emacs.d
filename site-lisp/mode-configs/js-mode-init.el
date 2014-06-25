@@ -6,7 +6,7 @@
   "My mode hook for JS editing modes."
 
   (interactive)
-  (setq normal-auto-fill-function 'c-do-auto-fill)
+  (set (make-local-variable 'normal-auto-fill-function) 'c-do-auto-fill)
   (comment-auto-fill)
   (smart-dash-mode t)
   (smartparens-mode t)

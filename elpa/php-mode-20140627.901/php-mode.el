@@ -6,13 +6,13 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Version: 20140523.1947
+;; Version: 20140627.901
 ;;; X-Original-Version: 1.13.2
 
-(defconst php-mode-version-number "1.13.2"
+(defconst php-mode-version-number "1.13.3"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2014-05-19"
+(defconst php-mode-modified "2014-06-19"
   "PHP Mode build date.")
 
 ;;; License
@@ -250,6 +250,11 @@ You can replace \"en\" with your ISO language code."
   :type 'hook
   :group 'php)
 
+(defcustom php-mode-psr2-hook nil
+  "Hook called when a PSR-2 file is opened with `php-mode'."
+  :type 'hook
+  :group 'php)
+
 (defcustom php-mode-force-pear nil
   "Normally PEAR coding rules are enforced only when the filename contains \"PEAR.\"
 Turning this on will force PEAR rules on all PHP files."
@@ -274,11 +279,14 @@ This variable can take one of the following symbol values:
 
 `WordPress' - use coding styles preferred for working with WordPress projects.
 
-`Symfony2' - use coding styles preferred for working with Symfony2 projects."
+`Symfony2' - use coding styles preferred for working with Symfony2 projects.
+
+`PSR-2' - use coding styles preferred for working with projects using PSR-2 standards."
   :type '(choice (const :tag "PEAR" pear)
                  (const :tag "Drupal" drupal)
                  (const :tag "WordPress" wordpress)
-                 (const :tag "Symfony2" symfony2))
+                 (const :tag "Symfony2" symfony2)
+                 (const :tag "PSR-2" psr2))
   :group 'php
   :set 'php-mode-custom-coding-style-set
   :initialize 'custom-initialize-default)
@@ -294,7 +302,9 @@ This variable can take one of the following symbol values:
           ((eq value 'wordpress)
            (php-enable-wordpress-coding-style))
           ((eq value 'symfony2)
-           (php-enable-symfony2-coding-style)))))
+           (php-enable-symfony2-coding-style))
+          ((eq value 'psr2)
+           (php-enable-psr2-coding-style)))))
 
 
 
@@ -413,6 +423,32 @@ working with Symfony2."
   (setq show-trailing-whitespace nil)
   (remove-hook 'before-save-hook 'delete-trailing-whitespace t))
 
+(c-add-style
+ "psr2"
+ '((c-basic-offset . 4)
+   (c-offsets-alist . ((block-open . -)
+                       (block-close . 0)
+                       (topmost-intro-cont . (first c-lineup-cascaded-calls
+                                                    php-lineup-arglist-intro))
+                       (brace-list-intro . +)
+                       (brace-list-entry . c-lineup-cascaded-calls)
+                       (arglist-close . php-lineup-arglist-close)
+                       (arglist-intro . php-lineup-arglist-intro)
+                       (knr-argdecl . [0])
+                       (arglist-cont-nonempty . c-lineup-cascaded-calls)
+                       (statement-cont . (first c-lineup-cascaded-calls +))
+                       (case-label . +)))))
+
+(defun php-enable-psr2-coding-style ()
+  "Makes php-mode use coding styles defined by PSR-2"
+  (interactive)
+  (setq tab-width 4
+        indent-tabs-mode nil)
+  (c-set-style "psr2")
+  ;; Undo drupal coding style whitespace effects
+  (setq show-trailing-whitespace nil)
+  (remove-hook 'before-save-hook 'delete-trailing-whitespace t))
+
 
 (defun php-mode-version ()
   "Display string describing the version of PHP mode."
@@ -472,7 +508,8 @@ See `php-beginning-of-defun'."
       (setq php-warned-bad-indent t)
       (let* ((known-multi-libs '(("mumamo" mumamo (lambda () (nxhtml-mumamo)))
                                  ("mmm-mode" mmm-mode (lambda () (mmm-mode 1)))
-                                 ("multi-mode" multi-mode (lambda () (multi-mode 1)))))
+                                 ("multi-mode" multi-mode (lambda () (multi-mode 1)))
+                                 ("web-mode" web-mode (lambda () (web-mode)))))
              (known-names (mapcar (lambda (lib) (car lib)) known-multi-libs))
              (available-multi-libs (delq nil
                                          (mapcar
@@ -797,6 +834,10 @@ the string HEREDOC-START."
   (add-hook 'php-mode-symfony2-hook 'php-enable-symfony2-coding-style
              nil t)
 
+  ;; ;; PSR-2 coding standards
+  (add-hook 'php-mode-psr2-hook 'php-enable-psr2-coding-style
+             nil t)
+
   (cond ((eq php-mode-coding-style 'pear)
          (php-enable-pear-coding-style)
          (run-hooks 'php-mode-pear-hook))
@@ -808,7 +849,10 @@ the string HEREDOC-START."
          (run-hooks 'php-mode-wordpress-hook))
         ((eq php-mode-coding-style 'symfony2)
          (php-enable-symfony2-coding-style)
-         (run-hooks 'php-mode-symfony2-hook)))
+         (run-hooks 'php-mode-symfony2-hook))
+        ((eq php-mode-coding-style 'psr2)
+         (php-enable-psr2-coding-style)
+         (run-hooks 'php-mode-psr2-hook)))
 
   (if (or php-mode-force-pear
           (and (stringp buffer-file-name)
@@ -1101,9 +1145,33 @@ searching the PHP website."
       "CRYPT_STD_DES"
       "CRYPT_MD5"
       "DIRECTORY_SEPARATOR"
+      "SEEK_SET"
       "SEEK_CUR"
+      "SEEK_END"
       "LOCK_SH"
+      "LOCK_EX"
       "LOCK_UN"
+      "LOCK_NB"
+      "GLOB_BRACE"
+      "GLOB_ONLYDIR"
+      "GLOB_MARK"
+      "GLOB_NOSORT"
+      "GLOB_NOCHECK"
+      "GLOB_NOESCAPE"
+      "GLOB_AVAILABLE_FLAGS"
+      "FILE_USE_INCLUDE_PATH"
+      "FILE_NO_DEFAULT_CONTEXT"
+      "FILE_APPEND"
+      "FILE_IGNORE_NEW_LINES"
+      "FILE_SKIP_EMPTY_LINES"
+      "FILE_BINARY"
+      "FILE_TEXT"
+      "INI_SCANNER_NORMAL"
+      "INI_SCANNER_RAW"
+      "FNM_NOESCAPE"
+      "FNM_PATHNAME"
+      "FNM_PERIOD"
+      "FNM_CASEFOLD"
       "HTML_SPECIALCHARS"
       "ENT_COMPAT"
       "ENT_QUOTES"
@@ -1125,7 +1193,9 @@ searching the PHP website."
       "CREDITS_ALL"
       "STR_PAD_RIGHT"
       "PATHINFO_DIRNAME"
+      "PATHINFO_BASENAME"
       "PATHINFO_EXTENSION"
+      "PATHINFO_FILENAME"
       "CHAR_MAX"
       "LC_NUMERIC"
       "LC_COLLATE"
@@ -1502,6 +1572,11 @@ searching the PHP website."
       "CURLSSH_AUTH_PASSWORD"
       "CURLSSH_AUTH_PUBLICKEY"
 
+      ;; SESSION constants
+      "PHP_SESSION_DISABLED"
+      "PHP_SESSION_NONE"
+      "PHP_SESSION_ACTIVE"
+      
       ;; IMAP constants
       "NIL"
       "OP_DEBUG"

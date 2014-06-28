@@ -13,7 +13,8 @@
  '(ispell-program-name "aspell")
  '(js2-mode-show-parse-errors nil)
  '(js2-mode-show-strict-warnings nil)
- '(php-mode-coding-style (quote symfony2))
+ '(magit-diff-use-overlays nil)
+ '(php-mode-coding-style (quote psr2) nil nil "PSR-2 is not ideal, but it's a standard.")
  '(safe-local-variable-values
    (quote
     ((php-auto-yasnippet-required-files

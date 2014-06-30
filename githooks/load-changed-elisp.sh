@@ -10,7 +10,7 @@ emacs --batch --eval "(require 'server)" \
     --eval "(if (not (eq (server-running-p) t)) (kill-emacs 1))"
 is_server_running=$?
 if [ $is_server_running -eq 0 ]; then
-    updated_files=$(git diff --name-only --diff-filter=[ACM] $1 $2 | grep '\.el$')
+    updated_files=$(git diff --name-only --diff-filter=ACM "$1" "$2" | grep '\.el$')
     for file in $updated_files
     do
         emacsclient --eval \

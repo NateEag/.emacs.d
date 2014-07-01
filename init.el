@@ -498,6 +498,11 @@
 (setq nxml-slash-auto-complete-flag t)
 (add-hook 'nxml-mode-hook (lambda () (emmet-mode t)))
 
+;; Groovy mode
+(add-auto-mode 'groovy-mode
+               "\\.groovy$"
+               "\\.gradle")
+
 ;; If we're running in a window system, start an emacs server, so emacsclient
 ;; can connect to this instance.
 (require 'server)

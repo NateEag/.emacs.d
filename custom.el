@@ -10,10 +10,19 @@
  '(custom-safe-themes
    (quote
     ("d677ef584c6dfc0697901a44b885cc18e206f05114c8a3b7fde674fce6180879" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" default)))
+ '(guess-style-guesser-alist
+   (quote
+    ((indent-tabs-mode . guess-style-guess-tabs-mode)
+     (tab-width . guess-style-guess-tab-width)
+     (c-basic-offset . guess-style-guess-c-basic-offset)
+     (nxml-child-indent . guess-style-guess-indent)
+     (css-indent-offset . guess-style-guess-indent)
+     (python-indent . guess-style-guess-indent)
+     (js2-basic-offset . guess-style-guess-indent))))
  '(ispell-program-name "aspell")
  '(js2-mode-show-parse-errors nil)
  '(js2-mode-show-strict-warnings nil)
- '(magit-diff-use-overlays nil)
+ '(magit-use-overlays nil)
  '(php-mode-coding-style (quote psr2) nil nil "PSR-2 is not ideal, but it's a standard.")
  '(safe-local-variable-values
    (quote

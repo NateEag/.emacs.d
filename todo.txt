@@ -4,7 +4,8 @@
 -Write a general-case ac-source for Tern.js. Right now I have to press M-Tab to
  trigger top-level completions, and I'd like to just press Tab. emacs-eclim
  might be a good place to rip off the basic idea from, since it depends on an
- external process to get completions.
+ external process to get completions. I think if I had this I could get JS
+ completions in web-mode, which would be awesome.
 
 -Add php-auto-yasnippet-style function params to tern.js.
 

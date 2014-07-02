@@ -287,7 +287,7 @@
     (let ((format (cond
                    ((not prefix) "%l:%M %p")
                    ((equal prefix '(4)) "%Y-%m-%d %H:%m:%s"))))
-      (insert (concat " " (org-trim (format-time-string format))))))
+      (insert (concat " " (s-trim (format-time-string format))))))
 
 ;;; Stefan Monnier <foo at acm.org>. It is the opposite of fill-paragraph
 (defun unfill-paragraph ()

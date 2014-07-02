@@ -488,8 +488,10 @@
 
 ;; js2-mode works poorly for me on composer.json files.
 (add-hook 'js-mode-hook 'js-mode-init)
-(add-to-list 'auto-mode-alist '("\\.json\\'" . js-mode))
-(add-to-list 'auto-mode-alist '("\\.*jshintrc\\'" . js-mode))
+(add-auto-mode 'js-mode
+               "\\.json\\'"
+               "\\.*jshintrc\\'"
+               "\\.tern-project\\'")
 
 ;; xml-mode
 ;; IIS's 'config' files are actually XML.

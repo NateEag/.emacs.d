@@ -108,6 +108,8 @@ the environment as needed for ac-sources, right before they're used.")
   (set (make-local-variable 'te/current-tag-fn)
        'web-mode-te-current-tag-fn)
 
+  (define-key tagedit-mode-map (kbd "C-k") 'web-mode-tagedit-kill)
+
   (smart-dash-mode)
   (web-mode-install-smart-dash-insert))
 
@@ -144,6 +146,13 @@ Hence this wrapper."
          (:self-closing . ,self-closing)
          (:beg . ,beg)
          (:end . ,end))))))
+
+(defun web-mode-tagedit-kill ()
+  "Call tagedit-kill if in HTML and kill-line otherwise."
+  (interactive)
+  (if (equal (web-mode-language-at-pos) "html")
+      (tagedit-kill)
+    (kill-line)))
 
 (provide 'web-mode-init)
 ;;; web-mode-init.el ends here

@@ -455,10 +455,18 @@
 (add-hook 'emacs-lisp-mode-hook 'emacs-lisp-init)
 
 ;; Python mode.
+(require 'jedi-force)
 (setq auto-mode-alist (cons '("\\.py$" . python-mode) auto-mode-alist))
 (setq interpreter-mode-alist
       (cons '("python" . python-mode) interpreter-mode-alist))
+
+(add-hook 'hack-local-variables-hook 'run-local-vars-mode-hook)
+
 (add-hook 'python-mode-hook 'python-mode-accessories-init)
+
+(add-hook 'python-mode-local-vars-hook 'jedi-force-setup-extra-args)
+(add-hook 'python-mode-local-vars-hook 'jedi:setup)
+
 
 ;; DEBUG I cannot get this to autoload, and I don't know why.
 (require 'python-mode-accessories-init)

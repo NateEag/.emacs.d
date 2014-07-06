@@ -12,7 +12,7 @@
   "A wrapper around smart-dash-mode for use with web-mode."
   ;; Only be smart about dashes in languages where it makes sense.
   (if (member (web-mode-language-at-pos) (list "html" "css"))
-      (self-insert-command)
+      (self-insert-command 1)
     (smart-dash-insert)))
 
 (defun web-mode-install-smart-dash-insert ()
@@ -21,26 +21,6 @@
     (make-local-variable 'smart-dash-mode-keymap)
     (setq smart-dash-mode-keymap (copy-keymap map)))
   (define-key smart-dash-mode-keymap "-" 'web-mode-smart-dash-insert))
-
-(defvar web-mode-before-auto-complete-hooks nil
-  "List of functions to run before triggering the auto-complete library.
-
-Auto-complete sources will sometimes need some tweaking to work
-nicely with web-mode. This hook gives users the chance to adjust
-the environment as needed for ac-sources, right before they're used.")
-
-(defvar web-mode-ac-sources-alist nil
-  "alist mapping language names as string to auto-complete sources for that language.")
-
-(defadvice ac-start (before web-mode-set-up-ac-sources activate)
-  "Set `ac-sources' based on current language before running auto-complete."
-  (if (equal major-mode 'web-mode)
-      (progn
-        (run-hooks 'web-mode-before-auto-complete-hooks)
-        (let ((new-web-mode-ac-sources
-               (assoc (web-mode-language-at-pos)
-                      web-mode-ac-sources-alist)))
-          (setq ac-sources (cdr new-web-mode-ac-sources))))))
 
 (defun web-mode-init ()
   "My web-mode config."
@@ -87,7 +67,7 @@ the environment as needed for ac-sources, right before they're used.")
           ;; as well as values. Since auto-complete already has the alist
           ;; mapping property names to legal values, I should add one that uses
           ;; the keys and issue a merge request.
-          ("css" . (ac-source-css-property))))
+          ("css" . (ac-source-css-property ac-source-css-property-names))))
 
   (require 'tagedit)
   (tagedit-add-paredit-like-keybindings)

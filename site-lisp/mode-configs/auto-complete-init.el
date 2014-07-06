@@ -1,5 +1,11 @@
 ;; My auto-complete.el settings.
 
+;; Auto-complete source for CSS property names, from
+;; https://github.com/fxbois/web-mode/issues/116#issuecomment-46450381
+(defvar ac-source-css-property-names
+'((candidates . (loop for property in ac-css-property-alist
+                      collect (car property)))))
+
 (defun auto-complete-tab-noconflict ()
   (let ((command (key-binding [tab]))) ; remember command
     (local-unset-key [tab]) ; unset from (kbd "<tab>")

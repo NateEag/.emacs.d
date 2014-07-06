@@ -7,4 +7,6 @@
   (auto-complete-mode)
   (ac-css-mode-setup)
   (flycheck-mode)
-  (emmet-mode))
+  (emmet-mode)
+
+  (setq ac-sources '(ac-source-css-property-names ac-source-css-property)))

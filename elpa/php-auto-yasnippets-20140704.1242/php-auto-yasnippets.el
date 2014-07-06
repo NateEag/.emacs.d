@@ -81,8 +81,8 @@
 (require 'php-mode)
 (require 'yasnippet)
 (eval-when-compile
-  (require 'auto-complete))
-
+  (when (locate-library "auto-complete")
+    (require 'auto-complete)))
 
 ;;; This section defines constants the package uses as well as any
 ;;; global variables which the user may wish to change.

@@ -24,10 +24,7 @@
  flow. If not, I can lazy-load vim's editing power, and learn how to cope
  better when I'm stuck in vim.
 
--Get Jedi to prefer virtualenvs in the current project directory. Project
- directory is probably just 'parent folder for this buffer that contains a
- .git/ folder'. kenobi.el seems like it should work with some modifications:
- https://gist.github.com/nyergler/6100112
+-Get jedi to not override my "C-c r" keybinding.
 
 -Move my general programming customizations (like binding M-j to RET, turning
  on comment-auto-fill, etc) into a prog-mode-hook, and call that prog-mode

@@ -9,6 +9,8 @@
   ;; Initialize Jedi. Note that for this to work, you'll have to install Jedi
   ;; in a virtualenv, using the Makefile.
   (setq jedi:setup-keys t)
+  (define-key jedi-mode-map (kbd "M-.") 'jedi:goto-definition)
+  (define-key jedi-mode-map (kbd "M-,") 'jedi:goto-definition-pop-marker)
   (setq jedi:complete-on-dot t))
 
 (provide 'python-mode-accessories-init)

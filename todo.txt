@@ -234,11 +234,6 @@
  like a sane, consistent way to deal with that sort of cursor movement. ...and
  a few years later, I have learned that subword-mode will let you do this.
 
--A command that lets you invert delimiters. Sometimes you realize mid-stream
- that you used the wrong ones, and as long as point is between them and there
- are no duplicates, the editor should be able to find the nearest delimiters
- and change them. Now you can keep on cranking.
-
 -Set up jedi to load virtualenvs for the current project. See
  http://stackoverflow.com/questions/21246218/how-can-i-make-emacs-jedi-use-project-specific-virtualenvs
  for more details.

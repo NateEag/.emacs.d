@@ -524,6 +524,8 @@
 ;; Expand-region lets you select delimited regions quickly.
 (global-set-key (kbd "C-c r") 'er/expand-region)
 
+;; toggle-quote lets you toggle a string between single- and double-quoted.
+(global-set-key (kbd "C-c '") 'toggle-quotes)
 
 ;; Just for grins, see how long starting up took.
 (add-hook 'after-init-hook

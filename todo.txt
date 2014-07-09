@@ -241,9 +241,6 @@
 -Look into anaconda-mode. It appears to be a wrapper around Jedi that might add
  a bit more intelligence, or something? Popped up in list-packages today.
 
--Figure out why jedi's jump-to-definition doesn't work until after I've tried
- to autocomplete something.
-
 -Think about whether I should pull ropemode back into python-mode; I never
  really used the refactoring tools, but maybe I should.
 

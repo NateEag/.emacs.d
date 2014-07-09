@@ -22,7 +22,6 @@
  '(ispell-program-name "aspell")
  '(js2-mode-show-parse-errors nil)
  '(js2-mode-show-strict-warnings nil)
- '(magit-diff-use-overlays nil)
  '(magit-use-overlays nil)
  '(php-mode-coding-style (quote psr2) nil nil "PSR-2 is not ideal, but it's a standard.")
  '(safe-local-variable-values
@@ -34,7 +33,7 @@
  '(smart-dash-c-modes (quote (c-mode c++-mode objc-mode php-mode web-mode)))
  '(yas-expand-only-for-last-commands
    (quote
-    (self-insert-command smart-dash-insert web-mode-smart-dash-insert)) nil nil "Only trigger yasnippet while first typing. Makes TAB indent even if inadvertantly over a yasnippet's key."))
+    (self-insert-command smart-dash-insert web-mode-smart-dash-insert ac-complete ac-expand)) nil nil "Only trigger yasnippet while first typing. Makes TAB indent even if inadvertantly over a yasnippet's key."))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.

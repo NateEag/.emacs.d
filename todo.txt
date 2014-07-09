@@ -15,16 +15,9 @@
 
 -Finish getting tagedit to work with web-mode.
 
--Add CSS property name auto-completion source. There's a web-mode issue I'm
- involved in that has a solution for this.
-
--Finish the dynamic completion source chooser for web-mode.
-
 -Try installing evil-mode and seeing if it interferes with my usual editing
  flow. If not, I can lazy-load vim's editing power, and learn how to cope
  better when I'm stuck in vim.
-
--Get jedi to not override my "C-c r" keybinding.
 
 -Move my general programming customizations (like binding M-j to RET, turning
  on comment-auto-fill, etc) into a prog-mode-hook, and call that prog-mode

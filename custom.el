@@ -7,9 +7,16 @@
    (quote
     (delete-backward-char backward-delete-char backward-delete-char-untabify autopair-backspace paredit-backward-delete paredit-backward-delete-word smart-dash-insert)))
  '(ac-trigger-key "TAB")
+ '(blink-cursor-blinks 0 nil nil "blink!!!!")
+ '(blink-cursor-mode t nil nil "For some reason, I really like blinky cursors.")
+ '(c-basic-offset 4 nil nil "4 spaces is, on average, the standard.")
+ '(c-default-style "linux" nil nil "GNU-style indentation on C-like languages is stupid. Linux style is much more sane.")
+ '(column-number-mode t)
  '(custom-safe-themes
    (quote
     ("d677ef584c6dfc0697901a44b885cc18e206f05114c8a3b7fde674fce6180879" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" default)))
+ '(fill-column 79 nil nil "Code should generally be under 80 columns wide for readability.")
+ '(global-font-lock-mode t nil nil "Everyone likes syntax coloration.")
  '(guess-style-guesser-alist
    (quote
     ((indent-tabs-mode . guess-style-guess-tabs-mode)
@@ -19,10 +26,14 @@
      (css-indent-offset . guess-style-guess-indent)
      (python-indent . guess-style-guess-indent)
      (js2-basic-offset . guess-style-guess-indent))))
+ '(indent-tabs-mode nil nil nil "I dislike using tabs for indentation. Spaces are a simpler way to indent.")
+ '(inhibit-startup-screen t nil nil "The emacs startup message is a needless annoyance.")
  '(ispell-program-name "aspell")
  '(js2-mode-show-parse-errors nil)
  '(js2-mode-show-strict-warnings nil)
+ '(line-number-mode t)
  '(magit-use-overlays nil)
+ '(menu-bar-mode nil nil nil "I don't really use the menus, either.")
  '(php-mode-coding-style (quote psr2) nil nil "PSR-2 is not ideal, but it's a standard.")
  '(safe-local-variable-values
    (quote
@@ -30,7 +41,13 @@
       (list "~/github/gitlist/vendor/autoload.php"))
      (eval guess-style-guess-all)
      (eval highlight-regexp "^ *"))))
+ '(sentence-end-double-space nil nil nil "I do not use double-spaces after sentences. Neither should you.")
+ '(show-paren-mode t)
  '(smart-dash-c-modes (quote (c-mode c++-mode objc-mode php-mode web-mode)))
+ '(tab-width 4 nil nil "When a project prefers tabs, this is the width I usually see.")
+ '(tool-bar-mode nil nil nil "The toolbar is an even more needless annoyance.")
+ '(transient-mark-mode 1 nil nil "I like seeing my selections.")
+ '(visible-bell t nil nil "STOP THE RINGING")
  '(yas-expand-only-for-last-commands
    (quote
     (self-insert-command smart-dash-insert web-mode-smart-dash-insert ac-complete ac-expand)) nil nil "Only trigger yasnippet while first typing. Makes TAB indent even if inadvertantly over a yasnippet's key."))

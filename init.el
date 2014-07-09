@@ -17,50 +17,15 @@
 
 ;;; General preferences.
 
+(setq custom-file (make-emacs-dir-path "custom.el"))
+(load custom-file)
+
 ;; Set up my default font.
 (my-set-default-font)
 
 ;; Let's try out the solarized theme. In theory, it should be easier on my
 ;; eyes...
 (load-theme 'solarized-dark t)
-
-;; Everyone likes syntax coloration.
-(global-font-lock-mode 1)
-
-;; I like seeing my selections.
-(setq transient-mark-mode 1)
-
-;; For some reason, I really like blinky cursors.
-(setq blink-cursor-blinks 0)
-(blink-cursor-mode 1)
-
-;; STOP THE RINGING
-(setq visible-bell 1)
-
-;; The emacs startup message is a needless annoyance.
-(setq inhibit-startup-message t)
-
-;; The toolbar is an even more needless annoyance.
-(tool-bar-mode -1)
-
-;; I don't really use the menus, either.
-(menu-bar-mode -1)
-
-;; I do not use double-spaces after sentences. Neither should you.
-(setq sentence-end-double-space nil)
-
-;; I dislike using tabs for indentation. Spaces are a simpler way to indent.
-(setq indent-tabs-mode nil)
-(setq-default indent-tabs-mode nil)
-
-;; That said, adhering to project styles is more important than my personal
-;; preferences. Most of the Tab-using projects I work on have this tab-width.
-(setq-default tab-width 4)
-
-;; GNU-style indentation on C-like languages is stupid. Linux style is much
-;; more sane.
-(setq c-default-style "linux"
-      c-basic-offset 4)
 
 ;; Most of the time, I want Unix-style line endings, and UTF-8 is generally a
 ;; good thing.
@@ -76,16 +41,6 @@
 
 ;; Default frames to a width of 80 chars.
 (add-to-list 'default-frame-alist '(width . 80))
-
-;; Default fill-column should be 79.
-(setq-default fill-column 79)
-
-;; I like to know what line/column I'm in, always.
-(line-number-mode 1)
-(column-number-mode 1)
-
-;; Yay for highlighting parentheses!
-(show-paren-mode 1)
 
 ;; If the matching line for a paren is offscreen, show the matching line in the
 ;; minibuffer.
@@ -128,6 +83,7 @@
 ;; Turn off default vc-mode, because I never use it.
 (setq vc-handled-backends nil)
 
+
 ;;; Save-related hooks.
 
 (defun force-buffer-backup ()
@@ -161,6 +117,7 @@
 
 ;; If a file looks scripty and it isn't executable at save time, make it so.
 (add-hook 'after-save-hook 'executable-make-buffer-file-executable-if-script-p)
+
 
 ;; Save minibuffer data between sessions.
 (setq savehist-file (make-emacs-dir-path "tmp/savehist"))
@@ -518,9 +475,6 @@
 (require 'server)
 (when (and (display-graphic-p) (not (eq t (server-running-p))))
     (server-start))
-
-(setq custom-file (make-emacs-dir-path "custom.el"))
-(load custom-file)
 
 ;;; My global keybindings, now that everything's loaded and defined.
 

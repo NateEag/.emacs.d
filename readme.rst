@@ -11,8 +11,8 @@ heavyweight fairly quickly, and I was not impressed with how little it believed
 in graphical environments.
 
 After a naive search for the perfect editor in my early twenties (I narrowly
-avoided wasting years writing one), in 2009 I decided to learn Emacs, since I
-knew some of its shortcuts fairly well, and I needed to learn something well.
+avoided wasting years writing one), in 2009 I decided to learn Emacs well,
+since I knew a lot of its shortcuts and had decided to stick with an editor.
 
 A year or two into the project, I realized my dream editor had been sitting in
 my lap all along, if only I'd tried to learn it.
@@ -24,14 +24,21 @@ Why Emacs (or: Hokey Religions and Ancient Weapons)
 Like all art forms, programming has technique.
 
 Despite the grumbling from the graphical language crowd, most programming comes
-down to entering, reading, and changing plain text in files. Thus, a programmer
-should manipulate text fluidly and effortlessly, the way a pianist plays
-arpeggios and scales.
+down to entering, reading, and changing plain text in files.
 
-Changing editors for each language, therefore, is a horrible burden. Eclipse
-for Java, PyCharm for Python, Sublime for JavaScript... The act of editing a
-program in any one of these is different. Rather, the editor should change for
-each language, so that the fundamental acts of programming remain unchanged.
+Thus, a programmer should manipulate text fluidly and effortlessly, the way a
+pianist plays arpeggios and scales. A musician's technique is the mechanics of
+how he makes the instrument produce sound; a programmer's technique is the
+mechanics of how he gives the computer instructions.
+
+Changing editors for each language complicates technique. Eclipse for Java,
+PyCharm for Python, Sublime for JavaScript... The technique of editing a
+program in each of these environments is different, and over a lifetime adds
+cognitive burden.
+
+Instead of changing editors for each language, a programmer's editor should
+adapt itself to each language, so that the technique of programming remains
+unchanged.
 
 For that purpose, Emacs reigns supreme.
 
@@ -39,12 +46,36 @@ It is Turing-complete, it has been honed over decades to a razor-sharp edge, it
 runs almost everywhere, and I can mold it to myself without recompiling or even
 turning it off.
 
-I am no master, but if you look, you may find things of use to you,
-particularly for PHP, HTML templates, and CSS. Python and JavaScript see some
-use too, but are not what they could be.
+Features
+========
 
-Examine todo.txt and tell me about entries that can be resolved by turning on
-existing features. I've found some myself, and would not mind finding more.
+My PHP setup is lacking smart code-completion and jump-to-definition, but
+otherwise, it's pretty solid. The last time I was hacking on PHP seriously I was
+on Windows, and I couldn't get `pfff <https://github.com/facebook/pfff>`__ to
+compile there, but on *nix that would be the next thing I'd add.
+
+I have a decent Python setup, with `Jedi
+<http://jedi.jedidjah.ch/en/latest/>`__ for auto-complete and jump-to-def. I've
+also trained it to look for virtualenvs in the project directory, which makes
+it more useful to me.
+
+I use a combination of js2-mode, Tern.js, jshint, and skewer-mode for
+live-editing JavaScript meant for web browsers. In theory this should be pretty
+awesome, and it's not bad, but there are some kinks to work out yet.
+
+For editing web templates of all stripes, I use the awesome `web-mode
+<http://web-mode.org/>`__ with several extensions, including
+`emmet-mode <https://github.com/smihica/emmet-mode>`__.
+
+I use css-mode for CSS, which is somewhat lacking, but I use a personal
+extension to skewer-mode for live-editing stylesheets, and that makes life
+better.
+
+I use flycheck for style-checking just about everything, and install the
+relevant checker whenever I start working with a new language.
+
+Look in todo.txt and tell me about entries that can be resolved by just turning
+on features. I've found some myself and would not mind finding more.
 
 Layout
 ======

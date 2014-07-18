@@ -6,21 +6,17 @@
   "My mode hook for JS editing modes."
 
   (interactive)
+  (my-prog-mode-init)
+
   (if (eq major-mode 'js2-mode)
       (set (make-local-variable 'normal-auto-fill-function) 'c-do-auto-fill))
-  (comment-auto-fill)
-  (smart-dash-mode t)
-  (smartparens-mode t)
-  (yas-minor-mode t)
-  (auto-complete-mode t)
-  (setq ac-sources '(ac-source-yasnippet))
   (skewer-mode)
-  (flycheck-mode)
 
   ;; Since I've bound C-r to regex searching, I'll use C-M-r to mean
   ;; 'refactor'.
   (js2r-add-keybindings-with-prefix "C-M-r")
 
+  (setq ac-sources '(ac-source-yasnippet))
   (tern-mode 't)
   (eval-after-load 'tern
     '(progn

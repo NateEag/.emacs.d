@@ -189,10 +189,10 @@ If COLLECTION is an `obarray', a TEST should be needed. See `obarray'."
         (cons (concat (propertize
                        " " 'display
                        (propertize "[?]" 'face 'helm-ff-prefix))
-                      cand)
-              cand)
+                      c)
+              c)
         into lst
-        else collect cand into lst
+        else collect c into lst
         finally return (helm-fast-remove-dups lst :test 'equal)))
 
 ;;;###autoload
@@ -326,7 +326,7 @@ that use `helm-comp-read' See `helm-M-x' for example."
                          must-match-map (or keymap helm-map))
                       (or keymap helm-map)))
            (helm-read-file-name-mode-line-string
-            (replace-regexp-in-string "helm-exit-minibuffer"
+            (replace-regexp-in-string "helm-maybe-exit-minibuffer"
                                       "helm-confirm-and-exit-minibuffer"
                                       helm-read-file-name-mode-line-string))
            (get-candidates (lambda ()
@@ -728,7 +728,7 @@ Keys description:
                     must-match-map helm-read-file-map)
                  helm-read-file-map))
          (helm-read-file-name-mode-line-string
-          (replace-regexp-in-string "helm-exit-minibuffer"
+          (replace-regexp-in-string "helm-maybe-exit-minibuffer"
                                     "helm-confirm-and-exit-minibuffer"
                                     helm-read-file-name-mode-line-string))
          (src-list `(((name . ,(format "%s History" name))
@@ -750,9 +750,7 @@ Keys description:
                                       helm-ff-auto-update-initial-value)
                                 (setq helm-ff-auto-update--state
                                       helm-ff-auto-update-flag)
-                                (with-helm-temp-hook 'helm-after-initialize-hook
-                                  (with-helm-buffer  
-                                    (set (make-local-variable 'helm-in-file-completion-p) t)))))
+                                (helm-set-local-variable 'helm-in-file-completion-p t)))
                       (mode-line . ,mode-line)
                       (candidates
                        . (lambda ()

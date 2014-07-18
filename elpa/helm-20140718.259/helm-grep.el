@@ -185,7 +185,7 @@ If set to nil `doc-view-mode' will be used instead of an external command."
     (define-key map (kbd "C-w")      'helm-yank-text-at-point)
     (define-key map (kbd "C-x C-s")  'helm-grep-run-save-buffer)
     (when helm-grep-use-ioccur-style-keys
-      (define-key map (kbd "<right>")  'helm-grep-run-persistent-action)
+      (define-key map (kbd "<right>")  'helm-execute-persistent-action)
       (define-key map (kbd "<left>")  'helm-grep-run-default-action))
     (define-key map (kbd "C-c ?")    'helm-grep-help)
     (delq nil map))
@@ -384,7 +384,7 @@ It is intended to use as a let-bound variable, DON'T set this globaly.")
                                                   'face 'helm-grep-cmd-line)))
                       (setq mode-line-format
                             '(" " mode-line-buffer-identification " "
-                              (line-number-mode "%l") " "
+                              (:eval (format "L%s" (helm-candidate-number-at-point))) " "
                               (:eval (propertize
                                       (format
                                        "[%s process finished - (no results)] "
@@ -399,7 +399,7 @@ It is intended to use as a let-bound variable, DON'T set this globaly.")
                     (with-helm-window
                       (setq mode-line-format
                             '(" " mode-line-buffer-identification " "
-                              (line-number-mode "%l") " "
+                              (:eval (format "L%s" (helm-candidate-number-at-point))) " "
                               (:eval (propertize
                                       (format
                                        "[%s process finished - (%s results)] "
@@ -559,13 +559,6 @@ If N is positive go forward otherwise go backward."
     (with-helm-window
       (helm-goto-next-or-prec-file 1 etagp))))
 
-(defun helm-grep-run-persistent-action ()
-  "Run grep persistent action from `helm-do-grep-1'."
-  (interactive)
-  (with-helm-alive-p
-    (helm-attrset 'jump-persistent 'helm-grep-persistent-action)
-    (helm-execute-persistent-action 'jump-persistent)))
-
 (defun helm-grep-run-default-action ()
   "Run grep default action from `helm-do-grep-1'."
   (interactive)
@@ -603,13 +596,13 @@ If N is positive go forward otherwise go backward."
   (let ((buf "*hgrep*")
         new-buf)
     (when (get-buffer buf)
-      (setq new-buf (read-string "GrepBufferName: " buf))
+      (setq new-buf (helm-read-string "GrepBufferName: " buf))
       (cl-loop for b in (helm-buffer-list)
             when (and (string= new-buf b)
                       (not (y-or-n-p
                             (format "Buffer `%s' already exists overwrite? "
                                     new-buf))))
-            do (setq new-buf (read-string "GrepBufferName: " "*hgrep ")))
+            do (setq new-buf (helm-read-string "GrepBufferName: " "*hgrep ")))
       (setq buf new-buf))
     (with-current-buffer (get-buffer-create buf)
       (setq buffer-read-only t)
@@ -741,7 +734,7 @@ Special commands:
 (defun helm-grep-read-ack-type ()
   "Select types for the '--type' argument of ack-grep."
   (require 'helm-mode)
-  (require 'helm-adaptative)
+  (require 'helm-adaptive)
   (setq helm-grep-ack-types-cache (helm-grep-hack-types))
   (let ((types (helm-comp-read
                 "Types: " helm-grep-ack-types-cache
@@ -846,24 +839,19 @@ in recurse, search being made on `helm-zgrep-file-extension-regexp'."
       (setq helm-ff-default-directory default-directory))
     ;; We need to store these vars locally
     ;; to pass infos later to `helm-resume'.
-    (with-helm-temp-hook 'helm-after-initialize-hook
-      (with-helm-buffer
-        (set (make-local-variable 'helm-zgrep-recurse-flag)
-             (and recurse zgrep))
-        (set (make-local-variable 'helm-grep-last-targets) targets)
-        (set (make-local-variable 'helm-grep-include-files)
-             (or include-files types))
-        (set (make-local-variable 'helm-grep-in-recurse) recurse)
-        (set (make-local-variable 'helm-grep-use-zgrep) zgrep)
-        (set (make-local-variable 'helm-grep-last-default-directory)
-             helm-ff-default-directory)
-        (set (make-local-variable 'helm-grep-default-command)
-             (cond (helm-grep-use-zgrep helm-default-zgrep-command)
-                   (helm-grep-in-recurse helm-grep-default-recurse-command)
-                   ;; When resuming the local value of
-                   ;; `helm-grep-default-command' is used, only git-grep
-                   ;; should need this.
-                   (t helm-grep-default-command)))))
+    (helm-set-local-variable 'helm-zgrep-recurse-flag (and recurse zgrep)
+                             'helm-grep-last-targets targets
+                             'helm-grep-include-files (or include-files types)
+                             'helm-grep-in-recurse recurse
+                             'helm-grep-use-zgrep zgrep
+                             'helm-grep-last-default-directory helm-ff-default-directory
+                             'helm-grep-default-command
+                             (cond (zgrep helm-default-zgrep-command)
+                                   (recurse helm-grep-default-recurse-command)
+                                   ;; When resuming the local value of
+                                   ;; `helm-grep-default-command' is used, only git-grep
+                                   ;; should need this.
+                                   (t helm-grep-default-command)))
     ;; Setup the source.
     (setq helm-source-grep
           `((name . ,(if zgrep "Zgrep" (capitalize (if recurse
@@ -897,7 +885,7 @@ in recurse, search being made on `helm-zgrep-file-extension-regexp'."
     (helm
      :sources '(helm-source-grep)
      :buffer (format "*helm %s*" (if zgrep "zgrep" (helm-grep-command recurse)))
-     :default-directory helm-grep-last-default-directory
+     :default-directory helm-ff-default-directory
      :keymap helm-grep-map ; [1]
      :history 'helm-grep-history
      :truncate-lines t)))
@@ -1070,7 +1058,7 @@ If a prefix arg is given run grep on all buffers ignoring non--file-buffers."
                (with-helm-window
                  (setq mode-line-format
                        '(" " mode-line-buffer-identification " "
-                         (line-number-mode "%l") " "
+                         (:eval (format "L%s" (helm-candidate-number-at-point))) " "
                          (:eval (propertize
                                  (format "[Pdfgrep Process Finish - %s result(s)] "
                                          (max (1- (count-lines

@@ -46,7 +46,7 @@ It is a float, usually 1024.0 but could be 1000.0 on some systems."
   :group 'helm-utils
   :type 'float)
 
-(defvar helm-goto-line-before-hook nil
+(defvar helm-goto-line-before-hook '(helm-save-current-pos-to-mark-ring)
   "Run before jumping to line.
 This hook run when jumping from `helm-goto-line', `helm-etags-default-action',
 and `helm-imenu-default-action'.")
@@ -297,9 +297,8 @@ With a numeric prefix arg show only the ARG number of candidates."
   (with-helm-window
     (with-helm-default-directory helm-default-directory
         (let ((helm-candidate-number-limit (and (> arg 1) arg)))
-          (save-window-excursion
-            (helm-set-source-filter
-             (list (assoc-default 'name (helm-get-current-source)))))))))
+          (helm-set-source-filter
+           (list (assoc-default 'name (helm-get-current-source))))))))
 
 ;;;###autoload
 (defun helm-display-all-sources ()
@@ -557,14 +556,14 @@ Return nil on valid file name remote or not."
     (when (and meth (<= (length split) 2))
       (cadr split))))
 
-(defun helm-file-human-size (size)
+(cl-defun helm-file-human-size (size &optional (kbsize helm-default-kbsize))
   "Return a string showing SIZE of a file in human readable form.
 SIZE can be an integer or a float depending it's value.
 `file-attributes' will take care of that to avoid overflow error.
-KBSIZE if a floating point number, default value is 1024.0."
-  (let ((M (cons "M" (/ size (expt helm-default-kbsize 2))))
-        (G (cons "G" (/ size (expt helm-default-kbsize 3))))
-        (K (cons "K" (/ size helm-default-kbsize)))
+KBSIZE if a floating point number, defaulting to `helm-default-kbsize'."
+  (let ((M (cons "M" (/ size (expt kbsize 2))))
+        (G (cons "G" (/ size (expt kbsize 3))))
+        (K (cons "K" (/ size kbsize)))
         (B (cons "B" size)))
     (cl-loop with result = B
           for (a . b) in
@@ -843,7 +842,8 @@ directory, open this directory."
       (find-file (concat "/" helm-su-or-sudo "::" (expand-file-name candidate))))))
 
 (defun helm-find-many-files (_ignore)
-  (mapc 'find-file (helm-marked-candidates)))
+  (let ((helm--reading-passwd-or-string t))
+    (mapc 'find-file (helm-marked-candidates))))
 
 (defun helm-goto-line-with-adjustment (line line-content)
   (let ((startpos)

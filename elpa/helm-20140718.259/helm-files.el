@@ -163,7 +163,7 @@ This set `ffap-newfile-prompt'."
 
 (defcustom helm-ff-avfs-directory "~/.avfs"
   "The default avfs directory, usually '~/.avfs'.
-When this is set you will be able to expand archive filenames with `C-z'
+When this is set you will be able to expand archive filenames with `C-j'
 inside an avfs directory mounted with mountavfs.
 See <http://sourceforge.net/projects/avf/>."
   :type  'string
@@ -306,6 +306,7 @@ WARNING: Setting this to nil is unsafe and can cause deletion of a whole tree."
     (define-key map (kbd "C-c C-x")       'helm-ff-run-open-file-externally)
     (define-key map (kbd "C-c X")         'helm-ff-run-open-file-with-default-tool)
     (define-key map (kbd "M-!")           'helm-ff-run-eshell-command-on-file)
+    (define-key map (kbd "M-%")           'helm-ff-run-query-replace-on-marked)
     (define-key map (kbd "C-=")           'helm-ff-run-ediff-file)
     (define-key map (kbd "C-c =")         'helm-ff-run-ediff-merge-file)
     (define-key map (kbd "M-p")           'helm-ff-run-switch-to-history)
@@ -322,15 +323,15 @@ WARNING: Setting this to nil is unsafe and can cause deletion of a whole tree."
     ;; Next 2 have no effect if candidate is not an image file.
     (define-key map (kbd "M-l")           'helm-ff-rotate-left-persistent)
     (define-key map (kbd "M-r")           'helm-ff-rotate-right-persistent)
-    (define-key map (kbd "C-.")           'helm-find-files-down-one-level)
-    (define-key map (kbd "C-l")           'helm-find-files-down-one-level)
+    (define-key map (kbd "C-.")           'helm-find-files-up-one-level)
+    (define-key map (kbd "C-l")           'helm-find-files-up-one-level)
     (define-key map (kbd "C-h C-b")       'helm-send-bug-report-from-helm)
     (define-key map (kbd "C-x @")         'helm-ff-run-find-file-as-root)
     (define-key map (kbd "C-c @")         'helm-ff-run-insert-org-link)
     (helm-define-key-with-subkeys map (kbd "DEL") ?\d 'helm-ff-delete-char-backward
                                   nil nil 'helm-ff-delete-char-backward--exit-fn)
     (when helm-ff-lynx-style-map
-      (define-key map (kbd "<left>")      'helm-find-files-down-one-level)
+      (define-key map (kbd "<left>")      'helm-find-files-up-one-level)
       (define-key map (kbd "<right>")     'helm-execute-persistent-action))
     (delq nil map))
   "Keymap for `helm-find-files'.")
@@ -340,15 +341,15 @@ WARNING: Setting this to nil is unsafe and can cause deletion of a whole tree."
     (set-keymap-parent map helm-map)
     (define-key map (kbd "<C-return>")    'helm-cr-empty-string)
     (define-key map (kbd "C-]")           'helm-ff-run-toggle-basename)
-    (define-key map (kbd "C-.")           'helm-find-files-down-one-level)
-    (define-key map (kbd "C-l")           'helm-find-files-down-one-level)
+    (define-key map (kbd "C-.")           'helm-find-files-up-one-level)
+    (define-key map (kbd "C-l")           'helm-find-files-up-one-level)
     (define-key map (kbd "C-c h")         'helm-ff-file-name-history)
     (define-key map (kbd "C-<backspace>") 'helm-ff-run-toggle-auto-update)
     (define-key map (kbd "C-c ?")         'helm-read-file-name-help)
     (helm-define-key-with-subkeys map (kbd "DEL") ?\d 'helm-ff-delete-char-backward
                                   nil nil 'helm-ff-delete-char-backward--exit-fn)
     (when helm-ff-lynx-style-map
-      (define-key map (kbd "<left>")      'helm-find-files-down-one-level)
+      (define-key map (kbd "<left>")      'helm-find-files-up-one-level)
       (define-key map (kbd "<right>")     'helm-execute-persistent-action)
       (define-key map (kbd "C-o")         nil)
       (define-key map (kbd "<M-left>")    'helm-previous-source)
@@ -365,12 +366,11 @@ WARNING: Setting this to nil is unsafe and can cause deletion of a whole tree."
 
 
 ;; Internal.
-(defvar helm-find-files-doc-header " (`C-l': Go to precedent level)"
+(defvar helm-find-files-doc-header " (`C-l': Go up one level)"
   "*The doc that is inserted in the Name header of a find-files or dired source.")
 (defvar helm-ff-auto-update-flag nil
   "Internal, flag to turn on/off auto-update in `helm-find-files'.
 Don't set it directly, use instead `helm-ff-auto-update-initial-value'.")
-(defvar helm-ff-auto-update--state nil)
 (defvar helm-ff-last-expanded nil
   "Store last expanded directory or file.")
 (defvar helm-ff-default-directory nil)
@@ -381,6 +381,8 @@ Don't set it directly, use instead `helm-ff-auto-update-initial-value'.")
   "Same as `ffap-url-regexp' but match earlier possible url.")
 (defvar helm-tramp-file-name-regexp "\\`/\\([^[/:]+\\|[^/]+]\\):")
 (defvar helm-marked-buffer-name "*helm marked*")
+(defvar helm-ff--auto-update-state nil)
+(defvar helm-ff--deleting-char-backward nil)
 
 
 ;;; Helm-find-files
@@ -393,11 +395,9 @@ Don't set it directly, use instead `helm-ff-auto-update-initial-value'.")
     (init . (lambda ()
               (setq helm-ff-auto-update-flag
                     helm-ff-auto-update-initial-value)
-              (setq helm-ff-auto-update--state
+              (setq helm-ff--auto-update-state
                     helm-ff-auto-update-flag)
-              (with-helm-temp-hook 'helm-after-initialize-hook
-                (with-helm-buffer
-                  (set (make-local-variable 'helm-in-file-completion-p) t)))))
+              (helm-set-local-variable 'helm-in-file-completion-p t)))
     (candidates . helm-find-files-get-candidates)
     (filtered-candidate-transformer . helm-ff-sort-candidates)
     (filter-one-by-one . helm-ff-filter-candidate-one-by-one)
@@ -416,14 +416,20 @@ Don't set it directly, use instead `helm-ff-auto-update-initial-value'.")
            ("Find file in Dired" . helm-point-file-in-dired)
            ,(and (locate-library "elscreen")
                  '("Find file in Elscreen"  . helm-elscreen-find-file))
+           ("View file" . view-file)
            ("Checksum File" . helm-ff-checksum)
+           ("Query replace on marked" . helm-ff-query-replace-on-marked)
+           ("Serial rename files" . helm-ff-serial-rename)
+           ("Serial rename by symlinking files" . helm-ff-serial-rename-by-symlink)
+           ("Serial rename by copying files" . helm-ff-serial-rename-by-copying)
+           ("Open file with default tool" . helm-open-file-with-default-tool)
+           ("Find file in hex dump" . hexl-find-file)
            ("Complete at point `C-c i'"
             . helm-insert-file-name-completion-at-point)
            ("Insert as org link `C-c @'" . helm-files-insert-as-org-link)
            ("Find shell command `C-c /'" . helm-ff-find-sh-command)
            ("Open file externally `C-c C-x, C-u to choose'"
             . helm-open-file-externally)
-           ("Open file with default tool" . helm-open-file-with-default-tool)
            ("Grep File(s) `C-s, C-u Recurse'" . helm-find-files-grep)
            ("Zgrep File(s) `M-g z, C-u Recurse'" . helm-ff-zgrep)
            ("Switch to Eshell `M-e'" . helm-ff-switch-to-eshell)
@@ -431,22 +437,17 @@ Don't set it directly, use instead `helm-ff-auto-update-initial-value'.")
            ("Eshell command on file(s) `M-!, C-u take all marked as arguments.'"
             . helm-find-files-eshell-command-on-file)
            ("Find file as root `C-x @'" . helm-find-file-as-root)
-           ("Find file in hex dump" . hexl-find-file)
            ("Ediff File `C-='" . helm-find-files-ediff-files)
            ("Ediff Merge File `C-c ='" . helm-find-files-ediff-merge-files)
            ("Delete File(s) `M-D'" . helm-delete-marked-files)
            ("Copy file(s) `M-C, C-u to follow'" . helm-find-files-copy)
            ("Rename file(s) `M-R, C-u to follow'" . helm-find-files-rename)
-           ("Serial rename files" . helm-ff-serial-rename)
-           ("Serial rename by symlinking files" . helm-ff-serial-rename-by-symlink)
-           ("Serial rename by copying files" . helm-ff-serial-rename-by-copying)
            ("Symlink files(s) `M-S, C-u to follow'" . helm-find-files-symlink)
            ("Relsymlink file(s) `C-u to follow'" . helm-find-files-relsymlink)
            ("Hardlink file(s) `M-H, C-u to follow'" . helm-find-files-hardlink)
            ("Find file other window `C-c o'" . find-file-other-window)
            ("Switch to history `M-p'" . helm-find-files-switch-to-hist)
            ("Find file other frame `C-c C-o'" . find-file-other-frame)
-           ("View file" . view-file)
            ("Print File `C-c p, C-u to refresh'" . helm-ff-print)
            ("Locate `C-x C-f, C-u to specify locate db'" . helm-ff-locate)))))
   "The main source to browse files.
@@ -670,23 +671,32 @@ will not be loaded first time you use this."
                      ;; If command is an alias be sure it accept
                      ;; more than one arg i.e $*.
                      (string-match "\\$\\*$" alias-value)))
-               (> (length cand-list) 1))
+               (cdr cand-list))
 
           ;; Run eshell-command with ALL marked files as arguments.
+          ;; This wont work on remote files, because tramp handlers depends
+          ;; on `default-directory' (limitation).
           (let ((mapfiles (mapconcat 'shell-quote-argument cand-list " ")))
             (if (string-match "'%s'\\|\"%s\"\\|%s" command)
                 (eshell-command (format command mapfiles)) ; See [1]
               (eshell-command (format "%s %s" command mapfiles))))
 
         ;; Run eshell-command on EACH marked files.
-        (cl-loop for i in cand-list
-              for files = (format "'%s'" i)
+        ;; To work with tramp handler we have to call
+        ;; COMMAND on basename of each file, using
+        ;; its basedir as `default-directory'.
+        (cl-loop for f in cand-list
+              for dir = (and (not (string-match ffap-url-regexp f))
+                             (helm-basedir f))
+              for file = (format "'%s'" (if (and dir (file-remote-p dir))
+                                            (helm-basename f) f))
               for com = (if (string-match "'%s'\\|\"%s\"\\|%s" command)
                             ;; [1] This allow to enter other args AFTER filename
                             ;; i.e <command %s some_more_args>
-                            (format command files)
-                          (format "%s %s" command files))
-              do (eshell-command com))))))
+                            (format command file)
+                          (format "%s %s" command file))
+              do (let ((default-directory (or dir default-directory)))
+                   (eshell-command com)))))))
 
 (defun helm-find-files-eshell-command-on-file (_candidate)
   "Run `eshell-command' on CANDIDATE or marked candidates.
@@ -712,15 +722,15 @@ See `helm-find-files-eshell-command-on-file-1' for more info."
 See `helm-ff-serial-rename-1'."
   (let* ((cands     (helm-marked-candidates :with-wildcard t))
          (def-name  (car cands))
-         (name      (read-string "NewName: "
-                                 (replace-regexp-in-string
-                                  "[0-9]+$" ""
-                                  (helm-basename
-                                   def-name
-                                   (file-name-extension def-name)))))
+         (name      (helm-read-string "NewName: "
+                                      (replace-regexp-in-string
+                                       "[0-9]+$" ""
+                                       (helm-basename
+                                        def-name
+                                        (file-name-extension def-name)))))
          (start     (read-number "StartAtNumber: "))
-         (extension (read-string "Extension: "
-                                 (file-name-extension (car cands))))
+         (extension (helm-read-string "Extension: "
+                                      (file-name-extension (car cands))))
          (dir       (expand-file-name
                      (helm-read-file-name
                       "Serial Rename to directory: "
@@ -820,9 +830,61 @@ other directories.
 See `helm-ff-serial-rename-1'."
   (helm-ff-serial-rename-action 'copy))
 
+(defun helm-ff-query-replace-on-marked-1 (candidates)
+  (with-helm-display-marked-candidates
+    helm-marked-buffer-name
+    (mapcar 'helm-basename candidates)
+    (let* ((regexp (read-string "Replace regexp in files: "))
+           (str    (read-string (format "Replace regexp `%s' with: " regexp))))
+      (cl-loop with query = "y"
+               with count = 0
+               for old in candidates
+               for new = (concat (helm-basedir old)
+                                 (replace-regexp-in-string
+                                  regexp str
+                                  (helm-basename old)))
+               ;; If `regexp' is not matched in `old'
+               ;; `replace-regexp-in-string' will
+               ;; return `old' unmodified.
+               unless (string= old new)
+               do (progn
+                    (unless (string= query "!")
+                      (while (not (member
+                                   (setq query
+                                         (string
+                                          (read-key
+                                           (propertize
+                                            (format
+                                             "Replace `%s' by `%s' (!,y,n,q)"
+                                             old new)
+                                            'face 'minibuffer-prompt))))
+                                   '("y" "!" "n" "q")))
+                        (message "Please answer by y,n,! or q") (sit-for 1)))
+                    (when (string= query "q")
+                      (cl-return (message "Operation aborted")))
+                    (unless (string= query "n")
+                      (rename-file old new)
+                      (cl-incf count)))
+               finally (message "%d Files renamed" count))))
+  ;; This fix the emacs bug where "Emacs-Lisp:" is sent
+  ;; in minibuffer (not the echo area).
+  (sit-for 0.1)
+  (with-current-buffer (window-buffer (minibuffer-window))
+    (delete-minibuffer-contents)))
+
+;; The action.
+(defun helm-ff-query-replace-on-marked (_candidate)
+  (let ((marked (helm-marked-candidates)))
+    (helm-run-after-quit #'helm-ff-query-replace-on-marked-1 marked)))
+
+;; The command for `helm-find-files-map'.
+(defun helm-ff-run-query-replace-on-marked ()
+  (interactive)
+  (helm-ff-query-replace-on-marked nil))
+
 (defun helm-ff-toggle-auto-update (_candidate)
   (setq helm-ff-auto-update-flag (not helm-ff-auto-update-flag))
-  (setq helm-ff-auto-update--state helm-ff-auto-update-flag)
+  (setq helm-ff--auto-update-state helm-ff-auto-update-flag)
   (message "[Auto expansion %s]"
            (if helm-ff-auto-update-flag "enabled" "disabled")))
 
@@ -836,12 +898,14 @@ See `helm-ff-serial-rename-1'."
   "Disable helm find files auto update and delete char backward."
   (interactive)
   (setq helm-ff-auto-update-flag nil)
+  (setq helm-ff--deleting-char-backward t)
   (call-interactively
    (lookup-key (current-global-map)
                (read-kbd-macro "DEL"))))
 
 (defun helm-ff-delete-char-backward--exit-fn ()
-  (setq helm-ff-auto-update-flag helm-ff-auto-update--state))
+  (setq helm-ff-auto-update-flag helm-ff--auto-update-state)
+  (setq helm-ff--deleting-char-backward nil))
 
 (defun helm-ff-run-switch-to-history ()
   "Run Switch to history action from `helm-source-find-files'."
@@ -1034,7 +1098,7 @@ Same as `dired-do-print' but for helm."
                            (helm-comp-read
                             "Printer: " helm-ff-printer-list)
                          printer-name))
-         (command (read-string
+         (command (helm-read-string
                    (format "Print *%s File(s):\n%s with: "
                            len
                            (mapconcat
@@ -1139,9 +1203,9 @@ You should not modify this yourself unless you know what you do.")
         (cl-loop for i in helm-file-completion-sources
               thereis (string= cur-source i)))))
 
-(defun helm-find-files-down-one-level (arg)
-  "Go down one level like unix command `cd ..'.
-If prefix numeric arg is given go ARG level down."
+(defun helm-find-files-up-one-level (arg)
+  "Go up one level like unix command `cd ..'.
+If prefix numeric arg is given go ARG level up."
   (interactive "p")
   (with-helm-alive-p
     (when (and (helm-file-completion-source-p)
@@ -1149,7 +1213,7 @@ If prefix numeric arg is given go ARG level down."
       (with-helm-window
         (when helm-follow-mode
           (helm-follow-mode -1) (message nil)))
-      ;; When going to precedent level we want to be at the line
+      ;; When going up one level we want to be at the line
       ;; corresponding to actual directory, so store this info
       ;; in `helm-ff-last-expanded'.
       (let ((cur-cand (helm-get-selection))
@@ -1162,13 +1226,12 @@ If prefix numeric arg is given go ARG level down."
               ((and cur-cand (file-exists-p cur-cand))
                (setq helm-ff-last-expanded cur-cand)))
         (helm-set-pattern new-pattern helm-suspend-update-flag)
-        (with-helm-after-update-hook (helm-ff-retrieve-last-expanded))
-        (helm-check-minibuffer-input)))))
+        (with-helm-after-update-hook (helm-ff-retrieve-last-expanded))))))
 
 (defun helm-ff-retrieve-last-expanded ()
   "Move overlay to last visited directory `helm-ff-last-expanded'.
-This happen after using `helm-find-files-down-one-level',
-or hitting C-z on \"..\"."
+This happen after using `helm-find-files-up-one-level',
+or hitting C-j on \"..\"."
   (when helm-ff-last-expanded
     (let ((presel (if helm-ff-transformer-show-only-basename
                       (helm-basename
@@ -1196,17 +1259,22 @@ or hitting C-z on \"..\"."
 (defun helm-ff-update-when-only-one-matched ()
   "Expand to directory when sole completion.
 When only one candidate is remaining and it is a directory,
-expand to this directory."
-  (when (and helm-ff-auto-update-flag
-             (helm-file-completion-source-p)
-             ;; Issue #295
-             ;; File predicates are returning t
-             ;; with paths like //home/foo.
-             ;; So check it is not the case by regexp
-             ;; to allow user to do C-a / to start e.g
-             ;; entering a tramp method e.g /sudo::.
-             (not (string-match "\\`//" helm-pattern))
-             (not (helm-ff-invalid-tramp-name-p)))
+expand to this directory.
+This happen only when `helm-ff-auto-update-flag' is non--nil
+or when `helm-pattern' is equal to \"~/\"."
+  (when (or (and helm-ff-auto-update-flag
+                 (null helm-ff--deleting-char-backward)
+                 (helm-file-completion-source-p)
+                 ;; Issue #295
+                 ;; File predicates are returning t
+                 ;; with paths like //home/foo.
+                 ;; So check it is not the case by regexp
+                 ;; to allow user to do C-a / to start e.g
+                 ;; entering a tramp method e.g /sudo::.
+                 (not (string-match "\\`//" helm-pattern))
+                 (not (helm-ff-invalid-tramp-name-p)))
+            ;; Fix issue #542.
+            (string= helm-pattern "~/"))
     (let* ((history-p   (string= (assoc-default
                                   'name (helm-get-current-source))
                                  "Read File Name History"))
@@ -1395,28 +1463,23 @@ purpose."
   "Create candidate list for `helm-source-find-files'."
   (let* ((path          (helm-ff-set-pattern helm-pattern))
          (dir-p         (file-accessible-directory-p path))
-         (path-name-dir (if (and dir-p
-                                 ;; Don't add the "/" at the end
-                                 ;; of path when `helm-ff-auto-update-flag'
-                                 ;; is enabled.
-                                 helm-ff-auto-update-flag)
-                            (file-name-as-directory (expand-file-name path))
-                          (file-name-directory (expand-file-name path))))
+         basedir
          invalid-basedir
          non-essential
          (tramp-verbose helm-tramp-verbose)) ; No tramp message when 0.
     (set-text-properties 0 (length path) nil path)
     ;; Issue #118 allow creation of newdir+newfile.
-    ;; Check if base directory of PATH is valid.
     (unless (or
              ;; A tramp file name not completed.
              (string= path "Invalid tramp file name")
              ;; An empty pattern
              (string= path "")
-             ;; An existing directory
+             ;; Check if base directory of PATH is valid.
              (helm-aif (file-name-directory path)
+                 ;; If PATH is a valid directory IT=PATH,
+                 ;; else IT=basedir of PATH.
                  (file-directory-p it)))
-      ;; basedir is invalid, that's mean user is starting
+      ;; BASEDIR is invalid, that's mean user is starting
       ;; to write a non--existing path in minibuffer
       ;; probably to create a 'new_dir' or a 'new_dir+new_file'.
       (setq invalid-basedir t))
@@ -1424,15 +1487,32 @@ purpose."
     ;; like that the actual value (e.g /ssh:) is passed to
     ;; `helm-ff-tramp-hostnames'.
     (unless (or (string= path "Invalid tramp file name")
-                invalid-basedir) ; Leave  helm-pattern unchanged.
-      (setq helm-pattern (helm-ff--transform-pattern-for-completion path)))
-    (setq helm-ff-default-directory
-          (if (string= helm-pattern "")
-              (expand-file-name "/") ; Expand to "/" or "c:/"
-            ;; If path is an url *default-directory have to be nil.
-            (unless (or (string-match helm-ff-url-regexp path)
-                        (and ffap-url-regexp (string-match ffap-url-regexp path)))
-              path-name-dir)))
+                invalid-basedir)      ; Leave  helm-pattern unchanged.
+      (setq helm-ff-auto-update-flag  ; [1]
+            ;; Unless auto update is disabled at startup or
+            ;; interactively, start auto updating only at third char.
+            (unless (or (null helm-ff-auto-update-initial-value)
+                        (null helm-ff--auto-update-state)
+                        ;; But don't enable auto update when
+                        ;; deleting backward.
+                        helm-ff--deleting-char-backward)
+              (or (>= (length (helm-basename path)) 3) dir-p)))
+      (setq helm-pattern (helm-ff--transform-pattern-for-completion path))
+      ;; This have to be set after [1] to allow deleting char backward.
+      (setq basedir (expand-file-name
+                     (if (and dir-p helm-ff-auto-update-flag)
+                         ;; Add the final "/" to path
+                         ;; when `helm-ff-auto-update-flag' is enabled.
+                         (file-name-as-directory path)
+                         (file-name-directory path))))
+      (setq helm-ff-default-directory
+            (if (string= helm-pattern "")
+                (expand-file-name "/")  ; Expand to "/" or "c:/"
+                ;; If path is an url *default-directory have to be nil.
+                (unless (or (string-match helm-ff-url-regexp path)
+                            (and ffap-url-regexp
+                                 (string-match ffap-url-regexp path)))
+                  basedir))))
     (cond ((string= path "Invalid tramp file name")
            (or (helm-ff-tramp-hostnames) ; Hostnames completion.
                (prog2
@@ -1465,7 +1545,7 @@ purpose."
                                  ;; if it is a directory.
                                  dir-p)
                        (list path))
-                     (helm-ff-directory-files path-name-dir t))))))
+                     (helm-ff-directory-files basedir t))))))
 
 (defsubst helm-ff-directory-files (directory &optional full)
   "List contents of DIRECTORY.
@@ -1494,14 +1574,14 @@ systems."
        (not (memq helm-mp-matching-method '(multi1 multi3p)))))
 
 (defun helm-ff--transform-pattern-for-completion (pattern)
-  "Maybe return FNAME with it's basename modified as a regexp.
+  "Maybe return PATTERN with it's basename modified as a regexp.
 This happen only when `helm-ff-smart-completion' is enabled.
 This provide a similar behavior as `ido-enable-flex-matching'.
 See also `helm--mapconcat-candidate'.
-If FNAME is an url returns it unmodified.
-When FNAME contain a space fallback to match-plugin.
+If PATTERN is an url returns it unmodified.
+When PATTERN contain a space fallback to match-plugin.
 If basename contain one or more space fallback to match-plugin.
-If FNAME is a valid directory name,return FNAME unchanged."
+If PATTERN is a valid directory name,return PATTERN unchanged."
   ;; handle bad filenames containing a backslash.
   (setq pattern (helm-ff-handle-backslash pattern))
   (let ((bn      (helm-basename pattern))
@@ -1514,8 +1594,12 @@ If FNAME is a valid directory name,return FNAME unchanged."
     (cond
       ((or (and dir-p tramp-p (string-match ":\\'" pattern))
            (string= pattern "")
-           (and dir-p (< (length bn) 2)))
-       ;; Use full FNAME on e.g "/ssh:host:".
+           (and dir-p (<= (length bn) 2))
+           ;; Fix Issue #541 when BD have a subdir similar
+           ;; to BN, don't switch to match plugin
+           ;; which will match both.
+           (and dir-p (string-match (regexp-quote bn) bd)))
+       ;; Use full PATTERN on e.g "/ssh:host:".
        (regexp-quote pattern))
       ;; Prefixing BN with a space call match-plugin completion.
       ;; This allow showing all files/dirs matching BN (Issue #518).
@@ -1533,7 +1617,7 @@ If FNAME is a valid directory name,return FNAME unchanged."
        (concat (regexp-quote bd)
                (replace-regexp-in-string "[*]" "[*]" bn)))
       (t
-       (setq bn (if (> (length bn) 1) ; wait 2nd char before concating.
+       (setq bn (if (>= (length bn) 2) ; wait 2nd char before concating.
                     (helm--mapconcat-candidate bn)
                   (concat ".*" (regexp-quote bn))))
        (concat (regexp-quote bd) bn)))))
@@ -1543,9 +1627,10 @@ If FNAME is a valid directory name,return FNAME unchanged."
 
 (defun helm-ff-save-history ()
   "Store the last value of `helm-ff-default-directory' in `helm-ff-history'.
-Note that only directories are saved here."
+Note that only existing directories are saved here."
   (when (and helm-ff-default-directory
-             (helm-file-completion-source-p))
+             (helm-file-completion-source-p)
+             (file-directory-p helm-ff-default-directory))
     (set-text-properties 0 (length helm-ff-default-directory)
                          nil helm-ff-default-directory)
     (push helm-ff-default-directory helm-ff-history)))
@@ -1674,7 +1759,8 @@ This is called normally on third hit of \
 in `helm-find-files-persistent-action'."
   (let* ((buf      (get-file-buffer candidate))
          (buf-name (buffer-name buf))
-         (win (get-buffer-window buf)))
+         (win (get-buffer-window buf))
+         (helm--reading-passwd-or-string t))
     (if (and buf win
              (not (eq buf (get-buffer helm-current-buffer)))
              (not (buffer-modified-p buf)))
@@ -1894,7 +1980,7 @@ This affect directly file CANDIDATE."
 If CANDIDATE is not a directory expand CANDIDATE filename.
 If CANDIDATE is alone, open file CANDIDATE filename.
 That's mean:
-First hit on C-z expand CANDIDATE second hit open file.
+First hit on C-j expand CANDIDATE second hit open file.
 If a prefix arg is given or `helm-follow-mode' is on open file."
   (let* ((follow        (or (buffer-local-value
                              'helm-follow-mode
@@ -1934,7 +2020,7 @@ If a prefix arg is given or `helm-follow-mode' is on open file."
           ;; A regular file, expand it, (cl-first hit)
           ((and (>= num-lines-buf 3) (not current-prefix-arg) (not follow))
            (funcall insert-in-minibuffer new-pattern))
-          ;; An image file and it is the second hit on C-z,
+          ;; An image file and it is the second hit on C-j,
           ;; show the file in `image-dired'.
           ((string-match (image-file-name-regexp) candidate)
            (when (buffer-live-p (get-buffer image-dired-display-image-buffer))
@@ -2276,12 +2362,21 @@ Ask to kill buffers associated with that file, too."
                       "Mkdir: Unable to create directory `%s': file exists."
                       (helm-basename dirfname))
                    (make-directory dir 'parent)))
-               (or (and helm-ff (helm-find-files-1 dir)) t)))))
+               (when helm-ff
+                 ;; Allow having this new dir in history
+                 ;; to be able to retrieve it immediately
+                 ;; if we want to e.g copy a file from somewhere in it.
+                 (setq helm-ff-default-directory
+                       (file-name-as-directory dir))
+                 (push helm-ff-default-directory helm-ff-history))
+               (or (and helm-ff (helm-find-files-1 dir)) t))))
+        (helm--reading-passwd-or-string t))
     (if (> (length marked) 1)
         ;; Open all marked files in background and display
         ;; the first one.
-        (progn (mapc 'find-file-noselect (cdr marked))
-               (find-file (car marked)))
+        (progn
+          (mapc 'find-file-noselect (cdr marked))
+          (find-file (car marked)))
       (if (and (not (file-exists-p candidate))
                (not url-p)
                (string-match "/$" candidate))
@@ -2568,6 +2663,31 @@ Colorize only symlinks, directories and files."
 ;;; External searching file tools.
 ;;
 ;; Tracker desktop search
+(defvar helm-source-tracker-cand-incomplete nil "Contains incomplete candidate")
+(defun helm-source-tracker-transformer (candidates _source)
+  (helm-log "received: %S" candidates)
+  (cl-loop for cand in candidates
+           for path = (when (stringp helm-source-tracker-cand-incomplete)
+                        (caar (helm-highlight-files
+                               (list helm-source-tracker-cand-incomplete))))
+           for built = (if (not (stringp cand)) cand
+                         (let ((snippet cand))
+                           (unless (or (null path)
+                                      (string= "" path)
+                                      (not (string-match-p
+                                          "\\`[[:space:]]*\\.\\.\\."
+                                          snippet)))
+                             (let ((complete-candidate
+                                    (cons (concat path "\n" snippet) path)))
+                               (setq helm-source-tracker-cand-incomplete nil)
+                               (helm-log "built: %S" complete-candidate)
+                               complete-candidate))))
+           when (and (stringp cand)
+                   (string-match "\\`[[:space:]]*file://" cand))
+           do (setq helm-source-tracker-cand-incomplete ; save path
+                    (replace-match "" t t cand)) end
+           collect built))
+
 (defvar helm-source-tracker-search
   `((name . "Tracker Search")
     (candidates-process
@@ -2575,14 +2695,11 @@ Colorize only symlinks, directories and files."
          (start-process "tracker-search-process" nil
                         "tracker-search"
                         "--disable-color"
-                        "--disable-snippets"
+                        "--limit=512"
                         helm-pattern)))
-    (filtered-candidate-transformer
-     . ((lambda (candidates _source)
-          (cl-loop for cand in candidates
-                when (string-match "\\`[[:space:]]*file://" cand)
-                collect (replace-match "" nil t cand)))
-        (lambda (candidates _source) (helm-highlight-files candidates))))
+    (filtered-candidate-transformer . helm-source-tracker-transformer)
+    ;;(multiline) ; https://github.com/emacs-helm/helm/issues/529
+    (keymap . ,helm-generic-files-map)
     (action . ,(cdr (helm-get-attribute-from-type 'action 'file)))
     (action-transformer
      helm-transform-file-load-el
@@ -2706,7 +2823,7 @@ This is the starting point for nearly all actions you can do on files."
                             (if helm-ff-transformer-show-only-basename
                                 (helm-basename it) it))))
     (set-text-properties 0 (length input) nil input)
-    (helm-find-files-1 input (and presel (regexp-quote presel)))))
+    (helm-find-files-1 input (and presel (concat "^" (regexp-quote presel))))))
 
 ;;;###autoload
 (defun helm-for-files ()

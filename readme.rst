@@ -49,30 +49,34 @@ turning it off.
 Features
 ========
 
-My PHP setup is lacking smart code-completion and jump-to-definition, but
-otherwise, it's pretty solid. The last time I was hacking on PHP seriously I was
-on Windows, and I couldn't get `pfff <https://github.com/facebook/pfff>`__ to
-compile there, but on *nix that would be the next thing I'd add.
+I use `flycheck <https://github.com/flycheck/flycheck>`__ for style-checking
+just about everything, and install the relevant checker whenever I start
+working with a new language.
 
 I have a decent Python setup, with `Jedi
 <http://jedi.jedidjah.ch/en/latest/>`__ for auto-complete and jump-to-def. I've
 also trained it to look for virtualenvs in the project directory, which makes
 it more useful to me.
 
-I use a combination of js2-mode, Tern.js, jshint, and skewer-mode for
-live-editing JavaScript meant for web browsers. In theory this should be pretty
-awesome, and it's not bad, but there are some kinks to work out yet.
+I use a combination of `js2-mode <https://github.com/mooz/js2-mode>`__,
+`Tern.js <http://ternjs.net/>`__,
+`jshint <http://www.jshint.com/>`__ (via flycheck),
+`js2-refactor <https://github.com/magnars/js2-refactor.el>`__ and
+`skewer-mode <https://github.com/skeeto/skewer-mode>`__
+for live-editing JavaScript meant for web browsers. In theory this should be
+pretty awesome, and it's not bad, but there are some kinks to work out yet.
+
+My PHP setup is lacking smart code-completion and jump-to-definition, but
+otherwise, it's pretty solid. The last time I was hacking on PHP seriously I was
+on Windows, and I couldn't get `pfff <https://github.com/facebook/pfff>`__ to
+compile there, but on *nix that would be the next thing I'd add.
 
 For editing web templates of all stripes, I use the awesome `web-mode
 <http://web-mode.org/>`__ with several extensions, including
 `emmet-mode <https://github.com/smihica/emmet-mode>`__.
 
-I use css-mode for CSS, which is somewhat lacking, but I use a personal
-extension to skewer-mode for live-editing stylesheets, and that makes life
-better.
-
-I use flycheck for style-checking just about everything, and install the
-relevant checker whenever I start working with a new language.
+I use css-mode for CSS, which is somewhat lacking, but I use
+skewer-reload-stylesheets to live-edit, and that makes life better.
 
 Look in todo.txt and tell me about entries that can be resolved by just turning
 on features. I've found some myself and would not mind finding more.

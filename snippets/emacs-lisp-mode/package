@@ -1,0 +1,20 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: package
+# key: package
+# binding: direct-keybinding
+# --
+;;; $1.el --- $2
+
+;;; Author: $3
+
+;;; Version: $4
+
+;;; Commentary:
+
+;; $0
+
+;;; Code:
+
+
+
+;;; $1.el ends here

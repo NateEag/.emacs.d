@@ -61,13 +61,15 @@
                  )))
 
   (setq web-mode-ac-sources-alist
-        '(("php" . (ac-source-php-auto-yasnippets ac-source-yasnippet))
+        '(("php" . (ac-source-yasnippet ac-source-php-auto-yasnippets))
           ("html" . (ac-source-emmet-html-aliases ac-source-emmet-html-snippets))
           ;; DEBUG It would be nice to have an ac-source for CSS property names
           ;; as well as values. Since auto-complete already has the alist
           ;; mapping property names to legal values, I should add one that uses
           ;; the keys and issue a merge request.
-          ("css" . (ac-source-css-property ac-source-css-property-names))))
+          ("css" . (ac-source-css-property
+                    ac-source-css-property-names
+                    ac-source-emmet-css-snippets))))
 
   (require 'tagedit)
   (tagedit-add-paredit-like-keybindings)

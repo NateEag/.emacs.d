@@ -5,7 +5,8 @@
 ;; Author: Will Mengarini <seldon@eskimo.com>
 ;; URL: <http://www.eskimo.com/~seldon>
 ;; Created: Th 19 Feb 98
-;; Version: 0.44
+;; Version: 20091203.1012
+;; X-Original-Version: 0.44, Sa 23 Jan 99
 ;; Keywords: extensions, diminish, minor, codeprose
 
 ;; This file is part of GNU Emacs.

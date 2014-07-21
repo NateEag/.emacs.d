@@ -1,10 +1,10 @@
 ;;; know-your-http-well-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-
+(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads (http-header) "http-headers" "http-headers.el"
-;;;;;;  (21258 2263 0 0))
+;;;### (autoloads nil "http-headers" "http-headers.el" (21453 3928
+;;;;;;  0 0))
 ;;; Generated autoloads from http-headers.el
 
 (autoload 'http-header "http-headers" "\
@@ -14,8 +14,8 @@ Display the meaning of an HTTP header
 
 ;;;***
 
-;;;### (autoloads (http-method) "http-methods" "http-methods.el"
-;;;;;;  (21258 2263 0 0))
+;;;### (autoloads nil "http-methods" "http-methods.el" (21453 3928
+;;;;;;  0 0))
 ;;; Generated autoloads from http-methods.el
 
 (autoload 'http-method "http-methods" "\
@@ -25,8 +25,8 @@ Display the meaning of an HTTP method
 
 ;;;***
 
-;;;### (autoloads (http-relation) "http-relations" "http-relations.el"
-;;;;;;  (21258 2263 0 0))
+;;;### (autoloads nil "http-relations" "http-relations.el" (21453
+;;;;;;  3928 0 0))
 ;;; Generated autoloads from http-relations.el
 
 (autoload 'http-relation "http-relations" "\
@@ -36,8 +36,8 @@ Display the meaning of an HTTP relation
 
 ;;;***
 
-;;;### (autoloads (http-status-code) "http-status-codes" "http-status-codes.el"
-;;;;;;  (21258 2263 0 0))
+;;;### (autoloads nil "http-status-codes" "http-status-codes.el"
+;;;;;;  (21453 3928 0 0))
 ;;; Generated autoloads from http-status-codes.el
 
 (autoload 'http-status-code "http-status-codes" "\
@@ -48,15 +48,13 @@ Display the meaning of an HTTP status code or phrase
 ;;;***
 
 ;;;### (autoloads nil nil ("know-your-http-well-pkg.el" "know-your-http-well.el")
-;;;;;;  (21258 2264 950 0))
+;;;;;;  (21453 3928 602017 0))
 
 ;;;***
 
-(provide 'know-your-http-well-autoloads)
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
-;; coding: utf-8
 ;; End:
 ;;; know-your-http-well-autoloads.el ends here

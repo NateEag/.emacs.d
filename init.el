@@ -1,4 +1,4 @@
-;;; package --- Nate Eagleson's Emacs config.
+;;; init.el --- Nate Eagleson's Emacs config.
 
 ;;; Commentary:
 

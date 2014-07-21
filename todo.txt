@@ -1,6 +1,3 @@
--Move my one-off variable setting operations into custom.el, now that I know I
- can add my snarky comments to it.
-
 -Write a general-case ac-source for Tern.js. Right now I have to press M-Tab to
  trigger top-level completions, and I'd like to just press Tab. emacs-eclim
  might be a good place to rip off the basic idea from, since it depends on an
@@ -9,20 +6,14 @@
 
 -Add php-auto-yasnippet-style function params to tern.js.
 
--Make comment auto-fill work in js2-mode. At present, it auto-fills but without
- a prefix. It has a built-in function for comment filling; maybe I can override
- the usual auto-fill function with that somehow?
+-Make comment auto-fill work with C++-style comments in js2-mode, not just
+ C-style.
 
 -Finish getting tagedit to work with web-mode.
 
 -Try installing evil-mode and seeing if it interferes with my usual editing
  flow. If not, I can lazy-load vim's editing power, and learn how to cope
  better when I'm stuck in vim.
-
--Move my general programming customizations (like binding M-j to RET, turning
- on comment-auto-fill, etc) into a prog-mode-hook, and call that prog-mode
- hook from any mode-hooks that don't already trigger prog-mode-hook (probably
- most of them).
 
 -Check why focus-mode resizes frame slightly on Windows.
 
@@ -68,13 +59,15 @@
  per-project 'docroot/static' variable. I would like that source to be
  activated when I am working in a template and have entered an href="/..." or a
  src="/...". Actually, it might work better if it was just activated for any
- string beginning with '/'.
+ string beginning with '/'. Some hints:
+ http://superuser.com/questions/67170/how-do-i-complete-file-paths-in-emacs
 
 -See if my Emacs crashes can be reproduced by leaving old byte-compiled files
  on my load-path alongside newer versions of the same file, a la updating a
  library from MELPA then pulling that down to a different clone of the repo. It
  occurred to me today that my current setup does this, and it seems like a
- candidate for crashiness.
+ candidate for crashiness. I have a lot fewer crashes now, but still get one
+ every few weeks, I'd say.
 
 -Add an after-revert-hook to reload helm-git-file's cache for any containing
  repo if necessary. Seems like this should be a simple thing to do, though if
@@ -189,8 +182,6 @@
 -Fix comment filling and comment auto-filling in CSS mode (and web-mode). I
  think it might be an issue in sh-mode too?
 
--Get filepath autocompletion working in buffers. Some hints: http://superuser.com/questions/67170/how-do-i-complete-file-paths-in-emacs
-
 -If particularly bored, try getting GEBEN set up for debugging PHP. I'm
  uncertain whether this would actually be worth the effort.
 
@@ -233,10 +224,6 @@
  in-name words as distinct entities in some modes but not in others, and I'd
  like a sane, consistent way to deal with that sort of cursor movement. ...and
  a few years later, I have learned that subword-mode will let you do this.
-
--Set up jedi to load virtualenvs for the current project. See
- http://stackoverflow.com/questions/21246218/how-can-i-make-emacs-jedi-use-project-specific-virtualenvs
- for more details.
 
 -Look into anaconda-mode. It appears to be a wrapper around Jedi that might add
  a bit more intelligence, or something? Popped up in list-packages today.

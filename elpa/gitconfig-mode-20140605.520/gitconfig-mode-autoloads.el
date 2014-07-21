@@ -1,10 +1,10 @@
 ;;; gitconfig-mode-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-
+(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads (gitconfig-mode) "gitconfig-mode" "gitconfig-mode.el"
-;;;;;;  (21286 63470 0 0))
+;;;### (autoloads nil "gitconfig-mode" "gitconfig-mode.el" (21453
+;;;;;;  1918 0 0))
 ;;; Generated autoloads from gitconfig-mode.el
 
 (autoload 'gitconfig-mode "gitconfig-mode" "\
@@ -16,16 +16,9 @@ A major mode for editing .gitconfig files.
 
 ;;;***
 
-;;;### (autoloads nil nil ("gitconfig-mode-pkg.el") (21286 63470
-;;;;;;  55000 0))
-
-;;;***
-
-(provide 'gitconfig-mode-autoloads)
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
-;; coding: utf-8
 ;; End:
 ;;; gitconfig-mode-autoloads.el ends here

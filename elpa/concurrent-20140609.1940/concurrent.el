@@ -3,7 +3,7 @@
 ;; Copyright (C) 2010, 2011, 2012  SAKURAI Masashi
 
 ;; Author: SAKURAI Masashi <m.sakurai at kiwanami.net>
-;; Version: 20140303.1635
+;; Version: 20140609.1940
 ;; X-Original-Version: 0.3.1
 ;; Keywords: deferred, async, concurrent
 ;; Package-Requires: ((deferred "0.3.1"))
@@ -332,6 +332,22 @@ the removed deferred object. "
   "[internal] If the variable entry is not bound, return `t'."
   (eq 'cc:dataflow-undefine (cc:dataflow-value obj)))
 
+(defmacro cc:dataflow-parent-environment (df)
+  "[internal] Return the parent environment."
+  `(car ,df))
+
+(defmacro cc:dataflow-test (df)
+  "[internal] Return the test function."
+  `(cadr ,df))
+
+(defmacro cc:dataflow-channel (df)
+  "[internal] Return the channel object."
+  `(caddr ,df))
+
+(defmacro cc:dataflow-list (df)
+  "[internal] Return the list of deferred object which are waiting for value binding."
+  `(cdddr ,df))
+
 (defun cc:dataflow-environment (&optional parent-env test-func channel)
   "Create a dataflow environment.
 PARENT-ENV is the default environment. If this environment doesn't have the entry A and the parent one has the entry A, this environment can return the entry A. One can override the entry, setting another entry A to this environment.
@@ -368,22 +384,6 @@ CHANNEL is a channel object that sends signals of variable events. Observers can
                                 (cc:dataflow-deferred-list it) nil)
                    do (deferred:callback-post i value))
              (setf (cc:dataflow-deferred-list obj) nil))))))))
-
-(defmacro cc:dataflow-parent-environment (df)
-  "[internal] Return the parent environment."
-  `(car ,df))
-
-(defmacro cc:dataflow-test (df)
-  "[internal] Return the test function."
-  `(cadr ,df))
-
-(defmacro cc:dataflow-channel (df)
-  "[internal] Return the channel object."
-  `(caddr ,df))
-
-(defmacro cc:dataflow-list (df)
-  "[internal] Return the list of deferred object which are waiting for value binding."
-  `(cdddr ,df))
 
 (defun cc:dataflow-get-object-for-value (df key)
   "[internal] Return an entry object that is indicated by KEY.

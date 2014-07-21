@@ -6,13 +6,13 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Version: 20140627.901
-;;; X-Original-Version: 1.13.2
+;; Version: 20140718.1321
+;;; X-Original-Version: 1.13.5
 
-(defconst php-mode-version-number "1.13.3"
+(defconst php-mode-version-number "1.13.5"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2014-06-19"
+(defconst php-mode-modified "2014-07-18"
   "PHP Mode build date.")
 
 ;;; License
@@ -436,8 +436,10 @@ working with Symfony2."
                        (arglist-intro . php-lineup-arglist-intro)
                        (knr-argdecl . [0])
                        (arglist-cont-nonempty . c-lineup-cascaded-calls)
-                       (statement-cont . (first c-lineup-cascaded-calls +))
-                       (case-label . +)))))
+                       (statement-cont . +)
+                       (substatement-open . 0)
+                       (case-label . +)
+                       (comment-intro . 0)))))
 
 (defun php-enable-psr2-coding-style ()
   "Makes php-mode use coding styles defined by PSR-2"
@@ -445,9 +447,9 @@ working with Symfony2."
   (setq tab-width 4
         indent-tabs-mode nil)
   (c-set-style "psr2")
-  ;; Undo drupal coding style whitespace effects
-  (setq show-trailing-whitespace nil)
-  (remove-hook 'before-save-hook 'delete-trailing-whitespace t))
+  (set (make-local-variable 'require-final-newline) t)
+  (set (make-local-variable 'show-trailing-whitespace) t)
+  (add-hook 'before-save-hook 'delete-trailing-whitespace nil t))
 
 
 (defun php-mode-version ()
@@ -751,13 +753,26 @@ the string HEREDOC-START."
   (c-put-char-property (1- (point)) 'syntax-table (string-to-syntax "|")))
 
 (defun php-syntax-propertize-extend-region (start end)
-  "Extend the propertize region of START falls inside a heredoc."
-  (when (re-search-backward php-heredoc-start-re nil t)
-    (let ((new-start (point)))
-      (when (and (re-search-forward
-                  (php-heredoc-end-re (match-string 0)) nil t)
-                 (> (point) start))
-        (cons new-start end)))))
+  "Extend the propertize region if START or END falls inside a
+PHP heredoc."
+  (let ((new-start)
+        (new-end))
+    (goto-char start)
+    (when (re-search-backward php-heredoc-start-re nil t)
+      (let ((maybe (point)))
+        (when (and (re-search-forward
+                    (php-heredoc-end-re (match-string 0)) nil t)
+                   (> (point) start))
+          (setq new-start (maybe)))))
+    (goto-char end)
+    (when (re-search-backward php-heredoc-start-re nil t)
+      (if (re-search-forward
+           (php-heredoc-end-re (match-string 0)) nil t)
+          (when (> (point) end)
+            (setq new-end (point)))
+        (setq new-end (point-max))))
+    (when (or new-start new-end)
+      (cons (or new-start start) (or new-end end)))))
 
 ;;;###autoload
 (define-derived-mode php-mode c-mode "PHP"
@@ -1576,7 +1591,7 @@ searching the PHP website."
       "PHP_SESSION_DISABLED"
       "PHP_SESSION_NONE"
       "PHP_SESSION_ACTIVE"
-      
+
       ;; IMAP constants
       "NIL"
       "OP_DEBUG"

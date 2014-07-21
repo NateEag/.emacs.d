@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "simple-httpd" "simple-httpd.el" (21354 57827
+;;;### (autoloads nil "simple-httpd" "simple-httpd.el" (21453 3957
 ;;;;;;  0 0))
 ;;; Generated autoloads from simple-httpd.el
 
@@ -18,6 +18,11 @@ instance per Emacs instance.
 Stop the web server if it is currently running, otherwise do nothing.
 
 \(fn)" t nil)
+
+(autoload 'httpd-serve-directory "simple-httpd" "\
+Start the web server with given `directory' as `httpd-root'.
+
+\(fn DIRECTORY)" t nil)
 
 ;;;***
 

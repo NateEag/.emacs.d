@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "toggle-quotes" "toggle-quotes.el" (21437 31542
+;;;### (autoloads nil "toggle-quotes" "toggle-quotes.el" (21453 3974
 ;;;;;;  0 0))
 ;;; Generated autoloads from toggle-quotes.el
 

@@ -4,7 +4,7 @@
 
 ;; Author: Jim Tian <tianjin.sc@gmail.com>
 ;; URL: https://github.com/toctan/toggle-quotes.el
-;; Version: 20140709.537
+;; Version: 20140710.226
 ;; X-Original-Version: 0.1.0
 ;; Keywords: convenience, quotes
 
@@ -53,7 +53,8 @@
     (save-excursion
       (goto-char beg)
       (forward-sexp 1)
-      (skip-syntax-backward "^\"")
+      (if (eq major-mode 'js2-mode)
+          (skip-syntax-backward "^\""))
       (point))))
 
 (defun tq/string-at-point ()

@@ -1,10 +1,9 @@
 ;;; emacs-eclim-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-
+(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads (eclim-mode eclim/workspace-dir) "eclim" "eclim.el"
-;;;;;;  (21254 59336 0 0))
+;;;### (autoloads nil "eclim" "eclim.el" (21453 1862 0 0))
 ;;; Generated autoloads from eclim.el
 
 (autoload 'eclim/workspace-dir "eclim" "\
@@ -22,12 +21,14 @@ An interface to the Eclipse IDE.
 
 ;;;***
 
-;;;### (autoloads (eclim-manage-projects) "eclim-project" "eclim-project.el"
-;;;;;;  (21254 59337 0 0))
+;;;### (autoloads nil "eclim-project" "eclim-project.el" (21453 1863
+;;;;;;  0 0))
 ;;; Generated autoloads from eclim-project.el
 
-(autoload 'eclim-manage-projects "eclim-project" "\
+(autoload 'eclim-project-mode "eclim-project" "\
+Manage all your eclim projects in one buffer.
 
+\\{eclim-project-mode-map}
 
 \(fn)" t nil)
 
@@ -35,16 +36,14 @@ An interface to the Eclipse IDE.
 
 ;;;### (autoloads nil nil ("ac-emacs-eclim-source.el" "company-emacs-eclim.el"
 ;;;;;;  "eclim-ant.el" "eclim-completion.el" "eclim-java.el" "eclim-maven.el"
-;;;;;;  "eclim-problems.el" "eclimd.el" "emacs-eclim-pkg.el") (21254
-;;;;;;  59337 627395 0))
+;;;;;;  "eclim-problems.el" "eclimd.el" "emacs-eclim-pkg.el") (21453
+;;;;;;  1863 231709 0))
 
 ;;;***
 
-(provide 'emacs-eclim-autoloads)
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
-;; coding: utf-8
 ;; End:
 ;;; emacs-eclim-autoloads.el ends here

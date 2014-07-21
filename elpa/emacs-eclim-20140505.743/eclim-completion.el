@@ -65,7 +65,9 @@
               (php-mode
                (eclim/execute-command "php_complete" "-p" "-f" "-e" "-o"))
               ((javascript-mode js-mode)
-               (eclim/execute-command "javascript_complete" "-p" "-f" "-e" "-o"))))
+               (eclim/execute-command "javascript_complete" "-p" "-f" "-e" "-o"))
+              ((c++-mode c-mode)
+               (eclim/execute-command "c_complete" "-p" "-f" "-e" ("-l" "standard") "-o"))))
     (setq eclim--is-completing nil)))
 
 (defun eclim--completion-candidates-filter (c)
@@ -153,7 +155,7 @@ buffer."
   (setq eclim--completion-start
         (save-excursion
           (case major-mode
-            ((java-mode javascript-mode js-mode ruby-mode php-mode)
+            ((java-mode javascript-mode js-mode ruby-mode php-mode c-mode c++-mode)
              (progn
                (ignore-errors (beginning-of-thing 'symbol))
                ;; Completion candidates for annotations don't include '@'.
@@ -191,7 +193,7 @@ buffer."
     ;; we are completing an attribute; let's use yasnippet to get som nice completion going
     (let* ((end (point))
            (c (buffer-substring-no-properties eclim--completion-start end))
-           (completion (if (string-endswith-p c "\"") c (concat c "=\"\""))))
+           (completion (if (s-ends-with? "\"" c) c (concat c "=\"\""))))
       (when (string-match "\\(.*\\)=\"\\(.*\\)\"" completion)
         (delete-region eclim--completion-start end)
         (if (and eclim-use-yasnippet (featurep 'yasnippet)  yas-minor-mode)
@@ -210,6 +212,7 @@ buffer."
 (defun eclim--completion-action ()
   (case major-mode
     ('java-mode (eclim--completion-action-java))
+    ((c-mode c++-mode) (eclim--completion-action-java))
     ('nxml-mode (eclim--completion-action-xml))
     (t (eclim--completion-action-default))))
 

@@ -235,6 +235,14 @@ has been found."
   (interactive)
   (eclim/execute-command "java_constructor" "-p" "-f" "-o"))
 
+(defun eclim/java-call-hierarchy (project file offset length encoding)
+  (eclim--call-process "java_callhierarchy"
+                       "-p" project
+                       "-f" file
+                       "-o" (number-to-string offset)
+                       "-l" (number-to-string length)
+                       "-e" encoding))
+
 (defun eclim/java-hierarchy (project file offset encoding)
   (eclim--call-process "java_hierarchy"
                        "-p" project
@@ -262,6 +270,39 @@ has been found."
                        (switch-to-buffer buf)
                        (revert-buffer t t t))))))
       (message "Done"))))
+
+(defun eclim-java-call-hierarchy (project file encoding)
+  (interactive (list (eclim--project-name)
+                     (eclim--project-current-file)
+                     (eclim--current-encoding)))
+  (let ((boundary "\\([<>()\\[\\.\s\t\n!=,;]\\|]\\)"))
+    (save-excursion
+      (if (re-search-backward boundary nil t)
+        (forward-char))
+      (let ((top-node (eclim/java-call-hierarchy project file (eclim--byte-offset)
+                                                 (length (cdr (eclim--java-identifier-at-point t))) encoding)))
+        (pop-to-buffer "*eclim: call hierarchy*" t)
+        (special-mode)
+        (let ((buffer-read-only nil))
+          (erase-buffer)
+          (eclim--java-insert-call-hierarchy-node
+           project
+           top-node
+           0))))))
+(defun eclim--java-insert-call-hierarchy-node (project node level)
+  (let ((declaration (cdr (assoc 'name node))))
+    (insert (format (concat "%-"(number-to-string (* level 2)) "s=> ") ""))
+    (lexical-let ((position (cdr (assoc 'position node))))
+      (if position
+        (insert-text-button declaration
+                            'follow-link t
+                            'help-echo declaration
+                            'action #'(lambda (&rest ignore)
+                                        (eclim--visit-declaration position)))
+        (insert declaration)))
+    (newline)
+    (loop for caller across (cdr (assoc 'callers node))
+          do (eclim--java-insert-call-hierarchy-node project caller (1+ level)))))
 
 (defun eclim-java-hierarchy (project file offset encoding)
   (interactive (list (eclim--project-name)
@@ -330,7 +371,7 @@ universal argument the search will be made CASE-INSENSITIVE."
                                              (if (string-match-p "^[A-Z]" current-symbol)
                                                  current-symbol
                                                (eclim--java-current-type-name))))
-                     current-prefix-arg))
+                     "P"))
   (eclim-java-find-generic "workspace" "declarations" "type" type-name case-insensitive t))
 
 (defun eclim-java-find-generic (scope context type pattern &optional case-insensitive open-single-file)
@@ -344,7 +385,7 @@ be made CASE-INSENSITIVE."
                      (eclim--completing-read "Context: " eclim--java-search-contexts)
                      (eclim--completing-read "Type: " eclim--java-search-types)
                      (read-string "Pattern: ")
-                     current-prefix-arg))
+                     "P"))
   (eclim/with-results hits ("java_search" ("-p" pattern) ("-t" type) ("-x" context) ("-s" scope) (if case-insensitive '("-i" "")))
     (eclim--find-display-results pattern hits open-single-file)))
 
@@ -579,6 +620,7 @@ method."
 
 
 (defun eclim-java-show-documentation-for-current-element ()
+  "Displays the doc comments for the element at the pointers position."
   (interactive)
   (let ((symbol (symbol-at-point)))
     (if symbol

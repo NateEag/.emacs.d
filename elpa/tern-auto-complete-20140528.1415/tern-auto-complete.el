@@ -2,7 +2,7 @@
 ;;; tern-auto-complete.el --- Tern Completion by auto-complete.el
 
 ;; Author:  <m.sakurai at kiwanami.net>
-;; Version: 20140421.706
+;; Version: 20140528.1415
 ;; X-Original-Version: 0.0.1
 ;; Package-Requires: ((tern "0.0.1") (auto-complete "1.4") (cl-lib "0.5") (emacs "24"))
 
@@ -33,7 +33,10 @@
 
 ;;; Completion
 
-(defvar tern-ac-on-dot t "[AC] If t, tern enable completion by auto-completion.")
+(defcustom tern-ac-on-dot t
+  "[AC] If t, tern enable completion by auto-completion."
+  :type 'boolean
+  :group 'auto-complete)
 
 (defvar tern-ac-complete-reply nil  "[internal] tern-ac-complete-reply.")
 
@@ -95,12 +98,10 @@
         tern-ac-complete-request-point)))
 
 ;; (makunbound 'ac-source-tern-completion)
-(eval-after-load 'auto-complete
-  '(progn
-     (ac-define-source tern-completion
-                       '((candidates . tern-ac-completion-matches)
-                         (prefix . tern-ac-completion-prefix)
-                         (requires . -1)))))
+(ac-define-source tern-completion
+  '((candidates . tern-ac-completion-matches)
+    (prefix . tern-ac-completion-prefix)
+    (requires . -1)))
 
 ;;;###autoload
 (defun tern-ac-setup ()

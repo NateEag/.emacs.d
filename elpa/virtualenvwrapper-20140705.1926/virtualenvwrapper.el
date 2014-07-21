@@ -4,7 +4,7 @@
 
 ;; Author: James J Porter <porterjamesj@gmail.com>
 ;; URL: http://github.com/porterjamesj/virtualenvwrapper.el
-;; Version: 20140315.216
+;; Version: 20140705.1926
 ;; X-Original-Version: 20131514
 ;; Keywords: python, virtualenv, virtualenvwrapper
 ;; Package-Requires: ((dash "1.5.0") (s "1.6.1"))
@@ -46,7 +46,7 @@
   :group 'python)
 
 (defcustom venv-location
-  (expand-file-name "~/.virtualenvs/")
+  (expand-file-name (or (getenv "WORKON_HOME") "~/.virtualenvs/"))
   "The location(s) of your virtualenvs. This
 can be either a string, which indicates a single directory in which
 you keep all your virutalenvs, or a list of strings, in which case it
@@ -54,6 +54,32 @@ specifies disparate locations in which all your virtualenvs are kept.
 The default location is ~/.virtualenvs/, which is where your virtualenvs
 are stored if you use virtualenvwrapper in the shell."
   :group 'virtualenvwrapper)
+
+;; hooks
+
+(defvar venv-premkvirtualenv-hook nil
+  "Hook run before creating a new virtualenv.")
+
+(defvar venv-postmkvirtualenv-hook nil
+  "Hook run after creating a new virtualenv.")
+
+(defvar venv-prermvirtualenv-hook nil
+  "Hook run before deleting a virtualenv.")
+
+(defvar venv-postrmvirtualenv-hook nil
+  "Hook run after deleting a virtualenv.")
+
+(defvar venv-preactivate-hook nil
+  "Hook run before a virtualenv is activated.")
+
+(defvar venv-postactivate-hook nil
+  "Hook run after a virtualenv is activated.")
+
+(defvar venv-predeactivate-hook nil
+  "Hook run before a virtualenv is deactivated.")
+
+(defvar venv-postdeactivate-hook nil
+  "Hook run after a virtualenv is deactivated.")
 
 
 ;; internal variables that you probably shouldn't mess with
@@ -63,6 +89,7 @@ are stored if you use virtualenvwrapper in the shell."
 (defvar venv-current-name nil "Name of current virtualenv.")
 
 (defvar venv-current-dir nil "Directory of current virtualenv.")
+
 
 ;; copy from virtualenv.el
 (defvar venv-executables-dir
@@ -187,6 +214,7 @@ prompting the user with the string PROMPT"
 (defun venv-deactivate ()
   "Deactivate the current venv."
   (interactive)
+  (run-hooks 'venv-predeactivate-hook)
   (setq python-shell-virtualenv-path nil)
   (setq exec-path (venv-get-stripped-path exec-path))
   (setenv "PATH" (s-join path-separator
@@ -196,6 +224,7 @@ prompting the user with the string PROMPT"
   (setq venv-current-name nil)
   (setq venv-current-dir nil)
   (setq eshell-path-env (getenv "PATH"))
+  (run-hooks 'venv-postdeactivate-hook)
   (when (called-interactively-p 'interactive)
     (message "virtualenv deactivated")))
 
@@ -219,6 +248,7 @@ interactively."
       ;; then read
       (setq venv-current-name
             (venv-read-name "Virtualenv to switch to: "))))
+  (run-hooks 'venv-preactivate-hook)
   (setq venv-current-dir
         (venv-name-to-dir venv-current-name))
   ;; push it onto the history
@@ -232,6 +262,7 @@ interactively."
   ;; keep eshell path in sync
   (setq eshell-path-env (getenv "PATH"))
   (setenv "VIRTUAL_ENV" venv-current-dir)
+  (run-hooks 'venv-postactivate-hook)
   (when (called-interactively-p 'interactive)
     (message (concat "Switched to virtualenv: " venv-current-name))))
 
@@ -250,16 +281,18 @@ default-directory."
       (setq names (list (read-from-minibuffer "New virtualenv: "))))
     ;; map over all the envs we want to make
     (--each names
-            ;; error if this env already exists
-            (when (-contains? (venv-get-candidates) it)
-              (error "A virtualenv with this name already exists!"))
-            ;; should this be asynchronous?
-            (shell-command (concat "virtualenv " parent-dir it))
-            (when (listp venv-location)
-              (add-to-list 'venv-location (concat parent-dir it)))
-            (when (called-interactively-p 'interactive)
-              (message (concat "Created virtualenv: " it)))))
-    ;; workon the last venv we made
+      ;; error if this env already exists
+      (when (-contains? (venv-get-candidates) it)
+        (error "A virtualenv with this name already exists!"))
+      (run-hooks 'venv-premkvirtualenv-hook)
+      (shell-command (concat "virtualenv " parent-dir it))
+      (when (listp venv-location)
+        (add-to-list 'venv-location (concat parent-dir it)))
+      (venv-with-virtualenv it
+                            (run-hooks 'venv-postmkvirtualenv-hook))
+      (when (called-interactively-p 'interactive)
+        (message (concat "Created virtualenv: " it)))))
+  ;; workon the last venv we made
     (venv-workon (car (last names))))
 
 ;;;###autoload
@@ -276,18 +309,20 @@ default-directory."
     (setq names (list (venv-read-name "Virtualenv to delete: "))))
   ;; map over names, deleting the appropriate directory
   (--each names
-          (delete-directory (venv-name-to-dir it) t)
-          ;; get it out of the history so it doesn't show up in completing reads
-          (setq venv-history (-filter
-                              (lambda (s) (not (s-equals? s it))) venv-history))
-          ;; if location is a list, delete it from the list
-          (when (listp venv-location)
-            (setq venv-location
-                  (-filter (lambda (locs) (not (s-equals?
-                                                it
-                                                (venv-dir-to-name locs))))
-                           venv-location)))
-          (message (concat "Deleted virtualenv: " it))))
+    (run-hooks 'venv-prermvirtualenv-hook)
+    (delete-directory (venv-name-to-dir it) t)
+    ;; get it out of the history so it doesn't show up in completing reads
+    (setq venv-history (-filter
+                        (lambda (s) (not (s-equals? s it))) venv-history))
+    ;; if location is a list, delete it from the list
+    (when (listp venv-location)
+      (setq venv-location
+            (-filter (lambda (locs) (not (s-equals?
+                                          it
+                                          (venv-dir-to-name locs))))
+                     venv-location)))
+    (run-hooks 'venv-postrmvirtualenv-hook)
+    (message (concat "Deleted virtualenv: " it))))
 
 ;;;###autoload
 (defun venv-lsvirtualenv ()
@@ -424,9 +459,10 @@ virtualenvwrapper.el."
 
 ;; eshell
 
-(defun venv--gen-fun (command)
-  `(defun ,(intern (format "pcomplete/eshell-mode/%s" command)) ()
-     (pcomplete-here* (venv-get-candidates))))
+(eval-and-compile
+  (defun venv--gen-fun (command)
+    `(defun ,(intern (format "pcomplete/eshell-mode/%s" command)) ()
+       (pcomplete-here* (venv-get-candidates)))))
 
 (defmacro venv--make-pcompletions (commands)
   `(progn ,@(-map #'venv--gen-fun commands)))
@@ -442,7 +478,7 @@ virtualenvwrapper.el."
   (defun eshell/deactivate () (venv-deactivate))
   (defun eshell/rmvirtualenv (&rest args) (apply #'venv-rmvirtualenv args))
   (defun eshell/mkvirtualenv (&rest args) (apply #'venv-mkvirtualenv args))
-  (defun eshell/cpvirtualenv (&rest argas) (apply #'venv-cpvirtualenv args))
+  (defun eshell/cpvirtualenv (&rest args) (apply #'venv-cpvirtualenv args))
   (defun eshell/cdvirtualenv (&optional arg) (venv-cdvirtualenv arg))
   (defun eshell/lsvirtualenv () (venv-list-virtualenvs))
   (defun eshell/allvirtualenv (&rest command)

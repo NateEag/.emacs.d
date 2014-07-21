@@ -1,10 +1,10 @@
 ;;; gitattributes-mode-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-
+(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads (gitattributes-mode) "gitattributes-mode" "gitattributes-mode.el"
-;;;;;;  (21286 63408 0 0))
+;;;### (autoloads nil "gitattributes-mode" "gitattributes-mode.el"
+;;;;;;  (21453 1915 0 0))
 ;;; Generated autoloads from gitattributes-mode.el
 
 (autoload 'gitattributes-mode "gitattributes-mode" "\
@@ -17,16 +17,9 @@ A major mode for editing .gitattributes files.
 
 ;;;***
 
-;;;### (autoloads nil nil ("gitattributes-mode-pkg.el") (21286 63408
-;;;;;;  785000 0))
-
-;;;***
-
-(provide 'gitattributes-mode-autoloads)
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
-;; coding: utf-8
 ;; End:
 ;;; gitattributes-mode-autoloads.el ends here

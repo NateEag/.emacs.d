@@ -1,10 +1,10 @@
 ;;; git-commit-mode-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-
+(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads (git-commit-mode) "git-commit-mode" "git-commit-mode.el"
-;;;;;;  (21286 63277 0 0))
+;;;### (autoloads nil "git-commit-mode" "git-commit-mode.el" (21453
+;;;;;;  3949 0 0))
 ;;; Generated autoloads from git-commit-mode.el
 
 (autoload 'git-commit-mode "git-commit-mode" "\
@@ -20,16 +20,9 @@ basic structure of and errors in git commit messages.
 
 ;;;***
 
-;;;### (autoloads nil nil ("git-commit-mode-pkg.el") (21286 63277
-;;;;;;  687000 0))
-
-;;;***
-
-(provide 'git-commit-mode-autoloads)
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
-;; coding: utf-8
 ;; End:
 ;;; git-commit-mode-autoloads.el ends here

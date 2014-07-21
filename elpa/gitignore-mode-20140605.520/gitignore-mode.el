@@ -1,12 +1,11 @@
 ;;; gitignore-mode.el --- Major mode for editing .gitignore files -*- lexical-binding: t; -*-
+;; Version: 20140605.520
 
 ;; Copyright (c) 2012-2013  Sebastian Wiesner
 ;; Copyright (C) 2012-2014  The Magit Project Developers
 
 ;; Author: Sebastian Wiesner <lunaryorn@gmail.com>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
-;; Version: 20140313.1504
-;; X-Original-Version: 0.14.0
 ;; Homepage: https://github.com/magit/git-modes
 ;; Keywords: convenience vc git
 

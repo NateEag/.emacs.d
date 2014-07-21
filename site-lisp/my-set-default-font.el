@@ -5,10 +5,12 @@
 
   (let ((my-display-pixel-width (display-pixel-width))
         (my-display-mm-width (display-mm-width)))
-    (if (or (not my-display-pixel-width)
-            (not my-display-mm-width)
-            (< (/ (display-pixel-width) (display-mm-width)) 3))
-        12
+    (if (and my-display-pixel-width my-display-mm-width)
+        ;; Guess a font size based on monitor resolution.
+        (floor
+         (*
+          (/ (float (display-pixel-width)) (display-mm-width))
+          4.44))
       14)))
 
 (defun my-get-default-font-name ()

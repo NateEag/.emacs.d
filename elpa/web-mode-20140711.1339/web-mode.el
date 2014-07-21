@@ -3,7 +3,7 @@
 
 ;; Copyright 2011-2014 François-Xavier Bois
 
-;; Version: 9.0.45
+;; Version: 9.0.48
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -52,7 +52,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "9.0.45"
+(defconst web-mode-version "9.0.48"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -639,7 +639,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("lsp"              . "\\.lsp\\'")
     ("mako"             . "\\.mako?\\'")
     ("mason"            . "\\.mas\\'")
-    ("mojolicious"      . "mojolicious\\|\\.epl\\'")
+    ("mojolicious"      . "mojolicious\\|\\.epl?\\'")
     ("mustache"         . "\\.mustache\\'")
     ("php"              . "\\.\\(php\\|ctp\\|psp\\|inc\\)\\'")
     ("python"           . "\\.pml\\'")
@@ -708,16 +708,6 @@ Must be used in conjunction with web-mode-enable-block-face."
   (if (boundp 'web-mode-engines-alternate-delimiters) web-mode-engines-alternate-delimiters '())
   "Engine delimiters. Useful for engines that provide alternate delimiters.")
 
-(defun web-mode-highlight-whitespaces (beg end)
-  "Scan whitespaces."
-  (save-excursion
-    (goto-char beg)
-    (while (re-search-forward web-mode-whitespaces-regexp end t)
-      (add-text-properties (match-beginning 0) (match-end 0)
-                           '(face web-mode-whitespace-face))
-      ) ;while
-    ))
-
 (defun web-mode-engine-delimiter-open (engine default)
   "alternative open delimiter"
   (let (delim)
@@ -761,7 +751,8 @@ Must be used in conjunction with web-mode-enable-block-face."
                       ("<%@" "%>")
                       ("<%:" "%>")
                       ("<%-" "- " " --%>")))
-    ("blade"       . (("{{ " " }}")
+    ("blade"       . (("{{{ " " }}}")
+                      ("{{ " " }}")
                       ("{{-" "- " " --}}")))
     ("django"      . (("{{ " " }}")
                       ("{% " " %}")
@@ -846,7 +837,7 @@ Must be used in conjunction with web-mode-enable-block-face."
    '("go"               . "{{.")
    '("jsp"              . "<%\\|${\\|</?[[:alpha:]]+:[[:alpha:]]+")
    '("lsp"              . "<%")
-   '("mako"             . "</?%\\|${\\|^[ \t]*% \\|^[ \t]*##")
+   '("mako"             . "</?%\\|${\\|^[ \t]*%.\\|^[ \t]*##")
    '("mason"            . "</?[&%]\\|^%.")
    '("mojolicious"      . "<%.\\|^[ \t]*%.")
    '("php"              . "<\\?")
@@ -1222,7 +1213,6 @@ Must be used in conjunction with web-mode-enable-block-face."
 
 (defvar web-mode-selector-font-lock-keywords
   (list
-
    (cons (concat "@\\(" web-mode-css-at-rules "\\)\\>")
          '(1 'web-mode-css-at-rule-face))
    '("\\<\\(all\|braille\\|embossed\\|handheld\\|print\\|projection\\|screen\\|speech\\|tty\\|tv\\|and\\|or\\)\\>" 1 'web-mode-keyword-face)
@@ -1624,6 +1614,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     (modify-syntax-entry ?& "." table)
     (modify-syntax-entry ?/ "." table)
     (modify-syntax-entry ?= "." table)
+    (modify-syntax-entry ?% "." table)
 
     table)
   "Syntax table used tp reveal whitespaces.")
@@ -1794,7 +1785,7 @@ the environment as needed for ac-sources, right before they're used.")
            (set-buffer-modified-p old-modified-p)))))
 
   (defun web-mode-buffer-narrowed-p ()
-    "For compatibility with Emacs 24.3."
+    "For compatibility with Emacs pre 24.3."
     (if (fboundp 'buffer-narrowed-p)
         (buffer-narrowed-p)
       (/= (- (point-max) (point-min)) (buffer-size))))
@@ -1906,7 +1897,7 @@ the environment as needed for ac-sources, right before they're used.")
 
   )
 
-;;---- ADVICE ------------------------------------------------------------------
+;;---- ADVICES -----------------------------------------------------------------
 
 (defadvice ac-start (before web-mode-set-up-ac-sources activate)
   "Set `ac-sources' based on current language before running auto-complete."
@@ -2124,6 +2115,10 @@ the environment as needed for ac-sources, right before they're used.")
           (cond
            ((string= tagopen "{{-")
             (setq closing-string "--}}"))
+           ((string= tagopen "{{{")
+            (setq closing-string "}}}"
+                  delim-open "{{{"
+                  delim-close "}}}"))
            ((string= sub2 "{{")
             (setq closing-string "}}"
                   delim-open "{{"
@@ -2553,9 +2548,20 @@ the environment as needed for ac-sources, right before they're used.")
 
     (cond
 
-     ((member web-mode-engine '("php" "asp" "lsp" "mako" "python" "web2py" "mason"))
+     ((member web-mode-engine '("php" "asp" "lsp" "python" "web2py" "mason"))
       (setq regexp web-mode-engine-token-regexp)
+;;      (message "%S %S" (point) web-mode-engine-token-regexp)
       )
+
+     ((string= web-mode-engine "mako")
+      (cond
+       ((string= sub2 "##")
+        (setq token-type 'comment)
+        )
+       (t
+        (setq regexp web-mode-engine-token-regexp))
+       )
+      ) ;mako
 
      ((string= web-mode-engine "django")
       (cond
@@ -2732,7 +2738,7 @@ the environment as needed for ac-sources, right before they're used.")
 (defun web-mode-block-tokenize (reg-beg reg-end &optional regexp)
   "Tokenize block chunk."
   (unless regexp (setq regexp web-mode-engine-token-regexp))
-;;  (message "tokenize: reg-beg(%S) reg-end(%S) block-end(%S)" reg-beg reg-end block-end)
+;;  (message "tokenize: reg-beg(%S) reg-end(%S) regexp(%S)" reg-beg reg-end regexp)
   (save-excursion
     (let ((pos reg-beg) beg char match continue (flags 0) token-type)
 
@@ -3249,10 +3255,13 @@ the environment as needed for ac-sources, right before they're used.")
 (defun web-mode-scan-elements (reg-beg reg-end)
   "Scan html nodes (tags/attrs/comments/doctype)."
   (save-excursion
-    (let (part-beg part-end flags limit close-expr props tname tbeg tend tstop element-content-type regexp regexp1 regexp2 part-close-tag char)
+    (let (part-beg part-end flags limit close-expr props tname tbeg tend element-content-type regexp regexp1 regexp2 part-close-tag char)
 
       (setq regexp1 "<\\(/?[[:alpha:]][[:alnum:]-]*\\|!--\\|!\\[CDATA\\[\\|!doctype\\|\?xml\\)"
             regexp2 "<\\(/?[[:alpha:]][[:alnum:]-]*\\|!--\\|!\\[CDATA\\[\\)")
+
+;;      (setq regexp1 "<\\(/?[[:alpha:]][[:alnum:]-]*\\|!\\(--\\|\\[CDATA\\[\\|doctype\\)\\|\?xml\\)")
+;;      (setq regexp2 "<\\(/?[[:alpha:]][[:alnum:]-]*\\|!\\(--\\|\\[CDATA\\[\\)\\)")
 
       (setq regexp regexp1)
 
@@ -3265,7 +3274,6 @@ the environment as needed for ac-sources, right before they're used.")
               char (aref tname 0)
               tbeg (match-beginning 0)
               tend nil
-              tstop (point)
               element-content-type nil
               limit reg-end
               part-beg nil
@@ -3328,7 +3336,7 @@ the environment as needed for ac-sources, right before they're used.")
          ((string= tname "style")
           (setq element-content-type "css"
                 part-close-tag "</style>"))
-         ((member tname '("script"))
+         ((string= tname "script")
           (let (script)
             (setq script (buffer-substring-no-properties tbeg tend)
                   part-close-tag "</script>")
@@ -3397,6 +3405,7 @@ the environment as needed for ac-sources, right before they're used.")
        ((>= pos limit)
         (setq continue nil)
         (setq go-back t)
+;;        (message "ici------")
         (setq attrs (+ attrs (web-mode-scan-attr state char name-beg name-end val-beg attr-flags equal-offset)))
         )
 
@@ -3459,7 +3468,8 @@ the environment as needed for ac-sources, right before they're used.")
           (setq tag-flags (logior tag-flags 8))
           )
         (setq continue nil)
-        (setq attrs (+ attrs (web-mode-scan-attr state char name-beg name-end val-beg attr-flags equal-offset)))
+        (when name-beg
+          (setq attrs (+ attrs (web-mode-scan-attr state char name-beg name-end val-beg attr-flags equal-offset))))
         )
 
        ((and spaced (member state '(1 3 5)))
@@ -4257,7 +4267,6 @@ the environment as needed for ac-sources, right before they're used.")
   "Highlight blocks."
   (web-mode-process-blocks reg-beg reg-end "highlight"))
 
-
 (defun web-mode-highlight-tags (reg-beg reg-end)
   "web-mode-highlight-nodes"
   (let ((continue t))
@@ -4289,8 +4298,6 @@ the environment as needed for ac-sources, right before they're used.")
           (when (and (web-mode-dom-sf expr reg-end)
                      (setq end (match-end 0))
                      (not (text-property-any beg end 'tag-end t)))
-;;            (message "%S %S" beg end)
-;;            (web-mode-fontify-region beg end 'web-mode-latex-font-lock-keywords)
             (font-lock-append-text-property beg end 'face 'web-mode-inlay-face)
             ) ;when
           ) ;while
@@ -4433,7 +4440,7 @@ the environment as needed for ac-sources, right before they're used.")
       (cond
        ((member sub3 '("<% " "<%\n" "<%!"))
         (setq keywords web-mode-mako-block-font-lock-keywords))
-       ((string= sub2 "% ")
+       ((eq (aref sub2 0) ?\%)
         (setq keywords web-mode-mako-block-font-lock-keywords))
        ((member sub2 '("<%" "</"))
         (setq keywords web-mode-mako-tag-font-lock-keywords))
@@ -4722,6 +4729,7 @@ the environment as needed for ac-sources, right before they're used.")
 
 (defun web-mode-fontify-region (beg end keywords)
   "Font-lock region according to the keywords."
+;;  (message "beg=%S end=%S keywords=%S" beg end keywords)
   (save-excursion
     (let ((font-lock-keywords keywords)
           (font-lock-multiline nil)
@@ -4998,6 +5006,16 @@ the environment as needed for ac-sources, right before they're used.")
       (goto-char ori)
       ) ;if
     ;;    (message "%S" tags)
+    ))
+
+(defun web-mode-highlight-whitespaces (beg end)
+  "Scan whitespaces."
+  (save-excursion
+    (goto-char beg)
+    (while (re-search-forward web-mode-whitespaces-regexp end t)
+      (add-text-properties (match-beginning 0) (match-end 0)
+                           '(face web-mode-whitespace-face))
+      ) ;while
     ))
 
 (defun web-mode-whitespaces-show ()
@@ -5730,16 +5748,6 @@ the environment as needed for ac-sources, right before they're used.")
                                                    indent-offset
                                                    block-beg))
             )
-
-           ;; ((and (string= language "jsx")
-           ;;       (get-text-property pos 'part-expr)
-           ;;       (get-text-property (1- pos) 'part-expr))
-           ;;  (setq offset (web-mode-bracket-indentation pos
-           ;;                                             block-column
-           ;;                                             indent-offset
-           ;;                                             language
-           ;;                                             block-beg))
-           ;;  )
 
            ((and (string= language "jsx")
                  (eq (get-text-property pos 'tag-type) 'end)
@@ -7054,7 +7062,7 @@ the environment as needed for ac-sources, right before they're used.")
 (defun web-mode-element-is-void (&optional tag)
   "Test if tag is a void (self-closing) tag."
   (cond
-   ((and tag (member tag '("div" "a")))
+   ((and tag (member tag '("div" "a" "li")))
 ;;   ((and tag (string= tag "div"))
     nil)
    (tag
@@ -8789,9 +8797,15 @@ the environment as needed for ac-sources, right before they're used.")
 
 (defun web-mode-block-code-end-position (&optional pos)
   (unless pos (setq pos (point)))
+;;  (message "from %S" (point))
   (setq pos (web-mode-block-end-position pos))
-  (when (and pos (eq (get-text-property pos 'block-token) 'delimiter) pos)
-    (setq pos (previous-single-property-change pos 'block-token)))
+;;  (message "to %S" pos)
+  (when (and pos
+             (eq (get-text-property pos 'block-token) 'delimiter)
+             (eq (get-text-property (1- pos) 'block-token) 'delimiter))
+    (setq pos (previous-single-property-change pos 'block-token))
+;;    (message "la%S" pos)
+    )
   pos)
 
 (defun web-mode-block-end-position (&optional pos)
@@ -8801,6 +8815,7 @@ the environment as needed for ac-sources, right before they're used.")
    ((get-text-property pos 'block-end)
     pos)
    ((get-text-property pos 'block-side)
+;;    (message "pos=%S %S" pos (or (next-single-property-change pos 'block-end) (point-max)))
     (or (next-single-property-change pos 'block-end)
         (point-max)))
    (t

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "tern" "tern.el" (21354 58904 0 0))
+;;;### (autoloads nil "tern" "tern.el" (21453 3972 0 0))
 ;;; Generated autoloads from tern.el
 
 (autoload 'tern-use-server "tern" "\
@@ -15,10 +15,6 @@
 Minor mode binding to the Tern JavaScript analyzer
 
 \(fn &optional ARG)" t nil)
-
-;;;***
-
-;;;### (autoloads nil nil ("tern-pkg.el") (21354 58904 53301 0))
 
 ;;;***
 

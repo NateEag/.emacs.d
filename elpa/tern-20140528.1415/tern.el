@@ -3,7 +3,7 @@
 
 ;; Author: Marijn Haverbeke
 ;; URL: http://ternjs.net/
-;; Version: 20140421.706
+;; Version: 20140528.1415
 ;; X-Original-Version: 0.0.1
 ;; Package-Requires: ((json "1.2") (cl-lib "0.5") (emacs "24"))
 
@@ -428,6 +428,7 @@ list of strings, giving the binary name and arguments.")
   (interactive)
   (let ((varname (and (or prompt-var (not (tern-at-interesting-expression)))
                       (read-from-minibuffer "Variable: "))))
+    (push-mark)
     (tern-run-query #'tern-show-definition `((type . "definition") (variable . ,varname)) (point))))
 
 (defun tern-find-definition-by-name ()

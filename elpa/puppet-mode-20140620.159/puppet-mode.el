@@ -1,17 +1,17 @@
 ;;; puppet-mode.el --- Major mode for Puppet manifests  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2013, 2014  Sebastian Wiesner <lunaryorn@gmail.com>
+;; Copyright (C) 2013, 2014  Sebastian Wiesner <swiesner@lunaryorn.com>
 ;; Copyright (C) 2013, 2014  Bozhidar Batsov <bozhidar@batsov.com>
 ;; Copyright (C) 2011  Puppet Labs Inc
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
-;;     Sebastian Wiesner <lunaryorn@gmail.com>
+;;     Sebastian Wiesner <swiesner@lunaryorn.com>
 ;;     Russ Allbery <rra@stanford.edu>
 ;; Maintainer: Bozhidar Batsov <bozhidar@batsov.com>
-;;     Sebastian Wiesner <lunaryorn@gmail.com>
+;;     Sebastian Wiesner <swiesner@lunaryorn.com>
 ;; URL: https://github.com/lunaryorn/puppet-mode
 ;; Keywords: languages
-;; Version: 20140428.159
+;; Version: 20140620.159
 ;; X-Original-Version: 0.4-cvs
 ;; Package-Requires: ((emacs "24.1") (pkg-info "0.4"))
 
@@ -219,8 +219,8 @@ Return nil, if there is no special context at POS, or one of
     (if (nth 4 state)
         'comment
       (pcase (nth 3 state)
-        (?\' 'single-quoted)
-        (?\" 'double-quoted)))))
+        (`?\' 'single-quoted)
+        (`?\" 'double-quoted)))))
 
 (defun puppet-in-string-or-comment-p (&optional pos)
   "Determine whether POS is inside a string or comment."
@@ -784,7 +784,7 @@ denotes the surrounding context, and MATCH-DATA is the original
 match data from propertization."
   (let* ((beg (match-beginning (or group 1)))
          ;; Syntax functions can modify the match data, so we must preserve it
-         (context (save-match-data (puppet-syntax-context))))
+         (context (save-match-data (puppet-syntax-context beg))))
     (put-text-property beg (1+ beg) property
                        (cons context (match-data)))))
 

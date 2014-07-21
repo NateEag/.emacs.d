@@ -52,23 +52,31 @@
   (unless (update-packages-newest-package-installed-p package)
     (let ((package-desc (update-packages-get-package-desc package package-alist)))
       (update-packages-upgrade-or-install-package package)
+
       (require 'magit)
+      ;; Add new package.
       (call-process magit-git-executable
                     nil
                     nil
                     nil
                     "add"
-                    ;; Stage all modifications, including deletions.
+                    (expand-file-name package-user-dir))
+      ;; Stage deletion of old package.
+      (call-process magit-git-executable
+                    nil
+                    nil
+                    nil
+                    "add"
                     "-u"
                     (expand-file-name package-user-dir))
-      ;; Just need to get this doing package name and I should be set...
+      ;; Commit changes.
       (call-process magit-git-executable
                     nil
                     nil
                     nil
                     "commit"
                     "-m"
-                    (concat "Update package " (package-desc-name package-desc))))))
+                    (concat "Update package " (package-desc-full-name package-desc))))))
 
 (defun update-packages-update-installed-packages ()
   "Update all installed packages that can be updated."

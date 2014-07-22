@@ -7,7 +7,8 @@
 -Add php-auto-yasnippet-style function params to tern.js.
 
 -Make comment auto-fill work with C++-style comments in js2-mode, not just
- C-style.
+ C-style. Turns out it does - it's just that js2-mode thinks single-line
+ comments are only block comments if there's a trailing single-line comment.
 
 -Finish getting tagedit to work with web-mode.
 

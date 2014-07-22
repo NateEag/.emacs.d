@@ -7,7 +7,7 @@
 
 ;; Keywords: languages, faces
 ;; Last edit: 2005-01-06
-;; Version: 20080905.553
+;; Version: 20140625.1556
 ;; X-Original-Version: 2.0 $Id: apache-mode.el 8264 2005-06-29 23:34:41Z quarl $
 
 ;; apache-mode.el is free software; you can redistribute it and/or modify it
@@ -366,6 +366,7 @@
              "ProxyIOBufferSize"
              "ProxyMaxForwards"
              "ProxyPass"
+             "ProxyPassMatch"
              "ProxyPassReverse"
              "ProxyPreserveHost"
              "ProxyReceiveBufferSize"

@@ -1,10 +1,10 @@
 ;;; apache-mode-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-
+(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads (apache-mode) "apache-mode" "apache-mode.el" (21310
-;;;;;;  57313 0 0))
+;;;### (autoloads nil "apache-mode" "apache-mode.el" (21454 20816
+;;;;;;  0 0))
 ;;; Generated autoloads from apache-mode.el
 
 (autoload 'apache-mode "apache-mode" "\
@@ -19,16 +19,9 @@ Major mode for editing Apache configuration files.
 
 ;;;***
 
-;;;### (autoloads nil nil ("apache-mode-pkg.el") (21310 57313 859000
-;;;;;;  0))
-
-;;;***
-
-(provide 'apache-mode-autoloads)
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
-;; coding: utf-8
 ;; End:
 ;;; apache-mode-autoloads.el ends here

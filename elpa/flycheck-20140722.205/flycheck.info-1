@@ -1,4 +1,4 @@
-This is /tmp/flycheck27353QUQ/flycheck-20140719.810/flycheck.info,
+This is /tmp/flycheck28927kpj/flycheck-20140722.205/flycheck.info,
 produced by makeinfo version 4.13 from
 /home/melpa/melpa/working/flycheck/doc/flycheck.texi.
 
@@ -369,7 +369,7 @@ File: flycheck.info,  Node: Features,  Next: 3rd party extensions,  Up: Introduc
 1.1 Features
 ============
 
-   - 39 languages with 67 syntax checkers, see *note Supported
+   - 39 languages with 68 syntax checkers, see *note Supported
      languages: 5.
 
    - *note Fully automatic, fail-safe, on-the-fly syntax checking in
@@ -653,7 +653,7 @@ and many extension packages for other languages in the popular ELPA
 archive MELPA(3).
 
 *Flycheck* provides support for 39 languages (see *note Supported
-languages: 5.) with 67 syntax checkers, most of them contributed by the
+languages: 5.) with 68 syntax checkers, most of them contributed by the
 community.  Notably, Flycheck does _not_ support Java and Makefiles.
 
 ---------- Footnotes ----------
@@ -2170,7 +2170,7 @@ File: flycheck.info,  Node: Supported languages,  Next: Glossary,  Prev: Usage, 
 6 Supported languages
 *********************
 
-Flycheck supports the following 39 languages with 67 syntax checkers.
+Flycheck supports the following 39 languages with 68 syntax checkers.
 
 Each language has one or more syntax checkers, whose names follow a
 `LANGUAGE-TOOL' convention, where LANGUAGE is the programming language
@@ -3890,13 +3890,61 @@ File: flycheck.info,  Node: Scala,  Next: Scss,  Prev: Sass,  Up: Supported lang
 ==========
 
  -- Flycheck Syntax Checker: scala
+          Chained syntax checkers: The following syntax checkers are
+          *note chained: 56. after this syntax checker:
+
+            1. *note scalastyle: 10d, if there are only warnings
+
+          The *first* suitable syntax checker is used.
+
      A Scala syntax checker using the Scala compiler.
 
      See URL `http://www.scala-lang.org/'(1).
 
+ -- Flycheck Syntax Checker: scalastyle
+     A Scala style checker using scalastyle.
+
+     Note that this syntax checker is not used if
+     *note `flycheck-scalastyle-jar': 10e. or *note `flycheck-scalastylerc': 10f. are nil or
+     point to non-existing files.
+
+     See URL `http://www.scalastyle.org'(2).
+
+Options
+.......
+
+      -- User Option: flycheck-scalastyle-jar
+               Variable properties: Automatically becomes buffer-local
+               when set.  This variable is safe as a file local
+               variable if its value satisfies the predicate `stringp'.
+
+          The JAR file which implements scalastyle
+
+          This variable is an option for the syntax checker ``scalastyle''
+
+          This user option was introduced, or its default value was
+          changed, in version 0.20 of the flycheck package.
+
+
+Configuration file
+..................
+
+      -- User Option: flycheck-scalastylerc
+               Variable properties: Automatically becomes buffer-local
+               when set.  This variable is safe as a file local
+               variable if its value satisfies the predicate `stringp'.
+
+          Configuration file for ``scalastyle''
+
+          This user option was introduced, or its default value was
+          changed, in version 0.20 of the flycheck package.
+
+
 ---------- Footnotes ----------
 
 (1) http://www.scala-lang.org/
+
+(2) http://www.scalastyle.org
 
 
 File: flycheck.info,  Node: Scss,  Next: Shell script languages,  Prev: Scala,  Up: Supported languages
@@ -3941,7 +3989,7 @@ File: flycheck.info,  Node: Shell script languages,  Next: Slim,  Prev: Scss,  U
           Chained syntax checkers: The following syntax checkers are
           *note chained: 56. after this syntax checker:
 
-            1. *note sh-shellcheck: 112, if there are no errors
+            1. *note sh-shellcheck: 115, if there are no errors
 
           The *first* suitable syntax checker is used.
 
@@ -3953,7 +4001,7 @@ File: flycheck.info,  Node: Shell script languages,  Next: Slim,  Prev: Scss,  U
           Chained syntax checkers: The following syntax checkers are
           *note chained: 56. after this syntax checker:
 
-            1. *note sh-shellcheck: 112, if there are no errors
+            1. *note sh-shellcheck: 115, if there are no errors
 
           The *first* suitable syntax checker is used.
 
@@ -3971,7 +4019,7 @@ See also
           Chained syntax checkers: The following syntax checkers are
           *note chained: 56. after this syntax checker:
 
-            1. *note sh-shellcheck: 112, if there are no errors
+            1. *note sh-shellcheck: 115, if there are no errors
 
           The *first* suitable syntax checker is used.
 
@@ -3989,7 +4037,7 @@ See also
           Chained syntax checkers: The following syntax checkers are
           *note chained: 56. after this syntax checker:
 
-            1. *note sh-shellcheck: 112, if there are no errors
+            1. *note sh-shellcheck: 115, if there are no errors
 
           The *first* suitable syntax checker is used.
 
@@ -4178,7 +4226,7 @@ disabled syntax checker
 
 enabled syntax checker
      A *note registered syntax checker: 5e. which is not a *note
-     disabled syntax checker: 12a.  
+     disabled syntax checker: 12d.  
 
 suitable syntax checker
      A *note syntax checker: 61. which can be used to check the current
@@ -4213,7 +4261,7 @@ provides examples for common use cases.
 
 If you define a new syntax checker, _please_ contribute it to Flycheck
 to make it available to other users, too.  See *note Contributing
-syntax checkers: 12d. for more information.
+syntax checkers: 130. for more information.
 
 * Menu:
 
@@ -4269,7 +4317,7 @@ You define new syntax checkers with *note flycheck-define-checker: 19.:
 
           Each ARG is an argument to the executable, either as string,
           or as special symbol or form for
-          *note `flycheck-substitute-argument': 12f, which see.
+          *note `flycheck-substitute-argument': 132, which see.
 
      `:error-patterns ((LEVEL SEXP ...) ...)'
           An unquoted list of error patterns to parse the output of
@@ -4281,7 +4329,7 @@ You define new syntax checkers with *note flycheck-define-checker: 19.:
           extract line, column, file name and error message.
 
           See ``rx'' for general information about RX, and
-          *note `flycheck-rx-to-string': 130. for special RX forms provided by
+          *note `flycheck-rx-to-string': 133. for special RX forms provided by
           Flycheck.
 
           All patterns are applied in the order of declaration to the
@@ -4441,11 +4489,11 @@ File: flycheck.info,  Node: Error parsers,  Next: Extending syntax checkers,  Pr
 
 Syntax checkers may use more sophisticated error parsing by given the
 `:error-parser' argument to *note flycheck-define-checker: 19.  See
-*note Builtin error parsers: 139. for a list of builtin parsers.
+*note Builtin error parsers: 13c. for a list of builtin parsers.
 
 You may also define your own error parsers.  An error parser is any
 function that takes the following three arguments and returns a list of
-*note flycheck-error: 13a. objects (see *note Error API: 75. for more
+*note flycheck-error: 13d. objects (see *note Error API: 75. for more
 information):
 
 `output'
@@ -4458,7 +4506,7 @@ information):
      A buffer object referring to the buffer that was syntax-checked.
 
 Flycheck provides some utility functions to implement your own error
-parsers.  See *note Error parser API: 13b. for details.
+parsers.  See *note Error parser API: 13e. for details.
 
 
 File: flycheck.info,  Node: Extending syntax checkers,  Next: Examples,  Prev: Error parsers,  Up: Extending Flycheck
@@ -4537,7 +4585,7 @@ directory and containing the contents of the buffer to check.
 Next we specify how to parse the output of the syntax checker.  PHP
 CodeSniffer provides an option to output errors in an XML format
 similar to the Java tool Checkstyle, so we use the built-in _error
-parser_ *note flycheck-parse-checkstyle: 142. to parse the output.
+parser_ *note flycheck-parse-checkstyle: 145. to parse the output.
 
 Then we enable the syntax checker in PHP editing modes.
 
@@ -4670,7 +4718,7 @@ omitted from the command line.
 Some Syntax checkers can also be configured using options passed on the
 command line.  Flycheck supports this case, too.  We will use this
 facility to extend the PHP CodeSniffer syntax checker from the *note
-Basic syntax checkers: 141. section with support for coding standards:
+Basic syntax checkers: 144. section with support for coding standards:
 
     (flycheck-def-option-var flycheck-phpcs-standard nil phpcs
       "The coding standard for PHP CodeSniffer."
@@ -4690,7 +4738,7 @@ The syntax checker is pretty much the same as before, except that a new
 element was added to `:command'.  This element passes the value of the
 new option variable *note flycheck-phpcs-standard: eb. to the syntax
 checker.  This variable is declared with the special macro *note
-flycheck-def-option-var: 132. at the beginning.
+flycheck-def-option-var: 135. at the beginning.
 
 
 File: flycheck.info,  Node: Chaining syntax checkers,  Prev: Configuration files for syntax checkers,  Up: Examples
@@ -4755,7 +4803,7 @@ File: flycheck.info,  Node: Error API,  Next: Builtin error parsers,  Up: Flyche
 =============
 
 Flycheck errors are represented by the CL structure *note
-flycheck-error: 13a.  See *note Structures: (cl)Structures. for more
+flycheck-error: 13d.  See *note Structures: (cl)Structures. for more
 information about CL structures.
 
  -- CL Struct: flycheck-error
@@ -4793,19 +4841,19 @@ information about CL structures.
           level defined with *note flycheck-define-error-level: 25.
 
      There are two constructors to create new *note flycheck-error:
-     13a. objects:
+     13d. objects:
 
       -- Function: flycheck-error-new-at line column &optional level
                message &key checker filename buffer
           Create a new Flycheck error at the given LINE and COLUMN.
 
-          LINE and COLUMN refer to the *note line: 14c. and *note
-          column: 14d. of the new error.  The optional LEVEL and
-          MESSAGE arguments fill the *note level: 14f. and
+          LINE and COLUMN refer to the *note line: 14f. and *note
+          column: 150. of the new error.  The optional LEVEL and
+          MESSAGE arguments fill the *note level: 152. and
           cl-slot:`message' slots respectively.
 
           CHECKER, FILENAME and BUFFER are keyword arguments, for *note
-          checker: 14a, *note filename: 14b. and *note buffer: 149.
+          checker: 14d, *note filename: 14e. and *note buffer: 14c.
           respectively.  BUFFER defaults to the current buffer, the
           other two default to `nil'.
 
@@ -4815,12 +4863,12 @@ information about CL structures.
                arguments.
 
       -- Function: flycheck-error-new &rest attributes
-          Create a new *note flycheck-error: 13a. with the given
+          Create a new *note flycheck-error: 13d. with the given
           ATTRIBUTES.
 
           ATTRIBUTES is a property list, where each property specifies
           the value for the corresponding slot of *note flycheck-error:
-          13a, for instance:
+          13d, for instance:
 
               (flycheck-error-new :line 10 :column 5 :message "Foo" :level 'warning)
 
@@ -4982,6 +5030,10 @@ File: flycheck.info,  Node: Syntax checker API,  Next: Builtin option filters,  
  -- Function: flycheck-substitute-argument arg checker
      Substitute ARG for CHECKER.
 
+     Return a list of real arguments for the executable of CHECKER,
+     substituted for the symbolic argument ARG.  Single arguments,
+     e.g. if ARG is a literal strings, are wrapped in a list.
+
      ARG may be one of the following forms:
 
      STRING
@@ -5011,7 +5063,7 @@ File: flycheck.info,  Node: Syntax checker API,  Next: Builtin option filters,  
           as primary input to a checker, unless absolutely necessary.
 
           When using this symbol as primary input to the syntax
-          checker, add *note `flycheck-buffer-saved-p': 165. to the ``:predicate''.
+          checker, add *note `flycheck-buffer-saved-p': 168. to the ``:predicate''.
 
      ``temporary-directory''
           Create a unique temporary directory and return its path.
@@ -5022,7 +5074,7 @@ File: flycheck.info,  Node: Syntax checker API,  Next: Builtin option filters,  
 
      `(config-file OPTION VARIABLE)'
           Search the configuration file bound to VARIABLE with
-          *note `flycheck-locate-config-file': 166. and return a list of arguments
+          *note `flycheck-locate-config-file': 169. and return a list of arguments
           that pass this configuration file to the syntax checker, or
           nil if the configuration file was not found.
 
@@ -5054,11 +5106,9 @@ File: flycheck.info,  Node: Syntax checker API,  Next: Builtin option filters,  
           PREPEND-FN defaults to ``list''.
 
           FILTER is an optional function to be applied to each item in
-          the list.  Items for which FILTER returns nil are dropped.
-
-          If the list is non-nil after the application of FILTER,
-          return a flattened list with OPTION prepended to each ITEM
-          in the value of VARIABLE after the application of FILTER.
+          the list before prepending OPTION.  It shall return the
+          option value for each item as string, or nil, if the item is
+          to be ignored.
 
      `(option-flag OPTION VARIABLE)'
           Retrieve the value of VARIABLE and return OPTION, if the
@@ -5425,7 +5475,7 @@ introducing two new syntax checkers:
    - *note perl-perlcritic: e4. checks Perl with the powerful
      Perl-Critic(2) tool.
 
-   - *note sh-shellcheck: 112. checks Shell scripts with the awesome
+   - *note sh-shellcheck: 115. checks Shell scripts with the awesome
      Shellcheck(3) tool, which finds all sorts of idiomatic and
      semantics mistakes in shell scripts of various shell languages,
      and will greatly improve your shell scripting.
@@ -5504,7 +5554,7 @@ flycheck-completion-system' or add the following to your `init.el':
 
     (eval-after-load 'flycheck '(setq flycheck-completion-system 'ido))
 
-Also, *note flycheck-count-errors: 158. was changed to count errors of
+Also, *note flycheck-count-errors: 15b. was changed to count errors of
 all levels.  It returns an alist mapping error levels to the amount of
 errors of that level.
 
@@ -5627,7 +5677,7 @@ checkers, a brand-new error list, and the ability to override the
 executables of syntax checkers.
 
 Let's go through the list of important changes.  For a detailed list,
-please read the *note changelog: 18e.
+please read the *note changelog: 191.
 
 * Menu:
 
@@ -5731,7 +5781,7 @@ File: flycheck.info,  Node: Miscellaneous new options,  Prev: Better Haskell sup
 
    - The SASS and SCSS syntax checkers support the Compass framework
      now, via *note flycheck-sass-compass: 10a. and *note
-     flycheck-scss-compass: 10f.  respectively.
+     flycheck-scss-compass: 112.  respectively.
 
    - Clang can enable Microsoft C/C++ extensions now, via *note
      flycheck-clang-ms-extensions: 92.
@@ -5823,7 +5873,7 @@ the modern syntax-checking extension for Emacs.
 
 It is three months since the last release, so this release brings quite
 a lot of changes.  For a complete list of all changes, please read the
-complete list of *note changes: 18e.  This article will just cover the
+complete list of *note changes: 191.  This article will just cover the
 most important changes.
 
 * Menu:
@@ -5844,7 +5894,7 @@ File: flycheck.info,  Node: Breaking changes<5>,  Next: New syntax checkers,  Up
 -----------------------
 
 This release introduces three breaking changes.  Two of these are
-related to the *note new-error-list: 19f.:
+related to the *note new-error-list: 1a2.:
 
      Warning: `flycheck-display-errors-in-list' is gone.  If you had
      previously set *note flycheck-display-errors-function: 28. to this
@@ -6083,58 +6133,66 @@ File: flycheck.info,  Node: master in development,  Next: 0 19 Jun 12 2014,  Up:
         - The internal names of syntax checker properties changed.
           *All packages depending on Flycheck must be recompiled!*
 
+        - `flycheck-substitute-argument' always returns a list now
+
    - New syntax checkers:
 
         - #408(1): C/C++ with GCC
 
+        - #425(2): Scala with scalastyle
+
    - New features:
 
-        - #412(2): Add `flycheck-clang-no-exceptions' and
+        - #412(3): Add `flycheck-clang-no-exceptions' and
           `flycheck-gcc-no-exceptions' to flag exceptions as errors in
           C++
 
-        - #417(3): Add `flycheck-rust-crate-root' to resolve
+        - #417(4): Add `flycheck-rust-crate-root' to resolve
           inter-crate references in `rust'
 
-        - #420(4): Add `flycheck-clang-blocks' to enable the block
+        - #420(5): Add `flycheck-clang-blocks' to enable the block
           syntax in Clang
 
         - `read-flycheck-checker' now accepts a default value
 
    - Improvements:
 
-        - #421(5): Use proper temporary files in `python-flake8'
+        - #421(6): Use proper temporary files in `python-flake8'
 
-        - #423(6): Demote errors from `package-initialize' in the
+        - #423(7): Demote errors from `package-initialize' in the
           `emacs-lisp' checker
 
         - `flycheck-select-checker' now uses the last used syntax
           checker as default when reading from minibuffer
 
-        - #428(7): `flycheck-compile' now prompts for the syntax
+        - #428(8): `flycheck-compile' now prompts for the syntax
           checker to run as `compile' command
+
+        - #439(9): The `rust' syntax checker shows info messages now
 
    - Other changes:
 
-        - Remove dependency on f.el
-
-        - Remove dependency on s.el
+        - Remove dependencies on f.el and s.el
 
 ---------- Footnotes ----------
 
 (1) https://github.com/flycheck/flycheck/issues/408
 
-(2) https://github.com/flycheck/flycheck/issues/412
+(2) https://github.com/flycheck/flycheck/issues/425
 
-(3) https://github.com/flycheck/flycheck/issues/417
+(3) https://github.com/flycheck/flycheck/issues/412
 
-(4) https://github.com/flycheck/flycheck/issues/420
+(4) https://github.com/flycheck/flycheck/issues/417
 
-(5) https://github.com/flycheck/flycheck/issues/421
+(5) https://github.com/flycheck/flycheck/issues/420
 
-(6) https://github.com/flycheck/flycheck/issues/423
+(6) https://github.com/flycheck/flycheck/issues/421
 
-(7) https://github.com/flycheck/flycheck/issues/428
+(7) https://github.com/flycheck/flycheck/issues/423
+
+(8) https://github.com/flycheck/flycheck/issues/428
+
+(9) https://github.com/flycheck/flycheck/issues/439
 
 
 File: flycheck.info,  Node: 0 19 Jun 12 2014,  Next: 0 18 Mar 24 2014,  Prev: master in development,  Up: Changes
@@ -7825,7 +7883,7 @@ File: flycheck.info,  Node: Building HTML and Texinfo,  Next: Verifying referenc
 ==============================
 
 First, switch to the virtual environment you created in the *note Build
-environment setup: 1d5, and make sure that the requirements are up to
+environment setup: 1d8, and make sure that the requirements are up to
 date:
 
     $ source ~/.virtualenvs/cask/bin/activate
@@ -7891,7 +7949,7 @@ Flycheck.
 
 When making changes to the documentation, you need to rebuild the
 Texinfo version with, by following the *note instructions to build the
-documentation: 1d7.
+documentation: 1da.
 
 ---------- Footnotes ----------
 
@@ -7953,8 +8011,8 @@ support and patches are greatly appreciated.
      and `cppcheck' respectively, and contributed a Verilog syntax
      checker using `verilator'.
 
-   - Derek Harland(7) added `flycheck-rust-create-root' to the Rust
-     syntax checker.
+   - Derek Harland(7) improved Rust syntax checking by adding support
+     for info messages, and for crates with `flycheck-rust-create-root'
 
    - Doug MacEachern(8) added a Go syntax checker using `errcheck'.
 
@@ -7971,73 +8029,75 @@ support and patches are greatly appreciated.
    - Krzysztof Witkowski(12) implemented `eval' support in Flycheck
      commands.
 
-   - Magnar Sveen(13) developed the awesome dash.el(14) and s.el(15)
+   - Lee Adams(13) added a Scala style checker using scalastyle.
+
+   - Magnar Sveen(14) developed the awesome dash.el(15) and s.el(16)
      libraries, that drive considerable parts of Flycheck's internals.
 
-   - Malyshev Artem(16) made Flycheck's keybindings customizable with
+   - Malyshev Artem(17) made Flycheck's keybindings customizable with
      `flycheck-keymap-prefix'.
 
-   - Marian Schubert(17) added the Perl syntax checker.
+   - Marian Schubert(18) added the Perl syntax checker.
 
-   - Mark Hellewell(18) added the Puppet syntax and style checkers.
+   - Mark Hellewell(19) added the Puppet syntax and style checkers.
 
-   - Martin Grenfell(19) created the awesome Vim library syntastic(20)
+   - Martin Grenfell(20) created the awesome Vim library syntastic(21)
      which inspired this project and many of its checkers.
 
-   - Matthias Dahl(21) improved the performance of Flycheck's temp file
+   - Matthias Dahl(22) improved the performance of Flycheck's temp file
      handling.
 
-   - Matthias Güdemann(22) contributed an initial version of the
+   - Matthias Güdemann(23) contributed an initial version of the
      Flycheck logo, and provided very valuable input, ideas and
      feedback during the design of official logo.
 
-   - Mitch Tishmack(23) added support for Microsoft extensions to the
+   - Mitch Tishmack(24) added support for Microsoft extensions to the
      Clang syntax checker.
 
-   - Peter Vasil(24) contributed syntax checkers for XML, Lua and Go
+   - Peter Vasil(25) contributed syntax checkers for XML, Lua and Go
      (using `go build' and `go test'), added unit tests and did
      valuable testing.
 
-   - Robert Dallas Gray(25) made error display customizable with
+   - Robert Dallas Gray(26) made error display customizable with
      `flycheck-display-errors-function'.
 
-   - Robert Zaremba(26) added Go syntax checker using `gofmt'.
+   - Robert Zaremba(27) added Go syntax checker using `gofmt'.
 
-   - Simon Carter(27) provided valuable feedback about automatic syntax
+   - Simon Carter(28) provided valuable feedback about automatic syntax
      checking, and took great effort to debug some very subtle issues
      in it.
 
-   - steckerhalter(28) provided the PHP CodeSniffer checker.
+   - steckerhalter(29) provided the PHP CodeSniffer checker.
 
-   - Steve Purcell(29) implemented many checkers, contributed important
+   - Steve Purcell(30) implemented many checkers, contributed important
      ideas to the design of the checker API and engaged in worthwhile
      discussion to shape this project.
 
-   - Sylvain Benner(30) added syntax checkers for Elixir and Erlang,
-     and wrote the cool flycheck-color-mode-line(31) extension.
+   - Sylvain Benner(31) added syntax checkers for Elixir and Erlang,
+     and wrote the cool flycheck-color-mode-line(32) extension.
 
-   - Sylvain Rousseau(32) added a syntax checker for POSIX shell script
+   - Sylvain Rousseau(33) added a syntax checker for POSIX shell script
      using `bash', and improved error parsing in the Bash script syntax
      checker.
 
-   - Ted Zlatanov(33) added a syntax checker for CFEngine.
+   - Ted Zlatanov(34) added a syntax checker for CFEngine.
 
-   - Tom Jakubowski(34) added `flycheck-rust-check-tests' to the Rust
+   - Tom Jakubowski(35) added `flycheck-rust-check-tests' to the Rust
      syntax checker.
 
-   - tom tan(35) added a syntax checker for the D programming language
-     using `dmd', and wrote the cool flycheck-d-unittest(36) extension.
+   - tom tan(36) added a syntax checker for the D programming language
+     using `dmd', and wrote the cool flycheck-d-unittest(37) extension.
 
-   - Yannick Roehlly(37) added support for PEP8 naming errors to the
+   - Yannick Roehlly(38) added support for PEP8 naming errors to the
      Flake8 syntax checker.
 
-   - Yasuyuki Oka(38) contributed a lot of syntax checkers for various
+   - Yasuyuki Oka(39) contributed a lot of syntax checkers for various
      languages, including AsciiDoc, Chef recipes, ERuby, GNU Make,
      Handlebars, Javascript, PHP, Racket, Ruby, Slim and YAML.
 
-   - Victor Deryagin(39) added the Rust syntax checker.
+   - Victor Deryagin(40) added the Rust syntax checker.
 
-Of course we also need to thank GNU Flymake(40), the first,
+Of course we also need to thank GNU Flymake(41), the first,
 respectable, though somewhat failed attempt at on-the-fly syntax
 checking.
 
@@ -8067,61 +8127,63 @@ checking.
 
 (12) https://github.com/kwitek
 
-(13) https://github.com/magnars
+(13) https://github.com/leeaustinadams
 
-(14) https://github.com/magnars/dash.el
+(14) https://github.com/magnars
 
-(15) https://github.com/magnars/s.el
+(15) https://github.com/magnars/dash.el
 
-(16) https://github.com/proofit404
+(16) https://github.com/magnars/s.el
 
-(17) https://github.com/maio
+(17) https://github.com/proofit404
 
-(18) https://github.com/markhellewell
+(18) https://github.com/maio
 
-(19) https://github.com/scrooloose
+(19) https://github.com/markhellewell
 
-(20) https://github.com/scrooloose/syntastic
+(20) https://github.com/scrooloose
 
-(21) https://github.com/BinaryKhaos
+(21) https://github.com/scrooloose/syntastic
 
-(22) https://github.com/mgudemann
+(22) https://github.com/BinaryKhaos
 
-(23) https://github.com/mitchty
+(23) https://github.com/mgudemann
 
-(24) https://github.com/ptrv
+(24) https://github.com/mitchty
 
-(25) https://github.com/rdallasgray
+(25) https://github.com/ptrv
 
-(26) https://github.com/robert-zaremba
+(26) https://github.com/rdallasgray
 
-(27) https://github.com/bbbscarter
+(27) https://github.com/robert-zaremba
 
-(28) https://github.com/steckerhalter
+(28) https://github.com/bbbscarter
 
-(29) https://github.com/purcell
+(29) https://github.com/steckerhalter
 
-(30) https://github.com/syl20bnr
+(30) https://github.com/purcell
 
-(31) https://github.com/flycheck/flycheck-color-mode-line
+(31) https://github.com/syl20bnr
 
-(32) https://github.com/thisirs
+(32) https://github.com/flycheck/flycheck-color-mode-line
 
-(33) https://github.com/tzz
+(33) https://github.com/thisirs
 
-(34) https://github.com/tomjakubowski
+(34) https://github.com/tzz
 
-(35) https://github.com/tom-tan
+(35) https://github.com/tomjakubowski
 
-(36) https://github.com/flycheck/flycheck-d-unittest
+(36) https://github.com/tom-tan
 
-(37) https://github.com/yannick1974
+(37) https://github.com/flycheck/flycheck-d-unittest
 
-(38) https://github.com/yasuyk
+(38) https://github.com/yannick1974
 
-(39) https://github.com/vderyagin
+(39) https://github.com/yasuyk
 
-(40) http://www.gnu.org/software/emacs/manual/html_node/flymake/
+(40) https://github.com/vderyagin
+
+(41) http://www.gnu.org/software/emacs/manual/html_node/flymake/
 
 
 File: flycheck.info,  Node: GNU General Public License,  Next: GNU Free Documentation License,  Prev: Credits,  Up: Top
@@ -8803,464 +8865,6 @@ File: flycheck.info,  Node: GNU General Public License,  Next: GNU Free Document
     the library.  If this is what you want to do, use the GNU Lesser General
     Public License instead of this License.  But first, please read
     <http://www.gnu.org/philosophy/why-not-lgpl.html>.
-
-
-File: flycheck.info,  Node: GNU Free Documentation License,  Next: Index,  Prev: GNU General Public License,  Up: Top
-
-17 GNU Free Documentation License
-*********************************
-
-
-                    GNU Free Documentation License
-                     Version 1.3, 3 November 2008
-
-
-     Copyright (C) 2000, 2001, 2002, 2007, 2008 Free Software Foundation, Inc.
-         <http://fsf.org/>
-     Everyone is permitted to copy and distribute verbatim copies
-     of this license document, but changing it is not allowed.
-
-    0. PREAMBLE
-
-    The purpose of this License is to make a manual, textbook, or other
-    functional and useful document "free" in the sense of freedom: to
-    assure everyone the effective freedom to copy and redistribute it,
-    with or without modifying it, either commercially or noncommercially.
-    Secondarily, this License preserves for the author and publisher a way
-    to get credit for their work, while not being considered responsible
-    for modifications made by others.
-
-    This License is a kind of "copyleft", which means that derivative
-    works of the document must themselves be free in the same sense.  It
-    complements the GNU General Public License, which is a copyleft
-    license designed for free software.
-
-    We have designed this License in order to use it for manuals for free
-    software, because free software needs free documentation: a free
-    program should come with manuals providing the same freedoms that the
-    software does.  But this License is not limited to software manuals;
-    it can be used for any textual work, regardless of subject matter or
-    whether it is published as a printed book.  We recommend this License
-    principally for works whose purpose is instruction or reference.
-
-
-    1. APPLICABILITY AND DEFINITIONS
-
-    This License applies to any manual or other work, in any medium, that
-    contains a notice placed by the copyright holder saying it can be
-    distributed under the terms of this License.  Such a notice grants a
-    world-wide, royalty-free license, unlimited in duration, to use that
-    work under the conditions stated herein.  The "Document", below,
-    refers to any such manual or work.  Any member of the public is a
-    licensee, and is addressed as "you".  You accept the license if you
-    copy, modify or distribute the work in a way requiring permission
-    under copyright law.
-
-    A "Modified Version" of the Document means any work containing the
-    Document or a portion of it, either copied verbatim, or with
-    modifications and/or translated into another language.
-
-    A "Secondary Section" is a named appendix or a front-matter section of
-    the Document that deals exclusively with the relationship of the
-    publishers or authors of the Document to the Document's overall
-    subject (or to related matters) and contains nothing that could fall
-    directly within that overall subject.  (Thus, if the Document is in
-    part a textbook of mathematics, a Secondary Section may not explain
-    any mathematics.)  The relationship could be a matter of historical
-    connection with the subject or with related matters, or of legal,
-    commercial, philosophical, ethical or political position regarding
-    them.
-
-    The "Invariant Sections" are certain Secondary Sections whose titles
-    are designated, as being those of Invariant Sections, in the notice
-    that says that the Document is released under this License.  If a
-    section does not fit the above definition of Secondary then it is not
-    allowed to be designated as Invariant.  The Document may contain zero
-    Invariant Sections.  If the Document does not identify any Invariant
-    Sections then there are none.
-
-    The "Cover Texts" are certain short passages of text that are listed,
-    as Front-Cover Texts or Back-Cover Texts, in the notice that says that
-    the Document is released under this License.  A Front-Cover Text may
-    be at most 5 words, and a Back-Cover Text may be at most 25 words.
-
-    A "Transparent" copy of the Document means a machine-readable copy,
-    represented in a format whose specification is available to the
-    general public, that is suitable for revising the document
-    straightforwardly with generic text editors or (for images composed of
-    pixels) generic paint programs or (for drawings) some widely available
-    drawing editor, and that is suitable for input to text formatters or
-    for automatic translation to a variety of formats suitable for input
-    to text formatters.  A copy made in an otherwise Transparent file
-    format whose markup, or absence of markup, has been arranged to thwart
-    or discourage subsequent modification by readers is not Transparent.
-    An image format is not Transparent if used for any substantial amount
-    of text.  A copy that is not "Transparent" is called "Opaque".
-
-    Examples of suitable formats for Transparent copies include plain
-    ASCII without markup, Texinfo input format, LaTeX input format, SGML
-    or XML using a publicly available DTD, and standard-conforming simple
-    HTML, PostScript or PDF designed for human modification.  Examples of
-    transparent image formats include PNG, XCF and JPG.  Opaque formats
-    include proprietary formats that can be read and edited only by
-    proprietary word processors, SGML or XML for which the DTD and/or
-    processing tools are not generally available, and the
-    machine-generated HTML, PostScript or PDF produced by some word
-    processors for output purposes only.
-
-    The "Title Page" means, for a printed book, the title page itself,
-    plus such following pages as are needed to hold, legibly, the material
-    this License requires to appear in the title page.  For works in
-    formats which do not have any title page as such, "Title Page" means
-    the text near the most prominent appearance of the work's title,
-    preceding the beginning of the body of the text.
-
-    The "publisher" means any person or entity that distributes copies of
-    the Document to the public.
-
-    A section "Entitled XYZ" means a named subunit of the Document whose
-    title either is precisely XYZ or contains XYZ in parentheses following
-    text that translates XYZ in another language.  (Here XYZ stands for a
-    specific section name mentioned below, such as "Acknowledgements",
-    "Dedications", "Endorsements", or "History".)  To "Preserve the Title"
-    of such a section when you modify the Document means that it remains a
-    section "Entitled XYZ" according to this definition.
-
-    The Document may include Warranty Disclaimers next to the notice which
-    states that this License applies to the Document.  These Warranty
-    Disclaimers are considered to be included by reference in this
-    License, but only as regards disclaiming warranties: any other
-    implication that these Warranty Disclaimers may have is void and has
-    no effect on the meaning of this License.
-
-    2. VERBATIM COPYING
-
-    You may copy and distribute the Document in any medium, either
-    commercially or noncommercially, provided that this License, the
-    copyright notices, and the license notice saying this License applies
-    to the Document are reproduced in all copies, and that you add no
-    other conditions whatsoever to those of this License.  You may not use
-    technical measures to obstruct or control the reading or further
-    copying of the copies you make or distribute.  However, you may accept
-    compensation in exchange for copies.  If you distribute a large enough
-    number of copies you must also follow the conditions in section 3.
-
-    You may also lend copies, under the same conditions stated above, and
-    you may publicly display copies.
-
-
-    3. COPYING IN QUANTITY
-
-    If you publish printed copies (or copies in media that commonly have
-    printed covers) of the Document, numbering more than 100, and the
-    Document's license notice requires Cover Texts, you must enclose the
-    copies in covers that carry, clearly and legibly, all these Cover
-    Texts: Front-Cover Texts on the front cover, and Back-Cover Texts on
-    the back cover.  Both covers must also clearly and legibly identify
-    you as the publisher of these copies.  The front cover must present
-    the full title with all words of the title equally prominent and
-    visible.  You may add other material on the covers in addition.
-    Copying with changes limited to the covers, as long as they preserve
-    the title of the Document and satisfy these conditions, can be treated
-    as verbatim copying in other respects.
-
-    If the required texts for either cover are too voluminous to fit
-    legibly, you should put the first ones listed (as many as fit
-    reasonably) on the actual cover, and continue the rest onto adjacent
-    pages.
-
-    If you publish or distribute Opaque copies of the Document numbering
-    more than 100, you must either include a machine-readable Transparent
-    copy along with each Opaque copy, or state in or with each Opaque copy
-    a computer-network location from which the general network-using
-    public has access to download using public-standard network protocols
-    a complete Transparent copy of the Document, free of added material.
-    If you use the latter option, you must take reasonably prudent steps,
-    when you begin distribution of Opaque copies in quantity, to ensure
-    that this Transparent copy will remain thus accessible at the stated
-    location until at least one year after the last time you distribute an
-    Opaque copy (directly or through your agents or retailers) of that
-    edition to the public.
-
-    It is requested, but not required, that you contact the authors of the
-    Document well before redistributing any large number of copies, to
-    give them a chance to provide you with an updated version of the
-    Document.
-
-
-    4. MODIFICATIONS
-
-    You may copy and distribute a Modified Version of the Document under
-    the conditions of sections 2 and 3 above, provided that you release
-    the Modified Version under precisely this License, with the Modified
-    Version filling the role of the Document, thus licensing distribution
-    and modification of the Modified Version to whoever possesses a copy
-    of it.  In addition, you must do these things in the Modified Version:
-
-    A. Use in the Title Page (and on the covers, if any) a title distinct
-       from that of the Document, and from those of previous versions
-       (which should, if there were any, be listed in the History section
-       of the Document).  You may use the same title as a previous version
-       if the original publisher of that version gives permission.
-    B. List on the Title Page, as authors, one or more persons or entities
-       responsible for authorship of the modifications in the Modified
-       Version, together with at least five of the principal authors of the
-       Document (all of its principal authors, if it has fewer than five),
-       unless they release you from this requirement.
-    C. State on the Title page the name of the publisher of the
-       Modified Version, as the publisher.
-    D. Preserve all the copyright notices of the Document.
-    E. Add an appropriate copyright notice for your modifications
-       adjacent to the other copyright notices.
-    F. Include, immediately after the copyright notices, a license notice
-       giving the public permission to use the Modified Version under the
-       terms of this License, in the form shown in the Addendum below.
-    G. Preserve in that license notice the full lists of Invariant Sections
-       and required Cover Texts given in the Document's license notice.
-    H. Include an unaltered copy of this License.
-    I. Preserve the section Entitled "History", Preserve its Title, and add
-       to it an item stating at least the title, year, new authors, and
-       publisher of the Modified Version as given on the Title Page.  If
-       there is no section Entitled "History" in the Document, create one
-       stating the title, year, authors, and publisher of the Document as
-       given on its Title Page, then add an item describing the Modified
-       Version as stated in the previous sentence.
-    J. Preserve the network location, if any, given in the Document for
-       public access to a Transparent copy of the Document, and likewise
-       the network locations given in the Document for previous versions
-       it was based on.  These may be placed in the "History" section.
-       You may omit a network location for a work that was published at
-       least four years before the Document itself, or if the original
-       publisher of the version it refers to gives permission.
-    K. For any section Entitled "Acknowledgements" or "Dedications",
-       Preserve the Title of the section, and preserve in the section all
-       the substance and tone of each of the contributor acknowledgements
-       and/or dedications given therein.
-    L. Preserve all the Invariant Sections of the Document,
-       unaltered in their text and in their titles.  Section numbers
-       or the equivalent are not considered part of the section titles.
-    M. Delete any section Entitled "Endorsements".  Such a section
-       may not be included in the Modified Version.
-    N. Do not retitle any existing section to be Entitled "Endorsements"
-       or to conflict in title with any Invariant Section.
-    O. Preserve any Warranty Disclaimers.
-
-    If the Modified Version includes new front-matter sections or
-    appendices that qualify as Secondary Sections and contain no material
-    copied from the Document, you may at your option designate some or all
-    of these sections as invariant.  To do this, add their titles to the
-    list of Invariant Sections in the Modified Version's license notice.
-    These titles must be distinct from any other section titles.
-
-    You may add a section Entitled "Endorsements", provided it contains
-    nothing but endorsements of your Modified Version by various
-    parties--for example, statements of peer review or that the text has
-    been approved by an organization as the authoritative definition of a
-    standard.
-
-    You may add a passage of up to five words as a Front-Cover Text, and a
-    passage of up to 25 words as a Back-Cover Text, to the end of the list
-    of Cover Texts in the Modified Version.  Only one passage of
-    Front-Cover Text and one of Back-Cover Text may be added by (or
-    through arrangements made by) any one entity.  If the Document already
-    includes a cover text for the same cover, previously added by you or
-    by arrangement made by the same entity you are acting on behalf of,
-    you may not add another; but you may replace the old one, on explicit
-    permission from the previous publisher that added the old one.
-
-    The author(s) and publisher(s) of the Document do not by this License
-    give permission to use their names for publicity for or to assert or
-    imply endorsement of any Modified Version.
-
-
-    5. COMBINING DOCUMENTS
-
-    You may combine the Document with other documents released under this
-    License, under the terms defined in section 4 above for modified
-    versions, provided that you include in the combination all of the
-    Invariant Sections of all of the original documents, unmodified, and
-    list them all as Invariant Sections of your combined work in its
-    license notice, and that you preserve all their Warranty Disclaimers.
-
-    The combined work need only contain one copy of this License, and
-    multiple identical Invariant Sections may be replaced with a single
-    copy.  If there are multiple Invariant Sections with the same name but
-    different contents, make the title of each such section unique by
-    adding at the end of it, in parentheses, the name of the original
-    author or publisher of that section if known, or else a unique number.
-    Make the same adjustment to the section titles in the list of
-    Invariant Sections in the license notice of the combined work.
-
-    In the combination, you must combine any sections Entitled "History"
-    in the various original documents, forming one section Entitled
-    "History"; likewise combine any sections Entitled "Acknowledgements",
-    and any sections Entitled "Dedications".  You must delete all sections
-    Entitled "Endorsements".
-
-
-    6. COLLECTIONS OF DOCUMENTS
-
-    You may make a collection consisting of the Document and other
-    documents released under this License, and replace the individual
-    copies of this License in the various documents with a single copy
-    that is included in the collection, provided that you follow the rules
-    of this License for verbatim copying of each of the documents in all
-    other respects.
-
-    You may extract a single document from such a collection, and
-    distribute it individually under this License, provided you insert a
-    copy of this License into the extracted document, and follow this
-    License in all other respects regarding verbatim copying of that
-    document.
-
-
-    7. AGGREGATION WITH INDEPENDENT WORKS
-
-    A compilation of the Document or its derivatives with other separate
-    and independent documents or works, in or on a volume of a storage or
-    distribution medium, is called an "aggregate" if the copyright
-    resulting from the compilation is not used to limit the legal rights
-    of the compilation's users beyond what the individual works permit.
-    When the Document is included in an aggregate, this License does not
-    apply to the other works in the aggregate which are not themselves
-    derivative works of the Document.
-
-    If the Cover Text requirement of section 3 is applicable to these
-    copies of the Document, then if the Document is less than one half of
-    the entire aggregate, the Document's Cover Texts may be placed on
-    covers that bracket the Document within the aggregate, or the
-    electronic equivalent of covers if the Document is in electronic form.
-    Otherwise they must appear on printed covers that bracket the whole
-    aggregate.
-
-
-    8. TRANSLATION
-
-    Translation is considered a kind of modification, so you may
-    distribute translations of the Document under the terms of section 4.
-    Replacing Invariant Sections with translations requires special
-    permission from their copyright holders, but you may include
-    translations of some or all Invariant Sections in addition to the
-    original versions of these Invariant Sections.  You may include a
-    translation of this License, and all the license notices in the
-    Document, and any Warranty Disclaimers, provided that you also include
-    the original English version of this License and the original versions
-    of those notices and disclaimers.  In case of a disagreement between
-    the translation and the original version of this License or a notice
-    or disclaimer, the original version will prevail.
-
-    If a section in the Document is Entitled "Acknowledgements",
-    "Dedications", or "History", the requirement (section 4) to Preserve
-    its Title (section 1) will typically require changing the actual
-    title.
-
-
-    9. TERMINATION
-
-    You may not copy, modify, sublicense, or distribute the Document
-    except as expressly provided under this License.  Any attempt
-    otherwise to copy, modify, sublicense, or distribute it is void, and
-    will automatically terminate your rights under this License.
-
-    However, if you cease all violation of this License, then your license
-    from a particular copyright holder is reinstated (a) provisionally,
-    unless and until the copyright holder explicitly and finally
-    terminates your license, and (b) permanently, if the copyright holder
-    fails to notify you of the violation by some reasonable means prior to
-    60 days after the cessation.
-
-    Moreover, your license from a particular copyright holder is
-    reinstated permanently if the copyright holder notifies you of the
-    violation by some reasonable means, this is the first time you have
-    received notice of violation of this License (for any work) from that
-    copyright holder, and you cure the violation prior to 30 days after
-    your receipt of the notice.
-
-    Termination of your rights under this section does not terminate the
-    licenses of parties who have received copies or rights from you under
-    this License.  If your rights have been terminated and not permanently
-    reinstated, receipt of a copy of some or all of the same material does
-    not give you any rights to use it.
-
-
-    10. FUTURE REVISIONS OF THIS LICENSE
-
-    The Free Software Foundation may publish new, revised versions of the
-    GNU Free Documentation License from time to time.  Such new versions
-    will be similar in spirit to the present version, but may differ in
-    detail to address new problems or concerns.  See
-    http://www.gnu.org/copyleft/.
-
-    Each version of the License is given a distinguishing version number.
-    If the Document specifies that a particular numbered version of this
-    License "or any later version" applies to it, you have the option of
-    following the terms and conditions either of that specified version or
-    of any later version that has been published (not as a draft) by the
-    Free Software Foundation.  If the Document does not specify a version
-    number of this License, you may choose any version ever published (not
-    as a draft) by the Free Software Foundation.  If the Document
-    specifies that a proxy can decide which future versions of this
-    License can be used, that proxy's public statement of acceptance of a
-    version permanently authorizes you to choose that version for the
-    Document.
-
-    11. RELICENSING
-
-    "Massive Multiauthor Collaboration Site" (or "MMC Site") means any
-    World Wide Web server that publishes copyrightable works and also
-    provides prominent facilities for anybody to edit those works.  A
-    public wiki that anybody can edit is an example of such a server.  A
-    "Massive Multiauthor Collaboration" (or "MMC") contained in the site
-    means any set of copyrightable works thus published on the MMC site.
-
-    "CC-BY-SA" means the Creative Commons Attribution-Share Alike 3.0
-    license published by Creative Commons Corporation, a not-for-profit
-    corporation with a principal place of business in San Francisco,
-    California, as well as future copyleft versions of that license
-    published by that same organization.
-
-    "Incorporate" means to publish or republish a Document, in whole or in
-    part, as part of another Document.
-
-    An MMC is "eligible for relicensing" if it is licensed under this
-    License, and if all works that were first published under this License
-    somewhere other than this MMC, and subsequently incorporated in whole or
-    in part into the MMC, (1) had no cover texts or invariant sections, and
-    (2) were thus incorporated prior to November 1, 2008.
-
-    The operator of an MMC Site may republish an MMC contained in the site
-    under CC-BY-SA on the same site at any time before August 1, 2009,
-    provided the MMC is eligible for relicensing.
-
-
-    ADDENDUM: How to use this License for your documents
-
-    To use this License in a document you have written, include a copy of
-    the License in the document and put the following copyright and
-    license notices just after the title page:
-
-        Copyright (c)  YEAR  YOUR NAME.
-        Permission is granted to copy, distribute and/or modify this document
-        under the terms of the GNU Free Documentation License, Version 1.3
-        or any later version published by the Free Software Foundation;
-        with no Invariant Sections, no Front-Cover Texts, and no Back-Cover Texts.
-        A copy of the license is included in the section entitled "GNU
-        Free Documentation License".
-
-    If you have Invariant Sections, Front-Cover Texts and Back-Cover Texts,
-    replace the "with...Texts." line with this:
-
-        with the Invariant Sections being LIST THEIR TITLES, with the
-        Front-Cover Texts being LIST, and with the Back-Cover Texts being LIST.
-
-    If you have Invariant Sections without Cover Texts, or some other
-    combination of the three, merge those two alternatives to suit the
-    situation.
-
-    If your document contains nontrivial examples of program code, we
-    recommend releasing these examples in parallel under your choice of
-    free software license, such as the GNU General Public License,
-    to permit their use in free software.
 
 
 

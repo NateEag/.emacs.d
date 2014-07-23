@@ -88,9 +88,6 @@
  from autoload cookie comments, rather than maintaining them manually. Might
  fit well into my commit hook setup?
 
--Move my one-off variable customizations into custom.el (at least the ones that
- don't need any documentation of why they are what they are).
-
 -Use my new add-auto-mode function to set up my auto-mode-alist patterns. It's
  more readable.
 
@@ -128,9 +125,6 @@
 -Look into https://github.com/mbunkus/mo-git-blame. Git blame on a file in
  emacs, which could save time.
 
--Consider using auto-revert-tail-mode when I need to keep an eye on a log file
- while programming.
-
 -php-mode should not move sigils when swapping words with M-t.
  $this_thing => thing_$this is not what we want.
 
@@ -167,10 +161,6 @@
  one in the style of the Python one, especially since args should be
  initialized at the class level.
 
--Get flycheck to deactivate/reactivate intelligently for the current edited
- line. If your cursor is on a line you have been editing, you probably don't
- want highlights until you save or move to a different line.
-
 -My SQL-in-PHP code does not work with queries that are built using
  concatenation, which some do (especially in crappy legacy codebases). See my
  email inbox for examples.
@@ -183,6 +173,11 @@
 
 -If particularly bored, try getting GEBEN set up for debugging PHP. I'm
  uncertain whether this would actually be worth the effort.
+
+-Next time I have to work against a DB server, install emacs-edbi:
+ https://github.com/kiwanami/emacs-edbi
+ Looks like it should beat the pants of sql-mode, even if it does depend on
+ Perl.
 
 -sql-mode appears to be a far more powerful beast than I had ever really
  appreciated. I should look into setting up and learning the server

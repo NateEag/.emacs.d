@@ -499,7 +499,7 @@
 ;; Change names from snake_case to ALL_CAPS to StudlyCaps to camelCase.
 ;; TODO Make this just toggle between snake_case and camelCase. They're what I
 ;; usually use.
-(global-set-key (kbd "C-c c") 'string-inflection-cycle)
+(global-set-key (kbd "C-c c") 'string-inflection-toggle)
 
 ;; g is for git, which is oh so much fun.
 (global-set-key (kbd "C-c g") 'magit-status)

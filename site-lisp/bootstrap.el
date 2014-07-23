@@ -5,6 +5,22 @@
   "Return path with `user-emacs-directory' prepended."
   (concat user-emacs-directory path))
 
+;; Set up auto-compile, which should prevent me from ever again loading an
+;; older byte-code file.
+;;
+;; ...at least, as long as I'm running 24.4 or newer...
+;; DEBUG Hard-coding ELPA-managed paths seems like a terrible idea, but that's
+;; what the project's readme recommends doing...
+(add-to-list 'load-path (make-emacs-dir-path "elpa/auto-compile-20140521.723/"))
+(add-to-list 'load-path (make-emacs-dir-path "elpa/packed-20140311.1357/"))
+(setq load-prefer-newer t)
+(require 'auto-compile)
+(auto-compile-on-load-mode 1)
+(auto-compile-on-save-mode 1)
+
+;; I use Flycheck, so I don't need to see the compilation errors buffer.
+(setq auto-compile-display-buffer nil)
+
 ;; Set up the package library per my desires.
 (require 'package)
 (setq package-user-dir (make-emacs-dir-path "elpa/"))
@@ -73,6 +89,8 @@ are for modes that didn't come with autoloading."
 
   ;; tea-time's autoloads, despite being installed from MELPA, don't seem to
   ;; work. Therefore...
-  (autoload 'tea-timer "tea-time.el"))
+  (autoload 'tea-timer "tea-time.el")
+
+  (autoload 'update-packages-update-installed-packages "update-packages" nil t))
 
 (nateeag-autoloads-init)

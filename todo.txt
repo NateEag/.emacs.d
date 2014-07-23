@@ -88,8 +88,6 @@
  from autoload cookie comments, rather than maintaining them manually. Might
  fit well into my commit hook setup?
 
--Add a post-checkout hook, so elisp gets recompiled when I change branches.
-
 -Move my one-off variable customizations into custom.el (at least the ones that
  don't need any documentation of why they are what they are).
 
@@ -267,10 +265,6 @@
  code, by saying basically "fold at this line" and "unfold at this line".
  I have started playing with hide/show mode, and it's not perfect, but it does
  more or less what I want for now.
-
--Consider auto-compile as an alternative to my current githooks setup. It might
- be less prone to edge cases (like screwups after a rebase).
- https://github.com/tarsius/auto-compile/blob/master/auto-compile.el
 
 -It might be nice to store all byte-compiled files in a single byte-cache
  folder. It's probably not worth much hassle, though, since I have hooks

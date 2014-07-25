@@ -2262,9 +2262,10 @@ Otherwise, return nil."
 (defun magit-ref-exists-p (ref)
   (magit-git-success "show-ref" "--verify" ref))
 
-(defun magit-rev-parse (ref)
-  "Return the SHA hash for REF."
-  (magit-git-string "rev-parse" ref))
+(defun magit-rev-parse (&rest args)
+  "Execute `git rev-parse ARGS', returning first line of output.
+If there is no output return nil."
+  (apply #'magit-git-string "rev-parse" args))
 
 (defun magit-ref-ambiguous-p (ref)
   "Return whether or not REF is ambiguous."
@@ -5735,7 +5736,7 @@ ask the user what remote to use."
                            (car remotes)))))
     (when (or current-prefix-arg (not remote))
       (setq remote (magit-read-remote "Push to remote")))
-    (magit-run-git-async "push" remote "--tags")))
+    (magit-run-git-async "push" remote "--tags" magit-custom-options)))
 
 ;;;###autoload
 (defun magit-push ()
@@ -6020,6 +6021,8 @@ depending on the value of option `magit-commit-squash-commit'.
                                    (buffer-list)))))
          (buffer (funcall locate-buffer)))
     (unless buffer
+      (unless (magit-commit-assert nil)
+        (user-error "Abort"))
       (magit-commit)
       (while (not (setq buffer (funcall locate-buffer)))
         (sit-for 0.01)))

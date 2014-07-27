@@ -50,19 +50,19 @@
 (defun update-packages-upgrade-package-and-commit (package)
   "If PACKAGE can be upgraded, upgrade it and commit."
   (unless (update-packages-newest-package-installed-p package)
-    (let ((package-desc (update-packages-get-package-desc package package-alist)))
+    (let ((package-desc (update-packages-get-package-desc package package-alist))
+          (git-executable (executable-find "git")))
       (update-packages-upgrade-or-install-package package)
 
-      (require 'magit)
       ;; Add new package.
-      (call-process magit-git-executable
+      (call-process git-executable
                     nil
                     nil
                     nil
                     "add"
                     (expand-file-name package-user-dir))
       ;; Stage deletion of old package.
-      (call-process magit-git-executable
+      (call-process git-executable
                     nil
                     nil
                     nil
@@ -70,7 +70,7 @@
                     "-u"
                     (expand-file-name package-user-dir))
       ;; Commit changes.
-      (call-process magit-git-executable
+      (call-process git-executable
                     nil
                     nil
                     nil

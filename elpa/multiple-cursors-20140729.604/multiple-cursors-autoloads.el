@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "mc-edit-lines" "mc-edit-lines.el" (21388 61795
+;;;### (autoloads nil "mc-edit-lines" "mc-edit-lines.el" (21464 15927
 ;;;;;;  0 0))
 ;;; Generated autoloads from mc-edit-lines.el
 
@@ -33,7 +33,7 @@ Add one cursor to the beginning of each line in the active region.
 
 ;;;***
 
-;;;### (autoloads nil "mc-mark-more" "mc-mark-more.el" (21388 61795
+;;;### (autoloads nil "mc-mark-more" "mc-mark-more.el" (21464 15928
 ;;;;;;  0 0))
 ;;; Generated autoloads from mc-mark-more.el
 
@@ -194,7 +194,7 @@ Mark the tag we're in and its pair for renaming.
 
 ;;;***
 
-;;;### (autoloads nil "mc-mark-pop" "mc-mark-pop.el" (21388 61795
+;;;### (autoloads nil "mc-mark-pop" "mc-mark-pop.el" (21464 15928
 ;;;;;;  0 0))
 ;;; Generated autoloads from mc-mark-pop.el
 
@@ -207,7 +207,7 @@ to the popped mark.
 ;;;***
 
 ;;;### (autoloads nil "mc-separate-operations" "mc-separate-operations.el"
-;;;;;;  (21388 61795 0 0))
+;;;;;;  (21464 15928 0 0))
 ;;; Generated autoloads from mc-separate-operations.el
 
 (autoload 'mc/insert-numbers "mc-separate-operations" "\
@@ -228,7 +228,7 @@ Insert increasing numbers for each cursor, starting at 0 or ARG.
 ;;;***
 
 ;;;### (autoloads nil "rectangular-region-mode" "rectangular-region-mode.el"
-;;;;;;  (21388 61795 0 0))
+;;;;;;  (21464 15927 0 0))
 ;;; Generated autoloads from rectangular-region-mode.el
 
 (autoload 'set-rectangular-region-anchor "rectangular-region-mode" "\
@@ -242,8 +242,8 @@ an exceedingly quick way of adding multiple cursors to multiple lines.
 ;;;***
 
 ;;;### (autoloads nil nil ("mc-cycle-cursors.el" "multiple-cursors-core.el"
-;;;;;;  "multiple-cursors-pkg.el" "multiple-cursors.el") (21388 61795
-;;;;;;  161000 0))
+;;;;;;  "multiple-cursors-pkg.el" "multiple-cursors.el") (21464 15928
+;;;;;;  172140 0))
 
 ;;;***
 

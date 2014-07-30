@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: environment
 ;; URL: https://github.com/purcell/exec-path-from-shell
-;; Version: 20140720.838
+;; Version: 20140729.1327
 ;; X-Original-Version: DEV
 
 ;; This file is not part of GNU Emacs.
@@ -138,7 +138,7 @@ shell-escaped, so they may contain $ etc."
 
 Execute $SHELL according to `exec-path-from-shell-arguments'.
 The result is a list of (NAME . VALUE) pairs."
-  (let* ((dollar-names (mapcar (lambda (n) (concat "$" n)) names))
+  (let* ((dollar-names (mapcar (lambda (n) (format "${%s-}" n)) names))
          (values (if (exec-path-from-shell--tcsh-p (getenv "SHELL"))
                      ;; Dumb shell
                      (mapcar (lambda (v)

@@ -7,6 +7,9 @@
  external process to get completions, or jedi. I think if I had this I could
  get JS completions in web-mode, which would be awesome.
 
+-Extract jedi-force to be an ELPA package. I was thinking of adding more
+ features, but it might be fine as it is.
+
 -Add php-auto-yasnippet-style function params to tern.js.
 
 -Make comment auto-fill work with C++-style comments in js2-mode, not just

@@ -12,6 +12,9 @@
 
 -Finish getting tagedit to work with web-mode.
 
+-Extend post-pull hook to run 'git clean -fd elpa/', to keep the zombie
+ directories from living on.
+
 -Try installing evil-mode and seeing if it interferes with my usual editing
  flow. If not, I can lazy-load vim's editing power, and learn how to cope
  better when I'm stuck in vim.

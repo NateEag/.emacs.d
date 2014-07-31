@@ -362,6 +362,9 @@
 ;; Text-editing modes of various stripes.
 (defun text-mode-init ()
   "Configuration that is shared across my various text modes."
+
+  (ac-ispell-setup)
+  (ac-ispell-ac-setup)
   (auto-fill-mode t)
   (smartparens-mode)
 

@@ -1,3 +1,21 @@
-ac-comphist.dat
+# Backup files don't belong under version control. They usually go in a single
+# folder, but if there's an error in my config or I'm running -Q (both things
+# that can happen when hacking on an Emacs config, oddly enough), these can
+# wind up in here.
 *~
+
+# Byte-compiled files really don't belong in version control.
 *.elc
+
+# My auto-complete history is different between machines for a reason.
+ac-comphist.dat
+
+# The same goes for recent files.
+recentf
+
+# And Tramp's history/computed settings too.
+tramp
+
+# Because I don't like storing binaries in git repos, ignore this.
+# It holds Jedi's default virtualenv, IIRC.
+.python-environments

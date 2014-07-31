@@ -1,4 +1,4 @@
-This is /tmp/flycheck303148MD/flycheck-20140728.601/flycheck.info,
+This is /tmp/flycheck27043Lda/flycheck-20140730.1438/flycheck.info,
 produced by makeinfo version 4.13 from
 /home/melpa/melpa/working/flycheck/doc/flycheck.texi.
 
@@ -515,9 +515,9 @@ Index
 * flycheck-add-next-checker; Emacs Lisp function: Extending syntax checkers.
                                                               (line   8)
 * flycheck-after-syntax-check-hook; Emacs Lisp hook: Syntax checking<2>.
-                                                              (line 103)
+                                                              (line 125)
 * flycheck-before-syntax-check-hook; Emacs Lisp hook: Syntax checking<2>.
-                                                              (line 126)
+                                                              (line 145)
 * flycheck-buffer-saved-p; Emacs Lisp function: Builtin syntax checker predicates.
                                                               (line   6)
 * flycheck-buffer; Emacs Lisp command:   Syntax checking<2>.  (line  76)
@@ -563,7 +563,7 @@ Index
 * flycheck-define-checker; Emacs Lisp macro: Defining new syntax checkers.
                                                               (line   8)
 * flycheck-define-error-level; Emacs Lisp function: Syntax checker API.
-                                                              (line 124)
+                                                              (line 123)
 * flycheck-describe-checker; Emacs Lisp command: Syntax checker selection<2>.
                                                               (line 176)
 * flycheck-disabled-checkers; Emacs Lisp user option: Syntax checker selection<2>.
@@ -649,11 +649,16 @@ Index
                                                               (line  73)
 * flycheck-info; Emacs Lisp face:        Error reporting.     (line  16)
 * flycheck-jshintrc; Emacs Lisp user option: Javascript.      (line  14)
+* flycheck-last-status-change; Emacs Lisp variable: Status API.
+                                                              (line  44)
 * flycheck-list-errors; Emacs Lisp command: Error reporting.  (line 210)
 * flycheck-locate-config-file-functions; Emacs Lisp user option: Syntax checker configuration files.
                                                               (line  20)
 * flycheck-locate-config-file; Emacs Lisp function: Syntax checker API.
-                                                              (line 115)
+                                                              (line 114)
+* flycheck-mode-line-status-text; Emacs Lisp function: Status API.
+                                                              (line  50)
+* flycheck-mode-line; Emacs Lisp user option: Mode line.      (line  38)
 * flycheck-mode; Emacs Lisp command:     Flycheck Mode.       (line   8)
 * flycheck-mode; Emacs Lisp user option: Flycheck Mode.       (line  11)
 * flycheck-next-error; Emacs Lisp command: Error navigation.  (line  47)
@@ -678,6 +683,8 @@ Index
 * flycheck-pylintrc; Emacs Lisp user option: Python.          (line  70)
 * flycheck-registered-checker-p; Emacs Lisp function: Syntax checker API.
                                                               (line   6)
+* flycheck-report-error; Emacs Lisp function: Status API.     (line  37)
+* flycheck-report-status; Emacs Lisp function: Status API.    (line   6)
 * flycheck-rubocop-lint-only; Emacs Lisp user option: Ruby.   (line  21)
 * flycheck-rubocoprc; Emacs Lisp user option: Ruby.           (line  35)
 * flycheck-rust-check-tests; Emacs Lisp user option: Rust.    (line  16)
@@ -698,14 +705,16 @@ Index
                                                               (line  19)
 * flycheck-standard-error-navigation; Emacs Lisp user option: Error navigation.
                                                               (line  16)
+* flycheck-status-changed-functions; Emacs Lisp hook: Syntax checking<2>.
+                                                              (line 106)
 * flycheck-string-list-p; Emacs Lisp function: Utilities.     (line  26)
 * flycheck-substitute-argument; Emacs Lisp function: Syntax checker API.
                                                               (line  12)
 * flycheck-symbol-list-p; Emacs Lisp function: Utilities.     (line  29)
 * flycheck-syntax-check-failed-hook; Emacs Lisp hook: Syntax checking<2>.
-                                                              (line 145)
-* flycheck-temp-prefix; Emacs Lisp user option: Syntax checking<2>.
                                                               (line 164)
+* flycheck-temp-prefix; Emacs Lisp user option: Syntax checking<2>.
+                                                              (line 183)
 * flycheck-tidyrc; Emacs Lisp user option: HTML.              (line  14)
 * flycheck-warning; Emacs Lisp face:     Error reporting.     (line  16)
 * global-flycheck-mode; Emacs Lisp command: Flycheck Mode.    (line  14)

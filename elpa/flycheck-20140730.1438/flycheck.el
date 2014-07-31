@@ -4969,9 +4969,9 @@ for more information about the custom directory."
   :safe #'stringp
   :package-version '(flycheck . "0.16"))
 
-(flycheck-def-config-file-var flycheck-eslintrc javascript-eslint ".eslintrc"
+(flycheck-def-config-file-var flycheck-eslintrc javascript-eslint nil
   :safe #'stringp
-  :package-version '(flycheck . "0.16"))
+  :package-version '(flycheck . "0.20"))
 
 (flycheck-define-checker javascript-eslint
   "A JavaScript syntax and style checker using eslint.
@@ -4980,7 +4980,10 @@ See URL `https://github.com/eslint/eslint'."
   :command ("eslint" "--format=compact"
             (config-file "--config" flycheck-eslintrc)
             (option "--rulesdir" flycheck-eslint-rulesdir)
-            source)
+            ;; We need to use source-inplace because eslint looks for
+            ;; configuration files in the directory of the file being checked.
+            ;; See https://github.com/flycheck/flycheck/issues/447
+            source-inplace)
   :error-patterns
   ((warning line-start (file-name)
             ": line " line ", col " column ", Warning - " (message) line-end)

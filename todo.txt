@@ -1,3 +1,6 @@
+-Figure out why auto-complete narrowing is so slow now. It used to be much,
+ much faster, and in fact if I turn it on in this file it is.
+
 -Write a general-case ac-source for Tern.js. Right now I have to press M-Tab to
  trigger top-level completions, and I'd like to just press Tab. emacs-eclim
  might be a good place to rip off the basic idea from, since it depends on an

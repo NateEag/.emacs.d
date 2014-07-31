@@ -39,6 +39,7 @@
  '(magit-diff-use-overlays nil)
  '(magit-use-overlays nil)
  '(menu-bar-mode nil nil nil "I don't really use the menus, either.")
+ '(mo-git-blame-git-blame-args "-M -C -w" nil nil "Follow movement in a file, look for movement between files in the same commit, and ignore whitespace changes.")
  '(php-mode-coding-style (quote psr2) nil nil "PSR-2 is not ideal, but it's a standard.")
  '(safe-local-variable-values
    (quote

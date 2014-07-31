@@ -385,6 +385,12 @@
 (add-hook 'git-commit-mode-hook 'git-commit-mode-hook)
 (add-to-list 'auto-mode-alist '("COMMIT_EDITMSG$" . git-commit-mode))
 
+;; Unix config mode (mostly used for .git* files)
+(defun conf-unix-mode-init ()
+  "My settings for editing Unix config files."
+  (auto-fill-mode))
+(add-hook 'conf-unix-mode-hook 'conf-unix-mode-init)
+
 ;; Set up gitconfig mode.
 (add-to-list 'auto-mode-alist '(".gitconfig$" . gitconfig-mode))
 

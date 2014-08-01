@@ -18,9 +18,11 @@
   (interactive)
   (require 'auto-complete)
   (require 'auto-complete-config)
+
   ;; (ac-config-default)
   (if (not ac-initialized)
       (progn
+        (ac-flyspell-workaround)
         (setq ac-auto-start nil)
         (custom-set-variables
          '(ac-trigger-key "TAB"))

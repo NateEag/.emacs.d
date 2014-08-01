@@ -21,8 +21,6 @@
  flow. If not, I can lazy-load vim's editing power, and learn how to cope
  better when I'm stuck in vim.
 
--Check why focus-mode resizes frame slightly on Windows.
-
 -File feature request to flycheck for being able to run checkers while in
  web-mode. May well get rejected, because supporting this would be pretty hard.
 

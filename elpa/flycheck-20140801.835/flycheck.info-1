@@ -1,4 +1,4 @@
-This is /tmp/flycheck27043Lda/flycheck-20140730.1438/flycheck.info,
+This is /tmp/flycheck10377cP2/flycheck-20140801.835/flycheck.info,
 produced by makeinfo version 4.13 from
 /home/melpa/melpa/working/flycheck/doc/flycheck.texi.
 
@@ -62,6 +62,7 @@ Copyright (C) 2014, Sebastian Wiesner
 * Flycheck news::
 * Changes::
 * Contribution guidelines::
+* Testing Flycheck::
 * Writing documentation::
 * Maintenance tasks::
 * Credits::
@@ -333,6 +334,13 @@ Contributing code
 * Commit messages::
 * Contributing syntax checkers::
 * Pull requests::
+
+Testing Flycheck
+
+* Test suite layout::
+* Test running::
+* Virtual test environment::
+* Travis CI::
 
 Writing documentation
 
@@ -7755,7 +7763,7 @@ Initial release as flymake-checkers
         - Emacs Lisp
 
 
-File: flycheck.info,  Node: Contribution guidelines,  Next: Writing documentation,  Prev: Changes,  Up: Top
+File: flycheck.info,  Node: Contribution guidelines,  Next: Testing Flycheck,  Prev: Changes,  Up: Top
 
 12 Contribution guidelines
 **************************
@@ -7915,8 +7923,8 @@ above:
      environment, or explain how to install the tool on an Ubuntu 12.04
      system.
 
-     Note: We will _not_ merge syntax checkers which cannot be tested
-     on Travis CI.
+     Note: Unit tests that can run on Travis CI are *mandatory* for all
+     syntax checkers in Flycheck.
 
 
 File: flycheck.info,  Node: Pull requests,  Prev: Contributing syntax checkers,  Up: Contributing code
@@ -7935,14 +7943,208 @@ File: flycheck.info,  Node: Pull requests,  Prev: Contributing syntax checkers, 
      clear title and description in grammatically correct, complete
      sentences.
 
+     Note: Pull requests *must* pass all tests on Travis CI before
+     being merged.
+
 ---------- Footnotes ----------
 
 (1) https://help.github.com/articles/using-pull-requests
 
 
-File: flycheck.info,  Node: Writing documentation,  Next: Maintenance tasks,  Prev: Contribution guidelines,  Up: Top
+File: flycheck.info,  Node: Testing Flycheck,  Next: Writing documentation,  Prev: Contribution guidelines,  Up: Top
 
-13 Writing documentation
+13 Testing Flycheck
+*******************
+
+Flycheck comes with a large unit test suite, which tests all syntax
+checkers and large parts of Flychecks internal API and interactive
+commands.
+
+This document explains how to use this test suite.
+
+* Menu:
+
+* Test suite layout::
+* Test running::
+* Virtual test environment::
+* Travis CI::
+
+
+File: flycheck.info,  Node: Test suite layout,  Next: Test running,  Up: Testing Flycheck
+
+13.1 Test suite layout
+======================
+
+All test code is contained in the `test/' sub-directory, which has the
+following contents:
+
+   - `flycheck-test.el': The actual unit test suite, that is, the test
+     cases and the utility functions.
+
+   - `resources/': Resource files used by the test suite, including
+     example code in various programming languages to test syntax
+     checkers.
+
+   - `init.el': A simple init file which initializes a bare-bones Emacs
+     session for the Flycheck test suite.
+
+   - `run.el': A simple test runner for non-interactive use, which
+     reads ERT selectors from the command line and runs all matching
+     tests.
+
+
+File: flycheck.info,  Node: Test running,  Next: Virtual test environment,  Prev: Test suite layout,  Up: Testing Flycheck
+
+13.2 Test running
+=================
+
+First install Emacs Lisp dependencies using Cask(1):
+
+    $ make deps
+
+Then install the syntax checkers that you'd like to test:
+
+    $ brew install go
+    $ pip install --user pylint
+    $ npm install --global coffee coffee-lint jshint
+    $ cabal install hlint shellcheck
+
+     Note: If you'd like to keep your environment clean, use the *note
+     Virtual test environment: 1e3. instead.
+
+Run the entire test suite:
+
+    $ make test
+
+     Note: Tests which can't be run because of missing tools are
+     gracefully skipped.
+
+You may also run a specific subset of test cases by passing an ERT
+selector expression.  The following example runs all tests for C and
+C++, except those whose name matches `gcc':
+
+    $ make ERTSELECTOR='(and (or (tag language-c) (tag language-c++)) (not "gcc"))' test
+
+See *note Test Selectors: (ert)Test Selectors. for the syntax of test
+selectors.
+
+     Note: Keep in mind that you must quote the expression for your
+     shell _and_ for Emacs Lisp.
+
+---------- Footnotes ----------
+
+(1) http://cask.readthedocs.org
+
+
+File: flycheck.info,  Node: Virtual test environment,  Next: Travis CI,  Prev: Test running,  Up: Testing Flycheck
+
+13.3 Virtual test environment
+=============================
+
+To run all tests successfully, you need a large amount of external
+tools.  To keep your environment clean, and test against a reference
+environment, Flycheck provides a virtual machine with a complete test
+environment, based on VirtualBox and Vagrant.
+
+The virtual machine contains
+
+   - The latest stable Emacs release
+
+   - A nightly build of Emacs trunk
+
+   - `make' and Cask(1)
+
+   - All syntax checkers supported by Flycheck
+
+To use this VM, first install the following tools on your system:
+
+   - VirtualBox(2)
+
+   - Vagrant(3)
+
+   - Ansible(4)
+
+On Linux, these packages are typically available from the package
+manager of your distribution.  On OS X, use the binaries provided for
+Vagrant and VirtualBox, and install Ansible from Homebrew(5) with `brew
+install ansible'.
+
+To start the VM run the following command in the root directory of
+Flycheck:
+
+    $ vagrant up
+
+     Warning: On the first time, this command will setup and provision
+     the VM, and *download and install over 1GB* of images and packages
+     along the way.  Depending on your network connection and disk
+     speed, this can take *several hours*.
+
+After the VM is started, you can connect to it:
+
+    $ vagrant ssh
+
+This will give you a bash prompt within the VM, on which you can run
+the tests as explained in *note Test running: 1e1.
+
+To switch between Emacs versions, pass `EMACS' to `make test':
+
+    $ make EMACS=emacs-snapshot test
+    $ make EMACS=emacs24 test
+
+The latter is the default.
+
+When finished, you can shutdown the VM with:
+
+    $ vagrant halt
+
+Occasionally you should provision the test environment again, to update
+to the latest Emacs nightly build, and to follow updates of syntax
+checker tools.  To do so, use the `--provision' flag when starting the
+VM:
+
+    $ vagrant up --provision
+
+You can also provision a running machine with:
+
+    $ vagrant provision
+
+The VM is provisioned from Ansible playbooks in the `playbooks/'
+sub-directory of the top-level source directory.
+
+---------- Footnotes ----------
+
+(1) http://cask.readthedocs.org
+
+(2) https://www.virtualbox.org/
+
+(3) http://www.vagrantup.com/
+
+(4) http://www.ansible.com/home
+
+(5) http://brew.sh/
+
+
+File: flycheck.info,  Node: Travis CI,  Prev: Virtual test environment,  Up: Testing Flycheck
+
+13.4 Travis CI
+==============
+
+The entire test suite continuously runs on *note Travis CI: 1e6. after
+every push, with the latest Emacs release and a nightly Emacs snapshot.
+
+Travis CI is configured from `.travis.yml' in the top-level source
+directory, and uses mostly the same playbooks for provisioning.
+
+     Note: Travis CI is the *reference environment* for Flycheck's test
+     suite.  All tests *must pass* on Travis CI.
+
+     In case Travis CI diverges from the *note VM: 1e3, Travis CI is
+     authoritative.
+
+
+File: flycheck.info,  Node: Writing documentation,  Next: Maintenance tasks,  Prev: Testing Flycheck,  Up: Top
+
+14 Writing documentation
 ************************
 
 This document explains how to edit and building the documentation of
@@ -7957,7 +8159,7 @@ Flycheck.
 
 File: flycheck.info,  Node: Build environment setup,  Next: Building HTML and Texinfo,  Up: Writing documentation
 
-13.1 Build environment setup
+14.1 Build environment setup
 ============================
 
 Flycheck's documentation is written using Sphinx(1) and
@@ -8003,11 +8205,11 @@ Now you are set up to build the documentation.
 
 File: flycheck.info,  Node: Building HTML and Texinfo,  Next: Verifying references,  Prev: Build environment setup,  Up: Writing documentation
 
-13.2 Building HTML and Texinfo
+14.2 Building HTML and Texinfo
 ==============================
 
 First, switch to the virtual environment you created in the *note Build
-environment setup: 1e0, and make sure that the requirements are up to
+environment setup: 1e9, and make sure that the requirements are up to
 date:
 
     $ source ~/.virtualenvs/cask/bin/activate
@@ -8032,7 +8234,7 @@ preview it.  The Texinfo build goes to `doc/flycheck.texi'.
 
 File: flycheck.info,  Node: Verifying references,  Prev: Building HTML and Texinfo,  Up: Writing documentation
 
-13.3 Verifying references
+14.3 Verifying references
 =========================
 
 Sphinx emits warnings for internal references and cross-references to
@@ -8047,7 +8249,7 @@ You can additionally verify all external references with:
 
 File: flycheck.info,  Node: Maintenance tasks,  Next: Credits,  Prev: Writing documentation,  Up: Top
 
-14 Maintenance tasks
+15 Maintenance tasks
 ********************
 
 This document explains various maintenance tasks for Flycheck, that
@@ -8061,7 +8263,7 @@ contributors have to perform under specific circumstances.
 
 File: flycheck.info,  Node: Rebuilding the Texinfo,  Next: Rasterized logo files,  Up: Maintenance tasks
 
-14.1 Rebuilding the Texinfo
+15.1 Rebuilding the Texinfo
 ===========================
 
 Flycheck contains a Texinfo version of the documentation at
@@ -8073,7 +8275,7 @@ Flycheck.
 
 When making changes to the documentation, you need to rebuild the
 Texinfo version with, by following the *note instructions to build the
-documentation: 1e2.
+documentation: 1eb.
 
 ---------- Footnotes ----------
 
@@ -8082,7 +8284,7 @@ documentation: 1e2.
 
 File: flycheck.info,  Node: Rasterized logo files,  Prev: Rebuilding the Texinfo,  Up: Maintenance tasks
 
-14.2 Rasterized logo files
+15.2 Rasterized logo files
 ==========================
 
 The source of the Flycheck logo is `flycheck.svg'.  The documentation
@@ -8114,7 +8316,7 @@ properly render the logo.
 
 File: flycheck.info,  Node: Credits,  Next: GNU General Public License,  Prev: Maintenance tasks,  Up: Top
 
-15 Credits
+16 Credits
 **********
 
 Flycheck is written and maintained by Sebastian Wiesner(1), with
@@ -8312,7 +8514,7 @@ checking.
 
 File: flycheck.info,  Node: GNU General Public License,  Next: GNU Free Documentation License,  Prev: Credits,  Up: Top
 
-16 GNU General Public License
+17 GNU General Public License
 *****************************
 
                         GNU GENERAL PUBLIC LICENSE

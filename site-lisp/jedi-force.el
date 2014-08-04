@@ -2,15 +2,29 @@
 
 ;;; Commentary:
 ;;;
+;;; "The Force is what gives a Jedi his power." -- Obi-Wan Kenobi
 ;;;
+;;; [Jedi](http://jedi.jedidjah.ch/en/latest/) is an awesome tool for
+;;; supporting Python auto-completion and jump-to-definition library for
+;;; a variety of editors.
 ;;;
-;;; This is just [kenobi.el](https://gist.github.com/nyergler/6100112)
-;;; modified to suit my own usage patterns.
+;;; By default, a Jedi server doesn't know what virtualenv a given Python
+;;; source file relies on. With the aid of the Force, however, a Jedi will know
+;;; where to look.
+;;;
+;;; This is mostly [kenobi.el](https://gist.github.com/nyergler/6100112)
+;;; tweaked to fit my usage patterns. It doesn't have Kenobi's built-in support
+;;; for finding .egg files, but you can use `jedi-force-extra-paths' for the
+;;; same purpose.
+;;;
+;;; I would like to pull this out of my config and make it standalone. To do
+;;; that, I need to add a one-shot setup function that configures the hooks for
+;;; you, since setup isn't entirely trivial.
 
 ;;; Code:
 
 (defvar jedi-force-virtualenv-dir-name "virtualenv"
-  "Name of directory containing a Python project's virtualenv.
+  "Name of directory to check for a Python virtualenv.
 
 If necessary, use .dir-locals.el to configure it on a per-project basis.")
 
@@ -19,12 +33,21 @@ If necessary, use .dir-locals.el to configure it on a per-project basis.")
 
 Best set in .dir-locals.el for a given project.")
 
+(defvar jedi-force-find-buffer-virtualenv
+  'jedi-force-find-virtualenv-in-buffer-path
+  "Function to locate virtualenv for a buffer.
+
+Should be a function that accepts a buffer-file-name and returns
+the path to the corresponding virtualenv, or `nil' if none is found.
+
+Defaults to `jedi-force-find-virtualenv-in-buffer-path'.")
+
 (defun run-local-vars-mode-hook ()
   "Run a hook for the major-mode after local variables have been set up."
   (run-hooks (intern (concat (symbol-name major-mode) "-local-vars-hook"))))
 
-(defun jedi-force-find-buffer-virtualenv (buffer-name)
- "Return path to the current buffer's virtualenv, or nil if none is found."
+(defun jedi-force-find-virtualenv-in-buffer-path (buffer-name)
+ "Look for a virtualenv anywhere above `buffer-name'."
  (let ((buffer-dir (file-name-directory buffer-name)))
    (while (and (not (file-exists-p
                      (concat
@@ -44,8 +67,9 @@ Best set in .dir-locals.el for a given project.")
 
 (defun jedi-force-setup-extra-args ()
   "Hook to set up jedi's arguments for the current buffer."
-  (let ((virtualenv-path (jedi-force-find-buffer-virtualenv buffer-file-name))
-        )
+  (let ((virtualenv-path (apply jedi-force-find-buffer-virtualenv
+                                (list buffer-file-name))))
+
     (make-local-variable 'jedi:server-args)
 
     (when virtualenv-path (set (make-local-variable 'jedi:server-args)

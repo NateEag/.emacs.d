@@ -314,6 +314,11 @@
   ;; automatically.
   (guess-style-guess-all)
 
+  ;; Make camelCaseNames more readable. See custom.el for settings.
+  (require 'glasses)
+  (glasses-mode)
+  (diminish 'glasses-mode)
+
   ;; Everyone likes spell-checking.
   (flyspell-prog-mode)
   (diminish 'flyspell-mode)

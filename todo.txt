@@ -129,15 +129,8 @@
  auto-complete and jump-to-def. It should let me stay in Emacs while getting
  Eclipse's most useful features.
 
--Look into https://github.com/mbunkus/mo-git-blame. Git blame on a file in
- emacs, which could save time.
-
 -php-mode should not move sigils when swapping words with M-t.
  $this_thing => thing_$this is not what we want.
-
--glasses-mode looks handy, but when I used 'bold' as the face and set
- glasses-separator to nil, it made existing underscores vanish. Should probably
- make a bug report.
 
 -It would be really sweet to get yasnippet's bracket placement to do the Right
  Thing based on major-mode, placing them on the newline or on the same line

@@ -4,6 +4,8 @@
  external process to get completions, or jedi. I think if I had this I could
  get JS completions in web-mode, which would be awesome.
 
+-Teach Tern.js that auto-complete on dot shouldn't happen in comments.
+
 -Extract jedi-force to be an ELPA package. I was thinking of adding more
  features, but it might be fine as it is.
 

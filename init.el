@@ -173,6 +173,16 @@
 
 ;; Random functions worth having around.
 
+;; From http://stackoverflow.com/a/9697222
+(defun comment-or-uncomment-region-or-line ()
+    "Comment/uncomment region, or current line if there is no region."
+    (interactive)
+    (let (beg end)
+        (if (region-active-p)
+            (setq beg (region-beginning) end (region-end))
+            (setq beg (line-beginning-position) end (line-end-position)))
+        (comment-or-uncomment-region beg end)))
+
 ;; From http://stackoverflow.com/a/17859480/1128957
 (defun add-auto-mode (mode &rest patterns)
   "Add filename `patterns' to `auto-mode-alist' for MODE."
@@ -485,6 +495,9 @@
 ;; I'd much rather have a sane way to goto-line than be able to easily change
 ;; my font settings.
 (global-set-key "\M-g" 'goto-line)
+
+;; Sometimes you want to toggle the current line's comment state.
+(global-set-key (kbd "M-;") 'comment-or-uncomment-region-or-line)
 
 ;; I'd rather have regexes available when I search. Sorry, RMS.
 ;; Also, my Windows box at work has C-M-s bound OS-wide to pop a pointless

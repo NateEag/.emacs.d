@@ -101,7 +101,7 @@
 ;; globally. I'm guessing before-save-hook is not a buffer-local variable.
 (defun maybe-delete-trailing-whitespace ()
   "Delete trailing whitespace if the current buffer's filename allows it."
-  (unless (string-match "\\.*.\\(patch\\|diff\\)" (buffer-file-name))
+  (unless (string-match "\\.*.\\(patch\\|diff\\)$" (buffer-file-name))
       (delete-trailing-whitespace)))
 (add-hook 'before-save-hook 'maybe-delete-trailing-whitespace)
 

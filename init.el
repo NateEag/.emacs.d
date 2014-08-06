@@ -421,12 +421,8 @@
 (setq interpreter-mode-alist
       (cons '("python" . python-mode) interpreter-mode-alist))
 
-(add-hook 'hack-local-variables-hook 'run-local-vars-mode-hook)
-
 (add-hook 'python-mode-hook 'python-mode-accessories-init)
-
-(add-hook 'python-mode-local-vars-hook 'jedi-force-setup-extra-args)
-(add-hook 'python-mode-local-vars-hook 'jedi:setup)
+(jedi-force-set-up-hooks)
 
 
 ;; DEBUG I cannot get this to autoload, and I don't know why.

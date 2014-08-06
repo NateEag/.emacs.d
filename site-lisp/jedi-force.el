@@ -42,9 +42,21 @@ the path to the corresponding virtualenv, or `nil' if none is found.
 
 Defaults to `jedi-force-find-virtualenv-in-buffer-path'.")
 
-(defun run-local-vars-mode-hook ()
-  "Run a hook for the major-mode after local variables have been set up."
+(defun jedi-force-run-local-vars-mode-hook ()
+  "Run additional hooks for `major-mode'.
+
+Should be added to `hack-local-variables-hook', to run major-mode-specific
+hooks on file-local variables."
   (run-hooks (intern (concat (symbol-name major-mode) "-local-vars-hook"))))
+
+(defun jedi-force-set-up-hooks ()
+  "Install hooks to start Jedi with guidance from the Force.
+
+Handles adding jedi:setup to hooks, so don't add it yourself."
+
+  (add-hook 'hack-local-variables-hook 'jedi-force-run-local-vars-mode-hook)
+  (add-hook 'python-mode-local-vars-hook 'jedi-force-setup-extra-args)
+  (add-hook 'python-mode-local-vars-hook 'jedi:setup))
 
 (defun jedi-force-find-virtualenv-in-buffer-path (buffer-name)
  "Look for a virtualenv anywhere above `buffer-name'."

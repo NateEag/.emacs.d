@@ -761,13 +761,13 @@ keybindings.  Changing this variable is at your own risk."
       (define-key flycheck-mode-map key flycheck-command-map))
     (set-default variable key)))
 
-(defcustom flycheck-mode-line
-  '(" FlyC" (:eval (flycheck-mode-line-status-text)))
+(defcustom flycheck-mode-line '(:eval (flycheck-mode-line-status-text))
   "Mode line lighter for Flycheck.
 
 The value of this variable is a mode line template as in
 `mode-line-format'.  See Info Node `(elisp)Mode Line Format' for
-more information.
+more information.  Note that it should contain a _single_ mode
+line construct only.
 
 Customize this variable to change how Flycheck reports its status
 in the mode line.  You may use `flycheck-mode-line-status-text'
@@ -792,18 +792,29 @@ Set this variable to nil to disable the mode line completely."
 (defvar flycheck-mode-menu-map
   (easy-menu-create-menu
    "Syntax checking"
-   '(["Check current buffer" flycheck-buffer t]
+   '(["Enable on-the-fly syntax checking" flycheck-mode
+      :style toggle :selected flycheck-mode
+      ;; Don't let users toggle the mode if there is no syntax checker for this
+      ;; buffer
+      :enable (flycheck-get-checker-for-buffer)]
+     ["Check current buffer" flycheck-buffer flycheck-mode]
      ["Clear errors in buffer" flycheck-clear t]
-     ["Compile current buffer" flycheck-compile t]
      "---"
-     ["Go to next error" flycheck-next-error t]
-     ["Go to previous error" flycheck-previous-error t]
-     ["Show all errors" flycheck-list-errors t]
-     ["Google messages at point" flycheck-google-messages t]
+     ["Go to next error" flycheck-next-error flycheck-mode]
+     ["Go to previous error" flycheck-previous-error flycheck-mode]
+     ["Show all errors" flycheck-list-errors flycheck-mode]
      "---"
-     ["Select syntax checker" flycheck-select-checker t]
+     ["Copy messages at point" flycheck-copy-messages-as-kill
+      (flycheck-overlays-at (point))]
+     ["Google messages at point" flycheck-google-messages
+      (flycheck-overlays-at (point))]
+     "---"
+     ["Select syntax checker" flycheck-select-checker flycheck-mode]
+     ["Set executable of syntax checker" flycheck-set-checker-executable
+      flycheck-mode]
      "---"
      ["Describe syntax checker" flycheck-describe-checker t]
+     ["Show Flycheck version" flycheck-version t]
      ["Read the Flycheck manual" flycheck-info t]))
   "Menu of `flycheck-mode'.")
 
@@ -3692,21 +3703,22 @@ refresh the mode line."
 
 STATUS defaults to `flycheck-last-status-change' if omitted or
 nil."
-  (pcase (or status flycheck-last-status-change)
-    (`not-checked "")
-    (`no-checker "-")
-    (`running "*")
-    (`errored "!")
-    (`finished
-     (if flycheck-current-errors
-         (let ((error-counts (flycheck-count-errors
-                              flycheck-current-errors)))
-           (format ":%s/%s"
-                   (or (cdr (assq 'error error-counts)) 0)
-                   (or (cdr (assq 'warning error-counts)) 0)))
-       ""))
-    (`interrupted "-")
-    (`suspicious "?")))
+  (let ((text (pcase (or status flycheck-last-status-change)
+                (`not-checked "")
+                (`no-checker "-")
+                (`running "*")
+                (`errored "!")
+                (`finished
+                 (if flycheck-current-errors
+                     (let ((error-counts (flycheck-count-errors
+                                          flycheck-current-errors)))
+                       (format ":%s/%s"
+                               (or (cdr (assq 'error error-counts)) 0)
+                               (or (cdr (assq 'warning error-counts)) 0)))
+                   ""))
+                (`interrupted "-")
+                (`suspicious "?"))))
+    (concat " FlyC" text)))
 
 
 ;;; General error display

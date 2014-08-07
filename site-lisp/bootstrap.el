@@ -80,8 +80,6 @@ are for modes that didn't come with autoloading."
   (autoload 'my-set-default-font "my-set-default-font"
     "Guess the default font." t)
 
-  (autoload 'focus-mode "focus-mode" "Minimalist minor mode." t)
-
   ;; I use python-mode.el, with the TQS-coloration patch applied.
   ;; I should probably try installing the latest version and seeing how it
   ;; holds up.

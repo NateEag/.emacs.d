@@ -1,0 +1,7 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: stacktrace
+# key: stacktrace
+# binding: direct-keybinding
+# --
+var err = new Error();
+console.log(err.stack);

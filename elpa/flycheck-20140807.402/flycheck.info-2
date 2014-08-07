@@ -1,4 +1,4 @@
-This is /tmp/flycheck10377cP2/flycheck-20140801.835/flycheck.info,
+This is /tmp/flycheck11420o51/flycheck-20140807.402/flycheck.info,
 produced by makeinfo version 4.13 from
 /home/melpa/melpa/working/flycheck/doc/flycheck.texi.
 
@@ -8,7 +8,7 @@ START-INFO-DIR-ENTRY
 * flycheck: (flycheck.info). On the fly syntax checking for GNU Emacs
 END-INFO-DIR-ENTRY
 
-This manual is for Flycheck version 0.20-cvs.
+This manual is for Flycheck version 0.20-cvs1.
 
 Copyright (C) 2014, Sebastian Wiesner
 
@@ -563,7 +563,7 @@ Index
 * flycheck-define-checker; Emacs Lisp macro: Defining new syntax checkers.
                                                               (line   8)
 * flycheck-define-error-level; Emacs Lisp function: Syntax checker API.
-                                                              (line 123)
+                                                              (line 126)
 * flycheck-describe-checker; Emacs Lisp command: Syntax checker selection<2>.
                                                               (line 176)
 * flycheck-disabled-checkers; Emacs Lisp user option: Syntax checker selection<2>.
@@ -626,6 +626,13 @@ Index
 * flycheck-gcc-no-exceptions; Emacs Lisp user option: C/C++.  (line 285)
 * flycheck-gcc-no-rtti; Emacs Lisp user option: C/C++.        (line 301)
 * flycheck-gcc-warnings; Emacs Lisp user option: C/C++.       (line 316)
+* flycheck-gfortran-include-path; Emacs Lisp user option: Fortran.
+                                                              (line  15)
+* flycheck-gfortran-language-standard; Emacs Lisp user option: Fortran.
+                                                              (line  33)
+* flycheck-gfortran-layout; Emacs Lisp user option: Fortran.  (line  50)
+* flycheck-gfortran-warnings; Emacs Lisp user option: Fortran.
+                                                              (line  72)
 * flycheck-ghc-language-extensions; Emacs Lisp user option: Haskell.
                                                               (line  21)
 * flycheck-ghc-no-user-package-database; Emacs Lisp user option: Haskell.
@@ -655,7 +662,7 @@ Index
 * flycheck-locate-config-file-functions; Emacs Lisp user option: Syntax checker configuration files.
                                                               (line  20)
 * flycheck-locate-config-file; Emacs Lisp function: Syntax checker API.
-                                                              (line 114)
+                                                              (line 117)
 * flycheck-mode-line-status-text; Emacs Lisp function: Status API.
                                                               (line  50)
 * flycheck-mode-line; Emacs Lisp user option: Mode line.      (line  38)
@@ -687,6 +694,7 @@ Index
 * flycheck-report-status; Emacs Lisp function: Status API.    (line   6)
 * flycheck-rubocop-lint-only; Emacs Lisp user option: Ruby.   (line  21)
 * flycheck-rubocoprc; Emacs Lisp user option: Ruby.           (line  35)
+* flycheck-rubylintrc; Emacs Lisp user option: Ruby.          (line  52)
 * flycheck-rust-check-tests; Emacs Lisp user option: Rust.    (line  16)
 * flycheck-rust-crate-root; Emacs Lisp user option: Rust.     (line  32)
 * flycheck-rust-library-path; Emacs Lisp user option: Rust.   (line  52)
@@ -717,6 +725,8 @@ Index
                                                               (line 183)
 * flycheck-tidyrc; Emacs Lisp user option: HTML.              (line  14)
 * flycheck-warning; Emacs Lisp face:     Error reporting.     (line  16)
+* fortran-gfortran; Emacs Lisp Flycheck syntax checker: Fortran.
+                                                              (line   6)
 * global-flycheck-mode; Emacs Lisp command: Flycheck Mode.    (line  14)
 * global-flycheck-mode; Emacs Lisp user option: Flycheck Mode.
                                                               (line  30)
@@ -756,10 +766,10 @@ Index
 * rst-sphinx; Emacs Lisp Flycheck syntax checker: ReStructuredText.
                                                               (line  11)
 * rst; Emacs Lisp Flycheck syntax checker: ReStructuredText.  (line   6)
-* ruby-jruby; Emacs Lisp Flycheck syntax checker: Ruby.       (line  68)
+* ruby-jruby; Emacs Lisp Flycheck syntax checker: Ruby.       (line  82)
 * ruby-rubocop; Emacs Lisp Flycheck syntax checker: Ruby.     (line   6)
 * ruby-rubylint; Emacs Lisp Flycheck syntax checker: Ruby.    (line  42)
-* ruby; Emacs Lisp Flycheck syntax checker: Ruby.             (line  48)
+* ruby; Emacs Lisp Flycheck syntax checker: Ruby.             (line  62)
 * rust; Emacs Lisp Flycheck syntax checker: Rust.             (line   6)
 * sass; Emacs Lisp Flycheck syntax checker: Sass.             (line   6)
 * scala; Emacs Lisp Flycheck syntax checker: Scala.           (line   6)

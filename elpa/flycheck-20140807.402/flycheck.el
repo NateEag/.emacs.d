@@ -6,7 +6,7 @@
 ;; Author: Sebastian Wiesner <swiesner@lunaryorn.com>
 ;; URL: https://flycheck.readthedocs.org
 ;; Keywords: convenience languages tools
-;; Version: 0.20-cvs
+;; Version: 0.20-cvs1
 ;; Package-Requires: ((dash "2.4.0") (pkg-info "0.4") (cl-lib "0.3") (emacs "24.1"))
 
 ;; This file is not part of GNU Emacs.
@@ -50,6 +50,7 @@
 (require 'subr-x nil 'no-error)  ; Additional utilities, Emacs 24.4 and upwards
 (require 'pcase)                 ; Pattern matching for Emacs Lisp
 (require 'tabulated-list)        ; To list errors
+(require 'easymenu)             ; Flycheck Mode menu definition
 (require 'rx)                    ; Regexp fanciness in `flycheck-define-checker'
 (require 'help-mode)             ; `define-button-type'
 (require 'find-func)             ; `find-function-regexp-alist'
@@ -188,6 +189,7 @@ attention to case differences."
     emacs-lisp-checkdoc
     erlang
     eruby-erubis
+    fortran-gfortran
     go-gofmt
     go-golint
     go-vet
@@ -787,30 +789,36 @@ Set this variable to nil to disable the mode line completely."
 
 
 ;;; Minor mode definition
+(defvar flycheck-mode-menu-map
+  (easy-menu-create-menu
+   "Syntax checking"
+   '(["Check current buffer" flycheck-buffer t]
+     ["Clear errors in buffer" flycheck-clear t]
+     ["Compile current buffer" flycheck-compile t]
+     "---"
+     ["Go to next error" flycheck-next-error t]
+     ["Go to previous error" flycheck-previous-error t]
+     ["Show all errors" flycheck-list-errors t]
+     ["Google messages at point" flycheck-google-messages t]
+     "---"
+     ["Select syntax checker" flycheck-select-checker t]
+     "---"
+     ["Describe syntax checker" flycheck-describe-checker t]
+     ["Read the Flycheck manual" flycheck-info t]))
+  "Menu of `flycheck-mode'.")
+
 (defvar flycheck-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map flycheck-keymap-prefix flycheck-command-map)
+    ;; We place the menu under a custom menu key.  Since this menu key is not
+    ;; present in the menu of the global map, no top-level menu entry is added
+    ;; to the global menu bar.  However, it still appears on the mode line
+    ;; lighter.
+    (define-key map [menu-bar flycheck] flycheck-mode-menu-map)
     map)
   "Keymap of `flycheck-mode'.")
 
-(easy-menu-change
- '("Tools") "Syntax Checking"
- '(["Check current buffer" flycheck-buffer t]
-   ["Clear errors in buffer" flycheck-clear t]
-   ["Compile current buffer" flycheck-compile t]
-   "---"
-   ["Go to next error" flycheck-next-error t]
-   ["Go to previous error" flycheck-previous-error t]
-   ["Show all errors" flycheck-list-errors t]
-   ["Google messages at point" flycheck-google-messages t]
-   "---"
-   ["Select syntax checker" flycheck-select-checker t]
-   "---"
-   ["Describe syntax checker" flycheck-describe-checker t]
-   ["Read the Flycheck manual" flycheck-info t])
- "Spell Checking")
-
-(easy-menu-change '("Tools") "--" nil "Spell Checking")
+(easy-menu-add-item nil '("Tools") flycheck-mode-menu-map "Spell Checking")
 
 (defun flycheck-teardown ()
   "Teardown Flycheck in the current buffer..
@@ -1214,21 +1222,6 @@ Return the name of the temporary file."
       (flycheck-save-buffer-to-file filename))
     filename))
 
-(defun flycheck-option-with-value-argument (option value)
-  "Create arguments specifying OPTION with VALUE.
-
-OPTION is a string denoting the option to pass, VALUE a string
-containing the value for this option.
-
-If OPTION ends with a equal sign =, OPTION and VALUE are
-concatenated to a single string, which is then wrapped in a list
-and returned.
-
-Otherwise `(list OPTION VALUE)' is returned."
-  (if (string-suffix-p "=" option)
-      (list (concat option value))
-    (list option value)))
-
 (defun flycheck-prepend-with-option (option items &optional prepend-fn)
   "Prepend OPTION to each item in ITEMS, using PREPEND-FN.
 
@@ -1454,24 +1447,27 @@ https://github.com/d11wtq/grizzl")))
     (`(config-file ,option-name ,config-file-var)
      (and (stringp option-name)
           (symbolp config-file-var)))
+    (`(config-file ,option-name ,config-file-var ,prepender)
+     (and (stringp option-name)
+          (symbolp config-file-var)
+          (symbolp prepender)))
     (`(,(or `option `option-list) ,option-name ,option-var)
      (and (stringp option-name)
           (symbolp option-var)))
+    (`(,(or `option `option-list) ,option-name ,option-var ,prepender)
+     (and (stringp option-name)
+          (symbolp option-var)
+          (symbolp prepender)))
+    (`(,(or `option `option-list) ,option-name ,option-var ,prepender ,filter)
+     (and (stringp option-name)
+          (symbolp option-var)
+          (symbolp prepender)
+          (symbolp filter)))
     (`(option-flag ,option-name ,option-var)
      (and (stringp option-name)
           (symbolp option-var)))
-    (`(,(or `option `option-list) ,option-name ,option-var ,prepender-or-filter)
-     (and (stringp option-name)
-          (-all? #'symbolp (list option-var prepender-or-filter))))
-    (`(option-list ,option-name ,option-var ,prepender ,filter)
-     (and (stringp option-name)
-          (-all? #'symbolp (list option-var prepender filter))))
     (`(eval ,_) t)
     (_ nil)))
-
-(defun flycheck-command-arguments-list-p (arguments)
-  "Check whether ARGUMENTS is a list of valid arguments."
-  (-all? 'flycheck-command-argument-p arguments))
 
 (defun flycheck-validate-next-checker (next-checker &optional validate-checker)
   "Validate NEXT-CHECKER.
@@ -1517,7 +1513,7 @@ this constant.")
       (error "Missing :command"))
     (unless (stringp (car command))
       (error "Invalid command executable %S" (car command)))
-    (unless (flycheck-command-arguments-list-p (cdr command))
+    (unless (-all? 'flycheck-command-argument-p (cdr command))
       (error "Invalid command arguments %S" command))
     (when (and (null parser) (null patterns))
       (error "Missing :error-patterns or :error-parser"))
@@ -2007,28 +2003,31 @@ STRING
      Return a unique temporary filename.  The file is *not*
      created.
 
-`(config-file OPTION VARIABLE)'
+`(config-file OPTION VARIABLE [PREPEND-FN])'
      Search the configuration file bound to VARIABLE with
      `flycheck-locate-config-file' and return a list of arguments
      that pass this configuration file to the syntax checker, or
      nil if the configuration file was not found.
 
-     If OPTION ends with a = character, the returned list
-     contains a single element only, being the concatenation of
-     OPTION and the path of the configuration file.  Otherwise
-     the list has two items, the first being OPTION, the second
-     the path of the configuration file.
+     PREPEND-FN is called with the OPTION and the located
+     configuration file, and should return OPTION prepended
+     before the file, either a string or as list.  If omitted,
+     PREPEND-FN defaults to `list'.
 
-`(option OPTION VARIABLE [FILTER])'
+`(option OPTION VARIABLE [PREPEND-FN [FILTER]])'
      Retrieve the value of VARIABLE and return a list of
      arguments that pass this value as value for OPTION to the
      syntax checker.
 
+     PREPEND-FN is called with the OPTION and the value of
+     VARIABLE, and should return OPTION prepended before the
+     file, either a string or as list.  If omitted, PREPEND-FN
+     defaults to `list'.
+
      FILTER is an optional function to be applied to the value of
-     VARIABLE.  This function must return nil or a string.  In
-     the former case, return nil.  In the latter case, return a
-     list of arguments as described above.  If OPTION ends with a
-     =, process it like in a `config-file' cell (see above).
+     VARIABLE before prepending.  This function must return nil
+     or a string.  In the former case, return nil.  In the latter
+     case, return a list of arguments as described above.
 
 `(option-list OPTION VARIABLE [PREPEND-FN [FILTER]])'
      Retrieve the value of VARIABLE, which must be a list,
@@ -2078,19 +2077,29 @@ are substituted within the body of cells!"
     (`(config-file ,option-name ,file-name-var)
      (-when-let* ((value (symbol-value file-name-var))
                   (file-name (flycheck-locate-config-file value checker)))
-       (flycheck-option-with-value-argument option-name file-name)))
+       (flycheck-prepend-with-option option-name (list file-name))))
+    (`(config-file ,option-name ,file-name-var ,prepend-fn)
+     (-when-let* ((value (symbol-value file-name-var))
+                  (file-name (flycheck-locate-config-file value checker)))
+       (flycheck-prepend-with-option option-name (list file-name) prepend-fn)))
     (`(option ,option-name ,variable)
      (-when-let (value (symbol-value variable))
        (unless (stringp value)
          (error "Value %S of %S for option %s is not a string"
                 value variable option-name))
-       (flycheck-option-with-value-argument option-name value)))
-    (`(option ,option-name ,variable ,filter)
+       (flycheck-prepend-with-option option-name (list value))))
+    (`(option ,option-name ,variable ,prepend-fn)
+     (-when-let (value (symbol-value variable))
+       (unless (stringp value)
+         (error "Value %S of %S for option %s is not a string"
+                value variable option-name))
+       (flycheck-prepend-with-option option-name (list value) prepend-fn)))
+    (`(option ,option-name ,variable ,prepend-fn ,filter)
      (-when-let (value (funcall filter (symbol-value variable)))
        (unless (stringp value)
          (error "Value %S of %S (filter: %S) for option %s is not a string"
                 value variable filter option-name))
-       (flycheck-option-with-value-argument option-name value)))
+       (flycheck-prepend-with-option option-name (list value) prepend-fn)))
     (`(option-list ,option-name ,variable)
      (let ((value (symbol-value variable)))
        (unless (and (listp value) (-all? #'stringp value))
@@ -4139,8 +4148,8 @@ See URL `http://clang.llvm.org/'."
                                         ; location
             "-fno-diagnostics-show-option" ; Do not show the corresponding
                                         ; warning group
-            (option "-std=" flycheck-clang-language-standard)
-            (option "-stdlib=" flycheck-clang-standard-library)
+            (option "-std=" flycheck-clang-language-standard concat)
+            (option "-stdlib=" flycheck-clang-standard-library concat)
             (option-flag "-fms-extensions" flycheck-clang-ms-extensions)
             (option-flag "-fno-exceptions" flycheck-clang-no-exceptions)
             (option-flag "-fno-rtti" flycheck-clang-no-rtti)
@@ -4258,7 +4267,7 @@ Requires GCC 4.8 or newer.  See URL `https://gcc.gnu.org/'."
             "-fno-diagnostics-show-caret" ; Do not visually indicate the source location
             "-fno-diagnostics-show-option" ; Do not show the corresponding
                                         ; warning group
-            (option "-std=" flycheck-gcc-language-standard)
+            (option "-std=" flycheck-gcc-language-standard concat)
             (option-flag "-fno-exceptions" flycheck-gcc-no-exceptions)
             (option-flag "-fno-rtti" flycheck-gcc-no-rtti)
             (option-list "-include" flycheck-gcc-includes)
@@ -4324,7 +4333,7 @@ This will have no effect when using Cppcheck 1.53 and older."
 
 See URL `http://cppcheck.sourceforge.net/'."
   :command ("cppcheck" "--quiet" "--xml-version=2" "--inline-suppr"
-            (option "--enable=" flycheck-cppcheck-checks
+            (option "--enable=" flycheck-cppcheck-checks concat
                     flycheck-option-comma-separated-list)
             (option-flag "--inconclusive" flycheck-cppcheck-inconclusive)
             source)
@@ -4590,9 +4599,9 @@ See Info Node `(elisp)Byte Compilation'."
                          ;; Expand relative paths against the directory of the
                          ;; buffer to check
                          expand-file-name)
-            (option "--eval" flycheck-emacs-lisp-package-user-dir
+            (option "--eval" flycheck-emacs-lisp-package-user-dir nil
                     flycheck-option-emacs-lisp-package-user-dir)
-            (option "--eval" flycheck-emacs-lisp-initialize-packages
+            (option "--eval" flycheck-emacs-lisp-initialize-packages nil
                     flycheck-option-emacs-lisp-package-initialize)
             "--eval" (eval flycheck-emacs-lisp-check-form)
             "--"
@@ -4703,6 +4712,93 @@ See URL `http://www.kuwata-lab.com/erubis/'."
              (member (file-name-extension (buffer-file-name))
                      '("erb" "rhtml"))))))
 
+(flycheck-def-option-var flycheck-gfortran-include-path nil fortran-gfortran
+  "A list of include directories for GCC Fortran.
+
+The value of this variable is a list of strings, where each
+string is a directory to add to the include path of gcc.
+Relative paths are relative to the file being checked."
+  :type '(repeat (directory :tag "Include directory"))
+  :safe #'flycheck-string-list-p
+  :package-version '(flycheck . "0.20"))
+
+(flycheck-def-option-var flycheck-gfortran-language-standard "f95" fortran-gfortran
+  "The language standard to use in GFortran.
+
+The value of this variable is either a string denoting a language
+standard, or nil, to use the default standard.  When non-nil,
+pass the language standard via the `-std' option."
+  :type '(choice (const :tag "Default standard" nil)
+                 (string :tag "Language standard"))
+  :safe #'stringp
+  :package-version '(flycheck . "0.20"))
+
+(flycheck-def-option-var flycheck-gfortran-layout nil fortran-gfortran
+  "The source code layout to use in GFortran.
+
+The value of this variable is one of the following symbols:
+
+nil
+     Let gfortran determine the layout from the extension
+
+`free'
+     Use free form layout
+
+
+`fixed'
+     Use fixed form layout
+
+In any other case, an error is signaled.")
+
+(defun flycheck-option-gfortran-layout (value)
+  "Option VALUE filter for `flycheck-gfortran-layout'."
+  (pcase value
+    (`nil nil)
+    (`free "free-form")
+    (`fixed "fixed-form")
+    (_ (error "Invalid value for flycheck-gfortran-layout: %S" value))))
+
+(flycheck-def-option-var flycheck-gfortran-warnings  '("all" "extra")
+                         fortran-gfortran
+  "A list of warnings for GCC Fortran.
+
+The value of this variable is a list of strings, where each string
+is the name of a warning category to enable.  By default, all
+recommended warnings and some extra warnings are enabled (as by
+`-Wall' and `-Wextra' respectively).
+
+Refer to the gfortran manual at URL
+`https://gcc.gnu.org/onlinedocs/gfortran/' for more information
+about warnings")
+
+(flycheck-define-checker fortran-gfortran
+  "An Fortran syntax checker using GCC.
+
+Uses GCC's Fortran compiler gfortran.  See URL
+`https://gcc.gnu.org/onlinedocs/gfortran/'."
+  :command ("gfortran"
+            (option "-std=" flycheck-gfortran-language-standard concat)
+            (option "-f" flycheck-gfortran-layout concat
+                    flycheck-option-gfortran-layout)
+            "-fsyntax-only"
+            "-fshow-column"
+            "-fno-diagnostics-show-caret" ; Do not visually indicate the source location
+            "-fno-diagnostics-show-option" ; Do not show the corresponding
+                                        ; warning group
+            (option-list "-W" flycheck-gfortran-warnings concat)
+            (option-list "-I" flycheck-gfortran-include-path concat)
+            ;; We must stay in the same directory, to properly resolve #include
+            ;; with quotes
+            source-inplace)
+  :error-patterns
+  ((error line-start (file-name) ":" line "." column ":\n"
+          (= 3 (zero-or-more not-newline) "\n")
+          (or "Error" "Fatal Error") ": " (message) line-end)
+   (warning line-start (file-name) ":" line "." column ":\n"
+            (= 3 (zero-or-more not-newline) "\n")
+            "Warning: " (message) line-end))
+  :modes (fortran-mode f90-mode))
+
 (flycheck-define-checker go-gofmt
   "A Go syntax and style checker using the gofmt utility.
 
@@ -4753,8 +4849,7 @@ take an io.Writer as their first argument, like Fprintf,
 See URL `http://golang.org/cmd/go/' and URL
 `http://godoc.org/code.google.com/p/go.tools/cmd/vet'."
   :command ("go" "tool" "vet"
-            (option "-printfuncs="
-                    flycheck-go-vet-print-functions
+            (option "-printfuncs=" flycheck-go-vet-print-functions concat
                     flycheck-option-comma-separated-list)
             source)
   :error-patterns
@@ -5136,7 +5231,7 @@ the `--severity' option to Perl Critic."
 
 See URL `https://metacpan.org/pod/Perl::Critic'."
   :command ("perlcritic" "--no-color" "--verbose" "%f:%l:%c:%s:%m (%e)\n"
-            (option "--severity" flycheck-perlcritic-verbosity
+            (option "--severity" flycheck-perlcritic-verbosity nil
                     flycheck-option-int)
             source)
   :error-patterns
@@ -5205,7 +5300,7 @@ or as path to a standard specification."
 
 See URL `http://pear.php.net/package/PHP_CodeSniffer/'."
   :command ("phpcs" "--report=emacs"
-            (option "--standard=" flycheck-phpcs-standard)
+            (option "--standard=" flycheck-phpcs-standard concat)
             source)
   ;; Though phpcs supports Checkstyle output which we could feed to
   ;; `flycheck-parse-checkstyle', we are still using error patterns here,
@@ -5295,11 +5390,9 @@ For best error reporting, use Flake8 2.0 or newer.
 See URL `https://pypi.python.org/pypi/flake8'."
   :command ("flake8"
             (config-file "--config" flycheck-flake8rc)
-            (option "--max-complexity"
-                    flycheck-flake8-maximum-complexity
+            (option "--max-complexity" flycheck-flake8-maximum-complexity nil
                     flycheck-option-int)
-            (option "--max-line-length"
-                    flycheck-flake8-maximum-line-length
+            (option "--max-line-length" flycheck-flake8-maximum-line-length nil
                     flycheck-option-int)
             source)
   :error-patterns
@@ -5337,7 +5430,7 @@ See URL `http://www.pylint.org/'."
   ;; -r n disables the scoring report
   :command ("pylint" "-r" "n"
             "--msg-template" "{path}:{line}:{column}:{C}:{msg} ({msg_id})"
-            (config-file "--rcfile=" flycheck-pylintrc)
+            (config-file "--rcfile" flycheck-pylintrc concat)
             ;; Need `source-inplace' for relative imports (e.g. `from .foo
             ;; import bar'), see https://github.com/flycheck/flycheck/issues/280
             source-inplace)
@@ -5446,12 +5539,20 @@ See URL `http://batsov.com/rubocop/'."
   :modes (enh-ruby-mode ruby-mode)
   :next-checkers ((warnings-only . ruby-rubylint)))
 
+;; Default to `nil' to let Rubylint find its configuration file by itself, and
+;; to maintain backwards compatibility with older Rubylint and Flycheck releases
+(flycheck-def-config-file-var flycheck-rubylintrc ruby-rubylint nil
+  :safe #'stringp)
+
 (flycheck-define-checker ruby-rubylint
   "A Ruby syntax and code analysis checker using ruby-lint.
 
-Requires ruby-lint 2.0 or newer.  See URL
+Requires ruby-lint 2.0 or newer.  To use `flycheck-rubylintrc',
+ruby-lint 2.0.2 or newer is required.  See URL
 `https://github.com/YorickPeterse/ruby-lint'."
-  :command ("ruby-lint" "--presenter=syntastic" source)
+  :command ("ruby-lint" "--presenter=syntastic"
+            (config-file "--config" flycheck-rubylintrc)
+            source)
   :error-patterns
   ((info line-start
          (file-name) ":I:" line ":" column ": " (message) line-end)

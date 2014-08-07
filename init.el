@@ -255,6 +255,40 @@
 ;; Handy key definition
 (define-key global-map "\M-Q" 'unfill-paragraph)
 
+;; Function to use popup.el menu for flyspell instead of the GUI menu.
+;; From Emacswiki: http://www.emacswiki.org/emacs/FlySpell#toc11
+;; It'd be nice to convert this to a package.
+(defun flyspell-emacs-popup-textual (event poss word)
+  "A textual flyspell popup menu."
+  (require 'popup)
+  (let* ((corrects (if flyspell-sort-corrections
+                       (sort (car (cdr (cdr poss))) 'string<)
+                     (car (cdr (cdr poss)))))
+         (cor-menu (if (consp corrects)
+                       (mapcar (lambda (correct)
+                                 (list correct correct))
+                               corrects)
+                     '()))
+         (affix (car (cdr (cdr (cdr poss)))))
+         show-affix-info
+         (base-menu  (let ((save (if (and (consp affix) show-affix-info)
+                                     (list
+                                      (list (concat "Save affix: " (car affix))
+                                            'save)
+                                      '("Accept (session)" session)
+                                      '("Accept (buffer)" buffer))
+                                   '(("Save word" save)
+                                     ("Accept (session)" session)
+                                     ("Accept (buffer)" buffer)))))
+                       (if (consp cor-menu)
+                           (append cor-menu (cons "" save))
+                         save)))
+         (menu (mapcar
+                (lambda (arg) (if (consp arg) (car arg) arg))
+                base-menu)))
+    (cadr (assoc (popup-menu* menu :scroll-bar t) base-menu))))
+
+
 ;; Minor mode setup and registration.
 
 ;; Activate undo-tree-mode globally and diminish it.
@@ -356,6 +390,11 @@
 ;; Run emmet-mode customizations when it's started.
 (eval-after-load 'emmet-mode
   '(emmet-mode-init))
+
+;; Set up flyspell customizations when it's started.
+(eval-after-load 'flyspell
+  '(progn
+     (fset 'flyspell-emacs-popup 'flyspell-emacs-popup-textual)))
 
 ;; Major mode setup and registration.
 

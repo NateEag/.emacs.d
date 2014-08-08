@@ -1,4 +1,4 @@
-This is /tmp/flycheck3828215/flycheck-20140807.536/flycheck.info,
+This is /tmp/flycheck22380fwL/flycheck-20140808.424/flycheck.info,
 produced by makeinfo version 4.13 from
 /home/melpa/melpa/working/flycheck/doc/flycheck.texi.
 
@@ -2204,7 +2204,8 @@ reporting:
 
      The value of this variable is a mode line template as in
      ``mode-line-format''.  See Info Node *note Mode Line Format: (elisp)Mode Line Format. for
-     more information.
+     more information.  Note that it should contain a _single_ mode
+     line construct only.
 
      Customize this variable to change how Flycheck reports its status
      in the mode line.  You may use *note `flycheck-mode-line-status-text': 89.
@@ -3998,6 +3999,18 @@ Options
           changed, in version 0.20 of the flycheck package.
 
 
+      -- User Option: flycheck-rust-crate-type
+               Variable properties: Automatically becomes buffer-local
+               when set.  This variable is safe as a file local
+               variable if its value satisfies the predicate `stringp'.
+
+          The type of the Rust Crate to check.
+
+          The value of this variable is a string denoting the crate type,
+          for the ``--crate-type'' flag.
+
+          This variable is an option for the syntax checker ``rust''
+
       -- User Option: flycheck-rust-library-path
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
@@ -4063,7 +4076,7 @@ File: flycheck.info,  Node: Scala,  Next: Scss,  Prev: Sass,  Up: Supported lang
           Chained syntax checkers: The following syntax checkers are
           *note chained: 56. after this syntax checker:
 
-            1. *note scalastyle: 11a, if there are only warnings
+            1. *note scalastyle: 11b, if there are only warnings
 
           The *first* suitable syntax checker is used.
 
@@ -4075,7 +4088,7 @@ File: flycheck.info,  Node: Scala,  Next: Scss,  Prev: Sass,  Up: Supported lang
      A Scala style checker using scalastyle.
 
      Note that this syntax checker is not used if
-     *note `flycheck-scalastyle-jar': 11b. or *note `flycheck-scalastylerc': 11c. are nil or
+     *note `flycheck-scalastyle-jar': 11c. or *note `flycheck-scalastylerc': 11d. are nil or
      point to non-existing files.
 
      See URL `http://www.scalastyle.org'(2).
@@ -4159,7 +4172,7 @@ File: flycheck.info,  Node: Shell script languages,  Next: Slim,  Prev: Scss,  U
           Chained syntax checkers: The following syntax checkers are
           *note chained: 56. after this syntax checker:
 
-            1. *note sh-shellcheck: 122, if there are no errors
+            1. *note sh-shellcheck: 123, if there are no errors
 
           The *first* suitable syntax checker is used.
 
@@ -4171,7 +4184,7 @@ File: flycheck.info,  Node: Shell script languages,  Next: Slim,  Prev: Scss,  U
           Chained syntax checkers: The following syntax checkers are
           *note chained: 56. after this syntax checker:
 
-            1. *note sh-shellcheck: 122, if there are no errors
+            1. *note sh-shellcheck: 123, if there are no errors
 
           The *first* suitable syntax checker is used.
 
@@ -4189,7 +4202,7 @@ See also
           Chained syntax checkers: The following syntax checkers are
           *note chained: 56. after this syntax checker:
 
-            1. *note sh-shellcheck: 122, if there are no errors
+            1. *note sh-shellcheck: 123, if there are no errors
 
           The *first* suitable syntax checker is used.
 
@@ -4207,7 +4220,7 @@ See also
           Chained syntax checkers: The following syntax checkers are
           *note chained: 56. after this syntax checker:
 
-            1. *note sh-shellcheck: 122, if there are no errors
+            1. *note sh-shellcheck: 123, if there are no errors
 
           The *first* suitable syntax checker is used.
 
@@ -4396,7 +4409,7 @@ disabled syntax checker
 
 enabled syntax checker
      A *note registered syntax checker: 60. which is not a *note
-     disabled syntax checker: 13a.  
+     disabled syntax checker: 13b.  
 
 suitable syntax checker
      A *note syntax checker: 63. which can be used to check the current
@@ -4431,7 +4444,7 @@ provides examples for common use cases.
 
 If you define a new syntax checker, _please_ contribute it to Flycheck
 to make it available to other users, too.  See *note Contributing
-syntax checkers: 13d. for more information.
+syntax checkers: 13e. for more information.
 
 * Menu:
 
@@ -4487,7 +4500,7 @@ You define new syntax checkers with *note flycheck-define-checker: 19.:
 
           Each ARG is an argument to the executable, either as string,
           or as special symbol or form for
-          *note `flycheck-substitute-argument': 13f, which see.
+          *note `flycheck-substitute-argument': 140, which see.
 
      `:error-patterns ((LEVEL SEXP ...) ...)'
           An unquoted list of error patterns to parse the output of
@@ -4499,7 +4512,7 @@ You define new syntax checkers with *note flycheck-define-checker: 19.:
           extract line, column, file name and error message.
 
           See ``rx'' for general information about RX, and
-          *note `flycheck-rx-to-string': 140. for special RX forms provided by
+          *note `flycheck-rx-to-string': 141. for special RX forms provided by
           Flycheck.
 
           All patterns are applied in the order of declaration to the
@@ -4659,11 +4672,11 @@ File: flycheck.info,  Node: Error parsers,  Next: Extending syntax checkers,  Pr
 
 Syntax checkers may use more sophisticated error parsing by given the
 `:error-parser' argument to *note flycheck-define-checker: 19.  See
-*note Builtin error parsers: 149. for a list of builtin parsers.
+*note Builtin error parsers: 14a. for a list of builtin parsers.
 
 You may also define your own error parsers.  An error parser is any
 function that takes the following three arguments and returns a list of
-*note flycheck-error: 14a. objects (see *note Error API: 77. for more
+*note flycheck-error: 14b. objects (see *note Error API: 77. for more
 information):
 
 `output'
@@ -4676,7 +4689,7 @@ information):
      A buffer object referring to the buffer that was syntax-checked.
 
 Flycheck provides some utility functions to implement your own error
-parsers.  See *note Error parser API: 14b. for details.
+parsers.  See *note Error parser API: 14c. for details.
 
 
 File: flycheck.info,  Node: Extending syntax checkers,  Next: Examples,  Prev: Error parsers,  Up: Extending Flycheck
@@ -4755,7 +4768,7 @@ directory and containing the contents of the buffer to check.
 Next we specify how to parse the output of the syntax checker.  PHP
 CodeSniffer provides an option to output errors in an XML format
 similar to the Java tool Checkstyle, so we use the built-in _error
-parser_ *note flycheck-parse-checkstyle: 152. to parse the output.
+parser_ *note flycheck-parse-checkstyle: 153. to parse the output.
 
 Then we enable the syntax checker in PHP editing modes.
 
@@ -4888,7 +4901,7 @@ omitted from the command line.
 Some Syntax checkers can also be configured using options passed on the
 command line.  Flycheck supports this case, too.  We will use this
 facility to extend the PHP CodeSniffer syntax checker from the *note
-Basic syntax checkers: 151. section with support for coding standards:
+Basic syntax checkers: 152. section with support for coding standards:
 
     (flycheck-def-option-var flycheck-phpcs-standard nil phpcs
       "The coding standard for PHP CodeSniffer."
@@ -4908,7 +4921,7 @@ The syntax checker is pretty much the same as before, except that a new
 element was added to `:command'.  This element passes the value of the
 new option variable *note flycheck-phpcs-standard: f7. to the syntax
 checker.  This variable is declared with the special macro *note
-flycheck-def-option-var: 142. at the beginning.
+flycheck-def-option-var: 143. at the beginning.
 
 
 File: flycheck.info,  Node: Chaining syntax checkers,  Prev: Configuration files for syntax checkers,  Up: Examples
@@ -5030,7 +5043,7 @@ File: flycheck.info,  Node: Error API,  Next: Builtin error parsers,  Prev: Stat
 =============
 
 Flycheck errors are represented by the CL structure *note
-flycheck-error: 14a.  See *note Structures: (cl)Structures. for more
+flycheck-error: 14b.  See *note Structures: (cl)Structures. for more
 information about CL structures.
 
  -- CL Struct: flycheck-error
@@ -5068,19 +5081,19 @@ information about CL structures.
           level defined with *note flycheck-define-error-level: 25.
 
      There are two constructors to create new *note flycheck-error:
-     14a. objects:
+     14b. objects:
 
       -- Function: flycheck-error-new-at line column &optional level
                message &key checker filename buffer
           Create a new Flycheck error at the given LINE and COLUMN.
 
-          LINE and COLUMN refer to the *note line: 15f. and *note
-          column: 160. of the new error.  The optional LEVEL and
-          MESSAGE arguments fill the *note level: 162. and
+          LINE and COLUMN refer to the *note line: 160. and *note
+          column: 161. of the new error.  The optional LEVEL and
+          MESSAGE arguments fill the *note level: 163. and
           cl-slot:`message' slots respectively.
 
           CHECKER, FILENAME and BUFFER are keyword arguments, for *note
-          checker: 15d, *note filename: 15e. and *note buffer: 15c.
+          checker: 15e, *note filename: 15f. and *note buffer: 15d.
           respectively.  BUFFER defaults to the current buffer, the
           other two default to `nil'.
 
@@ -5090,12 +5103,12 @@ information about CL structures.
                arguments.
 
       -- Function: flycheck-error-new &rest attributes
-          Create a new *note flycheck-error: 14a. with the given
+          Create a new *note flycheck-error: 14b. with the given
           ATTRIBUTES.
 
           ATTRIBUTES is a property list, where each property specifies
           the value for the corresponding slot of *note flycheck-error:
-          14a, for instance:
+          14b, for instance:
 
               (flycheck-error-new :line 10 :column 5 :message "Foo" :level 'warning)
 
@@ -5289,7 +5302,7 @@ File: flycheck.info,  Node: Syntax checker API,  Next: Builtin option filters,  
           as primary input to a checker, unless absolutely necessary.
 
           When using this symbol as primary input to the syntax
-          checker, add *note `flycheck-buffer-saved-p': 177. to the ``:predicate''.
+          checker, add *note `flycheck-buffer-saved-p': 178. to the ``:predicate''.
 
      ``temporary-directory''
           Create a unique temporary directory and return its path.
@@ -5300,7 +5313,7 @@ File: flycheck.info,  Node: Syntax checker API,  Next: Builtin option filters,  
 
      `(config-file OPTION VARIABLE [PREPEND-FN])'
           Search the configuration file bound to VARIABLE with
-          *note `flycheck-locate-config-file': 178. and return a list of arguments
+          *note `flycheck-locate-config-file': 179. and return a list of arguments
           that pass this configuration file to the syntax checker, or
           nil if the configuration file was not found.
 
@@ -5704,14 +5717,14 @@ introducing two new syntax checkers:
    - *note perl-perlcritic: f0. checks Perl with the powerful
      Perl-Critic(2) tool.
 
-   - *note sh-shellcheck: 122. checks Shell scripts with the awesome
+   - *note sh-shellcheck: 123. checks Shell scripts with the awesome
      Shellcheck(3) tool, which finds all sorts of idiomatic and
      semantics mistakes in shell scripts of various shell languages,
      and will greatly improve your shell scripting.
 
 D users can now tell *note d-dmd: b2. about include directories with the
 new option *note flycheck-dmd-include-path: b3.  Likewise, Rust users
-can use *note flycheck-rust-library-path: 114. now.
+can use *note flycheck-rust-library-path: 115. now.
 
 ---------- Footnotes ----------
 
@@ -5906,7 +5919,7 @@ checkers, a brand-new error list, and the ability to override the
 executables of syntax checkers.
 
 Let's go through the list of important changes.  For a detailed list,
-please read the *note changelog: 1a0.
+please read the *note changelog: 1a1.
 
 * Menu:
 
@@ -6009,8 +6022,8 @@ File: flycheck.info,  Node: Miscellaneous new options,  Prev: Better Haskell sup
 ..................................
 
    - The SASS and SCSS syntax checkers support the Compass framework
-     now, via *note flycheck-sass-compass: 117. and *note
-     flycheck-scss-compass: 11f.  respectively.
+     now, via *note flycheck-sass-compass: 118. and *note
+     flycheck-scss-compass: 120.  respectively.
 
    - Clang can enable Microsoft C/C++ extensions now, via *note
      flycheck-clang-ms-extensions: 98.
@@ -6102,7 +6115,7 @@ the modern syntax-checking extension for Emacs.
 
 It is three months since the last release, so this release brings quite
 a lot of changes.  For a complete list of all changes, please read the
-complete list of *note changes: 1a0.  This article will just cover the
+complete list of *note changes: 1a1.  This article will just cover the
 most important changes.
 
 * Menu:
@@ -6123,7 +6136,7 @@ File: flycheck.info,  Node: Breaking changes<5>,  Next: New syntax checkers,  Up
 -----------------------
 
 This release introduces three breaking changes.  Two of these are
-related to the *note new-error-list: 1b1.:
+related to the *note new-error-list: 1b2.:
 
      Warning: `flycheck-display-errors-in-list' is gone.  If you had
      previously set *note flycheck-display-errors-function: 28. to this
@@ -6399,25 +6412,32 @@ File: flycheck.info,  Node: master in development,  Next: 0 19 Jun 12 2014,  Up:
         - #424(8): Add `flycheck-rubylintrc' to support configuration
           files for `ruby-rubylint'
 
+        - #446(9): Add `flycheck-rust-crate-type' to make the Crate
+          type customizable
+
    - Improvements:
 
-        - #421(9): Use proper temporary files in `python-flake8'
+        - #421(10): Use proper temporary files in `python-flake8'
 
-        - #423(10): Demote errors from `package-initialize' in the
+        - #423(11): Demote errors from `package-initialize' in the
           `emacs-lisp' checker
 
         - `flycheck-select-checker' now uses the last used syntax
           checker as default when reading from minibuffer
 
-        - #428(11): `flycheck-compile' now prompts for the syntax
+        - #428(12): `flycheck-compile' now prompts for the syntax
           checker to run as `compile' command
 
-        - #439(12): The `rust' syntax checker shows info messages now
+        - #439(13): The `rust' syntax checker shows info messages now
 
-        - #443(13), #444(14): The `sass' and `scss' syntax checkers now
+        - #443(14), #444(15): The `sass' and `scss' syntax checkers now
           use a temporary directory for their cache
 
-        - #447(15): Change the default of `flycheck-eslintrc' to `nil'
+        - #447(16): Change the default of `flycheck-eslintrc' to `nil'
+
+        - #365(17): Show the menu on the mode line lighter
+
+        - Greatly improve Flycheck's menu
 
    - Other changes:
 
@@ -6441,19 +6461,23 @@ File: flycheck.info,  Node: master in development,  Next: 0 19 Jun 12 2014,  Up:
 
 (8) https://github.com/flycheck/flycheck/issues/424
 
-(9) https://github.com/flycheck/flycheck/issues/421
+(9) https://github.com/flycheck/flycheck/issues/446
 
-(10) https://github.com/flycheck/flycheck/issues/423
+(10) https://github.com/flycheck/flycheck/issues/421
 
-(11) https://github.com/flycheck/flycheck/issues/428
+(11) https://github.com/flycheck/flycheck/issues/423
 
-(12) https://github.com/flycheck/flycheck/issues/439
+(12) https://github.com/flycheck/flycheck/issues/428
 
-(13) https://github.com/flycheck/flycheck/issues/443
+(13) https://github.com/flycheck/flycheck/issues/439
 
-(14) https://github.com/flycheck/flycheck/issues/444
+(14) https://github.com/flycheck/flycheck/issues/443
 
-(15) https://github.com/flycheck/flycheck/issues/447
+(15) https://github.com/flycheck/flycheck/issues/444
+
+(16) https://github.com/flycheck/flycheck/issues/447
+
+(17) https://github.com/flycheck/flycheck/issues/365
 
 
 File: flycheck.info,  Node: 0 19 Jun 12 2014,  Next: 0 18 Mar 24 2014,  Prev: master in development,  Up: Changes
@@ -8137,7 +8161,7 @@ Then install the syntax checkers that you'd like to test:
     $ cabal install hlint shellcheck
 
      Note: If you'd like to keep your environment clean, use the *note
-     Virtual test environment: 1ea. instead.
+     Virtual test environment: 1eb. instead.
 
 Run the entire test suite:
 
@@ -8215,7 +8239,7 @@ After the VM is started, you can connect to it:
     $ vagrant ssh
 
 This will give you a bash prompt within the VM, on which you can run
-the tests as explained in *note Test running: 1e8.
+the tests as explained in *note Test running: 1e9.
 
 To switch between Emacs versions, pass `EMACS' to `make test':
 
@@ -8260,7 +8284,7 @@ File: flycheck.info,  Node: Travis CI,  Prev: Virtual test environment,  Up: Tes
 13.4 Travis CI
 ==============
 
-The entire test suite continuously runs on *note Travis CI: 1ed. after
+The entire test suite continuously runs on *note Travis CI: 1ee. after
 every push, with the latest Emacs release and a nightly Emacs snapshot.
 
 Travis CI is configured from `.travis.yml' in the top-level source
@@ -8269,7 +8293,7 @@ directory, and uses mostly the same playbooks for provisioning.
      Note: Travis CI is the *reference environment* for Flycheck's test
      suite.  All tests *must pass* on Travis CI.
 
-     In case Travis CI diverges from the *note VM: 1ea, Travis CI is
+     In case Travis CI diverges from the *note VM: 1eb, Travis CI is
      authoritative.
 
 
@@ -8340,7 +8364,7 @@ File: flycheck.info,  Node: Building HTML and Texinfo,  Next: Verifying referenc
 ==============================
 
 First, switch to the virtual environment you created in the *note Build
-environment setup: 1f0, and make sure that the requirements are up to
+environment setup: 1f1, and make sure that the requirements are up to
 date:
 
     $ source ~/.virtualenvs/cask/bin/activate
@@ -8406,7 +8430,7 @@ Flycheck.
 
 When making changes to the documentation, you need to rebuild the
 Texinfo version with, by following the *note instructions to build the
-documentation: 1f2.
+documentation: 1f3.
 
 ---------- Footnotes ----------
 
@@ -8469,7 +8493,7 @@ support and patches are greatly appreciated.
      checker using `verilator'.
 
    - Derek Harland(7) improved Rust syntax checking by adding support
-     for info messages, and for crates with `flycheck-rust-create-root'
+     for info messages, and for crates with `flycheck-rust-crate-root'
 
    - Doug MacEachern(8) added a Go syntax checker using `errcheck'.
 
@@ -8480,84 +8504,86 @@ support and patches are greatly appreciated.
    - Gereon Frey(10) fixed the `go-build' syntax checker and improved
      its tests.
 
-   - Jimmy Yuen Ho Wong(11) added the HTML syntax checker and the
+   - Gulshan Singh(11) added `flycheck-rust-crate-type'
+
+   - Jimmy Yuen Ho Wong(12) added the HTML syntax checker and the
      jshint Javascript checker, and did valuable testing and bug fixing.
 
-   - Krzysztof Witkowski(12) implemented `eval' support in Flycheck
+   - Krzysztof Witkowski(13) implemented `eval' support in Flycheck
      commands.
 
-   - Lee Adams(13) added a Scala style checker using scalastyle.
+   - Lee Adams(14) added a Scala style checker using scalastyle.
 
-   - Magnar Sveen(14) developed the awesome dash.el(15) and s.el(16)
+   - Magnar Sveen(15) developed the awesome dash.el(16) and s.el(17)
      libraries, that drive considerable parts of Flycheck's internals.
 
-   - Malyshev Artem(17) made Flycheck's keybindings customizable with
+   - Malyshev Artem(18) made Flycheck's keybindings customizable with
      `flycheck-keymap-prefix'.
 
-   - Marian Schubert(18) added the Perl syntax checker.
+   - Marian Schubert(19) added the Perl syntax checker.
 
-   - Mark Hellewell(19) added the Puppet syntax and style checkers.
+   - Mark Hellewell(20) added the Puppet syntax and style checkers.
 
-   - Martin Grenfell(20) created the awesome Vim library syntastic(21)
+   - Martin Grenfell(21) created the awesome Vim library syntastic(22)
      which inspired this project and many of its checkers.
 
-   - Matthias Dahl(22) improved the performance of Flycheck's temp file
+   - Matthias Dahl(23) improved the performance of Flycheck's temp file
      handling.
 
-   - Matthias Güdemann(23) contributed an initial version of the
+   - Matthias Güdemann(24) contributed an initial version of the
      Flycheck logo, and provided very valuable input, ideas and
      feedback during the design of official logo.
 
-   - Mitch Tishmack(24) added support for Microsoft extensions to the
+   - Mitch Tishmack(25) added support for Microsoft extensions to the
      Clang syntax checker.
 
-   - Per Nordlöw(25) contributed a syntax checker for Fortran using
+   - Per Nordlöw(26) contributed a syntax checker for Fortran using
      gfortran.
 
-   - Peter Vasil(26) contributed syntax checkers for XML, Lua and Go
+   - Peter Vasil(27) contributed syntax checkers for XML, Lua and Go
      (using `go build' and `go test'), added unit tests and did
      valuable testing.
 
-   - Robert Dallas Gray(27) made error display customizable with
+   - Robert Dallas Gray(28) made error display customizable with
      `flycheck-display-errors-function'.
 
-   - Robert Zaremba(28) added Go syntax checker using `gofmt'.
+   - Robert Zaremba(29) added Go syntax checker using `gofmt'.
 
-   - Simon Carter(29) provided valuable feedback about automatic syntax
+   - Simon Carter(30) provided valuable feedback about automatic syntax
      checking, and took great effort to debug some very subtle issues
      in it.
 
-   - steckerhalter(30) provided the PHP CodeSniffer checker.
+   - steckerhalter(31) provided the PHP CodeSniffer checker.
 
-   - Steve Purcell(31) implemented many checkers, contributed important
+   - Steve Purcell(32) implemented many checkers, contributed important
      ideas to the design of the checker API and engaged in worthwhile
      discussion to shape this project.
 
-   - Sylvain Benner(32) added syntax checkers for Elixir and Erlang,
-     and wrote the cool flycheck-color-mode-line(33) extension.
+   - Sylvain Benner(33) added syntax checkers for Elixir and Erlang,
+     and wrote the cool flycheck-color-mode-line(34) extension.
 
-   - Sylvain Rousseau(34) added a syntax checker for POSIX shell script
+   - Sylvain Rousseau(35) added a syntax checker for POSIX shell script
      using `bash', and improved error parsing in the Bash script syntax
      checker.
 
-   - Ted Zlatanov(35) added a syntax checker for CFEngine.
+   - Ted Zlatanov(36) added a syntax checker for CFEngine.
 
-   - Tom Jakubowski(36) added `flycheck-rust-check-tests' to the Rust
+   - Tom Jakubowski(37) added `flycheck-rust-check-tests' to the Rust
      syntax checker.
 
-   - tom tan(37) added a syntax checker for the D programming language
-     using `dmd', and wrote the cool flycheck-d-unittest(38) extension.
+   - tom tan(38) added a syntax checker for the D programming language
+     using `dmd', and wrote the cool flycheck-d-unittest(39) extension.
 
-   - Yannick Roehlly(39) added support for PEP8 naming errors to the
+   - Yannick Roehlly(40) added support for PEP8 naming errors to the
      Flake8 syntax checker.
 
-   - Yasuyuki Oka(40) contributed a lot of syntax checkers for various
+   - Yasuyuki Oka(41) contributed a lot of syntax checkers for various
      languages, including AsciiDoc, Chef recipes, ERuby, GNU Make,
      Handlebars, Javascript, PHP, Racket, Ruby, Slim and YAML.
 
-   - Victor Deryagin(41) added the Rust syntax checker.
+   - Victor Deryagin(42) added the Rust syntax checker.
 
-Of course we also need to thank GNU Flymake(42), the first,
+Of course we also need to thank GNU Flymake(43), the first,
 respectable, though somewhat failed attempt at on-the-fly syntax
 checking.
 
@@ -8583,69 +8609,71 @@ checking.
 
 (10) https://github.com/gfrey
 
-(11) https://github.com/wyuenho
+(11) https://github.com/gsingh93
 
-(12) https://github.com/kwitek
+(12) https://github.com/wyuenho
 
-(13) https://github.com/leeaustinadams
+(13) https://github.com/kwitek
 
-(14) https://github.com/magnars
+(14) https://github.com/leeaustinadams
 
-(15) https://github.com/magnars/dash.el
+(15) https://github.com/magnars
 
-(16) https://github.com/magnars/s.el
+(16) https://github.com/magnars/dash.el
 
-(17) https://github.com/proofit404
+(17) https://github.com/magnars/s.el
 
-(18) https://github.com/maio
+(18) https://github.com/proofit404
 
-(19) https://github.com/markhellewell
+(19) https://github.com/maio
 
-(20) https://github.com/scrooloose
+(20) https://github.com/markhellewell
 
-(21) https://github.com/scrooloose/syntastic
+(21) https://github.com/scrooloose
 
-(22) https://github.com/BinaryKhaos
+(22) https://github.com/scrooloose/syntastic
 
-(23) https://github.com/mgudemann
+(23) https://github.com/BinaryKhaos
 
-(24) https://github.com/mitchty
+(24) https://github.com/mgudemann
 
-(25) https://github.com/nordlow
+(25) https://github.com/mitchty
 
-(26) https://github.com/ptrv
+(26) https://github.com/nordlow
 
-(27) https://github.com/rdallasgray
+(27) https://github.com/ptrv
 
-(28) https://github.com/robert-zaremba
+(28) https://github.com/rdallasgray
 
-(29) https://github.com/bbbscarter
+(29) https://github.com/robert-zaremba
 
-(30) https://github.com/steckerhalter
+(30) https://github.com/bbbscarter
 
-(31) https://github.com/purcell
+(31) https://github.com/steckerhalter
 
-(32) https://github.com/syl20bnr
+(32) https://github.com/purcell
 
-(33) https://github.com/flycheck/flycheck-color-mode-line
+(33) https://github.com/syl20bnr
 
-(34) https://github.com/thisirs
+(34) https://github.com/flycheck/flycheck-color-mode-line
 
-(35) https://github.com/tzz
+(35) https://github.com/thisirs
 
-(36) https://github.com/tomjakubowski
+(36) https://github.com/tzz
 
-(37) https://github.com/tom-tan
+(37) https://github.com/tomjakubowski
 
-(38) https://github.com/flycheck/flycheck-d-unittest
+(38) https://github.com/tom-tan
 
-(39) https://github.com/yannick1974
+(39) https://github.com/flycheck/flycheck-d-unittest
 
-(40) https://github.com/yasuyk
+(40) https://github.com/yannick1974
 
-(41) https://github.com/vderyagin
+(41) https://github.com/yasuyk
 
-(42) http://www.gnu.org/software/emacs/manual/html_node/flymake/
+(42) https://github.com/vderyagin
+
+(43) http://www.gnu.org/software/emacs/manual/html_node/flymake/
 
 
 File: flycheck.info,  Node: GNU General Public License,  Next: GNU Free Documentation License,  Prev: Credits,  Up: Top

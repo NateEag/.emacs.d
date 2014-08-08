@@ -137,7 +137,6 @@ attention to case differences."
   (define-fringe-bitmap 'exclamation-mark
     [24 60 60 24 24 0 0 24 24] nil nil 'center))
 
-
 
 ;;; Customization
 (defgroup flycheck nil
@@ -5618,16 +5617,6 @@ See URL `http://jruby.org/'."
   :modes (enh-ruby-mode ruby-mode)
   :next-checkers ((warnings-only . ruby-rubylint)))
 
-(flycheck-def-option-var flycheck-rust-library-path nil rust
-  "A list of library directories for Rust.
-
-The value of this variable is a list of strings, where each
-string is a directory to add to the library path of Rust.
-Relative paths are relative to the file being checked."
-  :type '(repeat (directory :tag "Library directory"))
-  :safe #'flycheck-string-list-p
-  :package-version '(flycheck . "0.18"))
-
 (flycheck-def-option-var flycheck-rust-check-tests t rust
   "Whether to check test code in Rust.
 
@@ -5654,13 +5643,33 @@ if it is not modified, i.e. after it has been saved."
   :package-version '(flycheck . "0.20")
   :safe #'stringp)
 
+(flycheck-def-option-var flycheck-rust-crate-type "lib" rust
+  "The type of the Rust Crate to check.
+
+The value of this variable is a string denoting the crate type,
+for the `--crate-type' flag."
+  :type 'string
+  :safe #'stringp
+  :package-version '("flycheck" . "0.20"))
+
+(flycheck-def-option-var flycheck-rust-library-path nil rust
+  "A list of library directories for Rust.
+
+The value of this variable is a list of strings, where each
+string is a directory to add to the library path of Rust.
+Relative paths are relative to the file being checked."
+  :type '(repeat (directory :tag "Library directory"))
+  :safe #'flycheck-string-list-p
+  :package-version '(flycheck . "0.18"))
+
 (flycheck-define-checker rust
   "A Rust syntax checker using Rust compiler.
 
 This syntax checker needs Rust 0.10 or newer.
 
 See URL `http://www.rust-lang.org'."
-  :command ("rustc" "--crate-type=lib" "--no-trans"
+  :command ("rustc" "--no-trans"
+            (option "--crate-type" flycheck-rust-crate-type)
             (option-flag "--test" flycheck-rust-check-tests)
             (option-list "-L" flycheck-rust-library-path concat)
             (eval (or flycheck-rust-crate-root

@@ -1,4 +1,4 @@
-This is /tmp/flycheck3828215/flycheck-20140807.536/flycheck.info,
+This is /tmp/flycheck22380fwL/flycheck-20140808.424/flycheck.info,
 produced by makeinfo version 4.13 from
 /home/melpa/melpa/working/flycheck/doc/flycheck.texi.
 
@@ -697,7 +697,8 @@ Index
 * flycheck-rubylintrc; Emacs Lisp user option: Ruby.          (line  52)
 * flycheck-rust-check-tests; Emacs Lisp user option: Rust.    (line  16)
 * flycheck-rust-crate-root; Emacs Lisp user option: Rust.     (line  32)
-* flycheck-rust-library-path; Emacs Lisp user option: Rust.   (line  52)
+* flycheck-rust-crate-type; Emacs Lisp user option: Rust.     (line  52)
+* flycheck-rust-library-path; Emacs Lisp user option: Rust.   (line  64)
 * flycheck-rx-to-string; Emacs Lisp function: Utilities.      (line   6)
 * flycheck-sanitize-errors; Emacs Lisp function: Error filters.
                                                               (line   6)

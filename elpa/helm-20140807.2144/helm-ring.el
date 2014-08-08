@@ -73,6 +73,8 @@ If nil or zero (disabled), don't truncate candidate, show all."
                              (cl-loop for cand in (helm-marked-candidates)
                                    do (setq kill-ring
                                             (delete cand kill-ring)))))))
+    (persistent-action . (lambda (_candidate) (ignore)))
+    (persistent-help . "DoNothing")
     (keymap . ,helm-kill-ring-map)
     (last-command)
     (migemo)
@@ -245,7 +247,14 @@ replace with STR as yanked string."
           ((and (consp val) (window-configuration-p (car val)))
            (list "window configuration."
                  'jump-to-register))
-          ((and (consp val) (frame-configuration-p (car val)))
+          ((and (vectorp val)
+                (fboundp 'undo-tree-register-data-p)
+                (undo-tree-register-data-p (elt val 1)))
+           (list
+            "Undo-tree entry."
+            'undo-tree-restore-state-from-register))
+          ((or (and (vectorp val) (eq 'registerv (aref val 0)))
+               (and (consp val) (frame-configuration-p (car val))))
            (list "frame configuration."
                  'jump-to-register))
           ((and (consp val) (eq (car val) 'file))
@@ -277,10 +286,6 @@ replace with STR as yanked string."
             'insert-register
             'append-to-register
             'prepend-to-register))
-          ((vectorp val)
-           (list
-            "Undo-tree entry."
-            'undo-tree-restore-state-from-register))
           (t
            "GARBAGE!"))
         collect (cons (format "Register %3s:\n %s" key (car string-actions))

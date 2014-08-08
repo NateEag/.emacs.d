@@ -4,7 +4,7 @@
 ;; Copyright (C) 2013-     Shin Aoyama        (@smihica https://github.com/smihica)
 ;; Copyright (C) 2009-2012 Chris Done
 
-;; Version: 20140713.1825
+;; Version: 20140807.1113
 ;; X-Original-Version: 1.0.9
 ;; Author: Shin Aoyama <smihica@gmail.com>
 ;; URL: https://github.com/smihica/emmet-mode
@@ -1978,7 +1978,7 @@ tbl) tbl)
 (puthash "selfClosing" nil tbl)
 tbl) tbl)
 (puthash "div" (let ((tbl (make-hash-table :test 'equal)))
-(puthash "block" nil tbl)
+(puthash "block" t tbl)
 (puthash "selfClosing" nil tbl)
 tbl) tbl)
 (puthash "dl" (let ((tbl (make-hash-table :test 'equal)))
@@ -2207,7 +2207,7 @@ tbl) tbl)
 (puthash "selfClosing" nil tbl)
 tbl) tbl)
 (puthash "p" (let ((tbl (make-hash-table :test 'equal)))
-(puthash "block" nil tbl)
+(puthash "block" t tbl)
 (puthash "selfClosing" nil tbl)
 tbl) tbl)
 (puthash "param" (let ((tbl (make-hash-table :test 'equal)))
@@ -2937,16 +2937,17 @@ tbl))
           (self-closing?      (and (not (or tag-txt content))
                                    (or (not tag-has-body?)
                                        (and settings (gethash "selfClosing" settings)))))
-          (lf                 (if (or content-multiline? block-tag?) "\n")))
+	  (block-indentation? (or content-multiline? (and block-tag? content)))
+          (lf                 (if block-indentation? "\n")))
      (concat "<" tag-name id classes props
              (if self-closing? "/>"
                (concat ">"
                        (if tag-txt
-                           (if (or content-multiline? block-tag?)
+                           (if block-indentation? 
                                (emmet-indent tag-txt)
                              tag-txt))
                        (if content
-                           (if (or content-multiline? block-tag?)
+                           (if block-indentation?
                                (emmet-indent content)
                              content))
                        lf
@@ -2990,15 +2991,16 @@ tbl))
                    (lambda (prop)
                      (concat ":" (symbol-name (car prop)) " \"" (cadr prop) "\""))))
          (content-multiline? (and content (string-match "\n" content)))
-         (block-tag? (and settings (gethash "block" settings))))
+         (block-tag? (and settings (gethash "block" settings)))
+         (block-indentation? (or content-multiline? (and block-tag? content))))
     (concat "[:" tag-name id classes props
             (if tag-txt
                 (let ((tag-txt-quoted (concat "\"" tag-txt "\"")))
-                  (if (or content-multiline? block-tag?)
+                  (if block-indentation?
                       (emmet-indent tag-txt-quoted)
                     (concat " " tag-txt-quoted))))
             (if content
-                (if (or content-multiline? block-tag?)
+                (if block-indentation?
                     (emmet-indent content)
                   (concat " " content)))
             "]")))

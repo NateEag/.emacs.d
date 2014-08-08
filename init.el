@@ -481,6 +481,10 @@
 (setq auto-mode-alist (cons '("\\.php$" . php-mode) auto-mode-alist))
 (add-hook 'php-mode-hook 'php-mode-init)
 
+;; At least get basic amenities in Java. I should probably get eclim up and
+;; running someday, since $DAYJOB uses a lot of it, even if I am frontend.
+(add-hook 'java-mode-hook 'my-prog-mode-init)
+
 ;; Tweak CSS mode a bit.
 ;; Note that for skewer-mode to be useful, you'll need to first call
 ;; the function (run-skewer). The following bookmarklet can then be used to

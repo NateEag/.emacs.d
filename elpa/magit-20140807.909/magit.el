@@ -688,6 +688,7 @@ which generates a tracking name of the form \"REMOTE-BRANCHNAME\"."
 
 (defcustom magit-mode-hook nil
   "Hook run when entering a Magit mode derived mode."
+  :options '(magit-load-config-extensions)
   :group 'magit-modes
   :type 'hook)
 
@@ -764,6 +765,11 @@ manager but it will be used in more places in the future."
                         (function :tag "format using function")))))
 
 ;;;;;; Status
+
+(defcustom magit-status-mode-hook nil
+  "Hook run when the `magit-status' buffer is created."
+  :group 'magit-status
+  :type 'hook)
 
 (defcustom magit-status-sections-hook
   '(magit-insert-status-local-line
@@ -6051,7 +6057,7 @@ depending on the value of option `magit-commit-squash-commit'.
                                      (forward-comment -1000)
                                      (point))))))
              (cond ((re-search-forward
-                     (format "(.*\\<%s\\>.*):" (regexp-quote fun))
+                     (format "(.*\\_<%s\\_>.*):" (regexp-quote fun))
                      limit t)
                     ;; found it, goto end of current entry
                     (if (re-search-forward "^(" limit t)

@@ -291,6 +291,11 @@
 
 ;; Minor mode setup and registration.
 
+;; Activate key-chord-mode so I can bind actions to character pairs.
+;; Since key-chord-mode is not a true minor mode, there's no need to diminish
+;; it.
+(key-chord-mode t)
+
 ;; Activate undo-tree-mode globally and diminish it.
 ;;
 ;; It seems to me that undo-tree-mode and backup-walker might be good candidates
@@ -588,6 +593,12 @@
 (add-hook 'after-init-hook
           (lambda ()
             (message (emacs-init-time))))
+
+;; Keybindings for evil-mode.
+;;
+;; A lot of my custom ones may wind up in here. We'll see if modal editing
+;; sticks for me.
+(key-chord-define evil-insert-state-map "jk" 'evil-normal-state)
 
 (provide 'init)
 ;;; init.el ends here

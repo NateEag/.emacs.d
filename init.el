@@ -612,6 +612,9 @@
 (global-evil-leader-mode)
 (evil-leader/set-leader ",")
 
+;; Turn on surround everywhere.
+(global-evil-surround-mode)
+
 ;; Set up my leader shortcuts.
 ;;
 ;; I'm not really sure what I'll want here long-term. I'm starting with a few

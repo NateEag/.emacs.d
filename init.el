@@ -615,7 +615,9 @@
 ;; I'm not really sure what I'll want here long-term. I'm starting with a few
 ;; of my regular shortcuts.
 (evil-leader/set-key
-  "g" 'magit-status)
+  "g" 'magit-status
+  "b" 'my-helm-for-files
+  "s" 'helm-swoop)
 
 (provide 'init)
 ;;; init.el ends here

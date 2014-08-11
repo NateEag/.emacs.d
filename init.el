@@ -598,6 +598,12 @@
 ;;
 ;; A lot of my custom ones may wind up in here. We'll see if modal editing
 ;; sticks for me.
+
+;; Use regular emacs keybindings for insert-mode.
+(setcdr evil-insert-state-map nil)
+
+;; Use 'jk' to go from insert-state to normal-state. It's easier to type than
+;; Escape.
 (key-chord-define evil-insert-state-map "jk" 'evil-normal-state)
 
 (provide 'init)

@@ -23,10 +23,6 @@
  Super key and start using Super for personal keybindings. Should be faster
  than C-c <key>.
 
--Try installing evil-mode and seeing if it interferes with my usual editing
- flow. If not, I can lazy-load vim's editing power, and learn how to cope
- better when I'm stuck in vim.
-
 -File feature request to flycheck for being able to run checkers while in
  web-mode. May well get rejected, because supporting this would be pretty hard.
 

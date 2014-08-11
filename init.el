@@ -606,5 +606,9 @@
 ;; Escape.
 (key-chord-define evil-insert-state-map "jk" 'evil-normal-state)
 
+;; Use ',' as my leader key.
+(global-evil-leader-mode)
+(evil-leader/set-leader ",")
+
 (provide 'init)
 ;;; init.el ends here

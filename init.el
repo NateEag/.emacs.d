@@ -173,6 +173,24 @@
 
 ;; Random functions worth having around.
 
+;; Function to refresh a file in my jstoolkit sandbox.
+;;
+;; Used as a file-local after-save-hook so I don't have to recompile the
+;; toolkit every time I update a file.
+;;
+;; DEBUG I'm not really sure where this should live. It doesn't belong in
+;; .dir-locals.el, since it's a not-entirely-trivial function, it doesn't
+;; belong in jstoolkit since it's my own tooling, and it doesn't belong here
+;; because it's project-specific.
+(defun hit-servlet ()
+  (let ((filename (file-name-nondirectory (buffer-file-name))))
+    (start-process "refresh-js"
+                   nil
+                   "curl"
+                   (concat "http://localhost:3003/controller/pp?file="
+                           filename))
+    (message (concat "Processing " filename))))
+
 ;; From http://stackoverflow.com/a/9697222
 (defun comment-or-uncomment-region-or-line ()
     "Comment/uncomment region, or current line if there is no region."

@@ -587,6 +587,8 @@
 (global-set-key (kbd "C-c r") 'er/expand-region)
 
 ;; toggle-quote lets you toggle a string between single- and double-quoted.
+;; This will probably be deprecated in favor of evil-surround, once I'm more
+;; fluent in evil-mode.
 (global-set-key (kbd "C-c '") 'toggle-quotes)
 
 ;; Just for grins, see how long starting up took.
@@ -617,7 +619,8 @@
 (evil-leader/set-key
   "g" 'magit-status
   "b" 'my-helm-for-files
-  "s" 'helm-swoop)
+  "s" 'helm-swoop
+  "r" 'er/expand-region)
 
 (provide 'init)
 ;;; init.el ends here

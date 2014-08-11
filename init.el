@@ -623,7 +623,8 @@
   "g" 'magit-status
   "b" 'my-helm-for-files
   "s" 'helm-swoop
-  "r" 'er/expand-region)
+  "r" 'er/expand-region
+  "f" 'find-file)
 
 (provide 'init)
 ;;; init.el ends here

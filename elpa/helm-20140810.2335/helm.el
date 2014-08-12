@@ -215,6 +215,7 @@ Any other keys pressed run their assigned command defined in MAP and exit the lo
     (define-key map (kbd "C-c C-d")    'helm-delete-current-selection)
     (define-key map (kbd "C-c C-y")    'helm-yank-selection)
     (define-key map (kbd "C-c C-k")    'helm-kill-selection-and-quit)
+    (define-key map (kbd "C-c C-i")    'helm-copy-to-buffer)
     (define-key map (kbd "C-c C-f")    'helm-follow-mode)
     (define-key map (kbd "C-c C-u")    'helm-force-update)
     (define-key map (kbd "M-p")        'previous-history-element)
@@ -2334,6 +2335,11 @@ If no map is found in current source do nothing (keep previous map)."
     ;; Be sure we call this from helm-buffer.
     (helm-funcall-foreach 'cleanup))
   (helm-kill-async-processes)
+  ;; When running helm from a dedicated frame
+  ;; with no minibuffer, helm will run in the main frame
+  ;; which have a minibuffer, so be sure to disable
+  ;; the `no-other-window' prop there.
+  (helm-prevent-switching-other-window :enabled nil)
   (helm-log-run-hook 'helm-cleanup-hook)
   (helm-frame-or-window-configuration 'restore)
   ;; [1] now bury-buffer from underlying windows otherwise,
@@ -4417,47 +4423,57 @@ Argument ACTION if present will be used as second argument of `display-buffer'."
   (interactive)
   (require 'helm-files)
   (with-helm-window
-    (let ((nomark (assq 'nomark (helm-get-current-source))))
-      (if nomark
-          (message "Marking not allowed in this source")
-        (save-excursion
-          (goto-char (helm-get-previous-header-pos))
-          (helm-next-line)
-          (let* ((next-head (helm-get-next-header-pos))
-                 (end       (and next-head
-                                 (save-excursion
-                                   (goto-char next-head)
-                                   (forward-line -1)
-                                   (point))))
-                 (maxpoint  (or end (point-max))))
-            (while (< (point) maxpoint)
-              (helm-mark-current-line)
-              (let* ((prefix (get-text-property (point-at-bol) 'display))
-                     (cand   (helm-get-selection))
-                     (bn     (and (helm-file-completion-source-p)
-                                  (helm-basename cand)))
-                     (src    (assoc-default 'name (helm-get-current-source))))
-                (when (and (not (helm-this-visible-mark))
-                           (not (or (string= prefix "[?]")
-                                    (string= prefix "[@]"))))
-                  ;; Don't mark possibles directories ending with . or ..
-                  ;; autosave files/links and non--existent file.
-                  (unless
-                      (and (or (helm-file-completion-source-p)
-                               (equal src "Files from Current Directory"))
-                           (or (string-match "^[.]?#.*#?$\\|[^#]*[.]\\{1,2\\}$" bn)
-                               ;; We need to test here when not using a transformer
-                               ;; that tag prefix (i.e on tramp)
-                               (not (file-exists-p cand))))
-                    (helm-make-visible-mark))))
-              (if (helm-pos-multiline-p)
-                  (progn
-                    (goto-char (or (helm-get-next-candidate-separator-pos) (point-max)))
-                    (forward-line 1))
-                (forward-line 1))
-              (end-of-line))))
-        (helm-mark-current-line)
-        (message "%s candidates marked" (length helm-marked-candidates))))))
+    (let ((nomark (assq 'nomark (helm-get-current-source)))
+          (follow (if helm-follow-mode 1 -1)))
+      (helm-follow-mode -1)
+      (unwind-protect
+           (if nomark
+               (message "Marking not allowed in this source")
+               (save-excursion
+                 (goto-char (helm-get-previous-header-pos))
+                 (helm-next-line)
+                 (let* ((next-head (helm-get-next-header-pos))
+                        (end       (and next-head
+                                        (save-excursion
+                                          (goto-char next-head)
+                                          (forward-line -1)
+                                          (point))))
+                        (maxpoint  (or end (point-max))))
+                   (while (< (point) maxpoint)
+                     (helm-mark-current-line)
+                     (let* ((prefix (get-text-property (point-at-bol) 'display))
+                            (cand   (helm-get-selection))
+                            (bn     (and (helm-file-completion-source-p)
+                                         (helm-basename cand)))
+                            (src-name    (assoc-default 'name
+                                                   (helm-get-current-source))))
+                       (when (and (not (helm-this-visible-mark))
+                                  (not (or (string= prefix "[?]")
+                                           (string= prefix "[@]"))))
+                         ;; Don't mark possibles directories ending with . or ..
+                         ;; autosave files/links and non--existent file.
+                         (unless
+                             (and (or (helm-file-completion-source-p)
+                                      (string=
+                                       src-name "Files from Current Directory"))
+                                  (or (string-match
+                                       "^[.]?#.*#?$\\|[^#]*[.]\\{1,2\\}$" bn)
+                                      ;; We need to test here when not using
+                                      ;; a transformer that tag prefix
+                                      ;; (i.e on tramp).
+                                      (not (file-exists-p cand))))
+                           (helm-make-visible-mark))))
+                     (if (helm-pos-multiline-p)
+                         (progn
+                           (goto-char
+                            (or (helm-get-next-candidate-separator-pos)
+                                (point-max)))
+                           (forward-line 1))
+                         (forward-line 1))
+                     (end-of-line))))
+               (helm-mark-current-line)
+               (message "%s candidates marked" (length helm-marked-candidates)))
+        (helm-follow-mode follow) (message nil)))))
 
 (defun helm-unmark-all ()
   "Unmark all candidates in all sources of current helm session."
@@ -4596,6 +4612,14 @@ is what is used to perform actions."
      (kill-new sel)
      (message "Killed: %s" sel))
    (helm-get-selection nil (not arg))))
+
+(defun helm-copy-to-buffer ()
+  "Copy selection or marked candidates to `helm-current-buffer'."
+  (interactive)
+  (with-helm-buffer
+    (cl-loop for cand in (helm-marked-candidates)
+             do (with-helm-current-buffer
+                  (insert cand "\n")))))
 
 
 ;;; Follow-mode: Automatical execution of persistent-action

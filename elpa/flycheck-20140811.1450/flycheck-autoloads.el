@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "flycheck" "flycheck.el" (21476 50477 0 0))
+;;;### (autoloads nil "flycheck" "flycheck.el" (21482 4326 0 0))
 ;;; Generated autoloads from flycheck.el
 
 (autoload 'flycheck-mode "flycheck" "\
@@ -93,6 +93,14 @@ Define a new error LEVEL with PROPERTIES.
 
 The following PROPERTIES constitute an error level:
 
+`:severity SEVERITY'
+     A number denoting the severity of this level.  The higher
+     the number, the more severe is this level compared to other
+     levels.  Defaults to 0.
+
+     The severity is used by `flycheck-error-level-<' to
+     determine the ordering of errors according to their levels.
+
 `:overlay-category CATEGORY'
      A symbol denoting the overlay category to use for error
      highlight overlays for this level.  See Info
@@ -126,7 +134,7 @@ The following PROPERTIES constitute an error level:
 
 ;;;***
 
-;;;### (autoloads nil nil ("flycheck-pkg.el") (21476 50477 360254
+;;;### (autoloads nil nil ("flycheck-pkg.el") (21482 4326 960258
 ;;;;;;  0))
 
 ;;;***

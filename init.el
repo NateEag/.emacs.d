@@ -633,6 +633,9 @@
 ;; Turn on surround everywhere.
 (global-evil-surround-mode)
 
+;; Turn on nerd-commenting. We'll see how I like it.
+(evilnc-default-hotkeys)
+
 ;; Set up my leader shortcuts.
 ;;
 ;; I'm not really sure what I'll want here long-term. I'm starting with a few

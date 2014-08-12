@@ -54,20 +54,13 @@
           (git-executable (executable-find "git")))
       (update-packages-upgrade-or-install-package package)
 
-      ;; Add new package.
+      ;; Stage changes to the packages directory.
       (call-process git-executable
                     nil
                     "*git-results*"
                     nil
                     "add"
-                    (expand-file-name package-user-dir))
-      ;; Stage deletion of old package.
-      (call-process git-executable
-                    nil
-                    "*git-results*"
-                    nil
-                    "add"
-                    "-u"
+                    "-A"
                     (expand-file-name package-user-dir))
       ;; Commit changes.
       (call-process git-executable

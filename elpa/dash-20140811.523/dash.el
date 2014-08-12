@@ -1,9 +1,9 @@
 ;;; dash.el --- A modern list library for Emacs
 
-;; Copyright (C) 2012 Magnar Sveen
+;; Copyright (C) 2012-2014 Magnar Sveen
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
-;; Version: 20140717.547
+;; Version: 20140811.523
 ;; X-Original-Version: 2.8.0
 ;; Keywords: lists
 
@@ -239,6 +239,10 @@ Alias: `-reject'"
 (defun -keep (fn list)
   "Return a new list of the non-nil results of applying FN to the items in LIST."
   (--keep (funcall fn it) list))
+
+(defun -non-nil (list)
+  "Return all non-nil elements of LIST."
+  (-remove 'null list))
 
 (defmacro --map-indexed (form list)
   "Anaphoric form of `-map-indexed'."
@@ -1368,6 +1372,20 @@ N is the length of the returned list."
   (declare (debug (form form form)))
   `(-iterate (lambda (it) ,form) ,init ,n))
 
+(defun -fix (fn list)
+  "Compute the (least) fixpoint of FN with initial input LIST.
+
+FN is called at least once, results are compared with `equal'."
+  (let ((re (funcall fn list)))
+    (while (not (equal list re))
+      (setq list re)
+      (setq re (funcall fn re)))
+    re))
+
+(defmacro --fix (form list)
+  "Anaphoric form of `-fix'."
+  `(-fix (lambda (it) ,form) ,list))
+
 (defun -unfold (fun seed)
   "Build a list from SEED using FUN.
 
@@ -1580,6 +1598,7 @@ structure such as plist or alist."
                              "--remove"
                              "-reject"
                              "--reject"
+                             "-non-nil"
                              "-keep"
                              "--keep"
                              "-map-indexed"
@@ -1730,6 +1749,8 @@ structure such as plist or alist."
                              "--min-by"
                              "-iterate"
                              "--iterate"
+                             "-fix"
+                             "--fix"
                              "-unfold"
                              "--unfold"
                              "-cons-pair?"
@@ -1760,6 +1781,7 @@ structure such as plist or alist."
                              "-orfn"
                              "-andfn"
                              "-iteratefn"
+                             "-fixfn"
                              "-prodfn"
                              ))
              (special-variables '(

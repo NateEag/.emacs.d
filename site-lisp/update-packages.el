@@ -57,14 +57,14 @@
       ;; Add new package.
       (call-process git-executable
                     nil
-                    nil
+                    "*git-results*"
                     nil
                     "add"
                     (expand-file-name package-user-dir))
       ;; Stage deletion of old package.
       (call-process git-executable
                     nil
-                    nil
+                    "*git-results*"
                     nil
                     "add"
                     "-u"
@@ -72,7 +72,7 @@
       ;; Commit changes.
       (call-process git-executable
                     nil
-                    nil
+                    "*git-results*"
                     nil
                     "commit"
                     "-m"

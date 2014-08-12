@@ -1,14 +1,15 @@
 ;;; emmet-mode.el --- Unofficial Emmet's support for emacs
 
-;; Copyright (C) 2014-     William David Mayo (@pbocks  https://github.com/pobocks)
-;; Copyright (C) 2013-     Shin Aoyama        (@smihica https://github.com/smihica)
+;; Copyright (C) 2014-     Dmitry Mukhutdinov (@flyingleafe  https://github.com/flyingleafe)
+;; Copyright (C) 2014-     William David Mayo (@pbocks       https://github.com/pobocks)
+;; Copyright (C) 2013-     Shin Aoyama        (@smihica      https://github.com/smihica)
 ;; Copyright (C) 2009-2012 Chris Done
 
-;; Version: 20140807.1113
-;; X-Original-Version: 1.0.9
+;; Version: 20140811.803
+;; X-Original-Version: 1.0.10
 ;; Author: Shin Aoyama <smihica@gmail.com>
 ;; URL: https://github.com/smihica/emmet-mode
-;; Last-Updated: 2014-07-14 Mon
+;; Last-Updated: 2014-08-11 Mon
 ;; Keywords: convenience
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -67,7 +68,7 @@
 ;;
 ;;; Code:
 
-(defconst emmet-mode:version "1.0.8")
+(defconst emmet-mode:version "1.0.10")
 
 (require 'cl)
 
@@ -831,6 +832,15 @@ tbl) tbl)
 (puthash "cc:ie" "<!--[if IE]>\n\t${child}\n<![endif]-->" tbl)
 (puthash "cc:ie6" "<!--[if lte IE 6]>\n\t${child}\n<![endif]-->" tbl)
 (puthash "cc:noie" "<!--[if !IE]><!-->\n\t${child}\n<!--<![endif]-->" tbl)
+tbl) tbl)
+tbl) tbl)
+(puthash "sass" (let ((tbl (make-hash-table :test 'equal)))
+(puthash "snippets" (let ((tbl (make-hash-table :test 'equal)))
+(puthash "@f" "@font-face\n\tfont-family:|\n\tsrc:url(|)\n" tbl)
+(puthash "@f+" "@font-face\n\tfont-family: '${1:FontName}'\n\tsrc: url('${2:FileName}.eot')\n\tsrc: url('${2:FileName}.eot?#iefix') format('embedded-opentype'), url('${2:FileName}.woff') format('woff'), url('${2:FileName}.ttf') format('truetype'), url('${2:FileName}.svg#${1:FontName}') format('svg')\n\tfont-style: ${3:normal}\n\tfont-weight: ${4:normal}\n" tbl)
+(puthash "@kf" "@-webkit-keyframes ${1:identifier}\n\t${2:from}\n\t\t${3}${6}\n\t${4:to}\n\t\t${5}\n\n@-o-keyframes ${1:identifier}\n\t${2:from}\n\t\t${3}${6}\n\t${4:to}\n\t\t${5}\n\n@-moz-keyframes ${1:identifier}\n\t${2:from}\n\t\t${3}${6}\n\t${4:to}\n\t\t${5}\n\n@keyframes ${1:identifier}\n\t${2:from}\n\t\t${3}${6}\n\t${4:to}\n\t\t${5}\n" tbl)
+(puthash "@m" "@media ${1:screen}\n\t|\n" tbl)
+(puthash "@media" "@media ${1:screen}\n\t|\n" tbl)
 tbl) tbl)
 tbl) tbl)
 tbl))
@@ -2538,7 +2548,7 @@ tbl))
                       `(tag (,tagname ,has-body? nil)) input))
       (let ((tag-data (cadar it)) (input (cdr it)))
         (emmet-pif (emmet-run
-                        emmet-props
+                        emmet-properties
                         (let ((props (cdr expr)))
                           `((tag ,(append tag-data (list props))) . ,input))
                         `((tag ,(append tag-data '(nil))) . ,input))
@@ -2617,7 +2627,7 @@ tbl))
 
 (defun emmet-tag-props (tag input)
   (let ((tag-data (cadr tag)))
-    (emmet-run emmet-props
+    (emmet-run emmet-properties
                    (let ((props (cdr expr)))
                      `((tag ,(append tag-data (list props))) . ,input))
                    `((tag ,(append tag-data '(nil))) . ,input))))
@@ -2631,7 +2641,7 @@ tbl))
 
 (defun emmet-prop (input)
   (emmet-parse
-   " " 1 "space"
+   " *" 1 "space"
    (emmet-run
     emmet-name
     (let ((name (cdr expr)))
@@ -2674,6 +2684,12 @@ tbl))
   (emmet-parse "{\\(.*?\\)}" 2 "inner text"
                    (let ((txt (emmet-split-numbering-expressions (elt it 1))))
                      `((text ,txt) . ,input))))
+
+(defun emmet-properties (input)
+  "A bracketed emmet property expression."
+  (emmet-parse "\\[\\(.*?\\)\\]" 2 "properties"
+                `(,(car (emmet-props (elt it 1))) . ,input)))
+
 
 (defun emmet-pexpr (input)
   "A zen coding expression with parentheses around it."
@@ -3343,6 +3359,10 @@ tbl))
  (gethash "snippets" (gethash "css" emmet-snippets)))
 
 (emmet-defparameter
+ emmet-sass-snippets
+ (gethash "snippets" (gethash "sass" emmet-snippets)))
+
+(emmet-defparameter
  emmet-css-unitless-properties
  (gethash "unitlessProperties" (gethash "css" emmet-preferences)))
 
@@ -3417,43 +3437,48 @@ tbl))
   (emmet-join-string
    (mapcar
     #'(lambda (expr)
-        (let ((basement
-               (emmet-aif
-                (gethash (car expr) emmet-css-snippets)
-                (let ((set it) (fn nil) (unitlessp nil))
-                  (if (stringp set)
-                      (progn
-                        ;; new pattern
-                        ;; creating print function
-                        (setf fn (emmet-css-instantiate-lambda set))
-                        ;; get unitless or no
-                        (setf unitlessp
-                              (not (null (string-match
-                                          emmet-css-unitless-properties-regex set))))
-                        ;; caching
-                        (puthash (car expr) (cons fn unitlessp) emmet-css-snippets))
-                    (progn
-                      ;; cache hit.
-                      (setf fn (car set))
-                      (setf unitlessp (cdr set))))
-                  (apply fn
-                         (mapcar
-                          #'(lambda (arg)
-                              (if (listp arg)
-                                  (if unitlessp (car arg)
-                                    (apply #'concat arg))
-                                arg))
-                          (cdddr expr))))
-                (concat (car expr) ": "
-                        (emmet-join-string
-                         (mapcar #'(lambda (arg)
-                                     (if (listp arg) (apply #'concat arg) arg))
-                                 (cdddr expr)) " ")
-                        ";"))))
+        (let* 
+	    ((hash-map (if emmet-use-sass-syntax emmet-sass-snippets emmet-css-snippets))
+	     (basement
+	      (emmet-aif
+	       (or (gethash (car expr) hash-map) (gethash (car expr) emmet-css-snippets))
+	       (let ((set it) (fn nil) (unitlessp nil))
+		 (if (stringp set)
+		     (progn
+		       ;; new pattern
+		       ;; creating print function
+		       (setf fn (emmet-css-instantiate-lambda set))
+		       ;; get unitless or no
+		       (setf unitlessp
+			     (not (null (string-match
+					 emmet-css-unitless-properties-regex set))))
+		       ;; caching
+		       (puthash (car expr) (cons fn unitlessp) hash-map))
+		   (progn
+		     ;; cache hit.
+		     (setf fn (car set))
+		     (setf unitlessp (cdr set))))
+		 (apply fn
+			(mapcar
+			 #'(lambda (arg)
+			     (if (listp arg)
+				 (if unitlessp (car arg)
+				   (apply #'concat arg))
+			       arg))
+			 (cdddr expr))))
+	       (concat (car expr) ": "
+		       (emmet-join-string
+			(mapcar #'(lambda (arg)
+				    (if (listp arg) (apply #'concat arg) arg))
+				(cdddr expr)) " ")
+		       ";"))))
           (let ((line
                  (if (caddr expr)
                      (concat (subseq basement 0 -1) " !important;")
                    basement)))
+	    ;; remove trailing semicolon while editing Sass files
+	    (if (and emmet-use-sass-syntax (equal ";" (subseq line -1)))
+		(setq line (subseq line 0 -1)))
             (emmet-aif
              (cadr expr)
              (emmet-css-transform-vendor-prefixes line it)
@@ -3473,23 +3498,30 @@ tbl))
 (defun emmet-expr-on-line ()
   "Extract a emmet expression and the corresponding bounds
    for the current line."
-  (let* ((start (line-beginning-position))
-         (end (line-end-position))
+  (let* ((end (point))
+         (start (emmet-find-left-bound))
          (line (buffer-substring-no-properties start end)))
-    (save-excursion
-      (save-match-data
-        (let ((bound (point)))
-          (goto-char start)
-          (if (re-search-forward "\\(\\([ \t]+\\)?<[^>]*?>\\)+" bound t)
-              (progn
-                (setq start (match-end 0))
-                (setq end bound)
-                (setq line (buffer-substring-no-properties start end))
-                )
-            ))))
     (let ((expr (emmet-regex "\\([ \t]*\\)\\([^\n]+\\)" line 2)))
       (if (first expr)
           (list (first expr) start end)))))
+
+(defun emmet-find-left-bound ()
+  "Find the left bound of an emmet expr"
+  (save-excursion (save-match-data
+    (let ((char (char-before))
+          (last-gt (point)))
+      (while char
+        (cond ((member char '(?\} ?\] ?\)))
+               (backward-sexp) (setq char (char-before)))
+              ((eq char ?\>)
+               (setq last-gt (point)) (backward-char) (setq char (char-before)))
+              ((eq char ?\<)
+               (goto-char last-gt) (setq char nil))
+              ((not (string-match-p "[[:space:]\n;]" (string char)))
+               (backward-char) (setq char (char-before)))
+              (t
+               (setq char nil))))
+      (point)))))
 
 (defcustom emmet-indentation 4
   "Number of spaces used for indentation."
@@ -3504,6 +3536,11 @@ tbl))
 (defvar emmet-use-css-transform nil
   "When true, transform Emmet snippets into CSS, instead of the usual HTML.")
 (make-variable-buffer-local 'emmet-use-css-transform)
+
+(defvar emmet-use-sass-syntax nil
+  "When true, uses Sass syntax for CSS abbreviations expanding,
+e. g. without semicolons")
+(make-variable-buffer-local 'emmet-use-sass-syntax)
 
 (defvar emmet-css-major-modes
   '(css-mode
@@ -3531,18 +3568,12 @@ For more information see `emmet-mode'."
   (let* ((here (point))
          (preview (if emmet-preview-default (not arg) arg))
          (beg (if preview
-                  (progn
-                    (beginning-of-line)
-                    (skip-chars-forward " \t")
-                    (point))
-                (when mark-active (region-beginning))))
+                  (emmet-find-left-bound)
+                (when (use-region-p) (region-beginning))))
          (end (if preview
-                  (progn
-                    (end-of-line)
-                    (skip-chars-backward " \t")
-                    (point))
-                (when mark-active (region-end)))))
-    (if beg
+                  here
+                (when (use-region-p) (region-end)))))
+    (if (and preview beg)
         (progn
           (goto-char here)
           (emmet-preview beg end))
@@ -3559,20 +3590,22 @@ For more information see `emmet-mode'."
                        (+ (- p (length output-markup))
                         (emmet-html-next-insert-point output-markup)))))))))))))
 
-(defvar emmet-mode-keymap nil
+(defvar emmet-mode-keymap
+  (let
+      ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-j") 'emmet-expand-line)
+    (define-key map (kbd "<C-return>") 'emmet-expand-line)
+    (define-key map (kbd "<C-M-right>") 'emmet-next-edit-point)
+    (define-key map (kbd "<C-M-left>") 'emmet-prev-edit-point)
+    map)
   "Keymap for emmet minor mode.")
-
-(if emmet-mode-keymap
-    nil
-  (progn
-    (setq emmet-mode-keymap (make-sparse-keymap))
-    (define-key emmet-mode-keymap (kbd "C-j") 'emmet-expand-line)
-    (define-key emmet-mode-keymap (kbd "<C-return>") 'emmet-expand-line)))
 
 (defun emmet-after-hook ()
   "Initialize Emmet's buffer-local variables."
   (if (memq major-mode emmet-css-major-modes)
-      (setq emmet-use-css-transform t)))
+      (setq emmet-use-css-transform t))
+  (if (eq major-mode 'sass-mode)
+      (setq emmet-use-sass-syntax t)))
 
 ;;;###autoload
 (define-minor-mode emmet-mode
@@ -3666,7 +3699,7 @@ See also `emmet-expand-line'."
       (let* ((indent (current-indentation))
              (markup (emmet-preview-transformed indent)))
         (when markup
-          (delete-region (line-beginning-position) (overlay-end ovli))
+          (delete-region (overlay-start ovli) (overlay-end ovli))
           (emmet-insert-and-flash markup)
           (let ((output-markup (buffer-substring-no-properties (line-beginning-position) (point))))
             (when (and emmet-move-cursor-after-expanding (emmet-html-text-p markup))
@@ -3759,7 +3792,7 @@ cursor position will be moved to after the first quote."
   "Expand emmet between BEG and END interactively.
 This will show a preview of the expanded emmet code and you can
 accept it or skip it."
-  (interactive (if mark-active
+  (interactive (if (use-region-p)
                    (list (region-beginning) (region-end))
                  (list nil nil)))
   (emmet-preview-abort)
@@ -3839,6 +3872,53 @@ accept it or skip it."
     (when show
       (overlay-put emmet-preview-output 'after-string
                    (concat show "\n")))))
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;; Implementation of "Go to Edit Point" functionality ;;
+;; http://docs.emmet.io/actions/go-to-edit-point/     ;;
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+(defun emmet-go-to-edit-point (count)
+  (let
+      ((buf (buffer-string))
+       (point (point))
+       (edit-point "\\(\\(><\\)\\|\\(^[[:blank:]]+$\\)\\|\\(=\\(\"\\|'\\)\\{2\\}\\)\\)"))
+    (if (> count 0)
+	(progn
+	  (forward-char)
+	  (let
+	      ((search-result (re-search-forward edit-point nil t count)))
+	    (if search-result
+		(progn
+		  (cond
+		   ((or (match-string 2) (match-string 4)) (backward-char))
+		   ((match-string 3) (end-of-line)))
+		  search-result)
+		(backward-char))))
+      (progn
+	(backward-char)
+	(let
+	    ((search-result (re-search-backward edit-point nil t (- count))))
+	  (if search-result
+	      (progn
+		(cond
+		 ((match-string 2) (forward-char))
+		 ((match-string 3) (end-of-line))
+		 ((match-string 4) (forward-char 2)))
+		search-result)
+	      (forward-char)))))))
+
+;;;###autoload
+(defun emmet-next-edit-point (count)
+  (interactive "^p")
+  (unless (or emmet-use-css-transform (emmet-go-to-edit-point count))
+    (error "Last edit point reached.")))
+
+;;;###autoload
+(defun emmet-prev-edit-point (count)
+  (interactive "^p")
+  (unless (or emmet-use-css-transform (emmet-go-to-edit-point (- count)))
+    (error "First edit point reached.")))
 
 (provide 'emmet-mode)
 

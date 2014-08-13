@@ -48,7 +48,11 @@
  '(php-mode-coding-style (quote psr2) nil nil "PSR-2 is not ideal, but it's a standard.")
  '(safe-local-variable-values
    (quote
-    ((php-auto-yasnippet-required-files
+    ((eval add-hook
+           (quote after-save-hook)
+           (quote hit-servlet)
+           nil t)
+     (php-auto-yasnippet-required-files
       (list "~/github/gitlist/vendor/autoload.php"))
      (eval guess-style-guess-all)
      (eval highlight-regexp "^ *"))))

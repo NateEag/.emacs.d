@@ -1,4 +1,4 @@
-This is /tmp/flycheck16097-dg/flycheck-20140811.1450/flycheck.info,
+This is /tmp/flycheck21986o9r/flycheck-20140812.1041/flycheck.info,
 produced by makeinfo version 4.13 from
 /home/melpa/melpa/working/flycheck/doc/flycheck.texi.
 
@@ -8,7 +8,7 @@ START-INFO-DIR-ENTRY
 * flycheck: (flycheck.info). On the fly syntax checking for GNU Emacs
 END-INFO-DIR-ENTRY
 
-This manual is for Flycheck version 0.20-cvs1.
+This manual is for Flycheck version 0.20.
 
 Copyright (C) 2014, Sebastian Wiesner
 
@@ -492,6 +492,7 @@ Index
  [index ]
 * Menu:
 
+* ada-gnat; Emacs Lisp Flycheck syntax checker: Ada.          (line   6)
 * asciidoc; Emacs Lisp Flycheck syntax checker: AsciiDoc.     (line   6)
 * c/c++-clang; Emacs Lisp Flycheck syntax checker: C/C++.     (line   6)
 * c/c++-cppcheck; Emacs Lisp Flycheck syntax checker: C/C++.  (line 339)
@@ -644,6 +645,10 @@ Index
                                                               (line  55)
 * flycheck-ghc-search-path; Emacs Lisp user option: Haskell.  (line  73)
 * flycheck-gjslintrc; Emacs Lisp user option: Javascript.     (line  72)
+* flycheck-gnat-include-path; Emacs Lisp user option: Ada.    (line  15)
+* flycheck-gnat-language-standard; Emacs Lisp user option: Ada.
+                                                              (line  33)
+* flycheck-gnat-warnings; Emacs Lisp user option: Ada.        (line  50)
 * flycheck-go-vet-print-functions; Emacs Lisp user option: Go.
                                                               (line  64)
 * flycheck-google-max-messages; Emacs Lisp user option: Error reporting.
@@ -707,7 +712,7 @@ Index
                                                               (line   6)
 * flycheck-sass-compass; Emacs Lisp user option: Sass.        (line  14)
 * flycheck-scalastyle-jar; Emacs Lisp user option: Scala.     (line  30)
-* flycheck-scalastylerc; Emacs Lisp user option: Scala.       (line  46)
+* flycheck-scalastylerc; Emacs Lisp user option: Scala.       (line  49)
 * flycheck-scss-compass; Emacs Lisp user option: Scss.        (line  14)
 * flycheck-select-checker; Emacs Lisp command: Syntax checker selection<2>.
                                                               (line  72)
@@ -776,8 +781,9 @@ Index
 * ruby; Emacs Lisp Flycheck syntax checker: Ruby.             (line  62)
 * rust; Emacs Lisp Flycheck syntax checker: Rust.             (line   6)
 * sass; Emacs Lisp Flycheck syntax checker: Sass.             (line   6)
+* scala-scalastyle; Emacs Lisp Flycheck syntax checker: Scala.
+                                                              (line  18)
 * scala; Emacs Lisp Flycheck syntax checker: Scala.           (line   6)
-* scalastyle; Emacs Lisp Flycheck syntax checker: Scala.      (line  18)
 * scss; Emacs Lisp Flycheck syntax checker: Scss.             (line   6)
 * sh-bash; Emacs Lisp Flycheck syntax checker: Shell script languages.
                                                               (line   6)

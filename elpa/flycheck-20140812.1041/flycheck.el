@@ -6,7 +6,7 @@
 ;; Author: Sebastian Wiesner <swiesner@lunaryorn.com>
 ;; URL: https://flycheck.readthedocs.org
 ;; Keywords: convenience languages tools
-;; Version: 0.20-cvs1
+;; Version: 0.21-cvs
 ;; Package-Requires: ((dash "2.4.0") (pkg-info "0.4") (cl-lib "0.3") (emacs "24.1"))
 
 ;; This file is not part of GNU Emacs.
@@ -173,7 +173,8 @@ attention to case differences."
   :link '(info-link "(flycheck)Error reporting"))
 
 (defcustom flycheck-checkers
-  '(asciidoc
+  '(ada-gnat
+    asciidoc
     c/c++-clang
     c/c++-gcc
     c/c++-cppcheck
@@ -226,7 +227,7 @@ attention to case differences."
     rust
     sass
     scala
-    scalastyle
+    scala-scalastyle
     scss
     sh-bash
     sh-posix-dash
@@ -2436,7 +2437,14 @@ _NAME is ignored."
   (format "*Flycheck %s*" (buffer-file-name)))
 
 (defun flycheck-compile (checker)
-  "Run CHECKER as in `compile'."
+  "Run CHECKER via `compile'.
+
+CHECKER must be a valid syntax checker.  Interactively, prompt
+for a syntax checker to run.
+
+Instead of highlighting errors in the buffer, this command pops
+up a separate buffer with the entire output of the syntax checker
+tool, just like `compile' (\\[compile])."
   (interactive
    (list (read-flycheck-checker "Run syntax checker as compile command: "
                                 (or flycheck-checker flycheck-last-checker))))
@@ -4147,6 +4155,70 @@ variable symbol for a syntax checker."
 
 
 ;;; Built-in checkers
+(flycheck-def-option-var flycheck-gnat-include-path nil ada-gnat
+  "A list of include directories for GNAT.
+
+The value of this variable is a list of strings, where each
+string is a directory to add to the include path of gcc.
+Relative paths are relative to the file being checked."
+  :type '(repeat (directory :tag "Include directory"))
+  :safe #'flycheck-string-list-p
+  :package-version '(flycheck . "0.20"))
+
+(flycheck-def-option-var flycheck-gnat-language-standard "2012" ada-gnat
+  "The language standard to use in GNAT.
+
+The value of this variable is either a string denoting a language
+standard, or nil, to use the default standard. When non-nil, pass
+the language standard via the `-std' option."
+  :type '(choice (const :tag "Default standard" nil)
+                 (string :tag "Language standard"))
+  :safe #'stringp
+  :package-version '(flycheck . "0.20"))
+
+(flycheck-def-option-var flycheck-gnat-warnings
+    '("wa") ada-gnat
+  "A list of additional Ada warnings to enable in GNAT.
+
+The value of this variable is a list of strings, where each
+string is the name of a warning category to enable. By default,
+most optional warnings are recommended, as in `-gnata'.
+
+Refer to Info Node `(gnat_ugn_unw)Warning Message Control' for
+more information about GNAT warnings."
+  :type '(repeat :tag "Warnings" (string :tag "Warning name"))
+  :safe #'flycheck-string-list-p
+  :package-version '(flycheck . "0.20"))
+
+(flycheck-define-checker ada-gnat
+  "An Ada syntax checker using GNAT.
+
+Uses the GNAT compiler from GCC.  See URL
+`https://gcc.gnu.org/onlinedocs/gnat_ugn_unw/'."
+  :command ("gnatmake"
+            "-c"                        ; Just compile, don't bind
+            "-f"                        ; Force re-compilation
+            "-u"                        ; Compile the main file only
+            "-gnatf"                    ; Full error information
+            "-gnatef"                   ; Full source file name
+            "-D" temporary-directory
+            (option-list "-gnat" flycheck-gnat-warnings concat)
+            (option-list "-I" flycheck-gnat-include-path concat)
+            (option "-gnat" flycheck-gnat-language-standard concat)
+            source)
+  :error-patterns
+  ((error line-start
+          (message "In file included from") " " (file-name) ":" line ":"
+          column ":"
+          line-end)
+   (info line-start (file-name) ":" line ":" column
+         ": note: " (message) line-end)
+   (warning line-start (file-name) ":" line ":" column
+            ": warning: " (message) line-end)
+   (error line-start (file-name) ":" line ":" column ;no specific error prefix in Ada
+          ": " (message) line-end))
+  :modes (ada-mode))
+
 (flycheck-define-checker asciidoc
   "A AsciiDoc syntax checker using the AsciiDoc compiler.
 
@@ -4268,6 +4340,21 @@ information about warnings."
   :safe #'flycheck-string-list-p
   :package-version '(flycheck . "0.14"))
 
+(defun flycheck-c/c++-quoted-include-directory ()
+  "Get the directory for quoted includes.
+
+C/C++ compiles typicall look up includes with quotation marks in
+the directory of the file being compiled.  However, since
+Flycheck uses temporary copies for syntax checking, it needs to
+explicitly determine the directory for quoted includes.
+
+This function determines the directory by looking at
+`buffer-file-name', or if that is nil, at `default-directory'."
+  (-if-let (fn (buffer-file-name))
+      (file-name-directory fn)
+    ;; If the buffer has no file name, fall back to its default directory
+    default-directory))
+
 (flycheck-define-checker c/c++-clang
   "A C/C++ syntax checker using Clang.
 
@@ -4279,6 +4366,7 @@ See URL `http://clang.llvm.org/'."
                                         ; location
             "-fno-diagnostics-show-option" ; Do not show the corresponding
                                         ; warning group
+            "-iquote" (eval (flycheck-c/c++-quoted-include-directory))
             (option "-std=" flycheck-clang-language-standard concat)
             (option "-stdlib=" flycheck-clang-standard-library concat)
             (option-flag "-fms-extensions" flycheck-clang-ms-extensions)
@@ -4293,9 +4381,7 @@ See URL `http://clang.llvm.org/'."
                   (pcase major-mode
                     (`c++-mode "c++")
                     (`c-mode "c")))
-            ;; We must stay in the same directory, to properly resolve #include
-            ;; with quotes
-            source-inplace)
+            source)
   :error-patterns
   ((error line-start
           (message "In file included from") " " (file-name) ":" line ":"
@@ -4398,6 +4484,7 @@ Requires GCC 4.8 or newer.  See URL `https://gcc.gnu.org/'."
             "-fno-diagnostics-show-caret" ; Do not visually indicate the source location
             "-fno-diagnostics-show-option" ; Do not show the corresponding
                                         ; warning group
+            "-iquote" (eval (flycheck-c/c++-quoted-include-directory))
             (option "-std=" flycheck-gcc-language-standard concat)
             (option-flag "-fno-exceptions" flycheck-gcc-no-exceptions)
             (option-flag "-fno-rtti" flycheck-gcc-no-rtti)
@@ -4409,9 +4496,7 @@ Requires GCC 4.8 or newer.  See URL `https://gcc.gnu.org/'."
                   (pcase major-mode
                     (`c++-mode "c++")
                     (`c-mode "c")))
-            ;; We must stay in the same directory, to properly resolve #include
-            ;; with quotes
-            source-inplace)
+            source)
   :error-patterns
   ((error line-start
           (message "In file included from") " " (file-name) ":" line ":"
@@ -4908,19 +4993,19 @@ about warnings")
 Uses GCC's Fortran compiler gfortran.  See URL
 `https://gcc.gnu.org/onlinedocs/gfortran/'."
   :command ("gfortran"
-            (option "-std=" flycheck-gfortran-language-standard concat)
-            (option "-f" flycheck-gfortran-layout concat
-                    flycheck-option-gfortran-layout)
             "-fsyntax-only"
             "-fshow-column"
             "-fno-diagnostics-show-caret" ; Do not visually indicate the source location
             "-fno-diagnostics-show-option" ; Do not show the corresponding
                                         ; warning group
+            ;; Fortran has similar include processing as C/C++
+            "-iquote" (eval (flycheck-c/c++-quoted-include-directory))
+            (option "-std=" flycheck-gfortran-language-standard concat)
+            (option "-f" flycheck-gfortran-layout concat
+                    flycheck-option-gfortran-layout)
             (option-list "-W" flycheck-gfortran-warnings concat)
             (option-list "-I" flycheck-gfortran-include-path concat)
-            ;; We must stay in the same directory, to properly resolve #include
-            ;; with quotes
-            source-inplace)
+            source)
   :error-patterns
   ((error line-start (file-name) ":" line "." column ":\n"
           (= 3 (zero-or-more not-newline) "\n")
@@ -5858,19 +5943,22 @@ See URL `http://www.scala-lang.org/'."
   :error-patterns
   ((error line-start (file-name) ":" line ": error: " (message) line-end))
   :modes scala-mode
-  :next-checkers ((warnings-only . scalastyle)))
+  :next-checkers ((warnings-only . scala-scalastyle)))
 
-(flycheck-def-config-file-var flycheck-scalastylerc scalastyle nil
+(flycheck-def-config-file-var flycheck-scalastylerc scala-scalastyle nil
   :safe #'stringp
   :package-version '(flycheck . "0.20"))
 
-(flycheck-def-option-var flycheck-scalastyle-jar nil scalastyle
-  "The JAR file which implements scalastyle"
+(flycheck-def-option-var flycheck-scalastyle-jar nil scala-scalastyle
+  "The path to the main JAR file of Scalastyle.
+
+If this option is nil, or points to a non-existing file,
+`scala-scalastyle' can not be used."
   :type '(file :must-match t)
   :safe #'stringp
   :package-version '(flycheck . "0.20"))
 
-(flycheck-define-checker scalastyle
+(flycheck-define-checker scala-scalastyle
   "A Scala style checker using scalastyle.
 
 Note that this syntax checker is not used if
@@ -5894,7 +5982,7 @@ See URL `http://www.scalastyle.org'."
   (lambda () (and flycheck-scalastyle-jar flycheck-scalastylerc
                   (file-exists-p flycheck-scalastyle-jar)
                   (file-exists-p (flycheck-locate-config-file
-                                  flycheck-scalastylerc 'scalastyle)))))
+                                  flycheck-scalastylerc 'scala-scalastyle)))))
 
 (flycheck-def-option-var flycheck-scss-compass nil scss
   "Whether to enable the Compass CSS framework.

@@ -51,7 +51,11 @@
   "If PACKAGE can be upgraded, upgrade it and commit."
   (unless (update-packages-newest-package-installed-p package)
     (let ((package-desc (update-packages-get-package-desc package package-alist))
-          (git-executable (executable-find "git")))
+          (git-executable (executable-find "git"))
+          (cwd default-directory)
+          (package-dir (expand-file-name package-user-dir)))
+
+      (cd package-dir)
       (update-packages-upgrade-or-install-package package)
 
       ;; Stage changes to the packages directory.
@@ -61,7 +65,8 @@
                     nil
                     "add"
                     "-A"
-                    (expand-file-name package-user-dir))
+                    package-dir)
+
       ;; Commit changes.
       (call-process git-executable
                     nil
@@ -69,7 +74,8 @@
                     nil
                     "commit"
                     "-m"
-                    (concat "Update package " (package-desc-full-name package-desc))))))
+                    (concat "Update package " (package-desc-full-name package-desc)))
+      (cd cwd))))
 
 (defun update-packages-update-installed-packages ()
   "Update all installed packages that can be updated."

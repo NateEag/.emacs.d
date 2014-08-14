@@ -452,7 +452,7 @@ The following events are known:
 `mode-enabled'
      Check syntax immediately when `flycheck-mode' is enabled.
 
-Flycheck performs a syntax checks only on evens, which are
+Flycheck performs a syntax checks only on events, which are
 contained in this list.  For instance, if the value of this
 variable is `(mode-enabled save)', Flycheck will only check if
 the mode is enabled or the buffer was saved, but never after
@@ -1434,7 +1434,9 @@ FILE-NAME is nil, return `default-directory'."
             (setq base-directory (directory-file-name
                                   (file-name-directory base-directory))))
           (file-name-as-directory base-directory))
-      (if file-name (file-name-directory file-name) default-directory))))
+      (if file-name
+          (file-name-directory file-name)
+        (expand-file-name default-directory)))))
 
 
 ;;; Minibuffer tools
@@ -4581,7 +4583,8 @@ See URL `http://acrmp.github.io/foodcritic/'."
   :predicate
   (lambda ()
     (let ((parent-dir (file-name-directory
-                       (directory-file-name default-directory))))
+                       (directory-file-name
+                        (expand-file-name default-directory)))))
       (or
        ;; Chef CookBook
        ;; http://docs.opscode.com/chef/knife.html#id38

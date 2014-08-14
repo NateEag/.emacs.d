@@ -645,7 +645,8 @@
   "b" 'my-helm-for-files
   "s" 'helm-swoop
   "r" 'er/expand-region
-  "f" 'find-file)
+  "f" 'find-file
+  "w" 'save-buffer)
 
 (provide 'init)
 ;;; init.el ends here

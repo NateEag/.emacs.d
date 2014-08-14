@@ -6,7 +6,7 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Version: 20140721.1613
+;; Version: 20140812.1745
 ;;; X-Original-Version: 1.13.5
 
 (defconst php-mode-version-number "1.13.5"
@@ -759,7 +759,7 @@ PHP heredoc."
         (when (and (re-search-forward
                     (php-heredoc-end-re (match-string 0)) nil t)
                    (> (point) start))
-          (setq new-start (maybe)))))
+          (setq new-start maybe))))
     (goto-char end)
     (when (re-search-backward php-heredoc-start-re nil t)
       (if (re-search-forward

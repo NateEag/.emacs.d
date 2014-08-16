@@ -314,6 +314,9 @@
 ;; it.
 (key-chord-mode t)
 
+;; Activate evil-mode globally. Here's hoping this goes okay...
+(evil-mode)
+
 ;; Activate undo-tree-mode globally and diminish it.
 ;;
 ;; It seems to me that undo-tree-mode and backup-walker might be good candidates

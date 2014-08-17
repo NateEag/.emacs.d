@@ -146,8 +146,6 @@
 -Similarly, bash snippets would be nice:
  https://github.com/bmaland/yasnippet-sh-mode
 
--Look into binding Shift-Enter to whatever Meta-J is bound to.
-
 -I should have Twig/Django snippets. 'block' is the obvious one, but probably
  snippets for all the major bits of syntax would be handy, and someone out
  there must have written such things.
@@ -174,7 +172,7 @@
 
 -Next time I have to work against a DB server, install emacs-edbi:
  https://github.com/kiwanami/emacs-edbi
- Looks like it should beat the pants of sql-mode, even if it does depend on
+ Looks like it should beat the pants off sql-mode, even if it does depend on
  Perl.
 
 -sql-mode appears to be a far more powerful beast than I had ever really

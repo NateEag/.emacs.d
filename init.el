@@ -314,9 +314,6 @@
 ;; it.
 (key-chord-mode t)
 
-;; Activate evil-mode globally. Here's hoping this goes okay...
-(evil-mode)
-
 ;; Activate undo-tree-mode globally and diminish it.
 ;;
 ;; It seems to me that undo-tree-mode and backup-walker might be good candidates
@@ -333,6 +330,42 @@
 ;; installed.
 (global-auto-revert-mode)
 (diminish 'auto-revert-mode)
+
+(defun evil-mode-init ()
+  "My personal evil-mode configuration."
+
+  ;; Use regular emacs keybindings for insert-mode.
+  (setcdr evil-insert-state-map nil)
+
+  ;; Use 'jk' to go from insert-state to normal-state. It's easier to type than
+  ;; Escape.
+  (key-chord-define evil-insert-state-map "jk" 'evil-normal-state)
+
+  ;; Use ',' as my leader key.
+  (global-evil-leader-mode)
+  (evil-leader/set-leader ",")
+
+  ;; Turn on surround everywhere.
+  (global-evil-surround-mode)
+
+  ;; Turn on nerd-commenting. We'll see how I like it.
+  (evilnc-default-hotkeys)
+
+  ;; Set up my leader shortcuts.
+  ;;
+  ;; I'm not really sure what I'll want here long-term. I'm starting with a few
+  ;; of my regular shortcuts.
+  (evil-leader/set-key
+   "g" 'magit-status
+   "b" 'my-helm-for-files
+   "s" 'helm-swoop
+   "r" 'er/expand-region
+   "f" 'find-file
+   "w" 'save-buffer)
+
+  (message "calling the hook"))
+
+(eval-after-load 'evil (lambda () (evil-mode-init)))
 
 (add-hook 'magit-auto-revert-mode-hook
           (lambda () (diminish 'magit-auto-revert-mode)))
@@ -355,6 +388,12 @@
 
 (defun my-prog-mode-init ()
   "General setup for programming modes."
+
+  ;; "Emacs is a great OS, but a terrible text editor.
+  ;; Fortunately, it's possible to write a great text editor for a great OS..."
+  ;; -- some wag discussing evil-mode
+  (require 'evil)
+  (evil-local-mode)
 
   ;; Auto-fill comments, but not code.
   (comment-auto-fill)
@@ -442,6 +481,8 @@
 ;; Text-editing modes of various stripes.
 (defun text-mode-init ()
   "Configuration that is shared across my various text modes."
+
+  (evil-local-mode)
 
   (ac-ispell-setup)
   (ac-ispell-ac-setup)
@@ -616,40 +657,6 @@
 (add-hook 'after-init-hook
           (lambda ()
             (message (emacs-init-time))))
-
-;; Keybindings for evil-mode.
-;;
-;; A lot of my custom ones may wind up in here. We'll see if modal editing
-;; sticks for me.
-
-;; Use regular emacs keybindings for insert-mode.
-(setcdr evil-insert-state-map nil)
-
-;; Use 'jk' to go from insert-state to normal-state. It's easier to type than
-;; Escape.
-(key-chord-define evil-insert-state-map "jk" 'evil-normal-state)
-
-;; Use ',' as my leader key.
-(global-evil-leader-mode)
-(evil-leader/set-leader ",")
-
-;; Turn on surround everywhere.
-(global-evil-surround-mode)
-
-;; Turn on nerd-commenting. We'll see how I like it.
-(evilnc-default-hotkeys)
-
-;; Set up my leader shortcuts.
-;;
-;; I'm not really sure what I'll want here long-term. I'm starting with a few
-;; of my regular shortcuts.
-(evil-leader/set-key
-  "g" 'magit-status
-  "b" 'my-helm-for-files
-  "s" 'helm-swoop
-  "r" 'er/expand-region
-  "f" 'find-file
-  "w" 'save-buffer)
 
 (provide 'init)
 ;;; init.el ends here

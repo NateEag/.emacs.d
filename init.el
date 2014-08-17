@@ -472,11 +472,11 @@
   (when (locate-library "sql-indent")
     (load-library "sql-indent")))
 (add-hook 'sql-mode-hook 'load-sql-mode-accessories)
-(setq auto-mode-alist (cons '("\\.sql$" . sql-mode) auto-mode-alist))
+(add-auto-mode 'sql-mode "\\.sql$")
 
 ;; Shell script mode.
 (add-hook 'sh-mode-hook 'my-prog-mode-init)
-(add-to-list 'auto-mode-alist '("\\.bats$" . sh-mode))
+(add-auto-mode 'sh-mode "\\.bats$")
 
 ;; Text-editing modes of various stripes.
 (defun text-mode-init ()
@@ -496,8 +496,7 @@
 (add-hook 'text-mode-hook 'text-mode-init)
 
 ;; lilypond-mode - ripped from the lilypond repo.
-(add-to-list 'auto-mode-alist '("\\.ly$" . LilyPond-mode))
-(add-to-list 'auto-mode-alist '("\\.ily$" . LilyPond-mode))
+(add-auto-mode 'LilyPond-mode "\\.ly$" "\\.ily$")
 (add-hook 'LilyPond-mode-hook (lambda () (turn-on-font-lock)))
 
 ;; Commit message mode.
@@ -507,7 +506,7 @@
   (setq fill-column 72)
   (turn-on-flyspell))
 (add-hook 'git-commit-mode-hook 'git-commit-mode-hook)
-(add-to-list 'auto-mode-alist '("COMMIT_EDITMSG$" . git-commit-mode))
+(add-auto-mode 'git-commit-mode "COMMIT_EDITMSG$")
 
 ;; Unix config mode (mostly used for .git* files)
 (defun conf-unix-mode-init ()
@@ -516,16 +515,14 @@
 (add-hook 'conf-unix-mode-hook 'conf-unix-mode-init)
 
 ;; Set up gitconfig mode.
-(add-to-list 'auto-mode-alist '(".gitconfig$" . gitconfig-mode))
+(add-auto-mode 'gitconfig-mode ".gitconfig$")
 
 ;; reStructuredText mode.
-(setq auto-mode-alist (cons '("\\.rst$" . rst-mode) auto-mode-alist))
-(setq auto-mode-alist (cons '("\\.rest$" . rst-mode) auto-mode-alist))
+(add-auto-mode 'rst-mode "\\.rst$" "\\.rest$")
 (add-hook 'rst-mode-hook 'text-mode-init)
 
 ;; Markdown mode.
-(setq auto-mode-alist
-  (cons '("\\.md" . markdown-mode) auto-mode-alist))
+(add-auto-mode 'markdown-mode "\\.md")
 (add-hook 'markdown-mode-hook 'text-mode-init)
 
 ;; Emacs Lisp mode.
@@ -533,7 +530,7 @@
 
 ;; Python mode.
 (require 'jedi-force)
-(setq auto-mode-alist (cons '("\\.py$" . python-mode) auto-mode-alist))
+(add-auto-mode 'python-mode "\\.py$")
 (setq interpreter-mode-alist
       (cons '("python" . python-mode) interpreter-mode-alist))
 
@@ -545,7 +542,7 @@
 (require 'python-mode-accessories-init)
 
 ;; Include my PHP editing settings.
-(setq auto-mode-alist (cons '("\\.php$" . php-mode) auto-mode-alist))
+(add-auto-mode 'php-mode "\\.php$")
 (add-hook 'php-mode-hook 'php-mode-init)
 
 ;; At least get basic amenities in Java. I should probably get eclim up and
@@ -569,9 +566,9 @@
 
 ;; JavaScript Mode.
 (add-hook 'js2-mode-hook 'js-mode-init)
-(add-to-list 'auto-mode-alist '("\\.js\\'" . js2-mode))
+(add-auto-mode 'js2-mode "\\.js\\'")
 
-;; js2-mode works poorly for me on composer.json files.
+;; js2-mode works poorly for me on .json files.
 (add-hook 'js-mode-hook 'js-mode-init)
 (add-auto-mode 'js-mode
                "\\.json\\'"
@@ -580,7 +577,7 @@
 
 ;; xml-mode
 ;; IIS's 'config' files are actually XML.
-(add-to-list 'auto-mode-alist '("web.config$" . xml-mode))
+(add-auto-mode 'xml-mode "web.config$")
 (setq nxml-child-indent 4)
 (setq nxml-slash-auto-complete-flag t)
 (add-hook 'nxml-mode-hook (lambda () (emmet-mode t)))

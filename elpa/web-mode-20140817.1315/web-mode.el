@@ -3,7 +3,7 @@
 
 ;; Copyright 2011-2014 François-Xavier Bois
 
-;; Version: 9.0.67
+;; Version: 9.0.70
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -36,7 +36,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "9.0.67"
+(defconst web-mode-version "9.0.70"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -122,7 +122,7 @@
   :type 'boolean
   :group 'web-mode)
 
-(defcustom web-mode-enable-whitespaces nil
+(defcustom web-mode-enable-whitespace-fontification nil
   "Enable whitespaces."
   :type 'boolean
   :group 'web-mode)
@@ -151,6 +151,11 @@ See web-mode-part-face."
 
 (defcustom web-mode-enable-heredoc-fontification t
   "Enable heredoc fontification. The identifier should contain JS, JAVASCRIPT or HTML."
+  :type 'boolean
+  :group 'web-mode)
+
+(defcustom web-mode-enable-element-fontification nil
+  "Enable element fontification. The content of an element can have a face associated."
   :type 'boolean
   :group 'web-mode)
 
@@ -507,6 +512,21 @@ Must be used in conjunction with web-mode-enable-block-face."
   "Overlay face for folded."
   :group 'web-mode-faces)
 
+(defface web-mode-bold-face
+  '((t :weight bold))
+  "bold face."
+  :group 'web-mode-faces)
+
+(defface web-mode-italic-face
+  '((t :slant italic))
+  "bold face."
+  :group 'web-mode-faces)
+
+(defface web-mode-underline-face
+  '((t :underline t))
+  "bold face."
+  :group 'web-mode-faces)
+
 (defface web-mode-current-element-highlight-face
   '((t :background "#000000"))
   "Overlay face for element highlight."
@@ -583,7 +603,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("blade"       . ("laravel"))
     ("closure"     . ("soy"))
     ("ctemplate"   . ("mustache" "handlebars" "hapax" "ngtemplate" "ember" "kite" "meteor" "blaze"))
-    ("django"      . ("dtl" "twig" "swig" "jinja" "jinja2" "erlydtl" "liquid"))
+    ("django"      . ("dtl" "twig" "swig" "jinja" "jinja2" "erlydtl" "liquid" "clabango" "selmer"))
     ("dust"        . ("dustjs"))
     ("erb"         . ("eruby" "erubis" "ejs"))
     ("go"          . ("gtl"))
@@ -599,8 +619,8 @@ Must be used in conjunction with web-mode-enable-block-face."
   "Engine name aliases")
 
 (defvar web-mode-content-types
-  '(("css"        . "\\.css\\'\\|\\.css\\.erb\\'")
-    ("javascript" . "\\.js\\'\\|\\.js\\.erb\\'")
+  '(("css"        . "\\.\\(s?css\\|css\\.erb\\)\\'")
+    ("javascript" . "\\.\\(js\\|js\\.erb\\)\\'")
     ("json"       . "\\.\\(json\\|jsonld\\)\\'")
     ("jsx"        . "\\.jsx\\'")
     ("html"       . "."))
@@ -799,7 +819,10 @@ Must be used in conjunction with web-mode-enable-block-face."
                  ("cycle"   . ("{% cycle "   . " as  %}\n\n{% endcycle  %}"))
                  ("filter"  . ("{% filter "  . " %}\n\n{% endfilter %}"))
                  ("for"     . ("{% for "     . " in  %}\n\n{% endfor %}"))
-                 ("if"      . ("{% if "      . " %}\n\n{% endif %}"))))
+                 ("if"      . ("{% if "      . " %}\n\n{% endif %}"))
+                 ("ifequal" . ("{% ifequal " . " %}\n\n{% endifequal %}"))
+                 ("safe"    . ("{% safe "    . " %}\n\n{% endsafe %}"))
+                 ))
     (nil . (("html5" . ("<!doctype html>\n<html>\n<head>\n<title></title>\n<meta charset=\"utf-8\" />\n</head>\n<body>\n" . "\n</body>\n</html>"))
             ("table" . ("<table><tbody>\n<tr>\n<td>" . "</td>\n<td></td>\n</tr>\n</tbody></table>"))
             ("ul"    . ("<ul>\n<li>" . "</li>\n<li></li>\n</ul>"))))
@@ -856,6 +879,17 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("whitespaces"       . t)
     ("indentation"       . t))
   "Normalization rules")
+
+(defvar web-mode-element-faces
+  (list
+   '("h1"     . web-mode-underline-face)
+   '("h2"     . web-mode-underline-face)
+   '("h3"     . web-mode-underline-face)
+   '("h4"     . web-mode-underline-face)
+   '("title"  . web-mode-underline-face)
+   '("em"     . web-mode-italic-face)
+   '("strong" . web-mode-bold-face)
+   ))
 
 (defvar web-mode-comment-keywords
   (regexp-opt
@@ -915,7 +949,8 @@ Must be used in conjunction with web-mode-enable-block-face."
     (regexp-opt
      '("charset" "import" "media" "page" "font-face"
        "namespace" "supports" "document"
-       "keyframes" "-moz-keyframes" "-webkit-keyframes"))))
+       "keyframes" "-moz-keyframes" "-webkit-keyframes"
+       "mixin"))))
 
 (defvar web-mode-css-pseudo-classes
   (eval-when-compile
@@ -1128,7 +1163,7 @@ Must be used in conjunction with web-mode-enable-block-face."
    '("assets" "autoescape" "block" "blocktrans" "cache" "call" "comment"
      "elif" "else" "elseif" "elsif" "embed" "empty" "filter" "foreach" "for"
      "ifchanged" "ifequal" "ifnotequal" "if"
-     "macro" "draw" "random" "sandbox" "spaceless" "verbatim" "with")
+     "macro" "draw" "random" "safe" "sandbox" "spaceless" "verbatim" "with")
    t))
 
 (defvar web-mode-django-keywords
@@ -1209,6 +1244,7 @@ Must be used in conjunction with web-mode-enable-block-face."
 
 (defvar web-mode-selector-font-lock-keywords
   (list
+   '("$[[:alnum:]-]+" 0 'web-mode-css-variable-face)
    (cons (concat "@\\(" web-mode-css-at-rules "\\)\\>")
          '(1 'web-mode-css-at-rule-face))
    '("\\<\\(all\|braille\\|embossed\\|handheld\\|print\\|projection\\|screen\\|speech\\|tty\\|tv\\|and\\|or\\)\\>" 1 'web-mode-keyword-face)
@@ -1222,12 +1258,14 @@ Must be used in conjunction with web-mode-enable-block-face."
 (defvar web-mode-declaration-font-lock-keywords
   (list
    '("--[[:alnum:]-]+" 0 'web-mode-css-variable-face)
+   '("$[[:alnum:]-]+" 0 'web-mode-css-variable-face)
    (cons (concat "@\\(" web-mode-css-at-rules "\\)\\>") '(1 'web-mode-css-at-rule-face))
    '("url(\\([^)]+\\)" 1 'web-mode-string-face)
    '("\\([[:alpha:]-]+\\)[ ]?:" 1 'web-mode-css-property-name-face)
    '("\\([[:alpha:]-]+\\)[ ]?(" 1 'web-mode-css-function-face)
    '("#[[:alnum:]]\\{1,6\\}" 0 'web-mode-css-color-face t t)
    '("![ ]?important" 0 'web-mode-css-priority-face t t)
+   '("\\([[:alnum:]-.]+\\)[ ]+{" 1 'web-mode-css-selector-face)
    ))
 
 (defvar web-mode-html-font-lock-keywords
@@ -1883,7 +1921,7 @@ the environment as needed for ac-sources, right before they're used.")
               t t))
    )
 
-  (when web-mode-enable-whitespaces
+  (when web-mode-enable-whitespace-fontification
     (web-mode-whitespaces-on))
 
   (web-mode-guess-engine-and-content-type)
@@ -4187,7 +4225,10 @@ the environment as needed for ac-sources, right before they're used.")
              (web-mode-highlight-parts beg end)
              (web-mode-highlight-blocks beg end))
             ) ;cond
-           (when web-mode-enable-whitespaces
+           (when web-mode-enable-element-fontification
+             (web-mode-highlight-elements beg end)
+             )
+           (when web-mode-enable-whitespace-fontification
              (web-mode-highlight-whitespaces beg end))
            ))))))
 
@@ -4925,6 +4966,42 @@ the environment as needed for ac-sources, right before they're used.")
     ;;    (message "%S" tags)
     ))
 
+(defun web-mode-highlight-elements (beg end)
+  "web-mode-highlight-elements"
+  (save-excursion
+    (goto-char beg)
+    (let ((continue t) (i 0) ctx face)
+      (setq continue (or (get-text-property (point) 'tag-beg)
+                         (web-mode-tag-next)))
+      (while continue
+        (cond
+         ;;         (t (setq continue nil))
+         ((> (setq i (1+ i)) 1000)
+          (setq continue nil)
+          (message "too much tags")
+          )
+         ((> (point) end)
+          (setq continue nil)
+          )
+         ((not (get-text-property (point) 'tag-beg))
+          (setq continue nil))
+         ((eq (get-text-property (point) 'tag-type) 'start)
+          (when (and (setq ctx (web-mode-element-boundaries (point)))
+                     (<= (car (cdr ctx)) end)
+                     (setq face (cdr (assoc (get-text-property (point) 'tag-name) web-mode-element-faces))))
+            ;; (font-lock-prepend-text-property
+            ;; (put-text-property
+            (font-lock-prepend-text-property (1+ (cdr (car ctx))) (car (cdr ctx))
+                                             'font-lock-face face))
+;;          (message "%S %S %S" (point) (get-text-property (point) 'tag-name) (web-mode-element-boundaries (point)))
+          )
+         ) ;cond
+        (when (not (web-mode-tag-next))
+          (setq continue nil)
+          )
+        ) ;while
+      )))
+
 (defun web-mode-highlight-whitespaces (beg end)
   "Scan whitespaces."
   (save-excursion
@@ -4938,7 +5015,7 @@ the environment as needed for ac-sources, right before they're used.")
 (defun web-mode-whitespaces-show ()
   "Toggle whitespaces."
   (interactive)
-  (if web-mode-enable-whitespaces
+  (if web-mode-enable-whitespace-fontification
       (web-mode-whitespaces-off)
     (web-mode-whitespaces-on))
   (web-mode-scan-buffer))
@@ -4950,14 +5027,14 @@ the environment as needed for ac-sources, right before they're used.")
     (global-hl-line-mode -1))
   (when web-mode-display-table
     (setq buffer-display-table web-mode-display-table))
-  (setq web-mode-enable-whitespaces t))
+  (setq web-mode-enable-whitespace-fontification t))
 
 (defun web-mode-whitespaces-off ()
   "Hide whitespaces."
   (when web-mode-hl-line-mode-flag
     (global-hl-line-mode 1))
   (setq buffer-display-table nil)
-  (setq web-mode-enable-whitespaces nil))
+  (setq web-mode-enable-whitespace-fontification nil))
 
 (defun web-mode-buffer-indent ()
   "Indent all buffer."
@@ -5065,6 +5142,8 @@ the environment as needed for ac-sources, right before they're used.")
       (when (setq elt (cdr (assoc "indentation" rules)))
         (web-mode-buffer-indent))
       )))
+
+;;---- INDENTATION -------------------------------------------------------------
 
 (defun web-mode-block-previous-live-line ()
   "Return previous non blank/comment/string line and return this line (trimmed)."
@@ -6643,6 +6722,11 @@ the environment as needed for ac-sources, right before they're used.")
            (not (member web-mode-expand-previous-state '("html-attr" "html-tag"))))
       (web-mode-attribute-select pos)
       (setq web-mode-expand-previous-state "html-attr"))
+
+     ((and (eq (get-text-property pos 'tag-type) 'comment)
+           (not (member web-mode-expand-previous-state '("html-tag" "html-comment" "html-elt" "html-parent"))))
+      (web-mode-tag-select)
+      (setq web-mode-expand-previous-state "html-comment"))
 
      ((and (get-text-property pos 'tag-name)
            (not (member web-mode-expand-previous-state '("html-tag" "html-elt" "html-parent"))))

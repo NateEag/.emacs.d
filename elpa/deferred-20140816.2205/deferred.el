@@ -3,7 +3,7 @@
 ;; Copyright (C) 2010, 2011, 2012  SAKURAI Masashi
 
 ;; Author: SAKURAI Masashi <m.sakurai at kiwanami.net>
-;; Version: 20140609.1917
+;; Version: 20140816.2205
 ;; X-Original-Version: 0.3.2
 ;; Keywords: deferred, async
 ;; URL: https://github.com/kiwanami/emacs-deferred
@@ -97,6 +97,17 @@
      (lexical-let (self)
        (setq self (lambda( ,@args ) ,@body))
        (funcall self ,@argsyms)))))
+
+(defmacro* deferred:try (d &key catch finally)
+  "Try-catch-finally macro. This macro simulates the
+try-catch-finally block asynchronously. CATCH and FINALLY can be
+nil. Because of asynchrony, this macro does not ensure that the
+task FINALLY should be called."
+  (let ((chain 
+         (if catch `((deferred:error it ,catch)))))
+    (when finally
+      (setq chain (append chain `((deferred:watch it ,finally)))))
+    `(deferred:$ ,d ,@chain)))
 
 (defun deferred:setTimeout (f msec)
   "[internal] Timer function that emulates the `setTimeout' function in JS."
@@ -716,17 +727,6 @@ deferred task and return the TIMEOUT-FORM."
      (deferred:nextc (deferred:wait ,timeout-msec)
        (lambda (x) ,timeout-form))
      ,d))
-
-(defmacro* deferred:try (d &key catch finally)
-  "Try-catch-finally macro. This macro simulates the
-try-catch-finally block asynchronously. CATCH and FINALLY can be
-nil. Because of asynchrony, this macro does not ensure that the
-task FINALLY should be called."
-  (let ((chain 
-         (if catch `((deferred:error it ,catch)))))
-    (when finally
-      (setq chain (append chain `((deferred:watch it ,finally)))))
-    `(deferred:$ ,d ,@chain)))
 
 
 

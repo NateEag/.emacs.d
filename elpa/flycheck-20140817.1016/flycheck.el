@@ -1434,7 +1434,9 @@ FILE-NAME is nil, return `default-directory'."
             (setq base-directory (directory-file-name
                                   (file-name-directory base-directory))))
           (file-name-as-directory base-directory))
-      (if file-name (file-name-directory file-name) default-directory))))
+      (if file-name
+          (file-name-directory file-name)
+        (expand-file-name default-directory)))))
 
 
 ;;; Minibuffer tools
@@ -1483,6 +1485,7 @@ https://github.com/d11wtq/grizzl")))
     ((pred stringp) t)
     ((or `source `source-inplace `source-original) t)
     ((or `temporary-directory `temporary-file-name) t)
+    (`null-device t)
     (`(config-file ,option-name ,config-file-var)
      (and (stringp option-name)
           (symbolp config-file-var)))
@@ -2042,6 +2045,18 @@ STRING
      Return a unique temporary filename.  The file is *not*
      created.
 
+     To ignore the output of syntax checkers, try `null-device'
+     first.
+
+`null-device'
+     Return the value of `null-device', i.e the system null
+     device.
+
+     Use this option to ignore the output of a syntax checker.
+     If the syntax checker cannot handle the null device, or
+     won't write to an existing file, try `temporary-file-name'
+     instead.
+
 `(config-file OPTION VARIABLE [PREPEND-FN])'
      Search the configuration file bound to VARIABLE with
      `flycheck-locate-config-file' and return a list of arguments
@@ -2113,6 +2128,7 @@ are substituted within the body of cells!"
     (`temporary-file-name
      (let ((directory (flycheck-temp-dir-system)))
        (list (make-temp-name (expand-file-name "flycheck" directory)))))
+    (`null-device (list null-device))
     (`(config-file ,option-name ,file-name-var)
      (-when-let* ((value (symbol-value file-name-var))
                   (file-name (flycheck-locate-config-file value checker)))
@@ -4479,7 +4495,6 @@ warnings."
 
 Requires GCC 4.8 or newer.  See URL `https://gcc.gnu.org/'."
   :command ("gcc"
-            "-fsyntax-only"
             "-fshow-column"
             "-fno-diagnostics-show-caret" ; Do not visually indicate the source location
             "-fno-diagnostics-show-option" ; Do not show the corresponding
@@ -4496,7 +4511,11 @@ Requires GCC 4.8 or newer.  See URL `https://gcc.gnu.org/'."
                   (pcase major-mode
                     (`c++-mode "c++")
                     (`c-mode "c")))
-            source)
+            source
+            ;; GCC performs full checking only when actually compiling, so
+            ;; `-fsyntax-only' is not enough. Just let it generate assembly
+            ;; code.
+            "-S" "-o" null-device)
   :error-patterns
   ((error line-start
           (message "In file included from") " " (file-name) ":" line ":"
@@ -4581,7 +4600,8 @@ See URL `http://acrmp.github.io/foodcritic/'."
   :predicate
   (lambda ()
     (let ((parent-dir (file-name-directory
-                       (directory-file-name default-directory))))
+                       (directory-file-name
+                        (expand-file-name default-directory)))))
       (or
        ;; Chef CookBook
        ;; http://docs.opscode.com/chef/knife.html#id38
@@ -5084,7 +5104,7 @@ See URL `http://golang.org/cmd/go/' and URL
   "A Go syntax and type checker using the `go build' command.
 
 See URL `http://golang.org/cmd/go'."
-  :command ("go" "build" "-o" temporary-file-name)
+  :command ("go" "build" "-o" null-device)
   :error-patterns
   ((error line-start (file-name) ":" line ":"
           (optional column ":") " "
@@ -6117,7 +6137,7 @@ See URL `http://www.ctan.org/pkg/lacheck'."
   "A Texinfo syntax checker using makeinfo.
 
 See URL `http://www.gnu.org/software/texinfo/'."
-  :command ("makeinfo" "-o" temporary-file-name source-inplace)
+  :command ("makeinfo" "-o" null-device source-inplace)
   :error-patterns
   ((warning line-start (file-name) ":"
             line (optional ":" column) ": "

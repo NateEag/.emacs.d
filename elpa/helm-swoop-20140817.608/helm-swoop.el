@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2013 by Shingo Fukuyama
 
-;; Version: 20140502.913
+;; Version: 20140817.608
 ;; X-Original-Version: 1.4
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
@@ -155,9 +155,10 @@
     (delq nil $map))
   "Keymap for helm-swoop")
 
-(defvar helm-swoop-pre-input-function
+(defcustom helm-swoop-pre-input-function
   (lambda () (thing-at-point 'symbol))
-  "This function can pre-input keywords when helm-swoop invoked")
+  "This function can pre-input keywords when helm-swoop invoked"
+  :group 'helm-swoop :type 'function)
 
 (defun helm-swoop-pre-input-optimize ($query)
   (when $query

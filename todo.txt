@@ -26,6 +26,9 @@
 -File feature request to flycheck for being able to run checkers while in
  web-mode. May well get rejected, because supporting this would be pretty hard.
 
+-Tweak md-readme.el so that author/created/requires lines are headers *without*
+ colons, whose bodies are the text following the colon-delimited field names.
+
 -Find a way to auto-include skewer on page refresh without having to include it
  in a codebase. I'm thinking a Chrome plugin for "refresh and load
  bookmarklet", or something along those lines.

@@ -25,6 +25,8 @@
 (defun web-mode-init ()
   "My web-mode config."
 
+  ;; web-mode specific config, to make indentation and comments behave the way
+  ;; I expect.
   (setq web-mode-markup-indent-offset 4)
   (setq web-mode-css-indent-offset 4)
   (setq web-mode-code-indent-offset 4)
@@ -35,16 +37,15 @@
   (setq web-mode-script-padding 0)
   (setq web-mode-block-padding 0)
 
+  ;; Start with the usual prog-mode setup. Things'll get bumpier, though,
+  ;; because web-mode is an odd beast.
+  (my-prog-mode-init)
+
+  ;; Following is the mountain of web-mode-specific setup.
+
   (skewer-html-mode)
 
-  (comment-auto-fill)
-
-  (yas-minor-mode)
   (yas-activate-extra-mode 'php-mode)
-
-  (smartparens-mode)
-
-  (auto-complete-mode)
 
   (emmet-mode)
 
@@ -63,10 +64,6 @@
   (setq web-mode-ac-sources-alist
         '(("php" . (ac-source-yasnippet ac-source-php-auto-yasnippets))
           ("html" . (ac-source-emmet-html-aliases ac-source-emmet-html-snippets))
-          ;; DEBUG It would be nice to have an ac-source for CSS property names
-          ;; as well as values. Since auto-complete already has the alist
-          ;; mapping property names to legal values, I should add one that uses
-          ;; the keys and issue a merge request.
           ("css" . (ac-source-css-property
                     ac-source-css-property-names
                     ac-source-emmet-css-snippets))))

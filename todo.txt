@@ -11,11 +11,14 @@
 
 -Add php-auto-yasnippet-style function params to tern.js.
 
+-Add transpose operator/command to evil. I just want to be able to swap various
+ text objects/motions cleanly - something like 't{' rather than 'd{}P'.
+
+-Finish getting tagedit to work with web-mode.
+
 -Make comment auto-fill work with C++-style comments in js2-mode, not just
  C-style. Turns out it does - it's just that js2-mode thinks single-line
  comments are only block comments if there's a trailing single-line comment.
-
--Finish getting tagedit to work with web-mode.
 
 -Figure out why mo-git-blame isn't using mo-git-blame-git-blame-args.
 
@@ -23,11 +26,11 @@
  Super key and start using Super for personal keybindings. Should be faster
  than C-c <key>.
 
--File feature request to flycheck for being able to run checkers while in
- web-mode. May well get rejected, because supporting this would be pretty hard.
-
 -Tweak md-readme.el so that author/created/requires lines are headers *without*
  colons, whose bodies are the text following the colon-delimited field names.
+
+-File feature request to flycheck for being able to run checkers while in
+ web-mode. May well get rejected, because supporting this would be pretty hard.
 
 -Find a way to auto-include skewer on page refresh without having to include it
  in a codebase. I'm thinking a Chrome plugin for "refresh and load

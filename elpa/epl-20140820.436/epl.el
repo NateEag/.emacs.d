@@ -5,7 +5,7 @@
 ;; Author: Sebastian Wiesner <swiesner@lunaryorn.com>
 ;; Maintainer: Johan Andersson <johan.rejeep@gmail.com>
 ;;     Sebastian Wiesner <swiesner@lunaryorn.com>
-;; Version: 20140620.218
+;; Version: 20140820.436
 ;; X-Original-Version: 0.7-cvs
 ;; Package-Requires: ((cl-lib "0.3"))
 ;; Keywords: convenience
@@ -446,7 +446,7 @@ no package with NAME is installed."
   (car (epl--find-package-in-list name package-alist)))
 
 (defun epl-available-packages ()
-  "Get all packages available for installed.
+  "Get all packages available for installation.
 
 Return a list of package objects."
   (apply #'append (mapcar #'epl--parse-package-list-entry

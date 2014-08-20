@@ -182,6 +182,7 @@ attention to case differences."
     chef-foodcritic
     coffee
     coffee-coffeelint
+    coq
     css-csslint
     d-dmd
     elixir
@@ -308,7 +309,6 @@ information about file variables.")
 
 (defcustom flycheck-locate-config-file-functions
   '(flycheck-locate-config-file-absolute-path
-    flycheck-locate-config-file-projectile
     flycheck-locate-config-file-ancestor-directories
     flycheck-locate-config-file-home)
   "Functions to locate syntax checker configuration files.
@@ -2272,24 +2272,6 @@ _CHECKER is ignored."
   (unless (string= (file-name-nondirectory filepath) filepath)
     (expand-file-name filepath)))
 
-(defun flycheck-locate-config-file-projectile (filename _checker)
-  "Locate a configuration FILENAME in a projectile project.
-
-If the Projectile library (see URL
-`https://github.com/bbatsov/projectile') is available and the
-current buffer is within a Projectile project, search FILENAME in
-the root directory of the project.  If the file is found, return
-its absolute path.
-
-Otherwise return nil.
-
-_CHECKER is ignored."
-  (when (fboundp 'projectile-project-root)
-    (-when-let* ((root (ignore-errors (projectile-project-root)))
-                 (filepath (expand-file-name filename root)))
-      (when (file-exists-p filepath)
-        filepath))))
-
 (defun flycheck-locate-config-file-ancestor-directories (filename _checker)
   "Locate a configuration FILENAME in ancestor directories.
 
@@ -2315,7 +2297,6 @@ directory, or nil otherwise."
 (mapc (apply-partially #'custom-add-frequent-value
                        'flycheck-locate-config-file-functions)
       '(flycheck-locate-config-file-absolute-path
-        flycheck-locate-config-file-projectile
         flycheck-locate-config-file-ancestor-directories
         flycheck-locate-config-file-home))
 
@@ -4639,6 +4620,39 @@ See URL `http://www.coffeelint.org/'."
   :error-parser flycheck-parse-checkstyle
   :modes coffee-mode)
 
+(flycheck-define-checker coq
+  "A Coq syntax checker using the Coq compiler.
+
+See URL `http://coq.inria.fr/'."
+  ;; We use coqtop in batch mode, because coqc is picky about file names.
+  :command ("coqtop" "-batch" "-load-vernac-source" source)
+  :error-patterns
+  ((error line-start "File \"" (file-name) "\", line " line
+          ;; TODO: Parse the end column, once Flycheck supports that
+          ", characters " column "-" (one-or-more digit) ":\n"
+          (or "Syntax error: " "Error: ")
+          ;; Most Coq error messages span multiple lines, and end with a dot.
+          ;; There are simple one-line messages, too, though.
+          (message (or (and (one-or-more (or not-newline "\n")) ".")
+                       (one-or-more not-newline)))
+          line-end))
+  :error-filter
+  (lambda (errors)
+    (dolist (err errors)
+      ;; Coq uses zero-based indexing for columns, so we need to fix column
+      ;; indexes.  Also, delete trailing whitespace from all lines in the error
+      ;; message
+      (let ((column (flycheck-error-column err))
+            (message (flycheck-error-message err)))
+        (setf (flycheck-error-column err) (1+ column))
+        (with-temp-buffer
+          (insert message)
+          (delete-trailing-whitespace)
+          (setf (flycheck-error-message err)
+                (buffer-substring-no-properties (point-min) (point-max))))))
+    (flycheck-sanitize-errors errors))
+  :modes coq-mode)
+
 (flycheck-define-checker css-csslint
   "A CSS syntax and style checker using csslint.
 
@@ -4678,15 +4692,20 @@ Relative paths are relative to the file being checked."
 (flycheck-define-checker d-dmd
   "A D syntax checker using the DMD compiler.
 
-See URL `http://dlang.org/'."
-  :command ("dmd" "-debug" "-o-"
+Requires DMD 2.066 or newer.  See URL `http://dlang.org/'."
+  :command ("dmd"
+            "-debug"                    ; Compile in debug mode
+            "-o-"                       ; Don't generate an object file
+            "-vcolumns"                 ; Add columns in output
             "-wi" ; Compilation will continue even if there are warnings
             (eval (concat "-I" (flycheck-d-base-directory)))
             (option-list "-I" flycheck-dmd-include-path concat)
             source)
   :error-patterns
-  ((error line-start (file-name) "(" line "): Error: " (message) line-end)
-   (warning line-start (file-name) "(" line "): "
+  ((error line-start
+          (file-name) "(" line "," column "): Error: " (message)
+          line-end)
+   (warning line-start (file-name) "(" line "," column "): "
             (or "Warning" "Deprecation") ": " (message) line-end))
   :modes d-mode)
 
@@ -4941,12 +4960,7 @@ See URL `http://www.kuwata-lab.com/erubis/'."
   :command ("erubis" "-z" source)
   :error-patterns
   ((error line-start  (file-name) ":" line ": " (message) line-end))
-  :predicate
-  (lambda ()
-    (or (memq major-mode '(html-erb-mode rhtml-mode))
-        (and (buffer-file-name)
-             (member (file-name-extension (buffer-file-name))
-                     '("erb" "rhtml"))))))
+  :modes (html-erb-mode rhtml-mode))
 
 (flycheck-def-option-var flycheck-gfortran-include-path nil fortran-gfortran
   "A list of include directories for GCC Fortran.
@@ -5301,7 +5315,7 @@ See URL `https://github.com/w3c/tidy-html5'."
             "line " line
             " column " column
             " - Warning: " (message) line-end))
-  :modes (html-mode nxhtml-mode web-mode))
+  :modes (html-mode nxhtml-mode))
 
 (flycheck-def-config-file-var flycheck-jshintrc javascript-jshint ".jshintrc"
   :safe #'stringp)
@@ -5946,7 +5960,7 @@ See URL `http://sass-lang.com'."
    (warning line-start "WARNING on line " line " of " (file-name)
             ":" (optional "\r") "\n" (message) line-end)
    (error line-start
-          "Syntax error: "
+          (or "Syntax error: " "Error: ")
           (message (one-or-more not-newline)
                    (zero-or-more "\n"
                                  (one-or-more " ")
@@ -6025,7 +6039,7 @@ See URL `http://sass-lang.com'."
    (warning line-start "WARNING on line " line " of " (file-name)
             ":" (optional "\r") "\n" (message) line-end)
    (error line-start
-          "Syntax error: "
+          (or "Syntax error: " "Error: ")
           (message (one-or-more not-newline)
                    (zero-or-more "\n"
                                  (one-or-more " ")

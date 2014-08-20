@@ -1,4 +1,4 @@
-This is /tmp/flycheck5180QEW/flycheck-20140817.1016/flycheck.info,
+This is /tmp/flycheck2448VWJ/flycheck-20140819.1136/flycheck.info,
 produced by makeinfo version 4.13 from
 /home/melpa/melpa/working/flycheck/doc/flycheck.texi.
 
@@ -503,6 +503,7 @@ Index
 * coffee-coffeelint; Emacs Lisp Flycheck syntax checker: Coffeescript.
                                                               (line  18)
 * coffee; Emacs Lisp Flycheck syntax checker: Coffeescript.   (line   6)
+* coq; Emacs Lisp Flycheck syntax checker: Coq.               (line   6)
 * css-csslint; Emacs Lisp Flycheck syntax checker: CSS.       (line   6)
 * d-dmd; Emacs Lisp Flycheck syntax checker: D.               (line   6)
 * disabled syntax checker:               Glossary.            (line  12)

@@ -1,5 +1,5 @@
 ;;; md-readme.el --- Markdown-formatted READMEs for your ELisp
-;; Version: 20091123.23
+;; Version: 20140819.415
 
 ;; Copyright (C) 2009 Thomas Kappler
 
@@ -92,6 +92,16 @@ This function transforms the header in-place, so be sure to
 extract the header first with mdr-extract-header and call it on
 the copy."
   (goto-char (point-min))
+  ;; Replace "separator" lines of just semicolons
+  (replace-regexp "
+;;;;* *
+" "\n")
+  (goto-char (point-min))
+  ;; Collapse multiple blank comment lines to just one
+  (replace-regexp "
+\\(;; *\n\\)\\{2,\\}" "
+\\1")
+  (goto-char (point-min))
   (mdr-find-and-replace-disclaimer)
   (while (< (line-number-at-pos) (line-number-at-pos (point-max)))
     (when (looking-at ";;")
@@ -107,6 +117,7 @@ the copy."
 		 (when (looking-at ":")
 		   (delete-char 1)))))
 	    ((mdr-looking-at-list-p) (insert "*"))
+            ((looking-at "\n") nil) ; Nothing after the semicolons
 	    (t (delete-char 1)))) ; whitespace
     (forward-line 1)))
 

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil nil ("md-readme.el") (21490 47778 30188 0))
+;;;### (autoloads nil nil ("md-readme.el") (21492 38601 583901 0))
 
 ;;;***
 

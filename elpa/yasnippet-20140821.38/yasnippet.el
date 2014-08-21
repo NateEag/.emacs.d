@@ -130,8 +130,7 @@
 ;;; Code:
 
 (require 'cl)
-(eval-and-compile
-  (require 'cl-lib))
+(require 'cl-lib)
 (require 'easymenu)
 (require 'help-mode)
 
@@ -151,21 +150,25 @@
   "Yet Another Snippet extension"
   :group 'editing)
 
-(defvar yas--load-file-name load-file-name
-  "Store the filename that yasnippet.el was originally loaded from.")
+(defvar yas-installed-snippets-dir nil)
+(setq yas-installed-snippets-dir
+      (when load-file-name
+        (concat (file-name-directory load-file-name) "snippets")))
 
 (defcustom yas-snippet-dirs (remove nil
                                     (list "~/.emacs.d/snippets"
-                                          (when yas--load-file-name
-                                            (concat (file-name-directory yas--load-file-name) "snippets"))))
-  "Directory or list of snippet dirs for each major mode.
+                                          'yas-installed-snippets-dir))
+  "List of top-level snippet directories.
 
-The directory where user-created snippets are to be stored.  Can
-also be a list of directories.  In that case, when used for
-bulk (re)loading of snippets (at startup or via
-`yas-reload-all'), directories appearing earlier in the list
-shadow other dir's snippets.  Also, the first directory is taken
-as the default for storing the user's new snippets."
+Each element, a string or a symbol whose value is a string,
+designates a top-level directory where per-mode snippet
+directories can be found.
+
+Elements appearing earlier in the list shadow later elements'
+snippets.
+
+The first directory is taken as the default for storing snippet's
+created with `yas-new-snippet'. "
   :type '(choice (string :tag "Single directory (string)")
                  (repeat :args (string) :tag "List of directories (strings)"))
   :group 'yasnippet
@@ -179,8 +182,18 @@ as the default for storing the user's new snippets."
                (yas-reload-all)))))
 
 (defun yas-snippet-dirs ()
-  "Return `yas-snippet-dirs' (which see) as a list."
-  (if (listp yas-snippet-dirs) yas-snippet-dirs (list yas-snippet-dirs)))
+  "Return variable `yas-snippet-dirs' as list of strings."
+  (cl-loop for e in (if (listp yas-snippet-dirs)
+                        yas-snippet-dirs
+                      (list yas-snippet-dirs))
+           collect
+           (cond ((stringp e) e)
+                 ((and (symbolp e)
+                       (boundp e)
+                       (stringp (symbol-value e)))
+                  (symbol-value e))
+                 (t
+                  (error "[yas] invalid element %s in `yas-snippet-dirs'" e)))))
 
 (defvaralias 'yas/root-directory 'yas-snippet-dirs)
 
@@ -1243,12 +1256,14 @@ Returns (TEMPLATES START END). This function respects
                            'again)
                  (setq methods (cdr methods))))
               (t
-               (error "[yas] invalid element in `yas-key-syntaxes'")))
-        (setq templates
-              (mapcan #'(lambda (table)
-                          (yas--fetch table (buffer-substring-no-properties (point)
-                                                                            original)))
-                      (yas--get-snippet-tables))))
+               (yas--warning "Warning invalid element %s in `yas-key-syntaxes'" method)))
+        (let ((possible-key (buffer-substring-no-properties (point) original)))
+          (save-excursion
+            (goto-char original)
+            (setq templates
+                  (mapcan #'(lambda (table)
+                              (yas--fetch table possible-key))
+                          (yas--get-snippet-tables))))))
       (when templates
         (list templates (point) original)))))
 
@@ -1736,36 +1751,44 @@ With prefix argument USE-JIT do jit-loading of snippets."
          current-prefix-arg t))
   (unless yas-snippet-dirs
     (setq yas-snippet-dirs top-level-dir))
-  (dolist (dir (yas--subdirs top-level-dir))
-    (let* ((major-mode-and-parents (yas--compute-major-mode-and-parents
-                                    (concat dir "/dummy")))
-           (mode-sym (car major-mode-and-parents))
-           (parents (cdr major-mode-and-parents)))
-      ;; Attention: The parents and the menus are already defined
-      ;; here, even if the snippets are later jit-loaded.
-      ;;
-      ;; * We need to know the parents at this point since entering a
-      ;;   given mode should jit load for its parents
-      ;;   immediately. This could be reviewed, the parents could be
-      ;;   discovered just-in-time-as well
-      ;;
-      ;; * We need to create the menus here to support the `full'
-      ;;   option to `yas-use-menu' (all known snippet menus are shown to the user)
-      ;;
-      (yas--define-parents mode-sym parents)
-      (yas--menu-keymap-get-create mode-sym)
-      (let ((fun `(lambda () ;; FIXME: Simulating lexical-binding.
-                    (yas--load-directory-1 ',dir ',mode-sym))))
-        (if (and use-jit
-                 (not (some #'(lambda (buffer)
-                                (with-current-buffer buffer
-                                  ;; FIXME: Shouldn't this use derived-mode-p?
-                                  (when (eq major-mode mode-sym)
-                                    (yas--message 3 "Discovered there was already %s in %s" buffer mode-sym)
-                                    t)))
-                            (buffer-list))))
-            (yas--schedule-jit mode-sym fun)
-            (funcall fun)))))
+  (let ((impatient-buffers))
+    (dolist (dir (yas--subdirs top-level-dir))
+      (let* ((major-mode-and-parents (yas--compute-major-mode-and-parents
+                                      (concat dir "/dummy")))
+             (mode-sym (car major-mode-and-parents))
+             (parents (cdr major-mode-and-parents)))
+        ;; Attention: The parents and the menus are already defined
+        ;; here, even if the snippets are later jit-loaded.
+        ;;
+        ;; * We need to know the parents at this point since entering a
+        ;;   given mode should jit load for its parents
+        ;;   immediately. This could be reviewed, the parents could be
+        ;;   discovered just-in-time-as well
+        ;;
+        ;; * We need to create the menus here to support the `full'
+        ;;   option to `yas-use-menu' (all known snippet menus are shown to the user)
+        ;;
+        (yas--define-parents mode-sym parents)
+        (yas--menu-keymap-get-create mode-sym)
+        (let ((fun `(lambda () ;; FIXME: Simulating lexical-binding.
+                      (yas--load-directory-1 ',dir ',mode-sym))))
+          (if use-jit
+              (yas--schedule-jit mode-sym fun)
+            (funcall fun)))
+        ;; Look for buffers that are already in `mode-sym', and so
+        ;; need the new snippets immediately...
+        ;; 
+        (when use-jit 
+          (cl-loop for buffer in (buffer-list)
+                   do (with-current-buffer buffer
+                        (when (eq major-mode mode-sym)
+                          (yas--message 3 "Discovered there was already %s in %s" buffer mode-sym)
+                          (push buffer impatient-buffers)))))))
+    ;; ...after TOP-LEVEL-DIR has been completely loaded, call
+    ;; `yas--load-pending-jits' in these impatient buffers.
+    ;; 
+    (cl-loop for buffer in impatient-buffers
+             do (with-current-buffer buffer (yas--load-pending-jits))))
   (when interactive
     (yas--message 3 "Loaded snippets from %s." top-level-dir)))
 
@@ -4365,6 +4388,11 @@ object satisfying `yas--field-p' to restrict the expansion to.")))
   "When LEVEL is above `yas-verbosity-level', log MESSAGE and ARGS."
   (when (> yas-verbosity level)
     (message "%s" (apply #'yas--format message args))))
+
+(defun yas--warning (format-control &rest format-args)
+  (let ((msg (apply #'format format-control format-args)))
+    (display-warning 'yasnippet msg :warning)
+    (yas--message 1 msg)))
 
 (defun yas--format (format-control &rest format-args)
   (apply #'format (concat "[yas] " format-control) format-args))

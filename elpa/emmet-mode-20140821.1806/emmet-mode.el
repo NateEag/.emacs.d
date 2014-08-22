@@ -5,7 +5,7 @@
 ;; Copyright (C) 2013-     Shin Aoyama        (@smihica      https://github.com/smihica)
 ;; Copyright (C) 2009-2012 Chris Done
 
-;; Version: 20140818.1609
+;; Version: 20140821.1806
 ;; X-Original-Version: 1.0.10
 ;; Author: Shin Aoyama <smihica@gmail.com>
 ;; URL: https://github.com/smihica/emmet-mode
@@ -3710,36 +3710,13 @@ See also `emmet-expand-line'."
   (emmet-preview-abort))
 
 (defun emmet-html-next-insert-point (str)
-  (let ((intag t)    (instring nil)
-        (last-c nil) (c nil)
-        (rti 0))
-    (loop for i to (1- (length str)) do
-          (setq last-c c)
-          (setq c (elt str i))
-          (case c
-            (?\" (if (not (= last-c ?\\))
-                     (progn (setq instring (not instring))
-                            (when (and emmet-move-cursor-between-quotes
-                                       (not instring)
-                                       (= last-c ?\"))
-                              (return i)))))
-            (?>  (if (not instring)
-                     (if intag
-                         (if (= last-c ?/) (return (1+ i))
-                           (progn (setq intag nil)
-                                  (setq rti (1+ i))))
-                       (return i)))) ;; error?
-            (?<  (if (and (not instring) (not intag))
-                     (setq intag t)))
-            (?/  (if (and intag
-                          (not instring)
-                          (= last-c ?<))
-                     (return rti)))
-            (t
-             (if (memq c '(?\t ?\n ?\r ?\s))
-                 (progn (setq c last-c))
-               (if (and (not intag) (not instring))
-                   (return rti))))))))
+  (with-temp-buffer
+    (insert str)
+    (goto-char (point-min))
+    (or
+     (emmet-aif (emmet-go-to-edit-point 1 t) (- it 1)) ; try to find an edit point
+     (emmet-aif (re-search-forward ".+</" nil t) (- it 3))   ; try to place cursor after tag contents
+     (length str))))                             ; ok, just go to the end
 
 (defvar emmet-flash-ovl nil)
 (make-variable-buffer-local 'emmet-flash-ovl)
@@ -3878,11 +3855,14 @@ accept it or skip it."
 ;; http://docs.emmet.io/actions/go-to-edit-point/     ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defun emmet-go-to-edit-point (count)
-  (let
-      ((buf (buffer-string))
-       (point (point))
-       (edit-point "\\(\\(><\\)\\|\\(^[[:blank:]]+$\\)\\|\\(=\\(\"\\|'\\)\\{2\\}\\)\\)"))
+(defun emmet-go-to-edit-point (count &optional only-before-closed-tag)
+  (let*
+      ((between-tags
+        (if only-before-closed-tag "\\(><\\)/" "\\(><\\)"))
+       (indented-line "\\(^[[:blank:]]+$\\)")
+       (between-quotes "\\(=\\(\"\\|'\\)\\{2\\}\\)")
+       (edit-point (format "\\(%s\\|%s\\|%s\\)"
+                           between-tags indented-line between-quotes)))
     (if (> count 0)
 	(progn
 	  (forward-char)
@@ -3891,9 +3871,10 @@ accept it or skip it."
 	    (if search-result
 		(progn
 		  (cond
-		   ((or (match-string 2) (match-string 4)) (backward-char))
-		   ((match-string 3) (end-of-line)))
-		  search-result)
+		   ((match-string 2) (goto-char (- (match-end 2) 1)))
+		   ((match-string 3) (end-of-line))
+                   ((match-string 4) (backward-char)))
+		  (point))
 		(backward-char))))
       (progn
 	(backward-char)
@@ -3902,10 +3883,10 @@ accept it or skip it."
 	  (if search-result
 	      (progn
 		(cond
-		 ((match-string 2) (forward-char))
+		 ((match-string 2) (goto-char (- (match-end 2) 1)))
 		 ((match-string 3) (end-of-line))
 		 ((match-string 4) (forward-char 2)))
-		search-result)
+		(point))
 	      (forward-char)))))))
 
 ;;;###autoload

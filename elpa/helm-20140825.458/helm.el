@@ -710,8 +710,7 @@ If nil, use default `mode-line-format'.")
 (defvar helm-saved-selection nil
   "Value of the currently selected object when the action list is shown.")
 (defvar helm-sources nil
-  "[INTERNAL] Value of current sources in used, a list.")
-(defvar helm-delayed-init-executed nil)
+  "[INTERNAL] Value of current sources in use, a list.")
 (defvar helm-buffer "*helm*"
   "Buffer showing completions.")
 (defvar helm-current-buffer nil
@@ -1407,6 +1406,17 @@ When helm is alive use `make-local-variable' as usual on `helm-buffer'.
                          collect (cons (car i) (cadr i)))
                 helm--local-variables)))
 
+(defun helm-make-actions (&rest args)
+  "Build an alist with (NAME . ACTION) elements with each pairs in ARGS.
+Where NAME is a string or a function returning a string or nil and ACTION
+a function.
+If NAME returns nil the pair is skipped."
+  (cl-loop for i on args by #'cddr
+           for name  = (car i)
+           when (functionp name)
+           do (setq name (funcall name))
+           when name
+           collect (cons name (cadr i))))
 
 ;; Core: API helper
 (cl-defun helm-empty-buffer-p (&optional (buffer helm-buffer))
@@ -2100,7 +2110,6 @@ It is intended to use this only in `helm-initial-setup'."
   (helm-log-run-hook 'helm-before-initialize-hook)
   (setq helm-current-prefix-arg nil)
   (setq helm-suspend-update-flag nil)
-  (setq helm-delayed-init-executed nil)
   (setq helm-current-buffer (helm--current-buffer))
   (setq helm-buffer-file-name buffer-file-name)
   (setq helm-issued-errors nil)
@@ -2419,19 +2428,9 @@ Helm plug-ins are realized by this function."
 
 
 ;; Core: all candidates
-(defun helm-process-delayed-init (source)
-  "Initialize delayed SOURCE."
-  (let ((name (assoc-default 'name source)))
-    (unless (member name helm-delayed-init-executed)
-      (helm-aif (assoc-default 'delayed-init source)
-          (with-current-buffer helm-current-buffer
-            (helm-funcall-with-source source it)
-            (cl-dolist (_f (if (functionp it) (list it) it))
-              (add-to-list 'helm-delayed-init-executed name)))))))
 
 (defun helm-get-candidates (source)
   "Retrieve and return the list of candidates from SOURCE."
-  (helm-process-delayed-init source)
   (let* (inhibit-quit
          (candidate-fn (assoc-default 'candidates source))
          (candidate-proc (assoc-default 'candidates-process source))
@@ -2523,7 +2522,8 @@ ARGS is (cand1 cand2 ...) or ((disp1 . real1) (disp2 . real2) ...)
 (defmacro helm--maybe-process-filter-one-by-one-candidate (candidate source)
   "Execute `filter-one-by-one' function(s) on CANDIDATE in SOURCE."
   `(helm-aif (assoc-default 'filter-one-by-one ,source)
-       (if (listp it)
+       (if (and (listp it)
+                (not (functionp it))) ;; Don't treat lambda's as list.
            (cl-loop for f in it
                  do (setq ,candidate (funcall f ,candidate)))
          (setq ,candidate (funcall it ,candidate)))))

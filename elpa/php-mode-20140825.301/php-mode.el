@@ -6,7 +6,7 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Version: 20140812.1745
+;; Version: 20140825.301
 ;;; X-Original-Version: 1.13.5
 
 (defconst php-mode-version-number "1.13.5"
@@ -728,6 +728,9 @@ the string HEREDOC-START."
   (string-match "\\w+" heredoc-start)
   (concat "^\\(" (match-string 0 heredoc-start) "\\)\\W"))
 
+(defsubst php-in-comment-p ()
+  (nth 4 (syntax-ppss)))
+
 (defun php-syntax-propertize-function (start end)
   "Apply propertize rules from START to END."
   ;; (defconst php-syntax-propertize-function
@@ -736,7 +739,12 @@ the string HEREDOC-START."
   (goto-char start)
   (while (and (< (point) end)
               (re-search-forward php-heredoc-start-re end t))
-    (php-heredoc-syntax)))
+    (php-heredoc-syntax))
+  (goto-char start)
+  (while (re-search-forward "['\"]" end t)
+    (when (php-in-comment-p)
+      (c-put-char-property (match-beginning 0)
+                           'syntax-table (string-to-syntax "_")))))
 
 (defun php-heredoc-syntax ()
   "Mark the boundaries of searched heredoc."

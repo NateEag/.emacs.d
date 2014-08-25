@@ -5,7 +5,7 @@
 ;; Author: Sebastian Wiesner <swiesner@lunaryorn.com>
 ;; Maintainer: Johan Andersson <johan.rejeep@gmail.com>
 ;;     Sebastian Wiesner <swiesner@lunaryorn.com>
-;; Version: 20140822.136
+;; Version: 20140823.609
 ;; X-Original-Version: 0.7-cvs
 ;; Package-Requires: ((cl-lib "0.3"))
 ;; Keywords: convenience
@@ -88,9 +88,12 @@
 ;; `epl-package-installed-p' determines whether a package is installed, either
 ;; built-in or explicitly installed.
 
-;; `epl-built-in-packages', `epl-installed-packages' and
-;; `epl-available-packages' get all packages built-in, installed or available
-;; for installation respectively.
+;; `epl-package-outdated-p' determines whether a package is outdated, that is,
+;; whether a package with a higher version number is available.
+
+;; `epl-built-in-packages', `epl-installed-packages', `epl-outdated-packages'
+;; and `epl-available-packages' get all packages built-in, installed, outdated,
+;; or available for installation respectively.
 
 ;; `epl-find-built-in-package', `epl-find-installed-packages' and
 ;; `epl-find-available-packages' find built-in, installed and available packages
@@ -115,7 +118,7 @@
 (require 'cl-lib)
 (require 'package)
 
-(defun epl--package-desc-p (package)
+(defsubst epl--package-desc-p (package)
   "Whether PACKAGE is a `package-desc' object.
 
 Like `package-desc-p', but return nil, if `package-desc-p' is not
@@ -219,7 +222,7 @@ description to VAR in BODY."
          ,@body)
      (signal 'wrong-type-argument (list #'epl-package-p ,var))))
 
-(defun epl-package--package-desc-p (package)
+(defsubst epl-package--package-desc-p (package)
   "Whether the description of PACKAGE is a `package-desc'."
   (epl--package-desc-p (epl-package-description package)))
 
@@ -246,10 +249,10 @@ description to VAR in BODY."
      ((fboundp 'package-desc-doc) (package-desc-doc package)) ; Legacy
      (:else (error "Cannot get summary from %S" package)))))
 
-(defun epl-requirement--from-req (req)
+(defsubst epl-requirement--from-req (req)
   "Create a `epl-requirement' from a `package-desc' REQ."
-  (cl-destructuring-bind (name version) req
-    (epl-requirement-create :name name
+  (let  ((version (cadr req)))
+    (epl-requirement-create :name (car req)
                             :version (if (listp version) version
                                        (version-to-list version)))))
 
@@ -436,6 +439,27 @@ there is no built-in package with NAME."
     ;; empty.
     (epl--parse-built-in-entry (assq name package--builtins))))
 
+(defun epl-package-outdated-p (package)
+  "Determine whether a PACKAGE is outdated.
+
+A package is outdated, if there is an available package with a
+higher version.
+
+PACKAGE is either a package name as symbol, or a package object.
+In the former case, test the installed or built-in package with
+the highest version number, in the later case, test the package
+object itself.
+
+Return t, if the package is outdated, or nil otherwise."
+  (let* ((package (if (epl-package-p package)
+                      package
+                    (or (car (epl-find-installed-packages package))
+                        (epl-find-built-in-package package))))
+         (available (car (epl-find-available-packages
+                          (epl-package-name package)))))
+    (and package available (version-list-< (epl-package-version package)
+                                           (epl-package-version available)))))
+
 (defun epl--parse-package-list-entry (entry)
   "Parse a list of packages from ENTRY.
 
@@ -463,7 +487,21 @@ Return a list of `epl-package' objects parsed from ENTRY."
 Return a list of package objects."
   (apply #'append (mapcar #'epl--parse-package-list-entry package-alist)))
 
-(defun epl--find-package-in-list (name list)
+(defsubst epl--filter-outdated-packages (packages)
+  "Filter outdated packages from PACKAGES."
+  (let (res)
+    (dolist (package packages)
+      (when (epl-package-outdated-p package)
+        (push package res)))
+    (nreverse res)))
+
+(defun epl-outdated-packages ()
+  "Get all outdated packages, as in `epl-package-outdated-p'.
+
+Return a list of package objects."
+  (epl--filter-outdated-packages (epl-installed-packages)))
+
+(defsubst epl--find-package-in-list (name list)
   "Find a package by NAME in a package LIST.
 
 Return a list of corresponding `epl-package' objects."

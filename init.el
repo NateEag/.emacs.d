@@ -361,7 +361,8 @@
    "s" 'helm-swoop
    "r" 'er/expand-region
    "f" 'find-file
-   "w" 'save-buffer)
+   "w" 'save-buffer
+   "x" 'execute-extended-command)
 
   (message "calling the hook"))
 

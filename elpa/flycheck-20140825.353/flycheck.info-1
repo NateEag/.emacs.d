@@ -1,4 +1,4 @@
-This is /tmp/flycheck2170X5k/flycheck-20140821.801/flycheck.info,
+This is /tmp/flycheck17909h31/flycheck-20140825.353/flycheck.info,
 produced by makeinfo version 4.13 from
 /home/melpa/melpa/working/flycheck/doc/flycheck.texi.
 
@@ -2058,6 +2058,15 @@ The default function displays the error messages in the echo area:
      In the latter case, show messages in
      ``flycheck-error-message-buffer''.
 
+Alternatively, the following error display functions are available:
+
+ -- Function: flycheck-display-error-messages-unless-error-list errors
+     Show messages of ERRORS unless the error list is visible.
+
+     Like *note `flycheck-display-error-messages': 7a, but only if the error
+     list (see *note `flycheck-list-errors': 47.) is not visible in any window in
+     the current frame.
+
 You can also work with the error messages at point, and copy them into
 the kill ring or search them on Google:
 
@@ -2070,7 +2079,7 @@ the kill ring or search them on Google:
  -- Command: M-x flycheck-google-messages
      Google for all Flycheck error messages at the current point.
 
-     If there are more than *note flycheck-google-max-messages: 7d.
+     If there are more than *note flycheck-google-max-messages: 7e.
      errors at point, signal an error, to avoid spamming your browser
      with Google tabs.
 
@@ -2083,11 +2092,11 @@ the kill ring or search them on Google:
 
      How many messages to google at once.
 
-     If set to an integer, *note `flycheck-google-messages': 7c. will signal an
+     If set to an integer, *note `flycheck-google-messages': 7d. will signal an
      error if there are more Flycheck messages at point than the value
      of this variable.
 
-     If set to nil, *note `flycheck-google-messages': 7c. will always google *all*
+     If set to nil, *note `flycheck-google-messages': 7d. will always google *all*
      messages at point.  This setting is *not* recommended.
 
      This user option was introduced, or its default value was changed,
@@ -2108,8 +2117,8 @@ You can also show a list with all errors in the current buffer:
 
 When you move the point in the current buffer while the error list is
 visible, all errors at point and at the current line are highlighted in
-the error list with *note flycheck-error-list-highlight-at-point: 7f.
-and *note flycheck-error-list-highlight: 80. respectively.
+the error list with *note flycheck-error-list-highlight-at-point: 80.
+and *note flycheck-error-list-highlight: 81. respectively.
 
  -- Face: flycheck-error-list-highlight-at-point
      Flycheck face to highlight error at point in the error list.
@@ -2160,7 +2169,7 @@ in the current buffer.  See *note Compilation Mode: (emacs)Compilation
 Mode. for more information about these commands.
 
 You can disable this integration by setting *note
-flycheck-standard-error-navigation: 84. to nil:
+flycheck-standard-error-navigation: 85. to nil:
 
  -- User Option: flycheck-standard-error-navigation
           Variable properties: This variable is safe as a file local
@@ -2173,7 +2182,7 @@ flycheck-standard-error-navigation: 84. to nil:
      these functions just navigate errors from compilation modes.
 
      Flycheck error navigation with *note `flycheck-next-error': 45,
-     *note `flycheck-previous-error': 46. and *note `flycheck-first-error': 85. is always
+     *note `flycheck-previous-error': 46. and *note `flycheck-first-error': 86. is always
      enabled, regardless of the value of this variable.
 
      Note that this setting only takes effect when *note `flycheck-mode': 4e. is
@@ -2191,7 +2200,7 @@ reported by the compilation buffer instead.
 
 To address this issue, Flycheck provides independent error navigation
 commands, which are not affected by *note
-flycheck-standard-error-navigation: 84.:
+flycheck-standard-error-navigation: 85.:
 
  -- Command: C-c ! n
  -- Command: M-x flycheck-next-error
@@ -2250,9 +2259,9 @@ Flycheck indicates its state in the mode line:
 
      This indicator should *never* be displayed for built-in syntax
      checkers.  If it is, please report an issue to the Flycheck
-     developers, as by *note Reporting issues: 88.
+     developers, as by *note Reporting issues: 89.
 
-Change *note flycheck-mode-line: 89. to customize the mode line
+Change *note flycheck-mode-line: 8a. to customize the mode line
 reporting:
 
  -- User Option: flycheck-mode-line
@@ -2267,15 +2276,15 @@ reporting:
      line construct only.
 
      Customize this variable to change how Flycheck reports its status
-     in the mode line.  You may use *note `flycheck-mode-line-status-text': 8a.
+     in the mode line.  You may use *note `flycheck-mode-line-status-text': 8b.
      to obtain a human-readable status text, including an
      error/warning count.
 
      You may also assemble your own status text.  The current status
-     of Flycheck is available in *note `flycheck-last-status-change': 8b.  The
+     of Flycheck is available in *note `flycheck-last-status-change': 8c.  The
      errors in the current buffer are stored in
      *note `flycheck-current-errors': 5b, and the function
-     *note `flycheck-count-errors': 8c. may be used to obtain the number of
+     *note `flycheck-count-errors': 8d. may be used to obtain the number of
      errors grouped by error level.
 
      Set this variable to nil to disable the mode line completely.
@@ -2390,7 +2399,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           A list of include directories for GNAT.
 
@@ -2425,7 +2434,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           A list of additional Ada warnings to enable in GNAT.
 
@@ -2471,7 +2480,7 @@ File: flycheck.info,  Node: C/C++,  Next: CFEngine,  Prev: AsciiDoc,  Up: Suppor
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note c/c++-cppcheck: 99, if there are only warnings
+            1. *note c/c++-cppcheck: 9a, if there are only warnings
 
           The *first* suitable syntax checker is used.
 
@@ -2503,7 +2512,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           Additional preprocessor definitions for Clang.
 
@@ -2521,7 +2530,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           A list of include directories for Clang.
 
@@ -2539,7 +2548,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           A list of additional include files for Clang.
 
@@ -2641,7 +2650,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           A list of additional warnings to enable in Clang.
 
@@ -2664,7 +2673,7 @@ Options
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note c/c++-cppcheck: 99, if there are only warnings
+            1. *note c/c++-cppcheck: 9a, if there are only warnings
 
           The *first* suitable syntax checker is used.
 
@@ -2679,7 +2688,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           Additional preprocessor definitions for GCC.
 
@@ -2697,7 +2706,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           A list of include directories for GCC.
 
@@ -2715,7 +2724,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           A list of additional include files for GCC.
 
@@ -2781,7 +2790,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           A list of additional warnings to enable in GCC.
 
@@ -2812,7 +2821,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           Enabled checks for Cppcheck.
 
@@ -2922,7 +2931,7 @@ File: flycheck.info,  Node: Coffeescript,  Next: Coq,  Prev: Chef,  Up: Supporte
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note coffee-coffeelint: b5, if there are only warnings
+            1. *note coffee-coffeelint: b6, if there are only warnings
 
           The *first* suitable syntax checker is used.
 
@@ -3001,7 +3010,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           A list of include directories for dmd.
 
@@ -3057,7 +3066,7 @@ Emacs(1), Emacs Lisp reference(2)
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note emacs-lisp-checkdoc: c3.
+            1. *note emacs-lisp-checkdoc: c4.
 
           The *first* suitable syntax checker is used.
 
@@ -3129,7 +3138,7 @@ Options
           variable before initializing packages.
 
           This variable has no effect, if
-          *note `flycheck-emacs-lisp-initialize-packages': c4. is nil.
+          *note `flycheck-emacs-lisp-initialize-packages': c5. is nil.
 
           This variable is an option for the syntax checker ``emacs-lisp''
 
@@ -3214,7 +3223,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           A list of include directories for GCC Fortran.
 
@@ -3300,15 +3309,15 @@ File: flycheck.info,  Node: Go,  Next: Haml,  Prev: Fortran,  Up: Supported lang
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note go-golint: d4, if there are no errors
+            1. *note go-golint: d5, if there are no errors
 
-            2. *note go-vet: d5, if there are no errors
+            2. *note go-vet: d6, if there are no errors
 
-            3. *note go-build: d6, if there are no errors
+            3. *note go-build: d7, if there are no errors
 
-            4. *note go-test: d7, if there are no errors
+            4. *note go-test: d8, if there are no errors
 
-            5. *note go-errcheck: d8, if there are no errors
+            5. *note go-errcheck: d9, if there are no errors
 
           The *first* suitable syntax checker is used.
 
@@ -3320,13 +3329,13 @@ File: flycheck.info,  Node: Go,  Next: Haml,  Prev: Fortran,  Up: Supported lang
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note go-vet: d5.
+            1. *note go-vet: d6.
 
-            2. *note go-build: d6.
+            2. *note go-build: d7.
 
-            3. *note go-test: d7.
+            3. *note go-test: d8.
 
-            4. *note go-errcheck: d8.
+            4. *note go-errcheck: d9.
 
           The *first* suitable syntax checker is used.
 
@@ -3338,11 +3347,11 @@ File: flycheck.info,  Node: Go,  Next: Haml,  Prev: Fortran,  Up: Supported lang
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note go-build: d6.
+            1. *note go-build: d7.
 
-            2. *note go-test: d7.
+            2. *note go-test: d8.
 
-            3. *note go-errcheck: d8.
+            3. *note go-errcheck: d9.
 
           The *first* suitable syntax checker is used.
 
@@ -3358,7 +3367,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           A comma-separated list of print-like functions for `go tool vet'.
 
@@ -3379,7 +3388,7 @@ Options
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note go-errcheck: d8, if there are no errors
+            1. *note go-errcheck: d9, if there are no errors
 
           The *first* suitable syntax checker is used.
 
@@ -3391,7 +3400,7 @@ Options
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note go-errcheck: d8, if there are no errors
+            1. *note go-errcheck: d9, if there are no errors
 
           The *first* suitable syntax checker is used.
 
@@ -3460,7 +3469,7 @@ File: flycheck.info,  Node: Haskell,  Next: HTML,  Prev: Handlebars,  Up: Suppor
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note haskell-hlint: e0, if there are only warnings
+            1. *note haskell-hlint: e1, if there are only warnings
 
           The *first* suitable syntax checker is used.
 
@@ -3475,7 +3484,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           Language extensions for GHC.
 
@@ -3509,7 +3518,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           Additional module databases for GHC.
 
@@ -3527,7 +3536,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           Module search path for GHC.
 
@@ -3772,7 +3781,7 @@ File: flycheck.info,  Node: Perl,  Next: PHP,  Prev: Make,  Up: Supported langua
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note perl-perlcritic: fc.
+            1. *note perl-perlcritic: fd.
 
           The *first* suitable syntax checker is used.
 
@@ -3820,9 +3829,9 @@ File: flycheck.info,  Node: PHP,  Next: Puppet,  Prev: Perl,  Up: Supported lang
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note php-phpmd: 100, if there are only warnings
+            1. *note php-phpmd: 101, if there are only warnings
 
-            2. *note php-phpcs: 101, if there are only warnings
+            2. *note php-phpcs: 102, if there are only warnings
 
           The *first* suitable syntax checker is used.
 
@@ -3834,7 +3843,7 @@ File: flycheck.info,  Node: PHP,  Next: Puppet,  Prev: Perl,  Up: Supported lang
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note php-phpcs: 101.
+            1. *note php-phpcs: 102.
 
           The *first* suitable syntax checker is used.
 
@@ -3849,7 +3858,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           The rule sets for PHP Mess Detector.
 
@@ -3902,7 +3911,7 @@ File: flycheck.info,  Node: Puppet,  Next: Python,  Prev: PHP,  Up: Supported la
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note puppet-lint: 106, if there are no errors
+            1. *note puppet-lint: 107, if there are no errors
 
           The *first* suitable syntax checker is used.
 
@@ -3949,7 +3958,7 @@ Options
           variable as warning.
 
           If set to an integer, this variable overrules any similar setting
-          in the configuration file denoted by *note `flycheck-flake8rc': 10a.
+          in the configuration file denoted by *note `flycheck-flake8rc': 10b.
 
           This variable is an option for the syntax checker ``python-flake8''
 
@@ -3962,11 +3971,11 @@ Options
 
           If set to an integer, the value of this variable denotes the
           maximum length of lines, overruling any similar setting in the
-          configuration file denoted by *note `flycheck-flake8rc': 10a.  An error will
+          configuration file denoted by *note `flycheck-flake8rc': 10b.  An error will
           be reported for any line longer than the value of this variable.
 
           If set to nil, use the maximum line length from the configuration
-          file denoted by *note `flycheck-flake8rc': 10a, or the PEP 8 recommendation
+          file denoted by *note `flycheck-flake8rc': 10b, or the PEP 8 recommendation
           of 79 characters if there is no configuration with this setting.
 
           This variable is an option for the syntax checker ``python-flake8''
@@ -4077,7 +4086,7 @@ File: flycheck.info,  Node: Ruby,  Next: Rust,  Prev: ReStructuredText,  Up: Sup
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note ruby-rubylint: 117, if there are only warnings
+            1. *note ruby-rubylint: 118, if there are only warnings
 
           The *first* suitable syntax checker is used.
 
@@ -4112,7 +4121,7 @@ Configuration file
  -- Flycheck Syntax Checker: ruby-rubylint
      A Ruby syntax and code analysis checker using ruby-lint.
 
-     Requires ruby-lint 2.0 or newer.  To use *note `flycheck-rubylintrc': 11a,
+     Requires ruby-lint 2.0 or newer.  To use *note `flycheck-rubylintrc': 11b,
      ruby-lint 2.0.2 or newer is required.  See URL
      `https://github.com/YorickPeterse/ruby-lint'(2).
 
@@ -4133,7 +4142,7 @@ Configuration file
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note ruby-rubylint: 117, if there are only warnings
+            1. *note ruby-rubylint: 118, if there are only warnings
 
           The *first* suitable syntax checker is used.
 
@@ -4153,7 +4162,7 @@ Configuration file
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note ruby-rubylint: 117, if there are only warnings
+            1. *note ruby-rubylint: 118, if there are only warnings
 
           The *first* suitable syntax checker is used.
 
@@ -4244,7 +4253,7 @@ Options
                Variable properties: Automatically becomes buffer-local
                when set.  This variable is safe as a file local
                variable if its value satisfies the predicate *note
-               flycheck-string-list-p: 92.
+               flycheck-string-list-p: 93.
 
           A list of library directories for Rust.
 
@@ -4314,7 +4323,7 @@ File: flycheck.info,  Node: Scala,  Next: Scss,  Prev: Sass,  Up: Supported lang
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note scala-scalastyle: 129, if there are only warnings
+            1. *note scala-scalastyle: 12a, if there are only warnings
 
           The *first* suitable syntax checker is used.
 
@@ -4326,7 +4335,7 @@ File: flycheck.info,  Node: Scala,  Next: Scss,  Prev: Sass,  Up: Supported lang
      A Scala style checker using scalastyle.
 
      Note that this syntax checker is not used if
-     *note `flycheck-scalastyle-jar': 12a. or *note `flycheck-scalastylerc': 12b. are nil or
+     *note `flycheck-scalastyle-jar': 12b. or *note `flycheck-scalastylerc': 12c. are nil or
      point to non-existing files.
 
      See URL `http://www.scalastyle.org'(2).
@@ -4413,7 +4422,7 @@ File: flycheck.info,  Node: Shell script languages,  Next: Slim,  Prev: Scss,  U
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note sh-shellcheck: 131, if there are no errors
+            1. *note sh-shellcheck: 132, if there are no errors
 
           The *first* suitable syntax checker is used.
 
@@ -4425,7 +4434,7 @@ File: flycheck.info,  Node: Shell script languages,  Next: Slim,  Prev: Scss,  U
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note sh-shellcheck: 131, if there are no errors
+            1. *note sh-shellcheck: 132, if there are no errors
 
           The *first* suitable syntax checker is used.
 
@@ -4443,7 +4452,7 @@ See also
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note sh-shellcheck: 131, if there are no errors
+            1. *note sh-shellcheck: 132, if there are no errors
 
           The *first* suitable syntax checker is used.
 
@@ -4461,7 +4470,7 @@ See also
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note sh-shellcheck: 131, if there are no errors
+            1. *note sh-shellcheck: 132, if there are no errors
 
           The *first* suitable syntax checker is used.
 
@@ -4650,7 +4659,7 @@ disabled syntax checker
 
 enabled syntax checker
      A *note registered syntax checker: 61. which is not a *note
-     disabled syntax checker: 149.  
+     disabled syntax checker: 14a.  
 
 suitable syntax checker
      A *note syntax checker: 64. which can be used to check the current
@@ -4672,7 +4681,7 @@ chaining
      For instance, Haskell buffers are first checked with GHC for
      syntax and type errors, and then with `hlint' for idiomatic and
      semantic mistakes.  Hence, the syntax checker chain consists of
-     *note haskell-ghc: df.  and *note haskell-hlint: e0.
+     *note haskell-ghc: e0.  and *note haskell-hlint: e1.
 
 
 File: flycheck.info,  Node: Extending Flycheck,  Next: Flycheck API,  Prev: Glossary,  Up: Top
@@ -4685,7 +4694,7 @@ provides examples for common use cases.
 
 If you define a new syntax checker, _please_ contribute it to Flycheck
 to make it available to other users, too.  See *note Contributing
-syntax checkers: 14c. for more information.
+syntax checkers: 14d. for more information.
 
 * Menu:
 
@@ -4741,7 +4750,7 @@ You define new syntax checkers with *note flycheck-define-checker: 19.:
 
           Each ARG is an argument to the executable, either as string,
           or as special symbol or form for
-          *note `flycheck-substitute-argument': 14e, which see.
+          *note `flycheck-substitute-argument': 14f, which see.
 
      `:error-patterns ((LEVEL SEXP ...) ...)'
           An unquoted list of error patterns to parse the output of
@@ -4753,7 +4762,7 @@ You define new syntax checkers with *note flycheck-define-checker: 19.:
           extract line, column, file name and error message.
 
           See ``rx'' for general information about RX, and
-          *note `flycheck-rx-to-string': 14f. for special RX forms provided by
+          *note `flycheck-rx-to-string': 150. for special RX forms provided by
           Flycheck.
 
           All patterns are applied in the order of declaration to the
@@ -4913,11 +4922,11 @@ File: flycheck.info,  Node: Error parsers,  Next: Extending syntax checkers,  Pr
 
 Syntax checkers may use more sophisticated error parsing by given the
 `:error-parser' argument to *note flycheck-define-checker: 19.  See
-*note Builtin error parsers: 158. for a list of builtin parsers.
+*note Builtin error parsers: 159. for a list of builtin parsers.
 
 You may also define your own error parsers.  An error parser is any
 function that takes the following three arguments and returns a list of
-*note flycheck-error: 159. objects (see *note Error API: 78. for more
+*note flycheck-error: 15a. objects (see *note Error API: 78. for more
 information):
 
 `output'
@@ -4930,7 +4939,7 @@ information):
      A buffer object referring to the buffer that was syntax-checked.
 
 Flycheck provides some utility functions to implement your own error
-parsers.  See *note Error parser API: 15a. for details.
+parsers.  See *note Error parser API: 15b. for details.
 
 
 File: flycheck.info,  Node: Extending syntax checkers,  Next: Examples,  Prev: Error parsers,  Up: Extending Flycheck
@@ -5009,7 +5018,7 @@ directory and containing the contents of the buffer to check.
 Next we specify how to parse the output of the syntax checker.  PHP
 CodeSniffer provides an option to output errors in an XML format
 similar to the Java tool Checkstyle, so we use the built-in _error
-parser_ *note flycheck-parse-checkstyle: 161. to parse the output.
+parser_ *note flycheck-parse-checkstyle: 162. to parse the output.
 
 Then we enable the syntax checker in PHP editing modes.
 
@@ -5142,7 +5151,7 @@ omitted from the command line.
 Some Syntax checkers can also be configured using options passed on the
 command line.  Flycheck supports this case, too.  We will use this
 facility to extend the PHP CodeSniffer syntax checker from the *note
-Basic syntax checkers: 160. section with support for coding standards:
+Basic syntax checkers: 161. section with support for coding standards:
 
     (flycheck-def-option-var flycheck-phpcs-standard nil phpcs
       "The coding standard for PHP CodeSniffer."
@@ -5160,9 +5169,9 @@ Basic syntax checkers: 160. section with support for coding standards:
 
 The syntax checker is pretty much the same as before, except that a new
 element was added to `:command'.  This element passes the value of the
-new option variable *note flycheck-phpcs-standard: 103. to the syntax
+new option variable *note flycheck-phpcs-standard: 104. to the syntax
 checker.  This variable is declared with the special macro *note
-flycheck-def-option-var: 151. at the beginning.
+flycheck-def-option-var: 152. at the beginning.
 
 
 File: flycheck.info,  Node: Chaining syntax checkers,  Prev: Configuration files for syntax checkers,  Up: Examples
@@ -5255,7 +5264,7 @@ File: flycheck.info,  Node: Status API,  Next: Error API,  Up: Flycheck API
      ``suspicious''
           The last syntax check had a suspicious result.
 
-     Set *note `flycheck-last-status-change': 8b. and call
+     Set *note `flycheck-last-status-change': 8c. and call
      *note `flycheck-status-changed-functions': 59. with STATUS.  Afterwards
      refresh the mode line.
 
@@ -5275,7 +5284,7 @@ File: flycheck.info,  Node: Status API,  Next: Error API,  Up: Flycheck API
  -- Function: flycheck-mode-line-status-text &optional status
      Get a text describing STATUS for use in the mode line.
 
-     STATUS defaults to *note `flycheck-last-status-change': 8b. if omitted or
+     STATUS defaults to *note `flycheck-last-status-change': 8c. if omitted or
      nil.
 
 
@@ -5285,7 +5294,7 @@ File: flycheck.info,  Node: Error API,  Next: Error Analysis,  Prev: Status API,
 =============
 
 Flycheck errors are represented by the CL structure *note
-flycheck-error: 159.  See *note Structures: (cl)Structures. for more
+flycheck-error: 15a.  See *note Structures: (cl)Structures. for more
 information about CL structures.
 
  -- CL Struct: flycheck-error
@@ -5323,19 +5332,19 @@ information about CL structures.
           level defined with *note flycheck-define-error-level: 25.
 
      There are two constructors to create new *note flycheck-error:
-     159. objects:
+     15a. objects:
 
       -- Function: flycheck-error-new-at line column &optional level
                message &key checker filename buffer
           Create a new Flycheck error at the given LINE and COLUMN.
 
-          LINE and COLUMN refer to the *note line: 16e. and *note
-          column: 16f. of the new error.  The optional LEVEL and
-          MESSAGE arguments fill the *note level: 171. and
+          LINE and COLUMN refer to the *note line: 16f. and *note
+          column: 170. of the new error.  The optional LEVEL and
+          MESSAGE arguments fill the *note level: 172. and
           cl-slot:`message' slots respectively.
 
           CHECKER, FILENAME and BUFFER are keyword arguments, for *note
-          checker: 16c, *note filename: 16d. and *note buffer: 16b.
+          checker: 16d, *note filename: 16e. and *note buffer: 16c.
           respectively.  BUFFER defaults to the current buffer, the
           other two default to `nil'.
 
@@ -5345,12 +5354,12 @@ information about CL structures.
                arguments.
 
       -- Function: flycheck-error-new &rest attributes
-          Create a new *note flycheck-error: 159. with the given
+          Create a new *note flycheck-error: 15a. with the given
           ATTRIBUTES.
 
           ATTRIBUTES is a property list, where each property specifies
           the value for the corresponding slot of *note flycheck-error:
-          159, for instance:
+          15a, for instance:
 
               (flycheck-error-new :line 10 :column 5 :message "Foo" :level 'warning)
 
@@ -5412,7 +5421,7 @@ information about CL structures.
       -- Function: flycheck-error-level-< err1 err2
           Determine whether ERR1 goes before ERR2 by error level.
 
-          Like *note `flycheck-error-<': 17a, but compares by error level severity
+          Like *note `flycheck-error-<': 17b, but compares by error level severity
           first.  Levels of the same severity are compared by name.
 
 
@@ -5561,7 +5570,7 @@ File: flycheck.info,  Node: Syntax checker API,  Next: Builtin option filters,  
           as primary input to a checker, unless absolutely necessary.
 
           When using this symbol as primary input to the syntax
-          checker, add *note `flycheck-buffer-saved-p': 189. to the ``:predicate''.
+          checker, add *note `flycheck-buffer-saved-p': 18a. to the ``:predicate''.
 
      ``temporary-directory''
           Create a unique temporary directory and return its path.
@@ -5584,7 +5593,7 @@ File: flycheck.info,  Node: Syntax checker API,  Next: Builtin option filters,  
 
      `(config-file OPTION VARIABLE [PREPEND-FN])'
           Search the configuration file bound to VARIABLE with
-          *note `flycheck-locate-config-file': 18a. and return a list of arguments
+          *note `flycheck-locate-config-file': 18b. and return a list of arguments
           that pass this configuration file to the syntax checker, or
           nil if the configuration file was not found.
 
@@ -5662,7 +5671,7 @@ File: flycheck.info,  Node: Syntax checker API,  Next: Builtin option filters,  
           the number, the more severe is this level compared to other
           levels.  Defaults to 0.
 
-          The severity is used by *note `flycheck-error-level-<': 17b. to
+          The severity is used by *note `flycheck-error-level-<': 17c. to
           determine the ordering of errors according to their levels.
 
      `:overlay-category CATEGORY'
@@ -5790,7 +5799,7 @@ Flycheck 0.20 is out, with new syntax checkers, many new options,
 improvements and bug fixes, and some important breaking changes.
 
 This announcement covers the most important changes.  For details,
-please refer to *note Changes: 195.
+please refer to *note Changes: 196.
 
 * Menu:
 
@@ -5830,8 +5839,8 @@ File: flycheck.info,  Node: Language support,  Next: Error list improvements,  P
 10.1.2 Language support
 -----------------------
 
-Flycheck now supports Ada and Fortran with *note ada-gnat: 90. and
-*note fortran-gfortran: cd. respectively.
+Flycheck now supports Ada and Fortran with *note ada-gnat: 91. and
+*note fortran-gfortran: ce. respectively.
 
 * Menu:
 
@@ -5848,13 +5857,13 @@ File: flycheck.info,  Node: C/C++<2>,  Next: Rust<2>,  Up: Language support
 10.1.2.1 C/C++
 ..............
 
-C/C++ can now be checked with GCC (*note c/c++-gcc: a3.) as an
+C/C++ can now be checked with GCC (*note c/c++-gcc: a4.) as an
 alternative to Clang.  GCC supports the same options as Clang, with the
-exception of *note flycheck-clang-blocks: 9a.
+exception of *note flycheck-clang-blocks: 9b.
 
 The Clang syntax checker now supports the Clang block syntax with the
-new option *note flycheck-clang-blocks: 9a, and allows to disable
-exceptions with *note flycheck-clang-no-exceptions: a0.
+new option *note flycheck-clang-blocks: 9b, and allows to disable
+exceptions with *note flycheck-clang-no-exceptions: a1.
 
 Furthermore, temporary files for the Clang syntax checker are now
 created in the system temporary directory.
@@ -5879,7 +5888,7 @@ File: flycheck.info,  Node: Scala<2>,  Next: Sass/SCSS,  Prev: Rust<2>,  Up: Lan
 10.1.2.3 Scala
 ..............
 
-Flycheck now supports Scalastyle(1) with *note scala-scalastyle: 129.
+Flycheck now supports Scalastyle(1) with *note scala-scalastyle: 12a.
 
 ---------- Footnotes ----------
 
@@ -5891,7 +5900,7 @@ File: flycheck.info,  Node: Sass/SCSS,  Next: Javascript<2>,  Prev: Scala<2>,  U
 10.1.2.4 Sass/SCSS
 ..................
 
-*note sass: 125. and *note scss: 12d. now use a temporary directory for
+*note sass: 126. and *note scss: 12e. now use a temporary directory for
 their cache and do not clutter the source directory anymore.
 
 
@@ -5900,7 +5909,7 @@ File: flycheck.info,  Node: Javascript<2>,  Next: Ruby<2>,  Prev: Sass/SCSS,  Up
 10.1.2.5 Javascript
 ...................
 
-*note flycheck-eslintrc: ee. is now `nil' by default.  ESLint(1) will
+*note flycheck-eslintrc: ef. is now `nil' by default.  ESLint(1) will
 now find its configuration file by itself, which enables configuration
 cascading.  See Configuring ESLint(2) for more information.
 
@@ -5916,8 +5925,8 @@ File: flycheck.info,  Node: Ruby<2>,  Prev: Javascript<2>,  Up: Language support
 10.1.2.6 Ruby
 .............
 
-*note ruby-rubylint: 117. now supports configuration files with *note
-flycheck-rubylintrc: 11a.  This requires ruby-lint 2.0.2 or newer.
+*note ruby-rubylint: 118. now supports configuration files with *note
+flycheck-rubylintrc: 11b.  This requires ruby-lint 2.0.2 or newer.
 
 
 File: flycheck.info,  Node: Error list improvements,  Next: User interface improvements,  Prev: Language support,  Up: Aug 12 2014 — Flycheck 0 20 released
@@ -5947,7 +5956,7 @@ File: flycheck.info,  Node: User interface improvements,  Next: Miscellaneous ne
 ----------------------------------
 
 The mode line indicator of Flycheck is now customizable with *note
-flycheck-mode-line: 89, which is a mode line template (see *note Mode
+flycheck-mode-line: 8a, which is a mode line template (see *note Mode
 Line Format: (elisp)Mode Line Format.).  The mode line of the error
 list buffer is customizable as well, with
 `flycheck-error-list-mode-line'.
@@ -5983,7 +5992,7 @@ File: flycheck.info,  Node: Miscellaneous fixes,  Next: Get it,  Prev: Miscellan
 
 Flycheck now properly unloads with `unload-feature'.
 
-The *note emacs-lisp: c2. checker does not longer choke when
+The *note emacs-lisp: c3. checker does not longer choke when
 `package-initialize' signals an error.
 
 
@@ -6018,7 +6027,7 @@ File: flycheck.info,  Node: Breaking changes<2>,  Next: Languages,  Up: Jun 12 2
 10.2.1 Breaking changes
 -----------------------
 
-*note ruby-rubylint: 117. requires Ruby Lint 2.0 or newer, due to some
+*note ruby-rubylint: 118. requires Ruby Lint 2.0 or newer, due to some
 breaking changes in the command line interface of Ruby Lint.
 
 
@@ -6041,10 +6050,10 @@ File: flycheck.info,  Node: C/C++<3>,  Next: Emacs Lisp<2>,  Up: Languages
 10.2.2.1 C/C++
 ..............
 
-The new *note flycheck-cppcheck-inconclusive: ac. enables *note
-c/c++-cppcheck: 99. tests that might yield false positives.
+The new *note flycheck-cppcheck-inconclusive: ad. enables *note
+c/c++-cppcheck: 9a. tests that might yield false positives.
 
-When reporting errors in included files, *note c/c++-clang: 98. now
+When reporting errors in included files, *note c/c++-clang: 99. now
 includes the error messages in the faulty include file in the error
 message on the affected `#include' statement.
 
@@ -6055,7 +6064,7 @@ File: flycheck.info,  Node: Emacs Lisp<2>,  Next: Go<2>,  Prev: C/C++<3>,  Up: L
 ...................
 
 Flycheck now removes redundant whitespace in the error messages
-reported by the *note emacs-lisp: c2. syntax checker.
+reported by the *note emacs-lisp: c3. syntax checker.
 
 
 File: flycheck.info,  Node: Go<2>,  Next: Haskell<2>,  Prev: Emacs Lisp<2>,  Up: Languages
@@ -6064,7 +6073,7 @@ File: flycheck.info,  Node: Go<2>,  Next: Haskell<2>,  Prev: Emacs Lisp<2>,  Up:
 ...........
 
 Go code is now checked for unhandled error return values with the new
-*note go-errcheck: d8. syntax checker.
+*note go-errcheck: d9. syntax checker.
 
 Flycheck does not longer signal errors in Go Mode, when the `go'
 executable is not available.
@@ -6076,7 +6085,7 @@ File: flycheck.info,  Node: Haskell<2>,  Next: Rust<3>,  Prev: Go<2>,  Up: Langu
 ................
 
 Flycheck now dedents the error messages reported by *note haskell-ghc:
-df, and properly checks Haskell files without extensions.
+e0, and properly checks Haskell files without extensions.
 
 
 File: flycheck.info,  Node: Rust<3>,  Prev: Haskell<2>,  Up: Languages
@@ -6084,7 +6093,7 @@ File: flycheck.info,  Node: Rust<3>,  Prev: Haskell<2>,  Up: Languages
 10.2.2.5 Rust
 .............
 
-*note rust: 11e. has a new *note flycheck-rust-check-tests: 11f.
+*note rust: 11f. has a new *note flycheck-rust-check-tests: 120.
 option, to disable syntax checking of test code.
 
 
@@ -6184,11 +6193,11 @@ as well.
 Furthermore, the version requirements for some syntax checker tools
 changed:
 
-   - *note rust: 11e.  needs upcoming Rust 0.10 now, because Flycheck
+   - *note rust: 11f.  needs upcoming Rust 0.10 now, because Flycheck
      followed backwards-incompatible upstream changes in the `rustc'
      options.
 
-   - *note rst-sphinx: 113. needs Sphinx 1.2 now, because Flycheck uses
+   - *note rst-sphinx: 114. needs Sphinx 1.2 now, because Flycheck uses
      a special writer now, which is not present in previous releases.
 
 
@@ -6198,28 +6207,28 @@ File: flycheck.info,  Node: Syntax checkers<2>,  Next: Bug fixes<2>,  Prev: Brea
 ----------------------
 
 Flycheck can now check BSD Makefile with BSD Make as well.  The *note
-make: f8. syntax checker does not use GNU Make specific options
+make: f9. syntax checker does not use GNU Make specific options
 anymore, and will work with any POSIX compatible variant of Make.
 
 Go syntax checking got a major update with new syntax checkers based on
-Golint(1) (*note go-golint: d4.) and `go tool vet' (*note go-vet: d5.).
+Golint(1) (*note go-golint: d5.) and `go tool vet' (*note go-vet: d6.).
 Go now has one of the most complete and powerful syntax checker chains
 in Flycheck.
 
 Support for Perl and for shell scripts was greatly improved by
 introducing two new syntax checkers:
 
-   - *note perl-perlcritic: fc. checks Perl with the powerful
+   - *note perl-perlcritic: fd. checks Perl with the powerful
      Perl-Critic(2) tool.
 
-   - *note sh-shellcheck: 131. checks Shell scripts with the awesome
+   - *note sh-shellcheck: 132. checks Shell scripts with the awesome
      Shellcheck(3) tool, which finds all sorts of idiomatic and
      semantics mistakes in shell scripts of various shell languages,
      and will greatly improve your shell scripting.
 
-D users can now tell *note d-dmd: bc. about include directories with the
-new option *note flycheck-dmd-include-path: bd.  Likewise, Rust users
-can use *note flycheck-rust-library-path: 122. now.
+D users can now tell *note d-dmd: bd. about include directories with the
+new option *note flycheck-dmd-include-path: be.  Likewise, Rust users
+can use *note flycheck-rust-library-path: 123. now.
 
 ---------- Footnotes ----------
 
@@ -6237,20 +6246,20 @@ File: flycheck.info,  Node: Bug fixes<2>,  Next: Get it<3>,  Prev: Syntax checke
 
 As always, a good deal of bugs and issues was fixed:
 
-   - *note puppet-lint: 106. includes the name of the corresponding
+   - *note puppet-lint: 107. includes the name of the corresponding
      check in the error message now.
 
-   - *note rst: 112. handles `.. include::' directives with relative
+   - *note rst: 113. handles `.. include::' directives with relative
      file names now.
 
-   - *note rst-sphinx: 113. will no longer choke if the document being
+   - *note rst-sphinx: 114. will no longer choke if the document being
      checked contains custom nodes without `text'  writers.
 
-   - *note rust: 11e. will not longer emit pointless warnings about
+   - *note rust: 11f. will not longer emit pointless warnings about
      missing `main' functions in library creates.
 
    - Various error parsing problems were corrected in *note
-     c/c++-clang: 98, *note go-build: d6. and *note go-test: d7.
+     c/c++-clang: 99, *note go-build: d7. and *note go-test: d8.
 
 
 File: flycheck.info,  Node: Get it<3>,  Prev: Bug fixes<2>,  Up: Mar 24 2014 — Flycheck 0 18 released
@@ -6291,7 +6300,7 @@ flycheck-completion-system' or add the following to your `init.el':
 
     (eval-after-load 'flycheck '(setq flycheck-completion-system 'ido))
 
-Also, *note flycheck-count-errors: 8c. was changed to count errors of
+Also, *note flycheck-count-errors: 8d. was changed to count errors of
 all levels.  It returns an alist mapping error levels to the amount of
 errors of that level.
 
@@ -6356,13 +6365,13 @@ File: flycheck.info,  Node: Syntax checkers<3>,  Next: Extending syntax checkers
 Flycheck can now check GNU Makefiles (#321(1)) with the new `make-gmake'
 syntax checker.
 
-The *note rust: 11e. syntax checker now uses `--no-trans' to check for
+The *note rust: 11f. syntax checker now uses `--no-trans' to check for
 more than just syntax errors.  For instance, it will report unused
 variables now.
 
 As part of the transition to the new manual, Flycheck now provides a
-syntax checker for Sphinx documents (*note rst-sphinx: 113.).  The
-*note rst: 112. syntax checker does not check documents within a Sphinx
+syntax checker for Sphinx documents (*note rst-sphinx: 114.).  The
+*note rst: 113. syntax checker does not check documents within a Sphinx
 project anymore, do avoid false positives from Sphinx-specific markup.
 
 ---------- Footnotes ----------
@@ -6384,7 +6393,7 @@ File: flycheck.info,  Node: Other bug fixes and improvements,  Prev: Extending s
    - Flycheck does not longer attach syntax checker processes to the
      buffer anymore, improving compatibility with Tabbar Mode (#298(1)).
 
-   - The *note emacs-lisp: c2. and *note emacs-lisp-checkdoc: c3. syntax
+   - The *note emacs-lisp: c3. and *note emacs-lisp-checkdoc: c4. syntax
      checkers do not visit the file being checked anymore, to avoid
      unintended side effects from unsafe local variables, etc. (#319(2))
 
@@ -6414,7 +6423,7 @@ checkers, a brand-new error list, and the ability to override the
 executables of syntax checkers.
 
 Let's go through the list of important changes.  For a detailed list,
-please read the *note changelog: 1c4.
+please read the *note changelog: 1c5.
 
 * Menu:
 
@@ -6517,14 +6526,14 @@ File: flycheck.info,  Node: Miscellaneous new options,  Prev: Better Haskell sup
 ..................................
 
    - The SASS and SCSS syntax checkers support the Compass framework
-     now, via *note flycheck-sass-compass: 126. and *note
-     flycheck-scss-compass: 12e.  respectively.
+     now, via *note flycheck-sass-compass: 127. and *note
+     flycheck-scss-compass: 12f.  respectively.
 
    - Clang can enable Microsoft C/C++ extensions now, via *note
-     flycheck-clang-ms-extensions: 9f.
+     flycheck-clang-ms-extensions: a0.
 
    - Rubocop can inhibit all style hints via the new *note
-     flycheck-rubocop-lint-only: 118.
+     flycheck-rubocop-lint-only: 119.
 
 
 File: flycheck.info,  Node: New features<2>,  Next: Improved error list,  Prev: Syntax checkers<4>,  Up: Jan 12 2014 — Flycheck 0 16 released
@@ -6610,7 +6619,7 @@ the modern syntax-checking extension for Emacs.
 
 It is three months since the last release, so this release brings quite
 a lot of changes.  For a complete list of all changes, please read the
-complete list of *note changes: 1c4.  This article will just cover the
+complete list of *note changes: 1c5.  This article will just cover the
 most important changes.
 
 * Menu:
@@ -6631,7 +6640,7 @@ File: flycheck.info,  Node: Breaking changes<6>,  Next: New syntax checkers,  Up
 -----------------------
 
 This release introduces three breaking changes.  Two of these are
-related to the *note new-error-list: 1d5.:
+related to the *note new-error-list: 1d6.:
 
      Warning: `flycheck-display-errors-in-list' is gone.  If you had
      previously set *note flycheck-display-errors-function: 28. to this
@@ -6685,9 +6694,9 @@ to show the errors of the corresponding buffer.
 Furthermore, the error list highlights the errors at point and at the
 current line.  If you move the point to an error location, the error
 list automatically scrolls to the corresponding error, and highlights
-it with the new *note flycheck-error-list-highlight-at-point: 7f. face.
+it with the new *note flycheck-error-list-highlight-at-point: 80. face.
 Additionally, it highlights all other errors at the current line with
-the new *note flycheck-error-list-highlight: 80. face.
+the new *note flycheck-error-list-highlight: 81. face.
 
 
 File: flycheck.info,  Node: C/C++ support,  Next: New info level messages,  Prev: New error list,  Up: Nov 15 2013 – Flycheck 0 15 released
@@ -6695,28 +6704,28 @@ File: flycheck.info,  Node: C/C++ support,  Next: New info level messages,  Prev
 10.6.4 C/C++ support
 --------------------
 
-The *note c/c++-clang: 98. syntax checker for C and C++ got a bunch of
+The *note c/c++-clang: 99. syntax checker for C and C++ got a bunch of
 new options:
 
    - Set additional preprocessor definitions for syntax checking with
-     *note flycheck-clang-definitions: 9b, corresponding to the `-D'
+     *note flycheck-clang-definitions: 9c, corresponding to the `-D'
      option for `clang'.
 
    - Include additional headers or files during syntax checking with
-     *note flycheck-clang-includes: 9d, corresponding to the `-include'
+     *note flycheck-clang-includes: 9e, corresponding to the `-include'
      option for `clang'.
 
    - Choose the language standard, e.g. C++98 or C++11, with *note
-     flycheck-clang-language-standard: 9e, corresponding to the `-std'
+     flycheck-clang-language-standard: 9f, corresponding to the `-std'
      option for `clang'.
 
    - Disable RTTI during syntax checking with *note
-     flycheck-clang-no-rtti: a1, corresponding to the `-fno-rtti'
+     flycheck-clang-no-rtti: a2, corresponding to the `-fno-rtti'
      option for `clang'.  In current Clang versions, however, this does
      not cause errors or warnings when using RTTI.
 
    - Choose the standard library for syntax checking with *note
-     flycheck-clang-standard-library: a2, corresponding to the `-stdlib'
+     flycheck-clang-standard-library: a3, corresponding to the `-stdlib'
      option for `clang'.  Currently, Clang supports `libstdc++' for the
      good old GNU standard library, and `libc++' for the modern Libc++
      from the LLVM project.
@@ -6751,12 +6760,12 @@ code.  With this new level, the semantics of error levels is as follows:
 Some syntax checkers were changed to use this new level for messages,
 which do not really fit into the `warning' level:
 
-   - *note c/c++-clang: 98. for `note:' messages
+   - *note c/c++-clang: 99. for `note:' messages
 
-   - *note python-flake8: 108. for PEP8 naming issues emitted by the
+   - *note python-flake8: 109. for PEP8 naming issues emitted by the
      `pep8-naming' plugin
 
-   - *note python-pylint: 10c. for convention level messages, e.g.
+   - *note python-pylint: 10d. for convention level messages, e.g.
      naming issues, etc.
 
 The new level is already supported by the popular Solarized(1) and
@@ -6801,16 +6810,16 @@ improvements:
 
    - Flycheck does not longer check encrypted files for obvious reasons.
 
-   - The *note emacs-lisp-checkdoc: c3. syntax checker does not check
+   - The *note emacs-lisp-checkdoc: c4. syntax checker does not check
      `.dir-locals.el' anymore.
 
-   - *note python-pylint: 10c. now parses error columns from the output
+   - *note python-pylint: 10d. now parses error columns from the output
      of `pylint'.
 
-   - Spurious “flawed definition” warnings in *note lua: f6, *note rst:
-     112. and *note go-build: d6. were fixed.
+   - Spurious “flawed definition” warnings in *note lua: f7, *note rst:
+     113. and *note go-build: d7. were fixed.
 
-   - *note c/c++-cppcheck: 99. output now parses correctly when using
+   - *note c/c++-cppcheck: 9a. output now parses correctly when using
      the pure Emacs Lisp XML parser in `xml.el'.
 
           Note: Nonetheless, you are advised to use Emacs with `libxml'
@@ -6880,6 +6889,9 @@ File: flycheck.info,  Node: master in development,  Next: 0 20 Aug 12 2014,  Up:
 
         - Add `null-device' symbol for syntax checker commands
 
+        - Add `flycheck-display-error-messages-unless-error-list' for
+          `flycheck-error-display-function'
+
    - Improvements:
 
         - Improve GCC syntax checking by expanding templates [GH-459](3)
@@ -6892,6 +6904,8 @@ File: flycheck.info,  Node: master in development,  Next: 0 20 Aug 12 2014,  Up:
 
         - Expand `default-directory' before using it, to handle
           abbreviated paths gracefully [GH-434](6)
+
+        - Restore mouse support in the error list [GH-468](7)
 
 ---------- Footnotes ----------
 
@@ -6906,6 +6920,8 @@ File: flycheck.info,  Node: master in development,  Next: 0 20 Aug 12 2014,  Up:
 (5) https://github.com/flycheck/flycheck/issues/461
 
 (6) https://github.com/flycheck/flycheck/issues/434
+
+(7) https://github.com/flycheck/flycheck/issues/468
 
 
 File: flycheck.info,  Node: 0 20 Aug 12 2014,  Next: 0 19 Jun 12 2014,  Prev: master in development,  Up: Changes
@@ -8757,7 +8773,7 @@ Then install the syntax checkers that you'd like to test:
     $ cabal install hlint shellcheck
 
      Note: If you'd like to keep your environment clean, use the *note
-     Virtual test environment: 20e. instead.
+     Virtual test environment: 20f. instead.
 
 Run the entire test suite:
 
@@ -8835,7 +8851,7 @@ After the VM is started, you can connect to it:
     $ vagrant ssh
 
 This will give you a bash prompt within the VM, on which you can run
-the tests as explained in *note Test running: 20c.
+the tests as explained in *note Test running: 20d.
 
 To switch between Emacs versions, pass `EMACS' to `make test':
 
@@ -8880,7 +8896,7 @@ File: flycheck.info,  Node: Travis CI,  Prev: Virtual test environment,  Up: Tes
 13.4 Travis CI
 ==============
 
-The entire test suite continuously runs on *note Travis CI: 211. after
+The entire test suite continuously runs on *note Travis CI: 212. after
 every push, with the latest Emacs release and a nightly Emacs snapshot.
 
 Travis CI is configured from `.travis.yml' in the top-level source
@@ -8889,7 +8905,7 @@ directory, and uses mostly the same playbooks for provisioning.
      Note: Travis CI is the *reference environment* for Flycheck's test
      suite.  All tests *must pass* on Travis CI.
 
-     In case Travis CI diverges from the *note VM: 20e, Travis CI is
+     In case Travis CI diverges from the *note VM: 20f, Travis CI is
      authoritative.
 
 
@@ -8960,7 +8976,7 @@ File: flycheck.info,  Node: Building HTML and Texinfo,  Next: Verifying referenc
 ==============================
 
 First, switch to the virtual environment you created in the *note Build
-environment setup: 214, and make sure that the requirements are up to
+environment setup: 215, and make sure that the requirements are up to
 date:
 
     $ source ~/.virtualenvs/cask/bin/activate
@@ -9026,7 +9042,7 @@ Flycheck.
 
 When making changes to the documentation, you need to rebuild the
 Texinfo version with, by following the *note instructions to build the
-documentation: 216.
+documentation: 217.
 
 ---------- Footnotes ----------
 

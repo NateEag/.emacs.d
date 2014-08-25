@@ -1,4 +1,4 @@
-This is /tmp/flycheck2170X5k/flycheck-20140821.801/flycheck.info,
+This is /tmp/flycheck17909h31/flycheck-20140825.353/flycheck.info,
 produced by makeinfo version 4.13 from
 /home/melpa/melpa/working/flycheck/doc/flycheck.texi.
 
@@ -544,7 +544,7 @@ Index
 * flycheck-clang-standard-library; Emacs Lisp user option: C/C++.
                                                               (line 156)
 * flycheck-clang-warnings; Emacs Lisp user option: C/C++.     (line 176)
-* flycheck-clear; Emacs Lisp command:    Error reporting.     (line 247)
+* flycheck-clear; Emacs Lisp command:    Error reporting.     (line 256)
 * flycheck-coffeelintrc; Emacs Lisp user option: Coffeescript.
                                                               (line  28)
 * flycheck-collapse-error-message-whitespace; Emacs Lisp function: Error filters.
@@ -552,7 +552,7 @@ Index
 * flycheck-completion-system; Emacs Lisp user option: Syntax checker selection<2>.
                                                               (line 139)
 * flycheck-copy-messages-as-kill; Emacs Lisp command: Error reporting.
-                                                              (line 181)
+                                                              (line 190)
 * flycheck-count-errors; Emacs Lisp function: Error Analysis. (line  15)
 * flycheck-cppcheck-checks; Emacs Lisp user option: C/C++.    (line 347)
 * flycheck-cppcheck-inconclusive; Emacs Lisp user option: C/C++.
@@ -571,6 +571,8 @@ Index
                                                               (line 176)
 * flycheck-disabled-checkers; Emacs Lisp user option: Syntax checker selection<2>.
                                                               (line  31)
+* flycheck-display-error-messages-unless-error-list; Emacs Lisp function: Error reporting.
+                                                              (line 180)
 * flycheck-display-error-messages; Emacs Lisp function: Error reporting.
                                                               (line 166)
 * flycheck-display-errors-delay; Emacs Lisp user option: Error reporting.
@@ -597,9 +599,9 @@ Index
 * flycheck-error-line-region; Emacs Lisp function: Error API. (line  83)
 * flycheck-error-line; Emacs Lisp slot:  Error API.           (line  28)
 * flycheck-error-list-highlight-at-point; Emacs Lisp face: Error reporting.
-                                                              (line 231)
+                                                              (line 240)
 * flycheck-error-list-highlight; Emacs Lisp face: Error reporting.
-                                                              (line 238)
+                                                              (line 247)
 * flycheck-error-message; Emacs Lisp slot: Error API.         (line  37)
 * flycheck-error-new-at; Emacs Lisp function: Error API.      (line  47)
 * flycheck-error-new; Emacs Lisp function: Error API.         (line  66)
@@ -653,9 +655,9 @@ Index
 * flycheck-go-vet-print-functions; Emacs Lisp user option: Go.
                                                               (line  64)
 * flycheck-google-max-messages; Emacs Lisp user option: Error reporting.
-                                                              (line 197)
+                                                              (line 206)
 * flycheck-google-messages; Emacs Lisp command: Error reporting.
-                                                              (line 186)
+                                                              (line 195)
 * flycheck-has-errors-p; Emacs Lisp function: Error Analysis. (line  21)
 * flycheck-highlighting-mode; Emacs Lisp user option: Error reporting.
                                                               (line  33)
@@ -667,7 +669,7 @@ Index
 * flycheck-jshintrc; Emacs Lisp user option: Javascript.      (line  14)
 * flycheck-last-status-change; Emacs Lisp variable: Status API.
                                                               (line  44)
-* flycheck-list-errors; Emacs Lisp command: Error reporting.  (line 216)
+* flycheck-list-errors; Emacs Lisp command: Error reporting.  (line 225)
 * flycheck-locate-config-file-functions; Emacs Lisp user option: Syntax checker configuration files.
                                                               (line  20)
 * flycheck-locate-config-file; Emacs Lisp function: Syntax checker API.
@@ -759,7 +761,7 @@ Index
                                                               (line   6)
 * json-jsonlint; Emacs Lisp Flycheck syntax checker: JSON.    (line   6)
 * less; Emacs Lisp Flycheck syntax checker: LESS.             (line   6)
-* list-flycheck-errors; Emacs Lisp command: Error reporting.  (line 216)
+* list-flycheck-errors; Emacs Lisp command: Error reporting.  (line 225)
 * lua; Emacs Lisp Flycheck syntax checker: Lua.               (line   6)
 * make; Emacs Lisp Flycheck syntax checker: Make.             (line   6)
 * perl-perlcritic; Emacs Lisp Flycheck syntax checker: Perl.  (line  18)

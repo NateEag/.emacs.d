@@ -373,6 +373,8 @@ If set to nil, do not display errors at all."
   :group 'flycheck
   :type '(choice (const :tag "Display error messages"
                         flycheck-display-error-messages)
+                 (const :tag "Display error messages only if no error list"
+                        flycheck-display-error-messages-unless-error-list)
                  (function :tag "Error display function"))
   :package-version '(flycheck . "0.13")
   :risky t)
@@ -3540,33 +3542,48 @@ the beginning of the buffer."
     ;; list itself.
     (flycheck-error-list-set-source (current-buffer))))
 
+(define-button-type 'flycheck-error-list
+  'action #'flycheck-error-list-button-goto-error
+  'help-echo (purecopy "mouse-2, RET: goto error"))
+
+(defun flycheck-error-list-button-goto-error (button)
+  "Go to the error at BUTTON."
+  (flycheck-error-list-goto-error (button-start button)))
+
+(defun flycheck-error-list-make-cell (text &optional face)
+  "Make an error list cell with TEXT and FACE."
+  (let ((face (or face 'default)))
+    (list text 'type 'flycheck-error-list 'face face)))
+
 (defun flycheck-error-list-make-number-cell (number face)
   "Make a table cell for a NUMBER with FACE.
 
 Convert NUMBER to string, fontify it with FACE and return the
 string with attached text properties."
-  (if (numberp number)
-      (propertize (number-to-string number) 'font-lock-face face)
-    ""))
+  (flycheck-error-list-make-cell
+   (if (numberp number) (number-to-string number) "")
+   face))
 
 (defun flycheck-error-list-make-entry (error)
   "Make a table cell for the given ERROR.
 
 Return a list with the contents of the table cell."
-  (let ((level-face (flycheck-error-level-error-list-face
-                     (flycheck-error-level error)))
-        (line (flycheck-error-line error))
-        (column (flycheck-error-column error))
-        (message (or (flycheck-error-message error) "Unknown error"))
-        (checker (flycheck-error-checker error)))
+  (let* ((level (flycheck-error-level error))
+         (level-face (flycheck-error-level-error-list-face level))
+         (line (flycheck-error-line error))
+         (column (flycheck-error-column error))
+         (message (or (flycheck-error-message error)
+                      (format "Unknown %s" (symbol-name level))))
+         (checker (flycheck-error-checker error)))
     (list error
           (vector (flycheck-error-list-make-number-cell
                    line 'flycheck-error-list-line-number)
                   (flycheck-error-list-make-number-cell
                    column 'flycheck-error-list-column-number)
-                  (propertize (symbol-name (flycheck-error-level error))
-                              'font-lock-face level-face)
-                  (format "%s (%s)" message checker)))))
+                  (flycheck-error-list-make-cell
+                   (symbol-name (flycheck-error-level error)) level-face)
+                  (flycheck-error-list-make-cell
+                   (format "%s (%s)" message checker))))))
 
 (defun flycheck-error-list-entries ()
   "Create the entries for the error list."
@@ -3617,10 +3634,25 @@ mode line indication of `flycheck-error-list-mode'."
     (when (buffer-live-p flycheck-error-list-source-buffer)
       (switch-to-buffer flycheck-error-list-source-buffer))))
 
+(defun flycheck-get-error-list-window-list (&optional all-frames)
+  "Get all windows displaying the error list.
+
+ALL-FRAMES specifies the frames to consider, as in
+`get-buffer-window-list'."
+  (-when-let (buf (get-buffer flycheck-error-list-buffer))
+    (get-buffer-window-list buf nil all-frames)))
+
+(defun flycheck-get-error-list-window (&optional all-frames)
+  "Get a window displaying the error list, or nil if none.
+
+ALL-FRAMES specifies the frames to consider, as in
+`get-buffer-window'."
+  (-when-let (buf (get-buffer flycheck-error-list-buffer))
+    (get-buffer-window buf all-frames)))
+
 (defun flycheck-error-list-recenter-at (pos)
   "Recenter the error list at POS."
-  (dolist (window (get-buffer-window-list flycheck-error-list-buffer
-                                          nil 'all-frames))
+  (dolist (window (flycheck-get-error-list-window-list t))
     (with-selected-window window
       (goto-char pos)
       (recenter))))
@@ -3636,19 +3668,17 @@ list."
   ;; select this window while reverting, because Tabulated List mode attempts to
   ;; recenter the error at the old location, so it must have the proper window
   ;; selected.
-  (-when-let (error-list-window (get-buffer-window flycheck-error-list-buffer
-                                                   'all-frames))
-    (with-selected-window error-list-window
+  (-when-let (window (flycheck-get-error-list-window t))
+    (with-selected-window window
       (revert-buffer))
     (flycheck-error-list-highlight-errors)))
 
-(defun flycheck-error-list-goto-error (&optional error)
-  "Go to the location of an ERROR from the error list.
+(defun flycheck-error-list-goto-error (&optional pos)
+  "Go to the location of the error at POS in the error list.
 
-Interactively or when ERROR is not given, go to the error at
-point."
+POS defaults to `point'."
   (interactive)
-  (-when-let* ((error (or error (tabulated-list-get-id)))
+  (-when-let* ((error (tabulated-list-get-id pos))
                (buffer (flycheck-error-buffer error)))
     (when (buffer-live-p buffer)
       (if (eq (window-buffer) (get-buffer flycheck-error-list-buffer))
@@ -3908,6 +3938,15 @@ In the latter case, show messages in
     (when (and errors (flycheck-may-use-echo-area-p))
       (display-message-or-buffer (string-join messages "\n\n")
                                  flycheck-error-message-buffer))))
+
+(defun flycheck-display-error-messages-unless-error-list (errors)
+  "Show messages of ERRORS unless the error list is visible.
+
+Like `flycheck-display-error-messages', but only if the error
+list (see `flycheck-list-errors') is not visible in any window in
+the current frame."
+  (unless (flycheck-get-error-list-window 'current-frame)
+    (flycheck-display-error-messages errors)))
 
 (defun flycheck-hide-error-buffer ()
   "Hide the Flycheck error buffer if necessary.

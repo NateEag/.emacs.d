@@ -5,7 +5,7 @@
 ;; Copyright (C) 2013-     Shin Aoyama        (@smihica      https://github.com/smihica)
 ;; Copyright (C) 2009-2012 Chris Done
 
-;; Version: 20140821.1806
+;; Version: 20140824.1604
 ;; X-Original-Version: 1.0.10
 ;; Author: Shin Aoyama <smihica@gmail.com>
 ;; URL: https://github.com/smihica/emmet-mode
@@ -3500,19 +3500,23 @@ tbl))
    for the current line."
   (let* ((end (point))
          (start (emmet-find-left-bound))
-         (line (buffer-substring-no-properties start end)))
-    (let ((expr (emmet-regex "\\([ \t]*\\)\\([^\n]+\\)" line 2)))
-      (if (first expr)
-          (list (first expr) start end)))))
+         (line (buffer-substring-no-properties start end))
+         (expr (emmet-regex "\\([ \t]*\\)\\([^\n]+\\)" line 2)))
+    (if (first expr)
+        (list (first expr) start end))))
 
 (defun emmet-find-left-bound ()
   "Find the left bound of an emmet expr"
   (save-excursion (save-match-data
     (let ((char (char-before))
-          (last-gt (point)))
+          (last-gt (point))
+          (in-style-attr (looking-back "style=[\"'][^\"']*")))
       (while char
-        (cond ((member char '(?\} ?\] ?\)))
-               (backward-sexp) (setq char (char-before)))
+        (cond ((and in-style-attr (member char '(?\" ?\')))
+               (setq char nil))
+              ((member char '(?\} ?\] ?\)))
+               (with-syntax-table (standard-syntax-table)
+                 (backward-sexp) (setq char (char-before))))
               ((eq char ?\>)
                (setq last-gt (point)) (backward-char) (setq char (char-before)))
               ((eq char ?\<)
@@ -3551,9 +3555,30 @@ e. g. without semicolons")
   "Major modes that use emmet for CSS, rather than HTML.")
 
 (defun emmet-transform (input)
-  (if emmet-use-css-transform
+  (if (or (emmet-detect-style-tag-and-attr) emmet-use-css-transform)
       (emmet-css-transform input)
     (emmet-html-transform input)))
+
+(defun emmet-reposition-cursor (expr)
+  (let ((output-markup (buffer-substring-no-properties (second expr) (point))))
+    (when emmet-move-cursor-after-expanding
+      (let ((p (point))
+            (new-pos (if (emmet-html-text-p output-markup)
+                         (emmet-html-next-insert-point output-markup)
+                       (emmet-css-next-insert-point output-markup))))
+        (goto-char
+         (+ (- p (length output-markup))
+            new-pos))))))
+
+(defun emmet-detect-style-tag-and-attr ()
+  (let* ((qt "[\"']")
+         (not-qt "[^\"']")
+         (everything "\\(.\\|\n\\)*"))
+    (or
+     (and (looking-at (format "%s*%s" not-qt qt))
+          (looking-back (format "style=%s%s*" qt not-qt))) ; style attr
+     (and (looking-at (format "%s</style>" everything))
+          (looking-back (format "<style>%s" everything)))))) ; style tag
 
 ;;;###autoload
 (defun emmet-expand-line (arg)
@@ -3583,12 +3608,7 @@ For more information see `emmet-mode'."
               (when markup
                 (delete-region (second expr) (third expr))
                 (emmet-insert-and-flash markup)
-                (let ((output-markup (buffer-substring-no-properties (second expr) (point))))
-                  (when (and emmet-move-cursor-after-expanding (emmet-html-text-p markup))
-                    (let ((p (point)))
-                      (goto-char
-                       (+ (- p (length output-markup))
-                        (emmet-html-next-insert-point output-markup)))))))))))))
+                (emmet-reposition-cursor expr))))))))
 
 (defvar emmet-mode-keymap
   (let
@@ -3701,12 +3721,7 @@ See also `emmet-expand-line'."
         (when markup
           (delete-region (overlay-start ovli) (overlay-end ovli))
           (emmet-insert-and-flash markup)
-          (let ((output-markup (buffer-substring-no-properties (line-beginning-position) (point))))
-            (when (and emmet-move-cursor-after-expanding (emmet-html-text-p markup))
-              (let ((p (point)))
-                (goto-char
-                 (+ (- p (length output-markup))
-                    (emmet-html-next-insert-point output-markup))))))))))
+          (emmet-reposition-cursor expr)))))
   (emmet-preview-abort))
 
 (defun emmet-html-next-insert-point (str)
@@ -3717,6 +3732,13 @@ See also `emmet-expand-line'."
      (emmet-aif (emmet-go-to-edit-point 1 t) (- it 1)) ; try to find an edit point
      (emmet-aif (re-search-forward ".+</" nil t) (- it 3))   ; try to place cursor after tag contents
      (length str))))                             ; ok, just go to the end
+
+(defun emmet-css-next-insert-point (str)
+  (let ((regexp (if emmet-use-sass-syntax ": *\\($\\)" ": *\\(;\\)$")))
+    (save-match-data
+      (set-match-data nil t)
+      (string-match regexp str)
+      (or (match-beginning 1) (length str)))))
 
 (defvar emmet-flash-ovl nil)
 (make-variable-buffer-local 'emmet-flash-ovl)

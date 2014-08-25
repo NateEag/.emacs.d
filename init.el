@@ -558,6 +558,9 @@
 (setq httpd-port 9000)
 (add-hook 'css-mode-hook 'css-mode-init)
 
+(add-auto-mode 'scss-mode
+               "\\.scss\\'")
+
 ;; Web mode.
 ;; For editing web templates of various stripes.
 (add-auto-mode 'web-mode

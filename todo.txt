@@ -14,6 +14,9 @@
 -Add transpose operator/command to evil. I just want to be able to swap various
  text objects/motions cleanly - something like 't{' rather than 'd{}P'.
 
+-Report bug on autoloading evil-nerd-commenter, particularly with
+ evil-local-mode.
+
 -Finish getting tagedit to work with web-mode.
 
 -Make comment auto-fill work with C++-style comments in js2-mode, not just

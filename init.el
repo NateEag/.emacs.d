@@ -348,9 +348,6 @@
   ;; Turn on surround everywhere.
   (global-evil-surround-mode)
 
-  ;; Turn on nerd-commenting. We'll see how I like it.
-  (evilnc-default-hotkeys)
-
   ;; Set up my leader shortcuts.
   ;;
   ;; I'm not really sure what I'll want here long-term. I'm starting with a few
@@ -364,7 +361,19 @@
    "w" 'save-buffer
    "x" 'execute-extended-command)
 
-  (message "calling the hook"))
+  ;; Set up evil-nerd-commenter.
+  ;;
+  ;; This is a lame workaround. Requiring evil-nerd-commenter if evil-mode is
+  ;; not active causes a crash. Thus, we require it whenever evil-mode is
+  ;; activated, since it'll be a no-op after the first time.
+  ;;
+  ;; DEBUG Commented out for now, because I still haven't solved the weird
+  ;; crashes it's causing me.
+  ;;
+  ;; (add-hook 'evil-local-mode-hook '(lambda ()
+  ;;                                    (require 'evil-nerd-commenter)
+  ;;                                    (evilnc-default-hotkeys)))
+  )
 
 (eval-after-load 'evil (lambda () (evil-mode-init)))
 

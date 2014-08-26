@@ -619,6 +619,12 @@
 
 ;; Global keybindings inside the "reserved for user" namespace.
 
+;; M-x means a lot of finger-scrunching.
+(global-set-key [f8] 'execute-extended-command)
+
+;; Reverting a buffer is much like refreshing.
+(global-set-key [f5] '(lambda () (interactive) (revert-buffer t t)))
+
 ;; Switch buffers/find likely files via Helm.
 (global-set-key (kbd "C-c b") 'my-helm-for-files)
 

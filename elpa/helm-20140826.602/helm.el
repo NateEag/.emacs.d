@@ -1410,7 +1410,9 @@ When helm is alive use `make-local-variable' as usual on `helm-buffer'.
   "Build an alist with (NAME . ACTION) elements with each pairs in ARGS.
 Where NAME is a string or a function returning a string or nil and ACTION
 a function.
-If NAME returns nil the pair is skipped."
+If NAME returns nil the pair is skipped.
+
+\(fn NAME ACTION ...)"
   (cl-loop for i on args by #'cddr
            for name  = (car i)
            when (functionp name)
@@ -3821,7 +3823,7 @@ delete minibuffer contents from point instead of deleting all."
     source))
 
 ;; Built-in plug-in: candidates-in-buffer
-(defun helm-candidates-in-buffer (source)
+(defun helm-candidates-in-buffer (&optional source)
   "Get candidates from the candidates buffer according to `helm-pattern'.
 
 BUFFER is `helm-candidate-buffer' by default.  Each
@@ -3886,21 +3888,20 @@ a specific part of candidate.
 
 To customize `helm-candidates-in-buffer' behavior, use `search',
 `get-line', `match-part' and `search-from-end' attributes."
-
-  (helm-candidates-in-buffer-1
-   (helm-candidate-buffer)
-   helm-pattern
-   (or (assoc-default 'get-line source)
-       #'buffer-substring-no-properties)
-   ;; use external variable `source'.
-   (or (assoc-default 'search source)
-       (if (assoc 'search-from-end source)
-           '(helm-candidates-in-buffer-search-from-end)
-         '(helm-candidates-in-buffer-search-from-start)))
-   (helm-candidate-number-limit source)
-   (assoc 'search-from-end source)
-   (helm-attr 'match-part)
-   source))
+  (let ((src (or source (helm-get-current-source))))
+    (helm-candidates-in-buffer-1
+     (helm-candidate-buffer)
+     helm-pattern
+     (or (assoc-default 'get-line src)
+         #'buffer-substring-no-properties)
+     (or (assoc-default 'search src)
+         (if (assoc 'search-from-end src)
+             '(helm-candidates-in-buffer-search-from-end)
+             '(helm-candidates-in-buffer-search-from-start)))
+     (helm-candidate-number-limit src)
+     (assoc 'search-from-end src)
+     (helm-attr 'match-part)
+     src)))
 
 (defun helm-candidates-in-buffer-search-from-start (pattern)
   "Search PATTERN with `re-search-forward' with bound and noerror args."

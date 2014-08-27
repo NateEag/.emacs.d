@@ -518,6 +518,13 @@
 (add-hook 'git-commit-mode-hook 'git-commit-mode-hook)
 (add-auto-mode 'git-commit-mode "COMMIT_EDITMSG$")
 
+;; General config mode hook.
+(defun conf-mode-init ()
+  "My settings for editing config files."
+
+  (my-prog-mode-init))
+(add-hook 'conf-mode-hook 'conf-mode-init)
+
 ;; Unix config mode (mostly used for .git* files)
 (defun conf-unix-mode-init ()
   "My settings for editing Unix config files."

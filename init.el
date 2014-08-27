@@ -358,6 +358,10 @@
    "w" 'save-buffer
    "x" 'execute-extended-command)
 
+  ;; Some modes it's better to start in insert-state for.
+  (loop for (mode . state) in '((git-commit-mode . insert))
+        do (evil-set-initial-state mode state))
+
   ;; Set up evil-nerd-commenter.
   ;;
   ;; This is a lame workaround. Requiring evil-nerd-commenter if evil-mode is

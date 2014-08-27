@@ -39,9 +39,6 @@
 (put 'upcase-region 'disabled nil)
 (put 'downcase-region 'disabled nil)
 
-;; Default frames to a width of 80 chars.
-(add-to-list 'default-frame-alist '(width . 80))
-
 ;; If the matching line for a paren is offscreen, show the matching line in the
 ;; minibuffer.
 (defadvice show-paren-function (after my-echo-paren-matching-line activate)
@@ -679,7 +676,8 @@
 ;; Just for grins, see how long starting up took.
 (add-hook 'after-init-hook
           (lambda ()
-            (message (emacs-init-time))))
+            (message (emacs-init-time))
+            (my-set-up-frame (selected-frame))))
 
 (provide 'init)
 ;;; init.el ends here

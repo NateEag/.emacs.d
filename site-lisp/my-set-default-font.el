@@ -1,4 +1,6 @@
 ;; A few functions I'm evolving for choosing my default font.
+;;
+;; ...and my default frame config, it seems. Probably should rename this file.
 
 (defun my-get-default-font-size ()
   "Return a good size for my default font based on monitor's pixel density."
@@ -32,3 +34,12 @@
   ;; font-free setting.
   (if (member (my-get-default-font-name) (font-family-list))
       (set-frame-font (my-get-default-font size) nil t)))
+
+(defun my-set-up-frame (frame)
+  "Set up `FRAME' the way I like."
+
+  ;; Two 80-column windows. The extra chars are for the fringes.
+  (set-frame-width frame 164)
+
+  (delete-other-windows)
+  (split-window-right))

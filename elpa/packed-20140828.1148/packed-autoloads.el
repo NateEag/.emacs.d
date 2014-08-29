@@ -4,7 +4,7 @@
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
 ;;;### (autoloads nil nil ("packed-git.el" "packed-pkg.el" "packed.el")
-;;;;;;  (21455 8819 342773 0))
+;;;;;;  (21504 22722 983029 0))
 
 ;;;***
 

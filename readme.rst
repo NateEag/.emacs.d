@@ -27,14 +27,14 @@ Despite the grumbling from the graphical language crowd, most programming comes
 down to entering, reading, and changing plain text in files.
 
 Thus, a programmer should manipulate text fluidly and effortlessly, the way a
-pianist plays arpeggios and scales. A musician's technique is the mechanics of
-how he makes the instrument produce sound; a programmer's technique is the
-mechanics of how he gives the computer instructions.
+pianist plays arpeggios and scales. A musician's technique is how he makes the
+instrument produce sound; a programmer's technique is how he gives the computer
+instructions.
 
 Changing editors for each language complicates technique. Eclipse for Java,
-PyCharm for Python, Sublime for JavaScript... The technique of editing a
-program in each of these environments is different, and over a lifetime adds
-cognitive burden.
+PyCharm for Python, Sublime for JavaScript... The keystrokes for editing a
+program are different in each of these, and over a lifetime adds cognitive
+burden.
 
 Instead of changing editors for each language, a programmer's editor should
 adapt itself to each language, so that the technique of programming remains
@@ -48,6 +48,12 @@ turning it off.
 
 Features
 ========
+
+Emacs' default keybindings are powerful but complex. They're hard to type and
+are likely why
+`RMS has had wrist problems <https://stallman.org/stallman-computing.html>`__.
+I use `evil-mode <https://gitorious.org/evil/pages/Home>`__ with plugins for
+vim-style modal editing, which is more powerful and easier on my hands.
 
 I use `flycheck <https://github.com/flycheck/flycheck>`__ for style-checking
 just about everything, and install the relevant checker whenever I start

@@ -4,7 +4,7 @@
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
 ;;;### (autoloads nil "evil-nerd-commenter" "evil-nerd-commenter.el"
-;;;;;;  (21495 6821 0 0))
+;;;;;;  (21504 22735 0 0))
 ;;; Generated autoloads from evil-nerd-commenter.el
 
 (autoload 'evilnc-comment-or-uncomment-paragraphs "evil-nerd-commenter" "\
@@ -51,7 +51,7 @@ Copy and paste NUM lines. Then comment the original lines. NUM could be negative
    Case 2: If a region selected, the region is expand to make sure the region contain
    whole lines. Then we operate the expanded region. NUM is ignored.
 
-\(fn &optional NUM)" nil nil)
+\(fn &optional NUM)" t nil)
 
 (autoload 'evilnc-copy-to-line "evil-nerd-commenter" "\
 Copy from the current line to the LINENUM line, for non-evil user only
@@ -75,8 +75,8 @@ Set the hotkeys of evil-nerd-comment
 
 ;;;***
 
-;;;### (autoloads nil nil ("evil-nerd-commenter-pkg.el") (21495 6821
-;;;;;;  587507 0))
+;;;### (autoloads nil nil ("evil-nerd-commenter-pkg.el") (21504 22735
+;;;;;;  980104 0))
 
 ;;;***
 

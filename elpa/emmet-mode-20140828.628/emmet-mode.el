@@ -5,7 +5,7 @@
 ;; Copyright (C) 2013-     Shin Aoyama        (@smihica      https://github.com/smihica)
 ;; Copyright (C) 2009-2012 Chris Done
 
-;; Version: 20140824.1604
+;; Version: 20140828.628
 ;; X-Original-Version: 1.0.10
 ;; Author: Shin Aoyama <smihica@gmail.com>
 ;; URL: https://github.com/smihica/emmet-mode
@@ -3617,6 +3617,7 @@ For more information see `emmet-mode'."
     (define-key map (kbd "<C-return>") 'emmet-expand-line)
     (define-key map (kbd "<C-M-right>") 'emmet-next-edit-point)
     (define-key map (kbd "<C-M-left>") 'emmet-prev-edit-point)
+    (define-key map (kbd "C-c w") 'emmet-wrap-with-markup)
     map)
   "Keymap for emmet minor mode.")
 
@@ -3882,9 +3883,14 @@ accept it or skip it."
       ((between-tags
         (if only-before-closed-tag "\\(><\\)/" "\\(><\\)"))
        (indented-line "\\(^[[:blank:]]+$\\)")
-       (between-quotes "\\(=\\(\"\\|'\\)\\{2\\}\\)")
-       (edit-point (format "\\(%s\\|%s\\|%s\\)"
-                           between-tags indented-line between-quotes)))
+       (between-quotes
+        (if emmet-move-cursor-between-quotes "\\(=\\(\"\\|'\\)\\{2\\}\\)" nil))
+       (whole-regex
+        (mapconcat 'identity
+                   (delq nil
+                         (list between-tags indented-line between-quotes))
+                   "\\|"))
+       (edit-point (format "\\(%s\\)" whole-regex)))
     (if (> count 0)
 	(progn
 	  (forward-char)
@@ -3910,6 +3916,23 @@ accept it or skip it."
 		 ((match-string 4) (forward-char 2)))
 		(point))
 	      (forward-char)))))))
+
+;;;###autoload
+(defun emmet-wrap-with-markup (wrap-with)
+  "Wrap region with markup."
+  (interactive "sExpression to wrap with: ")
+  (let* ((emmet-move-cursor-between-quotes nil)
+         (to-wrap (buffer-substring-no-properties (region-beginning) (region-end)))
+         (expr (concat wrap-with ">{!EMMET-TO-WRAP-REPLACEMENT!}"))
+         (markup (replace-regexp-in-string
+                  "!EMMET-TO-WRAP-REPLACEMENT!" to-wrap
+                  (emmet-transform expr)
+                  t t)))
+         (when markup
+           (delete-region (region-beginning) (region-end))
+           (insert markup)
+           (indent-region (region-beginning) (region-end))
+           )))
 
 ;;;###autoload
 (defun emmet-next-edit-point (count)

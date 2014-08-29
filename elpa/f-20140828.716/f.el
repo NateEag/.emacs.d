@@ -4,8 +4,8 @@
 
 ;; Author: Johan Andersson <johan.rejeep@gmail.com>
 ;; Maintainer: Johan Andersson <johan.rejeep@gmail.com>
-;; Version: 20140815.412
-;; X-Original-Version: 0.17
+;; Version: 20140828.716
+;; X-Original-Version: 0.17.1
 ;; Keywords: files, directories
 ;; URL: http://github.com/rejeep/f.el
 ;; Package-Requires: ((s "1.7.0") (dash "2.2.0"))
@@ -94,14 +94,18 @@ If PATH is not allowed to be modified, throw error."
 
 (defun f-common-parent (paths)
   "Return the deepest common parent directory of PATHS."
-  (let* ((paths (-map 'f-split paths))
-         (common (caar paths))
-         (re nil))
-    (while (--all? (equal (car it) common) paths)
-      (setq paths (-map 'cdr paths))
-      (push common re)
-      (setq common (caar paths)))
-    (if re (concat (apply 'f-join (nreverse re)) "/") "")))
+  (cond
+   ((not paths) nil)
+   ((not (cdr paths)) (f-parent (car paths)))
+   (:otherwise
+    (let* ((paths (-map 'f-split paths))
+           (common (caar paths))
+           (re nil))
+      (while (--all? (equal (car it) common) paths)
+        (setq paths (-map 'cdr paths))
+        (push common re)
+        (setq common (caar paths)))
+      (if re (concat (apply 'f-join (nreverse re)) "/") "")))))
 
 (defun f-ext (path)
   "Return the file extension of PATH."

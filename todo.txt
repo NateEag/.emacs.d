@@ -17,6 +17,17 @@
 -Report bug on autoloading evil-nerd-commenter, particularly with
  evil-local-mode.
 
+-Integrate what's useful from spacemacs: https://github.com/syl20bnr/spacemacs
+ evil-little-word, evil-operator-comment, some clever keybinding ideas
+ (probably want them under <leader>, though).
+
+-Try <spacebar> as leader key. That way either hand can trigger it.
+
+-Refactor my autoloading mode setup to rely on use-package, which looks to do
+ things the way I like except much cleaner, and should let me autoload my
+ ad-hoc libraries much more cleanly:
+ https://github.com/jwiegley/use-package
+
 -Finish getting tagedit to work with web-mode.
 
 -Make comment auto-fill work with C++-style comments in js2-mode, not just

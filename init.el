@@ -135,26 +135,27 @@
     (setq tramp-default-method "plink"))
 ;; Normally I want to load remote directory variable files. This can cause
 ;; efficiency problems, but I currently only use Emacs to edit remotely in a
-;; dev environment. I may need to think this through more carefully
+;; dev environment. I may need to think this through more carefully...
+;;
 ;; Enable directory local variables with remote files. This facilitates both
 ;; the (dir-locals-set-class-variables ...)(dir-locals-set-directory-class ...)
 ;; and the dir-locals.el approaches.
-(defadvice hack-dir-local-variables (around my-remote-dir-local-variables)
-  "Allow directory local variables with remote files, by temporarily redefining
-     `file-remote-p' to return nil unconditionally."
-  (cl-flet ((file-remote-p (&rest) nil))
-    ad-do-it))
-(ad-activate 'hack-dir-local-variables)
+;; (defadvice hack-dir-local-variables (around my-remote-dir-local-variables)
+;;   "Allow directory local variables with remote files, by temporarily redefining
+;;      `file-remote-p' to return nil unconditionally."
+;;   (cl-flet ((file-remote-p (&rest) nil))
+;;     ad-do-it))
+;; (ad-activate 'hack-dir-local-variables)
 
 ;; Make changing tabs re-guess the file's indentation style.
 (defadvice untabify (after untabify-set-indent-tabs-mode
                            (start end  &optional _arg))
-  "Set indent-tabs-mode after untabifying."
+  "Set `indent-tabs-mode' after untabifying."
   (setq indent-tabs-mode nil))
 
 (defadvice tabify (after tabify-set-indent-tabs-mode
                            (start end  &optional _arg))
-  "Re-guess file's indentation style after tabifying."
+  "Set `indent-tabs-mode' after tabifying."
   (setq indent-tabs-mode t))
 
 (ad-activate 'untabify)
@@ -162,9 +163,6 @@
 
 (ad-activate 'tabify)
 (ad-enable-advice 'tabify 'after 'tabify-set-indent-tabs-mode)
-
-;; The uniquify package names buffers uniquely and readably.
-(require 'uniquify)
 
 ;; Random functions worth having around.
 

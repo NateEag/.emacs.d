@@ -357,6 +357,7 @@
    "x" 'execute-extended-command)
 
   ;; Some modes it's better to start in insert-state for.
+  (require 'cl)
   (loop for (mode . state) in '((git-commit-mode . insert))
         do (evil-set-initial-state mode state))
 

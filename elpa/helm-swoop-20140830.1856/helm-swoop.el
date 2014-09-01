@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2013 by Shingo Fukuyama
 
-;; Version: 20140817.608
+;; Version: 20140830.1856
 ;; X-Original-Version: 1.4
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
@@ -509,7 +509,7 @@ If $linum is number, lines are separated by $linum"
   (unless (boundp 'helm-swoop-last-query)
     (set (make-local-variable 'helm-swoop-last-query) ""))
   (setq helm-swoop-target-buffer (current-buffer))
-  (helm-swoop--set-prefix $multiline)
+  (helm-swoop--set-prefix (prefix-numeric-value $multiline))
   ;; Overlay
   (setq helm-swoop-line-overlay (make-overlay (point) (point)))
   (overlay-put helm-swoop-line-overlay

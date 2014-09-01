@@ -1,4 +1,4 @@
-This is /tmp/flycheck78216lb/flycheck-20140826.331/flycheck.info,
+This is /tmp/flycheck20506a-H/flycheck-20140829.853/flycheck.info,
 produced by makeinfo version 4.13 from
 /home/melpa/melpa/working/flycheck/doc/flycheck.texi.
 
@@ -8,7 +8,7 @@ START-INFO-DIR-ENTRY
 * flycheck: (flycheck.info). On the fly syntax checking for GNU Emacs
 END-INFO-DIR-ENTRY
 
-This manual is for Flycheck version 0.21-cvs.
+This manual is for Flycheck version 0.21-cvs1.
 
 Copyright (C) 2014, Sebastian Wiesner
 
@@ -31,7 +31,7 @@ File: flycheck.info,  Node: Top,  Next: Introduction,  Up: (dir)
 Flycheck
 ********
 
-This manual is for Flycheck version 0.21-cvs.
+This manual is for Flycheck version 0.21-cvs1.
 
 Copyright (C) 2014, Sebastian Wiesner
 
@@ -2480,7 +2480,8 @@ File: flycheck.info,  Node: C/C++,  Next: CFEngine,  Prev: AsciiDoc,  Up: Suppor
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note c/c++-cppcheck: 9a, if there are only warnings
+            1. *note c/c++-cppcheck: 9a, if there are no errors above
+               level `warning'
 
           The *first* suitable syntax checker is used.
 
@@ -2673,7 +2674,8 @@ Options
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note c/c++-cppcheck: 9a, if there are only warnings
+            1. *note c/c++-cppcheck: 9a, if there are no errors above
+               level `warning'
 
           The *first* suitable syntax checker is used.
 
@@ -2931,7 +2933,8 @@ File: flycheck.info,  Node: Coffeescript,  Next: Coq,  Prev: Chef,  Up: Supporte
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note coffee-coffeelint: b6, if there are only warnings
+            1. *note coffee-coffeelint: b6, if there are no errors
+               above level `warning'
 
           The *first* suitable syntax checker is used.
 
@@ -3309,15 +3312,20 @@ File: flycheck.info,  Node: Go,  Next: Haml,  Prev: Fortran,  Up: Supported lang
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note go-golint: d5, if there are no errors
+            1. *note go-golint: d5, if there are no errors above level
+               `warning'
 
-            2. *note go-vet: d6, if there are no errors
+            2. *note go-vet: d6, if there are no errors above level
+               `warning'
 
-            3. *note go-build: d7, if there are no errors
+            3. *note go-build: d7, if there are no errors above level
+               `warning'
 
-            4. *note go-test: d8, if there are no errors
+            4. *note go-test: d8, if there are no errors above level
+               `warning'
 
-            5. *note go-errcheck: d9, if there are no errors
+            5. *note go-errcheck: d9, if there are no errors above
+               level `warning'
 
           The *first* suitable syntax checker is used.
 
@@ -3388,7 +3396,8 @@ Options
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note go-errcheck: d9, if there are no errors
+            1. *note go-errcheck: d9, if there are no errors above
+               level `warning'
 
           The *first* suitable syntax checker is used.
 
@@ -3400,7 +3409,8 @@ Options
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note go-errcheck: d9, if there are no errors
+            1. *note go-errcheck: d9, if there are no errors above
+               level `warning'
 
           The *first* suitable syntax checker is used.
 
@@ -3469,7 +3479,8 @@ File: flycheck.info,  Node: Haskell,  Next: HTML,  Prev: Handlebars,  Up: Suppor
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note haskell-hlint: e1, if there are only warnings
+            1. *note haskell-hlint: e1, if there are no errors above
+               level `warning'
 
           The *first* suitable syntax checker is used.
 
@@ -3829,9 +3840,11 @@ File: flycheck.info,  Node: PHP,  Next: Puppet,  Prev: Perl,  Up: Supported lang
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note php-phpmd: 101, if there are only warnings
+            1. *note php-phpmd: 101, if there are no errors above level
+               `warning'
 
-            2. *note php-phpcs: 102, if there are only warnings
+            2. *note php-phpcs: 102, if there are no errors above level
+               `warning'
 
           The *first* suitable syntax checker is used.
 
@@ -3911,7 +3924,8 @@ File: flycheck.info,  Node: Puppet,  Next: Python,  Prev: PHP,  Up: Supported la
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note puppet-lint: 107, if there are no errors
+            1. *note puppet-lint: 107, if there are no errors above
+               level `warning'
 
           The *first* suitable syntax checker is used.
 
@@ -4086,7 +4100,8 @@ File: flycheck.info,  Node: Ruby,  Next: Rust,  Prev: ReStructuredText,  Up: Sup
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note ruby-rubylint: 118, if there are only warnings
+            1. *note ruby-rubylint: 118, if there are no errors above
+               level `warning'
 
           The *first* suitable syntax checker is used.
 
@@ -4142,7 +4157,8 @@ Configuration file
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note ruby-rubylint: 118, if there are only warnings
+            1. *note ruby-rubylint: 118, if there are no errors above
+               level `warning'
 
           The *first* suitable syntax checker is used.
 
@@ -4162,7 +4178,8 @@ Configuration file
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note ruby-rubylint: 118, if there are only warnings
+            1. *note ruby-rubylint: 118, if there are no errors above
+               level `warning'
 
           The *first* suitable syntax checker is used.
 
@@ -4323,7 +4340,8 @@ File: flycheck.info,  Node: Scala,  Next: Scss,  Prev: Sass,  Up: Supported lang
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note scala-scalastyle: 12a, if there are only warnings
+            1. *note scala-scalastyle: 12a, if there are no errors
+               above level `warning'
 
           The *first* suitable syntax checker is used.
 
@@ -4422,7 +4440,8 @@ File: flycheck.info,  Node: Shell script languages,  Next: Slim,  Prev: Scss,  U
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note sh-shellcheck: 132, if there are no errors
+            1. *note sh-shellcheck: 132, if there are no errors above
+               level `warning'
 
           The *first* suitable syntax checker is used.
 
@@ -4434,7 +4453,8 @@ File: flycheck.info,  Node: Shell script languages,  Next: Slim,  Prev: Scss,  U
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note sh-shellcheck: 132, if there are no errors
+            1. *note sh-shellcheck: 132, if there are no errors above
+               level `warning'
 
           The *first* suitable syntax checker is used.
 
@@ -4452,7 +4472,8 @@ See also
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note sh-shellcheck: 132, if there are no errors
+            1. *note sh-shellcheck: 132, if there are no errors above
+               level `warning'
 
           The *first* suitable syntax checker is used.
 
@@ -4470,7 +4491,8 @@ See also
           Chained syntax checkers: The following syntax checkers are
           *note chained: 57. after this syntax checker:
 
-            1. *note sh-shellcheck: 132, if there are no errors
+            1. *note sh-shellcheck: 132, if there are no errors above
+               level `warning'
 
           The *first* suitable syntax checker is used.
 
@@ -4820,22 +4842,18 @@ You define new syntax checkers with *note flycheck-define-checker: 19.:
           An unquoted list defining the syntax checker to run after
           this syntax checker.
 
-          Flycheck tries all items in order of declaration.  Each ITEM
-          is either a syntax checker symbol, or a cons
-          cell `(PREDICATE . CHECKER)'.
+          Each ITEM is a cons cell `(LEVEL . CHECKER)'.  CHECKER is a
+          syntax checker to run after this syntax checker.  LEVEL is
+          an error level.  CHECKER will only be used if there are no
+          current errors of at least LEVEL.  LEVEL may also be t, in
+          which case CHECKER is used regardless of the current errors.
 
-          In the former case, the syntax checker is always considered.
-          In the later case, CHECKER is only considered if the
-          PREDICATE matches.
+          ITEM may also be a syntax checker symbol, which is
+          equivalent to `(t . ITEM)'.
 
-          PREDICATE is either ``no-errors'' or ``warnings-only''.  With
-          ``no-errors'' CHECKER is only considered if this checker
-          reported no errors or warnings at all.  With ``warnings-only''
-          CHECKER is only considered if this checker reported only
-          warnings, but no errors.
-
-          The first registered and available syntax checker with
-          matching predicate is executed after this checker.
+          Flycheck tries all items in order of declaration, and uses
+          the first whose LEVEL matches and whose CHECKER is
+          registered and can be used for the current buffer.
 
  -- Macro: flycheck-def-config-file-var symbol checker &optional
           file-name &rest custom-args
@@ -4949,24 +4967,23 @@ File: flycheck.info,  Node: Extending syntax checkers,  Next: Examples,  Prev: E
 
 There are some means to extend defined syntax checkers:
 
- -- Function: flycheck-add-next-checker checker next-checker &optional
-          append
-     Add a NEXT-CHECKER after CHECKER.
+ -- Function: flycheck-add-next-checker checker next &optional append
+     Add a NEXT checker after CHECKER.
 
-     CHECKER is a syntax checker symbol, to which to add NEXT-CHECKER.
+     CHECKER is a syntax checker symbol, to which to add NEXT checker.
 
-     NEXT-CHECKER describes the syntax checker to run after CHECKER.
-     It is a either a syntax checker symbol, or a cons
-     cell `(PREDICATE . CHECKER)'.  In the former case, always
-     consider the syntax checker.  In the later case, only consider
-     CHECKER if the PREDICATE matches.  PREDICATE is either ``no-errors''
-     or ``warnings-only''.  In the former case, CHECKER is only
-     considered if this checker reported no errors or warnings at all,
-     in the latter case, CHECKER is only considered if this checker
-     reported only warnings, but no errors.
+     NEXT is a cons cell `(LEVEL . NEXT-CHECKER)'.  NEXT-CHECKER is a
+     symbol denoting the syntax checker to run after CHECKER.  LEVEL
+     is an error level.  NEXT-CHECKER will only be used if there is no
+     current error whose level is more severe than LEVEL.  LEVEL may
+     also be t, in which case NEXT-CHECKER is used regardless of the
+     current errors.
 
-     NEXT-CHECKER is prepended before other checkers to run after
-     CHECKER, unless APPEND is non-nil.
+     NEXT can also be a syntax checker symbol only, which is
+     equivalent to `(t . NEXT)'.
+
+     NEXT-CHECKER is prepended before other next checkers, unless
+     APPEND is non-nil.
 
 
 File: flycheck.info,  Node: Examples,  Prev: Extending syntax checkers,  Up: Extending Flycheck
@@ -5200,11 +5217,11 @@ PHP CodeSniffer if there are no syntax errors:
       ((error line-start (or "Parse" "Fatal" "syntax") " error" (any ":" ",") " "
               (message) " in " (file-name) " on line " line line-end))
       :modes (php-mode php+-mode)
-      :next-checkers ((warnings-only . php-phpcs)))
+      :next-checkers ((warning . php-phpcs)))
 
-Now PHP CodeSniffer will check the coding style, whenever a PHP syntax
-check did not result in any errors, if PHP CodeSniffer syntax checker
-is usable _and_ registered.
+Now PHP CodeSniffer will check the coding style, but only if PHP
+CodeSniffer is a *note registered syntax checker: 61, and if `php' only
+emitted errors with `warning' level or less, that is, no errors.
 
 
 File: flycheck.info,  Node: Flycheck API,  Next: Flycheck news,  Prev: Extending Flycheck,  Up: Top
@@ -5440,15 +5457,17 @@ of a syntax check.
      A list of all errors and warnings in the current buffer.
 
  -- Function: flycheck-count-errors errors
-     Count the number of warnings and errors in ERRORS.
+     Count the number of ERRORS, grouped by level..
 
-     Return a cons cell whose ``car'' is the number of errors and whose
-     ``car'' is the number of warnings.
+     Return an alist, where each ITEM is a cons cell whose ``car'' is an
+     error level, and whose ``cdr'' is the number of errors of that
+     level.
 
- -- Function: flycheck-has-errors-p errors &optional level
+ -- Function: flycheck-has-errors-p errors level
      Determine if there are any ERRORS with LEVEL.
 
-     If LEVEL is omitted check if ERRORS is not nil.
+ -- Function: flycheck-has-max-errors-p errors level
+     Check if there is no error in ERRORS more severe than LEVEL.
 
 
 File: flycheck.info,  Node: Builtin error parsers,  Next: Error parser API,  Prev: Error Analysis,  Up: Flycheck API
@@ -5570,7 +5589,7 @@ File: flycheck.info,  Node: Syntax checker API,  Next: Builtin option filters,  
           as primary input to a checker, unless absolutely necessary.
 
           When using this symbol as primary input to the syntax
-          checker, add *note `flycheck-buffer-saved-p': 18a. to the ``:predicate''.
+          checker, add *note `flycheck-buffer-saved-p': 18b. to the ``:predicate''.
 
      ``temporary-directory''
           Create a unique temporary directory and return its path.
@@ -5593,7 +5612,7 @@ File: flycheck.info,  Node: Syntax checker API,  Next: Builtin option filters,  
 
      `(config-file OPTION VARIABLE [PREPEND-FN])'
           Search the configuration file bound to VARIABLE with
-          *note `flycheck-locate-config-file': 18b. and return a list of arguments
+          *note `flycheck-locate-config-file': 18c. and return a list of arguments
           that pass this configuration file to the syntax checker, or
           nil if the configuration file was not found.
 
@@ -5799,7 +5818,7 @@ Flycheck 0.20 is out, with new syntax checkers, many new options,
 improvements and bug fixes, and some important breaking changes.
 
 This announcement covers the most important changes.  For details,
-please refer to *note Changes: 196.
+please refer to *note Changes: 197.
 
 * Menu:
 
@@ -6423,7 +6442,7 @@ checkers, a brand-new error list, and the ability to override the
 executables of syntax checkers.
 
 Let's go through the list of important changes.  For a detailed list,
-please read the *note changelog: 1c5.
+please read the *note changelog: 1c6.
 
 * Menu:
 
@@ -6619,7 +6638,7 @@ the modern syntax-checking extension for Emacs.
 
 It is three months since the last release, so this release brings quite
 a lot of changes.  For a complete list of all changes, please read the
-complete list of *note changes: 1c5.  This article will just cover the
+complete list of *note changes: 1c6.  This article will just cover the
 most important changes.
 
 * Menu:
@@ -6640,7 +6659,7 @@ File: flycheck.info,  Node: Breaking changes<6>,  Next: New syntax checkers,  Up
 -----------------------
 
 This release introduces three breaking changes.  Two of these are
-related to the *note new-error-list: 1d6.:
+related to the *note new-error-list: 1d7.:
 
      Warning: `flycheck-display-errors-in-list' is gone.  If you had
      previously set *note flycheck-display-errors-function: 28. to this
@@ -6881,6 +6900,9 @@ File: flycheck.info,  Node: master in development,  Next: 0 20 Aug 12 2014,  Up:
 
         - `d-dmd' now requires DMD 2.066 or newer [GH-460](2)
 
+        - `:next-checkers' now requires the maximum permissible level
+          instead of a custom predicate [GH-472](3)
+
    - New syntax checkers:
 
         - Coq
@@ -6894,18 +6916,21 @@ File: flycheck.info,  Node: master in development,  Next: 0 20 Aug 12 2014,  Up:
 
    - Improvements:
 
-        - Improve GCC syntax checking by expanding templates [GH-459](3)
+        - Improve GCC syntax checking by expanding templates [GH-459](4)
 
-        - `d-dmd' reports errors with columns now [GH-460](4)
+        - `d-dmd' reports errors with columns now [GH-460](5)
 
-        - Remove Projectile-based config file search [GH-461](5)
+        - Remove Projectile-based config file search [GH-461](6)
 
    - Bug fixes:
 
         - Expand `default-directory' before using it, to handle
-          abbreviated paths gracefully [GH-434](6)
+          abbreviated paths gracefully [GH-434](7)
 
-        - Restore mouse support in the error list [GH-468](7)
+        - Restore mouse support in the error list [GH-468](8)
+
+        - `less' now correctly resolves relative paths in `data-uri'
+          [GH-471](9)
 
 ---------- Footnotes ----------
 
@@ -6913,15 +6938,19 @@ File: flycheck.info,  Node: master in development,  Next: 0 20 Aug 12 2014,  Up:
 
 (2) https://github.com/flycheck/flycheck/issues/460
 
-(3) https://github.com/flycheck/flycheck/issues/459
+(3) https://github.com/flycheck/flycheck/issues/472
 
-(4) https://github.com/flycheck/flycheck/issues/460
+(4) https://github.com/flycheck/flycheck/issues/459
 
-(5) https://github.com/flycheck/flycheck/issues/461
+(5) https://github.com/flycheck/flycheck/issues/460
 
-(6) https://github.com/flycheck/flycheck/issues/434
+(6) https://github.com/flycheck/flycheck/issues/461
 
-(7) https://github.com/flycheck/flycheck/issues/468
+(7) https://github.com/flycheck/flycheck/issues/434
+
+(8) https://github.com/flycheck/flycheck/issues/468
+
+(9) https://github.com/flycheck/flycheck/issues/471
 
 
 File: flycheck.info,  Node: 0 20 Aug 12 2014,  Next: 0 19 Jun 12 2014,  Prev: master in development,  Up: Changes
@@ -8773,7 +8802,7 @@ Then install the syntax checkers that you'd like to test:
     $ cabal install hlint shellcheck
 
      Note: If you'd like to keep your environment clean, use the *note
-     Virtual test environment: 20f. instead.
+     Virtual test environment: 210. instead.
 
 Run the entire test suite:
 
@@ -8851,7 +8880,7 @@ After the VM is started, you can connect to it:
     $ vagrant ssh
 
 This will give you a bash prompt within the VM, on which you can run
-the tests as explained in *note Test running: 20d.
+the tests as explained in *note Test running: 20e.
 
 To switch between Emacs versions, pass `EMACS' to `make test':
 
@@ -8896,7 +8925,7 @@ File: flycheck.info,  Node: Travis CI,  Prev: Virtual test environment,  Up: Tes
 13.4 Travis CI
 ==============
 
-The entire test suite continuously runs on *note Travis CI: 212. after
+The entire test suite continuously runs on *note Travis CI: 213. after
 every push, with the latest Emacs release and a nightly Emacs snapshot.
 
 Travis CI is configured from `.travis.yml' in the top-level source
@@ -8905,7 +8934,7 @@ directory, and uses mostly the same playbooks for provisioning.
      Note: Travis CI is the *reference environment* for Flycheck's test
      suite.  All tests *must pass* on Travis CI.
 
-     In case Travis CI diverges from the *note VM: 20f, Travis CI is
+     In case Travis CI diverges from the *note VM: 210, Travis CI is
      authoritative.
 
 
@@ -8976,7 +9005,7 @@ File: flycheck.info,  Node: Building HTML and Texinfo,  Next: Verifying referenc
 ==============================
 
 First, switch to the virtual environment you created in the *note Build
-environment setup: 215, and make sure that the requirements are up to
+environment setup: 216, and make sure that the requirements are up to
 date:
 
     $ source ~/.virtualenvs/cask/bin/activate
@@ -9042,7 +9071,7 @@ Flycheck.
 
 When making changes to the documentation, you need to rebuild the
 Texinfo version with, by following the *note instructions to build the
-documentation: 217.
+documentation: 218.
 
 ---------- Footnotes ----------
 

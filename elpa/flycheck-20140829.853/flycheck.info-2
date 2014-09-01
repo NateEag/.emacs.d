@@ -1,4 +1,4 @@
-This is /tmp/flycheck78216lb/flycheck-20140826.331/flycheck.info,
+This is /tmp/flycheck20506a-H/flycheck-20140829.853/flycheck.info,
 produced by makeinfo version 4.13 from
 /home/melpa/melpa/working/flycheck/doc/flycheck.texi.
 
@@ -8,7 +8,7 @@ START-INFO-DIR-ENTRY
 * flycheck: (flycheck.info). On the fly syntax checking for GNU Emacs
 END-INFO-DIR-ENTRY
 
-This manual is for Flycheck version 0.21-cvs.
+This manual is for Flycheck version 0.21-cvs1.
 
 Copyright (C) 2014, Sebastian Wiesner
 
@@ -495,13 +495,13 @@ Index
 * ada-gnat; Emacs Lisp Flycheck syntax checker: Ada.          (line   6)
 * asciidoc; Emacs Lisp Flycheck syntax checker: AsciiDoc.     (line   6)
 * c/c++-clang; Emacs Lisp Flycheck syntax checker: C/C++.     (line   6)
-* c/c++-cppcheck; Emacs Lisp Flycheck syntax checker: C/C++.  (line 339)
-* c/c++-gcc; Emacs Lisp Flycheck syntax checker: C/C++.       (line 199)
+* c/c++-cppcheck; Emacs Lisp Flycheck syntax checker: C/C++.  (line 341)
+* c/c++-gcc; Emacs Lisp Flycheck syntax checker: C/C++.       (line 200)
 * cfengine; Emacs Lisp Flycheck syntax checker: CFEngine.     (line   6)
 * chaining:                              Glossary.            (line  32)
 * chef-foodcritic; Emacs Lisp Flycheck syntax checker: Chef.  (line  11)
 * coffee-coffeelint; Emacs Lisp Flycheck syntax checker: Coffeescript.
-                                                              (line  18)
+                                                              (line  19)
 * coffee; Emacs Lisp Flycheck syntax checker: Coffeescript.   (line   6)
 * coq; Emacs Lisp Flycheck syntax checker: Coq.               (line   6)
 * css-csslint; Emacs Lisp Flycheck syntax checker: CSS.       (line   6)
@@ -530,23 +530,23 @@ Index
 * flycheck-checkers; Emacs Lisp user option: Syntax checker selection<2>.
                                                               (line  10)
 * flycheck-chktexrc; Emacs Lisp user option: TeX/LaTeX.       (line  19)
-* flycheck-clang-blocks; Emacs Lisp user option: C/C++.       (line  21)
-* flycheck-clang-definitions; Emacs Lisp user option: C/C++.  (line  38)
-* flycheck-clang-include-path; Emacs Lisp user option: C/C++. (line  56)
-* flycheck-clang-includes; Emacs Lisp user option: C/C++.     (line  74)
+* flycheck-clang-blocks; Emacs Lisp user option: C/C++.       (line  22)
+* flycheck-clang-definitions; Emacs Lisp user option: C/C++.  (line  39)
+* flycheck-clang-include-path; Emacs Lisp user option: C/C++. (line  57)
+* flycheck-clang-includes; Emacs Lisp user option: C/C++.     (line  75)
 * flycheck-clang-language-standard; Emacs Lisp user option: C/C++.
-                                                              (line  92)
+                                                              (line  93)
 * flycheck-clang-ms-extensions; Emacs Lisp user option: C/C++.
-                                                              (line 109)
+                                                              (line 110)
 * flycheck-clang-no-exceptions; Emacs Lisp user option: C/C++.
-                                                              (line 125)
-* flycheck-clang-no-rtti; Emacs Lisp user option: C/C++.      (line 141)
+                                                              (line 126)
+* flycheck-clang-no-rtti; Emacs Lisp user option: C/C++.      (line 142)
 * flycheck-clang-standard-library; Emacs Lisp user option: C/C++.
-                                                              (line 156)
-* flycheck-clang-warnings; Emacs Lisp user option: C/C++.     (line 176)
+                                                              (line 157)
+* flycheck-clang-warnings; Emacs Lisp user option: C/C++.     (line 177)
 * flycheck-clear; Emacs Lisp command:    Error reporting.     (line 256)
 * flycheck-coffeelintrc; Emacs Lisp user option: Coffeescript.
-                                                              (line  28)
+                                                              (line  29)
 * flycheck-collapse-error-message-whitespace; Emacs Lisp function: Error filters.
                                                               (line  15)
 * flycheck-completion-system; Emacs Lisp user option: Syntax checker selection<2>.
@@ -554,15 +554,15 @@ Index
 * flycheck-copy-messages-as-kill; Emacs Lisp command: Error reporting.
                                                               (line 190)
 * flycheck-count-errors; Emacs Lisp function: Error Analysis. (line  15)
-* flycheck-cppcheck-checks; Emacs Lisp user option: C/C++.    (line 347)
+* flycheck-cppcheck-checks; Emacs Lisp user option: C/C++.    (line 349)
 * flycheck-cppcheck-inconclusive; Emacs Lisp user option: C/C++.
-                                                              (line 370)
+                                                              (line 372)
 * flycheck-current-errors; Emacs Lisp variable: Error Analysis.
                                                               (line   9)
 * flycheck-def-config-file-var; Emacs Lisp macro: Defining new syntax checkers.
-                                                              (line 132)
+                                                              (line 128)
 * flycheck-def-option-var; Emacs Lisp macro: Defining new syntax checkers.
-                                                              (line 146)
+                                                              (line 142)
 * flycheck-define-checker; Emacs Lisp macro: Defining new syntax checkers.
                                                               (line   8)
 * flycheck-define-error-level; Emacs Lisp function: Syntax checker API.
@@ -625,14 +625,14 @@ Index
 * flycheck-fringe-error; Emacs Lisp face: Error reporting.    (line  67)
 * flycheck-fringe-info; Emacs Lisp face: Error reporting.     (line  67)
 * flycheck-fringe-warning; Emacs Lisp face: Error reporting.  (line  67)
-* flycheck-gcc-definitions; Emacs Lisp user option: C/C++.    (line 214)
-* flycheck-gcc-include-path; Emacs Lisp user option: C/C++.   (line 232)
-* flycheck-gcc-includes; Emacs Lisp user option: C/C++.       (line 250)
+* flycheck-gcc-definitions; Emacs Lisp user option: C/C++.    (line 216)
+* flycheck-gcc-include-path; Emacs Lisp user option: C/C++.   (line 234)
+* flycheck-gcc-includes; Emacs Lisp user option: C/C++.       (line 252)
 * flycheck-gcc-language-standard; Emacs Lisp user option: C/C++.
-                                                              (line 268)
-* flycheck-gcc-no-exceptions; Emacs Lisp user option: C/C++.  (line 285)
-* flycheck-gcc-no-rtti; Emacs Lisp user option: C/C++.        (line 301)
-* flycheck-gcc-warnings; Emacs Lisp user option: C/C++.       (line 316)
+                                                              (line 270)
+* flycheck-gcc-no-exceptions; Emacs Lisp user option: C/C++.  (line 287)
+* flycheck-gcc-no-rtti; Emacs Lisp user option: C/C++.        (line 303)
+* flycheck-gcc-warnings; Emacs Lisp user option: C/C++.       (line 318)
 * flycheck-gfortran-include-path; Emacs Lisp user option: Fortran.
                                                               (line  15)
 * flycheck-gfortran-language-standard; Emacs Lisp user option: Fortran.
@@ -641,24 +641,26 @@ Index
 * flycheck-gfortran-warnings; Emacs Lisp user option: Fortran.
                                                               (line  72)
 * flycheck-ghc-language-extensions; Emacs Lisp user option: Haskell.
-                                                              (line  21)
+                                                              (line  22)
 * flycheck-ghc-no-user-package-database; Emacs Lisp user option: Haskell.
-                                                              (line  39)
+                                                              (line  40)
 * flycheck-ghc-package-databases; Emacs Lisp user option: Haskell.
-                                                              (line  55)
-* flycheck-ghc-search-path; Emacs Lisp user option: Haskell.  (line  73)
+                                                              (line  56)
+* flycheck-ghc-search-path; Emacs Lisp user option: Haskell.  (line  74)
 * flycheck-gjslintrc; Emacs Lisp user option: Javascript.     (line  72)
 * flycheck-gnat-include-path; Emacs Lisp user option: Ada.    (line  15)
 * flycheck-gnat-language-standard; Emacs Lisp user option: Ada.
                                                               (line  33)
 * flycheck-gnat-warnings; Emacs Lisp user option: Ada.        (line  50)
 * flycheck-go-vet-print-functions; Emacs Lisp user option: Go.
-                                                              (line  64)
+                                                              (line  69)
 * flycheck-google-max-messages; Emacs Lisp user option: Error reporting.
                                                               (line 206)
 * flycheck-google-messages; Emacs Lisp command: Error reporting.
                                                               (line 195)
-* flycheck-has-errors-p; Emacs Lisp function: Error Analysis. (line  21)
+* flycheck-has-errors-p; Emacs Lisp function: Error Analysis. (line  22)
+* flycheck-has-max-errors-p; Emacs Lisp function: Error Analysis.
+                                                              (line  25)
 * flycheck-highlighting-mode; Emacs Lisp user option: Error reporting.
                                                               (line  33)
 * flycheck-idle-change-delay; Emacs Lisp user option: Syntax checking<2>.
@@ -692,8 +694,8 @@ Index
                                                               (line   8)
 * flycheck-perlcritic-verbosity; Emacs Lisp user option: Perl.
                                                               (line  26)
-* flycheck-phpcs-standard; Emacs Lisp user option: PHP.       (line  58)
-* flycheck-phpmd-rulesets; Emacs Lisp user option: PHP.       (line  35)
+* flycheck-phpcs-standard; Emacs Lisp user option: PHP.       (line  60)
+* flycheck-phpmd-rulesets; Emacs Lisp user option: PHP.       (line  37)
 * flycheck-previous-error; Emacs Lisp command: Error navigation.
                                                               (line  55)
 * flycheck-process-error-functions; Emacs Lisp hook: Error reporting.
@@ -703,9 +705,9 @@ Index
                                                               (line   6)
 * flycheck-report-error; Emacs Lisp function: Status API.     (line  37)
 * flycheck-report-status; Emacs Lisp function: Status API.    (line   6)
-* flycheck-rubocop-lint-only; Emacs Lisp user option: Ruby.   (line  21)
-* flycheck-rubocoprc; Emacs Lisp user option: Ruby.           (line  35)
-* flycheck-rubylintrc; Emacs Lisp user option: Ruby.          (line  52)
+* flycheck-rubocop-lint-only; Emacs Lisp user option: Ruby.   (line  22)
+* flycheck-rubocoprc; Emacs Lisp user option: Ruby.           (line  36)
+* flycheck-rubylintrc; Emacs Lisp user option: Ruby.          (line  53)
 * flycheck-rust-check-tests; Emacs Lisp user option: Rust.    (line  16)
 * flycheck-rust-crate-root; Emacs Lisp user option: Rust.     (line  32)
 * flycheck-rust-crate-type; Emacs Lisp user option: Rust.     (line  52)
@@ -714,8 +716,8 @@ Index
 * flycheck-sanitize-errors; Emacs Lisp function: Error filters.
                                                               (line   6)
 * flycheck-sass-compass; Emacs Lisp user option: Sass.        (line  14)
-* flycheck-scalastyle-jar; Emacs Lisp user option: Scala.     (line  30)
-* flycheck-scalastylerc; Emacs Lisp user option: Scala.       (line  49)
+* flycheck-scalastyle-jar; Emacs Lisp user option: Scala.     (line  31)
+* flycheck-scalastylerc; Emacs Lisp user option: Scala.       (line  50)
 * flycheck-scss-compass; Emacs Lisp user option: Scss.        (line  14)
 * flycheck-select-checker; Emacs Lisp command: Syntax checker selection<2>.
                                                               (line  72)
@@ -742,16 +744,16 @@ Index
 * global-flycheck-mode; Emacs Lisp command: Flycheck Mode.    (line  14)
 * global-flycheck-mode; Emacs Lisp user option: Flycheck Mode.
                                                               (line  30)
-* go-build; Emacs Lisp Flycheck syntax checker: Go.           (line  85)
-* go-errcheck; Emacs Lisp Flycheck syntax checker: Go.        (line 109)
+* go-build; Emacs Lisp Flycheck syntax checker: Go.           (line  90)
+* go-errcheck; Emacs Lisp Flycheck syntax checker: Go.        (line 116)
 * go-gofmt; Emacs Lisp Flycheck syntax checker: Go.           (line   6)
-* go-golint; Emacs Lisp Flycheck syntax checker: Go.          (line  26)
-* go-test; Emacs Lisp Flycheck syntax checker: Go.            (line  97)
-* go-vet; Emacs Lisp Flycheck syntax checker: Go.             (line  44)
+* go-golint; Emacs Lisp Flycheck syntax checker: Go.          (line  31)
+* go-test; Emacs Lisp Flycheck syntax checker: Go.            (line 103)
+* go-vet; Emacs Lisp Flycheck syntax checker: Go.             (line  49)
 * haml; Emacs Lisp Flycheck syntax checker: Haml.             (line   6)
 * handlebars; Emacs Lisp Flycheck syntax checker: Handlebars. (line   6)
 * haskell-ghc; Emacs Lisp Flycheck syntax checker: Haskell.   (line   6)
-* haskell-hlint; Emacs Lisp Flycheck syntax checker: Haskell. (line  98)
+* haskell-hlint; Emacs Lisp Flycheck syntax checker: Haskell. (line  99)
 * html-tidy; Emacs Lisp Flycheck syntax checker: HTML.        (line   6)
 * javascript-eslint; Emacs Lisp Flycheck syntax checker: Javascript.
                                                               (line  21)
@@ -766,10 +768,10 @@ Index
 * make; Emacs Lisp Flycheck syntax checker: Make.             (line   6)
 * perl-perlcritic; Emacs Lisp Flycheck syntax checker: Perl.  (line  18)
 * perl; Emacs Lisp Flycheck syntax checker: Perl.             (line   6)
-* php-phpcs; Emacs Lisp Flycheck syntax checker: PHP.         (line  50)
-* php-phpmd; Emacs Lisp Flycheck syntax checker: PHP.         (line  20)
+* php-phpcs; Emacs Lisp Flycheck syntax checker: PHP.         (line  52)
+* php-phpmd; Emacs Lisp Flycheck syntax checker: PHP.         (line  22)
 * php; Emacs Lisp Flycheck syntax checker: PHP.               (line   6)
-* puppet-lint; Emacs Lisp Flycheck syntax checker: Puppet.    (line  18)
+* puppet-lint; Emacs Lisp Flycheck syntax checker: Puppet.    (line  19)
 * puppet-parser; Emacs Lisp Flycheck syntax checker: Puppet.  (line   6)
 * python-flake8; Emacs Lisp Flycheck syntax checker: Python.  (line   6)
 * python-pylint; Emacs Lisp Flycheck syntax checker: Python.  (line  60)
@@ -778,26 +780,26 @@ Index
 * rst-sphinx; Emacs Lisp Flycheck syntax checker: ReStructuredText.
                                                               (line  11)
 * rst; Emacs Lisp Flycheck syntax checker: ReStructuredText.  (line   6)
-* ruby-jruby; Emacs Lisp Flycheck syntax checker: Ruby.       (line  82)
+* ruby-jruby; Emacs Lisp Flycheck syntax checker: Ruby.       (line  84)
 * ruby-rubocop; Emacs Lisp Flycheck syntax checker: Ruby.     (line   6)
-* ruby-rubylint; Emacs Lisp Flycheck syntax checker: Ruby.    (line  42)
-* ruby; Emacs Lisp Flycheck syntax checker: Ruby.             (line  62)
+* ruby-rubylint; Emacs Lisp Flycheck syntax checker: Ruby.    (line  43)
+* ruby; Emacs Lisp Flycheck syntax checker: Ruby.             (line  63)
 * rust; Emacs Lisp Flycheck syntax checker: Rust.             (line   6)
 * sass; Emacs Lisp Flycheck syntax checker: Sass.             (line   6)
 * scala-scalastyle; Emacs Lisp Flycheck syntax checker: Scala.
-                                                              (line  18)
+                                                              (line  19)
 * scala; Emacs Lisp Flycheck syntax checker: Scala.           (line   6)
 * scss; Emacs Lisp Flycheck syntax checker: Scss.             (line   6)
 * sh-bash; Emacs Lisp Flycheck syntax checker: Shell script languages.
                                                               (line   6)
 * sh-posix-bash; Emacs Lisp Flycheck syntax checker: Shell script languages.
-                                                              (line  36)
+                                                              (line  38)
 * sh-posix-dash; Emacs Lisp Flycheck syntax checker: Shell script languages.
-                                                              (line  18)
+                                                              (line  19)
 * sh-shellcheck; Emacs Lisp Flycheck syntax checker: Shell script languages.
-                                                              (line  66)
+                                                              (line  70)
 * sh-zsh; Emacs Lisp Flycheck syntax checker: Shell script languages.
-                                                              (line  54)
+                                                              (line  57)
 * slim; Emacs Lisp Flycheck syntax checker: Slim.             (line   6)
 * suitable syntax checker:               Glossary.            (line  21)
 * syntax checker:                        Glossary.            (line   6)

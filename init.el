@@ -15,6 +15,9 @@
 ;; Set up my load path and a few other core things.
 (load-file (concat user-emacs-directory "site-lisp/bootstrap.el"))
 
+;; Set up package-specific autoloads and settings.
+(load-file (make-emacs-dir-path "site-lisp/config-packages.el"))
+
 ;;; General preferences.
 
 (setq custom-file (make-emacs-dir-path "custom.el"))
@@ -162,11 +165,6 @@
 
 ;; The uniquify package names buffers uniquely and readably.
 (require 'uniquify)
-(setq
-  uniquify-buffer-name-style 'post-forward
-  uniquify-separator ":"
-  uniquify-after-kill-buffer-p t
-  uniquify-ignore-buffers-re "^\\*")
 
 ;; Random functions worth having around.
 

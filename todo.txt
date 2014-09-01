@@ -25,7 +25,7 @@
 
 -Refactor my autoloading mode setup to rely on use-package, which looks to do
  things the way I like except much cleaner, and should let me autoload my
- ad-hoc libraries much more cleanly:
+ ad-hoc libraries much more cleanly.
  https://github.com/jwiegley/use-package
 
 -Finish getting tagedit to work with web-mode.

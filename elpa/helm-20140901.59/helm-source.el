@@ -31,6 +31,10 @@
 (require 'cl-lib)
 (require 'eieio)
 
+
+;;; Classes for sources
+;;
+;;
 (defclass helm-source ()
   ((name
     :initarg :name
@@ -485,7 +489,23 @@ If none of these are found fallback to `helm-input-idle-delay'.")
     :initform nil
     :custom boolean
     :documentation
-    "If you are not Japonese, ignore this."))
+    "If you are not Japonese, ignore this.")
+
+   (before-init-hook
+    :initarg :before-init-hook
+    :initform nil
+    :custom symbol
+    :documentation
+    "  A local hook that run at beginning of initilization of this source.
+i.e Before the creation of `helm-buffer'.")
+
+   (after-init-hook
+    :initarg :after-init-hook
+    :initform nil
+    :custom symbol
+    :documentation
+    "  A local hook that run at end of initilization of this source.
+i.e After the creation of `helm-buffer'."))
   
   "Main interface to define helm sources."
   :abstract t)
@@ -526,18 +546,17 @@ If none of these are found fallback to `helm-input-idle-delay'.")
 `candidates-in-buffer',so there is no need to change the value of this slot.")
 
    (init
-    :initform (lambda ()
-                (helm-init-candidates-in-buffer 'global
-                  '("ERROR: You must build a buffer handling your data with a function in the `init' slot or use the `data' slot."))))
+    :initform 'helm-default-init-source-in-buffer-function)
 
    (data
     :initarg :data
     :initform nil
     :custom (choice list string)
     :documentation
-    "  A string or a list that will be used to initialize the buffer that handle this data.
-  This data will be passed to the init slot function and the buffer will be build with
-  `helm-init-candidates-in-buffer'.")
+    "  A string or a list that will be used to feed the `helm-candidates-buffer'.
+  This data will be passed in a function added to the init slot and
+  the buffer will be build with `helm-init-candidates-in-buffer'.
+  This is an easy and fast method to build a `candidates-in-buffer' source.")
    
    (dont-plug
     :initform '(helm-compile-source--candidates-in-buffer))
@@ -639,6 +658,65 @@ If none of these are found fallback to `helm-input-idle-delay'.")
    (volatile
     :initform t)))
 
+
+;;; Classes for types.
+;;
+;;
+(defclass helm-type (helm-source)
+  ((name        :initform nil)
+   (header-line :initform nil))
+  "Main source to create types."
+  :abstract t)
+
+(defclass helm-type-file (helm-type)
+    ((action
+      :initform
+      (helm-make-actions
+       "Find file"                            'helm-find-many-files
+       "Find file as root"                    'helm-find-file-as-root
+       "Find file other window"               'find-file-other-window
+       "Find file other frame"                'find-file-other-frame
+       "Open dired in file's directory"       'helm-open-dired
+       "Grep File(s) `C-u recurse'"           'helm-find-files-grep
+       "Zgrep File(s) `C-u Recurse'"          'helm-ff-zgrep
+       "Pdfgrep File(s)"                      'helm-ff-pdfgrep
+       "Insert as org link"                   'helm-files-insert-as-org-link
+       "Checksum File"                        'helm-ff-checksum
+       "Ediff File"                           'helm-find-files-ediff-files
+       "Ediff Merge File"                     'helm-find-files-ediff-merge-files
+       "Etags `M-., C-u tap, C-u C-u reload tag file'"
+       'helm-ff-etags-select
+       "View file"                            'view-file
+       "Insert file"                          'insert-file
+       "Delete file(s)"                       'helm-delete-marked-files
+       "Open file externally (C-u to choose)" 'helm-open-file-externally
+       "Open file with default tool"          'helm-open-file-with-default-tool
+       "Find file in hex dump"                'hexl-find-file))
+     
+     (persistent-help
+      :initform "Show this file")
+
+     (action-transformer
+      :initform '(helm-transform-file-load-el
+                  helm-transform-file-browse-url))
+
+     (candidate-transformer
+      :initform '(helm-skip-boring-files
+                  helm-highlight-files
+                  helm-w32-pathname-transformer))))
+
+
+;;; Error functions
+;;
+;;
+(defun helm-default-init-source-in-buffer-function ()
+  (helm-init-candidates-in-buffer 'global
+    '("ERROR: No buffer handling your data, use either the `init' slot or the `data' slot.")))
+  
+
+;;; Internal Builder functions.
+;;
+;;
 (defun helm--create-source (object class)
   "[INTERNAL] Build a helm source from a CLASS OBJECT."
   (cl-loop for s in (object-slots object)
@@ -647,14 +725,49 @@ If none of these are found fallback to `helm-input-idle-delay'.")
            when slot-val
            collect (cons s (unless (eq t slot-val) slot-val))))
 
+(defun helm--make-source (name class &rest args)
+  "Build a `helm' source named NAME with ARGS for CLASS.
+Argument NAME is a string which define the source name, so no need to use
+the keyword :name in your source, NAME will be used instead.
+Argument CLASS is an eieio class object.
+Arguments ARGS are keyword value pairs as defined in CLASS."
+  (let ((source (apply #'make-instance class name args)))
+    (oset source :name name)
+    (helm--setup-source source)
+    (helm--create-source source (object-class source))))
+
+(defun helm--make-type (class &rest args)
+  (let ((source (apply #'make-instance class args)))
+    (helm--create-source source (object-class source))))
+
+
+;;; Methods to access types slots.
+(defmethod helm-source-get-action-from-type ((object helm-type-file))
+  (oref object :action))
+
+
+;;; Method to build sources.
+;;
+;;
+(defmethod helm--setup-source :before ((source helm-source))
+  (helm-aif (slot-value source :keymap)
+      (and (symbolp it) (set-slot-value source :keymap (symbol-value it)))))
+
 (defmethod helm--setup-source ((_source helm-source-sync)))
 
 (defmethod helm--setup-source ((source helm-source-in-buffer))
-  (helm-aif (slot-value source :data)
-      (oset source :init `(lambda ()
-                            (helm-init-candidates-in-buffer
-                                'global
-                              ',it))))
+  (let ((cur-init (slot-value source :init)))
+    (helm-aif (slot-value source :data)
+        (oset source
+              :init (delq
+                     nil
+                     `(,(and (null (eq 'helm-default-init-source-in-buffer-function
+                                       cur-init))
+                             cur-init)
+                        (lambda ()
+                          (helm-init-candidates-in-buffer
+                              'global
+                            ',it)))))))
   (let ((mtc (slot-value source :match)))
     (cl-assert (or (equal '(identity) mtc)
                    (eq 'identity mtc))
@@ -670,17 +783,10 @@ If none of these are found fallback to `helm-input-idle-delay'.")
 
 (defmethod helm--setup-source ((_source helm-source-dummy)))
 
-(defun helm--make-source (name class &rest args)
-  "Build a `helm' source named NAME with ARGS for CLASS.
-Argument NAME is a string which define the source name, so no need to use
-the keyword :name in your source, NAME will be used instead.
-Argument CLASS is an eieio class object.
-Arguments ARGS are keyword value pairs as defined in CLASS."
-  (let ((source (apply #'make-instance class name args)))
-    (oset source :name name)
-    (helm--setup-source source)
-    (helm--create-source source (eieio-object-class source))))
-
+
+;;; User functions
+;;
+;;  Sources
 (defmacro helm-build-sync-source (name &rest args)
   "Build a synchronous helm source with name NAME.
 Args ARGS are keywords provided by `helm-source-sync'."
@@ -700,6 +806,14 @@ Args ARGS are keywords provided by `helm-source-in-buffer'."
   "Build a helm source with name NAME using `dummy' method.
 Args ARGS are keywords provided by `helm-source-dummy'."
   `(helm--make-source ,name 'helm-source-dummy ,@args))
+
+;; Types
+(defun helm-actions-from-type-file ()
+  (let ((source (make-instance 'helm-type-file)))
+    (helm-source-get-action-from-type source)))
+
+(defun helm-build-type-file ()
+  (helm--make-type 'helm-type-file))
 
 (provide 'helm-source)
 

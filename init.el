@@ -386,6 +386,10 @@
   (glasses-mode)
   (diminish 'glasses-mode)
 
+  ;; Similarly, make camelCaseNames more navigable (for vanilla Emacs - looks
+  ;; like I need evil-little-word to let evil behave this way).
+  (subword-mode t)
+
   ;; Everyone likes spell-checking.
   (flyspell-prog-mode)
   (diminish 'flyspell-mode)

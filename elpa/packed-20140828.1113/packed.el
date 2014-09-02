@@ -1,4 +1,5 @@
 ;;; packed.el --- package manager agnostic Emacs Lisp package utilities
+;; Version: 20140828.1113
 
 ;; Copyright (C) 2012-2014  Jonas Bernoulli
 

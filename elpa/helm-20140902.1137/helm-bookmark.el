@@ -83,17 +83,17 @@
     map)
   "Generic Keymap for emacs bookmark sources.")
 
+(defclass helm-source-basic-bookmarks (helm-source-in-buffer helm-type-bookmark)
+   ((init :initform (lambda ()
+                      (bookmark-maybe-load-default-file)
+                      (helm-init-candidates-in-buffer
+                          'global
+                        (bookmark-all-names))))
+    (filtered-candidate-transformer :initform 'helm-bookmark-transformer)
+    (search :initform 'helm-bookmark-search-fn)))
+
 (defvar helm-source-bookmarks
-  (helm-build-in-buffer-source
-   "Bookmarks"
-   :init (lambda ()
-           (bookmark-maybe-load-default-file)
-           (helm-init-candidates-in-buffer
-               'global
-             (bookmark-all-names)))
-   :filtered-candidate-transformer 'helm-bookmark-transformer
-   :search 'helm-bookmark-search-fn
-   :type 'bookmark)
+  (helm--make-source "Bookmarks" 'helm-source-basic-bookmarks)
   "See (info \"(emacs)Bookmarks\").")
 
 (defun helm-bookmark-transformer (candidates _source)

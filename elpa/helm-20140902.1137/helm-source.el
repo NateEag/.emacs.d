@@ -31,6 +31,9 @@
 (require 'cl-lib)
 (require 'eieio)
 
+(defgeneric helm--setup-source (source)
+  "Prepare slots and handle slot errors before creating a helm source.")
+
 
 ;;; Classes for sources
 ;;
@@ -38,7 +41,7 @@
 (defclass helm-source ()
   ((name
     :initarg :name
-    :initform ""
+    :initform nil
     :custom string
     :documentation
     "  The name of the source.
@@ -175,18 +178,6 @@
     "  Help message for this source.
   If not present, `helm-help-message' value will be used.")
    
-   (type
-    :initarg :type
-    :initform nil
-    :type symbol
-    :documentation
-    "  Indicates the type of the items the source returns.
-
-  Merge attributes not specified in the source itself from
-  `helm-type-attributes'.
-
-  This attribute is implemented by plug-in.")
-
    (multiline
     :initarg :multiline
     :initform nil
@@ -386,13 +377,6 @@
     :documentation
     "  Disable highlight match in this source.")
    
-   (no-matchplugin
-    :initarg :no-matchplugin
-    :initform nil
-    :custom boolean
-    :documentation
-    "  Disable matchplugin for this source.")
-
    (allow-dups
     :initarg :allow-dups
     :initform nil
@@ -491,6 +475,11 @@ If none of these are found fallback to `helm-input-idle-delay'.")
     :documentation
     "If you are not Japonese, ignore this.")
 
+   (matchplugin
+    :initarg :matchplugin
+    :initform t
+    :custom boolean)
+
    (before-init-hook
     :initarg :before-init-hook
     :initform nil
@@ -513,6 +502,9 @@ i.e After the creation of `helm-buffer'."))
 (defclass helm-source-sync (helm-source)
   ((candidates
     :initform '("ERROR: You must specify the `candidates' slot, either with a list or a function"))
+
+   (dont-plug
+    :initform '(helm-compile-source--match-plugin))
    
    (match-strict
     :initarg :match-strict
@@ -534,18 +526,12 @@ i.e After the creation of `helm-buffer'."))
     :documentation
     "  You should use this attribute when using a function involving
   an async process instead of `candidates'.
-  The function must return a process.")))
+  The function must return a process.")
+
+   (matchplugin :initform nil)))
 
 (defclass helm-source-in-buffer (helm-source)
-  ((candidates-in-buffer
-    :initarg :candidates-in-buffer
-    :initform t
-    :custom boolean
-    :documentation
-    "It is just here to notify to the match-plugin we are using
-`candidates-in-buffer',so there is no need to change the value of this slot.")
-
-   (init
+  ((init
     :initform 'helm-default-init-source-in-buffer-function)
 
    (data
@@ -559,7 +545,8 @@ i.e After the creation of `helm-buffer'."))
   This is an easy and fast method to build a `candidates-in-buffer' source.")
    
    (dont-plug
-    :initform '(helm-compile-source--candidates-in-buffer))
+    :initform '(helm-compile-source--candidates-in-buffer
+                helm-compile-source--match-plugin))
    
    (candidates
     :initform 'helm-candidates-in-buffer)
@@ -627,10 +614,10 @@ i.e After the creation of `helm-buffer'."))
 
   filename:candidate-containing-the-word-filename
 
-  What you want is to ignore "filename" part and match only
-  "candidate-containing-the-word-filename"
+  What you want is to ignore \"filename\" part and match only
+  \"candidate-containing-the-word-filename\"
 
-  So give a function matching only the part of candidate after ":"
+  So give a function matching only the part of candidate after \":\"
 
   If source contain match-part attribute, match is computed only
   on part of candidate returned by the call of function provided
@@ -661,49 +648,87 @@ i.e After the creation of `helm-buffer'."))
 
 ;;; Classes for types.
 ;;
-;;
-(defclass helm-type (helm-source)
-  ((name        :initform nil)
-   (header-line :initform nil))
-  "Main source to create types."
-  :abstract t)
+;;  Files
+(defclass helm-type-file (helm-source) ()
+  "A class to define helm type file.")
 
-(defclass helm-type-file (helm-type)
-    ((action
-      :initform
-      (helm-make-actions
-       "Find file"                            'helm-find-many-files
-       "Find file as root"                    'helm-find-file-as-root
-       "Find file other window"               'find-file-other-window
-       "Find file other frame"                'find-file-other-frame
-       "Open dired in file's directory"       'helm-open-dired
-       "Grep File(s) `C-u recurse'"           'helm-find-files-grep
-       "Zgrep File(s) `C-u Recurse'"          'helm-ff-zgrep
-       "Pdfgrep File(s)"                      'helm-ff-pdfgrep
-       "Insert as org link"                   'helm-files-insert-as-org-link
-       "Checksum File"                        'helm-ff-checksum
-       "Ediff File"                           'helm-find-files-ediff-files
-       "Ediff Merge File"                     'helm-find-files-ediff-merge-files
-       "Etags `M-., C-u tap, C-u C-u reload tag file'"
-       'helm-ff-etags-select
-       "View file"                            'view-file
-       "Insert file"                          'insert-file
-       "Delete file(s)"                       'helm-delete-marked-files
-       "Open file externally (C-u to choose)" 'helm-open-file-externally
-       "Open file with default tool"          'helm-open-file-with-default-tool
-       "Find file in hex dump"                'hexl-find-file))
-     
-     (persistent-help
-      :initform "Show this file")
+(defmethod helm--setup-source :before ((source helm-type-file))
+    (oset source :action
+          (helm-make-actions
+           "Find file"                            'helm-find-many-files
+           "Find file as root"                    'helm-find-file-as-root
+           "Find file other window"               'find-file-other-window
+           "Find file other frame"                'find-file-other-frame
+           "Open dired in file's directory"       'helm-open-dired
+           "Grep File(s) `C-u recurse'"           'helm-find-files-grep
+           "Zgrep File(s) `C-u Recurse'"          'helm-ff-zgrep
+           "Pdfgrep File(s)"                      'helm-ff-pdfgrep
+           "Insert as org link"                   'helm-files-insert-as-org-link
+           "Checksum File"                        'helm-ff-checksum
+           "Ediff File"                           'helm-find-files-ediff-files
+           "Ediff Merge File"                     'helm-find-files-ediff-merge-files
+           "Etags `M-., C-u tap, C-u C-u reload tag file'"
+           'helm-ff-etags-select
+           "View file"                            'view-file
+           "Insert file"                          'insert-file
+           "Delete file(s)"                       'helm-delete-marked-files
+           "Open file externally (C-u to choose)" 'helm-open-file-externally
+           "Open file with default tool"          'helm-open-file-with-default-tool
+           "Find file in hex dump"                'hexl-find-file))
+    (oset source :persistent-help "Show this file")
+    (oset source :action-transformer '(helm-transform-file-load-el
+                                       helm-transform-file-browse-url))
+    (oset source :candidate-transformer '(helm-skip-boring-files
+                                          helm-highlight-files
+                                          helm-w32-pathname-transformer)))
 
-     (action-transformer
-      :initform '(helm-transform-file-load-el
-                  helm-transform-file-browse-url))
+;; Bookmarks
+(defclass helm-type-bookmark (helm-source) ()
+  "A class to define type bookmarks.")
 
-     (candidate-transformer
-      :initform '(helm-skip-boring-files
-                  helm-highlight-files
-                  helm-w32-pathname-transformer))))
+(defmethod helm--setup-source :before ((source helm-type-bookmark))
+  (oset source :action (helm-make-actions
+                        "Jump to bookmark" 'helm-bookmark-jump
+                        "Jump to BM other window" 'helm-bookmark-jump-other-window
+                        "Bookmark edit annotation" 'bookmark-edit-annotation
+                        "Bookmark show annotation" 'bookmark-show-annotation
+                        "Delete bookmark(s)" 'helm-delete-marked-bookmarks
+                        "Edit Bookmark" 'helm-bookmark-edit-bookmark
+                        "Rename bookmark" 'helm-bookmark-rename
+                        "Relocate bookmark" 'bookmark-relocate))
+  (oset source :keymap helm-bookmark-map)
+  (oset source :mode-line helm-bookmark-mode-line-string))
+
+;; Buffers
+(defclass helm-type-buffer (helm-source) ()
+  "A class to define type buffer.")
+
+(defmethod helm--setup-source :before ((source helm-type-buffer))
+  (oset source :action (helm-make-actions
+                        "Switch to buffer" 'helm-switch-to-buffer
+                        (lambda () (and (locate-library "popwin") "Switch to buffer in popup window"))
+                        'popwin:popup-buffer
+                        "Switch to buffer other window" 'switch-to-buffer-other-window
+                        "Switch to buffer other frame" 'switch-to-buffer-other-frame
+                        (lambda () (and (locate-library "elscreen") "Display buffer in Elscreen"))
+                        'helm-find-buffer-on-elscreen
+                        "Query replace regexp" 'helm-buffer-query-replace-regexp
+                        "Query replace" 'helm-buffer-query-replace
+                        "View buffer" 'view-buffer
+                        "Display buffer" 'display-buffer
+                        "Grep buffers (C-u grep all buffers)" 'helm-zgrep-buffers
+                        "Multi occur buffer(s)" 'helm-multi-occur-as-action
+                        "Revert buffer(s)" 'helm-revert-marked-buffers
+                        "Insert buffer" 'insert-buffer
+                        "Kill buffer(s)" 'helm-kill-marked-buffers
+                        "Diff with file" 'diff-buffer-with-file
+                        "Ediff Marked buffers" 'helm-ediff-marked-buffers
+                        "Ediff Merge marked buffers" (lambda (candidate)
+                                                       (helm-ediff-marked-buffers candidate t))))
+      (oset source :persistent-help "Show this buffer")
+      (oset source :filtered-candidate-transformer '(helm-skip-boring-buffers
+                                                     helm-buffers-sort-transformer
+                                                     helm-highlight-buffers)))
 
 
 ;;; Error functions
@@ -738,8 +763,34 @@ Arguments ARGS are keyword value pairs as defined in CLASS."
 
 (defun helm--make-type (class &rest args)
   (let ((source (apply #'make-instance class args)))
+    (helm--setup-source source)
     (helm--create-source source (object-class source))))
 
+(defun helm-source-mp-get-search-or-match-fns (source method)
+  (let ((searchers        (and (eq method 'search)
+                               (if (eq t (oref source :search-from-end))
+                                   helm-mp-default-search-backward-functions
+                                   helm-mp-default-search-functions)))
+        (defmatch         (helm-aif (slot-value source :match)
+                              (helm-mklist it)))
+        (defmatch-strict  (helm-aif (and (eq method 'match)
+                                         (slot-value source :match-strict))
+                              (helm-mklist it)))
+        (defsearch        (helm-aif (and (eq method 'search)
+                                         (slot-value source :search))
+                              (helm-mklist it)))
+        (defsearch-strict (helm-aif (and (eq method 'search-strict)
+                                         (slot-value source :search-strict))
+                              (helm-mklist it))))
+    (cl-case method
+      (match (cond (defmatch-strict)
+                   (defmatch
+                    (append helm-mp-default-match-functions defmatch))
+                   (t helm-mp-default-match-functions)))
+      (search (cond (defsearch-strict)
+                    (defsearch
+                     (append searchers defsearch))
+                    (t searchers))))))
 
 ;;; Methods to access types slots.
 (defmethod helm-source-get-action-from-type ((object helm-type-file))
@@ -753,7 +804,10 @@ Arguments ARGS are keyword value pairs as defined in CLASS."
   (helm-aif (slot-value source :keymap)
       (and (symbolp it) (set-slot-value source :keymap (symbol-value it)))))
 
-(defmethod helm--setup-source ((_source helm-source-sync)))
+(defmethod helm--setup-source ((source helm-source-sync))
+  (when (slot-value source :matchplugin)
+    (oset source :match
+          (helm-source-mp-get-search-or-match-fns source 'match))))
 
 (defmethod helm--setup-source ((source helm-source-in-buffer))
   (let ((cur-init (slot-value source :init)))
@@ -768,12 +822,12 @@ Arguments ARGS are keyword value pairs as defined in CLASS."
                           (helm-init-candidates-in-buffer
                               'global
                             ',it)))))))
+  (when (slot-value source :matchplugin)
+    (oset source :search (helm-source-mp-get-search-or-match-fns source 'search)))
   (let ((mtc (slot-value source :match)))
     (cl-assert (or (equal '(identity) mtc)
                    (eq 'identity mtc))
                nil "Invalid slot value for `match'")
-    (cl-assert (eq (slot-value source :candidates-in-buffer) t)
-               nil "Invalid slot value for `candidates-in-buffer'")
     (cl-assert (eq (slot-value source :volatile) t)
                nil "Invalid slot value for `volatile'")))
 
@@ -810,6 +864,7 @@ Args ARGS are keywords provided by `helm-source-dummy'."
 ;; Types
 (defun helm-actions-from-type-file ()
   (let ((source (make-instance 'helm-type-file)))
+    (helm--setup-source source)
     (helm-source-get-action-from-type source)))
 
 (defun helm-build-type-file ()

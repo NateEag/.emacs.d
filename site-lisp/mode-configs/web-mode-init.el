@@ -11,16 +11,29 @@
 (defun web-mode-smart-dash-insert ()
   "A wrapper around smart-dash-mode for use with web-mode."
   ;; Only be smart about dashes in languages where it makes sense.
+  (interactive)
   (if (member (web-mode-language-at-pos) (list "html" "css"))
       (self-insert-command 1)
     (smart-dash-insert)))
 
+;; From http://stackoverflow.com/a/14769115.
+(defun local-set-minor-mode-key (mode key def)
+  "Override a minor mode keybinding for the local buffer.
+
+Stores keymaps stored in buffer-local `minor-mode-overriding-map-alist'."
+
+  (let* ((oldmap (cdr (assoc mode minor-mode-map-alist)))
+         (newmap (or (cdr (assoc mode minor-mode-overriding-map-alist))
+                     (let ((map (make-sparse-keymap)))
+                       (set-keymap-parent map oldmap)
+                       (push `(,mode . ,map) minor-mode-overriding-map-alist)
+                       map))))
+    (define-key newmap key def)))
+
 (defun web-mode-install-smart-dash-insert ()
   "When called, override smart-dash-mode's usual keybinding for '-'."
-  (let ((map smart-dash-mode-keymap))
-    (make-local-variable 'smart-dash-mode-keymap)
-    (setq smart-dash-mode-keymap (copy-keymap map)))
-  (define-key smart-dash-mode-keymap "-" 'web-mode-smart-dash-insert))
+  (local-set-minor-mode-key 'smart-dash-mode "-" 'web-mode-smart-dash-insert)
+  (local-set-minor-mode-key 'smart-dash-mode (kbd "<kp-subtract>") 'web-mode-smart-dash-insert))
 
 (defun web-mode-init ()
   "My web-mode config."
@@ -89,7 +102,6 @@
 
   (define-key tagedit-mode-map (kbd "C-k") 'web-mode-tagedit-kill)
 
-  (smart-dash-mode)
   (web-mode-install-smart-dash-insert))
 
 (defun web-mode-te-skip-tag-forward-fn ()

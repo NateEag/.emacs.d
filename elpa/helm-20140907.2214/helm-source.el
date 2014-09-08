@@ -630,6 +630,9 @@ i.e After the creation of `helm-buffer'."))
 
    (filtered-candidate-transformer
     :initform 'helm-dummy-candidate)
+
+   (matchplugin
+    :initform nil)
    
    (accept-empty
     :initarg :accept-empty
@@ -750,7 +753,7 @@ i.e After the creation of `helm-buffer'."))
            when slot-val
            collect (cons s (unless (eq t slot-val) slot-val))))
 
-(defun helm--make-source (name class &rest args)
+(defun helm-make-source (name class &rest args)
   "Build a `helm' source named NAME with ARGS for CLASS.
 Argument NAME is a string which define the source name, so no need to use
 the keyword :name in your source, NAME will be used instead.
@@ -761,8 +764,9 @@ Arguments ARGS are keyword value pairs as defined in CLASS."
     (helm--setup-source source)
     (helm--create-source source (object-class source))))
 
-(defun helm--make-type (class &rest args)
+(defun helm-make-type (class &rest args)
   (let ((source (apply #'make-instance class args)))
+    (oset source :name nil)
     (helm--setup-source source)
     (helm--create-source source (object-class source))))
 
@@ -835,7 +839,17 @@ Arguments ARGS are keyword value pairs as defined in CLASS."
   (cl-assert (null (slot-value source :candidates))
              nil "Incorrect use of `candidates' use `candidates-process' instead"))
 
-(defmethod helm--setup-source ((_source helm-source-dummy)))
+(defmethod helm--setup-source ((source helm-source-dummy))
+  (let ((mtc (slot-value source :match)))
+    (cl-assert (or (equal '(identity) mtc)
+                   (eq 'identity mtc))
+               nil "Invalid slot value for `match'")
+    (cl-assert (eq (slot-value source :volatile) t)
+               nil "Invalid slot value for `volatile'")
+    (cl-assert (equal (slot-value source :candidates) '("dummy"))
+               nil "Invalid slot value for `candidates'")
+    (cl-assert (eq (slot-value source :accept-empty) t)
+               nil "Invalid slot value for `accept-empty'")))
 
 
 ;;; User functions
@@ -844,22 +858,22 @@ Arguments ARGS are keyword value pairs as defined in CLASS."
 (defmacro helm-build-sync-source (name &rest args)
   "Build a synchronous helm source with name NAME.
 Args ARGS are keywords provided by `helm-source-sync'."
-  `(helm--make-source ,name 'helm-source-sync ,@args))
+  `(helm-make-source ,name 'helm-source-sync ,@args))
 
 (defmacro helm-build-async-source (name &rest args)
   "Build a asynchronous helm source with name NAME.
 Args ARGS are keywords provided by `helm-source-async'."
-  `(helm--make-source ,name 'helm-source-async ,@args))
+  `(helm-make-source ,name 'helm-source-async ,@args))
 
 (defmacro helm-build-in-buffer-source (name &rest args)
   "Build a helm source with name NAME using `candidates-in-buffer' method.
 Args ARGS are keywords provided by `helm-source-in-buffer'."
-  `(helm--make-source ,name 'helm-source-in-buffer ,@args))
+  `(helm-make-source ,name 'helm-source-in-buffer ,@args))
 
 (defmacro helm-build-dummy-source (name &rest args)
   "Build a helm source with name NAME using `dummy' method.
 Args ARGS are keywords provided by `helm-source-dummy'."
-  `(helm--make-source ,name 'helm-source-dummy ,@args))
+  `(helm-make-source ,name 'helm-source-dummy ,@args))
 
 ;; Types
 (defun helm-actions-from-type-file ()
@@ -868,7 +882,7 @@ Args ARGS are keywords provided by `helm-source-dummy'."
     (helm-source-get-action-from-type source)))
 
 (defun helm-build-type-file ()
-  (helm--make-type 'helm-type-file))
+  (helm-make-type 'helm-type-file))
 
 (provide 'helm-source)
 

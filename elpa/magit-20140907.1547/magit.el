@@ -3720,8 +3720,9 @@ tracked in the current repository are reverted if
                 (save-excursion
                   (goto-char (magit-section-end section))
                   (when (re-search-backward
-                         magit-process-error-message-re nil
-                         (magit-section-content-beginning section))
+                         magit-process-error-message-re
+                         (magit-section-content-beginning section)
+                         t)
                     (match-string 1)))))
          "Git failed")
      (let ((key (and (buffer-live-p command-buf)
@@ -4701,7 +4702,8 @@ to consider it or not when called with that buffer current."
 As determined by the directory passed to `magit-status'."
   (and buffer-file-name
        (let ((topdir (magit-get-top-dir magit-default-directory)))
-         (and (string-prefix-p topdir buffer-file-name)
+         (and topdir
+              (string-prefix-p topdir buffer-file-name)
               ;; ^ Avoid needlessly connecting to unrelated tramp remotes.
               (string= topdir (magit-get-top-dir
                                (file-name-directory buffer-file-name)))))))

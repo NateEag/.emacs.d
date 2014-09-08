@@ -2,7 +2,7 @@
 ;;; tern-auto-complete.el --- Tern Completion by auto-complete.el
 
 ;; Author:  <m.sakurai at kiwanami.net>
-;; Version: 20140528.1415
+;; Version: 20140905.643
 ;; X-Original-Version: 0.0.1
 ;; Package-Requires: ((tern "0.0.1") (auto-complete "1.4") (cl-lib "0.5") (emacs "24"))
 
@@ -51,7 +51,7 @@
    (lambda (data) 
      (tern-ac-complete-response data)
      (funcall cc))
-   `((type . "completions") (types . t) (docs . t))
+   `((type . "completions") (types . t) (docs . t) (caseInsensitive . t))
    (point)))
 
 (defun tern-ac-complete-response (data)

@@ -3,6 +3,6 @@
 # key: function
 # binding: direct-keybinding
 # --
-function${1: name}() {
+function${1: name}($2) {
     $0
 }

@@ -4,7 +4,7 @@
 
 ;; Author: John Wiegley <jwiegley@gmail.com>
 ;; Created: 17 Jun 2012
-;; Version: 20140517.445
+;; Version: 20140908.806
 ;; X-Original-Version: 1.0
 ;; Package-Requires: ((bind-key "1.0") (diminish "0.44"))
 ;; Keywords: dotemacs startup speed config package
@@ -42,8 +42,7 @@
 (require 'bytecomp)
 (require 'diminish nil t)
 
-(when (fboundp 'declare-function)
-  (declare-function package-installed-p 'package))
+(declare-function package-installed-p 'package)
 
 (defgroup use-package nil
   "A use-package declaration for simplifying your `.emacs'."

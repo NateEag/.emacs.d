@@ -2417,6 +2417,8 @@ CHECKER will be used, even if it is not contained in
        (list nil)
      (list (read-flycheck-checker "Select checker: " flycheck-last-checker))))
   (when (not (eq checker flycheck-checker))
+    (unless (or (not checker) (flycheck-may-use-checker checker))
+      (user-error "Can't use syntax checker %S in this buffer" checker))
     (setq flycheck-checker checker)
     (when flycheck-mode
       (flycheck-buffer))))
@@ -3987,7 +3989,7 @@ of `google-wrap-in-quotes'.
 This function requires the Google This library from URL
 `https://github.com/Bruce-Connor/emacs-google-this'."
   (interactive "d\nP")
-  (if (fboundp 'google-string)
+  (if (fboundp 'google-this-string)
       (let ((messages (delq nil (mapcar #'flycheck-error-message
                                         (flycheck-overlay-errors-at pos)))))
         (when (and flycheck-google-max-messages
@@ -3995,7 +3997,7 @@ This function requires the Google This library from URL
           (user-error "More than %s messages at point"
                       flycheck-google-max-messages))
         (dolist (msg messages)
-          (google-string quote-flag msg 'no-confirm)))
+          (google-this-string quote-flag msg 'no-confirm)))
     (user-error "Please install Google This from \
 https://github.com/Bruce-Connor/emacs-google-this")))
 

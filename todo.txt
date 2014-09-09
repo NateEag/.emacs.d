@@ -56,6 +56,9 @@
 
 -I'd like yasnippets for JavaScript. I don't much like the defaults.
 
+-Report and/or fix yasnippet issue where loading js2-mode's snippets doesn't
+ load its parent-mode's snippets.
+
 -Find a better CSS mode. Ideally something that supports SCSS, probably. Maybe
  https://github.com/antonj/scss-mode. Actually, I just saw someone suggest
  using web-mode for CSS, and it occurs to me that might actually work out okay
@@ -71,6 +74,9 @@
  or the JDK looking for a class that might apply.
 
 -Make a PR to auto-complete for supporting smart-dash-mode.
+
+-Add a workaround to web-mode-init so smart-dash-mode knows when we're in a
+ comment.
 
 -Make a PR to yasnippet for my solution to the 'once' snippet overriding the
  'require_once' snippet.

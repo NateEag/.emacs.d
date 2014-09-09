@@ -69,6 +69,9 @@ Stores keymaps stored in buffer-local `minor-mode-overriding-map-alist'."
                  (if (string= web-mode-cur-language "php")
                      (yas-activate-extra-mode 'php-mode)
                    (yas-deactivate-extra-mode 'php-mode))
+                 (if (string= web-mode-cur-language "javascript")
+                     (yas-activate-extra-mode 'js2-mode)
+                   (yas-deactivate-extra-mode 'js2-mode))
                  (if (string= web-mode-cur-language "css")
                      (setq emmet-use-css-transform t)
                    (setq emmet-use-css-transform nil))
@@ -77,6 +80,7 @@ Stores keymaps stored in buffer-local `minor-mode-overriding-map-alist'."
   (setq web-mode-ac-sources-alist
         '(("php" . (ac-source-yasnippet ac-source-php-auto-yasnippets))
           ("html" . (ac-source-emmet-html-aliases ac-source-emmet-html-snippets))
+          ("javascript" . (ac-source-yasnippet))
           ("css" . (ac-source-css-property
                     ac-source-css-property-names
                     ac-source-emmet-css-snippets))))

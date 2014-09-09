@@ -4,7 +4,7 @@
 
 ;; Author: Christopher Wellons <wellons@nullprogram.com>
 ;; URL: https://github.com/skeeto/emacs-http-server
-;; Version: 20140613.955
+;; Version: 20140908.1908
 ;; X-Original-Version: 1.4.5
 ;; Package-Requires: ((cl-lib "0.3"))
 
@@ -567,7 +567,8 @@ actually serve up files."
 (defun httpd-unhex (str)
   "Fully decode the URL encoding in STR (including +'s)."
   (when str
-    (url-unhex-string (replace-regexp-in-string (regexp-quote "+") " " str) t)))
+    (let ((nonplussed (replace-regexp-in-string (regexp-quote "+") " " str)))
+      (decode-coding-string (url-unhex-string nonplussed t) 'utf-8))))
 
 (defun httpd-parse-args (argstr)
   "Parse a string containing URL encoded arguments."

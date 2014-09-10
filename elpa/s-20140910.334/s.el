@@ -3,7 +3,7 @@
 ;; Copyright (C) 2012 Magnar Sveen
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
-;; Version: 20140714.707
+;; Version: 20140910.334
 ;; X-Original-Version: 1.9.0
 ;; Keywords: strings
 
@@ -592,6 +592,14 @@ to match. "
     (insert s)
     (goto-char (point-min))
     (count-matches regexp (or start 1) (or end (point-max)))))
+
+(defun s-wrap (s prefix &optional suffix)
+  "Wrap string S with PREFIX and optionally SUFFIX.
+
+Return string S with PREFIX prepended.  If SUFFIX is present, it
+is appended, otherwise PREFIX is used as both prefix and
+suffix."
+  (concat prefix s (or suffix prefix)))
 
 (provide 's)
 ;;; s.el ends here

@@ -4,7 +4,7 @@
 
 ;; Author: James J Porter <porterjamesj@gmail.com>
 ;; URL: http://github.com/porterjamesj/virtualenvwrapper.el
-;; Version: 20140705.1926
+;; Version: 20140909.2155
 ;; X-Original-Version: 20131514
 ;; Keywords: python, virtualenv, virtualenvwrapper
 ;; Package-Requires: ((dash "1.5.0") (s "1.6.1"))
@@ -382,20 +382,21 @@ directory."
 
 ;; macros and functions supporting executing elisp or
 ;; shell commands in a particular venv
-
-(defmacro venv-with-virtualenv (name &rest forms)
-  "Evaluate FORMS with venv NAME active. NAME must be a string
+(eval-and-compile
+  (defmacro venv-with-virtualenv (name &rest forms)
+    "Evaluate FORMS with venv NAME active. NAME must be a string
 identifying a virtualenv."
-  `(progn
-     (let ((prev-dir default-directory)
-           (prev-env venv-current-name))
-       (venv-workon ,name) ;; switch it up
-       (cd venv-current-dir)
-       ,@forms ;; evalulate forms
-       (if prev-env ;; switch back
-           (venv-workon prev-env)
+    `(progn
+       (let ((prev-dir default-directory)
+             (prev-env venv-current-name))
+         (venv-workon ,name) ;; switch it up
+         (cd venv-current-dir)
+         ,@forms ;; evalulate forms
+         (if prev-env ;; switch back
+             (venv-workon prev-env)
            (venv-deactivate))
-       (cd prev-dir))))
+         (cd prev-dir)))))
+
 
 (defmacro venv-allvirtualenv (&rest forms)
   "For each virtualenv, activate it, switch to its directory,

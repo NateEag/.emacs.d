@@ -59,7 +59,9 @@
      (eval highlight-regexp "^ *"))))
  '(sentence-end-double-space nil nil nil "I do not use double-spaces after sentences. Neither should you.")
  '(show-paren-mode t)
- '(smart-dash-c-modes (quote (c-mode c++-mode objc-mode php-mode web-mode)))
+ '(smart-dash-c-modes
+   (quote
+    (c-mode c++-mode objc-mode php-mode web-mode js2-mode)))
  '(tab-width 4 nil nil "When a project prefers tabs, this is the width I usually see.")
  '(tool-bar-mode nil nil nil "The toolbar is an even more needless annoyance.")
  '(transient-mark-mode 1 nil nil "I like seeing my selections.")

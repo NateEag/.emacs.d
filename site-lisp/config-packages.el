@@ -20,6 +20,10 @@
               uniquify-after-kill-buffer-p t
               uniquify-ignore-buffers-re "^\\*"))
 
+(use-package magit
+  :defer t
+  :diminish magit-auto-revert-mode)
+
 (use-package evil
   :defer t
   :config

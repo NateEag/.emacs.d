@@ -290,9 +290,6 @@
 (global-auto-revert-mode)
 (diminish 'auto-revert-mode)
 
-(add-hook 'magit-auto-revert-mode-hook
-          (lambda () (diminish 'magit-auto-revert-mode)))
-
 ;; After a few months, I can definitively say that Helm beats pressing Tab.
 (helm-mode)
 (diminish 'helm-mode)

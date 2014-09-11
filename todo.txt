@@ -1,3 +1,6 @@
+-Get ac-isearch working when auto-completion is active. I think my
+ global-set-key of C-s to regex searching currently overrides it.
+
 -Write a general-case ac-source for Tern.js. Right now I have to press M-Tab to
  trigger top-level completions, and I'd like to just press Tab. emacs-eclim
  might be a good place to rip off the basic idea from, since it depends on an

@@ -106,6 +106,9 @@
  you have a lot of buffers open from that repo it might get expensive... Think
  about this, anyway.
 
+-Make my helm-git-files setup match each chunk match against the whole path
+ in the repo. It currently seems to treat them as one big regex..
+
 -Look into find-file-in-repository as an alternative to my git-ls-files helm
  plugin, since it handles repos other than git.
  http://melpa.milkbox.net/#/find-file-in-repository

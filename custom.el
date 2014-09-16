@@ -49,7 +49,10 @@
  '(php-mode-coding-style (quote psr2) nil nil "PSR-2 is not ideal, but it's a standard.")
  '(safe-local-variable-values
    (quote
-    ((eval add-hook
+    ((eval add-to-list
+           (quote after-save-hook)
+           (quote hit-servlet))
+     (eval add-hook
            (quote after-save-hook)
            (quote hit-servlet)
            nil t)

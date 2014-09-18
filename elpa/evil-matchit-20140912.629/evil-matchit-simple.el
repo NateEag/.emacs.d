@@ -1,4 +1,4 @@
-;;; evil-matchit-javascript.el --- simple match plugin of evil-matchit
+;;; evil-matchit-simple.el --- simple match plugin of evil-matchit
 
 ;; Copyright (C) 2014  Chen Bin <chenbin.sh@gmail.com>
 
@@ -28,13 +28,12 @@
 
 (require 'evil-matchit)
 
-;; TODO, fn.then().({}, find the second (
-(defun evilmi--javascript-find-open-brace (cur-line)
+(defun evilmi--simple-find-open-brace (cur-line)
   (let (rlt)
     ;; javascript code line "(function(...) { ..."
     ;; C code line "} else {"
-    (if (or (string-match "^[ \t]*[\(\}]?[$_a-zA-Z0-9]+.*{ *\\(\/\/.*\\)?$" cur-line)
-            (string-match "^[ \t]*[\(\}]?[$_a-zA-Z0-9]+.*{ *\\(\/\*[^/]*\*\/\\)?$" cur-line))
+    (if (or (string-match "^[ \t]*[\(\}]?[_a-zA-Z0-9]+.*{ *\\(\/\/.*\\)?$" cur-line)
+            (string-match "^[ \t]*[\(\}]?[_a-zA-Z0-9]+.*{ *\\(\/\*[^/]*\*\/\\)?$" cur-line))
         (setq rlt 1)
       (save-excursion
         (forward-line)
@@ -45,22 +44,20 @@
           )
         )
       )
-    rlt
-    )
-  )
+    rlt))
 
 ;;;###autoload
-(defun evilmi-javascript-get-tag ()
+(defun evilmi-simple-get-tag ()
   (let (p
         forward-line-num
         rlt
         (cur-line (buffer-substring-no-properties
                    (line-beginning-position) (line-end-position)))
         )
-    (message "evilmi-javascript-get-tag called")
+
     ;; only handle open tag
     (if (not (memq (following-char) (string-to-list "{[(}}])")))
-        (if (setq forward-line-num (evilmi--javascript-find-open-brace cur-line))
+        (if (setq forward-line-num (evilmi--simple-find-open-brace cur-line))
             (when forward-line-num
               (setq p (line-beginning-position))
               (forward-line (1- forward-line-num))
@@ -71,12 +68,10 @@
           )
       (setq rlt (list (point)))
       )
-    rlt
-    )
-  )
+    rlt))
 
 ;;;###autoload
-(defun evilmi-javascript-jump (rlt NUM)
+(defun evilmi-simple-jump (rlt NUM)
   (let (cur-line)
     (when rlt
       (evil-jump-item)
@@ -85,14 +80,11 @@
                       (line-beginning-position)
                       (line-end-position)))
       ;; hack for javascript
-      (message "cur-line=%s" cur-line)
-      (if (or (string-match "^[ \t]*}\)\(.*\)\; *$" cur-line)
-              (string-match "^[ \t]*}\(.*\))\; *$" cur-line)
-              (string-match "^[ \t]*}\])\; *$" cur-line))
+      (if (string-match "^[ \t]*})(.*)\; *$" cur-line)
           (line-end-position)
         (1+ (point))
         )
       )
     ))
 
-(provide 'evil-matchit-javascript)
+(provide 'evil-matchit-simple)

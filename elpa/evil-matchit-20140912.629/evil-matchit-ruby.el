@@ -34,39 +34,23 @@
 (defvar evilmi-ruby-extract-keyword-howtos
   '(("^[ \t]*\\([a-z]+\\)\\( .*\\| *\\)$" 1)
     ("^.* \\(do\\) |[a-z0-9A-Z,|]+|$" 1)
-    )
-  "The list of HOWTO on extracting keyword from current line.
-Each howto is actually a pair. The first element of pair is the regular
-expression to match the current line. The second is the index of sub-matches
-to extract the keyword which starts from one. The sub-match is the match defined
-between '\\(' and '\\)' in regular expression.
-")
+    ))
 
 (defvar evilmi-ruby-match-tags
-  '((("unless" "if") ("elsif" "else") ("end"))
+  '((("unless" "if") ("elsif" "else") "end")
     ("begin" ("rescue" "ensure") "end")
-    ("case" ("when" "else") ("end"))
-    (("class" "def" "while" "do" "module" "for" "until") () ("end"))
-    )
-  "The table we look up match tags. This is a three column table.
-The first column contains the open tag(s).
-The second column contains the middle tag(s).
-The third column contains the closed tags(s).
-The forth column is optional, t means the tags could be function exit
-")
+    ("case" ("when" "else") "end")
+    (("class" "def" "while" "do" "module" "for" "until") () "end")
+    ))
 
 ;;;###autoload
 (defun evilmi-ruby-get-tag ()
   (let (rlt)
-    (message "evilmi-ruby-get-tag called")
     (setq rlt (evilmi-sdk-get-tag evilmi-ruby-match-tags evilmi-ruby-extract-keyword-howtos))
-    (message "rlt=%s" rlt)
     rlt))
 
 ;;;###autoload
 (defun evilmi-ruby-jump (rlt NUM)
-  (message "evilmi-ruby-jump called")
-  (evilmi-sdk-jump rlt NUM evilmi-ruby-match-tags evilmi-ruby-extract-keyword-howtos)
-  )
+  (evilmi-sdk-jump rlt NUM evilmi-ruby-match-tags evilmi-ruby-extract-keyword-howtos))
 
 (provide 'evil-matchit-ruby)

@@ -1,4 +1,4 @@
-;;; evil-matchit-sh.el ---sh (bash/zsh) plugin of evil-matchit
+;;; evil-matchit-template.el --- web template plugin of evil-matchit
 
 ;; Copyright (C) 2014  Chen Bin <chenbin.sh@gmail.com>
 
@@ -31,34 +31,26 @@
 ;; All you need to do is just define the match-tags for SDK algorithm to lookup.
 (require 'evil-matchit-sdk)
 
-;; ruby/bash/lua/vimrc
-(defvar evilmi-sh-match-tags
-  '((("if") ("elif" "else") ("fi"))
-    ("case" (";;") ("esac"))
-    ("function" ("exit") ("\}") t)
-    (("for" "do" "while" "until") () ("done"))
-    )
-  "The table we look up match tags. This is a three column table.
-The first column contains the open tag(s).
-The second column contains the middle tag(s).
-The third column contains the closed tags(s).
-"
-  )
+(defvar evilmi-template-extract-keyword-howtos
+  '(("^[ \t]*<\\?php +\\([a-z]+\\).*$" 1)
+    ))
 
-(defvar evilmi-sh-extract-keyword-howtos
-  '(("^[ \t]*\\([a-z]+\\)\\( .*\\| *\\)$" 1)
-    ("^.*\\(;;\\) *$" 1)
-    ("^\\(\} *\\)" 1)
+(defvar evilmi-template-match-tags
+  '(("if" ("elseif" "else") "endif" "MONOGAMY")
+    ("foreach" () "endforeach" "MONOGAMY")
+    ("for" () "endfor" "MONOGAMY")
+    ("while" () "endwhile" "MONOGAMY")
     ))
 
 ;;;###autoload
-(defun evilmi-sh-get-tag ()
-  (evilmi-sdk-get-tag evilmi-sh-match-tags evilmi-sh-extract-keyword-howtos)
-  )
+(defun evilmi-template-get-tag ()
+  (let (rlt)
+    (setq rlt (evilmi-sdk-get-tag evilmi-template-match-tags evilmi-template-extract-keyword-howtos))
+    rlt))
 
 ;;;###autoload
-(defun evilmi-sh-jump (rlt NUM)
-  (evilmi-sdk-jump rlt NUM evilmi-sh-match-tags evilmi-sh-extract-keyword-howtos)
+(defun evilmi-template-jump (rlt NUM)
+  (evilmi-sdk-jump rlt NUM evilmi-template-match-tags evilmi-template-extract-keyword-howtos)
   )
 
-(provide 'evil-matchit-sh)
+(provide 'evil-matchit-template)

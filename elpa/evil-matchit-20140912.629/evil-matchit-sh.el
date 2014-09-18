@@ -1,4 +1,4 @@
-;;; evil-matchit-cmake.el ---cmake (ruby/lua) plugin of evil-matchit
+;;; evil-matchit-sh.el ---sh (bash/zsh) plugin of evil-matchit
 
 ;; Copyright (C) 2014  Chen Bin <chenbin.sh@gmail.com>
 
@@ -31,33 +31,28 @@
 ;; All you need to do is just define the match-tags for SDK algorithm to lookup.
 (require 'evil-matchit-sdk)
 
-(defvar evilmi-cmake-extract-keyword-howtos
-  '(("^[ \t]*\\([a-zA-Z]+ *\\) *(.*$" 1)
+;; ruby/bash/lua/vimrc
+(defvar evilmi-sh-match-tags
+  '((("if") ("elif" "else") ("fi"))
+    ("case" (";;") ("esac"))
+    ("function" ("exit") ("\}") "FN_EXIT")
+    (("for" "do" "while" "until") () ("done"))
     ))
 
-;; CMake (http://www.cmake.org) syntax
-(defvar evilmi-cmake-match-tags
-  '((("if" "IF") ("elseif" "ELSEIF" "else" "ELSE") ("endif" "ENDIF"))
-    (("foreach" "FOREACH") () ("endforeach" "ENDFOREACH"))
-    (("macro" "MACRO") () ("endmacro" "ENDMACRO"))
-    (("while" "WHILE") () ("endwhile" "ENDWHILE"))
-    (("function" "FUNCTION") () ("endfunction" "ENDFUNCTION"))
-    )
-  "The table we look up match tags. This is a three column table.
-The first column contains the open tag(s).
-The second column contains the middle tag(s).
-The third column contains the closed tags(s).
-"
+(defvar evilmi-sh-extract-keyword-howtos
+  '(("^[ \t]*\\([a-z]+\\)\\( .*\\| *\\)$" 1)
+    ("^.*\\(;;\\) *$" 1)
+    ("^\\(\} *\\)" 1)
+    ))
+
+;;;###autoload
+(defun evilmi-sh-get-tag ()
+  (evilmi-sdk-get-tag evilmi-sh-match-tags evilmi-sh-extract-keyword-howtos)
   )
 
 ;;;###autoload
-(defun evilmi-cmake-get-tag ()
-  (evilmi-sdk-get-tag evilmi-cmake-match-tags evilmi-cmake-extract-keyword-howtos)
+(defun evilmi-sh-jump (rlt NUM)
+  (evilmi-sdk-jump rlt NUM evilmi-sh-match-tags evilmi-sh-extract-keyword-howtos)
   )
 
-;;;###autoload
-(defun evilmi-cmake-jump (rlt NUM)
-  (evilmi-sdk-jump rlt NUM evilmi-cmake-match-tags evilmi-cmake-extract-keyword-howtos)
-  )
-
-(provide 'evil-matchit-cmake)
+(provide 'evil-matchit-sh)

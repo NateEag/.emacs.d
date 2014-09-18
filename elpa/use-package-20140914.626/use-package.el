@@ -4,7 +4,7 @@
 
 ;; Author: John Wiegley <jwiegley@gmail.com>
 ;; Created: 17 Jun 2012
-;; Version: 20140908.806
+;; Version: 20140914.626
 ;; X-Original-Version: 1.0
 ;; Package-Requires: ((bind-key "1.0") (diminish "0.44"))
 ;; Keywords: dotemacs startup speed config package
@@ -402,10 +402,11 @@ For full documentation. please see commentary.
          (eval-when-compile
            (when (bound-and-true-p byte-compile-current-file)
              ,@defines-eval
-             (with-demoted-errors
-                ,(if (stringp name)
-                     `(load ,name t)
-                   `(require ',name nil t)))))
+             (condition-case err
+                 ,(if (stringp name)
+                      `(load ,name t)
+                    `(require ',name nil t))
+               (error (message "Error compiling %s: %s" ',name err) nil))))
 
          ,(if (and (or commands (use-package-plist-get args :defer))
                    (not (use-package-plist-get args :demand)))

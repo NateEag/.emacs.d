@@ -1,10 +1,10 @@
 ;;; packed.el --- package manager agnostic Emacs Lisp package utilities
-;; Version: 20140828.1113
+;; Version: 20140913.1531
 
 ;; Copyright (C) 2012-2014  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
-;; Homepage: http://tarsius.github.com/packed
+;; Homepage: https://github.com/tarsius/packed
 ;; Keywords: compile, convenience, lisp, package, library
 
 ;; Package: packed

@@ -2415,7 +2415,7 @@ If USE-INSIDE-STRING is non-nil, use value of
       (!cdr action))
     r))
 
-(defun sp--get-context (type)
+(defun sp--get-handler-context (type)
   "Return the context constant.  TYPE is type of the handler."
   (let ((in-string (cl-case type
                      (:pre-handlers
@@ -2425,6 +2425,18 @@ If USE-INSIDE-STRING is non-nil, use value of
                      (:post-handlers
                       (sp-point-in-string-or-comment)))))
     (if in-string 'string 'code)))
+
+(defun sp--get-context (&optional point in-string in-comment)
+  "Return the context of POINT.
+
+If the optional arguments IN-STRING or IN-COMMENT non-nil, their
+value is used instead of a test."
+  (save-excursion
+    (goto-char (or point (point)))
+    (cond
+     ((or in-string (sp-point-in-string)) 'string)
+     ((or in-comment (sp-point-in-comment)) 'comment)
+     (t 'code))))
 
 (defun sp--parse-insertion-spec (fun)
   "Parse the insertion specification FUN and return a form to evaluate."
@@ -2489,7 +2501,7 @@ see `sp-pair' for description."
   "Run all the hooks for pair ID of type TYPE on action ACTION."
   (ignore-errors
     (let ((hook (sp-get-pair id type))
-          (context (sp--get-context type)))
+          (context (sp--get-handler-context type)))
       (if hook
           (--each hook (sp--run-function-or-insertion it id action context))
         (let ((tag-hook (plist-get
@@ -2532,7 +2544,7 @@ see `sp-pair' for description."
                           (--any? (equal (single-key-description last-command-event) it) conds))
                   (sp--run-function-or-insertion
                    fun sp-last-inserted-pair 'insert
-                   (sp--get-context :post-handlers)))))))
+                   (sp--get-handler-context :post-handlers)))))))
         (setq sp-last-inserted-pair nil))
 
       ;; Here we run the delayed insertion. Some details in issue #113
@@ -2550,7 +2562,7 @@ see `sp-pair' for description."
                                (eq this-command it))
                               ((stringp it)
                                (equal (single-key-description last-command-event) it))
-                              ((ignore-errors (funcall it pair 'insert (sp--get-context :post-handlers))))) conds))
+                              ((ignore-errors (funcall it pair 'insert (sp--get-handler-context :post-handlers))))) conds))
             ;; TODO: refactor this and the same code in
             ;; `sp-insert-pair' to a separate function
             (sp--run-hook-with-args open-pair :pre-handlers 'insert)
@@ -3644,10 +3656,14 @@ is remove the just added wrapping."
             (setq sp-last-operation 'sp-delete-pair-opening))))
          ;; we're inside a pair
          ((and inside-pair sp-autodelete-pair)
-          (search-forward (substring (cdr inside-pair) 0 1))
-          (delete-char (- (+ (- (point) p) (1- (length (car inside-pair))))))
-          (delete-char (1- (length (cdr inside-pair))))
-          (setq sp-last-operation 'sp-delete-pair))
+          (let* ((end (save-excursion
+                        (search-forward (cdr inside-pair))))
+                 (cs (sp--get-context p))
+                 (ce (sp--get-context end)))
+            (when (eq cs ce)
+              (delete-char (- end p))
+              (delete-char (- (1- (length (car inside-pair)))))
+              (setq sp-last-operation 'sp-delete-pair))))
          ;; we're behind a closing pair
          ((and behind-pair sp-autodelete-closing-pair)
           (delete-char (- (1- (length (cdr behind-pair)))))
@@ -3859,13 +3875,11 @@ The expressions considered are those delimited by pairs on
            ;; one point backward, then test the comment/string thing,
            ;; then compute the correct bounds, and then restore the
            ;; point so the search will pick up the )
-           (in-string-or-comment (-if-let (soc (sp-point-in-string-or-comment))
-                                     (if back
-                                         (save-excursion
-                                           (backward-char)
-                                           (sp-point-in-string-or-comment))
-                                       soc)
-                                   soc))
+           (in-string-or-comment (if back
+                                     (save-excursion
+                                       (backward-char)
+                                       (sp-point-in-string-or-comment))
+                                   (sp-point-in-string-or-comment)))
            (string-bounds (and in-string-or-comment (sp--get-string-or-comment-bounds)))
            (fw-bound (if in-string-or-comment (cdr string-bounds) (point-max)))
            (bw-bound (if in-string-or-comment (car string-bounds) (point-min)))
@@ -4018,9 +4032,11 @@ opening and closing delimiter, such as *...*, \"...\", `...` etc."
           (setq m (match-string-no-properties 0))
           (setq needle (regexp-quote m))
           (setq skip-match-fn (sp-get-pair m :skip-match))
-          (when (sp-point-in-string)
-            (let ((r (sp-get-quoted-string-bounds)))
-              (setq limit (cons (1- (car r)) (1+ (cdr r))))))
+          (cond
+           ((sp-point-in-string)
+            (setq limit (sp-get-quoted-string-bounds)))
+           ((sp-point-in-comment)
+            (setq limit (sp-get-comment-bounds))))
           (save-excursion
             (while (sp--find-next-stringlike-delimiter needle 'search-backward-regexp (car limit) skip-match-fn)
               (setq count (1+ count))))
@@ -4431,7 +4447,8 @@ expression.
 The return value is a plist with the same format as the value
 returned by `sp-get-sexp'."
   (sp--maybe-init)
-  (let (b e)
+  (if (sp-point-in-comment)
+      (sp-get-stringlike-expression back)
     (if (sp-point-in-string)
         (let ((r (sp-get-quoted-string-bounds)))
           (sp--get-string r))

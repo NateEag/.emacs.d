@@ -3689,7 +3689,11 @@ list."
     (with-selected-window window
       (revert-buffer))
     (run-hooks 'flycheck-error-list-after-refresh-hook)
-    (flycheck-error-list-highlight-errors)))
+    (let ((preserve-pos (eq (current-buffer)
+                            (get-buffer flycheck-error-list-buffer))))
+      ;; If the error list is the current buffer, don't recenter when
+      ;; highlighting
+      (flycheck-error-list-highlight-errors preserve-pos))))
 
 (defun flycheck-error-list-goto-error (&optional pos)
   "Go to the location of the error at POS in the error list.
@@ -3711,7 +3715,7 @@ POS defaults to `point'."
           (widen)
           (goto-char pos)))
       ;; Re-highlight the errors
-      (flycheck-error-list-highlight-errors))))
+      (flycheck-error-list-highlight-errors 'preserve-pos))))
 
 (defun flycheck-error-list-next-error-pos (pos &optional n)
   "Get the N'th next error in the error list from POS.
@@ -3721,8 +3725,7 @@ instead.
 
 Get the beginning position of the N'th next error from POS, or
 nil, if there is no next error."
-  (let ((n (or n 1))
-        )
+  (let ((n (or n 1)))
     (if (>= n 0)
         ;; Search forward
         (while (and pos (/= n 0))
@@ -3759,8 +3762,13 @@ nil, if there is no next error."
   "Error highlight overlays in the error list buffer.")
 (put 'flycheck-error-list-highlight-overlays 'permanent-local t)
 
-(defun flycheck-error-list-highlight-errors ()
-  "Highlight errors in the error list."
+(defun flycheck-error-list-highlight-errors (&optional preserve-pos)
+  "Highlight errors in the error list.
+
+Highlight all errors in the error lists that are at point in the
+source buffer, and on the same line as point.  Then recenter the
+error list to the highlighted error, unless PRESERVE-POS is
+non-nil."
   (when (get-buffer flycheck-error-list-buffer)
     (let ((errors-at-line (flycheck-overlay-errors-in (line-beginning-position)
                                                       (line-end-position)))
@@ -3796,11 +3804,12 @@ nil, if there is no next error."
                   (setq next-error-pos end)))))
           ;; Delete the old overlays
           (mapc #'delete-overlay old-overlays)
-          ;; Move point to the middle error
-          (goto-char (+ min-point (/ (- max-point min-point) 2)))
-          (beginning-of-line)
-          ;; And recenter the error list at this position
-          (flycheck-error-list-recenter-at (point)))))))
+          (unless preserve-pos
+            ;; Move point to the middle error
+            (goto-char (+ min-point (/ (- max-point min-point) 2)))
+            (beginning-of-line)
+            ;; And recenter the error list at this position
+            (flycheck-error-list-recenter-at (point))))))))
 
 (defun flycheck-list-errors ()
   "Show the error list for the current buffer."
@@ -5210,24 +5219,59 @@ See URL `http://golang.org/cmd/go'."
                   (string-suffix-p "_test.go" (buffer-file-name))))
   :next-checkers ((warning . go-errcheck)))
 
+(defun flycheck-go-package-name (&optional file-name gopath)
+  "Determine the package name for FILE-NAME and GOPATH.
+
+FILE-NAME defaults to `buffer-file-name'.  GOPATH defaults to
+$GOPATH.
+
+Return the package name for FILE-NAME, or nil if FILE-NAME is not
+part of any package or if GOPATH is nil."
+  (-when-let* ((gopath (or gopath (getenv "GOPATH")))
+               (file-name (or file-name (buffer-file-name))))
+    (let ((gosrc (file-name-as-directory (expand-file-name "src/" gopath)))
+          (file-name (expand-file-name file-name)))
+      (when (string-prefix-p gosrc file-name)
+        ;; The file is part of a package, so determine the package name, as
+        ;; relative file name to the GO source directory
+        (directory-file-name            ; Remove trailing /
+         (file-relative-name (file-name-directory file-name) gosrc))))))
+
 (flycheck-define-checker go-errcheck
   "A Go checker for unchecked errors.
 
 See URL `https://github.com/kisielk/errcheck'."
-  :command ("errcheck" ".")
+  :command ("errcheck" (eval (flycheck-go-package-name)))
   :error-patterns
-  ((warning line-start (file-name) ":" line ":" column (one-or-more "\t") (message) line-end))
+  ((warning line-start
+            (file-name) ":" line ":" column (one-or-more "\t")
+            (message)
+            line-end))
   :error-filter
   (lambda (errors)
-    (let ((errors (flycheck-sanitize-errors errors)))
+    (let ((errors (flycheck-sanitize-errors errors))
+          (gosrc (expand-file-name "src/" (getenv "GOPATH"))))
       (dolist (err errors)
+        ;; File names are relative to the Go source directory, so we need to
+        ;; unexpand and re-expand them
+        (setf (flycheck-error-filename err)
+              (expand-file-name
+               ;; Get the relative name back, since Flycheck has already
+               ;; expanded the name for us
+               (file-relative-name (flycheck-error-filename err))
+               ;; And expand it against the Go source directory
+               gosrc))
         (-when-let (message (flycheck-error-message err))
           ;; Improve the messages reported by errcheck to make them more clear.
           (setf (flycheck-error-message err)
                 (format "Ignored `error` returned from `%s`" message)))))
     errors)
   :modes go-mode
-  :predicate flycheck-buffer-saved-p)
+  :predicate
+  (lambda ()
+    ;; We need a valid package name, since errcheck only works on entire
+    ;; packages, and can't check individual Go files.
+    (and (flycheck-buffer-saved-p) (flycheck-go-package-name))))
 
 (flycheck-define-checker haml
   "A Haml syntax checker using the Haml compiler.

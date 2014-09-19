@@ -60,6 +60,7 @@
       (list "~/github/gitlist/vendor/autoload.php"))
      (eval guess-style-guess-all)
      (eval highlight-regexp "^ *"))))
+ '(scroll-bar-mode nil)
  '(sentence-end-double-space nil nil nil "I do not use double-spaces after sentences. Neither should you.")
  '(show-paren-mode t)
  '(smart-dash-c-modes

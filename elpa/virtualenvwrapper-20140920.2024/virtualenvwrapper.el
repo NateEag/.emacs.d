@@ -4,7 +4,7 @@
 
 ;; Author: James J Porter <porterjamesj@gmail.com>
 ;; URL: http://github.com/porterjamesj/virtualenvwrapper.el
-;; Version: 20140909.2155
+;; Version: 20140920.2024
 ;; X-Original-Version: 20131514
 ;; Keywords: python, virtualenv, virtualenvwrapper
 ;; Package-Requires: ((dash "1.5.0") (s "1.6.1"))
@@ -266,6 +266,25 @@ interactively."
   (when (called-interactively-p 'interactive)
     (message (concat "Switched to virtualenv: " venv-current-name))))
 
+
+;; for hilarious reasons to do with bytecompiling, this has to be here
+;; instead of below
+(defmacro venv-with-virtualenv (name &rest forms)
+  "Evaluate FORMS with venv NAME active. NAME must be a string
+identifying a virtualenv."
+  `(progn
+     (let ((prev-dir default-directory)
+           (prev-env venv-current-name))
+       (venv-workon ,name) ;; switch it up
+       (cd venv-current-dir)
+       (unwind-protect
+           (progn
+             ,@forms) ;; evalulate forms
+         (if prev-env ;; switch back
+             (venv-workon prev-env)
+           (venv-deactivate))
+         (cd prev-dir)))))
+
 ;;;###autoload
 (defun venv-mkvirtualenv (&rest names)
 "Create new virtualenvs NAMES. If venv-location is a single
@@ -293,11 +312,11 @@ default-directory."
       (when (called-interactively-p 'interactive)
         (message (concat "Created virtualenv: " it)))))
   ;; workon the last venv we made
-    (venv-workon (car (last names))))
+  (venv-workon (car (last names))))
 
 ;;;###autoload
 (defun venv-rmvirtualenv (&rest names)
-"Delete virtualenvs NAMES."
+  "Delete virtualenvs NAMES."
   (interactive)
   ;; deactivate first
   (venv-deactivate)
@@ -382,21 +401,6 @@ directory."
 
 ;; macros and functions supporting executing elisp or
 ;; shell commands in a particular venv
-(eval-and-compile
-  (defmacro venv-with-virtualenv (name &rest forms)
-    "Evaluate FORMS with venv NAME active. NAME must be a string
-identifying a virtualenv."
-    `(progn
-       (let ((prev-dir default-directory)
-             (prev-env venv-current-name))
-         (venv-workon ,name) ;; switch it up
-         (cd venv-current-dir)
-         ,@forms ;; evalulate forms
-         (if prev-env ;; switch back
-             (venv-workon prev-env)
-           (venv-deactivate))
-         (cd prev-dir)))))
-
 
 (defmacro venv-allvirtualenv (&rest forms)
   "For each virtualenv, activate it, switch to its directory,
@@ -489,7 +493,6 @@ virtualenvwrapper.el."
   (venv--make-pcompletions ("workon" "rmvirtualenv"
                             "cdvirtualenv" "cpvirtualenv"))
   (message "Eshell virtualenv support initialized."))
-
 
 (provide 'virtualenvwrapper)
 ;;; virtualenvwrapper.el ends here

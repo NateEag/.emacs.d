@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "async" "async.el" (21536 5525 0 0))
+;;;### (autoloads nil "async" "async.el" (21536 41361 0 0))
 ;;; Generated autoloads from async.el
 
 (autoload 'async-start-process "async" "\
@@ -68,7 +68,7 @@ returns nil.  It can still be useful, however, as an argument to
 ;;;***
 
 ;;;### (autoloads nil nil ("async-bytecomp.el" "async-pkg.el" "dired-async.el"
-;;;;;;  "smtpmail-async.el") (21536 5526 93196 0))
+;;;;;;  "smtpmail-async.el") (21536 41361 195675 0))
 
 ;;;***
 

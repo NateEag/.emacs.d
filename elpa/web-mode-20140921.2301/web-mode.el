@@ -3,7 +3,7 @@
 
 ;; Copyright 2011-2014 François-Xavier Bois
 
-;; Version: 9.0.88
+;; Version: 9.0.89
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -36,7 +36,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "9.0.88"
+(defconst web-mode-version "9.0.89"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -1218,7 +1218,7 @@ Must be used in conjunction with web-mode-enable-block-face."
      "elif" "else" "elseif" "elsif" "embed" "empty" "filter" "foreach" "for"
      "ifchanged" "ifequal" "ifnotequal" "if" "with"
      "macro" "draw" "random" "safe" "sandbox" "spaceless" "verbatim"
-     "form" ;; liquid
+     "form" "unless" "capture" ;; liquid
      )
    t))
 
@@ -2411,7 +2411,7 @@ the environment as needed for ac-sources, right before they're used.")
           (cond
 
            ((listp closing-string)
-;;            (message "point=%S sub2=%s reg-end=%S engine=%S" (point) sub2 reg-end web-mode-engine)
+            ;;(message "point=%S sub2=%s reg-end=%S engine=%S" (point) sub2 reg-end web-mode-engine)
             (if (web-mode-rsf-balanced (car closing-string) (cdr closing-string) reg-end t)
                 (progn
 ;;                  (message "found %S" (point))
@@ -2419,7 +2419,9 @@ the environment as needed for ac-sources, right before they're used.")
                         pos (point)))
               (when (and (string= web-mode-engine "php")
                          (string= "<?" sub2)
-                         (save-excursion (not (re-search-forward "?>" reg-end t))))
+;;                         (progn (message "ici%S" closing-string))
+;;                         (save-excursion (not (re-search-forward "?>" reg-end t)))
+                         )
 ;;                (message "not found pos=%S %S" (point) (text-property-any (1+ open) (point) 'block-beg 0))
                 (setq close (point-max) ;;(if (looking-at-p "[ \t\n]*<") (line-end-position) (point-max))
                       delim-close nil
@@ -4013,20 +4015,33 @@ the environment as needed for ac-sources, right before they're used.")
       (goto-char reg-beg)
 ;;      (message "reg-beg(%S) reg-end(%S)" reg-beg reg-end)
       (while (and (< (point) reg-end) (web-mode-dom-rsf "</?[[:alnum:]]" reg-end))
-        (setq match-beg (match-beginning 0)
-              match-end (match-end 0))
-        (goto-char match-beg)
-        (setq beg nil
-              end nil
-              continue t)
-        (while continue
-          (if (setq pair (web-mode-scan-literal reg-end))
-              (setq beg (or beg (car pair))
-                    end (cdr pair))
-            (setq continue nil))
-          ) ;while continue
-        (when (= (point) match-beg)
-          (goto-char match-end))
+
+        ;; (setq match-beg (match-beginning 0)
+        ;;       match-end (match-end 0))
+        ;; (goto-char match-beg)
+        ;; (setq beg nil
+        ;;       end nil
+        ;;       continue t
+        ;;       )
+
+        (setq beg (match-beginning 0)
+              end nil)
+
+        (when (web-mode-dom-rsf ">[ \t\n]*\\([;,)]\\|\\'\\)" reg-end)
+          (setq end (match-beginning 1))
+          )
+
+;;         (while continue
+;;           (if (setq pair (web-mode-scan-literal reg-end))
+;;               (setq beg (or beg (car pair))
+;;                     end (cdr pair))
+;;             (setq continue nil))
+;; ;;          (message "pair=%S" pair)
+;;           ) ;while continue
+
+;;        (when (= (point) match-beg)
+;;          (goto-char match-end))
+
         (when (and beg end)
           (put-text-property beg end 'part-token 'html)
           (web-mode-scan-elements beg end)
@@ -4035,7 +4050,7 @@ the environment as needed for ac-sources, right before they're used.")
         ) ;while
       )))
 
-(defun web-mode-scan-literal (reg-end)
+(defun web-mode-scan-literal2 (reg-end)
   "web-mode-scan-literal"
   (let (beg end)
     (setq beg (point))
@@ -4043,8 +4058,15 @@ the environment as needed for ac-sources, right before they're used.")
      ((looking-at "</?\\([[:alnum:]]+\\(?:[-][[:alpha:]]+\\)?\\)")
       (when (web-mode-closing-paren reg-end)
         (forward-char)
+        (skip-chars-forward " \t\n")
         (setq end (point))
         )
+      ;; (when (looking-at "[ \t\n]")
+      ;;   (skip-chars-forward " \t\n")
+      ;;   (if (looking-at-p "[),;]")
+      ;;       (setq end nil)
+      ;;     (setq end (point)))
+      ;;   )
       )
      ((eq (char-after) ?\{)
       (when (web-mode-closing-paren reg-end)
@@ -4059,7 +4081,7 @@ the environment as needed for ac-sources, right before they're used.")
         (setq end (point)))
       )
      (t
-      (skip-chars-forward "^<),;")
+      (skip-chars-forward "^<,);") ;;"^<),;")
       (when (> (point) beg)
         (setq end (point)))
       )
@@ -4182,6 +4204,7 @@ the environment as needed for ac-sources, right before they're used.")
         (forward-char)
         )
        (t
+;;        (message "la")
         (setq continue nil))
        ) ;cond
       ) ;while
@@ -4241,21 +4264,24 @@ the environment as needed for ac-sources, right before they're used.")
     (web-mode-invalidate-block-region beg end))
 
    ((and web-mode-enable-part-partial-invalidation
-         (get-text-property beg 'part-side)
-         (get-text-property end 'part-side)
-         (> beg (point-min))
-         (get-text-property (1- beg) 'part-side)
-         (get-text-property end 'part-side)
-         ;; (not (looking-back "\\*/\\|</"))
-         ;; (progn
-         ;;   (setq chunk (buffer-substring-no-properties beg end))
-         ;;   (not (string-match-p "\\*/\\|</" chunk))
-         ;;   )
-         )
+         (or (member web-mode-content-type '("jsx" "javascript"))
+             (and (get-text-property beg 'part-side)
+                  (get-text-property end 'part-side)
+                  (> beg (point-min))
+                  (get-text-property (1- beg) 'part-side)
+                  (get-text-property end 'part-side))
+             ))
+    ;; (not (looking-back "\\*/\\|</"))
+    ;; (progn
+    ;;   (setq chunk (buffer-substring-no-properties beg end))
+    ;;   (not (string-match-p "\\*/\\|</" chunk))
+    ;;   )
+
     ;;      (message "invalidate part")
     (web-mode-invalidate-part-region beg end))
 
    (t
+    ;;(message "coucou")
     (web-mode-invalidate-region beg end))
 
    ) ;cond
@@ -5927,7 +5953,6 @@ the environment as needed for ac-sources, right before they're used.")
       ctx
       )))
 
-;; TODO : detect if font-lock is desabled : in that case, call web-mode-propertize
 (defun web-mode-indent-line ()
   "Indent current line according to language."
 
@@ -6175,7 +6200,7 @@ the environment as needed for ac-sources, right before they're used.")
             )
 
            ((and (member first-char '(?\? ?\. ?\:))
-                 (not (string= language "erb")))
+                 (not (member language '("erb"))))
             (web-mode-rsb "[^!=][=(]" block-beg)
             (setq offset (1+ (current-column)))
             (when (and (string= web-mode-engine "php")
@@ -6185,7 +6210,9 @@ the environment as needed for ac-sources, right before they're used.")
             )
 
            ((and (member prev-char '(?\? ?\:))
+                 (not (eq (get-text-property pos 'part-token) 'html))
                  (not (string-match-p "^\\(case\\|default\\)[ :]" prev-line)))
+;;            (message "ici")
             (web-mode-sb "?" block-beg)
             (when (looking-back ")[ ]*")
               (web-mode-sb ")" block-beg)
@@ -6197,7 +6224,9 @@ the environment as needed for ac-sources, right before they're used.")
             )
 
            ((and (member prev-char '(?\. ?\+ ?\? ?\:))
+                 (not (eq (get-text-property pos 'part-token) 'html))
                  (not (string-match-p "^\\(case\\|default\\)[ :]" prev-line)))
+;;            (message "coucou")
             (web-mode-rsb "=\\|(" block-beg)
             (if (eq (char-after) ?\=) (skip-chars-forward "= ") (skip-chars-forward "( "))
             (setq offset (current-column))
@@ -6258,7 +6287,7 @@ the environment as needed for ac-sources, right before they're used.")
                                                            indent-offset
                                                            language
                                                            block-beg)))
-
+;;              (message "quiqui")
               )
 
             ;; (setq offset (car (web-mode-part-indentation pos
@@ -8340,7 +8369,6 @@ Pos should be in a tag."
 
     ;;-- auto-pairing
     (when (and web-mode-enable-auto-pairing
-               ;;(not auto-opened)
                (not auto-closed)
                (not (get-text-property end 'part-side)))
       (let ((i 0) expr p after pos-end (l (length web-mode-auto-pairs)))
@@ -8879,6 +8907,7 @@ Pos should be in a tag."
     (let ((continue t))
       (back-to-indentation)
       (if (and (get-text-property (point) 'tag-beg)
+               ;;               (not (member web-mode-content-type '("jsx")))
                (not (get-text-property (point) 'part-side))
                (not (get-text-property (point) 'block-side))
                )

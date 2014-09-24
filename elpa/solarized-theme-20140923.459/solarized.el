@@ -5,7 +5,7 @@
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; Author: Thomas Frössman <thomasf@jossystem.se>
 ;; URL: http://github.com/bbatsov/solarized-emacs
-;; Version: 1.1.0
+;; Version: 1.2.0
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -544,10 +544,10 @@ customize the resulting theme."
      `(anzu-mode-line ((,class (:foreground ,yellow :weight bold))))
 
      ;; bm
-     `(bm-face ((,class (:background ,yellow-lc :foreground ,base03))))
-     `(bm-fringe-face ((,class (:background ,yellow-lc :foreground ,base03))))
-     `(bm-fringe-persistent-face ((,class (:background ,green-lc :foreground ,base03))))
-     `(bm-persistent-face ((,class (:background ,green-lc :foreground ,base03))))
+     `(bm-face ((,class (:overline ,base0))))
+     `(bm-fringe-face ((,class (:overline ,base0))))
+     `(bm-fringe-persistent-face ((,class (:overline ,base0))))
+     `(bm-persistent-face ((,class (:overline ,base0))))
 
      ;; calfw
      `(cfw:face-day-title ((,class (:background ,base02))))
@@ -1715,7 +1715,12 @@ customize the resulting theme."
                                         :background ,cyan))))
      `(term-color-white ((t (:foreground ,base2
                                          :background ,base2))))
-     
+
+     ;; todotxt
+     `(todotxt-priority-a-face ((,class (:foreground ,orange))))
+     `(todotxt-priority-b-face ((,class (:foreground ,yellow))))
+     `(todotxt-priority-c-face ((,class (:foreground ,violet))))
+
      ;; tooltip. (NOTE: This setting has no effect on the os widgets for me
      ;; zencoding uses this)
      `(tooltip ((,class (:background ,yellow-lc :foreground ,yellow-hc

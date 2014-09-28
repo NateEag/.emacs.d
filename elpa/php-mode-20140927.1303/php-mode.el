@@ -6,13 +6,13 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Version: 20140923.1250
+;; Version: 20140927.1303
 ;;; X-Original-Version: 1.13.5
 
 (defconst php-mode-version-number "1.13.5"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2014-09-04"
+(defconst php-mode-modified "2014-09-27"
   "PHP Mode build date.")
 
 ;;; License
@@ -63,7 +63,6 @@
 ;;; Code:
 
 (require 'cc-mode)
-(require 'cl)
 (eval-when-compile
   (require 'cc-langs)
   (require 'cc-fonts))
@@ -1318,7 +1317,7 @@ a completion list."
                                       ("\\(\\$\\)\\(\\sw+\\)" 1 'default)
 
                                       ;; Highlight all upper-cased symbols as constant
-                                      ("\\<\\([A-Z0-9_]\\{2,\\}\\)\\>" 1 font-lock-constant-face)
+                                      ("\\<\\([A-Z_][A-Z0-9_]+\\)\\>" 1 font-lock-constant-face)
 
                                       ;; Highlight all statically accessed class names as constant,
                                       ;; another valid option would be using type-face, but using constant-face

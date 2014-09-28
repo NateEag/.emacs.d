@@ -37,6 +37,8 @@ case $1 in
         ;;
 esac
 
+cd $(dirname "$0")
+
 # Check if autoload file exists.
 # It is maybe in a different directory if
 # emacs-helm.sh is a symlink.

@@ -361,7 +361,8 @@
   (if (not (member major-mode '(emacs-lisp-mode
                                 lisp-mode
                                 lisp-interaction-mode
-                                css-mode)))
+                                css-mode
+                                scss-mode)))
       (progn
         (smart-dash-mode)
         (diminish 'smart-dash-mode))))

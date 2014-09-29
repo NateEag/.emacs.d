@@ -3660,7 +3660,8 @@ is remove the just added wrapping."
                         (search-forward (cdr inside-pair))))
                  (cs (sp--get-context p))
                  (ce (sp--get-context end)))
-            (when (eq cs ce)
+            (when (or (not (eq cs 'comment)) ;; a => b <=> ~a v b
+                      (eq ce 'comment))
               (delete-char (- end p))
               (delete-char (- (1- (length (car inside-pair)))))
               (setq sp-last-operation 'sp-delete-pair))))
@@ -3905,9 +3906,10 @@ The expressions considered are those delimited by pairs on
                    (if (not back)
                        (sp-point-in-string-or-comment (1- (point)))
                      (sp-point-in-string-or-comment)))
-              (let* ((bounds (sp--get-string-or-comment-bounds))
-                     (jump-to (if back (1- (car bounds)) (1+ (cdr bounds)))))
-                (goto-char jump-to))
+              (-if-let (bounds (sp--get-string-or-comment-bounds))
+                  (let ((jump-to (if back (1- (car bounds)) (1+ (cdr bounds)))))
+                    (goto-char jump-to))
+                (setq done t))
             (setq done t))))
       (when r
         (setq possible-pairs (--filter (or (equal ms (car it))
@@ -7695,37 +7697,43 @@ support custom pairs."
   "Display the show pair overlays."
   (when show-smartparens-mode
     (save-match-data
-      (let* ((pair-list (sp--get-allowed-pair-list))
-             (opening (sp--get-opening-regexp pair-list))
-             (closing (sp--get-closing-regexp pair-list))
-             (allowed (and sp-show-pair-from-inside (sp--get-allowed-regexp)))
-             ok match)
-        (cond
-         ((or (sp--looking-at (if sp-show-pair-from-inside allowed opening))
-              (and (memq major-mode sp-navigate-consider-stringlike-sexp)
-                   (looking-at (sp--get-stringlike-regexp)))
-              (and (memq major-mode sp-navigate-consider-sgml-tags)
-                   (looking-at "<")))
-          (setq match (match-string 0))
-          ;; we can use `sp-get-thing' here because we *are* at some
-          ;; pair opening, and so only the tag or the sexp can trigger.
-          (setq ok (sp-get-thing))
-          (if ok
-              (sp-get ok (sp-show--pair-create-overlays :beg :end :op-l :cl-l))
-            (sp-show--pair-create-mismatch-overlay (point) (length match))))
-         ((or (sp--looking-back (if sp-show-pair-from-inside allowed closing))
-              (and (memq major-mode sp-navigate-consider-stringlike-sexp)
-                   (sp--looking-back (sp--get-stringlike-regexp)))
-              (and (memq major-mode sp-navigate-consider-sgml-tags)
-                   (sp--looking-back ">")))
-          (setq match (match-string 0))
-          (setq ok (sp-get-thing t))
-          (if ok
-              (sp-get ok (sp-show--pair-create-overlays :beg :end :op-l :cl-l))
-            (sp-show--pair-create-mismatch-overlay (- (point) (length match))
-                                                   (length match))))
-         (sp-show-pair-overlays
-          (sp-show--pair-delete-overlays)))))))
+      (cl-labels ((create-forward
+                   (match)
+                   ;; we can use `sp-get-thing' here because we *are* at some
+                   ;; pair opening, and so only the tag or the sexp can trigger.
+                   (-if-let (ok (sp-get-thing))
+                       (sp-get ok (sp-show--pair-create-overlays :beg :end :op-l :cl-l))
+                     (sp-show--pair-create-mismatch-overlay (point) (length match))))
+                  (create-backward
+                   (match)
+                   (-if-let (ok (sp-get-thing t))
+                       (sp-get ok (sp-show--pair-create-overlays :beg :end :op-l :cl-l))
+                     (sp-show--pair-create-mismatch-overlay (- (point) (length match))
+                                                            (length match)))))
+        (let* ((pair-list (sp--get-allowed-pair-list))
+               (opening (sp--get-opening-regexp pair-list))
+               (closing (sp--get-closing-regexp pair-list))
+               (allowed (and sp-show-pair-from-inside (sp--get-allowed-regexp)))
+               match)
+          (cond
+           ;; if we are in a situation "()|", we should highlight the
+           ;; regular pair and not the string pair "from inside"
+           ((sp--looking-back (if sp-show-pair-from-inside allowed closing))
+            (create-backward (match-string 0)))
+           ((or (sp--looking-at (if sp-show-pair-from-inside allowed opening))
+                (and (memq major-mode sp-navigate-consider-stringlike-sexp)
+                     (looking-at (sp--get-stringlike-regexp)))
+                (and (memq major-mode sp-navigate-consider-sgml-tags)
+                     (looking-at "<")))
+            (create-forward (match-string 0)))
+           ((or (sp--looking-back (if sp-show-pair-from-inside allowed closing))
+                (and (memq major-mode sp-navigate-consider-stringlike-sexp)
+                     (sp--looking-back (sp--get-stringlike-regexp)))
+                (and (memq major-mode sp-navigate-consider-sgml-tags)
+                     (sp--looking-back ">")))
+            (create-backward (match-string 0)))
+           (sp-show-pair-overlays
+            (sp-show--pair-delete-overlays))))))))
 
 (defun sp-show--pair-enc-function (&optional thing)
   "Display the show pair overlays for enclosing expression."

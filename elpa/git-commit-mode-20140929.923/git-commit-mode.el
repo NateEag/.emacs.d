@@ -1,5 +1,5 @@
 ;;; git-commit-mode.el --- Major mode for editing git commit messages -*- lexical-binding: t; -*-
-;; Version: 20140831.1359
+;; Version: 20140929.923
 
 ;; Copyright (c) 2010-2012  Florian Ragwitz
 ;; Copyright (c) 2012-2013  Sebastian Wiesner
@@ -85,7 +85,7 @@ confirmation before committing."
   :type '(choice (const :tag "On style errors" t)
                  (const :tag "Never" nil)))
 
-(defcustom git-commit-mode-hook '(turn-on-auto-fill flyspell-mode)
+(defcustom git-commit-mode-hook '(turn-on-auto-fill)
   "Hook run when entering Git Commit mode."
   :options '(turn-on-auto-fill flyspell-mode git-commit-save-message)
   :type 'hook

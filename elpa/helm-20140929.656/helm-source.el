@@ -674,6 +674,7 @@ i.e After the creation of `helm-buffer'."))
            'helm-ff-etags-select
            "View file"                            'view-file
            "Insert file"                          'insert-file
+           "Add marked files to file-cache"       'helm-ff-cache-add-file
            "Delete file(s)"                       'helm-delete-marked-files
            "Open file externally (C-u to choose)" 'helm-open-file-externally
            "Open file with default tool"          'helm-open-file-with-default-tool
@@ -826,7 +827,8 @@ Arguments ARGS are keyword value pairs as defined in CLASS."
                         (lambda ()
                           (helm-init-candidates-in-buffer
                               'global
-                            ',it)))))))
+                            (if (functionp ,it) (funcall ,it)
+                                (if (stringp ,it) ,it ',it)))))))))
   (when (slot-value source :matchplugin)
     (oset source :search (helm-source-mp-get-search-or-match-fns source 'search)))
   (let ((mtc (slot-value source :match)))

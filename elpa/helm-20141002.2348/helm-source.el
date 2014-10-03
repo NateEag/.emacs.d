@@ -34,6 +34,9 @@
 (defgeneric helm--setup-source (source)
   "Prepare slots and handle slot errors before creating a helm source.")
 
+(defgeneric helm-setup-user-source (source)
+  "Allow users modifying slots in SOURCE just before creation.")
+
 
 ;;; Classes for sources
 ;;
@@ -763,6 +766,7 @@ Arguments ARGS are keyword value pairs as defined in CLASS."
   (let ((source (apply #'make-instance class name args)))
     (oset source :name name)
     (helm--setup-source source)
+    (helm-setup-user-source source)
     (helm--create-source source (object-class source))))
 
 (defun helm-make-type (class &rest args)
@@ -797,18 +801,44 @@ Arguments ARGS are keyword value pairs as defined in CLASS."
                     (defsearch
                      (append searchers defsearch))
                     (t searchers))))))
+
+
+;;; Modifiers
+;;
+(cl-defun helm-source-add-action-to-source-if (name fn source predicate
+                                                    &optional (index 4))
+  "Same as `helm-add-action-to-source-if' but for SOURCE defined as eieio object.
+You can use this inside a `helm--setup-source' method for a SOURCE defined as
+an eieio class."
+  (let* ((actions     (oref source :action))
+         (action-transformers (oref source :action-transformer))
+         (new-action  (list (cons name fn)))
+         (transformer `(lambda (actions candidate)
+                         (cond ((funcall (quote ,predicate) candidate)
+                                (helm-append-at-nth
+                                 actions (quote ,new-action) ,index))
+                               (t actions)))))
+    (when (symbolp actions)
+      (oset source :action (list (cons "Default action" actions))))
+    (when (symbolp action-transformers)
+      (setq action-transformers (list action-transformers)))
+    (oset source
+          :action-transformer
+          (delq nil (append (list transformer) action-transformers)))))
 
 ;;; Methods to access types slots.
 (defmethod helm-source-get-action-from-type ((object helm-type-file))
   (oref object :action))
 
 
-;;; Method to build sources.
+;;; Methods to build sources.
 ;;
 ;;
 (defmethod helm--setup-source :before ((source helm-source))
   (helm-aif (slot-value source :keymap)
       (and (symbolp it) (set-slot-value source :keymap (symbol-value it)))))
+
+(defmethod helm-setup-user-source ((_source helm-source)))
 
 (defmethod helm--setup-source ((source helm-source-sync))
   (when (slot-value source :matchplugin)

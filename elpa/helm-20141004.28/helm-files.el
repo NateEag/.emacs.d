@@ -2485,8 +2485,10 @@ Else return ACTIONS unmodified."
   (helm-make-source
    "File Cache" 'helm-file-cache
    :data (lambda ()
-           (cl-loop for (bn dir) in file-cache-alist
-                    collect (expand-file-name bn dir)))))
+           (cl-loop for item in file-cache-alist append
+                    (cl-destructuring-bind (base &rest dirs) item
+                      (cl-loop for dir in dirs collect
+                               (concat dir base)))))))
 
 (cl-defun helm-file-cache-add-directory-recursively
     (dir &optional match (ignore-dirs t))
@@ -2503,6 +2505,30 @@ Else return ACTIONS unmodified."
   (require 'filecache)
   (let ((mkd (helm-marked-candidates)))
     (mapc 'file-cache-add-file mkd)))
+
+(defun helm-ff-file-cache-remove-file-1 (file)
+  "Remove FILE from `file-cache-alist'."
+  (let ((entry (assoc (helm-basename file) file-cache-alist))
+        (dir   (helm-basedir file))
+        new-entry)
+    (setq new-entry (remove dir entry))
+    (when (= (length entry) 1)
+      (setq new-entry nil))
+    (setq file-cache-alist
+          (cons new-entry (remove entry file-cache-alist)))))
+
+(defun helm-ff-file-cache-remove-file (_file)
+  "Remove marked files from `file-cache-alist.'"
+  (let ((mkd (helm-marked-candidates)))
+    (mapc 'helm-ff-file-cache-remove-file-1 mkd)))
+
+(defun helm-transform-file-cache (actions _candidate)
+  (let ((source (helm-get-current-source)))
+    (if (string= (assoc-default 'name source) "File Cache")
+        (append actions
+                '(("Remove marked files from file-cache"
+                   . helm-ff-file-cache-remove-file)))
+        actions)))
 
 
 ;;; File name history

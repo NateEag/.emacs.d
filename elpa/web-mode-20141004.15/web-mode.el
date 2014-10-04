@@ -3,7 +3,7 @@
 
 ;; Copyright 2011-2014 François-Xavier Bois
 
-;; Version: 9.0.96
+;; Version: 9.0.99
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -36,7 +36,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "9.0.96"
+(defconst web-mode-version "9.0.99"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -3372,7 +3372,7 @@ the environment as needed for ac-sources, right before they're used.")
     (> n 0)
     ))
 
-(defvar web-mode-regexp1 "<\\(/?[[:alpha:]][[:alnum:]-]*\\|!--\\|!\\[CDATA\\[\\|!doctype\\|\?xml\\)")
+(defvar web-mode-regexp1 "<\\(/?[[:alpha:]][[:alnum:]-]*\\|!--\\|!\\[CDATA\\[\\|!doctype\\|!DOCTYPE\\|\?xml\\)")
 (defvar web-mode-regexp2 "<\\(/?[[:alpha:]][[:alnum:]-]*\\|!--\\|!\\[CDATA\\[\\)")
 
 (defun web-mode-scan-elements (reg-beg reg-end)
@@ -4790,7 +4790,7 @@ the environment as needed for ac-sources, right before they're used.")
                      (member char '(?\" ?\<))
                      (member web-mode-engine '("php" "erb"))
                      (> (- end beg) 4))
-            (web-mode-interpolate-string beg end)
+            (web-mode-interpolate-block-string beg end)
             ) ;when
           (when (and web-mode-enable-comment-keywords
                      (eq token-type 'comment)
@@ -4880,7 +4880,11 @@ the environment as needed for ac-sources, right before they're used.")
                   (cond
                    (face
                     (remove-text-properties beg end '(face nil))
-                    (put-text-property beg end 'font-lock-face face))
+                    (put-text-property beg end 'font-lock-face face)
+                    (when (and (string= content-type "javascript")
+                               (>= (- end beg) 6))
+                      (web-mode-interpolate-javascript-string beg end))
+                    ) ;face
                    ;;((eq token-type 'html)
                    ;; (message "html : %S %S" beg end)
 ;;                 ;;   (remove-text-properties beg end '(face nil))
@@ -5040,13 +5044,27 @@ the environment as needed for ac-sources, right before they're used.")
   (save-excursion
     (goto-char (+ 4 beg))
     (setq end (1- end))
-    (while (re-search-forward "${.*}" end t)
-      (remove-text-properties (match-beginning 0) (match-end 0) '(font-lock-face nil))
-      (web-mode-fontify-region (match-beginning 0) (match-end 0) web-mode-uel-font-lock-keywords))
+    (while (re-search-forward "${.*?}" end t)
+      (remove-text-properties (match-beginning 0) (match-end 0)
+                              '(font-lock-face nil))
+      (web-mode-fontify-region (match-beginning 0) (match-end 0)
+                               web-mode-uel-font-lock-keywords))
+    ))
+
+(defun web-mode-interpolate-javascript-string (beg end)
+  "Scan js string to fontify ${ } vars"
+  (save-excursion
+    (goto-char (1+ beg))
+    (setq end (1- end))
+    (while (re-search-forward "${.*?}" end t)
+      (put-text-property (match-beginning 0) (match-end 0)
+                         'font-lock-face
+                         'web-mode-variable-name-face)
+      )
     ))
 
 ;; todo : parsing plus compliqué: {$obj->values[3]->name}
-(defun web-mode-interpolate-string (beg end)
+(defun web-mode-interpolate-block-string (beg end)
   "Interpolate php/erb strings."
   (save-excursion
     (goto-char (1+ beg))
@@ -10146,6 +10164,13 @@ Pos should be in a tag."
         (message "[%s]" (buffer-string))
         ) ;if
       out)))
+
+;;(defun web-mode-profile ()
+;;  (interactive)
+;;  (profiler-start 'cpu+mem)
+;;  (web-mode-buffer-scan)
+;;  (profiler-report)
+;;  )
 
 ;;---- MISC --------------------------------------------------------------------
 

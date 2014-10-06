@@ -53,7 +53,8 @@
      "r" 'er/expand-region
      "f" 'find-file
      "w" 'save-buffer
-     "x" 'execute-extended-command)
+     "x" 'execute-extended-command
+     "m" 'multi-term-dedicated-toggle)
 
    ;; Some modes it's better to start in insert-state for.
    (require 'cl)

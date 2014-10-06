@@ -584,6 +584,13 @@
 ;; Expand-region lets you select delimited regions quickly.
 (global-set-key (kbd "C-c r") 'er/expand-region)
 
+;; Try out multi-term as my terminal emulator.
+(global-set-key (kbd "C-c m") 'multi-term-dedicated-toggle)
+;; DEBUG These don't do what I'd like. They open new windows, and I'd like them
+;; to just move to the next term-buffer in my selected window.
+(global-set-key (kbd "s-[") 'multi-term-prev)
+(global-set-key (kbd "s-]") 'multi-term-next)
+
 ;; toggle-quote lets you toggle a string between single- and double-quoted.
 ;; This will probably be deprecated in favor of evil-surround, once I'm more
 ;; fluent in evil-mode.

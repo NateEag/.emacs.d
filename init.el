@@ -593,7 +593,8 @@
 (add-hook 'after-init-hook
           (lambda ()
             (message (emacs-init-time))
-            (my-set-up-frame (selected-frame))))
+            (when (display-graphic-p)
+              (my-set-up-frame (selected-frame)))))
 
 (provide 'init)
 ;;; init.el ends here

@@ -34,6 +34,9 @@
    ;; Use 'jk' to go from insert-state to normal-state. It's easier to type than
    ;; Escape.
    (key-chord-define evil-insert-state-map "jk" 'evil-normal-state)
+   (key-chord-define evil-motion-state-map "jk" 'evil-normal-state)
+   (key-chord-define evil-visual-state-map "jk" 'evil-normal-state)
+   (key-chord-define evil-emacs-state-map "jk" 'evil-normal-state)
 
    ;; Use ',' as my leader key.
    (global-evil-leader-mode)

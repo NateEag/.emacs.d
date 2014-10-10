@@ -3,6 +3,7 @@
     "version": "0.0.1",
     "dependencies": {
         "jshint": "2.5.2",
-        "tern": "0.7.0"
+        "tern": "0.7.0",
+        "csslint": "0.10.0"
     }
 }

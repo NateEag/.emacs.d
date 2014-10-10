@@ -42,4 +42,7 @@
   (set-frame-width frame 164)
 
   (delete-other-windows)
-  (split-window-right))
+  (split-window-right)
+
+  ;; N.B.: This depends on frame-cmds.el, which I installed via MELPA.
+  (maximize-frame-vertically))

@@ -117,12 +117,6 @@
 (when (memq window-system '(mac ns))
   (exec-path-from-shell-initialize))
 
-;; Tweak exec-path to include binaries in this repo.
-(setq exec-path
-      (append
-       exec-path
-       (list (make-emacs-dir-path "bin"))))
-
 ;; Load Windows-specific tweaks to environment, if we're running Windows.
 (if (eq system-type 'windows-nt)
     (set-windows-env))

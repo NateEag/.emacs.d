@@ -38,11 +38,16 @@
 (defun my-set-up-frame (frame)
   "Set up `FRAME' the way I like."
 
+  ;; N.B.: This depends on frame-cmds.el, which I installed via MELPA.
+  (maximize-frame-vertically)
+
+  ;; maximize-frame-vertically makes the frame one line too tall on OS X, so
+  ;; the frame's title bar hides the first line. Work around that.
+  ;; TODO should really report this as a bug against frame-cmds.el.
+  (set-frame-height frame (- (frame-height) 1))
+
   ;; Two 80-column windows. The extra chars are for the fringes.
   (set-frame-width frame 164)
 
   (delete-other-windows)
-  (split-window-right)
-
-  ;; N.B.: This depends on frame-cmds.el, which I installed via MELPA.
-  (maximize-frame-vertically))
+  (split-window-right))

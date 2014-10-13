@@ -10,7 +10,7 @@
  '(blink-cursor-blinks 0 nil nil "blink!!!!")
  '(blink-cursor-mode t nil nil "For some reason, I really like blinky cursors.")
  '(c-basic-offset 4 nil nil "4 spaces is, on average, the standard.")
- '(c-default-style "linux" nil nil "GNU-style indentation on C-like languages is stupid. Linux style is much more sane.")
+ '(c-default-style (quote ((php-mode . "php") (cc-mode . "linux"))))
  '(column-number-mode t)
  '(create-lockfiles nil nil nil "Since these lockfiles are only respected by Emacs, and I don't think I've ever even shared a machine with another emacser, let alone a specific file, I'm turning this off. It horked the build process for a project at work.")
  '(custom-safe-themes

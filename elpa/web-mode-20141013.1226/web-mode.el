@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2014 François-Xavier Bois
 
-;; Version: 20141011.926
-;; X-Original-Version: 9.0.103
+;; Version: 20141013.1226
+;; X-Original-Version: 10.0.0
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -22,7 +22,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "9.0.103"
+(defconst web-mode-version "10.0.0"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -548,7 +548,6 @@ Must be used in conjunction with web-mode-enable-block-face."
   "Sql keywords."
   :group 'web-mode-faces)
 
-
 ;;---- VARS --------------------------------------------------------------------
 
 (defvar font-lock-beg)
@@ -782,6 +781,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("ctemplate"   . (("{{ " "}}")
                       ("{{{" "}}}")
                       ("{~{" "}}")
+                      ("{{~" "{ " "}}}")
                       ("{{/" "}}")
                       ("{{#" "}}")))
     ("django"      . (("{{ " " }}")
@@ -3349,7 +3349,12 @@ the environment as needed for ac-sources, right before they're used.")
     ))
 
 (defvar web-mode-regexp1 "<\\(/?[[:alpha:]][[:alnum:]-]*\\|!--\\|!\\[CDATA\\[\\|!doctype\\|!DOCTYPE\\|\?xml\\)")
+
+;;(defvar web-mode-regexp1 "<\\(/?[[:alpha:]][[:alnum:]-]*\\|\?xml\\|!\\(?:--\\|\\[CDATA\\[\\|doctype\\|DOCTYPE\\)\\)")
+
 (defvar web-mode-regexp2 "<\\(/?[[:alpha:]][[:alnum:]-]*\\|!--\\|!\\[CDATA\\[\\)")
+
+;;(defvar web-mode-regexp2 "<\\(/?[[:alpha:]][[:alnum:]-]*\\|\?xml\\|!\\(?:--\\|\\[CDATA\\[\\)\\)")
 
 (defun web-mode-scan-elements (reg-beg reg-end)
   "Scan html nodes (tags/attrs/comments/doctype)."
@@ -3380,8 +3385,8 @@ the environment as needed for ac-sources, right before they're used.")
           (cond
            ((eq char ?\/)
             (setq props (list 'tag-name (substring tname 1) 'tag-type 'end)
-                  flags (logior flags 4))
-            (setq limit (if (> reg-end (line-end-position)) (line-end-position) reg-end))
+                  flags (logior flags 4)
+                  limit (if (> reg-end (line-end-position)) (line-end-position) reg-end))
             )
            ((web-mode-element-is-void tname)
             (setq props (list 'tag-name tname 'tag-type 'void)))
@@ -3460,7 +3465,7 @@ the environment as needed for ac-sources, right before they're used.")
           (put-text-property part-beg part-end 'part-side
                              (intern element-content-type web-mode-obarray))
           (setq tend part-end)
-          )
+          ) ;when
 
         (goto-char tend)
 

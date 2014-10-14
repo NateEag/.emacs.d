@@ -495,6 +495,8 @@
 (add-hook 'js2-mode-hook 'js-mode-init)
 (add-auto-mode 'js2-mode "\\.js\\'")
 
+(add-to-list 'interpreter-mode-alist (cons "node" 'js2-mode))
+
 ;; js2-mode works poorly for me on .json files.
 (add-hook 'js-mode-hook 'js-mode-init)
 (add-auto-mode 'js-mode

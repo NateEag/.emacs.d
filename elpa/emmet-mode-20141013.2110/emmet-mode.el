@@ -5,7 +5,7 @@
 ;; Copyright (C) 2013-     Shin Aoyama        (@smihica      https://github.com/smihica)
 ;; Copyright (C) 2009-2012 Chris Done
 
-;; Version: 20141001.1137
+;; Version: 20141013.2110
 ;; X-Original-Version: 1.0.10
 ;; Author: Shin Aoyama <smihica@gmail.com>
 ;; URL: https://github.com/smihica/emmet-mode
@@ -3738,7 +3738,8 @@ See also `emmet-expand-line'."
 
 (defun emmet-preview-accept ()
   (interactive)
-  (let ((ovli emmet-preview-input))
+  (let ((ovli emmet-preview-input)
+        (expr (emmet-expr-on-line)))
     (if (not (and (overlayp ovli)
                   (bufferp (overlay-buffer ovli))))
         (message "Preview is not active")

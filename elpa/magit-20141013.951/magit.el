@@ -4080,12 +4080,14 @@ the current repository."
             (tracked (magit-git-lines "ls-tree" "-r" "--name-only" "HEAD")))
         (dolist (buf (buffer-list))
           (with-current-buffer buf
-            (let ((file (buffer-file-name)))
-              (when (and file (string-prefix-p topdir file)
+            (let ((file buffer-file-truename))
+              (when (and file
+                         (setq file (expand-file-name file))
+                         (string-prefix-p topdir file)
                          (not (string-prefix-p gitdir file))
                          (member (file-relative-name file topdir) tracked)
                          (file-readable-p file)
-                         (not (verify-visited-file-modtime buf)))
+                         (not (buffer-modified-p)))
                 (revert-buffer 'ignore-auto 'dont-ask 'preserve-modes)
                 (vc-find-file-hook)
                 (run-hooks 'magit-revert-buffer-hook)))))))))
@@ -4705,7 +4707,7 @@ As determined by the directory passed to `magit-status'."
   (and buffer-file-name
        (let ((topdir (magit-get-top-dir magit-default-directory)))
          (and topdir
-              (string-prefix-p topdir buffer-file-name)
+              (equal (file-remote-p topdir) (file-remote-p buffer-file-name))
               ;; ^ Avoid needlessly connecting to unrelated tramp remotes.
               (string= topdir (magit-get-top-dir
                                (file-name-directory buffer-file-name)))))))

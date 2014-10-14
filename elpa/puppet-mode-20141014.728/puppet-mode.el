@@ -11,7 +11,7 @@
 ;;     Sebastian Wiesner <swiesner@lunaryorn.com>
 ;; URL: https://github.com/lunaryorn/puppet-mode
 ;; Keywords: languages
-;; Version: 20140725.1546
+;; Version: 20141014.728
 ;; X-Original-Version: 0.4-cvs
 ;; Package-Requires: ((emacs "24.1") (pkg-info "0.4"))
 
@@ -868,7 +868,8 @@ Used as `syntax-propertize-function' in Puppet Mode."
   '((puppet-resource-arrow
      (regexp . "\\(\\s-*\\)=>\\(\\s-*\\)")
      (group  . (1 2))
-     (modes  . '(puppet-mode))))
+     (modes  . '(puppet-mode))
+     (separate . entire)))
   "Align rules for Puppet Mode.")
 
 (defun puppet-align-block ()

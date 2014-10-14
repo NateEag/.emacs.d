@@ -6,13 +6,12 @@
 ;; Maintainer: Drew Adams (concat "drew.adams" "@" "oracle" ".com")
 ;; Copyright (C) 1996-2014, Drew Adams, all rights reserved.
 ;; Created: Tue Mar  5 16:30:45 1996
-;; Version: 20141004.549
+;; Version: 20141014.151
 ;; X-Original-Version: 0
-;; Package-Requires: ()
 ;; Package-Requires: ((frame-fns "0"))
-;; Last-Updated: Fri Oct  3 22:42:06 2014 (-0700)
+;; Last-Updated: Mon Oct 13 18:50:03 2014 (-0700)
 ;;           By: dradams
-;;     Update #: 2986
+;;     Update #: 2987
 ;; URL: http://www.emacswiki.org/frame-cmds.el
 ;; Doc URL: http://emacswiki.org/FrameModes
 ;; Doc URL: http://www.emacswiki.org/OneOnOneEmacs
@@ -274,6 +273,8 @@
 ;;
 ;;; Change Log:
 ;;
+;; 2014/10/13 dadams
+;;     Removed extra, empty Package-Requires.
 ;; 2014/07/21 dadams
 ;;     Do not redefine delete-window - just advise it.
 ;;     delete/iconify-window: Just use delete-window, not old-delete-window.

@@ -1,1 +1,0 @@
-(define-package "frame-cmds" "20141004.549" "Frame and window commands (interactive functions)." 'nil :url "http://www.emacswiki.org/frame-cmds.el" :keywords '("internal" "extensions" "mouse" "frames" "windows" "convenience"))

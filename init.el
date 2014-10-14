@@ -499,6 +499,7 @@
 (add-hook 'js-mode-hook 'js-mode-init)
 (add-auto-mode 'js-mode
                "\\.json\\'"
+               "\\.*jsbeautifyrc\\'"
                "\\.*jshintrc\\'"
                "\\.tern-project\\'")
 

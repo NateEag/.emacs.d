@@ -117,4 +117,9 @@
         (cadr (assoc (popup-menu* menu :scroll-bar t) base-menu))))
     (fset 'flyspell-emacs-popup 'flyspell-emacs-popup-textual)))
 
+(use-package coffee-mode
+  :defer t
+  :config
+  (my-prog-mode-init))
+
 ;;; config-packages.el ends here

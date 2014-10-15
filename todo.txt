@@ -35,6 +35,10 @@
  ad-hoc libraries much more cleanly.
  https://github.com/jwiegley/use-package
 
+-Add before-save-hook to set normal-mode if the buffer has never been saved
+ before and we're in fundamental-mode. This would be handy when making new
+ shell scripts, as it'd pick up on the shabang.
+
 -Finish getting tagedit to work with web-mode.
 
 -Make comment auto-fill work with C++-style comments in js2-mode, not just

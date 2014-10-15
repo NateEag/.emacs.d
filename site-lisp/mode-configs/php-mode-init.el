@@ -39,9 +39,6 @@
   ;; :(
   ;; (php-sql-mmm-submode)
 
-  ;; Activate programming settings.
-  (my-prog-mode-init)
-
   ;; Everyone loves code folding.
   (hs-minor-mode-init)
 

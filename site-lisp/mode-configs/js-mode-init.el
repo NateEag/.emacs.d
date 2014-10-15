@@ -1,12 +1,10 @@
 (defun tern-complete-fallback-to-tab ()
   "If tern finds completions at point, try them. Else, usual tab behavior."
   )
-
 (defun js-mode-init ()
   "My mode hook for JS editing modes."
 
   (interactive)
-  (my-prog-mode-init)
 
   (if (eq major-mode 'js2-mode)
       (set (make-local-variable 'normal-auto-fill-function) 'c-do-auto-fill))

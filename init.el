@@ -361,6 +361,8 @@
         (smart-dash-mode)
         (diminish 'smart-dash-mode))))
 
+(add-hook 'prog-mode-hook 'my-prog-mode-init)
+
 ;; Run yasnippet customizations when it's started.
 (eval-after-load 'yasnippet
   '(yasnippet-init))
@@ -383,15 +385,12 @@
 (defun load-sql-mode-accessories ()
   (interactive)
 
-  (my-prog-mode-init)
-
   (when (locate-library "sql-indent")
     (load-library "sql-indent")))
 (add-hook 'sql-mode-hook 'load-sql-mode-accessories)
 (add-auto-mode 'sql-mode "\\.sql$")
 
 ;; Shell script mode.
-(add-hook 'sh-mode-hook 'my-prog-mode-init)
 (add-auto-mode 'sh-mode "\\.bats$")
 
 ;; Text-editing modes of various stripes.

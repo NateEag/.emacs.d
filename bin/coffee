@@ -1,0 +1,7 @@
+#! /bin/bash
+
+# Simple shell script to call the coffeescript that's installed in lib/.
+#
+# This only exists to make my exec-path simpler.
+project_dir=$(dirname $0)/..
+$project_dir/lib/node_modules/coffee-script/bin/coffee "$@"

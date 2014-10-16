@@ -6,12 +6,12 @@
 ;; Maintainer: Drew Adams (concat "drew.adams" "@" "oracle" ".com")
 ;; Copyright (C) 1996-2014, Drew Adams, all rights reserved.
 ;; Created: Tue Mar  5 16:30:45 1996
-;; Version: 20141014.151
+;; Version: 20141015.1443
 ;; X-Original-Version: 0
 ;; Package-Requires: ((frame-fns "0"))
-;; Last-Updated: Mon Oct 13 18:50:03 2014 (-0700)
+;; Last-Updated: Wed Oct 15 07:40:41 2014 (-0700)
 ;;           By: dradams
-;;     Update #: 2987
+;;     Update #: 2991
 ;; URL: http://www.emacswiki.org/frame-cmds.el
 ;; Doc URL: http://emacswiki.org/FrameModes
 ;; Doc URL: http://www.emacswiki.org/OneOnOneEmacs
@@ -273,6 +273,8 @@
 ;;
 ;;; Change Log:
 ;;
+;; 2014/10/15 dadams
+;;     window-mgr-title-bar-pixel-height: Added default value for ns (Next).  Thx to Nate Eagleson.
 ;; 2014/10/13 dadams
 ;;     Removed extra, empty Package-Requires.
 ;; 2014/07/21 dadams
@@ -592,7 +594,10 @@ Candidates include `jump-to-frame-config-register' and `show-buffer-menu'."
                  (function :tag "Another function"))
   :group 'Frame-Commands)
 
-(defcustom window-mgr-title-bar-pixel-height (if (eq window-system 'mac) 22 27)
+(defcustom window-mgr-title-bar-pixel-height (case window-system
+                                               (mac        22)
+                                               (ns         40)
+                                               (otherwise  27))
   "*Height of frame title bar provided by the window manager, in pixels.
 You might alternatively call this constant the title-bar \"width\" or
 \"thickness\".  There is no way for Emacs to determine this, so you

@@ -8,9 +8,9 @@
 
 ;;; Code:
 
-;; Sometimes you want to debug when there are errors, but not nearly as often
-;; as I believed at the first.
-;(setq debug-on-error t)
+;; Debug if there's an error during setup, since we'll have to fix it. We turn
+;; this back off at the end of the file.
+(setq debug-on-error t)
 
 ;; Set up my load path and a few other core things.
 (load-file (concat user-emacs-directory "site-lisp/bootstrap.el"))
@@ -598,6 +598,9 @@
             (message (emacs-init-time))
             (when (display-graphic-p)
               (my-set-up-frame (selected-frame)))))
+
+;; Now that we're done with setup, stop debugging on error.
+(setq debug-on-error nil)
 
 (provide 'init)
 ;;; init.el ends here

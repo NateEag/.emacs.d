@@ -1,7 +1,0 @@
-#! /bin/bash
-
-# Simple shell script to call the jshint that's installed in lib/.
-#
-# This only exists to make my exec-path simpler.
-project_dir=$(dirname $0)/..
-$project_dir/lib/node_modules/jshint/bin/jshint "$@"

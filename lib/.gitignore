@@ -1,4 +1,0 @@
-# To avoid storing platform-specific binaries in my repo, a lot of this dir's
-# contents are populated via installers of some sort, and the results are *not*
-# kept under version control.
-flake8-env

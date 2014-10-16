@@ -1,7 +1,0 @@
-#! /bin/bash
-
-# Simple wrapper to run flake8 command in lib/ directory.
-#
-# Exists only to keep my exec-path simpler.
-project_dir=$(dirname $0)/..
-$project_dir/lib/flake8-env/bin/flake8 "$@"

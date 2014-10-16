@@ -1,7 +1,0 @@
-#! /bin/bash
-
-# Simple wrapper around tern binary installed in lib/.
-#
-# Exists only to keep exec-path simpler.
-project_dir=$(dirname $0)/..
-$project_dir/lib/node_modules/csslint/cli.js "$@"

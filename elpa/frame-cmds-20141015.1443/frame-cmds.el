@@ -529,6 +529,7 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl)) ;; case, incf (plus, for Emacs 20: dolist)
+(require 'cl)
 (require 'frame-fns) ;; frame-geom-value-numeric, frames-on, get-frame-name, get-a-frame, read-frame
 (require 'strings nil t) ;; (no error if not found) read-buffer
 (require 'misc-fns nil t) ;; (no error if not found) another-buffer

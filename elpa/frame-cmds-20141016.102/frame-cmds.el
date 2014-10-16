@@ -6,12 +6,12 @@
 ;; Maintainer: Drew Adams (concat "drew.adams" "@" "oracle" ".com")
 ;; Copyright (C) 1996-2014, Drew Adams, all rights reserved.
 ;; Created: Tue Mar  5 16:30:45 1996
-;; Version: 20141015.1443
+;; Version: 20141016.102
 ;; X-Original-Version: 0
 ;; Package-Requires: ((frame-fns "0"))
-;; Last-Updated: Wed Oct 15 07:40:41 2014 (-0700)
+;; Last-Updated: Wed Oct 15 18:00:48 2014 (-0700)
 ;;           By: dradams
-;;     Update #: 2991
+;;     Update #: 2993
 ;; URL: http://www.emacswiki.org/frame-cmds.el
 ;; Doc URL: http://emacswiki.org/FrameModes
 ;; Doc URL: http://www.emacswiki.org/OneOnOneEmacs
@@ -529,7 +529,6 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl)) ;; case, incf (plus, for Emacs 20: dolist)
-(require 'cl)
 (require 'frame-fns) ;; frame-geom-value-numeric, frames-on, get-frame-name, get-a-frame, read-frame
 (require 'strings nil t) ;; (no error if not found) read-buffer
 (require 'misc-fns nil t) ;; (no error if not found) another-buffer
@@ -543,6 +542,7 @@
 ;; in `thumb-frm.el'.
 
 ;; Quiet byte-compiler.
+(defvar 1on1-minibuffer-frame)          ; In `oneonone.el'
 (defvar mac-tool-bar-display-mode)
 
 ;;;;;;;;;;;;;;;;;;;;;;;
@@ -595,10 +595,10 @@ Candidates include `jump-to-frame-config-register' and `show-buffer-menu'."
                  (function :tag "Another function"))
   :group 'Frame-Commands)
 
-(defcustom window-mgr-title-bar-pixel-height (case window-system
-                                               (mac        22)
-                                               (ns         40)
-                                               (otherwise  27))
+;; Use `cond', not `case', for Emacs 20 byte-compiler.
+(defcustom window-mgr-title-bar-pixel-height (cond ((eq window-system 'mac) 22)
+						   ((eq window-system 'ns)  40)
+						   (t  27))
   "*Height of frame title bar provided by the window manager, in pixels.
 You might alternatively call this constant the title-bar \"width\" or
 \"thickness\".  There is no way for Emacs to determine this, so you

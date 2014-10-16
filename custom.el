@@ -72,7 +72,6 @@
  '(tool-bar-mode nil nil nil "The toolbar is an even more needless annoyance.")
  '(transient-mark-mode 1 nil nil "I like seeing my selections.")
  '(visible-bell t nil nil "STOP THE RINGING")
- '(window-mgr-title-bar-pixel-height 40)
  '(yas-expand-only-for-last-commands
    (quote
     (self-insert-command smart-dash-insert web-mode-smart-dash-insert ac-complete ac-expand)) nil nil "Only trigger yasnippet while first typing. Makes TAB indent even if inadvertantly over a yasnippet's key."))

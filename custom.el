@@ -13,6 +13,7 @@
  '(c-default-style (quote ((php-mode . "php") (cc-mode . "linux"))))
  '(column-number-mode t)
  '(create-lockfiles nil nil nil "Since these lockfiles are only respected by Emacs, and I don't think I've ever even shared a machine with another emacser, let alone a specific file, I'm turning this off. It horked the build process for a project at work.")
+ '(cursor-type (quote bar) nil nil "I use vertical bar so I can tell quickly when I'm in a buffer without evil-mode.")
  '(custom-safe-themes
    (quote
     ("d677ef584c6dfc0697901a44b885cc18e206f05114c8a3b7fde674fce6180879" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" default)))

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "frame-cmds" "frame-cmds.el" (21567 44814 0
+;;;### (autoloads nil "frame-cmds" "frame-cmds.el" (21569 6896 0
 ;;;;;;  0))
 ;;; Generated autoloads from frame-cmds.el
 
@@ -444,6 +444,11 @@ VARIABLE is a symbol that names a user option.
 `other-frame', if `one-window-p'; otherwise, `other-window'.
 
 \(fn ARG)" t nil)
+
+;;;***
+
+;;;### (autoloads nil nil ("frame-cmds-pkg.el") (21569 6896 80113
+;;;;;;  0))
 
 ;;;***
 

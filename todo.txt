@@ -47,6 +47,11 @@
 
 -Figure out why mo-git-blame isn't using mo-git-blame-git-blame-args.
 
+-Use zebra striping to make mo-git-blame/target buffer more readable.
+
+-Use an alist mapping strings to functions to generate personal keybindings,
+ both with Super and with <leader>.
+
 -Since Emacs doesn't really use Command key sequences, I should use it as the
  Super key and start using Super for personal keybindings. Should be faster
  than C-c <key>.

@@ -1,8 +1,11 @@
-;;; groovy-mode.el --- Groovy mode derived mode
+;;; groovy-mode.el --- Major mode for Groovy source files
 
-;;  Author: Russel Winder <russel@winder.org.uk>
+;;  Author: Russel Winder <russel@winder.org.uk>, 2006–
+;;	Jim Morris <morris@wolfman.com>, 2009–
+;;  Maintainer:  Russel Winder <russel@winder.org.uk>
 ;;  Created: 2006-08-01
-;;  Version: 201409151557
+;;  Version: 201410180537
+;;  Keywords: languages
 
 ;;;; NB Version number is date and time yyyymmddhhMM in GMT (aka UTC).
 
@@ -19,34 +22,31 @@
 ;;  You should have received a copy of the GNU General Public License along with this program; if not, write
 ;;  to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-;;; Authors:
-;;
-;;  Russel Winder <russel@winder.org.uk>, 2006–
-;;  Jim Morris <morris@wolfman.com>, 2009–
+;;; Usage:
+;; Put these lines in your init file.
+;;   (autoload 'groovy-mode "groovy-mode" "Major mode for editing Groovy code." t)
+;;   (add-to-list 'auto-mode-alist '("\\.groovy\\'" . groovy-mode))
 
 ;;; Commentary:
-;;
 ;;  This mode was initially developed using the Java and Awk modes that are part of CC Mode (the 5.31 source
 ;;  was used) and C# Mode from Dylan R. E. Moonfire <contact@mfgames.com> (the 0.5.0 source was used).  This
 ;;  code may contain some code fragments from those sources that was cut-and-pasted then edited.  All other
 ;;  code was newly entered by the author.  Obviously changes have been made since then.
 ;;
-;;  NB  This derived mode requires CC Mode 5.31 or later for the virtual semicolon code to work.
+;;  NB  This mode requires CC Mode 5.31 or later for the virtual semicolon code to work.
 ;;
 ;;  There appears to be a problem in CC Mode 5.31 such that csharp-mode and groovy-mode crash XEmacs 21.4 if
 ;;  the files are byte compiled.
 
 ;;; Bugs:
-;;
-;;  Bug tracking is currently (2013-06-06) handled using the GitHub issue tracker at https://github.com/russel/Emacs-Groovy-Mode/issues
+;;  Bug tracking is currently handled using the GitHub issue tracker at
+;;  https://github.com/Groovy-Emacs-Modes/groovy-emacs-modes/issues
 
 ;;; Versions:
-;;
 ;;  This mode is available on MELPA which tracks the mainline Git repository on GitHub, so there is a rolling release
 ;;  system based on commits to the mainline. There is unlikely to be a "formal release".
 
 ;;; Notes:
-;;
 ;;  Need to think about the `*.', `?.', `.&' and `.@' operators.  Also, `..' and `..<'.  This probably means
 ;;  changing `c-after-id-concat-ops' but also `c-operators'.
 ;;
@@ -64,10 +64,15 @@
 ;;
 ;;  Probably need to change `c-type-decl-suffix-key' as Groovy is not the same as Java.
 
-;;;  Changes:
-;;
-;;  See the history in the Bazaar branch.
+;;;  TODO:
+;;   Issues with this code are managed via the project issue management
+;;   on GitHub: https://github.com/Groovy-Emacs-Modes/groovy-emacs-modes/issues?state=open
 
+;; History:
+;;   History is tracked in the Git repository rather than in this file.
+;;   See https://github.com/Groovy-Emacs-Modes/groovy-emacs-modes/commits/master
+
+;;----------------------------------------------------------------------------
 ;;; Code:
 
 (require 'cc-mode)
@@ -218,11 +223,12 @@ since CC Mode treats every identifier as an expression."
 ;; Mode `Virtual semicolon material.  The idea is to say when an EOL is a `virtual semicolon,
 ;; i.e. a statement terminator.
 
-(c-lang-defconst c-stmt-delim-chars
-                 groovy "^;{}\n\r?:")
+(when (version< c-version "5.32.2")
+  (c-lang-defconst c-stmt-delim-chars
+                   groovy "^;{}\n\r?:")
 
-(c-lang-defconst c-stmt-delim-chars-with-comma
-                 groovy "^;,{}\n\r?:")
+  (c-lang-defconst c-stmt-delim-chars-with-comma
+                   groovy "^;,{}\n\r?:"))
 
 ;;  Is there a virtual semicolon at POS or point?
 ;;
@@ -269,7 +275,7 @@ since CC Mode treats every identifier as an expression."
 ;; ie
 ;; if(x > y)
 ;;
-;; if(x < y) do somehting will not match
+;; if(x < y) do something will not match
 ;; else blah blah will not match either
 (defun groovy-not-if-or-else-etc-p ( pos )
   (save-excursion
@@ -307,7 +313,7 @@ since CC Mode treats every identifier as an expression."
 ;(c-lang-defconst c-other-op-syntax-tokens
 ;  groovy '( "<%" "%>" ))
 
-;; Groovy does not allow the full set of Java keywords in the moifier category and, of course, there is the
+;; Groovy does not allow the full set of Java keywords in the modifier category and, of course, there is the
 ;; `def' modifier which Groovy introduces to support dynamic typing.  Should `const' be treated
 ;; as reserved here as it is in Java?
 (c-lang-defconst c-modifier-kwds
@@ -403,7 +409,8 @@ need for `java-font-lock-extra-types'.")
 ;(easy-menu-define c-groovy-menu groovy-mode-map "Groovy Mode Commands"
 ;                (cons "Groovy" (c-lang-const c-mode-menu groovy)))
 
-;;;###autoload (add-to-list 'auto-mode-alist '("\\.groovy\\'" . groovy-mode))
+;;----------------------------------------------------------------------------
+;;;###autoload (add-to-list 'auto-mode-alist '("\\.g\\(?:ant\\|roovy\\|radle\\)\\'" . groovy-mode))
 
 ;; Custom variables
 ;;;###autoload
@@ -411,7 +418,6 @@ need for `java-font-lock-extra-types'.")
   "*Hook called by `groovy-mode'."
   :type 'hook
   :group 'c)
-
 
 ;;; The following are used to overide cc-mode indentation behavior to match groovy
 
@@ -586,9 +592,12 @@ need for `java-font-lock-extra-types'.")
   groovy-imenu-regexp
   "Imenu generic expression for Groovy mode.  See `imenu-generic-expression'.")
 
-;;; The entry point into the mode
+;; For compatibility with Emacs < 24
+(defalias 'groovy-parent-mode
+  (if (fboundp 'prog-mode) 'prog-mode 'fundamental-mode))
+
 ;;;###autoload
-(defun groovy-mode ()
+(define-derived-mode groovy-mode groovy-parent-mode "Groovy"
   "Major mode for editing Groovy code.
 
 The hook `c-mode-common-hook' is run with no args at mode
@@ -596,14 +605,9 @@ initialization, then `groovy-mode-hook'.
 
 Key bindings:
 \\{groovy-mode-map}"
-  (interactive)
-  (kill-all-local-variables)
   (c-initialize-cc-mode t)
-  (set-syntax-table groovy-mode-syntax-table)
-  (setq major-mode 'groovy-mode
-	mode-name "Groovy"
-	local-abbrev-table groovy-mode-abbrev-table
-	abbrev-mode t)
+  (setq local-abbrev-table groovy-mode-abbrev-table
+        abbrev-mode t)
   (use-local-map groovy-mode-map)
   (c-init-language-vars groovy-mode)
   (c-common-init 'groovy-mode)
@@ -625,6 +629,8 @@ Key bindings:
   (c-set-offset 'label '+)
 
   (c-update-modeline))
+
+;;----------------------------------------------------------------------------
 
 (provide 'groovy-mode)
 

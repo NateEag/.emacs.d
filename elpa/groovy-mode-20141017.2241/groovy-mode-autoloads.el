@@ -3,25 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "grails-mode" "grails-mode.el" (21531 2894
-;;;;;;  0 0))
-;;; Generated autoloads from grails-mode.el
-
-(autoload 'grails-mode "grails-mode" "\
-Grails Minor Mode.
-     With no argument, this command toggles the mode.
-     Non-null prefix argument turns on the mode.
-     Null prefix argument turns off the mode.
-
-     When Grails mode is enabled, several keys are enabled that
-     will allow navigation around a typical grails project.
-
-\(fn &optional ARG)" t nil)
-
-;;;***
-
-;;;### (autoloads nil "groovy-electric" "groovy-electric.el" (21531
-;;;;;;  2894 0 0))
+;;;### (autoloads nil "groovy-electric" "groovy-electric.el" (21573
+;;;;;;  5818 0 0))
 ;;; Generated autoloads from groovy-electric.el
 
 (autoload 'groovy-electric-mode "groovy-electric" "\
@@ -39,10 +22,10 @@ have Font Lock enabled. ${ } is expanded when in a GString
 
 ;;;***
 
-;;;### (autoloads nil "groovy-mode" "groovy-mode.el" (21531 2894
+;;;### (autoloads nil "groovy-mode" "groovy-mode.el" (21573 5818
 ;;;;;;  0 0))
 ;;; Generated autoloads from groovy-mode.el
- (add-to-list 'auto-mode-alist '("\\.groovy\\'" . groovy-mode))
+ (add-to-list 'auto-mode-alist '("\\.g\\(?:ant\\|roovy\\|radle\\)\\'" . groovy-mode))
 
 (defvar groovy-mode-hook nil "\
 *Hook called by `groovy-mode'.")
@@ -62,7 +45,7 @@ Key bindings:
 
 ;;;***
 
-;;;### (autoloads nil "inf-groovy" "inf-groovy.el" (21531 2894 0
+;;;### (autoloads nil "inf-groovy" "inf-groovy.el" (21573 5818 0
 ;;;;;;  0))
 ;;; Generated autoloads from inf-groovy.el
 
@@ -122,7 +105,7 @@ of `groovy-program-name').  Runs the hooks `inferior-groovy-mode-hook'
 
 ;;;***
 
-;;;### (autoloads nil nil ("groovy-mode-pkg.el") (21531 2894 786199
+;;;### (autoloads nil nil ("groovy-mode-pkg.el") (21573 5818 139321
 ;;;;;;  0))
 
 ;;;***

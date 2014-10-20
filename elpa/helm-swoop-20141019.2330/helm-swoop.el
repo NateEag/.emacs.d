@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2013 by Shingo Fukuyama
 
-;; Version: 20140922.1747
+;; Version: 20141019.2330
 ;; X-Original-Version: 1.4
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
@@ -101,12 +101,19 @@
   :group 'helm-swoop)
 (defface helm-swoop-target-word-face
   '((t (:background "#7700ff" :foreground "#ffffff")))
-  "Face for target line"
+  "Face for target word"
+  :group 'helm-swoop)
+(defface helm-swoop-line-number-face
+  '((t (:foreground "#999999")))
+  "Face for each line number"
   :group 'helm-swoop)
 
 (defcustom helm-swoop-speed-or-color nil
  "If nil, you can slightly boost invoke speed in exchange for text color"
  :group 'helm-swoop :type 'boolean)
+(defcustom helm-swoop-use-line-number-face nil
+  "Use face to each line number on helm-swoop buffer"
+  :group 'helm-swoop :type 'boolean)
 (defcustom helm-swoop-split-with-multiple-windows nil
  "Split window when having multiple windows open"
  :group 'helm-swoop :type 'boolean)
@@ -407,7 +414,9 @@ If $linum is number, lines are separated by $linum"
         (insert (format "%s " $i))
         (while (re-search-forward "\n" nil t)
           (cl-incf $i)
-          (insert (format "%s " $i)))
+          (if helm-swoop-use-line-number-face
+              (insert (propertize (format "%s" $i) 'font-lock-face 'helm-swoop-line-number-face) " ")
+            (insert (format "%s " $i))))
         ;; Delete empty lines
         (unless $linum
           (goto-char (point-min))
@@ -433,11 +442,13 @@ If $linum is number, lines are separated by $linum"
                 (helm-swoop--goto-line
                  (when (string-match "^[0-9]+" $line)
                    (string-to-number (match-string 0 $line))))
-                (when (re-search-forward
-                       (mapconcat 'identity
-                                  (split-string helm-pattern " ") "\\|")
-                       nil t)
-                  (goto-char (match-beginning 0)))
+                (let (($regex (mapconcat 'identity
+                                         (split-string helm-pattern " ")
+                                         "\\|")))
+                  (when (or (and (and (featurep 'migemo) (featurep 'helm-migemo))
+                                 (migemo-forward $regex nil t))
+                            (re-search-forward $regex nil t))
+                    (goto-char (match-beginning 0))))
                 (helm-swoop--recenter)))
     (migemo) ;;? in exchange for those matches ^ $ [0-9] .*
     ))

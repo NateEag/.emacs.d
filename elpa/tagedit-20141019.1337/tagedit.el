@@ -3,7 +3,7 @@
 ;; Copyright (C) 2012 Magnar Sveen <magnars@gmail.com>
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
-;; Version: 20140618.521
+;; Version: 20141019.1337
 ;; X-Original-Version: 1.4.0
 ;; Keywords: convenience
 ;; Package-Requires: ((s "1.3.1") (dash "1.0.3"))
@@ -310,7 +310,7 @@
     (insert closing-tag)
     (insert opening-tag)
     (when multiline?
-      (let ((first (save-excursion (backward-list)
+      (let ((first (save-excursion (te/backward-list)
                                    (te/current-tag-behind)))
             (second (te/current-tag)))
         (te/ensure-proper-multiline second)
@@ -452,6 +452,18 @@
 
   If point is not inside any tags, returns nil. ")
 
+(defvar te/forward-list-fn 'forward-list
+  "Move forward across the next <opening tag> or </closing tag>.")
+
+(defvar te/backward-list-fn 'backward-list
+  "Move backward across the previous <opening tag> or </closing tag>.")
+
+(defvar te/backward-sexp-fn 'backward-sexp
+  "Move backward across one balanced expression (sexp).")
+
+(defvar te/point-inside-string-fn 'te-sgml/point-inside-string?
+  "Checks if point is currently inside a string.")
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (defun te/get (list key)
@@ -468,6 +480,18 @@
 
 (defun te/current-tag ()
   (funcall te/current-tag-fn))
+
+(defun te/forward-list ()
+  (funcall te/forward-list-fn))
+
+(defun te/backward-sexp ()
+  (funcall te/backward-sexp-fn))
+
+(defun te/backward-list ()
+  (funcall te/backward-list-fn))
+
+(defun te/point-inside-string? ()
+  (funcall te/point-inside-string-fn))
 
 (defun te/current-tag-behind ()
   (save-excursion
@@ -506,7 +530,7 @@
   (te/goto-attribute-end "id" (te/current-tag))
   (set-mark (point))
   (forward-char 1)
-  (backward-sexp 1)
+  (te/backward-sexp)
   (forward-char 1))
 
 (defun te/has-attribute (attr tag)
@@ -733,7 +757,7 @@
   (save-excursion
     (= (line-number-at-pos)
        (progn (goto-char (te/get tag :end))
-              (forward-list -1)
+              (te/backward-list)
               (line-number-at-pos)))))
 
 (defmacro te/kill-to (&rest body)
@@ -756,7 +780,7 @@
 
 (defun te/kill-to-end-of-tag-contents (tag)
   (te/kill-to (goto-char (te/get tag :end))
-              (forward-list -1)))
+              (te/backward-list)))
 
 (defun te/kill-remaining-attributes-on-line ()
   (let ((line (line-number-at-pos)))
@@ -783,7 +807,7 @@
 (defun te/tag-details-end (tag)
   (save-excursion
     (goto-char (te/get tag :beg))
-    (forward-list 1)
+    (te/forward-list)
     (if (looking-back "/>" 2)
         (- (point) 2)
       (- (point) 1))))
@@ -800,9 +824,6 @@
   (te/kill-to
     (te/move-point-forward-out-of-string)
     (forward-char -1)))
-
-(defun te/point-inside-string? ()
-  (nth 3 (syntax-ppss)))
 
 (defun te/point-inside-comment? ()
   (nth 4 (syntax-ppss)))
@@ -826,7 +847,7 @@
     (goto-char (te/get tag :end))
     (unless (looking-at "$")
       (newline))
-    (backward-sexp)
+    (te/backward-sexp)
     (unless (looking-back "^\s*")
       (newline))
     (goto-char (te/get tag :beg))
@@ -856,7 +877,7 @@
         (beginning-of-line)
         (looking-at (concat "^\s*</" (te/get tag :name) ">$")))
       (delete-char (- 0 (current-column) 1)) ;; then delete entire line
-    (backward-sexp)
+    (te/backward-sexp)
     (delete-region (point) (te/get tag :end)))) ;; otherwise just the end tag
 
 (defun te/delete-beg-tag (tag)
@@ -886,13 +907,13 @@
 
 (defun te/goto-end-of-attribute ()
   (search-forward "\"")
-  (when (nth 3 (syntax-ppss)) ; inside string
+  (when (te/point-inside-string?)
     (forward-char -1)
     (forward-sexp 1)))
 
 (defun te/select-attribute ()
   (search-forward "\"")
-  (when (nth 3 (syntax-ppss)) ; inside string
+  (when (te/point-inside-string?)
     (forward-char -1)
     (forward-sexp 1))
   (set-mark (point))
@@ -963,7 +984,7 @@ This happens when you press refill-paragraph.")
 (defun te/inner-beg (tag)
   (save-excursion
     (goto-char (te/get tag :beg))
-    (forward-list 1)
+    (te/forward-list)
     (point)))
 
 (defun te/inner-end (tag)
@@ -993,7 +1014,7 @@ This happens when you press refill-paragraph.")
   (unless (te/empty-tag tag)
     (save-excursion
       (goto-char (te/get tag :end))
-      (backward-sexp)
+      (te/backward-sexp)
       (skip-syntax-backward " >")
       (if (looking-back ">")
           (progn
@@ -1010,7 +1031,7 @@ This happens when you press refill-paragraph.")
           (parent (te/parent-tag tag)))
       (when parent
         (goto-char (te/get parent :end))
-        (backward-sexp)
+        (te/backward-sexp)
         (= here (point))))))
 
 (defun te/next-sibling (tag)
@@ -1040,6 +1061,9 @@ This happens when you press refill-paragraph.")
 
 (defvar te-sgml/self-closing-tag-types
   '(empty jsp))
+
+(defun te-sgml/point-inside-string? ()
+  (nth 3 (syntax-ppss)))
 
 (defun te-sgml/tag-name-from-context (context)
   (or (sgml-tag-name context)

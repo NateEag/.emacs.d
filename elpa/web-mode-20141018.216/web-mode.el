@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2014 François-Xavier Bois
 
-;; Version: 20141016.1336
-;; X-Original-Version: 10.0.2
+;; Version: 20141018.216
+;; X-Original-Version: 10.0.3
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -22,7 +22,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "10.0.2"
+(defconst web-mode-version "10.0.3"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -560,6 +560,7 @@ Must be used in conjunction with web-mode-enable-block-face."
 
 (defvar web-mode-auto-pairs nil)
 (defvar web-mode-block-regexp nil)
+(defvar web-mode-chunk-length 64)
 (defvar web-mode-closing-blocks nil)
 (defvar web-mode-column-overlays nil)
 (defvar web-mode-comments-invisible nil)
@@ -8272,7 +8273,7 @@ Pos should be in a tag."
     (web-mode-set-engine "php")
     )
    ((and (string= web-mode-content-type "javascript")
-         (< (point) 64)
+         (< (point) web-mode-chunk-length)
          (eq (char-after (point-min)) ?\/)
          (string-match-p "@jsx" (buffer-substring-no-properties
                                  (line-beginning-position)
@@ -8288,8 +8289,9 @@ Pos should be in a tag."
     (let (engine)
 ;;      (message "detect-engine: %S" (point))
       (goto-char (point-min))
-      (when (and (re-search-forward "-\\*- engine:[ ]*\\([[:alnum:]-]+\\)[ ]*-\\*-" 64 t)
-                 (or (eq (get-text-property (point) 'part-token) 'comment)
+      (when (and (re-search-forward "-\\*- engine:[ ]*\\([[:alnum:]-]+\\)[ ]*-\\*-" web-mode-chunk-length t)
+                 (or t
+                     (eq (get-text-property (point) 'part-token) 'comment)
                      (eq (get-text-property (point) 'block-token) 'comment)
                      (eq (get-text-property (point) 'tag-type) 'comment)))
         (setq engine (web-mode-engine-canonical-name (match-string-no-properties 1))
@@ -8376,12 +8378,10 @@ Pos should be in a tag."
       (web-mode-detect-content-type))
     (when (and web-mode-enable-engine-detection
                (or (null web-mode-engine) (string= web-mode-engine "none"))
-               (< (point) 64)
+               (< (point) web-mode-chunk-length)
                (web-mode-detect-engine))
-      (message "la")
       (web-mode-on-engine-setted)
-      (web-mode-buffer-highlight)
-      )
+      (web-mode-buffer-highlight))
     (cond
      ((<= (point) 3)
       )
@@ -10233,7 +10233,9 @@ Pos should be in a tag."
                (string-match-p "@jsx"
                                 (buffer-substring-no-properties
                                  (point-min)
-                                 (if (< (point-max) 64) (point-max) 64)
+                                 (if (< (point-max) web-mode-chunk-length)
+                                     (point-max)
+                                   web-mode-chunk-length)
                                  )))
       (setq web-mode-content-type "jsx")
       ) ;when

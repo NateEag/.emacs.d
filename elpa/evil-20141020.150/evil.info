@@ -1,4 +1,4 @@
-This is /tmp/evil12334uXV/evil-20141014.1/evil.info, produced by
+This is /tmp/evil23266eWR/evil-20141020.150/evil.info, produced by
 makeinfo version 4.13 from /home/melpa/melpa/working/evil/doc/evil.texi.
 
 This manual is for Evil (version 0.1 of 2011-07-30), an extensible vi
@@ -1193,28 +1193,28 @@ permit their use in free software.
 
 
 Tag Table:
-Node: Top892
-Node: Overview1165
-Ref: Overview-Footnote-11525
-Node: Installation1753
-Ref: Installation-Footnote-12351
-Node: Modes and states2401
-Node: Settings3454
-Ref: Settings-Footnote-15905
-Node: The cursor6062
-Node: The initial state7267
-Node: Keymaps7726
-Node: `evil-define-key'9590
-Node: Hooks10776
-Node: Macros12298
-Node: Motions12578
-Node: Operators14512
-Node: Text objects16840
-Node: Types19848
-Node: States21326
-Node: Other internals22424
-Node: Command properties22601
-Node: GNU Free Documentation License23928
+Node: Top894
+Node: Overview1167
+Ref: Overview-Footnote-11527
+Node: Installation1755
+Ref: Installation-Footnote-12353
+Node: Modes and states2403
+Node: Settings3456
+Ref: Settings-Footnote-15907
+Node: The cursor6064
+Node: The initial state7269
+Node: Keymaps7728
+Node: `evil-define-key'9592
+Node: Hooks10778
+Node: Macros12300
+Node: Motions12580
+Node: Operators14514
+Node: Text objects16842
+Node: Types19850
+Node: States21328
+Node: Other internals22426
+Node: Command properties22603
+Node: GNU Free Documentation License23930
 
 End Tag Table
 

@@ -267,6 +267,9 @@
 ;; it.
 (key-chord-mode t)
 
+;; It doesn't work everywhere, but which-function-mode is nice when it does.
+(which-function-mode t)
+
 ;; Activate undo-tree-mode globally and diminish it.
 ;;
 ;; It seems to me that undo-tree-mode and backup-walker might be good candidates

@@ -92,6 +92,15 @@
   (setq buffer-backed-up nil))
 (add-hook 'before-save-hook 'force-buffer-backup)
 
+(defun maybe-reset-major-mode ()
+  "Reset the buffer's major-mode if appropriate."
+  (when (and
+         ;; The buffer's visited file does not exist.
+         (eq (file-exists-p (buffer-file-name)) nil)
+         (eq major-mode 'fundamental-mode))
+    (normal-mode)))
+(add-hook 'before-save-hook 'maybe-reset-major-mode)
+
 ;; I generally prefer to strip trailing whitespace on saves, but not when I'm
 ;; editing diffs, where whitespace is crucial. If I ever start using another
 ;; file format where trailing whitespace matters, this might need upgrading,

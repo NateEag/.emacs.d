@@ -12,4 +12,6 @@
   (yas-minor-mode t)
   (define-key emmet-mode-keymap (kbd "C-c j") 'emmet-expand-yas)
 
-  (eval-after-load "auto-complete" '(require 'ac-emmet)))
+  (eval-after-load "auto-complete" '(require 'ac-emmet))
+
+  (diminish 'emmet-mode))

@@ -5,6 +5,7 @@
 
   (skewer-reload-stylesheets-mode)
   (rainbow-mode)
+  (diminish 'rainbow-mode)
   (ac-css-mode-setup)
   (emmet-mode)
 

@@ -363,6 +363,15 @@
 
 (add-hook 'prog-mode-hook 'my-prog-mode-init)
 
+(eval-after-load 'simple
+  '(diminish 'auto-fill-function))
+
+(eval-after-load 'flycheck
+  '(diminish 'flycheck-mode))
+
+(eval-after-load 'subword
+  '(diminish 'subword-mode))
+
 ;; Run yasnippet customizations when it's started.
 (eval-after-load 'yasnippet
   '(yasnippet-init))
@@ -498,6 +507,9 @@
 (add-auto-mode 'js2-mode "\\.js\\'")
 
 (add-to-list 'interpreter-mode-alist (cons "node" 'js2-mode))
+
+(eval-after-load 'js2-mode
+  '(diminish js2-mode "js2"))
 
 ;; js2-mode works poorly for me on .json files.
 (add-hook 'js-mode-hook 'js-mode-init)

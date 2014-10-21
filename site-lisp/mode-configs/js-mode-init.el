@@ -23,4 +23,5 @@
        ;; Override Tern's completion-at-point keybinding with auto-complete.
        ;; I really wish I could just press Tab for this, but the current
        ;; tern-auto-complete package does not have a general-case ac-source.
-       (define-key tern-mode-keymap (kbd "M-TAB") 'tern-ac-complete))))
+       (define-key tern-mode-keymap (kbd "M-TAB") 'tern-ac-complete)
+       (diminish 'tern-mode))))

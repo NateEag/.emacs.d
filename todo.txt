@@ -1,9 +1,9 @@
 -Get ac-isearch working when auto-completion is active. I think my
  global-set-key of C-s to regex searching currently overrides it.
 
--Get multi-term keybindings up and running. I'd like s-[ and s-] to turn on a
- max-width terminal if it's not on, and to move to 'prev' and 'next' terms if
- it is.
+-I'd like s-[ and s-] to turn on a max-width (popwin) terminal if none is
+ displayed, and to move to 'prev' and 'next' terms if it is. I'd also like
+ changing to a terminal buffer to always focus it in a popwin window.
 
 -Write a general-case ac-source for Tern.js. Right now I have to press M-Tab to
  trigger top-level completions, and I'd like to just press Tab. emacs-eclim
@@ -56,6 +56,9 @@
 -Since Emacs doesn't really use Command key sequences, I should use it as the
  Super key and start using Super for personal keybindings. Should be faster
  than C-c <key>.
+
+-If I ever get minimap.el usable on OS X, when active it should appear between
+ my two panes. That way it's always close to whichever buffer it applies to.
 
 -Tweak md-readme.el so that author/created/requires lines are headers *without*
  colons, whose bodies are the text following the colon-delimited field names.
@@ -280,6 +283,9 @@
  anything that looks like a sentence. For instance, when I refactor a sentence,
  it ought to know that the first word gets capitalized. That might be the only
  thing I actually want, come to think of it...
+
+-I would like multiline comments to be hidden after the first line by default,
+ with an easy way to toggle full comment display.
 
 -I'd really like a code folding minor-mode - just lets you hide/show blocks of
  code, by saying basically "fold at this line" and "unfold at this line".

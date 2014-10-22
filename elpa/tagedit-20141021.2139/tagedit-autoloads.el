@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "tagedit" "tagedit.el" (21573 5875 0 0))
+;;;### (autoloads nil "tagedit" "tagedit.el" (21575 45287 0 0))
 ;;; Generated autoloads from tagedit.el
 
 (autoload 'tagedit-add-paredit-like-keybindings "tagedit" "\

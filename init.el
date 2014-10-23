@@ -516,6 +516,8 @@
 
 ;; JavaScript Mode.
 (add-hook 'js2-mode-hook 'js-mode-init)
+(add-hook 'js2-mode-hook '(lambda ()
+                            (setq mode-name "js2")))
 (add-auto-mode 'js2-mode "\\.js\\'")
 
 (add-to-list 'interpreter-mode-alist (cons "node" 'js2-mode))

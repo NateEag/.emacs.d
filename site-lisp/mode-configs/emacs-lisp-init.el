@@ -10,9 +10,12 @@
 
   (my-prog-mode-init)
 
+  (setq mode-name "elisp")
+
   (turn-on-elisp-slime-nav-mode)
   (diminish 'elisp-slime-nav-mode)
   (ac-emacs-lisp-mode-setup)
+
   (eldoc-mode t)
   (diminish 'eldoc-mode))
 ;;; emacs-lisp-init.el ends here

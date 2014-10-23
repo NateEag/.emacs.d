@@ -6,7 +6,7 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Version: 20140929.1456
+;; Version: 20141022.2216
 ;;; X-Original-Version: 1.13.5
 
 (defconst php-mode-version-number "1.13.5"
@@ -443,7 +443,7 @@ This variable can take one of the following symbol values:
   ;; falls back to java, so no need to specify the language
   php (append (remove ">>>=" (c-lang-const c-assignment-operators))
               '(".=")))
- 
+
 (c-lang-defconst beginning-of-defun-function
   php 'php-beginning-of-defun)
 
@@ -481,7 +481,7 @@ PHP does not have an \"enum\"-like keyword."
   php '("implements" "extends"))
 
 (c-lang-defconst c-type-list-kwds
-  php '("new" "use" "as" "implements" "extends" "namespace"))
+  php '("new" "use" "as" "implements" "extends" "namespace" "instanceof" "insteadof"))
 
 (c-lang-defconst c-ref-list-kwds
   php nil)
@@ -491,7 +491,8 @@ PHP does not have an \"enum\"-like keyword."
               (remove "synchronized" (c-lang-const c-block-stmt-2-kwds))))
 
 (c-lang-defconst c-simple-stmt-kwds
-  php (append '("include" "include_once" "require" "require_once" "echo" "print")
+  php (append '("include" "include_once" "require" "require_once"
+                "echo" "print" "die" "exit")
               (c-lang-const c-simple-stmt-kwds)))
 
 (c-lang-defconst c-constant-kwds
@@ -504,24 +505,18 @@ PHP does not have an \"enum\"-like keyword."
 
 (c-lang-defconst c-other-kwds
   "Keywords not accounted for by any other `*-kwds' language constant."
-  php '("abstract"
+  php '(
+    "__halt_compiler"
     "and"
     "array"
+    "callable"
+    "as"
     "break"
     "catch all"
     "catch"
     "clone"
-    "const"
-    "continue"
-    "declare"
     "default"
-    "die"
-    "do"
-    "echo"
-    "else"
-    "elseif"
     "empty"
-    "encoding"
     "enddeclare"
     "endfor"
     "endforeach"
@@ -529,32 +524,19 @@ PHP does not have an \"enum\"-like keyword."
     "endswitch"
     "endwhile"
     "eval"
-    "exit"
-    "final"
-    "finally"
-    "for"
-    "foreach"
-    "function"
     "global"
-    "if"
-    "include"
-    "include_once"
     "isset"
     "list"
     "or"
-    "require"
-    "require_once"
-    "return"
     "static"
-    "switch"
-    "throw"
-    "ticks"
-    "try"
     "unset"
     "var"
-    "while"
     "xor"
-    "yield"))
+    "yield"
+
+    ;; technically not reserved keywords, but "declare directives"
+    "encoding"
+    "ticks"))
 
 ;; PHP does not have <> templates/generics
 (c-lang-defconst c-recognize-<>-arglists
@@ -567,19 +549,18 @@ PHP does not have an \"enum\"-like keyword."
  "php"
  '((c-basic-offset . 4)
    (c-doc-comment-style . javadoc)
-   (c-offsets-alist . ((inline-open . 0)
-                       (inlambda . 0)
-                       (class-open . -)
-                       (statement-cont . (first c-lineup-cascaded-calls +))
-                       (topmost-intro-cont . (first c-lineup-cascaded-calls +))
+   (c-offsets-alist . ((arglist-close . php-lineup-arglist-close)
                        (arglist-cont . (first c-lineup-cascaded-calls 0))
-                       (statement-block-intro . +)
-                       (substatement-open . 0)
-                       (case-label . +)
-                       (label . +)
                        (arglist-cont-nonempty . (first c-lineup-cascaded-calls c-lineup-arglist))
                        (arglist-intro . php-lineup-arglist-intro)
-                       (arglist-close . php-lineup-arglist-close)))))
+                       (case-label . +)
+                       (class-open . -)
+                       (inlambda . 0)
+                       (inline-open . 0)
+                       (label . +)
+                       (statement-cont . (first c-lineup-cascaded-calls +))
+                       (substatement-open . 0)
+                       (topmost-intro-cont . (first c-lineup-cascaded-calls +))))))
 
 (add-to-list 'c-default-style '(php-mode . "php"))
 
@@ -604,12 +585,7 @@ code and modules."
 (c-add-style
  "drupal"
  '("php"
-   (c-basic-offset . 2)
-   (c-offsets-alist . ((arglist-close . 0)
-                       (arglist-intro . +)
-                       (arglist-cont-nonempty . c-lineup-math)
-                       (statement-cont . +)
-                       (topmost-intro-cont . +)))))
+   (c-basic-offset . 2)))
 
 (defun php-enable-drupal-coding-style ()
   "Makes php-mode use coding styles that are preferable for
@@ -625,14 +601,7 @@ working with Drupal."
 (c-add-style
   "wordpress"
   '("php"
-    (c-basic-offset . 4)
-    (c-offsets-alist . ((arglist-cont . 0)
-                        (arglist-intro . +)
-                        (case-label . 2)
-                        (arglist-close . 0)
-                        (defun-close . 0)
-                        (defun-block-intro . +)
-                        (statement-cont . +)))))
+    (c-basic-offset . 4)))
 
 (defun php-enable-wordpress-coding-style ()
   "Makes php-mode use coding styles that are preferable for
@@ -1300,54 +1269,73 @@ a completion list."
 (defconst php-font-lock-keywords-2 (c-lang-const c-matchers-2 php)
   "Medium level highlighting for PHP mode.")
 
-(defconst php-font-lock-keywords-3 (append
-                                    `(
-                                      ;; Highlight variables, e.g. 'var' in '$var' and '$obj->var', but not
-                                      ;; in $obj->var()
-                                      ("->\\(\\sw+\\)\\s-*(" 1 'default)
-                                      ("\\(\\$\\|->\\)\\([a-zA-Z0-9_]+\\)" 2 font-lock-variable-name-face)
+(defconst php-font-lock-keywords-3
+  (append
+   ;; php-mode patterns *before* cc-mode:
+   ;;  only add patterns here if you want to prevent cc-mode from applying
+   ;;  a different face.
+   '(
+     ;; The dollar sign should not get a variable-name face, below
+     ;; pattern resets the face to default in case cc-mode sets the
+     ;; variable-name face (cc-mode does this for variables prefixed
+     ;; with type, like in arglist)
+     ("\\(\\$\\)\\(\\sw+\\)" 1 'default)
 
-                                      ;; The dollar sign should not get a variable-name face, below pattern
-                                      ;; resets the face to default in case cc-mode set the variable-name face
-                                      ;; (cc-mode does this for variables prefixed with type, like in arglist)
-                                      ("\\(\\$\\)\\(\\sw+\\)" 1 'default)
+     ;; Array is a keyword, except when used as cast, so that (int)
+     ;; and (array) look the same
+     ("(\\(array\\))" 1 font-lock-type-face)
 
-                                      ;; Highlight all upper-cased symbols as constant
-                                      ("\\<\\([A-Z_][A-Z0-9_]+\\)\\>" 1 font-lock-constant-face)
+     ;; Support the ::class constant in PHP5.6
+     ("\\sw+::\\(class\\)" 1 font-lock-constant-face))
 
-                                      ;; Highlight all statically accessed class names as constant,
-                                      ;; another valid option would be using type-face, but using constant-face
-                                      ;; because this is how it works in c++-mode.
-                                      ("\\(\\sw+\\)::" 1 font-lock-constant-face)
+   ;; cc-mode patterns
+   (c-lang-const c-matchers-3 php)
 
-                                      ;; Support the ::class constant in PHP5.6
-                                      ("\\sw+::\\(class\\)" 1 font-lock-constant-face)
+   ;; php-mode patterns *after* cc-mode:
+   ;;   most patterns should go here, faces will only be applied if not
+   ;;   already fontified by another pattern. Note that using OVERRIDE
+   ;;   is usually overkill.
+   `(
+     ;; Highlight variables, e.g. 'var' in '$var' and '$obj->var', but
+     ;; not in $obj->var()
+     ("->\\(\\sw+\\)\\s-*(" 1 'default)
+     ("\\(\\$\\|->\\)\\([a-zA-Z0-9_]+\\)" 2 font-lock-variable-name-face)
 
-                                      ;; Array is a keyword, except when used as cast, so that (int) and (array)
-                                      ;; look the same
-                                      ("(\\(array\\))" 1 font-lock-type-face)
+     ;; Highlight all upper-cased symbols as constant
+     ("\\<\\([A-Z_][A-Z0-9_]+\\)\\>" 1 font-lock-constant-face)
 
-                                      ;; Highlight function/method names
-                                      ("\\<function\\s-+&?\\(\\sw+\\)\\s-*(" 1 font-lock-function-name-face)
+     ;; Highlight all statically accessed class names as constant,
+     ;; another valid option would be using type-face, but using
+     ;; constant-face because this is how it works in c++-mode.
+     ("\\(\\sw+\\)::" 1 font-lock-constant-face)
 
-                                      ;; Class names are highlighted by cc-mode as defined in c-class-decl-kwds,
-                                      ;; below regexp is a workaround for a bug where the class names are not
-                                      ;; highlighted right after opening a buffer (editing a file corrects it).
-                                      ;;
-                                      ;; This behaviour is caused by the preceding '<?php', which cc-mode cannot
-                                      ;; handle easily. Registering it as a cpp preprocessor works well (i.e. the
-                                      ;; next line is not a statement-cont) but the highlighting glitch remains.
-                                      (,(concat (regexp-opt (c-lang-const c-class-decl-kwds php))
-                                                " \\(\\sw+\\)")
-                                       1 font-lock-type-face)
+     ;; Highlight function/method names
+     ("\\<function\\s-+&?\\(\\sw+\\)\\s-*(" 1 font-lock-function-name-face)
 
-                                      ;; While c-opt-cpp-* highlights the <?php opening tags, it is not possible
-                                      ;; to make it highlight short open tags and closing tags as well. So we force
-                                      ;; the correct face on all cases that c-opt-cpp-* lacks for this purpose.
-                                      ;; Note that starting a file with <% breaks indentation, a limitation we
-                                      ;; can/should live with.
-                                      (,(regexp-opt '("?>" "<?" "<%" "%>")) 0 font-lock-preprocessor-face))
-                                    (c-lang-const c-matchers-3 php))
+     ;; Highlight class name after "use .. as"
+     ("\\<as\\s-+\\(\\sw+\\)" 1 font-lock-type-face)
+
+     ;; Class names are highlighted by cc-mode as defined in
+     ;; c-class-decl-kwds, below regexp is a workaround for a bug
+     ;; where the class names are not highlighted right after opening
+     ;; a buffer (editing a file corrects it).
+     ;;
+     ;; This behaviour is caused by the preceding '<?php', which
+     ;; cc-mode cannot handle easily. Registering it as a cpp
+     ;; preprocessor works well (i.e. the next line is not a
+     ;; statement-cont) but the highlighting glitch remains.
+     (,(concat (regexp-opt (c-lang-const c-class-decl-kwds php))
+               " \\(\\sw+\\)")
+      1 font-lock-type-face)
+
+     ;; While c-opt-cpp-* highlights the <?php opening tags, it is not
+     ;; possible to make it highlight short open tags and closing tags
+     ;; as well. So we force the correct face on all cases that
+     ;; c-opt-cpp-* lacks for this purpose.
+     ;;
+     ;; Note that starting a file with <% breaks indentation, a
+     ;; limitation we can/should live with.
+     (,(regexp-opt '("?>" "<?" "<%" "%>")) 0 font-lock-preprocessor-face)))
   "Detailed highlighting for PHP mode.")
 
 (defvar php-font-lock-keywords php-font-lock-keywords-3

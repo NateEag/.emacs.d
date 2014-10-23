@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2014 François-Xavier Bois
 
-;; Version: 20141018.216
-;; X-Original-Version: 10.0.3
+;; Version: 20141022.1046
+;; X-Original-Version: 10.0.6
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -22,7 +22,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "10.0.3"
+(defconst web-mode-version "10.0.6"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -970,7 +970,7 @@ Must be used in conjunction with web-mode-enable-block-face."
       "STR_PAD_LEFT" "STR_PAD_RIGHT"
       "ENT_COMPAT" "ENT_QUOTES" "ENT_NOQUOTES" "ENT_IGNORE"
       "ENT_SUBSTITUTE" "ENT_DISALLOWED" "ENT_HTML401" "ENT_XML1"
-      "ENT_XHTML" "ENT_HTML5"
+      "ENT_XHTML" "ENT_HTML5" "JSON_PRETTY_PRINT"
       "LIBXML_NOBLANKS"))))
 
 (defvar web-mode-php-keywords
@@ -3938,6 +3938,7 @@ the environment as needed for ac-sources, right before they're used.")
         ) ;while
       ) ;save-excursion
     (when pos (goto-char pos))
+    ;;(message "jsx-skip: %S" pos)
     pos))
 
 (defun web-mode-scan-expr-literal (reg-beg reg-end)
@@ -4173,6 +4174,10 @@ the environment as needed for ac-sources, right before they're used.")
 ;;  (message "propertize: beg(%S) end(%S)" web-mode-change-beg web-mode-change-end)
   (unless beg (setq beg web-mode-change-beg))
   (unless end (setq end web-mode-change-end))
+
+  (when (and end (> end (point-max)))
+    (setq end (point-max)))
+
   (setq web-mode-change-beg nil
         web-mode-change-end nil)
   (cond
@@ -6049,6 +6054,11 @@ the environment as needed for ac-sources, right before they're used.")
            ) ;cond
           )
 
+         ((string= language "ctemplate")
+          (when (and (web-mode-block-beginning)
+                     (web-mode-rsf "{{#?"))
+            (setq offset (current-column)))
+          )
 
          ((member language '("asp" "aspx" "blade" "code" "django" "erb"
                              "freemarker" "javascript" "jsp" "jsx" "lsp"
@@ -6209,6 +6219,7 @@ the environment as needed for ac-sources, right before they're used.")
            ((and (string= language "jsx")
                  (eq (get-text-property pos 'tag-type) 'end)
                  (web-mode-tag-match))
+            ;;(message "jsx indent")
             (setq offset (current-indentation))
             )
 
@@ -6217,14 +6228,16 @@ the environment as needed for ac-sources, right before they're used.")
                  ;;(get-text-property pos 'tag-type)
                  (not (and (get-text-property pos 'part-expr)
                            (get-text-property (1- pos) 'part-expr)))
-                 (and prev-props (plist-get prev-props 'tag-type))
-                 ;;(eq (get-text-property (1- pos) 'part-token) 'html)
+;;                 (progn (message "la") t)
+;;                 (and prev-props (plist-get prev-props 'tag-type))
+                 (and prev-props (plist-get prev-props 'part-element))
                  )
             ;;(message "jsx %S" prev-props)
             (setq offset (web-mode-markup-indentation pos))
             )
 
            ((member language '("javascript" "jsx"))
+            ;;(message "jsx indent")
             (setq offset (car (web-mode-part-indentation pos
                                                          block-column
                                                          indent-offset
@@ -10372,39 +10385,4 @@ Pos should be in a tag."
 ;;---- TODO --------------------------------------------------------------------
 ;;- parameter for function chaining
 ;;- supprimer 2 flags sur blocks
-;;- phphint
-;;- tag-name uniquement sur les html tag
-;;- Stickiness of Text Properties
-;;- screenshot : http://www.cockos.com/licecap/
 ;;- tester shortcut A -> pour pomme
-
-;; (defun web-mode-indent-cycle (regex-line regex-sym block-beg indent-offset)
-;;   "Returns next position in the indent cycle for REGEX-SYM on
-;; positions from the previous line matching REGEX-LINE withing
-;; BLOCK-BEGIN. Loops to start at INDENT-OFFSET."
-;;   (letrec
-;;       ((match-indices-all (lambda  (regex string)
-;;                             (let ((i (string-match-p regex string)))
-;;                               (if i (cons
-;;                                      i
-;;                                      (mapcar (lambda (x) (+ x i 1))
-;;                                              (funcall match-indices-all regex
-;;                                                       (substring string (+ i 1)))))))))
-;;        (filter (lambda (condp lst)
-;;                  (delq nil
-;;                        (mapcar (lambda (x)
-;;                                  (and (funcall condp x) x)) lst))))
-;;        (this-line (thing-at-point 'line))
-;;        (rsb-prev-line (progn
-;;                         (web-mode-rsb regex-line block-beg)
-;;                         (thing-at-point 'line)))
-;;        (pos-of-this-sym (string-match-p regex-sym this-line))
-;;        (prev-sym-locations (funcall match-indices-all regex-sym rsb-prev-line))
-;;        (farther-syms (progn
-;;                        (add-to-list 'prev-sym-locations (+ indent-offset web-mode-code-indent-offset))
-;;                        (funcall filter (lambda (i) (> i pos-of-this-sym))
-;;                                 (sort prev-sym-locations '<)))))
-;;     (cond ((null farther-syms) indent-offset)
-;;           ((or web-mode-indent-cycle-left-first
-;;                (equal last-command 'indent-for-tab-command)) (car farther-syms))
-;;           (t (car (last farther-syms))))))

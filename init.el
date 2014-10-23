@@ -28,7 +28,7 @@
 
 ;; Let's try out the solarized theme. In theory, it should be easier on my
 ;; eyes...
-(load-theme 'solarized-dark t)
+(load-theme 'solarized-light t)
 
 ;; Most of the time, I want Unix-style line endings, and UTF-8 is generally a
 ;; good thing.

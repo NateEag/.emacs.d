@@ -53,7 +53,15 @@
                  ;; If eclimd is running, use it.
                  (when (eclimd--running-p)
                    (eclim-mode)
-                   (require 'ac-emacs-eclim-source))))))
+                   (require 'ac-emacs-eclim-source)
+
+                   ;; Set up eclim-mode-specific keybindings.
+                   ;; TODO This jumps to def in a different window, and I don't
+                   ;; see an equivalent command for returning that I can map to
+                   ;; "M-,". Fix that if I start doing more Java stuff.
+                   (define-key java-mode-map (kbd "M-.") 'eclim-java-find-declaration)
+                   )))))
+
 
 (use-package evil
   :defer t

@@ -24,6 +24,36 @@
   :defer t
   :diminish magit-auto-revert-mode)
 
+(use-package abbrev
+  :defer t
+  :config
+  (progn
+    (diminish 'abbrev-mode)))
+
+(use-package eclimd
+  :defer t
+  :diminish
+  :init
+  (progn
+    (autoload 'eclimd--running-p "eclimd" nil t)))
+
+(use-package eclim
+  :defer t
+  :diminish)
+
+;; cc-mode defines several derived packages, including Java. I'm defining this
+;; so I can configure java-mode, but I expect over time it will become much
+;; more monstrous.
+(use-package cc-mode
+  :defer t
+  :config
+  (progn
+    (add-hook 'java-mode-hook
+              '(lambda ()
+                 ;; If eclimd is running, use it.
+                 (when (eclimd--running-p)
+                   (eclim-mode))))))
+
 (use-package evil
   :defer t
   :config

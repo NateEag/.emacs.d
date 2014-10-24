@@ -41,18 +41,19 @@
   :defer t
   :diminish)
 
-;; cc-mode defines several derived packages, including Java. I'm defining this
-;; so I can configure java-mode, but I expect over time it will become much
-;; more monstrous.
+;; cc-mode defines several derived packages, so this setup will probably grow
+;; to cover more than one mode.
 (use-package cc-mode
   :defer t
   :config
   (progn
+    ;; java-mode setup
     (add-hook 'java-mode-hook
               '(lambda ()
                  ;; If eclimd is running, use it.
                  (when (eclimd--running-p)
-                   (eclim-mode))))))
+                   (eclim-mode)
+                   (require 'ac-emacs-eclim-source))))))
 
 (use-package evil
   :defer t

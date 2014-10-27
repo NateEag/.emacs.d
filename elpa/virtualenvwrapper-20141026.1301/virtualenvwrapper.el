@@ -4,35 +4,18 @@
 
 ;; Author: James J Porter <porterjamesj@gmail.com>
 ;; URL: http://github.com/porterjamesj/virtualenvwrapper.el
-;; Version: 20140920.2024
+;; Version: 20141026.1301
 ;; X-Original-Version: 20131514
 ;; Keywords: python, virtualenv, virtualenvwrapper
 ;; Package-Requires: ((dash "1.5.0") (s "1.6.1"))
 
 ;;; Commentary:
 
-;; A powerful virtualenv tool for Emacs.  See documentation at
-;; https://github.com/porterjamesj/virtualenvwrapper.el
-
-;;; POTENTIAL TODOS:
-;; - Figure out a better way to make M-x shell work than
-;;   advising it.  This could be done if Emacs had pre-
-;;   and post- shell activation hooks.
-;; - Implement the option to have eshell work in a separate
-;;   namespace.  This would be a substantial refactor.
-;; - Add an option for `venv-location' to be an alist.
-;; - Propertize the venv names in the output of `venv-lsvirtualenv'
-;;   so that clicking or pressing RET on one will switch to it.
-
-;;; VERSION HISTORY
-;; 20130921
-;; - Fix a bug that caused an error if exec-path was nil (Thanks Steven Huwig).
-;; - Fix a bug that prevented cpvirtualenv from working in eshell.
-;; - Fix a bug in which deleted virtualenvs sometimes still showed up
-;;   in completions.
-;; - Eshell commands now tab complete virtualenv names where appropriate.
-;; - mkvirtualenv and rmvirtualenv can now accept multiple names.
-
+;; A featureful virtualenv tool for Emacs. Emulates much of the
+;; functionality of Doug Hellmann's
+;; [virtualenvwrapper](https://bitbucket.org/dhellmann/virtualenvwrapper/)
+;; See documentation at
+;; https://github.com/porterjamesj/virtualenvwrapper.el for more details.
 
 ;;; Code:
 
@@ -285,6 +268,18 @@ identifying a virtualenv."
            (venv-deactivate))
          (cd prev-dir)))))
 
+(defun venv--check-executable ()
+  "Verify that there is a virtualenv executable available,
+throwing an error if not"
+  (unless (executable-find "virtualenv")
+    (error "There doesn't appear to be a virtualenv executable on
+    your exec path. Unsure that you have virtualenv installed and
+    that the exec-path variable is set such that virtualenv can
+    be found. A common cause of problems like this is GUI Emacs
+    not having environment variables set up like the shell. Check
+    out https://github.com/purcell/exec-path-from-shell for a
+    robust solution to this problem.")))
+
 ;;;###autoload
 (defun venv-mkvirtualenv (&rest names)
 "Create new virtualenvs NAMES. If venv-location is a single
@@ -292,6 +287,7 @@ directory, the new virtualenvs are made there; if it is a list of
 directories, the new virtualenvs are made in the current
 default-directory."
   (interactive)
+  (venv--check-executable)
   (let ((parent-dir (if (stringp venv-location)
                         (file-name-as-directory
                          (expand-file-name venv-location))

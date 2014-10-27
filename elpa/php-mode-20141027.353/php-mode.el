@@ -6,13 +6,13 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Version: 20141022.2216
-;;; X-Original-Version: 1.13.5
+;; Version: 20141027.353
+;;; X-Original-Version: 1.15.0
 
-(defconst php-mode-version-number "1.13.5"
+(defconst php-mode-version-number "1.15.0"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2014-09-27"
+(defconst php-mode-modified "2014-10-27"
   "PHP Mode build date.")
 
 ;;; License
@@ -544,6 +544,22 @@ PHP does not have an \"enum\"-like keyword."
 
 (c-lang-defconst c-enums-contain-decls
   php nil)
+
+(c-lang-defconst c-nonlabel-token-key
+  "Regexp matching things that can't occur in generic colon labels.
+
+This overrides cc-mode `c-nonlabel-token-key' to support switching on
+double quoted strings and true/false/null.
+
+Note: this regexp is also applied to goto-labels, a future improvement
+might be to handle switch and goto labels differently."
+  php (concat
+     ;; All keywords except `c-label-kwds' and `c-constant-kwds'.
+     (c-make-keywords-re t
+       (set-difference (c-lang-const c-keywords)
+                       (append (c-lang-const c-label-kwds)
+                               (c-lang-const c-constant-kwds))
+                       :test 'string-equal))))
 
 (c-add-style
  "php"

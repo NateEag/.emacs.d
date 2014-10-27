@@ -4,8 +4,8 @@
 
 ;; Author: Syohei YOSHIDA <syohex@gmail.com>
 ;; URL: https://github.com/syohex/emacs-literate-coffee-mode
-;; Version: 20140621.2041
-;; X-Original-Version: 0.03
+;; Version: 20141023.2147
+;; X-Original-Version: 0.04
 ;; Package-Requires: ((coffee-mode "0.5.0"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -130,5 +130,7 @@
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.litcoffee\\'" . litcoffee-mode))
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.coffee.md\\'" . litcoffee-mode))
 
 ;;; literate-coffee-mode.el ends here

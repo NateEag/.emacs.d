@@ -311,6 +311,9 @@
                    helm-git-files:all-source
                    helm-source-recentf)))
 
+;; TODO It'd be nice if this hook didn't run when I'm just opening a buffer to
+;; compile the file, like when installing packages. Advising the appropriate
+;; functions would probably do it, but I'm not sure which ones need the advice.
 (defun my-prog-mode-init ()
   "General setup for programming modes."
 
@@ -338,12 +341,12 @@
   (diminish 'auto-complete-mode)
 
   ;; Get clickable code-folding indicators in the fringe.
-  ;; DEBUG Somehow, turning this on makes installing web-mode via MELPA fail.
-  ;; ...bet it just is *really* slow on huge files like web-mode, and thus
-  ;; makes byte-compiling/parsing the file for autoloads deathly slow. Should
-  ;; see if I can modify my-prog-mode-init to not run for buffers that are just
-  ;; being compiled, somehow... Maybe advise the compile functions with a
-  ;; bail-out-early variable?
+  ;; DEBUG This is *deathly* slow when you open files over about 7000 lines.
+  ;; Not sure if it's so much linecount as just lots of folding points?
+  ;; Regardless, opening something like web-mode.el effectively freezes emacs
+  ;; for minutes. If I could optimize it or give it some kind of cutoff, that
+  ;; might make it usable again.
+  ;;
   ;; (hideshowvis-minor-mode t)
 
   ;; Pressing RET should do newline-then-indent, and continue any comment we

@@ -62,6 +62,11 @@
                    (define-key java-mode-map (kbd "M-.") 'eclim-java-find-declaration)
                    )))))
 
+(use-package hideshow
+  :defer t
+  :config
+  (progn
+    (diminish 'hs-minor-mode)))
 
 (use-package evil
   :defer t

@@ -337,6 +337,9 @@
                          ac-source-words-in-same-mode-buffers))
   (diminish 'auto-complete-mode)
 
+  ;; Get clickable code-folding indicators in the fringe.
+  (hideshowvis-minor-mode t)
+
   ;; Pressing RET should do newline-then-indent, and continue any comment we
   ;; happen to be in.
   (local-set-key (kbd "RET") (key-binding (kbd "M-j")))

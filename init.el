@@ -134,8 +134,7 @@
 ;; We don't load it by default, but we do config it. To load it, just do
 ;; (require 'tramp)
 (setq tramp-default-method "scp")
-(if (eq system-type 'windows-nt)
-    (setq tramp-default-method "plink"))
+
 ;; Normally I want to load remote directory variable files. This can cause
 ;; efficiency problems, but I currently only use Emacs to edit remotely in a
 ;; dev environment. I may need to think this through more carefully...

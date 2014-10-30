@@ -338,7 +338,13 @@
   (diminish 'auto-complete-mode)
 
   ;; Get clickable code-folding indicators in the fringe.
-  (hideshowvis-minor-mode t)
+  ;; DEBUG Somehow, turning this on makes installing web-mode via MELPA fail.
+  ;; ...bet it just is *really* slow on huge files like web-mode, and thus
+  ;; makes byte-compiling/parsing the file for autoloads deathly slow. Should
+  ;; see if I can modify my-prog-mode-init to not run for buffers that are just
+  ;; being compiled, somehow... Maybe advise the compile functions with a
+  ;; bail-out-early variable?
+  ;; (hideshowvis-minor-mode t)
 
   ;; Pressing RET should do newline-then-indent, and continue any comment we
   ;; happen to be in.

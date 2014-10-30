@@ -374,6 +374,12 @@
   (flyspell-prog-mode)
   (diminish 'flyspell-mode)
 
+  ;; Highlight TODO and friends as warnings. Yanked from this blog post:
+  ;; http://emacsredux.com/blog/2013/07/24/highlight-comment-annotations/
+  (font-lock-add-keywords
+   nil '(("\\<\\(FIX\\(ME\\)?\\|TODO\\|DEBUG\\|OPTIMIZE\\|HACK\\|REFACTOR\\)"
+          1 font-lock-string-face t)))
+
   ;; Turn on smart-dash-mode if it's not a bad idea in our current mode.
   (if (not (member major-mode '(emacs-lisp-mode
                                 lisp-mode

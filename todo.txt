@@ -59,6 +59,7 @@
 
 -Tweak md-readme.el so that author/created/requires lines are headers *without*
  colons, whose bodies are the text following the colon-delimited field names.
+ el2markdown is another package to do a similar job - maybe it's better?
 
 -File feature request to flycheck for being able to run checkers while in
  web-mode. May well get rejected, because supporting this would be pretty hard.

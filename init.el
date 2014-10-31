@@ -306,7 +306,6 @@
   ;; Fortunately, it's possible to write a great text editor for a great OS..."
   ;; -- some wag discussing evil-mode
 
-  (require 'evil)
   (evil-local-mode)
 
   ;; Auto-fill comments, but not code.

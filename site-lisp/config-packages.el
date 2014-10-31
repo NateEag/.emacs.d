@@ -87,7 +87,7 @@
     (diminish 'hs-minor-mode)))
 
 (use-package evil
-  :defer t
+  :commands evil-local-mode
   :config
   (progn
    ;; Use regular emacs keybindings for insert-mode.

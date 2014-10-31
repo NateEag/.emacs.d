@@ -80,6 +80,14 @@
                    (define-key java-mode-map (kbd "M-.") 'eclim-java-find-declaration)
                    )))))
 
+(use-package nxml-mode
+  :mode ("web.config$" . xml-mode)
+  :init
+  (progn
+    (setq nxml-child-indent 4)
+    (setq nxml-slash-auto-complete-flag t)
+    (add-hook 'nxml-mode-hook (lambda () (emmet-mode t)))))
+
 (use-package hideshow
   :defer t
   :config

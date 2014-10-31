@@ -426,13 +426,6 @@
                "\\.*jshintrc\\'"
                "\\.tern-project\\'")
 
-;; xml-mode
-;; IIS's 'config' files are actually XML.
-(add-auto-mode 'xml-mode "web.config$")
-(setq nxml-child-indent 4)
-(setq nxml-slash-auto-complete-flag t)
-(add-hook 'nxml-mode-hook (lambda () (emmet-mode t)))
-
 ;; Groovy mode
 (add-auto-mode 'groovy-mode
                "\\.groovy$"

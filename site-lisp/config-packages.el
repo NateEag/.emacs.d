@@ -179,12 +179,15 @@
         (cadr (assoc (popup-menu* menu :scroll-bar t) base-menu))))
     (fset 'flyspell-emacs-popup 'flyspell-emacs-popup-textual)))
 
+(use-package my-functions
+  :commands hit-servlet comment-or-uncomment-region-or-line wrap-args
+            move-current-buffer insert-date insert-time unfill-paragraph
+            add-auto-mode)
+
 (use-package config-windows
-  :defer t
   :commands set-windows-env)
 
 (use-package cygwin-mount
-  :defer t
   :commands cygwin-mount-activate)
 
 ;;; config-packages.el ends here

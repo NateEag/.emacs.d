@@ -296,22 +296,6 @@
 (global-auto-revert-mode)
 (diminish 'auto-revert-mode)
 
-;; After a few months, I can definitively say that Helm beats pressing Tab.
-(helm-mode)
-(diminish 'helm-mode)
-
-;; DEBUG The first time this runs in a repo, I don't see any git-ls-files
-;; results. I think it's probably just taking a while to run git-ls-files?
-(require 'helm-git-files)
-(defun my-helm-for-files ()
-  "Try to make it painless to open files/swap buffers."
-  (interactive)
-  (helm :sources '(helm-source-buffers-list
-                   helm-git-files:modified-source
-                   helm-git-files:untracked-source
-                   helm-git-files:all-source
-                   helm-source-recentf)))
-
 ;; TODO It'd be nice if this hook didn't run when I'm just opening a buffer to
 ;; compile the file, like when installing packages. Advising the appropriate
 ;; functions would probably do it, but I'm not sure which ones need the advice.

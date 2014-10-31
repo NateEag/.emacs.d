@@ -63,6 +63,7 @@
 
    ; Don't break multiple hardlinks.
    backup-by-copying-when-linked t
+
    ; Don't litter the filesystem with backups *or* autosaves.
    backup-directory-alist
     `(("." . ,my-autosaves-dir))
@@ -109,7 +110,7 @@
 ;; loading diff-mode, but for some reason, that only worked when I removed it
 ;; globally. I'm guessing before-save-hook is not a buffer-local variable.
 (defun maybe-delete-trailing-whitespace ()
-  "Delete trailing whitespace if the current buffer's filename allows it."
+  "Delete trailing whitespace if the current buffer is not a patch."
   (unless (string-match "\\.*.\\(patch\\|diff\\)$" (buffer-file-name))
       (delete-trailing-whitespace)))
 (add-hook 'before-save-hook 'maybe-delete-trailing-whitespace)

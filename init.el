@@ -242,7 +242,6 @@
   (guess-style-guess-all)
 
   ;; Make camelCaseNames more readable. See custom.el for settings.
-  (require 'glasses)
   (glasses-mode)
   (diminish 'glasses-mode)
 

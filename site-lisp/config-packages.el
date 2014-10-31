@@ -141,6 +141,10 @@
 
    ))
 
+(use-package glasses
+  :commands glasses-mode
+  :diminish glasses-mode)
+
 (use-package flyspell
   :defer t
   :config

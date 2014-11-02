@@ -28,21 +28,32 @@
 
 (defun my-set-default-font (&optional size)
   "Set my default font, if possible, optionally at point size `size`."
-
-  (interactive)
   ;; Do not set a font if it is not available - keeps us from crashing in a
   ;; font-free setting.
   (if (member (my-get-default-font-name) (font-family-list))
       (set-frame-font (my-get-default-font size) nil t)))
 
-(defun my-set-up-frame (frame)
-  "Set up `FRAME' the way I like."
+(defun my-set-up-frame ()
+  "Configure current frame's layout and font size based on display size."
+
+  (interactive)
+
+  (my-set-default-font)
 
   ;; N.B.: This depends on frame-cmds.el, which I installed via MELPA.
   (maximize-frame-vertically)
 
-  ;; Two 80-column windows. The extra chars are for the fringes.
-  (set-frame-width frame 164)
-
   (delete-other-windows)
-  (split-window-right))
+
+  ;; On smaller displays, I usually only want one window so I have space left
+  ;; to look at a browser window while coding. On larger, seeing two code pages
+  ;; at once is handy.
+  (let* ((frame-screen-ratio
+          (/ (float (frame-pixel-width (selected-frame))) (display-pixel-width)))
+         (num-windows (if (> frame-screen-ratio 0.34)
+                          1
+                        2)))
+    ;; 80 chars + 1 for each fringe.
+    (set-frame-width (selected-frame) (* 82 num-windows))
+    (when (= 2 num-windows)
+        (split-window-right))))

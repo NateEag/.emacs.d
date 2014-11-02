@@ -38,6 +38,9 @@
                        helm-git-files:all-source
                        helm-source-recentf)))))
 
+(use-package my-frame-setup
+  :commands my-set-up-frame)
+
 (use-package magit
   :defer t
   :diminish magit-auto-revert-mode)

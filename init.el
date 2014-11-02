@@ -23,9 +23,6 @@
 (setq custom-file (make-emacs-dir-path "custom.el"))
 (load custom-file)
 
-;; Set up my default font.
-(my-set-default-font)
-
 ;; Let's try out the solarized theme. In theory, it should be easier on my
 ;; eyes...
 (load-theme 'solarized-light t)
@@ -511,7 +508,7 @@
           (lambda ()
             (message (emacs-init-time))
             (when (display-graphic-p)
-              (my-set-up-frame (selected-frame)))))
+              (my-set-up-frame))))
 
 ;; Now that we're done with setup, stop debugging on error.
 (setq debug-on-error nil)

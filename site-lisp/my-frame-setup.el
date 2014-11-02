@@ -1,6 +1,14 @@
-;; A few functions I'm evolving for choosing my default font.
+;;; my-frame-setup.el --- configure frames the way I like.
+
+;;; Author: Nate Eagleson
+
+;;; Version: 0.0.1
+
+;;; Commentary:
+
 ;;
-;; ...and my default frame config, it seems. Probably should rename this file.
+
+;;; Code:
 
 (defun my-get-default-font-size ()
   "Return a good size for my default font based on monitor's pixel density."
@@ -57,3 +65,6 @@
     (set-frame-width (selected-frame) (* 82 num-windows))
     (when (= 2 num-windows)
         (split-window-right))))
+
+(provide 'my-frame-setup)
+;;; my-frame-setup.el ends here

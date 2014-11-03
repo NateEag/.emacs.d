@@ -199,6 +199,8 @@
             move-current-buffer insert-date insert-time unfill-paragraph
             add-auto-mode)
 
+(use-package my-keybindings)
+
 (use-package config-windows
   :commands set-windows-env)
 

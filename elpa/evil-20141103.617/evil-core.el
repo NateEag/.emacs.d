@@ -107,6 +107,7 @@
 
 (declare-function evil-emacs-state-p "evil-states")
 (declare-function evil-ex-p "evil-ex")
+(defvar evil-mode-buffers)
 
 (define-minor-mode evil-local-mode
   "Minor mode for setting up Evil in a single buffer."
@@ -170,10 +171,6 @@ To enable Evil globally, do (evil-mode 1)."
     (evil-local-mode 1)
     (evil-initialize-state)))
 
-;;;###autoload (autoload 'evil-mode "evil" "Toggle evil in all buffers" t)
-(define-globalized-minor-mode evil-mode
-  evil-local-mode evil-initialize)
-
 ;; No hooks are run in Fundamental buffers, so other measures are
 ;; necessary to initialize Evil in these buffers. When Evil is
 ;; enabled globally, the default value of `major-mode' is set to
@@ -196,12 +193,6 @@ To enable Evil globally, do (evil-mode 1)."
     (ad-disable-regexp "^evil")
     (ad-update-regexp "^evil")
     (with-no-warnings (evil-esc-mode -1))))
-
-(put 'evil-mode 'function-documentation
-     "Toggle Evil in all buffers.
-Enable with positive ARG and disable with negative ARG.
-See `evil-local-mode' to toggle Evil in the
-current buffer only.")
 
 (defun evil-change-state (state &optional message)
   "Change the state to STATE.

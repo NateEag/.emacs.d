@@ -422,12 +422,6 @@
                "\\.*jshintrc\\'"
                "\\.tern-project\\'")
 
-;; Groovy mode
-(add-auto-mode 'groovy-mode
-               "\\.groovy$"
-               "\\.gradle")
-(add-hook 'groovy-mode-hook 'my-prog-mode-init)
-
 ;; If we're running in a window system, start an emacs server, so emacsclient
 ;; can connect to this instance.
 (require 'server)

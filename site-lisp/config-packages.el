@@ -83,6 +83,13 @@
                    (define-key java-mode-map (kbd "M-.") 'eclim-java-find-declaration)
                    )))))
 
+(use-package groovy-mode
+  :defer t
+  :mode "\\.groovy$"
+  :mode "\\.gradle$"
+  :config
+  (add-hook 'groovy-mode-hook 'my-prog-mode-init))
+
 (use-package nxml-mode
   :mode ("web.config$" . xml-mode)
   :init

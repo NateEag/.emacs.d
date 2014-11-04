@@ -57,6 +57,9 @@
 ;; usually use.
 (global-set-key (kbd "C-c c") 'string-inflection-toggle)
 
+;; Look up URLs quickly.
+(global-set-key (kbd "C-c u") 'browse-url)
+
 ;; g is for git, which is oh so much fun.
 (global-set-key (kbd "C-c g") 'magit-status)
 

@@ -167,11 +167,6 @@
 
 ;; Minor mode setup and registration.
 
-;; Activate key-chord-mode so I can bind actions to character pairs.
-;; Since key-chord-mode is not a true minor mode, there's no need to diminish
-;; it.
-(key-chord-mode t)
-
 ;; Activate undo-tree-mode globally and diminish it.
 ;;
 ;; It seems to me that undo-tree-mode and backup-walker might be good candidates

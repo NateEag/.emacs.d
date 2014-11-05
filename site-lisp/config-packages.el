@@ -108,6 +108,12 @@
   :commands evil-local-mode
   :config
   (progn
+
+    ;; Activate key-chord-mode so I can bind actions to character pairs.
+    ;; Since key-chord-mode is not a true minor mode, there's no need to diminish
+    ;; it.
+    (key-chord-mode t)
+
     ;; Use regular emacs keybindings for insert-mode.
     (setcdr evil-insert-state-map nil)
 

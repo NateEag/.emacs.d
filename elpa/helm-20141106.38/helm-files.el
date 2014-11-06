@@ -1668,7 +1668,12 @@ Note that only existing directories are saved here."
 (add-hook 'helm-exit-minibuffer-hook 'helm-files-save-file-name-history)
 
 (defun helm-ff-valid-symlink-p (file)
-  (file-exists-p (file-truename file)))
+  (helm-aif (condition-case-unless-debug nil
+                ;; `file-truename' send error
+                ;; on cyclic symlinks (Issue #692).
+                (file-truename file)
+              (error nil))
+      (file-exists-p it)))
 
 (defun helm-get-default-mode-for-file (filename)
   "Return the default mode to open FILENAME."

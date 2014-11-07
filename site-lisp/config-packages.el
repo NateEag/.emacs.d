@@ -98,6 +98,16 @@
     (setq nxml-slash-auto-complete-flag t)
     (add-hook 'nxml-mode-hook (lambda () (emmet-mode t)))))
 
+(use-package scss-mode
+  :mode "\\.scss\\'"
+  :config
+  (add-hook 'scss-mode-hook
+            (lambda ()
+              ;; Use SCSS-style comments, largely so that comment functions
+              ;; don't go crazy the way they do in css-mode.
+              (setq comment-start "//"
+                    comment-end ""))))
+
 (use-package hideshow
   :defer t
   :config

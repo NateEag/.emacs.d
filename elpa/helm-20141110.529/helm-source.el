@@ -364,7 +364,18 @@
 
   This attribute has no effect for asynchronous sources (see
   attribute `candidates'), since they perform pattern matching
-  themselves.")
+  themselves.
+
+  Note that FUZZY-MATCH slot will overhide value of this slot.")
+
+   (fuzzy-match
+    :initarg :fuzzy-match
+    :initform nil
+    :custom boolean
+    :documentation
+    "  Enable fuzzy matching in this source.
+  This will overwrite settings in MATCH slot, and for
+  sources build with child class `helm-source-in-buffer' the SEARCH slot.")
 
    (nomark
     :initarg :nomark
@@ -578,7 +589,10 @@
     :documentation
     "  List of functions like `re-search-forward' or `search-forward'.
   Buffer search function used by `helm-candidates-in-buffer'.
-  By default, `helm-candidates-in-buffer' uses `re-search-forward'.")
+  By default, `helm-candidates-in-buffer' uses `re-search-forward'.
+  The function should take one arg PATTERN.
+
+  Note that FUZZY-MATCH slot wiil overhide value of this slot.")
 
    (search-from-end
     :initarg :search-from-end
@@ -605,7 +619,7 @@
 
    (match-part
     :initarg :match-part
-    :initform nil
+    :initform 'identity
     :custom function
     :documentation
     "  Allow matching candidate in the line with `candidates-in-buffer'.
@@ -842,6 +856,8 @@ an eieio class."
 (defmethod helm-setup-user-source ((_source helm-source)))
 
 (defmethod helm--setup-source ((source helm-source-sync))
+  (when (slot-value source :fuzzy-match)
+    (oset source :match 'helm-fuzzy-match))
   (when (slot-value source :matchplugin)
     (oset source :match
           (helm-source-mp-get-search-or-match-fns source 'match))))
@@ -860,6 +876,8 @@ an eieio class."
                         (helm-init-candidates-in-buffer
                             'global
                           (if (functionp it) (funcall it) it))))))))
+  (when (slot-value source :fuzzy-match)
+    (oset source :search '(helm-fuzzy-search)))
   (when (slot-value source :matchplugin)
     (oset source :search (helm-source-mp-get-search-or-match-fns source 'search)))
   (let ((mtc (slot-value source :match)))

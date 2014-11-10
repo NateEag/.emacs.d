@@ -3,7 +3,7 @@
 
 ;; Author: Marijn Haverbeke
 ;; URL: http://ternjs.net/
-;; Version: 20140814.750
+;; Version: 20141107.635
 ;; X-Original-Version: 0.0.1
 ;; Package-Requires: ((json "1.2") (cl-lib "0.5") (emacs "24"))
 
@@ -397,7 +397,7 @@ list of strings, giving the binary name and arguments.")
 
 (defun tern-highlight-refs ()
   (interactive)
-  (tern-run-query #'tern-do-highlight "refs" (point) :silent))
+  (tern-run-query #'tern-do-highlight "refs" (point)))
 
 ;; Jump-to-definition
 

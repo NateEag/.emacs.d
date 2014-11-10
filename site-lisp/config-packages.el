@@ -148,6 +148,7 @@
     (evil-leader/set-key
       "g" 'magit-status
       "b" 'my-helm-for-files
+      "c" 'execute-extended-command
       "s" 'helm-swoop
       "r" 'er/expand-region
       "f" 'find-file

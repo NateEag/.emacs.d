@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2014 François-Xavier Bois
 
-;; Version: 20141102.1032
-;; X-Original-Version: 10.0.17
+;; Version: 20141109.1319
+;; X-Original-Version: 10.0.19
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -22,7 +22,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "10.0.17"
+(defconst web-mode-version "10.0.19"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -322,7 +322,7 @@ See web-mode-part-face."
   :group 'web-mode-faces)
 
 (defface web-mode-html-attr-engine-face
-  '((t :inherit web-mode-html-attr-custom-face))
+  '((t :inherit web-mode-block-delimiter-face));;web-mode-html-attr-custom-face))
   "Face for custom engine attribute names (e.g. ng-*)."
   :group 'web-mode-faces)
 
@@ -642,8 +642,9 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("mojolicious" . ())
     ("python"      . ())
     ("razor"       . ("play" "play2"))
+    ("thymeleaf"   . ())
     ("underscore"  . ("underscore.js"))
-    ("velocity"    . ("vtl" "cheetah"))
+    ("velocity"    . ("vtl" "cheetah" "ssp"))
     ("web2py"      . ()))
   "Engine name aliases")
 
@@ -656,7 +657,8 @@ Must be used in conjunction with web-mode-enable-block-face."
   "content types")
 
 (defvar web-mode-engine-attr-regexps
-  '(("angular" . "ng-"))
+  '(("angular"   . "ng-")
+    ("thymeleaf" . "th:"))
   "Engine custom attributes")
 
 (defvar web-mode-engine-file-regexps
@@ -667,6 +669,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("closure"          . "\\.soy\\'")
     ("ctemplate"        . "\\.\\(chtml\\|mustache\\)\\'")
     ("django"           . "\\.\\(djhtml\\|tmpl\\|dtl\\|liquid\\)\\'")
+    ("elixir"           . "\\.eex\\'")
     ("erb"              . "\\.\\(erb\\|rhtml\\|ejs\\|erb\\.html\\)\\'")
     ("freemarker"       . "\\.ftl\\'")
     ("go"               . "\\.go\\(html\\|tmpl\\)\\'")
@@ -681,6 +684,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("razor"            . "\\.\\(cs\\|vb\\)html\\'")
     ("smarty"           . "\\.tpl\\'")
     ("template-toolkit" . "\\.tt.?\\'")
+    ("thymeleaf"        . "\\.thtml\\'")
     ("velocity"         . "\\.v\\(sl\\|tl\\|m\\)\\'")
 
     ("django"           . "twig")
@@ -804,6 +808,10 @@ Must be used in conjunction with web-mode-enable-block-face."
                       ("{% " " %}")
                       ("{%-" " " " %}")
                       ("{# " " #}")))
+    ("elixir"      . (("<% " " %>")
+                      ("<%=" " " " %>")
+                      ("<%%" " " " %>")
+                      ("<%#" " " " %>")))
     ("erb"         . (("<% " " %>")
                       ("<%=" "%>")
                       ("<%#" "%>")
@@ -886,6 +894,7 @@ Must be used in conjunction with web-mode-enable-block-face."
    '("ctemplate"        . "[$]?{[{~].")
    '("django"           . "{[#{%]")
    '("dust"             . "{.")
+   '("elixir"           . "<%.")
    '("erb"              . "<%\\|^%.")
    '("freemarker"       . "<%\\|${\\|</?[[:alpha:]]+:[[:alpha:]]\\|</?[@#].\\|\\[/?[@#].")
    '("go"               . "{{.")
@@ -961,6 +970,18 @@ Must be used in conjunction with web-mode-enable-block-face."
    (append
     (cdr (assoc "python" web-mode-extra-constants))
     '("True" "False" "None" "__debug__" "NotImplemented" "Ellipsis"))))
+
+(defvar web-mode-erlang-constants
+  (regexp-opt
+   (append
+    (cdr (assoc "erlang" web-mode-extra-constants))
+    '("true" "false"))))
+
+(defvar web-mode-erlang-keywords
+  (regexp-opt
+   (append
+    (cdr (assoc "erlang" web-mode-extra-keywords))
+    '("else" "if" "do" "end"))))
 
 (defvar web-mode-lsp-constants
   (regexp-opt
@@ -1634,6 +1655,16 @@ Must be used in conjunction with web-mode-enable-block-face."
          '(0 'web-mode-keyword-face))
    ))
 
+(defvar web-mode-erlang-font-lock-keywords
+  (list
+   (cons (concat "\\<\\(" web-mode-erlang-keywords "\\)\\>")
+         '(0 'web-mode-keyword-face))
+   (cons (concat "\\<\\(" web-mode-erlang-constants "\\)\\>")
+         '(0 'web-mode-constant-face))
+   '("@\\([[:alnum:]_]+\\)" 0 'web-mode-variable-name-face)
+   '("[ ]\\(:[[:alnum:]-_]+\\)" 1 'web-mode-symbol-face)
+   ))
+
 (defvar web-mode-mason-font-lock-keywords
   (list
    (cons (concat "\\<\\(" web-mode-mason-keywords "\\)\\>")
@@ -1702,6 +1733,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("closure"          . web-mode-closure-font-lock-keywords)
     ("ctemplate"        . web-mode-ctemplate-font-lock-keywords)
     ("dust"             . web-mode-dust-font-lock-keywords)
+    ("elixir"           . web-mode-erlang-font-lock-keywords)
     ("erb"              . web-mode-erb-font-lock-keywords)
     ("go"               . web-mode-go-font-lock-keywords)
     ("lsp"              . web-mode-lsp-font-lock-keywords)
@@ -2131,7 +2163,8 @@ the environment as needed for ac-sources, right before they're used.")
 
          ((string= web-mode-engine "mako")
           (cond
-           ((member tagopen '("<% " "<%!"))
+           ((and (string= tagopen "<%")
+                 (member (char-after) '(?\s ?\n ?\!)))
             (setq closing-string "%>"
                   delim-open "<%[!]?"
                   delim-close "%>"))
@@ -2148,6 +2181,17 @@ the environment as needed for ac-sources, right before they're used.")
                   delim-open "%"))
            )
           ) ;mako
+
+         ((string= web-mode-engine "elixir")
+          (cond
+           ((string= tagopen "<%#")
+            (setq closing-string "%>"))
+           ((string= sub2 "<%")
+            (setq closing-string "%>"
+                  delim-open "<%[=%]?"
+                  delim-close "%>"))
+           )
+          ) ;mojolicious
 
          ((string= web-mode-engine "mojolicious")
           (cond
@@ -2575,7 +2619,7 @@ the environment as needed for ac-sources, right before they're used.")
   ;;  (message "reg-beg(%S) reg-end(%S) delim-open(%S) delim-close(%S)" reg-beg reg-end delim-open delim-close)
   (when (member web-mode-engine
                 '("asp" "aspx" "clip" "closure" "ctemplate" "django" "dust"
-                  "erb" "freemarker" "jsp" "lsp" "mako" "mason" "mojolicious"
+                  "elixir" "erb" "freemarker" "jsp" "lsp" "mako" "mason" "mojolicious"
                   "smarty" "template-toolkit" "web2py"))
     (save-excursion
       (when delim-open
@@ -2733,6 +2777,15 @@ the environment as needed for ac-sources, right before they're used.")
         (setq regexp "\"\\|'"))
        )
       ) ;blade
+
+     ((string= web-mode-engine "elixir")
+      (cond
+       ((string= sub3 "<%#")
+        (setq token-type 'comment))
+       (t
+        (setq regexp "\"\\|'"))
+       )
+      ) ;elixir
 
      ((string= web-mode-engine "mojolicious")
       (cond
@@ -3183,10 +3236,15 @@ the environment as needed for ac-sources, right before they're used.")
        ((string= web-mode-engine "mako")
         (cond
          ((looking-at "</?%\\([[:alpha:]]+\\(?:[:][[:alpha:]]+\\)?\\)")
-          (setq control (match-string-no-properties 1)
-                type (if (eq (aref (match-string-no-properties 0) 1) ?\/) 'close 'open))
-          (setq controls (append controls (list (cons type control))))
-         )
+          (cond
+           ((eq (char-after (- (web-mode-block-end-position reg-beg) 1)) ?\/)
+            )
+           (t
+            (setq control (match-string-no-properties 1)
+                  type (if (eq (aref (match-string-no-properties 0) 1) ?\/) 'close 'open))
+            (setq controls (append controls (list (cons type control)))))
+           )
+          )
          ((web-mode-block-starts-with "\\(else\\|elif\\)" reg-beg)
           (setq controls (append controls (list (cons 'inside "if")))))
          ((web-mode-block-starts-with "end\\(if\\|for\\)" reg-beg)
@@ -3278,6 +3336,17 @@ the environment as needed for ac-sources, right before they're used.")
           (setq controls (append controls (list (cons 'open "ctrl")))))
          )
         ) ;template-toolkit
+
+       ((string= web-mode-engine "elixir")
+        (cond
+         ((web-mode-block-starts-with "end" reg-beg)
+          (setq controls (append controls (list (cons 'close "ctrl")))))
+         ((web-mode-block-starts-with "else" reg-beg)
+          (setq controls (append controls (list (cons 'inside "ctrl")))))
+         ((web-mode-block-starts-with "if\\|for\\|while" reg-beg)
+          (setq controls (append controls (list (cons 'open "ctrl")))))
+         )
+        ) ;elixir
 
        ((string= web-mode-engine "velocity")
         (cond
@@ -3669,9 +3738,9 @@ the environment as needed for ac-sources, right before they're used.")
 
        ((= state 2)
         (setq name-end pos)
-        (when (and (= attr-flags 0) (eq char ?\-))
-          (setq attr-flags (logior attr-flags 1)))
-        (when (= (logand attr-flags 1) 1)
+;;        (when (and (= attr-flags 0) (member char '(?\- ?\:)))
+;;          (setq attr-flags (logior attr-flags 1)))
+        (when (and (= attr-flags 0) (member char '(?\- ?\:))) ;;(= (logand attr-flags 1) 1)
           (let (attr)
             (setq attr (buffer-substring-no-properties name-beg (1+ name-end)))
             (cond
@@ -3680,10 +3749,12 @@ the environment as needed for ac-sources, right before they're used.")
               )
              ((and web-mode-engine-attr-regexp
                    (string-match-p web-mode-engine-attr-regexp attr))
-              ;;            (message "%S" web-mode-engine-attr-regexp)
+              ;;(message "%S: %S" pos web-mode-engine-attr-regexp)
               (setq attr-flags (logior attr-flags 2))
-              (setq attr-flags (1- attr-flags))
+              ;;(setq attr-flags (1- attr-flags))
               )
+             ((and (eq char ?\-) (not (string= attr "http-")))
+              (setq attr-flags (logior attr-flags 1)))
              ) ;cond
             ) ;let
           ) ;when attr-flags = 1
@@ -4408,6 +4479,7 @@ the environment as needed for ac-sources, right before they're used.")
              (web-mode-highlight-elements beg end))
            (when web-mode-enable-whitespace-fontification
              (web-mode-highlight-whitespaces beg end))
+;;           (message "%S %S" font-lock-keywords font-lock-keywords-alist)
            ))))))
 
 (defun web-mode-highlight-tags (reg-beg reg-end)
@@ -10160,9 +10232,12 @@ Pos should be in a tag."
 (defun web-mode-on-engine-setted ()
   "engine setted"
   (let (elt elts engines)
+
     (when (string= web-mode-engine "razor") (setq web-mode-enable-block-face t))
     (setq web-mode-engine-attr-regexp (cdr (assoc web-mode-engine web-mode-engine-attr-regexps)))
     (setq web-mode-engine-token-regexp (cdr (assoc web-mode-engine web-mode-engine-token-regexps)))
+
+    ;;(message "%S %S" web-mode-engine-attr-regexp web-mode-engine)
 
     (setq elt (assoc web-mode-engine web-mode-engine-open-delimiter-regexps))
     (if elt

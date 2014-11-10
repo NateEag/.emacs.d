@@ -2,8 +2,8 @@
 
 ;; Copyright (C) 2010 Chris Wanstrath
 
-;; Version: 20141105.329
-;; X-Original-Version: 0.5.5
+;; Version: 20141106.1931
+;; X-Original-Version: 0.5.6
 ;; Keywords: CoffeeScript major mode
 ;; Author: Chris Wanstrath <chris@ozmm.org>
 ;; URL: http://github.com/defunkt/coffee-mode
@@ -138,7 +138,7 @@
 ;; Customizable Variables
 ;;
 
-(defconst coffee-mode-version "0.5.5"
+(defconst coffee-mode-version "0.5.6"
   "The version of `coffee-mode'.")
 
 (defgroup coffee nil

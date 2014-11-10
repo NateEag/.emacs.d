@@ -136,7 +136,7 @@
 
     ;; Use ',' as my leader key.
     (global-evil-leader-mode)
-    (evil-leader/set-leader ",")
+    (evil-leader/set-leader "<SPC>")
 
     ;; Turn on surround everywhere.
     (global-evil-surround-mode)

@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2014 François-Xavier Bois
 
-;; Version: 20141109.1319
-;; X-Original-Version: 10.0.19
+;; Version: 20141112.2327
+;; X-Original-Version: 10.1.03
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -22,7 +22,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "10.0.19"
+(defconst web-mode-version "10.1.03"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -61,17 +61,20 @@
   :type 'integer
   :group 'web-mode)
 
-(defcustom web-mode-markup-indent-offset 2
+(defcustom web-mode-markup-indent-offset
+  (if (and (boundp 'standard-indent) standard-indent) standard-indent 2)
   "Html indentation level."
   :type 'integer
   :group 'web-mode)
 
-(defcustom web-mode-css-indent-offset 2
+(defcustom web-mode-css-indent-offset
+  (if (and (boundp 'standard-indent) standard-indent) standard-indent 2)
   "CSS indentation level."
   :type 'integer
   :group 'web-mode)
 
-(defcustom web-mode-code-indent-offset 2
+(defcustom web-mode-code-indent-offset
+  (if (and (boundp 'standard-indent) standard-indent) standard-indent 2)
   "Code (javascript, php, etc.) indentation level."
   :type 'integer
   :group 'web-mode)
@@ -174,7 +177,7 @@ See web-mode-part-face."
   :group 'web-mode)
 
 (defcustom web-mode-enable-engine-detection nil
-  "Detect directive like -*- engine: ENGINE -*- at the top of the file."
+  "Detect such directive -*- engine: ENGINE -*- at the top of the file."
   :type 'boolean
   :group 'web-mode)
 
@@ -621,6 +624,10 @@ Must be used in conjunction with web-mode-enable-block-face."
   '(("<\\(h[1-9]\\)\\([^>]*\\)>\\([^<]*\\)" 1 3 ">")
     ("^[ \t]*<\\([@a-z]+\\)[^>]*>? *$" 1 "id=\"\\([a-zA-Z0-9_]+\\)\"" "#" ">"))
   "Regexps to match imenu items (see http://web-mode.org/doc/imenu.txt)")
+
+(defvar web-mode-indentation-params
+  '(("lineup-args" . t)
+    ))
 
 (defvar web-mode-engines
   '(("angular"     . ("angularjs" "angular.js"))
@@ -3249,7 +3256,8 @@ the environment as needed for ac-sources, right before they're used.")
           (setq controls (append controls (list (cons 'inside "if")))))
          ((web-mode-block-starts-with "end\\(if\\|for\\)" reg-beg)
           (setq controls (append controls (list (cons 'close (match-string-no-properties 1))))))
-         ((web-mode-block-starts-with "if\\|for" reg-beg)
+         ((and (web-mode-block-starts-with "if\\|for" reg-beg)
+               (web-mode-block-ends-with ":" reg-beg))
           (setq controls (append controls (list (cons 'open (match-string-no-properties 0))))))
          )
         ) ;mako
@@ -4427,7 +4435,7 @@ the environment as needed for ac-sources, right before they're used.")
         (region nil))
     (if (and web-mode-change-beg web-mode-change-end)
         (setq region (web-mode-propertize))
-      (message "font-lock-highlight ** untouched buffer (%S) **" this-command)
+      ;;(message "font-lock-highlight ** untouched buffer (%S) **" this-command)
       (setq region (web-mode-propertize (point) limit)))
     ;;(message "region=%S" region)
     (when (and region (car region))
@@ -5949,13 +5957,16 @@ the environment as needed for ac-sources, right before they're used.")
         )
 
       (when (string= web-mode-content-type "html")
+
         (cond
          ((member language '("javascript" "jsx"))
           (setq block-column (+ block-column web-mode-script-padding)))
          ((string= language "css")
           (setq block-column (+ block-column web-mode-style-padding)))
          ((not (member language '("html" "razor")))
-          (setq block-column (+ block-column web-mode-block-padding)))
+          (setq block-column (+ block-column web-mode-block-padding))
+          ;;(message "bc=%S" block-column)
+          )
          )
         )
 
@@ -6155,13 +6166,21 @@ the environment as needed for ac-sources, right before they're used.")
             )
 
            ((member first-char '(?\} ?\) ?\]))
-
             (let ((ori (web-mode-opening-paren-position pos)))
               (cond
                ((null ori)
                 (message "indent-line ** invalid closing bracket (%S) **" pos)
                 (setq offset block-column))
+               ((and (looking-back ")[ ]*")
+                     (re-search-backward ")[ ]*" nil t)
+                     (web-mode-block-opening-paren block-beg))
+                (back-to-indentation)
+                (setq offset (current-indentation))
+                (when (> block-column offset)
+                  (setq offset block-column))
+                )
                (t
+                ;;(message "pos=%S" (point))
                 (goto-char ori)
                 (back-to-indentation)
                 (setq offset (current-indentation))
@@ -6200,6 +6219,21 @@ the environment as needed for ac-sources, right before they're used.")
            ((and (string= language "php") (string-match-p "^->" line))
             (when (web-mode-translate-backward pos "->" language block-beg)
               (setq offset (current-column)))
+            )
+
+           ((and (string= language "php")
+                 (string-match-p ",$" prev-line)
+                 (null (cdr (assoc "lineup-args" web-mode-indentation-params)))
+                 )
+            (cond
+             ((web-mode-translate-backward pos "[(\[]" language block-beg)
+              ;;(message "ixi")
+              (setq offset (+ (current-indentation)
+                              web-mode-code-indent-offset)))
+             ((web-mode-translate-backward pos "var " language block-beg)
+              ;;(message "ixi2")
+              (setq offset (+ (current-indentation) 4)))
+             )
             )
 
            ((and (string= language "php") (string-match-p "\\.$" prev-line))
@@ -6335,6 +6369,7 @@ the environment as needed for ac-sources, right before they're used.")
 
            (t
             ;;TODO : prendre l'origine du bracket indent
+            ;;(message "coucou")
             (setq offset (web-mode-bracket-indentation pos
                                                        block-column
                                                        indent-offset
@@ -6646,6 +6681,7 @@ the environment as needed for ac-sources, right before they're used.")
 (defun web-mode-python-indentation (pos line initial-column language-offset limit)
   "Calc indent column."
   (interactive)
+  ;;(message "ic=%S" initial-column)
   (unless limit (setq limit nil))
   (let (h out prev-line prev-indentation ctx)
     (setq h (web-mode-previous-line pos limit))
@@ -6665,7 +6701,9 @@ the environment as needed for ac-sources, right before they're used.")
         )
        ) ;cond
       ) ;when
-    out))
+    ;;out
+    (if (< out initial-column) initial-column out)
+    ))
 
 (defun web-mode-asp-indentation (pos line initial-column language-offset limit)
   "Calc indent column."
@@ -6745,7 +6783,7 @@ the environment as needed for ac-sources, right before they're used.")
     (goto-char pos)
     (let ((continue t) searcher depth (i 0))
       (setq depth (web-mode-bracket-depth (point) language limit))
-;;      (message "depth=%S" depth)
+      ;;(message "depth=%S" depth)
       (if (> (length regexp) 3)
           (setq searcher 'web-mode-rsb)
         (setq searcher 'web-mode-sb))
@@ -6761,6 +6799,11 @@ the environment as needed for ac-sources, right before they're used.")
                 pos nil)
           )
          ((= depth (web-mode-bracket-depth (point) language limit))
+          (setq continue nil
+                pos (point))
+          )
+         ((and (member (match-string-no-properties 0) '("(" "[" "{"))
+               (= depth (1+ (web-mode-bracket-depth (point) language limit))))
           (setq continue nil
                 pos (point))
           )
@@ -6894,7 +6937,7 @@ the environment as needed for ac-sources, right before they're used.")
         ) ;while
       (goto-char pos)
       (setq block-info (web-mode-count-opened-brackets pos language limit))
-;;      (message "%S" block-info)
+      ;;(message "%S" block-info)
       (setq col initial-column)
       (cond
        ((plist-get block-info :inline-arg) ;;lsp
@@ -7040,10 +7083,12 @@ the environment as needed for ac-sources, right before they're used.")
 ;;              (message "num-opened=%S %S" num-opened (point))
               )
              )
-
-            (when (and (= num-opened 1) (null inline-checked))
+            ;;(message "%S" (cdr (assoc "align-args" web-mode-indentation-params)))
+            (when (and ;;nil (cdr (assoc "align-args" web-mode-indentation-params))
+                       (= num-opened 1)
+                       (null inline-checked))
               (setq inline-checked t)
-;;              (message "la%S" (point))
+              ;;              (message "la%S" (point))
               (when (not (web-mode-is-void-after)) ;(not (looking-at-p ".[ ]*$"))
                 (setq inline-pos t
                       col-num (1+ (current-column)))
@@ -8489,12 +8534,27 @@ Pos should be in a tag."
       )
      ((and web-mode-enable-auto-quoting
            (member this-command '(self-insert-command))
-           (get-text-property (1- (point)) 'tag-attr)
-           (not (get-text-property (point) 'part-element))
-           (eq (char-before) ?\=)
-           (not (looking-at-p "[ ]*[\"']")))
-      (insert "\"\"")
-      (backward-char))
+           (get-text-property (- (point) 2) 'tag-attr)
+           (not (get-text-property (point) 'part-element)))
+      (cond
+       ((and (eq (char-before) ?\=)
+             (not (looking-at-p "[ ]*[\"']")))
+        ;;(message "ici1")
+        (insert "\"\"")
+        (backward-char))
+       ((and (eq (char-before) ?\")
+             (not (looking-at-p "[ ]*[\"]")))
+        ;;(message "ici2")
+        (insert "\"")
+        (backward-char))
+       ((and (eq (char-before) ?\")
+             (eq (char-after) ?\")
+             (looking-at-p "[\"]"))
+        ;;(message "ici3")
+        (delete-char 1)
+        (backward-char))
+       )
+      )
      ((and (member this-command '(self-insert-command))
            (not (get-text-property (point) 'part-side)))
       (setq ctx (web-mode-complete))

@@ -619,7 +619,7 @@
 
    (match-part
     :initarg :match-part
-    :initform 'identity
+    :initform nil
     :custom function
     :documentation
     "  Allow matching candidate in the line with `candidates-in-buffer'.
@@ -857,6 +857,7 @@ an eieio class."
 
 (defmethod helm--setup-source ((source helm-source-sync))
   (when (slot-value source :fuzzy-match)
+    ;; FIXME should I allow appending other match fns to this ?
     (oset source :match 'helm-fuzzy-match))
   (when (slot-value source :matchplugin)
     (oset source :match
@@ -877,6 +878,7 @@ an eieio class."
                             'global
                           (if (functionp it) (funcall it) it))))))))
   (when (slot-value source :fuzzy-match)
+    ;; FIXME should I allow appending other search fns to this ?
     (oset source :search '(helm-fuzzy-search)))
   (when (slot-value source :matchplugin)
     (oset source :search (helm-source-mp-get-search-or-match-fns source 'search)))

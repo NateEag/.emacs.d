@@ -379,13 +379,6 @@
 (when evil-want-C-w-in-emacs-state
   (define-key evil-emacs-state-map "\C-w" 'evil-window-map))
 
-;;; Minibuffer
-
-(define-key minibuffer-local-map "\C-p" 'evil-complete-next)
-(define-key minibuffer-local-map "\C-n" 'evil-complete-previous)
-(define-key minibuffer-local-map "\C-x\C-p" 'evil-complete-next-line)
-(define-key minibuffer-local-map "\C-x\C-n" 'evil-complete-previous-line)
-
 ;;; Mouse
 (define-key evil-motion-state-map [down-mouse-1] 'evil-mouse-drag-region)
 (define-key evil-visual-state-map [mouse-2] 'evil-exit-visual-and-repeat)
@@ -471,6 +464,7 @@
 (define-key evil-ex-completion-map "\d" #'evil-ex-delete-backward-char)
 (define-key evil-ex-completion-map "\t" #'evil-ex-completion)
 (define-key evil-ex-completion-map [tab] #'evil-ex-completion)
+(define-key evil-ex-completion-map [remap completion-at-point] #'evil-ex-completion)
 (define-key evil-ex-completion-map "\C-a" 'evil-ex-completion)
 (define-key evil-ex-completion-map "\C-b" 'move-beginning-of-line)
 (define-key evil-ex-completion-map "\C-c" 'abort-recursive-edit)

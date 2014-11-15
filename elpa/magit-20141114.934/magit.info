@@ -336,7 +336,7 @@ which will have your previous log messages.  This is particularly useful
 if you have a hook that occasionally causes git to refuse your commit.
 
    To abort a commit use ‘C-c C-k’.  The commit message is saved and can
-later be retrieved in the commit message buffer using ‘M-p’ and ‘M-a’.
+later be retrieved in the commit message buffer using ‘M-n’ and ‘M-p’.
 
    Typing ‘C’ will also pop up the change description buffer, but in
 addition, it will try to insert a ChangeLog-style entry for the change
@@ -630,7 +630,7 @@ File: magit.info,  Node: Branches in the Branch Manager,  Next: Remotes in the B
 ===================================
 
 In the branch manager, each branch is displayed on a separate line.  The
-current local branch is marked by a “#” in front of the name.  Remote
+current local branch is marked by a “*” in front of the name.  Remote
 branches are grouped by the remote they come from.
 
    If a local branch tracks a remote branch some extra information is

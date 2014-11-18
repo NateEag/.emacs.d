@@ -2243,14 +2243,17 @@ Perform substitution in the arguments of CHECKER, but with
 
 Return the command of CHECKER as single string, suitable for
 shell execution."
-  (combine-and-quote-strings
+  ;; Note: Do NOT use `combine-and-quote-strings' here.  Despite it's name it
+  ;; does not properly quote shell arguments, and actually breaks for special
+  ;; characters.  See https://github.com/flycheck/flycheck/pull/522
+  (mapconcat #'shell-quote-argument
    (cons (flycheck-checker-executable checker)
          (apply #'append
                 (mapcar (lambda (arg)
                           (if (memq arg '(source source-inplace source-original))
                               (list (or (buffer-file-name) ""))
                             (flycheck-substitute-argument arg checker)))
-                        (flycheck-checker-arguments checker))))))
+                        (flycheck-checker-arguments checker)))) " "))
 
 (defun flycheck-check-modes (checker)
   "Check the allowed modes of CHECKER.
@@ -4911,23 +4914,23 @@ See URL `http://elixir-lang.org/'."
 (flycheck-def-option-var flycheck-emacs-lisp-load-path nil emacs-lisp
   "Load path to use in the Emacs Lisp syntax checker.
 
+When set to `inherit', use the `load-path' of the current Emacs
+session during syntax checking.
+
 When set to a list of strings, add each directory in this list to
 the `load-path' before invoking the byte compiler.  Relative
 paths in this list are expanded against the `default-directory'
-of the buffer to check.  When nil, only use the built-in
-`load-path' of Emacs.
+of the buffer to check.
 
-The directory of the file being checked is always part of the
-`load-path' while checking, regardless of the value of this
-variable.
-
-Set this variable to `load-path' to use the `load-path' of your
-Emacs session for syntax checking.
+When nil, do not explicitly set the `load-path' during syntax
+checking.  The syntax check only uses the built-in `load-path' of
+Emacs in this case.
 
 Note that changing this variable can lead to wrong results of the
 syntax check, e.g. if an unexpected version of a required library
 is used."
-  :type '(repeat directory)
+  :type '(choice (const :tag "Inherit current `load-path'" inherit)
+                 (repeat :tag "Load path" directory))
   :risky t
   :package-version '(flycheck . "0.14"))
 
@@ -4990,10 +4993,11 @@ This variable has no effect, if
 
 See Info Node `(elisp)Byte Compilation'."
   :command ("emacs" (eval flycheck-emacs-args)
-            (option-list "--directory" flycheck-emacs-lisp-load-path nil
-                         ;; Expand relative paths against the directory of the
-                         ;; buffer to check
-                         expand-file-name)
+            (eval
+             (let ((path (pcase flycheck-emacs-lisp-load-path
+                           (`inherit load-path)
+                           (p (mapcar #'expand-file-name p)))))
+               (flycheck-prepend-with-option "--directory" path)))
             (option "--eval" flycheck-emacs-lisp-package-user-dir nil
                     flycheck-option-emacs-lisp-package-user-dir)
             (option "--eval" flycheck-emacs-lisp-initialize-packages nil
@@ -6126,7 +6130,7 @@ See URL `http://www.rust-lang.org'."
             (one-or-more digit) ":" (one-or-more digit) " warning: "
             (message) line-end)
    (info line-start (file-name) ":" line ":" column ": "
-         (one-or-more digit) ":" (one-or-more digit) " note: "
+         (one-or-more digit) ":" (one-or-more digit) " " (or "note" "help") ": "
          (message) line-end))
   :modes rust-mode
   :predicate (lambda ()

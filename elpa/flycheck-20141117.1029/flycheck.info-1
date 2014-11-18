@@ -61,6 +61,7 @@ Copyright © 2014, Sebastian Wiesner
 * Flycheck releases:: 
 * Extending Flycheck:: 
 * Flycheck API:: 
+* Flycheck ERT API:: 
 * Contribution guidelines:: 
 * Testing Flycheck:: 
 * Writing documentation:: 
@@ -374,6 +375,20 @@ Flycheck API
 * Builtin option filters:: 
 * Builtin syntax checker predicates:: 
 * Utilities:: 
+
+Flycheck ERT API
+
+* Loading:: 
+* Compatibility:: 
+* Initialization:: 
+* Utility macros for buffer handling:: 
+* Utility macros for resource blocks:: 
+* Test resources:: 
+* Environment information:: 
+* Test case definitions:: 
+* Test case results:: 
+* Syntax checking in test cases:: 
+* Test assertions:: 
 
 Contribution guidelines
 
@@ -3327,18 +3342,17 @@ Emacs(1), Emacs Lisp reference(2)
 
           Load path to use in the Emacs Lisp syntax checker.
 
+          When set to ‘`inherit'’, use the ‘`load-path'’ of the current Emacs
+          session during syntax checking.
+
           When set to a list of strings, add each directory in this list to
           the ‘`load-path'’ before invoking the byte compiler.  Relative
           paths in this list are expanded against the ‘`default-directory'’
-          of the buffer to check.  When nil, only use the built-in
-          ‘`load-path'’ of Emacs.
+          of the buffer to check.
 
-          The directory of the file being checked is always part of the
-          ‘`load-path'’ while checking, regardless of the value of this
-          variable.
-
-          Set this variable to ‘`load-path'’ to use the ‘`load-path'’ of your
-          Emacs session for syntax checking.
+          When nil, do not explicitly set the ‘`load-path'’ during syntax
+          checking.  The syntax check only uses the built-in ‘`load-path'’ of
+          Emacs in this case.
 
           Note that changing this variable can lead to wrong results of the
           syntax check, e.g. if an unexpected version of a required library
@@ -5244,8 +5258,8 @@ any of the navigation commands.
 The new function *note
 flycheck-display-error-messages-unless-error-list: 7f. shows messages of
 the errors at point in the echo area, but only if the error list is
-_not_ visible.  Use this function for ‘flycheck-error-display-function’
-to make use of this feature.
+_not_ visible.  Use this function for *note
+flycheck-display-errors-function: 28. to make use of this feature.
 
 
 File: flycheck.info,  Node: Syntax checker definition and extension,  Next: Obtaining the new release,  Prev: Error navigation and display,  Up: Flycheck 0 21
@@ -6404,20 +6418,45 @@ File: flycheck.info,  Node: master in development,  Next: 0 21 Oct 26 2014,  Up:
         - Never allow use of disabled checkers anymore, even with
           ‘flycheck-select-checker’
 
+   - New features:
+
+        - ‘flycheck-ert.el’ library to write unit tests for Flycheck
+          extensions
+
    - Improvements:
 
         - Automatically disable syntax checkers that report too many
           errors [GH-476](1)
 
+        - Reduce filesystem access when parsing errors to improve
+          parsing speed
+
+        - Add explicit ‘load-path’ inheritance to
+          ‘flycheck-emacs-lisp-load-path’, via new ‘inherit’ value
+          [GH-511](2)
+
+        - Parse help messages from ‘rustc’ [GH-517](3)
+
    - Bug fixes:
 
-        - Properly parse notes in ‘sh-shellcheck’ [GH-508](2)
+        - Properly parse notes in ‘sh-shellcheck’ [GH-508](4)
+
+        - Fix shell quoting in ‘flycheck-compile’ [GH-522](5)
+          [GH-523](6)
 
    ---------- Footnotes ----------
 
    (1) https://github.com/flycheck/flycheck/issues/476
 
-   (2) https://github.com/flycheck/flycheck/issues/508
+   (2) https://github.com/flycheck/flycheck/issues/511
+
+   (3) https://github.com/flycheck/flycheck/issues/517
+
+   (4) https://github.com/flycheck/flycheck/issues/508
+
+   (5) https://github.com/flycheck/flycheck/issues/522
+
+   (6) https://github.com/flycheck/flycheck/issues/523
 
 
 File: flycheck.info,  Node: 0 21 Oct 26 2014,  Next: 0 20 Aug 12 2014,  Prev: master in development,  Up: Changelog
@@ -8687,7 +8726,7 @@ CodeSniffer is a *note registered syntax checker: 61, and if ‘php’ only
 emitted errors with ‘warning’ level or less, that is, no errors.
 
 
-File: flycheck.info,  Node: Flycheck API,  Next: Contribution guidelines,  Prev: Extending Flycheck,  Up: Top
+File: flycheck.info,  Node: Flycheck API,  Next: Flycheck ERT API,  Prev: Extending Flycheck,  Up: Top
 
 10 Flycheck API
 ***************
@@ -9245,55 +9284,4 @@ File: flycheck.info,  Node: Builtin option filters,  Next: Builtin syntax checke
 
      Otherwise, apply FILTER to VALUE and return the result.
      SEPARATOR is ignored in this case.
-
-
-File: flycheck.info,  Node: Builtin syntax checker predicates,  Next: Utilities,  Prev: Builtin option filters,  Up: Flycheck API
-
-10.9 Builtin syntax checker predicates
-======================================
-
- -- Function: flycheck -buffer-saved-p &optional buffer
-
-     Determine whether BUFFER is saved to a file.
-
-     BUFFER is the buffer to check.  If omitted or nil, use the
-     current buffer as BUFFER.
-
-     Return non-nil if the BUFFER is backed by a file, and not
-     modified, or nil otherwise.
-
-
-File: flycheck.info,  Node: Utilities,  Prev: Builtin syntax checker predicates,  Up: Flycheck API
-
-10.10 Utilities
-===============
-
- -- Function: flycheck -rx-to-string form &optional no-group
-
-     Like ‘`rx-to-string'’ for FORM, but with special keywords:
-
-     ‘`line'’
-          matches the line number.
-
-     ‘`column'’
-          matches the column number.
-
-     ‘(file-name SEXP ...)’
-          matches the file name.  SEXP constitutes the body of the message.  If no
-          SEXP is given, use a default body  of ‘(minimal-match
-          (one-or-more not-newline))’.
-
-     ‘(message SEXP ...)’
-          matches the message. SEXP constitutes the body of the message.  If no SEXP
-          is given, use a default body of ‘(one-or-more not-newline)’.
-
-     NO-GROUP is passed to ‘`rx-to-string'’.
-
- -- Function: flycheck -string-list-p obj
-
-     Determine if OBJ is a list of strings.
-
- -- Function: flycheck -symbol-list-p obj
-
-     Determine if OBJ is a list of symbols.
 

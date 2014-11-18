@@ -2686,7 +2686,7 @@ and `helm-pattern'."
              (if (string-match "[[:upper:]]" pattern) nil t)))
     (t helm-case-fold-search)))
 
-(defun helm-match-from-candidates (cands matchfns limit source)
+(defun helm-match-from-candidates (cands matchfns match-part-fn limit source)
   (let (matches)
     (condition-case err
         (let ((item-count 0)
@@ -2696,11 +2696,13 @@ and `helm-pattern'."
             (let (newmatches)
               (cl-dolist (candidate cands)
                 (unless (gethash candidate helm-match-hash)
-                  (when (funcall match
-                                 (helm-candidate-get-display candidate))
-                    (helm--accumulate-candidates
-                     candidate newmatches
-                     helm-match-hash item-count limit source))))
+                  (let ((target (helm-candidate-get-display candidate)))
+                    (when (funcall match
+                                   (if match-part-fn
+                                       (funcall match-part-fn target) target)) 
+                      (helm--accumulate-candidates
+                       candidate newmatches
+                       helm-match-hash item-count limit source)))))
               ;; filter-one-by-one may return nil candidates, so delq them if some.
               (setq matches (nconc matches (nreverse (delq nil newmatches)))))))
       (error (unless (eq (car err) 'invalid-regexp) ; Always ignore regexps errors.
@@ -2713,6 +2715,7 @@ and `helm-pattern'."
   "Start computing candidates in SOURCE."
   (save-current-buffer
     (let ((matchfns (helm-match-functions source))
+          (matchpartfn (assoc-default 'match-part source))
           (helm-source-name (assoc-default 'name source))
           (helm-current-source source)
           (limit (helm-candidate-number-limit source))
@@ -2729,7 +2732,7 @@ and `helm-pattern'."
             (helm-get-cached-candidates source) limit)
          ;; Compute candidates according to pattern with their match fns.
          (helm-match-from-candidates
-          (helm-get-cached-candidates source) matchfns limit source))
+          (helm-get-cached-candidates source) matchfns matchpartfn limit source))
        source))))
 
 (defun helm-render-source (source matches)
@@ -2740,7 +2743,7 @@ and `helm-pattern'."
     (if (not (assq 'multiline source))
         (cl-loop for m in matches
                  for count from 1
-                 do (helm-insert-match m 'insert source count)) 
+                 do (helm-insert-match m 'insert source count))
       (let ((start (point))
             (count 0)
             separate)
@@ -3576,8 +3579,6 @@ don't exit and send message 'no match'."
       (let* ((empty-buffer-p (with-current-buffer helm-buffer
                                (eq (point-min) (point-max))))
              (sel (helm-get-selection))
-             (hash-val (and (hash-table-p minibuffer-completion-table)
-                            (gethash sel minibuffer-completion-table)))
              (unknown (and (not empty-buffer-p)
                            (string= (get-text-property
                                      0 'display
@@ -3590,14 +3591,11 @@ don't exit and send message 'no match'."
                (setq minibuffer-completion-confirm nil)
                (minibuffer-message " [confirm]"))
               ((and (or empty-buffer-p
-                        (unless
-                            (and minibuffer-completion-predicate
-                                 (or (and hash-val
-                                          (apply
-                                           minibuffer-completion-predicate
-                                           (list sel hash-val)))
-                                     (funcall minibuffer-completion-predicate
-                                              sel)))
+                        (unless (if minibuffer-completing-file-name
+                                    (and minibuffer-completion-predicate
+                                         (funcall minibuffer-completion-predicate sel))
+                                    (try-completion sel minibuffer-completion-table
+                                                    minibuffer-completion-predicate))
                           unknown))
                     (eq minibuffer-completion-confirm t))
                (minibuffer-message " [No match]"))

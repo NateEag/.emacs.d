@@ -301,9 +301,6 @@
 (add-hook 'sql-mode-hook 'load-sql-mode-accessories)
 (add-auto-mode 'sql-mode "\\.sql$")
 
-;; Shell script mode.
-(add-auto-mode 'sh-mode "\\.bats$")
-
 ;; Text-editing modes of various stripes.
 (defun text-mode-init ()
   "Configuration that is shared across my various text modes."

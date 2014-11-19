@@ -47,9 +47,7 @@
 
 (use-package abbrev
   :defer t
-  :config
-  (progn
-    (diminish 'abbrev-mode)))
+  :diminish abbrev-mode)
 
 (use-package eclimd
   :defer t

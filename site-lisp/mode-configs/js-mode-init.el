@@ -20,8 +20,21 @@
     '(progn
        (require 'tern-auto-complete)
        (tern-ac-setup)
+
        ;; Override Tern's completion-at-point keybinding with auto-complete.
        ;; I really wish I could just press Tab for this, but the current
        ;; tern-auto-complete package does not have a general-case ac-source.
        (define-key tern-mode-keymap (kbd "M-TAB") 'tern-ac-complete)
+
+       ;; Replace Tern's implementation of tern-ac-dot-complete with one that
+       ;; doesn't auto-complete in comments. I have a PR outstanding; we'll see
+       ;; if it gets merged.
+
+       (defun tern-ac-dot-complete ()
+         "Insert dot and complete code at point by tern."
+         (interactive)
+         (insert ".")
+         (unless (nth 4 (syntax-ppss))
+           (tern-ac-complete)))
+
        (diminish 'tern-mode))))

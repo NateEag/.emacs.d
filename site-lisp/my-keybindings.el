@@ -40,9 +40,6 @@
 ;; Reverting a buffer is much like refreshing.
 (global-set-key [f5] '(lambda () (interactive) (revert-buffer t t)))
 
-;; Switch buffers/find likely files via Helm.
-(global-set-key (kbd "C-c b") 'my-helm-for-files)
-
 ;; Change flycheck's prefix-key to "C-c e". Code is taken from a docstring in
 ;; flycheck.
 (eval-after-load 'flycheck
@@ -52,38 +49,56 @@
       (define-key flycheck-mode-map flycheck-keymap-prefix
         flycheck-command-map)))
 
-;; Change names from snake_case to ALL_CAPS to StudlyCaps to camelCase.
-;; TODO Make this just toggle between snake_case and camelCase. They're what I
-;; usually use.
-(global-set-key (kbd "C-c c") 'string-inflection-toggle)
+(defvar nateeag/command-mnemonics
+  '(
+    ;; Change names from snake_case to ALL_CAPS to StudlyCaps to camelCase.
+    ("u" . string-inflection-toggle)
 
-;; Look up URLs quickly.
-(global-set-key (kbd "C-c u") 'browse-url)
+    ;; Switch buffers/find likely files via Helm.
+    ("b" . my-helm-for-files)
 
-;; g is for git, which is oh so much fun.
-(global-set-key (kbd "C-c g") 'magit-status)
+    ;; TODO Make this just toggle between snake_case and camelCase. They're
+    ;; what I usually use.
+    ("c" . string-inflection-toggle)
 
-;; Dates and times are handy to be able to insert.
-(global-set-key (kbd "C-c d") 'insert-date)
-(global-set-key (kbd "C-c t") 'insert-time)
+    ;; Look up URLs quickly.
+    ("u" . browse-url)
 
-;; Search through buffers with helm-swoop.
-(global-set-key (kbd "C-c s") 'helm-swoop)
+    ;; g is for git, which is oh so much fun.
+    ("g" . magit-status)
 
-;; Expand-region lets you select delimited regions quickly.
-(global-set-key (kbd "C-c r") 'er/expand-region)
+    ;; Dates and times are handy to be able to insert.
+    ("d" . insert-date)
+    ("t" . insert-time)
 
-;; Try out multi-term as my terminal emulator.
-(global-set-key (kbd "C-c m") 'multi-term-dedicated-toggle)
-;; DEBUG These don't do what I'd like. They open new windows, and I'd like them
-;; to just move to the next term-buffer in my selected window.
-(global-set-key (kbd "s-[") 'multi-term-prev)
-(global-set-key (kbd "s-]") 'multi-term-next)
+    ;; Search through buffers with helm-swoop.
+    ("s" . helm-swoop)
 
-;; toggle-quote lets you toggle a string between single- and double-quoted.
-;; This will probably be deprecated in favor of evil-surround, once I'm more
-;; fluent in evil-mode.
-(global-set-key (kbd "C-c '") 'toggle-quotes)
+    ;; Expand-region lets you select delimited regions quickly.
+    ("r" . er/expand-region)
+
+    ;; Try out multi-term as my terminal emulator.
+    ("m" . multi-term-dedicated-toggle)
+
+    ;; DEBUG These don't do what I'd like. They open new windows, and I'd like
+    ;; them to just move to the next term-buffer in my selected window.
+    ("[" . multi-term-prev)
+    ("]" . multi-term-next)
+
+    ;; toggle-quote lets you toggle a string between single- and double-quoted.
+    ;; This will probably be deprecated in favor of evil-surround, once I'm more
+    ;; fluent in evil-mode.
+    ("'" . toggle-quotes)
+    )
+  "An alist mapping mnemonics to commands.
+
+Used to define keyboard shortcuts.")
+
+(dolist (elt nateeag/command-mnemonics)
+        (let ((mnemonic (car elt))
+              (command (cdr elt)))
+          (global-set-key (kbd (concat "s-" mnemonic)) command)
+          (global-set-key (kbd (concat "C-c " mnemonic)) command)))
 
 (provide 'my-keybindings)
 ;;; my-keybindings.el ends here

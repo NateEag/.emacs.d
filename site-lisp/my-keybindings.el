@@ -61,6 +61,8 @@
     ;; what I usually use.
     ("c" . string-inflection-toggle)
 
+    ("f" . find-file)
+
     ;; Look up URLs quickly.
     ("u" . browse-url)
 
@@ -80,6 +82,12 @@
     ;; Try out multi-term as my terminal emulator.
     ("m" . multi-term-dedicated-toggle)
 
+    ;; because I've gotten used to a shortcut inspired by vim saving.
+    ("w" . save-buffer)
+
+    ;; M-x is too much work, and F8 is a bit of a reach.
+    ("x" . execute-extended-command)
+
     ;; DEBUG These don't do what I'd like. They open new windows, and I'd like
     ;; them to just move to the next term-buffer in my selected window.
     ("[" . multi-term-prev)
@@ -97,8 +105,13 @@ Used to define keyboard shortcuts.")
 (dolist (elt nateeag/command-mnemonics)
         (let ((mnemonic (car elt))
               (command (cdr elt)))
+          ;; Use Super for my personal keybindings. The Emacs manual says that
+          ;; C-c <key> is reserved for user keybindings, but in practice
+          ;; there's not a lot mapped to the Super key.
           (global-set-key (kbd (concat "s-" mnemonic)) command)
-          (global-set-key (kbd (concat "C-c " mnemonic)) command)))
+
+          ;; Tell evil-leader-mode to use the mnemonic for this command.
+          (evil-leader/set-key mnemonic command)))
 
 (provide 'my-keybindings)
 ;;; my-keybindings.el ends here

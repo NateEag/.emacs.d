@@ -139,25 +139,7 @@
     ;; Turn on surround everywhere.
     (global-evil-surround-mode)
 
-    ;; Set up my leader shortcuts.
-    ;;
-    ;; I'm not really sure what I'll want here long-term. I'm starting with a few
-    ;; of my regular shortcuts.
-    (evil-leader/set-key
-      "g" 'magit-status
-      "b" 'my-helm-for-files
-      "c" 'execute-extended-command
-      "s" 'helm-swoop
-      "r" 'er/expand-region
-      "f" 'find-file
-      "w" 'save-buffer
-      "x" 'execute-extended-command
-      "m" 'multi-term-dedicated-toggle)
-
-    ;; Some modes it's better to start in insert-state for.
-    (require 'cl)
-    (loop for (mode . state) in '((git-commit-mode . insert))
-          do (evil-set-initial-state mode state))
+    ;; See my-keybindings.el for my actual leader keybindings.
 
     ;; Set up evil-nerd-commenter.
     ;;

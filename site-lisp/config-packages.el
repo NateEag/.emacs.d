@@ -152,10 +152,15 @@
     (global-evil-leader-mode)
     (evil-leader/set-leader "<SPC>")
 
+    ;; See my-keybindings.el for my actual leader keybindings.
+
     ;; Turn on surround everywhere.
     (global-evil-surround-mode)
 
-    ;; See my-keybindings.el for my actual leader keybindings.
+    ;; Some modes it's better to start in insert-state for.
+    (require 'cl)
+    (loop for (mode . state) in '((git-commit-mode . insert))
+          do (evil-set-initial-state mode state))
 
     ;; Set up evil-nerd-commenter.
     ;;

@@ -38,6 +38,22 @@
                        helm-git-files:all-source
                        helm-source-recentf)))))
 
+;; Since emacs 24.4 made revert undoable, this option is perfectly safe and
+;; pretty convenient.
+(use-package autorevert
+  :diminish auto-revert-mode
+  :init
+  (global-auto-revert-mode))
+
+;; It seems to me that undo-tree-mode and backup-walker might be good candidates
+;; for merging somehow - they're like two sides of the same coin. I'll need a
+;; lot more hands-on experience with both to have any idea how that would look
+;; in practice.
+(use-package undo-tree
+  :diminish undo-tree-mode
+  :init
+  (global-undo-tree-mode))
+
 (use-package my-frame-setup
   :commands my-set-up-frame)
 

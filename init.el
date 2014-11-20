@@ -165,25 +165,6 @@
 (ad-enable-advice 'tabify 'after 'tabify-set-indent-tabs-mode)
 
 
-;; Minor mode setup and registration.
-
-;; Activate undo-tree-mode globally and diminish it.
-;;
-;; It seems to me that undo-tree-mode and backup-walker might be good candidates
-;; for merging somehow - they're like two sides of the same coin. I'll need a
-;; lot more hands-on experience with both to have any idea how that would look
-;; in practice.
-(global-undo-tree-mode)
-(diminish 'undo-tree-mode)
-
-;; Some experiments *seem* to indicate that this shouldn't ever bite me. I'm
-;; turning it on and hoping that's the case.
-;; I've mainly turned it on globally because I can't figure out a better way to
-;; diminish auto-revert-mode in git-managed buffers now that I have magit
-;; installed.
-(global-auto-revert-mode)
-(diminish 'auto-revert-mode)
-
 ;; TODO It'd be nice if this hook didn't run when I'm just opening a buffer to
 ;; compile the file, like when installing packages. Advising the appropriate
 ;; functions would probably do it, but I'm not sure which ones need the advice.

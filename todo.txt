@@ -11,8 +11,6 @@
  external process to get completions, or jedi. I think if I had this I could
  get JS completions in web-mode, which would be awesome.
 
--Teach Tern.js that auto-complete on dot shouldn't happen in comments.
-
 -Extract jedi-force to be an ELPA package. I was thinking of adding more
  features, but it might be fine as it is.
 
@@ -27,8 +25,6 @@
 -Integrate what's useful from spacemacs: https://github.com/syl20bnr/spacemacs
  evil-little-word, evil-operator-comment, some clever keybinding ideas
  (probably want them under <leader>, though).
-
--Try <spacebar> as leader key. That way either hand can trigger it.
 
 -Refactor my autoloading mode setup to rely on use-package, which looks to do
  things the way I like except much cleaner, and should let me autoload my
@@ -46,13 +42,6 @@
 -Figure out why mo-git-blame isn't using mo-git-blame-git-blame-args.
 
 -Use zebra striping to make mo-git-blame/target buffer more readable.
-
--Use an alist mapping strings to functions to generate personal keybindings,
- both with Super and with <leader>.
-
--Since Emacs doesn't really use Command key sequences, I should use it as the
- Super key and start using Super for personal keybindings. Should be faster
- than C-c <key>.
 
 -If I ever get minimap.el usable on OS X, when active it should appear between
  my two panes. That way it's always close to whichever buffer it applies to.
@@ -153,9 +142,6 @@
 -As a simple exercise to start learning macros, try implementing PHP's
  "defaulting" ternary operator behavior. The example I emailed myself was
  (setq (default (= 3 foo) 5)), where 'default' is the macro, presumably.
-
--kill-ring-search could come in handy occasionally.
- http://nschum.de/src/emacs/kill-ring-search/
 
 -If I ever start using multiple windows more seriously, window-numbering-mode
  might be handy. http://nschum.de/src/emacs/window-numbering-mode/

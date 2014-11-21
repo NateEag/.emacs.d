@@ -3,7 +3,7 @@
 
 ;; Copyright 2011-2014 François-Xavier Bois
 
-;; Version: 20141120.1104
+;; Version: 20141120.2326
 ;; X-Original-Version: 10.1.05
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
@@ -2965,7 +2965,7 @@ the environment as needed for ac-sources, right before they're used.")
   (unless regexp (setq regexp web-mode-engine-token-regexp))
 ;;  (message "tokenize: reg-beg(%S) reg-end(%S) regexp(%S)" reg-beg reg-end regexp)
   (save-excursion
-    (let ((pos reg-beg) beg char match continue (flags 0) token-type token-end)
+    (let ((pos reg-beg) beg end char match continue (flags 0) token-type token-end)
 
       (remove-list-of-text-properties reg-beg reg-end '(block-token))
 
@@ -3041,7 +3041,10 @@ the environment as needed for ac-sources, right before they're used.")
         (when (eq token-type 'comment)
           (put-text-property beg (1+ beg) 'syntax-table (string-to-syntax "<"))
           ;;(put-text-property (1- (point)) (point) 'syntax-table (string-to-syntax ">"))
-          (put-text-property (point) (1+ (point)) 'syntax-table (string-to-syntax ">"))
+          (if (>= (point) (point-max))
+              (setq end (1- (point)))
+            (setq end (point)))
+          (put-text-property end (1+ end) 'syntax-table (string-to-syntax ">"))
           )
 
         ) ;while
@@ -4014,6 +4017,9 @@ the environment as needed for ac-sources, right before they're used.")
           (put-text-property beg (point) 'part-token token-type)
           (when (eq token-type 'comment)
             (put-text-property beg (1+ beg) 'syntax-table (string-to-syntax "<"))
+            ;;(if (>= (point) (point-max))
+            ;;    (setq end (1- (point-max)))
+            ;;  (setq end (point)))
             (put-text-property (1- (point)) (point) 'syntax-table (string-to-syntax ">"))
             )
           )

@@ -146,6 +146,13 @@
 -If I ever start using multiple windows more seriously, window-numbering-mode
  might be handy. http://nschum.de/src/emacs/window-numbering-mode/
 
+-Research PHP parsing tools/infrastructure that might be adapted to an Emacs
+ plugin for code comprehension/refactoring/etc. If eclim works out, I might not
+ need anything else. A few possibilities follow:
+
+-See if HipHopVM has any support for PHP auto-completion. It looks like it has
+ some for Hack, anyway.
+
 -Get PHP tags working well. After months of finding nothing that really worked,
  I got an email from a random netizen pointing me to pfff, a tool Facebook
  wrote in OCaml for analyzing php. You can compile stags from it, a command for
@@ -158,10 +165,6 @@
 -Look into emacs-eclim for intelligent PHP support. Might take some elisp
  hacking, but I think that's all it would take, apart from installing Eclipse
  bits. https://github.com/senny/emacs-eclim
-
--Research PHP parsing tools/infrastructure that might be adapted to an Emacs
- plugin for code comprehension/refactoring/etc. If eclim works out, I might not
- need anything else.
 
 -If I ever have to go back to programming Java, try using emacs-eclim for
  auto-complete and jump-to-def. It should let me stay in Emacs while getting

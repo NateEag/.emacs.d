@@ -2,7 +2,7 @@
 ;;; tern-auto-complete.el --- Tern Completion by auto-complete.el
 
 ;; Author:  <m.sakurai at kiwanami.net>
-;; Version: 20140905.643
+;; Version: 20141121.453
 ;; X-Original-Version: 0.0.1
 ;; Package-Requires: ((tern "0.0.1") (auto-complete "1.4") (cl-lib "0.5") (emacs "24"))
 
@@ -47,8 +47,8 @@
   (setq tern-last-point-pos (point))
   (setq tern-ac-complete-reply nil)
   (setq tern-ac-complete-request-point (point))
-  (tern-run-query 
-   (lambda (data) 
+  (tern-run-query
+   (lambda (data)
      (tern-ac-complete-response data)
      (funcall cc))
    `((type . "completions") (types . t) (docs . t) (caseInsensitive . t))
@@ -73,7 +73,8 @@
   "Insert dot and complete code at point by tern."
   (interactive)
   (insert ".")
-  (tern-ac-complete))
+  (unless (nth 4 (syntax-ppss))
+    (tern-ac-complete)))
 
 (defvar tern-ac-completion-truncate-length 22
   "[AC] truncation length for type summary.")
@@ -84,10 +85,10 @@
      (let ((doc (cdr (assq 'doc item)))
            (type (cdr (assq 'type item)))
            (name (cdr (assq 'name item))))
-       (popup-make-item 
+       (popup-make-item
         name
         :symbol (if (string-match "fn" type) "f" "v")
-        :summary (truncate-string-to-width 
+        :summary (truncate-string-to-width
                   type tern-ac-completion-truncate-length 0 nil "...")
         :document (concat type "\n\n" doc))))
    tern-ac-complete-reply))

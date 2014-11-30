@@ -131,7 +131,8 @@
  http://melpa.milkbox.net/#/find-file-in-repository
 
 -Add a command to backup-walker to revert to the selected backup file. 'r'
- would be a good keybinding.
+ would be a good keybinding. If this doesn't already exist, it might make sense
+ to wrap this up with my other backup settings as 'sane-autosaves'.
 
 -Add a command to backup-walker to ediff against the current file.
 

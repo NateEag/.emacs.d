@@ -1,12 +1,11 @@
-;;; jedi-force.el -- jedi find current project's virtualenv automatically.
+;;; jedi-force.el -- guide jedi.el to current project's virtualenv.
 
 ;;; Commentary:
 ;;;
 ;;; "The Force is what gives a Jedi his power." -- Obi-Wan Kenobi
 ;;;
 ;;; [Jedi](http://jedi.jedidjah.ch/en/latest/) is an awesome tool for
-;;; supporting Python auto-completion and jump-to-definition library for
-;;; a variety of editors.
+;;; supporting Python auto-completion and jump-to-definition in editors.
 ;;;
 ;;; By default, a Jedi server doesn't know what virtualenv a given Python
 ;;; source file relies on. With the aid of the Force, however, a Jedi will know

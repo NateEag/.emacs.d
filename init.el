@@ -91,12 +91,17 @@
 (add-hook 'before-save-hook 'force-buffer-backup)
 
 (defun maybe-reset-major-mode ()
-  "Reset the buffer's major-mode if appropriate."
+  "Reset the buffer's major-mode if a different mode seems like a better fit.
+
+Mostly useful as a before-save-hook, to guess mode when saving a
+new file for the first time."
+
   (when (and
          ;; The buffer's visited file does not exist.
          (eq (file-exists-p (buffer-file-name)) nil)
          (eq major-mode 'fundamental-mode))
     (normal-mode)))
+
 (add-hook 'before-save-hook 'maybe-reset-major-mode)
 
 ;; I generally prefer to strip trailing whitespace on saves, but not when I'm
@@ -110,6 +115,7 @@
   "Delete trailing whitespace if the current buffer is not a patch."
   (unless (string-match "\\.*.\\(patch\\|diff\\)$" (buffer-file-name))
       (delete-trailing-whitespace)))
+
 (add-hook 'before-save-hook 'maybe-delete-trailing-whitespace)
 
 ;; If a file looks scripty and it isn't executable at save time, make it so.

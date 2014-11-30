@@ -138,37 +138,43 @@ If set to nil `doc-view-mode' will be used instead of an external command."
 ;;; Faces
 ;;
 ;;
+(defgroup helm-grep-faces nil
+  "Customize the appearance of helm-grep."
+  :prefix "helm-"
+  :group 'helm-grep
+  :group 'helm-faces)
+
 (defface helm-grep-match
   '((((background light)) :foreground "#b00000")
     (((background dark))  :foreground "gold1"))
   "Face used to highlight grep matches."
-  :group 'helm-grep)
+  :group 'helm-grep-faces)
 
 (defface helm-grep-file
     '((t (:foreground "BlueViolet"
           :underline t)))
   "Face used to highlight grep results filenames."
-  :group 'helm-grep)
+  :group 'helm-grep-faces)
 
 (defface helm-grep-lineno
     '((t (:foreground "Darkorange1")))
   "Face used to highlight grep number lines."
-  :group 'helm-grep)
+  :group 'helm-grep-faces)
 
 (defface helm-grep-running
     '((t (:foreground "Red")))
   "Face used in mode line when grep is running."
-  :group 'helm-grep)
+  :group 'helm-grep-faces)
 
 (defface helm-grep-finish
     '((t (:foreground "Green")))
   "Face used in mode line when grep is finish."
-  :group 'helm-grep)
+  :group 'helm-grep-faces)
 
 (defface helm-grep-cmd-line
     '((t (:inherit diff-added)))
   "Face used to highlight grep command line when no results."
-  :group 'helm-grep)
+  :group 'helm-grep-faces)
 
 
 ;;; Keymaps
@@ -222,7 +228,6 @@ If set to nil `doc-view-mode' will be used instead of an external command."
 (defvar helm-grep-include-files nil)
 (defvar helm-grep-in-recurse nil)
 (defvar helm-grep-use-zgrep nil)
-(defvar helm-grep-last-default-directory nil)
 (defvar helm-grep-default-directory-fn nil
   "A function that should return a directory to expand candidate to.
 It is intended to use as a let-bound variable, DON'T set this globaly.")
@@ -234,20 +239,13 @@ It is intended to use as a let-bound variable, DON'T set this globaly.")
 ;;; Init
 ;;
 ;;
-(defun helm-grep-prepare-candidates (candidates)
+(defun helm-grep-prepare-candidates (candidates in-directory)
   "Prepare filenames and directories CANDIDATES for grep command line."
   ;; If one or more candidate is a directory, search in all files
   ;; of this candidate (e.g /home/user/directory/*).
   ;; If r option is enabled search also in subdidrectories.
   ;; We need here to expand wildcards to support crap windows filenames
   ;; as grep doesn't accept quoted wildcards (e.g "dir/*.el").
-  (setq candidates (if (file-remote-p default-directory)
-                       ;; Grep don't understand tramp filenames
-                       ;; use the local name.
-                       (mapcar #'(lambda (x)
-                                   (file-remote-p x 'localname))
-                               candidates)
-                     candidates))
   (if helm-zgrep-recurse-flag
       (mapconcat 'shell-quote-argument candidates " ")
     ;; When candidate is a directory, search in all its files.
@@ -286,9 +284,15 @@ It is intended to use as a let-bound variable, DON'T set this globaly.")
                 ;; here too in case we are called from elsewhere.
                 (t (file-expand-wildcards i t))) into all-files ; [1]
           finally return
-          (if (string-match "^git" helm-grep-default-command)
-              (mapconcat 'identity all-files " ")
-            (mapconcat 'shell-quote-argument all-files " ")))))
+          (let ((files (if (file-remote-p in-directory)
+                       ;; Grep don't understand tramp filenames
+                       ;; use the local name.
+                       (mapcar #'(lambda (x) (file-remote-p x 'localname))
+                               all-files)
+                       all-files)))
+            (if (string-match "^git" helm-grep-default-command)
+                (mapconcat 'identity files " ")
+                (mapconcat 'shell-quote-argument files " "))))))
 
 (defun helm-grep-command (&optional recursive)
   (let* ((com (if recursive
@@ -301,7 +305,7 @@ It is intended to use as a let-bound variable, DON'T set this globaly.")
   (let* ((rec-com (helm-grep-command t))
          (norm-com (helm-grep-command))
          (norm-com-ack-p (string-match "\\`ack" norm-com))
-         (rec-com-ack-p (string-match "\\`ack" rec-com)))
+         (rec-com-ack-p (and rec-com (string-match "\\`ack" rec-com))))
     (cl-case where
       (default   (and norm-com norm-com-ack-p))
       (recursive (and rec-com rec-com-ack-p))
@@ -313,7 +317,7 @@ It is intended to use as a let-bound variable, DON'T set this globaly.")
 (defun helm-grep--prepare-cmd-line (only-files &optional include zgrep)
   (let* ((default-directory (or helm-default-directory
                                 (expand-file-name helm-ff-default-directory)))
-         (fnargs            (helm-grep-prepare-candidates only-files))
+         (fnargs            (helm-grep-prepare-candidates only-files default-directory))
          (ignored-files     (unless (helm-grep-use-ack-p)
                               (mapconcat
                                #'(lambda (x)
@@ -356,7 +360,9 @@ It is intended to use as a let-bound variable, DON'T set this globaly.")
 
 (defun helm-grep-init (cmd-line)
   "Start an asynchronous grep process with CMD-LINE using ZGREP if non--nil."
-  (let* ((zgrep (string-match "\\`zgrep" cmd-line))
+  (let* ((default-directory (or helm-default-directory
+                                (expand-file-name helm-ff-default-directory)))
+         (zgrep (string-match "\\`zgrep" cmd-line))
          ;; Use pipe only with grep, zgrep or git-grep.
          (process-connection-type (and (not zgrep) (helm-grep-use-ack-p)))
          (tramp-verbose helm-tramp-verbose))
@@ -851,7 +857,6 @@ in recurse, search being made on `helm-zgrep-file-extension-regexp'."
                              'helm-grep-include-files (or include-files types)
                              'helm-grep-in-recurse recurse
                              'helm-grep-use-zgrep zgrep
-                             'helm-grep-last-default-directory helm-ff-default-directory
                              'helm-grep-default-command
                              (cond (zgrep helm-default-zgrep-command)
                                    (recurse helm-grep-default-recurse-command)
@@ -1045,7 +1050,8 @@ If a prefix arg is given run grep on all buffers ignoring non--file-buffers."
                         (mapcar #'(lambda (x)
                                     (file-remote-p x 'localname))
                                 only-files)
-                      only-files)))
+                      only-files)
+                    default-directory))
          (cmd-line (format helm-pdfgrep-default-command
                            helm-pattern
                            fnargs))

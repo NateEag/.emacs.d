@@ -110,7 +110,7 @@ text to be displayed in BUFNAME."
 
 (defun helm-help-event-loop ()
   (let ((prompt (propertize
-                 "[SPC,C-v,down:NextPage  b,M-v,up:PrevPage  C-s/r:Isearch Other:Exit]"
+                 "[SPC,C-v,down:NextPage  b,M-v,up:PrevPage]"
                  'face 'helm-helper))
         (scroll-error-top-bottom t))
     (condition-case _err
@@ -118,8 +118,6 @@ text to be displayed in BUFNAME."
               (cl-case event
                 ((?\C-v ? down) (scroll-up-command helm-scroll-amount))
                 ((?\M-v ?b up)  (scroll-down-command helm-scroll-amount))
-                ((?\C-s)        (isearch-forward))
-                ((?\C-r)        (isearch-backward))
                 (t (cl-return))))
       (beginning-of-buffer (message "Beginning of buffer"))
       (end-of-buffer       (message "End of Buffer")))))
@@ -477,9 +475,11 @@ You can save your results in a grep-mode buffer, see below.
 
 Grepping on remote file will work only with grep, not ack-grep, but it is
 anyway bad supported as tramp doesn't support multiple process running in a
-short delay (less than 5s actually), so I strongly advice hitting `C-!' (i.e
-suspend process) before entering anything in pattern, and hit again `C-!' when
-your regexp is ready to send to remote process.
+short delay (less than 5s actually) among other things,
+so I strongly advice hitting `C-!' (i.e suspend process)
+before entering anything in pattern, and hit again `C-!' when
+your regexp is ready to send to remote process,
+or even better don't use tramp at all and mount your remote file system on SSHFS.
 
 \nSpecific commands for Helm Grep:
 \\<helm-grep-map>

@@ -501,10 +501,38 @@ This happen when using `helm-next/previous-line'."
   :group 'helm
   :type 'boolean)
 
+(defcustom helm-default-fuzzy-match-fn 'helm-fuzzy-match
+  "The default function for fuzzy matching in `helm-source-sync' based sources."
+  :group 'helm
+  :type 'function)
+
+(defcustom helm-default-fuzzy-search-fn 'helm-fuzzy-search
+  "The default function for fuzzy matching in `helm-source-in-buffer' based sources."
+  :group 'helm
+  :type 'function)
+
+(defcustom helm-default-fuzzy-sort-fn 'helm-fuzzy-matching-default-sort-fn
+  "The default sort transformer function used in fuzzy matching.
+When nil no sorting will be done."
+  :group 'helm
+  :type 'function)
+
+(defcustom helm-default-fuzzy-matching-highlight-fn 'helm-fuzzy-default-highlight-match
+  "The default function to highlight matches in fuzzy matching.
+When nil no highlighting will be done."
+  :group 'helm
+  :type 'function)
+
 
 ;;; Faces
 ;;
 ;;
+(defgroup helm-faces nil
+  "Customize the appearance of helm."
+  :prefix "helm-"
+  :group 'faces
+  :group 'helm)
+
 (defface helm-source-header
     '((((background dark))
        :background "#22083397778B"
@@ -515,7 +543,7 @@ This happen when using `helm-next/previous-line'."
        :foreground "black"
        :weight bold :height 1.3 :family "Sans Serif"))
   "Face for source header in the helm buffer."
-  :group 'helm)
+  :group 'helm-faces)
 
 (defface helm-visible-mark
     '((((min-colors 88) (background dark))
@@ -527,40 +555,40 @@ This happen when using `helm-next/previous-line'."
        (:background "green1"))
       (t (:background "green")))
   "Face for visible mark."
-  :group 'helm)
+  :group 'helm-faces)
 
 (defface helm-header
     '((t (:inherit header-line)))
   "Face for header lines in the helm buffer."
-  :group 'helm)
+  :group 'helm-faces)
 
 (defface helm-candidate-number
     '((((background dark)) :background "Yellow" :foreground "black")
       (((background light)) :background "#faffb5" :foreground "black"))
-  "Face for candidate number in mode-line." :group 'helm)
+  "Face for candidate number in mode-line." :group 'helm-faces)
 
 (defface helm-selection
     '((((background dark)) :background "ForestGreen" :underline t)
       (((background light)) :background "#b5ffd1" :underline t))
   "Face for currently selected item in the helm buffer."
-  :group 'helm)
+  :group 'helm-faces)
 
 (defface helm-separator
     '((((background dark)) :foreground "red")
       (((background light)) :foreground "#ffbfb5"))
   "Face for multiline source separator."
-  :group 'helm)
+  :group 'helm-faces)
 
 (defface helm-action
     '((t (:underline t)))
   "Face for action lines in the helm action buffer."
-  :group 'helm)
+  :group 'helm-faces)
 
 (defface helm-prefarg
     '((((background dark)) :foreground "green")
       (((background light)) :foreground "red"))
   "Face for showing prefix arg in mode-line."
-  :group 'helm)
+  :group 'helm-faces)
 
 
 ;;; Variables.
@@ -2659,6 +2687,44 @@ e.g helm.el$
                do (goto-char eol) and return t
                else do (goto-char eol)
                finally return nil))))
+
+(defun helm-score-string-for-pattern (string pattern)
+  "Give a score to STRING according to number of contiguous matches found with PATTERN."
+  (let* ((pat-lookup (cl-loop for str on (split-string pattern "" t) by 'cdr
+                              when (cdr str)
+                              collect (list (car str) (cadr str))))
+         (str-lookup (cl-loop for str on (split-string string "" t) by 'cdr
+                              when (cdr str)
+                              collect (list (car str) (cadr str))))
+         (bonus (if (equal (car pat-lookup) (car str-lookup)) 1 0)))
+    (+ bonus (length (cl-nintersection pat-lookup str-lookup :test 'equal)))))
+
+(defun helm-fuzzy-matching-default-sort-fn (candidates _source)
+  (sort candidates
+        (lambda (s1 s2)
+          (let ((scr1 (helm-score-string-for-pattern s1 helm-pattern))
+                (scr2 (helm-score-string-for-pattern s2 helm-pattern))
+                (len1 (length s1))
+                (len2 (length s2)))
+            (cond ((= scr1 scr2)
+                   (< len1 len2))
+                  ((> scr1 scr2)))))))
+
+(defun helm-fuzzy-default-highlight-match (candidate)
+  "The default function to highlight matches in fuzzy matching.
+It is meant to use with `filter-one-by-one' slot."
+  (with-temp-buffer
+    (insert candidate)
+    (goto-char (point-min))
+    (cl-loop with pattern = (if (string-match-p " " helm-pattern)
+                                (split-string helm-pattern)
+                                (split-string helm-pattern "" t))
+             for p in pattern
+             do
+             (when (re-search-forward p nil t)
+               (add-text-properties
+                (match-beginning 0) (match-end 0) '(face helm-match))))
+    (buffer-string)))
 
 (defun helm-match-functions (source)
   (let ((matchfns (or (assoc-default 'match source)

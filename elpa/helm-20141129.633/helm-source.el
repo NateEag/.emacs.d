@@ -375,7 +375,10 @@
     :documentation
     "  Enable fuzzy matching in this source.
   This will overwrite settings in MATCH slot, and for
-  sources build with child class `helm-source-in-buffer' the SEARCH slot.")
+  sources built with child class `helm-source-in-buffer' the SEARCH slot.
+  This is an easy way of enabling fuzzy matching, but you can use the MATCH
+  or SEARCH slots yourself if you want something more elaborated, mixing
+  different type of match (See `helm-source-buffers' class for example).")
 
    (nomark
     :initarg :nomark
@@ -389,7 +392,12 @@
     :initform nil
     :custom boolean
     :documentation
-    "  Disable highlight match in this source.")
+    "  Disable highlight match in this source.
+  This will disable generic highlighting done by matchplugin,
+  but some specialized highlighting can be done from elsewhere,
+  i.e `filtered-candidate-transformer' or `filter-one-by-one' slots,
+  so even if non--nil this may have no effect if highlighting is handled
+  from somewhere else.")
    
    (allow-dups
     :initarg :allow-dups
@@ -739,6 +747,35 @@
                                                      helm-buffers-sort-transformer
                                                      helm-highlight-buffers)))
 
+;; Functions
+(defclass helm-type-function (helm-source) ()
+  "A class to define helm type function.")
+
+(defmethod helm--setup-source :before ((source helm-type-function))
+  (oset source :action (helm-make-actions
+                         "Describe command" 'describe-function
+                         "Add command to kill ring" 'helm-kill-new
+                          "Go to command's definition" 'find-function
+                          "Debug on entry" 'debug-on-entry
+                          "Cancel debug on entry" 'cancel-debug-on-entry
+                          "Trace function" 'trace-function
+                          "Trace function (background)" 'trace-function-background
+                          "Untrace function" 'untrace-function))
+  (oset source :action-transformer 'helm-transform-function-call-interactively)
+  (oset source :candidate-transformer 'helm-mark-interactive-functions)
+  (oset source :coerce 'helm-symbolify))
+
+;; Commands
+(defclass helm-type-command (helm-source) ()
+  "A class to define helm type command.")
+
+(defmethod helm--setup-source :before ((source helm-type-command))
+  (oset source :action (append (helm-make-actions
+                                "Call interactively" 'helm-call-interactively)
+                               (helm-actions-from-type-function)))
+  (oset source :coerce 'helm-symbolify)
+  (oset source :persistent-action 'describe-function))
+
 
 ;;; Error functions
 ;;
@@ -765,6 +802,7 @@ Argument NAME is a string which define the source name, so no need to use
 the keyword :name in your source, NAME will be used instead.
 Argument CLASS is an eieio class object.
 Arguments ARGS are keyword value pairs as defined in CLASS."
+  (declare (indent 2))  
   (let ((source (apply #'make-instance class name args)))
     (oset source :name name)
     (helm--setup-source source)
@@ -829,7 +867,18 @@ an eieio class."
           (delq nil (append (list transformer) action-transformers)))))
 
 ;;; Methods to access types slots.
+;;
+;;
 (defmethod helm-source-get-action-from-type ((object helm-type-file))
+  (oref object :action))
+
+(defmethod helm-source-get-action-from-type ((object helm-type-buffer))
+  (oref object :action))
+
+(defmethod helm-source-get-action-from-type ((object helm-type-bookmark))
+  (oref object :action))
+
+(defmethod helm-source-get-action-from-type ((object helm-type-function))
   (oref object :action))
 
 
@@ -838,15 +887,28 @@ an eieio class."
 ;;
 (defmethod helm--setup-source :before ((source helm-source))
   (helm-aif (slot-value source :keymap)
-      (and (symbolp it) (set-slot-value source :keymap (symbol-value it)))))
+      (and (symbolp it) (set-slot-value source :keymap (symbol-value it))))
+  (when (slot-value source :fuzzy-match)
+    (oset source :nohighlight t)
+    (when helm-default-fuzzy-matching-highlight-fn
+      (oset source :filter-one-by-one
+            (helm-aif (oref source :filter-one-by-one)
+                (append (if (listp it) it (list it))
+                        (list helm-default-fuzzy-matching-highlight-fn))
+              (list helm-default-fuzzy-matching-highlight-fn))))
+    (when helm-default-fuzzy-sort-fn
+      (oset source :filtered-candidate-transformer
+            (helm-aif (oref source :filtered-candidate-transformer)
+                (append (if (listp it) it (list it))
+                        (list helm-default-fuzzy-sort-fn))
+              (list helm-default-fuzzy-sort-fn))))))
 
 (defmethod helm-setup-user-source ((_source helm-source)))
 
 (defmethod helm--setup-source ((source helm-source-sync))
   (when (slot-value source :fuzzy-match)
     ;; FIXME should I allow appending other match fns to this ?
-    (oset source :match 'helm-fuzzy-match)
-    (oset source :nohighlight t))
+    (oset source :match helm-default-fuzzy-match-fn))
   (when (slot-value source :matchplugin)
     (oset source :match
           (helm-source-mp-get-search-or-match-fns source 'match))))
@@ -867,8 +929,7 @@ an eieio class."
                           (if (functionp it) (funcall it) it))))))))
   (when (slot-value source :fuzzy-match)
     ;; FIXME should I allow appending other search fns to this ?
-    (oset source :search '(helm-fuzzy-search))
-    (oset source :nohighlight t))
+    (oset source :search `(,helm-default-fuzzy-search-fn)))
   (when (slot-value source :matchplugin)
     (oset source :search (helm-source-mp-get-search-or-match-fns source 'search)))
   (let ((mtc (slot-value source :match)))
@@ -930,6 +991,22 @@ Args ARGS are keywords provided by `helm-source-dummy'."
 
 (defun helm-build-type-file ()
   (helm-make-type 'helm-type-file))
+
+(defun helm-actions-from-type-function ()
+  (let ((source (make-instance 'helm-type-function)))
+    (helm--setup-source source)
+    (helm-source-get-action-from-type source)))
+
+(defun helm-build-type-function ()
+  (helm-make-type 'helm-type-function))
+
+(defun helm-actions-from-type-command ()
+  (let ((source (make-instance 'helm-type-command)))
+    (helm--setup-source source)
+    (helm-source-get-action-from-type source)))
+
+(defun helm-build-type-command ()
+  (helm-make-type 'helm-type-command))
 
 (provide 'helm-source)
 

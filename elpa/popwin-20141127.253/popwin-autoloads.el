@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "popwin" "popwin.el" (21510 36430 0 0))
+;;;### (autoloads nil "popwin" "popwin.el" (21626 37043 0 0))
 ;;; Generated autoloads from popwin.el
 
 (autoload 'popwin:popup-buffer "popwin" "\
@@ -33,7 +33,7 @@ Same as `pop-to-buffer' except that this function will use
 (autoload 'popwin:universal-display "popwin" "\
 Call the following command interactively with letting
 `popwin:special-display-config' be
-`popwin:universal-display-config'. This wil be useful when
+`popwin:universal-display-config'. This will be useful when
 displaying buffers in popup windows temporarily.
 
 \(fn)" t nil)

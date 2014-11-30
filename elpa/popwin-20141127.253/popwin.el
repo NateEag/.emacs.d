@@ -4,7 +4,7 @@
 
 ;; Author: Tomohiro Matsuyama <tomo@cx4a.org>
 ;; Keywords: convenience
-;; Version: 20140902.1727
+;; Version: 20141127.253
 ;; X-Original-Version: 0.7.0alpha
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -981,7 +981,7 @@ be used for `popwin:universal-display'."
 (defun popwin:universal-display ()
   "Call the following command interactively with letting
 `popwin:special-display-config' be
-`popwin:universal-display-config'. This wil be useful when
+`popwin:universal-display-config'. This will be useful when
 displaying buffers in popup windows temporarily."
   (interactive)
   (let ((command (key-binding (read-key-sequence "" t)))

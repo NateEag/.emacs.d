@@ -35,9 +35,7 @@
      (js2-basic-offset . guess-style-guess-indent))))
  '(indent-tabs-mode nil nil nil "I dislike using tabs for indentation. Spaces are a simpler way to indent.")
  '(inhibit-startup-screen t nil nil "The emacs startup message is a needless annoyance.")
- '(ispell-extra-args
-   (quote
-    ("--run-together" "--run-together-limit=7" "--run-together-min=2")) nil nil "These settings are good for spell-checking camelCased names when programming, supposedly. We'll see how they work out.")
+ '(ispell-extra-args nil)
  '(ispell-program-name "aspell")
  '(js2-indent-switch-body t nil nil "Crockford may not like it, but I do.")
  '(js2-mode-show-parse-errors nil)

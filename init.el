@@ -294,8 +294,10 @@ new file for the first time."
 
   (evil-local-mode)
 
+  (turn-on-flyspell)
   (ac-ispell-setup)
   (ac-ispell-ac-setup)
+
   (auto-fill-mode t)
   (smartparens-mode)
 

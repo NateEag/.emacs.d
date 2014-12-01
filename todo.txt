@@ -237,6 +237,10 @@
 -Figure out what the best way to save/restore my Emacs sessions is. Ideally,
  find a solution that lets me save/restore buffer state for a whole directory.
 
+-Find a way to strip trailing whitespace *outside* literal blocks in
+ markdown-mode. My current approach means you can't have blank lines in literal
+ blocks (they look like unnecessary whitespace and get stripped).
+
 -Figure out/steal/write a good cross-file find-and-replace. I can see why so
  many guys just use a Perl one-liner (which I have), but being able to do this
  from inside your editor is pretty convenient, especially if you want to do
@@ -247,6 +251,9 @@
 
 -Think about whether I should pull ropemode back into python-mode; I never
  really used the refactoring tools, but maybe I should.
+
+-Set up ispell to use run-together words *outside* of comments and strings in
+ programming modes. It results in tons of noise everywhere else.
 
 -When I'm yanking something into an indented block, python-mode ought to assume
  that I want it indented to that block's depth and adjust the leading

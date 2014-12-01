@@ -265,7 +265,7 @@ list of strings, giving the binary name and arguments.")
   (when tern-update-argument-hints-async
     (cancel-timer tern-update-argument-hints-async))
   (setq tern-update-argument-hints-async
-        (run-at-time 
+        (run-at-time
          (* 0.001 tern-update-argument-hints-timer) nil
          (lambda ()
            (condition-case err

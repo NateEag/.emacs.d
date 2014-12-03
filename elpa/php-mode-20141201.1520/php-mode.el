@@ -6,7 +6,7 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Version: 20141027.353
+;; Version: 20141201.1520
 ;;; X-Original-Version: 1.15.0
 
 (defconst php-mode-version-number "1.15.0"
@@ -86,10 +86,21 @@
   (defvar c-vsemi-status-unknown-p)
   (defvar syntax-propertize-via-font-lock))
 
-;;; Emacs 24.3 obsoletes flet in favor of cl-flet.  So if we are not
-;;; using that version then we revert to using flet.
-(unless (fboundp 'cl-flet)
-  (defalias 'cl-flet 'flet))
+;; Work around emacs bug#18845, cc-mode expects cl to be loaded
+;; while php-mode only uses cl-lib (without compatibility aliases)
+(eval-when-compile
+  (if (and (= emacs-major-version 24) (= emacs-minor-version 4))
+    (require 'cl)))
+
+;; Use the recommended cl functions in php-mode but alias them to the
+;; old names when we detect emacs < 24.3
+(if (and (= emacs-major-version 24) (< emacs-minor-version 3))
+    (progn
+      (unless (fboundp 'cl-flet)
+        (defalias 'cl-flet 'flet))
+      (unless (fboundp 'cl-set-difference)
+        (defalias 'cl-set-difference 'set-difference))))
+
 
 ;; Local variables
 ;;;###autoload
@@ -427,7 +438,7 @@ This variable can take one of the following symbol values:
 ;; Allow '\' when scanning from open brace back to defining
 ;; construct like class
 (c-lang-defconst c-block-prefix-disallowed-chars
-  php (set-difference (c-lang-const c-block-prefix-disallowed-chars)
+  php (cl-set-difference (c-lang-const c-block-prefix-disallowed-chars)
                       '(?\\)))
 
 ;; Allow $ so variables are recognized in cc-mode and remove @. This
@@ -481,7 +492,7 @@ PHP does not have an \"enum\"-like keyword."
   php '("implements" "extends"))
 
 (c-lang-defconst c-type-list-kwds
-  php '("new" "use" "as" "implements" "extends" "namespace" "instanceof" "insteadof"))
+  php '("new" "use" "implements" "extends" "namespace" "instanceof" "insteadof"))
 
 (c-lang-defconst c-ref-list-kwds
   php nil)
@@ -556,7 +567,7 @@ might be to handle switch and goto labels differently."
   php (concat
      ;; All keywords except `c-label-kwds' and `c-constant-kwds'.
      (c-make-keywords-re t
-       (set-difference (c-lang-const c-keywords)
+       (cl-set-difference (c-lang-const c-keywords)
                        (append (c-lang-const c-label-kwds)
                                (c-lang-const c-constant-kwds))
                        :test 'string-equal))))
@@ -571,6 +582,7 @@ might be to handle switch and goto labels differently."
                        (arglist-intro . php-lineup-arglist-intro)
                        (case-label . +)
                        (class-open . -)
+                       (comment-intro . 0)
                        (inlambda . 0)
                        (inline-open . 0)
                        (label . +)
@@ -594,8 +606,8 @@ code and modules."
         indent-tabs-mode nil)
   (c-set-style "pear")
 
-  ;; Undo drupal coding style whitespace effects
-  (setq show-trailing-whitespace nil)
+  ;; Undo drupal/PSR-2 coding style whitespace effects
+  (set (make-local-variable 'show-trailing-whitespace) nil)
   (remove-hook 'before-save-hook 'delete-trailing-whitespace))
 
 (c-add-style
@@ -609,8 +621,8 @@ working with Drupal."
   (interactive)
   (setq tab-width 2
         indent-tabs-mode nil
-        fill-column 78
-        show-trailing-whitespace t)
+        fill-column 78)
+  (set (make-local-variable 'show-trailing-whitespace) t)
   (add-hook 'before-save-hook 'delete-trailing-whitespace)
   (c-set-style "drupal"))
 
@@ -629,8 +641,8 @@ working with Wordpress."
         c-indent-comments-syntactically-p t)
   (c-set-style "wordpress")
 
-  ;; Undo drupal coding style whitespace effects
-  (setq show-trailing-whitespace nil)
+  ;; Undo drupal/PSR-2 coding style whitespace effects
+  (set (make-local-variable 'show-trailing-whitespace) nil)
   (remove-hook 'before-save-hook 'delete-trailing-whitespace))
 
 (c-add-style
@@ -648,8 +660,8 @@ working with Symfony2."
         require-final-newline t)
   (c-set-style "symfony2")
 
-  ;; Undo drupal coding style whitespace effects
-  (setq show-trailing-whitespace nil)
+  ;; Undo drupal/PSR-2 coding style whitespace effects
+  (set (make-local-variable 'show-trailing-whitespace) nil)
   (remove-hook 'before-save-hook 'delete-trailing-whitespace))
 
 (c-add-style
@@ -665,9 +677,10 @@ working with Symfony2."
         require-final-newline t)
   (c-set-style "psr2")
 
-  ;; Undo drupal coding style whitespace effects
-  (setq show-trailing-whitespace nil)
-  (remove-hook 'before-save-hook 'delete-trailing-whitespace))
+  ;; Apply drupal-like coding style whitespace effects
+  (set (make-local-variable 'require-final-newline) t)
+  (set (make-local-variable 'show-trailing-whitespace) t)
+  (add-hook 'before-save-hook 'delete-trailing-whitespace))
 
 (defconst php-beginning-of-defun-regexp
   "^\\s-*\\(?:\\(?:abstract\\|final\\|private\\|protected\\|public\\|static\\)\\s-+\\)*function\\s-+&?\\(\\(?:\\sw\\|\\s_\\)+\\)\\s-*("
@@ -1291,6 +1304,14 @@ a completion list."
    ;;  only add patterns here if you want to prevent cc-mode from applying
    ;;  a different face.
    '(
+     ;; Highlight variables, e.g. 'var' in '$var' and '$obj->var', but
+     ;; not in $obj->var()
+     ("->\\(\\sw+\\)\\s-*(" 1 'default)
+     ("\\(\\$\\|->\\)\\([a-zA-Z0-9_]+\\)" 2 font-lock-variable-name-face)
+
+     ;; Highlight function/method names
+     ("\\<function\\s-+&?\\(\\sw+\\)\\s-*(" 1 font-lock-function-name-face)
+
      ;; The dollar sign should not get a variable-name face, below
      ;; pattern resets the face to default in case cc-mode sets the
      ;; variable-name face (cc-mode does this for variables prefixed
@@ -1312,11 +1333,6 @@ a completion list."
    ;;   already fontified by another pattern. Note that using OVERRIDE
    ;;   is usually overkill.
    `(
-     ;; Highlight variables, e.g. 'var' in '$var' and '$obj->var', but
-     ;; not in $obj->var()
-     ("->\\(\\sw+\\)\\s-*(" 1 'default)
-     ("\\(\\$\\|->\\)\\([a-zA-Z0-9_]+\\)" 2 font-lock-variable-name-face)
-
      ;; Highlight all upper-cased symbols as constant
      ("\\<\\([A-Z_][A-Z0-9_]+\\)\\>" 1 font-lock-constant-face)
 
@@ -1324,9 +1340,6 @@ a completion list."
      ;; another valid option would be using type-face, but using
      ;; constant-face because this is how it works in c++-mode.
      ("\\(\\sw+\\)::" 1 font-lock-constant-face)
-
-     ;; Highlight function/method names
-     ("\\<function\\s-+&?\\(\\sw+\\)\\s-*(" 1 font-lock-function-name-face)
 
      ;; Highlight class name after "use .. as"
      ("\\<as\\s-+\\(\\sw+\\)" 1 font-lock-type-face)

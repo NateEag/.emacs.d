@@ -2440,7 +2440,6 @@ If no map is found in current source do nothing (keep previous map)."
   ;; In delayed sources `helm-pattern' have not been resat yet.
   (unless (equal input helm-pattern)
     (setq helm-pattern input)
-    (helm--fuzzy-match-maybe-set-pattern)
     (unless (helm-action-window)
       (setq helm-input helm-pattern))
     (helm-log "helm-pattern = %S" helm-pattern)
@@ -2701,50 +2700,53 @@ e.g helm.el$
 (defun helm-fuzzy-match (candidate)
   "Check if `helm-pattern' fuzzy match CANDIDATE.
 This function is used with sources build with `helm-source-sync'."
-  (let ((regexp (cadr (gethash 'helm-pattern helm--fuzzy-regexp-cache))))
-    (if (string-match "\\`!" helm-pattern)
-        (not (string-match regexp candidate))
-        (string-match regexp candidate))))
+  (unless (string-match " " helm-pattern)
+    ;; When pattern have one or more spaces, let
+    ;; match-plugin doing the job with no fuzzy matching.[1]
+    (let ((regexp (cadr (gethash 'helm-pattern helm--fuzzy-regexp-cache))))
+      (if (string-match "\\`!" helm-pattern)
+          (not (string-match regexp candidate))
+          (string-match regexp candidate)))))
 
 (defun helm-fuzzy-search (pattern)
   "Same as `helm-fuzzy-match' but for sources build with `helm-source-in-buffer'."
-  (let* ((regexps (gethash 'helm-pattern helm--fuzzy-regexp-cache))
-         (partial-regexp (car regexps))
-         (regexp (cadr regexps)))
-  (if (or (string-match "\\`!" pattern)
-          (cl-loop for p in (split-string pattern " " t)
-                   thereis (string-match "\\`!" p)))
-      ;; Don't try to search here, just return
-      ;; the position of line and go ahead,
-      ;; letting match-part fn checking if
-      ;; pattern match against this line.
-      (prog1 (list (point-at-bol) (point-at-eol))
-        (forward-line 1))
-      ;; We could use here directly `re-search-forward'
-      ;; on the regexp produced by `helm--mapconcat-pattern',
-      ;; but it is very slow because emacs have to do an incredible
-      ;; amount of loops to match e.g "[^f]*o[^o]..." in the whole buffer,
-      ;; more the regexp is long more the amount of loops grow.
-      ;; (Probably leading to a max-lisp-eval-depth error if both
-      ;; regexp and buffer are too big)
-      ;; So just search the first bit of pattern e.g "[^f]*f", and
-      ;; then search the corresponding line with the whole regexp,
-      ;; which increase dramatically the speed of the search.
-      (cl-loop while (re-search-forward partial-regexp nil t)
-               for bol = (point-at-bol)
-               for eol = (point-at-eol)
-               if (progn (goto-char bol)
-                         (re-search-forward regexp eol t))
-               do (goto-char eol) and return t
-               else do (goto-char eol)
-               finally return nil))))
+  (unless (string-match " " helm-pattern)
+    ;; Same as in `helm-fuzzy-match' ref[1].
+    (let* ((regexps (gethash 'helm-pattern helm--fuzzy-regexp-cache))
+           (partial-regexp (car regexps))
+           (regexp (cadr regexps)))
+      (if (string-match "\\`!" pattern)
+          ;; Don't try to search here, just return
+          ;; the position of line and go ahead,
+          ;; letting `helm-search-match-part' checking if
+          ;; pattern match against this line.
+          (prog1 (list (point-at-bol) (point-at-eol))
+            (forward-line 1))
+          ;; We could use here directly `re-search-forward'
+          ;; on the regexp produced by `helm--mapconcat-pattern',
+          ;; but it is very slow because emacs have to do an incredible
+          ;; amount of loops to match e.g "[^f]*o[^o]..." in the whole buffer,
+          ;; more the regexp is long more the amount of loops grow.
+          ;; (Probably leading to a max-lisp-eval-depth error if both
+          ;; regexp and buffer are too big)
+          ;; So just search the first bit of pattern e.g "[^f]*f", and
+          ;; then search the corresponding line with the whole regexp,
+          ;; which increase dramatically the speed of the search.
+          (cl-loop while (re-search-forward partial-regexp nil t)
+                   for bol = (point-at-bol)
+                   for eol = (point-at-eol)
+                   if (progn (goto-char bol)
+                             (re-search-forward regexp eol t))
+                   do (goto-char eol) and return t
+                   else do (goto-char eol)
+                   finally return nil)))))
 
-(defun helm-score-string-for-pattern (string pattern)
-  "Give a score to STRING according to number of contiguous matches found with PATTERN."
+(defun helm-score-candidate-for-pattern (candidate pattern)
+  "Give a score to CANDIDATE according to number of contiguous matches found with PATTERN."
   (let* ((pat-lookup (cl-loop for str on (split-string pattern "" t) by 'cdr
                               when (cdr str)
                               collect (list (car str) (cadr str))))
-         (str-lookup (cl-loop for str on (split-string string "" t) by 'cdr
+         (str-lookup (cl-loop for str on (split-string candidate "" t) by 'cdr
                               when (cdr str)
                               collect (list (car str) (cadr str))))
          (bonus (if (equal (car pat-lookup) (car str-lookup)) 1 0)))
@@ -2753,10 +2755,13 @@ This function is used with sources build with `helm-source-sync'."
 (defun helm-fuzzy-matching-default-sort-fn (candidates _source)
   (sort candidates
         (lambda (s1 s2)
-          (let ((scr1 (helm-score-string-for-pattern s1 helm-pattern))
-                (scr2 (helm-score-string-for-pattern s2 helm-pattern))
-                (len1 (length s1))
-                (len2 (length s2)))
+          ;; Sort on real part of candidate.
+          (let* ((cand1 (if (consp s1) (cdr s1) s1))
+                 (cand2 (if (consp s2) (cdr s2) s2))
+                 (scr1 (helm-score-candidate-for-pattern cand1 helm-pattern))
+                 (scr2 (helm-score-candidate-for-pattern cand2 helm-pattern))
+                 (len1 (length cand1))
+                 (len2 (length cand2)))
             (cond ((= scr1 scr2)
                    (< len1 len2))
                   ((> scr1 scr2)))))))
@@ -2867,6 +2872,7 @@ and `helm-pattern'."
           (limit (helm-candidate-number-limit source))
           (helm-pattern (helm-process-pattern-transformer
                          helm-pattern source)))
+      (helm--fuzzy-match-maybe-set-pattern)
       ;; If source have a `filtered-candidate-transformer' attr
       ;; Filter candidates with this func, otherwise just compute
       ;; candidates.
@@ -4172,25 +4178,17 @@ When using fuzzy matching and negation (i.e \"!\"), this function is always call
   (let ((part (funcall match-part-fn candidate))
         (fuzzy-regexp (cadr (gethash 'helm-pattern helm--fuzzy-regexp-cache))))
     (if (string-match " " pattern)
-        ;; FIXME: The fuzzy regexp cache is not handling splitted
-        ;; patterns actually, so I must compute the splitted regexp here
-        ;; at each turn of the loop which is costly.
-        (cl-loop for i in (split-string pattern " " t) always
+        (cl-loop for i in (split-string pattern) always
                  (if (string-match "\\`!" i)
-                     (not (string-match
-                           (if helm--in-fuzzy
-                               (helm--mapconcat-pattern
-                                (substring i 1))
-                               (substring i 1))
-                           part))
-                     (string-match
-                      (if helm--in-fuzzy
-                          (helm--mapconcat-pattern i) i)
-                      part)))
+                     (not (string-match (substring i 1) part))
+                     (string-match i part)))
         (if (string-match "\\`!" pattern)
-            (let ((reg (substring pattern 1)))
-              (not (string-match (if helm--in-fuzzy fuzzy-regexp reg)
-                                 part)))
+            (not (string-match (if helm--in-fuzzy
+                                   ;; Fuzzy regexp have already been
+                                   ;; computed with substring 1.
+                                   fuzzy-regexp
+                                   (substring 1 pattern))
+                               part))
             (string-match (if helm--in-fuzzy fuzzy-regexp pattern)
                           part)))))
 

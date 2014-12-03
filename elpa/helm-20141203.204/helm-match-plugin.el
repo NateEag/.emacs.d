@@ -289,6 +289,9 @@ i.e (identity (string-match \"foo\" \"foo bar\")) => t."
     (cl-loop for (predicate . regexp) in pat
              always (funcall predicate
                              (condition-case _err
+                                 ;; FIXME: Probably do nothing when
+                                 ;; using fuzzy leaving the job
+                                 ;; to the fuzzy fn.
                                  (string-match regexp str)
                                (invalid-regexp nil))))))
 
@@ -302,6 +305,7 @@ i.e (identity (re-search-forward \"foo\" (point-at-eol) t)) => t."
                           (helm-mp-3-get-patterns pattern)
                           pattern)
            when (eq (caar pat) 'not) return
+           ;; Pass the job to `helm-search-match-part'.
            (prog1 (list (point-at-bol) (point-at-eol))
              (forward-line 1))
            while (condition-case _err

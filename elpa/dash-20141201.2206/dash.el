@@ -3,7 +3,7 @@
 ;; Copyright (C) 2012-2014 Magnar Sveen
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
-;; Version: 20141106.455
+;; Version: 20141201.2206
 ;; X-Original-Version: 2.9.0
 ;; Keywords: lists
 
@@ -288,6 +288,16 @@ Elements are compared using `equal'.
 See also: `-replace-at'"
   (--map-when (equal it old) new list))
 
+(defmacro --mapcat (form list)
+  "Anaphoric form of `-mapcat'."
+  (declare (debug (form form)))
+  `(apply 'append (--map ,form ,list)))
+
+(defun -mapcat (fn list)
+  "Return the concatenation of the result of mapping FN over LIST.
+Thus function FN should return a list."
+  (--mapcat (funcall fn it) list))
+
 (defun -flatten (l)
   "Take a nested list L and return its contents as a single, flat list.
 
@@ -295,6 +305,11 @@ See also: `-flatten-n'"
   (if (and (listp l) (listp (cdr l)))
       (-mapcat '-flatten l)
     (list l)))
+
+(defmacro --iterate (form init n)
+  "Anaphoric version of `-iterate'."
+  (declare (debug (form form form)))
+  `(-iterate (lambda (it) ,form) ,init ,n))
 
 (defun -flatten-n (num list)
   "Flatten NUM levels of a nested LIST.
@@ -305,16 +320,6 @@ See also: `-flatten'"
 (defun -concat (&rest lists)
   "Return a new list with the concatenation of the elements in the supplied LISTS."
   (apply 'append lists))
-
-(defmacro --mapcat (form list)
-  "Anaphoric form of `-mapcat'."
-  (declare (debug (form form)))
-  `(apply 'append (--map ,form ,list)))
-
-(defun -mapcat (fn list)
-  "Return the concatenation of the result of mapping FN over LIST.
-Thus function FN should return a list."
-  (--mapcat (funcall fn it) list))
 
 (defalias '-copy 'copy-sequence
   "Create a shallow copy of LIST.")
@@ -1743,11 +1748,6 @@ N is the length of the returned list."
       (--dotimes (1- n)
         (push (funcall fun (car r)) r))
       (nreverse r))))
-
-(defmacro --iterate (form init n)
-  "Anaphoric version of `-iterate'."
-  (declare (debug (form form form)))
-  `(-iterate (lambda (it) ,form) ,init ,n))
 
 (defun -fix (fn list)
   "Compute the (least) fixpoint of FN with initial input LIST.

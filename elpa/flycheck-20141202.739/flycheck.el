@@ -3092,6 +3092,7 @@ the beginning of the buffer."
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "n") #'flycheck-error-list-next-error)
     (define-key map (kbd "p") #'flycheck-error-list-previous-error)
+    (define-key map (kbd "g") #'flycheck-error-list-check-source)
     (define-key map (kbd "RET") #'flycheck-error-list-goto-error)
     map)
   "The keymap of `flycheck-error-list-mode'.")
@@ -3139,6 +3140,14 @@ the beginning of the buffer."
     ;; We must not update the source buffer, if the current buffer is the error
     ;; list itself.
     (flycheck-error-list-set-source (current-buffer))))
+
+(defun flycheck-error-list-check-source ()
+  "Trigger a syntax check in the source buffer of the error list."
+  (interactive)
+  (let ((buffer (get-buffer flycheck-error-list-source-buffer)))
+    (when (buffer-live-p buffer)
+      (with-current-buffer buffer
+        (flycheck-buffer)))))
 
 (define-button-type 'flycheck-error-list
   'action #'flycheck-error-list-button-goto-error
@@ -3263,7 +3272,6 @@ ALL-FRAMES specifies the frames to consider, as in
 Add all errors currently reported for the current
 `flycheck-error-list-source-buffer', and recenter the error
 list."
-  (interactive)
   ;; We only refresh the error list, when it is visible in a window, and we
   ;; select this window while reverting, because Tabulated List mode attempts to
   ;; recenter the error at the old location, so it must have the proper window
@@ -4524,7 +4532,9 @@ otherwise."
          level
          (unless (string-empty-p message) message)
          :checker checker
-         :filename (unless (string-empty-p filename) filename))))))
+         :filename (if (or (null filename) (string-empty-p filename))
+                       (buffer-file-name)
+                     filename))))))
 
 (defun flycheck-parse-error-with-patterns (err patterns checker)
   "Parse a single ERR with error PATTERNS for CHECKER.
@@ -5070,7 +5080,7 @@ See URL `http://www.coffeelint.org/'."
   :command
   ("coffeelint"
    (config-file "--file" flycheck-coffeelintrc)
-   "--checkstyle" source)
+   "--reporter" "checkstyle" source)
   :error-parser flycheck-parse-checkstyle
   :modes coffee-mode)
 
@@ -5963,7 +5973,7 @@ See URL `http://www.perl.org'."
   :modes (perl-mode cperl-mode)
   :next-checkers (perl-perlcritic))
 
-(flycheck-def-option-var flycheck-perlcritic-verbosity nil perl-perlcritic
+(flycheck-def-option-var flycheck-perlcritic-severity nil perl-perlcritic
   "The message severity for Perl Critic.
 
 The value of this variable is a severity level as integer, for
@@ -5972,12 +5982,15 @@ the `--severity' option to Perl Critic."
   :safe #'integerp
   :package-version '(flycheck . "0.18"))
 
+(define-obsolete-variable-alias 'flycheck-perlcritic-verbosity
+  'flycheck-perlcritic-severity "0.22")
+
 (flycheck-define-checker perl-perlcritic
   "A Perl syntax checker using Perl::Critic.
 
 See URL `https://metacpan.org/pod/Perl::Critic'."
   :command ("perlcritic" "--no-color" "--verbose" "%f:%l:%c:%s:%m (%e)\n"
-            (option "--severity" flycheck-perlcritic-verbosity nil
+            (option "--severity" flycheck-perlcritic-severity nil
                     flycheck-option-int)
             source)
   :error-patterns

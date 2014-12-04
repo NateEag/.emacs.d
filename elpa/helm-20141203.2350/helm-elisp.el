@@ -242,10 +242,7 @@ Return a cons \(beg . end\)."
          (candidates (append loc-vars glob-syms))
          (helm-quit-if-no-candidate t)
          (helm-execute-action-at-once-if-one t)
-         (enable-recursive-minibuffers t)
-         (helm-match-plugin-enabled
-          (member 'helm-compile-source--match-plugin
-                  helm-compile-source-functions)))
+         (enable-recursive-minibuffers t))
     (setq helm-lisp-completion--cache (cl-loop for sym in candidates
                                             for len = (length sym)
                                             when (> len helm-lgst-len)
@@ -259,6 +256,7 @@ Return a cons \(beg . end\)."
                       :data helm-lisp-completion--cache
                       :persistent-action 'helm-lisp-completion-persistent-action
                       :nomark t
+                      :fuzzy-match t
                       :persistent-help "Show brief doc in mode-line"
                       :filtered-candidate-transformer 'helm-lisp-completion-transformer
                       :action `(lambda (candidate)
@@ -267,7 +265,7 @@ Return a cons \(beg . end\)."
                                     0.01 nil
                                     'helm-insert-completion-at-point
                                     ,beg ,end candidate))))
-           :input (if helm-match-plugin-enabled (concat target " ") target)
+           :input target
            :resume 'noresume
            :buffer "*helm lisp completion*"
            :allow-nest t))
@@ -565,18 +563,10 @@ First call indent, second complete symbol, third complete fname."
 ;;; Locate elisp library
 ;;
 ;;
-(defvar helm-source-locate-library
-  `((name . "Elisp libraries (Scan)")
-    (init . (helm-locate-library-scan-init))
-    (candidates-in-buffer)
-    (candidate-number-limit . 9999)
-    (keymap . ,helm-generic-files-map)
-    (type . file)))
-
-(defun helm-locate-library-scan-init ()
-  "Init helm buffer status."
-  (helm-init-candidates-in-buffer
-      'global (helm-locate-library-scan-list)))
+(defclass helm-locate-library-class (helm-source-in-buffer helm-type-file)
+  ((data :initform (lambda () (helm-locate-library-scan-list)))
+   (fuzzy-match :initform t)
+   (keymap :initform helm-generic-files-map)))
 
 (defun helm-locate-library-scan-list ()
   (cl-loop for dir in load-path
@@ -589,7 +579,8 @@ First call indent, second complete symbol, third complete fname."
 ;;;###autoload
 (defun helm-locate-library ()
   (interactive)
-  (helm :sources 'helm-source-locate-library
+  (helm :sources (helm-make-source "Elisp libraries (Scan)"
+                     'helm-locate-library-class)
         :buffer "*helm locate library*"))
 
 (defun helm-set-variable (var)

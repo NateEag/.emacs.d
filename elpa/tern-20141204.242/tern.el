@@ -3,7 +3,7 @@
 
 ;; Author: Marijn Haverbeke
 ;; URL: http://ternjs.net/
-;; Version: 20141107.635
+;; Version: 20141204.242
 ;; X-Original-Version: 0.0.1
 ;; Package-Requires: ((json "1.2") (cl-lib "0.5") (emacs "24"))
 
@@ -213,10 +213,11 @@ list of strings, giving the binary name and arguments.")
      doc)))
 
 (defun tern-send-buffer-to-server ()
-  (tern-run-request (lambda (_err _data))
-                    `((files . [((type . "full")
-                                 (name . ,(tern-project-relative-file))
-                                 (text . ,(buffer-string)))]))))
+  (when (buffer-file-name)
+    (tern-run-request (lambda (_err _data))
+                      `((files . [((type . "full")
+                                   (name . ,(tern-project-relative-file))
+                                   (text . ,(buffer-string)))])))))
 
 ;; Completion
 

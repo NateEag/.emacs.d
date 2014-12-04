@@ -1,7 +1,7 @@
 This is flycheck.info, produced by makeinfo version 5.2 from
 flycheck.texi.
 
-This manual is for Flycheck version 0.22-cvs.
+This manual is for Flycheck version 0.22-cvs1.
 
 Copyright © 2014, Sebastian Wiesner
 
@@ -29,12 +29,12 @@ END-INFO-DIR-ENTRY
 
 File: flycheck.info,  Node: Command arguments,  Next: Options for command syntax checkers,  Up: Command syntax checkers
 
-10.2.1 Command arguments
+10.3.1 Command arguments
 ------------------------
 
 The arguments passed to the external command of a command syntax checker
 are subject to substitution with *note flycheck-substitute-argument:
-1dd, which replaces special symbols and forms with strings for
+1d8, which replaces special symbols and forms with strings for
 consumption by the external command:
 
  -- Function: flycheck -substitute-argument arg checker
@@ -54,7 +54,7 @@ consumption by the external command:
           Create a temporary file to check and return its path.  With
           ‘`source-inplace'’ create the temporary file in the same
           directory as the original file.  The value of
-          *note ‘flycheck-temp-prefix’: 5d. is used as prefix of the file name.
+          *note ‘flycheck-temp-prefix’: 59. is used as prefix of the file name.
 
           With ‘`source'’, try to retain the non-directory component of
           the buffer’s file name in the temporary file.
@@ -158,7 +158,7 @@ consumption by the external command:
 
 File: flycheck.info,  Node: Options for command syntax checkers,  Next: Configuration files for command syntax checkers,  Prev: Command arguments,  Up: Command syntax checkers
 
-10.2.2 Options for command syntax checkers
+10.3.2 Options for command syntax checkers
 ------------------------------------------
 
 Command syntax checkers can define options, whose values are substituted
@@ -207,7 +207,7 @@ Flycheck provides some built-in filters for such options:
 
 File: flycheck.info,  Node: Configuration files for command syntax checkers,  Next: Error parsing with regular expressions,  Prev: Options for command syntax checkers,  Up: Command syntax checkers
 
-10.2.3 Configuration files for command syntax checkers
+10.3.3 Configuration files for command syntax checkers
 ------------------------------------------------------
 
 Additionally, command syntax checkers can pass configuration files to
@@ -237,7 +237,7 @@ the external command.
      Locate the configuration file FILENAME for CHECKER.
 
      Locate the configuration file using
-     *note ‘flycheck-locate-config-file-functions’: 6d.
+     *note ‘flycheck-locate-config-file-functions’: 6b.
 
      Return the absolute path of the configuration file, or nil if no
      configuration file was found.
@@ -245,14 +245,14 @@ the external command.
 
 File: flycheck.info,  Node: Error parsing with regular expressions,  Next: Error parsers,  Prev: Configuration files for command syntax checkers,  Up: Command syntax checkers
 
-10.2.4 Error parsing with regular expressions
+10.3.4 Error parsing with regular expressions
 ---------------------------------------------
 
 Normally, command syntax checkers use regular expressions to extract
 errors from the output.  For simplicity and readability, Flycheck uses
 RX expressions instead of standard regular expressions, and provides
 some custom RX forms for frequent patterns, implemented by *note
-flycheck-rx-to-string: 1dc.:
+flycheck-rx-to-string: 1d7.:
 
  -- Function: flycheck -rx-to-string form &optional no-group
 
@@ -265,13 +265,16 @@ flycheck-rx-to-string: 1dc.:
           matches the column number.
 
      ‘(file-name SEXP ...)’
-          matches the file name.  SEXP constitutes the body of the message.  If no
-          SEXP is given, use a default body  of ‘(minimal-match
+          matches the file name.  SEXP describes the file name.  If no
+          SEXP is given, use a default body of ‘(minimal-match
           (one-or-more not-newline))’.
 
      ‘(message SEXP ...)’
           matches the message. SEXP constitutes the body of the message.  If no SEXP
           is given, use a default body of ‘(one-or-more not-newline)’.
+
+     ‘(id SEXP ...)’
+          matches an error ID.  SEXP describes the ID.
 
      NO-GROUP is passed to ‘`rx-to-string'’.
 
@@ -295,7 +298,7 @@ special error parser:
 
 File: flycheck.info,  Node: Error parsers,  Prev: Error parsing with regular expressions,  Up: Command syntax checkers
 
-10.2.5 Error parsers
+10.3.5 Error parsers
 --------------------
 
 Alternatively, command syntax checkers can use custom functions to parse
@@ -340,11 +343,11 @@ The following functions can aid you in writing custom parsers:
 
 File: flycheck.info,  Node: Errors,  Next: Flycheck buffer status,  Prev: Command syntax checkers,  Up: Flycheck API
 
-10.3 Errors
+10.4 Errors
 ===========
 
 The list of errors in a buffer is stored in the local variable *note
-flycheck-current-errors: 5b.:
+flycheck-current-errors: 8f.:
 
  -- Variable: flycheck -current-errors
 
@@ -367,10 +370,6 @@ about CL structures.
           The buffer object referring to the buffer this error belongs
           to.
 
-               Note: You do not need to set this attribute when creating
-               errors in an error parser.  Flycheck automatically keeps
-               track of the buffer itself.
-
       -- Slot: checker
 
           The syntax checker that reported this error.
@@ -385,7 +384,8 @@ about CL structures.
 
       -- Slot: column
 
-          An integer providing the column the error refers to.
+          An _optional_ integer providing the column the error refers
+          to.
 
           If this attribute is ‘nil’, Flycheck will assume that the
           error refers to the whole line.
@@ -397,25 +397,33 @@ about CL structures.
       -- Slot: level
 
           The error level of the message, as symbol denoting an error
-          level defined with *note flycheck-define-error-level: 25.
+          level defined with *note flycheck-define-error-level: 27.
+
+      -- Slot: id
+
+          An _optional_ unique identifier for this kind of error.
+
+          This field should identify the kind of an error, not the
+          individual error itself.
 
      There are two constructors to create new *note flycheck-error: 202.
      objects:
 
       -- Function: flycheck -error-new-at line column &optional level
-               message &key checker filename buffer
+               message &key checker id filename buffer
 
           Create a new Flycheck error at the given LINE and COLUMN.
 
-          LINE and COLUMN refer to the *note line: 21c. and *note
-          column: 21d. of the new error.  The optional LEVEL and MESSAGE
-          arguments fill the *note level: 21f. and cl-slot:‘message’
+          LINE and COLUMN refer to the *note line: 21d. and *note
+          column: 21e. of the new error.  The optional LEVEL and MESSAGE
+          arguments fill the *note level: 220. and cl-slot:‘message’
           slots respectively.
 
-          CHECKER, FILENAME and BUFFER are keyword arguments, for *note
-          checker: 21a, *note filename: 21b. and *note buffer: 219.
-          respectively.  BUFFER defaults to the current buffer, the
-          other two default to ‘nil’.
+          CHECKER, ID, FILENAME and BUFFER are keyword arguments, for
+          *note checker: 21b, *note id: 221, *note filename: 21c. and
+          *note buffer: 21a. respectively.  BUFFER defaults to the
+          current buffer and FILENAME to the file name of the current
+          buffer.  The other keyword arguments default to ‘nil’.
 
                Warning: Due to a limitation of Common Lisp functions in
                Emacs Lisp, you must specify *all* optional arguments,
@@ -499,7 +507,7 @@ about CL structures.
 
           Determine whether ERR1 goes before ERR2 by error level.
 
-          Like *note ‘flycheck-error-<’: 228, but compares by error level severity
+          Like *note ‘flycheck-error-<’: 22a, but compares by error level severity
           first.  Levels of the same severity are compared by name.
 
 * Menu:
@@ -511,15 +519,17 @@ about CL structures.
 
 File: flycheck.info,  Node: Error processing<2>,  Next: Error analysis,  Up: Errors
 
-10.3.1 Error processing
+10.4.1 Error processing
 -----------------------
+
+ -- Hook: flycheck -process-error-functions
 
  -- Function: flycheck -add-overlay
 
 
 File: flycheck.info,  Node: Error analysis,  Next: Error levels<2>,  Prev: Error processing<2>,  Up: Errors
 
-10.3.2 Error analysis
+10.4.2 Error analysis
 ---------------------
 
 Flycheck provides some functions for rudimentary error analysis:
@@ -542,7 +552,7 @@ Flycheck provides some functions for rudimentary error analysis:
 
 File: flycheck.info,  Node: Error levels<2>,  Prev: Error analysis,  Up: Errors
 
-10.3.3 Error levels
+10.4.3 Error levels
 -------------------
 
 Flycheck provides three built-in error levels:
@@ -560,7 +570,7 @@ Flycheck provides three built-in error levels:
      Informational annotations
 
 You can define new error levels with *note flycheck-define-error-level:
-25.:
+27.:
 
  -- Function: flycheck -define-error-level level &rest properties
 
@@ -573,7 +583,7 @@ You can define new error levels with *note flycheck-define-error-level:
           the number, the more severe is this level compared to other
           levels.  Defaults to 0.
 
-          The severity is used by *note ‘flycheck-error-level-<’: 229. to
+          The severity is used by *note ‘flycheck-error-level-<’: 22b. to
           determine the ordering of errors according to their levels.
 
      ‘:overlay-category CATEGORY’
@@ -600,7 +610,7 @@ You can define new error levels with *note flycheck-define-error-level:
 
      ‘:error-list-face FACE’
           A face symbol denoting the face to use for messages of this
-          level in the error list.  See *note ‘flycheck-list-errors’: 47.
+          level in the error list.  See *note ‘flycheck-list-errors’: 4a.
 
  -- Function: flycheck -error-level-p level
 
@@ -609,8 +619,25 @@ You can define new error levels with *note flycheck-define-error-level:
 
 File: flycheck.info,  Node: Flycheck buffer status,  Next: Utilities,  Prev: Errors,  Up: Flycheck API
 
-10.4 Flycheck buffer status
+10.5 Flycheck buffer status
 ===========================
+
+ -- Hook: flycheck -status-changed-functions
+
+          Variable properties: This variable may be risky if used as a
+          file-local variable.
+
+     Functions to run if the Flycheck status changed.
+
+     This hook is run whenever the status of Flycheck changes.  Each
+     hook function takes the status symbol as sinlge argument, as
+     given to *note ‘flycheck-report-status’: 234, which see.
+
+     This variable is a abnormal hook.  See Info
+     node *note (elisp)Hooks::.
+
+     This hook was introduced, or its default value was changed, in
+     version 0.20 of the flycheck package.
 
  -- Function: flycheck -report-status status
 
@@ -640,8 +667,8 @@ File: flycheck.info,  Node: Flycheck buffer status,  Next: Utilities,  Prev: Err
      ‘`suspicious'’
           The last syntax check had a suspicious result.
 
-     Set *note ‘flycheck-last-status-change’: 96. and call
-     *note ‘flycheck-status-changed-functions’: 59. with STATUS.  Afterwards
+     Set *note ‘flycheck-last-status-change’: 8e. and call
+     *note ‘flycheck-status-changed-functions’: 176. with STATUS.  Afterwards
      refresh the mode line.
 
  -- Variable: flycheck -last-status-change
@@ -655,13 +682,13 @@ File: flycheck.info,  Node: Flycheck buffer status,  Next: Utilities,  Prev: Err
 
      Get a text describing STATUS for use in the mode line.
 
-     STATUS defaults to *note ‘flycheck-last-status-change’: 96. if omitted or
+     STATUS defaults to *note ‘flycheck-last-status-change’: 8e. if omitted or
      nil.
 
 
 File: flycheck.info,  Node: Utilities,  Prev: Flycheck buffer status,  Up: Flycheck API
 
-10.5 Utilities
+10.6 Utilities
 ==============
 
  -- Function: flycheck -string-list-p obj
@@ -715,22 +742,22 @@ File: flycheck.info,  Node: Loading and initializing,  Next: Utilities<2>,  Prev
 
 The ERT API is provided by the ‘flycheck-ert’ library, which is part of
 the Flycheck package.  If the Flycheck package is installed (see *note
-Installation: 30.), you can load the ERT API with:
+Installation: 31.), you can load the ERT API with:
 
      (require 'flycheck-ert)
 
 This will also load the ‘ert’ and ‘flycheck’ libraries.
 
 Flycheck ERT supports test resources (see *note Accessing test
-resources: 238.).  For this feature, you need to initialize Flycheck ERT
+resources: 23b.).  For this feature, you need to initialize Flycheck ERT
 with a resource directory by calling *note flycheck-ert-initialize:
-239.:
+23c.:
 
  -- Function: flycheck -ert-initialize resource-dir
 
      Initialize a test suite with RESOURCE-DIR.
 
-     RESOURCE-DIR is the directory, *note ‘flycheck-ert-resource-filename’: 23a.
+     RESOURCE-DIR is the directory, *note ‘flycheck-ert-resource-filename’: 23d.
      should use to lookup resource files.
 
 
@@ -803,7 +830,7 @@ File: flycheck.info,  Node: Accessing test resources,  Next: Obtaining informati
 -------------------------------
 
 The following functions and macros load resources from the directory
-given to *note flycheck-ert-initialize: 239.
+given to *note flycheck-ert-initialize: 23c.
 
  -- Function: flycheck -ert-resource-filename resource-file
 
@@ -817,7 +844,7 @@ given to *note flycheck-ert-initialize: 239.
      Create a temp buffer from a RESOURCE-FILE and execute BODY.
 
      The absolute file name of RESOURCE-FILE is determined with
-     *note ‘flycheck-ert-resource-filename’: 23a.
+     *note ‘flycheck-ert-resource-filename’: 23d.
 
  -- Function: flycheck -ert-locate-config-file filename _checker
 
@@ -916,7 +943,7 @@ File: flycheck.info,  Node: Invoking syntax checkers in test cases,  Next: Writi
 
  -- Function: flycheck -ert-buffer-sync
 
-     Like *note ‘flycheck-buffer’: 43, but synchronously.
+     Like *note ‘flycheck-buffer’: 46, but synchronously.
 
  -- Function: flycheck -ert-ensure-clear
 
@@ -942,7 +969,7 @@ File: flycheck.info,  Node: Writing assertions,  Prev: Invoking syntax checkers 
 
      ERRORS is a list of errors expected to be present in the current
      buffer.  Each error is given as a list of arguments to
-     *note ‘flycheck-error-new-at’: 220.
+     *note ‘flycheck-error-new-at’: 222.
 
      If ERRORS are omitted, test that there are no errors at all in
      the current buffer.
@@ -962,13 +989,13 @@ File: flycheck.info,  Node: Writing assertions,  Prev: Invoking syntax checkers 
      check with.  If more than one major mode is specified, the test
      is run for each mode separately, so if you give three major
      modes, the entire test will run three times.  ERRORS is the list
-     of expected errors, as in *note ‘flycheck-ert-should-errors’: 254.  If
+     of expected errors, as in *note ‘flycheck-ert-should-errors’: 257.  If
      omitted, the syntax check must not emit any errors.  The errors
      are cleared after each test.
 
      The syntax checker is selected via standard syntax checker
      selection.  To test a specific checker, you need to set
-     *note ‘flycheck-checker’: 21. or *note ‘flycheck-disabled-checkers’: 60. accordingly
+     *note ‘flycheck-checker’: 23. or *note ‘flycheck-disabled-checkers’: 5d. accordingly
      before using this predicate, depending on whether you want to use
      manual or automatic checker selection.
 
@@ -1238,7 +1265,7 @@ Then install the syntax checkers that you’d like to test:
      $ cabal install hlint shellcheck
 
      Note: If you’d like to keep your environment clean, use the *note
-     Virtual test environment: 267. instead.
+     Virtual test environment: 26a. instead.
 
 Run the entire test suite:
 
@@ -1315,7 +1342,7 @@ After the VM is started, you can connect to it:
      $ vagrant ssh
 
 This will give you a bash prompt within the VM, on which you can run the
-tests as explained in *note Test running: 265.
+tests as explained in *note Test running: 268.
 
 To switch between Emacs versions, pass ‘EMACS’ to ‘make test’:
 
@@ -1360,7 +1387,7 @@ File: flycheck.info,  Node: Travis CI,  Prev: Virtual test environment,  Up: Tes
 13.4 Travis CI
 ==============
 
-The entire test suite continuously runs on *note Travis CI: 26a. after
+The entire test suite continuously runs on *note Travis CI: 26d. after
 every push, with the latest Emacs release and a nightly Emacs snapshot.
 
 Travis CI is configured from ‘.travis.yml’ in the top-level source
@@ -1369,7 +1396,7 @@ directory, and uses mostly the same playbooks for provisioning.
      Note: Travis CI is the *reference environment* for Flycheck’s test
      suite.  All tests *must pass* on Travis CI.
 
-     In case Travis CI diverges from the *note VM: 267, Travis CI is
+     In case Travis CI diverges from the *note VM: 26a, Travis CI is
      authoritative.
 
 
@@ -1440,7 +1467,7 @@ File: flycheck.info,  Node: Building HTML and Texinfo,  Next: Verifying referenc
 ==============================
 
 First, switch to the virtual environment you created in the *note Build
-environment setup: 26d, and make sure that the requirements are up to
+environment setup: 270, and make sure that the requirements are up to
 date:
 
      $ source ~/.virtualenvs/cask/bin/activate
@@ -1506,7 +1533,7 @@ Flycheck.
 
 When making changes to the documentation, you need to rebuild the
 Texinfo version with, by following the *note instructions to build the
-documentation: 26f.
+documentation: 272.
 
    ---------- Footnotes ----------
 
@@ -2720,22 +2747,22 @@ Index
 * flycheck-add-next-checker; Emacs Lisp function: Generic syntax checkers.
                                                               (line 187)
 * flycheck-add-overlay; Emacs Lisp function: Error processing<2>.
-                                                              (line   6)
-* flycheck-after-syntax-check-hook; Emacs Lisp hook: Syntax checking<2>.
-                                                              (line 126)
-* flycheck-before-syntax-check-hook; Emacs Lisp hook: Syntax checking<2>.
-                                                              (line 147)
+                                                              (line   8)
+* flycheck-after-syntax-check-hook; Emacs Lisp hook: Syntax checks.
+                                                              (line  27)
+* flycheck-before-syntax-check-hook; Emacs Lisp hook: Syntax checks.
+                                                              (line  48)
 * flycheck-buffer-saved-p; Emacs Lisp function: Predicates for syntax checkers.
                                                               (line   8)
-* flycheck-buffer; Emacs Lisp command:   Syntax checking<2>.  (line  76)
-* flycheck-check-syntax-automatically; Emacs Lisp user option: Syntax checking<2>.
+* flycheck-buffer; Emacs Lisp command:   Checking buffers.    (line  75)
+* flycheck-check-syntax-automatically; Emacs Lisp user option: Checking buffers.
                                                               (line  19)
 * flycheck-checker-error-threshold; Emacs Lisp user option: Error reporting.
-                                                              (line 143)
-* flycheck-checker; Emacs Lisp variable: Syntax checker selection<2>.
-                                                              (line 114)
-* flycheck-checkers; Emacs Lisp user option: Syntax checker selection<2>.
-                                                              (line  10)
+                                                              (line  18)
+* flycheck-checker; Emacs Lisp variable: Selecting syntax checkers.
+                                                              (line 155)
+* flycheck-checkers; Emacs Lisp user option: Selecting syntax checkers.
+                                                              (line   9)
 * flycheck-chktexrc; Emacs Lisp user option: TeX/LaTeX.       (line  20)
 * flycheck-clang-blocks; Emacs Lisp user option: C/C++.       (line  23)
 * flycheck-clang-definitions; Emacs Lisp user option: C/C++.  (line  40)
@@ -2751,17 +2778,17 @@ Index
 * flycheck-clang-standard-library; Emacs Lisp user option: C/C++.
                                                               (line 158)
 * flycheck-clang-warnings; Emacs Lisp user option: C/C++.     (line 178)
-* flycheck-clear; Emacs Lisp command:    Error reporting.     (line 130)
+* flycheck-clear; Emacs Lisp command:    Error reporting.     (line 187)
 * flycheck-coffeelintrc; Emacs Lisp user option: Coffeescript.
                                                               (line  31)
 * flycheck-collapse-error-message-whitespace; Emacs Lisp function: Error filters.
                                                               (line  19)
 * flycheck-compile; Emacs Lisp command:  Finding the right error patterns.
                                                               (line  16)
-* flycheck-completion-system; Emacs Lisp user option: Syntax checker selection<2>.
-                                                              (line 145)
-* flycheck-copy-messages-as-kill; Emacs Lisp command: Error messages.
-                                                              (line  72)
+* flycheck-completion-system; Emacs Lisp user option: Selecting syntax checkers.
+                                                              (line 118)
+* flycheck-copy-errors-as-kill; Emacs Lisp command: Copying killing errors.
+                                                              (line   9)
 * flycheck-count-errors; Emacs Lisp function: Error analysis. (line   8)
 * flycheck-cppcheck-checks; Emacs Lisp user option: C/C++.    (line 368)
 * flycheck-cppcheck-inconclusive; Emacs Lisp user option: C/C++.
@@ -2781,18 +2808,18 @@ Index
                                                               (line  23)
 * flycheck-define-generic-checker; Emacs Lisp function: Generic syntax checkers.
                                                               (line  10)
-* flycheck-describe-checker; Emacs Lisp command: Syntax checker selection<2>.
-                                                              (line 181)
-* flycheck-disabled-checkers; Emacs Lisp user option: Syntax checker selection<2>.
-                                                              (line  32)
-* flycheck-display-error-messages-unless-error-list; Emacs Lisp function: Error messages.
-                                                              (line  61)
-* flycheck-display-error-messages; Emacs Lisp function: Error messages.
-                                                              (line  46)
-* flycheck-display-errors-delay; Emacs Lisp user option: Error messages.
-                                                              (line   8)
-* flycheck-display-errors-function; Emacs Lisp user option: Error messages.
-                                                              (line  22)
+* flycheck-describe-checker; Emacs Lisp command: Selecting syntax checkers.
+                                                              (line 187)
+* flycheck-disabled-checkers; Emacs Lisp user option: Selecting syntax checkers.
+                                                              (line  34)
+* flycheck-display-error-messages-unless-error-list; Emacs Lisp function: Error reporting.
+                                                              (line 161)
+* flycheck-display-error-messages; Emacs Lisp function: Error reporting.
+                                                              (line 148)
+* flycheck-display-errors-delay; Emacs Lisp user option: Error reporting.
+                                                              (line 117)
+* flycheck-display-errors-function; Emacs Lisp user option: Error reporting.
+                                                              (line 133)
 * flycheck-dmd-include-path; Emacs Lisp user option: D.       (line  15)
 * flycheck-emacs-lisp-initialize-packages; Emacs Lisp user option: Emacs Lisp.
                                                               (line  27)
@@ -2800,38 +2827,39 @@ Index
                                                               (line  47)
 * flycheck-emacs-lisp-package-user-dir; Emacs Lisp user option: Emacs Lisp.
                                                               (line  76)
-* flycheck-error-<; Emacs Lisp function: Errors.              (line 152)
+* flycheck-error-<; Emacs Lisp function: Errors.              (line 157)
 * flycheck-error-buffer; Emacs Lisp slot: Errors.             (line  25)
-* flycheck-error-checker; Emacs Lisp slot: Errors.            (line  34)
-* flycheck-error-column-region; Emacs Lisp function: Errors.  (line 114)
-* flycheck-error-column; Emacs Lisp slot: Errors.             (line  46)
-* flycheck-error-filename; Emacs Lisp slot: Errors.           (line  38)
-* flycheck-error-format; Emacs Lisp function: Errors.         (line 145)
-* flycheck-error-level-<; Emacs Lisp function: Errors.        (line 158)
+* flycheck-error-checker; Emacs Lisp slot: Errors.            (line  30)
+* flycheck-error-column-region; Emacs Lisp function: Errors.  (line 119)
+* flycheck-error-column; Emacs Lisp slot: Errors.             (line  42)
+* flycheck-error-filename; Emacs Lisp slot: Errors.           (line  34)
+* flycheck-error-format; Emacs Lisp function: Errors.         (line 150)
+* flycheck-error-id; Emacs Lisp slot:    Errors.              (line  59)
+* flycheck-error-level-<; Emacs Lisp function: Errors.        (line 163)
 * flycheck-error-level-p; Emacs Lisp function: Error levels<2>.
                                                               (line  63)
-* flycheck-error-level; Emacs Lisp slot: Errors.              (line  57)
-* flycheck-error-line-region; Emacs Lisp function: Errors.    (line 104)
-* flycheck-error-line; Emacs Lisp slot:  Errors.              (line  42)
-* flycheck-error-list-after-refresh-hook; Emacs Lisp hook: Error list<2>.
+* flycheck-error-level; Emacs Lisp slot: Errors.              (line  54)
+* flycheck-error-line-region; Emacs Lisp function: Errors.    (line 109)
+* flycheck-error-line; Emacs Lisp slot:  Errors.              (line  38)
+* flycheck-error-list-after-refresh-hook; Emacs Lisp hook: Listing errors.
                                                               (line  22)
-* flycheck-error-list-checker-name; Emacs Lisp face: Error list<2>.
+* flycheck-error-list-checker-name; Emacs Lisp face: Listing errors.
                                                               (line  64)
-* flycheck-error-list-column-number; Emacs Lisp face: Error list<2>.
+* flycheck-error-list-column-number; Emacs Lisp face: Listing errors.
                                                               (line  57)
-* flycheck-error-list-highlight; Emacs Lisp face: Error list<2>.
+* flycheck-error-list-highlight; Emacs Lisp face: Listing errors.
                                                               (line  40)
-* flycheck-error-list-line-number; Emacs Lisp face: Error list<2>.
+* flycheck-error-list-line-number; Emacs Lisp face: Listing errors.
                                                               (line  50)
-* flycheck-error-message; Emacs Lisp slot: Errors.            (line  53)
-* flycheck-error-new-at; Emacs Lisp function: Errors.         (line  65)
-* flycheck-error-new; Emacs Lisp function: Errors.            (line  85)
+* flycheck-error-message; Emacs Lisp slot: Errors.            (line  50)
+* flycheck-error-new-at; Emacs Lisp function: Errors.         (line  69)
+* flycheck-error-new; Emacs Lisp function: Errors.            (line  90)
 * flycheck-error-parser; Emacs Lisp function: Error parsers.  (line  23)
-* flycheck-error-pos; Emacs Lisp function: Errors.            (line 136)
-* flycheck-error-thing-region; Emacs Lisp function: Errors.   (line 124)
-* flycheck-error-with-buffer; Emacs Lisp macro: Errors.       (line  98)
+* flycheck-error-pos; Emacs Lisp function: Errors.            (line 141)
+* flycheck-error-thing-region; Emacs Lisp function: Errors.   (line 129)
+* flycheck-error-with-buffer; Emacs Lisp macro: Errors.       (line 103)
 * flycheck-error; Emacs Lisp CL struct:  Errors.              (line  20)
-* flycheck-error; Emacs Lisp face:       Error reporting.     (line  16)
+* flycheck-error; Emacs Lisp face:       Error reporting.     (line  72)
 * flycheck-ert-at-nth-error; Emacs Lisp function: Writing assertions.
                                                               (line  52)
 * flycheck-ert-buffer-sync; Emacs Lisp function: Invoking syntax checkers in test cases.
@@ -2877,7 +2905,8 @@ Index
 * flycheck-eslint-rulesdir; Emacs Lisp user option: Javascript.
                                                               (line  32)
 * flycheck-eslintrc; Emacs Lisp user option: Javascript.      (line  56)
-* flycheck-first-error; Emacs Lisp command: Error navigation. (line  65)
+* flycheck-first-error; Emacs Lisp command: Navigating and jumping to errors.
+                                                              (line  66)
 * flycheck-flake8-maximum-complexity; Emacs Lisp user option: Python.
                                                               (line  17)
 * flycheck-flake8-maximum-line-length; Emacs Lisp user option: Python.
@@ -2885,9 +2914,9 @@ Index
 * flycheck-flake8rc; Emacs Lisp user option: Python.          (line  56)
 * flycheck-fold-include-errors; Emacs Lisp function: Error filters.
                                                               (line  25)
-* flycheck-fringe-error; Emacs Lisp face: Error reporting.    (line  67)
-* flycheck-fringe-info; Emacs Lisp face: Error reporting.     (line  67)
-* flycheck-fringe-warning; Emacs Lisp face: Error reporting.  (line  67)
+* flycheck-fringe-error; Emacs Lisp face: Error reporting.    (line 105)
+* flycheck-fringe-info; Emacs Lisp face: Error reporting.     (line 105)
+* flycheck-fringe-warning; Emacs Lisp face: Error reporting.  (line 105)
 * flycheck-gcc-definitions; Emacs Lisp user option: C/C++.    (line 218)
 * flycheck-gcc-include-path; Emacs Lisp user option: C/C++.   (line 236)
 * flycheck-gcc-includes; Emacs Lisp user option: C/C++.       (line 254)
@@ -2918,36 +2947,37 @@ Index
 * flycheck-gnat-warnings; Emacs Lisp user option: Ada.        (line  51)
 * flycheck-go-vet-print-functions; Emacs Lisp user option: Go.
                                                               (line  72)
-* flycheck-google-max-messages; Emacs Lisp user option: Error messages.
-                                                              (line  90)
-* flycheck-google-messages; Emacs Lisp command: Error messages.
-                                                              (line  78)
 * flycheck-has-errors-p; Emacs Lisp function: Error analysis. (line  16)
 * flycheck-has-max-errors-p; Emacs Lisp function: Error analysis.
                                                               (line  20)
 * flycheck-highlighting-mode; Emacs Lisp user option: Error reporting.
-                                                              (line  33)
-* flycheck-idle-change-delay; Emacs Lisp user option: Syntax checking<2>.
+                                                              (line  38)
+* flycheck-idle-change-delay; Emacs Lisp user option: Checking buffers.
                                                               (line  55)
 * flycheck-indication-mode; Emacs Lisp user option: Error reporting.
-                                                              (line  74)
-* flycheck-info; Emacs Lisp face:        Error reporting.     (line  16)
+                                                              (line  89)
+* flycheck-info; Emacs Lisp face:        Error reporting.     (line  72)
 * flycheck-jshintrc; Emacs Lisp user option: Javascript.      (line  15)
+* flycheck-keymap-prefix; Emacs Lisp user option: Usage.      (line  13)
 * flycheck-last-status-change; Emacs Lisp variable: Flycheck buffer status.
-                                                              (line  38)
-* flycheck-list-errors; Emacs Lisp command: Error list<2>.    (line   8)
+                                                              (line  55)
+* flycheck-list-errors; Emacs Lisp command: Listing errors.   (line   9)
 * flycheck-locate-config-file-functions; Emacs Lisp user option: Syntax checker configuration files.
                                                               (line  20)
 * flycheck-locate-config-file; Emacs Lisp function: Configuration files for command syntax checkers.
                                                               (line  28)
 * flycheck-mode-line-status-text; Emacs Lisp function: Flycheck buffer status.
-                                                              (line  45)
-* flycheck-mode-line; Emacs Lisp user option: Mode line.      (line  44)
-* flycheck-mode; Emacs Lisp command:     Flycheck Mode.       (line   8)
-* flycheck-mode; Emacs Lisp user option: Flycheck Mode.       (line  12)
-* flycheck-navigation-minimum-level; Emacs Lisp user option: Error navigation.
-                                                              (line  77)
-* flycheck-next-error; Emacs Lisp command: Error navigation.  (line  47)
+                                                              (line  62)
+* flycheck-mode-line; Emacs Lisp user option: Mode line reporting.
+                                                              (line  44)
+* flycheck-mode; Emacs Lisp command:     Enabling syntax checking<2>.
+                                                              (line  40)
+* flycheck-mode; Emacs Lisp user option: Enabling syntax checking<2>.
+                                                              (line  44)
+* flycheck-navigation-minimum-level; Emacs Lisp user option: Navigating and jumping to errors.
+                                                              (line  82)
+* flycheck-next-error; Emacs Lisp command: Navigating and jumping to errors.
+                                                              (line  48)
 * flycheck-option-comma-separated-list; Emacs Lisp function: Options for command syntax checkers.
                                                               (line  33)
 * flycheck-option-int; Emacs Lisp function: Options for command syntax checkers.
@@ -2955,22 +2985,21 @@ Index
 * flycheck-parse-checkstyle; Emacs Lisp function: Error parsers.
                                                               (line  10)
 * flycheck-parse-with-patterns; Emacs Lisp function: Error parsing with regular expressions.
-                                                              (line  36)
+                                                              (line  39)
 * flycheck-parse-xml-string; Emacs Lisp function: Error parsers.
                                                               (line  31)
-* flycheck-perlcritic-verbosity; Emacs Lisp user option: Perl.
-                                                              (line  28)
+* flycheck-perlcritic-severity; Emacs Lisp user option: Perl. (line  28)
 * flycheck-phpcs-standard; Emacs Lisp user option: PHP.       (line  64)
 * flycheck-phpmd-rulesets; Emacs Lisp user option: PHP.       (line  39)
-* flycheck-previous-error; Emacs Lisp command: Error navigation.
-                                                              (line  56)
-* flycheck-process-error-functions; Emacs Lisp hook: Error reporting.
-                                                              (line  93)
+* flycheck-previous-error; Emacs Lisp command: Navigating and jumping to errors.
+                                                              (line  57)
+* flycheck-process-error-functions; Emacs Lisp hook: Error processing<2>.
+                                                              (line   6)
 * flycheck-pylintrc; Emacs Lisp user option: Python.          (line  75)
 * flycheck-registered-checker-p; Emacs Lisp function: Generic syntax checkers.
                                                               (line 167)
 * flycheck-report-status; Emacs Lisp function: Flycheck buffer status.
-                                                              (line   6)
+                                                              (line  23)
 * flycheck-rubocop-lint-only; Emacs Lisp user option: Ruby.   (line  23)
 * flycheck-rubocoprc; Emacs Lisp user option: Ruby.           (line  42)
 * flycheck-rubylintrc; Emacs Lisp user option: Ruby.          (line  61)
@@ -2986,33 +3015,34 @@ Index
 * flycheck-scalastyle-jar; Emacs Lisp user option: Scala.     (line  33)
 * flycheck-scalastylerc; Emacs Lisp user option: Scala.       (line  52)
 * flycheck-scss-compass; Emacs Lisp user option: Scss.        (line  15)
-* flycheck-select-checker; Emacs Lisp command: Syntax checker selection<2>.
-                                                              (line  73)
+* flycheck-select-checker; Emacs Lisp command: Selecting syntax checkers.
+                                                              (line  74)
 * flycheck-set-checker-executable; Emacs Lisp command: Syntax checker executables.
                                                               (line  22)
 * flycheck-shellcheck-excluded-warnings; Emacs Lisp user option: Shell script languages.
                                                               (line  81)
 * flycheck-sphinx-warn-on-missing-references; Emacs Lisp user option: ReStructuredText.
                                                               (line  21)
-* flycheck-standard-error-navigation; Emacs Lisp user option: Error navigation.
-                                                              (line  16)
-* flycheck-status-changed-functions; Emacs Lisp hook: Syntax checking<2>.
-                                                              (line 107)
+* flycheck-standard-error-navigation; Emacs Lisp user option: Navigating and jumping to errors.
+                                                              (line  21)
+* flycheck-status-changed-functions; Emacs Lisp hook: Flycheck buffer status.
+                                                              (line   6)
 * flycheck-string-list-p; Emacs Lisp function: Utilities.     (line   6)
 * flycheck-substitute-argument; Emacs Lisp function: Command arguments.
                                                               (line  11)
 * flycheck-symbol-list-p; Emacs Lisp function: Utilities.     (line  10)
-* flycheck-syntax-check-failed-hook; Emacs Lisp hook: Syntax checking<2>.
-                                                              (line 167)
-* flycheck-temp-prefix; Emacs Lisp user option: Syntax checking<2>.
-                                                              (line 187)
+* flycheck-syntax-check-failed-hook; Emacs Lisp hook: Syntax checks.
+                                                              (line  66)
+* flycheck-temp-prefix; Emacs Lisp user option: Checking buffers.
+                                                              (line  84)
 * flycheck-tidyrc; Emacs Lisp user option: HTML.              (line  15)
-* flycheck-warning; Emacs Lisp face:     Error reporting.     (line  16)
+* flycheck-warning; Emacs Lisp face:     Error reporting.     (line  72)
 * fortran-gfortran; Emacs Lisp Flycheck syntax checker: Fortran.
                                                               (line   6)
-* global-flycheck-mode; Emacs Lisp command: Flycheck Mode.    (line  16)
-* global-flycheck-mode; Emacs Lisp user option: Flycheck Mode.
-                                                              (line  33)
+* global-flycheck-mode; Emacs Lisp command: Enabling syntax checking<2>.
+                                                              (line   9)
+* global-flycheck-mode; Emacs Lisp user option: Enabling syntax checking<2>.
+                                                              (line  26)
 * go-build; Emacs Lisp Flycheck syntax checker: Go.           (line  94)
 * go-errcheck; Emacs Lisp Flycheck syntax checker: Go.        (line 122)
 * go-gofmt; Emacs Lisp Flycheck syntax checker: Go.           (line   6)
@@ -3032,7 +3062,6 @@ Index
                                                               (line   6)
 * json-jsonlint; Emacs Lisp Flycheck syntax checker: JSON.    (line   6)
 * less; Emacs Lisp Flycheck syntax checker: LESS.             (line   6)
-* list-flycheck-errors; Emacs Lisp command: Error list<2>.    (line   8)
 * lua; Emacs Lisp Flycheck syntax checker: Lua.               (line   6)
 * make; Emacs Lisp Flycheck syntax checker: Make.             (line   6)
 * perl-perlcritic; Emacs Lisp Flycheck syntax checker: Perl.  (line  19)

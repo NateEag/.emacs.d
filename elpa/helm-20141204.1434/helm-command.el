@@ -43,6 +43,9 @@ Show all candidates on startup when 0 (default)."
   :group 'helm-command
   :type 'boolean)
 
+(defcustom helm-M-x-fuzzy-match t
+  "Enable fuzzy matching in `helm-M-x' when non--nil.")
+
 
 ;;; Faces
 ;;
@@ -128,6 +131,10 @@ fuzzy matching is running its own sort function with a different algorithm."
 
 (defun helm-M-x-transformer (candidates _source)
   "Transformer function for `helm-M-x' candidates."
+  (helm-M-x-transformer-1 candidates (null helm--in-fuzzy)))
+
+(defun helm-M-x-transformer-hist (candidates _source)
+  "Transformer function for `helm-M-x' candidates."
   (helm-M-x-transformer-1 candidates))
 
 (defun helm-M-x--notify-prefix-arg ()
@@ -149,6 +156,9 @@ You can get help on each command by persistent action."
   (let* ((history (cl-loop for i in extended-command-history
                         when (commandp (intern i)) collect i))
          command sym-com in-help help-cand
+         (helm-default-fuzzy-sort-fn (lambda (candidates _source)
+                                       (helm-fuzzy-matching-default-sort-fn-1
+                                        candidates 'real)))
          (helm--mode-line-display-prefarg t)
          (pers-help #'(lambda (candidate)
                         (let ((hbuf (get-buffer (help-buffer))))
@@ -188,12 +198,12 @@ You can get help on each command by persistent action."
                           :del-input nil
                           :mode-line helm-M-x-mode-line
                           :must-match t
-                          :fuzzy t
+                          :fuzzy helm-M-x-fuzzy-match
                           :nomark t
                           :keymap helm-M-x-map
                           :candidates-in-buffer t
                           :fc-transformer 'helm-M-x-transformer
-                          :hist-fc-transformer 'helm-M-x-transformer)))
+                          :hist-fc-transformer 'helm-M-x-transformer-hist)))
       (cancel-timer tm)
       (setq helm--mode-line-display-prefarg nil))
     (setq sym-com (intern command))

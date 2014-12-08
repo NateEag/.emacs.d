@@ -3,8 +3,8 @@
 ;; Copyright (C) 2012-2014 Magnar Sveen
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
-;; Version: 20141201.2206
-;; X-Original-Version: 2.9.0
+;; Version: 20141207.1052
+;; X-Original-Version: 2.10.0
 ;; Keywords: lists
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -1115,71 +1115,6 @@ sorts it in descending order."
       (-sort comp)
       (-map 'cdr))))
 
-(defmacro -when-let (var-val &rest body)
-  "If VAL evaluates to non-nil, bind it to VAR and execute body.
-VAR-VAL should be a (VAR VAL) pair."
-  (declare (debug ((symbolp form) body))
-           (indent 1))
-  (let ((var (car var-val))
-        (val (cadr var-val)))
-    `(let ((,var ,val))
-       (when ,var
-         ,@body))))
-
-(defmacro -when-let* (vars-vals &rest body)
-  "If all VALS evaluate to true, bind them to their corresponding
-VARS and execute body. VARS-VALS should be a list of (VAR VAL)
-pairs (corresponding to bindings of `let*')."
-  (declare (debug ((&rest (symbolp form)) body))
-           (indent 1))
-  (if (= (length vars-vals) 1)
-      `(-when-let ,(car vars-vals)
-         ,@body)
-    `(-when-let ,(car vars-vals)
-       (-when-let* ,(cdr vars-vals)
-         ,@body))))
-
-(defmacro --when-let (val &rest body)
-  "If VAL evaluates to non-nil, bind it to `it' and execute
-body."
-  (declare (debug (form body))
-           (indent 1))
-  `(let ((it ,val))
-     (when it
-       ,@body)))
-
-(defmacro -if-let (var-val then &rest else)
-  "If VAL evaluates to non-nil, bind it to VAR and do THEN,
-otherwise do ELSE. VAR-VAL should be a (VAR VAL) pair."
-  (declare (debug ((symbolp form) form body))
-           (indent 2))
-  (let ((var (car var-val))
-        (val (cadr var-val)))
-    `(let ((,var ,val))
-       (if ,var ,then ,@else))))
-
-(defmacro -if-let* (vars-vals then &rest else)
-  "If all VALS evaluate to true, bind them to their corresponding
-VARS and do THEN, otherwise do ELSE. VARS-VALS should be a list
-of (VAR VAL) pairs (corresponding to the bindings of `let*')."
-  (declare (debug ((&rest (symbolp form)) form body))
-           (indent 2))
-  (let ((first-pair (car vars-vals))
-        (rest (cdr vars-vals)))
-    (if (= (length vars-vals) 1)
-        `(-if-let ,first-pair ,then ,@else)
-      `(-if-let ,first-pair
-         (-if-let* ,rest ,then ,@else)
-         ,@else))))
-
-(defmacro --if-let (val then &rest else)
-  "If VAL evaluates to non-nil, bind it to `it' and do THEN,
-otherwise do ELSE."
-  (declare (debug (form form body))
-           (indent 2))
-  `(let ((it ,val))
-     (if it ,then ,@else)))
-
 (defun dash--match-ignore-place-p (symbol)
   "Return non-nil if SYMBOL is a symbol and starts with _."
   (and (symbolp symbol)
@@ -1192,8 +1127,8 @@ otherwise do ELSE."
     `(pop ,source))
    (t
     `(progn
-       (setq ,s (nthcdr ,skip-cdr ,s))
-       (pop ,s)))))
+       (setq ,source (nthcdr ,skip-cdr ,source))
+       (pop ,source)))))
 
 (defun dash--match-cons-get-car (skip-cdr source)
   "Helper function generating idiomatic code to get nth car."
@@ -1556,6 +1491,64 @@ See `-let' for the description of destructuring mechanism."
       ;; We should find a way to optimize that.  Not critical however.
       `(lambda ,(--map (cadr it) inputs)
          (-let* ,inputs ,@body))))))
+
+(defmacro -if-let* (vars-vals then &rest else)
+  "If all VALS evaluate to true, bind them to their corresponding
+VARS and do THEN, otherwise do ELSE. VARS-VALS should be a list
+of (VAR VAL) pairs.
+
+Note: binding is done according to `-let*'."
+  (declare (debug ((&rest (sexp form)) form body))
+           (indent 2))
+  (->> vars-vals
+    (-mapcat (-lambda ((pat src)) (dash--match pat src)))
+    (-reduce-r-from
+     (-lambda ((var val) memo)
+       `(let ((,var ,val))
+          (if ,var ,memo ,@else)))
+     then)))
+
+(defmacro -if-let (var-val then &rest else)
+  "If VAL evaluates to non-nil, bind it to VAR and do THEN,
+otherwise do ELSE. VAR-VAL should be a (VAR VAL) pair.
+
+Note: binding is done according to `-let'."
+  (declare (debug ((sexp form) form body))
+           (indent 2))
+  `(-if-let* (,var-val) ,then ,@else))
+
+(defmacro --if-let (val then &rest else)
+  "If VAL evaluates to non-nil, bind it to `it' and do THEN,
+otherwise do ELSE."
+  (declare (debug (form form body))
+           (indent 2))
+  `(-if-let (it ,val) ,then ,@else))
+
+(defmacro -when-let* (vars-vals &rest body)
+  "If all VALS evaluate to true, bind them to their corresponding
+VARS and execute body. VARS-VALS should be a list of (VAR VAL)
+pairs.
+
+Note: binding is done according to `-let*'."
+  (declare (debug ((&rest (sexp form)) body))
+           (indent 1))
+  `(-if-let* ,vars-vals (progn ,@body)))
+
+(defmacro -when-let (var-val &rest body)
+  "If VAL evaluates to non-nil, bind it to VAR and execute body.
+VAR-VAL should be a (VAR VAL) pair.
+
+Note: binding is done according to `-let'."
+  (declare (debug ((sexp form) body))
+           (indent 1))
+  `(-if-let ,var-val (progn ,@body)))
+
+(defmacro --when-let (val &rest body)
+  "If VAL evaluates to non-nil, bind it to `it' and execute
+body."
+  (declare (debug (form body))
+           (indent 1))
+  `(--if-let ,val (progn ,@body)))
 
 (defun -distinct (list)
   "Return a new list with all duplicates removed.

@@ -29,7 +29,7 @@ END-INFO-DIR-ENTRY
 
 Indirect:
 flycheck.info-1: 1037
-flycheck.info-2: 305357
+flycheck.info-2: 302117
 
 Tag Table:
 (Indirect)
@@ -1244,821 +1244,831 @@ Ref: 158206996
 Node: master in development208080
 Ref: guide/releases/index master-in-development208174
 Ref: 1b2208174
-Ref: master in development-Footnote-1210726
-Ref: master in development-Footnote-2210782
-Ref: master in development-Footnote-3210838
-Ref: master in development-Footnote-4210894
-Ref: master in development-Footnote-5210950
-Ref: master in development-Footnote-6211006
-Ref: master in development-Footnote-7211062
-Ref: master in development-Footnote-8211118
-Ref: master in development-Footnote-9211174
-Ref: master in development-Footnote-10211230
-Ref: master in development-Footnote-11211287
-Ref: master in development-Footnote-12211344
-Ref: master in development-Footnote-13211401
-Ref: master in development-Footnote-14211458
-Ref: master in development-Footnote-15211515
-Ref: master in development-Footnote-16211572
-Ref: master in development-Footnote-17211629
-Node: 0 21 Oct 26 2014211686
-Ref: guide/releases/index oct-26-2014211805
-Ref: 1b3211805
-Ref: 0 21 Oct 26 2014-Footnote-1214348
-Ref: 0 21 Oct 26 2014-Footnote-2214404
-Ref: 0 21 Oct 26 2014-Footnote-3214460
-Ref: 0 21 Oct 26 2014-Footnote-4214516
-Ref: 0 21 Oct 26 2014-Footnote-5214572
-Ref: 0 21 Oct 26 2014-Footnote-6214628
-Ref: 0 21 Oct 26 2014-Footnote-7214684
-Ref: 0 21 Oct 26 2014-Footnote-8214740
-Ref: 0 21 Oct 26 2014-Footnote-9214796
-Ref: 0 21 Oct 26 2014-Footnote-10214852
-Ref: 0 21 Oct 26 2014-Footnote-11214909
-Ref: 0 21 Oct 26 2014-Footnote-12214966
-Ref: 0 21 Oct 26 2014-Footnote-13215023
-Ref: 0 21 Oct 26 2014-Footnote-14215080
-Ref: 0 21 Oct 26 2014-Footnote-15215137
-Ref: 0 21 Oct 26 2014-Footnote-16215194
-Ref: 0 21 Oct 26 2014-Footnote-17215251
-Ref: 0 21 Oct 26 2014-Footnote-18215308
-Ref: 0 21 Oct 26 2014-Footnote-19215365
-Ref: 0 21 Oct 26 2014-Footnote-20215422
-Ref: 0 21 Oct 26 2014-Footnote-21215479
-Node: 0 20 Aug 12 2014215536
-Ref: guide/releases/index aug-12-2014215650
-Ref: 1b4215650
-Ref: 0 20 Aug 12 2014-Footnote-1219230
-Ref: 0 20 Aug 12 2014-Footnote-2219286
-Ref: 0 20 Aug 12 2014-Footnote-3219342
-Ref: 0 20 Aug 12 2014-Footnote-4219398
-Ref: 0 20 Aug 12 2014-Footnote-5219454
-Ref: 0 20 Aug 12 2014-Footnote-6219510
-Ref: 0 20 Aug 12 2014-Footnote-7219566
-Ref: 0 20 Aug 12 2014-Footnote-8219622
-Ref: 0 20 Aug 12 2014-Footnote-9219678
-Ref: 0 20 Aug 12 2014-Footnote-10219734
-Ref: 0 20 Aug 12 2014-Footnote-11219791
-Ref: 0 20 Aug 12 2014-Footnote-12219848
-Ref: 0 20 Aug 12 2014-Footnote-13219905
-Ref: 0 20 Aug 12 2014-Footnote-14219962
-Ref: 0 20 Aug 12 2014-Footnote-15220019
-Ref: 0 20 Aug 12 2014-Footnote-16220076
-Ref: 0 20 Aug 12 2014-Footnote-17220133
-Ref: 0 20 Aug 12 2014-Footnote-18220190
-Ref: 0 20 Aug 12 2014-Footnote-19220247
-Ref: 0 20 Aug 12 2014-Footnote-20220304
-Ref: 0 20 Aug 12 2014-Footnote-21220361
-Ref: 0 20 Aug 12 2014-Footnote-22220418
-Ref: 0 20 Aug 12 2014-Footnote-23220475
-Ref: 0 20 Aug 12 2014-Footnote-24220532
-Ref: 0 20 Aug 12 2014-Footnote-25220589
-Ref: 0 20 Aug 12 2014-Footnote-26220646
-Ref: 0 20 Aug 12 2014-Footnote-27220703
-Ref: 0 20 Aug 12 2014-Footnote-28220760
-Node: 0 19 Jun 12 2014220817
-Ref: guide/releases/index jun-12-2014220931
-Ref: 1b5220931
-Ref: 0 19 Jun 12 2014-Footnote-1222801
-Ref: 0 19 Jun 12 2014-Footnote-2222857
-Ref: 0 19 Jun 12 2014-Footnote-3222913
-Ref: 0 19 Jun 12 2014-Footnote-4222969
-Ref: 0 19 Jun 12 2014-Footnote-5223025
-Ref: 0 19 Jun 12 2014-Footnote-6223081
-Ref: 0 19 Jun 12 2014-Footnote-7223137
-Ref: 0 19 Jun 12 2014-Footnote-8223193
-Ref: 0 19 Jun 12 2014-Footnote-9223249
-Ref: 0 19 Jun 12 2014-Footnote-10223305
-Ref: 0 19 Jun 12 2014-Footnote-11223362
-Ref: 0 19 Jun 12 2014-Footnote-12223419
-Ref: 0 19 Jun 12 2014-Footnote-13223476
-Ref: 0 19 Jun 12 2014-Footnote-14223533
-Node: 0 18 Mar 24 2014223590
-Ref: guide/releases/index mar-24-2014223703
-Ref: 1b6223703
-Ref: 0 18 Mar 24 2014-Footnote-1225719
-Ref: 0 18 Mar 24 2014-Footnote-2225775
-Ref: 0 18 Mar 24 2014-Footnote-3225830
-Ref: 0 18 Mar 24 2014-Footnote-4225886
-Ref: 0 18 Mar 24 2014-Footnote-5225942
-Ref: 0 18 Mar 24 2014-Footnote-6225998
-Ref: 0 18 Mar 24 2014-Footnote-7226054
-Ref: 0 18 Mar 24 2014-Footnote-8226110
-Ref: 0 18 Mar 24 2014-Footnote-9226166
-Ref: 0 18 Mar 24 2014-Footnote-10226222
-Node: 0 17 Feb 1 2014226279
-Ref: guide/releases/index feb-1-2014226392
-Ref: 1b7226392
-Ref: 0 17 Feb 1 2014-Footnote-1228086
-Ref: 0 17 Feb 1 2014-Footnote-2228116
-Ref: 0 17 Feb 1 2014-Footnote-3228172
-Ref: 0 17 Feb 1 2014-Footnote-4228228
-Ref: 0 17 Feb 1 2014-Footnote-5228284
-Ref: 0 17 Feb 1 2014-Footnote-6228340
-Ref: 0 17 Feb 1 2014-Footnote-7228396
-Ref: 0 17 Feb 1 2014-Footnote-8228452
-Ref: 0 17 Feb 1 2014-Footnote-9228508
-Node: 0 16 Jan 11 2014228564
-Ref: guide/releases/index sphinx228677
-Ref: 1b8228677
-Ref: guide/releases/index jan-11-2014228677
-Ref: 1b9228677
-Ref: 0 16 Jan 11 2014-Footnote-1231509
-Ref: 0 16 Jan 11 2014-Footnote-2231564
-Ref: 0 16 Jan 11 2014-Footnote-3231620
-Ref: 0 16 Jan 11 2014-Footnote-4231676
-Ref: 0 16 Jan 11 2014-Footnote-5231732
-Ref: 0 16 Jan 11 2014-Footnote-6231788
-Ref: 0 16 Jan 11 2014-Footnote-7231844
-Ref: 0 16 Jan 11 2014-Footnote-8231900
-Ref: 0 16 Jan 11 2014-Footnote-9231956
-Ref: 0 16 Jan 11 2014-Footnote-10232012
-Ref: 0 16 Jan 11 2014-Footnote-11232069
-Ref: 0 16 Jan 11 2014-Footnote-12232126
-Ref: 0 16 Jan 11 2014-Footnote-13232183
-Ref: 0 16 Jan 11 2014-Footnote-14232240
-Ref: 0 16 Jan 11 2014-Footnote-15232297
-Ref: 0 16 Jan 11 2014-Footnote-16232354
-Ref: 0 16 Jan 11 2014-Footnote-17232411
-Ref: 0 16 Jan 11 2014-Footnote-18232468
-Ref: 0 16 Jan 11 2014-Footnote-19232525
-Ref: 0 16 Jan 11 2014-Footnote-20232582
-Ref: 0 16 Jan 11 2014-Footnote-21232639
-Ref: 0 16 Jan 11 2014-Footnote-22232696
-Node: 0 15 Nov 15 2013232753
-Ref: guide/releases/index nov-15-2013232869
-Ref: 1ba232869
-Ref: guide/releases/index flycheck-hdevtools232869
-Ref: 1bb232869
-Ref: 0 15 Nov 15 2013-Footnote-1237077
-Ref: 0 15 Nov 15 2013-Footnote-2237133
-Ref: 0 15 Nov 15 2013-Footnote-3237189
-Ref: 0 15 Nov 15 2013-Footnote-4237245
-Ref: 0 15 Nov 15 2013-Footnote-5237301
-Ref: 0 15 Nov 15 2013-Footnote-6237357
-Ref: 0 15 Nov 15 2013-Footnote-7237413
-Ref: 0 15 Nov 15 2013-Footnote-8237454
-Ref: 0 15 Nov 15 2013-Footnote-9237510
-Ref: 0 15 Nov 15 2013-Footnote-10237566
-Ref: 0 15 Nov 15 2013-Footnote-11237623
-Ref: 0 15 Nov 15 2013-Footnote-12237680
-Ref: 0 15 Nov 15 2013-Footnote-13237737
-Ref: 0 15 Nov 15 2013-Footnote-14237794
-Ref: 0 15 Nov 15 2013-Footnote-15237851
-Ref: 0 15 Nov 15 2013-Footnote-16237908
-Ref: 0 15 Nov 15 2013-Footnote-17237965
-Ref: 0 15 Nov 15 2013-Footnote-18238022
-Ref: 0 15 Nov 15 2013-Footnote-19238079
-Ref: 0 15 Nov 15 2013-Footnote-20238136
-Ref: 0 15 Nov 15 2013-Footnote-21238193
-Ref: 0 15 Nov 15 2013-Footnote-22238250
-Ref: 0 15 Nov 15 2013-Footnote-23238307
-Ref: 0 15 Nov 15 2013-Footnote-24238364
-Ref: 0 15 Nov 15 2013-Footnote-25238421
-Ref: 0 15 Nov 15 2013-Footnote-26238478
-Ref: 0 15 Nov 15 2013-Footnote-27238535
-Ref: 0 15 Nov 15 2013-Footnote-28238592
-Ref: 0 15 Nov 15 2013-Footnote-29238649
-Ref: 0 15 Nov 15 2013-Footnote-30238706
-Node: 0 14 1 Aug 16 2013238763
-Ref: guide/releases/index grizzl238879
-Ref: 1bc238879
-Ref: guide/releases/index aug-16-2013238879
-Ref: 1bd238879
-Ref: 0 14 1 Aug 16 2013-Footnote-1239037
-Node: 0 14 Aug 15 2013239093
-Ref: guide/releases/index aug-15-2013239209
-Ref: 1be239209
-Ref: 0 14 Aug 15 2013-Footnote-1242179
-Ref: 0 14 Aug 15 2013-Footnote-2242235
-Ref: 0 14 Aug 15 2013-Footnote-3242291
-Ref: 0 14 Aug 15 2013-Footnote-4242347
-Ref: 0 14 Aug 15 2013-Footnote-5242403
-Ref: 0 14 Aug 15 2013-Footnote-6242459
-Ref: 0 14 Aug 15 2013-Footnote-7242515
-Ref: 0 14 Aug 15 2013-Footnote-8242571
-Ref: 0 14 Aug 15 2013-Footnote-9242627
-Ref: 0 14 Aug 15 2013-Footnote-10242683
-Ref: 0 14 Aug 15 2013-Footnote-11242740
-Ref: 0 14 Aug 15 2013-Footnote-12242797
-Ref: 0 14 Aug 15 2013-Footnote-13242854
-Ref: 0 14 Aug 15 2013-Footnote-14242911
-Ref: 0 14 Aug 15 2013-Footnote-15242968
-Ref: 0 14 Aug 15 2013-Footnote-16243025
-Ref: 0 14 Aug 15 2013-Footnote-17243082
-Ref: 0 14 Aug 15 2013-Footnote-18243139
-Ref: 0 14 Aug 15 2013-Footnote-19243196
-Ref: 0 14 Aug 15 2013-Footnote-20243253
-Ref: 0 14 Aug 15 2013-Footnote-21243310
-Ref: 0 14 Aug 15 2013-Footnote-22243367
-Node: 0 13 Jun 28 2013243424
-Ref: guide/releases/index jun-28-2013243538
-Ref: 1bf243538
-Ref: 0 13 Jun 28 2013-Footnote-1246158
-Ref: 0 13 Jun 28 2013-Footnote-2246214
-Ref: 0 13 Jun 28 2013-Footnote-3246270
-Ref: 0 13 Jun 28 2013-Footnote-4246326
-Ref: 0 13 Jun 28 2013-Footnote-5246382
-Ref: 0 13 Jun 28 2013-Footnote-6246438
-Ref: 0 13 Jun 28 2013-Footnote-7246494
-Node: 0 12 May 18 2013246550
-Ref: guide/releases/index may-18-2013246664
-Ref: 1c0246664
-Ref: 0 12 May 18 2013-Footnote-1247493
-Ref: 0 12 May 18 2013-Footnote-2247549
-Ref: 0 12 May 18 2013-Footnote-3247605
-Ref: 0 12 May 18 2013-Footnote-4247661
-Node: 0 11 May 01 2013247717
-Ref: guide/releases/index may-01-2013247831
-Ref: 1c1247831
-Ref: 0 11 May 01 2013-Footnote-1248797
-Ref: 0 11 May 01 2013-Footnote-2248853
-Ref: 0 11 May 01 2013-Footnote-3248909
-Ref: 0 11 May 01 2013-Footnote-4248965
-Ref: 0 11 May 01 2013-Footnote-5249011
-Node: 0 10 Apr 21 2013249067
-Ref: guide/releases/index apr-21-2013249180
-Ref: 1c2249180
-Ref: guide/releases/index projectile249180
-Ref: 1c3249180
-Ref: 0 10 Apr 21 2013-Footnote-1250833
-Ref: 0 10 Apr 21 2013-Footnote-2250889
-Ref: 0 10 Apr 21 2013-Footnote-3250945
-Ref: 0 10 Apr 21 2013-Footnote-4251001
-Ref: 0 10 Apr 21 2013-Footnote-5251057
-Ref: 0 10 Apr 21 2013-Footnote-6251113
-Ref: 0 10 Apr 21 2013-Footnote-7251171
-Ref: 0 10 Apr 21 2013-Footnote-8251227
-Ref: 0 10 Apr 21 2013-Footnote-9251282
-Node: 0 9 Apr 13 2013251338
-Ref: guide/releases/index apr-13-2013251449
-Ref: 1c4251449
-Ref: guide/releases/index google-this251449
-Ref: 1c5251449
-Ref: 0 9 Apr 13 2013-Footnote-1251837
-Ref: 0 9 Apr 13 2013-Footnote-2251893
-Node: 0 8 Apr 9 2013251949
-Ref: guide/releases/index apr-9-2013252061
-Ref: 1c6252061
-Ref: 0 8 Apr 9 2013-Footnote-1253189
-Ref: 0 8 Apr 9 2013-Footnote-2253244
-Ref: 0 8 Apr 9 2013-Footnote-3253300
-Ref: 0 8 Apr 9 2013-Footnote-4253355
-Ref: 0 8 Apr 9 2013-Footnote-5253410
-Ref: 0 8 Apr 9 2013-Footnote-6253465
-Ref: 0 8 Apr 9 2013-Footnote-7253520
-Ref: 0 8 Apr 9 2013-Footnote-8253575
-Node: 0 7 1 Feb 23 2013253631
-Ref: guide/releases/index feb-23-2013253743
-Ref: 1c7253743
-Ref: 0 7 1 Feb 23 2013-Footnote-1254370
-Ref: 0 7 1 Feb 23 2013-Footnote-2254425
-Node: 0 7 Feb 14 2013254480
-Ref: guide/releases/index feb-14-2013254595
-Ref: 1c8254595
-Ref: 0 7 Feb 14 2013-Footnote-1255353
-Ref: 0 7 Feb 14 2013-Footnote-2255408
-Ref: 0 7 Feb 14 2013-Footnote-3255463
-Ref: 0 7 Feb 14 2013-Footnote-4255518
-Ref: 0 7 Feb 14 2013-Footnote-5255573
-Node: 0 6 1 Jan 30 2013255628
-Ref: guide/releases/index jan-30-2013255741
-Ref: 1c9255741
-Node: 0 6 Jan 29 2013255829
-Ref: guide/releases/index jan-29-2013255942
-Ref: 1ca255942
-Ref: 0 6 Jan 29 2013-Footnote-1257964
-Ref: 0 6 Jan 29 2013-Footnote-2258019
-Ref: 0 6 Jan 29 2013-Footnote-3258074
-Ref: 0 6 Jan 29 2013-Footnote-4258129
-Ref: 0 6 Jan 29 2013-Footnote-5258184
-Ref: 0 6 Jan 29 2013-Footnote-6258239
-Ref: 0 6 Jan 29 2013-Footnote-7258294
-Ref: 0 6 Jan 29 2013-Footnote-8258349
-Ref: 0 6 Jan 29 2013-Footnote-9258404
-Ref: 0 6 Jan 29 2013-Footnote-10258459
-Ref: 0 6 Jan 29 2013-Footnote-11258515
-Ref: 0 6 Jan 29 2013-Footnote-12258571
-Ref: 0 6 Jan 29 2013-Footnote-13258627
-Ref: 0 6 Jan 29 2013-Footnote-14258683
-Ref: 0 6 Jan 29 2013-Footnote-15258739
-Ref: 0 6 Jan 29 2013-Footnote-16258795
-Ref: 0 6 Jan 29 2013-Footnote-17258851
-Ref: 0 6 Jan 29 2013-Footnote-18258907
-Ref: 0 6 Jan 29 2013-Footnote-19258963
-Node: 0 5 Dec 28 2012259019
-Ref: guide/releases/index dec-28-2012259130
-Ref: 1cb259130
-Ref: 0 5 Dec 28 2012-Footnote-1259951
-Ref: 0 5 Dec 28 2012-Footnote-2260006
-Ref: 0 5 Dec 28 2012-Footnote-3260061
-Ref: 0 5 Dec 28 2012-Footnote-4260116
-Ref: 0 5 Dec 28 2012-Footnote-5260171
-Ref: 0 5 Dec 28 2012-Footnote-6260226
-Ref: 0 5 Dec 28 2012-Footnote-7260281
-Ref: 0 5 Dec 28 2012-Footnote-8260336
-Ref: 0 5 Dec 28 2012-Footnote-9260391
-Node: 0 4 Nov 21 2012260446
-Ref: guide/releases/index nov-21-2012260557
-Ref: 1cc260557
-Ref: guide/releases/index flymake-cursor260557
-Ref: 1cd260557
-Ref: 0 4 Nov 21 2012-Footnote-1261021
-Ref: 0 4 Nov 21 2012-Footnote-2261075
-Ref: 0 4 Nov 21 2012-Footnote-3261129
-Ref: 0 4 Nov 21 2012-Footnote-4261183
-Ref: 0 4 Nov 21 2012-Footnote-5261237
-Ref: 0 4 Nov 21 2012-Footnote-6261292
-Ref: 0 4 Nov 21 2012-Footnote-7261347
-Node: 0 3 Nov 21 2012261402
-Ref: guide/releases/index id2261513
-Ref: 1ce261513
-Ref: 0 3 Nov 21 2012-Footnote-1261691
-Node: 0 2 Oct 25 2012261745
-Ref: guide/releases/index oct-25-2012261856
-Ref: 1cf261856
-Ref: 0 2 Oct 25 2012-Footnote-1262064
-Node: 0 1 Oct 11 2012262118
-Ref: guide/releases/index oct-11-2012262205
-Ref: 1d0262205
-Node: Extending Flycheck262448
-Ref: dev/extending doc262555
-Ref: 1d1262555
-Ref: dev/extending extending-flycheck262555
-Ref: 1d2262555
-Node: Defining new syntax checkers263436
-Ref: dev/extending defining-new-syntax-checkers263565
-Ref: a263565
-Ref: dev/extending id1263565
-Ref: 1d6263565
-Ref: Defining new syntax checkers-Footnote-1267926
-Node: Finding the right error patterns267957
-Ref: dev/extending pylint268092
-Ref: 1d9268092
-Ref: dev/extending finding-the-right-error-patterns268092
-Ref: 1da268092
-Ref: dev/extending el function flycheck-compile268677
-Ref: 174268677
-Node: Trying a new syntax checker269322
-Ref: dev/extending trying-a-new-syntax-checker269497
-Ref: 1dc269497
-Node: Registering new syntax checkers270035
-Ref: dev/extending registering-new-syntax-checkers270169
-Ref: 1dd270169
-Ref: dev/extending id2270169
-Ref: 1de270169
-Node: Advanced syntax checker definitions271669
-Ref: dev/extending advanced-syntax-checker-definitions271836
-Ref: 1df271836
-Node: Parsing structured output format272117
-Ref: dev/extending id3272290
-Ref: 1e0272290
-Ref: dev/extending parsing-structured-output-format272290
-Ref: 1db272290
-Ref: Parsing structured output format-Footnote-1273424
-Node: Passing options and configuration files to syntax checkers273455
-Ref: dev/extending passing-options-and-configuration-files-to-syntax-checkers273676
-Ref: 1e3273676
-Ref: dev/extending jshint273676
-Ref: 1e4273676
-Ref: Passing options and configuration files to syntax checkers-Footnote-1276920
-Ref: Passing options and configuration files to syntax checkers-Footnote-2276963
-Node: Controlling the use of a syntax checker276994
-Ref: dev/extending rubocop277220
-Ref: 1e7277220
-Ref: dev/extending controlling-the-use-of-a-syntax-checker277220
-Ref: 1e8277220
-Node: Applying more than one syntax checker278151
-Ref: dev/extending applying-more-than-one-syntax-checker278310
-Ref: 1e9278310
-Ref: Applying more than one syntax checker-Footnote-1281618
-Node: Other ways to extend Flycheck281666
-Ref: dev/extending shellcheck281796
-Ref: 1eb281796
-Ref: dev/extending other-ways-to-extend-flycheck281796
-Ref: 1ec281796
-Node: Use arbitrary functions to check buffers281948
-Ref: dev/extending use-arbitrary-functions-to-check-buffers282086
-Ref: 1ed282086
-Node: Hooking into Flycheck282309
-Ref: dev/extending hooking-into-flycheck282447
-Ref: 1ee282447
-Node: Status changes282654
-Ref: dev/extending status-changes282753
-Ref: 1ef282753
-Ref: Status changes-Footnote-1283354
-Node: Error processing283415
-Ref: dev/extending error-processing283536
-Ref: 1f1283536
-Node: Error display284040
-Ref: dev/extending error-display284138
-Ref: 1f4284138
-Ref: Error display-Footnote-1284424
-Node: Flycheck API284477
-Ref: dev/api flycheck-pos-tip284583
-Ref: 1f5284583
-Ref: dev/api doc284583
-Ref: 1f6284583
-Ref: dev/api flycheck-api284583
-Ref: 1d3284583
-Ref: dev/api id1284583
-Ref: 1f7284583
-Node: Syntax checks285093
-Ref: dev/api syntax-checks285189
-Ref: 1f8285189
-Ref: dev/api api-syntax-checks285189
-Ref: 1f9285189
-Ref: dev/api el variable flycheck-after-syntax-check-hook285927
-Ref: 1fa285927
-Ref: dev/api el variable flycheck-before-syntax-check-hook286712
-Ref: 1f0286712
-Ref: dev/api el variable flycheck-syntax-check-failed-hook287299
-Ref: 1fb287299
-Node: Generic syntax checkers287822
-Ref: dev/api generic-syntax-checkers287950
-Ref: 1fc287950
-Ref: dev/api api-generic-syntax-checkers287950
-Ref: 1fd287950
-Ref: dev/api el function flycheck-define-generic-checker288160
-Ref: 1b288160
-Ref: dev/api el function flycheck-registered-checker-p295094
-Ref: 64295094
-Ref: dev/api el function flycheck-add-mode295378
-Ref: 164295378
-Ref: dev/api el function flycheck-add-next-checker295675
-Ref: 1ea295675
-Node: Status callback protocol296518
-Ref: dev/api status-callback-protocol296643
-Ref: 200296643
-Ref: dev/api api-status-callback-protocol296643
-Ref: 1ff296643
-Ref: dev/api el function status-callback296878
-Ref: 201296878
-Node: Predicates for syntax checkers298097
-Ref: dev/api predicates-for-syntax-checkers298244
-Ref: 203298244
-Ref: dev/api el function flycheck-buffer-saved-p298391
-Ref: 204298391
-Node: Error filters298692
-Ref: dev/api error-filters298806
-Ref: 205298806
-Ref: dev/api el function flycheck-sanitize-errors298927
-Ref: 1fe298927
-Ref: dev/api el function flycheck-collapse-error-message-whitespace299191
-Ref: 206299191
-Ref: dev/api el function flycheck-fold-include-errors299331
-Ref: 207299331
-Node: Command syntax checkers299376
-Ref: dev/api api-command-syntax-checkers299497
-Ref: 208299497
-Ref: dev/api command-syntax-checkers299497
-Ref: 209299497
-Ref: dev/api el function flycheck-define-command-checker299799
-Ref: 20a299799
-Ref: dev/api el function flycheck-def-executable-var302966
-Ref: 20b302966
-Ref: dev/api el function flycheck-define-checker303765
-Ref: 19303765
-Node: Command arguments305357
-Ref: dev/api command-arguments305480
-Ref: 20d305480
-Ref: dev/api el function flycheck-substitute-argument305774
-Ref: 1d8305774
-Node: Options for command syntax checkers310822
-Ref: dev/api options-for-command-syntax-checkers311001
-Ref: 20f311001
-Ref: dev/api el function flycheck-def-option-var311189
-Ref: 1e5311189
-Ref: dev/api el function flycheck-option-int311903
-Ref: 210311903
-Ref: dev/api el function flycheck-option-comma-separated-list312084
-Ref: 211312084
-Node: Configuration files for command syntax checkers312690
-Ref: dev/api configuration-files-for-command-syntax-checkers312890
-Ref: 212312890
-Ref: dev/api api-configuration-files312890
-Ref: 1e6312890
-Ref: dev/api el function flycheck-def-config-file-var313091
-Ref: 213313091
-Ref: dev/api el function flycheck-locate-config-file313890
-Ref: 20e313890
-Node: Error parsing with regular expressions314217
-Ref: dev/api error-parsing-with-regular-expressions314395
-Ref: 214314395
-Ref: dev/api el function flycheck-rx-to-string314792
-Ref: 1d7314792
-Ref: dev/api el function flycheck-parse-with-patterns315663
-Ref: 20c315663
-Node: Error parsers316171
-Ref: dev/api error-parsers316293
-Ref: 215316293
-Ref: dev/api api-error-parsers316293
-Ref: 1e2316293
-Ref: dev/api el function flycheck-parse-checkstyle316518
-Ref: 1e1316518
-Ref: dev/api el function flycheck-error-parser316961
-Ref: 216316961
-Ref: dev/api el function flycheck-parse-xml-string317269
-Ref: 217317269
-Ref: Error parsers-Footnote-1317729
-Node: Errors317772
-Ref: dev/api errors317892
-Ref: 218317892
-Ref: dev/api api-errors317892
-Ref: 219317892
-Ref: dev/api el variable flycheck-current-errors318017
-Ref: 8f318017
-Ref: dev/api el struct flycheck-error318357
-Ref: 202318357
-Ref: dev/api el function flycheck-error-buffer318482
-Ref: 21a318482
-Ref: dev/api el function flycheck-error-checker318591
-Ref: 21b318591
-Ref: dev/api el function flycheck-error-filename318671
-Ref: 21c318671
-Ref: dev/api el function flycheck-error-line318761
-Ref: 21d318761
-Ref: dev/api el function flycheck-error-column318844
-Ref: 21e318844
-Ref: dev/api el function flycheck-error-message319067
-Ref: 21f319067
-Ref: dev/api el function flycheck-error-level319146
-Ref: 220319146
-Ref: dev/api el function flycheck-error-id319307
-Ref: 221319307
-Ref: dev/api el function flycheck-error-new-at319584
-Ref: 222319584
-Ref: dev/api el function flycheck-error-new320610
-Ref: 223320610
-Ref: dev/api el function flycheck-error-with-buffer321072
-Ref: 224321072
-Ref: dev/api el function flycheck-error-line-region321262
-Ref: 225321262
-Ref: dev/api el function flycheck-error-column-region321581
-Ref: 226321581
-Ref: dev/api el function flycheck-error-thing-region321920
-Ref: 227321920
-Ref: dev/api el function flycheck-error-pos322403
-Ref: 228322403
-Ref: dev/api el function flycheck-error-format322694
-Ref: 229322694
-Ref: dev/api el function flycheck-error-<322904
-Ref: 22a322904
-Ref: dev/api el function flycheck-error-level-<323079
-Ref: 22b323079
-Node: Error processing<2>323462
-Ref: dev/api error-processing323549
-Ref: 22c323549
-Ref: dev/api el variable flycheck-process-error-functions323598
-Ref: 1f2323598
-Ref: dev/api el function flycheck-add-overlay323643
-Ref: 1f3323643
-Node: Error analysis323680
-Ref: dev/api error-analysis323791
-Ref: 22d323791
-Ref: dev/api el function flycheck-count-errors323902
-Ref: 90323902
-Ref: dev/api el function flycheck-has-errors-p324162
-Ref: 22e324162
-Ref: dev/api el function flycheck-has-max-errors-p324265
-Ref: 22f324265
-Ref: dev/api el function auto324306
-Ref: 230324306
-Node: Error levels<2>324327
-Ref: dev/api error-levels324410
-Ref: 231324410
-Ref: dev/api el function flycheck-define-error-level324737
-Ref: 27324737
-Ref: dev/api el function flycheck-error-level-p326514
-Ref: 89326514
-Node: Flycheck buffer status326616
-Ref: dev/api api-flycheck-buffer-status326722
-Ref: 232326722
-Ref: dev/api flycheck-buffer-status326722
-Ref: 233326722
-Ref: dev/api el variable flycheck-status-changed-functions326779
-Ref: 176326779
-Ref: dev/api el function flycheck-report-status327379
-Ref: 234327379
-Ref: dev/api el variable flycheck-last-status-change328263
-Ref: 8e328263
-Ref: dev/api el function flycheck-mode-line-status-text328446
-Ref: 8d328446
-Node: Utilities328665
-Ref: dev/api utilities328756
-Ref: 235328756
-Ref: dev/api api-utilities328756
-Ref: 236328756
-Ref: dev/api el function flycheck-string-list-p328787
-Ref: 96328787
-Ref: dev/api el function flycheck-symbol-list-p328875
-Ref: 5f328875
-Node: Flycheck ERT API328963
-Ref: dev/test-api flycheck-ert-api329074
-Ref: 237329074
-Ref: dev/test-api doc329074
-Ref: 238329074
-Node: Compatibility329398
-Ref: dev/test-api compatibility329499
-Ref: 239329499
-Node: Loading and initializing329969
-Ref: dev/test-api loading-and-initializing330091
-Ref: 23a330091
-Ref: dev/test-api el function flycheck-ert-initialize330657
-Ref: 23c330657
-Node: Utilities<2>330887
-Ref: dev/test-api utilities331015
-Ref: 23e331015
-Node: Creating temporary buffers331196
-Ref: dev/test-api creating-temporary-buffers331305
-Ref: 23f331305
-Ref: dev/test-api el function flycheck-ert-with-temp-buffer331374
-Ref: 240331374
-Ref: dev/test-api el function flycheck-ert-with-file-buffer331663
-Ref: 241331663
-Node: Scoping resource access331880
-Ref: dev/test-api scoping-resource-access332022
-Ref: 242332022
-Ref: dev/test-api el function flycheck-ert-with-help-buffer332085
-Ref: 243332085
-Ref: dev/test-api el function flycheck-ert-with-env332261
-Ref: 244332261
-Ref: dev/test-api el function flycheck-ert-with-global-mode332627
-Ref: 245332627
-Node: Accessing test resources332800
-Ref: dev/test-api test-resources332959
-Ref: 23b332959
-Ref: dev/test-api accessing-test-resources332959
-Ref: 246332959
-Ref: dev/test-api el function flycheck-ert-resource-filename333139
-Ref: 23d333139
-Ref: dev/test-api el function flycheck-ert-with-resource-buffer333353
-Ref: 247333353
-Ref: dev/test-api el function flycheck-ert-locate-config-file333610
-Ref: 248333610
-Node: Obtaining information about the environment333758
-Ref: dev/test-api obtaining-information-about-the-environment333885
-Ref: 249333885
-Ref: dev/test-api el variable flycheck-ert-user-error-type333988
-Ref: 24a333988
-Ref: dev/test-api el function flycheck-ert-travis-ci-p334085
-Ref: 24b334085
-Ref: dev/test-api el function flycheck-ert-check-gpg334179
-Ref: 24c334179
-Ref: dev/test-api el function flycheck-ert-extract-version-command334256
-Ref: 24d334256
-Node: Defining test cases334625
-Ref: dev/test-api defining-test-cases334720
-Ref: 24e334720
-Ref: dev/test-api el function flycheck-ert-def-checker-test334896
-Ref: 24f334896
-Node: Checking results of test cases336115
-Ref: dev/test-api checking-results-of-test-cases336250
-Ref: 250336250
-Ref: dev/test-api el function flycheck-ert-syntax-check-timed-out-p336450
-Ref: 251336450
-Node: Invoking syntax checkers in test cases336601
-Ref: dev/test-api invoking-syntax-checkers-in-test-cases336763
-Ref: 252336763
-Ref: dev/test-api el function flycheck-ert-buffer-sync336856
-Ref: 253336856
-Ref: dev/test-api el function flycheck-ert-ensure-clear336960
-Ref: 254336960
-Node: Writing assertions337104
-Ref: dev/test-api writing-assertions337227
-Ref: 255337227
-Ref: dev/test-api el function flycheck-ert-should-overlay337280
-Ref: 256337280
-Ref: dev/test-api el function flycheck-ert-should-errors337436
-Ref: 257337436
-Ref: dev/test-api el function flycheck-ert-should-syntax-check338077
-Ref: 258338077
-Ref: dev/test-api el function flycheck-ert-at-nth-error339257
-Ref: 259339257
-Node: Contribution guidelines339481
-Ref: contrib/guidelines doc339596
-Ref: 25a339596
-Ref: contrib/guidelines contribution-guidelines339596
-Ref: 25b339596
-Ref: Contribution guidelines-Footnote-1339983
-Node: Reporting issues340035
-Ref: contrib/guidelines id1340139
-Ref: 25c340139
-Ref: contrib/guidelines reporting-issues340139
-Ref: 8b340139
-Ref: Reporting issues-Footnote-1340672
-Node: Contributing code340724
-Ref: contrib/guidelines id2340828
-Ref: 25d340828
-Ref: contrib/guidelines contributing-code340828
-Ref: 1d4340828
-Node: General341116
-Ref: contrib/guidelines general341198
-Ref: 25e341198
-Node: Code style341323
-Ref: contrib/guidelines code-style341429
-Ref: 25f341429
-Node: Commit messages341856
-Ref: contrib/guidelines commit-messages341983
-Ref: 260341983
-Ref: Commit messages-Footnote-1343775
-Ref: Commit messages-Footnote-2343853
-Ref: Commit messages-Footnote-3343897
-Node: Contributing syntax checkers343937
-Ref: contrib/guidelines contributing-syntax-checkers344067
-Ref: 1d5344067
-Ref: contrib/guidelines id3344067
-Ref: 261344067
-Node: Pull requests344851
-Ref: contrib/guidelines id4344957
-Ref: 262344957
-Ref: contrib/guidelines pull-requests344957
-Ref: 263344957
-Ref: Pull requests-Footnote-1345552
-Node: Testing Flycheck345613
-Ref: contrib/testing testing-flycheck345733
-Ref: 264345733
-Ref: contrib/testing doc345733
-Ref: 265345733
-Ref: contrib/testing pull-request345733
-Ref: 266345733
-Node: Test suite layout346068
-Ref: contrib/testing test-suite-layout346161
-Ref: 267346161
-Node: Test running347013
-Ref: contrib/testing test-running347139
-Ref: 268347139
-Ref: contrib/testing id1347139
-Ref: 269347139
-Ref: Test running-Footnote-1348295
-Node: Virtual test environment348331
-Ref: contrib/testing id2348449
-Ref: 26b348449
-Ref: contrib/testing virtual-test-environment348449
-Ref: 26a348449
-Ref: Virtual test environment-Footnote-1350554
-Ref: Virtual test environment-Footnote-2350590
-Ref: Virtual test environment-Footnote-3350626
-Ref: Virtual test environment-Footnote-4350661
-Ref: Virtual test environment-Footnote-5350697
-Node: Travis CI350721
-Ref: contrib/testing homebrew350818
-Ref: 26c350818
-Ref: contrib/testing travis-ci350818
-Ref: 26d350818
-Node: Writing documentation351343
-Ref: contrib/docs writing-documentation351457
-Ref: 26e351457
-Ref: contrib/docs doc351457
-Ref: 26f351457
-Node: Build environment setup351684
-Ref: contrib/docs doc-build-env351801
-Ref: 270351801
-Ref: contrib/docs build-environment-setup351801
-Ref: 271351801
-Ref: Build environment setup-Footnote-1352948
-Ref: Build environment setup-Footnote-2352978
-Ref: Build environment setup-Footnote-3353040
-Ref: Build environment setup-Footnote-4353093
-Ref: Build environment setup-Footnote-5353122
-Node: Building HTML and Texinfo353176
-Ref: contrib/docs building-docs353322
-Ref: 272353322
-Ref: contrib/docs building-html-and-texinfo353322
-Ref: 273353322
-Ref: Building HTML and Texinfo-Footnote-1354063
-Node: Verifying references354089
-Ref: contrib/docs verifying-references354203
-Ref: 274354203
-Node: Maintenance tasks354563
-Ref: contrib/maintenance maintenance-tasks354687
-Ref: 275354687
-Ref: contrib/maintenance doc354687
-Ref: 276354687
-Node: Rebuilding the Texinfo354923
-Ref: contrib/maintenance rebuilding-the-texinfo355031
-Ref: 277355031
-Ref: Rebuilding the Texinfo-Footnote-1355534
-Node: Rasterized logo files355560
-Ref: contrib/maintenance rasterized-logo-files355668
-Ref: 278355668
-Ref: contrib/maintenance melpa355668
-Ref: 279355668
-Ref: Rasterized logo files-Footnote-1356444
-Ref: Rasterized logo files-Footnote-2356480
-Node: GNU General Public License356514
-Ref: gpl gnu-general-public-license356647
-Ref: 27a356647
-Ref: gpl doc356647
-Ref: 27b356647
-Ref: gpl inkscape356647
-Ref: 27c356647
-Node: GNU Free Documentation License394621
-Ref: fdl doc394742
-Ref: 27d394742
-Ref: fdl gnu-free-documentation-license394742
-Ref: 27e394742
-Node: Index419630
+Ref: master in development-Footnote-1210863
+Ref: master in development-Footnote-2210919
+Ref: master in development-Footnote-3210975
+Ref: master in development-Footnote-4211031
+Ref: master in development-Footnote-5211087
+Ref: master in development-Footnote-6211143
+Ref: master in development-Footnote-7211199
+Ref: master in development-Footnote-8211255
+Ref: master in development-Footnote-9211311
+Ref: master in development-Footnote-10211367
+Ref: master in development-Footnote-11211424
+Ref: master in development-Footnote-12211481
+Ref: master in development-Footnote-13211538
+Ref: master in development-Footnote-14211595
+Ref: master in development-Footnote-15211652
+Ref: master in development-Footnote-16211709
+Ref: master in development-Footnote-17211766
+Ref: master in development-Footnote-18211823
+Ref: master in development-Footnote-19211880
+Node: 0 21 Oct 26 2014211937
+Ref: guide/releases/index oct-26-2014212056
+Ref: 1b3212056
+Ref: 0 21 Oct 26 2014-Footnote-1214599
+Ref: 0 21 Oct 26 2014-Footnote-2214655
+Ref: 0 21 Oct 26 2014-Footnote-3214711
+Ref: 0 21 Oct 26 2014-Footnote-4214767
+Ref: 0 21 Oct 26 2014-Footnote-5214823
+Ref: 0 21 Oct 26 2014-Footnote-6214879
+Ref: 0 21 Oct 26 2014-Footnote-7214935
+Ref: 0 21 Oct 26 2014-Footnote-8214991
+Ref: 0 21 Oct 26 2014-Footnote-9215047
+Ref: 0 21 Oct 26 2014-Footnote-10215103
+Ref: 0 21 Oct 26 2014-Footnote-11215160
+Ref: 0 21 Oct 26 2014-Footnote-12215217
+Ref: 0 21 Oct 26 2014-Footnote-13215274
+Ref: 0 21 Oct 26 2014-Footnote-14215331
+Ref: 0 21 Oct 26 2014-Footnote-15215388
+Ref: 0 21 Oct 26 2014-Footnote-16215445
+Ref: 0 21 Oct 26 2014-Footnote-17215502
+Ref: 0 21 Oct 26 2014-Footnote-18215559
+Ref: 0 21 Oct 26 2014-Footnote-19215616
+Ref: 0 21 Oct 26 2014-Footnote-20215673
+Ref: 0 21 Oct 26 2014-Footnote-21215730
+Node: 0 20 Aug 12 2014215787
+Ref: guide/releases/index aug-12-2014215901
+Ref: 1b4215901
+Ref: 0 20 Aug 12 2014-Footnote-1219481
+Ref: 0 20 Aug 12 2014-Footnote-2219537
+Ref: 0 20 Aug 12 2014-Footnote-3219593
+Ref: 0 20 Aug 12 2014-Footnote-4219649
+Ref: 0 20 Aug 12 2014-Footnote-5219705
+Ref: 0 20 Aug 12 2014-Footnote-6219761
+Ref: 0 20 Aug 12 2014-Footnote-7219817
+Ref: 0 20 Aug 12 2014-Footnote-8219873
+Ref: 0 20 Aug 12 2014-Footnote-9219929
+Ref: 0 20 Aug 12 2014-Footnote-10219985
+Ref: 0 20 Aug 12 2014-Footnote-11220042
+Ref: 0 20 Aug 12 2014-Footnote-12220099
+Ref: 0 20 Aug 12 2014-Footnote-13220156
+Ref: 0 20 Aug 12 2014-Footnote-14220213
+Ref: 0 20 Aug 12 2014-Footnote-15220270
+Ref: 0 20 Aug 12 2014-Footnote-16220327
+Ref: 0 20 Aug 12 2014-Footnote-17220384
+Ref: 0 20 Aug 12 2014-Footnote-18220441
+Ref: 0 20 Aug 12 2014-Footnote-19220498
+Ref: 0 20 Aug 12 2014-Footnote-20220555
+Ref: 0 20 Aug 12 2014-Footnote-21220612
+Ref: 0 20 Aug 12 2014-Footnote-22220669
+Ref: 0 20 Aug 12 2014-Footnote-23220726
+Ref: 0 20 Aug 12 2014-Footnote-24220783
+Ref: 0 20 Aug 12 2014-Footnote-25220840
+Ref: 0 20 Aug 12 2014-Footnote-26220897
+Ref: 0 20 Aug 12 2014-Footnote-27220954
+Ref: 0 20 Aug 12 2014-Footnote-28221011
+Node: 0 19 Jun 12 2014221068
+Ref: guide/releases/index jun-12-2014221182
+Ref: 1b5221182
+Ref: 0 19 Jun 12 2014-Footnote-1223052
+Ref: 0 19 Jun 12 2014-Footnote-2223108
+Ref: 0 19 Jun 12 2014-Footnote-3223164
+Ref: 0 19 Jun 12 2014-Footnote-4223220
+Ref: 0 19 Jun 12 2014-Footnote-5223276
+Ref: 0 19 Jun 12 2014-Footnote-6223332
+Ref: 0 19 Jun 12 2014-Footnote-7223388
+Ref: 0 19 Jun 12 2014-Footnote-8223444
+Ref: 0 19 Jun 12 2014-Footnote-9223500
+Ref: 0 19 Jun 12 2014-Footnote-10223556
+Ref: 0 19 Jun 12 2014-Footnote-11223613
+Ref: 0 19 Jun 12 2014-Footnote-12223670
+Ref: 0 19 Jun 12 2014-Footnote-13223727
+Ref: 0 19 Jun 12 2014-Footnote-14223784
+Node: 0 18 Mar 24 2014223841
+Ref: guide/releases/index mar-24-2014223954
+Ref: 1b6223954
+Ref: 0 18 Mar 24 2014-Footnote-1225970
+Ref: 0 18 Mar 24 2014-Footnote-2226026
+Ref: 0 18 Mar 24 2014-Footnote-3226081
+Ref: 0 18 Mar 24 2014-Footnote-4226137
+Ref: 0 18 Mar 24 2014-Footnote-5226193
+Ref: 0 18 Mar 24 2014-Footnote-6226249
+Ref: 0 18 Mar 24 2014-Footnote-7226305
+Ref: 0 18 Mar 24 2014-Footnote-8226361
+Ref: 0 18 Mar 24 2014-Footnote-9226417
+Ref: 0 18 Mar 24 2014-Footnote-10226473
+Node: 0 17 Feb 1 2014226530
+Ref: guide/releases/index feb-1-2014226643
+Ref: 1b7226643
+Ref: 0 17 Feb 1 2014-Footnote-1228337
+Ref: 0 17 Feb 1 2014-Footnote-2228367
+Ref: 0 17 Feb 1 2014-Footnote-3228423
+Ref: 0 17 Feb 1 2014-Footnote-4228479
+Ref: 0 17 Feb 1 2014-Footnote-5228535
+Ref: 0 17 Feb 1 2014-Footnote-6228591
+Ref: 0 17 Feb 1 2014-Footnote-7228647
+Ref: 0 17 Feb 1 2014-Footnote-8228703
+Ref: 0 17 Feb 1 2014-Footnote-9228759
+Node: 0 16 Jan 11 2014228815
+Ref: guide/releases/index sphinx228928
+Ref: 1b8228928
+Ref: guide/releases/index jan-11-2014228928
+Ref: 1b9228928
+Ref: 0 16 Jan 11 2014-Footnote-1231760
+Ref: 0 16 Jan 11 2014-Footnote-2231815
+Ref: 0 16 Jan 11 2014-Footnote-3231871
+Ref: 0 16 Jan 11 2014-Footnote-4231927
+Ref: 0 16 Jan 11 2014-Footnote-5231983
+Ref: 0 16 Jan 11 2014-Footnote-6232039
+Ref: 0 16 Jan 11 2014-Footnote-7232095
+Ref: 0 16 Jan 11 2014-Footnote-8232151
+Ref: 0 16 Jan 11 2014-Footnote-9232207
+Ref: 0 16 Jan 11 2014-Footnote-10232263
+Ref: 0 16 Jan 11 2014-Footnote-11232320
+Ref: 0 16 Jan 11 2014-Footnote-12232377
+Ref: 0 16 Jan 11 2014-Footnote-13232434
+Ref: 0 16 Jan 11 2014-Footnote-14232491
+Ref: 0 16 Jan 11 2014-Footnote-15232548
+Ref: 0 16 Jan 11 2014-Footnote-16232605
+Ref: 0 16 Jan 11 2014-Footnote-17232662
+Ref: 0 16 Jan 11 2014-Footnote-18232719
+Ref: 0 16 Jan 11 2014-Footnote-19232776
+Ref: 0 16 Jan 11 2014-Footnote-20232833
+Ref: 0 16 Jan 11 2014-Footnote-21232890
+Ref: 0 16 Jan 11 2014-Footnote-22232947
+Node: 0 15 Nov 15 2013233004
+Ref: guide/releases/index nov-15-2013233120
+Ref: 1ba233120
+Ref: guide/releases/index flycheck-hdevtools233120
+Ref: 1bb233120
+Ref: 0 15 Nov 15 2013-Footnote-1237328
+Ref: 0 15 Nov 15 2013-Footnote-2237384
+Ref: 0 15 Nov 15 2013-Footnote-3237440
+Ref: 0 15 Nov 15 2013-Footnote-4237496
+Ref: 0 15 Nov 15 2013-Footnote-5237552
+Ref: 0 15 Nov 15 2013-Footnote-6237608
+Ref: 0 15 Nov 15 2013-Footnote-7237664
+Ref: 0 15 Nov 15 2013-Footnote-8237705
+Ref: 0 15 Nov 15 2013-Footnote-9237761
+Ref: 0 15 Nov 15 2013-Footnote-10237817
+Ref: 0 15 Nov 15 2013-Footnote-11237874
+Ref: 0 15 Nov 15 2013-Footnote-12237931
+Ref: 0 15 Nov 15 2013-Footnote-13237988
+Ref: 0 15 Nov 15 2013-Footnote-14238045
+Ref: 0 15 Nov 15 2013-Footnote-15238102
+Ref: 0 15 Nov 15 2013-Footnote-16238159
+Ref: 0 15 Nov 15 2013-Footnote-17238216
+Ref: 0 15 Nov 15 2013-Footnote-18238273
+Ref: 0 15 Nov 15 2013-Footnote-19238330
+Ref: 0 15 Nov 15 2013-Footnote-20238387
+Ref: 0 15 Nov 15 2013-Footnote-21238444
+Ref: 0 15 Nov 15 2013-Footnote-22238501
+Ref: 0 15 Nov 15 2013-Footnote-23238558
+Ref: 0 15 Nov 15 2013-Footnote-24238615
+Ref: 0 15 Nov 15 2013-Footnote-25238672
+Ref: 0 15 Nov 15 2013-Footnote-26238729
+Ref: 0 15 Nov 15 2013-Footnote-27238786
+Ref: 0 15 Nov 15 2013-Footnote-28238843
+Ref: 0 15 Nov 15 2013-Footnote-29238900
+Ref: 0 15 Nov 15 2013-Footnote-30238957
+Node: 0 14 1 Aug 16 2013239014
+Ref: guide/releases/index grizzl239130
+Ref: 1bc239130
+Ref: guide/releases/index aug-16-2013239130
+Ref: 1bd239130
+Ref: 0 14 1 Aug 16 2013-Footnote-1239288
+Node: 0 14 Aug 15 2013239344
+Ref: guide/releases/index aug-15-2013239460
+Ref: 1be239460
+Ref: 0 14 Aug 15 2013-Footnote-1242430
+Ref: 0 14 Aug 15 2013-Footnote-2242486
+Ref: 0 14 Aug 15 2013-Footnote-3242542
+Ref: 0 14 Aug 15 2013-Footnote-4242598
+Ref: 0 14 Aug 15 2013-Footnote-5242654
+Ref: 0 14 Aug 15 2013-Footnote-6242710
+Ref: 0 14 Aug 15 2013-Footnote-7242766
+Ref: 0 14 Aug 15 2013-Footnote-8242822
+Ref: 0 14 Aug 15 2013-Footnote-9242878
+Ref: 0 14 Aug 15 2013-Footnote-10242934
+Ref: 0 14 Aug 15 2013-Footnote-11242991
+Ref: 0 14 Aug 15 2013-Footnote-12243048
+Ref: 0 14 Aug 15 2013-Footnote-13243105
+Ref: 0 14 Aug 15 2013-Footnote-14243162
+Ref: 0 14 Aug 15 2013-Footnote-15243219
+Ref: 0 14 Aug 15 2013-Footnote-16243276
+Ref: 0 14 Aug 15 2013-Footnote-17243333
+Ref: 0 14 Aug 15 2013-Footnote-18243390
+Ref: 0 14 Aug 15 2013-Footnote-19243447
+Ref: 0 14 Aug 15 2013-Footnote-20243504
+Ref: 0 14 Aug 15 2013-Footnote-21243561
+Ref: 0 14 Aug 15 2013-Footnote-22243618
+Node: 0 13 Jun 28 2013243675
+Ref: guide/releases/index jun-28-2013243789
+Ref: 1bf243789
+Ref: 0 13 Jun 28 2013-Footnote-1246409
+Ref: 0 13 Jun 28 2013-Footnote-2246465
+Ref: 0 13 Jun 28 2013-Footnote-3246521
+Ref: 0 13 Jun 28 2013-Footnote-4246577
+Ref: 0 13 Jun 28 2013-Footnote-5246633
+Ref: 0 13 Jun 28 2013-Footnote-6246689
+Ref: 0 13 Jun 28 2013-Footnote-7246745
+Node: 0 12 May 18 2013246801
+Ref: guide/releases/index may-18-2013246915
+Ref: 1c0246915
+Ref: 0 12 May 18 2013-Footnote-1247744
+Ref: 0 12 May 18 2013-Footnote-2247800
+Ref: 0 12 May 18 2013-Footnote-3247856
+Ref: 0 12 May 18 2013-Footnote-4247912
+Node: 0 11 May 01 2013247968
+Ref: guide/releases/index may-01-2013248082
+Ref: 1c1248082
+Ref: 0 11 May 01 2013-Footnote-1249048
+Ref: 0 11 May 01 2013-Footnote-2249104
+Ref: 0 11 May 01 2013-Footnote-3249160
+Ref: 0 11 May 01 2013-Footnote-4249216
+Ref: 0 11 May 01 2013-Footnote-5249262
+Node: 0 10 Apr 21 2013249318
+Ref: guide/releases/index apr-21-2013249431
+Ref: 1c2249431
+Ref: guide/releases/index projectile249431
+Ref: 1c3249431
+Ref: 0 10 Apr 21 2013-Footnote-1251084
+Ref: 0 10 Apr 21 2013-Footnote-2251140
+Ref: 0 10 Apr 21 2013-Footnote-3251196
+Ref: 0 10 Apr 21 2013-Footnote-4251252
+Ref: 0 10 Apr 21 2013-Footnote-5251308
+Ref: 0 10 Apr 21 2013-Footnote-6251364
+Ref: 0 10 Apr 21 2013-Footnote-7251422
+Ref: 0 10 Apr 21 2013-Footnote-8251478
+Ref: 0 10 Apr 21 2013-Footnote-9251533
+Node: 0 9 Apr 13 2013251589
+Ref: guide/releases/index apr-13-2013251700
+Ref: 1c4251700
+Ref: guide/releases/index google-this251700
+Ref: 1c5251700
+Ref: 0 9 Apr 13 2013-Footnote-1252088
+Ref: 0 9 Apr 13 2013-Footnote-2252144
+Node: 0 8 Apr 9 2013252200
+Ref: guide/releases/index apr-9-2013252312
+Ref: 1c6252312
+Ref: 0 8 Apr 9 2013-Footnote-1253440
+Ref: 0 8 Apr 9 2013-Footnote-2253495
+Ref: 0 8 Apr 9 2013-Footnote-3253551
+Ref: 0 8 Apr 9 2013-Footnote-4253606
+Ref: 0 8 Apr 9 2013-Footnote-5253661
+Ref: 0 8 Apr 9 2013-Footnote-6253716
+Ref: 0 8 Apr 9 2013-Footnote-7253771
+Ref: 0 8 Apr 9 2013-Footnote-8253826
+Node: 0 7 1 Feb 23 2013253882
+Ref: guide/releases/index feb-23-2013253994
+Ref: 1c7253994
+Ref: 0 7 1 Feb 23 2013-Footnote-1254621
+Ref: 0 7 1 Feb 23 2013-Footnote-2254676
+Node: 0 7 Feb 14 2013254731
+Ref: guide/releases/index feb-14-2013254846
+Ref: 1c8254846
+Ref: 0 7 Feb 14 2013-Footnote-1255604
+Ref: 0 7 Feb 14 2013-Footnote-2255659
+Ref: 0 7 Feb 14 2013-Footnote-3255714
+Ref: 0 7 Feb 14 2013-Footnote-4255769
+Ref: 0 7 Feb 14 2013-Footnote-5255824
+Node: 0 6 1 Jan 30 2013255879
+Ref: guide/releases/index jan-30-2013255992
+Ref: 1c9255992
+Node: 0 6 Jan 29 2013256080
+Ref: guide/releases/index jan-29-2013256193
+Ref: 1ca256193
+Ref: 0 6 Jan 29 2013-Footnote-1258215
+Ref: 0 6 Jan 29 2013-Footnote-2258270
+Ref: 0 6 Jan 29 2013-Footnote-3258325
+Ref: 0 6 Jan 29 2013-Footnote-4258380
+Ref: 0 6 Jan 29 2013-Footnote-5258435
+Ref: 0 6 Jan 29 2013-Footnote-6258490
+Ref: 0 6 Jan 29 2013-Footnote-7258545
+Ref: 0 6 Jan 29 2013-Footnote-8258600
+Ref: 0 6 Jan 29 2013-Footnote-9258655
+Ref: 0 6 Jan 29 2013-Footnote-10258710
+Ref: 0 6 Jan 29 2013-Footnote-11258766
+Ref: 0 6 Jan 29 2013-Footnote-12258822
+Ref: 0 6 Jan 29 2013-Footnote-13258878
+Ref: 0 6 Jan 29 2013-Footnote-14258934
+Ref: 0 6 Jan 29 2013-Footnote-15258990
+Ref: 0 6 Jan 29 2013-Footnote-16259046
+Ref: 0 6 Jan 29 2013-Footnote-17259102
+Ref: 0 6 Jan 29 2013-Footnote-18259158
+Ref: 0 6 Jan 29 2013-Footnote-19259214
+Node: 0 5 Dec 28 2012259270
+Ref: guide/releases/index dec-28-2012259381
+Ref: 1cb259381
+Ref: 0 5 Dec 28 2012-Footnote-1260202
+Ref: 0 5 Dec 28 2012-Footnote-2260257
+Ref: 0 5 Dec 28 2012-Footnote-3260312
+Ref: 0 5 Dec 28 2012-Footnote-4260367
+Ref: 0 5 Dec 28 2012-Footnote-5260422
+Ref: 0 5 Dec 28 2012-Footnote-6260477
+Ref: 0 5 Dec 28 2012-Footnote-7260532
+Ref: 0 5 Dec 28 2012-Footnote-8260587
+Ref: 0 5 Dec 28 2012-Footnote-9260642
+Node: 0 4 Nov 21 2012260697
+Ref: guide/releases/index nov-21-2012260808
+Ref: 1cc260808
+Ref: guide/releases/index flymake-cursor260808
+Ref: 1cd260808
+Ref: 0 4 Nov 21 2012-Footnote-1261272
+Ref: 0 4 Nov 21 2012-Footnote-2261326
+Ref: 0 4 Nov 21 2012-Footnote-3261380
+Ref: 0 4 Nov 21 2012-Footnote-4261434
+Ref: 0 4 Nov 21 2012-Footnote-5261488
+Ref: 0 4 Nov 21 2012-Footnote-6261543
+Ref: 0 4 Nov 21 2012-Footnote-7261598
+Node: 0 3 Nov 21 2012261653
+Ref: guide/releases/index id2261764
+Ref: 1ce261764
+Ref: 0 3 Nov 21 2012-Footnote-1261942
+Node: 0 2 Oct 25 2012261996
+Ref: guide/releases/index oct-25-2012262107
+Ref: 1cf262107
+Ref: 0 2 Oct 25 2012-Footnote-1262315
+Node: 0 1 Oct 11 2012262369
+Ref: guide/releases/index oct-11-2012262456
+Ref: 1d0262456
+Node: Extending Flycheck262699
+Ref: dev/extending doc262806
+Ref: 1d1262806
+Ref: dev/extending extending-flycheck262806
+Ref: 1d2262806
+Node: Defining new syntax checkers263687
+Ref: dev/extending defining-new-syntax-checkers263816
+Ref: a263816
+Ref: dev/extending id1263816
+Ref: 1d6263816
+Ref: Defining new syntax checkers-Footnote-1268177
+Node: Finding the right error patterns268208
+Ref: dev/extending pylint268343
+Ref: 1d9268343
+Ref: dev/extending finding-the-right-error-patterns268343
+Ref: 1da268343
+Ref: dev/extending el function flycheck-compile268928
+Ref: 174268928
+Node: Trying a new syntax checker269573
+Ref: dev/extending trying-a-new-syntax-checker269748
+Ref: 1dc269748
+Node: Registering new syntax checkers270286
+Ref: dev/extending registering-new-syntax-checkers270420
+Ref: 1dd270420
+Ref: dev/extending id2270420
+Ref: 1de270420
+Node: Advanced syntax checker definitions271920
+Ref: dev/extending advanced-syntax-checker-definitions272087
+Ref: 1df272087
+Node: Parsing structured output format272368
+Ref: dev/extending id3272541
+Ref: 1e0272541
+Ref: dev/extending parsing-structured-output-format272541
+Ref: 1db272541
+Ref: Parsing structured output format-Footnote-1273675
+Node: Passing options and configuration files to syntax checkers273706
+Ref: dev/extending passing-options-and-configuration-files-to-syntax-checkers273927
+Ref: 1e3273927
+Ref: dev/extending jshint273927
+Ref: 1e4273927
+Ref: Passing options and configuration files to syntax checkers-Footnote-1277171
+Ref: Passing options and configuration files to syntax checkers-Footnote-2277214
+Node: Controlling the use of a syntax checker277245
+Ref: dev/extending rubocop277471
+Ref: 1e7277471
+Ref: dev/extending controlling-the-use-of-a-syntax-checker277471
+Ref: 1e8277471
+Node: Applying more than one syntax checker278402
+Ref: dev/extending applying-more-than-one-syntax-checker278561
+Ref: 1e9278561
+Ref: Applying more than one syntax checker-Footnote-1281869
+Node: Other ways to extend Flycheck281917
+Ref: dev/extending shellcheck282047
+Ref: 1eb282047
+Ref: dev/extending other-ways-to-extend-flycheck282047
+Ref: 1ec282047
+Node: Use arbitrary functions to check buffers282199
+Ref: dev/extending use-arbitrary-functions-to-check-buffers282337
+Ref: 1ed282337
+Node: Hooking into Flycheck282560
+Ref: dev/extending hooking-into-flycheck282698
+Ref: 1ee282698
+Node: Status changes282905
+Ref: dev/extending status-changes283004
+Ref: 1ef283004
+Ref: Status changes-Footnote-1283605
+Node: Error processing283666
+Ref: dev/extending error-processing283787
+Ref: 1f1283787
+Node: Error display284291
+Ref: dev/extending error-display284389
+Ref: 1f4284389
+Ref: Error display-Footnote-1284675
+Node: Flycheck API284728
+Ref: dev/api flycheck-pos-tip284834
+Ref: 1f5284834
+Ref: dev/api doc284834
+Ref: 1f6284834
+Ref: dev/api flycheck-api284834
+Ref: 1d3284834
+Ref: dev/api id1284834
+Ref: 1f7284834
+Node: Syntax checks285344
+Ref: dev/api syntax-checks285440
+Ref: 1f8285440
+Ref: dev/api api-syntax-checks285440
+Ref: 1f9285440
+Ref: dev/api el variable flycheck-after-syntax-check-hook286178
+Ref: 1fa286178
+Ref: dev/api el variable flycheck-before-syntax-check-hook286963
+Ref: 1f0286963
+Ref: dev/api el variable flycheck-syntax-check-failed-hook287550
+Ref: 1fb287550
+Node: Generic syntax checkers288073
+Ref: dev/api generic-syntax-checkers288201
+Ref: 1fc288201
+Ref: dev/api api-generic-syntax-checkers288201
+Ref: 1fd288201
+Ref: dev/api el function flycheck-define-generic-checker288411
+Ref: 1b288411
+Ref: dev/api el function flycheck-registered-checker-p295345
+Ref: 64295345
+Ref: dev/api el function flycheck-add-mode295629
+Ref: 164295629
+Ref: dev/api el function flycheck-add-next-checker295926
+Ref: 1ea295926
+Node: Status callback protocol296769
+Ref: dev/api status-callback-protocol296894
+Ref: 200296894
+Ref: dev/api api-status-callback-protocol296894
+Ref: 1ff296894
+Ref: dev/api el function status-callback297129
+Ref: 201297129
+Node: Predicates for syntax checkers298348
+Ref: dev/api predicates-for-syntax-checkers298495
+Ref: 203298495
+Ref: dev/api el function flycheck-buffer-saved-p298642
+Ref: 204298642
+Node: Error filters298943
+Ref: dev/api error-filters299057
+Ref: 205299057
+Ref: dev/api el function flycheck-sanitize-errors299178
+Ref: 1fe299178
+Ref: dev/api el function flycheck-increment-error-columns299442
+Ref: 206299442
+Ref: dev/api el function flycheck-collapse-error-message-whitespace299654
+Ref: 207299654
+Ref: dev/api el function flycheck-dedent-error-messages299794
+Ref: 208299794
+Ref: dev/api el function flycheck-fold-include-errors300099
+Ref: 209300099
+Ref: dev/api el function flycheck-dequalify-error-ids300519
+Ref: 20a300519
+Ref: dev/api el function flycheck-remove-error-ids300991
+Ref: 20b300991
+Node: Command syntax checkers302117
+Ref: dev/api api-command-syntax-checkers302238
+Ref: 20c302238
+Ref: dev/api command-syntax-checkers302238
+Ref: 20d302238
+Ref: dev/api el function flycheck-define-command-checker302540
+Ref: 20e302540
+Ref: dev/api el function flycheck-def-executable-var305707
+Ref: 20f305707
+Ref: dev/api el function flycheck-define-checker306506
+Ref: 19306506
+Node: Command arguments307061
+Ref: dev/api command-arguments307184
+Ref: 211307184
+Ref: dev/api el function flycheck-substitute-argument307478
+Ref: 1d8307478
+Node: Options for command syntax checkers312526
+Ref: dev/api options-for-command-syntax-checkers312705
+Ref: 213312705
+Ref: dev/api el function flycheck-def-option-var312893
+Ref: 1e5312893
+Ref: dev/api el function flycheck-option-int313607
+Ref: 214313607
+Ref: dev/api el function flycheck-option-comma-separated-list313788
+Ref: 215313788
+Node: Configuration files for command syntax checkers314394
+Ref: dev/api configuration-files-for-command-syntax-checkers314594
+Ref: 216314594
+Ref: dev/api api-configuration-files314594
+Ref: 1e6314594
+Ref: dev/api el function flycheck-def-config-file-var314795
+Ref: 217314795
+Ref: dev/api el function flycheck-locate-config-file315594
+Ref: 212315594
+Node: Error parsing with regular expressions315921
+Ref: dev/api error-parsing-with-regular-expressions316099
+Ref: 218316099
+Ref: dev/api el function flycheck-rx-to-string316496
+Ref: 1d7316496
+Ref: dev/api el function flycheck-parse-with-patterns317367
+Ref: 210317367
+Node: Error parsers317875
+Ref: dev/api error-parsers317997
+Ref: 219317997
+Ref: dev/api api-error-parsers317997
+Ref: 1e2317997
+Ref: dev/api el function flycheck-parse-checkstyle318222
+Ref: 1e1318222
+Ref: dev/api el function flycheck-error-parser318665
+Ref: 21a318665
+Ref: dev/api el function flycheck-parse-xml-string318973
+Ref: 21b318973
+Ref: Error parsers-Footnote-1319433
+Node: Errors319476
+Ref: dev/api errors319596
+Ref: 21c319596
+Ref: dev/api api-errors319596
+Ref: 21d319596
+Ref: dev/api el variable flycheck-current-errors319721
+Ref: 8f319721
+Ref: dev/api el struct flycheck-error320061
+Ref: 202320061
+Ref: dev/api el function flycheck-error-buffer320186
+Ref: 21e320186
+Ref: dev/api el function flycheck-error-checker320295
+Ref: 21f320295
+Ref: dev/api el function flycheck-error-filename320375
+Ref: 220320375
+Ref: dev/api el function flycheck-error-line320465
+Ref: 221320465
+Ref: dev/api el function flycheck-error-column320548
+Ref: 222320548
+Ref: dev/api el function flycheck-error-message321408
+Ref: 223321408
+Ref: dev/api el function flycheck-error-level321487
+Ref: 224321487
+Ref: dev/api el function flycheck-error-id321648
+Ref: 225321648
+Ref: dev/api el function flycheck-error-new-at321925
+Ref: 226321925
+Ref: dev/api el function flycheck-error-new322951
+Ref: 227322951
+Ref: dev/api el function flycheck-error-with-buffer323413
+Ref: 228323413
+Ref: dev/api el function flycheck-error-line-region323603
+Ref: 229323603
+Ref: dev/api el function flycheck-error-column-region323922
+Ref: 22a323922
+Ref: dev/api el function flycheck-error-thing-region324261
+Ref: 22b324261
+Ref: dev/api el function flycheck-error-pos324744
+Ref: 22c324744
+Ref: dev/api el function flycheck-error-format325035
+Ref: 22d325035
+Ref: dev/api el function flycheck-error-<325245
+Ref: 22e325245
+Ref: dev/api el function flycheck-error-level-<325420
+Ref: 22f325420
+Node: Error processing<2>325803
+Ref: dev/api error-processing325890
+Ref: 230325890
+Ref: dev/api el variable flycheck-process-error-functions325939
+Ref: 1f2325939
+Ref: dev/api el function flycheck-add-overlay325984
+Ref: 1f3325984
+Node: Error analysis326021
+Ref: dev/api error-analysis326132
+Ref: 231326132
+Ref: dev/api el function flycheck-count-errors326243
+Ref: 90326243
+Ref: dev/api el function flycheck-has-errors-p326503
+Ref: 232326503
+Ref: dev/api el function flycheck-has-max-errors-p326606
+Ref: 233326606
+Ref: dev/api el function auto326647
+Ref: 234326647
+Node: Error levels<2>326668
+Ref: dev/api error-levels326751
+Ref: 235326751
+Ref: dev/api el function flycheck-define-error-level327078
+Ref: 27327078
+Ref: dev/api el function flycheck-error-level-p328855
+Ref: 89328855
+Node: Flycheck buffer status328957
+Ref: dev/api api-flycheck-buffer-status329063
+Ref: 236329063
+Ref: dev/api flycheck-buffer-status329063
+Ref: 237329063
+Ref: dev/api el variable flycheck-status-changed-functions329120
+Ref: 176329120
+Ref: dev/api el function flycheck-report-status329720
+Ref: 238329720
+Ref: dev/api el variable flycheck-last-status-change330604
+Ref: 8e330604
+Ref: dev/api el function flycheck-mode-line-status-text330787
+Ref: 8d330787
+Node: Utilities331006
+Ref: dev/api utilities331097
+Ref: 239331097
+Ref: dev/api api-utilities331097
+Ref: 23a331097
+Ref: dev/api el function flycheck-string-list-p331128
+Ref: 96331128
+Ref: dev/api el function flycheck-symbol-list-p331216
+Ref: 5f331216
+Node: Flycheck ERT API331304
+Ref: dev/test-api flycheck-ert-api331415
+Ref: 23b331415
+Ref: dev/test-api doc331415
+Ref: 23c331415
+Node: Compatibility331739
+Ref: dev/test-api compatibility331840
+Ref: 23d331840
+Node: Loading and initializing332310
+Ref: dev/test-api loading-and-initializing332432
+Ref: 23e332432
+Ref: dev/test-api el function flycheck-ert-initialize332998
+Ref: 240332998
+Node: Utilities<2>333228
+Ref: dev/test-api utilities333356
+Ref: 242333356
+Node: Creating temporary buffers333537
+Ref: dev/test-api creating-temporary-buffers333646
+Ref: 243333646
+Ref: dev/test-api el function flycheck-ert-with-temp-buffer333715
+Ref: 244333715
+Ref: dev/test-api el function flycheck-ert-with-file-buffer334004
+Ref: 245334004
+Node: Scoping resource access334221
+Ref: dev/test-api scoping-resource-access334363
+Ref: 246334363
+Ref: dev/test-api el function flycheck-ert-with-help-buffer334426
+Ref: 247334426
+Ref: dev/test-api el function flycheck-ert-with-env334602
+Ref: 248334602
+Ref: dev/test-api el function flycheck-ert-with-global-mode334968
+Ref: 249334968
+Node: Accessing test resources335141
+Ref: dev/test-api test-resources335300
+Ref: 23f335300
+Ref: dev/test-api accessing-test-resources335300
+Ref: 24a335300
+Ref: dev/test-api el function flycheck-ert-resource-filename335480
+Ref: 241335480
+Ref: dev/test-api el function flycheck-ert-with-resource-buffer335694
+Ref: 24b335694
+Ref: dev/test-api el function flycheck-ert-locate-config-file335951
+Ref: 24c335951
+Node: Obtaining information about the environment336099
+Ref: dev/test-api obtaining-information-about-the-environment336226
+Ref: 24d336226
+Ref: dev/test-api el variable flycheck-ert-user-error-type336329
+Ref: 24e336329
+Ref: dev/test-api el function flycheck-ert-travis-ci-p336426
+Ref: 24f336426
+Ref: dev/test-api el function flycheck-ert-check-gpg336520
+Ref: 250336520
+Ref: dev/test-api el function flycheck-ert-extract-version-command336597
+Ref: 251336597
+Node: Defining test cases336966
+Ref: dev/test-api defining-test-cases337061
+Ref: 252337061
+Ref: dev/test-api el function flycheck-ert-def-checker-test337237
+Ref: 253337237
+Node: Checking results of test cases338456
+Ref: dev/test-api checking-results-of-test-cases338591
+Ref: 254338591
+Ref: dev/test-api el function flycheck-ert-syntax-check-timed-out-p338791
+Ref: 255338791
+Node: Invoking syntax checkers in test cases338942
+Ref: dev/test-api invoking-syntax-checkers-in-test-cases339104
+Ref: 256339104
+Ref: dev/test-api el function flycheck-ert-buffer-sync339197
+Ref: 257339197
+Ref: dev/test-api el function flycheck-ert-ensure-clear339301
+Ref: 258339301
+Node: Writing assertions339445
+Ref: dev/test-api writing-assertions339568
+Ref: 259339568
+Ref: dev/test-api el function flycheck-ert-should-overlay339621
+Ref: 25a339621
+Ref: dev/test-api el function flycheck-ert-should-errors339777
+Ref: 25b339777
+Ref: dev/test-api el function flycheck-ert-should-syntax-check340418
+Ref: 25c340418
+Ref: dev/test-api el function flycheck-ert-at-nth-error341598
+Ref: 25d341598
+Node: Contribution guidelines341822
+Ref: contrib/guidelines doc341937
+Ref: 25e341937
+Ref: contrib/guidelines contribution-guidelines341937
+Ref: 25f341937
+Ref: Contribution guidelines-Footnote-1342324
+Node: Reporting issues342376
+Ref: contrib/guidelines id1342480
+Ref: 260342480
+Ref: contrib/guidelines reporting-issues342480
+Ref: 8b342480
+Ref: Reporting issues-Footnote-1343013
+Node: Contributing code343065
+Ref: contrib/guidelines id2343169
+Ref: 261343169
+Ref: contrib/guidelines contributing-code343169
+Ref: 1d4343169
+Node: General343457
+Ref: contrib/guidelines general343539
+Ref: 262343539
+Node: Code style343664
+Ref: contrib/guidelines code-style343770
+Ref: 263343770
+Node: Commit messages344197
+Ref: contrib/guidelines commit-messages344324
+Ref: 264344324
+Ref: Commit messages-Footnote-1346116
+Ref: Commit messages-Footnote-2346194
+Ref: Commit messages-Footnote-3346238
+Node: Contributing syntax checkers346278
+Ref: contrib/guidelines contributing-syntax-checkers346408
+Ref: 1d5346408
+Ref: contrib/guidelines id3346408
+Ref: 265346408
+Node: Pull requests347192
+Ref: contrib/guidelines id4347298
+Ref: 266347298
+Ref: contrib/guidelines pull-requests347298
+Ref: 267347298
+Ref: Pull requests-Footnote-1347893
+Node: Testing Flycheck347954
+Ref: contrib/testing testing-flycheck348074
+Ref: 268348074
+Ref: contrib/testing doc348074
+Ref: 269348074
+Ref: contrib/testing pull-request348074
+Ref: 26a348074
+Node: Test suite layout348409
+Ref: contrib/testing test-suite-layout348502
+Ref: 26b348502
+Node: Test running349354
+Ref: contrib/testing test-running349480
+Ref: 26c349480
+Ref: contrib/testing id1349480
+Ref: 26d349480
+Ref: Test running-Footnote-1350636
+Node: Virtual test environment350672
+Ref: contrib/testing id2350790
+Ref: 26f350790
+Ref: contrib/testing virtual-test-environment350790
+Ref: 26e350790
+Ref: Virtual test environment-Footnote-1352895
+Ref: Virtual test environment-Footnote-2352931
+Ref: Virtual test environment-Footnote-3352967
+Ref: Virtual test environment-Footnote-4353002
+Ref: Virtual test environment-Footnote-5353038
+Node: Travis CI353062
+Ref: contrib/testing homebrew353159
+Ref: 270353159
+Ref: contrib/testing travis-ci353159
+Ref: 271353159
+Node: Writing documentation353684
+Ref: contrib/docs writing-documentation353798
+Ref: 272353798
+Ref: contrib/docs doc353798
+Ref: 273353798
+Node: Build environment setup354025
+Ref: contrib/docs doc-build-env354142
+Ref: 274354142
+Ref: contrib/docs build-environment-setup354142
+Ref: 275354142
+Ref: Build environment setup-Footnote-1355289
+Ref: Build environment setup-Footnote-2355319
+Ref: Build environment setup-Footnote-3355381
+Ref: Build environment setup-Footnote-4355434
+Ref: Build environment setup-Footnote-5355463
+Node: Building HTML and Texinfo355517
+Ref: contrib/docs building-docs355663
+Ref: 276355663
+Ref: contrib/docs building-html-and-texinfo355663
+Ref: 277355663
+Ref: Building HTML and Texinfo-Footnote-1356404
+Node: Verifying references356430
+Ref: contrib/docs verifying-references356544
+Ref: 278356544
+Node: Maintenance tasks356904
+Ref: contrib/maintenance maintenance-tasks357028
+Ref: 279357028
+Ref: contrib/maintenance doc357028
+Ref: 27a357028
+Node: Rebuilding the Texinfo357264
+Ref: contrib/maintenance rebuilding-the-texinfo357372
+Ref: 27b357372
+Ref: Rebuilding the Texinfo-Footnote-1357875
+Node: Rasterized logo files357901
+Ref: contrib/maintenance rasterized-logo-files358009
+Ref: 27c358009
+Ref: contrib/maintenance melpa358009
+Ref: 27d358009
+Ref: Rasterized logo files-Footnote-1358785
+Ref: Rasterized logo files-Footnote-2358821
+Node: GNU General Public License358855
+Ref: gpl gnu-general-public-license358988
+Ref: 27e358988
+Ref: gpl doc358988
+Ref: 27f358988
+Ref: gpl inkscape358988
+Ref: 280358988
+Node: GNU Free Documentation License396962
+Ref: fdl doc397083
+Ref: 281397083
+Ref: fdl gnu-free-documentation-license397083
+Ref: 282397083
+Node: Index421971
 
 End Tag Table
 

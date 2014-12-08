@@ -6480,17 +6480,21 @@ File: flycheck.info,  Node: master in development,  Next: 0 21 Oct 26 2014,  Up:
         - ‘g’ in the error list checks the source buffer again
           [GH-532](14)
 
+        - ‘haskell-ghc’ supports literate Haskell now [GH-535](15)
+
    - Bug fixes:
 
-        - Properly parse notes in ‘sh-shellcheck’ [GH-508](15)
+        - Properly parse notes in ‘sh-shellcheck’ [GH-508](16)
 
-        - Fix shell quoting in ‘flycheck-compile’ [GH-522](16)
-          [GH-523](17)
+        - Fix shell quoting in ‘flycheck-compile’ [GH-522](17)
+          [GH-523](18)
 
         - Fix faulty properties of customize options which broke
           ‘customize-changed’ and related functions
 
         - Fix use deprecated option in ‘coffee-coffeelint’
+
+        - Fix error columns of ‘python-pylint’ [GH-536](19)
 
    ---------- Footnotes ----------
 
@@ -6522,11 +6526,15 @@ File: flycheck.info,  Node: master in development,  Next: 0 21 Oct 26 2014,  Up:
 
    (14) https://github.com/flycheck/flycheck/issues/532
 
-   (15) https://github.com/flycheck/flycheck/issues/508
+   (15) https://github.com/flycheck/flycheck/issues/535
 
-   (16) https://github.com/flycheck/flycheck/issues/522
+   (16) https://github.com/flycheck/flycheck/issues/508
 
-   (17) https://github.com/flycheck/flycheck/issues/523
+   (17) https://github.com/flycheck/flycheck/issues/522
+
+   (18) https://github.com/flycheck/flycheck/issues/523
+
+   (19) https://github.com/flycheck/flycheck/issues/536
 
 
 File: flycheck.info,  Node: 0 21 Oct 26 2014,  Next: 0 20 Aug 12 2014,  Prev: master in development,  Up: Changelog
@@ -9214,128 +9222,55 @@ checkers:
 
      Returns sanitized ERRORS.
 
+ -- Function: flycheck -increment-error-columns errors &optional offset
+
+     Increment all columns of ERRORS by OFFSET.
+
+     Use this as ‘`:error-filter'’ if a syntax checker outputs 0-based
+     columns.
+
  -- Function: flycheck -collapse-error-message-whitespace errors
 
      Collapse whitespace in all messages of ERRORS.
 
      Return ERRORS.
 
- -- Function: flycheck -fold-include-errors
+ -- Function: flycheck -dedent-error-messages errors
 
-
-File: flycheck.info,  Node: Command syntax checkers,  Next: Errors,  Prev: Generic syntax checkers,  Up: Flycheck API
+     Dedent all messages of ERRORS.
 
-10.3 Command syntax checkers
-============================
+     For each error in ERRORS, determine the indentation offset from
+     the leading whitespace of the first line, and dedent all further
+     lines accordingly.
 
-Command syntax checkers are a specialised variant of generic syntax
-checkers which use an external command to check the contents of the
-current buffer.  To define a new command syntax checker, use *note
-flycheck-define-command-checker: 20a.:
+     Return ERRORS, with in-place modifications.
 
- -- Function: flycheck -define-command-checker symbol docstring &rest
-          properties
+ -- Function: flycheck -fold-include-errors errors sentinel-message
 
-     Define SYMBOL as syntax checker which runs a command.
+     Fold errors from included files.
 
-     Define SYMBOL as generic syntax checker via
-     *note ‘flycheck-define-generic-checker’: 1b, which uses an external command
-     to check the buffer.  SYMBOL and DOCSTRING are the same as for
-     *note ‘flycheck-define-generic-checker’: 1b.
+     ERRORS is a list of errors in which to fold errors.
+     SENTINEL-MESSAGE is the error message which denotes an error on
+     an include.
 
-     The following PROPERTIES constitute a command syntax checker.
-     Unless otherwise noted, all properties are mandatory.
+     The function will fold the messages of all subsequent errors in
+     the included file into the error on the include.
 
-     ‘:command COMMAND’
-          The command to run for syntax checking.
+     Returns ERRORS, with folded messages.
 
-          COMMAND is a list of the form ‘(EXECUTABLE [ARG ...])’.
+ -- Function: flycheck -dequalify-error-ids errors
 
-          EXECUTABLE is a string with the executable of this syntax
-          checker.  It can be overridden with the variable
-          ‘`flycheck-SYMBOL-executable'’.  Note that this variable is
-          NOT implicitly defined by this function.  Use
-          *note ‘flycheck-def-executable-var’: 20b. to define this variable.
+     De-qualify error ids in ERRORS.
 
-          Each ARG is an argument to the executable, either as string,
-          or as special symbol or form for
-          *note ‘flycheck-substitute-argument’: 1d8, which see.
+     Remove all qualifications from error ids in ERRORS, by stripping
+     all leading dotted components from error IDs.  For instance, if
+     the error ID is com.foo.E100, replace it with E100.
 
-     ‘:error-patterns PATTERNS’
-          A list of patterns to parse the output of the ‘`:command'’.
+     This error filter is mainly useful to simplify error IDs obtained
+     from parsing Checkstyle XML, which frequently has very verbose
+     IDs, that include the name of the tool.
 
-          Each ITEM in PATTERNS is a list ‘(LEVEL SEXP ...)’, where
-          LEVEL is a Flycheck error level (see
-          *note ‘flycheck-define-error-level’: 27.), followed by one or more RX
-          ‘`SEXP'’s which parse an error of that level and extract line,
-          column, file name and the message.
+ -- Function: flycheck -remove-error-ids errors
 
-          See ‘`rx'’ for general information about RX, and
-          *note ‘flycheck-rx-to-string’: 1d7. for some special RX forms provided
-          by Flycheck.
-
-          All patterns are applied in the order of declaration to the
-          whole output of the syntax checker.  Output already matched
-          by a pattern will not be matched by subsequent patterns.  In
-          other words, the first pattern wins.
-
-          This property is optional.  If omitted, however, an
-          ‘`:error-parser'’ is mandatory.
-
-     ‘:error-parser FUNCTION’
-          A function to parse errors with.
-
-          The function shall accept three arguments OUTPUT CHECKER
-          BUFFER.  OUTPUT is the syntax checker output as string,
-          CHECKER the syntax checker that was used, and BUFFER a
-          buffer object representing the checked buffer.  The function
-          must return a list of ‘`flycheck-error'’ objects parsed from
-          OUTPUT.
-
-          This property is optional.  If omitted, it defaults to
-          *note ‘flycheck-parse-with-patterns’: 20c.  In this case,
-          ‘`:error-patterns'’ is mandatory.
-
-     In addition to these PROPERTIES, all properties from
-     *note ‘flycheck-define-generic-checker’: 1b. may be specified, except of
-     ‘`:start'’, ‘`:interrupt'’, and ‘`:doc-printer'’.
-
-Each command checker uses an accompanying variable to override the
-executable, which you can define with *note flycheck-def-executable-var:
-20b.:
-
- -- Macro: flycheck -def-executable-var checker default-executable
-
-     Define the executable variable for CHECKER.
-
-     DEFAULT-EXECUTABLE is the default executable.  It is only used in
-     the docstring of the variable.
-
-     The variable is defined with ‘`defcustom'’ in the
-     ‘`flycheck-executables'’ group.  It’s also defined to be risky as
-     file-local variable, to avoid arbitrary executables being used
-     for syntax checking.
-
-Since command syntax checkers are by far the most common kind of syntax
-checkers, Flycheck provides a convenience macro *note
-flycheck-define-checker: 19. which wraps up *note
-flycheck-define-command-checker: 20a. and *note
-flycheck-def-executable-var: 20b. into a single macro, and reduces
-syntactic clutter by allowing unquoted arguments:
-
- -- Macro: flycheck -define-checker symbol docstring &rest properties
-
-     Define SYMBOL as command syntax checker with DOCSTRING and PROPERTIES.
-
-     Like *note ‘flycheck-define-command-checker’: 20a, but PROPERTIES must not
-     be quoted.  Also, implicitly define the executable variable for
-     SYMBOL with *note ‘flycheck-def-executable-var’: 20b.
-
-* Menu:
-
-* Command arguments:: 
-* Options for command syntax checkers:: 
-* Configuration files for command syntax checkers:: 
-* Error parsing with regular expressions:: 
-* Error parsers:: 
+     Remove all error ids from ERRORS.
 

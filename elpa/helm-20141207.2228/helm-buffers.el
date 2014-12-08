@@ -26,6 +26,8 @@
 (require 'helm-regexp)
 
 (declare-function ido-make-buffer-list "ido" (default))
+(declare-function ido-add-virtual-buffers-to-list "ido")
+
 
 (defgroup helm-buffers nil
   "Buffers related Applications and libraries for Helm."
@@ -202,28 +204,31 @@ Only buffer names are fuzzy matched when this is enabled,
 (defvar ido-temp-list)
 (defvar ido-ignored-list)
 (defvar ido-process-ignore-lists)
+(defvar ido-use-virtual-buffers)
+(defvar ido-virtual-buffers)
 
 (defvar helm-source-ido-virtual-buffers
-  `((name . "Ido virtual buffers")
-    (candidates . (lambda ()
-                    (let (ido-temp-list
-                          ido-ignored-list
-                          (ido-process-ignore-lists t))
-                      (when ido-use-virtual-buffers
-                        (ido-add-virtual-buffers-to-list)
-                        ido-virtual-buffers))))
-    (keymap . ,helm-buffers-ido-virtual-map)
-    (mode-line . helm-buffers-ido-virtual-mode-line-string)
-    (action . (("Find file" . helm-find-many-files)
-               ("Find file other window" . find-file-other-window)
-               ("Find file other frame" . find-file-other-frame)
-               ("Find file as root" . helm-find-file-as-root)
-               ("Grep File(s) `C-u recurse'" . helm-find-files-grep)
-               ("Zgrep File(s) `C-u Recurse'" . helm-ff-zgrep)
-               ("View file" . view-file)
-               ("Delete file(s)" . helm-delete-marked-files)
-               ("Open file externally (C-u to choose)"
-                . helm-open-file-externally)))))
+  (helm-build-sync-source "Ido virtual buffers"
+    :candidates (lambda ()
+                  (let (ido-temp-list
+                        ido-ignored-list
+                        (ido-process-ignore-lists t))
+                    (when ido-use-virtual-buffers
+                      (ido-add-virtual-buffers-to-list)
+                      ido-virtual-buffers)))
+    :fuzzy-match helm-buffers-fuzzy-matching
+    :keymap helm-buffers-ido-virtual-map
+    :mode-line helm-buffers-ido-virtual-mode-line-string
+    :action '(("Find file" . helm-find-many-files)
+              ("Find file other window" . find-file-other-window)
+              ("Find file other frame" . find-file-other-frame)
+              ("Find file as root" . helm-find-file-as-root)
+              ("Grep File(s) `C-u recurse'" . helm-find-files-grep)
+              ("Zgrep File(s) `C-u Recurse'" . helm-ff-zgrep)
+              ("View file" . view-file)
+              ("Delete file(s)" . helm-delete-marked-files)
+              ("Open file externally (C-u to choose)"
+               . helm-open-file-externally))))
 
 
 (defvar ido-use-virtual-buffers)

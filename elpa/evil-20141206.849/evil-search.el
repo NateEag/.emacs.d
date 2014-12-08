@@ -229,14 +229,14 @@ one more than the current position."
       (set-text-properties 0 (length string) nil string)
       ;; position to search from
       (goto-char start)
+      (setq isearch-string string)
+      (isearch-update-ring string regexp-p)
       (condition-case nil
           (funcall search-func string)
         (search-failed
          (goto-char orig)
          (user-error "\"%s\": %s not found"
                      string (if regexp-p "pattern" "string"))))
-      (setq isearch-string string)
-      (isearch-update-ring string regexp-p)
       ;; handle opening and closing of invisible area
       (cond
        ((boundp 'isearch-filter-predicates)
@@ -1234,11 +1234,15 @@ a :substitute command with arguments."
     ;; the r flag
     (when (zerop (length pattern))
       (setq pattern
-            (if (and evil-ex-last-was-search (memq ?r flags))
-                (and evil-ex-search-pattern
-                     (evil-ex-pattern-regex evil-ex-search-pattern))
-              (and evil-ex-substitute-pattern
-                   (evil-ex-pattern-regex evil-ex-substitute-pattern)))
+            (if (eq evil-search-module 'evil-search)
+                (if (and evil-ex-last-was-search (memq ?r flags))
+                    (and evil-ex-search-pattern
+                         (evil-ex-pattern-regex evil-ex-search-pattern))
+                  (and evil-ex-substitute-pattern
+                       (evil-ex-pattern-regex evil-ex-substitute-pattern)))
+              (if (eq case-fold-search t)
+                  isearch-string
+                (concat isearch-string "\\C")))
             flags (remq ?r flags)))
     ;; generate pattern
     (when pattern

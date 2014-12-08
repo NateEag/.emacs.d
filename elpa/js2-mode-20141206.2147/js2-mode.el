@@ -3525,8 +3525,8 @@ You can tell the quote type by looking at the first character."
 (put 'cl-struct-js2-tagged-template-node 'js2-printer 'js2-print-tagged-template)
 
 (defun js2-visit-tagged-template (n callback)
-  (js2-visit-ast (js2-tagged-template-node-tag n) kid callback)
-  (js2-visit-ast (js2-tagged-template-node-template n) kid callback))
+  (js2-visit-ast (js2-tagged-template-node-tag n) callback)
+  (js2-visit-ast (js2-tagged-template-node-template n) callback))
 
 (defun js2-print-tagged-template (n i)
   (insert (js2-make-pad i))
@@ -7664,7 +7664,8 @@ arrow function), NAME is js2-name-node."
     (when name
       (js2-set-face (js2-node-pos name) (js2-node-end name)
                     'font-lock-function-name-face 'record)
-      (when (plusp (js2-name-node-length name))
+      (when (and (eq function-type 'FUNCTION_STATEMENT)
+                 (plusp (js2-name-node-length name)))
         ;; Function statements define a symbol in the enclosing scope
         (js2-define-symbol js2-FUNCTION (js2-name-node-name name) fn-node)))
     (if (or (js2-inside-function) (plusp js2-nesting-of-with))

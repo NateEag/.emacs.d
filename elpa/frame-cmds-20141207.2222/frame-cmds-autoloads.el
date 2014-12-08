@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "frame-cmds" "frame-cmds.el" (21569 6896 0
+;;;### (autoloads nil "frame-cmds" "frame-cmds.el" (21637 45700 0
 ;;;;;;  0))
 ;;; Generated autoloads from frame-cmds.el
 
@@ -303,25 +303,55 @@ In Lisp code:
 
 \(fn &optional DIRECTION FRAME)" t nil)
 
+(defalias 'tile-frames-side-by-side 'tile-frames-horizontally)
+
 (autoload 'tile-frames-horizontally "frame-cmds" "\
-Tile frames horizontally.
-Interatively:
+Tile frames horizontally (side by side).
+Interactively:
   With prefix arg, you are prompted for names of two frames to tile.
   With no prefix arg, all visible frames are tiled, except a
        standalone minibuffer frame, if any.
 If called from a program, all frames in list FRAMES are tiled.
 
 \(fn &optional FRAMES)" t nil)
+
+(defalias 'tile-frames-top-to-bottom 'tile-frames-vertically)
 
 (autoload 'tile-frames-vertically "frame-cmds" "\
-Tile frames vertically.
-Interatively:
+Tile frames vertically (stacking from the top of the screen downward).
+Interactively:
   With prefix arg, you are prompted for names of two frames to tile.
   With no prefix arg, all visible frames are tiled, except a
        standalone minibuffer frame, if any.
 If called from a program, all frames in list FRAMES are tiled.
 
 \(fn &optional FRAMES)" t nil)
+
+(autoload 'create-frame-tiled-horizontally "frame-cmds" "\
+Horizontally tile screen with selected frame and a copy.
+The same character size is used for the new frame.
+
+\(fn)" t nil)
+
+(autoload 'create-frame-tiled-vertically "frame-cmds" "\
+Vertically tile screen with selected frame and a copy.
+The same character size is used for the new frame.
+
+\(fn)" t nil)
+
+(autoload 'split-frame-horizontally "frame-cmds" "\
+Horizontally split the selected frame.
+With a prefix arg, create that many new frames.
+The same character size is used for the new frames.
+
+\(fn NUM)" t nil)
+
+(autoload 'split-frame-vertically "frame-cmds" "\
+Vertically split the selected frame.
+With a prefix arg, create that many new frames.
+The same character size is used for the new frames.
+
+\(fn NUM)" t nil)
 
 (autoload 'enlarge-frame "frame-cmds" "\
 Increase the height of FRAME (default: selected-frame) by INCREMENT.
@@ -444,11 +474,6 @@ VARIABLE is a symbol that names a user option.
 `other-frame', if `one-window-p'; otherwise, `other-window'.
 
 \(fn ARG)" t nil)
-
-;;;***
-
-;;;### (autoloads nil nil ("frame-cmds-pkg.el") (21569 6896 80113
-;;;;;;  0))
 
 ;;;***
 

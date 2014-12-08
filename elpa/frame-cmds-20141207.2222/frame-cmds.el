@@ -6,18 +6,18 @@
 ;; Maintainer: Drew Adams (concat "drew.adams" "@" "oracle" ".com")
 ;; Copyright (C) 1996-2014, Drew Adams, all rights reserved.
 ;; Created: Tue Mar  5 16:30:45 1996
-;; Version: 20141016.102
+;; Version: 20141207.2222
 ;; X-Original-Version: 0
 ;; Package-Requires: ((frame-fns "0"))
-;; Last-Updated: Wed Oct 15 18:00:48 2014 (-0700)
+;; Last-Updated: Sun Dec  7 14:19:48 2014 (-0800)
 ;;           By: dradams
-;;     Update #: 2993
+;;     Update #: 3030
 ;; URL: http://www.emacswiki.org/frame-cmds.el
 ;; Doc URL: http://emacswiki.org/FrameModes
 ;; Doc URL: http://www.emacswiki.org/OneOnOneEmacs
 ;; Doc URL: http://www.emacswiki.org/Frame_Tiling_Commands
 ;; Keywords: internal, extensions, mouse, frames, windows, convenience
-;; Compatibility: GNU Emacs: 20.x, 21.x, 22.x, 23.x, 24.x
+;; Compatibility: GNU Emacs: 20.x, 21.x, 22.x, 23.x, 24.x, 25.x
 ;;
 ;; Features that might be required by this library:
 ;;
@@ -100,11 +100,13 @@
 ;;
 ;;  Commands defined here:
 ;;
-;;    `delete-1-window-frames-on', `delete/iconify-window',
-;;    `delete/iconify-windows-on', `delete-other-frames',
-;;    `delete-windows-for', `enlarge-font', `enlarge-frame',
-;;    `enlarge-frame-horizontally', `hide-everything', `hide-frame',
-;;    `iconify-everything', `iconify/map-frame', `iconify/show-frame',
+;;    `create-frame-tiled-horizontally',
+;;    `create-frame-tiled-vertically', `delete-1-window-frames-on',
+;;    `delete/iconify-window', `delete/iconify-windows-on',
+;;    `delete-other-frames', `delete-windows-for', `enlarge-font',
+;;    `enlarge-frame', `enlarge-frame-horizontally',
+;;    `hide-everything', `hide-frame', `iconify-everything',
+;;    `iconify/map-frame', `iconify/show-frame',
 ;;    `jump-to-frame-config-register', `maximize-frame',
 ;;    `maximize-frame-horizontally', `maximize-frame-vertically',
 ;;    `mouse-iconify/map-frame', `mouse-iconify/show-frame',
@@ -122,8 +124,10 @@
 ;;    `set-frame-alist-parameter-from-frame', `show-*Help*-buffer',
 ;;    `show-a-frame-on', `show-buffer-menu', `show-frame',
 ;;    `show-hide', `shrink-frame', `shrink-frame-horizontally',
+;;    `split-frame-horizontally', `split-frame-vertically',
 ;;    `tell-customize-var-has-changed', `tile-frames',
-;;    `tile-frames-horizontally', `tile-frames-vertically',
+;;    `tile-frames-horizontally', `tile-frames-side-by-side',
+;;    `tile-frames-top-to-bottom', `tile-frames-vertically',
 ;;    `toggle-max-frame', `toggle-max-frame-horizontally',
 ;;    `toggle-max-frame-vertically'.
 ;;
@@ -141,7 +145,8 @@
 ;;    `frcmds-read-args-for-tiling',
 ;;    `frcmds-read-buffer-for-delete-windows',
 ;;    `frcmds-set-difference', `frcmds-smart-tool-bar-pixel-height',
-;;    `frcmds-tile-frames', `nbutlast' (Emacs 20).
+;;    `frcmds-split-frame-1', `frcmds-tile-frames', `nbutlast' (Emacs
+;;    20).
 ;;
 ;;  Error symbols defined here:
 ;;
@@ -273,6 +278,14 @@
 ;;
 ;;; Change Log:
 ;;
+;; 2014/12/07 dadams
+;;     Added: split-frame-horizontally, split-frame-vertically.
+;;     frcmds-tile-frames: Added optional args, so can tile within a rectangle.
+;;     create-frame-tiled-(horizontally|vertically): Keep same font size.
+;; 2014/12/06 dadams
+;;     Added: create-frame-tiled-horizontally, create-frame-tiled-vertically.
+;;     Added aliases: tile-frames-side-by-side, tile-frames-top-to-bottom.
+;;     window-mgr-title-bar-pixel-height: Changed default value for ns to 50.  Thx to Nate Eagleson.
 ;; 2014/10/15 dadams
 ;;     window-mgr-title-bar-pixel-height: Added default value for ns (Next).  Thx to Nate Eagleson.
 ;; 2014/10/13 dadams
@@ -529,7 +542,8 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl)) ;; case, incf (plus, for Emacs 20: dolist)
-(require 'frame-fns) ;; frame-geom-value-numeric, frames-on, get-frame-name, get-a-frame, read-frame
+(require 'frame-fns) ;; frame-geom-value-cons, frame-geom-value-numeric, frames-on, get-frame-name,
+                     ;; get-a-frame, read-frame
 (require 'strings nil t) ;; (no error if not found) read-buffer
 (require 'misc-fns nil t) ;; (no error if not found) another-buffer
 
@@ -597,7 +611,8 @@ Candidates include `jump-to-frame-config-register' and `show-buffer-menu'."
 
 ;; Use `cond', not `case', for Emacs 20 byte-compiler.
 (defcustom window-mgr-title-bar-pixel-height (cond ((eq window-system 'mac) 22)
-						   ((eq window-system 'ns)  40)
+                                                   ;; For older versions of OS X, 40 might be better.
+						   ((eq window-system 'ns)  50)
 						   (t  27))
   "*Height of frame title bar provided by the window manager, in pixels.
 You might alternatively call this constant the title-bar \"width\" or
@@ -1275,9 +1290,11 @@ In Lisp code:
   (show-frame frame))
 
 ;;;###autoload
+(defalias 'tile-frames-side-by-side 'tile-frames-horizontally)
+;;;###autoload
 (defun tile-frames-horizontally (&optional frames)
-  "Tile frames horizontally.
-Interatively:
+  "Tile frames horizontally (side by side).
+Interactively:
   With prefix arg, you are prompted for names of two frames to tile.
   With no prefix arg, all visible frames are tiled, except a
        standalone minibuffer frame, if any.
@@ -1286,9 +1303,11 @@ If called from a program, all frames in list FRAMES are tiled."
   (frcmds-tile-frames 'horizontal frames))
 
 ;;;###autoload
+(defalias 'tile-frames-top-to-bottom 'tile-frames-vertically)
+;;;###autoload
 (defun tile-frames-vertically (&optional frames)
-  "Tile frames vertically.
-Interatively:
+  "Tile frames vertically (stacking from the top of the screen downward).
+Interactively:
   With prefix arg, you are prompted for names of two frames to tile.
   With no prefix arg, all visible frames are tiled, except a
        standalone minibuffer frame, if any.
@@ -1296,11 +1315,73 @@ If called from a program, all frames in list FRAMES are tiled."
   (interactive (and current-prefix-arg  (frcmds-read-args-for-tiling)))
   (frcmds-tile-frames 'vertical frames))
 
-(defun frcmds-tile-frames (direction frames)
+;;;###autoload
+(defun create-frame-tiled-horizontally ()
+  "Horizontally tile screen with selected frame and a copy.
+The same character size is used for the new frame."
+  (interactive)
+  (let* ((fr1    (selected-frame))
+         (font1  (frame-parameter fr1 'font))
+         (fr2    (make-frame-command)))
+    (save-selected-window (select-frame fr2) (set-frame-font font1))
+    (frcmds-tile-frames 'horizontal (list fr1 fr2))))
+
+;;;###autoload
+(defun create-frame-tiled-vertically ()
+  "Vertically tile screen with selected frame and a copy.
+The same character size is used for the new frame."
+  (interactive)
+  (let* ((fr1    (selected-frame))
+         (font1  (frame-parameter fr1 'font))
+         (fr2    (make-frame-command)))
+    (frcmds-tile-frames 'vertical (list fr1 fr2))))
+
+;;;###autoload
+(defun split-frame-horizontally (num)
+  "Horizontally split the selected frame.
+With a prefix arg, create that many new frames.
+The same character size is used for the new frames."
+  (interactive "p")
+  (frcmds-split-frame-1 'horizontal num))
+  
+;;;###autoload
+(defun split-frame-vertically (num)
+  "Vertically split the selected frame.
+With a prefix arg, create that many new frames.
+The same character size is used for the new frames."
+  (interactive "p")
+  (frcmds-split-frame-1 'vertical num))
+
+(defun frcmds-split-frame-1 (direction num)
+  "Helper for `split-frame-horizontally' and `split-frame-vertically'.
+DIRECTION is `horizontal' or `vertical'.
+NUM is the desired number of new frames to create."
+  (let* ((fr1     (selected-frame))
+         (font1   (frame-parameter fr1 'font))
+         (x-min   (frame-geom-value-numeric 'left (frame-parameter fr1 'left)))
+         (y-min   (frame-geom-value-numeric 'top  (frame-parameter fr1 'top)))
+         (wid     (* (frame-parameter fr1 'width)  (frame-char-width fr1)))
+         (hght    (* (frame-parameter fr1 'height) (frame-char-height fr1)))
+         (frames  (list fr1))
+         fr)
+    (dotimes (ii num)
+      (setq fr  (make-frame-command))
+      (save-selected-window (select-frame fr) (set-frame-font font1))
+      (push fr frames))
+    (frcmds-tile-frames direction frames x-min y-min wid hght)))
+
+(defun frcmds-tile-frames (direction frames &optional x-min-pix y-min-pix pix-width pix-height)
   "Tile visible frames horizontally or vertically, depending on DIRECTION.
-Arg DIRECTION is `horizontal' or `vertical'.
+Arg DIRECTION is `horizontal' or `vertical' (meaning side by side or
+above and below, respectively).
+
 Arg FRAMES is the list of frames to tile.  If nil, then tile all visible
-frames (except a standalone minibuffer frame, if any)."
+frames (except a standalone minibuffer frame, if any).
+
+The optional args cause tiling to be limited to the bounding rectangle
+they specify.  X-MIN-PIX and Y-MIN-PIX are the `left' and `top' screen
+pixel positions of the rectangle.  X-PIX-WIDTH and Y-PIX-HEIGHT are
+the pixel width and height of the rectangle."
   (let ((visible-frames   (or frames
                               (filtered-frame-list ; Get visible frames, except minibuffer.
                                #'(lambda (fr)
@@ -1313,15 +1394,16 @@ frames (except a standalone minibuffer frame, if any)."
                                                      (cdr (assq 'name (frame-parameters fr)))))))))))
         ;; Size of a frame that uses all of the available screen area,
         ;; but leaving room for a minibuffer frame at bottom of display.
-        (fr-pixel-width   (frcmds-available-screen-pixel-width))
-        (fr-pixel-height  (frcmds-available-screen-pixel-height))
+        (fr-pixel-width   (or pix-width   (frcmds-available-screen-pixel-width)))
+        (fr-pixel-height  (or pix-height  (frcmds-available-screen-pixel-height)))
         (fr-origin        (if (eq direction 'horizontal)
-                              (car (frcmds-effective-screen-pixel-bounds))
-                            (cadr (frcmds-effective-screen-pixel-bounds)))))
+                              (or x-min-pix  (car (frcmds-effective-screen-pixel-bounds)))
+                            (or y-min-pix  (cadr (frcmds-effective-screen-pixel-bounds))))))
     (case direction                     ; Size of frame in pixels.
       (horizontal  (setq fr-pixel-width   (/ fr-pixel-width  (length visible-frames))))
       (vertical    (setq fr-pixel-height  (/ fr-pixel-height (length visible-frames))))
-      (otherwise   (error "Function frcmds-tile-frames: DIRECTION must be `horizontal' or `vertical'")))
+      (otherwise   (error "`frcmds-tile-frames': DIRECTION must be `horizontal' or `vertical'")))
+    ;;(debug) ; @@@
     (dolist (fr  visible-frames)
       ;; $$$$$$ (let ((borders (* 2 (+ (cdr (assq 'border-width (frame-parameters fr)))
       ;;                               (cdr (assq 'internal-border-width (frame-parameters fr)))))))
@@ -1329,17 +1411,25 @@ frames (except a standalone minibuffer frame, if any)."
         (set-frame-size
          fr
          ;; Subtract borders, scroll bars, & title bar, then convert pixel sizes to char sizes.
-         (/ (- fr-pixel-width borders (frcmds-extra-pixels-width fr))
+         (/ (or (and pix-width  fr-pixel-width)
+                (- fr-pixel-width borders (frcmds-extra-pixels-width fr)))
             (frame-char-width fr))
-         (- (/ (- fr-pixel-height borders (frcmds-extra-pixels-height fr)
-                  window-mgr-title-bar-pixel-height (frcmds-smart-tool-bar-pixel-height))
+         (- (/ (or (and pix-height  (- fr-pixel-height
+                                       borders
+                                       (frcmds-extra-pixels-height fr)
+                                       window-mgr-title-bar-pixel-height))
+
+                   (- fr-pixel-height borders
+                      (frcmds-extra-pixels-height fr)
+                      window-mgr-title-bar-pixel-height
+                      (frcmds-smart-tool-bar-pixel-height)))
                (frame-char-height fr))
-            (if (eq window-system 'mac)
+            (if (or pix-height  (eq window-system 'mac))
                 0                       ; Menu bar for Carbon Emacs is not in the frame.
               (cdr (assq 'menu-bar-lines (frame-parameters fr))))))) ; Subtract `menu-bar-lines'.
       (set-frame-position fr
-                          (if (eq direction 'horizontal) fr-origin 0)
-                          (if (eq direction 'horizontal) 0 fr-origin))
+                          (if (eq direction 'horizontal) fr-origin (or x-min-pix  0))
+                          (if (eq direction 'horizontal) (or y-min-pix  0) fr-origin))
       (show-frame fr)
       (incf fr-origin (if (eq direction 'horizontal) fr-pixel-width fr-pixel-height)))))
 

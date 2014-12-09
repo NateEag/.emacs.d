@@ -3,7 +3,7 @@
 ;; Copyright (C) 2010, 2011, 2012  SAKURAI Masashi
 
 ;; Author: SAKURAI Masashi <m.sakurai at kiwanami.net>
-;; Version: 20140816.2205
+;; Version: 20141208.1613
 ;; X-Original-Version: 0.3.2
 ;; Keywords: deferred, async
 ;; URL: https://github.com/kiwanami/emacs-deferred
@@ -67,6 +67,8 @@
 ;; deferred.el.
 
 (require 'cl)
+
+(declare-function pp-display-expression 'pp)
 
 (defvar deferred:version nil "deferred.el version")
 (setq deferred:version "0.3.2")

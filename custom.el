@@ -50,7 +50,33 @@
  '(require-final-newline t)
  '(safe-local-variable-values
    (quote
-    ((scss-compile-at-save)
+    ((eval setq flycheck-eslint-rulesdir
+           (concat nateeag/dir-locals-dir "node_modules/camel_case"))
+     (flycheck-eslint-rulesdir concat nateeag/dir-locals-dir "node_modules/camel_case")
+     (eval set
+           (make-local-variable
+            (quote nateeag/dir-locals-dir))
+           (file-name-directory
+            (let
+                ((d
+                  (dir-locals-find-file ".")))
+              (if
+                  (stringp d)
+                  d
+                (car d)))))
+     (flycheck-eslint-rulesdir concat nateeag/project-path "node_modules/camel_case")
+     (eval set
+           (make-local-variable
+            (quote nateeag/project-path))
+           (file-name-directory
+            (let
+                ((d
+                  (dir-locals-find-file ".")))
+              (if
+                  (stringp d)
+                  d
+                (car d)))))
+     (scss-compile-at-save)
      (eval add-to-list
            (quote after-save-hook)
            (quote hit-servlet))

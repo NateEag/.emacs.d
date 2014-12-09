@@ -15,6 +15,10 @@
   ;; 'refactor'.
   (js2r-add-keybindings-with-prefix "C-M-r")
 
+  ;; I prefer eslint to jshint. If a project uses jshint, I use .dir-locals.el
+  ;; to override this setting.
+  (setq flycheck-checker 'javascript-eslint)
+
   (setq ac-sources '(ac-source-yasnippet))
   (tern-mode 't)
   (eval-after-load 'tern

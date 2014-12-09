@@ -55,7 +55,7 @@
     ("u" . string-inflection-toggle)
 
     ;; Switch buffers/find likely files via Helm.
-    ("b" . my-helm-for-files)
+    ("b" . helm-for-files)
 
     ;; TODO Make this just toggle between snake_case and camelCase. They're
     ;; what I usually use.

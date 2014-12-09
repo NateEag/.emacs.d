@@ -26,17 +26,7 @@
   (progn
     (helm-mode)
 
-    ;; DEBUG The first time this runs in a repo, I don't see any git-ls-files
-    ;; results. I think it's probably just taking a while to run git-ls-files?
-    (require 'helm-git-files)
-    (defun my-helm-for-files ()
-      "Try to make it painless to open files/swap buffers."
-      (interactive)
-      (helm :sources '(helm-source-buffers-list
-                       helm-git-files:modified-source
-                       helm-git-files:untracked-source
-                       helm-git-files:all-source
-                       helm-source-recentf)))))
+    (require 'helm-git-files)))
 
 ;; Since emacs 24.4 made revert undoable, this option is perfectly safe and
 ;; pretty convenient.

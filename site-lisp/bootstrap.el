@@ -12,7 +12,7 @@
 ;; DEBUG Hard-coding ELPA-managed paths seems like a terrible idea, but that's
 ;; what the project's readme recommends doing...
 (add-to-list 'load-path (make-emacs-dir-path "elpa/auto-compile-20140913.1532/"))
-(add-to-list 'load-path (make-emacs-dir-path "elpa/packed-20140913.1531/"))
+(add-to-list 'load-path (make-emacs-dir-path "elpa/packed-20141207.54/"))
 (setq load-prefer-newer t)
 (require 'auto-compile)
 (auto-compile-on-load-mode 1)

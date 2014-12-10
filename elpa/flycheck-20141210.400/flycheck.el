@@ -757,18 +757,19 @@ This variable is a normal hook.  See Info node `(elisp)Hooks'."
 
 (defvar flycheck-command-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "c" 'flycheck-buffer)
-    (define-key map "C" 'flycheck-clear)
-    (define-key map (kbd "C-c") 'flycheck-compile)
-    (define-key map "n" 'flycheck-next-error)
-    (define-key map "p" 'flycheck-previous-error)
-    (define-key map "l" 'flycheck-list-errors)
-    (define-key map (kbd "C-w") 'flycheck-copy-errors-as-kill)
-    (define-key map "s" 'flycheck-select-checker)
-    (define-key map "e" 'flycheck-set-checker-executable)
-    (define-key map "?" 'flycheck-describe-checker)
-    (define-key map "i" 'flycheck-info)
-    (define-key map "V" 'flycheck-version)
+    (define-key map "c"         #'flycheck-buffer)
+    (define-key map "C"         #'flycheck-clear)
+    (define-key map (kbd "C-c") #'flycheck-compile)
+    (define-key map "n"         #'flycheck-next-error)
+    (define-key map "p"         #'flycheck-previous-error)
+    (define-key map "l"         #'flycheck-list-errors)
+    (define-key map (kbd "C-w") #'flycheck-copy-errors-as-kill)
+    (define-key map "s"         #'flycheck-select-checker)
+    (define-key map "e"         #'flycheck-set-checker-executable)
+    (define-key map "?"         #'flycheck-describe-checker)
+    (define-key map "i"         #'flycheck-info)
+    (define-key map "V"         #'flycheck-version)
+    (define-key map "v"         #'flycheck-verify-setup)
     map)
   "Keymap of Flycheck interactive commands.")
 
@@ -1266,6 +1267,28 @@ A checker is disabled if it is contained in
 `flycheck-disabled-checkers'."
   (memq checker flycheck-disabled-checkers))
 
+(defun flycheck-possibly-suitable-checkers ()
+  "Find possibly suitable checkers for the current buffer.
+
+Return a list of all syntax checkers which could possibly be
+suitable for the current buffer, if any problems in their setup
+were fixed.
+
+Currently this function collects all registered syntax checkers
+whose `:modes' contain the current major mode or which do not
+have any `:modes', but a `:predicate' that returns non-nil for
+the current buffer."
+  (let (checkers)
+    (dolist (checker flycheck-checkers)
+      (let ((modes (flycheck-checker-modes checker))
+            (predicate (flycheck-checker-predicate checker)))
+        (when (or (memq major-mode modes)
+                  (and (not modes)
+                       (functionp predicate)
+                       (funcall predicate)))
+          (push checker checkers))))
+    (nreverse checkers)))
+
 
 ;;; Generic syntax checkers
 (defconst flycheck-generic-checker-version 2
@@ -1359,7 +1382,7 @@ are mandatory.
      attempt to interrupt syntax checks wit this syntax checker,
      and simply ignore their results.
 
-`:doc-printer FUNCTION'
+`:print-doc FUNCTION'
      A function to print additional documentation into the Help
      buffer of this checker.
 
@@ -1377,6 +1400,21 @@ are mandatory.
 
      This property is optional.  If omitted, no additional
      documentation is printed for this syntax checker.
+
+:verify FUNCTION
+     A function to verify the checker for the current buffer.
+
+     FUNCTION is called with the syntax checker as single
+     argument, and shall return a list of
+     `flycheck-verification-result' objects indicating whether
+     the syntax checker could be used in the current buffer, and
+     highlighting potential setup problems.
+
+     This property is optional.  If omitted, no additional
+     verification occurs for this syntax checker.  It is however
+     absolutely recommended that you add a `:verify' function to
+     your syntax checker, because it will help users to spot
+     potential setup problems.
 
 `:modes MODES'
      A major mode symbol or a list thereof, denoting major modes
@@ -1454,9 +1492,10 @@ Signal an error, if any property has an invalid value."
            (doc-string 2))
   (let ((start (plist-get properties :start))
         (interrupt (plist-get properties :interrupt))
-        (doc-printer (plist-get properties :doc-printer))
+        (print-doc (plist-get properties :print-doc))
         (modes (plist-get properties :modes))
         (predicate (plist-get properties :predicate))
+        (verify (plist-get properties :verify))
         (filter (or (plist-get properties :error-filter)
                     #'flycheck-sanitize-errors))
         (next-checkers (plist-get properties :next-checkers))
@@ -1470,9 +1509,12 @@ Signal an error, if any property has an invalid value."
     (unless (or (null interrupt) (functionp interrupt))
       (error ":interrupt %S of syntax checker %s is not a function"
              symbol interrupt))
-    (unless (or (null doc-printer) (functionp doc-printer))
-      (error ":doc-printer %S of syntax checker %s is not a function"
-             symbol doc-printer))
+    (unless (or (null print-doc) (functionp print-doc))
+      (error ":print-doc %S of syntax checker %s is not a function"
+             symbol print-doc))
+    (unless (or (null verify) (functionp verify))
+      (error ":verify %S of syntax checker %S is not a function"
+             symbol verify))
     (unless (or modes predicate)
       (error "Missing :modes or :predicate in syntax checker %s" symbol))
     (dolist (mode modes)
@@ -1497,9 +1539,10 @@ Try to reinstall the package defining this syntax checker." symbol)
       (pcase-dolist (`(,prop . ,value)
                      `((flycheck-start         . ,start)
                        (flycheck-interrupt     . ,interrupt)
-                       (flycheck-doc-printer   . ,doc-printer)
+                       (flycheck-print-doc     . ,print-doc)
                        (flycheck-modes         . ,modes)
                        (flycheck-predicate     . ,real-predicate)
+                       (flycheck-verify        . ,verify)
                        (flycheck-error-filter  . ,filter)
                        (flycheck-next-checkers . ,next-checkers)
                        (flycheck-documentation . ,docstring)
@@ -1572,8 +1615,8 @@ nil otherwise."
 ;;; Help for generic syntax checkers
 (define-button-type 'help-flycheck-checker-def
   :supertype 'help-xref
-  'help-function 'flycheck-goto-checker-definition
-  'help-echo (purecopy "mouse-2, RET: find Flycheck checker definition"))
+  'help-function #'flycheck-goto-checker-definition
+  'help-echo "mouse-2, RET: find Flycheck checker definition")
 
 (defconst flycheck-find-checker-regexp
   (rx line-start (zero-or-more (syntax whitespace))
@@ -1629,7 +1672,7 @@ Pop up a help buffer with the documentation of CHECKER."
         (let ((filename (flycheck-checker-file checker))
               (modes (flycheck-checker-modes checker))
               (predicate (flycheck-checker-predicate checker))
-              (doc-printer (get checker 'flycheck-doc-printer)))
+              (print-doc (get checker 'flycheck-print-doc)))
           (princ (format "%s is a Flycheck syntax checker" checker))
           (when filename
             (princ (format " in `%s'" (file-name-nondirectory filename)))
@@ -1656,12 +1699,123 @@ Pop up a help buffer with the documentation of CHECKER."
               (save-excursion
                 (fill-region-as-paragraph modes-start (point-max)))))
           (princ "\n")
-          ;; Call the custom doc-printer of the checker, if present
-          (when doc-printer
-            (funcall doc-printer checker))
+          ;; Call the custom print-doc function of the checker, if present
+          (when print-doc
+            (funcall print-doc checker))
           ;; Ultimately, print the docstring
           (princ "\nDocumentation:\n")
           (princ (flycheck-checker-documentation checker)))))))
+
+
+;;; Syntax checker verification
+(cl-defstruct (flycheck-verification-result
+               (:constructor flycheck-verification-result-new))
+  "Structure for storing a single verification result.
+
+Slots:
+
+`label'
+     A label for this result, as string
+
+`message'
+     A message for this result, as string
+
+`face'
+     The face to use for the `message'.
+
+     You can either use a face symbol, or a list of face symbols."
+  label message face)
+
+(defun flycheck-verify-generic-checker (checker)
+  "Verify a generic CHECKER in the current buffer.
+
+Return a list of `flycheck-verification-result' objects."
+  (let (results
+        (predicate (flycheck-checker-predicate checker))
+        (verify (get checker 'flycheck-verify)))
+    (when predicate
+      (let ((result (funcall predicate)))
+        (push (flycheck-verification-result-new
+               :label "predicate"
+               :message (prin1-to-string (not (null result)))
+               :face (if result 'success '(bold warning)))
+              results)))
+    (append (nreverse results)
+            (and verify (funcall verify checker)))))
+
+(define-button-type 'help-flycheck-checker-doc
+  :supertype 'help-xref
+  'help-function #'flycheck-describe-checker
+  'help-echo "mouse-2, RET: describe Flycheck checker")
+
+(defun flycheck-verify-setup ()
+  "Check whether Flycheck can be used in this buffer.
+
+Display a new buffer listing all syntax checkers that could be
+applicable in the current buffer.  For each syntax checkers,
+possible problems are shown."
+  (interactive)
+  (when (and (buffer-file-name) (buffer-modified-p))
+    ;; Save the buffer
+    (save-buffer))
+
+  (let ((buffer (current-buffer))
+        (checkers (flycheck-possibly-suitable-checkers)))
+
+    ;; Now print all applicable checkers
+    (with-help-window (get-buffer-create " *Flycheck checkers*")
+      (with-current-buffer standard-output
+        (princ "Syntax checkers for buffer ")
+        (insert (propertize (buffer-name buffer) 'face 'bold))
+        (princ " in ")
+        (let ((mode (buffer-local-value 'major-mode buffer)))
+          (insert-button (symbol-name mode)
+                         'type 'help-function
+                         'help-args (list mode)))
+        (princ ":\n\n")
+        (unless checkers
+          (insert (propertize "There are no syntax checkers for this buffer!\n\n"
+                              'face '(bold error))))
+        (dolist (checker checkers)
+          (princ "  ")
+          (insert-button (symbol-name checker)
+                         'type 'help-flycheck-checker-doc
+                         'help-args (list checker))
+          (princ "\n")
+          (let* ((results (with-current-buffer buffer
+                            (flycheck-verify-generic-checker checker)))
+                 (label-length
+                  (-max (mapcar
+                         (lambda (res)
+                           (length (flycheck-verification-result-label res)))
+                         results)))
+                 (message-column (+ 8 label-length)))
+            (dolist (result results)
+              (princ "    - ")
+              (princ (flycheck-verification-result-label result))
+              (princ ": ")
+              (princ (make-string (- message-column (current-column)) ?\ ))
+              (let ((message (flycheck-verification-result-message result))
+                    (face (flycheck-verification-result-face result)))
+                (insert (propertize message 'face face)))
+              (princ "\n")))
+          (princ "\n"))
+        (princ "Flycheck Mode is ")
+        (let ((enabled (buffer-local-value 'flycheck-mode buffer)))
+          (insert (propertize (if enabled "enabled" "disabled")
+                              'face (if enabled 'success '(warning bold)))))
+        (princ ".\n")
+
+        (let ((unregistered-checkers (-difference (flycheck-defined-checkers)
+                                                  flycheck-checkers)))
+          (when unregistered-checkers
+            (insert (propertize "\nThe following syntax checkers are not registered:\n\n"
+                                'face '(bold warning)))
+            (dolist (checker unregistered-checkers)
+              (princ "  - ")
+              (princ checker)
+              (princ "\n"))
+            (princ "\nTry adding these syntax checkers to `flycheck-checkers'.")))))))
 
 
 ;;; Predicates for generic syntax checkers
@@ -3212,7 +3366,7 @@ the beginning of the buffer."
 
 (define-button-type 'flycheck-error-list
   'action #'flycheck-error-list-button-goto-error
-  'help-echo (purecopy "mouse-2, RET: goto error"))
+  'help-echo "mouse-2, RET: goto error")
 
 (defun flycheck-error-list-button-goto-error (button)
   "Go to the error at BUTTON."
@@ -3685,10 +3839,13 @@ Unless otherwise noted, all properties are mandatory.
 
 In addition to these PROPERTIES, all properties from
 `flycheck-define-generic-checker' may be specified, except of
-`:start', `:interrupt', and `:doc-printer'."
+`:start', `:interrupt', and `:print-doc'.  You may specify a
+custom `:verify' function, but you should take care to call
+`flycheck-verify-command-checker' in a custom `:verify'
+function."
   (declare (indent 1)
            (doc-string 2))
-  (dolist (prop '(:start :interrupt :doc-printer))
+  (dolist (prop '(:start :interrupt :print-doc))
     (when (plist-get properties prop)
       (error "%s not allowed in definition of command syntax checker %s"
              prop symbol)))
@@ -3722,7 +3879,8 @@ In addition to these PROPERTIES, all properties from
     (apply #'flycheck-define-generic-checker symbol docstring
            :start #'flycheck-start-command-checker
            :interrupt #'flycheck-interrupt-command-checker
-           :doc-printer #'flycheck-command-checker-print-doc
+           :print-doc #'flycheck-command-checker-print-doc
+           :verify #'flycheck-verify-command-checker
            properties)
 
     ;; Pre-compile all errors patterns into strings, so that we don't need to do
@@ -4048,6 +4206,18 @@ symbols in the command."
       (princ "\n  This syntax checker can be configured with these options:\n\n")
       (dolist (var option-vars)
         (princ (format "     * `%s'\n" var))))))
+
+(defun flycheck-verify-command-checker (checker)
+  "Verify a command CHECKER in the current buffer.
+
+Return a list of `flycheck-verification-result' objects for
+CHECKER."
+  (let ((executable (executable-find (flycheck-checker-executable checker))))
+    (list
+     (flycheck-verification-result-new
+      :label "executable"
+      :message (if executable (format "Found at %s" executable) "Not found")
+      :face (if executable 'success '(bold error))))))
 
 
 ;;; Process management for command syntax checkers

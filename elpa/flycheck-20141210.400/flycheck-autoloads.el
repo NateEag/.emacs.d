@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "flycheck" "flycheck.el" (21637 45698 0 0))
+;;;### (autoloads nil "flycheck" "flycheck.el" (21640 34520 0 0))
 ;;; Generated autoloads from flycheck.el
 
 (autoload 'flycheck-info "flycheck" "\
@@ -159,7 +159,10 @@ Unless otherwise noted, all properties are mandatory.
 
 In addition to these PROPERTIES, all properties from
 `flycheck-define-generic-checker' may be specified, except of
-`:start', `:interrupt', and `:doc-printer'.
+`:start', `:interrupt', and `:print-doc'.  You may specify a
+custom `:verify' function, but you should take care to call
+`flycheck-verify-command-checker' in a custom `:verify'
+function.
 
 \(fn SYMBOL DOCSTRING &rest PROPERTIES)" nil nil)
 
@@ -205,8 +208,8 @@ Use this together with the `option', `option-list' and
 
 ;;;***
 
-;;;### (autoloads nil nil ("flycheck-ert.el" "flycheck-pkg.el") (21637
-;;;;;;  45698 743764 0))
+;;;### (autoloads nil nil ("flycheck-ert.el" "flycheck-pkg.el") (21640
+;;;;;;  34520 548110 0))
 
 ;;;***
 

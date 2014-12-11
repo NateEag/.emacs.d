@@ -86,10 +86,6 @@ are for modes that didn't come with autoloading."
   ;; work. Therefore...
   (autoload 'tea-timer "tea-time.el")
 
-  (autoload 'update-packages-update-installed-packages "update-packages" nil t)
-
-  ;; I use s-trim for a one-off function, and am tired of the function failing
-  ;; every time I restart Emacs.
-  (autoload 's-trim "s"))
+  (autoload 'update-packages-update-installed-packages "update-packages" nil t))
 
 (nateeag-autoloads-init)

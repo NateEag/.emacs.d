@@ -51,6 +51,12 @@
 
 (defvar nateeag/command-mnemonics
   '(
+    ;; Jump to different parts of the screen very quickly.
+    ("a w" . evil-ace-jump-word-mode)
+    ("a b" . ace-window)
+    ("a l" . evil-ace-jump-line-mode)
+    ("a c" . evil-ace-jump-char-mode)
+
     ;; Change names from snake_case to ALL_CAPS to StudlyCaps to camelCase.
     ("u" . string-inflection-toggle)
 
@@ -102,22 +108,34 @@
 
 Used to define keyboard shortcuts.")
 
-(dolist (elt nateeag/command-mnemonics)
-        (let ((mnemonic (car elt))
-              (command (cdr elt)))
-          ;; Set up my mnemonics in the Emacs-approved user keybinding space,
-          ;; just because I occasionally use them out of habit.
-          ;; TODO I should probably bind them to a lambda that messages me
-          ;; saying "Don't use those keybindings!" then runs the command.
-          (global-set-key (kbd (concat "C-c " mnemonic)) command)
+(defun nateeag/create-keybindings ()
+  "Generate keybindings from `nateeag/command-mnemonics'."
 
-          ;; Use Super for my personal keybindings. The Emacs manual says that
-          ;; C-c <key> is reserved for user keybindings, but in practice
-          ;; there's not a lot mapped to the Super key.
-          (global-set-key (kbd (concat "s-" mnemonic)) command)
+  (interactive)
 
-          ;; Tell evil-leader-mode to use the mnemonic for this command.
-          (evil-leader/set-key mnemonic command)))
+  ;; TODO Should unset prefix keys by parsing mnemonic in the loop. This is WET.
+  (global-unset-key (kbd "s-a"))
+
+  (dolist (elt nateeag/command-mnemonics)
+    (let ((mnemonic (car elt))
+          (command (cdr elt)))
+      ;; Set up my mnemonics in the Emacs-approved user keybinding space,
+      ;; just because I occasionally use them out of habit.
+      ;; TODO I should probably bind them to a lambda that messages me
+      ;; saying "Don't use those keybindings!" then runs the command.
+      (global-set-key (kbd (concat "C-c " mnemonic)) command)
+
+      ;; Use Super for my personal keybindings. The Emacs manual says that
+      ;; C-c <key> is reserved for user keybindings, but in practice
+      ;; there's not a lot mapped to the Super key.
+      (global-set-key (kbd (concat "s-" mnemonic)) command)
+
+      ;; Tell evil-leader-mode to use the mnemonic for this command.
+      ;; Note that evil-leader expects key sequences to have no separating
+      ;; whitespace.
+      (evil-leader/set-key (s-replace " " "" mnemonic) command))) )
+
+(nateeag/create-keybindings)
 
 (provide 'my-keybindings)
 ;;; my-keybindings.el ends here

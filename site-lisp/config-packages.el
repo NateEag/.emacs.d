@@ -47,6 +47,9 @@
 (use-package my-frame-setup
   :commands my-set-up-frame)
 
+(use-package s
+  :commands s-replace s-trim)
+
 (use-package magit
   :defer t
   :diminish magit-auto-revert-mode)

@@ -5,21 +5,38 @@
   "Return path with `user-emacs-directory' prepended."
   (concat user-emacs-directory path))
 
+;; Set up load-path.
+(defun add-subdirs-to-front-of-load-path (path)
+  "Add directories beneath path to the beginning of load-path."
+  (let ((default-directory path))
+    (setq load-path
+          (append
+           (let ((load-path (copy-sequence load-path)))
+                (normal-top-level-add-subdirs-to-load-path))
+                 load-path))
+    (setq load-path (append (list path) load-path))))
+
+(add-subdirs-to-front-of-load-path (make-emacs-dir-path "site-lisp"))
+
+;; Add elpa/ to load-path to load auto-compile before package.el.
+(add-subdirs-to-front-of-load-path (make-emacs-dir-path "elpa"))
+
+
 ;; Set up auto-compile, which should prevent me from ever again loading an
 ;; older byte-code file.
 ;;
 ;; ...at least, as long as I'm running 24.4 or newer...
-;; DEBUG Hard-coding ELPA-managed paths seems like a terrible idea, but that's
-;; what the project's readme recommends doing...
-(add-to-list 'load-path (make-emacs-dir-path "elpa/auto-compile-20140913.1532/"))
-(add-to-list 'load-path (make-emacs-dir-path "elpa/packed-20141207.54/"))
+
 (setq load-prefer-newer t)
+
 (require 'auto-compile)
+
 (auto-compile-on-load-mode 1)
 (auto-compile-on-save-mode 1)
 
 ;; I use Flycheck, so I don't need to see the compilation errors buffer.
 (setq auto-compile-display-buffer nil)
+
 
 ;; Set up the package library per my desires.
 (require 'package)
@@ -28,19 +45,6 @@
 (add-to-list 'package-archives '("melpa" .
                                  "http://melpa.milkbox.net/packages/"))
 (package-initialize)
-
-;; Set up my load-path reasonably.
-(defun add-subdirs-to-front-of-load-path (path)
-  "Add directories beneath path to the beginning of load-path."
-  (let ((default-directory path))
-    (setq load-path
-          (append
-           (let ((load-path (copy-sequence load-path)))
-                (normal-top-level-add-subdirs-to-load-path))
-                 load-path))))
-
-(add-subdirs-to-front-of-load-path (make-emacs-dir-path "site-lisp"))
-(add-to-list 'load-path (make-emacs-dir-path "site-lisp"))
 
 ;; Set up manually-maintained autoloads.
 (defun nateeag-autoloads-init ()

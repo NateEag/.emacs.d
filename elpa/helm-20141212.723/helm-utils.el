@@ -430,7 +430,7 @@ from its directory."
 ;; Same as `vc-directory-exclusion-list'.
 (defvar helm-walk-ignore-directories
   '("SCCS" "RCS" "CVS" "MCVS" ".svn" ".git" ".hg" ".bzr"
-    "_MTN" "_darcs" "{arch}"))
+    "_MTN" "_darcs" "{arch}" ".gvfs"))
 
 (cl-defun helm-walk-directory (directory &key path (directories t) match skip-subdirs)
   "Walk through DIRECTORY tree.
@@ -457,11 +457,12 @@ instead of `helm-walk-ignore-directories'."
                    (cl-loop with ls = (directory-files
                                        dir t directory-files-no-dot-files-regexp)
                          for f in ls
-                         if (file-directory-p f)
+                         for type = (car (file-attributes f))
+                         if (eq type t)
                          do (progn (when directories
                                      (push (funcall fn f) result))
                                    ;; Don't recurse in directory symlink.
-                                   (unless (file-symlink-p f)
+                                   (unless (stringp type)
                                      (funcall ls-R f)))
                          else do
                          (if match

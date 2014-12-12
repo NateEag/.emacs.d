@@ -1,11 +1,10 @@
 ;;; helm-git-files-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-
+(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads (helm-git-files helm-git-files:submodule-sources
-;;;;;;  helm-git-files:git-p) "helm-git-files" "helm-git-files.el"
-;;;;;;  (21256 64301 0 0))
+;;;### (autoloads nil "helm-git-files" "helm-git-files.el" (21643
+;;;;;;  25696 0 0))
 ;;; Generated autoloads from helm-git-files.el
 
 (autoload 'helm-git-files:git-p "helm-git-files" "\
@@ -31,16 +30,9 @@
 
 ;;;***
 
-;;;### (autoloads nil nil ("helm-git-files-pkg.el") (21256 64301
-;;;;;;  356367 0))
-
-;;;***
-
-(provide 'helm-git-files-autoloads)
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
-;; coding: utf-8
 ;; End:
 ;;; helm-git-files-autoloads.el ends here

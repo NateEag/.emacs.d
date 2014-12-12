@@ -1,5 +1,5 @@
 ;;; packed.el --- package manager agnostic Emacs Lisp package utilities
-;; Version: 20141207.54
+;; Version: 20141211.904
 
 ;; Copyright (C) 2012-2014  Jonas Bernoulli
 
@@ -439,10 +439,10 @@ Elements of `load-path' which no longer exist are not removed."
          (setq file (car elt)
                dir (file-name-nondirectory file))
          (if (cdr elt)
-             (cl-case (byte-recompile-file file force 0)
-               (no-byte-compile (setq skip-count (1+ skip-count)))
-               ((t)             (setq  lib-count (1+  lib-count)))
-               ((nil)           (setq fail-count (1+ fail-count))))
+             (cl-incf (pcase (byte-recompile-file file force 0)
+                        (`no-byte-compile skip-count)
+                        (`t lib-count)
+                        (_  fail-count)))
            (setq skip-count (1+ skip-count)))
          (unless (eq last-dir dir)
            (setq last-dir dir dir-count (1+ dir-count)))))

@@ -218,6 +218,7 @@ attention to case differences."
     puppet-lint
     python-flake8
     python-pylint
+    python-pycompile
     racket
     rpm-rpmlint
     rst
@@ -4454,11 +4455,10 @@ directory, or nil otherwise."
                                           &rest custom-args)
   "Define SYMBOL as option variable with INIT-VALUE for CHECKER.
 
-SYMBOL is declared as customizable variable, buffer-local
-variable using `defcustom', to provide an option for the given
-syntax CHECKER.  INIT-VALUE is the initial value of the variable,
-and DOCSTRING is its docstring.  CUSTOM-ARGS are forwarded to
-`defcustom'.
+SYMBOL is declared as customizable, buffer-local variable using
+`defcustom', to provide an option for the given syntax CHECKER.
+INIT-VALUE is the initial value of the variable, and DOCSTRING is
+its docstring.  CUSTOM-ARGS are forwarded to `defcustom'.
 
 Use this together with the `option', `option-list' and
 `option-flag' forms in the `:command' argument to
@@ -6008,9 +6008,6 @@ See URL `http://www.haskell.org/ghc/'."
                    (flycheck-module-root-directory
                     (flycheck-find-in-buffer flycheck-haskell-module-re))))
             (option-list "-X" flycheck-ghc-language-extensions concat)
-            ;; Force GHC to treat the file as Haskell file, even if it doesn't
-            ;; have an extension.  Otherwise GHC would fail on files without an
-            ;; extension
             "-x" (eval
                   (pcase major-mode
                     (`haskell-mode "hs")
@@ -6472,6 +6469,22 @@ See URL `http://www.pylint.org/'."
    (info line-start (file-name) ":" line ":" column ":"
          "C:" (id (one-or-more (not (any ":")))) ":"
          (message) line-end))
+  :modes python-mode)
+
+(flycheck-define-checker python-pycompile
+  "A Python syntax checker using Python's builtin compiler.
+
+See URL `https://docs.python.org/3.4/library/py_compile.html'."
+  :command ("python" "-m" "py_compile" source)
+  :error-patterns
+  ;; Python 2.7
+  ((error line-start "  File \"" (file-name) "\", line " line "\n"
+          (= 2 (zero-or-more not-newline) "\n")
+          "SyntaxError: " (message) line-end)
+   ;; 2.6
+   (error line-start "SyntaxError: ('" (message (one-or-more (not (any "'"))))
+          "', ('" (file-name (one-or-more (not (any "'")))) "', "
+          line ", " column ", " (one-or-more not-newline) line-end))
   :modes python-mode)
 
 (flycheck-define-checker racket
@@ -6957,6 +6970,9 @@ See URL `http://www.nongnu.org/chktex/'."
   :error-patterns
   ((warning line-start (file-name) ":" line ":" column ":"
             (id (one-or-more digit)) ":" (message) line-end))
+  :error-filter
+  (lambda (errors)
+    (flycheck-sanitize-errors (flycheck-increment-error-columns errors)))
   :modes (latex-mode plain-tex-mode))
 
 (flycheck-define-checker tex-lacheck

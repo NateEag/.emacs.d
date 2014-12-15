@@ -4,7 +4,7 @@
 
 ;; Author: Tomohiro Matsuyama <tomo@cx4a.org>
 ;; Keywords: convenience
-;; Version: 20141127.253
+;; Version: 20141213.1820
 ;; X-Original-Version: 0.7.0alpha
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -100,6 +100,11 @@ the selected window."
     (if (>= emacs-major-version 24)
         (switch-to-buffer buffer-or-name norecord t)
       (switch-to-buffer buffer-or-name norecord))))
+
+(defun popwin:select-window (window &optional norecord)
+  "Call `select-window' with saving the current buffer."
+  (save-current-buffer
+    (select-window window norecord)))
 
 (defun popwin:buried-buffer-p (buffer)
   "Return t if BUFFER might be thought of as a buried buffer."
@@ -212,7 +217,7 @@ new-window."
         (with-selected-window window
           (popwin:switch-to-buffer buffer t))
         (when selected
-          (select-window window))
+          (popwin:select-window window))
         (set-window-point window point)
         (set-window-start window start t)
         (when dedicated

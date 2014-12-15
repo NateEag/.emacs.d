@@ -1449,6 +1449,14 @@ purpose."
            (expand-file-name "/")) ; Expand to "/" or "c:/"
           ((string-match "\\`\\(~/\\|.*/~/\\)\\'" pattern)
            (expand-file-name "~/"))
+          ;; Match "/method:maybe_hostname:~"
+          ((and (string-match (concat reg "~") pattern)
+                (setq cur-method (match-string 1 pattern))
+                (member cur-method methods))
+           (setq tramp-name (expand-file-name
+                             (helm-create-tramp-name
+                              (match-string 0 pattern))))
+           (replace-match tramp-name nil t pattern))
           ;; Match "/method:maybe_hostname:"
           ((and (string-match reg pattern)
                 (setq cur-method (match-string 1 pattern))
@@ -1483,8 +1491,7 @@ purpose."
 
 (defun helm-find-files-get-candidates (&optional require-match)
   "Create candidate list for `helm-source-find-files'."
-  (let* ((path          (expand-file-name
-                         (helm-ff-set-pattern helm-pattern)))
+  (let* ((path          (helm-ff-set-pattern helm-pattern))
          (dir-p         (file-accessible-directory-p path))
          basedir
          invalid-basedir
@@ -2671,11 +2678,12 @@ Set `recentf-max-saved-items' to a bigger value if default is too small.")
 
 ;;; Browse project
 ;; Need dependencies:
-;; <https://github.com/emacs-helm/helm-ls-git.git>
-;; <https://github.com/emacs-helm/helm-mercurial-queue/blob/master/helm-ls-hg.el>
+;; <https://github.com/emacs-helm/helm-ls-git>
+;; <https://github.com/emacs-helm/helm-ls-hg>
 ;; Only hg and git are supported for now.
 (defvar helm--browse-project-cache (make-hash-table :test 'equal))
-(defun helm-browse-project-find-files (directory)
+(defun helm-browse-project-find-files (directory &optional refresh)
+  (when refresh (remhash directory helm--browse-project-cache))
   (unless (gethash directory helm--browse-project-cache)
     (puthash directory (helm-walk-directory
                         directory
@@ -2686,11 +2694,13 @@ Set `recentf-max-saved-items' to a bigger value if default is too small.")
                    :match-part (lambda (c)
                                  (if helm-ff-transformer-show-only-basename
                                      (helm-basename c) c))
-                   :filter-one-by-one (lambda (c)
-                                        (if helm-ff-transformer-show-only-basename
-                                            (cons (propertize (helm-basename c)
-                                                              'face 'helm-ff-file) c)
-                                            (propertize c 'face 'helm-ff-file)))
+                   :filter-one-by-one
+                   (lambda (c)
+                     (if helm-ff-transformer-show-only-basename
+                         (cons (propertize (helm-basename c)
+                                           'face 'helm-ff-file)
+                               c)
+                       (propertize c 'face 'helm-ff-file)))
                    :keymap helm-generic-files-map
                    :action (helm-actions-from-type-file))
         :buffer "*helm browse project*"))
@@ -2698,11 +2708,16 @@ Set `recentf-max-saved-items' to a bigger value if default is too small.")
 ;;;###autoload
 (defun helm-browse-project (arg)
   "Browse files and see status of project with its vcs.
-Only hg and git are supported for now.
-Fall back to `helm-find-files' if directory is not under
-control of one of those vcs.
-With a prefix ARG browse files recursively.
-Need dependencies:
+Only HG and GIT are supported for now.
+Fall back to `helm-find-files' or `helm-browse-project-find-files'
+if current directory is not under control of one of those vcs.
+With a prefix ARG browse files recursively, with two prefix ARG
+rebuild the cache.
+If the current directory is found in the cache, start
+`helm-browse-project-find-files' even with no prefix ARG.
+NOTE: The prefix ARG have no effect on the VCS controlled directories.
+
+Need dependencies for VCS:
 <https://github.com/emacs-helm/helm-ls-git.git>
 and
 <https://github.com/emacs-helm/helm-mercurial-queue/blob/master/helm-ls-hg.el>."
@@ -2713,11 +2728,14 @@ and
         ((and (fboundp 'helm-hg-root)
               (helm-hg-root))
          (helm-hg-find-files-in-project))
-        (t (if arg
-               (helm-browse-project-find-files (helm-current-directory))
-               (helm-find-files nil)))))
+        (t (let ((cur-dir (helm-current-directory)))
+             (if (or arg (gethash cur-dir helm--browse-project-cache)) 
+                 (helm-browse-project-find-files cur-dir (equal arg '(16)))
+               (helm-find-files nil))))))
 
 (defun helm-ff-browse-project (_candidate)
+  "Browse project in current directory.
+See `helm-browse-project'."
   (with-helm-default-directory helm-ff-default-directory
       ;; `helm-browse-project' will call `helm-ls-git-ls'
       ;; which will set locally `helm-default-directory'

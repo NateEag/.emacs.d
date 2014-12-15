@@ -432,9 +432,12 @@ from its directory."
   '("SCCS" "RCS" "CVS" "MCVS" ".svn" ".git" ".hg" ".bzr"
     "_MTN" "_darcs" "{arch}" ".gvfs"))
 
-(cl-defun helm-walk-directory (directory &key path (directories t) match skip-subdirs)
+(cl-defun helm-walk-directory (directory &key (path 'basename)
+                                           (directories t)
+                                           match skip-subdirs)
   "Walk through DIRECTORY tree.
-Argument PATH can be one of basename, relative, or full, default to basename.
+Argument PATH can be one of basename, relative, full, or a function
+called on file name, default to basename.
 Argument DIRECTORIES when non--nil (default) return also directories names,
 otherwise skip directories names.
 Argument MATCH can be a predicate or a regexp.
@@ -446,7 +449,7 @@ instead of `helm-walk-ignore-directories'."
                (basename 'file-name-nondirectory)
                (relative 'file-relative-name)
                (full     'identity)
-               (t        'file-name-nondirectory)))
+               (t        path)))
          ls-R)
     (setq ls-R (lambda (dir)
                  (unless (and skip-subdirs
@@ -454,25 +457,33 @@ instead of `helm-walk-ignore-directories'."
                                       (if (listp skip-subdirs)
                                           skip-subdirs
                                         helm-walk-ignore-directories)))
-                   (cl-loop with ls = (directory-files
-                                       dir t directory-files-no-dot-files-regexp)
+                   (cl-loop with ls = (sort (file-name-all-completions "" dir)
+                                            'string-lessp)
                          for f in ls
-                         for type = (car (file-attributes f))
-                         if (eq type t)
+                         ;; Use `directory-file-name' to remove the final slash.
+                         ;; Needed to avoid infloop on symlinks symlinking
+                         ;; a directory inside it [1].
+                         for file = (directory-file-name
+                                     (expand-file-name f dir))
+                         unless (member f '("./" "../"))
+                         ;; A directory.
+                         if (char-equal (aref f (1- (length f))) ?/)
                          do (progn (when directories
-                                     (push (funcall fn f) result))
-                                   ;; Don't recurse in directory symlink.
-                                   (unless (stringp type)
-                                     (funcall ls-R f)))
+                                     (push (funcall fn file) result))
+                                   ;; Don't recurse in symlinks.
+                                   ;; `file-symlink-p' have to be called
+                                   ;; on the directory with its final
+                                   ;; slash removed [1].
+                                   (and (not (file-symlink-p file))
+                                        (funcall ls-R file)))
                          else do
                          (if match
                              (and (if (functionp match)
                                       (funcall match f)
                                     (and (stringp match)
-                                         (string-match
-                                          match (file-name-nondirectory f))))
-                                  (push (funcall fn f) result))
-                           (push (funcall fn f) result))))))
+                                         (string-match match f)))
+                                  (push (funcall fn file) result))
+                           (push (funcall fn file) result))))))
     (funcall ls-R directory)
     (nreverse result)))
 

@@ -258,10 +258,6 @@ new file for the first time."
 (eval-after-load 'subword
   '(diminish 'subword-mode))
 
-;; Run yasnippet customizations when it's started.
-(eval-after-load 'yasnippet
-  '(yasnippet-init))
-
 ;; Run smartparens customizations when it's started.
 (eval-after-load 'smartparens
   '(smartparens-init))

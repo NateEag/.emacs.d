@@ -178,6 +178,7 @@
     (loop for (mode . state) in '((git-commit-mode . insert))
           do (evil-set-initial-state mode state))
 
+    (evil-commentary-default-setup)
     ;; Set up evil-nerd-commenter.
     ;;
     ;; This is a lame workaround. Requiring evil-nerd-commenter if evil-mode is

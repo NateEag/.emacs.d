@@ -252,9 +252,6 @@ new file for the first time."
 
 (add-hook 'prog-mode-hook 'my-prog-mode-init)
 
-(eval-after-load 'simple
-  '(diminish 'auto-fill-function))
-
 (eval-after-load 'flycheck
   '(diminish 'flycheck-mode))
 

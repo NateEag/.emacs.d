@@ -58,6 +58,9 @@
   :defer t
   :diminish abbrev-mode)
 
+(use-package simple
+  :diminish auto-fill-function)
+
 (use-package eclimd
   :defer t
   :diminish

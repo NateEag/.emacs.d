@@ -3,7 +3,7 @@
 
 ;; Copyright 2011-2014 François-Xavier Bois
 
-;; Version: 20141214.2327
+;; Version: 20141215.1123
 ;; X-Original-Version: 10.1.15
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
@@ -10978,8 +10978,8 @@ Pos should be in a tag."
     (recenter)
   ))
 
-;;; web-mode.el ends here
 (provide 'web-mode)
+;;; web-mode.el ends here
 
 ;; Local Variables:
 ;; coding: utf-8

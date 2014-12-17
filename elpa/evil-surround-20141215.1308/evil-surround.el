@@ -6,7 +6,7 @@
 ;;      Vegard Øye <vegard_oye at hotmail dot com>
 ;; Maintainer: Please send bug reports to the mailing list (below).
 ;; Created: July 23 2011
-;; Version: 20140616.1127
+;; Version: 20141215.1308
 ;; X-Original-Version: 0.1
 ;; Keywords: emulation, vi, evil
 ;; Mailing list: <implementations-list at lists.ourproject.org>
@@ -274,10 +274,6 @@ Becomes this:
           (goto-char (overlay-start overlay)))
       (delete-overlay overlay))))
 
-(evil-define-operator evil-Surround-region (beg end type char)
-  "Call surround-region, toggling force-new-line"
-  (interactive "<R>c")
-  (evil-surround-region beg end type char t))
 
 ;;;###autoload
 (define-minor-mode evil-surround-mode
@@ -301,8 +297,7 @@ Becomes this:
   "Global minor mode to emulate surround.vim.")
 
 (evil-define-key 'operator evil-surround-mode-map "s" 'evil-surround-edit)
-(evil-define-key 'visual evil-surround-mode-map "s" 'evil-surround-region)
-(evil-define-key 'visual evil-surround-mode-map "S" 'evil-Surround-region)
+(evil-define-key 'visual evil-surround-mode-map "S" 'evil-surround-region)
 
 (provide 'evil-surround)
 

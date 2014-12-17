@@ -4,7 +4,7 @@
 
 ;; Author: Syohei YOSHIDA <syohex@gmail.com>
 ;; URL: https://github.com/syohex/emacs-literate-coffee-mode
-;; Version: 20141023.2147
+;; Version: 20141216.1519
 ;; X-Original-Version: 0.04
 ;; Package-Requires: ((coffee-mode "0.5.0"))
 
@@ -83,6 +83,17 @@
     (litcoffee--font-lock-keywords 1 font-lock-keyword-face)
     (litcoffee--font-lock-string-interpolation 0 font-lock-variable-name-face t)))
 
+(defun litcoffee--syntax-propertize-regexp-function (start end)
+  (save-excursion
+    (goto-char start)
+    (when (re-search-forward "\\(?:[^\\]\\)\\(/\\)" end t)
+      (let ((ppss (progn
+                    (goto-char (match-beginning 1))
+                    (syntax-ppss))))
+        (when (nth 8 ppss)
+          (put-text-property (match-beginning 1) (match-end 1)
+                             'syntax-table (string-to-syntax "_")))))))
+
 (defun litcoffee-syntax-propertize-function (start end)
   (goto-char start)
   (funcall
@@ -92,7 +103,8 @@
          (let ((head-of-line (match-string 1))
                (start (match-beginning 0))
                (end (match-end 0)))
-           (unless (string-match-p "^\\(\t\\| \\{4,\\}\\)" head-of-line)
+           (if (string-match-p "\\`\\(\t\\| \\{4,\\}\\)" head-of-line)
+               (litcoffee--syntax-propertize-regexp-function start end)
              (put-text-property start end 'litcoffee-not-highlight t)
              (save-excursion
                (goto-char start)
@@ -101,15 +113,6 @@
                                     'syntax-table (string-to-syntax "_")))))))))
     (coffee-block-strings-delimiter
      (0 (ignore (coffee-syntax-block-strings-stringify))))
-    ("\\(?:[^\\]\\)\\(/\\)"
-     (1 (ignore
-         (let ((ppss (progn
-                       (goto-char (match-beginning 1))
-                       (syntax-ppss))))
-           (when (nth 8 ppss)
-             (put-text-property (match-beginning 1) (match-end 1)
-                                'syntax-table (string-to-syntax "_")))))))
-    (coffee-regexp-regexp (1 (string-to-syntax "_")))
     ("^[[:space:]]\\{4,\\}*\\(###\\)\\([[:space:]]+.*\\)?$"
      (1 (ignore
          (let ((after-triple-hash (match-string-no-properties 2)))

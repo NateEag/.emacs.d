@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "expand-region" "expand-region.el" (21640 34510
+;;;### (autoloads nil "expand-region" "expand-region.el" (21649 34831
 ;;;;;;  0 0))
 ;;; Generated autoloads from expand-region.el
 
@@ -20,7 +20,7 @@ before calling `er/expand-region' for the first time.
 ;;;***
 
 ;;;### (autoloads nil "expand-region-custom" "expand-region-custom.el"
-;;;;;;  (21640 34510 0 0))
+;;;;;;  (21649 34832 0 0))
 ;;; Generated autoloads from expand-region-custom.el
 
 (let ((loads (get 'expand-region 'custom-loads))) (if (member '"expand-region-custom" loads) nil (put 'expand-region 'custom-loads (cons '"expand-region-custom" loads))))
@@ -78,7 +78,7 @@ List of modes which derive from `text-mode' for which text mode expansions are n
 ;;;;;;  "python-el-expansions.el" "python-el-fgallina-expansions.el"
 ;;;;;;  "python-mode-expansions.el" "ruby-mode-expansions.el" "sml-mode-expansions.el"
 ;;;;;;  "text-mode-expansions.el" "the-org-mode-expansions.el" "web-mode-expansions.el")
-;;;;;;  (21640 34511 111559 0))
+;;;;;;  (21649 34832 679090 0))
 
 ;;;***
 

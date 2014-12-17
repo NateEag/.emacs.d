@@ -564,6 +564,7 @@ customize the resulting theme."
      `(cider-test-error-face ((t (:foreground ,red :weight bold :underline t))))
      `(cider-test-success-face ((t (:foreground ,green :weight bold :underline t))))
 ;;;;; company-mode
+     `(company-template-field ((,class (:background ,yellow :foreground ,base02))))
      `(company-tooltip ((,class (:background ,base02 :foreground ,cyan))))
      `(company-tooltip-selection ((,class (:background ,cyan-lc :foreground ,cyan-hc))))
      `(company-tooltip-mouse ((,class (:background ,cyan-hc :foreground ,cyan-lc))))
@@ -734,6 +735,13 @@ customize the resulting theme."
      `(elfeed-search-feed-face ((,class (:foreground ,base01))))
      `(elfeed-search-tag-face ((,class (:foreground ,base0))))
      `(elfeed-search-title-face ((,class (:foreground ,base0))))
+
+;;;;; elscreen
+     `(elscreen-tab-background-face ((,class (:background ,base03))))
+     `(elscreen-tab-current-screen-face ((,class (:background ,base1 :foreground ,base03)) (t (:underline t))))
+     `(elscreen-tab-other-screen-face ((,class (:background ,base02 :foreground ,base01))))
+     `(elscreen-tab-control-face ((,class (:background ,base03 :foreground ,base0))))
+
 ;;;;; epc
      `(epc:face-title ((,class (:foreground ,blue :background ,base03
                                             :weight normal :underline nil))))

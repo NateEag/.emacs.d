@@ -513,14 +513,18 @@ C/\\[helm-cr-empty-string]\t\t->Maybe return empty string (unless `must-match').
 
 ** Helm generic file tips:\n
 
+*** Locate
 You can add after writing search pattern any of the locate command line options.
 e.g -b, -e, -n <number>...etc.
 See Man locate for more infos.
 
-*** Note:
-
 Some other sources (at the moment recentf and file in current directory sources)
 support the -b flag for compatibility with locate when they are used with it.
+
+*** Browse project
+
+When your directory is not under version control,
+don't forget to refresh your cache when files have been added/removed in your directory.
 
 \n** Specific commands for helm locate and others files sources:
 
@@ -538,6 +542,7 @@ support the -b flag for compatibility with locate when they are used with it.
 \\[helm-ff-run-open-file-externally]\t\t->Open file with external program (C-u to choose).
 \\[helm-ff-run-open-file-with-default-tool]\t\t->Open file externally with default tool.
 \\[helm-ff-run-insert-org-link]\t\t->Insert org link.
+\\[helm-generic-file-help]\t\t->Show this help.
 \n** Helm Map\n
 \\{helm-map}")
 
@@ -825,14 +830,24 @@ Multiple regexp matching is allowed, just enter a space to separate your regexps
   "\n* Helm elisp package\n
 \n** Helm elisp package tips:
 *** Upgrade elisp packages
-Upgrading is not yet implemented, but you can easily achieve this like this:
+Upgrading is not yet implemented, but you can easily achieve this task like this:
 
 1) Show only installed packages
    You should see two versions of package(s) if a new version
    is available.
-2) Delete the installed version
-3) Run `helm-resume'
-4) Install the new version
+2) Delete the installed package(s) version (Mark them and delete).
+3) Run `helm-resume' [1]
+4) Install the new package(s) version not already installed (Mark them and install).
+
+So if for example you have bound helm-resume to `f1', you can do:
+
+1) Mark the installed package(s) version and hit `f3'.
+2) Hit `f1'.[1]
+3) Mark the new package(s) version not already installed and hit `f2'.
+
+**** NOTE [1]: If you restart `helm-list-elisp-packages' instead of using `helm-resume'
+you will NOT see anymore the packages to install and you will have to retrieve them
+manually, which can be a pain if you have many.
 
 \n** Specific commands for Helm elisp package:\n
 \\<helm-el-package-map>

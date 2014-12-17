@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2010 Chris Wanstrath
 
-;; Version: 20141207.500
+;; Version: 20141216.620
 ;; X-Original-Version: 0.5.7
 ;; Keywords: CoffeeScript major mode
 ;; Author: Chris Wanstrath <chris@ozmm.org>
@@ -781,11 +781,9 @@ output in a compilation buffer."
   "Return the indentation level of the previous non-blank line."
   (save-excursion
     (forward-line -1)
-    (if (bobp)
-        0
-      (while (and (looking-at "^[ \t]*$") (not (bobp)))
-        (forward-line -1))
-      (current-indentation))))
+    (while (and (looking-at "^[ \t]*$") (not (bobp)))
+      (forward-line -1))
+    (current-indentation)))
 
 (defun coffee-newline-and-indent ()
   "Insert a newline and indent it to the same level as the previous line."

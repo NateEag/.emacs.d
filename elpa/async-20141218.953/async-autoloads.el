@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "async" "async.el" (21550 36644 0 0))
+;;;### (autoloads nil "async" "async.el" (21651 10324 0 0))
 ;;; Generated autoloads from async.el
 
 (autoload 'async-start-process "async" "\
@@ -11,7 +11,8 @@ Start the executable PROGRAM asynchronously.  See `async-start'.
 PROGRAM is passed PROGRAM-ARGS, calling FINISH-FUNC with the
 process object when done.  If FINISH-FUNC is nil, the future
 object will return the process object when the program is
-finished.
+finished.  Set DEFAULT-DIRECTORY to change PROGRAM's current
+working directory.
 
 \(fn NAME PROGRAM FINISH-FUNC &rest PROGRAM-ARGS)" nil nil)
 
@@ -68,7 +69,7 @@ returns nil.  It can still be useful, however, as an argument to
 ;;;***
 
 ;;;### (autoloads nil nil ("async-bytecomp.el" "async-pkg.el" "dired-async.el"
-;;;;;;  "smtpmail-async.el") (21550 36644 601323 0))
+;;;;;;  "smtpmail-async.el") (21651 10324 152813 0))
 
 ;;;***
 

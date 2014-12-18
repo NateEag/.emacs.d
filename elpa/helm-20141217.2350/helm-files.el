@@ -2654,8 +2654,10 @@ Don't use it in your own code unless you know what you are doing.")
                                    helm-recentf--basename-flag)
                                (helm-basename candidate) candidate)))
    (filter-one-by-one :initform (lambda (c)
-                                  (if helm-ff-transformer-show-only-basename
-                                      (cons (helm-basename c) c) c)))
+                                  (if (and helm-ff-transformer-show-only-basename
+                                           (not (consp c)))
+                                      (cons (helm-basename c) c)
+                                      c)))
    (keymap :initform helm-generic-files-map)
    (help-message :initform helm-generic-file-help-message)
    (mode-line :initform helm-generic-file-mode-line-string)
@@ -2690,6 +2692,10 @@ Set `recentf-max-saved-items' to a bigger value if default is too small.")
              helm--browse-project-cache))
   (helm :sources (helm-build-in-buffer-source "Browse project"
                    :data (gethash directory helm--browse-project-cache)
+                   :header-name (lambda (name)
+                                  (format
+                                   "%s (%s)"
+                                   name (abbreviate-file-name directory)))
                    :match-part (lambda (c)
                                  (if helm-ff-transformer-show-only-basename
                                      (helm-basename c) c))

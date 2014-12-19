@@ -1,9 +1,9 @@
 ;;; editorconfig.el --- EditorConfig Emacs extension
 
-;; Copyright (C) 2011-2013 EditorConfig Team
+;; Copyright (C) 2011-2014 EditorConfig Team
 
 ;; Author: EditorConfig Team <editorconfig@googlegroups.com>
-;; Version: 20141215.1941
+;; Version: 20141218.2317
 ;; X-Original-Version: 0.3
 ;; URL: http://github.com/editorconfig/editorconfig-emacs#readme
 
@@ -45,7 +45,11 @@
 
 ;;; Code:
 
-(defvar edconf-exec-path "editorconfig")
+(defcustom edconf-exec-path
+  "editorconfig"
+  "EditorConfig command"
+  :type 'string
+  :group 'editorconfig)
 
 (defcustom edconf-indentation-alist
   '((emacs-lisp-mode lisp-indent-offset)
@@ -120,6 +124,12 @@ NOTE: Only the **buffer local** value of VARIABLE will be set."
   :risky t
   :group 'editorconfig)
 
+(defun edconf-string-integer-p (string)
+  "Whether a string representing integer"
+  (if (stringp string)
+    (string-match-p "\\`[0-9]+\\'" string)
+    nil))
+
 (defun edconf-set-indentation/python-mode (size)
   (set (make-local-variable (if (or (> emacs-major-version 24)
                                     (and (= emacs-major-version 24)
@@ -147,8 +157,9 @@ NOTE: Only the **buffer local** value of VARIABLE will be set."
   "Set indentation type from given style and size"
   (make-local-variable 'indent-tabs-mode)
   (make-local-variable 'tab-width)
-  (when (and size (not (equal size "tab")))
-    (setq size (string-to-number size)))
+  (if (edconf-string-integer-p size)
+    (setq size (string-to-number size))
+    (when (not (equal size "tab")) (setq size nil)))
   (setq tab-width (cond (tab_width (string-to-number tab_width))
                         ((numberp size) size)
                         (t tab-width)))
@@ -218,6 +229,11 @@ NOTE: Only the **buffer local** value of VARIABLE will be set."
       'delete-trailing-whitespace
       write-file-functions))))
 
+(defun edconf-set-line-length (length)
+  "set the max line length (fill-column)"
+  (when (edconf-string-integer-p length)
+    (set-fill-column (string-to-number length))))
+
 (defun edconf-get-properties ()
   "Call EditorConfig core and return output"
   (let ((oldbuf (current-buffer)))
@@ -250,7 +266,8 @@ NOTE: Only the **buffer local** value of VARIABLE will be set."
                               (gethash 'tab_width props))
       (edconf-set-line-ending (gethash 'end_of_line props))
       (edconf-set-trailing-nl (gethash 'insert_final_newline props))
-      (edconf-set-trailing-ws (gethash 'trim_trailing_whitespace props)))))
+      (edconf-set-trailing-ws (gethash 'trim_trailing_whitespace props))
+      (edconf-set-line-length (gethash 'max_line_length props)))))
 
 ;;;###autoload
 (add-hook 'find-file-hook 'edconf-find-file-hook)

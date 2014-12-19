@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "editorconfig" "editorconfig.el" (21649 34829
+;;;### (autoloads nil "editorconfig" "editorconfig.el" (21652 13824
 ;;;;;;  0 0))
 ;;; Generated autoloads from editorconfig.el
 

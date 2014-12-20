@@ -4,8 +4,8 @@
 
 ;; Author: Quang Linh LE <linktohack@gmail.com>
 ;; URL: http://github.com/linktohack/evil-commentary
-;; Version: 20141215.1344
-;; X-Original-Version: 0.0.1
+;; Version: 20141220.252
+;; X-Original-Version: 0.0.2
 ;; Keywords: evil comment commentary evil-commentary
 ;; Package-Requires: ((evil "1.0.0"))
 
@@ -45,17 +45,17 @@
 
 (require 'evil)
 
-(evil-define-operator evil-commentary (beg end type register)
+(evil-define-operator evil-commentary (beg end type)
   "Comment or uncomment region that {motion} moves over."
   :move-point nil
-  (interactive "<R><x>")
+  (interactive "<R>")
   (comment-or-uncomment-region beg end))
 
-(evil-define-operator evil-commentary-line (beg end type register)
+(evil-define-operator evil-commentary-line (beg end type)
   "Comment or uncomment [count] lines."
   :motion evil-line
   :move-point nil
-  (interactive "<R><x>")
+  (interactive "<R>")
   (when (evil-visual-state-p)
     (unless (memq type '(line block))
       (let ((range (evil-expand beg end 'line)))

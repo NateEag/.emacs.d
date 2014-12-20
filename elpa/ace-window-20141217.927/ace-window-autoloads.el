@@ -3,34 +3,22 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "ace-window" "ace-window.el" (21641 54381 0
+;;;### (autoloads nil "ace-window" "ace-window.el" (21653 45483 0
 ;;;;;;  0))
 ;;; Generated autoloads from ace-window.el
 
-(autoload 'aw-list-visual-area "ace-window" "\
-Forward to `ace-jump-list-visual-area', removing invisible frames.
-
-\(fn)" nil nil)
-
-(autoload 'aw-generic "ace-window" "\
-Create a window-manipulating function.
-MODE-LINE is a string to display while a window is being selected.
-HANDLER is a function that takes a window argument.
-
-\(fn MODE-LINE HANDLER)" nil t)
-
 (autoload 'ace-select-window "ace-window" "\
-
+Ace select window.
 
 \(fn)" t nil)
 
 (autoload 'ace-delete-window "ace-window" "\
-
+Ace delete window.
 
 \(fn)" t nil)
 
 (autoload 'ace-swap-window "ace-window" "\
-
+Ace swap window.
 
 \(fn)" t nil)
 

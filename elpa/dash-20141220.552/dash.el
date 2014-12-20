@@ -3,7 +3,7 @@
 ;; Copyright (C) 2012-2014 Magnar Sveen
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
-;; Version: 20141210.817
+;; Version: 20141220.552
 ;; X-Original-Version: 2.10.0
 ;; Keywords: lists
 
@@ -902,8 +902,8 @@ of cons cells. Otherwise, return the groupings as a list of lists. "
       (setq lists (mapcar 'cdr lists)))
     (setq results (nreverse results))
     (if (= (length lists) 2)
-        ; to support backward compatability, return
-        ; a cons cell if two lists were provided
+        ;; to support backward compatability, return
+        ;; a cons cell if two lists were provided
         (--map (cons (car it) (cadr it)) results)
       results)))
 

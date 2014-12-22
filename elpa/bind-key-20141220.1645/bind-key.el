@@ -4,7 +4,7 @@
 
 ;; Author: John Wiegley <jwiegley@gmail.com>
 ;; Created: 16 Jun 2012
-;; Version: 20140620.1343
+;; Version: 20141220.1645
 ;; X-Original-Version: 1.0
 ;; Keywords: keys keybinding config dotemacs
 ;; URL: https://github.com/jwiegley/use-package
@@ -286,8 +286,8 @@ function symbol (unquoted)."
       (dolist (binding
                (setq personal-keybindings
                      (sort personal-keybindings
-                           #'(lambda (l r)
-                               (car (compare-keybindings l r))))))
+                           (lambda (l r)
+                             (car (compare-keybindings l r))))))
         
         (if (not (eq (cdar last-binding) (cdar binding)))
             (princ (format "\n\n%s\n%s\n\n"

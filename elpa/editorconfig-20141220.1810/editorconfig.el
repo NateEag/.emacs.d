@@ -3,8 +3,8 @@
 ;; Copyright (C) 2011-2014 EditorConfig Team
 
 ;; Author: EditorConfig Team <editorconfig@googlegroups.com>
-;; Version: 20141218.2317
-;; X-Original-Version: 0.3
+;; Version: 20141220.1810
+;; X-Original-Version: 0.4
 ;; URL: http://github.com/editorconfig/editorconfig-emacs#readme
 
 ;; See
@@ -88,7 +88,8 @@
               web-mode-css-indent-offset
               web-mode-code-indent-offset
               web-mode-script-padding
-              web-mode-style-padding))
+              web-mode-style-padding)
+    (erlang-mode erlang-indent-level))
   "Alist of indentation setting methods by modes.
 
 Each element looks like (MODE . FUNCTION) or (MODE . INDENT-SPEC-LIST).

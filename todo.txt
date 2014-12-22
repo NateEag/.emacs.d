@@ -45,6 +45,7 @@
 
 -If I ever get minimap.el usable on OS X, when active it should appear between
  my two panes. That way it's always close to whichever buffer it applies to.
+ Note: the sublimity package looks like it may be more maintained.
 
 -Tweak md-readme.el so that author/created/requires lines are headers *without*
  colons, whose bodies are the text following the colon-delimited field names.

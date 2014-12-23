@@ -4,7 +4,7 @@
 
 ;; Author: Artur Malabarba <bruce.connor.am@gmail.com>
 ;; Maintainer: Artur Malabarba <bruce.connor.am@gmail.com>
-;; Version: 1.0.2
+;; Version: 1.0.3
 ;; Keywords: extensions lisp
 ;; Prefix: let-alist
 ;; Separator: -
@@ -131,7 +131,7 @@ the variables of the outer one. You can, however, access alists
 inside the original alist by using dots inside the symbol, as
 displayed in the example above."
   (declare (indent 1) (debug t))
-  (let ((var (gensym "alist")))
+  (let ((var (make-symbol "alist")))
     `(let ((,var ,alist))
        (let ,(mapcar (lambda (x) `(,(car x) ,(let-alist--access-sexp (car x) var)))
                (delete-dups (let-alist--deep-dot-search body)))
@@ -139,6 +139,10 @@ displayed in the example above."
 
 ;;;; ChangeLog:
 
+;; 2014-12-22  Artur Malabarba  <bruce.connor.am@gmail.com>
+;; 
+;; 	packages/let-alist: Use `make-symbol' instead of `gensym'.
+;; 
 ;; 2014-12-20  Artur Malabarba  <bruce.connor.am@gmail.com>
 ;; 
 ;; 	packages/let-alist: Enable access to deeper alists

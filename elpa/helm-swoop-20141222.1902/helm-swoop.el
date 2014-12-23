@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2013 by Shingo Fukuyama
 
-;; Version: 20141217.2103
+;; Version: 20141222.1902
 ;; X-Original-Version: 1.4
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
@@ -692,8 +692,7 @@ If $linum is number, lines are separated by $linum"
          ($disguise-caret
           (lambda ()
             (save-excursion
-              (goto-char (point-min))
-              (re-search-forward $prompt-regexp-with-line-number nil t)
+              (re-search-backward $prompt-regexp-with-line-number nil t)
               (let (($o (make-overlay (match-beginning 1) (match-end 1))))
                 (overlay-put $o 'face 'helm-swoop-target-word-face)
                 (overlay-put $o 'modification-hooks '(helm-swoop--caret-match-delete))

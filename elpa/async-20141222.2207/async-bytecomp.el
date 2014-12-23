@@ -44,7 +44,9 @@
 
 (defvar async-byte-compile-log-file "~/.emacs.d/async-bytecomp.log")
 
-(defun async-byte-recompile-directory (directory &optional arg force quiet)
+(defun async-byte-recompile-directory (directory &optional quiet)
+  "Compile all *.el files in DIRECTORY asynchronously.
+All *.elc files are systematically deleted before proceeding."
   (cl-loop with dir = (directory-files directory t "\\.elc\\'")
            unless dir return nil
            for f in dir
@@ -77,11 +79,11 @@
     (async-start
      `(lambda ()
         (require 'bytecomp)
-        ,(async-inject-variables "\\`load-path\\'")
+        ,(async-inject-variables "\\`\\(load-path\\)\\|byte\\'")
         (let ((default-directory (file-name-as-directory ,directory))
               error-data)
           (add-to-list 'load-path default-directory)
-          (byte-recompile-directory ,directory ,arg ,force)
+          (byte-recompile-directory ,directory 0 t)
           (when (get-buffer byte-compile-log-buffer)
             (setq error-data (with-current-buffer byte-compile-log-buffer
                                (buffer-substring-no-properties (point-min) (point-max))))
@@ -90,7 +92,7 @@
                 (erase-buffer)
                 (insert error-data))))))
      call-back)
-    (message "Started compiling asynchronously directory %s..." directory)))
+    (message "Started compiling asynchronously directory %s" directory)))
 
 (defadvice package--compile (around byte-compile-async activate)
   ;; FIXME this seems redundant and unneeded, the only thing it
@@ -100,7 +102,7 @@
   ;; compilation in package-activate (force arg).
   (package-activate-1 pkg-desc)
   (load "async-bytecomp")
-  (async-byte-recompile-directory (package-desc-dir pkg-desc) 0 t t))
+  (async-byte-recompile-directory (package-desc-dir pkg-desc) t))
 
 (provide 'async-bytecomp)
 

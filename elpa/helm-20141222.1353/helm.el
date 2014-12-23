@@ -501,24 +501,24 @@ This happen when using `helm-next/previous-line'."
   :group 'helm
   :type 'boolean)
 
-(defcustom helm-default-fuzzy-match-fn 'helm-fuzzy-match
-  "The default function for fuzzy matching in `helm-source-sync' based sources."
+(defcustom helm-fuzzy-match-fn 'helm-fuzzy-match
+  "The function for fuzzy matching in `helm-source-sync' based sources."
   :group 'helm
   :type 'function)
 
-(defcustom helm-default-fuzzy-search-fn 'helm-fuzzy-search
-  "The default function for fuzzy matching in `helm-source-in-buffer' based sources."
+(defcustom helm-fuzzy-search-fn 'helm-fuzzy-search
+  "The function for fuzzy matching in `helm-source-in-buffer' based sources."
   :group 'helm
   :type 'function)
 
-(defcustom helm-default-fuzzy-sort-fn 'helm-fuzzy-matching-default-sort-fn
-  "The default sort transformer function used in fuzzy matching.
+(defcustom helm-fuzzy-sort-fn 'helm-fuzzy-matching-default-sort-fn
+  "The sort transformer function used in fuzzy matching.
 When nil no sorting will be done."
   :group 'helm
   :type 'function)
 
-(defcustom helm-default-fuzzy-matching-highlight-fn 'helm-fuzzy-default-highlight-match
-  "The default function to highlight matches in fuzzy matching.
+(defcustom helm-fuzzy-matching-highlight-fn 'helm-fuzzy-default-highlight-match
+  "The function to highlight matches in fuzzy matching.
 When nil no highlighting will be done."
   :group 'helm
   :type 'function)
@@ -2782,23 +2782,26 @@ This function is used with sources build with `helm-source-sync'."
 (defun helm-fuzzy-matching-default-sort-fn-1 (candidates &optional real-or-display)
   (if (string= helm-pattern "")
       candidates
-      (sort candidates
-            (lambda (s1 s2)
-              ;; Score and measure the length on real or display part of candidate
-              ;; according to `real-or-display'.
-              (let* ((cand1 (if (consp s1)
-                                (if (eq real-or-display 'display) (car s1) (cdr s1))
-                                s1))
-                     (cand2 (if (consp s2)
-                                (if (eq real-or-display 'display) (car s2) (cdr s2))
-                                s2))
-                     (scr1 (helm-score-candidate-for-pattern cand1 helm-pattern))
-                     (scr2 (helm-score-candidate-for-pattern cand2 helm-pattern))
-                     (len1 (length cand1))
-                     (len2 (length cand2)))
-                (cond ((= scr1 scr2)
-                       (< len1 len2))
-                      ((> scr1 scr2))))))))
+    (let ((scored-candidates
+           (mapcar
+            (lambda (c)
+              (let* ((cand (if (consp c)
+                               (if (eq real-or-display 'display) (car c) (cdr c))
+                             c))
+                     (scr (helm-score-candidate-for-pattern cand helm-pattern))
+                     (len (length cand)))
+                (list c scr len)))
+            candidates)))
+      (mapcar (lambda (x) (car x))
+              (sort scored-candidates
+                    (lambda (s1 s2)
+                      (let ((scr1 (cadr s1))
+                            (scr2 (cadr s2))
+                            (len1 (cl-caddr s1))
+                            (len2 (cl-caddr s2)))
+                        (cond ((= scr1 scr2)
+                               (< len1 len2))
+                              ((> scr1 scr2))))))))))
 
 (defun helm-fuzzy-matching-default-sort-fn (candidates _source)
   "The default-function for sorting candidates in fuzzy matching.

@@ -5,7 +5,7 @@
 ;; Copyright (C) 2013-     Shin Aoyama        (@smihica      https://github.com/smihica)
 ;; Copyright (C) 2009-2012 Chris Done
 
-;; Version: 20141126.548
+;; Version: 20141222.1925
 ;; X-Original-Version: 1.0.10
 ;; Author: Shin Aoyama <smihica@gmail.com>
 ;; URL: https://github.com/smihica/emmet-mode
@@ -465,7 +465,7 @@ cursor position will be moved to after the first quote."
       (setq here
             (save-excursion
               (goto-char here)
-              (skip-chars-forward "\s-")
+              (skip-chars-forward "[:space:]")
               (point))))
     (setq emmet-flash-ovl (make-overlay here (point)))
     (overlay-put emmet-flash-ovl 'face 'emmet-preview-output)

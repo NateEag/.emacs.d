@@ -4,8 +4,8 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Version: 20141217.927
-;; X-Original-Version: 0.5.0
+;; Version: 20141226.50
+;; X-Original-Version: 0.6.0
 ;; Package-Requires: ((ace-jump-mode "2.0"))
 ;; Keywords: cursor, window, location
 
@@ -107,9 +107,9 @@ Use M-0 `ace-window' to toggle this value."
 (defun aw--callback ()
   "Call `aw--current-op' for the window selected by ace-jump."
   (interactive)
-  (let* ((ret (cl-position (aref (this-command-keys) 0)
-                           aw-keys))
-         (index (or ret (length aw-keys)))
+  (let* ((index (or (cl-position (aref (this-command-keys) 0)
+                                 aw-keys)
+                    (length aw-keys)))
          (node (nth index (cdr ace-jump-search-tree))))
     (cond ((null node)
            (message "No such position candidate.")
@@ -248,16 +248,18 @@ Set mode line to MODE-LINE during the selection process."
 
 ;;;###autoload
 (defun ace-window (arg)
-  "Select a window with `ace-jump-mode'and perform an action based on prefix ARG.
-Variations are described below.
+  "Select a window with function `ace-jump-mode'.
+Perform an action based on ARG described below.
 
 By default, behaves like extended `other-window'.
 
-Prefixed with one \\[universal-argument], does a swap between selected window
- and current window, so that the selected buffer moves to current window (and
- current buffer moves to selected window).
+Prefixed with one \\[universal-argument], does a swap between the
+selected window and the current window, so that the selected
+buffer moves to current window (and current buffer moves to
+selected window).
 
-Prefixed with two \\[universal-argument]'s, deletes the selected window."
+Prefixed with two \\[universal-argument]'s, deletes the selected
+window."
   (interactive "p")
   (cl-case arg
     (0
@@ -296,7 +298,7 @@ Windows are numbered top down, left to right."
       (select-frame-set-input-focus frame))
     (if (window-live-p window)
         (select-window window)
-      (error "aw-delete-window: %S" aj-data))))
+      (error "Bad aj-data, aw-delete-window: %S" aj-data))))
 
 (defun aw-delete-window (aj-data)
   "Delete window of `aj-position' structure AJ-DATA."
@@ -309,7 +311,7 @@ Windows are numbered top down, left to right."
         (delete-frame frame)
       (if (window-live-p window)
           (delete-window window)
-        (error "aw-delete-window: %S" aj-data)))))
+        (error "Bad aj-data, aw-delete-window: %S" aj-data)))))
 
 (defun aw-swap-window (aj-data)
   "Swap buffers of current window and that of `aj-position' structure AJ-DATA."
@@ -321,15 +323,14 @@ Windows are numbered top down, left to right."
                   (set-window-buffer window2 buffer1)
                   (select-window window2))))
     (let ((frame (aj-position-frame aj-data))
-          (window (aj-position-window aj-data)))
+          (window (aj-position-window aj-data))
+          (this-window (selected-window)))
       (when (and (frame-live-p frame)
                  (not (eq frame (selected-frame))))
         (select-frame-set-input-focus (window-frame window)))
       (when (and (window-live-p window)
-                 (not (eq window (selected-window))))
-        (swap-windows
-         (get-buffer-window (current-buffer))
-         window)))))
+                 (not (eq window this-window)))
+        (swap-windows this-window window)))))
 
 (defun aw-offset (window)
   "Return point in WINDOW that's closest to top left corner.

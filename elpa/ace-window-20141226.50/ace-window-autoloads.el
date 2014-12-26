@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "ace-window" "ace-window.el" (21653 45483 0
+;;;### (autoloads nil "ace-window" "ace-window.el" (21661 29973 0
 ;;;;;;  0))
 ;;; Generated autoloads from ace-window.el
 
@@ -23,16 +23,18 @@ Ace swap window.
 \(fn)" t nil)
 
 (autoload 'ace-window "ace-window" "\
-Select a window with `ace-jump-mode'and perform an action based on prefix ARG.
-Variations are described below.
+Select a window with function `ace-jump-mode'.
+Perform an action based on ARG described below.
 
 By default, behaves like extended `other-window'.
 
-Prefixed with one \\[universal-argument], does a swap between selected window
- and current window, so that the selected buffer moves to current window (and
- current buffer moves to selected window).
+Prefixed with one \\[universal-argument], does a swap between the
+selected window and the current window, so that the selected
+buffer moves to current window (and current buffer moves to
+selected window).
 
-Prefixed with two \\[universal-argument]'s, deletes the selected window.
+Prefixed with two \\[universal-argument]'s, deletes the selected
+window.
 
 \(fn ARG)" t nil)
 

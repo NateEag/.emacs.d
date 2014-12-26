@@ -2768,44 +2768,69 @@ This function is used with sources build with `helm-source-sync'."
                    else do (goto-char eol)
                    finally return nil)))))
 
+(defsubst helm--collect-pairs-in-string (string)
+  (cl-loop for str on (split-string string "" t) by 'cdr
+           when (cdr str)
+           collect (list (car str) (cadr str))))
+
 (defsubst helm-score-candidate-for-pattern (candidate pattern)
-  "Give a score to CANDIDATE according to number of contiguous matches found with PATTERN."
-  (let* ((pat-lookup (cl-loop for str on (split-string pattern "" t) by 'cdr
-                              when (cdr str)
-                              collect (list (car str) (cadr str))))
-         (str-lookup (cl-loop for str on (split-string candidate "" t) by 'cdr
-                              when (cdr str)
-                              collect (list (car str) (cadr str))))
-         (bonus (if (equal (car pat-lookup) (car str-lookup)) 1 0)))
-    (+ bonus (length (cl-nintersection pat-lookup str-lookup :test 'equal)))))
+  "Give a score to CANDIDATE according to PATTERN.
+Score is calculated against number of contiguous matches found with PATTERN.
+If PATTERN is fully matched in CANDIDATE a maximal score (100) is given.
+A bonus of one point is given when PATTERN prefix match CANDIDATE."
+  (let* ((pat-lookup (helm--collect-pairs-in-string pattern))
+         (str-lookup (helm--collect-pairs-in-string candidate))
+         (bonus (if (equal (car pat-lookup) (car str-lookup)) 1 0))
+         (bonus1 (and (string-match (concat "\\<" (regexp-quote pattern) "\\>")
+                                    candidate)
+                      100)))
+    (+ bonus (or bonus1 (length (cl-nintersection
+                                 pat-lookup str-lookup :test 'equal))))))
 
 (defun helm-fuzzy-matching-default-sort-fn-1 (candidates &optional real-or-display)
+  "The sort function used for fuzzy-matching in helm.
+Sort CANDIDATES according to their score calculated by
+`helm-score-candidate-for-pattern'.
+When two candidates have the same score sort is made by length.
+Argument REAL-OR-DISPLAY define if sort is made on the real or the display
+part of candidate, if its value is 'display use the display part, any other value
+will use the real part."
   (if (string= helm-pattern "")
       candidates
-    (let ((scored-candidates
-           (mapcar
-            (lambda (c)
-              (let* ((cand (if (consp c)
-                               (if (eq real-or-display 'display) (car c) (cdr c))
-                             c))
-                     (scr (helm-score-candidate-for-pattern cand helm-pattern))
-                     (len (length cand)))
-                (list c scr len)))
-            candidates)))
-      (mapcar (lambda (x) (car x))
-              (sort scored-candidates
-                    (lambda (s1 s2)
-                      (let ((scr1 (cadr s1))
-                            (scr2 (cadr s2))
-                            (len1 (cl-caddr s1))
-                            (len2 (cl-caddr s2)))
-                        (cond ((= scr1 scr2)
-                               (< len1 len2))
-                              ((> scr1 scr2))))))))))
+      (let ((table-scr (make-hash-table :test 'equal)))
+        (sort candidates
+              (lambda (s1 s2)
+                ;; Score and measure the length on real or display part of candidate
+                ;; according to `real-or-display'.
+                (let* ((real-or-disp-fn (if (eq real-or-display 'display) #'car #'cdr))
+                       (cand1 (if (consp s1)
+                                  (funcall real-or-disp-fn s1)
+                                  s1))
+                       (cand2 (if (consp s2)
+                                  (funcall real-or-disp-fn s2)
+                                  s2))
+                       (data1 (or (gethash cand1 table-scr)
+                                  (puthash cand1 (list (helm-score-candidate-for-pattern
+                                                        cand1 helm-pattern)
+                                                       (length cand1))
+                                           table-scr)))
+                       (data2 (or (gethash cand2 table-scr)
+                                  (puthash cand2 (list (helm-score-candidate-for-pattern
+                                                        cand2 helm-pattern)
+                                                       (length cand2))
+                                           table-scr)))
+                       (len1 (cadr data1))
+                       (len2 (cadr data2))
+                       (scr1 (car data1))
+                       (scr2 (car data2)))
+                  (cond ((= scr1 scr2)
+                         (< len1 len2))
+                        ((> scr1 scr2)))))))))
 
 (defun helm-fuzzy-matching-default-sort-fn (candidates _source)
-  "The default-function for sorting candidates in fuzzy matching.
-It is sorting on the display part of candidate."
+  "The default transformer for sorting candidates in fuzzy matching.
+It is sorting on the display part of candidate.
+See `helm-fuzzy-matching-default-sort-fn-1'."
   (helm-fuzzy-matching-default-sort-fn-1 candidates 'display))
 
 (defun helm-fuzzy-default-highlight-match (candidate)

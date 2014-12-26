@@ -4,7 +4,7 @@
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: lisp
-;; Version: 20141223.723
+;; Version: 20141223.914
 ;; X-Original-Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (flycheck "0.22-cvs1") (emacs "24"))
 
@@ -116,7 +116,7 @@
   "Return position and contents of the \"Package-Requires\" header.
 If no such header is present, fail the pass."
   (if (flypkg/goto-header "Package-Requires")
-      (list (match-beginning 2) (line-number-at-pos) (match-string 2))
+      (list (match-beginning 3) (line-number-at-pos) (match-string 3))
     (signal 'flypkg/failed-pass '("No Package-Requires found"))))
 
 (flypkg/define-pass flypkg/parse-dependency-list (context)
@@ -220,7 +220,7 @@ If no such header is present, fail the pass."
 (flypkg/define-pass flypkg/lexical-binding-requires-emacs-24 (context)
   "Warn about lexical-binding without depending on Emacs 24."
   (goto-char (point-min))
-  (when (re-search-forward ".*-\\*\\- +\\(lexical-binding\\): +t" (line-end-position) t)
+  (when (flypkg/lexical-binding-declared-in-header-line-p)
     (let* ((lexbind-line (line-number-at-pos))
            (lexbind-col (1+ (- (match-beginning 1) (line-beginning-position))))
            (valid-deps
@@ -265,10 +265,8 @@ If no such header is present, fail the pass."
                     ;; In case this is an Emacs from before `hack-local-variables'
                     ;; started to warn about `lexical-binding' on a line other
                     ;; than the first.
-                    (and (assq 'lexical-binding file-local-variables-alist)
-                         (progn
-                           (goto-char (point-min))
-                           (not (re-search-forward ".*-\\*\\- +lexical-binding: +t" (line-end-position) t)))))
+                    (and (cdr (assq 'lexical-binding file-local-variables-alist))
+                         (not (flypkg/lexical-binding-declared-in-header-line-p))))
             (flypkg/error
              context 1 1 'error
              "`lexical-binding' must be set in the first line.")))))))
@@ -334,12 +332,12 @@ Alternatively, depend on Emacs 24.3, which introduced cl-lib 1.0."
 (defun flypkg/goto-header (header-name)
   "Move to the first occurrence of HEADER-NAME in the file.
 If the return value is non-nil, then point will be at the end of
-the file, and the first and second match groups will contain the name and
+the file, and the second and third match groups will contain the name and
 value of the header with any leading or trailing whitespace removed."
   (let ((initial-point (point)))
     (goto-char (point-min))
     (let ((case-fold-search t))
-      (if (re-search-forward (concat "^;+ *\\(" (regexp-quote header-name) "\\) *: *\\(.*?\\) *$") nil t)
+      (if (re-search-forward (concat (lm-get-header-re header-name) "\\(.*?\\) *$") nil t)
           (point)
         (goto-char initial-point)
         nil))))
@@ -351,6 +349,22 @@ value of the header with any leading or trailing whitespace removed."
     (forward-line))
   (insert (format ";; Version: %s" version))
   (newline))
+
+(defun flypkg/get-header-line-file-local-variables ()
+  "Return local variables specified in the -*- line.
+Returns an alist of elements (VAR . VAL), where VAR is a variable
+and VAL is the specified value.
+
+For details, see `hack-local-variables-prop-line'."
+  (cl-letf (((symbol-function #'message) #'ignore))
+    (hack-local-variables-prop-line)))
+
+(defun flypkg/lexical-binding-declared-in-header-line-p ()
+  "Test if `lexical-binding' is declared in the -*- line."
+  ;; Test the `cdr' to see if it's actually true, because
+  ;; -*- lexical-binding: nil -*-
+  ;; is legal, if silly.
+  (cdr (assq 'lexical-binding (flypkg/get-header-line-file-local-variables))))
 
 (flycheck-define-generic-checker 'emacs-lisp-package
   "A checker for \"Package-Requires\" headers."

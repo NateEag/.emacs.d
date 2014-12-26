@@ -3,7 +3,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: navigation slime elisp emacs-lisp
 ;; URL: https://github.com/purcell/elisp-slime-nav
-;; Version: 20141222.1517
+;; Version: 20141224.854
 ;; X-Original-Version: DEV
 ;;
 ;;; Commentary:
@@ -82,7 +82,7 @@ Argument SYM-NAME is the thing to find."
   (interactive (list (elisp-slime-nav--read-symbol-at-point)))
   (when sym-name
     (let ((sym (intern sym-name)))
-      (message "Searching for %s..." (pp-to-string sym))
+      (message "Searching for %s..." sym-name)
       (ring-insert find-tag-marker-ring (point-marker))
       (cond
        ((fboundp sym)

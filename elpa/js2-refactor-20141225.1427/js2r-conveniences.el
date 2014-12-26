@@ -83,9 +83,8 @@ split, join it instead."
 (defun move-line-up ()
   (interactive)
   (let ((col (current-column)))
-    (save-excursion
-      (forward-line)
-      (transpose-lines -1))
+    (transpose-lines 1)
+    (forward-line -2)
     (move-to-column col)))
 
 (defun js2r--current-line-is-prefixed-with-list-item-start ()

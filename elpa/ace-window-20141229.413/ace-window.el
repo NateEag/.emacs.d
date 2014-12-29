@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Version: 20141226.50
+;; Version: 20141229.413
 ;; X-Original-Version: 0.6.0
 ;; Package-Requires: ((ace-jump-mode "2.0"))
 ;; Keywords: cursor, window, location
@@ -82,6 +82,10 @@
 (defcustom aw-ignore-on t
   "When t, `ace-window' will ignore `aw-ignored-buffers'.
 Use M-0 `ace-window' to toggle this value."
+  :group 'ace-window)
+
+(defcustom aw-background t
+  "When t, `ace-window' will dim out all buffers temporarily when used.'."
   :group 'ace-window)
 
 (defun aw-ignored-p (window)
@@ -193,7 +197,7 @@ Set mode line to MODE-LINE during the selection process."
                          :visual-area va))
                       visual-area-list)))
          ;; create background for each visual area
-         (if ace-jump-mode-gray-background
+         (if aw-background
              (setq ace-jump-background-overlay-list
                    (loop for va in visual-area-list
                       collect (let* ((w (aj-visual-area-window va))

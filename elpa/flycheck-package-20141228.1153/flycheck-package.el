@@ -4,7 +4,7 @@
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: lisp
-;; Version: 20141223.914
+;; Version: 20141228.1153
 ;; X-Original-Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (flycheck "0.22-cvs1") (emacs "24"))
 
@@ -111,6 +111,9 @@
 
 
 ;;; Passes for each check
+
+(flypkg/define-pass flypkg/looks-like-a-package (_context)
+  (lm-header (regexp-opt '("Package-Version" "Package-Requires"))))
 
 (flypkg/define-pass flypkg/get-dependency-list (_context)
   "Return position and contents of the \"Package-Requires\" header.
@@ -287,14 +290,14 @@ Alternatively, depend on Emacs 24.3, which introduced cl-lib 1.0."
 
 (flypkg/define-pass flypkg/valid-package-version-present (context)
   "Check that a valid \"Version\" header is present."
-  (flypkg/call-pass context #'flypkg/get-dependency-list)
-  (let ((version (lm-header (rx (? "Package-") "Version"))))
+  (flypkg/call-pass context #'flypkg/looks-like-a-package)
+  (let ((version (flypkg/goto-header (rx (? "Package-") "Version"))))
     (if version
         (unless (ignore-errors (version-to-list version))
           (flypkg/error
            context
            (line-number-at-pos)
-           (1+ (- (match-beginning 1) (line-beginning-position)))
+           (1+ (- (match-beginning 3) (line-beginning-position)))
            'warning
            (format "\"%s\" is not a valid version. MELPA will handle this, but other archives will not." version)))
       (flypkg/error
@@ -338,7 +341,7 @@ value of the header with any leading or trailing whitespace removed."
     (goto-char (point-min))
     (let ((case-fold-search t))
       (if (re-search-forward (concat (lm-get-header-re header-name) "\\(.*?\\) *$") nil t)
-          (point)
+          (substring-no-properties (match-string 3))
         (goto-char initial-point)
         nil))))
 

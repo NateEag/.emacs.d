@@ -4,7 +4,7 @@
 
 ;; Author: Tomohiro Matsuyama <tomo@cx4a.org>
 ;; Keywords: convenience
-;; Version: 20141213.1820
+;; Version: 20141227.2351
 ;; X-Original-Version: 0.7.0alpha
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -195,7 +195,10 @@ HFACTOR, and vertical factor VFACTOR."
             (window-dedicated-p node))
     (destructuring-bind (dir edges . windows) node
       (append (list dir edges)
-              (mapcar 'popwin:window-config-tree-1 windows)))))
+              (loop for window in windows
+                    unless (and (windowp window)
+                                (window-parameter window 'window-side))
+                    collect (popwin:window-config-tree-1 window))))))
 
 (defun popwin:window-config-tree ()
   "Return `window-tree' with replacing window values in the tree

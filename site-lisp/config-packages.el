@@ -118,6 +118,11 @@
               (setq comment-start "//"
                     comment-end ""))))
 
+(use-package yaml-mode
+  :config
+  (add-hook 'yaml-mode-hook
+            'my-prog-mode-init))
+
 (use-package hideshow
   :defer t
   :config

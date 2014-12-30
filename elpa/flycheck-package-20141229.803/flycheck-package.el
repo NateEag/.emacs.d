@@ -4,7 +4,7 @@
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: lisp
-;; Version: 20141228.1153
+;; Version: 20141229.803
 ;; X-Original-Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (flycheck "0.22-cvs1") (emacs "24"))
 
@@ -113,11 +113,13 @@
 ;;; Passes for each check
 
 (flypkg/define-pass flypkg/looks-like-a-package (_context)
-  (lm-header (regexp-opt '("Package-Version" "Package-Requires"))))
+  (unless (lm-header (rx (or "Package-Version" "Package-Requires")))
+    (signal 'flypkg/failed-pass '("Buffer doesn't look like a package"))))
 
-(flypkg/define-pass flypkg/get-dependency-list (_context)
+(flypkg/define-pass flypkg/get-dependency-list (context)
   "Return position and contents of the \"Package-Requires\" header.
 If no such header is present, fail the pass."
+  (flypkg/call-pass context #'flypkg/looks-like-a-package)
   (if (flypkg/goto-header "Package-Requires")
       (list (match-beginning 3) (line-number-at-pos) (match-string 3))
     (signal 'flypkg/failed-pass '("No Package-Requires found"))))
@@ -140,7 +142,9 @@ If no such header is present, fail the pass."
        (signal 'flypkg/failed-pass err)))))
 
 (flypkg/define-pass flypkg/get-well-formed-dependencies (context)
-  "Check that listed dependencies are in the format (name \"version\")."
+  "Check that listed dependencies are in the format (name \"version\").
+Return a list of well-formed dependencies, where each element is of
+the form (PACKAGE-NAME PACKAGE-VERSION LINE-BEGINNING-OFFSET)."
   (pcase-let ((`(,position ,line-no ,parsed-deps)
                (flypkg/call-pass context #'flypkg/parse-dependency-list)))
     (let ((valid-deps '()))
@@ -222,12 +226,15 @@ If no such header is present, fail the pass."
 
 (flypkg/define-pass flypkg/lexical-binding-requires-emacs-24 (context)
   "Warn about lexical-binding without depending on Emacs 24."
+  (flypkg/call-pass context #'flypkg/looks-like-a-package)
   (goto-char (point-min))
   (when (flypkg/lexical-binding-declared-in-header-line-p)
     (let* ((lexbind-line (line-number-at-pos))
            (lexbind-col (1+ (- (match-beginning 1) (line-beginning-position))))
            (valid-deps
-            (cdr (flypkg/call-pass context #'flypkg/get-well-formed-dependencies))))
+            (condition-case nil
+                (cdr (flypkg/call-pass context #'flypkg/get-well-formed-dependencies))
+              (flypkg/failed-pass '()))))
       (unless (assq 'emacs valid-deps)
         (flypkg/error
          context lexbind-line lexbind-col 'warning
@@ -235,6 +242,7 @@ If no such header is present, fail the pass."
 
 (flypkg/define-pass flypkg/lexical-binding-must-be-in-first-line (context)
   "Check that any lexical-binding declaration is on the first line of the file."
+  (flypkg/call-pass context #'flypkg/looks-like-a-package)
   (cl-block return
     (let ((original-buffer (current-buffer)))
       (with-temp-buffer

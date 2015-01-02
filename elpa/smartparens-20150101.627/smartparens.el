@@ -746,17 +746,6 @@ instead."
           (const :tag "Insert the pair if opening and closing pair is the same and the containing expression is empty and always insert other pairs normally." 3))
   :group 'smartparens)
 
-(defcustom sp-autoinsert-if-followed-by-word t
-  "If non-nil, autoinsert the whole pair even if point is followed by word.
-
-For example |word followed by ( would produce (|)word.  If nil,
-it would produce (|word.
-
-This option is deprecated.  You should instead use the :when
-and :unless properties of `sp-pair'."
-  :type 'boolean
-  :group 'smartparens)
-
 (defcustom sp-autoinsert-quote-if-followed-by-closing-pair nil
   "If non-nil, autoinsert string quote pair even if the point is followed by closing pair.
 
@@ -779,18 +768,6 @@ choice of wording.  It is kept this way to preserve backward
 compatibility.  The intended meaning is \"insert the pair if
 followed by closing pair?\", t = yes."
   :type 'boolean
-  :group 'smartparens)
-
-(defcustom sp-autoinsert-inhibit-functions nil
-  "List of functions to call before autoinserting a pair.
-
-If any of these return t, the pair is not inserted.  The
-functions take two arguments: current opening pair and a boolean
-value indicating if the point is inside string or comment.
-
-This option is deprecated.  You should instead use the :when
-and :unless properties of `sp-pair'."
-  :type 'hook
   :group 'smartparens)
 
 (defcustom sp-autoskip-closing-pair 'always-end
@@ -3272,11 +3249,7 @@ setting `sp-autoinsert-pair' to nil.
 
 You can globally disable insertion of closing pair if point is
 followed by the matching opening pair.  It is disabled by
-default.  See `sp-autoinsert-if-followed-by-same' for more info.
-
-You can globally disable insertion of closing pair if point is
-followed by word.  It is disabled by default.  See
-`sp-autoinsert-if-followed-by-word' for more info."
+default.  See `sp-autoinsert-if-followed-by-same' for more info."
   (let* ((last-keys (or (and pair (sp--reverse-string pair)) (sp--get-recent-keys)))
          ;; (last-keys "\"\"\"\"\"\"\"\"\"\"\"\"")
          ;; we go through all the opening pairs and compare them to
@@ -3309,10 +3282,6 @@ followed by word.  It is disabled by default.  See
                                   (not (sp-skip-closing-pair nil t)))
                             t)
                           (sp--do-action-p open-pair 'insert t)
-                          (if sp-autoinsert-if-followed-by-word t
-                            (or (= (point) (point-max))
-                                (not (and (eq (char-syntax (following-char)) ?w)
-                                          (not (eq (following-char) ?\'))))))
                           (if sp-autoinsert-quote-if-followed-by-closing-pair t
                             (if (and (eq (char-syntax (preceding-char)) ?\")
                                      ;; this is called *after* the character is
@@ -3348,11 +3317,7 @@ followed by word.  It is disabled by default.  See
                                      (save-excursion
                                        (backward-char (length trig))
                                        (sp--looking-back (sp--strict-regexp-quote open-pair))))
-                                (not (equal open-pair close-pair)))))
-                          (not (run-hook-with-args-until-success
-                                'sp-autoinsert-inhibit-functions
-                                open-pair
-                                (or sp-point-inside-string (sp-point-in-comment))))))
+                                (not (equal open-pair close-pair)))))))
                  (when pair (delete-char (- (length pair))))))
           ;; if this pair could not be inserted, we try the procedure
           ;; again with this pair removed from sp-pair-list to give
@@ -6267,10 +6232,11 @@ Examples:
   |foo (bar (baz) quux) -> foo (bar (baz) quux|) ;; 4"
   (interactive "p")
   (setq arg (or arg 1))
-  (let ((n (abs arg))
-        (fw (> arg 0))
-        (open (sp--get-opening-regexp (sp--get-allowed-pair-list)))
-        (close (sp--get-closing-regexp (sp--get-allowed-pair-list))))
+  (let* ((n (abs arg))
+         (fw (> arg 0))
+         (allowed (sp--get-allowed-pair-list))
+         (open (sp--get-opening-regexp allowed))
+         (close (sp--get-closing-regexp allowed)))
     (if fw
         (while (> n 0)
           ;; First we need to get to the beginning of a symbol.  This means
@@ -6281,13 +6247,16 @@ Examples:
                   ((not (memq (char-syntax (following-char)) '(?w ?_)))
                    (forward-char)
                    t)
-                  ((sp--valid-initial-delimiter-p (sp--looking-at open))
+                  ;; if allowed is empty, the regexp matches anything
+                  ;; and we go into infinite loop, cf. Issue #400
+                  ((and allowed (sp--valid-initial-delimiter-p (sp--looking-at open)))
                    (goto-char (match-end 0)))
-                  ((sp--valid-initial-delimiter-p (sp--looking-at close))
+                  ((and allowed (sp--valid-initial-delimiter-p (sp--looking-at close)))
                    (goto-char (match-end 0)))))
           (while (and (not (eobp))
-                      (not (or (sp--valid-initial-delimiter-p (sp--looking-at open))
-                               (sp--valid-initial-delimiter-p (sp--looking-at close))))
+                      (or (not allowed)
+                          (not (or (sp--valid-initial-delimiter-p (sp--looking-at open))
+                                   (sp--valid-initial-delimiter-p (sp--looking-at close)))))
                       (memq (char-syntax (following-char)) '(?w ?_)))
             (forward-char))
           (setq n (1- n)))

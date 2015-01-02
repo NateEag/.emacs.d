@@ -452,7 +452,7 @@
 		   nil "Unicode confusables table" tar
 		   ((:url . "http://elpa.gnu.org/packages/uni-confusables.html"))])
  (vlf .
-      [(1 6)
+      [(1 7)
        nil "View Large Files" tar
        ((:keywords "large files" "utilities")
 	(:url . "https://github.com/m00natic/vlfi"))])

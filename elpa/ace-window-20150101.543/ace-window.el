@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Version: 20141230.1250
+;; Version: 20150101.543
 ;; X-Original-Version: 0.6.0
 ;; Package-Requires: ((ace-jump-mode "2.0"))
 ;; Keywords: cursor, window, location
@@ -82,10 +82,12 @@
 (defcustom aw-ignore-on t
   "When t, `ace-window' will ignore `aw-ignored-buffers'.
 Use M-0 `ace-window' to toggle this value."
+  :type 'boolean
   :group 'ace-window)
 
 (defcustom aw-background t
   "When t, `ace-window' will dim out all buffers temporarily when used.'."
+  :type 'boolean
   :group 'ace-window)
 
 (defun aw-ignored-p (window)

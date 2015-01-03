@@ -1,9 +1,9 @@
 This is flycheck.info, produced by makeinfo version 5.2 from
 flycheck.texi.
 
-This manual is for Flycheck version 0.22.
+This manual is for Flycheck version 0.23-cvs.
 
-Copyright © 2014, Sebastian Wiesner
+Copyright © 2014-2015 Sebastian Wiesner
 
      Permission is granted to copy, distribute and/or modify this
      documentation under the terms of the GNU Free Documentation
@@ -32,9 +32,9 @@ File: flycheck.info,  Node: Top,  Next: Introduction,  Up: (dir)
 Flycheck
 ********
 
-This manual is for Flycheck version 0.22.
+This manual is for Flycheck version 0.23-cvs.
 
-Copyright © 2014, Sebastian Wiesner
+Copyright © 2014-2015 Sebastian Wiesner
 
      Permission is granted to copy, distribute and/or modify this
      documentation under the terms of the GNU Free Documentation
@@ -348,6 +348,7 @@ Flycheck 0.15
 Changelog
 
 * master (in development): master in development. 
+* 0.22 (Dec 23, 2014): 0 22 Dec 23 2014. 
 * 0.21 (Oct 26, 2014): 0 21 Oct 26 2014. 
 * 0.20 (Aug 12, 2014): 0 20 Aug 12 2014. 
 * 0.19 (Jun 12, 2014): 0 19 Jun 12 2014. 
@@ -6786,6 +6787,7 @@ File: flycheck.info,  Node: Changelog,  Prev: Release announcements,  Up: Flyche
 * Menu:
 
 * master (in development): master in development. 
+* 0.22 (Dec 23, 2014): 0 22 Dec 23 2014. 
 * 0.21 (Oct 26, 2014): 0 21 Oct 26 2014. 
 * 0.20 (Aug 12, 2014): 0 20 Aug 12 2014. 
 * 0.19 (Jun 12, 2014): 0 19 Jun 12 2014. 
@@ -6812,10 +6814,25 @@ File: flycheck.info,  Node: Changelog,  Prev: Release announcements,  Up: Flyche
 * 0.1 (Oct 11, 2012): 0 1 Oct 11 2012. 
 
 
-File: flycheck.info,  Node: master in development,  Next: 0 21 Oct 26 2014,  Up: Changelog
+File: flycheck.info,  Node: master in development,  Next: 0 22 Dec 23 2014,  Up: Changelog
 
 8.2.1 master (in development)
 -----------------------------
+
+   - Improvements:
+
+        - ‘chef-foodcritic’ handles relative paths correctly now
+          [GH-556](1)
+
+   ---------- Footnotes ----------
+
+   (1) https://github.com/flycheck/flycheck/issues/556
+
+
+File: flycheck.info,  Node: 0 22 Dec 23 2014,  Next: 0 21 Oct 26 2014,  Prev: master in development,  Up: Changelog
+
+8.2.2 0.22 (Dec 23, 2014)
+-------------------------
 
    - *Breaking changes*:
 
@@ -6970,9 +6987,9 @@ File: flycheck.info,  Node: master in development,  Next: 0 21 Oct 26 2014,  Up:
    (25) https://github.com/flycheck/flycheck/issues/451
 
 
-File: flycheck.info,  Node: 0 21 Oct 26 2014,  Next: 0 20 Aug 12 2014,  Prev: master in development,  Up: Changelog
+File: flycheck.info,  Node: 0 21 Oct 26 2014,  Next: 0 20 Aug 12 2014,  Prev: 0 22 Dec 23 2014,  Up: Changelog
 
-8.2.2 0.21 (Oct 26, 2014)
+8.2.3 0.21 (Oct 26, 2014)
 -------------------------
 
    - *Breaking changes*:
@@ -7098,7 +7115,7 @@ File: flycheck.info,  Node: 0 21 Oct 26 2014,  Next: 0 20 Aug 12 2014,  Prev: ma
 
 File: flycheck.info,  Node: 0 20 Aug 12 2014,  Next: 0 19 Jun 12 2014,  Prev: 0 21 Oct 26 2014,  Up: Changelog
 
-8.2.3 0.20 (Aug 12, 2014)
+8.2.4 0.20 (Aug 12, 2014)
 -------------------------
 
    - *Breaking changes*:
@@ -7264,7 +7281,7 @@ File: flycheck.info,  Node: 0 20 Aug 12 2014,  Next: 0 19 Jun 12 2014,  Prev: 0 
 
 File: flycheck.info,  Node: 0 19 Jun 12 2014,  Next: 0 18 Mar 24 2014,  Prev: 0 20 Aug 12 2014,  Up: Changelog
 
-8.2.4 0.19 (Jun 12, 2014)
+8.2.5 0.19 (Jun 12, 2014)
 -------------------------
 
    - Flycheck now has an official logo [GH-331](1)
@@ -7354,7 +7371,7 @@ File: flycheck.info,  Node: 0 19 Jun 12 2014,  Next: 0 18 Mar 24 2014,  Prev: 0 
 
 File: flycheck.info,  Node: 0 18 Mar 24 2014,  Next: 0 17 Feb 1 2014,  Prev: 0 19 Jun 12 2014,  Up: Changelog
 
-8.2.5 0.18 (Mar 24, 2014)
+8.2.6 0.18 (Mar 24, 2014)
 -------------------------
 
    - *Breaking changes*:
@@ -7441,7 +7458,7 @@ File: flycheck.info,  Node: 0 18 Mar 24 2014,  Next: 0 17 Feb 1 2014,  Prev: 0 1
 
 File: flycheck.info,  Node: 0 17 Feb 1 2014,  Next: 0 16 Jan 11 2014,  Prev: 0 18 Mar 24 2014,  Up: Changelog
 
-8.2.6 0.17 (Feb 1, 2014)
+8.2.7 0.17 (Feb 1, 2014)
 ------------------------
 
    - The manual was ported to Sphinx(1) and is now located at
@@ -7516,7 +7533,7 @@ File: flycheck.info,  Node: 0 17 Feb 1 2014,  Next: 0 16 Jan 11 2014,  Prev: 0 1
 
 File: flycheck.info,  Node: 0 16 Jan 11 2014,  Next: 0 15 Nov 15 2013,  Prev: 0 17 Feb 1 2014,  Up: Changelog
 
-8.2.7 0.16 (Jan 11, 2014)
+8.2.8 0.16 (Jan 11, 2014)
 -------------------------
 
    - *Breaking changes*:
@@ -7655,7 +7672,7 @@ File: flycheck.info,  Node: 0 16 Jan 11 2014,  Next: 0 15 Nov 15 2013,  Prev: 0 
 
 File: flycheck.info,  Node: 0 15 Nov 15 2013,  Next: 0 14 1 Aug 16 2013,  Prev: 0 16 Jan 11 2014,  Up: Changelog
 
-8.2.8 0.15 (Nov 15, 2013)
+8.2.9 0.15 (Nov 15, 2013)
 -------------------------
 
    - Flycheck has a new home at ‘https://github.com/flycheck/flycheck’,
@@ -7844,8 +7861,8 @@ File: flycheck.info,  Node: 0 15 Nov 15 2013,  Next: 0 14 1 Aug 16 2013,  Prev: 
 
 File: flycheck.info,  Node: 0 14 1 Aug 16 2013,  Next: 0 14 Aug 15 2013,  Prev: 0 15 Nov 15 2013,  Up: Changelog
 
-8.2.9 0.14.1 (Aug 16, 2013)
----------------------------
+8.2.10 0.14.1 (Aug 16, 2013)
+----------------------------
 
    - Bug fixes:
 
@@ -7858,7 +7875,7 @@ File: flycheck.info,  Node: 0 14 1 Aug 16 2013,  Next: 0 14 Aug 15 2013,  Prev: 
 
 File: flycheck.info,  Node: 0 14 Aug 15 2013,  Next: 0 13 Jun 28 2013,  Prev: 0 14 1 Aug 16 2013,  Up: Changelog
 
-8.2.10 0.14 (Aug 15, 2013)
+8.2.11 0.14 (Aug 15, 2013)
 --------------------------
 
    - *Breaking changes*:
@@ -7997,7 +8014,7 @@ File: flycheck.info,  Node: 0 14 Aug 15 2013,  Next: 0 13 Jun 28 2013,  Prev: 0 
 
 File: flycheck.info,  Node: 0 13 Jun 28 2013,  Next: 0 12 May 18 2013,  Prev: 0 14 Aug 15 2013,  Up: Changelog
 
-8.2.11 0.13 (Jun 28, 2013)
+8.2.12 0.13 (Jun 28, 2013)
 --------------------------
 
    - *Breaking changes*:
@@ -8093,7 +8110,7 @@ File: flycheck.info,  Node: 0 13 Jun 28 2013,  Next: 0 12 May 18 2013,  Prev: 0 
 
 File: flycheck.info,  Node: 0 12 May 18 2013,  Next: 0 11 May 01 2013,  Prev: 0 13 Jun 28 2013,  Up: Changelog
 
-8.2.12 0.12 (May 18, 2013)
+8.2.13 0.12 (May 18, 2013)
 --------------------------
 
    - New syntax checkers:
@@ -8138,7 +8155,7 @@ File: flycheck.info,  Node: 0 12 May 18 2013,  Next: 0 11 May 01 2013,  Prev: 0 
 
 File: flycheck.info,  Node: 0 11 May 01 2013,  Next: 0 10 Apr 21 2013,  Prev: 0 12 May 18 2013,  Up: Changelog
 
-8.2.13 0.11 (May 01, 2013)
+8.2.14 0.11 (May 01, 2013)
 --------------------------
 
    - New syntax checkers:
@@ -8187,7 +8204,7 @@ File: flycheck.info,  Node: 0 11 May 01 2013,  Next: 0 10 Apr 21 2013,  Prev: 0 
 
 File: flycheck.info,  Node: 0 10 Apr 21 2013,  Next: 0 9 Apr 13 2013,  Prev: 0 11 May 01 2013,  Up: Changelog
 
-8.2.14 0.10 (Apr 21, 2013)
+8.2.15 0.10 (Apr 21, 2013)
 --------------------------
 
    - Flycheck uses ‘cl-lib’ now.  This library is built-in as of GNU
@@ -8263,7 +8280,7 @@ File: flycheck.info,  Node: 0 10 Apr 21 2013,  Next: 0 9 Apr 13 2013,  Prev: 0 1
 
 File: flycheck.info,  Node: 0 9 Apr 13 2013,  Next: 0 8 Apr 9 2013,  Prev: 0 10 Apr 21 2013,  Up: Changelog
 
-8.2.15 0.9 (Apr 13, 2013)
+8.2.16 0.9 (Apr 13, 2013)
 -------------------------
 
    - New syntax checkers:
@@ -8288,7 +8305,7 @@ File: flycheck.info,  Node: 0 9 Apr 13 2013,  Next: 0 8 Apr 9 2013,  Prev: 0 10 
 
 File: flycheck.info,  Node: 0 8 Apr 9 2013,  Next: 0 7 1 Feb 23 2013,  Prev: 0 9 Apr 13 2013,  Up: Changelog
 
-8.2.16 0.8 (Apr 9, 2013)
+8.2.17 0.8 (Apr 9, 2013)
 ------------------------
 
    - New syntax checkers:
@@ -8348,7 +8365,7 @@ File: flycheck.info,  Node: 0 8 Apr 9 2013,  Next: 0 7 1 Feb 23 2013,  Prev: 0 9
 
 File: flycheck.info,  Node: 0 7 1 Feb 23 2013,  Next: 0 7 Feb 14 2013,  Prev: 0 8 Apr 9 2013,  Up: Changelog
 
-8.2.17 0.7.1 (Feb 23, 2013)
+8.2.18 0.7.1 (Feb 23, 2013)
 ---------------------------
 
    - Bug fixes:
@@ -8380,7 +8397,7 @@ File: flycheck.info,  Node: 0 7 1 Feb 23 2013,  Next: 0 7 Feb 14 2013,  Prev: 0 
 
 File: flycheck.info,  Node: 0 7 Feb 14 2013,  Next: 0 6 1 Jan 30 2013,  Prev: 0 7 1 Feb 23 2013,  Up: Changelog
 
-8.2.18 0.7 (Feb 14, 2013)
+8.2.19 0.7 (Feb 14, 2013)
 -------------------------
 
    - New features:
@@ -8425,7 +8442,7 @@ File: flycheck.info,  Node: 0 7 Feb 14 2013,  Next: 0 6 1 Jan 30 2013,  Prev: 0 
 
 File: flycheck.info,  Node: 0 6 1 Jan 30 2013,  Next: 0 6 Jan 29 2013,  Prev: 0 7 Feb 14 2013,  Up: Changelog
 
-8.2.19 0.6.1 (Jan 30, 2013)
+8.2.20 0.6.1 (Jan 30, 2013)
 ---------------------------
 
    - Fix package dependencies
@@ -8433,7 +8450,7 @@ File: flycheck.info,  Node: 0 6 1 Jan 30 2013,  Next: 0 6 Jan 29 2013,  Prev: 0 
 
 File: flycheck.info,  Node: 0 6 Jan 29 2013,  Next: 0 5 Dec 28 2012,  Prev: 0 6 1 Jan 30 2013,  Up: Changelog
 
-8.2.20 0.6 (Jan 29, 2013)
+8.2.21 0.6 (Jan 29, 2013)
 -------------------------
 
    - New syntax checkers:
@@ -8546,7 +8563,7 @@ File: flycheck.info,  Node: 0 6 Jan 29 2013,  Next: 0 5 Dec 28 2012,  Prev: 0 6 
 
 File: flycheck.info,  Node: 0 5 Dec 28 2012,  Next: 0 4 Nov 21 2012,  Prev: 0 6 Jan 29 2013,  Up: Changelog
 
-8.2.21 0.5 (Dec 28, 2012)
+8.2.22 0.5 (Dec 28, 2012)
 -------------------------
 
    - New syntax checkers:
@@ -8607,7 +8624,7 @@ File: flycheck.info,  Node: 0 5 Dec 28 2012,  Next: 0 4 Nov 21 2012,  Prev: 0 6 
 
 File: flycheck.info,  Node: 0 4 Nov 21 2012,  Next: 0 3 Nov 21 2012,  Prev: 0 5 Dec 28 2012,  Up: Changelog
 
-8.2.22 0.4 (Nov 21, 2012)
+8.2.23 0.4 (Nov 21, 2012)
 -------------------------
 
    - Rename the project to Flycheck [GH-5](1)
@@ -8649,7 +8666,7 @@ File: flycheck.info,  Node: 0 4 Nov 21 2012,  Next: 0 3 Nov 21 2012,  Prev: 0 5 
 
 File: flycheck.info,  Node: 0 3 Nov 21 2012,  Next: 0 2 Oct 25 2012,  Prev: 0 4 Nov 21 2012,  Up: Changelog
 
-8.2.23 0.3 (Nov 21, 2012)
+8.2.24 0.3 (Nov 21, 2012)
 -------------------------
 
    - Replace ‘flymake-mode’ with a custom syntax checking minor mode
@@ -8662,7 +8679,7 @@ File: flycheck.info,  Node: 0 3 Nov 21 2012,  Next: 0 2 Oct 25 2012,  Prev: 0 4 
 
 File: flycheck.info,  Node: 0 2 Oct 25 2012,  Next: 0 1 Oct 11 2012,  Prev: 0 3 Nov 21 2012,  Up: Changelog
 
-8.2.24 0.2 (Oct 25, 2012)
+8.2.25 0.2 (Oct 25, 2012)
 -------------------------
 
    - New syntax checkers:
@@ -8680,7 +8697,7 @@ File: flycheck.info,  Node: 0 2 Oct 25 2012,  Next: 0 1 Oct 11 2012,  Prev: 0 3 
 
 File: flycheck.info,  Node: 0 1 Oct 11 2012,  Prev: 0 2 Oct 25 2012,  Up: Changelog
 
-8.2.25 0.1 (Oct 11, 2012)
+8.2.26 0.1 (Oct 11, 2012)
 -------------------------
 
 Initial release as flymake-checkers
@@ -8708,7 +8725,7 @@ File: flycheck.info,  Node: Extending Flycheck,  Next: Flycheck API,  Prev: Flyc
 This chapter explains how to add new syntax checkers and how to extend
 built-in syntax checkers, by example.  For a detailed reference on the
 involved types, functions and macros, please refer to the *note Flycheck
-API: 1f7.
+API: 1f8.
 
      Note: If you define a new syntax checker or have an extension to a
      built-in syntax checker, please report it to Flycheck (see *note
@@ -8717,8 +8734,8 @@ API: 1f7.
 
      If you would like to contribute your extension or your new syntax
      checker to Flycheck as a patch or pull request, please see *note
-     Contributing code: 1f8. and *note Contributing syntax checkers:
-     1f9.
+     Contributing code: 1f9. and *note Contributing syntax checkers:
+     1fa.
 
 * Menu:
 
@@ -8813,7 +8830,7 @@ it, and how to parse its output:
      See also
 .............
 
-     *note flycheck-rx-to-string: 1fb.; for a list of all special ‘rx’
+     *note flycheck-rx-to-string: 1fc.; for a list of all special ‘rx’
      forms provided by Flycheck and their reference
 
    - The ‘:modes’ property denotes the major modes, in which Flycheck
@@ -8824,7 +8841,7 @@ it, and how to parse its output:
 See also
 ........
 
-*note flycheck-substitute-argument: 1fc.; for a complete list of all
+*note flycheck-substitute-argument: 1fd.; for a complete list of all
 special arguments
 
 * Menu:
@@ -8866,7 +8883,7 @@ highlights everything that matches a pattern.
 
 Sometimes however an output format doesn’t lend itself to error
 patterns.  In this case, you need to write a more sophisticated parser
-yourself.  See *note Parsing structured output format: 1ff. for more
+yourself.  See *note Parsing structured output format: 200. for more
 information.
 
 
@@ -8966,7 +8983,7 @@ error parsing comes *for free* in Flycheck.
 See also
 ........
 
-*note Error parsers: 205.; for more information about error parsers
+*note Error parsers: 206.; for more information about error parsers
 
    ---------- Footnotes ----------
 
@@ -9012,7 +9029,7 @@ flycheck-substitute-argument; for a list of all special ‘option-’
 arguments
 
 Flycheck also provides a convenience macro *note
-flycheck-def-option-var: 208. to declare these options:
+flycheck-def-option-var: 209. to declare these options:
 
      (flycheck-def-option-var flycheck-rubocop-lint-only nil ruby-rubocop
        "Whether to only report code issues in Rubocop.
@@ -9053,7 +9070,7 @@ non-nil.
 
 Flycheck provides a sophisticated logic to find an appropriate
 configuration file.  See *note Syntax checker configuration files: 6b.
-and *note Configuration files for command syntax checkers: 209. for
+and *note Configuration files for command syntax checkers: 20a. for
 details.
 
    ---------- Footnotes ----------
@@ -9121,7 +9138,7 @@ Suppose we defined a syntax checker for Shellcheck called
      written for.
 
 We can now arrange for this syntax checker to be used after ‘sh-zsh’
-with *note flycheck-add-next-checker: 20d.:
+with *note flycheck-add-next-checker: 20e.:
 
      (flycheck-add-next-checker 'sh-zsh '(warning . sh-shellcheck))
 
@@ -9134,7 +9151,7 @@ errors.
 
 Flycheck will only use a chained syntax checker if it is registered in
 *note flycheck-checkers: 5e, so we need to *note register our new syntax
-checker: 201.:
+checker: 202.:
 
      (add-to-list 'flycheck-checkers 'sh-shellcheck 'append)
 
@@ -9152,7 +9169,7 @@ Note that unlike before we *append* the new syntax checker at the end of
 
 You also can specify chained syntax checkers directly in *note
 flycheck-define-checker: 19. with the ‘:next-checkers’ property.
-Instead of calling *note flycheck-add-next-checker: 20d, we could also
+Instead of calling *note flycheck-add-next-checker: 20e, we could also
 have added this property to the definition of ‘sh-zsh’:
 
      (flycheck-define-checker sh-zsh
@@ -9166,7 +9183,7 @@ have added this property to the definition of ‘sh-zsh’:
        :next-checkers ((warning . sh-shellcheck)))
 
      Note: If you control the definition of both syntax checkers, this
-     style is *preferable* to *note flycheck-add-next-checker: 20d.  Use
+     style is *preferable* to *note flycheck-add-next-checker: 20e.  Use
      this function only if you cannot change the definition of the prior
      syntax checker.
 
@@ -9215,7 +9232,7 @@ File: flycheck.info,  Node: Status changes,  Next: Error processing,  Up: Hookin
 9.3.2.1 Status changes
 ......................
 
-*note flycheck-before-syntax-check-hook: 213. and
+*note flycheck-before-syntax-check-hook: 214. and
 ‘flycheck-after-syntax-check-hook’ run before and after syntax checks,
 and let you update your Emacs instance according to Flycheck’s state.
 For instance, flycheck-color-mode-line(1) uses these hooks to colour
@@ -9234,11 +9251,11 @@ File: flycheck.info,  Node: Error processing,  Next: Error display,  Prev: Statu
 9.3.2.2 Error processing
 ........................
 
-The functions in *note flycheck-process-error-functions: 215. are used
+The functions in *note flycheck-process-error-functions: 216. are used
 to process new errors reported by a Flycheck syntax checker.  Add to
 this hook to get informed about each error reported in a Flycheck
 buffer.  In fact, Flycheck uses this hook itself: The standard value
-*note flycheck-add-overlay: 216. is responsible for adding error
+*note flycheck-add-overlay: 217. is responsible for adding error
 highlighting to the buffer.  As a consequence, you can *entirely opt
 out* from highlighting with a custom hook.
 
@@ -9287,7 +9304,7 @@ File: flycheck.info,  Node: Syntax checks,  Next: Generic syntax checkers<2>,  U
 
 A syntax check performs the following steps:
 
-  1. Run hooks in *note flycheck-before-syntax-check-hook: 213.
+  1. Run hooks in *note flycheck-before-syntax-check-hook: 214.
 
   2. Clear error information from previous syntax checks.
 
@@ -9298,13 +9315,13 @@ A syntax check performs the following steps:
   5. Run the syntax checker.
 
   6. Parse the output of the tool, and report all errors and warnings,
-     via *note flycheck-process-error-functions: 215.
+     via *note flycheck-process-error-functions: 216.
 
   7. If the buffer can be checked with another syntax checker, continue
      from step 4, but with the next syntax checker.  This is called
      *note chaining: a0. of syntax checkers.
 
-  8. Run hooks in *note flycheck-after-syntax-check-hook: 21d.
+  8. Run hooks in *note flycheck-after-syntax-check-hook: 21e.
 
  -- Hook: flycheck -after-syntax-check-hook
 

@@ -1,9 +1,9 @@
 This is flycheck.info, produced by makeinfo version 5.2 from
 flycheck.texi.
 
-This manual is for Flycheck version 0.22.
+This manual is for Flycheck version 0.23-cvs.
 
-Copyright © 2014, Sebastian Wiesner
+Copyright © 2014-2015 Sebastian Wiesner
 
      Permission is granted to copy, distribute and/or modify this
      documentation under the terms of the GNU Free Documentation
@@ -209,7 +209,7 @@ buffer.
      See also
 .............
 
-     *note Status callback protocol: 221.
+     *note Status callback protocol: 222.
 
 To make new syntax checkers available for automatic selection you need
 to register them by adding them to *note flycheck-checkers: 5e.
@@ -416,7 +416,7 @@ flycheck-define-command-checker: 173.:
      *note ‘flycheck-define-generic-checker’: 1b, the following PROPERTIES
      constitute a command syntax checker.  Unless otherwise noted, all
      properties are mandatory.  Note that the default ‘`:error-filter'’
-     of command checkers is *note ‘flycheck-sanitize-errors’: 227.
+     of command checkers is *note ‘flycheck-sanitize-errors’: 228.
 
      ‘:command COMMAND’
           The command to run for syntax checking.
@@ -427,11 +427,11 @@ flycheck-define-command-checker: 173.:
           checker.  It can be overridden with the variable
           ‘`flycheck-SYMBOL-executable'’.  Note that this variable is
           NOT implicitly defined by this function.  Use
-          *note ‘flycheck-def-executable-var’: 22e. to define this variable.
+          *note ‘flycheck-def-executable-var’: 22f. to define this variable.
 
           Each ARG is an argument to the executable, either as string,
           or as special symbol or form for
-          *note ‘flycheck-substitute-argument’: 1fc, which see.
+          *note ‘flycheck-substitute-argument’: 1fd, which see.
 
      ‘:error-patterns PATTERNS’
           A list of patterns to parse the output of the ‘`:command'’.
@@ -443,7 +443,7 @@ flycheck-define-command-checker: 173.:
           column, file name and the message.
 
           See ‘`rx'’ for general information about RX, and
-          *note ‘flycheck-rx-to-string’: 1fb. for some special RX forms provided
+          *note ‘flycheck-rx-to-string’: 1fc. for some special RX forms provided
           by Flycheck.
 
           All patterns are applied in the order of declaration to the
@@ -465,7 +465,7 @@ flycheck-define-command-checker: 173.:
           OUTPUT.
 
           This property is optional.  If omitted, it defaults to
-          *note ‘flycheck-parse-with-patterns’: 22f.  In this case,
+          *note ‘flycheck-parse-with-patterns’: 230.  In this case,
           ‘`:error-patterns'’ is mandatory.
 
      Note that you may not give ‘`:start'’, ‘`:interrupt'’, and
@@ -476,7 +476,7 @@ flycheck-define-command-checker: 173.:
 
 Each command checker uses an accompanying variable to override the
 executable, which you can define with *note flycheck-def-executable-var:
-22e.:
+22f.:
 
  -- Macro: flycheck -def-executable-var checker default-executable
 
@@ -494,7 +494,7 @@ Since command syntax checkers are by far the most common kind of syntax
 checkers, Flycheck provides a convenience macro *note
 flycheck-define-checker: 19. which wraps up *note
 flycheck-define-command-checker: 173. and *note
-flycheck-def-executable-var: 22e. into a single macro, and reduces
+flycheck-def-executable-var: 22f. into a single macro, and reduces
 syntactic clutter by allowing unquoted arguments:
 
  -- Macro: flycheck -define-checker symbol docstring &rest properties
@@ -503,7 +503,7 @@ syntactic clutter by allowing unquoted arguments:
 
      Like *note ‘flycheck-define-command-checker’: 173, but PROPERTIES must not
      be quoted.  Also, implicitly define the executable variable for
-     SYMBOL with *note ‘flycheck-def-executable-var’: 22e.
+     SYMBOL with *note ‘flycheck-def-executable-var’: 22f.
 
 * Menu:
 
@@ -521,7 +521,7 @@ File: flycheck.info,  Node: Command arguments,  Next: Options for command syntax
 
 The arguments passed to the external command of a command syntax checker
 are subject to substitution with *note flycheck-substitute-argument:
-1fc, which replaces special symbols and forms with strings for
+1fd, which replaces special symbols and forms with strings for
 consumption by the external command:
 
  -- Function: flycheck -substitute-argument arg checker
@@ -560,7 +560,7 @@ consumption by the external command:
           as primary input to a checker, unless absolutely necessary.
 
           When using this symbol as primary input to the syntax
-          checker, add *note ‘flycheck-buffer-saved-p’: 225. to the ‘`:predicate'’.
+          checker, add *note ‘flycheck-buffer-saved-p’: 226. to the ‘`:predicate'’.
 
      ‘`temporary-directory'’
           Create a unique temporary directory and return its path.
@@ -583,7 +583,7 @@ consumption by the external command:
 
      ‘(config-file OPTION VARIABLE [PREPEND-FN])’
           Search the configuration file bound to VARIABLE with
-          *note ‘flycheck-locate-config-file’: 231. and return a list of arguments
+          *note ‘flycheck-locate-config-file’: 232. and return a list of arguments
           that pass this configuration file to the syntax checker, or
           nil if the configuration file was not found.
 
@@ -750,7 +750,7 @@ Normally, command syntax checkers use regular expressions to extract
 errors from the output.  For simplicity and readability, Flycheck uses
 RX expressions instead of standard regular expressions, and provides
 some custom RX forms for frequent patterns, implemented by *note
-flycheck-rx-to-string: 1fb.:
+flycheck-rx-to-string: 1fc.:
 
  -- Function: flycheck -rx-to-string form &optional no-group
 
@@ -897,7 +897,7 @@ about CL structures.
                occasionally a program tries to proactively adapt to
                Emacs’ convention, and outputs 0-based columns.  In this
                case, you need to adapt the column numbers for Flycheck,
-               via *note flycheck-increment-error-columns: 228. as
+               via *note flycheck-increment-error-columns: 229. as
                ‘:error-filter’.
 
       -- Slot: message
@@ -924,13 +924,13 @@ about CL structures.
 
           Create a new Flycheck error at the given LINE and COLUMN.
 
-          LINE and COLUMN refer to the *note line: 23f. and *note
-          column: 240. of the new error.  The optional LEVEL and MESSAGE
-          arguments fill the *note level: 242. and cl-slot:‘message’
+          LINE and COLUMN refer to the *note line: 240. and *note
+          column: 241. of the new error.  The optional LEVEL and MESSAGE
+          arguments fill the *note level: 243. and cl-slot:‘message’
           slots respectively.
 
           CHECKER, ID, FILENAME and BUFFER are keyword arguments, for
-          *note checker: 164, *note id: 175, *note filename: 23e. and
+          *note checker: 164, *note id: 175, *note filename: 23f. and
           *note buffer: 163. respectively.  BUFFER defaults to the
           current buffer and FILENAME to the file name of the current
           buffer.  The other keyword arguments default to ‘nil’.
@@ -1017,7 +1017,7 @@ about CL structures.
 
           Determine whether ERR1 goes before ERR2 by error level.
 
-          Like *note ‘flycheck-error-<’: 24b, but compares by error level severity
+          Like *note ‘flycheck-error-<’: 24c, but compares by error level severity
           first.  Levels of the same severity are compared by name.
 
 * Menu:
@@ -1093,7 +1093,7 @@ You can define new error levels with *note flycheck-define-error-level:
           the number, the more severe is this level compared to other
           levels.  Defaults to 0.
 
-          The severity is used by *note ‘flycheck-error-level-<’: 24c. to
+          The severity is used by *note ‘flycheck-error-level-<’: 24d. to
           determine the ordering of errors according to their levels.
 
      ‘:overlay-category CATEGORY’
@@ -1141,7 +1141,7 @@ File: flycheck.info,  Node: Flycheck buffer status,  Next: Utilities,  Prev: Err
 
      This hook is run whenever the status of Flycheck changes.  Each
      hook function takes the status symbol as sinlge argument, as
-     given to *note ‘flycheck-report-status’: 255, which see.
+     given to *note ‘flycheck-report-status’: 256, which see.
 
      This variable is a abnormal hook.  See Info
      node *note (elisp)Hooks::.
@@ -1259,15 +1259,15 @@ Installation: 31.), you can load the ERT API with:
 This will also load the ‘ert’ and ‘flycheck’ libraries.
 
 Flycheck ERT supports test resources (see *note Accessing test
-resources: 25c.).  For this feature, you need to initialize Flycheck ERT
+resources: 25d.).  For this feature, you need to initialize Flycheck ERT
 with a resource directory by calling *note flycheck-ert-initialize:
-25d.:
+25e.:
 
  -- Function: flycheck -ert-initialize resource-dir
 
      Initialize a test suite with RESOURCE-DIR.
 
-     RESOURCE-DIR is the directory, *note ‘flycheck-ert-resource-filename’: 25e.
+     RESOURCE-DIR is the directory, *note ‘flycheck-ert-resource-filename’: 25f.
      should use to lookup resource files.
 
 
@@ -1340,7 +1340,7 @@ File: flycheck.info,  Node: Accessing test resources,  Next: Obtaining informati
 -------------------------------
 
 The following functions and macros load resources from the directory
-given to *note flycheck-ert-initialize: 25d.
+given to *note flycheck-ert-initialize: 25e.
 
  -- Function: flycheck -ert-resource-filename resource-file
 
@@ -1354,7 +1354,7 @@ given to *note flycheck-ert-initialize: 25d.
      Create a temp buffer from a RESOURCE-FILE and execute BODY.
 
      The absolute file name of RESOURCE-FILE is determined with
-     *note ‘flycheck-ert-resource-filename’: 25e.
+     *note ‘flycheck-ert-resource-filename’: 25f.
 
  -- Function: flycheck -ert-locate-config-file filename _checker
 
@@ -1479,7 +1479,7 @@ File: flycheck.info,  Node: Writing assertions,  Prev: Invoking syntax checkers 
 
      ERRORS is a list of errors expected to be present in the current
      buffer.  Each error is given as a list of arguments to
-     *note ‘flycheck-error-new-at’: 243.
+     *note ‘flycheck-error-new-at’: 244.
 
      If ERRORS are omitted, test that there are no errors at all in
      the current buffer.
@@ -1499,7 +1499,7 @@ File: flycheck.info,  Node: Writing assertions,  Prev: Invoking syntax checkers 
      check with.  If more than one major mode is specified, the test
      is run for each mode separately, so if you give three major
      modes, the entire test will run three times.  ERRORS is the list
-     of expected errors, as in *note ‘flycheck-ert-should-errors’: 278.  If
+     of expected errors, as in *note ‘flycheck-ert-should-errors’: 279.  If
      omitted, the syntax check must not emit any errors.  The errors
      are cleared after each test.
 
@@ -1777,7 +1777,7 @@ Then install the syntax checkers that you’d like to test:
      $ cabal install hlint shellcheck
 
      Note: If you’d like to keep your environment clean, use the *note
-     Virtual test environment: 28b. instead.
+     Virtual test environment: 28c. instead.
 
 Run the entire test suite:
 
@@ -1854,7 +1854,7 @@ After the VM is started, you can connect to it:
      $ vagrant ssh
 
 This will give you a bash prompt within the VM, on which you can run the
-tests as explained in *note Test running: 289.
+tests as explained in *note Test running: 28a.
 
 To switch between Emacs versions, pass ‘EMACS’ to ‘make test’:
 
@@ -1899,7 +1899,7 @@ File: flycheck.info,  Node: Travis CI,  Prev: Virtual test environment,  Up: Tes
 13.4 Travis CI
 ==============
 
-The entire test suite continuously runs on *note Travis CI: 28e. after
+The entire test suite continuously runs on *note Travis CI: 28f. after
 every push, with the latest Emacs release and a nightly Emacs snapshot.
 
 Travis CI is configured from ‘.travis.yml’ in the top-level source
@@ -1908,7 +1908,7 @@ directory, and uses mostly the same playbooks for provisioning.
      Note: Travis CI is the *reference environment* for Flycheck’s test
      suite.  All tests *must pass* on Travis CI.
 
-     In case Travis CI diverges from the *note VM: 28b, Travis CI is
+     In case Travis CI diverges from the *note VM: 28c, Travis CI is
      authoritative.
 
 
@@ -1979,7 +1979,7 @@ File: flycheck.info,  Node: Building HTML and Texinfo,  Next: Verifying referenc
 ==============================
 
 First, switch to the virtual environment you created in the *note Build
-environment setup: 291, and make sure that the requirements are up to
+environment setup: 292, and make sure that the requirements are up to
 date:
 
      $ source ~/.virtualenvs/cask/bin/activate
@@ -2045,7 +2045,7 @@ Flycheck.
 
 When making changes to the documentation, you need to rebuild the
 Texinfo version with, by following the *note instructions to build the
-documentation: 293.
+documentation: 294.
 
    ---------- Footnotes ----------
 

@@ -1,6 +1,6 @@
 ;;; flycheck.el --- Modern on-the-fly syntax checking for GNU Emacs -*- lexical-binding: t; -*-
 
-;; Copyright (c) 2012, 2013, 2014 Sebastian Wiesner <swiesner@lunaryorn.com>
+;; Copyright (c) 2012-2015 Sebastian Wiesner <swiesner@lunaryorn.com>
 ;; Copyright (C) 2013, 2014 Free Software Foundation, Inc.
 ;;
 ;; Author: Sebastian Wiesner <swiesner@lunaryorn.com>
@@ -2269,9 +2269,14 @@ Return t when CHECKER was disabled, or nil otherwise."
     (push checker flycheck-disabled-checkers)
     t))
 
-(defun flycheck-clear ()
-  "Clear all errors in the current buffer."
-  (interactive)
+(defun flycheck-clear (&optional shall-interrupt)
+  "Clear all errors in the current buffer.
+
+With prefix arg or SHALL-INTERRUPT non-nil, also interrupt the
+current syntax check."
+  (interactive "P")
+  (when shall-interrupt
+    (flycheck-stop))
   (flycheck-delete-all-overlays)
   (flycheck-clear-errors)
   (flycheck-error-list-refresh)
@@ -5334,7 +5339,11 @@ See URL `http://cfengine.com/'."
   "A Chef cookbooks syntax checker using Foodcritic.
 
 See URL `http://acrmp.github.io/foodcritic/'."
-  :command ("foodcritic" source)
+  ;; Use `source-inplace' to allow resource discovery with relative paths.
+  ;; foodcritic interprets these as relative to the source file, so we need to
+  ;; stay within the source tree.  See
+  ;; https://github.com/flycheck/flycheck/pull/556
+  :command ("foodcritic" source-inplace)
   :error-patterns
   ((error line-start (message) ": " (file-name) ":" line line-end))
   :modes (enh-ruby-mode ruby-mode)

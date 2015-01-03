@@ -113,7 +113,7 @@
 	     ((:url . "http://www.dr-qubit.org/emacs.php")
 	      (:keywords "extensions" "matching" "data structures trie" "tree" "dictionary" "completion" "regexp"))])
  (diff-hl .
-	  [(1 6 0)
+	  [(1 7 0)
 	   ((cl-lib
 	     (0 2)))
 	   "Highlight uncommitted changes" tar

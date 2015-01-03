@@ -4,7 +4,7 @@
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: lisp
-;; Version: 20141229.803
+;; Version: 20150102.1458
 ;; X-Original-Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (flycheck "0.22-cvs1") (emacs "24"))
 
@@ -313,7 +313,8 @@ Alternatively, depend on Emacs 24.3, which introduced cl-lib 1.0."
        "\"Version:\" or \"Package-Version:\" header is missing. MELPA will handle this, but other archives will not."))))
 
 (flypkg/define-pass flypkg/package-el-can-parse-buffer (context)
-  "Check that `package-buffer-info' can read metadata from this file."
+  "Check that `package-buffer-info' can read metadata from this file.
+If it can, return the read metadata."
   (flypkg/call-pass context #'flypkg/valid-package-version-present)
   (condition-case err
       (let ((orig-buffer (current-buffer)))
@@ -328,6 +329,23 @@ Alternatively, depend on Emacs 24.3, which introduced cl-lib 1.0."
       1 1
       'error
       (format "package.el cannot parse this buffer: %s" (error-message-string err))))))
+
+(flypkg/define-pass flypkg/package-has-summary (context)
+  (let* ((desc (flypkg/call-pass context #'flypkg/package-el-can-parse-buffer))
+         (summary (package-desc-summary desc)))
+    (cond
+     ((string-empty-p summary)
+      (flypkg/error
+       context
+       1 1
+       'warning
+       "Package should have a non-empty summary."))
+     ((> (length summary) 80)
+      (flypkg/error
+       context
+       1 1
+       'warning
+       "The package summary is too long. It should be at most 80 characters.")))))
 
 
 ;;; Helpers and checker definition

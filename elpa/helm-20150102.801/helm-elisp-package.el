@@ -23,6 +23,8 @@
 ;; internals vars
 (defvar helm-el-package--show-only 'all)
 (defvar helm-el-package--initialized-p nil)
+(defvar helm-el-package--tabulated-list nil)
+(defvar helm-el-package--upgrades nil)
 
 (defun helm-el-package--init ()
   (when (null package-alist)
@@ -34,7 +36,9 @@
   (helm-init-candidates-in-buffer
       'global
     (with-current-buffer (get-buffer "*Packages*")
+      (setq helm-el-package--tabulated-list tabulated-list-entries)
       (buffer-string)))
+  (setq helm-el-package--upgrades (helm-el-package-menu--find-upgrades))
   (setq helm-el-package--show-only 'all)
   (kill-buffer "*Packages*"))
 
@@ -44,8 +48,8 @@
                           (package-desc-name id)
                         (car id)))))
 
-(defun helm-el-package-install (_candidate)
-  (cl-loop with mkd = (helm-marked-candidates)
+(defun helm-el-package-install-1 (pkg-list)
+  (cl-loop with mkd = pkg-list
         for p in mkd
         for id = (get-text-property 0 'tabulated-list-id p)
         do (package-install
@@ -65,8 +69,11 @@
                                       (length installed-list)
                                       (mapconcat 'symbol-name installed-list ", "))))))
 
-(defun helm-el-package-uninstall (_candidate)
-  (cl-loop with mkd = (helm-marked-candidates)
+(defun helm-el-package-install (_candidate)
+  (helm-el-package-install-1 (helm-marked-candidates)))
+
+(defun helm-el-package-uninstall-1 (pkg-list)
+  (cl-loop with mkd = pkg-list
         for p in mkd
         for id = (get-text-property 0 'tabulated-list-id p)
         do
@@ -102,20 +109,86 @@
                            when (assq (symbol-name (car p)) delete-list)
                            do (setq package-alist (delete p package-alist))))))
 
+(defun helm-el-package-uninstall (_candidate)
+  (helm-el-package-uninstall-1 (helm-marked-candidates)))
+
+(defun helm-el-package-menu--find-upgrades ()
+  (cl-loop for entry in helm-el-package--tabulated-list
+           for pkg-desc = (car entry)
+           for status = (aref (cadr entry) 2)
+           when (member status '("installed" "unsigned"))
+           collect pkg-desc
+           into installed
+           when (member status '("available" "new"))
+           collect (cons (package-desc-name pkg-desc) pkg-desc)
+           into available
+           finally return
+           (cl-loop for pkg in installed
+                    for avail-pkg = (assq (package-desc-name pkg) available)
+                    when (and avail-pkg
+                              (version-list-< (package-desc-version pkg)
+                                              (package-desc-version
+                                               (cdr avail-pkg))))
+                    collect avail-pkg)))
+
+(defun helm-el-package-upgrade-1 (pkg-list)
+  (cl-loop for p in pkg-list
+           for pkg-desc = (car p)
+           for upgrade = (cdr (assq (package-desc-name pkg-desc)
+                                    helm-el-package--upgrades))
+           do
+           (cond ((null upgrade)
+                  (ignore))
+                 ((equal pkg-desc upgrade)
+                  ;;Install.
+                  (package-install pkg-desc))
+                 (t
+                  ;; Delete.
+                  (package-delete pkg-desc)))))
+
+(defun helm-el-package-upgrade (_candidate)
+  (helm-el-package-upgrade-1
+   (cl-loop with pkgs = (helm-marked-candidates)
+            for p in helm-el-package--tabulated-list
+            for pkg = (car p)
+            if (member (symbol-name (package-desc-name pkg)) pkgs)
+            collect p)))
+
+(defun helm-el-package-upgrade-all ()
+  (if helm-el-package--upgrades
+      (with-helm-display-marked-candidates
+        helm-marked-buffer-name (mapcar (lambda (x) (symbol-name (car x)))
+                                        helm-el-package--upgrades)
+        (when (y-or-n-p "Upgrade all packages? ")
+          (helm-el-package-upgrade-1 helm-el-package--tabulated-list)))
+      (message "No packages to upgrade actually!")))
+
+(defun helm-el-package-upgrade-all-action (_candidate)
+  (helm-el-package-upgrade-all))
+
 (defun helm-el-package--transformer (candidates _source)
   (cl-loop for c in candidates
-        for id = (get-text-property 0 'tabulated-list-id c) 
-        for installed-p = (assq (if (fboundp 'package-desc-name)
-                                    (package-desc-name id)
-                                  (car id))
-                                package-alist)
+        for id = (get-text-property 0 'tabulated-list-id c)
+        for name = (if (fboundp 'package-desc-name)
+                       (package-desc-name id)
+                       (car id))
+        for installed-p = (assq name package-alist)
+        for upgrade-p = (assq name helm-el-package--upgrades)
         for cand = (cons c (car (split-string c)))
-        when (or (and installed-p
+        when (or (and upgrade-p
+                      (eq helm-el-package--show-only 'upgrade))
+                 (and installed-p
                       (eq helm-el-package--show-only 'installed))
                  (and (not installed-p)
                       (eq helm-el-package--show-only 'uninstalled)) 
                  (eq helm-el-package--show-only 'all))
         collect cand))
+
+(defun helm-el-package-show-upgrade ()
+  (interactive)
+  (with-helm-alive-p
+    (setq helm-el-package--show-only 'upgrade)
+    (helm-update)))
 
 (defun helm-el-package-show-installed ()
   (interactive)
@@ -139,7 +212,7 @@
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
     (define-key map (kbd "M-I") 'helm-el-package-show-installed)
-    (define-key map (kbd "M-U") 'helm-el-package-show-uninstalled)
+    (define-key map (kbd "M-U") 'helm-el-package-show-upgrade)
     (define-key map (kbd "M-A") 'helm-el-package-show-all)
     (define-key map (kbd "C-c ?") 'helm-el-package-help)
     map))
@@ -151,12 +224,20 @@
     (match-part . (lambda (c) (car (split-string c))))
     (filtered-candidate-transformer . helm-el-package--transformer)
     (candidates-in-buffer)
+    (action-transformer . (lambda (actions candidate)
+                            (let ((pkg-desc (get-text-property
+                                             0 'tabulated-list-id candidate)))
+                              (if (cdr (assq (package-desc-name pkg-desc)
+                                             helm-el-package--upgrades))
+                                  (append '(("Upgrade package" . helm-el-package-upgrade)) actions)
+                                  actions))))
     (mode-line . helm-el-package-mode-line)
     (keymap . ,helm-el-package-map)
     (candidate-number-limit . 9999)
     (action . (("Describe" . helm-el-package-describe)
                ("Install" . helm-el-package-install)
-               ("Uninstall" . helm-el-package-uninstall)))))
+               ("Uninstall" . helm-el-package-uninstall)
+               ("Upgrade all packages" . helm-el-package-upgrade-all-action)))))
 
 ;;;###autoload
 (defun helm-list-elisp-packages (arg)

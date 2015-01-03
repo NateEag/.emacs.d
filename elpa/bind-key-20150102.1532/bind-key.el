@@ -4,7 +4,7 @@
 
 ;; Author: John Wiegley <jwiegley@gmail.com>
 ;; Created: 16 Jun 2012
-;; Version: 20141220.1645
+;; Version: 20150102.1532
 ;; X-Original-Version: 1.0
 ;; Keywords: keys keybinding config dotemacs
 ;; URL: https://github.com/jwiegley/use-package
@@ -42,7 +42,7 @@
 ;;
 ;;   (bind-key* "<C-return>" 'other-window)
 ;;
-;; If you want to rebind a key only in a particular key, use:
+;; If you want to rebind a key only in a particular keymap, use:
 ;;
 ;;   (bind-key "C-c x" 'my-ctrl-c-x-command some-other-mode-map)
 ;;

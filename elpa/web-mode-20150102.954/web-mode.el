@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2015 François-Xavier Bois
 
-;; Version: 20150101.1320
-;; X-Original-Version: 10.1.28
+;; Version: 20150102.954
+;; X-Original-Version: 10.1.29
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -25,7 +25,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "10.1.28"
+(defconst web-mode-version "10.1.29"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -3212,6 +3212,13 @@ the environment as needed for ac-sources, right before they're used.")
 
        ((string= web-mode-engine "erb")
         (cond
+         ((web-mode-block-ends-with "}[ ]*else[ ]*{" reg-beg)
+          (setq controls (append controls (list (cons 'inside "{")))))
+         ((web-mode-block-starts-with "}" reg-beg)
+          (setq controls (append controls (list (cons 'close "{")))))
+         ((web-mode-block-ends-with "{" reg-beg)
+          (setq controls (append controls (list (cons 'open "{")))))
+
          ((web-mode-block-starts-with "else\\|elsif\\|when" reg-beg)
           (setq controls (append controls (list (cons 'inside "ctrl")))))
          ((web-mode-block-starts-with "end" reg-beg)

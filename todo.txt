@@ -135,6 +135,8 @@
 -Add a command to backup-walker to revert to the selected backup file. 'r'
  would be a good keybinding. If this doesn't already exist, it might make sense
  to wrap this up with my other backup settings as 'sane-autosaves'.
+ See if backups-mode makes this work nicely?
+ https://github.com/chadbraunduin/backups-mode
 
 -Add a command to backup-walker to ediff against the current file.
 

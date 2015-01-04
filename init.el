@@ -331,7 +331,11 @@ new file for the first time."
 
 ;; reStructuredText mode.
 (add-auto-mode 'rst-mode "\\.rst$" "\\.rest$")
-(add-hook 'rst-mode-hook 'text-mode-init)
+(add-hook 'rst-mode-hook (lambda ()
+                           (text-mode-init)
+                           ;; rst uses these for link delimiters. In other
+                           ;; modes I'm more prone to use them for tags.
+                           (sp-pair "<" ">")))
 
 ;; Markdown mode.
 (add-auto-mode 'markdown-mode "\\.md")

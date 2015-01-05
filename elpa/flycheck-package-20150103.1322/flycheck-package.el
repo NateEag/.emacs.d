@@ -4,9 +4,9 @@
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: lisp
-;; Version: 20150102.1458
+;; Version: 20150103.1322
 ;; X-Original-Version: 0
-;; Package-Requires: ((cl-lib "0.5") (flycheck "0.22-cvs1") (emacs "24"))
+;; Package-Requires: ((cl-lib "0.5") (flycheck "0.22") (emacs "24"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -31,8 +31,8 @@
 ;;    (eval-after-load 'flycheck
 ;;      '(flycheck-package-setup))
 
-;; Checks will currently be enabled only if a "Package-Requires:" header
-;; is present in the file.
+;; Checks will currently be enabled only if a "Package-Requires:" or
+;; "Package-Version:" header is present in the file.
 
 ;;; Code:
 
@@ -340,12 +340,12 @@ If it can, return the read metadata."
        1 1
        'warning
        "Package should have a non-empty summary."))
-     ((> (length summary) 80)
+     ((> (length summary) 50)
       (flypkg/error
        context
        1 1
        'warning
-       "The package summary is too long. It should be at most 80 characters.")))))
+       "The package summary is too long. It should be at most 50 characters.")))))
 
 
 ;;; Helpers and checker definition

@@ -3,7 +3,7 @@
 
 ;; Copyright 2011-2015 François-Xavier Bois
 
-;; Version: 20150103.1214
+;; Version: 20150104.2313
 ;; X-Original-Version: 10.1.31
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
@@ -189,7 +189,7 @@ See web-mode-part-face."
   :type 'boolean
   :group 'web-mode)
 
-(defcustom web-mode-enable-comment-keywords nil
+(defcustom web-mode-enable-comment-keywords '()
   "Enable highlight of keywords like FIXME, TODO, etc. in comments."
   :type 'list
   :group 'web-mode)

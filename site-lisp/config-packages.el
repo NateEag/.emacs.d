@@ -123,6 +123,36 @@
   (add-hook 'yaml-mode-hook
             'my-prog-mode-init))
 
+(use-package slime
+  :config
+  (progn
+    (defun mit-scheme-start-swank (file encoding)
+     (format "%S\n\n" `(start-swank ,file)))
+
+    (defun mit-scheme-find-buffer-package ()
+      (save-excursion
+        (let ((case-fold-search t))
+          (goto-char (point-min))
+          (and (re-search-forward "^;+ package: \\(([^)]+)\\)" nil t)
+               (match-string-no-properties 1)))))
+
+    (defun mit-scheme-slime-mode-init ()
+      (slime-mode t)
+      (make-local-variable 'slime-find-buffer-package-function)
+      (setq slime-find-buffer-package-function 'mit-scheme-find-buffer-package))
+
+    (slime-setup)
+
+    (if (not (memq 'mit-scheme slime-lisp-implementations))
+        (setq slime-lisp-implementations
+              (cons '(mit-scheme ("mit-scheme")
+                                 :init mit-scheme-start-swank)
+                    slime-lisp-implementations)))
+
+    (setq slime-default-lisp 'mit-scheme)
+
+    (add-hook 'scheme-mode-hook 'mit-scheme-slime-mode-init)))
+
 (use-package hideshow
   :defer t
   :config

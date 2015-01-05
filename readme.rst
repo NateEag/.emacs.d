@@ -89,6 +89,10 @@ bug that loses part of undo history, but have not been able to reproduce it
 consistently - it may relate to `undo in region
 <https://lists.gnu.org/archive/html/bug-gnu-emacs/2014-01/msg01106.html>`__.
 
+I use `helm <http://emacs-helm.github.io/helm/>`__ to find files and commands
+quickly and easily. `helm-swoop
+<https://github.com/ShingoFukuyama/helm-swoop>`__ is pretty neat too.
+
 I use `backup-walker <https://github.com/lewang/backup-walker>`__ to search
 through a file's backups when I need an older version I didn't commit. I store
 all backups in `autosaves/` and back up on every save, even in version control

@@ -227,6 +227,12 @@ I.e use the -path/ipath arguments of find instead of -name/iname."
   :group 'helm-files
   :type 'hook)
 
+(defcustom helm-find-files-sort-directories nil
+  "When nil allow sorting directories when input is a matched directory.
+Note that this will be much slower."
+  :group 'helm-files
+  :type 'boolean)
+
 
 ;;; Faces
 ;;
@@ -1555,7 +1561,8 @@ purpose."
                    ;; "Invalid tramp file name" is now printed
                    ;; in `helm-buffer'.
                    (list path))))
-          ((or (file-regular-p path)
+          ((or (and (file-regular-p path)
+                    (eq last-repeatable-command 'helm-execute-persistent-action))
                ;; `ffap-url-regexp' don't match until url is complete.
                (string-match helm-ff-url-regexp path)
                invalid-basedir
@@ -1831,34 +1838,40 @@ return FNAME prefixed with [?]."
           ((or new-file (not (file-exists-p fname)))
            (concat prefix-new " " fname)))))
 
+(defun helm-ff-score-candidate-for-pattern (str pattern)
+  (if (and (member str '("." ".."))
+           helm-find-files-sort-directories)
+      200
+      (helm-score-candidate-for-pattern str pattern)))
+
 (defun helm-ff-sort-candidates (candidates _source)
   "Sort function for `helm-source-find-files'.
 Return candidates prefixed with basename of `helm-input' first."
-  (if (or (file-directory-p helm-input)
+  (if (or (and (null helm-find-files-sort-directories)
+               (file-directory-p helm-input))
           (null candidates))
       candidates
-    (let* ((c1        (car candidates))
-           (cand1real (if (consp c1) (cdr c1) c1))
-           (cand1     (unless (file-exists-p cand1real)
-                        c1))
-           (rest-cand (if cand1 (cdr candidates) candidates))
-           (memo-src  (make-hash-table :test 'equal))
-           (all (sort rest-cand
-                      #'(lambda (s1 s2)
-                          (let* ((score (lambda (str)
-                                          (helm-score-candidate-for-pattern
-                                           str (helm-basename helm-input))))
-                                 (bn1 (helm-basename (if (consp s1) (cdr s1) s1)))
-                                 (bn2 (helm-basename (if (consp s2) (cdr s2) s2)))
-                                 (sc1 (or (gethash bn1 memo-src)
-                                          (puthash bn1 (funcall score bn1) memo-src)))
-                                 (sc2 (or (gethash bn2 memo-src)
-                                          (puthash bn2 (funcall score bn2) memo-src))))
-                            (cond ((= sc1 sc2)
-                                   (< (string-width bn1)
-                                      (string-width bn2)))
-                                  ((> sc1 sc2))))))))
-      (if cand1 (cons cand1 all) all))))
+      (let* ((c1        (car candidates))
+             (cand1real (if (consp c1) (cdr c1) c1))
+             (cand1     (unless (file-exists-p cand1real) c1))
+             (rest-cand (if cand1 (cdr candidates) candidates))
+             (memo-src  (make-hash-table :test 'equal))
+             (all (sort rest-cand
+                        #'(lambda (s1 s2)
+                            (let* ((score (lambda (str)
+                                            (helm-ff-score-candidate-for-pattern
+                                             str (helm-basename helm-input))))
+                                   (bn1 (helm-basename (if (consp s1) (cdr s1) s1)))
+                                   (bn2 (helm-basename (if (consp s2) (cdr s2) s2)))
+                                   (sc1 (or (gethash bn1 memo-src)
+                                            (puthash bn1 (funcall score bn1) memo-src)))
+                                   (sc2 (or (gethash bn2 memo-src)
+                                            (puthash bn2 (funcall score bn2) memo-src))))
+                              (cond ((= sc1 sc2)
+                                     (< (string-width bn1)
+                                        (string-width bn2)))
+                                    ((> sc1 sc2))))))))
+        (if cand1 (cons cand1 all) all))))
 
 (defun helm-ff-filter-candidate-one-by-one (file)
   "`filter-one-by-one' Transformer function for `helm-source-find-files'."
@@ -2045,11 +2058,12 @@ If a prefix arg is given or `helm-follow-mode' is on open file."
              (setq helm-ff-last-expanded helm-ff-default-directory))
            (funcall insert-in-minibuffer (file-name-as-directory
                                           (expand-file-name candidate))))
-          ;; A symlink file, expand to it's true name. (cl-first hit)
+          ;; A symlink file, expand to it's true name. (first hit)
           ((and (file-symlink-p candidate) (not current-prefix-arg) (not follow))
            (funcall insert-in-minibuffer (file-truename candidate)))
-          ;; A regular file, expand it, (cl-first hit)
+          ;; A regular file, expand it, (first hit)
           ((and (>= num-lines-buf 3) (not current-prefix-arg) (not follow))
+           (setq helm-pattern "") ; Force update.
            (funcall insert-in-minibuffer new-pattern))
           ;; An image file and it is the second hit on C-j,
           ;; show the file in `image-dired'.

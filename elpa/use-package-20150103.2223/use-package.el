@@ -4,7 +4,7 @@
 
 ;; Author: John Wiegley <jwiegley@gmail.com>
 ;; Created: 17 Jun 2012
-;; Version: 20150102.1809
+;; Version: 20150103.2223
 ;; X-Original-Version: 1.0
 ;; Package-Requires: ((bind-key "1.0") (diminish "0.44"))
 ;; Keywords: dotemacs startup speed config package
@@ -415,7 +415,8 @@ For full documentation. please see commentary.
                                  (quote ,(cdr binding))
                                  ,(if (stringp name) name `',name)
                                  nil))))
-                 keymap-alist)
+                 keymap-alist
+                 t)
 
         (funcall init-for-commands-or-keymaps
                  (lambda (binding)
@@ -425,7 +426,8 @@ For full documentation. please see commentary.
                                  (quote ,(cdr binding))
                                  ,(if (stringp name) name `',name)
                                  t))))
-                 overriding-keymap-alist)
+                 overriding-keymap-alist
+                 t)
 
         (funcall init-for-commands-or-keymaps
                  (lambda (binding)

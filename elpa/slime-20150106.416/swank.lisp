@@ -1307,17 +1307,17 @@ event was found."
 
 (defun simple-repl ()
   (loop
-   (format t "~a> " (package-string-for-prompt *package*))
-   (force-output)
-   (let ((form (handler-case (read)
-                 (end-of-repl-input () (return)))))
-     (let ((- form)
-           (values (multiple-value-list (eval form))))
-       (setq *** **  ** *  * (car values)
-             /// //  // /  / values
-             +++ ++  ++ +  + form)
-       (cond ((null values) (format t "; No values~&"))
-             (t (mapc (lambda (v) (format t "~s~&" v)) values)))))))
+    (format t "~a> " (package-string-for-prompt *package*))
+    (force-output)
+    (let ((form (handler-case (read)
+                  (end-of-repl-input () (return)))))
+      (let ((- form)
+            (values (multiple-value-list (eval form))))
+        (setq *** **  ** *  * (car values)
+              /// //  // /  / values
+              +++ ++  ++ +  + form)
+        (cond ((null values) (format t "; No values~&"))
+              (t (mapc (lambda (v) (format t "~s~&" v)) values)))))))
 
 (defun make-repl-input-stream (connection stdin)
   (make-input-stream

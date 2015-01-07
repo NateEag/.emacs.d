@@ -4,8 +4,8 @@
 
 ;; Author: Adam Patterson <adam@adamrt.com>
 ;; URL: http://github.com/adamrt/sane-term
-;; Version: 20141102.1227
-;; X-Original-Version: 0.1
+;; Version: 20150106.1200
+;; X-Original-Version: 0.2
 ;; Package-Requires: ((emacs "24.1"))
 
 ;;; Commentary:
@@ -53,7 +53,6 @@ Depends on sane-term-kill-on-exit."
 
 (defun sane-term-next ()
   "Cycle through term buffers."
-  (interactive)
   (when (derived-mode-p 'term-mode)
     (bury-buffer))
   (catch 'loop

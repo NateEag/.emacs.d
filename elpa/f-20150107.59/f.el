@@ -4,8 +4,8 @@
 
 ;; Author: Johan Andersson <johan.rejeep@gmail.com>
 ;; Maintainer: Johan Andersson <johan.rejeep@gmail.com>
-;; Version: 20140828.716
-;; X-Original-Version: 0.17.1
+;; Version: 20150107.59
+;; X-Original-Version: 0.17.2
 ;; Keywords: files, directories
 ;; URL: http://github.com/rejeep/f.el
 ;; Package-Requires: ((s "1.7.0") (dash "2.2.0"))
@@ -105,7 +105,12 @@ If PATH is not allowed to be modified, throw error."
         (setq paths (-map 'cdr paths))
         (push common re)
         (setq common (caar paths)))
-      (if re (concat (apply 'f-join (nreverse re)) "/") "")))))
+      (cond
+       ((null re) "")
+       ((and (= (length re) 1) (f-root? (car re)))
+        (f-root))
+       (:otherwise
+        (concat (apply 'f-join (nreverse re)) "/")))))))
 
 (defun f-ext (path)
   "Return the file extension of PATH."

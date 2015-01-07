@@ -1207,16 +1207,24 @@ FILE-NAME is nil, return `default-directory'."
 (defvar read-flycheck-checker-history nil
   "`completing-read' history of `read-flycheck-checker'.")
 
-(defun read-flycheck-checker (prompt &optional default)
+(defun read-flycheck-checker (prompt &optional default property)
   "Read a flycheck checker from minibuffer with PROMPT and DEFAULT.
 
-Return the checker as symbol, or default, if no checker was
+PROMPT is a string to show in the minibuffer as prompt.  It
+should end with a single space.  DEFAULT is a symbol denoting the
+default checker to use, if the user did not select any checker.
+PROPERTY is a symbol denoting a syntax checker property.  If
+non-nil, only complete syntax checkers which have a non-nil value
+for PROPERTY.
+
+Return the checker as symbol, or DEFAULT if no checker was
 chosen.  If DEFAULT is nil and no checker was chosen, signal a
-`user-error', if the underlying completion system does not
-provide a default on its own."
+`user-error' if the underlying completion system does not provide
+a default on its own."
   (when (and default (not (flycheck-valid-checker-p default)))
     (error "%S is no valid Flycheck checker" default))
-  (let* ((candidates (mapcar #'symbol-name (flycheck-defined-checkers)))
+  (let* ((candidates (mapcar #'symbol-name
+                             (flycheck-defined-checkers property)))
          (default (and default (symbol-name default)))
          (input (pcase flycheck-completion-system
                   (`ido (ido-completing-read prompt candidates nil
@@ -1234,7 +1242,7 @@ https://github.com/d11wtq/grizzl")))
                                       default)))))
     (when (string-empty-p input)
       (unless default
-        (user-error "No syntax checker entered"))
+        (user-error "No syntax checker selected"))
       (setq input default))
     (let ((checker (intern input)))
       (unless (flycheck-valid-checker-p checker)
@@ -1243,14 +1251,18 @@ https://github.com/d11wtq/grizzl")))
 
 
 ;;; Checker API
-(defun flycheck-defined-checkers ()
-  "Find all defined syntax checkers.
+(defun flycheck-defined-checkers (&optional property)
+  "Find all defined syntax checkers, optionally with PROPERTY.
+
+PROPERTY is a symbol.  If given, only return syntax checkers with
+a non-nil value for PROPERTY.
 
 The returned list is sorted alphapetically by the symbol name of
 the syntax checkers."
   (let (defined-checkers)
     (mapatoms (lambda (symbol)
-                (when (flycheck-valid-checker-p symbol)
+                (when (and (flycheck-valid-checker-p symbol)
+                           (or (null property) (get symbol property)))
                   (push symbol defined-checkers))))
     (sort defined-checkers #'string<)))
 
@@ -2016,15 +2028,11 @@ Return the checker if it may be used, or nil otherwise."
 (defun flycheck-get-new-checker-for-buffer ()
   "Find a new checker for the current buffer.
 
-If a checker is found set `flycheck-last-checker' to re-use this
-checker for the next check.
-
 Return the checker if there is any, or nil otherwise."
   (let ((checkers flycheck-checkers))
     (while (and checkers (not (flycheck-may-use-checker (car checkers))))
       (setq checkers (cdr checkers)))
-    (when checkers
-      (setq flycheck-last-checker (car checkers)))))
+    (car checkers)))
 
 (defun flycheck-get-checker-for-buffer ()
   "Find the checker for the current buffer.
@@ -2075,7 +2083,10 @@ CHECKER will be used, even if it is not contained in
   (when (not (eq checker flycheck-checker))
     (unless (or (not checker) (flycheck-may-use-checker checker))
       (user-error "Can't use syntax checker %S in this buffer" checker))
-    (setq flycheck-checker checker)
+    (setq flycheck-checker checker
+          ;; Clear cached checker to make sure that automatic selection restarts
+          ;; if necessary
+          flycheck-last-checker nil)
     (when flycheck-mode
       (flycheck-buffer))))
 
@@ -2092,7 +2103,6 @@ Set `flycheck-current-syntax-check' accordingly."
   ;; Allocate the current syntax check *before* starting it.  This allows for
   ;; synchronous checks, which call the status callback immediately in there
   ;; start function.
-
   (let* ((check (flycheck-syntax-check-new :buffer (current-buffer)
                                            :checker checker
                                            :context nil))
@@ -2121,7 +2131,11 @@ Set `flycheck-current-syntax-check' accordingly."
            syntax-check args)))
 
 (defun flycheck-buffer ()
-  "Check syntax in the current buffer."
+  "Check syntax in the current buffer.
+
+The syntax checker used for the syntax check is cached in
+`flycheck-last-checker' and re-used for the next check, if
+possible."
   (interactive)
   (flycheck-clean-deferred-check)
   (if flycheck-mode
@@ -2137,6 +2151,9 @@ Set `flycheck-current-syntax-check' accordingly."
             (let* ((checker (flycheck-get-checker-for-buffer)))
               (if checker
                   (progn
+                    ;; Remember the last syntax checker to speed up checker
+                    ;; selection
+                    (setq flycheck-last-checker checker)
                     (flycheck-start-current-syntax-check checker)
                     (flycheck-report-status 'running))
                 (flycheck-clear)
@@ -3934,8 +3951,9 @@ The executable variable is named `flycheck-CHECKER-executable'."
 The executable is either the value of the variable
 `flycheck-CHECKER-executable', or the default executable given in
 the syntax checker definition, if the variable is nil."
-  (or (symbol-value (flycheck-checker-executable-variable checker))
-      (flycheck-checker-default-executable checker)))
+  (let ((var (flycheck-checker-executable-variable checker)))
+    (or (and (boundp var) (symbol-value var))
+        (flycheck-checker-default-executable checker))))
 
 (defun flycheck-checker-arguments (checker)
   "Get the command arguments of CHECKER."
@@ -4600,8 +4618,10 @@ Instead of highlighting errors in the buffer, this command pops
 up a separate buffer with the entire output of the syntax checker
 tool, just like `compile' (\\[compile])."
   (interactive
-   (list (read-flycheck-checker "Run syntax checker as compile command: "
-                                (or flycheck-checker flycheck-last-checker))))
+   (let ((default (or flycheck-checker flycheck-last-checker)))
+     (list (read-flycheck-checker "Run syntax checker as compile command: "
+                                  (when (get default 'flycheck-command) default)
+                                  'flycheck-command))))
   (unless (flycheck-valid-checker-p checker)
     (user-error "%S is not a valid syntax checker" checker))
   (unless (buffer-file-name)
@@ -4609,7 +4629,7 @@ tool, just like `compile' (\\[compile])."
   (unless (flycheck-may-use-checker checker)
     (user-error "Cannot use syntax checker %S in this buffer" checker))
   (unless (flycheck-checker-executable checker)
-    (user-error "Cannot run checker %S in compilation buffer" checker))
+    (user-error "Cannot run checker %S as shell command" checker))
   (let* ((command (flycheck-checker-shell-command checker))
          (buffer (compilation-start command nil #'flycheck-compile-name)))
     (with-current-buffer buffer

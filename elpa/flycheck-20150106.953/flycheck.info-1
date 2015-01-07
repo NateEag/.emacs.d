@@ -1724,6 +1724,10 @@ You can also always check the current buffer manually:
 
      Check syntax in the current buffer.
 
+     The syntax checker used for the syntax check is cached in
+     ‘`flycheck-last-checker'’ and re-used for the next check, if
+     possible.
+
      Note: If syntax checking does not work, check your setup:
 
       -- Command: C -c ! v
@@ -6824,9 +6828,16 @@ File: flycheck.info,  Node: master in development,  Next: 0 22 Dec 23 2014,  Up:
         - ‘chef-foodcritic’ handles relative paths correctly now
           [GH-556](1)
 
+   - Bug fixes:
+
+        - Cache last used syntax checker only when actually checking the
+          buffer [GH-559](2)
+
    ---------- Footnotes ----------
 
    (1) https://github.com/flycheck/flycheck/issues/556
+
+   (2) https://github.com/flycheck/flycheck/issues/559
 
 
 File: flycheck.info,  Node: 0 22 Dec 23 2014,  Next: 0 21 Oct 26 2014,  Prev: master in development,  Up: Changelog

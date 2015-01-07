@@ -3563,10 +3563,10 @@ Index
 * flycheck-syntax-check-failed-hook; Emacs Lisp hook: Syntax checks.
                                                               (line  66)
 * flycheck-temp-prefix; Emacs Lisp user option: Checking buffers.
-                                                              (line  95)
+                                                              (line  99)
 * flycheck-tidyrc; Emacs Lisp user option: HTML.              (line  15)
 * flycheck-verify-setup; Emacs Lisp command: Checking buffers.
-                                                              (line  82)
+                                                              (line  86)
 * flycheck-warning; Emacs Lisp face:     Error reporting.     (line  72)
 * fortran-gfortran; Emacs Lisp Flycheck syntax checker: Fortran.
                                                               (line   6)

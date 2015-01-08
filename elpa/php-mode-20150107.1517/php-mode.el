@@ -6,13 +6,13 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Version: 20141229.1858
+;; Version: 20150107.1517
 ;;; X-Original-Version: 1.15.1
 
 (defconst php-mode-version-number "1.15.1"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2014-12-29"
+(defconst php-mode-modified "2015-01-06"
   "PHP Mode build date.")
 
 ;;; License
@@ -192,10 +192,8 @@ which will be the name of the method."
   (concat
    ;; Initial space with possible 'abstract' or 'final' keywords
    "^\\s-*\\(?:\\(?:abstract\\|final\\)\\s-+\\)?"
-   ;; The function visilibity
-   visibility
-   ;; Is it static?
-   "\\s-+\\(?:static\\s-+\\)?"
+   ;; 'static' keyword may come either before or after visibility
+   "\\(?:" visibility "\\(?:\\s-+static\\)?\\|\\(?:static\\s-+\\)?" visibility "\\)\\s-+"
    ;; Make sure 'function' comes next with some space after
    "function\\s-+"
    ;; Capture the name as the first group and the regexp and make sure

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "minimap" "minimap.el" (21565 22245 0 0))
+;;;### (autoloads nil "minimap" "minimap.el" (21679 57418 0 0))
 ;;; Generated autoloads from minimap.el
 
 (autoload 'minimap-toggle "minimap" "\

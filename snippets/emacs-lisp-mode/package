@@ -16,5 +16,5 @@
 ;;; Code:
 
 
-
+(provide '$1)
 ;;; $1.el ends here

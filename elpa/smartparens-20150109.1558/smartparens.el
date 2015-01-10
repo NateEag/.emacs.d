@@ -49,6 +49,7 @@
 
 ;;; Code:
 
+(eval-when-compile (require 'cl)) ; for `lexical-let'
 (require 'cl-lib)
 (require 'dash)
 (require 'thingatpt)
@@ -2430,14 +2431,14 @@ value is used instead of a test."
 
 (defun sp--parse-insertion-spec (fun)
   "Parse the insertion specification FUN and return a form to evaluate."
-  (cl-labels ((push-non-empty
-               (what)
-               (unless (equal (cadr what) "")
-                 ;; relies on dynamic binding
-                 (push what spec))))
-    (let ((spec nil)
-          (after nil)
-          (last 1))
+  (let ((spec nil)
+        (after nil)
+        (last 1))
+    (cl-labels ((push-non-empty
+                 (what)
+                 (unless (equal (cadr what) "")
+                   ;; relies on dynamic binding
+                   (push what spec))))
       (with-temp-buffer
         (insert fun)
         (goto-char (point-min))
@@ -4573,7 +4574,7 @@ This function is equivalent to doing:
 
 For example, you can restrict function `sp-forward-sexp' to just
 the pairs for easier navigation of blocks in C-like languages."
-  (letf (((symbol-value object) t))
+  (cl-letf (((symbol-value object) t))
     (call-interactively function)))
 
 ;; TODO: add shorter alias?
@@ -6890,7 +6891,7 @@ Examples:
         (setq items (nreverse items))
         (save-excursion
           (goto-char end)
-          (delete-backward-char (length cl))
+          (delete-char (- (length cl)))
           (while items
             (sp-get (car items)
               (goto-char :end)
@@ -7389,6 +7390,10 @@ This is the case if `subword-mode' is enabled and
 `sp-use-subword' is non-nil."
   (and sp-use-subword (bound-and-true-p subword-mode)))
 
+(declare-function subword-kill "subword")
+(declare-function subword-forward "subword")
+(declare-function subword-backward "subword")
+
 (defun sp--kill-word (&optional n)
   "Kill N words or subwords."
   (let ((n (or n 1)))
@@ -7846,6 +7851,7 @@ has a pair definition.  If so, we insert the closing pair."
     )
   "A list of vars that need to be tracked on a per-cursor basis.")
 
+(defvar mc/cursor-specific-vars)
 (eval-after-load 'multiple-cursors
   '(dolist (it sp--mc/cursor-specific-vars)
      (add-to-list 'mc/cursor-specific-vars it)))

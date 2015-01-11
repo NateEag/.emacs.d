@@ -69,4 +69,5 @@
   :keymap skewer-reload-stylesheets-mode-map
   :group 'skewer)
 
+(provide 'skewer-reload-stylesheets)
 ;;; skewer-reload-stylesheets.el ends here

@@ -258,6 +258,11 @@ Note that this will be much slower."
   "Face used for directories in `helm-find-files'."
   :group 'helm-files-faces)
 
+(defface helm-ff-dotted-directory
+    '((t (:foreground "black" :background "DimGray")))
+  "Face used for directories in `helm-find-files'."
+  :group 'helm-files-faces)
+
 (defface helm-ff-symlink
     '((t (:foreground "DarkOrange")))
   "Face used for symlinks in `helm-find-files'."
@@ -1267,8 +1272,11 @@ or hitting C-j on \"..\"."
                  (helm-get-selection))
       (unless (or (and (string-match helm-tramp-file-name-regexp it)
                        (not (file-remote-p it nil t)))
-                  (file-exists-p it))
-        (helm-next-line))))
+                  (and (file-exists-p it)
+                       (null (helm-ff-dot-file-p it))))
+        (helm-next-line)
+        (while (helm-ff-dot-file-p (helm-get-selection))
+          (helm-next-line)))))
 (add-hook 'helm-after-update-hook 'helm-ff-move-to-first-real-candidate)
 
 ;;; Auto-update - helm-find-files auto expansion of directories.
@@ -1911,6 +1919,11 @@ Return candidates prefixed with basename of `helm-input' first."
               ((stringp type)
                (cons (helm-ff-prefix-filename
                       (propertize disp 'face 'helm-ff-symlink) t)
+                     file))
+              ;; A dotted directory.
+              ((and (eq t type) (helm-ff-dot-file-p file))
+               (cons (helm-ff-prefix-filename
+                      (propertize disp 'face 'helm-ff-dotted-directory) t)
                      file))
               ;; A directory.
               ((eq t type)

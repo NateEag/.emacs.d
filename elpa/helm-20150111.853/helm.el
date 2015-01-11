@@ -1004,7 +1004,7 @@ not `exit-minibuffer' or unwanted functions."
 
 (defun helm-window ()
   "Window of `helm-buffer'."
-  (get-buffer-window (helm-buffer-get) 'visible))
+  (get-buffer-window (helm-buffer-get) 0))
 
 (defun helm-action-window ()
   "Window of `helm-action-buffer'."
@@ -1014,6 +1014,9 @@ not `exit-minibuffer' or unwanted functions."
   "Be sure BODY is excuted in the helm window."
   (declare (indent 0) (debug t))
   `(with-selected-window (helm-window)
+     (select-frame-set-input-focus (if (minibufferp helm-current-buffer)
+                                       (selected-frame)
+                                       (last-nonminibuffer-frame)))
      ,@body))
 
 (defmacro with-helm-current-buffer (&rest body)
@@ -2816,7 +2819,7 @@ This function is used with sources build with `helm-source-sync'."
            when (cdr str)
            collect (list (car str) (cadr str))))
 
-(defsubst helm-score-candidate-for-pattern (candidate pattern)
+(defun helm-score-candidate-for-pattern (candidate pattern)
   "Give a score to CANDIDATE according to PATTERN.
 Score is calculated against number of contiguous matches found with PATTERN.
 If PATTERN is fully matched in CANDIDATE a maximal score (100) is given.
@@ -3550,7 +3553,7 @@ Possible value of DIRECTION are 'next or 'previous."
                                              'face 'helm-prefarg)))))
                     (:eval (helm-show-candidate-number
                             (car-safe helm-mode-line-string)))
-                    " " helm--mode-line-string-real " -%-")
+                    " " helm--mode-line-string-real " " mode-line-end-spaces)
               helm--mode-line-string-real
               (substitute-command-keys (if (listp helm-mode-line-string)
                                            (cadr helm-mode-line-string)

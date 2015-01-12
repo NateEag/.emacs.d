@@ -123,6 +123,12 @@
   (add-hook 'yaml-mode-hook
             'my-prog-mode-init))
 
+(use-package lisp-mode
+  :mode (("\\.el\\'" . emacs-lisp-mode)
+         ("/Cask\\'" . emacs-lisp-mode))
+  :config
+  (add-hook 'emacs-lisp-mode-hook 'emacs-lisp-init))
+
 (use-package slime
   :config
   (progn

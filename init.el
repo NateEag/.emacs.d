@@ -341,9 +341,6 @@ new file for the first time."
 (add-auto-mode 'markdown-mode "\\.md")
 (add-hook 'markdown-mode-hook 'text-mode-init)
 
-;; Emacs Lisp mode.
-(add-hook 'emacs-lisp-mode-hook 'emacs-lisp-init)
-
 ;; Python mode.
 (require 'jedi-force)
 (add-auto-mode 'python-mode "\\.py$")

@@ -96,8 +96,7 @@ quickly and easily. `helm-swoop
 I use `backup-walker <https://github.com/lewang/backup-walker>`__ to search
 through a file's backups when I need an older version I didn't commit. I store
 all backups in `autosaves/` and back up on every save, even in version control
-repositories. I have not lost a line of code I cared about since setting this
-up.
+repositories. I have not lost a line of code since setting this up.
 
 I have a decent Python setup, with `Jedi
 <http://jedi.jedidjah.ch/en/latest/>`__ for auto-complete, jump-to-definition

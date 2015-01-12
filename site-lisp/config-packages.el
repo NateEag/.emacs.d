@@ -72,6 +72,10 @@
   :defer t
   :diminish)
 
+(use-package csharp-mode
+  :config
+  (add-hook 'csharp-mode-hook 'omnisharp-mode))
+
 ;; cc-mode defines several derived packages, so this setup will probably grow
 ;; to cover more than one mode.
 (use-package cc-mode

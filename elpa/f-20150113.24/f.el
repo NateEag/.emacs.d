@@ -4,7 +4,7 @@
 
 ;; Author: Johan Andersson <johan.rejeep@gmail.com>
 ;; Maintainer: Johan Andersson <johan.rejeep@gmail.com>
-;; Version: 20150107.59
+;; Version: 20150113.24
 ;; X-Original-Version: 0.17.2
 ;; Keywords: files, directories
 ;; URL: http://github.com/rejeep/f.el
@@ -489,7 +489,7 @@ RECURSIVE - Search for files and directories recursive."
         parent
       (if (funcall fn dir)
           dir
-        (f-up fn parent)))))
+	(with-no-warnings (f-up fn parent))))))
 
 (defmacro f--traverse-upwards (body &optional path)
   "Anaphoric version of `f-traverse-upwards'."

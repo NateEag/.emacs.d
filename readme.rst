@@ -2,8 +2,8 @@
 Nate Eagleson's Emacs Config
 ============================
 
-Ever since Dr. Thang Bui told his C++ programming class to use it for writing
-programs in the Sun lab, Emacs has been my editor.
+Ever since [Dr. Bui](http://cs.hbg.psu.edu/~bui/) told our C++ programming
+class to use it for programming in the Sun lab, Emacs has been my editor.
 
 On that first encounter, I was put off by its user interface, which is
 obscurantist at best. I discovered that the default install is incredibly
@@ -15,7 +15,7 @@ avoided wasting years writing one), in 2009 I decided to learn Emacs well,
 since I knew a lot of its shortcuts and had decided to stick with an editor.
 
 A year or two into the project, I realized my dream editor had been sitting in
-my lap all along, if only I'd tried to learn it.
+my lap all along, if only I had tried to learn it.
 
 
 Why Emacs (or: Hokey Religions and Ancient Weapons)
@@ -23,14 +23,15 @@ Why Emacs (or: Hokey Religions and Ancient Weapons)
 
 Like all art forms, programming has technique.
 
+A musician's technique is how he makes the instrument produce sound.
+A painter's technique is how she puts paint on the canvas.
+A programmer's technique is how he gives the computer instructions.
+
 Despite the grumbling from the graphical language crowd, most programming comes
 down to entering, reading, and changing plain text in files.
 
 Thus, a programmer should manipulate text fluidly and effortlessly, the way a
-pianist plays arpeggios and scales.
-
-A musician's technique is how he makes the instrument produce sound.
-A programmer's technique is how he gives the computer instructions.
+pianist plays arpeggios or a painter wields a brush.
 
 Changing editors for each language complicates technique. Eclipse for Java,
 PyCharm for Python, Sublime for JavaScript... The keystrokes for editing a
@@ -41,13 +42,13 @@ Instead of changing editors for each language, a programmer's editor should
 adapt itself to each language, so that the technique of programming remains
 unchanged.
 
-In the same way, the programmer should not adapt her workflow to the editor -
-the editor should adapt to her workflow.
+In the same way, the programmer should not adapt herself to the editor -
+the editor should adapt to her.
 
-For those purposes, Emacs reigns supreme.
+For these purposes, Emacs reigns supreme.
 
-It is Turing-complete, it has been honed over decades to a razor-sharp edge, it
-runs almost everywhere, and it can be rewritten without even turning it off.
+It has been honed over decades to a razor-sharp edge, it runs almost
+everywhere, and it can be rewritten without restarting it.
 
 My Setup
 ========
@@ -62,9 +63,9 @@ editing, which is more powerful and easier on my hands.
 `evil-surround <https://github.com/timcharper/evil-surround>`__, and
 `ace-jump-mode <https://github.com/winterTTr/ace-jump-mode>`__ make it even better.
 
-I'm moving to `use-package <https://github.com/jwiegley/use-package>`__ for
-configuring and loading packages on-demand. It's a huge improvement over
-my accumulated piles of ad-hoc code for that purpose.
+I'm slowly moving to `use-package <https://github.com/jwiegley/use-package>`__
+for configuring and loading packages on-demand. It's a huge improvement over my
+accumulated piles of ad-hoc code.
 
 I use `flycheck <https://github.com/flycheck/flycheck>`__ for style-checking
 just about everything, and install the relevant checkers whenever I start
@@ -116,8 +117,8 @@ otherwise, it's pretty solid. The last time I was hacking on PHP seriously I was
 on Windows, and I couldn't get `pfff <https://github.com/facebook/pfff>`__ to
 compile there, but on *nix that would be the next thing I'd add.
 
-For editing web templates of all stripes, I use the awesome `web-mode
-<http://web-mode.org/>`__ with several extensions, including
+For editing web templates, I use the awesome `web-mode <http://web-mode.org/>`__
+with several extensions, including
 `emmet-mode <https://github.com/smihica/emmet-mode>`__.
 
 I use css-mode for CSS, which is somewhat lacking, but I use
@@ -126,7 +127,7 @@ I use css-mode for CSS, which is somewhat lacking, but I use
 that makes life better.
 
 Look in todo.txt and tell me about entries that can be resolved by turning on
-built-in features. I've found some myself and would not mind finding more.
+built-in features. I've found a few and would not mind finding more.
 
 Layout
 ======

@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2015 François-Xavier Bois
 
-;; Version: 20150105.1354
-;; X-Original-Version: 10.2.00
+;; Version: 20150114.337
+;; X-Original-Version: 10.2.04
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -25,7 +25,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "10.2.00"
+(defconst web-mode-version "10.2.04"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -3057,6 +3057,9 @@ the environment as needed for ac-sources, right before they're used.")
 
       (remove-list-of-text-properties reg-beg reg-end '(block-token))
 
+      ;; TODO : vérifier la cohérence
+      (put-text-property reg-beg reg-end 'block-side t)
+
       (goto-char reg-beg)
 
       (when (> reg-beg reg-end)
@@ -4051,10 +4054,20 @@ the environment as needed for ac-sources, right before they're used.")
           )
 
          ((eq ?\* ch-next)
-          (unless (eq ?\\ ch-before)
+          (cond
+           ((and (member content-type '("javascript" "jsx"))
+                 (looking-back "[(=][ ]*..")
+                 (looking-at-p "[^*]*/[gimy]*"))
+            (setq token-type 'string)
+            (re-search-forward "/[gimy]*" reg-end t)
+            ;;(skip-chars-forward "/gimy")
+            )
+           ((unless (eq ?\\ ch-before)
             (setq token-type 'comment)
             (search-forward "*/" reg-end t)
             )
+            )
+           )
           )
 
          ((and (member content-type '("javascript" "jsx"))
@@ -4395,6 +4408,7 @@ the environment as needed for ac-sources, right before they're used.")
 ;; web-mode-block-tokenize travaille en effet sur les fins de lignes pour
 ;; les commentaires de type //
 (defun web-mode-invalidate-block-region (pos-beg pos-end)
+  ;;  (message "pos-beg(%S) pos-end(%S)" pos-beg pos-end)
   (save-excursion
     (let (beg end code-beg code-end)
       ;;(message "invalidate-block-region: pos-beg(%S)=%S" pos-beg (get-text-property pos 'block-side))
@@ -4419,7 +4433,7 @@ the environment as needed for ac-sources, right before they're used.")
           (setq end code-end))
         ;; ?? pas de (web-mode-block-tokenize beg end) ?
         (cons beg end)
-        )
+        ) ; asp
        (t
         (goto-char pos-beg)
         (if (web-mode-block-rsb "[;{}(][ ]*\n" code-beg)
@@ -4430,6 +4444,7 @@ the environment as needed for ac-sources, right before they're used.")
             (setq end (1- (match-end 0)))
           (setq end code-end))
         (web-mode-block-tokenize beg end)
+        ;;(message "beg(%S) end(%S)" beg end)
         (cons beg end)
         )
        ) ;cond
@@ -4575,7 +4590,7 @@ the environment as needed for ac-sources, right before they're used.")
   )
 
 (defun web-mode-highlight-region (&optional beg end content-type)
-;;  (message "highlight-region: beg(%S) end(%S) ct(%S)" beg end content-type)
+  ;;  (message "highlight-region: beg(%S) end(%S) ct(%S)" beg end content-type)
   (web-mode-with-silent-modifications
    (save-excursion
      (save-restriction
@@ -8308,7 +8323,8 @@ Pos should be in a tag."
       )
 
      ((and (>= (point) 3)
-           (member this-command '(self-insert-command)))
+           (member this-command '(self-insert-command))
+           (not (member (get-text-property (point) 'part-token) '(comment string))))
       (setq ctx (web-mode-complete)))
 
      ((and web-mode-enable-auto-opening
@@ -8378,7 +8394,6 @@ Pos should be in a tag."
           ) ;let
         ) ;save-excursion
       )
-
     ;;    (message "post-command (%S) (%S)" web-mode-change-end web-mode-change-end)
     ))
 
@@ -8417,9 +8432,8 @@ Pos should be in a tag."
         ) ;while
       )))
 
-;; ½ &frac12; &#189; &#x00BD;
 (defun web-mode-dom-entities-replace ()
-  "Replace html entities e.g. entities &eacute; &#233; &#x00E9; become é"
+  "Replace html entities e.g. &eacute; &#233; or &#x00E9; become é"
   (interactive)
   (save-excursion
     (let (ms pair elt (min (point-min)) (max (point-max)))

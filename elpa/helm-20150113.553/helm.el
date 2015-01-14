@@ -31,13 +31,6 @@
 (require 'cl-lib)
 (require 'helm-source)
 
-(defmacro helm-with-gensyms (symbols &rest body) 
-  "Bind the SYMBOLS to fresh uninterned symbols and eval BODY."
-  (declare (indent 1))
-  `(let ,(mapcar (lambda (s) `(,s (make-symbol (concat "--" (symbol-name ',s)))))
-                 symbols)
-     ,@body))
-
 
 ;;; Multi keys
 ;;
@@ -988,18 +981,17 @@ not `exit-minibuffer' or unwanted functions."
 
 ;; Test tools
 (defmacro with-helm-time-after-update (&rest body)
-  (helm-with-gensyms (start-time time-elapsed)
-    `(let ((,start-time (float-time)) ,time-elapsed)
-       (add-hook 'helm-after-update-hook
-                 (lambda ()
-                   (setq ,time-elapsed (- (float-time) ,start-time))
-                   (keyboard-quit)))
-       (unwind-protect ,@body
-         (remove-hook 'helm-after-update-hook
-                      (lambda ()
-                        (setq  ,time-elapsed (- (float-time) ,start-time))
-                        (keyboard-quit))))
-       ,time-elapsed)))
+  `(let ((start-time (float-time)) time-elapsed)
+     (add-hook 'helm-after-update-hook
+               (lambda ()
+                 (setq time-elapsed (- (float-time) start-time))
+                 (keyboard-quit)))
+     (unwind-protect ,@body
+       (remove-hook 'helm-after-update-hook
+                    (lambda ()
+                      (setq  time-elapsed (- (float-time) start-time))
+                      (keyboard-quit))))
+     time-elapsed))
 
 
 ;; Helm API
@@ -1049,14 +1041,13 @@ not `exit-minibuffer' or unwanted functions."
 (defmacro with-helm-restore-variables(&rest body)
   "Restore `helm-restored-variables' after executing BODY."
   (declare (indent 0) (debug t))
-  (helm-with-gensyms (orig-vars)
-    `(let ((,orig-vars (mapcar (lambda (v)
-                                (cons v (symbol-value v)))
-                              helm-restored-variables)))
-       (unwind-protect (progn ,@body)
-         (cl-loop for (var . value) in ,orig-vars
-                  do (set var value))
-         (helm-log "restore variables")))))
+  `(let ((orig-vars (mapcar (lambda (v)
+                              (cons v (symbol-value v)))
+                            helm-restored-variables)))
+     (unwind-protect (progn ,@body)
+       (cl-loop for (var . value) in orig-vars
+             do (set var value))
+       (helm-log "restore variables"))))
 
 (defmacro with-helm-default-directory (directory &rest body)
   (declare (indent 2) (debug t))
@@ -1072,7 +1063,7 @@ not `exit-minibuffer' or unwanted functions."
 (defmacro with-helm-temp-hook (hook &rest body)
   "Execute temporarily BODY as a function for HOOK."
   (declare (indent 1) (debug t))
-  (helm-with-gensyms (fun)
+  (let ((fun (cl-gensym "helm-hook")))
     `(progn
        (defun ,fun ()
          (unwind-protect
@@ -3183,7 +3174,6 @@ is done on whole `helm-buffer' and not on current source."
   "Wheter SOURCE is a delayed source or not."
   (or (assoc 'delayed source)
       (and helm-quick-update
-           (> (length helm-sources) 1)
            (< (window-height (get-buffer-window (current-buffer)))
               (line-number-at-pos (point-max))))))
 

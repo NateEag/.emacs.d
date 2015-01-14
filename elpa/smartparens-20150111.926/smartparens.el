@@ -423,7 +423,6 @@ Symbol is defined as a chunk of text recognized by
 (defvar sp--lisp-modes '(emacs-lisp-mode
                          inferior-emacs-lisp-mode
                          inferior-lisp-mode
-                         inf-clojure-mode
                          lisp-interaction-mode
                          scheme-mode
                          scheme-interaction-mode
@@ -432,8 +431,8 @@ Symbol is defined as a chunk of text recognized by
                          lisp-mode
                          eshell-mode
                          slime-repl-mode
-                         monroe-mode
                          cider-repl-mode
+                         nrepl-repl-mode
                          clojure-mode
                          common-lisp-mode)
   "List of Lisp modes.")

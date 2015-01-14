@@ -3,7 +3,7 @@
 
 ;; Author: Marijn Haverbeke
 ;; URL: http://ternjs.net/
-;; Version: 20141204.242
+;; Version: 20150114.140
 ;; X-Original-Version: 0.0.1
 ;; Package-Requires: ((json "1.2") (cl-lib "0.5") (emacs "24"))
 
@@ -92,7 +92,8 @@ list of strings, giving the binary name and arguments.")
 
 (defun tern-start-server (c)
   (let* ((default-directory tern-project-dir)
-         (proc (apply #'start-process "Tern" nil tern-command))
+         (cmd (if (member "--strip-crs" tern-command) tern-command (append tern-command '("--strip-crs"))))
+         (proc (apply #'start-process "Tern" nil cmd))
          (all-output ""))
     (set-process-query-on-exit-flag proc nil)
     (set-process-sentinel proc (lambda (_proc _event)

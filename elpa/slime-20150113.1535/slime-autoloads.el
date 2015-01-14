@@ -48,6 +48,6 @@
 ;; End:
 
 ;;;### (autoloads nil nil ("slime-pkg.el" "slime-tests.el" "slime.el")
-;;;;;;  (21683 64656 953759 0))
+;;;;;;  (21686 31739 558964 0))
 
 ;;;***

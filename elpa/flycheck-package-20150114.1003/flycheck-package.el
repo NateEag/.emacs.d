@@ -1,10 +1,11 @@
 ;;; flycheck-package.el --- A Flycheck checker for elisp package authors -*- lexical-binding: t -*-
 
-;; Copyright (C) 2014  Steve Purcell
+;; Copyright (C) 2014-2015  Steve Purcell, Fanael Linithien
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
+;;         Fanael Linithien <fanael4@gmail.com>
 ;; Keywords: lisp
-;; Version: 20150114.742
+;; Version: 20150114.1003
 ;; X-Original-Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (flycheck "0.22") (emacs "24"))
 

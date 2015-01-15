@@ -6,7 +6,7 @@
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 11 July 2012
 ;; Package-Requires: ((emacs "24.1") (visual-fill-column "1.1"))
-;; Version: 2
+;; Version: 2.8
 ;; Keywords: text
 
 ;; Redistribution and use in source and binary forms, with or without
@@ -57,6 +57,12 @@
   :group 'writeroom
   :type '(choice (integer :label "Absolute width:")
                  (float :label "Relative width:" :value 0.5)))
+
+(defvar writeroom--saved-visual-fill-column nil
+  "Flag to store the status of `visual-fill-column-mode'.
+Used to restore `visual-fill-colum-mode' if it was active before
+activating `writeroom-mode'.")
+(make-variable-buffer-local 'writeroom--saved-visual-fill-column)
 
 (defcustom writeroom-mode-line nil
   "The mode line format to use.
@@ -116,6 +122,20 @@ This option is only relevant when activating `writeroom-mode'
 with `global-writeroom-mode'."
   :group 'writeroom
   :type '(repeat (symbol :tag "Major mode")))
+
+(defcustom writeroom-restore-window-config nil
+  "If set, restore window configuration after disabling `writeroom-mode'.
+Setting this option makes sense primarily if `writeroom-mode' is
+used in one buffer only. The window configuration that is stored
+is the one that exists when `writeroom-mode' is first called, and
+it is restored when `writeroom-mode' is deactivated in the last
+buffer."
+  :group 'writeroom
+  :type '(choice (const :tag "Do not restore window configuration" nil)
+                 (const :tag "Restore window configuration" t)))
+
+(defvar writeroom--saved-window-config nil
+  "Window configuration active before `writeroom-mode' is activated.")
 
 (defcustom writeroom-global-effects '(writeroom-toggle-fullscreen
                                       writeroom-toggle-alpha
@@ -189,10 +209,10 @@ buffer's major mode is a member of `writeroom-major-modes'."
   :group 'writeroom)
 
 (defun writeroom--kill-buffer-function ()
-  "Function to run when killing a buffer.
-This function checks if `writeroom-mode' is enabled in the buffer
-to be killed and adjusts `writeroom--buffers' and the global
-effects accordingly."
+  "Disable `writeroom-mode' before killing a buffer, if necessary.
+This function is for use in `kill-buffer-hook'. It checks whether
+`writeroom-mode' is enabled in the buffer to be killed and
+adjusts `writeroom--buffers' and the global effects accordingly."
   (when writeroom-mode
     (setq writeroom--buffers (delq (current-buffer) writeroom--buffers))
     (when (not writeroom--buffers)
@@ -215,19 +235,26 @@ fringes, and maximizes the window. It also runs the functions in
 `writeroom-global-effects' if the current buffer is the first
 buffer in which `writeroom-mode' is activated."
   (when (not writeroom--buffers)
-    (writeroom--activate-global-effects t))
+    (writeroom--activate-global-effects t)
+    (if writeroom-restore-window-config
+        (setq writeroom--saved-window-config (current-window-configuration))))
   (add-to-list 'writeroom--buffers (current-buffer))
   (when writeroom-maximize-window
     (delete-other-windows))
   (unless (eq writeroom-mode-line t) ; if t, use standard mode line
     (setq writeroom--saved-mode-line mode-line-format)
     (setq mode-line-format writeroom-mode-line))
+
+  ;; save the status of `visual-fill-column-mode' before (re)enabling it
+  ;; with writeroom-specific settings.
+  (setq writeroom--saved-visual-fill-column visual-fill-column-mode)
   (setq visual-fill-column-width (if (floatp writeroom-width)
                                      (truncate (* (window-total-width) writeroom-width))
                                    writeroom-width)
         visual-fill-column-center-text t
         visual-fill-column-disable-fringe writeroom-disable-fringe)
   (visual-fill-column-mode 1)
+
   ;; if the current buffer is displayed in some window, the windows'
   ;; margins and fringes must be adjusted.
   (mapc (lambda (w)
@@ -244,7 +271,9 @@ and the fringes. It also runs the functions in
 was active."
   (setq writeroom--buffers (delq (current-buffer) writeroom--buffers))
   (when (not writeroom--buffers)
-    (writeroom--activate-global-effects nil))
+    (writeroom--activate-global-effects nil)
+    (if writeroom-restore-window-config
+        (set-window-configuration writeroom--saved-window-config)))
   (when writeroom--saved-mode-line
     (setq mode-line-format writeroom--saved-mode-line)
     (setq writeroom--saved-mode-line nil))
@@ -252,13 +281,19 @@ was active."
   (kill-local-variable 'visual-fill-column-width)
   (kill-local-variable 'visual-fill-column-center-text)
   (kill-local-variable 'visual-fill-column-disable-fringe)
+
   ;; if the current buffer is displayed in some window, the windows'
   ;; margins and fringes must be adjusted.
   (mapc (lambda (w)
           (with-selected-window w
             (set-window-margins (selected-window) 0 0)
             (set-window-fringes (selected-window) nil nil)))
-        (get-buffer-window-list (current-buffer) nil)))
+        (get-buffer-window-list (current-buffer) nil))
+
+  ;; reenable `visual-fill-colummn-mode' with original settings if it was
+  ;; active before activating `writeroom-mode'.
+  (if writeroom--saved-visual-fill-column
+      (visual-fill-column-mode 1)))
 
 (provide 'writeroom-mode)
 

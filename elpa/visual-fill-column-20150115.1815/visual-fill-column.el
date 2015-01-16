@@ -6,7 +6,7 @@
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 2015
-;; Version: 20150114.1531
+;; Version: 20150115.1815
 ;; X-Original-Version: 1.2
 ;; Package-Requires: ((emacs "24.3"))
 
@@ -53,7 +53,7 @@ this option is set to a value, it is used instead."
   "Disable the fringe when `visual-fill-column-mode' is active."
   :group 'visual-fill-column
   :type '(choice (const :tag "Do not disable the fringes" nil)
-                 (const :tag "Disable the fringes' t")))
+                 (const :tag "Disable the fringes" t)))
 (make-variable-buffer-local 'visual-fill-column-disable-fringe)
 (put 'visual-fill-column-disable-fringe 'safe-local-variable 'symbolp)
 

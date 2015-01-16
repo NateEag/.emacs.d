@@ -73,7 +73,7 @@ possible to specify a special mode line for `writeroom-mode'
 buffers. If this option is chosen, the default is to only show
 the buffer's modification status and the buffer name, but the
 format can be customized. See the documentation for the variable
-`mode-line-format' for further inormation."
+`mode-line-format' for further information."
   :group 'writeroom
   :type '(choice (const :tag "Disable the mode line" nil)
                  (const :tag "Use default mode line" t)
@@ -133,6 +133,16 @@ buffer."
   :group 'writeroom
   :type '(choice (const :tag "Do not restore window configuration" nil)
                  (const :tag "Restore window configuration" t)))
+
+(defcustom writeroom-extra-line-spacing nil
+  "Additional line spacing for `writeroom-mode`"
+  :group 'writeroom
+  :type '(choice (const :tag "Do not add extra line spacing" :value nil)
+                 (integer :tag "Absolute height" :value 5)
+                 (float :tag "Relative height" :value 0.8)))
+(defvar writeroom--saved-line-spacing nil
+  "Saved value of `line-spacing'.")
+(make-variable-buffer-local 'writeroom--saved-line-spacing)
 
 (defvar writeroom--saved-window-config nil
   "Window configuration active before `writeroom-mode' is activated.")
@@ -230,8 +240,7 @@ otherwise."
 
 (defun writeroom--enable ()
   "Set up writeroom-mode for the current buffer.
-This function sets the margins, disables the mode line and the
-fringes, and maximizes the window. It also runs the functions in
+This function also runs the functions in
 `writeroom-global-effects' if the current buffer is the first
 buffer in which `writeroom-mode' is activated."
   (when (not writeroom--buffers)
@@ -239,8 +248,14 @@ buffer in which `writeroom-mode' is activated."
     (if writeroom-restore-window-config
         (setq writeroom--saved-window-config (current-window-configuration))))
   (add-to-list 'writeroom--buffers (current-buffer))
+
   (when writeroom-maximize-window
     (delete-other-windows))
+
+  (when writeroom-extra-line-spacing
+    (setq writeroom--saved-line-spacing line-spacing)
+    (setq line-spacing writeroom-extra-line-spacing))
+
   (unless (eq writeroom-mode-line t) ; if t, use standard mode line
     (setq writeroom--saved-mode-line mode-line-format)
     (setq mode-line-format writeroom-mode-line))
@@ -264,8 +279,7 @@ buffer in which `writeroom-mode' is activated."
 
 (defun writeroom--disable ()
   "Reset the current buffer to its normal appearance.
-This function sets the margins to 0 and reenables the mode line
-and the fringes. It also runs the functions in
+This function also runs the functions in
 `writeroom-global-effects' to undo their effects if
 `writeroom-mode' is deactivated in the last buffer in which it
 was active."
@@ -274,9 +288,15 @@ was active."
     (writeroom--activate-global-effects nil)
     (if writeroom-restore-window-config
         (set-window-configuration writeroom--saved-window-config)))
+
+  (when writeroom-extra-line-spacing
+    (setq line-spacing writeroom--saved-line-spacing)
+    (setq writeroom--saved-line-spacing nil))
+
   (when writeroom--saved-mode-line
     (setq mode-line-format writeroom--saved-mode-line)
     (setq writeroom--saved-mode-line nil))
+
   (visual-fill-column-mode -1)
   (kill-local-variable 'visual-fill-column-width)
   (kill-local-variable 'visual-fill-column-center-text)

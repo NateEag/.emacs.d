@@ -227,12 +227,6 @@ I.e use the -path/ipath arguments of find instead of -name/iname."
   :group 'helm-files
   :type 'hook)
 
-(defcustom helm-find-files-sort-directories nil
-  "When nil allow sorting directories when input is a matched directory.
-Note that this will be much slower."
-  :group 'helm-files
-  :type 'boolean)
-
 
 ;;; Faces
 ;;
@@ -1843,16 +1837,15 @@ return FNAME prefixed with [?]."
            (concat prefix-new " " fname)))))
 
 (defun helm-ff-score-candidate-for-pattern (str pattern)
-  (if (and (member str '("." ".."))
-           helm-find-files-sort-directories)
+  (if (member str '("." ".."))
       200
       (helm-score-candidate-for-pattern str pattern)))
 
 (defun helm-ff-sort-candidates (candidates _source)
   "Sort function for `helm-source-find-files'.
 Return candidates prefixed with basename of `helm-input' first."
-  (if (or (and (null helm-find-files-sort-directories)
-               (file-directory-p helm-input))
+  (if (or (and (file-directory-p helm-input)
+               (string-match "/\\'" helm-input))
           (null candidates))
       candidates
       (let* ((c1        (car candidates))

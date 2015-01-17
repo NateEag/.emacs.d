@@ -193,7 +193,7 @@
 	   ((:url . "http://elpa.gnu.org/packages/flylisp.html")
 	    (:keywords))])
  (ggtags .
-	 [(0 8 8)
+	 [(0 8 9)
 	  ((emacs
 	    (24))
 	   (cl-lib

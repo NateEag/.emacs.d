@@ -43,7 +43,15 @@
 
 
 
-(defconst ac-version "1.4.0")
+(defconst ac-version "1.4.0"
+  "Version of auto-complete in string format.
+Use `version-to-list' to get version component.")
+
+(defconst ac-version-major (car (version-to-list ac-version))
+  "Major version number of auto-complete")
+
+(defconst ac-version-minor (cadr (version-to-list ac-version))
+  "Minor version number of auto-complete")
 
 (eval-when-compile
   (require 'cl))
@@ -429,7 +437,6 @@ If there is no common part, this will be nil.")
     (define-key map "\t" 'ac-expand)
     (define-key map [tab] 'ac-expand)
     (define-key map "\r" 'ac-complete)
-    (define-key map [return] 'ac-complete)
     (define-key map (kbd "M-TAB") 'auto-complete)
 
     (define-key map "\M-n" 'ac-next)
@@ -463,6 +470,7 @@ If there is no common part, this will be nil.")
 (defvar ac-menu-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map ac-completing-map)
+    (define-key map (kbd "RET") 'ac-complete)
     (define-key map "\C-n" 'ac-next)
     (define-key map "\C-p" 'ac-previous)
     (define-key map "\C-s" 'ac-isearch)
@@ -965,13 +973,13 @@ You can not use it in source definition like (prefix . `NAME')."
 (defun ac-prefix (requires ignore-list)
   (loop with current = (point)
         with point
+        with point-def
         with prefix-def
         with sources
         for source in (ac-compiled-sources)
         for prefix = (assoc-default 'prefix source)
         for req = (or (assoc-default 'requires source) requires 1)
 
-        if (null prefix-def)
         do
         (unless (member prefix ignore-list)
           (save-excursion
@@ -994,10 +1002,12 @@ You can not use it in source definition like (prefix . `NAME')."
                      (integerp req)
                      (< (- current point) req))
                 (setq point nil))
-            (if point
-                (setq prefix-def prefix))))
-
-        if (equal prefix prefix-def) do (push source sources)
+            (when point
+                (if (null prefix-def)
+                    (setq prefix-def prefix
+                          point-def point))
+                (if (equal point point-def)
+                    (push source sources)))))
 
         finally return
         (and point (list prefix-def point (nreverse sources)))))
@@ -1170,6 +1180,22 @@ You can not use it in source definition like (prefix . `NAME')."
   "Abort completion."
   (ac-cleanup))
 
+(defun ac-extend-region-to-delete (string)
+  "Determine the boundary of the region to delete before
+inserting the completed string. This will be either the position
+of current point, or the end of the symbol at point, if the text
+from point to end of symbol is the right part of the completed
+string."
+  (let* ((end-of-symbol (or (cdr-safe (bounds-of-thing-at-point 'symbol))
+                            (point)))
+         (remaindar (buffer-substring-no-properties (point) end-of-symbol))
+         (remaindar-length (length remaindar)))
+    (if (and (>= (length string) remaindar-length)
+             (string= (substring-no-properties string (- remaindar-length))
+                      remaindar))
+        end-of-symbol
+      (point))))
+ 
 (defun ac-expand-string (string &optional remove-undo-boundary)
   "Expand `STRING' into the buffer and update `ac-prefix' to `STRING'.
 This function records deletion and insertion sequences by `undo-boundary'.
@@ -1189,10 +1215,10 @@ that have been made before in this function.  When `buffer-undo-list' is
         (progn
           (let (buffer-undo-list)
             (save-excursion
-              (delete-region ac-point (point))))
+              (delete-region ac-point (ac-extend-region-to-delete string))))
           (setq buffer-undo-list
                 (nthcdr 2 buffer-undo-list)))
-      (delete-region ac-point (point)))
+      (delete-region ac-point (ac-extend-region-to-delete string)))
     (insert (substring-no-properties string))
     ;; Sometimes, possible when omni-completion used, (insert) added
     ;; to buffer-undo-list strange record about position changes.
@@ -1487,22 +1513,32 @@ that have been made before in this function.  When `buffer-undo-list' is
     (if (eq this-command 'ac-previous)
         (setq ac-dwim-enable t))))
 
-(defun ac-expand ()
-  "Try expand, and if expanded twice, select next candidate."
-  (interactive)
+(defun ac-expand (arg)
+  "Try expand, and if expanded twice, select next candidate.
+If given a prefix argument, select the previous candidate."
+  (interactive "P")
   (unless (ac-expand-common)
     (let ((string (ac-selected-candidate)))
       (when string
         (when (equal ac-prefix string)
-          (ac-next)
+          (if (not arg)
+              (ac-next)
+            (ac-previous))
           (setq string (ac-selected-candidate)))
-        (ac-expand-string string (eq last-command this-command))
+        (ac-expand-string string
+                          (or (eq last-command 'ac-expand)
+                             (eq last-command 'ac-expand-previous)))
         ;; Do reposition if menu at long line
         (if (and (> (popup-direction ac-menu) 0)
-                 (ac-menu-at-wrapper-line-p))
+               (ac-menu-at-wrapper-line-p))
             (ac-reposition))
         (setq ac-show-menu t)
         string))))
+
+(defun ac-expand-previous (arg)
+  "Like `ac-expand', but select previous candidate."
+  (interactive "P")
+  (ac-expand (not arg)))
 
 (defun ac-expand-common ()
   "Try to expand meaningful common part."

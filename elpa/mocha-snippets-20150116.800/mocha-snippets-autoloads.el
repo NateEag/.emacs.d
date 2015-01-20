@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "mocha-snippets" "mocha-snippets.el" (21686
-;;;;;;  45428 0 0))
+;;;### (autoloads nil "mocha-snippets" "mocha-snippets.el" (21694
+;;;;;;  30892 0 0))
 ;;; Generated autoloads from mocha-snippets.el
 
 (autoload 'mocha-snippets-initialize "mocha-snippets" "\
@@ -16,8 +16,8 @@
 
 ;;;***
 
-;;;### (autoloads nil nil ("mocha-snippets-pkg.el") (21686 45428
-;;;;;;  950920 0))
+;;;### (autoloads nil nil ("mocha-snippets-pkg.el") (21694 30892
+;;;;;;  827405 0))
 
 ;;;***
 

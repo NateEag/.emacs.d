@@ -3,26 +3,24 @@
 ;; Copyright (C) 2015 Gunther Hagleitner
 
 ;; Author: Gunther Hagleitner
-;; Version: 20150116.58
+;; Version: 20150119.2243
 ;; X-Original-Version: 0.1
 ;; Keywords: games
 ;; URL: https://github.com/hagleitn/speed-type
 ;; Package-Requires: ((cl-lib "0.3"))
 
-;; This file is NOT part of GNU Emacs.
-
-;; GNU Emacs is free software: you can redistribute it and/or modify
+;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
 ;; (at your option) any later version.
 
-;; GNU Emacs is distributed in the hope that it will be useful,
+;; This program is distributed in the hope that it will be useful,
 ;; but WITHOUT ANY WARRANTY; without even the implied warranty of
 ;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with GNU Emacs.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;
@@ -208,7 +206,8 @@ Total errors:\t%d
            speed-type--entries
            speed-type--errors
            speed-type--corrections
-           (speed-type--elapsed-time))))
+           (speed-type--elapsed-time)))
+  (read-only-mode))
 
 (defun speed-type--diff (orig new start end)
   "Update stats and buffer contents with result of changes in text."
@@ -226,7 +225,9 @@ Total errors:\t%d
                  (store-substring speed-type--mod-str pos0 2)))
         (cl-incf speed-type--entries)
         (cl-decf speed-type--remaining)
-        (add-face-text-property pos (1+ pos) `(:foreground ,color))))))
+	(if (fboundp 'add-face-text-property)
+	    (add-face-text-property pos (1+ pos) `(:foreground ,color))
+	  (add-text-properties pos (1+ pos) `(face (:foreground ,color))))))))
 
 (defun speed-type--change (start end length)
   "Handle buffer changes.
@@ -286,11 +287,13 @@ are color coded and stats are gathered about the typing performance."
     (add-hook 'first-change-hook 'speed-type--first-change)
     (message "Timer will start when you type the first character.")))
 
+;;;###autoload
 (defun speed-type-region (start end)
   "Open copy of [START,END] in a new buffer to speed type the text."
   (interactive "r")
   (speed-type--setup (buffer-substring start end)))
 
+;;;###autoload
 (defun speed-type-buffer ()
   "Open copy of buffer contents in a new buffer to speed type the text."
   (interactive)
@@ -301,6 +304,7 @@ are color coded and stats are gathered about the typing performance."
 (defvar speed-type--skip-paragraphs 30)
 (defvar speed-type--max-paragraphs 200)
 
+;;;###autoload
 (defun speed-type-text ()
   "Setup a new text sample to practice touch or speed typing."
   (interactive)

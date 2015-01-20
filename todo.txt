@@ -78,6 +78,9 @@
  bleeding-edge CSS 3 stuff. Get that in there. Ideally, generated from the
  spec, along with basic docs, and adding ';' at the end of property values.
 
+-Maybe add ac-html-csswatcher package to my setup. Parses CSS/LESS files in your
+ project to give you a class/ID ac-source when writing HTML.
+
 -It would be awesome to have a flycheck module that gave warnings/errors based
  on (configurable) browsers you just violated support for. The caniuse data
  makes this feasible, but maybe a royal pain.

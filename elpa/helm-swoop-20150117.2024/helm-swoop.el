@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2013 by Shingo Fukuyama
 
-;; Version: 20141222.1902
+;; Version: 20150117.2024
 ;; X-Original-Version: 1.4
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
@@ -967,7 +967,8 @@ If $linum is number, lines are separated by $linum"
             (cons (point) (buffer-name (current-buffer)))))
   (setq helm-swoop-last-line-info
         (cons (current-buffer) (line-number-at-pos)))
-  (let (($buffs (or $buflist (helm-multi-swoop--get-marked-buffers)))
+  (let (($buffs (or $buflist (helm-multi-swoop--get-marked-buffers)
+                    (error "No buffer selected")))
         $contents
         $preserve-position)
     (setq helm-multi-swoop-last-selected-buffers $buffs)

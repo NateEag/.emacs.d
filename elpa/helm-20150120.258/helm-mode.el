@@ -210,7 +210,11 @@ If COLLECTION is an `obarray', a TEST should be needed. See `obarray'."
                       c)
               c)
         into lst
-        else collect c into lst
+        else collect (if (and (stringp c)
+                              (string-match "\n" c))
+                         (cons (replace-regexp-in-string "\n" "->" c) c)
+                         c)
+        into lst
         finally return (helm-fast-remove-dups lst :test 'equal)))
 
 ;;;###autoload
@@ -776,7 +780,7 @@ Keys description:
                       (init . (lambda ()
                                 (setq helm-ff-auto-update-flag
                                       helm-ff-auto-update-initial-value)
-                                (setq helm-ff-auto-update--state
+                                (setq helm-ff--auto-update-state
                                       helm-ff-auto-update-flag)
                                 (helm-set-local-variable 'helm-in-file-completion-p t)))
                       (mode-line . ,mode-line)

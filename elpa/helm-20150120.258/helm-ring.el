@@ -359,10 +359,17 @@ It is drop-in replacement of `yank-pop'.
 
 First call open the kill-ring browser, next calls move to next line."
   (interactive)
-  (helm :sources helm-source-kill-ring
-        :buffer "*helm kill ring*"
-        :resume 'noresume
-        :allow-nest t))
+  (let ((enable-recursive-minibuffers t))
+    (helm :sources helm-source-kill-ring
+          :buffer "*helm kill ring*"
+          :resume 'noresume
+          :allow-nest t)))
+
+(defvar helm-kmacro-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map helm-map)
+    (define-key map (kbd "C-c ?") 'helm-kmacro-help)
+    map))
 
 ;;;###autoload
 (defun helm-execute-kmacro ()
@@ -379,6 +386,7 @@ This command is useful when used with persistent action."
                                kmacro-ring)
                          :test 'equal))
           :multiline t
+          :keymap helm-kmacro-map
           :candidate-transformer
           (lambda (candidates)
             (cl-loop for c in candidates collect
@@ -395,7 +403,8 @@ This command is useful when used with persistent action."
              (kmacro-push-ring)
              (kmacro-split-ring-element candidate)
              (kmacro-exec-ring-item
-              candidate helm-current-prefix-arg))))))
+              candidate helm-current-prefix-arg))))
+        :buffer "*helm kmacro*"))
 
 (provide 'helm-ring)
 

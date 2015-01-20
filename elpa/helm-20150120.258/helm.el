@@ -231,22 +231,6 @@ Any other keys pressed run their assigned command defined in MAP and exit the lo
     (define-key map (kbd "C-!")        'helm-toggle-suspend-update)
     (define-key map (kbd "C-x b")      'helm-resume-previous-session-after-quit)
     (define-key map (kbd "C-x C-b")    'helm-resume-list-buffers-after-quit)
-    ;; Disable usage of the mouse while in helm.
-    (define-key map (kbd "<down-mouse-1>")   'ignore)
-    (define-key map (kbd "<drag-mouse-1>")   'ignore)
-    (define-key map (kbd "<mouse-1>")        'ignore)
-    (define-key map (kbd "<double-mouse-1>") 'ignore)
-    (define-key map (kbd "<triple-mouse-1>") 'ignore)
-    (define-key map (kbd "<down-mouse-2>")   'ignore)
-    (define-key map (kbd "<drag-mouse-2>")   'ignore)
-    (define-key map (kbd "<mouse-2>")        'ignore)
-    (define-key map (kbd "<double-mouse-2>") 'ignore)
-    (define-key map (kbd "<triple-mouse-2>") 'ignore)
-    (define-key map (kbd "<down-mouse-3>")   'ignore)
-    (define-key map (kbd "<drag-mouse-3>")   'ignore)
-    (define-key map (kbd "<mouse-3>")        'ignore)
-    (define-key map (kbd "<double-mouse-3>") 'ignore)
-    (define-key map (kbd "<triple-mouse-3>") 'ignore)
     ;; Disable `file-cache-minibuffer-complete'.
     (define-key map (kbd "<C-tab>")    'undefined)
     ;; Multi keys
@@ -547,6 +531,17 @@ See `fit-window-to-buffer' for more infos."
   :group 'helm
   :type 'integer)
 
+(defcustom helm-input-method-verbose-flag nil
+  "The default value of `input-method-verbose-flag' to use in helm minibuffer.
+It is nil by default to allow helm updating and exiting without turning off
+the input method when complex methods are in use, if you set it to any other
+value allowed by `input-method-verbose-flag' you will have at each time you want
+to exit or helm update to disable the `current-input-method' with `C-\\'."
+  :group 'helm
+  :type '(radio :tag "A flag to control extra guidance given by input methods in helm."
+          (const :tag "Never provide guidance" nil)
+          (const :tag "Always provide guidance" t)
+          (const :tag "Provide guidance only in complex methods" complex-only)))
 
 ;;; Faces
 ;;
@@ -1022,13 +1017,6 @@ not `exit-minibuffer' or unwanted functions."
   "Be sure BODY is excuted in the helm window."
   (declare (indent 0) (debug t))
   `(with-selected-window (helm-window)
-     ;; This fix Issue when iconifying emacs frame
-     ;; but it seems it cause problems depending of the
-     ;; window-manager windows configuration.
-     ;; So I am disabling this for now, see Issue (#822).
-     ;; (select-frame-set-input-focus (if (minibufferp helm-current-buffer)
-     ;;                                   (selected-frame)
-     ;;                                   (last-nonminibuffer-frame)))
      ,@body))
 
 (defmacro with-helm-current-buffer (&rest body)
@@ -1819,8 +1807,9 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
     (helm-log "any-keymap = %S" any-keymap)
     (helm-log "any-default = %S" any-default)
     (helm-log "any-history = %S" any-history)
-    (let ((old-overriding-local-map overriding-terminal-local-map)
-          (non-essential t)
+    (helm--remap-mouse-events 'undefined) ; disable mouse.
+    (let ((non-essential t)
+          (input-method-verbose-flag helm-input-method-verbose-flag)
           (old--cua cua-mode)
           (helm-maybe-use-default-as-input
            (or helm-maybe-use-default-as-input ; it is let-bounded so use it.
@@ -1866,7 +1855,7 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
           (ad-deactivate 'tramp-read-passwd)
           (ad-deactivate 'ange-ftp-get-passwd))
         (helm-log "helm-alive-p = %S" (setq helm-alive-p nil))
-        (setq overriding-terminal-local-map old-overriding-local-map)
+        (helm--remap-mouse-events nil)
         (setq helm-alive-p nil)
         ;; Reset helm-pattern so that lambda's using it
         ;; before running helm will not start with its old value.
@@ -2461,6 +2450,22 @@ If no map is found in current source do nothing (keep previous map)."
         (with-current-buffer (window-buffer (minibuffer-window))
           (setq minor-mode-overriding-map-alist `((helm--minor-mode . ,it)))))))
 
+(defun helm--remap-mouse-events (binding)
+  "Remap all mouse events to BINDING.
+When BINDING is nil remap all mouse events to their original value."
+  (cl-loop for k in '([mouse-1] [down-mouse-1] [drag-mouse-1]
+                      [double-mouse-1] [triple-mouse-1]
+                      [mouse-2] [down-mouse-2] [drag-mouse-2]
+                      [double-mouse-2] [triple-mouse-2]
+                      [mouse-3] [down-mouse-3] [drag-mouse-3]
+                      [double-mouse-3] [triple-mouse-3]
+                      [mouse-4] [down-mouse-4] [drag-mouse-4]
+                      [double-mouse-4] [triple-mouse-4]
+                      [mouse-5] [down-mouse-5] [drag-mouse-5]
+                      [double-mouse-5] [triple-mouse-5])
+           do
+           (define-key global-map (vector 'remap (lookup-key global-map k)) binding)))
+
 
 ;; Core: clean up
 
@@ -2898,14 +2903,17 @@ It is meant to use with `filter-one-by-one' slot."
     (with-temp-buffer
       (insert display)
       (goto-char (point-min))
-      (cl-loop with pattern = (if (string-match-p " " helm-pattern)
-                                  (split-string helm-pattern)
-                                  (split-string helm-pattern "" t))
-               for p in pattern
-               do
-               (when (search-forward p nil t)
-                 (add-text-properties
-                  (match-beginning 0) (match-end 0) '(face helm-match))))
+      (if (search-forward helm-pattern nil t)
+          (add-text-properties
+           (match-beginning 0) (match-end 0) '(face helm-match))
+          (cl-loop with pattern = (if (string-match-p " " helm-pattern)
+                                      (split-string helm-pattern)
+                                      (split-string helm-pattern "" t))
+                   for p in pattern
+                   do
+                   (when (search-forward p nil t)
+                     (add-text-properties
+                      (match-beginning 0) (match-end 0) '(face helm-match)))))
       (setq display (buffer-string)))
     (if real (cons display real) display)))
 
@@ -2929,7 +2937,7 @@ if ITEM-COUNT reaches LIMIT, exit from inner loop."
   `(unless (gethash ,candidate ,hash)
      (unless (assq 'allow-dups ,source)
        (puthash ,candidate t ,hash))
-     (helm--maybe-process-filter-one-by-one-candidate ,candidate source)
+     (helm--maybe-process-filter-one-by-one-candidate ,candidate ,source)
      (push ,candidate ,newmatches)
      (cl-incf ,item-count)
      (when (= ,item-count ,limit) (cl-return))))

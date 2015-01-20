@@ -668,37 +668,6 @@ MODES."
   :type 'boolean
   :group 'smartparens)
 
-(defcustom sp-autoinsert-if-followed-by-same 3
-  "Customizes behaviour of pair insertion if the point is followed by
-the same opening pair as currently inserted pair.
-
-The first option does not change the insertion behaviour and pairs are
-inserted normally.  For example |() followed by ( would produce (|)().
-
-The second option inserts the pair only if the opening pair
-following point is not the same as currently inserted pair.  For
-example |() followed by ( would produce (|().  If next character
-isn't part of any pair, insert normally.
-
-The third option behaves as second, but if the opening and closing
-pairs are the same, and we are looking at the closing pair, insert the
-whole pair.  For example \"|\" followed by \" produce \"\"|\"\".  This
-is useful in modes where pairs of same characters have special
-meaning, such as `markdown-mode' and * for italics and ** for bold.
-
-The forth option is a combination of first and third.  The pairs
-where opening and closing pair are different are always inserted
-normally.  The pairs with same opening and closing delimiter are
-only inserted if the enclosing expression is empty (for nested
-quotations etc.), otherwise the closing delimiter is skipped
-instead."
-  :type '(radio
-          (const :tag "Insert the pair normally" 0)
-          (const :tag "Insert the pair only if not followed by same" 1)
-          (const :tag "Insert the pair only if not followed by same, but if the closing pair is the same as opening, insert new pair (useful for nested quote insertion)" 2)
-          (const :tag "Insert the pair if opening and closing pair is the same and the containing expression is empty and always insert other pairs normally." 3))
-  :group 'smartparens)
-
 (defcustom sp-autoinsert-quote-if-followed-by-closing-pair nil
   "If non-nil, autoinsert string quote pair even if the point is followed by closing pair.
 
@@ -1272,10 +1241,43 @@ beginning."
        ,@body
        (sp--back-to-indentation ,c ,i))))
 
-(defun sp--this-command-self-insert-p ()
+;; Please contribute these if you come across some!
+(defvar sp--self-insert-commands
+  '(self-insert-command
+    org-self-insert-command
+    LaTeX-insert-left-brace)
+   "List of commands that are some sort of `self-insert-command'.
+
+Many modes rebind \"self-inserting\" keys to \"smart\" versions
+which do some additional processing before delegating the
+insertion to `self-insert-command'.  Smartparens needs to be able
+to distinguish these to properly handle insertion and reinsertion
+of pairs and wraps.")
+
+;; Please contribute these if you come across some!
+(defvar sp--special-self-insert-commands
+  '(TeX-insert-dollar)
+   "List of commands which are handled as if they were `self-insert-command's.
+
+Some modes redefine \"self-inserting\" keys to \"smart\" versions
+which do some additional processing but do _not_ delegate the
+insertion to `self-insert-command', instead inserting via
+`insert'.  Smartparens needs to be able to distinguish these to
+properly handle insertion and reinsertion of pairs and wraps.
+
+The `sp--post-self-insert-hook-handler' is called in the
+`post-command-hook' for these commands.")
+
+(defun sp--self-insert-command-p ()
   "Return non-nil if `this-command' is some sort of `self-insert-command'."
-  (memq this-command '(self-insert-command
-                       org-self-insert-command)))
+  (memq this-command sp--self-insert-commands))
+
+(defun sp--special-self-insert-command-p ()
+  "Return non-nil if `this-command' is \"special\" self insert command.
+
+A special self insert command is one that inserts a character but
+does not trigger `post-self-insert-hook'."
+  (memq this-command sp--special-self-insert-commands))
 
 (defun sp--signum (x)
   "Return 1 if X is positive, -1 if negative, 0 if zero."
@@ -2422,6 +2424,8 @@ see `sp-pair' for description."
 ;; funcions" like `my-wrap-with-paren'.
 (defun sp--post-command-hook-handler ()
   "Handle the situation after some command has executed."
+  (when (sp--special-self-insert-command-p)
+    (sp--post-self-insert-hook-handler))
   (ignore-errors
     (when smartparens-mode
       ;; handle the wrap overlays
@@ -2485,12 +2489,13 @@ see `sp-pair' for description."
       (when (eq sp-last-operation 'sp-insert-pair-delayed)
         (setq sp-last-operation nil))
 
-      (unless (sp--this-command-self-insert-p)
+      (unless (or (sp--self-insert-command-p)
+                  (sp--special-self-insert-command-p))
         ;; unless the last command was a self-insert, remove the
         ;; information about the last wrapped region.  It is only used
         ;; for: 1. deleting the wrapping immediately after the wrap,
         ;; 2. re-wrapping region immediatelly after a sucessful wrap.
-        ;; Therefore,t he deletion should have no ill-effect.  If the
+        ;; Therefore, the deletion should have no ill-effect.  If the
         ;; necessity will arise, we can add a different flag.
         (setq sp-last-wrapped-region nil)
         (setq sp-last-operation nil)
@@ -2523,6 +2528,9 @@ see `sp-pair' for description."
        (sp-wrap-overlays
         (sp-wrap-region))
        (t
+        (sp--setaction action (-when-let ((&keys :open open :close close)
+                                          (sp--pair-to-insert))
+                                (sp--wrap-repeat-last (cons open close))))
         (sp--setaction action (sp-insert-pair))
         (sp--setaction action (sp-skip-closing-pair))
         ;; if nothing happened, we just inserted a character, so
@@ -2544,6 +2552,12 @@ see `sp-pair' for description."
             (backward-char 1)
             (insert sp-escape-char))))))))
 
+;; Unfortunately, some modes rebind "inserting" keys to their own
+;; handlers but do not hand over the insertion back to
+;; `self-insert-command', rather, they insert via `insert'.
+;; Therefore, we need to call this handler in `post-command-hook' too.
+;; The list `sp--special-self-insert-commands' specifies which
+;; commands to handle specially.
 (add-hook 'post-self-insert-hook 'sp--post-self-insert-hook-handler)
 
 ;; TODO: get rid of this ugly state tracking
@@ -3100,6 +3114,18 @@ pairs insertable by trigger are returned."
     (-when-let (pairs (--filter (funcall looking-fn (sp--strict-regexp-quote (plist-get it :open))) sp-local-pairs))
       (cons :open pairs))))
 
+(defun sp--pair-to-insert-comparator (prop a b)
+  (cond
+   ;; in case of triggers shorter always wins
+   ((eq prop :trigger)
+    (< (length (plist-get a :trigger)) (length (plist-get b :trigger))))
+   ;; shorter wins only if the shorter's closing is a prefix of the
+   ;; longer's closing
+   (t
+    (if (< (length (plist-get a :open)) (length (plist-get b :open)))
+        (string-prefix-p (plist-get a :close) (plist-get b :close))
+      (not (string-prefix-p (plist-get b :close) (plist-get a :close)))))))
+
 (defun sp--pair-to-insert ()
   "Return pair that can be inserted at point.
 
@@ -3108,7 +3134,7 @@ Return nil if such pair does not exist.
 If more triggers or opening pairs are possible select the
 shortest one."
   (-when-let ((property . pairs) (sp--all-pairs-to-insert))
-    (car (--sort (< (length (plist-get it property)) (length (plist-get other property))) pairs))))
+    (car (--sort (sp--pair-to-insert-comparator property it other) pairs))))
 
 (defun sp--longest-prefix-to-insert ()
   "Return pair with the longest :open which can be inserted at point."
@@ -3160,132 +3186,113 @@ setting `sp-autoinsert-pair' to nil.
 
 You can globally disable insertion of closing pair if point is
 followed by the matching opening pair.  It is disabled by
-default.  See `sp-autoinsert-if-followed-by-same' for more info."
+default."
   (-let* ((active-pair (sp--pair-to-insert))
           ((open-pair close-pair trig) (sp--insert-pair-get-pair-info active-pair)))
-    ;; Test "repeat last wrap" here.  If we wrap a region and then
-    ;; type in a pair, wrap again around the last active region.  This
-    ;; should probably be tested in the `self-insert-command'
-    ;; advice... but we're lazy :D
-    (if (and sp-autowrap-region
-             active-pair
-             (sp--wrap-repeat-last (cons open-pair close-pair)))
-        sp-last-operation
-      (if (not (unwind-protect
-                   (progn
-                     (when pair (insert pair))
-                     (and sp-autoinsert-pair
-                          active-pair
-                          (if (eq sp-autoskip-closing-pair 'always)
-                              (or (not (equal open-pair close-pair))
-                                  (not (sp-skip-closing-pair nil t)))
-                            t)
-                          (sp--do-action-p open-pair 'insert t)
-                          (if sp-autoinsert-quote-if-followed-by-closing-pair t
-                            (if (and (eq (char-syntax (preceding-char)) ?\")
-                                     ;; this is called *after* the character is
-                                     ;; inserted.  Therefore, if we are not in string, it
-                                     ;; must have been closed just now
-                                     (not (sp-point-in-string)))
-                                (let ((pattern (sp--get-closing-regexp)))
-                                  ;; If we simply insert closing ", we also
-                                  ;; don't want to escape it.  Therefore, we
-                                  ;; need to set `sp-last-operation'
-                                  ;; accordingly to be checked in
-                                  ;; `self-insert-command' advice.
-                                  (if (sp--looking-at pattern)
-                                      (progn (setq sp-last-operation 'sp-self-insert-no-escape) nil)
-                                    t))
-                              t))
-                          (cond
-                           ((eq sp-autoinsert-if-followed-by-same 0) t)
-                           ((eq sp-autoinsert-if-followed-by-same 1)
-                            (not (sp--looking-at (sp--strict-regexp-quote open-pair))))
-                           ((eq sp-autoinsert-if-followed-by-same 2)
-                            (or (not (sp--looking-at (sp--strict-regexp-quote open-pair)))
-                                (and (equal open-pair close-pair)
-                                     (eq sp-last-operation 'sp-insert-pair)
-                                     (save-excursion
-                                       (backward-char 1)
-                                       (sp--looking-back (sp--strict-regexp-quote open-pair))))))
-                           ((eq sp-autoinsert-if-followed-by-same 3)
-                            (or (not (sp--get-active-overlay 'pair))
-                                (not (sp--looking-at (sp--strict-regexp-quote open-pair)))
-                                (and (equal open-pair close-pair)
-                                     (eq sp-last-operation 'sp-insert-pair)
-                                     (save-excursion
-                                       (backward-char (length trig))
-                                       (sp--looking-back (sp--strict-regexp-quote open-pair))))
-                                (not (equal open-pair close-pair)))))))
-                 (when pair (delete-char (- (length pair))))))
-          ;; if this pair could not be inserted, we try the procedure
-          ;; again with this pair removed from sp-pair-list to give
-          ;; chance to other pairs sharing a common suffix (for
-          ;; example \[ and [)
-          (let ((new-sp-pair-list (--remove (equal (car it) open-pair) sp-pair-list)))
-            (when (> (length sp-pair-list) (length new-sp-pair-list))
-              (let ((sp-pair-list new-sp-pair-list))
-                (sp-insert-pair))))
-        ;; setup the delayed insertion here.
-        (if (sp-get-pair open-pair :when-cond)
-            (progn
-              (setq sp-delayed-pair (cons open-pair (- (point) (length open-pair))))
-              (setq sp-last-operation 'sp-insert-pair-delayed))
-          (unless pair (delete-char (- (length trig))))
-          (insert open-pair)
-          (sp--run-hook-with-args open-pair :pre-handlers 'insert)
-          (--when-let (sp--pair-to-uninsert)
-            (let ((cl (plist-get it :close)))
-              (when (and (sp--looking-at-p (sp--strict-regexp-quote cl))
-                         (not (string-prefix-p cl close-pair)))
-                (delete-char (length cl)))))
-          (insert close-pair)
-          (backward-char (length close-pair))
-          (sp--pair-overlay-create (- (point) (length open-pair))
-                                   (+ (point) (length close-pair))
-                                   open-pair)
+    (if (not (unwind-protect
+                 (progn
+                   (when pair (insert pair))
+                   (and sp-autoinsert-pair
+                        active-pair
+                        (if (eq sp-autoskip-closing-pair 'always)
+                            (or (not (equal open-pair close-pair))
+                                (not (sp-skip-closing-pair nil t)))
+                          t)
+                        (sp--do-action-p open-pair 'insert t)
+                        (if sp-autoinsert-quote-if-followed-by-closing-pair t
+                          (if (and (eq (char-syntax (preceding-char)) ?\")
+                                   ;; this is called *after* the character is
+                                   ;; inserted.  Therefore, if we are not in string, it
+                                   ;; must have been closed just now
+                                   (not (sp-point-in-string)))
+                              (let ((pattern (sp--get-closing-regexp)))
+                                ;; If we simply insert closing ", we also
+                                ;; don't want to escape it.  Therefore, we
+                                ;; need to set `sp-last-operation'
+                                ;; accordingly to be checked in
+                                ;; `self-insert-command' advice.
+                                (if (sp--looking-at pattern)
+                                    (progn (setq sp-last-operation 'sp-self-insert-no-escape) nil)
+                                  t))
+                            t))
+                        ;; was sp-autoinsert-if-followed-by-same
+                        (or (not (sp--get-active-overlay 'pair))
+                            (not (sp--looking-at (sp--strict-regexp-quote open-pair)))
+                            (and (equal open-pair close-pair)
+                                 (eq sp-last-operation 'sp-insert-pair)
+                                 (save-excursion
+                                   (backward-char (length trig))
+                                   (sp--looking-back (sp--strict-regexp-quote open-pair))))
+                            (not (equal open-pair close-pair)))))
+               (when pair (delete-char (- (length pair))))))
+        ;; if this pair could not be inserted, we try the procedure
+        ;; again with this pair removed from sp-pair-list to give
+        ;; chance to other pairs sharing a common suffix (for
+        ;; example \[ and [)
+        (let ((new-sp-pair-list (--remove (equal (car it) open-pair) sp-pair-list)))
+          (when (> (length sp-pair-list) (length new-sp-pair-list))
+            (let ((sp-pair-list new-sp-pair-list))
+              (sp-insert-pair))))
+      ;; setup the delayed insertion here.
+      (if (sp-get-pair open-pair :when-cond)
+          (progn
+            (setq sp-delayed-pair (cons open-pair (- (point) (length open-pair))))
+            (setq sp-last-operation 'sp-insert-pair-delayed))
+        (unless pair (delete-char (- (length trig))))
+        (insert open-pair)
+        (sp--run-hook-with-args open-pair :pre-handlers 'insert)
+        (--when-let (sp--pair-to-uninsert)
+          (let ((cl (plist-get it :close)))
+            (when (and (sp--looking-at-p (sp--strict-regexp-quote cl))
+                       (not (string-prefix-p cl close-pair)))
+              (delete-char (length cl)))))
+        (insert close-pair)
+        (backward-char (length close-pair))
+        (sp--pair-overlay-create (- (point) (length open-pair))
+                                 (+ (point) (length close-pair))
+                                 open-pair)
 
-          ;; we only autoescape if the pair is a single character string
-          ;; delimiter.  More elaborate pairs are probably already
-          ;; escaped.  We leave the responsibility to the user, since
-          ;; it's not that common and the usecases might vary -> there's
-          ;; no good "default" case.
-          (when (and sp-autoescape-string-quote
-                     sp-point-inside-string
-                     (or
-                      (and (equal open-pair "\"") (equal close-pair "\"")
-                           (eq sp-point-inside-string ?\"))
-                      (and (equal open-pair "'") (equal close-pair "'")
-                           (eq sp-point-inside-string ?')))
-                     (or (not (memq major-mode sp-autoescape-string-quote-if-empty))
-                         ;; Test if the string is empty here, by which
-                         ;; we mean the point is surrounded by the
-                         ;; string delimiters.  This enables us to
-                         ;; write e.g. """""" in python docs.
-                         (cl-labels ((check-quote (delimiter)
-                                                  (and (equal (char-after (1+ (point))) delimiter)
-                                                       (equal (char-before (1- (point))) delimiter))))
-                           (not (or (check-quote ?\")
-                                    (check-quote ?'))))))
-            (save-excursion
-              (backward-char 1)
-              (insert sp-escape-char)
-              (forward-char 1)
-              (insert sp-escape-char))
-            (overlay-put (sp--get-active-overlay 'pair) 'pair-id "\\\""))
+        ;; we only autoescape if the pair is a single character string
+        ;; delimiter.  More elaborate pairs are probably already
+        ;; escaped.  We leave the responsibility to the user, since
+        ;; it's not that common and the usecases might vary -> there's
+        ;; no good "default" case.
+        (when (and sp-autoescape-string-quote
+                   sp-point-inside-string
+                   (or
+                    (and (equal open-pair "\"") (equal close-pair "\"")
+                         (eq sp-point-inside-string ?\"))
+                    (and (equal open-pair "'") (equal close-pair "'")
+                         (eq sp-point-inside-string ?')))
+                   (or (not (memq major-mode sp-autoescape-string-quote-if-empty))
+                       ;; Test if the string is empty here, by which
+                       ;; we mean the point is surrounded by the
+                       ;; string delimiters.  This enables us to
+                       ;; write e.g. """""" in python docs.
+                       (cl-labels ((check-quote (delimiter)
+                                                (and (equal (char-after (1+ (point))) delimiter)
+                                                     (equal (char-before (1- (point))) delimiter))))
+                         (not (or (check-quote ?\")
+                                  (check-quote ?'))))))
+          (save-excursion
+            (backward-char 1)
+            (insert sp-escape-char)
+            (forward-char 1)
+            (insert sp-escape-char))
+          (overlay-put (sp--get-active-overlay 'pair) 'pair-id "\\\""))
 
-          (when sp-undo-pairs-separately
-            (sp--split-last-insertion-undo (+ (length open-pair) (length close-pair)))
-            ;; TODO: abc\{abc\} undo undo \{asd\} . next undo removes the
-            ;; entire \{asd\} if we do not insert two nils here.
-            ;; Normally, repeated nils are ignored so it shouldn't
-            ;; matter.  It would still be useful to inspect further.
-            (push nil buffer-undo-list)
-            (push nil buffer-undo-list))
-          (sp--run-hook-with-args open-pair :post-handlers 'insert)
-          (setq sp-last-inserted-pair open-pair)
-          (setq sp-recent-keys nil)
-          (setq sp-last-operation 'sp-insert-pair))))))
+        (when sp-undo-pairs-separately
+          (sp--split-last-insertion-undo (+ (length open-pair) (length close-pair)))
+          ;; TODO: abc\{abc\} undo undo \{asd\} . next undo removes the
+          ;; entire \{asd\} if we do not insert two nils here.
+          ;; Normally, repeated nils are ignored so it shouldn't
+          ;; matter.  It would still be useful to inspect further.
+          (push nil buffer-undo-list)
+          (push nil buffer-undo-list))
+        (sp--run-hook-with-args open-pair :post-handlers 'insert)
+        (setq sp-last-inserted-pair open-pair)
+        (setq sp-recent-keys nil)
+        (setq sp-last-operation 'sp-insert-pair)))))
 
 (defun sp--wrap-repeat-last (active-pair)
   "If the last operation was a wrap and `sp-wrap-repeat-last' is

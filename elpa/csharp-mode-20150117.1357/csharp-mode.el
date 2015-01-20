@@ -5,7 +5,7 @@
 ;; Maintainer : Jostein Kjønigsen <jostein@gmail.com>
 ;; Created    : Feburary 2005
 ;; Modified   : November 2014
-;; Version: 20141204.2302
+;; Version: 20150117.1357
 ;; X-Original-Version    : 0.8.8
 ;; Keywords   : c# languages oop mode
 ;; X-URL      : https://github.com/josteink/csharp-mode
@@ -348,11 +348,6 @@
   ;;(error (byte-compile-dest-file))
   ;;(error (c-get-current-file))
 
-  (defconst csharp-aspnet-directive-re
-    "<%@.+?%>"
-    "Regex for matching directive blocks in ASP.NET files (.aspx, .ashx, .ascx)")
-
-
   (defconst csharp-enum-decl-re
     (concat
      "\\<enum[ \t\n\r\f\v]+"
@@ -414,16 +409,12 @@ A vsemi appears in 3 cases in C#:
 
  - in an object initializer, before the open-curly?
 
- - after an ASPNET directive, that appears in a aspx/ashx/ascx file
+ - after an ASPNET directive, that appears in a aspx/ashx/ascx file (not supported)
 
 An example of the former is  [WebMethod] or [XmlElement].
-An example of the latter is something like this:
-
-    <%@ WebHandler Language=\"C#\" Class=\"Handler\" %>
 
 Providing this function allows the indenting in csharp-mode
-to work properly with code that includes attributes and ASPNET
-directives.
+to work properly with code that includes attributes.
 
 "
   (save-excursion
@@ -437,11 +428,6 @@ directives.
               "\\(?:[A-Za-z_][[:alnum:]]*\\.\\)*"
               "[A-Za-z_][[:alnum:]]*[\ t\n\f\v\r]*"))
              (looking-at "[ \t\n\f\v\r]*{"))
-        t)
-
-       ;; put a vsemi after an ASPNET directive, like
-       ;; <%@ WebHandler Language="C#" Class="Handler" %>
-       ((looking-back (concat csharp-aspnet-directive-re "$") nil t)
         t)
 
        ;; put a vsemi after an attribute, as with
@@ -1230,51 +1216,6 @@ comment at the start of cc-engine.el for more info."
                               (c-put-font-lock-face b2 e2 'font-lock-type-face)))))
                     (goto-char (match-end 0))
                     ))
-                nil))
-
-
-           ;; Case 6: directive blocks for .aspx/.ashx/.ascx
-           ,`((lambda (limit)
-                (let ((parse-sexp-lookup-properties
-                       (cc-eval-when-compile
-                         (boundp 'parse-sexp-lookup-properties))))
-
-                  (while (re-search-forward csharp-aspnet-directive-re limit t)
-                    (csharp-log 3 "aspnet template? - %d limit(%d)" (match-beginning 1)
-                                limit)
-
-                    (unless
-                        (progn
-                          (goto-char (match-beginning 0))
-                          (c-skip-comments-and-strings limit))
-
-                        (save-match-data
-                          (let ((end-open (+ (match-beginning 0) 3))
-                                (beg-close (- (match-end 0) 2)))
-                            (c-put-font-lock-face (match-beginning 0)
-                                                  end-open
-                                                  'font-lock-preprocessor-face)
-
-                            (c-put-font-lock-face beg-close
-                                                  (match-end 0)
-                                                  'font-lock-preprocessor-face)
-
-                            ;; fontify within the directive
-                            (while (re-search-forward
-                                    ,(concat
-                                      "\\("
-                                      (c-lang-const c-symbol-key)
-                                      "\\)"
-                                      "=?"
-                                      )
-                                    beg-close t)
-
-                            (c-put-font-lock-face (match-beginning 1)
-                                                  (match-end 1)
-                                                  'font-lock-keyword-face)
-                            (c-skip-comments-and-strings beg-close))
-                            ))
-                        (goto-char (match-end 0)))))
                 nil))
 
 

@@ -6,8 +6,8 @@
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 2015
-;; Version: 20150115.1815
-;; X-Original-Version: 1.2
+;; Version: 20150117.1048
+;; X-Original-Version: 1.3
 ;; Package-Requires: ((emacs "24.3"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -49,13 +49,13 @@ this option is set to a value, it is used instead."
 (make-variable-buffer-local 'visual-fill-column-width)
 (put 'visual-fill-column-width 'safe-local-variable 'numberp)
 
-(defcustom visual-fill-column-disable-fringe t
-  "Disable the fringe when `visual-fill-column-mode' is active."
+(defcustom visual-fill-column-fringes-outside-margins t
+  "Put the fringes outside the margins."
   :group 'visual-fill-column
-  :type '(choice (const :tag "Do not disable the fringes" nil)
-                 (const :tag "Disable the fringes" t)))
-(make-variable-buffer-local 'visual-fill-column-disable-fringe)
-(put 'visual-fill-column-disable-fringe 'safe-local-variable 'symbolp)
+  :type '(choice (const :tag "Put fringes outside the margins" t)
+                 (const :tag "Keep the fringes inside the margins" nil)))
+(make-variable-buffer-local 'visual-fill-column-fringes-outside-margins)
+(put 'visual-fill-column-fringes-outside-margins 'safe-local-variable 'symbolp)
 
 (defcustom visual-fill-column-center-text nil
   "If set, center the text area in the window."
@@ -93,26 +93,13 @@ in which `visual-line-mode' is active as well."
 (defun visual-fill-column-mode--disable ()
   "Disable `visual-fill-column-mode' for the current buffer."
   (remove-hook 'window-configuration-change-hook #'visual-fill-column--adjust-window t)
-  (set-window-margins (selected-window) 0 0)
-  (when visual-fill-column-disable-fringe
-    (set-window-fringes (selected-window) nil nil)))
+  (set-window-fringes (selected-window) nil)
+  (set-window-margins (selected-window) 0 0))
 
 (defun visual-fill-column--adjust-window ()
   "Adjust the window margins and fringes."
-  (visual-fill-column--set-fringes)
+  (set-window-fringes (selected-window) nil nil visual-fill-column-fringes-outside-margins)
   (visual-fill-column--set-margins))
-
-(defun visual-fill-column--set-fringes ()
-  "Set the fringes for the current window."
-  (when visual-fill-column-disable-fringe
-    ;; the left fringe is only disabled if the text is centered
-    (let ((left (if visual-fill-column-center-text 0 nil))
-          (right 0))
-      ;; swap left & right fringes in explicitly R2L buffers
-      (when (eq bidi-paragraph-direction 'right-to-left)
-        (setq right left)
-        (setq left 0))
-      (set-window-fringes (selected-window) left right))))
 
 (defun visual-fill-column--set-margins ()
   "Set window margins for the current window."

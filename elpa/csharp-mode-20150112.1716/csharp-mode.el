@@ -5,7 +5,7 @@
 ;; Maintainer : Jostein Kjønigsen <jostein@gmail.com>
 ;; Created    : Feburary 2005
 ;; Modified   : November 2014
-;; Version: 20150117.1357
+;; Version: 20150112.1716
 ;; X-Original-Version    : 0.8.8
 ;; Keywords   : c# languages oop mode
 ;; X-URL      : https://github.com/josteink/csharp-mode
@@ -345,9 +345,6 @@
   ;; constants used in this module
   ;; ==================================================================
 
-  ;;(error (byte-compile-dest-file))
-  ;;(error (c-get-current-file))
-
   (defconst csharp-enum-decl-re
     (concat
      "\\<enum[ \t\n\r\f\v]+"
@@ -402,14 +399,12 @@ close-brace) appears.  The concept is used to allow proper
 indenting of blocks of code: Where a vsemi appears, the following
 line will not indent further.
 
-A vsemi appears in 3 cases in C#:
+A vsemi appears in 2 cases in C#:
 
  - after an attribute that decorates a class, method, field, or
    property.
 
  - in an object initializer, before the open-curly?
-
- - after an ASPNET directive, that appears in a aspx/ashx/ascx file (not supported)
 
 An example of the former is  [WebMethod] or [XmlElement].
 
@@ -1217,58 +1212,6 @@ comment at the start of cc-engine.el for more info."
                     (goto-char (match-end 0))
                     ))
                 nil))
-
-
-;;            ;; Case 5: #if
-;;            ,@(when t
-;;                `((,(byte-compile
-;;                     `(lambda (limit)
-;;                        (let ((parse-sexp-lookup-properties
-;;                               (cc-eval-when-compile
-;;                                 (boundp 'parse-sexp-lookup-properties))))
-;;                          (while (re-search-forward
-;;                                  "\\<\\(#if\\)[ \t\n\r\f\v]+\\([A-Za-z_][[:alnum:]]*\\)"
-;;                                  limit t)
-;;
-;;                            (csharp-log 3 "#if directive - %d" (match-beginning 1))
-;;
-;;                            (unless
-;;                                (progn
-;;                                  (goto-char (match-beginning 0))
-;;                                  (c-skip-comments-and-strings limit))
-;;
-;;                              (save-match-data
-;;                                (c-put-font-lock-face (match-beginning 2)
-;;                                                      (match-end 2)
-;;                                                      'font-lock-variable-name-face)
-;;                                (goto-char (match-end 0))))))
-;;                        nil))
-;;                   )))
-
-
- ;;           ,`(,(c-make-font-lock-search-function
- ;;                (concat "\\<new"
- ;;                        "[ \t\n\r\f\v]+"
- ;;                        "\\(\\(?:"
- ;;                        (c-lang-const c-symbol-key)
- ;;                        "\\.\\)*"
- ;;                        (c-lang-const c-symbol-key)
- ;;                        "\\)"
- ;;                        "[ \t\n\r\f\v]*"
- ;;                        "\\(?:"
- ;;                        "( *)[ \t\n\r\f\v]*"          ;; optional ()
- ;;                        "\\)?"
- ;;                        "{")
- ;;                '((c-font-lock-declarators limit t nil)
- ;;                  (save-match-data
- ;;                    (goto-char (match-end 0))
- ;;                    (c-put-char-property (1- (point)) 'c-type
- ;;                                         'c-decl-id-start)
- ;;                    (c-forward-syntactic-ws))
- ;;                  (goto-char (match-end 0)))))
-
-
-
 
            ;; Fontify labels after goto etc.
            ,@(when (c-lang-const c-before-label-kwds)

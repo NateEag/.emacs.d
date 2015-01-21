@@ -2323,8 +2323,14 @@ See py-no-outdent-1-re-raw, py-no-outdent-2-re-raw for better readable content "
 (defconst py-try-block-re "[ \t]*\\_<try\\_>[: \n\t]"
   "Matches the beginning of a `try' block. ")
 
-(defconst py-if-block-re "[ \t]*\\_<if\\_>[: \n\t]"
+(defconst py-for-block-re "[ \t]*\\_<for\\_> +[[:alpha:]_][[:alnum:]_]* +in +[[:alpha:]_][[:alnum:]_]* *[: \n\t]"
+  "Matches the beginning of a `try' block. ")
+
+(defconst py-if-block-re "[ \t]*\\_<if\\_> +[[:alpha:]_][[:alnum:]_]* *[: \n\t]"
   "Matches the beginning of an `if' block. ")
+
+(defconst py-elif-block-re "[ \t]*\\_<elif\\_> +[[:alpha:]_][[:alnum:]_]* *[: \n\t]"
+  "Matches the beginning of an `elif' block. ")
 
 (defconst py-class-re "[ \t]*\\_<\\(class\\)\\_>[ \n\t]"
   "Matches the beginning of a class definition. ")
@@ -6978,15 +6984,8 @@ http://docs.python.org/reference/compound_stmts.html"
                            (py-beginning-of-statement)
                            (unless (looking-at (symbol-value regexp))
                              (cdr (py--go-to-keyword (symbol-value regexp) (current-indentation))))))
-                        ;; indent from first beginning of clause matters
-                        ;; ((not (looking-at py-extended-block-or-clause-re))
-                        ;;  (py--go-to-keyword py-extended-block-or-clause-re indent)
-                        ;;  (if (looking-at (symbol-value regexp))
-                        ;;      (setq erg (point))
-                        ;;    (py--beginning-of-form-intern regexp iact (current-indentation) orig)))
                         ((numberp indent)
-                         (ignore-errors
-                           (cdr (py--go-to-keyword (symbol-value regexp) indent))))
+			 (cdr (py--go-to-keyword (symbol-value regexp) indent)))
                         (t (ignore-errors
                              (cdr (py--go-to-keyword (symbol-value regexp)
                                                     (- (progn (if (py--beginning-of-statement-p) (current-indentation) (save-excursion (py-beginning-of-statement) (current-indentation)))) py-indent-offset)))))))
@@ -11822,11 +11821,11 @@ Internal use"
       (let (pop-up-windows)
 	(py-restore-window-configuration))))))
 
-(defun py-kill-buffer-unconditional (&optional buffer)
+(defun py-kill-buffer-unconditional (buffer)
   "Kill buffer unconditional, kill buffer-process if existing. "
-  (interactive)
-  (let ((buffer (or buffer (current-buffer)))
-        proc kill-buffer-query-functions)
+  (interactive
+   (list (current-buffer)))
+  (let (proc kill-buffer-query-functions)
     (ignore-errors
       (setq proc (get-buffer-process buffer))
       (and proc (kill-process proc))

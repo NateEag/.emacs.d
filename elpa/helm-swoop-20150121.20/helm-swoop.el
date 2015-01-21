@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2013 by Shingo Fukuyama
 
-;; Version: 20150117.2024
+;; Version: 20150121.20
 ;; X-Original-Version: 1.4
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
@@ -463,6 +463,15 @@ If $linum is number, lines are separated by $linum"
                 (helm-swoop--recenter)))
     (migemo) ;;? in exchange for those matches ^ $ [0-9] .*
     ))
+
+(defun helm-c-source-multi-swoop ($buf $func $action)
+  `((name . ,$buf)
+    (candidates . ,(funcall $func))
+    (action . ,$action)
+    (header-line . ,(concat $buf "    [C-c C-e] Edit mode"))
+    (keymap . ,helm-multi-swoop-map)
+    (requires-pattern . 2)
+    (migemo)))
 
 (defun helm-c-source-swoop-multiline ($linum)
   `((name . ,(buffer-name (current-buffer)))
@@ -998,12 +1007,7 @@ If $linum is number, lines are separated by $linum"
                 (setq
                  $contents
                  (cons
-                  `((name . ,$buf)
-                    (candidates . ,(funcall $func))
-                    (action . ,$action)
-                    (header-line . ,(concat $buf "    [C-c C-e] Edit mode"))
-                    (keymap . ,helm-multi-swoop-map)
-                    (requires-pattern . 2))
+                  (helm-c-source-multi-swoop $buf $func $action)
                   $contents)))))
           $buffs)
     (unwind-protect
@@ -1181,7 +1185,8 @@ Last selected buffers will be applied to helm-multi-swoop.
   (helm-swoop--restore)
   (delete-overlay helm-swoop-line-overlay)
   (setq helm-multi-swoop-all-from-helm-swoop-last-point helm-swoop-last-point)
-  (run-with-timer 0 nil (lambda () (helm-multi-swoop-all helm-pattern)))
+  (let (($query helm-pattern))
+    (run-with-timer 0 nil (lambda () (helm-multi-swoop-all $query))))
   (helm-exit-minibuffer))
 
 (defadvice helm-resume (around helm-multi-swoop-resume activate)

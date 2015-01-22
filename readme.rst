@@ -2,7 +2,7 @@
 Nate Eagleson's Emacs Config
 ============================
 
-Ever since [Dr. Bui](http://cs.hbg.psu.edu/~bui/) told our C++ programming
+Ever since `Dr. Bui <http://cs.hbg.psu.edu/~bui/>`__ told our C++ programming
 class to use it for programming in the Sun lab, Emacs has been my editor.
 
 On that first encounter, I was put off by its user interface, which is

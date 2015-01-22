@@ -224,6 +224,13 @@
 	nil "Heap (a.k.a. priority queue) data structure" single
 	((:url . "http://www.dr-qubit.org/emacs.php")
 	 (:keywords "extensions" "data structures" "heap" "priority queue"))])
+ (hydra .
+	[(0 3 0)
+	 ((cl-lib
+	   (0 5)))
+	 "Make bindings that stick around" tar
+	 ((:keywords "bindings")
+	  (:url . "https://github.com/abo-abo/hydra"))])
  (ioccur .
 	 [(2 4)
 	  nil "Incremental occur" single

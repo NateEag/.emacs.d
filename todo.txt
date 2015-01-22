@@ -267,6 +267,14 @@
  the right call most of the time. If it's not, you're just an indent command
  away from having the right depth.
 
+-Figure out why pyimpsort.el throws an error for me. It has something to do
+ with my config - emacs -Q with package set up, then requiring python-mode and
+ pyimpsort works. One of my addons (possibly jedi-force?) is causing the error.
+
+-Fix which-func-ff-hook error: (void-function py--imenu-create-index-function).
+ Might be related to above - they both seem likely to involve a variable being
+ defined at the wrong-ish time.
+
 -Frequently, especially when writing prose, I find my fingers doing the dance
  any given editor requires to swap elements in a comma-separated list. Seems
  like that shouldn't require too many keystrokes. I'm sure Emacs can do this

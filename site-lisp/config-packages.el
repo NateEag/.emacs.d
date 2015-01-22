@@ -97,6 +97,12 @@
                    (define-key java-mode-map (kbd "M-.") 'eclim-java-find-declaration)
                    )))))
 
+(use-package yaml-mode
+  :mode "\\.yaml\\'"
+  :config
+  (add-hook 'yaml-mode-hook
+            'my-prog-mode-init))
+
 (use-package groovy-mode
   :defer t
   :mode "\\.groovy$"
@@ -112,6 +118,15 @@
     (setq nxml-slash-auto-complete-flag t)
     (add-hook 'nxml-mode-hook (lambda () (emmet-mode t)))))
 
+(use-package web-mode
+  :mode (("\\.html\\'" . web-mode)
+         ("\\.tmpl\\'" . web-mode)
+         ("\\.twig\\'" . web-mode)
+         ("\\.hbs\\'" . web-mode)
+         ("\\.handlebars\\'" . web-mode))
+  :config
+  (add-hook 'web-mode-hook 'web-mode-init))
+
 (use-package scss-mode
   :mode "\\.scss\\'"
   :config
@@ -121,11 +136,6 @@
               ;; don't go crazy the way they do in css-mode.
               (setq comment-start "//"
                     comment-end ""))))
-
-(use-package yaml-mode
-  :config
-  (add-hook 'yaml-mode-hook
-            'my-prog-mode-init))
 
 (use-package lisp-mode
   :mode (("\\.el\\'" . emacs-lisp-mode)

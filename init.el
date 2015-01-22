@@ -366,17 +366,6 @@ new file for the first time."
 (setq httpd-port 9000)
 (add-hook 'css-mode-hook 'css-mode-init)
 
-;; Web mode.
-;; For editing web templates of various stripes.
-(add-auto-mode 'web-mode
-               ".*\\.html\\'"
-               ".*\\.html\\..*"
-               ".*\\.twig\\..*"
-               ".*\\.tmpl\\..*"
-               "/\\(views\\|templates\\|include\\)/.*\\.php$"
-               ".*.hbs\\'")
-(add-hook 'web-mode-hook 'web-mode-init)
-
 ;; JavaScript Mode.
 (add-hook 'js2-mode-hook 'js-mode-init)
 (add-hook 'js2-mode-hook '(lambda ()

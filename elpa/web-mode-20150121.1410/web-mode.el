@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2015 François-Xavier Bois
 
-;; Version: 20150117.1100
-;; X-Original-Version: 10.2.08
+;; Version: 20150121.1410
+;; X-Original-Version: 10.2.10
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -22,7 +22,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "10.2.08"
+(defconst web-mode-version "10.2.10"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -116,6 +116,11 @@
 
 (defcustom web-mode-enable-auto-expanding nil
   "e.g. s/ expands to <span>|</span>."
+  :type 'boolean
+  :group 'web-mode)
+
+(defcustom web-mode-enable-control-block-indentation t
+  "Control blocks increase indentation."
   :type 'boolean
   :group 'web-mode)
 
@@ -6773,7 +6778,8 @@ the environment as needed for ac-sources, right before they're used.")
             (setq block-pos nil))
           ) ;when
         )
-       ((get-text-property pos 'block-beg)
+       ((and web-mode-enable-control-block-indentation
+             (get-text-property pos 'block-beg))
         (when (setq controls (web-mode-block-controls-get pos))
           (dolist (control controls)
             (setq tag (cdr control))

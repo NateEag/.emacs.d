@@ -1,4 +1,4 @@
-(define-package "flycheck" "20150117.1114" "Modern on-the-fly syntax checking for GNU Emacs"
+(define-package "flycheck" "20150123.433" "Modern on-the-fly syntax checking for GNU Emacs"
   '((dash "2.4.0")
     (pkg-info "0.4")
     (let-alist "1.0.1")

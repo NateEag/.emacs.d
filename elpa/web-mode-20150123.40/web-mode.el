@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2015 François-Xavier Bois
 
-;; Version: 20150121.1410
-;; X-Original-Version: 10.2.10
+;; Version: 20150123.40
+;; X-Original-Version: 10.3.00
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -22,7 +22,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "10.2.10"
+(defconst web-mode-version "10.3.00"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -8078,14 +8078,20 @@ Pos should be in a tag."
     t))
 
 (defun web-mode-tag-fetch-opening (regexp pos)
-  (let ((counter 1) (n 0))
+  (let ((counter 1) (n 0) (type nil))
     (goto-char pos)
     (while (and (> counter 0) (re-search-backward regexp nil t))
-      (when (get-text-property (point) 'tag-beg)
+      (when (and (get-text-property (point) 'tag-beg)
+                 (member (get-text-property (point) 'tag-type) '(start end)))
         (setq n (1+ n))
-        (if (eq (get-text-property (point) 'tag-type) 'end)
-            (setq counter (1+ counter))
-          (setq counter (1- counter))))
+        (cond
+         ((eq (get-text-property (point) 'tag-type) 'end)
+          (setq counter (1+ counter)))
+         (t
+          (setq counter (1- counter))
+          )
+         )
+        )
       )
     (if (= n 0) (goto-char pos))
     ))

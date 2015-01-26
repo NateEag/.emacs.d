@@ -6,13 +6,13 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Version: 20150121.448
+;; Version: 20150123.1905
 ;;; X-Original-Version: 1.15.2
 
 (defconst php-mode-version-number "1.15.2"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2015-01-06"
+(defconst php-mode-modified "2015-01-23"
   "PHP Mode build date.")
 
 ;;; License
@@ -600,7 +600,7 @@ but only if the setting is enabled"
                        (inlambda . 0)
                        (inline-open . 0)
                        (label . +)
-                       (statement-cont . (first php-lineup-cascaded-calls +))
+                       (statement-cont . (first php-lineup-cascaded-calls php-lineup-string-cont +))
                        (substatement-open . 0)
                        (topmost-intro-cont . (first php-lineup-cascaded-calls +))))))
 
@@ -861,6 +861,23 @@ This is was done due to the problem reported here:
 (defun php-c-vsemi-status-unknown-p ()
   "See `php-c-at-vsemi-p'."
   )
+
+(defun php-lineup-string-cont (langelem)
+  "Line up string toward equal sign or dot
+e.g.
+$str = 'some'
+     . 'string';
+this ^ lineup"
+  (save-excursion
+    (goto-char (cdr langelem))
+    (setq anchor 0)
+    ;; Find equal sign
+    (if (not (<= (setq anchor (re-search-forward "=")) (line-end-position)))
+        ;; Or find dot sign
+        (if (<= (setq anchor (re-search-forward ".")) (line-end-position))))
+    (setq anchor (- anchor (line-beginning-position)))
+    (setq anchor (1- anchor))
+    (vector anchor)))
 
 (defun php-lineup-arglist-intro (langelem)
   (save-excursion

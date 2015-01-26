@@ -209,7 +209,6 @@ attention to case differences."
     json-jsonlint
     less
     lua
-    make
     perl
     perl-perlcritic
     php
@@ -5954,7 +5953,7 @@ take an io.Writer as their first argument, like Fprintf,
   "A Go syntax checker using the `go tool vet' command.
 
 See URL `http://golang.org/cmd/go/' and URL
-`http://godoc.org/code.google.com/p/go.tools/cmd/vet'."
+`http://godoc.org/golang.org/x/tools/cmd/vet'."
   :command ("go" "tool" "vet"
             (option "-printfuncs=" flycheck-go-vet-print-functions concat
                     flycheck-option-comma-separated-list)
@@ -6347,28 +6346,6 @@ See URL `http://www.lua.org/'."
           (minimal-match (zero-or-more not-newline))
           ":" line ": " (message) line-end))
   :modes lua-mode)
-
-(flycheck-define-checker make
-  "A Makefile syntax checker using the POSIX compatible Make command.
-
-See URL `http://pubs.opengroup.org/onlinepubs/9699919799/utilities/make.html'."
-  :command ("make" "-n" "-f" source-inplace)
-  :error-patterns
-  (;; GNU Make
-   ;; http://www.gnu.org/software/make/
-   (error line-start (file-name) ":" line ": " (message) line-end)
-   ;; NetBSD Make
-   ;; http://netbsd.gw.com/cgi-bin/man-cgi?make++NetBSD-current
-   (error line-start
-          (zero-or-more not-newline) ; make command name
-          ": \"" (file-name) "\" line " line ": " (message) line-end)
-   ;; FreeBSD Make (unmaintained)
-   ;; http://www.freebsd.org/cgi/man.cgi?query=make&sektion=1
-   (error line-start "\"" (file-name) "\", line " line ": " (message) line-end)
-   ;; OpenBSD Make (unmaintained)
-   ;; http://www.openbsd.org/cgi-bin/man.cgi?query=make
-   (error line-start (message) " (" (file-name) ":" line ")" line-end))
-  :modes (makefile-mode makefile-gmake-mode makefile-bsdmake-mode))
 
 (flycheck-define-checker perl
   "A Perl syntax checker using the Perl interpreter.

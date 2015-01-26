@@ -225,7 +225,7 @@
 	((:url . "http://www.dr-qubit.org/emacs.php")
 	 (:keywords "extensions" "data structures" "heap" "priority queue"))])
  (hydra .
-	[(0 3 0)
+	[(0 3 1)
 	 ((cl-lib
 	   (0 5)))
 	 "Make bindings that stick around" tar
@@ -345,7 +345,7 @@
 	    ((:url . "http://elpa.gnu.org/packages/omn-mode.html")
 	     (:keywords))])
  (org .
-      [(20150119)
+      [(20150126)
        nil "Outline-based notes management and organizer" tar nil])
  (osc .
       [(0 1)

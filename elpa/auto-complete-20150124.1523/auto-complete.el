@@ -1,11 +1,11 @@
 ;;; auto-complete.el --- Auto Completion for GNU Emacs
 
-;; Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013  Tomohiro Matsuyama
+;; Copyright (C) 2008, 2009, 2010, 2011, 2012, 2013, 2014, 2015  Tomohiro Matsuyama
 
 ;; Author: Tomohiro Matsuyama <m2ym.pub@gmail.com>
-;; URL: http://cx4a.org/software/auto-complete
+;; URL: https://github.com/auto-complete/auto-complete
 ;; Keywords: completion, convenience
-;; Version: 1.4.0
+;; Version: 1.5.0
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@
 
 
 
-(defconst ac-version "1.4.0"
+(defconst ac-version "1.5.0"
   "Version of auto-complete in string format.
 Use `version-to-list' to get version component.")
 
@@ -1068,6 +1068,35 @@ You can not use it in source definition like (prefix . `NAME')."
                              candidates))
     candidates))
 
+(defun ac-delete-candidates (candidates)
+  (cl-delete-duplicates
+   candidates
+   :test (lambda (x y)
+           ;; We assume two candidates are same if their titles are
+           ;; equal and their actions are equal.
+           (when (and (equal x y)
+                      (eq (popup-item-property x 'action)
+                          (popup-item-property y 'action)))
+             ;; Share properties among them.
+             ;; XXX need popup-item-set-property
+             (dolist (symbol '(symbol document))
+               (put-text-property 0 1 symbol (or (popup-item-property x symbol) (popup-item-property y symbol)) x)
+               (put-text-property 0 1 symbol (or (popup-item-property x symbol) (popup-item-property y symbol)) y))
+             t))))
+
+(defun ac-reduce-candidates (candidates)
+  ;; Call `ac-delete-candidates' on first portion of candidate list
+  ;; for speed.
+  (let ((size 20))
+    (if (< (length candidates) size)
+        (ac-delete-candidates candidates)
+      (cl-loop for c on candidates by 'cdr
+               repeat (1- size)
+               finally return
+               (let ((rest (cdr c)))
+                 (setcdr c nil)
+                 (append (ac-delete-candidates candidates) (copy-sequence rest)))))))
+
 (defun ac-candidates ()
   "Produce candidates for current sources."
   (loop with completion-ignore-case = (or (eq ac-ignore-case t)
@@ -1076,29 +1105,31 @@ You can not use it in source definition like (prefix . `NAME')."
         with case-fold-search = completion-ignore-case
         with prefix-len = (length ac-prefix)
         for source in ac-current-sources
-        ;; Delete duplicates from the same source, but allow multiple sources to
-        ;; provide the same candidate completion.
-        append (delete-dups (ac-candidates-1 source)) into candidates
+        append (ac-candidates-1 source) into candidates
         finally return
-        (if (and ac-use-comphist ac-comphist)
-            (if ac-show-menu
-                (let* ((pair (ac-comphist-sort ac-comphist candidates prefix-len ac-comphist-threshold))
-                       (n (car pair))
-                       (result (cdr pair))
-                       (cons (if (> n 0) (nthcdr (1- n) result)))
-                       (cdr (cdr cons)))
-                  (if cons (setcdr cons nil))
-                  (setq ac-common-part (try-completion ac-prefix result))
-                  (setq ac-whole-common-part (try-completion ac-prefix candidates))
-                  (if cons (setcdr cons cdr))
-                  result)
-              (setq candidates (ac-comphist-sort ac-comphist candidates prefix-len))
-              (setq ac-common-part (if candidates (popup-x-to-string (car candidates))))
-              (setq ac-whole-common-part (try-completion ac-prefix candidates))
-              candidates)
-          (setq ac-common-part (try-completion ac-prefix candidates))
-          (setq ac-whole-common-part ac-common-part)
-          candidates)))
+        (progn
+          (if (and ac-use-comphist ac-comphist)
+              (if ac-show-menu
+                  (let* ((pair (ac-comphist-sort ac-comphist candidates prefix-len ac-comphist-threshold))
+                         (n (car pair))
+                         (result (cdr pair))
+                         (cons (if (> n 0) (nthcdr (1- n) result)))
+                         (cdr (cdr cons)))
+                    (setq result (ac-reduce-candidates result))
+                    (if cons (setcdr cons nil))
+                    (setq ac-common-part (try-completion ac-prefix result))
+                    (setq ac-whole-common-part (try-completion ac-prefix candidates))
+                    (if cons (setcdr cons cdr))
+                    result)
+                (setq candidates (ac-comphist-sort ac-comphist candidates prefix-len))
+                (setq ac-common-part (if candidates (popup-x-to-string (car candidates))))
+                (setq ac-whole-common-part (try-completion ac-prefix candidates))
+                candidates)
+            (when ac-show-menu
+              (setq candidates (ac-reduce-candidates candidates)))
+            (setq ac-common-part (try-completion ac-prefix candidates))
+            (setq ac-whole-common-part ac-common-part)
+            candidates))))
 
 (defun ac-update-candidates (cursor scroll-top)
   "Update candidates of menu to `ac-candidates' and redraw it."
@@ -1483,10 +1514,10 @@ that have been made before in this function.  When `buffer-undo-list' is
     (unless (ac-menu-live-p)
       (ac-start))
     (let ((ac-match-function 'fuzzy-all-completions))
-      (unless ac-cursor-color
-        (setq ac-cursor-color (frame-parameter (selected-frame) 'cursor-color)))
-      (if ac-fuzzy-cursor-color
-          (set-cursor-color ac-fuzzy-cursor-color))
+      (when ac-fuzzy-cursor-color
+        (unless ac-cursor-color
+          (setq ac-cursor-color (frame-parameter (selected-frame) 'cursor-color)))
+        (set-cursor-color ac-fuzzy-cursor-color))
       (setq ac-show-menu t)
       (setq ac-fuzzy-enable t)
       (setq ac-triggered nil)
@@ -1598,8 +1629,9 @@ If given a prefix argument, select the previous candidate."
                      (ac-stop-word-p prefix))))
           (prog1 nil
             (ac-abort))
-        (unless ac-cursor-color
-          (setq ac-cursor-color (frame-parameter (selected-frame) 'cursor-color)))
+        (when (and ac-use-fuzzy ac-fuzzy-cursor-color)
+          (unless ac-cursor-color
+            (setq ac-cursor-color (frame-parameter (selected-frame) 'cursor-color))))
         (setq ac-show-menu (or ac-show-menu (if (eq ac-auto-show-menu t) t))
               ac-current-sources sources
               ac-buffer (current-buffer)
@@ -1916,7 +1948,7 @@ completion menu. This workaround stops that annoying behavior."
                         (and (local-variable-p 'ac-word-index buffer)
                              (cdr (buffer-local-value 'ac-word-index buffer))))
         into candidates
-        finally return candidates))
+        finally return (delete-dups candidates)))
 
 (ac-define-source words-in-buffer
   '((candidates . ac-word-candidates)))

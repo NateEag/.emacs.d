@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; Keywords: lisp
-;; Version: 20150123.305
+;; Version: 20150123.624
 ;; X-Original-Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (flycheck "0.22") (emacs "24"))
 
@@ -51,31 +51,36 @@
   (funcall callback
            'finished
            (mapcar (lambda (x)
-                     (apply #'flycheck-error-new-at x))
-                   (flypkg/check-all))))
+                     (apply #'flycheck-error-new-at `(,@x :checker ,checker)))
+                   (condition-case err
+                       (flypkg/check-all)
+                     (error
+                      (funcall callback 'errored (error-message-string err))
+                      (signal (car err) (cdr err)))))))
 
-(defvar flypkg-errors nil
+(defvar flypkg/errors nil
   "List of errors and warnings for the current buffer.
 This is bound dynamically while the checks run.")
 
 (defun flypkg/check-all ()
   "Return a list of errors/warnings for the current buffer."
-  (let (flypkg-errors)
-    (save-excursion
-      (save-restriction
-        (widen)
-        (when (flypkg/looks-like-a-package)
-          (flypkg/check-package-version-present)
-          (flypkg/check-lexical-binding-is-on-first-line)
-          (let ((desc (flypkg/check-package-el-can-parse)))
-            (when desc
-              (flypkg/check-package-summary desc)))
-          (flypkg/check-dependency-list))))
-    flypkg-errors))
+  (let ((flypkg/errors '()))
+    (save-match-data
+      (save-excursion
+        (save-restriction
+          (widen)
+          (when (flypkg/looks-like-a-package)
+            (flypkg/check-package-version-present)
+            (flypkg/check-lexical-binding-is-on-first-line)
+            (let ((desc (flypkg/check-package-el-can-parse)))
+              (when desc
+                (flypkg/check-package-summary desc)))
+            (flypkg/check-dependency-list)))))
+    flypkg/errors))
 
 (defun flypkg/error (line col type message)
   "Construct a datum for error at LINE and COL with TYPE and MESSAGE."
-  (push (list line col type message) flypkg-errors))
+  (push (list line col type message) flypkg/errors))
 
 
 ;;; Checks
@@ -87,7 +92,7 @@ This is bound dynamically while the checks run.")
           (line-no (line-number-at-pos))
           (deps (match-string 3)))
       (condition-case err
-          (cl-destructuring-bind (parsed-deps . parse-end-pos) (read-from-string deps)
+          (pcase-let ((`(,parsed-deps . ,parse-end-pos) (read-from-string deps)))
             (unless (= parse-end-pos (length deps))
               (flypkg/error
                line-no 1 'error

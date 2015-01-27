@@ -6,13 +6,13 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Version: 20150123.1905
+;; Version: 20150126.1747
 ;;; X-Original-Version: 1.15.2
 
 (defconst php-mode-version-number "1.15.2"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2015-01-23"
+(defconst php-mode-modified "2015-01-26"
   "PHP Mode build date.")
 
 ;;; License
@@ -553,9 +553,17 @@ PHP does not have an \"enum\"-like keyword."
     "xor"
     "yield"
 
-    ;; technically not reserved keywords, but "declare directives"
+    ;; Below keywords are technically not reserved keywords, but
+    ;; threated no differently by php-mode from actual reserved
+    ;; keywords
+    ;;
+    ;;; declare directives:
     "encoding"
-    "ticks"))
+    "ticks"
+
+    ;;; self for static references:
+    "self"
+    ))
 
 ;; PHP does not have <> templates/generics
 (c-lang-defconst c-recognize-<>-arglists
@@ -1367,6 +1375,16 @@ a completion list."
    ;;   already fontified by another pattern. Note that using OVERRIDE
    ;;   is usually overkill.
    `(
+     
+     ;; Highlight variables, e.g. 'var' in '$var' and '$obj->var', but
+     ;; not in $obj->var()
+     ("->\\(\\sw+\\)\\s-*(" 1 'default)
+
+     ;; Highlight special variables
+     ("\\$\\(this\\|that\\)" 1 font-lock-constant-face)
+
+     ("\\(\\$\\|->\\)\\([a-zA-Z0-9_]+\\)" 2 font-lock-variable-name-face)
+
      ;; Highlight all upper-cased symbols as constant
      ("\\<\\([A-Z_][A-Z0-9_]+\\)\\>" 1 font-lock-constant-face)
 
@@ -1441,7 +1459,7 @@ The output will appear in the buffer *PHP*."
       (call-process "php" nil php-buffer nil "-r" (clean-php-code code)))))
 
 
-(defface php-annotations-annotation-face '((t . (:inherit 'font-lock-constant-face)))
+(defface php-annotations-annotation-face '((t . (:inherit font-lock-constant-face)))
   "Face used to highlight annotations.")
 
 (defconst php-annotations-re "\\(\\s-\\|{\\)\\(@[[:alpha:]]+\\)")

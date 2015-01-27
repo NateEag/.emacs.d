@@ -1,5 +1,5 @@
 ;;; packed.el --- package manager agnostic Emacs Lisp package utilities
-;; Version: 20150112.1551
+;; Version: 20150122.2048
 
 ;; Copyright (C) 2012-2015  Jonas Bernoulli
 
@@ -153,7 +153,7 @@ and the file name is displayed in the echo area."
     file))
 
 (defconst packed-ignore-library-regexp
-  (regexp-opt (list "^t$" "test")))
+  (regexp-opt (list "^\\." "^t$" "test" "autoloads" "loaddefs")))
 
 (defconst packed-ignore-directory-regexp
   (regexp-opt (list "RCS" "CVS" "^t$" "test")))
@@ -237,9 +237,6 @@ function would return t.  See `packed-ignore-directory-p'."
     (save-match-data
       (and (string-match (packed-el-regexp) filename)
            (not (or (file-symlink-p file)
-                    (string-prefix-p "." filename)
-                    (string-suffix-p "-autoloads.el" filename)
-                    (string-suffix-p "loaddefs.el" filename)
                     (string-equal filename dir-locals-file)
                     (auto-save-file-name-p filename)
                     (if package

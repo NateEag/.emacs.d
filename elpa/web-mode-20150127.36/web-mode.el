@@ -3,7 +3,7 @@
 
 ;; Copyright 2011-2015 François-Xavier Bois
 
-;; Version: 20150125.2300
+;; Version: 20150127.36
 ;; X-Original-Version: 10.3.03
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
@@ -19,6 +19,12 @@
 ;; =============================================================================
 
 ;; Code goes here
+
+;;---- TODO --------------------------------------------------------------------
+
+;; web-mode-enable, web-mode-disable :
+;; for the defcustom elt-highlight, whitespace
+;; more debug in web-mode-debug : element-highlight, column-highlight
 
 ;;---- CONSTS ------------------------------------------------------------------
 

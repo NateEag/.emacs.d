@@ -703,7 +703,10 @@ and before performing action.")
 (defvar helm-move-selection-after-hook nil
   "Run after moving selection in `helm-buffer'.")
 
-(defvar helm-restored-variables
+(defvar helm-window-configuration-hook nil
+  "Run when switching to and back from action buffer.")
+
+(defconst helm-restored-variables
   '(helm-candidate-number-limit
     helm-source-filter
     helm-source-in-each-line-flag
@@ -1047,17 +1050,12 @@ not `exit-minibuffer' or unwanted functions."
   `(with-current-buffer (helm-buffer-get)
      ,@body))
 
-(defmacro with-helm-restore-variables(&rest body)
+(defmacro with-helm-restore-variables (&rest body)
   "Restore `helm-restored-variables' after executing BODY."
   (declare (indent 0) (debug t))
-  (helm-with-gensyms (orig-vars)
-    `(let ((,orig-vars (mapcar (lambda (v)
-                                (cons v (symbol-value v)))
-                              helm-restored-variables)))
-       (unwind-protect (progn ,@body)
-         (cl-loop for (var . value) in ,orig-vars
-                  do (set var value))
-         (helm-log "restore variables")))))
+  `(let ,(mapcar (lambda (symbol) (list symbol symbol))
+                 helm-restored-variables)
+     ,@body))
 
 (defmacro with-helm-default-directory (directory &rest body)
   (declare (indent 2) (debug t))
@@ -3503,23 +3501,25 @@ If action buffer is selected, back to the helm buffer."
   (helm-log-run-hook 'helm-select-action-hook)
   (setq helm-saved-selection (helm-get-selection))
   (with-selected-frame (with-helm-window (selected-frame))
-    (cond ((get-buffer-window helm-action-buffer 'visible)
-           (set-window-buffer (get-buffer-window helm-action-buffer)
-                              helm-buffer)
-           (kill-buffer helm-action-buffer)
-           (helm-display-mode-line (helm-get-current-source))
-           (helm-set-pattern helm-input 'noupdate))
-          (helm-saved-selection
-           (setq helm-saved-current-source (helm-get-current-source))
-           (let ((actions (helm-get-actions-from-current-source)))
-             (if (functionp actions)
-                 (message "Sole action: %s" actions)
-               (helm-show-action-buffer actions)
-               (helm-delete-minibuffer-contents)
-               ;; Make `helm-pattern' differs from the previous value.
-               (setq helm-pattern 'dummy)
-               (helm-check-minibuffer-input))))
-          (t (message "No Actions available")))))
+    (prog1
+        (cond ((get-buffer-window helm-action-buffer 'visible)
+               (set-window-buffer (get-buffer-window helm-action-buffer)
+                                  helm-buffer)
+               (kill-buffer helm-action-buffer)
+               (helm-display-mode-line (helm-get-current-source))
+               (helm-set-pattern helm-input 'noupdate))
+              (helm-saved-selection
+               (setq helm-saved-current-source (helm-get-current-source))
+               (let ((actions (helm-get-actions-from-current-source)))
+                 (if (functionp actions)
+                     (message "Sole action: %s" actions)
+                     (helm-show-action-buffer actions)
+                     (helm-delete-minibuffer-contents)
+                     ;; Make `helm-pattern' differs from the previous value.
+                     (setq helm-pattern 'dummy)
+                     (helm-check-minibuffer-input))))
+              (t (message "No Actions available")))
+      (run-hooks 'helm-window-configuration-hook))))
 
 (defun helm-show-action-buffer (actions)
   (with-current-buffer (get-buffer-create helm-action-buffer)
@@ -5095,8 +5095,10 @@ See `fit-window-to-buffer' for more infos."
   :group 'helm
   :global t
   (if helm-autoresize-mode
-      (add-hook 'helm-after-update-hook 'helm--autoresize-hook)
-      (remove-hook 'helm-after-update-hook 'helm--autoresize-hook)))
+      (progn (add-hook 'helm-after-update-hook 'helm--autoresize-hook)
+             (add-hook 'helm-window-configuration-hook 'helm--autoresize-hook))
+      (remove-hook 'helm-after-update-hook 'helm--autoresize-hook)
+      (remove-hook 'helm-window-configuration-hook 'helm--autoresize-hook)))
 
 
 (provide 'helm)

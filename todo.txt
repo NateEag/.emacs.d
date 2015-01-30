@@ -214,8 +214,10 @@
 -If particularly bored, try getting GEBEN set up for debugging PHP. I'm
  uncertain whether this would actually be worth the effort.
 
--Next time I have to work against a DB server, install emacs-edbi:
- https://github.com/kiwanami/emacs-edbi
+-Next time I have to work against a DB server, install emacs-edbi and
+ edbi-minor-mode:
+ https://github.com/kiwanami/emacs-edbi,
+ https://github.com/proofit404/edbi-minor-mode
  Looks like it should beat the pants off sql-mode, even if it does depend on
  Perl.
 

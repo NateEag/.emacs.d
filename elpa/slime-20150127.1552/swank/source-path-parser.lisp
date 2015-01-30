@@ -85,12 +85,16 @@ The source locations are stored in SOURCE-MAP."
       (install-wrappers rt)
       rt)))
 
+;; FIXME: try to do this with *READ-SUPPRESS* = t to avoid interning.
+;; Should be possible as we only need the right "list structure" and
+;; not the right atoms.
 (defun read-and-record-source-map (stream)
   "Read the next object from STREAM.
 Return the object together with a hashtable that maps
 subexpressions of the object to stream positions."
   (let* ((source-map (make-hash-table :test #'eq))
          (*readtable* (make-source-recording-readtable *readtable* source-map))
+	 (*read-suppress* nil)
 	 (start (file-position stream))
 	 (form (ignore-errors (read stream)))
 	 (end (file-position stream)))
@@ -102,17 +106,51 @@ subexpressions of the object to stream positions."
 (defun skip-whitespace (stream)
   (peek-char t stream))
 
+;; FIXME: do something cleaner than this.
+(defun readtable-for-package (package)
+  ;; KLUDGE: due to the load order we can't reference the swank
+  ;; package.
+  (funcall (read-from-string "swank::guess-buffer-readtable")
+           (string-upcase (package-name package))))
+
+(defun skip-one-toplevel-form (stream read-suppress package readtable)
+  ;; Read one form trying to parse IN-PACKAGE forms.
+  ;; Return three values: (NEW-READ-SUPPRESS NEW-PACKAGE NEW-READTABLE).
+  (let ((form (let ((*read-suppress* read-suppress)
+		    (*package* package)
+		    (*readtable* readtable))
+		(read stream))))
+    (cond ((and (consp form)
+		(string= (car form) 'in-package))
+	   (let ((pkg (find-package (second form))))
+	     (if pkg
+		 (values nil pkg (readtable-for-package pkg))
+		 (values t package readtable))))
+	  (t
+	   (values nil package readtable)))))
+
+;; IDEA: maybe stop being so clever after the first IN-PACKAGE form.
+;;
+;; IDEA: 1) skip over the form with *READ-SUPPRESS* 2) reset the file
+;; position 3) use READ-LINE and only if the line matches a pattern
+;; process it as IN-PACKAGE.
 (defun skip-toplevel-forms (n stream)
-  (let ((*read-suppress* t))
-    (dotimes (i n)
-      (read stream))))
+  ;; Skip over N toplevel forms.  Try to be clever and and recognize
+  ;; the IN-PACKAGE form.  For this *READ-SUPPRESS* is NIL (i.e. lots
+  ;; of interning) until a non-existing package would be needed.
+  (let ((read-suppress nil)
+	(package *package*)
+	(readtable *readtable*))
+    (dotimes (_ n)
+      (multiple-value-setq (read-suppress package readtable)
+	(skip-one-toplevel-form stream read-suppress package readtable)))
+    (values package readtable)))
 
 (defun read-source-form (n stream)
   "Read the Nth toplevel form number with source location recording.
 Return the form and the source-map."
-  (skip-toplevel-forms n stream)
-  (skip-whitespace stream)
-  (let ((*read-suppress* nil))
+  (multiple-value-bind (*package* *readtable*) (skip-toplevel-forms n stream)
+    (skip-whitespace stream)
     (read-and-record-source-map stream)))
 
 (defun source-path-stream-position (path stream)
@@ -158,6 +196,7 @@ of the deepest (i.e. smallest) possible form is returned."
     ;; select the first subform present in source-map
     (loop for form in (reverse forms)
 	  for positions = (gethash form source-map)
-	  until (and positions (null (cdr positions)))
-	  finally (destructuring-bind ((start . end)) positions
-		    (return (values start end))))))
+	  while positions
+	  when (null (cdr positions))
+	  return (destructuring-bind ((start . end)) positions
+		   (return (values start end))))))

@@ -1,3 +1,26 @@
+2015-01-28  Helmut Eller  <heller@common-lisp.net>
+
+	* swank/source-path-parser.lisp (skip-toplevel-forms): Use the
+	package tracking code; return multiple values instead of a macro.
+	Also remove the error handling; let it crash.
+	(skip-one-toplevel-form): New helper.
+	(call-with-skipping-toplevel-forms, with-skipping-toplevel-forms):
+	Merged into skip-toplevel-forms.
+
+2015-01-27  Gábor Melis  <mega@retes.hu>
+
+	* Makefile (clean-fasls): Don't fail if ~/.slime/fasl/ does not
+	exist.
+
+	* swank/source-path-parser.lisp: Make source parser to honor
+	SWANK:*READTABLE-ALIST* which makes M-. work on SBCL even if
+	skipping over forms requires a special readtable.
+
+2015-01-27  Helmut Eller  <heller@common-lisp.net>
+
+	* lib/hyperspec.el (common-lisp-hyperspec-root): Use file://
+	in example.
+
 2015-01-02  Luís Oliveira  <loliveira@common-lisp.net>
 
 	* slime.el (slime-path): Only set slime-path at load-time. Setting

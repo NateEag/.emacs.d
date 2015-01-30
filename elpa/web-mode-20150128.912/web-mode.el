@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2015 François-Xavier Bois
 
-;; Version: 20150127.36
-;; X-Original-Version: 10.3.03
+;; Version: 20150128.912
+;; X-Original-Version: 10.3.08
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -22,13 +22,11 @@
 
 ;;---- TODO --------------------------------------------------------------------
 
-;; web-mode-enable, web-mode-disable :
-;; for the defcustom elt-highlight, whitespace
-;; more debug in web-mode-debug : element-highlight, column-highlight
+;; web-mode-enable|disable: elt-highlight, col-highlight, whitespace
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "10.3.03"
+(defconst web-mode-version "10.3.08"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -2024,7 +2022,7 @@ the environment as needed for ac-sources, right before they're used.")
   (if (fboundp 'with-silent-modifications)
       (defalias 'web-mode-with-silent-modifications 'with-silent-modifications)
     (defmacro web-mode-with-silent-modifications (&rest body)
-      "For compatibility with Emacs pre 23.3"
+      "For compatibility with Emacs pre 23.3."
       `(let ((old-modified-p (buffer-modified-p))
              (inhibit-modification-hooks t)
              (buffer-undo-list t))
@@ -3292,7 +3290,8 @@ the environment as needed for ac-sources, right before they're used.")
             (setq controls (append controls (list (cons 'inside "for")))))
            ((web-mode-block-starts-with "end\\([[:alpha:]]+\\)" reg-beg)
             (setq controls (append controls (list (cons 'close (match-string-no-properties 1))))))
-           ((web-mode-block-starts-with web-mode-django-control-blocks reg-beg)
+           ((web-mode-block-starts-with (concat web-mode-django-control-blocks "\\>") reg-beg)
+            ;;(message "%S" (concat web-mode-django-control-blocks "\\>"))
             (setq controls (append controls (list (cons 'open (match-string-no-properties 1))))))
            )
           )
@@ -5983,6 +5982,8 @@ the environment as needed for ac-sources, right before they're used.")
              (token (plist-get ctx :token))
              (chars (list curr-char prev-char)))
 
+        ;;(message "%S" ctx)
+
         (cond
 
          ((or (bobp) (= (line-number-at-pos pos) 1))
@@ -6247,7 +6248,7 @@ the environment as needed for ac-sources, right before they're used.")
           (cond
            ((not (web-mode-javascript-args-beginning pos reg-beg))
             )
-           ((not (cdr (assoc "lineup-calls" web-mode-indentation-params)))
+           ((not (cdr (assoc "lineup-args" web-mode-indentation-params)))
             (setq offset (+ (current-indentation) web-mode-code-indent-offset)))
            ((not (eq curr-char ?\,))
             (setq offset (current-column)))
@@ -6349,8 +6350,8 @@ the environment as needed for ac-sources, right before they're used.")
   (save-excursion
     (goto-char pos)
     (let ((offset 0) beg ret)
-      (setq beg (web-mode-markup-indentation-origin))
-      (when beg
+      (when (setq beg (web-mode-markup-indentation-origin))
+        ;;(message "beg %S" beg)
         (goto-char beg)
         (setq ret (web-mode-element-is-opened beg pos))
         (cond
@@ -6737,6 +6738,7 @@ the environment as needed for ac-sources, right before they're used.")
                                    (get-text-property pos 'tag-beg)
                                    (member (get-text-property pos 'tag-type) types))
                               (and (get-text-property pos 'block-beg)
+                                   (not (get-text-property pos 'tag-type))
                                    (web-mode-block-is-control pos)
                                    (not (looking-at-p "{% comment"))))))
       ) ;while
@@ -10584,7 +10586,9 @@ Pos should be in a tag."
 (defun web-mode-debug ()
   "Display informations useful for debugging."
   (interactive)
-  (let (modes)
+  (let ((modes nil)
+        (customs '(web-mode-enable-current-column-highlight web-mode-enable-current-element-highlight))
+        (ignore '(abbrev-mode auto-composition-mode auto-compression-mode auto-encryption-mode auto-insert-mode column-number-mode delete-selection-mode electric-indent-mode file-name-shadow-mode font-lock-mode global-font-lock-mode global-hl-line-mode line-number-mode menu-bar-mode mouse-wheel-mode recentf-mode transient-mark-mode)))
     (message "\n")
     (message "--- WEB-MODE DEBUG BEG ---")
     (message "versions: emacs(%S.%S) web-mode(%S)"
@@ -10599,12 +10603,16 @@ Pos should be in a tag."
              (cdr (assoc 'background-color default-frame-alist)))
     (mapc (lambda (mode)
             (condition-case nil
-                (if (and (symbolp mode) (symbol-value mode))
+                (if (and (symbolp mode) (symbol-value mode) (not (member mode ignore)))
                     (add-to-list 'modes mode))
               (error nil))
             ) ;lambda
           minor-mode-list)
     (message "minor modes: %S" modes)
+    (message "minor modes: %S" modes)
+    (message "customs:")
+    (dolist (custom customs)
+      (message (format "%s(%S) " (symbol-name custom) (symbol-value custom))))
     (message "--- WEB-MODE DEBUG END ---")
     (switch-to-buffer "*Messages*")
     (goto-char (point-max))
@@ -10619,3 +10627,158 @@ Pos should be in a tag."
 ;; coding: utf-8
 ;; indent-tabs-mode: nil
 ;; End:
+
+
+
+;; (defun my-web-forward-sexp (n)
+;;   (interactive "p")
+;;   (if (< n 0)
+;;       (my-web-backward-sexp (- n))
+;;     (let ((origpos (point)))
+;;       (dotimes (_ n)
+;;         (skip-chars-forward "\s\t\n")
+;;         (unless (eobp)
+;;           (let ((pos (point)))
+;;             (cond ((eq (get-text-property pos 'face)
+;;                        'web-mode-html-tag-bracket-face)
+;;                    ;; we're looking at a tag delimiter
+;;                    (cond ((= (char-after pos) ?<)
+;;                           ;; we're looking at the tag: |<foo>
+;;                           (web-mode-navigate)
+;;                           (if (< (point) pos)
+;;                               ;; we've moved BACKWARD with "web-mode-navigate"
+;;                               ;; (the tag we're looking at was the ender of the element)
+;;                               ;; <foo>brabrabra|</foo> -> |<foo>brabrabra</foo>
+;;                               (signal 'scan-error
+;;                                       (list "Containing expression ends prematurely"
+;;                                             pos
+;;                                             (prog1 (1+ (web-mode-tag-end-position pos))
+;;                                               (goto-char origpos))))
+;;                             ;; we've successfully moved FORWARD, or haven't moved
+;;                             ;; |<foo>brabrabra</foo> -> <foo>brabrabra|</foo>
+;;                             ;;                 |<br> -> |<br>
+;;                             (web-mode-tag-end)))
+;;                          (t
+;;                           ;; we're looking up the end of the tag: <foo|>
+;;                           (signal 'scan-error
+;;                                   (list "Containing expression ends prematurely"
+;;                                         pos (1+ pos))))))
+;;                   ((get-text-property pos 'block-beg)
+;;                    ;; we're looking at a block
+;;                    (web-mode-block-end))
+;;                   ((and (not (string= (web-mode-language-at-pos) "html"))
+;;                         (eq (get-text-property pos 'face)
+;;                             'web-mode-block-delimiter-face))
+;;                    ;; we're looking at the end of the block
+;;                    ;; <?php foo |?>
+;;                    (signal 'scan-error
+;;                            (list "Containing expression ends prematurely"
+;;                                  pos
+;;                                  (prog1 (1+ (web-mode-block-end-position))
+;;                                    (goto-char origpos)))))
+;;                   (t
+;;                    ;; otherwise, do the normal "forward-sexp"
+;;                    (let ((forward-sexp-function nil))
+;;                      (forward-sexp))
+;;                    (unless (looking-back "\\s)")
+;;                      (let ((delim
+;;                             (or (text-property-any
+;;                                  pos (point) 'face 'web-mode-block-delimiter-face)
+;;                                 (text-property-any
+;;                                  pos (point) 'face 'web-mode-html-tag-bracket-face))))
+;;                        (when delim
+;;                          ;; we've skipped over a block/tag delimiter
+;;                          ;; brabrabra|:<br> -> brabrabra:<br|>
+;;                          (goto-char delim)
+;;                          (skip-chars-backward "\s\t\n"))))))))))))
+
+;; (defun my-web-backward-sexp (n)
+;;   (interactive "p")
+;;   (if (< n 0) (my-web-forward-sexp (- n))
+;;     (let ((origpos (point)))
+;;       (dotimes (_ n)
+;;         (skip-chars-backward "\s\t\n")
+;;         (unless (bobp)
+;;           (let ((pos (point)))
+;;             (cond ((eq (get-text-property (1- pos) 'face)
+;;                        'web-mode-html-tag-bracket-face)
+;;                    ;; we're looking back a tag delimiter
+;;                    (cond ((= (char-before pos) ?>)
+;;                           ;; we're looking back the tag ender: <foo>|
+;;                           (backward-char 1)
+;;                           (web-mode-navigate)
+;;                           (if (< pos (point))
+;;                               ;; we've moved FORWARD
+;;                               ;; <foo|>brabrabra</foo> -> <foo>brabrabra|</foo>
+;;                               (signal 'scan-error
+;;                                       (list "Containing expression ends prematurely"
+;;                                             (prog1 (web-mode-tag-beginning-position (1- pos))
+;;                                               (goto-char origpos))
+;;                                             pos))
+;;                             (web-mode-tag-beginning)))
+;;                          (t
+;;                           ;; we're looking back the beginning of the tag: <|foo>
+;;                           (signal 'scan-error
+;;                                   (list "Containing expression ends prematurely"
+;;                                         (1- pos) pos)))))
+;;                   ((get-text-property (1- pos) 'block-end)
+;;                    ;; we're looking back the block-end
+;;                    (backward-char 1)
+;;                    (web-mode-block-beginning))
+;;                   ((and (not (string= (web-mode-language-at-pos pos) "html"))
+;;                         (eq (get-text-property (1- pos) 'face)
+;;                             'web-mode-block-delimiter-face))
+;;                    ;; we're looking back the beginning of the block
+;;                    ;; <?php| foo ?>
+;;                    (signal 'scan-error
+;;                            (list "Containing expression ends prematurely"
+;;                                  (prog1 (web-mode-block-beginning-position)
+;;                                    (goto-char origpos))
+;;                                  pos)))
+;;                   (t
+;;                    (let ((forward-sexp-function nil))
+;;                      (backward-sexp))
+;;                    (unless (looking-at "\\s(")
+;;                      (let ((delim
+;;                             (or (text-property-any
+;;                                  (point) pos 'face 'web-mode-block-delimiter-face)
+;;                                 (text-property-any
+;;                                  (point) pos 'face 'web-mode-html-tag-bracket-face))))
+;;                        (when delim
+;;                          (goto-char
+;;                           (next-single-property-change delim 'face)))))))))))))
+
+;; (add-hook 'web-mode-hook
+;;           (lambda ()
+;;             (setq-local forward-sexp-function 'my-web-forward-sexp)))
+
+
+;; zk-phi commented on 8 Aug 2014
+;; "my-web-forward-sexp" command basically moves the cursor forward like "forward-sexp":
+
+;; |(foo bar) baz -> (foo bar)| baz -> (foo bar) baz| ... (| are cursors)
+;; but when we're just before a html tag, element, or block, jumps over it.
+
+;; |<div>brabra</div> -> <div>brabra</div>|
+;; |<br> -> <br>|
+;; |<?php brabrabra ?> -> <?php brabrabra ?>|
+;; When we reached the end of an element or a block, raise a "scan-error" like "forward-sexp" does.
+
+;; (|foo bar) -> (foo| bar) -> (foo bar|) -> error
+;; <div>|foo bar</div> -> <div>foo| bar</div> -> <div>foo bar|</div> -> error
+;; <?php |brabrabra ?> -> <?php brabrabra| ?> -> error
+;; "my-web-forward-sexp" does nothing at the end of buffer.
+
+;; "my-web-backward-sexp" is the inverse of "my-web-forward-sexp".
+
+;; We can use sexp-wise commands to operate on html tags, elements and blocks by overriding "forward-sexp" with "my-web-forward-sexp".
+;; fxbois
+;;  Owner
+;; fxbois commented on 8 Aug 2014
+;; @zk-phi somes advices
+
+;; prefer (get-text-property (point) 'tag-beg) to (= (char-after pos) ?<)
+;; and test the property 'block-token and the value 'delimiter instead the 'face (using the 'face property is realy not a good idea)
+;; You can use the method web-mode-reveal to see the properties used (look at the *Messages* buffer)
+
+;; If you have any question, do not hesitate to ask here

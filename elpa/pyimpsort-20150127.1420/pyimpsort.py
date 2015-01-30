@@ -71,7 +71,7 @@ class ImpSorter(ast.NodeVisitor):
 
     @staticmethod
     def get_dynlibs():
-        dirname = path.join(sys.exec_prefix, 'lib/python{0}/lib-dynload'.format(sysconfig.get_python_version()))
+        dirname = path.join(sys.exec_prefix, 'lib', 'python{0}'.format(sysconfig.get_python_version()), 'lib-dynload')
         dynlibs = glob1(dirname, '*.so')
         return map(_clean_ext_suffix, dynlibs)
 
@@ -92,31 +92,32 @@ class ImpSorter(ast.NodeVisitor):
     # :: Node -> Key
     def _node_sort_key(self, node):
         """
-        where key is a tuple of the form::
-
-            (future, stdlib, site package, name, fromimport, from_names)
+        Given an AST node return a tuple which is used for sorting.
         """
-        future = 1
-        stdlib = 1
-        thirdparty = 1
+        non_future = non_stdlib = non_thirdparty = True
+        relative = False
         if isinstance(node, ast.Import):
             name = [node.names[0].name, node.names[0].asname]
+            level = 0
             from_names = None
             fromimport = 0
         elif isinstance(node, ast.ImportFrom):
             name = [node.module]
+            level = node.level
             from_names = [nm.name for nm in node.names]
             fromimport = 1
         else:
             raise TypeError(node)
-        modname = name[0].split('.')[0]
-        if modname == '__future__':
-            future = 0
+        modname = name[0].split('.')[0] if name[0] else ''
+        if level != 0:
+            relative = True
+        elif modname == '__future__':
+            non_future = False
         elif modname in self.stdlibs:
-            stdlib = 0
+            non_stdlib = False
         elif self.is_thirdparty(modname):
-            thirdparty = 0
-        return (future, stdlib, thirdparty, fromimport, name, from_names)
+            non_thirdparty = False
+        return (non_future, non_stdlib, non_thirdparty, relative, level, fromimport, name, from_names)
 
     def new_nodes(self):
         """
@@ -145,7 +146,7 @@ class ImpSorter(ast.NodeVisitor):
         pkey = None
         for key, node in sorted(self.new_nodes()):
             # insert new lines between groups
-            if pkey and key[:3] != pkey[:3]:
+            if pkey and key[:4] != pkey[:4]:
                 print(u'', file=file)
             pkey = key
 
@@ -160,7 +161,7 @@ class ImpSorter(ast.NodeVisitor):
             if isinstance(node, ast.Import):
                 print(u'import {0}'.format(all_names), file=file)
             elif isinstance(node, ast.ImportFrom):
-                print(u'from {0}{1} import {2}'.format('.' * node.level, node.module, all_names), file=file)
+                print(u'from {0}{1} import {2}'.format('.' * node.level, node.module or '', all_names), file=file)
 
 
 def main():

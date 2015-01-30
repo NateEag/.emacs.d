@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "pyimpsort" "pyimpsort.el" (21695 46316 0 0))
+;;;### (autoloads nil "pyimpsort" "pyimpsort.el" (21707 38849 0 0))
 ;;; Generated autoloads from pyimpsort.el
 
 (autoload 'pyimpsort-region "pyimpsort" "\
@@ -18,7 +18,7 @@ Sort python imports from current buffer.
 
 ;;;***
 
-;;;### (autoloads nil nil ("pyimpsort-pkg.el") (21695 46316 973491
+;;;### (autoloads nil nil ("pyimpsort-pkg.el") (21707 38849 795618
 ;;;;;;  0))
 
 ;;;***

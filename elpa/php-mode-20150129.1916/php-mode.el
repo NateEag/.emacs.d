@@ -6,7 +6,7 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Version: 20150126.1747
+;; Version: 20150129.1916
 ;;; X-Original-Version: 1.15.2
 
 (defconst php-mode-version-number "1.15.2"
@@ -632,8 +632,7 @@ code and modules."
   (c-set-style "pear")
 
   ;; Undo drupal/PSR-2 coding style whitespace effects
-  (set (make-local-variable 'show-trailing-whitespace) nil)
-  (remove-hook 'before-save-hook 'delete-trailing-whitespace))
+  (set (make-local-variable 'show-trailing-whitespace) nil))
 
 (c-add-style
  "drupal"
@@ -648,7 +647,7 @@ working with Drupal."
         indent-tabs-mode nil
         fill-column 78)
   (set (make-local-variable 'show-trailing-whitespace) t)
-  (add-hook 'before-save-hook 'delete-trailing-whitespace)
+  (add-hook 'before-save-hook 'delete-trailing-whitespace nil t)
   (c-set-style "drupal"))
 
 (c-add-style
@@ -667,8 +666,7 @@ working with Wordpress."
   (c-set-style "wordpress")
 
   ;; Undo drupal/PSR-2 coding style whitespace effects
-  (set (make-local-variable 'show-trailing-whitespace) nil)
-  (remove-hook 'before-save-hook 'delete-trailing-whitespace))
+  (set (make-local-variable 'show-trailing-whitespace) nil))
 
 (c-add-style
   "symfony2"
@@ -686,8 +684,7 @@ working with Symfony2."
   (c-set-style "symfony2")
 
   ;; Undo drupal/PSR-2 coding style whitespace effects
-  (set (make-local-variable 'show-trailing-whitespace) nil)
-  (remove-hook 'before-save-hook 'delete-trailing-whitespace))
+  (set (make-local-variable 'show-trailing-whitespace) nil))
 
 (c-add-style
   "psr2"
@@ -705,7 +702,7 @@ working with Symfony2."
   ;; Apply drupal-like coding style whitespace effects
   (set (make-local-variable 'require-final-newline) t)
   (set (make-local-variable 'show-trailing-whitespace) t)
-  (add-hook 'before-save-hook 'delete-trailing-whitespace))
+  (add-hook 'before-save-hook 'delete-trailing-whitespace nil t))
 
 (defconst php-beginning-of-defun-regexp
   "^\\s-*\\(?:\\(?:abstract\\|final\\|private\\|protected\\|public\\|static\\)\\s-+\\)*function\\s-+&?\\(\\(?:\\sw\\|\\s_\\)+\\)\\s-*("
@@ -878,14 +875,9 @@ $str = 'some'
 this ^ lineup"
   (save-excursion
     (goto-char (cdr langelem))
-    (setq anchor 0)
-    ;; Find equal sign
-    (if (not (<= (setq anchor (re-search-forward "=")) (line-end-position)))
-        ;; Or find dot sign
-        (if (<= (setq anchor (re-search-forward ".")) (line-end-position))))
-    (setq anchor (- anchor (line-beginning-position)))
-    (setq anchor (1- anchor))
-    (vector anchor)))
+    (when (or (search-forward "=" (line-end-position) t)
+              (search-forward "." (line-end-position) t))
+      (vector (1- (current-column))))))
 
 (defun php-lineup-arglist-intro (langelem)
   (save-excursion

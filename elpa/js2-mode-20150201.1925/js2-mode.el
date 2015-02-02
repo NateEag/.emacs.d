@@ -1,13 +1,13 @@
 ;;; js2-mode.el --- Improved JavaScript editing mode
 
-;; Copyright (C) 2009, 2011-2014  Free Software Foundation, Inc.
+;; Copyright (C) 2009, 2011-2015  Free Software Foundation, Inc.
 
 ;; Author: Steve Yegge <steve.yegge@gmail.com>
 ;;         mooz <stillpedant@gmail.com>
 ;;         Dmitry Gutov <dgutov@yandex.ru>
 ;; URL:  https://github.com/mooz/js2-mode/
 ;;       http://code.google.com/p/js2-mode/
-;; Version: 20141118
+;; Version: 20150202
 ;; Keywords: languages, javascript
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 
@@ -2313,19 +2313,25 @@ Returns nil if there is no enclosing scope node."
       (setq parent (js2-node-parent parent)))
     parent))
 
-(defun js2-get-defining-scope (scope name)
+(defun js2-get-defining-scope (scope name &optional point)
   "Search up scope chain from SCOPE looking for NAME, a string or symbol.
-Returns `js2-scope' in which NAME is defined, or nil if not found."
+Returns `js2-scope' in which NAME is defined, or nil if not found.
+
+If POINT is non-nil, and if the found declaration type is
+`js2-LET', also check that the declaration node is before POINT."
   (let ((sym (if (symbolp name)
                  name
                (intern name)))
-        table
         result
         (continue t))
     (while (and scope continue)
       (if (or
-           (and (setq table (js2-scope-symbol-table scope))
-                (assq sym table))
+           (let ((entry (cdr (assq sym (js2-scope-symbol-table scope)))))
+             (and entry
+                  (or (not point)
+                      (not (eq js2-LET (js2-symbol-decl-type entry)))
+                      (>= point
+                          (js2-node-abs-pos (js2-symbol-ast-node entry))))))
            (and (eq sym 'arguments)
                 (js2-function-node-p scope)))
           (setq continue nil
@@ -5632,8 +5638,7 @@ See http://es5.github.io/#x7.6"
   "Skip to end of line."
   (while (not (memq (js2-get-char) js2-eol-chars)))
   (js2-unget-char)
-  (setf (js2-token-end (js2-current-token)) js2-ts-cursor)
-  (setq js2-token-end js2-ts-cursor))
+  (setf (js2-token-end (js2-current-token)) js2-ts-cursor))
 
 (defun js2-init-scanner (&optional buf line)
   "Create token stream for BUF starting on LINE.
@@ -5869,9 +5874,9 @@ the token is flagged as such."
 During operation, creates an instance of `js2-token' struct, sets
 its relevant fields and puts it into `js2-ti-tokens'."
   (let (identifier-start
-        is-unicode-escape-start c c1
+        is-unicode-escape-start c
         contains-escape escape-val str result base
-        quote-char val look-for-slash continue tt
+        quote-char look-for-slash continue tt
         (token (js2-new-token 0)))
     (setq
      tt
@@ -6238,7 +6243,7 @@ its relevant fields and puts it into `js2-ti-tokens'."
   ;; building it out of a string buffer.
   (let ((c (js2-get-char))
         js2-ts-string-buffer
-        nc)
+        nc c1 val escape-val)
     (catch 'break
       (while (/= c quote-char)
         (catch 'continue
@@ -7035,7 +7040,7 @@ it is considered declared."
         (unless (or (member name js2-global-externs)
                     (member name js2-default-externs)
                     (member name js2-additional-externs)
-                    (js2-get-defining-scope scope name))
+                    (js2-get-defining-scope scope name pos))
           (js2-report-warning "msg.undeclared.variable" name pos (- end pos)
                               'js2-external-variable))))
     (setq js2-recorded-identifiers nil)))
@@ -9238,9 +9243,21 @@ If NODE is non-nil, it is the AST node associated with the symbol."
 
 (defun js2-parse-paren-expr-or-generator-comp ()
   (let ((px-pos (js2-current-token-beg)))
-    (if (and (>= js2-language-version 200)
-             (js2-match-token js2-FOR))
-        (js2-parse-generator-comp px-pos)
+    (cond
+     ((and (>= js2-language-version 200)
+           (js2-match-token js2-FOR))
+      (js2-parse-generator-comp px-pos))
+     ((and (>= js2-language-version 200)
+           (js2-match-token js2-RP))
+      ;; Not valid expression syntax, but this is valid in an arrow
+      ;; function with no params: () => body.
+      (if (eq (js2-peek-token) js2-ARROW)
+          ;; Return whatever, it will hopefully be rewinded and
+          ;; reparsed when we reach the =>.
+          (make-js2-keyword-node :type js2-NULL)
+        (js2-report-error "msg.syntax")
+        (make-js2-error-node)))
+     (t
       (let* ((js2-in-for-init nil)
              (expr (js2-parse-expr))
              (pn (make-js2-paren-node :pos px-pos
@@ -9249,7 +9266,7 @@ If NODE is non-nil, it is the AST node associated with the symbol."
                                               px-pos))))
         (js2-node-add-children pn (js2-paren-node-expr pn))
         (js2-must-match js2-RP "msg.no.paren")
-        pn))))
+        pn)))))
 
 (defun js2-parse-expr (&optional oneshot)
   (let* ((pn (js2-parse-assign-expr))
@@ -9968,17 +9985,6 @@ array-literals, array comprehensions and regular expressions."
           (= tt js2-FALSE)
           (= tt js2-TRUE))
       (make-js2-keyword-node :type tt))
-     ((= tt js2-RP)
-      ;; Not valid expression syntax, but this is valid in an arrow
-      ;; function with no params: () => body.
-      (if (eq (js2-peek-token) js2-ARROW)
-          (progn
-            (js2-unget-token)  ; Put back the right paren.
-            ;; Return whatever, it will hopefully be rewinded and
-            ;; reparsed when we reach the =>.
-            (make-js2-keyword-node :type js2-NULL))
-        (js2-report-error "msg.syntax")
-        (make-js2-error-node)))
      ((= tt js2-TRIPLEDOT)
       ;; Likewise, only valid in an arrow function with a rest param.
       (if (and (js2-match-token js2-NAME)
@@ -10248,9 +10254,16 @@ If ONLY-OF-P is non-nil, only the 'for (foo of bar)' form is allowed."
     pn))
 
 (defun js2-parse-class-stmt ()
-  (let ((pos (js2-current-token-beg)))
-    (js2-must-match-name "msg.unnamed.class.stmt")
-    (js2-parse-class pos 'CLASS_STATEMENT (js2-create-name-node t))))
+  (let ((pos (js2-current-token-beg))
+        (_ (js2-must-match-name "msg.unnamed.class.stmt"))
+        (name (js2-create-name-node t)))
+    (js2-set-face (js2-node-pos name) (js2-node-end name)
+                  'font-lock-function-name-face 'record)
+    (let ((node (js2-parse-class pos 'CLASS_STATEMENT name)))
+      (js2-define-symbol js2-FUNCTION
+                         (js2-name-node-name name)
+                         node)
+      node)))
 
 (defun js2-parse-class-expr ()
   (let ((pos (js2-current-token-beg))
@@ -10262,9 +10275,6 @@ If ONLY-OF-P is non-nil, only the 'for (foo of bar)' form is allowed."
 (defun js2-parse-class (pos form name)
   ;; class X [extends ...] {
   (let (pn elems extends)
-    (when name
-      (js2-set-face (js2-node-pos name) (js2-node-end name)
-                    'font-lock-function-name-face 'record))
     (if (js2-match-token js2-EXTENDS)
         (if (= (js2-peek-token) js2-LC)
             (js2-report-error "msg.missing.extends")

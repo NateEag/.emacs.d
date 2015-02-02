@@ -2729,9 +2729,23 @@ the previous shell command is executed instead."
       (if previous (user-error "No previous shell command")
         (user-error "No shell command")))
      (evil-ex-range
-      (shell-command-on-region beg end command nil t)
-      (goto-char beg)
-      (evil-first-non-blank))
+      (if (not evil-display-shell-error-in-message)
+          (shell-command-on-region beg end command nil t)
+        (let ((output-buffer (generate-new-buffer " *temp*"))
+              (error-buffer (generate-new-buffer " *temp*")))
+          (unwind-protect
+              (if (zerop (shell-command-on-region beg end
+                                                  command
+                                                  output-buffer nil
+                                                  error-buffer))
+                  (progn
+                    (delete-region beg end)
+                    (insert-buffer-substring output-buffer)
+                    (goto-char beg)
+                    (evil-first-non-blank))
+                (display-message-or-buffer error-buffer))
+            (kill-buffer output-buffer)
+            (kill-buffer error-buffer)))))
      (t
       (shell-command command)))))
 
@@ -3244,13 +3258,45 @@ Default position is the beginning of the buffer."
         (message "\"%s\" %d %slines --%s--" file nlines readonly perc)
       (message "%d lines --%s--" nlines perc))))
 
-(evil-define-operator evil-ex-sort (beg end &optional reverse)
+(evil-define-operator evil-ex-sort (beg end &optional options reverse)
   "The Ex sort command.
-\[BEG,END]sort[!]"
+\[BEG,END]sort[!] [i][u]
+The following additional options are supported:
+
+  * i   ignore case
+  * u   remove duplicate lines
+
+The 'bang' argument means to sort in reverse order."
   :motion mark-whole-buffer
   :move-point nil
-  (interactive "<r><!>")
-  (sort-lines reverse beg end))
+  (interactive "<r><a><!>")
+  (let ((beg (copy-marker beg))
+        (end (copy-marker end))
+        sort-fold-case uniq)
+    (dolist (opt (append options nil))
+      (cond
+       ((eq opt ?i) (setq sort-fold-case t))
+       ((eq opt ?u) (setq uniq t))
+       (t (user-error "Unsupported sort option: %c" opt))))
+    (sort-lines reverse beg end)
+    (when uniq
+      (let (line prev-line)
+        (goto-char beg)
+        (while (and (< (point) end) (not (eobp)))
+          (setq line (buffer-substring-no-properties
+                      (line-beginning-position)
+                      (line-end-position)))
+          (if (and (stringp prev-line)
+                   (eq t (compare-strings line nil nil
+                                          prev-line nil nil
+                                          sort-fold-case)))
+              (delete-region (progn (forward-line 0) (point))
+                             (progn (forward-line 1) (point)))
+            (setq prev-line line)
+            (forward-line 1)))))
+    (goto-char beg)
+    (set-marker beg nil)
+    (set-marker end nil)))
 
 ;;; Window navigation
 

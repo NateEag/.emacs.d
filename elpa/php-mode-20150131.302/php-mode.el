@@ -6,13 +6,13 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Version: 20150129.1916
-;;; X-Original-Version: 1.15.2
+;; Version: 20150131.302
+;;; X-Original-Version: 1.15.3
 
-(defconst php-mode-version-number "1.15.2"
+(defconst php-mode-version-number "1.15.3"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2015-01-26"
+(defconst php-mode-modified "2015-01-31"
   "PHP Mode build date.")
 
 ;;; License
@@ -547,6 +547,7 @@ PHP does not have an \"enum\"-like keyword."
     "isset"
     "list"
     "or"
+    "parent"
     "static"
     "unset"
     "var"
@@ -1341,6 +1342,9 @@ a completion list."
      ;; Highlight variables, e.g. 'var' in '$var' and '$obj->var', but
      ;; not in $obj->var()
      ("->\\(\\sw+\\)\\s-*(" 1 'default)
+
+     ;; Highlight special variables
+     ("\\$\\(this\\|that\\)" 1 font-lock-constant-face)
      ("\\(\\$\\|->\\)\\([a-zA-Z0-9_]+\\)" 2 font-lock-variable-name-face)
 
      ;; Highlight function/method names
@@ -1367,13 +1371,9 @@ a completion list."
    ;;   already fontified by another pattern. Note that using OVERRIDE
    ;;   is usually overkill.
    `(
-     
      ;; Highlight variables, e.g. 'var' in '$var' and '$obj->var', but
      ;; not in $obj->var()
      ("->\\(\\sw+\\)\\s-*(" 1 'default)
-
-     ;; Highlight special variables
-     ("\\$\\(this\\|that\\)" 1 font-lock-constant-face)
 
      ("\\(\\$\\|->\\)\\([a-zA-Z0-9_]+\\)" 2 font-lock-variable-name-face)
 

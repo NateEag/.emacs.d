@@ -79,6 +79,10 @@
     ("d" . insert-date)
     ("t" . insert-time)
 
+    ;; HTML involves lots of extraneous angle brackets. Emmet-mode makes typing
+    ;; it less annoying.
+    ("j" . emmet-expand-yas)
+
     ;; Search through buffers with helm-swoop.
     ("s" . helm-swoop)
 

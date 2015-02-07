@@ -592,7 +592,7 @@ See: https://github.com/tkf/emacs-jedi/issues/54"
   "Call ``Script(...).METHOD-NAME`` and return a deferred object."
   (let ((source      (buffer-substring-no-properties (point-min) (point-max)))
         (line        (count-lines (point-min) (min (1+ (point)) (point-max))))
-        (column      (current-column))
+        (column      (- (point) (line-beginning-position)))
         (source-path (jedi:-buffer-file-name)))
     (epc:call-deferred (jedi:get-epc)
                        method-name
@@ -690,11 +690,13 @@ in their Emacs configuration."
 
 (defun* jedi:get-in-function-call--construct-call-signature
     (&key params index call_name)
-  (let ((current-arg (nth index params)))
-    (when (and current-arg (null jedi:tooltip-method))
-      (setf (nth index params)
-            (propertize current-arg 'face 'jedi:highlight-function-argument)))
-    (concat call_name "(" (mapconcat #'identity params ", ") ")")))
+  (if (not index)
+      (concat call_name "()")
+    (let ((current-arg (nth index params)))
+      (when (and current-arg (null jedi:tooltip-method))
+        (setf (nth index params)
+              (propertize current-arg 'face 'jedi:highlight-function-argument)))
+      (concat call_name "(" (mapconcat #'identity params ", ") ")"))))
 
 (defun jedi:get-in-function-call--tooltip-show (args)
   (when (and args (not ac-completing))

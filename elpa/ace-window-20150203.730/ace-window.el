@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Version: 20150114.1344
+;; Version: 20150203.730
 ;; X-Original-Version: 0.6.1
 ;; Package-Requires: ((ace-jump-mode "2.0"))
 ;; Keywords: cursor, window, location
@@ -90,6 +90,13 @@ Use M-0 `ace-window' to toggle this value."
   :type 'boolean
   :group 'ace-window)
 
+(defvar ace-window-end-hook nil
+  "Function(s) to call after `ace-window' is done.")
+
+(defvar ace-window-end-once-hook nil
+  "Function(s) to call once after `ace-window' is done.
+This hook is set to nil with each call to `ace-window'.")
+
 (defun aw-ignored-p (window)
   "Return t if WINDOW should be ignored."
   (and aw-ignore-on
@@ -135,6 +142,9 @@ Use M-0 `ace-window' to toggle this value."
              (ace-jump-push-mark)
              (run-hooks 'ace-jump-mode-before-jump-hook)
              (funcall aw--current-op aj-data))
+           (run-hooks 'ace-window-end-hook)
+           (run-hooks 'ace-window-end-once-hook)
+           (setq ace-window-end-once-hook)
            (run-hooks 'ace-jump-mode-end-hook))
 
           (t
@@ -255,6 +265,17 @@ Set mode line to MODE-LINE during the selection process."
   (interactive)
   (setq aw--current-op 'aw-swap-window)
   (aw--doit " Ace - Swap Window"))
+
+;;;###autoload
+(defun ace-maximize-window ()
+  "Ace maximize window."
+  (interactive)
+  (setq aw--current-op
+        (lambda (aj)
+          (let ((wnd (aj-position-window aj)))
+            (select-window wnd)
+            (delete-other-windows))))
+  (aw--doit " Ace - Maximize Window"))
 
 ;;;###autoload
 (defun ace-window (arg)

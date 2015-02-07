@@ -2870,15 +2870,22 @@ This function is used with sources build with `helm-source-sync'."
   "Give a score to CANDIDATE according to PATTERN.
 Score is calculated against number of contiguous matches found with PATTERN.
 If PATTERN is fully matched in CANDIDATE a maximal score (100) is given.
-A bonus of one point is given when PATTERN prefix match CANDIDATE."
+A bonus of one point is given when PATTERN prefix match CANDIDATE.
+Contiguous matches have a coefficient of 2."
   (let* ((pat-lookup (helm--collect-pairs-in-string pattern))
          (str-lookup (helm--collect-pairs-in-string candidate))
          (bonus (if (equal (car pat-lookup) (car str-lookup)) 1 0))
          (bonus1 (and (string-match (concat "\\<" (regexp-quote pattern) "\\>")
                                     candidate)
                       100)))
-    (+ bonus (or bonus1 (length (cl-nintersection
-                                 pat-lookup str-lookup :test 'equal))))))
+    (+ bonus (or bonus1
+                 ;; Give a coefficient of 2 for contiguous matches.
+                 ;; That's mean that "wiaaaki" will not take precedence
+                 ;; on "aaawiki" when matching on "wiki" even if "wiaaaki"
+                 ;; starts by "wi".
+                 (* (length (cl-nintersection
+                             pat-lookup str-lookup :test 'equal))
+                    2)))))
 
 (defun helm-fuzzy-matching-default-sort-fn (candidates _source &optional use-real)
   "The transformer for sorting candidates in fuzzy matching.
@@ -4451,11 +4458,11 @@ Returns the resulting buffer."
     (with-current-buffer buf
       (erase-buffer)
       (if (listp data)
-          (cl-loop for i in data
-                   for str = (cond ((symbolp i) (symbol-name i))
-                                   ((numberp i) (number-to-string i))
-                                   (t i))
-                   do (insert (concat str "\n")))
+          (insert (mapconcat (lambda (i)
+                               (cond ((symbolp i) (symbol-name i))
+                                     ((numberp i) (number-to-string i))
+                                     (t i)))
+                             data "\n"))
         (and (stringp data) (insert data))))
     buf))
 

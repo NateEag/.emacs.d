@@ -25,10 +25,14 @@
 (defvar helm-el-package--initialized-p nil)
 (defvar helm-el-package--tabulated-list nil)
 (defvar helm-el-package--upgrades nil)
+(defvar helm-el-package--removable-packages nil)
 
 (defun helm-el-package--init ()
   (when (null package-alist)
     (setq helm-el-package--show-only 'all))
+  (when (fboundp 'package--removable-packages)
+    (setq helm-el-package--removable-packages
+          (package--removable-packages)))
   (save-selected-window
     (list-packages helm-el-package--initialized-p)
     (setq helm-el-package--initialized-p t)
@@ -124,8 +128,8 @@
 (defun helm-el-package-menu--find-upgrades ()
   (cl-loop for entry in helm-el-package--tabulated-list
            for pkg-desc = (car entry)
-           for status = (aref (cadr entry) 2)
-           when (member status '("installed" "unsigned"))
+           for status = (package-desc-status pkg-desc)
+           when (member status '("installed" "unsigned" "dependency"))
            collect pkg-desc
            into installed
            when (member status '("available" "new"))
@@ -153,7 +157,10 @@
                   (package-install pkg-desc))
                  (t
                   ;; Delete.
-                  (package-delete pkg-desc)))))
+                  (if (boundp 'package-selected-packages)
+                      (with-no-warnings
+                        (package-delete pkg-desc t t))
+                      (package-delete pkg-desc))))))
 
 (defun helm-el-package-upgrade (_candidate)
   (helm-el-package-upgrade-1
@@ -185,7 +192,12 @@
            for upgrade-p = (assq name helm-el-package--upgrades)
            for user-installed-p = (and (boundp 'package-selected-packages)
                                        (memq name package-selected-packages))
-           do (when user-installed-p (put-text-property 0 2 'display "I " c))
+           do (when user-installed-p (put-text-property 0 2 'display "S " c))
+           do (when (memq name helm-el-package--removable-packages)
+                (put-text-property 0 2 'display "U " c)
+                (put-text-property
+                 2 (+ (length (symbol-name name)) 2)
+                 'face 'font-lock-variable-name-face c))
            for cand = (cons c (car (split-string c)))
            when (or (and upgrade-p
                          (eq helm-el-package--show-only 'upgrade))

@@ -863,6 +863,14 @@ the upgrade action (visible only when there is upgradables packages).
 Of course you can upgrade a single package by just running the upgrade action
 without marking it.
 
+*** Meaning of flags prefixing packages (Emacs-25)
+
+- The flag \"S\" that prefix package names mean that this package is one of `package-selected-packages'.
+This feature is only available with emacs-25.
+
+- The flag \"U\" that prefix package names mean that this package is no more needed.
+This feature is only available with emacs-25.
+
 \n** Specific commands for Helm elisp package:\n
 \\<helm-el-package-map>
 \\[helm-el-package-show-all]\t->Show all packages.

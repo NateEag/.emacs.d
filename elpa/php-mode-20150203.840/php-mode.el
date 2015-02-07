@@ -6,7 +6,7 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Version: 20150131.302
+;; Version: 20150203.840
 ;;; X-Original-Version: 1.15.3
 
 (defconst php-mode-version-number "1.15.3"
@@ -633,7 +633,8 @@ code and modules."
   (c-set-style "pear")
 
   ;; Undo drupal/PSR-2 coding style whitespace effects
-  (set (make-local-variable 'show-trailing-whitespace) nil))
+  (set (make-local-variable 'show-trailing-whitespace)
+       (default-value 'show-trailing-whitespace)))
 
 (c-add-style
  "drupal"
@@ -667,7 +668,8 @@ working with Wordpress."
   (c-set-style "wordpress")
 
   ;; Undo drupal/PSR-2 coding style whitespace effects
-  (set (make-local-variable 'show-trailing-whitespace) nil))
+  (set (make-local-variable 'show-trailing-whitespace)
+       (default-value 'show-trailing-whitespace)))
 
 (c-add-style
   "symfony2"
@@ -685,7 +687,8 @@ working with Symfony2."
   (c-set-style "symfony2")
 
   ;; Undo drupal/PSR-2 coding style whitespace effects
-  (set (make-local-variable 'show-trailing-whitespace) nil))
+  (set (make-local-variable 'show-trailing-whitespace)
+       (default-value 'show-trailing-whitespace)))
 
 (c-add-style
   "psr2"

@@ -30,7 +30,7 @@
 		 nil "Indent and dedent Lisp code, automatically adjust close parens" tar
 		 ((:url . "http://elpa.gnu.org/packages/adjust-parens.html"))])
  (ahungry-theme .
-		[(1 0 4)
+		[(1 0 5)
 		 ((emacs
 		   (24)))
 		 "Ahungry color theme for Emacs.  Make sure to (load-theme 'ahungry)." tar
@@ -55,6 +55,11 @@
 	      nil "run the aumix program in a buffer" single
 	      ((:url . "http://user42.tuxfamily.org/aumix-mode/index.html")
 	       (:keywords "multimedia" "mixer" "aumix"))])
+ (auto-overlays .
+		[(0 10 8)
+		 nil "Automatic regexp-delimited overlays" tar
+		 ((:keywords "extensions")
+		  (:url . "http://www.dr-qubit.org/emacs.php"))])
  (caps-lock .
 	    [(1 0)
 	     nil "Caps-lock as a minor mode" single
@@ -92,7 +97,7 @@
 	   ((:keywords "abbrev" "convenience" "matching")
 	    (:url . "http://company-mode.github.io/"))])
  (company-statistics .
-		     [(0 1)
+		     [(0 1 1)
 		      ((emacs
 			(24 3))
 		       (company
@@ -101,7 +106,7 @@
 		      ((:keywords "abbrev" "convenience" "matching")
 		       (:url . "https://github.com/company-mode/company-statistics"))])
  (context-coloring .
-		   [(4 0 0)
+		   [(5 0 0)
 		    ((emacs
 		      (24))
 		     (js2-mode
@@ -255,7 +260,7 @@
 	((:url . "http://www.dr-qubit.org/emacs.php")
 	 (:keywords "extensions" "data structures" "heap" "priority queue"))])
  (hydra .
-	[(0 6 1)
+	[(0 8 0)
 	 ((cl-lib
 	   (0 5)))
 	 "Make bindings that stick around" tar
@@ -377,7 +382,7 @@
 	    ((:url . "http://elpa.gnu.org/packages/omn-mode.html")
 	     (:keywords))])
  (org .
-      [(20150202)
+      [(20150209)
        nil "Outline-based notes management and organizer" tar nil])
  (osc .
       [(0 1)
@@ -425,7 +430,7 @@
 		  ((:url . "http://elpa.gnu.org/packages/scroll-restore.html")
 		   (:keywords "scrolling"))])
  (seq .
-      [(1 0)
+      [(1 1)
        nil "Sequence manipulation functions" single
        ((:url . "http://elpa.gnu.org/packages/seq.html")
 	(:keywords "sequences"))])

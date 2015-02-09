@@ -203,7 +203,7 @@ Only buffer names are fuzzy matched when this is enabled,
                (if mjm
                    (with-current-buffer buffer (funcall mjm))
                    (set-buffer-major-mode buffer))
-               (helm-switch-to-buffer buffer))))))
+               (switch-to-buffer buffer))))))
 
 (defvar ido-temp-list)
 (defvar ido-ignored-list)
@@ -535,7 +535,7 @@ If REGEXP-FLAG is given use `query-replace-regexp'."
           for buf in bufs
           do
           (save-window-excursion
-            (helm-switch-to-buffer buf)
+            (switch-to-buffer buf)
             (save-excursion
               (let ((case-fold-search t))
                 (goto-char (point-min))
@@ -574,10 +574,11 @@ If REGEXP-FLAG is given use `query-replace-regexp'."
 
 (defun helm-buffer-revert-and-update (_candidate)
   (let ((marked (helm-marked-candidates))
-        (preselect (helm-get-selection nil t)))
+        (preselect (helm-buffers--quote-truncated-buffer
+                    (helm-get-selection))))
     (cl-loop for buf in marked do (helm-revert-buffer buf))
     (when (> (length marked) 1) (helm-unmark-all))
-    (helm-force-update (regexp-quote preselect))))
+    (helm-force-update preselect)))
 
 (defun helm-buffer-revert-persistent ()
   "Revert buffer without quitting helm."
@@ -647,7 +648,7 @@ If REGEXP-FLAG is given use `query-replace-regexp'."
   "Run switch to other window action from `helm-source-buffers-list'."
   (interactive)
   (with-helm-alive-p
-    (helm-quit-and-execute-action 'switch-to-buffer-other-window)))
+    (helm-quit-and-execute-action 'helm-switch-to-buffers-other-window)))
 
 (defun helm-buffer-switch-other-frame ()
   "Run switch to other frame action from `helm-source-buffers-list'."
@@ -713,7 +714,7 @@ If REGEXP-FLAG is given use `query-replace-regexp'."
 (defun helm-buffers-list-persistent-action (candidate)
   (if current-prefix-arg
       (helm-buffers-persistent-kill candidate)
-    (helm-switch-to-buffer candidate)))
+    (switch-to-buffer candidate)))
 
 (defun helm-ediff-marked-buffers (_candidate &optional merge)
   "Ediff 2 marked buffers or CANDIDATE and `helm-current-buffer'.
@@ -793,7 +794,7 @@ displayed with the `file-name-shadow' face if available."
 (define-helm-type-attribute 'buffer
   `((action
      . ,(helm-make-actions
-         "Switch to buffer" 'helm-switch-to-buffer
+         "Switch to buffer" 'switch-to-buffer
          (lambda () (and (locate-library "popwin") "Switch to buffer in popup window"))
          'popwin:popup-buffer
          "Switch to buffer other window `C-c o'" 'switch-to-buffer-other-window

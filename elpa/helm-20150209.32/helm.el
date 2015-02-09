@@ -600,8 +600,8 @@ to exit or helm update to disable the `current-input-method' with `C-\\'."
   "Face for candidate number in mode-line." :group 'helm-faces)
 
 (defface helm-selection
-    '((((background dark)) :background "ForestGreen" :underline t)
-      (((background light)) :background "#b5ffd1" :underline t))
+    '((((background dark)) :background "ForestGreen")
+      (((background light)) :background "#b5ffd1"))
   "Face for currently selected item in the helm buffer."
   :group 'helm-faces)
 
@@ -1053,9 +1053,14 @@ not `exit-minibuffer' or unwanted functions."
 (defmacro with-helm-restore-variables (&rest body)
   "Restore `helm-restored-variables' after executing BODY."
   (declare (indent 0) (debug t))
-  `(let ,(mapcar (lambda (symbol) (list symbol symbol))
-                 helm-restored-variables)
-     ,@body))
+  (helm-with-gensyms (orig-vars)
+    `(let ((,orig-vars (mapcar (lambda (v)
+                                 (cons v (symbol-value v)))
+                               helm-restored-variables)))
+       (unwind-protect (progn ,@body)
+         (cl-loop for (var . value) in ,orig-vars
+               do (set var value))
+         (helm-log "restore variables")))))
 
 (defmacro with-helm-default-directory (directory &rest body)
   (declare (indent 2) (debug t))
@@ -2162,7 +2167,8 @@ For ANY-RESUME ANY-INPUT ANY-DEFAULT and ANY-SOURCES See `helm'."
 
     (setq helm-selection-overlay
           (make-overlay (point-min) (point-min) (get-buffer buffer)))
-    (overlay-put helm-selection-overlay 'face 'helm-selection)))
+    (overlay-put helm-selection-overlay 'face 'helm-selection)
+    (overlay-put helm-selection-overlay 'priority 1)))
 
 (defun helm-restore-position-on-quit ()
   "Restore position in `helm-current-buffer' when quitting."
@@ -4790,6 +4796,7 @@ Argument ACTION if present will be used as second argument of `display-buffer'."
                               (or (helm-get-next-candidate-separator-pos)
                                   (point-max))
                             (1+ (point-at-eol))))))
+    (overlay-put o 'priority 0)
     (overlay-put o 'face   'helm-visible-mark)
     (overlay-put o 'source (assoc-default 'name (helm-get-current-source)))
     (overlay-put o 'string (buffer-substring (overlay-start o) (overlay-end o)))

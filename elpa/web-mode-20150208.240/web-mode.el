@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2015 François-Xavier Bois
 
-;; Version: 20150204.757
-;; X-Original-Version: 10.4.01
+;; Version: 20150208.240
+;; X-Original-Version: 10.4.02
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -25,7 +25,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "10.4.01"
+(defconst web-mode-version "10.4.02"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -676,7 +676,7 @@ Must be used in conjunction with web-mode-enable-block-face."
 (defvar web-mode-content-types
   '(("css"        . "\\.\\(s?css\\|css\\.erb\\)\\'")
     ("javascript" . "\\.\\(js\\|js\\.erb\\)\\'")
-    ("json"       . "\\.\\(json\\|jsonld\\)\\'")
+    ("json"       . "\\.\\(api\\|json\\|jsonld\\)\\'")
     ("jsx"        . "\\.jsx\\'")
     ("xml"        . "\\.xml\\'")
     ("html"       . "."))
@@ -1916,6 +1916,7 @@ the environment as needed for ac-sources, right before they're used.")
     (define-key map [menu-bar wm attr attr-end] '(menu-item "End" web-mode-attribute-end))
     (define-key map [menu-bar wm attr attr-beg] '(menu-item "Beginning" web-mode-attribute-beginning))
     (define-key map [menu-bar wm attr attr-sel] '(menu-item "Select" web-mode-attribute-select))
+    (define-key map [menu-bar wm attr attr-kil] '(menu-item "Kill" web-mode-attribute-kill))
     (define-key map [menu-bar wm attr attr-nex] '(menu-item "Next" web-mode-attribute-next))
     (define-key map [menu-bar wm attr attr-tra] '(menu-item "Transpose" web-mode-attribute-transpose))
 
@@ -1961,6 +1962,7 @@ the environment as needed for ac-sources, right before they're used.")
     (define-key map (kbd "C-c C-a e") 'web-mode-attribute-end)
     (define-key map (kbd "C-c C-a i") 'web-mode-attribute-insert)
     (define-key map (kbd "C-c C-a s") 'web-mode-attribute-select)
+    (define-key map (kbd "C-c C-a k") 'web-mode-attribute-kill)
     (define-key map (kbd "C-c C-a t") 'web-mode-attribute-transpose)
     (define-key map (kbd "C-c C-a n") 'web-mode-attribute-next)
 
@@ -8737,7 +8739,7 @@ Pos should be in a tag."
                (> tag-end next-end))
       (setq attr-beg (web-mode-attribute-beginning-position pos)
             attr-end (web-mode-attribute-end-position pos))
-;;      (message "%S %S - %S %S" attr-beg attr-end next-beg next-end)
+      ;;      (message "%S %S - %S %S" attr-beg attr-end next-beg next-end)
       (transpose-regions attr-beg (1+ attr-end) next-beg (1+ next-end))
       )))
 
@@ -8753,6 +8755,13 @@ Pos should be in a tag."
     (web-mode-attribute-end)
     (point)
     ))
+
+(defun web-mode-attribute-kill ()
+  "Kill the current html attribute."
+  (interactive)
+  (web-mode-attribute-select)
+  (when mark-active
+    (kill-region (region-beginning) (region-end))))
 
 (defun web-mode-block-close (&optional pos)
   "Close the first unclosed control block."

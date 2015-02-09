@@ -4,7 +4,7 @@
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
 ;;;### (autoloads nil nil ("python-mode-pkg.el" "python-mode.el")
-;;;;;;  (21695 49478 770902 0))
+;;;;;;  (21720 42217 192960 0))
 
 ;;;***
 

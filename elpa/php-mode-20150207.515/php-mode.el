@@ -6,7 +6,7 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Version: 20150203.840
+;; Version: 20150207.515
 ;;; X-Original-Version: 1.15.3
 
 (defconst php-mode-version-number "1.15.3"
@@ -830,7 +830,8 @@ example `html-mode'.  Known such libraries are:\n\t"
         (move-beginning-of-line nil)
         ;; Don't indent heredoc end mark
         (save-match-data
-          (unless (looking-at "[a-zA-Z0-9_]+;\n")
+          (unless (and (looking-at "[a-zA-Z0-9_]+;\n")
+                       (php-in-string-p))
             (setq doit t)))
         (goto-char here)
         (when doit

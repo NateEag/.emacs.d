@@ -62,10 +62,25 @@
      ((\? space) (\? "\\(?:.\\|\n\\)+") #'$2))
     (range
      ("%" #'(evil-ex-full-range))
-     (line (\? "[,;]" line #'$2) #'evil-ex-range)
+     (line ";" line #'(let ((tmp1 $1))
+                        (save-excursion
+                          (goto-line tmp1)
+                          (evil-ex-range tmp1 $3))))
+     (line "," line #'(evil-ex-range $1 $3))
+     (line #'(evil-ex-range $1 nil))
      ("`" "[-a-zA-Z_<>']" ",`" "[-a-zA-Z_<>']"
       #'(evil-ex-char-marker-range $2 $4)))
     (line
+     (base (\? offset) search (\? offset)
+           #'(let ((tmp (evil-ex-line $1 $2)))
+               (save-excursion
+                 (goto-line tmp)
+                 (evil-ex-line $3 $4))))
+     ((\? base) offset search (\? offset)
+      #'(let ((tmp (evil-ex-line $1 $2)))
+          (save-excursion
+            (goto-line tmp)
+            (evil-ex-line $3 $4))))
      (base (\? offset) #'evil-ex-line)
      ((\? base) offset #'evil-ex-line))
     (base

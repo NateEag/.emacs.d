@@ -252,10 +252,12 @@ If this flag is nil, then 50 means jump 50 times.")
   "Buffer-local minor mode to emulate matchit.vim"
   :keymap (make-sparse-keymap)
   (if (fboundp 'evilmi-customize-keybinding)
+      ;; use user's own key bindings
       (evilmi-customize-keybinding)
-    (evil-define-key 'normal evil-matchit-mode-map
-      "%" 'evilmi-jump-items)
-    )
+    ;; else use default key bindgs
+    (evil-define-key 'normal evil-matchit-mode-map "%" 'evilmi-jump-items)
+    (evil-define-key 'visual evil-matchit-mode-map "%" 'evilmi-jump-items))
+
   (evil-normalize-keymaps)
   (evilmi-init-plugins))
 

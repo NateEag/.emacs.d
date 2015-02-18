@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Version: 20150207.540
+;; Version: 20150217.650
 ;; X-Original-Version: 0.7.0
 ;; Package-Requires: ((ace-jump-mode "2.0"))
 ;; Keywords: cursor, window, location
@@ -80,7 +80,7 @@
           (const :tag "global" global)
           (const :tag "frame" frame)))
 
-(defcustom aw-ignored-buffers '("*Calc Trail*")
+(defcustom aw-ignored-buffers '("*Calc Trail*" "*LV*")
   "List of buffers to ignore when selecting window."
   :group 'ace-window)
 
@@ -167,7 +167,10 @@ Amend MODE-LINE to the mode line for the duration of the selection."
        (select-window (aj-visual-area-window (car visual-area-list))))
       (2
        (select-window
-        (next-window nil nil next-window-scope)))
+        (next-window nil nil next-window-scope))
+       (while (aw-ignored-p (selected-window))
+         (select-window
+          (next-window nil nil next-window-scope))))
       (t
        (let ((candidate-list
               (mapcar (lambda (va)

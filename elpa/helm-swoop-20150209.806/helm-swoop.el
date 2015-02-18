@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2013 by Shingo Fukuyama
 
-;; Version: 20150201.2203
+;; Version: 20150209.806
 ;; X-Original-Version: 1.4
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
@@ -208,10 +208,16 @@
 (defsubst helm-swoop--get-string-at-line ()
   (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
 
-(defsubst helm-swoop--buffer-substring ()
+(defsubst helm-swoop--buffer-substring ($point-min $point-max)
   (if helm-swoop-speed-or-color
-      (buffer-substring (point-min) (point-max))
-    (buffer-substring-no-properties (point-min) (point-max))))
+      (let (($content (buffer-substring $point-min $point-max)))
+        (with-temp-buffer
+          (let ((inhibit-read-only t))
+            (insert $content)
+            (remove-text-properties (point-min) (point-max) '(read-only t))
+            (setq $content (buffer-substring (point-min) (point-max)))))
+        $content)
+    (buffer-substring-no-properties $point-min $point-max)))
 
 ;;;###autoload
 (defun helm-swoop-back-to-last-point (&optional $cancel)
@@ -424,7 +430,7 @@ This function needs to call after latest helm-swoop-line-overlay set."
 (defun helm-swoop--get-content (&optional $linum)
   "Get the whole content in buffer and add line number at the head.
 If $linum is number, lines are separated by $linum"
-  (let (($bufstr (helm-swoop--buffer-substring))
+  (let (($bufstr (helm-swoop--buffer-substring (point-min) (point-max)))
         $return)
     (with-temp-buffer
       (insert $bufstr)
@@ -441,7 +447,7 @@ If $linum is number, lines are separated by $linum"
           (goto-char (point-min))
           (while (re-search-forward "^[0-9]+\\s-*$" nil t)
             (replace-match ""))))
-      (setq $return (helm-swoop--buffer-substring)))
+      (setq $return (helm-swoop--buffer-substring (point-min) (point-max))))
     $return))
 
 (defun helm-c-source-swoop ()
@@ -453,7 +459,7 @@ If $linum is number, lines are separated by $linum"
                 (setq helm-swoop-cache t))))
     (candidates-in-buffer)
     (get-line . ,(if helm-swoop-speed-or-color
-                     'buffer-substring
+                     'helm-swoop--buffer-substring
                    'buffer-substring-no-properties))
     (keymap . ,helm-swoop-map)
     (header-line . "[C-c C-e] Edit mode, [M-i] apply all buffers")
@@ -586,8 +592,8 @@ If $linum is number, lines are separated by $linum"
         (ad-activate 'helm-next-line)
         (ad-enable-advice 'helm-previous-line 'around 'helm-swoop-previous-line)
         (ad-activate 'helm-previous-line)
-	(ad-enable-advice 'helm-toggle-visible-mark 'around 'helm-swoop-toggle-visible-mark)		
-	(ad-activate 'helm-toggle-visible-mark)
+        (ad-enable-advice 'helm-toggle-visible-mark 'around 'helm-swoop-toggle-visible-mark)
+        (ad-activate 'helm-toggle-visible-mark)
         (ad-enable-advice 'helm-move--next-line-fn 'around
                           'helm-multi-swoop-next-line-cycle)
         (ad-activate 'helm-move--next-line-fn)
@@ -907,6 +913,12 @@ If $linum is number, lines are separated by $linum"
     (when (called-interactively-p 'any)
       (helm-multi-swoop--move-line-action))))
 
+(defadvice helm-toggle-visible-mark (around helm-multi-swoop-toggle-visible-mark disable)
+  (let ((helm-move-to-line-cycle-in-source nil))
+    ad-do-it
+    (when (called-interactively-p 'any)
+      (helm-multi-swoop--move-line-action))))
+
 (defadvice helm-move--next-line-fn (around helm-multi-swoop-next-line-cycle disable)
   (if (not (helm-pos-multiline-p))
       (if (eq (point-max) (save-excursion (forward-line 1) (point)))
@@ -1030,6 +1042,9 @@ If $linum is number, lines are separated by $linum"
           (ad-enable-advice 'helm-previous-line 'around
                             'helm-multi-swoop-previous-line)
           (ad-activate 'helm-previous-line)
+          (ad-enable-advice 'helm-toggle-visible-mark 'around
+                            'helm-multi-swoop-toggle-visible-mark)
+          (ad-activate 'helm-toggle-visible-mark)
           (ad-enable-advice 'helm-move--next-line-fn 'around
                             'helm-multi-swoop-next-line-cycle)
           (ad-activate 'helm-move--next-line-fn)
@@ -1071,6 +1086,9 @@ If $linum is number, lines are separated by $linum"
         (ad-disable-advice 'helm-previous-line 'around
                            'helm-multi-swoop-previous-line)
         (ad-activate 'helm-previous-line)
+        (ad-disable-advice 'helm-toggle-visible-mark 'around
+                           'helm-multi-swoop-toggle-visible-mark)
+        (ad-activate 'helm-toggle-visible-mark)
         (ad-disable-advice 'helm-move--next-line-fn 'around
                            'helm-multi-swoop-next-line-cycle)
         (ad-activate 'helm-move--next-line-fn)

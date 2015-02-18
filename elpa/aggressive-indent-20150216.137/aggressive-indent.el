@@ -4,8 +4,8 @@
 
 ;; Author: Artur Malabarba <bruce.connor.am@gmail.com>
 ;; URL: http://github.com/Bruce-Connor/aggressive-indent-mode
-;; Version: 20150202.548
-;; X-Original-Version: 0.3.4
+;; Version: 20150216.137
+;; X-Original-Version: 0.3.5
 ;; Package-Requires: ((emacs "24.1") (names "0.5") (cl-lib "0.5"))
 ;; Keywords: indent lisp maint tools
 ;; Prefix: aggressive-indent
@@ -111,7 +111,7 @@ Meant for use in functions which go in hooks."
 ;;;###autoload
 (define-namespace aggressive-indent- :group indent
 
-(defconst version "0.3.2" "Version of the aggressive-indent.el package.")
+(defconst version "0.3.5" "Version of the aggressive-indent.el package.")
 (defun bug-report ()
   "Opens github issues page in a web browser. Please send any bugs you find.
 Please include your emacs and aggressive-indent versions."
@@ -143,6 +143,7 @@ Please include this in your report!"
     haml-mode
     haskell-mode
     makefile-mode
+    makefile-gmake-mode
     minibuffer-inactive-mode
     netcmd-mode
     python-mode
@@ -154,6 +155,7 @@ Please include this in your report!"
     eshell-mode
     tabulated-list-mode
     term-mode
+    TeX-output-mode
     text-mode
     yaml-mode
     )

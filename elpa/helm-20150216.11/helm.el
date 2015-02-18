@@ -119,8 +119,8 @@ second call within 0.5s run `helm-swap-windows'."
   '(helm-toggle-resplit-window helm-swap-windows) 1)
 
 ;;;###autoload
-(defmacro helm-define-key-with-subkeys (map key subkey command
-                                        &optional other-subkeys menu exit-fn)
+(defun helm-define-key-with-subkeys (map key subkey command
+                                         &optional other-subkeys menu exit-fn)
   "Allow defining in MAP a KEY and SUBKEY to COMMAND.
 
 This allow typing KEY to call COMMAND the first time and
@@ -129,12 +129,12 @@ type only SUBKEY on subsequent calls.
 Arg MAP is the keymap to use, SUBKEY is the initial short keybinding to
 call COMMAND.
 
-Arg OTHER-SUBKEYS is an unquoted alist specifying other short keybindings
+Arg OTHER-SUBKEYS is an alist specifying other short keybindings
 to use once started.
 e.g:
 
 \(helm-define-key-with-subkeys global-map
-   \(kbd \"C-x v n\") ?n 'git-gutter:next-hunk ((?p . git-gutter:previous-hunk))\)
+   \(kbd \"C-x v n\") ?n 'git-gutter:next-hunk '((?p . git-gutter:previous-hunk))\)
 
 
 In this example, `C-x v n' will run `git-gutter:next-hunk'
@@ -152,30 +152,31 @@ NOTE: SUBKEY and OTHER-SUBKEYS bindings support
 only char syntax actually (e.g ?n)
 so don't use strings, vectors or whatever to define them."
   (declare (indent 1))
-  (let ((other-keys (and other-subkeys
-                         (cl-loop for (x . y) in other-subkeys
-                               collect (list x `(call-interactively ',y) t)))))
-    `(define-key ,map ,key
-       (lambda ()
-         (interactive)
-         (unwind-protect
-              (progn
-                (call-interactively ,command)
-                (while (let ((input (read-key ,menu)) kb com)
-                         (setq last-command-event input)
-                         (cl-case input 
-                           (,subkey (call-interactively ,command) t)
-                           ,@other-keys
-                           (t
-                            (setq kb  (this-command-keys-vector))
-                            (setq com (lookup-key ,map kb))
-                            (if (commandp com)
-                                (call-interactively com)
-                              (setq unread-command-events
-                                    (nconc (mapcar 'identity kb)
-                                           unread-command-events)))
-                            nil)))))
-           (and ,exit-fn (funcall ,exit-fn)))))))
+  (define-key map key
+    (lambda ()
+      (interactive)
+      (unwind-protect
+          (progn
+            (call-interactively command)
+            (while (let ((input (read-key menu)) other kb com)
+                     (setq last-command-event input)
+                     (cond
+                      ((eq input subkey)
+                       (call-interactively command)
+                       t)
+                      ((setq other (assoc input other-subkeys))
+                       (call-interactively (cdr other))
+                       t)
+                      (t
+                       (setq kb (vector last-command-event))
+                       (setq com (lookup-key map kb))
+                       (if (commandp com)
+                           (call-interactively com)
+                         (setq unread-command-events
+                               (nconc (mapcar 'identity kb)
+                                      unread-command-events)))
+                       nil)))))
+        (and exit-fn (funcall exit-fn))))))
 
 
 ;;; Keymap
@@ -3555,7 +3556,8 @@ If action buffer is selected, back to the helm buffer."
                                               ((< count 10)
                                                (format "[f%s]  " count))
                                               (t (format "[f%s] " count)))
-                                        (propertize i 'face 'helm-action)) j))))
+                                        (propertize i 'face 'helm-action))
+                                j))))
             (candidate-number-limit))))
     (set (make-local-variable 'helm-source-filter) nil)
     (set (make-local-variable 'helm-selection-overlay) nil)
@@ -4039,10 +4041,12 @@ to a list of forms.\n\n")
 
 ;; Core: misc
 (defun helm-kill-buffer-hook ()
-  "Remove tick entry from `helm-tick-hash' when killing a buffer."
+  "Remove tick entry from `helm-tick-hash' and remove buffer from
+`helm-buffers' when killing a buffer."
   (cl-loop for key being the hash-keys in helm-tick-hash
         if (string-match (format "^%s/" (regexp-quote (buffer-name))) key)
-        do (remhash key helm-tick-hash)))
+        do (remhash key helm-tick-hash))
+  (setq helm-buffers (remove (buffer-name) helm-buffers)))
 (add-hook 'kill-buffer-hook 'helm-kill-buffer-hook)
 
 (defun helm-preselect (candidate-or-regexp &optional source)
@@ -4906,7 +4910,8 @@ When key WITH-WILDCARD is specified try to expand a wilcard if some."
           for (source . real) in
           (or (reverse helm-marked-candidates)
               (list (cons current-src (helm-get-selection))))
-          when (equal current-src source)
+          when (equal (assoc 'name current-src)
+                      (assoc 'name source))
           ;; When real is a normal filename without wildcard
           ;; file-expand-wildcards returns a list of one file.
           ;; When real is a non--existent file it return nil.

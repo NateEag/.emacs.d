@@ -56,7 +56,7 @@
 	      ((:url . "http://user42.tuxfamily.org/aumix-mode/index.html")
 	       (:keywords "multimedia" "mixer" "aumix"))])
  (auto-overlays .
-		[(0 10 8)
+		[(0 10 9)
 		 nil "Automatic regexp-delimited overlays" tar
 		 ((:keywords "extensions")
 		  (:url . "http://www.dr-qubit.org/emacs.php"))])
@@ -106,7 +106,7 @@
 		      ((:keywords "abbrev" "convenience" "matching")
 		       (:url . "https://github.com/company-mode/company-statistics"))])
  (context-coloring .
-		   [(5 0 0)
+		   [(6 0 0)
 		    ((emacs
 		      (24))
 		     (js2-mode
@@ -260,7 +260,7 @@
 	((:url . "http://www.dr-qubit.org/emacs.php")
 	 (:keywords "extensions" "data structures" "heap" "priority queue"))])
  (hydra .
-	[(0 8 0)
+	[(0 9 0)
 	 ((cl-lib
 	   (0 5)))
 	 "Make bindings that stick around" tar
@@ -358,7 +358,7 @@
 	      ((:url . "http://elpa.gnu.org/packages/nhexl-mode.html")
 	       (:keywords "data"))])
  (nlinum .
-	 [(1 5)
+	 [(1 6)
 	  nil "Show line numbers in the margin" single
 	  ((:url . "http://elpa.gnu.org/packages/nlinum.html")
 	   (:keywords "convenience"))])
@@ -382,7 +382,7 @@
 	    ((:url . "http://elpa.gnu.org/packages/omn-mode.html")
 	     (:keywords))])
  (org .
-      [(20150209)
+      [(20150216)
        nil "Outline-based notes management and organizer" tar nil])
  (osc .
       [(0 1)
@@ -430,7 +430,7 @@
 		  ((:url . "http://elpa.gnu.org/packages/scroll-restore.html")
 		   (:keywords "scrolling"))])
  (seq .
-      [(1 1)
+      [(1 2)
        nil "Sequence manipulation functions" single
        ((:url . "http://elpa.gnu.org/packages/seq.html")
 	(:keywords "sequences"))])
@@ -445,7 +445,7 @@
 	     ((:url . "http://elpa.gnu.org/packages/sisu-mode.html")
 	      (:keywords "text" "processes" "tools"))])
  (sml-mode .
-	   [(6 5)
+	   [(6 7)
 	    nil "Major mode for editing (Standard) ML" single
 	    ((:url . "http://elpa.gnu.org/packages/sml-mode.html")
 	     (:keywords "sml"))])
@@ -482,6 +482,11 @@
 		      nil "temp buffer browse mode" single
 		      ((:url . "http://elpa.gnu.org/packages/temp-buffer-browse.html")
 		       (:keywords "convenience"))])
+ (test-simple .
+	      [(1 1)
+	       nil "Simple Unit Test Framework for Emacs Lisp" single
+	       ((:url . "http://github.com/rocky/emacs-test-simple")
+		(:keywords "unit-test"))])
  (trie .
        [(0 2 6)
 	((tNFA

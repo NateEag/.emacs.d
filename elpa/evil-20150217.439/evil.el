@@ -6,6 +6,7 @@
 ;;      Barry O'Reilly <gundaetiapo at gmail.com>
 ;;      Christoph Lange <langec at web.de>
 ;;      Emanuel Evans <emanuel.evans at gmail.com>
+;;      Eric Siegel <siegel.eric at gmail.com>
 ;;      Frank Fischer <frank-fischer at shadow-soft.de>
 ;;      Frank Terbeck <ft at bewatermyfriend.org>
 ;;      Gordon Gustafson <gordon3.14 at gmail.com>
@@ -16,6 +17,7 @@
 ;;      Lintaro Ina <tarao.gnn at gmail.com>
 ;;      Lukasz Wrzosek <wrzoski at mail.com>
 ;;      Marian Schubert <maio at netsafe.cz>
+;;      Matthew Malcomson <>
 ;;      Michael Markert <markert.michael at googlemail.com>
 ;;      Mike Gerwitz <mikegerwitz at gnu.org>
 ;;      Nikolai Weibull <now at bitwi.se>

@@ -296,6 +296,16 @@ but the delete operation is a separate undo step."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-split-window-below nil
+  "If non-nil split windows are created below."
+  :type 'boolean
+  :group 'evil)
+
+(defcustom evil-vsplit-window-right nil
+  "If non-nil vsplit windows are created to the right."
+  :type 'boolean
+  :group 'evil)
+
 (defcustom evil-esc-delay 0.01
   "Time in seconds to wait for another key after ESC."
   :type 'number
@@ -1172,6 +1182,9 @@ describing it, etc.")
 
 (evil-define-local-var evil-this-motion-count nil
   "Current motion count.")
+
+(defvar evil-last-register nil
+  "The last executed register.")
 
 (defvar evil-inhibit-operator nil
   "Inhibit current operator.

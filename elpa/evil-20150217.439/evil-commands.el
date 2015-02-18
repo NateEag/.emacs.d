@@ -1846,11 +1846,14 @@ when called interactively."
            register (or evil-this-register (read-char)))
      (cond
       ((eq register ?@)
-       (setq macro last-kbd-macro))
+       (unless evil-last-register
+         (user-error "No previously executed keyboard macro."))
+       (setq macro (evil-get-register evil-last-register t)))
       ((eq register ?:)
        (setq macro (lambda () (evil-ex-repeat nil))))
       (t
-       (setq macro (evil-get-register register t))))
+       (setq macro (evil-get-register register t)
+             evil-last-register register)))
      (list count macro)))
   (cond
    ((functionp macro)
@@ -2576,6 +2579,20 @@ The same as `buffer-menu', but shows only buffers visiting
 files."
   :repeat nil
   (buffer-menu 1))
+
+(evil-define-command evil-goto-error (count)
+  "Go to error number COUNT.
+
+If no COUNT supplied, move to the current error.
+
+Acts like `first-error' other than when given no counts, goes
+to the current error instead of the first, like in Vim's :cc
+command."
+  :repeat nil
+  (interactive "P")
+  (if count
+      (first-error (if (eql 0 count) 1 count))
+    (next-error 0)))
 
 (evil-define-command evil-buffer (buffer)
   "Switches to another buffer."
@@ -3347,6 +3364,29 @@ TREE is the tree layout to be restored."
    (t
     (set-window-buffer win tree))))
 
+(defun evil-alternate-buffer (&optional window)
+  "Return the last buffer WINDOW has displayed other than the
+current one (equivalent to Vim's alternate buffer).
+
+Returns the first item in `window-prev-buffers' that isn't
+`window-buffer' of WINDOW."
+  ;; If the last buffer visitied has been killed, then `window-prev-buffers'
+  ;; returns a list with `current-buffer' at the head, we account for this
+  ;; possibility.
+  (let* ((prev-buffers (window-prev-buffers))
+         (head (car prev-buffers)))
+    (if (eq (car head) (window-buffer window))
+        (cadr prev-buffers)
+      head)))
+
+(evil-define-command evil-switch-to-windows-last-buffer ()
+  "Switch to current windows last open buffer."
+  :repeat nil
+  (let ((previous-place (evil-alternate-buffer)))
+    (when previous-place
+      (switch-to-buffer (car previous-place))
+      (goto-char (car (last previous-place))))))
+
 (evil-define-command evil-window-delete ()
   "Deletes the current window.
 If `evil-auto-balance-windows' is non-nil then all children of
@@ -3362,12 +3402,14 @@ the deleted window's parent window are rebalanced."
 
 (evil-define-command evil-window-split (&optional count file)
   "Splits the current window horizontally, COUNT lines height,
-editing a certain FILE. If COUNT and `evil-auto-balance-windows'
-are both non-nil then all children of the parent of the splitted
-window are rebalanced."
+editing a certain FILE. The new window will be created below
+when `evil-split-window-below' is non-nil. If COUNT and
+`evil-auto-balance-windows' are both non-nil then all children
+of the parent of the splitted window are rebalanced."
   :repeat nil
   (interactive "P<f>")
-  (split-window (selected-window) count)
+  (split-window (selected-window) count
+                (if evil-split-window-below 'above 'below))
   (when (and (not count) evil-auto-balance-windows)
     (balance-windows (window-parent)))
   (when file
@@ -3375,12 +3417,14 @@ window are rebalanced."
 
 (evil-define-command evil-window-vsplit (&optional count file)
   "Splits the current window vertically, COUNT columns width,
-editing a certain FILE. If COUNT and `evil-auto-balance-windows'
-are both non-nil then all children of the parent of the splitted
-window are rebalanced."
+editing a certain FILE. The new window will be created to the
+right when `evil-vsplit-window-right' is non-nil. If COUNT and
+`evil-auto-balance-windows'are both non-nil then all children
+of the parent of the splitted window are rebalanced."
   :repeat nil
   (interactive "P<f>")
-  (split-window (selected-window) count t)
+  (split-window (selected-window) count
+                (if evil-vsplit-window-right 'left 'right))
   (when (and (not count) evil-auto-balance-windows)
     (balance-windows (window-parent)))
   (when file
@@ -3438,34 +3482,20 @@ window are rebalanced."
 (evil-define-command evil-window-bottom-right ()
   "Move the cursor to bottom-right window."
   :repeat nil
-  (while (let (success)
-           (condition-case nil
-               (progn
-                 (windmove-right)
-                 (setq success t))
-             (error nil))
-           (condition-case nil
-               (progn
-                 (windmove-down)
-                 (setq success t))
-             (error nil))
-           success)))
+  (select-window
+   (let ((last-sibling (frame-root-window)))
+     (while (not (window-live-p last-sibling))
+       (setq last-sibling (window-last-child last-sibling)))
+     last-sibling)))
 
 (evil-define-command evil-window-top-left ()
   "Move the cursor to top-left window."
   :repeat nil
-  (while (let (success)
-           (condition-case nil
-               (progn
-                 (windmove-left)
-                 (setq success t))
-             (error nil))
-           (condition-case nil
-               (progn
-                 (windmove-up)
-                 (setq success t))
-             (error nil))
-           success)))
+  (select-window
+   (let ((first-child (window-child (frame-root-window))))
+     (while (not (window-live-p first-child))
+       (setq first-child (window-child first-child)))
+     first-child)))
 
 (evil-define-command evil-window-mru ()
   "Move the cursor to the previous (last accessed) buffer in another window.
@@ -3509,7 +3539,8 @@ top-left."
 and opens a new buffer or edits a certain FILE."
   :repeat nil
   (interactive "P<f>")
-  (split-window (selected-window) count)
+  (split-window (selected-window) count
+                (if evil-split-window-below 'above 'below))
   (when (and (not count) evil-auto-balance-windows)
     (balance-windows (window-parent)))
   (if file
@@ -3524,7 +3555,8 @@ and opens a new buffer or edits a certain FILE."
 and opens a new buffer name or edits a certain FILE."
   :repeat nil
   (interactive "P<f>")
-  (split-window (selected-window) count t)
+  (split-window (selected-window) count
+                (if evil-vsplit-window-right 'left 'right))
   (when (and (not count) evil-auto-balance-windows)
     (balance-windows (window-parent)))
   (if file

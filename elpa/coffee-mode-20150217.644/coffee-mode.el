@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2010 Chris Wanstrath
 
-;; Version: 20150130.1627
+;; Version: 20150217.644
 ;; X-Original-Version: 0.5.8
 ;; Keywords: CoffeeScript major mode
 ;; Author: Chris Wanstrath <chris@ozmm.org>
@@ -523,10 +523,6 @@ called `coffee-compiled-buffer-name'."
 (eval-and-compile
   (defvar coffee-regexp-regexp "\\s/\\(\\(?:\\\\/\\|[^/\n\r]\\)*\\)\\s/"))
 
-;; String Interpolation(This regexp is taken from ruby-mode)
-(eval-and-compile
-  (defvar coffee-string-interpolation-regexp "#{[^}\n\\\\]*\\(?:\\\\.[^}\n\\\\]*\\)*}"))
-
 ;; JavaScript Keywords
 (defvar coffee-js-keywords
   '("if" "else" "new" "return" "try" "catch"
@@ -572,7 +568,25 @@ called `coffee-compiled-buffer-name'."
     (,coffee-boolean-regexp 1 font-lock-constant-face)
     (,coffee-lambda-regexp 1 font-lock-function-name-face)
     (,coffee-keywords-regexp 1 font-lock-keyword-face)
-    (,coffee-string-interpolation-regexp 0 font-lock-variable-name-face t)))
+    (,(lambda (limit)
+        (let ((res nil)
+              start)
+          (while (and (not res) (search-forward "#{" limit t))
+            (let ((restart-pos (match-end 0)))
+              (setq start (match-beginning 0))
+              (let (finish)
+                (while (and (not finish) (search-forward "}" limit t))
+                  (let ((end-pos (point)))
+                    (save-excursion
+                      (when (and (ignore-errors (backward-list 1))
+                                 (= start (1- (point))))
+                        (setq res end-pos finish t)))))
+                (unless finish
+                  (goto-char restart-pos)))))
+          (when (and res start)
+            (set-match-data (list start res)))
+          res))
+     (0 font-lock-variable-name-face t))))
 
 ;;
 ;; Helper Functions
@@ -836,7 +850,7 @@ Delete ARG spaces if ARG!=1."
 ;; line starts with `class', for instance, you're probably going to
 ;; want to indent the next line.
 
-(defvar coffee-indenters-bol '("class" "for" "if" "else" "while" "until"
+(defvar coffee-indenters-bol '("class" "for" "if" "else" "unless" "while" "until"
                                "try" "catch" "finally" "switch")
   "Keywords or syntax whose presence at the start of a line means the
 next line should probably be indented.")
@@ -930,6 +944,28 @@ END lie."
         (amount (if count (prefix-numeric-value count)
                   (coffee-indent-shift-amount start end 'right))))
     (indent-rigidly start end amount)))
+
+(defun coffee-indent-region (start end)
+  (interactive "r")
+  (save-excursion
+    (goto-char start)
+    (forward-line 1)
+    (while (and (not (eobp)) (< (point) end))
+      (let ((prev-indent (coffee-previous-indent))
+            (curindent (current-indentation))
+            indent-size)
+        (if (coffee-line-wants-indent)
+            (let ((expected (+ prev-indent coffee-tab-width)))
+              (when (/= curindent expected)
+                (setq indent-size expected)))
+          (when (> curindent prev-indent)
+            (setq indent-size prev-indent)))
+        (when indent-size
+          (save-excursion
+            (goto-char (line-beginning-position))
+            (delete-horizontal-space)
+            (coffee-insert-spaces indent-size))))
+      (forward-line 1))))
 
 ;;
 ;; Fill
@@ -1166,18 +1202,29 @@ comments such as the following:
         (put-text-property (- curpoint 3) curpoint
                            'syntax-table (string-to-syntax "!"))))))
 
+(defsubst coffee--in-string-p ()
+  (nth 3 (syntax-ppss)))
+
 (defun coffee-syntax-string-interpolation ()
-  (let ((end (point))
-        finish)
-    (goto-char (match-beginning 0))
-    (while (not finish)
-      (skip-chars-forward "^\"")
-      (if (or (eobp) (>= (point) end))
-          (setq finish t)
-        (put-text-property (point) (1+ (point))
-                           'syntax-table (string-to-syntax "_"))
-        (forward-char 1)))
-    (goto-char (1+ end))))
+  (let ((start (match-beginning 0))
+        (end (point)))
+    (if (not (coffee--in-string-p))
+        (put-text-property start (1+ start)
+                           'syntax-table (string-to-syntax "< b"))
+      (goto-char start)
+      (let (finish res)
+        (while (and (not finish) (search-forward "}" nil t))
+          (let ((end-pos (match-end 0)))
+            (save-excursion
+              (when (and (ignore-errors (backward-list 1))
+                         (= start (1- (point))))
+                (setq res end-pos finish t)))))
+        (goto-char end)
+        (when res
+          (while (re-search-forward "[\"'#]" res t)
+            (put-text-property (match-beginning 0) (match-end 0)
+                               'syntax-table (string-to-syntax "_")))
+          (goto-char (1- res)))))))
 
 (defun coffee-syntax-propertize-function (start end)
   (goto-char start)
@@ -1194,8 +1241,7 @@ comments such as the following:
              (put-text-property (match-beginning 1) (match-end 1)
                                 'syntax-table (string-to-syntax "_")))))))
     (coffee-regexp-regexp (1 (string-to-syntax "_")))
-    (coffee-string-interpolation-regexp
-     (0 (ignore (coffee-syntax-string-interpolation))))
+    ("#{" (0 (ignore (coffee-syntax-string-interpolation))))
     ("###"
      (0 (ignore (coffee-syntax-propertize-block-comment)))))
    (point) end))
@@ -1227,6 +1273,7 @@ comments such as the following:
   (make-local-variable 'coffee-tab-width)
   (make-local-variable 'coffee-indent-tabs-mode)
   (set (make-local-variable 'indent-line-function) 'coffee-indent-line)
+  (set (make-local-variable 'indent-region-function) 'coffee-indent-region)
   (set (make-local-variable 'tab-width) coffee-tab-width)
 
   (set (make-local-variable 'syntax-propertize-function)

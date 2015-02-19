@@ -73,7 +73,7 @@
 	 ((:keywords "games")
 	  (:url . "http://elpa.gnu.org/packages/chess.html"))])
  (cl-generic .
-	     [(0 1)
+	     [(0 2)
 	      nil "Forward cl-generic compatibility for Emacs<25" single
 	      ((:url . "http://elpa.gnu.org/packages/cl-generic.html")
 	       (:keywords))])
@@ -395,7 +395,7 @@
        ((:url . "http://elpa.gnu.org/packages/osc.html")
 	(:keywords "comm" "processes" "multimedia"))])
  (pabbrev .
-	  [(4 1)
+	  [(4 2)
 	   nil "Predictive abbreviation expansion" single
 	   ((:url . "http://elpa.gnu.org/packages/pabbrev.html")
 	    (:keywords))])
@@ -492,6 +492,11 @@
 	       nil "Simple Unit Test Framework for Emacs Lisp" single
 	       ((:url . "http://github.com/rocky/emacs-test-simple")
 		(:keywords "unit-test"))])
+ (timerfunctions .
+		 [(1 4 2)
+		  nil "Enhanced versions of some timer.el functions" single
+		  ((:url . "http://elpa.gnu.org/packages/timerfunctions.html")
+		   (:keywords))])
  (trie .
        [(0 2 6)
 	((tNFA

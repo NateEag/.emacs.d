@@ -309,7 +309,7 @@ See `sp-base-key-bindings'."
   "List of pairs for autoinsertion or wrapping.
 
 Maximum length of opening or closing pair is
-`sp-max-pair-length-c' characters.")
+`sp-max-pair-length' characters.")
 (make-variable-buffer-local 'sp-pair-list)
 
 (defvar sp-local-pairs nil
@@ -376,7 +376,7 @@ run.")
   "Non-nil if buffer was modified before the advice on
 `self-insert-command' executed.")
 
-(defconst sp-max-pair-length-c 10
+(defconst sp-max-pair-length 10
   "Maximum length of an opening or closing delimiter.
 
 Only the pairs defined by `sp-pair' are considered.  Tag pairs
@@ -397,7 +397,7 @@ can be of any length.")
   "List of pair definitions.
 
 Maximum length of opening or closing pair is
-`sp-max-pair-length-c' characters.")
+`sp-max-pair-length' characters.")
 
 (defvar sp-tags nil
   "List of tag definitions.  See `sp-local-tag' for more information.")
@@ -3315,11 +3315,11 @@ is remove the just added wrapping."
   "Return non-nil if text before point matches regular expression REGEXP.
 
 With optional argument LIMIT search only that many characters
-backward.  If LIMIT is nil, default to `sp-max-pair-length-c'.
+backward.  If LIMIT is nil, default to `sp-max-pair-length'.
 
 If optional argument NON-GREEDY is t search for any matching
 sequence, not necessarily the longest possible."
-  (setq limit (or limit sp-max-pair-length-c))
+  (setq limit (or limit sp-max-pair-length))
   (let ((case-fold-search nil)
         (from (max 1 (- (point) limit)))
         (to (point))
@@ -3367,19 +3367,18 @@ pairs!"
     (search-forward-regexp regexp bound noerror count)))
 
 (defun sp-get-quoted-string-bounds ()
-  "If the point is inside a quoted string, return its bounds."
-  (when (nth 3 (syntax-ppss))
-    (let ((open (save-excursion
-                  (while (and (not (bobp))
-                              (nth 3 (syntax-ppss)))
-                    (backward-char 1))
-                  (point)))
-          (close (save-excursion
-                   (while (and (not (eobp))
-                               (nth 3 (syntax-ppss)))
-                     (forward-char 1))
-                   (point))))
-      (cons open close))))
+  "Return the bounds of the string around point.
+
+If the point is not inside a quoted string, return nil."
+  (let ((parse-data (syntax-ppss)))
+    (when (nth 3 parse-data)
+      (let* ((open (nth 8 parse-data))
+             (close (save-excursion
+                      (parse-partial-sexp
+                       (point) (point-max)
+                       nil nil parse-data 'syntax-table)
+                      (point))))
+        (cons open close)))))
 
 ;; TODO: the repeated conditions are ugly, refactor this!
 (defun sp-get-comment-bounds ()

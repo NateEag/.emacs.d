@@ -277,7 +277,7 @@
 	   ((:url . "http://elpa.gnu.org/packages/javaimp.html")
 	    (:keywords "java" "maven" "programming"))])
  (jgraph-mode .
-	      [(1 0)
+	      [(1 1)
 	       ((cl-lib
 		 (0 5)))
 	       "Major mode for Jgraph files" single
@@ -387,7 +387,7 @@
 	    ((:url . "http://elpa.gnu.org/packages/omn-mode.html")
 	     (:keywords))])
  (org .
-      [(20150216)
+      [(20150223)
        nil "Outline-based notes management and organizer" tar nil])
  (osc .
       [(0 1)

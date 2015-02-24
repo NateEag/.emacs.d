@@ -2130,17 +2130,29 @@ If a prefix arg is given or `helm-follow-mode' is on open file."
              (guess       (and (stringp tap) (substring-no-properties tap)))
              (beg         (- (point) (length guess)))
              (full-path-p (and (stringp guess)
-                               (or (string-match-p (concat "^" (getenv "HOME")) guess)
-                                   (string-match-p "^[^\~]" guess)))))
+                               (or (string-match-p
+                                    (concat "^" (getenv "HOME"))
+                                    guess)
+                                   (string-match-p
+                                    "\\`\\(/\\|[[:lower:][:upper:]]:/\\)"
+                                    guess)))))
         (set-text-properties 0 (length candidate) nil candidate)
         (if (and guess (not (string= guess ""))
-                 (string-match-p "^\\(~/\\|/\\|[[:lower:][:upper:]]:/\\)" guess))
+                 (or (string-match "^\\(~/\\|/\\|[[:lower:][:upper:]]:/\\)"
+                                   guess)
+                     (file-exists-p candidate)))
             (progn
               (delete-region beg end)
-              (insert (if full-path-p
-                          (expand-file-name candidate)
-                        (abbreviate-file-name candidate))))
-          (insert candidate))))))
+              (insert (cond (full-path-p
+                             (expand-file-name candidate))
+                            ((string= (match-string 1 guess) "~/")
+                              (abbreviate-file-name candidate))
+                            (t (file-relative-name candidate)))))
+            (insert (cond ((equal helm-current-prefix-arg '(4))
+                           (abbreviate-file-name candidate))
+                          ((equal helm-current-prefix-arg '(16))
+                           (file-relative-name candidate))
+                          (t candidate))))))))
 
 (cl-defun helm-find-files-history (&key (comp-read t))
   "The `helm-find-files' history.
@@ -2921,18 +2933,17 @@ utility mdfind.")
 ;;
 ;;
 (defvar helm-source-findutils
-  `((name . "Find")
-    (header-name . (lambda (name)
-                     (concat name " in [" helm-default-directory "]")))
-    (candidates-process . helm-find-shell-command-fn)
-    (filtered-candidate-transformer . helm-findutils-transformer)
-    (action-transformer helm-transform-file-load-el)
-    (action . ,(cdr (helm-inherit-attribute-from-source
-                     'action helm-source-locate)))
-    (mode-line  . helm-generic-file-mode-line-string)
-    (keymap . ,helm-generic-files-map)
-    (candidate-number-limit . 9999)
-    (requires-pattern . 3)))
+  (helm-build-async-source "Find"
+    :header-name (lambda (name)
+                   (concat name " in [" helm-default-directory "]"))
+    :candidates-process 'helm-find-shell-command-fn
+    :filtered-candidate-transformer 'helm-findutils-transformer
+    :action-transformer 'helm-transform-file-load-el
+    :action (helm-actions-from-type-file)
+    :mode-line  helm-generic-file-mode-line-string
+    :keymap helm-generic-files-map
+    :candidate-number-limit 9999
+    :requires-pattern 3))
 
 (defun helm-findutils-transformer (candidates _source)
   (cl-loop for i in candidates
@@ -3038,7 +3049,8 @@ This is the starting point for nearly all actions you can do on files."
                                (expand-file-name org-directory))
                               ((and (eq major-mode 'dired-mode) default-input)
                                (file-name-directory default-input))
-                              (default-input)
+                              ((and (not (string= default-input ""))
+                                    default-input))
                               (t (expand-file-name (helm-current-directory)))))
          (presel        (helm-aif (or hist
                                       (buffer-file-name (current-buffer))

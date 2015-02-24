@@ -280,6 +280,10 @@ See also `helm-locate'."
    (candidate-number-limit :initform 9999)
    (mode-line :initform helm-generic-file-mode-line-string)))
 
+(defvar helm-source-locate
+  (helm-make-source "Locate" 'helm-locate-source
+    :pattern-transformer 'helm-locate-pattern-transformer))
+
 (defun helm-locate-pattern-transformer (pattern)
   (if helm-locate-fuzzy-match
       (cond ((string-match
@@ -289,10 +293,6 @@ See also `helm-locate'."
                       (match-string 1 pattern)) " -b"))
             (t (helm--mapconcat-pattern pattern)))
       pattern))
-
-(defvar helm-source-locate
-  (helm-make-source "Locate" 'helm-locate-source
-    :pattern-transformer 'helm-locate-pattern-transformer))
 
 ;;;###autoload
 (defun helm-locate-read-file-name (prompt)

@@ -3,13 +3,13 @@
 
 ;; Copyright 2011-2015 François-Xavier Bois
 
-;; Version: 20150219.801
-;; X-Original-Version: 10.4.07
+;; Version: 20150223.1131
+;; X-Original-Version: 11.0.0
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
 ;; Keywords: languages
-;; URL: http://web-mode.org
+;; Homepage: http://web-mode.org
 ;; Repository: http://github.com/fxbois/web-mode
 ;; License: GNU General Public License >= 2
 ;; Distribution: This file is not part of Emacs
@@ -22,10 +22,13 @@
 
 ;;---- TODO --------------------------------------------------------------------
 
+;; web-mode-attribute-next(-position)
+;; v12 : invert path and XX (web-mode-engines-alist,
+;;       web-mode-content-types-alist)
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "10.4.07"
+(defconst web-mode-version "11.0.0"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -571,7 +574,6 @@ Must be used in conjunction with web-mode-enable-block-face."
   :group 'web-mode-faces)
 
 (defface web-mode-current-column-highlight-face
-;;  '((t :background "#292929"))
   '((t :background "#3e3c36"))
   "Overlay face for current column."
   :group 'web-mode-faces)
@@ -605,7 +607,6 @@ Must be used in conjunction with web-mode-enable-block-face."
 (defvar web-mode-font-lock-keywords '(web-mode-font-lock-highlight))
 (defvar web-mode-change-beg nil)
 (defvar web-mode-change-end nil)
-(defvar web-mode-hl-line-mode-flag nil)
 (defvar web-mode-hook nil)
 (defvar web-mode-inlay-regexp nil)
 (defvar web-mode-is-scratch nil)
@@ -775,10 +776,10 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("Scaron" . 352) ("Sigma" . 931)
     ("THORN" . 222) ("Tau" . 932) ("Theta" . 920)
     ("UArr" . 8657) ("Uacute" . 218) ("Uacute" . 250) ("Ucirc" . 219)
-    ("Ucirc" . 251) ("Ugrave" . 217) ("Ugrave" . 249) ("Upsih" . 978)
+    ("Ugrave" . 217)  ("Upsih" . 978)
     ("Upsilon" . 933) ("Uuml" . 220) ("Uuml" . 252)
     ("Xi" . 926)
-    ("Yacute" . 221) ("Yuml" . 376)
+    ("Yacute" . 221) ("Yuml" . 376) ("yacute" . 253) ("yuml" . 255)
     ("Zeta" . 918)
     ("aacute" . 225) ("acirc" . 226) ("acute" . 180) ("aelig" . 230)
     ("agrave" . 224) ("alefsym" . 8501) ("alpha" . 945) ("amp" . 38)
@@ -830,7 +831,8 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("tau" . 964) ("there4" . 8756) ("theta" . 952) ("thetasym" . 977)
     ("thinsp" . 8201) ("thorn" . 254) ("tilde" . 732) ("times" . 215)
     ("trade" . 8482)
-    ("uarr" . 8593) ("uml" . 168) ("upsilon" . 965)
+    ("uarr" . 8593) ("ucirc" . 251) ("ugrave" . 249) ("uml" . 168)
+    ("upsilon" . 965)
     ("weierp" . 8472)
     ("xi" . 958)
     ("yacute" . 253) ("yen" . 165) ("yuml" . 255) ("zeta" . 950)
@@ -2012,8 +2014,8 @@ the environment as needed for ac-sources, right before they're used.")
     (define-key map (kbd "C-c C-a t") 'web-mode-attribute-transpose)
     (define-key map (kbd "C-c C-a n") 'web-mode-attribute-next)
 
-    (define-key map (kbd "C-c C-b c") 'web-mode-block-close)
     (define-key map (kbd "C-c C-b b") 'web-mode-block-beginning)
+    (define-key map (kbd "C-c C-b c") 'web-mode-block-close)
     (define-key map (kbd "C-c C-b e") 'web-mode-block-end)
     (define-key map (kbd "C-c C-b k") 'web-mode-block-kill)
     (define-key map (kbd "C-c C-b n") 'web-mode-block-next)
@@ -2021,9 +2023,9 @@ the environment as needed for ac-sources, right before they're used.")
     (define-key map (kbd "C-c C-b s") 'web-mode-block-select)
 
     (define-key map (kbd "C-c C-d a") 'web-mode-dom-apostrophes-replace)
-    (define-key map (kbd "C-c C-d n") 'web-mode-dom-normalize)
     (define-key map (kbd "C-c C-d d") 'web-mode-dom-errors-show)
     (define-key map (kbd "C-c C-d e") 'web-mode-dom-entities-replace)
+    (define-key map (kbd "C-c C-d n") 'web-mode-dom-normalize)
     (define-key map (kbd "C-c C-d q") 'web-mode-dom-quotes-replace)
     (define-key map (kbd "C-c C-d t") 'web-mode-dom-traverse)
     (define-key map (kbd "C-c C-d x") 'web-mode-dom-xpath)
@@ -2069,6 +2071,7 @@ the environment as needed for ac-sources, right before they're used.")
     (define-key map (kbd "C-c C-j")   'web-mode-jshint)
     (define-key map (kbd "C-c C-m")   'web-mode-mark-and-expand)
     (define-key map (kbd "C-c C-n")   'web-mode-navigate)
+    (define-key map (kbd "C-c C-r")   'web-mode-reload)
     (define-key map (kbd "C-c C-s")   'web-mode-snippet-insert)
     ;;C-c C-t : tag
     (define-key map (kbd "C-c C-w")   'web-mode-whitespaces-show)
@@ -2132,7 +2135,6 @@ the environment as needed for ac-sources, right before they're used.")
   (make-local-variable 'web-mode-engine-token-regexp)
   (make-local-variable 'web-mode-expand-initial-pos)
   (make-local-variable 'web-mode-expand-previous-state)
-  (make-local-variable 'web-mode-hl-line-mode-flag)
   (make-local-variable 'web-mode-indent-style)
   (make-local-variable 'web-mode-is-scratch)
   (make-local-variable 'web-mode-jshint-errors)
@@ -2168,10 +2170,6 @@ the environment as needed for ac-sources, right before they're used.")
         indent-line-function 'web-mode-indent-line
         parse-sexp-lookup-properties t
         yank-excluded-properties t)
-
-  (if (and (fboundp 'global-hl-line-mode)
-           global-hl-line-mode)
-      (setq web-mode-hl-line-mode-flag t))
 
   (add-hook 'after-change-functions 'web-mode-on-after-change nil t)
   (add-hook 'after-save-hook        'web-mode-on-after-save t t)
@@ -3981,7 +3979,7 @@ the environment as needed for ac-sources, right before they're used.")
       (when (null go-back)
         (forward-char))
 
-      (when (> (setq counter (1+ counter)) 2000)
+      (when (> (setq counter (1+ counter)) 3200)
         (message "attr-skip ** too much attr ** pos-ori(%S) limit(%S)" pos-ori limit)
         (setq continue nil))
 
@@ -5421,6 +5419,7 @@ the environment as needed for ac-sources, right before they're used.")
      ) ;cond
     errors))
 
+;; TODO: executable-find program
 (defun web-mode-jshint ()
   "Run JSHint on all the JavaScript parts."
   (interactive)
@@ -5565,7 +5564,7 @@ the environment as needed for ac-sources, right before they're used.")
   (interactive
    (list (completing-read
           "Feature: "
-          (let (features elt)
+          (let (features)
             (dolist (elt web-mode-features)
               (setq features (append features (list (car elt)))))
             features))))
@@ -5595,7 +5594,7 @@ the environment as needed for ac-sources, right before they're used.")
   (interactive
    (list (completing-read
           "Feature: "
-          (let (features elt)
+          (let (features)
             (dolist (elt web-mode-features)
               (setq features (append features (list (car elt)))))
             features))))
@@ -5743,15 +5742,11 @@ the environment as needed for ac-sources, right before they're used.")
 (defun web-mode-whitespaces-on ()
   "Show whitespaces."
   (interactive)
-  (when web-mode-hl-line-mode-flag
-    (global-hl-line-mode -1))
   (when web-mode-display-table
     (setq buffer-display-table web-mode-display-table))
   (setq web-mode-enable-whitespace-fontification t))
 
 (defun web-mode-whitespaces-off ()
-  (when web-mode-hl-line-mode-flag
-    (global-hl-line-mode 1))
   (setq buffer-display-table nil)
   (setq web-mode-enable-whitespace-fontification nil))
 
@@ -5806,19 +5801,21 @@ the environment as needed for ac-sources, right before they're used.")
       )))
 
 (defun web-mode-buffer-change-attr-case (&optional type)
-  "Change case of attribute names (inside html tags)."
+  "Change case of html attribute names."
   (interactive)
+  (unless type (setq type "downcase"))
   (save-excursion
     (goto-char (point-min))
-    (let ((continue t) f)
-      (setq f (if (member type '("upper" "uppercase" "upper-case")) 'uppercase 'downcase))
+    (let ((continue t)
+          (fun (if (eq (aref (downcase type) 0) ?u) 'uppercase 'downcase)))
       (while continue
-        (if (web-mode-attribute-next)
-            (when (looking-at "\\([[:alnum:]-]+\\)")
-              (replace-match (funcall f (match-string 0)) t)
-;;              (message "tag: %S (%S)" (match-string 0) (point))
-              ) ;when
+        (cond
+         ((not (web-mode-attribute-next))
           (setq continue nil))
+         ((looking-at "\\([[:alnum:]-]+\\)")
+          (replace-match (funcall fun (match-string 0)) t)
+          )
+         ) ;cond
         ) ;while
       )))
 
@@ -5828,19 +5825,19 @@ the environment as needed for ac-sources, right before they're used.")
     (goto-char (point-min))
     (let ((continue t) rule part-end)
       (while continue
-        (if (web-mode-part-next)
-            (when (eq (get-text-property (point) 'part-side) 'css)
-              (setq part-end (web-mode-part-end-position))
-              (while (setq rule (web-mode-css-rule-next part-end))
-                (when (not (looking-at-p "[[:space:]]*\\($\\|<\\)"))
-                  (newline)
-                  (indent-according-to-mode)
-                  ;;(indent-for-tab-command)
-                  (setq part-end (web-mode-part-end-position)))
-                )
-              )
-          (setq continue nil)
+        (cond
+         ((not (web-mode-part-next))
+          (setq continue nil))
+         ((eq (get-text-property (point) 'part-side) 'css)
+          (setq part-end (web-mode-part-end-position))
+          (while (setq rule (web-mode-css-rule-next part-end))
+            (when (not (looking-at-p "[[:space:]]*\\($\\|<\\)"))
+              (newline)
+              (indent-according-to-mode)
+              (setq part-end (web-mode-part-end-position)))
+            )
           )
+         ) ;cond
         )
       )))
 
@@ -6378,11 +6375,15 @@ the environment as needed for ac-sources, right before they're used.")
             ) ;when
           )
 
-         ((and (member language '("javascript" "jsx" "ejs")) (member ?\, chars))
+         ((and (member language '("javascript" "jsx" "ejs"))
+               (or (member ?\, chars)
+                   (member prev-char '(?\( ?\[ ?\{))))
           (cond
            ((not (web-mode-javascript-args-beginning pos reg-beg))
+            (message "no js args beg")
             )
-           ((not (cdr (assoc "lineup-args" web-mode-indentation-params)))
+           ((or (not (cdr (assoc "lineup-args" web-mode-indentation-params)))
+                (looking-at-p "\n"))
             (setq offset (+ (current-indentation) web-mode-code-indent-offset)))
            ((not (eq curr-char ?\,))
             (setq offset (current-column)))
@@ -7048,33 +7049,6 @@ the environment as needed for ac-sources, right before they're used.")
       ) ;let
     ))
 
-(defun web-mode-is-void-after (&optional pos)
-  "Only spaces or comment after (1+ pos)"
-  (unless pos (setq pos (point)))
-  (save-excursion
-    (setq pos (1+ pos))
-    (goto-char pos)
-;;    (message "after pos=%S" pos)
-    (let ((eol (line-end-position)) (continue t) c (ret t) part-side)
-      (setq part-side (or (member web-mode-content-type '("javascript" "css"))
-                          (not (null (get-text-property pos 'part-side)))))
-      (while continue
-        (setq c (char-after pos))
-;;        (message "%S c='%c'" pos c)
-        (cond
-         ((member c '(?\s ?\n)) )
-         ((and part-side (eq (get-text-property pos 'part-token) 'comment)) )
-         ((and part-side (get-text-property pos 'block-side)) )
-         ((and (not part-side) (eq (get-text-property pos 'block-token) 'comment)) )
-         (t (setq ret nil
-                  continue nil))
-         )
-        (when continue
-          (setq pos (1+ pos))
-          (when (>= pos eol) (setq continue nil)))
-        ) ;while
-      ret)))
-
 (defun web-mode-count-char-in-string (char string)
   (let ((n 0))
     (dotimes (i (length string))
@@ -7209,6 +7183,13 @@ the environment as needed for ac-sources, right before they're used.")
 
     ))
 
+(defun web-mode-block-kill ()
+  "Kill the current block."
+  (interactive)
+  (web-mode-block-select)
+  (when mark-active
+    (kill-region (region-beginning) (region-end))))
+
 (defun web-mode-block-select ()
   "Select the current block."
   (interactive)
@@ -7315,24 +7296,22 @@ the environment as needed for ac-sources, right before they're used.")
   "Fold/Unfold all the children of the current html element."
   (interactive)
   (unless pos (setq pos (point)))
-  (let (child children)
-    (save-excursion
-      (setq children (reverse (web-mode-element-children pos)))
-      (dolist (child children)
-        (goto-char child)
-        (web-mode-fold-or-unfold))
-      )))
+  (save-excursion
+    (dolist (child (reverse (web-mode-element-children pos)))
+      (goto-char child)
+      (web-mode-fold-or-unfold))
+    ))
 
 (defun web-mode-element-mute-blanks ()
   "Mute blanks."
   (interactive)
-  (let (pos parent beg end child children elt)
+  (let (pos parent beg end children elt)
     (setq pos (point))
     (save-excursion
       (when (and (setq parent (web-mode-element-boundaries pos))
-                 (setq child (web-mode-element-child-position (point))))
+                 (web-mode-element-child-position (point)))
         (setq children (reverse (web-mode-element-children)))
-;;        (message "%S %S" parent children)
+        ;;        (message "%S %S" parent children)
         ;;        (setq end (car (cdr parent)))
         ;;        (message "end=%S" end)
         (goto-char (car (cdr parent)))
@@ -7523,13 +7502,6 @@ Pos should be in a tag."
   "Kill the current html element."
   (interactive)
   (web-mode-element-select)
-  (when mark-active
-    (kill-region (region-beginning) (region-end))))
-
-(defun web-mode-block-kill ()
-  "Kill the current block."
-  (interactive)
-  (web-mode-block-select)
   (when mark-active
     (kill-region (region-beginning) (region-end))))
 
@@ -8029,7 +8001,7 @@ Pos should be in a tag."
     (web-mode-remove-text-at-pos 1 (+ beg 2))))
 
 (defun web-mode-snippet-names ()
-  (let (codes snippet)
+  (let (codes)
     (dolist (snippet web-mode-snippets)
       (add-to-list 'codes (car snippet) t))
     codes))
@@ -8315,18 +8287,12 @@ Pos should be in a tag."
 (defun web-mode-detect-engine ()
   (save-excursion
     (let (engine)
-;;      (message "detect-engine: %S" (point))
       (goto-char (point-min))
-      (when (and (re-search-forward "-\\*- engine:[ ]*\\([[:alnum:]-]+\\)[ ]*-\\*-" web-mode-chunk-length t)
-                 (or t
-                     (eq (get-text-property (point) 'part-token) 'comment)
-                     (eq (get-text-property (point) 'block-token) 'comment)
-                     (eq (get-text-property (point) 'tag-type) 'comment)))
+      (when (re-search-forward "-\\*- engine:[ ]*\\([[:alnum:]-]+\\)[ ]*-\\*-" web-mode-chunk-length t)
         (setq engine (web-mode-engine-canonical-name (match-string-no-properties 1))
               web-mode-engine engine)
         )
-      engine)
-    ))
+      engine)))
 
 (defun web-mode-on-after-change (beg end len)
 ;;  (message "after-change: pos=%d, beg=%d, end=%d, len=%d, ocmd=%S, cmd=%S" (point) beg end len this-original-command this-command)
@@ -8507,9 +8473,6 @@ Pos should be in a tag."
                     (eq (get-text-property (point) 'tag-type) 'end)
                     (looking-back ">\n[ \t]*")
                     (setq n (length (match-string-no-properties 0)))
-                    ;;(progn (message "n=%S" n))
-                    ;;(eq (char-before) ?\n)
-                    ;;(eq (char-before (1- (point))) ?\>)
                     (eq (get-text-property (- (point) n) 'tag-type) 'start)
                     (string= (get-text-property (- (point) n) 'tag-name)
                              (get-text-property (point) 'tag-name))
@@ -8521,10 +8484,7 @@ Pos should be in a tag."
       (newline-and-indent)
       (forward-line -1)
       (indent-according-to-mode)
-;;      (indent-according-to-mode)
-;;      (indent-for-tab-command)
       )
-     ;;-- auto-indentation
      ) ;cond
 
     (when (and web-mode-enable-auto-indentation
@@ -8569,7 +8529,7 @@ Pos should be in a tag."
 
 (defun web-mode-dom-entities-encode ()
   (save-excursion
-    (let (regexp ms pair elt (min (point-min)) (max (point-max)))
+    (let (regexp ms elt (min (point-min)) (max (point-max)))
       (when mark-active
         (setq min (region-beginning)
               max (region-end))
@@ -8589,7 +8549,7 @@ Pos should be in a tag."
       )))
 
 (defun web-mode-dom-entities-replace ()
-  "Replace html entities e.g. &eacute; &#233; or &#x00E9; become é"
+  "Replace html entities (e.g. &eacute; &#233; or &#x00E9; become é)"
   (interactive)
   (save-excursion
     (let (ms pair elt (min (point-min)) (max (point-max)))
@@ -8601,22 +8561,21 @@ Pos should be in a tag."
       (while (web-mode-content-rsf "&\\([#]?[[:alnum:]]\\{2,8\\}\\);" max)
         (setq elt nil)
         (setq ms (match-string-no-properties 1))
-        (if (eq (aref ms 0) ?\#)
-            (if (eq (aref ms 1) ?x)
-                (progn
-                  (setq elt (substring ms 2))
-                  (setq elt (downcase elt))
-                  (setq elt (string-to-number elt 16))
-                  (setq elt (char-to-string elt))
-                  )
-              (setq elt (substring ms 1))
-              (setq elt (char-to-string (string-to-number elt)))
-              )
-          (setq pair (assoc ms web-mode-html-entities))
-          (if pair (setq elt (cdr pair)))
-          (if elt (setq elt (char-to-string elt)))
-          ) ;if
-        (if elt (replace-match elt))
+        (cond
+         ((not (eq (aref ms 0) ?\#))
+          (and (setq pair (assoc ms web-mode-html-entities))
+               (setq elt (cdr pair))
+               (setq elt (char-to-string elt))))
+         ((eq (aref ms 1) ?x)
+          (setq elt (substring ms 2))
+          (setq elt (downcase elt))
+          (setq elt (string-to-number elt 16))
+          (setq elt (char-to-string elt)))
+         (t
+          (setq elt (substring ms 1))
+          (setq elt (char-to-string (string-to-number elt))))
+         ) ;cond
+        (when elt (replace-match elt))
         ) ;while
       )))
 
@@ -9154,26 +9113,21 @@ Pos should be in a tag."
                  (< (point) close))
         (setq child (point))
         )
-      child
-      )))
+      child)))
 
 (defun web-mode-element-parent-position (&optional pos)
-  (let (n
-        tag-type
-        tag-name
-        (continue t)
-        (h (make-hash-table :test 'equal)))
+  (let (n tag-type tag-name (continue t) (tags (make-hash-table :test 'equal)))
     (save-excursion
       (if pos (goto-char pos))
       (while (and continue (web-mode-tag-previous))
-        (setq pos (point))
-        (setq tag-type (get-text-property pos 'tag-type)
-              tag-name (get-text-property pos 'tag-name))
-        (setq n (gethash tag-name h 0))
+        (setq pos (point)
+              tag-type (get-text-property pos 'tag-type)
+              tag-name (get-text-property pos 'tag-name)
+              n (gethash tag-name tags 0))
         (when (member tag-type '(end start))
           (if (eq tag-type 'end)
-              (puthash tag-name (1- n) h)
-            (puthash tag-name (1+ n) h)
+              (puthash tag-name (1- n) tags)
+            (puthash tag-name (1+ n) tags)
             (when (= n 0) (setq continue nil))
             ) ;if
           ) ;when
@@ -9219,7 +9173,6 @@ Pos should be in a tag."
   pos)
 
 (defun web-mode-part-beginning-position (&optional pos)
-  "Beginning of part"
   (unless pos (setq pos (point)))
   (cond
    ((member web-mode-content-type web-mode-part-content-types)
@@ -9237,29 +9190,14 @@ Pos should be in a tag."
 
 (defun web-mode-part-next-position (&optional pos)
   (unless pos (setq pos (point)))
-  ;; (if (get-text-property pos 'part-side)
-  ;;     (if (= pos (point-min))
-  ;;         (set pos (point-min))
-  ;;       (setq pos (web-mode-part-end-position pos))
-  ;;       (when (and pos (> (point-max) pos))
-  ;;         (setq pos (1+ pos))
-  ;;         (if (not (get-text-property pos 'part-side))
-  ;;             (setq pos (next-single-property-change pos 'part-side)))
-  ;;         ) ;when
-  ;;       )
-  ;;   (setq pos (next-single-property-change pos 'part-side))
-  ;;   )
   (cond
-   ((and (= pos (point-min))
-         (get-text-property pos 'part-side))
+   ((and (= pos (point-min)) (get-text-property pos 'part-side))
     )
    ((not (get-text-property pos 'part-side))
     (setq pos (next-single-property-change pos 'part-side)))
-   ((and (setq pos (web-mode-part-end-position pos))
-         (>= pos (point-max)))
+   ((and (setq pos (web-mode-part-end-position pos)) (>= pos (point-max)))
     (setq pos nil))
-   ((and (setq pos (1+ pos))
-         (not (get-text-property pos 'part-side)))
+   ((and (setq pos (1+ pos)) (not (get-text-property pos 'part-side)))
     (setq pos (next-single-property-change pos 'part-side)))
    ) ;cond
   pos)
@@ -9627,17 +9565,22 @@ Pos should be in a tag."
         (when (setq pos (web-mode-opening-paren-position pos reg-beg))
           (setq pos (1- pos))))
        ((member char '(?\( ?\[ ?\{))
-        (setq continue nil)
-        (web-mode-looking-at ".[ \t\n]*" pos)
-        (setq pos (+ pos (length (match-string-no-properties 0)))))
+;;        (web-mode-looking-at ".[ \t\n]*" pos)
+        (web-mode-looking-at ".[ ]*" pos)
+        (setq pos (+ pos (length (match-string-no-properties 0)))
+              continue nil)
+;;        (message "=>%S" pos)
+        )
        ((web-mode-looking-back "\\(var\\|let\\|return\\|const\\)[ \n\t]*" pos)
-        (web-mode-looking-at "[ \t\n]*" pos)
+;;        (web-mode-looking-at "[ \t\n]*" pos)
+        (web-mode-looking-at "[ \t]*" pos)
         (setq pos (+ pos (length (match-string-no-properties 0)))
               continue nil))
        (t
         (setq pos (1- pos)))
        ) ;cond
       ) ;while
+    ;;(message "=%S" pos)
     pos))
 
 (defun web-mode-javascript-calls-beginning-position (pos &optional reg-beg)
@@ -9958,18 +9901,22 @@ Pos should be in a tag."
     (save-excursion
       (cond
        ((not (get-text-property pos 'tag-type))
-        (when (and (web-mode-element-parent)
-                   (web-mode-tag-match)
-                   (web-mode-element-next))
-          (setq pos (point)))
+        (if (and (web-mode-element-parent)
+                 (web-mode-tag-match)
+                 (web-mode-element-next))
+            (setq pos (point))
+          (setq pos nil))
         )
        ((eq (get-text-property pos 'tag-type) 'start)
-        (when (and (web-mode-tag-match)
-                   (web-mode-element-next))
-          (setq pos (point)))
+        (if (and (web-mode-tag-match)
+                 (web-mode-element-next))
+            (setq pos (point))
+          (setq pos nil))
         )
        ((web-mode-element-next)
         (setq pos (point)))
+       (t
+        (setq pos nil))
        ) ;cond
       ) ;save-excursion
     (if pos (goto-char pos))
@@ -10005,6 +9952,8 @@ Pos should be in a tag."
     )
    ((and (web-mode-element-parent)
          (not (web-mode-element-sibling-next)))
+    (goto-char (point-min)))
+   (t
     (goto-char (point-min)))
    ) ;cond
   )
@@ -10480,11 +10429,16 @@ Pos should be in a tag."
   "Executes web-mode unit tests. See `web-mode-tests-directory'."
   (interactive)
   (let (files ret regexp)
-    (setq regexp "^[[:alnum:]][[:alnum:].]+\\'")
-;;    (setq regexp "a\\.jsx\\'")
+    (setq regexp "^[[:alnum:]][[:alnum:]._]+\\'")
     (setq files (directory-files web-mode-tests-directory t regexp))
     (dolist (file files)
-      (setq ret (web-mode-test-process file)))
+      (cond
+       ((eq (string-to-char (file-name-nondirectory file)) ?\_)
+        (delete-file file))
+       (t
+        (setq ret (web-mode-test-process file)))
+       ) ;cond
+      ) ;dolist
     ))
 
 (defun web-mode-test-process (file)
@@ -10521,7 +10475,7 @@ Pos should be in a tag."
   (interactive
    (list (completing-read
           "Engine: "
-          (let (engines elt)
+          (let (engines)
             (dolist (elt web-mode-engines)
               (setq engines (append engines (list (car elt)))))
             engines))))
@@ -10680,9 +10634,8 @@ Pos should be in a tag."
         (when (and (null engine) (member name (cdr elt)))
           (setq engine (car elt)))
         ) ;dolist
-      engine) ;t
-     )
-    ))
+      engine)
+     )))
 
 (defun web-mode-on-after-save ()
   (when web-mode-is-scratch
@@ -10704,17 +10657,18 @@ Pos should be in a tag."
     (put-text-property (point-min) (point-max) 'invisible nil)
     (remove-overlays)
     ;;   (message "1- %S" font-lock-unfontify-region-function)
-    (setq font-lock-unfontify-region-function
-          'font-lock-default-unfontify-region)
-    (unload-feature 'web-mode t)
-    ;;   (message "2- %S" font-lock-unfontify-region-function)
+    (setq font-lock-unfontify-region-function 'font-lock-default-unfontify-region)
+    ;;(unload-feature 'web-mode t)
     (load "web-mode.el")
     (setq web-mode-change-beg nil
           web-mode-change-end nil)
-
     (web-mode)
-    (when (fboundp 'web-mode-hook)
-      (web-mode-hook))
+    ;;(run-mode-hooks)
+    ;;(message "ixi")
+    ;;(run-hooks 'web-mode-hook)
+    ;;(when (fboundp 'web-mode-hook)
+    ;;  (message "run hook")
+    ;;  (web-mode-hook))
     ) ;silent
   )
 
@@ -10737,7 +10691,7 @@ Pos should be in a tag."
 (defun web-mode-reveal ()
   "Display text properties at point."
   (interactive)
-  (let (symbol symbols out)
+  (let (symbols out)
     (setq out (format
                "[point=%S engine=%S content-type=%S language-at-pos=%S]\n"
                (point)
@@ -10757,8 +10711,8 @@ Pos should be in a tag."
   "Display informations useful for debugging."
   (interactive)
   (let ((modes nil)
-        (customs '(web-mode-enable-current-column-highlight web-mode-enable-current-element-highlight))
-        (ignore '(abbrev-mode auto-composition-mode auto-compression-mode auto-encryption-mode auto-insert-mode column-number-mode delete-selection-mode electric-indent-mode file-name-shadow-mode font-lock-mode global-font-lock-mode global-hl-line-mode line-number-mode menu-bar-mode mouse-wheel-mode recentf-mode transient-mark-mode)))
+        (customs '(web-mode-enable-current-column-highlight web-mode-enable-current-element-highlight indent-tabs-mode))
+        (ignore '(abbrev-mode auto-composition-mode auto-compression-mode auto-encryption-mode auto-insert-mode blink-cursor-mode column-number-mode delete-selection-mode electric-indent-mode file-name-shadow-mode font-lock-mode global-font-lock-mode global-hl-line-mode line-number-mode menu-bar-mode mouse-wheel-mode recentf-mode show-point-mode tool-bar-mode tooltip-mode transient-mark-mode)))
     (message "\n")
     (message "--- WEB-MODE DEBUG BEG ---")
     (message "versions: emacs(%S.%S) web-mode(%S)"
@@ -10779,9 +10733,9 @@ Pos should be in a tag."
             ) ;lambda
           minor-mode-list)
     (message "minor modes: %S" modes)
-    (message "customs:")
+    (message "vars:")
     (dolist (custom customs)
-      (message (format "%s(%S) " (symbol-name custom) (symbol-value custom))))
+      (message (format "%s=%S " (symbol-name custom) (symbol-value custom))))
     (message "--- WEB-MODE DEBUG END ---")
     (switch-to-buffer "*Messages*")
     (goto-char (point-max))
@@ -10796,3 +10750,30 @@ Pos should be in a tag."
 ;; coding: utf-8
 ;; indent-tabs-mode: nil
 ;; End:
+
+;; (defun web-mode-is-void-after (&optional pos)
+;;   "Only spaces or comment after (1+ pos)"
+;;   (unless pos (setq pos (point)))
+;;   (save-excursion
+;;     (setq pos (1+ pos))
+;;     (goto-char pos)
+;; ;;    (message "after pos=%S" pos)
+;;     (let ((eol (line-end-position)) (continue t) c (ret t) part-side)
+;;       (setq part-side (or (member web-mode-content-type '("javascript" "css"))
+;;                           (not (null (get-text-property pos 'part-side)))))
+;;       (while continue
+;;         (setq c (char-after pos))
+;; ;;        (message "%S c='%c'" pos c)
+;;         (cond
+;;          ((member c '(?\s ?\n)) )
+;;          ((and part-side (eq (get-text-property pos 'part-token) 'comment)) )
+;;          ((and part-side (get-text-property pos 'block-side)) )
+;;          ((and (not part-side) (eq (get-text-property pos 'block-token) 'comment)) )
+;;          (t (setq ret nil
+;;                   continue nil))
+;;          )
+;;         (when continue
+;;           (setq pos (1+ pos))
+;;           (when (>= pos eol) (setq continue nil)))
+;;         ) ;while
+;;       ret)))

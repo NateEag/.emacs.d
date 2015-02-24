@@ -2,8 +2,8 @@
 
 ;; Copyright (C) 2010 Chris Wanstrath
 
-;; Version: 20150217.644
-;; X-Original-Version: 0.5.8
+;; Version: 20150222.1753
+;; X-Original-Version: 0.5.9
 ;; Keywords: CoffeeScript major mode
 ;; Author: Chris Wanstrath <chris@ozmm.org>
 ;; URL: http://github.com/defunkt/coffee-mode
@@ -138,7 +138,7 @@
 ;; Customizable Variables
 ;;
 
-(defconst coffee-mode-version "0.5.8"
+(defconst coffee-mode-version "0.5.9"
   "The version of `coffee-mode'.")
 
 (defgroup coffee nil
@@ -1141,16 +1141,16 @@ comments such as the following:
   (defconst coffee-block-strings-delimiter
     (rx (and
          ;; Match even number of backslashes.
-         (or (not (any ?\\ ?\' ?\"))
+         (or (not (any ?\\ ?\' ?\" ?/))
              point
              ;; Quotes might be preceded by a escaped quote.
              (and (or (not (any ?\\)) point)
                   ?\\
                   (* ?\\ ?\\)
-                  (any ?\' ?\")))
+                  (any ?\' ?\" ?/)))
          (* ?\\ ?\\)
          ;; Match single or triple quotes of any kind.
-         (group (or "'''" "\"\"\""))))))
+         (group (or "'''" "\"\"\"" "///"))))))
 
 (defsubst coffee-syntax-count-quotes (quote-char start-point limit)
   (let ((i 0))

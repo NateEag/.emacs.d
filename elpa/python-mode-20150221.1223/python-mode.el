@@ -1,3 +1,5 @@
+
+
 ;; python-mode.el --- Edit, debug, develop, run Python programs.
 
 ;; Includes a minor mode for handling a Python/IPython shell,
@@ -2766,6 +2768,7 @@ See original source: http://pymacs.progiciels-bpi.ca"
   (add-to-list 'load-path (concat default-directory "extensions")))
 
 
+
 (and py-company-pycomplete-p (require 'company-pycomplete))
 
 
@@ -2934,7 +2937,7 @@ Returns char found. "
               word-end) . py-exception-name-face)
         ;; Builtins
         (,(rx
-	   (or space line-start (not (any ".")))
+	   (or space line-start (not (any ".(")))
 	   symbol-start
 	   (group (or "_" "__doc__" "__import__" "__name__" "__package__" "abs" "all"
 		      "any" "apply" "basestring" "bin" "bool" "buffer" "bytearray"
@@ -4943,6 +4946,7 @@ Optional argument REPEAT, the number of loops done already, is checked for py-ma
 
 (defun py-end-of-statement-bol ()
   "Go to the beginning-of-line following current statement."
+  (interactive) 
   (let ((erg (py-end-of-statement)))
     (setq erg (py--beginning-of-line-form))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
@@ -16947,76 +16951,6 @@ Use `py-fast-process' "
 	(py-return-result-p t))
     (py--complete-prepare shell debug beg end word t)))
 
-;; python-components-skeletons
-(define-skeleton py-else
-  "Auxiliary skeleton."
-  nil
-  (unless (eq ?y (read-char "Add `else' clause? (y for yes or RET for no) "))
-    (signal 'quit t))
-  < "else:" \n)
-
-(define-skeleton py-if
-    "If condition "
-  "if " "if " str ":" \n
-  _ \n
-  ("other condition, %s: "
-  < "elif " str ":" \n
-   > _ \n nil)
-  '(py-else) | ^)
-
-(define-skeleton py-while
-    "Condition: "
-  "while " "while " str ":" \n
-  > -1 _ \n
-  '(py-else) | ^)
-
-(define-skeleton py-for
-    "Target, %s: "
-  "for " "for " str " in " (skeleton-read "Expression, %s: ") ":" \n
-  > -1 _ \n
-  '(py-else) | ^)
-
-(define-skeleton py-try/except
-    "Py-try/except skeleton "
-  "try:" "try:" \n
-  > -1 _ \n
-  ("Exception, %s: "
-   < "except " str '(python-target) ":" \n
-   > _ \n nil)
-  < "except:" \n
-  > _ \n
-  '(py-else) | ^)
-
-(define-skeleton py-target
-  "Auxiliary skeleton."
-  "Target, %s: " ", " str | -2)
-
-(define-skeleton py-try/finally
-    "Py-try/finally skeleton "
-  "try:" \n
-  > -1 _ \n
-  < "finally:" \n
-  > _ \n)
-
-(define-skeleton py-def
-    "Name: "
-  "def " str " (" ("Parameter, %s: " (unless (equal ?\( (char-before)) ", ")
-                   str) "):" \n
-                   "\"\"\"" - "\"\"\"" \n     ; Fixme:  extra space inserted -- why?).
-                   > _ \n)
-
-(define-skeleton py-class
-    "Name: "
-  "class " str " (" ("Inheritance, %s: "
-		     (unless (equal ?\( (char-before)) ", ")
-		     str)
-  & ")" | -2				; close list or remove opening
-  ":" \n
-  "\"\"\"" - "\"\"\"" \n
-  > _ \n)
-
-;;;
-
 ;; python-components-intern
 
 ;;  Keymap
@@ -19398,7 +19332,7 @@ Use pydoc on symbol at point"]
 
 Execute statement running pdb\. . "])
                  ("Checks"
-		  
+
 		  ["Flycheck mode" py-flycheck-mode
 		   :help " `py-flycheck-mode'
 
@@ -25167,6 +25101,11 @@ Try to find source definition of function at point"]))))
 (when py-org-cycle-p
   (define-key python-mode-map (kbd "<backtab>") 'org-cycle))
 
+(defun py-load-skeletons ()
+  "Load skeletons from extensions. "
+  (interactive) 
+  (load (concat py-install-directory "/extensions/python-components-skeletons.el")))
+
 (defun py--kill-emacs-hook ()
   "Delete files in `py-file-queue'.
 These are Python temporary files awaiting execution."
@@ -25766,6 +25705,11 @@ LIEP stores line-end-position at point-of-interest
 				    (+ (current-column) py-closing-list-space))
 				   ((looking-at "\\s([ \t]*$")
 				    (py--empty-arglist-indent nesting py-indent-offset indent-offset))
+				   ((looking-at "\\s([ \t]*\\([^ \t]+.*\\)$")
+				     (goto-char (match-beginning 1))
+				     (if py-indent-paren-spanned-multilines-p
+					 (+ (current-column) py-indent-offset)
+				       (current-column)))
 				   (t (py--fetch-previous-indent orig))))
 				 ;; already behind a dedented element in list
 				 ((<= 2 (- origline this-line))

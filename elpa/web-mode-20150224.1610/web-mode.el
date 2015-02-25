@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2015 François-Xavier Bois
 
-;; Version: 20150223.1131
-;; X-Original-Version: 11.0.0
+;; Version: 20150224.1610
+;; X-Original-Version: 11.0.5
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -23,12 +23,15 @@
 ;;---- TODO --------------------------------------------------------------------
 
 ;; web-mode-attribute-next(-position)
+
 ;; v12 : invert path and XX (web-mode-engines-alist,
 ;;       web-mode-content-types-alist)
 
+;; web-mode-comment-beginning|end(-position) : to use with indent-line
+
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "11.0.0"
+(defconst web-mode-version "11.0.5"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -5693,7 +5696,8 @@ the environment as needed for ac-sources, right before they're used.")
                          'after-string
                          (concat
                           (if (> column diff) (make-string (- column diff) ?\s) "")
-                          (propertize 'font-lock-face
+                          (propertize " "
+                                      'font-lock-face
                                       'web-mode-current-column-highlight-face)
                           ) ;concat
                          )
@@ -5937,6 +5941,7 @@ the environment as needed for ac-sources, right before they're used.")
              (not (get-text-property pos 'block-beg)))
 
         (setq reg-beg (or (web-mode-block-beginning-position pos) (point-min)))
+        ;;(message "reg-beg=%S" reg-beg)
         (goto-char reg-beg)
         (setq reg-col (current-column))
         (setq language web-mode-engine)
@@ -5950,11 +5955,11 @@ the environment as needed for ac-sources, right before they're used.")
          ((string= web-mode-engine "razor")
           (setq reg-beg (+ reg-beg 2))
           )
-         ((string= web-mode-engine "ctemplate")
-          (save-excursion
-            (when (web-mode-rsf "{{#?")
-              (setq reg-col (current-column))))
-          )
+         ;;((string= web-mode-engine "ctemplate")
+         ;; (save-excursion
+         ;;   (when (web-mode-rsf "{{#?")
+         ;;     (setq reg-col (current-column))))
+         ;; )
          ((string= web-mode-engine "template-toolkit")
           (setq reg-beg (+ reg-beg 3)
                 reg-col (+ reg-col 3))
@@ -6022,7 +6027,13 @@ the environment as needed for ac-sources, right before they're used.")
                  (eq (get-text-property (1- pos) 'block-token) 'comment)
                  (progn
                    (setq reg-beg (previous-single-property-change pos 'block-token))
-                   t)))
+                   t))
+            (and (> pos (point-min))
+                 (eq (get-text-property pos 'tag-type) 'comment)
+                 (progn
+                   (setq reg-beg (web-mode-tag-beginning-position pos))
+                   t))
+            )
         (setq token "comment"))
        ((or (and (> pos (point-min))
                  (member (get-text-property pos 'part-token)
@@ -6140,12 +6151,14 @@ the environment as needed for ac-sources, right before they're used.")
           ) ;case string
 
          ((string= token "comment")
-          (goto-char (car
-                      (web-mode-property-boundaries
-                       (if (eq (get-text-property pos 'part-token) 'comment)
-                           'part-token
-                         'block-token)
-                       pos)))
+          (if (eq (get-text-property pos 'tag-type) 'comment)
+              (web-mode-tag-beginning)
+            (goto-char (car
+                        (web-mode-property-boundaries
+                         (if (eq (get-text-property pos 'part-token) 'comment)
+                             'part-token
+                           'block-token)
+                         pos))))
           (setq offset (current-column))
           (cond
            ((member (buffer-substring-no-properties (point) (+ (point) 2)) '("/*" "{*" "@*"))
@@ -6156,14 +6169,10 @@ the environment as needed for ac-sources, right before they're used.")
               (setq offset (+ offset 3)))
              ) ;cond
             )
-           ((and (string= web-mode-engine "django")
-                 (looking-back "{% comment %}"))
-            (setq offset (- offset 12))
-            )
-           ((and (string= web-mode-engine "mako")
-                 (looking-back "<%doc%>"))
-            (setq offset (- offset 6))
-            )
+           ((and (string= web-mode-engine "django") (looking-back "{% comment %}"))
+            (setq offset (- offset 12)))
+           ((and (string= web-mode-engine "mako") (looking-back "<%doc%>"))
+            (setq offset (- offset 6)))
            ) ;cond
           ) ;case comment
 
@@ -6461,6 +6470,7 @@ the environment as needed for ac-sources, right before they're used.")
 
         ;;(message "offset=%S" offset)
         (when (and offset reg-col (< offset reg-col)) (setq offset reg-col))
+        ;;(message "offset=%S" offset)
 
         ) ;let
       ) ;save-excursion
@@ -7747,19 +7757,23 @@ Pos should be in a tag."
 (defun web-mode-comment-or-uncomment ()
   "Comment or uncomment line(s), block or region at POS."
   (interactive)
-  (save-excursion
-    (if (and mark-active (eq (point) (region-end)))
-        (exchange-point-and-mark))
-    (skip-chars-forward "[:space:]" (line-end-position))
-    (if (or (eq (get-text-property (point) 'tag-type) 'comment)
-            (eq (get-text-property (point) 'block-token) 'comment)
-            (eq (get-text-property (point) 'part-token) 'comment))
-	(web-mode-uncomment (point))
-      (web-mode-comment (point)))))
+  ;;  (save-excursion
+  (if (and mark-active (eq (point) (region-end)))
+      (exchange-point-and-mark))
+  (skip-chars-forward "[:space:]" (line-end-position))
+  (if (or (eq (get-text-property (point) 'tag-type) 'comment)
+          (eq (get-text-property (point) 'block-token) 'comment)
+          (eq (get-text-property (point) 'part-token) 'comment))
+      (web-mode-uncomment (point))
+    (web-mode-comment (point)))
+  ;;)
+  )
 
 (defun web-mode-comment (pos)
-  (save-excursion
-    (let (ctx language sel beg end tmp block-side single-line-block)
+;;  (save-excursion
+    (let (ctx language sel beg end tmp block-side single-line-block pos-after)
+
+      (setq pos-after pos)
 
       (setq block-side (get-text-property pos 'block-side))
       (setq single-line-block (web-mode-is-single-line-block pos))
@@ -7791,10 +7805,12 @@ Pos should be in a tag."
         (when (> (point) (mark))
           (exchange-point-and-mark))
 
-        (if (eq (char-before end) ?\n)
+        (if (and (eq (char-before end) ?\n)
+                 (not (eq (char-after end) ?\n)))
             (setq end (1- end)))
 
-        (setq sel (web-mode-trim (buffer-substring-no-properties beg end)))
+;;        (setq sel (web-mode-trim (buffer-substring-no-properties beg end)))
+        (setq sel (buffer-substring-no-properties beg end))
         (delete-region beg end)
         (deactivate-mark)
 
@@ -7803,32 +7819,28 @@ Pos should be in a tag."
          ((member language '("html" "xml"))
           (cond
            ((and (= web-mode-comment-style 2) (string= web-mode-engine "django"))
-            (web-mode-insert-and-indent (concat "{# " sel " #}"))
-            )
+            (web-mode-insert-and-indent (concat "{# " sel " #}")))
            ((and (= web-mode-comment-style 2) (member web-mode-engine '("ejs" "erb")))
-            (web-mode-insert-and-indent (concat "<%# " sel " %>"))
-            )
+            (web-mode-insert-and-indent (concat "<%# " sel " %>")))
            ((and (= web-mode-comment-style 2) (string= web-mode-engine "aspx"))
-            (web-mode-insert-and-indent (concat "<%-- " sel " --%>"))
-            )
+            (web-mode-insert-and-indent (concat "<%-- " sel " --%>")))
            ((and (= web-mode-comment-style 2) (string= web-mode-engine "smarty"))
             (web-mode-insert-and-indent (concat
                                          (web-mode-engine-delimiter-open web-mode-engine "{")
                                          "* "
                                          sel
                                          " *"
-                                         (web-mode-engine-delimiter-close web-mode-engine "}")))
-            )
+                                         (web-mode-engine-delimiter-close web-mode-engine "}"))))
            ((and (= web-mode-comment-style 2) (string= web-mode-engine "blade"))
-            (web-mode-insert-and-indent (concat "{{-- " sel " --}}"))
-            )
+            (web-mode-insert-and-indent (concat "{{-- " sel " --}}")))
            ((and (= web-mode-comment-style 2) (string= web-mode-engine "razor"))
-            (web-mode-insert-and-indent (concat "@* " sel " *@"))
-            )
+            (web-mode-insert-and-indent (concat "@* " sel " *@")))
            (t
             (web-mode-insert-and-indent (concat "<!-- " sel " -->"))
-            )
-           )
+            (when (< (length sel) 1)
+              (search-backward " -->")
+              (setq pos-after nil))
+            ))
           ) ;case html
 
          ((member language '("php" "javascript" "java"))
@@ -7854,54 +7866,53 @@ Pos should be in a tag."
         ) ;t
        ) ;cond
 
-      )
-    ) ;save-excursion
-;;  (message "%S" (point))
-;;  (goto-char pos)
-  )
+      (when pos-after (goto-char pos-after))
+
+      ))
 
 (defun web-mode-uncomment (pos)
   (let ((beg pos) (end pos) (sub2 "") comment prop)
-    (cond
-     ((and (get-text-property pos 'block-side)
-           (intern-soft (concat "web-mode-uncomment-" web-mode-engine "-block")))
-      (funcall (intern (concat "web-mode-uncomment-" web-mode-engine "-block")) pos)
-      )
-     (t
-      (setq prop
-            (cond
-             ((eq (get-text-property pos 'block-token) 'comment) 'block-token)
-             ((eq (get-text-property pos 'tag-type) 'comment) 'tag-type)
-             ((eq (get-text-property pos 'part-token) 'comment) 'part-token)
-             ))
-      (if (and (not (bobp))
-               (eq (get-text-property pos prop) (get-text-property (1- pos) prop)))
-          (setq beg (or (previous-single-property-change pos prop)
-                        (point-min))))
-      (if (and (not (eobp))
-               (eq (get-text-property pos prop) (get-text-property (1+ pos) prop)))
-          (setq end (or (next-single-property-change pos prop)
-                        (point-max))))
-      (when (> (- end beg) 4)
-        (setq comment (buffer-substring-no-properties beg end))
-        (setq sub2 (substring comment 0 2))
-        (cond
-         ((member sub2 '("<!" "<%"))
-          (setq comment (replace-regexp-in-string "\\(^<[!%]--[ ]?\\|[ ]?--[%]?>$\\)" "" comment)))
-         ((string= sub2 "{#")
-          (setq comment (replace-regexp-in-string "\\(^{#[ ]?\\|[ ]?#}$\\)" "" comment)))
-         ((string= sub2 "/*")
-          (setq comment (replace-regexp-in-string "\\(^/\\*[ ]?\\|[ ]?\\*/$\\)" "" comment)))
-         ((string= sub2 "//")
-          (setq comment (replace-regexp-in-string "\\(^//\\)" "" comment)))
-         )
-        (delete-region beg end)
-        (web-mode-insert-and-indent comment)
-        (goto-char beg)
-        ) ;when
-      ) ;t
-     ) ;cond
-    (indent-according-to-mode)))
+    (save-excursion
+      (cond
+       ((and (get-text-property pos 'block-side)
+             (intern-soft (concat "web-mode-uncomment-" web-mode-engine "-block")))
+        (funcall (intern (concat "web-mode-uncomment-" web-mode-engine "-block")) pos)
+        )
+       (t
+        (setq prop
+              (cond
+               ((eq (get-text-property pos 'block-token) 'comment) 'block-token)
+               ((eq (get-text-property pos 'tag-type) 'comment) 'tag-type)
+               ((eq (get-text-property pos 'part-token) 'comment) 'part-token)
+               ))
+        (if (and (not (bobp))
+                 (eq (get-text-property pos prop) (get-text-property (1- pos) prop)))
+            (setq beg (or (previous-single-property-change pos prop)
+                          (point-min))))
+        (if (and (not (eobp))
+                 (eq (get-text-property pos prop) (get-text-property (1+ pos) prop)))
+            (setq end (or (next-single-property-change pos prop)
+                          (point-max))))
+        (when (> (- end beg) 4)
+          (setq comment (buffer-substring-no-properties beg end))
+          (setq sub2 (substring comment 0 2))
+          (cond
+           ((member sub2 '("<!" "<%"))
+            (setq comment (replace-regexp-in-string "\\(^<[!%]--[ ]?\\|[ ]?--[%]?>$\\)" "" comment)))
+           ((string= sub2 "{#")
+            (setq comment (replace-regexp-in-string "\\(^{#[ ]?\\|[ ]?#}$\\)" "" comment)))
+           ((string= sub2 "/*")
+            (setq comment (replace-regexp-in-string "\\(^/\\*[ ]?\\|[ ]?\\*/$\\)" "" comment)))
+           ((string= sub2 "//")
+            (setq comment (replace-regexp-in-string "\\(^//\\)" "" comment)))
+           )
+          (delete-region beg end)
+          (web-mode-insert-and-indent comment)
+          (goto-char beg)
+          ) ;when
+        ) ;t
+       ) ;cond
+      (indent-according-to-mode))))
 
 (defun web-mode-comment-ejs-block (pos)
   (let (beg end)
@@ -9802,7 +9813,7 @@ Pos should be in a tag."
           (backward-char 1)
           (web-mode-tag-beginning))
          (t
-          (let ((backward-sexp-function nil))
+          (let ((forward-sexp-function nil))
             (backward-sexp))
           ) ;case t
          ) ;cond

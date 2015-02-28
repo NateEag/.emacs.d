@@ -4,7 +4,7 @@
 ;;
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Created: 11 September 2014
-;; Version: 20150103.445
+;; Version: 20150228.309
 ;; X-Original-Version: 0.4
 ;; Package-Requires: ((dash "2.8.0"))
 
@@ -141,7 +141,7 @@ information about Auto Complete."
                            'pip-requirements-auto-complete-setup)
 
 ;;;###autoload
-(define-derived-mode pip-requirements-mode fundamental-mode "pip-require"
+(define-derived-mode pip-requirements-mode prog-mode "pip-require"
   "Major mode for editing pip requirements files."
   :syntax-table pip-requirements-syntax-table
   (set (make-local-variable 'font-lock-defaults) '(pip-requirements-operators))

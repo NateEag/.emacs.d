@@ -623,6 +623,12 @@ to exit or helm update to disable the `current-input-method' with `C-\\'."
   "Face for showing prefix arg in mode-line."
   :group 'helm-faces)
 
+(defface helm-match
+  '((((background light)) :foreground "#b00000")
+    (((background dark))  :foreground "gold1"))
+  "Face used to highlight matches."
+  :group 'helm)
+
 
 ;;; Variables.
 ;;
@@ -2963,6 +2969,12 @@ It is meant to use with `filter-one-by-one' slot."
                       (match-beginning 0) (match-end 0) '(face helm-match)))))
       (setq display (buffer-string)))
     (if real (cons display real) display)))
+
+(defun helm-fuzzy-highlight-matches (candidates _source)
+  "The filtered-candidate-transformer function to highlight matches in fuzzy.
+See helm-fuzzy-default-highlight-match."
+  (cl-loop for c in candidates
+           collect (helm-fuzzy-default-highlight-match c)))
 
 (defun helm-match-functions (source)
   (let ((matchfns (or (assoc-default 'match source)

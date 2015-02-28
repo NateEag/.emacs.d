@@ -393,12 +393,16 @@
     :initform nil
     :custom boolean
     :documentation
-    "  Disable highlight match in this source.
-  This will disable generic highlighting done by matchplugin,
+    "  Disable highlighting matches in this source.
+  This will disable generic highlighting of matches,
   but some specialized highlighting can be done from elsewhere,
-  i.e `filtered-candidate-transformer' or `filter-one-by-one' slots,
-  so even if non--nil this may have no effect if highlighting is handled
-  from somewhere else.")
+  i.e from `filtered-candidate-transformer' or `filter-one-by-one' slots.
+  So use this to either disable completely highlighting in your source,
+  or to disable highlighting and use a specialized highlighting matches
+  function for this source.
+  Remember that this function should run AFTER all filter functions if those
+  filter functions are modifying face properties, though it is possible to
+  avoid this by using new `add-face-text-property' in your filter functions.")
    
    (allow-dups
     :initarg :allow-dups
@@ -571,7 +575,6 @@ Matching is done basically with `string-match' against each candidate.")
   The function must return a process.")
 
    (matchplugin :initform nil)
-   (nohighlight :initform t)
    (dont-plug :initform '(helm-compile-source--match-plugin
                           helm-compile-source--persistent-help)))
 
@@ -960,20 +963,18 @@ an eieio class."
   (oset source :header-line (helm-source--header-line source))
   (helm-aif (slot-value source :persistent-help)
       (oset source :header-line (helm-source--persistent-help-string it source)))
-  (when (slot-value source :fuzzy-match)
-    (oset source :nohighlight t)
-    (when helm-fuzzy-matching-highlight-fn
-      (oset source :filter-one-by-one
-            (helm-aif (oref source :filter-one-by-one)
-                (append (helm-mklist it)
-                        (list helm-fuzzy-matching-highlight-fn))
-              (list helm-fuzzy-matching-highlight-fn))))
-    (when helm-fuzzy-sort-fn
+  (when (and (slot-value source :fuzzy-match) helm-fuzzy-sort-fn)
       (oset source :filtered-candidate-transformer
             (helm-aif (oref source :filtered-candidate-transformer)
                 (append (helm-mklist it)
                         (list helm-fuzzy-sort-fn))
-              (list helm-fuzzy-sort-fn))))))
+              (list helm-fuzzy-sort-fn))))
+  (unless (oref source :nohighlight)
+    (oset source :filtered-candidate-transformer
+          (helm-aif (oref source :filtered-candidate-transformer)
+              (append (helm-mklist it)
+                      (list #'helm-fuzzy-highlight-matches))
+            (list #'helm-fuzzy-highlight-matches)))))
 
 (defmethod helm-setup-user-source ((_source helm-source)))
 
@@ -1019,9 +1020,7 @@ an eieio class."
   (cl-assert (null (slot-value source :candidates))
              nil "Incorrect use of `candidates' use `candidates-process' instead")
   (cl-assert (null (slot-value source :matchplugin))
-             nil "`matchplugin' not allowed in async sources.")
-  (cl-assert (slot-value source :nohighlight)
-             nil "Highlighting defeat async purpose, use own highlighting for source."))
+             nil "`matchplugin' not allowed in async sources."))
 
 (defmethod helm--setup-source ((source helm-source-dummy))
   (let ((mtc (slot-value source :match)))

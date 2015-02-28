@@ -227,6 +227,11 @@ I.e use the -path/ipath arguments of find instead of -name/iname."
   :group 'helm-files
   :type 'hook)
 
+(defcustom helm-multi-files-toggle-locate-binding "C-c p"
+  "Default binding to switch back and forth locate in `helm-multi-files'."
+  :group 'helm-files
+  :type 'string)
+
 
 ;;; Faces
 ;;
@@ -391,6 +396,7 @@ Don't set it directly, use instead `helm-ff-auto-update-initial-value'.")
 (defvar helm-marked-buffer-name "*helm marked*")
 (defvar helm-ff--auto-update-state nil)
 (defvar helm-ff--deleting-char-backward nil)
+(defvar helm-multi-files--toggle-locate nil)
 
 
 ;;; Helm-find-files
@@ -1363,13 +1369,16 @@ or when `helm-pattern' is equal to \"~/\"."
 (defun helm-ff-auto-expand-to-home-or-root ()
   "Allow expanding to home/user directory or root or text yanked after pattern."
   (when (and (helm-file-completion-source-p)
-             (string-match "/\\./\\|/\\.\\./\\|/~.*/\\|//\\|\\(/[[:alpha:]]:/\\|\\s\\+\\)"
-                           helm-pattern)
+             (string-match
+              "/\\$.*/\\|/\\./\\|/\\.\\./\\|/~.*/\\|//\\|\\(/[[:alpha:]]:/\\|\\s\\+\\)"
+              helm-pattern)
              (with-current-buffer (window-buffer (minibuffer-window)) (eolp))
              (not (string-match helm-ff-url-regexp helm-pattern)))
     (let* ((match (match-string 0 helm-pattern))
            (input (cond ((string= match "/./") default-directory)
                         ((string= helm-pattern "/../") "/")
+                        ((string-match-p "\\`/\\$" match)
+                         (substitute-in-file-name match))
                         (t (expand-file-name
                             (helm-substitute-in-filename helm-pattern)
                             ;; [Windows] On UNC paths "/" expand to current machine,
@@ -1463,7 +1472,9 @@ purpose."
     ;; In some rare cases tramp can return a nil input,
     ;; so be sure pattern is a string for safety (Issue #476).
     (unless pattern (setq pattern ""))
-    (cond ((string= pattern "") "")
+    (cond ((string-match "\\`\\$" pattern)
+           (substitute-in-file-name pattern))
+          ((string= pattern "") "")
           ((string-match "\\`[.]\\{1,2\\}/\\'" pattern)
            (expand-file-name pattern))
           ((string-match ".*\\(~?/?[.]\\{1\\}/\\)\\'" pattern)
@@ -1866,6 +1877,7 @@ return FNAME prefixed with [?]."
 Return candidates prefixed with basename of `helm-input' first."
   (if (or (and (file-directory-p helm-input)
                (string-match "/\\'" helm-input))
+          (string-match "\\`\\$" helm-input)
           (null candidates))
       candidates
       (let* ((c1        (car candidates))
@@ -2525,6 +2537,21 @@ Else return ACTIONS unmodified."
            (append actions (list browse-action)))
           (t actions))))
 
+(defun helm-multi-files-toggle-to-locate ()
+  (interactive)
+  (with-helm-buffer
+  (if (setq helm-multi-files--toggle-locate
+            (not helm-multi-files--toggle-locate))
+      (progn
+        (helm-set-sources (unless (memq 'helm-source-locate
+                                        helm-sources)
+                            (cons 'helm-source-locate helm-sources)))
+        (helm-set-source-filter '(helm-source-locate)))
+      (helm-kill-async-processes)
+      (helm-set-sources (remove 'helm-source-locate
+                                helm-for-files-preferred-list))
+      (helm-set-source-filter nil))))
+
 
 ;;; List of files gleaned from every dired buffer
 ;;
@@ -3071,6 +3098,28 @@ Run all sources defined in `helm-for-files-preferred-list'."
           (helm-make-source "Buffers" 'helm-source-buffers)))
   (let ((helm-ff-transformer-show-only-basename nil))
     (helm :sources helm-for-files-preferred-list :buffer "*helm for files*")))
+
+;;;###autoload
+(defun helm-multi-files ()
+  "Same as `helm-for-files' but allow toggling from locate to others sources."
+  (interactive)
+  (unless helm-source-buffers-list
+    (setq helm-source-buffers-list
+          (helm-make-source "Buffers" 'helm-source-buffers)))
+  (setq helm-multi-files--toggle-locate nil)
+  (let ((sources (remove 'helm-source-locate helm-for-files-preferred-list))
+        (helm-ff-transformer-show-only-basename nil)
+        (old-key (lookup-key
+                  helm-map
+                  (read-kbd-macro helm-multi-files-toggle-locate-binding))))
+    (with-helm-temp-hook 'helm-after-initialize-hook
+      (define-key helm-map (kbd helm-multi-files-toggle-locate-binding)
+        'helm-multi-files-toggle-to-locate))
+    (unwind-protect
+         (helm :sources sources
+               :buffer "*helm multi files*")
+      (define-key helm-map (kbd helm-multi-files-toggle-locate-binding)
+        old-key))))
 
 ;;;###autoload
 (defun helm-recentf ()

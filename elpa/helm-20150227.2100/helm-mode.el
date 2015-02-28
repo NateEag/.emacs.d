@@ -737,7 +737,6 @@ Keys description:
                            (if ,marked-candidates
                                (helm-marked-candidates :with-wildcard t)
                              (identity candidate))))))
-         (helm-mp-highlight-delay nil)
          ;; Be sure we don't erase the underlying minibuffer if some.
          (helm-ff-auto-update-initial-value
           (and helm-ff-auto-update-initial-value
@@ -769,6 +768,7 @@ Keys description:
                             (concat hname helm-find-files-doc-header))
              :mode-line mode-line
              :candidates hist
+             :nohighlight t
              :persistent-action persistent-action
              :persistent-help persistent-help
              :nomark nomark
@@ -784,6 +784,7 @@ Keys description:
                            helm-ff-auto-update-flag)
                      (helm-set-local-variable 'helm-in-file-completion-p t))
              :mode-line mode-line
+             :nohighlight t
              :candidates
              (lambda ()
                (append (and (not (file-exists-p helm-pattern))
@@ -949,81 +950,76 @@ Can be used as value for `completion-in-region-function'."
                   (afun (plist-get completion-extra-properties :annotation-function))
                   (data (all-completions input collection predicate))
                   (init-space-suffix (unless helm-completion-in-region-fuzzy-match " "))
-                  (file-comp-p (helm-mode--in-file-completion-p input (car data)))
+                  ;; Assume that when `afun' and `predicate' are null
+                  ;; we are in filename completion.
+                  (file-comp-p (or (helm-mode--in-file-completion-p)
+                                   (and (null afun) (null predicate)))) 
                   ;; Completion-at-point and friends have no prompt.
-                  (result (helm-comp-read
-                           (or (and (boundp 'prompt) prompt) "Pattern: ")
-                           (if file-comp-p
-                               (cl-loop for f in data unless
-                                        (string-match "\\`\\.\\{1,2\\}/\\'" f)
-                                        collect f)
-                               (if afun
-                                   (mapcar (lambda (s)
-                                             (let ((ann (funcall afun s)))
-                                               (if ann
-                                                   (cons
-                                                    (concat
-                                                     s
-                                                     (propertize
-                                                      " " 'display
-                                                      (propertize
-                                                       ann
-                                                       'face 'completions-annotations)))
-                                                    s)
-                                                   s)))
-                                           data)
-                                   data))
-                           :name str-command
-                           :fuzzy helm-completion-in-region-fuzzy-match
-                           :nomark t
-                           :initial-input
-                           (cond ((and file-comp-p
-                                       (not (string-match "/\\'" input)))
-                                  (concat (helm-basename input)
-                                          (unless (string= input "")
-                                            init-space-suffix)))
-                                 ((string-match "/\\'" input) nil)
-                                 ((or (null require-match)
-                                      (stringp require-match))
-                                  input)
-                                 (t (concat input init-space-suffix)))
-                           :buffer buf-name
-                           :fc-transformer (append (list 'helm-cr-default-transformer)
-                                                   (list (lambda (candidates _source)
-                                                           (sort candidates 'helm-generic-sort-fn))))
-                           :exec-when-only-one t
-                           :quit-when-no-cand
-                           #'(lambda ()
-                               ;; Delay message to overwrite "Quit".
-                               (run-with-timer
-                                0.01 nil
-                                #'(lambda ()
-                                    (message "[No matches]")))
-                               t)       ; exit minibuffer immediately.
-                           :must-match require-match)))
+                  (result (if (stringp data)
+                              data
+                              (helm-comp-read
+                               (or (and (boundp 'prompt) prompt) "Pattern: ")
+                               (if file-comp-p
+                                   (cl-loop for f in data unless
+                                            (string-match "\\`\\.\\{1,2\\}/\\'" f)
+                                            collect f)
+                                   (if afun
+                                       (mapcar (lambda (s)
+                                                 (let ((ann (funcall afun s)))
+                                                   (if ann
+                                                       (cons
+                                                        (concat
+                                                         s
+                                                         (propertize
+                                                          " " 'display
+                                                          (propertize
+                                                           ann
+                                                           'face 'completions-annotations)))
+                                                        s)
+                                                       s)))
+                                               data)
+                                       data))
+                               :name str-command
+                               :fuzzy helm-completion-in-region-fuzzy-match
+                               :nomark t
+                               :initial-input
+                               (cond ((and file-comp-p
+                                           (not (string-match "/\\'" input)))
+                                      (concat (helm-basename input)
+                                              (unless (string= input "")
+                                                init-space-suffix)))
+                                     ((string-match "/\\'" input) nil)
+                                     ((or (null require-match)
+                                          (stringp require-match))
+                                      input)
+                                     (t (concat input init-space-suffix)))
+                               :buffer buf-name
+                               :fc-transformer (append (list 'helm-cr-default-transformer)
+                                                       (list (lambda (candidates _source)
+                                                               (sort candidates 'helm-generic-sort-fn))))
+                               :exec-when-only-one t
+                               :quit-when-no-cand
+                               #'(lambda ()
+                                   ;; Delay message to overwrite "Quit".
+                                   (run-with-timer
+                                    0.01 nil
+                                    #'(lambda ()
+                                        (message "[No matches]")))
+                                   t)   ; exit minibuffer immediately.
+                               :must-match require-match))))
              (when result
                (delete-region (if (and file-comp-p
                                        (save-excursion
                                          (re-search-backward "~?/" start t)))
                                   (match-end 0) start)
                               end)
-               (insert (if file-comp-p
-                           (shell-quote-argument result)
-                           result))))
+               (insert result)))
         (advice-remove 'lisp--local-variables
                        #'helm-mode--advice-lisp--local-variables))))
 
-(defun helm-mode--in-file-completion-p (target candidate)
-  (when (and candidate target)
-    (or (string-match "/\\'" candidate)
-        (string-match "\\`~?/.*/\\'" target)
-        (string-match "\\`[a-zA-Z]:/.*/\\'" target)
-        (if (or (string-match "\\`~?/" target)
-                (string-match "\\`[a-zA-Z]:/" target))
-            (file-exists-p (expand-file-name candidate (helm-basedir target)))
-          (file-exists-p (expand-file-name
-                          candidate (with-helm-current-buffer
-                                      default-directory)))))))
+(defun helm-mode--in-file-completion-p ()
+  (with-helm-current-buffer
+    (run-hook-with-args-until-success 'file-name-at-point-functions)))
 
 (when (boundp 'completion-in-region-function)
   (defconst helm--old-completion-in-region-function completion-in-region-function))

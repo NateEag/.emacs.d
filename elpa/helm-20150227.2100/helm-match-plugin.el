@@ -88,24 +88,6 @@ Default is multi3."
   :set   'helm-mp-set-matching-method
   :group 'helm-match-plugin)
 
-(defface helm-match
-  '((((background light)) :foreground "#b00000")
-    (((background dark))  :foreground "gold1"))
-  "Face used to highlight matches."
-  :group 'helm-match-plugin)
-
-(defcustom helm-mp-highlight-delay 0.7
-  "Highlight matches with `helm-match' face after this many seconds.
- If nil, no highlight. "
-  :type  'integer
-  :group 'helm-match-plugin)
-
-(defcustom helm-mp-highlight-threshold 2
-  "Minimum length of pattern to highlight.
-The smaller  this value is, the slower highlight is."
-  :type  'integer
-  :group 'helm-match-plugin)
-
 ;;;###autoload
 (define-minor-mode helm-match-plugin-mode
     "Add more flexible regexp matching for helm.
@@ -114,13 +96,10 @@ See `helm-mp-matching-method' for the behavior of each method."
   :require 'helm-match-plugin
   :global t
   (if helm-match-plugin-mode
-      (progn
-        (add-to-list 'helm-compile-source-functions 'helm-compile-source--match-plugin)
-        (add-hook 'helm-update-hook 'helm-mp-highlight-match))
+      (add-to-list 'helm-compile-source-functions 'helm-compile-source--match-plugin)
     (setq helm-compile-source-functions
           (delq 'helm-compile-source--match-plugin
-                helm-compile-source-functions))
-    (remove-hook 'helm-update-hook 'helm-mp-highlight-match)))
+                helm-compile-source-functions))))
 
 
 ;;; Build regexps
@@ -391,51 +370,6 @@ e.g \"bar foo\" will match \"barfoo\" but not \"foobar\" contrarily to
              `(search ,@searchfns) `(match ,@matchfns))
          ,@source))))
 
-
-;;; Highlight matches.
-;;
-;;
-(defun helm-mp-highlight-match ()
-  "Highlight matches after `helm-mp-highlight-delay' seconds."
-  (unless (or (assoc 'nohighlight (helm-get-current-source))
-              (not helm-mp-highlight-delay)
-              (helm-empty-buffer-p)
-              (string= helm-pattern ""))
-    (helm-mp-highlight-match-internal (window-end (helm-window)))
-    (run-with-idle-timer helm-mp-highlight-delay nil
-                         'helm-mp-highlight-match-internal
-                         (with-current-buffer helm-buffer (point-max)))))
-
-(defun helm-mp-highlight-region (start end regexp face)
-  (save-excursion
-    (goto-char start)
-    (let ((case-fold-search (helm-set-case-fold-search regexp)) me)
-      (condition-case _err
-          (while (and (setq me (re-search-forward regexp nil t))
-                      (< (point) end)
-                      (< 0 (- (match-end 0) (match-beginning 0))))
-            (unless (helm-pos-header-line-p)
-              (if (fboundp 'add-face-text-property) ;Emacs >= 24.4
-                  (add-face-text-property (match-beginning 0) me face)
-                (put-text-property (match-beginning 0) me 'face face))))
-        (invalid-regexp nil)))))
-
-(defun helm-mp-highlight-match-internal (end)
-  (when helm-alive-p
-    (set-buffer helm-buffer)
-    (let ((requote (cl-loop for (pred . re) in
-                         (helm-mp-3-get-patterns helm-pattern)
-                         when (and (eq pred 'identity)
-                                   (>= (length re)
-                                       helm-mp-highlight-threshold))
-                         collect re into re-list
-                         finally return
-                         (if (and re-list (>= (length re-list) 1))
-                             (mapconcat 'identity re-list "\\|")
-                           (regexp-quote helm-pattern)))))
-      (when (>= (length requote) helm-mp-highlight-threshold)
-        (helm-mp-highlight-region
-         (point-min) end requote 'helm-match)))))
 
 ;; Enable match-plugin by default.
 (helm-match-plugin-mode 1)

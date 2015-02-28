@@ -901,6 +901,7 @@ in recurse, search being made on `helm-zgrep-file-extension-regexp'."
                            (concat name "(C-c ? Help)"))
             :candidates-process 'helm-grep-collect-candidates
             :filter-one-by-one 'helm-grep-filter-one-by-one
+            :nohighlight t
             :candidate-number-limit 9999
             :mode-line helm-grep-mode-line-string
             :history 'helm-grep-history
@@ -1119,26 +1120,22 @@ If a prefix arg is given run grep on all buffers ignoring non--file-buffers."
       (kill-buffer helm-action-buffer))
     (setq helm-pdfgrep-targets only)
     (helm
-     :sources
-     `(((name . "PdfGrep")
-        (init . (lambda ()
-                  ;; If `helm-find-files' haven't already started,
-                  ;; give a default value to `helm-ff-default-directory'.
-                  (setq helm-ff-default-directory (or helm-ff-default-directory
-                                                      default-directory))))
-        (candidates-process
-         . (lambda ()
-             (funcall helm-pdfgrep-default-function helm-pdfgrep-targets)))
-        (filter-one-by-one . helm-grep-filter-one-by-one)
-        (candidate-number-limit . 9999)
-        (no-matchplugin)
-        (nohighlight)
-        (history . ,'helm-grep-history)
-        (keymap . ,helm-pdfgrep-map)
-        (mode-line . helm-pdfgrep-mode-line-string)
-        (action . helm-pdfgrep-action)
-        (persistent-help . "Jump to PDF Page")
-        (requires-pattern . 2)))
+     :sources (helm-build-async-source "PdfGrep"
+                :init (lambda ()
+                        ;; If `helm-find-files' haven't already started,
+                        ;; give a default value to `helm-ff-default-directory'.
+                        (setq helm-ff-default-directory (or helm-ff-default-directory
+                                                            default-directory)))
+                :candidates-process (lambda ()
+                                      (funcall helm-pdfgrep-default-function helm-pdfgrep-targets))
+                :filter-one-by-one #'helm-grep-filter-one-by-one
+                :candidate-number-limit 9999
+                :history 'helm-grep-history
+                :keymap helm-pdfgrep-map
+                :mode-line helm-pdfgrep-mode-line-string
+                :action #'helm-pdfgrep-action
+                :persistent-help "Jump to PDF Page"
+                :requires-pattern 2)
      :buffer "*helm pdfgrep*"
      :history 'helm-grep-history)))
 

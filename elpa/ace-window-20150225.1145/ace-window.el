@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Version: 20150217.650
+;; Version: 20150225.1145
 ;; X-Original-Version: 0.7.0
 ;; Package-Requires: ((ace-jump-mode "2.0"))
 ;; Keywords: cursor, window, location
@@ -63,51 +63,39 @@
 ;;; Code:
 (require 'ace-jump-mode)
 
-;; ——— Customization ———————————————————————————————————————————————————————————
+;;* Customization
 (defgroup ace-window nil
   "Quickly switch current window."
   :group 'convenience
   :prefix "aw-")
 
 (defcustom aw-keys '(?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9)
-  "Keys for selecting window."
-  :group 'ace-window)
+  "Keys for selecting window.")
 
 (defcustom aw-scope 'global
   "The scope used by `ace-window'."
-  :group 'ace-window
   :type '(choice
           (const :tag "global" global)
           (const :tag "frame" frame)))
 
 (defcustom aw-ignored-buffers '("*Calc Trail*" "*LV*")
   "List of buffers to ignore when selecting window."
-  :group 'ace-window)
+  :type '(repeat string))
 
 (defcustom aw-ignore-on t
   "When t, `ace-window' will ignore `aw-ignored-buffers'.
 Use M-0 `ace-window' to toggle this value."
-  :type 'boolean
-  :group 'ace-window)
+  :type 'boolean)
 
 (defcustom aw-background t
   "When t, `ace-window' will dim out all buffers temporarily when used.'."
-  :type 'boolean
-  :group 'ace-window)
+  :type 'boolean)
 
-(defvar ace-window-end-hook nil
-  "Function(s) to call after `ace-window' is done.")
-(make-obsolete-variable
- 'ace-window-end-hook
- "Don't use `ace-window-end-hook', just call what you need right after `ace-window'" "0.7.0")
+(defface aw-leading-char-face
+    '((t (:inherit ace-jump-face-foreground)))
+  "Face for each window's leading char.")
 
-(defvar ace-window-end-once-hook nil
-  "Function(s) to call once after `ace-window' is done.
-This hook is set to nil with each call to `ace-window'.")
-(make-obsolete-variable
- 'ace-window-end-once-hook
- "Don't use `ace-window-end-once-hook', just call what you need right after `ace-window'" "0.7.0")
-
+;;* Implementation
 (defun aw-ignored-p (window)
   "Return t if WINDOW should be ignored."
   (and aw-ignore-on
@@ -200,8 +188,26 @@ Amend MODE-LINE to the mode line for the duration of the selection."
                (ace-jump-tree-breadth-first-construct
                 (length candidate-list)
                 (length aw-keys)))
-         (ace-jump-populate-overlay-to-search-tree
-          ace-jump-search-tree candidate-list)
+         (let ((s (list ace-jump-search-tree)))
+           (while s
+             (let ((node (pop s)))
+               (cond
+                 ((eq (car node) 'branch)
+                  ;; push all child node into stack
+                  (setq s (append (cdr node) s)))
+                 ((eq (car node) 'leaf)
+                  (let* ((p (pop candidate-list))
+                         (o (aj-position-offset p))
+                         (ol (make-overlay
+                              o (1+ o)
+                              (aj-position-buffer p))))
+                    ;; update leaf node to remember the ol
+                    (setf (cdr node) ol)
+                    (overlay-put ol 'face 'aw-leading-char-face)
+                    (overlay-put ol 'window (aj-position-window p))
+                    (overlay-put ol 'aj-data p)))
+                 (t
+                  (message "Failure in traversal"))))))
          (ace-jump-update-overlay-in-search-tree
           ace-jump-search-tree aw-keys)
          (setq ace-jump-mode mode-line)
@@ -239,7 +245,7 @@ Amend MODE-LINE to the mode line for the duration of the selection."
     (prog1 (selected-window)
       (select-window start-window))))
 
-;; ——— Interactive —————————————————————————————————————————————————————————————
+;;* Interactive
 ;;;###autoload
 (defun ace-select-window ()
   "Ace select window."
@@ -293,7 +299,7 @@ window."
     (16 (ace-delete-window))
     (t (ace-select-window))))
 
-;; ——— Utility —————————————————————————————————————————————————————————————————
+;;* Utility
 (defun aw-visual-area< (va1 va2)
   "Return true if visual area VA1 is less than VA2.
 This is determined by their respective window coordinates.

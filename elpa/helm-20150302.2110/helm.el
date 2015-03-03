@@ -2482,8 +2482,16 @@ It will override `helm-map' with the local map of current source.
 If no map is found in current source do nothing (keep previous map)."
   (with-helm-buffer
     (helm-aif (assoc-default 'keymap (helm-get-current-source))
-        (with-current-buffer (window-buffer (minibuffer-window))
-          (setq minor-mode-overriding-map-alist `((helm--minor-mode . ,it)))))))
+        ;; We need the timer to leave enough time
+        ;; to helm to setup its buffer when changing source
+        ;; from a recursive minibuffer.
+        ;; e.g C-x C-f M-y C-g
+        ;; => *find-files have now the bindings of *kill-ring.
+        (run-with-idle-timer
+         0.01 nil
+         (lambda ()
+           (with-current-buffer (window-buffer (minibuffer-window))
+             (setq minor-mode-overriding-map-alist `((helm--minor-mode . ,it)))))))))
 
 ;;; Prevent loosing focus when using mouse.
 ;;
@@ -2951,7 +2959,7 @@ sort on the real part."
   "The default function to highlight matches in fuzzy matching.
 It is meant to use with `filter-one-by-one' slot."
   (let* ((pair (and (consp candidate) candidate))
-         (display (if pair (car pair) candidate))
+         (display (helm-stringify (if pair (car pair) candidate)))
          (real (cdr pair)))
     (with-temp-buffer
       (insert display)

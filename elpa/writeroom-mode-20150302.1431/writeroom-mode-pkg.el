@@ -1,4 +1,4 @@
-(define-package "writeroom-mode" "20150117.1437" "Minor mode for distraction-free writing"
+(define-package "writeroom-mode" "20150302.1431" "Minor mode for distraction-free writing"
   '((emacs "24.1")
     (visual-fill-column "1.4"))
   :keywords

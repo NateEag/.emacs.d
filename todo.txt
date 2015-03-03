@@ -59,8 +59,11 @@
  bookmarklet", or something along those lines.
 
 -Find a way to load skewer in Chrome from an HTTPS page. Starting Chrome with
- the --allow-insecure-content flag might work, but I don't see how to test that
- on Windows. It sure would be annoying if I couldn't solve this.
+ the --allow-insecure-content flag might work.
+
+-Install and set up yatemplate: https://github.com/mineo/yatemplate
+ It'd be nice, for instance, to have new '*.sh' files have '#! /bin/bash' and
+ the standard "be sane" declarations by default.
 
 -I'd like yasnippets for JavaScript. I don't much like the defaults.
 

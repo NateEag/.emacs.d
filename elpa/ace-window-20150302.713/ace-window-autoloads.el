@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "ace-window" "ace-window.el" (21745 59870 0
+;;;### (autoloads nil "ace-window" "ace-window.el" (21749 49526 0
 ;;;;;;  0))
 ;;; Generated autoloads from ace-window.el
 
@@ -28,7 +28,7 @@ Ace maximize window.
 \(fn)" t nil)
 
 (autoload 'ace-window "ace-window" "\
-Select a window with function `ace-jump-mode'.
+Select a window.
 Perform an action based on ARG described below.
 
 By default, behaves like extended `other-window'.
@@ -42,6 +42,11 @@ Prefixed with two \\[universal-argument]'s, deletes the selected
 window.
 
 \(fn ARG)" t nil)
+
+;;;***
+
+;;;### (autoloads nil nil ("ace-window-pkg.el" "avy-jump.el" "avy.el")
+;;;;;;  (21749 49526 730161 0))
 
 ;;;***
 

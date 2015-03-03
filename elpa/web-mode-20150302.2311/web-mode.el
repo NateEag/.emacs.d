@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2015 François-Xavier Bois
 
-;; Version: 20150228.12
-;; X-Original-Version: 11.0.8
+;; Version: 20150302.2311
+;; X-Original-Version: 11.0.10
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -31,7 +31,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "11.0.8"
+(defconst web-mode-version "11.0.10"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -227,6 +227,11 @@ See web-mode-part-face."
   :group 'web-mode
   :type '(choice (const :tag "Auto-close on </" 1)
                  (const :tag "Auto-close on > and </" 2)))
+
+(defcustom web-mode-extra-expanders '()
+  "A list of additional expanders."
+  :type 'list
+  :group 'web-mode)
 
 (defcustom web-mode-extra-auto-pairs '()
   "A list of additional snippets."
@@ -7093,8 +7098,6 @@ the environment as needed for ac-sources, right before they're used.")
 (defun web-mode-mark-and-expand ()
   "Mark and expand."
   (interactive)
-  (when (not (eq last-command this-command))
-    (setq web-mode-expand-previous-state nil))
   (web-mode-mark (point)))
 
 (defun web-mode-mark (pos)
@@ -7104,8 +7107,8 @@ the environment as needed for ac-sources, right before they're used.")
         (setq reg-beg (region-beginning))
       (setq web-mode-expand-initial-pos (point)))
 
-    ;;    (message "regs=%S %S %S %S" (region-beginning) (region-end) (point-min) (point-max))
-    ;;    (message "before=%S" web-mode-expand-previous-state)
+    ;; (message "regs=%S %S %S %S" (region-beginning) (region-end) (point-min) (point-max))
+    ;; (message "before=%S" web-mode-expand-previous-state)
 
     (cond
 
@@ -7116,7 +7119,17 @@ the environment as needed for ac-sources, right before they're used.")
       (deactivate-mark)
       (goto-char (or web-mode-expand-initial-pos (point-min)))
       (setq web-mode-expand-previous-state nil)
-      (recenter))
+      (when (and web-mode-expand-initial-pos
+                 (or (< web-mode-expand-initial-pos (window-start))
+                     (> web-mode-expand-initial-pos (window-end))))
+        (recenter))
+      )
+
+     ((string= web-mode-expand-previous-state "elt-content")
+      (web-mode-element-parent)
+      ;;(message "pos=%S" (point))
+      (web-mode-element-select)
+      (setq web-mode-expand-previous-state "html-parent"))
 
      ((and (member (get-text-property pos 'block-token) '(comment string))
            (not (member web-mode-expand-previous-state '("block-token" "block-body" "block-side"))))
@@ -7200,20 +7213,35 @@ the environment as needed for ac-sources, right before they're used.")
       (setq web-mode-expand-previous-state "html-elt"))
 
      (t
-      (web-mode-element-parent)
-      (if (and reg-beg (= reg-beg (region-beginning)))
-          (progn
-            (push-mark (point))
-            (push-mark (point-max) nil t)
-            (goto-char (point-min))
-            (setq web-mode-expand-previous-state "mark-whole"))
+      ;; (web-mode-element-parent)
+      ;; (if (and reg-beg (= reg-beg (region-beginning)))
+      ;;     (progn
+      ;;       (push-mark (point))
+      ;;       (push-mark (point-max) nil t)
+      ;;       (goto-char (point-min))
+      ;;       (setq web-mode-expand-previous-state "mark-whole"))
+      ;;   (web-mode-element-select)
+      ;;   (setq web-mode-expand-previous-state "html-parent")
+      ;;   )
+      (cond
+       ((not (web-mode-element-parent))
+        (push-mark (point))
+        (push-mark (point-max) nil t)
+        (goto-char (point-min))
+        (setq web-mode-expand-previous-state "mark-whole"))
+       ((not (= (web-mode-tag-end-position (point)) (1- beg)))
+        (web-mode-element-content-select)
+        (setq web-mode-expand-previous-state "elt-content"))
+       (t
         (web-mode-element-select)
         (setq web-mode-expand-previous-state "html-parent"))
+       )
       ) ;t
 
      ) ;cond
 
-;;    (message "after=%S\n-----------------------" web-mode-expand-previous-state)
+    ;;(message "w=%S" (window-end))
+    ;;(message "after=%S" web-mode-expand-previous-state)
 
     ))
 
@@ -8400,11 +8428,12 @@ Pos should be in a tag."
                (not (get-text-property (1- pos) 'part-side))
                (not (get-text-property (1- pos) 'block-side))
                (looking-back "\\(^\\|[[:punct:][:space:]>]\\)./"))
-      (let ((i 0) pair (l (length web-mode-expanders)))
+      (setq expanders (append web-mode-expanders web-mode-extra-expanders))
+      (let ((i 0) pair (l (length expanders)))
         (setq chunk (buffer-substring-no-properties (- pos 2) pos))
         ;;(message "%S" chunk)
         (while (and (< i l) (not auto-expanded))
-          (setq pair (elt web-mode-expanders i)
+          (setq pair (elt expanders i)
                 i (1+ i))
           (when (string= (car pair) chunk)
             (setq auto-expanded t)
@@ -8473,6 +8502,15 @@ Pos should be in a tag."
 
 (defun web-mode-on-post-command ()
   (let (ctx n char)
+
+    ;;(message "this-command=%S (%S)" this-command web-mode-expand-previous-state)
+
+    (when (and web-mode-expand-previous-state
+               (not (eq this-command 'web-mode-mark-and-expand)))
+      ;;(message "deactivate-mark")
+      (deactivate-mark)
+      (setq web-mode-expand-previous-state nil
+            web-mode-expand-initial-pos nil))
 
     (when (member this-command '(yank))
       (setq web-mode-inhibit-fontification nil)
@@ -9303,22 +9341,17 @@ Pos should be in a tag."
 (defun web-mode-block-beginning-position (&optional pos)
   (unless pos (setq pos (point)))
   (cond
-   ((or (and (get-text-property pos 'block-side)
-             (= pos (point-min)))
+   ((or (and (get-text-property pos 'block-side) (= pos (point-min)))
         (get-text-property pos 'block-beg))
     )
-   ((and (> pos (point-min))
-         (get-text-property (1- pos) 'block-beg))
-    (setq pos (1- pos))
-    )
+   ((and (> pos (point-min)) (get-text-property (1- pos) 'block-beg))
+    (setq pos (1- pos)))
    ((get-text-property pos 'block-side)
     (setq pos (previous-single-property-change pos 'block-beg))
-    (setq pos (if (and pos (> pos (point-min))) (1- pos) (point-min)))
-    )
+    (setq pos (if (and pos (> pos (point-min))) (1- pos) (point-min))))
    (t
     (setq pos nil))
    ) ;cond
-;;  (message "web-mode-block-beginning-position=%S" pos)
   pos)
 
 (defun web-mode-block-string-beginning-position (pos &optional block-beg)
@@ -9345,7 +9378,7 @@ Pos should be in a tag."
         (web-mode-looking-at ".[ \t\n]*" pos)
         (setq pos (+ pos (length (match-string-no-properties 0))))
         )
-       ((web-mode-looking-back "\\(return\\|echo\\|include\\|print\\)[ \n\t]*" pos)
+       ((web-mode-looking-back "\\<\\(return\\|echo\\|include\\|print\\)[ \n\t]*" pos)
         (setq ;;pos (point)
               continue nil))
        (t
@@ -9411,7 +9444,7 @@ Pos should be in a tag."
         (web-mode-looking-at ".[ \t\n]*" pos)
         (setq pos (+ pos (length (match-string-no-properties 0)))))
        ((and (string= web-mode-engine "php")
-             (web-mode-looking-back "\\(extends\\|implements\\)[ \n\t]*" pos))
+             (web-mode-looking-back "\\<\\(extends\\|implements\\)[ \n\t]*" pos))
         (setq ;;pos (point)
               continue nil))
        (t
@@ -9547,7 +9580,7 @@ Pos should be in a tag."
         (setq continue nil)
         (web-mode-looking-at ".[ \t\n]*" pos)
         (setq pos (+ pos (length (match-string-no-properties 0)))))
-       ((web-mode-looking-back "\\(return\\)[ \n\t]*" pos)
+       ((web-mode-looking-back "\\<\\(return\\)[ \n\t]*" pos)
         (setq continue nil)
         (web-mode-looking-at "[ \t\n]*" pos)
         (setq pos (+ pos (length (match-string-no-properties 0)))))
@@ -9606,7 +9639,7 @@ Pos should be in a tag."
               continue nil)
 ;;        (message "=>%S" pos)
         )
-       ((web-mode-looking-back "\\<\\(var\\|let\\|return\\|const\\)[ \n\t]*" pos)
+       ((web-mode-looking-back "\\<\\(var\\|let\\|return\\|const\\)[ \n\t]+" pos)
 ;;        (web-mode-looking-at "[ \t\n]*" pos)
         (web-mode-looking-at "[ \t]*" pos)
         (setq pos (+ pos (length (match-string-no-properties 0)))
@@ -9662,7 +9695,7 @@ Pos should be in a tag."
         (setq continue nil)
         (web-mode-looking-at ".[ \t\n]*" pos)
         (setq pos (+ pos (length (match-string-no-properties 0)))))
-       ((web-mode-looking-back "\\(return\\|else\\)[ \n\t]*" pos)
+       ((web-mode-looking-back "\\<\\(return\\|else\\)[ \n\t]*" pos)
         (setq continue nil))
        (t
         (setq pos (1- pos)))

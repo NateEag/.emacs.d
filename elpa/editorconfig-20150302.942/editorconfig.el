@@ -3,7 +3,7 @@
 ;; Copyright (C) 2011-2014 EditorConfig Team
 
 ;; Author: EditorConfig Team <editorconfig@googlegroups.com>
-;; Version: 20150113.1135
+;; Version: 20150302.942
 ;; X-Original-Version: 0.4
 ;; URL: http://github.com/editorconfig/editorconfig-emacs#readme
 
@@ -111,7 +111,8 @@ property emacs_linum to decide whether to show line numbers on the left
               web-mode-css-indent-offset
               web-mode-code-indent-offset
               web-mode-script-padding
-              web-mode-style-padding))
+              web-mode-style-padding)
+    (yaml-mode yaml-indent-offset))
   "Alist of indentation setting methods by modes.
 
 Each element looks like (MODE . FUNCTION) or (MODE . INDENT-SPEC-LIST).

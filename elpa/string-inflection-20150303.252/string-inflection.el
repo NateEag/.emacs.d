@@ -4,7 +4,7 @@
 
 ;; Author: akicho8 <akicho8@gmail.com>
 ;; Keywords: elisp
-;; Version: 20150221.323
+;; Version: 20150303.252
 ;; X-Original-Version: 1.0.2
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -31,6 +31,7 @@
 ;;; Code:
 
 (defconst string-inflection-word-chars "a-zA-Z0-9_")
+(defconst string-inflection-non-word-chars (concat "^" string-inflection-word-chars))
 
 ;;--------------------------------------------------------------------------------
 
@@ -64,31 +65,33 @@
 (defun string-inflection-camelcase ()
   "FooBar format"
   (interactive)
-  (insert (string-inflection-camelcase-function (string-inflection-get-current-word))))
+  (insert (string-inflection-camelcase-function (string-inflection-get-current-word t))))
 
 ;;;###autoload
 (defun string-inflection-lower-camelcase ()
   "fooBar format"
   (interactive)
-  (insert (string-inflection-lower-camelcase-function (string-inflection-get-current-word))))
+  (insert (string-inflection-lower-camelcase-function (string-inflection-get-current-word t))))
 
 ;;;###autoload
 (defun string-inflection-underscore ()
   "foo_bar format"
   (interactive)
-  (insert (string-inflection-underscore-function (string-inflection-get-current-word))))
+  (insert (string-inflection-underscore-function (string-inflection-get-current-word t))))
 
 ;;;###autoload
 (defun string-inflection-upcase ()
   "FOO_BAR format"
   (interactive)
-  (insert (string-inflection-upcase-function (string-inflection-get-current-word))))
+  (insert (string-inflection-upcase-function (string-inflection-get-current-word t))))
 
 ;;--------------------------------------------------------------------------------
 
-(defun string-inflection-get-current-word ()
-  "Gets the symbol near the cursor"
+(defun string-inflection-get-current-word (&optional skip)
+  "Gets the symbol near the cursor.  If SKIP is non-nil, skip non-word characters forward."
   (interactive)
+  (and skip
+       (skip-chars-forward string-inflection-non-word-chars))
   (let ((start (progn
                  (skip-chars-forward string-inflection-word-chars)
                  (point)))

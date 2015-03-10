@@ -30,7 +30,7 @@
 		 nil "Indent and dedent Lisp code, automatically adjust close parens" tar
 		 ((:url . "http://elpa.gnu.org/packages/adjust-parens.html"))])
  (ahungry-theme .
-		[(1 0 5)
+		[(1 0 6)
 		 ((emacs
 		   (24)))
 		 "Ahungry color theme for Emacs.  Make sure to (load-theme 'ahungry)." tar
@@ -88,7 +88,7 @@
 	       ((:url . "http://github.com/defunkt/coffee-mode")
 		(:keywords "coffeescript" "major" "mode"))])
  (company .
-	  [(0 8 11)
+	  [(0 8 12)
 	   ((emacs
 	     (24 1))
 	    (cl-lib
@@ -260,7 +260,7 @@
 	((:url . "http://www.dr-qubit.org/emacs.php")
 	 (:keywords "extensions" "data structures" "heap" "priority queue"))])
  (hydra .
-	[(0 9 0)
+	[(0 11 0)
 	 ((cl-lib
 	   (0 5)))
 	 "Make bindings that stick around" tar
@@ -392,7 +392,7 @@
 	    ((:url . "http://elpa.gnu.org/packages/omn-mode.html")
 	     (:keywords))])
  (org .
-      [(20150302)
+      [(20150309)
        nil "Outline-based notes management and organizer" tar nil])
  (osc .
       [(0 1)
@@ -420,7 +420,7 @@
 	 ((:url . "http://www.dr-qubit.org/emacs.php")
 	  (:keywords "extensions" "data structures" "queue"))])
  (rainbow-mode .
-	       [(0 10)
+	       [(0 11)
 		nil "Colorize color names in buffers" single
 		((:url . "http://elpa.gnu.org/packages/rainbow-mode.html")
 		 (:keywords "faces"))])
@@ -440,7 +440,7 @@
 		  ((:url . "http://elpa.gnu.org/packages/scroll-restore.html")
 		   (:keywords "scrolling"))])
  (seq .
-      [(1 2)
+      [(1 3)
        nil "Sequence manipulation functions" single
        ((:url . "http://elpa.gnu.org/packages/seq.html")
 	(:keywords "sequences"))])
@@ -464,6 +464,13 @@
 	   nil "Implementation of Sokoban for Emacs." tar
 	   ((:keywords "games")
 	    (:url . "http://elpa.gnu.org/packages/sokoban.html"))])
+ (spinner .
+	  [(1 0)
+	   ((cl-lib
+	     (0 5)))
+	   "Add spinners and progress-bars to the mode-line for ongoing operations" single
+	   ((:url . "https://github.com/Bruce-Connor/spinner.el")
+	    (:keywords "processes" "mode-line"))])
  (svg .
       [(0 1)
        ((emacs

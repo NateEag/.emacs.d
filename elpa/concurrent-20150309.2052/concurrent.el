@@ -3,7 +3,7 @@
 ;; Copyright (C) 2010, 2011, 2012  SAKURAI Masashi
 
 ;; Author: SAKURAI Masashi <m.sakurai at kiwanami.net>
-;; Version: 20150205.616
+;; Version: 20150309.2052
 ;; X-Original-Version: 0.3.1
 ;; Keywords: deferred, async, concurrent
 ;; Package-Requires: ((deferred "0.3.1"))
@@ -208,7 +208,7 @@ permission is returned, the task is executed."
       :catch
       error-func
       :finally
-      (lambda (x) (cc:semaphore-release semaphore)))))
+      (lambda (_x) (cc:semaphore-release semaphore)))))
 (put 'cc:semaphore-with 'lisp-indent-function 1)
 
 (defun cc:semaphore-release-all (semaphore)
@@ -376,7 +376,7 @@ CHANNEL is a channel object that sends signals of variable events. Observers can
     (cc:dataflow-connect
      df 'set
      (lambda (args)
-       (destructuring-bind (event (key)) args
+       (destructuring-bind (_event (key)) args
          (let* ((obj (cc:dataflow-get-object-for-value df key))
                 (value (and obj (cc:dataflow-value obj))))
            (when obj
@@ -486,7 +486,6 @@ This function does nothing for the waiting deferred objects."
   (append
    (loop for i in (cc:dataflow-list df)
          for key = (cc:dataflow-key i)
-         for val = (cc:dataflow-value i)
          if (cc:dataflow-undefine-p i) collect key)
    (deferred:aand
      (cc:dataflow-parent-environment df)

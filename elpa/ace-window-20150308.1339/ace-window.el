@@ -85,6 +85,12 @@ Use M-0 `ace-window' to toggle this value."
   "When t, `ace-window' will dim out all buffers temporarily when used.'."
   :type 'boolean)
 
+(defcustom aw-leading-char-style 'char
+  "Style of the leading char overlay."
+  :type '(choice
+          (const :tag "single char" 'char)
+          (const :tag "full path" 'path)))
+
 (defface aw-leading-char-face
     '((((class color)) (:foreground "red"))
       (((background dark)) (:foreground "gray100"))
@@ -95,6 +101,10 @@ Use M-0 `ace-window' to toggle this value."
 (defface aw-background-face
   '((t (:foreground "gray40")))
   "Face for whole window background during selection.")
+
+(defface aw-mode-line-face
+  '((t (:foreground "black")))
+  "Face used for displaying the ace window key in the mode-line.")
 
 ;;* Implementation
 (defun aw-ignored-p (window)
@@ -150,8 +160,8 @@ Use M-0 `ace-window' to toggle this value."
   (setq aw-overlays-back nil)
   (aw--remove-leading-chars))
 
-(defun aw--lead-overlay (char leaf)
-  "Create an overlay with CHAR at LEAF.
+(defun aw--lead-overlay (path leaf)
+  "Create an overlay using PATH at LEAF.
 LEAF is (PT . WND)."
   (let* ((pt (car leaf))
          (wnd (cdr leaf))
@@ -159,17 +169,23 @@ LEAF is (PT . WND)."
          (old-str (with-selected-window wnd
                     (buffer-substring pt (1+ pt))))
          (new-str
-          (format "%c%s"
-                  char
-                  (cond
-                    ((string-equal old-str "\t")
-                     (make-string (1- tab-width) ?\ ))
-                    ((string-equal old-str "\n")
-                     "\n")
-                    (t
-                     (make-string
-                      (max 0 (1- (string-width old-str)))
-                      ?\ ))))))
+          (concat
+           (cl-case aw-leading-char-style
+             (char
+              (apply #'string (last path)))
+             (path
+              (apply #'string (reverse path)))
+             (t
+              (error "Bad `aw-leading-char-style': %S"
+                     aw-leading-char-style)))
+           (cond ((string-equal old-str "\t")
+                  (make-string (1- tab-width) ?\ ))
+                 ((string-equal old-str "\n")
+                  "\n")
+                 (t
+                  (make-string
+                   (max 0 (1- (string-width old-str)))
+                   ?\ ))))))
     (overlay-put ol 'face 'aw-leading-char-face)
     (overlay-put ol 'window wnd)
     (overlay-put ol 'display new-str)
@@ -192,6 +208,16 @@ LEAF is (PT . WND)."
                       (overlay-put ol 'face 'aw-background-face)
                       ol))
                   wnd-list))))
+
+(defvar aw--flip-keys nil
+  "Pre-processed `aw-flip-keys'.")
+
+(defcustom aw-flip-keys '("n")
+  "Keys which should select the last window."
+  :set (lambda (sym val)
+         (set sym val)
+         (setq aw--flip-keys
+               (mapcar (lambda (x) (aref (kbd x) 0)) val))))
 
 (defun aw-select (mode-line)
   "Return a selected other window.
@@ -227,10 +253,16 @@ Amend MODE-LINE to the mode line for the duration of the selection."
          (force-mode-line-update)
          ;; turn off helm transient map
          (remove-hook 'post-command-hook 'helm--maybe-update-keymap)
-         (unwind-protect (or (cdr (avy-read (avy-tree candidate-list aw-keys)
-                                            #'aw--lead-overlay
-                                            #'aw--remove-leading-chars))
-                             start-window)
+         (unwind-protect
+              (condition-case err
+                  (or (cdr (avy-read (avy-tree candidate-list aw-keys)
+                                     #'aw--lead-overlay
+                                     #'aw--remove-leading-chars))
+                      start-window)
+                (error
+                 (if (memq (caddr err) aw--flip-keys)
+                     (aw--pop-window)
+                   (signal (car err) (cdr err)))))
            (aw--done)))))))
 
 ;;* Interactive
@@ -306,6 +338,27 @@ Windows are numbered top down, left to right."
           ((< (cadr e1) (cadr e2))
            t))))
 
+(defvar aw--window-ring (make-ring 10)
+  "Hold the window switching history.")
+
+(defun aw--push-window (window)
+  "Store WINDOW to `aw--window-ring'."
+  (when (or (zerop (ring-length aw--window-ring))
+            (not (equal
+                  (ring-ref aw--window-ring 0)
+                  window)))
+    (ring-insert aw--window-ring (selected-window))))
+
+(defun aw--pop-window ()
+  "Return the removed top of `aw--window-ring'."
+  (let (res)
+    (condition-case nil
+        (while (not (window-live-p
+                     (setq res (ring-remove aw--window-ring 0)))))
+      (error
+       (error "No previous windows stored")))
+    res))
+
 (defun aw-switch-to-window (window)
   "Switch to the window WINDOW."
   (let ((frame (window-frame window)))
@@ -313,8 +366,15 @@ Windows are numbered top down, left to right."
                (not (eq frame (selected-frame))))
       (select-frame-set-input-focus frame))
     (if (window-live-p window)
-        (select-window window)
+        (progn
+          (aw--push-window (selected-window))
+          (select-window window))
       (error "Got a dead window %S" window))))
+
+(defun aw-flip-window ()
+  "Switch to the window you were previously in."
+  (interactive)
+  (aw-switch-to-window (aw--pop-window)))
 
 (defun aw-delete-window (window)
   "Delete window WINDOW."
@@ -344,6 +404,7 @@ Windows are numbered top down, left to right."
         (select-frame-set-input-focus (window-frame window)))
       (when (and (window-live-p window)
                  (not (eq window this-window)))
+        (aw--push-window this-window)
         (swap-windows this-window window)))))
 
 (defun aw-offset (window)
@@ -363,6 +424,39 @@ The point is writable, i.e. it's not part of space after newline."
                        h))
           (forward-line))
         (+ (point) h)))))
+
+;;* Mode line
+;;;###autoload
+(define-minor-mode ace-window-display-mode
+  "Minor mode for showing the ace window key in the mode line."
+  :global t
+  (if ace-window-display-mode
+      (progn
+        (aw-update)
+        (set-default
+         'mode-line-format
+         `((ace-window-display-mode
+            (:eval (window-parameter (selected-window) 'ace-window-path)))
+           ,@(default-value 'mode-line-format)))
+        (force-mode-line-update t)
+        (add-hook 'window-configuration-change-hook 'aw-update))
+    (set-default
+     'mode-line-format
+     (assq-delete-all
+      'ace-window-display-mode
+      (default-value 'mode-line-format)))
+    (remove-hook 'window-configuration-change-hook 'aw-update)))
+
+(defun aw-update ()
+  "Update ace-window-path window parameter for all windows."
+  (avy-traverse
+   (avy-tree (aw-window-list) aw-keys)
+   (lambda (path leaf)
+     (set-window-parameter
+      leaf 'ace-window-path
+      (propertize
+       (apply #'string (reverse path))
+       'face 'aw-mode-line-face)))))
 
 (provide 'ace-window)
 

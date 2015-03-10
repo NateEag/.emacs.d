@@ -356,18 +356,6 @@ With a numeric prefix arg show only the ARG number of candidates."
           collect (propertize i 'face face)
           else collect i)))
 
-(defun helm-stringify (str-or-sym)
-  "Get string of STR-OR-SYM."
-  (if (stringp str-or-sym)
-      str-or-sym
-    (symbol-name str-or-sym)))
-
-(defun helm-symbolify (str-or-sym)
-  "Get symbol of STR-OR-SYM."
-  (if (symbolp str-or-sym)
-      str-or-sym
-    (intern str-or-sym)))
-
 (defun helm-describe-function (func)
   "FUNC is symbol or string."
   (describe-function (helm-symbolify func))
@@ -928,6 +916,17 @@ grabs the entire symbol."
 
 (defun helm-reset-yank-point ()
   (setq helm-yank-point nil))
+
+(defun helm-read-repeat-string (prompt &optional count)
+  "Prompt as many time PROMPT is not empty.
+If COUNT is non--nil add a number after each prompt."
+  (cl-loop with elm
+        while (not (string= elm ""))
+        for n from 1
+        do (when count
+             (setq prompt (concat prompt (int-to-string n) ": ")))
+        collect (setq elm (helm-read-string prompt)) into lis
+        finally return (remove "" lis)))
 
 ;; FIXME why do we run this after PA?
 ;; Seems it is not needed, thus it create a bug

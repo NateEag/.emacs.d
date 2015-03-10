@@ -692,6 +692,19 @@ like `re-search-forward', see below documentation of :search slot.")
    (volatile
     :initform t)))
 
+(defclass helm-source-in-file (helm-source-in-buffer)
+  ((init :initform (lambda ()
+                     (let ((file (helm-attr 'candidates-file)))
+                       (with-current-buffer (helm-candidate-buffer 'global)
+                         (insert-file-contents file)))))
+   (candidates-file
+    :initarg :candidates-file
+    :initform nil
+    :custom string
+    :documentation "A filename."))
+  
+  "The contents of the file will be used as candidates in buffer.") 
+
 
 ;;; Classes for types.
 ;;
@@ -1061,6 +1074,15 @@ Args ARGS are keywords provided by `helm-source-in-buffer'."
 Args ARGS are keywords provided by `helm-source-dummy'."
   (declare (indent 1))
   `(helm-make-source ,name 'helm-source-dummy ,@args))
+
+(defmacro helm-build-in-file-source (name file &rest args)
+  "Build a helm source with NAME name using `candidates-in-files' method.
+Arg FILE is a filename, the contents of this file will be
+used as candidates in buffer.
+Args ARGS are keywords provided by `helm-source-in-file'."
+  (declare (indent 1))
+  `(helm-make-source ,name 'helm-source-in-file
+     :candidates-file ,file ,@args))
 
 ;; Types
 (defun helm-actions-from-type-file ()

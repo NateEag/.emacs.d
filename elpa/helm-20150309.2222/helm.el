@@ -1600,6 +1600,7 @@ in the source where point is."
            (setq helm-quit t)
            (exit-minibuffer)
            (keyboard-quit)
+           ;; See comment about this in `with-local-quit'.
            (eval '(ignore nil)))))
 
 (defun helm-compose (arg-lst func-lst)
@@ -1642,6 +1643,18 @@ This is used in transformers to modify candidates list."
     (apply 'helm-funcall-with-source source
            (lambda (&rest oargs) (helm-compose oargs funcs))
            args)))
+
+(defun helm-stringify (str-or-sym)
+  "Get string of STR-OR-SYM."
+  (if (stringp str-or-sym)
+      str-or-sym
+    (symbol-name str-or-sym)))
+
+(defun helm-symbolify (str-or-sym)
+  "Get symbol of STR-OR-SYM."
+  (if (symbolp str-or-sym)
+      str-or-sym
+    (intern str-or-sym)))
 
 
 ;; Core: entry point
@@ -2803,7 +2816,7 @@ e.g helm.el$
     => \"[^h]*h[^e]*e[^l]*l[^m]*m[^.]*[.][^e]*e[^l]*l$\"
     ^helm.el$
     => \"helm[.]el$\"."
-  (let ((ls (split-string pattern "" t)))
+  (let ((ls (split-string-and-unquote pattern "")))
     (if (string= "^" (car ls))
         ;; Exact match.
         (mapconcat (lambda (c)
@@ -3241,8 +3254,9 @@ is done on whole `helm-buffer' and not on current source."
 (defun helm-update-source-p (source)
   "Whether SOURCE need updating or not."
   (let ((len (string-width
-              (if (or (not (assoc 'no-matchplugin source))
-                      helm-match-plugin-mode)
+              (if (and helm-match-plugin-mode
+                       (or (assoc 'matchplugin source)
+                           (null (assoc 'no-matchplugin source))))
                   ;; Don't count spaces entered when using
                   ;; match-plugin.
                   (replace-regexp-in-string " " "" helm-pattern)
@@ -3949,8 +3963,12 @@ don't exit and send message 'no match'."
                         (unless (if minibuffer-completing-file-name
                                     (and minibuffer-completion-predicate
                                          (funcall minibuffer-completion-predicate sel))
-                                    (try-completion sel minibuffer-completion-table
-                                                    minibuffer-completion-predicate))
+                                    (and (stringp sel)
+                                         ;; SEL may be a cons cell when helm-comp-read
+                                         ;; is called directly with a collection composed
+                                         ;; of (display . real) and real is a cons cell.
+                                         (try-completion sel minibuffer-completion-table
+                                                         minibuffer-completion-predicate)))
                           unknown))
                     (eq minibuffer-completion-confirm t))
                (minibuffer-message " [No match]"))
@@ -4351,7 +4369,7 @@ To customize `helm-candidates-in-buffer' behavior, use `search',
         newmatches
         (case-fold-search (helm-set-case-fold-search))
         (stopper (if search-from-end #'bobp #'eobp)))
-    (helm-search-from-candidate-buffer-internal
+    (helm--search-from-candidate-buffer-1
      (lambda ()
        (clrhash helm-cib-hash)
        (cl-dolist (searcher search-fns)
@@ -4414,17 +4432,14 @@ When using fuzzy matching and negation (i.e \"!\"), this function is always call
                   collect (funcall get-line-fn (point-at-bol) (point-at-eol))
                   do (funcall next-line-fn 1))))
 
-(defun helm-search-from-candidate-buffer-internal (search-fn)
-  (goto-char (point-min))
-  (insert "\n")
-  (goto-char (point-max))
-  (insert "\n")
+(defun helm--search-from-candidate-buffer-1 (search-fn)
+  ;; Previously we were adding a newline at bob and at eol
+  ;; and removing these newlines afterward, it seems it is no more
+  ;; needed, thus when searching for empty line ("^$")
+  ;; it was adding the first line as a matched line
+  ;; which is wrong.
   (unwind-protect
        (funcall search-fn)
-    (goto-char (point-min))
-    (delete-char 1)
-    (goto-char (1- (point-max)))
-    (delete-char 1)
     (set-buffer-modified-p nil)))
 
 (defun helm-candidate-buffer (&optional create-or-buffer)

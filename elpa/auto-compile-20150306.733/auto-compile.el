@@ -1,5 +1,5 @@
 ;;; auto-compile.el --- automatically compile Emacs Lisp libraries
-;; Version: 20150112.1608
+;; Version: 20150306.733
 
 ;; Copyright (C) 2008-2014  Jonas Bernoulli
 
@@ -58,6 +58,7 @@
 
 ;;     ;;; init.el --- user init file      -*- no-byte-compile: t -*-
 ;;     (setq load-prefer-newer t)
+;;     (add-to-list 'load-path "/path/to/dash")
 ;;     (add-to-list 'load-path "/path/to/packed")
 ;;     (add-to-list 'load-path "/path/to/auto-compile")
 ;;     (require 'auto-compile)

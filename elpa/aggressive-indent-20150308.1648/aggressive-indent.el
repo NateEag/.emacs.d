@@ -4,7 +4,7 @@
 
 ;; Author: Artur Malabarba <bruce.connor.am@gmail.com>
 ;; URL: http://github.com/Bruce-Connor/aggressive-indent-mode
-;; Version: 20150216.137
+;; Version: 20150308.1648
 ;; X-Original-Version: 0.3.5
 ;; Package-Requires: ((emacs "24.1") (names "0.5") (cl-lib "0.5"))
 ;; Keywords: indent lisp maint tools
@@ -133,6 +133,7 @@ Please include this in your report!"
 (defcustom excluded-modes
   '(
     bibtex-mode
+    cider-repl-mode
     coffee-mode
     conf-mode
     Custom-mode

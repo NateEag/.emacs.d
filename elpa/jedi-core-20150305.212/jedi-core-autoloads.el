@@ -1,37 +1,12 @@
-;;; jedi-autoloads.el --- automatically extracted autoloads
+;;; jedi-core-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "jedi" "jedi.el" (21749 49535 0 0))
-;;; Generated autoloads from jedi.el
+;;;### (autoloads nil "jedi-core" "jedi-core.el" (21758 53161 0 0))
+;;; Generated autoloads from jedi-core.el
 
-(autoload 'jedi:ac-setup "jedi" "\
-Add Jedi AC sources to `ac-sources'.
-
-If auto-completion is all you need, you can call this function instead
-of `jedi:setup', like this::
-
-   (add-hook 'python-mode-hook 'jedi:ac-setup)
-
-Note that this function calls `auto-complete-mode' if it is not
-already enabled, for people who don't call `global-auto-complete-mode'
-in their Emacs configuration.
-
-\(fn)" t nil)
-
-(autoload 'jedi:complete "jedi" "\
-Complete code at point.
-
-\(fn &key (expand ac-expand-on-auto-complete))" t nil)
-
-;;;***
-
-;;;### (autoloads nil "jedi-common" "jedi-common.el" (21749 49535
-;;;;;;  0 0))
-;;; Generated autoloads from jedi-common.el
-
-(autoload 'jedi:start-dedicated-server "jedi-common" "\
+(autoload 'jedi:start-dedicated-server "jedi-core" "\
 Start Jedi server dedicated to this buffer.
 This is useful, for example, when you want to use different
 `sys.path' for some buffer.  When invoked as an interactive
@@ -45,17 +20,17 @@ See also: `jedi:server-args'.
 
 \(fn COMMAND)" t nil)
 
-(autoload 'helm-jedi-related-names "jedi-common" "\
+(autoload 'helm-jedi-related-names "jedi-core" "\
 Find related names of the object at point using `helm' interface.
 
 \(fn)" t nil)
 
-(autoload 'anything-jedi-related-names "jedi-common" "\
+(autoload 'anything-jedi-related-names "jedi-core" "\
 Find related names of the object at point using `anything' interface.
 
 \(fn)" t nil)
 
-(autoload 'jedi:setup "jedi-common" "\
+(autoload 'jedi:setup "jedi-core" "\
 Fully setup jedi.el for current buffer.
 It setups `ac-sources' or `company-backends' and turns
 `jedi-mode' on.
@@ -70,7 +45,7 @@ what jedi can do.
 
 \(fn)" t nil)
 
-(autoload 'jedi:install-server "jedi-common" "\
+(autoload 'jedi:install-server "jedi-core" "\
 This command installs Jedi server script jediepcserver.py in a
 Python environment dedicated to Emacs.  By default, the
 environment is at ``~/.emacs.d/.python-environments/default/``.
@@ -112,14 +87,15 @@ See also:
 
 \(fn)" t nil)
 
-(autoload 'jedi:install-server-block "jedi-common" "\
+(autoload 'jedi:install-server-block "jedi-core" "\
 Blocking version `jedi:install-server'.
 
 \(fn)" nil nil)
 
 ;;;***
 
-;;;### (autoloads nil nil ("jedi-pkg.el") (21749 49535 361935 0))
+;;;### (autoloads nil nil ("jedi-core-pkg.el") (21758 53161 174783
+;;;;;;  0))
 
 ;;;***
 
@@ -128,4 +104,4 @@ Blocking version `jedi:install-server'.
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
 ;; End:
-;;; jedi-autoloads.el ends here
+;;; jedi-core-autoloads.el ends here

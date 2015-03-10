@@ -3,7 +3,7 @@
 ;; Copyright (C) 2010, 2011, 2012  SAKURAI Masashi
 
 ;; Author: SAKURAI Masashi <m.sakurai at kiwanami.net>
-;; Version: 20150205.616
+;; Version: 20150309.2052
 ;; X-Original-Version: 0.3.2
 ;; Keywords: deferred, async
 ;; URL: https://github.com/kiwanami/emacs-deferred
@@ -86,7 +86,6 @@
   (declare (debug (&rest form)))
   `(let (it)
      ,@(loop for i in elements
-             with it = nil
              collect
              `(setq it ,i))
      it))
@@ -94,7 +93,7 @@
 (defmacro deferred:lambda (args &rest body)
   "Anaphoric lambda macro for self recursion."
   (declare (debug ("args" form &rest form)))
-  (let ((argsyms (loop for i in args collect (gensym))))
+  (let ((argsyms (loop repeat (length args) collect (gensym))))
   `(lambda (,@argsyms)
      (lexical-let (self)
        (setq self (lambda( ,@args ) ,@body))
@@ -134,7 +133,7 @@ Callback that takes no argument may be specified.
 Passing callback with no argument is deprecated.
 Callback must take one argument.
 Or, this error is coming from somewhere inside of the callback: %S" err)
-     (condition-case err2
+     (condition-case nil
          (funcall f)
        ('wrong-number-of-arguments
         (signal 'wrong-number-of-arguments (cdr err))))))) ; return the first error
@@ -171,7 +170,7 @@ Or, this error is coming from somewhere inside of the callback: %S" err)
       (lambda (e)
         (pp-display-expression e "*deferred:pp*")))
     (deferred:nextc it
-      (lambda (x) (pop-to-buffer "*deferred:pp*")))))
+      (lambda (_x) (pop-to-buffer "*deferred:pp*")))))
 
 (defvar deferred:debug-on-signal nil
 "If non nil, the value `debug-on-signal' is substituted this
@@ -520,14 +519,14 @@ idle for MSEC millisecond."
   "Call the given function asynchronously."
   (lexical-let ((f f) (args args))
     (deferred:next
-      (lambda (x)
+      (lambda (_x)
         (apply f args)))))
 
 (defun deferred:apply (f &optional args)
   "Call the given function asynchronously."
   (lexical-let ((f f) (args args))
     (deferred:next
-      (lambda (x)
+      (lambda (_x)
         (apply f args)))))
 
 
@@ -554,7 +553,7 @@ idle for MSEC millisecond."
                         (push ld items)
                         (setq ld
                               (lexical-let ((i i) (func func))
-                                (deferred:nextc ld (lambda (x) (deferred:call-lambda func i)))))
+                                (deferred:nextc ld (lambda (_x) (deferred:call-lambda func i)))))
                         finally return ld))
                  ((listp times-or-list)
                   (loop for i in times-or-list
@@ -563,7 +562,7 @@ idle for MSEC millisecond."
                         (push ld items)
                         (setq ld
                               (lexical-let ((i i) (func func))
-                                (deferred:nextc ld (lambda (x) (deferred:call-lambda func i)))))
+                                (deferred:nextc ld (lambda (_x) (deferred:call-lambda func i)))))
                         finally return ld)))))
       (setf (deferred-cancel rd)
             (lambda (x) (deferred:default-cancel x)
@@ -788,7 +787,7 @@ process."
                     (with-current-buffer buf (buffer-string))
                   (kill-buffer buf)))))
     (setf (deferred-cancel d)
-          (lambda (x)
+          (lambda (_x)
             (deferred:default-cancel d)
             (deferred:default-cancel pd)))
     d))
@@ -805,7 +804,7 @@ process."
          (con-type process-connection-type)
          (nd (deferred:new)) proc-buf proc)
       (deferred:nextc d
-        (lambda (x)
+        (lambda (_x)
           (setq proc-buf (get-buffer-create buf-name))
           (condition-case err
               (let ((default-directory pwd)
@@ -817,7 +816,7 @@ process."
                         (apply f proc-name buf-name command args)))
                 (set-process-sentinel
                  proc
-                 (lambda (proc event)
+                 (lambda (_proc event)
                    (cond
                     ((string-match "exited abnormally" event)
                      (let ((msg (if (buffer-live-p proc-buf)
@@ -875,17 +874,17 @@ into. Values of dynamically bound 'url-request-data', 'url-request-method' and
                      (cbargs cbargs) (silent silent) (inhibit-cookies inhibit-cookies) buf
                      (local-values (mapcar (lambda (symbol) (symbol-value symbol)) url-global-variables)))
          (deferred:next
-           (lambda (x)
+           (lambda (_x)
              (progv url-global-variables local-values
                (condition-case err
                    (setq buf
                          (url-retrieve
-                          url (lambda (xx) (deferred:post-task nd 'ok buf))
+                          url (lambda (_xx) (deferred:post-task nd 'ok buf))
                           cbargs silent inhibit-cookies))
                  (error (deferred:post-task nd 'ng err)))
              nil)))
          (setf (deferred-cancel nd)
-               (lambda (x)
+               (lambda (_x)
                  (when (buffer-live-p buf)
                    (kill-buffer buf))))
          nd))

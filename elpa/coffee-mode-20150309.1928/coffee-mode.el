@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2010 Chris Wanstrath
 
-;; Version: 20150226.912
+;; Version: 20150309.1928
 ;; X-Original-Version: 0.5.9
 ;; Keywords: CoffeeScript major mode
 ;; Author: Chris Wanstrath <chris@ozmm.org>
@@ -1235,14 +1235,19 @@ comments such as the following:
     ("/"
      (0 (ignore
          (let ((curpoint (point))
-               (ppss (progn
-                       (goto-char (match-beginning 0))
-                       (syntax-ppss))))
-           (when (nth 8 ppss)
-             (put-text-property (match-beginning 0) (match-end 0)
-                                'syntax-table (string-to-syntax "_")))
-           (goto-char curpoint)))))
-    (coffee-regexp-regexp (1 (string-to-syntax "_")))
+               (start (match-beginning 0))
+               (end (match-end 0)))
+           (goto-char start)
+           (let ((ppss (syntax-ppss)))
+             (cond ((nth 8 ppss)
+                    (put-text-property start end
+                                       'syntax-table (string-to-syntax "_"))
+                    (goto-char curpoint))
+                   ((looking-at coffee-regexp-regexp)
+                    (put-text-property (match-beginning 1) (match-end 1)
+                                       'syntax-table (string-to-syntax "_"))
+                    (goto-char (match-end 0)))
+                   (t (goto-char curpoint))))))))
     ("#{" (0 (ignore (coffee-syntax-string-interpolation))))
     ("###"
      (0 (ignore (coffee-syntax-propertize-block-comment)))))

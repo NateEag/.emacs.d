@@ -1,6 +1,6 @@
 ;;; solarized.el --- Solarized for Emacs.
 
-;; Copyright (C) 2011-2014 Bozhidar Batsov
+;; Copyright (C) 2011-2015 Bozhidar Batsov
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; Author: Thomas Frössman <thomasf@jossystem.se>
@@ -31,10 +31,6 @@
 ;; and enjoy!
 ;;
 ;; Don't forget that the theme requires Emacs 24.
-;;
-;;; Bugs
-;;
-;; None that I'm aware of.
 ;;
 ;;; Credits
 ;;
@@ -297,7 +293,7 @@ customize the resulting theme."
                                     :inverse-video t))))
      `(mouse ((,class (:foreground ,base03 :background ,base0
                                    :inverse-video t))))
-     `(escape-glyph ((,class (:foreground ,violet))))     
+     `(escape-glyph ((,class (:foreground ,violet))))
      `(fringe ((,class (:foreground ,s-fringe-fg :background ,s-fringe-bg))))
      `(highlight ((,class (:background ,base02))))
      `(link ((,class (:foreground ,yellow :underline t :weight bold))))
@@ -307,6 +303,7 @@ customize the resulting theme."
      `(error ((,class (:foreground ,orange))))
      `(lazy-highlight ((,class (:foreground ,base03 :background ,yellow
                                             :weight normal))))
+     `(widget-field ((,class (:background ,base02))))
      '(button ((t (:underline t))))
 ;;;;; compilation
      `(compilation-column-face ((,class (:foreground ,cyan :underline nil))))
@@ -396,6 +393,8 @@ customize the resulting theme."
      `(enh-ruby-op-face ((,class (:foreground ,base0))))
      `(erm-syn-errline ((,class (:inherit flymake-errline))))
      `(erm-syn-warnline ((,class (:inherit flymake-warnline))))
+;;;;; completions
+     `(completions-annotations ((t (:foreground ,base01))))
 ;;;;; grep
      `(grep-context-face ((,class (:foreground ,base0))))
      `(grep-error-face ((,class (:foreground ,red :weight bold :underline t))))
@@ -1630,6 +1629,27 @@ customize the resulting theme."
 ;;;;; skewer-mode
      `(skewer-error-face ((,class (:foreground ,orange :underline nil))))
      `(skewer-repl-log-face ((,class (:foreground ,violet))))
+;;;;; smart-mode-line
+     ;; use (setq sml/theme nil) to enable Solarized for sml
+     `(sml/modes               ((,class (:foreground ,base1 :weight bold))))
+     `(sml/minor-modes         ((,class (:foreground ,base00))))
+     `(sml/filename            ((,class (:foreground ,blue :weight bold))))
+     `(sml/folder              ((,class (:foreground ,base0))))
+     `(sml/prefix              ((,class (:foreground ,cyan))))
+     `(sml/read-only           ((,class (:foreground ,green))))
+     `(sml/modified            ((,class (:foreground ,red))))
+     `(sml/outside-modified    ((,class (:foreground ,magenta))))
+     `(sml/line-number         ((,class (:foreground ,base0 :weight bold))))
+     `(sml/col-number          ((,class (:foreground ,base0))))
+     `(sml/position-percentage ((,class (:foreground ,base00))))
+     `(sml/sudo                ((,class (:foreground ,red :weight bold))))
+     `(sml/git                 ((,class (:foreground ,cyan))))
+     `(sml/process             ((,class (:foreground ,magenta :weight bold))))
+     `(sml/vc                  ((,class (:foreground ,yellow))))
+     `(sml/vc-edited           ((,class (:foreground ,orange))))
+     `(sml/charging            ((,class (:foreground ,green))))
+     `(sml/discharging         ((,class (:foreground ,red))))
+     `(sml/time                ((,class (:foreground ,base0))))
 ;;;;; smartparens
      `(sp-pair-overlay-face ((,class (:background ,base02))))
      `(sp-wrap-overlay-face ((,class (:background ,base02))))
@@ -1978,7 +1998,7 @@ customize the resulting theme."
      `(hl-fg-colors '(,base03 ,base03 ,base03 ,base03 ,base03 ,base03
                               ,base03 ,base03))
      `(hl-bg-colors '(,yellow-lc ,orange-lc ,red-lc ,magenta-lc
-                                 ,violet-lc ,blue-lc ,cyan-lc ,green-lc)) 
+                                 ,violet-lc ,blue-lc ,cyan-lc ,green-lc))
 ;;;;; pos-tip
      `(pos-tip-foreground-color ,base1)
      `(pos-tip-background-color ,base02)

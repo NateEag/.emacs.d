@@ -3,8 +3,8 @@
 ;; Copyright (C) 2012-2014 Magnar Sveen
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
-;; Version: 20141220.1452
-;; X-Original-Version: 2.10.0
+;; Version: 2.10.0
+;; Package-Version: 20150311.2355
 ;; Keywords: lists
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -391,6 +391,24 @@ Alias: `-find'"
 
 (defalias '-find '-first)
 (defalias '--find '--first)
+
+(defmacro --some (form list)
+  "Anaphoric form of `-some'."
+  (declare (debug (form form)))
+  (let ((n (make-symbol "needle")))
+    `(let (,n)
+       (--each-while ,list (not ,n)
+         (setq ,n ,form))
+       ,n)))
+
+(defun -some (pred list)
+  "Return (PRED x) for the first LIST item where (PRED x) is non-nil, else nil.
+
+Alias: `-any'"
+  (--some (funcall pred it) list))
+
+(defalias '-any '-some)
+(defalias '--any '--some)
 
 (defmacro --last (form list)
   "Anaphoric form of `-last'."
@@ -1992,6 +2010,10 @@ structure such as plist or alist."
                              "--first"
                              "-find"
                              "--find"
+                             "-some"
+                             "--some"
+                             "-any"
+                             "--any"
                              "-last"
                              "--last"
                              "-first-item"

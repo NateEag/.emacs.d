@@ -4,8 +4,8 @@
 
 ;; Author: John Wiegley <jwiegley@gmail.com>
 ;; Created: 17 Jun 2012
-;; Version: 20150118.722
-;; X-Original-Version: 1.0
+;; Version: 1.0
+;; Package-Version: 20150313.247
 ;; Package-Requires: ((bind-key "1.0") (diminish "0.44"))
 ;; Keywords: dotemacs startup speed config package
 ;; X-URL: https://github.com/jwiegley/use-package
@@ -24,7 +24,7 @@
 ;; along with GNU Emacs; see the file COPYING.  If not, write to the
 ;; Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 ;; Boston, MA 02111-1307, USA.
-
+
 ;;; Commentary:
 
 ;; The `use-package' declaration macro allows you to isolate package
@@ -35,7 +35,7 @@
 ;; functionality!
 ;;
 ;; Please see README.md from the same repository for documentation.
-
+
 ;;; Code:
 
 (require 'bind-key)
@@ -84,7 +84,8 @@ then the expanded macros do their job silently."
     `(if (bound-and-true-p use-package-verbose)
          (let ((,nowvar (current-time)))
            (message "%s..." ,text)
-           (prog1 (progn ,@body)
+           (prog1
+               (progn ,@body)
              (let ((elapsed
                     (float-time (time-subtract (current-time) ,nowvar))))
                (if (> elapsed
@@ -103,9 +104,8 @@ then the expanded macros do their job silently."
   "Ensure that the idle timer is running."
   (unless use-package-idle-timer
     (setq use-package-idle-timer
-          (run-with-idle-timer
-           use-package-idle-interval t
-           'use-package-idle-eval))))
+          (run-with-idle-timer use-package-idle-interval t
+                               'use-package-idle-eval))))
 
 (defun use-package-init-on-idle (form priority)
   "Add a new form to the idle queue."
@@ -119,8 +119,8 @@ then the expanded macros do their job silently."
   "Get a list of all priorities in the idle queue.
 The list is sorted in the order forms should be run."
   (let ((priorities nil))
-    (maphash (lambda (priority forms)
-               (setq priorities (cons priority priorities)))
+    (maphash #'(lambda (priority forms)
+                 (setq priorities (cons priority priorities)))
              use-package-idle-forms)
     (sort priorities '<)))
 
@@ -136,20 +136,17 @@ Return nil when the queue is empty."
       (remhash priority use-package-idle-forms))
     first-form))
 
-(defun use-package-idle-eval()
+(defun use-package-idle-eval ()
   "Start to eval idle-commands from the idle queue."
   (let ((next (use-package-idle-pop)))
     (if next
         (progn
           (when use-package-verbose
             (message "use-package idle:%s" next))
-
           (condition-case e
               (funcall next)
-            (error
-             (message
-              "Failure on use-package idle. Form: %s, Error: %s"
-              next e)))
+            (error "Failure on use-package idle. Form: %s, Error: %s"
+                   next e))
           ;; recurse after a bit
           (when (sit-for use-package-idle-interval)
             (use-package-idle-eval)))
@@ -157,21 +154,32 @@ Return nil when the queue is empty."
       (cancel-timer use-package-idle-timer)
       (setq use-package-idle-timer nil))))
 
+(eval-when-compile
+  (defvar package-pinned-packages)
+  (defvar package-archives))
+
 (defun use-package-pin-package (package archive)
   "Pin PACKAGE to ARCHIVE."
   (unless (boundp 'package-pinned-packages)
     (setq package-pinned-packages ()))
-  (let ((archive-symbol (if (symbolp archive) archive (intern archive)))
-        (archive-name   (if (stringp archive) archive (symbol-name archive))))
+  (let ((archive-symbol (if (symbolp archive)
+                            archive
+                          (intern archive)))
+        (archive-name   (if (stringp archive)
+                            archive
+                          (symbol-name archive))))
     (if (use-package--archive-exists-p archive-symbol)
-        (add-to-list 'package-pinned-packages (cons package archive-name))
-      (error (message  "Archive '%s' requested for package '%s' is not available." archive-name package)))
+        (add-to-list 'package-pinned-packages
+                     (cons package archive-name))
+      (error "Archive '%s' requested for package '%s' is not available."
+             archive-name package))
     (package-initialize t)))
 
 (defun use-package--archive-exists-p (archive)
   "Check if a given ARCHIVE is enabled.
 
-ARCHIVE can be a string or a symbol or 'manual to indicate a manually updated package."
+ARCHIVE can be a string or a symbol or 'manual to indicate a
+manually updated package."
   (if (member archive '(manual "manual"))
       't
     (let ((valid nil))
@@ -185,8 +193,7 @@ ARCHIVE can be a string or a symbol or 'manual to indicate a manually updated pa
     (package-install package)))
 
 (defvar use-package-keywords
-  '(
-    :bind
+  '(:bind
     :bind*
     :commands
     :config
@@ -208,8 +215,7 @@ ARCHIVE can be a string or a symbol or 'manual to indicate a manually updated pa
     :pre-load
     :requires
     :bind-keymap
-    :bind-keymap*
-    )
+    :bind-keymap*)
   "Keywords recognized by `use-package'.")
 
 (defun use-package-mplist-get (plist prop)
@@ -223,13 +229,9 @@ is followed by another keyword or is the last element in the
 list, the function returns t.
 
 Currently this function infloops when the list is circular."
-  (let ((tail plist)
-        found
-        result)
-    (while (and
-            (consp tail)
-            (not
-             (eq prop (car tail))))
+  (let ((tail plist) found result)
+    (while (and (consp tail)
+                (not (eq prop (car tail))))
       (pop tail))
     (when (eq prop (pop tail))
       (setq found t))
@@ -265,21 +267,26 @@ if it were backquoted."
 A modified plist is one where properties are keywords and values
 are all non-keywords elements that follow it."
   (let ((result))
-    (mapc (lambda (elt)
-            (when (keywordp elt)
-              (push elt result)))
+    (mapc #'(lambda (elt)
+              (when (keywordp elt)
+                (push elt result)))
           plist)
     (nreverse result)))
 
 (defun use-package-validate-keywords (args)
   "Error if any keyword given in ARGS is not recognized.
 Return the list of recognized keywords."
-  (mapc
-   (function
-    (lambda (keyword)
-      (unless (memq keyword use-package-keywords)
-        (error "Unrecognized keyword: %s" keyword))))
-   (use-package-mplist-keys args)))
+  (mapc #'(lambda (keyword)
+            (unless (memq keyword use-package-keywords)
+              (error "Unrecognized keyword: %s" keyword)))
+        (use-package-mplist-keys args)))
+
+(defsubst use-package-maybe-list (sym-or-list)
+  "If SYM-OR-LIST is just (a . b), return ((a . b))"
+  (if (and (consp sym-or-list)
+           (stringp (car sym-or-list)))
+      (list sym-or-list)
+    sym-or-list))
 
 (defmacro use-package (name &rest args)
   "Use a package with configuration options.
@@ -321,240 +328,199 @@ For full documentation. please see commentary.
 :ensure loads package using package.el if necessary.
 :pin pin package to archive."
   (use-package-validate-keywords args) ; error if any bad keyword, ignore result
-  (let* ((commands (use-package-plist-get args :commands t t))
-         (pre-init-body (use-package-plist-get args :pre-init))
-         (pre-load-body (use-package-plist-get args :pre-load))
-         (init-body (use-package-plist-get args :init))
-         (config-body (use-package-plist-get args :config))
-         (diminish-var (use-package-plist-get args :diminish t))
-         (defines (use-package-plist-get args :defines t t))
-         (idle-body (use-package-plist-get args :idle))
-         (idle-priority (use-package-plist-get args :idle-priority))
-         (keybindings-alist (use-package-plist-get args :bind t t))
-         (overriding-keybindings-alist (use-package-plist-get args :bind* t t))
-         (keymap-alist (use-package-plist-get args :bind-keymap t t))
-         (overriding-keymap-alist (use-package-plist-get args :bind-keymap* t t))
-         (mode (use-package-plist-get args :mode t t))
-         (mode-alist
-          (if (stringp mode) (cons mode name) mode))
-         (interpreter (use-package-plist-get args :interpreter t t))
-         (interpreter-alist
-          (if (stringp interpreter) (cons interpreter name) interpreter))
-         (predicate (use-package-plist-get args :if))
-         (pkg-load-path (use-package-plist-get args :load-path t t))
-         (archive-name (use-package-plist-get args :pin))
-         (defines-eval (if (null defines)
-                           nil
-                         (if (listp defines)
-                             (mapcar (lambda (var) `(defvar ,var)) defines)
-                           `((defvar ,defines)))))
-         (requires (use-package-plist-get args :requires t))
-         (requires-test (if (null requires)
-                            t
-                          (if (listp requires)
-                              `(not (member nil (mapcar #'featurep
-                                                        (quote ,requires))))
-                            `(featurep (quote ,requires)))))
-         (name-string (if (stringp name) name (symbol-name name)))
-         (name-symbol (if (stringp name) (intern name) name)))
-
-    ;; force this immediately -- one off cost
-    (unless (use-package-plist-get args :disabled)
+  ;; force this immediately -- one off cost
+  (unless (use-package-plist-get args :disabled)
+    (let* ((commands (use-package-plist-get args :commands t t))
+           (pre-init-body (use-package-plist-get args :pre-init))
+           (pre-load-body (use-package-plist-get args :pre-load))
+           init-body
+           (config-body (use-package-plist-get args :config))
+           (diminish-var (use-package-plist-get args :diminish t))
+           (defines (use-package-plist-get args :defines t t))
+           (idle-body (use-package-plist-get args :idle))
+           (idle-priority (use-package-plist-get args :idle-priority))
+           (keybindings-alist (use-package-plist-get args :bind t t))
+           (overriding-keybindings-alist (use-package-plist-get args :bind* t t))
+           (keymap-alist (use-package-plist-get args :bind-keymap t t))
+           (overriding-keymap-alist
+            (use-package-plist-get args :bind-keymap* t t))
+           (mode (use-package-plist-get args :mode t t))
+           (mode-alist
+            (if (stringp mode) (cons mode name) mode))
+           (interpreter (use-package-plist-get args :interpreter t t))
+           (interpreter-alist
+            (if (stringp interpreter) (cons interpreter name) interpreter))
+           (predicate (use-package-plist-get args :if))
+           (pkg-load-path (use-package-plist-get args :load-path t t))
+           (archive-name (use-package-plist-get args :pin))
+           (defines-eval (if (null defines)
+                             nil
+                           (if (listp defines)
+                               (mapcar #'(lambda (var) `(defvar ,var)) defines)
+                             `((defvar ,defines)))))
+           (requires (use-package-plist-get args :requires t))
+           (requires-test (if (null requires)
+                              t
+                            (if (listp requires)
+                                `(not (member nil (mapcar #'featurep
+                                                          (quote ,requires))))
+                              `(featurep (quote ,requires)))))
+           (name-string (if (stringp name) name (symbol-name name)))
+           (name-symbol (if (stringp name) (intern name) name)))
 
       (when archive-name
         (use-package-pin-package name archive-name))
 
       (let* ((ensure (use-package-plist-get args :ensure))
-             (package-name
-              (or (and (eq ensure t)
-                       name)
-                  ensure)))
-
+             (package-name (or (and (eq ensure t) name) ensure)))
         (when package-name
           (require 'package)
           (use-package-ensure-elpa package-name)))
 
-
       (if diminish-var
-          (setq config-body
-                `(progn
-                   ,config-body
-                   (ignore-errors
-                     ,@(cond
-                        ((stringp diminish-var)
-                         `((diminish (quote ,(intern (concat name-string "-mode")))
-                                     ,diminish-var)))
-                        ((symbolp diminish-var)
-                         `((diminish (quote ,diminish-var))))
-                        ((and (consp diminish-var) (stringp (cdr diminish-var)))
-                         `((diminish (quote ,(car diminish-var)) ,(cdr diminish-var))))
-                        (t      ; list of symbols or (symbol . "string") pairs
-                         (mapcar (lambda (var)
-                                   (if (listp var)
-                                       `(diminish (quote ,(car var)) ,(cdr var))
-                                     `(diminish (quote ,var))))
-                                 diminish-var)))))))
+          (setq
+           config-body
+           `(progn
+              ,config-body
+              (ignore-errors
+                ,@(cond
+                   ((stringp diminish-var)
+                    `((diminish (quote ,(intern (concat name-string "-mode")))
+                                ,diminish-var)))
+                   ((symbolp diminish-var)
+                    `((diminish (quote ,diminish-var))))
+                   ((and (consp diminish-var) (stringp (cdr diminish-var)))
+                    `((diminish (quote ,(car diminish-var))
+                                ,(cdr diminish-var))))
+                   (t           ; list of symbols or (symbol . "string") pairs
+                    (mapcar #'(lambda (var)
+                                (if (listp var)
+                                    `(diminish (quote ,(car var)) ,(cdr var))
+                                  `(diminish (quote ,var))))
+                            diminish-var)))))))
 
       (if (and commands (symbolp commands))
           (setq commands (list commands)))
 
+      (setq
+       init-body
+       (append
+        (mapcar #'(lambda (mode)
+                    (push (cdr mode) commands)
+                    `(add-to-list 'auto-mode-alist ',mode))
+                (use-package-maybe-list mode-alist))
 
-      (when idle-body
-        (when (null idle-priority)
-          (setq idle-priority 5))
-        (setq init-body
-              `(progn
-                 (require 'use-package)
-                 (use-package-init-on-idle (lambda () ,idle-body) ,idle-priority)
-                 ,init-body)))
+        (mapcar #'(lambda (interpreter)
+                    (push (cdr interpreter) commands)
+                    `(add-to-list 'interpreter-mode-alist ',interpreter))
+                (use-package-maybe-list interpreter-alist))
 
-      (let ((init-for-commands-or-keymaps
-             (lambda (func sym-or-list &optional keymap)
-               (let ((cons-list (if (and (consp sym-or-list)
-                                         (stringp (car sym-or-list)))
-                                    (list sym-or-list)
-                                  sym-or-list)))
-                 (if cons-list
-                     (setq init-body
-                           `(progn
-                              ,init-body
-                              ,@(mapcar (lambda (elem)
-                                          (when (not keymap)
-                                              (push (cdr elem) commands))
-                                          (funcall func elem))
-                                        cons-list))))))))
+        (mapcar #'(lambda (binding)
+                    (push (cdr binding) commands)
+                    `(bind-key ,(car binding) #',(cdr binding)))
+                (use-package-maybe-list keybindings-alist))
 
-        (funcall init-for-commands-or-keymaps
-                 (lambda (binding)
-                   `(bind-key ,(car binding)
-                              (lambda () (interactive)
-                                (use-package-autoload-keymap
-                                 (quote ,(cdr binding))
-                                 ,(if (stringp name) name `',name)
-                                 nil))))
-                 keymap-alist
-                 t)
+        (mapcar #'(lambda (binding)
+                    (push (cdr binding) commands)
+                    `(bind-key* ,(car binding) #',(cdr binding)))
+                (use-package-maybe-list overriding-keybindings-alist))
 
-        (funcall init-for-commands-or-keymaps
-                 (lambda (binding)
-                   `(bind-key ,(car binding)
-                              (lambda () (interactive)
-                                (use-package-autoload-keymap
-                                 (quote ,(cdr binding))
-                                 ,(if (stringp name) name `',name)
-                                 t))))
-                 overriding-keymap-alist
-                 t)
+        (mapcar #'(lambda (binding)
+                    `(bind-key ,(car binding)
+                               #'(lambda () (interactive)
+                                   (use-package-autoload-keymap
+                                    ',(cdr binding) ,name-symbol nil))))
+                (use-package-maybe-list keymap-alist))
 
-        (funcall init-for-commands-or-keymaps
-                 (lambda (binding)
-                   `(bind-key ,(car binding)
-                              (quote ,(cdr binding))))
-                 keybindings-alist)
+        (mapcar #'(lambda (binding)
+                    `(bind-key ,(car binding)
+                               #'(lambda () (interactive)
+                                   (use-package-autoload-keymap
+                                    ',(cdr binding) ,name-symbol t))))
+                (use-package-maybe-list overriding-keymap-alist))
 
-        (funcall init-for-commands-or-keymaps
-                 (lambda (binding)
-                   `(bind-key* ,(car binding)
-                               (quote ,(cdr binding))))
-                 overriding-keybindings-alist)
+        ;; First, execute the user's initializations
+        (list (use-package-plist-get args :init))
 
-        (funcall init-for-commands-or-keymaps
-                 (lambda (mode)
-                   `(add-to-list 'auto-mode-alist
-                                 (quote ,mode)))
-                 mode-alist)
-
-        (funcall init-for-commands-or-keymaps
-                 (lambda (interpreter)
-                   `(add-to-list 'interpreter-mode-alist
-                                 (quote ,interpreter)))
-                 interpreter-alist))
+        (when idle-body
+          (when (null idle-priority)
+            (setq idle-priority 5))
+          (list
+           `(progn
+              (require 'use-package)
+              (use-package-init-on-idle #'(lambda () ,idle-body)
+                                        ,idle-priority))))))
 
       `(progn
          ,pre-load-body
          ,@(mapcar
-            (lambda (path)
-              `(add-to-list 'load-path
-                            ,(if (file-name-absolute-p path)
-                                 path
-                               (expand-file-name path user-emacs-directory))))
+            #'(lambda (path)
+                `(add-to-list 'load-path
+                              ,(if (file-name-absolute-p path)
+                                   path
+                                 (expand-file-name path user-emacs-directory))))
             (cond ((stringp pkg-load-path)
                    (list pkg-load-path))
                   ((functionp pkg-load-path)
                    (funcall pkg-load-path))
-                  (t
-                   pkg-load-path)))
+                  (t pkg-load-path)))
 
          (eval-when-compile
            (when (bound-and-true-p byte-compile-current-file)
              ,@defines-eval
-             (condition-case err
-                 ,(if (stringp name)
-                      `(load ,name t)
-                    `(require ',name nil t))
-               (error (message "Error requiring %s: %s" ',name err) nil))))
+             (with-demoted-errors
+                 ,(format "Error in %s: %%S" name)
+               (require ',name-symbol nil t))))
 
-         ,(if (and (or commands (use-package-plist-get args :defer)
-                       (use-package-plist-get args :bind-keymap)
-                       (use-package-plist-get args :bind-keymap*))
+         ,(if (and (or commands (use-package-plist-get args :defer))
                    (not (use-package-plist-get args :demand)))
-              (let (form)
-                (mapc (lambda (command)
-                   (push `(unless (fboundp (quote ,command))
-                            (autoload (function ,command)
-                              ,name-string nil t))
-                         form))
-                      commands)
-
-                `(when ,(or predicate t)
+              `(when ,(or predicate t)
+                 ,pre-init-body
+                 ,@(mapcar #'(lambda (command)
+                               `(autoload #',command ,name-string nil t))
+                           commands)
+                 ,@init-body
+                 ,(if (and config-body requires-test)
+                    `(eval-after-load ,name-string
+                       '(use-package-with-elapsed-timer
+                            ,(format "Configuring package %s" name-string)
+                          ,config-body)))
+                 t)
+            `(when (and ,(or predicate t) ,requires-test)
+               (use-package-with-elapsed-timer
+                   ,(format "Loading package %s" name-string)
+                 (if (not (require ',name-symbol nil t))
+                     (message "Could not load package %s" ,name-string)
                    ,pre-init-body
-                   ,@form
-                   ,init-body
-                   ,(unless (null config-body)
-                      `(eval-after-load ,(if (stringp name) name `',name)
-                         `(,(lambda ()
-                              (if ,requires-test
-                                  (use-package-with-elapsed-timer
-                                      ,(format "Configuring package %s" name-string)
-                                    ,config-body))))))
-                   t))
-            `(if (and ,(or predicate t)
-                      ,requires-test)
-                 (use-package-with-elapsed-timer
-                     ,(format "Loading package %s" name-string)
-                   (if (not ,(if (stringp name)
-                                 `(load ,name t)
-                               `(require ',name nil t)))
-                       (message "Could not load package %s" ,name-string)
-                     ,pre-init-body
-                     ,init-body
-                     ,config-body
-                     t))))))))
+                   ,@init-body
+                   ,config-body
+                   t))))))))
 
 (defun use-package-autoload-keymap (keymap-symbol package override)
-  "Loads PACKAGE and then binds the key sequence used to invoke this function to
-KEYMAP-SYMBOL.  It then simulates pressing the same key sequence a again, so
-that the next key pressed is routed to the newly loaded keymap.
+  "Loads PACKAGE and then binds the key sequence used to invoke
+this function to KEYMAP-SYMBOL.  It then simulates pressing the
+same key sequence a again, so that the next key pressed is routed
+to the newly loaded keymap.
 
-This function supports use-package's :bind-keymap keyword.  It works
-by binding the given key sequence to an invocation of this function for a
-particular keymap.  The keymap is expected to be defined by the package.  In
-this way, loading the package is deferred until the prefix key sequence is
-pressed."
-  (if (if (stringp package) (load package t) (require package nil t))
-      (if (and (boundp keymap-symbol) (keymapp (symbol-value keymap-symbol)))
-          (let ((key (key-description (this-command-keys-vector)))
-                (keymap (symbol-value keymap-symbol)))
-            (progn
-              (if override
-                  `(eval `(bind-key* ,key ,keymap)) ; eval form is necessary to avoid compiler error
-                (bind-key key keymap))
-              (setq unread-command-events
-                    (listify-key-sequence (this-command-keys-vector)))))
-        (error
-         "use-package: package %s failed to define keymap %s"
-         package keymap-symbol))
-    (error "Could not load package %s" package)))
+This function supports use-package's :bind-keymap keyword.  It
+works by binding the given key sequence to an invocation of this
+function for a particular keymap.  The keymap is expected to be
+defined by the package.  In this way, loading the package is
+deferred until the prefix key sequence is pressed."
+  (if (not (require package nil t))
+      (error "Could not load package %s" package)
+    (if (and (boundp keymap-symbol)
+             (keymapp (symbol-value keymap-symbol)))
+        (let ((key (key-description (this-command-keys-vector)))
+              (keymap (symbol-value keymap-symbol)))
+          (if override
+              ;; eval form is necessary to avoid compiler error
+              `(eval `(bind-key* ,key ,keymap))
+            (bind-key key keymap))
+          (setq unread-command-events
+                (listify-key-sequence (this-command-keys-vector))))
+      (error "use-package: package %s failed to define keymap %s"
+             package keymap-symbol))))
 
 (put 'use-package 'lisp-indent-function 'defun)
 
@@ -566,7 +532,9 @@ pressed."
 (font-lock-add-keywords 'emacs-lisp-mode use-package-font-lock-keywords)
 
 (provide 'use-package)
+
 ;; Local Variables:
 ;; indent-tabs-mode: nil
 ;; End:
+
 ;;; use-package.el ends here

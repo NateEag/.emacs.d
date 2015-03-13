@@ -6,8 +6,8 @@
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 2015
-;; Version: 20150117.1048
-;; X-Original-Version: 1.3
+;; Version: 1.3
+;; Package-Version: 20150311.1735
 ;; Package-Requires: ((emacs "24.3"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -101,11 +101,22 @@ in which `visual-line-mode' is active as well."
   (set-window-fringes (selected-window) nil nil visual-fill-column-fringes-outside-margins)
   (visual-fill-column--set-margins))
 
+(defun visual-fill-column--window-body-width (&optional window)
+  "Return the body width of WINDOW.
+The body width here refers to the width of the text area plus the
+margins, but excluding the fringes, scroll bar and right
+divider. WINDOW defaults to the selected window."
+  (or window (setq window (selected-window)))
+  (let ((margins (window-margins window)))
+    (+ (window-width window)
+       (or (car margins) 0)
+       (or (cdr margins) 0))))
+
 (defun visual-fill-column--set-margins ()
   "Set window margins for the current window."
   ;; calculate left & right margins
   (let* ((window (selected-window))
-         (total-width (window-total-width window))
+         (total-width (visual-fill-column--window-body-width window))
          (width (or visual-fill-column-width
                     fill-column))
          (margins (if (< (- total-width width) 0) ; margins must be >= 0

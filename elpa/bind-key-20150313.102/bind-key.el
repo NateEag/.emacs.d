@@ -4,8 +4,8 @@
 
 ;; Author: John Wiegley <jwiegley@gmail.com>
 ;; Created: 16 Jun 2012
-;; Version: 20150102.1532
-;; X-Original-Version: 1.0
+;; Version: 1.0
+;; Package-Version: 20150313.102
 ;; Keywords: keys keybinding config dotemacs
 ;; URL: https://github.com/jwiegley/use-package
 

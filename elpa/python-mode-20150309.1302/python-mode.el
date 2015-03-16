@@ -1,5 +1,3 @@
-
-
 ;; python-mode.el --- Edit, debug, develop, run Python programs.
 
 ;; Includes a minor mode for handling a Python/IPython shell,
@@ -84,18 +82,21 @@
   "Directory where python-mode.el and it's subdirectories should be installed. Needed for completion and other environment stuff only. "
 
   :type 'string
+  :tag "py-install-directory"
   :group 'python-mode)
 
 (defcustom python-mode-modeline-display "Py"
   "String to display in Emacs modeline "
 
   :type 'string
+  :tag "python-mode-modeline-display"
   :group 'python-mode)
 
 (defcustom py-extensions "py-extensions.el"
   "File where extensions to python-mode.el should be installed. Used by virtualenv support. "
 
   :type 'string
+  :tag "py-extensions"
   :group 'python-mode)
 
 (defcustom info-lookup-mode "python"
@@ -105,6 +106,7 @@ Make sure it's accessible from Emacs by M-x info RET ...
 See INSTALL-INFO-FILES for help. "
 
   :type 'string
+  :tag "info-lookup-mode"
   :group 'python-mode)
 
 (defcustom py-fast-process-p nil
@@ -117,6 +119,7 @@ See: large output makes Emacs freeze, lp:1253907
 Results arrive in output buffer, which is not in comint-mode"
 
   :type 'boolean
+  :tag "py-fast-process-p"
   :group 'python-mode)
 
 (defcustom py-shell-unfontify-p t
@@ -125,6 +128,7 @@ Results arrive in output buffer, which is not in comint-mode"
 Default is nil "
 
 :type 'boolean
+  :tag "py-shell-unfontify-p"
 :group 'python-mode)
 
 (defcustom py-session-p t
@@ -136,6 +140,7 @@ See also `py-dedicated-process-p'
 "
 
   :type 'boolean
+  :tag "py-session-p"
   :group 'python-mode)
 
 (defcustom py-max-help-buffer-p nil
@@ -144,6 +149,7 @@ See also `py-dedicated-process-p'
 Default is nil. In help-buffer, \"q\" will close it.  "
 
 :type 'boolean
+  :tag "py-max-help-buffer-p"
 :group 'python-mode)
 
 (defcustom py-highlight-error-source-p nil
@@ -152,6 +158,7 @@ Default is nil. In help-buffer, \"q\" will close it.  "
 M-x `py-remove-overlays-at-point' removes that highlighting.
  "
 :type 'boolean
+  :tag "py-highlight-error-source-p"
 :group 'python-mode)
 
 (defcustom py-set-pager-cat-p nil
@@ -164,6 +171,7 @@ Avoids lp:783828, \"Terminal not fully functional\", for help('COMMAND') in pyth
 When non-nil, imports module `os' "
 
 :type 'boolean
+  :tag "py-set-pager-cat-p"
 :group 'python-mode)
 
 (defcustom py-empty-line-closes-p nil
@@ -179,6 +187,7 @@ Default is nil
 If non-nil, a C-j from empty line dedents."
 
 :type 'boolean
+  :tag "py-empty-line-closes-p"
 :group 'python-mode)
 
 (defcustom py-prompt-on-changed-p t
@@ -186,8 +195,9 @@ If non-nil, a C-j from empty line dedents."
 
 Default is `t'"
 
-:type 'boolean
-:group 'python-mode)
+ :type 'boolean
+ :tag "py-prompt-on-changed-p"
+ :group 'python-mode)
 
 (defcustom py-dedicated-process-p nil
   "If commands executing code use a dedicated shell.
@@ -195,15 +205,19 @@ Default is `t'"
 Default is nil
 
 When non-nil and `py-session-p', an existing dedicated process is re-used instead of default - which allows executing stuff in parallel.
-")
+"
+  :type 'boolean
+  :tag "py-dedicated-process-p"
+  :group 'python-mode)
 
 (defcustom py-store-result-p nil
- "When non-nil, put resulting string of `py-execute-...' into kill-ring, so it might be yanked.
+  "When non-nil, put resulting string of `py-execute-...' into kill-ring, so it might be yanked.
 
 Default is nil"
 
-:type 'boolean
-:group 'python-mode)
+  :type 'boolean
+  :tag "py-dedicated-process-p"
+  :group 'python-mode)
 
 (defvar py-return-result-p t
  "Internally used. When non-nil, return resulting string of `py-execute-...' functions. Imports will use it with nil.
@@ -215,10 +229,33 @@ Default is t")
 
 Restart py-shell once with new Emacs/python-mode. ")
 
+(defcustom py-update-gud-pdb-history-p t
+  "If pdb should provide suggestions WRT file to check and py-pdb-path.
+
+Default is t
+See lp:963253
+"
+  :type 'boolean
+  :tag "py-update-gud-pdb-history-p"
+  :group 'python-mode
+  :tag "py-update-gud-pdb-history-p")
+
+(defcustom py-pdb-executable nil
+  "Indicate PATH/TO/pdb.
+
+Default is nil
+See lp:963253
+"
+  :type 'string
+  :tag "py-pdb-executable"
+  :group 'python-mode
+  :tag "py-pdb-executable")
+
 (defcustom py-hide-show-minor-mode-p nil
   "If hide-show minor-mode should be on, default is nil. "
 
   :type 'boolean
+  :tag "py-hide-show-minor-mode-p"
   :group 'python-mode)
 
 (defcustom py-load-skeletons-p nil
@@ -229,6 +266,7 @@ Pressing \"if<SPACE>\" for example will prompt for the if-condition.
 "
 
   :type 'boolean
+  :tag "py-load-skeletons-p"
   :group 'python-mode)
 
 (defcustom py-if-name-main-permission-p t
@@ -238,6 +276,7 @@ by \"if __name__== '__main__':\".
 Default is non-nil"
 
   :type 'boolean
+  :tag "py-if-name-main-permission-p"
   :group 'python-mode)
 
 (defcustom py-use-font-lock-doc-face-p nil
@@ -247,19 +286,22 @@ Default is non-nil"
 Call M-x `customize-face' in order to have a visible effect. "
 
   :type 'boolean
+  :tag "py-use-font-lock-doc-face-p"
   :group 'python-mode)
 
-(defcustom empty-comment-line-separates-paragraph-p t
+(defcustom py-empty-comment-line-separates-paragraph-p t
   "Consider paragraph start/end lines with nothing inside but comment sign.
 
 Default is  non-nil"
   :type 'boolean
+  :tag "py-empty-comment-line-separates-paragraph-p"
   :group 'python-mode)
 
 (defcustom py-indent-honors-inline-comment nil
   "If non-nil, indents to column of inlined comment start.
 Default is nil. "
   :type 'boolean
+  :tag "py-indent-honors-inline-comment"
   :group 'python-mode)
 
 (defcustom py-auto-fill-mode nil
@@ -269,18 +311,21 @@ according values in `py-comment-fill-column' and `py-docstring-fill-column'.
 Default is  nil"
 
   :type 'boolean
+  :tag "py-auto-fill-mode"
   :group 'python-mode)
 
 (defcustom py-error-markup-delay 4
   "Seconds error's are highlighted in exception buffer. "
 
   :type 'integer
+  :tag "py-error-markup-delay"
   :group 'python-mode)
 
 (defcustom py-fast-completion-delay 0.1
   "Used by py--fast-send-string-intern. "
 
   :type 'float
+  :tag "py-fast-completion-delay"
   :group 'python-mode)
 
 (defcustom py-new-shell-delay
@@ -291,12 +336,13 @@ Default is  nil"
   "If a new comint buffer is connected to Python, commands like completion might need some delay. "
 
   :type 'float
+  :tag "py-new-shell-delay"
   :group 'python-mode)
 
 (defcustom py-autofill-timer-delay 1
   "Delay when idle before functions ajusting  `py-docstring-fill-column' resp. `py-comment-fill-column' are called. "
   :type 'integer
-
+  :tag "py-autofill-timer-delay"
   :group 'python-mode)
 
 (defcustom py-docstring-fill-column 72
@@ -305,6 +351,7 @@ Any non-integer value means do not use a different value of
 `fill-column' when filling docstrings."
   :type '(choice (integer)
                  (const :tag "Use the current `fill-column'" t))
+  :tag "py-docstring-fill-column"
   :group 'python-mode)
 
 (defcustom py-comment-fill-column 79
@@ -312,7 +359,8 @@ Any non-integer value means do not use a different value of
 Any non-integer value means do not use a different value of
 `fill-column' when filling docstrings."
   :type '(choice (integer)
-                 (const :tag "Use the current `fill-column'" t))
+		 (const :tag "Use the current `fill-column'" t))
+  :tag "py-comment-fill-column"
   :group 'python-mode)
 
 (defcustom py-fontify-shell-buffer-p nil
@@ -325,6 +373,7 @@ Seems convenient when playing with stuff in IPython shell
 Might not be TRT when a lot of output arrives "
 
   :type 'boolean
+  :tag "py-fontify-shell-buffer-p"
   :group 'python-mode)
 
 (defcustom py-modeline-display-full-path-p nil
@@ -333,6 +382,7 @@ Might not be TRT when a lot of output arrives "
 Default is nil. Note: when `py-shell-name' is specified with path, it's shown as an acronym in buffer-name already. "
 
   :type 'boolean
+  :tag "py-modeline-display-full-path-p"
   :group 'python-mode)
 
 (defcustom py-modeline-acronym-display-home-p nil
@@ -340,6 +390,7 @@ Default is nil. Note: when `py-shell-name' is specified with path, it's shown as
 
 Default is nil "
   :type 'boolean
+  :tag "py-modeline-acronym-display-home-p"
   :group 'python-mode)
 
 (defun py-smart-operator-check ()
@@ -381,23 +432,11 @@ Give some hints, if not."
   "Buffer name for IPython-shell completions, internally used")
 
 (defcustom py-timer-close-completions-p t
- "If `py-timer-close-completion-buffer' should run, default is non-nil. "
+  "If `py-timer-close-completion-buffer' should run, default is non-nil. "
 
-:type 'boolean
-:group 'python-mode)
-
-;; (defcustom py-smart-operator-mode-p nil
-;; "If python-mode calls `smart-operator-mode-on'
-;; 
-;; Default is nil. "
-;; 
-;; :type 'boolean
-;; :group 'python-mode
-;; :set (lambda (symbol value)
-;; (and (py-smart-operator-check)
-;; (set-default symbol value)
-;; (smart-operator-mode (if value 1 0)))))
-;; 
+  :type 'boolean
+  :tag "py-timer-close-completions-p"
+  :group 'python-mode)
 
 (defcustom py-smart-operator-mode-p nil
   "If python-mode calls `smart-operator-mode-on'
@@ -405,6 +444,7 @@ Give some hints, if not."
 Default is nil. "
 
   :type 'boolean
+  :tag "py-smart-operator-mode-p"
   :group 'python-mode)
 
 (defcustom py-autopair-mode nil
@@ -414,32 +454,22 @@ Default is nil
 Load `autopair-mode' written by Joao Tavora <joaotavora [at] gmail.com>
 URL: http://autopair.googlecode.com "
   :type 'boolean
-  :group 'python-mode)
-
-  ;; :set (lambda (symbol value)
-  ;;        (and
-  ;;         ;; (py-autopair-check)
-  ;;             (set-default symbol value)
-  ;;             (autopair-mode (if value 1 0)))))
-
-(defcustom py-no-completion-calls-dabbrev-expand-p t
-  "If completion function should call dabbrev-expand when no completion found. Default is `t'
-
-See  `py-indent-no-completion-p'"
-  :type 'boolean
+  :tag "py-autopair-mode"
   :group 'python-mode)
 
 (defcustom py-indent-no-completion-p nil
-  "If completion function should insert a TAB when no completion found. Default is `nil'
+  "If completion function should insert a TAB when no completion found.
 
-See also `py-no-completion-calls-dabbrev-expand-p'"
+Default is `nil'"
   :type 'boolean
+  :tag "py-indent-no-completion-p"
   :group 'python-mode)
 
 (defcustom py-company-pycomplete-p nil
   "Load company-pycomplete stuff. Default is  nil"
 
   :type 'boolean
+  :tag "py-company-pycomplete-p"
   :group 'python-mode)
 
 (defvar py-auto-completion-mode-p nil
@@ -454,20 +484,16 @@ See also `py-no-completion-calls-dabbrev-expand-p'"
 (defvar py-auto-completion-buffer nil
   "Internally used by `py-auto-completion-mode'")
 
-(defvar py--auto-complete-timer nil)
-
-(defcustom py--auto-complete-timer-delay 1
+(defvar py--auto-complete-timer-delay 1
   "Seconds Emacs must be idle to trigger auto-completion.
 
-See `py-auto-completion-mode'"
-
-  :type 'number
-  :group 'python-mode)
+See `py-auto-completion-mode'")
 
 (defcustom py-auto-complete-p nil
   "Run python-mode's built-in auto-completion via py-complete-function. Default is  nil"
 
   :type 'boolean
+  :tag "py-auto-complete-p"
   :group 'python-mode)
 (make-variable-buffer-local 'py-auto-complete-p)
 
@@ -478,6 +504,7 @@ Default is  nil
 See also `py-tab-indents-region-p'"
 
   :type 'boolean
+  :tag "py-tab-shifts-region-p"
   :group 'python-mode)
 
 (defcustom py-tab-indents-region-p nil
@@ -487,6 +514,7 @@ Default is  nil
 See also `py-tab-shifts-region-p'"
 
   :type 'boolean
+  :tag "py-tab-indents-region-p"
   :group 'python-mode)
 
 (defcustom py-block-comment-prefix-p t
@@ -495,6 +523,7 @@ See also `py-tab-shifts-region-p'"
 Default is t"
 
   :type 'boolean
+  :tag "py-block-comment-prefix-p"
   :group 'python-mode)
 
 (defcustom py-org-cycle-p nil
@@ -503,6 +532,7 @@ Default is t"
 Default is nil. "
 
   :type 'boolean
+  :tag "py-org-cycle-p"
   :group 'python-mode)
 
 (defcustom py-set-complete-keymap-p  nil
@@ -512,18 +542,21 @@ Default is nil.
 See also resp. edit `py-complete-set-keymap' "
 
   :type 'boolean
+  :tag "py-set-complete-keymap-p"
   :group 'python-mode)
 
 (defcustom py-outline-minor-mode-p t
   "If outline minor-mode should be on, default is `t'. "
 
   :type 'boolean
+  :tag "py-outline-minor-mode-p"
   :group 'python-mode)
 
 (defcustom py-guess-py-install-directory-p t
   "If in cases, `py-install-directory' isn't set,  `py-set-load-path'should guess it from `buffer-file-name'. "
 
   :type 'boolean
+  :tag "py-guess-py-install-directory-p"
   :group 'python-mode)
 
 (defcustom py-load-pymacs-p nil
@@ -535,6 +568,7 @@ Pymacs has been written by François Pinard and many others.
 See original source: http://pymacs.progiciels-bpi.ca"
 
   :type 'boolean
+  :tag "py-load-pymacs-p"
   :group 'python-mode)
 
 (defcustom py-verbose-p nil
@@ -543,6 +577,7 @@ See original source: http://pymacs.progiciels-bpi.ca"
 Default is nil. "
 
   :type 'boolean
+  :tag "py-verbose-p"
   :group 'python-mode)
 
 (defcustom py-sexp-function nil
@@ -551,9 +586,11 @@ Default is nil. "
 Default is nil. "
 
   :type '(choice
+
           (const :tag "default" nil)
           (const :tag "py-end-of-partial-expression" py-end-of-partial-expression)
           (const :tag "py-end-of-expression" py-end-of-expression))
+  :tag "py-sexp-function"
   :group 'python-mode)
 
 (defcustom py-close-provides-newline t
@@ -561,16 +598,19 @@ Default is nil. "
 
 When non-nil, `py-end-of-def' and related will work faster"
   :type 'boolean
+  :tag "py-close-provides-newline"
   :group 'python-mode)
 
 (defcustom py-dedent-keep-relative-column t
   "If point should follow dedent or kind of electric move to end of line. Default is t - keep relative position. "
   :type 'boolean
+  :tag "py-dedent-keep-relative-column"
   :group 'python-mode)
 
 (defcustom py-indent-honors-multiline-listing nil
   "If `t', indents to 1+ column of opening delimiter. If `nil', indent adds one level to the beginning of statement. Default is `nil'. "
   :type 'boolean
+  :tag "py-indent-honors-multiline-listing"
   :group 'python-mode)
 
 (defcustom py-indent-paren-spanned-multilines-p nil
@@ -589,6 +629,7 @@ def foo():
         bar()
 "
   :type 'boolean
+  :tag "py-indent-paren-spanned-multilines-p"
   :group 'python-mode)
 
 (defcustom py-closing-list-dedents-bos nil
@@ -621,11 +662,13 @@ result = some_function_that_takes_arguments(
 Examples from PEP8"
 
   :type 'boolean
+  :tag "py-closing-list-dedents-bos"
   :group 'python-mode)
 
 (defcustom py-closing-list-space 1
   "Number of chars, closing parenthesis outdent from opening, default is 1 "
   :type 'number
+  :tag "py-closing-list-space"
   :group 'python-mode)
 
 (defcustom py-max-specpdl-size max-specpdl-size
@@ -636,11 +679,13 @@ This threshold is just an approximation. It might set far higher maybe.
 See lp:1235375. In case code is not to navigate due to errors, `which-function-mode' and others might make Emacs hang. Rather exit than. "
 
   :type 'number
+  :tag "py-max-specpdl-size"
   :group 'python-mode)
 
 (defcustom py-closing-list-keeps-space nil
   "If non-nil, closing parenthesis dedents onto column of opening plus `py-closing-list-space', default is nil "
   :type 'boolean
+  :tag "py-closing-list-keeps-space"
   :group 'python-mode)
 
 (defcustom py-electric-kill-backward-p nil
@@ -661,6 +706,7 @@ my_string[]
 In result cursor is insided emptied delimited form."
 
   :type 'boolean
+  :tag "py-electric-kill-backward-p"
   :group 'python-mode)
 
 (defcustom py-electric-colon-active-p nil
@@ -668,6 +714,7 @@ In result cursor is insided emptied delimited form."
 
 See also `py-electric-colon-bobl-only' "
   :type 'boolean
+  :tag "py-electric-colon-active-p"
   :group 'python-mode)
 
 (defcustom py-electric-colon-bobl-only t
@@ -677,6 +724,7 @@ See also `py-electric-colon-bobl-only' "
 See lp:1207405 resp. `py-electric-colon-active-p' "
 
   :type 'boolean
+  :tag "py-electric-colon-bobl-only"
   :group 'python-mode)
 
 (defcustom py-electric-yank-active-p nil
@@ -684,6 +732,7 @@ See lp:1207405 resp. `py-electric-colon-active-p' "
 
 Default is nil"
   :type 'boolean
+  :tag "py-electric-yank-active-p"
   :group 'python-mode)
 
 (defcustom py-electric-colon-greedy-p nil
@@ -691,26 +740,31 @@ Default is nil"
 
 If nil, default, it will not move from at any reasonable level. "
   :type 'boolean
+  :tag "py-electric-colon-greedy-p"
   :group 'python-mode)
 
 (defcustom py-electric-colon-newline-and-indent-p nil
   "If non-nil, `py-electric-colon' will call `newline-and-indent'.  Default is `nil'. "
   :type 'boolean
+  :tag "py-electric-colon-newline-and-indent-p"
   :group 'python-mode)
 
 (defcustom py-electric-comment-p nil
   "If \"#\" should call `py-electric-comment'. Default is `nil'. "
   :type 'boolean
+  :tag "py-electric-comment-p"
   :group 'python-mode)
 
 (defcustom py-electric-comment-add-space-p nil
   "If py-electric-comment should add a space.  Default is `nil'. "
   :type 'boolean
+  :tag "py-electric-comment-add-space-p"
   :group 'python-mode)
 
 (defcustom py-mark-decorators nil
   "If py-mark-def-or-class functions should mark decorators too. Default is `nil'. "
   :type 'boolean
+  :tag "py-mark-decorators"
   :group 'python-mode)
 
 (defcustom py-defun-use-top-level-p nil
@@ -723,22 +777,26 @@ commands `py-beginning-of-top-level', `py-end-of-top-level'
 
 mark-defun marks top-level form at point etc."
 
-:type 'boolean
-:group 'python-mode)
+ :type 'boolean
+  :tag "py-defun-use-top-level-p"
+ :group 'python-mode)
 
 (defcustom py-tab-indent t
   "Non-nil means TAB in Python mode calls `py-indent-line'."
   :type 'boolean
+  :tag "py-tab-indent"
   :group 'python-mode)
 
 (defcustom py-return-key 'newline
   "Which command <return> should call. "
   :type '(choice
+
           (const :tag "default" py-newline-and-indent)
           (const :tag "newline" newline)
           (const :tag "py-newline-and-indent" py-newline-and-indent)
           (const :tag "py-newline-and-dedent" py-newline-and-dedent)
           )
+  :tag "py-return-key"
   :group 'python-mode)
 
 (defcustom py-complete-function 'py-fast-complete
@@ -747,29 +805,26 @@ mark-defun marks top-level form at point etc."
 Might not affect IPython, as `py-shell-complete' is the only known working here.
 Normally python-mode knows best which function to use. "
   :type '(choice
+
           (const :tag "default" nil)
           (const :tag "Pymacs and company based py-complete" py-complete)
           (const :tag "py-shell-complete" py-shell-complete)
           (const :tag "py-indent-or-complete" py-indent-or-complete)
 	  (const :tag "py-fast-complete" py-fast-complete)
           )
-  :group 'python-mode)
-
-(defcustom ipython-complete-function 'ipython-complete
-  "Function used for completion in IPython shell buffers. "
-  :type '(choice (const :tag "py-shell-complete" py-shell-complete)
-                 (const :tag "Pymacs based py-complete" py-complete)
-                 (const :tag "IPython's ipython-complete" ipython-complete))
+  :tag "py-complete-function"
   :group 'python-mode)
 
 (defcustom py-encoding-string " # -*- coding: utf-8 -*-"
   "Default string specifying encoding of a Python file. "
   :type 'string
+  :tag "py-encoding-string"
   :group 'python-mode)
 
 (defcustom py-shebang-startstring "#! /bin/env"
   "Detecting the shell in head of file. "
   :type 'string
+  :tag "py-shebang-startstring"
   :group 'python-mode)
 
 (defcustom py-flake8-command ""
@@ -777,6 +832,7 @@ Normally python-mode knows best which function to use. "
 
 If empty, python-mode will guess some "
   :type 'string
+  :tag "py-flake8-command"
   :group 'python-mode)
 
 (defcustom py-flake8-command-args ""
@@ -784,6 +840,7 @@ If empty, python-mode will guess some "
 
 Default is the empty string. "
   :type 'string
+  :tag "py-flake8-command-args"
   :group 'python-mode)
 
 (defvar py-flake8-history nil
@@ -796,16 +853,19 @@ Default is nil. ")
 
 Messaging increments the prompt counter of IPython shell. "
   :type 'boolean
+  :tag "py-message-executing-temporary-file"
   :group 'python-mode)
 
 (defcustom py-execute-no-temp-p nil
   "Seems Emacs-24.3 provided a way executing stuff without temporary files. "
   :type 'boolean
+  :tag "py-execute-no-temp-p"
   :group 'python-mode)
 
 (defcustom py-lhs-inbound-indent 1
   "When line starts a multiline-assignment: How many colums indent should be more than opening bracket, brace or parenthesis. "
   :type 'integer
+  :tag "py-lhs-inbound-indent"
   :group 'python-mode)
 
 (defcustom py-continuation-offset 2
@@ -813,11 +873,13 @@ Messaging increments the prompt counter of IPython shell. "
 Continuation lines are those that immediately follow a backslash
 terminated line. "
   :type 'integer
+  :tag "py-continuation-offset"
   :group 'python-mode)
 
 (defcustom py-indent-tabs-mode nil
   "Python-mode starts `indent-tabs-mode' with the value specified here, default is nil. "
   :type 'boolean
+  :tag "py-indent-tabs-mode"
   :group 'python-mode)
 
 (defcustom py-smart-indentation t
@@ -838,6 +900,7 @@ to `python-mode':
  so if you want to defeat the automagic configuration, you must also
  set `py-smart-indentation' to nil in your `python-mode-hook'."
   :type 'boolean
+  :tag "py-smart-indentation"
   :group 'python-mode)
 
 (defcustom py-block-comment-prefix "##"
@@ -847,6 +910,7 @@ that the indentation commands won't get confused (i.e., the string
 should be of the form `#x...' where `x' is not a blank or a tab, and
  `...' is arbitrary).  However, this string should not end in whitespace."
   :type 'string
+  :tag "py-block-comment-prefix"
   :group 'python-mode)
 
 (defcustom py-indent-offset 4
@@ -854,6 +918,7 @@ should be of the form `#x...' where `x' is not a blank or a tab, and
  `\\[py-guess-indent-offset]' can usually guess a good value when
 you're editing someone else's Python code."
   :type 'integer
+  :tag "py-indent-offset"
   :group 'python-mode)
 (make-variable-buffer-local 'py-indent-offset)
 
@@ -861,23 +926,27 @@ you're editing someone else's Python code."
   "Amount of offset per level of indentation of backslashed.
 No semantic indent,  which diff to `py-indent-offset' indicates "
   :type 'integer
+  :tag "py-backslashed-lines-indent-offset"
   :group 'python-mode)
 
-(defcustom pdb-path '/usr/lib/python2.7/pdb.py
+(defcustom py-pdb-path '/usr/lib/python2.7/pdb.py
   "Where to find pdb.py. Edit this according to your system.
 
 If you ignore the location `M-x py-guess-pdb-path' might display it."
   :type 'variable
+  :tag "py-pdb-path"
   :group 'python-mode)
 
 (defcustom py-indent-comments t
   "When t, comment lines are indented. "
   :type 'boolean
+  :tag "py-indent-comments"
   :group 'python-mode)
 
 (defcustom py-uncomment-indents-p nil
   "When non-nil, after uncomment indent lines. "
   :type 'boolean
+  :tag "py-uncomment-indents-p"
   :group 'python-mode)
 
 (defcustom py-separator-char 47
@@ -885,7 +954,9 @@ If you ignore the location `M-x py-guess-pdb-path' might display it."
 
 Precedes guessing when not empty, returned by function `py-separator-char'. "
   :type 'character
+  :tag "py-separator-char"
   :group 'python-mode)
+
 (and
  ;; used as a string finally
  ;; kept a character not to break existing customizations
@@ -894,6 +965,7 @@ Precedes guessing when not empty, returned by function `py-separator-char'. "
 (defcustom py-custom-temp-directory ""
   "If set, will take precedence over guessed values from `py-temp-directory'. Default is the empty string. "
   :type 'string
+  :tag "py-custom-temp-directory"
   :group 'python-mode)
 
 (defcustom py-beep-if-tab-change t
@@ -908,6 +980,7 @@ equal <number>, `tab-width' is set to <number>, a message saying so is
 displayed in the echo area, and if `py-beep-if-tab-change' is non-nil
 the Emacs bell is also rung as a warning."
   :type 'boolean
+  :tag "py-beep-if-tab-change"
   :group 'python-mode)
 
 (defcustom py-jump-on-exception t
@@ -916,17 +989,20 @@ When this variable is non-nil and an exception occurs when running
 Python code synchronously in a subprocess, jump immediately to the
 source code of the innermost traceback frame."
   :type 'boolean
+  :tag "py-jump-on-exception"
   :group 'python-mode)
 
 (defcustom py-ask-about-save t
   "If not nil, ask about which buffers to save before executing some code.
 Otherwise, all modified buffers are saved without asking."
   :type 'boolean
+  :tag "py-ask-about-save"
   :group 'python-mode)
 
 (defcustom py-delete-function 'delete-char
   "Function called by `py-electric-delete' when deleting forwards."
   :type 'function
+  :tag "py-delete-function"
   :group 'python-mode)
 
 (defcustom py-pdbtrack-do-tracking-p t
@@ -937,6 +1013,7 @@ Python program, pdbtrack notices the pdb prompt and displays the
 source file and line that the program is stopped at, much the same way
 as gud-mode does for debugging C programs with gdb."
   :type 'boolean
+  :tag "py-pdbtrack-do-tracking-p"
   :group 'python-mode)
 (make-variable-buffer-local 'py-pdbtrack-do-tracking-p)
 
@@ -945,11 +1022,13 @@ as gud-mode does for debugging C programs with gdb."
 When non-nil this is an alist mapping paths in the Python interpreter
 to paths in Emacs."
   :type 'alist
+  :tag "py-pdbtrack-filename-mapping"
   :group 'python-mode)
 
 (defcustom py-pdbtrack-minor-mode-string " PDB"
   "String to use in the minor mode list when pdbtrack is enabled."
   :type 'string
+  :tag "py-pdbtrack-minor-mode-string"
   :group 'python-mode)
 
 (defcustom py-import-check-point-max
@@ -960,12 +1039,16 @@ CPython or a Jython shell), it looks at the so-called `shebang' line
                            -- i.e. #! line.  If that's not available, it looks at some of the
 file heading imports to see if they look Java-like."
   :type 'integer
+  :tag "py-import-check-point-max
+"
   :group 'python-mode)
 
 (defcustom py-jython-packages
   '("java" "javax")
   "Imported packages that imply `jython-mode'."
   :type '(repeat string)
+  :tag "py-jython-packages
+"
   :group 'python-mode)
 
 (defcustom py-current-defun-show t
@@ -974,12 +1057,14 @@ file heading imports to see if they look Java-like."
 Default is `t'."
 
   :type 'boolean
+  :tag "py-current-defun-show"
   :group 'python-mode)
 
 (defcustom py-current-defun-delay 2
   "When called interactively, `py-current-defun' should wait PY-WHICH-FUNC-DELAY seconds at the definition name found, before returning to previous position. "
 
   :type 'number
+  :tag "py-current-defun-delay"
   :group 'python-mode)
 
 (defcustom py-python-send-delay 5
@@ -988,6 +1073,7 @@ Default is `t'."
 See also py-ipython-send-delay"
 
   :type 'number
+  :tag "py-python-send-delay"
   :group 'python-mode)
 
 (defcustom py-ipython-send-delay 9
@@ -996,6 +1082,7 @@ See also py-ipython-send-delay"
 See also py-python-send-delay"
 
   :type 'number
+  :tag "py-ipython-send-delay"
   :group 'python-mode)
 
 (defcustom py-master-file nil
@@ -1013,92 +1100,96 @@ variable section, e.g.:
 
                            "
   :type 'string
+  :tag "py-master-file"
   :group 'python-mode)
 (make-variable-buffer-local 'py-master-file)
 
 (defcustom py-pychecker-command "pychecker"
   "Shell command used to run Pychecker."
   :type 'string
-  :group 'python-mode
-  :tag "Pychecker Command")
+  :tag "py-pychecker-command"
+  :group 'python-mode)
 
 (defcustom py-pychecker-command-args '("--stdlib")
   "List of string arguments to be passed to pychecker."
   :type '(repeat string)
-  :group 'python-mode
-  :tag "Pychecker Command Args")
+  :tag "py-pychecker-command-args"
+  :group 'python-mode)
 
 (defcustom py-pyflakes-command "pyflakes"
   "Shell command used to run Pyflakes."
   :type 'string
-  :group 'python-mode
-  :tag "Pyflakes Command")
+  :tag "py-pyflakes-command"
+  :group 'python-mode)
 
 (defcustom py-pyflakes-command-args '("")
   "List of string arguments to be passed to pyflakes.
 
 Default is \"\""
   :type '(repeat string)
-  :group 'python-mode
-  :tag "Pyflakes Command Args")
+  :tag "py-pyflakes-command-args"
+  :group 'python-mode)
 
 (defcustom py-pep8-command "pep8"
   "Shell command used to run pep8."
   :type 'string
-  :group 'python-mode
-  :tag "PEP 8 Command")
+  :tag "py-pep8-command"
+  :group 'python-mode)
 
 (defcustom py-pep8-command-args '("")
   "List of string arguments to be passed to pylint.
 
 Default is \"\" "
   :type '(repeat string)
-  :group 'python-mode
-  :tag "PEP 8 Command Args")
+  :tag "py-pep8-command-args"
+  :group 'python-mode)
 
 (defcustom py-pyflakespep8-command (concat py-install-directory "/pyflakespep8.py")
   "Shell command used to run `pyflakespep8'."
   :type 'string
-  :group 'python-mode
-  :tag "Pyflakespep8 Command")
+  :tag "py-pyflakespep8-command"
+  :group 'python-mode)
 
 (defcustom py-pyflakespep8-command-args '("")
   "List of string arguments to be passed to pyflakespep8.
 
 Default is \"\" "
   :type '(repeat string)
-  :group 'python-mode
-  :tag "Pyflakespep8 Command Args")
+  :tag "py-pyflakespep8-command-args"
+  :group 'python-mode)
 
 (defcustom py-pylint-command "pylint"
   "Shell command used to run Pylint."
   :type 'string
-  :group 'python-mode
-  :tag "Pylint Command")
+  :tag "py-pylint-command"
+  :group 'python-mode)
 
 (defcustom py-pylint-command-args '("--errors-only")
   "List of string arguments to be passed to pylint.
 
 Default is \"--errors-only\" "
   :type '(repeat string)
-  :group 'python-mode
-  :tag "Pylint Command Args")
+  :tag "py-pylint-command-args"
+  :group 'python-mode)
 
 (defcustom py-shell-input-prompt-1-regexp ">>> "
   "A regular expression to match the input prompt of the shell."
   :type 'regexp
+  :tag "py-shell-input-prompt-1-regexp"
   :group 'python-mode)
 
 (defcustom py-shell-input-prompt-2-regexp "[.][.][.] "
   "A regular expression to match the input prompt of the shell after the
 first line of input."
   :type 'string
+  :tag "py-shell-input-prompt-2-regexp"
   :group 'python-mode)
 
 (defcustom py-shell-prompt-read-only t
   "If non-nil, the python prompt is read only.  Setting this
 variable will only effect new shells."
   :type 'boolean
+  :tag "py-shell-prompt-read-only"
   :group 'python-mode)
 
 (defcustom py-honor-IPYTHONDIR-p nil
@@ -1107,12 +1198,14 @@ followed by \"/history\". Default is nil.
 
 Otherwise value of py-ipython-history is used. "
   :type 'boolean
+  :tag "py-honor-IPYTHONDIR-p"
   :group 'python-mode)
 
 (defcustom py-ipython-history "~/.ipython/history"
   "ipython-history default file. Used when py-honor-IPYTHONDIR-p is nil (default) "
 
   :type 'string
+  :tag "py-ipython-history"
   :group 'python-mode)
 
 (defcustom py-honor-PYTHONHISTORY-p nil
@@ -1121,12 +1214,14 @@ Default is nil.
 
 Otherwise value of py-python-history is used. "
   :type 'boolean
+  :tag "py-honor-PYTHONHISTORY-p"
   :group 'python-mode)
 
 (defcustom py-python-history "~/.python_history"
   "python-history default file. Used when py-honor-PYTHONHISTORY-p is nil (default) "
 
   :type 'string
+  :tag "py-python-history"
   :group 'python-mode)
 
 (defcustom py-switch-buffers-on-execute-p nil
@@ -1135,6 +1230,7 @@ Otherwise value of py-python-history is used. "
 If `py-keep-windows-configuration' is t, this will take precedence over setting here. "
 
   :type 'boolean
+  :tag "py-switch-buffers-on-execute-p"
   :group 'python-mode)
 
 (defcustom py-split-window-on-execute 'just-two
@@ -1154,13 +1250,14 @@ For the moment: If a multitude of python-shells/buffers should be
 visible, open them manually and set `py-keep-windows-configuration' to `t'.
 
 "
-      :type '(choice
+  :type '(choice
+
           (const :tag "default" just-two)
 	  (const :tag "Reuse" t)
           (const :tag "No split" nil)
 	  (const :tag "just-two" just-two)
           (const :tag "always" always))
-
+  :tag "py-split-window-on-execute"
   :group 'python-mode)
 
 (defcustom py-split-windows-on-execute-function 'split-window-vertically
@@ -1168,6 +1265,7 @@ visible, open them manually and set `py-keep-windows-configuration' to `t'.
   :type '(choice (const :tag "split-window-vertically" split-window-vertically)
                  (const :tag "split-window-horizontally" split-window-horizontally)
                  )
+  :tag "py-split-windows-on-execute-function"
   :group 'python-mode)
 
 (defcustom py-hide-show-keywords
@@ -1176,16 +1274,20 @@ visible, open them manually and set `py-keep-windows-configuration' to `t'.
     "with")
   "Keywords composing visible heads. "
   :type '(repeat string)
+  :tag "py-hide-show-keywords
+"
   :group 'python-mode)
 
 (defcustom py-hide-show-hide-docstrings t
   "Controls if doc strings can be hidden by hide-show"
   :type 'boolean
+  :tag "py-hide-show-hide-docstrings"
   :group 'python-mode)
 
 (defcustom py-hide-comments-when-hiding-all t
   "Hide the comments too when you do an `hs-hide-all'."
   :type 'boolean
+  :tag "py-hide-comments-when-hiding-all"
   :group 'python-mode)
 
 (defcustom py-outline-mode-keywords
@@ -1194,13 +1296,18 @@ visible, open them manually and set `py-keep-windows-configuration' to `t'.
     "with")
   "Keywords composing visible heads. "
   :type '(repeat string)
+  :tag "py-outline-mode-keywords
+"
   :group 'python-mode)
 
 (defcustom python-mode-hook nil
   "Hook run when entering Python mode."
 
+  :type 'hook
+  :tag "python-mode-hook"
   :group 'python-mode
-  :type 'hook)
+  )
+
 
 (defcustom py-shell-name
   (if (eq system-type 'windows-nt)
@@ -1215,6 +1322,8 @@ On Windows default is C:/Python27/python
 
 Else python"
   :type 'string
+  :tag "py-shell-name
+"
   :group 'python-mode)
 
 (defvar py-default-interpreter py-shell-name)
@@ -1235,11 +1344,14 @@ With Anaconda for example the following works here:
 Else /usr/bin/python"
 
   :type 'string
+  :tag "py-python-command
+"
   :group 'python-mode)
 
 (defcustom py-python-command-args '("-i")
   "List of string arguments to be used when starting a Python shell."
   :type '(repeat string)
+  :tag "py-python-command-args"
   :group 'python-mode)
 
 (defcustom py-python2-command
@@ -1257,11 +1369,14 @@ With Anaconda for example the following works here:
 Else /usr/bin/python"
 
   :type 'string
+  :tag "py-python2-command
+"
   :group 'python-mode)
 
 (defcustom py-python2-command-args '("-i")
   "List of string arguments to be used when starting a Python shell."
   :type '(repeat string)
+  :tag "py-python2-command-args"
   :group 'python-mode)
 
 (defcustom py-python3-command
@@ -1280,11 +1395,14 @@ On Windows see C:/Python3/python.exe
 At GNU systems see /usr/bin/python3"
 
   :type 'string
+  :tag "py-python3-command
+"
   :group 'python-mode)
 
 (defcustom py-python3-command-args '("-i")
   "List of string arguments to be used when starting a Python3 shell."
   :type '(repeat string)
+  :tag "py-python3-command-args"
   :group 'python-mode)
 
 (defcustom py-ipython-command
@@ -1304,6 +1422,8 @@ While with Anaconda for example the following works here:
 Else /usr/bin/ipython"
 
   :type 'string
+  :tag "py-ipython-command
+"
   :group 'python-mode)
 
 (defcustom py-ipython-command-args
@@ -1317,6 +1437,8 @@ With Anaconda the following is known to work:
 \"C:\\\\Users\\\\My-User-Name\\\\Anaconda\\\\Scripts\\\\ipython-script-py\"
 "
   :type '(repeat string)
+  :tag "py-ipython-command-args
+"
   :group 'python-mode)
 
 (defcustom py-jython-command
@@ -1330,11 +1452,14 @@ Not known to work at windows
 Default /usr/bin/jython"
 
   :type 'string
+  :tag "py-jython-command
+"
   :group 'python-mode)
 
 (defcustom py-jython-command-args '("")
   "List of string arguments to be used when starting a Python shell."
   :type '(repeat string)
+  :tag "py-jython-command-args"
   :group 'python-mode)
 
 (defcustom py-bpython-command
@@ -1349,33 +1474,37 @@ Not known to work at windows
 Default /usr/bin/bpython"
 
   :type 'string
+  :tag "py-bpython-command
+"
   :group 'python-mode)
 
 (defcustom py-bpython-command-args '("")
   "List of string arguments to be used when starting a Python shell."
   :type '(repeat string)
+  :tag "py-bpython-command-args"
   :group 'python-mode)
 
 (defcustom py-shell-toggle-1 py-python2-command
   "A PATH/TO/EXECUTABLE or default value used by `py-toggle-shell'. "
   :type 'string
+  :tag "py-shell-toggle-1"
   :group 'python-mode)
 
 (defcustom py-shell-toggle-2 py-python3-command
   "A PATH/TO/EXECUTABLE or default value used by `py-toggle-shell'. "
   :type 'string
+  :tag "py-shell-toggle-2"
   :group 'python-mode)
 
 (defcustom py--imenu-create-index-p nil
   "Non-nil means Python mode creates and displays an index menu of functions and global variables. "
   :type 'boolean
+  :tag "py--imenu-create-index-p"
   :group 'python-mode)
 
-(defcustom py-history-filter-regexp "\\`\\s-*\\S-?\\S-?\\s-*\\'\\|'''/tmp/"
+(defvar py-history-filter-regexp "\\`\\s-*\\S-?\\S-?\\s-*\\'\\|'''/tmp/"
   "Input matching this regexp is not saved on the history list.
-Default ignores all inputs of 0, 1, or 2 non-blank characters."
-  :type 'regexp
-  :group 'python-mode)
+Default ignores all inputs of 0, 1, or 2 non-blank characters.")
 
 (defcustom py-match-paren-mode nil
   "Non-nil means, cursor will jump to beginning or end of a block.
@@ -1383,6 +1512,7 @@ This vice versa, to beginning first.
 Sets `py-match-paren-key' in python-mode-map.
 Customize `py-match-paren-key' which key to use. "
   :type 'boolean
+  :tag "py-match-paren-mode"
   :group 'python-mode)
 
 (defcustom py-match-paren-key "%"
@@ -1392,17 +1522,20 @@ that the indentation commands won't get confused (i.e., the string
 should be of the form `#x...' where `x' is not a blank or a tab, and
                                `...' is arbitrary).  However, this string should not end in whitespace."
   :type 'string
+  :tag "py-match-paren-key"
   :group 'python-mode)
 
 (defcustom py-kill-empty-line t
   "If t, py-indent-forward-line kills empty lines. "
   :type 'boolean
+  :tag "py-kill-empty-line"
   :group 'python-mode)
 
 (defcustom py-imenu-show-method-args-p nil
   "Controls echoing of arguments of functions & methods in the Imenu buffer.
 When non-nil, arguments are printed."
   :type 'boolean
+  :tag "py-imenu-show-method-args-p"
   :group 'python-mode)
 
 (defcustom py-use-local-default nil
@@ -1412,6 +1545,7 @@ of default Python.
 Making switch between several virtualenv's easier,
                                `python-mode' should deliver an installer, so named-shells pointing to virtualenv's will be available. "
   :type 'boolean
+  :tag "py-use-local-default"
   :group 'python-mode)
 
 (defcustom py-edit-only-p nil
@@ -1419,12 +1553,14 @@ Making switch between several virtualenv's easier,
 
 See bug report at launchpad, lp:944093. "
   :type 'boolean
+  :tag "py-edit-only-p"
   :group 'python-mode)
 
 (defcustom py-force-py-shell-name-p nil
   "When `t', execution with kind of Python specified in `py-shell-name' is enforced, possibly shebang doesn't take precedence. "
 
   :type 'boolean
+  :tag "py-force-py-shell-name-p"
   :group 'python-mode)
 
 (defcustom python-mode-v5-behavior-p nil
@@ -1432,6 +1568,7 @@ See bug report at launchpad, lp:944093. "
 v5 did it - lp:990079. This might fail with certain chars - see UnicodeEncodeError lp:550661"
 
   :type 'boolean
+  :tag "python-mode-v5-behavior-p"
   :group 'python-mode)
 
 (defcustom py-trailing-whitespace-smart-delete-p nil
@@ -1441,6 +1578,7 @@ v5 did it - lp:990079. This might fail with certain chars - see UnicodeEncodeErr
 Also commands may delete trailing whitespace by the way.
 When editing other peoples code, this may produce a larger diff than expected "
   :type 'boolean
+  :tag "py-trailing-whitespace-smart-delete-p"
   :group 'python-mode)
 
 (defcustom py-newline-delete-trailing-whitespace-p t
@@ -1448,16 +1586,29 @@ When editing other peoples code, this may produce a larger diff than expected "
 
 Default is `t'. See lp:1100892 "
   :type 'boolean
+  :tag "py-newline-delete-trailing-whitespace-p"
   :group 'python-mode)
 
 (defcustom py--warn-tmp-files-left-p nil
   "Messages a warning, when `py-temp-directory' contains files susceptible being left by previous Python-mode sessions. See also lp:987534 "
   :type 'boolean
+  :tag "py--warn-tmp-files-left-p"
   :group 'python-mode)
 
 (defcustom py-complete-ac-sources '(ac-source-pycomplete)
-  "List of auto-complete sources assigned to `ac-sources' in `py-complete-initialize'."
+  "List of auto-complete sources assigned to `ac-sources' in `py-complete-initialize'.
+
+Default is known to work an Ubuntu 14.10 - having python-
+mode, pymacs and auto-complete-el, with the following minimal
+emacs initialization:
+
+\(require 'pymacs)
+\(require 'auto-complete-config)
+\(ac-config-default)
+
+"
   :type 'hook
+  :tag "py-complete-ac-sources"
   :options '(ac-source-pycomplete ac-source-abbrev ac-source-dictionary ac-source-words-in-same-mode-buffers)
   :group 'python-mode)
 
@@ -1468,6 +1619,7 @@ a Python process.  This is the default, for security
 reasons, as it is easy for the Python process to be started
 without the user's realization (e.g. to perform completion)."
   :type 'boolean
+  :tag "py-remove-cwd-from-path"
   :group 'python-mode)
 
 (defvar py-ignore-result-p nil
@@ -1477,11 +1629,13 @@ without the user's realization (e.g. to perform completion)."
   "If `py-use-local-default' is non-nil, `py-shell' will use EXECUTABLE indicated here incl. path. "
 
   :type 'string
+  :tag "py-shell-local-path"
   :group 'python-mode)
 
 (defcustom py-ipython-execute-delay 0.3
   "Delay needed by execute functions when no IPython shell is running. "
   :type 'float
+  :tag "py-ipython-execute-delay"
   :group 'python-mode)
 
 (defvar py-shell-completion-setup-code
@@ -1528,35 +1682,22 @@ if \'0.10\' < version:
 (defcustom py--imenu-create-index-function 'py--imenu-create-index-new
   "Switch between `py--imenu-create-index-new', which also lists modules variables,  and series 5. index-machine"
   :type '(choice (const :tag "'py--imenu-create-index-new, also lists modules variables " py--imenu-create-index-new)
+
                  (const :tag "py--imenu-create-index, series 5. index-machine" py-imenu-create-index))
+  :tag "py--imenu-create-index-function"
   :group 'python-mode)
 
-(defcustom python-source-modes '(python-mode jython-mode)
-  "Used to determine if a buffer contains Python source code.
-If a file is loaded into a buffer that is in one of these major modes,
-it is considered Python source by `py-load-file', which uses the
-value to determine defaults."
-  :type '(repeat function)
-  :group 'python-mode)
-
-(defcustom py-input-filter-re "\\`\\s-*\\S-?\\S-?\\s-*\\'"
+(defvar py-input-filter-re "\\`\\s-*\\S-?\\S-?\\s-*\\'"
   "Input matching this regexp is not saved on the history list.
-Default ignores all inputs of 0, 1, or 2 non-blank characters."
-  :type 'regexp
-  :group 'python-mode)
+Default ignores all inputs of 0, 1, or 2 non-blank characters.")
+
 (defvaralias 'inferior-python-filter-regexp 'py-input-filter-re)
 
-(defcustom strip-chars-before  "\\`[ \t\r\n]*"
-  "Regexp indicating which chars shall be stripped before STRING - which is defined by `string-chars-preserve'."
+(defvar strip-chars-before  "\\`[ \t\r\n]*"
+  "Regexp indicating which chars shall be stripped before STRING - which is defined by `string-chars-preserve'.")
 
-  :type 'string
-  :group 'convenience)
-
-(defcustom strip-chars-after  "[ \t\r\n]*\\'"
-  "Regexp indicating which chars shall be stripped after STRING - which is defined by `string-chars-preserve'."
-
-  :type 'string
-  :group 'convenience)
+(defvar strip-chars-after  "[ \t\r\n]*\\'"
+  "Regexp indicating which chars shall be stripped after STRING - which is defined by `string-chars-preserve'.")
 
 (defcustom py-docstring-style 'pep-257-nn
   "Implemented styles are DJANGO, ONETWO, PEP-257, PEP-257-NN,
@@ -1618,19 +1759,22 @@ SYMMETRIC:
     If processing fails throw ProcessingError.
     \"\"\""
   :type '(choice
+
           (const :tag "Don't format docstrings" nil)
           (const :tag "Django's coding standards style." django)
           (const :tag "One newline and start and Two at end style." onetwo)
           (const :tag "PEP-257 with 2 newlines at end of string." pep-257)
           (const :tag "PEP-257 with 1 newline at end of string." pep-257-nn)
           (const :tag "Symmetric style." symmetric))
+  :tag "py-docstring-style"
   :group 'python-mode)
 
 (defcustom py-execute-directory nil
   "When set, stores the file's default directory-name py-execute-... functions act upon.
 
 Used by Python-shell for output of `py-execute-buffer' and related commands. See also `py-use-current-dir-when-execute-p'"
-    :type 'string
+  :type 'string
+  :tag "py-execute-directory"
   :group 'python-mode)
 
 (defcustom py-use-current-dir-when-execute-p t
@@ -1638,6 +1782,7 @@ Used by Python-shell for output of `py-execute-buffer' and related commands. See
 
 See also `py-execute-directory'"
   :type 'boolean
+  :tag "py-use-current-dir-when-execute-p"
   :group 'python-mode)
 
 (defcustom py-keep-shell-dir-when-execute-p nil
@@ -1645,16 +1790,19 @@ See also `py-execute-directory'"
 
 See also `py-execute-directory'"
   :type 'boolean
+  :tag "py-keep-shell-dir-when-execute-p"
   :group 'python-mode)
 
 (defcustom py-fileless-buffer-use-default-directory-p t
   "When `py-use-current-dir-when-execute-p' is non-nil and no buffer-file exists, value of `default-directory' sets current working directory of Python output shell"
   :type 'boolean
+  :tag "py-fileless-buffer-use-default-directory-p"
   :group 'python-mode)
 
 (defcustom py-check-command "pychecker --stdlib"
   "Command used to check a Python file."
   :type 'string
+  :tag "py-check-command"
   :group 'python-mode)
 
 (defvar py-this-abbrevs-changed nil
@@ -1689,12 +1837,14 @@ See also `py-execute-directory'"
 Default is nil "
 
   :type '(choice
+
           (const :tag "default" nil)
           (const :tag "use py-ffap" py-ffap))
-  :group 'python-mode
+  :tag "py-ffap-p"
   :set (lambda (symbol value)
          (set-default symbol value)
-         (py--set-ffap-form)))
+         (py--set-ffap-form))
+    :group 'python-mode)
 
 (defcustom py-keep-windows-configuration nil
   "Takes precedence over `py-split-window-on-execute' and `py-switch-buffers-on-execute-p'.
@@ -1709,6 +1859,7 @@ Default is nil "
           (const :tag "nil" nil)
           (const :tag "t" t)
           (const :tag "force" 'force))
+  :tag "py-keep-windows-configuration"
   :group 'python-mode)
 
 (defvar py-output-buffer "*Python Output*"
@@ -1725,6 +1876,7 @@ Output buffer is created dynamically according to Python version and kind of pro
   "Regular Expression matching top\-level input prompt of python shell.
 It should not contain a caret (^) at the beginning."
   :type 'string
+  :tag "py-shell-prompt-regexp"
   :group 'python-mode)
 
 (defvar py-ffap-setup-code
@@ -1775,6 +1927,7 @@ It should not contain a caret (^) at the beginning."
   "Regular Expression matching output prompt of python shell.
 It should not contain a caret (^) at the beginning."
   :type 'string
+  :tag "py-shell-prompt-output-regexp"
   :group 'python-mode)
 
 (defvar py-underscore-word-syntax-p t
@@ -1832,16 +1985,16 @@ syntax or has word syntax and isn't a letter.")
   "Returns locally used executable-name including its version. ")
 (make-variable-buffer-local 'py-local-versioned-command)
 
-(defvar ipython-completion-command-string nil
-  "Either ipython0.10-completion-command-string or ipython0.11-completion-command-string.
+(defvar py-ipython-completion-command-string nil
+  "Either py-ipython0.10-completion-command-string or py-ipython0.11-completion-command-string.
 
-ipython0.11-completion-command-string also covers version 0.12")
+py-ipython0.11-completion-command-string also covers version 0.12")
 
-(defvar ipython0.10-completion-command-string
+(defvar py-ipython0.10-completion-command-string
   "print(';'.join(__IP.Completer.all_completions('%s'))) #PYTHON-MODE SILENT\n"
   "The string send to ipython to query for all possible completions")
 
-(defvar ipython0.11-completion-command-string
+(defvar py-ipython0.11-completion-command-string
   "print(';'.join(get_ipython().Completer.all_completions('%s'))) #PYTHON-MODE SILENT\n"
   "The string send to ipython to query for all possible completions")
 
@@ -1904,7 +2057,7 @@ can write into: the value (if any) of the environment variable TMPDIR,
   "Recognize the pydb-prompt. ")
 
  ;; prevent ipython.el's setting
-(setq ipython-de-input-prompt-regexp "In \\[[0-9]+\\]:\\|^[ ]\\{3\\}[.]\\{3,\\}:" )
+(setq py-ipython-input-prompt-re "In \\[[0-9]+\\]:\\|^[ ]\\{3\\}[.]\\{3,\\}:" )
 
 (defvar py-exec-command nil
   "Internally used. ")
@@ -1921,10 +2074,10 @@ can write into: the value (if any) of the environment variable TMPDIR,
 
 (defvar py-pylint-history nil)
 
-(defvar ipython-de-input-prompt-regexp "In \\[[0-9]+\\]:\\|^[ ]\\{3\\}[.]\\{3,\\}:"
+(defvar py-ipython-input-prompt-re "In \\[[0-9]+\\]:\\|^[ ]\\{3\\}[.]\\{3,\\}:"
   "A regular expression to match the IPython input prompt. ")
 
-(defvar ipython-de-output-prompt-regexp "^Out\\[[0-9]+\\]: "
+(defvar py-ipython-output-prompt-re "^Out\\[[0-9]+\\]: "
   "A regular expression to match the output prompt of IPython.")
 
 (defvar py-mode-output-map nil
@@ -1945,6 +2098,7 @@ can write into: the value (if any) of the environment variable TMPDIR,
 Temporary files are not deleted. Other functions might implement
 some logging etc. "
   :type 'boolean
+  :tag "py-debug-p"
   :group 'python-mode)
 
 (defvar py-completion-last-window-configuration nil
@@ -1999,7 +2153,7 @@ subsequent py-up-exception needs the line number where the region
 started, in order to jump to the correct file line.  This variable is
 set in py-execute-region and used in py--jump-to-exception.")
 
-(defvar match-paren-no-use-syntax-pps nil)
+(defvar py-match-paren-no-use-syntax-pps nil)
 
 (defvar py-traceback-line-re
   "[ \t]+File \"\\([^\"]+\\)\", line \\([0-9]+\\)"
@@ -2078,7 +2232,7 @@ for options to pass to the DOCNAME interpreter. \"
 
 (defvar py-fast-filter-re (concat "\\("
 			       (mapconcat 'identity
-					  (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt "[.]\\{3,\\}:? *"))
+					  (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp py-ipython-input-prompt-re py-ipython-output-prompt-re py-pdbtrack-input-prompt py-pydbtrack-input-prompt "[.]\\{3,\\}:? *"))
 					  "\\|")
 			       "\\)")
   "Internally used by `py-fast-filter'.
@@ -2294,6 +2448,7 @@ See py-no-outdent-1-re-raw, py-no-outdent-2-re-raw for better readable content "
   "Fetch errors from Py-shell.
 hooked into `compilation-error-regexp-alist'  "
   :type '(alist string)
+  :tag "py-compilation-regexp-alist"
   :group 'python-mode)
 
 (defun py--quote-syntax (n)
@@ -2354,9 +2509,12 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
 (defvar py-windows-config nil
   "Completion stores py-windows-config-register here")
 
-(setq symbol-definition-start-re "^[ \t]*(\\(defun\\|defvar\\|defcustom\\)")
-
 (put 'py-indent-offset 'safe-local-variable 'integerp)
+
+;; testing
+(defvar py-ert-test-default-executables
+  (list "python" "python3" "ipython")
+  "Serialize tests employing dolist")
 
 (defsubst py-keep-region-active ()
   "Keep the region active in XEmacs."
@@ -2374,6 +2532,7 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
 (defface py-XXX-tag-face
   '((t (:inherit font-lock-string-face)))
   "XXX\\|TODO\\|FIXME "
+  :tag "py-XXX-tag-face"
   :group 'python-mode)
 
 (defface py-pseudo-keyword-face
@@ -2382,60 +2541,69 @@ Used for syntactic keywords.  N is the match number (1, 2 or 3)."
   Ellipsis.
 
 See also `py-object-reference-face'"
+  :tag "py-pseudo-keyword-face"
   :group 'python-mode)
 
 (defface py-object-reference-face
   '((t (:inherit py-pseudo-keyword-face)))
   "Face when referencing object members from its class resp. method., commonly \"cls\" and \"self\""
+  :tag "py-object-reference-face"
   :group 'python-mode)
 
 (defface py-variable-name-face
   '((t (:inherit default)))
   "Face method decorators."
+  :tag "py-variable-name-face"
   :group 'python-mode)
 
 (defface py-number-face
  '((t (:inherit default)))
   "Highlight numbers. "
+  :tag "py-number-face"
   :group 'python-mode)
 
 (defface py-try-if-face
   '((t (:inherit font-lock-keyword-face)))
   "Highlight keywords. "
+  :tag "py-try-if-face"
   :group 'python-mode)
 
 (defface py-import-from-face
   '((t (:inherit font-lock-keyword-face)))
   "Highlight keywords. "
+  :tag "py-import-from-face"
   :group 'python-mode)
 
 (defface py-def-class-face
   '((t (:inherit font-lock-keyword-face)))
   "Highlight keywords. "
+  :tag "py-def-class-face"
   :group 'python-mode)
 
  ;; PEP 318 decorators
 (defface py-decorators-face
   '((t (:inherit font-lock-keyword-face)))
   "Face method decorators."
+  :tag "py-decorators-face"
   :group 'python-mode)
 
 (defface py-builtins-face
   '((t (:inherit font-lock-builtin-face)))
   "Face for builtins like TypeError, object, open, and exec."
+  :tag "py-builtins-face"
   :group 'python-mode)
 
 (defface py-class-name-face
   '((t (:inherit font-lock-type-face)))
   "Face for classes."
+  :tag "py-class-name-face"
   :group 'python-mode)
 
 (defface py-exception-name-face
   '((t (:inherit font-lock-builtin-face)))
   "."
+  :tag "py-exception-name-face"
   :group 'python-mode)
-
-(make-obsolete-variable 'jpython-mode-hook 'jython-mode-hook nil)
 
 (defun py--delete-all-but-first-prompt ()
   "Don't let prompts from setup-codes sent clutter buffer. "
@@ -2768,9 +2936,7 @@ See original source: http://pymacs.progiciels-bpi.ca"
   (add-to-list 'load-path (concat default-directory "extensions")))
 
 
-
 (and py-company-pycomplete-p (require 'company-pycomplete))
-
 
 ;; Macros
 (defmacro empty-line-p ()
@@ -2825,16 +2991,6 @@ Returns char found. "
   (if (featurep 'xemacs)
       '(parse-partial-sexp (point-min) (point))
     '(syntax-ppss)))
-
-;; (defun py-count-lines ()
-;;   "Count lines in buffer, optional without given boundaries.
-
-;; See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
-;;   (save-restriction
-;;     (widen)
-;;     (if (featurep 'xemacs)
-;;         (count-lines (point-min) (point-max))
-;;       (count-matches "[\n\C-m]" (point-min) (point-max)))))
 
 (defun py-in-string-or-comment-p ()
   "Returns beginning position if inside a string or comment, nil otherwise. "
@@ -3388,6 +3544,7 @@ Underscores in word-class makes `forward-word' etc. travel the indentifiers. Def
 
 See bug report at launchpad, lp:940812 "
   :type 'boolean
+  :tag "py-underscore-word-syntax-p"
   :group 'python-mode
   :set (lambda (symbol value)
          (set-default symbol value)
@@ -3832,26 +3989,41 @@ The defun visible is the one that contains point or follows point. "
     (forward-line 1))
   (back-to-indentation))
 
-(defun py-indent-region (start end &optional indent-offset recursive)
+(defun py--indent-line-by-line (end)
+  "Indent every line until end to max reasonable extend. "
+  (while (< (line-end-position) end)
+    (if (empty-line-p)
+	(forward-line 1)
+      (py-indent-and-forward))))
+
+(defun py-indent-region (start end &optional line-by-line)
   "Reindent a region of Python code.
 
-With optional INDENT-OFFSET specify a different value than `py-indent-offset' at place.
+In case first line accepts an indent, keep the remaining
+lines relative. 
+Otherwise lines in region get outmost indent,
+same with optional argument
 
-Guesses the outmost reasonable indent
-Returns and keeps relative position "
+In order to shift a chunk of code, where the first line is okay, start with second line.
+"
   (interactive "*r\nP")
   (let ((orig (copy-marker (point)))
         (beg start)
         (end (copy-marker end))
-        (py-indent-offset (prefix-numeric-value
-                           (or indent-offset py-indent-offset))))
+	indent need)
     (goto-char beg)
-    (while (< (line-end-position) end)
-      (if (empty-line-p)
-          (forward-line 1)
-        (py-indent-and-forward)))
-    (unless (empty-line-p) (py-indent-line nil t))
-    (goto-char orig)))
+    (beginning-of-line)
+    (setq beg (point))
+    (skip-chars-forward " \t\r\n\f")
+    (if (eq 4 (prefix-numeric-value line-by-line))
+	(py--indent-line-by-line end)
+      ;; (unless (empty-line-p) (py-indent-line nil t))
+      (setq indent (py-compute-indentation))
+      (setq need (- indent (current-indentation)))
+      (if (< 0 (abs need))
+	  (indent-rigidly beg end need)
+	(py--indent-line-by-line end))
+      (goto-char orig))))
 
 (defun py--beginning-of-buffer-position ()
   (point-min))
@@ -3980,7 +4152,7 @@ Indented same level, which don't open blocks. "
       (setq beg last)
       (goto-char orig)
       (setq end (line-end-position))
-      (while (and (setq last (line-end-position))
+      (while (and (setq last (py--end-of-statement-position))
                   (setq end (py-down-statement))
                   (not (py--beginning-of-block-p))
                   ;; (not (looking-at py-keywords))
@@ -4041,12 +4213,8 @@ Store deleted statements in kill-ring "
          (beg (car bounds))
          (end (cdr bounds)))
     (when (and beg end)
-      (goto-char beg)
-      (push-mark)
-      (goto-char end)
       (kill-new (buffer-substring-no-properties beg end))
       (delete-region beg end))))
-
 
 (defun py--join-words-wrapping (words separator line-prefix line-length)
   (let ((lines ())
@@ -4776,6 +4944,7 @@ http://docs.python.org/reference/compound_stmts.html"
           (skip-chars-backward " \t\r\n\f")
           (py-beginning-of-statement orig done limit))
          ((nth 8 pps)
+	  ;; inside string
           (and (nth 3 pps) (setq done t))
           (goto-char (nth 8 pps))
           (py-beginning-of-statement orig done limit))
@@ -4789,44 +4958,36 @@ http://docs.python.org/reference/compound_stmts.html"
           (back-to-indentation)
           (setq done t)
           (py-beginning-of-statement orig done limit))
+	 ;; BOL or at space before comment
          ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*"))
           (forward-comment -1)
           (while (and (not (bobp)) (looking-at "[ \t]*#")(looking-back "^[ \t]*"))
             (forward-comment -1))
           (unless (bobp)
             (py-beginning-of-statement orig done limit)))
+	 ;; at inline comment
          ((looking-at "[ \t]*#")
 	  (when (py--skip-to-semicolon-backward (save-excursion (back-to-indentation)(point)))
-	    ;; (skip-chars-backward (concat "^" comment-start) (line-beginning-position))
-	    ;; (back-to-indentation)
 	    (skip-chars-forward " \t")
 	    (unless (bobp)
 	      (py-beginning-of-statement orig done limit))))
+	 ;; at beginning of string
          ((and (not done) (looking-at py-string-delim-re))
           (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
             (setq done t))
           (back-to-indentation)
           (py-beginning-of-statement orig done limit))
+	 ;; after end of statement
 	 ((and (not done) (eq (char-before) ?\;))
 	  (skip-chars-backward ";")
 	  (py-beginning-of-statement orig done limit))
+	 ;; travel until indentation or semicolon
 	 ((and (not done) (py--skip-to-semicolon-backward (save-excursion (back-to-indentation)(point))))
-	  ;; (back-to-indentation)
 	  (py-beginning-of-statement orig done limit))
+	 ;; at current indent
 	 ((and (not done) (not (eq 0 (skip-chars-backward " \t\r\n\f"))))
-          ;; (setq done t)
-          (py-beginning-of-statement orig done limit))
-	 ((and (not done)(not (eq (current-column) (current-indentation))))
-	  (if (ignore-errors
-		(< 0
-		   (abs
-		    (py--skip-to-semicolon-backward (save-excursion (back-to-indentation)(point))))))
-	      (progn
-		(setq done t)
-		(py-beginning-of-statement orig done limit))
-	    (back-to-indentation)
-	    (setq done t)
-	    (py-beginning-of-statement orig done limit))))
+          (py-beginning-of-statement orig done limit)))
+	;; return nil when before comment
 	(unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))
 	  (when (< (point) orig)(setq erg (point))))
 	(when (and py-verbose-p (interactive-p)) (message "%s" erg))
@@ -4841,15 +5002,15 @@ See also `py-up-statement': up from current definition to next beginning of stat
   (interactive)
   (let* ((indent (or indent (when (eq 'py-end-of-statement-bol (car
   py-bol-forms-last-indent))(cdr py-bol-forms-last-indent))))
-	 (orig (point)) 
+	 (orig (point))
          erg)
     (if indent
         (while (and (setq erg (py-beginning-of-statement)) (< indent (current-indentation))(not (bobp))))
       (setq erg (py-beginning-of-statement)))
     ;; reset
     (setq py-bol-forms-last-indent nil)
-    (beginning-of-line) 
-    (and (< (point) orig) (setq erg (point))) 
+    (beginning-of-line)
+    (and (< (point) orig) (setq erg (point)))
     (when (interactive-p) (message "%s" erg))
     erg))
 
@@ -4946,7 +5107,7 @@ Optional argument REPEAT, the number of loops done already, is checked for py-ma
 
 (defun py-end-of-statement-bol ()
   "Go to the beginning-of-line following current statement."
-  (interactive) 
+  (interactive)
   (let ((erg (py-end-of-statement)))
     (setq erg (py--beginning-of-line-form))
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
@@ -5250,10 +5411,10 @@ With universal arg \C-u insert a `%'. "
     (if arg
         (self-insert-command (if (numberp arg) arg 1))
       (cond
-       ((and (not match-paren-no-use-syntax-pps) (looking-at "\\s("))
+       ((and (not py-match-paren-no-use-syntax-pps) (looking-at "\\s("))
         (forward-list 1)
         (backward-char 1))
-       ((and (not match-paren-no-use-syntax-pps)(looking-at "\\s)"))
+       ((and (not py-match-paren-no-use-syntax-pps)(looking-at "\\s)"))
         (forward-char 1) (backward-list 1))
        ;; if match-paren-no-syntax-pps
        ((looking-at "(")
@@ -5313,7 +5474,7 @@ Return position"
   "Delete `block' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "block")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5321,7 +5482,7 @@ Stores data in kill ring"
   "Delete `clause' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "clause")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5329,7 +5490,7 @@ Stores data in kill ring"
   "Delete `block-or-clause' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "block-or-clause")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5337,7 +5498,7 @@ Stores data in kill ring"
   "Delete `def' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "def")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5345,7 +5506,7 @@ Stores data in kill ring"
   "Delete `class' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "class")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5353,7 +5514,7 @@ Stores data in kill ring"
   "Delete `def-or-class' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "def-or-class")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5361,7 +5522,7 @@ Stores data in kill ring"
   "Delete `if-block' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "if-block")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5369,7 +5530,7 @@ Stores data in kill ring"
   "Delete `try-block' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "try-block")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5377,7 +5538,7 @@ Stores data in kill ring"
   "Delete `minor-block' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "minor-block")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5385,7 +5546,7 @@ Stores data in kill ring"
   "Delete `for-block' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "for-block")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5393,7 +5554,7 @@ Stores data in kill ring"
   "Delete `top-level' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "top-level")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5401,7 +5562,7 @@ Stores data in kill ring"
   "Delete `statement' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "statement")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5409,7 +5570,7 @@ Stores data in kill ring"
   "Delete `expression' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "expression")))
     (kill-region (car erg) (cdr erg))))
 
@@ -5417,7 +5578,7 @@ Stores data in kill ring"
   "Delete `partial-expression' at point.
 
 Stores data in kill ring"
-  (interactive)
+  (interactive "*")
   (let ((erg (py--mark-base "partial-expression")))
     (kill-region (car erg) (cdr erg))))
 
@@ -6601,7 +6762,6 @@ With prefix arg, position cursor at end of buffer."
   (interactive "P")
   (pop-to-buffer (process-buffer (py-proc)) t) ;Runs python if needed.
   (when eob-p
-    (push-mark)
     (goto-char (point-max))))
 
 (defalias 'py-shell-send-file 'py-send-file)
@@ -6815,17 +6975,17 @@ interpreter.
   (py-shell argprompt t))
 
 (defun py-set-ipython-completion-command-string (shell)
-  "Set and return `ipython-completion-command-string'. "
+  "Set and return `py-ipython-completion-command-string'. "
   (interactive)
   (let* ((ipython-version (shell-command-to-string (concat shell " -V"))))
     (if (string-match "[0-9]" ipython-version)
-        (setq ipython-completion-command-string
+        (setq py-ipython-completion-command-string
               (cond ((string-match "^[^0].+" ipython-version)
-		     ipython0.11-completion-command-string)
+		     py-ipython0.11-completion-command-string)
                     ((string-match "^0.1[1-3]" ipython-version)
-                     ipython0.11-completion-command-string)
+                     py-ipython0.11-completion-command-string)
                     ((string= "^0.10" ipython-version)
-                     ipython0.10-completion-command-string)))
+                     py-ipython0.10-completion-command-string)))
       (error ipython-version))))
 
 (defun py-ipython--module-completion-import (proc)
@@ -6918,7 +7078,6 @@ SEPCHAR is the file-path separator of your system. "
     (set-buffer exception-buffer)
     (goto-char (point-min))
     (forward-line (1- origline))
-    (push-mark)
     (and (search-forward action (line-end-position) t)
          (and py-verbose-p (message "exception-buffer: %s on line %d" py-exception-buffer origline))
          (and py-highlight-error-source-p
@@ -6926,7 +7085,6 @@ SEPCHAR is the file-path separator of your system. "
               (overlay-put erg
                            'face 'highlight)))))
 
-;;  Result: (nil 5 "print(34ed)" " SyntaxError: invalid token ")
 (defun py--jump-to-exception (py-error origline &optional file)
   "Jump to the Python code in FILE at LINE."
   (let (
@@ -7316,10 +7474,7 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 	 (origline
 	  (save-restriction
 	    (widen)
-	    (count-lines
-	     (point-min)
-	     ;; count-lines doesn't honor current line when at BOL
-	     end)))
+	    (py-count-lines (point-min) end)))
 	 ;; argument SHELL might be a string like "python", "IPython" "python3", a symbol holding PATH/TO/EXECUTABLE or just a symbol like 'python3
 	 (which-shell
 	  (if shell
@@ -7487,7 +7642,7 @@ May we get rid of the temporary file? "
   (let* ((start (copy-marker start))
          (end (copy-marker end))
          (py-exception-buffer (or py-exception-buffer (current-buffer)))
-         (line (count-lines (point-min) (if (eq start (line-beginning-position)) (1+ start) start)))
+         (line (py-count-lines (point-min) (if (eq start (line-beginning-position)) (1+ start) start)))
          (strg (buffer-substring-no-properties start end))
          (tempfile (or (buffer-file-name) (concat (expand-file-name py-temp-directory) py-separator-char (replace-regexp-in-string py-separator-char "-" "temp") ".py")))
 
@@ -7642,7 +7797,7 @@ Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will being sw
 
 (defun py--insert-offset-lines (line)
   "Fix offline amount, make error point at the corect line. "
-  (insert (make-string (- line (count-lines (point-min) (point))) 10)))
+  (insert (make-string (- line (py-count-lines (point-min) (point))) 10)))
 
 (defun py--execute-file-base (&optional proc filename cmd procbuf orig file execute-directory py-exception-buffer)
   "Send to Python interpreter process PROC, in Python version 2.. \"execfile('FILENAME')\".
@@ -8233,7 +8388,7 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
         (forward-line -1)
         (end-of-line)
         (when (or (re-search-backward py-shell-prompt-regexp nil t 1)
-                  (re-search-backward (concat ipython-de-input-prompt-regexp "\\|" ipython-de-output-prompt-regexp) nil t 1))
+                  (re-search-backward (concat py-ipython-input-prompt-re "\\|" py-ipython-output-prompt-re) nil t 1))
           (save-excursion
             (when (re-search-forward "File \"\\(.+\\)\", line \\([0-9]+\\)\\(.*\\)$" nil t)
               (setq erg (copy-marker (point)))
@@ -8363,12 +8518,13 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
   "Retrieve available completions for INPUT using PROCESS.
 Argument COMPLETION-CODE is the python code used to get
 completions on the current context."
-  (let ((completions
+  (let ((erg
 	 (py--send-string-return-output
 	  (format completion-code input) process)))
     (sit-for 0.2 t)
-    (when (> (length completions) 2)
-      (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
+    (when (> (length erg) 2)
+      (setq erg (split-string erg "^'\\|^\"\\|;\\|'$\\|\"$" t)))
+    erg))
 
 ;; post-command-hook
 ;; caused insert-file-contents error lp:1293172
@@ -8474,7 +8630,7 @@ completions on the current context."
 (defun py--complete-prepare (&optional shell debug beg end word fast-complete)
   (let* ((py-exception-buffer (current-buffer))
          (pos (copy-marker (point)))
-	 (pps (syntax-ppss))
+	 (pps (parse-partial-sexp (or (ignore-errors (overlay-end comint-last-prompt-overlay))(line-beginning-position)) (point)))
 	 (in-string (when (nth 3 pps) (nth 8 pps)))
          (beg
 	  (save-excursion
@@ -8566,15 +8722,6 @@ in (I)Python shell-modes `py-shell-complete'"
 
 (defvar py-pdbtrack-is-tracking-p nil)
 
-(defun py-update-gud-pdb-history ()
-  "If pdb is called at a Python buffer, put it's file name at the head of `gud-pdb-history'. "
-  (interactive)
-  (let* ((first (replace-regexp-in-string "^\\([^ ]+\\) +.+$" "\\1" (car gud-pdb-history)))
-         (second (if (string-match ".+.py$" (buffer-file-name))
-                     (buffer-file-name) (replace-regexp-in-string "^\\([^ ]+\\) +\\(.+\\)$" "\\2" (car gud-pdb-history))))
-         (erg (concat first " " second)))
-    (push erg gud-pdb-history)))
-
 (defun py--pdbtrack-overlay-arrow (activation)
   "Activate or de arrow at beginning-of-line in current buffer."
   ;; This was derived/simplified from edebug-overlay-arrow
@@ -8641,7 +8788,6 @@ script, and set to python-mode, and pdbtrack will find it.)"
             (message "pdbtrack: line %s, file %s" target_lineno target_fname)
             (py--pdbtrack-overlay-arrow t)
             (pop-to-buffer origbuf t)))))))
-
 
 (defun py--pdbtrack-map-filename (filename)
 
@@ -8774,12 +8920,10 @@ named for funcname or define a function funcname."
   (let ((py-python-command-args (list "-i" "-m" "pdb")))
     (py-execute-region beg end)))
 
-
 (defun py-pdb-execute-statement ()
   (interactive)
   (let ((stm (progn (py-statement) (car kill-ring))))
     (py-execute-string (concat "import pdb;pdb.run('" stm "')"))))
-
 
 (defun py-pdb-help ()
   "Print generic pdb.help() message "
@@ -8790,12 +8934,80 @@ named for funcname or define a function funcname."
   (interactive)
   (py-execute-string (concat "import pdb;pdb.break('" stm "')")))
 
+(defun py--pdb-versioned ()
+  "Guess existing pdb version from py-shell-name
+
+Return \"pdb[VERSION]\" if executable found, just \"pdb\" otherwise"
+  (interactive)
+  (let ((erg (when (string-match "[23]" py-shell-name)
+	       ;; versions-part
+	       (substring py-shell-name (string-match "[23]" py-shell-name)))))
+    (if erg
+      (2cond ((executable-find (concat "pdb" erg))
+	     (concat "pdb" erg))
+	    ((and (string-match "\\." erg)
+		  (executable-find (concat "pdb" (substring erg 0 (string-match "\\." erg)))))
+	     (concat "pdb" (substring erg 0 (string-match "\\." erg)))))
+      "pdb")))
+
+(defun py--pdb-current-executable ()
+  "When py-pdb-executable is set, return it.
+
+Otherwise return resuslt from `executable-find' "
+  (or py-pdb-executable
+      (executable-find "pdb")))
+
+(defun py-update-gud-pdb-history ()
+  "If pdb is called at a Python buffer, put it's file name at the head of `gud-pdb-history'. "
+  (interactive)
+  (let* (;; PATH/TO/pdb
+	 (first (or (and gud-pdb-history (replace-regexp-in-string "^\\([^ ]+\\) +.+$" "\\1" (car gud-pdb-history)))
+		    (py--pdb-current-executable)))
+	 ;; file to debug
+         (second (cond ((not (ignore-errors (buffer-file-name)))
+			(error "%s" "Buffer must be saved first."))
+		       ((not (string-match ".+.py$" (buffer-file-name)))
+			(error "command expects a file with suffix \".py\""))
+		     ((string-match ".+.py$" (buffer-file-name))
+                      (replace-regexp-in-string "^\\([^ ]+\\) +\\(.+\\)$" "\\2" (car gud-pdb-history)))))
+         (erg (concat first " " second)))
+    (push erg gud-pdb-history)))
+
+;; (defadvice pdb (before init-pdb-history activate)
+;;   (py-update-gud-pdb-history))
+;;
+;; (ad-activate 'pdb)
+;; (ad-update 'pdb)
+
+;; (defun py-pdb (command-line &optional file)
+;;   "Run pdb on program FILE in buffer `*gud-FILE*'.
+;; The directory containing FILE becomes the initial working directory
+;; and source-file directory for your debugger.
+
+;; `py-pdb-executable', when set, is used
+
+;; lp:963253"
+;;   (interactive
+;;    (list
+;;     ;;
+;;     ;; (eq system-type 'ms-dos)(eq system-type 'windows-nt))
+;;     ;; sys.version_info[0]
+;;     ;; setq gud-pdb-command-name ?
+;;     ;; (py--pdb-current-executable)
+;;     'pdb))
+;;   (let ((file (or file (buffer-file-name))))
+;;     (gud-query-cmdline 'pdb file)))
+
+
+;; (defun py-pdb ()
+;;   (interactive)
+;;   (py-update-gud-pdb-history)
+;;   (pdb))
+
 ;; python-components-help
-(defcustom py-eldoc-string-code
+(defvar py-eldoc-string-code
   "__PYDOC_get_help('''%s''')\n"
-  "Python code used to get a string with the documentation of an object."
-  :type 'string
-  :group 'python-mode)
+  "Python code used to get a string with the documentation of an object.")
 
 (defalias 'py-eldoc 'py-eldoc-function)
 
@@ -9793,15 +10005,21 @@ Consider \"pip install flake8\" resp. visit \"pypi.python.org\""))
 
 ;;  from string-strip.el --- Strip CHARS from STRING
 
+(defvar py-chars-before " \t\n\r\f"
+  "Used by `py--string-strip'")
+
+(defvar py-chars-after " \t\n\r\f"
+    "Used by `py--string-strip'")
+
 ;;  (setq strip-chars-before  "[ \t\r\n]*")
-(defun string-strip (str &optional chars-before chars-after)
+(defun py--string-strip (str &optional chars-before chars-after)
   "Return a copy of STR, CHARS removed.
 `CHARS-BEFORE' and `CHARS-AFTER' default is \"[ \t\r\n]*\",
 i.e. spaces, tabs, carriage returns, newlines and newpages. "
   (let ((s-c-b (or chars-before
-                   strip-chars-before))
+                   py-chars-before))
         (s-c-a (or chars-after
-                   strip-chars-after))
+                   py-chars-after))
         (erg str))
     (setq erg (replace-regexp-in-string  s-c-b "" erg))
     (setq erg (replace-regexp-in-string  s-c-a "" erg))
@@ -9854,13 +10072,13 @@ i.e. spaces, tabs, carriage returns, newlines and newpages. "
         (list command (list local-file)))
     (message "%s" "flymake needs a `buffer-file-name'. Please save before calling.")))
 
-(defun py-flycheck-mode (&optional arg) 
+(defun py-flycheck-mode (&optional arg)
   "Toggle `flycheck-mode'.
 
 With negative argument switch off flycheck-mode
 See menu \"Tools/Syntax Checking\""
   (interactive "p")
-  (setq arg (or arg (if flycheck-mode 0 1))) 
+  (setq arg (or arg (if flycheck-mode 0 1)))
   (if (featurep 'flycheck)
       (if (< arg 0)
 	  ;; switch off
@@ -9972,28 +10190,6 @@ Maybe call M-x describe-variable RET to query its value. "
       (org-mode))))
 
 ;; python-components-extensions
-
-(defcustom py-match-paren-mode nil
-  "*Non-nil means, cursor will jump to beginning or end of a block.
-This vice versa, to beginning first.
-Sets `py-match-paren-key' in python-mode-map.
-Customize `py-match-paren-key' which key to use. "
-  :type 'boolean
-  :group 'python)
-
-(defcustom py-match-paren-key "%"
-  "*String used by \\[comment-region] to comment out a block of code.
-This should follow the convention for non-indenting comment lines so
-that the indentation commands won't get confused (i.e., the string
-should be of the form `#x...' where `x' is not a blank or a tab, and
-`...' is arbitrary).  However, this string should not end in whitespace."
-  :type 'string
-  :group 'python)
-
-(defcustom py-kill-empty-line t
-  "*If t, py-indent-forward-line kills empty lines. "
-  :type 'boolean
-  :group 'python)
 
 (defun py-indent-forward-line (&optional arg)
   "Indent and move one line forward to next indentation.
@@ -10199,10 +10395,8 @@ With arg, do it that many times.
 
 ;; from sh-werkstatt.el. Introduced here for convenience.
 (unless (boundp 'empty-line-p-chars)
-  (defcustom empty-line-p-chars "^[ \t\f\r]*$"
-    "Empty-line-p-chars."
-    :type 'regexp
-    :group 'convenience))
+  (defvar empty-line-p-chars "^[ \t\f\r]*$"))
+
 
 (unless (functionp 'in-string-p)
   (defun in-string-p (&optional pos)
@@ -10276,7 +10470,7 @@ With arg, do it that many times.
 
 With optional \\[universal-argument] print as string"
   (interactive "*P")
-  (let* ((name (string-strip (or arg (car kill-ring))))
+  (let* ((name (py--string-strip (or arg (car kill-ring))))
          ;; guess if doublequotes or parentheses are needed
          (numbered (not (eq 4 (prefix-numeric-value arg))))
          (form (cond ((or (eq major-mode 'python-mode)(eq major-mode 'py-shell-mode))
@@ -10648,43 +10842,50 @@ of the first definition found."
   "Start an Python interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
+  (interactive "P")
   (py-shell argprompt nil "python"))
-
-(defun ipython (&optional argprompt)
-  "Start an IPython interpreter.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (py-shell argprompt nil "ipython"))
 
 (defun python2 (&optional argprompt)
   "Start an Python2 interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
+  (interactive "P")
   (py-shell argprompt nil "python2"))
-
-(defun jython (&optional argprompt)
-  "Start an Jython interpreter.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (py-shell argprompt nil "jython"))
 
 (defun python3 (&optional argprompt)
   "Start an Python3 interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
+  (interactive "P")
   (py-shell argprompt nil "python3"))
 
-(defun bpython (&optional argprompt)
-  "Start an Bpython interpreter.
+(defun ipython (&optional argprompt)
+  "Start an IPython interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (py-shell argprompt nil "bpython"))
+  (interactive "P")
+  (py-shell argprompt nil "ipython"))
+
+(defun ipython2.7 (&optional argprompt)
+  "Start an IPython2.7 interpreter.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "P")
+  (py-shell argprompt nil "ipython2.7"))
+
+(defun ipython3 (&optional argprompt)
+  "Start an IPython3 interpreter.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "P")
+  (py-shell argprompt nil "ipython3"))
+
+(defun jython (&optional argprompt)
+  "Start an Jython interpreter.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "P")
+  (py-shell argprompt nil "jython"))
 
 ;; dedicated
 (defun python-dedicated (&optional argprompt switch)
@@ -10692,48 +10893,56 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-dedicated-process-p t))
+ (let ((py-dedicated-process-p t))
     (py-shell argprompt t "python")))
-
-(defun ipython-dedicated (&optional argprompt switch)
-  "Start an unique IPython interpreter in another window.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (let ((py-dedicated-process-p t))
-    (py-shell argprompt t "ipython")))
 
 (defun python2-dedicated (&optional argprompt switch)
   "Start an unique Python2 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-dedicated-process-p t))
+ (let ((py-dedicated-process-p t))
     (py-shell argprompt t "python2")))
-
-(defun jython-dedicated (&optional argprompt switch)
-  "Start an unique Jython interpreter in another window.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (let ((py-dedicated-process-p t))
-    (py-shell argprompt t "jython")))
 
 (defun python3-dedicated (&optional argprompt switch)
   "Start an unique Python3 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-dedicated-process-p t))
+ (let ((py-dedicated-process-p t))
     (py-shell argprompt t "python3")))
 
-(defun bpython-dedicated (&optional argprompt switch)
-  "Start an unique Bpython interpreter in another window.
+(defun ipython-dedicated (&optional argprompt switch)
+  "Start an unique IPython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-dedicated-process-p t))
-    (py-shell argprompt t "bpython")))
+ (let ((py-dedicated-process-p t))
+    (py-shell argprompt t "ipython")))
+
+(defun ipython2.7-dedicated (&optional argprompt switch)
+  "Start an unique IPython2.7 interpreter in another window.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let ((py-dedicated-process-p t))
+    (py-shell argprompt t "ipython2.7")))
+
+(defun ipython3-dedicated (&optional argprompt switch)
+  "Start an unique IPython3 interpreter in another window.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let ((py-dedicated-process-p t))
+    (py-shell argprompt t "ipython3")))
+
+(defun jython-dedicated (&optional argprompt switch)
+  "Start an unique Jython interpreter in another window.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let ((py-dedicated-process-p t))
+    (py-shell argprompt t "jython")))
 
 ;; switch
 (defun python-switch (&optional argprompt)
@@ -10741,48 +10950,56 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-switch-buffers-on-execute-p t))
+ (let ((py-switch-buffers-on-execute-p t))
     (py-shell argprompt nil "python")))
-
-(defun ipython-switch (&optional argprompt)
-  "Switch to IPython interpreter in another window.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (let ((py-switch-buffers-on-execute-p t))
-    (py-shell argprompt nil "ipython")))
 
 (defun python2-switch (&optional argprompt)
   "Switch to Python2 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-switch-buffers-on-execute-p t))
+ (let ((py-switch-buffers-on-execute-p t))
     (py-shell argprompt nil "python2")))
-
-(defun jython-switch (&optional argprompt)
-  "Switch to Jython interpreter in another window.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (let ((py-switch-buffers-on-execute-p t))
-    (py-shell argprompt nil "jython")))
 
 (defun python3-switch (&optional argprompt)
   "Switch to Python3 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-switch-buffers-on-execute-p t))
+ (let ((py-switch-buffers-on-execute-p t))
     (py-shell argprompt nil "python3")))
 
-(defun bpython-switch (&optional argprompt)
-  "Switch to Bpython interpreter in another window.
+(defun ipython-switch (&optional argprompt)
+  "Switch to IPython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-switch-buffers-on-execute-p t))
-    (py-shell argprompt nil "bpython")))
+ (let ((py-switch-buffers-on-execute-p t))
+    (py-shell argprompt nil "ipython")))
+
+(defun ipython2.7-switch (&optional argprompt)
+  "Switch to IPython2.7 interpreter in another window.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let ((py-switch-buffers-on-execute-p t))
+    (py-shell argprompt nil "ipython2.7")))
+
+(defun ipython3-switch (&optional argprompt)
+  "Switch to IPython3 interpreter in another window.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let ((py-switch-buffers-on-execute-p t))
+    (py-shell argprompt nil "ipython3")))
+
+(defun jython-switch (&optional argprompt)
+  "Switch to Jython interpreter in another window.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let ((py-switch-buffers-on-execute-p t))
+    (py-shell argprompt nil "jython")))
 
 ;; no-switch
 (defun python-no-switch (&optional argprompt)
@@ -10790,48 +11007,56 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let (py-switch-buffers-on-execute-p)
+ (let (py-switch-buffers-on-execute-p)
     (py-shell argprompt nil "python")))
-
-(defun ipython-no-switch (&optional argprompt)
-  "Open an IPython interpreter in another window, but do not switch to it.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (let (py-switch-buffers-on-execute-p)
-    (py-shell argprompt nil "ipython")))
 
 (defun python2-no-switch (&optional argprompt)
   "Open an Python2 interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let (py-switch-buffers-on-execute-p)
+ (let (py-switch-buffers-on-execute-p)
     (py-shell argprompt nil "python2")))
-
-(defun jython-no-switch (&optional argprompt)
-  "Open an Jython interpreter in another window, but do not switch to it.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (let (py-switch-buffers-on-execute-p)
-    (py-shell argprompt nil "jython")))
 
 (defun python3-no-switch (&optional argprompt)
   "Open an Python3 interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let (py-switch-buffers-on-execute-p)
+ (let (py-switch-buffers-on-execute-p)
     (py-shell argprompt nil "python3")))
 
-(defun bpython-no-switch (&optional argprompt)
-  "Open an Bpython interpreter in another window, but do not switch to it.
+(defun ipython-no-switch (&optional argprompt)
+  "Open an IPython interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let (py-switch-buffers-on-execute-p)
-    (py-shell argprompt nil "bpython")))
+ (let (py-switch-buffers-on-execute-p)
+    (py-shell argprompt nil "ipython")))
+
+(defun ipython2.7-no-switch (&optional argprompt)
+  "Open an IPython2.7 interpreter in another window, but do not switch to it.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let (py-switch-buffers-on-execute-p)
+    (py-shell argprompt nil "ipython2.7")))
+
+(defun ipython3-no-switch (&optional argprompt)
+  "Open an IPython3 interpreter in another window, but do not switch to it.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let (py-switch-buffers-on-execute-p)
+    (py-shell argprompt nil "ipython3")))
+
+(defun jython-no-switch (&optional argprompt)
+  "Open an Jython interpreter in another window, but do not switch to it.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let (py-switch-buffers-on-execute-p)
+    (py-shell argprompt nil "jython")))
 
 ;; dedicated switch
 (defalias 'python-dedicated-switch 'python-switch-dedicated)
@@ -10840,19 +11065,9 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-dedicated-process-p t)
+ (let ((py-dedicated-process-p t)
         (py-switch-buffers-on-execute-p t))
     (py-shell argprompt t "python")))
-
-(defalias 'ipython-dedicated-switch 'ipython-switch-dedicated)
-(defun ipython-switch-dedicated (&optional argprompt)
-  "Switch to an unique IPython interpreter in another window.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (let ((py-dedicated-process-p t)
-        (py-switch-buffers-on-execute-p t))
-    (py-shell argprompt t "ipython")))
 
 (defalias 'python2-dedicated-switch 'python2-switch-dedicated)
 (defun python2-switch-dedicated (&optional argprompt)
@@ -10860,19 +11075,9 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-dedicated-process-p t)
+ (let ((py-dedicated-process-p t)
         (py-switch-buffers-on-execute-p t))
     (py-shell argprompt t "python2")))
-
-(defalias 'jython-dedicated-switch 'jython-switch-dedicated)
-(defun jython-switch-dedicated (&optional argprompt)
-  "Switch to an unique Jython interpreter in another window.
-
-Optional \\[universal-argument] prompts for path to the interpreter. "
-  (interactive "p")
-  (let ((py-dedicated-process-p t)
-        (py-switch-buffers-on-execute-p t))
-    (py-shell argprompt t "jython")))
 
 (defalias 'python3-dedicated-switch 'python3-switch-dedicated)
 (defun python3-switch-dedicated (&optional argprompt)
@@ -10880,36 +11085,49 @@ Optional \\[universal-argument] prompts for path to the interpreter. "
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-dedicated-process-p t)
+ (let ((py-dedicated-process-p t)
         (py-switch-buffers-on-execute-p t))
     (py-shell argprompt t "python3")))
 
-(defalias 'bpython-dedicated-switch 'bpython-switch-dedicated)
-(defun bpython-switch-dedicated (&optional argprompt)
-  "Switch to an unique Bpython interpreter in another window.
+(defalias 'ipython-dedicated-switch 'ipython-switch-dedicated)
+(defun ipython-switch-dedicated (&optional argprompt)
+  "Switch to an unique IPython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (let ((py-dedicated-process-p t)
+ (let ((py-dedicated-process-p t)
         (py-switch-buffers-on-execute-p t))
-    (py-shell argprompt t "bpython")))
+    (py-shell argprompt t "ipython")))
 
+(defalias 'ipython2.7-dedicated-switch 'ipython2.7-switch-dedicated)
+(defun ipython2.7-switch-dedicated (&optional argprompt)
+  "Switch to an unique IPython2.7 interpreter in another window.
 
-(defalias 'Python 'python)
-(defalias 'pyhotn 'python)
-(defalias 'pyhton 'python)
-(defalias 'pyton 'python)
-(defalias 'pyt 'python)
-(defalias 'Python2 'python2)
-(defalias 'Python3 'python3)
-(defalias 'IPython 'ipython)
-(defalias 'Ipython 'ipython)
-(defalias 'IPyton 'ipython)
-(defalias 'Ipyton 'ipython)
-(defalias 'ipyton 'ipython)
-(defalias 'ipyhton 'ipython)
-(defalias 'ipy 'ipython)
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let ((py-dedicated-process-p t)
+        (py-switch-buffers-on-execute-p t))
+    (py-shell argprompt t "ipython2.7")))
 
+(defalias 'ipython3-dedicated-switch 'ipython3-switch-dedicated)
+(defun ipython3-switch-dedicated (&optional argprompt)
+  "Switch to an unique IPython3 interpreter in another window.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let ((py-dedicated-process-p t)
+        (py-switch-buffers-on-execute-p t))
+    (py-shell argprompt t "ipython3")))
+
+(defalias 'jython-dedicated-switch 'jython-switch-dedicated)
+(defun jython-switch-dedicated (&optional argprompt)
+  "Switch to an unique Jython interpreter in another window.
+
+Optional \\[universal-argument] prompts for path to the interpreter. "
+  (interactive "p")
+ (let ((py-dedicated-process-p t)
+        (py-switch-buffers-on-execute-p t))
+    (py-shell argprompt t "jython")))
 
 ;; python-components-electric
 (defun py-electric-colon (arg)
@@ -11774,182 +11992,156 @@ With ARG do that ARG times. "
   "Returns beginning of statement position at beginning-of-line. "
   (save-excursion
     (let ((erg (py-beginning-of-statement)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-block-position ()
   "Returns beginning of block position at beginning-of-line. "
   (save-excursion
     (let ((erg (py-beginning-of-block)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-clause-position ()
   "Returns beginning of clause position at beginning-of-line. "
   (save-excursion
     (let ((erg (py-beginning-of-clause)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-block-or-clause-position ()
   "Returns beginning of block-or-clause position at beginning-of-line. "
   (save-excursion
     (let ((erg (py-beginning-of-block-or-clause)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-def-position ()
   "Returns beginning of def position at beginning-of-line. "
   (save-excursion
     (let ((erg (py-beginning-of-def)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-class-position ()
   "Returns beginning of class position at beginning-of-line. "
   (save-excursion
     (let ((erg (py-beginning-of-class)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-def-or-class-position ()
   "Returns beginning of def-or-class position at beginning-of-line. "
   (save-excursion
     (let ((erg (py-beginning-of-def-or-class)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-expression-position ()
   "Returns beginning of expression position at beginning-of-line. "
   (save-excursion
     (let ((erg (py-beginning-of-expression)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-partial-expression-position ()
   "Returns beginning of partial-expression position at beginning-of-line. "
   (save-excursion
     (let ((erg (py-beginning-of-partial-expression)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-minor-block-position ()
   "Returns beginning of minor-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (py-beginning-of-minor-block)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-if-block-position ()
   "Returns beginning of if-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (py-beginning-of-if-block)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-try-block-position ()
   "Returns beginning of try-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (py-beginning-of-try-block)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-except-block-position ()
   "Returns beginning of except-block position at beginning-of-line. "
   (save-excursion
     (let ((erg (py-beginning-of-except-block)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-top-level-position ()
   "Returns beginning of top-level position at beginning-of-line. "
   (save-excursion
     (let ((erg (py-beginning-of-top-level)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-statement-position-bol ()
   "Returns beginning of statement position. "
   (save-excursion
     (let ((erg (py-beginning-of-statement-bol)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-block-position-bol ()
   "Returns beginning of block position. "
   (save-excursion
     (let ((erg (py-beginning-of-block-bol)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-clause-position-bol ()
   "Returns beginning of clause position. "
   (save-excursion
     (let ((erg (py-beginning-of-clause-bol)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-block-or-clause-position-bol ()
   "Returns beginning of block-or-clause position. "
   (save-excursion
     (let ((erg (py-beginning-of-block-or-clause-bol)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-def-position-bol ()
   "Returns beginning of def position. "
   (save-excursion
     (let ((erg (py-beginning-of-def-bol)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-class-position-bol ()
   "Returns beginning of class position. "
   (save-excursion
     (let ((erg (py-beginning-of-class-bol)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-def-or-class-position-bol ()
   "Returns beginning of def-or-class position. "
   (save-excursion
     (let ((erg (py-beginning-of-def-or-class-bol)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-minor-block-position-bol ()
   "Returns beginning of minor-block position. "
   (save-excursion
     (let ((erg (py-beginning-of-minor-block-bol)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-if-block-position-bol ()
   "Returns beginning of if-block position. "
   (save-excursion
     (let ((erg (py-beginning-of-if-block-bol)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-try-block-position-bol ()
   "Returns beginning of try-block position. "
   (save-excursion
     (let ((erg (py-beginning-of-try-block-bol)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-except-block-position-bol ()
   "Returns beginning of except-block position. "
   (save-excursion
     (let ((erg (py-beginning-of-except-block-bol)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--beginning-of-top-level-position-bol ()
   "Returns beginning of top-level position. "
   (save-excursion
     (let ((erg (py-beginning-of-top-level-bol)))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 ;; python-components-end-position-forms
@@ -11963,7 +12155,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-statement))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-block-position ()
@@ -11974,7 +12165,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-block))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-clause-position ()
@@ -11985,7 +12175,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-clause))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-block-or-clause-position ()
@@ -11996,7 +12185,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-block-or-clause))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-def-position ()
@@ -12007,7 +12195,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-def))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-class-position ()
@@ -12018,7 +12205,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-class))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-def-or-class-position ()
@@ -12029,7 +12215,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-def-or-class))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-buffer-position ()
@@ -12040,7 +12225,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-buffer))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-expression-position ()
@@ -12051,7 +12235,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-expression))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-partial-expression-position ()
@@ -12062,7 +12245,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-partial-expression))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-minor-block-position ()
@@ -12073,7 +12255,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-minor-block))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-if-block-position ()
@@ -12084,7 +12265,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-if-block))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-try-block-position ()
@@ -12095,7 +12275,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-try-block))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-except-block-position ()
@@ -12106,7 +12285,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-except-block))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-top-level-position ()
@@ -12117,7 +12295,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-top-level))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-statement-position-bol ()
@@ -12128,7 +12305,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-statement-bol))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-block-position-bol ()
@@ -12139,7 +12315,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-block-bol))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-clause-position-bol ()
@@ -12150,7 +12325,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-clause-bol))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-block-or-clause-position-bol ()
@@ -12161,7 +12335,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-block-or-clause-bol))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-def-position-bol ()
@@ -12172,7 +12345,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-def-bol))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-class-position-bol ()
@@ -12183,7 +12355,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-class-bol))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-minor-block-position-bol ()
@@ -12194,7 +12365,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-minor-block-bol))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-if-block-position-bol ()
@@ -12205,7 +12375,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-if-block-bol))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 (defun py--end-of-try-block-position-bol ()
@@ -12216,7 +12385,6 @@ With ARG do that ARG times. "
                    (skip-chars-backward " \t\r\n\f")
                    (forward-char -1))
                  (py-end-of-try-block-bol))))
-      (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
 ;; python-components-end-forms
@@ -12935,8 +13103,7 @@ Return position if def-or-class found, nil otherwise "
 		  (prog1
 		      (or beg (funcall (intern-soft (concat "py--beginning-of-" form "-p")))
 
-			  (funcall (intern-soft (concat "py-beginning-of-" form)))
-			  (push-mark)))))
+			  (funcall (intern-soft (concat "py-beginning-of-" form)))))))
 	   (end (unless file
 		  (or end (funcall (intern-soft (concat "py-end-of-" form))))))
 	   (py-dedicated-process-p dedicated)
@@ -12961,39 +13128,39 @@ Return position if def-or-class found, nil otherwise "
   (py--execute-prepare "statement" shell t switch))
 
 (defun py-execute-statement-python ()
-  "Send statement at point to default interpreter. 
+  "Send statement at point to default interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "statement" 'python nil nil))
 
 (defun py-execute-statement-python-switch ()
-  "Send statement at point to default interpreter. 
+  "Send statement at point to default interpreter.
 
-Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "statement" 'python nil 'switch))
 
 (defun py-execute-statement-python-no-switch ()
-  "Send statement at point to default interpreter. 
+  "Send statement at point to default interpreter.
 
-Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p'
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "statement" 'python nil 'no-switch))
 
 (defun py-execute-statement-python-dedicated ()
-  "Send statement at point to default unique interpreter. 
+  "Send statement at point to default unique interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "statement" 'python t nil))
 
 (defun py-execute-statement-python-dedicated-switch ()
-  "Send statement at point to default unique interpreter and switch to result. 
+  "Send statement at point to default unique interpreter and switch to result.
 
 For `default' see value of `py-shell-name'"
   (interactive)
@@ -13005,14 +13172,14 @@ For `default' see value of `py-shell-name'"
   (py--execute-prepare "statement" 'ipython nil nil))
 
 (defun py-execute-statement-ipython-switch ()
-  "Send statement at point to IPython interpreter. 
+  "Send statement at point to IPython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "statement" 'ipython nil 'switch))
 
 (defun py-execute-statement-ipython-no-switch ()
-  "Send statement at point to IPython interpreter. 
+  "Send statement at point to IPython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13034,14 +13201,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "statement" 'python2 nil nil))
 
 (defun py-execute-statement-python2-switch ()
-  "Send statement at point to Python2 interpreter. 
+  "Send statement at point to Python2 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "statement" 'python2 nil 'switch))
 
 (defun py-execute-statement-python2-no-switch ()
-  "Send statement at point to Python2 interpreter. 
+  "Send statement at point to Python2 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13063,14 +13230,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "statement" 'jython nil nil))
 
 (defun py-execute-statement-jython-switch ()
-  "Send statement at point to Jython interpreter. 
+  "Send statement at point to Jython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "statement" 'jython nil 'switch))
 
 (defun py-execute-statement-jython-no-switch ()
-  "Send statement at point to Jython interpreter. 
+  "Send statement at point to Jython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13092,14 +13259,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "statement" 'python3 nil nil))
 
 (defun py-execute-statement-python3-switch ()
-  "Send statement at point to Python3 interpreter. 
+  "Send statement at point to Python3 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "statement" 'python3 nil 'switch))
 
 (defun py-execute-statement-python3-no-switch ()
-  "Send statement at point to Python3 interpreter. 
+  "Send statement at point to Python3 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13121,39 +13288,39 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "block" shell t switch))
 
 (defun py-execute-block-python ()
-  "Send block at point to default interpreter. 
+  "Send block at point to default interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "block" 'python nil nil))
 
 (defun py-execute-block-python-switch ()
-  "Send block at point to default interpreter. 
+  "Send block at point to default interpreter.
 
-Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "block" 'python nil 'switch))
 
 (defun py-execute-block-python-no-switch ()
-  "Send block at point to default interpreter. 
+  "Send block at point to default interpreter.
 
-Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p'
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "block" 'python nil 'no-switch))
 
 (defun py-execute-block-python-dedicated ()
-  "Send block at point to default unique interpreter. 
+  "Send block at point to default unique interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "block" 'python t nil))
 
 (defun py-execute-block-python-dedicated-switch ()
-  "Send block at point to default unique interpreter and switch to result. 
+  "Send block at point to default unique interpreter and switch to result.
 
 For `default' see value of `py-shell-name'"
   (interactive)
@@ -13165,14 +13332,14 @@ For `default' see value of `py-shell-name'"
   (py--execute-prepare "block" 'ipython nil nil))
 
 (defun py-execute-block-ipython-switch ()
-  "Send block at point to IPython interpreter. 
+  "Send block at point to IPython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "block" 'ipython nil 'switch))
 
 (defun py-execute-block-ipython-no-switch ()
-  "Send block at point to IPython interpreter. 
+  "Send block at point to IPython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13194,14 +13361,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "block" 'python2 nil nil))
 
 (defun py-execute-block-python2-switch ()
-  "Send block at point to Python2 interpreter. 
+  "Send block at point to Python2 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "block" 'python2 nil 'switch))
 
 (defun py-execute-block-python2-no-switch ()
-  "Send block at point to Python2 interpreter. 
+  "Send block at point to Python2 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13223,14 +13390,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "block" 'jython nil nil))
 
 (defun py-execute-block-jython-switch ()
-  "Send block at point to Jython interpreter. 
+  "Send block at point to Jython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "block" 'jython nil 'switch))
 
 (defun py-execute-block-jython-no-switch ()
-  "Send block at point to Jython interpreter. 
+  "Send block at point to Jython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13252,14 +13419,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "block" 'python3 nil nil))
 
 (defun py-execute-block-python3-switch ()
-  "Send block at point to Python3 interpreter. 
+  "Send block at point to Python3 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "block" 'python3 nil 'switch))
 
 (defun py-execute-block-python3-no-switch ()
-  "Send block at point to Python3 interpreter. 
+  "Send block at point to Python3 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13281,39 +13448,39 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "clause" shell t switch))
 
 (defun py-execute-clause-python ()
-  "Send clause at point to default interpreter. 
+  "Send clause at point to default interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "clause" 'python nil nil))
 
 (defun py-execute-clause-python-switch ()
-  "Send clause at point to default interpreter. 
+  "Send clause at point to default interpreter.
 
-Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "clause" 'python nil 'switch))
 
 (defun py-execute-clause-python-no-switch ()
-  "Send clause at point to default interpreter. 
+  "Send clause at point to default interpreter.
 
-Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p'
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "clause" 'python nil 'no-switch))
 
 (defun py-execute-clause-python-dedicated ()
-  "Send clause at point to default unique interpreter. 
+  "Send clause at point to default unique interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "clause" 'python t nil))
 
 (defun py-execute-clause-python-dedicated-switch ()
-  "Send clause at point to default unique interpreter and switch to result. 
+  "Send clause at point to default unique interpreter and switch to result.
 
 For `default' see value of `py-shell-name'"
   (interactive)
@@ -13325,14 +13492,14 @@ For `default' see value of `py-shell-name'"
   (py--execute-prepare "clause" 'ipython nil nil))
 
 (defun py-execute-clause-ipython-switch ()
-  "Send clause at point to IPython interpreter. 
+  "Send clause at point to IPython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "clause" 'ipython nil 'switch))
 
 (defun py-execute-clause-ipython-no-switch ()
-  "Send clause at point to IPython interpreter. 
+  "Send clause at point to IPython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13354,14 +13521,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "clause" 'python2 nil nil))
 
 (defun py-execute-clause-python2-switch ()
-  "Send clause at point to Python2 interpreter. 
+  "Send clause at point to Python2 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "clause" 'python2 nil 'switch))
 
 (defun py-execute-clause-python2-no-switch ()
-  "Send clause at point to Python2 interpreter. 
+  "Send clause at point to Python2 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13383,14 +13550,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "clause" 'jython nil nil))
 
 (defun py-execute-clause-jython-switch ()
-  "Send clause at point to Jython interpreter. 
+  "Send clause at point to Jython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "clause" 'jython nil 'switch))
 
 (defun py-execute-clause-jython-no-switch ()
-  "Send clause at point to Jython interpreter. 
+  "Send clause at point to Jython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13412,14 +13579,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "clause" 'python3 nil nil))
 
 (defun py-execute-clause-python3-switch ()
-  "Send clause at point to Python3 interpreter. 
+  "Send clause at point to Python3 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "clause" 'python3 nil 'switch))
 
 (defun py-execute-clause-python3-no-switch ()
-  "Send clause at point to Python3 interpreter. 
+  "Send clause at point to Python3 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13441,39 +13608,39 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "block-or-clause" shell t switch))
 
 (defun py-execute-block-or-clause-python ()
-  "Send block-or-clause at point to default interpreter. 
+  "Send block-or-clause at point to default interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "block-or-clause" 'python nil nil))
 
 (defun py-execute-block-or-clause-python-switch ()
-  "Send block-or-clause at point to default interpreter. 
+  "Send block-or-clause at point to default interpreter.
 
-Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "block-or-clause" 'python nil 'switch))
 
 (defun py-execute-block-or-clause-python-no-switch ()
-  "Send block-or-clause at point to default interpreter. 
+  "Send block-or-clause at point to default interpreter.
 
-Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p'
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "block-or-clause" 'python nil 'no-switch))
 
 (defun py-execute-block-or-clause-python-dedicated ()
-  "Send block-or-clause at point to default unique interpreter. 
+  "Send block-or-clause at point to default unique interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "block-or-clause" 'python t nil))
 
 (defun py-execute-block-or-clause-python-dedicated-switch ()
-  "Send block-or-clause at point to default unique interpreter and switch to result. 
+  "Send block-or-clause at point to default unique interpreter and switch to result.
 
 For `default' see value of `py-shell-name'"
   (interactive)
@@ -13485,14 +13652,14 @@ For `default' see value of `py-shell-name'"
   (py--execute-prepare "block-or-clause" 'ipython nil nil))
 
 (defun py-execute-block-or-clause-ipython-switch ()
-  "Send block-or-clause at point to IPython interpreter. 
+  "Send block-or-clause at point to IPython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "block-or-clause" 'ipython nil 'switch))
 
 (defun py-execute-block-or-clause-ipython-no-switch ()
-  "Send block-or-clause at point to IPython interpreter. 
+  "Send block-or-clause at point to IPython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13514,14 +13681,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "block-or-clause" 'python2 nil nil))
 
 (defun py-execute-block-or-clause-python2-switch ()
-  "Send block-or-clause at point to Python2 interpreter. 
+  "Send block-or-clause at point to Python2 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "block-or-clause" 'python2 nil 'switch))
 
 (defun py-execute-block-or-clause-python2-no-switch ()
-  "Send block-or-clause at point to Python2 interpreter. 
+  "Send block-or-clause at point to Python2 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13543,14 +13710,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "block-or-clause" 'jython nil nil))
 
 (defun py-execute-block-or-clause-jython-switch ()
-  "Send block-or-clause at point to Jython interpreter. 
+  "Send block-or-clause at point to Jython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "block-or-clause" 'jython nil 'switch))
 
 (defun py-execute-block-or-clause-jython-no-switch ()
-  "Send block-or-clause at point to Jython interpreter. 
+  "Send block-or-clause at point to Jython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13572,14 +13739,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "block-or-clause" 'python3 nil nil))
 
 (defun py-execute-block-or-clause-python3-switch ()
-  "Send block-or-clause at point to Python3 interpreter. 
+  "Send block-or-clause at point to Python3 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "block-or-clause" 'python3 nil 'switch))
 
 (defun py-execute-block-or-clause-python3-no-switch ()
-  "Send block-or-clause at point to Python3 interpreter. 
+  "Send block-or-clause at point to Python3 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13601,39 +13768,39 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "def" shell t switch))
 
 (defun py-execute-def-python ()
-  "Send def at point to default interpreter. 
+  "Send def at point to default interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "def" 'python nil nil))
 
 (defun py-execute-def-python-switch ()
-  "Send def at point to default interpreter. 
+  "Send def at point to default interpreter.
 
-Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "def" 'python nil 'switch))
 
 (defun py-execute-def-python-no-switch ()
-  "Send def at point to default interpreter. 
+  "Send def at point to default interpreter.
 
-Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p'
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "def" 'python nil 'no-switch))
 
 (defun py-execute-def-python-dedicated ()
-  "Send def at point to default unique interpreter. 
+  "Send def at point to default unique interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "def" 'python t nil))
 
 (defun py-execute-def-python-dedicated-switch ()
-  "Send def at point to default unique interpreter and switch to result. 
+  "Send def at point to default unique interpreter and switch to result.
 
 For `default' see value of `py-shell-name'"
   (interactive)
@@ -13645,14 +13812,14 @@ For `default' see value of `py-shell-name'"
   (py--execute-prepare "def" 'ipython nil nil))
 
 (defun py-execute-def-ipython-switch ()
-  "Send def at point to IPython interpreter. 
+  "Send def at point to IPython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "def" 'ipython nil 'switch))
 
 (defun py-execute-def-ipython-no-switch ()
-  "Send def at point to IPython interpreter. 
+  "Send def at point to IPython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13674,14 +13841,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "def" 'python2 nil nil))
 
 (defun py-execute-def-python2-switch ()
-  "Send def at point to Python2 interpreter. 
+  "Send def at point to Python2 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "def" 'python2 nil 'switch))
 
 (defun py-execute-def-python2-no-switch ()
-  "Send def at point to Python2 interpreter. 
+  "Send def at point to Python2 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13703,14 +13870,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "def" 'jython nil nil))
 
 (defun py-execute-def-jython-switch ()
-  "Send def at point to Jython interpreter. 
+  "Send def at point to Jython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "def" 'jython nil 'switch))
 
 (defun py-execute-def-jython-no-switch ()
-  "Send def at point to Jython interpreter. 
+  "Send def at point to Jython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13732,14 +13899,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "def" 'python3 nil nil))
 
 (defun py-execute-def-python3-switch ()
-  "Send def at point to Python3 interpreter. 
+  "Send def at point to Python3 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "def" 'python3 nil 'switch))
 
 (defun py-execute-def-python3-no-switch ()
-  "Send def at point to Python3 interpreter. 
+  "Send def at point to Python3 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13761,39 +13928,39 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "class" shell t switch))
 
 (defun py-execute-class-python ()
-  "Send class at point to default interpreter. 
+  "Send class at point to default interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "class" 'python nil nil))
 
 (defun py-execute-class-python-switch ()
-  "Send class at point to default interpreter. 
+  "Send class at point to default interpreter.
 
-Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "class" 'python nil 'switch))
 
 (defun py-execute-class-python-no-switch ()
-  "Send class at point to default interpreter. 
+  "Send class at point to default interpreter.
 
-Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p'
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "class" 'python nil 'no-switch))
 
 (defun py-execute-class-python-dedicated ()
-  "Send class at point to default unique interpreter. 
+  "Send class at point to default unique interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "class" 'python t nil))
 
 (defun py-execute-class-python-dedicated-switch ()
-  "Send class at point to default unique interpreter and switch to result. 
+  "Send class at point to default unique interpreter and switch to result.
 
 For `default' see value of `py-shell-name'"
   (interactive)
@@ -13805,14 +13972,14 @@ For `default' see value of `py-shell-name'"
   (py--execute-prepare "class" 'ipython nil nil))
 
 (defun py-execute-class-ipython-switch ()
-  "Send class at point to IPython interpreter. 
+  "Send class at point to IPython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "class" 'ipython nil 'switch))
 
 (defun py-execute-class-ipython-no-switch ()
-  "Send class at point to IPython interpreter. 
+  "Send class at point to IPython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13834,14 +14001,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "class" 'python2 nil nil))
 
 (defun py-execute-class-python2-switch ()
-  "Send class at point to Python2 interpreter. 
+  "Send class at point to Python2 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "class" 'python2 nil 'switch))
 
 (defun py-execute-class-python2-no-switch ()
-  "Send class at point to Python2 interpreter. 
+  "Send class at point to Python2 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13863,14 +14030,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "class" 'jython nil nil))
 
 (defun py-execute-class-jython-switch ()
-  "Send class at point to Jython interpreter. 
+  "Send class at point to Jython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "class" 'jython nil 'switch))
 
 (defun py-execute-class-jython-no-switch ()
-  "Send class at point to Jython interpreter. 
+  "Send class at point to Jython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13892,14 +14059,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "class" 'python3 nil nil))
 
 (defun py-execute-class-python3-switch ()
-  "Send class at point to Python3 interpreter. 
+  "Send class at point to Python3 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "class" 'python3 nil 'switch))
 
 (defun py-execute-class-python3-no-switch ()
-  "Send class at point to Python3 interpreter. 
+  "Send class at point to Python3 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -13921,39 +14088,39 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "region" shell t switch))
 
 (defun py-execute-region-python (beg end)
-  "Send region at point to default interpreter. 
+  "Send region at point to default interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive "r")
   (py--execute-prepare "region" 'python nil nil (or beg (region-beginning)) (or end (region-end))))
 
 (defun py-execute-region-python-switch (beg end)
-  "Send region at point to default interpreter. 
+  "Send region at point to default interpreter.
 
-Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'.
 
 For `default' see value of `py-shell-name'"
   (interactive "r")
   (py--execute-prepare "region" 'python nil 'switch (or beg (region-beginning)) (or end (region-end))))
 
 (defun py-execute-region-python-no-switch (beg end)
-  "Send region at point to default interpreter. 
+  "Send region at point to default interpreter.
 
-Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p'
 
 For `default' see value of `py-shell-name'"
   (interactive "r")
   (py--execute-prepare "region" 'python nil 'no-switch (or beg (region-beginning)) (or end (region-end))))
 
 (defun py-execute-region-python-dedicated (beg end)
-  "Send region at point to default unique interpreter. 
+  "Send region at point to default unique interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive "r")
   (py--execute-prepare "region" 'python t nil (or beg (region-beginning)) (or end (region-end))))
 
 (defun py-execute-region-python-dedicated-switch (beg end)
-  "Send region at point to default unique interpreter and switch to result. 
+  "Send region at point to default unique interpreter and switch to result.
 
 For `default' see value of `py-shell-name'"
   (interactive "r")
@@ -13965,14 +14132,14 @@ For `default' see value of `py-shell-name'"
   (py--execute-prepare "region" 'ipython nil nil (or beg (region-beginning)) (or end (region-end))))
 
 (defun py-execute-region-ipython-switch (beg end)
-  "Send region at point to IPython interpreter. 
+  "Send region at point to IPython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive "r")
   (py--execute-prepare "region" 'ipython nil 'switch (or beg (region-beginning)) (or end (region-end))))
 
 (defun py-execute-region-ipython-no-switch (beg end)
-  "Send region at point to IPython interpreter. 
+  "Send region at point to IPython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive "r")
@@ -13994,14 +14161,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "region" 'python2 nil nil (or beg (region-beginning)) (or end (region-end))))
 
 (defun py-execute-region-python2-switch (beg end)
-  "Send region at point to Python2 interpreter. 
+  "Send region at point to Python2 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive "r")
   (py--execute-prepare "region" 'python2 nil 'switch (or beg (region-beginning)) (or end (region-end))))
 
 (defun py-execute-region-python2-no-switch (beg end)
-  "Send region at point to Python2 interpreter. 
+  "Send region at point to Python2 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive "r")
@@ -14023,14 +14190,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "region" 'jython nil nil (or beg (region-beginning)) (or end (region-end))))
 
 (defun py-execute-region-jython-switch (beg end)
-  "Send region at point to Jython interpreter. 
+  "Send region at point to Jython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive "r")
   (py--execute-prepare "region" 'jython nil 'switch (or beg (region-beginning)) (or end (region-end))))
 
 (defun py-execute-region-jython-no-switch (beg end)
-  "Send region at point to Jython interpreter. 
+  "Send region at point to Jython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive "r")
@@ -14052,14 +14219,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "region" 'python3 nil nil (or beg (region-beginning)) (or end (region-end))))
 
 (defun py-execute-region-python3-switch (beg end)
-  "Send region at point to Python3 interpreter. 
+  "Send region at point to Python3 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive "r")
   (py--execute-prepare "region" 'python3 nil 'switch (or beg (region-beginning)) (or end (region-end))))
 
 (defun py-execute-region-python3-no-switch (beg end)
-  "Send region at point to Python3 interpreter. 
+  "Send region at point to Python3 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive "r")
@@ -14081,7 +14248,7 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "buffer" shell t switch))
 
 (defun py-execute-buffer-python ()
-  "Send buffer at point to default interpreter. 
+  "Send buffer at point to default interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
@@ -14097,9 +14264,9 @@ For `default' see value of `py-shell-name'"
       (py--execute-prepare "buffer" 'python nil nil (point-min) (point-max)))))
 
 (defun py-execute-buffer-python-switch ()
-  "Send buffer at point to default interpreter. 
+  "Send buffer at point to default interpreter.
 
-Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'.
 
 For `default' see value of `py-shell-name'"
   (interactive)
@@ -14115,9 +14282,9 @@ For `default' see value of `py-shell-name'"
       (py--execute-prepare "buffer" 'python nil 'switch (point-min) (point-max)))))
 
 (defun py-execute-buffer-python-no-switch ()
-  "Send buffer at point to default interpreter. 
+  "Send buffer at point to default interpreter.
 
-Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p'
 
 For `default' see value of `py-shell-name'"
   (interactive)
@@ -14133,7 +14300,7 @@ For `default' see value of `py-shell-name'"
       (py--execute-prepare "buffer" 'python nil 'no-switch (point-min) (point-max)))))
 
 (defun py-execute-buffer-python-dedicated ()
-  "Send buffer at point to default unique interpreter. 
+  "Send buffer at point to default unique interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
@@ -14149,7 +14316,7 @@ For `default' see value of `py-shell-name'"
       (py--execute-prepare "buffer" 'python t nil (point-min) (point-max)))))
 
 (defun py-execute-buffer-python-dedicated-switch ()
-  "Send buffer at point to default unique interpreter and switch to result. 
+  "Send buffer at point to default unique interpreter and switch to result.
 
 For `default' see value of `py-shell-name'"
   (interactive)
@@ -14179,7 +14346,7 @@ For `default' see value of `py-shell-name'"
       (py--execute-prepare "buffer" 'ipython nil nil (point-min) (point-max)))))
 
 (defun py-execute-buffer-ipython-switch ()
-  "Send buffer at point to IPython interpreter. 
+  "Send buffer at point to IPython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
@@ -14195,7 +14362,7 @@ Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
       (py--execute-prepare "buffer" 'ipython nil 'switch (point-min) (point-max)))))
 
 (defun py-execute-buffer-ipython-no-switch ()
-  "Send buffer at point to IPython interpreter. 
+  "Send buffer at point to IPython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -14253,7 +14420,7 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
       (py--execute-prepare "buffer" 'python2 nil nil (point-min) (point-max)))))
 
 (defun py-execute-buffer-python2-switch ()
-  "Send buffer at point to Python2 interpreter. 
+  "Send buffer at point to Python2 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
@@ -14269,7 +14436,7 @@ Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
       (py--execute-prepare "buffer" 'python2 nil 'switch (point-min) (point-max)))))
 
 (defun py-execute-buffer-python2-no-switch ()
-  "Send buffer at point to Python2 interpreter. 
+  "Send buffer at point to Python2 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -14327,7 +14494,7 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
       (py--execute-prepare "buffer" 'jython nil nil (point-min) (point-max)))))
 
 (defun py-execute-buffer-jython-switch ()
-  "Send buffer at point to Jython interpreter. 
+  "Send buffer at point to Jython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
@@ -14343,7 +14510,7 @@ Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
       (py--execute-prepare "buffer" 'jython nil 'switch (point-min) (point-max)))))
 
 (defun py-execute-buffer-jython-no-switch ()
-  "Send buffer at point to Jython interpreter. 
+  "Send buffer at point to Jython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -14401,7 +14568,7 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
       (py--execute-prepare "buffer" 'python3 nil nil (point-min) (point-max)))))
 
 (defun py-execute-buffer-python3-switch ()
-  "Send buffer at point to Python3 interpreter. 
+  "Send buffer at point to Python3 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
@@ -14417,7 +14584,7 @@ Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
       (py--execute-prepare "buffer" 'python3 nil 'switch (point-min) (point-max)))))
 
 (defun py-execute-buffer-python3-no-switch ()
-  "Send buffer at point to Python3 interpreter. 
+  "Send buffer at point to Python3 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -14466,39 +14633,39 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "expression" shell t switch))
 
 (defun py-execute-expression-python ()
-  "Send expression at point to default interpreter. 
+  "Send expression at point to default interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "expression" 'python nil nil))
 
 (defun py-execute-expression-python-switch ()
-  "Send expression at point to default interpreter. 
+  "Send expression at point to default interpreter.
 
-Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "expression" 'python nil 'switch))
 
 (defun py-execute-expression-python-no-switch ()
-  "Send expression at point to default interpreter. 
+  "Send expression at point to default interpreter.
 
-Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p'
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "expression" 'python nil 'no-switch))
 
 (defun py-execute-expression-python-dedicated ()
-  "Send expression at point to default unique interpreter. 
+  "Send expression at point to default unique interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "expression" 'python t nil))
 
 (defun py-execute-expression-python-dedicated-switch ()
-  "Send expression at point to default unique interpreter and switch to result. 
+  "Send expression at point to default unique interpreter and switch to result.
 
 For `default' see value of `py-shell-name'"
   (interactive)
@@ -14510,14 +14677,14 @@ For `default' see value of `py-shell-name'"
   (py--execute-prepare "expression" 'ipython nil nil))
 
 (defun py-execute-expression-ipython-switch ()
-  "Send expression at point to IPython interpreter. 
+  "Send expression at point to IPython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "expression" 'ipython nil 'switch))
 
 (defun py-execute-expression-ipython-no-switch ()
-  "Send expression at point to IPython interpreter. 
+  "Send expression at point to IPython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -14539,14 +14706,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "expression" 'python2 nil nil))
 
 (defun py-execute-expression-python2-switch ()
-  "Send expression at point to Python2 interpreter. 
+  "Send expression at point to Python2 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "expression" 'python2 nil 'switch))
 
 (defun py-execute-expression-python2-no-switch ()
-  "Send expression at point to Python2 interpreter. 
+  "Send expression at point to Python2 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -14568,14 +14735,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "expression" 'jython nil nil))
 
 (defun py-execute-expression-jython-switch ()
-  "Send expression at point to Jython interpreter. 
+  "Send expression at point to Jython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "expression" 'jython nil 'switch))
 
 (defun py-execute-expression-jython-no-switch ()
-  "Send expression at point to Jython interpreter. 
+  "Send expression at point to Jython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -14597,14 +14764,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "expression" 'python3 nil nil))
 
 (defun py-execute-expression-python3-switch ()
-  "Send expression at point to Python3 interpreter. 
+  "Send expression at point to Python3 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "expression" 'python3 nil 'switch))
 
 (defun py-execute-expression-python3-no-switch ()
-  "Send expression at point to Python3 interpreter. 
+  "Send expression at point to Python3 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -14626,39 +14793,39 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "partial-expression" shell t switch))
 
 (defun py-execute-partial-expression-python ()
-  "Send partial-expression at point to default interpreter. 
+  "Send partial-expression at point to default interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "partial-expression" 'python nil nil))
 
 (defun py-execute-partial-expression-python-switch ()
-  "Send partial-expression at point to default interpreter. 
+  "Send partial-expression at point to default interpreter.
 
-Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "partial-expression" 'python nil 'switch))
 
 (defun py-execute-partial-expression-python-no-switch ()
-  "Send partial-expression at point to default interpreter. 
+  "Send partial-expression at point to default interpreter.
 
-Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p'
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "partial-expression" 'python nil 'no-switch))
 
 (defun py-execute-partial-expression-python-dedicated ()
-  "Send partial-expression at point to default unique interpreter. 
+  "Send partial-expression at point to default unique interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "partial-expression" 'python t nil))
 
 (defun py-execute-partial-expression-python-dedicated-switch ()
-  "Send partial-expression at point to default unique interpreter and switch to result. 
+  "Send partial-expression at point to default unique interpreter and switch to result.
 
 For `default' see value of `py-shell-name'"
   (interactive)
@@ -14670,14 +14837,14 @@ For `default' see value of `py-shell-name'"
   (py--execute-prepare "partial-expression" 'ipython nil nil))
 
 (defun py-execute-partial-expression-ipython-switch ()
-  "Send partial-expression at point to IPython interpreter. 
+  "Send partial-expression at point to IPython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "partial-expression" 'ipython nil 'switch))
 
 (defun py-execute-partial-expression-ipython-no-switch ()
-  "Send partial-expression at point to IPython interpreter. 
+  "Send partial-expression at point to IPython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -14699,14 +14866,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "partial-expression" 'python2 nil nil))
 
 (defun py-execute-partial-expression-python2-switch ()
-  "Send partial-expression at point to Python2 interpreter. 
+  "Send partial-expression at point to Python2 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "partial-expression" 'python2 nil 'switch))
 
 (defun py-execute-partial-expression-python2-no-switch ()
-  "Send partial-expression at point to Python2 interpreter. 
+  "Send partial-expression at point to Python2 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -14728,14 +14895,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "partial-expression" 'jython nil nil))
 
 (defun py-execute-partial-expression-jython-switch ()
-  "Send partial-expression at point to Jython interpreter. 
+  "Send partial-expression at point to Jython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "partial-expression" 'jython nil 'switch))
 
 (defun py-execute-partial-expression-jython-no-switch ()
-  "Send partial-expression at point to Jython interpreter. 
+  "Send partial-expression at point to Jython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -14757,14 +14924,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "partial-expression" 'python3 nil nil))
 
 (defun py-execute-partial-expression-python3-switch ()
-  "Send partial-expression at point to Python3 interpreter. 
+  "Send partial-expression at point to Python3 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "partial-expression" 'python3 nil 'switch))
 
 (defun py-execute-partial-expression-python3-no-switch ()
-  "Send partial-expression at point to Python3 interpreter. 
+  "Send partial-expression at point to Python3 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -14786,39 +14953,39 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "line" shell t switch))
 
 (defun py-execute-line-python ()
-  "Send line at point to default interpreter. 
+  "Send line at point to default interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "line" 'python nil nil))
 
 (defun py-execute-line-python-switch ()
-  "Send line at point to default interpreter. 
+  "Send line at point to default interpreter.
 
-Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "line" 'python nil 'switch))
 
 (defun py-execute-line-python-no-switch ()
-  "Send line at point to default interpreter. 
+  "Send line at point to default interpreter.
 
-Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p'
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "line" 'python nil 'no-switch))
 
 (defun py-execute-line-python-dedicated ()
-  "Send line at point to default unique interpreter. 
+  "Send line at point to default unique interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "line" 'python t nil))
 
 (defun py-execute-line-python-dedicated-switch ()
-  "Send line at point to default unique interpreter and switch to result. 
+  "Send line at point to default unique interpreter and switch to result.
 
 For `default' see value of `py-shell-name'"
   (interactive)
@@ -14830,14 +14997,14 @@ For `default' see value of `py-shell-name'"
   (py--execute-prepare "line" 'ipython nil nil))
 
 (defun py-execute-line-ipython-switch ()
-  "Send line at point to IPython interpreter. 
+  "Send line at point to IPython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "line" 'ipython nil 'switch))
 
 (defun py-execute-line-ipython-no-switch ()
-  "Send line at point to IPython interpreter. 
+  "Send line at point to IPython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -14859,14 +15026,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "line" 'python2 nil nil))
 
 (defun py-execute-line-python2-switch ()
-  "Send line at point to Python2 interpreter. 
+  "Send line at point to Python2 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "line" 'python2 nil 'switch))
 
 (defun py-execute-line-python2-no-switch ()
-  "Send line at point to Python2 interpreter. 
+  "Send line at point to Python2 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -14888,14 +15055,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "line" 'jython nil nil))
 
 (defun py-execute-line-jython-switch ()
-  "Send line at point to Jython interpreter. 
+  "Send line at point to Jython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "line" 'jython nil 'switch))
 
 (defun py-execute-line-jython-no-switch ()
-  "Send line at point to Jython interpreter. 
+  "Send line at point to Jython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -14917,14 +15084,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "line" 'python3 nil nil))
 
 (defun py-execute-line-python3-switch ()
-  "Send line at point to Python3 interpreter. 
+  "Send line at point to Python3 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "line" 'python3 nil 'switch))
 
 (defun py-execute-line-python3-no-switch ()
-  "Send line at point to Python3 interpreter. 
+  "Send line at point to Python3 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -14946,39 +15113,39 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "top-level" shell t switch))
 
 (defun py-execute-top-level-python ()
-  "Send top-level at point to default interpreter. 
+  "Send top-level at point to default interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "top-level" 'python nil nil))
 
 (defun py-execute-top-level-python-switch ()
-  "Send top-level at point to default interpreter. 
+  "Send top-level at point to default interpreter.
 
-Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
+Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "top-level" 'python nil 'switch))
 
 (defun py-execute-top-level-python-no-switch ()
-  "Send top-level at point to default interpreter. 
+  "Send top-level at point to default interpreter.
 
-Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
+Keep current buffer. Ignores `py-switch-buffers-on-execute-p'
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "top-level" 'python nil 'no-switch))
 
 (defun py-execute-top-level-python-dedicated ()
-  "Send top-level at point to default unique interpreter. 
+  "Send top-level at point to default unique interpreter.
 
 For `default' see value of `py-shell-name'"
   (interactive)
   (py--execute-prepare "top-level" 'python t nil))
 
 (defun py-execute-top-level-python-dedicated-switch ()
-  "Send top-level at point to default unique interpreter and switch to result. 
+  "Send top-level at point to default unique interpreter and switch to result.
 
 For `default' see value of `py-shell-name'"
   (interactive)
@@ -14990,14 +15157,14 @@ For `default' see value of `py-shell-name'"
   (py--execute-prepare "top-level" 'ipython nil nil))
 
 (defun py-execute-top-level-ipython-switch ()
-  "Send top-level at point to IPython interpreter. 
+  "Send top-level at point to IPython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "top-level" 'ipython nil 'switch))
 
 (defun py-execute-top-level-ipython-no-switch ()
-  "Send top-level at point to IPython interpreter. 
+  "Send top-level at point to IPython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -15019,14 +15186,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "top-level" 'python2 nil nil))
 
 (defun py-execute-top-level-python2-switch ()
-  "Send top-level at point to Python2 interpreter. 
+  "Send top-level at point to Python2 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "top-level" 'python2 nil 'switch))
 
 (defun py-execute-top-level-python2-no-switch ()
-  "Send top-level at point to Python2 interpreter. 
+  "Send top-level at point to Python2 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -15048,14 +15215,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "top-level" 'jython nil nil))
 
 (defun py-execute-top-level-jython-switch ()
-  "Send top-level at point to Jython interpreter. 
+  "Send top-level at point to Jython interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "top-level" 'jython nil 'switch))
 
 (defun py-execute-top-level-jython-no-switch ()
-  "Send top-level at point to Jython interpreter. 
+  "Send top-level at point to Jython interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -15077,14 +15244,14 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (py--execute-prepare "top-level" 'python3 nil nil))
 
 (defun py-execute-top-level-python3-switch ()
-  "Send top-level at point to Python3 interpreter. 
+  "Send top-level at point to Python3 interpreter.
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
   (py--execute-prepare "top-level" 'python3 nil 'switch))
 
 (defun py-execute-top-level-python3-no-switch ()
-  "Send top-level at point to Python3 interpreter. 
+  "Send top-level at point to Python3 interpreter.
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
@@ -16530,9 +16697,15 @@ Return the process"
   "Set `py-result' according to `py-fast-filter-re'.
 
 Remove trailing newline"
-  (let* ((erg (ansi-color-filter-apply string)))
-    (setq py-result (replace-regexp-in-string (format "[ \n]*%s[ \n]*" py-fast-filter-re) "" erg))
-    py-result))
+    (replace-regexp-in-string (format "[ \n]*%s[ \n]*" py-fast-filter-re) "" (ansi-color-filter-apply string)))
+
+;; (defun py--filter-result (string)
+;;   "Set `py-result' according to `py-fast-filter-re'.
+
+;; Remove trailing newline"
+;;   (let* ((erg (ansi-color-filter-apply string)))
+;;     (setq py-result (replace-regexp-in-string (format "[ \n]*%s[ \n]*" py-fast-filter-re) "" erg))
+;;     py-result))
 
 (defun py--fast-send-string-no-output (string proc output-buffer)
   (with-current-buffer output-buffer
@@ -16565,6 +16738,7 @@ Remove trailing newline"
       ;; sets py-result
       (unless py-ignore-result-p
 	(setq py-result (py--filter-result (py--fetch-result orig))))
+
       (when return
 	py-result))))
 
@@ -16685,11 +16859,10 @@ Output-buffer is not in comint-mode "
 
 ;; python-components-auto-fill
 
-(defvar auto-fill-mode-orig (auto-fill-mode)
+(defvar py-auto-fill-mode-orig (auto-fill-mode)
   "Store the original state of auto-fill-mode. ")
 
-(defvar fill-column-orig fill-column
-  "Store the original value of fill-column. ")
+;; py-fill-column-orig  already defined
 
 (defun py-comment-auto-fill ()
   "Toggles comment-auto-fill mode"
@@ -17046,267 +17219,155 @@ If `default-directory' is a remote file name, it is also prompted
 to change if called with a prefix arg.
 
 . "]
-                  ("Other"
-                   :help "Alternative Python Shells"
+ 		  ("Other"
+		   :help "Alternative Python Shells"
 
-                   ["ipython" ipython
-                    :help "`ipython'
-Start an IPython interpreter.
+		   ["Python2" python2
+		    :help " `python2'
 
-Optional C-u prompts for options to pass to the IPython interpreter. See `py-python-command-args'."]
-                   ["python3" python3
-                    :help "`python3'
-Start an Python3 interpreter.
-
-Optional C-u prompts for options to pass to the Python3 interpreter. See `py-python-command-args'."]
-                   ["python2" python2
-                    :help "`python2'
 Start an Python2 interpreter.
 
-Optional C-u prompts for options to pass to the Python2 interpreter. See `py-python-command-args'."]
-                   ["python2.7" python2.7
-                    :help "`python2.7'
-Start an Python2.7 interpreter.
+Optional C-u prompts for path to the interpreter. "]
 
-Optional C-u prompts for options to pass to the Python2.7 interpreter. See `py-python-command-args'."]
-                   ["jython" jython
-                    :help "`jython'
+		   ["Python3" python3
+		    :help " `python3'
+
+Start an Python3 interpreter.
+
+Optional C-u prompts for path to the interpreter. "]
+
+		   ["Ipython" ipython
+		    :help " `ipython'
+
+Start an IPython interpreter.
+
+Optional C-u prompts for path to the interpreter. "]
+
+		   ["Ipython2.7" ipython2.7
+		    :help " `ipython2.7'
+
+Start an IPython2.7 interpreter.
+
+Optional C-u prompts for path to the interpreter. "]
+
+		   ["Ipython3" ipython3
+		    :help " `ipython3'
+
+Start an IPython3 interpreter.
+
+Optional C-u prompts for path to the interpreter. "]
+
+		   ["Jython" jython
+		    :help " `jython'
+
 Start an Jython interpreter.
 
-Optional C-u prompts for options to pass to the Jython interpreter. See `py-python-command-args'."]
+Optional C-u prompts for path to the interpreter. "]
 
-                   ["python3.3" python3.3
-                    :help "`python3.3'
-Start an Python3.3 interpreter.
+		   ("Dedicated"
+		    :help "Dedicated Shells"
+		    ["Python dedicated" python-dedicated
+		     :help " `python-dedicated'
 
-Optional C-u prompts for options to pass to the Python3.3 interpreter. See `py-python-command-args'."]
-
-                   ["python3.4" python3.4
-                    :help "`python3.3'
-Start an Python3.4 interpreter.
-
-Optional C-u prompts for options to pass to the Python3.4 interpreter. See `py-python-command-args'."]
-
-                   "-"
-                   ["python-dedicated" python-dedicated
-                    :help "`python-dedicated'
 Start an unique Python interpreter in another window.
 
-Optional C-u prompts for options to pass to the Python interpreter. See `py-python-command-args'."]
-                   ["ipython-dedicated" ipython-dedicated
-                    :help "`ipython-dedicated'
-Start an unique IPython interpreter in another window.
+Optional C-u prompts for path to the interpreter. "]
 
-Optional C-u prompts for options to pass to the IPython interpreter. See `py-python-command-args'."]
-                   ["python3-dedicated" python3-dedicated
-                    :help "`python3-dedicated'
-Start an unique Python3 interpreter in another window.
+		    ["Python2 dedicated" python2-dedicated
+		     :help " `python2-dedicated'
 
-Optional C-u prompts for options to pass to the Python3 interpreter. See `py-python-command-args'."]
-                   ["python2-dedicated" python2-dedicated
-                    :help "`python2-dedicated'
 Start an unique Python2 interpreter in another window.
 
-Optional C-u prompts for options to pass to the Python2 interpreter. See `py-python-command-args'."]
-                   ["python2.7-dedicated" python2.7-dedicated
-                    :help "`python2'.7-dedicated
-Start an unique Python2.7 interpreter in another window.
+Optional C-u prompts for path to the interpreter. "]
 
-Optional C-u prompts for options to pass to the Python2.7 interpreter. See `py-python-command-args'."]
-                   ["jython-dedicated" jython-dedicated
-                    :help "`jython-dedicated'
+		    ["Python3 dedicated" python3-dedicated
+		     :help " `python3-dedicated'
+
+Start an unique Python3 interpreter in another window.
+
+Optional C-u prompts for path to the interpreter. "]
+
+		    ["Ipython dedicated" ipython-dedicated
+		     :help " `ipython-dedicated'
+
+Start an unique IPython interpreter in another window.
+
+Optional C-u prompts for path to the interpreter. "]
+
+		    ["Ipython2.7 dedicated" ipython2.7-dedicated
+		     :help " `ipython2.7-dedicated'
+
+Start an unique IPython2.7 interpreter in another window.
+
+Optional C-u prompts for path to the interpreter. "]
+
+		    ["Ipython3 dedicated" ipython3-dedicated
+		     :help " `ipython3-dedicated'
+
+Start an unique IPython3 interpreter in another window.
+
+Optional C-u prompts for path to the interpreter. "]
+
+		    ["Jython dedicated" jython-dedicated
+		     :help " `jython-dedicated'
+
 Start an unique Jython interpreter in another window.
 
-Optional C-u prompts for options to pass to the Jython interpreter. See `py-python-command-args'."]
+Optional C-u prompts for path to the interpreter. "]
+		    )
 
-                   "-"
-                   ("Ignoring defaults "
-                    :help "Commands will ignore default setting of
-`py-switch-buffers-on-execute-p' and `py-split-window-on-execute'"
+		   ("Switch"
+		    :help "Switch to shell"
+		    ["Python switch" python-switch
+		     :help " `python-switch'
 
-                    ["Execute file python switch" py-execute-file-python-switch
-                     :help " `py-execute-file-python-switch'
-Send file to a Python interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]
+Switch to Python interpreter in another window.
 
-                    ["Execute file python no-switch" py-execute-file-python-no-switch
-                     :help " `py-execute-file-python-no-switch'
-Send file to a Python interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "nil". "]
+Optional C-u prompts for path to the interpreter. "]
 
-                    ["Execute file python dedicated" py-execute-file-python-dedicated
-                     :help " `py-execute-file-python-dedicated'
-Send file to a Python interpreter.
+		    ["Python2 switch" python2-switch
+		     :help " `python2-switch'
 
-Uses a dedicated shell. "]
+Switch to Python2 interpreter in another window.
 
-                    ["Execute file python dedicated switch" py-execute-file-python-dedicated-switch
-                     :help " `py-execute-file-python-dedicated-switch'
-Send file to a Python interpreter.
+Optional C-u prompts for path to the interpreter. "]
 
-Uses a dedicated shell.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]
+		    ["Python3 switch" python3-switch
+		     :help " `python3-switch'
 
-                    ["Execute file ipython switch" py-execute-file-ipython-switch
-                     :help " `py-execute-file-ipython-switch'
-Send file to a Ipython interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]
+Switch to Python3 interpreter in another window.
 
-                    ["Execute file ipython no-switch" py-execute-file-ipython-no-switch
-                     :help " `py-execute-file-ipython-no-switch'
-Send file to a Ipython interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "nil". "]
+Optional C-u prompts for path to the interpreter. "]
 
-                    ["Execute file ipython dedicated" py-execute-file-ipython-dedicated
-                     :help " `py-execute-file-ipython-dedicated'
-Send file to a Ipython interpreter.
+		    ["Ipython switch" ipython-switch
+		     :help " `ipython-switch'
 
-Uses a dedicated shell. "]
+Switch to IPython interpreter in another window.
 
-                    ["Execute file ipython dedicated switch" py-execute-file-ipython-dedicated-switch
-                     :help " `py-execute-file-ipython-dedicated-switch'
-Send file to a Ipython interpreter.
+Optional C-u prompts for path to the interpreter. "]
 
-Uses a dedicated shell.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]
+		    ["Ipython2.7 switch" ipython2.7-switch
+		     :help " `ipython2.7-switch'
 
-                    ["Execute file python3 switch" py-execute-file-python3-switch
-                     :help " `py-execute-file-python3-switch'
-Send file to a Python3 interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]
+Switch to IPython2.7 interpreter in another window.
 
-                    ["Execute file python3 no-switch" py-execute-file-python3-no-switch
-                     :help " `py-execute-file-python3-no-switch'
-Send file to a Python3 interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "nil". "]
+Optional C-u prompts for path to the interpreter. "]
 
-                    ["Execute file python3 dedicated" py-execute-file-python3-dedicated
-                     :help " `py-execute-file-python3-dedicated'
-Send file to a Python3 interpreter.
+		    ["Ipython3 switch" ipython3-switch
+		     :help " `ipython3-switch'
 
-Uses a dedicated shell. "]
+Switch to IPython3 interpreter in another window.
 
-                    ["Execute file python3 dedicated switch" py-execute-file-python3-dedicated-switch
-                     :help " `py-execute-file-python3-dedicated-switch'
-Send file to a Python3 interpreter.
+Optional C-u prompts for path to the interpreter. "]
 
-Uses a dedicated shell.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]
+		    ["Jython switch" jython-switch
+		     :help " `jython-switch'
 
-                    ["Execute file python2 switch" py-execute-file-python2-switch
-                     :help " `py-execute-file-python2-switch'
-Send file to a Python2 interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]
+Switch to Jython interpreter in another window.
 
-                    ["Execute file python2 no-switch" py-execute-file-python2-no-switch
-                     :help " `py-execute-file-python2-no-switch'
-Send file to a Python2 interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "nil". "]
+Optional C-u prompts for path to the interpreter. "]
+		    ))
 
-                    ["Execute file python2 dedicated" py-execute-file-python2-dedicated
-                     :help " `py-execute-file-python2-dedicated'
-Send file to a Python2 interpreter.
-
-Uses a dedicated shell. "]
-
-                    ["Execute file python2 dedicated switch" py-execute-file-python2-dedicated-switch
-                     :help " `py-execute-file-python2-dedicated-switch'
-Send file to a Python2 interpreter.
-
-Uses a dedicated shell.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]
-
-                    ["Execute file python2.7 switch" py-execute-file-python2.7-switch
-                     :help " `py-execute-file-python2.7-switch'
-Send file to a Python2.7 interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]
-
-                    ["Execute file python2.7 no-switch" py-execute-file-python2.7-no-switch
-                     :help " `py-execute-file-python2.7-no-switch'
-Send file to a Python2.7 interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "nil". "]
-
-                    ["Execute file python2.7 dedicated" py-execute-file-python2.7-dedicated
-                     :help " `py-execute-file-python2.7-dedicated'
-Send file to a Python2.7 interpreter.
-
-Uses a dedicated shell. "]
-
-                    ["Execute file python2.7 dedicated switch" py-execute-file-python2.7-dedicated-switch
-                     :help " `py-execute-file-python2.7-dedicated-switch'
-Send file to a Python2.7 interpreter.
-
-Uses a dedicated shell.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]
-
-                    ["Execute file jython switch" py-execute-file-jython-switch
-                     :help " `py-execute-file-jython-switch'
-Send file to a Jython interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]
-
-                    ["Execute file jython no-switch" py-execute-file-jython-no-switch
-                     :help " `py-execute-file-jython-no-switch'
-Send file to a Jython interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "nil". "]
-
-                    ["Execute file jython dedicated" py-execute-file-jython-dedicated
-                     :help " `py-execute-file-jython-dedicated'
-Send file to a Jython interpreter.
-
-Uses a dedicated shell. "]
-
-                    ["Execute file jython dedicated switch" py-execute-file-jython-dedicated-switch
-                     :help " `py-execute-file-jython-dedicated-switch'
-Send file to a Jython interpreter.
-
-Uses a dedicated shell.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]
-
-                    ["Execute file python3.3 switch" py-execute-file-python3.3-switch
-                     :help " `py-execute-file-python3.3-switch'
-Send file to a Python3.3 interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]
-
-                    ["Execute file python3.3 no-switch" py-execute-file-python3.3-no-switch
-                     :help " `py-execute-file-python3.3-no-switch'
-Send file to a Python3.3 interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "nil". "]
-
-                    ["Execute file python3.3 dedicated" py-execute-file-python3.3-dedicated
-                     :help " `py-execute-file-python3.3-dedicated'
-Send file to a Python3.3 interpreter.
-
-Uses a dedicated shell. "]
-
-                    ["Execute file python3.3 dedicated switch" py-execute-file-python3.3-dedicated-switch
-                     :help " `py-execute-file-python3.3-dedicated-switch'
-Send file to a Python3.3 interpreter.
-
-Uses a dedicated shell.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]
-
-                    ["Execute file bpython switch" py-execute-file-bpython-switch
-                     :help " `py-execute-file-bpython-switch'
-Send file to a Bpython interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]
-
-                    ["Execute file bpython no-switch" py-execute-file-bpython-no-switch
-                     :help " `py-execute-file-bpython-no-switch'
-Send file to a Bpython interpreter.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "nil". "]
-
-                    ["Execute file bpython dedicated" py-execute-file-bpython-dedicated
-                     :help " `py-execute-file-bpython-dedicated'
-Send file to a Bpython interpreter.
-
-Uses a dedicated shell. "]
-
-                    ["Execute file bpython dedicated switch" py-execute-file-bpython-dedicated-switch
-                     :help " `py-execute-file-bpython-dedicated-switch'
-Send file to a Bpython interpreter.
-
-Uses a dedicated shell.
-Ignores default of `py-switch-buffers-on-execute-p', uses it with value "non-nil". "]))
                   "-"
 
 		  ["Toggle shell" py-toggle-shell
@@ -19600,14 +19661,6 @@ In experimental state yet "
 
                     ("Completion"
 
-                     ["No completion calls dabbrev expand "
-                      (setq py-no-completion-calls-dabbrev-expand-p
-                            (not py-no-completion-calls-dabbrev-expand-p))
-                      :help "If completion function should call dabbrev-expand when no completion found\. Default is `t'
-
-See also `py-indent-no-completion-p'Use `M-x customize-variable' to set it permanently"
-                      :style toggle :selected py-no-completion-calls-dabbrev-expand-p]
-
                      ["Set Pymacs-based complete keymap "
                       (setq py-set-complete-keymap-p
                             (not py-set-complete-keymap-p))
@@ -19617,20 +19670,12 @@ Default is nil.
 See also resp. edit `py-complete-set-keymap' Use `M-x customize-variable' to set it permanently"
                       :style toggle :selected py-set-complete-keymap-p]
 
-                     ["No completion calls dabbrev expand "
-                      (setq py-no-completion-calls-dabbrev-expand-p
-                            (not py-no-completion-calls-dabbrev-expand-p))
-                      :help "If completion function should call dabbrev-expand when no completion found. Default is `t'
-
-See also `py-indent-no-completion-p'Use `M-x customize-variable' to set it permanently"
-                      :style toggle :selected py-no-completion-calls-dabbrev-expand-p]
-
                      ["Indent no completion "
                       (setq py-indent-no-completion-p
                             (not py-indent-no-completion-p))
                       :help "If completion function should indent when no completion found. Default is `t'
 
-See also `py-no-completion-calls-dabbrev-expand-p'Use `M-x customize-variable' to set it permanently"
+Use `M-x customize-variable' to set it permanently"
                       :style toggle :selected py-indent-no-completion-p]
 
                      ["Company pycomplete "
@@ -20317,12 +20362,12 @@ Default is nil. Use `M-x customize-variable' to set it permanently"
                      :style toggle :selected py-verbose-p]
 
                     ["Empty comment line separates paragraph "
-                     (setq empty-comment-line-separates-paragraph-p
-                           (not empty-comment-line-separates-paragraph-p))
+                     (setq py-empty-comment-line-separates-paragraph-p
+                           (not py-empty-comment-line-separates-paragraph-p))
                      :help "Consider paragraph start/end lines with nothing inside but comment sign.
 
 Default is non-nilUse `M-x customize-variable' to set it permanently"
-                     :style toggle :selected empty-comment-line-separates-paragraph-p]
+                     :style toggle :selected py-empty-comment-line-separates-paragraph-p]
 
                     ["Org cycle "
                      (setq py-org-cycle-p
@@ -22991,14 +23036,6 @@ Otherwise value of py-python-history is used. Use `M-x customize-variable' to se
 
 		("Completion"
 
-		 ["No completion calls dabbrev expand "
-		  (setq py-no-completion-calls-dabbrev-expand-p
-			(not py-no-completion-calls-dabbrev-expand-p))
-		  :help "If completion function should call dabbrev-expand when no completion found\. Default is `t'
-
-See also `py-indent-no-completion-p'Use `M-x customize-variable' to set it permanently"
-		  :style toggle :selected py-no-completion-calls-dabbrev-expand-p]
-
 		 ["Set Pymacs-based complete keymap "
 		  (setq py-set-complete-keymap-p
 			(not py-set-complete-keymap-p))
@@ -23008,20 +23045,12 @@ Default is nil.
 See also resp. edit `py-complete-set-keymap' Use `M-x customize-variable' to set it permanently"
 		  :style toggle :selected py-set-complete-keymap-p]
 
-		 ["No completion calls dabbrev expand "
-		  (setq py-no-completion-calls-dabbrev-expand-p
-			(not py-no-completion-calls-dabbrev-expand-p))
-		  :help "If completion function should call dabbrev-expand when no completion found. Default is `t'
-
-See also `py-indent-no-completion-p'Use `M-x customize-variable' to set it permanently"
-		  :style toggle :selected py-no-completion-calls-dabbrev-expand-p]
-
 		 ["Indent no completion "
 		  (setq py-indent-no-completion-p
 			(not py-indent-no-completion-p))
 		  :help "If completion function should indent when no completion found. Default is `t'
 
-See also `py-no-completion-calls-dabbrev-expand-p'Use `M-x customize-variable' to set it permanently"
+Use `M-x customize-variable' to set it permanently"
 		  :style toggle :selected py-indent-no-completion-p]
 
 		 ["Company pycomplete "
@@ -23670,12 +23699,12 @@ Default is nil. Use `M-x customize-variable' to set it permanently"
 		 :style toggle :selected py-verbose-p]
 
 		["Empty comment line separates paragraph "
-		 (setq empty-comment-line-separates-paragraph-p
-		       (not empty-comment-line-separates-paragraph-p))
+		 (setq py-empty-comment-line-separates-paragraph-p
+		       (not py-empty-comment-line-separates-paragraph-p))
 		 :help "Consider paragraph start/end lines with nothing inside but comment sign.
 
 Default is non-nilUse `M-x customize-variable' to set it permanently"
-		 :style toggle :selected empty-comment-line-separates-paragraph-p]
+		 :style toggle :selected py-empty-comment-line-separates-paragraph-p]
 
 		["Org cycle "
 		 (setq py-org-cycle-p
@@ -25103,7 +25132,7 @@ Try to find source definition of function at point"]))))
 
 (defun py-load-skeletons ()
   "Load skeletons from extensions. "
-  (interactive) 
+  (interactive)
   (load (concat py-install-directory "/extensions/python-components-skeletons.el")))
 
 (defun py--kill-emacs-hook ()
@@ -25132,7 +25161,7 @@ If no EXECUTABLE given, `py-shell-name' is used.
 Interactively output of `--version' is displayed. "
   (interactive)
   (let* ((executable (or executable py-shell-name))
-         (erg (string-strip (shell-command-to-string (concat executable " --version")))))
+         (erg (py--string-strip (shell-command-to-string (concat executable " --version")))))
     (when (interactive-p) (message "%s" erg))
     (unless verbose (setq erg (cadr (split-string erg))))
     erg))
@@ -25254,7 +25283,7 @@ Should you need more shells to select, extend this command by adding inside the 
                     ((eq 3 (prefix-numeric-value arg))
                      "python3")
                     ((eq 4 (prefix-numeric-value arg))
-                     (string-strip
+                     (py--string-strip
                       (read-from-minibuffer "Python Shell: " py-shell-name) "\" " "\" "
                       ))
                     ((eq 5 (prefix-numeric-value arg))
@@ -25536,7 +25565,10 @@ Use `defcustom' to keep value across sessions "
   "Kill buffer unconditional, kill buffer-process if existing. "
   (interactive
    (list (current-buffer)))
-  (let (proc kill-buffer-query-functions)
+  (let ((buffer (or (and (bufferp buffer) buffer)
+		    (get-buffer buffer)))
+	proc kill-buffer-query-functions)
+
     (ignore-errors
       (setq proc (get-buffer-process buffer))
       (and proc (kill-process proc))
@@ -25583,7 +25615,7 @@ LIEP stores line-end-position at point-of-interest
       ;; needed by closing
       (unless orig (unless (bobp) (back-to-indentation)))
       (let* ((orig (or orig (point)))
-             (origline (or origline (py-count-lines)))
+             (origline (or origline (py-count-lines (point-min) (point))))
              ;; closing indicates: when started, looked
              ;; at a single closing parenthesis
              ;; line: moved already a line backward
@@ -25607,7 +25639,7 @@ LIEP stores line-end-position at point-of-interest
              erg indent this-line)
         (if (and (< repeat 1)
                  (and (comint-check-proc (current-buffer))
-                      (re-search-backward (concat py-shell-prompt-regexp "\\|" ipython-de-output-prompt-regexp "\\|" ipython-de-input-prompt-regexp) nil t 1)))
+                      (re-search-backward (concat py-shell-prompt-regexp "\\|" py-ipython-output-prompt-re "\\|" py-ipython-input-prompt-re) nil t 1)))
             ;; common recursion not suitable because of prompt
             (with-temp-buffer
 	      ;; (when py-debug-p (switch-to-buffer (current-buffer)))
@@ -25706,10 +25738,10 @@ LIEP stores line-end-position at point-of-interest
 				   ((looking-at "\\s([ \t]*$")
 				    (py--empty-arglist-indent nesting py-indent-offset indent-offset))
 				   ((looking-at "\\s([ \t]*\\([^ \t]+.*\\)$")
-				     (goto-char (match-beginning 1))
-				     (if py-indent-paren-spanned-multilines-p
-					 (+ (current-column) py-indent-offset)
-				       (current-column)))
+				    (goto-char (match-beginning 1))
+				    (if py-indent-paren-spanned-multilines-p
+					(+ (current-column) py-indent-offset)
+				      (current-column)))
 				   (t (py--fetch-previous-indent orig))))
 				 ;; already behind a dedented element in list
 				 ((<= 2 (- origline this-line))
@@ -25729,9 +25761,7 @@ LIEP stores line-end-position at point-of-interest
 			    (goto-char (nth 1 (syntax-ppss)))
 			    (setq line
 				  ;; should be faster
-				  (< (line-end-position) liep)
-				  ;; (< (py-count-lines) origline)
-				  )
+				  (< (line-end-position) liep))
 			    (py-compute-indentation orig origline closing line nesting repeat indent-offset liep))
 			   ((not (py--beginning-of-statement-p))
 			    (py-beginning-of-statement)
@@ -26279,14 +26309,16 @@ i.e. the limit on how far back to scan."
      ((nth 3 state) 'string)
      ((nth 4 state) 'comment))))
 
-(defun py-count-lines ()
+(defun py-count-lines (&optional beg end)
   "Count lines in accessible part until current line.
 
 See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
   (interactive)
   (save-excursion
     (let ((count 0)
-          (orig (point)))
+          (orig (point))
+	  (beg (or beg (point-min)))
+	  (end (or end (point))))
       (save-match-data
 	(if (or (eq major-mode 'comint-mode)
 		(eq major-mode 'py-shell-mode))
@@ -26294,14 +26326,14 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
 		(re-search-backward py-fast-filter-re nil t 1)
 		(goto-char (match-end 0))
 	      (when py-debug-p (message "%s"  "py-count-lines: Don't see a prompt here"))
-	      (goto-char (point-min)))
-	  (goto-char (point-min))))
-      (while (and (< (point) orig)(not (eobp)) (skip-chars-forward "^\n" orig))
+	      (goto-char beg))
+	  (goto-char beg)))
+      (while (and (< (point) end)(not (eobp)) (skip-chars-forward "^\n" end))
         (setq count (1+ count))
-        (unless (or (not (< (point) orig)) (eobp)) (forward-char 1)
-                (setq count (+ count (abs (skip-chars-forward "\n" orig))))))
+        (unless (or (not (< (point) end)) (eobp)) (forward-char 1)
+                (setq count (+ count (abs (skip-chars-forward "\n" end))))))
       (when (bolp) (setq count (1+ count)))
-      (when (interactive-p) (message "%s" count))
+      (when (and py-debug-p (interactive-p)) (message "%s" count))
       count)))
 
 (defun py-which-function ()
@@ -26499,11 +26531,8 @@ the output."
     (sit-for 0.1 t)
     ;; (py--delay-process-dependent process)
     (when (and output (not (string= "" output)))
-      (setq output
-	    (replace-regexp-in-string
-	     (format "[ \n]*%s[ \n]*" py-fast-filter-re)
-	     "" output)))
-    output))
+	    (py--string-strip
+	     (format "[ \n]*%s[ \n]*" py-fast-filter-re)))))
 
 (defun py--send-string-return-output (string &optional process msg)
   "Send STRING to PROCESS and return output.
@@ -26511,22 +26540,24 @@ the output."
 When MSG is non-nil messages the first line of STRING.  Return
 the output."
   (with-current-buffer (process-buffer process)
-    (let* (output
+    (let* (erg
 	   (process (or process (get-buffer-process (py-shell))))
 	   (comint-preoutput-filter-functions
 	    (append comint-preoutput-filter-functions
 		    '(ansi-color-filter-apply
 		      (lambda (string)
-			(setq output (concat output string))
+			(setq erg (concat erg string))
 			"")))))
       (py-send-string string process)
       (accept-process-output process 5)
-      (when (and output (not (string= "" output)))
-	(setq output
+      (sit-for 0.1 t)
+      (when (and erg (not (string= "" erg)))
+	(setq erg
 	      (replace-regexp-in-string
 	       (format "[ \n]*%s[ \n]*" py-fast-filter-re)
-	       "" output)))
-      output)))
+	       "" erg)))
+      ;; (sit-for 0.1 t)
+      erg)))
 
 (defun py-which-def-or-class ()
   "Returns concatenated `def' and `class' names in hierarchical order, if cursor is inside.
@@ -27014,6 +27045,48 @@ Returns a list, whose car is beg, cdr - end."
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
+;; from gud.el
+;; (defun pdb (command-line)
+;;   "Run pdb on program FILE in buffer `*gud-FILE*'.
+;; The directory containing FILE becomes the initial working directory
+;; and source-file directory for your debugger."
+;;   (interactive
+;;    (list (gud-query-cmdline 'pdb)))
+
+(defun py--pdb-versioned ()
+  "Guess existing pdb version from py-shell-name
+
+Return \"pdb[VERSION]\" if executable found, just \"pdb\" otherwise"
+  (interactive)
+  (let ((erg (when (string-match "[23]" py-shell-name)
+	       ;; versions-part
+	       (substring py-shell-name (string-match "[23]" py-shell-name)))))
+    (if erg
+      (cond ((executable-find (concat "pdb" erg))
+	     (concat "pdb" erg))
+	    ((and (string-match "\\." erg)
+		  (executable-find (concat "pdb" (substring erg 0 (string-match "\\." erg)))))
+	     (concat "pdb" (substring erg 0 (string-match "\\." erg)))))
+      "pdb")))
+
+(defun py-pdb (command-line)
+  "Run pdb on program FILE in buffer `*gud-FILE*'.
+The directory containing FILE becomes the initial working directory
+and source-file directory for your debugger.
+
+At GNU Linux systems required pdb version should be detected by `py--pdb-version', at Windows configure `py-python-ms-pdb-command'
+
+lp:963253"
+  (interactive
+   (list (gud-query-cmdline
+	  (if (or (eq system-type 'ms-dos)(eq system-type 'windows-nt))
+	      (car (read-from-string py-python-ms-pdb-command))
+	    ;; sys.version_info[0]
+	    (car (read-from-string (py--pdb-version)))) "asdf")))
+  (pdb command-line (buffer-file-name)))
+
+;; /usr/lib/python2.7/pdb.py eyp.py
+
 (defalias 'py-forward-block 'py-end-of-block)
 (defalias 'py-forward-block-or-clause 'py-end-of-block-or-clause)
 (defalias 'py-forward-class 'py-end-of-class)
@@ -27037,6 +27110,17 @@ Returns a list, whose car is beg, cdr - end."
 (defalias 'py-goto-beyond-block 'py-end-of-block-bol)
 (defalias 'py-goto-beyond-final-line 'py-end-of-statement-bol)
 (defalias 'py-kill-minor-expression 'py-kill-partial-expression)
+
+(defalias 'Python 'python)
+(defalias 'pyhotn 'python)
+(defalias 'pyhton 'python)
+(defalias 'pyt 'python)
+(defalias 'Python2 'python2)
+(defalias 'Python3 'python3)
+(defalias 'IPython 'ipython)
+(defalias 'Ipython 'ipython)
+(defalias 'iyp 'ipython)
+(defalias 'ipy 'ipython)
 
 ;; python-components-foot
 
@@ -27132,7 +27216,7 @@ See available customizations listed in files variables-python-mode at directory 
   (set (make-local-variable 'parse-sexp-ignore-comments) t)
   (set (make-local-variable 'comment-use-syntax) t)
   (set (make-local-variable 'comment-start) "#")
-  (if empty-comment-line-separates-paragraph-p
+  (if py-empty-comment-line-separates-paragraph-p
       (progn
         (set (make-local-variable 'paragraph-separate) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$")
         (set (make-local-variable 'paragraph-start) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
@@ -27241,7 +27325,7 @@ See available customizations listed in files variables-python-mode at directory 
        (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
 	      (concat "\\("
 		      (mapconcat 'identity
-				 (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp ipython-de-input-prompt-regexp ipython-de-output-prompt-regexp py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
+				 (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp py-ipython-input-prompt-re py-ipython-output-prompt-re py-pdbtrack-input-prompt py-pydbtrack-input-prompt))
 				 "\\|")
 		      "\\)"))
 	     (t (concat "\\("
@@ -27253,8 +27337,6 @@ See available customizations listed in files variables-python-mode at directory 
 
   (make-local-variable 'comint-output-filter-functions)
   ;; (set (make-local-variable 'comint-input-filter) 'py--input-filter)
-  (set (make-local-variable 'compilation-error-regexp-alist)
-       py-compilation-regexp-alist)
   (set (make-local-variable 'comint-input-filter) 'py-history-input-filter)
   (set (make-local-variable 'comint-prompt-read-only) py-shell-prompt-read-only)
   ;; It might be useful having a different setting of `comint-use-prompt-regexp' in py-shell - please report when a use-case shows up

@@ -1,5 +1,4 @@
 ;;; gitattributes-mode.el --- Major mode for editing .gitattributes files -*- lexical-binding: t -*-
-;; Version: 20140605.520
 
 ;; Copyright (C) 2013-2014  The Magit Project Developers
 
@@ -7,6 +6,7 @@
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/magit/git-modes
 ;; Keywords: convenience vc git
+;; Package-Version: 20150314.625
 
 ;; This file is NOT part of GNU Emacs.
 
@@ -142,6 +142,8 @@ If NO-STATE is non-nil then do not print state."
      (let ((old-limit limit))
        (save-excursion
          (beginning-of-line)
+         (while (looking-at "^\\s-*$")
+           (forward-line))
          (when (re-search-forward "[[:space:]]" limit 'noerror)
            (setq limit (point))))
        (unless (< limit (point))

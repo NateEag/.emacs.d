@@ -1,11 +1,11 @@
 ;;; popwin.el --- Popup Window Manager.
 
-;; Copyright (C) 2011, 2012, 2013, 2014  Tomohiro Matsuyama
+;; Copyright (C) 2011-2015  Tomohiro Matsuyama
 
-;; Author: Tomohiro Matsuyama <tomo@cx4a.org>
+;; Author: Tomohiro Matsuyama <m2ym.pub@gmail.com>
 ;; Keywords: convenience
-;; Version: 20141227.2351
-;; X-Original-Version: 0.7.0alpha
+;; Package-Version: 20150315.600
+;; Version: 1.0.0
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -62,7 +62,7 @@
 
 (eval-when-compile (require 'cl))
 
-(defconst popwin:version "0.7.0alpha")
+(defconst popwin:version "1.0.0")
 
 
 

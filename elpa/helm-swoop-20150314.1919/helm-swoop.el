@@ -3,7 +3,7 @@
 ;; Copyright (C) 2013 by Shingo Fukuyama
 
 ;; Version: 1.5.0
-;; Package-Version: 20150310.2227
+;; Package-Version: 20150314.1919
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
 ;; Created: Oct 24 2013
@@ -173,6 +173,12 @@
     (define-key $map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
     (delq nil $map))
   "Keymap for helm-swoop")
+
+(defvar helm-multi-swoop-map
+  (let (($map (make-sparse-keymap)))
+    (set-keymap-parent $map helm-map)
+    (define-key $map (kbd "C-c C-e") 'helm-multi-swoop-edit)
+    (delq nil $map)))
 
 (defcustom helm-swoop-pre-input-function
   (lambda () (thing-at-point 'symbol))
@@ -519,6 +525,7 @@ If $linum is number, lines are separated by $linum"
             (or $multiline 1)) ;; $multiline is for resume
     (set (make-local-variable 'helm-swoop-last-prefix-number)
          (or $multiline 1))))
+(helm-swoop--set-prefix) ;; Silence error "Warning: reference to free variable"
 
 ;; Delete cache when modified file is saved
 (defun helm-swoop--clear-cache ()
@@ -706,7 +713,7 @@ If $linum is number, lines are separated by $linum"
       (- $end $beg $len) ;; Unused argument? To avoid byte compile error
     (delete-region (overlay-start $o) (1- (overlay-end $o)))))
 
-(defun helm-swoop-caret-match (&optional $resume)
+(defun helm-swoop-caret-match (&optional _$resume)
   (interactive)
   (let* (($prompt helm-swoop-prompt) ;; Accept change of the variable
          ($line-number-regexp "^[0-9]+.")
@@ -884,12 +891,6 @@ If $linum is number, lines are separated by $linum"
 (defvar helm-multi-swoop-all-from-helm-swoop-last-point nil
   "For the last position, when helm-multi-swoop-all-from-helm-swoop canceled")
 (defvar helm-multi-swoop-move-line-action-last-buffer nil)
-
-(defvar helm-multi-swoop-map
-  (let (($map (make-sparse-keymap)))
-    (set-keymap-parent $map helm-map)
-    (define-key $map (kbd "C-c C-e") 'helm-multi-swoop-edit)
-    (delq nil $map)))
 
 (defvar helm-multi-swoop-buffers-map
   (let (($map (make-sparse-keymap)))

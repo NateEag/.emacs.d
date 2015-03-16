@@ -1,12 +1,12 @@
 ;;; ac-ispell.el --- ispell completion source for auto-complete
 
-;; Copyright (C) 2014 by Syohei YOSHIDA
+;; Copyright (C) 2015 by Syohei YOSHIDA
 
 ;; Author: Syohei YOSHIDA <syohex@gmail.com>
 ;; URL: https://github.com/syohex/emacs-ac-ispell
-;; Version: 20140702.1553
-;; X-Original-Version: 0.06
-;; Package-Requires: ((auto-complete "1.4"))
+;; Package-Version: 20150313.1728
+;; Version: 0.07
+;; Package-Requires: ((auto-complete "1.4") (cl-lib "0.5"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -44,6 +44,7 @@
 
 (require 'auto-complete)
 (require 'ispell)
+(require 'ring)
 
 (defgroup ac-ispell nil
   "Auto completion with ispell."
@@ -59,12 +60,17 @@
   :type 'integer
   :group 'ac-ispell)
 
+(defcustom ac-ispell-cache-size 20
+  "Size of candidates cache."
+  :type 'integer
+  :group 'ac-ispell)
+
 (defface ac-ispell-fuzzy-candidate-face
   '((t (:inherit ac-candidate-face :foreground "red")))
   "Face for fuzzy candidate."
   :group 'ac-ispell)
 
-(defvar ac-ispell--cache nil)
+(defvar ac-ispell--cache (make-ring ac-ispell-cache-size))
 
 (defun ac-ispell--case-function (input)
   (let ((case-fold-search nil))
@@ -75,14 +81,14 @@
 (defun ac-ispell--lookup-candidates (lookup-func input)
   (let ((candidates (funcall lookup-func (concat input "*")
                              ispell-complete-word-dict)))
-    (setq ac-ispell--cache (cons input candidates))
+    (ring-insert ac-ispell--cache (cons input candidates))
     candidates))
 
 (defun ac-ispell--lookup-cache (input)
-  (let* ((cached-input (car ac-ispell--cache))
-         (regexp (concat "\\`" cached-input)))
-    (when (string-match-p regexp input)
-      (cdr ac-ispell--cache))))
+  (cl-loop for (prefix . candidates) in (ring-elements ac-ispell--cache)
+           for regexp = (concat "\\`" prefix)
+           when (string-match-p regexp input)
+           return candidates))
 
 (defun ac-ispell--candidates ()
   (let ((input (downcase ac-prefix))

@@ -45,7 +45,7 @@
   (setq helm-el-package--upgrades (helm-el-package-menu--find-upgrades))
   (if helm-force-updating-p
       (message "Refreshing packages list done")
-    (setq helm-el-package--show-only 'all))
+      (setq helm-el-package--show-only 'all))
   (kill-buffer "*Packages*"))
 
 (defun helm-el-package-describe (candidate)

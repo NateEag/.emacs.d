@@ -21,52 +21,10 @@
 (require 'helm)
 (require 'helm-utils)
 
-(declare-function Info-index-nodes "info" (&optional file))
-(declare-function Info-goto-node "info" (&optional fork))
-(declare-function Info-find-node "info.el" (filename nodename &optional no-going-back))
-
 
 ;;; Plug-in: `info-index'
 ;;
 ;;
-(defvar Info-history)
-(cl-defun helm-info-init (&optional (file (helm-attr 'info-file)))
-  ;; Allow reinit candidate buffer when using edebug.
-  (helm-aif (and debug-on-error
-                 (helm-candidate-buffer))
-      (kill-buffer it))
-  (unless (helm-candidate-buffer)
-    (save-window-excursion
-      (info file)
-      (let (Info-history
-            (tobuf (helm-candidate-buffer 'global))
-            (infobuf (current-buffer))
-            s e
-            (nodes (or (helm-attr 'index-nodes) (Info-index-nodes))))
-        (cl-dolist (node nodes)
-          (Info-goto-node node)
-          (goto-char (point-min))
-          (while (search-forward "\n* " nil t)
-            (unless (search-forward "Menu:\n" (1+ (point-at-eol)) t)
-              (save-current-buffer (buffer-substring-no-properties
-                                    (point-at-bol) (point-at-eol)))
-              (setq s (point-at-bol)
-                    e (point-at-eol))
-              (with-current-buffer tobuf
-                (insert-buffer-substring infobuf s e)
-                (insert "\n")))))))))
-
-(defun helm-info-goto (node-line)
-  (Info-goto-node (car node-line))
-  (helm-goto-line (cdr node-line)))
-
-(defun helm-info-display-to-real (line)
-  (and (string-match
-        ;; This regexp is stolen from Info-apropos-matches
-        "\\* +\\([^\n]*.+[^\n]*\\):[ \t]+\\([^\n]*\\)\\.\\(?:[ \t\n]*(line +\\([0-9]+\\))\\)?" line)
-       (cons (format "(%s)%s" (helm-attr 'info-file) (match-string 2 line))
-             (string-to-number (or (match-string 3 line) "1")))))
-
 (defun helm-make-info-source (source file)
   `(,@source
     (name . ,(concat "Info Index: " file))
@@ -90,14 +48,6 @@
   Example:
 
   (defvar helm-source-info-wget '((info-index . \"wget\"))")
-
-(helm-document-attribute 'index-nodes "info-index plugin (optional)"
-  "  Index nodes of info file.
-
-  If it is omitted, `Info-index-nodes' is used to collect index
-  nodes. Some info files are missing index specification.
-
-  See `helm-source-info-screen'.")
 
 
 ;;; Plug-in: `candidates-file'

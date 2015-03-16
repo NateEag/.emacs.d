@@ -515,6 +515,7 @@ that use `helm-comp-read' See `helm-M-x' for example."
                                             (and (funcall test x)
                                                  (not (keywordp x))))
                                           default))
+               :filtered-candidate-transformer 'helm-apropos-default-sort-fn
                :persistent-action 'helm-lisp-completion-persistent-action
                :persistent-help "Show brief doc in mode-line")
     :prompt prompt
@@ -841,7 +842,7 @@ Keys description:
     (setq dir (expand-file-name dir)))
   (unless (or fname (consp fname))
     (setq fname (expand-file-name
-                 (or initial buffer-file-name)
+                 (or initial buffer-file-name dir)
                  dir)))
   (if (and fname (consp fname))
       (setq fname (cl-loop for f in fname

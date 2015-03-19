@@ -1,11 +1,11 @@
-;;; jedi.el --- a Python auto-completion for Emacs
+;;; jedi.el --- a Python auto-completion for Emacs -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015 Takafumi Arakaki
 
 ;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
-;; Package-Requires: ((jedi-core "0.2.1") (auto-complete "1.4"))
-;; Version: 20150308.517
-;; X-Original-Version: 0.2.1
+;; Package-Requires: ((emacs "24") (jedi-core "0.2.2") (auto-complete "1.4"))
+;; Version: 0.2.2
+;; Package-Version: 20150318.1613
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -24,9 +24,7 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'cl))
-
+(require 'cl-lib)
 (require 'auto-complete)
 (require 'jedi-core)
 
@@ -76,14 +74,13 @@ in their Emacs configuration."
     (requires . -1)))
 
 ;;;###autoload
-(defun* jedi:complete (&key (expand ac-expand-on-auto-complete))
+(cl-defun jedi:complete (&key (expand ac-expand-on-auto-complete))
   "Complete code at point."
   (interactive)
-  (lexical-let ((expand expand))
-    (deferred:nextc (jedi:complete-request)
-      (lambda ()
-        (let ((ac-expand-on-auto-complete expand))
-          (ac-start :triggered 'command))))))
+  (deferred:nextc (jedi:complete-request)
+    (lambda ()
+      (let ((ac-expand-on-auto-complete expand))
+        (ac-start :triggered 'command)))))
 ;; Calling `auto-complete' or `ac-update-greedy' instead of `ac-start'
 ;; here did not work.
 

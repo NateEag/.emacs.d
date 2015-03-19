@@ -18,18 +18,14 @@
 
 -Add transpose operator/command to evil. I just want to be able to swap various
  text objects/motions cleanly - something like 't{' rather than 'd{}P'.
+ Apparently there's a vim plugin called vim-exchange that handles this, and I
+ think there may even be an evil port.
 
 -Report bug on autoloading evil-nerd-commenter, particularly with
  evil-local-mode.
 
 -Integrate what's useful from spacemacs: https://github.com/syl20bnr/spacemacs
- evil-little-word, evil-operator-comment, some clever keybinding ideas
- (probably want them under <leader>, though).
-
--Refactor my autoloading mode setup to rely on use-package, which looks to do
- things the way I like except much cleaner, and should let me autoload my
- ad-hoc libraries much more cleanly.
- https://github.com/jwiegley/use-package
+ I've got most of what I want, but evil-little-word would be nice.
 
 -Finish getting tagedit to work with web-mode.
 
@@ -243,11 +239,16 @@
  be 72. Apparently this is fixed in a Jan. 2013 commit to python-mode.el.
 
 -Figure out what the best way to save/restore my Emacs sessions is. Ideally,
- find a solution that lets me save/restore buffer state for a whole directory.
+ find a solution that lets me save/restore buffer state for a whole directory,
+ but not for ones I haven't configured. I bet combining one of the existing
+ packages with a bit of elisp and .dir-locals.el would do the job.
 
 -Find a way to strip trailing whitespace *outside* literal blocks in
  markdown-mode. My current approach means you can't have blank lines in literal
- blocks (they look like unnecessary whitespace and get stripped).
+ blocks (they look like unnecessary whitespace and get stripped). Should be
+ easy enough - advise the whitespace stripping functions to not execute if the
+ prev and next content lines are indented four spaces, and activate the advice
+ only in markdown-mode.
 
 -Figure out/steal/write a good cross-file find-and-replace. I can see why so
  many guys just use a Perl one-liner (which I have), but being able to do this
@@ -278,7 +279,7 @@
 
 -Fix which-func-ff-hook error: (void-function py--imenu-create-index-function).
  Might be related to above - they both seem likely to involve a variable being
- defined at the wrong-ish time.
+ defined at the wrong time.
 
 -Frequently, especially when writing prose, I find my fingers doing the dance
  any given editor requires to swap elements in a comma-separated list. Seems

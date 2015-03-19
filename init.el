@@ -52,6 +52,8 @@
 
 ;; Autosave's defaults are not very nice. Here, we fix them.
 ;; Create autosave dir if it doesn't exist.
+;; TODO Put autosaves outside my .emacs.d. I don't back .emacs.d up, since
+;; I have it on GitHub, but I should really back up my backups...
 (setq my-autosaves-dir (make-emacs-dir-path "autosaves/"))
 (make-directory my-autosaves-dir t)
 (setq

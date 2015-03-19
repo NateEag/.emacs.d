@@ -7,7 +7,7 @@
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/magit/git-modes
 ;; Keywords: convenience vc git
-;; Package-Version: 20150316.747
+;; Package-Version: 20150316.1434
 
 ;; This file is not part of GNU Emacs.
 
@@ -41,9 +41,10 @@
                         symbol-start
                         (minimal-match (zero-or-more not-newline))
                         symbol-end "]"))
-        (looking-at (rx line-start "\t"
-                        symbol-start (or (syntax word)
-                                         (syntax symbol))))
+        (looking-at (concat (rx line-start)
+                            (gitconfig-indentation-string)
+                            (rx symbol-start (or (syntax word)
+                                                 (syntax symbol)))))
         (looking-at (rx (zero-or-one "\t") (or "#" ";"))))))
 
 (defun gitconfig-point-in-indentation-p ()
@@ -64,11 +65,14 @@
       (beginning-of-line)
       (delete-horizontal-space)
       (unless (equal (char-after) ?\[)
-        (insert-char ?\t 1))
+        (insert (gitconfig-indentation-string)))
       (if was-in-indent
           (back-to-indentation)
         (goto-char (marker-position old-point)))
       (set-marker old-point nil))))
+
+(defun gitconfig-indentation-string ()
+  (if indent-tabs-mode "\t" (make-string tab-width ?\ )))
 
 (defvar gitconfig-mode-syntax-table
   (let ((table (make-syntax-table conf-unix-mode-syntax-table)))

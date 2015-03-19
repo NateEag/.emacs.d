@@ -2,8 +2,8 @@
 
 ;; Copyright (C) 2010 Chris Wanstrath
 
-;; Version: 20150309.1928
-;; X-Original-Version: 0.5.9
+;; Version: 0.6.0
+;; Package-Version: 20150318.1623
 ;; Keywords: CoffeeScript major mode
 ;; Author: Chris Wanstrath <chris@ozmm.org>
 ;; URL: http://github.com/defunkt/coffee-mode
@@ -28,102 +28,7 @@
 ;;; Commentary
 
 ;; Provides syntax highlighting, indentation support, imenu support,
-;; a menu bar, and a few cute commands.
-
-;; ## Indentation
-
-;; ### TAB Theory
-
-;; It goes like this: when you press `TAB`, we indent the line unless
-;; doing so would make the current line more than two indentation levels
-;; deepers than the previous line. If that's the case, remove all
-;; indentation.
-
-;; Consider this code, with point at the position indicated by the
-;; caret:
-
-;;     line1()
-;;       line2()
-;;       line3()
-;;          ^
-
-;; Pressing `TAB` will produce the following code:
-
-;;     line1()
-;;       line2()
-;;         line3()
-;;            ^
-
-;; Pressing `TAB` again will produce this code:
-
-;;     line1()
-;;       line2()
-;;     line3()
-;;        ^
-
-;; And so on. I think this is a pretty good way of getting decent
-;; indentation with a whitespace-sensitive language.
-
-;; ### Newline and Indent
-
-;; We all love hitting `RET` and having the next line indented
-;; properly. Given this code and cursor position:
-
-;;     line1()
-;;       line2()
-;;       line3()
-;;             ^
-
-;; Pressing `RET` would insert a newline and place our cursor at the
-;; following position:
-
-;;     line1()
-;;       line2()
-;;       line3()
-
-;;       ^
-
-;; In other words, the level of indentation is maintained. This
-;; applies to comments as well. Combined with the `TAB` you should be
-;; able to get things where you want them pretty easily.
-
-;; ### Indenters
-
-;; `class`, `for`, `if`, and possibly other keywords cause the next line
-;; to be indented a level deeper automatically.
-
-;; For example, given this code and cursor position::
-
-;;     class Animal
-;;                 ^
-
-;; Pressing enter would produce the following:
-
-;;     class Animal
-
-;;       ^
-
-;; That is, indented a column deeper.
-
-;; This also applies to lines ending in `->`, `=>`, `{`, `[`, and
-;; possibly more characters.
-
-;; So this code and cursor position:
-
-;;     $('#demo').click ->
-;;                        ^
-
-;; On enter would produce this:
-
-;;     $('#demo').click ->
-
-;;       ^
-
-;; Pretty slick.
-
-;; Thanks to Jeremy Ashkenas for CoffeeScript, and to
-;; http://xahlee.org/emacs/elisp_syntax_coloring.html, Jason
-;; Blevins's markdown-mode.el and Steve Yegge's js2-mode for guidance.
+;; compiling to JavaScript, REPL, a menu bar, and a few cute commands.
 
 ;;; Code:
 
@@ -138,7 +43,7 @@
 ;; Customizable Variables
 ;;
 
-(defconst coffee-mode-version "0.5.9"
+(defconst coffee-mode-version "0.6.0"
   "The version of `coffee-mode'.")
 
 (defgroup coffee nil
@@ -495,7 +400,7 @@ called `coffee-compiled-buffer-name'."
 ;;
 
 ;; Instance variables (implicit this)
-(defvar coffee-this-regexp "\\(?:@\\w+\\|\\<this\\)\\>")
+(defvar coffee-this-regexp "\\(?:@[_[:word:]]+\\|\\<this\\)\\>")
 
 ;; Prototype::access
 (defvar coffee-prototype-regexp "[_[:word:].$]+?::")

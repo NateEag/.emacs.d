@@ -3,7 +3,7 @@
 ;; Copyright (C) 2013 by Shingo Fukuyama
 
 ;; Version: 1.5.0
-;; Package-Version: 20150314.1919
+;; Package-Version: 20150320.1831
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
 ;; Created: Oct 24 2013
@@ -427,6 +427,8 @@ This function needs to call after latest helm-swoop-line-overlay set."
   (with-helm-window
     (setq helm-swoop-pattern helm-pattern)
     (when (< 2 (length helm-pattern))
+      (helm-swoop--delete-overlay 'target-buffer)
+      (helm-swoop--target-word-overlay 'target-buffer)
       (with-selected-window helm-swoop-synchronizing-window
         (helm-swoop--delete-overlay 'target-buffer)
         (helm-swoop--target-word-overlay 'target-buffer)))))
@@ -609,9 +611,6 @@ If $linum is number, lines are separated by $linum"
         (ad-activate 'helm-move--previous-line-fn)
         (add-hook 'helm-update-hook 'helm-swoop--pattern-match)
         (add-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position t)
-        (unless (and (symbolp 'helm-match-plugin-mode)
-                     (symbol-value 'helm-match-plugin-mode))
-          (helm-match-plugin-mode 1))
         (cond ($query
                (if (string-match
                     "\\(\\^\\[0\\-9\\]\\+\\.\\)\\(.*\\)" $query)
@@ -1054,9 +1053,6 @@ If $linum is number, lines are separated by $linum"
           (ad-activate 'helm-move--previous-line-fn)
           (add-hook 'helm-update-hook 'helm-swoop--pattern-match)
           (add-hook 'helm-after-update-hook 'helm-swoop--keep-nearest-position t)
-          (unless (and (symbolp 'helm-match-plugin-mode)
-                       (symbol-value 'helm-match-plugin-mode))
-            (helm-match-plugin-mode 1))
           (setq helm-swoop-line-overlay
                 (make-overlay (point) (point)))
           (overlay-put helm-swoop-line-overlay

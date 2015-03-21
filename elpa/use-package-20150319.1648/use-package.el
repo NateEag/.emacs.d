@@ -5,7 +5,7 @@
 ;; Author: John Wiegley <jwiegley@gmail.com>
 ;; Created: 17 Jun 2012
 ;; Version: 2.0
-;; Package-Version: 20150318.1856
+;; Package-Version: 20150319.1648
 ;; Package-Requires: ((bind-key "1.0") (diminish "0.44"))
 ;; Keywords: dotemacs startup speed config package
 ;; X-URL: https://github.com/jwiegley/use-package
@@ -53,8 +53,7 @@
   "Whether to report about loading and configuration details.
 
 If you customize this, then you should require the `use-package'
-feature in files that use one of the macros `use-package' or
-`use-package-with-elapsed-timer', even if these files only
+feature in files that use `use-package', even if these files only
 contain compiled expansions of the macros.  If you don't do so,
 then the expanded macros do their job silently."
   :type 'boolean
@@ -67,8 +66,7 @@ Note that `use-package-verbose' has to be set to t, for anything
 to be reported at all.
 
 If you customize this, then you should require the `use-package'
-feature in files that use one of the macros `use-package' or
-`use-package-with-elapsed-timer', even if these files only
+feature in files that use `use-package', even if these files only
 contain compiled expansions of the macros.  If you don't do so,
 then the expanded macros do their job silently."
   :type 'number
@@ -106,49 +104,6 @@ then your byte-compiled init file is as minimal as possible."
   :type 'boolean
   :group 'use-package)
 
-(defvar use-package-extra-keywords nil
-  "A list of extra keywords to be accepted in the use-package form.")
-
-(defconst use-package-phases
-  '(setup-load-path
-    pre-compile-load
-    preface
-    setup-autoloads
-    register-load-on-idle
-    declare-functions
-    init
-    register-eval-after-load
-    deferred-config
-    package-load
-    config
-    wrapup)
-  "A list of phases that capture the sequence of `use-package'.
-This is used by `use-package-add-keywords' in order to register
-new keywords, and to specify when their handler should be
-called.
-Each phase registers a `before-' and `after-' counterpart, so
-that you can register new keywords as follows:
-
-  (use-package-add-keywords :ensure 'after-preface)
-
-Which is identical to saying:
-
-  (use-package-add-keywords :ensure 'before-setup-autoloads)
-
-The reason for duplicating the sequence points with redundant
-before and after monikers is to make keyword-adding resilient to
-the creation of new phases in future.")
-
-(defun use-package-add-keywords (&rest args)
-  (let ((keywords (cl-remove-if #'(lambda (x) (not (keywordp args)))))
-        (phases (cl-remove-if #'(lambda (x) (keywordp args))))))
-  )
-
-(defun use-package-progn (body)
-  (if (= (length body) 1)
-      (car body)
-    `(progn ,@body)))
-
 (defun use-package-expand (name label form)
   "FORM is a list of forms, so `((foo))' if only `foo' is being called."
   (declare (indent 1))
@@ -158,7 +113,7 @@ the creation of new phases in future.")
       (let ((err (make-symbol "err")))
         (list
          `(condition-case-unless-debug ,err
-              ,(use-package-progn form)
+              ,(macroexp-progn form)
             (error
              (ignore
               (display-warning 'use-package
@@ -177,21 +132,21 @@ ARGS is a list of forms, so `((foo))' if only `foo' is being called."
     (let ((keyword-name (substring (format "%s" keyword) 1))
           (block (plist-get args keyword)))
       (when block
-        `((when ,(use-package-progn
+        `((when ,(macroexp-progn
                   (use-package-expand name-string (format "pre-%s hook" keyword)
                     `(run-hook-with-args-until-failure
                       ',(intern (concat "use-package--" name-string
                                         "--pre-" keyword-name "-hook")))))
-            ,(use-package-progn
+            ,(macroexp-progn
               (use-package-expand name-string (format "%s" keyword)
                 (plist-get args keyword)))
-            ,(use-package-progn
+            ,(macroexp-progn
               (use-package-expand name-string (format "post-%s hook" keyword)
                 `(run-hooks
                   ',(intern (concat "use-package--" name-string
                                     "--post-" keyword-name "-hook")))))))))))
 
-(defun use-package-with-elapsed-timer (text body)
+(defun use-package--with-elapsed-timer (text body)
   "BODY is a list of forms, so `((foo))' if only `foo' is being called."
   (declare (indent 1))
   (if use-package-expand-minimally
@@ -201,7 +156,7 @@ ARGS is a list of forms, so `((foo))' if only `foo' is being called."
           `((let ((,nowvar (current-time)))
               (message "%s..." ,text)
               (prog1
-                  ,(use-package-progn body)
+                  ,(macroexp-progn body)
                 (let ((elapsed
                        (float-time (time-subtract (current-time) ,nowvar))))
                   (if (> elapsed ,use-package-minimum-reported-time)
@@ -209,7 +164,7 @@ ARGS is a list of forms, so `((foo))' if only `foo' is being called."
                     (message "%s...done" ,text))))))
         body))))
 
-(put 'use-package-with-elapsed-timer 'lisp-indent-function 1)
+(put 'use-package--with-elapsed-timer 'lisp-indent-function 1)
 
 (defsubst use-package-error (msg)
   "Report MSG as an error, so the user knows it came from this package."
@@ -246,7 +201,7 @@ ARGS is a list of forms, so `((foo))' if only `foo' is being called."
     (list arg))
    ((and (not recursed) (listp arg) (listp (cdr arg)))
     (mapcar #'(lambda (x) (car (use-package-normalize-diminish
-                           name-symbol label x t))) arg))
+                                name-symbol label x t))) arg))
    (t
     (use-package-error
      (concat label " wants a string, symbol, "
@@ -294,7 +249,7 @@ ARGS is a list of forms, so `((foo))' if only `foo' is being called."
     (list arg))
    ((and (not recursed) (listp arg) (listp (cdr arg)))
     (mapcar #'(lambda (x) (car (use-package-normalize-pairs
-                           name-symbol label x t allow-vector))) arg))
+                                name-symbol label x t allow-vector))) arg))
    (t
     (use-package-error
      (concat label " wants a string, (string . symbol) or list of these")))))
@@ -441,12 +396,12 @@ ARGS is a list of forms, so `((foo))' if only `foo' is being called."
 
          (mapcar #'(lambda (mode)
                      (push (cdr mode) commands)
-                     `(add-to-list 'auto-mode-alist ',mode))
+                     `(push ',mode auto-mode-alist))
                  (plist-get args :mode))
 
          (mapcar #'(lambda (interpreter)
                      (push (cdr interpreter) commands)
-                     `(add-to-list 'interpreter-mode-alist ',interpreter))
+                     `(push ',interpreter interpreter-mode-alist))
                  (plist-get args :interpreter))
 
          (mapcar #'(lambda (binding)
@@ -483,7 +438,7 @@ ARGS is a list of forms, so `((foo))' if only `foo' is being called."
        ;; These are all the configurations to be made after the package has
        ;; loaded.
        (config-body
-        (use-package-with-elapsed-timer
+        (use-package--with-elapsed-timer
             (format "Configuring package %s" name-string)
           (use-package-cat-maybes
            (use-package-hook-injector name-string :config args)
@@ -503,7 +458,7 @@ ARGS is a list of forms, so `((foo))' if only `foo' is being called."
     (use-package-cat-maybes
      ;; Setup the load-path
      (mapcar #'(lambda (path)
-                 `(eval-and-compile (add-to-list 'load-path ,path)))
+                 `(eval-and-compile (push ,path load-path)))
              (plist-get args :load-path))
 
      pre-compile-load
@@ -541,9 +496,9 @@ ARGS is a list of forms, so `((foo))' if only `foo' is being called."
           (if config-body
               `((eval-after-load ',name
                   ;; '(,config-defun)
-                  ',(use-package-progn config-body))))
+                  ',(macroexp-progn config-body))))
           (list t))
-       (use-package-with-elapsed-timer
+       (use-package--with-elapsed-timer
            (format "Loading package %s" name-string)
          (if use-package-expand-minimally
              (use-package-cat-maybes
@@ -632,15 +587,15 @@ this file.  Usage:
           ((body (use-package-cat-maybes
                   (use--package name name-symbol name-string args*)
                   (when archive-name
-                    `((add-to-list 'package-pinned-packages
-                                   '(,name-symbol . ,archive-name))))))
+                    `((push '(,name-symbol . ,archive-name)
+                            package-pinned-packages)))))
            (pred (plist-get args* :if))
            (expansion (if pred
                           `((when ,pred ,@body))
                         body))
            (requires (plist-get args* :requires))
            (body*
-            (use-package-progn
+            (macroexp-progn
              (if (null requires)
                  expansion
                `((if ,(if (listp requires)
@@ -648,9 +603,7 @@ this file.  Usage:
                         `(featurep ',requires))
                      ,@expansion))))))
         ;; (message "Expanded:\n%s" (pp-to-string body*))
-        `(let ((byte-compile-warnings byte-compile-warnings))
-           (byte-compile-disable-warning 'redefined)
-           ,body*)))))
+        body*))))
 
 (put 'use-package 'lisp-indent-function 'defun)
 
@@ -681,7 +634,7 @@ deferred until the prefix key sequence is pressed."
              package keymap-symbol))))
 
 (defconst use-package-font-lock-keywords
-  '(("(\\(use-package\\(?:-with-elapsed-timer\\)?\\)\\_>[ \t']*\\(\\(?:\\sw\\|\\s_\\)+\\)?"
+  '(("(\\(use-package\\)\\_>[ \t']*\\(\\(?:\\sw\\|\\s_\\)+\\)?"
      (1 font-lock-keyword-face)
      (2 font-lock-constant-face nil t))))
 
@@ -703,8 +656,7 @@ deferred until the prefix key sequence is pressed."
   (let ((archive-symbol (if (symbolp archive) archive (intern archive)))
         (archive-name   (if (stringp archive) archive (symbol-name archive))))
     (if (use-package--archive-exists-p archive-symbol)
-        (add-to-list 'package-pinned-packages
-                     (cons package archive-name))
+        (push (cons package archive-name) package-pinned-packages)
       (error "Archive '%s' requested for package '%s' is not available."
              archive-name package))
     (package-initialize t)))

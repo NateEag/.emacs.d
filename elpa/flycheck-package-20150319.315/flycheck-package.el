@@ -5,8 +5,8 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; Keywords: lisp
-;; Version: 20150123.624
-;; X-Original-Version: 0
+;; Package-Version: 20150319.315
+;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (flycheck "0.22") (emacs "24"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -295,7 +295,12 @@ DESC is a struct as returned by `package-buffer-info'."
       (flypkg/error
        1 1
        'warning
-       "The package summary is too long. It should be at most 50 characters.")))))
+       "The package summary is too long. It should be at most 50 characters.")))
+    (when (string-match-p "\\<[Ee]macs\\>" summary)
+      (flypkg/error
+       1 1
+       'warning
+       "Including \"Emacs\" in the package description is usually redundant."))))
 
 
 ;;; Helpers and checker definition

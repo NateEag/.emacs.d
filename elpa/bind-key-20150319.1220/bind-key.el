@@ -5,7 +5,7 @@
 ;; Author: John Wiegley <jwiegley@gmail.com>
 ;; Created: 16 Jun 2012
 ;; Version: 1.0
-;; Package-Version: 20150313.102
+;; Package-Version: 20150319.1220
 ;; Keywords: keys keybinding config dotemacs
 ;; URL: https://github.com/jwiegley/use-package
 
@@ -235,12 +235,9 @@ function symbol (unquoted)."
       "#<keymap>")
      (t
       elem)))
-   ((keymapp elem)
-    (if (and bind-key-describe-special-forms
-             (symbolp elem)
-             (get elem 'variable-documentation))
-        (format "%s" (get elem 'variable-documentation))
-      "#<keymap>"))
+   ;; must be a symbol, non-symbol keymap case covered above
+   ((and bind-key-describe-special-forms (keymapp elem))
+    (get elem 'variable-documentation))
    ((symbolp elem)
     elem)
    (t

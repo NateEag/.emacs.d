@@ -1182,12 +1182,15 @@ See also `evil-goto-min'."
                     (< (point) (cdr bnd)))
           (goto-char (cdr bnd)))
         ;; no thing at (point)
-        (goto-char
-         (if (and (zerop (forward-thing thing))
-                  (setq bnd (bounds-of-thing-at-point thing))
-                  (< (point) (cdr bnd)))
-             (car bnd)
-           (point-max))))
+        (if (zerop (forward-thing thing))
+            ;; now at the end of the next thing
+            (let ((bnd (bounds-of-thing-at-point thing)))
+              (if (or (< (car bnd) (point))    ; end of a thing
+                      (= (car bnd) (cdr bnd))) ; zero width thing
+                  (goto-char (car bnd))
+                ;; beginning of yet another thing, go back
+                (forward-thing thing -1)))
+          (goto-char (point-max))))
        (t
         (while (and (not (bobp))
                     (or (backward-char) t)
@@ -2898,7 +2901,9 @@ linewise, otherwise it is character wise."
     ;; check if current object is selected
     (when (or (not beg) (not end)
               (> beg (car bnd))
-              (< end (cdr bnd)))
+              (< end (cdr bnd))
+              (and (eq type 'inclusive)
+                   (= (1+ beg) end))) ; empty region does not count
       (when (or (not beg) (< (car bnd) beg)) (setq beg (car bnd)))
       (when (or (not end) (> (cdr bnd) end)) (setq end (cdr bnd)))
       (setq count (if (> count 0) (1- count) (1+ count))))
@@ -2928,7 +2933,11 @@ linewise, otherwise it is character wise."
          (bnd (or objbnd (evil-bounds-of-not-thing-at-point thing)))
          addcurrent other)
     ;; check if current object is not selected
-    (when (or (not beg) (not end) (> beg (car bnd)) (< end (cdr bnd)))
+    (when (or (not beg) (not end)
+              (> beg (car bnd))
+              (< end (cdr bnd))
+              (and (eq type 'inclusive)
+                   (= (1+ beg) end))) ; empty region does not count
       ;; if not, enlarge selection
       (when (or (not beg) (< (car bnd) beg)) (setq beg (car bnd)))
       (when (or (not end) (> (cdr bnd) end)) (setq end (cdr bnd)))
@@ -2986,14 +2995,14 @@ selection matches that object exactly."
             (count (abs (or count 1)))
             op cl op-end cl-end)
         ;; start scanning at beginning
-        (goto-char (if inclusive (1+ beg) end))
+        (goto-char (if (or inclusive (= beg end)) (1+ beg) end))
         (when (and (zerop (funcall thing +1)) (match-beginning 0))
           (setq cl (cons (match-beginning 0) (match-end 0)))
           (goto-char (car cl))
           (when (and (zerop (funcall thing -1)) (match-beginning 0))
             (setq op (cons (match-beginning 0) (match-end 0)))))
         ;; start scanning from end
-        (goto-char (if inclusive (1- end) beg))
+        (goto-char (if (or inclusive) (1- end) beg))
         (when (and (zerop (funcall thing -1)) (match-beginning 0))
           (setq op-end (cons (match-beginning 0) (match-end 0)))
           (goto-char (cdr op-end))

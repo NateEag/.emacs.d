@@ -4,8 +4,8 @@
 
 ;; Author: Artur Malabarba <bruce.connor.am@gmail.com>
 ;; URL: http://github.com/Bruce-Connor/aggressive-indent-mode
-;; Version: 20150308.1648
-;; X-Original-Version: 0.3.5
+;; Package-Version: 20150322.208
+;; Version: 0.3.5
 ;; Package-Requires: ((emacs "24.1") (names "0.5") (cl-lib "0.5"))
 ;; Keywords: indent lisp maint tools
 ;; Prefix: aggressive-indent
@@ -138,11 +138,13 @@ Please include this in your report!"
     conf-mode
     Custom-mode
     diff-mode
+    doc-view-mode
     dos-mode
     erc-mode
     jabber-chat-mode
     haml-mode
     haskell-mode
+    image-mode
     makefile-mode
     makefile-gmake-mode
     minibuffer-inactive-mode

@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2015 François-Xavier Bois
 
-;; Version: 11.0.27
-;; Package-Version: 20150320.246
+;; Version: 11.0.29
+;; Package-Version: 20150321.1140
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -27,7 +27,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "11.0.27"
+(defconst web-mode-version "11.0.29"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -1615,7 +1615,8 @@ Must be used in conjunction with web-mode-enable-block-face."
          '(1 'web-mode-type-face))
    '("|[ ]?\\([[:alpha:]_]+\\)\\>" 1 'web-mode-function-call-face)
    '("\\<\\([[:alpha:]_]+\\)[ ]?(" 1 'web-mode-function-call-face)
-   '("[[:alnum:]_]+" 0 'web-mode-variable-name-face)
+   '("[[:alnum:]_.]+" 0 'web-mode-variable-name-face)
+   '("[[:alnum:]_]+\\([.][[:alnum:]_]+\\)+" 0 'web-mode-variable-name-face t t)
    ))
 
 (defvar web-mode-ctemplate-font-lock-keywords
@@ -9950,15 +9951,15 @@ Pos should be in a tag."
     ) ;block-side
    ((get-text-property (1- pos) 'block-side)
     (setq pos (web-mode-block-beginning-position (1- pos)))
-    (cond
-     ((or (null pos) (= pos (point-min)))
-      (setq pos nil)
-      )
-     ((and (setq pos (previous-single-property-change pos 'block-beg))
-           (> pos (point-min)))
-      (setq pos (1- pos))
-      )
-     )
+    ;; (cond
+    ;;  ((or (null pos) (= pos (point-min)))
+    ;;   (setq pos nil)
+    ;;   )
+    ;;  ((and (setq pos (previous-single-property-change pos 'block-beg))
+    ;;        (> pos (point-min)))
+    ;;   (setq pos (1- pos))
+    ;;   )
+    ;;  )
     ) ;block-side
    (t
     (setq pos (previous-single-property-change pos 'block-side))

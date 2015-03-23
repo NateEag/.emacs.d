@@ -3016,7 +3016,8 @@ through the field's start point"
    ;; the field numbered 0, just before the exit marker, should
    ;; never be skipped
    ;;
-   (not (zerop (yas--field-number field)))))
+   (not (and (yas--field-number field)
+             (zerop (yas--field-number field))))))
 
 (defun yas--snippets-at-point (&optional all-snippets)
   "Return a sorted list of snippets at point.
@@ -3489,6 +3490,10 @@ The error should be ignored in `debug-ignored-errors'"
 Text between START and END will be deleted before inserting
 template.  EXPAND-ENV is a list of (SYM VALUE) let-style dynamic bindings
 considered when expanding the snippet."
+  (cl-assert (and yas-minor-mode
+                  (memq 'yas--post-command-handler post-command-hook))
+             nil
+             "[yas] `yas-expand-snippet' needs properly setup `yas-minor-mode'")
   (run-hooks 'yas-before-expand-snippet-hook)
 
   ;;

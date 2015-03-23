@@ -672,9 +672,6 @@ will not be loaded first time you use this."
                      :input-history
                      'helm-eshell-command-on-file-input-history))
            (alias-value (car (assoc-default command eshell-command-aliases-list))))
-      (when (and (= (length cand-list) 1)
-                 (string-match "[*]" (helm-basename (car cand-list))))
-        (setq cand-list (file-expand-wildcards (car cand-list) t)))
       (if (or (equal helm-current-prefix-arg '(16))
               (equal map '(16)))
           ;; Two time C-u from `helm-comp-read' mean print to current-buffer.
@@ -1378,7 +1375,8 @@ or when `helm-pattern' is equal to \"~/\"."
              (with-current-buffer (window-buffer (minibuffer-window)) (eolp))
              (not (string-match helm-ff-url-regexp helm-pattern)))
     (let* ((match (match-string 0 helm-pattern))
-           (input (cond ((string= match "/./") default-directory)
+           (input (cond ((string= match "/./")
+                         (expand-file-name default-directory))
                         ((string= helm-pattern "/../") "/")
                         ((string-match-p "\\`/\\$" match)
                          (let ((sub (substitute-in-file-name match)))
@@ -2485,7 +2483,10 @@ Called with a prefix arg open files in background without selecting them."
                (or (and helm-ff (helm-find-files-1 dir)) t))))
         (helm--reading-passwd-or-string t))
     (if (cdr marked)
-        (dired-simultaneous-find-file marked helm-current-prefix-arg)
+        (if helm-current-prefix-arg
+            (dired-simultaneous-find-file marked nil)
+            (mapc 'find-file-noselect (cdr marked))
+            (find-file (car marked)))
       (if (and (not (file-exists-p candidate))
                (not url-p)
                (string-match "/$" candidate))

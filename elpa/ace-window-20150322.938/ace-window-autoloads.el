@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "ace-window" "ace-window.el" (21767 15923 0
+;;;### (autoloads nil "ace-window" "ace-window.el" (21776 30973 0
 ;;;;;;  0))
 ;;; Generated autoloads from ace-window.el
 
@@ -59,7 +59,7 @@ Minor mode for showing the ace window key in the mode line.
 
 ;;;***
 
-;;;### (autoloads nil "avy-jump" "avy-jump.el" (21767 15923 0 0))
+;;;### (autoloads nil "avy-jump" "avy-jump.el" (21776 30973 0 0))
 ;;; Generated autoloads from avy-jump.el
 
 (autoload 'avi-goto-char "avy-jump" "\
@@ -112,8 +112,8 @@ Select two lines and copy the text between them here.
 
 ;;;***
 
-;;;### (autoloads nil nil ("ace-window-pkg.el" "avy.el") (21767 15923
-;;;;;;  330041 0))
+;;;### (autoloads nil nil ("ace-window-pkg.el" "avy.el") (21776 30973
+;;;;;;  720098 0))
 
 ;;;***
 

@@ -6,7 +6,7 @@
 ;; Maintainer: John Wiegley <jwiegley@gmail.com>
 ;; Created: 17 Jun 2012
 ;; Version: 2.0
-;; Package-Version: 20150322.2238
+;; Package-Version: 20150325.1614
 ;; Package-Requires: ((bind-key "1.0") (diminish "0.44"))
 ;; Keywords: dotemacs startup speed config package
 ;; URL: https://github.com/jwiegley/use-package
@@ -672,7 +672,7 @@ function for a particular keymap.  The keymap is expected to be
 defined by the package.  In this way, loading the package is
 deferred until the prefix key sequence is pressed."
   (if (not (require package nil t))
-      (error "Could not load package %s" package)
+      (use-package-error (format "Could not load package.el: %s" package))
     (if (and (boundp keymap-symbol)
              (keymapp (symbol-value keymap-symbol)))
         (let ((key (key-description (this-command-keys-vector)))
@@ -683,8 +683,9 @@ deferred until the prefix key sequence is pressed."
             (bind-key key keymap))
           (setq unread-command-events
                 (listify-key-sequence (this-command-keys-vector))))
-      (error "use-package: package %s failed to define keymap %s"
-             package keymap-symbol))))
+      (use-package-error
+       (format "use-package: package.el %s failed to define keymap %s"
+               package keymap-symbol)))))
 
 (defun use-package-handler/:bind-keymap
     (name-symbol keyword arg rest state &optional override)
@@ -697,6 +698,7 @@ deferred until the prefix key sequence is pressed."
                          'bind-key)
                       ,(car binding)
                       #'(lambda ()
+                          (interactive)
                           (use-package-autoload-keymap
                            ',(cdr binding) ',name-symbol nil)))) arg)))
     (use-package-concat
@@ -883,10 +885,7 @@ deferred until the prefix key sequence is pressed."
              config-body)
           `((if (not (require ',name-symbol nil t))
                 (ignore
-                 (display-warning
-                  'use-package
-                  (format "Could not load %s" ',name-symbol)
-                  :error))
+                 (message (format "Could not load %s" ',name-symbol)))
               ,@config-body)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -920,9 +919,10 @@ deferred until the prefix key sequence is pressed."
   (let ((body (use-package-process-keywords name-symbol rest state)))
     (use-package-concat
      (mapcar #'(lambda (var)
-                 (if (consp var)
-                     `(diminish ',(car var) ,(cdr var))
-                   `(diminish ',var)))
+                 `(if (fboundp 'diminish)
+                      ,(if (consp var)
+                           `(diminish ',(car var) ,(cdr var))
+                         `(diminish ',var))))
              arg)
      body)))
 
@@ -1025,11 +1025,11 @@ this file.  Usage:
                     ,@(mapcar #'(lambda (var) `(defvar ,var))
                               (plist-get args* :defines))
                     (with-demoted-errors
-                        ,(format "Error loading %s: %%S" name-symbol)
+                        ,(format "Cannot load %s: %%S" name-symbol)
                       ,(if use-package-verbose
                            `(message "Compiling package %s" ',name-symbol))
                       ,(unless (plist-get args* :no-require)
-                         `(require ',name-symbol nil t)))))))
+                         `(require ',name-symbol)))))))
 
       (let ((body
              (macroexp-progn

@@ -2,11 +2,11 @@
 
 ;; Copyright (C) 2014 Artur Malabarba <bruce.connor.am@gmail.com>
 
-;; Author: Artur Malabarba <bruce.connor.am@gmail.com>
-;; URL: http://github.com/Bruce-Connor/aggressive-indent-mode
-;; Package-Version: 20150322.208
-;; Version: 0.3.5
-;; Package-Requires: ((emacs "24.1") (names "0.5") (cl-lib "0.5"))
+;; Author: Artur Malabarba <emacs@endlessparentheses.com>
+;; URL: http://github.com/Malabarba/aggressive-indent-mode
+;; Package-Version: 20150325.1329
+;; Version: 1.0
+;; Package-Requires: ((emacs "24.1") (names "20150125.9") (cl-lib "0.5"))
 ;; Keywords: indent lisp maint tools
 ;; Prefix: aggressive-indent
 ;; Separator: -
@@ -14,12 +14,12 @@
 ;;; Commentary:
 ;;
 ;; `electric-indent-mode' is enough to keep your code nicely aligned when
-;; all you do is type. However, once you start shifting blocks around,
+;; all you do is type.  However, once you start shifting blocks around,
 ;; transposing lines, or slurping and barfing sexps, indentation is bound
 ;; to go wrong.
 ;;
 ;; `aggressive-indent-mode' is a minor mode that keeps your code always
-;; indented. It reindents after every command, making it more reliable
+;; indented.  It reindents after every command, making it more reliable
 ;; than `electric-indent-mode'.
 ;;
 ;; ### Instructions ###
@@ -34,7 +34,7 @@
 ;;     (add-hook 'css-mode-hook #'aggressive-indent-mode)
 ;;
 ;; You can use this hook on any mode you want, `aggressive-indent' is not
-;; exclusive to emacs-lisp code. In fact, if you want to turn it on for
+;; exclusive to emacs-lisp code.  In fact, if you want to turn it on for
 ;; every programming mode, you can do something like:
 ;;
 ;;     (global-aggressive-indent-mode 1)
@@ -89,42 +89,26 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'names)
-
-(defmacro aggressive-indent--do-softly (&rest body)
-  "Execute body unobstrusively.
-This means:
- 1. Do nothing in several situations, specified by
-    `aggressive-indent-dont-indent-if' and
-    `aggressive-indent--internal-dont-indent-if'.
- 2. Silence all messages.
- 3. Never throw errors.
-Meant for use in functions which go in hooks."
-  (declare (debug t))
-  `(unless (or (run-hook-wrapped
-                'aggressive-indent--internal-dont-indent-if
-                #'eval)
-               (aggressive-indent--run-user-hooks))
-     (cl-letf (((symbol-function 'message) #'ignore))
-       (ignore-errors ,@body))))
+(eval-when-compile (require 'names))
 
 ;;;###autoload
-(define-namespace aggressive-indent- :group indent
+(define-namespace aggressive-indent-
+:group indent
 
-(defconst version "0.3.5" "Version of the aggressive-indent.el package.")
 (defun bug-report ()
-  "Opens github issues page in a web browser. Please send any bugs you find.
-Please include your emacs and aggressive-indent versions."
+  "Opens github issues page in a web browser.  Please send any bugs you find.
+Please include your Emacs and `aggressive-indent' versions."
   (interactive)
+  (require 'lisp-mnt)
   (message "Your `aggressive-indent-version' is: %s, and your emacs version is: %s.
 Please include this in your report!"
-           version emacs-version)
+    (lm-version (find-library-name "aggressive-indent")) emacs-version)
   (browse-url "https://github.com/Bruce-Connor/aggressive-indent-mode/issues/new"))
 
 
 ;;; Start of actual Code:
 (defcustom dont-electric-modes '(ruby-mode)
-  "List of major-modes where `electric-indent-mode' should be disabled."
+  "List of major-modes where `electric-indent' should be disabled."
   :type '(choice
           (const :tag "Never use `electric-indent-mode'." t)
           (repeat :tag "List of major-modes to avoid `electric-indent-mode'." symbol))
@@ -164,7 +148,7 @@ Please include this in your report!"
     )
   "Modes in which `aggressive-indent-mode' should not be activated.
 This variable is only used if `global-aggressive-indent-mode' is
-active. If the minor mode is turned on with the local command,
+active.  If the minor mode is turned on with the local command,
 `aggressive-indent-mode', this variable is ignored."
   :type '(repeat symbol)
   :package-version '(aggressive-indent . "0.3.1"))
@@ -189,24 +173,27 @@ commands will NOT be followed by a re-indent."
     (null (buffer-modified-p))
     (and (boundp 'smerge-mode) smerge-mode)
     (string-match "\\`[[:blank:]]*\n?\\'" (or (thing-at-point 'line) ""))
-    (and (not aggressive-indent-comments-too)
-         (aggressive-indent--in-comment-p))
-    (aggressive-indent--in-string-p))
+    (let ((sp (syntax-ppss)))
+      ;; Comments.
+      (or (and (not aggressive-indent-comments-too) (elt sp 4))
+          ;; Strings.
+          (elt sp 3))))
   "List of forms which prevent indentation when they evaluate to non-nil.
-This is for internal use only. For user customization, use
+This is for internal use only.  For user customization, use
 `aggressive-indent-dont-indent-if' instead.")
 
-(defcustom modes-to-prefer-defun '(emacs-lisp-mode lisp-mode scheme-mode)
+(defcustom modes-to-prefer-defun
+  '(emacs-lisp-mode lisp-mode scheme-mode clojure-mode)
   "List of major-modes in which indenting defun is preferred.
 Add here any major modes with very good definitions of
 `end-of-defun' and `beginning-of-defun', or modes which bug out
 if you have `after-change-functions' (such as paredit).
 
 If current major mode is derived from one of these,
-`aggressive-indent-mode' will call
-`aggressive-indent-indent-defun' after every command. Otherwise,
-it will call `aggressive-indent-indent-region-and-on' after every
-buffer change."
+`aggressive-indent' will call `aggressive-indent-indent-defun'
+after every command.  Otherwise, it will call
+`aggressive-indent-indent-region-and-on' after every buffer
+change."
   :type '(repeat symbol)
   :package-version '(aggressive-indent . "0.3"))
 
@@ -228,7 +215,7 @@ buffer change."
 
 (defcustom dont-indent-if '()
   "List of variables and functions to prevent aggressive indenting.
-This variable is a list where each element is a lisp form.
+This variable is a list where each element is a Lisp form.
 As long as any one of these forms returns non-nil,
 aggressive-indent will not perform any indentation.
 
@@ -253,10 +240,9 @@ erroring again."
        (condition-case er
            (prog1 (eval (cons 'or dont-indent-if))
              (setq -has-errored nil))
-         (error
-          (unless -has-errored
-            (setq -has-errored t)
-            (message -error-message er))))))
+         (error (unless -has-errored
+                  (setq -has-errored t)
+                  (message -error-message er))))))
 
 :autoload
 (defun indent-defun ()
@@ -272,8 +258,8 @@ Throw an error if parentheses are unbalanced."
 
 (defun -softly-indent-defun ()
   "Indent current defun unobstrusively.
-Like `aggressive-indent-indent-defun', but wrapped in a
-`aggressive-indent--do-softly'."
+Like `aggressive-indent-indent-defun', but without errors or
+messages."
   (unless (or (run-hook-wrapped
                'aggressive-indent--internal-dont-indent-if
                #'eval)
@@ -316,9 +302,9 @@ until nothing more happens."
       (goto-char p))))
 
 (defun -softly-indent-region-and-on (l r &rest _)
-  "Indent current defun unobstrusively.
-Like `aggressive-indent-indent-region-and-on', but wrapped in a
-`aggressive-indent--do-softly'."
+  "Indent region between L and R, and a bit more.
+Like `aggressive-indent-indent-region-and-on', but without errors
+or messages."
   (unless (or (run-hook-wrapped
                'aggressive-indent--internal-dont-indent-if
                #'eval)
@@ -343,25 +329,15 @@ Like `aggressive-indent-indent-region-and-on', but wrapped in a
             -changed-list-right nil))))
 
 (defun -keep-track-of-changes (l r &rest _)
-  "Store the limits of each change that happens in the buffer."
+  "Store the limits (L and R) of each change in the buffer."
   (push l -changed-list-left)
   (push r -changed-list-right))
-
-(defun -in-comment-p ()
-  "Return non-nil if point is inside a comment.
-Assumes that the syntax table is sufficient to find comments."
-  (nth 4 (syntax-ppss)))
-
-(defun -in-string-p ()
-  "Return non-nil if point is inside a string.
-Assumes that the syntax table is sufficient for recognizing
-strings."
-  (nth 3 (syntax-ppss)))
 
 
 ;;; Minor modes
 :autoload
-(define-minor-mode mode nil nil " =>"
+(define-minor-mode mode
+  nil nil " =>"
   '(("" . aggressive-indent-indent-defun)
     ([backspace] menu-item "maybe-delete-indentation" ignore
      :filter (lambda (&optional _)
@@ -394,7 +370,7 @@ strings."
     (remove-hook 'post-command-hook #'-softly-indent-defun 'local)))
 
 (defun -local-electric (on)
-  "Turn `electric-indent-mode' on or off locally, as given by boolean ON."
+  "Turn variable `electric-indent-mode' on or off locally, as per boolean ON."
   (if (fboundp 'electric-indent-local-mode)
       (electric-indent-local-mode (if on 1 -1))
     (set (make-local-variable 'electric-indent-mode) on)))
@@ -409,4 +385,4 @@ strings."
 )
 
 (provide 'aggressive-indent)
-;;; aggressive-indent.el ends here.
+;;; aggressive-indent.el ends here

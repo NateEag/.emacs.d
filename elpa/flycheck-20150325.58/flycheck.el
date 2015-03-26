@@ -5651,8 +5651,9 @@ To initialize packages, call `package-initialize' before
 byte-compiling the file to check.
 
 When nil, never initialize packages.  When `auto', initialize
-packages only when checking files from `user-emacs-directory'.
-For any other non-nil value, always initialize packages."
+packages only when checking `user-init-file' or files from
+`user-emacs-directory'.  For any other non-nil value, always
+initialize packages."
   :type '(choice (const :tag "Do not initialize packages" nil)
                  (const :tag "Initialize packages for configuration only" auto)
                  (const :tag "Always initialize packages" t))
@@ -5669,7 +5670,9 @@ For any other non-nil value, always initialize packages."
   "Option VALUE filter for `flycheck-emacs-lisp-initialize-packages'."
   (let ((shall-initialize
          (if (eq value 'auto)
-             (flycheck-in-user-emacs-directory-p (buffer-file-name))
+             (or (flycheck-in-user-emacs-directory-p (buffer-file-name))
+                 (flycheck-same-files-p (buffer-file-name)
+                                        user-init-file))
            value)))
     (when shall-initialize
       ;; If packages shall be initialized, return the corresponding form,
@@ -5934,7 +5937,7 @@ See URL `https://github.com/golang/lint'."
                   go-build go-test go-errcheck))
 
 (flycheck-def-option-var flycheck-go-vet-print-functions nil go-vet
-  "A comma-separated list of print-like functions for `go tool vet'.
+  "A list of print-like functions for `go tool vet'.
 
 Go vet will check these functions for format string problems and
 issues, such as a mismatch between the number of formats used,

@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; Keywords: lisp
-;; Package-Version: 20150319.315
+;; Package-Version: 20150324.9
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (flycheck "0.22") (emacs "24"))
 
@@ -296,7 +296,10 @@ DESC is a struct as returned by `package-buffer-info'."
        1 1
        'warning
        "The package summary is too long. It should be at most 50 characters.")))
-    (when (string-match-p "\\<[Ee]macs\\>" summary)
+    (when (save-match-data
+            (let ((case-fold-search t))
+              (and (string-match "\\<emacs\\>" summary)
+                   (not (string-match-p "[[:space:]]+lisp" summary (match-end 0))))))
       (flypkg/error
        1 1
        'warning

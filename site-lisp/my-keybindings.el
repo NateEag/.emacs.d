@@ -57,6 +57,8 @@
     ("a l" . evil-ace-jump-line-mode)
     ("a c" . evil-ace-jump-char-mode)
 
+    ("e" . eval-buffer)
+
     ;; Change names from snake_case to ALL_CAPS to StudlyCaps to camelCase.
     ("u" . string-inflection-toggle)
 

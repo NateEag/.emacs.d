@@ -3,7 +3,8 @@
 
 -I'd like s-[ and s-] to turn on a max-width (popwin) terminal if none is
  displayed, and to move to 'prev' and 'next' terms if it is. I'd also like
- changing to a terminal buffer to always focus it in a popwin window.
+ changing to a terminal buffer to always focus it in a popwin window. Update:
+ window-purpose might be a useful package for this.
 
 -Write a general-case ac-source for Tern.js. Right now I have to press M-Tab to
  trigger top-level completions, and I'd like to just press Tab. emacs-eclim

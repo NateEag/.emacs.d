@@ -1,4 +1,4 @@
-;;; config-packages.el --- configure my Emacs packages.
+;; config-packages.el --- configure my Emacs packages.
 
 ;;; Author: Nate Eagleson
 
@@ -46,6 +46,11 @@
 
 (use-package my-frame-setup
   :commands my-set-up-frame)
+
+(use-package space-trail
+  ;; TODO Remove commands once it's packaged and has autoloads.
+  :commands space-trail-activate
+  :init (space-trail-activate))
 
 (use-package s
   :commands s-replace s-trim)

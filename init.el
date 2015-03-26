@@ -106,20 +106,6 @@ new file for the first time."
 
 (add-hook 'before-save-hook 'maybe-reset-major-mode)
 
-;; I generally prefer to strip trailing whitespace on saves, but not when I'm
-;; editing diffs, where whitespace is crucial. If I ever start using another
-;; file format where trailing whitespace matters, this might need upgrading,
-;; but for now, this hack should do the job.
-;; I originally tried to remove the delete-trailing-whitespace hook when
-;; loading diff-mode, but for some reason, that only worked when I removed it
-;; globally. I'm guessing before-save-hook is not a buffer-local variable.
-(defun maybe-delete-trailing-whitespace ()
-  "Delete trailing whitespace if the current buffer is not a patch."
-  (unless (string-match "\\.*.\\(patch\\|diff\\)$" (buffer-file-name))
-      (delete-trailing-whitespace)))
-
-(add-hook 'before-save-hook 'maybe-delete-trailing-whitespace)
-
 ;; If a file looks scripty and it isn't executable at save time, make it so.
 (add-hook 'after-save-hook 'executable-make-buffer-file-executable-if-script-p)
 

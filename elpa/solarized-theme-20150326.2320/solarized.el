@@ -255,8 +255,7 @@ customize the resulting theme."
                                'variable-pitch 'default))
          (s-fringe-bg (if solarized-distinct-fringe-background
                           base02 base03))
-         (s-fringe-fg (if solarized-distinct-fringe-background
-                          base0 base01))
+         (s-fringe-fg base01)
 
 
          (s-header-line-fg (if solarized-high-contrast-mode-line
@@ -1431,7 +1430,7 @@ customize the resulting theme."
      `(navi2ch-bm-view-face ((,class (:foreground ,yellow))))
      `(navi2ch-bm-cache-face ((,class (:foreground ,blue))))
      `(navi2ch-bm-update-face ((,class (:foreground ,orange))))
-     `(navi2ch-bm-down-face ((,class (:foreground ,base03))))
+     `(navi2ch-bm-down-face ((,class (:foreground ,base1))))
      `(navi2ch-bm-mark-face ((,class (:foreground ,red))))
      `(navi2ch-bm-new-unread-face ((,class (:foreground ,green))))
      `(navi2ch-bm-new-view-face ((,class (:foreground ,yellow))))
@@ -1448,7 +1447,7 @@ customize the resulting theme."
      `(navi2ch-bm-seen-cache-face ((,class (:foreground ,blue))))
      `(navi2ch-bm-seen-update-face ((,class (:foreground ,orange))))
      `(navi2ch-bm-seen-mark-face ((,class (:foreground ,red))))
-     `(navi2ch-article-header-face ((,class (:foreground ,base03))))
+     `(navi2ch-article-header-face ((,class (:foreground ,base1))))
      `(navi2ch-article-header-contents-face ((,class (:foreground ,blue))))
      `(navi2ch-article-header-fusianasan-face ((,class (:foreground ,blue :underline t))))
      `(navi2ch-article-link-face ((,class (:weight bold))))
@@ -1460,6 +1459,13 @@ customize the resulting theme."
      `(navi2ch-message-link-face ((,class (:weight bold))))
      `(navi2ch-message-url-face ((,class (:weight bold))))
      `(navi2ch-message-citation-face ((,class (:foreground ,magenta))))
+;;;;; neotree
+     `(neo-banner-face ((,class (:foreground ,base01))))
+     `(neo-header-face ((,class (:foreground ,blue))))
+     `(neo-root-dir-face ((,class (:foreground ,base1 :weight bold))))
+     `(neo-dir-link-face ((,class (:foreground ,blue))))
+     `(neo-file-link-face ((,class (:foreground ,base0))))
+     `(neo-expand-btn-face ((,class (:foreground ,base01))))
 ;;;;; org-mode
      `(org-agenda-structure
        ((,class (:foreground ,base1 :background ,base02
@@ -1578,6 +1584,19 @@ customize the resulting theme."
      `(popup-scroll-bar-background-face ((,class (:background ,base01))))
      `(popup-scroll-bar-foreground-face ((,class (:background ,base1))))
      `(popup-tip-face ((,class (:background ,base02 :foreground ,base0))))
+;;;;; powerline
+     `(powerline-active1 ((,class ,(if solarized-high-contrast-mode-line
+                                       `(:background ,base00 :foreground ,base03)
+                                       `(:background ,base03 :foreground ,base00)))))
+     `(powerline-active2 ((,class ,(if solarized-high-contrast-mode-line
+                                       `(:background ,base01 :foreground ,base03)
+                                       `(:background ,base02 :foreground ,base00)))))
+     `(powerline-inactive1 ((,class ,(if solarized-high-contrast-mode-line
+                                         `(:background ,base03 :foreground ,base1)
+                                         `(:background ,base02 :foreground ,base01)))))
+     `(powerline-inactive2 ((,class ,(if solarized-high-contrast-mode-line
+                                         `(:background ,base02 :foreground ,base1)
+                                         `(:background ,base03 :foreground ,base01)))))
 ;;;;; rainbow-blocks
      `(rainbow-blocks-depth-1-face ((,class (:foreground ,cyan))))
      `(rainbow-blocks-depth-2-face ((,class (:foreground ,yellow))))

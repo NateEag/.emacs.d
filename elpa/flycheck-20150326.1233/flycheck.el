@@ -310,10 +310,7 @@ file.  See Info Node `(emacs)Specifying File Variables' for more
 information about file variables.")
 (put 'flycheck-checker 'safe-local-variable 'flycheck-registered-checker-p)
 
-(defcustom flycheck-locate-config-file-functions
-  '(flycheck-locate-config-file-absolute-path
-    flycheck-locate-config-file-ancestor-directories
-    flycheck-locate-config-file-home)
+(defcustom flycheck-locate-config-file-functions nil
   "Functions to locate syntax checker configuration files.
 
 Each function in this hook must accept two arguments: The value
@@ -350,7 +347,7 @@ future syntax checks of the buffer."
   :risky t
   :package-version '(flycheck . "0.22"))
 
-(defcustom flycheck-process-error-functions '(flycheck-add-overlay)
+(defcustom flycheck-process-error-functions nil
   "Functions to process errors.
 
 Each function in this hook must accept a single argument: A
@@ -868,6 +865,20 @@ Mode Conventions'), regardless of the value of this option."
                       (repeat :inline t (symbol :tag "mode"))))
   :risky t
   :package-version '(flycheck . "0.23"))
+
+;; Add built-in functions to our hooks, via `add-hook', to make sure that our
+;; functions are really present, even if the variable was implicitly defined by
+;; another call to `add-hook' that occurred before Flycheck was loaded.  See
+;; http://lists.gnu.org/archive/html/emacs-devel/2015-02/msg01271.html for why
+;; we don't initialize the hook variables right away.  We append our own
+;; functions, because a user likely expects that their functions come first,
+;; even if the added them before Flycheck was loaded.
+(dolist (hook (list #'flycheck-locate-config-file-absolute-path
+                    #'flycheck-locate-config-file-ancestor-directories
+                    #'flycheck-locate-config-file-home))
+  (add-hook 'flycheck-locate-config-file-functions hook 'append))
+
+(add-hook 'flycheck-process-error-functions #'flycheck-add-overlay 'append)
 
 
 ;;; Global Flycheck menu
@@ -2140,9 +2151,13 @@ buffer-local value of `flycheck-disabled-checkers'."
       ;; We must use `remq' instead of `delq', because we must _not_ modify the
       ;; list.  Otherwise we could potentially modify the global default value,
       ;; in case the list is the global default.
-      (setq flycheck-disabled-checkers (remq checker flycheck-disabled-checkers))
+      (when (memq checker flycheck-disabled-checkers)
+        (setq flycheck-disabled-checkers
+              (remq checker flycheck-disabled-checkers))
+        (flycheck-buffer))
     (unless (memq checker flycheck-disabled-checkers)
-      (push checker flycheck-disabled-checkers))))
+      (push checker flycheck-disabled-checkers)
+      (flycheck-buffer))))
 
 
 ;;; Syntax checks for the current buffer
@@ -5671,8 +5686,13 @@ initialize packages."
   (let ((shall-initialize
          (if (eq value 'auto)
              (or (flycheck-in-user-emacs-directory-p (buffer-file-name))
-                 (flycheck-same-files-p (buffer-file-name)
-                                        user-init-file))
+                 ;; `user-init-file' is nil in non-interactive sessions.  Now,
+                 ;; no user would possibly use Flycheck in a non-interactive
+                 ;; session, but our unit tests run non-interactively, so we
+                 ;; have to handle this case anyway
+                 (and user-init-file
+                      (flycheck-same-files-p (buffer-file-name)
+                                             user-init-file)))
            value)))
     (when shall-initialize
       ;; If packages shall be initialized, return the corresponding form,

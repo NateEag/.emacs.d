@@ -66,5 +66,9 @@
     (when (= 2 num-windows)
         (split-window-right))))
 
+(defadvice make-frame-command (after set-up-new-frame activate)
+  "After creating a new frame, size it the way I like."
+  (my-set-up-frame))
+
 (provide 'my-frame-setup)
 ;;; my-frame-setup.el ends here

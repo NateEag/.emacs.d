@@ -203,10 +203,13 @@ Only buffer names are fuzzy matched when this is enabled,
    :action (helm-make-actions
             "Create buffer (C-u choose mode)"
             (lambda (candidate)
-             (let ((mjm (and helm-current-prefix-arg
-                             (intern-soft (helm-comp-read
-                                           "Major-mode: "
-                                           helm-buffers-favorite-modes))))
+             (let ((mjm (or (and helm-current-prefix-arg
+                                 (intern-soft (helm-comp-read
+                                               "Major-mode: "
+                                               helm-buffers-favorite-modes)))
+                            (cl-loop for (r . m) in auto-mode-alist
+                                     when (string-match r candidate)
+                                     return m)))
                    (buffer (get-buffer-create candidate)))
                (if mjm
                    (with-current-buffer buffer (funcall mjm))
@@ -359,20 +362,21 @@ Should be called after others transformers i.e (boring buffers)."
                           (concat truncbuf "\t" formatted-size
                                   "  " fmode "  " meta)
                         name)
-                      i)))
+                      (get-buffer i))))
 
-(defun helm-buffer--get-preselection (buffer-name)
-  (concat "^"
-          (if (and (null helm-buffer-details-flag)
-                   (numberp helm-buffer-max-length)
-                   (> (string-width buffer-name)
-                      helm-buffer-max-length))
-              (regexp-quote
-               (helm-substring-by-width
-                buffer-name helm-buffer-max-length))
-            (concat (regexp-quote buffer-name)
-                    (if helm-buffer-details-flag
-                        "$" "[[:blank:]]+")))))
+(defun helm-buffer--get-preselection (buffer)
+  (let ((bufname (buffer-name buffer)))
+    (concat "^"
+            (if (and (null helm-buffer-details-flag)
+                     (numberp helm-buffer-max-length)
+                     (> (string-width bufname)
+                        helm-buffer-max-length))
+                (regexp-quote
+                 (helm-substring-by-width
+                  bufname helm-buffer-max-length))
+                (concat (regexp-quote bufname)
+                        (if helm-buffer-details-flag
+                            "$" "[[:blank:]]+"))))))
 
 (defun helm-toggle-buffers-details ()
   (interactive)
@@ -683,13 +687,14 @@ If REGEXP-FLAG is given use `query-replace-regexp'."
   (with-helm-temp-hook 'helm-after-persistent-action-hook
     (helm-force-update (regexp-quote (helm-get-selection nil t)))))
 
-(defun helm-buffers--quote-truncated-buffer (bufname)
-  (regexp-quote
-   (if helm-buffer-max-length
-       (helm-substring-by-width
-        bufname helm-buffer-max-length
-        "")
-     bufname)))
+(defun helm-buffers--quote-truncated-buffer (buffer)
+  (let ((bufname (buffer-name buffer)))
+    (regexp-quote
+     (if helm-buffer-max-length
+         (helm-substring-by-width
+          bufname helm-buffer-max-length
+          "")
+         bufname))))
 
 (defun helm-buffers-persistent-kill (_buffer)
   (let ((marked (helm-marked-candidates)))

@@ -56,8 +56,13 @@ and `helm-imenu-default-action'.")
   "The register where `helm-save-pos-to-register-before-jump' save position.")
 
 (defface helm-selection-line
-    '((t (:inherit highlight)))
+    '((t (:inherit highlight :distant-foreground "black")))
   "Face used in the `helm-current-buffer' when jumping to candidate."
+  :group 'helm-faces)
+
+(defface helm-match-item
+    '((t (:inherit isearch)))
+  "Face used to highlight item matched in a selected line."
   :group 'helm-faces)
 
 
@@ -287,6 +292,28 @@ Default is `eq'."
         finally return
         (cl-loop for i being the hash-values in cont collect i)))
 
+(defun helm-remove-if-not-match (regexp seq)
+  "Remove all elements of SEQ that don't match REGEXP."
+  (cl-loop for s in seq
+           for str = (cond ((symbolp s)
+                            (symbol-name s))
+                           ((consp s)
+                            (car s))
+                           (t s))
+           when (string-match-p regexp str)
+           collect s))
+
+(defun helm-remove-if-match (regexp seq)
+  "Remove all elements of SEQ that match REGEXP."
+  (cl-loop for s in seq
+           for str = (cond ((symbolp s)
+                            (symbol-name s))
+                           ((consp s)
+                            (car s))
+                           (t s))
+           unless (string-match-p regexp str)
+           collect s))
+
 (defun helm-handle-winner-boring-buffers ()
   "Add `helm-buffer' to `winner-boring-buffers' when quitting/exiting helm.
 Add this function to `helm-cleanup-hook' when you don't want to see helm buffers
@@ -314,34 +341,41 @@ from its directory."
           (grep-line (and (stringp sel)
                           (helm-grep-split-line sel)))
           (bmk-name  (and (stringp sel)
+                          (not grep-line)
                           (replace-regexp-in-string "\\`\\*" "" sel)))
           (bmk       (and bmk-name (assoc bmk-name bookmark-alist)))
+          (buf       (helm-aif (get-buffer sel) (buffer-name it)))
           (default-preselection (or (buffer-file-name helm-current-buffer)
                                     default-directory)))
-     (if (stringp sel)
-         (helm-aif (get-buffer (or (get-text-property
-                                    (1- (length sel)) 'buffer-name sel)
-                                   sel))
-             (or (buffer-file-name it)
-                 (car (rassoc it dired-buffers))
-                 (and (with-current-buffer it
-                        (eq major-mode 'org-agenda-mode))
-                      org-directory
-                      (expand-file-name org-directory))
-                 (with-current-buffer it default-directory))
-           (cond (bmk (helm-aif (bookmark-get-filename bmk)
-                          (if (and ffap-url-regexp
-                                   (string-match ffap-url-regexp it))
-                              it (expand-file-name it))
-                        default-directory))
-                 ((or (file-remote-p sel)
-                      (file-exists-p sel))
-                  (expand-file-name sel))
-                 ((and grep-line (file-exists-p (car grep-line)))
-                  (expand-file-name (car grep-line)))
-                 ((and ffap-url-regexp (string-match ffap-url-regexp sel)) sel)
-                 (t default-preselection)))
-       default-preselection))))
+     (cond
+       ;; Buffer.
+       (buf (or (buffer-file-name sel)
+                (car (rassoc buf dired-buffers))
+                (and (with-current-buffer buf
+                       (eq major-mode 'org-agenda-mode))
+                     org-directory
+                     (expand-file-name org-directory))
+                (with-current-buffer buf default-directory)))
+       ;; Bookmark.
+       (bmk (helm-aif (bookmark-get-filename bmk)
+                (if (and ffap-url-regexp
+                         (string-match ffap-url-regexp it))
+                    it (expand-file-name it))
+              default-directory))
+       ((or (file-remote-p sel)
+            (file-exists-p sel))
+        (expand-file-name sel))
+       ;; Grep.
+       ((and grep-line (file-exists-p (car grep-line)))
+        (expand-file-name (car grep-line)))
+       ;; Occur.
+       (grep-line
+        (with-current-buffer (get-buffer (car grep-line))
+          (or (buffer-file-name) default-directory)))
+       ;; Url.
+       ((and ffap-url-regexp (string-match ffap-url-regexp sel)) sel)
+       ;; Default.
+       (t default-preselection)))))
 
 ;; Same as `vc-directory-exclusion-list'.
 (defvar helm-walk-ignore-directories
@@ -607,7 +641,7 @@ Useful in dired buffers when there is inserted subdirs."
 ;;
 ;; Internal
 (defvar helm-match-line-overlay nil)
-
+(defvar helm--match-item-overlays nil)
 (defun helm-highlight-current-line (&optional start end buf face pulse)
   "Highlight and underline current position"
   (let* ((start (or start (line-beginning-position)))
@@ -618,6 +652,18 @@ Useful in dired buffers when there is inserted subdirs."
       (apply 'move-overlay helm-match-line-overlay args))
     (overlay-put helm-match-line-overlay
                  'face (or face 'helm-selection-line))
+    (cl-loop with ov
+             for r in (helm-remove-if-match
+                       "\\`!" (split-string helm-pattern))
+             do (progn
+                  (goto-char start)
+                  (save-excursion
+                    (while (re-search-forward r end t)
+                      (push (setq ov (make-overlay
+                                      (match-beginning 0) (match-end 0)))
+                            helm--match-item-overlays)
+                      (overlay-put ov 'face 'helm-match-item)
+                      (overlay-put ov 'priority 1)))))
     (recenter)
     (when pulse
       (sit-for 0.3)
@@ -626,7 +672,9 @@ Useful in dired buffers when there is inserted subdirs."
 (defun helm-match-line-cleanup ()
   (when helm-match-line-overlay
     (delete-overlay helm-match-line-overlay)
-    (setq helm-match-line-overlay nil)))
+    (setq helm-match-line-overlay nil))
+  (when helm--match-item-overlays
+    (mapc 'delete-overlay helm--match-item-overlays)))
 
 (defun helm-match-line-update ()
   (when helm-match-line-overlay

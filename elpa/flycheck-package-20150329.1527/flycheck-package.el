@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; Keywords: lisp
-;; Package-Version: 20150324.9
+;; Package-Version: 20150329.1527
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (flycheck "0.22") (emacs "24"))
 
@@ -42,6 +42,12 @@
 (require 'flycheck)
 (require 'package)
 (require 'lisp-mnt)
+
+
+;;; Compatibility
+
+(unless (fboundp 'package-desc-summary)
+  (defalias 'package-desc-summary 'package-desc-doc))
 
 
 ;;; Machinery

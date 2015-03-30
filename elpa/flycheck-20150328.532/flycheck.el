@@ -208,6 +208,7 @@ attention to case differences."
     javascript-gjslint
     json-jsonlint
     less
+    luacheck
     lua
     perl
     perl-perlcritic
@@ -977,8 +978,11 @@ to a number and return it.  Otherwise return nil."
 
 (defun flycheck-same-files-p (file-a file-b)
   "Determine whether FILE-A and FILE-B refer to the same file."
-  (string= (directory-file-name (expand-file-name file-a))
-           (directory-file-name (expand-file-name file-b))))
+  ;; We must resolve symbolic links here, since some syntax checker always
+  ;; output canonical file names with all symbolic links resolved.  See
+  ;; https://github.com/flycheck/flycheck/issues/561
+  (string= (directory-file-name (file-truename file-a))
+           (directory-file-name (file-truename file-b))))
 
 (defvar-local flycheck-temporaries nil
   "Temporary files and directories created by Flycheck.")
@@ -2020,8 +2024,6 @@ buffer manually.
   :init-value nil
   :keymap flycheck-mode-map
   :lighter flycheck-mode-line
-  :group 'flycheck
-  :require 'flycheck
   :after-hook (flycheck-buffer-automatically 'mode-enabled 'force-deferred)
   (cond
    (flycheck-mode
@@ -2527,8 +2529,13 @@ returns t."
 (define-globalized-minor-mode global-flycheck-mode flycheck-mode
   flycheck-mode-on-safe
   :init-value nil
-  :group 'flycheck
-  :require 'flycheck)
+  ;; Do not expose Global Flycheck Mode on customize interface, because the
+  ;; interaction between package.el and customize is currently broken.  See
+  ;; https://github.com/flycheck/flycheck/issues/595
+
+  ;; :require 'flycheck :group
+  ;; 'flycheck
+  )
 
 (defun flycheck-global-teardown ()
   "Teardown Flycheck in all buffers.
@@ -6355,6 +6362,28 @@ See URL `http://lesscss.org'."
           ", column " column ":"
           line-end))
   :modes less-css-mode)
+
+(flycheck-def-config-file-var flycheck-luacheckrc luacheck ".luacheckrc"
+  :safe #'stringp
+  :package-version '(flycheck . "0.23"))
+
+(flycheck-define-checker luacheck
+  "A Lua syntax checker using luacheck.
+
+See URL `https://github.com/mpeterv/luacheck'."
+  :command ("luacheck"
+            (config-file "--config" flycheck-luacheckrc)
+            "--formatter" "plain"
+            "--codes"                   ; Show warning codes
+            "--no-color"
+            source)
+  :error-patterns
+  ((warning line-start (file-name)
+            ":" line ":" column ": (" (id (and "W" (one-or-more digit)))
+            ") " (message) line-end)
+   (error line-start (file-name)
+          ":" line ":" column ":" (message) line-end))
+  :modes lua-mode)
 
 (flycheck-define-checker lua
   "A Lua syntax checker using the Lua compiler.

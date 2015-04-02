@@ -75,9 +75,10 @@ POS is either a position or (BEG . END)."
                       #'aw--remove-leading-chars))))
     (aw--done)))
 
-(defun avi--regex-candidates (regex &optional wnd beg end)
+(defun avi--regex-candidates (regex &optional wnd beg end pred)
   "Return all elements that match REGEX in WND.
-Each element of the list is ((BEG . END) . WND)."
+Each element of the list is ((BEG . END) . WND)
+When PRED is non-nil, it's a filter for matching point positions."
   (setq wnd (or wnd (selected-window)))
   (let ((we (or end (window-end (selected-window) t)))
         candidates)
@@ -86,16 +87,22 @@ Each element of the list is ((BEG . END) . WND)."
       (save-excursion
         (goto-char (or beg (window-start)))
         (while (re-search-forward regex we t)
-          (push (cons (cons (match-beginning 0)
-                            (match-end 0))
-                      wnd) candidates)))
+          (when (or (null pred)
+                    (funcall pred))
+            (push (cons (cons (match-beginning 0)
+                              (match-end 0))
+                        wnd) candidates))))
       (nreverse candidates))))
+
+(defvar avi--overlay-offset 0
+  "The offset to apply in `avi--overlay'.")
 
 (defun avi--overlay (str pt wnd)
   "Create an overlay with STR at PT in WND."
-  (let ((ol (make-overlay pt (1+ pt) (window-buffer wnd)))
-        (old-str (with-selected-window wnd
-                   (buffer-substring pt (1+ pt)))))
+  (let* ((pt (+ pt avi--overlay-offset))
+         (ol (make-overlay pt (1+ pt) (window-buffer wnd)))
+         (old-str (with-selected-window wnd
+                    (buffer-substring pt (1+ pt)))))
     (when avi-background
       (setq old-str (propertize
                      old-str 'face 'aw-background-face)))
@@ -114,6 +121,28 @@ LEAF is ((BEG . END) . WND)."
        (caar leaf)
      (car leaf))
    (cdr leaf)))
+
+(defun avi--overlay-at (path leaf)
+  "Create an overlay with STR at LEAF.
+PATH is a list of keys from tree root to LEAF.
+LEAF is ((BEG . END) . WND)."
+  (let ((str (propertize
+              (string (car (last path)))
+              'face 'avi-lead-face))
+        (pt (if (consp (car leaf))
+                (caar leaf)
+              (car leaf)))
+        (wnd (cdr leaf)))
+    (let ((ol (make-overlay pt (1+ pt)
+                            (window-buffer wnd)))
+          (old-str (with-selected-window wnd
+                     (buffer-substring pt (1+ pt)))))
+      (when avi-background
+        (setq old-str (propertize
+                       old-str 'face 'aw-background-face)))
+      (overlay-put ol 'window wnd)
+      (overlay-put ol 'display str)
+      (push ol aw-overlays-lead))))
 
 (defun avi--overlay-post (path leaf)
   "Create an overlay with STR at LEAF.

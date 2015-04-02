@@ -1,11 +1,11 @@
 ;;; aggressive-indent.el --- Minor mode to aggressively keep your code always indented
 
-;; Copyright (C) 2014 Artur Malabarba <bruce.connor.am@gmail.com>
+;; Copyright (C) 2014 Free Software Foundation, Inc.
 
 ;; Author: Artur Malabarba <emacs@endlessparentheses.com>
 ;; URL: http://github.com/Malabarba/aggressive-indent-mode
-;; Package-Version: 20150325.1329
-;; Version: 1.0
+;; Package-Version: 20150401.1516
+;; Version: 1.0.1
 ;; Package-Requires: ((emacs "24.1") (names "20150125.9") (cl-lib "0.5"))
 ;; Keywords: indent lisp maint tools
 ;; Prefix: aggressive-indent
@@ -102,7 +102,8 @@ Please include your Emacs and `aggressive-indent' versions."
   (require 'lisp-mnt)
   (message "Your `aggressive-indent-version' is: %s, and your emacs version is: %s.
 Please include this in your report!"
-    (lm-version (find-library-name "aggressive-indent")) emacs-version)
+    (lm-version (find-library-name "aggressive-indent"))
+    emacs-version)
   (browse-url "https://github.com/Bruce-Connor/aggressive-indent-mode/issues/new"))
 
 
@@ -119,6 +120,7 @@ Please include this in your report!"
     bibtex-mode
     cider-repl-mode
     coffee-mode
+    comint-mode
     conf-mode
     Custom-mode
     diff-mode

@@ -62,14 +62,22 @@
   :prefix "pyimpsort-"
   :group 'applications)
 
+(defcustom pyimpsort-display-error-buffer nil
+  "Display error buffer on error."
+  :type 'boolean
+  :group 'pyimpsort)
+
+(defcustom pyimpsort-error-buffer-name "*pyimpsort-error*"
+  "Buffer name of pyimpsort error."
+  :type 'string
+  :group 'pyimpsort)
+
 (defconst pyimpsort-script
   (expand-file-name "pyimpsort.py"
                     (file-name-directory (if load-in-progress
                                              load-file-name
                                            (buffer-file-name))))
   "Absolute path of python pyimpsort.py script.")
-
-(defvar pyimpsort-error-buffer-name "*pyimpsort-error*")
 
 (defconst pyimpsort-imports-start-regexp
   (rx (group (and bol (or "import" "from")))))
@@ -102,11 +110,12 @@
 (defun pyimpsort-region (begin end)
   "Sort python imports from region BEGIN to END points."
   (interactive "r")
-  (atomic-change-group
-    (let* ((exec-path (python-shell-calculate-exec-path))
-           (python-executable (executable-find python-shell-interpreter))
-           (command (format "%s %s" python-executable pyimpsort-script)))
-      (shell-command-on-region begin end command nil 'replace pyimpsort-error-buffer-name t))))
+  (let* ((exec-path (python-shell-calculate-exec-path))
+         (python-executable (executable-find python-shell-interpreter))
+         (command (format "%s %s" python-executable pyimpsort-script)))
+    (atomic-change-group
+      (or (zerop (shell-command-on-region begin end command nil 'replace pyimpsort-error-buffer-name pyimpsort-display-error-buffer))
+          (error "Command exited abnormally.  See %s for details" pyimpsort-error-buffer-name)))))
 
 ;;;###autoload
 (defun pyimpsort-buffer ()

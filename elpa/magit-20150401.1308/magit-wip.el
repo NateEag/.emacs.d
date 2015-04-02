@@ -1,6 +1,6 @@
 ;;; magit-wip.el --- git-wip plug-in for Magit
 
-;; Copyright (C) 2012-2014  The Magit Project Developers
+;; Copyright (C) 2012-2015  The Magit Project Developers
 ;;
 ;; For a full list of contributors, see the AUTHORS.md file
 ;; at the top-level directory of this distribution and at
@@ -50,7 +50,7 @@
 
 (defun magit-wip-mode (&rest ignore)
   (message "magit-wip-mode is obsolete and doesn't do anything"))
-(make-obsolete 'magit-wip-mode "This mode is a noop now" "2.0.0")
+(make-obsolete 'magit-wip-mode "This mode is a noop now" "1.4.0")
 
 ;;; Options
 

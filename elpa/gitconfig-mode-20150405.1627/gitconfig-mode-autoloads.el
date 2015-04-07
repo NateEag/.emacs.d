@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "gitconfig-mode" "gitconfig-mode.el" (21785
-;;;;;;  45657 0 0))
+;;;### (autoloads nil "gitconfig-mode" "gitconfig-mode.el" (21796
+;;;;;;  16562 0 0))
 ;;; Generated autoloads from gitconfig-mode.el
 
 (autoload 'gitconfig-mode "gitconfig-mode" "\

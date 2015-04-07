@@ -3,8 +3,8 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 2.2
-;; Package-Version: 20150331.13
+;; Version: 2.3
+;; Package-Version: 20150403.1137
 ;; URL: https://github.com/pidu/git-timemachine
 ;; Keywords: git
 
@@ -94,6 +94,15 @@ will be shown in the minibuffer while navigating commits."
   (interactive)
   (git-timemachine-show-revision (git-timemachine--next-revision (reverse (git-timemachine--revisions)))))
 
+(defun git-timemachine-show-nth-revision (rev-number)
+  "Show the REV-NUMBER revision."
+ (interactive "nEnter revision number: ")
+ (let* ((revisions (reverse (git-timemachine--revisions)))
+        (revision (nth (1- rev-number) revisions))
+        (num-revisions (length revisions)))
+  (if revision (git-timemachine-show-revision revision)
+   (message "Only %d revisions exist." num-revisions))))
+
 (defun git-timemachine-show-revision (revision)
  "Show a REVISION (commit hash) of the current file."
  (when revision
@@ -149,6 +158,7 @@ will be shown in the minibuffer while navigating commits."
  :keymap
  '(("p" . git-timemachine-show-previous-revision)
    ("n" . git-timemachine-show-next-revision)
+   ("g" . git-timemachine-show-nth-revision)
    ("q" . git-timemachine-quit)
    ("w" . git-timemachine-kill-abbreviated-revision)
    ("W" . git-timemachine-kill-revision))
@@ -164,7 +174,7 @@ Call with the value of 'buffer-file-name."
 
 ;;;###autoload
 (defun git-timemachine-toggle ()
- "Toggle git timemachine mode"
+ "Toggle git timemachine mode."
  (interactive)
  (if (bound-and-true-p git-timemachine-mode)
   (git-timemachine-quit)

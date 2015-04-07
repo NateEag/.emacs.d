@@ -148,11 +148,8 @@ Alpha should be a float between 0 and 1."
 
 ;;; Setup Start
 
-(defun create-solarized-theme (variant theme-name &optional childtheme)
-  "Create a VARIANT of the theme named THEME-NAME.
-
-When optional argument CHILDTHEME function is supplied it's invoked to further
-customize the resulting theme."
+(defun create-solarized-theme (variant theme-name)
+  "Create a VARIANT of the theme named THEME-NAME."
 ;;; Color palette
   (let* ((class '((class color) (min-colors 89)))
          (s-base03    "#002b36")
@@ -207,18 +204,6 @@ customize the resulting theme."
          (base02 (if (eq variant 'light) s-base2 s-base02))
          (base3 (if (eq variant 'light) s-base03 s-base3))
          (base03 (if (eq variant 'light) s-base3 s-base03))
-
-         ;; Light/Dark adaptive solarized colors
-         ;;
-         ;; NOTE: the symbols -fg, -bg, -hl, -emph, -comments -fg-hc -fg-lc are only here to
-         ;; keep being compatible with preexisting child themes.
-         (solarized-fg (if (eq variant 'light) s-base00 s-base0))
-         (solarized-bg (if (eq variant 'light) s-base3 s-base03))
-         (solarized-hl (if (eq variant 'light) s-base2 s-base02))
-         (solarized-emph (if (eq variant 'light) s-base01 s-base1))
-         (solarized-comments (if (eq variant 'light) s-base1 s-base01))
-         (solarized-fg-hc (if (eq variant 'light) s-base3 s-base03))
-         (solarized-fg-lc (if (eq variant 'light) s-base03 s-base3))
 
          ;; Line drawing color
          ;;
@@ -321,7 +306,7 @@ customize the resulting theme."
      `(compilation-warning-face ((,class (:foreground ,yellow :weight normal :underline nil))))
 
      `(compilation-mode-line-exit
-       ((,class (:inherit compilation-info :foreground ,green :weight bold))))
+       ((,class (:foreground unspecified :weight bold))))
      `(compilation-mode-line-fail
        ((,class (:inherit compilation-error :foreground ,red :weight bold))))
      `(compilation-mode-line-run ((,class (:foreground ,orange :weight bold))))
@@ -459,7 +444,7 @@ customize the resulting theme."
      `(font-lock-string-face ((,class (:foreground ,cyan))))
      `(font-lock-type-face ((,class (:foreground ,yellow))))
      `(font-lock-variable-name-face ((,class (:foreground ,blue))))
-     `(font-lock-warning-face ((,class (:foreground ,orange :weight bold :underline t))))
+     `(font-lock-warning-face ((,class (:inherit error :weight bold))))
      `(c-annotation-face ((,class (:inherit font-lock-constant-face))))
 ;;;; Third-party
 ;;;;; ace-jump-mode
@@ -2057,8 +2042,7 @@ customize the resulting theme."
      `(xterm-color-names-bright [,base03 ,orange ,base01 ,base00
                                          ,base0 ,violet ,base1 ,base3])
 ;;; Setup End
-     (when childtheme
-       (funcall childtheme))
+
      ) ; END custom-theme-set-variables
   )    ; END defun create-solarized-theme
 

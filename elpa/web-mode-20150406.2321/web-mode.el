@@ -4,7 +4,7 @@
 ;; Copyright 2011-2015 François-Xavier Bois
 
 ;; Version: 11.0.31
-;; Package-Version: 20150402.1155
+;; Package-Version: 20150406.2321
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -6592,7 +6592,7 @@ the environment as needed for ac-sources, right before they're used.")
                 web-mode-change-end (+ web-mode-change-beg offset)))
         (setq offset (max 0 offset))
         (indent-line-to offset)
-        (if (> diff 0) (forward-char diff))
+        (if (> diff 0) (move-to-column (+ (current-column) diff)))
         (when (and (string= web-mode-engine "mason")
                    (= offset 0)
                    (eq char ?\%))

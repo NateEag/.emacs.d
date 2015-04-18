@@ -36,6 +36,9 @@
  better test might be "is there a preceding single-line comment". See
  js2-mode-extend-comment for the logic that would need tweaking.
 
+-Make auto-fill apply to strings in emacs-lisp-mode. Really seems like this
+ should already be happening. Dunno why it doesn't.
+
 -Figure out why mo-git-blame isn't using mo-git-blame-git-blame-args.
 
 -Use zebra striping to make mo-git-blame/target buffer more readable.

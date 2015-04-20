@@ -25,28 +25,28 @@
   '(diff-mode)
   "A list of modes that should not have trailing whitespace stripped.")
 
-(defvar space-trail-stop-whitespace-removal-predicates
+(defvar space-trail-prevent-buffer-stripping-predicates
   '(space-trail-ignored-mode-p)
-  "A list of functions. If any return true, strip passed buffer.")
+  "A list of functions. If any return true, do not strip current buffer.")
 
 (defvar space-trail-strip-whitespace-on-current-line-p
   t
   ;; TODO Make this description coherent. Probably the variable name too...
   "Whether to strip trailing whitespace on the cursor's current line.")
 
-;; STUB
+;; TODO Add check for markdown-mode 4-space indented literal blocks.
 (defvar space-trail-prevent-line-stripping-predicates
   '(space-trail-point-on-line-p)
-  "A list of functions that decide whether to strip a line's whitespace.
+  "A list of functions that can prevent stripping a line's whitespace.
 
-When stripping a buffer's whitespace, each one is called, passing the
-current line number and the value of (point) as the user sees it.
+Before stripping a line's trailing whitespace, each one is called,
+passing the current line number and the cursor's current location.
 
-If any function returns true, that line's trailing whitespace won't
+If any function returns true, the line's trailing whitespace won't
 be stripped.")
 
 (defun space-trail-point-on-line-p (line-num orig-point)
-  "Return true if ORIG-POINT is on LINE-NUM of current buffer."
+  "Return true if LINE-NUM of current buffer contains ORIG-POINT."
   (= line-num (line-number-at-pos orig-point)))
 
 (defun space-trail-delete-trailing-whitespace (&optional start end)
@@ -89,9 +89,6 @@ to give space-trail.el a hook point."
                ;; TODO Document or fix dep on cl for `some`.
                (some
                 (lambda (x) x)
-                ;; I'm trying to create a closure around the line we're
-                ;; currently on and orig-point. I'm not sure this has the
-                ;; effect I want, and it's pretty hard to read to boot.
                 (mapcar (lambda (func)
                           (funcall func
                                    (line-number-at-pos)
@@ -120,7 +117,7 @@ to give space-trail.el a hook point."
   (unless (some
            (lambda (x) x)
            ;; TODO change `stop` to `prevent`.
-           (mapcar 'funcall space-trail-stop-whitespace-removal-predicates))
+           (mapcar 'funcall space-trail-prevent-buffer-stripping-predicates))
         (space-trail-delete-trailing-whitespace)))
 
 (defun space-trail-ignored-mode-p (&optional buffer-or-string)

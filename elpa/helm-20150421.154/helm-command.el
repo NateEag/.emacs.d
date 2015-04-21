@@ -143,21 +143,8 @@ fuzzy matching is running its own sort function with a different algorithm."
     (with-helm-window
       (helm-display-mode-line (helm-get-current-source) 'force))))
 
-;;;###autoload
-(defun helm-M-x ()
-  "Preconfigured `helm' for Emacs commands.
-It is `helm' replacement of regular `M-x' `execute-extended-command'.
-
-Unlike regular `M-x' emacs vanilla `execute-extended-command' command,
-the prefix args if needed, are passed AFTER starting `helm-M-x'.
-
-You can get help on each command by persistent action."
-  (interactive)
-  (let* ((history (cl-loop for i in extended-command-history
-                        when (commandp (intern i))
-                        do (set-text-properties 0 (length i) nil i)
-                        and collect i))
-         command sym-com in-help help-cand
+(defun helm-M-x-read-extended-command ()
+  (let* (in-help help-cand
          (orig-fuzzy-sort-fn helm-fuzzy-sort-fn)
          (helm-fuzzy-sort-fn (lambda (candidates source)
                                (funcall orig-fuzzy-sort-fn candidates source 'real)))
@@ -174,12 +161,19 @@ You can get help on each command by persistent action."
                                   (set-window-buffer (get-buffer-window hbuf)
                                                      helm-current-buffer))
                                 (setq in-help nil))
-                            (helm-describe-function candidate)
-                            (setq in-help t))
+                              (helm-describe-function candidate)
+                              (setq in-help t))
                           (setq help-cand candidate))))
          (tm (run-at-time 1 0.1 'helm-M-x--notify-prefix-arg)))
+    (setq extended-command-history (cl-loop for i in extended-command-history
+                                            when (commandp (intern i))
+                                            do (set-text-properties 0 (length i) nil i)
+                                            and collect i))
     (unwind-protect
-         (let ((msg "Error: Specifying a prefix arg before calling `helm-M-x'"))
+         (let ((msg "Error: Specifying a prefix arg before calling `helm-M-x'")
+               ;; FIXME: Not needed for now as defining kmacro is prevented
+               ;; in `helm-internal'.
+               (helm--reading-passwd-or-string executing-kbd-macro))
            (when current-prefix-arg
              (ding)
              (message "%s" msg)
@@ -187,41 +181,58 @@ You can get help on each command by persistent action."
                (discard-input))
              (user-error msg))
            (setq current-prefix-arg nil)
-           (setq command (helm-comp-read
-                          "M-x " obarray
-                          :test 'commandp
-                          :requires-pattern helm-M-x-requires-pattern
-                          :name "Emacs Commands"
-                          :buffer "*helm M-x*"
-                          :persistent-action pers-help
-                          :persistent-help "Describe this command"
-                          :history history
-                          :reverse-history helm-M-x-reverse-history
-                          :del-input nil
-                          :mode-line helm-M-x-mode-line
-                          :must-match t
-                          :fuzzy helm-M-x-fuzzy-match
-                          :nomark t
-                          :keymap helm-M-x-map
-                          :candidates-in-buffer t
-                          :fc-transformer 'helm-M-x-transformer
-                          :hist-fc-transformer 'helm-M-x-transformer-hist)))
+           (helm-comp-read
+            "M-x " obarray
+            :test 'commandp
+            :requires-pattern helm-M-x-requires-pattern
+            :name "Emacs Commands"
+            :buffer "*helm M-x*"
+            :persistent-action pers-help
+            :persistent-help "Describe this command"
+            :history extended-command-history
+            :reverse-history helm-M-x-reverse-history
+            :del-input nil
+            :mode-line helm-M-x-mode-line
+            :must-match t
+            :fuzzy helm-M-x-fuzzy-match
+            :nomark t
+            :keymap helm-M-x-map
+            :candidates-in-buffer t
+            :fc-transformer 'helm-M-x-transformer
+            :hist-fc-transformer 'helm-M-x-transformer-hist))
       (cancel-timer tm)
-      (setq helm--mode-line-display-prefarg nil))
-    (setq sym-com (intern command))
-    (setq current-prefix-arg helm-current-prefix-arg)
+      (setq helm--mode-line-display-prefarg nil))))
+
+;;;###autoload
+(defun helm-M-x (arg &optional command-name)
+  "Preconfigured `helm' for Emacs commands.
+It is `helm' replacement of regular `M-x' `execute-extended-command'.
+
+Unlike regular `M-x' emacs vanilla `execute-extended-command' command,
+the prefix args if needed, are passed AFTER starting `helm-M-x'.
+
+You can get help on each command by persistent action."
+  (interactive (list nil (helm-M-x-read-extended-command)))
+  (let ((sym-com (and (stringp command-name) (intern-soft command-name))))
+    ;; When called interactively with a prefix arg
+    ;; `helm-M-x-read-extended-command' exit with error.
+    ;; So if ARG is non-nil, that's mean `helm-M-x' have been called
+    ;; from lisp and we keep this value.
+    (unless arg (setq arg helm-current-prefix-arg))
     ;; Avoid having `this-command' set to *exit-minibuffer.
     (setq this-command sym-com
           ;; Handle C-x z (repeat) Issue #322
           real-this-command sym-com)
-    (let ((prefix-arg current-prefix-arg))
+    (let ((prefix-arg arg))
       ;; This ugly construct is to save history even on error.
       (unless helm-M-x-always-save-history
         (command-execute sym-com 'record))
       (setq extended-command-history
-            (cons command (delete command history)))
+            (cons command-name
+                  (delete command-name extended-command-history)))
       (when helm-M-x-always-save-history
         (command-execute sym-com 'record)))))
+
 
 (provide 'helm-command)
 

@@ -156,10 +156,26 @@ better orientation."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Variables
 
+(defvar-local sp-forward-bound-fn nil
+  "Function to restrict the forward search")
+
+(defvar-local sp-backward-bound-fn nil
+  "Function to restrict the backward search")
+
+(defun sp--get-forward-bound ()
+  "Get the bound to limit the forward search for looking for pairs."
+  (and sp-forward-bound-fn (funcall sp-forward-bound-fn)))
+
+(defun sp--get-backward-bound ()
+  "Get the bound to limit the backward search for looking for pairs."
+  (and sp-backward-bound-fn (funcall sp-backward-bound-fn)))
+
+
 ;;;###autoload
-(defvar sp-keymap (make-sparse-keymap)
+(defvar smartparens-mode-map (make-sparse-keymap)
   "Keymap used for `smartparens-mode'.")
-(defvaralias 'smartparens-mode-map 'sp-keymap)
+(defvaralias 'sp-keymap 'smartparens-mode-map)
+(make-obsolete-variable 'sp-keymap 'smartparens-mode-map "2015-01-01")
 
 (defvar sp-paredit-bindings '(
                               ("C-M-f" . sp-forward-sexp) ;; navigation
@@ -186,13 +202,13 @@ better orientation."
 smartparens functions.")
 
 (defun sp--populate-keymap (bindings)
-  "Populates the `sp-keymap' from the BINDINGS alist."
+  "Populates the `smartparens-mode-map' from the BINDINGS alist."
   (--each bindings
-    (define-key sp-keymap (read-kbd-macro (car it)) (cdr it))))
+    (define-key smartparens-mode-map (read-kbd-macro (car it)) (cdr it))))
 
 ;;;###autoload
 (defun sp-use-paredit-bindings ()
-  "Initiate `sp-keymap' with paredit-compatible bindings for
+  "Initiate `smartparens-mode-map' with paredit-compatible bindings for
 corresponding functions provided by smartparens.  See variable
 `sp-paredit-bindings'."
   (interactive)
@@ -230,7 +246,7 @@ corresponding functions provided by smartparens.  See variable
 
 ;;;###autoload
 (defun sp-use-smartparens-bindings ()
-  "Initiate `sp-keymap' with smartparens bindings for navigation functions.
+  "Initiate `smartparens-mode-map' with smartparens bindings for navigation functions.
 See variable `sp-smartparens-bindings'."
   (interactive)
   (sp--populate-keymap sp-smartparens-bindings))
@@ -503,13 +519,13 @@ default, which should be the most verbose option available.")
 
 You can enable pre-set bindings by customizing
 `sp-base-key-bindings' variable.  The current content of
-`sp-keymap' is:
+`smartparens-mode-map' is:
 
- \\{sp-keymap}"
+ \\{smartparens-mode-map}"
   :init-value nil
   :lighter (" SP" (:eval (if smartparens-strict-mode "/s" "")))
   :group 'smartparens
-  :keymap sp-keymap
+  :keymap smartparens-mode-map
   (if smartparens-mode
       (progn
         (sp--init)
@@ -879,6 +895,21 @@ Warning: these are problematic in modes where the symbol might
 have multiple functions, such as * in markdown, where it denotes
 start of list item (unary) OR emphatic text (binary)."
   :type '(repeat symbol)
+  :group 'smartparens)
+
+(defcustom sp-nagivate-use-textmode-stringlike-parser '((derived . text-mode))
+  "List of modes where textmode stringlike parser is used.
+
+See `sp-get-textmode-stringlike-expression'.
+
+Each element of the list can either be a symbol which is then
+checked against `major-mode', or a cons (derived . PARENT-MODE),
+where PARENT-MODE is checked using `derived-mode-p'."
+  :type '(repeat (choice
+                  (symbol :tag "Major mode")
+                  (cons :tag "Derived mode"
+                    (const derived)
+                    (symbol :tag "Parent major mode name"))))
   :group 'smartparens)
 
 (defcustom sp-navigate-consider-symbols t
@@ -2637,13 +2668,20 @@ extra boundary conditions depending on parens."
 (defun sp--strict-regexp-opt (strings &optional ignored)
   "Like regexp-opt, but with extra boundary conditions to ensure
 that the strings are not matched in-symbol."
-  (--> strings
-       (-group-by (lambda (string)
-                    (list (and (string-match-p "\\`\\<" string) t)
-                          (and (string-match-p "\\>\\'" string) t)))
-                  it)
-       (mapconcat (lambda (g) (apply 'sp--regexp-for-group g)) it "\\|")
-       (concat "\\(?:" it "\\)")))
+  (with-syntax-table
+      ;; HACK: this is a terrible hack to make ' be treated as a
+      ;; punctuation.  Many text modes set it as word character which
+      ;; messes up the regexps
+      (let ((table (make-syntax-table (syntax-table))))
+        (modify-syntax-entry ?' "." table)
+        table)
+    (--> strings
+      (-group-by (lambda (string)
+                   (list (and (string-match-p "\\`\\<" string) t)
+                         (and (string-match-p "\\>\\'" string) t)))
+                 it)
+      (mapconcat (lambda (g) (apply 'sp--regexp-for-group g)) it "\\|")
+      (concat "\\(?:" it "\\)"))))
 
 (defun sp--strict-regexp-quote (string)
   "Like regexp-quote, but make sure that the string is not
@@ -3352,6 +3390,7 @@ longest possible match.  That means that searching for
 This is an internal function.  Only use this for searching for
 pairs!"
   (setq count (or count 1))
+  (setq bound (or bound (sp--get-forward-bound)))
   (let ((case-fold-search nil) r)
     (while (> count 0)
       (when (search-backward-regexp regexp bound noerror)
@@ -3363,6 +3402,7 @@ pairs!"
 
 (defun sp--search-forward-regexp (regexp &optional bound noerror count)
   "Just like `search-forward-regexp', but always case sensitive."
+  (setq bound (or bound (sp--get-backward-bound)))
   (let ((case-fold-search nil))
     (search-forward-regexp regexp bound noerror count)))
 
@@ -3680,10 +3720,128 @@ opening and closing delimiter, such as *...*, \"...\", `...` etc."
               (setq e (max mb me)))
             (list :beg b :end e :op m :cl m :prefix (sp--get-prefix b m) :suffix (sp--get-suffix e m))))))))
 
+(defun sp--textmode-stringlike-regexp (delimiters &optional direction)
+  "Get a regexp matching text-mode string-like DELIMITERS.
+
+Capture group 1 or 2 has the delimiter itself, depending on the
+direction (forward, backward).
+
+If DIRECTION is :open, create a regexp matching opening only.
+
+If DIRECTION is :close, create a regexp matching closing only.
+
+If DIRECTION is nil, create a regexp matching both directions."
+  (let* ((delims (regexp-opt delimiters))
+         (re (concat
+              (if (or (not direction)
+                      (eq direction :open))
+                  (concat "\\(?:" "\\(?:\\`\\|[[:space:]]\\)" "\\(" delims "\\)" "[^[:space:]]\\)") "")
+              (if (not direction) "\\|" "")
+              (if (or (not direction)
+                      (eq direction :close))
+                  (concat "\\(?:[^[:space:]]" "\\(" delims "\\)" "\\(?:[[:space:][:punct:]]\\|\\'\\)" "\\)") ""))))
+    re))
+
+(defun sp--find-next-textmode-stringlike-delimiter (needle search-fn-f &optional limit)
+  "Find the next string-like delimiter, considering the escapes
+and the skip-match predicate."
+  (let (hit match)
+    (while (and (not hit)
+                (funcall search-fn-f needle limit t))
+      (save-match-data
+        (let* ((group (if (match-string 1) 1 2))
+               (match (match-string-no-properties group))
+               (mb (match-beginning group))
+               (me (match-end group))
+               (skip-fn (sp-get-pair match :skip-match)))
+          (unless (sp--skip-match-p match mb me :pair-skip skip-fn :global-skip nil)
+            (setq hit (list match (if (= group 1) :open :close)))))))
+    hit))
+
+(defun sp-get-textmode-stringlike-expression (&optional back)
+  "Find the nearest text-mode string-like expression.
+
+Text-mode string-like expression is one where the delimiters must
+be surrounded by whitespace from the outside.  For example,
+
+foo *bar* baz
+
+is a valid expression enclosed in ** pair, but
+
+foo*bar*baz  OR  foo *bar*baz  OR  foo*bar* baz
+
+are not.
+
+This is the case in almost every markup language, and so we will
+adjust the parsing to only consider such pairs as delimiters.
+This makes the parsing much faster as it transforms the problem
+to non-stringlike matching and we can use a simple
+counting (stack) algorithm."
+  (save-excursion
+    (let ((restart-from (point))
+          hit re)
+      (while (not hit)
+        (goto-char restart-from)
+        (save-excursion
+          (ignore-errors
+            (if back (forward-char) (backward-char)))
+          (let* ((delimiters (-map 'car (sp--get-allowed-stringlike-list)))
+                 (needle (sp--textmode-stringlike-regexp delimiters))
+                 (search-fn-f (if (not back) 'sp--search-forward-regexp 'sp--search-backward-regexp))
+                 (search-fn-b (if back 'sp--search-forward-regexp 'sp--search-backward-regexp)))
+            (-if-let ((delim type) (sp--find-next-textmode-stringlike-delimiter needle search-fn-f))
+                (let ((search-fn (if (eq type :open) 'sp--search-forward-regexp 'sp--search-backward-regexp))
+                      (needle (sp--textmode-stringlike-regexp (list delim) (if (eq type :open) :close :open))))
+                  (setq restart-from (point))
+                  ;; this adjustments are made because elisp regexp
+                  ;; can't do lookahead assertions... so we match and
+                  ;; then back up
+                  (ignore-errors
+                    (when (and (not back) (eq type :open)) (backward-char 2))
+                    (when (and (not back) (eq type :close)) (backward-char 1))
+                    (when (and back (eq type :close)) (forward-char 2))
+                    (when (and back (eq type :open)) (forward-char 1)))
+                  (let ((other-end (point)))
+                    (when (sp--find-next-textmode-stringlike-delimiter needle search-fn)
+                      (let* ((this-end (if (eq type :open) (max (point-min) (1- (point))) (min (point-max) (1+ (point)))))
+                             (b (min this-end other-end))
+                             (e (max this-end other-end)))
+                        (setq re (list :beg b
+                                       :end e
+                                       :op delim
+                                       :cl delim
+                                       :prefix (sp--get-prefix b delim) :suffix (sp--get-suffix e delim)))
+                        (setq hit t)
+                        ;; We ignore matches that contain two
+                        ;; consecutive newlines, as that usually means
+                        ;; there's a new paragraph somewhere inbetween
+                        ;; TODO: make this customizable
+                        (when (sp-get re
+                                (save-excursion
+                                  (goto-char :beg)
+                                  (re-search-forward "\n\n\\|\r\r" :end t)))
+                          (setq re nil)
+                          (setq hit nil))))))
+              (setq hit :no-more)))))
+      re)))
+
+(defun sp-use-textmode-stringlike-parser-p ()
+  "Test if we should use textmode stringlike parser or not."
+  (let ((modes (-filter 'symbolp sp-nagivate-use-textmode-stringlike-parser))
+        (derived (-map 'cdr (-remove 'symbolp sp-nagivate-use-textmode-stringlike-parser))))
+    (or (--any? (eq major-mode it) modes)
+        (apply 'derived-mode-p derived))))
+
 (defun sp-get-expression (&optional back)
   "Find the nearest balanced expression of any kind.
 
-See also: `sp-navigate-consider-stringlike-sexp'."
+See also: `sp-navigate-consider-stringlike-sexp'.
+
+For markup and text modes a special, more efficient stringlike
+parser is available, see `sp-get-textmode-stringlike-expression'.
+By default, this is enabled in all modes derived from
+`text-mode'.  You can change it by customizing
+`sp-nagivate-use-textmode-stringlike-parser'."
   (if (memq major-mode sp-navigate-consider-stringlike-sexp)
       (let ((pre (sp--get-allowed-regexp))
             (sre (sp--get-stringlike-regexp))
@@ -3698,10 +3856,12 @@ See also: `sp-navigate-consider-stringlike-sexp'."
           ;; performance hack. If the delimiter is a character in
           ;; syntax class 34, grab the string-like expression using
           ;; `sp-get-string'
-          (if (and (= (length (match-string 0)) 1)
-                   (eq (char-syntax (string-to-char (match-string 0))) 34))
-              (sp-get-string back)
-            (sp-get-stringlike-expression back))))
+          (if (sp-use-textmode-stringlike-parser-p)
+              (sp-get-textmode-stringlike-expression back)
+            (if (and (= (length (match-string 0)) 1)
+                     (eq (char-syntax (string-to-char (match-string 0))) 34))
+                (sp-get-string back)
+              (sp-get-stringlike-expression back)))))
     (sp-get-paired-expression back)))
 
 (defun sp-get-sexp (&optional back)
@@ -4382,7 +4542,7 @@ expressions are considered."
                 (sp-get-string t))
                ((and (memq major-mode sp-navigate-consider-stringlike-sexp)
                      (sp--valid-initial-delimiter-p (sp--looking-back (sp--get-stringlike-regexp) nil))
-                     (sp-get-stringlike-expression t)))
+                     (sp-get-expression t)))
                (t (sp-get-symbol t)))))))
       (if (not sp-navigate-consider-symbols)
           (sp-get-sexp nil)
@@ -4404,7 +4564,7 @@ expressions are considered."
               (sp-get-string nil))
              ((and (memq major-mode sp-navigate-consider-stringlike-sexp)
                    (sp--valid-initial-delimiter-p (sp--looking-at (sp--get-stringlike-regexp)))
-                   (sp-get-stringlike-expression nil)))
+                   (sp-get-expression nil)))
              ;; it can still be that we are looking at a /prefix/ of a
              ;; sexp.  We should skip a symbol forward and check if it
              ;; is a sexp, and then maybe readjust the output.
@@ -5135,11 +5295,15 @@ t.  All the special prefix arguments work the same way."
 
 (defun sp-clone-sexp ()
   (interactive)
-  (-when-let (ok (sp-get-thing))
+  (-when-let (ok (or (sp-get-enclosing-sexp)
+                     (sp-get-sexp)))
     (sp-get ok
-      (goto-char :end-suf)
-      (sp-newline)
-      (insert (buffer-substring-no-properties :beg-prf :end-suf)))))
+      (save-excursion
+        (undo-boundary)
+        (goto-char :beg-prf)
+        (insert-buffer-substring-no-properties
+         (current-buffer) :beg-prf :end-suf)
+        (newline-and-indent)))))
 
 (defun sp-kill-hybrid-sexp (arg)
   "Kill a line as if with `kill-line', but respecting delimiters.

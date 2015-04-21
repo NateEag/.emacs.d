@@ -6,8 +6,8 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Version: 20150308.1835
-;;; X-Original-Version: 1.15.3
+;; Package-Version: 20150414.707
+;;; Version: 1.15.3
 
 (defconst php-mode-version-number "1.15.3"
   "PHP Mode version number.")
@@ -89,7 +89,7 @@
 ;; Work around emacs bug#18845, cc-mode expects cl to be loaded
 ;; while php-mode only uses cl-lib (without compatibility aliases)
 (eval-and-compile
-  (if (and (= emacs-major-version 24) (= emacs-minor-version 4))
+  (if (and (= emacs-major-version 24) (>= emacs-minor-version 4))
     (require 'cl)))
 
 ;; Use the recommended cl functions in php-mode but alias them to the
@@ -690,7 +690,8 @@ working with Symfony2."
 
 (c-add-style
   "psr2"
-  '("php"))
+  '("php"
+    (c-offsets-alist . ((statement-cont . +)))))
 
 (defun php-enable-psr2-coding-style ()
   "Makes php-mode comply to the PSR-2 coding style"

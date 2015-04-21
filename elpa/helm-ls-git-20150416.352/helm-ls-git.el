@@ -1,5 +1,5 @@
 ;;; helm-ls-git.el --- list git files. -*- lexical-binding: t -*-
-;; Package-Version: 20150402.439
+;; Package-Version: 20150416.352
 
 ;; Copyright (C) 2012 ~ 2014 Thierry Volpiatto <thierry.volpiatto@gmail.com>
 
@@ -122,8 +122,8 @@ The color of matched items can be customized in your .gitconfig."
   (when (and helm-ls-git-log-file
              (file-exists-p helm-ls-git-log-file))
     (delete-file helm-ls-git-log-file))
-  ;; `helm-resume' will use the value of `helm-default-directory'
-  ;; as value for `default-directory'.
+  ;; `helm-resume' will use the local value of `default-directory'
+  ;; in `helm-buffer' as value for `default-directory'.
   (helm-aif (helm-ls-git-root-dir)
       (with-helm-default-directory it
           (with-output-to-string
@@ -141,7 +141,7 @@ The color of matched items can be customized in your .gitconfig."
   (not (helm-ls-git-root-dir)))
 
 (defun helm-ls-git-transformer (candidates)
-  (cl-loop with root = (helm-ls-git-root-dir helm-default-directory)
+  (cl-loop with root = (helm-ls-git-root-dir (helm-default-directory))
         for i in candidates
         for abs = (expand-file-name i root)
         for disp = (if (and helm-ff-transformer-show-only-basename
@@ -239,7 +239,7 @@ The color of matched items can be customized in your .gitconfig."
             "Git status" (lambda (_candidate)
                            (with-current-buffer helm-buffer
                              (funcall helm-ls-git-status-command
-                                      helm-default-directory)))))))
+                                      (helm-default-directory))))))))
 
 
 (defun helm-ls-git-grep (_candidate)
@@ -296,7 +296,7 @@ The color of matched items can be customized in your .gitconfig."
                (list "status" "--porcelain")))))
 
 (defun helm-ls-git-status-transformer (candidates _source)
-  (cl-loop with root = (helm-ls-git-root-dir helm-default-directory)
+  (cl-loop with root = (helm-ls-git-root-dir (helm-default-directory))
         for i in candidates
         collect
         (cond ((string-match "^\\( M \\)\\(.*\\)" i) ; modified.
@@ -404,12 +404,6 @@ The color of matched items can be customized in your .gitconfig."
   (helm :sources '(helm-source-ls-git-status
                    helm-source-ls-git-buffers
                    helm-source-ls-git)
-        ;; When `helm-ls-git-ls' is called from lisp
-        ;; `default-directory' is normally let-bounded,
-        ;; to some other value;
-        ;; we now set this new let-bounded value local
-        ;; to `helm-default-directory'.
-        :default-directory default-directory
         :buffer "*helm lsgit*"))
 
 

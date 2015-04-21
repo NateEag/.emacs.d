@@ -148,8 +148,11 @@ Alpha should be a float between 0 and 1."
 
 ;;; Setup Start
 
-(defun create-solarized-theme (variant theme-name)
-  "Create a VARIANT of the theme named THEME-NAME."
+(defun create-solarized-theme (variant theme-name &optional childtheme)
+  "Create a VARIANT of the theme named THEME-NAME.
+
+When optional argument CHILDTHEME function is supplied it's invoked to further
+customize the resulting theme."
 ;;; Color palette
   (let* ((class '((class color) (min-colors 89)))
          (s-base03    "#002b36")
@@ -275,8 +278,6 @@ Alpha should be a float between 0 and 1."
      `(match ((,class (:background ,base02 :foreground ,base1 :weight bold))))
      `(cursor ((,class (:foreground ,base03 :background ,base0
                                     :inverse-video t))))
-     `(mouse ((,class (:foreground ,base03 :background ,base0
-                                   :inverse-video t))))
      `(escape-glyph ((,class (:foreground ,violet))))
      `(fringe ((,class (:foreground ,s-fringe-fg :background ,s-fringe-bg))))
      `(highlight ((,class (:background ,base02))))
@@ -578,6 +579,12 @@ Alpha should be a float between 0 and 1."
 ;;;;; coffee
      `(coffee-mode-class-name ((,class (:foreground ,yellow :weight bold))))
      `(coffee-mode-function-param ((,class (:foreground ,violet :slant italic))))
+
+;;;;; cperl-mode
+     `(cperl-array-face ((,class (:background unspecified :foreground ,blue))))
+     `(cperl-hash-face ((,class (:background unspecified :foreground ,blue))))
+     `(cperl-nonoverridable-face ((,class (:foreground ,base0 :weight bold))))
+
 ;;;;; custom
      `(custom-face-tag ((,class (:inherit ,s-variable-pitch :height ,solarized-height-plus-3
                                           :foreground ,violet :weight normal))))
@@ -882,6 +889,10 @@ Alpha should be a float between 0 and 1."
      `(git-gutter-fr+-added ((,class (:foreground ,green :weight bold))))
      `(git-gutter-fr+-deleted ((,class (:foreground ,red :weight bold))))
      `(git-gutter-fr+-modified ((,class (:foreground ,blue :weight bold))))
+;;;;; go-direx
+     `(go-direx-header ((,class (:foreground ,blue))))
+     `(go-direx-label ((,class (:foreground ,green))))
+     `(go-direx-package ((,class (:foreground ,base1 :weight bold))))
 ;;;;; guide-key
      `(guide-key/highlight-command-face ((,class (:foreground ,blue))))
      `(guide-key/key-face ((,class (:foreground ,base01))))
@@ -1566,11 +1577,15 @@ Alpha should be a float between 0 and 1."
      `(popup-face ((,class (:background ,base02 :foreground ,base0))))
      `(popup-isearch-match ((,class (:background ,yellow :foreground ,base03))))
      `(popup-menu-face ((,class (:background ,base02 :foreground ,base0))))
-     `(popup-menu-mouse-face ((,class (:background ,blue :foreground ,base0))))
+     `(popup-menu-mouse-face ((,class (:background ,blue :foreground ,base03))))
      `(popup-menu-selection-face ((,class (:background ,magenta :foreground ,base03))))
      `(popup-scroll-bar-background-face ((,class (:background ,base01))))
      `(popup-scroll-bar-foreground-face ((,class (:background ,base1))))
      `(popup-tip-face ((,class (:background ,base02 :foreground ,base0))))
+;;;;; pophint
+     `(pophint:tip-face ((,class (:background ,magenta :foreground ,base03))))
+     `(pophint:match-face ((,class (:background ,blue :foreground ,base03))))
+     `(pophint:pos-tip-face ((,class (:background ,base02 :foreground ,base0))))
 ;;;;; powerline
      `(powerline-active1 ((,class ,(if solarized-high-contrast-mode-line
                                        `(:background ,base00 :foreground ,base03)
@@ -2042,7 +2057,8 @@ Alpha should be a float between 0 and 1."
      `(xterm-color-names-bright [,base03 ,orange ,base01 ,base00
                                          ,base0 ,violet ,base1 ,base3])
 ;;; Setup End
-
+     (when childtheme
+       (funcall childtheme))
      ) ; END custom-theme-set-variables
   )    ; END defun create-solarized-theme
 

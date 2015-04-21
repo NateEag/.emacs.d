@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "omnisharp" "omnisharp.el" (21683 64574 0 0))
+;;;### (autoloads nil "omnisharp" "omnisharp.el" (21814 11929 0 0))
 ;;; Generated autoloads from omnisharp.el
 
 (autoload 'omnisharp-mode "omnisharp" "\
@@ -20,7 +20,7 @@ server backend.
 ;;;***
 
 ;;;### (autoloads nil "omnisharp-auto-complete-actions" "omnisharp-auto-complete-actions.el"
-;;;;;;  (21683 64574 0 0))
+;;;;;;  (21814 11929 0 0))
 ;;; Generated autoloads from omnisharp-auto-complete-actions.el
 
 (autoload 'company-omnisharp "omnisharp-auto-complete-actions" "\
@@ -31,7 +31,7 @@ server backend.
 ;;;***
 
 ;;;### (autoloads nil "omnisharp-server-actions" "omnisharp-server-actions.el"
-;;;;;;  (21683 64574 0 0))
+;;;;;;  (21814 11929 0 0))
 ;;; Generated autoloads from omnisharp-server-actions.el
 
 (autoload 'omnisharp-start-omnisharp-server "omnisharp-server-actions" "\
@@ -59,7 +59,7 @@ finished loading the solution.
 ;;;***
 
 ;;;### (autoloads nil nil ("example-config-for-evil-mode.el" "omnisharp-pkg.el"
-;;;;;;  "omnisharp-utils.el") (21683 64574 889273 0))
+;;;;;;  "omnisharp-utils.el") (21814 11929 227920 0))
 
 ;;;***
 

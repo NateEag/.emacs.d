@@ -22,6 +22,7 @@
 ;;      Mike Gerwitz <mikegerwitz at gnu.org>
 ;;      Nikolai Weibull <now at bitwi.se>
 ;;      phaebz <phaebz at gmail.com>
+;;      ralesi <scio62@gmail.com>
 ;;      Sanel Zukan <sanelz at gmail.com>
 ;;      Sarah Brofeldt <sarah at thinkmonster.(none)>
 ;;      Simon Hafner <hafnersimon at gmail.com>
@@ -42,7 +43,7 @@
 ;;      To get in touch, please use the bug tracker or the
 ;;      mailing list (see below).
 ;; Created: 2011-03-01
-;; Version: 1.0.9
+;; Version: 1.1.2
 ;; Keywords: emulation, vim
 ;; URL: http://gitorious.org/evil
 ;;      Repository: git://gitorious.org/evil/evil.git

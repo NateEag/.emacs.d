@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.0.9
+;; Version: 1.1.2
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -1556,7 +1556,7 @@ See also `evil-shift-left'."
     ;; assuming that point is in the first line, adjust its position
     (if (called-interactively-p 'any)
         (evil-first-non-blank)
-      (move-to-column (+ pnt-indent first-shift)))))
+      (move-to-column (max 0 (+ pnt-indent first-shift))))))
 
 (evil-define-command evil-shift-right-line (count)
   "Shift the current line COUNT times to the right.
@@ -3610,6 +3610,29 @@ and opens a new buffer name or edits a certain FILE."
   :repeat nil
   (interactive "P")
   (evil-resize-window (or count (frame-width)) t))
+
+(evil-define-command evil-ex-resize (arg)
+  "The ex :resize command.
+
+If ARG is a signed positive integer, increase the current window
+height by ARG.
+
+If ARG is a signed negative integer, decrease the current window
+height by ARG.
+
+If ARG is a positive integer without explicit sign, set the current
+window height to ARG.
+
+If ARG is empty, maximize the current window height."
+  (interactive "<a>")
+  (if (or (not arg) (= 0 (length arg)))
+      (evil-window-set-height nil)
+    (let ((n (string-to-int arg)))
+      (if (> n 0)
+          (if (= ?+ (aref arg 0))
+              (evil-window-increase-height n)
+            (evil-window-set-height n))
+        (evil-window-decrease-height (- n))))))
 
 (evil-define-command evil-window-rotate-upwards ()
   "Rotates the windows according to the currenty cyclic ordering."

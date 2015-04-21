@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.0.9
+;; Version: 1.1.2
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -55,6 +55,7 @@
 (define-key evil-normal-state-map "S" 'evil-change-whole-line)
 (define-key evil-normal-state-map "x" 'evil-delete-char)
 (define-key evil-normal-state-map "X" 'evil-delete-backward-char)
+(define-key evil-normal-state-map (kbd "DEL") 'evil-delete-char)
 (define-key evil-normal-state-map "y" 'evil-yank)
 (define-key evil-normal-state-map "Y" 'evil-yank-line)
 (define-key evil-normal-state-map "&" 'evil-ex-repeat-substitute)
@@ -347,6 +348,7 @@
 
 ;;; Insert state
 
+(define-key evil-insert-state-map "\C-v" 'quoted-insert)
 (define-key evil-insert-state-map "\C-k" 'evil-insert-digraph)
 (define-key evil-insert-state-map "\C-o" 'evil-execute-in-normal-state)
 (define-key evil-insert-state-map "\C-r" 'evil-paste-from-register)
@@ -461,6 +463,7 @@
 (evil-ex-define-cmd "set-initial-state" 'evil-ex-set-initial-state)
 (evil-ex-define-cmd "show-digraphs" 'evil-ex-show-digraphs)
 (evil-ex-define-cmd "sor[t]" 'evil-ex-sort)
+(evil-ex-define-cmd "res[ize]" 'evil-ex-resize)
 
 ;; search command line
 (define-key evil-ex-search-keymap "\d" #'evil-ex-delete-backward-char)

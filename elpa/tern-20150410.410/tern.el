@@ -3,8 +3,8 @@
 
 ;; Author: Marijn Haverbeke
 ;; URL: http://ternjs.net/
-;; Version: 20150302.211
-;; X-Original-Version: 0.0.1
+;; Package-Version: 20150410.410
+;; Version: 0.0.1
 ;; Package-Requires: ((json "1.2") (cl-lib "0.5") (emacs "24"))
 
 (require 'cl-lib)
@@ -429,7 +429,7 @@ list of strings, giving the binary name and arguments.")
               '(font-lock-comment-face font-lock-comment-delimiter-face font-lock-string-face))
       nil
     (let ((around (buffer-substring-no-properties (max 1 (1- (point))) (min (1+ (point)) (point-max)))))
-      (string-match "\\sw\\|)\\|]" around))))
+      (string-match "\\sw\\|)\\|]\\|_" around))))
 
 (defun tern-find-definition (&optional prompt-var)
   (interactive)

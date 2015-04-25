@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2015 François-Xavier Bois
 
-;; Version: 11.0.38
-;; Package-Version: 20150420.1223
+;; Version: 11.1.00
+;; Package-Version: 20150424.144
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Created: July 2011
@@ -27,7 +27,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "11.0.38"
+(defconst web-mode-version "11.1.00"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -3387,7 +3387,7 @@ the environment as needed for ac-sources, right before they're used.")
           (setq controls (append controls (list (cons 'inside "ctrl")))))
          ((web-mode-block-starts-with "end" reg-beg)
           (setq controls (append controls (list (cons 'close "ctrl")))))
-         ((and (web-mode-block-starts-with ".* do \\|for\\|if\\|unless\\|case" reg-beg)
+         ((and (web-mode-block-starts-with "\\(.* do\\|for\\|if\\|unless\\|case\\)\\>" reg-beg)
                (not (web-mode-block-ends-with "end" reg-end)))
           (setq controls (append controls (list (cons 'open "ctrl")))))
          )
@@ -6330,6 +6330,8 @@ the environment as needed for ac-sources, right before they're used.")
             )
            (web-mode-attr-indent-offset
             (setq offset (+ (current-column) web-mode-attr-indent-offset)))
+           ((string-match-p "^/>" curr-line)
+            (setq offset (current-column)))
            (t
             (let ((skip (next-single-property-change (point) 'tag-attr)))
               (when skip
@@ -8671,7 +8673,10 @@ Pos should be in a tag."
     ;;(message "%S: %S %S" this-command web-mode-change-beg web-mode-change-end)
 
     (when (and web-mode-expand-previous-state
-               (not (eq this-command 'web-mode-mark-and-expand)))
+               (not (member this-command '(web-mode-mark-and-expand
+                                           er/expand-region))))
+      (when (eq this-command 'keyboard-quit)
+        (goto-char web-mode-expand-initial-pos))
       (deactivate-mark)
       (setq web-mode-expand-previous-state nil
             web-mode-expand-initial-pos nil))

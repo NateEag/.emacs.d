@@ -2000,10 +2000,12 @@ lines.  This is the default behaviour for Visual-state insertion."
          (and (evil-visual-state-p)
               (memq (evil-visual-type) '(line block))
               (save-excursion
-                ;; go to upper-left corner temporarily so
-                ;; `count-lines' yields accurate results
-                (evil-visual-rotate 'upper-left)
-                (count-lines evil-visual-beginning evil-visual-end)))
+                (let ((m (mark)))
+                  ;; go to upper-left corner temporarily so
+                  ;; `count-lines' yields accurate results
+                  (evil-visual-rotate 'upper-left)
+                  (prog1 (count-lines evil-visual-beginning evil-visual-end)
+                    (set-mark m)))))
          (evil-visual-state-p)))
   (if (and (evil-called-interactively-p)
            (evil-visual-state-p))
@@ -2042,10 +2044,12 @@ the lines."
          (and (evil-visual-state-p)
               (memq (evil-visual-type) '(line block))
               (save-excursion
-                ;; go to upper-left corner temporarily so
-                ;; `count-lines' yields accurate results
-                (evil-visual-rotate 'upper-left)
-                (count-lines evil-visual-beginning evil-visual-end)))))
+                (let ((m (mark)))
+                  ;; go to upper-left corner temporarily so
+                  ;; `count-lines' yields accurate results
+                  (evil-visual-rotate 'upper-left)
+                  (prog1 (count-lines evil-visual-beginning evil-visual-end)
+                    (set-mark m)))))))
   (if (and (evil-called-interactively-p)
            (evil-visual-state-p))
       (cond
@@ -3627,7 +3631,7 @@ If ARG is empty, maximize the current window height."
   (interactive "<a>")
   (if (or (not arg) (= 0 (length arg)))
       (evil-window-set-height nil)
-    (let ((n (string-to-int arg)))
+    (let ((n (string-to-number arg)))
       (if (> n 0)
           (if (= ?+ (aref arg 0))
               (evil-window-increase-height n)

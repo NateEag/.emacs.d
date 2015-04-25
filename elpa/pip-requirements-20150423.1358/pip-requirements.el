@@ -4,8 +4,8 @@
 ;;
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Created: 11 September 2014
-;; Version: 20150228.309
-;; X-Original-Version: 0.4
+;; Version: 0.4
+;; Package-Version: 20150423.1358
 ;; Package-Requires: ((dash "2.8.0"))
 
 ;;; License:
@@ -42,6 +42,7 @@
 ;;; Code:
 
 (require 'dash)
+(require 'cl-lib)
 
 (defgroup pip-requirements nil
   "Requirements files for pip"
@@ -96,14 +97,14 @@
 
     (setq pip-packages
           (->> (libxml-parse-html-region (point) (point-max))
-            ;; Get the body tag.
-            -last-item
-            ;; Immediate children of the body.
-            cdr cdr cdr
-            ;; Anchor tags.
-            (--filter (eq (car it) 'a))
-            ;; Inner text of anchor tags.
-            (-map 'third))))
+               ;; Get the body tag.
+               -last-item
+               ;; Immediate children of the body.
+               cdr cdr cdr
+               ;; Anchor tags.
+               (--filter (eq (car it) 'a))
+               ;; Inner text of anchor tags.
+               (-map #'cl-third))))
   (kill-buffer pip-http-buffer))
 
 (defun pip-requirements-fetch-packages ()

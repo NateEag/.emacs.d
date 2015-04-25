@@ -893,6 +893,22 @@ customize the resulting theme."
      `(go-direx-header ((,class (:foreground ,blue))))
      `(go-direx-label ((,class (:foreground ,green))))
      `(go-direx-package ((,class (:foreground ,base1 :weight bold))))
+
+;;;;;; go-mode
+     `(go-coverage-0 ((,class (:foreground ,orange))))
+     `(go-coverage-1 ((,class (:foreground ,(solarized-color-blend blue yellow (/ 2.0 6))))))
+     `(go-coverage-2 ((,class (:foreground ,(solarized-color-blend blue yellow (/ 3.0 6))))))
+     `(go-coverage-3 ((,class (:foreground ,(solarized-color-blend blue yellow (/ 4.0 6))))))
+     `(go-coverage-4 ((,class (:foreground ,(solarized-color-blend blue yellow (/ 5.0 6))))))
+     `(go-coverage-5 ((,class (:foreground ,blue))))
+     `(go-coverage-6 ((,class (:foreground ,(solarized-color-blend cyan blue (/ 2.0 6))))))
+     `(go-coverage-7 ((,class (:foreground ,(solarized-color-blend cyan blue (/ 3.0 6))))))
+     `(go-coverage-8 ((,class (:foreground ,(solarized-color-blend cyan blue (/ 4.0 6))))))
+     `(go-coverage-9 ((,class (:foreground ,(solarized-color-blend cyan blue (/ 5.0 6))))))
+     `(go-coverage-10 ((,class (:foreground ,cyan))))
+     `(go-coverage-covered ((,class (:foreground ,green))))
+     `(go-coverage-untracked ((,class (:foreground ,base01))))
+
 ;;;;; guide-key
      `(guide-key/highlight-command-face ((,class (:foreground ,blue))))
      `(guide-key/key-face ((,class (:foreground ,base01))))
@@ -1680,6 +1696,42 @@ customize the resulting theme."
      `(show-paren-mismatch
        ((,class (:foreground ,base02 :background ,red
                              :weight ,s-maybe-bold))))
+
+;;;;; sx (WIP)
+     `(sx-custom-button ((,class (:background ,base02 :foreground ,base1
+                                              :box (:line-width 2 :style released-button :height 0.9)))))
+     `(sx-question-list-answers ((,class (:inherit sx-question-list-parent :foreground ,green :height 1.0))))
+     `(sx-question-list-answers-accepted ((,class (:inherit sx-question-list-answers :weight bold :underline t))))
+     `(sx-question-list-bounty ((,class (:foreground ,cyan))))
+     `(sx-question-list-date ((,class (:inherit font-lock-comment-face))))
+     `(sx-question-list-favorite ((,class (:inherit sx-question-list-score-upvoted))))
+     `(sx-question-list-parent ((,class (:inherit default))))
+     `(sx-question-list-read-question ((,class (:inherit sx-question-list-parent :height 1.0))))
+     `(sx-question-list-score ((,class (:inherit sx-question-list-parent :foreground ,base01 :height 1.0))))
+     `(sx-question-list-score-upvoted ((,class (:inherit sx-question-list-score :weight bold))))
+     `(sx-question-list-unread-question ((,class (:inherit sx-question-list-read-question :weight bold))))
+     `(sx-question-mode-accepted ((,class (:inherit sx-question-mode-title :foreground ,green :height 1.3))))
+     `(sx-question-mode-closed ((,class (:inherit font-lock-warning-face :box 2))))
+     `(sx-question-mode-closed-reason ((,class (:inherit sx-question-mode-title :box (:line-width 2 :color ,yellow)))))
+     ;; TODO: sx-question-mode-content-faceexposes a general problem that's hard to deal with,
+     ;; if base02 is used as bg some things are not visible enough.. It might be a good idea to
+     ;; introduce yet another special color that goes a little furhter towards netural gray and
+     ;; ensures readability as a bg for all solarized faces. If it's possible, that is.
+     `(sx-question-mode-content-face ((,class (:background unspecified))))
+     `(sx-question-mode-date ((,class (:inherit font-lock-string-face))))
+     `(sx-question-mode-header ((,class (:inherit message-header-name :weight normal))))
+     `(sx-question-mode-kbd-tag ((,class (:box (:line-width 3 :style released-button :color ,base02) :weight semibold :height 0.9))))
+     `(sx-question-mode-score ((,class nil)))
+     `(sx-question-mode-score-downvoted ((,class (:inherit (font-lock-warning-face sx-question-mode-score)))))
+     `(sx-question-mode-score-upvoted ((,class (:inherit (font-lock-function-name-face sx-question-mode-score) :weight bold))))
+     `(sx-question-mode-sub-sup-tag ((,class (:height 0.7))))
+     `(sx-question-mode-title ((,class (:inherit default :weight bold))))
+     `(sx-question-mode-title-comments ((,class (:inherit sx-question-mode-title))))
+     `(sx-tag ((,class (:foreground ,base0))))
+     `(sx-user-accept-rate ((,class nil)))
+     `(sx-user-name ((,class (:inherit font-lock-builtin-face))))
+     `(sx-user-reputation ((,class (:inherit font-lock-comment-face))))
+
 ;;;;; syslog-mode
      `(syslog-ip ((,class (:background unspecified
                                        :foreground ,green

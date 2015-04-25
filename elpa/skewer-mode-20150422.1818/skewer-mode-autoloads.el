@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "skewer-bower" "skewer-bower.el" (21649 34843
+;;;### (autoloads nil "skewer-bower" "skewer-bower.el" (21819 2786
 ;;;;;;  0 0))
 ;;; Generated autoloads from skewer-bower.el
 
@@ -19,7 +19,7 @@ Dynamically load a library from bower into the current page.
 
 ;;;***
 
-;;;### (autoloads nil "skewer-css" "skewer-css.el" (21649 34843 0
+;;;### (autoloads nil "skewer-css" "skewer-css.el" (21819 2786 0
 ;;;;;;  0))
 ;;; Generated autoloads from skewer-css.el
 
@@ -30,7 +30,7 @@ Minor mode for interactively loading new CSS rules.
 
 ;;;***
 
-;;;### (autoloads nil "skewer-html" "skewer-html.el" (21649 34843
+;;;### (autoloads nil "skewer-html" "skewer-html.el" (21819 2786
 ;;;;;;  0 0))
 ;;; Generated autoloads from skewer-html.el
 
@@ -41,7 +41,7 @@ Minor mode for interactively loading new HTML.
 
 ;;;***
 
-;;;### (autoloads nil "skewer-mode" "skewer-mode.el" (21649 34843
+;;;### (autoloads nil "skewer-mode" "skewer-mode.el" (21819 2786
 ;;;;;;  0 0))
 ;;; Generated autoloads from skewer-mode.el
 
@@ -68,7 +68,7 @@ Connect an inferior PhantomJS process to Skewer, returning the process.
 
 ;;;***
 
-;;;### (autoloads nil "skewer-repl" "skewer-repl.el" (21649 34843
+;;;### (autoloads nil "skewer-repl" "skewer-repl.el" (21819 2786
 ;;;;;;  0 0))
 ;;; Generated autoloads from skewer-repl.el
 
@@ -86,7 +86,7 @@ Start a JavaScript REPL to be evaluated in the visiting browser.
 
 ;;;***
 
-;;;### (autoloads nil "skewer-setup" "skewer-setup.el" (21649 34843
+;;;### (autoloads nil "skewer-setup" "skewer-setup.el" (21819 2786
 ;;;;;;  0 0))
 ;;; Generated autoloads from skewer-setup.el
 
@@ -98,7 +98,7 @@ Fully integrate Skewer into js2-mode, css-mode, and html-mode buffers.
 ;;;***
 
 ;;;### (autoloads nil nil ("cache-table.el" "skewer-mode-pkg.el")
-;;;;;;  (21649 34843 914165 0))
+;;;;;;  (21819 2786 492002 0))
 
 ;;;***
 

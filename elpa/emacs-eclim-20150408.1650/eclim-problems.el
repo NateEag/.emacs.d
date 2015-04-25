@@ -152,6 +152,15 @@
 (defun eclim--problems-clear-highlights ()
   (remove-overlays nil nil 'category 'eclim-problem))
 
+(defun eclim-problems-highlight ()
+  (interactive)
+  (when (eclim--accepted-p (buffer-file-name))
+    (save-restriction
+      (widen)
+      (eclim--problems-clear-highlights)
+      (loop for problem across (remove-if-not (lambda (p) (string= (assoc-default 'filename p) (file-truename (buffer-file-name)))) eclim--problems-list)
+            do (eclim--problems-insert-highlight problem)))))
+
 (defadvice find-file (after eclim-problems-highlight-on-find-file activate)
   (eclim-problems-highlight))
 (defadvice find-file-other-window (after eclim-problems-highlight-on-find-file-other-window activate)
@@ -160,15 +169,6 @@
   (eclim-problems-highlight))
 (defadvice switch-to-buffer (after eclim-problems-highlight-switch-to-buffer activate)
   (eclim-problems-highlight))
-
-(defun eclim-problems-highlight ()
-  (interactive)
-  (save-restriction
-    (widen)
-    (when (eclim--file-managed-p)
-      (eclim--problems-clear-highlights)
-      (loop for problem across (remove-if-not (lambda (p) (string= (assoc-default 'filename p) (file-truename (buffer-file-name)))) eclim--problems-list)
-            do (eclim--problems-insert-highlight problem)))))
 
 (defun eclim--problems-get-current-problem ()
   (let ((buf (get-buffer "*eclim: problems*")))
@@ -198,8 +198,8 @@
 (defun eclim-problems-correct ()
   (interactive)
   (let ((p (eclim--problems-get-current-problem)))
-    (if (not (string-match "\.java$" (cdr (assoc 'filename p))))
-        (error "Not a Java file. Corrections are currently supported only for Java.")
+    (if (not (string-match "\\.\\(groovy\\|java\\)$" (cdr (assoc 'filename p))))
+        (error "Not a Java or Groovy file. Corrections are currently supported only for Java or Groovy.")
       (eclim-problems-open-current)
       (eclim-java-correct (cdr (assoc 'line p)) (eclim--byte-offset)))))
 
@@ -212,6 +212,9 @@ it asynchronously."
        (when (not (minibuffer-window-active-p (minibuffer-window)))
          (message "refreshing... %s " (current-buffer)))
        (eclim/with-results-async ,res ("problems" ("-p" eclim--problems-project) (when (string= "e" eclim--problems-filter) '("-e" "true")))
+         (loop for problem across ,res
+               do (let ((filecell (assq 'filename problem)))
+                    (when filecell (setcdr filecell (file-truename (cdr filecell))))))
          (setq eclim--problems-list ,res)
          (let ((,problems ,res))
            ,@body)))))

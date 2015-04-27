@@ -83,6 +83,9 @@
 ;; Turn off default vc-mode, because I never use it.
 (setq vc-handled-backends nil)
 
+;; Tell magit to stop bothering me.
+(setq magit-last-seen-setup-instructions "1.4.0")
+
 
 ;;; Save-related hooks.
 

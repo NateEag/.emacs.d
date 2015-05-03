@@ -61,10 +61,20 @@
          (num-windows (if (> frame-screen-ratio 0.34)
                           1
                         2)))
-    ;; 80 chars + 1 for each fringe.
-    (set-frame-width (selected-frame) (* 82 num-windows))
-    (when (= 2 num-windows)
-        (split-window-right))))
+    (my-set-frame-width-by-window-count num-windows)
+    ))
+
+(defun my-set-frame-width-by-window-count (num-windows)
+  "Set frame width by number of desired 80-char windows."
+
+  (interactive "N")
+
+  ;; 2 extra chars for the fringe on either side.
+  (set-frame-width (selected-frame) (* 82 num-windows))
+
+  ;;HACK I never use more than two windows.
+ (if (= 2 num-windows)
+        (split-window-right)))
 
 (defadvice make-frame-command (after set-up-new-frame activate)
   "After creating a new frame, size it the way I like."

@@ -1,3 +1,7 @@
+-Give up on Mail.app and start using offline-imap, message-mode, and notmuch.
+ A decent guide can be found here:
+ http://chrisdone.com/posts/emacs-mail
+
 -Get ac-isearch working when auto-completion is active. I think my
  global-set-key of C-s to regex searching currently overrides it.
 

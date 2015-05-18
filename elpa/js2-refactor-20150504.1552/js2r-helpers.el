@@ -41,7 +41,7 @@
 
 (defun js2r--guard ()
   (when js2-parsed-errors
-    (error "Can't refactor while buffer has parse errors.")))
+    (error "Can't refactor while buffer has parse errors")))
 
 (defun js2r--current-quotes-char ()
   "The char that is the current quote delimiter"
@@ -123,6 +123,26 @@
 
 ;; finding expressions and arguments
 
+(defun js2r--closest-extractable-node ()
+  "Return the most appropriate node the be extracted into a variable or paramter.
+Lookup the closest expression node from the point, or the closest literal node instead.
+If no node is found, signal an error."
+  (or (or (js2r--closest #'js2r--expression-p)
+          (js2r--closest #'js2r--literal-node-p))
+      (error "Cannot perform refactoring: Nothing to extract at point")))
+
+(defun js2r--closest-stmt-node ()
+  "Return the closest standalone statement node.
+Special care is taken for if branch nodes: if a statement node is
+part of an if branch node (like 'else if' nodes), return the
+parent node."
+  (let* ((node (js2-node-parent-stmt (js2-node-at-point)))
+        (parent (js2-node-parent node)))
+    (if (and (js2-if-node-p node)
+             (js2-if-node-p parent))
+        parent
+      node)))
+
 (defun js2r--argument-p (node)
   (let ((parent (js2-node-parent node)))
     (and (js2-call-node-p parent)
@@ -130,10 +150,22 @@
 
 (defun js2r--expression-p (node)
   (or (js2-call-node-p node)
-      (js2-string-node-p node)
       (js2r--argument-p node)
       (and (js2-prop-get-node-p node)
            (not (js2-call-node-p (js2-node-parent node))))))
+
+(defun js2r--literal-node-p (node)
+  (or (js2-object-node-p node)
+      (js2-string-node-p node)
+      (js2-number-node-p node)
+      (js2r--boolean-node-p node)))
+
+(defun js2r--boolean-node-p (node)
+  (let* ((beg (js2-node-abs-pos node))
+         (end (js2-node-abs-end node))
+         (content (buffer-substring beg end)))
+    (and (js2-keyword-node-p node)
+         (member content '("true" "false")))))
 
 (defun js2r--single-complete-expression-between-p (beg end)
   (let ((ancestor (js2r--first-common-ancestor-in-region beg (- end 1))))

@@ -1,5 +1,5 @@
 ;;; helm-ls-git.el --- list git files. -*- lexical-binding: t -*-
-;; Package-Version: 20150423.2250
+;; Package-Version: 20150516.2143
 
 ;; Copyright (C) 2012 ~ 2014 Thierry Volpiatto <thierry.volpiatto@gmail.com>
 
@@ -22,6 +22,7 @@
 
 (require 'cl-lib)
 (require 'vc)
+(require 'vc-git)
 (require 'helm-files)
 
 (defvaralias 'helm-c-source-ls-git 'helm-source-ls-git)
@@ -230,9 +231,8 @@ The color of matched items can be customized in your .gitconfig."
            (helm-make-actions
             "Find file" 'helm-find-many-files
             "Git status" (lambda (_candidate)
-                           (with-current-buffer helm-buffer
-                             (funcall helm-ls-git-status-command
-                                      (helm-default-directory))))))))
+                           (funcall helm-ls-git-status-command
+                                    (helm-default-directory)))))))
 
 
 (defun helm-ls-git-grep (_candidate)
@@ -350,21 +350,24 @@ The color of matched items can be customized in your .gitconfig."
                                          do (setq last-bname bname))
                                    (save-buffer))))))))
           ((string-match "^ ?M+ *" disp)
-           (append actions (list '("Diff file" . helm-ls-git-diff)
-                                 '("Commit file(s)"
-                                   . (lambda (candidate)
-                                       (let* ((marked (helm-marked-candidates))
-                                              (default-directory
-                                               (file-name-directory (car marked))))
-                                         (vc-checkin marked 'Git))))
-                                 '("Revert file(s)" . (lambda (candidate)
-                                                     (let ((marked (helm-marked-candidates)))
-                                                       (cl-loop for f in marked do
-                                                             (progn
-                                                               (vc-git-revert f)
-                                                               (helm-aif (get-file-buffer f)
-                                                                   (with-current-buffer it
-                                                                     (revert-buffer t t)))))))))))
+           (append actions (helm-make-actions "Diff file" 'helm-ls-git-diff
+                                              "Commit file(s)"
+                                              (lambda (_candidate)
+                                                (let* ((marked (helm-marked-candidates))
+                                                       (default-directory
+                                                        (file-name-directory (car marked))))
+                                                  (vc-checkin marked 'Git)))
+                                              "Revert file(s)"
+                                              (lambda (_candidate)
+                                                (let ((marked (helm-marked-candidates)))
+                                                  (cl-loop for f in marked do
+                                                           (progn
+                                                             (vc-git-revert f)
+                                                             (helm-aif (get-file-buffer f)
+                                                                 (with-current-buffer it
+                                                                   (revert-buffer t t)))))))
+                                              "Copy file(s) `C-u to follow'" 'helm-find-files-copy
+                                              "Rename file(s) `C-u to follow'" 'helm-find-files-rename)))
           ((string-match "^ D " disp)
            (append actions (list '("Git delete" . vc-git-delete-file))))
           (t actions))))
@@ -375,7 +378,9 @@ The color of matched items can be customized in your .gitconfig."
       (when (buffer-live-p (get-buffer "*vc-diff*"))
         (kill-buffer "*vc-diff*")
         (balance-windows))
-      (call-interactively #'vc-diff))))
+      (vc-git-diff (list candidate))
+      (pop-to-buffer "*vc-diff*")
+      (diff-mode))))
 
 
 ;;;###autoload
@@ -404,12 +409,11 @@ The color of matched items can be customized in your .gitconfig."
 ;;; Helm-find-files integration.
 ;;
 (defun helm-ff-ls-git-find-files (_candidate)
-  (let ((default-directory helm-ff-default-directory))
-    (helm-run-after-quit
-     #'(lambda (d)
-         (let ((default-directory d))
-           (helm-ls-git-ls)))
-     default-directory)))
+  (helm-run-after-quit
+   #'(lambda (d)
+       (let ((default-directory d))
+         (helm-ls-git-ls)))
+   helm-ff-default-directory))
 
 (defun helm-ls-git-ff-dir-git-p (file)
   (when (or (file-exists-p file)

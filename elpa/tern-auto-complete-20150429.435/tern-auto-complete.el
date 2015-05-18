@@ -2,8 +2,8 @@
 ;;; tern-auto-complete.el --- Tern Completion by auto-complete.el
 
 ;; Author:  <m.sakurai at kiwanami.net>
-;; Version: 20141121.453
-;; X-Original-Version: 0.0.1
+;; Version: 0.0.1
+;; Package-Version: 20150429.435
 ;; Package-Requires: ((tern "0.0.1") (auto-complete "1.4") (cl-lib "0.5") (emacs "24"))
 
 ;;; Commentary:
@@ -87,9 +87,9 @@
            (name (cdr (assq 'name item))))
        (popup-make-item
         name
-        :symbol (if (string-match "fn" type) "f" "v")
+        :symbol (if (null type) "?" (if (string-match "fn" type) "f" "v"))
         :summary (truncate-string-to-width
-                  type tern-ac-completion-truncate-length 0 nil "...")
+                  (or type "?") tern-ac-completion-truncate-length 0 nil "...")
         :document (concat type "\n\n" doc))))
    tern-ac-complete-reply))
 

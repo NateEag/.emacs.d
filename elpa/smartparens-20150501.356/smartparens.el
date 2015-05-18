@@ -163,11 +163,17 @@ better orientation."
   "Function to restrict the backward search")
 
 (defun sp--get-forward-bound ()
-  "Get the bound to limit the forward search for looking for pairs."
+  "Get the bound to limit the forward search for looking for pairs.
+
+If it returns nil, the original bound passed to the search
+function will be considered."
   (and sp-forward-bound-fn (funcall sp-forward-bound-fn)))
 
 (defun sp--get-backward-bound ()
-  "Get the bound to limit the backward search for looking for pairs."
+  "Get the bound to limit the backward search for looking for pairs.
+
+If it returns nil, the original bound passed to the search
+function will be considered."
   (and sp-backward-bound-fn (funcall sp-backward-bound-fn)))
 
 
@@ -3390,7 +3396,7 @@ longest possible match.  That means that searching for
 This is an internal function.  Only use this for searching for
 pairs!"
   (setq count (or count 1))
-  (setq bound (or bound (sp--get-backward-bound)))
+  (setq bound (or (sp--get-backward-bound) bound))
   (let ((case-fold-search nil) r)
     (while (> count 0)
       (when (search-backward-regexp regexp bound noerror)
@@ -3402,7 +3408,7 @@ pairs!"
 
 (defun sp--search-forward-regexp (regexp &optional bound noerror count)
   "Just like `search-forward-regexp', but always case sensitive."
-  (setq bound (or bound (sp--get-forward-bound)))
+  (setq bound (or (sp--get-forward-bound) bound))
   (let ((case-fold-search nil))
     (search-forward-regexp regexp bound noerror count)))
 
@@ -3735,11 +3741,11 @@ If DIRECTION is nil, create a regexp matching both directions."
          (re (concat
               (if (or (not direction)
                       (eq direction :open))
-                  (concat "\\(?:" "\\(?:\\`\\|[[:space:]]\\)" "\\(" delims "\\)" "[^[:space:]]\\)") "")
+                  (concat "\\(?:" "\\(?:\\`\\|[ \t\n\r]\\)" "\\(" delims "\\)" "[^ \t\n\r]\\)") "")
               (if (not direction) "\\|" "")
               (if (or (not direction)
                       (eq direction :close))
-                  (concat "\\(?:[^[:space:]]" "\\(" delims "\\)" "\\(?:[[:space:][:punct:]]\\|\\'\\)" "\\)") ""))))
+                  (concat "\\(?:[^ \t\n\r]" "\\(" delims "\\)" "\\(?:[ \t\n\r[:punct:]]\\|\\'\\)" "\\)") ""))))
     re))
 
 (defun sp--find-next-textmode-stringlike-delimiter (needle search-fn-f &optional limit)
@@ -3795,15 +3801,22 @@ counting (stack) algorithm."
                   (setq restart-from (point))
                   ;; this adjustments are made because elisp regexp
                   ;; can't do lookahead assertions... so we match and
-                  ;; then back up
+                  ;; then back up.
                   (ignore-errors
-                    (when (and (not back) (eq type :open)) (backward-char 2))
+                    (when (and (not back) (eq type :open)) (backward-char (1+ (length delim))))
                     (when (and (not back) (eq type :close)) (backward-char 1))
-                    (when (and back (eq type :close)) (forward-char 2))
+                    (when (and back (eq type :close)) (forward-char (1+ (length delim))))
                     (when (and back (eq type :open)) (forward-char 1)))
                   (let ((other-end (point)))
                     (when (sp--find-next-textmode-stringlike-delimiter needle search-fn)
-                      (let* ((this-end (if (eq type :open) (max (point-min) (1- (point))) (min (point-max) (1+ (point)))))
+                      ;; Beware, we also need to test the beg/end of
+                      ;; buffer, because we have that variant in the
+                      ;; regexp.  In that case the match does not
+                      ;; consume anything and we needn't do any
+                      ;; correction.
+                      (let* ((this-end (if (eq type :open)
+                                           (max (point-min) (if (eobp) (point) (1- (point))))
+                                         (min (point-max) (if (bobp) (point) (1+ (point))))))
                              (b (min this-end other-end))
                              (e (max this-end other-end)))
                         (setq re (list :beg b

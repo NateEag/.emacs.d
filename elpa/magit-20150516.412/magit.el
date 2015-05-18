@@ -3622,9 +3622,11 @@ tracked in the current repository are reverted if
       (process-send-string
        proc
        (downcase
-        (concat (match-string (if (yes-or-no-p (substring string 0 beg)) 1 2)
-                              string)
-                "\n"))))))
+        (concat
+         (match-string
+          (if (save-match-data (yes-or-no-p (substring string 0 beg))) 1 2)
+          string)
+         "\n"))))))
 
 (defun magit-process-password-prompt (proc string)
   "Forward password prompts to the user."
@@ -4065,8 +4067,14 @@ the current repository."
               (and file (string-prefix-p topdir file)
                    (not (string-prefix-p gitdir file))
                    (member (file-relative-name file topdir) tracked)
-                   (let ((auto-revert-mode t))
-                     (auto-revert-handler)
+                   (let ((remote-file-name-inhibit-cache t))
+                     (when (buffer-stale--default-function)
+                       (setq auto-revert-notify-modified-p nil)
+                       (when auto-revert-verbose
+                         (message "Reverting buffer `%s'." (buffer-name)))
+                       (let ((buffer-read-only buffer-read-only))
+                         (revert-buffer 'ignore-auto 'dont-ask 'preserve-modes)))
+                     (vc-find-file-hook)
                      (run-hooks 'magit-revert-buffer-hook))))))))))
 
 ;;; (misplaced)

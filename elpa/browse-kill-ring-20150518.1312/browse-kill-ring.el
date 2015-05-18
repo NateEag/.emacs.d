@@ -5,8 +5,8 @@
 ;; Author: Colin Walters <walters@verbum.org>
 ;; Maintainer: browse-kill-ring <browse-kill-ring@tonotdo.com>
 ;; Created: 7 Apr 2001
-;; Version: 20150104.1237
-;; X-Original-Version: 2.0.0
+;; Version: 2.0.0
+;; Package-Version: 20150518.1312
 ;; URL: https://github.com/browse-kill-ring/browse-kill-ring
 ;; Keywords: convenience
 
@@ -174,38 +174,6 @@ Setting this variable to nil means no limit."
   "When `browse-kill-ring-display-duplicates' nil,
 if non-nil, then display leftmost(last) duplicate items in `kill-ring'."
   :type 'boolean
-  :group 'browse-kill-ring)
-
-(defadvice kill-new (around browse-kill-ring-no-kill-new-duplicates)
-  "An advice for not adding duplicate elements to `kill-ring'.
-Even after being \"activated\", this advice will only modify the
-behavior of `kill-new' when `browse-kill-ring-no-duplicates'
-is non-nil."
-  (if browse-kill-ring-no-duplicates
-      (setq kill-ring (delete (ad-get-arg 0) kill-ring)))
-  ad-do-it)
-
-(defcustom browse-kill-ring-no-duplicates nil
-  "If non-nil, then the `b-k-r-no-kill-new-duplicates' advice will operate.
-This means that duplicate entries won't be added to the `kill-ring'
-when you call `kill-new'.
-
-If you set this variable via customize, the advice will be activated
-or deactivated automatically.  Otherwise, to enable the advice, add
-
-B (ad-enable-advice 'kill-new 'around 'browse-kill-ring-no-kill-new-duplicates)
- (ad-activate 'kill-new)
-
-to your init file."
-  :type 'boolean
-  :set (lambda (symbol value)
-         (set symbol value)
-         (if value
-             (ad-enable-advice 'kill-new 'around
-                               'browse-kill-ring-no-kill-new-duplicates)
-           (ad-disable-advice 'kill-new 'around
-                              'browse-kill-ring-no-kill-new-duplicates))
-         (ad-activate 'kill-new))
   :group 'browse-kill-ring)
 
 (defcustom browse-kill-ring-depropertize nil
@@ -1147,18 +1115,19 @@ start of the buffer."
   "Display items in the `kill-ring' in another buffer."
   (interactive)
   (if (eq major-mode 'browse-kill-ring-mode)
-      (message "Already viewing the kill ring")
-    (let* ((orig-win (selected-window))
-           (orig-buf (window-buffer orig-win))
-           (buf (get-buffer-create "*Kill Ring*"))
-           (kill-ring-yank-pointer-string
-            (if kill-ring-yank-pointer
-                (substring-no-properties (car kill-ring-yank-pointer)))))
-      (browse-kill-ring-setup buf orig-buf orig-win)
-      (pop-to-buffer buf)
-      (browse-kill-ring-resize-window)
-      (unless (eq kill-ring kill-ring-yank-pointer)
-        (browse-kill-ring-find-entry kill-ring-yank-pointer-string)))))
+      (error "Already viewing the kill ring"))
+
+  (let* ((orig-win (selected-window))
+         (orig-buf (window-buffer orig-win))
+         (buf (get-buffer-create "*Kill Ring*"))
+         (kill-ring-yank-pointer-string
+          (if kill-ring-yank-pointer
+              (substring-no-properties (car kill-ring-yank-pointer)))))
+    (browse-kill-ring-setup buf orig-buf orig-win)
+    (pop-to-buffer buf)
+    (browse-kill-ring-resize-window)
+    (unless (eq kill-ring kill-ring-yank-pointer)
+      (browse-kill-ring-find-entry kill-ring-yank-pointer-string))))
 
 (provide 'browse-kill-ring)
 

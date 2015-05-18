@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "async" "async.el" (21814 11829 0 0))
+;;;### (autoloads nil "async" "async.el" (21850 30240 0 0))
 ;;; Generated autoloads from async.el
 
 (autoload 'async-start-process "async" "\
@@ -68,8 +68,56 @@ returns nil.  It can still be useful, however, as an argument to
 
 ;;;***
 
-;;;### (autoloads nil nil ("async-bytecomp.el" "async-pkg.el" "dired-async.el"
-;;;;;;  "smtpmail-async.el") (21814 11829 801732 0))
+;;;### (autoloads nil "async-bytecomp" "async-bytecomp.el" (21850
+;;;;;;  30240 0 0))
+;;; Generated autoloads from async-bytecomp.el
+
+(autoload 'async-byte-recompile-directory "async-bytecomp" "\
+Compile all *.el files in DIRECTORY asynchronously.
+All *.elc files are systematically deleted before proceeding.
+
+\(fn DIRECTORY &optional QUIET)" nil nil)
+
+(defvar async-bytecomp-package-mode nil "\
+Non-nil if Async-Bytecomp-Package mode is enabled.
+See the command `async-bytecomp-package-mode' for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `async-bytecomp-package-mode'.")
+
+(custom-autoload 'async-bytecomp-package-mode "async-bytecomp" nil)
+
+(autoload 'async-bytecomp-package-mode "async-bytecomp" "\
+Byte compile asynchronously packages installed with package.el.
+Async compilation of packages can be controlled by
+`async-bytecomp-allowed-packages'.
+
+\(fn &optional ARG)" t nil)
+
+;;;***
+
+;;;### (autoloads nil "dired-async" "dired-async.el" (21850 30240
+;;;;;;  0 0))
+;;; Generated autoloads from dired-async.el
+
+(defvar dired-async-mode nil "\
+Non-nil if Dired-Async mode is enabled.
+See the command `dired-async-mode' for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `dired-async-mode'.")
+
+(custom-autoload 'dired-async-mode "dired-async" nil)
+
+(autoload 'dired-async-mode "dired-async" "\
+Do dired actions asynchronously.
+
+\(fn &optional ARG)" t nil)
+
+;;;***
+
+;;;### (autoloads nil nil ("async-pkg.el" "smtpmail-async.el") (21850
+;;;;;;  30240 529288 0))
 
 ;;;***
 

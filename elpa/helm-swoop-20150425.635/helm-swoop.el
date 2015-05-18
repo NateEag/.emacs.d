@@ -2,8 +2,8 @@
 
 ;; Copyright (C) 2013 by Shingo Fukuyama
 
-;; Version: 1.5.0
-;; Package-Version: 20150320.1831
+;; Version: 1.5.1
+;; Package-Version: 20150425.635
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
 ;; Created: Oct 24 2013

@@ -223,7 +223,7 @@ arg METHOD can be one of buffer, buffer-other-window, buffer-other-frame."
   (let* ((split (helm-grep-split-line candidate))
          (buf (car split))
          (lineno (string-to-number (nth 1 split)))
-         (split-pat (helm-mp-split-pattern helm-pattern)))
+         (split-pat (helm-mp-split-pattern helm-input)))
     (cl-case method
       (buffer              (switch-to-buffer buf))
       (buffer-other-window (switch-to-buffer-other-window buf))
@@ -413,6 +413,10 @@ Same as `helm-moccur-goto-line' but go in new frame."
     (define-key map (kbd "<C-up>")   'helm-moccur-mode-goto-line-ow-backward)
     (define-key map (kbd "<M-down>") 'helm-gm-next-file)
     (define-key map (kbd "<M-up>")   'helm-gm-precedent-file)
+    (define-key map (kbd "M-n")      'helm-moccur-mode-goto-line-ow-forward)
+    (define-key map (kbd "M-p")      'helm-moccur-mode-goto-line-ow-backward)
+    (define-key map (kbd "M-N")      'helm-gm-next-file)
+    (define-key map (kbd "M-P")      'helm-gm-precedent-file)
     map))
 
 (defun helm-moccur-mode-goto-line ()
@@ -557,7 +561,8 @@ Special commands:
         :buffer "*helm occur*"
         :history 'helm-grep-history
         :preselect (and (memq 'helm-source-occur helm-sources-using-default-as-input)
-                        (format "%s:%d:" (buffer-name) (line-number-at-pos (point))))
+                        (format "%s:%d:" (regexp-quote (buffer-name))
+                                (line-number-at-pos (point))))
         :truncate-lines t))
 
 ;;;###autoload

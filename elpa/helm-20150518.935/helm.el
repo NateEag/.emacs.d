@@ -470,8 +470,9 @@ will have no effect until this mode will be disabled."
 
 (defcustom helm-sources-using-default-as-input '(helm-source-imenu
                                                  helm-source-info-elisp
-                                                 helm-source-etags-select)
-  "List of helm sources that need to use `helm-maybe-use-default-as-input'.
+                                                 helm-source-etags-select
+                                                 helm-source-man-pages)
+  "List of helm sources that need to use `helm--maybe-use-default-as-input'.
 When a source is member of this list, default `thing-at-point'
 will be used as input."
   :group 'helm
@@ -750,11 +751,6 @@ and before performing action.")
   "Quit when there is no candidates when non--nil.
 This variable accepts a function, which is executed if no candidate.")
 
-(defvar helm-maybe-use-default-as-input nil
-  "Use :default arg of `helm' as input to update display.
-Note that if also :input is specified as `helm' arg, it will take
-precedence on :default.")
-
 (defvar helm-source-in-each-line-flag nil
   "Non-nil means add helm-source text-property in each candidate.
 experimental feature.")
@@ -876,6 +872,13 @@ when `helm' is keyboard-quitted.")
 (defvar helm--reading-passwd-or-string nil)
 (defvar helm--in-update nil)
 (defvar helm--in-fuzzy nil)
+(defvar helm--maybe-use-default-as-input nil
+  "Flag to notify the use of use-default-as-input.
+Use only in let-bindings.
+Use :default arg of `helm' as input to update display.
+Note that if also :input is specified as `helm' arg, it will take
+precedence on :default.")
+
 
 ;; Utility: logging
 (defun helm-log (format-string &rest args)
@@ -1185,12 +1188,15 @@ arg TYPE is an existing type defined in `helm-type-attributes'."
 (defun helm-append-at-nth (seq elm index)
   "Append ELM at INDEX in SEQ."
   (let ((len (length seq)))
-    (when (> index len) (setq index len))
-    (cl-loop for i in seq
-          for count from 1 collect i
-          when (= count index)
-          if (listp elm) append elm
-          else collect elm)))
+    (cond ((> index len) (setq index len))
+          ((< index 0) (setq index 0)))
+    (if (zerop index)
+        (append elm seq)
+        (cl-loop for i in seq
+                 for count from 1 collect i
+                 when (= count index)
+                 if (listp elm) append elm
+                 else collect elm))))
 
 (defun helm-add-action-to-source (name fn source &optional index)
   "Add new action NAME linked to function FN to SOURCE.
@@ -1386,7 +1392,19 @@ of \(action-display . function\)."
     (helm-aif (helm-attr 'action-transformer)
         (helm-composed-funcall-with-source
          (helm-get-current-source) it
-         (helm-attr 'action) (helm-get-selection))
+         (helm-attr 'action)
+         ;; Check if the first given transformer
+         ;; returns the same set of actions for each
+         ;; candidate in marked candidates.
+         ;; If so use the car of marked to determine
+         ;; the set of actions, otherwise use the selection.
+         (if (cl-loop with marked = (helm-marked-candidates)
+                      with act = (car (helm-mklist it))
+                      with acts = (funcall act nil (car marked))
+                      for c in marked
+                      always (equal (funcall act nil c) acts))
+             (car (helm-marked-candidates))
+             (helm-get-selection)))
       (helm-attr 'action))))
 
 (defun helm-get-current-source ()
@@ -1558,7 +1576,8 @@ Return the result of last function call."
     (helm-log "functions = %S" functions)
     (helm-log "args = %S" args)
     (cl-loop with result for fn in funs
-          do (setq result (apply fn args)) finally return result)))
+             do (setq result (apply fn args))
+             finally return result)))
 
 (defun helm-funcall-foreach (sym &optional sources)
   "Call the associated function to SYM for each source if any."
@@ -1659,9 +1678,9 @@ candidate-transformer:
 This is used in transformers to modify candidates list."
   (if (functionp funcs)
       (apply 'helm-funcall-with-source source funcs args)
-    (apply 'helm-funcall-with-source source
-           (lambda (&rest oargs) (helm-compose oargs funcs))
-           args)))
+      (apply 'helm-funcall-with-source source
+             (lambda (&rest oargs) (helm-compose oargs funcs))
+             args)))
 
 (defun helm-stringify (str-or-sym)
   "Get string of STR-OR-SYM."
@@ -1739,7 +1758,7 @@ Initially selected candidate.  Specified by exact candidate or a regexp.
 A default argument that will be inserted in minibuffer \
 with \\<minibuffer-local-map>\\[next-history-element].
 When nil or not present `thing-at-point' will be used instead.
-If `helm-maybe-use-default-as-input' is non--nil display will be
+If `helm--maybe-use-default-as-input' is non--nil display will be
 updated using :default arg as input unless :input is specified,
 which in this case will take precedence on :default
 This is a string or a list, in this case the car of the list will
@@ -1872,8 +1891,8 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
   (let ((non-essential t)
         (input-method-verbose-flag helm-input-method-verbose-flag)
         (old--cua cua-mode)
-        (helm-maybe-use-default-as-input
-         (or helm-maybe-use-default-as-input ; it is let-bounded so use it.
+        (helm--maybe-use-default-as-input
+         (or helm--maybe-use-default-as-input ; it is let-bounded so use it.
              (cl-loop for s in (helm-normalize-sources any-sources)
                       thereis (memq s helm-sources-using-default-as-input)))))
     ;; cua-mode overhide local helm bindings.
@@ -2046,14 +2065,18 @@ Argument SAVE-OR-RESTORE is one of save or restore."
      (helm-log "Save position at %S" (cons (point) (window-start)))
      (setq helm-current-position (cons (point) (window-start))))
     (restore
-     (helm-log "Restore position at  %S in buffer %s"
-               helm-current-position
-               (buffer-name (current-buffer)))
-     (goto-char (car helm-current-position))
-     ;; Fix this position with the NOFORCE arg of `set-window-start'
-     ;; otherwise, if there is some other buffer than `helm-current-buffer'
-     ;; one, position will be lost.
-     (set-window-start (selected-window) (cdr helm-current-position) t))))
+     ;; Maybe `helm-current-buffer' have been deleted
+     ;; during helm session so check if it is here
+     ;; otherwise position in underlaying buffer will be lost.
+     (when (get-buffer-window helm-current-buffer 'visible)
+       (helm-log "Restore position at  %S in buffer %s"
+                 helm-current-position
+                 (buffer-name (current-buffer)))
+       (goto-char (car helm-current-position))
+       ;; Fix this position with the NOFORCE arg of `set-window-start'
+       ;; otherwise, if there is some other buffer than `helm-current-buffer'
+       ;; one, position will be lost.
+       (set-window-start (selected-window) (cdr helm-current-position) t)))))
 
 
 (defun helm-frame-or-window-configuration (save-or-restore)
@@ -2278,7 +2301,7 @@ It is intended to use this only in `helm-initial-setup'."
                                     (member (assoc-default 'name s)
                                             helm-source-filter))
                                 (helm-get-sources))))
-  (setq helm-pattern (or (and helm-maybe-use-default-as-input
+  (setq helm-pattern (or (and helm--maybe-use-default-as-input
                               (or (if (listp any-default)
                                       (car any-default) any-default)
                                   (with-helm-current-buffer
@@ -2383,11 +2406,15 @@ For ANY-PRESELECT ANY-RESUME ANY-KEYMAP ANY-DEFAULT ANY-HISTORY, See `helm'."
       ;; display if no result found with precedent value of `helm-pattern'
       ;; unless `helm-quit-if-no-candidate' is non--nil, in this case
       ;; Don't force update with an empty pattern.
-      ;; Reset also `helm-maybe-use-default-as-input' as this checking
+      ;; Reset also `helm--maybe-use-default-as-input' as this checking
       ;; happen only on startup.
-      (when (and helm-maybe-use-default-as-input (not source-delayed-p))
+      (when (and helm--maybe-use-default-as-input (not source-delayed-p))
+        ;; Store value of default temporarily here waiting next update
+        ;; to allow action like helm-moccur-action matching pattern
+        ;; at the place it jump to.
+        (setq helm-input helm-pattern)
         (setq helm-pattern "")
-        (setq helm-maybe-use-default-as-input nil)
+        (setq helm--maybe-use-default-as-input nil)
         (and (helm-empty-buffer-p)
              (null helm-quit-if-no-candidate)
              (helm-force-update)))
@@ -2597,14 +2624,14 @@ WARNING: Do not use this mode yourself, it is internal to helm."
   "Check INPUT string and update the helm buffer if necessary."
   ;; First time minibuffer is entered
   ;; we check value of `helm-pattern' that have been set
-  ;; in `helm-initial-setup' when `helm-maybe-use-default-as-input'
+  ;; in `helm-initial-setup' when `helm--maybe-use-default-as-input'
   ;; is non--nil.  After this initial check, reset
-  ;; `helm-maybe-use-default-as-input' and ignore this.
+  ;; `helm--maybe-use-default-as-input' and ignore this.
   ;; This happen only when source is `delayed'.
-  (when helm-maybe-use-default-as-input ; nil when non--delayed.
+  (when helm--maybe-use-default-as-input ; nil when non--delayed.
     (setq input helm-pattern)
     (with-helm-after-update-hook (setq helm-pattern ""))
-    (setq helm-maybe-use-default-as-input nil))
+    (setq helm--maybe-use-default-as-input nil))
   ;; In delayed sources `helm-pattern' have not been resat yet.
   (unless (equal input helm-pattern)
     (setq helm-pattern input)
@@ -2656,7 +2683,10 @@ Helm plug-ins are realized by this function."
                          ;; Process candidates-(process) function
                          ;; It may return a process or a list of candidates.
                          (if candidate-proc
-                             (helm-interpret-value candidate-proc source)
+                             ;; Calling `helm-interpret-value' with no
+                             ;; SOURCE arg force the use of `funcall'
+                             ;; and not `helm-funcall-with-source'.
+                             (helm-interpret-value candidate-proc)
                            (helm-interpret-value candidate-fn source))
                        (error (helm-log "Error: %S" err) nil))))
     (when (and (processp candidates) (not candidate-proc))
@@ -3271,8 +3301,10 @@ is done on whole `helm-buffer' and not on current source."
         (helm-log "end update")))))
 
 ;; Update keymap after updating.
-;; Putting this in a hook allow users to disable it.
-(add-hook 'helm-after-update-hook 'helm--maybe-update-keymap)
+;; Now we run this in post-command-hook, it is
+;; probably no more needed in helm-after-update-hook.
+;; Leave it commented as a reminder for now.
+;; (add-hook 'helm-after-update-hook 'helm--maybe-update-keymap)
 
 (defun helm-update-source-p (source)
   "Whether SOURCE need updating or not."

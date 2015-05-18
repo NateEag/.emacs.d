@@ -72,9 +72,8 @@ Find here the documentation of all sources actually documented."
       (erase-buffer)
       (cl-loop for elm in helm-help--string-list
             for str = (symbol-value elm)
-            do (if (functionp str)
-                   (insert (funcall str))
-                 (insert str)))))
+            do (insert (substitute-command-keys
+                        (if (functionp str) (funcall str) str))))))
   (let ((helm-org-headings--nofilename t))
     (helm :sources (helm-source-org-headings-for-files
                     (list helm-documentation-file))
@@ -334,16 +333,23 @@ Italic     => A non--file buffer.
   "\n* Helm Find Files\n
 
 ** Helm find files tips:
-\n*** Enter `~/' at end of pattern to quickly reach home directory.
 
-*** Enter `/' at end of pattern to quickly reach root of your file system.
+*** Quick pattern expansion:
 
-*** Enter `./' at end of pattern to quickly reach `default-directory' (initial start of session).
+\n**** Enter `~/' at end of pattern to quickly reach home directory.
+
+**** Enter `/' at end of pattern to quickly reach root of your file system.
+
+**** Enter `./' at end of pattern to quickly reach `default-directory' (initial start of session).
   If you are already in `default-directory' this will move cursor on top.
 
-*** Enter `../' at end of pattern will reach upper directory, moving cursor on top.
-  NOTE: This different to using `C-l' in that `C-l' don't move cursor on top but stay on previous
+**** Enter `../' at end of pattern will reach upper directory, moving cursor on top.
+  NOTE: This is different to using `C-l' in that `C-l' don't move cursor on top but stay on previous
   subdir name.
+
+**** Enter any environment var (e.g `$HOME') at end of pattern, it will be expanded.
+
+**** You can yank any valid filename after pattern, it will be expanded.
 
 *** You can complete with partial basename (start on third char entered)
 
@@ -431,7 +437,8 @@ The directory selection with \"**foo/\" like bash shopt globstar option is not s
 *** Bookmark your `helm-find-files' session
 
 You can bookmark your `helm-find-files' session with `C-x r m'.
-You can retrieve later these bookmarks easily by using M-x helm-filtered-bookmarks.
+You can retrieve later these bookmarks easily by using M-x helm-filtered-bookmarks
+or from the current `helm-find-files' session just hitting `C-x r b'.
 
 \n** Specific commands for `helm-find-files':\n
 \\<helm-find-files-map>
@@ -833,7 +840,14 @@ Multiple regexp matching is allowed, just enter a space to separate your regexps
 
 Matching empty lines is supported with the regexp \"^$\", you will get the results
 with only the buffer-name and the line number, you can of course save and edit these
-results.
+results (i.e add text to the empty line) .
+
+*** Automatically matching symbol at point
+
+You can match automatically the symbol at point, but keeping
+the minibuffer empty ready to write into.
+This is disabled by default, to enable this you have to add `helm-source-occur'
+and `helm-source-moccur' to `helm-sources-using-default-as-input'.
 
 *** Jump to the corresponding line in the searched buffer
 You can do this with `C-j' (persistent-action), to do it repetitively

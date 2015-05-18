@@ -20,6 +20,18 @@
 (require 'helm)
 (require 'package)
 
+(defgroup helm-el-package nil
+  "helm elisp packages."
+  :group 'helm)
+
+(defcustom helm-el-package-initial-filter 'all
+  "Show only installed, upgraded or all packages at startup."
+  :group 'helm-el-package
+  :type '(radio :tag "Initial filter for elisp packages"
+          (const :tag "Show all packages" all)
+          (const :tag "Show installed packages" installed)
+          (const :tag "Show upgradable packages" upgrade)))
+
 ;; internals vars
 (defvar helm-el-package--show-only 'all)
 (defvar helm-el-package--initialized-p nil)
@@ -45,7 +57,7 @@
   (setq helm-el-package--upgrades (helm-el-package-menu--find-upgrades))
   (if helm-force-updating-p
       (message "Refreshing packages list done")
-      (setq helm-el-package--show-only 'all))
+      (setq helm-el-package--show-only helm-el-package-initial-filter))
   (kill-buffer "*Packages*"))
 
 (defun helm-el-package-describe (candidate)
@@ -259,16 +271,16 @@
                       actions)))
         (cond ((cdr (assq (package-desc-name pkg-desc)
                           helm-el-package--upgrades))
-               (append '(("Upgrade package" . helm-el-package-upgrade)) acts))
+               (append '(("Upgrade package(s)" . helm-el-package-upgrade)) acts))
               ((package-installed-p (package-desc-name pkg-desc))
-               (append acts '(("Reinstall package" . helm-el-package-reinstall)
-                              ("Uninstall" . helm-el-package-uninstall))))
-              (t (append acts '(("Install" . helm-el-package-install))))))))
+               (append acts '(("Reinstall package(s)" . helm-el-package-reinstall)
+                              ("Uninstall package(s)" . helm-el-package-uninstall))))
+              (t (append acts '(("Install packages(s)" . helm-el-package-install))))))))
    (mode-line :initform helm-el-package-mode-line)
    (keymap :initform helm-el-package-map)
    (update :initform 'helm-el-package--update)
    (candidate-number-limit :initform 9999)
-   (action :initform '(("Describe" . helm-el-package-describe)))))
+   (action :initform '(("Describe package" . helm-el-package-describe)))))
 
 (defun helm-el-package--update ()
   (setq helm-el-package--initialized-p nil))

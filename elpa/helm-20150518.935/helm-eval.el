@@ -48,9 +48,9 @@ Should take one arg: the string to display."
                               (eldoc-fnsym-in-current-sexp .
                                elisp--fnsym-in-current-sexp) 
                               (eldoc-get-fnsym-args-string .
-                               elisp--get-fnsym-args-string) 
+                               elisp-get-fnsym-args-string) 
                               (eldoc-get-var-docstring .
-                               elisp--get-var-docstring))
+                               elisp-get-var-docstring))
              unless (fboundp f)
              do (defalias f a))
     ;; Emacs-24.
@@ -118,7 +118,7 @@ Should take one arg: the string to display."
         (when (member buf helm-eldoc-active-minibuffers-list)
           (with-current-buffer buf
             (let* ((sym     (save-excursion
-                              (unless (looking-back ")\\|\"" 1)
+                              (unless (looking-back ")\\|\"" (1- (point)))
                                 (forward-char -1))
                               (eldoc-current-symbol)))
                    (info-fn (eldoc-fnsym-in-current-sexp))

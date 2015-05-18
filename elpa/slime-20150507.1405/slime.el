@@ -325,18 +325,8 @@ argument."
   "Face for notes from the compiler."
   :group 'slime-mode-faces)
 
-(defun slime-face-inheritance-possible-p ()
-  "Return true if the :inherit face attribute is supported."
-  (assq :inherit custom-face-attributes))
-
 (defface slime-highlight-face
-  (if (slime-face-inheritance-possible-p)
-      '((t (:inherit highlight :underline nil)))
-    '((((class color) (background light))
-       (:background "darkseagreen2"))
-      (((class color) (background dark))
-       (:background "darkolivegreen"))
-      (t (:inverse-video t))))
+    '((t (:inherit highlight :underline nil)))
   "Face for compiler notes while selected."
   :group 'slime-mode-faces)
 
@@ -365,12 +355,14 @@ PROPERTIES specifies any default face properties."
 
 (define-sldb-faces
   (topline        "the top line describing the error")
-  (condition      "the condition class")
-  (section        "the labels of major sections in the debugger buffer")
-  (frame-label    "backtrace frame numbers")
+  (condition      "the condition class"
+                  '(:inherit font-lock-warning-face))
+  (section        "the labels of major sections in the debugger buffer"
+                  '(:inherit header-line))
+  (frame-label    "backtrace frame numbers"
+                  '(:inherit shadow))
   (restart-type   "restart names."
-                  (if (slime-face-inheritance-possible-p)
-                      '(:inherit font-lock-keyword-face)))
+                  '(:inherit font-lock-keyword-face))
   (restart        "restart descriptions")
   (restart-number "restart numbers (correspond to keystrokes to invoke)"
                   '(:bold t))
@@ -382,9 +374,11 @@ PROPERTIES specifies any default face properties."
    "frames which are surely not restartable")
   (detailed-frame-line
    "function names and arguments in a detailed (expanded) frame")
-  (local-name     "local variable names")
+  (local-name     "local variable names"
+                  '(:inherit font-lock-variable-name-face))
   (local-value    "local variable values")
-  (catch-tag      "catch tags"))
+  (catch-tag      "catch tags"
+                  '(:inherit highlight)))
 
 
 ;;;; Minor modes
@@ -6261,31 +6255,39 @@ was called originally."
     (set (make-local-variable 'truncate-lines) t)))
 
 (slime-define-keys slime-connection-list-mode-map
-  ("d"         'slime-connection-list-make-default)
-  ("g"         'slime-update-connection-list)
-  ((kbd "C-k") 'slime-quit-connection-at-point)
-  ("R"         'slime-restart-connection-at-point))
+  ("d"        'slime-connection-list-make-default)
+  ("g"        'slime-update-connection-list)
+  ("k"        'slime-disconnect-connection-at-point)
+  ("\C-c\C-q" 'slime-connection-list-quit-inferior-lisp)
+  ("\C-c\C-r" 'slime-connection-list-restart-inferior-lisp))
 
 (defun slime-connection-at-point ()
   (or (get-text-property (point) 'slime-connection)
       (error "No connection at point")))
 
-(defun slime-quit-connection-at-point (connection)
+(defun slime-disconnect-connection-at-point (connection)
   (interactive (list (slime-connection-at-point)))
-  (let ((slime-dispatching-connection connection)
-        (end (time-add (current-time) (seconds-to-time 3))))
-    (slime-quit-lisp t)
-    (while (memq connection slime-net-processes)
-      (when (time-less-p end (current-time))
-        (message "Quit timeout expired.  Disconnecting.")
-        (delete-process connection))
-      (sit-for 0 100)))
+  (slime-net-close connection)
   (slime-update-connection-list))
 
-(defun slime-restart-connection-at-point (connection)
+(defun slime-connection-list-quit-inferior-lisp (connection)
   (interactive (list (slime-connection-at-point)))
-  (let ((slime-dispatching-connection connection))
-    (slime-restart-inferior-lisp)))
+  (when (y-or-n-p "Are you sure you want to quit the inferior lisp process?")
+    (let ((slime-dispatching-connection connection)
+          (end (time-add (current-time) (seconds-to-time 3))))
+      (slime-quit-lisp t)
+      (while (memq connection slime-net-processes)
+             (when (time-less-p end (current-time))
+               (message "Quit timeout expired.  Disconnecting.")
+               (delete-process connection))
+             (sit-for 0 100)))
+   (slime-update-connection-list)))
+
+(defun slime-connection-list-restart-inferior-lisp (connection)
+  (interactive (list (slime-connection-at-point)))
+  (when (y-or-n-p "Are you sure you want to restart the inferior lisp process?")
+    (let ((slime-dispatching-connection connection))
+      (slime-restart-inferior-lisp))))
 
 (defun slime-connection-list-make-default ()
   "Make the connection at point the default connection."
@@ -6350,17 +6352,12 @@ was called originally."
   :group 'slime-inspector)
 
 (defface slime-inspector-value-face
-  (if (slime-face-inheritance-possible-p)
-      '((t (:inherit font-lock-builtin-face)))
-    '((((background light)) (:foreground "MediumBlue" :bold t))
-      (((background dark)) (:foreground "LightGray" :bold t))))
+    '((t (:inherit font-lock-builtin-face)))
   "Face for things which can themselves be inspected."
   :group 'slime-inspector)
 
 (defface slime-inspector-action-face
-  (if (slime-face-inheritance-possible-p)
-      '((t (:inherit font-lock-warning-face)))
-    '((t (:foreground "OrangeRed"))))
+    '((t (:inherit font-lock-warning-face)))
   "Face for labels of inspector actions."
   :group 'slime-inspector)
 
@@ -6724,7 +6721,10 @@ If ARG is negative, move forwards."
 (slime-define-keys slime-inspector-mode-map
   ([return] 'slime-inspector-operate-on-point)
   ("\C-m"   'slime-inspector-operate-on-point)
+  ([mouse-1] 'slime-inspector-operate-on-click)
   ([mouse-2] 'slime-inspector-operate-on-click)
+  ([mouse-6] 'slime-inspector-pop)
+  ([mouse-7] 'slime-inspector-next)
   ("l" 'slime-inspector-pop)
   ("n" 'slime-inspector-next)
   (" " 'slime-inspector-next)

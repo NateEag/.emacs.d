@@ -1,4 +1,4 @@
-;;; flycheck.el --- Modern on-the-fly syntax checking for GNU Emacs -*- lexical-binding: t; -*-
+;;; flycheck.el --- Modern on-the-fly syntax checking -*- lexical-binding: t; -*-
 
 ;; Copyright (c) 2012-2015 Sebastian Wiesner <swiesner@lunaryorn.com>
 ;; Copyright (C) 2013, 2014 Free Software Foundation, Inc.
@@ -144,7 +144,7 @@ attention to case differences."
   "Modern on-the-fly syntax checking for GNU Emacs."
   :prefix "flycheck-"
   :group 'tools
-  :link '(url-link :tag "Online manual" "http://flycheck.readthedocs.org")
+  :link '(url-link :tag "Website" "http://www.flycheck.org")
   :link '(url-link :tag "Github" "https://github.com/flycheck/flycheck")
   :link '(custom-manual "(flycheck)Top")
   :link '(info-link "(flycheck)Usage"))
@@ -186,7 +186,6 @@ attention to case differences."
     coq
     css-csslint
     d-dmd
-    elixir
     emacs-lisp
     emacs-lisp-checkdoc
     erlang
@@ -206,6 +205,7 @@ attention to case differences."
     javascript-jshint
     javascript-eslint
     javascript-gjslint
+    javascript-jscs
     json-jsonlint
     less
     luacheck
@@ -2373,6 +2373,7 @@ If CONDITION is non-nil, determine whether syntax may checked
 automatically according to
 `flycheck-check-syntax-automatically'."
   (and (not (or buffer-read-only (flycheck-ephemeral-buffer-p)))
+       (file-exists-p default-directory)
        (or (not condition)
            (memq condition flycheck-check-syntax-automatically))))
 
@@ -5623,25 +5624,6 @@ Requires DMD 2.066 or newer.  See URL `http://dlang.org/'."
             (or "Warning" "Deprecation") ": " (message) line-end))
   :modes d-mode)
 
-(flycheck-define-checker elixir
-  "An Elixir syntax checker using the Elixir interpreter.
-
-See URL `http://elixir-lang.org/'."
-  :command ("elixirc"
-            "-o" temporary-directory    ; Move compiler output out of the way
-            "--ignore-module-conflict"  ; Prevent tedious module redefinition
-                                        ; warning.
-            source)
-  :error-patterns
-  ;; Elixir compiler errors
-  ((error line-start "** (" (zero-or-more not-newline) ") "
-          (file-name) ":" line ": " (message) line-end)
-   ;; Warnings from Elixir >= 0.12.4
-   (warning line-start (file-name) ":" line ": warning:" (message) line-end)
-   ;; Warnings from older Elixir versions
-   (warning line-start (file-name) ":" line ": " (message) line-end))
-  :modes elixir-mode)
-
 (defconst flycheck-this-emacs-executable
   (concat invocation-directory invocation-name)
   "The path to the currently running Emacs executable.")
@@ -6309,7 +6291,8 @@ See URL `http://www.jshint.com'."
             source)
   :error-parser flycheck-parse-checkstyle
   :error-filter flycheck-dequalify-error-ids
-  :modes (js-mode js2-mode js3-mode))
+  :modes (js-mode js2-mode js3-mode)
+  :next-checkers ((warning . javascript-jscs)))
 
 (flycheck-def-option-var flycheck-eslint-rulesdir nil javascript-eslint
   "The directory of custom rules for ESLint.
@@ -6355,9 +6338,10 @@ See URL `https://github.com/eslint/eslint'."
                                          (match-string 1 s))
                                    "")
                                  (flycheck-error-message err))))
-                        (flycheck-sanitize-errors errors))
+                        (flycheck-sanitize-errors (flycheck-increment-error-columns errors)))
                   errors)
-  :modes (js-mode js2-mode js3-mode))
+  :modes (js-mode js2-mode js3-mode)
+  :next-checkers ((warning . javascript-jscs)))
 
 (flycheck-def-config-file-var flycheck-gjslintrc javascript-gjslint ".gjslintrc"
   :safe #'stringp)
@@ -6372,6 +6356,38 @@ See URL `https://developers.google.com/closure/utilities'."
   :error-patterns ((warning
                     line-start (file-name) ":" line ":("
                     (id (one-or-more digit)) ") " (message) line-end))
+  :modes (js-mode js2-mode js3-mode)
+  :next-checkers ((warning . javascript-jscs)))
+
+(defun flycheck-parse-jscs (output checker buffer)
+  "Parse JSCS OUTPUT from CHECKER and BUFFER.
+
+Like `flycheck-parse-checkstyle', but catches errors about no
+configuration found and prevents to be reported as a suspicious
+error."
+  (if (string-match-p (rx string-start "No configuration found") output)
+      (let ((message "No JSCS configuration found.  Set `flycheck-jscsrc' for JSCS"))
+        (list (flycheck-error-new-at 1 nil 'warning message
+                                     :checker checker
+                                     :buffer buffer
+                                     :filename (buffer-file-name buffer))))
+    (flycheck-parse-checkstyle output checker buffer)))
+
+(flycheck-def-config-file-var flycheck-jscsrc javascript-jscs ".jscsrc"
+  :safe #'stringp
+  :package-version '(flycheck . "0.24"))
+
+(flycheck-define-checker javascript-jscs
+  "A code style linter using JSCS.
+
+See URL `http://www.jscs.info'."
+  :command ("jscs" "--reporter=checkstyle"
+            (config-file "--config" flycheck-jscsrc)
+            source)
+  :error-parser flycheck-parse-jscs
+  :error-filter (lambda (errors)
+                  (flycheck-remove-error-ids
+                   (flycheck-sanitize-errors errors)))
   :modes (js-mode js2-mode js3-mode))
 
 (flycheck-define-checker json-jsonlint
@@ -6450,11 +6466,23 @@ See URL `http://www.lua.org/'."
           ":" line ": " (message) line-end))
   :modes lua-mode)
 
+(flycheck-def-option-var flycheck-perl-include-path nil perl
+  "A list of include directories for Perl.
+
+The value of this variable is a list of strings, where each
+string is a directory to add to the include path of Perl.
+Relative paths are relative to the file being checked."
+  :type '(repeat (directory :tag "Include directory"))
+  :safe #'flycheck-string-list-p
+  :package-version '(flycheck . "0.24"))
+
 (flycheck-define-checker perl
   "A Perl syntax checker using the Perl interpreter.
 
 See URL `http://www.perl.org'."
-  :command ("perl" "-w" "-c" source)
+  :command ("perl" "-w" "-c"
+            (option-list "-I" flycheck-perl-include-path)
+            source)
   :error-patterns
   ((error line-start (minimal-match (message))
           " at " (file-name) " line " line
@@ -6561,7 +6589,17 @@ See URL `http://pear.php.net/package/PHP_CodeSniffer/'."
 See URL `http://puppetlabs.com/'."
   :command ("puppet" "parser" "validate" "--color=false" source)
   :error-patterns
-  ((error line-start
+  (
+   ;; Patterns for Puppet 4
+   (error line-start "Error: Could not parse for environment "
+          (one-or-more word) ":"
+          (message) " at " (file-name) ":" line ":" column line-end)
+   (error line-start "Error: Could not parse for environment "
+          (one-or-more word) ":"
+          (message) " in file " (file-name) " at line " line ":" column
+          line-end)
+   ;; Errors from Puppet < 4
+   (error line-start
           ;; Skip over the path of the Puppet executable
           (minimal-match (zero-or-more not-newline))
           ": Could not parse for environment " (one-or-more word)
@@ -6727,6 +6765,9 @@ See URL `https://docs.python.org/3.4/library/py_compile.html'."
   ((error line-start "  File \"" (file-name) "\", line " line "\n"
           (= 2 (zero-or-more not-newline) "\n")
           "SyntaxError: " (message) line-end)
+   (error line-start "Sorry: IndentationError: "
+          (message) "(" (file-name) ", line " line ")"
+          line-end)
    ;; 2.6
    (error line-start "SyntaxError: ('" (message (one-or-more (not (any "'"))))
           "', ('" (file-name (one-or-more (not (any "'")))) "', "

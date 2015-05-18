@@ -4,7 +4,7 @@
 
 ;; Author: James J Porter <porterjamesj@gmail.com>
 ;; URL: http://github.com/porterjamesj/virtualenvwrapper.el
-;; Package-Version: 20150316.1607
+;; Package-Version: 20150505.1608
 ;; Version: 20131514
 ;; Keywords: python, virtualenv, virtualenvwrapper
 ;; Package-Requires: ((dash "1.5.0") (s "1.6.1"))
@@ -284,6 +284,10 @@ throwing an error if not"
     out https://github.com/purcell/exec-path-from-shell for a
     robust solution to this problem.")))
 
+(defun venv-get-python-executable ()
+  "Do a completing read for a python executable to use in mkvirtualenv"
+  )
+
 ;;;###autoload
 (defun venv-mkvirtualenv (&rest names)
 "Create new virtualenvs NAMES. If venv-location is a single
@@ -295,24 +299,27 @@ default-directory."
   (let ((parent-dir (if (stringp venv-location)
                         (file-name-as-directory
                          (expand-file-name venv-location))
-                      default-directory)))
-    (when (not names)
-      (setq names (list (read-from-minibuffer "New virtualenv: "))))
+                      default-directory))
+        (python-exe-arg (when current-prefix-arg
+                          (concat "--python="
+                                  (read-string "Python executable: " "python"))))
+        (names (if names names
+                 (list (read-from-minibuffer "New virtualenv: ")))))
     ;; map over all the envs we want to make
     (--each names
       ;; error if this env already exists
       (when (-contains? (venv-get-candidates) it)
         (error "A virtualenv with this name already exists!"))
       (run-hooks 'venv-premkvirtualenv-hook)
-      (shell-command (concat "virtualenv " parent-dir it))
+      (shell-command (concat "virtualenv " python-exe-arg " " parent-dir it))
       (when (listp venv-location)
         (add-to-list 'venv-location (concat parent-dir it)))
       (venv-with-virtualenv it
                             (run-hooks 'venv-postmkvirtualenv-hook))
       (when (called-interactively-p 'interactive)
-        (message (concat "Created virtualenv: " it)))))
-  ;; workon the last venv we made
-  (venv-workon (car (last names))))
+        (message (concat "Created virtualenv: " it))))
+    ;; workon the last venv we made
+    (venv-workon (car (last names)))))
 
 ;;;###autoload
 (defun venv-rmvirtualenv (&rest names)

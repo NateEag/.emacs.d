@@ -5,7 +5,9 @@
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; Maintainer: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Version: 0.8.0
+;; Package-Version: 20150513.1454
+;; Version: 0.8.1
+;; Package-Requires: ((avy "0.2.0"))
 ;; Keywords: window, location
 
 ;; This file is part of GNU Emacs.
@@ -86,6 +88,10 @@
 Use M-0 `ace-window' to toggle this value."
   :type 'boolean)
 
+(defcustom aw-ignore-current nil
+  "When t, `ace-window' will ignore `selected-window'."
+  :type 'boolean)
+
 (defcustom aw-background t
   "When t, `ace-window' will dim out all buffers temporarily when used.'."
   :type 'boolean)
@@ -95,6 +101,12 @@ Use M-0 `ace-window' to toggle this value."
   :type '(choice
           (const :tag "single char" 'char)
           (const :tag "full path" 'path)))
+
+(defcustom aw-dispatch-always nil
+  "When non-nil, `ace-window' will issue a `read-char' even for one window.
+This will make `ace-window' act different from `other-window' for
+  one or two windows."
+  :type 'boolean)
 
 (defface aw-leading-char-face
     '((((class color)) (:foreground "red"))
@@ -114,9 +126,11 @@ Use M-0 `ace-window' to toggle this value."
 ;;* Implementation
 (defun aw-ignored-p (window)
   "Return t if WINDOW should be ignored."
-  (and aw-ignore-on
-       (member (buffer-name (window-buffer window))
-               aw-ignored-buffers)))
+  (or (and aw-ignore-on
+           (member (buffer-name (window-buffer window))
+                   aw-ignored-buffers))
+      (and aw-ignore-current
+           (equal window (selected-window)))))
 
 (defun aw-window-list ()
   "Return the list of interesting windows."
@@ -141,9 +155,6 @@ Use M-0 `ace-window' to toggle this value."
        (error "Invalid `aw-scope': %S" aw-scope))))
    'aw-window<))
 
-(defvar aw-overlays-lead nil
-  "Hold overlays for leading chars.")
-
 (defvar aw-overlays-back nil
   "Hold overlays for when `aw-background' is t.")
 
@@ -158,12 +169,11 @@ Use M-0 `ace-window' to toggle this value."
 (defun aw--done ()
   "Clean up mode line and overlays."
   ;; mode line
-  (setq ace-window-mode nil)
-  (force-mode-line-update)
+  (aw-set-mode-line nil)
   ;; background
   (mapc #'delete-overlay aw-overlays-back)
   (setq aw-overlays-back nil)
-  (aw--remove-leading-chars))
+  (avy--remove-leading-chars))
 
 (defun aw--lead-overlay (path leaf)
   "Create an overlay using PATH at LEAF.
@@ -197,12 +207,7 @@ LEAF is (PT . WND)."
     (overlay-put ol 'face 'aw-leading-char-face)
     (overlay-put ol 'window wnd)
     (overlay-put ol 'display new-str)
-    (push ol aw-overlays-lead)))
-
-(defun aw--remove-leading-chars ()
-  "Remove leading char overlays."
-  (mapc #'delete-overlay aw-overlays-lead)
-  (setq aw-overlays-lead nil))
+    (push ol avy--overlays-lead)))
 
 (defun aw--make-backgrounds (wnd-list)
   "Create a dim background overlay for each window on WND-LIST."
@@ -217,91 +222,126 @@ LEAF is (PT . WND)."
                       ol))
                   wnd-list))))
 
-(defvar aw--flip-keys nil
-  "Pre-processed `aw-flip-keys'.")
+(define-obsolete-variable-alias
+    'aw-flip-keys 'aw--flip-keys "0.1.0"
+    "Use `aw-dispatch-alist' instead.")
 
-(defcustom aw-flip-keys '("n")
-  "Keys which should select the last window."
-  :set (lambda (sym val)
-         (set sym val)
-         (setq aw--flip-keys
-               (mapcar (lambda (x) (aref (kbd x) 0)) val))))
+(defvar aw-dispatch-function 'aw-dispatch-default
+  "Function to call when a character not in `aw-keys' is pressed.")
 
-(defun aw-select (mode-line)
+(defvar aw-action nil
+  "Function to call at the end of `aw-select'.")
+
+(defun aw-set-mode-line (str)
+  "Set mode line indicator to STR."
+  (setq ace-window-mode str)
+  (force-mode-line-update))
+
+(defvar aw-dispatch-alist
+  '((?x aw-delete-window " Ace - Delete Window")
+    (?m aw-swap-window " Ace - Swap Window")
+    (?n aw-flip-window)
+    (?v aw-split-window-vert " Ace - Split Vert Window")
+    (?b aw-split-window-horz " Ace - Split Horz Window")
+    (?i delete-other-windows " Ace - Maximize Window")
+    (?o delete-other-windows))
+  "List of actions for `aw-dispatch-default'.")
+
+(defun aw-dispatch-default (char)
+  "Perform an action depending on CHAR."
+  (let ((val (cdr (assoc char aw-dispatch-alist))))
+    (if val
+        (if (and (car val) (cadr val))
+            (prog1 (setq aw-action (car val))
+              (aw-set-mode-line (cadr val)))
+          (funcall (car val))
+          (throw 'done 'exit))
+      (avy-handler-default char))))
+
+(defun aw-select (mode-line &optional action)
   "Return a selected other window.
 Amend MODE-LINE to the mode line for the duration of the selection."
+  (setq aw-action action)
   (let ((start-window (selected-window))
         (next-window-scope (cl-case aw-scope
                              ('global 'visible)
                              ('frame 'frame)))
         (wnd-list (aw-window-list))
-        final-window)
-    (cl-case (length wnd-list)
-      (0
-       start-window)
-      (1
-       (car wnd-list))
-      (2
-       (setq final-window (next-window nil nil next-window-scope))
-       (while (and (aw-ignored-p final-window)
-                   (not (equal final-window start-window)))
-         (setq final-window (next-window final-window nil next-window-scope)))
-       final-window)
-      (t
-       (let ((candidate-list
-              (mapcar (lambda (wnd)
-                        ;; can't jump if the buffer is empty
-                        (with-current-buffer (window-buffer wnd)
-                          (when (= 0 (buffer-size))
-                            (insert " ")))
-                        (cons (aw-offset wnd) wnd))
-                      wnd-list)))
-         (aw--make-backgrounds wnd-list)
-         (setq ace-window-mode mode-line)
-         (force-mode-line-update)
-         ;; turn off helm transient map
-         (remove-hook 'post-command-hook 'helm--maybe-update-keymap)
-         (unwind-protect
-              (condition-case err
-                  (or (cdr (avy-read (avy-tree candidate-list aw-keys)
-                                     #'aw--lead-overlay
-                                     #'aw--remove-leading-chars))
-                      start-window)
-                (error
-                 (if (memq (nth 2 err) aw--flip-keys)
-                     (aw--pop-window)
-                   (signal (car err) (cdr err)))))
-           (aw--done)))))))
+        window)
+    (setq window
+          (cond ((<= (length wnd-list) 1)
+                 (when aw-dispatch-always
+                   (setq aw-action
+                         (unwind-protect
+                              (catch 'done
+                                (funcall aw-dispatch-function (read-char)))
+                           (aw--done)))
+                   (when (eq aw-action 'exit)
+                     (setq aw-action nil)))
+                 (or (car wnd-list) start-window))
+                ((and (= (length wnd-list) 2)
+                      (not aw-dispatch-always)
+                      (not aw-ignore-current))
+                 (let ((wnd (next-window nil nil next-window-scope)))
+                   (while (and (aw-ignored-p wnd)
+                               (not (equal wnd start-window)))
+                     (setq wnd (next-window wnd nil next-window-scope)))
+                   wnd))
+                (t
+                 (let ((candidate-list
+                        (mapcar (lambda (wnd)
+                                  ;; can't jump if the buffer is empty
+                                  (with-current-buffer (window-buffer wnd)
+                                    (when (= 0 (buffer-size))
+                                      (insert " ")))
+                                  (cons (aw-offset wnd) wnd))
+                                wnd-list)))
+                   (aw--make-backgrounds wnd-list)
+                   (aw-set-mode-line mode-line)
+                   ;; turn off helm transient map
+                   (remove-hook 'post-command-hook 'helm--maybe-update-keymap)
+                   (unwind-protect
+                        (let* ((avy-handler-function aw-dispatch-function)
+                               (res (avy-read (avy-tree candidate-list aw-keys)
+                                              #'aw--lead-overlay
+                                              #'avy--remove-leading-chars)))
+                          (if (eq res 'exit)
+                              (setq aw-action nil)
+                            (or (cdr res)
+                                start-window)))
+                     (aw--done))))))
+    (if aw-action
+        (funcall aw-action window)
+      window)))
 
 ;;* Interactive
 ;;;###autoload
 (defun ace-select-window ()
   "Ace select window."
   (interactive)
-  (aw-switch-to-window
-   (aw-select " Ace - Window")))
+  (aw-select " Ace - Window"
+             #'aw-switch-to-window))
 
 ;;;###autoload
 (defun ace-delete-window ()
   "Ace delete window."
   (interactive)
-  (aw-delete-window
-   (aw-select " Ace - Delete Window")))
+  (aw-select " Ace - Delete Window"
+             #'aw-delete-window))
 
 ;;;###autoload
 (defun ace-swap-window ()
   "Ace swap window."
   (interactive)
-  (aw-swap-window
-   (aw-select " Ace - Swap Window")))
+  (aw-select " Ace - Swap Window"
+             #'aw-swap-window))
 
 ;;;###autoload
 (defun ace-maximize-window ()
   "Ace maximize window."
   (interactive)
-  (select-window
-   (aw-select " Ace - Maximize Window"))
-  (delete-other-windows))
+  (aw-select " Ace - Maximize Window"
+             #'delete-other-windows))
 
 ;;;###autoload
 (defun ace-window (arg)
@@ -361,10 +401,15 @@ Windows are numbered top down, left to right."
   "Return the removed top of `aw--window-ring'."
   (let (res)
     (condition-case nil
-        (while (not (window-live-p
-                     (setq res (ring-remove aw--window-ring 0)))))
+        (while (or (not (window-live-p
+                         (setq res (ring-remove aw--window-ring 0))))
+                   (equal res (selected-window))))
       (error
-       (error "No previous windows stored")))
+       (if (= (length (aw-window-list)) 2)
+           (progn
+             (other-window 1)
+             (setq res (selected-window)))
+         (error "No previous windows stored"))))
     res))
 
 (defun aw-switch-to-window (window)
@@ -414,6 +459,16 @@ Windows are numbered top down, left to right."
                  (not (eq window this-window)))
         (aw--push-window this-window)
         (swap-windows this-window window)))))
+
+(defun aw-split-window-vert (window)
+  "Split WINDOW vertically."
+  (select-window window)
+  (split-window-vertically))
+
+(defun aw-split-window-horz (window)
+  "Split WINDOW horizontally."
+  (select-window window)
+  (split-window-horizontally))
 
 (defun aw-offset (window)
   "Return point in WINDOW that's closest to top left corner.

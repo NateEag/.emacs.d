@@ -22,12 +22,13 @@
 ;; Copyright (C) 2012 Zhenlei Jia <zhenlei.jia@gmail.com>
 ;; Copyright (C) 2012 Peter Jones <pjones@pmade.com>
 ;; Copyright (C) 2013 Matus Goljer <dota.keys@gmail.com>
+;; Copyright (C) 2015 Google, Inc. (Contributor: Samuel Freilich <sfreilich@google.com>)
 
 ;; Author: Jason R. Blevins <jrblevin@sdf.org>
 ;; Maintainer: Jason R. Blevins <jrblevin@sdf.org>
 ;; Created: May 24, 2007
-;; Version: 20150121.1229
-;; X-Original-Version: 2.0
+;; Version: 2.0
+;; Package-Version: 20150515.2159
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: http://jblevins.org/projects/markdown-mode/
 
@@ -698,6 +699,7 @@
 ;;   * Gunnar Franke <Gunnar.Franke@gmx.de> for a completion bug report.
 ;;   * David Glasser <glasser@meteor.com> for a `paragraph-separate' fix.
 ;;   * Daniel Brotsky <dev@brotsky.com> for better auto-fill defaults.
+;;   * Samuel Freilich <sfreilich@google.com> for improved list item filling.
 
 ;;; Bugs:
 
@@ -4522,10 +4524,15 @@ This is an exact copy of `line-number-at-pos' for use in emacs21."
       (forward-line 0)
       (1+ (count-lines start (point))))))
 
-(defun markdown-nobreak-p ()
-  "Return nil if it is acceptable to break the current line at the point."
-  ;; inside in square brackets (e.g., link anchor text)
+(defun markdown-inside-link-text-p ()
+  "Return nil if not currently within link anchor text."
   (looking-back "\\[[^]]*"))
+
+(defun markdown-line-is-reference-definition-p ()
+  "Return whether the current line is a reference defition."
+  (save-excursion
+    (move-beginning-of-line 1)
+    (looking-at markdown-regex-reference-definition)))
 
 (defun markdown-adaptive-fill-function ()
   "Return prefix for filling paragraph or nil if not determined."
@@ -4542,6 +4549,20 @@ This is an exact copy of `line-number-at-pos' for use in emacs21."
     (match-string-no-properties 0))
    ;; No match
    (t nil)))
+
+(defun markdown-fill-forward-paragraph-function (&optional arg)
+  (let* ((arg (or arg 1))
+         (paragraphs-remaining (forward-paragraph arg))
+         (start (point)))
+    (when (< arg 0)
+      (while (and (not (eobp))
+                  (progn (move-to-left-margin) (not (eobp)))
+                  (looking-at paragraph-separate))
+        (forward-line 1))
+      (if (looking-at markdown-regex-list)
+          (forward-char (length (match-string 0)))
+        (goto-char start)))
+    paragraphs-remaining))
 
 
 ;;; Extensions ================================================================
@@ -4615,14 +4636,35 @@ if ARG is omitted or nil."
   (set (make-local-variable 'end-of-defun-function)
        'markdown-end-of-defun)
   ;; Paragraph filling
-  (set (make-local-variable 'paragraph-start)
-       "\f\\|[ \t]*$\\|[ \t]*[*+-] \\|[ \t]*[0-9]+\\.[ \t]\\|[ \t]*: ")
-  (set (make-local-variable 'paragraph-separate)
-       "\\(?:[ \t\f]*\\|.*  \\)$")
+  (set
+   ; Should match lines that start or seaprate paragraphs
+   (make-local-variable 'paragraph-start)
+       (mapconcat 'identity
+                  '(
+                    "\f" ; starts with a literal line-feed
+                    "[ \t\f]*$" ; space-only line
+                    "[ \t]*[*+-][ \t]+" ; unordered list item
+                    "[ \t]*[0-9]+\\.[ \t]+" ; ordered list item
+                    "[ \t]*\\[\\S-*\\]:[ \t]+" ; link ref def
+                    )
+                  "\\|"))
+  (set
+   ; Should match lines that separate paragraphs without being
+   ; part of any paragraph:
+   (make-local-variable 'paragraph-separate)
+   (mapconcat 'identity
+              '("[ \t\f]*$" ; space-only line
+                ; The following is not ideal, but the Fill customization
+                ; options really only handle paragraph-starting prefixes,
+                ; not paragraph-ending suffixes:
+                ".*  $") ; line ending in two spaces
+              "\\|"))
   (set (make-local-variable 'adaptive-fill-first-line-regexp)
        "\\`[ \t]*>[ \t]*?\\'")
   (set (make-local-variable 'adaptive-fill-function)
        'markdown-adaptive-fill-function)
+  (set (make-local-variable 'fill-forward-paragraph-function)
+       'markdown-fill-forward-paragraph-function)
   ;; Outline mode
   (make-local-variable 'outline-regexp)
   (setq outline-regexp markdown-regex-header)
@@ -4630,9 +4672,16 @@ if ARG is omitted or nil."
   (setq outline-level 'markdown-outline-level)
   ;; Cause use of ellipses for invisible text.
   (add-to-invisibility-spec '(outline . t))
-  ;; Indentation and filling
-  (make-local-variable 'fill-nobreak-predicate)
-  (add-hook 'fill-nobreak-predicate 'markdown-nobreak-p)
+
+  ;; Inhibiting line-breaking:
+  ;; Separating out each condition into a separate function so that users can
+  ;; override if desired (with remove-hook)
+  (add-hook 'fill-nobreak-predicate
+            'markdown-inside-link-text-p :local t)
+  (add-hook 'fill-nobreak-predicate
+            'markdown-line-is-reference-definition-p :local t)
+
+  ;; Indentation
   (setq indent-line-function markdown-indent-function)
 
   ;; Prepare hooks for XEmacs compatibility

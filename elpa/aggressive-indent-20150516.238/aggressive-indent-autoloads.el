@@ -4,7 +4,7 @@
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
 ;;;### (autoloads nil "aggressive-indent" "aggressive-indent.el"
-;;;;;;  (21788 43417 0 0))
+;;;;;;  (21850 30301 0 0))
 ;;; Generated autoloads from aggressive-indent.el
 
 (let ((loads (get 'aggressive-indent 'custom-loads))) (if (member '"aggressive-indent" loads) nil (put 'aggressive-indent 'custom-loads (cons '"aggressive-indent" loads))))
@@ -12,8 +12,9 @@
 (autoload 'aggressive-indent-indent-defun "aggressive-indent" "\
 Indent current defun.
 Throw an error if parentheses are unbalanced.
+If L and R are provided, use them for finding the start and end of defun.
 
-\(fn)" t nil)
+\(fn &optional L R)" t nil)
 
 (autoload 'aggressive-indent-indent-region-and-on "aggressive-indent" "\
 Indent region between L and R, and then some.

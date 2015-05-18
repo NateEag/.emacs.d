@@ -4,8 +4,7 @@
 
 ;; Author: Quang Linh LE <linktohack@gmail.com>
 ;; URL: http://github.com/linktohack/evil-commentary
-;; Version: 20150126.620
-;; X-Original-Version: 0.0.3
+;; Version: 0.0.5
 ;; Keywords: evil comment commentary evil-commentary
 ;; Package-Requires: ((evil "1.0.0"))
 
@@ -44,12 +43,35 @@
 ;;; Code:
 
 (require 'evil)
+(require 'ec-mode-comment-functions)
+
+(defgroup evil-commentary nil
+  "Comment stuff out"
+  :group 'evil
+  :prefix "evil-commentary-")
+
+(defcustom evil-commentary-comment-function-for-mode-alist
+  '((f90-mode . f90-comment-region)
+    (web-mode . web-mode-comment-or-uncomment-region))
+  "Mode-specific comment function.
+
+By default, `evil-commentary' use `comment-or-uncomment'
+function. By specify an alist of modes here, the comment function
+provided by major mode will be use instead.
+
+A comment functions has to accept BEG, END as its required
+parameter. See `ec-mode-comment-functions' if a customized one is
+needed."
+  :group 'evil-commentary)
 
 (evil-define-operator evil-commentary (beg end type)
   "Comment or uncomment region that {motion} moves over."
   :move-point nil
   (interactive "<R>")
-  (comment-or-uncomment-region beg end))
+  (let ((comment-function (cdr (assoc major-mode
+                                 evil-commentary-comment-function-for-mode-alist))))
+    (if comment-function (funcall comment-function beg end)
+      (comment-or-uncomment-region beg end))))
 
 (evil-define-operator evil-commentary-line (beg end type)
   "Comment or uncomment [count] lines."
@@ -63,7 +85,26 @@
               end (evil-range-end range)
               type (evil-type range))))
     (evil-exit-visual-state))
-  (comment-or-uncomment-region beg end))
+  (let ((comment-function (cdr (assoc major-mode
+                                 evil-commentary-comment-function-for-mode-alist))))
+    (if comment-function (funcall comment-function beg end)
+      (comment-or-uncomment-region beg end))))
+
+(evil-define-operator evil-commentary-yank (beg end type register yank-handler)
+  "Saves the characters in motion into the kill-ring."
+  :move-point nil
+  :repeat nil
+  (interactive "<R><x><y>")
+  (evil-yank beg end type register yank-handler)
+  (evil-commentary beg end))
+
+(evil-define-operator evil-commentary-yank-line (beg end type register)
+  "Saves whole lines into the kill-ring."
+  :motion evil-line
+  :move-point nil
+  (interactive "<R><x>")
+  (evil-yank-line beg end type register)
+  (evil-commentary-line beg end))
 
 ;;;###autoload
 (define-minor-mode evil-commentary-mode
@@ -72,6 +113,7 @@
   :global t
   :keymap (let ((map (make-sparse-keymap)))
             (evil-define-key 'normal map "gc" 'evil-commentary)
+            (evil-define-key 'normal map "gy" 'evil-commentary-yank)
             (define-key map (kbd "s-/") 'evil-commentary-line)
             map))
 

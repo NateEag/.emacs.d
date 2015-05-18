@@ -1155,6 +1155,11 @@ another file, or you've got a potential bug."
   :type 'boolean
   :group 'js2-mode)
 
+(defcustom js2-warn-about-unused-function-arguments nil
+  "Non-nil to treat function arguments like declared-but-unused variables."
+  :type 'booleanp
+  :group 'js2-mode)
+
 (defcustom js2-include-jslint-globals t
   "Non-nil to include the identifiers from JSLint global
 declaration (see http://www.jslint.com/lint.html#global) in the
@@ -1792,6 +1797,12 @@ the correct number of ARGS must be provided."
 
 (js2-msg "msg.undeclared.variable"  ; added by js2-mode
          "Undeclared variable or function '%s'")
+
+(js2-msg "msg.unused.variable"  ; added by js2-mode
+         "Unused variable or function '%s'")
+
+(js2-msg "msg.uninitialized.variable"  ; added by js2-mode
+         "Variable '%s' referenced but never initialized")
 
 (js2-msg "msg.ref.undefined.prop"
          "Reference to undefined property '%s'")
@@ -3952,6 +3963,7 @@ and both fields have the same value.")
 
 (defun js2-print-object-prop-node (n i)
   (let* ((left (js2-object-prop-node-left n))
+         (right (js2-object-prop-node-right n))
          (computed (not (or (js2-string-node-p left)
                             (js2-number-node-p left)
                             (js2-name-node-p left)))))
@@ -3964,7 +3976,7 @@ and both fields have the same value.")
     (if (not (js2-node-get-prop n 'SHORTHAND))
         (progn
           (insert ": ")
-          (js2-print-ast (js2-object-prop-node-right n) 0)))))
+          (js2-print-ast right 0)))))
 
 (cl-defstruct (js2-getter-setter-node
                (:include js2-infix-node)
@@ -3981,13 +3993,23 @@ property `GETTER_SETTER' set to js2-GET, js2-SET, or js2-FUNCTION. ")
 (put 'cl-struct-js2-getter-setter-node 'js2-printer 'js2-print-getter-setter)
 
 (defun js2-print-getter-setter (n i)
-  (let ((pad (js2-make-pad i))
-        (left (js2-getter-setter-node-left n))
-        (right (js2-getter-setter-node-right n)))
+  (let* ((pad (js2-make-pad i))
+         (left (js2-getter-setter-node-left n))
+         (right (js2-getter-setter-node-right n))
+         (computed (not (or (js2-string-node-p left)
+                            (js2-number-node-p left)
+                            (js2-name-node-p left)))))
     (insert pad)
     (if (/= (js2-node-type n) js2-FUNCTION)
         (insert (if (= (js2-node-type n) js2-GET) "get " "set ")))
+    (when (and (js2-function-node-p right)
+               (eq 'STAR (js2-function-node-generator-type right)))
+      (insert "*"))
+    (when computed
+      (insert "["))
     (js2-print-ast left 0)
+    (when computed
+      (insert "]"))
     (js2-print-ast right 0)))
 
 (cl-defstruct (js2-prop-get-node
@@ -7068,8 +7090,161 @@ it is considered declared."
                     (member name js2-additional-externs)
                     (js2-get-defining-scope scope name pos))
           (js2-report-warning "msg.undeclared.variable" name pos (- end pos)
-                              'js2-external-variable))))
-    (setq js2-recorded-identifiers nil)))
+                              'js2-external-variable))))))
+
+(defun js2--add-or-update-symbol (symbol inition used vars)
+  "Add or update SYMBOL entry in VARS, an hash table.
+SYMBOL is a js2-name-node, INITION either nil, t, or ?P,
+respectively meaning that SYMBOL is a mere declaration, an
+assignment or a function parameter; when USED is t, the symbol
+node is assumed to be an usage and thus added to the list stored
+in the cdr of the entry.
+"
+  (let* ((nm (js2-name-node-name symbol))
+         (es (js2-node-get-enclosing-scope symbol))
+         (ds (js2-get-defining-scope es nm)))
+    (when (and ds (not (equal nm "arguments")))
+      (let* ((sym (js2-scope-get-symbol ds nm))
+             (var (gethash sym vars))
+             (err-var-p (js2-catch-node-p ds)))
+        (unless inition
+          (setq inition err-var-p))
+        (if var
+            (progn
+              (when (and inition (not (equal (car var) ?P)))
+                (setcar var inition))
+              (when used
+                (push symbol (cdr var))))
+          ;; do not consider the declaration of catch parameter as an usage
+          (when (and err-var-p used)
+            (setq used nil))
+          (puthash sym (cons inition (if used (list symbol))) vars))))))
+
+(defun js2--classify-variables ()
+  "Collect and classify variables declared or used within js2-mode-ast.
+Traverse the whole ast tree returning a summary of the variables
+usage as an hash-table, keyed by their corresponding symbol table
+entry.
+Each variable is described by a tuple where the car is a flag
+indicating whether the variable has been initialized and the cdr
+is a possibly empty list of name nodes where it is used. External
+symbols, i.e. those not present in the whole scopes hierarchy,
+are ignored."
+  (let ((vars (make-hash-table :test #'eq :size 100)))
+    (js2-visit-ast
+     js2-mode-ast
+     (lambda (node end-p)
+       (when (null end-p)
+         (cond
+          ((js2-var-init-node-p node)
+           ;; take note about possibly initialized declarations
+           (let ((target (js2-var-init-node-target node))
+                 (initializer (js2-var-init-node-initializer node)))
+             (when target
+               (let* ((parent (js2-node-parent node))
+                      (grandparent (if parent (js2-node-parent parent)))
+                      (inited (not (null initializer))))
+                 (unless inited
+                   (setq inited
+                         (and grandparent
+                              (js2-for-in-node-p grandparent)
+                              (memq target
+                                    (mapcar #'js2-var-init-node-target
+                                            (js2-var-decl-node-kids
+                                             (js2-for-in-node-iterator grandparent)))))))
+                 (js2--add-or-update-symbol target inited nil vars)))))
+
+          ((js2-assign-node-p node)
+           ;; take note about assignments
+           (let ((left (js2-assign-node-left node)))
+             (when (js2-name-node-p left)
+               (js2--add-or-update-symbol left t nil vars))))
+
+          ((js2-prop-get-node-p node)
+           ;; handle x.y.z nodes, considering only x
+           (let ((left (js2-prop-get-node-left node)))
+             (when (js2-name-node-p left)
+               (js2--add-or-update-symbol left nil t vars))))
+
+          ((js2-name-node-p node)
+           ;; take note about used variables
+           (let ((parent (js2-node-parent node)))
+             (when parent
+               (unless (or (and (js2-var-init-node-p parent) ; handled above
+                                (eq node (js2-var-init-node-target parent)))
+                           (and (js2-assign-node-p parent)
+                                (eq node (js2-assign-node-left parent)))
+                           (js2-prop-get-node-p parent))
+                 (let ((used t) inited)
+                   (cond
+                    ((and (js2-function-node-p parent)
+                          (js2-wrapper-function-p parent))
+                     (setq inited (if (memq node (js2-function-node-params parent)) ?P t)))
+
+                    ((js2-for-in-node-p parent)
+                     (if (eq node (js2-for-in-node-iterator parent))
+                         (setq inited t used nil)))
+
+                    ((js2-function-node-p parent)
+                     (setq inited (if (memq node (js2-function-node-params parent)) ?P t)
+                           used nil)))
+
+                   (unless used
+                     (let ((grandparent (js2-node-parent parent)))
+                       (when grandparent
+                         (setq used (js2-return-node-p grandparent)))))
+
+                   (js2--add-or-update-symbol node inited used vars))))))))
+       t))
+    vars))
+
+(defun js2--get-name-node (node)
+  (cond
+   ((js2-name-node-p node) node)
+   ((js2-function-node-p node)
+    (js2-function-node-name node))
+   ((js2-class-node-p node)
+    (js2-class-node-name node))
+   ((js2-comp-loop-node-p node)
+    (js2-comp-loop-node-iterator node))
+   (t node)))
+
+(defun js2--highlight-unused-variable (symbol info)
+  (let ((name (js2-symbol-name symbol))
+        (inited (car info))
+        (refs (cdr info))
+        pos len)
+    (unless (and inited refs)
+      (if refs
+          (dolist (ref refs)
+            (setq pos (js2-node-abs-pos ref))
+            (setq len (js2-name-node-len ref))
+            (js2-report-warning "msg.uninitialized.variable" name pos len
+                                'js2-warning))
+        (when (or js2-warn-about-unused-function-arguments
+                  (not (eq inited ?P)))
+          (let* ((symn (js2-symbol-ast-node symbol))
+                 (namen (js2--get-name-node symn)))
+            (unless (js2-node-top-level-decl-p namen)
+              (setq pos (js2-node-abs-pos namen))
+              (setq len (js2-name-node-len namen))
+              (js2-report-warning "msg.unused.variable" name pos len
+                                  'js2-warning))))))))
+
+(defun js2-highlight-unused-variables ()
+  "Highlight unused variables."
+  (let ((vars (js2--classify-variables)))
+    (maphash #'js2--highlight-unused-variable vars)))
+
+;;;###autoload
+(define-minor-mode js2-highlight-unused-variables-mode
+  "Toggle highlight of unused variables."
+  :lighter ""
+  (if js2-highlight-unused-variables-mode
+      (add-hook 'js2-post-parse-callbacks
+                #'js2-highlight-unused-variables nil t)
+    (remove-hook 'js2-post-parse-callbacks
+                 #'js2-highlight-unused-variables t)))
 
 (defun js2-set-default-externs ()
   "Set the value of `js2-default-externs' based on the various
@@ -10214,7 +10389,7 @@ We should have just parsed the 'for' keyword before calling this function."
     pn))
 
 (defun js2-parse-comprehension (pos form)
-  (let (loops filters expr result)
+  (let (loops filters expr result last)
     (unwind-protect
         (progn
           (js2-unget-token)
@@ -10225,7 +10400,8 @@ We should have just parsed the 'for' keyword before calling this function."
               (js2-parse-comp-loop loop)))
           (while (js2-match-token js2-IF)
             (push (car (js2-parse-condition)) filters))
-          (setq expr (js2-parse-assign-expr)))
+          (setq expr (js2-parse-assign-expr))
+          (setq last (car loops)))
       (dolist (_ loops)
         (js2-pop-scope)))
     (setq result (make-js2-comp-node :pos pos
@@ -10236,6 +10412,7 @@ We should have just parsed the 'for' keyword before calling this function."
                                      :form form))
     (apply #'js2-node-add-children result (js2-comp-node-loops result))
     (apply #'js2-node-add-children result expr (js2-comp-node-filters result))
+    (setf (js2-scope-parent-scope result) last)
     result))
 
 (defun js2-parse-comp-loop (pn &optional only-of-p)
@@ -10344,38 +10521,41 @@ If ONLY-OF-P is non-nil, only the 'for (foo of bar)' form is allowed."
   (let ((pos (js2-current-token-beg))
         (static nil)
         (continue t)
-        tt elems elem after-comma)
+        tt elems elem after-comma previous-token)
     (while continue
       (setq tt (js2-get-prop-name-token)
             static nil
-            elem nil)
+            elem nil
+            previous-token nil)
+      ;; Handle 'static' keyword only if we're in a class
       (when (and class-p (= js2-NAME tt)
                  (string= "static" (js2-current-token-string)))
         (js2-record-face 'font-lock-keyword-face)
         (setq static t
               tt (js2-get-prop-name-token)))
+      ;; Handle generator * before the property name for in-line functions
+      (when (and (>= js2-language-version 200)
+                 (= js2-MUL tt))
+        (setq previous-token (js2-current-token)
+              tt (js2-get-prop-name-token)))
+      ;; Handle 'get' or 'set' keywords
+      (let ((prop (js2-current-token-string)))
+        (when (and (>= js2-language-version 200)
+                   (= js2-NAME tt)
+                   (or (string= prop "get")
+                       (string= prop "set"))
+                   (member (js2-peek-token)
+                           (list js2-NAME js2-STRING js2-NUMBER js2-LB)))
+          (setq previous-token (js2-current-token)
+                tt (js2-get-prop-name-token))))
       (cond
-       ;; {foo: ...}, {'foo': ...}, {foo, bar, ...},
-       ;; {get foo() {...}}, {set foo(x) {...}}, or {foo(x) {...}}
-       ;; TODO(sdh): support *foo() {...}
-       ((or (= js2-NAME tt)
-            (= tt js2-STRING))
+       ;; Found a property (of any sort)
+       ((member tt (list js2-NAME js2-STRING js2-NUMBER js2-LB))
         (setq after-comma nil
-              elem (js2-parse-named-prop tt))
+              elem (js2-parse-named-prop tt pos previous-token))
         (if (and (null elem)
                  (not js2-recover-from-parse-errors))
             (setq continue nil)))
-       ;; {[Symbol.iterator]: ...}
-       ((and (= tt js2-LB)
-             (>= js2-language-version 200))
-        (let ((expr (js2-parse-expr)))
-          (js2-must-match js2-RB "msg.missing.computed.rb")
-          (setq after-comma nil
-                elem (js2-parse-plain-property expr))))
-       ;; {12: x} or {10.7: x}
-       ((= tt js2-NUMBER)
-        (setq after-comma nil
-              elem (js2-parse-plain-property (make-js2-number-node))))
        ;; Break out of loop, and handle trailing commas.
        ((or (= tt js2-RC)
             (= tt js2-EOF))
@@ -10405,47 +10585,61 @@ If ONLY-OF-P is non-nil, only the 'for (foo of bar)' form is allowed."
     (js2-must-match js2-RC "msg.no.brace.prop")
     (nreverse elems)))
 
-(defun js2-parse-named-prop (tt)
+(defun js2-parse-named-prop (tt pos previous-token)
   "Parse a name, string, or getter/setter object property.
 When `js2-is-in-destructuring' is t, forms like {a, b, c} will be permitted."
-  (let ((string-prop (and (= tt js2-STRING)
-                          (make-js2-string-node)))
-        expr
-        (ppos (js2-current-token-beg))
-        (pend (js2-current-token-end))
-        (name (js2-create-name-node))
-        (prop (js2-current-token-string)))
+  (let ((key (cond
+              ;; Literal string keys: {'foo': 'bar'}
+              ((= tt js2-STRING)
+               (make-js2-string-node))
+              ;; Handle computed keys: {[Symbol.iterator]: ...}, *[1+2]() {...}},
+              ;; {[foo + bar]() { ... }}, {[get ['x' + 1]() {...}}
+              ((and (= tt js2-LB)
+                    (>= js2-language-version 200))
+               (prog1 (js2-parse-expr)
+                 (js2-must-match js2-RB "msg.missing.computed.rb")))
+              ;; Numeric keys: {12: 'foo'}, {10.7: 'bar'}
+              ((= tt js2-NUMBER)
+               (make-js2-number-node))
+              ;; Unquoted names: {foo: 12}
+              ((= tt js2-NAME)
+               (js2-create-name-node))
+              ;; Anything else is an error
+              (t (js2-report-error "msg.bad.prop"))))
+        (prop (and previous-token (js2-token-string previous-token)))
+        (property-type (when previous-token
+                             (if (= (js2-token-type previous-token) js2-MUL)
+                                 "*"
+                               (js2-token-string previous-token)))))
+    (when (or (string= prop "get")
+              (string= prop "set"))
+      (js2-set-face (js2-token-beg previous-token)
+                    (js2-token-end previous-token)
+                    'font-lock-keyword-face 'record))  ; get/set
     (cond
-     ;; getter/setter prop
-     ((and (= tt js2-NAME)
-           (= (js2-peek-token) js2-NAME)
-           (or (string= prop "get")
-               (string= prop "set")))
-      (js2-get-token)
-      (js2-set-face ppos pend 'font-lock-keyword-face 'record)  ; get/set
-      (js2-record-face 'font-lock-function-name-face)      ; for peeked name
-      (setq name (js2-create-name-node)) ; discard get/set & use peeked name
-      (js2-parse-getter-setter-prop ppos name prop))
      ;; method definition: {f() {...}}
      ((and (= (js2-peek-token) js2-LP)
            (>= js2-language-version 200))
-      (js2-record-face 'font-lock-function-name-face)      ; name
-      (js2-parse-getter-setter-prop ppos name ""))
+      (when (js2-name-node-p key)  ; highlight function name properties
+        (js2-record-face 'font-lock-function-name-face))
+      (js2-parse-getter-setter-prop pos key property-type))
      ;; regular prop
      (t
-      (prog1
-          (setq expr (js2-parse-plain-property (or string-prop name)))
-        (when (and (not string-prop)
+      (let ((beg (js2-current-token-beg))
+            (end (js2-current-token-end))
+            (expr (js2-parse-plain-property key)))
+        (when (and (= tt js2-NAME)
                    (not js2-is-in-destructuring)
                    js2-highlight-external-variables
                    (js2-node-get-prop expr 'SHORTHAND))
-          (js2-record-name-node name))
-        (js2-set-face ppos pend
+          (js2-record-name-node key))
+        (js2-set-face beg end
                       (if (js2-function-node-p
                            (js2-object-prop-node-right expr))
                           'font-lock-function-name-face
                         'font-lock-variable-name-face)
-                      'record))))))
+                      'record)
+        expr)))))
 
 (defun js2-parse-plain-property (prop)
   "Parse a non-getter/setter property in an object literal.
@@ -10499,7 +10693,7 @@ and expression closure style is also supported
 
 POS is the start position of the `get' or `set' keyword.
 PROP is the `js2-name-node' representing the property name.
-GET-P is non-nil if the keyword was `get'."
+TYPE-STRING is a string `get', `set', `*', or nil, indicating a found keyword."
   (let ((type (cond
                ((string= "get" type-string) js2-GET)
                ((string= "set" type-string) js2-SET)
@@ -10512,6 +10706,8 @@ GET-P is non-nil if the keyword was `get'."
       (if (cl-plusp (length (js2-function-name fn)))
           (js2-report-error "msg.bad.prop")))
     (js2-node-set-prop fn 'GETTER_SETTER type)  ; for codegen
+    (when (string= type-string "*")
+      (setf (js2-function-node-generator-type fn) 'STAR))
     (setq end (js2-node-end fn)
           result (make-js2-getter-setter-node :type type
                                               :pos pos

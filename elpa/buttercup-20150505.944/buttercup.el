@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2015  Jorgen Schaefer <contact@jorgenschaefer.de>
 
-;; Version: 1.0
+;; Version: 1.1
 ;; Author: Jorgen Schaefer <contact@jorgenschaefer.de>
 
 ;; This program is free software; you can redistribute it and/or
@@ -621,7 +621,7 @@ current directory."
   (dolist (dir (or command-line-args-left '(".")))
     (dolist (file (directory-files-recursively dir
                                                "\\`test-\\|-test.el\\'"))
-      (when (not (string-match "/\\." file))
+      (when (not (string-match "/\\." (file-relative-name file)))
         (load file nil t))))
   (buttercup-run))
 
@@ -762,7 +762,8 @@ Calls either `buttercup-reporter-batch' or
         (print-escape-nonascii t))
     (pcase event
       (`buttercup-started
-       (setq buttercup-reporter-batch--start-time (float-time))
+       (setq buttercup-reporter-batch--start-time (float-time)
+             buttercup-reporter-batch--failures nil)
        (buttercup--print "Running %s specs.\n\n"
                          (buttercup-suites-total-specs-defined arg)))
 
@@ -838,12 +839,13 @@ Calls either `buttercup-reporter-batch' or
   "Reporter for interactive uses."
   ;; This is a bit rudimentary ...
   (with-current-buffer (get-buffer-create "*Buttercup*")
-    (when (eq event 'buttercup-started)
-      (erase-buffer)
-      (view-mode 1)
-      (display-buffer (current-buffer)))
     (let ((old-print (symbol-function 'buttercup--print))
-          (buf (current-buffer)))
+          (buf (current-buffer))
+          (inhibit-read-only t))
+      (when (eq event 'buttercup-started)
+        (erase-buffer)
+        (special-mode)
+        (display-buffer (current-buffer)))
       (fset 'buttercup--print (lambda (fmt &rest args)
                                 (with-current-buffer buf
                                   (let ((inhibit-read-only t))

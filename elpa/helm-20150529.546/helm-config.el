@@ -25,7 +25,8 @@
 (require 'helm-aliases)
 (declare-function async-bytecomp-package-mode "ext:async-bytecomp.el")
 (when (require 'async-bytecomp nil t)
-  (async-bytecomp-package-mode 1))
+  (and (fboundp 'async-bytecomp-package-mode)
+       (async-bytecomp-package-mode 1)))
 
 
 (defgroup helm-config nil
@@ -107,6 +108,7 @@
     (define-key map (kbd "C-x r i")   'helm-register)
     (define-key map (kbd "C-c C-x")   'helm-run-external-command)
     (define-key map (kbd "b")         'helm-resume)
+    (define-key map (kbd "M-n")       'helm-gid)
     map))
 
 ;; Don't override the keymap we just defined with an empty
@@ -150,6 +152,7 @@
    ("Tools"
     ["Occur" helm-occur t]
     ["Grep" helm-do-grep t]
+    ["Gid"  helm-gid t]
     ["Etags" helm-etags-select t]
     ["Lisp complete at point" helm-lisp-completion-at-point t]
     ["Browse Kill ring" helm-show-kill-ring t]

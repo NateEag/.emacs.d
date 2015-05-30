@@ -37,12 +37,25 @@
   :group 'helm-semantic
   :type  'boolean)
 
-(defcustom helm-semantic-display-style 'semantic-format-tag-summarize
-  "Function to present a semantic tag."
+(defcustom helm-semantic-display-style
+  '((python-mode . semantic-format-tag-summarize)
+    (c-mode . semantic-format-tag-concise-prototype-c-mode)
+    (emacs-lisp-mode . semantic-format-tag-abbreviate-emacs-lisp-mode))
+  "Function to present a semantic tag according to `major-mode'.
+
+It is an alist where the `car' of each element is a `major-mode' and
+the `cdr' a `semantic-format-tag-*' function.
+
+If no function is found for current `major-mode', fall back to
+`semantic-format-tag-summarize' default function.
+
+You can have more or less informations depending of the `semantic-format-tag-*'
+function you choose.
+
+All the supported functions are prefixed with \"semantic-format-tag-\",
+you have completion on these functions with `C-M i' in the customize interface."
   :group 'helm-semantic
-  :type '(radio
-          (const :tag "Default" semantic-format-tag-summarize)
-          (const :tag "Prototype" semantic-format-tag-prototype)))
+  :type '(alist :key-type symbol :value-type symbol))
 
 ;;; keymap
 (defvar helm-semantic-map
@@ -59,7 +72,10 @@
 
 (defun helm-semantic--fetch-candidates (tags depth &optional class)
   "Write the contents of TAGS to the current buffer."
-  (let ((class class) cur-type)
+  (let ((class class) cur-type
+        (stylefn (or (with-helm-current-buffer
+                       (assoc-default major-mode helm-semantic-display-style))
+                     #'semantic-format-tag-summarize)))
     (cl-dolist (tag tags)
       (when (listp tag)
         (cl-case (setq cur-type (semantic-tag-class tag))
@@ -74,7 +90,7 @@
                           spaces (if (< depth 2) "" "├►") class)
                 spaces)
               ;; Save the tag for later
-              (propertize (funcall helm-semantic-display-style tag nil t)
+              (propertize (funcall stylefn tag nil t)
                           'semantic-tag tag)
               "\n")
              (and type-p (setq class (car tag)))
@@ -86,7 +102,7 @@
           ;; Don't do anything with packages or includes for now
           ((package include)
            (insert
-            (propertize (funcall helm-semantic-display-style tag nil t)
+            (propertize (funcall stylefn tag nil t)
                         'semantic-tag tag)
             "\n")
            )

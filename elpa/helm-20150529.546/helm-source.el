@@ -410,14 +410,7 @@
     :custom boolean
     :documentation
     "  Allow helm collecting duplicates candidates.")
-
-   (recenter
-    :initarg :recenter
-    :initform nil
-    :custom boolean
-    :documentation
-    "  `recenter' after jumping to candidate.")
-
+   
    (history
     :initarg :history
     :initform nil
@@ -948,9 +941,9 @@ an eieio class."
                                 (helm-append-at-nth
                                  actions (quote ,new-action) ,index))
                                (t actions)))))
-    (when (symbolp actions)
+    (when (or (symbolp actions) (functionp actions))
       (set-slot-value source 'action (list (cons "Default action" actions))))
-    (when (symbolp action-transformers)
+    (when (or (symbolp action-transformers) (functionp action-transformers))
       (setq action-transformers (list action-transformers)))
     (set-slot-value
      source

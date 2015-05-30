@@ -1647,8 +1647,9 @@ purpose."
                (and ffap-url-regexp (string-match ffap-url-regexp path)))
            (list path))
           ((string= path "") (helm-ff-directory-files "/" t))
+          ;; Check here if directory is accessible (not working on Windows).
           ((and (file-directory-p path) (not (file-readable-p path)))
-           (list (format "Opening directory: access denied, `%s'" path)))
+           (list (format "file-error: Opening directory permission denied `%s'" path)))
           ;; A fast expansion of PATH is made only if `helm-ff-auto-update-flag'
           ;; is enabled.
           ((and dir-p helm-ff-auto-update-flag)
@@ -1661,7 +1662,7 @@ purpose."
                        (list path))
                      (helm-ff-directory-files basedir t))))))
 
-(defsubst helm-ff-directory-files (directory &optional full)
+(defun helm-ff-directory-files (directory &optional full)
   "List contents of DIRECTORY.
 Argument FULL mean absolute path.
 It is same as `directory-files' but always returns the
@@ -1669,11 +1670,25 @@ dotted filename '.' and '..' even on root directories in Windows
 systems."
   (setq directory (file-name-as-directory
                    (expand-file-name directory)))
-  (let ((ls   (directory-files
-               directory full directory-files-no-dot-files-regexp))
+  (let* (file-error
+         (ls   (condition-case err
+                   (directory-files
+                    directory full directory-files-no-dot-files-regexp)
+                 ;; Handle file-error from here for Windows
+                 ;; because predicates like `file-readable-p' and friends
+                 ;; seem broken on emacs for Windows systems (always returns t).
+                 ;; This should never be called on GNU/Linux/Unix
+                 ;; as the error is properly intercepted in
+                 ;; `helm-find-files-get-candidates' by `file-readable-p'.
+                 (file-error
+                  (prog1
+                      (list (format "%s:%s"
+                                    (car err)
+                                    (mapconcat 'identity (cdr err) " ")))
+                    (setq file-error t)))))
         (dot  (concat directory "."))
         (dot2 (concat directory "..")))
-    (append (list dot dot2) ls)))
+    (append (and (not file-error) (list dot dot2)) ls)))
 
 (defun helm-ff-handle-backslash (fname)
   ;; Allow creation of filenames containing a backslash.
@@ -1981,7 +1996,7 @@ Return candidates prefixed with basename of `helm-input' first."
              (attr (file-attributes file))
              (type (car attr)))
 
-        (cond ((string-match "access denied" file) file)
+        (cond ((string-match "file-error" file) file)
               ( ;; A not already saved file.
                (and (stringp type)
                     (not (helm-ff-valid-symlink-p file))
@@ -2897,7 +2912,7 @@ Set `recentf-max-saved-items' to a bigger value if default is too small.")
 (defun helm-browse-project (arg)
   "Browse files and see status of project with its vcs.
 Only HG and GIT are supported for now.
-Fall back to `helm-find-files' or `helm-browse-project-find-files'
+Fall back to `helm-browse-project-find-files'
 if current directory is not under control of one of those vcs.
 With a prefix ARG browse files recursively, with two prefix ARG
 rebuild the cache.
@@ -2920,14 +2935,16 @@ and
          (helm-hg-find-files-in-project))
         (t (let ((cur-dir (helm-browse-project-get--root-dir
                            (helm-current-directory))))
-             (if (or arg (gethash cur-dir helm--browse-project-cache)) 
+             (if (or arg (gethash cur-dir helm--browse-project-cache))
                  (helm-browse-project-find-files cur-dir (equal arg '(16)))
-               (helm :sources (helm-browse-project-build-buffers-source cur-dir)
-                     :buffer "*helm browse project*"))))))
+                 (helm :sources (helm-browse-project-build-buffers-source cur-dir)
+                       :buffer "*helm browse project*"))))))
 
 (defun helm-browse-project-get--root-dir (directory)
   (cl-loop with dname = (file-name-as-directory directory)
            while (and dname (not (gethash dname helm--browse-project-cache)))
+           if (file-remote-p dname)
+           do (setq dname nil) else
            do (setq dname (helm-basedir (substring dname 0 (1- (length dname)))))
            finally return (or dname (file-name-as-directory directory))))
 
@@ -3091,72 +3108,84 @@ utility mdfind.")
     :requires-pattern 3))
 
 (defun helm-findutils-transformer (candidates _source)
-  (cl-loop for i in candidates
-           for type = (car (file-attributes i))    
-           for abs = (expand-file-name i (helm-default-directory))
-           for disp = (if (and helm-ff-transformer-show-only-basename
-                               (not (string-match "[.]\\{1,2\\}$" i)))
-                          (helm-basename i) abs)
-           collect (cond ((eq t type)
-                          (cons (propertize disp 'face 'helm-ff-directory) abs))
-                         ((stringp type)
-                          (cons (propertize disp 'face 'helm-ff-symlink) abs))
-                         (t (cons (propertize disp 'face 'helm-ff-file) abs)))))
+  (let (non-essential
+        (default-directory (helm-default-directory)))
+    (cl-loop for i in candidates
+             for abs = (expand-file-name
+                        (helm-aif (file-remote-p default-directory)
+                            (concat it i) i))
+             for type = (car (file-attributes abs))
+             for disp = (if (and helm-ff-transformer-show-only-basename
+                                 (not (string-match "[.]\\{1,2\\}$" i)))
+                            (helm-basename abs) abs)
+             collect (cond ((eq t type)
+                            (cons (propertize disp 'face 'helm-ff-directory)
+                                  abs))
+                           ((stringp type)
+                            (cons (propertize disp 'face 'helm-ff-symlink)
+                                  abs))
+                           (t (cons (propertize disp 'face 'helm-ff-file)
+                                    abs))))))
+
+(defun helm-find--build-cmd-line ()
+  (require 'find-cmd)
+  (let* ((default-directory (or (file-remote-p default-directory 'localname)
+                                default-directory))
+         (patterns+options (split-string helm-pattern "\\(\\`\\| +\\)\\* +"))
+         (fold-case (helm-set-case-fold-search (car patterns+options)))
+         (patterns (split-string (car patterns+options)))
+         (additional-options (and (cdr patterns+options)
+                                  (list (concat (cadr patterns+options) " "))))
+         (ignored-dirs ())
+         (ignored-files (when helm-findutils-skip-boring-files
+                          (cl-loop for f in completion-ignored-extensions
+                                   if (string-match "/$" f)
+                                   do (push (replace-match "" nil t f)
+                                            ignored-dirs)
+                                   else collect (concat "*" f))))
+         (path-or-name (if helm-findutils-search-full-path
+                           '(ipath path) '(iname name)))
+         (name-or-iname (if fold-case
+                            (car path-or-name) (cadr path-or-name))))
+    (find-cmd (and ignored-dirs
+                   `(prune (name ,@ignored-dirs)))
+              (and ignored-files
+                   `(not (name ,@ignored-files)))
+              `(and ,@(mapcar
+                       (lambda (pattern)
+                         `(,name-or-iname ,(concat "*" pattern "*")))
+                       patterns)
+                    ,@additional-options))))
 
 (defun helm-find-shell-command-fn ()
   "Asynchronously fetch candidates for `helm-find'.
-Additional find options can be sepcified after a \"*\"
+Additional find options can be specified after a \"*\"
 separator."
-  (require 'find-cmd)
-  (with-helm-default-directory (helm-default-directory)
-      (let* (process-connection-type
-             (patterns+options (split-string helm-pattern "\\(\\`\\| +\\)\\* +"))
-             (fold-case (helm-set-case-fold-search (car patterns+options)))
-             (patterns (split-string (car patterns+options)))
-             (additional-options (and (cdr patterns+options)
-                                      (list (concat (cadr patterns+options) " "))))
-             (ignored-dirs ())
-             (ignored-files (when helm-findutils-skip-boring-files
-                              (cl-loop for f in completion-ignored-extensions
-                                       if (string-match "/$" f)
-                                       do (push (replace-match "" nil t f)
-                                                ignored-dirs)
-                                       else collect (concat "*" f))))
-             (path-or-name (if helm-findutils-search-full-path
-                               '(ipath path) '(iname name)))
-             (name-or-iname (if fold-case
-                                (car path-or-name) (cadr path-or-name)))
-             (cmd (find-cmd (and ignored-dirs
-                                 `(prune (name ,@ignored-dirs)))
-                            (and ignored-files
-                                 `(not (name ,@ignored-files)))
-                            `(and ,@(mapcar
-                                     (lambda (pattern)
-                                       `(,name-or-iname ,(concat "*" pattern "*")))
-                                     patterns)
-                                  ,@additional-options)))
-             (proc (start-file-process-shell-command "hfind" helm-buffer cmd)))
-        (helm-log "Find command:\n%s" cmd)
-        (prog1 proc
-          (set-process-sentinel
-           proc
-           #'(lambda (process event)
-               (helm-process-deferred-sentinel-hook
-                process event (helm-default-directory))
-               (if (string= event "finished\n")
-                   (with-helm-window
-                     (setq mode-line-format
-                           '(" " mode-line-buffer-identification " "
-                             (:eval (format "L%s" (helm-candidate-number-at-point))) " "
-                             (:eval (propertize
-                                     (format "[Find process finished - (%s results)]" 
-                                             (max (1- (count-lines
-                                                       (point-min) (point-max)))
-                                                  0))
-                                     'face 'helm-locate-finish))))
-                     (force-mode-line-update))
-                   (helm-log "Error: Find %s"
-                             (replace-regexp-in-string "\n" "" event)))))))))
+  (let* (process-connection-type
+         non-essential
+         (cmd (helm-find--build-cmd-line))
+         (proc (start-file-process-shell-command "hfind" helm-buffer cmd)))
+    (helm-log "Find command:\n%s" cmd)
+    (prog1 proc
+      (set-process-sentinel
+       proc
+       #'(lambda (process event)
+           (helm-process-deferred-sentinel-hook
+            process event (helm-default-directory))
+           (if (string= event "finished\n")
+               (with-helm-window
+                 (setq mode-line-format
+                       '(" " mode-line-buffer-identification " "
+                         (:eval (format "L%s" (helm-candidate-number-at-point))) " "
+                         (:eval (propertize
+                                 (format "[Find process finished - (%s results)]" 
+                                         (max (1- (count-lines
+                                                   (point-min) (point-max)))
+                                              0))
+                                 'face 'helm-locate-finish))))
+                 (force-mode-line-update))
+               (helm-log "Error: Find %s"
+                         (replace-regexp-in-string "\n" "" event))))))))
 
 (defun helm-find-1 (dir)
   (let ((default-directory (file-name-as-directory dir)))

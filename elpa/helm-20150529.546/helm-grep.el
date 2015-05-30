@@ -390,7 +390,7 @@ It is intended to use as a let-bound variable, DON'T set this globaly.")
 
 (defun helm-grep-init (cmd-line)
   "Start an asynchronous grep process with CMD-LINE using ZGREP if non--nil."
-  (let* ((default-directory (or (expand-file-name helm-ff-default-directory)
+  (let* ((default-directory (or helm-ff-default-directory
                                 (helm-default-directory)))
          (zgrep (string-match "\\`zgrep" cmd-line))
          ;; Use pipe only with grep, zgrep or git-grep.
@@ -1008,15 +1008,15 @@ in recurse, search being made on `helm-zgrep-file-extension-regexp'."
           (cl-loop for reg in (if multi-match
                                   (cl-loop for r in (helm-mp-split-pattern
                                                      helm-pattern)
-                                        unless (string-match "\\`!" r)
-                                        collect r)
-                                (list helm-pattern))
-                do
-                (while (and (re-search-forward reg nil t)
-                            (> (- (setq end (match-end 0))
-                                  (setq beg (match-beginning 0))) 0))
-                  (add-text-properties beg end '(face helm-grep-match)))
-                do (goto-char (point-min))) 
+                                           unless (string-match "\\`!" r)
+                                           collect r)
+                                  (list helm-pattern))
+                   do
+                   (while (and (re-search-forward reg nil t)
+                               (> (- (setq end (match-end 0))
+                                     (setq beg (match-beginning 0))) 0))
+                     (add-text-properties beg end '(face helm-grep-match)))
+                   do (goto-char (point-min))) 
           (buffer-string))
       (error nil))))
 

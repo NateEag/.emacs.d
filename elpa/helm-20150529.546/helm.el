@@ -474,7 +474,9 @@ will have no effect until this mode will be disabled."
                                                  helm-source-man-pages)
   "List of helm sources that need to use `helm--maybe-use-default-as-input'.
 When a source is member of this list, default `thing-at-point'
-will be used as input."
+will be used as input.
+
+Note that async sources are not supporting this actually."
   :group 'helm
   :type '(repeat (choice symbol)))
 
@@ -690,9 +692,8 @@ can be set here with `helm-set-local-variable'.")
 
 (defvar helm-after-initialize-hook nil
   "Run after helm initialization.
-This hook run inside `helm-buffer' once created.
-Variables are initialized and the `helm-buffer' is created.
-But the `helm-buffer' has no contents.")
+This hook run after `helm-buffer' is created but not from `helm-buffer'
+so the hook have to specify in which buffer it should run.")
 
 (defvar helm-update-hook nil
   "Run after the helm buffer was updated according the new input pattern.
@@ -877,7 +878,8 @@ when `helm' is keyboard-quitted.")
 Use only in let-bindings.
 Use :default arg of `helm' as input to update display.
 Note that if also :input is specified as `helm' arg, it will take
-precedence on :default.")
+precedence on :default.
+NOTE: Async sources are not supporting this.")
 
 
 ;; Utility: logging
@@ -1258,9 +1260,9 @@ only when predicate helm-ff-candidates-lisp-p return non--nil:
                                 (helm-append-at-nth
                                  actions (quote ,new-action) ,index))
                                (t actions)))))
-    (when (symbolp actions)
+    (when (or (symbolp actions) (functionp actions))
       (helm-attrset 'action (list (cons "Default action" actions)) source))
-    (when (symbolp action-transformers)
+    (when (or (symbolp action-transformers) (functionp action-transformers))
       (setq action-transformers (list action-transformers)))
     (if test-only                       ; debug
         (delq nil (append (list transformer) action-transformers))
@@ -1508,17 +1510,26 @@ Otherwise, return VALUE itself."
 
 (defun helm-set-local-variable (&rest args)
   "Bind each pair in ARGS locally to `helm-buffer'.
+
 Use this to set local vars before calling helm.
+
+When used from an init or update function
+(i.e when `helm-force-update' is running) the variables are set
+using `make-local-variable' within the `helm-buffer'.
+
 Usage: helm-set-local-variable ([VAR VALUE]...)
 Just like `setq' except that the vars are not set sequentially.
-IOW Don't use VALUE of previous VAR to eval the VALUE of next VAR.
-When helm is alive use `make-local-variable' as usual on `helm-buffer'.
+IOW Don't use VALUE of previous VAR to set the VALUE of next VAR.
 
 \(fn VAR VALUE ...)"
-  (setq helm--local-variables
-        (append (cl-loop for i on args by #'cddr
-                         collect (cons (car i) (cadr i)))
-                helm--local-variables)))
+  (if helm-force-updating-p
+      (with-helm-buffer
+        (cl-loop for i on args by #'cddr
+                 do (set (make-local-variable (car i)) (cadr i))))
+      (setq helm--local-variables
+            (append (cl-loop for i on args by #'cddr
+                             collect (cons (car i) (cadr i)))
+                    helm--local-variables))))
 
 (defun helm-make-actions (&rest args)
   "Build an alist with (NAME . ACTION) elements with each pairs in ARGS.
@@ -2179,7 +2190,11 @@ It uses `switch-to-buffer' or `pop-to-buffer' depending of value of
           (and (eq helm-split-window-default-side 'same)
                (one-window-p t)))
       (progn (delete-other-windows) (switch-to-buffer buffer))
-    (when (and (or helm-always-two-windows helm-autoresize-mode)
+    (when (and (or helm-always-two-windows helm-autoresize-mode
+                   (eq (save-selected-window
+                         (funcall helm-split-window-preferred-function
+                                  (selected-window)))
+                       (get-buffer-window helm-current-buffer)))
                (not (eq helm-split-window-default-side 'same))
                (not (minibufferp helm-current-buffer))
                (not helm-split-window-in-side-p))
@@ -4210,6 +4225,16 @@ before the candidate we want to preselect."
       (or (eq (point-at-bol) (point-at-eol))
           (helm-pos-header-line-p)
           (eobp)))))
+
+(defun helm-beginning-of-source-p (&optional at-point)
+  "Return non--nil if we are at bob or beginning of source."
+  (save-excursion
+    (if (and (helm-pos-multiline-p) (null at-point))
+        (null (helm-get-previous-candidate-separator-pos))
+      (forward-line (if at-point 0 -1))
+      (or (eq (point-at-bol) (point-at-eol))
+          (helm-pos-header-line-p)
+          (bobp)))))
 
 (defun helm-edit-current-selection-internal (func)
   (with-helm-window

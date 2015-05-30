@@ -28,7 +28,7 @@
 ;; Maintainer: Jason R. Blevins <jrblevin@sdf.org>
 ;; Created: May 24, 2007
 ;; Version: 2.0
-;; Package-Version: 20150515.2159
+;; Package-Version: 20150528.1552
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: http://jblevins.org/projects/markdown-mode/
 
@@ -64,11 +64,11 @@
 ;;    * [Release notes][]
 ;;
 ;;  [markdown-mode.el]: http://jblevins.org/projects/markdown-mode/markdown-mode.el
-;;  [screenshot]: http://jblevins.org/projects/markdown-mode/screenshots/20130131-002.png
-;;  [release notes]: http://jblevins.org/projects/markdown-mode/rev-2-0
+;;  [Screenshot]: http://jblevins.org/projects/markdown-mode/screenshots/20130131-002.png
+;;  [Release notes]: http://jblevins.org/projects/markdown-mode/rev-2-0
 ;;
 ;; [^theme]: The theme used in the screenshot is
-;;   [color-theme-twilight](https://github.com/crafterm/twilight-emacs).
+;;     [color-theme-twilight](https://github.com/crafterm/twilight-emacs).
 ;;
 ;; markdown-mode is also available in several package managers, including:
 ;;
@@ -216,7 +216,7 @@
 ;;     line is not blank, they use the text on the current line.
 ;;     Finally, the setext commands will prompt for heading text if
 ;;     there is no active region and the current line is blank.
-;;     
+;;
 ;;     `C-c C-t h` inserts a heading with automatically chosen type and
 ;;     level (both determined by the previous heading).  `C-c C-t H`
 ;;     behaves similarly, but uses setext (underlined) headings when
@@ -1399,6 +1399,10 @@ extension support.")
 (defconst markdown-footnote-chars
   "[[:alnum:]-]"
   "Regular expression maching any character that is allowed in a footnote identifier.")
+
+(defconst markdown-regex-footnote-definition
+  (concat "^\\[\\(\\^" markdown-footnote-chars "*?\\)\\]:\\(?:[ \t]+\\|$\\)")
+  "Regular expression matching a footnote definition, capturing the label.")
 
 
 ;;; Compatibility =============================================================
@@ -2704,8 +2708,16 @@ NIL is returned instead."
                 (while (>= (markdown-next-line-indent) 4)
                   (backward-paragraph))
                 (forward-line)
-                (if (looking-at (concat "^\\[\\(\\^" markdown-footnote-chars "*?\\)\\]:"))
-                    (list (match-string 1) (point))))))
+                (let ((continue t)
+                      (result nil))
+                  (while (and continue (not result) (not (eobp)))
+                   (cond
+                    ((looking-at markdown-regex-footnote-definition)
+                     (setq result (list (match-string 1) (point))))
+                    ((looking-at paragraph-separate)
+                     (forward-line))
+                    (t (setq continue nil))))
+                  result))))
       (when fn
         (while (progn
                  (forward-paragraph)
@@ -4529,10 +4541,11 @@ This is an exact copy of `line-number-at-pos' for use in emacs21."
   (looking-back "\\[[^]]*"))
 
 (defun markdown-line-is-reference-definition-p ()
-  "Return whether the current line is a reference defition."
+  "Return whether the current line is a (non-footnote) reference defition."
   (save-excursion
     (move-beginning-of-line 1)
-    (looking-at markdown-regex-reference-definition)))
+    (and (looking-at-p markdown-regex-reference-definition)
+         (not (looking-at-p "[ \t]*\\[^")))))
 
 (defun markdown-adaptive-fill-function ()
   "Return prefix for filling paragraph or nil if not determined."
@@ -4547,6 +4560,8 @@ This is an exact copy of `line-number-at-pos' for use in emacs21."
    ;; List items
    ((looking-at markdown-regex-list)
     (match-string-no-properties 0))
+   ((looking-at markdown-regex-footnote-definition)
+    "    ") ; four spaces
    ;; No match
    (t nil)))
 
@@ -4637,7 +4652,7 @@ if ARG is omitted or nil."
        'markdown-end-of-defun)
   ;; Paragraph filling
   (set
-   ; Should match lines that start or seaprate paragraphs
+   ; Should match start of lines that start or seaprate paragraphs
    (make-local-variable 'paragraph-start)
        (mapconcat 'identity
                   '(
@@ -4657,7 +4672,8 @@ if ARG is omitted or nil."
                 ; The following is not ideal, but the Fill customization
                 ; options really only handle paragraph-starting prefixes,
                 ; not paragraph-ending suffixes:
-                ".*  $") ; line ending in two spaces
+                ".*  $" ; line ending in two spaces
+                "[ \t]*\\[\\^\\S-*\\]:[ \t]*$") ; just the start of a footnote def
               "\\|"))
   (set (make-local-variable 'adaptive-fill-first-line-regexp)
        "\\`[ \t]*>[ \t]*?\\'")
@@ -4677,9 +4693,9 @@ if ARG is omitted or nil."
   ;; Separating out each condition into a separate function so that users can
   ;; override if desired (with remove-hook)
   (add-hook 'fill-nobreak-predicate
-            'markdown-inside-link-text-p :local t)
+            'markdown-inside-link-text-p nil t)
   (add-hook 'fill-nobreak-predicate
-            'markdown-line-is-reference-definition-p :local t)
+            'markdown-line-is-reference-definition-p nil t)
 
   ;; Indentation
   (setq indent-line-function markdown-indent-function)
@@ -4706,9 +4722,12 @@ if ARG is omitted or nil."
   ;; do the initial link fontification
   (markdown-fontify-buffer-wiki-links))
 
-;;;###autoload(add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode))
-;;;###autoload(add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
-;;;###autoload(add-to-list 'auto-mode-alist '("\\.text\\'" . markdown-mode))
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.markdown\\'" . markdown-mode))
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.text\\'" . markdown-mode))
+;;;###autoload
+(add-to-list 'auto-mode-alist '("\\.md\\'" . gfm-mode))
 
 
 ;;; GitHub Flavored Markdown Mode  ============================================

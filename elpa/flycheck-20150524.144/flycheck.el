@@ -206,6 +206,7 @@ attention to case differences."
     javascript-eslint
     javascript-gjslint
     javascript-jscs
+    javascript-standard
     json-jsonlint
     less
     luacheck
@@ -6283,7 +6284,7 @@ See URL `https://github.com/w3c/tidy-html5'."
   :safe #'stringp)
 
 (flycheck-define-checker javascript-jshint
-  "A JavaScript syntax and style checker using jshint.
+  "A Javascript syntax and style checker using jshint.
 
 See URL `http://www.jshint.com'."
   :command ("jshint" "--checkstyle-reporter"
@@ -6314,7 +6315,7 @@ for more information about the custom directory."
   :package-version '(flycheck . "0.20"))
 
 (flycheck-define-checker javascript-eslint
-  "A JavaScript syntax and style checker using eslint.
+  "A Javascript syntax and style checker using eslint.
 
 See URL `https://github.com/eslint/eslint'."
   :command ("eslint" "--format=checkstyle"
@@ -6347,7 +6348,7 @@ See URL `https://github.com/eslint/eslint'."
   :safe #'stringp)
 
 (flycheck-define-checker javascript-gjslint
-  "A JavaScript syntax and style checker using Closure Linter.
+  "A Javascript syntax and style checker using Closure Linter.
 
 See URL `https://developers.google.com/closure/utilities'."
   :command ("gjslint" "--unix_mode"
@@ -6378,7 +6379,7 @@ error."
   :package-version '(flycheck . "0.24"))
 
 (flycheck-define-checker javascript-jscs
-  "A code style linter using JSCS.
+  "A Javascript style checker using JSCS.
 
 See URL `http://www.jscs.info'."
   :command ("jscs" "--reporter=checkstyle"
@@ -6388,6 +6389,22 @@ See URL `http://www.jscs.info'."
   :error-filter (lambda (errors)
                   (flycheck-remove-error-ids
                    (flycheck-sanitize-errors errors)))
+  :modes (js-mode js2-mode js3-mode))
+
+(flycheck-define-checker javascript-standard
+  "A Javascript code and style checker for the (Semi-)Standard Style.
+
+This checker works with `standard' and `semistandard', defaulting
+to the former.  To use it with the latter, set
+`flycheck-javascript-standard-executable' to `semistandard'.
+
+See URL `https://github.com/feross/standard' and URL
+`https://github.com/Flet/semistandard'."
+  :command ("standard" source)
+  :error-patterns
+  ((error line-start
+          "  " (file-name) ":" line ":" column ":" (message)
+          line-end))
   :modes (js-mode js2-mode js3-mode))
 
 (flycheck-define-checker json-jsonlint
@@ -7003,6 +7020,9 @@ See URL `http://jruby.org/'."
   :modes (enh-ruby-mode ruby-mode)
   :next-checkers ((warning . ruby-rubylint)))
 
+(flycheck-def-args-var flycheck-rust-args rust
+  :package-version '(flycheck . "0.24"))
+
 (flycheck-def-option-var flycheck-rust-check-tests t rust
   "Whether to check test code in Rust.
 
@@ -7060,6 +7080,7 @@ See URL `http://www.rust-lang.org'."
             (option "--crate-type" flycheck-rust-crate-type)
             (option-flag "--test" flycheck-rust-check-tests)
             (option-list "-L" flycheck-rust-library-path concat)
+            (eval flycheck-rust-args)
             (eval (or flycheck-rust-crate-root
                       (flycheck-substitute-argument 'source-inplace 'rust))))
   :error-patterns

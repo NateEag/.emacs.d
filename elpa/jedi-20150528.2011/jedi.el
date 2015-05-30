@@ -5,7 +5,7 @@
 ;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
 ;; Package-Requires: ((emacs "24") (jedi-core "0.2.2") (auto-complete "1.4"))
 ;; Version: 0.2.4
-;; Package-Version: 20150517.212
+;; Package-Version: 20150528.2011
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -100,9 +100,10 @@ in their Emacs configuration."
     (if jedi:complete-on-dot
         (define-key map "." 'jedi:dot-complete)
       (define-key map "." nil)))
-  (if jedi-mode
-      (add-hook 'after-change-functions 'jedi:after-change-handler nil t)
-    (remove-hook 'after-change-functions 'jedi:after-change-handler t)))
+  (when jedi:install-imenu
+    (if jedi-mode
+        (add-hook 'after-change-functions 'jedi:after-change-handler nil t)
+      (remove-hook 'after-change-functions 'jedi:after-change-handler t))))
 
 ;;;###autoload
 (setq jedi:setup-function #'jedi:ac-setup

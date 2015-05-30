@@ -76,7 +76,7 @@
   :group 'languages
   :prefix "py-")
 
-(defconst py-version "This is experimental `python-components-mode' not released yet, see https://code.launchpad.net/~a-roehler/python-mode/python-mode-components")
+(defconst py-version "6.2.0+")
 
 (defcustom py-install-directory ""
   "Directory where python-mode.el and it's subdirectories should be installed. Needed for completion and other environment stuff only. "
@@ -1113,9 +1113,9 @@ variable section, e.g.:
   :tag "py-pychecker-command"
   :group 'python-mode)
 
-(defcustom py-pychecker-command-args '("--stdlib")
-  "List of string arguments to be passed to pychecker."
-  :type '(repeat string)
+(defcustom py-pychecker-command-args "--stdlib"
+  "String arguments to be passed to pychecker."
+  :type 'string
   :tag "py-pychecker-command-args"
   :group 'python-mode)
 
@@ -1125,11 +1125,11 @@ variable section, e.g.:
   :tag "py-pyflakes-command"
   :group 'python-mode)
 
-(defcustom py-pyflakes-command-args '("")
-  "List of string arguments to be passed to pyflakes.
+(defcustom py-pyflakes-command-args ""
+  "String arguments to be passed to pyflakes.
 
 Default is \"\""
-  :type '(repeat string)
+  :type 'string
   :tag "py-pyflakes-command-args"
   :group 'python-mode)
 
@@ -1139,11 +1139,11 @@ Default is \"\""
   :tag "py-pep8-command"
   :group 'python-mode)
 
-(defcustom py-pep8-command-args '("")
-  "List of string arguments to be passed to pylint.
+(defcustom py-pep8-command-args ""
+  "String arguments to be passed to pylint.
 
 Default is \"\" "
-  :type '(repeat string)
+  :type 'string
   :tag "py-pep8-command-args"
   :group 'python-mode)
 
@@ -1153,11 +1153,11 @@ Default is \"\" "
   :tag "py-pyflakespep8-command"
   :group 'python-mode)
 
-(defcustom py-pyflakespep8-command-args '("")
-  "List of string arguments to be passed to pyflakespep8.
+(defcustom py-pyflakespep8-command-args ""
+  "string arguments to be passed to pyflakespep8.
 
 Default is \"\" "
-  :type '(repeat string)
+  :type 'string
   :tag "py-pyflakespep8-command-args"
   :group 'python-mode)
 
@@ -1167,8 +1167,8 @@ Default is \"\" "
   :tag "py-pylint-command"
   :group 'python-mode)
 
-(defcustom py-pylint-command-args '("--errors-only")
-  "List of string arguments to be passed to pylint.
+(defcustom py-pylint-command-args "--errors-only"
+  "String arguments to be passed to pylint.
 
 Default is \"--errors-only\" "
   :type '(repeat string)
@@ -1351,9 +1351,9 @@ Else /usr/bin/python"
 "
   :group 'python-mode)
 
-(defcustom py-python-command-args '("-i")
-  "List of string arguments to be used when starting a Python shell."
-  :type '(repeat string)
+(defcustom py-python-command-args "-i"
+  "String arguments to be used when starting a Python shell."
+  :type 'string
   :tag "py-python-command-args"
   :group 'python-mode)
 
@@ -1376,8 +1376,8 @@ Else /usr/bin/python"
 "
   :group 'python-mode)
 
-(defcustom py-python2-command-args '("-i")
-  "List of string arguments to be used when starting a Python shell."
+(defcustom py-python2-command-args "-i"
+  "String arguments to be used when starting a Python shell."
   :type '(repeat string)
   :tag "py-python2-command-args"
   :group 'python-mode)
@@ -1402,8 +1402,8 @@ At GNU systems see /usr/bin/python3"
 "
   :group 'python-mode)
 
-(defcustom py-python3-command-args '("-i")
-  "List of string arguments to be used when starting a Python3 shell."
+(defcustom py-python3-command-args "-i"
+  "String arguments to be used when starting a Python3 shell."
   :type '(repeat string)
   :tag "py-python3-command-args"
   :group 'python-mode)
@@ -1431,15 +1431,15 @@ Else /usr/bin/ipython"
 
 (defcustom py-ipython-command-args
   (if (eq system-type 'windows-nt)
-      '("-i" "C:\\Python27\\Scripts\\ipython-script.py")
-    '("--pylab" "--automagic"))
-  "List of string arguments to be used when starting a Python shell.
+      "-i C:\\Python27\\Scripts\\ipython-script.py"
+    "--pylab --automagic")
+  "String arguments to be used when starting a Python shell.
 At Windows make sure ipython-script.py is PATH. Also setting PATH/TO/SCRIPT here should work, for example;
 C:\\Python27\\Scripts\\ipython-script.py
 With Anaconda the following is known to work:
 \"C:\\\\Users\\\\My-User-Name\\\\Anaconda\\\\Scripts\\\\ipython-script-py\"
 "
-  :type '(repeat string)
+  :type 'string
   :tag "py-ipython-command-args
 "
   :group 'python-mode)
@@ -1459,9 +1459,9 @@ Default /usr/bin/jython"
 "
   :group 'python-mode)
 
-(defcustom py-jython-command-args '("")
-  "List of string arguments to be used when starting a Python shell."
-  :type '(repeat string)
+(defcustom py-jython-command-args ""
+  "String arguments to be used when starting a Python shell."
+  :type 'string
   :tag "py-jython-command-args"
   :group 'python-mode)
 
@@ -1611,6 +1611,17 @@ without the user's realization (e.g. to perform completion)."
 
   :type 'string
   :tag "py-shell-local-path"
+  :group 'python-mode)
+
+(defcustom py-python-edit-version ""
+  "When not empty, fontify according to Python version specified.
+
+Default is the empty string, a useful value \"python3\" maybe.
+
+When empty, version is guessed via `py-choose-shell'. "
+
+  :type 'string
+  :tag "py-python-edit-version"
   :group 'python-mode)
 
 (defcustom py-ipython-execute-delay 0.3
@@ -2972,7 +2983,7 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
 
 (defun py--escape-open-paren-col1 (start end)
   (goto-char start)
-  (switch-to-buffer (current-buffer)) 
+  ;; (switch-to-buffer (current-buffer))
   (while (re-search-forward "^(" end t 1)
     (insert "\\")
     (end-of-line)))
@@ -3142,11 +3153,11 @@ Returns char found. "
 		      "any" "apply" "basestring" "bin" "bool" "buffer" "bytearray"
 		      "bytes" "callable" "chr" "classmethod" "cmp" "coerce" "compile"
 		      "complex" "delattr" "dict" "dir" "divmod" "enumerate" "eval"
-		      "execfile" "file" "filter" "float" "format" "frozenset"
+		      "execfile" "filter" "float" "format" "frozenset"
 		      "getattr" "globals" "hasattr" "hash" "help" "hex" "id" "input"
 		      "int" "intern" "isinstance" "issubclass" "iter" "len" "list"
 		      "locals" "long" "map" "max" "min" "next" "object" "oct" "open"
-		      "ord" "pow" "print" "property" "range" "raw_input" "reduce"
+		      "ord" "pow" "property" "range" "raw_input" "reduce"
 		      "reload" "repr" "reversed" "round" "set" "setattr" "slice"
 		      "sorted" "staticmethod" "str" "sum" "super" "tuple" "type"
 		      "unichr" "unicode" "vars" "xrange" "zip"))
@@ -5159,17 +5170,6 @@ Optional argument REPEAT, the number of loops done already, is checked for py-ma
     (when (and py-verbose-p (interactive-p)) (message "%s" erg))
     erg))
 
-(defun py-goto-statement-below ()
-  "Goto beginning of next statement. "
-  (interactive)
-  (let ((orig (point))
-        (erg (py-end-of-statement)))
-    (py-beginning-of-statement)
-    (when (< (point) orig)
-      (goto-char erg)
-      (py-end-of-statement)
-      (py-beginning-of-statement))))
-
 ;;  Decorator
 (defun py-beginning-of-decorator ()
   "Go to the beginning of a decorator.
@@ -5213,8 +5213,6 @@ Returns position if succesful "
           (setq erg (point))))
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
-
-
 
 ;;  Helper functions
 
@@ -7382,19 +7380,20 @@ Receives a buffer-name as argument"
   (setq py-exception-buffer (or exception-buffer (and py-exception-buffer (buffer-live-p py-exception-buffer) py-exception-buffer) py-buffer-name)))
 
 (defun py--create-new-shell ()
-  (with-current-buffer
-      (apply #'make-comint-in-buffer executable py-buffer-name executable nil (split-string-and-unquote (car args)))
-    ;; (py--shell-make-comint executable py-buffer-name args)
-    (let ((proc (get-buffer-process (current-buffer))))
-      (if (string-match "^i" (process-name proc))
-	  (py-ipython-shell-mode)
-	(py-python-shell-mode)))
-    (setq py-output-buffer (current-buffer))
-    (sit-for 0.1 t)
-    (goto-char (point-max))
-    ;; otherwise comint might initialize it with point-min
-    (set-marker comint-last-input-end (point))
-    (setq py-exception-buffer (or exception-buffer (and py-exception-buffer (buffer-live-p py-exception-buffer) py-exception-buffer) (current-buffer)))))
+  (let ((buf (current-buffer)))
+    (with-current-buffer
+	(apply #'make-comint-in-buffer executable py-buffer-name executable nil (split-string-and-unquote args))
+      ;; (py--shell-make-comint executable py-buffer-name args)
+      (let ((proc (get-buffer-process (current-buffer))))
+	(if (string-match "^i" (process-name proc))
+	    (py-ipython-shell-mode)
+	  (py-python-shell-mode)))
+      (setq py-output-buffer (current-buffer))
+      (sit-for 0.1 t)
+      (goto-char (point-max))
+      ;; otherwise comint might initialize it with point-min
+      (set-marker comint-last-input-end (point))
+      (setq py-exception-buffer (or exception-buffer (and py-exception-buffer (buffer-live-p py-exception-buffer) py-exception-buffer) buf)))))
 
 (defun py--determine-local-default ()
   (if (not (string= "" py-shell-local-path))
@@ -7526,7 +7525,7 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 	      ;; shell might be specified in different ways
 	      (or (and (stringp shell) shell)
 		  (ignore-errors (eval shell))
-		  (and (symbolp shell) (prin1-to-string shell)))
+		  (and (symbolp shell) (format "%s" shell)))
 	    (py-choose-shell)))
 	 (execute-directory
 	  (cond ((ignore-errors (file-name-directory (file-remote-p (buffer-file-name) 'localname))))
@@ -8033,174 +8032,6 @@ Ignores setting of `py-switch-buffers-on-execute-p'. "
         (py-switch-buffers-on-execute-p t))
     (py--execute-buffer-base)))
 
-;;  Specifying shells start
-(defun py-execute-region-python (start end)
-  "Send the region to a common shell calling the python interpreter. "
-  (interactive "r")
-  (let ((py-shell-name "python"))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python-switch (start end)
-  "Send the region to a common shell calling the python interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will being switched to. "
-  (interactive "r")
-  (let ((py-switch-buffers-on-execute-p t))
-    (py--execute-base start end "python")))
-
-(defun py-execute-region-python-no-switch (beg end)
-  "Send region at point to Python interpreter.
-
-Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
-  (interactive "r")
-  (let ((py-shell-name "python")
-        py-switch-buffers-on-execute-p)
-    (py--execute-base beg end)))
-
-(defun py-execute-region-python2 (start end)
-  "Send the region to a common shell calling the python2 interpreter. "
-  (interactive "r")
-  (let ((py-shell-name "python2"))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python2-switch (start end)
-  "Send the region to a common shell calling the python2 interpreter.
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will being switched to. "
-  (interactive "r")
-  (let ((py-shell-name "python2")
-        (py-switch-buffers-on-execute-p t))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python2-no-switch (start end)
-  "Send the region to a common shell calling the python2 interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will not being switched to."
-  (interactive "r")
-  (let (py-switch-buffers-on-execute-p)
-    (py--execute-base start end "python2")))
-
-(defun py-execute-region-python2.7 (start end)
-  "Send the region to a common shell calling the python2.7 interpreter. "
-  (interactive "r")
-  (let ((py-shell-name "python2.7"))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python2.7-switch (start end)
-  "Send the region to a common shell calling the python2.7 interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will being switched to. "
-  (interactive "r")
-  (let ((py-shell-name "python2.7")
-        (py-switch-buffers-on-execute-p t))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python2.7-no-switch (start end)
-  "Send the region to a common shell calling the python2.7 interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will not being switched to."
-  (interactive "r")
-  (let ((py-shell-name "python2.7")
-        (py-switch-buffers-on-execute-p))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python3 (start end)
-  "Send the region to a common shell calling the python3 interpreter. "
-  (interactive "r")
-  (let ((py-shell-name "python3"))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python3-switch (start end)
-  "Send the region to a common shell calling the python3 interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will being switched to. "
-  (interactive "r")
-  (let ((py-shell-name "python3")
-        (py-switch-buffers-on-execute-p t))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python3-no-switch (start end)
-  "Send the region to a common shell calling the python3 interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will not being switched to."
-  (interactive "r")
-  (let ((py-shell-name "python3")
-        (py-switch-buffers-on-execute-p))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python3.2 (start end)
-  "Send the region to a common shell calling the python3.2 interpreter. "
-  (interactive "r")
-  (let ((py-shell-name "python3.2"))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python3.2-switch (start end)
-  "Send the region to a common shell calling the python3.2 interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will being switched to. "
-  (interactive "r")
-  (let ((py-shell-name "python3.2")
-        (py-switch-buffers-on-execute-p t))
-    (py--execute-base start end)))
-
-(defun py-execute-region-python3.2-no-switch (start end)
-  "Send the region to a common shell calling the python3.2 interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will not being switched to."
-  (interactive "r")
-  (let ((py-shell-name "python3.2")
-        (py-switch-buffers-on-execute-p))
-    (py--execute-base start end)))
-
-(defun py-execute-region-ipython (start end)
-  "Send the region to a common shell calling the ipython interpreter. "
-  (interactive "r")
-  (let ((py-shell-name "ipython"))
-    (py--execute-base start end)))
-
-(defun py-execute-region-ipython-switch (start end)
-  "Send the region to a common shell calling the ipython interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will being switched to. "
-  (interactive "r")
-  (let ((py-shell-name "ipython")
-        (py-switch-buffers-on-execute-p t))
-    (py--execute-base start end)))
-
-(defun py-execute-region-ipython-no-switch (start end)
-  "Send the region to a common shell calling the ipython interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will not being switched to."
-  (interactive "r")
-  (let ((py-shell-name "ipython")
-        (py-switch-buffers-on-execute-p))
-    (py--execute-base start end)))
-
-(defun py-execute-region-jython (start end)
-  "Send the region to a common shell calling the jython interpreter. "
-  (interactive "r")
-  (let ((py-shell-name "jython"))
-    (py--execute-base start end)))
-
-(defun py-execute-region-jython-switch (start end)
-  "Send the region to a common shell calling the jython interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will being switched to. "
-  (interactive "r")
-  (let ((py-shell-name "jython")
-        (py-switch-buffers-on-execute-p t))
-    (py--execute-base start end)))
-
-(defun py-execute-region-jython-no-switch (start end)
-  "Send the region to a common shell calling the jython interpreter.
-
-Ignores setting of `py-switch-buffers-on-execute-p', output-buffer will not being switched to."
-  (interactive "r")
-  (let ((py-shell-name "jython")
-        (py-switch-buffers-on-execute-p))
-    (py--execute-base start end)))
-
-;;  Specifying shells end
-
 ;;  Fixme: Try to define the function or class within the relevant
 ;;  module, not just at top level.
 (defun py-execute-defun ()
@@ -8409,6 +8240,192 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
 (defalias 'py-ipython-shell-command-on-region 'py-execute-region-ipython)
 (defalias 'py-shell-command-on-region 'py-execute-region)
 (defalias 'py-send-region-ipython 'py-execute-region-ipython)
+
+;; python-components-execute-region
+
+(defun py-execute-region (beg end)
+  "Execute region. " 
+  (interactive "r")
+  (py--execute-base beg end))
+
+(defun py-execute-region-switch (beg end)
+  "Execute region switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p t))
+    (py--execute-base beg end)))
+
+(defun py-execute-region-no-switch (beg end)
+  "Execute region no-switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p nil))
+    (py--execute-base beg end)))
+
+(defun py-execute-region-dedicated (beg end)
+  "Execute region dedicated. " 
+  (interactive "r")
+  (let ((py-dedicated-process-p t))
+    (py--execute-base beg end)))
+
+(defun py-execute-region-python (beg end)
+  "Execute region Python. " 
+  (interactive "r")
+  (py--execute-base beg end "python"))
+
+(defun py-execute-region-python-switch (beg end)
+  "Execute region Python switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p t))
+    (py--execute-base beg end "python")))
+
+(defun py-execute-region-python-no-switch (beg end)
+  "Execute region Python no-switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p nil))
+    (py--execute-base beg end "python")))
+
+(defun py-execute-region-python-dedicated (beg end)
+  "Execute region Python dedicated. " 
+  (interactive "r")
+  (let ((py-dedicated-process-p t))
+    (py--execute-base beg end "python")))
+
+(defun py-execute-region-python2 (beg end)
+  "Execute region Python2. " 
+  (interactive "r")
+  (py--execute-base beg end "python2"))
+
+(defun py-execute-region-python2-switch (beg end)
+  "Execute region Python2 switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p t))
+    (py--execute-base beg end "python2")))
+
+(defun py-execute-region-python2-no-switch (beg end)
+  "Execute region Python2 no-switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p nil))
+    (py--execute-base beg end "python2")))
+
+(defun py-execute-region-python2-dedicated (beg end)
+  "Execute region Python2 dedicated. " 
+  (interactive "r")
+  (let ((py-dedicated-process-p t))
+    (py--execute-base beg end "python2")))
+
+(defun py-execute-region-python3 (beg end)
+  "Execute region Python3. " 
+  (interactive "r")
+  (py--execute-base beg end "python3"))
+
+(defun py-execute-region-python3-switch (beg end)
+  "Execute region Python3 switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p t))
+    (py--execute-base beg end "python3")))
+
+(defun py-execute-region-python3-no-switch (beg end)
+  "Execute region Python3 no-switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p nil))
+    (py--execute-base beg end "python3")))
+
+(defun py-execute-region-python3-dedicated (beg end)
+  "Execute region Python3 dedicated. " 
+  (interactive "r")
+  (let ((py-dedicated-process-p t))
+    (py--execute-base beg end "python3")))
+
+(defun py-execute-region-ipython (beg end)
+  "Execute region IPython. " 
+  (interactive "r")
+  (py--execute-base beg end "ipython"))
+
+(defun py-execute-region-ipython-switch (beg end)
+  "Execute region IPython switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p t))
+    (py--execute-base beg end "ipython")))
+
+(defun py-execute-region-ipython-no-switch (beg end)
+  "Execute region IPython no-switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p nil))
+    (py--execute-base beg end "ipython")))
+
+(defun py-execute-region-ipython-dedicated (beg end)
+  "Execute region IPython dedicated. " 
+  (interactive "r")
+  (let ((py-dedicated-process-p t))
+    (py--execute-base beg end "ipython")))
+
+(defun py-execute-region-ipython2.7 (beg end)
+  "Execute region IPython2.7. " 
+  (interactive "r")
+  (py--execute-base beg end "ipython2.7"))
+
+(defun py-execute-region-ipython2.7-switch (beg end)
+  "Execute region IPython2.7 switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p t))
+    (py--execute-base beg end "ipython2.7")))
+
+(defun py-execute-region-ipython2.7-no-switch (beg end)
+  "Execute region IPython2.7 no-switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p nil))
+    (py--execute-base beg end "ipython2.7")))
+
+(defun py-execute-region-ipython2.7-dedicated (beg end)
+  "Execute region IPython2.7 dedicated. " 
+  (interactive "r")
+  (let ((py-dedicated-process-p t))
+    (py--execute-base beg end "ipython2.7")))
+
+(defun py-execute-region-ipython3 (beg end)
+  "Execute region IPython3. " 
+  (interactive "r")
+  (py--execute-base beg end "ipython3"))
+
+(defun py-execute-region-ipython3-switch (beg end)
+  "Execute region IPython3 switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p t))
+    (py--execute-base beg end "ipython3")))
+
+(defun py-execute-region-ipython3-no-switch (beg end)
+  "Execute region IPython3 no-switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p nil))
+    (py--execute-base beg end "ipython3")))
+
+(defun py-execute-region-ipython3-dedicated (beg end)
+  "Execute region IPython3 dedicated. " 
+  (interactive "r")
+  (let ((py-dedicated-process-p t))
+    (py--execute-base beg end "ipython3")))
+
+(defun py-execute-region-jython (beg end)
+  "Execute region Jython. " 
+  (interactive "r")
+  (py--execute-base beg end "jython"))
+
+(defun py-execute-region-jython-switch (beg end)
+  "Execute region Jython switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p t))
+    (py--execute-base beg end "jython")))
+
+(defun py-execute-region-jython-no-switch (beg end)
+  "Execute region Jython no-switch. " 
+  (interactive "r")
+  (let ((py-switch-buffers-on-execute-p nil))
+    (py--execute-base beg end "jython")))
+
+(defun py-execute-region-jython-dedicated (beg end)
+  "Execute region Jython dedicated. " 
+  (interactive "r")
+  (let ((py-dedicated-process-p t))
+    (py--execute-base beg end "jython")))
 
 ;; python-components-send
 (defun py-output-buffer-filter (&optional beg end)
@@ -8637,7 +8654,7 @@ in (I)Python shell-modes `py-shell-complete'"
 	 (py-indent-region (region-beginning) (region-end)))
 	((or (bolp)
 	     (member (char-before)(list 9 10 12 13 32))
-	     (and (not (eobp)) (not (member (char-after)(list 9 10 12 13 32)))))
+	     (not (eolp)))
 	 (py-indent-line))
 	((eq major-mode 'python-mode)
 	 (if (string-match "ipython" (py-choose-shell))
@@ -8864,8 +8881,8 @@ named for funcname or define a function funcname."
 
 (defun py-execute-region-pdb (beg end)
   (interactive "r")
-  (let ((py-python-command-args (list "-i" "-m" "pdb")))
-    (py-execute-region beg end)))
+  (let ((py-python-command-args "-i -m pdb")))
+    (py-execute-region beg end))
 
 (defun py-pdb-execute-statement ()
   (interactive)
@@ -11184,38 +11201,50 @@ With \\[universal-argument] \"#\" electric behavior is inhibited inside a string
 (defun py-electric-backspace (&optional arg)
   "Delete preceding character or level of indentation.
 
-With ARG do that ARG times.
+When `delete-active-region' and (region-active-p), delete region.
+
+Unless at indentation:
+  With `py-electric-kill-backward-p' delete whitespace before point.
+  With `py-electric-kill-backward-p' at end of a list, empty that list.
+
 Returns column reached. "
-  (interactive "*p")
-  (let ((arg (or arg 1))
-        erg)
-    (dotimes (i arg)
-      (cond ((looking-back "^[ \t]+")
-             (let* ((remains (% (current-column) py-indent-offset)))
-               (if (< 0 remains)
-                   (delete-char (- remains))
-                 (indent-line-to (- (current-indentation) py-indent-offset)))))
-            ((and py-electric-kill-backward-p (member (char-before) (list ?\) ?\] ?\})))
-                  (py-empty-out-list-backward))
-            (t (delete-char (- 1)))))
+  (interactive "p*")
+  (or arg (setq arg 1))
+  (let (erg)
+    (cond ((and (region-active-p)
+		;; Emacs23 doesn't know that var
+		(boundp 'delete-active-region) delete-active-region)
+	   (backward-delete-char-untabify arg))
+	  ;; (delete-region (region-beginning) (region-end)))
+	  ((looking-back "^[ \t]+")
+	   (let* ((remains (% (current-column) py-indent-offset)))
+	     (if (< 0 remains)
+		 (delete-char (- remains))
+	       (indent-line-to (- (current-indentation) py-indent-offset)))))
+	  ((and py-electric-kill-backward-p (member (char-before) (list ?\) ?\] ?\})))
+	   (py-empty-out-list-backward))
+	  ((and py-electric-kill-backward-p  (< 0 (setq erg (abs (skip-chars-backward " \t\r\n\f")))))
+	   (delete-region (point) (+ erg (point))))
+	  (t (delete-char (- 1))))
     (setq erg (current-column))
     (when (and (interactive-p) py-verbose-p) (message "%s" erg))
     erg))
 
-(defun py-electric-delete (&optional arg)
+(defun py-electric-delete ()
   "Delete following character or levels of whitespace.
 
-With ARG do that ARG times. "
-  (interactive "*p")
-  (let ((arg (or arg 1))
-	(orig (point))
-	delchars)
-    (dotimes (i arg)
-      (setq delchars 1)
-      (when (<= py-indent-offset (skip-chars-forward " \t"))
-	(setq delchars py-indent-offset))
-      (goto-char orig)
-      (delete-char delchars))))
+When `delete-active-region' and (region-active-p), delete region "
+  (interactive "*")
+  (let ((orig (point)))
+    (cond ((and (region-active-p)
+		;; Emacs23 doesn't know that var
+		(boundp 'delete-active-region) delete-active-region)
+	   (delete-region (region-beginning) (region-end)))
+	  ((and (< (current-column)(current-indentation)) (<= py-indent-offset (skip-chars-forward " \t")))
+	   (goto-char orig)
+	   (delete-char py-indent-offset))
+	  (t (skip-chars-forward " \t")
+	     (delete-region orig (point))))))
 
 (defun py-electric-yank (&optional arg)
   "Perform command `yank' followed by an `indent-according-to-mode' "
@@ -18564,8 +18593,8 @@ Use `py-fast-process' "
     (define-key map [(super backspace)] 'py-dedent)
     ;; (define-key map [(control return)] 'py-newline-and-dedent)
     ;; indentation level modifiers
-    (define-key map [(control c)(control l)] 'py-shift-left)
-    (define-key map [(control c)(control r)] 'py-shift-right)
+    (define-key map [(control c)(control l)] 'comint-dynamic-list-input-ring)
+    (define-key map [(control c)(control r)] 'comint-previous-prompt)
     (define-key map [(control c)(<)] 'py-shift-left)
     (define-key map [(control c)(>)] 'py-shift-right)
     (define-key map [(control c)(tab)] 'py-indent-region)
@@ -20238,7 +20267,6 @@ Returns position if successful, nil otherwise "
       (when (and py-verbose-p (interactive-p)) (message "%s" erg))
       erg)))
 
-(defalias 'py-end-of-top-level-bol 'py-end-of-top-level)
 (defun py-end-of-top-level ()
   "Go to end of top-level form at point.
 
@@ -25643,17 +25671,13 @@ See available customizations listed in files variables-python-mode at directory 
 				     (font-lock-syntactic-keywords
 				      . py-font-lock-syntactic-keywords))))
   ;; avoid to run py-choose-shell again from `py--fix-start'
-  (cond ((and (boundp 'py-buffer-name) py-buffer-name)
-	 (if (string-match "python3" py-buffer-name)
-	     (font-lock-add-keywords 'python-mode
-				     '(("\\<print\\>" . 'py-builtins-face)))
-	   '(("\\<print\\>" . 'font-lock-keyword-face))))
-	((string-match "python3" (py-choose-shell))
+  (cond ((string-match "ython3" py-python-edit-version)
 	 (font-lock-add-keywords 'python-mode
-				 '(("\\<print\\>" . 'py-builtins-face))))
+				 '(("\\<print\\>" . 'py-builtins-face)
+				   ("\\<file\\>" . nil))))
 	(t (font-lock-add-keywords 'python-mode
-				   '(("\\<print\\>" . 'font-lock-keyword-face)))))
-
+				   '(("\\<print\\>" . 'font-lock-keyword-face)
+				     ("\\<file\\>" . 'py-builtins-face)))))
   (set (make-local-variable 'which-func-functions) 'py-which-def-or-class)
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (set (make-local-variable 'parse-sexp-ignore-comments) t)

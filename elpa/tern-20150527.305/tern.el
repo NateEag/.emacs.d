@@ -3,7 +3,7 @@
 
 ;; Author: Marijn Haverbeke
 ;; URL: http://ternjs.net/
-;; Package-Version: 20150410.410
+;; Package-Version: 20150527.305
 ;; Version: 0.0.1
 ;; Package-Requires: ((json "1.2") (cl-lib "0.5") (emacs "24"))
 
@@ -385,7 +385,7 @@ list of strings, giving the binary name and arguments.")
 
 ;; Highlight references in scope
 
-(defvar tern-flash-timeout 0.5 "Delay before highlight overlay dissappears.")
+(defvar tern-flash-timeout 0.5 "Delay before the highlight overlay disappears.")
 
 (defun tern-flash-region (start end)
   "Temporarily highlight region from START to END."

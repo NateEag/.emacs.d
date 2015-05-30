@@ -668,7 +668,18 @@ MODES."
 
 ;;;###autoload
 (defun turn-on-smartparens-mode ()
-  "Turn on `smartparens-mode'."
+  "Turn on `smartparens-mode'.
+
+This function is used to turn on `smartparens-global-mode'.
+
+By default `smartparens-global-mode' ignores buffers with
+`mode-class' set to special, but only if they are also not comint
+buffers.
+
+Additionally, buffers on `sp-ignore-modes-list' are ignored.
+
+You can still turn on smartparens in these mode manually (or
+in mode's startup-hook etc.) by calling `smartparens-mode'."
   (interactive)
   (unless (or (member major-mode sp-ignore-modes-list)
               (and (not (derived-mode-p 'comint-mode))
@@ -1295,7 +1306,10 @@ of pairs and wraps.")
 
 ;; Please contribute these if you come across some!
 (defvar sp--special-self-insert-commands
-  '(TeX-insert-dollar)
+  '(
+    TeX-insert-dollar
+    TeX-insert-quote
+    )
    "List of commands which are handled as if they were `self-insert-command's.
 
 Some modes redefine \"self-inserting\" keys to \"smart\" versions
@@ -7385,9 +7399,10 @@ comment."
   "Insert the comment character and adjust hanging sexps such
   that it doesn't break structure."
   (interactive)
-  (if (sp-point-in-comment)
-      (when (= 1 (length (single-key-description last-command-event))) ;; pretty hacky
-        (insert (single-key-description last-command-event)))
+  (if (sp-point-in-string-or-comment)
+      (if (= 1 (length (single-key-description last-command-event))) ;; pretty hacky
+          (insert (single-key-description last-command-event))
+        (insert comment-start))
     (let ((old-point (point))
           (column (current-column))
           (indentation (sp--current-indentation))
@@ -7395,12 +7410,15 @@ comment."
           (hsexp (sp-get-hybrid-sexp))
           (newline-inserted 0))
       (goto-char (sp-get hsexp :end))
-      (if (sp--looking-at (sp--get-closing-regexp))
+      (if (and (sp--looking-at-p (concat "\\s-*" (sp--get-closing-regexp)))
+               (= old-line (line-number-at-pos)))
           (progn
+            (setq old-point (point))
             (newline)
             (setq newline-inserted (1+ (- (line-end-position) (point)))))
         (when (/= old-line (line-number-at-pos))
           (sp-backward-sexp)
+          (setq old-point (+ old-point (skip-syntax-backward " ")))
           (newline)
           (setq newline-inserted (- (line-end-position) (point)))))
       ;; @{ indenting madness
@@ -7410,6 +7428,9 @@ comment."
       ;; @}
       (let ((comment-delim (or (cdr (--first (memq major-mode (car it)) sp-comment-string))
                                comment-start)))
+        (when (and (/= 0 (current-column))
+                   (not (sp--looking-back-p "\\s-")))
+          (insert " "))
         (insert comment-delim)
         (when (/= newline-inserted 0)
           (save-excursion

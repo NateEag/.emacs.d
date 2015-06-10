@@ -2,6 +2,10 @@
  A decent guide can be found here:
  http://chrisdone.com/posts/emacs-mail
 
+-Take a look at firestarter as an easy way to set up post-save hooks.
+ Simpler alternative to file watchers, perhaps:
+ https://github.com/wasamasa/firestarter
+
 -Get ac-isearch working when auto-completion is active. I think my
  global-set-key of C-s to regex searching currently overrides it.
 

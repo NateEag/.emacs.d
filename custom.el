@@ -92,14 +92,19 @@
      (eval guess-style-guess-all)
      (eval highlight-regexp "^ *"))))
  '(scroll-bar-mode nil)
+ '(send-mail-function (quote smtpmail-send-it))
  '(sentence-end-double-space nil nil nil "I do not use double-spaces after sentences. Neither should you.")
  '(show-paren-mode t)
  '(smart-dash-c-modes
    (quote
     (c-mode c++-mode objc-mode php-mode web-mode js2-mode)))
+ '(smtpmail-smtp-server "smtp.gmail.com")
+ '(smtpmail-smtp-service 465)
+ '(smtpmail-stream-type (quote ssl))
  '(tab-width 4 nil nil "When a project prefers tabs, this is the width I usually see.")
  '(tool-bar-mode nil nil nil "The toolbar is an even more needless annoyance.")
  '(transient-mark-mode 1 nil nil "I like seeing my selections.")
+ '(user-mail-address "nate@nateeag.com")
  '(visible-bell t nil nil "STOP THE RINGING")
  '(yas-expand-only-for-last-commands
    (quote

@@ -49,6 +49,16 @@
  '(menu-bar-mode nil nil nil "I don't really use the menus, either.")
  '(mo-git-blame-git-blame-args "-M -C -w" nil nil "Follow movement in a file, look for movement between files in the same commit, and ignore whitespace changes.")
  '(multi-term-dedicated-window-height 24)
+ '(notmuch-saved-searches
+   (quote
+    ((:name "Third-party software" :query "tag:third-party-software" :sort-order newest-first)
+     (:name "inbox" :query "tag:inbox AND tag:unread" :key "i" :sort-order newest-first)
+     (:name "unread" :query "tag:unread" :key "u" :sort-order newest-first)
+     (:name "flagged" :query "tag:flagged" :key "f" :sort-order newest-first)
+     (:name "sent" :query "tag:sent" :key "t" :sort-order newest-first)
+     (:name "drafts" :query "tag:draft" :key "d" :sort-order newest-first)
+     (:name "all mail" :query "*" :key "a" :sort-order newest-first))))
+ '(notmuch-search-oldest-first nil)
  '(php-mode-coding-style (quote psr2) nil nil "PSR-2 is not ideal, but it's a standard.")
  '(require-final-newline t)
  '(safe-local-variable-values

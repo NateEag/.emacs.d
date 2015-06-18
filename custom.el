@@ -51,7 +51,8 @@
  '(multi-term-dedicated-window-height 24)
  '(notmuch-saved-searches
    (quote
-    ((:name "Third-party software" :query "tag:third-party-software" :sort-order newest-first)
+    ((:name "Learn Tech" :query "tag:learn-tech")
+     (:name "Third-party software" :query "tag:third-party-software" :sort-order newest-first)
      (:name "inbox" :query "tag:inbox AND tag:unread" :key "i" :sort-order newest-first)
      (:name "unread" :query "tag:unread" :key "u" :sort-order newest-first)
      (:name "flagged" :query "tag:flagged" :key "f" :sort-order newest-first)

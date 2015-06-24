@@ -12,6 +12,15 @@
 
 (require 'use-package)
 
+(use-package notmuch
+  :config
+  (progn
+    (define-key notmuch-search-mode-map "d"
+      (lambda (&optional beg end)
+        "mark message as deleted"
+        (interactive (notmuch-search-interactive-region))
+        (notmuch-search-tag (list "+deleted") beg end)))))
+
 (use-package uniquify
              :init
              (setq

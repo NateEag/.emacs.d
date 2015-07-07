@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "markdown-mode" "markdown-mode.el" (21865 2228
+;;;### (autoloads nil "markdown-mode" "markdown-mode.el" (21915 46154
 ;;;;;;  0 0))
 ;;; Generated autoloads from markdown-mode.el
 
@@ -16,7 +16,7 @@ Major mode for editing Markdown files.
 
 (add-to-list 'auto-mode-alist '("\\.text\\'" . markdown-mode))
 
-(add-to-list 'auto-mode-alist '("\\.md\\'" . gfm-mode))
+(add-to-list 'auto-mode-alist '("\\.md\\'" . markdown-mode))
 
 (autoload 'gfm-mode "markdown-mode" "\
 Major mode for editing GitHub Flavored Markdown files.

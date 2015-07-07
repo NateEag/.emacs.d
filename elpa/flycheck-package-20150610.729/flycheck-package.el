@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; Keywords: lisp
-;; Package-Version: 20150527.612
+;; Package-Version: 20150610.729
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (flycheck "0.22") (emacs "24"))
 
@@ -135,7 +135,8 @@ the form (PACKAGE-NAME PACKAGE-VERSION LINE-NO LINE-BEGINNING-OFFSET)."
                   (goto-char position)
                   (let ((line-start (line-beginning-position))
                         (pattern
-                         (format "( *\\(%s\\)\\(?:)\\|[^[:alnum:]_\\-].*?)\\)" package-name)))
+                         (format "( *\\(%s\\)\\(?:)\\|[^[:alnum:]_\\-].*?)\\)"
+                                 (regexp-quote (symbol-name package-name)))))
                     (if (re-search-forward pattern (line-end-position) t)
                         (- (1+ (match-beginning 1)) line-start)
                       1)))))

@@ -2,8 +2,8 @@
 
 ;; Copyright (C) 2013 by Shingo Fukuyama
 
-;; Version: 1.5.1
-;; Package-Version: 20150425.635
+;; Version: 1.6.0
+;; Package-Version: 20150704.839
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
 ;; Created: Oct 24 2013
@@ -171,6 +171,7 @@
     (set-keymap-parent $map helm-map)
     (define-key $map (kbd "C-c C-e") 'helm-swoop-edit)
     (define-key $map (kbd "M-i") 'helm-multi-swoop-all-from-helm-swoop)
+    (define-key $map (kbd "C-w") 'helm-swoop-yank-thing-at-point)
     (delq nil $map))
   "Keymap for helm-swoop")
 
@@ -227,8 +228,8 @@
 
 ;;;###autoload
 (defun helm-swoop-back-to-last-point (&optional $cancel)
-  (interactive)
   "Go back to last position where `helm-swoop' was called"
+  (interactive)
   (if helm-swoop-last-point
       (let (($po (point)))
         (switch-to-buffer (cdr helm-swoop-last-point))
@@ -535,6 +536,14 @@ If $linum is number, lines are separated by $linum"
   (if (boundp 'helm-swoop-list-cache) (setq helm-swoop-list-cache nil)))
 (add-hook 'after-save-hook 'helm-swoop--clear-cache)
 
+(defadvice narrow-to-region (around helm-swoop-advice-narrow-to-region activate)
+  (helm-swoop--clear-cache)
+  ad-do-it)
+
+(defadvice widen (around helm-swoop-advice-widen activate)
+  (helm-swoop--clear-cache)
+  ad-do-it)
+
 (defun helm-swoop--restore ()
   (when (= 1 helm-exit-status)
     (helm-swoop-back-to-last-point t)
@@ -566,10 +575,10 @@ If $linum is number, lines are separated by $linum"
 
 ;;;###autoload
 (cl-defun helm-swoop (&key $query $source ($multiline current-prefix-arg))
-  (interactive)
   "List the all lines to another buffer, which is able to squeeze by
  any words you input. At the same time, the original buffer's cursor
  is jumping line to line according to moving up and down the list."
+  (interactive)
   (setq helm-swoop-synchronizing-window (selected-window))
   (setq helm-swoop-last-point (cons (point) (buffer-name (current-buffer))))
   (setq helm-swoop-last-line-info
@@ -586,6 +595,7 @@ If $linum is number, lines are separated by $linum"
                        'helm-swoop-target-line-face))
   ;; Cache
   (cond ((not (boundp 'helm-swoop-cache))
+         ;; first time of a buffer
          (set (make-local-variable 'helm-swoop-cache) nil))
         ((buffer-modified-p)
          (setq helm-swoop-cache nil)))
@@ -678,6 +688,20 @@ If $linum is number, lines are separated by $linum"
     (helm-swoop)))
 ;; When doing evil-search, hand the word over to helm-swoop
 ;; (define-key evil-motion-state-map (kbd "M-i") 'helm-swoop-from-evil-search)
+
+;; Receive word from evil search ---------------
+(defun helm-swoop-yank-thing-at-point ()
+  "Insert string at which the point helm-swoop started."
+  (interactive)
+  (let ($amend)
+    (with-selected-window helm-swoop-synchronizing-window
+      (with-current-buffer (get-buffer (cdr helm-swoop-last-point))
+        (save-excursion
+          (goto-char (car helm-swoop-last-point))
+          (setq $amend (thing-at-point 'symbol)))))
+    (when $amend
+      (with-selected-window (minibuffer-window)
+        (insert $amend)))))
 
 ;; For helm-resume ------------------------
 (defadvice helm-resume-select-buffer
@@ -967,9 +991,9 @@ If $linum is number, lines are separated by $linum"
             (set-window-buffer nil $buf)
             (helm-swoop--pattern-match))
           (helm-swoop--goto-line $num)
-          (helm-multi-swoop--overlay-move $buf))
-        (setq helm-multi-swoop-move-line-action-last-buffer $buf)
-        (helm-swoop--recenter))
+          (helm-multi-swoop--overlay-move $buf)
+          (helm-swoop--recenter))
+        (setq helm-multi-swoop-move-line-action-last-buffer $buf))
       (setq helm-swoop-last-line-info (cons $buf $num)))))
 
 (defun helm-multi-swoop--get-marked-buffers ()
@@ -1136,7 +1160,6 @@ If $linum is number, lines are separated by $linum"
 
 ;;;###autoload
 (defun helm-multi-swoop (&optional $query $buflist)
-  (interactive)
   "\
 Usage:
 M-x helm-multi-swoop
@@ -1147,6 +1170,7 @@ C-u M-x helm-multi-swoop
 If you have done helm-multi-swoop before, you can skip select buffers step.
 Last selected buffers will be applied to helm-multi-swoop.
 "
+  (interactive)
   (cond ($query
          (setq helm-multi-swoop-query $query))
         (mark-active
@@ -1174,8 +1198,8 @@ Last selected buffers will be applied to helm-multi-swoop.
 
 ;;;###autoload
 (defun helm-multi-swoop-all (&optional $query)
-  (interactive)
   "Apply all buffers to helm-multi-swoop"
+  (interactive)
   (cond ($query
          (setq helm-multi-swoop-query $query))
         (mark-active
@@ -1192,6 +1216,50 @@ Last selected buffers will be applied to helm-multi-swoop.
   (helm-multi-swoop--exec nil
                           :$query helm-multi-swoop-query
                           :$buflist (helm-multi-swoop--get-buffer-list)))
+
+(defun get-buffers-matching-mode ($mode)
+  "Returns a list of buffers where their major-mode is equal to MODE"
+  (let ($buffer-mode-matches)
+    (mapc (lambda ($buffer)
+            (with-current-buffer $buffer
+              (if (eq $mode major-mode)
+                  (add-to-list '$buffer-mode-matches (buffer-name $buffer)))))
+          (buffer-list))
+    $buffer-mode-matches))
+
+(defun helm-multi-swoop-by-mode ($mode &optional $query)
+  "Apply all buffers whose mode is MODE to helm-multi-swoop"
+  (cond ($query
+         (setq helm-multi-swoop-query $query))
+        (mark-active
+         (let (($st (buffer-substring-no-properties
+                     (region-beginning) (region-end))))
+           (if (string-match "\n" $st)
+               (message "Multi line region is not allowed")
+             (setq helm-multi-swoop-query
+                   (helm-swoop-pre-input-optimize $st)))))
+        ((setq helm-multi-swoop-query
+               (helm-swoop-pre-input-optimize
+                (funcall helm-swoop-pre-input-function))))
+        (t (setq helm-multi-swoop-query "")))
+  (if (get-buffers-matching-mode $mode)
+      (helm-multi-swoop--exec nil
+                              :$query helm-multi-swoop-query
+                              :$buflist (get-buffers-matching-mode $mode))
+    (message "there are no buffers in that mode right now")))
+
+;;;###autoload
+(defun helm-multi-swoop-org (&optional $query)
+  "Applies all org-mode buffers to helm-multi-swoop"
+  (interactive)
+  (helm-multi-swoop-by-mode 'org-mode $query))
+
+;;;###autoload
+(defun helm-multi-swoop-current-mode (&optional $query)
+  "Applies all buffers of the same mode as the current buffer to helm-multi-swoop"
+  (interactive)
+  (helm-multi-swoop-by-mode major-mode $query))
+
 
 ;; option -------------------------------------------------------
 
@@ -1215,6 +1283,17 @@ Last selected buffers will be applied to helm-multi-swoop.
   (let (($query helm-pattern))
     (run-with-timer 0 nil (lambda () (helm-multi-swoop-all $query))))
   (helm-exit-minibuffer))
+
+(defun helm-multi-swoop-current-mode-from-helm-swoop ()
+  "Invoke `helm-multi-swoop-all' from helm-swoop."
+  (interactive)
+  (helm-swoop--restore)
+  (delete-overlay helm-swoop-line-overlay)
+  (setq helm-multi-swoop-all-from-helm-swoop-last-point helm-swoop-last-point)
+  (let (($query helm-pattern))
+    (run-with-timer 0 nil (lambda () (helm-multi-swoop-current-mode $query))))
+  (helm-exit-minibuffer))
+;; (define-key helm-swoop-map (kbd "M-m") 'helm-multi-swoop-current-mode-from-helm-swoop)
 
 (defadvice helm-resume (around helm-multi-swoop-resume activate)
   "Resume if the last used helm buffer is *Helm Swoop*"

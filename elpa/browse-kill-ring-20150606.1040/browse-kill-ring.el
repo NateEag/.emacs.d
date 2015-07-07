@@ -6,7 +6,7 @@
 ;; Maintainer: browse-kill-ring <browse-kill-ring@tonotdo.com>
 ;; Created: 7 Apr 2001
 ;; Version: 2.0.0
-;; Package-Version: 20150518.1312
+;; Package-Version: 20150606.1040
 ;; URL: https://github.com/browse-kill-ring/browse-kill-ring
 ;; Keywords: convenience
 
@@ -568,11 +568,11 @@ case retun nil."
   (interactive "p")
   (browse-kill-ring-forward (- arg)))
 
-(defun browse-kill-ring-read-regexp (msg)
+(defun browse-kill-ring-read-regexp (msg &optional empty-is-nil-p)
   (let* ((default (car regexp-history))
          (input
           (read-from-minibuffer
-           (if default
+           (if (and default (not empty-is-nil-p))
                (format "%s for regexp (default `%s'): "
                        msg
                        default)
@@ -580,9 +580,10 @@ case retun nil."
            nil
            nil
            nil
-           'regexp-history)))
+           'regexp-history
+           (if empty-is-nil-p default nil))))
     (if (equal input "")
-        default
+        (if empty-is-nil-p nil default)
       input)))
 
 (defun browse-kill-ring-search-forward (regexp &optional backwards)
@@ -854,8 +855,8 @@ reselects ENTRY in the `*Kill Ring*' buffer."
 (defun browse-kill-ring-occur (regexp)
   "Display all `kill-ring' entries matching REGEXP."
   (interactive
-   (list
-    (browse-kill-ring-read-regexp "Display kill ring entries matching")))
+   (list (browse-kill-ring-read-regexp
+          "Display kill ring entries matching" t)))
   (assert (eq major-mode 'browse-kill-ring-mode))
   (browse-kill-ring-setup (current-buffer)
                           browse-kill-ring-original-buffer
@@ -1080,8 +1081,9 @@ it's turned on."
             (set-buffer-modified-p nil)
             (goto-char (point-min))
             (browse-kill-ring-forward 0)
-            (when regexp
-              (setq mode-name (concat "Kill Ring [" regexp "]")))
+            (setq mode-name (if regexp
+                                (concat "Kill Ring [" regexp "]")
+                              "Kill Ring"))
             (run-hooks 'browse-kill-ring-hook)))
       (progn
         (setq buffer-read-only t)))))

@@ -3,8 +3,8 @@
 ;; Copyright (C) 2012-2014 Magnar Sveen
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
-;; Version: 2.10.0
-;; Package-Version: 20150513.1027
+;; Version: 2.11.0
+;; Package-Version: 20150704.253
 ;; Keywords: lists
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -134,7 +134,9 @@ item, etc. If LIST contains no items, return INITIAL-VALUE and
 FN is not called.
 
 In the anaphoric form `--reduce-from', the accumulated value is
-exposed as `acc`."
+exposed as `acc`.
+
+See also: `-reduce', `-reduce-r'"
   (--reduce-from (funcall fn acc it) initial-value list))
 
 (defmacro --reduce (form list)
@@ -154,7 +156,9 @@ reduce return the result of calling FN with no arguments. If
 LIST has only 1 item, it is returned and FN is not called.
 
 In the anaphoric form `--reduce', the accumulated value is
-exposed as `acc`."
+exposed as `acc`.
+
+See also: `-reduce-from', `-reduce-r'"
   (if list
       (-reduce-from fn (car list) (cdr list))
     (funcall fn)))
@@ -165,7 +169,9 @@ the resulting expression. If LIST is empty, INITIAL-VALUE is
 returned and FN is not called.
 
 Note: this function works the same as `-reduce-from' but the
-operation associates from right instead of from left."
+operation associates from right instead of from left.
+
+See also: `-reduce-r', `-reduce'"
   (if (not list) initial-value
     (funcall fn (car list) (-reduce-r-from fn initial-value (cdr list)))))
 
@@ -185,7 +191,9 @@ The first argument of FN is the new item, the second is the
 accumulated value.
 
 Note: this function works the same as `-reduce' but the operation
-associates from right instead of from left."
+associates from right instead of from left.
+
+See also: `-reduce-r-from', `-reduce'"
   (cond
    ((not list) (funcall fn))
    ((not (cdr list)) (car list))
@@ -1169,16 +1177,17 @@ second item in second form, etc."
                   (list form x)))
    (:else `(-> (-> ,x ,form) ,@more))))
 
-(defmacro ->> (x form &rest more)
+(defmacro ->> (x &optional form &rest more)
   "Thread the expr through the forms. Insert X as the last item
 in the first form, making a list of it if it is not a list
 already. If there are more forms, insert the first form as the
 last item in second form, etc."
-  (if (null more)
-      (if (listp form)
-          `(,(car form) ,@(cdr form) ,x)
-        (list form x))
-    `(->> (->> ,x ,form) ,@more)))
+  (cond
+   ((null form) x)
+   ((null more) (if (listp form)
+                    `(,@form ,x)
+                  (list form x)))
+   (:else `(->> (->> ,x ,form) ,@more))))
 
 (defmacro --> (x form &rest more)
   "Thread the expr through the forms. Insert X at the position
@@ -1666,7 +1675,9 @@ See `-let' for the description of destructuring mechanism."
 VARS and do THEN, otherwise do ELSE. VARS-VALS should be a list
 of (VAR VAL) pairs.
 
-Note: binding is done according to `-let*'."
+Note: binding is done according to `-let*'.  VALS are evaluated
+sequentially, and evaluation stops after the first nil VAL is
+encountered."
   (declare (debug ((&rest (sexp form)) form body))
            (indent 2))
   (->> vars-vals
@@ -1699,7 +1710,9 @@ otherwise do ELSE."
 VARS and execute body. VARS-VALS should be a list of (VAR VAL)
 pairs.
 
-Note: binding is done according to `-let*'."
+Note: binding is done according to `-let*'.  VALS are evaluated
+sequentially, and evaluation stops after the first nil VAL is
+encountered."
   (declare (debug ((&rest (sexp form)) body))
            (indent 1))
   `(-if-let* ,vars-vals (progn ,@body)))

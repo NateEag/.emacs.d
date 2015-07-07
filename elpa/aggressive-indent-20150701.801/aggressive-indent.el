@@ -4,7 +4,7 @@
 
 ;; Author: Artur Malabarba <emacs@endlessparentheses.com>
 ;; URL: http://github.com/Malabarba/aggressive-indent-mode
-;; Package-Version: 20150516.238
+;; Package-Version: 20150701.801
 ;; Version: 1.1
 ;; Package-Requires: ((emacs "24.1") (names "20150125.9") (cl-lib "0.5"))
 ;; Keywords: indent lisp maint tools
@@ -19,7 +19,7 @@
 ;; to go wrong.
 ;;
 ;; `aggressive-indent-mode' is a minor mode that keeps your code always
-;; indented.  It reindents after every command, making it more reliable
+;; indented.  It reindents after every change, making it more reliable
 ;; than `electric-indent-mode'.
 ;;
 ;; ### Instructions ###
@@ -174,7 +174,15 @@ commands will NOT be followed by a re-indent."
     buffer-read-only
     (null (buffer-modified-p))
     (and (boundp 'smerge-mode) smerge-mode)
-    (string-match "\\`[[:blank:]]*\n?\\'" (or (thing-at-point 'line) ""))
+    (let ((line (thing-at-point 'line)))
+      (when (stringp line)
+        (or (string-match "\\`[[:blank:]]*\n?\\'" line)
+            ;; If the user is starting to type a comment.
+            (and (stringp comment-start)
+                 (string-match (concat "\\`[[:blank:]]*"
+                                       (substring comment-start 0 1)
+                                       "[[:blank:]]*$")
+                               line)))))
     (let ((sp (syntax-ppss)))
       ;; Comments.
       (or (and (not aggressive-indent-comments-too) (elt sp 4))

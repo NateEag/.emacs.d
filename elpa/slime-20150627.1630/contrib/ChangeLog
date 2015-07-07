@@ -1,3 +1,22 @@
+2015-06-14  Luís Oliveira  <loliveira@common-lisp.net>
+
+	Fix github issue #249 reported by egarrulo.
+
+	* slime-autodoc.el (slime-fontify-string): Obsolete function
+	alias for slime-autdoc--fontify.
+
+2015-06-13  Luís Oliveira  <loliveira@common-lisp.net>
+
+	Fix github issue #248 reported by egarrulo.
+
+	* slime-asdf.el (slime-find-asd-file): Use cl-return rather than
+	return since, in recent versions of Emacs, the latter does not see
+	the cl-block established by cl-loop.
+
+2015-06-01  Luís Oliveira  <loliveira@common-lisp.net>
+
+	* slime-fancy.el (slime-fancy): Depend on slime-mdot-fu.
+
 2015-05-27  Luís Oliveira  <loliveira@common-lisp.net>
 
 	* swank-c-p-c.lisp (completion-output-case-converter): Take a

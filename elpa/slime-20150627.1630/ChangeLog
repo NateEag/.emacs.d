@@ -1,3 +1,28 @@
+2015-06-27  Stas Boukarev  <stassats@gmail.com>
+
+	* swank.lisp (*pre-reply-hook*): Don't add
+	sync-indentation-to-emacs on CLASP, it takes too much time.
+
+	* swank/clasp.lisp (assert-source-directory): Uses the SYS logical
+	host, not SRC.
+
+2015-06-24  Angelo Rossi  <angelo.rossi.homelab@gmail.com>
+
+	* swank-loader.lisp (*architecture-features*): Add :mips and
+	:mipsel.
+
+2015-06-23  Christian Schafmeister  <chris.schaf@verizon.net>
+
+	* swank/clasp.lisp: Made it compatible with the upcoming
+	release of clasp and this breaks compatibility with the
+	current "master" release of clasp. Moved some symbols
+	(core:chdir -> ext:chdir).
+
+2015-06-01  Luís Oliveira  <loliveira@common-lisp.net>
+
+	* swank/sbcl.lisp: Added workaround for a bug in SBCL 1.2.12's
+	SB-EXT:RESTRICT-COMPILER-POLICY. Courtesy of Stas Boukarev.
+
 2015-05-20  Helmut Eller  <heller@common-lisp.net>
 
 	* slime.el (slime-xref-mode-map): Bind . and , for compatibility.

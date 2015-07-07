@@ -3,7 +3,7 @@
 
 ;; Author:  <m.sakurai at kiwanami.net>
 ;; Version: 0.0.1
-;; Package-Version: 20150429.435
+;; Package-Version: 20150611.639
 ;; Package-Requires: ((tern "0.0.1") (auto-complete "1.4") (cl-lib "0.5") (emacs "24"))
 
 ;;; Commentary:
@@ -37,6 +37,16 @@
   "[AC] If t, tern enable completion by auto-completion."
   :type 'boolean
   :group 'auto-complete)
+
+(defcustom tern-ac-sync t
+  "[AC] If t, auto-complete will wait for tern canditates before starting.
+This enables tern canditates to integrate automatically in auto-complete without
+the need for a separate keybinding.
+
+Remember to add ac-source-tern-completion to ac-sources."
+  :type 'boolean
+  :group 'auto-complete)
+
 
 (defvar tern-ac-complete-reply nil  "[internal] tern-ac-complete-reply.")
 
@@ -111,6 +121,17 @@
   (if tern-ac-on-dot
       (define-key tern-mode-keymap "." 'tern-ac-dot-complete)
     (define-key tern-mode-keymap "." nil)))
+
+(defvar tern-ac-js-major-modes '(js2-mode js-mode javascript-mode))
+
+(defadvice auto-complete (around add-tern-ac-candidates first activate)
+  "Load tern-js canditates before ac-start."
+  (if (and tern-ac-sync
+           (memq major-mode tern-ac-js-major-modes)
+           (not (or (ac-menu-live-p) (ac-inline-live-p))))
+      (tern-ac-complete-request
+       'auto-complete-1)
+    ad-do-it))
 
 
 (provide 'tern-auto-complete)

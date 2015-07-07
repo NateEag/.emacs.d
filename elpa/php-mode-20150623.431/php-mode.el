@@ -6,13 +6,13 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Package-Version: 20150528.1916
-;;; Version: 1.16.0
+;; Package-Version: 20150623.431
+;;; Version: 1.17.0
 
-(defconst php-mode-version-number "1.16.0"
+(defconst php-mode-version-number "1.17.0"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2015-05-28"
+(defconst php-mode-modified "2015-06-23"
   "PHP Mode build date.")
 
 ;;; License
@@ -1480,9 +1480,10 @@ The output will appear in the buffer *PHP*."
 
 (defun php-string-intepolated-variable-font-lock-find (limit)
   (while (re-search-forward php-string-interpolated-variable-regexp limit t)
-    (when (php-in-string-p)
-      (put-text-property (match-beginning 0) (match-end 0)
-                         'face 'font-lock-variable-name-face)))
+    (let ((quoted-stuff (nth 3 (syntax-ppss))))
+      (when (and quoted-stuff (member quoted-stuff '(?\" ?`)))
+        (put-text-property (match-beginning 0) (match-end 0)
+                           'face 'font-lock-variable-name-face))))
   nil)
 
 (eval-after-load 'php-mode
@@ -1534,3 +1535,7 @@ The output will appear in the buffer *PHP*."
 (provide 'php-mode)
 
 ;;; php-mode.el ends here
+
+;; Local Variables:
+;; firestarter: ert-run-tests-interactively
+;; End:

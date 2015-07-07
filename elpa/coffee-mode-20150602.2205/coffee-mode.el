@@ -3,7 +3,7 @@
 ;; Copyright (C) 2010 Chris Wanstrath
 
 ;; Version: 0.6.0
-;; Package-Version: 20150528.445
+;; Package-Version: 20150602.2205
 ;; Keywords: CoffeeScript major mode
 ;; Author: Chris Wanstrath <chris@ozmm.org>
 ;; URL: http://github.com/defunkt/coffee-mode
@@ -1180,7 +1180,6 @@ comments such as the following:
 
   ;; single quote strings
   (modify-syntax-entry ?' "\"" coffee-mode-syntax-table)
-  (modify-syntax-entry ?` "\"" coffee-mode-syntax-table)
 
   ;; indentation
   (make-local-variable 'coffee-tab-width)

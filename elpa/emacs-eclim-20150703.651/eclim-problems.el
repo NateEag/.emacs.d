@@ -1,3 +1,5 @@
+(require 'popup)
+
 (defgroup eclim-problems nil
   "Problems: settings for displaying the problems buffer and highlighting errors in code."
   :group 'eclim)
@@ -193,9 +195,9 @@
   (interactive)
   (let* ((p (eclim--problems-get-current-problem)))
     (funcall (if same-window
-         'find-file
-       'find-file-other-window)
-     (assoc-default 'filename p))
+                 'find-file
+               'find-file-other-window)
+             (assoc-default 'filename p))
     (eclim--problem-goto-pos p)))
 
 (defun eclim-problems-correct ()
@@ -347,7 +349,7 @@ create and initialize a new buffer."
           (setq eclim--problems-file buffer-file-name)
           (set-buffer buf)
           (eclim--problems-mode)
-                                        ;(eclim-problems-buffer-refresh)
+          ;;(eclim-problems-buffer-refresh)
           (goto-char (point-min))))))
 
 (defun eclim--problems-mode-init (&optional quiet)

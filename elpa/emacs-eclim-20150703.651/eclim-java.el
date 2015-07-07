@@ -147,12 +147,12 @@ in eclim when appropriate."
              str)))))
 
 (defun eclim--java-parse-method-signature (signature)
-  (flet ((parser3/parse-arg (arg)
-                            (let ((arg-rev (reverse arg)))
-                              (cond ((null arg) nil)
-                                    ((= (length arg) 1) (list (list :type (first arg))))
-                                    ((listp (first arg-rev)) (list (cons :type arg)))
-                                    (t (list (cons :name (first arg-rev)) (cons :type (reverse (rest arg-rev)))))))))
+  (cl-flet ((parser3/parse-arg (arg)
+                               (let ((arg-rev (reverse arg)))
+                                 (cond ((null arg) nil)
+                                       ((= (length arg) 1) (list (list :type (first arg))))
+                                       ((listp (first arg-rev)) (list (cons :type arg)))
+                                       (t (list (cons :name (first arg-rev)) (cons :type (reverse (rest arg-rev)))))))))
     (let ((ast (reverse (eclim--java-parser-read signature))))
       (list (cons :arglist (mapcar #'parser3/parse-arg (first ast)))
             (cons :name (second ast))
@@ -271,7 +271,7 @@ has been found."
   (let ((boundary "\\([<>()\\[\\.\s\t\n!=,;]\\|]\\)"))
     (save-excursion
       (if (re-search-backward boundary nil t)
-        (forward-char))
+          (forward-char))
       (let ((top-node (eclim/java-call-hierarchy project file (eclim--byte-offset)
                                                  (length (cdr (eclim--java-identifier-at-point t))) encoding)))
         (pop-to-buffer "*eclim: call hierarchy*" t)
@@ -287,11 +287,11 @@ has been found."
     (insert (format (concat "%-"(number-to-string (* level 2)) "s=> ") ""))
     (lexical-let ((position (cdr (assoc 'position node))))
       (if position
-        (insert-text-button declaration
-                            'follow-link t
-                            'help-echo declaration
-                            'action #'(lambda (&rest ignore)
-                                        (eclim--visit-declaration position)))
+          (insert-text-button declaration
+                              'follow-link t
+                              'help-echo declaration
+                              'action #'(lambda (&rest ignore)
+                                          (eclim--visit-declaration position)))
         (insert declaration)))
     (newline)
     (loop for caller across (cdr (assoc 'callers node))
@@ -425,23 +425,23 @@ matters for buffers containing non-ASCII characters)."
 imports section of a java source file. This will preserve the
 undo history."
   (interactive)
-  (flet ((cut-imports ()
-                      (beginning-of-buffer)
-                      (if (re-search-forward "^import" nil t)
-                          (progn
-                            (beginning-of-line)
-                            (let ((beg (point)))
-                              (end-of-buffer)
-                              (re-search-backward "^import")
-                              (end-of-line)
-                              (let ((imports (buffer-substring-no-properties beg (point))))
-                                (delete-region beg (point))
-                                imports)))
-                        (progn
-                          (forward-line 1)
-                          (delete-blank-lines)
-                          (insert "\n\n\n")
-                          (forward-line -2)))))
+  (cl-flet ((cut-imports ()
+                         (beginning-of-buffer)
+                         (if (re-search-forward "^import" nil t)
+                             (progn
+                               (beginning-of-line)
+                               (let ((beg (point)))
+                                 (end-of-buffer)
+                                 (re-search-backward "^import")
+                                 (end-of-line)
+                                 (let ((imports (buffer-substring-no-properties beg (point))))
+                                   (delete-region beg (point))
+                                   imports)))
+                           (progn
+                             (forward-line 1)
+                             (delete-blank-lines)
+                             (insert "\n\n\n")
+                             (forward-line -2)))))
     (save-excursion
       (clear-visited-file-modtime)
       (cut-imports)
@@ -482,7 +482,7 @@ sorts import statements. "
   (cond ((null type) nil)
         ((listp (first type))
          (append (list "<") (rest (mapcan (lambda (type) (append (list ", ") (format-type type))) (first type))) (list ">")
-               (format-type (rest type))))
+                 (format-type (rest type))))
         (t (cons (let ((type-name (symbol-name (first type))))
                    (when (string-match "\\(.*\\.\\)?\\(.*\\)" type-name)
                      (match-string 2 type-name)))
@@ -494,22 +494,22 @@ implemnt/override, then inserts a skeleton for the chosen
 method."
   (interactive)
   (eclim/with-results response ("java_impl" "-p" "-f" "-o")
-    (flet ((join (glue items)
-                 (cond ((null items) "")
-                       ((= 1 (length items)) (format "%s" (first items)))
-                       (t (reduce (lambda (a b) (format "%s%s%s" a glue b)) items))))
-           (format-type (type)
-                        (cond ((null type) nil)
-                              ((listp (first type))
-                               (append (list "<") (rest (mapcan (lambda (type) (append (list ", ") (format-type type))) (first type))) (list ">")
-                                       (format-type (rest type))))
-                              (t (cons (let ((type-name (symbol-name (first type))))
-                                         (when (string-match "\\(.*\\.\\)?\\(.*\\)" type-name)
-                                           (let ((package (match-string 1 type-name))
-                                                 (class (match-string 2 type-name)))
-                                             (eclim-java-import (concat package class))
-                                             class)))
-                                       (format-type (rest type)))))))
+    (cl-flet ((join (glue items)
+                    (cond ((null items) "")
+                          ((= 1 (length items)) (format "%s" (first items)))
+                          (t (reduce (lambda (a b) (format "%s%s%s" a glue b)) items))))
+              (format-type (type)
+                           (cond ((null type) nil)
+                                 ((listp (first type))
+                                  (append (list "<") (rest (mapcan (lambda (type) (append (list ", ") (format-type type))) (first type))) (list ">")
+                                          (format-type (rest type))))
+                                 (t (cons (let ((type-name (symbol-name (first type))))
+                                            (when (string-match "\\(.*\\.\\)?\\(.*\\)" type-name)
+                                              (let ((package (match-string 1 type-name))
+                                                    (class (match-string 2 type-name)))
+                                                (eclim-java-import (concat package class))
+                                                class)))
+                                          (format-type (rest type)))))))
       (let* ((methods (remove-if-not (lambda (m) (or (null name)
                                                      (string-match name m)))
                                      (mapcar (lambda (x) (replace-regexp-in-string "[ \n\t]+" " " x))
@@ -544,8 +544,27 @@ method."
     (compile (concat eclim-executable " -command java -p "  eclim--project-name
                      " -c " (eclim-package-and-class)))))
 
+(defun eclim--java-junit-file (project file offset encoding)
+     (concat eclim-executable
+             " -command java_junit -p " project
+             " -f " file
+             " -o " (number-to-string offset)
+             " -e " encoding))
+
+(defun eclim--java-junit-project (project endcoding)
+     (concat eclim-executable
+             " -command java_junit -p " project
+             " -e " encoding))
+
+(defun eclim--buffer-contains-substring (string)
+  (save-excursion
+    (save-match-data
+      (goto-char (point-min))
+      (search-forward string nil t))))
+
 (defun eclim-run-junit (project file offset encoding)
-  "Run the current JUnit class or method at point.
+  "Run the current JUnit tests for current project or
+current class or current method.
 
 This method hooks onto the running Eclipse process and is thus
 much faster than running mvn test -Dtest=TestClass#method."
@@ -555,12 +574,9 @@ much faster than running mvn test -Dtest=TestClass#method."
                      (eclim--current-encoding)))
   (if (not (string= major-mode "java-mode"))
       (message "Running JUnit tests only makes sense for Java buffers.")
-    (compile
-     (concat eclim-executable
-             " -command java_junit -p " project
-             " -f " file
-             " -o " (number-to-string offset)
-             " -e " encoding))))
+    (compile (if (eclim--buffer-contains-substring "@Test")
+                 (eclim--java-junit-file project file offset encoding)
+               (eclim--java-junit-project project encoding)))))
 
 (defun eclim-java-correct (line offset)
   (eclim/with-results correction-info ("java_correct" "-p" "-f" ("-l" line) ("-o" offset))

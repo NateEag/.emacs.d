@@ -1,10 +1,10 @@
 ;;; let-alist.el --- Easily let-bind values of an assoc-list by their names -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2014 Free Software Foundation, Inc.
+;; Copyright (C) 2014-2015 Free Software Foundation, Inc.
 
 ;; Author: Artur Malabarba <bruce.connor.am@gmail.com>
 ;; Maintainer: Artur Malabarba <bruce.connor.am@gmail.com>
-;; Version: 1.0.3
+;; Version: 1.0.4
 ;; Keywords: extensions lisp
 ;; Prefix: let-alist
 ;; Separator: -
@@ -72,12 +72,12 @@ symbol, and each cdr is the same symbol without the `.'."
         ;; Return the cons cell inside a list, so it can be appended
         ;; with other results in the clause below.
         (list (cons data (intern (replace-match "" nil nil name)))))))
-   ((not (listp data)) nil)
-   (t (apply #'append
-        (mapcar #'let-alist--deep-dot-search data)))))
+   ((not (consp data)) nil)
+   (t (append (let-alist--deep-dot-search (car data))
+              (let-alist--deep-dot-search (cdr data))))))
 
 (defun let-alist--access-sexp (symbol variable)
-  "Return a sexp used to acess SYMBOL inside VARIABLE."
+  "Return a sexp used to access SYMBOL inside VARIABLE."
   (let* ((clean (let-alist--remove-dot symbol))
          (name (symbol-name clean)))
     (if (string-match "\\`\\." name)
@@ -139,6 +139,14 @@ displayed in the example above."
 
 ;;;; ChangeLog:
 
+;; 2015-06-11  Artur Malabarba  <bruce.connor.am@gmail.com>
+;; 
+;; 	* let-alist (let-alist--deep-dot-search): Fix cons
+;; 
+;; 2015-03-07  Artur Malabarba  <bruce.connor.am@gmail.com>
+;; 
+;; 	let-alist: Update copyright
+;; 
 ;; 2014-12-22  Artur Malabarba  <bruce.connor.am@gmail.com>
 ;; 
 ;; 	packages/let-alist: Use `make-symbol' instead of `gensym'.

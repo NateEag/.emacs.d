@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.1.6
+;; Version: 1.2.1
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -192,6 +192,12 @@ moves the cursor."
 
 (defcustom evil-move-cursor-back t
   "Whether the cursor is moved backwards when exiting Insert state."
+  :type 'boolean
+  :group 'evil)
+
+(defcustom evil-move-beyond-eol nil
+  "Whether the cursor is allowed to move past the last character of \
+a line."
   :type 'boolean
   :group 'evil)
 
@@ -567,6 +573,7 @@ If STATE is nil, Evil is disabled in the buffer."
     gdb-registers-mode
     gdb-threads-mode
     gist-list-mode
+    git-commit-mode
     gnus-article-mode
     gnus-browse-mode
     gnus-group-mode
@@ -575,18 +582,27 @@ If STATE is nil, Evil is disabled in the buffer."
     google-maps-static-mode
     ibuffer-mode
     jde-javadoc-checker-report-mode
-    magit-commit-mode
+    magit-cherry-mode
     magit-diff-mode
-    magit-key-mode
     magit-log-mode
-    magit-mode
-    magit-reflog-mode
-    magit-show-branches-mode
-    magit-branch-manager-mode ;; New name for magit-show-branches-mode
-    magit-stash-mode
-    magit-status-mode
-    magit-wazzup-mode
+    magit-log-select-mode
+    magit-popup-mode
+    magit-popup-sequence-mode
     magit-process-mode
+    magit-reflog-mode
+    magit-refs-mode
+    magit-revision-mode
+    magit-stash-mode
+    magit-stashes-mode
+    magit-status-mode
+    ;; Obsolete as of Magit v2.1.0
+    magit-mode
+    magit-branch-manager-mode
+    magit-commit-mode
+    magit-key-mode
+    magit-rebase-mode
+    magit-wazzup-mode
+    ;; end obsolete
     mh-folder-mode
     monky-mode
     mu4e-main-mode
@@ -1689,7 +1705,7 @@ Otherwise the previous command is assumed as substitute.")
           (goto-char (point-min))
           (buffer-substring (point-min) (line-end-position)))
          ;; no repo, use plain version
-         (t "1.1.6")))))
+         (t "1.2.1")))))
   "The current version of Evil")
 
 (defun evil-version ()

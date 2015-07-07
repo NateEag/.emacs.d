@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.1.6
+;; Version: 1.2.1
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -317,7 +317,8 @@ activated."
  ((version< emacs-version "25")
   (defadvice preceding-sexp (around evil activate)
     "In normal-state or motion-state, last sexp ends at point."
-    (if (or (evil-normal-state-p) (evil-motion-state-p))
+    (if (and (not evil-move-beyond-eol)
+             (or (evil-normal-state-p) (evil-motion-state-p)))
         (save-excursion
           (unless (or (eobp) (eolp)) (forward-char))
           ad-do-it)
@@ -325,7 +326,8 @@ activated."
 
   (defadvice pp-last-sexp (around evil activate)
     "In normal-state or motion-state, last sexp ends at point."
-    (if (or (evil-normal-state-p) (evil-motion-state-p))
+    (if (and (not evil-move-beyond-eol)
+             (or (evil-normal-state-p) (evil-motion-state-p)))
         (save-excursion
           (unless (or (eobp) (eolp)) (forward-char))
           ad-do-it)
@@ -333,7 +335,8 @@ activated."
  (t
   (defun evil--preceding-sexp (command &rest args)
     "In normal-state or motion-state, last sexp ends at point."
-    (if (or (evil-normal-state-p) (evil-motion-state-p))
+    (if (and (not evil-move-beyond-eol)
+             (or (evil-normal-state-p) (evil-motion-state-p)))
         (save-excursion
           (unless (or (eobp) (eolp)) (forward-char))
           (apply command args))

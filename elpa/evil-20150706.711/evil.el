@@ -11,6 +11,7 @@
 ;;      Frank Terbeck <ft at bewatermyfriend.org>
 ;;      Gordon Gustafson <gordon3.14 at gmail.com>
 ;;      Herbert Jones <jones.herbert at gmail.com>
+;;      Jonas Bernoulli <jonas at bernoul.li>
 ;;      Jonathan Claggett <jclaggett at lonocloud.com>
 ;;      José A. Romero L. <escherdragon at gmail.com>
 ;;      Lars Andersen <expez at expez.com>
@@ -43,7 +44,7 @@
 ;;      To get in touch, please use the bug tracker or the
 ;;      mailing list (see below).
 ;; Created: 2011-03-01
-;; Version: 1.1.6
+;; Version: 1.2.1
 ;; Keywords: emulation, vim
 ;; URL: http://gitorious.org/evil
 ;;      Repository: git://gitorious.org/evil/evil.git

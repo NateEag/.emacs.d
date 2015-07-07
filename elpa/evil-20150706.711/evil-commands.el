@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.1.6
+;; Version: 1.2.1
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -1491,6 +1491,19 @@ but doesn't insert or remove any spaces."
       (indent-according-to-mode)
     (goto-char beg)
     (indent-region beg end))
+  ;; We also need to tabify or untabify the leading white characters
+  (let* ((beg-line (line-number-at-pos beg))
+         (end-line (line-number-at-pos end))
+         (ln beg-line)
+         (convert-white (if indent-tabs-mode 'tabify 'untabify)))
+    (save-excursion
+      (while (<= ln end-line)
+        (goto-char (point-min))
+        (forward-line (- ln 1))
+        (back-to-indentation)
+        ;; Whether tab or space should be used is determined by indent-tabs-mode
+        (funcall convert-white (line-beginning-position) (point))
+        (setq ln (1+ ln)))))
   (back-to-indentation))
 
 (evil-define-operator evil-indent-line (beg end)
@@ -3669,15 +3682,16 @@ If ARG is empty, maximize the current window height."
 and redisplays the current buffer there."
   :repeat nil
   (unless (one-window-p)
-    (let ((b (current-buffer)))
-      (delete-window)
-      (let ((btree (evil-get-buffer-tree (car (window-tree)))))
-        (delete-other-windows)
-        (let ((newwin (selected-window))
-              (subwin (split-window)))
-          (evil-restore-window-tree subwin btree)
-          (set-window-buffer newwin b)
-          (select-window newwin))))
+    (save-excursion
+      (let ((b (current-buffer)))
+        (delete-window)
+        (let ((btree (evil-get-buffer-tree (car (window-tree)))))
+          (delete-other-windows)
+          (let ((newwin (selected-window))
+                (subwin (split-window)))
+            (evil-restore-window-tree subwin btree)
+            (set-window-buffer newwin b)
+            (select-window newwin)))))
     (balance-windows)))
 
 (evil-define-command evil-window-move-far-left ()
@@ -3685,15 +3699,16 @@ and redisplays the current buffer there."
 and redisplays the current buffer there."
   :repeat nil
   (unless (one-window-p)
-    (let ((b (current-buffer)))
-      (delete-window)
-      (let ((btree (evil-get-buffer-tree (car (window-tree)))))
-        (delete-other-windows)
-        (let ((newwin (selected-window))
-              (subwin (split-window-horizontally)))
-          (evil-restore-window-tree subwin btree)
-          (set-window-buffer newwin b)
-          (select-window newwin))))
+    (save-excursion
+      (let ((b (current-buffer)))
+        (delete-window)
+        (let ((btree (evil-get-buffer-tree (car (window-tree)))))
+          (delete-other-windows)
+          (let ((newwin (selected-window))
+                (subwin (split-window-horizontally)))
+            (evil-restore-window-tree subwin btree)
+            (set-window-buffer newwin b)
+            (select-window newwin)))))
     (balance-windows)))
 
 (evil-define-command evil-window-move-far-right ()
@@ -3701,15 +3716,16 @@ and redisplays the current buffer there."
 and redisplays the current buffer there."
   :repeat nil
   (unless (one-window-p)
-    (let ((b (current-buffer)))
-      (delete-window)
-      (let ((btree (evil-get-buffer-tree (car (window-tree)))))
-        (delete-other-windows)
-        (let ((subwin (selected-window))
-              (newwin (split-window-horizontally)))
-          (evil-restore-window-tree subwin btree)
-          (set-window-buffer newwin b)
-          (select-window newwin))))
+    (save-excursion
+      (let ((b (current-buffer)))
+        (delete-window)
+        (let ((btree (evil-get-buffer-tree (car (window-tree)))))
+          (delete-other-windows)
+          (let ((subwin (selected-window))
+                (newwin (split-window-horizontally)))
+            (evil-restore-window-tree subwin btree)
+            (set-window-buffer newwin b)
+            (select-window newwin)))))
     (balance-windows)))
 
 (evil-define-command evil-window-move-very-bottom ()
@@ -3717,15 +3733,16 @@ and redisplays the current buffer there."
 and redisplays the current buffer there."
   :repeat nil
   (unless (one-window-p)
-    (let ((b (current-buffer)))
-      (delete-window)
-      (let ((btree (evil-get-buffer-tree (car (window-tree)))))
-        (delete-other-windows)
-        (let ((subwin (selected-window))
-              (newwin (split-window)))
-          (evil-restore-window-tree subwin btree)
-          (set-window-buffer newwin b)
-          (select-window newwin))))
+    (save-excursion
+      (let ((b (current-buffer)))
+        (delete-window)
+        (let ((btree (evil-get-buffer-tree (car (window-tree)))))
+          (delete-other-windows)
+          (let ((subwin (selected-window))
+                (newwin (split-window)))
+            (evil-restore-window-tree subwin btree)
+            (set-window-buffer newwin b)
+            (select-window newwin)))))
     (balance-windows)))
 
 ;;; Mouse handling

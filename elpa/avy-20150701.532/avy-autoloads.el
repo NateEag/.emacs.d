@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "avy" "avy.el" (21865 2067 0 0))
+;;;### (autoloads nil "avy" "avy.el" (21915 45871 0 0))
 ;;; Generated autoloads from avy.el
 
 (autoload 'avy-goto-char "avy" "\
@@ -14,9 +14,8 @@ The window scope is determined by `avy-all-windows' (ARG negates it).
 
 (autoload 'avy-goto-char-in-line "avy" "\
 Jump to the currently visible CHAR in the current line.
-The window scope is determined by `avy-all-windows' (ARG negates it).
 
-\(fn CHAR &optional ARG)" t nil)
+\(fn CHAR)" t nil)
 
 (autoload 'avy-goto-char-2 "avy" "\
 Jump to the currently visible CHAR1 followed by CHAR2.

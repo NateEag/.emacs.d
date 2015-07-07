@@ -4,8 +4,8 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/avy
-;; Package-Version: 20150526.759
-;; Version: 0.2.1
+;; Package-Version: 20150701.532
+;; Version: 0.3.0
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: point, location
 
@@ -76,7 +76,7 @@
                      (const avy-move-line))
           :value-type (repeat :tag "Keys" character)))
 
-(defcustom avy-style 'pre
+(defcustom avy-style 'at-full
   "The default method of displaying the overlays.
 Use `avy-styles-alist' to customize this per-command."
   :type '(choice
@@ -106,7 +106,8 @@ If the commands isn't on the list, `avy-style' is used."
                        (const :tag "Pre" pre)
                        (const :tag "At" at)
                        (const :tag "At Full" at-full)
-                       (const :tag "Post" post))))
+                       (const :tag "Post" post)
+                       (const :tag "De Bruijn" de-bruijn))))
 
 (defcustom avy-background nil
   "When non-nil, a gray background will be added during the selection."
@@ -131,6 +132,15 @@ When nil, punctuation chars will not be matched.
 \"[!-/:-@[-`{-~]\" will match all printable punctuation chars."
   :type 'regexp)
 
+(defcustom avy-ignored-modes '(image-mode doc-view-mode pdf-view-mode)
+  "List of modes to ignore when searching for candidates.
+Typically, these modes don't use the text representation.")
+
+(defvar avy-translate-char-function #'identity
+  "Function to translate user input key into another key.
+For example, to make SPC do the same as ?a, use
+\(lambda (c) (if (= c 32) ?a c)).")
+
 (defface avy-lead-face-0
   '((t (:foreground "white" :background "#4f57f9")))
   "Face used for first non-terminating leading chars.")
@@ -139,6 +149,10 @@ When nil, punctuation chars will not be matched.
     '((t (:foreground "white" :background "gray")))
   "Face used for matched leading chars.")
 
+(defface avy-lead-face-2
+    '((t (:foreground "white" :background "#f86bf3")))
+  "Face used for leading chars.")
+
 (defface avy-lead-face
   '((t (:foreground "white" :background "#e52b50")))
   "Face used for the leading chars.")
@@ -146,6 +160,14 @@ When nil, punctuation chars will not be matched.
 (defface avy-background-face
   '((t (:foreground "gray40")))
   "Face for whole window background during selection.")
+
+(defconst avy-lead-faces '(avy-lead-face
+                           avy-lead-face-0
+                           avy-lead-face-2
+                           avy-lead-face
+                           avy-lead-face-0
+                           avy-lead-face-2)
+  "Face sequence for `avy--overlay-at-full'.")
 
 ;;* Internals
 ;;** Tree
@@ -304,7 +326,7 @@ multiple DISPLAY-FN invokations."
                         (push (cons path leaf) avy--leafs)))
         (dolist (x avy--leafs)
           (funcall display-fn (car x) (cdr x))))
-      (let ((char (read-char))
+      (let ((char (funcall avy-translate-char-function (read-char)))
             branch)
         (funcall cleanup-fn)
         (if (setq branch (assoc char tree))
@@ -333,7 +355,7 @@ multiple DISPLAY-FN invokations."
       (while (< i len)
         (dolist (x (reverse alist))
           (avy--overlay-at-full (reverse (car x)) (cdr x)))
-        (let ((char (read-char)))
+        (let ((char (funcall avy-translate-char-function (read-char))))
           (avy--remove-leading-chars)
           (setq alist
                 (delq nil
@@ -372,7 +394,7 @@ multiple DISPLAY-FN invokations."
                             avy-all-windows)))
      (dolist (wnd (avy-window-list))
        (with-selected-window wnd
-         (unless (memq major-mode '(image-mode doc-view-mode))
+         (unless (memq major-mode avy-ignored-modes)
            ,@body)))))
 
 (defmacro avy--with-avy-keys (command &rest body)
@@ -396,7 +418,11 @@ POS is either a position or (BEG . END)."
         ((eq x 'exit))
 
         (t
-         (select-window (cdr x))
+         (let* ((window (cdr x))
+                (frame (window-frame window)))
+           (unless (equal frame (selected-frame))
+             (select-frame-set-input-focus frame))
+           (select-window window))
          (let ((pt (car x)))
            (when (consp pt)
              (setq pt (car pt)))
@@ -559,17 +585,29 @@ LEAF is normally ((BEG . END) . WND)."
                 (car leaf)))
          (wnd (cdr leaf))
          oov)
-    (when (or avy-highlight-first (> (length str) 1))
-      (set-text-properties 0 1 '(face avy-lead-face-0) str))
+    (dotimes (i len)
+      (set-text-properties (- len i 1) (- len i)
+                           `(face ,(nth i avy-lead-faces))
+                           str))
+    (when (eq avy-style 'de-bruijn)
+      (setq str (concat
+                 (propertize avy-current-path
+                             'face 'avy-lead-face-1)
+                 str))
+      (setq len (length str)))
     (with-selected-window wnd
       (save-excursion
         (goto-char beg)
-        (when (setq oov (cl-find-if (lambda (o)
-                                      (and (eq (overlay-get o 'category) 'avy)
-                                           (eq (overlay-get o 'window) wnd)))
-                                    (overlays-in (point) (min (+ (point) len)
-                                                              (line-end-position)))))
-          (setq len (- (overlay-start oov) beg))
+        (when (setq oov
+                    (delq nil
+                          (mapcar
+                           (lambda (o)
+                             (and (eq (overlay-get o 'category) 'avy)
+                                  (eq (overlay-get o 'window) wnd)
+                                  (overlay-start o)))
+                           (overlays-in (point) (min (+ (point) len)
+                                                     (line-end-position))))))
+          (setq len (- (apply #'min oov) beg))
           (setq str (substring str 0 len)))
         (let ((other-ov (cl-find-if
                          (lambda (o)
@@ -674,22 +712,17 @@ The window scope is determined by `avy-all-windows' (ARG negates it)."
      avy-style)))
 
 ;;;###autoload
-(defun avy-goto-char-in-line (char &optional arg)
-  "Jump to the currently visible CHAR in the current line.
-The window scope is determined by `avy-all-windows' (ARG negates it)."
-  (interactive (list (read-char "char: ")
-                     current-prefix-arg))
-  (let ((avy-all-windows
-         (if arg
-             (not avy-all-windows)
-           avy-all-windows)))
+(defun avy-goto-char-in-line (char)
+  "Jump to the currently visible CHAR in the current line."
+  (interactive (list (read-char "char: ")))
+  (let ((avy-all-windows nil))
     (avy--with-avy-keys avy-goto-char
       (avy--goto
        (avy--process
         (save-restriction
           (narrow-to-region (line-beginning-position)
                             (line-end-position))
-          (avy--regex-candidates (string char)))
+          (avy--regex-candidates (regexp-quote (string char))))
         (avy--style-fn avy-style))))))
 
 ;;;###autoload
@@ -714,7 +747,7 @@ The window scope is determined by `avy-all-windows' (ARG negates it)."
             (avy--regex-candidates isearch-string))
            (avy-background nil)
            (candidate
-            (avy--process candidates #'avy--overlay-post)))
+            (avy--process candidates (avy--style-fn avy-style))))
       (isearch-done)
       (avy--goto candidate))))
 
@@ -738,7 +771,7 @@ The window scope is determined by `avy-all-windows' (ARG negates it)."
                          "\\.")
                         ((and avy-word-punc-regexp
                               (string-match avy-word-punc-regexp str))
-                         str)
+                         (regexp-quote str))
                         (t
                          (concat
                           "\\b"
@@ -831,6 +864,7 @@ The window scope is determined by `avy-all-windows' (ARG negates it)."
                (let ((line (read-from-minibuffer
                             "Goto line: " (string char))))
                  (when line
+                   (push-mark)
                    (goto-char (point-min))
                    (forward-line (1- (string-to-number line)))
                    (throw 'done 'exit)))))))
@@ -903,13 +937,14 @@ The window scope is determined by `avy-all-windows' (ARG negates it)."
   (interactive "P")
   (let ((c1 (read-char "char 1: "))
         (c2 (read-char "char 2: " nil avy-timeout-seconds)))
-    (avy--generic-jump
-     (regexp-quote
-      (if c2
-          (string c1 c2)
-        (string c1)))
-     arg
-     avy-style)))
+    (avy--with-avy-keys avy-goto-char-timer
+      (avy--generic-jump
+       (regexp-quote
+        (if c2
+            (string c1 c2)
+          (string c1)))
+       arg
+       avy-style))))
 
 (define-obsolete-variable-alias
     'avy-goto-char-style 'avy-style "0.1.0"

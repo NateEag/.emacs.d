@@ -4,7 +4,7 @@
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
 ;;;### (autoloads nil "evil-nerd-commenter" "evil-nerd-commenter.el"
-;;;;;;  (21865 2112 0 0))
+;;;;;;  (21915 45974 0 0))
 ;;; Generated autoloads from evil-nerd-commenter.el
 
 (autoload 'evilnc-comment-or-uncomment-paragraphs "evil-nerd-commenter" "\
@@ -26,7 +26,7 @@ or 'C-u 3 M-x evilnc-quick-comment-or-uncomment-to-the-line' to comment to the l
 \(fn &optional UNITS)" t nil)
 
 (autoload 'evilnc-toggle-invert-comment-line-by-line "evil-nerd-commenter" "\
-
+Please note this command may NOT work on complex evil text objects
 
 \(fn)" t nil)
 
@@ -41,6 +41,8 @@ Comment or uncomment NUM lines. NUM could be negative.
    extra N-1 lines from next line
    Case 2: If a region selected, the region is expand to make sure the region contain
    whole lines. Then we comment/uncomment the expanded region. NUM is ignored.
+   Case 3: If a region in ONE line is selected, we comment/uncomment that region.
+   In this case, CORRECT comment syntax will be used for C++/Java/Javascript.
 
 \(fn &optional NUM)" t nil)
 
@@ -76,7 +78,7 @@ Set the hotkeys of evil-nerd-comment
 ;;;***
 
 ;;;### (autoloads nil nil ("evil-nerd-commenter-operator.el" "evil-nerd-commenter-pkg.el")
-;;;;;;  (21865 2112 237639 0))
+;;;;;;  (21915 45974 163873 0))
 
 ;;;***
 

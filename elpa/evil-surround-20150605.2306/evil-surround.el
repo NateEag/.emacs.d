@@ -6,8 +6,8 @@
 ;;      Vegard Øye <vegard_oye at hotmail dot com>
 ;; Maintainer: Please send bug reports to the mailing list (below).
 ;; Created: July 23 2011
-;; Version: 20150117.1102
-;; X-Original-Version: 0.1
+;; Version: 0.1
+;; Package-Version: 20150605.2306
 ;; Keywords: emulation, vi, evil
 ;; Mailing list: <implementations-list at lists.ourproject.org>
 ;;      Subscribe: http://tinyurl.com/implementations-list
@@ -95,6 +95,10 @@ Each item is of the form (OPERATOR . OPERATION)."
          (rest (match-string 2 input)))
     (cons (format "<%s%s>" (or tag "") (or rest ""))
           (format "</%s>" (or tag "")))))
+
+(defun evil-surround-valid-char-p (char)
+  "Returns whether CHAR is a valid surround char or not."
+  (not (memq char '(?\C-\[ ?\C-?))))
 
 (defun evil-surround-pair (char)
   "Return the evil-surround pair of char.
@@ -192,9 +196,10 @@ overlays OUTER and INNER, which are passed to `evil-surround-delete'."
   (cond
    ((and outer inner)
     (evil-surround-delete char outer inner)
-    (evil-surround-region (overlay-start outer)
-                     (overlay-end outer)
-                     nil (read-char)))
+    (let ((key (read-char)))
+      (evil-surround-region (overlay-start outer)
+                            (overlay-end outer)
+                            nil (if (evil-surround-valid-char-p key) key char))))
    (t
     (let* ((outer (evil-surround-outer-overlay char))
            (inner (evil-surround-inner-overlay char)))
@@ -212,6 +217,22 @@ overlays OUTER and INNER, which are passed to `evil-surround-delete'."
 (defun evil-surround-setup-surround-line-operators ()
   (define-key evil-operator-shortcut-map "s" 'evil-surround-line)
   (define-key evil-operator-shortcut-map "S" 'evil-surround-line))
+
+(defun evil-surround-block (beg end char)
+  "Split a block into regions per line and surround each of them individually."
+  (save-excursion
+    (goto-char beg)
+    (let ((lines (- (1+ (line-number-at-pos end)) (line-number-at-pos beg)))
+          (start-col (current-column))
+          (end-col (save-excursion (goto-char end) (current-column))))
+      (while (> lines 0)
+        (move-to-column start-col)
+        ;; skip lines that are empty at this column
+        (unless (/= start-col (current-column))
+          (evil-surround-region (point) (save-excursion (move-to-column end-col) (point))
+                                'inclusive char))
+        (setq lines (1- lines))
+        (next-line)))))
 
 ;; Dispatcher function in Operator-Pending state.
 ;; "cs" calls `evil-surround-change', "ds" calls `evil-surround-delete',
@@ -260,37 +281,41 @@ Becomes this:
    }"
 
   (interactive "<R>c")
-  (let* ((overlay (make-overlay beg end nil nil t))
-         (pair (evil-surround-pair char))
-         (open (car pair))
-         (close (cdr pair)))
-    (unwind-protect
-        (progn
-          (goto-char (overlay-start overlay))
+  (when (evil-surround-valid-char-p char)
+    (let* ((overlay (make-overlay beg end nil nil t))
+           (pair (evil-surround-pair char))
+           (open (car pair))
+           (close (cdr pair)))
+      (unwind-protect
+          (progn
+            (goto-char (overlay-start overlay))
 
-          (cond ((eq type 'line)
-                 (insert open)
-                 (indent-according-to-mode)
-                 (newline-and-indent)
-                 (goto-char (overlay-end overlay))
-                 (insert close)
-                 (indent-according-to-mode)
-                 (newline))
+            (cond ((eq type 'block)
+                   (evil-surround-block beg end char))
 
-                (force-new-line
-                 (insert open)
-                 (indent-according-to-mode)
-                 (newline-and-indent)
-                 (goto-char (overlay-end overlay))
-                 (newline-and-indent)
-                 (insert close))
+                  ((eq type 'line)
+                   (insert open)
+                   (indent-according-to-mode)
+                   (newline-and-indent)
+                   (goto-char (overlay-end overlay))
+                   (insert close)
+                   (indent-according-to-mode)
+                   (newline))
 
-                (t
-                 (insert open)
-                 (goto-char (overlay-end overlay))
-                 (insert close)))
-          (goto-char (overlay-start overlay)))
-      (delete-overlay overlay))))
+                  (force-new-line
+                   (insert open)
+                   (indent-according-to-mode)
+                   (newline-and-indent)
+                   (goto-char (overlay-end overlay))
+                   (newline-and-indent)
+                   (insert close))
+
+                  (t
+                   (insert open)
+                   (goto-char (overlay-end overlay))
+                   (insert close)))
+            (goto-char (overlay-start overlay)))
+        (delete-overlay overlay)))))
 
 (evil-define-operator evil-Surround-region (beg end type char)
   "Call surround-region, toggling force-new-line"

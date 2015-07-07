@@ -1,11 +1,11 @@
-;;; names.el --- Namespaces for emacs-lisp. Avoid name clobbering without hiding symbols.
+;;; names.el --- Namespaces for emacs-lisp. Avoid name clobbering without hiding symbols.  -*- lexical-binding:t -*-
 
-;; Copyright (C) 2014 Free Software Foundation, Inc.
+;; Copyright (C) 2014-2015 Free Software Foundation, Inc.
 
 ;; Author: Artur Malabarba <bruce.connor.am@gmail.com>
 ;; Maintainer: Artur Malabarba <bruce.connor.am@gmail.com>
 ;; URL: http://github.com/Bruce-Connor/names
-;; Version: 20150125.9
+;; Version: 20150618.0
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: extensions lisp
 ;; Prefix: names
@@ -44,10 +44,12 @@
 ;; If `C-x' is not a prefix.
 (unless (consp (key-binding "\C-x"))
   ;; Disable the `C-xC-a' binds.
+  (defvar edebug-inhibit-emacs-lisp-mode-bindings)
   (setq edebug-inhibit-emacs-lisp-mode-bindings t)
   ;; And the `C-xX' binds.
+  (defvar global-edebug-prefix)
   (when (or (null (boundp 'global-edebug-prefix))
-            (eq 24 (elt global-edebug-prefix 0)))
+            (eq ?\C-x (elt global-edebug-prefix 0)))
     (setq global-edebug-prefix "")))
 (require 'edebug)
 (require 'bytecomp)
@@ -55,43 +57,46 @@
 
 ;;; Support
 (declare-function names--autoload-do-load "names" 2)
-(if (fboundp 'function-get)
-    (defalias 'names--function-get #'function-get)
-  (defun names--function-get (f prop &rest _)
-    "Return the value of property PROP of function F.
+(defalias 'names--function-get
+  (if (fboundp 'function-get) #'function-get
+
+    (defun names--autoload-do-load (def name)
+      "Load autoloaded definition DEF from function named NAME."
+      (unless (load (cadr def) 'noerror)
+        (error "Macro `%s' is autoloaded, but its file (%s) couldn't be loaded"
+          name (cadr def)))
+      (symbol-function name))
+
+    (lambda (f prop &rest _)
+      "Return the value of property PROP of function F.
 If F is an autoloaded macro, try to autoload it in the hope that
 it will set PROP."
-    (let ((val nil))
-      (while (and (symbolp f)
-                  (null (setq val (get f prop)))
-                  (fboundp f))
-        (let ((fundef (symbol-function f)))
-          (if (and (names--autoloadp fundef)
-                   (not (equal fundef (names--autoload-do-load fundef f))))
-              nil ;Re-try `get' on the same `f'.
-            (setq f fundef))))
-      val))
-  (defun names--autoload-do-load (def name)
-    "Load autoloaded definition DEF from function named NAME."
-    (unless (load (cadr def) 'noerror)
-      (error "Macro `%s' is autoloaded, but its file (%s) couldn't be loaded"
-             name (cadr def)))
-    (symbol-function name)))
+      (let ((val nil))
+        (while (and (symbolp f)
+                    (null (setq val (get f prop)))
+                    (fboundp f))
+          (let ((fundef (symbol-function f)))
+            (if (and (names--autoloadp fundef)
+                     (not (equal fundef (names--autoload-do-load fundef f))))
+                nil                     ;Re-try `get' on the same `f'.
+              (setq f fundef))))
+        val))))
 
-(if (fboundp 'macrop)
-    (defalias 'names--compat-macrop #'macrop)
-  (defun names--compat-macrop (object)
-    "Non-nil if and only if OBJECT is a macro."
-    (let ((def (indirect-function object t)))
-      (when (consp def)
-        (or (eq 'macro (car def))
-            (and (names--autoloadp def) (memq (nth 4 def) '(macro t))))))))
+(defalias 'names--compat-macrop
+  (if (fboundp 'macrop) #'macrop
+    (lambda (object)
+      "Non-nil if and only if OBJECT is a macro."
+      (let ((def (or (ignore-errors (indirect-function object t))
+                     (ignore-errors (indirect-function object)))))
+        (when (consp def)
+          (or (eq 'macro (car def))
+              (and (names--autoloadp def) (memq (nth 4 def) '(macro t)))))))))
 
-(if (fboundp 'autoloadp)
-    (defalias 'names--autoloadp #'autoloadp)
-  (defsubst names--autoloadp (object)
-    "Non-nil if OBJECT is an autoload."
-    (eq 'autoload (car-safe object))))
+(defalias 'names--autoloadp
+  (if (fboundp 'autoloadp) #'autoloadp
+    (lambda (object)
+      "Non-nil if OBJECT is an autoload."
+      (eq 'autoload (car-safe object)))))
 
 (unless (get-edebug-spec 'cl-defun)
   (def-edebug-spec cl-defun defun*))
@@ -120,7 +125,7 @@ it will set PROP."
 
 ;;; ---------------------------------------------------------------
 ;;; Variables
-(defconst names-version "20150125.9" "Version of the names.el package.")
+(defconst names-version "20150618.0" "Version of the names.el package.")
 
 (defvar names--name nil
   "Name of the current namespace inside the `define-namespace' macro.")
@@ -182,6 +187,22 @@ Is only non-nil if the :group keyword is passed to `define-namespace'.")
   "The version number given by :version.
 Used to define a constant and a command.")
 
+(defvar names--functionlike-macros nil
+  "Function-like macros, even if their debug-spec says otherwise.
+When expanding the namespace, these macros will be treated
+exactly like functions. This means that their contents will be
+namespaced like regular function arguments.
+
+To add macros to this list, pass the :functionlike-macros keyword
+to your namespace along with a list of macro names (as unquoted
+symbols).
+Example:
+
+    (define-namespace foo-
+    :functionlike-macros (-> ->> thread-first thread-last)
+    ;; Rest of code
+    )")
+
 (defconst names--keyword-list
   `((:group
      1 ,(lambda (x)
@@ -240,6 +261,12 @@ needed by the :version and :group keywords.")
                 (format "\\`%s" (regexp-quote val)))))
      "Change the value of the `names--protection' variable.")
 
+    (:functionlike-macros
+     1
+     ,(lambda (x) (setq names--functionlike-macros
+                   (append x names--functionlike-macros)))
+     "A list of values to be appended to `names--functionlike-macros'.")
+
     (:no-let-vars
      0 nil
      "Indicates variables assigned in let-bind are NOT candidates for namespacing.")
@@ -291,9 +318,9 @@ behaviour.")
   `(when (boundp ',var)
      (remove
       nil
-      (mapcar (lambda (x) (when (funcall (or ,pred 'identity) (or (car-safe x) x))
-                (or (car-safe x) x)))
-          ,var))))
+      (mapcar (lambda (x) (when (funcall (or ,pred #'identity) (or (car-safe x) x))
+                            (or (car-safe x) x)))
+              ,var))))
 
 (defmacro names--next-keyword (body)
   "If car of BODY is a known keyword, `pop' it (and its arguments) from body.
@@ -305,7 +332,7 @@ Returns a list (KEYWORD . ARGUMENTLIST)."
           (keywordp kar)
           (setq n (assoc kar names--keyword-list))
           (setq n (cadr n))
-          (dotimes (it (1+ n) out)
+          (dotimes (_ (1+ n) out)
             (push (pop ,body) out))
           (nreverse out))))
 
@@ -407,6 +434,7 @@ See `define-namespace' for more information."
               (names--remove-namespace-from-list
                (names--filter-if-bound byte-compile-macro-environment (lambda (x) (not (names--compat-macrop x))))
                (names--filter-if-bound byte-compile-function-environment (lambda (x) (not (names--compat-macrop x))))))
+             (names--functionlike-macros names--functionlike-macros)
              names--keywords names--local-vars key-and-args
              names--version names--package names--group-parent)
         ;; Read keywords
@@ -593,28 +621,29 @@ Also adds `version' to `names--fbound' and `names--bound'."
                                byte-compile-macro-environment))))))))
 
 ;;;###autoload
-(defadvice find-function-search-for-symbol
-    (around names-around-find-function-search-for-symbol-advice
-            (symbol type library) activate)
-  "Make sure `find-function-search-for-symbol' understands namespaces."
-  ad-do-it
-  (ignore-errors
-    (unless (cdr ad-return-value)
-      (with-current-buffer (car ad-return-value)
-        (search-forward-regexp "^(define-namespace\\_>")
-        (skip-chars-forward "\r\n[:blank:]")
-        (let* ((names--regexp
-                (concat "\\`" (regexp-quote
-                               (symbol-name (read (current-buffer))))))
-               (short-symbol
-                ;; We manually implement `names--remove-namespace'
-                ;; because it might not be loaded.
-                (let ((name (symbol-name symbol)))
-                  (when (string-match names--regexp name)
-                    (intern (replace-match "" nil nil name))))))
-          (when short-symbol
-            (ad-set-arg 0 short-symbol)
-            ad-do-it))))))
+(eval-after-load 'find-func
+  '(defadvice find-function-search-for-symbol
+       (around names-around-find-function-search-for-symbol-advice
+               (symbol type library) activate)
+     "Make sure `find-function-search-for-symbol' understands namespaces."
+     ad-do-it
+     (ignore-errors
+       (unless (cdr ad-return-value)
+         (with-current-buffer (car ad-return-value)
+           (search-forward-regexp "^(define-namespace\\_>")
+           (skip-chars-forward "\r\n[:blank:]")
+           (let* ((names--regexp
+                   (concat "\\`" (regexp-quote
+                                  (symbol-name (read (current-buffer))))))
+                  (short-symbol
+                   ;; We manually implement `names--remove-namespace'
+                   ;; because it might not be loaded.
+                   (let ((name (symbol-name symbol)))
+                     (when (string-match names--regexp name)
+                       (intern (replace-match "" nil nil name))))))
+             (when short-symbol
+               (ad-set-arg 0 short-symbol)
+               ad-do-it)))))))
 
 (defun names--extract-autoloads (body)
   "Return a list of the forms in BODY preceded by :autoload."
@@ -673,14 +702,14 @@ Use the `names--inside-make-autoload' variable to indicate to
 (defun names--message (f &rest rest)
   "If :verbose is on, pass F and REST to `message'."
   (when (names--keyword :verbose)
-    (apply 'message (concat "[names] " f) rest)))
+    (apply #'message (concat "[names] " f) rest)))
 
 (defun names--warn (f &rest rest)
   "Pass F and REST to `message', unless byte-compiling or non-interactive."
   (unless (and (null (names--keyword :verbose))
                (and (boundp 'byte-compile-function-environment)
                     byte-compile-function-environment))
-    (apply 'message (concat "[names] " f) rest)))
+    (apply #'message (concat "[names] " f) rest)))
 
 (defun names--error-if-using-vars ()
   "Remind the developer that variables are not customizable."
@@ -695,7 +724,7 @@ Use the `names--inside-make-autoload' variable to indicate to
   "Return a concatenated un-namespaced version of LISTS.
 Symbols in LISTS that aren't namespaced are removed, symbols that
 are namespaced become un-namespaced."
-  (delq nil (mapcar 'names--remove-namespace (apply 'append lists))))
+  (delq nil (mapcar 'names--remove-namespace (apply #'append lists))))
 
 (defun names--remove-namespace (symbol)
   "Return SYMBOL with namespace removed, or nil if it wasn't namespaced."
@@ -741,7 +770,10 @@ returns nil."
            (and (names--keyword :global)
                 (boundp (names--prepend sbl))))))
 
-;;; This is calling edebug even on `when' and `unless'
+(defvar names--verbose nil
+  "If non-nil, verbose message are printed regardless of the :verbose keyword.
+Use this to easily turn on verbosity during tests.")
+
 (defun names--args-of-function-or-macro (function args macro)
   "Namespace FUNCTION's arguments ARGS, with special treatment if MACRO is non-nil."
   (if macro
@@ -749,7 +781,8 @@ returns nil."
             (names--verbose (eq function 'push)))
         (names--message "Edebug-spec of `%s' is %s" function it)
         ;; Macros where we evaluate all arguments are like functions.
-        (if (equal it t)
+        (if (or (equal it t)
+                (memq function names--functionlike-macros))
             (names--args-of-function-or-macro function args nil)
           ;; Macros where nothing is evaluated we can just return.
           (if (equal it 0)
@@ -833,14 +866,10 @@ phenomenally. So we hack into edebug instead."
     (symbol-function 'message))
   "Where names stores `message's definition while overriding it.")
 
-(defvar names--verbose nil
-  "If non-nil, verbose message are printed regardless of the :verbose keyword.
-Use this to easily turn on verbosity during tests.")
-
-(defun names--edebug-message (&rest _)
+(defun names--edebug-message (&rest args)
   (if (or (names--keyword :verbose) names--verbose)
-      (apply names--message-backup _)
-    (when _ (apply 'format _))))
+      (apply names--message-backup args)
+    (when args (apply #'format args))))
 
 (defun names--edebug-make-enter-wrapper (forms)
   (setq edebug-def-name
@@ -946,11 +975,10 @@ the keyword arguments, if any."
 ;; lines of the functions defined below. It will be automatically used
 ;; whenever that form is found.
 
-;;; Defun, defmacro, and defsubst macros are pretty predictable.
+;; Defun, defmacro, and defsubst macros are pretty predictable.
 (defun names--convert-defmacro (form)
   "Special treatment for `defmacro' FORM."
-  (let* ((names--name-already-prefixed t)
-         (name (cadr form))
+  (let* ((name (cadr form))
          (spaced-name (names--prepend name))
          decl)
     (add-to-list 'names--macro name)
@@ -1114,9 +1142,9 @@ quoted symbols)."
        (names--handle-symbol-as-function (pop copy))
        (names--handle-symbol-as-function (pop copy)))
       (mapcar #'names-convert-form copy)))))
-(defalias #'names--convert-define-global-minor-mode
+(defalias 'names--convert-define-global-minor-mode
   #'names--convert-define-globalized-minor-mode)
-(defalias #'names--convert-easy-mmode-define-global-mode
+(defalias 'names--convert-easy-mmode-define-global-mode
   #'names--convert-define-globalized-minor-mode)
 
 (defun names--convert-quote (form)
@@ -1128,8 +1156,7 @@ logically namespaced and is never parsed for namespacing
 When FORM is (function form), a symbol is namespaced as a
 function name, a list is namespaced as a lambda form."
   (let ((kadr (cadr form))
-        (this-name (car form))
-        func)
+        (this-name (car form)))
     (if (and (eq this-name 'function)
              (listp kadr))
         (list this-name (names-convert-form kadr))
@@ -1194,8 +1221,7 @@ Return (macro . (names-convert-form (cdr FORM)))."
   (names--warn "Found a `closure'! You should use `lambda's instead")
   (let ((names--local-vars
          (append (names--vars-from-arglist (cadr form))
-                 names--local-vars))
-        (forms (cdr (cdr form))))
+                 names--local-vars)))
     (cons
      (car form)
      (names--convert-lambda (cdr form)))))

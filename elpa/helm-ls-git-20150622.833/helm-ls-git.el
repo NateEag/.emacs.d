@@ -1,5 +1,5 @@
 ;;; helm-ls-git.el --- list git files. -*- lexical-binding: t -*-
-;; Package-Version: 20150516.2143
+;; Package-Version: 20150622.833
 
 ;; Copyright (C) 2012 ~ 2014 Thierry Volpiatto <thierry.volpiatto@gmail.com>
 
@@ -30,6 +30,11 @@
 (defvaralias 'helm-c-source-ls-git-status 'helm-source-ls-git-status)
 (make-obsolete-variable 'helm-c-source-ls-git-status 'helm-source-ls-git-status "1.5.1")
 
+;; Define the sources.
+(defvar helm-source-ls-git-status nil)
+(defvar helm-source-ls-git nil)
+(defvar helm-source-ls-git-buffers nil)
+
 
 (defgroup helm-ls-git nil
   "Helm completion for git repos."
@@ -51,6 +56,11 @@ Valid values are symbol 'abs (default) or 'relative."
 (defcustom helm-ls-git-fuzzy-match nil
   "Enable fuzzy matching in `helm-source-ls-git-status' and `helm-source-ls-git'."
   :group 'helm-ls-git
+  :set (lambda (var val)
+         (set var val)
+         (setq helm-source-ls-git nil
+               helm-source-ls-git-status nil
+               helm-source-ls-git-buffers nil))
   :type 'boolean)
 
 (defcustom helm-ls-git-grep-command "git grep -n%cH --color=never --full-name -e %p %f"
@@ -109,7 +119,8 @@ The color of matched items can be customized in your .gitconfig."
 (defvar helm-ls-git-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-generic-files-map)
-    (define-key map (kbd "C-s") 'helm-ls-git-run-grep)
+    (define-key map (kbd "C-s")   'helm-ls-git-run-grep)
+    (define-key map (kbd "C-c g") 'helm-ff-run-gid)
     map))
 
 ;; Append visited files from `helm-source-ls-git' to `file-name-history'.
@@ -142,25 +153,27 @@ The color of matched items can be customized in your .gitconfig."
   (not (helm-ls-git-root-dir)))
 
 (defun helm-ls-git-transformer (candidates)
-  (cl-loop with root = (helm-ls-git-root-dir (helm-default-directory))
-        for i in candidates
-        for abs = (expand-file-name i root)
-        for disp = (if (and helm-ff-transformer-show-only-basename
-                            (not (string-match "[.]\\{1,2\\}$" i)))
-                       (helm-basename i)
-                     (cl-case helm-ls-git-show-abs-or-relative
-                       (absolute abs)
-                       (relative i)))
-        collect
-        (cons (propertize disp 'face 'helm-ff-file) abs)))
+   (cl-loop with root = (helm-ls-git-root-dir)
+            for i in candidates
+            for abs = (expand-file-name i root)
+            for disp = (if (and helm-ff-transformer-show-only-basename
+                                (not (string-match "[.]\\{1,2\\}$" i)))
+                           (helm-basename i)
+                           (cl-case helm-ls-git-show-abs-or-relative
+                             (absolute abs)
+                             (relative (file-relative-name i root))))
+            collect
+            (cons (propertize disp 'face 'helm-ff-file) abs)))
 
 (defun helm-ls-git-sort-fn (candidates)
   "Transformer for sorting candidates."
   (helm-ff-sort-candidates candidates nil))
 
 (defun helm-ls-git-init ()
-  (let ((data (helm-ls-git-list-files)))
-    (when (string= data "")
+  (let ((data (cl-loop with root = (helm-ls-git-root-dir)
+                       for c in (split-string (helm-ls-git-list-files) "\n" t)
+                       collect (expand-file-name c root))))
+    (when (null data)
       (setq data
             (if helm-ls-git-log-file
                 (with-current-buffer
@@ -190,14 +203,15 @@ The color of matched items can be customized in your .gitconfig."
      actions
      (helm-make-actions "Git grep files (`C-u' only files with ext, `C-u C-u' all)"
                         'helm-ls-git-grep
+                        "Gid" 'helm-ff-gid
                         "Search in Git log (C-u show patch)"
                         'helm-ls-git-search-log)
      3)))
 
-;; Define the sources.
-(defvar helm-source-ls-git-status nil)
-(defvar helm-source-ls-git nil)
-(defvar helm-source-ls-git-buffers nil)
+(defun helm-ls-git-match-part (candidate)
+  (if (with-helm-buffer helm-ff-transformer-show-only-basename)
+      (helm-basename candidate)
+      candidate))
 
 ;;;###autoload
 (defclass helm-ls-git-source (helm-source-in-buffer)
@@ -206,10 +220,7 @@ The color of matched items can be customized in your .gitconfig."
    (keymap :initform helm-ls-git-map)
    (help-message :initform helm-generic-file-help-message)
    (mode-line :initform helm-generic-file-mode-line-string)
-   (match-part :initform (lambda (candidate)
-                           (if helm-ff-transformer-show-only-basename
-                               (helm-basename candidate)
-                               candidate)))
+   (match-part :initform 'helm-ls-git-match-part)
    (candidate-transformer :initform '(helm-ls-git-transformer
                                       helm-ls-git-sort-fn))
    (action-transformer :initform 'helm-transform-file-load-el)
@@ -281,15 +292,17 @@ The color of matched items can be customized in your .gitconfig."
   (when (and helm-ls-git-log-file
              (file-exists-p helm-ls-git-log-file))
     (delete-file helm-ls-git-log-file))
-  (with-output-to-string
-      (with-current-buffer standard-output
-        (apply #'process-file
-               "git"
-               nil (list t helm-ls-git-log-file) nil
-               (list "status" "--porcelain")))))
+  (helm-aif (helm-ls-git-root-dir)
+      (with-helm-default-directory it
+          (with-output-to-string
+              (with-current-buffer standard-output
+                (apply #'process-file
+                       "git"
+                       nil (list t helm-ls-git-log-file) nil
+                       (list "status" "--porcelain")))))))
 
 (defun helm-ls-git-status-transformer (candidates _source)
-  (cl-loop with root = (helm-ls-git-root-dir (helm-default-directory))
+  (cl-loop with root = (helm-ls-git-root-dir)
         for i in candidates
         collect
         (cond ((string-match "^\\( M \\)\\(.*\\)" i) ; modified.
@@ -384,8 +397,10 @@ The color of matched items can be customized in your .gitconfig."
 
 
 ;;;###autoload
-(defun helm-ls-git-ls ()
-  (interactive)
+(defun helm-ls-git-ls (&optional arg)
+  (interactive "p")
+  (when (and arg (helm-ls-git-not-inside-git-repo))
+    (error "Not inside a Git repository"))
   (unless (and helm-source-ls-git-status
                helm-source-ls-git
                helm-source-ls-git-buffers)
@@ -403,25 +418,8 @@ The color of matched items can be customized in your .gitconfig."
   (helm :sources '(helm-source-ls-git-status
                    helm-source-ls-git-buffers
                    helm-source-ls-git)
+        :ff-transformer-show-only-basename nil
         :buffer "*helm lsgit*"))
-
-
-;;; Helm-find-files integration.
-;;
-(defun helm-ff-ls-git-find-files (_candidate)
-  (helm-run-after-quit
-   #'(lambda (d)
-       (let ((default-directory d))
-         (helm-ls-git-ls)))
-   helm-ff-default-directory))
-
-(defun helm-ls-git-ff-dir-git-p (file)
-  (when (or (file-exists-p file)
-            (file-directory-p file))
-    (stringp (condition-case nil
-                 (helm-ls-git-root-dir
-                  helm-ff-default-directory)
-               (error nil)))))
 
 
 (provide 'helm-ls-git)

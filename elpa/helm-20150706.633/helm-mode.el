@@ -100,6 +100,11 @@ Affect among others `completion-at-point', `completing-read-multiple'."
   :group 'helm-mode
   :type 'boolean)
 
+(defcustom helm-mode-fuzzy-match nil
+  "Enable fuzzy matching in `helm-mode'."
+  :group 'helm-mode
+  :type 'boolean)
+
 
 (defvar helm-comp-read-map
   (let ((map (make-sparse-keymap)))
@@ -535,6 +540,7 @@ that use `helm-comp-read' See `helm-M-x' for example."
                                                  (not (keywordp x))))
                                           (or (car-safe default) default)))
                :filtered-candidate-transformer 'helm-apropos-default-sort-fn
+               :fuzzy-match helm-mode-fuzzy-match
                :persistent-action 'helm-lisp-completion-persistent-action
                :persistent-help "Show brief doc in mode-line")
     :prompt prompt
@@ -587,6 +593,7 @@ It should be used when candidate list don't need to rebuild dynamically."
                            1 0)
      :candidates-in-buffer cands-in-buffer
      :exec-when-only-one exec-when-only-one
+     :fuzzy helm-mode-fuzzy-match
      :buffer buffer
      ;; If DEF is not provided, fallback to empty string
      ;; to avoid `thing-at-point' to be appended on top of list
@@ -844,7 +851,8 @@ Keys description:
                   :case-fold-search case-fold
                   :default default
                   :buffer buffer
-                  :preselect preselect)))
+                  :preselect (and (stringp preselect)
+                                  (regexp-quote preselect)))))
     (or
      (cond ((and result (stringp result)
                  (string= result "") ""))
@@ -958,7 +966,8 @@ Don't use it directly, use instead `helm-read-file-name' in your programs."
       (ido-mode (if ido-state 1 -1))
       ;; Same comment as in `helm--completing-read-default'.
       (setq this-command current-command))
-    fname))
+    (if (eq predicate 'file-directory-p) ; Using `read-directory-name'.
+        (file-name-as-directory fname) fname)))
 
 (defun helm-mode--advice-lisp--local-variables (old--fn &rest args)
   (ignore-errors

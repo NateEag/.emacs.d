@@ -134,7 +134,7 @@ i.e Don't replace inside a word, regexp is surrounded with \\bregexp\\b."
   (let ((matches (match-data))
         (line    (buffer-substring s e)))
     (propertize
-     (cl-loop with ln = (format "%5d: %s" (line-number-at-pos s) line)
+     (cl-loop with ln = (format "%5d: %s" (1- (line-number-at-pos s)) line)
            for i from 0 to (1- (/ (length matches) 2))
            concat (format "\n         %s'%s'" (format "Group %d: " i)
                           (match-string i))
@@ -393,9 +393,8 @@ Same as `helm-moccur-goto-line' but go in new frame."
         :input input
         :truncate-lines t))
 
-;;;###autoload
 (defun helm-moccur-run-save-buffer ()
-  "Run grep save results action from `helm-do-grep-1'."
+  "Run moccur save results action from `helm-moccur'."
   (interactive)
   (with-helm-alive-p
     (helm-quit-and-execute-action 'helm-moccur-save-results)))

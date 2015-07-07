@@ -124,10 +124,8 @@ you have completion on these functions with `C-M i' in the customize interface."
 
 (defun helm-semantic--maybe-set-needs-update ()
   (with-helm-current-buffer
-    (let ((tick (buffer-modified-tick)))
-      (unless (eq helm-cached-imenu-tick tick)
-        (setq helm-cached-imenu-tick tick)
-        (semantic-parse-tree-set-needs-update)))))
+    (when (semantic-parse-tree-needs-update-p)
+      (semantic-parse-tree-set-needs-update))))
 
 (defvar helm-source-semantic nil)
 
@@ -179,7 +177,7 @@ If ARG is supplied, pre-select symbol at point instead of current"
 
 ;;;###autoload
 (defun helm-semantic-or-imenu (arg)
-  "Run `helm' with `semantic' or `imenu'.
+  "Preconfigured helm for `semantic' or `imenu'.
 If ARG is supplied, pre-select symbol at point instead of current
 semantic tag in scope.
 

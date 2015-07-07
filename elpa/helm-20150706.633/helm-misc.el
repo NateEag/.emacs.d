@@ -46,6 +46,7 @@
   "Face used to colorize home time in `helm-world-time'."
   :group 'helm-misc)
 
+
 
 ;;; Latex completion
 (defvar LaTeX-math-menu)
@@ -142,7 +143,7 @@ current local map, current global map, and all current minor maps."
 
 ;;;###autoload
 (defun helm-browse-menubar ()
-  "Helm interface to the menubar using lacarte.el."
+  "Preconfigured helm to the menubar using lacarte.el."
   (interactive)
   (require 'lacarte)
   (helm :sources (mapcar 
@@ -283,22 +284,10 @@ It is added to `extended-command-history'.
 
 ;;;###autoload
 (defun helm-stumpwm-commands()
+  "Preconfigured helm for stumpwm commands."
   (interactive)
   (helm-other-buffer 'helm-source-stumpwm-commands
                      "*helm stumpwm commands*"))
-
-;;;###autoload
-(defun helm-mini ()
-  "Preconfigured `helm' lightweight version \(buffer -> recentf\)."
-  (interactive)
-  (require 'helm-files)
-  (unless helm-source-buffers-list
-    (setq helm-source-buffers-list
-          (helm-make-source "Buffers" 'helm-source-buffers)))
-  (let ((helm-ff-transformer-show-only-basename nil))
-    (helm :sources helm-mini-default-sources
-          :buffer "*helm mini*"
-          :truncate-lines t)))
 
 ;;;###autoload
 (defun helm-minibuffer-history ()
@@ -310,7 +299,7 @@ It is added to `extended-command-history'.
 
 ;;;###autoload
 (defun helm-comint-input-ring ()
-  "Predefined `helm' that provide completion of `comint' history."
+  "Preconfigured `helm' that provide completion of `comint' history."
   (interactive)
   (when (derived-mode-p 'comint-mode)
     (helm :sources 'helm-source-comint-input-ring

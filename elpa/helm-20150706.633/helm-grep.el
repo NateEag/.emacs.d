@@ -583,21 +583,23 @@ If N is positive go forward otherwise go backward."
 (defun helm-goto-precedent-file ()
   "Go to precedent file in helm grep/etags buffers."
   (interactive)
-  (let ((etagp (when (string= (assoc-default
-                               'name (helm-get-current-source)) "Etags")
-                 'etags)))
-    (with-helm-window
-      (helm-goto-next-or-prec-file -1 etagp))))
+  (with-helm-alive-p
+    (let ((etagp (when (string= (assoc-default
+                                 'name (helm-get-current-source)) "Etags")
+                   'etags)))
+      (with-helm-window
+        (helm-goto-next-or-prec-file -1 etagp)))))
 
 ;;;###autoload
 (defun helm-goto-next-file ()
   "Go to precedent file in helm grep/etags buffers."
   (interactive)
-  (let ((etagp (when (string= (assoc-default
-                               'name (helm-get-current-source)) "Etags")
-                 'etags)))
-    (with-helm-window
-      (helm-goto-next-or-prec-file 1 etagp))))
+  (with-helm-alive-p
+    (let ((etagp (when (string= (assoc-default
+                                 'name (helm-get-current-source)) "Etags")
+                   'etags)))
+      (with-helm-window
+        (helm-goto-next-or-prec-file 1 etagp)))))
 
 (defun helm-grep-run-default-action ()
   "Run grep default action from `helm-do-grep-1'."
@@ -617,7 +619,6 @@ If N is positive go forward otherwise go backward."
   (with-helm-alive-p
     (helm-quit-and-execute-action 'helm-grep-other-frame)))
 
-;;;###autoload
 (defun helm-grep-run-save-buffer ()
   "Run grep save results action from `helm-do-grep-1'."
   (interactive)
@@ -697,17 +698,14 @@ Special commands:
                                  "\n"))))
          (message "Reverting buffer done"))))))
 
-;;;###autoload
 (defun helm-gm-next-file ()
   (interactive)
   (helm-goto-next-or-prec-file 1))
 
-;;;###autoload
 (defun helm-gm-precedent-file ()
   (interactive)
   (helm-goto-next-or-prec-file -1))
 
-;;;###autoload
 (defun helm-grep-mode-jump ()
   (interactive)
   (helm-grep-action
@@ -723,17 +721,14 @@ Special commands:
           (forward-line arg))
       (error nil))))
 
-;;;###autoload
 (defun helm-grep-mode-jump-other-window-forward ()
   (interactive)
   (helm-grep-mode-jump-other-window-1 1))
 
-;;;###autoload
 (defun helm-grep-mode-jump-other-window-backward ()
   (interactive)
   (helm-grep-mode-jump-other-window-1 -1))
 
-;;;###autoload
 (defun helm-grep-mode-jump-other-window ()
   (interactive)
   (let ((candidate (buffer-substring (point-at-bol) (point-at-eol))))
@@ -834,17 +829,21 @@ These extensions will be added to command line with --include arg of grep."
 ;;
 ;;
 (defvar helm-source-grep nil)
-(defun helm-do-grep-1 (targets &optional recurse zgrep exts default-input)
+(defun helm-do-grep-1 (targets &optional recurse zgrep exts default-input input)
   "Launch grep on a list of TARGETS files.
 When RECURSE is given use -r option of grep and prompt user
 to set the --include args of grep.
-You can give more than one arg separated by space.
+You can give more than one arg separated by space at prompt.
 e.g *.el *.py *.tex.
+From lisp use the EXTS argument as a list of extensions as above.
 If you are using ack-grep, you will be prompted for --type
-instead.
-If prompt is empty '--exclude `grep-find-ignored-files' is used instead.
+instead and EXTS will be ignored.
+If prompt is empty `grep-find-ignored-files' are added to --exclude.
+Argument DEFAULT-INPUT is use as `default' arg of `helm' and INPUT
+is used as `input' arg of `helm', See `helm' docstring.
 ZGREP when non--nil use zgrep instead, without prompting for a choice
-in recurse, search being made on `helm-zgrep-file-extension-regexp'."
+in recurse, and ignoring EXTS, search being made on
+`helm-zgrep-file-extension-regexp'."
   (when (and (helm-grep-use-ack-p)
              helm-ff-default-directory
              (file-remote-p helm-ff-default-directory))
@@ -924,6 +923,7 @@ in recurse, search being made on `helm-zgrep-file-extension-regexp'."
      :sources 'helm-source-grep
      :buffer (format "*helm %s*" (if zgrep "zgrep" (helm-grep-command recurse)))
      :default default-input
+     :input input
      :keymap helm-grep-map
      :history 'helm-grep-history
      :truncate-lines t)))
@@ -995,22 +995,27 @@ in recurse, search being made on `helm-zgrep-file-extension-regexp'."
              (lambda () (or helm-ff-default-directory
                             (helm-default-directory)
                             default-directory)))))
-    (helm-grep--filter-candidate-1 candidate)))
+    (if (consp candidate)
+        (helm-grep--filter-candidate-1 (cdr candidate))
+        (and (stringp candidate)
+             (helm-grep--filter-candidate-1 candidate)))))
 
 (defun helm-grep-highlight-match (str &optional multi-match)
   "Highlight in string STR all occurences matching `helm-pattern'."
   (require 'helm-match-plugin)
   (let (beg end)
-    (condition-case nil
+    (condition-case-unless-debug nil
         (with-temp-buffer
           (insert str)
           (goto-char (point-min))
           (cl-loop for reg in (if multi-match
+                                  ;; (m)occur.
                                   (cl-loop for r in (helm-mp-split-pattern
                                                      helm-pattern)
                                            unless (string-match "\\`!" r)
                                            collect r)
-                                  (list helm-pattern))
+                                  ;; async sources (grep, gid etc...)
+                                  (list helm-input))
                    do
                    (while (and (re-search-forward reg nil t)
                                (> (- (setq end (match-end 0))

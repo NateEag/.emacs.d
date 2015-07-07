@@ -75,6 +75,19 @@ Only buffer names are fuzzy matched when this is enabled,
   "Ignore checking for `file-exists-p' on remote files."
   :group 'helm-buffers
   :type 'boolean)
+
+(defcustom helm-buffers-truncate-lines t
+  "Truncate lines in `helm-buffers-list' when non--nil."
+  :group 'helm-buffers
+  :type 'boolean)
+
+(defcustom helm-mini-default-sources '(helm-source-buffers-list
+                                       helm-source-recentf
+                                       helm-source-buffer-not-found)
+  "Default sources list used in `helm-mini'."
+  :group 'helm-misc
+  :type '(repeat (choice symbol)))
+
 
 ;;; Faces
 ;;
@@ -681,16 +694,20 @@ If REGEXP-FLAG is given use `query-replace-regexp'."
 
 (defun helm-buffers-persistent-kill-1 (buffer)
   "Persistent action to kill buffer."
-  (with-current-buffer (get-buffer buffer)
-    (if (and (buffer-modified-p)
-             (buffer-file-name (current-buffer)))
-        (progn
-          (save-buffer)
-          (kill-buffer buffer))
-      (kill-buffer buffer)))
-  (helm-delete-current-selection)
-  (with-helm-temp-hook 'helm-after-persistent-action-hook
-    (helm-force-update (regexp-quote (helm-get-selection nil t)))))
+  (if (eql (get-buffer buffer) (get-buffer helm-current-buffer))
+      (progn
+        (message "Can't kill `helm-current-buffer' without quitting session")
+        (sit-for 1))
+      (with-current-buffer (get-buffer buffer)
+        (if (and (buffer-modified-p)
+                 (buffer-file-name (current-buffer)))
+            (progn
+              (save-buffer)
+              (kill-buffer buffer))
+            (kill-buffer buffer)))
+      (helm-delete-current-selection)
+      (with-helm-temp-hook 'helm-after-persistent-action-hook
+        (helm-force-update (regexp-quote (helm-get-selection nil t))))))
 
 (defun helm-buffers--quote-truncated-buffer (buffer)
   (let ((bufname (and (bufferp buffer)
@@ -840,7 +857,20 @@ displayed with the `file-name-shadow' face if available."
                    helm-source-buffer-not-found)
         :buffer "*helm buffers*"
         :keymap helm-buffer-map
-        :truncate-lines t))
+        :truncate-lines helm-buffers-truncate-lines))
+
+;;;###autoload
+(defun helm-mini ()
+  "Preconfigured `helm' lightweight version \(buffer -> recentf\)."
+  (interactive)
+  (require 'helm-files)
+  (unless helm-source-buffers-list
+    (setq helm-source-buffers-list
+          (helm-make-source "Buffers" 'helm-source-buffers)))
+  (helm :sources helm-mini-default-sources
+        :buffer "*helm mini*"
+        :ff-transformer-show-only-basename nil
+        :truncate-lines helm-buffers-truncate-lines))
 
 (provide 'helm-buffers)
 

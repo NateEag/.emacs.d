@@ -157,6 +157,7 @@ Should take one arg: the string to display."
   (helm :sources (helm-build-evaluation-result-source)
         :input (when arg (thing-at-point 'sexp))
         :buffer "*helm eval*"
+        :echo-input-in-header-line nil
         :history 'read-expression-history
         :keymap helm-eval-expression-map))
 

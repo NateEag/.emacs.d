@@ -109,7 +109,7 @@ replace with STR as yanked string."
   (with-helm-current-buffer
     (setq kill-ring (delete str kill-ring))
     (if (not (eq (helm-attr 'last-command helm-source-kill-ring) 'yank))
-        (run-with-timer 0.01 nil `(lambda () (insert-for-yank ,str)))
+        (insert-for-yank str)
       ;; from `yank-pop'
       (let ((inhibit-read-only t)
             (before (< (point) (mark t))))
@@ -118,7 +118,7 @@ replace with STR as yanked string."
           (funcall (or yank-undo-function 'delete-region) (mark t) (point)))
         (setq yank-undo-function nil)
         (set-marker (mark-marker) (point) helm-current-buffer)
-        (run-with-timer 0.01 nil `(lambda () (insert-for-yank ,str)))
+        (insert-for-yank str)
         ;; Set the window start back where it was in the yank command,
         ;; if possible.
         (set-window-start (selected-window) yank-window-start t)
@@ -129,8 +129,6 @@ replace with STR as yanked string."
           (goto-char (prog1 (mark t)
                        (set-marker (mark-marker) (point) helm-current-buffer))))))
     (kill-new str)))
-
-
 
 
 ;;;; <Mark ring>
@@ -167,7 +165,6 @@ replace with STR as yanked string."
                          (helm-highlight-current-line))
     :persistent-help "Show this line"))
 
-
 ;;; Global-mark-ring
 (defvar helm-source-global-mark-ring
   (helm-build-sync-source "global-mark-ring"
@@ -188,8 +185,11 @@ replace with STR as yanked string."
   (with-current-buffer (marker-buffer marker)
     (goto-char marker)
     (forward-line 0)
-    (let ((line (car (split-string (thing-at-point 'line) "[\n\r]"))))
-      (when (string= "" line) (setq line  "<EMPTY LINE>")) 
+    (let ((line (pcase (thing-at-point 'line)
+                  ((and line (pred stringp)
+                        (guard (not (string-match-p "\\`\n?\\'" line))))
+                   (car (split-string line "[\n\r]")))
+                  (_ "<EMPTY LINE>"))))
       (format "%7d:%s:    %s"
               (line-number-at-pos) (marker-buffer marker) line))))
 
@@ -205,6 +205,42 @@ replace with STR as yanked string."
                collect gm into recip
                finally return recip))))
 
+(defun helm--push-mark (&optional location nomsg activate)
+  "[Internal] Don't use directly, use instead `helm-push-mark-mode'."
+  (unless (null (mark t))
+    (setq mark-ring (cons (copy-marker (mark-marker)) mark-ring))
+    (when (> (length mark-ring) mark-ring-max)
+      (move-marker (car (nthcdr mark-ring-max mark-ring)) nil)
+      (setcdr (nthcdr (1- mark-ring-max) mark-ring) nil)))
+  (set-marker (mark-marker) (or location (point)) (current-buffer))
+  ;; Now push the mark on the global mark ring.
+  (setq global-mark-ring (cons (copy-marker (mark-marker))
+                               ;; Avoid having multiple entries
+                               ;; for same buffer in `global-mark-ring'.
+                               (cl-loop with mb = (current-buffer)
+                                        for m in global-mark-ring
+                                        for nmb = (marker-buffer m)
+                                        unless (eq mb nmb)
+                                        collect m)))
+  (when (> (length global-mark-ring) global-mark-ring-max)
+    (move-marker (car (nthcdr global-mark-ring-max global-mark-ring)) nil)
+    (setcdr (nthcdr (1- global-mark-ring-max) global-mark-ring) nil))
+  (or nomsg executing-kbd-macro (> (minibuffer-depth) 0)
+      (message "Mark set"))
+  (when (or activate (not transient-mark-mode))
+    (set-mark (mark t)))
+  nil)
+
+;;;###autoload
+(define-minor-mode helm-push-mark-mode
+    "Provide an improved version of `push-mark'.
+Modify the behavior of `push-mark' to update
+the `global-mark-ring' after each new visit."
+  :group 'helm-ring
+  :global t
+  (if helm-push-mark-mode
+      (advice-add 'push-mark :override #'helm--push-mark)
+      (advice-remove 'push-mark #'helm--push-mark)))
 
 ;;;; <Register>
 ;;; Insert from register
@@ -369,7 +405,7 @@ First call open the kill-ring browser, next calls move to next line."
 
 ;;;###autoload
 (defun helm-execute-kmacro ()
-  "Keyboard macros with helm interface.
+  "Preconfigured helm for keyboard macros.
 Define your macros with `f3' and `f4'.
 See (info \"(emacs) Keyboard Macros\") for detailed infos.
 This command is useful when used with persistent action."

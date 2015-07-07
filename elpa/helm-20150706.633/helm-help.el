@@ -17,7 +17,9 @@
 
 ;;; Code:
 (require 'helm)
-(require 'helm-org)
+
+(defvar helm-org-headings--nofilename)
+(declare-function helm-source-org-headings-for-files "helm-org.el")
 
 
 (defgroup helm-help nil
@@ -59,21 +61,22 @@
 
 ;;;###autoload
 (defun helm-documentation (arg)
-  "Helm documentation.
+  "Preconfigured helm for helm documentation.
 With a prefix arg refresh the documentation.
 
 Find here the documentation of all sources actually documented."
   (interactive "P")
+  (require 'helm-org)
   (when arg (delete-file helm-documentation-file)
         (helm-aif (get-file-buffer helm-documentation-file)
-          (kill-buffer it)))
+            (kill-buffer it)))
   (unless (file-exists-p helm-documentation-file)
     (with-temp-file helm-documentation-file
       (erase-buffer)
       (cl-loop for elm in helm-help--string-list
-            for str = (symbol-value elm)
-            do (insert (substitute-command-keys
-                        (if (functionp str) (funcall str) str))))))
+               for str = (symbol-value elm)
+               do (insert (substitute-command-keys
+                           (if (functionp str) (funcall str) str))))))
   (let ((helm-org-headings--nofilename t))
     (helm :sources (helm-source-org-headings-for-files
                     (list helm-documentation-file))
@@ -434,11 +437,26 @@ also using not recursive wilcard (e.g \"*.el\") is perfectly fine for this.
 This feature (\"**\") is activated by default with the option `helm-file-globstar'.
 The directory selection with \"**foo/\" like bash shopt globstar option is not supported yet.
 
+*** Copying renaming asynchronously
+
+If you use async library (if you have installed helm from MELPA you do) you can enable
+async for copying/renaming etc... your files by enabling `dired-async-mode'.
+
+Note that even when async is enabled, running a copy/rename action with a prefix arg
+will execute action synchronously, it will follow also the first file of the marked files
+in its destination directory.
+
 *** Bookmark your `helm-find-files' session
 
 You can bookmark your `helm-find-files' session with `C-x r m'.
 You can retrieve later these bookmarks easily by using M-x helm-filtered-bookmarks
 or from the current `helm-find-files' session just hitting `C-x r b'.
+
+*** Run Gid from `helm-find-files'
+
+You can navigate to a project containing an ID file created with the `mkid'
+command from id-utils, and run the `gid' command which will use the symbol at point
+in `helm-current-buffer' as default.
 
 \n** Specific commands for `helm-find-files':\n
 \\<helm-find-files-map>
@@ -448,6 +466,7 @@ or from the current `helm-find-files' session just hitting `C-x r b'.
 \\[helm-ff-run-grep]\t\t->Run Grep (C-u Recursive).
 \\[helm-ff-run-pdfgrep]\t\t->Run Pdfgrep on marked files.
 \\[helm-ff-run-zgrep]\t\t->Run zgrep (C-u Recursive).
+\\[helm-ff-run-gid]\t\t->Run gid (id-utils).
 \\[helm-ff-run-etags]\t\t->Run Etags (C-u use thing-at-point `C-u C-u' reload cache)
 \\[helm-ff-run-rename-file]\t\t->Rename File (C-u Follow).
 \\[helm-ff-run-query-replace-on-marked]\t\t->Query replace on marked files.
@@ -562,6 +581,7 @@ C/\\[helm-cr-empty-string]\t\t->Maybe return empty string (unless `must-match').
 
 ;;;###autoload
 (defun helm-read-file-name-help ()
+  "Help command for `read-file-name'."
   (interactive)
   (let ((helm-help-message helm-read-file-name-help-message))
     (helm-help)))
@@ -623,6 +643,7 @@ book * -size +1M
 
 ;;;###autoload
 (defun helm-generic-file-help ()
+  "Global help for helm."
   (interactive)
   (let ((helm-help-message helm-generic-file-help-message))
     (helm-help)))
@@ -648,6 +669,16 @@ your regexp is ready to send to remote process, even if helm is handling
 this by delaying each process at 5s. 
 Or even better don't use tramp at all and mount your remote file system on SSHFS.
 
+* Helm Gid\n
+** Helm Gid tips
+
+Helm gid read the database created with the `mkid' command from id-utils.
+The name of the database file can be customized with `helm-gid-db-file-name', it
+is usually \"ID\".
+Helm Gid use the symbol at point as default-input.
+You have access to this command also from `helm-find-files' which allow you to
+navigate to another directory to consult its database.
+
 \n** Specific commands for Helm Grep:\n
 \\<helm-grep-map>
 \\[helm-goto-next-file]\t->Next File.
@@ -664,6 +695,7 @@ Or even better don't use tramp at all and mount your remote file system on SSHFS
 
 ;;;###autoload
 (defun helm-grep-help ()
+  "Help command for helm grep."
   (interactive)
   (let ((helm-help-message helm-grep-help-message))
     (helm-help)))
@@ -684,6 +716,7 @@ Or even better don't use tramp at all and mount your remote file system on SSHFS
 
 ;;;###autoload
 (defun helm-pdfgrep-help ()
+  "Help command for pdfgrep."
   (interactive)
   (let ((helm-help-message helm-pdfgrep-help-message))
     (helm-help)))
@@ -892,6 +925,7 @@ to modify occurences in your buffer.
 
 ;;;###autoload
 (defun helm-moccur-help ()
+  "Help command for (m)occur."
   (interactive)
   (let ((helm-help-message helm-moccur-help-message))
     (helm-help)))
@@ -914,6 +948,7 @@ to modify occurences in your buffer.
 
 ;;;###autoload
 (defun helm-top-help ()
+  "Help command for top."
   (interactive)
   (let ((helm-help-message helm-top-help-message))
     (helm-help)))
@@ -936,6 +971,7 @@ to modify occurences in your buffer.
 
 ;;;###autoload
 (defun helm-apt-help ()
+  "Help command for helm apt."
   (interactive)
   (let ((helm-help-message helm-apt-help-message))
     (helm-help)))
@@ -969,12 +1005,20 @@ This feature is only available with emacs-25.
 \\[helm-el-package-show-all]\t->Show all packages.
 \\[helm-el-package-show-installed]\t->Show installed packages only.
 \\[helm-el-package-show-uninstalled]\t->Show not installed packages only.
+\\[helm-el-package-show-upgrade]\t->Show upgradable packages only.
+\\[helm-el-run-package-install]\t->Install package(s).
+\\[helm-el-run-package-reinstall]\t->Reinstall package(s).
+\\[helm-el-run-package-uninstall]\t->Uninstall package(s).
+\\[helm-el-run-package-upgrade]\t->Upgrade package(s).
+\\[helm-el-run-package-upgrade-all]\t->Upgrade all packages upgradables.
+\\[helm-el-run-visit-homepage]\t->Visit package homepage.
 \\[helm-el-package-help]\t->Show this help.
 \n** Helm Map\n
 \\{helm-map}")
 
 ;;;###autoload
 (defun helm-el-package-help ()
+  "Help command for emacs packages."
   (interactive)
   (let ((helm-help-message helm-el-package-help-message))
     (helm-help)))
@@ -1002,6 +1046,7 @@ the amount of prefix args entered.
 
 ;;;###autoload
 (defun helm-M-x-help ()
+  "Help command for `helm-M-x'."
   (interactive)
   (let ((helm-help-message helm-M-x-help-message))
     (helm-help)))
@@ -1021,6 +1066,7 @@ the amount of prefix args entered.
 
 ;;;###autoload
 (defun helm-imenu-help ()
+  "Help command for imenu."
   (interactive)
   (let ((helm-help-message helm-imenu-help-message))
     (helm-help)))
@@ -1042,6 +1088,7 @@ the amount of prefix args entered.
 
 ;;;###autoload
 (defun helm-color-help ()
+  "Help command for color."
   (interactive)
   (let ((helm-help-message helm-colors-help-message))
     (helm-help)))
@@ -1061,6 +1108,7 @@ the amount of prefix args entered.
 
 ;;;###autoload
 (defun helm-semantic-help ()
+  "Help command for semantic."
   (interactive)
   (let ((helm-help-message helm-semantic-help-message))
     (helm-help)))
@@ -1089,6 +1137,7 @@ you don't choose from there a command using helm completion.
 
 ;;;###autoload
 (defun helm-kmacro-help ()
+  "Help command for kmacro."
   (interactive)
   (let ((helm-help-message helm-kmacro-help-message))
     (helm-help)))

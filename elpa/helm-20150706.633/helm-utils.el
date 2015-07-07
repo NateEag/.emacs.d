@@ -69,7 +69,13 @@ It is a float, usually 1024.0 but could be 1000.0 on some systems."
 (defvar helm-goto-line-before-hook '(helm-save-current-pos-to-mark-ring)
   "Run before jumping to line.
 This hook run when jumping from `helm-goto-line', `helm-etags-default-action',
-and `helm-imenu-default-action'.")
+and `helm-imenu-default-action'.
+This allow you to retrieve a previous position after using the different helm
+tools for searching (etags, grep, gid, (m)occur etc...).
+By default positions are added to `mark-ring' you can also add to register
+by using instead (or adding) `helm-save-pos-to-register-before-jump'.
+In this case last position is added to the register
+`helm-save-pos-before-jump-register'.")
 
 (defvar helm-save-pos-before-jump-register ?_
   "The register where `helm-save-pos-to-register-before-jump' save position.")
@@ -313,28 +319,6 @@ Default is `eq'."
         do (puthash elm elm cont)
         finally return
         (cl-loop for i being the hash-values in cont collect i)))
-
-(defun helm-remove-if-not-match (regexp seq)
-  "Remove all elements of SEQ that don't match REGEXP."
-  (cl-loop for s in seq
-           for str = (cond ((symbolp s)
-                            (symbol-name s))
-                           ((consp s)
-                            (car s))
-                           (t s))
-           when (string-match-p regexp str)
-           collect s))
-
-(defun helm-remove-if-match (regexp seq)
-  "Remove all elements of SEQ that match REGEXP."
-  (cl-loop for s in seq
-           for str = (cond ((symbolp s)
-                            (symbol-name s))
-                           ((consp s)
-                            (car s))
-                           (t s))
-           unless (string-match-p regexp str)
-           collect s))
 
 (defun helm-handle-winner-boring-buffers ()
   "Add `helm-buffer' to `winner-boring-buffers' when quitting/exiting helm.

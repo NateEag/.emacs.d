@@ -4,7 +4,8 @@
 
 ;; Author: Quang Linh LE <linktohack@gmail.com>
 ;; URL: http://github.com/linktohack/evil-commentary
-;; Version: 0.0.5
+;; Package-Version: 20150628.1054
+;; Version: 1.0.0
 ;; Keywords: evil comment commentary evil-commentary
 ;; Package-Requires: ((evil "1.0.0"))
 
@@ -43,7 +44,9 @@
 ;;; Code:
 
 (require 'evil)
-(require 'ec-mode-comment-functions)
+
+(eval-when-compile
+  (require 'org nil t))
 
 (defgroup evil-commentary nil
   "Comment stuff out"
@@ -60,18 +63,28 @@ function. By specify an alist of modes here, the comment function
 provided by major mode will be use instead.
 
 A comment functions has to accept BEG, END as its required
-parameter. See `ec-mode-comment-functions' if a customized one is
-needed."
+parameter."
   :group 'evil-commentary)
 
 (evil-define-operator evil-commentary (beg end type)
   "Comment or uncomment region that {motion} moves over."
   :move-point nil
   (interactive "<R>")
-  (let ((comment-function (cdr (assoc major-mode
-                                 evil-commentary-comment-function-for-mode-alist))))
-    (if comment-function (funcall comment-function beg end)
-      (comment-or-uncomment-region beg end))))
+  ;; Special treatment for org-mode
+  (cond ((and (fboundp 'org-in-src-block-p)
+              (org-in-src-block-p))
+           (push-mark beg)
+           (goto-char end)
+           (setq mark-active t)
+           (org-babel-do-in-edit-buffer
+            (call-interactively 'evil-commentary))
+           (pop-mark))
+        (t
+         (let ((comment-function
+                (cdr (assoc major-mode
+                            evil-commentary-comment-function-for-mode-alist))))
+           (if comment-function (funcall comment-function beg end)
+             (comment-or-uncomment-region beg end))))))
 
 (evil-define-operator evil-commentary-line (beg end type)
   "Comment or uncomment [count] lines."
@@ -85,10 +98,7 @@ needed."
               end (evil-range-end range)
               type (evil-type range))))
     (evil-exit-visual-state))
-  (let ((comment-function (cdr (assoc major-mode
-                                 evil-commentary-comment-function-for-mode-alist))))
-    (if comment-function (funcall comment-function beg end)
-      (comment-or-uncomment-region beg end))))
+  (evil-commentary beg end type))
 
 (evil-define-operator evil-commentary-yank (beg end type register yank-handler)
   "Saves the characters in motion into the kill-ring."

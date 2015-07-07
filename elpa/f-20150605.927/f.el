@@ -4,8 +4,8 @@
 
 ;; Author: Johan Andersson <johan.rejeep@gmail.com>
 ;; Maintainer: Johan Andersson <johan.rejeep@gmail.com>
-;; Version: 20150217.328
-;; X-Original-Version: 0.17.2
+;; Version: 0.17.2
+;; Package-Version: 20150605.927
 ;; Keywords: files, directories
 ;; URL: http://github.com/rejeep/f.el
 ;; Package-Requires: ((s "1.7.0") (dash "2.2.0"))
@@ -386,6 +386,14 @@ directory, return sum of all files in PATH."
       (-sum (-map 'f-size (f-files path nil t)))
     (nth 7 (file-attributes path))))
 
+(defun f-depth (path)
+  "Return the depth of PATH.
+
+At first, PATH is expanded with `f-expand'. Then the full path is used to
+detect the depth.
+'/' will be zero depth, '/usr' will be one depth. And so on."
+  (- (length (f-split (f-expand path))) 1))
+
 
 ;;;; Misc
 
@@ -496,7 +504,7 @@ RECURSIVE - Search for files and directories recursive."
         parent
       (if (funcall fn dir)
           dir
-	(with-no-warnings (f-up fn parent))))))
+       (with-no-warnings (f-up fn parent))))))
 
 (defmacro f--traverse-upwards (body &optional path)
   "Anaphoric version of `f-traverse-upwards'."

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "eclim" "eclim.el" (21915 45907 0 0))
+;;;### (autoloads nil "eclim" "eclim.el" (21930 18400 0 0))
 ;;; Generated autoloads from eclim.el
 
 (autoload 'eclim/workspace-dir "eclim" "\
@@ -42,7 +42,7 @@ See `eclim-mode' for more information on Eclim mode.
 
 ;;;***
 
-;;;### (autoloads nil "eclim-project" "eclim-project.el" (21915 45907
+;;;### (autoloads nil "eclim-project" "eclim-project.el" (21930 18400
 ;;;;;;  0 0))
 ;;; Generated autoloads from eclim-project.el
 
@@ -57,8 +57,8 @@ Manage all your eclim projects in one buffer.
 
 ;;;### (autoloads nil nil ("ac-emacs-eclim-source.el" "company-emacs-eclim.el"
 ;;;;;;  "eclim-ant.el" "eclim-completion.el" "eclim-java.el" "eclim-maven.el"
-;;;;;;  "eclim-problems.el" "eclimd.el" "emacs-eclim-pkg.el") (21915
-;;;;;;  45908 188515 0))
+;;;;;;  "eclim-problems.el" "eclimd.el" "emacs-eclim-pkg.el") (21930
+;;;;;;  18400 491141 0))
 
 ;;;***
 

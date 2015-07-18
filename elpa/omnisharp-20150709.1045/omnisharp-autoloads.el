@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "omnisharp" "omnisharp.el" (21915 46187 0 0))
+;;;### (autoloads nil "omnisharp" "omnisharp.el" (21930 18460 0 0))
 ;;; Generated autoloads from omnisharp.el
 
 (autoload 'omnisharp-mode "omnisharp" "\
@@ -20,18 +20,18 @@ server backend.
 ;;;***
 
 ;;;### (autoloads nil "omnisharp-auto-complete-actions" "omnisharp-auto-complete-actions.el"
-;;;;;;  (21915 46187 0 0))
+;;;;;;  (21930 18460 0 0))
 ;;; Generated autoloads from omnisharp-auto-complete-actions.el
 
 (autoload 'company-omnisharp "omnisharp-auto-complete-actions" "\
-`company-mode' completion back-end using OmniSharp.
 
-\(fn COMMAND &optional ARG &rest IGNORED)" nil nil)
+
+\(fn COMMAND &optional ARG &rest IGNORED)" t nil)
 
 ;;;***
 
 ;;;### (autoloads nil "omnisharp-server-actions" "omnisharp-server-actions.el"
-;;;;;;  (21915 46187 0 0))
+;;;;;;  (21930 18460 0 0))
 ;;; Generated autoloads from omnisharp-server-actions.el
 
 (autoload 'omnisharp-start-omnisharp-server "omnisharp-server-actions" "\
@@ -59,8 +59,8 @@ finished loading the solution.
 ;;;***
 
 ;;;### (autoloads nil nil ("example-config-for-evil-mode.el" "omnisharp-pkg.el"
-;;;;;;  "omnisharp-settings.el" "omnisharp-utils.el") (21915 46187
-;;;;;;  587260 0))
+;;;;;;  "omnisharp-settings.el" "omnisharp-utils.el") (21930 18460
+;;;;;;  489206 0))
 
 ;;;***
 

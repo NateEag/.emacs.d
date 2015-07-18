@@ -1,3 +1,82 @@
+2015-07-17  Helmut Eller  <heller@common-lisp.net>
+
+	Start using completion-at-point.
+
+	That saves us the complex code to display the list of completions.
+	Unfortunately, slime-complete-symbol-function doesn't work well to
+	customize it.  Had to introduce a replacment:
+	slime-completion-at-point-functions.
+
+	* slime.el (slime-complete-symbol): Use completion-at-point.
+	(slime-completion-at-point-functions): New.
+	(slime--completion-at-point-functions): New helper.
+	(slime-complete-symbol-function): Obsolete, but have to keep it
+	around for some time.
+	(slime-simple-completion-at-point): Renamed from
+	slime-simple-complete-symbol to avoid confusion.
+	(slime-filename-completion): Renamed from
+	slime-maybe-complete-as-filename.
+	(slime-simple-complete-symbol): Backward compatible replacement.
+
+	(slime-completions-buffer-name)
+	(slime-complete-saved-window-configuration)
+	(slime-completions-window)
+	(slime-complete-maybe-save-window-configuration)
+	(slime-complete-delay-restoration)
+	(slime-complete-forget-window-configuration)
+	(slime-complete-restore-window-configuration)
+	(slime-complete-maybe-restore-window-configuration)
+	(slime-completion-window-active-p, slime-display-completion-list)
+	(slime-display-or-scroll-completions, slime-scroll-completions)
+	(slime-minibuffer-respecting-message): Move to
+	contrib/slime-c-p-c.el
+
+	* slime-tests.el (complete-symbol): Update tests.
+	* doc/slime.texi: Update documentation for symbol completion.
+
+2015-07-15  Helmut Eller  <heller@common-lisp.net>
+
+	Use *READ-SUPPRESS* more often while searching source locations.
+	This avoids certain reader errors when the compile-time and
+	load-time state is different and also avoids some unnecessary
+	interning.
+
+	* swank/source-path-parser.lisp (read-source-form): Use
+	guess-reader-state to setup *package* and *readtable* before using
+	the reader.
+	(guess-reader-state, starts-with-p, extract-package): New helpers.
+	(skip-toplevel-forms):  Bind *read-suppress* to t while
+	skipping over top-level forms.
+	(ignore-errors): Shadow cl:ignore-errors so that it can be
+	redefined during debugging.
+
+	* slime-tests.el (find-definition.2): New test case.
+
+2015-07-09  Stas Boukarev  <stassats@gmail.com>
+
+	* swank/clasp.lisp (print-frame): Print function names, not
+	function objects.
+2015-07-09  Jim Newton  <jimka.issy@gmail.com>
+
+	* contrib/slime-enclosing-context.el (slime-edit-definition): Use
+	cl-values.
+
+2015-07-09  Luís Oliveira  <loliveira@common-lisp.net>
+
+	Fix issue #255, reported by rgivan1.
+
+	* swank/ccl.lisp (function-name-package): Handle traced functions
+	and setf functions.
+
+2015-07-07  YOKOTA Yuki  <y2q.actionman@gmail.com>
+
+	* swank-loader.lisp (list-fasls): New function.
+
+2015-07-07  Stas Boukarev  <stassats@gmail.com>
+
+	* swank/sbcl.lisp (definition-source-file-location): Stop errors
+	from source-path-parser from producing no locations at all.
+
 2015-06-27  Stas Boukarev  <stassats@gmail.com>
 
 	* swank.lisp (*pre-reply-hook*): Don't add

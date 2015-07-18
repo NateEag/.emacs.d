@@ -54,9 +54,9 @@
   "Local variables whose values need to be saved when `writeroom-mode' is activated.")
 
 (defvar writeroom--saved-data nil
-  "Buffer-local data to be stored when `writeroom-mode' is
-  activated, so that the settings can be restored when
-  `writeroom-mode' is deactivated.")
+  "Buffer-local data to be stored when `writeroom-mode' is activated.
+These settings are restored when `writeroom-mode' is
+deactivated.")
 (make-variable-buffer-local 'writeroom--saved-data)
 
 (defvar writeroom--mode-line-showing nil
@@ -83,12 +83,12 @@
 (defcustom writeroom-mode-line nil
   "The mode line format to use.
 By default, this option is set to nil, which disables the mode
-line when `writeroom-mode' is activated. By setting the option to
-t, the standard mode line is retained. Alternatively, it is
+line when `writeroom-mode' is activated.  By setting this option
+to t, the standard mode line is retained.  Alternatively, it is
 possible to specify a special mode line for `writeroom-mode'
-buffers. If this option is chosen, the default is to only show
+buffers.  If this option is chosen, the default is to only show
 the buffer's modification status and the buffer name, but the
-format can be customized. See the documentation for the variable
+format can be customized.  See the documentation for the variable
 `mode-line-format' for further information."
   :group 'writeroom
   :type '(choice (const :tag "Disable the mode line" nil)
@@ -140,7 +140,7 @@ with `global-writeroom-mode'."
 (defcustom writeroom-restore-window-config nil
   "If set, restore window configuration after disabling `writeroom-mode'.
 Setting this option makes sense primarily if `writeroom-mode' is
-used in one buffer only. The window configuration that is stored
+used in one buffer only.  The window configuration that is stored
 is the one that exists when `writeroom-mode' is first called, and
 it is restored when `writeroom-mode' is deactivated in the last
 buffer."
@@ -149,7 +149,7 @@ buffer."
                  (const :tag "Restore window configuration" t)))
 
 (defcustom writeroom-extra-line-spacing nil
-  "Additional line spacing for `writeroom-mode`"
+  "Additional line spacing for `writeroom-mode`."
   :group 'writeroom
   :type '(choice (const :tag "Do not add extra line spacing" :value nil)
                  (integer :tag "Absolute height" :value 5)
@@ -180,13 +180,13 @@ buffer."
 The effect is activated by setting frame parameter FP to VALUE.
 FP should be an unquoted symbol, the name of a frame parameter;
 VALUE must be quoted (unless it is a string or a number, of
-course). It can also be an unquoted symbol, in which case it
+course).  It can also be an unquoted symbol, in which case it
 should be the name of a global variable whose value is then
 assigned to FP.
 
 This macro defines a function `writeroom-toggle-<FP>' that takes
 one argument and activates the effect if this argument is t and
-deactivates it when it is nil. When the effect is activated,
+deactivates it when it is nil.  When the effect is activated,
 the original value of frame parameter FP is stored in a frame
 parameter `writeroom-<FP>', so that it can be restored when the
 effect is deactivated."
@@ -236,7 +236,7 @@ buffer's major mode is a member of `writeroom-major-modes'."
 
 (defun writeroom--kill-buffer-function ()
   "Disable `writeroom-mode' before killing a buffer, if necessary.
-This function is for use in `kill-buffer-hook'. It checks whether
+This function is for use in `kill-buffer-hook'.  It checks whether
 `writeroom-mode' is enabled in the buffer to be killed and
 adjusts `writeroom--buffers' and the global effects accordingly."
   (when writeroom-mode
@@ -269,9 +269,9 @@ otherwise."
 
 (defun writeroom--enable ()
   "Set up writeroom-mode for the current buffer.
-This function also runs the functions in
-`writeroom-global-effects' if the current buffer is the first
-buffer in which `writeroom-mode' is activated."
+Also run the functions in `writeroom-global-effects' if the
+current buffer is the first buffer in which `writeroom-mode' is
+activated."
   ;; save buffer-local variables, if they have a buffer-local binding
   (setq writeroom--saved-data (mapcar (lambda (sym)
                                         (if (local-variable-p sym)
@@ -284,7 +284,7 @@ buffer in which `writeroom-mode' is activated."
     (writeroom--activate-global-effects t)
     (if writeroom-restore-window-config
         (setq writeroom--saved-window-config (current-window-configuration))))
-  (add-to-list 'writeroom--buffers (current-buffer))
+  (push (current-buffer) writeroom--buffers)
 
   (when writeroom-maximize-window
     (delete-other-windows))
@@ -311,10 +311,9 @@ buffer in which `writeroom-mode' is activated."
 
 (defun writeroom--disable ()
   "Reset the current buffer to its normal appearance.
-This function also runs the functions in
-`writeroom-global-effects' to undo their effects if
-`writeroom-mode' is deactivated in the last buffer in which it
-was active."
+Also run the functions in `writeroom-global-effects' to undo
+their effects if `writeroom-mode' is deactivated in the last
+buffer in which it was active."
   ;; disable visual-fill-column-mode
   (visual-fill-column-mode -1)
   (kill-local-variable 'visual-fill-column-width)

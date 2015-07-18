@@ -70,8 +70,6 @@
   (require 'let-alist)      ; `let-alist'
   (require 'cl-lib)         ; `cl-defstruct'
   (require 'compile)        ; Compile Mode integration
-  (require 'package)        ; Tell Emacs about package-user-dir
-  (require 'sh-script)      ; `sh-shell' for sh checker predicates
   (require 'jka-compr)      ; For JKA workarounds in `flycheck-temp-file-system'
   (require 'pcase)          ; `pcase-dolist' (`pcase' itself is autoloaded)
   )
@@ -84,6 +82,12 @@
 (require 'rx)                    ; Regexp fanciness in `flycheck-define-checker'
 (require 'help-mode)             ; `define-button-type'
 (require 'find-func)             ; `find-function-regexp-alist'
+
+
+;; Declare a bunch of dynamic variables that we need from other modes
+(defvar sh-shell)                       ; For shell script checker predicates
+(defvar ess-language)                   ; For r-lintr predicate
+(defvar package-user-dir)               ; For emacs-lisp option filters
 
 ;; Tell the byte compiler about autoloaded functions from packages
 (declare-function pkg-info-version-info "pkg-info" (package))
@@ -231,6 +235,7 @@ attention to case differences."
     haskell-ghc
     haskell-hlint
     html-tidy
+    jade
     javascript-jshint
     javascript-eslint
     javascript-gjslint
@@ -271,6 +276,7 @@ attention to case differences."
     sh-zsh
     sh-shellcheck
     slim
+    sql-sqlint
     tex-chktex
     tex-lacheck
     texinfo
@@ -1751,7 +1757,8 @@ Pop up a help buffer with the documentation of CHECKER."
         (let ((filename (flycheck-checker-get checker 'file))
               (modes (flycheck-checker-get checker 'modes))
               (predicate (flycheck-checker-get checker 'predicate))
-              (print-doc (flycheck-checker-get checker 'print-doc)))
+              (print-doc (flycheck-checker-get checker 'print-doc))
+              (next-checkers (flycheck-checker-get checker 'next-checkers)))
           (princ (format "%s is a Flycheck syntax checker" checker))
           (when filename
             (princ (format " in `%s'" (file-name-nondirectory filename)))
@@ -1774,10 +1781,32 @@ Pop up a help buffer with the documentation of CHECKER."
               (when predicate
                 (princ ", and uses a custom predicate")))
             (princ ".")
+            (when next-checkers
+              (princ "  It runs the following checkers afterwards:"))
             (with-current-buffer standard-output
               (save-excursion
-                (fill-region-as-paragraph modes-start (point-max)))))
-          (princ "\n")
+                (fill-region-as-paragraph modes-start (point-max))))
+            (princ "\n")
+
+            ;; Print the list of next checkers
+            (when next-checkers
+              (princ "\n")
+              (let ((beg-checker-list (with-current-buffer standard-output
+                                        (point))))
+                (dolist (next-checker next-checkers)
+                  (if (symbolp next-checker)
+                      (princ (format "     * `%s'\n" next-checker))
+                    (princ (format "     * `%s' (maximum level `%s')\n"
+                                   (cdr next-checker) (car next-checker)))))
+                ;;
+                (with-current-buffer standard-output
+                  (save-excursion
+                    (while (re-search-backward "`\\([^`']+\\)'"
+                                               beg-checker-list t)
+                      (when (flycheck-valid-checker-p
+                             (intern-soft (match-string 1)))
+                        (help-xref-button 1 'help-flycheck-checker-def checker
+                                          filename))))))))
           ;; Call the custom print-doc function of the checker, if present
           (when print-doc
             (funcall print-doc checker))
@@ -5702,13 +5731,15 @@ is used."
     'auto emacs-lisp
   "Whether to initialize packages in the Emacs Lisp syntax checker.
 
-To initialize packages, call `package-initialize' before
-byte-compiling the file to check.
-
 When nil, never initialize packages.  When `auto', initialize
 packages only when checking `user-init-file' or files from
 `user-emacs-directory'.  For any other non-nil value, always
-initialize packages."
+initialize packages.
+
+When initializing packages is enabled the `emacs-lisp' syntax
+checker calls `package-initialize' before byte-compiling the file
+to be checked.  It also sets `package-user-dir' according to
+`flycheck-emacs-lisp-package-user-dir'."
   :type '(choice (const :tag "Do not initialize packages" nil)
                  (const :tag "Initialize packages for configuration only" auto)
                  (const :tag "Always initialize packages" t))
@@ -5742,8 +5773,9 @@ initialize packages."
 (flycheck-def-option-var flycheck-emacs-lisp-package-user-dir nil emacs-lisp
   "Package directory for the Emacs Lisp syntax checker.
 
-When set to a string, set `package-user-dir' to the value of this
-variable before initializing packages.
+If set to a string set `package-user-dir' to the value of this
+variable before initializing packages. If set to nil just inherit
+the value of `package-user-dir' from the running Emacs session.
 
 This variable has no effect, if
 `flycheck-emacs-lisp-initialize-packages' is nil."
@@ -5754,11 +5786,10 @@ This variable has no effect, if
 
 (defun flycheck-option-emacs-lisp-package-user-dir (value)
   "Option VALUE filter for `flycheck-emacs-lisp-package-user-dir'."
-  (unless value
-    ;; Inherit the package directory from our Emacs session
-    (setq value (and (boundp 'package-user-dir) package-user-dir)))
-  (when value
-    (flycheck-sexp-to-string `(setq package-user-dir ,value))))
+  ;; Inherit the package directory from our Emacs session
+  (let ((value (or value package-user-dir)))
+    (when value
+      (flycheck-sexp-to-string `(setq package-user-dir ,value)))))
 
 (flycheck-define-checker emacs-lisp
   "An Emacs Lisp syntax checker using the Emacs Lisp Byte compiler.
@@ -6314,6 +6345,23 @@ See URL `https://github.com/w3c/tidy-html5'."
             " - Warning: " (message) line-end))
   :modes (html-mode nxhtml-mode))
 
+(flycheck-define-checker jade
+  "A Jade syntax checker using the Jade compiler.
+
+See URL `http://jade-lang.com'."
+  :command ("jade" source)
+  :error-patterns
+  ;; The pattern is based on the pattern in
+  ;; https://github.com/tardyp/SublimeLinter-jade/blob/master/linter.py#L23;
+  ;; tweaked slightly to:
+  ;; Error: (\S+):(\d+).*\r?\n(?:.*\|.*\n)+.*\n(.*)
+  ((error line-start
+          "Error: " (file-name) ":" line (zero-or-more not-newline) "\n"
+          (one-or-more (and (zero-or-more not-newline) "|"
+                            (zero-or-more not-newline) "\n"))
+          (zero-or-more not-newline) "\n" (message) line-end))
+  :modes jade-mode)
+
 (flycheck-def-config-file-var flycheck-jshintrc javascript-jshint ".jshintrc"
   :safe #'stringp)
 
@@ -6863,7 +6911,9 @@ See URL `https://github.com/jimhester/lintr'."
             line-end)
    (error line-start (file-name) ":" line ":" column ": error: " (message)
           line-end))
-  :modes ess-mode)
+  :modes ess-mode
+  ;; Don't check ESS files which do not contain R
+  :predicate (lambda () (equal ess-language "S")))
 
 (flycheck-define-checker racket
   "A Racket syntax checker using the Racket compiler.
@@ -7218,6 +7268,9 @@ See URL `http://www.scalastyle.org'."
           (message) " line=" line (optional " column=" column) line-end)
    (warning line-start "warning file=" (file-name) " message="
             (message) " line=" line (optional " column=" column) line-end))
+  :error-filter (lambda (errors)
+                  (flycheck-sanitize-errors
+                   (flycheck-increment-error-columns errors)))
   :modes scala-mode
   :predicate
   ;; Inhibit this syntax checker if the JAR or the configuration are unset or
@@ -7441,6 +7494,26 @@ See URL `http://slim-lang.com'."
           (file-name) ", Line " line (optional ", Column " column)
           line-end))
   :modes slim-mode)
+
+(flycheck-define-checker sql-sqlint
+  "A SQL syntax checker using the sqlint tool.
+
+See URL `https://github.com/purcell/sqlint'."
+  :command ("sqlint" source)
+  :error-patterns
+  ((warning line-start (file-name) ":" line ":" column ":WARNING "
+            (message (one-or-more not-newline)
+                     (zero-or-more "\n"
+                                   (one-or-more "  ")
+                                   (one-or-more not-newline)))
+            line-end)
+   (error line-start (file-name) ":" line ":" column ":ERROR "
+          (message (one-or-more not-newline)
+                   (zero-or-more "\n"
+                                 (one-or-more "  ")
+                                 (one-or-more not-newline)))
+          line-end))
+  :modes (sql-mode))
 
 (flycheck-def-config-file-var flycheck-chktexrc tex-chktex ".chktexrc"
   :safe #'stringp)

@@ -457,6 +457,14 @@ Symbol is defined as a chunk of text recognized by
                          common-lisp-mode)
   "List of Lisp modes.")
 
+(defcustom sp-no-reindent-after-kill-modes '(
+                                             coffee-mode
+                                             js2-mode
+                                             )
+  "List of modes that should not reindent after kill."
+  :type '(repeat symbol)
+  :group 'smartparens)
+
 (defvar sp--html-modes '(
                          sgml-mode
                          html-mode
@@ -2450,7 +2458,9 @@ value is used instead of a test."
                      (fun-spec (buffer-substring-no-properties p fun-end))
                      (instruction (cond
                                    ((equal fun-spec "i")
-                                    '(indent-according-to-mode)))))
+                                    '(indent-according-to-mode))
+                                   ((equal (aref fun-spec 0) ?d)
+                                    `(delete-char ,(string-to-number (substring fun-spec 1)))))))
                 (when instruction (push instruction spec)))))
            ((equal (match-string 0) "|")
             (cond
@@ -2954,12 +2964,15 @@ pairs insertable by trigger are returned."
    ;; in case of triggers shorter always wins
    ((eq prop :trigger)
     (< (length (plist-get a :trigger)) (length (plist-get b :trigger))))
-   ;; shorter wins only if the shorter's closing is a prefix of the
-   ;; longer's closing
+   ;; Shorter wins only if the shorter's closing is a prefix of the
+   ;; longer's closing.  In other words, if we are looking at
+   ;; shorter's closing and we are trying to nest it.
    (t
     (if (< (length (plist-get a :open)) (length (plist-get b :open)))
-        (string-prefix-p (plist-get a :close) (plist-get b :close))
-      (not (string-prefix-p (plist-get b :close) (plist-get a :close)))))))
+        (and (string-prefix-p (plist-get a :close) (plist-get b :close))
+             (sp--looking-at-p (plist-get a :close)))
+      (not (and (string-prefix-p (plist-get b :close) (plist-get a :close))
+                (sp--looking-at-p (plist-get b :close))))))))
 
 (defun sp--pair-to-insert ()
   "Return pair that can be inserted at point.
@@ -5343,13 +5356,14 @@ Note: prefix argument is shown after the example in
       (delete-region bdel edel)))
   (if (memq major-mode sp--lisp-modes)
       (indent-according-to-mode)
-    (save-excursion
-      (indent-region (line-beginning-position) (line-end-position)))
-    (when (> (save-excursion
-               (back-to-indentation)
-               (current-indentation))
-             (current-column))
-      (back-to-indentation))))
+    (unless (memq major-mode sp-no-reindent-after-kill-modes)
+      (save-excursion
+        (indent-region (line-beginning-position) (line-end-position)))
+      (when (> (save-excursion
+                 (back-to-indentation)
+                 (current-indentation))
+               (current-column))
+        (back-to-indentation)))))
 
 (defun sp-backward-kill-sexp (&optional arg dont-kill)
   "Kill the balanced expression preceding point.

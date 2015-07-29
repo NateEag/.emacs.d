@@ -65,8 +65,7 @@
   :commands s-replace s-trim)
 
 (use-package magit
-  :defer t
-  :diminish magit-auto-revert-mode)
+  :defer t)
 
 (use-package abbrev
   :defer t

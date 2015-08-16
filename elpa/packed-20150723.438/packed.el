@@ -5,10 +5,10 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/tarsius/packed
 ;; Keywords: compile, convenience, lisp, package, library
-;; Package-Version: 20150614.529
+;; Package-Version: 20150723.438
 
 ;; Package: packed
-;; Package-Requires: ((cl-lib "0.5") (dash "2.10.0"))
+;; Package-Requires: ((emacs "24.3") (dash "2.10.0"))
 
 ;; This file is not part of GNU Emacs.
 

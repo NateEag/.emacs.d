@@ -49,6 +49,7 @@
     (define-key map (kbd "g") 'eclim-project-mode-refresh)
     (define-key map (kbd "R") 'eclim-project-rename)
     (define-key map (kbd "q") 'eclim-quit-window)
+    (define-key map (kbd "r") 'eclim-project-refresh)
     map))
 
 (defvar eclim-project-info-mode-map
@@ -88,10 +89,6 @@
             (eclim--project-current-line)))
     (eclim--completing-read "Project: "
                             (mapcar (lambda (p) (assoc-default 'name p)) (eclim/project-list)))))
-
-(defun eclim--project-set-current ()
-  (ignore-errors
-    (setq eclim--project-name (eclim--project-current-line))))
 
 (defun eclim--project-buffer-refresh ()
   (eclim--project-clear-cache)
@@ -262,19 +259,22 @@
 
 (defun eclim-project-nature-add (nature)
   (interactive (list (eclim--project-nature-read)))
-  (message (eclim/project-nature-add eclim--project-name nature)))
+  (message (eclim/project-nature-add (eclim--project-current-line) nature)))
 
 (defun eclim-project-nature-remove (nature)
   (interactive (list (completing-read "Remove nature: "
                                       (append
-                                       (cdadr (aref (eclim/project-natures eclim--project-name) 0))
+                                       (cdadr (aref (eclim/project-natures (eclim--project-current-line)) 0))
                                        nil))))
-  (message (eclim/project-nature-remove eclim--project-name nature)))
+  (message (eclim/project-nature-remove (eclim--project-current-line) nature)))
 
 (defun eclim-project-natures ()
   (interactive)
   (message (with-output-to-string
-             (princ (cdadr (aref (eclim/project-natures eclim--project-name) 0))))))
+             (princ (cdadr (aref (eclim/project-natures (eclim--project-current-line)) 0))))))
+
+(defun eclim-project-dependencies (project)
+  (cdr (assoc 'depends (eclim/project-info project))))
 
 (defun eclim-project-mode-refresh ()
   (interactive)
@@ -300,6 +300,13 @@
   (when (not (listp projects)) (set 'projects (list projects)))
   (dolist (project projects)
     (eclim/project-close project))
+  (eclim--project-buffer-refresh))
+
+(defun eclim-project-refresh (projects)
+  (interactive (list (eclim--project-read)))
+  (when (not (listp projects)) (set 'projects (list projects)))
+  (dolist (project projects)
+    (eclim/project-refresh project))
   (eclim--project-buffer-refresh))
 
 (defun eclim-project-mark-current ()
@@ -375,15 +382,14 @@
         mode-name "eclim/project"
         mode-line-process ""
         truncate-lines t
-        line-move-visual nil
         buffer-read-only t
         default-directory (eclim/workspace-dir))
+  (setq-local line-move-visual nil)
   (put 'eclim-project-mode 'mode-class 'special)
   (hl-line-mode t)
   (use-local-map eclim-project-mode-map)
   (cd "~") ;; setting a defualt directoy avoids some problems with tramp
   (eclim--project-buffer-refresh)
-  (add-hook 'post-command-hook 'eclim--project-set-current nil t)
   (beginning-of-buffer)
   (run-mode-hooks 'eclim-project-mode-hook))
 

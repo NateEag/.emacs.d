@@ -19,11 +19,18 @@ Maintainer
 
 - Jonas Bernoulli <jonas@bernoul.li>
 
-Retired Maintainers
--------------------
+Developers
+----------
+
+- Kyle Meyer <kyle@kyleam.com>
+- Noam Postavsky <npostavs@users.sourceforge.net>
+
+Retired Maintainers and Developers
+----------------------------------
 
 - Nicolas Dudebout <nicolas.dudebout@gatech.edu>
 - Peter J. Weisberg <pj@irregularexpressions.net>
+- Pieter Praet <pieter@praet.org>
 - Phil Jackson <phil@shellarchive.co.uk>
 - Rémi Vanicat <vanicat@debian.org>
 - Yann Hodique <yann.hodique@gmail.com>
@@ -100,6 +107,7 @@ Contributors
 - Jeff Bellegarde <jbellegarde@whitepages.com>
 - Jeff Dairiki <dairiki@dairiki.org>
 - Jesse Alama <jesse.alama@gmail.com>
+- Johann Klähn <kljohann@gmail.com>
 - John Mastro <john.b.mastro@gmail.com>
 - John Wiegley <johnw@newartisans.com>
 - Jonas Bernoulli <jonas@bernoul.li>
@@ -108,6 +116,7 @@ Contributors
 - Josiah Schwab <jschwab@gmail.com>
 - Julien Danjou <julien@danjou.info>
 - Justin Caratzas <justin.caratzas@gmail.com>
+- Kan-Ru Chen <kanru@kanru.info>
 - Kan-Ru Chen <koster@debian.org>
 - Kimberly Wolk <kimwolk@hotmail.com>
 - Kyle Meyer <kyle@kyleam.com>
@@ -129,6 +138,7 @@ Contributors
 - Marian Schubert <marian.schubert@gooddata.com>
 - Marius Vollmer <marius.vollmer@gmail.com>
 - Mark Hepburn <Mark.Hepburn@csiro.au>
+- Mark Karpov <markkarpov@opmbx.org>
 - Mark Oteiza <mvoteiza@udel.edu>
 - Matus Goljer <dota.keys@gmail.com>
 - Michael Fogleman <michaelwfogleman@gmail.com>
@@ -143,6 +153,7 @@ Contributors
 - Nick Alcock <nick.alcock@oracle.com>
 - Nick Alexander <nalexander@mozilla.com>
 - Nick Dimiduk <ndimiduk@gmail.com>
+- Nicklas Lindgren <nili@gulmohar.se>
 - Nicolas Dudebout <nicolas.dudebout@gatech.edu>
 - Nicolas Richard <theonewiththeevillook@yahoo.fr>
 - Noam Postavsky <npostavs@users.sourceforge.net>
@@ -159,6 +170,7 @@ Contributors
 - Philipp Haselwarter <philipp@haselwarter.org>
 - Philip Weaver <philip.weaver@gmail.com>
 - Phil Jackson <phil@shellarchive.co.uk>
+- Phil Sainty <phil@catalyst.net.nz>
 - Pieter Praet <pieter@praet.org>
 - Prathamesh Sonpatki <csonpatki@gmail.com>
 - rabio <rabiodev@o2.pl>
@@ -168,6 +180,7 @@ Contributors
 - Remco van 't Veer <rwvtveer@xs4all.nl>
 - Rémi Vanicat <vanicat@debian.org>
 - René Stadler <mail@renestadler.de>
+- Richard Kim <emacs18@gmail.com>
 - Robert Boone <robo4288@gmail.com>
 - Robin Green <greenrd@greenrd.org>
 - Roger Crew <crew@cs.stanford.edu>

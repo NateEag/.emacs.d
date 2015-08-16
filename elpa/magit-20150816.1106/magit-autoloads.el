@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "git-rebase" "git-rebase.el" (21930 18435 0
+;;;### (autoloads nil "git-rebase" "git-rebase.el" (21968 62103 0
 ;;;;;;  0))
 ;;; Generated autoloads from git-rebase.el
 
@@ -23,7 +23,7 @@ running 'man git-rebase' at the command line) for details.
 
 ;;;***
 
-;;;### (autoloads nil "magit" "magit.el" (21930 18435 0 0))
+;;;### (autoloads nil "magit" "magit.el" (21968 62104 0 0))
 ;;; Generated autoloads from magit.el
 
 (autoload 'magit-status "magit" "\
@@ -34,6 +34,11 @@ If that directory isn't the root of an existing repository
 then offer to initialize it as a new repository.
 
 \(fn &optional DIRECTORY)" t nil)
+
+(autoload 'magit-status-internal "magit" "\
+
+
+\(fn DIRECTORY &optional SWITCH-FUNCTION)" nil nil)
  (autoload 'magit-show-refs-popup "magit" nil t)
 
 (autoload 'magit-show-refs-head "magit" "\
@@ -275,6 +280,32 @@ Fetch all submodules.
 With a prefix argument fetch all remotes.
 
 \(fn &optional ALL)" t nil)
+
+(autoload 'magit-submodule-deinit "magit" "\
+Unregister the submodule at PATH.
+
+\(fn PATH)" t nil)
+
+(defvar global-magit-file-buffer-mode nil "\
+Non-nil if Global-Magit-File-Buffer mode is enabled.
+See the command `global-magit-file-buffer-mode' for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `global-magit-file-buffer-mode'.")
+
+(custom-autoload 'global-magit-file-buffer-mode "magit" nil)
+
+(autoload 'global-magit-file-buffer-mode "magit" "\
+Toggle Magit-File-Buffer mode in all buffers.
+With prefix ARG, enable Global-Magit-File-Buffer mode if ARG is positive;
+otherwise, disable it.  If called from Lisp, enable the mode if
+ARG is omitted or nil.
+
+Magit-File-Buffer mode is enabled in all buffers where
+`magit-file-buffer-mode-turn-on' would do it.
+See `magit-file-buffer-mode' for more information on Magit-File-Buffer mode.
+
+\(fn &optional ARG)" t nil)
  (autoload 'magit-dispatch-popup "magit" nil t)
  (autoload 'magit-run-popup "magit" nil t)
 
@@ -283,13 +314,30 @@ Execute a Git subcommand asynchronously, displaying the output.
 With a prefix argument run Git in the root of the current
 repository, otherwise in `default-directory'.
 
-Non-interactively run Git in DIRECTORY with ARGS.
+\(fn ARGS DIRECTORY)" t nil)
+
+(autoload 'magit-git-command-topdir "magit" "\
+Execute a Git subcommand asynchronously, displaying the output.
+Run Git in the top-level directory of the current repository.
+
+\(fn)" t nil)
+
+(autoload 'magit-shell-command "magit" "\
+Execute a shell command asynchronously, displaying the output.
+With a prefix argument run the command in the root of the current
+repository, otherwise in `default-directory'.
 
 \(fn ARGS DIRECTORY)" t nil)
 
+(autoload 'magit-shell-command-topdir "magit" "\
+Execute a shell command asynchronously, displaying the output.
+Run the command in the top-level directory of the current repository.
+
+\(fn)" t nil)
+
 ;;;***
 
-;;;### (autoloads nil "magit-apply" "magit-apply.el" (21930 18435
+;;;### (autoloads nil "magit-apply" "magit-apply.el" (21968 62104
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-apply.el
 
@@ -326,7 +374,7 @@ Remove all changes from the staging area.
 
 ;;;***
 
-;;;### (autoloads nil "magit-bisect" "magit-bisect.el" (21930 18435
+;;;### (autoloads nil "magit-bisect" "magit-bisect.el" (21968 62103
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-bisect.el
  (autoload 'magit-bisect-popup "magit-bisect" nil t)
@@ -374,7 +422,7 @@ Bisect automatically by running commands after each step.
 
 ;;;***
 
-;;;### (autoloads nil "magit-blame" "magit-blame.el" (21930 18435
+;;;### (autoloads nil "magit-blame" "magit-blame.el" (21968 62104
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-blame.el
  (autoload 'magit-blame-popup "magit-blame" nil t)
@@ -399,10 +447,9 @@ only arguments available from `magit-blame-popup' should be used.
 
 ;;;***
 
-;;;### (autoloads nil "magit-commit" "magit-commit.el" (21930 18435
+;;;### (autoloads nil "magit-commit" "magit-commit.el" (21968 62103
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-commit.el
- (autoload 'magit-commit-popup "magit-commit" nil t)
 
 (autoload 'magit-commit "magit-commit" "\
 Create a new commit on HEAD.
@@ -491,10 +538,9 @@ Create a squash commit and instantly rebase.
 
 ;;;***
 
-;;;### (autoloads nil "magit-diff" "magit-diff.el" (21930 18435 0
+;;;### (autoloads nil "magit-diff" "magit-diff.el" (21968 62104 0
 ;;;;;;  0))
 ;;; Generated autoloads from magit-diff.el
- (autoload 'magit-diff-popup "magit-diff" nil t)
 
 (autoload 'magit-diff-dwim "magit-diff" "\
 Show changes for the thing at point.
@@ -503,10 +549,17 @@ Show changes for the thing at point.
 
 (autoload 'magit-diff "magit-diff" "\
 Show differences between two commits.
+
 RANGE should be a range (A..B or A...B) but can also be a single
 commit.  If one side of the range is omitted, then it defaults
 to HEAD.  If just a commit is given, then changes in the working
 tree relative to that commit are shown.
+
+If the region is active, use the revisions on the first and last
+line of the region.  With a prefix argument, instead of diffing
+the revisions, choose a revision to view changes along, starting
+at the common ancestor of both revisions (i.e., use a \"...\"
+range).
 
 \(fn RANGE &optional ARGS FILES)" t nil)
 
@@ -545,7 +598,7 @@ While amending, invoking the command again toggles between
 showing just the new changes or all the changes that will
 be commited.
 
-\(fn &optional ARGS)" t nil)
+\(fn &optional ARGS FILES)" t nil)
 
 (autoload 'magit-diff-paths "magit-diff" "\
 Show changes between any two files on disk.
@@ -557,11 +610,11 @@ Show the commit at point.
 If there is no commit at point or with a prefix argument prompt
 for a commit.
 
-\(fn COMMIT &optional NOSELECT MODULE ARGS)" t nil)
+\(fn COMMIT &optional NOSELECT MODULE ARGS FILES)" t nil)
 
 ;;;***
 
-;;;### (autoloads nil "magit-ediff" "magit-ediff.el" (21930 18435
+;;;### (autoloads nil "magit-ediff" "magit-ediff.el" (21968 62104
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-ediff.el
  (autoload 'magit-ediff-popup "magit-ediff" nil t)
@@ -588,6 +641,12 @@ Compare REVA:FILEA with REVB:FILEB using Ediff.
 FILEA and FILEB have to be relative to the top directory of the
 repository.  If REVA or REVB is nil then this stands for the
 working tree state.
+
+If the region is active, use the revisions on the first and last
+line of the region.  With a prefix argument, instead of diffing
+the revisions, choose a revision to view changes along, starting
+at the common ancestor of both revisions (i.e., use a \"...\"
+range).
 
 \(fn REVA REVB FILEA FILEB)" t nil)
 
@@ -623,9 +682,20 @@ FILE must be relative to the top directory of the repository.
 
 \(fn FILE)" t nil)
 
+(autoload 'magit-ediff-show-working-tree "magit-ediff" "\
+Show changes between HEAD and working tree using Ediff.
+FILE must be relative to the top directory of the repository.
+
+\(fn FILE)" t nil)
+
+(autoload 'magit-ediff-show-commit "magit-ediff" "\
+Show changes introduced by COMMIT using Ediff.
+
+\(fn COMMIT)" t nil)
+
 ;;;***
 
-;;;### (autoloads nil "magit-extras" "magit-extras.el" (21930 18435
+;;;### (autoloads nil "magit-extras" "magit-extras.el" (21968 62103
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-extras.el
 
@@ -644,11 +714,19 @@ blame to center around the line point is on.
 \(fn COMMIT FILENAME &optional LINENUM)" t nil)
 
 (autoload 'magit-run-gitk "magit-extras" "\
-Run Gitk for the current git repository.
-Without a prefix argument run `gitk --all', with
-a prefix argument run gitk without any arguments.
+Run `gitk' in the current repository.
 
-\(fn ARG)" t nil)
+\(fn)" t nil)
+
+(autoload 'magit-run-gitk-branches "magit-extras" "\
+Run `gitk --branches' in the current repository.
+
+\(fn)" t nil)
+
+(autoload 'magit-run-gitk-all "magit-extras" "\
+Run `gitk --all' in the current repository.
+
+\(fn)" t nil)
 
 (autoload 'magit-clean "magit-extras" "\
 Remove untracked files from the working tree.
@@ -688,9 +766,8 @@ on a position in a file-visiting buffer.
 
 ;;;***
 
-;;;### (autoloads nil "magit-log" "magit-log.el" (21930 18435 0 0))
+;;;### (autoloads nil "magit-log" "magit-log.el" (21968 62104 0 0))
 ;;; Generated autoloads from magit-log.el
- (autoload 'magit-log-popup "magit-log" nil t)
 
 (autoload 'magit-log-current "magit-log" "\
 Show log for the current branch.
@@ -730,8 +807,10 @@ Show log for all references and `HEAD'.
 
 (autoload 'magit-log-buffer-file "magit-log" "\
 Show log for the file visited in the current buffer.
+With a prefix argument or when `--follow' is part of
+`magit-log-arguments', then follow renames.
 
-\(fn)" t nil)
+\(fn &optional FOLLOW)" t nil)
 
 (autoload 'magit-reflog-current "magit-log" "\
 Display the reflog of the current branch.
@@ -755,12 +834,13 @@ Show commits in a branch that are not merged in the upstream branch.
 
 ;;;***
 
-;;;### (autoloads nil "magit-remote" "magit-remote.el" (21930 18435
+;;;### (autoloads nil "magit-remote" "magit-remote.el" (21968 62104
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-remote.el
 
 (autoload 'magit-clone "magit-remote" "\
 Clone the REPOSITORY to DIRECTORY.
+Then show the status buffer for the new repository.
 
 \(fn REPOSITORY DIRECTORY)" t nil)
  (autoload 'magit-remote-popup "magit-remote" nil t)
@@ -866,6 +946,10 @@ Push a tag to another repository.
 
 (autoload 'magit-format-patch "magit-remote" "\
 Create patches for the commits in RANGE.
+When a single commit is given for RANGE, create a patch for the
+changes introduced by that commit (unlike 'git format-patch'
+which creates patches for all commits that are reachable from
+HEAD but not from the specified commit).
 
 \(fn RANGE ARGS)" t nil)
 
@@ -881,8 +965,8 @@ is asked to pull.  START has to be reachable from that commit.
 
 ;;;***
 
-;;;### (autoloads nil "magit-sequence" "magit-sequence.el" (21930
-;;;;;;  18435 0 0))
+;;;### (autoloads nil "magit-sequence" "magit-sequence.el" (21968
+;;;;;;  62104 0 0))
 ;;; Generated autoloads from magit-sequence.el
 
 (autoload 'magit-sequencer-continue "magit-sequence" "\
@@ -971,7 +1055,7 @@ All commits not in UPSTREAM are rebased.
 
 \(fn UPSTREAM &optional ARGS)" t nil)
 
-(autoload 'magit-rebase-from "magit-sequence" "\
+(autoload 'magit-rebase-subset "magit-sequence" "\
 Start a non-interactive rebase sequence.
 Commits from START to `HEAD' onto NEWBASE.  START has to be
 selected from a list of recent commits.
@@ -1026,7 +1110,7 @@ Abort the current rebase operation, restoring the original branch.
 
 ;;;***
 
-;;;### (autoloads nil "magit-stash" "magit-stash.el" (21930 18435
+;;;### (autoloads nil "magit-stash" "magit-stash.el" (21968 62104
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-stash.el
  (autoload 'magit-stash-popup "magit-stash" nil t)
@@ -1114,11 +1198,11 @@ List all stashes in a buffer.
 (autoload 'magit-stash-show "magit-stash" "\
 Show all diffs of a stash in a buffer.
 
-\(fn STASH &optional NOSELECT ARGS)" t nil)
+\(fn STASH &optional NOSELECT ARGS FILES)" t nil)
 
 ;;;***
 
-;;;### (autoloads nil "magit-wip" "magit-wip.el" (21930 18435 0 0))
+;;;### (autoloads nil "magit-wip" "magit-wip.el" (21968 62103 0 0))
 ;;; Generated autoloads from magit-wip.el
 
 (defvar magit-wip-after-save-mode nil "\
@@ -1149,7 +1233,14 @@ See the command `magit-wip-after-apply-mode' for a description of this minor mod
 (custom-autoload 'magit-wip-after-apply-mode "magit-wip" nil)
 
 (autoload 'magit-wip-after-apply-mode "magit-wip" "\
-Commit to work-in-progress refs
+Commit to work-in-progress refs.
+
+After applying a change using any \"apply variant\"
+command (apply, stage, unstage, discard, and reverse) commit the
+affected files to the current wip refs.  For each branch there
+may be two wip refs; one contains snapshots of the files as found
+in the worktree and the other contains snapshots of the entries
+in the index.
 
 \(fn &optional ARG)" t nil)
 
@@ -1178,7 +1269,7 @@ command which is about to be called are committed.
 
 ;;;### (autoloads nil nil ("magit-core.el" "magit-git.el" "magit-mode.el"
 ;;;;;;  "magit-pkg.el" "magit-process.el" "magit-section.el" "magit-utils.el")
-;;;;;;  (21930 18435 370543 0))
+;;;;;;  (21968 62104 500276 0))
 
 ;;;***
 

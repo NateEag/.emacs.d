@@ -85,6 +85,9 @@
   :defer t
   :diminish)
 
+(use-package conf-mode
+  :mode "/dotfiles/")
+
 (use-package csharp-mode
   :config
   (add-hook 'csharp-mode-hook 'omnisharp-mode))

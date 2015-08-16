@@ -24,8 +24,8 @@
 
 ;; Author: David Andersson <l.david.andersson(at)sverige.nu>
 ;; Created: 27 April 2003
-;; Version: 20140929.2246
-;; X-Original-Version: 0.6 (2012-10-23)
+;; Version: 0.6 (2012-10-23)
+;; Package-Version: 20150808.1705
 ;; Keywords: keyboard chord input
 
 ;;; Commentary:
@@ -335,6 +335,9 @@ Please ignore that."
 		     key-chord-two-keys-delay)))
 	(if (if executing-kbd-macro
 		(not (memq first-char key-chord-in-last-kbd-macro))
+              (when (bound-and-true-p eldoc-mode)
+                (eldoc-pre-command-refresh-echo-area))
+
 	      (sit-for delay 0 'no-redisplay))
 	    (progn
 	      (setq key-chord-last-unmatched nil)

@@ -4,8 +4,8 @@
 
 ;; Author: akicho8 <akicho8@gmail.com>
 ;; Keywords: elisp
-;; Version: 20150303.252
-;; X-Original-Version: 1.0.2
+;; Package-Version: 20150805.256
+;; Version: 1.0.2
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -84,6 +84,12 @@
   "FOO_BAR format"
   (interactive)
   (insert (string-inflection-upcase-function (string-inflection-get-current-word t))))
+  
+;;;###autoload
+(defun string-inflection-lisp ()
+  "foo-bar format"
+  (interactive)
+  (insert (replace-regexp-in-string "_" "-" (string-inflection-underscore-function (string-inflection-get-current-word t)))))
 
 ;;--------------------------------------------------------------------------------
 

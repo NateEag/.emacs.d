@@ -2,9 +2,9 @@
 ;;
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: navigation slime elisp emacs-lisp
+;; Package-Version: 20150805.1248
 ;; URL: https://github.com/purcell/elisp-slime-nav
-;; Version: 20141224.854
-;; X-Original-Version: DEV
+;; Version: DEV
 ;;
 ;;; Commentary:
 ;;
@@ -83,7 +83,10 @@ Argument SYM-NAME is the thing to find."
   (when sym-name
     (let ((sym (intern sym-name)))
       (message "Searching for %s..." sym-name)
-      (ring-insert find-tag-marker-ring (point-marker))
+      (if (fboundp 'xref-push-marker-stack)
+          (xref-push-marker-stack)
+        (with-no-warnings
+          (ring-insert find-tag-marker-ring (point-marker))))
       (cond
        ((fboundp sym)
         (find-function sym))
@@ -108,7 +111,10 @@ for the symbol to jump to.
 
 Argument SYM-NAME is the thing to find."
   (interactive (list (elisp-slime-nav--read-symbol-at-point)))
-  (help-xref-interned (intern sym-name)))
+  (if (fboundp 'describe-symbol)
+      (describe-symbol (intern sym-name))
+    (with-no-warnings
+      (help-xref-interned (intern sym-name)))))
 
 
 (provide 'elisp-slime-nav)

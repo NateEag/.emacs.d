@@ -87,7 +87,10 @@ Any other non--nil value update after confirmation."
   "Keymap used in Moccur source.")
 
 
+;; History vars
 (defvar helm-build-regexp-history nil)
+(defvar helm-occur-history nil)
+
 (defun helm-query-replace-regexp (_candidate)
   "Query replace regexp from `helm-regexp'.
 With a prefix arg replace only matches surrounded by word boundaries,
@@ -279,18 +282,18 @@ Same as `helm-moccur-goto-line' but go in new frame."
   "Run goto line other window action from `helm-source-moccur'."
   (interactive)
   (with-helm-alive-p
-    (helm-quit-and-execute-action 'helm-moccur-goto-line-ow)))
+    (helm-exit-and-execute-action 'helm-moccur-goto-line-ow)))
 
 (defun helm-moccur-run-goto-line-of ()
   "Run goto line new frame action from `helm-source-moccur'."
   (interactive)
   (with-helm-alive-p
-    (helm-quit-and-execute-action 'helm-moccur-goto-line-of)))
+    (helm-exit-and-execute-action 'helm-moccur-goto-line-of)))
 
 (defun helm-moccur-run-default-action ()
   (interactive)
   (with-helm-alive-p
-    (helm-quit-and-execute-action 'helm-moccur-goto-line)))
+    (helm-exit-and-execute-action 'helm-moccur-goto-line)))
 
 (defvar helm-source-moccur nil)
 (defclass helm-source-multi-occur (helm-source-in-buffer)
@@ -308,7 +311,7 @@ Same as `helm-moccur-goto-line' but go in new frame."
    (candidate-number-limit :initform 9999)
    (help-message :initform 'helm-moccur-help-message)
    (keymap :initform helm-moccur-map)
-   (history :initform 'helm-grep-history)
+   (history :initform 'helm-occur-history)
    (requires-pattern :initform 2)))
 
 (defun helm-moccur-resume-fn ()
@@ -395,7 +398,7 @@ Same as `helm-moccur-goto-line' but go in new frame."
               collect (buffer-chars-modified-tick (get-buffer b)))))
   (helm :sources 'helm-source-moccur
         :buffer "*helm multi occur*"
-        :history 'helm-grep-history
+        :history 'helm-occur-history
         :keymap helm-moccur-map
         :input input
         :truncate-lines t))
@@ -404,7 +407,7 @@ Same as `helm-moccur-goto-line' but go in new frame."
   "Run moccur save results action from `helm-moccur'."
   (interactive)
   (with-helm-alive-p
-    (helm-quit-and-execute-action 'helm-moccur-save-results)))
+    (helm-exit-and-execute-action 'helm-moccur-save-results)))
 
 
 ;;; helm-moccur-mode
@@ -564,7 +567,7 @@ Special commands:
               collect (buffer-chars-modified-tick (get-buffer b)))))
   (helm :sources 'helm-source-occur
         :buffer "*helm occur*"
-        :history 'helm-grep-history
+        :history 'helm-occur-history
         :preselect (and (memq 'helm-source-occur helm-sources-using-default-as-input)
                         (format "%s:%d:" (regexp-quote (buffer-name))
                                 (line-number-at-pos (point))))
@@ -588,7 +591,7 @@ Special commands:
               collect (buffer-chars-modified-tick (get-buffer b))))
     (helm :sources 'helm-source-occur
           :buffer "*helm occur*"
-          :history 'helm-grep-history
+          :history 'helm-occur-history
           :input input
           :truncate-lines t)))
 

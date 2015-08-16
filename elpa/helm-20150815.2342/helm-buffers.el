@@ -86,8 +86,13 @@ Only buffer names are fuzzy matched when this is enabled,
                                        helm-source-recentf
                                        helm-source-buffer-not-found)
   "Default sources list used in `helm-mini'."
-  :group 'helm-misc
+  :group 'helm-buffers
   :type '(repeat (choice symbol)))
+
+(defcustom helm-buffers-end-truncated-string "..."
+  "The string to display at end of truncated buffer names."
+  :type 'string
+  :group 'helm-buffers)
 
 
 ;;; Faces
@@ -362,9 +367,12 @@ Should be called after others transformers i.e (boring buffers)."
                                       (helm-buffer--details i))
         for truncbuf = (if (> (string-width name) helm-buffer-max-length)
                            (helm-substring-by-width
-                            name helm-buffer-max-length)
-                         (concat name (make-string
-                                       (- (+ helm-buffer-max-length 3)
+                            name helm-buffer-max-length
+                            helm-buffers-end-truncated-string)
+                         (concat name
+                                 (make-string
+                                       (- (+ helm-buffer-max-length
+                                             (length helm-buffers-end-truncated-string))
                                           (string-width name)) ? )))
         for len = (length mode)
         when (> len helm-buffer-max-len-mode)
@@ -390,7 +398,8 @@ Should be called after others transformers i.e (boring buffers)."
                         helm-buffer-max-length))
                 (regexp-quote
                  (helm-substring-by-width
-                  bufname helm-buffer-max-length))
+                  bufname helm-buffer-max-length
+                  helm-buffers-end-truncated-string))
                 (concat (regexp-quote bufname)
                         (if helm-buffer-details-flag
                             "$" "[[:blank:]]+"))))))
@@ -632,61 +641,61 @@ If REGEXP-FLAG is given use `query-replace-regexp'."
   "Run kill buffer action from `helm-source-buffers-list'."
   (interactive)
   (with-helm-alive-p
-    (helm-quit-and-execute-action 'helm-kill-marked-buffers)))
+    (helm-exit-and-execute-action 'helm-kill-marked-buffers)))
 
 (defun helm-buffer-run-grep ()
   "Run Grep action from `helm-source-buffers-list'."
   (interactive)
   (with-helm-alive-p
-    (helm-quit-and-execute-action 'helm-grep-buffers)))
+    (helm-exit-and-execute-action 'helm-grep-buffers)))
 
 (defun helm-buffer-run-zgrep ()
   "Run Grep action from `helm-source-buffers-list'."
   (interactive)
   (with-helm-alive-p
-    (helm-quit-and-execute-action 'helm-zgrep-buffers)))
+    (helm-exit-and-execute-action 'helm-zgrep-buffers)))
 
 (defun helm-buffer-run-query-replace-regexp ()
   "Run Query replace regexp action from `helm-source-buffers-list'."
   (interactive)
   (with-helm-alive-p
-    (helm-quit-and-execute-action 'helm-buffer-query-replace-regexp)))
+    (helm-exit-and-execute-action 'helm-buffer-query-replace-regexp)))
 
 (defun helm-buffer-run-query-replace ()
   "Run Query replace action from `helm-source-buffers-list'."
   (interactive)
   (with-helm-alive-p
-    (helm-quit-and-execute-action 'helm-buffer-query-replace)))
+    (helm-exit-and-execute-action 'helm-buffer-query-replace)))
 
 (defun helm-buffer-switch-other-window ()
   "Run switch to other window action from `helm-source-buffers-list'."
   (interactive)
   (with-helm-alive-p
-    (helm-quit-and-execute-action 'helm-switch-to-buffers-other-window)))
+    (helm-exit-and-execute-action 'helm-switch-to-buffers-other-window)))
 
 (defun helm-buffer-switch-other-frame ()
   "Run switch to other frame action from `helm-source-buffers-list'."
   (interactive)
   (with-helm-alive-p
-    (helm-quit-and-execute-action 'switch-to-buffer-other-frame)))
+    (helm-exit-and-execute-action 'switch-to-buffer-other-frame)))
 
 (defun helm-buffer-switch-to-elscreen ()
   "Run switch to elscreen  action from `helm-source-buffers-list'."
   (interactive)
   (with-helm-alive-p
-    (helm-quit-and-execute-action 'helm-find-buffer-on-elscreen)))
+    (helm-exit-and-execute-action 'helm-find-buffer-on-elscreen)))
 
 (defun helm-buffer-run-ediff ()
   "Run ediff action from `helm-source-buffers-list'."
   (interactive)
   (with-helm-alive-p
-    (helm-quit-and-execute-action 'helm-ediff-marked-buffers)))
+    (helm-exit-and-execute-action 'helm-ediff-marked-buffers)))
 
 (defun helm-buffer-run-ediff-merge ()
   "Run ediff action from `helm-source-buffers-list'."
   (interactive)
   (with-helm-alive-p
-    (helm-quit-and-execute-action 'helm-ediff-marked-buffers-merge)))
+    (helm-exit-and-execute-action 'helm-ediff-marked-buffers-merge)))
 
 (defun helm-buffers-persistent-kill-1 (buffer)
   "Persistent action to kill buffer."
@@ -779,7 +788,7 @@ Can be used by any source that list buffers."
   "Run `helm-multi-occur-as-action' by key."
   (interactive)
   (with-helm-alive-p
-    (helm-quit-and-execute-action 'helm-multi-occur-as-action)))
+    (helm-exit-and-execute-action 'helm-multi-occur-as-action)))
 
 (defun helm-buffers-toggle-show-hidden-buffers ()
   (interactive)

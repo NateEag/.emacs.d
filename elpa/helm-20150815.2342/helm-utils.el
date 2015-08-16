@@ -212,7 +212,7 @@ If current selection is a buffer or a file, `helm-find-files'
 from its directory."
   (interactive)
   (require 'helm-grep)
-  (helm-run-after-quit
+  (helm-run-after-exit
    (lambda (f)
      (if (file-exists-p f)
          (helm-find-files-1 (file-name-directory f)
@@ -229,7 +229,8 @@ from its directory."
                           (not grep-line)
                           (replace-regexp-in-string "\\`\\*" "" sel)))
           (bmk       (and bmk-name (assoc bmk-name bookmark-alist)))
-          (buf       (helm-aif (get-buffer sel) (buffer-name it)))
+          (buf       (helm-aif (and (bufferp sel) (get-buffer sel))
+                         (buffer-name it)))
           (default-preselection (or (buffer-file-name helm-current-buffer)
                                     default-directory)))
      (cond
@@ -266,24 +267,28 @@ from its directory."
   "Sort predicate function for helm candidates.
 Args S1 and S2 can be single or \(display . real\) candidates,
 that is sorting is done against real value of candidate."
-  (let* ((reg1  (concat "\\_<" helm-pattern "\\_>"))
-         (reg2  (concat "\\_<" helm-pattern))
-         (split (split-string helm-pattern))
+  (let* ((pattern (regexp-quote helm-pattern))
+         (reg1  (concat "\\_<" pattern "\\_>"))
+         (reg2  (concat "\\_<" pattern))
+         (reg3  helm-pattern)
+         (split (split-string pattern))
          (str1  (if (consp s1) (cdr s1) s1))
          (str2  (if (consp s2) (cdr s2) s2))
-         (score #'(lambda (str r1 r2 lst)
-                    (cond ((string-match r1 str) 4)
-                          ((and (string-match " " helm-pattern)
-                                (string-match (concat "\\_<" (car lst)) str)
-                                (cl-loop for r in (cdr lst)
-                                      always (string-match r str))) 3)
-                          ((and (string-match " " helm-pattern)
-                                (cl-loop for r in lst always (string-match r str))) 2)
-                          ((string-match r2 str) 1)
-                          (t 0))))
-         (sc1 (funcall score str1 reg1 reg2 split))
-         (sc2 (funcall score str2 reg1 reg2 split)))
-    (cond ((or (zerop (string-width helm-pattern))
+         (score #'(lambda (str r1 r2 r3 lst)
+                    (+ (if (string-match (concat "\\`" pattern) str) 1 0)
+                       (cond ((string-match r1 str) 5)
+                             ((and (string-match " " pattern)
+                                   (string-match (concat "\\_<" (car lst)) str)
+                                   (cl-loop for r in (cdr lst)
+                                            always (string-match r str))) 4)
+                             ((and (string-match " " pattern)
+                                   (cl-loop for r in lst always (string-match r str))) 3)
+                             ((string-match r2 str) 2)
+                             ((string-match r3 str) 1)
+                             (t 0)))))
+         (sc1 (funcall score str1 reg1 reg2 reg3 split))
+         (sc2 (funcall score str2 reg1 reg2 reg3 split)))
+    (cond ((or (zerop (string-width pattern))
                (and (zerop sc1) (zerop sc2)))
            (string-lessp str1 str2))
           ((= sc1 sc2)
@@ -561,11 +566,6 @@ directory, open this directory."
 (defun helm-find-many-files (_ignore)
   (let ((helm--reading-passwd-or-string t))
     (mapc 'find-file (helm-marked-candidates))))
-
-(defun helm-quit-and-execute-action (action)
-  "Quit current helm session and execute ACTION."
-  (setq helm-saved-action action)
-  (helm-exit-minibuffer))
 
 (defun helm-read-repeat-string (prompt &optional count)
   "Prompt as many time PROMPT is not empty.

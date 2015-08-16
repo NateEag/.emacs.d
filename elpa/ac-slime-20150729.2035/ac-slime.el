@@ -4,8 +4,8 @@
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; URL: https://github.com/purcell/ac-slime
-;; Version: 20141002.639
-;; X-Original-Version: DEV
+;; Package-Version: 20150729.2035
+;; Version: DEV
 ;; Package-Requires: ((auto-complete "1.4") (slime "2.9") (cl-lib "0.5"))
 
 ;; This file is not part of GNU Emacs.
@@ -64,7 +64,10 @@
 (defun ac-source-slime-simple-candidates ()
   "Return a possibly-empty list of completions for the symbol at point."
   (when (slime-connected-p)
-    (car (slime-simple-completions (substring-no-properties ac-prefix)))))
+    (let ((completions (slime-simple-completions (substring-no-properties ac-prefix))))
+      (if (listp (car completions))
+          (car completions)
+        completions))))
 
 (defun ac-source-slime-case-correcting-completions (name collection)
   (mapcar #'(lambda (completion)

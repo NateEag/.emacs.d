@@ -64,8 +64,17 @@ before and after of calling FN in the hashtable SOURCE-MAP."
       #+(or)
       (format t "[~D \"~{~A~^, ~}\" ~D ~D ~S]~%"
 	      start values end (char-code char) char)
-      (unless (null values)
-	(push (cons start end) (gethash (car values) source-map)))
+      (when values
+        (destructuring-bind (&optional existing-start &rest existing-end)
+            (car (gethash (car values) source-map))
+          ;; Some macros may return what a sub-call to another macro
+          ;; produced, e.g. "#+(and) (a)" may end up saving (a) twice,
+          ;; once from #\# and once from #\(. If the saved form
+          ;; is a subform, don't save it again.
+          (unless (and existing-start existing-end
+                       (<= start existing-start end)
+                       (<= start existing-end end))
+            (push (cons start end) (gethash (car values) source-map)))))
       (values-list values))))
 
 (defun make-source-recording-readtable (readtable source-map)
@@ -154,7 +163,7 @@ subexpressions of the object to stream positions."
     (values (readtable-for-package pkg) pkg)))
 
 (defun skip-whitespace (stream)
-  (peek-char t stream))
+  (peek-char t stream nil nil))
 
 ;; Skip over N toplevel forms.
 (defun skip-toplevel-forms (n stream)

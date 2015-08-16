@@ -23,7 +23,7 @@
 (autoload 'slime-connect "slime"
   "Connect to a running Swank server." t)
 
-(autoload 'hyperspec-lookup "hyperspec" nil t)
+(autoload 'hyperspec-lookup "lib/hyperspec" nil t)
 
 (autoload 'slime-lisp-mode-hook "slime")
 
@@ -48,6 +48,6 @@
 ;; End:
 
 ;;;### (autoloads nil nil ("slime-pkg.el" "slime-tests.el" "slime.el")
-;;;;;;  (21930 18377 219047 0))
+;;;;;;  (21968 61774 265923 0))
 
 ;;;***

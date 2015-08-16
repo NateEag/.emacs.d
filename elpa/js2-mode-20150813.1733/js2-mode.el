@@ -94,7 +94,8 @@
       (require 'js2-old-indent)
     (defvaralias 'js2-basic-offset 'js-indent-level nil)
     (defalias 'js2-proper-indentation 'js--proper-indentation)
-    (defalias 'js2-indent-line 'js-indent-line)))
+    (defalias 'js2-indent-line 'js-indent-line)
+    (defalias 'js2-re-search-forward 'js--re-search-forward)))
 
 ;;; Externs (variables presumed to be defined by the host system)
 
@@ -11129,9 +11130,11 @@ such as `js-mode', while retaining the asynchronous error/warning
 highlighting features of `js2-mode'."
   :group 'js2-mode
   :lighter " js-lint"
-  (if js2-minor-mode
-      (js2-minor-mode-enter)
-    (js2-minor-mode-exit)))
+  (if (derived-mode-p 'js2-mode)
+      (setq js2-minor-mode nil)
+    (if js2-minor-mode
+        (js2-minor-mode-enter)
+      (js2-minor-mode-exit))))
 
 (defun js2-minor-mode-enter ()
   "Initialization for `js2-minor-mode'."
@@ -11278,7 +11281,6 @@ Selecting an error will jump it to the corresponding source-buffer error.
 ;;;###autoload
 (define-derived-mode js2-mode js-mode "Javascript-IDE"
   "Major mode for editing JavaScript code."
-  ;; Used by comment-region; don't change it.
   (set (make-local-variable 'max-lisp-eval-depth)
        (max max-lisp-eval-depth 3000))
   (set (make-local-variable 'indent-line-function) #'js2-indent-line)

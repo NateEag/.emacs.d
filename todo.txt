@@ -1,6 +1,6 @@
--Give up on Mail.app and start using offline-imap, message-mode, and notmuch.
- A decent guide can be found here:
- http://chrisdone.com/posts/emacs-mail
+-Finish getting 'o' to open attachments in viewer in notmuch-show mode.
+ It works(ish) if I manually force-load my ~/.mailcap file via
+ (mailcap-parse-mailcaps "~/.mailcap" t)
 
 -Take a look at firestarter as an easy way to set up post-save hooks.
  Simpler alternative to file watchers, perhaps:
@@ -14,7 +14,7 @@
  which is probably a need popwin would achieve admirably. I used to think I
  wanted something more like a tabbed terminal emulator, and maybe I will want
  some keybindings for flipping between groups of terminal buffers, but that's
- secondary to just establishing "terminal buffers get the bottom terminal".
+ secondary to just establishing "terminal buffers get the bottom window".
 
 -Write a general-case ac-source for Tern.js. Right now I have to press M-Tab to
  trigger top-level completions, and I'd like to just press Tab. emacs-eclim

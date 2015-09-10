@@ -120,4 +120,5 @@
   (let ((fill-column (point-max)))
     (fill-paragraph nil)))
 
+(provide 'my-functions)
 ;;; my-functions.el ends here

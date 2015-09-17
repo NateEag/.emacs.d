@@ -5,8 +5,8 @@
 ;; Copyright (C) 2008, 2009, 2014 Andy Stewart, all rights reserved.
 ;; Copyright (C) 2010, ahei, all rights reserved.
 ;; Created: <2008-09-19 23:02:42>
-;; Version: 20150220.1320
-;; X-Original-Version: 1.3
+;; Version: 1.3
+;; Package-Version: 20150220.520
 ;; Last-Updated: 2015-02-20 21:15:35
 ;; URL: http://www.emacswiki.org/emacs/download/multi-term.el
 ;; Keywords: term, terminal, multiple buffer

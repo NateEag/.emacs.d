@@ -55,7 +55,7 @@ Also affects `linum-mode' background."
   :group 'solarized)
 
 (defcustom solarized-distinct-doc-face nil
-  "Make font-lock-doc-face stand out more.
+  "Make `font-lock-doc-face' stand out more.
 Related discussion: https://github.com/bbatsov/solarized-emacs/issues/158"
   :type 'boolean
   :group 'solarized)
@@ -111,7 +111,7 @@ Related discussion: https://github.com/bbatsov/solarized-emacs/issues/158"
   :group 'solarized)
 
 (defcustom solarized-scale-org-headlines t
-  "Whether scaling of outline-headlines should apply to org-mode headlines."
+  "Whether scaling of outline-headlines should apply to `org-mode' headlines."
   :type 'boolean
   :group 'solarized)
 
@@ -156,7 +156,7 @@ Alpha should be a float between 0 and 1."
 (defmacro solarized-with-color-variables (variant &rest body)
   (declare (indent 0))
   `(let* ((class '((class color) (min-colors 89)))
-	 (variant ,variant)
+         (variant ,variant)
          (s-base03    "#002b36")
          (s-base02    "#073642")
          ;; emphasized content
@@ -789,7 +789,7 @@ customize the resulting theme."
                                       :weight normal :slant italic))))
 ;;;;; fixmee
      `(fixmee-notice-face ((,class (:background nil :foreground ,base1
-						:underline nil :slant italic :weight bold))))
+                                                :underline nil :slant italic :weight bold))))
 
 ;;;;; flx
      `(flx-highlight-face ((,class (:foreground ,blue
@@ -1317,7 +1317,7 @@ customize the resulting theme."
      `(magit-process-ok    ((t (:foreground ,green :weight bold))))
      `(magit-process-ng    ((t (:foreground ,red   :weight bold))))
 ;;;;;; log
-     `(magit-log-author    ((t (:foreground ,base0))))
+     `(magit-log-author    ((t (:foreground ,base01 :weight bold))))
      `(magit-log-date      ((t (:foreground ,base01))))
      `(magit-log-graph     ((t (:foreground ,base1))))
 ;;;;;; sequence
@@ -2119,6 +2119,10 @@ customize the resulting theme."
      `(fci-rule-color ,base02)
 ;;;;; magit
      `(magit-diff-use-overlays nil)
+;;;;; nrepl-client
+     `(nrepl-message-colors
+       '(,red ,orange ,yellow ,green-d ,green-l
+                      ,blue-d ,cyan ,magenta ,violet))
 ;;;;; highlight-changes
      `(highlight-changes-colors '(,magenta ,violet))
 ;;;;; highlight-symbol

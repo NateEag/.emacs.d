@@ -34,6 +34,8 @@
 
 (require 'magit-utils)
 
+(defvar magit-keep-region-overlay)
+
 ;;; Options
 
 (defgroup magit-section nil
@@ -902,13 +904,20 @@ invisible."
     t))
 
 (defun magit-section-make-overlay (start end face)
+  ;; Yes, this doesn't belong here.  But the alternative of
+  ;; spreading this hack across the code base is even worse.
+  (when (and magit-keep-region-overlay
+             (memq face '(magit-section-heading-selection
+                          magit-diff-file-heading-selection
+                          magit-diff-hunk-heading-selection)))
+    (setq face (list :foreground (face-foreground face))))
   (let ((ov (make-overlay start end nil t)))
     (overlay-put ov 'face face)
     (overlay-put ov 'evaporate t)
     (push ov magit-section-highlight-overlays)
     ov))
 
-(defun magit-section-goto-successor (section line char)
+(defun magit-section-goto-successor (section line char arg)
   (let ((ident (magit-section-ident section)))
     (--if-let (magit-get-section ident)
         (let ((start (magit-section-start it)))
@@ -919,21 +928,35 @@ invisible."
               (forward-char char))
             (unless (eq (magit-current-section) it)
               (goto-char start))))
-      (goto-char (--if-let (magit-section-goto-successor-1 section)
-                     (if (eq (magit-section-type it) 'button)
-                         (point-min)
-                       (magit-section-start it))
-                   (point-min))))))
+      (or (and (eq (magit-section-type section) 'hunk)
+               (-when-let (parent (magit-get-section
+                                   (magit-section-ident
+                                    (magit-section-parent section))))
+                 (let* ((children (magit-section-children parent))
+                        (siblings (magit-section-siblings section 'prev))
+                        (previous (nth (length siblings) children)))
+                   (if (not arg)
+                       (goto-char (magit-section-start
+                                   (or previous (car (last children)))))
+                     (when previous
+                       (goto-char (magit-section-start previous)))
+                     (if (and (stringp arg)
+                              (re-search-forward
+                               arg (magit-section-end parent) t))
+                         (goto-char (match-beginning 0))
+                       (goto-char (magit-section-end (car (last children))))
+                       (forward-line -1)
+                       (while (looking-at "^ ")    (forward-line -1))
+                       (while (looking-at "^[-+]") (forward-line -1))
+                       (forward-line))))))
+          (goto-char (--if-let (magit-section-goto-successor-1 section)
+                         (if (eq (magit-section-type it) 'button)
+                             (point-min)
+                           (magit-section-start it))
+                       (point-min)))))))
 
 (defun magit-section-goto-successor-1 (section)
-  (or (--when-let (and (eq (magit-section-type section) 'hunk)
-                       (magit-get-section
-                        (magit-section-ident
-                         (magit-section-parent section))))
-        (let ((children (magit-section-children it)))
-          (or (nth (length (magit-section-siblings section 'prev)) children)
-              (car (last children)))))
-      (--when-let (pcase (magit-section-type section)
+  (or (--when-let (pcase (magit-section-type section)
                     (`staged 'unstaged)
                     (`unstaged 'staged)
                     (`unpushed 'unpulled)
@@ -968,7 +991,7 @@ invisible."
 If optional DIRECTION is `prev' then return siblings that come
 before SECTION, if it is `next' then return siblings that come
 after SECTION.  For all other values return all siblings
-including SECTION itself."
+excluding SECTION itself."
   (-when-let (parent (magit-section-parent section))
     (let ((siblings  (magit-section-children parent)))
       (pcase direction

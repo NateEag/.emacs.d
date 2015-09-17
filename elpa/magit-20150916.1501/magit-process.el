@@ -132,12 +132,10 @@ When this is nil, no sections are ever removed."
   (hack-dir-local-variables-non-file-buffer))
 
 (defun magit-process-buffer (&optional pwd create)
-  (or (magit-mode-get-buffer magit-process-buffer-name-format
-                             'magit-process-mode pwd)
+  (or (magit-mode-get-buffer nil 'magit-process-mode pwd)
       (and create
-           (with-current-buffer (magit-mode-get-buffer-create
-                                 magit-process-buffer-name-format
-                                 'magit-process-mode pwd)
+           (with-current-buffer
+               (magit-mode-get-buffer-create nil 'magit-process-mode pwd)
              (magit-process-mode)
              (let ((inhibit-read-only t))
                (make-local-variable 'text-property-default-nonsticky)
@@ -213,6 +211,8 @@ Process output goes into a new section in a buffer specified by
 variable `magit-process-buffer-name-format'."
   (let ((inhibit-magit-revert t))
     (magit-run-git args)))
+
+(defvar magit-pre-call-git-hook nil)
 
 (defun magit-call-git (&rest args)
   "Call Git synchronously in a separate process.
@@ -350,6 +350,8 @@ See `magit-start-process' and `with-editor' for more information."
       (magit-run-git-async args)))
   (set-process-sentinel magit-this-process #'magit-sequencer-process-sentinel)
   magit-this-process)
+
+(defvar magit-pre-start-git-hook nil)
 
 (defun magit-start-git (input &rest args)
   "Start Git, prepare for refresh, and return the process object.
@@ -511,9 +513,7 @@ tracked in the current repository are reverted if
   "Special sentinel used by `magit-run-git-sequencer'."
   (when (memq (process-status process) '(exit signal))
     (magit-process-sentinel process event)
-    (--when-let (magit-mode-get-buffer
-                 magit-status-buffer-name-format
-                 'magit-status-mode)
+    (--when-let (magit-mode-get-buffer nil 'magit-status-mode)
       (with-current-buffer it
         (--when-let
             (magit-get-section

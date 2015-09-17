@@ -33,6 +33,8 @@
 (require 'magit-diff)
 
 (declare-function magit-blame-chunk-get 'magit-blame)
+(declare-function magit-blob-visit 'magit)
+(declare-function magit-find-file-noselect 'magit)
 (declare-function magit-insert-head-header 'magit)
 (declare-function magit-insert-upstream-header 'magit)
 (declare-function magit-read-file-from-rev 'magit)
@@ -540,12 +542,11 @@ completion candidates."
 
 ;;;###autoload
 (defun magit-log-buffer-file (&optional follow)
-  "Show log for the file visited in the current buffer.
+  "Show log for the blob or file visited in the current buffer.
 With a prefix argument or when `--follow' is part of
 `magit-log-arguments', then follow renames."
   (interactive "P")
-  (-if-let (file (or (buffer-file-name (buffer-base-buffer))
-                     magit-buffer-file-name))
+  (-if-let (file (magit-file-relative-name))
       (magit-mode-setup magit-log-buffer-name-format nil
                         #'magit-log-mode
                         #'magit-log-refresh-buffer
@@ -555,7 +556,7 @@ With a prefix argument or when `--follow' is part of
                           (if (and follow (not (member "--follow" args)))
                               (cons "--follow" args)
                             args))
-                        (list (file-relative-name file (magit-toplevel))))
+                        (list file))
     (user-error "Buffer isn't visiting a file"))
   (magit-log-goto-same-commit))
 
@@ -609,8 +610,7 @@ prefix argument instead bury the revision buffer, provided it
 is displayed in the current frame."
   (interactive "p")
   (if (< arg 0)
-      (let* ((buf (magit-mode-get-buffer magit-revision-buffer-name-format
-                                         'magit-revision-mode))
+      (let* ((buf (magit-mode-get-buffer nil 'magit-revision-mode))
              (win (and buf (get-buffer-window buf (selected-frame)))))
         (if win
             (with-selected-window win
@@ -670,6 +670,17 @@ Type \\[magit-reset] to reset HEAD to the commit at point.
     (setq args (remove "--follow" args)))
   (when (--any-p (string-match-p magit-log-remove-graph-re it) args)
     (setq args (remove "--graph" args)))
+  (--when-let (and magit-log-cutoff-length
+                   (= (length revs) 1)
+                   (setq revs (car revs))
+                   (not (string-match-p "\\.\\." revs))
+                   (not (member revs '("--all" "--branches")))
+                   (magit-git-string "rev-list" "--count"
+                                     "--first-parent" revs))
+    (setq revs (format "%s~%s..%s" revs
+                       (min (1- (string-to-number it))
+                            (max 1024 (* 2 magit-log-cutoff-length)))
+                       revs)))
   (magit-insert-section (logbuf)
     (magit-insert-log revs args files)))
 
@@ -920,18 +931,17 @@ alist in `magit-log-format-unicode-graph-alist'."
        (propertize (make-string (1- width) ?\s) 'face 'default)
        (propertize " " 'face 'fringe)))))
 
-(defun magit-format-duration (duration spec width)
+(defun magit-format-duration (duration spec &optional width)
   (cl-destructuring-bind (char unit units weight)
       (car spec)
     (let ((cnt (round (/ duration weight 1.0))))
       (if (or (not (cdr spec))
               (>= (/ duration weight) 1))
-          (if (= width 1)
+          (if (eq width 1)
               (format "%3i%c" cnt char)
-            (format (format "%%3i %%-%is" width) cnt
-                    (if (= cnt 1) unit units)))
+            (format (if width (format "%%3i %%-%is" width) "%i %s")
+                    cnt (if (= cnt 1) unit units)))
         (magit-format-duration duration (cdr spec) width)))))
-
 
 (defun magit-log-maybe-show-more-commits (section)
   "Automatically insert more commit sections in a log.
@@ -943,44 +953,51 @@ and `magit-log-auto-more' is non-nil."
     (forward-line -1)
     (magit-section-forward)))
 
-(defvar magit-log-show-commit-timer nil)
+(defvar magit-update-other-window-timer nil)
 
 (defun magit-log-maybe-show-commit (&optional _)
   "Automatically show commit at point in another window.
 If the section at point is a `commit' section and the value of
 `magit-diff-auto-show-p' calls for it, then show that commit in
 another window, using `magit-show-commit'."
-  (unless magit-log-show-commit-timer
-    (setq magit-log-show-commit-timer
+  (unless magit-update-other-window-timer
+    (setq magit-update-other-window-timer
           (run-with-idle-timer
            magit-diff-auto-show-delay nil
            (lambda ()
-             (--when-let
-                 (or (magit-section-when commit
-                       (and (or (and (magit-diff-auto-show-p 'log-follow)
-                                     (magit-mode-get-buffer
-                                      magit-revision-buffer-name-format
-                                      'magit-revision-mode))
-                                (and (magit-diff-auto-show-p 'log-oneline)
-                                     (derived-mode-p 'magit-log-mode)))
-                            (magit-section-value it)))
-                     (and magit-blame-mode
-                          (magit-diff-auto-show-p 'blame-follow)
-                          (magit-mode-get-buffer
-                           magit-revision-buffer-name-format
-                           'magit-revision-mode)
-                          (magit-blame-chunk-get :hash)))
-               (magit-show-commit it t))
-             (setq magit-log-show-commit-timer nil))))))
+             (magit-section-when commit
+               (let ((rev (magit-section-value it)))
+                 (--if-let (and (magit-diff-auto-show-p 'blob-follow)
+                                (derived-mode-p 'magit-log-mode)
+                                (--first (with-current-buffer it
+                                           magit-buffer-revision)
+                                         (-map #'window-buffer (window-list))))
+                     (save-excursion
+                       (with-selected-window (get-buffer-window it)
+                         (with-current-buffer it
+                           (magit-blob-visit (list (magit-rev-parse rev)
+                                                   (magit-file-relative-name
+                                                    magit-buffer-file-name))
+                                             (line-number-at-pos)))))
+                   (when (or (and (magit-diff-auto-show-p 'log-follow)
+                                  (magit-mode-get-buffer
+                                   nil 'magit-revision-mode nil nil t))
+                             (and (magit-diff-auto-show-p 'log-oneline)
+                                  (derived-mode-p 'magit-log-mode)))
+                     (apply #'magit-show-commit rev t nil
+                            (magit-diff-arguments))))))
+             (setq magit-update-other-window-timer nil))))))
 
 (defun magit-log-goto-same-commit ()
-  (--when-let
-      (and magit-previous-section
-           (derived-mode-p 'magit-log-mode)
-           (-when-let (value (magit-section-value magit-previous-section))
-             (--first (equal (magit-section-value it) value)
-                      (magit-section-children magit-root-section))))
-    (goto-char (magit-section-start it))))
+  (-when-let* ((prev magit-previous-section)
+               (rev  (cond ((magit-section-match 'commit prev)
+                            (magit-section-value prev))
+                           ((magit-section-match 'branch prev)
+                            (magit-rev-format
+                             "%h" (magit-section-value prev)))))
+               (same (--first (equal (magit-section-value it) rev)
+                              (magit-section-children magit-root-section))))
+    (goto-char (magit-section-start same))))
 
 ;;; Select Mode
 
@@ -1220,8 +1237,12 @@ commits."
 Show the last `magit-log-section-commit-count' commits."
   (magit-insert-section (recent nil collapse)
     (magit-insert-heading "Recent commits:")
-    (magit-insert-log nil (cons (format "-%d" magit-log-section-commit-count)
-                                magit-log-section-arguments))))
+    (magit-insert-log
+     (let ((beg (format "HEAD~%s" magit-log-section-commit-count)))
+       (and (magit-rev-verify beg)
+            (concat beg "..HEAD")))
+     (cons (format "-%d" magit-log-section-commit-count)
+           magit-log-section-arguments))))
 
 (defun magit-insert-unpulled-cherries ()
   "Insert section showing unpulled commits.
@@ -1241,10 +1262,10 @@ These sections can be expanded to show the respective commits."
   (-when-let (modules (magit-get-submodules))
     (magit-insert-section section (unpulled-modules)
       (magit-insert-heading "Unpulled modules:")
-      (let ((topdir (magit-toplevel)))
+      (magit-with-toplevel
         (dolist (module modules)
           (let ((default-directory
-                  (expand-file-name (file-name-as-directory module) topdir)))
+                  (expand-file-name (file-name-as-directory module))))
             (-when-let (tracked (magit-get-tracked-ref))
               (magit-insert-section sec (file module t)
                 (magit-insert-heading
@@ -1299,10 +1320,10 @@ These sections can be expanded to show the respective commits."
   (-when-let (modules (magit-get-submodules))
     (magit-insert-section section (unpushed-modules)
       (magit-insert-heading "Unpushed modules:")
-      (let ((topdir (magit-toplevel)))
+      (magit-with-toplevel
         (dolist (module modules)
           (let ((default-directory
-                  (expand-file-name (file-name-as-directory module) topdir)))
+                  (expand-file-name (file-name-as-directory module))))
             (-when-let (tracked (magit-get-tracked-ref))
               (magit-insert-section sec (file module t)
                 (magit-insert-heading

@@ -14,7 +14,7 @@
 ;;	Rémi Vanicat      <vanicat@debian.org>
 ;;	Yann Hodique      <yann.hodique@gmail.com>
 
-;; Package-Requires: ((emacs "24.4") (async "20150812") (dash "2.11.0") (with-editor "20150816") (git-commit "20150816") (magit-popup "20150816"))
+;; Package-Requires: ((emacs "24.4") (async "20150812") (dash "2.11.0") (with-editor "20150903") (git-commit "20150903") (magit-popup "20150903"))
 ;; Keywords: git tools vc
 ;; Homepage: https://github.com/magit/magit
 
@@ -142,6 +142,12 @@ The following `format'-like specs are supported:
   :package-version '(magit . "2.1.0")
   :group 'magit-status
   :type 'string)
+
+(defcustom magit-status-expand-stashes t
+  "Whether the list of stashes is expanded initially."
+  :package-version '(magit . "2.3.0")
+  :group 'magit-status
+  :type 'boolean)
 
 ;;;; Refs Mode
 
@@ -454,10 +460,10 @@ The sections are inserted by running the functions on the hook
 
 (defun magit-insert-repo-header ()
   "Insert a header line showing the path to the repository top-level."
-  (let ((topdir (magit-toplevel)))
-    (magit-insert-section (repo topdir)
+  (magit-with-toplevel
+    (magit-insert-section (repo default-directory)
       (magit-insert (format "%-10s%s\n" "Repo: "
-                            (abbreviate-file-name topdir))))))
+                            (abbreviate-file-name default-directory))))))
 
 (defun magit-insert-remote-header ()
   "Insert a header line about the remote of the current branch.
@@ -1004,6 +1010,8 @@ existing one."
 (defun magit-get-revision-buffer-create (rev file)
   (magit-get-revision-buffer rev file t))
 
+(defvar magit-find-file-hook nil)
+
 (defun magit-find-file-noselect (rev file)
   "Read FILE from REV into a buffer and return the buffer.
 FILE must be relative to the top directory of the repository."
@@ -1020,8 +1028,11 @@ FILE must be relative to the top directory of the repository."
         (setq buffer-read-only t)
         (set-buffer-modified-p nil)
         (goto-char (point-min))
+        (magit-blob-mode 1)
         (run-hooks 'magit-find-file-hook)
         (current-buffer))))
+
+(defvar magit-find-index-hook nil)
 
 (defun magit-find-file-index-noselect (file &optional revert)
   "Read FILE from the index into a buffer and return the buffer.
@@ -1076,8 +1087,7 @@ is done using `magit-find-index-noselect'."
           (when magit-wip-after-apply-mode
             (magit-wip-commit-after-apply (list file) " after un-/stage")))
       (message "Abort")))
-  (--when-let (magit-mode-get-buffer
-               magit-status-buffer-name-format 'magit-status-mode)
+  (--when-let (magit-mode-get-buffer nil 'magit-status-mode)
     (with-current-buffer it (magit-refresh)))
   t)
 
@@ -1090,6 +1100,16 @@ is no file at point then instead visit `default-directory'."
   (dired-jump other-window (--if-let (magit-file-at-point)
                                (expand-file-name it)
                              default-directory)))
+
+;;;###autoload
+(defun magit-checkout-file (rev file)
+  "Checkout FILE from REV."
+  (interactive
+   (let ((rev (magit-read-branch-or-commit
+               "Checkout from revision" magit-buffer-revision)))
+     (list rev (magit-read-file-from-rev rev "Checkout file"))))
+  (magit-with-toplevel
+    (magit-run-git "checkout" rev "--" file)))
 
 ;;; Manipulate
 ;;;; Init
@@ -1138,7 +1158,9 @@ Non-interactively DIRECTORY is (re-)initialized unconditionally."
               (?r "Rename"            magit-branch-rename)
               (?B "Create & checkout" magit-branch-and-checkout)
               (?e "Set description"   magit-branch-edit-description)
-              (?v "(Branch Manager)"  magit-branch-manager))
+              (?v "(Branch Manager)"  magit-branch-manager)
+              (?s "Spin off"          magit-branch-spinoff) nil nil
+              (?x "Reset"             magit-branch-reset))
   :default-arguments '("--track")
   :default-action 'magit-checkout
   :max-action-columns 3)
@@ -1188,6 +1210,69 @@ changes.
     (unless (magit-branch-p start)
       (setq args (delete "--track" args)))
     (list branch start args)))
+
+;;;###autoload
+(defun magit-branch-spinoff (branch &rest args)
+  "Create new branch from the unpushed commits.
+
+Create and checkout a new branch starting at and tracking the
+current branch.  That branch in turn is reset to the last commit
+it shares with its upstream.  If the current branch has no
+upstream or no unpushed commits, then the new branch is created
+anyway and the previously current branch is not touched.
+
+This is useful to create a feature branch after work has already
+began on the old branch (likely but not necessarily \"master\")."
+  (interactive (list (magit-read-string "Spin off branch")
+                     (magit-branch-arguments)))
+  (-if-let (current (magit-get-current-branch))
+      (let (tracked base)
+        (magit-call-git "checkout" args "-b" branch current)
+        (if (and (setq tracked (magit-get-tracked-branch current))
+                 (setq base (magit-git-string "merge-base" current tracked))
+                 (not (magit-rev-equal base current)))
+            (magit-run-git "update-ref" "-m"
+                           (format "reset: moving to %s" base)
+                           (concat "refs/heads/" current) base)
+          (magit-refresh)))
+    (magit-run-git "checkout" "-b" branch)))
+
+;;;###autoload
+(defun magit-branch-reset (branch to &optional args)
+  "Reset a branch to the tip of another branch or any other commit.
+
+When resetting to another branch, then also set that branch as
+the upstream of the branch being reset.
+
+When the branch being reset is the current branch, then do a
+hard reset.  If there are any uncommitted changes, then the user
+has to confirming the reset because those changes would be lost.
+
+This is useful when you have started work on a feature branch but
+realize it's all crap and want to start over."
+  (interactive
+   (let* ((atpoint (magit-branch-at-point))
+          (branch  (magit-read-local-branch "Reset branch" atpoint)))
+     (list branch
+           (magit-completing-read "Reset %s to"
+                                  (delete branch (magit-list-branch-names))
+                                  nil nil nil 'magit-revision-history
+                                  (or (and (not (equal branch atpoint)) atpoint)
+                                      (magit-get-tracked-branch branch)))
+           (magit-branch-arguments))))
+  (unless (member "--force" args)
+    (setq args (cons "--force" args)))
+  (if (magit-branch-p to)
+      (unless (member "--track" args)
+        (setq args (cons "--track" args)))
+    (setq args (delete "--track" args)))
+  (if (equal branch (magit-get-current-branch))
+      (if (and (magit-anything-modified-p)
+               (not (yes-or-no-p "Uncommitted changes will be lost.  Proceed?")))
+          (user-error "Abort")
+        (magit-reset-hard to)
+        (magit-branch-set-upstream branch to))
+    (magit-branch branch to args)))
 
 ;;;###autoload
 (defun magit-branch-delete (branches &optional force)
@@ -1570,7 +1655,8 @@ If FILE isn't tracked in Git fallback to using `delete-file'."
                         (unless tracked-only (magit-untracked-files)))))
     (magit-completing-read prompt choices nil t nil nil
                            (car (member (or (magit-section-when (file))
-                                            (magit-file-relative-name))
+                                            (magit-file-relative-name
+                                             nil tracked-only))
                                         choices)))))
 
 (defun magit-read-files (prompt initial-contents)
@@ -1825,22 +1911,22 @@ Optional PATH is the path to the submodule relative to the root
 of the superproject. If it is nil then the path is determined
 based on URL."
   (interactive
-   (let* ((default-directory (magit-toplevel))
-          (path (read-file-name
-                 "Add submodule: " nil nil nil
-                 (magit-section-when [file untracked]
-                   (directory-file-name (magit-section-value it))))))
-     (when path
-       (setq path (file-name-as-directory (expand-file-name path)))
-       (when (member path (list "" default-directory))
-         (setq path nil)))
-     (list (magit-read-string-ns
-            "Remote url"
-            (and path (magit-git-repo-p path t)
-                 (let ((default-directory path))
-                   (magit-get "remote" (or (magit-get-remote) "origin")
-                              "url"))))
-           (and path (directory-file-name (file-relative-name path))))))
+   (magit-with-toplevel
+     (let ((path (read-file-name
+                  "Add submodule: " nil nil nil
+                  (magit-section-when [file untracked]
+                    (directory-file-name (magit-section-value it))))))
+       (when path
+         (setq path (file-name-as-directory (expand-file-name path)))
+         (when (member path (list "" default-directory))
+           (setq path nil)))
+       (list (magit-read-string-ns
+              "Remote url"
+              (and path (magit-git-repo-p path t)
+                   (let ((default-directory path))
+                     (magit-get "remote" (or (magit-get-remote) "origin")
+                                "url"))))
+             (and path (directory-file-name (file-relative-name path)))))))
   (magit-run-git "submodule" "add" url path))
 
 ;;;###autoload
@@ -1889,46 +1975,125 @@ With a prefix argument fetch all remotes."
   (magit-with-toplevel
     (magit-run-git-async "submodule" "deinit" path)))
 
-;;;; File-buffer Mode
+;;;; File Mode
 
-(defvar magit-file-buffer-mode-map
+(defvar magit-file-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map "\C-xg"    'magit-status)
     (define-key map "\C-x\M-g" 'magit-dispatch-popup)
-    (define-key map "\C-c\M-g" 'magit-file-buffer-popup)
+    (define-key map "\C-c\M-g" 'magit-file-popup)
     map)
-  "Keymap for `magit-file-buffer-mode'.")
+  "Keymap for `magit-file-mode'.")
 
-(magit-define-popup magit-file-buffer-popup
+(magit-define-popup magit-file-popup
   "Popup consule for Magit commands in file-visiting buffers."
   :actions '((?s "Stage"   magit-stage-file)
              (?l "Log"     magit-log-buffer-file)
              (?c "Commit"  magit-commit-popup)
              (?u "Unstage" magit-unstage-file)
-             (?b "Blame"   magit-blame-popup))
+             (?b "Blame"   magit-blame-popup) nil nil
+             (?p "Find blob" magit-blob-previous))
   :max-action-columns 3)
 
-(defvar magit-file-buffer-mode-lighter "")
+(defvar magit-file-mode-lighter "")
 
-(define-minor-mode magit-file-buffer-mode
+(define-minor-mode magit-file-mode
   "Enable some Magit features in file-visiting buffers.
 
 Currently this only adds the following key bindings.
-\n\\{magit-file-buffer-mode-map}"
+\n\\{magit-file-mode-map}"
   :package-version '(magit . "2.2.0")
-  :lighter magit-file-buffer-mode-lighter
-  :keymap  magit-file-buffer-mode-map)
+  :lighter magit-file-mode-lighter
+  :keymap  magit-file-mode-map)
 
-(defun magit-file-buffer-mode-turn-on ()
+(defun magit-file-mode-turn-on ()
   (and buffer-file-name
        (ignore-errors (magit-inside-worktree-p))
-       (magit-file-buffer-mode)))
+       (magit-file-mode)))
 
 ;;;###autoload
-(define-globalized-minor-mode global-magit-file-buffer-mode
-  magit-file-buffer-mode magit-file-buffer-mode-turn-on
+(define-globalized-minor-mode global-magit-file-mode
+  magit-file-mode magit-file-mode-turn-on
   :package-version '(magit . "2.2.0")
   :group 'magit)
+
+(define-obsolete-function-alias 'global-magit-file-buffer-mode
+  'global-magit-file-mode "2.3.0")
+
+;;;; Blob Mode
+
+(defvar magit-blob-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map "n" 'magit-blob-next)
+    (define-key map "p" 'magit-blob-previous)
+    (define-key map "q" 'magit-kill-this-buffer)
+    map)
+  "Keymap for `magit-blob-mode'.")
+
+(define-minor-mode magit-blob-mode
+  "Enable some Magit features in blob-visiting buffers.
+
+Currently this only adds the following key bindings.
+\n\\{magit-blob-mode-map}"
+  :package-version '(magit . "2.3.0"))
+
+(defun magit-blob-next ()
+  "Visit the next blob which modified the current file."
+  (interactive)
+  (if magit-buffer-file-name
+      (magit-blob-visit (or (magit-blob-successor magit-buffer-revision
+                                                  magit-buffer-file-name)
+                            magit-buffer-file-name)
+                        (line-number-at-pos))
+    (if (buffer-file-name (buffer-base-buffer))
+        (user-error "You have reached the end of time")
+      (user-error "Buffer isn't visiting a file or blob"))))
+
+(defun magit-blob-previous ()
+  "Visit the previous blob which modified the current file."
+  (interactive)
+  (-if-let (file (or magit-buffer-file-name
+                     (buffer-file-name (buffer-base-buffer))))
+      (--if-let (magit-blob-ancestor magit-buffer-revision file)
+          (magit-blob-visit it (line-number-at-pos))
+        (user-error "You have reached the beginning of time"))
+    (user-error "Buffer isn't visiting a file or blob")))
+
+(defun magit-blob-visit (blob-or-file line)
+  (if (stringp blob-or-file)
+      (find-file blob-or-file)
+    (cl-destructuring-bind (rev file) blob-or-file
+      (magit-find-file rev file)
+      (let ((str (magit-rev-format "%ct%s" rev)))
+        (message "%s (%s ago)" (substring str 10)
+                 (magit-format-duration
+                  (abs (truncate (- (float-time)
+                                    (string-to-number
+                                     (substring str 0 10)))))
+                  magit-duration-spec)))))
+  (goto-char (point-min))
+  (forward-line (1- line)))
+
+(defun magit-blob-ancestor (rev file)
+  (let ((lines (magit-with-toplevel
+                 (magit-git-lines "log" "-2" "--format=%H" "--name-only"
+                                  "--follow" (or rev "HEAD") "--" file))))
+    (if rev (cddr lines) (butlast lines 2))))
+
+(defun magit-blob-successor (rev file)
+  (let ((lines (magit-with-toplevel
+                 (magit-git-lines "log" "--format=%H" "--name-only" "--follow"
+                                  "HEAD" "--" "lisp/magit-blame.el"))))
+    (catch 'found
+      (while lines
+        (if (equal (nth 2 lines) rev)
+            (throw 'found (list (nth 0 lines) (nth 1 lines)))
+          (setq lines (nthcdr 2 lines)))))))
+
+(defun magit-kill-this-buffer ()
+  "Kill the current buffer."
+  (interactive)
+  (kill-buffer (current-buffer)))
 
 ;;;; Dispatch Popup
 
@@ -2044,13 +2209,13 @@ repository, otherwise in `default-directory'."
 Run the command in the top-level directory of the current repository.
 \n(fn)" ; arguments are for internal use
   (interactive (magit-read-shell-command "Shell command (pwd: %s)" t))
-  (magit-git-command args directory))
+  (magit-shell-command args directory))
 
 (defun magit-read-shell-command (prompt &optional root)
   (let ((dir (if (or root current-prefix-arg)
                  (or (magit-toplevel)
                      (user-error "Not inside a Git repository"))
-               (expand-file-name default-directory))))
+               default-directory)))
     (list (magit-read-string (format prompt (abbreviate-file-name dir))
                              nil 'magit-git-command-history)
           dir)))
@@ -2126,20 +2291,19 @@ When the region is active, then behave like `kill-ring-save'."
   (interactive)
   (if (region-active-p)
       (copy-region-as-kill (mark) (point) 'region)
-    (-when-let (section (magit-current-section))
-      (let ((value (magit-section-value section)))
-        (magit-section-case
-          (branch (when current-prefix-arg
-                    (setq value (magit-rev-parse value))))
-          (commit (setq value (magit-rev-parse value)))
-          (module-commit (let ((default-directory
-                                 (file-name-as-directory
-                                  (expand-file-name
-                                   (magit-section-parent-value section)
-                                   (magit-toplevel)))))
-                           (setq value (magit-rev-parse value))))
-          (t value))
-        (kill-new (message "%s" value))))))
+    (-when-let* ((section (magit-current-section))
+                 (value (magit-section-value section)))
+      (magit-section-case
+        (branch (when current-prefix-arg
+                  (setq value (magit-rev-parse value))))
+        (commit (setq value (magit-rev-parse value)))
+        (module-commit (let ((default-directory
+                               (file-name-as-directory
+                                (expand-file-name
+                                 (magit-section-parent-value section)
+                                 (magit-toplevel)))))
+                         (setq value (magit-rev-parse value)))))
+      (kill-new (message "%s" value)))))
 
 (defun magit-copy-buffer-thing-as-kill ()
   "Save the thing displayed in the current buffer to the kill ring.
@@ -2257,7 +2421,8 @@ Git, and Emacs in the echo area."
     (when version
       (when (string-match "^\\([0-9]+\\.[0-9]+\\.[0-9]+\\)" version)
         (setq version (match-string 1 version)))
-      (when (version< version "1.9.4")
+      (when (and (not (equal (getenv "TRAVIS") "true"))
+                 (version< version "1.9.4"))
         (display-warning 'magit (format "\
 Magit requires Git >= 1.9.4, you are using %s.
 

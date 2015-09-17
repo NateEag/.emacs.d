@@ -180,81 +180,68 @@ and ignore the option.
     (magit-run-git-with-editor "commit" "--amend" "--only" args)))
 
 ;;;###autoload
-(defun magit-commit-fixup (&optional commit args confirm)
+(defun magit-commit-fixup (&optional commit)
   "Create a fixup commit.
-With a prefix argument the target commit has to be confirmed.
+
+With a prefix argument the target COMMIT has to be confirmed.
 Otherwise the commit at point may be used without confirmation
-depending on the value of option `magit-commit-squash-confirm'.
-\n(git commit --no-edit --fixup=COMMIT [ARGS])"
-  (interactive (magit-commit-squash-read-args))
-  (magit-commit-squash-internal 'magit-commit-fixup "--fixup"
-                                commit args confirm))
+depending on the value of option `magit-commit-squash-confirm'."
+  (interactive (list (magit-commit-at-point)))
+  (magit-commit-squash-internal "--fixup" commit))
 
 ;;;###autoload
-(defun magit-commit-squash (&optional commit args confirm)
+(defun magit-commit-squash (&optional commit)
   "Create a squash commit, without editing the squash message.
-With a prefix argument the target commit has to be confirmed.
+
+With a prefix argument the target COMMIT has to be confirmed.
 Otherwise the commit at point may be used without confirmation
-depending on the value of option `magit-commit-squash-confirm'.
-\n(git commit --no-edit --squash=COMMIT [ARGS])"
-  (interactive (magit-commit-squash-read-args))
-  (magit-commit-squash-internal 'magit-commit-squash "--squash"
-                                commit args confirm))
+depending on the value of option `magit-commit-squash-confirm'."
+  (interactive (list (magit-commit-at-point)))
+  (magit-commit-squash-internal "--squash" commit))
 
 ;;;###autoload
-(defun magit-commit-augment (&optional commit args confirm)
+(defun magit-commit-augment (&optional commit)
   "Create a squash commit, editing the squash message.
-With a prefix argument the target commit has to be confirmed.
+
+With a prefix argument the target COMMIT has to be confirmed.
 Otherwise the commit at point may be used without confirmation
-depending on the value of option `magit-commit-squash-confirm'.
-\n(git commit --squash=COMMIT [ARGS])"
-  (interactive (magit-commit-squash-read-args))
-  (magit-commit-squash-internal 'magit-commit-augment "--squash"
-                                commit args confirm t))
+depending on the value of option `magit-commit-squash-confirm'."
+  (interactive (list (magit-commit-at-point)))
+  (magit-commit-squash-internal "--squash" commit nil t))
 
 ;;;###autoload
-(defun magit-commit-instant-fixup (&optional commit args)
-  "Create a fixup commit and instantly rebase.
-\n(git commit --no-edit --fixup=COMMIT ARGS;
- git rebase -i COMMIT^ --autosquash --autostash)"
-  (interactive (list (magit-commit-at-point)
-                     (magit-commit-arguments)))
-  (magit-commit-squash-internal
-   (lambda (c a)
-     (when (setq c (magit-commit-fixup c a))
-       (magit-rebase-autosquash (concat c "^") (list "--autostash"))))
-   "--fixup" commit args t))
+(defun magit-commit-instant-fixup (&optional commit)
+  "Create a fixup commit targeting COMMIT and instantly rebase."
+  (interactive (list (magit-commit-at-point)))
+  (magit-commit-squash-internal "--fixup" commit t))
 
 ;;;###autoload
-(defun magit-commit-instant-squash (&optional commit args)
-  "Create a squash commit and instantly rebase.
-\n(git commit --no-edit --squash=COMMIT ARGS;
- git rebase -i COMMIT^ --autosquash --autostash)"
-  (interactive (list (magit-commit-at-point)
-                     (magit-commit-arguments)))
-  (magit-commit-squash-internal
-   (lambda (c a)
-     (when (setq c (magit-commit-squash c a))
-       (magit-rebase-autosquash (concat c "^") (list "--autostash"))))
-   "--squash" commit args t))
+(defun magit-commit-instant-squash (&optional commit)
+  "Create a squash commit targeting COMMIT and instantly rebase."
+  (interactive (list (magit-commit-at-point)))
+  (magit-commit-squash-internal "--squash" commit t))
 
-(defun magit-commit-squash-read-args ()
-  (list (magit-commit-at-point)
-        (magit-commit-arguments)
-        (or current-prefix-arg magit-commit-squash-confirm)))
-
-(defun magit-commit-squash-internal
-    (fn option commit args confirm &optional edit)
-  (when (setq args (magit-commit-assert args t))
-    (if (and commit (not confirm))
+(defun magit-commit-squash-internal (option commit &optional rebase edit confirmed)
+  (-when-let (args (magit-commit-assert (magit-commit-arguments) t))
+    (if (and commit
+             (or confirmed
+                 (not (or rebase
+                          current-prefix-arg
+                          magit-commit-squash-confirm))))
         (let ((magit-diff-auto-show nil))
           (magit-run-git-with-editor "commit"
                                      (unless edit "--no-edit")
-                                     (concat option "=" commit) args)
-          commit)
+                                     (concat option "=" commit)
+                                     args))
       (magit-log-select
-        `(lambda (commit) (,fn commit (list ,@args)))
-        "Type %p on the commit to squash/fixup into it,")
+        `(lambda (commit)
+           (magit-commit-squash-internal ,option commit ,rebase ,edit t)
+           ,@(when rebase
+               `((magit-rebase-interactive-1 commit
+                     (list "--autosquash" "--autostash")
+                   "" "true"))))
+        (format "Type %%p on a commit to %s into it,"
+                (substring option 2)))
       (when (magit-diff-auto-show-p 'log-select)
         (let ((magit-diff-switch-buffer-function 'display-buffer))
           (magit-diff-staged))))))
@@ -328,12 +315,13 @@ depending on the value of option `magit-commit-squash-confirm'.
   "Used by `magit-commit-add-log' to insert a single entry.")
 
 (defun magit-commit-add-log ()
-  "Add a stub for the current hunk into the commit message buffer.
+  "Add a stub for the current change into the commit message buffer.
 If no commit is in progress, then initiate it.  Use the function
 specified by variable `magit-commit-add-log-insert-function' to
 actually insert the entry."
   (interactive)
-  (let ((log (magit-commit-message-buffer)) buf pos)
+  (let ((hunk (magit-section-when 'hunk it))
+        (log (magit-commit-message-buffer)) buf pos)
     (save-window-excursion
       (call-interactively #'magit-diff-visit-file)
       (setq buf (current-buffer)
@@ -348,49 +336,42 @@ actually insert the entry."
       (with-current-buffer buf
         (goto-char pos)
         (funcall magit-commit-add-log-insert-function log
-                 (file-relative-name buffer-file-name (magit-toplevel))
-                 (add-log-current-defun))))))
+                 (magit-file-relative-name)
+                 (and hunk (add-log-current-defun)))))))
 
 (defun magit-commit-add-log-insert (buffer file defun)
   (with-current-buffer buffer
-    (goto-char (point-min))
-    (cond ((not (re-search-forward (format "^\\* %s" (regexp-quote file))
-                                   nil t))
-           ;; No entry for file, create it.
-           (goto-char (point-max))
-           (forward-comment -1000)
-           (unless (or (bobp) (looking-back "\\(\\*[^\n]+\\|\n\\)" nil))
-             (insert "\n"))
-           (insert (format "\n* %s" file))
-           (when defun
-             (insert (format " (%s)" defun)))
-           (insert ": "))
-          (defun
-           ;; found entry for file, look for defun
-           (let ((limit (save-excursion
-                          (or (and (re-search-forward "^\\* " nil t)
-                                   (match-beginning 0))
-                              (progn (goto-char (point-max))
-                                     (forward-comment -1000)
-                                     (point))))))
-             (cond ((re-search-forward
-                     (format "(.*\\_<%s\\_>.*):" (regexp-quote defun))
-                     limit t)
-                    ;; found it, goto end of current entry
-                    (if (re-search-forward "^(" limit t)
-                        (backward-char 2)
-                      (goto-char limit)))
-                   (t
-                    ;; not found, insert new entry
-                    (goto-char limit)
-                    (if (bolp)
-                        (open-line 1)
-                      (newline))
-                    (insert (format "(%s): " defun))))))
+    (undo-boundary)
+    (goto-char (point-max))
+    (while (re-search-backward (concat "^" comment-start) nil t))
+    (cond ((re-search-backward (format "* %s\\(?: (\\([^)]+\\))\\)?: " file)
+                               nil t)
+           (when (equal (match-string 1) defun)
+             (setq defun nil))
+           (re-search-forward ": "))
           (t
-           ;; found entry for file, look for its beginning
-           (when (looking-at ":")
-             (forward-char 2))))))
+           (when (re-search-backward "^[\\*(].+\n" nil t)
+             (goto-char (match-end 0)))
+           (while (re-search-forward "^[^\\*#\n].*\n" nil t))
+           (if defun
+               (progn (insert (format "* %s (%s): \n" file defun))
+                      (setq defun nil))
+             (insert (format "* %s: \n" file)))
+           (backward-char)
+           (unless (looking-at "\n[\n\\']")
+             (insert ?\n)
+             (backward-char))))
+    (when defun
+      (forward-line)
+      (let ((limit (save-excursion
+                     (and (re-search-forward "^\\*" nil t)
+                          (point)))))
+        (unless (or (looking-back (format "(%s): " defun)
+                                  (line-beginning-position))
+                    (re-search-forward (format "^(%s): " defun) limit t))
+          (while (re-search-forward "^[^\\*#\n].*\n" limit t))
+          (insert (format "(%s): \n" defun))
+          (backward-char))))))
 
 ;;; magit-commit.el ends soon
 (provide 'magit-commit)

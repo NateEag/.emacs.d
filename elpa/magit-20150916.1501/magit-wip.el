@@ -32,7 +32,6 @@
 
 (require 'magit-core)
 (require 'magit-log)
-(require 'format-spec)
 
 ;;; Options
 
@@ -107,12 +106,12 @@ Also see `magit-wip-after-save-mode' which calls this function
 automatically whenever a buffer visiting a tracked file is saved."
   (interactive)
   (--when-let (magit-wip-get-ref)
-    (let* ((default-directory (magit-toplevel))
-           (file (file-relative-name buffer-file-name )))
-      (magit-wip-commit-worktree it (list file)
-                                 (if (called-interactively-p 'any)
-                                     (format "wip-save %s after save" file)
-                                   (format "autosave %s after save" file))))))
+    (magit-with-toplevel
+      (let ((file (file-relative-name buffer-file-name)))
+        (magit-wip-commit-worktree
+         it (list file) (if (called-interactively-p 'any)
+                            (format "wip-save %s after save" file)
+                          (format "autosave %s after save" file)))))))
 
 ;;;###autoload
 (define-minor-mode magit-wip-after-apply-mode
@@ -153,7 +152,7 @@ command which is about to be called are committed."
 
 (defun magit-wip-commit-before-change (&optional files msg)
   (when magit-wip-before-change-mode
-    (let ((default-directory (magit-toplevel)))
+    (magit-with-toplevel
       (magit-wip-commit files msg))))
 
 ;;; Core
@@ -165,8 +164,8 @@ Interactively, commit all changes to all tracked files using
 a generic commit message.  With a prefix-argument the commit
 message is read in the minibuffer.
 
-Non-interactivly, on behalf of `magit-wip-before-change-hook',
-only commit changes to FILES using MSG as commit message."
+Non-interactively, only commit changes to FILES using MSG as
+commit message."
   (interactive (list nil (if current-prefix-arg
                              (magit-read-string "Wip commit message")
                            "wip-save tracked files")))
@@ -186,10 +185,10 @@ only commit changes to FILES using MSG as commit message."
 (defun magit-wip-commit-worktree (ref files msg)
   (let* ((wipref (concat magit-wip-namespace "wtree/" ref))
          (parent (magit-wip-get-parent ref wipref))
-         (tree (magit-with-temp-index parent
+         (tree (magit-with-temp-index parent "--reset"
                  (if files
                      (magit-call-git "add" "--" files)
-                   (let ((default-directory (magit-toplevel)))
+                   (magit-with-toplevel
                      (magit-call-git "add" "-u" ".")))
                  (magit-git-string "write-tree"))))
     (when (magit-git-failure "diff-tree" "--quiet" parent tree "--" files)
@@ -270,16 +269,17 @@ many \"branches\" of each wip ref are shown."
              args files))
 
 (defun magit-wip-log-get-tips (wipref count)
-  (let ((reflog (magit-git-lines "reflog" wipref)) tips)
-    (while (and reflog (> count 1))
-      (setq reflog (cl-member "^[^ ]+ [^:]+: restart autosaving"
-                              reflog :test #'string-match-p))
-      (when (and (cadr reflog)
-                 (string-match "^[^ ]+ \\([^:]+\\)" (cadr reflog)))
-        (push (match-string 1 (cadr reflog)) tips))
-      (setq reflog (cddr reflog))
-      (cl-decf count))
-    (cons wipref (nreverse tips))))
+  (-when-let (reflog (magit-git-lines "reflog" wipref))
+    (let (tips)
+      (while (and reflog (> count 1))
+        (setq reflog (cl-member "^[^ ]+ [^:]+: restart autosaving"
+                                reflog :test #'string-match-p))
+        (when (and (cadr reflog)
+                   (string-match "^[^ ]+ \\([^:]+\\)" (cadr reflog)))
+          (push (match-string 1 (cadr reflog)) tips))
+        (setq reflog (cddr reflog))
+        (cl-decf count))
+      (cons wipref (nreverse tips)))))
 
 ;;; magit-wip.el ends soon
 (provide 'magit-wip)

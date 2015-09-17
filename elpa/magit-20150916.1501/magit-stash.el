@@ -236,25 +236,20 @@ When the region is active offer to drop all contained stashes."
   (let ((magit-git-global-arguments (nconc (list "-c" "commit.gpgsign=false")
                                            magit-git-global-arguments))
         (default-directory (magit-toplevel))
-        (conflicts (magit-anything-unmerged-p))
         (summary (magit-stash-summary))
         (head "HEAD"))
-    (when (and worktree (not index) (not conflicts))
+    (when (and worktree (not index))
       (setq head (magit-commit-tree "pre-stash index" nil "HEAD")))
-    (or (setq index (if conflicts
-                        (magit-commit-tree (concat "index on " summary)
-                                           "HEAD^{tree}" "HEAD")
-                      (magit-commit-tree (concat "index on " summary)
-                                         nil head)))
+    (or (setq index (magit-commit-tree (concat "index on " summary) nil head))
         (error "Cannot save the current index state"))
     (and untracked
          (setq untracked (magit-untracked-files (eq untracked 'all)))
-         (setq untracked (magit-with-temp-index nil
+         (setq untracked (magit-with-temp-index nil nil
                            (or (and (magit-update-files untracked)
                                     (magit-commit-tree
                                      (concat "untracked files on " summary)))
                                (error "Cannot save the untracked files")))))
-    (magit-with-temp-index index
+    (magit-with-temp-index index "-m"
       (when worktree
         (or (magit-update-files (magit-git-items "diff" "-z" "--name-only" head))
             (error "Cannot save the current worktree state")))
@@ -291,7 +286,7 @@ If optional REF is non-nil show reflog for that instead.
 If optional HEADING is non-nil use that as section heading
 instead of \"Stashes:\"."
   (when (magit-rev-verify ref)
-    (magit-insert-section (stashes ref)
+    (magit-insert-section (stashes ref (not magit-status-expand-stashes))
       (magit-insert-heading heading)
       (magit-git-wash (apply-partially 'magit-log-wash-log 'stash)
         "reflog" "--format=%gd %at %gs" ref))))
@@ -357,7 +352,7 @@ The following `format'-like specs are supported:
                                      (magit-stash-at-point))
                                 (magit-read-stash "Show stash"))
                             nil)
-                      (magit-diff-arguments)))
+                      (delete "--stat" (magit-diff-arguments))))
   (magit-mode-setup magit-stash-buffer-name-format
                     (if noselect 'display-buffer 'pop-to-buffer)
                     #'magit-stash-mode
@@ -386,7 +381,7 @@ The following `format'-like specs are supported:
      (magit-insert-section (,(intern (format "stashed-%s" subtype)))
        (magit-insert-heading (format "%s %s:" (capitalize stash) ',subtype))
        (magit-git-wash #'magit-diff-wash-diffs
-         "diff" (cdr magit-refresh-args) "--no-prefix"
+         "diff" (cdr magit-refresh-args) "--no-prefix" "-u"
          (format ,format stash stash) "--" ,files))))
 
 (defun magit-insert-stash-index ()

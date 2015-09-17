@@ -67,30 +67,14 @@ displayed.  Otherwise fall back to regular region highlighting."
   :type 'hook
   :options '(magit-section-update-region magit-diff-update-hunk-region))
 
-(defcustom magit-restore-window-configuration t
-  "Whether quitting a Magit buffer restores previous window configuration.
-
-Function `magit-mode-display-buffer' is used to display and
-select Magit buffers.  Unless the buffer was already displayed in
-a window of the selected frame it also stores the previous window
-configuration.  If this option is non-nil that configuration will
-later be restored by `magit-mode-bury-buffer', provided the
-buffer has not since been displayed in another frame.
-
-This works best when only two windows are usually displayed in a
-frame.  If this isn't the case setting then the default value
-might lead to undesirable behaviour.  Also quitting a Magit
-buffer while another Magit buffer that was created earlier is
-still displayed will cause that buffer to be hidden, which might
-or might not be what you want.
-
-Note that if this was previously disabled, then setting it to t
-does not effect Magit buffers that already exist, because the
-previous window configurations are only stored if and only if
-this option is non-nil."
-  :package-version '(magit . "2.1.0")
+(defcustom magit-bury-buffer-function 'magit-restore-window-configuration
+  "The function used to bury or kill the current Magit buffer."
+  :package-version '(magit . "2.3.0")
   :group 'magit
-  :type 'boolean)
+  :type '(radio (function-item quit-window)
+                (function-item magit-mode-quit-window)
+                (function-item magit-restore-window-configuration)
+                (function :tag "Function")))
 
 (defcustom magit-refresh-verbose nil
   "Whether to revert Magit buffers verbosely."
@@ -183,6 +167,53 @@ has to confirm each save."
   :type '(choice (const :tag "Never" nil)
                  (const :tag "Ask" t)
                  (const :tag "Save without asking" dontask)))
+
+(defcustom magit-keep-region-overlay nil
+  "Whether to keep the region overlay when there is a valid selection.
+
+By default Magit removes the regular region overlay if, and only
+if, that region constitutes a valid selection as understood by
+Magit commands.  Otherwise it does not remove that overlay, and
+the region looks like it would in other buffers.
+
+There are two types of such valid selections: hunk-internal
+regions and regions that select two or more sibling sections.
+In such cases Magit removes the region overlay and instead
+highlights a slightly larger range.  All text (for hunk-internal
+regions) or the headings of all sections (for sibling selections)
+that are inside that range (not just inside the region) are acted
+on by commands such as the staging command.  This buffer range
+begins at the beginning of the line on which the region begins
+and ends at the end of the line on which the region ends.
+
+Because Magit acts on this larger range and not the region, it is
+actually quite important to visualize that larger range.  If we
+don't do that, then one might think that these commands act on
+the region instead.  If you want to *also* visualize the region,
+then set this option to t.  But please note that when the region
+does *not* constitute a valid selection, then the region is
+*always* visualized as usual, and that it is usually under such
+circumstances that you want to use a non-magit command to act on
+the region.
+
+Besides keeping the region overlay, setting this option to t also
+causes all face properties, except for `:foreground', to be
+ignored for the faces used to highlight headings of selected
+sections.  This avoids the worst conflicts that result from
+displaying the region and the selection overlays at the same
+time.  We are not interested in dealing with other conflicts.
+In fact we *already* provide a way to avoid all of these
+conflicts: *not* changing the value of this option.
+
+It should be clear by now that we consider it a mistake to set
+this to display the region when the Magit selection is also
+visualized, but since it has been requested a few times and
+because it doesn't cost much to offer this option we do so.
+However that might change.  If the existance of this option
+starts complicating other things, then it will be removed."
+  :package-version '(magit . "2.3.0")
+  :group 'magit-modes
+  :type 'boolean)
 
 ;;; Magit Mode
 
@@ -302,8 +333,7 @@ which visits the thing at point."
     ["Diff working tree" magit-diff-working-tree t]
     ["Diff" magit-diff t]
     ("Log"
-     ["Oneline Log" magit-log t]
-     ["Verbose Log" magit-log-verbose t]
+     ["Log" magit-log t]
      ["Reflog" magit-reflog t]
      ["Extended..." magit-log-popup t])
     "---"
@@ -315,7 +345,7 @@ which visits the thing at point."
     ["Discard" magit-discard t]
     ["Reset head" magit-reset-head t]
     ["Stash" magit-stash t]
-    ["Snapshot" magit-stash-snapshot t]
+    ["Snapshot" magit-snapshot t]
     "---"
     ["Branch..." magit-checkout t]
     ["Merge" magit-merge t]
@@ -327,7 +357,7 @@ which visits the thing at point."
     ["Remote update" magit-fetch-all t]
     ("Submodule"
      ["Submodule update" magit-submodule-update t]
-     ["Submodule update and init" magit-submodule-update-init t]
+     ["Submodule update and init" magit-submodule-setup t]
      ["Submodule init" magit-submodule-init t]
      ["Submodule sync" magit-submodule-sync t])
     "---"
@@ -353,6 +383,7 @@ Magit is documented in info node `(magit)'."
   (setq buffer-read-only t)
   (setq-local line-move-visual t) ; see #1771
   (setq show-trailing-whitespace nil)
+  (setq list-buffers-directory default-directory)
   (hack-dir-local-variables-non-file-buffer)
   (make-local-variable 'text-property-default-nonsticky)
   (push (cons 'keymap t) text-property-default-nonsticky)
@@ -366,8 +397,9 @@ Magit is documented in info node `(magit)'."
 
 (defun magit-highlight-region (start end window rol)
   (mapc #'delete-overlay magit-region-overlays)
-  (if (run-hook-with-args-until-success 'magit-region-highlight-hook
-                                        (magit-current-section))
+  (if (and (run-hook-with-args-until-success 'magit-region-highlight-hook
+                                             (magit-current-section))
+           (not magit-keep-region-overlay))
       (funcall (default-value 'redisplay-unhighlight-region-function) rol)
     (funcall (default-value 'redisplay-highlight-region-function)
              start end window rol)))
@@ -389,6 +421,8 @@ The value is usually set using `magit-mode-setup'.")
 The value is usually set using `magit-mode-setup'.")
 (put 'magit-refresh-args 'permanent-local t)
 
+(defvar magit-mode-setup-hook nil)
+
 ;; Kludge.  We use this instead of adding a new, optional argument to
 ;; `magit-setup-mode' in order to avoid breaking third-party packages.
 ;; See #2054 and #2060.
@@ -404,35 +438,34 @@ and finally \"refresh\" a first time.  All arguments are evaluated
 before switching to BUFFER."
   (declare (debug (form form form form &rest form)))
   (let ((smode (cl-gensym "mode"))
-        (sroot (cl-gensym "root"))
         (sfunc (cl-gensym "func"))
         (sargs (cl-gensym "args"))
         (sbuf  (cl-gensym "buffer")))
     `(let* ((,smode ,mode)
-            (,sroot (let ((default-directory (or magit-mode-setup--topdir
-                                                 default-directory)))
-                      (magit-toplevel)))
             (,sfunc ,refresh-func)
             (,sargs (list ,@refresh-args))
             (,sbuf  (magit-mode-display-buffer
-                     ,buffer ,smode ,switch-func ,sroot)))
-       (when find-file-visit-truename
-         (setq ,sroot (file-truename ,sroot)))
-       (if ,sroot
-           (with-current-buffer ,sbuf
-             (setq default-directory ,sroot
-                   magit-refresh-function ,sfunc
-                   magit-refresh-args ,sargs)
-             (run-hooks 'magit-mode-setup-hook)
-             (pcase ,smode
-               ((or `magit-log-mode `magit-reflog-mode)
-                (magit-xref-setup ,sargs))
-               ((or `magit-diff-mode `magit-revision-mode)
-                (magit-xref-setup ,sargs)
-                (goto-char (point-min))))
-             (funcall ,smode)
-             (magit-refresh-buffer))
-         (user-error "Not inside a Git repository")))))
+                     ,buffer ,smode ,switch-func
+                     (let ((default-directory
+                             (or magit-mode-setup--topdir
+                                 default-directory)))
+                       (--if-let (magit-toplevel)
+                           (if find-file-visit-truename
+                               (file-truename it)
+                             it)
+                         (user-error "Not inside a Git repository"))))))
+       (with-current-buffer ,sbuf
+         (setq magit-refresh-function ,sfunc)
+         (setq magit-refresh-args     ,sargs)
+         (run-hooks 'magit-mode-setup-hook)
+         (pcase ,smode
+           ((or `magit-log-mode `magit-reflog-mode)
+            (magit-xref-setup ,sargs))
+           ((or `magit-diff-mode `magit-revision-mode)
+            (magit-xref-setup ,sargs)
+            (goto-char (point-min))))
+         (funcall ,smode)
+         (magit-refresh-buffer)))))
 
 (defvar-local magit-previous-section nil)
 (put 'magit-previous-section 'permanent-local t)
@@ -460,13 +493,18 @@ the function `magit-toplevel'."
   (let ((section (magit-current-section)))
     (with-current-buffer buffer
       (setq magit-previous-section section)
-      (when magit-restore-window-configuration
+      (when (eq magit-bury-buffer-function 'magit-restore-window-configuration)
         (magit-save-window-configuration))))
   (funcall (or switch-function
                (if (derived-mode-p 'magit-mode)
                    'switch-to-buffer
                  'pop-to-buffer))
            buffer)
+  (when (eq magit-bury-buffer-function 'magit-mode-quit-window)
+    (let ((window (get-buffer-window buffer)))
+      (when (and (window-live-p window)
+                 (not (window-prev-buffers window)))
+        (set-window-parameter window 'magit-dedicated t))))
   buffer)
 
 (defun magit-mode-get-buffers ()
@@ -476,29 +514,34 @@ the function `magit-toplevel'."
                      (equal default-directory topdir)))
               (buffer-list))))
 
-(defun magit-mode-get-buffer (format mode &optional pwd create)
+(defun magit-mode-get-buffer (format mode &optional pwd create frame)
   (unless format
     (setq format (symbol-value
                   (intern (format "%s-buffer-name-format"
                                   (substring (symbol-name mode) 0 -5))))))
-  (setq pwd (expand-file-name (or pwd default-directory)))
-  (let* ((topdir (let ((default-directory pwd))
-                   (magit-toplevel)))
-         (name (format-spec
-                format (if topdir
-                           `((?a . ,(abbreviate-file-name topdir))
-                             (?b . ,(file-name-nondirectory
-                                     (directory-file-name topdir))))
-                         '((?a . "-") (?b . "-"))))))
-    (or (--first (with-current-buffer it
-                   (and (equal (buffer-name) name)
-                        (or (not topdir)
-                            (equal (expand-file-name default-directory)
-                                   topdir))))
-                 (buffer-list))
-        (and create
-             (let ((default-directory (or topdir pwd)))
-               (generate-new-buffer name))))))
+  (if (not (string-match-p "%[ab]" format))
+      (funcall (if create #'get-buffer-create #'get-buffer) format)
+    (setq pwd (expand-file-name (or pwd default-directory)))
+    (let* ((topdir (let ((default-directory pwd))
+                     (magit-toplevel)))
+           (name (format-spec
+                  format (if topdir
+                             `((?a . ,(abbreviate-file-name topdir))
+                               (?b . ,(file-name-nondirectory
+                                       (directory-file-name topdir))))
+                           '((?a . "-") (?b . "-"))))))
+      (or (--first (with-current-buffer it
+                     (and (equal (buffer-name) name)
+                          (or (not topdir)
+                              (equal (expand-file-name default-directory)
+                                     topdir))))
+                   (if frame
+                       (-map #'window-buffer
+                             (window-list (unless (eq frame t) frame)))
+                     (buffer-list)))
+          (and create
+               (let ((default-directory (or topdir pwd)))
+                 (generate-new-buffer name)))))))
 
 (defun magit-mode-get-buffer-create (format mode &optional directory)
   (magit-mode-get-buffer format mode directory t))
@@ -506,15 +549,32 @@ the function `magit-toplevel'."
 (defun magit-mode-bury-buffer (&optional kill-buffer)
   "Bury the current buffer.
 With a prefix argument, kill the buffer instead.
-
-If `magit-restore-window-configuration' is non-nil and the last
-configuration stored by `magit-mode-display-buffer' originates
-from the selected frame then restore it after burying/killing
-the buffer."
+This is done using `magit-bury-buffer-function'."
   (interactive "P")
-  (if magit-restore-window-configuration
-      (magit-restore-window-configuration kill-buffer)
-    (quit-window kill-buffer)))
+  (funcall magit-bury-buffer-function kill-buffer))
+
+(defun magit-mode-quit-window (kill-buffer)
+  "Quit the selected window and bury its buffer.
+
+This behaves similar to `quit-window', but when the window
+was originally created to display a Magit buffer and the
+current buffer is the last remaining Magit buffer that was
+ever displayed in the selected window, then delete that
+window."
+  (if (or (one-window-p)
+          (--first (let ((buffer (car it)))
+                     (and (not (eq buffer (current-buffer)))
+                          (buffer-live-p buffer)
+                          (or (not (window-parameter nil 'magit-dedicated))
+                              (with-current-buffer buffer
+                                (derived-mode-p 'magit-mode
+                                                'magit-process-mode)))))
+                   (window-prev-buffers)))
+      (quit-window kill-buffer)
+    (let ((window (selected-window)))
+      (quit-window kill-buffer)
+      (when (window-live-p window)
+        (delete-window window)))))
 
 (defun magit-rename-buffer (&optional newname)
   "Rename the current buffer, so that Magit won't reuse it.
@@ -544,6 +604,8 @@ With a prefix argument, the user can pick an arbitrary name."
 
 (defvar inhibit-magit-refresh nil)
 
+(defvar magit-pre-refresh-hook nil)
+
 (defun magit-refresh ()
   "Refresh some buffers belonging to the current repository.
 
@@ -559,9 +621,7 @@ current repository."
       (run-hooks 'magit-pre-refresh-hook)
       (magit-refresh-buffer)
       (unless (derived-mode-p 'magit-status-mode)
-        (--when-let (magit-mode-get-buffer
-                     magit-status-buffer-name-format
-                     'magit-status-mode)
+        (--when-let (magit-mode-get-buffer nil 'magit-status-mode)
           (with-current-buffer it
             (magit-refresh-buffer)))))
     (magit-revert-buffers)))
@@ -593,10 +653,8 @@ Uses the buffer-local `magit-refresh-function'."
                         (with-current-buffer buffer
                           (-when-let (section (magit-current-section))
                             (list
-                             (list it section
-                                   (count-lines (magit-section-start section)
-                                                (point))
-                                   (- (point) (line-beginning-position)))))))
+                             (nconc (list it section)
+                                    (magit-refresh-get-relative-position))))))
                       (or (get-buffer-window-list buffer nil t)
                           (list (selected-window))))))
       (deactivate-mark)
@@ -620,6 +678,26 @@ Uses the buffer-local `magit-refresh-function'."
       (message "Refreshing buffer `%s'...done (%.3fs)" (buffer-name)
                (float-time (time-subtract (current-time)
                                           magit-refresh-start-time))))))
+
+(defun magit-refresh-get-relative-position ()
+  (-when-let (section (magit-current-section))
+    (let ((start (magit-section-start section)))
+      (list (count-lines start (point))
+            (- (point) (line-beginning-position))
+            (and (eq (magit-section-type section) 'hunk)
+                 (region-active-p)
+                 (progn (goto-char (line-beginning-position))
+                        (when  (looking-at "^[-+]") (forward-line))
+                        (while (looking-at "^[ @]") (forward-line))
+                        (let ((beg (point)))
+                          (cond ((looking-at "^[-+]")
+                                 (forward-line)
+                                 (while (looking-at "^[-+]") (forward-line))
+                                 (while (looking-at "^ ")    (forward-line))
+                                 (forward-line -1)
+                                 (regexp-quote (buffer-substring-no-properties
+                                                beg (line-end-position))))
+                                (t t)))))))))
 
 (defvar inhibit-magit-revert nil)
 (defvar magit-revert-buffers-backlog nil)
@@ -764,13 +842,14 @@ is saved without asking, the user is asked about each modified
 buffer which visits a file in the current repository.  Optional
 argument (the prefix) non-nil means save all with no questions."
   (interactive "P")
-  (-when-let (topdir (magit-toplevel))
+  (-when-let (topdir (magit-rev-parse-safe "--show-toplevel"))
     (save-some-buffers
      arg (-partial (lambda (topdir)
                      (and buffer-file-name
                           ;; Avoid needlessly connecting to unrelated remotes.
                           (string-prefix-p topdir buffer-file-name)
-                          (equal (ignore-errors (magit-toplevel nil t)) topdir)))
+                          (equal (magit-rev-parse-safe "--show-toplevel")
+                                 topdir)))
                    topdir))))
 
 ;;; Restore Window Configuration
@@ -815,13 +894,9 @@ argument (the prefix) non-nil means save all with no questions."
       (help-xref-go-forward (current-buffer))
     (user-error "No next entry in buffer's history")))
 
-(defun magit-xref-insert-buttons ()
-  (when (and (or (and magit-revision-show-xref-buttons
-                      (derived-mode-p 'magit-revision-mode))
-                 (and magit-diff-show-xref-buttons
-                      (derived-mode-p 'magit-diff-mode)))
-             (or help-xref-stack help-xref-forward-stack))
-    (insert "\n")
+(defun magit-insert-xref-buttons (&optional _)
+  "Insert xref buttons."
+  (when (or help-xref-stack help-xref-forward-stack)
     (when help-xref-stack
       (magit-xref-insert-button help-back-label 'magit-xref-backward))
     (when help-xref-forward-stack

@@ -263,7 +263,9 @@
     (loop for (mode . state) in '((git-commit-mode . insert))
           do (evil-set-initial-state mode state))
 
-    (evil-commentary-default-setup)))
+    (evil-commentary-default-setup)
+
+    (diminish 'evil-commentary-mode)))
 
 (use-package glasses
   :commands glasses-mode

@@ -6,7 +6,6 @@
 
 ;;; Author: Eric James Michael Ritz
 ;;; URL: https://github.com/ejmr/php-mode
-;; Package-Version: 20150729.213
 ;;; Version: 1.17.0
 
 (defconst php-mode-version-number "1.17.0"
@@ -1002,8 +1001,7 @@ PHP heredoc."
     (set (make-local-variable 'syntax-propertize-function)
          #'php-syntax-propertize-function))
 
-  (setq font-lock-maximum-decoration t
-        imenu-generic-expression php-imenu-generic-expression)
+  (setq imenu-generic-expression php-imenu-generic-expression)
 
   ;; PHP vars are case-sensitive
   (setq case-fold-search t)

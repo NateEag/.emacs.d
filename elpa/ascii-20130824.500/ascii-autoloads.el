@@ -1,10 +1,9 @@
 ;;; ascii-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-
+(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads (ascii-off ascii-on ascii-display ascii-customize)
-;;;;;;  "ascii" "ascii.el" (21251 46650 0 0))
+;;;### (autoloads nil "ascii" "ascii.el" (22010 5210 0 0))
 ;;; Generated autoloads from ascii.el
 
 (autoload 'ascii-customize "ascii" "\
@@ -34,15 +33,9 @@ Turn off ASCII code display.
 
 ;;;***
 
-;;;### (autoloads nil nil ("ascii-pkg.el") (21251 46650 495000 0))
-
-;;;***
-
-(provide 'ascii-autoloads)
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
-;; coding: utf-8
 ;; End:
 ;;; ascii-autoloads.el ends here

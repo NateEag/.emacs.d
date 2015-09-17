@@ -7,8 +7,8 @@
 ;; Maintainer:	Vinicius Jose Latorre <viniciusjl@ig.com.br>
 ;; Time-stamp:	<2011/01/12 00:58:17 vinicius>
 ;; Keywords:	data, ascii
-;; Version: 20130824.1200
-;; X-Original-Version:	3.1
+;; Package-Version: 20130824.500
+;; Version:	3.1
 ;; X-URL:	http://www.emacswiki.org/cgi-bin/wiki/ViniciusJoseLatorre
 
 ;; This file is *NOT* (yet?) part of GNU Emacs.

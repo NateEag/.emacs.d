@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "avy" "avy.el" (21968 61818 0 0))
+;;;### (autoloads nil "avy" "avy.el" (22010 5199 0 0))
 ;;; Generated autoloads from avy.el
 
 (autoload 'avy-goto-char "avy" "\
@@ -65,7 +65,14 @@ Which one depends on variable `subword-mode'.
 
 (autoload 'avy-goto-line "avy" "\
 Jump to a line start in current buffer.
-The window scope is determined by `avy-all-windows' (ARG negates it).
+
+When ARG is 1, jump to lines currently visible, with the option
+to cancel to `goto-line' by entering a number.
+
+When ARG is 4, negate the window scope determined by
+`avy-all-windows'.
+
+Otherwise, forward to `goto-line' with ARG.
 
 \(fn &optional ARG)" t nil)
 
@@ -92,7 +99,7 @@ Setup the default shortcuts.
 \(fn)" nil nil)
 
 (autoload 'avy-goto-char-timer "avy" "\
-Read one or two consecutive chars and jump to the first one.
+Read one or many consecutive chars and jump to the first one.
 The window scope is determined by `avy-all-windows' (ARG negates it).
 
 \(fn &optional ARG)" t nil)

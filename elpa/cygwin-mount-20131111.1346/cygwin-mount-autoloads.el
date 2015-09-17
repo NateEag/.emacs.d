@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil nil ("cygwin-mount.el") (21585 34397 777400
+;;;### (autoloads nil nil ("cygwin-mount.el") (22010 5218 783942
 ;;;;;;  0))
 
 ;;;***

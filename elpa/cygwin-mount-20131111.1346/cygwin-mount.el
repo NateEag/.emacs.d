@@ -1,11 +1,11 @@
 ;;; cygwin-mount.el --- Teach EMACS about cygwin styles and mount points.
-;; Version: 20131111.2146
 
 ;; Copyright (C) 1997 Michael Cook <mcook@xemacs.org>.
 ;;               2001 Klaus Berndl <berndl@sdm.de>
 
 ;; Author: Michael Cook <mcook@xemacs.org>
 ;; Keywords: files, mount, cygwin
+;; Package-Version: 20131111.1346
 
 ;; This file is *NOT* (yet?) part of GNU Emacs.
 ;;

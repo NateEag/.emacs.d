@@ -6,8 +6,8 @@
 ;; Maintainer: Drew Adams (concat "drew.adams" "@" "oracle" ".com")
 ;; Copyright (C) 1996-2015, Drew Adams, all rights reserved.
 ;; Created: Tue Mar  5 16:15:50 1996
-;; Version: 20150104.2208
-;; X-Original-Version: 0
+;; Version: 0
+;; Package-Version: 20150104.1408
 ;; Package-Requires: ()
 ;; Last-Updated: Thu Jan  1 10:45:03 2015 (-0800)
 ;;           By: dradams

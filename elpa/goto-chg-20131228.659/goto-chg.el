@@ -22,8 +22,8 @@
 ;;
 ;; Author: David Andersson <l.david.andersson(at)sverige.nu>
 ;; Created: 16 May 2002
-;; Version: 20131228.1459
-;; X-Original-Version: 1.6
+;; Version: 1.6
+;; Package-Version: 20131228.659
 ;; Keywords: convenience, matching
 ;;
 ;;; Commentary:

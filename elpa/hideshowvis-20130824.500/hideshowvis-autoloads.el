@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "hideshowvis" "hideshowvis.el" (21585 34396
+;;;### (autoloads nil "hideshowvis" "hideshowvis.el" (22010 5258
 ;;;;;;  0 0))
 ;;; Generated autoloads from hideshowvis.el
 

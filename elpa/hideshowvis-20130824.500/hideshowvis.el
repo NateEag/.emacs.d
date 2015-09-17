@@ -3,8 +3,8 @@
 ;; Copyright 2008-2012 Jan Rehders
 ;;
 ;; Author: Jan Rehders <cmdkeen@gmx.de>
-;; Version: 20130824.1200
-;; X-Original-Version: 0.5
+;; Version: 0.5
+;; Package-Version: 20130824.500
 ;; Contributions and bug fixes by Bryan Waite, Michael Heerdegen, John Yates and
 ;; Matthew Fidler.
 ;;

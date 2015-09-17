@@ -270,6 +270,7 @@ Only buffer names are fuzzy matched when this is enabled,
 
 
 (defvar ido-use-virtual-buffers)
+(defvar ido-ignore-buffers)
 (defun helm-buffer-list ()
   "Return the current list of buffers.
 Currently visible buffers are put at the end of the list.
@@ -277,6 +278,7 @@ See `ido-make-buffer-list' for more infos."
   (require 'ido)
   (let ((ido-process-ignore-lists t)
         ido-ignored-list
+        ido-ignore-buffers
         ido-use-virtual-buffers)
     (ido-make-buffer-list nil)))
 
@@ -513,7 +515,7 @@ i.e same color."
                           for p in (split-string pattern)
                           when (string-match "\\`@\\(.*\\)" p)
                           return (match-string 1 p))))
-    (if regexp
+    (if (and buf regexp)
         (with-current-buffer buf
           (save-excursion
             (goto-char (point-min))
@@ -632,10 +634,12 @@ If REGEXP-FLAG is given use `query-replace-regexp'."
     (helm-execute-persistent-action 'kill-action)))
 
 (defun helm-kill-marked-buffers (_ignore)
-  (mapc 'kill-buffer (helm-marked-candidates))
-  (with-helm-buffer
-    (setq helm-marked-candidates nil
-          helm-visible-mark-overlays nil)))
+  (let ((bufs (helm-marked-candidates)))
+    (mapc 'kill-buffer bufs)
+    (with-helm-buffer
+      (setq helm-marked-candidates nil
+            helm-visible-mark-overlays nil))
+    (message "Killed %s buffers" (length bufs))))
 
 (defun helm-buffer-run-kill-buffers ()
   "Run kill buffer action from `helm-source-buffers-list'."

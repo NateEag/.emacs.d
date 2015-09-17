@@ -332,19 +332,6 @@ new file for the first time."
 (add-auto-mode 'markdown-mode "\\.md")
 (add-hook 'markdown-mode-hook 'text-mode-init)
 
-;; Python mode.
-(require 'jedi-force)
-(add-auto-mode 'python-mode "\\.py$")
-(setq interpreter-mode-alist
-      (cons '("python" . python-mode) interpreter-mode-alist))
-
-(add-hook 'python-mode-hook 'python-mode-accessories-init)
-(jedi-force-set-up-hooks)
-
-
-;; DEBUG I cannot get this to autoload, and I don't know why.
-(require 'python-mode-accessories-init)
-
 ;; Include my PHP editing settings.
 (add-auto-mode 'php-mode "\\.php$")
 (add-hook 'php-mode-hook 'php-mode-init)

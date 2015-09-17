@@ -90,6 +90,18 @@
 (use-package conf-mode
   :mode "/dotfiles/")
 
+(use-package jedi-force
+  :commands jedi-force-set-up-hooks)
+
+(use-package python-mode
+  :init (jedi-force-set-up-hooks)
+  :config
+  (add-hook 'python-mode-hook '(lambda ()
+                                 (my-prog-mode-init)
+
+                                 (setq jedi:use-shortcuts t)
+                                 (setq jedi:complete-on-dot t))))
+
 (use-package csharp-mode
   :config
   (add-hook 'csharp-mode-hook 'omnisharp-mode))

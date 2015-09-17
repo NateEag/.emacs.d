@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.2
+;; Version: 1.2.3
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -76,6 +76,7 @@ of the line or the buffer; just return nil."
       (forward-char)
       ;; don't put the cursor on a newline
       (when (and evil-move-cursor-back
+                 (not evil-move-beyond-eol)
                  (not (evil-visual-state-p))
                  (not (evil-operator-state-p))
                  (eolp) (not (eobp)) (not (bolp)))
@@ -865,7 +866,7 @@ The default is half the screen."
       (scroll-down nil))))
 
 (evil-define-command evil-scroll-page-down (count)
-  "Scrolls the window COUNT pages upwards."
+  "Scrolls the window COUNT pages downwards."
   :repeat nil
   :keep-visual t
   (interactive "p")
@@ -1437,6 +1438,7 @@ of the block."
       (goto-char end)
       (when (and evil-cross-lines
                  evil-move-cursor-back
+                 (not evil-move-beyond-eol)
                  (not (evil-visual-state-p))
                  (not (evil-operator-state-p))
                  (eolp) (not (eobp)) (not (bolp)))
@@ -1837,6 +1839,18 @@ The return value is the yanked text."
   (interactive "<C>")
   (setq evil-this-register register))
 
+(defvar evil-macro-buffer nil
+  "The buffer that has been active on macro recording.")
+
+(defun evil-abort-macro ()
+  "Abort macro recording when the buffer is changed.
+Macros are aborted when the the current buffer
+is changed during macro recording."
+  (unless (or (minibufferp) (eq (current-buffer) evil-macro-buffer))
+    (remove-hook 'post-command-hook #'evil-abort-macro)
+    (end-kbd-macro)
+    (message "Abort macro recording (changed buffer)")))
+
 (evil-define-command evil-record-macro (register)
   "Record a keyboard macro into REGISTER.
 If REGISTER is :, /, or ?, the corresponding command line window
@@ -1850,6 +1864,8 @@ will be opened instead."
    ((eq register ?\C-g)
     (keyboard-quit))
    ((and evil-this-macro defining-kbd-macro)
+    (remove-hook 'post-command-hook #'evil-abort-macro)
+    (setq evil-macro-buffer nil)
     (condition-case nil
         (end-kbd-macro)
       (error nil))
@@ -1870,7 +1886,9 @@ will be opened instead."
     (when defining-kbd-macro (end-kbd-macro))
     (setq evil-this-macro register)
     (evil-set-register evil-this-macro nil)
-    (start-kbd-macro nil))
+    (start-kbd-macro nil)
+    (setq evil-macro-buffer (current-buffer))
+    (add-hook 'post-command-hook #'evil-abort-macro))
    (t (error "Invalid register"))))
 
 (evil-define-command evil-execute-macro (count macro)

@@ -3,7 +3,7 @@
 ;; URL: https://github.com/slime/slime
 ;; Package-Requires: ((cl-lib "0.5"))
 ;; Keywords: languages, lisp, slime
-;; Version: 2.14
+;; Version: 2.15
 
 ;;;; License and Commentary
 
@@ -1708,7 +1708,7 @@ This doesn't mean it will connect right after Slime is loaded."
 (defun slime-next-connection ()
   "Change current slime connection, cycling through all connections."
   (interactive)
-  (slime-cycle-connections-within slime-net-processes))
+  (slime-cycle-connections-within (reverse slime-net-processes)))
 
 (define-obsolete-function-alias 'slime-cycle-connections
   'slime-next-connection "2.13")
@@ -1717,7 +1717,7 @@ This doesn't mean it will connect right after Slime is loaded."
   "Change current slime connection, cycling through all connections.
 Goes in reverse order, relative to `slime-next-connection'."
   (interactive)
-  (slime-cycle-connections-within (reverse slime-net-processes)))
+  (slime-cycle-connections-within slime-net-processes))
 
 (cl-defmacro slime-with-connection-buffer ((&optional process) &rest body)
   "Execute BODY in the process-buffer of PROCESS.

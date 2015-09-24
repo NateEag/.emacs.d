@@ -50,6 +50,7 @@
  '(magit-use-overlays nil)
  '(mailcap-download-directory "~/Downloads")
  '(menu-bar-mode nil nil nil "I don't really use the menus, either.")
+ '(mm-inline-large-images (quote resize))
  '(mo-git-blame-git-blame-args "-M -C -w" nil nil "Follow movement in a file, look for movement between files in the same commit, and ignore whitespace changes.")
  '(multi-term-dedicated-window-height 24)
  '(notmuch-saved-searches

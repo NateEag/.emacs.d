@@ -30,4 +30,5 @@
 
   (setq tramp-default-method "plink"))
 
+(provide 'config-windows)
 ;;; config-windows.el ends here

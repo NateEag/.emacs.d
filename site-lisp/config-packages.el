@@ -276,6 +276,9 @@
   :commands glasses-mode
   :diminish glasses-mode)
 
+(use-package diffview
+  :commands diffview-current)
+
 (use-package flyspell
   :defer t
   :config

@@ -1,7 +1,3 @@
--Finish getting 'o' to open attachments in viewer in notmuch-show mode.
- It works(ish) if I manually force-load my ~/.mailcap file via
- (mailcap-parse-mailcaps "~/.mailcap" t)
-
 -Take a look at firestarter as an easy way to set up post-save hooks.
  Simpler alternative to file watchers, perhaps:
  https://github.com/wasamasa/firestarter

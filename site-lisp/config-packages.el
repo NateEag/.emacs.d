@@ -229,6 +229,9 @@
         (define-key yas-minor-mode-map (kbd "C-c y") 'yas-expand)
         (define-key yas-minor-mode-map [(tab)] nil)))
 
+(use-package evil-exchange
+  :commands evil-exchange-install)
+
 (use-package evil
   :commands evil-local-mode
   :config
@@ -262,6 +265,8 @@
     (require 'cl)
     (loop for (mode . state) in '((git-commit-mode . insert))
           do (evil-set-initial-state mode state))
+
+    (evil-exchange-install)
 
     (evil-commentary-default-setup)
 

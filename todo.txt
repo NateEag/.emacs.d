@@ -23,16 +23,8 @@
 
 -Add php-auto-yasnippet-style function params to tern.js.
 
--Add transpose operator/command to evil. I just want to be able to swap various
- text objects/motions cleanly - something like 't{' rather than 'd{}P'.
- Apparently there's a vim plugin called vim-exchange that handles this, and I
- think there may even be an evil port.
-
--Report bug on autoloading evil-nerd-commenter, particularly with
- evil-local-mode.
-
 -Integrate what's useful from spacemacs: https://github.com/syl20bnr/spacemacs
- I've got most of what I want, but evil-little-word would be nice.
+ I've got most of what I want, but evil-little-word could be nice.
 
 -Finish getting tagedit to work with web-mode.
 

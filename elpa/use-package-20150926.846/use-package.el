@@ -5,8 +5,9 @@
 ;; Author: John Wiegley <jwiegley@gmail.com>
 ;; Maintainer: John Wiegley <jwiegley@gmail.com>
 ;; Created: 17 Jun 2012
-;; Version: 2.0
-;; Package-Version: 20150906.2051
+;; Modified: 26 Sep 2015
+;; Version: 2.1
+;; Package-Version: 20150926.846
 ;; Package-Requires: ((bind-key "1.0") (diminish "0.44"))
 ;; Keywords: dotemacs startup speed config package
 ;; URL: https://github.com/jwiegley/use-package
@@ -664,7 +665,7 @@ manually updated package."
 (defalias 'use-package-normalize/:bind* 'use-package-normalize-binder)
 
 (defun use-package-handler/:bind
-    (name keyword arg rest state &optional override)
+    (name keyword arg rest state &optional bind-macro)
   (let ((commands (remq nil (mapcar #'(lambda (arg)
                                         (if (listp arg)
                                             (cdr arg)
@@ -674,10 +675,10 @@ manually updated package."
        (use-package-sort-keywords
         (use-package-plist-maybe-put rest :defer t))
        (use-package-plist-append state :commands commands))
-     `((ignore (,(if override 'bind-keys* 'bind-keys) ,@arg))))))
+     `((ignore (,(if bind-macro bind-macro 'bind-keys) ,@arg))))))
 
 (defun use-package-handler/:bind* (name keyword arg rest state)
-  (use-package-handler/:bind name keyword arg rest state t))
+  (use-package-handler/:bind name keyword arg rest state 'bind-keys*))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;

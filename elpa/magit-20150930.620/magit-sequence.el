@@ -238,8 +238,12 @@ without prompting."
 (defun magit-am-apply-patches (&optional files args)
   "Apply the patches FILES."
   (interactive (list (or (magit-region-values 'file)
-                         (list (read-file-name "Apply patch: " nil
-                                               (magit-file-at-point))))
+                         (list (let ((default (magit-file-at-point)))
+                                 (read-file-name
+                                  (if default
+                                      (format "Apply patch (%s): " default)
+                                    "Apply patch: ")
+                                  nil default))))
                      (magit-am-arguments)))
   (magit-run-git-sequencer "am" args "--" (mapcar 'expand-file-name files)))
 
@@ -297,8 +301,8 @@ This discards all changes made since the sequence started."
               (?f "Autosquash"         magit-rebase-autosquash)
               (?o "Rebase subset"      magit-rebase-subset)
               nil
-              (?e "Rebase interactive" magit-rebase-interactive)
-              (?s "Edit commit"        magit-rebase-edit-commit)
+              (?i "Rebase interactive" magit-rebase-interactive)
+              (?e "Edit commit"        magit-rebase-edit-commit)
               (?l "Rebase unpushed"    magit-rebase-unpushed)
               (?w "Reword commit"      magit-rebase-reword-commit))
   :sequence-actions '((?r "Continue" magit-rebase-continue)
@@ -368,7 +372,7 @@ START has to be selected from a list of recent commits."
                                  (unless (member "--root" args) commit)))
     (magit-log-select
       `(lambda (commit)
-         (magit-rebase-interactive-1 commit ,message ,editor (list ,@args)))
+         (magit-rebase-interactive-1 commit (list ,@args) ,message ,editor))
       message)))
 
 ;;;###autoload

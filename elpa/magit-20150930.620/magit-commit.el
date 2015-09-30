@@ -54,15 +54,15 @@
   :group 'magit-commands
   :type 'boolean)
 
-(defcustom magit-commit-extend-override-date nil
+(defcustom magit-commit-extend-override-date t
   "Whether using `magit-commit-extend' changes the committer date."
-  :package-version '(magit . "2.1.0")
+  :package-version '(magit . "2.3.0")
   :group 'magit-commands
   :type 'boolean)
 
-(defcustom magit-commit-reword-override-date nil
+(defcustom magit-commit-reword-override-date t
   "Whether using `magit-commit-reword' changes the committer date."
-  :package-version '(magit . "2.1.0")
+  :package-version '(magit . "2.3.0")
   :group 'magit-commands
   :type 'boolean)
 
@@ -145,10 +145,11 @@ With a prefix argument amend to the commit at HEAD instead.
 ;;;###autoload
 (defun magit-commit-extend (&optional args override-date)
   "Amend the last commit, without editing the message.
-With a prefix argument do change the committer date, otherwise
-don't.  The option `magit-commit-extend-override-date' can be
-used to inverse the meaning of the prefix argument.
-\n(git commit --amend --no-edit)"
+
+With a prefix argument keep the committer date, otherwise change
+it.  The option `magit-commit-extend-override-date' can be used
+to inverse the meaning of the prefix argument.  \n(git commit
+--amend --no-edit)"
   (interactive (list (magit-commit-arguments)
                      (if current-prefix-arg
                          (not magit-commit-extend-override-date)
@@ -163,9 +164,9 @@ used to inverse the meaning of the prefix argument.
 (defun magit-commit-reword (&optional args override-date)
   "Reword the last commit, ignoring staged changes.
 
-With a prefix argument do change the committer date, otherwise
-don't.  The option `magit-commit-rewrite-override-date' can be
-used to inverse the meaning of the prefix argument.
+With a prefix argument keep the committer date, otherwise change
+it.  The option `magit-commit-reword-override-date' can be used
+to inverse the meaning of the prefix argument.
 
 Non-interactively respect the optional OVERRIDE-DATE argument
 and ignore the option.
@@ -283,14 +284,14 @@ depending on the value of option `magit-commit-squash-confirm'."
   (--when-let (and git-commit-mode
                    (magit-diff-auto-show-p 'commit)
                    (pcase last-command
-                     (`magit-commit        'magit-diff-staged)
+                     (`magit-commit
+                      (apply-partially 'magit-diff-staged nil))
                      (`magit-commit-amend  'magit-diff-while-amending)
                      (`magit-commit-reword 'magit-diff-while-amending)))
-    (setq with-editor-previous-winconf (current-window-configuration))
     (let ((magit-inhibit-save-previous-winconf 'unset)
           (magit-diff-switch-buffer-function
            (lambda (buffer) (display-buffer buffer t))))
-      (funcall it))))
+      (funcall it (car (magit-diff-arguments))))))
 
 (add-hook 'server-switch-hook 'magit-commit-diff)
 

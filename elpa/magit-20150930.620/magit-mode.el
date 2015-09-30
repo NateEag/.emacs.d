@@ -281,7 +281,7 @@ starts complicating other things, then it will be removed."
     (define-key map "s" 'magit-stage-file)
     (define-key map "S" 'magit-stage-modified)
     (define-key map "u" 'magit-unstage-file)
-    (define-key map "U" 'magit-reset-index)
+    (define-key map "U" 'magit-unstage-all)
     (define-key map "v" 'magit-revert-no-commit)
     (define-key map "V" 'magit-revert-popup)
     (define-key map "w" 'magit-am-popup)
@@ -295,8 +295,8 @@ starts complicating other things, then it will be removed."
     (define-key map "!" 'magit-run-popup)
     (define-key map "\C-xa"  'magit-add-change-log-entry)
     (define-key map "\C-x4a" 'magit-add-change-log-entry-other-window)
-    (define-key map "\C-w"   'magit-copy-as-kill)
-    (define-key map "\M-w"   'magit-copy-buffer-thing-as-kill)
+    (define-key map "\C-w"   'magit-copy-section-value)
+    (define-key map "\M-w"   'magit-copy-buffer-revision)
     (define-key map [remap evil-previous-line] 'evil-previous-visual-line)
     (define-key map [remap evil-next-line] 'evil-next-visual-line)
     map)
@@ -511,7 +511,7 @@ the function `magit-toplevel'."
   (let ((topdir (magit-toplevel)))
     (--filter (with-current-buffer it
                 (and (derived-mode-p 'magit-mode)
-                     (equal default-directory topdir)))
+                     (equal (expand-file-name default-directory) topdir)))
               (buffer-list))))
 
 (defun magit-mode-get-buffer (format mode &optional pwd create frame)

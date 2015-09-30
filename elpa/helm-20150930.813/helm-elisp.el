@@ -513,7 +513,7 @@ Filename completion happen if string start after or between a double quote."
 (defun helm-def-source--emacs-functions (&optional default)
   (helm-build-in-buffer-source "Functions"
     :init `(lambda ()
-             (helm-apropos-init #'(lambda (x)
+             (helm-apropos-init (lambda (x)
                                     (and (fboundp x)
                                          (not (commandp x))
                                          (not (generic-p x))
@@ -530,7 +530,7 @@ Filename completion happen if string start after or between a double quote."
 (defun helm-def-source--eieio-classes (&optional default)
   (helm-build-in-buffer-source "Classes"
     :init `(lambda ()
-             (helm-apropos-init #'(lambda (x)
+             (helm-apropos-init (lambda (x)
                                     (class-p x))
                                 ,default))
     :fuzzy-match helm-apropos-fuzzy-match
@@ -544,7 +544,7 @@ Filename completion happen if string start after or between a double quote."
 (defun helm-def-source--eieio-generic (&optional default)
   (helm-build-in-buffer-source "Generic functions"
     :init `(lambda ()
-             (helm-apropos-init #'(lambda (x)
+             (helm-apropos-init (lambda (x)
                                     (generic-p x))
                                 ,default))
     :fuzzy-match helm-apropos-fuzzy-match
@@ -736,7 +736,7 @@ Filename completion happen if string start after or between a double quote."
 (defun helm-btf--usable-p ()
   "Return t if current version of `backtrace-frame' accept 2 arguments."
   (condition-case nil
-      (and (backtrace-frame 1 'condition-case) t)
+      (progn (backtrace-frame 1 'condition-case) t)
     (wrong-number-of-arguments nil)))
 
 (if (helm-btf--usable-p)        ; Check if BTF accept more than one arg.

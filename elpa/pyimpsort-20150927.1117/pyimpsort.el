@@ -26,7 +26,6 @@
 ;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Commentary:
-;; [![Travis build status](https://travis-ci.org/emacs-pe/pyimpsort.el.png?branch=master)](https://travis-ci.org/emacs-pe/pyimpsort.el)
 ;;
 ;; `pyimpsort.el' sort the python imports of a file.
 ;; Currently uses [pyimpsort.py](pyimpsort.py) to process the way to sort python

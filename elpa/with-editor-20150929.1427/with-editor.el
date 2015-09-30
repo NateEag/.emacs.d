@@ -8,7 +8,7 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 
-;; Package-Requires: ((emacs "24.4") (dash "2.10.0"))
+;; Package-Requires: ((emacs "24.4") (async "20150812") (dash "2.11.0"))
 ;; Keywords: tools
 ;; Homepage: https://github.com/magit/magit
 
@@ -40,7 +40,7 @@
 ;; export `$EDITOR' making sure the executed command uses the current
 ;; Emacs instance as "the editor".  With a prefix argument these
 ;; commands prompt for an alternative environment variable such as
-;; `$GIT_EDITOR'.  To always use these variants add this to you init
+;; `$GIT_EDITOR'.  To always use these variants add this to your init
 ;; file:
 ;;
 ;;   (define-key (current-global-map)
@@ -84,6 +84,11 @@
 (require 'tramp)
 (require 'tramp-sh nil t)
 
+(and (require 'async-bytecomp nil t)
+     (memq 'magit (bound-and-true-p async-bytecomp-allowed-packages))
+     (fboundp 'async-bytecomp-package-mode)
+     (async-bytecomp-package-mode 1))
+
 (eval-when-compile
   (progn (require 'dired nil t)
          (require 'eshell nil t)
@@ -103,7 +108,7 @@
 (defun with-editor-locate-emacsclient ()
   "Search for a suitable Emacsclient executable."
   (--if-let (with-editor-locate-emacsclient-1 (with-editor-emacsclient-path) 3)
-      (shell-quote-argument it)
+      it
     (display-warning 'with-editor (format "\
 Cannot determine a suitable Emacsclient
 
@@ -121,7 +126,7 @@ please see https://github.com/magit/magit/wiki/Emacsclient."))
           (lambda (v) (cl-mapcar (lambda (e) (concat v e)) exec-suffixes))
           (nconc (cl-mapcon (lambda (v)
                               (setq v (mapconcat #'identity (reverse v) "."))
-                              (list v (concat "-" v)))
+                              (list v (concat "-" v) (concat ".emacs" v)))
                             (reverse version-lst))
                  (list "")))
          (lambda (exec)
@@ -132,7 +137,8 @@ please see https://github.com/magit/magit/wiki/Emacsclient."))
              (with-editor-locate-emacsclient-1 path (1- depth))))))
 
 (defun with-editor-emacsclient-version (exec)
-  (cadr (split-string (car (process-lines exec "--version")))))
+  (-when-let (1st-line (car (process-lines exec "--version")))
+    (cadr (split-string 1st-line))))
 
 (defun with-editor-emacsclient-path ()
   (let ((path exec-path))
@@ -287,10 +293,17 @@ not a good idea to change such entries.")
                  (ignore-errors
                    (server-send-string client "-error Canceled by user"))
                  (delete-process client))
+             ;; Fallback for when emacs was used as $EDITOR instead
+             ;; of emacsclient or the sleeping editor.  See #2258.
+             (ignore-errors (delete-file buffer-file-name))
              (kill-buffer)))
           (t
            (save-buffer)
-           (if clients (server-edit) (kill-buffer))))
+           (if clients
+               ;; Don't use `server-edit' because we do not want to show
+               ;; another buffer belonging to another client.  See #2197.
+               (server-done)
+             (kill-buffer))))
     (when pid
       (let ((default-directory dir))
         (process-file "kill" nil nil nil
@@ -352,7 +365,7 @@ Modify the `process-environment' for processes started in BODY,
 instructing them to use the Emacsclient as $EDITOR.  If optional
 ENVVAR is provided then bind that environment variable instead.
 \n(fn [ENVVAR] BODY...)"
-  (declare (indent defun))
+  (declare (indent defun) (debug (body)))
   `(let ((with-editor--envvar ,(if (stringp (car body))
                                    (pop body)
                                  '(or with-editor--envvar "EDITOR")))
@@ -372,12 +385,13 @@ ENVVAR is provided then bind that environment variable instead.
          (server-start))
        ;; Tell $EDITOR to use the Emacsclient.
        (setenv with-editor--envvar
-               (concat with-editor-emacsclient-executable
+               (concat (shell-quote-argument with-editor-emacsclient-executable)
        ;; Tell the process where the server file is.
                        (and (not server-use-tcp)
                             (concat " --socket-name="
-                                    (expand-file-name server-name
-                                                      server-socket-dir)))))
+                                    (shell-quote-argument
+                                     (expand-file-name server-name
+                                                       server-socket-dir))))))
        (when server-use-tcp
          (setenv "EMACS_SERVER_FILE"
                  (expand-file-name server-name server-auth-dir)))
@@ -395,6 +409,9 @@ ENVVAR is provided then bind that environment variable instead.
   "Honor `with-editor-server-window-alist' (which see)."
   (let ((server-window (with-current-buffer
                            (or next-buffer (current-buffer))
+                         (when with-editor-mode
+                           (setq with-editor-previous-winconf
+                                 (current-window-configuration)))
                          (with-editor-server-window))))
     ad-do-it))
 
@@ -441,6 +458,8 @@ which may or may not insert the text into the PROCESS' buffer."
           (,filter proc str)
           (with-editor-process-filter proc str t))
      filter)))
+
+(defvar with-editor-filter-visit-hook nil)
 
 (defun with-editor-output-filter (string)
   (save-match-data
@@ -586,7 +605,7 @@ else like the former."
 (defun with-editor-shell-command-read-args (prompt &optional async)
   (let ((command (read-shell-command
                   prompt nil nil
-                  (--when-let (or (buffer-file-name)
+                  (--when-let (or buffer-file-name
                                   (and (eq major-mode 'dired-mode)
                                        (dired-get-filename nil t)))
                     (file-relative-name it)))))
@@ -642,7 +661,7 @@ See `with-editor.info' for instructions."
      (format "  server-use-tcp: %s\n" server-use-tcp)
      (format "  server-name: %s\n" server-name)
      (format "  server-socket-dir: %s\n" server-socket-dir))
-    (if (file-accessible-directory-p server-socket-dir)
+    (if (and server-socket-dir (file-accessible-directory-p server-socket-dir))
         (--each (directory-files server-socket-dir nil "^[^.]")
           (insert (format "    %s\n" it)))
       (insert (format "    %s: not an accessible directory\n"
@@ -672,7 +691,7 @@ See `with-editor.info' for instructions."
     (--each (with-editor-emacsclient-path)
       (insert (format "    %s (%s)\n" it (car (file-attributes it))))
       (when (file-directory-p it)
-        (dolist (exec (directory-files it nil "emacsclient"))
+        (dolist (exec (directory-files it t "emacsclient"))
           (insert (format "      %s (%s)\n" exec
                           (with-editor-emacsclient-version exec))))))))
 

@@ -1,11 +1,11 @@
 ;;; sane-term.el --- Multi Term is crazy. This is not.
 
-;; Copyright (C) 2014 Adam Patterson
+;; Copyright (C) 2015 Adam Patterson
 
 ;; Author: Adam Patterson <adam@adamrt.com>
 ;; URL: http://github.com/adamrt/sane-term
-;; Version: 20150106.1200
-;; X-Original-Version: 0.2
+;; Package-Version: 20150917.1602
+;; Version: 0.3
 ;; Package-Requires: ((emacs "24.1"))
 
 ;;; Commentary:
@@ -22,7 +22,8 @@
   "Multi Term is crazy. This is not."
   :group 'term)
 
-(defcustom sane-term-shell-command "/bin/bash"
+(defcustom sane-term-shell-command (or (getenv "SHELL")
+                                       "/bin/sh")
   "Specify which shell to use."
   :type 'string
   :group 'sane-term)

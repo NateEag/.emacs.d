@@ -1392,6 +1392,10 @@ of pairs and wraps.")
   '(
     TeX-insert-dollar
     TeX-insert-quote
+    quack-insert-opening-paren
+    quack-insert-closing-paren
+    quack-insert-opening-bracket
+    quack-insert-closing-bracket
     )
    "List of commands which are handled as if they were `self-insert-command's.
 
@@ -1923,7 +1927,7 @@ needs.
 
 A special syntax for conditional execution of hooks is also
 supported.  If the added item is a list (function command1
-command2...), where funciton is a 3 argument function described
+command2...), where function is a 3 argument function described
 above and command(s) can be either name of a command or a string
 representing an event.  If the last command or event as described
 by `single-key-description' matches any on the list, the hook
@@ -3658,10 +3662,38 @@ The expressions considered are those delimited by pairs on
            ;; one point backward, then test the comment/string thing,
            ;; then compute the correct bounds, and then restore the
            ;; point so the search will pick up the )
+
+           ;; However, we need to distinguish the cases where we are
+           ;; in comment and trying to get out, and when we are in any
+           ;; context and we jump into string (in that case, we should
+           ;; report code context!).  For example:
+           ;;   "foo"|;bar
+           ;; or
+           ;;   "foo"|bar
+           ;; should both report code context
+           ;; and "|(foo)" should report string context.
+
+           ;; Beware the case when we have a string inside a comment, like
+           ;;   (foo) ;; bar "baz"| qux
+           ;; In this case we want to report comment context even when
+           ;; backing into the "" (which however is commented)
+
+           ;; Yet another case is when we are not in a comment but
+           ;; directly after one and we search backwards, consider:
+           ;;   /* foo bar */|
+           ;; in C-like language.  In this case, we want to report the
+           ;; context as comment.
+
+           ;; Thanks for being consistent at handling syntax bounds Emacs!
            (in-string-or-comment (if back
-                                     (save-excursion
-                                       (backward-char)
-                                       (sp-point-in-string-or-comment))
+                                     (let ((in-comment (sp-point-in-comment))
+                                           (in-string (sp-point-in-string)))
+                                       (save-excursion
+                                         (backward-char)
+                                         (cond
+                                          (in-comment (and in-comment (sp-point-in-comment)))
+                                          ((and (not in-comment) (sp-point-in-comment)) t)
+                                          ((or in-comment in-string)))))
                                    (sp-point-in-string-or-comment)))
            (string-bounds (and in-string-or-comment (sp--get-string-or-comment-bounds)))
            (fw-bound (if in-string-or-comment (cdr string-bounds) (point-max)))
@@ -3676,20 +3708,23 @@ The expressions considered are those delimited by pairs on
                                    (if back bw-bound fw-bound)
                                    r mb me ms)
         (unless (sp--skip-match-p ms mb me :global-skip global-skip-fn)
-          (when (not (if (not back)
-                         (sp-point-in-string-or-comment (1- (point)))
-                       (sp-point-in-string-or-comment)))
-            (setq in-string-or-comment nil))
           ;; if the point originally wasn't inside of a string or comment
           ;; but now is, jump out of the string/comment and only search
           ;; the code.  This ensures that the comments and strings are
           ;; skipped if we search inside code.
           (if (and (not in-string-or-comment)
-                   (if (not back)
-                       (sp-point-in-string-or-comment (1- (point)))
-                     (sp-point-in-string-or-comment)))
+                   (if back
+                       ;; When searching back, the point lands on the
+                       ;; first character of whatever pair we've found
+                       ;; and it is in the proper context, for example
+                       ;; "|(foo)"
+                       (sp-point-in-string-or-comment)
+                     ;; However, when searching forward, the point
+                     ;; lands after the last char of the pair so to get
+                     ;; its context we must back up one character
+                     (sp-point-in-string-or-comment (1- (point)))))
               (-if-let (bounds (sp--get-string-or-comment-bounds))
-                  (let ((jump-to (if back (1- (car bounds)) (1+ (cdr bounds)))))
+                  (let ((jump-to (if back (car bounds) (cdr bounds))))
                     (goto-char jump-to)
                     ;; Can't move out of comment because eob, #427
                     (when (eobp)
@@ -4209,7 +4244,7 @@ enclosing list boundaries or line boundaries."
 (defun sp-get-enclosing-sexp (&optional arg)
   "Return the balanced expression that wraps point at the same level.
 
-With ARG, ascend that many times.  This funciton expect positive
+With ARG, ascend that many times.  This function expect positive
 argument."
   (setq arg (or arg 1))
   (save-excursion
@@ -4394,7 +4429,7 @@ This function simply transforms BOUNDS, which is a cons (BEG
 
 This also means if the point is inside a string, this string is
 returned.  If there are another symbols between point and the
-string, nil is returned.  That means that this funciton only
+string, nil is returned.  That means that this function only
 return non-nil if the string is the very next meaningful
 expression.
 

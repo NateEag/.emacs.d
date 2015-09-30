@@ -3,9 +3,10 @@
 ;; Copyright (C) 2013-2015, Mitchel Humpherys
 
 ;; Author: Mitchel Humpherys <mitch.special@gmail.com>
+;; Maintainer: Mitchel Humpherys <mitch.special@gmail.com>
 ;; Keywords: convenience, diff
-;; Package-Version: 20150923.58
-;; Version: 0.1
+;; Package-Version: 20150928.2211
+;; Version: 1.0
 ;; URL: https://github.com/mgalgs/diffview-mode
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -43,10 +44,11 @@
 ;;
 ;;; Screenshots:
 ;;
-;; Before:<br>
-;; <img src="https://raw.github.com/mgalgs/diffview-mode/master/screenshots/diffview-before.png"><br>
-;; After:<br>
-;; <img src="https://raw.github.com/mgalgs/diffview-mode/master/screenshots/diffview-after.png"><br>
+;; Before:
+;; https://raw.github.com/mgalgs/diffview-mode/master/screenshots/diffview-before.png
+;;
+;; After:
+;; https://raw.github.com/mgalgs/diffview-mode/master/screenshots/diffview-after.png
 ;;
 ;;; Code:
 

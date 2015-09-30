@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "diffview" "diffview.el" (22022 55082 0 0))
+;;;### (autoloads nil "diffview" "diffview.el" (22028 22775 0 0))
 ;;; Generated autoloads from diffview.el
 
 (autoload 'diffview-current "diffview" "\

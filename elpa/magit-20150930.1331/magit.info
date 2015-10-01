@@ -1806,6 +1806,19 @@ File: magit.info,  Node: Log Buffer,  Next: Select from log,  Prev: Refreshing l
 5.2.2 Log Buffer
 ----------------
 
+‘L’     (‘magit-log-refresh-popup’)
+
+     This prefix command shows the following suffix commands along with
+     the appropriate infix arguments in a popup buffer.  See *note
+     Refreshing logs: Refreshing logs.
+
+‘q’     (‘magit-log-bury-buffer’)
+
+     Bury the current buffer or the revision buffer in the same frame.
+     Like ‘magit-mode-bury-buffer’ (which see) but with a negative
+     prefix argument instead bury the revision buffer, provided it is
+     displayed in the current frame.
+
 ‘C-c C-b’     (‘magit-go-backward’)
 
      Move backward in current buffer’s history.
@@ -1834,32 +1847,25 @@ File: magit.info,  Node: Log Buffer,  Next: Select from log,  Prev: Refreshing l
      scroll the buffer down.  If there is no commit or stash at point,
      then prompt for a commit.
 
-‘q’     (‘magit-log-bury-buffer’)
+‘=’     (‘magit-log-toggle-commit-limit’)
 
-     Bury the current buffer or the revision buffer in the same frame.
-     Like ‘magit-mode-bury-buffer’ (which see) but with a negative
-     prefix argument instead bury the revision buffer, provided it is
-     displayed in the current frame.
+     Toggle the number of commits the current log buffer is limited to.
+     If the number of commits is currently limited, then remove that
+     limit.  Otherwise set it to 256.
+
+‘+’     (‘magit-log-double-commit-limit’)
+
+     Double the number of commits the current log buffer is limited to.
+
+‘=’     (‘magit-log-half-commit-limit’)
+
+     Half the number of commits the current log buffer is limited to.
 
  -- User Option: magit-log-auto-more
 
      Insert more log entries automatically when moving past the last
      entry.  Only considered when moving past the last entry with
      ‘magit-goto-*-section’ commands.
-
-‘+’     (‘magit-log-show-more-commits’)
-
-     Increase the number of commits shown in current log.
-
-     With no prefix argument, show twice as many commits as before.
-     With a numerical prefix argument, show this many additional
-     commits.  With a non-numeric prefix argument, show all commits.
-
-     When no limit was previously imposed in the current buffer, set the
-     local limit to the default limit instead (or if that is nil then
-     100), regardless of the prefix argument.
-
-     By default ‘magit-log-cutoff-length’ commits are shown.
 
  -- User Option: magit-log-show-margin
 
@@ -1872,16 +1878,6 @@ File: magit.info,  Node: Log Buffer,  Next: Select from log,  Prev: Refreshing l
      When a log buffer contains a verbose log, then the margin is never
      displayed.  In status buffers this option is ignored, but it is
      possible to show the margin using the mentioned command.
-
-‘L’     (‘magit-log-refresh-popup’)
-
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.  See *note
-     Refreshing logs: Refreshing logs.
-
- -- User Option: magit-log-cutoff-length
-
-     The maximum number of commits to show in log and reflog buffers.
 
  -- User Option: magit-log-show-refname-after-summary
 
@@ -6016,7 +6012,7 @@ Appendix B Keystroke Index
 * ! p <1>:                               Running Git manually.
                                                               (line  38)
 * $:                                     Viewing Git output.  (line  11)
-* +:                                     Log Buffer.          (line  47)
+* +:                                     Log Buffer.          (line  53)
 * + <1>:                                 Refreshing diffs.    (line  58)
 * -:                                     Refreshing diffs.    (line  54)
 * 0:                                     Refreshing diffs.    (line  62)
@@ -6024,6 +6020,8 @@ Appendix B Keystroke Index
 * 2:                                     Section visibility.  (line  26)
 * 3:                                     Section visibility.  (line  26)
 * 4:                                     Section visibility.  (line  26)
+* =:                                     Log Buffer.          (line  47)
+* = <1>:                                 Log Buffer.          (line  57)
 * ^:                                     Section movement.    (line  31)
 * a:                                     Applying.            (line  33)
 * A:                                     Cherry picking.      (line   8)
@@ -6066,7 +6064,7 @@ Appendix B Keystroke Index
 * C-<tab>:                               Section visibility.  (line  13)
 * C-c C-a:                               Editing commit messages.
                                                               (line 128)
-* C-c C-b:                               Log Buffer.          (line   6)
+* C-c C-b:                               Log Buffer.          (line  19)
 * C-c C-b <1>:                           Refreshing diffs.    (line  80)
 * C-c C-c:                               Popup buffers and prefix commands.
                                                               (line  20)
@@ -6078,7 +6076,7 @@ Appendix B Keystroke Index
 * C-c C-d:                               Refreshing diffs.    (line  70)
 * C-c C-d <1>:                           Editing commit messages.
                                                               (line  57)
-* C-c C-f:                               Log Buffer.          (line  10)
+* C-c C-f:                               Log Buffer.          (line  23)
 * C-c C-f <1>:                           Refreshing diffs.    (line  84)
 * C-c C-i:                               Editing commit messages.
                                                               (line 153)
@@ -6135,7 +6133,7 @@ Appendix B Keystroke Index
 * d u:                                   Diffing.             (line  55)
 * d w:                                   Diffing.             (line  43)
 * D w:                                   Refreshing diffs.    (line  28)
-* DEL:                                   Log Buffer.          (line  24)
+* DEL:                                   Log Buffer.          (line  37)
 * DEL <1>:                               Diff buffer.         (line  48)
 * DEL <2>:                               Blaming.             (line  44)
 * DEL <3>:                               Editing rebase sequences.
@@ -6173,7 +6171,7 @@ Appendix B Keystroke Index
 * k <3>:                                 Stashing.            (line  88)
 * l:                                     Logging.             (line  24)
 * L:                                     Refreshing logs.     (line  11)
-* L <1>:                                 Log Buffer.          (line  73)
+* L <1>:                                 Log Buffer.          (line   6)
 * l a:                                   Logging.             (line  54)
 * l b:                                   Logging.             (line  50)
 * L g:                                   Refreshing logs.     (line  16)
@@ -6273,7 +6271,7 @@ Appendix B Keystroke Index
 * P t:                                   Pushing.             (line  51)
 * P T:                                   Pushing.             (line  57)
 * q:                                     Modes and Buffers.   (line  17)
-* q <1>:                                 Log Buffer.          (line  34)
+* q <1>:                                 Log Buffer.          (line  12)
 * q <2>:                                 Blaming.             (line  70)
 * q <3>:                                 Minor mode for buffers visiting blobs.
                                                               (line  20)
@@ -6303,7 +6301,7 @@ Appendix B Keystroke Index
 * s <1>:                                 Editing rebase sequences.
                                                               (line  59)
 * s-<tab>:                               Section visibility.  (line  22)
-* SPC:                                   Log Buffer.          (line  14)
+* SPC:                                   Log Buffer.          (line  27)
 * SPC <1>:                               Diff buffer.         (line  44)
 * SPC <2>:                               Blaming.             (line  34)
 * SPC <3>:                               Editing rebase sequences.
@@ -6507,11 +6505,11 @@ Appendix C Command Index
 * magit-diff-refresh-popup:              Refreshing diffs.    (line  11)
 * magit-diff-save-default-arguments:     Refreshing diffs.    (line  28)
 * magit-diff-set-default-arguments:      Refreshing diffs.    (line  21)
-* magit-diff-show-or-scroll-down:        Log Buffer.          (line  24)
+* magit-diff-show-or-scroll-down:        Log Buffer.          (line  37)
 * magit-diff-show-or-scroll-down <1>:    Blaming.             (line  44)
 * magit-diff-show-or-scroll-down <2>:    Editing rebase sequences.
                                                               (line  28)
-* magit-diff-show-or-scroll-up:          Log Buffer.          (line  14)
+* magit-diff-show-or-scroll-up:          Log Buffer.          (line  27)
 * magit-diff-show-or-scroll-up <1>:      Blaming.             (line  34)
 * magit-diff-show-or-scroll-up <2>:      Editing rebase sequences.
                                                               (line  21)
@@ -6553,9 +6551,9 @@ Appendix C Command Index
                                                               (line  24)
 * magit-git-command-topdir:              Running Git manually.
                                                               (line  19)
-* magit-go-backward:                     Log Buffer.          (line   6)
+* magit-go-backward:                     Log Buffer.          (line  19)
 * magit-go-backward <1>:                 Refreshing diffs.    (line  80)
-* magit-go-forward:                      Log Buffer.          (line  10)
+* magit-go-forward:                      Log Buffer.          (line  23)
 * magit-go-forward <1>:                  Refreshing diffs.    (line  84)
 * magit-init:                            Repository setup.    (line   6)
 * magit-jump-to-diffstat-or-diff:        Diff buffer.         (line  38)
@@ -6568,18 +6566,20 @@ Appendix C Command Index
 * magit-log-buffer-file:                 Logging.             (line  65)
 * magit-log-buffer-file <1>:             Minor mode for buffers visiting files.
                                                               (line  33)
-* magit-log-bury-buffer:                 Log Buffer.          (line  34)
+* magit-log-bury-buffer:                 Log Buffer.          (line  12)
 * magit-log-current:                     Logging.             (line  29)
+* magit-log-double-commit-limit:         Log Buffer.          (line  53)
+* magit-log-half-commit-limit:           Log Buffer.          (line  57)
 * magit-log-head:                        Logging.             (line  42)
 * magit-log-popup:                       Logging.             (line  24)
 * magit-log-refresh:                     Refreshing logs.     (line  16)
 * magit-log-refresh-popup:               Refreshing logs.     (line  11)
-* magit-log-refresh-popup <1>:           Log Buffer.          (line  73)
+* magit-log-refresh-popup <1>:           Log Buffer.          (line   6)
 * magit-log-save-default-arguments:      Refreshing logs.     (line  28)
 * magit-log-select-pick:                 Select from log.     (line  14)
 * magit-log-select-quit:                 Select from log.     (line  20)
 * magit-log-set-default-arguments:       Refreshing logs.     (line  21)
-* magit-log-show-more-commits:           Log Buffer.          (line  47)
+* magit-log-toggle-commit-limit:         Log Buffer.          (line  47)
 * magit-merge:                           Merging.             (line  16)
 * magit-merge <1>:                       Merging.             (line  51)
 * magit-merge-abort:                     Merging.             (line  56)
@@ -6968,12 +6968,11 @@ Appendix E Variable Index
 * magit-git-executable:                  Git executable.      (line  36)
 * magit-git-global-arguments:            Global Git arguments.
                                                               (line   6)
-* magit-log-auto-more:                   Log Buffer.          (line  41)
-* magit-log-cutoff-length:               Log Buffer.          (line  79)
+* magit-log-auto-more:                   Log Buffer.          (line  61)
 * magit-log-section-args:                Status options.      (line  23)
 * magit-log-section-commit-count:        Status sections.     (line  96)
-* magit-log-show-margin:                 Log Buffer.          (line  61)
-* magit-log-show-refname-after-summary:  Log Buffer.          (line  83)
+* magit-log-show-margin:                 Log Buffer.          (line  67)
+* magit-log-show-refname-after-summary:  Log Buffer.          (line  79)
 * magit-no-confirm:                      Completion and confirmation.
                                                               (line  42)
 * magit-not-reverted-hook:               Automatic refresh and revert.
@@ -7059,85 +7058,85 @@ Node: Status options61552
 Node: Logging62765
 Node: Refreshing logs65132
 Node: Log Buffer66517
-Node: Select from log69811
-Node: Reflog70751
-Node: Diffing71229
-Node: Refreshing diffs74225
-Node: Diff buffer77205
-Node: Diff options79107
-Node: Revision buffer81990
-Node: Ediffing82945
-Node: References buffer85994
-Node: References sections90704
-Node: Bisecting91579
-Node: Visiting blobs93075
-Node: Blaming93584
-Node: Manipulating96904
-Node: Repository setup97196
-Node: Staging and unstaging97959
-Node: Staging from file-visiting buffers100575
-Node: Applying101743
-Node: Committing103386
-Node: Initiating a commit103969
-Node: Editing commit messages107281
-Node: Branching117677
-Node: Merging121369
-Node: Rebasing123453
-Node: Editing rebase sequences126440
-Node: Rebase sequence log129474
-Node: Cherry picking136218
-Node: Reverting137824
-Node: Resetting139187
-Node: Stashing140677
-Node: Transferring143741
-Node: Remotes143979
-Node: Fetching144782
-Node: Pulling145598
-Node: Pushing146098
-Node: Creating and sending patches149076
-Node: Applying patches149771
-Node: Miscellaneous150769
-Node: Tagging151060
-Node: Notes151845
-Node: Submodules154370
-Node: Common commands155690
-Node: Wip modes157438
-Node: Minor mode for buffers visiting files164174
-Node: Minor mode for buffers visiting blobs166317
-Node: Customizing167122
-Node: Per-repository configuration168794
-Node: Essential settings170442
-Node: Safety170766
-Node: Performance173947
-Node: Plumbing179825
-Node: Calling Git180453
-Node: Getting a value from Git181976
-Node: Calling Git for effect185080
-Node: Section plumbing191584
-Node: Creating sections191812
-Node: Section selection195615
-Node: Matching sections197295
-Node: Refreshing buffers202497
-Node: Conventions205632
-Node: Confirmation and completion205809
-Node: Theming Faces206707
-Node: FAQ214858
-Node: Magit is slow215867
-Node: I am having problems committing216033
-Node: I am using an Emacs release older than 244216431
-Node: I am using a Git release older than 194217877
-Node: I am using MS Windows and cannot push with Magit218716
-Node: How to install the gitman info manual?219294
-Node: How can I show Git's output?221876
-Node: Expanding a file to show the diff causes it to disappear222686
-Node: Magit claims repository accessed using Tramp does not exist223226
-Node: Can Magit be used as ediff-version-control-package?224372
-Node: How to show diffs for gpg-encrypted files?226412
-Node: Emacs 245 hangs when loading Magit227003
-Node: Keystroke Index227522
-Node: Command Index254713
-Node: Function Index282568
-Node: Variable Index292476
+Node: Select from log69606
+Node: Reflog70546
+Node: Diffing71024
+Node: Refreshing diffs74020
+Node: Diff buffer77000
+Node: Diff options78902
+Node: Revision buffer81785
+Node: Ediffing82740
+Node: References buffer85789
+Node: References sections90499
+Node: Bisecting91374
+Node: Visiting blobs92870
+Node: Blaming93379
+Node: Manipulating96699
+Node: Repository setup96991
+Node: Staging and unstaging97754
+Node: Staging from file-visiting buffers100370
+Node: Applying101538
+Node: Committing103181
+Node: Initiating a commit103764
+Node: Editing commit messages107076
+Node: Branching117472
+Node: Merging121164
+Node: Rebasing123248
+Node: Editing rebase sequences126235
+Node: Rebase sequence log129269
+Node: Cherry picking136013
+Node: Reverting137619
+Node: Resetting138982
+Node: Stashing140472
+Node: Transferring143536
+Node: Remotes143774
+Node: Fetching144577
+Node: Pulling145393
+Node: Pushing145893
+Node: Creating and sending patches148871
+Node: Applying patches149566
+Node: Miscellaneous150564
+Node: Tagging150855
+Node: Notes151640
+Node: Submodules154165
+Node: Common commands155485
+Node: Wip modes157233
+Node: Minor mode for buffers visiting files163969
+Node: Minor mode for buffers visiting blobs166112
+Node: Customizing166917
+Node: Per-repository configuration168589
+Node: Essential settings170237
+Node: Safety170561
+Node: Performance173742
+Node: Plumbing179620
+Node: Calling Git180248
+Node: Getting a value from Git181771
+Node: Calling Git for effect184875
+Node: Section plumbing191379
+Node: Creating sections191607
+Node: Section selection195410
+Node: Matching sections197090
+Node: Refreshing buffers202292
+Node: Conventions205427
+Node: Confirmation and completion205604
+Node: Theming Faces206502
+Node: FAQ214653
+Node: Magit is slow215662
+Node: I am having problems committing215828
+Node: I am using an Emacs release older than 244216226
+Node: I am using a Git release older than 194217672
+Node: I am using MS Windows and cannot push with Magit218511
+Node: How to install the gitman info manual?219089
+Node: How can I show Git's output?221671
+Node: Expanding a file to show the diff causes it to disappear222481
+Node: Magit claims repository accessed using Tramp does not exist223021
+Node: Can Magit be used as ediff-version-control-package?224167
+Node: How to show diffs for gpg-encrypted files?226207
+Node: Emacs 245 hangs when loading Magit226798
+Node: Keystroke Index227317
+Node: Command Index254654
+Node: Function Index282655
+Node: Variable Index292563
 
 End Tag Table
 

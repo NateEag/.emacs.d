@@ -1,0 +1,13 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: how-i-code-post
+# key: how-i-code-post
+# binding: direct-keybinding
+# --
+$1
+${1:$(string-utils-string-repeat "=" (length yas-text))}
+
+:date: 2013-01-01
+:category: $2
+:summary: $3
+
+$0

@@ -260,6 +260,9 @@ File: magit-popup.info,  Node: Customizing existing popups,  Next: Other options
 It is possible to define additional infix arguments and suffix commands
 to an existing popup using the following functions.
 
+   You can find some examples which use the below commands at
+<https://github.com/magit/magit/wiki/Additional-proposed-infix-arguments-and-suffix-commands>.
+
  -- Function: magit-define-popup-switch popup key desc switch &optional
           enable at prepend
 
@@ -390,6 +393,10 @@ File: magit-popup.info,  Node: Other options,  Prev: Customizing existing popups
 
      The Emacs package used to display man-pages, one of ‘man’ or
      ‘woman’.
+
+   To emphasize the default action by making it bold use this:
+
+     (button-type-put 'magit-popup-action-button 'format " %k %D")
 
 
 File: magit-popup.info,  Node: Defining prefix and suffix commands,  Prev: Usage,  Up: Top
@@ -638,10 +645,10 @@ Node: Top989
 Node: Introduction2158
 Node: Usage4735
 Node: Customizing existing popups9392
-Node: Other options13512
-Node: Defining prefix and suffix commands15085
-Node: Defining prefix commands17237
-Node: Defining suffix commands23244
+Node: Other options13670
+Node: Defining prefix and suffix commands15375
+Node: Defining prefix commands17527
+Node: Defining suffix commands23534
 
 End Tag Table
 

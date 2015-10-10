@@ -4,7 +4,7 @@
 
 ;; Author: James J Porter <porterjamesj@gmail.com>
 ;; URL: http://github.com/porterjamesj/virtualenvwrapper.el
-;; Package-Version: 20150505.1608
+;; Package-Version: 20151005.806
 ;; Version: 20131514
 ;; Keywords: python, virtualenv, virtualenvwrapper
 ;; Package-Requires: ((dash "1.5.0") (s "1.6.1"))
@@ -479,6 +479,7 @@ virtualenvwrapper.el."
 (defmacro venv--make-pcompletions (commands)
   `(progn ,@(-map #'venv--gen-fun commands)))
 
+;;;###autoload
 (defun venv-initialize-eshell ()
   "Configure eshell for use with virtualenvwrapper.el."
   ;; make emacs and eshell share an environment

@@ -656,9 +656,6 @@ Other sources won't appear in the search results.
 If nil then there is no filtering.
 See also `helm-set-source-filter'.")
 
-(defvar helm-action-buffer "*helm action*"
-  "Buffer showing actions.")
-
 (defvar helm-selection-overlay nil
   "Overlay used to highlight the currently selected item.")
 
@@ -1081,26 +1078,6 @@ not `exit-minibuffer' or unwanted functions."
 
 
 ;; Helm API
-
-(defun helm-buffer-get ()
-  "Return `helm-action-buffer' if shown otherwise `helm-buffer'."
-  (if (helm-action-window)
-      helm-action-buffer
-    helm-buffer))
-
-(defun helm-window ()
-  "Window of `helm-buffer'."
-  (get-buffer-window (helm-buffer-get) 0))
-
-(defun helm-action-window ()
-  "Window of `helm-action-buffer'."
-  (get-buffer-window helm-action-buffer 'visible))
-
-(defmacro with-helm-window (&rest body)
-  "Be sure BODY is excuted in the helm window."
-  (declare (indent 0) (debug t))
-  `(with-selected-window (helm-window)
-     ,@body))
 
 (defmacro with-helm-restore-variables (&rest body)
   "Restore `helm-restored-variables' after executing BODY."
@@ -3217,11 +3194,14 @@ and `helm-pattern'."
        (helm-log "Using here `helm-while-no-input'")
        (helm-while-no-input ,@body))))
 
+(defun helm--collect-matches (src-list)
+  (let ((matches (helm--maybe-use-while-no-input
+                  (cl-loop for src in src-list
+                           collect (helm-compute-matches src)))))
+    (unless (eq matches t) matches)))
+
 (defun helm--compute-sources (src-list)
-  (cl-loop with matches = (helm--maybe-use-while-no-input
-                           (cl-loop for src in src-list
-                                 collect (helm-compute-matches src)))
-        when (eq matches t) do (setq matches nil)
+  (cl-loop with matches = (helm--collect-matches src-list)
         for src in src-list
         for mtc in matches
         do (helm-render-source src mtc)))
@@ -3273,7 +3253,8 @@ is done on whole `helm-buffer' and not on current source."
   (with-current-buffer (helm-buffer-get)
     (set (make-local-variable 'helm-input-local) helm-pattern)
     (let (normal-sources
-          delayed-sources)
+          delayed-sources
+          matches)
       (unwind-protect
            (progn
              ;; Iterate over all the sources
@@ -3289,13 +3270,21 @@ is done on whole `helm-buffer' and not on current source."
                    ;; Export the variables from cl-loop
                    finally (setq delayed-sources ds
                                  normal-sources ns))
-             (erase-buffer)
-             ;; Render all the sources into the helm buffer after
-             ;; calculating all candidates.
-             ;; Candidates must be computed AFTER erasing buffer
-             ;; even if it cause flickering; Doing so avoid
-             ;; unexpected results when executing actions.
-             (helm--compute-sources normal-sources))
+             ;; When no normal-sources erase buffer
+             ;; for the next possible delayed source
+             ;; or the already computed normal-source
+             ;; that is no more "updateable" (requires-pattern).
+             (unless normal-sources (erase-buffer))
+             ;; Compute matches without rendering the sources.
+             (helm-log "Matches: %S"
+                       (setq matches (helm--collect-matches normal-sources)))
+             ;; If computing matches finished and is not interrupted
+             ;; erase the helm-buffer and render results (Fix #1157).
+             (when matches
+               (erase-buffer)
+               (cl-loop for src in normal-sources
+                        for mtc in matches
+                        do (helm-render-source src mtc))))
         (helm-log "Delayed sources = %S"
                   (mapcar (lambda (s) (assoc-default 'name s))
                           delayed-sources))
@@ -3802,7 +3791,11 @@ Possible value of DIRECTION are 'next or 'previous."
         (put-text-property
          ;; Increment pos to handle the space before prompt (i.e `pref').
          (1+ pos) (+ 2 pos)
-         'face 'cursor header-line-format)
+         'face ;don't just use 'cursor; this can hide the current character
+         (list :inverse-video t
+               :foreground (face-background 'cursor)
+               :background (face-background 'default))
+         header-line-format)
         (when update (force-mode-line-update))))))
 
 (defun helm--update-header-line ()

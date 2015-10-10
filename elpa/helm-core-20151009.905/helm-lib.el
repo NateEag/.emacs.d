@@ -65,7 +65,8 @@ If you prefer scrolling line by line, set this value to 1."
 (defvar helm-current-buffer nil
   "Current buffer when `helm' is invoked.")
 (defvar helm-suspend-update-flag nil)
-
+(defvar helm-action-buffer "*helm action*"
+  "Buffer showing actions.")
 
 ;;; Macros helper.
 ;;
@@ -253,13 +254,17 @@ Default is `eq'."
         finally return
         (cl-loop for i being the hash-values in cont collect i)))
 
-(defun helm-skip-entries (seq regexp-list)
+(defun helm-skip-entries (seq black-regexp-list &optional white-regexp-list)
   "Remove entries which matches one of REGEXP-LIST from SEQ."
   (cl-loop for i in seq
-        unless (cl-loop for regexp in regexp-list
-                     thereis (and (stringp i)
-                                  (string-match regexp i)))
-        collect i))
+           unless (and (cl-loop for re in black-regexp-list
+                                thereis (and (stringp i)
+                                             (string-match-p re i)))
+                       (null
+                        (cl-loop for re in white-regexp-list
+                                thereis (and (stringp i)
+                                             (string-match-p re i)))))
+           collect i))
 
 (defun helm-shadow-entries (seq regexp-list)
   "Put shadow property on entries in SEQ matching a regexp in REGEXP-LIST."
@@ -546,6 +551,26 @@ That is what completion commands operate on."
                                  helm-current-buffer)
                             (setq helm-current-buffer
                                   (current-buffer)))
+     ,@body))
+
+(defun helm-buffer-get ()
+  "Return `helm-action-buffer' if shown otherwise `helm-buffer'."
+  (if (helm-action-window)
+      helm-action-buffer
+    helm-buffer))
+
+(defun helm-window ()
+  "Window of `helm-buffer'."
+  (get-buffer-window (helm-buffer-get) 0))
+
+(defun helm-action-window ()
+  "Window of `helm-action-buffer'."
+  (get-buffer-window helm-action-buffer 'visible))
+
+(defmacro with-helm-window (&rest body)
+  "Be sure BODY is excuted in the helm window."
+  (declare (indent 0) (debug t))
+  `(with-selected-window (helm-window)
      ,@body))
 
 

@@ -50,6 +50,9 @@
   "Git and other external processes used by Magit."
   :group 'magit)
 
+(defvar magit-git-environment nil
+  "Prepended to `process-environment' while running git.")
+
 (defcustom magit-git-executable
   ;; Git might be installed in a different location on a remote, so
   ;; it is better not to use the full path to the executable, except
@@ -58,14 +61,28 @@
   ;; than using "bin/git.exe" directly.
   (or (and (eq system-type 'windows-nt)
            (--when-let (executable-find "git.exe")
-             (let ((alt (directory-file-name (file-name-directory it))))
-               (if (and (equal (file-name-nondirectory alt) "cmd")
-                        (setq alt (expand-file-name
-                                   (convert-standard-filename "bin/git.exe")
-                                   (file-name-directory alt)))
-                        (file-executable-p alt))
-                   alt
-                 it))))
+             (or (with-temp-buffer
+                   (when (save-excursion
+                           (= (call-process
+                              it nil '(t t) nil "-c"
+                              "alias.exe=!which git | cygpath -wf -" "exe") 0))
+                     (prog1 (delete-and-extract-region 1 (line-end-position))
+                       (save-excursion
+                         (insert "PATH=")
+                         (call-process
+                          it nil '(t t) nil "-c"
+                          "alias.path=!cygpath -wp \"$PATH\"" "path"))
+                       (setq magit-git-environment
+                             (list (buffer-substring-no-properties
+                                    (point) (line-end-position)))))))
+                 (let ((alt (directory-file-name (file-name-directory it))))
+                   (if (and (equal (file-name-nondirectory alt) "cmd")
+                            (setq alt (expand-file-name
+                                       (convert-standard-filename "bin/git.exe")
+                                       (file-name-directory alt)))
+                            (file-executable-p alt))
+                       alt
+                     it)))))
       "git")
   "The Git executable used by Magit."
   :group 'magit-process
@@ -94,19 +111,22 @@ purpose."
   'magit-git-global-arguments "2.1.0")
 
 (defcustom magit-git-debug nil
-  "Whether to enable additional reporting of Git errors.
+  "Whether to enable additional reporting of git errors.
 
-Magit basically calls Git for one of these two reasons: for
+Magit basically calls git for one of these two reasons: for
 side-effects or to do something with its standard output.
 
-When Git is run for side-effects then its output, including error
+When git is run for side-effects then its output, including error
 messages, go into the process buffer which is shown when using \
 \\<magit-status-mode-map>\\[magit-process].
 
-When Git's output is consumed in some way, then it would be too
+When git's output is consumed in some way, then it would be too
 expensive to also insert it into this buffer, but when this
-option is non-nil and Git returns with a non-zero exit status,
-then at least its standard error is inserted into this buffer."
+option is non-nil and git returns with a non-zero exit status,
+then at least its standard error is inserted into this buffer.
+
+This is only intended for debugging purposes.  Do not enable this
+permanently, that would negatively affect performance"
   :group 'magit
   :group 'magit-process
   :type 'boolean)
@@ -125,7 +145,7 @@ then at least its standard error is inserted into this buffer."
     ("^\\(skip\\):"              magit-bisect-skip nil)
     ("^\\(good\\):"              magit-bisect-good nil)
     ("\\(.+\\)"                  magit-refname nil))
-  "How different refs should be formatted for display.
+  "How refs are formatted for display.
 
 Each entry controls how a certain type of ref is displayed, and
 has the form (REGEXP FACE FORMATTER).  REGEXP is a regular
@@ -216,7 +236,7 @@ add a section in the respective process buffer."
                                         magit-process-error-message-re nil t)
                                        (match-string 1))))
                       (let ((magit-git-debug nil))
-                        (with-current-buffer (magit-process-buffer nil t)
+                        (with-current-buffer (magit-process-buffer t)
                           (magit-process-insert-section default-directory
                                                         magit-git-executable
                                                         args exit log))))

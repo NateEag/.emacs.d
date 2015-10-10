@@ -301,7 +301,7 @@ Like `undo' but works in read-only buffers."
     (goto-char (line-beginning-position))
     (--if-let (and (looking-at git-rebase-line)
                    (match-string 2))
-        (apply #'magit-show-commit it nil nil (magit-diff-arguments))
+        (apply #'magit-show-commit it (magit-diff-arguments))
       (ding))))
 
 (defun git-rebase-backward-line (&optional n)
@@ -320,6 +320,7 @@ Rebase files are generated when you run 'git rebase -i' or run
 `magit-interactive-rebase'.  They describe how Git should perform
 the rebase.  See the documentation for git-rebase (e.g., by
 running 'man git-rebase' at the command line) for details."
+  :group 'git-rebase
   (setq font-lock-defaults '(git-rebase-mode-font-lock-keywords t t))
   (unless git-rebase-show-instructions
     (let ((inhibit-read-only t))

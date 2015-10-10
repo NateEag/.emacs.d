@@ -87,6 +87,12 @@ Interface concepts
 * Completion and confirmation::
 * Running Git::
 
+Modes and Buffers
+
+* Switching Buffers::
+* Naming Buffers::
+* Quitting Windows::
+
 Sections
 
 * Section movement::
@@ -659,37 +665,208 @@ buffers whose major-modes derive from ‘magit-mode’.
 buffer, called the *status buffer*.  Its usually from this buffer that
 the user invokes Git commands, or creates or visits other buffers.
 
+‘M-x magit-toggle-buffer-lock’     (‘magit-toggle-buffer-lock’)
+
+     This command locks the current buffer to its value or if the buffer
+     is already locked, then it unlocks it.
+
+     Locking a buffer to its value, prevents it from being reused to
+     display another value.  The name of a locked buffer contains its
+     value, which allows telling it apart from other locked buffers and
+     the unlocked buffer.
+
+     Not all Magit buffers can be locked to their values, for example it
+     wouldn’t make sense to lock a status buffer.
+
+     There can only be a single unlocked buffer using a certain
+     major-mode per repository.  So when a buffer is being unlocked and
+     another unlocked buffer already exists for that mode and
+     repository, then the former buffer is instead deleted and the
+     latter is displayed in its place.
+
+* Menu:
+
+* Switching Buffers::
+* Naming Buffers::
+* Quitting Windows::
+
+
+File: magit.info,  Node: Switching Buffers,  Next: Naming Buffers,  Up: Modes and Buffers
+
+4.1.1 Switching Buffers
+-----------------------
+
+ -- Function: magit-display-buffer buffer
+
+     This function is a wrapper around ‘display-buffer’ and is used to
+     display any Magit buffer.  It displays BUFFER in some window and,
+     unlike ‘display-buffer’, also selects that window, provided
+     ‘magit-display-buffer-noselect’ is nil.  It also runs the hooks
+     mentioned below.
+
+ -- Variable: magit-display-buffer-noselect
+
+     When this is non-nil, then ‘magit-display-buffer’ only displays the
+     buffer but forgoes also selecting the window.  This variable should
+     not be set globally, it is only intended to be let-bound, by code
+     that automatically updates "the other window".  This is used for
+     example when the revision buffer is updated when you move inside
+     the log buffer.
+
+ -- User Option: magit-display-buffer-function
+
+     The function specified here is called by ‘magit-display-buffer’
+     with one argument, a buffer, to actually display that buffer.  This
+     function should call ‘display-buffer’ with that buffer as first and
+     a list of display actions as second argument.
+
+     Instead of using a wrapper around ‘display-buffer’, that function
+     itself can be used here, in which case the display actions have to
+     be specified by adding them to ‘display-buffer-alist’ instead.
+
+     To learn about display actions, see *note (elisp)Choosing a Window
+     for Display::.
+
+ -- Function: magit-display-buffer-traditional buffer
+
+     This function is the current default value of option
+     ‘magit-display-buffer-function’.  Before that option and this
+     function were added, the behavior was hard-coded in many places all
+     over the code base but now all the rules are contained in this one
+     function (except for the "noselect" special case mentioned above).
+
+     If you want to use different rules, then a good way of doing that
+     is to start with a copy of this function and then adjust it to your
+     needs.  More functions to choose from will be added in the future,
+     and eventually the default will change.
+
+ -- User Option: magit-pre-display-buffer-hook
+
+     This hook is run by ‘magit-display-buffer’ before displaying the
+     buffer.
+
+ -- Function: magit-save-window-configuration
+
+     This function saves the current window configuration.  Later when
+     the buffer is buried, it may be restored by
+     ‘magit-restore-window-configuration’.
+
+ -- User Option: magit-post-display-buffer-hook
+
+     This hook is run by ‘magit-display-buffer’ after displaying the
+     buffer.
+
+ -- Function: magit-maybe-set-dedicated
+
+     This function remembers when a new window was created to display
+     the buffer.  That information is used by ‘magit-mode-quit-window’,
+     to determine whether the window should be deleted when its last
+     Magit buffer is buried.
+
+
+File: magit.info,  Node: Naming Buffers,  Next: Quitting Windows,  Prev: Switching Buffers,  Up: Modes and Buffers
+
+4.1.2 Naming Buffers
+--------------------
+
+ -- User Option: magit-generate-buffer-name-function
+
+     The function used to generate the names of Magit buffers.
+
+     Such a function should take ‘magit-uniquify-buffer-names’ as well
+     as ‘magit-buffer-name-format’ into account.  If it doesn’t, then
+     its doc-string should say so.  If it supports %-sequences not
+     mentioned in the doc-string of ‘magit-buffer-name-format’, then its
+     own doc-string should describe them.
+
+ -- Function: magit-generate-buffer-name-default-function mode
+
+     This function returns a buffer name suitable for a buffer whose
+     major-mode is MODE and which shows information about the repository
+     in which ‘default-directory’ is located.
+
+     This function uses ‘magit-buffer-name-format’, supporting the
+     %-sequences mentioned the documentation of that option.  It also
+     respects ‘magit-uniquify-buffer-names’.
+
+ -- User Option: magit-buffer-name-format
+
+     The format string used to name Magit buffers.
+
+     At least the following %-sequences are supported:
+
+        • ‘%m’ The name of the major-mode, but with the ‘-mode’ suffix
+          removed.
+
+        • ‘%M’ Like ‘%m’ but abbreviate ‘magit-status-mode’ as ‘magit’.
+
+        • ‘%v’ The value the buffer is locked to, in parentheses, if it
+          is the buffer is actually locked to its value.  An empty
+          string otherwise.
+
+        • ‘%V’ Like ‘%v’, but the string is prefixed with a space,
+          unless it is an empty string.
+
+        • ‘%t’ The top-level directory of the working tree of the
+          repository, or if ‘magit-uniquify-buffer-name’ is non-nil an
+          abbreviation of that.
+     The value should always contain either ‘%m’ or ‘%M’ as well as
+     ‘%t’.  If ‘magit-uniquify-buffer-name’ is non-nil, then the value
+     must end with ‘%t’.
+
+ -- User Option: magit-uniquify-buffer-names
+
+     This option controls whether the names of Magit buffers are
+     uniquified.  If the names are not being uniquified, then they
+     contain the full name to the top-level of the working tree of the
+     corresponding repository.  If they are being uniquified, then they
+     end with the basename of the top-level, or if that would conflict
+     with the name used for other buffers, then the names of all these
+     buffers are adjusted until they no longer conflict.
+
+     This is done using the ‘uniquify’ package; custoize its options to
+     control how buffer names are uniquified.
+
+
+File: magit.info,  Node: Quitting Windows,  Prev: Naming Buffers,  Up: Modes and Buffers
+
+4.1.3 Quitting Windows
+----------------------
+
 ‘q’     (‘magit-mode-bury-buffer’)
 
      This command buries the current Magit buffer.  With a prefix
      argument, it instead kills the buffer.
 
-     If ‘magit-restore-window-configuration’ is non-nil and the last
-     configuration stored by ‘magit-mode-display-buffer’ originates from
-     the selected frame (which usually is the case), then that is
-     restored after burying or killing the buffer.
+ -- User Option: magit-bury-buffer-function
 
- -- User Option: magit-restore-window-configuration
+     The function used to actually bury or kill the current buffer.
 
-     This option controls whether quitting a Magit buffer restores the
-     previous window configuration.
+     ‘magit-mode-bury-buffer’ calls this function with one argument.  If
+     the argument is non-nil, then the function has to kill the current
+     buffer.  Otherwise it has to bury it alive.  The default value
+     currently is ‘magit-restore-window-configuration’.
 
-   While it often is enough to have one buffer of a certain Magit mode
-per repository, this is not always the case.  You might, for example,
-want to view the diffs for two commits at the same time.  To do so,
-first rename the existing revision buffer.  Then show another commit.
-Usually that would reuse the existing buffer, but because its name no
-longer matches the default name, a new buffer is created instead.  The
-new buffer uses the default name, and therefore will be reused to show
-other commits as usual.
+ -- Function: magit-restore-window-configuration kill-buffer
 
-‘M-x magit-rename-buffer’     (‘magit-rename-buffer’)
+     Bury or kill the current buffer using ‘quit-window’, which is
+     called with KILL-BUFFER as first and the selected window as second
+     argument.
 
-     This command changes the name of the current Magit buffer by
-     appending ‘<N>’ and thereby keeping Magit from re-using it to
-     display other information of the same kind.
+     Then restore the window configuration that existed right before the
+     current buffer was displayed in the selected frame.  Unfortunately
+     that also means that point gets adjusted in all the buffers, which
+     are being displayed in the selected frame.
 
-     With a prefix argument, the user can pick an arbitrary name.
+ -- Function: magit-mode-quit-window kill-buffer
+
+     Bury or kill the current buffer using ‘quit-window’, which is
+     called with KILL-BUFFER as first and the selected window as second
+     argument.
+
+     Then, if the window was originally created to display a Magit
+     buffer and the buried buffer was the last remaining Magit buffer
+     that was ever displayed in the window, then that is deleted.
 
 
 File: magit.info,  Node: Automatic save,  Next: Automatic refresh and revert,  Prev: Modes and Buffers,  Up: Interface concepts
@@ -724,10 +901,15 @@ File: magit.info,  Node: Automatic refresh and revert,  Next: Sections,  Prev: A
 
 After running a command which may change the state of the current
 repository, the current Magit buffer and the corresponding status buffer
-are refreshed.  This ensures that the displayed information is
-up-to-date but can lead to a noticeable delay in big repositories.
-Other Magit buffers are not refreshed to keep the delay to a minimum and
-also because doing so can sometimes be undesirable.
+are refreshed.  Status buffer may optionally be automatically refreshed
+whenever a buffer is saved to a file inside the respective repository
+(see ‘magit-refresh-status’ below).
+
+   Automatically refreshing Magit buffers ensures that the displayed
+information is up-to-date most of the time but can lead to a noticeable
+delay in big repositories.  Other Magit buffers are not refreshed to
+keep the delay to a minimum and also because doing so can sometimes be
+undesirable.
 
  -- User Option: magit-revert-buffers
 
@@ -763,6 +945,10 @@ also because doing so can sometimes be undesirable.
 
           Revert the buffers synchronously and be quiet about it.
 
+          This is the recommended setting, because for the other values
+          the revert messages might prevent you from seeing other, more
+          important, messages in the echo area.
+
         • NUMBER
 
           An integer or float.  Revert the buffers asynchronously,
@@ -791,6 +977,17 @@ to the repository outside of Magit.
 
      The file-visiting buffers are always reverted, even if
      ‘magit-revert-buffers’ is nil.
+
+ -- Function: magit-refresh-status
+
+     This function is intended to be added to ‘after-save-hook’.  After
+     doing that the corresponding status buffer is refreshed whenever a
+     buffer is saved to a file inside a repository.
+
+     Note that refreshing a Magit buffer is done by re-creating its
+     contents from scratch, which can be slow in large repositories.  If
+     you are not satisfied with Magit’s performance, then you should
+     obviously not add this function to that hook.
 
  -- User Option: magit-refresh-buffer-hook
 
@@ -1658,19 +1855,6 @@ File: magit.info,  Node: Status options,  Prev: Status header sections,  Up: Sta
  -- User Option: magit-status-refresh-hook
 
      Hook run after a status buffer has been refreshed.
-
- -- User Option: magit-status-buffer-switch-function
-
-     Function used by ‘magit-status’ to switch to a status buffer.  The
-     function is given one argument, the status buffer.
-
- -- User Option: magit-status-buffer-name-format
-
-     Name format for buffers used to display a repository’s status.
-
-     The following ‘format’-like specs are supported: ‘%a’ the absolute
-     filename of the repository top-level.  ‘%b’ the basename of the
-     repository top-level.
 
  -- User Option: magit-log-section-args
 
@@ -2766,20 +2950,15 @@ apply variants are described in the next section.
 
      Remove the change at point from the staging area.
 
-‘U’     (‘magit-reset-index’)
+‘U’     (‘magit-unstage-all’)
+
+     Remove all changes from the staging area.
+
+‘M-x magit-reset-index’     (‘magit-reset-index’)
 
      Reset the index to some commit.  The commit is read from the user
      and defaults to the commit at point.  If there is no commit at
      point, then it defaults to ‘HEAD’.
-
-     So ‘U RET’ with no commit at point does the inverse of ‘S’ (or
-     actually ‘S yes RET’), i.e.  "unstage all staged changes".  If you
-     would rather use a command which always does just that, then rebind
-     ‘U’ to ‘magit-unstage-all’.
-
-‘M-x magit-unstage-all’     (‘magit-unstage-all’)
-
-     Remove all changes from the staging area.
 
    To stage a smaller unit than a range of lines, similar to ‘git add
 --patch’ followed by ‘e’ would do, then you can use ‘magit-ediff-stage’
@@ -3042,13 +3221,13 @@ those that are already committed.
 
 ‘C-c C-w’     (‘magit-pop-revision-stack’)
 
-     This command insert a representation of a revision into the current
-     buffer.  It can be used inside buffers used to write commit
+     This command inserts a representation of a revision into the
+     current buffer.  It can be used inside buffers used to write commit
      messages but also in other buffers such as buffers used to edit
      emails or ChangeLog files.
 
      By default this command pops the revision which was last added to
-     the ‘magit-revision-stack’ and insert it into the current buffer
+     the ‘magit-revision-stack’ and inserts it into the current buffer
      according to ‘magit-pop-revision-stack-format’.  Revisions can be
      put on the stack using ‘magit-copy-section-value’ and
      ‘magit-copy-buffer-revision’.
@@ -3077,14 +3256,14 @@ those that are already committed.
      The entries on the stack have the format ‘(HASH TOPLEVEL)’ and this
      option has the format ‘(POINT-FORMAT EOB-FORMAT INDEX-REGEXP)’, all
      of which may be nil or a string (though either one of EOB-FORMAT or
-     POINT-FORMAT should be a string, and if POINT-FORMAT is non-nil,
-     then the the two formats should be too).
+     POINT-FORMAT should be a string, and if INDEX-REGEXP is non-nil,
+     then the two formats should be too).
 
      First INDEX-REGEXP is used to find the previously inserted entry,
      by searching backward from point.  The first submatch must match
      the index number.  That number is incremented by one, and becomes
      the index number of the entry to be inserted.  If you don’t want to
-     number the inserted revisions, then us nil for INDEX-REGEXP.
+     number the inserted revisions, then use nil for INDEX-REGEXP.
 
      If INDEX-REGEXP is non-nil then both POINT-FORMAT and EOB-FORMAT
      should contain \"%N\", which is replaced with the number that was
@@ -3432,7 +3611,7 @@ only have to redo half the work.
 following commands as they always use that argument anyway, even if it
 is not enabled in the popup.
 
-‘r e’     (‘magit-rebase-interactive’)
+‘r i’     (‘magit-rebase-interactive’)
 
      Start an interactive rebase sequence.
 
@@ -3449,7 +3628,7 @@ is not enabled in the popup.
 
      Combine squash and fixup commits with their intended targets.
 
-‘r s’     (‘magit-rebase-edit-commit’)
+‘r e’     (‘magit-rebase-edit-commit’)
 
      Edit a single older commit using rebase.
 
@@ -3829,7 +4008,7 @@ Also see *note (gitman)git-reset:: .
      defaulting to the commit at point.  The working tree is kept as-is.
      With a prefix argument also reset the working tree.
 
-‘U’     (‘magit-reset-index’)
+‘M-x magit-reset-index’     (‘magit-reset-index’)
 
      Reset the index to some commit read from the user and defaulting to
      the commit at point.  Keep the ‘HEAD’ and working tree as-is, so if
@@ -3946,6 +4125,10 @@ Also see *note (gitman)git-stash:: .
 ‘z b’     (‘magit-stash-branch’)
 
      Create and checkout a new BRANCH from STASH.
+
+‘z f’     (‘magit-stash-format-patch’)
+
+     Create a patch from STASH.
 
 ‘k’     (‘magit-stash-clear’)
 
@@ -6160,15 +6343,15 @@ Appendix B Keystroke Index
 * f o:                                   Fetching.            (line  19)
 * F o:                                   Pulling.             (line  17)
 * g:                                     Automatic refresh and revert.
-                                                              (line  58)
-* G:                                     Automatic refresh and revert.
                                                               (line  67)
+* G:                                     Automatic refresh and revert.
+                                                              (line  76)
 * j:                                     Diff buffer.         (line  38)
 * k:                                     Viewing Git output.  (line  19)
 * k <1>:                                 Applying.            (line  37)
 * k <2>:                                 Editing rebase sequences.
                                                               (line  68)
-* k <3>:                                 Stashing.            (line  88)
+* k <3>:                                 Stashing.            (line  92)
 * l:                                     Logging.             (line  24)
 * L:                                     Refreshing logs.     (line  11)
 * L <1>:                                 Log Buffer.          (line   6)
@@ -6227,14 +6410,15 @@ Appendix B Keystroke Index
 * M-x magit-find-file-other-window:      Visiting blobs.      (line  11)
 * M-x magit-init:                        Repository setup.    (line   6)
 * M-x magit-log-buffer-file:             Logging.             (line  65)
-* M-x magit-rename-buffer:               Modes and Buffers.   (line  41)
 * M-x magit-reset-hard:                  Resetting.           (line  32)
 * M-x magit-reset-head:                  Resetting.           (line  21)
+* M-x magit-reset-index:                 Staging and unstaging.
+                                                              (line  45)
+* M-x magit-reset-index <1>:             Resetting.           (line  14)
 * M-x magit-reset-soft:                  Resetting.           (line  26)
 * M-x magit-stage-file:                  Staging from file-visiting buffers.
                                                               (line  10)
-* M-x magit-unstage-all:                 Staging and unstaging.
-                                                              (line  52)
+* M-x magit-toggle-buffer-lock:          Modes and Buffers.   (line  17)
 * M-x magit-unstage-file:                Staging from file-visiting buffers.
                                                               (line  18)
 * M-x magit-version:                     Git executable.      (line  17)
@@ -6270,7 +6454,7 @@ Appendix B Keystroke Index
 * P Q:                                   Pushing.             (line  28)
 * P t:                                   Pushing.             (line  51)
 * P T:                                   Pushing.             (line  57)
-* q:                                     Modes and Buffers.   (line  17)
+* q:                                     Quitting Windows.    (line   6)
 * q <1>:                                 Log Buffer.          (line  12)
 * q <2>:                                 Blaming.             (line  70)
 * q <3>:                                 Minor mode for buffers visiting blobs.
@@ -6279,15 +6463,15 @@ Appendix B Keystroke Index
 * r <1>:                                 Editing rebase sequences.
                                                               (line  51)
 * r a:                                   Rebasing.            (line  83)
-* r e:                                   Rebasing.            (line  43)
+* r e:                                   Rebasing.            (line  60)
 * r e <1>:                               Rebasing.            (line  79)
 * r f:                                   Rebasing.            (line  56)
+* r i:                                   Rebasing.            (line  43)
 * r l:                                   Rebasing.            (line  47)
 * r o:                                   Rebasing.            (line  21)
 * r r:                                   Rebasing.            (line  16)
 * r r <1>:                               Rebasing.            (line  71)
-* r s:                                   Rebasing.            (line  60)
-* r s <1>:                               Rebasing.            (line  75)
+* r s:                                   Rebasing.            (line  75)
 * r w:                                   Rebasing.            (line  64)
 * RET:                                   Diff buffer.         (line   6)
 * RET <1>:                               References buffer.   (line  99)
@@ -6325,7 +6509,6 @@ Appendix B Keystroke Index
                                                               (line  37)
 * U:                                     Staging and unstaging.
                                                               (line  41)
-* U <1>:                                 Resetting.           (line  14)
 * v:                                     Applying.            (line  41)
 * V:                                     Reverting.           (line   6)
 * V A:                                   Reverting.           (line  30)
@@ -6359,6 +6542,7 @@ Appendix B Keystroke Index
 * z a:                                   Stashing.            (line  58)
 * z b:                                   Stashing.            (line  84)
 * z d:                                   Stashing.            (line  71)
+* z f:                                   Stashing.            (line  88)
 * z i:                                   Stashing.            (line  20)
 * z I:                                   Stashing.            (line  46)
 * z l:                                   Stashing.            (line  76)
@@ -6587,7 +6771,7 @@ Appendix C Command Index
 * magit-merge-nocommit:                  Merging.             (line  36)
 * magit-merge-popup:                     Merging.             (line   8)
 * magit-merge-preview:                   Merging.             (line  43)
-* magit-mode-bury-buffer:                Modes and Buffers.   (line  17)
+* magit-mode-bury-buffer:                Quitting Windows.    (line   6)
 * magit-notes-edit:                      Notes.               (line  13)
 * magit-notes-merge:                     Notes.               (line  56)
 * magit-notes-merge-abort:               Notes.               (line  70)
@@ -6631,22 +6815,21 @@ Appendix C Command Index
 * magit-reflog-head:                     Reflog.              (line  19)
 * magit-reflog-other:                    Reflog.              (line  15)
 * magit-refresh:                         Automatic refresh and revert.
-                                                              (line  58)
-* magit-refresh-all:                     Automatic refresh and revert.
                                                               (line  67)
+* magit-refresh-all:                     Automatic refresh and revert.
+                                                              (line  76)
 * magit-remote-add:                      Remotes.             (line  13)
 * magit-remote-popup:                    Remotes.             (line   8)
 * magit-remote-remove:                   Remotes.             (line  28)
 * magit-remote-rename:                   Remotes.             (line  18)
 * magit-remote-set-url:                  Remotes.             (line  23)
-* magit-rename-buffer:                   Modes and Buffers.   (line  41)
 * magit-request-pull:                    Creating and sending patches.
                                                               (line  17)
 * magit-reset:                           Resetting.           (line   8)
 * magit-reset-hard:                      Resetting.           (line  32)
 * magit-reset-head:                      Resetting.           (line  21)
 * magit-reset-index:                     Staging and unstaging.
-                                                              (line  41)
+                                                              (line  45)
 * magit-reset-index <1>:                 Resetting.           (line  14)
 * magit-reset-soft:                      Resetting.           (line  26)
 * magit-reverse:                         Applying.            (line  41)
@@ -6716,8 +6899,9 @@ Appendix C Command Index
 * magit-stash:                           Stashing.            (line  13)
 * magit-stash-apply:                     Stashing.            (line  58)
 * magit-stash-branch:                    Stashing.            (line  84)
-* magit-stash-clear:                     Stashing.            (line  88)
+* magit-stash-clear:                     Stashing.            (line  92)
 * magit-stash-drop:                      Stashing.            (line  71)
+* magit-stash-format-patch:              Stashing.            (line  88)
 * magit-stash-index:                     Stashing.            (line  20)
 * magit-stash-keep-index:                Stashing.            (line  32)
 * magit-stash-list:                      Stashing.            (line  76)
@@ -6740,11 +6924,12 @@ Appendix C Command Index
 * magit-tag-delete:                      Tagging.             (line  18)
 * magit-tag-popup:                       Tagging.             (line   8)
 * magit-tag-prune:                       Tagging.             (line  24)
+* magit-toggle-buffer-lock:              Modes and Buffers.   (line  17)
 * magit-toggle-margin:                   Refreshing logs.     (line  36)
 * magit-unstage:                         Staging and unstaging.
                                                               (line  37)
 * magit-unstage-all:                     Staging and unstaging.
-                                                              (line  52)
+                                                              (line  41)
 * magit-unstage-file:                    Staging from file-visiting buffers.
                                                               (line  18)
 * magit-unstage-file <1>:                Minor mode for buffers visiting files.
@@ -6799,6 +6984,10 @@ Appendix D Function Index
 * magit-define-section-jumper:           Creating sections.   (line  76)
 * magit-diff-scope:                      Matching sections.   (line 105)
 * magit-diff-type:                       Matching sections.   (line  82)
+* magit-display-buffer:                  Switching Buffers.   (line   6)
+* magit-display-buffer-traditional:      Switching Buffers.   (line  37)
+* magit-generate-buffer-name-default-function: Naming Buffers.
+                                                              (line  16)
 * magit-get-section:                     Matching sections.   (line  16)
 * magit-git:                             Calling Git for effect.
                                                               (line  65)
@@ -6868,10 +7057,15 @@ Appendix D Function Index
                                                               (line  53)
 * magit-log-maybe-show-commit:           Section movement.    (line  57)
 * magit-log-maybe-show-more-commits:     Section movement.    (line  64)
+* magit-maybe-set-dedicated:             Switching Buffers.   (line  66)
 * magit-mode-display-buffer:             Refreshing buffers.  (line  32)
+* magit-mode-quit-window:                Quitting Windows.    (line  31)
 * magit-mode-setup:                      Refreshing buffers.  (line  17)
+* magit-refresh-status:                  Automatic refresh and revert.
+                                                              (line  85)
 * magit-region-sections:                 Section selection.   (line  10)
 * magit-region-values:                   Section selection.   (line  29)
+* magit-restore-window-configuration:    Quitting Windows.    (line  20)
 * magit-revert-buffers:                  Editing commit messages.
                                                               (line 178)
 * magit-run-git:                         Calling Git for effect.
@@ -6884,6 +7078,7 @@ Appendix D Function Index
                                                               (line  40)
 * magit-run-git-with-logfile:            Calling Git for effect.
                                                               (line  56)
+* magit-save-window-configuration:       Switching Buffers.   (line  55)
 * magit-section-case:                    Matching sections.   (line  58)
 * magit-section-hide:                    Section visibility.  (line  51)
 * magit-section-hide-children:           Section visibility.  (line  66)
@@ -6912,235 +7107,3 @@ Appendix D Function Index
 * with-editor-usage-message:             Editing commit messages.
                                                               (line 215)
 
-
-File: magit.info,  Node: Variable Index,  Prev: Function Index,  Up: Top
-
-Appendix E Variable Index
-*************************
-
- [index ]
-* Menu:
-
-* git-commit-fill-column:                Editing commit messages.
-                                                              (line 228)
-* git-commit-finish-query-functions:     Editing commit messages.
-                                                              (line 233)
-* git-commit-known-pseudo-headers:       Editing commit messages.
-                                                              (line 124)
-* git-commit-major-mode:                 Editing commit messages.
-                                                              (line 163)
-* git-commit-setup-hook:                 Editing commit messages.
-                                                              (line 174)
-* git-commit-summary-max-length:         Editing commit messages.
-                                                              (line 222)
-* git-rebase-auto-advance:               Editing rebase sequences.
-                                                              (line  94)
-* git-rebase-confirm-cancel:             Editing rebase sequences.
-                                                              (line 102)
-* git-rebase-show-instructions:          Editing rebase sequences.
-                                                              (line  98)
-* global-magit-file-mode:                Minor mode for buffers visiting files.
-                                                              (line  11)
-* magit-after-revert-hook:               Automatic refresh and revert.
-                                                              (line  82)
-* magit-blame-goto-chunk-hook:           Blaming.             (line  97)
-* magit-blame-heading-format:            Blaming.             (line  83)
-* magit-blame-show-headings:             Blaming.             (line  91)
-* magit-blame-time-format:               Blaming.             (line  87)
-* magit-branch-read-upstream-first:      Branching.           (line  90)
-* magit-commit-ask-to-stage:             Initiating a commit. (line  74)
-* magit-commit-extend-override-date:     Initiating a commit. (line  79)
-* magit-commit-reword-override-date:     Initiating a commit. (line  83)
-* magit-commit-squash-confirm:           Initiating a commit. (line  87)
-* magit-completing-read-function:        Completion and confirmation.
-                                                              (line  10)
-* magit-diff-auto-show:                  Diff options.        (line   6)
-* magit-diff-auto-show-delay:            Diff options.        (line  29)
-* magit-diff-highlight-indentation:      Diff options.        (line  64)
-* magit-diff-highlight-trailing:         Diff options.        (line  59)
-* magit-diff-paint-whitespace:           Diff options.        (line  51)
-* magit-diff-refine-hunk:                Diff options.        (line  41)
-* magit-ediff-dwim-show-on-hunks:        Ediffing.            (line  66)
-* magit-ediff-quit-hook:                 Ediffing.            (line  74)
-* magit-git-debug:                       Viewing Git output.  (line  23)
-* magit-git-debug <1>:                   Getting a value from Git.
-                                                              (line  64)
-* magit-git-executable:                  Git executable.      (line  36)
-* magit-git-global-arguments:            Global Git arguments.
-                                                              (line   6)
-* magit-log-auto-more:                   Log Buffer.          (line  61)
-* magit-log-section-args:                Status options.      (line  23)
-* magit-log-section-commit-count:        Status sections.     (line  96)
-* magit-log-show-margin:                 Log Buffer.          (line  67)
-* magit-log-show-refname-after-summary:  Log Buffer.          (line  79)
-* magit-no-confirm:                      Completion and confirmation.
-                                                              (line  42)
-* magit-not-reverted-hook:               Automatic refresh and revert.
-                                                              (line  92)
-* magit-pop-revision-stack-format:       Editing commit messages.
-                                                              (line  92)
-* magit-process-raise-error:             Calling Git for effect.
-                                                              (line 151)
-* magit-push-always-verify:              Pushing.             (line  61)
-* magit-refresh-args:                    Refreshing buffers.  (line  54)
-* magit-refresh-buffer-hook:             Automatic refresh and revert.
-                                                              (line  76)
-* magit-refresh-function:                Refreshing buffers.  (line  48)
-* magit-refs-indent-cherry-lines:        References buffer.   (line  88)
-* magit-refs-local-branch-format:        References buffer.   (line  76)
-* magit-refs-remote-branch-format:       References buffer.   (line  80)
-* magit-refs-sections-hook:              References sections. (line  13)
-* magit-refs-show-commit-count:          References buffer.   (line  29)
-* magit-refs-show-margin:                References buffer.   (line  40)
-* magit-refs-tags-format:                References buffer.   (line  84)
-* magit-repository-directories:          Status buffer.       (line  30)
-* magit-repository-directories-depth:    Status buffer.       (line  36)
-* magit-restore-window-configuration:    Modes and Buffers.   (line  27)
-* magit-revert-buffers:                  Automatic refresh and revert.
-                                                              (line  13)
-* magit-revision-insert-related-refs:    Revision buffer.     (line   6)
-* magit-revision-show-gravatar:          Revision buffer.     (line  10)
-* magit-root-section:                    Matching sections.   (line  74)
-* magit-save-repository-buffers:         Automatic save.      (line  13)
-* magit-section-movement-hook:           Section movement.    (line  39)
-* magit-section-set-visibility-hook:     Section visibility.  (line  80)
-* magit-section-show-child-count:        Section options.     (line   9)
-* magit-status-buffer-name-format:       Status options.      (line  15)
-* magit-status-buffer-switch-function:   Status options.      (line  10)
-* magit-status-headers-hook:             Status header sections.
-                                                              (line  17)
-* magit-status-refresh-hook:             Status options.      (line   6)
-* magit-status-sections-hook:            Status sections.     (line  10)
-* magit-this-process:                    Calling Git for effect.
-                                                              (line 146)
-* magit-visit-ref-create:                References buffer.   (line 115)
-* magit-wip-after-apply-mode:            Wip modes.           (line  99)
-* magit-wip-after-apply-mode-lighter:    Wip modes.           (line 141)
-* magit-wip-after-save-local-mode-lighter: Wip modes.         (line 137)
-* magit-wip-after-save-mode:             Wip modes.           (line  93)
-* magit-wip-before-change-mode:          Wip modes.           (line 113)
-* magit-wip-before-change-mode-lighter:  Wip modes.           (line 145)
-* magit-wip-namespace:                   Wip modes.           (line 149)
-
-
-
-Tag Table:
-Node: Top1217
-Node: Introduction5427
-Node: Installation10120
-Node: Updating from an older release10495
-Node: Installing from an Elpa archive12090
-Node: Installing from the Git repository13669
-Node: Post-installation tasks15913
-Node: Getting started17439
-Node: Interface concepts23174
-Node: Modes and Buffers23500
-Node: Automatic save25600
-Node: Automatic refresh and revert26665
-Node: Sections30437
-Node: Section movement31386
-Node: Section visibility33941
-Node: Section hooks37532
-Node: Section types and values39570
-Node: Section options40840
-Node: Popup buffers and prefix commands41312
-Node: Completion and confirmation42626
-Node: Running Git45532
-Node: Viewing Git output45768
-Node: Running Git manually46768
-Node: Git executable48894
-Node: Global Git arguments50901
-Node: Inspecting51708
-Node: Status buffer52835
-Node: Status sections55379
-Node: Status header sections59722
-Node: Status options61552
-Node: Logging62765
-Node: Refreshing logs65132
-Node: Log Buffer66517
-Node: Select from log69606
-Node: Reflog70546
-Node: Diffing71024
-Node: Refreshing diffs74020
-Node: Diff buffer77000
-Node: Diff options78902
-Node: Revision buffer81785
-Node: Ediffing82740
-Node: References buffer85789
-Node: References sections90499
-Node: Bisecting91374
-Node: Visiting blobs92870
-Node: Blaming93379
-Node: Manipulating96699
-Node: Repository setup96991
-Node: Staging and unstaging97754
-Node: Staging from file-visiting buffers100370
-Node: Applying101538
-Node: Committing103181
-Node: Initiating a commit103764
-Node: Editing commit messages107076
-Node: Branching117472
-Node: Merging121164
-Node: Rebasing123248
-Node: Editing rebase sequences126235
-Node: Rebase sequence log129269
-Node: Cherry picking136013
-Node: Reverting137619
-Node: Resetting138982
-Node: Stashing140472
-Node: Transferring143536
-Node: Remotes143774
-Node: Fetching144577
-Node: Pulling145393
-Node: Pushing145893
-Node: Creating and sending patches148871
-Node: Applying patches149566
-Node: Miscellaneous150564
-Node: Tagging150855
-Node: Notes151640
-Node: Submodules154165
-Node: Common commands155485
-Node: Wip modes157233
-Node: Minor mode for buffers visiting files163969
-Node: Minor mode for buffers visiting blobs166112
-Node: Customizing166917
-Node: Per-repository configuration168589
-Node: Essential settings170237
-Node: Safety170561
-Node: Performance173742
-Node: Plumbing179620
-Node: Calling Git180248
-Node: Getting a value from Git181771
-Node: Calling Git for effect184875
-Node: Section plumbing191379
-Node: Creating sections191607
-Node: Section selection195410
-Node: Matching sections197090
-Node: Refreshing buffers202292
-Node: Conventions205427
-Node: Confirmation and completion205604
-Node: Theming Faces206502
-Node: FAQ214653
-Node: Magit is slow215662
-Node: I am having problems committing215828
-Node: I am using an Emacs release older than 244216226
-Node: I am using a Git release older than 194217672
-Node: I am using MS Windows and cannot push with Magit218511
-Node: How to install the gitman info manual?219089
-Node: How can I show Git's output?221671
-Node: Expanding a file to show the diff causes it to disappear222481
-Node: Magit claims repository accessed using Tramp does not exist223021
-Node: Can Magit be used as ediff-version-control-package?224167
-Node: How to show diffs for gpg-encrypted files?226207
-Node: Emacs 245 hangs when loading Magit226798
-Node: Keystroke Index227317
-Node: Command Index254654
-Node: Function Index282655
-Node: Variable Index292563
-
-End Tag Table
-
-
-Local Variables:
-coding: utf-8
-End:

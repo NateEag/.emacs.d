@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "evil-commentary" "evil-commentary.el" (22028
-;;;;;;  22781 0 0))
+;;;### (autoloads nil "evil-commentary" "evil-commentary.el" (22041
+;;;;;;  7467 0 0))
 ;;; Generated autoloads from evil-commentary.el
 
 (defvar evil-commentary-mode nil "\

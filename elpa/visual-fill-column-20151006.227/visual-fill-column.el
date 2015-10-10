@@ -6,8 +6,8 @@
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 2015
-;; Version: 1.3
-;; Package-Version: 20150311.1735
+;; Version: 1.5
+;; Package-Version: 20151006.227
 ;; Package-Requires: ((emacs "24.3"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -105,7 +105,7 @@ in which `visual-line-mode' is active as well."
   "Return the body width of WINDOW.
 The body width here refers to the width of the text area plus the
 margins, but excluding the fringes, scroll bar and right
-divider. WINDOW defaults to the selected window."
+divider.  WINDOW defaults to the selected window."
   (or window (setq window (selected-window)))
   (let ((margins (window-margins window)))
     (+ (window-width window)

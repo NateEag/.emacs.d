@@ -46,6 +46,17 @@
   :init
   (global-auto-revert-mode))
 
+(use-package ne-yas-auto-insert
+  :commands ne-yas-auto-insert-activate
+            ne-yas-auto-insert-config)
+
+(use-package autoinsert
+  :init
+  (progn
+    (ne-yas-auto-insert-config)
+    (ne-yas-auto-insert-activate)
+    (auto-insert-mode)))
+
 ;; It seems to me that undo-tree-mode and backup-walker might be good candidates
 ;; for merging somehow - they're like two sides of the same coin. I'll need a
 ;; lot more hands-on experience with both to have any idea how that would look

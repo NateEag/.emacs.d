@@ -7,6 +7,7 @@
    (quote
     (delete-backward-char backward-delete-char backward-delete-char-untabify autopair-backspace paredit-backward-delete paredit-backward-delete-word smart-dash-insert)))
  '(ac-trigger-key "TAB")
+ '(auto-insert-query nil)
  '(blink-cursor-blinks 0 nil nil "blink!!!!")
  '(blink-cursor-mode t nil nil "For some reason, I really like blinky cursors.")
  '(c-basic-offset 4 nil nil "4 spaces is, on average, the standard.")

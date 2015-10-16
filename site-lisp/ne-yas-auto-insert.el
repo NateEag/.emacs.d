@@ -25,7 +25,7 @@
   "Add an item that matches all files to `auto-insert-alist'.
 
 TODO Consider activating `auto-insert-mode' in here, too?"
-  ;; Remove all existing entries, because I don't want the defaults.
+
   (define-auto-insert "^.*$" '(lambda () (ne-yas-auto-insert-expand-snippet))))
 
 (defun ne-yas-auto-insert-config ()
@@ -34,6 +34,7 @@ TODO Consider activating `auto-insert-mode' in here, too?"
 If this became a real package, I should probably move this into my own
 preferences."
 
+  ;; Remove all existing entries, because I don't want the defaults.
   ;; TODO This is aggressive behavior. If I ever extract this into a proper
   ;; package, make this opt-in behavior.
   (setq auto-insert-alist nil))

@@ -15,6 +15,7 @@
   (turn-on-elisp-slime-nav-mode)
   (diminish 'elisp-slime-nav-mode)
   (ac-emacs-lisp-mode-setup)
+  (setq ne-yas-auto-insert-snippet-name "package")
 
   (eldoc-mode t)
   (diminish 'eldoc-mode))

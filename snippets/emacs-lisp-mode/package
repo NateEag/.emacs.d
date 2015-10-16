@@ -3,7 +3,7 @@
 # key: package
 # binding: direct-keybinding
 # --
-;;; $1.el --- $2
+;;; ${1:`(file-name-base)`}.el --- $2
 
 ;;; Author: $3
 

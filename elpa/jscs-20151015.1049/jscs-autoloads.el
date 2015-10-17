@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "jscs" "jscs.el" (22040 30358 0 0))
+;;;### (autoloads nil "jscs" "jscs.el" (22050 14532 0 0))
 ;;; Generated autoloads from jscs.el
 
 (autoload 'jscs-indent-apply "jscs" "\

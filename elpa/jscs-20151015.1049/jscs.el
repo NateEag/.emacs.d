@@ -4,7 +4,7 @@
 
 ;; Author: papaeye <papaeye@gmail.com>
 ;; Keywords: languages, convenience
-;; Package-Version: 20151001.329
+;; Package-Version: 20151015.1049
 ;; Version: 0.2.0alpha
 ;; Homepage: https://github.com/papaeye/emacs-jscs
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
@@ -24,36 +24,28 @@
 
 ;;; Commentary:
 
-;; jscs.el provides consistent JavaScript editing using JSCS.
+;; jscs.el helps consistent JavaScript editing using JSCS.
 ;;
 ;; Installation:
 ;;
-;; 1. Install JSCS <http://jscs.info/>.
-;;
-;; 2. Put jscs.el somewhere in your `load-path'.
-;;
-;; 3. Add the following code into your .emacs:
-;;
-;;     (autoload 'jscs-indent-apply "jscs" nil t)
-;;     (autoload 'jscs-fix "jscs" nil t)
-;;     (autoload 'jscs-fix-run-before-save "jscs" nil t)
+;; jscs.el is available on [MELPA]<http://melpa.org/>.
 ;;
 ;; Usage:
 ;;
-;; To apply JSCS indentation rules to JavaScript modes,
+;; To apply JSCS indentation rules to JavaScript or JSON modes,
 ;; add the following code into your .emacs:
 ;;
 ;;     (add-hook 'js-mode-hook #'jscs-indent-apply)
 ;;     (add-hook 'js2-mode-hook #'jscs-indent-apply)
+;;     (add-hook 'json-mode-hook #'jscs-indent-apply)
 ;;
 ;; To run "jscs --fix" interactively, run \\[jscs-fix].
 ;;
-;; To run "jscs --fix" on the current buffer when saving,
+;; To run "jscs --fix" on JavaScript modes when saving,
 ;; add the following code into your .emacs:
 ;;
 ;;     (add-hook 'js-mode-hook #'jscs-fix-run-before-save)
 ;;     (add-hook 'js2-mode-hook #'jscs-fix-run-before-save)
-;;     (add-hook 'js3-mode-hook #'jscs-fix-run-before-save)
 
 ;;; Code:
 

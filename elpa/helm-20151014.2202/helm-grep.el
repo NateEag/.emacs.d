@@ -82,7 +82,7 @@ To customize the ANSI color in git-grep, GREP_COLORS have no effect,
 you will have to setup this in your .gitconfig:
 
     [color \"grep\"]
-	match = black yellow
+        match = black yellow
 
 where \"black\" is the foreground and \"yellow\" the background.
 See the git documentation for more infos.
@@ -167,9 +167,9 @@ If set to nil `doc-view-mode' will be used instead of an external command."
 
 (defcustom helm-grep-ignored-files
   (cons ".#*" (delq nil (mapcar (lambda (s)
-				  (unless (string-match-p "/\\'" s)
-				    (concat "*" s)))
-				completion-ignored-extensions)))
+                                  (unless (string-match-p "/\\'" s)
+                                    (concat "*" s)))
+                                completion-ignored-extensions)))
   "List of file names which `helm-grep' shall exclude."
   :group 'helm-grep
   :type '(repeat string))
@@ -179,6 +179,22 @@ If set to nil `doc-view-mode' will be used instead of an external command."
   "List of names of sub-directories which `helm-grep' shall not recurse into."
   :group 'helm-grep
   :type '(repeat string))
+
+(defcustom helm-grep-truncate-lines t
+  "When nil the grep line that appears will not be truncated."
+  :group 'helm-grep
+  :type 'boolean)
+
+(defcustom helm-grep-file-path-style 'basename
+  "File path display style when grep results are displayed.
+Possible value are:
+    basename: displays only the filename, none of the directory path
+    absolute: displays absolute path
+    relative: displays relative path from root grep directory."
+  :group 'helm-grep
+  :type '(choice (const :tag "Basename" basename)
+                 (const :tag "Absolute" absolute)
+                 (const :tag "Relative" relative)))
 
 
 ;;; Faces
@@ -934,7 +950,7 @@ in recurse, and ignoring EXTS, search being made on
      :input input
      :keymap helm-grep-map
      :history 'helm-grep-history
-     :truncate-lines t)))
+     :truncate-lines helm-grep-truncate-lines)))
 
 
 
@@ -984,9 +1000,14 @@ in recurse, and ignoring EXTS, search being made on
                      (expand-file-name (car split) root)
                    (car-safe split)))
          (lineno (nth 1 split))
-         (str    (nth 2 split)))
-    (if (and fname lineno str)
-        (cons (concat (propertize (file-name-nondirectory fname)
+         (str    (nth 2 split))
+         (display-fname (cl-ecase helm-grep-file-path-style
+                          (basename (and fname (file-name-nondirectory fname)))
+                          (absolute fname)
+                          (relative (and fname root
+                                         (file-relative-name fname root))))))
+    (if (and display-fname lineno str)
+        (cons (concat (propertize display-fname
                                   'face 'helm-grep-file
                                   'help-echo fname)
                       ":"
@@ -1171,7 +1192,7 @@ If a prefix arg is given run grep on all buffers ignoring non--file-buffers."
      "pdf-reader" nil
      (format-spec helm-pdfgrep-default-read-command
                   (list (cons ?f fname) (cons ?p pageno))))))
-
+
 ;;; AG - AT
 ;;
 ;;  https://github.com/ggreer/the_silver_searcher
@@ -1252,11 +1273,47 @@ You can use safely \"--color\" (default)."
         :keymap helm-grep-map
         :buffer (format "*helm %s*" (helm-grep--ag-command))))
 
+;;; Git grep
+;;
+;;
+(defcustom helm-grep-git-grep-command
+  "git grep -n%cH --color=always --exclude-standard --no-index --full-name -e %p %f"
+  "The git grep default command line.
+The option \"--color=always\" can be used safely.
+The color of matched items can be customized in your .gitconfig
+See `helm-grep-default-command' for more infos.
+
+The \"--exclude-standard\" and \"--no-index\" switches allow
+skipping unwanted files specified in ~/.gitignore_global
+and searching files not already staged.
+You have also to enable this in global \".gitconfig\" with
+    \"git config --global core.excludesfile ~/.gitignore_global\"."
+  :group 'helm-grep
+  :type 'string)
+
+(defun helm-grep-git-1 (directory)
+  (require 'vc)
+  (let* ((helm-grep-default-command helm-grep-git-grep-command)
+         helm-grep-default-recurse-command
+         ;; Expand filename of each candidate with the git root dir.
+         ;; The filename will be in the help-echo prop.
+         (helm-grep-default-directory-fn (lambda ()
+                                           (vc-find-root directory ".git")))
+         (helm-ff-default-directory (funcall helm-grep-default-directory-fn)))
+    (helm-do-grep-1 '("--"))))
+
+
 ;;;###autoload
 (defun helm-do-grep-ag ()
   "Preconfigured helm for grepping with AG in `default-directory'."
   (interactive)
   (helm-grep-ag-1 default-directory))
+
+;;;###autoload
+(defun helm-grep-do-git-grep ()
+  "Preconfigured helm for git-grepping `default-directory'."
+  (interactive)
+  (helm-grep-git-1 default-directory))
 
 ;;;###autoload
 (defun helm-do-grep ()

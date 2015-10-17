@@ -32,6 +32,7 @@
     (describe-symbol . helm-completing-read-symbols)
     (debug-on-entry . helm-completing-read-symbols)
     (find-function . helm-completing-read-symbols)
+    (disassemble . helm-completing-read-symbols)
     (trace-function . helm-completing-read-symbols)
     (trace-function-foreground . helm-completing-read-symbols)
     (trace-function-background . helm-completing-read-symbols)
@@ -119,6 +120,13 @@ To fuzzy match `completion-at-point' and friends see
     (define-key map (kbd "<M-RET>") 'helm-cr-empty-string)
     map)
   "Keymap for `helm-comp-read'.")
+
+(defvar helm-comp-read-must-match-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "RET")
+      'helm-confirm-and-exit-minibuffer)
+    map)
+  "Keymap use as must-match-map in `helm-comp-read' and `helm-read-file-name'.")
 
 
 ;;; Internal
@@ -387,11 +395,7 @@ that use `helm-comp-read' See `helm-M-x' for example."
     (when (eq must-match 'confirm-after-completion)
       (setq must-match 'confirm))
     (let* ((minibuffer-completion-confirm must-match)
-           (must-match-map (when must-match
-                             (let ((map (make-sparse-keymap)))
-                               (define-key map (kbd "RET")
-                                 'helm-confirm-and-exit-minibuffer)
-                               map)))
+           (must-match-map (when must-match helm-comp-read-must-match-map))
            (loc-map (if must-match-map
                         (make-composed-keymap
                          must-match-map (or keymap helm-map))
@@ -810,11 +814,7 @@ Keys description:
          (hist (and history (helm-comp-read-get-candidates
                              history nil nil alistp)))
          (minibuffer-completion-confirm must-match)
-         (must-match-map (when must-match
-                           (let ((map (make-sparse-keymap)))
-                             (define-key map (kbd "RET")
-                               'helm-confirm-and-exit-minibuffer)
-                             map)))
+         (must-match-map (when must-match helm-comp-read-must-match-map))
          (cmap (if must-match-map
                    (make-composed-keymap
                     must-match-map helm-read-file-map)

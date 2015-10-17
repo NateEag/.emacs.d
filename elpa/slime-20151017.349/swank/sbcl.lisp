@@ -1996,3 +1996,11 @@ stack."
            (values-list retlist))
       (when after
         (funcall after (if completed retlist :exited-non-locally))))))
+
+#+#.(swank/backend:with-symbol 'comma-expr 'sb-impl)
+(progn
+  (defmethod sexp-in-bounds-p ((s sb-impl::comma) i)
+    (= i 1))
+
+  (defmethod sexp-ref ((s sb-impl::comma) i)
+    (sb-impl::comma-expr s)))

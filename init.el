@@ -293,6 +293,7 @@ new file for the first time."
 
 ;; lilypond-mode - ripped from the lilypond repo.
 (add-auto-mode 'LilyPond-mode "\\.ly$" "\\.ily$")
+(add-hook 'LilyPond-mode-hook 'text-mode-init)
 (add-hook 'LilyPond-mode-hook (lambda () (turn-on-font-lock)))
 
 ;; Commit message mode.

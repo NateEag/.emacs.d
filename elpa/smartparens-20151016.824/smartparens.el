@@ -1248,6 +1248,10 @@ insert the modes."
   "Checks to see if the current `evil-state' is in normal mode."
   (and (fboundp 'evil-normal-state-p) (evil-normal-state-p)))
 
+(defun sp--evil-motion-state-p ()
+  "Checks to see if the current `evil-state' is in motion mode."
+  (and (fboundp 'evil-motion-state-p) (evil-motion-state-p)))
+
 (defun sp--evil-visual-state-p ()
   "Checks to see if the current `evil-state' is in visual mode."
   (and (fboundp 'evil-visual-state-p) (evil-visual-state-p)))
@@ -6507,8 +6511,9 @@ represent a valid object in a buffer!"
           (let ((b (bounds-of-thing-at-point 'line)))
             (delete-region (car b) (cdr b))))
         (setq indent-from (point)))
-      (sp--keep-indentation
-        (indent-region indent-from indent-to)))))
+      (unless (memq major-mode sp-no-reindent-after-kill-modes)
+        (sp--keep-indentation
+          (indent-region indent-from indent-to))))))
 
 (defun sp-unwrap-sexp (&optional arg)
   "Unwrap the following expression.
@@ -7675,24 +7680,39 @@ of the point."
         (indent-sexp))
       (sp--back-to-indentation column indentation))))
 
+(defun sp--balanced-context-p (count start-context end-context)
+  (let ((string-or-comment-count (cl-first count))
+        (normal-count (cl-second count)))
+    (cond
+     ((and start-context (eq start-context end-context))
+      (zerop string-or-comment-count))
+     ((eq start-context end-context) (zerop normal-count))
+     (t (= string-or-comment-count normal-count 0)))))
+
 (cl-defun sp-region-ok-p (start end)
   (save-restriction
     (save-excursion
       (narrow-to-region start end)
       (when (ignore-errors (scan-sexps (point-min) (point-max)) t)
-        (let ((count 0)
-              (start-context (progn (goto-char (point-min))
-                                    (sp-point-in-string-or-comment))))
+        (let ((count (list 0 0))
+              (start-context (progn (goto-char start) (sp-point-in-string-or-comment)))
+              (end-context (progn (goto-char end) (sp-point-in-string-or-comment))))
           (dolist (pairs (sp--get-allowed-pair-list))
             (goto-char (point-min))
             (while (re-search-forward (sp--strict-regexp-quote (car pairs)) end :noerror)
-              (when (eq start-context (sp-point-in-string-or-comment))
-                (incf count)))
+              (save-excursion
+                (backward-char)
+                (if (sp-point-in-string-or-comment)
+                    (cl-incf (cl-first count))
+                  (cl-incf (cl-second count)))))
             (goto-char (point-min))
             (while (re-search-forward (sp--strict-regexp-quote (cdr pairs)) end :noerror)
-              (when (eq start-context (sp-point-in-string-or-comment))
-                (decf count)))
-            (unless (= count 0)
+              (save-excursion
+                (backward-char)
+                (if (sp-point-in-string-or-comment)
+                    (cl-decf (cl-first count))
+                  (cl-decf (cl-second count)))))
+            (unless (sp--balanced-context-p count start-context end-context)
               (cl-return-from sp-region-ok-p)))
           t)))))
 
@@ -7900,10 +7920,15 @@ support custom pairs."
            ;; if we are in a situation "()|", we should highlight the
            ;; regular pair and not the string pair "from inside"
            ((and (not (sp--evil-normal-state-p))
+                 (not (sp--evil-motion-state-p))
                  (not (sp--evil-visual-state-p))
                  (sp--looking-back (if sp-show-pair-from-inside allowed closing)))
             (scan-and-place-overlays (match-string 0) :back))
-           ((or (sp--looking-at (if sp-show-pair-from-inside allowed opening))
+           ((or (and (or (sp--evil-normal-state-p)
+                         (sp--evil-motion-state-p)
+                         (sp--evil-visual-state-p))
+                     (sp--looking-at (sp--get-allowed-regexp)))
+                (sp--looking-at (if sp-show-pair-from-inside allowed opening))
                 (and (memq major-mode sp-navigate-consider-stringlike-sexp)
                      (looking-at (sp--get-stringlike-regexp)))
                 (and (memq major-mode sp-navigate-consider-sgml-tags)

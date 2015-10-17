@@ -303,10 +303,9 @@ call function WASHER with no argument."
 (defmacro magit--with-safe-default-directory (file &rest body)
   (declare (indent 1) (debug (form body)))
   `(catch 'unsafe-default-dir
-     (let ((default-directory
-             (file-name-as-directory (--if-let ,file
-                                         (expand-file-name it)
-                                       default-directory)))
+     (let ((default-directory (file-name-as-directory
+                               (expand-file-name
+                                (or ,file default-directory))))
            previous)
        (while (not (file-accessible-directory-p default-directory))
          (setq default-directory
@@ -364,14 +363,17 @@ returning the truename."
                ;; both is the case, then we are at the toplevel of
                ;; the same working tree, but also avoided needlessly
                ;; following any symlinks.
-               (let ((default-directory
-                       (setq updir (file-name-as-directory
-                                    (expand-file-name
-                                     (magit-rev-parse-safe "--show-cdup"))))))
-                 (and (string-equal (magit-rev-parse-safe "--show-cdup") "")
-                      (--when-let (magit-rev-parse-safe "--show-toplevel")
-                        (string-equal (magit-expand-git-file-name it)
-                                      topdir)))))
+               (progn
+                 (setq updir (file-name-as-directory
+                              (magit-rev-parse-safe "--show-cdup")))
+                 (setq updir (if (file-name-absolute-p updir)
+                                 (concat (file-remote-p default-directory) updir)
+                               (expand-file-name updir)))
+                 (let ((default-directory updir))
+                   (and (string-equal (magit-rev-parse-safe "--show-cdup") "")
+                        (--when-let (magit-rev-parse-safe "--show-toplevel")
+                          (string-equal (magit-expand-git-file-name it)
+                                        topdir))))))
               updir
             (concat (file-remote-p default-directory)
                     (file-name-as-directory topdir))))
@@ -384,8 +386,12 @@ returning the truename."
                         (expand-file-name gitdir))))
         (if (magit-bare-repo-p)
             gitdir
-          ;; Step outside the control directory to enter the working tree.
-          (file-name-directory (directory-file-name gitdir)))))))
+          (let ((link (expand-file-name "gitdir" gitdir)))
+            (if (file-exists-p link)
+                ;; Return the linked working tree.
+                (file-name-directory (magit-file-line link))
+              ;; Step outside the control directory to enter the working tree.
+              (file-name-directory (directory-file-name gitdir)))))))))
 
 (defmacro magit-with-toplevel (&rest body)
   (declare (indent defun) (debug (body)))
@@ -454,8 +460,8 @@ tracked file."
 (defun magit-tracked-files ()
   (magit-list-files "--cached"))
 
-(defun magit-untracked-files (&optional all)
-  (magit-list-files "--other" (unless all "--exclude-standard")))
+(defun magit-untracked-files (&optional all files)
+  (magit-list-files "--other" (unless all "--exclude-standard") "--" files))
 
 (defun magit-modified-files (&optional nomodules)
   (magit-git-items "diff-files" "-z" "--name-only"

@@ -902,8 +902,7 @@ File: magit.info,  Node: Automatic refresh and revert,  Next: Sections,  Prev: A
 After running a command which may change the state of the current
 repository, the current Magit buffer and the corresponding status buffer
 are refreshed.  Status buffer may optionally be automatically refreshed
-whenever a buffer is saved to a file inside the respective repository
-(see ‘magit-refresh-status’ below).
+whenever a buffer is saved to a file inside the respective repository.
 
    Automatically refreshing Magit buffers ensures that the displayed
 information is up-to-date most of the time but can lead to a noticeable
@@ -978,7 +977,7 @@ to the repository outside of Magit.
      The file-visiting buffers are always reverted, even if
      ‘magit-revert-buffers’ is nil.
 
- -- Function: magit-refresh-status
+ -- Function: magit-after-save-refresh-status
 
      This function is intended to be added to ‘after-save-hook’.  After
      doing that the corresponding status buffer is refreshed whenever a
@@ -1097,18 +1096,50 @@ hook’s default value.
      this to ‘magit-section-movement-hook’, then you must remove the
      hunk-only variant in turn.
 
- -- Function: magit-log-maybe-show-commit
-
-     This hook function shows the commit at point in another window.  If
-     the section at point is a ‘commit’ section and the value of
-     ‘magit-diff-auto-show-p’ calls for it, then the commit is shown in
-     another window, using ‘magit-show-commit’.
-
  -- Function: magit-log-maybe-show-more-commits
 
      This hook function only has an effect in log buffers, and ‘point’
      is on the "show more" section.  If that is the case, then it
      doubles the number of commits that are being shown.
+
+ -- Function: magit-log-maybe-update-revision-buffer
+
+     When moving inside a log buffer, then this function updates the
+     revision buffer, provided it is already being displayed in another
+     window of the same frame.
+
+ -- Function: magit-log-maybe-update-blob-buffer
+
+     When moving inside a log buffer and another window of the same
+     frame displays a blob buffer, then this function instead displays
+     the blob buffer for the commit at point in that window.
+
+ -- Function: magit-status-maybe-update-revision-buffer
+
+     When moving inside a status buffer, then this function updates the
+     revision buffer, provided it is already being displayed in another
+     window of the same frame.
+
+ -- Function: magit-status-maybe-update-blob-buffer
+
+     When moving inside a status buffer and another window of the same
+     frame displays a blob buffer, then this function instead displays
+     the blob buffer for the commit at point in that window.
+
+ -- User Option: magit-update-other-window-delay
+
+     Delay before automatically updating the other window.
+
+     When moving around in certain buffers certain other buffers, which
+     are being displayed in another window, may optionally be updated to
+     display information about the section at point.
+
+     When holding down a key to move by more than just one section, then
+     that would update that buffer for each section on the way.  To
+     prevent that, updating the revision buffer is delayed, and this
+     option controls for how long.  For optimal experience you might
+     have to adjust this delay and/or the keyboard repeat rate and delay
+     of your graphical environment or operating system.
 
 
 File: magit.info,  Node: Section visibility,  Next: Section hooks,  Prev: Section movement,  Up: Sections
@@ -1467,12 +1498,12 @@ begin with the subcommand, "git" is assumed.
 
    These suffix commands run arbitrary shell commands.
 
-‘! !’     (‘magit-shell-command-topdir’)
+‘! s’     (‘magit-shell-command-topdir’)
 
      This command reads a shell command from the user and executes it in
      the top-level directory of the current repository.
 
-‘! p’     (‘magit-shell-command’)
+‘! S’     (‘magit-shell-command’)
 
      This command reads a shell command from the user and executes it in
      ‘default-directory’.  With a prefix argument the command is
@@ -2353,41 +2384,6 @@ File: magit.info,  Node: Diff options,  Next: Revision buffer,  Prev: Diff buffe
 
 5.3.3 Diff options
 ------------------
-
- -- User Option: magit-diff-auto-show
-
-     Whether to automatically show the relevant diff or commit.
-
-     When this option is non-nil certain operations cause the relevant
-     changes to be displayed automatically.
-
-        • ‘commit’
-
-        • ‘stage-all’
-
-        • ‘log-oneline’
-
-        • ‘log-follow’
-
-        • ‘log-select’
-
-        • ‘blame-follow’
-     In the event that expanding very large patches takes a long time,
-     ‘C-g’ can be used to abort that step.  This is especially useful
-     when you would normally not look at the changes, e.g.  because you
-     are committing some binary files.
-
- -- User Option: magit-diff-auto-show-delay
-
-     How long to delay showing or updating the revision buffer, when
-     that happens automatically (according to ‘magit-diff-auto-show’).
-
-     When holding down a key to move by several lines, then that would
-     update that buffer for each line on the way.  To prevent that,
-     updating the revision buffer is delayed, and this option controls
-     for how long it is delayed.  For optimal experience you might have
-     to adjust this delay and/or the keyboard repeat rate and delay of
-     your graphical environment or operating system.
 
  -- User Option: magit-diff-refine-hunk
 
@@ -6180,8 +6176,6 @@ Appendix B Keystroke Index
                                                               (line  12)
 * ! !:                                   Running Git manually.
                                                               (line  19)
-* ! ! <1>:                               Running Git manually.
-                                                              (line  33)
 * ! a:                                   Running Git manually.
                                                               (line  51)
 * ! b:                                   Running Git manually.
@@ -6192,7 +6186,9 @@ Appendix B Keystroke Index
                                                               (line  47)
 * ! p:                                   Running Git manually.
                                                               (line  24)
-* ! p <1>:                               Running Git manually.
+* ! s:                                   Running Git manually.
+                                                              (line  33)
+* ! S:                                   Running Git manually.
                                                               (line  38)
 * $:                                     Viewing Git output.  (line  11)
 * +:                                     Log Buffer.          (line  53)
@@ -6343,9 +6339,9 @@ Appendix B Keystroke Index
 * f o:                                   Fetching.            (line  19)
 * F o:                                   Pulling.             (line  17)
 * g:                                     Automatic refresh and revert.
-                                                              (line  67)
+                                                              (line  66)
 * G:                                     Automatic refresh and revert.
-                                                              (line  76)
+                                                              (line  75)
 * j:                                     Diff buffer.         (line  38)
 * k:                                     Viewing Git output.  (line  19)
 * k <1>:                                 Applying.            (line  37)
@@ -6815,9 +6811,9 @@ Appendix C Command Index
 * magit-reflog-head:                     Reflog.              (line  19)
 * magit-reflog-other:                    Reflog.              (line  15)
 * magit-refresh:                         Automatic refresh and revert.
-                                                              (line  67)
+                                                              (line  66)
 * magit-refresh-all:                     Automatic refresh and revert.
-                                                              (line  76)
+                                                              (line  75)
 * magit-remote-add:                      Remotes.             (line  13)
 * magit-remote-popup:                    Remotes.             (line   8)
 * magit-remote-remove:                   Remotes.             (line  28)
@@ -6973,6 +6969,8 @@ Appendix D Function Index
                                                               (line 201)
 * ido-enter-magit-status:                Status buffer.       (line  42)
 * magit-add-section-hook:                Section hooks.       (line  18)
+* magit-after-save-refresh-status:       Automatic refresh and revert.
+                                                              (line  84)
 * magit-builtin-completing-read:         Completion and confirmation.
                                                               (line  23)
 * magit-call-git:                        Calling Git for effect.
@@ -7055,14 +7053,13 @@ Appendix D Function Index
                                                               (line  31)
 * magit-insert-user-header:              Status header sections.
                                                               (line  53)
-* magit-log-maybe-show-commit:           Section movement.    (line  57)
-* magit-log-maybe-show-more-commits:     Section movement.    (line  64)
+* magit-log-maybe-show-more-commits:     Section movement.    (line  57)
+* magit-log-maybe-update-blob-buffer:    Section movement.    (line  69)
+* magit-log-maybe-update-revision-buffer: Section movement.   (line  63)
 * magit-maybe-set-dedicated:             Switching Buffers.   (line  66)
 * magit-mode-display-buffer:             Refreshing buffers.  (line  32)
 * magit-mode-quit-window:                Quitting Windows.    (line  31)
 * magit-mode-setup:                      Refreshing buffers.  (line  17)
-* magit-refresh-status:                  Automatic refresh and revert.
-                                                              (line  85)
 * magit-region-sections:                 Section selection.   (line  10)
 * magit-region-values:                   Section selection.   (line  29)
 * magit-restore-window-configuration:    Quitting Windows.    (line  20)
@@ -7102,6 +7099,9 @@ Appendix D Function Index
                                                               (line 105)
 * magit-start-process:                   Calling Git for effect.
                                                               (line 124)
+* magit-status-maybe-update-blob-buffer: Section movement.    (line  81)
+* magit-status-maybe-update-revision-buffer: Section movement.
+                                                              (line  75)
 * magit-wip-log:                         Wip modes.           (line  69)
 * magit-wip-log-current:                 Wip modes.           (line  77)
 * with-editor-usage-message:             Editing commit messages.

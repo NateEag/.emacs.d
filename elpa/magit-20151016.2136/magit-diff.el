@@ -111,54 +111,6 @@ to draw thin lines."
   :group 'magit-diff
   :type 'boolean)
 
-(defcustom magit-diff-auto-show
-  '(commit stage-all log-oneline log-select blame-follow)
-  "Whether to automatically show relevant diff or commit.
-
-When this option is non-nil certain operations cause the relevant
-changes to be displayed automatically.
-
-`commit'
-`stage-all'
-`log-oneline'
-`log-follow'
-`log-select'
-`blame-follow'
-
-In the event that expanding very large patches takes a long time
-\\<global-map>\\[keyboard-quit] \
-can be used to abort that step. This is especially useful when
-you would normally not look at the changes, e.g. because you are
-committing some binary files.
-
-Also see `magit-diff-auto-show-delay'."
-  :package-version '(magit . "2.1.0")
-  :group 'magit-diff
-  :type 'sexp)
-
-(defcustom magit-diff-auto-show-delay 0.2
-  "Delay before automatically showing or updating the revision buffer.
-
-Depending on the value of `magit-diff-auto-show' (which see),
-moving in a log buffer, or with blame information active in
-a file-visiting buffer, may automatically show the commit at
-point in the revision.
-
-When holding down a key to move by several lines/chunks, then
-that would update that buffer for each line/chunk on the way.
-To prevent that, updating the revision buffer is delayed, and
-this option controls for how long.  For optimal experience you
-might have to adjust this delay and/or the keyboard repeat rate
-and delay of your graphical environment or operating system."
-  :package-version '(magit . "2.2.0")
-  :group 'magit-diff
-  :type 'number)
-
-(defun magit-diff-auto-show-p (op)
-  (if (eq (car magit-diff-auto-show) 'not)
-      (not (memq op (cdr magit-diff-auto-show)))
-    (memq op magit-diff-auto-show)))
-
 (defcustom magit-diff-refine-hunk nil
   "Whether to show word-granularity differences within diff hunks.
 
@@ -277,6 +229,22 @@ be nil."
                  (cons  :tag "Show gravatars"
                         (regexp :tag "Author regexp"    "^Author:     ")
                         (regexp :tag "Committer regexp" "^Commit:     "))))
+
+(defcustom magit-revision-use-gravatar-kludge nil
+  "Whether to work around a bug which affects display of gravatars.
+
+Gravatar images are spliced into two halves which are then
+displayed on separate lines.  On OS X the splicing has a bug in
+some Emacs builds, which causes the top and bottom halves to be
+interchanged.  Enabling this option works around this issue by
+interchanging the halves once more, which cancels out the effect
+of the bug.
+
+See https://github.com/magit/magit/issues/2265
+and https://debbugs.gnu.org/cgi/bugreport.cgi?bug=7847."
+  :package-version '(magit . "2.3.0")
+  :group 'magit-revision
+  :type 'boolean)
 
 ;;; Faces
 
@@ -981,8 +949,9 @@ then visit the actual file.  Otherwise when the diff is about
 an older commit, then visit the respective blob using
 `magit-find-file'.  Also see `magit-diff-visit-file-worktree'
 which, as the name suggests always visits the actual file."
-  (interactive (list (or (magit-file-at-point)
-                         (user-error "No file at point"))
+  (interactive (list (--if-let (magit-file-at-point)
+                         (expand-file-name it)
+                       (user-error "No file at point"))
                      current-prefix-arg))
   (if (file-accessible-directory-p file)
       (magit-diff-visit-directory file other-window)
@@ -1011,9 +980,7 @@ which, as the name suggests always visits the actual file."
                        (magit-find-file-noselect rev file)
                      (or (get-file-buffer file)
                          (find-file-noselect file))))
-      (if (or other-window (get-buffer-window buffer))
-          (pop-to-buffer buffer)
-        (switch-to-buffer buffer))
+      (magit-display-file-buffer buffer)
       (when line
         (goto-char (point-min))
         (forward-line (1- line))
@@ -1021,6 +988,24 @@ which, as the name suggests always visits the actual file."
           (move-to-column col)))
       (when unmerged-p
         (smerge-start-session)))))
+
+(defvar magit-display-file-buffer-function
+  'magit-display-file-buffer-traditional
+  "The function used by `magit-diff-visit-file' to display blob buffers.
+
+Other commands such as `magit-find-file' do not use this
+function.  Instead they use high-leverl functions to select the
+window to be used to display the buffer.  This variable and the
+related functions are an experimental feature and should be
+treated as such.")
+
+(defun magit-display-file-buffer (buffer)
+  (funcall magit-display-file-buffer-function buffer))
+
+(defun magit-display-file-buffer-traditional (buffer)
+  (if (or current-prefix-arg (get-buffer-window buffer))
+      (pop-to-buffer buffer)
+    (switch-to-buffer buffer)))
 
 (defun magit-diff-visit-file-worktree (file &optional other-window)
   "From a diff, visit the corresponding file at the appropriate position.
@@ -1223,10 +1208,10 @@ Staging and applying changes is documented in info node
   (let ((map (make-sparse-keymap)))
     (define-key map [C-return] 'magit-diff-visit-file-worktree)
     (define-key map "\C-j"     'magit-diff-visit-file-worktree)
-    (define-key map "\r" 'magit-diff-visit-file)
+    (define-key map [remap magit-visit-thing]  'magit-diff-visit-file)
+    (define-key map [remap magit-delete-thing] 'magit-discard)
     (define-key map "a"  'magit-apply)
     (define-key map "C"  'magit-commit-add-log)
-    (define-key map "k"  'magit-discard)
     (define-key map "K"  'magit-file-untrack)
     (define-key map "R"  'magit-file-rename)
     (define-key map "s"  'magit-stage)
@@ -1239,10 +1224,10 @@ Staging and applying changes is documented in info node
   (let ((map (make-sparse-keymap)))
     (define-key map [C-return] 'magit-diff-visit-file-worktree)
     (define-key map "\C-j"     'magit-diff-visit-file-worktree)
-    (define-key map "\r" 'magit-diff-visit-file)
+    (define-key map [remap magit-visit-thing]  'magit-diff-visit-file)
+    (define-key map [remap magit-delete-thing] 'magit-discard)
     (define-key map "a"  'magit-apply)
     (define-key map "C"  'magit-commit-add-log)
-    (define-key map "k"  'magit-discard)
     (define-key map "s"  'magit-stage)
     (define-key map "u"  'magit-unstage)
     (define-key map "v"  'magit-reverse)
@@ -1268,10 +1253,10 @@ Staging and applying changes is documented in info node
           "\\(contains \\(?:modified\\|untracked\\) content\\)\\|"
           "\\([^ :]+\\)\\( (rewind)\\)?:\\)$"))
 
-(defun magit-diff-wash-diffs (args)
+(defun magit-diff-wash-diffs (args &optional limit)
   (when (member "--stat" args)
     (magit-diff-wash-diffstat))
-  (when (re-search-forward magit-diff-headline-re nil t)
+  (when (re-search-forward magit-diff-headline-re limit t)
     (goto-char (line-beginning-position))
     (magit-wash-sequence (apply-partially 'magit-diff-wash-diff args))
     (insert ?\n)))
@@ -1323,9 +1308,7 @@ section or a child thereof."
                 (when del
                   (insert (propertize del 'face 'magit-diffstat-removed)))
                 (insert "\n")))))
-        (insert "\n"))
-      (unless (eobp)
-        (delete-char 1)))))
+        (if (looking-at "^$") (forward-line) (insert "\n"))))))
 
 (defun magit-diff-wash-diff (args)
   (cond
@@ -1657,20 +1640,24 @@ or a ref which is not a branch, then it inserts nothing."
              (font-obj (query-font (font-at (point) (get-buffer-window))))
              (size     (* 2 (+ (aref font-obj 4) (aref font-obj 5))))
              (align-to (+ offset (ceiling (/ size (aref font-obj 7) 1.0))))
-             (gravatar-size (- size 2)))
+             (gravatar-size (- size 2))
+             (slice1  '(slice .0 .0 1.0 0.5))
+             (slice2  '(slice .0 .5 1.0 1.0)))
         (gravatar-retrieve
          email
-         (lambda (image offset align-to)
+         (lambda (image offset align-to slice1 slice2)
            (unless (eq image 'error)
              (insert (propertize " " 'display `((,@image :ascent center :relief 1)
-                                                (slice .0 .0 1.0 0.5))))
+                                                ,slice1)))
              (insert (propertize " " 'display `((space :align-to ,align-to))))
              (forward-line)
              (forward-char offset)
              (insert (propertize " " 'display `((,@image :ascent center :relief 1)
-                                                (slice .0 .5 1.0 1.0))))
+                                                ,slice2)))
              (insert (propertize " " 'display `((space :align-to ,align-to))))))
-         (list offset align-to))))))
+         (list offset align-to
+               (if magit-revision-use-gravatar-kludge slice2 slice1)
+               (if magit-revision-use-gravatar-kludge slice1 slice2)))))))
 
 (defun magit-revision-set-visibility (section)
   "Preserve section visibility when displaying another commit."
@@ -1683,10 +1670,10 @@ or a ref which is not a branch, then it inserts nothing."
 
 (defvar magit-unstaged-section-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\r" 'magit-diff-unstaged)
-    (define-key map "k"  'magit-discard)
-    (define-key map "s"  'magit-stage)
-    (define-key map "u"  'magit-unstage)
+    (define-key map [remap magit-visit-thing]  'magit-diff-unstaged)
+    (define-key map [remap magit-delete-thing] 'magit-discard)
+    (define-key map "s" 'magit-stage)
+    (define-key map "u" 'magit-unstage)
     map)
   "Keymap for the `unstaged' section.")
 
@@ -1702,11 +1689,11 @@ or a ref which is not a branch, then it inserts nothing."
 
 (defvar magit-staged-section-map
   (let ((map (make-sparse-keymap)))
-    (define-key map "\r" 'magit-diff-staged)
-    (define-key map "k"  'magit-discard)
-    (define-key map "s"  'magit-stage)
-    (define-key map "u"  'magit-unstage)
-    (define-key map "v"  'magit-reverse)
+    (define-key map [remap magit-visit-thing]  'magit-diff-staged)
+    (define-key map [remap magit-delete-thing] 'magit-discard)
+    (define-key map "s" 'magit-stage)
+    (define-key map "u" 'magit-unstage)
+    (define-key map "v" 'magit-reverse)
     map)
   "Keymap for the `staged' section.")
 

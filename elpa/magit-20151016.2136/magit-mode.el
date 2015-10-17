@@ -72,7 +72,7 @@
 
 All Magit buffers (buffers whose major-modes derive from
 `magit-mode') are displayed using `magit-display-buffer',
-which in turn used the function specified here."
+which in turn uses the function specified here."
   :package-version '(magit . "2.3.0")
   :group 'magit-modes
   :type '(radio (function-item magit-display-buffer-traditional)
@@ -548,6 +548,7 @@ and `magit-post-display-buffer-hook'."
                               '(magit-process-mode
                                 magit-revision-mode
                                 magit-diff-mode
+                                magit-stash-mode
                                 magit-status-mode))))
               '(display-buffer-same-window)
             nil))) ; display in another window
@@ -564,23 +565,28 @@ Magit buffer is buried."
                (not (window-prev-buffers window)))
       (set-window-parameter window 'magit-dedicated t))))
 
+(defvar-local magit--default-directory nil
+  "Value of `default-directory' when buffer is generated.
+This exists to prevent a let-bound `default-directory' from
+tricking `magit-mode-get-buffer' or `magit-mode-get-buffers' into
+thinking a buffer belongs to a repo that it doesn't.")
+(put 'magit--default-directory 'permanent-local t)
+
 (defun magit-mode-get-buffers ()
   (let ((topdir (magit-toplevel)))
     (--filter (with-current-buffer it
                 (and (derived-mode-p 'magit-mode)
-                     (equal (expand-file-name default-directory) topdir)))
+                     (equal magit--default-directory topdir)))
               (buffer-list))))
-
-(defvar magit-mode-get-buffer--topdir nil) ; see #2054 and #2060
 
 (defvar-local magit-buffer-locked-p nil)
 (put 'magit-buffer-locked-p 'permanent-local t)
 
 (defun magit-mode-get-buffer (mode &optional create frame)
-  (-if-let (topdir (magit-toplevel magit-mode-get-buffer--topdir))
+  (-if-let (topdir (magit-toplevel))
       (or (--first (with-current-buffer it
                      (and (eq major-mode mode)
-                          (equal (expand-file-name default-directory) topdir)
+                          (equal magit--default-directory topdir)
                           (not magit-buffer-locked-p)))
                    (if frame
                        (-map #'window-buffer
@@ -594,13 +600,19 @@ Magit buffer is buried."
 (defun magit-generate-new-buffer (mode)
   (let* ((name (funcall magit-generate-buffer-name-function mode))
          (buffer (generate-new-buffer name)))
+    (with-current-buffer buffer
+      (setq magit--default-directory default-directory))
     (when magit-uniquify-buffer-names
       (add-to-list 'uniquify-list-buffers-directory-modes mode)
       (with-current-buffer buffer
         (setq list-buffers-directory default-directory))
-      (uniquify-rationalize-file-buffer-names
-       name (file-name-directory (directory-file-name default-directory))
-       buffer))
+      (let ((uniquify-buffer-name-style
+             (if (eq uniquify-buffer-name-style 'forward)
+                 'post-forward-angle-brackets
+               uniquify-buffer-name-style)))
+        (uniquify-rationalize-file-buffer-names
+         name (file-name-directory (directory-file-name default-directory))
+         buffer)))
     buffer))
 
 (defun magit-generate-buffer-name-default-function (mode &optional value)
@@ -788,21 +800,6 @@ tracked in the current repository."
                                                 beg (line-end-position))))
                                 (t t)))))))))
 
-(defun magit-refresh-status ()
-  "Refresh the status buffer of the current repository.
-
-This function is intended to be added to `after-save-hook'.
-
-If the status buffer does not exist or the file being visited in
-the current buffer isn't inside a repository, then do nothing.
-
-Note that refreshing a Magit buffer is done by re-creating its
-contents from scratch, which can be slow in large repositories.
-If you are not satisfied with Magit's performance, then you
-should obviously not add this function to that hook."
-  (--when-let (ignore-errors (magit-mode-get-buffer 'magit-status-mode))
-    (with-current-buffer it
-      (magit-refresh-buffer))))
 
 (defvar inhibit-magit-revert nil)
 (defvar magit-revert-buffers-backlog nil)
@@ -926,6 +923,32 @@ Like `vc-mode-line' but simpler, more efficient, and less buggy."
   (setq disable-magit-save-buffers nil))
 (add-hook 'pre-command-hook #'magit-pre-command-hook)
 
+(defvar magit-after-save-refresh-buffers nil)
+
+(defun magit-after-save-refresh-buffers ()
+  (dolist (buffer magit-after-save-refresh-buffers)
+    (with-current-buffer buffer
+      (magit-refresh-buffer)))
+  (setq magit-after-save-refresh-buffers nil)
+  (remove-hook 'post-command-hook 'magit-after-save-refresh-buffers))
+
+(defun magit-after-save-refresh-status ()
+  "Refresh the status buffer of the current repository.
+
+This function is intended to be added to `after-save-hook'.
+
+If the status buffer does not exist or the file being visited in
+the current buffer isn't inside a repository, then do nothing.
+
+Note that refreshing a Magit buffer is done by re-creating its
+contents from scratch, which can be slow in large repositories.
+If you are not satisfied with Magit's performance, then you
+should obviously not add this function to that hook."
+  (unless disable-magit-save-buffers
+    (--when-let (ignore-errors (magit-mode-get-buffer 'magit-status-mode))
+      (add-to-list 'magit-after-save-refresh-buffers it)
+      (add-hook 'post-command-hook 'magit-after-save-refresh-buffers))))
+
 (defun magit-maybe-save-repository-buffers ()
   "Maybe save file-visiting buffers belonging to the current repository.
 Do so if `magit-save-repository-buffers' is non-nil."
@@ -935,7 +958,8 @@ Do so if `magit-save-repository-buffers' is non-nil."
     (let ((msg (current-message)))
       (magit-save-repository-buffers
        (eq magit-save-repository-buffers 'dontask))
-      (when msg (message "%s" msg)))))
+      (when (and msg (not (equal msg (current-message))))
+        (message "%s" msg)))))
 
 (add-hook 'magit-pre-refresh-hook #'magit-maybe-save-repository-buffers)
 (add-hook 'magit-pre-call-git-hook #'magit-maybe-save-repository-buffers)

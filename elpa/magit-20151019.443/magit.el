@@ -1450,14 +1450,21 @@ inspect the merge and change the commit message.
 (defun magit-merge-preview (rev)
   "Preview result of merging REV into the current branch."
   (interactive (list (magit-read-other-branch-or-commit "Preview merge")))
-  (magit-mode-setup #'magit-diff-mode rev))
+  (magit-mode-setup #'magit-merge-preview-mode rev))
 
-(defun magit-merge-refresh-preview-buffer (rev)
-  (magit-insert-section (diffbuf)
-    (let* ((branch (magit-get-current-branch))
-           (head (or branch (magit-rev-verify "HEAD"))))
-      (magit-insert-heading (format "Preview merge of %s into %s"
-                                    rev (or branch "HEAD")))
+(define-derived-mode magit-merge-preview-mode magit-diff-mode "Magit Merge"
+  "Mode for previewing a merge."
+  :group 'magit-diff
+  (hack-dir-local-variables-non-file-buffer))
+
+(defun magit-merge-preview-refresh-buffer (rev)
+  (let* ((branch (magit-get-current-branch))
+         (head (or branch (magit-rev-verify "HEAD"))))
+    (setq header-line-format
+          (propertize (format "Preview merge of %s into %s"
+                              rev (or branch "HEAD"))
+                      'face 'magit-header-line))
+    (magit-insert-section (diffbuf)
       (magit-git-wash #'magit-diff-wash-diffs
         "merge-tree" (magit-git-string "merge-base" head rev) head rev))))
 

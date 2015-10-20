@@ -17,6 +17,9 @@
  checking, but if jscs can *fix* the style failures for me, that would be quite
  nice.
 
+-Look into midi-kbd.el and lily-midi.el as an aid in creating lilypond files
+ with MIDI instruments.
+
 -Write a general-case ac-source for Tern.js. Right now I have to press M-Tab to
  trigger top-level completions, and I'd like to just press Tab. emacs-eclim
  might be a good place to rip off the basic idea from, since it depends on an

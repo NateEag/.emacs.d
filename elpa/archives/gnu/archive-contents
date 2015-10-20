@@ -86,7 +86,7 @@
        ((:keywords "point" "location")
 	(:url . "https://github.com/abo-abo/avy"))])
  (beacon .
-	 [(0 1)
+	 [(0 1 1)
 	  ((seq
 	    (1 9)))
 	  "Highlight the cursor whenever the window scrolls" single
@@ -156,11 +156,11 @@
 		      ((:keywords "abbrev" "convenience" "matching")
 		       (:url . "https://github.com/company-mode/company-statistics"))])
  (context-coloring .
-		   [(7 0 0)
+		   [(7 1 0)
 		    ((emacs
 		      (24 3))
 		     (js2-mode
-		      (20150126)))
+		      (20150713)))
 		    "Highlight by scope" single
 		    ((:url . "https://github.com/jacksonrayhamilton/context-coloring")
 		     (:keywords "convenience" "faces" "tools"))])

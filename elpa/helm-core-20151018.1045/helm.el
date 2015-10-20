@@ -4293,7 +4293,8 @@ before the candidate we want to preselect."
     (when (helm-pos-multiline-p)
       (helm-move--beginning-of-multiline-candidate))
     (when (helm-pos-header-line-p) (forward-line 1))
-    (helm-mark-current-line)))
+    (helm-mark-current-line)
+    (helm-display-mode-line (helm-get-current-source))))
 
 (defun helm-delete-current-selection ()
   "Delete the currently selected item."
@@ -5201,13 +5202,15 @@ visible or invisible in all sources of current helm session"
                        (condition-case nil
                            (helm-file-expand-wildcards coerced t)
                          (error nil)))))
-    (unless (or wilds (null wildcard))
+    (unless (or wilds (null wildcard)
+                (null (string-match-p "[[*?]" coerced))) ; [1]
       ;; When real is a normal filename without wildcard
       ;; file-expand-wildcards returns a list of one file.
       ;; When real is a non--existent file it return nil.
       ;; IOW prevent returning (list "/foo/*.el") when
       ;; "/foo/*.el" haven't expanded previously and is
-      ;; a non existing file.
+      ;; a non existing file, but allow returning a non
+      ;; existing file that doesn't match a wilcard regexp [1].
       (setq coerced (file-expand-wildcards coerced t)))
     (or wilds (and coerced (list coerced)))))
 
@@ -5379,7 +5382,7 @@ This will enable `helm-follow-mode' automatically in `helm-source-buffers-list'.
                 (message "helm-follow-mode is %s"
                          (if helm-follow-mode
                              "enabled" "disabled"))
-                (helm-display-mode-line src))
+                (helm-display-mode-line src t))
             (unless helm-follow-mode-persistent
               (and sym (set sym (remove (assq 'follow src) src)))))
           (message "Not enough candidates for helm-follow-mode")))))

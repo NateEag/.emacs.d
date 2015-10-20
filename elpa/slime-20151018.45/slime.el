@@ -282,6 +282,10 @@ argument."
   :type '(choice (const :tag "Compound" slime-complete-symbol*)
                  (const :tag "Fuzzy" slime-fuzzy-complete-symbol)))
 
+(make-obsolete-variable 'slime-complete-symbol-function
+                        'slime-completion-at-point-functions
+                        "2015-10-18")
+
 (defcustom slime-completion-at-point-functions
   '(slime-filename-completion
     slime-simple-completion-at-point)
@@ -403,7 +407,7 @@ more easily. See `slime-init-keymaps'.")
 (defvar slime-current-thread)
 
 (defun slime--on ()
-  (add-hook 'completion-at-point-functions #'slime--completion-at-point nil t))
+  (slime-setup-completion))
 
 (defun slime--off ()
   (remove-hook 'completion-at-point-functions #'slime--completion-at-point t))
@@ -3514,6 +3518,9 @@ more than one space."
          (run-hook-with-args-until-success
           'slime-completion-at-point-functions))))
 
+(defun slime-setup-completion ()
+  (add-hook 'completion-at-point-functions #'slime--completion-at-point nil t))
+
 (defun slime-simple-completion-at-point ()
   "Complete the symbol at point.
 Perform completion similar to `elisp-completion-at-point'."
@@ -3555,6 +3562,10 @@ for the most recently enclosed macro or function."
             ((memq (char-before) '(?\t ?\ ))
              (slime-echo-arglist))))))
 
+(make-obsolete 'slime-indent-and-complete-symbol
+               "Set tab-always-indent to 'complete."
+               "2015-10-18")
+
 (defvar slime-minibuffer-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map minibuffer-local-map)
@@ -3573,8 +3584,7 @@ for the most recently enclosed macro or function."
             (setq slime-buffer-package package)
             (setq slime-buffer-connection connection)
             (set-syntax-table lisp-mode-syntax-table)
-            (add-hook 'completion-at-point-functions
-                      #'slime--completion-at-point nil t)))
+            (slime-setup-completion)))
         minibuffer-setup-hook))
 
 (defun slime-read-from-minibuffer (prompt &optional initial-value history)
@@ -3837,9 +3847,9 @@ The result is a (possibly empty) list of definitions."
       (and (consp x)
            (let ((l x))
              (while (consp l)
-               (slime-check-eval-in-emacs-result (car x))
+               (slime-lisp-readable-p (car x))
                (setq l (cdr l)))
-             (slime-check-eval-in-emacs-result l)))))
+             (slime-lisp-readable-p l)))))
 
 (defun slime-eval-for-lisp (thread tag form-string)
   (let ((ok nil)

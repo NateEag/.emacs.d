@@ -15,7 +15,7 @@ SLIME
 *****
 
 SLIME is the “Superior Lisp Interaction Mode for Emacs”.  This is the
-manual for version 2.15.  (Last updated October 19, 2015)
+manual for version 2.15.  (Last updated October 23, 2015)
 
    Written by Luke Gorrie and others.
 
@@ -2282,7 +2282,7 @@ File: slime.info,  Node: slime-mrepl,  Next: inferior-slime-mode,  Prev: REPL,  
 ==================
 
 The ‘slime-mrepl’ package adds support for multiple listener buffers.
-The command ‘M-x slime-open-listener’ creates a new buffer.  In a
+The command ‘M-x slime-new-mrepl’ creates a new buffer.  In a
 multi-threaded Lisp, each listener is associated with a separate thread.
 In a single-threaded Lisp it’s also possible to create multiple listener
 buffers but the commands are executed sequentially by the same process.
@@ -3666,34 +3666,34 @@ Node: REPL commands73432
 Node: Input Navigation74593
 Node: Shortcuts76117
 Node: slime-mrepl77613
-Node: inferior-slime-mode78125
-Node: Compound Completion78830
-Ref: slime-complete-symbol*79007
-Ref: Compound Completion-Footnote-182259
-Node: Fuzzy Completion82383
-Ref: slime-fuzzy-complete-symbol82636
-Node: slime-autodoc-mode85928
-Node: ASDF87157
-Node: Banner89115
-Node: Editing Commands89561
-Node: Fancy Inspector91188
-Node: Presentations91919
-Ref: Presentations-Footnote-198475
-Node: Typeout frames98716
-Node: TRAMP99840
-Node: Documentation Links100116
-Node: Xref and Class Browser100541
-Node: Highlight Edits101133
-Node: Scratch Buffer101605
-Ref: slime-scratch101767
-Node: SLIME Trace Dialog102422
-Node: slime-sprof106672
-Node: SLIME Enhanced M-.107660
-Node: slime-fancy108042
-Node: Credits108300
-Node: Key Index113056
-Node: Command Index124919
-Node: Variable Index140161
+Node: inferior-slime-mode78121
+Node: Compound Completion78826
+Ref: slime-complete-symbol*79003
+Ref: Compound Completion-Footnote-182255
+Node: Fuzzy Completion82379
+Ref: slime-fuzzy-complete-symbol82632
+Node: slime-autodoc-mode85924
+Node: ASDF87153
+Node: Banner89111
+Node: Editing Commands89557
+Node: Fancy Inspector91184
+Node: Presentations91915
+Ref: Presentations-Footnote-198471
+Node: Typeout frames98712
+Node: TRAMP99836
+Node: Documentation Links100112
+Node: Xref and Class Browser100537
+Node: Highlight Edits101129
+Node: Scratch Buffer101601
+Ref: slime-scratch101763
+Node: SLIME Trace Dialog102418
+Node: slime-sprof106668
+Node: SLIME Enhanced M-.107656
+Node: slime-fancy108038
+Node: Credits108296
+Node: Key Index113052
+Node: Command Index124915
+Node: Variable Index140157
 
 End Tag Table
 

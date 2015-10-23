@@ -70,7 +70,9 @@
  '(require-final-newline t)
  '(safe-local-variable-values
    (quote
-    ((eval setq flycheck-eslint-rulesdir
+    ((ne-yas-auto-insert-snippet-name . "how-i-code-post")
+     (ne-yas-auto-insert-snippet-name . "package")
+     (eval setq flycheck-eslint-rulesdir
            (concat nateeag/dir-locals-dir "node_modules/camel_case"))
      (flycheck-eslint-rulesdir concat nateeag/dir-locals-dir "node_modules/camel_case")
      (eval set

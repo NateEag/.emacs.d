@@ -1,9 +1,3 @@
--Post issue for helm stomping on smart-dash-mode. First create automated
- repro script. I do not have a workaround for this, but I happen not to be
- using Emacs with the modes I use smart-dash-mode in right now, so it's not
- crippling.
-
-
 -Take a look at firestarter as an easy way to set up post-save hooks.
  Simpler alternative to file watchers, perhaps:
  https://github.com/wasamasa/firestarter

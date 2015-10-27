@@ -1,3 +1,11 @@
+-Install and use the Unicode Troll Stopper. I hope I don't know any Unicode
+ trollers, but it would be nice to be warned if such a thing ever did happen...
+ https://github.com/camsaul/emacs-unicode-troll-stopper
+
+-Install and try out beacon. It looks to solve a problem that's irritated me in
+ the past.
+ https://github.com/Malabarba/beacon
+
 -Take a look at firestarter as an easy way to set up post-save hooks.
  Simpler alternative to file watchers, perhaps:
  https://github.com/wasamasa/firestarter

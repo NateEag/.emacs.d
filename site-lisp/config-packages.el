@@ -12,6 +12,9 @@
 
 (require 'use-package)
 
+(use-package beacon
+  :init (beacon-mode 1))
+
 (use-package notmuch
   :config
   (progn

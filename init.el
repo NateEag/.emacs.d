@@ -174,6 +174,9 @@ new file for the first time."
 
   (evil-local-mode)
 
+  (unicode-troll-stopper-mode)
+  (diminish 'unicode-troll-stopper-mode)
+
   ;; Auto-fill comments, but not code.
   (comment-auto-fill)
 

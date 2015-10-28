@@ -12,6 +12,7 @@
 
 (require 'use-package)
 
+;; Make it easy to find the cursor after scrolling.
 (use-package beacon
   :init (beacon-mode 1))
 

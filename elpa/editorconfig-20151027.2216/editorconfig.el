@@ -4,7 +4,7 @@
 
 ;; Author: EditorConfig Team <editorconfig@googlegroups.com>
 ;; Version: 0.4
-;; Package-Version: 20150831.1054
+;; Package-Version: 20151027.2216
 ;; URL: https://github.com/editorconfig/editorconfig-emacs#readme
 
 ;; See
@@ -43,6 +43,16 @@
   "editorconfig"
   "EditorConfig command"
   :type 'string
+  :group 'editorconfig)
+
+(defcustom edconf-get-properties-function
+  'edconf-get-properties-from-exec
+  "Function to get EditorConofig properties for current buffer.
+This function will be called with no argument and should return a hash object
+containing properties, or nil if any core program is not available.
+The hash object should have symbols of property names as keys and strings of
+property values as values."
+  :type 'function
   :group 'editorconfig)
 
 (defcustom edconf-custom-hooks ()
@@ -277,24 +287,35 @@ NOTE: Only the **buffer local** value of VARIABLE will be set."
                 (val (mapconcat 'identity (cdr key-val) "")))
             (puthash key val properties)))))))
 
+(defun edconf-get-properties-from-exec ()
+  "Get EditorConfig properties of current buffer by calling `edconf-exec-path'."
+  (if (executable-find edconf-exec-path)
+    (edconf-parse-properties (edconf-get-properties))
+    (display-warning :error
+      "Unable to find editorconfig executable.")
+    nil))
+
 ;;;###autoload
 (defun edconf-find-file-hook ()
-  (if (executable-find edconf-exec-path)
-    (let ((props (edconf-parse-properties (edconf-get-properties))))
-      (edconf-set-indentation (gethash 'indent_style props)
-                              (gethash 'indent_size props)
-                              (gethash 'tab_width props))
-      (edconf-set-line-ending (gethash 'end_of_line props))
-      (edconf-set-trailing-nl (gethash 'insert_final_newline props))
-      (edconf-set-trailing-ws (gethash 'trim_trailing_whitespace props))
-      (edconf-set-line-length (gethash 'max_line_length props))
-      (dolist (hook edconf-custom-hooks)
-        (funcall hook props)))
-    (display-warning :error "Unable to find editorconfig executable.  Styles will not be applied.")))
+  (let ((props (and (functionp edconf-get-properties-function)
+                 (funcall edconf-get-properties-function))))
+    (if props
+      (progn
+        (edconf-set-indentation (gethash 'indent_style props)
+          (gethash 'indent_size props)
+          (gethash 'tab_width props))
+        (edconf-set-line-ending (gethash 'end_of_line props))
+        (edconf-set-trailing-nl (gethash 'insert_final_newline props))
+        (edconf-set-trailing-ws (gethash 'trim_trailing_whitespace props))
+        (edconf-set-line-length (gethash 'max_line_length props))
+        (dolist (hook edconf-custom-hooks)
+          (funcall hook props)))
+      (display-warning :error "EditorConfig core program is not available.  Styles will not be applied."))))
 ;;;###autoload
 (add-hook 'find-file-hook 'edconf-find-file-hook)
 
-(add-to-list 'auto-mode-alist '("/\\.editorconfig$" . conf-unix-mode))
+;;;###autoload
+(add-to-list 'auto-mode-alist '("/\\.editorconfig\\'" . conf-unix-mode))
 
 (provide 'editorconfig)
 

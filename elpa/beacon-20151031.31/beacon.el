@@ -4,10 +4,10 @@
 
 ;; Author: Artur Malabarba <emacs@endlessparentheses.com>
 ;; URL: https://github.com/Malabarba/beacon
-;; Package-Version: 20151028.110
+;; Package-Version: 20151031.31
 ;; Keywords: convenience
-;; Version: 0.3
-;; Package-Requires: ((seq "1.9"))
+;; Version: 0.5.1
+;; Package-Requires: ((seq "1.11"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -39,6 +39,24 @@
 ;;; Code:
 
 (require 'seq)
+(require 'faces)
+(unless (fboundp 'seq-mapn)
+  ;; This is for people who are on outdated Emacs snapshots. Will be
+  ;; deleted in a couple of weeks.
+  (defun seq-mapn (function sequence &rest sequences)
+    "Like `seq-map' but FUNCTION is mapped over all SEQUENCES.
+The arity of FUNCTION must match the number of SEQUENCES, and the
+mapping stops on the shortest sequence.
+Return a list of the results.
+
+\(fn FUNCTION SEQUENCES...)"
+    (let ((result nil)
+          (sequences (seq-map (lambda (s) (seq-into s 'list))
+                            (cons sequence sequences))))
+      (while (not (memq nil sequences))
+        (push (apply function (seq-map #'car sequences)) result)
+        (setq sequences (seq-map #'cdr sequences)))
+      (nreverse result))))
 
 (defgroup beacon nil
   "Customization group for beacon."
@@ -236,7 +254,8 @@ Only returns `beacon-size' elements."
 
 (defun beacon--color-range ()
   "Return a list of background colors for the beacon."
-  (let* ((default-bg (face-attribute 'default :background))
+  (let* ((default-bg (or (background-color-at-point)
+                         (face-background 'default)))
          (bg (color-values (if (string-match "\\`unspecified-" default-bg)
                                (face-attribute 'beacon-fallback-background :background)
                              default-bg)))
@@ -246,7 +265,7 @@ Only returns `beacon-size' elements."
                   (color-distance "white" bg))
                (make-list 3 (* beacon-color 65535)))
               (t (make-list 3 (* (- 1 beacon-color) 65535))))))
-    (apply #'cl-mapcar (lambda (r g b) (format "#%04x%04x%04x" r g b))
+    (apply #'seq-mapn (lambda (r g b) (format "#%04x%04x%04x" r g b))
            (mapcar (lambda (n) (butlast (beacon--int-range (elt fg n) (elt bg n))))
                    [0 1 2]))))
 
@@ -338,7 +357,7 @@ The same is true for DELTA-X and horizonta movement."
     (let ((head (car mark-ring)))
       (when (and (eq beacon--previous-mark-head head)
                  (not (equal head beacon--previous-place)))
-        (push-mark beacon--previous-place)))))
+        (push-mark beacon--previous-place 'silent)))))
 
 (defun beacon--post-command ()
   "Blink if point moved very far."

@@ -728,22 +728,21 @@ defined direct keybindings to the command
 (defun yas--modes-to-activate (&optional mode)
   "Compute list of mode symbols that are active for `yas-expand'
 and friends."
-  (let (dfs explored)
-    (setq dfs (lambda (mode)
-                (unless (memq mode explored)
-                  (push mode explored)
-                  (loop for neighbour
-                        in (cl-list* (get mode 'derived-mode-parent)
-                                     (ignore-errors (symbol-function mode))
-                                     (gethash mode yas--parents))
-                        when (and neighbour
-                                  (not (memq neighbour explored))
-                                  (symbolp neighbour))
-                        do (funcall dfs neighbour)))))
-    (if mode
-        (funcall dfs mode)
-      (mapcar dfs (cons major-mode yas--extra-modes)))
-    explored))
+  (let* ((explored (if mode (list mode) ; Building up list in reverse.
+                     (cons major-mode (reverse yas--extra-modes))))
+         (dfs
+          (lambda (mode)
+            (cl-loop for neighbour
+                     in (cl-list* (get mode 'derived-mode-parent)
+                                  (ignore-errors (symbol-function mode))
+                                  (gethash mode yas--parents))
+                     when (and neighbour
+                               (not (memq neighbour explored))
+                               (symbolp neighbour))
+                     do (push neighbour explored)
+                     (funcall dfs neighbour)))))
+    (mapcar dfs explored)
+    (nreverse explored)))
 
 (defvar yas-minor-mode-hook nil
   "Hook run when `yas-minor-mode' is turned on.")
@@ -1779,9 +1778,9 @@ With prefix argument USE-JIT do jit-loading of snippets."
                           (current-time-string)))))
     ;; Normal case.
     (unless (file-exists-p (concat directory "/" ".yas-skip"))
-      (if (and (progn (yas--message 2 "Loading compiled snippets from %s" directory) t)
-               (load (expand-file-name ".yas-compiled-snippets" directory) 'noerror (<= yas-verbosity 3)))
-          (yas--message 2 "Loading snippet files from %s" directory)
+      (unless (and (load (expand-file-name ".yas-compiled-snippets" directory) 'noerror (<= yas-verbosity 3))
+                   (progn (yas--message 2 "Loaded compiled snippets from %s" directory) t))
+        (yas--message 2 "Loading snippet files from %s" directory)
         (yas--load-directory-2 directory mode-sym)))))
 
 (defun yas--load-directory-2 (directory mode-sym)
@@ -3403,6 +3402,7 @@ Only clears the field if it hasn't been modified and it point it
 at field start.  This hook doesn't do anything if an undo is in
 progress."
   (unless (or yas--inhibit-overlay-hooks
+              (not (overlayp yas--active-field-overlay)) ; Avoid Emacs bug #21824.
               (yas--undo-in-progress))
     (let* ((field (overlay-get overlay 'yas--field))
            (snippet (overlay-get yas--active-field-overlay 'yas--snippet)))

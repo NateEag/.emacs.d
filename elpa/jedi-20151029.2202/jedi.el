@@ -4,8 +4,8 @@
 
 ;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
 ;; Package-Requires: ((emacs "24") (jedi-core "0.2.2") (auto-complete "1.4"))
-;; Version: 0.2.5
-;; Package-Version: 20150623.2335
+;; Version: 0.2.6
+;; Package-Version: 20151029.2202
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

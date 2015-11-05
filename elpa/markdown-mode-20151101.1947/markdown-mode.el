@@ -30,7 +30,7 @@
 ;; Maintainer: Jason R. Blevins <jrblevin@sdf.org>
 ;; Created: May 24, 2007
 ;; Version: 2.0
-;; Package-Version: 20151011.1256
+;; Package-Version: 20151101.1947
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: http://jblevins.org/projects/markdown-mode/
 
@@ -1942,7 +1942,7 @@ If the point is not in a list item, do nothing."
       (setq indent (markdown-cur-line-indent)))
     ;; Don't skip over whitespace for empty list items (marker and
     ;; whitespace only), just move to end of whitespace.
-    (if (looking-back (concat markdown-regex-list "\\s-*"))
+    (if (looking-back (concat markdown-regex-list "\\s-*") nil)
           (goto-char (match-end 3))
       (skip-syntax-backward "-"))))
 
@@ -2133,7 +2133,7 @@ Group 3 matches the closing backticks."
   "Match GFM quoted code blocks from point to LAST."
   (let (open lang body close all)
     (if (search-forward-regexp
-         "\\(?:\\`\\|[\n\r]+\\s *[\n\r]\\)\\(```\\)\\([^[:space:]]+[[:space:]]*\\|{[^}]*}\\)?$" last t)
+         "\\(?:\\`\\|[\n\r]+\\s *[\n\r]\\)\\(```\\)[ ]?\\([^[:space:]]+[[:space:]]*\\|{[^}]*}\\)?$" last t)
         (progn
           (beginning-of-line)
           (setq open (list (match-beginning 1) (match-end 1))
@@ -2198,7 +2198,7 @@ This helps improve font locking for block constructs such as pre blocks."
   (eval-when-compile (defvar font-lock-beg) (defvar font-lock-end))
   (save-excursion
     (goto-char font-lock-beg)
-    (unless (looking-back "\n\n")
+    (unless (looking-back "\n\n" nil)
       (let ((found (or (re-search-backward "\n\n" nil t) (point-min))))
         (goto-char font-lock-end)
         (when (re-search-forward "\n\n" nil t)
@@ -2220,7 +2220,7 @@ This helps improve font locking for block constructs such as pre blocks."
 (defun markdown-ensure-blank-line-before ()
   "If previous line is not already blank, insert a blank line before point."
   (unless (bolp) (insert "\n"))
-  (unless (or (bobp) (looking-back "\n\\s-*\n")) (insert "\n")))
+  (unless (or (bobp) (looking-back "\n\\s-*\n" nil)) (insert "\n")))
 
 (defun markdown-ensure-blank-line-after ()
   "If following line is not already blank, insert a blank line after point.
@@ -2606,7 +2606,8 @@ header will be inserted."
            (insert text "\n" hdr))
           (t
            (setq hdr (make-string level ?#))
-           (insert hdr " " text (when (null markdown-asymmetric-header) " " hdr)))))
+           (insert hdr " " text)
+           (when (null markdown-asymmetric-header) (insert " " hdr)))))
   (markdown-ensure-blank-line-after)
   ;; Leave point at end of text
   (if setext
@@ -2804,7 +2805,7 @@ Call `markdown-insert-gfm-code-block' interactively
 if three backquotes inserted at the beginning of line."
   (interactive "*P")
   (self-insert-command (prefix-numeric-value arg))
-  (when (looking-back "^```")
+  (when (looking-back "^```" nil)
     (replace-match "")
     (call-interactively #'markdown-insert-gfm-code-block)))
 
@@ -2815,12 +2816,13 @@ region is active, wrap this region with the markup instead.  If
 the region boundaries are not on empty lines, these are added
 automatically in order to have the correct markup."
   (interactive "sProgramming language [none]: ")
+  (when (> (length lang) 0) (setq lang (concat " " lang)))
   (if (markdown-use-region-p)
       (let ((b (region-beginning)) (e (region-end)))
         (goto-char e)
         ;; if we're on a blank line, don't newline, otherwise the ```
         ;; should go on its own line
-        (unless (looking-back "\n")
+        (unless (looking-back "\n" nil)
           (newline))
         (insert "```")
         (markdown-ensure-blank-line-after)
@@ -3381,7 +3383,7 @@ match."
             (let (match)
               (save-match-data
                 (dolist (prev-regexp previous)
-                  (or match (setq match (looking-back prev-regexp)))))
+                  (or match (setq match (looking-back prev-regexp nil)))))
               (unless match
                 (save-excursion (funcall function))))))
         (add-to-list 'previous regexp)))))
@@ -4317,6 +4319,7 @@ When ARG is non-nil, repeat that many times.  When ARG is negative,
 move forward to the ARG-th following section."
   (interactive "P")
   (or arg (setq arg 1))
+  (forward-char 1)
   (or (re-search-backward markdown-regex-header nil t arg)
       (goto-char (point-min))))
 
@@ -4754,7 +4757,8 @@ and [[test test]] both map to Test-test.ext."
                              (downcase (substring basename 1 nil)))))
     (let* ((default
             (concat basename
-                    (if (buffer-file-name)
+                    (if (and (buffer-file-name)
+                             (file-name-extension (buffer-file-name)))
                         (concat "."
                                 (file-name-extension (buffer-file-name))))))
            (current default))
@@ -4929,7 +4933,7 @@ This is an exact copy of `line-number-at-pos' for use in emacs21."
 
 (defun markdown-inside-link-text-p ()
   "Return nil if not currently within link anchor text."
-  (looking-back "\\[[^]]*"))
+  (looking-back "\\[[^]]*" nil))
 
 (defun markdown-line-is-reference-definition-p ()
   "Return whether the current line is a (non-footnote) reference defition."

@@ -248,8 +248,16 @@ I.e use the -path/ipath arguments of find instead of -name/iname."
   :type 'string)
 
 (defcustom helm-ff-guess-ffap-filenames nil
-  "Use ffap to guess local filenames at point.
-This doesn't disable url or mail at point, only files."
+  "Use ffap to guess local filenames at point in `helm-find-files'.
+This doesn't disable url or mail at point, see
+`helm-ff-guess-ffap-urls' for this."
+  :group 'helm-files
+  :type 'boolean)
+
+(defcustom helm-ff-guess-ffap-urls t
+  "Use ffap to guess local urls at point in `helm-find-files'.
+This doesn't disable guessing filenames at point,
+see `helm-ff-guess-ffap-filenames' for this."
   :group 'helm-files
   :type 'boolean)
 
@@ -666,7 +674,7 @@ ACTION must be an action supported by `helm-dired-action'."
 
 (defun helm-ff-git-grep (_candidate)
   "Default action to git-grep `helm-ff-default-directory'."
-  (helm-grep-git-1 helm-ff-default-directory))
+  (helm-grep-git-1 helm-ff-default-directory helm-current-prefix-arg))
 
 (defun helm-find-files-ag (_candidate)
   (helm-grep-ag-1 helm-ff-default-directory))
@@ -2012,12 +2020,11 @@ return FNAME prefixed with [?]."
          (prefix-url (propertize
                       " " 'display
                       (propertize "[@]" 'face 'helm-ff-prefix))))
-    (cond ((or file-or-symlinkp (file-exists-p fname)) fname)
+    (cond (file-or-symlinkp fname)
           ((or (string-match helm-ff-url-regexp fname)
                (and ffap-url-regexp (string-match ffap-url-regexp fname)))
            (concat prefix-url " " fname))
-          ((or new-file (not (file-exists-p fname)))
-           (concat prefix-new " " fname)))))
+          (new-file (concat prefix-new " " fname)))))
 
 (defun helm-ff-score-candidate-for-pattern (str pattern)
   (if (member str '("." ".."))
@@ -2139,7 +2146,8 @@ Return candidates prefixed with basename of `helm-input' first."
            (append actions
                    '(("Gnus attach file(s)" . helm-ff-gnus-attach-files))))
           ((save-match-data
-             (and (not (string-match-p ffap-url-regexp str-at-point))
+             (and ffap-url-regexp
+                  (not (string-match-p ffap-url-regexp str-at-point))
                   (string-match (concat "\\(" fname-at-point "\\):\\([0-9]+:?\\)")
                                 str-at-point)
                   (file-equal-p (match-string 1 str-at-point) candidate)))
@@ -2169,13 +2177,14 @@ Return candidates prefixed with basename of `helm-input' first."
   "Find file CANDIDATE and maybe jump to line number found in fname at point.
 line number should be added at end of fname preceded with \":\".
 e.g \"foo:12\"."
-  (let ((linum (let ((str (with-helm-current-buffer
-                            (buffer-substring-no-properties
+  (let ((linum (with-helm-current-buffer
+                 (let ((str (buffer-substring-no-properties
                              (point-at-bol) (point-at-eol))))
-                     (fname (with-helm-current-buffer (ffap-guesser))))
-                 (when (string-match
-                        (concat "\\(" fname "\\):\\([0-9]+:?\\)") str)
-                   (match-string 2 str)))))
+                   (when (string-match
+                          (concat "\\(" (ffap-guesser)
+                                  "\\):\\([0-9]+:?\\)")
+                          str)
+                     (match-string 2 str))))))
     (find-file candidate)
     (and linum (not (string= linum ""))
          (helm-goto-line (string-to-number linum) t))))
@@ -2422,7 +2431,8 @@ Use it for non--interactive calls of `helm-find-files'."
 (defun helm-find-files-initial-input (&optional input)
   "Return INPUT if present, otherwise try to guess it."
   (let ((ffap-machine-p-known 'reject)
-        (ffap-alist (and helm-ff-guess-ffap-filenames ffap-alist)))
+        (ffap-alist (and helm-ff-guess-ffap-filenames ffap-alist))
+        (ffap-url-regexp (and helm-ff-guess-ffap-urls ffap-url-regexp)))
     (unless (eq major-mode 'image-mode)
       (or (and input (or (and (file-remote-p input) input)
                          (expand-file-name input)))
@@ -2712,12 +2722,11 @@ Called with a prefix arg open files in background without selecting them."
         ;; an existing filename, create or jump to it.
         ;; If the basedir of candidate doesn't exists,
         ;; ask for creating it.
-        (let ((dir (helm-basedir candidate)))
+        (let ((dir (and (not url-p) (helm-basedir candidate))))
           (find-file-at-point
            (cond ((and dir (file-directory-p dir))
-                  (substitute-in-file-name (car marked)))
-                 ;; FIXME Why do we use this on urls ?
-                 (url-p (helm-substitute-in-filename (car marked)))
+                  (substitute-in-file-name candidate))
+                 (url-p candidate)
                  ((funcall make-dir-fn dir) candidate))))))))
 
 (defun helm-shadow-boring-files (files)
@@ -2953,6 +2962,15 @@ Don't use it in your own code unless you know what you are doing.")
    (migemo :initform t)
    (keymap :initform helm-generic-files-map)
    (help-message :initform helm-generic-file-help-message)))
+
+(defmethod helm--setup-source :after ((source helm-recentf-source))
+  (set-slot-value
+   source 'action
+   (append (symbol-value (helm-actions-from-type-file))
+           '(("Delete file(s) from recentf" .
+              (lambda (_candidate)
+                (cl-loop for file in (helm-marked-candidates)
+                         do (setq recentf-list (delq file recentf-list)))))))))
 
 (defvar helm-source-recentf nil 
   "See (info \"(emacs)File Conveniences\").
@@ -3233,6 +3251,7 @@ utility mdfind.")
     :candidates-process 'helm-find-shell-command-fn
     :filtered-candidate-transformer 'helm-findutils-transformer
     :action-transformer 'helm-transform-file-load-el
+    :persistent-action 'helm-ff-kill-or-find-buffer-fname
     :action 'helm-type-file-actions
     :keymap helm-generic-files-map
     :candidate-number-limit 9999

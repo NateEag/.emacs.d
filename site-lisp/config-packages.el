@@ -247,6 +247,9 @@
 (use-package evil-exchange
   :commands evil-exchange-install)
 
+(use-package evil-commentary
+  :commands evil-commentary-mode)
+
 (use-package evil
   :commands evil-local-mode
   :config
@@ -283,7 +286,7 @@
 
     (evil-exchange-install)
 
-    (evil-commentary-default-setup)
+    (evil-commentary-mode)
 
     (diminish 'evil-commentary-mode)))
 

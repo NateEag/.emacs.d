@@ -1,3 +1,5 @@
+-Add keybindings for goto-chg commands and start using them.
+
 -Take a look at firestarter as an easy way to set up post-save hooks.
  Simpler alternative to file watchers, perhaps:
  https://github.com/wasamasa/firestarter
@@ -16,6 +18,10 @@
  the elisp library just so I have it around. I much prefer ESLint for style
  checking, but if jscs can *fix* the style failures for me, that would be quite
  nice.
+
+-Add tern-lint.el to my JS setup. Static type checking is a handy thing (and I
+ personally find flow's comment-annotation syntax too intrusive for good
+ readability).
 
 -Look into midi-kbd.el and lily-midi.el as an aid in creating lilypond files
  with MIDI instruments.
@@ -174,6 +180,8 @@
  three to rebuild the TAGS file and tell Emacs "reload this tags file!" when
  it's done. A really clever monkey might even hack up a Frankenstein
  auto-completion rig cross-breeding tag completion with php-auto-yasnippet.
+ ...years have passed, and phpctags seems to be the cool kid on the block now:
+ https://github.com/vim-php/phpctags
 
 -Look into emacs-eclim for intelligent PHP support. Might take some elisp
  hacking, but I think that's all it would take, apart from installing Eclipse

@@ -370,6 +370,7 @@ new file for the first time."
 (require 'server)
 (when (and (display-graphic-p) (not (eq t (server-running-p))))
     (server-start))
+
 ;; Just for grins, see how long starting up took.
 (add-hook 'after-init-hook
           (lambda ()

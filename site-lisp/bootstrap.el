@@ -18,8 +18,14 @@
 
 (add-subdirs-to-front-of-load-path (make-emacs-dir-path "site-lisp"))
 
-;; Add elpa/ to load-path to load auto-compile before package.el.
-(add-subdirs-to-front-of-load-path (make-emacs-dir-path "elpa"))
+
+;; Set up the package library per my desires.
+(require 'package)
+(setq package-user-dir (make-emacs-dir-path "elpa/"))
+(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
+(add-to-list 'package-archives '("melpa" .
+                                 "http://melpa.milkbox.net/packages/"))
+(package-initialize)
 
 
 ;; Set up auto-compile, which should prevent me from ever again loading an
@@ -37,14 +43,6 @@
 ;; I use Flycheck, so I don't need to see the compilation errors buffer.
 (setq auto-compile-display-buffer nil)
 
-
-;; Set up the package library per my desires.
-(require 'package)
-(setq package-user-dir (make-emacs-dir-path "elpa/"))
-(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
-(add-to-list 'package-archives '("melpa" .
-                                 "http://melpa.milkbox.net/packages/"))
-(package-initialize)
 
 ;; Set up manually-maintained autoloads.
 (defun nateeag-autoloads-init ()

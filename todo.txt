@@ -84,6 +84,8 @@
 
 -skewer-reload-stylesheets isn't working for me. Figure out why not and fix it.
 
+-Add flycheck-css-colorguard: http://melpa.org/#/flycheck-css-colorguard
+
 -add support for SCSS to skewer-reload-stylesheets.
 
 -css-mode should have working comment fill. Right now it only believes in

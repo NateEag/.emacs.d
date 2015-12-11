@@ -46,7 +46,6 @@ preferences."
   "Expand the snippet specified by `ne-yas-auto-insert-snippet-name'.
 
 If `ne-yas-auto-insert-snippet-name' is nil, do nothing."
-  (message "Imagine I am inserting something in this buffer...")
   (if ne-yas-auto-insert-snippet-name
       (yas-expand-snippet
        (yas-lookup-snippet ne-yas-auto-insert-snippet-name))))

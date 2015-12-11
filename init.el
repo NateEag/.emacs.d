@@ -50,6 +50,14 @@
       (when matching-text
         (message matching-text)))))
 
+;; If a directory doesn't exist on the way to a new file, create it.
+(defadvice find-file (before make-directory-maybe (filename &optional wildcards) activate)
+  "Create parent directory if not exists while visiting file."
+  (unless (file-exists-p filename)
+    (let ((dir (file-name-directory filename)))
+      (unless (file-exists-p dir)
+        (make-directory dir)))))
+
 ;; Autosave's defaults are not very nice. Here, we fix them.
 ;; Create autosave dir if it doesn't exist.
 ;; TODO Put autosaves outside my .emacs.d. I don't back .emacs.d up, since

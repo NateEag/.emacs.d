@@ -451,6 +451,7 @@ Should be called after others transformers i.e (boring buffers)."
                 (helm-make-visible-mark)))
             (forward-line 1) (end-of-line))))
       (helm-mark-current-line)
+      (helm-display-mode-line (helm-get-current-source) t)
       (message "%s candidates marked" (length helm-marked-candidates)))))
 
 (defun helm-buffers-mark-similar-buffers ()
@@ -754,13 +755,11 @@ If REGEXP-FLAG is given use `query-replace-regexp'."
                           (helm-get-selection))))))
 
 (defun helm-buffers-list-persistent-action (candidate)
-  (if current-prefix-arg
-      (helm-buffers-persistent-kill candidate)
-      (let ((current (window-buffer helm-persistent-action-display-window)))
-        (if (or (eql current (get-buffer helm-current-buffer))
-                (not (eql current (get-buffer candidate))))
-            (switch-to-buffer candidate)
-            (switch-to-buffer helm-current-buffer)))))
+  (let ((current (window-buffer helm-persistent-action-display-window)))
+    (if (or (eql current (get-buffer helm-current-buffer))
+            (not (eql current (get-buffer candidate))))
+        (switch-to-buffer candidate)
+        (switch-to-buffer helm-current-buffer))))
 
 (defun helm-ediff-marked-buffers (_candidate &optional merge)
   "Ediff 2 marked buffers or CANDIDATE and `helm-current-buffer'.
@@ -838,35 +837,6 @@ Can be used by any source that list buffers."
 displayed with the `file-name-shadow' face if available."
   (helm-shadow-entries buffers helm-boring-buffer-regexp-list))
 
-
-(define-helm-type-attribute 'buffer
-  `((action
-     . ,(helm-make-actions
-         "Switch to buffer" 'switch-to-buffer
-         (lambda () (and (locate-library "popwin") "Switch to buffer in popup window"))
-         'popwin:popup-buffer
-         "Switch to buffer other window `C-c o'" 'switch-to-buffer-other-window
-         "Switch to buffer other frame `C-c C-o'" 'switch-to-buffer-other-frame
-         (lambda () (and (locate-library "elscreen") "Display buffer in Elscreen"))
-         'helm-find-buffer-on-elscreen
-         "Query replace regexp `C-M-%'" 'helm-buffer-query-replace-regexp
-         "Query replace `M-%'" 'helm-buffer-query-replace
-         "View buffer" 'view-buffer
-         "Display buffer" 'display-buffer
-         "Grep buffers `M-g s' (C-u grep all buffers)" 'helm-zgrep-buffers
-         "Multi occur buffer(s) `C-s'" 'helm-multi-occur-as-action
-         "Revert buffer(s) `M-U'" 'helm-revert-marked-buffers
-         "Insert buffer" 'insert-buffer
-         "Kill buffer(s) `M-D'" 'helm-kill-marked-buffers
-         "Diff with file" 'diff-buffer-with-file
-         "Ediff Marked buffers `C-c ='" 'helm-ediff-marked-buffers
-         "Ediff Merge marked buffers `M-='" (lambda (candidate)
-                                              (helm-ediff-marked-buffers candidate t))))
-    (persistent-help . "Show this buffer")
-    (filtered-candidate-transformer helm-skip-boring-buffers
-                                    helm-buffers-sort-transformer
-                                    helm-highlight-buffers))
-  "Buffer or buffer name.")
 
 ;;;###autoload
 (defun helm-buffers-list ()

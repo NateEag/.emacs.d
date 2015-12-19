@@ -150,11 +150,6 @@ If set to nil `doc-view-mode' will be used instead of an external command."
   :group 'helm-grep
   :type 'string)
 
-(defcustom helm-do-grep-preselect-candidate nil
-  "When non--nil the file name of current buffer will be selected."
-  :group 'helm-grep
-  :type 'boolean)
-
 (defcustom helm-grep-preferred-ext nil
   "This file extension will be preselected for grep."
   :group 'helm-grep
@@ -605,7 +600,8 @@ If N is positive go forward otherwise go backward."
            (helm-aif (next-single-property-change (point-at-bol) 'help-echo)
                (goto-char it)
              (forward-line 1))
-           (funcall mark-maybe)))))
+           (funcall mark-maybe)))
+    (helm-log-run-hook 'helm-move-selection-after-hook)))
 
 ;;;###autoload
 (defun helm-goto-precedent-file ()
@@ -1316,70 +1312,6 @@ You have also to enable this in global \".gitconfig\" with
 With a prefix arg ARG git-grep the whole repository."
   (interactive "P")
   (helm-grep-git-1 default-directory arg))
-
-;;;###autoload
-(defun helm-do-grep ()
-  "Preconfigured helm for grep.
-Contrarily to Emacs `grep', no default directory is given, but
-the full path of candidates in ONLY.
-That allow to grep different files not only in `default-directory' but anywhere
-by marking them (C-<SPACE>). If one or more directory is selected
-grep will search in all files of these directories.
-You can also use wildcard in the base name of candidate.
-If a prefix arg is given use the -r option of grep (recurse).
-The prefix arg can be passed before or after start file selection.
-See also `helm-do-grep-1'."
-  (interactive)
-  (require 'helm-mode)
-  (let* ((preselection (or (dired-get-filename nil t)
-                           (buffer-file-name (current-buffer))))
-         (only    (helm-read-file-name
-                   "Search in file(s): "
-                   :marked-candidates t
-                   :preselect (and helm-do-grep-preselect-candidate
-                                   (if helm-ff-transformer-show-only-basename
-                                       (helm-basename preselection)
-                                     preselection))))
-         (prefarg (or current-prefix-arg helm-current-prefix-arg)))
-    (helm-do-grep-1 only prefarg)))
-
-;;;###autoload
-(defun helm-do-zgrep ()
-  "Preconfigured helm for zgrep."
-  (interactive)
-  (require 'helm-mode)
-  (let* ((prefarg (or current-prefix-arg helm-current-prefix-arg))
-         (preselection (or (dired-get-filename nil t)
-                           (buffer-file-name (current-buffer))))
-         (ls (helm-read-file-name
-              "Search in file(s): "
-              :marked-candidates t
-              :preselect (and helm-do-grep-preselect-candidate
-                              (if helm-ff-transformer-show-only-basename
-                                  (helm-basename preselection)
-                                preselection)))))
-    (helm-ff-zgrep-1 ls prefarg)))
-
-;;;###autoload
-(defun helm-do-pdfgrep ()
-  "Preconfigured helm for pdfgrep."
-  (interactive)
-  (require 'helm-mode)
-  (let* ((preselection (or (dired-get-filename nil t)
-                           (buffer-file-name (current-buffer))))
-         (only (helm-read-file-name
-                "Search in file(s): "
-                :marked-candidates t
-                :test (lambda (file)
-                          (or (string= (file-name-extension file) "pdf")
-                              (string= (file-name-extension file) "PDF")
-                              (file-directory-p file)))
-                :preselect (and helm-do-grep-preselect-candidate
-                                (if helm-ff-transformer-show-only-basename
-                                    (helm-basename preselection)
-                                  preselection))))
-         (helm-grep-default-function 'helm-pdfgrep-init))
-    (helm-do-pdfgrep-1 only)))
 
 
 (provide 'helm-grep)

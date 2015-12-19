@@ -228,6 +228,7 @@ If DB is not given or nil use locate without -d option.
 Argument DB can be given as a string or list of db files.
 Argument INITIAL-INPUT is a string to use as initial-input.
 See also `helm-locate'."
+  (require 'helm-files)
   (when (and db (stringp db)) (setq db (list db)))
   (helm-locate-set-command)
   (let ((helm-locate-command
@@ -389,7 +390,7 @@ Where db_path is a filename matched by
 `helm-locate-db-file-regexp'."
   (interactive "P")
   (setq helm-ff-default-directory default-directory)
-  (helm-locate-1 arg))
+  (helm-locate-1 arg nil nil (thing-at-point 'filename)))
 
 (provide 'helm-locate)
 

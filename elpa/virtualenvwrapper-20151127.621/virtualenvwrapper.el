@@ -1,11 +1,11 @@
 ;;; virtualenvwrapper.el --- a featureful virtualenv tool for Emacs
 
-;; Copyright (C) 2013 James J Porter
+;; Copyright (C) 2013 - 2015 James J Porter and [contributors](https://github.com/porterjamesj/virtualenvwrapper.el/graphs/contributors)
 
 ;; Author: James J Porter <porterjamesj@gmail.com>
 ;; URL: http://github.com/porterjamesj/virtualenvwrapper.el
-;; Package-Version: 20151005.806
-;; Version: 20131514
+;; Package-Version: 20151127.621
+;; Version: 20151123
 ;; Keywords: python, virtualenv, virtualenvwrapper
 ;; Package-Requires: ((dash "1.5.0") (s "1.6.1"))
 
@@ -21,6 +21,9 @@
 
 (require 'dash)
 (require 's)
+
+;; needed to set gud-pdb-command-name
+(require 'gud)
 
 ;; customizable variables
 
@@ -73,6 +76,8 @@ are stored if you use virtualenvwrapper in the shell."
 
 (defvar venv-current-dir nil "Directory of current virtualenv.")
 
+(defvar venv-system-gud-pdb-command-name gud-pdb-command-name
+  "Whatever `gud-pdb-command-name' is (usually \\[pdb]).")
 
 ;; copy from virtualenv.el
 (defvar venv-executables-dir
@@ -80,6 +85,15 @@ are stored if you use virtualenvwrapper in the shell."
   "The name of the directory containing executables. It is system dependent.")
 
 ;; internal utility functions
+
+(defun venv--set-venv-gud-pdb-command-name ()
+  "When in a virtual env, call pdb as \\[python -m pdb]."
+  (setq gud-pdb-command-name "python -m pdb"))
+
+(defun venv--set-system-gud-pdb-command-name ()
+  "Set the system \\[pdb] command."
+  (setq gud-pdb-command-name venv-system-gud-pdb-command-name))
+
 
 (defun venv-clear-history ()
   (setq venv-history nil))
@@ -207,9 +221,22 @@ prompting the user with the string PROMPT"
   (setq venv-current-name nil)
   (setq venv-current-dir nil)
   (setq eshell-path-env (getenv "PATH"))
+  (venv--set-system-gud-pdb-command-name)
   (run-hooks 'venv-postdeactivate-hook)
   (when (called-interactively-p 'interactive)
     (message "virtualenv deactivated")))
+
+;;;###autoload
+(defun venv-set-location (&optional location)
+  "Set where to look for virtual environments to LOCATION.
+This is useful e.g. when using tox."
+  (interactive)
+  (when (not location)
+    (setq location (read-directory-name "New virtualenv: ")))
+  (venv-deactivate)
+  (setq venv-location location)
+  (when (called-interactively-p 'interactive)
+    (message (concat "Virtualenv location: " location))))
 
 ;;;###autoload
 (defun venv-workon (&optional name)
@@ -249,6 +276,7 @@ interactively."
   ;; keep eshell path in sync
   (setq eshell-path-env (getenv "PATH"))
   (setenv "VIRTUAL_ENV" venv-current-dir)
+  (venv--set-venv-gud-pdb-command-name)
   (run-hooks 'venv-postactivate-hook)
   (when (called-interactively-p 'interactive)
     (message (concat "Switched to virtualenv: " venv-current-name))))

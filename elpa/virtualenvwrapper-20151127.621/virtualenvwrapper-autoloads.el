@@ -4,13 +4,19 @@
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
 ;;;### (autoloads nil "virtualenvwrapper" "virtualenvwrapper.el"
-;;;;;;  (22041 7716 0 0))
+;;;;;;  (22132 53968 0 0))
 ;;; Generated autoloads from virtualenvwrapper.el
 
 (autoload 'venv-deactivate "virtualenvwrapper" "\
 Deactivate the current venv.
 
 \(fn)" t nil)
+
+(autoload 'venv-set-location "virtualenvwrapper" "\
+Set where to look for virtual environments to LOCATION.
+This is useful e.g. when using tox.
+
+\(fn &optional LOCATION)" t nil)
 
 (autoload 'venv-workon "virtualenvwrapper" "\
 Interactively switch to virtualenv NAME. Prompts for name if called

@@ -6,7 +6,7 @@
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 11 July 2012
 ;; Package-Requires: ((emacs "24.1") (visual-fill-column "1.4"))
-;; Version: 2.10
+;; Version: 3.1
 ;; Keywords: text
 
 ;; Redistribution and use in source and binary forms, with or without
@@ -44,6 +44,10 @@
 ;;; Code:
 
 (require 'visual-fill-column)
+
+(defvar writeroom--frame nil
+  "The frame in which `writeroom-mode' is activated.
+The global effects only apply to this frame.")
 
 (defvar writeroom--buffers nil
   "List of buffers in which `writeroom-mode' is activated.")
@@ -155,22 +159,23 @@ buffer."
                  (integer :tag "Absolute height" :value 5)
                  (float :tag "Relative height" :value 0.8)))
 
-(defcustom writeroom-global-effects '(writeroom-toggle-fullscreen
-                             writeroom-toggle-alpha
-                             writeroom-toggle-vertical-scroll-bars
-                             writeroom-toggle-menu-bar-lines
-                             writeroom-toggle-tool-bar-lines)
+(defcustom writeroom-global-effects '(writeroom-set-fullscreen
+                             writeroom-set-alpha
+                             writeroom-set-vertical-scroll-bars
+                             writeroom-set-menu-bar-lines
+                             writeroom-set-tool-bar-lines)
   "List of global effects for `writeroom-mode'.
 These effects are enabled when `writeroom-mode' is activated in
 the first buffer and disabled when it is deactivated in the last
 buffer."
   :group 'writeroom
-  :type '(set (const :tag "Fullscreen" writeroom-toggle-fullscreen)
-              (const :tag "Disable transparency" writeroom-toggle-alpha)
-              (const :tag "Disable menu bar" writeroom-toggle-menu-bar-lines)
-              (const :tag "Disable tool bar" writeroom-toggle-tool-bar-lines)
-              (const :tag "Disable scroll bar" writeroom-toggle-vertical-scroll-bars)
-              (const :tag "Add border" writeroom-toggle-internal-border-width)
+  :type '(set (const :tag "Fullscreen" writeroom-set-fullscreen)
+              (const :tag "Disable transparency" writeroom-set-alpha)
+              (const :tag "Disable menu bar" writeroom-set-menu-bar-lines)
+              (const :tag "Disable tool bar" writeroom-set-tool-bar-lines)
+              (const :tag "Disable scroll bar" writeroom-set-vertical-scroll-bars)
+              (const :tag "Add border" writeroom-set-internal-border-width)
+              (const :tag "Display frame on all workspaces" writeroom-set-sticky)
               (repeat :inline t :tag "Custom effects" function)))
 
 (define-obsolete-variable-alias 'writeroom-global-functions 'writeroom-global-effects "`writeroom-mode' version 2.0")
@@ -184,22 +189,24 @@ course).  It can also be an unquoted symbol, in which case it
 should be the name of a global variable whose value is then
 assigned to FP.
 
-This macro defines a function `writeroom-toggle-<FP>' that takes
-one argument and activates the effect if this argument is t and
-deactivates it when it is nil.  When the effect is activated,
-the original value of frame parameter FP is stored in a frame
+This macro defines a function `writeroom-set-<FP>' that takes one
+argument and activates the effect if this argument is 1 and
+deactivates it if it is -1.  When the effect is activated, the
+original value of frame parameter FP is stored in a frame
 parameter `writeroom-<FP>', so that it can be restored when the
 effect is deactivated."
   (declare (indent defun))
   (let ((wfp (intern (format "writeroom-%s" fp))))
-    `(fset (quote ,(intern (format "writeroom-toggle-%s" fp)))
-           (lambda (arg)
-             (if arg
-                 (progn
-                   (set-frame-parameter nil (quote ,wfp) (frame-parameter nil (quote ,fp)))
-                   (set-frame-parameter nil (quote ,fp) ,value))
-               (set-frame-parameter nil (quote ,fp) (frame-parameter nil (quote ,wfp)))
-               (set-frame-parameter nil (quote ,wfp) nil))))))
+    `(fset (quote ,(intern (format "writeroom-set-%s" fp)))
+           (lambda (&optional arg)
+             (when (frame-live-p writeroom--frame)
+               (cond
+                ((= arg 1)         ; activate
+                 (set-frame-parameter writeroom--frame (quote ,wfp) (frame-parameter writeroom--frame (quote ,fp)))
+                 (set-frame-parameter writeroom--frame (quote ,fp) ,value))
+                ((= arg -1)        ; deactivate
+                 (set-frame-parameter writeroom--frame (quote ,fp) (frame-parameter writeroom--frame (quote ,wfp)))
+                 (set-frame-parameter writeroom--frame (quote ,wfp) nil))))))))
 
 (define-writeroom-global-effect fullscreen writeroom-fullscreen-effect)
 (define-writeroom-global-effect alpha '(100 100))
@@ -207,6 +214,7 @@ effect is deactivated."
 (define-writeroom-global-effect menu-bar-lines 0)
 (define-writeroom-global-effect tool-bar-lines 0)
 (define-writeroom-global-effect internal-border-width writeroom-border-width)
+(define-writeroom-global-effect sticky t)
 
 (defun turn-on-writeroom-mode ()
   "Turn on `writeroom-mode'.
@@ -242,14 +250,14 @@ adjusts `writeroom--buffers' and the global effects accordingly."
   (when writeroom-mode
     (setq writeroom--buffers (delq (current-buffer) writeroom--buffers))
     (when (not writeroom--buffers)
-      (writeroom--activate-global-effects nil))))
+      (writeroom--set-global-effects -1)
+      (setq writeroom--frame nil))))
 
 (add-hook 'kill-buffer-hook #'writeroom--kill-buffer-function)
 
-(defun writeroom--activate-global-effects (arg)
+(defun writeroom--set-global-effects (arg)
   "Activate or deactivate global effects.
-The effects are activated if ARG is non-nil, and deactivated
-otherwise."
+The effects are activated if ARG is 1, deactivated if it is -1."
   (mapc (lambda (fn)
           (funcall fn arg))
         writeroom-global-effects))
@@ -280,10 +288,13 @@ activated."
                              writeroom--local-variables))
   (setq writeroom--saved-visual-fill-column visual-fill-column-mode)
 
+  ;; activate global effects
   (when (not writeroom--buffers)
-    (writeroom--activate-global-effects t)
+    (setq writeroom--frame (selected-frame))
+    (writeroom--set-global-effects 1)
     (if writeroom-restore-window-config
         (setq writeroom--saved-window-config (current-window-configuration))))
+
   (push (current-buffer) writeroom--buffers)
 
   (when writeroom-maximize-window
@@ -323,7 +334,8 @@ buffer in which it was active."
   ;; restore global effects if necessary
   (setq writeroom--buffers (delq (current-buffer) writeroom--buffers))
   (when (not writeroom--buffers)
-    (writeroom--activate-global-effects nil)
+    (writeroom--set-global-effects -1)
+    (setq writeroom--frame nil)
     (if writeroom-restore-window-config
         (set-window-configuration writeroom--saved-window-config)))
 

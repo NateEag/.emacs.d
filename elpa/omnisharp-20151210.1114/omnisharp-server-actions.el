@@ -2,7 +2,7 @@
 ;; Path to the server
 (defcustom omnisharp-server-executable-path (executable-find "OmniSharp.exe")
   "Path to OmniSharpServer. If its value is nil, search for the server in the exec-path"
-    :type '(choice (const :tag "Not Set" nil) string))
+  :type '(choice (const :tag "Not Set" nil) string))
 
 (defun omnisharp--find-solution-files ()
   "Find solution files in parent directories. Returns a list
@@ -13,23 +13,26 @@ solution files were found."
       (locate-dominating-file
        (file-name-directory buffer-file-name)
        (lambda (file)
-	 (-when-let (dir-files (directory-files file nil "\\.sln$"))
-	   (setq solutions (cons (file-name-as-directory file)
-				 dir-files))))))
+         (-when-let (dir-files (directory-files file nil "\\.sln$"))
+           (setq solutions (cons (file-name-as-directory file)
+                                 dir-files))))))
     solutions))
 
 (defun omnisharp--start-omnisharp-server-for-solution-in-parent-directory ()
   (unless (omnisharp--check-alive-status-worker)
     (-let [(directory file . rest) (omnisharp--find-solution-files)]
-      (when directory
-	(omnisharp-start-omnisharp-server
-	 (if (null rest) ; only one solution found
-	     (concat directory file)
-	   (read-file-name "Select solution for current file: "
-			   directory
-			   nil
-			   t
-			   file)))))))
+      (if directory
+          (omnisharp-start-omnisharp-server
+           (if (null rest) ; only one solution found
+               (concat directory file)
+             (read-file-name "Select solution for current file: "
+                             directory
+                             nil
+                             t
+                             file)))
+        (message "Solution not found")
+        (omnisharp-start-omnisharp-server
+         (file-name-directory buffer-file-name))))))
 
 ;;;###autoload
 (defun omnisharp-start-omnisharp-server (path-to-solution)
@@ -43,24 +46,26 @@ solution files were found."
                       t
                       filename))))
   (setq BufferName "*Omni-Server*")
-  (if (equal nil omnisharp-server-executable-path)
-      (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path")
-    (if (omnisharp--valid-solution-path-p path-to-solution)
-        (progn
-          (if (string= (file-name-extension path-to-solution) "sln")
-              (message (format "Starting OmniSharpServer for solution file: %s" path-to-solution))
-            (message (format "Starting OmniSharpServer using folder mode in: %s" path-to-solution)))
-          (when (not (eq nil (get-buffer BufferName)))
-            (kill-buffer BufferName))
-          (let ((process (apply
-                          'start-process
-                          "Omni-Server"
-                          (get-buffer-create BufferName)
-                          (omnisharp--get-omnisharp-server-executable-command path-to-solution))))
-            (set-process-sentinel process 'omnisharp--server-process-sentinel)
-            (unless omnisharp-debug ;; ignore process output if debug flag not set
-              (set-process-filter process (lambda (process string))))))
-      (error (format "Path does not lead to a solution file: %s" path-to-solution)))))
+
+  (when (not (and omnisharp-server-executable-path (file-executable-p omnisharp-server-executable-path)))
+    (error "Could not find the OmniSharpServer. Please set the variable omnisharp-server-executable-path to a valid path"))
+  (when (not (omnisharp--valid-solution-path-p path-to-solution))
+    (error (format "Path does not lead to a solution file: %s" path-to-solution)))
+
+  (if (string= (file-name-extension path-to-solution) "sln")
+      (message (format "Starting OmniSharpServer for solution file: %s" path-to-solution))
+    (message (format "Starting OmniSharpServer using folder mode in: %s" path-to-solution)))
+
+  (when (not (eq nil (get-buffer BufferName)))
+    (kill-buffer BufferName))
+  (let ((process (apply
+                  'start-process
+                  "Omni-Server"
+                  (get-buffer-create BufferName)
+                  (omnisharp--get-omnisharp-server-executable-command path-to-solution))))
+    (set-process-sentinel process 'omnisharp--server-process-sentinel)
+    (unless omnisharp-debug ;; ignore process output if debug flag not set
+      (set-process-filter process (lambda (process string))))))
 
 ;;;###autoload
 (defun omnisharp-check-alive-status ()
@@ -77,7 +82,7 @@ port specified."
 
 (defun omnisharp--check-alive-status-worker ()
   (let ((result (omnisharp-post-message-curl-as-json
-		 (concat (omnisharp-get-host) "checkalivestatus"))))
+                 (concat (omnisharp-get-host) "checkalivestatus"))))
     (eq result t)))
 
 ;;;###autoload
@@ -92,7 +97,7 @@ finished loading the solution."
 
 (defun omnisharp--check-ready-status-worker ()
   (let ((result (omnisharp-post-message-curl-as-json
-		 (concat (omnisharp-get-host) "checkreadystatus"))))
+                 (concat (omnisharp-get-host) "checkreadystatus"))))
     (eq result t)))
 
 (defun omnisharp-reload-solution ()

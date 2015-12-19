@@ -7,7 +7,7 @@
 ;; Created: 17 Jun 2012
 ;; Modified: 26 Sep 2015
 ;; Version: 2.1
-;; Package-Version: 20150926.846
+;; Package-Version: 20151112.1439
 ;; Package-Requires: ((bind-key "1.0") (diminish "0.44"))
 ;; Keywords: dotemacs startup speed config package
 ;; URL: https://github.com/jwiegley/use-package
@@ -127,6 +127,7 @@ the user specified."
     :defines
     :functions
     :defer
+    :after
     :demand
     :init
     :config
@@ -463,13 +464,18 @@ manually updated package."
         (use-package-ensure-elpa package t)))))
 
 (defun use-package-handler/:ensure (name keyword ensure rest state)
-  (let ((body (use-package-process-keywords name rest state)))
-    ;; This happens at macro expansion time, not when the expanded code is
-    ;; compiled or evaluated.
-    (let ((package-name (or (and (eq ensure t) (use-package-as-symbol name)) ensure)))
-      (when package-name
-        (require 'package)
-        (use-package-ensure-elpa package-name)))
+  (let* ((body (use-package-process-keywords name rest state))
+         (package-name (or (and (eq ensure t) (use-package-as-symbol name)) ensure))
+         (ensure-form (if package-name
+                          `(progn (require 'package)
+                                  (use-package-ensure-elpa ',package-name)))))
+    ;; We want to avoid installing packages when the `use-package'
+    ;; macro is being macro-expanded by elisp completion (see
+    ;; `lisp--local-variables'), but still do install packages when
+    ;; byte-compiling to avoid requiring `package' at runtime.
+    (if (bound-and-true-p byte-compile-current-file)
+        (eval ensure-form)              ; Eval when byte-compiling,
+      (push ensure-form body))          ; or else wait until runtime.
     body))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -855,6 +861,33 @@ deferred until the prefix key sequence is pressed."
 
      body)))
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;
+;; :after
+;;
+
+(defalias 'use-package-normalize/:after 'use-package-normalize-symlist)
+
+(defun use-package-require-after-load (features name)
+  "Return form for after any of FEATURES require NAME."
+  `(progn
+     ,@(mapcar
+        (lambda (feat)
+          `(eval-after-load
+               (quote ,feat)
+             (quote (require (quote ,name)))))
+        features)))
+
+(defun use-package-handler/:after (name keyword arg rest state)
+  (let ((body (use-package-process-keywords name rest
+                (plist-put state :deferred t)))
+        (name-string (use-package-as-string name)))
+    (use-package-concat
+     (when arg
+       (list (use-package-require-after-load arg name)))
+     body)))
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; :demand
@@ -1020,6 +1053,10 @@ this file.  Usage:
                `:commands', `:bind', `:bind*', `:mode' or `:interpreter'.
                This can be an integer, to force loading after N seconds of
                idle time, if the package has not already been loaded.
+
+:after         Defer loading of a package until after any of the named
+               features are loaded.
+
 :demand        Prevent deferred loading in all cases.
 
 :if EXPR       Initialize and load only if EXPR evaluates to a non-nil value.

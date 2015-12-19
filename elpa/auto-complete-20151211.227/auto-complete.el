@@ -210,7 +210,8 @@ Use `version-to-list' to get version component.")
     ts-mode
     sclang-mode
     verilog-mode
-    qml-mode)
+    qml-mode
+    apples-mode)
   "Major modes `auto-complete-mode' can run on."
   :type '(repeat symbol)
   :group 'auto-complete)
@@ -833,7 +834,7 @@ You can not use it in source definition like (prefix . `NAME')."
 (defun ac-menu-delete ()
   (when ac-menu
     (popup-delete ac-menu)
-    (setq ac-menu)))
+    (setq ac-menu nil)))
 
 (defsubst ac-inline-overlay ()
   (nth 0 ac-inline))

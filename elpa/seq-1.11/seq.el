@@ -4,8 +4,7 @@
 
 ;; Author: Nicolas Petton <nicolas@petton.fr>
 ;; Keywords: sequences
-;; Package-Version: 20151028.759
-;; Version: 1.12
+;; Version: 1.11
 ;; Package: seq
 
 ;; Maintainer: emacs-devel@gnu.org
@@ -283,21 +282,6 @@ The result is a sequence of type TYPE, or a list if TYPE is nil."
   (apply #'seq-concatenate (or type 'list)
          (seq-map function seq)))
 
-(defun seq-mapn (function sequence &rest seqs)
-  "Like `seq-map' but FUNCTION is mapped over all SEQS.
-The arity of FUNCTION must match the number of SEQS, and the
-mapping stops on the shortest sequence.
-Return a list of the results.
-
-\(fn FUNCTION SEQS...)"
-  (let ((result nil)
-        (seqs (seq-map (lambda (s) (seq-into s 'list))
-                       (cons sequence seqs))))
-    (while (not (memq nil seqs))
-      (push (apply function (seq-map #'car seqs)) result)
-      (setq seqs (seq-map #'cdr seqs)))
-    (nreverse result)))
-
 (defun seq-partition (seq n)
   "Return a list of the elements of SEQ grouped into sub-sequences of length N.
 The last sequence may contain less than N elements.  If N is a
@@ -494,6 +478,87 @@ If no element is found, return nil."
   ;; In Emacs≥25, (via elisp--font-lock-flush-elisp-buffers and a few others)
   ;; we automatically highlight macros.
   (add-hook 'emacs-lisp-mode-hook #'seq--activate-font-lock-keywords))
+
+;;;; ChangeLog:
+
+;; 2015-10-20  Nicolas Petton  <nicolas@petton.fr>
+;; 
+;; 	Update seq.el to version 1.11
+;; 
+;; 	* packages/seq/seq.el:
+;; 	* packages/seq/tests/seq-tests.el: Update.
+;; 
+;; 2015-09-18  Nicolas Petton  <nicolas@petton.fr>
+;; 
+;; 	Update seq.el to version 1.9
+;; 
+;; 	* packages/seq/seq.el: Update to version 1.9.
+;; 	* packages/seq/tests/seq-tests.el: Update to version 1.9.
+;; 
+;; 2015-07-09  Nicolas Petton  <nicolas@petton.fr>
+;; 
+;; 	Update seq.el to version 1.8
+;; 
+;; 	* packages/seq/seq.el: Update to version 1.8.
+;; 	* packages/seq/tests/seq-tests.el: Update to version 1.8.
+;; 
+;; 2015-05-15  Nicolas Petton  <nicolas@petton.fr>
+;; 
+;; 	Update seq.el to version 1.7
+;; 
+;; 	* packages/seq/seq.el: Update to version 1.7.
+;; 	* packages/seq/tests/seq-tests.el: Update to version 1.7.
+;; 
+;; 2015-04-27  Nicolas Petton  <nicolas@petton.fr>
+;; 
+;; 	* packages/seq/seq.el: Update seq.el to version 1.5.
+;; 
+;; 2015-04-15  Nicolas Petton  <nicolas@petton.fr>
+;; 
+;; 	seq.el update
+;; 
+;; 	* packages/seq/seq.el: Update seq.el to version 1.4
+;; 	* packages/seq/tests/seq-tests.el: Update seq.el to version 1.4
+;; 
+;; 2015-03-25  Nicolas Petton  <nicolas@petton.fr>
+;; 
+;; 	Rephrases a comment in seq.el about the order of the arguments
+;; 
+;; 	* packages/seq/seq.el: Better comment about the order of the arguments
+;; 
+;; 2015-03-09  Nicolas Petton  <nicolas@petton.fr>
+;; 
+;; 	Update seq.el to version 1.3
+;; 
+;; 	* packages/seq/seq.el: update to version 1.3
+;; 	* packages/seq/tests/seq-tests.el: update to version 1.3
+;; 
+;; 2015-02-11  Nicolas Petton  <nicolas@petton.fr>
+;; 
+;; 	Update seq.el to version 1.2
+;; 
+;; 	* package/seq/seq.el: Update to version 1.2
+;; 	* packages/seq/tests/seq-tests.el: Update to version 1.2
+;; 
+;; 2015-02-09  Nicolas Petton  <nicolas@petton.fr>
+;; 
+;; 	Update seq.el to version 1.1.1
+;; 
+;; 	* package/seq/seq.el: Update to version 1.1.1
+;; 	* packages/seq/tests/seq-tests.el: Update to version 1.1.1
+;; 
+;; 2015-02-06  Nicolas Petton  <nicolas@petton.fr>
+;; 
+;; 	Update seq.el to version 1.1
+;; 
+;; 	* packages/seq/seq.el: Update to version 1.1
+;; 	* packages/seq/tests/seq-tests.el: Update to version 1.1
+;; 
+;; 2015-01-14  Nicolas Petton  <nicolas@petton.fr>
+;; 
+;; 	packages/seq: New package
+;; 
+
 
 (provide 'seq)
 ;;; seq.el ends here

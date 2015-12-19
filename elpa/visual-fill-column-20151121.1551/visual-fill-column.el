@@ -7,7 +7,7 @@
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 2015
 ;; Version: 1.5
-;; Package-Version: 20151006.227
+;; Package-Version: 20151121.1551
 ;; Package-Requires: ((emacs "24.3"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -87,12 +87,12 @@ in which `visual-line-mode' is active as well."
 
 (defun visual-fill-column-mode--enable ()
   "Set up `visual-fill-column-mode' for the current buffer."
-  (add-hook 'window-configuration-change-hook #'visual-fill-column--adjust-window nil t)
+  (add-hook 'window-configuration-change-hook #'visual-fill-column--adjust-window 'append 'local)
   (visual-fill-column--adjust-window))
 
 (defun visual-fill-column-mode--disable ()
   "Disable `visual-fill-column-mode' for the current buffer."
-  (remove-hook 'window-configuration-change-hook #'visual-fill-column--adjust-window t)
+  (remove-hook 'window-configuration-change-hook #'visual-fill-column--adjust-window 'local)
   (set-window-fringes (selected-window) nil)
   (set-window-margins (selected-window) 0 0))
 
@@ -101,11 +101,11 @@ in which `visual-line-mode' is active as well."
   (set-window-fringes (selected-window) nil nil visual-fill-column-fringes-outside-margins)
   (visual-fill-column--set-margins))
 
-(defun visual-fill-column--window-body-width (&optional window)
-  "Return the body width of WINDOW.
-The body width here refers to the width of the text area plus the
-margins, but excluding the fringes, scroll bar and right
-divider.  WINDOW defaults to the selected window."
+(defun visual-fill-column--window-max-text-width (&optional window)
+  "Return the maximum possible text width of WINDOW.
+The maximum possible text width is the width of the current text
+area plus the margins, but excluding the fringes, scroll bar and
+right divider.  WINDOW defaults to the selected window."
   (or window (setq window (selected-window)))
   (let ((margins (window-margins window)))
     (+ (window-width window)
@@ -116,7 +116,7 @@ divider.  WINDOW defaults to the selected window."
   "Set window margins for the current window."
   ;; calculate left & right margins
   (let* ((window (selected-window))
-         (total-width (visual-fill-column--window-body-width window))
+         (total-width (visual-fill-column--window-max-text-width window))
          (width (or visual-fill-column-width
                     fill-column))
          (margins (if (< (- total-width width) 0) ; margins must be >= 0

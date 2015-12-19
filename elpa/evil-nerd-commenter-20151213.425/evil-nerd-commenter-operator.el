@@ -1,10 +1,10 @@
-;;; evil-nerd-commenter-operator --- Provides an evil operator for evil-nerd-commenter
+;;; evil-nerd-commenter-operator.el --- Provides an evil operator for evil-nerd-commenter
 
 ;; Copyright (C) 2013-2015, Chen Bin
 
 ;; Author: Chen Bin <chenbin.sh@gmail.com>
 ;; URL: http://github.com/redguardtoo/evil-nerd-commenter
-;; Version: 2.0
+;; Version: 2.2
 ;; Keywords: commenter vim line evil
 ;;
 ;; This file is not part of GNU Emacs.

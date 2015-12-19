@@ -199,7 +199,7 @@ Set `js2-include-rhino-externs' to t to include them.")
   (mapcar 'symbol-name
           '(__dirname __filename Buffer clearInterval clearTimeout require
             console exports global module process setInterval setTimeout
-            querystring))
+            querystring setImmediate clearImmediate))
   "Node.js externs.
 Set `js2-include-node-externs' to t to include them.")
 
@@ -617,7 +617,9 @@ which doesn't seem particularly useful, but Rhino permits it."
 (defvar js2-NO_SUBS_TEMPLATE 167) ; template literal without substitutions
 (defvar js2-TAGGED_TEMPLATE 168)  ; tagged template literal
 
-(defconst js2-num-tokens (1+ js2-TAGGED_TEMPLATE))
+(defvar js2-AWAIT 169)  ; await (pseudo keyword)
+
+(defconst js2-num-tokens (1+ js2-AWAIT))
 
 (defconst js2-debug-print-trees nil)
 
@@ -675,6 +677,7 @@ List of chars built up while scanning various tokens.")
   (string "")
   number
   number-base
+  number-legacy-octal-p
   regexp-flags
   comment-type
   follows-eol-p)
@@ -1361,6 +1364,9 @@ the correct number of ARGS must be provided."
 
 (js2-msg "msg.yield.parenthesized"
          "yield expression must be parenthesized.")
+
+(js2-msg "msg.bad.await"
+         "await must be in async functions.")
 
 ;; NativeGlobal
 (js2-msg "msg.cant.call.indirect"
@@ -2545,7 +2551,10 @@ so many of its properties will be nil.
       (js2-print-from-clause from))
      (exports-list
       (js2-print-named-imports exports-list)))
-    (insert ";\n")))
+    (unless (or (and default (not (js2-assign-node-p default)))
+                (and declaration (or (js2-function-node-p declaration)
+                                     (js2-class-node-p declaration))))
+      (insert ";\n"))))
 
 (cl-defstruct (js2-while-node
                (:include js2-loop-node)
@@ -3256,6 +3265,7 @@ a `js2-label-node' or the innermost enclosing loop.")
                                                           params rest-p
                                                           body
                                                           generator-type
+                                                          async
                                                           lp rp)))
   "AST node for a function declaration.
 The `params' field is a Lisp list of nodes.  Each node is either a simple
@@ -3272,6 +3282,7 @@ The `params' field is a Lisp list of nodes.  Each node is either a simple
   ignore-dynamic   ; ignore value of the dynamic-scope flag (interpreter only)
   needs-activation ; t if we need an activation object for this frame
   generator-type   ; STAR, LEGACY, COMPREHENSION or nil
+  async            ; t if the function is defined as `async function`
   member-expr)     ; nonstandard Ecma extension from Rhino
 
 (put 'cl-struct-js2-function-node 'js2-visitor 'js2-visit-function-node)
@@ -3293,8 +3304,10 @@ The `params' field is a Lisp list of nodes.  Each node is either a simple
          (rest-p (js2-function-node-rest-p n))
          (body (js2-function-node-body n))
          (expr (not (eq (js2-function-node-form n) 'FUNCTION_STATEMENT))))
-    (unless (or method arrow)
-      (insert pad "function")
+    (unless method
+      (insert pad)
+      (when (js2-function-node-async n) (insert "async "))
+      (unless arrow (insert "function"))
       (when (eq (js2-function-node-generator-type n) 'STAR)
         (insert "*")))
     (when name
@@ -3465,6 +3478,7 @@ The type field inherited from `js2-node' holds the operator."
                (cons js2-TYPEOF "typeof")
                (cons js2-INSTANCEOF "instanceof")
                (cons js2-DELPROP "delete")
+               (cons js2-AWAIT "await")
                (cons js2-COMMA ",")
                (cons js2-COLON ":")
                (cons js2-OR "||")
@@ -3545,7 +3559,7 @@ The type field holds the actual assignment operator.")
                                                        len operand)))
   "AST node type for unary operator nodes.
 The type field can be NOT, BITNOT, POS, NEG, INC, DEC,
-TYPEOF, DELPROP or TRIPLEDOT.  For INC or DEC, a 'postfix node
+TYPEOF, DELPROP, TRIPLEDOT or AWAIT.  For INC or DEC, a 'postfix node
 property is added if the operator follows the operand."
   operand)  ; a `js2-node' expression
 
@@ -3565,7 +3579,8 @@ property is added if the operator follows the operand."
     (unless postfix
       (insert op))
     (if (or (= tt js2-TYPEOF)
-            (= tt js2-DELPROP))
+            (= tt js2-DELPROP)
+            (= tt js2-AWAIT))
         (insert " "))
     (js2-print-ast (js2-unary-node-operand n) 0)
     (when postfix
@@ -3701,11 +3716,14 @@ Returns 0 if NODE is nil or its identifier field is nil."
                                                         (num-value (js2-token-number
                                                                     (js2-current-token)))
                                                         (num-base (js2-token-number-base
-                                                                   (js2-current-token))))))
+                                                                   (js2-current-token)))
+                                                        (legacy-octal-p (js2-token-number-legacy-octal-p
+                                                                         (js2-current-token))))))
   "AST node for a number literal."
   value      ; the original string, e.g. "6.02e23"
   num-value  ; the parsed number value
-  num-base)  ; the number's base
+  num-base  ; the number's base
+  legacy-octal-p)  ; whether the number is a legacy octal (0123 instead of 0o123)
 
 (put 'cl-struct-js2-number-node 'js2-visitor 'js2-visit-none)
 (put 'cl-struct-js2-number-node 'js2-printer 'js2-print-number-node)
@@ -3947,13 +3965,12 @@ both fields have the same value.")
 (cl-defstruct (js2-method-node
                (:include js2-infix-node)
                (:constructor nil)
-               (:constructor make-js2-method-node (&key type ; GET, SET, or FUNCTION
-                                                        (pos js2-ts-cursor)
+               (:constructor make-js2-method-node (&key (pos js2-ts-cursor)
                                                         len left right)))
   "AST node for a method in an object literal or a class body.
 The `left' field is the `js2-name-node' naming the method.
 The `right' field is always an anonymous `js2-function-node' with a node
-property `METHOD_TYPE' set to js2-GET, js2-SET, or js2-FUNCTION. ")
+property `METHOD_TYPE' set to 'GET or 'SET. ")
 
 (put 'cl-struct-js2-method-node 'js2-visitor 'js2-visit-infix-node)
 (put 'cl-struct-js2-method-node 'js2-printer 'js2-print-method)
@@ -3961,10 +3978,14 @@ property `METHOD_TYPE' set to js2-GET, js2-SET, or js2-FUNCTION. ")
 (defun js2-print-method (n i)
   (let* ((pad (js2-make-pad i))
          (left (js2-method-node-left n))
-         (right (js2-method-node-right n)))
+         (right (js2-method-node-right n))
+         (type (js2-node-get-prop right 'METHOD_TYPE)))
     (insert pad)
-    (if (/= (js2-node-type n) js2-FUNCTION)
-        (insert (if (= (js2-node-type n) js2-GET) "get " "set ")))
+    (when type
+      (insert (cdr (assoc type '((GET . "get ")
+                                 (SET . "set ")
+                                 (ASYNC . "async ")
+                                 (FUNCTION . ""))))))
     (when (and (js2-function-node-p right)
                (eq 'STAR (js2-function-node-generator-type right)))
       (insert "*"))
@@ -5130,6 +5151,8 @@ You should use `js2-print-tree' instead of this function."
           (or (js2-node-has-side-effects expr)
               (when (js2-string-node-p expr)
                 (member (js2-string-node-value expr) '("use strict" "use asm"))))))
+       ((= tt js2-AWAIT)
+        (js2-node-has-side-effects (js2-unary-node-operand node)))
        ((= tt js2-COMMA)
         (js2-node-has-side-effects (js2-infix-node-right node)))
        ((or (= tt js2-AND)
@@ -5879,7 +5902,7 @@ its relevant fields and puts it into `js2-ti-tokens'."
   (let (identifier-start
         is-unicode-escape-start c
         contains-escape escape-val str result base
-        look-for-slash continue tt
+        look-for-slash continue tt legacy-octal
         (token (js2-new-token 0)))
     (setq
      tt
@@ -6001,6 +6024,7 @@ its relevant fields and puts it into `js2-ti-tokens'."
               ((and (or (eq c ?o) (eq c ?O))
                     (>= js2-language-version 200))
                (setq base 8)
+               (setq legacy-octal nil)
                (setq c (js2-get-char)))
               ((js2-digit-p c)
                (setq base 'maybe-8))
@@ -6038,7 +6062,8 @@ its relevant fields and puts it into `js2-ti-tokens'."
                (js2-add-to-string c)
                (setq c (js2-get-char)))
              (when (eq base 'maybe-8)
-               (setq base 8))))
+               (setq base 8
+                     legacy-octal t))))
            (when (and (eq base 10) (memq c '(?. ?e ?E)))
              (when (eq c ?.)
                (cl-loop do
@@ -6060,7 +6085,8 @@ its relevant fields and puts it into `js2-ti-tokens'."
            (js2-unget-char)
            (let ((str (js2-set-string-from-buffer token)))
              (setf (js2-token-number token) (js2-string-to-number str base)
-                   (js2-token-number-base token) base))
+                   (js2-token-number-base token) base
+                   (js2-token-number-legacy-octal-p token) (and (= base 8) legacy-octal)))
            (throw 'return js2-NUMBER))
          ;; is it a string?
          (when (or (memq c '(?\" ?\'))
@@ -7702,12 +7728,43 @@ Returns nil and consumes nothing if MATCH is not the next token."
 (defun js2-match-contextual-kwd (name)
   "Consume and return t if next token is `js2-NAME', and its
 string is NAME.  Returns nil and keeps current token otherwise."
-  (if (or (/= (js2-get-token) js2-NAME)
-          (not (string= (js2-current-token-string) name)))
-      (progn
-        (js2-unget-token)
-        nil)
+  (if (js2-contextual-kwd-p (progn (js2-get-token)
+                                   (js2-current-token))
+                            name)
+      (progn (js2-record-face 'font-lock-keyword-face) t)
+    (js2-unget-token)
+    nil))
+
+(defun js2-contextual-kwd-p (token name)
+  "Return t if TOKEN is `js2-NAME', and its string is NAME."
+  (and (= (js2-token-type token) js2-NAME)
+       (string= (js2-token-string token) name)))
+
+(defun js2-match-async-function ()
+  (when (and (js2-contextual-kwd-p (js2-current-token) "async")
+             (= (js2-peek-token) js2-FUNCTION))
     (js2-record-face 'font-lock-keyword-face)
+    (js2-get-token)
+    t))
+
+(defun js2-match-async-arrow-function ()
+  (when (and (js2-contextual-kwd-p (js2-current-token) "async")
+             (/= (js2-peek-token) js2-FUNCTION))
+    (js2-record-face 'font-lock-keyword-face)
+    (js2-get-token)
+    t))
+
+(defun js2-match-await (tt)
+  (when (and (= tt js2-NAME)
+             (js2-contextual-kwd-p (js2-current-token) "await"))
+    (js2-record-face 'font-lock-keyword-face)
+    (let ((beg (js2-current-token-beg))
+          (end (js2-current-token-end)))
+      (js2-get-token)
+      (unless (and (js2-inside-function)
+                   (js2-function-node-async js2-current-script-or-fn))
+        (js2-report-error "msg.bad.await" nil
+                          beg (- end beg))))
     t))
 
 (defun js2-get-prop-name-token ()
@@ -8081,8 +8138,7 @@ represented by FN-NODE at POS."
                        new-param-name-nodes (js2-define-destruct-symbols
                                              param js2-LP 'js2-function-param))
                  (js2-check-strict-function-params param-name-nodes new-param-name-nodes)
-                 (setq param-name-nodes (append param-name-nodes new-param-name-nodes))
-                 (push param params))
+                 (setq param-name-nodes (append param-name-nodes new-param-name-nodes)))
                 ;; variable name
                 (t
                  (when (and (>= js2-language-version 200)
@@ -8096,22 +8152,23 @@ represented by FN-NODE at POS."
                  (setq param (js2-create-name-node))
                  (js2-define-symbol js2-LP (js2-current-token-string) param)
                  (js2-check-strict-function-params param-name-nodes (list param))
-                 (setq param-name-nodes (append param-name-nodes (list param)))
-                 ;; default parameter value
-                 (when (and (>= js2-language-version 200)
-                            (js2-match-token js2-ASSIGN))
-                   (cl-assert (not paren-free-arrow))
-                   (let* ((pos (js2-node-pos param))
-                          (tt (js2-current-token-type))
-                          (op-pos (- (js2-current-token-beg) pos))
-                          (left param)
-                          (right (js2-parse-assign-expr))
-                          (len (- (js2-node-end right) pos)))
-                     (setq param (make-js2-assign-node
-                                  :type tt :pos pos :len len :op-pos op-pos
-                                  :left left :right right))
-                     (js2-node-add-children param left right)))
-                 (push param params)))
+                 (setq param-name-nodes (append param-name-nodes (list param)))))
+               ;; default parameter value
+               (when (and (not rest-param-at)
+                          (>= js2-language-version 200)
+                          (js2-match-token js2-ASSIGN))
+                 (cl-assert (not paren-free-arrow))
+                 (let* ((pos (js2-node-pos param))
+                        (tt (js2-current-token-type))
+                        (op-pos (- (js2-current-token-beg) pos))
+                        (left param)
+                        (right (js2-parse-assign-expr))
+                        (len (- (js2-node-end right) pos)))
+                   (setq param (make-js2-assign-node
+                                :type tt :pos pos :len len :op-pos op-pos
+                                :left left :right right))
+                   (js2-node-add-children param left right)))
+               (push param params)
                (when (and rest-param-at (> (length params) (1+ rest-param-at)))
                  (js2-report-error "msg.param.after.rest" nil
                                    (js2-node-pos param) (js2-node-len param)))
@@ -8144,7 +8201,7 @@ Last token scanned is the close-curly for the function body."
                                   (js2-name-node-name name) pos end)
         (js2-add-strict-warning "msg.anon.no.return.value" nil pos end)))))
 
-(defun js2-parse-function-stmt ()
+(defun js2-parse-function-stmt (&optional async-p)
   (let ((pos (js2-current-token-beg))
         (star-p (js2-match-token js2-MUL)))
     (js2-must-match-name "msg.unnamed.function.stmt")
@@ -8152,28 +8209,31 @@ Last token scanned is the close-curly for the function body."
           pn member-expr)
       (cond
        ((js2-match-token js2-LP)
-        (js2-parse-function 'FUNCTION_STATEMENT pos star-p name))
+        (js2-parse-function 'FUNCTION_STATEMENT pos star-p async-p name))
        (js2-allow-member-expr-as-function-name
         (setq member-expr (js2-parse-member-expr-tail nil name))
         (js2-parse-highlight-member-expr-fn-name member-expr)
         (js2-must-match js2-LP "msg.no.paren.parms")
-        (setf pn (js2-parse-function 'FUNCTION_STATEMENT pos star-p)
+        (setf pn (js2-parse-function 'FUNCTION_STATEMENT pos star-p async-p)
               (js2-function-node-member-expr pn) member-expr)
         pn)
        (t
         (js2-report-error "msg.no.paren.parms")
         (make-js2-error-node))))))
 
-(defun js2-parse-function-expr ()
+(defun js2-parse-async-function-stmt ()
+  (js2-parse-function-stmt t))
+
+(defun js2-parse-function-expr (&optional async-p)
   (let ((pos (js2-current-token-beg))
         (star-p (js2-match-token js2-MUL))
         name)
     (when (js2-match-token js2-NAME)
       (setq name (js2-create-name-node t)))
     (js2-must-match js2-LP "msg.no.paren.parms")
-    (js2-parse-function 'FUNCTION_EXPRESSION pos star-p name)))
+    (js2-parse-function 'FUNCTION_EXPRESSION pos star-p async-p name)))
 
-(defun js2-parse-function-internal (function-type pos star-p &optional name)
+(defun js2-parse-function-internal (function-type pos star-p &optional async-p name)
   (let (fn-node lp)
     (if (= (js2-current-token-type) js2-LP) ; eventually matched LP?
         (setq lp (js2-current-token-beg)))
@@ -8181,7 +8241,8 @@ Last token scanned is the close-curly for the function body."
                                           :name name
                                           :form function-type
                                           :lp (if lp (- lp pos))
-                                          :generator-type (and star-p 'STAR)))
+                                          :generator-type (and star-p 'STAR)
+                                          :async async-p))
     (when name
       (js2-set-face (js2-node-pos name) (js2-node-end name)
                     'font-lock-function-name-face 'record)
@@ -8236,7 +8297,7 @@ Last token scanned is the close-curly for the function body."
     (setf (js2-scope-parent-scope fn-node) js2-current-scope)
     fn-node))
 
-(defun js2-parse-function (function-type pos star-p &optional name)
+(defun js2-parse-function (function-type pos star-p &optional async-p name)
   "Function parser.  FUNCTION-TYPE is a symbol, POS is the
 beginning of the first token (function keyword, unless it's an
 arrow function), NAME is js2-name-node."
@@ -8252,7 +8313,7 @@ arrow function), NAME is js2-name-node."
       (setq ts-state (make-js2-ts-state))
       (setq continue (catch 'reparse
                        (setq fn-node (js2-parse-function-internal
-                                      function-type pos star-p name))
+                                      function-type pos star-p async-p name))
                        ;; Don't continue.
                        nil))
       (when continue
@@ -8362,9 +8423,12 @@ node are given relative start positions and correct lengths."
 (defun js2-statement-helper ()
   (let* ((tt (js2-get-token))
          (first-tt tt)
+         (async-stmt (js2-match-async-function))
          (parser (if (= tt js2-ERROR)
                      #'js2-parse-semi
-                   (aref js2-parsers tt)))
+                   (if async-stmt
+                       #'js2-parse-async-function-stmt
+                     (aref js2-parsers tt))))
          pn)
     ;; If the statement is set, then it's been told its label by now.
     (and js2-labeled-stmt
@@ -8373,7 +8437,8 @@ node are given relative start positions and correct lengths."
     (setq pn (funcall parser))
     ;; Don't do auto semi insertion for certain statement types.
     (unless (or (memq first-tt js2-no-semi-insertion)
-                (js2-labeled-stmt-node-p pn))
+                (js2-labeled-stmt-node-p pn)
+                async-stmt)
       (js2-auto-insert-semicolon pn))
     pn))
 
@@ -8780,20 +8845,41 @@ invalid export statements."
               (setq from-clause (js2-parse-from-clause)))
           (js2-unget-token))))
      ((js2-match-token js2-DEFAULT)
-      (setq default (js2-parse-expr)))
+      (setq default (cond ((js2-match-token js2-CLASS)
+                           (js2-parse-class-stmt))
+                          ((js2-match-token js2-NAME)
+                           (if (js2-match-async-function)
+                               (js2-parse-async-function-stmt)
+                             (js2-unget-token)
+                             (js2-parse-expr)))
+                          ((js2-match-token js2-FUNCTION)
+                           (js2-parse-function-stmt))
+                          (t (js2-parse-expr)))))
      ((or (js2-match-token js2-VAR) (js2-match-token js2-CONST) (js2-match-token js2-LET))
       (setq declaration (js2-parse-variables (js2-current-token-type) (js2-current-token-beg))))
+     ((js2-match-token js2-CLASS)
+      (setq declaration (js2-parse-class-stmt)))
+     ((js2-match-token js2-NAME)
+      (setq declaration
+            (if (js2-match-async-function)
+                (js2-parse-async-function-stmt)
+              (js2-unget-token)
+              (js2-parse-expr))))
+     ((js2-match-token js2-FUNCTION)
+      (setq declaration (js2-parse-function-stmt)))
      (t
       (setq declaration (js2-parse-expr))))
     (when from-clause
       (push from-clause children))
     (when declaration
       (push declaration children)
-      (when (not (js2-function-node-p declaration))
+      (when (not (or (js2-function-node-p declaration)
+                     (js2-class-node-p declaration)))
         (js2-auto-insert-semicolon declaration)))
     (when default
       (push default children)
-      (when (not (js2-function-node-p default))
+      (when (not (or (js2-function-node-p default)
+                     (js2-class-node-p default)))
         (js2-auto-insert-semicolon default)))
     (let ((node (make-js2-export-node
                   :pos beg
@@ -8838,7 +8924,7 @@ Last matched token must be js2-FOR."
              ((= tt js2-SEMI)
               (js2-unget-token)
               (setq init (make-js2-empty-expr-node)))
-             ((or (= tt js2-VAR) (= tt js2-LET))
+             ((or (= tt js2-VAR) (= tt js2-LET) (= tt js2-CONST))
               (setq init (js2-parse-variables tt (js2-current-token-beg))))
              (t
               (js2-unget-token)
@@ -9576,9 +9662,20 @@ If NODE is non-nil, it is the AST node associated with the symbol."
   (let ((tt (js2-get-token))
         (pos (js2-current-token-beg))
         pn left right op-pos
-        ts-state recorded-identifiers parsed-errors)
+        ts-state recorded-identifiers parsed-errors
+        async-p)
     (if (= tt js2-YIELD)
         (js2-parse-return-or-yield tt t)
+      ;; TODO(mooz): Bit confusing.
+      ;; If we meet `async` token and it's not part of `async
+      ;; function`, then this `async` is for a succeeding async arrow
+      ;; function.
+      ;; Since arrow function parsing doesn't rely on neither
+      ;; `js2-parse-function-stmt' nor `js2-parse-function-expr' that
+      ;; interpret `async` token, we trash `async` and just remember
+      ;; we met `async` keyword to `async-p'.
+      (when (js2-match-async-arrow-function)
+        (setq async-p t))
       ;; Save the tokenizer state in case we find an arrow function
       ;; and have to rewind.
       (setq ts-state (make-js2-ts-state)
@@ -9614,7 +9711,7 @@ If NODE is non-nil, it is the AST node associated with the symbol."
         (js2-ts-seek ts-state)
         (setq js2-recorded-identifiers recorded-identifiers
               js2-parsed-errors parsed-errors)
-        (setq pn (js2-parse-function 'FUNCTION_ARROW (js2-current-token-beg) nil)))
+        (setq pn (js2-parse-function 'FUNCTION_ARROW (js2-current-token-beg) nil async-p)))
        (t
         (js2-unget-token)))
       pn)))
@@ -9803,6 +9900,18 @@ to parse the operand (for prefix operators)."
     (js2-node-add-children pn expr)
     pn))
 
+(defun js2-make-await ()
+  "Make an await node."
+  (let* ((pos (js2-current-token-beg))
+         (expr (js2-parse-unary-expr))
+         (end (js2-node-end expr))
+         pn)
+    (setq pn (make-js2-await-node :pos pos
+                                  :len (- end pos)
+                                  :operand expr))
+    (js2-node-add-children pn expr)
+    pn))
+
 (defconst js2-incrementable-node-types
   (list js2-NAME js2-GETPROP js2-GETELEM js2-GET_REF js2-CALL)
   "Node types that can be the operand of a ++ or -- operator.")
@@ -9844,6 +9953,8 @@ to parse the operand (for prefix operators)."
      ((= tt js2-DELPROP)
       (js2-get-token)
       (js2-make-unary js2-DELPROP 'js2-parse-unary-expr))
+     ((js2-match-await tt)
+      (js2-make-unary js2-AWAIT 'js2-parse-unary-expr))
      ((= tt js2-ERROR)
       (js2-get-token)
       (make-js2-error-node))  ; try to continue
@@ -10233,6 +10344,8 @@ array-literals, array comprehensions and regular expressions."
       (js2-parse-class-expr))
      ((= tt js2-FUNCTION)
       (js2-parse-function-expr))
+     ((js2-match-async-function)
+      (js2-parse-function-expr t))
      ((= tt js2-LB)
       (js2-parse-array-comp-or-literal))
      ((= tt js2-LC)
@@ -10249,7 +10362,8 @@ array-literals, array comprehensions and regular expressions."
      ((= tt js2-NUMBER)
       (setq node (make-js2-number-node))
       (when (and js2-in-use-strict-directive
-                 (= (js2-number-node-num-base node) 8))
+                 (= (js2-number-node-num-base node) 8)
+                 (js2-number-node-legacy-octal-p node))
         (js2-report-error "msg.no.octal.strict"))
       node)
      ((or (= tt js2-STRING) (= tt js2-NO_SUBS_TEMPLATE))
@@ -10641,12 +10755,11 @@ expression)."
                  (= js2-MUL tt))
         (setq previous-token (js2-current-token)
               tt (js2-get-prop-name-token)))
-      ;; Handle 'get' or 'set' keywords
+      ;; Handle getter, setter and async methods
       (let ((prop (js2-current-token-string)))
         (when (and (>= js2-language-version 200)
                    (= js2-NAME tt)
-                   (or (string= prop "get")
-                       (string= prop "set"))
+                   (member prop '("get" "set" "async"))
                    (member (js2-peek-token)
                            (list js2-NAME js2-STRING js2-NUMBER js2-LB)))
           (setq previous-token (js2-current-token)
@@ -10699,8 +10812,11 @@ expression)."
                            ;; But make an exception for getter / setter pairs.
                            (not (and (js2-method-node-p elem)
                                      (js2-method-node-p previous-elem)
-                                     (/= (js2-method-node-type elem)
-                                         (js2-method-node-type previous-elem))))))
+                                     (let ((type (js2-node-get-prop (js2-method-node-right elem) 'METHOD_TYPE))
+                                           (previous-type (js2-node-get-prop (js2-method-node-right previous-elem) 'METHOD_TYPE)))
+                                       (and (member type '(GET SET))
+                                            (member previous-type '(GET SET))
+                                            (not (eq type previous-type))))))))
                     elems))
           (js2-report-error "msg.dup.obj.lit.prop.strict"
                             elem-key-string
@@ -10720,11 +10836,10 @@ When `js2-is-in-destructuring' is t, forms like {a, b, c} will be permitted."
                              (if (= (js2-token-type previous-token) js2-MUL)
                                  "*"
                                (js2-token-string previous-token)))))
-    (when (or (string= prop "get")
-              (string= prop "set"))
+    (when (member prop '("get" "set" "async"))
       (js2-set-face (js2-token-beg previous-token)
                     (js2-token-end previous-token)
-                    'font-lock-keyword-face 'record))  ; get/set
+                    'font-lock-keyword-face 'record))  ; get/set/async
     (cond
      ;; method definition: {f() {...}}
      ((and (= (js2-peek-token) js2-LP)
@@ -10829,7 +10944,8 @@ string or expression."
   "Parse method property in an object literal or a class body.
 JavaScript syntax is:
 
-  { foo(...) {...}, get foo() {...}, set foo(x) {...}, *foo(...) {...} }
+  { foo(...) {...}, get foo() {...}, set foo(x) {...}, *foo(...) {...},
+    async foo(...) {...} }
 
 and expression closure style is also supported
 
@@ -10838,12 +10954,12 @@ and expression closure style is also supported
 POS is the start position of the `get' or `set' keyword.
 PROP is the `js2-name-node' representing the property name.
 TYPE-STRING is a string `get', `set', `*', or nil, indicating a found keyword."
-  (let ((type (cond
-               ((string= "get" type-string) js2-GET)
-               ((string= "set" type-string) js2-SET)
-               (t js2-FUNCTION)))
-        result end
-        (fn (js2-parse-function-expr)))
+  (let* ((type (or (cdr (assoc type-string '(("get" . GET)
+                                             ("set" . SET)
+                                             ("async" . ASYNC))))
+                   'FUNCTION))
+         result end
+         (fn (js2-parse-function-expr (eq type 'ASYNC))))
     ;; it has to be an anonymous function, as we already parsed the name
     (if (/= (js2-node-type fn) js2-FUNCTION)
         (js2-report-error "msg.bad.prop")
@@ -10853,8 +10969,7 @@ TYPE-STRING is a string `get', `set', `*', or nil, indicating a found keyword."
     (when (string= type-string "*")
       (setf (js2-function-node-generator-type fn) 'STAR))
     (setq end (js2-node-end fn)
-          result (make-js2-method-node :type type
-                                       :pos pos
+          result (make-js2-method-node :pos pos
                                        :len (- end pos)
                                        :left prop
                                        :right fn))

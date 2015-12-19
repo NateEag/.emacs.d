@@ -3,7 +3,24 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "eclim" "eclim.el" (21968 61850 0 0))
+;;;### (autoloads nil "company-emacs-eclim" "company-emacs-eclim.el"
+;;;;;;  (22132 53894 0 0))
+;;; Generated autoloads from company-emacs-eclim.el
+
+(autoload 'company-emacs-eclim-setup "company-emacs-eclim" "\
+Convenience function that adds company-emacs-eclim to the list
+  of available company backends.
+
+\(fn)" nil nil)
+
+(autoload 'company-emacs-eclim "company-emacs-eclim" "\
+`company-mode' back-end for Eclim completion
+
+\(fn COMMAND &optional ARG &rest IGNORED)" t nil)
+
+;;;***
+
+;;;### (autoloads nil "eclim" "eclim.el" (22132 53894 0 0))
 ;;; Generated autoloads from eclim.el
 
 (autoload 'eclim/workspace-dir "eclim" "\
@@ -35,14 +52,14 @@ otherwise, disable it.  If called from Lisp, enable the mode if
 ARG is omitted or nil.
 
 Eclim mode is enabled in all buffers where
-`(lambda nil (if (and buffer-file-name (eclim--accepted-p buffer-file-name) (eclim--project-dir)) (eclim-mode 1)))' would do it.
+`(lambda nil (ignore-errors (if (and buffer-file-name (eclim--accepted-p buffer-file-name) (eclim--project-dir)) (eclim-mode 1))))' would do it.
 See `eclim-mode' for more information on Eclim mode.
 
 \(fn &optional ARG)" t nil)
 
 ;;;***
 
-;;;### (autoloads nil "eclim-project" "eclim-project.el" (21968 61850
+;;;### (autoloads nil "eclim-project" "eclim-project.el" (22132 53894
 ;;;;;;  0 0))
 ;;; Generated autoloads from eclim-project.el
 
@@ -55,10 +72,10 @@ Manage all your eclim projects in one buffer.
 
 ;;;***
 
-;;;### (autoloads nil nil ("ac-emacs-eclim-source.el" "company-emacs-eclim.el"
-;;;;;;  "eclim-ant.el" "eclim-completion.el" "eclim-debug.el" "eclim-java-run.el"
+;;;### (autoloads nil nil ("ac-emacs-eclim-source.el" "eclim-ant.el"
+;;;;;;  "eclim-completion.el" "eclim-debug.el" "eclim-java-run.el"
 ;;;;;;  "eclim-java.el" "eclim-maven.el" "eclim-problems.el" "eclimd.el"
-;;;;;;  "emacs-eclim-pkg.el") (21968 61851 50471 0))
+;;;;;;  "emacs-eclim-pkg.el") (22132 53894 767488 0))
 
 ;;;***
 

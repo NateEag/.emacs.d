@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "mo-git-blame" "mo-git-blame.el" (21466 26340
+;;;### (autoloads nil "mo-git-blame" "mo-git-blame.el" (22132 53940
 ;;;;;;  0 0))
 ;;; Generated autoloads from mo-git-blame.el
 

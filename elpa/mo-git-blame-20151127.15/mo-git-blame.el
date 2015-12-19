@@ -5,8 +5,8 @@
 
 ;; Author: Moritz Bunkus <moritz@bunkus.org>
 ;; Maintainer: Moritz Bunkus <moritz@bunkus.org>
-;; Version: 20140409.320
-;; X-Original-Version: 0.1.0
+;; Version: 0.1.0
+;; Package-Version: 20151127.15
 ;; Keywords: tools
 
 ;; mo-git-blame is free software; you can redistribute it and/or
@@ -238,7 +238,7 @@ git is already/still running."
     (save-excursion
       (let ((inhibit-read-only t)
             (info (format "%s (%s %s %s) %s"
-                          (substring (symbol-name (plist-get entry :hash)) 0 8)
+                          (substring (symbol-name (plist-get entry :hash)) 0 7)
                           (plist-get entry :author)
                           (format-time-string "%Y-%m-%d %T" (mo-git-blame-commit-info-to-time entry) t)
                           (plist-get entry :author-tz)

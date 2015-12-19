@@ -523,6 +523,10 @@ customize the resulting theme."
      `(android-mode-warning-face ((,class (:foreground ,yellow))))
 ;;;;; anzu-mode
      `(anzu-mode-line ((,class (:foreground ,yellow :weight bold))))
+;;;;; avy-mode
+     `(avy-lead-face ((,class (:inherit isearch))))
+     `(avy-lead-face-0 ((,class (:inherit isearch :background ,violet))))
+     `(avy-lead-face-2 ((,class (:inherit isearch :background ,cyan))))
 ;;;;; bm
      `(bm-face ((,class (:overline ,base0))))
      `(bm-fringe-face ((,class (:overline ,base0))))
@@ -1026,6 +1030,7 @@ customize the resulting theme."
      `(helm-grep-match ((,class (:inherit match))))
      `(helm-grep-running ((,class (:foreground ,red))))
      `(helm-header ((,class (:inherit header-line))))
+     `(helm-header-line-left-margin ((,class (:inherit header-line))))
      `(helm-lisp-completion-info ((,class (:foreground ,base0))))
      `(helm-lisp-show-completion ((,class (:foreground ,yellow  :background ,base02
                                                        :bold t))))
@@ -1147,6 +1152,15 @@ customize the resulting theme."
        ((,class (:foreground ,magenta :background ,base02))))
      `(info-user-option-ref-item
        ((,class (:foreground ,orange :background ,base02))))
+;;;;; ivy
+     `(ivy-confirm-face ((,class (:foreground ,green))))
+     `(ivy-current-match ((,class (:weight bold :background ,base02))))
+     `(ivy-match-required-face ((,class (:foreground ,red))))
+     `(ivy-minibuffer-match-face-1 ((,class (:foreground ,base1))))
+     `(ivy-minibuffer-match-face-2 ((,class (:foreground ,yellow))))
+     `(ivy-minibuffer-match-face-3 ((,class (:foreground ,yellow))))
+     `(ivy-minibuffer-match-face-4 ((,class (:foreground ,yellow))))
+     `(ivy-remote ((,class (:foreground ,blue))))
 ;;;;; jabber
      `(jabber-activity-face ((,class (:weight bold :foreground ,red))))
      `(jabber-activity-personal-face ((,class (:weight bold :foreground ,blue))))
@@ -1770,7 +1784,12 @@ customize the resulting theme."
      `(show-paren-mismatch
        ((,class (:foreground ,base02 :background ,red
                              :weight ,s-maybe-bold))))
-
+;;;;; swiper
+     `(swiper-line-face ((,class (:background ,base02))))
+     `(swiper-match-face-1 ((,class (:weight bold :foreground ,base1))))
+     `(swiper-match-face-2 ((,class (:weight bold :foreground ,yellow))))
+     `(swiper-match-face-3 ((,class (:weight bold :foreground ,yellow))))
+     `(swiper-match-face-4 ((,class (:weight bold :foreground ,yellow))))
 ;;;;; sx (WIP)
      `(sx-custom-button ((,class (:background ,base02 :foreground ,base1
                                               :box (:line-width 2 :style released-button :height 0.9)))))

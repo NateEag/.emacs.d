@@ -1,4 +1,4 @@
-;; python-components-mode.el --- Edit, debug, develop, run Python programs.
+;; python-mode.el --- Edit, debug, develop, run Python programs.
 
 ;; Includes a minor mode for handling a Python/IPython shell,
 ;; and can take advantage of Pymacs when installed.
@@ -13,7 +13,8 @@
 
 ;; Copyright (C) 1992,1993,1994  Tim Peters
 
-;; Author: 2003-2013 https://launchpad.net/python-mode
+;; Author: 2015-     https://gitlab.com/groups/python-mode-devs
+;;         2003-2014 https://launchpad.net/python-mode
 ;;         1995-2002 Barry A. Warsaw
 ;;         1992-1994 Tim Peters
 ;; Maintainer: python-mode@python.org
@@ -84,6 +85,15 @@
   :tag "py-install-directory"
   :group 'python-mode)
 
+(defcustom py-pythonpath ""
+  "Define $PYTHONPATH here, if needed.
+
+Emacs doesn't read .bashrc"
+
+  :type 'string
+  :tag "py-pythonpath"
+  :group 'python-mode)
+
 (when (string= "" py-install-directory)
   (setq py-install-directory default-directory))
 
@@ -123,6 +133,30 @@ Results arrive in output buffer, which is not in comint-mode"
   :type 'boolean
   :tag "py-fast-process-p"
   :group 'python-mode)
+
+;; (defcustom py-which-def-or-class-function py-which-def-or-class
+;;   "If which-function-mode should use `py-which-def-or-class'.
+
+;; Alternatively use built-in `which-function', which queries the index
+;; or `python-info-current-defun' from python.el"
+;;   :type '(choice
+
+;;           (const :tag "default" py-which-def-or-class)
+;; 	  (const :tag "built-in which-function" nil)
+;;           (const :tag "python-info-current-defun" python-info-current-defun))
+;;   :group 'python-mode)
+
+;; (defcustom py-which-def-or-class-function py-which-def-or-class
+;;   "If which-function-mode should use `py-which-def-or-class'.
+
+;; Alternatively use built-in `which-function', which queries the index
+;; or `python-info-current-defun' from python.el"
+;;   :type '(choice
+
+;;           (const :tag "default" py-which-def-or-class)
+;; 	  (const :tag "built-in which-function" nil)
+;;           (const :tag "python-info-current-defun" python-info-current-defun))
+;;   :group 'python-mode)
 
 (defcustom py-comment-auto-fill-p nil
   "When non-nil, fill comments.
@@ -2342,6 +2376,9 @@ Result: \"\\nIn [10]:    ....:    ....:    ....: 1\\n\\nIn [11]: \"
 
 (defcustom py-outdent-re-raw
   (list
+   "async def"
+   "async for"
+   "async with"
    "class"
    "def"
    "elif"
@@ -2351,20 +2388,7 @@ Result: \"\\nIn [10]:    ....:    ....:    ....: 1\\n\\nIn [11]: \"
    "if"
    "try"
    "while"
-   )
-  "")
-
-(defcustom py-outdent-re-raw
-  (list
-   "class"
-   "def"
-   "elif"
-   "else"
-   "except"
-   "for"
-   "if"
-   "try"
-   "while"
+   "with"
    )
   "")
 
@@ -2424,8 +2448,10 @@ See py-no-outdent-re-raw for better readable content ")
 (defconst py-class-re "[ \t]*\\_<\\(class\\)\\_>[ \n\t]"
   "Matches the beginning of a class definition. ")
 
-(defconst py-def-or-class-re "[ \t]*\\_<\\(def\\|class\\|async def\\)\\_>[ \n\t]"
+(defconst py-def-or-class-re "[ \t]*\\_<\\(async def\\|class\\|def\\)\\_>[ \n\t]"
   "Matches the beginning of a class- or functions definition. ")
+
+;; (setq py-def-or-class-re "[ \t]*\\_<\\(async def\\|class\\|def\\)\\_>[ \n\t]")
 
 ;; (defconst py-def-re "[ \t]*\\_<\\(async def\\|def\\)\\_>[ \n\t]"
 (defconst py-def-re "[ \t]*\\_<\\(def\\|async def\\)\\_>[ \n\t]"
@@ -2486,6 +2512,9 @@ See py-no-outdent-re-raw for better readable content ")
 
 (defcustom py-extended-block-or-clause-re-raw
   (list
+   "async def"
+   "async for"
+   "async with"
    "class"
    "def"
    "elif"
@@ -2519,7 +2548,7 @@ See py-no-outdent-re-raw for better readable content ")
    "\\_<\\("
    (regexp-opt py-block-or-clause-re-raw)
    "\\)\\_>")
-  "Matches known keywords opening a block. 
+  "Matches known keywords opening a block.
 
 Customizing `py-block-or-clause-re-raw'  will change values here")
 
@@ -3235,61 +3264,68 @@ Returns char found. "
       '(parse-partial-sexp (point-min) (point))
     '(parse-partial-sexp (point-min) (point))))
 
+(defun py-in-comment-p ()
+  "Return the beginning of current line's comment, if inside. "
+  (interactive)
+  (let* ((pps (parse-partial-sexp (point-min) (point)))
+	 (erg (and (nth 4 pps) (nth 8 pps))))
+    erg))
+
 (defun py-in-string-or-comment-p ()
   "Returns beginning position if inside a string or comment, nil otherwise. "
   (or (nth 8 (parse-partial-sexp (point-min) (point)))
       (when (or (looking-at "\"")(looking-at "[ \t]*#[ \t]*"))
         (point))))
 
-(eval-and-compile
-  (defconst python-rx-constituents
-    `((block-start . ,(rx symbol-start
-			  (or "def" "class" "if" "elif" "else" "try"
-			      "except" "finally" "for" "while" "with")
-			  symbol-end))
-      (decorator . ,(rx line-start (* space) ?@ (any letter ?_)
-			(* (any word ?_))))
-      (defun . ,(rx symbol-start (or "def" "class") symbol-end))
-      (if-name-main . ,(rx line-start "if" (+ space) "__name__"
-			   (+ space) "==" (+ space)
-			   (any ?' ?\") "__main__" (any ?' ?\")
-			   (* space) ?:))
-      (symbol-name . ,(rx (any letter ?_) (* (any word ?_))))
-      (open-paren . ,(rx (or "{" "[" "(")))
-      (close-paren . ,(rx (or "}" "]" ")")))
-      (simple-operator . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
-      ;; FIXME: rx should support (not simple-operator).
-      (not-simple-operator . ,(rx
-			       (not
-				(any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
-      ;; FIXME: Use regexp-opt.
-      (operator . ,(rx (or "+" "-" "/" "&" "^" "~" "|" "*" "<" ">"
-			   "=" "%" "**" "//" "<<" ">>" "<=" "!="
-			   "==" ">=" "is" "not")))
-      ;; FIXME: Use regexp-opt.
-      (assignment-operator . ,(rx (or "=" "+=" "-=" "*=" "/=" "//=" "%=" "**="
-				      ">>=" "<<=" "&=" "^=" "|=")))
-      (string-delimiter . ,(rx (and
-                                ;; Match even number of backslashes.
-                                (or (not (any ?\\ ?\' ?\")) point
-                                    ;; Quotes might be preceded by a escaped quote.
-                                    (and (or (not (any ?\\)) point) ?\\
-                                         (* ?\\ ?\\) (any ?\' ?\")))
-                                (* ?\\ ?\\)
-                                ;; Match single or triple quotes of any kind.
-                                (group (or "\"" "\"\"\"" "'" "'''"))))))
-    "Additional Python specific sexps for `python-rx'"))
+;; (eval-and-compile
+;;   (defconst python-rx-constituents
+;;     `((block-start . ,(rx symbol-start
+;; 			  (or "async def" "async for" "async with" "def" "class" "if" "elif" "else" "try"
+;; 			      "except" "finally" "for" "while" "with")
+;; 			  symbol-end))
+;;       (decorator . ,(rx line-start (* space) ?@ (any letter ?_)
+;; 			(* (any word ?_))))
+;;       (defun . ,(rx symbol-start (or "def" "class") symbol-end))
+;;       (if-name-main . ,(rx line-start "if" (+ space) "__name__"
+;; 			   (+ space) "==" (+ space)
+;; 			   (any ?' ?\") "__main__" (any ?' ?\")
+;; 			   (* space) ?:))
+;;       (symbol-name . ,(rx (any letter ?_) (* (any word ?_))))
+;;       (open-paren . ,(rx (or "{" "[" "(")))
+;;       (close-paren . ,(rx (or "}" "]" ")")))
+;;       (simple-operator . ,(rx (any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%)))
+;;       ;; FIXME: rx should support (not simple-operator).
+;;       (not-simple-operator . ,(rx
+;; 			       (not
+;; 				(any ?+ ?- ?/ ?& ?^ ?~ ?| ?* ?< ?> ?= ?%))))
+;;       ;; FIXME: Use regexp-opt.
+;;       (operator . ,(rx (or "+" "-" "/" "&" "^" "~" "|" "*" "<" ">"
+;; 			   "=" "%" "**" "//" "<<" ">>" "<=" "!="
+;; 			   "==" ">=" "is" "not")))
+;;       ;; FIXME: Use regexp-opt.
+;;       (assignment-operator . ,(rx (or "=" "+=" "-=" "*=" "/=" "//=" "%=" "**="
+;; 				      ">>=" "<<=" "&=" "^=" "|=")))
+;;       (string-delimiter . ,(rx (and
+;;                                 ;; Match even number of backslashes.
+;;                                 (or (not (any ?\\ ?\' ?\")) point
+;;                                     ;; Quotes might be preceded by a escaped quote.
+;;                                     (and (or (not (any ?\\)) point) ?\\
+;;                                          (* ?\\ ?\\) (any ?\' ?\")))
+;;                                 (* ?\\ ?\\)
+;;                                 ;; Match single or triple quotes of any kind.
+;;                                 (group (or "\"" "\"\"\"" "'" "'''"))))))
+;;     "Additional Python specific sexps for `python-rx'"))
 
-(eval-and-compile
-  (defmacro python-rx (&rest regexps)
-    "Python mode specialized rx macro which supports common python named REGEXPS."
-    (let ((rx-constituents (append python-rx-constituents rx-constituents)))
-      (cond ((null regexps)
-	     (error "No regexp"))
-	    ((cdr regexps)
-	     (rx-to-string `(and ,@regexps) t))
-	    (t
-	     (rx-to-string (car regexps) t))))))
+;; (eval-and-compile
+;;   (defmacro python-rx (&rest regexps)
+;;     "Python mode specialized rx macro which supports common python named REGEXPS."
+;;     (let ((rx-constituents (append python-rx-constituents rx-constituents)))
+;;       (cond ((null regexps)
+;; 	     (error "No regexp"))
+;; 	    ((cdr regexps)
+;; 	     (rx-to-string `(and ,@regexps) t))
+;; 	    (t
+;; 	     (rx-to-string (car regexps) t))))))
 
 ;;  Font-lock and syntax
 (setq python-font-lock-keywords
@@ -3297,15 +3333,17 @@ Returns char found. "
       `(,(rx symbol-start
              (or
 	      "if" "and" "del"  "not" "while" "as" "elif" "global"
-	      "or" "with" "assert" "else"  "pass" "yield" "break"
+	      "or" "async with" "with" "assert" "else"  "pass" "yield" "break"
 	      "exec" "in" "continue" "finally" "is" "except" "raise"
-	      "return"  "for" "lambda")
+	      "return"  "async for" "for" "lambda")
              symbol-end)
-        (,(rx symbol-start (or "def" "class") symbol-end) . py-def-class-face)
+        (,(rx symbol-start (or "async def" "def" "class") symbol-end) . py-def-class-face)
         (,(rx symbol-start (or "import" "from") symbol-end) . py-import-from-face)
         (,(rx symbol-start (or "try" "if") symbol-end) . py-try-if-face)
         ;; functions
         (,(rx symbol-start "def" (1+ space) (group (1+ (or word ?_))))
+         (1 font-lock-function-name-face))
+        (,(rx symbol-start "async def" (1+ space) (group (1+ (or word ?_))))
          (1 font-lock-function-name-face))
         ;; classes
         (,(rx symbol-start (group "class") (1+ space) (group (1+ (or word ?_))))
@@ -3357,10 +3395,10 @@ Returns char found. "
          (1 py-variable-name-face nil nil))
         ;; a, b, c = (1, 2, 3)
         (,(lambda (limit)
-            (let ((re (python-rx (group (+ (any word ?. ?_))) (* space)
-                                 (* ?, (* space) (+ (any word ?. ?_)) (* space))
-                                 ?, (* space) (+ (any word ?. ?_)) (* space)
-                                 assignment-operator))
+            (let ((re (rx (group (+ (any word ?. ?_))) (* space)
+			   (* ?, (* space) (+ (any word ?. ?_)) (* space))
+			   ?, (* space) (+ (any word ?. ?_)) (* space)
+			   (or "=" "+=" "-=" "*=" "/=" "//=" "%=" "**=" ">>=" "<<=" "&=" "^=" "|=")))
                   (res nil))
               (while (and (setq res (re-search-forward re limit t))
                           (goto-char (match-end 1))
@@ -3378,6 +3416,7 @@ Returns char found. "
 
 ;; (require 'python-components-bounds-forms)
 ;; (require 'python-components-execute-region)
+;; (require 'python-components-versioned)
 
 
 (require 'ansi-color)
@@ -5329,7 +5368,6 @@ Optional argument REPEAT, the number of loops done already, is checked for py-ma
           (orig (or orig (point)))
           erg pos last
           ;; use by scan-lists
-          ;; parse-sexp-ignore-comments
           forward-sexp-function
           stringchar stm pps err)
       (unless done (py--skip-to-comment-or-semicolon done))
@@ -5346,18 +5384,17 @@ Optional argument REPEAT, the number of loops done already, is checked for py-ma
 	      (setq orig (point))
 	      ;; do not go back at a possible unclosed list
 	      (goto-char (nth 1 pps))
-	      (let ((parse-sexp-ignore-comments t))
-		(if
-		    (ignore-errors (forward-list))
-		    (progn
-		      (when (looking-at ":[ \t]*$")
-			(forward-char 1))
-		      (setq done t)
-		      (skip-chars-forward "^#" (line-end-position))
-		      (skip-chars-backward " \t\r\n\f" (line-beginning-position))
-		      (py-forward-statement orig done repeat))
-		  (setq err (py--record-list-error pps))
-		  (goto-char orig))))))
+	      (if
+		  (ignore-errors (forward-list))
+		  (progn
+		    (when (looking-at ":[ \t]*$")
+		      (forward-char 1))
+		    (setq done t)
+		    (skip-chars-forward "^#" (line-end-position))
+		    (skip-chars-backward " \t\r\n\f" (line-beginning-position))
+		    (py-forward-statement orig done repeat))
+		(setq err (py--record-list-error pps))
+		(goto-char orig)))))
        ;; string
        ((nth 3 pps)
 	(when (py-end-of-string)
@@ -5752,19 +5789,21 @@ With BOL, return line-beginning-position"
 	       (setq erg (line-beginning-position))))
     (or erg (goto-char orig))))
 
-(defun py--backward-def-or-class-intern (regexp &optional indent bol)
-  (while (and (re-search-backward regexp nil 'move 1)
-	      (nth 8 (parse-partial-sexp (point-min) (point)))))
-  (when (looking-back "async ")
-		       (goto-char (match-beginning 0))) 
-  (let ((erg (when (looking-at regexp)
-	       (if bol (line-beginning-position) (point)))))
+(defun py--backward-def-or-class-intern (regexp &optional bol)
+  (let (erg)
+    (while (and (re-search-backward regexp nil 'move 1)
+		(setq erg (match-beginning 0))
+		(nth 8 (parse-partial-sexp (point-min) (point))))
+      (setq erg nil))
+    (and erg (looking-back "async ")
+	 (goto-char (match-beginning 0))
+	 (setq erg (point)))
     ;; bol-forms at not at bol yet
-    (and bol erg (goto-char erg))
+    (and bol erg (beginning-of-line) (setq erg (point)))
     (and erg py-mark-decorators (setq erg (py--backward-def-or-class-decorator-maybe bol)))
     erg))
 
-(defun py-backward-class (&optional indent)
+(defun py-backward-class ()
   "Go to beginning of class.
 
 If already at beginning, go one class backward.
@@ -5772,12 +5811,12 @@ Returns beginning of class if successful, nil otherwise
 
 When `py-mark-decorators' is non-nil, decorators are considered too. "
   (interactive)
-  (let ((erg (py--backward-def-or-class-intern py-class-re indent)))
+  (let ((erg (py--backward-def-or-class-intern py-class-re)))
     (when (and py-verbose-p (called-interactively-p 'any))
       (message "%s" erg))
     erg))
 
-(defun py-backward-def (&optional indent)
+(defun py-backward-def ()
   "Go to beginning of def.
 
 If already at beginning, go one def backward.
@@ -5785,12 +5824,12 @@ Returns beginning of def if successful, nil otherwise
 
 When `py-mark-decorators' is non-nil, decorators are considered too. "
   (interactive)
-  (let ((erg (py--backward-def-or-class-intern py-def-re indent)))
+  (let ((erg (py--backward-def-or-class-intern py-def-re)))
     (when (and py-verbose-p (called-interactively-p 'any))
       (message "%s" erg))
     erg))
 
-(defun py-backward-def-or-class (&optional indent)
+(defun py-backward-def-or-class ()
   "Go to beginning of def-or-class.
 
 If already at beginning, go one def-or-class backward.
@@ -5798,12 +5837,12 @@ Returns beginning of def-or-class if successful, nil otherwise
 
 When `py-mark-decorators' is non-nil, decorators are considered too. "
   (interactive)
-  (let ((erg (py--backward-def-or-class-intern py-def-or-class-re indent)))
+  (let ((erg (py--backward-def-or-class-intern py-def-or-class-re)))
     (when (and py-verbose-p (called-interactively-p 'any))
       (message "%s" erg))
     erg))
 
-(defun py-backward-class-bol (&optional indent)
+(defun py-backward-class-bol ()
   "Go to beginning of class, go to BOL.
 
 If already at beginning, go one class backward.
@@ -5811,12 +5850,12 @@ Returns beginning of class if successful, nil otherwise
 
 When `py-mark-decorators' is non-nil, decorators are considered too. "
   (interactive)
-  (let ((erg (py--backward-def-or-class-intern py-class-re indent t)))
+  (let ((erg (py--backward-def-or-class-intern py-class-re t)))
     (when (and py-verbose-p (called-interactively-p 'any))
       (message "%s" erg))
     erg))
 
-(defun py-backward-def-bol (&optional indent)
+(defun py-backward-def-bol ()
   "Go to beginning of def, go to BOL.
 
 If already at beginning, go one def backward.
@@ -5824,12 +5863,12 @@ Returns beginning of def if successful, nil otherwise
 
 When `py-mark-decorators' is non-nil, decorators are considered too. "
   (interactive)
-  (let ((erg (py--backward-def-or-class-intern py-def-re indent t)))
+  (let ((erg (py--backward-def-or-class-intern py-def-re t)))
     (when (and py-verbose-p (called-interactively-p 'any))
       (message "%s" erg))
     erg))
 
-(defun py-backward-def-or-class-bol (&optional indent)
+(defun py-backward-def-or-class-bol ()
   "Go to beginning of def-or-class, go to BOL.
 
 If already at beginning, go one def-or-class backward.
@@ -5837,7 +5876,7 @@ Returns beginning of def-or-class if successful, nil otherwise
 
 When `py-mark-decorators' is non-nil, decorators are considered too. "
   (interactive)
-  (let ((erg (py--backward-def-or-class-intern py-def-or-class-re indent t)))
+  (let ((erg (py--backward-def-or-class-intern py-def-or-class-re t)))
     (when (and py-verbose-p (called-interactively-p 'any))
       (message "%s" erg))
     erg))
@@ -7716,7 +7755,9 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 	 (py-orig-buffer-or-file (or filename (current-buffer)))
 	 (proc (cond (proc)
 		     ;; will deal with py-dedicated-process-p also
-		     (py-fast-process-p (get-buffer-process (py-fast-process buffer)))
+		     (py-fast-process-p
+		      (or (get-buffer-process buffer)
+			  (py-fast-process buffer)))
 		     (py-dedicated-process-p
 		      (get-buffer-process (py-shell nil py-dedicated-process-p which-shell buffer)))
 		     (t (or (get-buffer-process buffer)
@@ -7729,13 +7770,15 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 
 (defun py--send-to-fast-process (strg proc output-buffer)
   "Called inside of `py--execute-base-intern' "
-  (with-current-buffer (setq output-buffer (process-buffer proc))
+  (let ((output-buffer (or output-buffer (process-buffer proc))))
+  (with-current-buffer output-buffer
     (sit-for 0.2 t)
     (erase-buffer)
+    (switch-to-buffer (current-buffer))
     (py--fast-send-string-intern strg
 				 proc
 				 output-buffer py-store-result-p py-return-result-p)
-    (sit-for 0.1)))
+    (sit-for 0.1))))
 
 (defun py--execute-base-intern (strg shell filename proc file wholebuf buffer origline execute-directory start end which-shell)
   "Select the handler.
@@ -17402,20 +17445,23 @@ Fill according to `py-docstring-style' "
   (save-excursion
     (save-restriction
       (window-configuration-to-register py-windows-config-register)
-      (let* ((orig (copy-marker (point)))
-	     (docstring (unless (not py-docstring-style)(py--in-or-behind-or-before-a-docstring))))
-	(cond (docstring
-	       (setq fill-column py-docstring-fill-column)
-	       (py-fill-string justify py-docstring-style docstring))
-	      ((let ((fill-column py-comment-fill-column))
-		 (fill-comment-paragraph justify)))
-	      ((save-excursion
-		 (and (py-backward-statement)
-		      (equal (char-after) ?\@)))
-	       (py-fill-decorator justify))
-	      (t (fill-paragraph justify)))
-	(widen))
-      (jump-to-register py-windows-config-register))))
+      (if (or (py-in-comment-p)
+	      (and (bolp) (looking-at "[ \t]*#[# \t]*")))
+	  (py-fill-comment)
+	(let* ((orig (copy-marker (point)))
+	       (docstring (unless (not py-docstring-style)(py--in-or-behind-or-before-a-docstring))))
+	  (cond (docstring
+		 (setq fill-column py-docstring-fill-column)
+		 (py-fill-string justify py-docstring-style docstring))
+		((let ((fill-column py-comment-fill-column))
+		   (fill-comment-paragraph justify)))
+		((save-excursion
+		   (and (py-backward-statement)
+			(equal (char-after) ?\@)))
+		 (py-fill-decorator justify))
+		(t (fill-paragraph justify)))
+	  (widen))
+	(jump-to-register py-windows-config-register)))))
 
 ;; python-components-shift-forms
 
@@ -18399,31 +18445,23 @@ Return code of `py-top-level' at point, a string. "
 ;; python-components-forms-code.el ends here
 ;; python-components-fast-forms
 
-;;  Process forms fast
+;; Process forms fast
 
-(defun py-fast-process (&optional argprompt dedicated shell buffer-name)
+
+
+(defun py-fast-process (&optional buffer)
   "Connect am (I)Python process suitable for large output.
 
-Output buffer displays \"Fast\" in name by default
-It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to the freeze reported by lp:1253907
-
-Return the process"
-  (interactive "P")
-  (py-shell argprompt dedicated shell buffer-name t))
-
-(defun py--filter-result (string)
-  "Set `py-result' according to `py-fast-filter-re'.
-
-Remove trailing newline"
-    (replace-regexp-in-string (format "[ \n]*%s[ \n]*" py-fast-filter-re) "" (ansi-color-filter-apply string)))
-
-;; (defun py--filter-result (string)
-;;   "Set `py-result' according to `py-fast-filter-re'.
-
-;; Remove trailing newline"
-;;   (let* ((erg (ansi-color-filter-apply string)))
-;;     (setq py-result (replace-regexp-in-string (format "[ \n]*%s[ \n]*" py-fast-filter-re) "" erg))
-;;     py-result))
+Output buffer displays \"Fast\"  by default
+It is not in interactive, i.e. comint-mode, as its bookkeepings seem linked to the freeze reported by lp:1253907"
+  (interactive)
+  (let ((this-buffer
+         (set-buffer (or (and buffer (get-buffer-create buffer))
+                         (get-buffer-create py-buffer-name)))))
+    (let ((proc (start-process py-shell-name this-buffer py-shell-name)))
+      (with-current-buffer this-buffer
+        (erase-buffer))
+      proc)))
 
 (defun py--fast-send-string-no-output (string proc output-buffer)
   (with-current-buffer output-buffer
@@ -18445,6 +18483,12 @@ Remove trailing newline"
       ;;)
       )))
 
+(defun py--filter-result (string)
+  "Set `py-result' according to `py-fast-filter-re'.
+
+Remove trailing newline"
+    (replace-regexp-in-string (format "[ \n]*%s[ \n]*" py-fast-filter-re) "" (ansi-color-filter-apply string)))
+
 (defun py--fast-send-string-intern (string proc output-buffer store return)
   (with-current-buffer output-buffer
     (process-send-string proc "\n")
@@ -18456,124 +18500,132 @@ Remove trailing newline"
       ;; sets py-result
       (unless py-ignore-result-p
 	(setq py-result (py--filter-result (py--fetch-result orig))))
-
       (when return
 	py-result))))
 
-(defun py--fast-send-string (string &optional proc windows-config)
+(defun py--fast-send-string (string)
   "Process Python strings, being prepared for large output.
 
-Output buffer displays \"Fast\" in name by default
+Output buffer displays \"Fast\"  by default
 See also `py-fast-shell'
 
 "
-  (let* ((proc (or proc (get-buffer-process (py-fast-process))))
-	 (buffer (process-buffer proc)))
-    (if (or py-store-result-p py-return-result-p)
-	(py--fast-send-string-intern string proc buffer py-store-result-p py-return-result-p)
-      (py--fast-send-string-no-output string proc buffer))))
-
-(defun py-execute-string-fast (string)
-  "Evaluate STRING in Python process which is not in comint-mode.
-
-From a programm use `py--fast-send-string'"
-  (interactive "sPython command: ")
-  (py--fast-send-string string))
+  (let ((proc (or (get-buffer-process (get-buffer py-fast-output-buffer))
+                  (py-fast-process))))
+    ;;    (with-current-buffer py-fast-output-buffer
+    ;;      (erase-buffer))
+    (process-send-string proc string)
+    (or (string-match "\n$" string)
+        (process-send-string proc "\n"))
+    (accept-process-output proc 1)
+    (switch-to-buffer py-fast-output-buffer)
+    (beginning-of-line)
+    (skip-chars-backward "\r\n")
+    (delete-region (point) (point-max))))
 
 (defun py-process-region-fast (beg end)
   (interactive "r")
   (let ((py-fast-process-p t))
     (py-execute-region beg end)))
 
-(defun py-execute-statement-fast ()
-  "Process statement at point by a Python interpreter.
-
-Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
-  (interactive)
-  (let ((py-fast-process-p t))
-    (py--execute-prepare "statement")))
-
 (defun py-execute-block-fast ()
   "Process block at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
+Output buffer not in comint-mode, displays \"Fast\"  by default"
   (interactive)
   (let ((py-fast-process-p t))
-    (py--execute-prepare "block")))
+    (py--execute-prepare 'block)))
 
 (defun py-execute-block-or-clause-fast ()
   "Process block-or-clause at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
+Output buffer not in comint-mode, displays \"Fast\"  by default"
   (interactive)
   (let ((py-fast-process-p t))
-    (py--execute-prepare "block-or-clause")))
-
-(defun py-execute-def-fast ()
-  "Process def at point by a Python interpreter.
-
-Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
-  (interactive)
-  (let ((py-fast-process-p t))
-    (py--execute-prepare "def")))
+    (py--execute-prepare 'block-or-clause)))
 
 (defun py-execute-class-fast ()
   "Process class at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
+Output buffer not in comint-mode, displays \"Fast\"  by default"
   (interactive)
   (let ((py-fast-process-p t))
-    (py--execute-prepare "class")))
-
-(defun py-execute-def-or-class-fast ()
-  "Process def-or-class at point by a Python interpreter.
-
-Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
-  (interactive)
-  (let ((py-fast-process-p t))
-    (py--execute-prepare "def-or-class")))
-
-(defun py-execute-expression-fast ()
-  "Process expression at point by a Python interpreter.
-
-Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
-  (interactive)
-  (let ((py-fast-process-p t))
-    (py--execute-prepare "expression")))
-
-(defun py-execute-partial-expression-fast ()
-  "Process partial-expression at point by a Python interpreter.
-
-Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
-  (interactive)
-  (let ((py-fast-process-p t))
-    (py--execute-prepare "partial-expression")))
-
-(defun py-execute-top-level-fast ()
-  "Process top-level at point by a Python interpreter.
-
-Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
-  (interactive)
-  (let ((py-fast-process-p t))
-    (py--execute-prepare "top-level")))
+    (py--execute-prepare 'class)))
 
 (defun py-execute-clause-fast ()
   "Process clause at point by a Python interpreter.
 
 Suitable for large output, doesn't mess up interactive shell.
-Output-buffer is not in comint-mode "
+Output buffer not in comint-mode, displays \"Fast\"  by default"
   (interactive)
   (let ((py-fast-process-p t))
-    (py--execute-prepare "clause")))
+    (py--execute-prepare 'clause)))
+
+(defun py-execute-def-fast ()
+  "Process def at point by a Python interpreter.
+
+Suitable for large output, doesn't mess up interactive shell.
+Output buffer not in comint-mode, displays \"Fast\"  by default"
+  (interactive)
+  (let ((py-fast-process-p t))
+    (py--execute-prepare 'def)))
+
+(defun py-execute-def-or-class-fast ()
+  "Process def-or-class at point by a Python interpreter.
+
+Suitable for large output, doesn't mess up interactive shell.
+Output buffer not in comint-mode, displays \"Fast\"  by default"
+  (interactive)
+  (let ((py-fast-process-p t))
+    (py--execute-prepare 'def-or-class)))
+
+(defun py-execute-expression-fast ()
+  "Process expression at point by a Python interpreter.
+
+Suitable for large output, doesn't mess up interactive shell.
+Output buffer not in comint-mode, displays \"Fast\"  by default"
+  (interactive)
+  (let ((py-fast-process-p t))
+    (py--execute-prepare 'expression)))
+
+(defun py-execute-partial-expression-fast ()
+  "Process partial-expression at point by a Python interpreter.
+
+Suitable for large output, doesn't mess up interactive shell.
+Output buffer not in comint-mode, displays \"Fast\"  by default"
+  (interactive)
+  (let ((py-fast-process-p t))
+    (py--execute-prepare 'partial-expression)))
+
+(defun py-execute-section-fast ()
+  "Process section at point by a Python interpreter.
+
+Suitable for large output, doesn't mess up interactive shell.
+Output buffer not in comint-mode, displays \"Fast\"  by default"
+  (interactive)
+  (let ((py-fast-process-p t))
+    (py--execute-prepare 'section)))
+
+(defun py-execute-statement-fast ()
+  "Process statement at point by a Python interpreter.
+
+Suitable for large output, doesn't mess up interactive shell.
+Output buffer not in comint-mode, displays \"Fast\"  by default"
+  (interactive)
+  (let ((py-fast-process-p t))
+    (py--execute-prepare 'statement)))
+
+(defun py-execute-top-level-fast ()
+  "Process top-level at point by a Python interpreter.
+
+Suitable for large output, doesn't mess up interactive shell.
+Output buffer not in comint-mode, displays \"Fast\"  by default"
+  (interactive)
+  (let ((py-fast-process-p t))
+    (py--execute-prepare 'top-level)))
 
 ;; python-components-narrow
 
@@ -20196,25 +20248,6 @@ i.e. the limit on how far back to scan."
      ((nth 3 state) 'string)
      ((nth 4 state) 'comment))))
 
-(defun py-which-function ()
-  "Return the name of the function or class, if curser is in, return nil otherwise. "
-  (interactive)
-  (save-excursion
-    (save-restriction
-      (widen)
-      (let ((orig (point))
-            (erg (if (and (looking-at (concat py-def-or-class-re " +\\([^(]+\\)(.+")) (not (py-in-string-or-comment-p)))
-                     (match-string-no-properties 2)
-                   (progn
-                     (py-backward-def-or-class)
-                     (when (looking-at (concat py-def-or-class-re " +\\([^(]+\\)(.+"))
-                       (match-string-no-properties 2))))))
-        (if (and erg (< orig (py-forward-def-or-class)))
-            (when (called-interactively-p 'any) (message "%s" erg))
-          (setq erg nil)
-          (when (called-interactively-p 'any) (message "%s" "Not inside a function or class"))
-          erg)))))
-
 (defconst py-help-address "python-mode@python.org"
   "List dealing with usage and developing python-mode.
 
@@ -20419,40 +20452,74 @@ the output."
 	;; (sit-for 0.1 t)
 	erg))))
 
-(defun py-which-def-or-class ()
+(defun py-which-def-or-class (&optional orig)
   "Returns concatenated `def' and `class' names in hierarchical order, if cursor is inside.
 
 Returns \"???\" otherwise
 Used by variable `which-func-functions' "
   (interactive)
   (let* ((orig (point))
-         (first t)
-         def-or-class
-         done last erg name)
-    (and first (looking-at "[ \t]*\\_<\\(def\\|class\\)\\_>[ \n\t]\\([[:alnum:]_]+\\)")(not (nth 8 (parse-partial-sexp (point-min) (point))))
-         (add-to-list 'def-or-class (match-string-no-properties 2)))
-    (while
-        (and (not (bobp)) (not done) (or (< 0 (current-indentation)) first))
-      (py-backward-def-or-class)
-      (looking-at "[ \t]*\\_<\\(def\\|class\\)\\_>[ \n\t]\\([[:alnum:]_]+\\)")
-      (setq last (point))
-      (setq name (match-string-no-properties 2))
-      (if first
-          (progn
-            (setq first nil)
-            (py-forward-def-or-class)
-            (if
-                (<= orig (point))
-                (goto-char last)
-              (setq done t)
-              (goto-char orig)))
-        t)
-      (unless done (add-to-list 'def-or-class name)))
-    (unless done (setq def-or-class (mapconcat 'identity def-or-class ".")))
+	 (backindent 99999)
+	 (re (concat py-def-or-class-re "\\([[:alnum:]_]+\\)"))
+         erg forward indent backward limit)
+    (if
+	(and (looking-at re)
+	     (not (nth 8 (parse-partial-sexp (point-min) (point)))))
+	(progn
+	  (setq erg (list (match-string-no-properties 2)))
+	  (setq backindent (current-indentation)))
+      ;; maybe inside a definition's symbol
+      (or (eolp) (and (looking-at "[[:alnum:]]")(forward-word 1))))
+    (if
+	(and (not (and erg (eq 0 (current-indentation))))
+	     (setq limit (py-backward-top-level))
+	     (looking-at re))
+	(progn
+	  (add-to-list 'erg (match-string-no-properties 2))
+	  (setq indent (current-indentation)))
+      (goto-char orig)
+      (while (and
+	      (re-search-backward py-def-or-class-re limit t 1)
+	      (< (current-indentation) backindent)
+	      (setq backindent (current-indentation))
+	      (setq backward (point))
+	      (or (< 0 (current-indentation))
+		  (nth 8 (parse-partial-sexp (point-min) (point))))))
+      (when (and backward
+		 (goto-char backward)
+		 (looking-at re))
+	(add-to-list 'erg (match-string-no-properties 2))
+	(setq indent (current-indentation))))
+    ;; (goto-char orig))
+    (if erg
+	(progn
+	  (end-of-line)
+	  (while (and (re-search-forward py-def-or-class-re nil t 1)
+		      (<= (point) orig)
+		      (< indent (current-indentation))
+		      (or
+		       (nth 8 (parse-partial-sexp (point-min) (point)))
+		       (setq forward (point)))))
+	  (if forward
+	      (progn
+		(goto-char forward)
+		(save-excursion
+		  (back-to-indentation)
+		  (and (looking-at re)
+		       (setq erg (list (car erg) (match-string-no-properties 2)))
+		       ;; (< (py-forward-def-or-class) orig)
+		       ;; if match was beyond definition, nil
+		       ;; (setq erg nil)
+		       )))
+	    (goto-char orig))))
+    (if erg
+	(if (< 1 (length erg))
+	    (setq erg (mapconcat 'identity erg "."))
+	  (setq erg (car erg)))
+      (setq erg "???"))
     (goto-char orig)
-    (or def-or-class (setq def-or-class "???"))
-    (when (called-interactively-p 'any) (message "%s" def-or-class))
-    def-or-class))
+    (when (called-interactively-p 'any) (message "%s" erg))
+    erg))
 
 (defun py--beginning-of-form-intern (regexp &optional iact indent orig lc)
   "Go to beginning of FORM.
@@ -20596,8 +20663,10 @@ Returns position if successful, nil otherwise "
   (interactive)
   (let (erg)
     (unless (bobp)
-      (while (and (not (bobp)) (setq erg (py-backward-statement))
-                  (< 0 (current-indentation))))
+      (while (and (not (bobp))
+		  (setq erg (re-search-backward "^[[:alpha:]_'\"]" nil t 1))
+		  (nth 8 (parse-partial-sexp (point-min) (point)))
+		  (setq erg nil)))
       (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
       erg)))
 
@@ -20637,7 +20706,7 @@ Returns position if successful, nil otherwise"
         erg)
     (while (and (not (eobp))
 		(progn (end-of-line)
-		       (re-search-forward "^[[:alpha:]_]" nil 'move 1))
+		       (re-search-forward "^[[:alpha:]_'\"]" nil 'move 1))
 		(nth 8 (parse-partial-sexp (point-min) (point)))))
     (when (and (not (eobp)) (< orig (point)))
       (goto-char (match-beginning 0))
@@ -25203,7 +25272,7 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."]
 ;; after-change-major-mode-hook
 
 ;;;
-(define-derived-mode python-mode fundamental-mode python-mode-modeline-display
+(define-derived-mode python-mode prog-mode python-mode-modeline-display
   "Major mode for editing Python files.
 
 To submit a problem report, enter `\\[py-submit-bug-report]' from a
@@ -25265,7 +25334,6 @@ See available customizations listed in files variables-python-mode at directory 
 				     ("\\<file\\>" . 'py-builtins-face)))))
   (set (make-local-variable 'which-func-functions) 'py-which-def-or-class)
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
-  (set (make-local-variable 'parse-sexp-ignore-comments) t)
   (set (make-local-variable 'comment-use-syntax) t)
   (set (make-local-variable 'comment-start) "#")
   (if py-empty-comment-line-separates-paragraph-p

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "http-headers" "http-headers.el" (21453 3928
+;;;### (autoloads nil "http-headers" "http-headers.el" (22132 53936
 ;;;;;;  0 0))
 ;;; Generated autoloads from http-headers.el
 
@@ -14,7 +14,7 @@ Display the meaning of an HTTP header
 
 ;;;***
 
-;;;### (autoloads nil "http-methods" "http-methods.el" (21453 3928
+;;;### (autoloads nil "http-methods" "http-methods.el" (22132 53936
 ;;;;;;  0 0))
 ;;; Generated autoloads from http-methods.el
 
@@ -25,8 +25,8 @@ Display the meaning of an HTTP method
 
 ;;;***
 
-;;;### (autoloads nil "http-relations" "http-relations.el" (21453
-;;;;;;  3928 0 0))
+;;;### (autoloads nil "http-relations" "http-relations.el" (22132
+;;;;;;  53936 0 0))
 ;;; Generated autoloads from http-relations.el
 
 (autoload 'http-relation "http-relations" "\
@@ -37,7 +37,7 @@ Display the meaning of an HTTP relation
 ;;;***
 
 ;;;### (autoloads nil "http-status-codes" "http-status-codes.el"
-;;;;;;  (21453 3928 0 0))
+;;;;;;  (22132 53936 0 0))
 ;;; Generated autoloads from http-status-codes.el
 
 (autoload 'http-status-code "http-status-codes" "\
@@ -48,7 +48,7 @@ Display the meaning of an HTTP status code or phrase
 ;;;***
 
 ;;;### (autoloads nil nil ("know-your-http-well-pkg.el" "know-your-http-well.el")
-;;;;;;  (21453 3928 602017 0))
+;;;;;;  (22132 53936 37106 0))
 
 ;;;***
 

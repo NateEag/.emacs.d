@@ -31,6 +31,14 @@
 ;; good thing.
 (setq-default buffer-file-coding-system 'utf-8-unix)
 
+;; Work around visual-bell bug on OS X El Capitan:
+;; http://stuff-things.net/2015/10/05/emacs-visible-bell-work-around-on-os-x-el-capitan/
+;; Remove this when Emacs 25.1 comes out.
+(setq visible-bell nil)
+(setq ring-bell-function (lambda ()
+                           (invert-face 'mode-line)
+                           (run-with-timer 0.1 nil 'invert-face 'mode-line)))
+
 ;; I don't like to type 'yes' when I could just type 'y'.
 (defalias 'yes-or-no-p 'y-or-n-p)
 

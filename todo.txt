@@ -1,7 +1,9 @@
 -Add keybindings for goto-chg commands and start using them.
 
--Take a look at firestarter as an easy way to set up post-save hooks.
- Simpler alternative to file watchers, perhaps:
+-Try smooth-scrolling package and see if it makes my life any better:
+ https://github.com/aspiers/smooth-scrolling
+
+-Simpler alternative to file watchers, perhaps:
  https://github.com/wasamasa/firestarter
 
 -Get ac-isearch working when auto-completion is active. I think my
@@ -17,7 +19,7 @@
 -Look into integrating jscs.el with my JS editing flow. I've already installed
  the elisp library just so I have it around. I much prefer ESLint for style
  checking, but if jscs can *fix* the style failures for me, that would be quite
- nice.
+ nice. Note that newer ESLint versions have some support for fixing violations.
 
 -Add tern-lint.el to my JS setup. Static type checking is a handy thing (and I
  personally find flow's comment-annotation syntax too intrusive for good

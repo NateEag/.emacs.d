@@ -24,7 +24,8 @@
       (lambda (&optional beg end)
         "mark message as deleted"
         (interactive (notmuch-search-interactive-region))
-        (notmuch-search-tag (list "+deleted") beg end)))
+        (notmuch-search-tag (list "+deleted" "-unread") beg end)))
+
     (define-key notmuch-show-mode-map (kbd "o")
       'notmuch-show-interactively-view-part)))
 

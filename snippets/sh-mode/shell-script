@@ -1,0 +1,9 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: shell-script
+# key: shell-script
+# binding: direct-keybinding
+# --
+#! /bin/${1:sh}
+#
+# $2
+$0

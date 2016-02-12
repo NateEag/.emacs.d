@@ -110,6 +110,11 @@
 (use-package jedi-force
   :commands jedi-force-set-up-hooks)
 
+(use-package sh-script
+  :config (add-hook 'sh-mode-hook '(lambda ()
+                                     (setq ne-yas-auto-insert-snippet-name
+                                           "shell-script"))))
+
 (use-package python-mode
   :init (jedi-force-set-up-hooks)
   :config

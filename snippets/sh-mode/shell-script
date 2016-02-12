@@ -4,6 +4,6 @@
 # binding: direct-keybinding
 # --
 #! /bin/${1:sh}
-#
+
 # $2
 $0

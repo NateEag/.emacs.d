@@ -4,6 +4,9 @@
  guessing this is due to some piece of python-mode config I have, likely Jedi?
  It seems the most likely offender.
 
+-Try using avy-mode instead of ace-jump-mode. It lets you see both chars for
+ the target at once, which should make jumping significantly smoother.
+
 -Try smooth-scrolling package and see if it makes my life any better:
  https://github.com/aspiers/smooth-scrolling
 

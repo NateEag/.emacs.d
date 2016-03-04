@@ -81,6 +81,8 @@
     ("d" . insert-date)
     ("t" . insert-time)
 
+    ("o" . other-window)
+
     ;; HTML involves lots of extraneous angle brackets. Emmet-mode makes typing
     ;; it less annoying.
     ("j" . emmet-expand-yas)

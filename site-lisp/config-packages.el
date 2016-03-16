@@ -27,7 +27,16 @@
         (notmuch-search-tag (list "+deleted" "-unread") beg end)))
 
     (define-key notmuch-show-mode-map (kbd "o")
-      'notmuch-show-interactively-view-part)))
+      'notmuch-show-interactively-view-part)
+
+    (require 'notmuch-address)
+    (notmuch-address-setup)
+    ;; TODO Get address completion to work reliably.
+    ;; I can trigger it now, but the UI is all mangled, I'm guessing because I
+    ;; have Helm active?
+    (define-key notmuch-message-mode-map
+                (kbd "<backtab>")
+                '(lambda () (interactive) (notmuch-address-expand-name)))))
 
 (use-package uniquify
              :init

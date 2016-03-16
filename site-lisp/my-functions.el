@@ -75,6 +75,7 @@
     (indent-region open-paren-pos (+ close-paren-pos 1))))
 
 ;; Move the current buffer to a new location on disk, then rename the buffer.
+;; TODO Make this create non-existent directories for the renamed path.
 ;; From http://www.stringify.com/2006/apr/24/rename/
 ;;;###autoload
 (defun move-current-buffer ()

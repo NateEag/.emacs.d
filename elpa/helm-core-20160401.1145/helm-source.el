@@ -1,6 +1,6 @@
 ;;; helm-source.el --- Helm source creation. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015  Thierry Volpiatto <thierry.volpiatto@gmail.com>
+;; Copyright (C) 2015 ~ 2016  Thierry Volpiatto <thierry.volpiatto@gmail.com>
 
 ;; Author: Thierry Volpiatto <thierry.volpiatto@gmail.com>
 ;; URL: http://github.com/emacs-helm/helm
@@ -123,16 +123,6 @@
   closed. It is useful for killing unneeded candidates buffer.
 
   Note that the function is executed BEFORE performing action.")
-
-   (delayed
-    :initarg :delayed
-    :initform nil
-    :custom (choice null integer)
-    :documentation
-    "  Candidates from the source are shown only if the user stops
-  typing and is idle for `helm-idle-delay' seconds.
-  If a value is given to delayed attr, this value is used instead only
-  if it is > to `helm-idle-delay'.")
 
    (keymap
     :initarg :keymap
@@ -520,7 +510,11 @@
     :custom symbol
     :documentation
     "  A local hook that run at beginning of initilization of this source.
-  i.e Before the creation of `helm-buffer'.")
+  i.e Before the creation of `helm-buffer'.
+
+  Should be a variable (defined with defvar).
+  Can be also an anonymous function or a list of functions
+  directly added to slot, this is not recommended though.")
 
    (after-init-hook
     :initarg :after-init-hook
@@ -528,7 +522,19 @@
     :custom symbol
     :documentation
     "  A local hook that run at end of initilization of this source.
-  i.e After the creation of `helm-buffer'."))
+  i.e After the creation of `helm-buffer'.
+
+  Should be a variable.
+  Can be also an anonymous function or a list of functions
+  directly added to slot, this is not recommended though.")
+
+   (delayed
+    :initarg :delayed
+    :initform nil
+    :custom (choice null integer)
+    :documentation
+    "  This slot have no more effect and is just kept for backward compatibility.
+  Please don't use it."))
 
   "Main interface to define helm sources."
   :abstract t)
@@ -865,6 +871,9 @@ an eieio class."
 (defmethod helm--setup-source :primary ((_source helm-source)))
 
 (defmethod helm--setup-source :before ((source helm-source))
+  (when (slot-value source 'delayed)
+    (warn "Deprecated usage of helm `delayed' slot in `%s'"
+          (slot-value source 'name)))
   (helm-aif (slot-value source 'keymap)
       (and (symbolp it) (set-slot-value source 'keymap (symbol-value it))))
   (helm-aif (slot-value source 'persistent-help)

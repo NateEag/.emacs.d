@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "auto-compile" "auto-compile.el" (22132 53889
+;;;### (autoloads nil "auto-compile" "auto-compile.el" (22271 48937
 ;;;;;;  0 0))
 ;;; Generated autoloads from auto-compile.el
 
@@ -92,6 +92,26 @@ multiple files is toggled as follows:
   those containing a file named \".nosearch\".
 
 \(fn FILE ACTION)" t nil)
+
+(defvar auto-compile-on-load-mode nil "\
+Non-nil if Auto-Compile-On-Load mode is enabled.
+See the command `auto-compile-on-load-mode' for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `auto-compile-on-load-mode'.")
+
+(custom-autoload 'auto-compile-on-load-mode "auto-compile" nil)
+
+(autoload 'auto-compile-on-load-mode "auto-compile" "\
+Before loading a library recompile it if it needs recompilation.
+
+A library needs to be recompiled if the source file is newer than
+it's byte-compile destination.  Without this advice the outdated
+byte code file would be loaded instead.
+
+Also see the related `auto-compile-on-save-mode'.
+
+\(fn &optional ARG)" t nil)
 
 ;;;***
 

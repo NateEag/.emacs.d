@@ -6,8 +6,8 @@
 ;; Author: rubikitch <rubikitch@ruby-lang.org>
 ;;         Yasuyuki Oka <yasuyk@gmail.com>
 ;; Maintainer: Yasuyuki Oka <yasuyk@gmail.com>
-;; Version: 20140919.917
-;; X-Original-Version: 2.2
+;; Version: 2.2
+;; Package-Version: 20160318.1933
 ;; Package-Requires: ((helm "1.6.3")(auto-complete "1.4.0")(popup "0.5.0") (cl-lib "0.5"))
 ;; Keywords: completion, convenience, helm
 
@@ -57,7 +57,7 @@
 ;;; Code:
 
 (require 'helm)
-(require 'helm-match-plugin nil t)
+(require 'helm-multi-match nil t)
 (require 'helm-elisp)
 (require 'auto-complete)
 (require 'cl-lib)

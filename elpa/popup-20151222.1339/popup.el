@@ -4,7 +4,7 @@
 
 ;; Author: Tomohiro Matsuyama <m2ym.pub@gmail.com>
 ;; Keywords: lisp
-;; Package-Version: 20151125.542
+;; Package-Version: 20151222.1339
 ;; Version: 0.5.3
 ;; Package-Requires: ((cl-lib "0.5"))
 
@@ -1030,8 +1030,9 @@ HELP-DELAY is a delay of displaying helps."
                      prompt
                      &aux tip lines)
   "Show a tooltip of STRING at POINT. This function is
-synchronized unless NOWAIT specified. Almost arguments are same
-as `popup-create' except for TRUNCATE, NOWAIT, and PROMPT.
+synchronized unless NOWAIT specified. Almost all arguments are
+the same as in `popup-create', except for TRUNCATE, NOWAIT, and
+PROMPT.
 
 If TRUNCATE is non-nil, the tooltip can be truncated.
 
@@ -1326,8 +1327,8 @@ PROMPT is a prompt string when reading events during event loop."
                        initial-index
                        &aux menu event)
   "Show a popup menu of LIST at POINT. This function returns a
-value of the selected item. Almost arguments are same as
-`popup-create' except for KEYMAP, FALLBACK, HELP-DELAY, PROMPT,
+value of the selected item. Almost all arguments are the same as in
+`popup-create', except for KEYMAP, FALLBACK, HELP-DELAY, PROMPT,
 ISEARCH, ISEARCH-FILTER, ISEARCH-CURSOR-COLOR, ISEARCH-KEYMAP, and
 ISEARCH-CALLBACK.
 

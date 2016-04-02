@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2015  Jorgen Schaefer <contact@jorgenschaefer.de>
 
-;; Version: 1.2
+;; Version: 1.5
 ;; Author: Jorgen Schaefer <contact@jorgenschaefer.de>
 
 ;; This program is free software; you can redistribute it and/or
@@ -104,6 +104,20 @@ This is the mechanism underlying `expect'. You can use it
 directly if you want to write your own testing functionality."
   (signal 'buttercup-failed (apply #'format format args)))
 
+(defun buttercup-skip (format &rest args)
+  "Skip the current test with the given description."
+  (signal 'buttercup-pending (apply #'format format args)))
+
+(defmacro assume (condition &optional message)
+  "Assume CONDITIION for the current test.
+
+Assume that CONDITION evaluates to non-nil in the current test.
+If it evaluates to nil cancel the current test with MESSAGE.  If
+MESSAGE is omitted or nil show the condition form instead."
+  (let ((message (or message (format "%S => nil" condition))))
+    `(unless ,condition
+       (buttercup-skip "!! CANCELLED !! %s" ,message))))
+
 (defmacro buttercup-define-matcher (matcher args &rest body)
   "Define a matcher to be used in `expect'.
 
@@ -149,9 +163,9 @@ MATCHER is either a matcher defined with
 
 (buttercup-define-matcher :to-match (text regexp)
   (if (string-match regexp text)
-      (cons t (format "Expected %S to match the regexp %S"
+      (cons t (format "Expected %S not to match the regexp %S"
                       text regexp))
-    (cons nil (format "Expected %S not to match the regexp %S"
+    (cons nil (format "Expected %S to match the regexp %S"
                       text regexp))))
 
 (buttercup-define-matcher :to-be-truthy (arg)
@@ -279,6 +293,15 @@ MATCHER is either a matcher defined with
         (setq nspecs (1+ nspecs))))
     nspecs))
 
+(defun buttercup-suites-total-specs-pending (suite-list)
+  "Return the number of specs marked as pending in all suites in SUITE-LIST."
+  (let ((nspecs 0))
+    (dolist (spec-or-suite (buttercup--specs-and-suites suite-list))
+      (when (and (buttercup-spec-p spec-or-suite)
+                 (eq (buttercup-spec-status spec-or-suite) 'pending))
+        (setq nspecs (1+ nspecs))))
+    nspecs))
+
 (defun buttercup-suites-total-specs-failed (suite-list)
   "Return the number of failed specs in all suites in SUITE-LIST."
   (let ((nspecs 0))
@@ -333,7 +356,11 @@ form.")
 (defmacro describe (description &rest body)
   "Describe a suite of tests."
   (declare (indent 1) (debug (&define sexp def-body)))
-  `(buttercup-describe ,description (lambda () ,@body)))
+  (let ((new-body (if (eq (elt body 0) :var)
+                      `((let ,(elt body 1)
+                          ,@(cddr body)))
+                    body)))
+    `(buttercup-describe ,description (lambda () ,@new-body))))
 
 (defun buttercup-describe (description body-function)
   "Function to handle a `describe' form."
@@ -359,8 +386,7 @@ form.")
   (declare (indent 1) (debug (&define sexp def-body)))
   (if body
       `(buttercup-it ,description (lambda () ,@body))
-    `(buttercup-it ,description (lambda ()
-                                  (signal 'buttercup-pending t)))))
+    `(buttercup-xit ,description)))
 
 (defun buttercup-it (description body-function)
   "Function to handle an `it' form."
@@ -433,7 +459,7 @@ A disabled suite is not run."
 
 A disabled suite is not run."
   (buttercup-describe description (lambda ()
-                                    (signal 'buttercup-pending t))))
+                                    (signal 'buttercup-pending "PENDING"))))
 
 ;;;;;;;;;;;;;;;;;;;;;;
 ;;; Pending Specs: xit
@@ -443,14 +469,18 @@ A disabled suite is not run."
 
 A disabled spec is not run."
   (declare (indent 1))
-  `(buttercup-xit ,description (lambda () ,@body)))
+  `(buttercup-xit ,description))
 
-(defun buttercup-xit (description function)
+(defun buttercup-xit (description &optional function)
   "Like `buttercup-it', but mark the spec as disabled.
 
 A disabled spec is not run."
   (buttercup-it description (lambda ()
-                              (signal 'buttercup-pending t))))
+                              (signal 'buttercup-pending "PENDING")))
+  (let ((spec (car (last (buttercup-suite-children
+                          buttercup--current-suite)))))
+    (setf (buttercup-spec-status spec)
+          'pending)))
 
 ;;;;;;;;;
 ;;; Spies
@@ -631,12 +661,42 @@ KEYWORD can have one of the following values:
 
 Takes directories as command line arguments, defaulting to the
 current directory."
-  (dolist (dir (or command-line-args-left '(".")))
-    (dolist (file (directory-files-recursively
-                   dir "\\`test-.*\\.el\\'\\|-test\\.el\\'"))
-      (when (not (string-match "/\\." (file-relative-name file)))
-        (load file nil t))))
-  (buttercup-run))
+  (let ((dirs nil)
+        (patterns nil)
+        (args command-line-args-left))
+    (while args
+      (cond
+       ((member (car args) '("-p" "--pattern"))
+        (when (not (cdr args))
+          (error "Option requires argument: %s" (car args)))
+        (push (cadr args) patterns)
+        (setq args (cddr args)))
+       (t
+        (push (car args) dirs)
+        (setq args (cdr args)))))
+    (setq command-line-args-left nil)
+    (dolist (dir (or dirs '(".")))
+      (dolist (file (directory-files-recursively
+                     dir "\\`test-.*\\.el\\'\\|-tests?\\.el\\'"))
+        (when (not (string-match "/\\." (file-relative-name file)))
+          (load file nil t))))
+    (when patterns
+      (let ((suites-or-specs buttercup-suites))
+        (while suites-or-specs
+          (cond
+           ((buttercup-suite-p (car suites-or-specs))
+            (setq suites-or-specs (append suites-or-specs
+                                          (buttercup-suite-children
+                                           (car suites-or-specs)))))
+           ((buttercup-spec-p (car suites-or-specs))
+            (catch 'return
+              (dolist (p patterns)
+                (when (string-match p (buttercup-spec-full-name (car suites-or-specs)))
+                  (throw 'return t)))
+              (setf (buttercup-spec-function (car suites-or-specs))
+                    (lambda () (signal 'buttercup-pending "SKIPPED"))))))
+          (setq suites-or-specs (cdr suites-or-specs)))))
+    (buttercup-run)))
 
 ;;;###autoload
 (defun buttercup-run-markdown ()
@@ -681,13 +741,12 @@ Do not change the global value.")
     (funcall buttercup-reporter 'suite-started suite)
     (dolist (f (buttercup-suite-before-all suite))
       (buttercup--update-with-funcall suite f))
-    (when (eq (buttercup-suite-status suite) 'passed)
-      (dolist (sub (buttercup-suite-children suite))
-        (cond
-         ((buttercup-suite-p sub)
-          (buttercup--run-suite sub))
-         ((buttercup-spec-p sub)
-          (buttercup--run-spec sub)))))
+    (dolist (sub (buttercup-suite-children suite))
+      (cond
+       ((buttercup-suite-p sub)
+        (buttercup--run-suite sub))
+       ((buttercup-spec-p sub)
+        (buttercup--run-spec sub))))
     (dolist (f (buttercup-suite-after-all suite))
       (buttercup--update-with-funcall suite f))
     (funcall buttercup-reporter 'suite-done suite)))
@@ -697,8 +756,7 @@ Do not change the global value.")
   (buttercup--with-cleanup
    (dolist (f buttercup--before-each)
      (buttercup--update-with-funcall spec f))
-   (when (eq (buttercup-spec-status spec) 'passed)
-     (buttercup--update-with-funcall spec (buttercup-spec-function spec)))
+   (buttercup--update-with-funcall spec (buttercup-spec-function spec))
    (dolist (f buttercup--after-each)
      (buttercup--update-with-funcall spec f)))
   (funcall buttercup-reporter 'spec-done spec))
@@ -712,17 +770,19 @@ Do not change the global value.")
       (pcase description
         (`(error (buttercup-failed . ,failure-description))
          (setq description failure-description))
-        (`(error (buttercup-pending . t))
+        (`(error (buttercup-pending . ,pending-description))
          (setq status 'pending
-               description "Pending"))))
+               description pending-description))))
     (cond
      ((buttercup-suite-p suite-or-spec)
-      (when (eq (buttercup-suite-status suite-or-spec) 'passed)
+      (when (eq (buttercup-suite-status suite-or-spec)
+                'passed)
         (setf (buttercup-suite-status suite-or-spec) status)
         (setf (buttercup-suite-failure-description suite-or-spec) description)
         (setf (buttercup-suite-failure-stack suite-or-spec) stack)))
      (t
-      (when (eq (buttercup-spec-status suite-or-spec) 'passed)
+      (when (eq (buttercup-spec-status suite-or-spec)
+                'passed)
         (setf (buttercup-spec-status suite-or-spec) status)
         (setf (buttercup-spec-failure-description suite-or-spec) description)
         (setf (buttercup-spec-failure-stack suite-or-spec) stack))))))
@@ -777,8 +837,13 @@ Calls either `buttercup-reporter-batch' or
       (`buttercup-started
        (setq buttercup-reporter-batch--start-time (float-time)
              buttercup-reporter-batch--failures nil)
-       (buttercup--print "Running %s specs.\n\n"
-                         (buttercup-suites-total-specs-defined arg)))
+       (let ((defined (buttercup-suites-total-specs-defined arg))
+             (pending (buttercup-suites-total-specs-pending arg)))
+         (if (> pending 0)
+             (buttercup--print "Running %s out of %s specs.\n\n"
+                               (- defined pending)
+                               defined)
+           (buttercup--print "Running %s specs.\n\n" defined))))
 
       (`suite-started
        (let ((level (length (buttercup-suite-parents arg))))
@@ -802,8 +867,8 @@ Calls either `buttercup-reporter-batch' or
                (append buttercup-reporter-batch--failures
                        (list arg))))
         ((eq (buttercup-spec-status arg) 'pending)
-         (buttercup--print "  PENDING\n"))
-        (t
+         (buttercup--print "  %s\n" (buttercup-spec-failure-description arg)))
+        (_
          (error "Unknown spec status %s" (buttercup-spec-status arg)))))
 
       (`suite-done
@@ -834,15 +899,26 @@ Calls either `buttercup-reporter-batch' or
             (t
              (buttercup--print "FAILED: %S\n" description)))
            (buttercup--print "\n")))
-       (buttercup--print "Ran %s specs, %s failed, in %.1f seconds.\n"
-                         (buttercup-suites-total-specs-defined arg)
-                         (buttercup-suites-total-specs-failed arg)
-                         (- (float-time)
-                            buttercup-reporter-batch--start-time))
-       (when (> (buttercup-suites-total-specs-failed arg) 0)
-         (error "")))
+       (let ((defined (buttercup-suites-total-specs-defined arg))
+             (pending (buttercup-suites-total-specs-pending arg))
+             (failed (buttercup-suites-total-specs-failed arg))
+             (duration (- (float-time)
+                          buttercup-reporter-batch--start-time)))
+         (if (> pending 0)
+             (buttercup--print
+              "Ran %s out of %s specs, %s failed, in %.1f seconds.\n"
+              (- defined pending)
+              defined
+              failed
+              duration)
+           (buttercup--print "Ran %s specs, %s failed, in %.1f seconds.\n"
+                             defined
+                             failed
+                             duration))
+         (when (> failed 0)
+           (error ""))))
 
-      (t
+      (_
        (error "Unknown event %s" event)))))
 
 (defun buttercup--print (fmt &rest args)

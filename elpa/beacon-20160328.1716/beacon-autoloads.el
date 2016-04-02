@@ -3,8 +3,16 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "beacon" "beacon.el" (22132 53890 0 0))
+;;;### (autoloads nil "beacon" "beacon.el" (22271 48939 0 0))
 ;;; Generated autoloads from beacon.el
+
+(autoload 'beacon-blink "beacon" "\
+Blink the beacon at the position of the cursor.
+Unlike `beacon-blink-automated', the beacon will blink
+unconditionally (even if `beacon-mode' is disabled), and this can
+be invoked as a user command or called from lisp code.
+
+\(fn)" t nil)
 
 (defvar beacon-mode nil "\
 Non-nil if Beacon mode is enabled.

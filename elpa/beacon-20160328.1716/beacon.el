@@ -4,9 +4,9 @@
 
 ;; Author: Artur Malabarba <emacs@endlessparentheses.com>
 ;; URL: https://github.com/Malabarba/beacon
-;; Package-Version: 20151205.1003
+;; Package-Version: 20160328.1716
 ;; Keywords: convenience
-;; Version: 0.5.1
+;; Version: 1.2
 ;; Package-Requires: ((seq "1.11"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -151,6 +151,7 @@ For instance, if you want to disable beacon on buffers where
 (add-hook 'beacon-dont-blink-predicates #'window-minibuffer-p)
 
 (defcustom beacon-dont-blink-major-modes '(t magit-status-mode magit-popup-mode
+                                       inf-ruby-mode
                                        gnus-summary-mode gnus-group-mode)
   "A list of major-modes where the beacon won't blink.
 Whenever the current buffer satisfies `derived-mode-p' for
@@ -236,7 +237,7 @@ COLORS applied to each one."
            (seq-filter (lambda (o) (overlay-get o 'beacon))
                        (overlays-at (point))))))
 
-(defun beacon--vanish ()
+(defun beacon--vanish (&rest _)
   "Turn off the beacon."
   (when (timerp beacon--timer)
     (cancel-timer beacon--timer))
@@ -301,8 +302,10 @@ Only returns `beacon-size' elements."
     (o
      (delete-overlay o)
      (save-excursion
-       (while (progn (forward-char 1)
-                     (setq o (beacon--ov-at-point)))
+       (while (and (condition-case nil
+                       (progn (forward-char 1) t)
+                     (end-of-buffer nil))
+                   (setq o (beacon--ov-at-point)))
          (let ((colors (overlay-get o 'beacon-colors)))
            (if (not colors)
                (move-overlay o (1- (point)) (point))
@@ -311,10 +314,26 @@ Only returns `beacon-size' elements."
              (beacon--ov-put-after-string o colors)
              (forward-char 1))))))))
 
+;;;###autoload
 (defun beacon-blink ()
-  "Blink the beacon at the position of the cursor."
+  "Blink the beacon at the position of the cursor.
+Unlike `beacon-blink-automated', the beacon will blink
+unconditionally (even if `beacon-mode' is disabled), and this can
+be invoked as a user command or called from lisp code."
   (interactive)
   (beacon--vanish)
+  (beacon--shine)
+  (setq beacon--timer
+        (run-at-time beacon-blink-delay
+                     (/ beacon-blink-duration 1.0 beacon-size)
+                     #'beacon--dec)))
+
+(defun beacon-blink-automated ()
+  "If appropriate, blink the beacon at the position of the cursor.
+Unlike `beacon-blink', the blinking is conditioned on a series of
+variables: `beacon-mode', `beacon-dont-blink-commands',
+`beacon-dont-blink-major-modes', and
+`beacon-dont-blink-predicates'."
   ;; Record vars here in case something is blinking outside the
   ;; command loop.
   (beacon--record-vars)
@@ -322,11 +341,7 @@ Only returns `beacon-size' elements."
               (run-hook-with-args-until-success 'beacon-dont-blink-predicates)
               (seq-find #'derived-mode-p beacon-dont-blink-major-modes)
               (memq (or this-command last-command) beacon-dont-blink-commands))
-    (beacon--shine)
-    (setq beacon--timer
-          (run-at-time beacon-blink-delay
-                       (/ beacon-blink-duration 1.0 beacon-size)
-                       #'beacon--dec))))
+    (beacon-blink)))
 
 
 ;;; Movement detection
@@ -371,22 +386,25 @@ The same is true for DELTA-X and horizonta movement."
 (defun beacon--post-command ()
   "Blink if point moved very far."
   (cond
-   ((not (markerp beacon--previous-place))
-    (beacon--vanish))
+   ;; Sanity check.
+   ((not (markerp beacon--previous-place)))
+   ;; Blink for switching buffers.
+   ((and beacon-blink-when-buffer-changes
+         (not (eq (marker-buffer beacon--previous-place)
+                  (current-buffer))))
+    (beacon-blink-automated))
    ;; Blink for switching windows.
    ((and beacon-blink-when-window-changes
          (not (eq beacon--previous-window (selected-window))))
-    (beacon-blink))
+    (beacon-blink-automated))
    ;; Blink for scrolling.
    ((and beacon--window-scrolled
          (equal beacon--window-scrolled (selected-window)))
-    (beacon-blink))
+    (beacon-blink-automated))
    ;; Blink for movement
    ((beacon--movement-> beacon-blink-when-point-moves-vertically
                   beacon-blink-when-point-moves-horizontally)
-    (beacon-blink))
-   ;; Even if we don't blink, vanish any previous beacon.
-   (t (beacon--vanish)))
+    (beacon-blink-automated)))
   (beacon--maybe-push-mark)
   (setq beacon--window-scrolled nil))
 
@@ -405,12 +423,12 @@ unreliable, so just blink immediately."
     (if this-command
         (setq beacon--window-scrolled win)
       (setq beacon--window-scrolled nil)
-      (beacon-blink))))
+      (beacon-blink-automated))))
 
 (defun beacon--blink-on-focus ()
   "Blink if `beacon-blink-when-focused' is non-nil"
   (when beacon-blink-when-focused
-    (beacon-blink)))
+    (beacon-blink-automated)))
 
 
 ;;; Minor-mode
@@ -431,11 +449,13 @@ unreliable, so just blink immediately."
         (add-hook 'window-scroll-functions #'beacon--window-scroll-function)
         (add-hook 'focus-in-hook #'beacon--blink-on-focus)
         (add-hook 'post-command-hook #'beacon--post-command)
+        (add-hook 'before-change-functions #'beacon--vanish)
         (add-hook 'pre-command-hook #'beacon--record-vars)
         (add-hook 'pre-command-hook #'beacon--vanish))
     (remove-hook 'focus-in-hook #'beacon--blink-on-focus)
     (remove-hook 'window-scroll-functions #'beacon--window-scroll-function)
     (remove-hook 'post-command-hook #'beacon--post-command)
+    (remove-hook 'before-change-functions #'beacon--vanish)
     (remove-hook 'pre-command-hook #'beacon--record-vars)
     (remove-hook 'pre-command-hook #'beacon--vanish)))
 

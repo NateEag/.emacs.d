@@ -1,14 +1,12 @@
 ;;; packed.el --- package manager agnostic Emacs Lisp package utilities
 
-;; Copyright (C) 2012-2015  Jonas Bernoulli
+;; Copyright (C) 2012-2016  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/tarsius/packed
 ;; Keywords: compile, convenience, lisp, package, library
-;; Package-Version: 20150723.438
-
-;; Package: packed
-;; Package-Requires: ((emacs "24.3") (dash "2.10.0"))
+;; Package-Version: 20160321.36
+;; Package-Requires: ((emacs "24.3") (dash "2.12.1"))
 
 ;; This file is not part of GNU Emacs.
 
@@ -153,10 +151,10 @@ and the file name is displayed in the echo area."
     file))
 
 (defconst packed-ignore-library-regexp
-  (regexp-opt (list "^\\." "^t$" "test" "autoloads" "loaddefs")))
+  "\\(?:^\\.\\|-autoloads\\|-loaddefs\\|-tests?$\\|^ert$\\)")
 
 (defconst packed-ignore-directory-regexp
-  (regexp-opt (list "RCS" "CVS" "^t$" "test")))
+  "\\(?:CVS\\|RCS\\|^t$\\|^tests?$\\|^vendor$\\|^script$\\)")
 
 (defun packed-ignore-directory-p (directory package)
   "Return t if DIRECTORY should be ignored when searching for libraries.
@@ -192,6 +190,8 @@ FILE should be an Emacs lisp source file."
            (if (and ,filesym (not (equal ,filesym buffer-file-name)))
                (with-temp-buffer
                  (insert-file-contents ,filesym)
+                 (setq buffer-file-name ,filesym)
+                 (set-buffer-modified-p nil)
                  (with-syntax-table emacs-lisp-mode-syntax-table
                    ,@body))
              (goto-char (point-min))
@@ -243,7 +243,7 @@ function would return t.  See `packed-ignore-directory-p'."
                         (string-equal filename (concat package "-pkg.el"))
                       (string-match "-pkg\\.el$" filename))
                     (and (string-match packed-ignore-library-regexp
-                                       (file-name-nondirectory file))
+                                       (file-name-sans-extension filename))
                          (or (not package)
                              (not (string-match
                                    packed-ignore-library-regexp
@@ -513,7 +513,15 @@ Elements of `load-path' which no longer exist are not removed."
         (and (goto-char (point-min))
              (re-search-forward
               "^(provide-theme[\s\t\n]+'\\([^)]+\\))" nil t)
-             (list (intern (concat (match-string 1) "-theme")))))))
+             (list (intern (concat (match-string 1)
+                                   "-theme"))))
+        (and (goto-char (point-min))
+             (re-search-forward
+              "^(provide-me\\(?:[\s\t\n]+\"\\(.+\\)\"\\)?)" nil t)
+             (list (intern (concat (match-string 1)
+                                   (file-name-sans-extension
+                                    (file-name-nondirectory
+                                     buffer-file-name)))))))))
 
 (defun packed-library-feature (file)
   "Return the first valid feature actually provided by FILE.

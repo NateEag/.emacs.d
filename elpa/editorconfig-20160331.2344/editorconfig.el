@@ -1,12 +1,11 @@
 ;;; editorconfig.el --- EditorConfig Emacs Plugin
 
-;; Copyright (C) 2011-2015 EditorConfig Team
+;; Copyright (C) 2011-2016 EditorConfig Team
 
 ;; Author: EditorConfig Team <editorconfig@googlegroups.com>
-;; Version: 0.6.1
-;; Package-Version: 20151208.835
+;; Version: 0.7.4
 ;; URL: https://github.com/editorconfig/editorconfig-emacs#readme
-;; Package-Requires: ((editorconfig-core "20151107.831"))
+;; Package-Requires: ((cl-lib "0.5"))
 
 ;; See
 ;; https://github.com/editorconfig/editorconfig-emacs/graphs/contributors
@@ -39,6 +38,8 @@
 ;; version control systems.
 
 ;;; Code:
+
+(require 'conf-mode)
 
 (declare-function editorconfig-core-get-properties-hash
   "editorconfig-core"
@@ -81,12 +82,12 @@ The hook does not have to be coding style related; you can add whatever
 functionality you want.  For example, the following is an example to add a new
 property emacs_linum to decide whether to show line numbers on the left
 
-  (add-to-list 'editorconfig-custom-hooks
+  (add-hook 'editorconfig-custom-hooks
     '(lambda (props)
        (let ((show-line-num (gethash 'emacs_linum props)))
          (cond ((equal show-line-num \"true\") (linum-mode 1))
            ((equal show-line-num \"false\") (linum-mode 0))))))"
-  :type '(lambda (properties) (body))
+  :type 'hook
   :group 'editorconfig)
 (define-obsolete-variable-alias
   'edconf-custom-hooks
@@ -100,14 +101,17 @@ property emacs_linum to decide whether to show line numbers on the left
      (cmake-mode cmake-tab-width)
      (coffee-mode coffee-tab-width)
      (cperl-mode cperl-indent-level)
+     (crystal-mode crystal-indent-level)
      (css-mode css-indent-offset)
      (emacs-lisp-mode lisp-indent-offset)
      (erlang-mode erlang-indent-level)
+     (ess-mode ess-indent-offset)
      (groovy-mode c-basic-offset)
      (haskell-mode haskell-indent-spaces
        haskell-indent-offset
        shm-indent-spaces)
      (idl-mode c-basic-offset)
+     (jade-mode jade-tab-width)
      (java-mode c-basic-offset)
      (js-mode js-indent-level)
      (js2-mode js2-basic-offset)
@@ -116,21 +120,33 @@ property emacs_linum to decide whether to show line numbers on the left
      (latex-mode . editorconfig-set-indentation/latex-mode)
      (lisp-mode lisp-indent-offset)
      (livescript-mode livescript-tab-width)
+     (lua-mode lua-indent-level)
+     (matlab-mode matlab-indent-level)
      (mustache-mode mustache-basic-offset)
+     (nginx-mode nginx-indent-level)
      (nxml-mode nxml-child-indent (nxml-attribute-indent . 2))
      (objc-mode c-basic-offset)
+     (octave-mode octave-block-offset)
      (perl-mode perl-indent-level)
      (pike-mode c-basic-offset)
+     (ps-mode ps-mode-tab)
      (puppet-mode puppet-indent-level)
      (python-mode . editorconfig-set-indentation/python-mode)
      (ruby-mode ruby-indent-level)
+     (rust-mode rust-indent-offset)
      (scala-mode scala-indent:step)
+     (scss-mode css-indent-offset)
      (sgml-mode sgml-basic-offset)
      (sh-mode sh-basic-offset sh-indentation)
+     (slim-mode slim-indent-offset)
+     (tcl-mode tcl-indent-level
+       tcl-continued-indent-level)
+     (typescript-mode typescript-indent-level)
      (web-mode (web-mode-indent-style . (lambda (size) 2))
        web-mode-markup-indent-offset
        web-mode-css-indent-offset
        web-mode-code-indent-offset
+       web-mode-block-padding
        web-mode-script-padding
        web-mode-style-padding)
      (yaml-mode yaml-indent-offset))
@@ -172,6 +188,18 @@ NOTE: Only the **buffer local** value of VARIABLE will be set."
   'edconf-indentation-alist
   'editorconfig-indentation-alist
   "0.5")
+
+(defcustom editorconfig-exclude-modes ()
+  "List of major mode symbols not to apply properties."
+  :type '(repeat (symbol :tag "Major Mode"))
+  :group 'editorconfig)
+
+(defvar editorconfig-properties-hash nil
+  "Hash object of EditorConfig properties for current buffer.
+Set by `editorconfig-apply' and nil if that is not invoked in current buffer
+yet.")
+(make-variable-buffer-local 'editorconfig-properties-hash)
+
 
 (defun editorconfig-string-integer-p (string)
   "Return non-nil if STRING represents integer."
@@ -242,15 +270,24 @@ NOTE: Only the **buffer local** value of VARIABLE will be set."
                           ((integerp spec) (* spec size))
                           (t spec))))))))))))))
 
-(defun editorconfig-set-line-ending (end-of-line)
-  "Set line ending style to CR, LF, or CRLF by END-OF-LINE."
-  (set-buffer-file-coding-system
-    (cond
-      ((equal end-of-line "lf") 'undecided-unix)
-      ((equal end-of-line "cr") 'undecided-mac)
-      ((equal end-of-line "crlf") 'undecided-dos)
-      (t 'undecided))
-    nil t))
+(defun editorconfig-set-coding-system (end-of-line charset)
+  "Set buffer coding system by END-OF-LINE and CHARSET."
+  (let ((eol (cond
+               ((equal end-of-line "lf") 'undecided-unix)
+               ((equal end-of-line "cr") 'undecided-mac)
+               ((equal end-of-line "crlf") 'undecided-dos)
+               (t 'undecided)))
+         (cs (cond
+               ((equal charset "latin1") 'iso-latin-1)
+               ((equal charset "utf-8") 'utf-8)
+               ((equal charset "utf-8-bom") 'utf-8-with-signature)
+               ((equal charset "utf-16be") 'utf-16be)
+               ((equal charset "utf-16le") 'utf-16le)
+               (t 'undecided))))
+    (set-buffer-file-coding-system (merge-coding-systems
+                                     cs
+                                     eol)
+      nil t)))
 
 (defun editorconfig-set-trailing-nl (final-newline)
   "Set up requiring final newline by FINAL-NEWLINE."
@@ -293,8 +330,10 @@ NOTE: Only the **buffer local** value of VARIABLE will be set."
   (let ((filename (buffer-file-name)))
     (with-temp-buffer
       (setq default-directory "/")
-      (call-process editorconfig-exec-path nil t nil filename)
-      (buffer-string))))
+      (if (eq 0
+            (call-process editorconfig-exec-path nil t nil filename))
+        (buffer-string)
+        (error (buffer-string))))))
 
 (defun editorconfig-parse-properties (props-string)
   "Create properties hash table from PROPS-STRING."
@@ -312,9 +351,7 @@ NOTE: Only the **buffer local** value of VARIABLE will be set."
   "Get EditorConfig properties of current buffer by calling `editorconfig-exec-path'."
   (if (executable-find editorconfig-exec-path)
     (editorconfig-parse-properties (editorconfig-call-editorconfig-exec))
-    (display-warning :error
-      "Unable to find editorconfig executable.")
-    nil))
+    (error "Unable to find editorconfig executable")))
 
 (defun editorconfig-get-properties ()
   "Get EditorConfig properties of current buffer.
@@ -327,40 +364,130 @@ It calls `editorconfig-get-properties-from-exec' if
     (editorconfig-core-get-properties-hash)))
 
 ;;;###autoload
+(defun editorconfig-display-current-properties ()
+  "Display EditorConfig properties extracted for current buffer."
+  (interactive)
+  (if editorconfig-properties-hash
+    (let (
+           (buf (get-buffer-create "*EditorConfig Properties*"))
+           (file buffer-file-name)
+           (props editorconfig-properties-hash))
+      (with-current-buffer buf
+        (erase-buffer)
+        (insert (format "# EditorConfig for %s\n" file))
+        (maphash (lambda (k v)
+                   (insert (format "%S = %s\n" k v)))
+          props))
+      (display-buffer buf))
+    (message "Properties are not applied to current buffer yet.")
+    nil))
+
+;;;###autoload
 (defun editorconfig-apply ()
-  "Apply EditorConfig properties for current buffer."
+  "Apply EditorConfig properties for current buffer.
+This function ignores `editorconfig-exclude-modes' and always applies available
+properties."
   (interactive)
   (when buffer-file-name
-    (let ((props (and (functionp editorconfig-get-properties-function)
-                   (funcall editorconfig-get-properties-function))))
-      (if props
-        (progn
-          (editorconfig-set-indentation (gethash 'indent_style props)
-            (gethash 'indent_size props)
-            (gethash 'tab_width props))
-          (editorconfig-set-line-ending (gethash 'end_of_line props))
-          (editorconfig-set-trailing-nl (gethash 'insert_final_newline props))
-          (editorconfig-set-trailing-ws (gethash 'trim_trailing_whitespace props))
-          (editorconfig-set-line-length (gethash 'max_line_length props))
-          (dolist (hook editorconfig-custom-hooks)
+    (condition-case err
+      (progn
+        (unless (functionp editorconfig-get-properties-function)
+          (error "Invalid editorconfig-get-properties-function value"))
+        (let ((props (funcall editorconfig-get-properties-function)))
+          (progn
+            (setq editorconfig-properties-hash props)
+            (editorconfig-set-indentation (gethash 'indent_style props)
+              (gethash 'indent_size props)
+              (gethash 'tab_width props))
+            (editorconfig-set-coding-system
+              (gethash 'end_of_line props)
+              (gethash 'charset props))
+            (editorconfig-set-trailing-nl (gethash 'insert_final_newline props))
+            (editorconfig-set-trailing-ws (gethash 'trim_trailing_whitespace props))
+            (editorconfig-set-line-length (gethash 'max_line_length props))
+            (run-hook-with-args 'editorconfig-custom-hooks props))))
+      (error
+        (display-warning 'editorconfig
+          (concat (error-message-string err)
+            ".  Styles will not be applied.")
+          :error)))))
 
-            (funcall hook props)))
-        (display-warning :error "EditorConfig core program is not available.  Styles will not be applied.")))))
+(defun editorconfig-mode-apply ()
+  "Apply EditorConfig properties for current buffer.
+This function do the job only when the major mode is not listed in
+`editorconfig-exclude-modes'."
+  (when (and major-mode
+          (not (memq major-mode
+                 editorconfig-exclude-modes)))
+    (editorconfig-apply)))
 
 ;;;###autoload
 (define-minor-mode editorconfig-mode
-  "Toggle EditorConfig feature."
+  "Toggle EditorConfig feature.
+When enabled EditorConfig properties will be applied to buffers when first
+visiting files or changing major modes if the major mode is not listed in
+`editorconfig-exclude-modes'."
   :global t
   :lighter ""
-  (dolist (hook (list
-                  'find-file-hook
-                  'after-change-major-mode-hook))
+  (dolist (hook '(after-change-major-mode-hook))
     (if editorconfig-mode
-      (add-hook hook 'editorconfig-apply)
-      (remove-hook hook 'editorconfig-apply))))
+      (add-hook hook 'editorconfig-mode-apply)
+      (remove-hook hook 'editorconfig-mode-apply))))
+
+
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("/\\.editorconfig\\'" . conf-unix-mode))
+(define-derived-mode editorconfig-conf-mode conf-mode "EditorConfig"
+  "Major mode for editing .editorconfig files."
+  (set-variable 'indent-line-function 'indent-relative)
+  (let ((key-property-list
+          '("charset"
+            "end_of_line"
+            "indent_size"
+            "indent_style"
+            "insert_final_newline"
+            "max_line_length"
+            "root"
+            "tab_width"
+            "trim_trailing_whitespace"))
+        (key-value-list
+          '("true"
+            "false"
+            "lf"
+            "cr"
+            "crlf"
+            "space"
+            "tab"
+            "latin1"
+            "utf-8"
+            "utf-8-bom"
+            "utf-16be"
+            "utf-16le"))
+        (font-lock-value
+          '(("^[ \t]*\\[\\(.+?\\)\\]" 1 font-lock-type-face)
+            ("^[ \t]*\\(.+?\\)[ \t]*[=:]" 1 font-lock-variable-name-face))))
+
+    ;; Highlight all key values
+    (dolist (key-value key-value-list)
+      (add-to-list
+        'font-lock-value
+        `(,(format "[=:][ \t]*\\(%s\\)\\([ \t]\\|$\\)" key-value)
+          1 font-lock-constant-face)))
+    ;; Highlight all key properties
+    (dolist (key-property key-property-list)
+      (add-to-list
+        'font-lock-value
+        `(,(format "^[ \t]*\\(%s\\)[ \t]*[=:]" key-property)
+          1 font-lock-builtin-face)))
+    ;; Highlight comments
+    (add-to-list 'font-lock-value
+      '("^#.*\\|^;.*\\| #.*\\| ;.*" 0 font-lock-comment-face))
+
+    (conf-mode-initialize "#" font-lock-value)))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist
+  '("/\\.editorconfig\\'" . editorconfig-conf-mode))
 
 (provide 'editorconfig)
 

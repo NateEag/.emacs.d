@@ -529,7 +529,7 @@
 	((:keywords "hypermedia")
 	 (:url . "http://mwolson.org/projects/EmacsMuse.html"))])
  (nameless .
-	   [(1 0 0)
+	   [(1 0 1)
 	    ((emacs
 	      (24 4)))
 	    "Hide package namespace in your emacs-lisp code" single
@@ -586,7 +586,7 @@
 	     ((:url . "https://github.com/michael-heerdegen/on-screen.el")
 	      (:keywords "convenience"))])
  (org .
-      [(20160328)
+      [(20160404)
        nil "Outline-based notes management and organizer" tar nil])
  (osc .
       [(0 1)
@@ -888,7 +888,7 @@
        ((:keywords "multimedia" "xpm")
 	(:url . "http://www.gnuvola.org/software/xpm/"))])
  (yasnippet .
-	    [(0 8 0)
+	    [(0 9 1)
 	     nil "Yet another snippet extension for Emacs." tar
 	     ((:keywords "convenience" "emulation")
 	      (:url . "http://github.com/capitaomorte/yasnippet"))])

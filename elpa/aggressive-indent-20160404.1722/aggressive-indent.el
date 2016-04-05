@@ -4,8 +4,8 @@
 
 ;; Author: Artur Malabarba <emacs@endlessparentheses.com>
 ;; URL: https://github.com/Malabarba/aggressive-indent-mode
-;; Package-Version: 20160226.1046
-;; Version: 1.5.1
+;; Package-Version: 20160404.1722
+;; Version: 1.5.3
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: indent lisp maint tools
 ;; Prefix: aggressive-indent
@@ -350,9 +350,12 @@ or messages."
   "List of (left right) limit of regions changed in the last command loop.")
 (make-variable-buffer-local 'aggressive-indent--changed-list)
 
+(defvar-local aggressive-indent--balanced-parens t
+  "Non-nil if the current-buffer has balanced parens.")
+
 (defun aggressive-indent--indent-if-changed ()
   "Indent any region that changed in the last command loop."
-  (when aggressive-indent--changed-list
+  (when (and aggressive-indent--changed-list aggressive-indent--balanced-parens)
     (save-excursion
       (save-selected-window
         (unless (or (run-hook-wrapped 'aggressive-indent--internal-dont-indent-if #'eval)
@@ -369,10 +372,21 @@ or messages."
                 (setq aggressive-indent--changed-list
                       (cdr aggressive-indent--changed-list))))))))))
 
+(defun aggressive-indent--check-parens ()
+  "Check if parens are balanced in the current buffer.
+Store result in `aggressive-indent--balanced-parens'."
+  (setq aggressive-indent--balanced-parens
+        (save-excursion
+          (ignore-errors
+            (save-restriction
+              (check-parens)
+              t)))))
+
 (defun aggressive-indent--keep-track-of-changes (l r &rest _)
   "Store the limits (L and R) of each change in the buffer."
   (when aggressive-indent-mode
-    (push (list l r) aggressive-indent--changed-list)))
+    (push (list l r) aggressive-indent--changed-list)
+    (aggressive-indent--check-parens)))
 
 ;;; Minor modes
 ;;;###autoload
@@ -394,11 +408,12 @@ or messages."
                    (memq major-mode '(text-mode fundamental-mode))
                    buffer-read-only))
           (aggressive-indent-mode -1)
-        ;; Should electric indent be ON or OFF?        
+        ;; Should electric indent be ON or OFF?
         (if (or (eq aggressive-indent-dont-electric-modes t)
                 (cl-member-if #'derived-mode-p aggressive-indent-dont-electric-modes))
             (aggressive-indent--local-electric nil)
           (aggressive-indent--local-electric t))
+        (aggressive-indent--check-parens)
         (add-hook 'after-change-functions #'aggressive-indent--keep-track-of-changes nil 'local)
         (add-hook 'post-command-hook #'aggressive-indent--indent-if-changed nil 'local))
     ;; Clean the hooks

@@ -5,7 +5,7 @@
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Created: 11 September 2014
 ;; Version: 0.4
-;; Package-Version: 20150423.1358
+;; Package-Version: 20160131.926
 ;; Package-Requires: ((dash "2.8.0"))
 
 ;;; License:
@@ -66,12 +66,12 @@
 (defconst pip-requirements-name-regex
   (rx
    line-start
-   (group (1+ (or alphanumeric "-" ".")))))
+   (group (1+ (or alphanumeric "-" "_" ".")))))
 
 (defconst pip-requirements-version-regex
   (rx
    (group (or "==" ">" ">=" "<" "<=" "!="))
-   (group (1+ (or digit "b" ".")))))
+   (group (1+ (or digit "b" "." "post")))))
 
 (defconst pip-requirements-operators
   (list

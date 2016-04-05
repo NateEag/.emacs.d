@@ -1,13 +1,16 @@
 ;;; evil-surround.el --- emulate surround.vim from Vim
 
 ;; Copyright (C) 2010, 2011 Tim Harper
+
+;; Licensed under the same terms as Emacs.
+
 ;;
 ;; Author: Tim Harper <timcharper at gmail dot com>
 ;;      Vegard Øye <vegard_oye at hotmail dot com>
 ;; Maintainer: Please send bug reports to the mailing list (below).
 ;; Created: July 23 2011
 ;; Version: 0.1
-;; Package-Version: 20151210.1218
+;; Package-Version: 20160331.821
 ;; Keywords: emulation, vi, evil
 ;; Mailing list: <implementations-list at lists.ourproject.org>
 ;;      Subscribe: http://tinyurl.com/implementations-list
@@ -233,6 +236,16 @@ column."
          (evil-surround-region ibeg iend t char)))
      beg end nil)))
 
+(defun evil-surround-call-with-repeat (callback)
+  "Record keystrokes to repeat surround-region operator and it's motion.
+This is necessary because `evil-yank' operator is not repeatable (:repeat nil)"
+  (evil-repeat-start)
+  (evil-repeat-record "y")
+  (evil-repeat-record (this-command-keys))
+  (call-interactively callback)
+  (evil-repeat-keystrokes 'post)
+  (evil-repeat-stop))
+
 ;; Dispatcher function in Operator-Pending state.
 ;; "cs" calls `evil-surround-change', "ds" calls `evil-surround-delete',
 ;; and "ys" calls `evil-surround-region'.
@@ -250,7 +263,7 @@ Otherwise call `evil-surround-region'."
     (call-interactively 'evil-surround-delete))
    (t
     (evil-surround-setup-surround-line-operators)
-    (call-interactively 'evil-surround-region))))
+    (evil-surround-call-with-repeat 'evil-surround-region))))
 
 (evil-define-command evil-Surround-edit (operation)
   "Like evil-surround-edit, but for surrounding with additional new-lines.
@@ -263,7 +276,7 @@ It does nothing for change / delete."
    ((eq operation 'delete) nil)
    (t
     (evil-surround-setup-surround-line-operators)
-    (call-interactively 'evil-Surround-region))))
+    (evil-surround-call-with-repeat 'evil-Surround-region))))
 
 (evil-define-operator evil-surround-region (beg end type char &optional force-new-line)
   "Surround BEG and END with CHAR.
@@ -282,38 +295,55 @@ Becomes this:
   (interactive "<R>c")
   (when (evil-surround-valid-char-p char)
     (let* ((overlay (make-overlay beg end nil nil t))
-           (pair (evil-surround-pair char))
+           (pair (or (and (boundp 'pair) pair) (evil-surround-pair char)))
            (open (car pair))
-           (close (cdr pair)))
+           (close (cdr pair))
+           (beg-pos (overlay-start overlay)))
       (unwind-protect
           (progn
-            (goto-char (overlay-start overlay))
-
+            (goto-char beg-pos)
             (cond ((eq type 'block)
                    (evil-surround-block beg end char))
 
                   ((eq type 'line)
+                   (setq force-new-line
+                         (or force-new-line
+                             ;; Force newline if not invoked from an operator, e.g. VS)
+                             (eq evil-this-operator 'evil-surround-region)
+                             ;; Or on multi-line operator surrounds (like 'ysj]')
+                             (/= (line-number-at-pos) (line-number-at-pos (1- end)))))
+
+                   (back-to-indentation)
+                   (setq beg-pos (point))
                    (insert open)
-                   (newline-and-indent)
-                   (indent-region (overlay-start overlay) (overlay-end overlay))
+                   (when force-new-line (newline-and-indent))
                    (goto-char (overlay-end overlay))
+                   (if force-new-line
+                       (when (eobp)
+                         (newline-and-indent))
+                     (backward-char)
+                     (evil-last-non-blank)
+                     (forward-char))
                    (insert close)
-                   (indent-according-to-mode)
-                   (newline))
+                   (when (or force-new-line
+                             (/= (line-number-at-pos) (line-number-at-pos beg-pos)))
+                     (indent-region beg-pos (point))
+                     (newline-and-indent)))
 
                   (force-new-line
                    (insert open)
-                   (indent-according-to-mode)
                    (newline-and-indent)
-                   (goto-char (overlay-end overlay))
-                   (newline-and-indent)
-                   (insert close))
+                   (let ((pt (point)))
+                     (goto-char (overlay-end overlay))
+                     (newline-and-indent)
+                     (insert close)
+                     (indent-region pt (point))))
 
                   (t
                    (insert open)
                    (goto-char (overlay-end overlay))
                    (insert close)))
-            (goto-char (overlay-start overlay)))
+            (goto-char beg-pos))
         (delete-overlay overlay)))))
 
 (evil-define-operator evil-Surround-region (beg end type char)

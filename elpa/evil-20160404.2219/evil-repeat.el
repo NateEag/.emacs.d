@@ -3,7 +3,7 @@
 ;; Author: Frank Fischer <frank.fischer at mathematik.tu-chemnitz.de>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.7
+;; Version: 1.2.12
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -155,8 +155,7 @@
     (let* ((range (evil-visual-range))
            (beg (evil-range-beginning range))
            (end (1- (evil-range-end range)))
-           (nfwdlines (- (line-number-at-pos end)
-                         (line-number-at-pos beg))))
+           (nfwdlines (evil-count-lines beg end)))
       (evil-repeat-record
        (cond
         ((eq evil-visual-selection 'char)

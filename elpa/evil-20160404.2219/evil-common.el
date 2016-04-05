@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.7
+;; Version: 1.2.12
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -635,6 +635,7 @@ Return a list (MOTION COUNT [TYPE])."
                      (evil-visual-line . line)
                      (evil-visual-block . block)))
         command prefix)
+    (setq evil-this-type-modified nil)
     (unless motion
       (while (progn
                (setq command (evil-keypress-parser)
@@ -660,7 +661,8 @@ Return a list (MOTION COUNT [TYPE])."
             (setq type 'inclusive)
           (setq type 'exclusive)))
        (t
-        (setq type modifier))))
+        (setq type modifier)))
+      (setq evil-this-type-modified type))
     (list motion count type)))
 
 (defun evil-mouse-events-p (keys)
@@ -868,16 +870,18 @@ Inhibits echo area messages, mode line updates and cursor changes."
   "Returns the number of currently visible lines."
   (- (window-height) 1))
 
-(defun evil-max-scroll-up ()
-  "Returns the maximal number of lines that can be scrolled up."
-  (1- (line-number-at-pos (window-start))))
-
-(defun evil-max-scroll-down ()
-  "Returns the maximal number of lines that can be scrolled down."
-  (if (pos-visible-in-window-p (window-end))
+(defun evil-count-lines (beg end)
+  "Return absolute line-number-difference betweeen `beg` and `end`.
+This should give the same results no matter where on the line `beg`
+and `end` are."
+  (if (= beg end)
       0
-    (1+ (- (line-number-at-pos (point-max))
-           (line-number-at-pos (window-end))))))
+    (let* ((last (max beg end))
+           (end-at-bol (save-excursion (goto-char last)
+                                       (bolp))))
+      (if end-at-bol
+          (count-lines beg end)
+        (1- (count-lines beg end))))))
 
 ;;; Movement
 
@@ -1974,23 +1978,6 @@ or a marker object pointing nowhere."
                                   (marker-position (cdr entry))))))))
 (put 'evil-swap-out-markers 'permanent-local-hook t)
 
-(defun evil-jump-hook (&optional command)
-  "Set jump point if COMMAND has a non-nil :jump property."
-  (setq command (or command this-command))
-  (when (evil-get-command-property command :jump)
-    (evil-set-jump)))
-
-(defun evil-set-jump (&optional pos)
-  "Set jump point at POS.
-POS defaults to point."
-  (unless (or (region-active-p) (evil-visual-state-p))
-    (evil-save-echo-area
-      (mapc #'(lambda (marker)
-                (set-marker marker nil))
-            evil-jump-list)
-      (setq evil-jump-list nil)
-      (push-mark pos t))))
-
 (defun evil-get-register (register &optional noerror)
   "Return contents of REGISTER.
 Signal an error if empty, unless NOERROR is non-nil.
@@ -3063,56 +3050,111 @@ linewise, otherwise it is character wise."
                 (if line 'line type)
                 :expanded t)))
 
-(defun evil-select-block (thing beg end type count &optional inclusive countcurrent)
+(defun evil--get-block-range (op cl selection-type)
+  "Return the exclusive range of a visual selection.
+OP and CL are pairs of buffer positions for the opening and
+closing delimiter of a range. SELECTION-TYPE is the desired type
+of selection.  It is a symbol that determines which parts of the
+block are selected.  If it is 'inclusive or t the returned range
+is \(cons (car OP) (cdr CL)). If it is 'exclusive or nil the
+returned range is (cons (cdr OP) (car CL)).  If it is
+'exclusive-line the returned range will skip whitespace at the
+end of the line of OP and at the beginning of the line of CL."
+  (cond
+   ((memq selection-type '(inclusive t)) (cons (car op) (cdr cl)))
+   ((memq selection-type '(exclusive nil)) (cons (cdr op) (car cl)))
+   ((eq selection-type 'exclusive-line)
+    (let ((beg (cdr op))
+          (end (car cl)))
+      (save-excursion
+        (goto-char beg)
+        (when (and (eolp) (not (eobp)))
+          (setq beg (line-beginning-position 2)))
+        (goto-char end)
+        (skip-chars-backward " \t")
+        (when (bolp)
+          (setq end (point))
+          (goto-char beg)
+          (when (and (not (bolp)) (< beg end))
+            (setq end (1- end)))))
+      (cons beg end)))
+   (t
+    (user-error "Unknown selection-type %s" selection-type))))
+
+(defun evil-select-block (thing beg end type count
+                                &optional
+                                selection-type
+                                countcurrent
+                                fixedscan)
   "Return a range (BEG END) of COUNT delimited text objects.
 BEG END TYPE are the currently selected (visual) range.  The
 delimited object must be given by THING-up function (see
-`evil-up-block'). If INCLUSIVE is non-nil, OPEN and CLOSE are
-included in the range; otherwise they are excluded. If
-COUNTCURRENT is non-nil an objected is counted if the current
-selection matches that object exactly."
+`evil-up-block').
+
+SELECTION-TYPE is symbol that determines which parts of the block
+are selected.  If it is 'inclusive or t OPEN and CLOSE are
+included in the range. If it is 'exclusive or nil the delimiters
+are not contained. If it is 'exclusive-line the delimiters are
+not included as well as adjacent whitespace until the beginning
+of the next line or the end of the previous line. If the
+resulting selection consists of complete lines only and visual
+state is not active, the returned selection is linewise.
+
+If COUNTCURRENT is non-nil an objected is counted if the current
+selection matches that object exactly.
+
+Usually scanning for the surrounding block starts at (1+ beg)
+and (1- end). If this might fail due to the behavior of THING
+then FIXEDSCAN can be set to t. In this case the scan starts at
+BEG and END. One example where this might fail is if BEG and END
+are the delimiters of a string or comment."
   (save-excursion
     (save-match-data
-      (let ((beg (or beg (point)))
-            (end (or end (point)))
-            (count (abs (or count 1)))
-            op cl op-end cl-end)
-        ;; start scanning at beginning
-        (goto-char beg)
+      (let* ((orig-beg beg)
+             (orig-end end)
+             (beg (or beg (point)))
+             (end (or end (point)))
+             (count (abs (or count 1)))
+             op cl op-end cl-end)
+        ;; We always assume at least one selected character.
+        (if (= beg end) (setq end (1+ end)))
+        ;; We scan twice: starting at (1+ beg) forward and at (1- end)
+        ;; backward. The resulting selection is the smaller one.
+        (goto-char (if fixedscan beg (1+ beg)))
         (when (and (zerop (funcall thing +1)) (match-beginning 0))
           (setq cl (cons (match-beginning 0) (match-end 0)))
           (goto-char (car cl))
           (when (and (zerop (funcall thing -1)) (match-beginning 0))
             (setq op (cons (match-beginning 0) (match-end 0)))))
         ;; start scanning from end
-        ;;
-        ;; We always assume at least one selected character, otherwise
-        ;; commands like 'dib' on '(word)' with `point' being at the
-        ;; opening parenthesis would fail, because Emacs considers
-        ;; this position as outside of the parentheses.
-        (goto-char (if (= beg end) (1+ end) end))
+        (goto-char (if fixedscan end (1- end)))
         (when (and (zerop (funcall thing -1)) (match-beginning 0))
           (setq op-end (cons (match-beginning 0) (match-end 0)))
           (goto-char (cdr op-end))
           (when (and (zerop (funcall thing +1)) (match-beginning 0))
             (setq cl-end (cons (match-beginning 0) (match-end 0)))))
-        ;; use the tighter one of both
+        ;; Bug #607: use the tightest selection that contains the
+        ;; original selection. If non selection contains the original,
+        ;; use the larger one.
         (cond
          ((and (not op) (not cl-end))
           (error "No surrounding delimiters found"))
-         ((or (not op)    ; first not found
-              (and cl-end ; second better
-                   (>= (car op-end) (car op))
-                   (<= (cdr cl-end) (cdr cl))))
+         ((or (not op) ; first not found
+              (and cl-end ; second found
+                   (>= (car op-end) (car op)) ; second smaller
+                   (<= (cdr cl-end) (cdr cl))
+                   (<= (car op-end) beg)      ; second contains orig
+                   (>= (cdr cl-end) end)))
           (setq op op-end cl cl-end)))
         (setq op-end op cl-end cl) ; store copy
         ;; if the current selection contains the surrounding
         ;; delimiters, they do not count as new selection
-        (let ((cnt (if (or (and (not countcurrent) inclusive
-                                (<= beg (car op)) (>= end (cdr cl)))
-                           (and (not countcurrent) (not inclusive)
-                                (<= beg (cdr op)) (>= end (car cl))))
-                       count
+        (let ((cnt (if (and orig-beg orig-end (not countcurrent))
+                       (let ((sel (evil--get-block-range op cl selection-type)))
+                         (if (and (<= orig-beg (car sel))
+                                  (>= orig-end (cdr sel)))
+                             count
+                           (1- count)))
                      (1- count))))
           ;; starting from the innermost surrounding delimiters
           ;; increase selection
@@ -3129,14 +3171,22 @@ selection matches that object exactly."
                        (if (match-beginning 0)
                            (cons (match-beginning 0) (match-end 0))
                          cl)))))
-        (if inclusive
-            (setq op (car op) cl (cdr cl))
-          (setq op (cdr op) cl (car cl)))
-        (if (and (= op beg) (= cl end)
-                 (or (not countcurrent)
-                     (and countcurrent (/= count 1))))
-            (error "No surrounding delimiters found")
-          (evil-range op cl type :expanded t))))))
+        (let ((sel (evil--get-block-range op cl selection-type)))
+          (setq op (car sel)
+                cl (cdr sel)))
+        (cond
+         ((and (equal op orig-beg) (equal cl orig-end)
+               (or (not countcurrent)
+                   (and countcurrent (/= count 1))))
+          (error "No surrounding delimiters found"))
+         ((save-excursion
+            (and (not (evil-visual-state-p))
+                 (eq type 'inclusive)
+                 (progn (goto-char op) (bolp))
+                 (progn (goto-char cl) (bolp))))
+          (evil-range op cl 'line :expanded t))
+         (t
+          (evil-range op cl type :expanded t)))))))
 
 (defun evil-select-paren (open close beg end type count &optional inclusive)
   "Return a range (BEG END) of COUNT delimited text objects.
@@ -3148,9 +3198,15 @@ the range; otherwise they are excluded.
 The types of OPEN and CLOSE specify which kind of THING is used
 for parsing with `evil-select-block'. If OPEN and CLOSE are
 characters `evil-up-paren' is used. Otherwise OPEN and CLOSE
-must be regular expressions and `evil-up-block' is used."
+must be regular expressions and `evil-up-block' is used.
+
+If the selection is exclusive, whitespace at the end or at the
+beginning of the selection until the end-of-line or beginning-of-line
+is ignored."
   (lexical-let
       ((open open) (close close))
+    ;; we need special linewise exclusive selection
+    (unless inclusive (setq inclusive 'exclusive-line))
     (cond
      ((and (characterp open) (characterp close))
       (let ((thing #'(lambda (&optional cnt)
@@ -3187,7 +3243,8 @@ must be regular expressions and `evil-up-block' is used."
                                      type
                                      count
                                      inclusive
-                                     (or (< extbeg beg) (> extend end)))))))))
+                                     (or (< extbeg beg) (> extend end))
+                                     t)))))))
      (t
       (evil-select-block #'(lambda (&optional cnt)
                              (evil-up-block open close cnt))
@@ -3785,27 +3842,55 @@ should be left-aligned for left justification."
       (back-to-indentation))))
 
 ;;; View helper
-(defun evil-view-list (name body)
-  "Open new view buffer.
-The view buffer is named *NAME*. After the buffer is created, the
-function BODY is called with the view buffer being the current
-buffer. The new buffer is opened in view-mode with evil come up
-in motion state."
-  (let ((buf (get-buffer-create (concat "*" name "*")))
-        (inhibit-read-only t))
-    (with-current-buffer buf
-      (evil-motion-state)
-      (erase-buffer)
-      (funcall body)
-      (goto-char (point-min))
-      (view-buffer-other-window buf nil #'kill-buffer))))
 
-(defmacro evil-with-view-list (name &rest body)
-  "Execute BODY in new view-mode buffer *NAME*.
-This macro is a small convenience wrapper around
-`evil-view-list'."
-  (declare (indent 1) (debug t))
-  `(evil-view-list ,name #'(lambda () ,@body)))
+(defvar-local evil-list-view-select-action nil)
+(put 'evil-list-view-select-action 'permanent-local t)
+
+(define-derived-mode evil-list-view-mode tabulated-list-mode
+  "Evil List View"
+  (tabulated-list-init-header)
+  (tabulated-list-print))
+
+(defun evil-list-view-goto-entry ()
+  (interactive)
+  (when (and evil-list-view-select-action
+             (not (eobp)))
+    (let* ((line (line-number-at-pos (point)))
+           (entry (elt tabulated-list-entries (1- line))))
+      (funcall evil-list-view-select-action (nth 1 entry)))))
+
+(define-key evil-list-view-mode-map (kbd "q") #'kill-this-buffer)
+(define-key evil-list-view-mode-map [follow-link] nil) ;; allows mouse-1 to be activated
+(define-key evil-list-view-mode-map [mouse-1] #'evil-list-view-goto-entry)
+(define-key evil-list-view-mode-map [return] #'evil-list-view-goto-entry)
+
+(defmacro evil-with-view-list (&rest properties)
+  "Opens new list view buffer.
+
+PROPERTIES is a property-list which supports the following properties:
+
+:name           (required)   The name of the buffer.
+:mode-name      (required)   The name for the mode line.
+:format         (required)   The value for `tabulated-list-format'.
+:entries        (required)   The value for `tabulated-list-entries'.
+:select-action  (optional)   A function for row selection.
+                             It takes in a single parameter, which is the selected row's
+                             vector value that is passed into `:entries'.
+"
+  (declare (indent defun) (debug t))
+  `(let ((bufname (concat "*" ,(plist-get properties :name) "*"))
+         (inhibit-read-only t))
+     (and (get-buffer bufname)
+          (kill-buffer bufname))
+     (let ((buf (get-buffer-create bufname)))
+       (with-current-buffer buf
+         (setq tabulated-list-format ,(plist-get properties :format))
+         (setq tabulated-list-entries ,(plist-get properties :entries))
+         (setq evil-list-view-select-action ,(plist-get properties :select-action))
+         (evil-list-view-mode)
+         (setq mode-name ,(plist-get properties :mode-name))
+         (evil-motion-state))
+       (switch-to-buffer-other-window buf))))
 
 (provide 'evil-common)
 

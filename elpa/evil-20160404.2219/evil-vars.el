@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.7
+;; Version: 1.2.12
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -29,6 +29,8 @@
 
 (declare-function evil-add-command-properties "evil-common"
                   (command &rest properties))
+(declare-function evil-update-insert-state-bindings "evil-maps"
+                  (&optional _option-name remove force))
 
 ;;; Hooks
 
@@ -408,6 +410,22 @@ before point."
                     (not (lookup-key evil-motion-state-map (kbd "C-u"))))
                (define-key evil-motion-state-map (kbd "C-u") 'evil-scroll-up))))))
 
+(defcustom evil-want-C-d-scroll t
+  "Whether \"C-d\" scrolls like in Vim."
+  :type 'boolean
+  :group 'evil
+  :set #'(lambda (sym value)
+           (set-default sym value)
+           (when (boundp 'evil-motion-state-map)
+             (cond
+              ((and (not value)
+                    (eq (lookup-key evil-motion-state-map (kbd "C-d"))
+                        'evil-scroll-down))
+               (define-key evil-motion-state-map (kbd "C-d") nil))
+              ((and value
+                    (not (lookup-key evil-motion-state-map (kbd "C-d"))))
+               (define-key evil-motion-state-map (kbd "C-d") 'evil-scroll-down))))))
+
 (defcustom evil-want-C-w-delete t
   "Whether \"C-w\" deletes a word in Insert state."
   :type 'boolean
@@ -421,9 +439,9 @@ before point."
                         'evil-delete-backward-word))
                (define-key evil-motion-state-map (kbd "C-w") 'evil-window-map))
               ((and value
-                    (eq (lookup-key evil-motion-state-map (kbd "C-u"))
+                    (eq (lookup-key evil-motion-state-map (kbd "C-w"))
                         'evil-window-map))
-               (define-key evil-motion-state-map (kbd "C-u") 'evil-delete-backward-word))))))
+               (define-key evil-motion-state-map (kbd "C-w") 'evil-delete-backward-word))))))
 
 (defcustom evil-want-C-w-in-emacs-state nil
   "Whether \"C-w\" prefixes windows commands in Emacs state."
@@ -445,6 +463,14 @@ The default behavior is to yank the whole line."
            (evil-add-command-properties
             'evil-yank-line
             :motion (if value 'evil-end-of-line 'evil-line))))
+
+(defcustom evil-disable-insert-state-bindings nil
+  "Whether insert state bindings should be used. Excludes
+bindings for escape, delete and `evil-toggle-key'."
+  :group 'evil
+  :type 'boolean
+  :initialize #'evil-custom-initialize-pending-reset
+  :set #'evil-update-insert-state-bindings)
 
 (defcustom evil-echo-state t
   "Whether to signal the current state in the echo area."
@@ -554,6 +580,7 @@ If STATE is nil, Evil is disabled in the buffer."
 (defcustom evil-emacs-state-modes
   '(archive-mode
     bbdb-mode
+    biblio-selection-mode
     bookmark-bmenu-mode
     bookmark-edit-annotation-mode
     browse-kill-ring-mode
@@ -583,6 +610,7 @@ If STATE is nil, Evil is disabled in the buffer."
     emms-mark-mode
     emms-metaplaylist-mode
     emms-playlist-mode
+    ess-help-mode
     etags-select-mode
     fj-mode
     gc-issues-mode
@@ -595,6 +623,7 @@ If STATE is nil, Evil is disabled in the buffer."
     gdb-threads-mode
     gist-list-mode
     git-commit-mode
+    git-rebase-mode
     gnus-article-mode
     gnus-browse-mode
     gnus-group-mode
@@ -912,6 +941,15 @@ that line."
   :type 'boolean
   :group 'evil)
 
+(defcustom evil-text-object-change-visual-type t
+  "Text objects change the current visual state type.
+If non-nil then a text-object changes the type of the visual state to
+its default selection type (e.g. a word object always changes to
+charwise visual state). Otherwise the current visual state type is
+preserved."
+  :type 'boolean
+  :group 'evil)
+
 (defgroup evil-cjk nil
   "CJK support"
   :prefix "evil-cjk-"
@@ -1016,8 +1054,8 @@ only has influence if the evil search module is chosen in
   "If non-nil Vim-style backslash codes are supported in search patterns.
 See `evil-transform-vim-style-regexp' for the supported backslash
 codes.  Note that this only affects the search command if
-`evil-search-module' is set to 'evil. The isearch module always
-uses plain Emacs regular expressions."
+`evil-search-module' is set to 'evil-search. The isearch module
+always uses plain Emacs regular expressions."
   :type 'boolean
   :group 'evil)
 
@@ -1134,6 +1172,12 @@ SYMBOL is made permanent buffer local."
      (make-variable-buffer-local ',symbol)
      (put ',symbol 'permanent-local t)))
 
+(evil-define-local-var evil-ud-scroll-count 0
+  "Holds last used prefix for `evil-scroll-up'
+and `evil-scroll-down'.
+Determines how many lines should be scrolled.
+Default value is 0 - scroll half the screen.")
+
 (evil-define-local-var evil-state nil
   "The current Evil state.
 To change the state, use `evil-change-state'
@@ -1169,6 +1213,12 @@ is the variable containing the keymap for MODE.")
 reinitialized in each buffer. Entries have the form
 \(MODE . KEYMAP), where KEYMAP is the variable containing
 the keymap for MODE.")
+
+(defvar evil-minor-mode-keymaps-alist nil
+  "Association list of evil states to minor-mode keymap alists.
+Entries have the form (STATE . MODE-MAP-ALIST), where
+MODE-MAP-ALIST is an alist taking the form of
+`minor-mode-map-alist'.")
 
 (defvar evil-state-properties nil
   "Specifications made by `evil-define-state'.
@@ -1210,6 +1260,11 @@ describing it, etc.")
 
 (evil-define-local-var evil-this-type nil
   "Current motion type.")
+
+(evil-define-local-var evil-this-type-modified nil
+  "Non-nil iff current motion type has been modified by the user.
+If the type has been modified, this variable contains the new
+type.")
 
 (evil-define-local-var evil-this-register nil
   "Current register.")
@@ -1261,8 +1316,8 @@ Using `evil-with-restriction' stores the previous values of
     (?\) . evil-forward-sentence)
     (?{ . evil-backward-paragraph)
     (?} . evil-forward-paragraph)
-    (?' . evil-jump-backward)
-    (?` . evil-jump-backward)
+    (?' . evil-jump-backward-swap)
+    (?` . evil-jump-backward-swap)
     (?< . evil-visual-beginning)
     (?> . evil-visual-goto-end)
     (?. . (lambda ()
@@ -1276,9 +1331,6 @@ where STRING is a file path and NUMBER is a buffer position.
 The global value of this variable holds markers available from
 every buffer, while the buffer-local value holds markers available
 only in the current buffer.")
-
-(evil-define-local-var evil-jump-list nil
-  "Jump list.")
 
 (defconst evil-suppress-map (make-keymap)
   "Full keymap disabling default bindings to `self-insert-command'.")
@@ -1343,7 +1395,7 @@ has been repeated.")
   "The information about the number of following lines the
 insertion should be repeated. This is list (LINE COLUMN COUNT)
 where LINE is the line-number where the original insertion
-started and COLUMN is either a number of function determining the
+started and COLUMN is either a number or function determining the
 column where the repeated insertions should take place. COUNT is
 number of repeats (including the original insertion).")
 
@@ -1501,6 +1553,13 @@ Elements have the form (NAME . FUNCTION).")
 (defvar evil-visual-x-select-timeout 0.1
   "Time in seconds for the update of the X selection.")
 
+(declare-function origami-open-all-nodes "origami.el")
+(declare-function origami-close-all-nodes "origami.el")
+(declare-function origami-toggle-node "origami.el")
+(declare-function origami-open-node "origami.el")
+(declare-function origami-open-node-recursively "origami.el")
+(declare-function origami-close-node "origami.el")
+
 (defvar evil-fold-list
   `(((hs-minor-mode)
      :open-all   hs-show-all
@@ -1529,7 +1588,14 @@ Elements have the form (NAME . FUNCTION).")
                       (show-entry)
                       (show-children)))
      :open-rec   show-subtree
-     :close      hide-subtree))
+     :close      hide-subtree)
+    ((origami-mode)
+     :open-all   ,(lambda () (origami-open-all-nodes (current-buffer)))
+     :close-all  ,(lambda () (origami-close-all-nodes (current-buffer)))
+     :toggle     ,(lambda () (origami-toggle-node (current-buffer) (point)))
+     :open       ,(lambda () (origami-open-node (current-buffer) (point)))
+     :open-rec   ,(lambda () (origami-open-node-recursively (current-buffer) (point)))
+     :close      ,(lambda () (origami-close-node (current-buffer) (point)))))
   "Actions to be performed for various folding operations.
 
 The value should be a list of fold handlers, were a fold handler has
@@ -1732,7 +1798,7 @@ Otherwise the previous command is assumed as substitute.")
           (goto-char (point-min))
           (buffer-substring (point-min) (line-end-position)))
          ;; no repo, use plain version
-         (t "1.2.7")))))
+         (t "1.2.12")))))
   "The current version of Evil")
 
 (defun evil-version ()

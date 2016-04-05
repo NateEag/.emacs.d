@@ -6,7 +6,7 @@
 ;; Author: Moritz Bunkus <moritz@bunkus.org>
 ;; Maintainer: Moritz Bunkus <moritz@bunkus.org>
 ;; Version: 0.1.0
-;; Package-Version: 20151127.15
+;; Package-Version: 20160129.959
 ;; Keywords: tools
 
 ;; mo-git-blame is free software; you can redistribute it and/or
@@ -157,6 +157,14 @@ option if this variable is non-nil."
   :type '(choice (const :tag "Always" always)
                  (const :tag "If available" if-available)
                  (const :tag "Never" never)))
+
+(defcustom mo-git-blame-delete-other-windows nil
+  "Delete other windows before setting up the blame-window and the
+content-window if variable is non-nil."
+
+  :group 'mo-git-blame
+  :type '(choice (const :tag "Delete other windows" t)
+                 (const :tag "Don't delete other windows" nil)))
 
 ;; This function was taken from magit (called 'magit-trim-line' there).
 (defun mo-git-blame-trim-line (str)
@@ -526,6 +534,9 @@ option. Otherwise the whole file is blamed."
       (goto-char (point-max))
       (line-number-at-pos))))
 
+(defvar mo-git-blame-mode-hook nil
+  "Mode hook.")
+
 (defun mo-git-blame-mode ()
   "Show the output of 'git blame' and the content of the file in
 two frames side-by-side. Allows iterative re-blaming for specific
@@ -541,7 +552,8 @@ from elisp.
         mode-name "MoGitBlame"
         mode-line-process ""
         truncate-lines t)
-  (use-local-map mo-git-blame-mode-map))
+  (use-local-map mo-git-blame-mode-map)
+  (run-hooks 'mo-git-blame-mode-hook))
 
 (defun mo-git-blame--make-args (args)
   (delete ""
@@ -571,7 +583,7 @@ from elisp.
 
 (defun mo-git-blame-run-blame-incrementally (start-line lines-to-blame)
   (let* ((num-content-lines (mo-git-blame-number-of-content-lines))
-         i)
+         i args)
     (dotimes (i (1- num-content-lines))
       (insert "\n"))
 
@@ -678,8 +690,12 @@ blamed."
                 (cons (list :full-file-name (plist-get prior-vars :full-file-name)
                             :revision (plist-get prior-vars :current-revision))
                       prior-revisions))))
+    (when mo-git-blame-delete-other-windows
+      (delete-other-windows-internal))
     (if (window-full-width-p)
-        (split-window-horizontally mo-git-blame-blame-window-width))
+        (split-window-horizontally mo-git-blame-blame-window-width)
+      (shrink-window-horizontally (- (window-width)
+                                     mo-git-blame-blame-window-width)))
     (select-window (setq content-window (next-window)))
     (switch-to-buffer content-buffer)
     (select-window blame-window)

@@ -1,4 +1,4 @@
-(define-package "pyimpsort" "20150927.1117" "Sort python imports."
+(define-package "pyimpsort" "20160129.2053" "Sort python imports."
   '((emacs "24.3"))
   :url "https://github.com/emacs-pe/pyimpsort.el" :keywords
   '("convenience"))

@@ -39,7 +39,7 @@
 ;;       '(define-key python-mode-map "\C-c\C-u" #'pyimpsort-buffer))
 ;;
 ;;; Troubleshooting:
-;; + **Doesn't sort correcly third party libraries**
+;; + **Doesn't sort correctly third party libraries**
 ;;
 ;;   `pyimpsort.el' tries to identify the third party libraries if are installed
 ;;   in in the PYTHONPATH, if a package is not installed it is assumed that

@@ -1,6 +1,6 @@
 ;;; solarized.el --- Solarized for Emacs.
 
-;; Copyright (C) 2011-2015 Bozhidar Batsov
+;; Copyright (C) 2011-2016 Bozhidar Batsov
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; Author: Thomas Frössman <thomasf@jossystem.se>
@@ -246,7 +246,6 @@ Alpha should be a float between 0 and 1."
          (s-fringe-bg (if solarized-distinct-fringe-background
                           base02 base03))
          (s-fringe-fg base01)
-
 
          (s-header-line-fg (if solarized-high-contrast-mode-line
                                base1 base0))
@@ -1349,11 +1348,16 @@ customize the resulting theme."
      `(magit-bisect-skip ((t (:foreground ,yellow))))
      `(magit-bisect-bad  ((t (:foreground ,red))))
 ;;;;;; blame
-     `(magit-blame-heading ((t (:background ,base1 :foreground ,base02))))
-     `(magit-blame-hash    ((t (:background ,base1 :foreground ,base02))))
-     `(magit-blame-name    ((t (:background ,base1 :foreground ,orange-l))))
-     `(magit-blame-date    ((t (:background ,base1 :foreground ,orange-l))))
-     `(magit-blame-summary ((t (:background ,base1 :foreground ,base02 :weight bold))))
+     `(magit-blame-heading ((t (:background ,base02 :foreground ,violet
+                                            :weight bold :slant normal :box (:color ,base02 :line-width 2)))))
+     `(magit-blame-hash    ((t (:background ,base02 :foreground ,violet
+                                            :weight normal :slant normal :box (:color ,base02 :line-width 2)))))
+     `(magit-blame-name    ((t (:background ,base02 :foreground ,violet
+                                            :weight normal :slant normal :box (:color ,base02 :line-width 2)))))
+     `(magit-blame-date    ((t (:background ,base02 :foreground ,violet
+                                            :weight bold :slant normal :box (:color ,base02 :line-width 2)))))
+     `(magit-blame-summary ((t (:background ,base02 :foreground ,base0
+                                            :weight bold :slant normal :box (:color ,base02 :line-width 2)))))
 ;;;;;; references etc.
      `(magit-dimmed         ((t (:foreground ,base01))))
      `(magit-hash           ((t (:foreground ,base01))))
@@ -2050,7 +2054,7 @@ customize the resulting theme."
      `(whitespace-hspace ((,class (:background unspecified :foreground ,base1
                                                :inverse-video unspecified))))
      `(whitespace-tab ((,class (:background unspecified :foreground ,red
-                                            :inverse-video unspecified :weight bold))))
+                                            :inverse-video t))))
      `(whitespace-newline ((,class(:background unspecified :foreground ,base01
                                                :inverse-video unspecified))))
      `(whitespace-trailing ((,class (:background unspecified :foreground ,orange-lc

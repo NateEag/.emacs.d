@@ -37,7 +37,7 @@
 		 nil "Indent and dedent Lisp code, automatically adjust close parens" tar
 		 ((:url . "http://elpa.gnu.org/packages/adjust-parens.html"))])
  (aggressive-indent .
-		    [(1 5 1)
+		    [(1 5 3)
 		     ((emacs
 		       (24 1))
 		      (cl-lib
@@ -103,9 +103,9 @@
        ((:keywords "point" "location")
 	(:url . "https://github.com/abo-abo/avy"))])
  (beacon .
-	 [(1 2)
+	 [(1 2 1)
 	  ((seq
-	    (1 11)))
+	    (2 14)))
 	  "Highlight the cursor whenever the window scrolls" single
 	  ((:url . "https://github.com/Malabarba/beacon")
 	   (:keywords "convenience"))])

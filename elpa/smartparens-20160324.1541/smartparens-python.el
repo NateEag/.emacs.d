@@ -1,6 +1,6 @@
 ;;; smartparens-python.el --- Additional configuration for Python based modes.
 
-;; Copyright (C) 2015 Matus Goljer
+;; Copyright (C) 2015-2016 Matus Goljer
 
 ;; Author: Matus Goljer <matus.goljer@gmail.com>
 ;; Maintainer: Matus Goljer <matus.goljer@gmail.com>
@@ -52,6 +52,47 @@
 ;; paren
 (--each '(python-mode inferior-python-mode)
   (add-to-list 'sp-sexp-suffix (list it 'regexp "")))
+
+(defun sp-python-in-string-p (id action context)
+  "Return non-nil if point is in a string, taking
+care not to be confused by an unclosed ' that's just been typed."
+  (and (eq context 'string)
+       (save-excursion
+         (backward-char 1)
+         (nth 3 (syntax-ppss)))))
+
+(sp-local-pair 'python-mode
+               "'" "'"
+               :unless '(sp-in-comment-p sp-python-in-string-p))
+
+(sp-local-pair 'python-mode
+               "(" nil
+               :pre-handlers '(sp-python-pre-slurp-handler))
+
+(sp-local-pair 'python-mode
+               "[" nil
+               :pre-handlers '(sp-python-pre-slurp-handler))
+
+(defun sp-python-pre-slurp-handler (id action context)
+  (when (eq action 'slurp-forward)
+    ;; If there was no space before, we shouldn't add on.
+    ;; ok = enclosing, next-thing one being slurped into
+    ;; (variables let-bound in `sp-forward-slurp-sexp').
+    (save-excursion
+      (when (and (= (sp-get ok :end) (sp-get next-thing :beg))
+                 (equal (sp-get ok :op) (sp-get next-thing :op)))
+        (goto-char (sp-get ok :end))
+        (when (looking-back " ")
+          (delete-char -1))))))
+
+(defadvice python-indent-dedent-line-backspace
+    (around sp-backward-delete-char-advice activate)
+  (if smartparens-strict-mode
+      (cl-letf (((symbol-function 'delete-backward-char)
+                 (lambda (arg &optional killp)
+                   (sp-backward-delete-char arg))))
+        ad-do-it)
+    ad-do-it))
 
 (provide 'smartparens-python)
 ;;; smartparens-python.el ends here

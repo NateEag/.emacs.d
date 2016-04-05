@@ -66,10 +66,10 @@ If we return nil, ' should be used for character literals."
   "Return t if we could add a <T> in this position.
 If nil, the user is probably using < for something else."
   (and (apply #'sp-in-code-p args)
-       (looking-back (rx (or letter (seq letter "<"))))))
+       (looking-back (rx (or letter (seq letter "<") (seq letter "::<"))))))
 
 (sp-with-modes '(rust-mode)
-  (sp-local-pair "'" "'" :unless '(sp-in-comment-p sp-in-rust-lifetime-context))
+  (sp-local-pair "'" "'" :unless '(sp-in-comment-p sp-in-string-p sp-in-rust-lifetime-context))
   (sp-local-pair "<" ">" :when '(sp-rust-could-be-parameterized)))
 
 ;; Rust has no sexp suffices.  This fixes slurping

@@ -1,6 +1,6 @@
 ;;; smartparens.el --- Automatic insertion, wrapping and paredit-like navigation with user defined pairs.
 
-;; Copyright (C) 2012-2015 Matus Goljer
+;; Copyright (C) 2012-2016 Matus Goljer
 
 ;; Author: Matus Goljer <matus.goljer@gmail.com>
 ;; Maintainer: Matus Goljer <matus.goljer@gmail.com>
@@ -420,6 +420,14 @@ run.")
 Only the pairs defined by `sp-pair' are considered.  Tag pairs
 can be of any length.")
 
+(defconst sp-max-prefix-length 100
+  "Maximum length of a pair prefix.
+
+Because prefixes for pairs can be specified using regular
+expressions, they can potentially be of arbitrary length.  This
+settings solves the problem where the parser would decide to
+backtrack the entire buffer which would lock up Emacs.")
+
 (defvar sp-pairs '((t
                     .
                     ((:open "\\\\(" :close "\\\\)" :actions (insert wrap autoskip navigate))
@@ -457,7 +465,8 @@ Symbol is defined as a chunk of text recognized by
 
 (define-obsolete-variable-alias 'sp--lisp-modes 'sp-lisp-modes "2015-11-08")
 
-(defcustom sp-lisp-modes '(cider-repl-mode
+(defcustom sp-lisp-modes '(
+                           cider-repl-mode
                            clojure-mode
                            clojurec-mode
                            clojurescript-mode
@@ -473,11 +482,13 @@ Symbol is defined as a chunk of text recognized by
                            lisp-interaction-mode
                            lisp-mode
                            monroe-mode
+                           racket-mode
+                           racket-repl-mode
                            scheme-interaction-mode
                            scheme-mode
                            slime-repl-mode
-                           racket-mode
-                           racket-repl-mode)
+                           stumpwm-mode
+                           )
   "List of Lisp modes."
   :type '(repeat symbol)
   :group 'smartparens)
@@ -486,6 +497,8 @@ Symbol is defined as a chunk of text recognized by
                                              python-mode
                                              coffee-mode
                                              js2-mode
+                                             asm-mode
+                                             makefile-gmake-mode
                                              )
   "List of modes that should not reindent after kill."
   :type '(repeat symbol)
@@ -1471,7 +1484,7 @@ does not trigger `post-self-insert-hook'."
 
 (cl-eval-when (compile eval load)
   (defun sp--get-substitute (struct list)
-    "Only ever call this from sp-get!  This function do the
+    "Only ever call this from sp-get!  This function does the
 replacement of all the keywords with actual calls to sp-get."
     (if (listp list)
         (if (eq (car list) 'sp-get)
@@ -1835,7 +1848,7 @@ If PROP is non-nil, return the value of that property instead."
 (defun sp-wrap-with-pair (pair)
   "Wrap the following expression with PAIR.
 
-This function is non-interactive helper.  To use this function
+This function is a non-interactive helper.  To use this function
 interactively, bind the following lambda to a key:
 
  (lambda (&optional arg) (interactive \"P\") (sp-wrap-with-pair \"(\"))
@@ -2730,31 +2743,32 @@ see `sp-pair' for description."
 ;; figure out how to detect the argument to self-insert-command that
 ;; resulted to this insertion
 (defun sp--post-self-insert-hook-handler ()
-  (when smartparens-mode
-    (let (op action)
-      (setq op sp-last-operation)
-      (when (region-active-p)
-        (sp-wrap--initialize))
-      (cond
-       (sp-wrap-overlays
-        (sp-wrap))
-       (t
-        ;; TODO: this does not pick correct pair!! it uses insert and not wrapping code
-        (sp--setaction action (-when-let ((_ . open-pairs) (sp--all-pairs-to-insert))
-                                (catch 'done
-                                  (-each open-pairs
-                                    (-lambda ((&keys :open open :close close))
-                                      (--when-let (sp--wrap-repeat-last (cons open close))
-                                        (throw 'done it)))))))
-        (sp--setaction action (sp-insert-pair))
-        (sp--setaction action (sp-skip-closing-pair))
-        ;; if nothing happened, we just inserted a character, so
-        ;; set the apropriate operation.  We also need to check
-        ;; for `sp--self-insert-no-escape' not to overwrite
-        ;; it.  See `sp-autoinsert-quote-if-followed-by-closing-pair'.
-        (when (and (not action)
-                   (not (eq sp-last-operation 'sp-self-insert-no-escape)))
-          (setq sp-last-operation 'sp-self-insert)))))))
+  (with-demoted-errors "sp--post-self-insert-hook-handler: %S"
+    (when smartparens-mode
+      (let (op action)
+        (setq op sp-last-operation)
+        (when (region-active-p)
+          (sp-wrap--initialize))
+        (cond
+         (sp-wrap-overlays
+          (sp-wrap))
+         (t
+          ;; TODO: this does not pick correct pair!! it uses insert and not wrapping code
+          (sp--setaction action (-when-let ((_ . open-pairs) (sp--all-pairs-to-insert))
+                                  (catch 'done
+                                    (-each open-pairs
+                                      (-lambda ((&keys :open open :close close))
+                                        (--when-let (sp--wrap-repeat-last (cons open close))
+                                          (throw 'done it)))))))
+          (sp--setaction action (sp-insert-pair))
+          (sp--setaction action (sp-skip-closing-pair))
+          ;; if nothing happened, we just inserted a character, so
+          ;; set the apropriate operation.  We also need to check
+          ;; for `sp--self-insert-no-escape' not to overwrite
+          ;; it.  See `sp-autoinsert-quote-if-followed-by-closing-pair'.
+          (when (and (not action)
+                     (not (eq sp-last-operation 'sp-self-insert-no-escape)))
+            (setq sp-last-operation 'sp-self-insert))))))))
 
 ;; Unfortunately, some modes rebind "inserting" keys to their own
 ;; handlers but do not hand over the insertion back to
@@ -3712,7 +3726,7 @@ Non-nil return value means to skip the result."
          (sp--looking-back "\\\\" 1 t))))
 
 ;; TODO: since this function is used for all the navigation, we should
-;; optimaze it a lot! Get some elisp profiler! Also, we should split
+;; optimize it a lot! Get some elisp profiler! Also, we should split
 ;; this into smaller functions (esp. the "first expression search"
 ;; business)
 (defun sp-get-paired-expression (&optional back)
@@ -3760,11 +3774,12 @@ The expressions considered are those delimited by pairs on
                                      (let ((in-comment (sp-point-in-comment))
                                            (in-string (sp-point-in-string)))
                                        (save-excursion
-                                         (backward-char)
-                                         (cond
-                                          (in-comment (and in-comment (sp-point-in-comment)))
-                                          ((and (not in-comment) (sp-point-in-comment)) t)
-                                          ((or in-comment in-string)))))
+                                         (unless (= (point) (point-min))
+                                           (backward-char)
+                                           (cond
+                                            (in-comment (and in-comment (sp-point-in-comment)))
+                                            ((and (not in-comment) (sp-point-in-comment)) t)
+                                            ((or in-comment in-string))))))
                                    (sp-point-in-string-or-comment)))
            (string-bounds (and in-string-or-comment (sp--get-string-or-comment-bounds)))
            (fw-bound (if in-string-or-comment (cdr string-bounds) (point-max)))
@@ -3774,12 +3789,27 @@ The expressions considered are those delimited by pairs on
       (while (and (not done)
                   (sp--search-and-save-match
                    search-fn
-                   (sp--get-allowed-regexp)
+                   ;; #556 The regexp we use here might exclude or
+                   ;; include extra pairs in case the next match is in
+                   ;; a different context.  There's no way to know
+                   ;; beforehand where we land, so we need to consider
+                   ;; *all* pairs in the search and then re-check with
+                   ;; a regexp based on the context of the found pair
+                   (sp--get-allowed-regexp
+                    ;; use all the pairs!
+                    (sp--get-pair-list))
                    (if back bw-bound fw-bound)
                    r mb me ms))
         ;; search for the first opening pair.  Here, only consider tags
         ;; that are allowed in the current context.
-        (unless (sp--skip-match-p ms mb me :global-skip global-skip-fn)
+        (unless (or (not (save-excursion
+                           (if back
+                               (progn
+                                 (goto-char me)
+                                 (sp--looking-back-p (sp--get-allowed-regexp)))
+                             (goto-char mb)
+                             (sp--looking-at-p (sp--get-allowed-regexp)))))
+                    (sp--skip-match-p ms mb me :global-skip global-skip-fn))
           ;; if the point originally wasn't inside of a string or comment
           ;; but now is, jump out of the string/comment and only search
           ;; the code.  This ensures that the comments and strings are
@@ -4316,7 +4346,7 @@ enclosing list boundaries or line boundaries."
 (defun sp-get-enclosing-sexp (&optional arg)
   "Return the balanced expression that wraps point at the same level.
 
-With ARG, ascend that many times.  This function expect positive
+With ARG, ascend that many times.  This function expects a positive
 argument."
   (setq arg (or arg 1))
   (save-excursion
@@ -4407,7 +4437,7 @@ is used to retrieve the prefix instead of the global setting."
     (save-excursion
       (goto-char p)
       (if pref
-          (when (sp--looking-back pref)
+          (when (sp--looking-back pref sp-max-prefix-length)
             (match-string-no-properties 0))
         (-if-let (mmode-prefix (cdr (assoc major-mode sp-sexp-prefix)))
             (cond
@@ -5491,7 +5521,7 @@ Note: prefix argument is shown after the example in
          (n (abs arg))
          (ok t)
          (b (point-max))
-         (e (point-min))
+         (e (point))
          (kill-fn (if dont-kill 'copy-region-as-kill 'kill-region)))
     (cond
      ;; kill to the end or beginning of list
@@ -5994,6 +6024,9 @@ If ARG is raw prefix \\[universal-argument], extend all the way to the end of th
 
 If both the current expression and the expression to be slurped
 are strings, they are joined together.
+
+See also `sp-slurp-hybrid-sexp' which is similar but handles
+C-style syntax better.
 
 Examples:
 

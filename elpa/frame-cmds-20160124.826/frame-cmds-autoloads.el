@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "frame-cmds" "frame-cmds.el" (22010 5246 0
+;;;### (autoloads nil "frame-cmds" "frame-cmds.el" (22276 14398 0
 ;;;;;;  0))
 ;;; Generated autoloads from frame-cmds.el
 
@@ -474,6 +474,20 @@ VARIABLE is a symbol that names a user option.
 `other-frame', if `one-window-p'; otherwise, `other-window'.
 
 \(fn ARG)" t nil)
+
+(autoload 'tear-off-window "frame-cmds" "\
+Create a new frame displaying buffer of window clicked on.
+If window is not the only one in frame, then delete it.
+Otherwise, this command effectively clones the frame and window.
+
+\(fn)" t nil)
+
+(autoload 'tear-off-window-if-not-alone "frame-cmds" "\
+Move selected window to a new frame, unless it is alone in its frame.
+If it is alone, do nothing.  Otherwise, delete it and create a new
+frame showing the same buffer.
+
+\(fn)" t nil)
 
 ;;;***
 

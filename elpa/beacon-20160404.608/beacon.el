@@ -4,10 +4,10 @@
 
 ;; Author: Artur Malabarba <emacs@endlessparentheses.com>
 ;; URL: https://github.com/Malabarba/beacon
-;; Package-Version: 20160328.1716
+;; Package-Version: 20160404.608
 ;; Keywords: convenience
-;; Version: 1.2
-;; Package-Requires: ((seq "1.11"))
+;; Version: 1.2.1
+;; Package-Requires: ((seq "2.14"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

@@ -105,6 +105,10 @@ Java documentation under Android docs, so don't forget to set
 
 (defvar eclim--is-completing nil)
 (defvar eclim-java-show-documentation-history nil)
+(defvar eclim--run-class-history nil)
+(defvar-local eclim--run-class-commands nil
+  "Alist of previously ran commands in current buffer.
+See `eclim-run-class'.")
 
 (defun eclim/groovy-src-update (&optional save-others)
   "If `eclim-auto-save' is non-nil, save the current java
@@ -226,11 +230,11 @@ has been found."
 (defun eclim-run-java-doc ()
   "Run Javadoc on current or all projects."
   (interactive)
-  (let ((project-list (mapcar 'third (eclim/project-list))))
+  (let ((proj-list (eclim/project-list)))
     (if (y-or-n-p "Run Javadoc for all projects?")
-        (dolist (project project-list)
-          (eclim/execute-command "javadoc" ("-p" project)))
-      (eclim/execute-command "javadoc" "-p"))
+        (dotimes (i (length proj-list))
+            (eclim--call-process-no-parse "javadoc" "-p" (rest (assq 'name (elt proj-list i)))))
+      (eclim--call-process-no-parse "javadoc" "-p"))
     (message "Javadoc creation finished.")))
 
 (defun eclim-java-format ()
@@ -253,6 +257,14 @@ has been found."
                      (eclim--byte-offset)
                      (eclim--current-encoding)))
   (eclim--java-generate-bean-properties project file offset encoding "getter"))
+
+(defun eclim-java-generate-setter (project file offset encoding)
+  "Generates a setter method for the symbol at point."
+  (interactive (list (eclim-project-name)
+                     (eclim--project-current-file)
+                     (eclim--byte-offset)
+                     (eclim--current-encoding)))
+  (eclim--java-generate-bean-properties project file offset encoding "setter"))
 
 (defun eclim-java-constructor ()
   (interactive)
@@ -446,12 +458,12 @@ imports section of a java source file. This will preserve the
 undo history."
   (interactive)
   (cl-flet ((cut-imports ()
-                         (beginning-of-buffer)
+                         (goto-char (point-min))
                          (if (re-search-forward "^import" nil t)
                              (progn
                                (beginning-of-line)
                                (let ((beg (point)))
-                                 (end-of-buffer)
+                                 (goto-char (point-max))
                                  (re-search-backward "^import")
                                  (end-of-line)
                                  (let ((imports (buffer-substring-no-properties beg (point))))
@@ -462,27 +474,29 @@ undo history."
                              (delete-blank-lines)
                              (insert "\n\n\n")
                              (forward-line -2)))))
-    (save-excursion
-      (clear-visited-file-modtime)
-      (cut-imports)
-      (widen)
-      (insert
-       (let ((fname (buffer-file-name)))
-         (with-temp-buffer
-           (insert-file-contents fname)
-           (cut-imports))))
-      (not-modified)
-      (set-visited-file-modtime))))
+    (let* ((fname (buffer-file-name))
+           (new-imports (with-temp-buffer
+                          (insert-file-contents fname)
+                          (cut-imports))))
+      (save-excursion
+        (clear-visited-file-modtime)
+        (cut-imports)
+        (widen)
+        (insert new-imports)
+        (not-modified)
+        (set-visited-file-modtime)))))
 
 (defun eclim-java-import (type)
   "Adds an import statement for the given type, if one does not
 exist already."
-  (save-excursion
-    (beginning-of-buffer)
+  (unless (save-excursion
+            (goto-char (point-min))
+            (beginning-of-buffer)
+            (re-search-forward (format "^import %s;" type) nil t))
     (let ((revert-buffer-function 'eclim-soft-revert-imports))
-      (when (not (re-search-forward (format "^import %s;" type) nil t))
-        (eclim/execute-command "java_import" "-p" "-f" "-o" "-e" ("-t" type))
-        (eclim--problems-update-maybe)))))
+      (eclim/execute-command "java_import" "-p" "-f" "-o" "-e" ("-t" type))
+      (eclim--problems-update-maybe)
+      (message "Imported %s" type))))
 
 (defun eclim-java-import-organize (&optional types)
   "Checks the current file for missing imports, removes unused imports and
@@ -633,13 +647,37 @@ sub block)."
     (if package-name (concat package-name "." class-name)
       class-name)))
 
-(defun eclim-run-class ()
-  "Run the current class."
-  (interactive)
+(defun eclim-run-class (&optional editp)
+  "Run the current class.
+If optional EDITP is non-nil, edit the command before running
+it. The following format specs are substituted in the eclim command:
+
+   %p project name
+   %c fully qualified class name
+   %r root directory of the current project
+
+See help string of 'eclim ? java` for available
+arguments. Currently available arguments:
+
+    java -p project [-d] [-c classname] [-w workingdir]
+         [-v vmargs] [-s sysprops] [-e envargs] [-a args]
+"
+  (interactive "P")
   (if (not (string= major-mode "java-mode"))
       (message "Sorry cannot run current buffer.")
-    (compile (concat eclim-executable " -command java -p "  (eclim-project-name)
-                     " -c " (eclim-package-and-class)))))
+    (let* ((class (eclim-package-and-class))
+           (hist-command (and eclim--run-class-commands
+                              (assoc class eclim--run-class-commands)))
+           (command (or (cdr hist-command)
+                        (concat eclim-executable " -command java -p %p -c %c"))))
+      (when editp
+        (setq command (read-string "Run command: " command 'eclim--run-class-history))
+        (if hist-command
+            (setf (cdr hist-command) command)
+          (add-to-list 'eclim--run-class-commands (cons class command))))
+      (compile (format-spec command `((?p . ,(eclim-project-name))
+                                      (?c . ,class)
+                                      (?r . ,(eclim--project-dir))))))))
 
 (defun eclim--java-junit-file (project file offset encoding)
   (concat eclim-executable
@@ -706,6 +744,41 @@ much faster than running mvn test -Dtest=TestClass#method."
             (eclim--problems-update-maybe))
         (message "No automatic corrections found. Sorry")))))
 
+(defun eclim-java-browse-documentation-at-point (&optional arg)
+  "Browse the documentation of the element at point.
+With the prefix ARG, ask for pattern. Pattern is a shell glob
+pattern, not a regexp. Rely on `browse-url' to open user defined
+browser."
+  (interactive "P")
+  (let ((symbol (if arg
+                    (read-string "Glob Pattern: ")
+                  (symbol-at-point)))
+        (proj-name (or (eclim-project-name)
+                       (error "Not in Eclim project"))))
+    (if symbol
+        (let* ((urls (if arg
+                         (eclim/execute-command "java_docsearch"
+                                                ("-n" proj-name)
+                                                "-f"
+                                                ("-p" symbol))
+                       (let ((bounds (bounds-of-thing-at-point 'symbol)))
+                         (eclim/execute-command "java_docsearch"
+                                                ("-n" proj-name)
+                                                "-f"
+                                                ("-l" (- (cdr bounds) (car bounds)))
+                                                ("-o" (save-excursion
+                                                        (goto-char (car bounds))
+                                                        (eclim--byte-offset)))))))
+               ;; convert from vector to list
+               (urls (append urls nil)))
+          (if urls
+              (let ((url (if (> (length urls) 1)
+                             (eclim--completing-read "Browse: " (append urls nil))
+                           (car urls))))
+                (browse-url url))
+            (message "No documentation for '%s' found" symbol)))
+      (message "No element at point"))))
+
 (defun eclim-java-show-documentation-for-current-element ()
   "Displays the doc comments for the element at the pointers position."
   (interactive)
@@ -768,7 +841,6 @@ much faster than running mvn test -Dtest=TestClass#method."
 
   (goto-char (point-min)))
 
-
 (defun eclim-java-show-documentation-follow-link (link)
   (interactive)
   (let ((url (button-get link 'url)))
@@ -781,16 +853,16 @@ much faster than running mvn test -Dtest=TestClass#method."
           (let* ((doc-root-vars '(eclim-java-documentation-root
                                   eclim-java-android-documentation-root))
                  (path (replace-regexp-in-string "^[./]+" "" url))
-                 (fullpath (some (lambda (var)
-                                   (let ((fullpath (concat (symbol-value var)
-                                                           "/"
-                                                           path)))
-                                     (if (file-exists-p (replace-regexp-in-string
-                                                         "#.+"
-                                                         ""
-                                                         fullpath))
+                 (fullpath (cl-some (lambda (var)
+                                      (let ((fullpath (concat (symbol-value var)
+                                                              "/"
+                                                              path)))
+                                        (if (file-exists-p (replace-regexp-in-string
+                                                            "#.+"
+                                                            ""
+                                                            fullpath))
                                          fullpath)))
-                                 doc-root-vars)))
+                                    doc-root-vars)))
             (if fullpath
                 (browse-url (concat "file://" fullpath))
 

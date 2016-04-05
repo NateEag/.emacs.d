@@ -81,8 +81,8 @@ deactivated.")
 (defcustom writeroom-width 80
   "Width of the writeroom writing area."
   :group 'writeroom
-  :type '(choice (integer :label "Absolute width:")
-                 (float :label "Relative width:" :value 0.5)))
+  :type '(choice (integer :tag "Absolute width:")
+                 (float :tag "Relative width:" :value 0.5)))
 
 (defcustom writeroom-mode-line nil
   "The mode line format to use.
@@ -161,9 +161,9 @@ buffer."
 
 (defcustom writeroom-global-effects '(writeroom-set-fullscreen
                              writeroom-set-alpha
-                             writeroom-set-vertical-scroll-bars
                              writeroom-set-menu-bar-lines
-                             writeroom-set-tool-bar-lines)
+                             writeroom-set-tool-bar-lines
+                             writeroom-set-vertical-scroll-bars)
   "List of global effects for `writeroom-mode'.
 These effects are enabled when `writeroom-mode' is activated in
 the first buffer and disabled when it is deactivated in the last

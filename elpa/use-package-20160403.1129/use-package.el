@@ -7,7 +7,7 @@
 ;; Created: 17 Jun 2012
 ;; Modified: 26 Sep 2015
 ;; Version: 2.1
-;; Package-Version: 20151112.1439
+;; Package-Version: 20160403.1129
 ;; Package-Requires: ((bind-key "1.0") (diminish "0.44"))
 ;; Keywords: dotemacs startup speed config package
 ;; URL: https://github.com/jwiegley/use-package
@@ -59,7 +59,8 @@ If you customize this, then you should require the `use-package'
 feature in files that use `use-package', even if these files only
 contain compiled expansions of the macros.  If you don't do so,
 then the expanded macros do their job silently."
-  :type 'boolean
+  :type '(choice (const :tag "Quiet" nil) (const :tag "Verbose" t)
+                 (const :tag "Debug" debug))
   :group 'use-package)
 
 (defcustom use-package-debug nil
@@ -67,9 +68,25 @@ then the expanded macros do their job silently."
   :type 'boolean
   :group 'use-package)
 
+(defcustom use-package-check-before-init nil
+  "If non-nil, check that package exists before executing its `:init' block.
+The check is performed by looking for the module using `locate-library'."
+  :type 'boolean
+  :group 'use-package)
+
+(defcustom use-package-always-defer nil
+  "If non-nil, assume `:defer t` unless `:demand t` is given."
+  :type 'boolean
+  :group 'use-package)
+
 (defcustom use-package-always-ensure nil
   "Treat every package as though it had specified `:ensure SEXP`."
   :type 'sexp
+  :group 'use-package)
+
+(defcustom use-package-always-pin nil
+  "Treat every package as though it had specified `:pin SYM."
+  :type 'symbol
   :group 'use-package)
 
 (defcustom use-package-minimum-reported-time 0.1
@@ -171,7 +188,9 @@ convert it to a string and return that."
 (defun use-package-load-name (name &optional noerror)
   "Return a form which will load or require NAME depending on
 whether it's a string or symbol."
-  (if (stringp name) `(load ,name 'noerror) `(require ',name nil 'noerror)))
+  (if (stringp name)
+      `(load ,name 'noerror)
+    `(require ',name nil 'noerror)))
 
 (defun use-package-expand (name label form)
   "FORM is a list of forms, so `((foo))' if only `foo' is being called."
@@ -353,6 +372,7 @@ Unless the KEYWORD being processed intends to ignore remaining
 keywords, it must call this function recursively, passing in the
 plist with its keyword and argument removed, and passing in the
 next value for the STATE."
+  (declare (indent 1))
   (unless (null plist)
     (let* ((keyword (car plist))
            (arg (cadr plist))
@@ -420,29 +440,29 @@ manually updated package."
   (let ((archive-symbol (if (symbolp archive) archive (intern archive)))
         (archive-name   (if (stringp archive) archive (symbol-name archive))))
     (if (use-package--archive-exists-p archive-symbol)
-        (push (cons package archive-name) package-pinned-packages)
+        (add-to-list 'package-pinned-packages (cons package archive-name))
       (error "Archive '%s' requested for package '%s' is not available."
              archive-name package))
-    (package-initialize t)))
+    (unless (bound-and-true-p package--initialized)
+      (package-initialize t))))
 
 (defun use-package-handler/:pin (name keyword archive-name rest state)
-  (let ((body (use-package-process-keywords name rest state)))
-    ;; This happens at macro expansion time, not when the expanded code is
-    ;; compiled or evaluated.
-    (if (null archive-name)
-        body
-      (use-package-pin-package name archive-name)
-      (use-package-concat
-       body
-       `((push '(,(use-package-as-symbol name) . ,archive-name)
-               package-pinned-packages)
-         t)))))
+  (let ((body (use-package-process-keywords name rest state))
+        (pin-form (if archive-name
+                      `(use-package-pin-package ',(use-package-as-symbol name)
+                                                ,archive-name))))
+    ;; Pinning should occur just before ensuring
+    ;; See `use-package-handler/:ensure'.
+    (if (bound-and-true-p byte-compile-current-file)
+        (eval pin-form)              ; Eval when byte-compiling,
+      (push pin-form body))          ; or else wait until runtime.
+    body))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
 ;; :ensure
 ;;
-
+(defvar package-archive-contents)
 (defun use-package-normalize/:ensure (name keyword args)
   (if (null args)
       t
@@ -497,10 +517,7 @@ manually updated package."
 
 (defalias 'use-package-normalize/:if 'use-package-normalize-test)
 (defalias 'use-package-normalize/:when 'use-package-normalize-test)
-
-(defun use-package-normalize/:unless (name keyword args)
-  (not (use-package-only-one (symbol-name keyword) args
-         #'use-package-normalize-value)))
+(defalias 'use-package-normalize/:unless 'use-package-normalize-test)
 
 (defun use-package-handler/:if (name keyword pred rest state)
   (let ((body (use-package-process-keywords name rest state)))
@@ -563,7 +580,7 @@ manually updated package."
 (defun use-package-normalize-paths (label arg &optional recursed)
   "Normalize a list of filesystem paths."
   (cond
-   ((or (symbolp arg) (functionp arg))
+   ((and arg (or (symbolp arg) (functionp arg)))
     (let ((value (use-package-normalize-value label arg)))
       (use-package-normalize-paths label (eval value))))
    ((stringp arg)
@@ -586,7 +603,7 @@ manually updated package."
   (let ((body (use-package-process-keywords name rest state)))
     (use-package-concat
      (mapcar #'(lambda (path)
-                 `(eval-and-compile (push ,path load-path))) arg)
+                 `(eval-and-compile (add-to-list 'load-path ,path))) arg)
      body)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -645,9 +662,20 @@ manually updated package."
            (and allow-vector (vectorp (car x))))
        (symbolp (cdr x))))
 
+(defsubst use-package-is-string-pair (x)
+  "Return t if X has the type (STRING . STRING)."
+  (and (consp x)
+       (stringp (car x))
+       (stringp (cdr x))))
+
 (defun use-package-normalize-pairs
-    (name label arg &optional recursed allow-vector)
-  "Normalize a list of string/symbol pairs."
+    (name label arg &optional recursed allow-vector allow-string-cdrs)
+  "Normalize a list of string/symbol pairs.
+If RECURSED is non-nil, recurse into sublists.
+If ALLOW-VECTOR is non-nil, then the key to bind may specify a
+vector of keys, as accepted by `define-key'.
+If ALLOW-STRING-CDRS is non-nil, then the command name to bind to
+may also be a string, as accepted by `define-key'."
   (cond
    ((or (stringp arg) (and allow-vector (vectorp arg)))
     (list (cons arg (use-package-as-symbol name))))
@@ -656,16 +684,18 @@ manually updated package."
    ((and (not recursed) (listp arg) (listp (cdr arg)))
     (mapcar #'(lambda (x)
                 (let ((ret (use-package-normalize-pairs
-                            name label x t allow-vector)))
+                            name label x t allow-vector allow-string-cdrs)))
                   (if (listp ret)
                       (car ret)
                     ret))) arg))
+   ((and allow-string-cdrs (use-package-is-string-pair arg))
+    (list arg))
    (t arg)))
 
 (defun use-package-normalize-binder (name keyword args)
   (use-package-as-one (symbol-name keyword) args
     (lambda (label arg)
-      (use-package-normalize-pairs name label arg nil t))))
+      (use-package-normalize-pairs name label arg nil t t))))
 
 (defalias 'use-package-normalize/:bind 'use-package-normalize-binder)
 (defalias 'use-package-normalize/:bind* 'use-package-normalize-binder)
@@ -681,7 +711,10 @@ manually updated package."
        (use-package-sort-keywords
         (use-package-plist-maybe-put rest :defer t))
        (use-package-plist-append state :commands commands))
-     `((ignore (,(if bind-macro bind-macro 'bind-keys) ,@arg))))))
+     `((ignore
+        ,(macroexpand
+          `(,(if bind-macro bind-macro 'bind-keys)
+            :package ,name ,@arg)))))))
 
 (defun use-package-handler/:bind* (name keyword arg rest state)
   (use-package-handler/:bind name keyword arg rest state 'bind-keys*))
@@ -706,7 +739,7 @@ function for a particular keymap.  The keymap is expected to be
 defined by the package.  In this way, loading the package is
 deferred until the prefix key sequence is pressed."
   (if (not (require package nil t))
-      (use-package-error (format "Could not load package.el: %s" package))
+      (use-package-error (format "Cannot load package.el: %s" package))
     (if (and (boundp keymap-symbol)
              (keymapp (symbol-value keymap-symbol)))
         (let* ((kv (this-command-keys-vector))
@@ -758,7 +791,7 @@ deferred until the prefix key sequence is pressed."
   (let* (commands
          (form (mapcar #'(lambda (interpreter)
                            (push (cdr interpreter) commands)
-                           `(push ',interpreter interpreter-mode-alist)) arg)))
+                           `(add-to-list 'interpreter-mode-alist ',interpreter)) arg)))
     (use-package-concat
      (use-package-process-keywords name
        (use-package-sort-keywords
@@ -777,7 +810,7 @@ deferred until the prefix key sequence is pressed."
   (let* (commands
          (form (mapcar #'(lambda (mode)
                            (push (cdr mode) commands)
-                           `(push ',mode auto-mode-alist)) arg)))
+                           `(add-to-list 'auto-mode-alist ',mode)) arg)))
     (use-package-concat
      (use-package-process-keywords name
        (use-package-sort-keywords
@@ -851,12 +884,13 @@ deferred until the prefix key sequence is pressed."
      (apply
       #'nconc
       (mapcar #'(lambda (command)
-                  (append
-                   `((unless (fboundp ',command)
-                       (autoload #',command ,name-string nil t)))
-                   (when (bound-and-true-p byte-compile-current-file)
-                     `((eval-when-compile
-                         (declare-function ,command ,name-string))))))
+                  (when (not (stringp command))
+                    (append
+                     `((unless (fboundp ',command)
+                         (autoload #',command ,name-string nil t)))
+                     (when (bound-and-true-p byte-compile-current-file)
+                       `((eval-when-compile
+                           (declare-function ,command ,name-string)))))))
               (delete-dups (plist-get state :commands))))
 
      body)))
@@ -910,7 +944,13 @@ deferred until the prefix key sequence is pressed."
   (let ((body (use-package-process-keywords name rest state)))
     (use-package-concat
      ;; The user's initializations
-     (use-package-hook-injector (use-package-as-string name) :init arg)
+     (let ((init-body
+            (use-package-hook-injector (use-package-as-string name)
+                                       :init arg)))
+       (if use-package-check-before-init
+           `((if (locate-library ,(use-package-as-string name))
+                 ,(macroexp-progn init-body)))
+         init-body))
      body)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -945,7 +985,7 @@ deferred until the prefix key sequence is pressed."
              config-body)
           `((if (not ,(use-package-load-name name t))
                 (ignore
-                 (message (format "Could not load %s" ',name)))
+                 (message (format "Cannot load %s" ',name)))
               ,@config-body)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1017,6 +1057,7 @@ deferred until the prefix key sequence is pressed."
 ;; The main macro
 ;;
 
+;;;###autoload
 (defmacro use-package (name &rest args)
   "Declare an Emacs package by specifying a group of configuration options.
 
@@ -1077,7 +1118,12 @@ this file.  Usage:
                    (if use-package-always-ensure
                        (use-package-plist-maybe-put
                         args0 :ensure use-package-always-ensure)
-                     args0))))
+                     args0)))
+           (args* (use-package-sort-keywords
+                   (if use-package-always-pin
+                       (use-package-plist-maybe-put
+                        args* :pin use-package-always-pin)
+                     args*))))
 
       ;; When byte-compiling, pre-load the package so all its symbols are in
       ;; scope.
@@ -1090,14 +1136,15 @@ this file.  Usage:
                               (plist-get args* :defines))
                     (with-demoted-errors
                         ,(format "Cannot load %s: %%S" name)
-                      ,(if use-package-verbose
+                      ,(if (eq use-package-verbose 'debug)
                            `(message "Compiling package %s" ',name-symbol))
                       ,(unless (plist-get args* :no-require)
                          (use-package-load-name name)))))))
 
       (let ((body
              (macroexp-progn
-              (use-package-process-keywords name args*))))
+              (use-package-process-keywords name args*
+                (and use-package-always-defer '(:deferred t))))))
         (if use-package-debug
             (display-buffer
              (save-current-buffer

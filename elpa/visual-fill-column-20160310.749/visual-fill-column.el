@@ -1,13 +1,14 @@
 ;;; visual-fill-column.el --- fill-column for visual-line-mode  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015 Joost Kremers
+;; Copyright (C) 2015-2016 Joost Kremers
+;; Copyright (C) 2016 Martin Rudalics
 ;; All rights reserved.
 
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 2015
-;; Version: 1.5
-;; Package-Version: 20151121.1551
+;; Version: 1.7
+;; Package-Version: 20160310.749
 ;; Package-Requires: ((emacs "24.3"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -27,11 +28,11 @@
 
 ;;; Commentary:
 
-;; `visual-fill-column-mode' is a small Emacs minor mode that mimics the
-;; effect of `fill-column' in `visual-line-mode'. Instead of wrapping lines
-;; at the window edge, which is the standard behaviour of
-;; `visual-line-mode', it wraps lines at `fill-column'. If `fill-column' is
-;; too large for the window, the text is wrapped at the window edge.
+;; `visual-fill-column-mode' is a small Emacs minor mode that mimics the effect of `fill-column'
+;; in `visual-line-mode'.  Instead of wrapping lines at the window edge, which
+;; is the standard behaviour of `visual-line-mode', it wraps lines at
+;; `fill-column'.  If `fill-column' is too large for the window, the text is
+;; wrapped at the window edge.
 
 ;;; Code:
 
@@ -96,9 +97,49 @@ in which `visual-line-mode' is active as well."
   (set-window-fringes (selected-window) nil)
   (set-window-margins (selected-window) 0 0))
 
+(defun visual-fill-column-split-window (&optional window size side pixelwise)
+  "Split WINDOW, unsetting its margins first.
+SIZE, SIDE, and PIXELWISE are passed on to `split-window'.  This
+function is for use in the window parameter `split-window'."
+  (let ((horizontal (memq side '(t left right)))
+	margins new)
+    (when horizontal
+      ;; Reset margins.
+      (setq margins (window-margins window))
+      (set-window-margins window nil nil))
+    ;; Now try to split the window.
+    (set-window-parameter window 'split-window nil)
+    (unwind-protect
+	(setq new (split-window window size side pixelwise))
+      (set-window-parameter window 'split-window #'visual-fill-column-split-window)
+      ;; Restore old margins if we failed.
+      (when (and horizontal (not new))
+	(set-window-margins window (car margins) (cdr margins))))))
+
+(defun visual-fill-column-split-window-sensibly (&optional window)
+  "Split WINDOW sensibly, unsetting its margins first.
+This function unsets the window margins and calls
+`split-window-sensibly'.
+
+By default, `split-window-sensibly' does not split a window
+vertically if it has wide margins, even if there is enough space
+for a vertical split.  This function can be used as the value of
+`split-window-preferred-function' to enable vertically splitting
+windows with wide margins."
+  (let ((margins (window-margins window))
+        new)
+    ;; unset the margins and try to split the window
+    (set-window-margins window nil nil)
+    (unwind-protect
+        (setq new (split-window-sensibly window))
+      (when (not new)
+        (set-window-margins window (car margins) (cdr margins))))))
+
 (defun visual-fill-column--adjust-window ()
   "Adjust the window margins and fringes."
   (set-window-fringes (selected-window) nil nil visual-fill-column-fringes-outside-margins)
+  (if (>= emacs-major-version 25)
+      (set-window-parameter (selected-window) 'split-window #'visual-fill-column-split-window))
   (visual-fill-column--set-margins))
 
 (defun visual-fill-column--window-max-text-width (&optional window)
@@ -128,12 +169,13 @@ right divider.  WINDOW defaults to the selected window."
          (right (if visual-fill-column-center-text
                     (/ margins 2)
                   margins)))
+
     ;; put an explicitly R2L buffer on the right side of the window
     (when (and (eq bidi-paragraph-direction 'right-to-left)
                (= left 0))
       (setq left right)
       (setq right 0))
-    ;; check values and set the margins
+
     (set-window-margins window left right)))
 
 (provide 'visual-fill-column)

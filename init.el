@@ -305,7 +305,10 @@ new file for the first time."
   (smartparens-mode)
 
   ;; I occasionally want to use yasnippet in text mode.
-  (yas-minor-mode))
+  (yas-minor-mode)
+
+  ;; Turn on flycheck-mode for prose-lint.
+  (flycheck-mode t))
 
 ;; Everyone needs text-mode.
 (add-hook 'text-mode-hook 'text-mode-init)

@@ -54,6 +54,21 @@
 
     (require 'helm-git-files)))
 
+(use-package flycheck
+  :diminish
+  :defer t
+  :config (progn
+            (flycheck-define-checker proselint
+              "A linter for prose."
+              :command ("proselint" source-inplace)
+              :error-patterns
+              ((warning line-start (file-name) ":" line ":" column ": "
+                        (id (one-or-more (not (any " "))))
+                        (message) line-end))
+              :modes (text-mode markdown-mode gfm-mode rst-mode))
+
+            (add-to-list 'flycheck-checkers 'proselint)))
+
 ;; Since emacs 24.4 made revert undoable, this option is perfectly safe and
 ;; pretty convenient.
 (use-package autorevert

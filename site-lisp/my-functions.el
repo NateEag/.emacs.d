@@ -74,21 +74,29 @@
       (setq close-paren-pos (+ close-paren-pos 1)))
     (indent-region open-paren-pos (+ close-paren-pos 1))))
 
-;; Move the current buffer to a new location on disk, then rename the buffer.
-;; TODO Make this create non-existent directories for the renamed path.
-;; From http://www.stringify.com/2006/apr/24/rename/
-;;;###autoload
+;; Slightly tweaked from http://stackoverflow.com/a/25212377, to support moving
+;; to a new directory.
 (defun move-current-buffer ()
-  "Move the current buffer to a different file and change its name."
+  "Renames current buffer and file it is visiting."
   (interactive)
-  (if (not (buffer-file-name))
-      (call-interactively 'rename-buffer)
-    (let ((file (buffer-file-name)))
-      (with-temp-buffer
-        (set-buffer (dired-noselect file))
-        (dired-do-rename)
-        (kill-buffer nil))))
-  nil)
+  (let ((name (buffer-name))
+        (filename (buffer-file-name)))
+    (if (not (and filename (file-exists-p filename)))
+        (error "Buffer '%s' is not visiting a file!" name)
+      (let* ((new-name (read-file-name "New name: " filename))
+             (dir-name (file-name-directory new-name)))
+
+        (if (not (file-exists-p dir-name))
+            (make-directory dir-name t))
+
+        (if (get-buffer new-name)
+            (error "A buffer named '%s' already exists!" new-name)
+          (rename-file filename new-name 1)
+          (rename-buffer new-name)
+          (set-visited-file-name new-name)
+          (set-buffer-modified-p nil)
+          (message "File '%s' successfully renamed to '%s'"
+                   name (file-name-nondirectory new-name)))))))
 
 ;; Insert the current date.
 ;;;###autoload

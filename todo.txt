@@ -35,49 +35,6 @@
  personally find flow's comment-annotation syntax too intrusive for good
  readability).
 
--Look into midi-kbd.el and lily-midi.el as an aid in creating lilypond files
- with MIDI instruments.
-
--Write a general-case ac-source for Tern.js. Right now I have to press M-Tab to
- trigger top-level completions, and I'd like to just press Tab. emacs-eclim
- might be a good place to rip off the basic idea from, since it depends on an
- external process to get completions, or jedi. I think if I had this I could
- get JS completions in web-mode, which would be awesome.
-
--Extract jedi-force to be an ELPA package. I was thinking of adding more
- features, but it might be fine as it is.
-
--Add php-auto-yasnippet-style function params to tern.js.
-
--Integrate what's useful from spacemacs: https://github.com/syl20bnr/spacemacs
- I've got most of what I want, but evil-little-word could be nice.
-
--Finish getting tagedit to work with web-mode.
-
--Make comment auto-fill work with C++-style comments in js2-mode, not just
- C-style. Turns out it does - it's just that js2-mode thinks single-line
- comments are only block comments if there's a trailing single-line comment. A
- better test might be "is there a preceding single-line comment". See
- js2-mode-extend-comment for the logic that would need tweaking.
-
--Make auto-fill apply to strings in emacs-lisp-mode. Really seems like this
- should already be happening. Dunno why it doesn't.
-
--Figure out why mo-git-blame isn't using mo-git-blame-git-blame-args.
-
--Use zebra striping to make mo-git-blame/target buffer more readable.
-
--If I ever get minimap.el usable on OS X, when active it should appear between
- my two panes. That way it's always close to whichever buffer it applies to.
- Note: the sublimity package looks like it may be more maintained.
-
--Tweak md-readme.el so that author/created/requires lines are headers *without*
- colons, whose bodies are the text following the colon-delimited field names.
- el2markdown is another package to do a similar job - maybe it's better?
-
--File feature request to flycheck for being able to run checkers while in
- web-mode. May well get rejected, because supporting this would be pretty hard.
-
 -Find a way to auto-include skewer on page refresh without having to include it
  in a codebase. I'm thinking a Chrome plugin for "refresh and load
  bookmarklet", or something along those lines.
@@ -85,9 +42,15 @@
 -Find a way to load skewer in Chrome from an HTTPS page. Starting Chrome with
  the --allow-insecure-content flag might work.
 
--Install and set up yatemplate: https://github.com/mineo/yatemplate
- It'd be nice, for instance, to have new '*.sh' files have '#! /bin/bash' and
- the standard "be sane" declarations by default.
+-Write a general-case ac-source for Tern.js. Right now I have to press M-Tab to
+ trigger top-level completions, and I'd like to just press Tab. emacs-eclim
+ might be a good place to rip off the basic idea from, since it depends on an
+ external process to get completions, or jedi. I think if I had this I could
+ get JS completions in web-mode, which would be awesome.
+
+-Add php-auto-yasnippet-style function params to tern.js.
+
+-Finish getting tagedit to work with web-mode.
 
 -I'd like yasnippets for JavaScript. I don't much like the defaults.
 
@@ -114,19 +77,67 @@
  on (configurable) browsers you just violated support for. The caniuse data
  makes this feasible, but maybe a royal pain.
 
+-I would like an auto-complete source for existing files that is based on a
+ per-project 'docroot/static' variable. I would like that source to be
+ activated when I am working in a template and have entered an href="/..." or a
+ src="/...". Actually, it might work better if it was just activated for any
+ string beginning with '/'. Some hints:
+ http://superuser.com/questions/67170/how-do-i-complete-file-paths-in-emacs
+
 -Figure out how to make smartparens interact nicely with web-mode. '{{' and
  '{%' don't work right when both are on, but I don't see a way to ban
  multi-character sequences from smartparens, and I don't want to lose pairing
  braces in CSS and JS.
+
+-Add a workaround to web-mode-init so smart-dash-mode knows when we're in a
+ comment.
+
+-I should have Twig/Django snippets. 'block' is the obvious one, but probably
+ snippets for all the major bits of syntax would be handy, and someone out
+ there must have written such things.
+
+-Look into midi-kbd.el and lily-midi.el as an aid in creating lilypond files
+ with MIDI instruments.
+
+-Extract jedi-force to be an ELPA package. I was thinking of adding more
+ features, but it might be fine as it is.
+
+-Integrate what's useful from spacemacs: https://github.com/syl20bnr/spacemacs
+ I've got most of what I want, but evil-little-word could be nice.
+
+-Make comment auto-fill work with C++-style comments in js2-mode, not just
+ C-style. Turns out it does - it's just that js2-mode thinks single-line
+ comments are only block comments if there's a trailing single-line comment. A
+ better test might be "is there a preceding single-line comment". See
+ js2-mode-extend-comment for the logic that would need tweaking.
+
+-Make auto-fill apply to strings in emacs-lisp-mode. Really seems like this
+ should already be happening. Dunno why it doesn't.
+
+-Figure out why mo-git-blame isn't using mo-git-blame-git-blame-args.
+
+-Use zebra striping to make mo-git-blame/target buffer more readable.
+
+-If I ever get minimap.el usable on OS X, when active it should appear between
+ my two panes. That way it's always close to whichever buffer it applies to.
+ Note: the sublimity package looks like it may be more maintained.
+
+-Tweak md-readme.el so that author/created/requires lines are headers *without*
+ colons, whose bodies are the text following the colon-delimited field names.
+ el2markdown is another package to do a similar job - maybe it's better?
+
+-File feature request to flycheck for being able to run checkers while in
+ web-mode. May well get rejected, because supporting this would be pretty hard.
+
+-Install and set up yatemplate: https://github.com/mineo/yatemplate
+ It'd be nice, for instance, to have new '*.sh' files have '#! /bin/bash' and
+ the standard "be sane" declarations by default.
 
 -Add keybindings for scrolling completion window by a full window-ful. C-v and
  M-v are the obvious ones. Useful when you're digging through something like wx
  or the JDK looking for a class that might apply.
 
 -Make a PR to auto-complete for supporting smart-dash-mode.
-
--Add a workaround to web-mode-init so smart-dash-mode knows when we're in a
- comment.
 
 -Make a PR to yasnippet for my solution to the 'once' snippet overriding the
  'require_once' snippet.
@@ -136,13 +147,6 @@
  possible to bind something clever to Tab that picks which maneuver to do based
  on whether there are any characters before point *and* whether autocompletion
  has been invoked before while in this field. or something like that.
-
--I would like an auto-complete source for existing files that is based on a
- per-project 'docroot/static' variable. I would like that source to be
- activated when I am working in a template and have entered an href="/..." or a
- src="/...". Actually, it might work better if it was just activated for any
- string beginning with '/'. Some hints:
- http://superuser.com/questions/67170/how-do-i-complete-file-paths-in-emacs
 
 -See if my Emacs crashes can be reproduced by leaving old byte-compiled files
  on my load-path alongside newer versions of the same file, a la updating a
@@ -221,12 +225,8 @@
  every parameter you add, an @param line should be inserted in the header
  comment.
 
--Similarly, bash snippets would be nice:
+-bash snippets would be nice:
  https://github.com/bmaland/yasnippet-sh-mode
-
--I should have Twig/Django snippets. 'block' is the obvious one, but probably
- snippets for all the major bits of syntax would be handy, and someone out
- there must have written such things.
 
 -Write/get a PHP snippet for array keyval. '$key’ => $val,
 
@@ -274,13 +274,6 @@
  find a solution that lets me save/restore buffer state for a whole directory,
  but not for ones I haven't configured. I bet combining one of the existing
  packages with a bit of elisp and .dir-locals.el would do the job.
-
--Find a way to strip trailing whitespace *outside* literal blocks in
- markdown-mode. My current approach means you can't have blank lines in literal
- blocks (they look like unnecessary whitespace and get stripped). Should be
- easy enough - advise the whitespace stripping functions to not execute if the
- prev and next content lines are indented four spaces, and activate the advice
- only in markdown-mode.
 
 -Figure out/steal/write a good cross-file find-and-replace. I can see why so
  many guys just use a Perl one-liner (which I have), but being able to do this

@@ -40,6 +40,7 @@
 ;;; Code:
 
 (require 'dash)
+(require 'color)
 
 ;;; Options
 
@@ -117,28 +118,7 @@ Related discussion: https://github.com/bbatsov/solarized-emacs/issues/158"
 
 ;;; Utilities
 
-(defun solarized-color-name-to-rgb (color &optional frame)
-  "Convert COLOR string to a list of normalized RGB components.
-COLOR should be a color name (e.g. \"white\") or an RGB triplet
-string (e.g. \"#ff12ec\").
-
-Normally the return value is a list of three floating-point
-numbers, (RED GREEN BLUE), each between 0.0 and 1.0 inclusive.
-
-Optional argument FRAME specifies the frame where the color is to be
-displayed.  If FRAME is omitted or nil, use the selected frame.
-If FRAME cannot display COLOR, return nil."
-  ;; `colors-values' maximum value is either 65535 or 65280 depending on the
-  ;; display system.  So we use a white conversion to get the max value.
-  (let ((valmax (float (car (color-values "#ffffff")))))
-    (mapcar (lambda (x) (/ x valmax)) (color-values color frame))))
-
-(defun solarized-color-rgb-to-hex  (red green blue)
-  "Return hexadecimal notation for the color RED GREEN BLUE.
-RED, GREEN, and BLUE should be numbers between 0.0 and 1.0, inclusive."
-  (format "#%02x%02x%02x"
-          (* red 255) (* green 255) (* blue 255)))
-
+;;;###autoload
 (defun solarized-color-blend (color1 color2 alpha)
   "Blends COLOR1 onto COLOR2 with ALPHA.
 
@@ -146,11 +126,11 @@ COLOR1 and COLOR2 should be color names (e.g. \"white\") or RGB
 triplet strings (e.g. \"#ff12ec\").
 
 Alpha should be a float between 0 and 1."
-  (apply 'solarized-color-rgb-to-hex
+  (apply 'color-rgb-to-hex
          (-zip-with '(lambda (it other)
                        (+ (* alpha it) (* other (- 1 alpha))))
-                    (solarized-color-name-to-rgb color1)
-                    (solarized-color-name-to-rgb color2))))
+                    (color-name-to-rgb color1)
+                    (color-name-to-rgb color2))))
 
 ;;; Setup Start
 (defmacro solarized-with-color-variables (variant &rest body)
@@ -328,6 +308,15 @@ customize the resulting theme."
                                         :background ,magenta :foreground ,base03))))
      `(cua-rectangle-noselect ((,class (:inherit region :background ,base02
                                                  :foreground ,base01))))
+;;;;; debbugs
+     `(debbugs-gnu-archived ((,class (:inverse-video t))))
+     `(debbugs-gnu-done ((,class (:foreground ,base01))))
+     `(debbugs-gnu-handled ((,class (:foreground ,green))))
+     `(debbugs-gnu-new ((,class (:foreground ,blue))))
+     `(debbugs-gnu-pending ((,class (:foreground ,cyan))))
+     `(debbugs-gnu-stale ((,class (:foreground ,yellow))))
+     `(debbugs-gnu-tagged ((,class (:foreground ,base1 :weight bold))))
+
 ;;;;; diary
      `(diary ((,class (:foreground ,yellow))))
 ;;;;; dired
@@ -525,7 +514,9 @@ customize the resulting theme."
 ;;;;; avy-mode
      `(avy-lead-face ((,class (:inherit isearch))))
      `(avy-lead-face-0 ((,class (:inherit isearch :background ,violet))))
+     `(avy-lead-face-1 ((,class (:inherit isearch :background ,orange))))
      `(avy-lead-face-2 ((,class (:inherit isearch :background ,cyan))))
+     `(avy-background-face ((,class (:inherit font-lock-comment-face))))
 ;;;;; bm
      `(bm-face ((,class (:overline ,base0))))
      `(bm-fringe-face ((,class (:overline ,base0))))
@@ -555,10 +546,13 @@ customize the resulting theme."
                                                          :weight bold))))
      `(cfw:face-toolbar-button-on ((,class (:background ,yellow-hc :foreground ,yellow-lc
                                                         :weight bold))))
-;;;;; clojure-test-mode
-     `(clojure-test-failure-face ((t (:foreground ,orange :weight bold :underline t))))
-     `(clojure-test-error-face ((t (:foreground ,red :weight bold :underline t))))
-     `(clojure-test-success-face ((t (:foreground ,green :weight bold :underline t))))
+;;;;; cider
+     `(cider-result-overlay-face ((t (:background unspecified))))
+     `(cider-enlightened-face ((t (:box (:color ,magenta :line-width -1)))))
+     `(cider-enlightened-local-face ((t (:weight bold :foreground ,green-l))))
+     `(cider-deprecated-face ((t (:background ,yellow))))
+     `(cider-instrumented-face ((t (:box (:color ,red-l :line-width -1)))))
+     `(cider-traced-face ((t (:box (:color ,cyan :line-width -1)))))
 ;;;;; cider-repl-mode
      `(cider-repl-err-output-face ((t (:inherit ,font-lock-warning-face :underline nil))))
 ;;;;; cider-test-mode
@@ -920,6 +914,9 @@ customize the resulting theme."
      `(git-gutter-fr+-modified ((,class (:foreground ,blue :weight bold))))
 ;;;;; git-rebase
      `(git-rebase-hash ((,class (:foreground ,base01))))
+;;;;; git-timemachine
+     `(git-timemachine-minibuffer-author-face ((,class (:foreground ,orange))))
+     `(git-timemachine-minibuffer-detail-face ((,class (:foreground ,yellow))))
 ;;;;; go-direx
      `(go-direx-header ((,class (:foreground ,blue))))
      `(go-direx-label ((,class (:foreground ,green))))
@@ -1734,12 +1731,12 @@ customize the resulting theme."
      `(rainbow-delimiters-unmatched-face
        ((,class (:foreground ,base0 :background ,base03 :inverse-video t))))
 ;;;;; rst-mode
-     `(rst-level-1-face ((,class (:background ,yellow   :foreground ,base03))))
-     `(rst-level-2-face ((,class (:background ,cyan    :foreground ,base03))))
-     `(rst-level-3-face ((,class (:background ,blue    :foreground ,base03))))
-     `(rst-level-4-face ((,class (:background ,violet  :foreground ,base03))))
-     `(rst-level-5-face ((,class (:background ,magenta :foreground ,base03))))
-     `(rst-level-6-face ((,class (:background ,red     :foreground ,base03))))
+     `(rst-level-1 ((,class (:inherit org-level-1))))
+     `(rst-level-2 ((,class (:inherit org-level-2))))
+     `(rst-level-3 ((,class (:inherit org-level-3))))
+     `(rst-level-4 ((,class (:inherit org-level-4))))
+     `(rst-level-5 ((,class (:inherit org-level-5))))
+     `(rst-level-6 ((,class (:inherit org-level-6))))
 ;;;;; rpm-mode
      `(rpm-spec-dir-face ((,class (:foreground ,green))))
      `(rpm-spec-doc-face ((,class (:foreground ,green))))

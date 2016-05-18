@@ -1,4 +1,4 @@
-;; notmuch-lib.el --- common variables, functions and function declarations
+;;; notmuch-lib.el --- common variables, functions and function declarations
 ;;
 ;; Copyright © Carl Worth
 ;;
@@ -21,6 +21,9 @@
 
 ;; This is an part of an emacs-based interface to the notmuch mail system.
 
+;;; Code:
+
+(require 'mm-util)
 (require 'mm-view)
 (require 'mm-decode)
 (require 'cl)
@@ -520,11 +523,23 @@ This replaces spaces, percents, and double quotes in STR with
     "multipart/related"
     ))
 
-(defun notmuch-multipart/alternative-choose (types)
-  "Return a list of preferred types from the given list of types"
+(defun notmuch-multipart/alternative-determine-discouraged (msg)
+  "Return the discouraged alternatives for the specified message."
+  ;; If a function, return the result of calling it.
+  (if (functionp notmuch-multipart/alternative-discouraged)
+      (funcall notmuch-multipart/alternative-discouraged msg)
+    ;; Otherwise simply return the value of the variable, which is
+    ;; assumed to be a list of discouraged alternatives. This is the
+    ;; default behaviour.
+    notmuch-multipart/alternative-discouraged))
+
+(defun notmuch-multipart/alternative-choose (msg types)
+  "Return a list of preferred types from the given list of types
+for this message, if present."
   ;; Based on `mm-preferred-alternative-precedence'.
-  (let ((seq types))
-    (dolist (pref (reverse notmuch-multipart/alternative-discouraged))
+  (let ((discouraged (notmuch-multipart/alternative-determine-discouraged msg))
+	(seq types))
+    (dolist (pref (reverse discouraged))
       (dolist (elem (copy-sequence seq))
 	(when (string-match pref elem)
 	  (setq seq (nconc (delete elem seq) (list elem))))))
@@ -558,7 +573,20 @@ the given type."
 				   ,@(when process-crypto '("--decrypt"))
 				   ,(notmuch-id-to-query (plist-get msg :id))))
 			   (coding-system-for-read
-			    (if binaryp 'no-conversion 'utf-8)))
+			    (if binaryp 'no-conversion
+			      (let ((coding-system (mm-charset-to-coding-system
+						    (plist-get part :content-charset))))
+				;; Sadly,
+				;; `mm-charset-to-coding-system' seems
+				;; to return things that are not
+				;; considered acceptable values for
+				;; `coding-system-for-read'.
+				(if (coding-system-p coding-system)
+				    coding-system
+				  ;; RFC 2047 says that the default
+				  ;; charset is US-ASCII. RFC6657
+				  ;; complicates this somewhat.
+				  'us-ascii)))))
 		       (apply #'call-process notmuch-command nil '(t nil) nil args)
 		       (buffer-string))))))
     (when (and cache data)
@@ -919,3 +947,5 @@ status."
 ;; Local Variables:
 ;; byte-compile-warnings: (not cl-functions)
 ;; End:
+
+;;; notmuch-lib.el ends here

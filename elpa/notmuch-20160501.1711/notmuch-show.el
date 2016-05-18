@@ -1,4 +1,4 @@
-;; notmuch-show.el --- displaying notmuch forests.
+;;; notmuch-show.el --- displaying notmuch forests.
 ;;
 ;; Copyright © Carl Worth
 ;; Copyright © David Edmondson
@@ -20,6 +20,8 @@
 ;;
 ;; Authors: Carl Worth <cworth@cworth.org>
 ;;          David Edmondson <dme@dme.org>
+
+;;; Code:
 
 (eval-when-compile (require 'cl))
 (require 'mm-view)
@@ -607,7 +609,7 @@ will return nil if the CID is unknown or cannot be retrieved."
 	  (plist-get part :content)))
 
 (defun notmuch-show-insert-part-multipart/alternative (msg part content-type nth depth button)
-  (let ((chosen-type (car (notmuch-multipart/alternative-choose (notmuch-show-multipart/*-to-list part))))
+  (let ((chosen-type (car (notmuch-multipart/alternative-choose msg (notmuch-show-multipart/*-to-list part))))
 	(inner-parts (plist-get part :content))
 	(start (point)))
     ;; This inserts all parts of the chosen type rather than just one,
@@ -642,15 +644,10 @@ will return nil if the CID is unknown or cannot be retrieved."
 (defun notmuch-show-insert-part-multipart/signed (msg part content-type nth depth button)
   (when button
     (button-put button 'face 'notmuch-crypto-part-header))
-  ;; Add signature status button if sigstatus provided.
-  (if (plist-member part :sigstatus)
-      (let* ((from (notmuch-show-get-header :From msg))
-	     (sigstatus (car (plist-get part :sigstatus))))
-	(notmuch-crypto-insert-sigstatus-button sigstatus from))
-    ;; If we're not adding the signature status, tell the user how
-    ;; they can get it.
-    (when button
-      (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic MIME parts.")))
+
+  ;; Insert a button detailing the signature status.
+  (notmuch-crypto-insert-sigstatus-button (car (plist-get part :sigstatus))
+					  (notmuch-show-get-header :From msg))
 
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
@@ -666,20 +663,13 @@ will return nil if the CID is unknown or cannot be retrieved."
 (defun notmuch-show-insert-part-multipart/encrypted (msg part content-type nth depth button)
   (when button
     (button-put button 'face 'notmuch-crypto-part-header))
-  ;; Add encryption status button if encryption status is specified.
-  (if (plist-member part :encstatus)
-      (let ((encstatus (car (plist-get part :encstatus))))
-	(notmuch-crypto-insert-encstatus-button encstatus)
-	;; Add signature status button if signature status is
-	;; specified.
-	(if (plist-member part :sigstatus)
-	    (let* ((from (notmuch-show-get-header :From msg))
-		   (sigstatus (car (plist-get part :sigstatus))))
-	      (notmuch-crypto-insert-sigstatus-button sigstatus from))))
-    ;; If we're not adding the encryption status, tell the user how
-    ;; they can get it.
-    (when button
-      (button-put button 'help-echo "Set notmuch-crypto-process-mime to process cryptographic MIME parts.")))
+
+  ;; Insert a button detailing the encryption status.
+  (notmuch-crypto-insert-encstatus-button (car (plist-get part :encstatus)))
+
+  ;; Insert a button detailing the signature status.
+  (notmuch-crypto-insert-sigstatus-button (car (plist-get part :sigstatus))
+					  (notmuch-show-get-header :From msg))
 
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
@@ -2391,3 +2381,5 @@ is destroyed when FN returns."
 
 
 (provide 'notmuch-show)
+
+;;; notmuch-show.el ends here

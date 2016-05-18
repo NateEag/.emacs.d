@@ -1,4 +1,4 @@
-;; notmuch-mua.el --- emacs style mail-user-agent
+;;; notmuch-mua.el --- emacs style mail-user-agent
 ;;
 ;; Copyright © David Edmondson
 ;;
@@ -18,6 +18,8 @@
 ;; along with Notmuch.  If not, see <http://www.gnu.org/licenses/>.
 ;;
 ;; Authors: David Edmondson <dme@dme.org>
+
+;;; Code:
 
 (require 'message)
 (require 'mm-view)
@@ -248,7 +250,9 @@ mutiple parts get a header."
 		       ;; Don't omit long parts.
 		       (notmuch-show-max-text-part-size 0)
 		       ;; Insert headers for parts as appropriate for replying.
-		       (notmuch-show-insert-header-p-function notmuch-mua-reply-insert-header-p-function))
+		       (notmuch-show-insert-header-p-function notmuch-mua-reply-insert-header-p-function)
+		       ;; Don't indent multipart sub-parts.
+		       (notmuch-show-indent-multipart nil))
 		    (notmuch-show-insert-body original (plist-get original :body) 0)
 		    (buffer-substring-no-properties (point-min) (point-max)))))
 
@@ -318,8 +322,8 @@ modified. This function is notmuch addaptation of
 	(push (cons 'User-Agent user-agent) other-headers))))
 
   (unless (assq 'From other-headers)
-    (push (cons 'From (concat
-		       (notmuch-user-name) " <" (notmuch-user-primary-email) ">")) other-headers))
+    (push (cons 'From (message-make-from
+		       (notmuch-user-name) (notmuch-user-primary-email))) other-headers))
 
   (notmuch-mua-pop-to-buffer (message-buffer-name "mail" to)
 			     (or switch-function (notmuch-mua-get-switch-function)))
@@ -334,7 +338,10 @@ modified. This function is notmuch addaptation of
 	  ;; We need to convert any string input, eg from rmail-start-mail.
 	  (dolist (h other-headers other-headers)
 	    (if (stringp (car h)) (setcar h (intern (capitalize (car h))))))))
-	(args (list yank-action send-actions)))
+	(args (list yank-action send-actions))
+	;; Cause `message-setup-1' to do things relevant for mail,
+	;; such as observe `message-default-mail-headers'.
+	(message-this-is-mail t))
     ;; message-setup-1 in Emacs 23 does not accept return-action
     ;; argument. Pass it only if it is supplied by the caller. This
     ;; will never be the case when we're called by `compose-mail' in
@@ -393,7 +400,7 @@ the From: header is already filled in by notmuch."
 	    (ido-completing-read (concat "Sender address for " name ": ") addrs
 				 nil nil nil 'notmuch-mua-sender-history
 				 (car addrs))))
-      (concat name " <" address ">"))))
+      (message-make-from name address))))
 
 (put 'notmuch-mua-new-mail 'notmuch-prefix-doc "... and prompt for sender")
 (defun notmuch-mua-new-mail (&optional prompt-for-sender)
@@ -513,3 +520,5 @@ simply runs the corresponding `message-mode' hook functions."
 ;;
 
 (provide 'notmuch-mua)
+
+;;; notmuch-mua.el ends here

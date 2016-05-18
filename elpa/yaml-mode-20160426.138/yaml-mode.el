@@ -6,8 +6,8 @@
 ;;         Marshall T. Vandegrift <llasram@gmail.com>
 ;; Maintainer: Vasilij Schneidermann <v.schneidermann@gmail.com>
 ;; Package-Requires: ((emacs "24.1"))
+;; Package-Version: 20160426.138
 ;; Keywords: data yaml
-;; Package-Version: 20160220.340
 ;; Version: 0.0.12
 
 ;; This file is not part of Emacs
@@ -42,7 +42,7 @@
 ;; handle files ending in '.yml', add something like:
 ;;
 ;;    (require 'yaml-mode)
-;;    (add-to-list 'auto-mode-alist '("\\.yml$" . yaml-mode))
+;;    (add-to-list 'auto-mode-alist '("\\.yml\\'" . yaml-mode))
 ;;
 ;; to your .emacs file.
 ;;
@@ -432,7 +432,7 @@ cross boundaries of block literals."
   yaml-mode-version)
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.e?ya?ml$" . yaml-mode))
+(add-to-list 'auto-mode-alist '("\\.e?ya?ml\\'" . yaml-mode))
 
 (provide 'yaml-mode)
 

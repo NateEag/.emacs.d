@@ -2,8 +2,8 @@
 
 ;; Author: Doug MacEachern
 ;; URL: https://github.com/dougm/bats-mode
-;; Version: 20141115.701
-;; X-Original-Version: 0.1.0
+;; Package-Version: 20160513.2315
+;; Version: 0.1.0
 ;; Keywords: bats, tests
 
 ;; This program is free software; you can redistribute it and/or
@@ -36,6 +36,12 @@
     map)
   "Keymap used in Bats mode.")
 
+(defvar bats-check-program (executable-find (concat (file-name-directory
+                                                     (or load-file-name
+                                                         buffer-file-name))
+                                                    "bin/batscheck"))
+  "Default batscheck program.")
+
 ;;;###autoload
 (define-derived-mode bats-mode sh-mode "Bats"
   "Major mode for editing and running Bats tests.
@@ -43,6 +49,9 @@
 See URL `https://github.com/sstephenson/bats'.
 
 \\{bats-mode-map}"
+
+  (set (make-local-variable 'flycheck-sh-shellcheck-executable) bats-check-program)
+  (set (make-local-variable 'sh-shell) 'bash)
 
   ;; bash font-lock + a few bats keywords
   (add-to-list 'sh-font-lock-keywords-var
@@ -94,6 +103,10 @@ NAME if given is used as the bats test pattern."
 ;;;###autoload
 (progn
   (add-to-list 'auto-mode-alist '("\\.bats\\'" . bats-mode)))
+
+(eval-after-load 'flycheck
+  '(progn
+     (flycheck-add-mode 'sh-shellcheck 'bats-mode)))
 
 (provide 'bats-mode)
 

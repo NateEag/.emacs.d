@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "bats-mode" "bats-mode.el" (21610 37759 0 0))
+;;;### (autoloads nil "bats-mode" "bats-mode.el" (22331 51900 0 0))
 ;;; Generated autoloads from bats-mode.el
 
 (autoload 'bats-mode "bats-mode" "\

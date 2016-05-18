@@ -4,7 +4,7 @@
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
 ;; Version: 1.4.0
-;; Package-Version: 20150727.224
+;; Package-Version: 20160516.754
 ;; Keywords: convenience
 ;; Package-Requires: ((s "1.3.1") (dash "1.0.3"))
 
@@ -142,6 +142,11 @@
   (define-key tagedit-mode-map (kbd "M-S") 'tagedit-split-tag)
   (define-key tagedit-mode-map (kbd "M-J") 'tagedit-join-tags)
   (define-key tagedit-mode-map (kbd "M-?") 'tagedit-convolute-tags)
+  (define-key tagedit-mode-map (kbd "M-'") 'tagedit-goto-tag-content)
+  (define-key tagedit-mode-map (kbd "C-c C-<backspace>") 'te/kill-current-tag)
+  (define-key tagedit-mode-map (kbd "C-%") 'te/goto-tag-match)
+  (define-key tagedit-mode-map (kbd "C-^") 'te/goto-tag-begging)
+  (define-key tagedit-mode-map (kbd "C-$") 'te/goto-tag-end)
 
   ;; no paredit equivalents
   (define-key tagedit-mode-map (kbd "s-k") 'tagedit-kill-attribute)
@@ -165,6 +170,36 @@
   (define-key tagedit-mode-map (kbd ">") nil))
 
 ;;;###autoload
+(defun tagedit-goto-tag-content ()
+  "Goto start of content within current tag."
+  (interactive)
+  (goto-char (te/inner-beg (te/current-tag))))
+
+(defun te/goto-tag-begging ()
+  (interactive)
+  (goto-char (te/get (te/current-tag) :beg)))
+
+(defun te/goto-tag-end ()
+  (interactive)
+  (goto-char (1- (te/get (te/current-tag) :end))))
+
+(defun te/goto-tag-match ()
+  (interactive)
+  (let* ((tag (te/current-tag))
+         (in-opening-tag (and (>= (point) (te/get tag :beg)) (<= (point) (te/inner-beg tag))))
+         (in-closing-tag (and (<= (point) (te/get tag :end)) (>= (point) (te/inner-end tag)))))
+    (if in-opening-tag
+        (te/goto-tag-end)
+      (te/goto-tag-begging))))
+
+(defun te/kill-current-tag (arg)
+  (interactive "p")
+  (decf arg)
+  (let* ((tag (te/current-tag)) (parent tag))
+    (dotimes (i arg)
+      (setq parent (te/parent-tag parent)))
+    (kill-region (te/get parent :beg) (te/get parent :end))))
+
 (defun tagedit-insert-gt ()
   (interactive)
   (if (and (te/point-inside-tag-innards?)

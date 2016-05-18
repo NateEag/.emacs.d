@@ -3,7 +3,7 @@
 ;; Copyright (C) 2011-2016 EditorConfig Team
 
 ;; Author: EditorConfig Team <editorconfig@googlegroups.com>
-;; Version: 0.7.4
+;; Version: 0.7.6
 ;; URL: https://github.com/editorconfig/editorconfig-emacs#readme
 ;; Package-Requires: ((cl-lib "0.5"))
 
@@ -44,6 +44,13 @@
 (declare-function editorconfig-core-get-properties-hash
   "editorconfig-core"
   nil)
+
+(defgroup editorconfig nil
+  "EditorConfig Emacs Plugin.
+
+EditorConfig Helps developers define and maintain consistent coding styles
+between different editors and IDEs"
+  :group 'tools)
 
 (defcustom editorconfig-exec-path
   "editorconfig"
@@ -95,6 +102,7 @@ property emacs_linum to decide whether to show line numbers on the left
   "0.5")
 
 (defcustom editorconfig-indentation-alist
+  ;; For contributors: Sort modes in alphabetical order, please :)
   '((awk-mode c-basic-offset)
      (c++-mode c-basic-offset)
      (c-mode c-basic-offset)
@@ -114,9 +122,12 @@ property emacs_linum to decide whether to show line numbers on the left
      (jade-mode jade-tab-width)
      (java-mode c-basic-offset)
      (js-mode js-indent-level)
+     (js-jsx-mode js-indent-level sgml-basic-offset)
      (js2-mode js2-basic-offset)
+     (js2-jsx-mode js2-basic-offset sgml-basic-offset)
      (js3-mode js3-indent-level)
      (json-mode js-indent-level)
+     (julia-mode julia-indent-offset)
      (latex-mode . editorconfig-set-indentation/latex-mode)
      (lisp-mode lisp-indent-offset)
      (livescript-mode livescript-tab-width)
@@ -322,7 +333,8 @@ yet.")
 
 (defun editorconfig-set-line-length (length)
   "Set the max line length (fill-column) to LENGTH."
-  (when (editorconfig-string-integer-p length)
+  (when (and (editorconfig-string-integer-p length)
+          (> (string-to-number length) 0))
     (set-fill-column (string-to-number length))))
 
 (defun editorconfig-call-editorconfig-exec ()

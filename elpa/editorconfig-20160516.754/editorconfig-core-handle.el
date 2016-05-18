@@ -26,7 +26,7 @@
 
 ;;; Commentary:
 
-;; Handle class for EditorConfig config file. This library is used internally
+;; Handle class for EditorConfig config file.  This library is used internally
 ;; from editorconfig-core.el .
 
 ;;; Code:
@@ -41,11 +41,25 @@
   "Hash of EditorConfig filename and its `editorconfig-core-handle' instance.")
 
 (cl-defstruct editorconfig-core-handle
+  ;; Alist of top propetties
+  ;; e.g. (("root" . "true"))
   (top-prop nil)
-  (prop nil)
-  (mtime nil)
-  (path nil))
 
+  ;; Alist of properties
+  ;; Key: Section name
+  ;; Value: Alist of properties for each section name
+  ;; e.g.
+  ;; (
+  ;;  ("*" ("end_of_line" . "lf") ("indent_style" . "space"))
+  ;;  ("Makefile" ("indent_style" . "tab"))
+  ;; )
+  (prop nil)
+
+  ;; e.g. (22310 59113 203882 991000)
+  (mtime nil)
+
+  ;; e.g. "/home/a/b/.editorconfig"
+  (path nil))
 
 
 (defun editorconfig-core-handle (conf)
@@ -53,6 +67,7 @@
 
 If CONF does not exist return nil."
   (when (file-readable-p conf)
+    (setq conf (file-truename conf))
     (let ((cached (gethash conf
                     editorconfig-core-handle--cache-hash))
            (mtime (nth 5
@@ -85,7 +100,7 @@ The list returned will be ordered by the lines they appear.
 
 If HANDLE is nil return nil."
   (when handle
-    (mapcar 'cdr
+    (mapcar (lambda (prop) (copy-alist (cdr prop)))
       (cl-remove-if-not (lambda (prop)
                           (editorconfig-core-handle--fnmatch-p file
                             (car prop)
@@ -142,6 +157,8 @@ If CONF is not found return nil."
              ;; Alist of properties for current PATTERN
              (props ())
 
+             ;; Current line num
+             (current-line-number 1)
              )
         (while (not (eq (point) point-max))
           (setq line
@@ -168,8 +185,10 @@ If CONF is not found return nil."
               (let ((idx (string-match "=\\|:"
                            line)))
                 (unless idx
-                  (error (format "Failed to parse file: %s"
-                           conf)))
+                  (error "Error while reading config file: %s:%d:\n    %s\n"
+                         conf
+                         current-line-number
+                         line))
                 (let (
                        (key (downcase (editorconfig-core-handle--string-trim
                                         (substring line
@@ -187,7 +206,12 @@ If CONF is not found return nil."
                       (setq top-props
                         `(,@top-props (,key . ,value))))))))
             )
-          (forward-line 1))
+          (setq current-line-number
+            (1+ current-line-number))
+          ;; Use  this code instead of goto-line for Lisp program
+          (goto-char (point-min))
+          (forward-line (1- current-line-number))
+          )
         (when pattern
           (setq all-props
             `(,@all-props (,pattern . ,props))))

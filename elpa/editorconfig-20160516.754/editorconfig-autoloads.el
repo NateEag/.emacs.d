@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "editorconfig" "editorconfig.el" (22274 19327
+;;;### (autoloads nil "editorconfig" "editorconfig.el" (22331 51906
 ;;;;;;  0 0))
 ;;; Generated autoloads from editorconfig.el
 
@@ -46,7 +46,7 @@ Major mode for editing .editorconfig files.
 ;;;***
 
 ;;;### (autoloads nil "editorconfig-core" "editorconfig-core.el"
-;;;;;;  (22274 19327 0 0))
+;;;;;;  (22331 51906 0 0))
 ;;; Generated autoloads from editorconfig-core.el
 
 (autoload 'editorconfig-core-get-properties "editorconfig-core" "\
@@ -74,7 +74,7 @@ hash object instead.
 ;;;***
 
 ;;;### (autoloads nil "editorconfig-fnmatch" "editorconfig-fnmatch.el"
-;;;;;;  (22274 19327 0 0))
+;;;;;;  (22331 51906 0 0))
 ;;; Generated autoloads from editorconfig-fnmatch.el
 
 (autoload 'editorconfig-fnmatch-p "editorconfig-fnmatch" "\
@@ -98,7 +98,7 @@ be used:
 ;;;***
 
 ;;;### (autoloads nil nil ("editorconfig-core-handle.el" "editorconfig-pkg.el")
-;;;;;;  (22274 19327 890024 0))
+;;;;;;  (22331 51906 652693 0))
 
 ;;;***
 

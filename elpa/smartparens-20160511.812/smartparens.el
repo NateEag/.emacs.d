@@ -355,6 +355,22 @@ Maximum length of opening or closing pair is
   "Symbol holding the last successful operation.")
 (make-variable-buffer-local 'sp-last-operation)
 
+(cl-defstruct sp-state
+  "Smartparens state for the current buffer."
+  ;; A "counter" to track delayed hook.  When a pair is inserted, a
+  ;; cons of the form (:next . pair) is stored.  On the next
+  ;; (immediately after insertion) invocation of post-command-hook, it
+  ;; is changed to (:this . pair).  When the `car' is :this, the
+  ;; post-command-hook checks the delayed hooks for `pair' and
+  ;; executes them, then reset the "counter".
+  delayed-hook
+  ;; TODO
+  delayed-insertion)
+
+(defvar sp-state nil
+  "Smartparens state for the current buffer.")
+(make-variable-buffer-local 'sp-state)
+
 ;; TODO: get rid of this
 (defvar sp-previous-point -1
   "Location of point before last command.
@@ -646,6 +662,8 @@ after the smartparens indicator in the mode list."
 (defun sp--init ()
   "Initialize the buffer local pair bindings and other buffer
 local variables that depend on the active `major-mode'."
+  ;; setup local state
+  (setq sp-state (make-sp-state))
   ;; setup local pair replacements
   (sp--update-local-pairs)
   ;; set the escape char
@@ -974,7 +992,7 @@ start of list item (unary) OR emphatic text (binary)."
   :type '(repeat symbol)
   :group 'smartparens)
 
-(defcustom sp-nagivate-use-textmode-stringlike-parser '((derived . text-mode))
+(defcustom sp-navigate-use-textmode-stringlike-parser '((derived . text-mode))
   "List of modes where textmode stringlike parser is used.
 
 See `sp-get-textmode-stringlike-expression'.
@@ -988,6 +1006,9 @@ where PARENT-MODE is checked using `derived-mode-p'."
                     (const derived)
                     (symbol :tag "Parent major mode name"))))
   :group 'smartparens)
+
+(defvaralias 'sp-nagivate-use-textmode-stringlike-parser 'sp-navigate-use-textmode-stringlike-parser)
+;; For backward compatibility?
 
 (defcustom sp-navigate-consider-symbols t
   "If non-nil, consider symbols outside balanced expressions as such.
@@ -2671,18 +2692,22 @@ see `sp-pair' for description."
         (setq sp-previous-point (point)))
 
       ;; Here we run the delayed hooks. See issue #80
-      (when (and (not (eq sp-last-operation 'sp-insert-pair))
-                 sp-last-inserted-pair)
-        (let ((hooks (sp-get-pair sp-last-inserted-pair :post-handlers-cond)))
+      (cond
+       ((eq (car-safe (sp-state-delayed-hook sp-state)) :next)
+        (setf (car (sp-state-delayed-hook sp-state)) :this))
+       ((eq (car-safe (sp-state-delayed-hook sp-state)) :this)
+        (let* ((pair (cdr (sp-state-delayed-hook sp-state)))
+               (hooks (sp-get-pair pair :post-handlers-cond)))
           (--each hooks
             (let ((fun (car it))
                   (conds (cdr it)))
               (when (or (--any? (eq this-command it) conds)
                         (--any? (equal (single-key-description last-command-event) it) conds))
                 (sp--run-function-or-insertion
-                 fun sp-last-inserted-pair 'insert
-                 (sp--get-handler-context :post-handlers))))))
-        (setq sp-last-inserted-pair nil))
+                 fun pair 'insert
+                 (sp--get-handler-context :post-handlers)))))
+          (setf (sp-state-delayed-hook sp-state) nil)
+          (setq sp-last-inserted-pair nil))))
 
       ;; Here we run the delayed insertion. Some details in issue #113
       (when (and (not (eq sp-last-operation 'sp-insert-pair-delayed))
@@ -2711,6 +2736,7 @@ see `sp-pair' for description."
             ;; no auto-escape here? Should be fairly safe
             (sp--run-hook-with-args open-pair :post-handlers 'insert)
             (setq sp-last-inserted-pair open-pair)
+            ;; TODO: this is probably useless
             (setq sp-last-operation 'sp-insert-pair)))
         (setq sp-delayed-pair nil))
 
@@ -2978,6 +3004,7 @@ overlay."
         (overlay-put oright 'priority 100)
         (overlay-put oleft 'keymap sp-wrap-overlay-keymap)
         (overlay-put oleft 'type 'wrap)
+        (setq sp-previous-point (point))
         (goto-char (1+ (overlay-start oleft)))))))
 
 (defun sp-wrap--finalize (wrapping-end open close)
@@ -3027,8 +3054,12 @@ programatically.  Use `sp-wrap-with-pair' instead."
            (mapconcat (lambda (x)
                         (if sp-highlight-wrap-overlay
                             (concat
-                             (propertize (plist-get x :open) 'face 'sp-wrap-overlay-opening-pair)
-                             (propertize (plist-get x :close) 'face 'sp-wrap-overlay-closing-pair))
+                             (propertize
+                              (plist-get x :open) 'face
+                              'sp-wrap-overlay-opening-pair)
+                             (propertize
+                              (plist-get x :close)
+                              'face 'sp-wrap-overlay-closing-pair))
                           (concat (plist-get x :open) (plist-get x :close))))
                       opening-pairs " ")))
         (when (equal (sp--get-overlay-text obeg) open)
@@ -3275,6 +3306,7 @@ default."
           (push nil buffer-undo-list))
         (sp--run-hook-with-args open-pair :post-handlers 'insert)
         (setq sp-last-inserted-pair open-pair)
+        (setf (sp-state-delayed-hook sp-state) (cons :next open-pair))
         (setq sp-last-operation 'sp-insert-pair)))))
 
 (defun sp--wrap-repeat-last (active-pair)
@@ -4091,8 +4123,8 @@ counting (stack) algorithm."
 
 (defun sp-use-textmode-stringlike-parser-p ()
   "Test if we should use textmode stringlike parser or not."
-  (let ((modes (-filter 'symbolp sp-nagivate-use-textmode-stringlike-parser))
-        (derived (-map 'cdr (-remove 'symbolp sp-nagivate-use-textmode-stringlike-parser))))
+  (let ((modes (-filter 'symbolp sp-navigate-use-textmode-stringlike-parser))
+        (derived (-map 'cdr (-remove 'symbolp sp-navigate-use-textmode-stringlike-parser))))
     (or (--any? (eq major-mode it) modes)
         (apply 'derived-mode-p derived))))
 
@@ -7425,6 +7457,10 @@ considered balanced expressions."
          (b (sp-get selection :beg))
          (e (sp-get selection :end))
          contracted)
+    ;; Show a helpful error if we're trying to move beyond the
+    ;; beginning or end of the buffer.
+    (when (or (null b) (null e))
+      (user-error (if (bobp) "At beginning of buffer" "At end of buffer")))
     ;; if region is active and ready to use, check if this selection
     ;; == old selection.  If so, reselect the insides
     (when (region-active-p)

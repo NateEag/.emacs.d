@@ -4,8 +4,8 @@
 
 ;; Author: Artur Malabarba <emacs@endlessparentheses.com>
 ;; URL: https://github.com/Malabarba/aggressive-indent-mode
-;; Package-Version: 20160404.1722
-;; Version: 1.5.3
+;; Package-Version: 20160501.1911
+;; Version: 1.7
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: indent lisp maint tools
 ;; Prefix: aggressive-indent
@@ -350,8 +350,26 @@ or messages."
   "List of (left right) limit of regions changed in the last command loop.")
 (make-variable-buffer-local 'aggressive-indent--changed-list)
 
-(defvar-local aggressive-indent--balanced-parens t
+(defvar aggressive-indent--balanced-parens t
   "Non-nil if the current-buffer has balanced parens.")
+(make-variable-buffer-local 'aggressive-indent--balanced-parens)
+
+(defun aggressive-indent--proccess-changed-list-and-indent ()
+  "Indent the regions in `aggressive-indent--changed-list'."
+  (let ((inhibit-modification-hooks t)
+        (inhibit-point-motion-hooks t)
+        (indent-function
+         (if (cl-member-if #'derived-mode-p aggressive-indent-modes-to-prefer-defun)
+             #'aggressive-indent--softly-indent-defun #'aggressive-indent--softly-indent-region-and-on)))
+    ;; Take the 10 most recent changes.
+    (let ((cell (nthcdr 10 aggressive-indent--changed-list)))
+      (when cell (setcdr cell nil)))
+    ;; (message "----------")
+    (while aggressive-indent--changed-list
+      ;; (message "%S" (car aggressive-indent--changed-list))
+      (apply indent-function (car aggressive-indent--changed-list))
+      (setq aggressive-indent--changed-list
+            (cdr aggressive-indent--changed-list)))))
 
 (defun aggressive-indent--indent-if-changed ()
   "Indent any region that changed in the last command loop."
@@ -362,15 +380,7 @@ or messages."
                     (aggressive-indent--run-user-hooks))
           (while-no-input
             (redisplay)
-            (let ((inhibit-modification-hooks t)
-                  (inhibit-point-motion-hooks t)
-                  (indent-function
-                   (if (cl-member-if #'derived-mode-p aggressive-indent-modes-to-prefer-defun)
-                       #'aggressive-indent--softly-indent-defun #'aggressive-indent--softly-indent-region-and-on)))
-              (while aggressive-indent--changed-list
-                (apply indent-function (car aggressive-indent--changed-list))
-                (setq aggressive-indent--changed-list
-                      (cdr aggressive-indent--changed-list))))))))))
+            (aggressive-indent--proccess-changed-list-and-indent)))))))
 
 (defun aggressive-indent--check-parens ()
   "Check if parens are balanced in the current buffer.
@@ -378,9 +388,7 @@ Store result in `aggressive-indent--balanced-parens'."
   (setq aggressive-indent--balanced-parens
         (save-excursion
           (ignore-errors
-            (save-restriction
-              (check-parens)
-              t)))))
+            (zerop (car (syntax-ppss (point-max))))))))
 
 (defun aggressive-indent--keep-track-of-changes (l r &rest _)
   "Store the limits (L and R) of each change in the buffer."
@@ -415,9 +423,11 @@ Store result in `aggressive-indent--balanced-parens'."
           (aggressive-indent--local-electric t))
         (aggressive-indent--check-parens)
         (add-hook 'after-change-functions #'aggressive-indent--keep-track-of-changes nil 'local)
+        (add-hook 'before-save-hook #'aggressive-indent--proccess-changed-list-and-indent nil 'local)
         (add-hook 'post-command-hook #'aggressive-indent--indent-if-changed nil 'local))
     ;; Clean the hooks
     (remove-hook 'after-change-functions #'aggressive-indent--keep-track-of-changes 'local)
+    (remove-hook 'before-save-hook #'aggressive-indent--proccess-changed-list-and-indent 'local)
     (remove-hook 'post-command-hook #'aggressive-indent--indent-if-changed 'local)
     (remove-hook 'post-command-hook #'aggressive-indent--softly-indent-defun 'local)))
 

@@ -1,4 +1,4 @@
-(define-package "jedi-core" "20151214.705" "Common code of jedi.el and company-jedi.el"
+(define-package "jedi-core" "20160501.2043" "Common code of jedi.el and company-jedi.el"
   '((emacs "24")
     (epc "0.1.0")
     (python-environment "0.0.2")

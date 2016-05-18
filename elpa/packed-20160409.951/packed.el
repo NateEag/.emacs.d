@@ -5,7 +5,7 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/tarsius/packed
 ;; Keywords: compile, convenience, lisp, package, library
-;; Package-Version: 20160321.36
+;; Package-Version: 20160409.951
 ;; Package-Requires: ((emacs "24.3") (dash "2.12.1"))
 
 ;; This file is not part of GNU Emacs.
@@ -546,8 +546,8 @@ library.  If a file lacks an expected feature then loading it using
 
 (defconst packed-required-regexp "\
 \(\\(?:cc-\\)?require[\s\t\n]+'\
-\\([^(),\s\t\n]+\\)\
-\\(?:\\(?:[\s\t\n]+\\(?:nil\\|\".*\"\\)\\)\
+\\([^(),\s\t\n\"]+\\)\
+\\(?:\\(?:[\s\t\n]+\\(?:nil\\|\"[^\"]*\"\\)\\)\
 \\(?:[\s\t\n]+\\(?:nil\\|\\(t\\)\\)\\)?\\)?)")
 
 (defun packed-required ()

@@ -4,7 +4,7 @@
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
 ;; Version: 2.12.1
-;; Package-Version: 20160306.1222
+;; Package-Version: 20160510.1127
 ;; Keywords: lists
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -72,11 +72,36 @@ special values."
          (setq it-index (1+ it-index))
          (!cdr ,l)))))
 
+(defmacro -doto (eval-initial-value &rest forms)
+  "Eval a form, then insert that form as the 2nd argument to other forms.
+The EVAL-INITIAL-VALUE form is evaluated once. Its result is
+passed to FORMS, which are then evaluated sequentially. Returns
+the target form."
+  (declare (indent 1))
+  (let ((retval (make-symbol "value")))
+    `(let ((,retval ,eval-initial-value))
+       ,@(mapcar (lambda (form)
+                   (if (sequencep form)
+                       `(,(-first-item form) ,retval ,@(cdr form))
+                     `(funcall form ,retval)))
+                 forms)
+       ,retval)))
+
 (defun -each (list fn)
   "Call FN with every item in LIST. Return nil, used for side-effects only."
   (--each list (funcall fn it)))
 
 (put '-each 'lisp-indent-function 1)
+
+(defalias '--each-indexed '--each)
+
+(defun -each-indexed (list fn)
+  "Call (FN index item) for each item in LIST.
+
+In the anaphoric form `--each-indexed', the index is exposed as `it-index`.
+
+See also: `-map-indexed'."
+  (--each list (funcall fn it-index it)))
 
 (defmacro --each-while (list pred &rest body)
   "Anaphoric form of `-each-while'."
@@ -271,7 +296,7 @@ See also: `-remove', `-map-first'"
 Alias: `-reject-last'
 
 See also: `-remove', `-map-last'"
-  (nreverse (-remove-first pred (nreverse list))))
+  (nreverse (-remove-first pred (reverse list))))
 
 (defmacro --remove-last (form list)
   "Anaphoric form of `-remove-last'."
@@ -318,7 +343,9 @@ If you want to select the original items satisfying a predicate use `-filter'."
 (defun -map-indexed (fn list)
   "Return a new list consisting of the result of (FN index item) for each item in LIST.
 
-In the anaphoric form `--map-indexed', the index is exposed as `it-index`."
+In the anaphoric form `--map-indexed', the index is exposed as `it-index`.
+
+See also: `-each-indexed'."
   (--map-indexed (funcall fn it-index it) list))
 
 (defmacro --map-when (pred rep list)
@@ -362,7 +389,7 @@ See also: `-map-when', `-replace-first'"
   "Replace first item in LIST satisfying PRED with result of REP called on this item.
 
 See also: `-map-when', `-replace-last'"
-  (nreverse (-map-first pred rep (nreverse list))))
+  (nreverse (-map-first pred rep (reverse list))))
 
 (defmacro --map-last (pred rep list)
   "Anaphoric form of `-map-last'."
@@ -544,11 +571,8 @@ Alias: `-any'"
 
 (defun -butlast (list)
   "Return a list of all items in list except for the last."
-  (let (result)
-    (while (cdr list)
-      (!cons (car list) result)
-      (!cdr list))
-    (nreverse result)))
+  ;; no alias as we don't want magic optional argument
+  (butlast list))
 
 (defmacro --count (pred list)
   "Anaphoric form of `-count'."
@@ -665,7 +689,9 @@ section is returned.  Defaults to 1."
     (nreverse new-list)))
 
 (defun -take (n list)
-  "Return a new list of the first N items in LIST, or all items if there are fewer than N."
+  "Return a new list of the first N items in LIST, or all items if there are fewer than N.
+
+See also: `-take-last'"
   (let (result)
     (--dotimes n
       (when list
@@ -673,7 +699,23 @@ section is returned.  Defaults to 1."
         (!cdr list)))
     (nreverse result)))
 
-(defalias '-drop 'nthcdr "Return the tail of LIST without the first N items.")
+(defun -take-last (n list)
+  "Return the last N items of LIST in order.
+
+See also: `-take'"
+  (copy-sequence (last list n)))
+
+(defalias '-drop 'nthcdr
+  "Return the tail of LIST without the first N items.
+
+See also: `-drop-last'")
+
+(defun -drop-last (n list)
+  "Remove the last N items of LIST and return a copy.
+
+See also: `-drop'"
+  ;; No alias because we don't want magic optional argument
+  (butlast list n))
 
 (defmacro --take-while (form list)
   "Anaphoric form of `-take-while'."

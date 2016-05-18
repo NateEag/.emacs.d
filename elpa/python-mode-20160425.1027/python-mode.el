@@ -134,6 +134,9 @@ Results arrive in output buffer, which is not in comint-mode"
   :tag "py-fast-process-p"
   :group 'python-mode)
 
+(defvar py-this-result nil
+  "Internally used, store return-value")
+
 ;; (defcustom py-which-def-or-class-function py-which-def-or-class
 ;;   "If which-function-mode should use `py-which-def-or-class'.
 
@@ -269,6 +272,14 @@ Default is nil"
   "Internally used. When non-nil, return resulting string of `py-execute-...' functions. Imports will use it with nil.
 
 Default is t")
+
+(defcustom py--execute-use-temp-file-p nil
+ "Assume execution at a remote machine.
+
+ where write-access is not given. "
+
+:type 'boolean
+:group 'python-mode)
 
 (defvar py--match-paren-forward-p nil
   "Internally used by `py-match-paren'. ")
@@ -475,6 +486,9 @@ Give some hints, if not."
 (defvar smart-operator-mode nil)
 (defvar highlight-indent-active nil)
 (defvar autopair-mode nil)
+
+(defvar py-edit-docstring-orig-pos nil
+  "Internally used by `py-edit-docstring'. ")
 
 (defvar py-result nil
   "Internally used. May store result from Python process. ")
@@ -3441,7 +3455,7 @@ Returns char found. "
 	      "if" "and" "del"  "not" "while" "as" "elif" "global"
 	      "or" "async with" "with" "assert" "else"  "pass" "yield" "break"
 	      "exec" "in" "continue" "finally" "is" "except" "raise"
-	      "return"  "async for" "for" "lambda")
+	      "return"  "async for" "for" "lambda" "await")
              symbol-end)
         (,(rx symbol-start (or "async def" "def" "class") symbol-end) . py-def-class-face)
         (,(rx symbol-start (or "import" "from") symbol-end) . py-import-from-face)
@@ -4694,32 +4708,43 @@ Returns the string inserted. "
           (delete-region (point) (1+ (line-end-position)))
         (forward-line 1)))))
 
+(defun py--edit-docstring-set-vars ()
+  (setq beg (when (use-region-p) (region-beginning)))
+  (setq end (when (use-region-p) (region-end)))
+  (setq pps (parse-partial-sexp (point-min) (point)))
+  (when (nth 3 pps)
+    (setq beg (or beg (progn (goto-char (nth 8 pps))
+			     (skip-chars-forward (char-to-string (char-after)))(push-mark)(point))))
+    (setq end (or end
+		  (progn (goto-char (nth 8 pps))
+			 (forward-sexp)
+			 (skip-chars-backward (char-to-string (char-before)))
+			 (point))))))
+
 ;; Edit docstring
 (defun py-edit-docstring ()
   "Edit docstring or active region in python-mode. "
   (interactive "*")
   (let ((orig (point))
-	(beg (when (use-region-p) (region-beginning)))
-	(end (when (use-region-p) (region-end)))
-	(pps (parse-partial-sexp (point-min) (point))))
-    (when (nth 3 pps)
-      (let* (;; relative position in string
-	     (beg (or beg (progn (goto-char (nth 8 pps))
-				 (skip-chars-forward (char-to-string (char-after)))(push-mark)(point))))
-	     (end (or end
-		      (progn (goto-char (nth 8 pps))
-			     (forward-sexp)
-			     (skip-chars-backward (char-to-string (char-before)))
-			     (point))))
-	     (relpos (1+ (- orig beg)))
-	     (docstring (buffer-substring beg end)))
-	(kill-region beg end)
-	(set-buffer (get-buffer-create "Edit docstring"))
-	(erase-buffer)
-	(switch-to-buffer (current-buffer))
-	(insert docstring)
-	(python-mode)
-	(goto-char relpos)))))
+	beg end pps)
+    (py--edit-docstring-set-vars)
+    (setq relpos (1+ (- orig beg)))
+    (setq docstring (buffer-substring beg end))
+    (set (make-variable-buffer-local 'py-edit-docstring-orig-pos) orig)
+    (set-buffer (get-buffer-create "Edit docstring"))
+    (erase-buffer)
+    (switch-to-buffer (current-buffer))
+    (insert docstring)
+    (python-mode)
+    (goto-char relpos)
+    (message "%s" "Type C-c C-c when ready")
+    ))
+
+(defun py--write-back-edited-docstring (orig)
+  "When ready, write docstring back. "
+  (let ((newstring (buffer-substring-no-properties (point-min) (point-max))))
+    (py-restore-window-configuration)))
+    
 
 ;; python-components-backward-forms
 
@@ -20308,7 +20333,9 @@ LIEP stores line-end-position at point-of-interest
 				(current-indentation))))
 			;; in string
 			((and (nth 3 pps)(nth 8 pps))
-			 (py--compute-indentation-in-string pps))
+			 (if (py--docstring-p)
+			     (py--compute-indentation-in-string pps)
+			   0))
 			((and (looking-at "\"\"\"\\|'''")(not (bobp)))
 			 (py-backward-statement)
 			 (py-compute-indentation orig origline closing line nesting repeat indent-offset liep))
@@ -21639,6 +21666,10 @@ Use current region unless optional args BEG END are delivered."
 	(t (setq py-shell-fontify-style 'input)))
   (py--shell-setup-fontification py-shell-fontify-style)
   (when msg (message "py-shell-fontify-style set to: %s" py-shell-fontify-style)))
+
+(defun py-toggle-execute-use-temp-file ()
+  (interactive)
+  (setq py--execute-use-temp-file-p (not py--execute-use-temp-file-p)))
 
 ;; /usr/lib/python2.7/pdb.py eyp.py
 (defalias 'IPython 'ipython)

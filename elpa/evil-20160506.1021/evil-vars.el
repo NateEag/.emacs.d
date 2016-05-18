@@ -432,21 +432,32 @@ before point."
   :group 'evil
   :set #'(lambda (sym value)
            (set-default sym value)
-           (when (boundp 'evil-motion-state-map)
+           (when (boundp 'evil-insert-state-map)
              (cond
               ((and (not value)
-                    (eq (lookup-key evil-motion-state-map (kbd "C-w"))
+                    (eq (lookup-key evil-insert-state-map (kbd "C-w"))
                         'evil-delete-backward-word))
-               (define-key evil-motion-state-map (kbd "C-w") 'evil-window-map))
+               (define-key evil-insert-state-map (kbd "C-w") 'evil-window-map))
               ((and value
-                    (eq (lookup-key evil-motion-state-map (kbd "C-w"))
+                    (eq (lookup-key evil-insert-state-map (kbd "C-w"))
                         'evil-window-map))
-               (define-key evil-motion-state-map (kbd "C-w") 'evil-delete-backward-word))))))
+               (define-key evil-insert-state-map (kbd "C-w") 'evil-delete-backward-word))))))
 
 (defcustom evil-want-C-w-in-emacs-state nil
   "Whether \"C-w\" prefixes windows commands in Emacs state."
   :type 'boolean
-  :group 'evil)
+  :group 'evil
+  :set #'(lambda (sym value)
+           (set-default sym value)
+           (when (boundp 'evil-emacs-state-map)
+             (cond
+              ((and (not value)
+                    (eq (lookup-key evil-emacs-state-map (kbd "C-w"))
+                        'evil-window-map))
+               (define-key evil-emacs-state-map (kbd "C-w") nil))
+              ((and value
+                    (not (lookup-key evil-emacs-state-map (kbd "C-w"))))
+               (define-key evil-emacs-state-map (kbd "C-w") 'evil-window-map))))))
 
 (defcustom evil-want-change-word-to-end t
   "Whether \"cw\" behaves like \"ce\"."
@@ -664,6 +675,8 @@ If STATE is nil, Evil is disabled in the buffer."
     occur-mode
     org-agenda-mode
     package-menu-mode
+    pdf-outline-buffer-mode
+    pdf-view-mode
     proced-mode
     rcirc-mode
     rebase-mode
@@ -1172,11 +1185,17 @@ SYMBOL is made permanent buffer local."
      (make-variable-buffer-local ',symbol)
      (put ',symbol 'permanent-local t)))
 
-(evil-define-local-var evil-ud-scroll-count 0
+(evil-define-local-var evil-scroll-count 0
   "Holds last used prefix for `evil-scroll-up'
 and `evil-scroll-down'.
 Determines how many lines should be scrolled.
 Default value is 0 - scroll half the screen.")
+
+(evil-define-local-var evil-scroll-line-count 1
+  "Holds last used prefix for `evil-scroll-line-up'
+and `evil-scroll-line-down'.
+Determines how many lines should be scrolled.
+Default value is 1 line.")
 
 (evil-define-local-var evil-state nil
   "The current Evil state.

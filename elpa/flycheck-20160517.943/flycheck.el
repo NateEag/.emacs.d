@@ -6,9 +6,9 @@
 ;; Author: Sebastian Wiesner <swiesner@lunaryorn.com>
 ;; Maintainer: Sebastian Wiesner <swiesner@lunaryorn.com>
 ;;             Clément Pit--Claudel <clement.pitclaudel@live.com>
-;; URL: https://www.flycheck.org
+;; URL: http://www.flycheck.org
 ;; Keywords: convenience, languages, tools
-;; Version: 26-cvs
+;; Version: 28-cvs
 ;; Package-Requires: ((dash "2.12.1") (pkg-info "0.4") (let-alist "1.0.4") (seq "1.11") (emacs "24.3"))
 
 ;; This file is not part of GNU Emacs.
@@ -84,12 +84,12 @@
 (require 'rx)                    ; Regexp fanciness in `flycheck-define-checker'
 (require 'help-mode)             ; `define-button-type'
 (require 'find-func)             ; `find-function-regexp-alist'
+(require 'json)                  ; `flycheck-parse-tslint'
 
 
 ;; Declare a bunch of dynamic variables that we need from other modes
 (defvar sh-shell)                       ; For shell script checker predicates
 (defvar ess-language)                   ; For r-lintr predicate
-(defvar package-user-dir)               ; For emacs-lisp option filters
 
 ;; Tell the byte compiler about autoloaded functions from packages
 (declare-function pkg-info-version-info "pkg-info" (package))
@@ -194,6 +194,7 @@ attention to case differences."
     go-build
     go-test
     go-errcheck
+    go-unconvert
     groovy
     haml
     handlebars
@@ -210,7 +211,7 @@ attention to case differences."
     json-jsonlint
     json-python-json
     less
-    luacheck
+    lua-luacheck
     lua
     perl
     perl-perlcritic
@@ -226,6 +227,7 @@ attention to case differences."
     r-lintr
     racket
     rpm-rpmlint
+    markdown-mdl
     rst-sphinx
     rst
     ruby-rubocop
@@ -249,6 +251,7 @@ attention to case differences."
     tex-chktex
     tex-lacheck
     texinfo
+    typescript-tslint
     verilog-verilator
     xml-xmlstarlet
     xml-xmllint
@@ -832,7 +835,7 @@ This variable is a normal hook.  See Info node `(elisp)Hooks'."
     (define-key map "?"         #'flycheck-describe-checker)
     (define-key map "h"         #'flycheck-display-error-at-point)
     (define-key map "H"         #'display-local-help)
-    (define-key map "i"         #'flycheck-info)
+    (define-key map "i"         #'flycheck-manual)
     (define-key map "V"         #'flycheck-version)
     (define-key map "v"         #'flycheck-verify-setup)
     (define-key map "x"         #'flycheck-disable-checker)
@@ -1023,10 +1026,13 @@ just return nil."
         (assq-delete-all 'flycheck-checker find-function-regexp-alist)))
 
 ;;;###autoload
-(defun flycheck-info ()
+(defun flycheck-manual ()
   "Open the Flycheck manual."
   (interactive)
-  (info "flycheck"))
+  (browse-url "http://www.flycheck.org"))
+
+(define-obsolete-function-alias 'flycheck-info
+  'flycheck-manual "26" "Open the Flycheck manual.")
 
 
 ;;; Utility functions
@@ -2249,9 +2255,6 @@ buffer manually.
 
 
 ;;; Syntax checker selection for the current buffer
-(defvar-local flycheck-last-checker nil
-  "The last checker used for the current buffer.")
-
 (defun flycheck-get-checker-for-buffer ()
   "Find the checker for the current buffer.
 
@@ -5349,6 +5352,30 @@ See URL `http://phpmd.org/' for more information about phpmd."
                       errors)))))))))
        (nreverse errors)))))
 
+(defun flycheck-parse-tslint (output checker buffer)
+  "Parse TSLint errors from JSON OUTPUT.
+
+CHECKER and BUFFER denoted the CHECKER that returned OUTPUT and
+the BUFFER that was checked respectively.
+
+See URL `https://palantir.github.io/tslint/' for more information
+about TSLint."
+  (let* ((json-array-type 'list)
+         (tslint-json-output (json-read-from-string output))
+         errors)
+    (dolist (emessage tslint-json-output)
+      (let-alist emessage
+        (push (flycheck-error-new-at
+               (+ 1 .startPosition.line)
+               (+ 1 .startPosition.character)
+               'warning .failure
+               :id .ruleName
+               :checker checker
+               :buffer buffer
+               :filename .name)
+              errors)))
+    (nreverse errors)))
+
 
 ;;; Error parsing with regular expressions
 (defun flycheck-get-regexp (patterns)
@@ -6278,7 +6305,7 @@ This variable has no effect, if
 (defun flycheck-option-emacs-lisp-package-user-dir (value)
   "Option VALUE filter for `flycheck-emacs-lisp-package-user-dir'."
   ;; Inherit the package directory from our Emacs session
-  (let ((value (or value package-user-dir)))
+  (let ((value (or value (bound-and-true-p package-user-dir))))
     (when value
       (flycheck-sexp-to-string `(setq package-user-dir ,value)))))
 
@@ -6368,11 +6395,33 @@ See Info Node `(elisp)Byte Compilation'."
             (princ (buffer-substring-no-properties (point-min) (point-max)))
             (kill-buffer)))))))
 
+(defconst flycheck-emacs-lisp-checkdoc-variables
+  '(checkdoc-symbol-words
+    checkdoc-arguments-in-order-flag
+    checkdoc-force-history-flag
+    checkdoc-permit-comma-termination-flag
+    checkdoc-force-docstrings-flag
+    checkdoc-package-keywords-flag
+    checkdoc-spellcheck-documentation-flag
+    checkdoc-verb-check-experimental-flag
+    checkdoc-max-keyref-before-warn)
+  "Variables inherited by the checkdoc subprocess.")
+
+(defun flycheck-emacs-lisp-checkdoc-variables-form ()
+  "Make a sexp to pass relevant variables to a checkdoc subprocess.
+
+Variables are taken from `flycheck-emacs-lisp-checkdoc-variables'."
+  `(progn
+     ,@(seq-map (lambda (opt) `(setq-default ,opt ,(symbol-value opt)))
+                (seq-filter #'boundp flycheck-emacs-lisp-checkdoc-variables))))
+
 (flycheck-define-checker emacs-lisp-checkdoc
   "An Emacs Lisp style checker using CheckDoc.
 
 The checker runs `checkdoc-current-buffer'."
   :command ("emacs" (eval flycheck-emacs-args)
+            "--eval" (eval (flycheck-sexp-to-string
+                            (flycheck-emacs-lisp-checkdoc-variables-form)))
             "--eval" (eval flycheck-emacs-lisp-checkdoc-form)
             "--" source)
   :error-patterns
@@ -6541,7 +6590,8 @@ See URL `https://golang.org/cmd/gofmt/'."
                   (warning . go-vet)
                   ;; Fall back, if go-vet doesn't exist
                   (warning . go-build) (warning . go-test)
-                  (warning . go-errcheck)))
+                  (warning . go-errcheck)
+                  (warning . go-unconvert)))
 
 (flycheck-define-checker go-golint
   "A Go style checker using Golint.
@@ -6553,7 +6603,7 @@ See URL `https://github.com/golang/lint'."
   :modes go-mode
   :next-checkers (go-vet
                   ;; Fall back, if go-vet doesn't exist
-                  go-build go-test go-errcheck))
+                  go-build go-test go-errcheck go-unconvert))
 
 (flycheck-def-option-var flycheck-go-vet-print-functions nil go-vet
   "A list of print-like functions for `go tool vet'.
@@ -6588,7 +6638,7 @@ This option requires Go 1.6 or newer."
   "A Go syntax checker using the `go tool vet' command.
 
 See URL `https://golang.org/cmd/go/' and URL
-`https://godoc.org/golang.org/x/tools/cmd/vet'."
+`https://golang.org/cmd/vet/'."
   :command ("go" "tool" "vet" "-all"
             (option "-printfuncs=" flycheck-go-vet-print-functions concat
                     flycheck-option-comma-separated-list)
@@ -6605,15 +6655,17 @@ See URL `https://golang.org/cmd/go/' and URL
   :next-checkers (go-build
                   go-test
                   ;; Fall back if `go build' or `go test' can be used
-                  go-errcheck)
-  :verify-fn (lambda (_)
-               (let ((have-vet (member "vet" (ignore-errors
-                                               (process-lines go "tool")))))
-                 (list
-                  (flycheck-verification-result-new
-                   :label "go tool vet"
-                   :message (if have-vet "present" "missing")
-                   :face (if have-vet 'success '(bold error)))))))
+                  go-errcheck
+                  go-unconvert)
+  :verify (lambda (_)
+            (let* ((go (flycheck-checker-executable 'go-vet))
+                   (have-vet (member "vet" (ignore-errors
+                                             (process-lines go "tool")))))
+              (list
+               (flycheck-verification-result-new
+                :label "go tool vet"
+                :message (if have-vet "present" "missing")
+                :face (if have-vet 'success '(bold error)))))))
 
 (flycheck-def-option-var flycheck-go-build-install-deps nil go-build
   "Whether to install dependencies in `go build'.
@@ -6674,7 +6726,8 @@ See URL `https://golang.org/cmd/go'."
   :predicate (lambda ()
                (and (flycheck-buffer-saved-p)
                     (not (string-suffix-p "_test.go" (buffer-file-name)))))
-  :next-checkers ((warning . go-errcheck)))
+  :next-checkers ((warning . go-errcheck)
+                  (warning . go-unconvert)))
 
 (flycheck-define-checker go-test
   "A Go syntax and type checker using the `go test' command.
@@ -6694,7 +6747,8 @@ See URL `http://golang.org/cmd/go'."
   :predicate
   (lambda () (and (flycheck-buffer-saved-p)
                   (string-suffix-p "_test.go" (buffer-file-name))))
-  :next-checkers ((warning . go-errcheck)))
+  :next-checkers ((warning . go-errcheck)
+                  (warning . go-unconvert)))
 
 (flycheck-define-checker go-errcheck
   "A Go checker for unchecked errors.
@@ -6719,11 +6773,18 @@ See URL `https://github.com/kisielk/errcheck'."
                 (format "Ignored `error` returned from `%s`" message)))))
     errors)
   :modes go-mode
-  :predicate
-  (lambda ()
-    ;; We need a valid package name, since errcheck only works on entire
-    ;; packages, and can't check individual Go files.
-    (and (flycheck-buffer-saved-p))))
+  :predicate (lambda () (flycheck-buffer-saved-p))
+  :next-checkers ((warning . go-unconvert)))
+
+(flycheck-define-checker go-unconvert
+  "A Go checker looking for unnecessary type conversions.
+
+See URL `https://github.com/mdempsky/unconvert'."
+  :command ("unconvert" ".")
+  :error-patterns
+  ((warning line-start (file-name) ":" line ":" column ": " (message) line-end))
+  :modes go-mode
+  :predicate (lambda () (flycheck-buffer-saved-p)))
 
 (flycheck-define-checker groovy
   "A groovy syntax checker using groovy compiler API.
@@ -7245,11 +7306,11 @@ See URL `http://lesscss.org'."
           line-end))
   :modes less-css-mode)
 
-(flycheck-def-config-file-var flycheck-luacheckrc luacheck ".luacheckrc"
+(flycheck-def-config-file-var flycheck-luacheckrc lua-luacheck ".luacheckrc"
   :safe #'stringp
   :package-version '(flycheck . "0.23"))
 
-(flycheck-define-checker luacheck
+(flycheck-define-checker lua-luacheck
   "A Lua syntax checker using luacheck.
 
 See URL `https://github.com/mpeterv/luacheck'."
@@ -7397,11 +7458,18 @@ or as path to a standard specification."
   :safe #'stringp)
 
 (flycheck-define-checker php-phpcs
-  "A PHP style checker using PHP_CodeSniffer.
+  "A PHP style checker using PHP Code Sniffer.
+
+Needs PHP Code Sniffer 2.6 or newer.
 
 See URL `http://pear.php.net/package/PHP_CodeSniffer/'."
   :command ("phpcs" "--report=checkstyle"
-            (option "--standard=" flycheck-phpcs-standard concat))
+            (option "--standard=" flycheck-phpcs-standard concat)
+            ;; Pass original file name to phpcs.  We need to concat explicitly
+            ;; here, because phpcs really insists to get option and argument as
+            ;; a single command line argument :|
+            (eval (when (buffer-file-name)
+                    (concat "--stdin-path=" (buffer-file-name)))))
   :standard-input t
   :error-parser flycheck-parse-checkstyle
   :error-filter
@@ -7433,7 +7501,7 @@ See https://github.com/processing/processing/wiki/Command-Line"
 (flycheck-define-checker puppet-parser
   "A Puppet DSL syntax checker using puppet's own parser.
 
-See URL `https://puppetlabs.com/'."
+See URL `https://puppet.com/'."
   :command ("puppet" "parser" "validate" "--color=false")
   :standard-input t
   :error-patterns
@@ -7573,7 +7641,7 @@ Update the error level of ERR according to
   "A Python syntax and style checker using Flake8.
 
 Requires Flake8 2.0 or newer. See URL
-`https://flake8.readthedocs.org/'."
+`https://flake8.readthedocs.io/'."
   :command ("flake8"
             "--format=default"
             (config-file "--config" flycheck-flake8rc)
@@ -7650,7 +7718,7 @@ See URL `https://docs.python.org/3.4/library/py_compile.html'."
   :error-patterns
   ;; Python 2.7
   ((error line-start "  File \"" (file-name) "\", line " line "\n"
-          (= 2 (zero-or-more not-newline) "\n")
+          (>= 2 (zero-or-more not-newline) "\n")
           "SyntaxError: " (message) line-end)
    (error line-start "Sorry: IndentationError: "
           (message) "(" (file-name) ", line " line ")"
@@ -7784,6 +7852,61 @@ See URL `https://sourceforge.net/projects/rpmlint/'."
   :predicate (lambda () (or (not (eq major-mode 'sh-mode))
                             ;; In `sh-mode', we need the proper shell
                             (eq sh-shell 'rpm))))
+
+(flycheck-def-option-var flycheck-markdown-mdl-rules nil markdown-mdl
+  "Rules to enable for mdl.
+
+The value of this variable is a list of strings each of which is
+the name of a rule to enable.
+
+By default all rules are enabled.
+
+See URL
+`https://github.com/mivok/markdownlint/blob/master/docs/configuration.md'."
+  :type '(repeat :tag "Enabled rules"
+                 (string :tag "rule name"))
+  :safe #'flycheck-string-list-p
+  :package-version '(flycheck . "27"))
+
+(flycheck-def-option-var flycheck-markdown-mdl-tags nil markdown-mdl
+  "Rule tags to enable for mdl.
+
+The value of this variable is a list of strings each of which is
+the name of a rule tag.  Only rules with these tags are enabled.
+
+By default all rules are enabled.
+
+See URL
+`https://github.com/mivok/markdownlint/blob/master/docs/configuration.md'."
+  :type '(repeat :tag "Enabled tags"
+                 (string :tag "tag name"))
+  :safe #'flycheck-string-list-p
+  :package-version '(flycheck . "27"))
+
+(flycheck-def-config-file-var flycheck-markdown-mdl-style markdown-mdl nil
+  :safe #'stringp
+  :package-version '(flycheck . "27"))
+
+(flycheck-define-checker markdown-mdl
+  "Markdown checker using mdl.
+
+See URL `https://github.com/mivok/markdownlint'."
+  :command ("mdl"
+            (config-file "--style" flycheck-markdown-mdl-style)
+            (option "--tags=" flycheck-markdown-mdl-rules concat
+                    flycheck-option-comma-separated-list)
+            (option "--rules=" flycheck-markdown-mdl-rules concat
+                    flycheck-option-comma-separated-list))
+  :standard-input t
+  :error-patterns
+  ((error line-start
+          (file-name) ":" line ": " (id (one-or-more alnum)) " " (message)
+          line-end))
+  :error-filter
+  (lambda (errors)
+    (flycheck-sanitize-errors
+     (flycheck-remove-error-file-names "(stdin)" errors)))
+  :modes (markdown-mode gfm-mode))
 
 (defun flycheck-locate-sphinx-source-directory ()
   "Locate the Sphinx source directory for the current buffer.
@@ -7986,8 +8109,22 @@ The value of this variable is a string denoting the crate type,
 for the `--crate-type' flag."
   :type 'string
   :safe #'stringp
-  :package-version '("flycheck" . "0.20"))
+  :package-version '(flycheck . "0.20"))
 (make-variable-buffer-local 'flycheck-rust-crate-type)
+
+(flycheck-def-option-var flycheck-rust-binary-name nil rust-cargo
+  "The name of the binary to pass to `cargo rustc --bin'.
+
+The value of this variable is a string denoting the name of the
+binary to build: Either the name of the crate, or the name of one
+of the files under `src/bin'.
+
+This variable is used only when `flycheck-rust-crate-type' is
+`bin', and is only useful for crates with multiple targets."
+  :type 'string
+  :safe #'stringp
+  :package-version '(flycheck . "28"))
+(make-variable-buffer-local 'flycheck-rust-binary-name)
 
 (flycheck-def-option-var flycheck-rust-library-path nil (rust-cargo rust)
   "A list of library directories for Rust.
@@ -8004,7 +8141,10 @@ Relative paths are relative to the file being checked."
 
 This syntax checker needs Cargo with rustc subcommand."
   :command ("cargo" "rustc"
-            (eval (if (string= flycheck-rust-crate-type "lib") "--lib" nil))
+            (eval (cond
+                   ((string= flycheck-rust-crate-type "lib") "--lib")
+                   (flycheck-rust-binary-name
+                    (list "--bin" flycheck-rust-binary-name))))
             "--" "-Z" "no-trans"
             (option-flag "--test" flycheck-rust-check-tests)
             (option-list "-L" flycheck-rust-library-path concat)
@@ -8452,6 +8592,42 @@ See URL `http://www.gnu.org/software/texinfo/'."
           "-:" line (optional ":" column) ": " (message)
           line-end))
   :modes texinfo-mode)
+
+(flycheck-def-config-file-var flycheck-typescript-tslint-config
+    typescript-tslint "tslint.json"
+  :safe #'stringp
+  :package-version '(flycheck . "27"))
+
+(flycheck-def-option-var flycheck-typescript-tslint-rulesdir
+    nil typescript-tslint
+  "The directory of custom rules for TSLint.
+
+The value of this variable is either a string containing the path
+to a directory with custom rules, or nil, to not give any custom
+rules to TSLint.
+
+Refer to the TSLint manual at URL
+`http://palantir.github.io/tslint/usage/cli/'
+for more information about the custom directory."
+  :type '(choice (const :tag "No custom rules directory" nil)
+                 (directory :tag "Custom rules directory"))
+  :safe #'stringp
+  :package-version '(flycheck . "27"))
+
+(flycheck-define-checker typescript-tslint
+  "TypeScript style checker using TSLint.
+
+Note that this syntax checker is not used if
+`flycheck-typescript-tslint-config' is nil or refers to a
+non-existing file.
+
+See URL `https://github.com/palantir/tslint'."
+  :command ("tslint" "--format" "json"
+            (config-file "--config" flycheck-typescript-tslint-config)
+            (option "--rules-dir" flycheck-typescript-tslint-rulesdir)
+            source)
+  :error-parser flycheck-parse-tslint
+  :modes (typescript-mode))
 
 (flycheck-def-option-var flycheck-verilator-include-path nil verilog-verilator
   "A list of include directories for Verilator.

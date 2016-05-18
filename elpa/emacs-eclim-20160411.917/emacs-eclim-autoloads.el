@@ -4,7 +4,7 @@
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
 ;;;### (autoloads nil "company-emacs-eclim" "company-emacs-eclim.el"
-;;;;;;  (22276 14371 0 0))
+;;;;;;  (22331 51909 0 0))
 ;;; Generated autoloads from company-emacs-eclim.el
 
 (autoload 'company-emacs-eclim-setup "company-emacs-eclim" "\
@@ -20,7 +20,7 @@ Convenience function that adds company-emacs-eclim to the list
 
 ;;;***
 
-;;;### (autoloads nil "eclim" "eclim.el" (22276 14371 0 0))
+;;;### (autoloads nil "eclim" "eclim.el" (22331 51909 0 0))
 ;;; Generated autoloads from eclim.el
 
 (autoload 'eclim/workspace-dir "eclim" "\
@@ -59,7 +59,7 @@ See `eclim-mode' for more information on Eclim mode.
 
 ;;;***
 
-;;;### (autoloads nil "eclim-project" "eclim-project.el" (22276 14371
+;;;### (autoloads nil "eclim-project" "eclim-project.el" (22331 51909
 ;;;;;;  0 0))
 ;;; Generated autoloads from eclim-project.el
 
@@ -74,8 +74,8 @@ Manage all your eclim projects in one buffer.
 
 ;;;### (autoloads nil nil ("ac-emacs-eclim-source.el" "eclim-ant.el"
 ;;;;;;  "eclim-completion.el" "eclim-debug.el" "eclim-java-run.el"
-;;;;;;  "eclim-java.el" "eclim-maven.el" "eclim-problems.el" "eclimd.el"
-;;;;;;  "emacs-eclim-pkg.el") (22276 14371 100551 0))
+;;;;;;  "eclim-java.el" "eclim-maven.el" "eclim-problems.el" "eclim-scala.el"
+;;;;;;  "eclimd.el" "emacs-eclim-pkg.el") (22331 51909 271458 0))
 
 ;;;***
 

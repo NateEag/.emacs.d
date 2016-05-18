@@ -4,7 +4,7 @@
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
 ;;;### (autoloads nil "skewer-reload-stylesheets" "skewer-reload-stylesheets.el"
-;;;;;;  (21682 56410 0 0))
+;;;;;;  (22331 52014 0 0))
 ;;; Generated autoloads from skewer-reload-stylesheets.el
 
 (autoload 'skewer-reload-stylesheets-mode "skewer-reload-stylesheets" "\
@@ -14,8 +14,8 @@ Minor mode for interactively reloading CSS stylesheets.
 
 ;;;***
 
-;;;### (autoloads nil nil ("skewer-reload-stylesheets-pkg.el") (21682
-;;;;;;  56410 65121 0))
+;;;### (autoloads nil nil ("skewer-reload-stylesheets-pkg.el" "skewer-reload-stylesheets-test.el")
+;;;;;;  (22331 52014 464812 0))
 
 ;;;***
 

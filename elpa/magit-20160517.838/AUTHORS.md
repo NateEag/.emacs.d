@@ -5,7 +5,7 @@ The following people have contributed to Magit, including the
 libraries `git-commit.el`, `magit-popup.el`, and `with-editor.el`
 which are distributed as separate Elpa packages.
 
-For statistics see http://magit.vc/stats/authors.html.
+For statistics see https://magit.vc/stats/authors.html.
 
 Names below are sorted alphabetically.
 
@@ -59,6 +59,7 @@ Contributors
 - Andriy Kmit' <dev@madand.net>
 - Andy Sawyer <git@pureabstract.org>
 - Barak A. Pearlmutter <barak+git@pearlmutter.net>
+- Bart Bakker <bart@thesoftwarecraft.com>
 - Bastian Beischer <beischer@physik.rwth-aachen.de>
 - Ben Walton <bwalton@artsci.utoronto.ca>
 - Bradley Wright <brad@intranation.com>
@@ -97,6 +98,7 @@ Contributors
 - Felix Geller <fgeller@gmail.com>
 - Feng Li <fengli@blackmagicdesign.com>
 - Florian Ragwitz <rafl@debian.org>
+- Fritz Grabo <fritz.grabo@gmail.com>
 - Geoff Shannon <geoffpshannon@gmail.com>
 - George Kadianakis <desnacked@gmail.com>
 - Graham Clark <grclark@gmail.com>

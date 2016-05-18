@@ -1,10 +1,10 @@
-(define-package "magit" "20160402.2219" "A Git porcelain inside Emacs"
+(define-package "magit" "20160517.838" "A Git porcelain inside Emacs"
   '((emacs "24.4")
     (async "20150909.2257")
     (dash "20151021.113")
-    (with-editor "20160223.115")
-    (git-commit "20160130.64")
-    (magit-popup "20160302.322"))
+    (with-editor "20160408.201")
+    (git-commit "20160414.251")
+    (magit-popup "20160414.251"))
   :url "https://github.com/magit/magit" :keywords
   '("git" "tools" "vc"))
 ;; Local Variables:

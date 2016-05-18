@@ -61,20 +61,28 @@ Then show the status buffer for the new repository."
                 (and (string-match "\\([^./]+\\)\\(\\.git\\)?$" url)
                      (match-string 1 url))))))
   (setq directory (file-name-as-directory (expand-file-name directory)))
-  (message "Cloning %s..." repository)
-  (when (= (magit-call-git "clone" repository
-                           ;; Stop cygwin git making a "c:" directory.
-                           (magit-convert-git-filename directory))
-           0)
-    (let ((default-directory directory))
-      (when (or (eq  magit-clone-set-remote.pushDefault t)
-                (and magit-clone-set-remote.pushDefault
-                     (y-or-n-p "Set `remote.pushDefault' to \"origin\"? ")))
-        (magit-call-git "config" "remote.pushDefault" "origin"))
-      (unless magit-clone-set-remote-head
-        (magit-remote-unset-head "origin")))
-    (message "Cloning %s...done" repository)
-    (magit-status-internal directory)))
+  (magit-run-git-async "clone" repository
+                       ;; Stop cygwin git making a "c:" directory.
+                       (magit-convert-git-filename directory))
+  ;; Don't refresh the buffer we're calling from.
+  (process-put magit-this-process 'inhibit-refresh t)
+  (set-process-sentinel
+   magit-this-process
+   (lambda (process event)
+     (when (memq (process-status process) '(exit signal))
+       (let ((magit-process-raise-error t))
+         (magit-process-sentinel process event)))
+     (when (and (eq (process-status process) 'exit)
+                (= (process-exit-status process) 0))
+       (let ((default-directory directory))
+         (when (or (eq  magit-clone-set-remote.pushDefault t)
+                   (and magit-clone-set-remote.pushDefault
+                        (y-or-n-p "Set `remote.pushDefault' to \"origin\"? ")))
+           (magit-call-git "config" "remote.pushDefault" "origin"))
+         (unless magit-clone-set-remote-head
+           (magit-remote-unset-head "origin")))
+       (with-current-buffer (process-get process 'command-buf)
+         (magit-status-internal directory))))))
 
 ;;; Setup
 
@@ -178,7 +186,9 @@ Delete the symbolic-ref \"refs/remotes/<remote>/HEAD\"."
   'magit-commands
   :man-page "git-fetch"
   :switches '((?p "Prune deleted branches" "--prune"))
-  :actions  '("Fetch from"
+  :actions  '("Configure"
+              (?C "variables..."           magit-branch-config-popup)
+              "Fetch from"
               (?p magit-get-push-remote    magit-fetch-from-pushremote)
               (?u magit-get-remote         magit-fetch-from-upstream)
               (?e "elsewhere"              magit-fetch)
@@ -271,9 +281,11 @@ removed on the respective remote."
   "Popup console for pull commands."
   'magit-commands
   :man-page "git-pull"
-  :variables '((?r "branch.%s.rebase"
+  :variables '("Configure"
+               (?r "branch.%s.rebase"
                    magit-cycle-branch*rebase
-                   magit-pull-format-branch*rebase))
+                   magit-pull-format-branch*rebase)
+               (?C "variables..." magit-branch-config-popup))
   :actions '((lambda ()
                (--if-let (magit-get-current-branch)
                    (concat
@@ -315,10 +327,11 @@ missing.  To add them use something like:
       \\='magit-fetch-from-push-remote ?F))"
   'magit-commands
   :man-page "git-pull"
-  :variables '("Pull variables"
+  :variables '("Configure"
                (?r "branch.%s.rebase"
                    magit-cycle-branch*rebase
-                   magit-pull-format-branch*rebase))
+                   magit-pull-format-branch*rebase)
+               (?C "variables..." magit-branch-config-popup))
   :actions '((lambda ()
                (--if-let (magit-get-current-branch)
                    (concat
@@ -334,7 +347,7 @@ missing.  To add them use something like:
              (?F "remotes and prune" magit-fetch-all-prune)
              "Fetch"
              (?o "another branch"    magit-fetch-branch)
-             (?r "explicit refspec"  magit-fetch-refspec)
+             (?s "explicit refspec"  magit-fetch-refspec)
              (?m "submodules"        magit-submodule-fetch))
   :default-action 'magit-fetch
   :max-action-columns 1)
@@ -366,7 +379,9 @@ missing.  To add them use something like:
   "Pull from the upstream of the current branch."
   (interactive (list (magit-pull-arguments)))
   (--if-let (magit-get-upstream-branch)
-      (magit-git-pull it args)
+      (progn (run-hooks 'magit-credential-hook)
+             (magit-run-git-with-editor
+              "pull" args (car (magit-split-branch-name it))))
     (--if-let (magit-get-current-branch)
         (user-error "No upstream is configured for %s" it)
       (user-error "No branch is checked out"))))
@@ -416,7 +431,9 @@ removed after restarting Emacs."
               (?d "Dry run"       "--dry-run")
               ,@(and (not magit-push-current-set-remote-if-missing)
                      '((?u "Set upstream"  "--set-upstream"))))
-  :actions '((lambda ()
+  :actions '("Configure"
+             (?C "variables..."      magit-branch-config-popup)
+             (lambda ()
                (--when-let (magit-get-current-branch)
                  (concat (propertize "Push " 'face 'magit-popup-heading)
                          (propertize it      'face 'magit-branch-local)

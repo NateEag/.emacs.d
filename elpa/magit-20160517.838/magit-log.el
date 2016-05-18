@@ -172,6 +172,15 @@ This is useful if you use really long branch names."
   "Face for the date part of the log output."
   :group 'magit-faces)
 
+;;;; File Log
+
+(defcustom magit-log-buffer-file-locked t
+  "Whether `magit-log-buffer-file' uses a decicated buffer."
+  :package-version '(magit . "2.7.0")
+  :group 'magit-commands
+  :group 'magit-log
+  :type 'boolean)
+
 ;;;; Select Mode
 
 (defcustom magit-log-select-arguments '("-n256" "--decorate")
@@ -405,6 +414,25 @@ the upstream isn't ahead of the current branch) show."
            (default-value 'magit-log-arguments))))
     (magit-invoke-popup 'magit-log-popup nil arg)))
 
+;;;###autoload
+(defun magit-log-buffer-file-popup ()
+  "Popup console for log commands.
+
+This is a variant of `magit-log-popup' which shows the same popup
+but which limits the log to the file being visited in the current
+buffer."
+  (interactive)
+  (-if-let (file (magit-file-relative-name))
+      (let ((magit-log-arguments
+             (magit-popup-import-file-args
+              (-if-let (buffer (magit-mode-get-buffer 'magit-log-mode))
+                  (with-current-buffer buffer
+                    (nth 2 magit-refresh-args))
+                (default-value 'magit-log-arguments))
+              (list file))))
+        (magit-invoke-popup 'magit-log-popup nil nil))
+    (user-error "Buffer isn't visiting a file")))
+
 (defun magit-log-refresh-popup (arg)
   "Popup console for changing log arguments in the current buffer."
   (interactive "P")
@@ -573,19 +601,22 @@ With a prefix argument or when `--follow' is part of
                          (1- (line-number-at-pos (region-end))))
                  (list current-prefix-arg)))
   (-if-let (file (magit-file-relative-name))
-      (magit-mode-setup #'magit-log-mode
-                        (list (or magit-buffer-refname
-                                  (magit-get-current-branch) "HEAD"))
-                        (let ((args (car (magit-log-arguments))))
-                          (when (and follow (not (member "--follow" args)))
-                            (push "--follow" args))
-                          (when (and beg end)
-                            (setq args (cons (format "-L%s,%s:%s" beg end file)
-                                             (cl-delete "-L" args :test
-                                                        'string-prefix-p)))
-                            (setq file nil))
-                          args)
-                        (and file (list file)))
+      (magit-mode-setup-internal
+       #'magit-log-mode
+       (list (list (or magit-buffer-refname
+                       (magit-get-current-branch)
+                       "HEAD"))
+             (let ((args (car (magit-log-arguments))))
+               (when (and follow (not (member "--follow" args)))
+                 (push "--follow" args))
+               (when (and beg end)
+                 (setq args (cons (format "-L%s,%s:%s" beg end file)
+                                  (cl-delete "-L" args :test
+                                             'string-prefix-p)))
+                 (setq file nil))
+               args)
+             (and file (list file)))
+       magit-log-buffer-file-locked)
     (user-error "Buffer isn't visiting a file"))
   (magit-log-goto-same-commit))
 
@@ -1364,10 +1395,11 @@ ahead of the current branch, then show the commits that have
 not yet been pulled into the current branch.  If no upstream is
 configured or if the upstream is not ahead of the current branch,
 then show the last `magit-log-section-commit-count' commits."
-  (if (equal (magit-rev-parse "HEAD")
-             (magit-rev-parse "@{upstream}"))
-      (magit-insert-recent-commits t)
-    (magit-insert-unpulled-from-upstream)))
+  (let ((upstream (magit-rev-parse "@{upstream}")))
+    (if (or (not upstream)
+            (equal upstream (magit-rev-parse "HEAD")))
+        (magit-insert-recent-commits t)
+      (magit-insert-unpulled-from-upstream))))
 
 ;;;; Auxiliary Log Sections
 

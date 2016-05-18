@@ -588,10 +588,13 @@ range.  Otherwise, it can be any revision or range accepted by
                              "Failed to parse Cygwin mount: %S" it))
                     ;; If --exec-path is not a native Windows path,
                     ;; then we probably have a cygwin git.
-                    (and (not (string-match-p
-                               "\\`[a-zA-Z]:"
-                               (car (process-lines "git" "--exec-path"))))
-                         (ignore-errors (process-lines "mount"))))
+                    (let ((process-environment
+                           (append magit-git-environment process-environment)))
+                      (and (not (string-match-p
+                                 "\\`[a-zA-Z]:"
+                                 (car (process-lines
+                                       magit-git-executable "--exec-path"))))
+                           (ignore-errors (process-lines "mount")))))
              #'> :key (-lambda ((cyg . _win)) (length cyg))))
   "Alist of (CYGWIN . WIN32) directory names.
 Sorted from longest to shortest CYGWIN name."
@@ -1026,6 +1029,28 @@ where COMMITS is the number of commits in TAG but not in REV."
                  (list (match-string 1 it)))
             (magit-git-items "ls-files" "-z" "--stage")))
 
+(defun magit-list-worktrees ()
+  (let (worktrees worktree)
+    (dolist (line (magit-git-lines "worktree" "list" "--porcelain"))
+      (cond ((string-prefix-p "worktree" line)
+             (push (setq worktree (list (substring line 9) nil nil nil))
+                   worktrees))
+            ((string-equal line "bare")
+             (let* ((default-directory (car worktree))
+                    (wt (and (not (magit-get-boolean "core.bare"))
+                             (magit-get "core.worktree"))))
+               (if (and wt (file-exists-p (expand-file-name wt)))
+                   (progn (setf (nth 0 worktree) (expand-file-name wt))
+                          (setf (nth 2 worktree) (magit-rev-parse "HEAD"))
+                          (setf (nth 3 worktree) (magit-get-current-branch)))
+                 (setf (nth 1 worktree) t))))
+            ((string-prefix-p "HEAD" line)
+             (setf (nth 2 worktree) (substring line 5)))
+            ((string-prefix-p "branch" line)
+             (setf (nth 3 worktree) (substring line 18)))
+            ((string-equal line "detached"))))
+    (nreverse worktrees)))
+
 (defun magit-ref-p (rev)
   (or (car (member rev (magit-list-refs)))
       (car (member rev (magit-list-refnames)))))
@@ -1159,7 +1184,7 @@ Return a list of two integers: (A>B B>A)."
   (declare (indent 2) (debug (form form body)))
   (let ((file (cl-gensym "file")))
     `(let ((,file (magit-convert-git-filename
-                   (magit-git-dir (make-temp-name "index.magit.")))))
+                   (make-temp-name (magit-git-dir "index.magit.")))))
        (setq ,file (or (file-remote-p ,file 'localname) ,file))
        (unwind-protect
            (progn (--when-let ,tree
@@ -1179,7 +1204,7 @@ Return a list of two integers: (A>B B>A)."
            (delete-file (concat (file-remote-p default-directory) ,file)))))))
 
 (defun magit-commit-tree (message &optional tree &rest parents)
-  (magit-git-string "commit-tree" "-m" message
+  (magit-git-string "commit-tree" "--no-gpg-sign" "-m" message
                     (--mapcat (list "-p" it) (delq nil parents))
                     (or tree (magit-git-string "write-tree"))))
 
@@ -1265,12 +1290,12 @@ Return a list of two integers: (A>B B>A)."
     (prompt &optional remote default local-branch require-match)
   (let ((choice (magit-completing-read
                  prompt
-                 (nconc (and local-branch
-                             (if remote
-                                 (concat remote "/" local-branch)
-                               (--map (concat it "/" local-branch)
-                                      (magit-list-remotes))))
-                        (magit-list-remote-branch-names remote t))
+                 (-union (and local-branch
+                              (if remote
+                                  (concat remote "/" local-branch)
+                                (--map (concat it "/" local-branch)
+                                       (magit-list-remotes))))
+                         (magit-list-remote-branch-names remote t))
                  nil require-match nil 'magit-revision-history default)))
     (if (or remote (string-match "\\`\\([^/]+\\)/\\(.+\\)" choice))
         choice
@@ -1336,9 +1361,9 @@ Return a list of two integers: (A>B B>A)."
     (&optional (branch (magit-get-current-branch)) prompt)
   (magit-completing-read
    (or prompt (format "Change upstream of %s to" branch))
-   (nconc (--map (concat it "/" branch)
-                 (magit-list-remotes))
-          (delete branch (magit-list-branch-names)))
+   (-union (--map (concat it "/" branch)
+                  (magit-list-remotes))
+           (delete branch (magit-list-branch-names)))
    nil nil nil 'magit-revision-history
    (or (let ((r (magit-remote-branch-at-point))
              (l (magit-branch-at-point)))

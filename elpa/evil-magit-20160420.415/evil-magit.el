@@ -4,9 +4,9 @@
 
 ;; Author: Justin Burkett <justin@burkett.cc>
 ;; Package-Requires: ((evil "1.2.3") (magit "2.6.0"))
+;; Package-Version: 20160420.415
 ;; Homepage: https://github.com/justbur/evil-magit
 ;; Version: 0.2
-;; Package-Version: 20160324.1838
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published
@@ -95,7 +95,10 @@ should be a string suitable for `kbd'."
   (if (and (boundp map-sym)
            (keymapp (symbol-value map-sym)))
       (define-key
-        (evil-get-auxiliary-keymap (symbol-value map-sym) state t)
+        (condition-case err
+            (evil-get-auxiliary-keymap (symbol-value map-sym) state t t)
+          (wrong-number-of-arguments
+           (evil-get-auxiliary-keymap (symbol-value map-sym) state t)))
         (kbd key) def)
     (message "evil-magit: Error the keymap %s is not bound. Note evil-magit assumes\
  you have the latest version of magit." map-sym)))

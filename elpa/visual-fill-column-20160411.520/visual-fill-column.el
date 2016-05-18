@@ -8,7 +8,7 @@
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 2015
 ;; Version: 1.7
-;; Package-Version: 20160310.749
+;; Package-Version: 20160411.520
 ;; Package-Requires: ((emacs "24.3"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -116,6 +116,7 @@ function is for use in the window parameter `split-window'."
       (when (and horizontal (not new))
 	(set-window-margins window (car margins) (cdr margins))))))
 
+;;;###autoload
 (defun visual-fill-column-split-window-sensibly (&optional window)
   "Split WINDOW sensibly, unsetting its margins first.
 This function unsets the window margins and calls

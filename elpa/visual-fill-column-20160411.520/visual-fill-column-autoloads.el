@@ -4,7 +4,7 @@
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
 ;;;### (autoloads nil "visual-fill-column" "visual-fill-column.el"
-;;;;;;  (22276 14479 0 0))
+;;;;;;  (22331 52034 0 0))
 ;;; Generated autoloads from visual-fill-column.el
 
 (autoload 'visual-fill-column-mode "visual-fill-column" "\
@@ -32,6 +32,19 @@ Visual-Fill-Column mode is enabled in all buffers where
 See `visual-fill-column-mode' for more information on Visual-Fill-Column mode.
 
 \(fn &optional ARG)" t nil)
+
+(autoload 'visual-fill-column-split-window-sensibly "visual-fill-column" "\
+Split WINDOW sensibly, unsetting its margins first.
+This function unsets the window margins and calls
+`split-window-sensibly'.
+
+By default, `split-window-sensibly' does not split a window
+vertically if it has wide margins, even if there is enough space
+for a vertical split.  This function can be used as the value of
+`split-window-preferred-function' to enable vertically splitting
+windows with wide margins.
+
+\(fn &optional WINDOW)" nil nil)
 
 ;;;***
 

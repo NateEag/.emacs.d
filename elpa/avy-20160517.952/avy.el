@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/avy
-;; Package-Version: 20160402.1049
+;; Package-Version: 20160517.952
 ;; Version: 0.4.0
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: point, location
@@ -83,6 +83,7 @@ in the avy overlays."
                      (const avy-copy-line)
                      (const avy-copy-region)
                      (const avy-move-line)
+                     (const avy-move-region)
                      (function :tag "Other command"))
           :value-type (repeat :tag "Keys" character)))
 
@@ -112,6 +113,7 @@ If the commands isn't on the list, `avy-style' is used."
                      (const avy-copy-line)
                      (const avy-copy-region)
                      (const avy-move-line)
+                     (const avy-move-region)
                      (function :tag "Other command"))
           :value-type (choice
                        (const :tag "Pre" pre)
@@ -124,7 +126,8 @@ If the commands isn't on the list, `avy-style' is used."
   '((?x . avy-action-kill-move)
     (?X . avy-action-kill-stay)
     (?m . avy-action-mark)
-    (?n . avy-action-copy))
+    (?n . avy-action-copy)
+    (?i . avy-action-ispell))
   "List of actions for `avy-handler-default'.
 
 Each item is (KEY . ACTION).  When KEY not on `avy-keys' is
@@ -453,9 +456,10 @@ multiple DISPLAY-FN invokations."
         (t
          (error "Unrecognized option: %S" avy-all-windows))))
 
-(defcustom avy-all-windows-alt t
+(defcustom avy-all-windows-alt nil
   "The alternative `avy-all-windows' for use with \\[universal-argument]."
   :type '(choice
+          (const :tag "Current window" nil)
           (const :tag "All windows on the current frame" t)
           (const :tag "All windows on all frames" all-frames)))
 
@@ -523,6 +527,17 @@ Set `avy-style' according to COMMMAND as well."
    (kill-region pt (point))
    (just-one-space))
   (message "Killed: %s" (current-kill 0)))
+
+(defun avy-action-ispell (pt)
+  "Auto correct word at PT."
+  (save-excursion
+    (goto-char pt)
+    (if (looking-at-p "\\b")
+        (ispell-word)
+      (progn
+        (backward-word)
+        (when (looking-at-p "\\b")
+          (ispell-word))))))
 
 (defun avy--process (candidates overlay-fn)
   "Select one of CANDIDATES using `avy-read'.
@@ -962,13 +977,47 @@ The window scope is determined by `avy-all-windows' (ARG negates it)."
      avy-style)))
 
 ;;;###autoload
+(defun avy-goto-char-2-above (char1 char2 &optional arg)
+  "Jump to the currently visible CHAR1 followed by CHAR2.
+This is a scoped version of `avy-goto-char-2', where the scope is
+the visible part of the current buffer up to point."
+  (interactive (list (read-char "char 1: " t)
+                     (read-char "char 2: " t)
+                     current-prefix-arg))
+  (avy-with avy-goto-char-2
+    (avy--generic-jump
+     (regexp-quote (string char1 char2))
+     arg
+     avy-style
+     (window-start (selected-window))
+     (point))))
+
+;;;###autoload
+(defun avy-goto-char-2-below (char1 char2 &optional arg)
+  "Jump to the currently visible CHAR1 followed by CHAR2.
+This is a scoped version of `avy-goto-char-2', where the scope is
+the visible part of the current buffer following point."
+  (interactive (list (read-char "char 1: " t)
+                     (read-char "char 2: " t)
+                     current-prefix-arg))
+  (avy-with avy-goto-char-2
+    (avy--generic-jump
+     (regexp-quote (string char1 char2))
+     arg
+     avy-style
+     (point)
+     (window-end (selected-window) t))))
+
+;;;###autoload
 (defun avy-isearch ()
   "Jump to one of the current isearch candidates."
   (interactive)
   (avy-with avy-isearch
     (let ((avy-background nil))
       (avy--process
-       (avy--regex-candidates isearch-string)
+       (avy--regex-candidates (if isearch-regexp
+                                  isearch-string
+                                (regexp-quote isearch-string)))
        (avy--style-fn avy-style))
       (isearch-done))))
 
@@ -1037,7 +1086,12 @@ should return true."
                             (and predicate (funcall predicate)))
                     (unless (get-char-property (point) 'invisible)
                       (push (cons (point) (selected-window)) window-cands)))
-                  (subword-backward)))
+                  (subword-backward))
+                (and (= (point) ws)
+                     (or (null predicate)
+                         (and predicate (funcall predicate)))
+                     (not (get-char-property (point) 'invisible))
+                     (push (cons (point) (selected-window)) window-cands)))
               (setq candidates (nconc candidates window-cands))))))
       (avy--process candidates (avy--style-fn avy-style)))))
 
@@ -1235,6 +1289,22 @@ The window scope is determined by `avy-all-windows' or
                  (insert str)))
               (t
                (user-error "Unexpected `avy-line-insert-style'")))))))
+
+;;;###autoload
+(defun avy-move-region ()
+  "Select two lines and move the text between them here."
+  (interactive)
+  (avy-with avy-move-region
+    (let* ((beg (avy--line))
+           (end (save-excursion
+                  (goto-char (avy--line))
+                  (forward-line)
+                  (point)))
+           (text (buffer-substring beg end))
+           (pad (if (bolp) "" "\n")))
+      (move-beginning-of-line nil)
+      (delete-region beg end)
+      (insert text pad))))
 
 ;;;###autoload
 (defun avy-setup-default ()

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "avy" "avy.el" (22274 19231 0 0))
+;;;### (autoloads nil "avy" "avy.el" (22331 51894 0 0))
 ;;; Generated autoloads from avy.el
 
 (autoload 'avy-goto-char "avy" "\
@@ -20,6 +20,20 @@ Jump to the currently visible CHAR in the current line.
 (autoload 'avy-goto-char-2 "avy" "\
 Jump to the currently visible CHAR1 followed by CHAR2.
 The window scope is determined by `avy-all-windows' (ARG negates it).
+
+\(fn CHAR1 CHAR2 &optional ARG)" t nil)
+
+(autoload 'avy-goto-char-2-above "avy" "\
+Jump to the currently visible CHAR1 followed by CHAR2.
+This is a scoped version of `avy-goto-char-2', where the scope is
+the visible part of the current buffer up to point.
+
+\(fn CHAR1 CHAR2 &optional ARG)" t nil)
+
+(autoload 'avy-goto-char-2-below "avy" "\
+Jump to the currently visible CHAR1 followed by CHAR2.
+This is a scoped version of `avy-goto-char-2', where the scope is
+the visible part of the current buffer following point.
 
 \(fn CHAR1 CHAR2 &optional ARG)" t nil)
 
@@ -105,6 +119,11 @@ The window scope is determined by `avy-all-windows' or
 `avy-all-windows-alt' when ARG is non-nil.
 
 \(fn ARG)" t nil)
+
+(autoload 'avy-move-region "avy" "\
+Select two lines and move the text between them here.
+
+\(fn)" t nil)
 
 (autoload 'avy-setup-default "avy" "\
 Setup the default shortcuts.

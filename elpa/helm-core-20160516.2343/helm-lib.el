@@ -54,6 +54,15 @@ If you prefer scrolling line by line, set this value to 1."
   :group 'helm
   :type 'integer)
 
+(defcustom helm-help-full-frame t
+  "Display help window in full frame when non nil.
+
+Even when `nil' probably the same result (full frame)
+can be reach by tweaking `display-buffer-alist' but it is
+much more convenient to use a simple boolean value here."
+  :type 'boolean
+  :group 'helm-help)
+
 
 ;;; Internal vars
 ;;
@@ -110,7 +119,9 @@ If NAME returns nil the pair is skipped.
            do (setq name (funcall name))
            when name
            collect (cons name (cadr i))))
-
+
+;;; Anaphoric macros.
+;;
 (defmacro helm-aif (test-form then-form &rest else-forms)
   "Anaphoric version of `if'.
 Like `if' but set the result of TEST-FORM in a temporary variable called `it'.
@@ -118,6 +129,31 @@ THEN-FORM and ELSE-FORMS are then excuted just like in `if'."
   (declare (indent 2) (debug t))
   `(let ((it ,test-form))
      (if it ,then-form ,@else-forms)))
+
+(defmacro helm-awhile (sexp &rest body)
+  "Anaphoric version of `while'.
+Same usage as `while' except that SEXP is bound to
+a temporary variable called `it' at each turn.
+An implicit nil block is bound to the loop so usage
+of `cl-return' is possible to exit the loop."
+  (declare (indent 1) (debug t))
+  (helm-with-gensyms (flag)
+    `(let ((,flag t))
+       (cl-block nil
+         (while ,flag
+           (helm-aif ,sexp
+               (progn ,@body)
+             (setq ,flag nil)))))))
+
+(defmacro helm-acond (&rest clauses)
+  "Anaphoric version of `cond'."
+  (unless (null clauses)
+    (helm-with-gensyms (sym)
+      (let ((clause1 (car clauses)))
+        `(let ((,sym ,(car clause1)))
+           (helm-aif ,sym
+               ,@(cdr clause1)
+             (helm-acond ,@(cdr clauses))))))))
 
 (defun helm-current-line-contents ()
   "Current line string without properties."
@@ -163,7 +199,7 @@ text to be displayed in BUFNAME."
            (setq helm-suspend-update-flag t)
            (set-buffer (get-buffer-create bufname))
            (switch-to-buffer bufname)
-           (delete-other-windows)
+           (when helm-help-full-frame (delete-other-windows))
            (delete-region (point-min) (point-max))
            (org-mode)
            (save-excursion
@@ -209,28 +245,28 @@ text to be displayed in BUFNAME."
                  "[SPC,C-v,down,next:NextPage  b,M-v,up,prior:PrevPage C-s/r:Isearch q:Quit]"
                  'face 'helm-helper))
         scroll-error-top-bottom)
-    (cl-loop for event = (read-key prompt) do
-             (cl-case event
-               ((?\C-v ? down next) (helm-help-scroll-up helm-scroll-amount))
-               ((?\M-v ?b up prior) (helm-help-scroll-down helm-scroll-amount))
-               (?\C-s (isearch-forward))
-               (?\C-r (isearch-backward))
-               (?\C-a (call-interactively #'move-beginning-of-line))
-               (?\C-e (call-interactively #'move-end-of-line))
-               (?\C-f (call-interactively #'forward-char))
-               (?\C-b (call-interactively #'backward-char))
-               (?\C-n (helm-help-next-line))
-               (?\C-p (helm-help-previous-line))
-               (?\M-a (call-interactively #'backward-sentence))
-               (?\M-e (call-interactively #'forward-sentence))
-               (?\M-f (call-interactively #'forward-word))
-               (?\M-b (call-interactively #'backward-word))
-               (?\C-  (helm-help-toggle-mark))
-               (?\M-w (copy-region-as-kill
-                       (region-beginning) (region-end))
-                      (deactivate-mark))
-               (?q    (cl-return))
-               (t     (ignore))))))
+    (helm-awhile (read-key prompt)
+      (cl-case it
+        ((?\C-v ? down next) (helm-help-scroll-up helm-scroll-amount))
+        ((?\M-v ?b up prior) (helm-help-scroll-down helm-scroll-amount))
+        (?\C-s (isearch-forward))
+        (?\C-r (isearch-backward))
+        (?\C-a (call-interactively #'move-beginning-of-line))
+        (?\C-e (call-interactively #'move-end-of-line))
+        (?\C-f (call-interactively #'forward-char))
+        (?\C-b (call-interactively #'backward-char))
+        (?\C-n (helm-help-next-line))
+        (?\C-p (helm-help-previous-line))
+        (?\M-a (call-interactively #'backward-sentence))
+        (?\M-e (call-interactively #'forward-sentence))
+        (?\M-f (call-interactively #'forward-word))
+        (?\M-b (call-interactively #'backward-word))
+        (?\C-  (helm-help-toggle-mark))
+        (?\M-w (copy-region-as-kill
+                (region-beginning) (region-end))
+               (deactivate-mark))
+        (?q    (cl-return))
+        (t     (ignore))))))
 
 
 ;;; List processing
@@ -466,10 +502,15 @@ See `kill-new' for argument REPLACE."
 (defun helm-basename (fname &optional ext)
   "Print FNAME  with any  leading directory  components removed.
 If specified, also remove filename extension EXT.
-Arg EXT can be specified as a string with or without dot."
+Arg EXT can be specified as a string with or without dot,
+in this case it should match file-name-extension.
+It can also be non-nil (`t') in this case no checking
+of file-name-extension is done and the extension is removed
+unconditionally."
   (let ((non-essential t))
     (if (and ext (or (string= (file-name-extension fname) ext)
-                     (string= (file-name-extension fname t) ext))
+                     (string= (file-name-extension fname t) ext)
+                     (eq ext t))
              (not (file-directory-p fname)))
         (file-name-sans-extension (file-name-nondirectory fname))
       (file-name-nondirectory (directory-file-name fname)))))

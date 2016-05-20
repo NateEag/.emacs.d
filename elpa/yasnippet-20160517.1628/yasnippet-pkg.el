@@ -1,4 +1,4 @@
-(define-package "yasnippet" "20160514.418" "Yet another snippet extension for Emacs."
+(define-package "yasnippet" "20160517.1628" "Yet another snippet extension for Emacs."
   '((cl-lib "0.5"))
   :url "http://github.com/capitaomorte/yasnippet" :keywords
   '("convenience" "emulation"))

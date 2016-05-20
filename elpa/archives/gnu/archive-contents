@@ -37,7 +37,7 @@
 		 nil "Indent and dedent Lisp code, automatically adjust close parens" tar
 		 ((:url . "http://elpa.gnu.org/packages/adjust-parens.html"))])
  (aggressive-indent .
-		    [(1 7)
+		    [(1 8 1)
 		     ((emacs
 		       (24 1))
 		      (cl-lib
@@ -75,7 +75,7 @@
 			((:url . "http://www.gnuvola.org/software/aa2u/")
 			 (:keywords "ascii" "unicode" "box-drawing"))])
  (async .
-	[(1 6)
+	[(1 9)
 	 nil "Asynchronous processing in Emacs" tar
 	 ((:keywords "async")
 	  (:url . "http://elpa.gnu.org/packages/async.html"))])
@@ -421,9 +421,9 @@
 	(:url . "https://github.com/abo-abo/swiper"))])
  (javaimp .
 	  [(0 6)
-	   nil "Add and reorder Java import statements in Maven projects" single
-	   ((:url . "http://elpa.gnu.org/packages/javaimp.html")
-	    (:keywords "java" "maven" "programming"))])
+	   nil "Add and reorder Java import statements in Maven projects" tar
+	   ((:keywords "java" "maven" "programming")
+	    (:url . "http://elpa.gnu.org/packages/javaimp.html"))])
  (jgraph-mode .
 	      [(1 1)
 	       ((cl-lib

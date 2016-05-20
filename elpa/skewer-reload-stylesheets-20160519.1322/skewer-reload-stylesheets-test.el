@@ -28,6 +28,7 @@
          (test-css-file (concat project-dir "/test/overrides.css")))
     (find-file test-css-file)
     (skewer-reload-stylesheets-mode t)
+    (skewer-reload-stylesheets-reload-on-save)
 
     (browse-url test-html-url)))
 

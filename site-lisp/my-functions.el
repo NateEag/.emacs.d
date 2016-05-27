@@ -129,5 +129,20 @@
   (let ((fill-column (point-max)))
     (fill-paragraph nil)))
 
+(defun ne/get-dir-locals-file ()
+  "Return the path to the .dir-locals.el file for the current buffer.
+
+This turns out to be more work than you'd hope - hence this function."
+
+  (locate-dominating-file buffer-file-name ".dir-locals.el"))
+
+(defun ne/get-dir-locals-parent-dir ()
+  "Return the path to the folder containing this file's .dir-locals.el.
+
+Just saves a half-line or so in .dir-locals.el files, when you're trying to
+find the path to the project directory."
+
+  (file-name-directory (ne/get-dir-locals-file)))
+
 (provide 'my-functions)
 ;;; my-functions.el ends here

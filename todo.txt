@@ -35,10 +35,6 @@
  personally find flow's comment-annotation syntax too intrusive for good
  readability).
 
--Find a way to auto-include skewer on page refresh without having to include it
- in a codebase. I'm thinking a Chrome plugin for "refresh and load
- bookmarklet", or something along those lines.
-
 -Find a way to load skewer in Chrome from an HTTPS page. Starting Chrome with
  the --allow-insecure-content flag might work.
 
@@ -57,11 +53,7 @@
 -Report and/or fix yasnippet issue where loading js2-mode's snippets doesn't
  load its parent-mode's snippets.
 
--skewer-reload-stylesheets isn't working for me. Figure out why not and fix it.
-
 -Add flycheck-css-colorguard: http://melpa.org/#/flycheck-css-colorguard
-
--add support for SCSS to skewer-reload-stylesheets.
 
 -css-mode should have working comment fill. Right now it only believes in
  single-line comments, which gets clumsy and annoying fast.

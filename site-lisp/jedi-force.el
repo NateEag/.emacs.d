@@ -59,6 +59,10 @@ Handles adding jedi:setup to hooks, so don't add it yourself."
 
 (defun jedi-force-find-virtualenv-in-buffer-path (buffer-name)
  "Look for a virtualenv anywhere above `buffer-name'."
+
+ ;; TODO Rework this to use locate-dominating-file.
+ ;; I didn't know it existed back when I wrote this.
+
  (let ((buffer-dir (file-name-directory buffer-name)))
    (while (and (not (file-exists-p
                      (concat

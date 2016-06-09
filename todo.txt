@@ -59,6 +59,12 @@
  single-line comments, which gets clumsy and annoying fast.
  ...it looks like someone may have actually fixed this:
  https://lists.gnu.org/archive/html/emacs-diffs/2015-04/msg00293.html
+ Further research shows that css-fill-paragraph works, but there are two issues
+ with my current setup using current css-mode:
+     * RET binding inserts new comment start/end.
+       php-mode gets this right.
+     * When auto-fill is triggered, it fails to catch the single space I use
+       after an asterisk.
 
 -ac-source-css-property and ac-source-css-property-names are missing a bunch of
  bleeding-edge CSS 3 stuff. Get that in there. Ideally, generated from the
@@ -107,6 +113,16 @@
 
 -Make auto-fill apply to strings in emacs-lisp-mode. Really seems like this
  should already be happening. Dunno why it doesn't.
+
+-Get Emacs to auto-fill with string concatenation in JS (and similar langs).
+ That is, something like this
+ var foo = 'foo is ' +
+           'a set of ' +
+           'really short strings';
+
+ if filled, becomes
+
+ var foo = 'foo is a set of really short strings';
 
 -Figure out why mo-git-blame isn't using mo-git-blame-git-blame-args.
 
@@ -263,6 +279,10 @@
 -I'd also like context-sensitive paragraph filling. That is, in comments, my
  fill-column value is 79, but if I'm in a Python docstring, fill-column should
  be 72. Apparently this is fixed in a Jan. 2013 commit to python-mode.el.
+
+-It would be nice if auto-fill refilled paragraphs when lines are shortened.
+ fill-paragraph does what I want after I've made a few shorter, ragged lines,
+ but it's annoying to have to type it myself.
 
 -Figure out what the best way to save/restore my Emacs sessions is. Ideally,
  find a solution that lets me save/restore buffer state for a whole directory,

@@ -4,8 +4,11 @@
   (my-prog-mode-init)
 
   (skewer-reload-stylesheets-mode)
+  (skewer-reload-stylesheets-reload-on-save)
+
   (rainbow-mode)
   (diminish 'rainbow-mode)
+
   (ac-css-mode-setup)
   (emmet-mode)
 

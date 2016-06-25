@@ -4,7 +4,7 @@
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
 ;; Version: 2.12.1
-;; Package-Version: 20160510.1127
+;; Package-Version: 20160619.611
 ;; Keywords: lists
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -102,6 +102,7 @@ In the anaphoric form `--each-indexed', the index is exposed as `it-index`.
 
 See also: `-map-indexed'."
   (--each list (funcall fn it-index it)))
+(put '-each-indexed 'lisp-indent-function 1)
 
 (defmacro --each-while (list pred &rest body)
   "Anaphoric form of `-each-while'."
@@ -1867,7 +1868,7 @@ Alias: `-uniq'"
 (defalias '-uniq '-distinct)
 
 (defun -union (list list2)
-  "Return a new list containing the elements of LIST1 and elements of LIST2 that are not in LIST1.
+  "Return a new list containing the elements of LIST and elements of LIST2 that are not in LIST.
 The test for equality is done with `equal',
 or with `-compare-fn' if that's non-nil."
   ;; We fall back to iteration implementation if the comparison
@@ -2255,6 +2256,8 @@ structure such as plist or alist."
        (let ((new-keywords '(
                              "-each"
                              "--each"
+                             "-each-indexed"
+                             "--each-indexed"
                              "-each-while"
                              "--each-while"
                              "-dotimes"

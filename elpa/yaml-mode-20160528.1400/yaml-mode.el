@@ -6,7 +6,7 @@
 ;;         Marshall T. Vandegrift <llasram@gmail.com>
 ;; Maintainer: Vasilij Schneidermann <v.schneidermann@gmail.com>
 ;; Package-Requires: ((emacs "24.1"))
-;; Package-Version: 20160426.138
+;; Package-Version: 20160528.1400
 ;; Keywords: data yaml
 ;; Version: 0.0.12
 
@@ -79,6 +79,7 @@
 (defcustom yaml-indent-offset 2
   "*Amount of offset per level of indentation."
   :type 'integer
+  :safe 'natnump
   :group 'yaml)
 
 (defcustom yaml-backspace-function 'backward-delete-char-untabify

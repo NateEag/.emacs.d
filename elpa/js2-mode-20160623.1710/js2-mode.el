@@ -1,13 +1,13 @@
 ;;; js2-mode.el --- Improved JavaScript editing mode
 
-;; Copyright (C) 2009, 2011-2015  Free Software Foundation, Inc.
+;; Copyright (C) 2009, 2011-2016  Free Software Foundation, Inc.
 
 ;; Author: Steve Yegge <steve.yegge@gmail.com>
 ;;         mooz <stillpedant@gmail.com>
 ;;         Dmitry Gutov <dgutov@yandex.ru>
 ;; URL:  https://github.com/mooz/js2-mode/
 ;;       http://code.google.com/p/js2-mode/
-;; Version: 20150909
+;; Version: 20160623
 ;; Keywords: languages, javascript
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 
@@ -277,6 +277,11 @@ end of the line, otherwise, at the beginning of the next line."
   :type 'boolean
   :group 'js2-mode)
 
+(defcustom js2-mode-assume-strict nil
+  "Non-nil to start files in strict mode automatically."
+  :type 'boolean
+  :group 'js2-mode)
+
 (defcustom js2-mode-show-strict-warnings t
   "Non-nil to emit Ecma strict-mode warnings.
 Some of the warnings can be individually disabled by other flags,
@@ -534,11 +539,11 @@ which doesn't seem particularly useful, but Rhino permits it."
 (defvar js2-ASSIGN_MUL 98)     ; *=
 (defvar js2-ASSIGN_DIV 99)     ; /=
 (defvar js2-ASSIGN_MOD 100)    ; %=
+(defvar js2-ASSIGN_EXPON 101)
 
 (defvar js2-first-assign js2-ASSIGN)
-(defvar js2-last-assign js2-ASSIGN_MOD)
+(defvar js2-last-assign js2-ASSIGN_EXPON)
 
-(defvar js2-HOOK 101)          ; conditional (?:)
 (defvar js2-COLON 102)
 (defvar js2-OR 103)            ; logical or (||)
 (defvar js2-AND 104)           ; logical and (&&)
@@ -619,7 +624,10 @@ which doesn't seem particularly useful, but Rhino permits it."
 
 (defvar js2-AWAIT 169)  ; await (pseudo keyword)
 
-(defconst js2-num-tokens (1+ js2-AWAIT))
+(defvar js2-HOOK 170)          ; conditional (?:)
+(defvar js2-EXPON 171)
+
+(defconst js2-num-tokens (1+ js2-EXPON))
 
 (defconst js2-debug-print-trees nil)
 
@@ -3502,6 +3510,7 @@ The type field inherited from `js2-node' holds the operator."
                (cons js2-ADD "+")       ; infix plus
                (cons js2-SUB "-")       ; infix minus
                (cons js2-MUL "*")
+               (cons js2-EXPON "**")
                (cons js2-DIV "/")
                (cons js2-MOD "%")
                (cons js2-NOT "!")
@@ -3521,6 +3530,7 @@ The type field inherited from `js2-node' holds the operator."
                (cons js2-ASSIGN_ADD "+=")
                (cons js2-ASSIGN_SUB "-=")
                (cons js2-ASSIGN_MUL "*=")
+               (cons js2-ASSIGN_EXPON "**=")
                (cons js2-ASSIGN_DIV "/=")
                (cons js2-ASSIGN_MOD "%="))))
     (cl-loop for (k . v) in tokens do
@@ -5078,6 +5088,7 @@ You should use `js2-print-tree' instead of this function."
                       js2-ASSIGN_RSH
                       js2-ASSIGN_SUB
                       js2-ASSIGN_URSH
+                      js2-ASSIGN_EXPON
                       js2-BLOCK
                       js2-BREAK
                       js2-CALL
@@ -6189,7 +6200,11 @@ its relevant fields and puts it into `js2-ti-tokens'."
                           (?*
                            (if (js2-match-char ?=)
                                js2-ASSIGN_MUL
-                             (throw 'return js2-MUL)))
+                             (if (js2-match-char ?*)
+                                 (if (js2-match-char ?=)
+                                     js2-ASSIGN_EXPON
+                                   js2-EXPON)
+                               (throw 'return js2-MUL))))
                           (?/
                            ;; is it a // comment?
                            (when (js2-match-char ?/)
@@ -7456,22 +7471,23 @@ We do a depth-first traversal of NODE.  For any functions we find,
 we append the property name to QNAME, then call `js2-record-imenu-entry'."
   (let (right)
     (dolist (e (js2-object-node-elems node))  ; e is a `js2-object-prop-node'
-      (let ((left (js2-infix-node-left e))
-            ;; Element positions are relative to the parent position.
-            (pos (+ pos (js2-node-pos e))))
-        (cond
-         ;; foo: function() {...}
-         ((js2-function-node-p (setq right (js2-infix-node-right e)))
-          (when (js2-prop-node-name left)
-            ;; As a policy decision, we record the position of the property,
-            ;; not the position of the `function' keyword, since the property
-            ;; is effectively the name of the function.
-            (js2-record-imenu-entry right (append qname (list left)) pos)))
-         ;; foo: {object-literal} -- add foo to qname, offset position, and recurse
-         ((js2-object-node-p right)
-          (js2-record-object-literal right
-                                     (append qname (list (js2-infix-node-left e)))
-                                     (+ pos (js2-node-pos right)))))))))
+      (when (js2-infix-node-p e)
+        (let ((left (js2-infix-node-left e))
+              ;; Element positions are relative to the parent position.
+              (pos (+ pos (js2-node-pos e))))
+          (cond
+           ;; foo: function() {...}
+           ((js2-function-node-p (setq right (js2-infix-node-right e)))
+            (when (js2-prop-node-name left)
+              ;; As a policy decision, we record the position of the property,
+              ;; not the position of the `function' keyword, since the property
+              ;; is effectively the name of the function.
+              (js2-record-imenu-entry right (append qname (list left)) pos)))
+           ;; foo: {object-literal} -- add foo to qname, offset position, and recurse
+           ((js2-object-node-p right)
+            (js2-record-object-literal right
+                                       (append qname (list (js2-infix-node-left e)))
+                                       (+ pos (js2-node-pos right))))))))))
 
 (defun js2-node-top-level-decl-p (node)
   "Return t if NODE's name is defined in the top-level scope.
@@ -7987,7 +8003,7 @@ Scanner should be initialized."
           js2-nesting-of-function 0
           js2-labeled-stmt nil
           js2-recorded-identifiers nil  ; for js2-highlight
-          js2-in-use-strict-directive nil)
+          js2-in-use-strict-directive js2-mode-assume-strict)
     (while (/= (setq tt (js2-get-token)) js2-EOF)
       (if (= tt js2-FUNCTION)
           (progn
@@ -8098,21 +8114,25 @@ declared; probably to check them for errors."
         (list node)))
      ((js2-object-node-p node)
       (dolist (elem (js2-object-node-elems node))
-        ;; js2-infix-node-p catches both object prop node and initialized
-        ;; binding element (which is directly an infix node).
-        (cond
-         ((js2-object-prop-node-p elem)
-          (push (js2-define-destruct-symbols
-                 ;; In abbreviated destructuring {a, b}, right == left.
-                 (js2-object-prop-node-right elem)
-                 decl-type face ignore-not-in-block)
-                name-nodes))
-         ;; Destructuring with default argument.
-         ((js2-infix-node-p elem)
-          (push (js2-define-destruct-symbols
-                 (js2-infix-node-left elem)
-                 decl-type face ignore-not-in-block)
-                name-nodes))))
+        (let ((subexpr (cond
+                        ((and (js2-infix-node-p elem)
+                              (= js2-ASSIGN (js2-infix-node-type elem)))
+                         ;; Destructuring with default argument.
+                         (js2-infix-node-left elem))
+                        ((and (js2-infix-node-p elem)
+                              (= js2-COLON (js2-infix-node-type elem)))
+                         ;; In regular destructuring {a: aa, b: bb},
+                         ;; the var is on the right.  In abbreviated
+                         ;; destructuring {a, b}, right == left.
+                         (js2-infix-node-right elem))
+                        ((and (js2-unary-node-p elem)
+                              (= js2-TRIPLEDOT (js2-unary-node-type elem)))
+                         ;; Destructuring with spread.
+                         (js2-unary-node-operand elem)))))
+          (when subexpr
+            (push (js2-define-destruct-symbols
+                   subexpr decl-type face ignore-not-in-block)
+                  name-nodes))))
       (apply #'append (nreverse name-nodes)))
      ((js2-array-node-p node)
       (dolist (elem (js2-array-node-elems node))
@@ -9600,16 +9620,10 @@ If NODE is non-nil, it is the AST node associated with the symbol."
          (pos (if node (js2-node-abs-pos node)))
          (len (if node (js2-node-len node))))
     (cond
-     ((and symbol ; already defined
-           (or (if js2-in-use-strict-directive
-                   ;; two const-bound vars in this block have same name
-                   (and (= sdt js2-CONST)
-                        (eq defining-scope js2-current-scope))
-                 (or (= sdt js2-CONST)          ; old version is const
-                     (= decl-type js2-CONST)))  ; new version is const
-               ;; two let-bound vars in this block have same name
-               (and (= sdt js2-LET)
-                    (eq defining-scope js2-current-scope))))
+     ((and symbol ; already defined in this block
+           (or (= sdt js2-LET)
+               (= sdt js2-CONST))
+           (eq defining-scope js2-current-scope))
       (js2-report-error
        (cond
         ((= sdt js2-CONST) "msg.const.redecl")
@@ -9619,9 +9633,7 @@ If NODE is non-nil, it is the AST node associated with the symbol."
         (t "msg.parm.redecl"))
        name pos len))
      ((or (= decl-type js2-LET)
-          ;; strict mode const is scoped to the current LexicalEnvironment
-          (and js2-in-use-strict-directive
-               (= decl-type js2-CONST)))
+          (= decl-type js2-CONST))
       (if (and (= decl-type js2-LET)
                (not ignore-not-in-block)
                (or (= (js2-node-type js2-current-scope) js2-IF)
@@ -9629,10 +9641,7 @@ If NODE is non-nil, it is the AST node associated with the symbol."
           (js2-report-error "msg.let.decl.not.in.block")
         (js2-define-new-symbol decl-type name node)))
      ((or (= decl-type js2-VAR)
-          (= decl-type js2-FUNCTION)
-          ;; sloppy mode const is scoped to the current VariableEnvironment
-          (and (not js2-in-use-strict-directive)
-               (= decl-type js2-CONST)))
+          (= decl-type js2-FUNCTION))
       (if symbol
           (if (and js2-strict-var-redeclaration-warning (= sdt js2-VAR))
               (js2-add-strict-warning "msg.var.redecl" name)
@@ -9908,7 +9917,7 @@ FIXME: The latter option is unused?"
   (list js2-MUL js2-DIV js2-MOD))
 
 (defun js2-parse-mul-expr ()
-  (let ((pn (js2-parse-unary-expr))
+  (let ((pn (js2-parse-expon-expr))
         tt
         (continue t))
     (while continue
@@ -9917,6 +9926,18 @@ FIXME: The latter option is unused?"
           (setq pn (js2-make-binary tt pn 'js2-parse-unary-expr))
         (js2-unget-token)
         (setq continue nil)))
+    pn))
+
+(defun js2-parse-expon-expr ()
+  (let ((pn (js2-parse-unary-expr)))
+    (when (>= js2-language-version 200)
+      (while (js2-match-token js2-EXPON)
+        (when (and (js2-unary-node-p pn)
+                   (not (memq (js2-node-type pn) '(js2-INC js2-DEC))))
+          (js2-report-error "msg.syntax" nil
+                            (js2-node-abs-pos pn) (js2-node-len pn)))
+        ;; Make it right-associative.
+        (setq pn (js2-make-binary js2-EXPON pn 'js2-parse-expon-expr))))
     pn))
 
 (defun js2-make-unary (type parser &rest args)
@@ -10738,16 +10759,19 @@ If ONLY-OF-P is non-nil, only the 'for (foo of bar)' form is allowed."
 `js2-method-node') as a string, or nil if it can't be
 represented as a string (e.g., the key is computed by an
 expression)."
-  (let ((key (js2-infix-node-left property-node)))
-    (when (js2-computed-prop-name-node-p key)
-      (setq key (js2-computed-prop-name-node-expr key)))
-    (cond
-     ((js2-name-node-p key)
-      (js2-name-node-name key))
-     ((js2-string-node-p key)
-      (js2-string-node-value key))
-     ((js2-number-node-p key)
-      (js2-number-node-value key)))))
+  (cond
+   ((js2-unary-node-p property-node) nil) ;; {...foo}
+   (t
+    (let ((key (js2-infix-node-left property-node)))
+      (when (js2-computed-prop-name-node-p key)
+        (setq key (js2-computed-prop-name-node-expr key)))
+      (cond
+       ((js2-name-node-p key)
+        (js2-name-node-name key))
+       ((js2-string-node-p key)
+        (js2-string-node-value key))
+       ((js2-number-node-p key)
+        (js2-number-node-value key)))))))
 
 (defun js2-parse-object-literal-elems (&optional class-p)
   (let ((pos (js2-current-token-beg))
@@ -10782,7 +10806,13 @@ expression)."
           (setq previous-token (js2-current-token)
                 tt (js2-get-prop-name-token))))
       (cond
-       ;; Found a property (of any sort)
+       ;; Rest/spread (...expr)
+       ((and (>= js2-language-version 200)
+             (not class-p) (not static) (not previous-token)
+             (= js2-TRIPLEDOT tt))
+        (setq after-comma nil
+              elem (js2-make-unary js2-TRIPLEDOT 'js2-parse-assign-expr)))
+       ;; Found a key/value property (of any sort)
        ((member tt (list js2-NAME js2-STRING js2-NUMBER js2-LB))
         (setq after-comma nil
               elem (js2-parse-named-prop tt previous-token))
@@ -10863,7 +10893,8 @@ When `js2-is-in-destructuring' is t, forms like {a, b, c} will be permitted."
      ;; method definition: {f() {...}}
      ((and (= (js2-peek-token) js2-LP)
            (>= js2-language-version 200))
-      (when (js2-name-node-p key)  ; highlight function name properties
+      (when (or (js2-name-node-p key) (js2-string-node-p key))
+        ;; highlight function name properties
         (js2-record-face 'font-lock-function-name-face))
       (js2-parse-method-prop pos key property-type))
      ;; binding element with initializer
@@ -10978,15 +11009,13 @@ TYPE-STRING is a string `get', `set', `*', or nil, indicating a found keyword."
                                              ("async" . ASYNC))))
                    'FUNCTION))
          result end
-         (fn (js2-parse-function-expr (eq type 'ASYNC))))
-    ;; it has to be an anonymous function, as we already parsed the name
-    (if (/= (js2-node-type fn) js2-FUNCTION)
-        (js2-report-error "msg.bad.prop")
-      (if (cl-plusp (length (js2-function-name fn)))
-          (js2-report-error "msg.bad.prop")))
+         (pos (js2-current-token-beg))
+         (_ (js2-must-match js2-LP "msg.no.paren.parms"))
+         (fn (js2-parse-function 'FUNCTION_EXPRESSION pos
+                                 (string= type-string "*")
+                                 (eq type 'ASYNC)
+                                 nil)))
     (js2-node-set-prop fn 'METHOD_TYPE type)  ; for codegen
-    (when (string= type-string "*")
-      (setf (js2-function-node-generator-type fn) 'STAR))
     (unless pos (setq pos (js2-node-pos prop)))
     (setq end (js2-node-end fn)
           result (make-js2-method-node :pos pos

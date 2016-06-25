@@ -33,13 +33,10 @@
   :group 'helm-sys)
 
 
-(defun helm-top-command-set-fn (var _value)
-  (set var
-       (cl-case system-type
-         (darwin "env COLUMNS=%s ps -axo pid,user,pri,nice,ucomm,tty,start,vsz,%%cpu,%%mem,etime,command")
-         (t      "env COLUMNS=%s top -b -n 1"))))
-
-(defcustom helm-top-command "env COLUMNS=%s top -b -n 1"
+(defcustom helm-top-command
+  (cl-case system-type
+    (darwin "env COLUMNS=%s ps -axo pid,user,pri,nice,ucomm,tty,start,vsz,%%cpu,%%mem,etime,command")
+    (t      "env COLUMNS=%s top -b -n 1"))
   "Top command used to display output of top.
 To use top command, a version supporting batch mode (-b option) is needed.
 On Mac OSX top command doesn't support this, so ps command
@@ -50,9 +47,28 @@ working properly, that is 12 elements with the 2 first being
 PID and USER and the last 4 being %CPU, %MEM, TIME and COMMAND.
 A format string where %s will be replaced with `frame-width'."
   :group 'helm-sys
-  :type 'string
-  :set  'helm-top-command-set-fn)
+  :type 'string)
 
+(defcustom helm-top-poll-delay 1.5
+  "Helm top poll after this dealy when `helm-top-poll-mode' is enabled.
+The minimal delay allowed is 1.5, if less than this helm-top will use 1.5."
+  :group 'helm-sys
+  :type  'float)
+
+(defcustom helm-top-poll-delay-post-command 1.0
+  "Helm top stop polling during this delay.
+This delay is additioned to `helm-top-poll-delay' after emacs stop
+being idle."
+  :group 'helm-sys
+  :type 'float)
+
+(defcustom helm-top-poll-preselection 'linum
+  "Stay on same line or follow candidate when `helm-top-poll' update display.
+Possible values are 'candidate or 'linum."
+  :group'helm-sys
+  :type '(radio :tag "Preferred preselection action for helm-top"
+          (const :tag "Follow candidate" candidate)
+          (const :tag "Stay on same line" linum)))
 
 ;;; Top (process)
 ;;
@@ -67,10 +83,82 @@ A format string where %s will be replaced with `frame-width'."
     (define-key map (kbd "M-U")   'helm-top-run-sort-by-user)
     map))
 
+(defvar helm-top-after-init-hook nil
+  "Local hook for helm-top.")
+
+(defvar helm-top--poll-timer nil)
+
+(defun helm-top-poll (&optional no-update delay)
+  (when helm-top--poll-timer
+    (cancel-timer helm-top--poll-timer))
+  (condition-case nil
+      (progn
+        (when (and (helm-alive-p) (null no-update))
+          ;; Fix quitting while process is running
+          ;; by binding `with-local-quit' in init function
+          ;; Issue #1521.
+          (helm-force-update
+           (cl-ecase helm-top-poll-preselection
+             (candidate (replace-regexp-in-string
+                         "[0-9]+" "[0-9]+"
+                         (regexp-quote (helm-get-selection nil t))))
+             (linum `(lambda ()
+                       (goto-char (point-min))
+                       (forward-line ,(helm-candidate-number-at-point)))))))
+        (setq helm-top--poll-timer
+              (run-with-idle-timer
+               (helm-aif (current-idle-time)
+                   (time-add it (seconds-to-time
+                                 (or delay (helm-top--poll-delay))))
+                 (or delay (helm-top--poll-delay)))
+               nil
+               'helm-top-poll)))
+    (quit (cancel-timer helm-top--poll-timer))))
+
+(defun helm-top--poll-delay ()
+  (max 1.5 helm-top-poll-delay))
+
+(defun helm-top-poll-no-update ()
+  (helm-top-poll t (+ (helm-top--poll-delay)
+                      helm-top-poll-delay-post-command)))
+
+(defun helm-top-initialize-poll-hooks ()
+  ;; When emacs is idle during say 20s
+  ;; the idle timer will run in 20+1.5 s.
+  ;; This is fine when emacs stays idle, because the next timer
+  ;; will run at 21.5+1.5 etc... so the display will be updated
+  ;; at every 1.5 seconds.
+  ;; But as soon as emacs looses its idleness, the next update
+  ;; will occur at say 21+1.5 s, so we have to reinitialize
+  ;; the timer at 0+1.5.
+  (add-hook 'post-command-hook 'helm-top-poll-no-update)
+  (add-hook 'focus-in-hook 'helm-top-poll-no-update))
+
+;;;###autoload
+(define-minor-mode helm-top-poll-mode
+    "Refresh automatically helm top buffer once enabled."
+  :group 'helm-top
+  :global t
+  (if helm-top-poll-mode
+      (progn
+        (add-hook 'helm-top-after-init-hook 'helm-top-poll-no-update)
+        (add-hook 'helm-top-after-init-hook 'helm-top-initialize-poll-hooks))
+      (remove-hook 'helm-top-after-init-hook 'helm-top-poll-no-update)
+      (remove-hook 'helm-top-after-init-hook 'helm-top-initialize-poll-hooks)))
+
 (defvar helm-source-top
   (helm-build-in-buffer-source "Top"
-    :header-name (lambda (name) (concat name " (Press C-c C-u to refresh)"))
+    :header-name (lambda (name)
+                   (concat name (if helm-top-poll-mode
+                                    " (auto updating)"
+                                    " (Press C-c C-u to refresh)")))
     :init #'helm-top-init
+    :after-init-hook 'helm-top-after-init-hook
+    :cleanup (lambda ()
+               (when helm-top--poll-timer
+                 (cancel-timer helm-top--poll-timer))
+               (remove-hook 'post-command-hook 'helm-top-poll-no-update)
+               (remove-hook 'focus-in-hook 'helm-top-poll-no-update))
     :nomark t
     :display-to-real #'helm-top-display-to-real
     :persistent-action #'helm-top-sh-persistent-action
@@ -136,11 +224,12 @@ Show actions only on line starting by a PID."
 
 (defun helm-top-init ()
   "Insert output of top command in candidate buffer."
-  (unless helm-top-sort-fn (helm-top-set-mode-line "CPU"))
-  (with-current-buffer (helm-candidate-buffer 'global)
-    (call-process-shell-command
-     (format helm-top-command (frame-width))
-     nil (current-buffer))))
+  (with-local-quit
+    (unless helm-top-sort-fn (helm-top-set-mode-line "CPU"))
+    (with-current-buffer (helm-candidate-buffer 'global)
+      (call-process-shell-command
+       (format helm-top-command (frame-width))
+       nil (current-buffer)))))
 
 (defun helm-top-display-to-real (line)
   "Return pid only from LINE."
@@ -191,25 +280,33 @@ Show actions only on line starting by a PID."
   (interactive)
   (helm-top-set-mode-line "COM")
   (setq helm-top-sort-fn 'helm-top-sort-by-com)
-  (helm-update (regexp-quote (helm-get-selection nil t))))
+  (helm-update (replace-regexp-in-string
+                "[0-9]+" "[0-9]+"
+                (regexp-quote (helm-get-selection nil t)))))
 
 (defun helm-top-run-sort-by-cpu ()
   (interactive)
   (helm-top-set-mode-line "CPU")
   (setq helm-top-sort-fn nil)
-  (helm-update (regexp-quote (helm-get-selection nil t))))
+  (helm-update (replace-regexp-in-string
+                "[0-9]+" "[0-9]+"
+                (regexp-quote (helm-get-selection nil t)))))
 
 (defun helm-top-run-sort-by-mem ()
   (interactive)
   (helm-top-set-mode-line "MEM")
   (setq helm-top-sort-fn 'helm-top-sort-by-mem)
-  (helm-update (regexp-quote (helm-get-selection nil t))))
+  (helm-update (replace-regexp-in-string
+                "[0-9]+" "[0-9]+"
+                (regexp-quote (helm-get-selection nil t)))))
 
 (defun helm-top-run-sort-by-user ()
   (interactive)
   (helm-top-set-mode-line "USER")
   (setq helm-top-sort-fn 'helm-top-sort-by-user)
-  (helm-update (regexp-quote (helm-get-selection nil t))))
+  (helm-update (replace-regexp-in-string
+                "[0-9]+" "[0-9]+"
+                (regexp-quote (helm-get-selection nil t)))))
 
 
 ;;; X RandR resolution change

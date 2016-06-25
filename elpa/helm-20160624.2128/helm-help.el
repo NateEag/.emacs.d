@@ -185,6 +185,7 @@ Italic     => A non--file buffer.
 \\[helm-buffers-run-multi-occur]\t\tMulti Occur buffer or marked buffers. (C-u toggle force searching current-buffer).
 \\[helm-buffer-switch-other-window]\t\tSwitch other window.
 \\[helm-buffer-switch-other-frame]\t\tSwitch other frame.
+\\[helm-buffers-run-browse-project]\t\tBrowse Project from buffer.
 \\[helm-buffer-run-query-replace-regexp]\t\tQuery replace regexp in marked buffers.
 \\[helm-buffer-run-query-replace]\t\tQuery replace in marked buffers.
 \\[helm-buffer-run-ediff]\t\tEdiff current buffer with candidate.  If two marked buffers ediff those buffers.
@@ -266,6 +267,9 @@ If you are already in `default-directory' this will move cursor on top.
 NOTE: This is different from using `C-l' in that `C-l' doesn't move cursor on top but stays on previous
 subdir name.
 
+**** Enter `..name/' at end of pattern start a recursive search of directories matching name under
+your current directory, see below the \"Recursive completion on subdirectories\" section for more infos.
+
 **** Enter any environment var (e.g. `$HOME') at end of pattern, it will be expanded
 
 **** You can yank any valid filename after pattern, it will be expanded
@@ -325,11 +329,31 @@ e.g. You can create \"~/new/newnew/newnewnew/my_newfile.txt\".
 - With two prefix args
   same but the cache will be refreshed.
 
-**** You can start a recursive search with Locate of Find (See commands below)
+**** You can start a recursive search with Locate or Find (See commands below)
 
 With Locate you can use a local db with a prefix arg. If the localdb doesn't already
 exists, you will be prompted for its creation, if it exists and you want to refresh it,
 give two prefix args.
+
+Note that when using locate the helm-buffer is empty until you type something,
+but helm use by default the basename of pattern entered in your helm-find-files session,
+hitting M-n should just kick in the locate search with this pattern.
+If you want to automatically do this add the `helm-source-locate'
+to `helm-sources-using-default-as-input'.
+
+**** Recursive completion on subdirectories
+
+Starting from the current directory you are browsing, it is possible
+to have completion of all directories under here.
+So if you are at \"/home/you/foo/\" and you want to go to \"/home/you/foo/bar/baz/somewhere/else\"
+just type \"/home/you/foo/..else\" and hit `C-j' or enter the final \"/\", helm will show you all
+possibles directories under \"foo\" matching \"else\".
+\(Note that entering two spaces before \"else\" instead of two dots works also).
+
+NOTE: Completion on subdirectories use locate as backend, you can configure
+the command with `helm-locate-recursive-dirs-command'.
+Because this completion use an index, you may not have all the recent additions
+of directories until you update your index (with `updatedb' for locate).
 
 *** Insert filename at point or complete filename at point
 
@@ -985,11 +1009,12 @@ This feature is only available with emacs-25.
 
 *** Prefix Args
 
-All the prefix args passed BEFORE running `helm-M-x' are ignored,
-you should get an error message if you do so.
-When you want to pass prefix args, pass them AFTER starting `helm-M-x',
+When you want pass prefix args, you should pass prefix args AFTER starting `helm-M-x',
 you will see a prefix arg counter appearing in mode-line notifying you
-the number of prefix args entered.")
+the number of prefix args entered.
+
+If you pass prefix args before running `helm-M-x', it will be displayed in prompt,
+then the first C-u after `helm-M-x' will be used to clear that prefix args.")
 
 ;;; helm-imenu
 ;;

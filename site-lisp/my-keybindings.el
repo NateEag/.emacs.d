@@ -71,6 +71,15 @@
 
     ("f" . helm-find-files)
 
+    ;; A few project-related keybinds.
+    ;; ...all this stuff kinda makes me think I should look into hydra.
+    ;; TODO Make/find a command that finds file in project *if* in project,
+    ;; falls back to just finding files across my machine, and also provides
+    ;; all open buffers. Basically, I don't want to have to think about where
+    ;; files live or whether I've opened it unless necessary.
+    ("p f" . helm-projectile-find-file)
+    ("p s" . projectile-ag)
+
     ;; Look up URLs quickly.
     ("u" . browse-url)
 
@@ -123,6 +132,7 @@ Used to define keyboard shortcuts.")
 
   ;; TODO Should unset prefix keys by parsing mnemonic in the loop. This is WET.
   (global-unset-key (kbd "s-a"))
+  (global-unset-key (kbd "s-p"))
 
   (dolist (elt nateeag/command-mnemonics)
     (let ((mnemonic (car elt))

@@ -2260,10 +2260,12 @@ some logging etc. "
 (defvar py-not-expression-chars " #\t\r\n\f"
   "py-expression assumes chars indicated probably will not compose a py-expression. ")
 
-(defvar py-partial-expression-backward-chars "^ =,\"'()[]{}:#\t\r\n\f"
+(defvar py-partial-expression-backward-chars "^ .=,\"'()[]{}:#\t\r\n\f"
   "py-partial-expression assumes chars indicated possible composing a py-partial-expression, skip it. ")
+;; (setq py-partial-expression-backward-chars "^ .=,\"'()[]{}:#\t\r\n\f")
 
-(defvar py-partial-expression-forward-chars "^ \"')}]:#\t\r\n\f")
+(defvar py-partial-expression-forward-chars "^ .\"')}]:#\t\r\n\f")
+;; (setq py-partial-expression-forward-chars "^ .\"')}]:#\t\r\n\f")
 
 (defvar py-operator-re "[ \t]*\\(\\.\\|+\\|-\\|*\\|//\\|//\\|&\\|%\\||\\|\\^\\|>>\\|<<\\|<\\|<=\\|>\\|>=\\|==\\|!=\\|=\\)[ \t]*"
   "Matches most of Python syntactical meaningful characters, inclusive whitespaces around.
@@ -4709,42 +4711,72 @@ Returns the string inserted. "
         (forward-line 1)))))
 
 (defun py--edit-docstring-set-vars ()
-  (setq beg (when (use-region-p) (region-beginning)))
-  (setq end (when (use-region-p) (region-end)))
-  (setq pps (parse-partial-sexp (point-min) (point)))
-  (when (nth 3 pps)
-    (setq beg (or beg (progn (goto-char (nth 8 pps))
-			     (skip-chars-forward (char-to-string (char-after)))(push-mark)(point))))
-    (setq end (or end
-		  (progn (goto-char (nth 8 pps))
-			 (forward-sexp)
-			 (skip-chars-backward (char-to-string (char-before)))
-			 (point))))))
+  (save-excursion
+    (setq py--docbeg (when (use-region-p) (region-beginning)))
+    (setq py--docend (when (use-region-p) (region-end)))
+    (let ((pps (parse-partial-sexp (point-min) (point))))
+      (when (nth 3 pps)
+	(setq py--docbeg (or py--docbeg (progn (goto-char (nth 8 pps))
+					       (skip-chars-forward (char-to-string (char-after)))(push-mark)(point))))
+	(setq py--docend (or py--docend
+			     (progn (goto-char (nth 8 pps))
+				    (forward-sexp)
+				    (skip-chars-backward (char-to-string (char-before)))
+				    (point)))))
+      (setq py--docbeg (copy-marker py--docbeg))
+      (setq py--docend (copy-marker py--docend)))))
 
 ;; Edit docstring
+(defvar py--docbeg nil
+  "Internally used by `py-edit-docstring'")
+
+(defvar py--docend nil
+  "Internally used by `py-edit-docstring'")
+
+(defvar py--oldbuf nil
+  "Internally used by `py-edit-docstring'")
+
+(defvar py-edit-docstring-buffer "Edit docstring"
+  "Name of the temporary buffer to use when editing. ")
+
+(defvar py--edit-docstring-register nil)
+
+(defun py--write-back-docstring ()
+  (interactive)
+  (unless (eq (current-buffer) (get-buffer py-edit-docstring-buffer))
+    (set-buffer py-edit-docstring-buffer))
+  (goto-char (point-min))
+  (while (re-search-forward "[\"']" nil t 1)
+    (or (py-escaped)
+	(replace-match (concat "\\\\" (match-string-no-properties 0)))))
+  (jump-to-register py--edit-docstring-register)
+  ;; (py-restore-window-configuration)
+  (delete-region py--docbeg py--docend)
+  (insert-buffer py-edit-docstring-buffer))
+
 (defun py-edit-docstring ()
   "Edit docstring or active region in python-mode. "
   (interactive "*")
-  (let ((orig (point))
-	beg end pps)
-    (py--edit-docstring-set-vars)
-    (setq relpos (1+ (- orig beg)))
-    (setq docstring (buffer-substring beg end))
-    (set (make-variable-buffer-local 'py-edit-docstring-orig-pos) orig)
-    (set-buffer (get-buffer-create "Edit docstring"))
-    (erase-buffer)
-    (switch-to-buffer (current-buffer))
-    (insert docstring)
-    (python-mode)
-    (goto-char relpos)
-    (message "%s" "Type C-c C-c when ready")
-    ))
-
-(defun py--write-back-edited-docstring (orig)
-  "When ready, write docstring back. "
-  (let ((newstring (buffer-substring-no-properties (point-min) (point-max))))
-    (py-restore-window-configuration)))
-    
+  (save-excursion
+    (save-restriction
+      (window-configuration-to-register py--edit-docstring-register)
+      (setq py--oldbuf (current-buffer))
+      (let ((orig (point))
+	     pps)
+	(py--edit-docstring-set-vars)
+	;; store relative position in docstring
+	(setq relpos (1+ (- orig py--docbeg)))
+	(setq docstring (buffer-substring py--docbeg py--docend))
+	(set (make-variable-buffer-local 'py-edit-docstring-orig-pos) orig)
+	(set-buffer (get-buffer-create py-edit-docstring-buffer))
+	(erase-buffer)
+	(switch-to-buffer (current-buffer))
+	(insert docstring)
+	(python-mode)
+	(local-set-key [(control c)(control c)] 'py--write-back-docstring)
+	(goto-char relpos)
+	(message "%s" "Type C-c C-c writes contents back")
+	))))
 
 ;; python-components-backward-forms
 
@@ -5403,7 +5435,7 @@ Operators are ignored. "
   (let (erg)
     (skip-chars-forward py-partial-expression-backward-chars)
     ;; group arg
-    (and
+    (while
      (looking-at "[\[{(]")
      (goto-char (scan-sexps (point) 1)))
     (setq erg (point))
@@ -6019,19 +6051,45 @@ With BOL, return line-beginning-position"
     (or erg (goto-char orig))))
 
 (defun py--backward-def-or-class-matcher (regexp indent)
-  (while (and (re-search-backward regexp nil 'move 1)
-	      (setq erg (match-beginning 0))
-	      (or
-	       (< indent (current-indentation))
-	       (nth 8 (parse-partial-sexp (point-min) (point)))))
-    (setq erg nil)))
+  (let (done)
+    (while (and
+	    (not done)
+	    (re-search-backward regexp nil 'move 1)
+	    (or
+	     (nth 8 (parse-partial-sexp (point-min) (point)))
+	     (if
+		 ;; looking one level below
+		 (< 0 indent)
+		 (if
+		     (<= indent (current-indentation))
+		     t
+		   (setq done (match-beginning 0)))
+	       (if
+		   (< indent (current-indentation))
+		   t
+		 (setq done (match-beginning 0)))))))
+    done))
 
 (defun py--backward-def-or-class-intern (regexp &optional bol)
-  (let ((indent (progn (when (py-in-string-or-comment-p)
-			    (py-backward-statement))
-		       (current-indentation)))
+  ;; get the right start-indent
+  ;; (when (empty-line-p)
+  ;;   (skip-chars-backward " \t\r\n\f"))
+  ;; ;; just behind a closing delimiter
+  ;; (when (and (eolp) (member (char-before) (list ?\) ?} ?\] ?\" ?')))
+  ;;   (forward-char -1))
+  (let ((indent (if (empty-line-p)
+		    (current-indentation)
+		  (save-excursion
+		    (if (py--beginning-of-statement-p)
+			(current-indentation)
+		      (py-backward-statement)
+		      (current-indentation)))))
+
+	;; (progn (when (py-in-string-or-comment-p)
+	;; (py-backward-statement))
+	;; (current-indentation)))
 	erg)
-    (py--backward-def-or-class-matcher regexp indent)
+    (setq erg (py--backward-def-or-class-matcher regexp indent))
     (and erg (looking-back "async ")
 	 (goto-char (match-beginning 0))
 	 (setq erg (point)))
@@ -7593,7 +7651,9 @@ Internal use"
       ;; Fixme: otherwise new window appears above
       (save-excursion
 	(other-window 1)
-	(pop-to-buffer output-buffer)
+	;; (pop-to-buffer output-buffer)
+	;; [Bug 1579309] python buffer window on top when using python3
+	(switch-to-buffer output-buffer)
 	(goto-char (point-max))
 	(other-window 1)))
      ((not py-switch-buffers-on-execute-p)
@@ -18969,7 +19029,7 @@ the default"
 Return code of `py-block' at point, a string. "
   (interactive)
   (let ((erg (py--mark-base "block")))
-    (py--forms-report-result erg)))
+    (py--forms-report-result erg (called-interactively-p 'any))))
 
 (defun py-block-or-clause ()
   "Block-Or-Clause at point.
@@ -18977,7 +19037,7 @@ Return code of `py-block' at point, a string. "
 Return code of `py-block-or-clause' at point, a string. "
   (interactive)
   (let ((erg (py--mark-base "block-or-clause")))
-    (py--forms-report-result erg)))
+    (py--forms-report-result erg (called-interactively-p 'any))))
 
 (defun py-buffer ()
   "Buffer at point.
@@ -18985,7 +19045,7 @@ Return code of `py-block-or-clause' at point, a string. "
 Return code of `py-buffer' at point, a string. "
   (interactive)
   (let ((erg (py--mark-base "buffer")))
-    (py--forms-report-result erg)))
+    (py--forms-report-result erg (called-interactively-p 'any))))
 
 (defun py-class ()
   "Class at point.
@@ -18993,7 +19053,7 @@ Return code of `py-buffer' at point, a string. "
 Return code of `py-class' at point, a string. "
   (interactive)
   (let ((erg (py--mark-base "class")))
-    (py--forms-report-result erg)))
+    (py--forms-report-result erg (called-interactively-p 'any))))
 
 (defun py-clause ()
   "Clause at point.
@@ -19001,7 +19061,7 @@ Return code of `py-class' at point, a string. "
 Return code of `py-clause' at point, a string. "
   (interactive)
   (let ((erg (py--mark-base "clause")))
-    (py--forms-report-result erg)))
+    (py--forms-report-result erg (called-interactively-p 'any))))
 
 (defun py-def ()
   "Def at point.
@@ -19009,7 +19069,7 @@ Return code of `py-clause' at point, a string. "
 Return code of `py-def' at point, a string. "
   (interactive)
   (let ((erg (py--mark-base "def")))
-    (py--forms-report-result erg)))
+    (py--forms-report-result erg (called-interactively-p 'any))))
 
 (defun py-def-or-class ()
   "Def-Or-Class at point.
@@ -19017,7 +19077,7 @@ Return code of `py-def' at point, a string. "
 Return code of `py-def-or-class' at point, a string. "
   (interactive)
   (let ((erg (py--mark-base "def-or-class")))
-    (py--forms-report-result erg)))
+    (py--forms-report-result erg (called-interactively-p 'any))))
 
 (defun py-expression ()
   "Expression at point.
@@ -19025,7 +19085,7 @@ Return code of `py-def-or-class' at point, a string. "
 Return code of `py-expression' at point, a string. "
   (interactive)
   (let ((erg (py--mark-base "expression")))
-    (py--forms-report-result erg)))
+    (py--forms-report-result erg (called-interactively-p 'any))))
 
 (defun py-indent ()
   "Indent at point.
@@ -19033,7 +19093,7 @@ Return code of `py-expression' at point, a string. "
 Return code of `py-indent' at point, a string. "
   (interactive)
   (let ((erg (py--mark-base "indent")))
-    (py--forms-report-result erg)))
+    (py--forms-report-result erg (called-interactively-p 'any))))
 
 (defun py-line ()
   "Line at point.
@@ -19041,7 +19101,7 @@ Return code of `py-indent' at point, a string. "
 Return code of `py-line' at point, a string. "
   (interactive)
   (let ((erg (py--mark-base "line")))
-    (py--forms-report-result erg)))
+    (py--forms-report-result erg (called-interactively-p 'any))))
 
 (defun py-minor-block ()
   "Minor-Block at point.
@@ -19049,7 +19109,7 @@ Return code of `py-line' at point, a string. "
 Return code of `py-minor-block' at point, a string. "
   (interactive)
   (let ((erg (py--mark-base "minor-block")))
-    (py--forms-report-result erg)))
+    (py--forms-report-result erg (called-interactively-p 'any))))
 
 (defun py-paragraph ()
   "Paragraph at point.
@@ -19057,7 +19117,7 @@ Return code of `py-minor-block' at point, a string. "
 Return code of `py-paragraph' at point, a string. "
   (interactive)
   (let ((erg (py--mark-base "paragraph")))
-    (py--forms-report-result erg)))
+    (py--forms-report-result erg (called-interactively-p 'any))))
 
 (defun py-partial-expression ()
   "Partial-Expression at point.
@@ -19065,7 +19125,7 @@ Return code of `py-paragraph' at point, a string. "
 Return code of `py-partial-expression' at point, a string. "
   (interactive)
   (let ((erg (py--mark-base "partial-expression")))
-    (py--forms-report-result erg)))
+    (py--forms-report-result erg (called-interactively-p 'any))))
 
 (defun py-region ()
   "Region at point.
@@ -19073,7 +19133,7 @@ Return code of `py-partial-expression' at point, a string. "
 Return code of `py-region' at point, a string. "
   (interactive)
   (let ((erg (py--mark-base "region")))
-    (py--forms-report-result erg)))
+    (py--forms-report-result erg (called-interactively-p 'any))))
 
 (defun py-statement ()
   "Statement at point.
@@ -19081,7 +19141,7 @@ Return code of `py-region' at point, a string. "
 Return code of `py-statement' at point, a string. "
   (interactive)
   (let ((erg (py--mark-base "statement")))
-    (py--forms-report-result erg)))
+    (py--forms-report-result erg (called-interactively-p 'any))))
 
 (defun py-top-level ()
   "Top-Level at point.
@@ -19089,7 +19149,7 @@ Return code of `py-statement' at point, a string. "
 Return code of `py-top-level' at point, a string. "
   (interactive)
   (let ((erg (py--mark-base "top-level")))
-    (py--forms-report-result erg)))
+    (py--forms-report-result erg (called-interactively-p 'any))))
 
 ;; python-components-forms-code.el ends here
 ;; python-components-fast-forms
@@ -21648,9 +21708,9 @@ Use current region unless optional args BEG END are delivered."
       (funcall (car (read-from-string (concat "py-forward-" name))))
       (narrow-to-region (point) start))))
 
-(defun py--forms-report-result (erg)
+(defun py--forms-report-result (erg &optional iact)
   (let ((res (ignore-errors (buffer-substring-no-properties (car-safe erg) (cdr-safe erg)))))
-    (when (and res (called-interactively-p 'any))
+    (when (and res iact)
       (goto-char (car-safe erg))
       (set-mark (point))
       (goto-char (cdr-safe erg)))

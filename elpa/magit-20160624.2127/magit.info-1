@@ -120,6 +120,7 @@ Running Git
 Inspecting
 
 * Status buffer::
+* Repository list::
 * Logging::
 * Diffing::
 * Ediffing::
@@ -714,7 +715,7 @@ buffers whose major-modes derive from ‘magit-mode’.
      This command locks the current buffer to its value or if the buffer
      is already locked, then it unlocks it.
 
-     Locking a buffer to its value, prevents it from being reused to
+     Locking a buffer to its value prevents it from being reused to
      display another value.  The name of a locked buffer contains its
      value, which allows telling it apart from other locked buffers and
      the unlocked buffer.
@@ -767,6 +768,13 @@ File: magit.info,  Node: Switching Buffers,  Next: Naming Buffers,  Up: Modes an
      function should call ‘display-buffer’ with that buffer as first and
      a list of display actions as second argument.
 
+     Magit provides several functions, listed below, that are suitable
+     values for this option.  If you want to use different rules, then a
+     good way of doing that is to start with a copy of one of these
+     functions and then adjust it to your needs.  More functions to
+     choose from will likely be added in the future, and eventually the
+     default will change.
+
      Instead of using a wrapper around ‘display-buffer’, that function
      itself can be used here, in which case the display actions have to
      be specified by adding them to ‘display-buffer-alist’ instead.
@@ -782,10 +790,36 @@ File: magit.info,  Node: Switching Buffers,  Next: Naming Buffers,  Up: Modes an
      over the code base but now all the rules are contained in this one
      function (except for the "noselect" special case mentioned above).
 
-     If you want to use different rules, then a good way of doing that
-     is to start with a copy of this function and then adjust it to your
-     needs.  More functions to choose from will be added in the future,
-     and eventually the default will change.
+ -- Function: magit-display-buffer-same-window-except-diff-v1
+
+     This function displays most buffers in the currently selected
+     window.  If a buffer’s mode derives from ‘magit-diff-mode’ or
+     ‘magit-process-mode’, it is displayed in another window.
+
+ -- Function: magit-display-buffer-fullframe-status-v1
+
+     This function fills the entire frame when displaying a status
+     buffer.  Otherwise, it behaves like
+     ‘magit-display-buffer-traditional’.
+
+ -- Function: magit-display-buffer-fullframe-status-topleft-v1
+
+     This function fills the entire frame when displaying a status
+     buffer.  It behaves like ‘magit-display-buffer-fullframe-status-v1’
+     except that it displays buffers that derive from ‘magit-diff-mode’
+     or ‘magit-process-mode’ to the top or left of the current buffer
+     rather than to the bottom or right.  As a result, Magit buffers
+     tend to pop up on the same side as they would if
+     ‘magit-display-buffer-traditional’ were in use.
+
+ -- Function: magit-display-buffer-fullcolumn-most-v1
+
+     This function displays most buffers so that they fill the entire
+     height of the frame.  However, the buffer is displayed in another
+     window if 1) the buffer’s mode derives from ‘magit-process-mode’,
+     or 2) the buffer’s mode derives from ‘magit-diff-mode’, provided
+     that the mode of the current buffer derives from ‘magit-log-mode’
+     or ‘magit-cherry-mode’.
 
  -- User Option: magit-pre-display-buffer-hook
 
@@ -1783,6 +1817,7 @@ described later.
 * Menu:
 
 * Status buffer::
+* Repository list::
 * Logging::
 * Diffing::
 * Ediffing::
@@ -1792,7 +1827,7 @@ described later.
 * Blaming::
 
 
-File: magit.info,  Node: Status buffer,  Next: Logging,  Up: Inspecting
+File: magit.info,  Node: Status buffer,  Next: Repository list,  Up: Inspecting
 
 5.1 Status buffer
 =================
@@ -1823,15 +1858,20 @@ that it should be bound globally.  We recommend using ‘C-x g’:
 
  -- User Option: magit-repository-directories
 
-     Directories containing Git repositories.  Magit checks these
-     directories for Git repositories and offers them as choices when
-     ‘magit-status’ is used with a prefix argument.
+     List of directories that are or contain Git repositories.  Each
+     element has the form ‘(DIRECTORY . DEPTH)’ or, for backward
+     compatibility, just DIRECTORY. DIRECTORY has to be a directory or a
+     directory file-name, a string.  DEPTH, an integer, specifies the
+     maximum depth to look for Git repositories.  If it is 0, then only
+     add DIRECTORY itself.  For elements that are strings, the value of
+     option ‘magit-repository-directories-depth’ specifies the depth.
 
  -- User Option: magit-repository-directories-depth
 
-     The maximum depth to look for Git repositories.  When looking for a
-     Git repository below the directories in
-     ‘magit-repository-directories’, only descend this many levels deep.
+     The maximum depth to look for Git repositories.  This option is
+     obsolete and only used for elements of the option
+     ‘magit-repository-directories’ (which see) that don’t specify the
+     depth directly.
 
  -- Command: ido-enter-magit-status
 
@@ -2120,9 +2160,73 @@ File: magit.info,  Node: Status options,  Prev: Status header sections,  Up: Sta
 buffers.
 
 
-File: magit.info,  Node: Logging,  Next: Diffing,  Prev: Status buffer,  Up: Inspecting
+File: magit.info,  Node: Repository list,  Next: Logging,  Prev: Status buffer,  Up: Inspecting
 
-5.2 Logging
+5.2 Repository list
+===================
+
+ -- Command: magit-list-repositories
+
+     This command displays a list of repositories.
+
+     The options ‘magit-repository-directories’ and
+     ‘magit-repository-directories-depth’ control which repositories are
+     displayed.
+
+ -- User Option: magit-repolist-columns
+
+     This option controls what columns are displayed by the command
+     ‘magit-list-repositories’ and how they are displayed.
+
+     Each element has the form ‘(HEADER WIDTH FORMAT PROPS)’.
+
+     HEADER is the string displayed in the header.  WIDTH is the width
+     of the column.  FORMAT is a function that is called with one
+     argument, the repository identification (usually its basename), and
+     with ‘default-directory’ bound to the toplevel of its working tree.
+     It has to return a string to be inserted or nil.  PROPS is an alist
+     that supports the keys ‘:right-align’ and ‘:pad-right’.
+
+   The following functions can be added to the above option:
+
+ -- Function: magit-repolist-column-ident
+
+     This function inserts the identification of the repository.
+     Usually this is just its basename.
+
+ -- Function: magit-repolist-column-path
+
+     This function inserts the absolute path of the repository.
+
+ -- Function: magit-repolist-column-version
+
+     This function inserts a description of the repository’s ‘HEAD’
+     revision.
+
+ -- Function: magit-repolist-column-unpulled-from-upstream
+
+     This function inserts the number of upstream commits not in the
+     current branch.
+
+ -- Function: magit-repolist-column-unpulled-from-pushremote
+
+     This function inserts the number of commits in the push branch but
+     not the current branch.
+
+ -- Function: magit-repolist-column-unpushed-to-upstream
+
+     This function inserts the number of commits in the current branch
+     but not its upstream.
+
+ -- Function: magit-repolist-column-unpushed-to-pushremote
+
+     This function inserts the number of commits in the current branch
+     but not its push branch.
+
+
+File: magit.info,  Node: Logging,  Next: Diffing,  Prev: Repository list,  Up: Inspecting
+
+5.3 Logging
 ===========
 
 The status buffer contains logs for the unpushed and unpulled commits,
@@ -2204,7 +2308,7 @@ buffers visiting files: Minor mode for buffers visiting files.
 
 File: magit.info,  Node: Refreshing logs,  Next: Log Buffer,  Up: Logging
 
-5.2.1 Refreshing logs
+5.3.1 Refreshing logs
 ---------------------
 
 The prefix command ‘magit-log-refresh-popup’, on ‘L’, can be used to
@@ -2244,7 +2348,7 @@ the status buffer.
 
 File: magit.info,  Node: Log Buffer,  Next: Select from log,  Prev: Refreshing logs,  Up: Logging
 
-5.2.2 Log Buffer
+5.3.2 Log Buffer
 ----------------
 
 ‘L’     (‘magit-log-refresh-popup’)
@@ -2328,7 +2432,7 @@ File: magit.info,  Node: Log Buffer,  Next: Select from log,  Prev: Refreshing l
 
 File: magit.info,  Node: Select from log,  Next: Reflog,  Prev: Log Buffer,  Up: Logging
 
-5.2.3 Select from log
+5.3.3 Select from log
 ---------------------
 
 When the user has to select a recent commit that is reachable from
@@ -2354,7 +2458,7 @@ is used for selection:
 
 File: magit.info,  Node: Reflog,  Prev: Select from log,  Up: Logging
 
-5.2.4 Reflog
+5.3.4 Reflog
 ------------
 
 Also see *note (gitman)git-reflog:: .
@@ -2377,7 +2481,7 @@ Logging: Logging.
 
 File: magit.info,  Node: Diffing,  Next: Ediffing,  Prev: Logging,  Up: Inspecting
 
-5.3 Diffing
+5.4 Diffing
 ===========
 
 The status buffer contains diffs for the staged and unstaged commits,
@@ -2464,7 +2568,7 @@ buffers visiting files: Minor mode for buffers visiting files.
 
 File: magit.info,  Node: Refreshing diffs,  Next: Diff buffer,  Up: Diffing
 
-5.3.1 Refreshing diffs
+5.4.1 Refreshing diffs
 ----------------------
 
 The prefix command ‘magit-diff-refresh-popup’, on ‘D’, can be used to
@@ -2552,7 +2656,7 @@ without having to using one of the diff popups.
 
 File: magit.info,  Node: Diff buffer,  Next: Diff options,  Prev: Refreshing diffs,  Up: Diffing
 
-5.3.2 Diff buffer
+5.4.2 Diff buffer
 -----------------
 
 ‘RET’     (‘magit-diff-visit-file’)
@@ -2604,7 +2708,7 @@ File: magit.info,  Node: Diff buffer,  Next: Diff options,  Prev: Refreshing dif
 
 File: magit.info,  Node: Diff options,  Next: Revision buffer,  Prev: Diff buffer,  Up: Diffing
 
-5.3.3 Diff options
+5.4.3 Diff options
 ------------------
 
  -- User Option: magit-diff-refine-hunk
@@ -2652,7 +2756,7 @@ File: magit.info,  Node: Diff options,  Next: Revision buffer,  Prev: Diff buffe
 
 File: magit.info,  Node: Revision buffer,  Prev: Diff options,  Up: Diffing
 
-5.3.4 Revision buffer
+5.4.4 Revision buffer
 ---------------------
 
  -- User Option: magit-revision-insert-related-refs
@@ -2678,7 +2782,7 @@ File: magit.info,  Node: Revision buffer,  Prev: Diff options,  Up: Diffing
 
 File: magit.info,  Node: Ediffing,  Next: References buffer,  Prev: Diffing,  Up: Inspecting
 
-5.4 Ediffing
+5.5 Ediffing
 ============
 
 This section describes how to enter Ediff from Magit buffers.  For
@@ -2776,7 +2880,7 @@ information on how to use Ediff itself, see *note (ediff)Top::.
 
 File: magit.info,  Node: References buffer,  Next: Bisecting,  Prev: Ediffing,  Up: Inspecting
 
-5.5 References buffer
+5.6 References buffer
 =====================
 
 ‘y’     (‘magit-show-refs-popup’)
@@ -2907,7 +3011,7 @@ accustomed to that inconsistency we are keeping it that way.
 
 File: magit.info,  Node: References sections,  Up: References buffer
 
-5.5.1 References sections
+5.6.1 References sections
 -------------------------
 
 The contents of references buffers is controlled using the hook
@@ -2936,7 +3040,7 @@ used for the status buffer.
 
 File: magit.info,  Node: Bisecting,  Next: Visiting blobs,  Prev: References buffer,  Up: Inspecting
 
-5.6 Bisecting
+5.7 Bisecting
 =============
 
 Also see *note (gitman)git-bisect:: .
@@ -2988,7 +3092,7 @@ commands instead.
 
 File: magit.info,  Node: Visiting blobs,  Next: Blaming,  Prev: Bisecting,  Up: Inspecting
 
-5.7 Visiting blobs
+5.8 Visiting blobs
 ==================
 
 ‘M-x magit-find-file’     (‘magit-find-file’)
@@ -3004,7 +3108,7 @@ File: magit.info,  Node: Visiting blobs,  Next: Blaming,  Prev: Bisecting,  Up: 
 
 File: magit.info,  Node: Blaming,  Prev: Visiting blobs,  Up: Inspecting
 
-5.8 Blaming
+5.9 Blaming
 ===========
 
 Also see *note (gitman)git-blame:: .
@@ -3849,7 +3953,7 @@ features are available from separate popups.
      then the target branch is set as the upstream of the branch that is
      being reset.
 
-‘b d’     (‘magit-branch-delete’)
+‘b k’     (‘magit-branch-delete’)
 
      Delete one or multiple branches.  If the region marks multiple
      branches, then offer to delete those.  Otherwise, prompt for a
@@ -6436,9 +6540,10 @@ File: magit.info,  Node: Matching sections,  Prev: Section selection,  Up: Secti
         • ‘TYPE’
 
           matches TYPE regardless of its parents.
-     Each TYPE is a symbol.  Note that is not necessary to specify all
-     TYPEs up to the root section as printed by ‘magit-describe-type’,
-     unless of course your want to be that precise.
+     Each TYPE is a symbol.  Note that it is not necessary to specify
+     all TYPEs up to the root section as printed by
+     ‘magit-describe-type’, unless of course you want to be that
+     precise.
 
  -- Function: magit-section-when condition &rest body
 
@@ -7248,9 +7353,9 @@ Appendix B Keystroke Index
 * B b:                                   Bisecting.           (line  31)
 * b b:                                   The branch popup.    (line  29)
 * b c:                                   The branch popup.    (line  47)
-* b d:                                   The branch popup.    (line  88)
 * B g:                                   Bisecting.           (line  36)
 * B k:                                   Bisecting.           (line  41)
+* b k:                                   The branch popup.    (line  88)
 * b n:                                   The branch popup.    (line  37)
 * B r:                                   Bisecting.           (line  47)
 * b r:                                   The branch popup.    (line  94)

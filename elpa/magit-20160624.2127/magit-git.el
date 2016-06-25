@@ -187,7 +187,7 @@ change the upstream and many which create new branches."
 (defvar magit--refresh-cache nil)
 
 (defmacro magit--with-refresh-cache (key &rest body)
-  (declare (indent 1))
+  (declare (indent 1) (debug (form body)))
   (let ((k (cl-gensym)))
     `(if magit--refresh-cache
          (let ((,k ,key))
@@ -1031,7 +1031,10 @@ where COMMITS is the number of commits in TAG but not in REV."
 
 (defun magit-list-worktrees ()
   (let (worktrees worktree)
-    (dolist (line (magit-git-lines "worktree" "list" "--porcelain"))
+    (dolist (line (let ((magit-git-standard-options
+                         ;; KLUDGE At least in v2.8.3 this triggers a segfault.
+                         (remove "--no-pager" magit-git-standard-options)))
+                    (magit-git-lines "worktree" "list" "--porcelain")))
       (cond ((string-prefix-p "worktree" line)
              (push (setq worktree (list (substring line 9) nil nil nil))
                    worktrees))
@@ -1438,9 +1441,14 @@ Return a list of two integers: (A>B B>A)."
 
 (defun magit-set (val &rest keys)
   "Set Git config settings specified by KEYS to VAL."
-  (if val
-      (magit-git-string "config" (mapconcat 'identity keys ".") val)
-    (magit-git-string "config" "--unset" (mapconcat 'identity keys "."))))
+  (let ((key (mapconcat 'identity keys ".")))
+    (if val
+        (magit-git-success "config" key val)
+      (magit-git-success "config" "--unset" key))
+    val))
+
+(gv-define-setter magit-get (val &rest keys)
+  `(magit-set ,val ,@keys))
 
 ;;; magit-git.el ends soon
 

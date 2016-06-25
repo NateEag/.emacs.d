@@ -249,19 +249,22 @@ of the current screen line."
 (evil-define-motion evil-next-line-first-non-blank (count)
   "Move the cursor COUNT lines down on the first non-blank character."
   :type line
-  (evil-next-line (or count 1))
+  (let ((this-command this-command))
+    (evil-next-line (or count 1)))
   (evil-first-non-blank))
 
 (evil-define-motion evil-next-line-1-first-non-blank (count)
   "Move the cursor COUNT-1 lines down on the first non-blank character."
   :type line
-  (evil-next-line (1- (or count 1)))
+  (let ((this-command this-command))
+    (evil-next-line (1- (or count 1))))
   (evil-first-non-blank))
 
 (evil-define-motion evil-previous-line-first-non-blank (count)
   "Move the cursor COUNT lines up on the first non-blank character."
   :type line
-  (evil-previous-line (or count 1))
+  (let ((this-command this-command))
+    (evil-previous-line (or count 1)))
   (evil-first-non-blank))
 
 (evil-define-motion evil-goto-line (count)
@@ -1389,6 +1392,8 @@ of the block."
         (opoint (save-excursion
                   (goto-char beg)
                   (line-beginning-position))))
+    (unless (eq evil-want-fine-undo t)
+      (evil-start-undo-step))
     (funcall delete-func beg end type register yank-handler)
     (cond
      ((eq type 'line)
@@ -1692,9 +1697,11 @@ The default for width is the value of `fill-column'."
   "Replace text from BEG to END with CHAR."
   :motion evil-forward-char
   (interactive "<R>"
-               (evil-save-cursor
-                 (evil-refresh-cursor 'replace)
-                 (list (evil-read-key))))
+               (unwind-protect
+                   (let ((evil-force-cursor 'replace))
+                     (evil-refresh-cursor)
+                     (list (evil-read-key)))
+                 (evil-refresh-cursor)))
   (when char
     (if (eq type 'block)
         (save-excursion
@@ -2182,7 +2189,8 @@ the lines."
         (evil-visual-rotate 'lower-right)
         (evil-append count)))
     (unless (eolp) (forward-char))
-    (evil-insert count vcount skip-empty-lines)))
+    (evil-insert count vcount skip-empty-lines)
+    (add-hook 'post-command-hook #'evil-maybe-remove-spaces)))
 
 (defun evil-insert-resume (count)
   "Switch to Insert state at previous insertion point.
@@ -2194,33 +2202,17 @@ switch to insert state."
   (unless (evil-visual-state-p)
     (evil-insert count)))
 
-(defun evil-maybe-remove-spaces ()
-  "Remove space from newly opened empty line.
-This function should be called from `post-command-hook' after
-`evil-open-above' or `evil-open-below'.  If the last command
-finished insert state and if the current line consists of
-whitespaces only, then those spaces have been inserted because of
-the indentation.  In this case those spaces are removed leaving a
-completely empty line."
-  (unless (memq this-command '(evil-open-above evil-open-below))
-    (remove-hook 'post-command-hook 'evil-maybe-remove-spaces)
-    (when (and (not (evil-insert-state-p))
-               (save-excursion
-                 (beginning-of-line)
-                 (looking-at "^\\s-*$")))
-      (delete-region (line-beginning-position)
-                     (line-end-position)))))
-
 (defun evil-open-above (count)
   "Insert a new line above point and switch to Insert state.
 The insertion will be repeated COUNT times."
   (interactive "p")
+  (unless (eq evil-want-fine-undo t)
+    (evil-start-undo-step))
   (evil-insert-newline-above)
   (setq evil-insert-count count
         evil-insert-lines t
         evil-insert-vcount nil)
   (evil-insert-state 1)
-  (add-hook 'post-command-hook #'evil-maybe-remove-spaces)
   (when evil-auto-indent
     (indent-according-to-mode)))
 
@@ -2228,13 +2220,14 @@ The insertion will be repeated COUNT times."
   "Insert a new line below point and switch to Insert state.
 The insertion will be repeated COUNT times."
   (interactive "p")
+  (unless (eq evil-want-fine-undo t)
+    (evil-start-undo-step))
   (push (point) buffer-undo-list)
   (evil-insert-newline-below)
   (setq evil-insert-count count
         evil-insert-lines t
         evil-insert-vcount nil)
   (evil-insert-state 1)
-  (add-hook 'post-command-hook #'evil-maybe-remove-spaces)
   (when evil-auto-indent
     (indent-according-to-mode)))
 
@@ -2851,7 +2844,7 @@ This function fails with an error if Emacs is run in server mode."
     (kill-emacs 1)))
 
 (evil-define-command evil-save-and-quit ()
-  "Exits Emacs, without saving."
+  "Save all buffers and exit Emacs."
   (save-buffers-kill-terminal t))
 
 (evil-define-command evil-save-and-close (file &optional bang)

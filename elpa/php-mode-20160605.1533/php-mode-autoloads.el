@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "php-mode" "php-mode.el" (22331 51995 0 0))
+;;;### (autoloads nil "php-mode" "php-mode.el" (22382 47636 0 0))
 ;;; Generated autoloads from php-mode.el
 
 (let ((loads (get 'php 'custom-loads))) (if (member '"php-mode" loads) nil (put 'php 'custom-loads (cons '"php-mode" loads))))
@@ -31,7 +31,7 @@ Major mode for editing PHP code.
 ;;;;;;  "php-exif.el" "php-ext.el" "php-filesystem.el" "php-gd.el"
 ;;;;;;  "php-math.el" "php-mode-pkg.el" "php-pcre.el" "php-regex.el"
 ;;;;;;  "php-simplexml.el" "php-strings.el" "php-var.el" "php-xmlparser.el"
-;;;;;;  "php-xmlreader.el") (22331 51995 503437 0))
+;;;;;;  "php-xmlreader.el") (22382 47636 647921 0))
 
 ;;;***
 

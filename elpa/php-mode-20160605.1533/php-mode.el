@@ -1061,7 +1061,8 @@ PHP heredoc."
        php-beginning-of-defun-regexp)
 
   (when (>= emacs-major-version 25)
-    (php-syntax-propertize-function (point-min) (point-max))))
+    (with-silent-modifications
+      (php-syntax-propertize-function (point-min) (point-max)))))
 
 
 ;; Define function name completion function
@@ -1328,7 +1329,7 @@ a completion list."
      ("->\\(\\sw+\\)\\s-*(" 1 'default)
 
      ;; Highlight special variables
-     ("\\$\\(this\\|that\\)" 1 font-lock-constant-face)
+     ("\\$\\(this\\|that\\)\\_>" 1 font-lock-constant-face)
      ("\\(\\$\\|->\\)\\([a-zA-Z0-9_]+\\)" 2 font-lock-variable-name-face)
 
      ;; Highlight function/method names

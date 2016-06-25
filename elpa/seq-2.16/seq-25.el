@@ -440,10 +440,7 @@ SEQUENCE must be a sequence of numbers or markers."
 
 (cl-defmethod seq-drop ((list list) n)
   "Optimized implementation of `seq-drop' for lists."
-  (while (and list (> n 0))
-    (setq list (cdr list)
-          n (1- n)))
-  list)
+  (nthcdr n list))
 
 (cl-defmethod seq-take ((list list) n)
   "Optimized implementation of `seq-take' for lists."

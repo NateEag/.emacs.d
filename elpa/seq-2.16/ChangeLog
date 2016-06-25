@@ -1,3 +1,17 @@
+2016-06-12  Nicolas Petton  <nicolas@petton.fr>
+
+	Update seq.el to 2.16
+
+	* packages/seq/seq-24.el:
+	* packages/seq/seq-25.el: Better implementation of seq-drop for lists.
+	* packages/seq/seq.el: Bump version number.
+
+2016-04-22  Stefan Monnier  <monnier@iro.umontreal.ca>
+
+	* seq-24.el (seq-concatenate,seq-into,seq--make-bindings): Use _
+
+	rather than t as catch-all for pcase.
+
 2016-03-31  Nicolas Petton  <nicolas@petton.fr>
 
 	Update seq to version 2.15

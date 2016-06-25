@@ -1,6 +1,6 @@
 ;;; seq-24.el --- seq.el implementation for Emacs 24.x -*- lexical-binding: t -*-
 
-;; Copyright (C) 2014-2015 Free Software Foundation, Inc.
+;; Copyright (C) 2014-2016 Free Software Foundation, Inc.
 
 ;; Author: Nicolas Petton <nicolas@petton.fr>
 ;; Keywords: sequences
@@ -270,7 +270,7 @@ TYPE must be one of following symbols: vector, string or list.
     (`vector (apply #'vconcat seqs))
     (`string (apply #'concat seqs))
     (`list (apply #'append (append seqs '(nil))))
-    (t (error "Not a sequence type name: %S" type))))
+    (_ (error "Not a sequence type name: %S" type))))
 
 (defun seq-mapcat (function sequence &optional type)
   "Concatenate the result of applying FUNCTION to each element of SEQUENCE.
@@ -359,7 +359,7 @@ TYPE can be one of the following symbols: vector, string or list."
     (`vector (vconcat sequence))
     (`string (concat sequence))
     (`list (append sequence nil))
-    (t (error "Not a sequence type name: %S" type))))
+    (_ (error "Not a sequence type name: %S" type))))
 
 (defun seq-min (sequence)
   "Return the smallest element of SEQUENCE.
@@ -374,10 +374,7 @@ SEQUENCE must be a sequence of numbers or markers."
 (defun seq--drop-list (list n)
   "Return a list from LIST without its first N elements.
 This is an optimization for lists in `seq-drop'."
-  (while (and list (> n 0))
-    (setq list (cdr list)
-          n (1- n)))
-  list)
+  (nthcdr n list))
 
 (defun seq--take-list (list n)
   "Return a list from LIST made of its first N elements.
@@ -432,7 +429,7 @@ BINDINGS."
                           (seq-drop ,sequence ,index))
                         bindings)
                   (setq rest-marker t)))
-          (t
+          (_
            (push `(,name (seq--elt-safe ,sequence ,index)) bindings))))
       (setq index (1+ index)))
     bindings))

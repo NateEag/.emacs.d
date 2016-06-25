@@ -76,6 +76,18 @@ much more convenient to use a simple boolean value here."
 (defvar helm-suspend-update-flag nil)
 (defvar helm-action-buffer "*helm action*"
   "Buffer showing actions.")
+
+
+;;; Compatibility
+;;
+(defun helm-add-face-text-properties (beg end face &optional append object)
+  "Add the face property to the text from START to END.
+It is a compatibility function which behave exactly like
+`add-face-text-property' if available otherwise like `add-text-properties'.
+When only `add-text-properties' is available APPEND is ignored."
+  (if (fboundp 'add-face-text-property)
+      (add-face-text-property beg end face append object)
+      (add-text-properties beg end `(face ,face) object)))
 
 ;;; Macros helper.
 ;;
@@ -333,6 +345,17 @@ Default is `eq'."
                                              (string-match-p re i)))))
            collect i))
 
+(defun helm-boring-directory-p (directory black-list)
+  "Check if one regexp in BLACK-LIST match DIRECTORY."
+  (helm-awhile (helm-basedir (directory-file-name
+                              (expand-file-name directory)))
+    (when (string= it "/") (cl-return nil))
+    (when (cl-loop for r in black-list
+                   thereis (string-match-p
+                            r (directory-file-name directory)))
+      (cl-return t))
+    (setq directory it)))
+
 (defun helm-shadow-entries (seq regexp-list)
   "Put shadow property on entries in SEQ matching a regexp in REGEXP-LIST."
   (let ((face 'italic))
@@ -488,6 +511,48 @@ Add spaces at end if needed to reach WIDTH when STR is shorter than WIDTH."
   "CANDIDATE is symbol or string.
 See `kill-new' for argument REPLACE."
   (kill-new (helm-stringify candidate) replace))
+
+
+;;; Modes
+;;
+(defun helm-same-major-mode-p (start-buffer alist)
+  "Decide if current-buffer is related to START-BUFFER.
+Argument ALIST is an alist of associated major modes."
+  ;; START-BUFFER is the current-buffer where we start searching.
+  ;; Determine the major-mode of START-BUFFER as `cur-maj-mode'.
+  ;; Each time the loop go in another buffer we try from this buffer
+  ;; to determine if its `major-mode' is:
+  ;; - same as the `cur-maj-mode'
+  ;; - derived from `cur-maj-mode' and from
+  ;;   START-BUFFER if its mode is derived from the one in START-BUFFER. 
+  ;; - have an assoc entry (major-mode . cur-maj-mode)
+  ;; - have an rassoc entry (cur-maj-mode . major-mode)
+  ;; - check if one of these entries inherit from another one in
+  ;;   `alist'.
+  (let* ((cur-maj-mode  (with-current-buffer start-buffer major-mode))
+         (maj-mode      major-mode)
+         (c-assoc-mode  (assq cur-maj-mode alist))
+         (c-rassoc-mode (rassq cur-maj-mode alist))
+         (o-assoc-mode  (assq major-mode alist))
+         (o-rassoc-mode (rassq major-mode alist))
+         (cdr-c-assoc-mode (cdr c-assoc-mode))
+         (cdr-o-assoc-mode (cdr o-assoc-mode)))
+    (or (eq major-mode cur-maj-mode)
+        (derived-mode-p cur-maj-mode)
+        (with-current-buffer start-buffer
+          (derived-mode-p maj-mode))
+        (or (eq cdr-c-assoc-mode major-mode)
+            (eq (car c-rassoc-mode) major-mode)
+            (eq (cdr (assq cdr-c-assoc-mode alist))
+                major-mode)
+            (eq (car (rassq cdr-c-assoc-mode alist))
+                major-mode))
+        (or (eq cdr-o-assoc-mode cur-maj-mode)
+            (eq (car o-rassoc-mode) cur-maj-mode)
+            (eq (cdr (assq cdr-o-assoc-mode alist))
+                cur-maj-mode)
+            (eq (car (rassq cdr-o-assoc-mode alist))
+                cur-maj-mode)))))
 
 ;;; Files routines
 ;;
@@ -544,62 +609,65 @@ Useful in dired buffers when there is inserted subdirs."
 
 ;; Same as `vc-directory-exclusion-list'.
 (defvar helm-walk-ignore-directories
-  '("SCCS" "RCS" "CVS" "MCVS" ".svn" ".git" ".hg" ".bzr"
-    "_MTN" "_darcs" "{arch}" ".gvfs"))
+  '("SCCS/" "RCS/" "CVS/" "MCVS/" ".svn/" ".git/" ".hg/" ".bzr/"
+    "_MTN/" "_darcs/" "{arch}/" ".gvfs/"))
+
+(defsubst helm--dir-file-name (file dir)
+  (expand-file-name
+   (substring file 0 (1- (length file))) dir))
+
+(defsubst helm--dir-name-p (str)
+  (char-equal (aref str (1- (length str))) ?/))
 
 (cl-defun helm-walk-directory (directory &key (path 'basename)
-                                           (directories t)
-                                           match skip-subdirs)
+                                         directories
+                                         match skip-subdirs)
   "Walk through DIRECTORY tree.
+
 Argument PATH can be one of basename, relative, full, or a function
 called on file name, default to basename.
+
 Argument DIRECTORIES when non--nil (default) return also directories names,
-otherwise skip directories names.
-Argument MATCH can be a predicate or a regexp.
-Argument SKIP-SUBDIRS when non--nil will skip `helm-walk-ignore-directories'
-unless it is given as a list of directories, in this case this list will be used
+otherwise skip directories names, with a value of 'only returns
+only subdirectories, i.e files are skipped.
+
+Argument MATCH is a regexp matching files or directories.
+
+Argument SKIP-SUBDIRS when `t' will skip `helm-walk-ignore-directories'
+otherwise if it is given as a list of directories, this list will be used
 instead of `helm-walk-ignore-directories'."
-  (let* ((result '())
-         (fn (cl-case path
+  (let ((fn (cl-case path
                (basename 'file-name-nondirectory)
                (relative 'file-relative-name)
                (full     'identity)
-               (t        path))))
+               (t        path)))) ; A function.
+    (setq skip-subdirs (if (listp skip-subdirs)
+                           skip-subdirs
+                           helm-walk-ignore-directories))
     (cl-labels ((ls-rec (dir)
-                  (unless (and skip-subdirs
-                               (member (helm-basename dir)
-                                       (if (listp skip-subdirs)
-                                           skip-subdirs
-                                         helm-walk-ignore-directories)))
-                    (cl-loop with ls = (sort (file-name-all-completions "" dir)
-                                             'string-lessp)
-                          for f in ls
-                          ;; Use `directory-file-name' to remove the final slash.
-                          ;; Needed to avoid infloop on symlinks symlinking
-                          ;; a directory inside it [1].
-                          for file = (directory-file-name
-                                      (expand-file-name f dir))
-                          unless (member f '("./" "../"))
-                          ;; A directory.
-                          if (char-equal (aref f (1- (length f))) ?/)
-                          do (progn (when directories
-                                      (push (funcall fn file) result))
-                                    ;; Don't recurse in symlinks.
-                                    ;; `file-symlink-p' have to be called
-                                    ;; on the directory with its final
-                                    ;; slash removed [1].
-                                    (and (not (file-symlink-p file))
-                                         (ls-rec file)))
-                          else do
-                          (if match
-                              (and (if (functionp match)
-                                       (funcall match f)
-                                     (and (stringp match)
-                                          (string-match match f)))
-                                   (push (funcall fn file) result))
-                            (push (funcall fn file) result))))))
-      (ls-rec directory)
-      (nreverse result))))
+                  (unless (file-symlink-p dir)
+                    (cl-loop for f in (sort (file-name-all-completions "" dir)
+                                            'string-lessp)
+                             unless (member f '("./" "../"))
+                             ;; A directory.
+                             ;; Use `helm--dir-file-name' to remove the final slash.
+                             ;; Needed to avoid infloop on directory symlinks.
+                             if (and (helm--dir-name-p f)
+                                     (helm--dir-file-name f dir))
+                             nconc
+                             (unless (member f skip-subdirs)
+                               (if (and directories
+                                        (or (null match)
+                                            (string-match match f)))
+                                   (nconc (list (concat (funcall fn it) "/"))
+                                          (ls-rec it))
+                                   (ls-rec it)))
+                             ;; A regular file.
+                             else nconc
+                             (when (and (null (eq directories 'only))
+                                        (or (null match) (string-match match f)))
+                               (list (funcall fn (expand-file-name f dir))))))))
+      (ls-rec directory))))
 
 (defun helm-file-expand-wildcards (pattern &optional full)
   "Same as `file-expand-wildcards' but allow recursion.

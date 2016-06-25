@@ -4,7 +4,7 @@
 
 ;; Author: Artur Malabarba <emacs@endlessparentheses.com>
 ;; URL: https://github.com/Malabarba/aggressive-indent-mode
-;; Package-Version: 20160518.1614
+;; Package-Version: 20160608.1625
 ;; Version: 1.8.1
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: indent lisp maint tools
@@ -137,6 +137,7 @@ Please include this in your report!"
     netcmd-mode
     python-mode
     sass-mode
+    scala-mode
     slim-mode
     special-mode
     shell-mode

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "multi-term" "multi-term.el" (22010 5302 0
+;;;### (autoloads nil "multi-term" "multi-term.el" (22382 47623 0
 ;;;;;;  0))
 ;;; Generated autoloads from multi-term.el
 

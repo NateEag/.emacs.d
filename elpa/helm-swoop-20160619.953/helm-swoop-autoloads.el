@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "helm-swoop" "helm-swoop.el" (22331 51951 0
+;;;### (autoloads nil "helm-swoop" "helm-swoop.el" (22382 47595 0
 ;;;;;;  0))
 ;;; Generated autoloads from helm-swoop.el
 
@@ -48,6 +48,11 @@ Applies all org-mode buffers to helm-multi-swoop
 
 (autoload 'helm-multi-swoop-current-mode "helm-swoop" "\
 Applies all buffers of the same mode as the current buffer to helm-multi-swoop
+
+\(fn &optional $QUERY)" t nil)
+
+(autoload 'helm-multi-swoop-projectile "helm-swoop" "\
+Apply all opened buffers of the current project to helm-multi-swoop
 
 \(fn &optional $QUERY)" t nil)
 

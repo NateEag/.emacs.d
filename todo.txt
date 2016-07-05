@@ -1,4 +1,19 @@
+-I'd like to have a hotkey that brings up my most recent terminal. I'd also
+ like terminal windows to always appear in a bottom window of my current frame,
+ which is probably a need popwin would achieve admirably. I used to think I
+ wanted something more like a tabbed terminal emulator, and maybe I will want
+ some keybindings for flipping between groups of terminal buffers, but that's
+ secondary to just establishing "terminal buffers get the bottom window".
+ I have just installed term-projectile, which seems to handle the create and
+ swap features - I just need to teach popwin how to force terminals to always
+ display in the bottom half of a split panel properly.
+
+-Make the ansi-term tweaks suggested in this article:
+ http://echosa.github.io/blog/2012/06/06/improving-ansi-term/
+
 -Add keybindings for goto-chg commands and start using them.
+
+-Finish getting tagedit to work with web-mode.
 
 -Fix the issue where leaving a Python buffer reverts point to position 0. I'm
  guessing this is due to some piece of python-mode config I have, likely Jedi?
@@ -16,19 +31,6 @@
 -Get ac-isearch working when auto-completion is active. I think my
  global-set-key of C-s to regex searching currently overrides it.
 
--I'd like to have a hotkey that brings up my most recent terminal. I'd also
- like terminal windows to always appear in a bottom window of my current frame,
- which is probably a need popwin would achieve admirably. I used to think I
- wanted something more like a tabbed terminal emulator, and maybe I will want
- some keybindings for flipping between groups of terminal buffers, but that's
- secondary to just establishing "terminal buffers get the bottom window".
- I have just installed term-projectile, which seems to handle the create and
- swap features - I just need to teach popwin how to force terminals to always
- display in the bottom half of a split panel.
-
--Make the ansi-term tweaks suggested in this article:
- http://echosa.github.io/blog/2012/06/06/improving-ansi-term/
-
 -Look into integrating jscs.el with my JS editing flow. I've already installed
  the elisp library just so I have it around. I much prefer ESLint for style
  checking, but if jscs can *fix* the style failures for me, that would be quite
@@ -38,9 +40,6 @@
  personally find flow's comment-annotation syntax too intrusive for good
  readability).
 
--Find a way to load skewer in Chrome from an HTTPS page. Starting Chrome with
- the --allow-insecure-content flag might work.
-
 -Write a general-case ac-source for Tern.js. Right now I have to press M-Tab to
  trigger top-level completions, and I'd like to just press Tab. emacs-eclim
  might be a good place to rip off the basic idea from, since it depends on an
@@ -49,7 +48,8 @@
 
 -Add php-auto-yasnippet-style function params to tern.js.
 
--Finish getting tagedit to work with web-mode.
+-Find a way to load skewer in Chrome from an HTTPS page. Starting Chrome with
+ the --allow-insecure-content flag might work.
 
 -I'd like yasnippets for JavaScript. I don't much like the defaults.
 
@@ -66,6 +66,8 @@
  with my current setup using current css-mode:
      * RET binding inserts new comment start/end.
        php-mode gets this right.
+       ...aha - this is probably because of the binding I do in my
+       prog-mode-hook.
      * When auto-fill is triggered, it fails to catch the single space I use
        after an asterisk.
 
@@ -213,6 +215,9 @@
  auto-completion rig cross-breeding tag completion with php-auto-yasnippet.
  ...years have passed, and phpctags seems to be the cool kid on the block now:
  https://github.com/vim-php/phpctags
+
+-ac-php looks like it does a lot of what I'd need, as a newcomer to the party:
+ https://github.com/xcwen/ac-php
 
 -Look into emacs-eclim for intelligent PHP support. Might take some elisp
  hacking, but I think that's all it would take, apart from installing Eclipse

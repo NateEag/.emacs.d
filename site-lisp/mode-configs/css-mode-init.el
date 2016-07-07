@@ -1,8 +1,6 @@
 (defun css-mode-init ()
   "Set up css-mode the way I like it."
 
-  (my-prog-mode-init)
-
   (skewer-reload-stylesheets-mode)
   (skewer-reload-stylesheets-reload-on-save)
 

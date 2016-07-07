@@ -19,18 +19,6 @@
  guessing this is due to some piece of python-mode config I have, likely Jedi?
  It seems the most likely offender.
 
--Try using avy-mode instead of ace-jump-mode. It lets you see both chars for
- the target at once, which should make jumping significantly smoother.
-
--Try smooth-scrolling package and see if it makes my life any better:
- https://github.com/aspiers/smooth-scrolling
-
--Simpler alternative to file watchers, perhaps:
- https://github.com/wasamasa/firestarter
-
--Get ac-isearch working when auto-completion is active. I think my
- global-set-key of C-s to regex searching currently overrides it.
-
 -Look into integrating jscs.el with my JS editing flow. I've already installed
  the elisp library just so I have it around. I much prefer ESLint for style
  checking, but if jscs can *fix* the style failures for me, that would be quite
@@ -64,12 +52,34 @@
  https://lists.gnu.org/archive/html/emacs-diffs/2015-04/msg00293.html
  Further research shows that css-fill-paragraph works, but there are two issues
  with my current setup using current css-mode:
-     * RET binding inserts new comment start/end.
-       php-mode gets this right.
-       ...aha - this is probably because of the binding I do in my
-       prog-mode-hook.
-     * When auto-fill is triggered, it fails to catch the single space I use
-       after an asterisk.
+     * RET binding does not insert the appropriate comment prefix.
+
+       php-mode gets this right. So does c-mode. Ah, right - because php-mode is
+       a big hack on top of c-mode.
+
+       It looks like c-mode has its own function implementing the
+       comment-and-newline behavior, while I'm using comment-indent-new-line.
+       It works fine in most modes, but not css-mode.
+
+       Supposedly setting 'comment-multi-line' to non-nil should solve this, but
+       it doesn't.
+
+       ...inspection via edebug suggests comment-indent-new-line is expecting
+       fill-prefix to be set by adaptive-fill, but it's nil. How's that
+       supposed to work?
+
+       fill-prefix is used on the assumption that it's a normal fill-prefix,
+       then a few lines later it's used as if it's chosen by adaptive-fill, but
+       with no logic to actually invoke adaptive-fill.
+
+       If I run fill-context-prefix manually on a decent-sized hunk of CSS
+       comment, it returns " * ", as you'd hope.
+
+       So how can I make that apply in this context?
+
+     * fill-paragraph does not work correctly on a one-line paragraph that is
+       wider than fill-column. It works fine in other cases, and auto-fill
+       itself *does* work fine in that case.
 
 -ac-source-css-property and ac-source-css-property-names are missing a bunch of
  bleeding-edge CSS 3 stuff. Get that in there. Ideally, generated from the
@@ -101,8 +111,27 @@
  snippets for all the major bits of syntax would be handy, and someone out
  there must have written such things.
 
+-Make aggressive-fill-paragraph-mode run after any character is entered, and
+ also after delete actions. evil-delete uses delete-region, and the Backspace
+ key seems to generally be bound to some variation or wrapper around
+ backward-delete-char.
+
+-Make aggressive-fill-paragraph-mode not eat spaces when active in this file.
+
 -Look into midi-kbd.el and lily-midi.el as an aid in creating lilypond files
  with MIDI instruments.
+
+-Try using avy-mode instead of ace-jump-mode. It lets you see both chars for
+ the target at once, which should make jumping significantly smoother.
+
+-Try smooth-scrolling package and see if it makes my life any better:
+ https://github.com/aspiers/smooth-scrolling
+
+-Simpler alternative to file watchers, perhaps:
+ https://github.com/wasamasa/firestarter
+
+-Get ac-isearch working when auto-completion is active. I think my
+ global-set-key of C-s to regex searching currently overrides it.
 
 -Extract jedi-force to be an ELPA package. I was thinking of adding more
  features, but it might be fine as it is.

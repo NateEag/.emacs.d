@@ -8,8 +8,12 @@
 
 ;;; Code:
 
-;; Debug if there's an error during setup, since we'll have to fix it. We turn
-;; this back off at the end of the file.
+;; Temporarily make the GC threshold large, to speed up startup.
+(setq ne/old-gc-cons-threshold gc-cons-threshold)
+(setq gc-cons-threshold 10000000)
+
+;; Debug if there's an error during setup. We turn this back off at the end of
+;; the file.
 (setq debug-on-error t)
 
 ;; Set up my load path and a few other core things.
@@ -401,6 +405,9 @@ new file for the first time."
 
 ;; Now that we're done with setup, stop debugging on error.
 (setq debug-on-error nil)
+
+;; Restore the previous gc-cons-threshold, for day-to-day operations.
+(setq gc-cons-threshold ne/old-gc-cons-threshold)
 
 (provide 'init)
 ;;; init.el ends here

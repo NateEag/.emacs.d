@@ -12,6 +12,22 @@
 
 (require 'use-package)
 
+(use-package s
+  :commands s-replace s-trim)
+
+(use-package my-functions
+  :commands hit-servlet comment-or-uncomment-region-or-line wrap-args
+            move-current-buffer insert-date insert-time unfill-paragraph
+            add-auto-mode)
+
+(use-package my-keybindings)
+
+(use-package config-windows
+  :commands set-windows-env)
+
+(use-package cygwin-mount
+  :commands cygwin-mount-activate)
+
 ;; Make it easy to find the cursor after scrolling.
 (use-package beacon
   :init (beacon-mode 1)
@@ -56,9 +72,7 @@
     (helm-mode 1)
 
     (global-set-key (kbd "M-x") 'helm-M-x)
-    (global-set-key (kbd "C-x C-f") 'helm-find-files)
-
-    (require 'helm-git-files)))
+    (global-set-key (kbd "C-x C-f") 'helm-find-files)))
 
 (use-package flycheck
   :diminish
@@ -110,9 +124,6 @@
   :commands space-trail-activate
   :init (space-trail-activate))
 
-(use-package s
-  :commands s-replace s-trim)
-
 (use-package magit
   :defer t)
 
@@ -137,13 +148,13 @@
 (use-package conf-mode
   :mode "/dotfiles/")
 
-(use-package jedi-force
-  :commands jedi-force-set-up-hooks)
-
 (use-package sh-script
   :config (add-hook 'sh-mode-hook '(lambda ()
                                      (setq-local ne-yas-auto-insert-snippet-name
                                            "shell-script"))))
+
+(use-package jedi-force
+  :commands jedi-force-set-up-hooks)
 
 (use-package python-mode
   :init (jedi-force-set-up-hooks)
@@ -181,6 +192,7 @@
 
 (use-package yaml-mode
   :mode "\\.yaml\\'"
+  :defer t
   :config
   (add-hook 'yaml-mode-hook
             'my-prog-mode-init))
@@ -194,7 +206,8 @@
 
 (use-package nxml-mode
   :mode ("web.config$" . xml-mode)
-  :init
+  :defer t
+  :config
   (progn
     (setq nxml-child-indent 4)
     (setq nxml-slash-auto-complete-flag t)
@@ -371,18 +384,5 @@
                     base-menu)))
         (cadr (assoc (popup-menu* menu :scroll-bar t) base-menu))))
     (fset 'flyspell-emacs-popup 'flyspell-emacs-popup-textual)))
-
-(use-package my-functions
-  :commands hit-servlet comment-or-uncomment-region-or-line wrap-args
-            move-current-buffer insert-date insert-time unfill-paragraph
-            add-auto-mode)
-
-(use-package my-keybindings)
-
-(use-package config-windows
-  :commands set-windows-env)
-
-(use-package cygwin-mount
-  :commands cygwin-mount-activate)
 
 ;;; config-packages.el ends here

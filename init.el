@@ -19,13 +19,13 @@
 ;; Set up my load path and a few other core things.
 (load-file (concat user-emacs-directory "site-lisp/bootstrap.el"))
 
+(setq custom-file (make-emacs-dir-path "custom.el"))
+(load custom-file)
+
 ;; Set up package-specific autoloads and settings.
 (load-file (make-emacs-dir-path "site-lisp/config-packages.el"))
 
 ;;; General preferences.
-
-(setq custom-file (make-emacs-dir-path "custom.el"))
-(load custom-file)
 
 ;; Let's try out the solarized theme. In theory, it should be easier on my
 ;; eyes...

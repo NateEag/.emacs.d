@@ -17,6 +17,8 @@
   (ac-emacs-lisp-mode-setup)
   (setq-local ne-yas-auto-insert-snippet-name "package")
 
+  (push '(?\` . ("`" . "'")) evil-surround-pairs-alist)
+
   (eldoc-mode t)
   (diminish 'eldoc-mode))
 ;;; emacs-lisp-init.el ends here

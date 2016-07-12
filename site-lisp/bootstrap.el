@@ -53,7 +53,6 @@ are for modes that didn't come with autoloading."
 
   (autoload 'auto-complete-init "auto-complete-init.el")
   (autoload 'web-mode-init "web-mode-init.el")
-  (autoload 'set-windows-env "set-windows-env.el")
   (autoload 'comment-auto-fill "comment-auto-fill.el")
   (autoload 'emacs-lisp-init "emacs-lisp-init.el")
   (autoload 'js-mode-init "js-mode-init.el")

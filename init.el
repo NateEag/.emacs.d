@@ -306,7 +306,7 @@ new file for the first time."
   (ac-ispell-ac-setup)
 
   (auto-fill-mode t)
-  (aggressive-fill-mode t)
+  (aggressive-fill-paragraph-mode t)
 
   (smartparens-mode)
 

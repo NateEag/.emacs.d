@@ -199,6 +199,8 @@ new file for the first time."
 
   ;; Auto-fill comments, but not code.
   (comment-auto-fill)
+  ;; And do it aggressively.
+  (aggressive-fill-paragraph-mode)
 
   ;; Smartparens beat auto-pair after a long, hard struggle.
   (smartparens-mode t)

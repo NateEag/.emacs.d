@@ -134,6 +134,10 @@
 (use-package simple
   :diminish auto-fill-function)
 
+(use-package aggressive-fill-paragraph
+  :defer t
+  :config (afp-advise-filled-functions))
+
 (use-package eclimd
   :defer t
   :diminish

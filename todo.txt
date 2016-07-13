@@ -111,12 +111,9 @@
  snippets for all the major bits of syntax would be handy, and someone out
  there must have written such things.
 
--Make aggressive-fill-paragraph-mode run after any character is entered, and
- also after delete actions. evil-delete uses delete-region, and the Backspace
- key seems to generally be bound to some variation or wrapper around
- backward-delete-char.
-
--Make aggressive-fill-paragraph-mode not eat spaces when active in this file.
+-Make aggressive-fill-paragraph-mode allow inserting newlines. At least in
+ emacs-lisp-mode, I can't make a new paragraph in a comment. This goes wrong in
+ the comment-indent-new-line function.
 
 -Look into midi-kbd.el and lily-midi.el as an aid in creating lilypond files
  with MIDI instruments.

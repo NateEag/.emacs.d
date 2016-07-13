@@ -69,6 +69,15 @@ This is in contrast to the default behavior, which is to fill only after
 characters in `afp-fill-keys' are typed."
   :group 'aggressive-fill-paragraph)
 
+(defcustom afp-fill-after-functions
+  nil
+  "A list of functions that should fill the paragraph after running.
+
+Note that `delete-region' will have no effect if entered here - see
+`afp-advise-filled-functions' for an explanation of why."
+  :group 'aggressive-fill-paragraph
+  :type '(repeat function))
+
 (defcustom afp-suppress-fill-pfunction-list
   (list
    #'afp-markdown-inside-code-block?
@@ -149,6 +158,16 @@ taking care with special cases for documentation comments."
    ;; Otherwise just use the default one
    (t #'fill-paragraph)))
 
+(defun afp-fill-paragraph (&rest args)
+  "If this mode is active, fill a paragraph with the appropriate fill function.
+
+Primarily intended for use as advice to commonly-used functions like
+`kill-region' and `yank', to keep things properly filled all the time.
+
+Note, however, that kill-region cannot be usefully advised."
+
+  (when aggressive-fill-paragraph-mode
+    (funcall (afp-choose-fill-function))))
 
 (defun aggressive-fill-paragraph-post-self-insert-function ()
   "Fill paragraph when space is inserted and fill is not disabled
@@ -166,7 +185,7 @@ for any reason."
     (when (memq last-command-event '(?\s ?\t))
       (backward-delete-char 1))
 
-    (funcall (afp-choose-fill-function))
+    (afp-fill-paragraph)
 
     (when (memq last-command-event '(?\s ?\t))
       (insert last-command-event))))
@@ -185,6 +204,41 @@ for any reason."
                 #'aggressive-fill-paragraph-post-self-insert-function nil t)
     (remove-hook 'post-self-insert-hook
                  #'aggressive-fill-paragraph-post-self-insert-function t)))
+
+(defun afp-advise-filled-functions ()
+  "Advise each function in `afp-fill-after-functions' to fill after running.
+
+This makes it possible to work like you're in a word processor, by
+having deletes and pastes trigger filling.
+
+Note, however, that advising `delete-region' does not work,
+because advice cannot be applied to native functions with their
+own bytecode operation, at least not in the face of byte-compiled
+elisp:
+
+http://nullprogram.com/blog/2013/01/22
+
+The only workaround I can think of for this is re-implementing `delete-region' in
+Emacs Lisp, as it would then be an advisable function even in byte-compiled code.
+
+However, that sounds like crazy talk."
+
+  (dolist (target-function afp-fill-after-functions)
+    (advice-add target-function :after #'afp-fill-paragraph)))
+
+(defun afp-set-default-fill-after-functions ()
+  "Set `afp-fill-after-functions' to the standard values for
+  word-processor-style filling.
+
+TODO Actually install the hooks after this function is called?
+It's mainly intended as an easy setup aid, so that might be the
+smart thing to do."
+
+  (setq afp-fill-after-functions '(backward-delete-char
+                                   backward-delete-char-untabify
+                                   kill-region
+                                   yank
+                                   yank-pop)))
 
 ;;;###autoload
 (defun afp-setup-recommended-hooks ()

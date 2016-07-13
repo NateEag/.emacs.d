@@ -60,6 +60,15 @@ by *, + or -."
        (or (eql (org-element-type (org-element-at-point)) 'table)
            (eql (org-element-type (org-element-at-point)) 'table-row))))
 
+(defcustom afp-fill-on-self-insert
+  nil
+  "If non-nil, `afp-fill-paragraph' fills after a character is inserted by
+typing it directly.
+
+This is in contrast to the default behavior, which is to fill only after
+characters in `afp-fill-keys' are typed."
+  :group 'aggressive-fill-paragraph)
+
 (defcustom afp-suppress-fill-pfunction-list
   (list
    #'afp-markdown-inside-code-block?
@@ -144,14 +153,23 @@ taking care with special cases for documentation comments."
 (defun aggressive-fill-paragraph-post-self-insert-function ()
   "Fill paragraph when space is inserted and fill is not disabled
 for any reason."
-  (when (and (-contains? afp-fill-keys last-command-event)
+  (when (and (or afp-fill-on-self-insert
+                 (-contains? afp-fill-keys last-command-event))
              (not (afp-suppress-fill?)))
 
-    ;; Delete the charcter before filling and reinsert after. This is
-    ;; needed because we don't know if filling will remove whitespace.
-    (backward-delete-char 1)
+    ;; If the new character is whitespace, delete it before filling and
+    ;; reinserting the characters. This works around cases where filling
+    ;; removes whitespace.
+    ;;
+    ;; TODO Find more robust way to check "is it whitespace". There must be one
+    ;; built into Emacs.
+    (when (memq last-command-event '(?\s ?\t))
+      (backward-delete-char 1))
+
     (funcall (afp-choose-fill-function))
-    (insert last-command-event)))
+
+    (when (memq last-command-event '(?\s ?\t))
+      (insert last-command-event))))
 
 
 

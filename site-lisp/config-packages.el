@@ -62,6 +62,9 @@
               uniquify-after-kill-buffer-p t
               uniquify-ignore-buffers-re "^\\*"))
 
+(use-package projectile
+  :init (projectile-mode))
+
 (use-package helm-projectile
   :commands helm-projectile-find-file)
 

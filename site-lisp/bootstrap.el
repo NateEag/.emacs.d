@@ -16,8 +16,6 @@
                  load-path))
     (setq load-path (append (list path) load-path))))
 
-(add-subdirs-to-front-of-load-path (make-emacs-dir-path "site-lisp"))
-
 
 ;; Set up the package library per my desires.
 (require 'package)
@@ -26,6 +24,8 @@
 (add-to-list 'package-archives '("melpa" .
                                  "http://melpa.milkbox.net/packages/"))
 (package-initialize)
+
+(add-subdirs-to-front-of-load-path (make-emacs-dir-path "site-lisp"))
 
 
 ;; Set up auto-compile, which should prevent me from ever again loading an

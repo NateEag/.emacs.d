@@ -111,9 +111,14 @@
  snippets for all the major bits of syntax would be handy, and someone out
  there must have written such things.
 
--Make aggressive-fill-paragraph-mode allow inserting newlines. At least in
- emacs-lisp-mode, I can't make a new paragraph in a comment. This goes wrong in
- the comment-indent-new-line function.
+-Figure out how to run afp-fill-paragraph after kill-region *only* if the user
+ called it interactively. It's often used in code which can lead to weird
+ results inside comments.
+
+-Make afp-fill-paragraph play better with <RET> <RET> in emacs lisp comments.
+ The second <RET> loses the leading space, so you then have to type a space
+ with something other than self-insert-function to actually make your new
+ paragraph.
 
 -Look into midi-kbd.el and lily-midi.el as an aid in creating lilypond files
  with MIDI instruments.

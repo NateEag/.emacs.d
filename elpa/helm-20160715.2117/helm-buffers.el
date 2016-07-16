@@ -23,7 +23,6 @@
 (require 'helm-utils)
 (require 'helm-elscreen)
 (require 'helm-grep)
-(require 'helm-plugin)
 (require 'helm-regexp)
 (require 'helm-help)
 
@@ -224,6 +223,7 @@ Only buffer names are fuzzy matched when this is enabled,
    (keymap :initform helm-buffer-map)
    (migemo :initform 'nomultimatch)
    (volatile :initform t)
+   (resume :initform (lambda () (setq helm-buffers-in-project-p nil)))
    (help-message :initform 'helm-buffer-help-message)
    (persistent-help
     :initform
@@ -423,7 +423,7 @@ Should be called after others transformers i.e (boring buffers)."
     (let ((preselect (helm-buffer--get-preselection
                       (helm-get-selection))))
       (setq helm-buffer-details-flag (not helm-buffer-details-flag))
-      (helm-force-update preselect))))
+      (helm-update preselect))))
 (put 'helm-toggle-buffers-details 'helm-only t)
 
 (defun helm-buffers-sort-transformer (candidates _source)
@@ -767,7 +767,8 @@ If REGEXP-FLAG is given use `query-replace-regexp'."
                                   (helm-buffers--quote-truncated-buffer b)))
                          (when (y-or-n-p (format "kill buffer (%s)? " b))
                            (helm-buffers-persistent-kill-1 b))
-                         (message nil)))
+                         (message nil)
+                         (helm--remove-marked-and-update-mode-line b)))
       (with-helm-buffer
         (setq helm-marked-candidates nil
               helm-visible-mark-overlays nil))
@@ -836,12 +837,12 @@ Can be used by any source that list buffers."
                         (cons 'helm-skip-boring-buffers
                               (remove 'helm-shadow-boring-buffers
                                       filter-attrs))
-                        helm-source-buffers-list t)
+                        helm-source-buffers-list)
         (helm-attrset 'filtered-candidate-transformer
                       (cons 'helm-shadow-boring-buffers
                             (remove 'helm-skip-boring-buffers
                                     filter-attrs))
-                      helm-source-buffers-list t))
+                      helm-source-buffers-list))
       (helm-force-update))))
 (put 'helm-buffers-toggle-show-hidden-buffers 'helm-only t)
 

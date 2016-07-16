@@ -164,7 +164,8 @@ taking care with special cases for documentation comments."
 Primarily intended for use as advice to commonly-used functions like
 `kill-region' and `yank', to keep things properly filled all the time.
 
-Note, however, that kill-region cannot be usefully advised."
+Note, however, that `delete-region' cannot be consistently advised.
+See `afp-advise-filled-functions' for a discussion of why."
 
   (when aggressive-fill-paragraph-mode
     (funcall (afp-choose-fill-function))))

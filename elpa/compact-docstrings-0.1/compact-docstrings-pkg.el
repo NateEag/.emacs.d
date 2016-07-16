@@ -1,0 +1,1 @@
+(define-package "compact-docstrings" "0.1" "Shrink blank lines in docstrings and doc comments" 'nil :url "https://github.com/cpitclaudel/compact-docstrings" :keywords '("convenience" "faces" "lisp" "maint" "c"))

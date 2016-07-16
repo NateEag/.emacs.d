@@ -6934,6 +6934,7 @@ of a simple name.  Called before EXPR has a parent node."
              "member"
              "memberOf"
              "method"
+             "module"
              "name"
              "namespace"
              "since"
@@ -9923,7 +9924,7 @@ FIXME: The latter option is unused?"
     (while continue
       (setq tt (js2-get-token))
       (if (memq tt js2-parse-mul-ops)
-          (setq pn (js2-make-binary tt pn 'js2-parse-unary-expr))
+          (setq pn (js2-make-binary tt pn 'js2-parse-expon-expr))
         (js2-unget-token)
         (setq continue nil)))
     pn))
@@ -11619,7 +11620,7 @@ variables (`sgml-basic-offset' et al) locally, like so:
 
   (defun set-jsx-indentation ()
     (setq-local sgml-basic-offset js2-basic-offset))
-  (add-hook 'js2-jsx-mode-hook #'set-jsx-indentation)"
+  (add-hook \\='js2-jsx-mode-hook #\\='set-jsx-indentation)"
   (set (make-local-variable 'indent-line-function) #'js2-jsx-indent-line))
 
 (defun js2-mode-exit ()

@@ -4,7 +4,7 @@
 
 ;; Author: Syohei YOSHIDA <syohex@gmail.com>
 ;; URL: https://github.com/syohex/emacs-helm-ag
-;; Package-Version: 20160622.2235
+;; Package-Version: 20160702.324
 ;; Version: 0.56
 ;; Package-Requires: ((emacs "24.3") (helm "1.7.7"))
 
@@ -430,7 +430,6 @@ Default behaviour shows finish and result in mode-line."
     :fuzzy-match helm-ag-fuzzy-match
     :action helm-ag--actions
     :candidate-number-limit 9999
-    :keymap helm-ag-map
     :follow (and helm-follow-mode-persistent 1)))
 
 ;;;###autoload
@@ -667,7 +666,6 @@ Default behaviour shows finish and result in mode-line."
     (define-key map (kbd "g") 'helm-ag--update-save-results)
     map))
 
-;;;###autoload
 (define-derived-mode helm-ag-mode special-mode "helm-ag"
   "Major mode to provide actions in helm grep saved buffer.
 
@@ -768,7 +766,7 @@ Continue searching the parent directory? "))
                   (helm-ag--default-directory parent))
              (setq helm-ag--last-default-directory default-directory)
              (helm-attrset 'name (helm-ag--helm-header default-directory) helm-ag-source)
-             (helm :sources '(helm-ag-source) :buffer "*helm-ag*")))))
+             (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map)))))
     (message nil)))
 
 ;;;###autoload
@@ -782,7 +780,7 @@ Continue searching the parent directory? "))
     (helm-attrset 'search-this-file (file-relative-name (buffer-file-name))
                   helm-ag-source)
     (helm-attrset 'name (format "Search at %s" filename) helm-ag-source)
-    (helm :sources '(helm-ag-source) :buffer "*helm-ag*")))
+    (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map)))
 
 ;;;###autoload
 (defun helm-ag (&optional basedir)
@@ -798,7 +796,7 @@ Continue searching the parent directory? "))
       (helm-ag--query)
       (helm-attrset 'search-this-file nil helm-ag-source)
       (helm-attrset 'name (helm-ag--helm-header helm-ag--default-directory) helm-ag-source)
-      (helm :sources '(helm-ag-source) :buffer "*helm-ag*"))))
+      (helm :sources '(helm-ag-source) :buffer "*helm-ag*" :keymap helm-ag-map))))
 
 (defun helm-ag--split-string (str)
   (with-temp-buffer
@@ -997,8 +995,7 @@ Continue searching the parent directory? "))
     :nohighlight t
     :requires-pattern 3
     :candidate-number-limit 9999
-    :follow (and helm-follow-mode-persistent 1)
-    :keymap helm-do-ag-map))
+    :follow (and helm-follow-mode-persistent 1)))
 
 (defun helm-ag--do-ag-up-one-level ()
   (interactive)
@@ -1015,7 +1012,7 @@ Continue searching the parent directory? "))
              (helm-attrset 'name (helm-ag--helm-header parent)
                            helm-source-do-ag)
              (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
-                   :input initial-input)))))
+                   :keymap helm-do-ag-map :input initial-input)))))
     (message nil)))
 
 (defun helm-ag--set-do-ag-option ()
@@ -1047,7 +1044,7 @@ Continue searching the parent directory? "))
                         helm-ag--default-directory))))
     (helm-attrset 'name (helm-ag--helm-header search-dir)
                   helm-source-do-ag)
-    (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*"
+    (helm :sources '(helm-source-do-ag) :buffer "*helm-ag*" :keymap helm-do-ag-map
           :input (or (helm-ag--marked-input)
                      (helm-ag--insert-thing-at-point helm-ag-insert-at-point)))))
 

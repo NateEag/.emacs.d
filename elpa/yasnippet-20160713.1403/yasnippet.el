@@ -207,7 +207,7 @@ created with `yas-new-snippet'. "
 # name: $1
 # key: ${2:${1:$(yas--key-from-desc yas-text)}}
 # --
-$0`yas-selected-text`"
+$0`(yas-escape-text yas-selected-text)`"
   "Default snippet to use when creating a new snippet.
 If nil, don't use any snippet."
   :type 'string
@@ -1083,7 +1083,7 @@ Has the following fields:
         (maphash #'(lambda (k v)
                      (let ((template (gethash name v)))
                        (when (and template
-                                  (eq uuid (yas--template-uuid template)))
+                                  (equal uuid (yas--template-uuid template)))
                          (remhash name v)
                          (when (zerop (hash-table-count v))
                            (push k empty-keys)))))
@@ -1914,18 +1914,11 @@ prefix argument."
         (funcall fun))
       (remhash mode yas--scheduled-jit-loads))))
 
-;; (when (<= emacs-major-version 22)
-;;   (add-hook 'after-change-major-mode-hook 'yas--load-pending-jits))
+(defun yas-escape-text (text)
+  "Escape TEXT for snippet."
+  (when text
+    (replace-regexp-in-string "[\\$]" "\\\\\\&" text)))
 
-(defun yas--quote-string (string)
-  "Escape and quote STRING.
-foo\"bar\\! -> \"foo\\\"bar\\\\!\""
-  (concat "\""
-          (replace-regexp-in-string "[\\\"]"
-                                    "\\\\\\&"
-                                    string
-                                    t)
-          "\""))
 
 ;;; Snippet compilation function
 
@@ -3086,8 +3079,7 @@ Otherwise delegate to `yas-next-field'."
                         (and (not (eq field active))
                              (yas--field-probably-deleted-p snippet field)))
                       (yas--snippet-fields snippet))))
-    (if (>= n 0) (nth n (memq active live-fields))
-      (car (last (memq active (reverse live-fields)) (- n))))))
+    (nth (abs n) (memq active (if (>= n 0) live-fields (reverse live-fields))))))
 
 (defun yas-next-field (&optional arg)
   "Navigate to the ARGth next field.
@@ -3423,14 +3415,15 @@ field start.  This hook does nothing if an undo is in progress."
     (let* ((inhibit-modification-hooks t)
            (field (overlay-get overlay 'yas--field))
            (snippet (overlay-get yas--active-field-overlay 'yas--snippet)))
-      (when (yas--skip-and-clear-field-p field beg end length)
-        ;; We delete text starting from the END of insertion.
-        (yas--skip-and-clear field end))
-      (setf (yas--field-modified-p field) t)
-      (yas--advance-end-maybe field (overlay-end overlay))
-      (save-excursion
-        (yas--field-update-display field))
-      (yas--update-mirrors snippet))))
+      (save-match-data
+        (when (yas--skip-and-clear-field-p field beg end length)
+          ;; We delete text starting from the END of insertion.
+          (yas--skip-and-clear field end))
+        (setf (yas--field-modified-p field) t)
+        (yas--advance-end-maybe field (overlay-end overlay))
+        (save-excursion
+          (yas--field-update-display field))
+        (yas--update-mirrors snippet)))))
 
 ;;; Apropos protection overlays:
 ;;
@@ -4016,8 +4009,11 @@ With optional string TEXT do it in string instead of the buffer."
 (defun yas--save-backquotes ()
   "Save all the \"`(lisp-expression)`\"-style expressions
 with their evaluated value into `yas--backquote-markers-and-strings'."
-  (let* ((yas--change-detected nil)
-         (detect-change (lambda (_beg _end) (setq yas--change-detected t))))
+  (let* ((yas--snippet-buffer (current-buffer))
+         (yas--change-detected nil)
+         (detect-change (lambda (_beg _end)
+                          (when (eq (current-buffer) yas--snippet-buffer)
+                            (setq yas--change-detected t)))))
     (while (re-search-forward yas--backquote-lisp-expression-regexp nil t)
       (let ((current-string (match-string-no-properties 1)) transformed)
         (save-restriction (widen)

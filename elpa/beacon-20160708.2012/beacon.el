@@ -4,7 +4,7 @@
 
 ;; Author: Artur Malabarba <emacs@endlessparentheses.com>
 ;; URL: https://github.com/Malabarba/beacon
-;; Package-Version: 20160526.1750
+;; Package-Version: 20160708.2012
 ;; Keywords: convenience
 ;; Version: 1.3.1
 ;; Package-Requires: ((seq "2.14"))
@@ -281,9 +281,10 @@ Only returns `beacon-size' elements."
                        (color-distance "white" bg)))
                (make-list 3 (* beacon-color 65535)))
               (t (make-list 3 (* (- 1 beacon-color) 65535))))))
-    (apply #'seq-mapn (lambda (r g b) (format "#%04x%04x%04x" r g b))
-           (mapcar (lambda (n) (butlast (beacon--int-range (elt fg n) (elt bg n))))
-                   [0 1 2]))))
+    (when bg
+      (apply #'seq-mapn (lambda (r g b) (format "#%04x%04x%04x" r g b))
+             (mapcar (lambda (n) (butlast (beacon--int-range (elt fg n) (elt bg n))))
+                     [0 1 2])))))
 
 
 ;;; Blinking

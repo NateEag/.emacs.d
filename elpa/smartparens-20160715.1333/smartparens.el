@@ -556,6 +556,9 @@ Symbol is defined as a chunk of text recognized by
     (:cant-slurp
      "We can't slurp without breaking strictly balanced expression. Ignored."
      "Can't slurp without breaking balance.")
+    (:cant-slurp-context
+     "We can't slurp into different context (comment -> code). Ignored."
+     "Can't slurp into different context.")
     (:blank-sexp
      "Point is in blank sexp, nothing to barf."
      "Point is in blank sexp.")
@@ -2358,7 +2361,9 @@ with given type."
 tracking the position of the point.  START and END are the
 boundaries of the overlay, ID is the id of the pair."
   (let ((overlay (make-overlay start end)))
-    (overlay-put overlay 'priority 100)
+    ;; set priority to 99 so that yasnippet with 100 overloads the
+    ;; keymap #625
+    (overlay-put overlay 'priority 99)
     (overlay-put overlay 'keymap sp-pair-overlay-keymap)
     (overlay-put overlay 'pair-id id)
     (overlay-put overlay 'type 'pair)
@@ -2371,7 +2376,7 @@ boundaries of the overlay, ID is the id of the pair."
   (interactive)
   (unwind-protect
       (-let (((obeg . oend) sp-wrap-overlays))
-        (when (and (not (called-interactively-p))
+        (when (and (not (called-interactively-p 'any))
                    (sp--delete-selection-p))
           (kill-region (overlay-end obeg) (overlay-start oend)))
         (delete-region (overlay-start oend) (overlay-end oend))
@@ -2781,7 +2786,7 @@ see `sp-pair' for description."
           (sp-wrap))
          (t
           ;; TODO: this does not pick correct pair!! it uses insert and not wrapping code
-          (sp--setaction action (-when-let ((_ . open-pairs) (sp--all-pairs-to-insert))
+          (sp--setaction action (-when-let ((_ . open-pairs) (sp--all-pairs-to-insert nil 'wrap))
                                   (catch 'done
                                     (-each open-pairs
                                       (-lambda ((&keys :open open :close close))
@@ -3124,7 +3129,10 @@ include separate pair node."
   (and (equal (char-after (1+ (point))) delimeter)
        (equal (char-after (- (point) 2)) delimeter)))
 
-(defun sp--all-pairs-to-insert (&optional looking-fn)
+;; TODO: remove ACTION argument and make the selection process more
+;; unified (see also sp--pair-to-wrap which depends on buffer state
+;; among other things)
+(defun sp--all-pairs-to-insert (&optional looking-fn action)
   "Return all pairs that can be inserted at point.
 
 Return nil if such pair does not exist.
@@ -3133,11 +3141,17 @@ Pairs inserted using a trigger have higher priority over pairs
 without a trigger and only one or the other list is returned.
 
 In other words, if any pair can be inserted using a trigger, only
-pairs insertable by trigger are returned."
+pairs insertable by trigger are returned.
+
+ACTION is an implementation detail.  Usually it has the value
+'insert when we determine pairs to insert.  On repeated wrapping
+however we pass the value 'wrap.  This will be refactored away in
+the upcoming version."
   (setq looking-fn (or looking-fn 'sp--looking-back-p))
+  (setq action (or action 'insert))
   (let ((working-pairs
          ;; TODO: abstract this into a new "sp--get-..." hierarchy
-         (--filter (sp--do-action-p (plist-get it :open) 'insert) sp-local-pairs)))
+         (--filter (sp--do-action-p (plist-get it :open) action) sp-local-pairs)))
     (-if-let (trigs (--filter (and (plist-get it :trigger)
                                    (funcall looking-fn (sp--strict-regexp-quote (plist-get it :trigger))))
                               working-pairs))
@@ -6114,6 +6128,7 @@ Examples:
       (let ((n (abs (prefix-numeric-value arg)))
             (enc (sp-get-enclosing-sexp))
             (ins-space 0)
+            (in-comment (sp-point-in-comment))
             next-thing ok)
         (when enc
           (save-excursion
@@ -6138,30 +6153,40 @@ Examples:
                   (goto-char (sp-get next-thing :end-suf))
                   (setq ok next-thing)
                   (setq next-thing (sp-get-thing nil)))
-                (if ok
+                ;; do not allow slurping into a different context from
+                ;; inside a comment
+                (if (and in-comment
+                         (save-excursion
+                           (sp-get next-thing
+                             (goto-char :beg)
+                             (not (sp-point-in-comment)))))
                     (progn
-                      (if (and (equal (sp-get next-thing :cl) "\"")
-                               (equal (sp-get ok :cl) "\""))
-                          (progn
-                            (sp--join-sexp ok next-thing)
-                            (goto-char (- (sp-get next-thing :end) 2))
-                            (plist-put enc :end (- (sp-get next-thing :end) 2)))
-                        (delete-char (sp-get ok (- (+ :cl-l :suffix-l))))
-                        (when (and (sp-get ok (/= :len-in 0))
-                                   (= (sp-get ok :end-suf) (sp-get next-thing :beg-prf)))
-                          (insert " ")
-                          (setq ins-space -1))
-                        ;; this calculation corrects the absence of already deleted cls
-                        (goto-char (- (sp-get next-thing :end-suf) (sp-get ok (+ :cl-l :suffix-l)) ins-space))
-                        (sp--run-hook-with-args (sp-get enc :op) :pre-handlers 'slurp-forward)
-                        (sp-get ok (insert :cl :suffix))
-                        (sp--indent-region (sp-get ok :beg-prf) (point))
-                        ;; HACK: update the "enc" data structure if ok==enc
-                        (when (= (sp-get enc :beg) (sp-get ok :beg)) (plist-put enc :end (point)))
-                        (sp--run-hook-with-args (sp-get enc :op) :post-handlers 'slurp-forward))
-                      (setq n (1- n)))
-                  (sp-message :cant-slurp)
-                  (setq n -1)))))))
+                      (sp-message :cant-slurp-context)
+                      (setq n -1))
+                  (if ok
+                      (progn
+                        (if (and (equal (sp-get next-thing :cl) "\"")
+                                 (equal (sp-get ok :cl) "\""))
+                            (progn
+                              (sp--join-sexp ok next-thing)
+                              (goto-char (- (sp-get next-thing :end) 2))
+                              (plist-put enc :end (- (sp-get next-thing :end) 2)))
+                          (delete-char (sp-get ok (- (+ :cl-l :suffix-l))))
+                          (when (and (sp-get ok (/= :len-in 0))
+                                     (= (sp-get ok :end-suf) (sp-get next-thing :beg-prf)))
+                            (insert " ")
+                            (setq ins-space -1))
+                          ;; this calculation corrects the absence of already deleted cls
+                          (goto-char (- (sp-get next-thing :end-suf) (sp-get ok (+ :cl-l :suffix-l)) ins-space))
+                          (sp--run-hook-with-args (sp-get enc :op) :pre-handlers 'slurp-forward)
+                          (sp-get ok (insert :cl :suffix))
+                          (sp--indent-region (sp-get ok :beg-prf) (point))
+                          ;; HACK: update the "enc" data structure if ok==enc
+                          (when (= (sp-get enc :beg) (sp-get ok :beg)) (plist-put enc :end (point)))
+                          (sp--run-hook-with-args (sp-get enc :op) :post-handlers 'slurp-forward))
+                        (setq n (1- n)))
+                    (sp-message :cant-slurp)
+                    (setq n -1))))))))
     (sp-backward-slurp-sexp (sp--negate-argument arg))))
 
 (defun sp-backward-slurp-sexp (&optional arg)
@@ -6196,6 +6221,7 @@ Examples:
   (if (> (prefix-numeric-value arg) 0)
       (let ((n (abs (prefix-numeric-value arg)))
             (enc (sp-get-enclosing-sexp))
+            (in-comment (sp-point-in-comment))
             next-thing ok)
         (when enc
           (save-excursion
@@ -6218,28 +6244,38 @@ Examples:
                   (goto-char (sp-get next-thing :beg-prf))
                   (setq ok next-thing)
                   (setq next-thing (sp-get-thing t)))
-                (if ok
+                ;; do not allow slurping into a different context from
+                ;; inside a comment
+                (if (and in-comment
+                         (save-excursion
+                           (sp-get next-thing
+                             (goto-char :beg)
+                             (not (sp-point-in-comment)))))
                     (progn
-                      (if (and (equal (sp-get next-thing :cl) "\"")
-                               (equal (sp-get ok :cl) "\""))
-                          (progn
-                            (sp--join-sexp next-thing ok)
-                            (goto-char (sp-get next-thing :beg-prf))
-                            (plist-put enc :beg (sp-get next-thing :beg)))
-                        (delete-char (sp-get ok (+ :op-l :prefix-l)))
-                        (when (and (sp-get ok (/= :len-in 0))
-                                   (= (sp-get ok :beg-prf) (sp-get next-thing :end-suf)))
-                          (insert " "))
-                        (goto-char (sp-get next-thing :beg-prf))
-                        (sp--run-hook-with-args (sp-get enc :op) :pre-handlers 'slurp-backward)
-                        (sp-get ok (insert :prefix :op))
-                        (sp--indent-region (point) (sp-get ok :end))
-                        ;; HACK: update the "enc" data structure if ok==enc
-                        (when (sp-compare-sexps enc ok) (plist-put enc :beg (- (point) (sp-get ok :op-l))))
-                        (sp--run-hook-with-args (sp-get enc :op) :post-handlers 'slurp-backward))
-                      (setq n (1- n)))
-                  (sp-message :cant-slurp)
-                  (setq n -1)))))))
+                      (sp-message :cant-slurp-context)
+                      (setq n -1))
+                  (if ok
+                      (progn
+                        (if (and (equal (sp-get next-thing :cl) "\"")
+                                 (equal (sp-get ok :cl) "\""))
+                            (progn
+                              (sp--join-sexp next-thing ok)
+                              (goto-char (sp-get next-thing :beg-prf))
+                              (plist-put enc :beg (sp-get next-thing :beg)))
+                          (delete-char (sp-get ok (+ :op-l :prefix-l)))
+                          (when (and (sp-get ok (/= :len-in 0))
+                                     (= (sp-get ok :beg-prf) (sp-get next-thing :end-suf)))
+                            (insert " "))
+                          (goto-char (sp-get next-thing :beg-prf))
+                          (sp--run-hook-with-args (sp-get enc :op) :pre-handlers 'slurp-backward)
+                          (sp-get ok (insert :prefix :op))
+                          (sp--indent-region (point) (sp-get ok :end))
+                          ;; HACK: update the "enc" data structure if ok==enc
+                          (when (sp-compare-sexps enc ok) (plist-put enc :beg (- (point) (sp-get ok :op-l))))
+                          (sp--run-hook-with-args (sp-get enc :op) :post-handlers 'slurp-backward))
+                        (setq n (1- n)))
+                    (sp-message :cant-slurp)
+                    (setq n -1))))))))
     (sp-forward-slurp-sexp (sp--negate-argument arg))))
 
 (defun sp-add-to-previous-sexp (&optional arg)
@@ -6635,7 +6671,8 @@ Examples:
         (goto-char :beg)
         (insert (car pair))
         (unless keep-old
-          (delete-char :op-l))))))
+          (delete-char :op-l))))
+    (sp--run-hook-with-args (sp-get enc :op) :post-handlers 'rewrap-sexp)))
 
 (defun sp-swap-enclosing-sexp (&optional arg)
   "Swap the enclosing delimiters of this and the parent expression.

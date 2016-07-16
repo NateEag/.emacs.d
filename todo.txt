@@ -36,9 +36,6 @@
 
 -Add php-auto-yasnippet-style function params to tern.js.
 
--Find a way to load skewer in Chrome from an HTTPS page. Starting Chrome with
- the --allow-insecure-content flag might work.
-
 -I'd like yasnippets for JavaScript. I don't much like the defaults.
 
 -Report and/or fix yasnippet issue where loading js2-mode's snippets doesn't

@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "smart-tabs-mode" "smart-tabs-mode.el" (21361
-;;;;;;  38533 0 0))
+;;;### (autoloads nil "smart-tabs-mode" "smart-tabs-mode.el" (22410
+;;;;;;  4775 0 0))
 ;;; Generated autoloads from smart-tabs-mode.el
 
 (autoload 'smart-tabs-when "smart-tabs-mode" "\

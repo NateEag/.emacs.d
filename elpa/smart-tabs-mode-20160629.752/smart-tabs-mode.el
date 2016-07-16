@@ -12,9 +12,9 @@
 ;;         Matt Renaud <mrenaud92@gmail.com>
 ;; Maintainer: Joel C. Salomon <joelcsalomon@gmail.com>
 ;; URL: http://www.emacswiki.org/emacs/SmartTabs
+;; Package-Version: 20160629.752
 ;; Created: 19 Sep 2011
-;; Version: 20140331.1629
-;; X-Original-Version: 1.0
+;; Version: 1.0
 ;; Keywords: languages
 
 ;; This file is not part of GNU Emacs.
@@ -213,6 +213,8 @@ Smarttabs is enabled in mode hook.")
 ;;;###autoload
 (define-minor-mode smart-tabs-mode
   "Intelligently indent with tabs, align with spaces!"
+
+  :init-value nil
 
   (progn
     (smart-tabs-mode/no-tabs-mode-advice align)

@@ -1,8 +1,7 @@
 (defun css-mode-init ()
   "Set up css-mode the way I like it."
 
-  (skewer-reload-stylesheets-mode)
-  (skewer-reload-stylesheets-reload-on-save)
+  (skewer-reload-stylesheets-start-editing)
 
   (rainbow-mode)
   (diminish 'rainbow-mode)

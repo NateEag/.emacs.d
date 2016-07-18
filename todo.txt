@@ -19,6 +19,20 @@
  guessing this is due to some piece of python-mode config I have, likely Jedi?
  It seems the most likely offender.
 
+-Make js2-mode's comment-filling work better. Right now, if you fill a comment
+ of the form
+
+ /**
+  *      This is a paragraph that goes for a way and then eventually should wrap to a second line.
+  */
+
+ it does not properly indent the second line up to the first.
+
+-Get aggressive-fill-paragraph-mode working in js2-mode. I'm not sure why, but
+ it seems to have no effect in C-style comments.
+
+-Get flycheck eslint checker working on Windows.
+
 -Look into integrating jscs.el with my JS editing flow. I've already installed
  the elisp library just so I have it around. I much prefer ESLint for style
  checking, but if jscs can *fix* the style failures for me, that would be quite
@@ -44,12 +58,12 @@
 -Add flycheck-css-colorguard: http://melpa.org/#/flycheck-css-colorguard
 
 -css-mode should have working comment fill. Right now it only believes in
- single-line comments, which gets clumsy and annoying fast.
- ...it looks like someone may have actually fixed this:
- https://lists.gnu.org/archive/html/emacs-diffs/2015-04/msg00293.html
- Further research shows that css-fill-paragraph works, but there are two issues
- with my current setup using current css-mode:
-     * RET binding does not insert the appropriate comment prefix.
+ single-line comments, which gets clumsy and annoying fast. ...it looks like
+ someone may have actually fixed this:
+ https://lists.gnu.org/archive/html/emacs-diffs/2015-04/msg00293.html Further
+ research shows that css-fill-paragraph works, but there are two issues with my
+ current setup using current css-mode: * RET binding does not insert the
+ appropriate comment prefix.
 
        php-mode gets this right. So does c-mode. Ah, right - because php-mode is
        a big hack on top of c-mode.
@@ -89,6 +103,11 @@
  on (configurable) browsers you just violated support for. The caniuse data
  makes this feasible, but maybe a royal pain.
 
+-Bind '<leader> p s' to helm-projectile-ag, with fallback to the regular grep
+ command. (feature request in helm-projectile-ag?)
+
+-Fix ':' choking projectile grep searches on Windows.
+
 -I would like an auto-complete source for existing files that is based on a
  per-project 'docroot/static' variable. I would like that source to be
  activated when I am working in a template and have entered an href="/..." or a
@@ -116,6 +135,8 @@
  The second <RET> loses the leading space, so you then have to type a space
  with something other than self-insert-function to actually make your new
  paragraph.
+
+-Use Consolas-10 as font by default on Windows.
 
 -Look into midi-kbd.el and lily-midi.el as an aid in creating lilypond files
  with MIDI instruments.
@@ -203,15 +224,13 @@
  you have a lot of buffers open from that repo it might get expensive... Think
  about this, anyway.
 
--Look into find-file-in-repository as an alternative to my git-ls-files helm
- plugin, since it handles repos other than git.
- http://melpa.milkbox.net/#/find-file-in-repository
-
 -Add a command to backup-walker to revert to the selected backup file. 'r'
  would be a good keybinding. If this doesn't already exist, it might make sense
- to wrap this up with my other backup settings as 'sane-autosaves'.
- See if backups-mode makes this work nicely?
+ to wrap this up with my other backup settings as 'sane-autosaves'. See if
+ backups-mode makes this work nicely?
  https://github.com/chadbraunduin/backups-mode
+
+-Add a focus loss autosave, and possibly an autosave on idle.
 
 -Add a command to backup-walker to ediff against the current file.
 

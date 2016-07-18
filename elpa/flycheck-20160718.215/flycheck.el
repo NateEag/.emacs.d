@@ -241,6 +241,7 @@ attention to case differences."
     sh-zsh
     sh-shellcheck
     slim
+    slim-lint
     sql-sqlint
     tex-chktex
     tex-lacheck
@@ -6588,7 +6589,12 @@ nil
 `fixed'
      Use fixed form layout
 
-In any other case, an error is signaled.")
+In any other case, an error is signaled."
+  :type '(choice (const :tag "Guess layout from extension" nil)
+                 (const :tag "Free form layout" free)
+                 (const :tag "Fixed form layout" fixed))
+  :safe (lambda (value) (or (not value) (memq value '(free fixed))))
+  :package-version '(flycheck . "0.20"))
 
 (defun flycheck-option-gfortran-layout (value)
   "Option VALUE filter for `flycheck-gfortran-layout'."
@@ -6609,7 +6615,12 @@ recommended warnings and some extra warnings are enabled (as by
 
 Refer to the gfortran manual at URL
 `https://gcc.gnu.org/onlinedocs/gfortran/' for more information
-about warnings")
+about warnings"
+  :type '(choice (const :tag "No additional warnings" nil)
+                 (repeat :tag "Additional warnings"
+                         (string :tag "Warning name")))
+  :safe #'flycheck-string-list-p
+  :package-version '(flycheck . "0.20"))
 
 (flycheck-define-checker fortran-gfortran
   "An Fortran syntax checker using GCC.
@@ -8628,6 +8639,15 @@ See URL `http://slim-lang.com'."
           "Slim::Parser::SyntaxError:" (message) (optional "\r") "\n  "
           "STDIN, Line " line (optional ", Column " column)
           line-end))
+  :modes slim-mode
+  :next-checkers ((warning . slim-lint)))
+
+(flycheck-define-checker slim-lint
+  "A Slim linter.
+
+See URL `https://github.com/sds/slim-lint'."
+  :command ("slim-lint" "--reporter=checkstyle" source)
+  :error-parser flycheck-parse-checkstyle
   :modes slim-mode)
 
 (flycheck-define-checker sql-sqlint

@@ -4,8 +4,16 @@
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
 ;;;### (autoloads nil "skewer-reload-stylesheets" "skewer-reload-stylesheets.el"
-;;;;;;  (22410 4774 0 0))
+;;;;;;  (22413 22290 0 0))
 ;;; Generated autoloads from skewer-reload-stylesheets.el
+
+(autoload 'skewer-reload-stylesheets-start-editing "skewer-reload-stylesheets" "\
+Configure current buffer for live-editing.
+
+Add this to your stylesheet editing mode hook to make every
+stylesheet live-editable by default.
+
+\(fn)" nil nil)
 
 (autoload 'skewer-reload-stylesheets-mode "skewer-reload-stylesheets" "\
 Minor mode for interactively reloading CSS stylesheets.
@@ -15,7 +23,7 @@ Minor mode for interactively reloading CSS stylesheets.
 ;;;***
 
 ;;;### (autoloads nil nil ("skewer-reload-stylesheets-pkg.el" "skewer-reload-stylesheets-test.el")
-;;;;;;  (22410 4774 32836 0))
+;;;;;;  (22413 22290 803771 0))
 
 ;;;***
 

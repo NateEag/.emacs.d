@@ -19,8 +19,11 @@
  guessing this is due to some piece of python-mode config I have, likely Jedi?
  It seems the most likely offender.
 
--Make js2-mode's comment-filling work better. Right now, if you fill a comment
- of the form
+-Figure out why I'm not getting js2-mode as my javascript mode. I thought I
+ was, but something has clearly changed that...
+
+-Make aggressive-fill-paragraph-mode work better in js2-mode. Right now, if you
+ fill a comment of the form
 
  /**
   *      This is a paragraph that goes for a way and then eventually should wrap to a second line.
@@ -28,8 +31,25 @@
 
  it does not properly indent the second line up to the first.
 
+ Research suggests afp-only-fill-comments uses fill-comment-paragraph, which
+ seems to work with //-style comments, but not C-style comments, I think due to
+ comment-start being // in js2-mode.
+
+ js-mode itself uses js-c-fill-paragraph when you press M-q - it's the value
+ of fill-paragraph-function.
+
+ So what if we hack the comment-filling code to use it?
+
+ Why, that works just beautifully.
+
+ So I guess aggressive-fill-paragraph should consider the value of
+ fill-paragraph-function?
+
 -Get aggressive-fill-paragraph-mode working in js2-mode. I'm not sure why, but
  it seems to have no effect in C-style comments.
+
+-Add afp-super-aggressive to aggressive-fill-paragraph-mode to bundle up my
+ proposed changes per the maintainer's suggestion.
 
 -Get flycheck eslint checker working on Windows.
 

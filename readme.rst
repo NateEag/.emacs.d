@@ -7,8 +7,8 @@ class to use it for programming in the Sun lab, Emacs has been my editor.
 
 On that first encounter, I was put off by its user interface, which is
 obscurantist at best. I discovered that the default install is incredibly
-heavyweight fairly quickly, and I was not impressed with how little it believed
-in graphical environments.
+unwieldy, and I was not impressed with how little it believed in graphical
+environments.
 
 After a naive search for the perfect editor in my early twenties (I narrowly
 avoided wasting years writing one), in 2009 I decided to learn Emacs well,

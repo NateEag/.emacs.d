@@ -1,3 +1,10 @@
+-Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
+
+-Split my tagedit/web-mode bridge out to a separate module, unless fxbois wants
+ it in web-mode.
+
+-Submit PR to make flycheck-eslint-rulesdir a list.
+
 -I'd like to have a hotkey that brings up my most recent terminal. I'd also
  like terminal windows to always appear in a bottom window of my current frame,
  which is probably a need popwin would achieve admirably. I used to think I
@@ -12,8 +19,6 @@
  http://echosa.github.io/blog/2012/06/06/improving-ansi-term/
 
 -Add keybindings for goto-chg commands and start using them.
-
--Finish getting tagedit to work with web-mode.
 
 -Fix the issue where leaving a Python buffer reverts point to position 0. I'm
  guessing this is due to some piece of python-mode config I have, likely Jedi?

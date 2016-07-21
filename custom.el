@@ -85,6 +85,7 @@
  '(package-enable-at-startup nil)
  '(php-mode-coding-style (quote psr2) nil nil "PSR-2 is not ideal, but it's a standard.")
  '(projectile-indexing-method (quote alien))
+ '(projectile-use-git-grep t)
  '(require-final-newline t)
  '(safe-local-variable-values
    (quote

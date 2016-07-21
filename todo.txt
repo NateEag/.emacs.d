@@ -75,6 +75,13 @@
 
 -Try tern's new sync completions, which let you use it as a regular ac-source.
 
+-Report issue with Tern seeing 'this' as the global namespace in Angular
+ controller functions. Controllers always have constructor semantics, and
+ should be treated as such.
+
+-Report dontLoad being overridden by loadEagerly in .tern-project. I would
+ expect the opposite behavior.
+
 -Add php-auto-yasnippet-style function params to tern.js.
 
 -I'd like yasnippets for JavaScript. I don't much like the defaults.

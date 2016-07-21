@@ -22,6 +22,15 @@
 -Figure out why I'm not getting js2-mode as my javascript mode. I thought I
  was, but something has clearly changed that...
 
+-js2-mode indents constructs like this:
+
+ var foo = {
+         bar: 'baz'
+     },
+     biz = 12;
+
+ incorrectly (or at least not how I like it to). Figure out why, fix it.
+
 -Make aggressive-fill-paragraph-mode work better in js2-mode. Right now, if you
  fill a comment of the form
 
@@ -51,7 +60,9 @@
 -Add afp-super-aggressive to aggressive-fill-paragraph-mode to bundle up my
  proposed changes per the maintainer's suggestion.
 
--Get flycheck eslint checker working on Windows.
+-Add function for injecting JS from arbitrary URL into documents.
+ There's already one for using bower, but being able to just grab any URL could
+ be handy, especially if you're in a locked-down environment.
 
 -Look into integrating jscs.el with my JS editing flow. I've already installed
  the elisp library just so I have it around. I much prefer ESLint for style
@@ -62,11 +73,7 @@
  personally find flow's comment-annotation syntax too intrusive for good
  readability).
 
--Write a general-case ac-source for Tern.js. Right now I have to press M-Tab to
- trigger top-level completions, and I'd like to just press Tab. emacs-eclim
- might be a good place to rip off the basic idea from, since it depends on an
- external process to get completions, or jedi. I think if I had this I could
- get JS completions in web-mode, which would be awesome.
+-Try tern's new sync completions, which let you use it as a regular ac-source.
 
 -Add php-auto-yasnippet-style function params to tern.js.
 
@@ -125,6 +132,10 @@
 
 -Bind '<leader> p s' to helm-projectile-ag, with fallback to the regular grep
  command. (feature request in helm-projectile-ag?)
+
+-Make projectile refresh cache on idle, and always use cache? I can touch
+ .projectile if I want to force a refresh. Then again, this is only noticeable
+ on my work machine... Enable if file listing takes more than N milliseconds?
 
 -Fix ':' choking projectile grep searches on Windows.
 
@@ -201,6 +212,14 @@
 -Figure out why mo-git-blame isn't using mo-git-blame-git-blame-args.
 
 -Use zebra striping to make mo-git-blame/target buffer more readable.
+ https://github.com/sabof/stripe-buffer might do the job...
+
+-Get mo-git-blame set up to spawn a new frame of a useful size. It's hard to
+ use in a regular frame.
+
+-Figure out how to use mo-git-blame a little better. It's supposed to support
+ iterative blame (e.g. "blame from previous commit"), but I don't see how so
+ far.
 
 -If I ever get minimap.el usable on OS X, when active it should appear between
  my two panes. That way it's always close to whichever buffer it applies to.

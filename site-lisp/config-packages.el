@@ -160,6 +160,9 @@
                                      (setq-local ne-yas-auto-insert-snippet-name
                                            "shell-script"))))
 
+(use-package json-mode
+  :config (add-hook 'json-mode-hook 'js-mode-init))
+
 (use-package jedi-force
   :commands jedi-force-set-up-hooks)
 

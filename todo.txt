@@ -65,6 +65,9 @@
 -Add afp-super-aggressive to aggressive-fill-paragraph-mode to bundle up my
  proposed changes per the maintainer's suggestion.
 
+-Make json-mode.el print paths more minimally (use .name instead of ["name"])?
+ Maybe it's that way cause it's not supported everywhere.
+
 -Add function for injecting JS from arbitrary URL into documents.
  There's already one for using bower, but being able to just grab any URL could
  be handy, especially if you're in a locked-down environment.

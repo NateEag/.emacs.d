@@ -387,7 +387,6 @@ new file for the first time."
 (add-hook 'js-mode-hook 'js-mode-init)
 (add-hook 'js-mode-hook '(lambda () (setq mode-name "js-mode")))
 (add-auto-mode 'js-mode
-               "\\.json\\'"
                "\\.*jsbeautifyrc\\'"
                "\\.*jshintrc\\'"
                "\\.tern-project\\'")

@@ -333,7 +333,7 @@
     (key-chord-define evil-visual-state-map "JK" 'evil-normal-state)
     (key-chord-define evil-emacs-state-map "JK" 'evil-normal-state)
 
-    ;; Use ',' as my leader key.
+    ;; Always use a leader key, because the leader is awesome.
     (global-evil-leader-mode)
     (evil-leader/set-leader "<SPC>")
 

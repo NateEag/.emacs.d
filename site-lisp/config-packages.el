@@ -327,6 +327,12 @@
     (key-chord-define evil-visual-state-map "jk" 'evil-normal-state)
     (key-chord-define evil-emacs-state-map "jk" 'evil-normal-state)
 
+    ;; Make sure it works even when Caps Lock is on.
+    (key-chord-define evil-insert-state-map "JK" 'evil-normal-state)
+    (key-chord-define evil-motion-state-map "JK" 'evil-normal-state)
+    (key-chord-define evil-visual-state-map "JK" 'evil-normal-state)
+    (key-chord-define evil-emacs-state-map "JK" 'evil-normal-state)
+
     ;; Use ',' as my leader key.
     (global-evil-leader-mode)
     (evil-leader/set-leader "<SPC>")

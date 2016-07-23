@@ -98,12 +98,15 @@
 -Add flycheck-css-colorguard: http://melpa.org/#/flycheck-css-colorguard
 
 -css-mode should have working comment fill. Right now it only believes in
- single-line comments, which gets clumsy and annoying fast. ...it looks like
- someone may have actually fixed this:
- https://lists.gnu.org/archive/html/emacs-diffs/2015-04/msg00293.html Further
- research shows that css-fill-paragraph works, but there are two issues with my
- current setup using current css-mode: * RET binding does not insert the
- appropriate comment prefix.
+ single-line comments, which gets clumsy and annoying fast.
+
+...it looks like someone may have actually fixed this:
+ https://lists.gnu.org/archive/html/emacs-diffs/2015-04/msg00293.html
+
+ Further research shows that css-fill-paragraph works, but there are two issues
+ with my current setup using current css-mode:
+
+     * RET binding does not insert the appropriate comment prefix.
 
        php-mode gets this right. So does c-mode. Ah, right - because php-mode is
        a big hack on top of c-mode.
@@ -266,18 +269,6 @@
  possible to bind something clever to Tab that picks which maneuver to do based
  on whether there are any characters before point *and* whether autocompletion
  has been invoked before while in this field. or something like that.
-
--See if my Emacs crashes can be reproduced by leaving old byte-compiled files
- on my load-path alongside newer versions of the same file, a la updating a
- library from MELPA then pulling that down to a different clone of the repo. It
- occurred to me today that my current setup does this, and it seems like a
- candidate for crashiness. I have a lot fewer crashes now, but still get one
- every few weeks, I'd say.
-
--Add an after-revert-hook to reload helm-git-file's cache for any containing
- repo if necessary. Seems like this should be a simple thing to do, though if
- you have a lot of buffers open from that repo it might get expensive... Think
- about this, anyway.
 
 -Add a command to backup-walker to revert to the selected backup file. 'r'
  would be a good keybinding. If this doesn't already exist, it might make sense

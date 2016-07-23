@@ -20,18 +20,5 @@
   (setq flycheck-checker 'javascript-eslint)
 
   (setq ac-sources '(ac-source-yasnippet))
-  (tern-mode 't)
-  (eval-after-load 'tern
-    '(progn
-       (require 'tern-auto-complete)
-       (tern-ac-setup)
 
-       ;; Keybinding to force Tern's autocompletion, for cases like discussing
-       ;; data structures and APIs in comments.
-       (define-key tern-mode-keymap (kbd "C-<tab>") 'tern-ac-complete)
-
-       ;; Replace Tern's implementation of tern-ac-dot-complete with one that
-       ;; doesn't auto-complete in comments. I have a PR outstanding; we'll see
-       ;; if it gets merged.
-
-       (diminish 'tern-mode))))
+  (tern-mode t))

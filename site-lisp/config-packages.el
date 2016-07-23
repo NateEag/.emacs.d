@@ -160,6 +160,51 @@
                                      (setq-local ne-yas-auto-insert-snippet-name
                                            "shell-script"))))
 
+(use-package tern
+  :diminish tern-mode
+  :config (add-hook 'tern-mode-hook '(lambda ()
+                                      (require 'tern-auto-complete)
+                                      (tern-ac-setup)
+
+                                      ;; Keybinding to force Tern's
+                                      ;; autocompletion, for cases like
+                                      ;; discussing data structures and APIs in
+                                      ;; comments.
+                                      (define-key
+                                        tern-mode-keymap
+                                        (kbd "C-<tab>")
+                                        'tern-ac-complete)
+
+                                      (setq tern-ac-sync t)
+                                      (add-to-list 'ac-sources
+                                                   'ac-source-tern-completion))))
+
+(use-package tern-auto-complete
+  :commands tern-ac-setup
+  :config
+  ;; Make tern's ac-source work with ac-trigger-key-command.
+  ;;
+  ;; Without this advice, completions are not fired when I press Tab with my
+  ;; config.
+  ;;
+  ;; TODO Turn this into a PR to tern-auto-complete?
+  ;;
+  ;; It's almost an exact copy of the advice from there on auto-complete, and
+  ;; should prevent other people who use an ac-trigger-key from having the same
+  ;; issue.
+  (defadvice ac-trigger-key-command (around add-tern-ac-candidates first activate)
+    "Load tern-js canditates before ac-start."
+    (if (and tern-ac-sync
+             (memq major-mode tern-ac-js-major-modes)
+             (not (or (ac-menu-live-p) (ac-inline-live-p)))
+             ;; Extension - do not complete if there is no prefix, so TAB
+             ;; fallback behavior can occur in that case.
+             (ac-prefix-default))
+        (tern-ac-complete-request
+         'auto-complete-1)
+      ad-do-it))
+  )
+
 (use-package json-mode
   :config (add-hook 'json-mode-hook 'js-mode-init))
 

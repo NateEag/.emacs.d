@@ -6,11 +6,6 @@
 '((candidates . (loop for property in ac-css-property-alist
                       collect (car property)))))
 
-(defun auto-complete-tab-noconflict ()
-  (let ((command (key-binding [tab]))) ; remember command
-    (local-unset-key [tab]) ; unset from (kbd "<tab>")
-    (local-set-key (kbd "TAB") command))) ; bind to (kbd "TAB")
-
 (setq ac-initialized nil)
 (defun auto-complete-init ()
   "My basic configuration for autocomplete.el."
@@ -24,11 +19,12 @@
       (progn
         (ac-flyspell-workaround)
         (setq ac-auto-start nil)
+
         (custom-set-variables
          '(ac-trigger-key "TAB"))
+
         (define-key ac-completing-map "\C-n" 'ac-next)
         (define-key ac-completing-map "\C-p" 'ac-previous)
         (setq ac-dwim t)
 
-        (setq ac-initialized t)))
-  (auto-complete-tab-noconflict))
+        (setq ac-initialized t))))

@@ -81,8 +81,6 @@
  personally find flow's comment-annotation syntax too intrusive for good
  readability).
 
--Try tern's new sync completions, which let you use it as a regular ac-source.
-
 -Report issue with Tern seeing 'this' as the global namespace in Angular
  controller functions. Controllers always have constructor semantics, and
  should be treated as such.
@@ -254,6 +252,9 @@
 -Add keybindings for scrolling completion window by a full window-ful. C-v and
  M-v are the obvious ones. Useful when you're digging through something like wx
  or the JDK looking for a class that might apply.
+
+-Make pressing Enter on a yasnippet in auto-complete menu trigger the snippet.
+ At least in my js2-mode setup, it just completes it then inserts a newline.
 
 -Make a PR to auto-complete for supporting smart-dash-mode.
 

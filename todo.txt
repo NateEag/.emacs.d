@@ -276,8 +276,6 @@
  backups-mode makes this work nicely?
  https://github.com/chadbraunduin/backups-mode
 
--Add a focus loss autosave, and possibly an autosave on idle.
-
 -Add a command to backup-walker to ediff against the current file.
 
 -Generate autoloads for my mode configs (and other code I've hacked up myself)
@@ -315,6 +313,8 @@
 -Look into emacs-eclim for intelligent PHP support. Might take some elisp
  hacking, but I think that's all it would take, apart from installing Eclipse
  bits. https://github.com/senny/emacs-eclim
+
+-Install/configure php-scratch, as it could be handy for quick experiments.
 
 -If I ever have to go back to programming Java, try using emacs-eclim for
  auto-complete and jump-to-def. It should let me stay in Emacs while getting

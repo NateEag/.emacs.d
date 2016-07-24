@@ -107,12 +107,15 @@
 (setq magit-last-seen-setup-instructions "1.4.0")
 
 
-;;; Save-related hooks.
+;;; Save-related hooks and advice.
 
 (defun force-buffer-backup ()
-  "Force a backup every time we save a file."
+  "Force buffer to back up on next save."
 
   (setq buffer-backed-up nil))
+
+;; Back up buffers on every save.
+
 (add-hook 'before-save-hook 'force-buffer-backup)
 
 (defun maybe-reset-major-mode ()
@@ -131,6 +134,21 @@ new file for the first time."
 
 ;; If a file looks scripty and it isn't executable at save time, make it so.
 (add-hook 'after-save-hook 'executable-make-buffer-file-executable-if-script-p)
+
+;; Save when Emacs loses focus, when I change buffers, when I change windows,
+;; and when it's been idle for a while.
+(defun ne/save-when-file (&rest args)
+  "Save current buffer if it has an associated file.
+
+Accepts unused `args' so it can be used as advice for arbitrary functions."
+
+  (when (buffer-file-name)
+    (save-buffer)))
+
+(advice-add 'other-window :before #'ne/save-when-file)
+(advice-add 'switch-to-buffer :before #'ne/save-when-file)
+(focus-autosave-mode t)
+(run-with-idle-timer 5 t 'focus-autosave-save-all)
 
 
 ;; Save minibuffer data between sessions.

@@ -11,6 +11,8 @@
       (set (make-local-variable 'normal-auto-fill-function) 'c-do-auto-fill))
   (skewer-mode)
 
+  (setq-local afp-comment-fill-function 'js-c-fill-paragraph)
+
   ;; Since I've bound C-r to regex searching, I'll use C-M-r to mean
   ;; 'refactor'.
   (js2r-add-keybindings-with-prefix "C-M-r")

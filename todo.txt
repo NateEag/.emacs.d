@@ -5,14 +5,18 @@
 
 -Submit PR to make flycheck-eslint-rulesdir a list.
 
+-Make js-doc use Tern (when available) to guess types for function params.
+
+-Make js-doc indent yasnippet blocks correctly.
+
 -I'd like to have a hotkey that brings up my most recent terminal. I'd also
  like terminal windows to always appear in a bottom window of my current frame,
  which is probably a need popwin would achieve admirably. I used to think I
  wanted something more like a tabbed terminal emulator, and maybe I will want
  some keybindings for flipping between groups of terminal buffers, but that's
- secondary to just establishing "terminal buffers get the bottom window".
- I have just installed term-projectile, which seems to handle the create and
- swap features - I just need to teach popwin how to force terminals to always
+ secondary to just establishing "terminal buffers get the bottom window". I
+ have just installed term-projectile, which seems to handle the create and swap
+ features - I just need to teach popwin how to force terminals to always
  display in the bottom half of a split panel properly.
 
 -Make the ansi-term tweaks suggested in this article:
@@ -56,7 +60,7 @@
 
  Why, that works just beautifully.
 
- So I guess aggressive-fill-paragraph should consider the value of
+ So I guess afp-only-fill-comments should consider the value of
  fill-paragraph-function?
 
 -Get aggressive-fill-paragraph-mode working in js2-mode. I'm not sure why, but

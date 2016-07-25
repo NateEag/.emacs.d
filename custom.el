@@ -144,6 +144,7 @@
  '(transient-mark-mode 1 nil nil "I like seeing my selections.")
  '(user-mail-address "nate@nateeag.com")
  '(visible-bell t nil nil "STOP THE RINGING")
+ '(yas-also-auto-indent-first-line t)
  '(yas-expand-only-for-last-commands
    (quote
     (self-insert-command smart-dash-insert web-mode-smart-dash-insert ac-complete ac-expand)) nil nil "Only trigger yasnippet while first typing. Makes TAB indent even if inadvertantly over a yasnippet's key.")

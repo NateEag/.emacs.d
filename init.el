@@ -148,6 +148,7 @@ Accepts unused `args' so it can be used as advice for arbitrary functions."
 (advice-add 'other-window :before #'ne/save-when-file)
 (advice-add 'switch-to-buffer :before #'ne/save-when-file)
 (focus-autosave-mode t)
+(diminish 'focus-autosave-mode)
 (run-with-idle-timer 5 t 'focus-autosave-save-all)
 
 

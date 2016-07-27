@@ -58,6 +58,12 @@ Stores keymaps stored in buffer-local `minor-mode-overriding-map-alist'."
 
   (skewer-html-mode)
 
+  ;; web-mode currently has a bogus replacement for comment-indent-new-line, so
+  ;; we just use newline-and-indent.
+  ;;
+  ;; https://github.com/fxbois/web-mode/issues/772
+  (local-set-key (kbd "RET") 'newline-and-indent)
+
   (yas-activate-extra-mode 'php-mode)
 
   (emmet-mode)

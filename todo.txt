@@ -66,6 +66,18 @@
  ask the maintainer what approach he'd prefer to see here - I haven't really
  thought through the proper thing to do.
 
+ ...trying my hack out for a day has persuaded me it's the wrong approach. I've
+ just re-introduced his original issue, in that I sometimes get code filled for
+ reasons unclear to me.
+
+ I think perhaps the right thing to do here is to add a customizable var that
+ accepts a function, which tests if we're in a comment. We add that function to
+ afp-suppress-fill-pfunction-list on mode start if the current major-mode is in
+ afp-fill-comments-only-mode-list.
+
+ I'm hoping that would prevent us from filling while we're in code, but I don't
+ fully understand what *does* trigger the fill-code behavior.
+
 -Add afp-super-aggressive to aggressive-fill-paragraph-mode to bundle up my
  proposed changes per the maintainer's suggestion.
 

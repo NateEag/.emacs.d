@@ -201,8 +201,15 @@
              ;; fallback behavior can occur in that case.
              (ac-prefix-default))
         (tern-ac-complete-request
-         'auto-complete-1)
+         '(lambda ()
+            (auto-complete-1 :triggered 'trigger-key)))
       ad-do-it))
+  ;; ac-source-yasnippet fails with the above advice if I don't do this.
+  ;;
+  ;; TODO Make this more robust. It should only add ac-trigger-key-command if
+  ;; it isn't already in there.
+  (if yas-expand-only-for-last-commands
+      (add-to-list 'yas-expand-only-for-last-commands 'ac-trigger-key-command))
   )
 
 (use-package json-mode

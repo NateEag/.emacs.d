@@ -37,7 +37,6 @@
      biz = 12;
 
  incorrectly (or at least not how I like it to). Figure out why, fix it.
- This only happens when the object literal is the first var.
 
 -Make aggressive-fill-paragraph-mode work better in js2-mode. Right now, if you
  fill a comment of the form
@@ -62,9 +61,8 @@
  So I guess afp-only-fill-comments should consider the value of
  fill-paragraph-function?
 
- I've made this customizable, and that's working for the moment. I'll have to
- ask the maintainer what approach he'd prefer to see here - I haven't really
- thought through the proper thing to do.
+-Get aggressive-fill-paragraph-mode working in js2-mode. I'm not sure why, but
+ it seems to have no effect in C-style comments.
 
  ...trying my hack out for a day has persuaded me it's the wrong approach. I've
  just re-introduced his original issue, in that I sometimes get code filled for

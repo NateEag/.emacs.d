@@ -69,18 +69,6 @@ This is in contrast to the default behavior, which is to fill only after
 characters in `afp-fill-keys' are typed."
   :group 'aggressive-fill-paragraph)
 
-(defcustom afp-comment-fill-function
-  'fill-comment-paragraph
-  "Function to use when filling only comments.
-
-The need for this arose from `fill-comment-paragraph' not filling
-C-style comments in `js2-mode'.
-
-This may not be the right way to solve the problem - it's just a
-pragmatic fix I can apply for the moment."
-
-  :group 'aggressive-fill-paragraph)
-
 (defcustom afp-fill-after-functions
   nil
   "A list of functions that should fill the paragraph after running.
@@ -119,7 +107,7 @@ Note that `delete-region' will have no effect if entered here - see
 (defun afp-only-fill-comments (&optional justify)
   "Replacement fill-paragraph function which only fills comments
 and leaves everything else alone."
-  (funcall afp-comment-fill-function justify)
+  (fill-comment-paragraph justify)
 
   ;; returning true says we are done with filling, don't fill anymore
   t)

@@ -181,9 +181,6 @@
  multi-character sequences from smartparens, and I don't want to lose pairing
  braces in CSS and JS.
 
--Add a workaround to web-mode-init so smart-dash-mode knows when we're in a
- comment.
-
 -I should have Twig/Django snippets. 'block' is the obvious one, but probably
  snippets for all the major bits of syntax would be handy, and someone out
  there must have written such things.
@@ -270,10 +267,14 @@
  M-v are the obvious ones. Useful when you're digging through something like wx
  or the JDK looking for a class that might apply.
 
--Make pressing Enter on a yasnippet in auto-complete menu trigger the snippet.
- At least in my js2-mode setup, it just completes it then inserts a newline.
+-Make smart-dash-mode in sh-mode prefer _s when typing var names, and -s when
+ typing most other things (options, filenames, etc). I think that reflects my
+ experience of having it active in sh-mode.
 
 -Make a PR to auto-complete for supporting smart-dash-mode.
+
+-Add a workaround to web-mode-init so smart-dash-mode knows when we're in a
+ comment.
 
 -Make a PR to yasnippet for my solution to the 'once' snippet overriding the
  'require_once' snippet.

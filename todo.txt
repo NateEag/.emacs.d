@@ -79,6 +79,10 @@
 -Add afp-super-aggressive to aggressive-fill-paragraph-mode to bundle up my
  proposed changes per the maintainer's suggestion.
 
+-Make aggressive-fill-paragraph-mode suppress auto-fill in markdown-mode code
+ blocks. I thought it was supposed to, but in the traditional four-space
+ indented code blocks, it doesn't seem to work for me.
+
 -Make json-mode.el print paths more minimally (use .name instead of ["name"])?
  Maybe it's that way cause it's not supported everywhere.
 
@@ -101,6 +105,10 @@
 
 -Report dontLoad being overridden by loadEagerly in .tern-project. I would
  expect the opposite behavior.
+
+-For vars that are assigned a function directly, tern should treat any
+ immediately-preceding JSDoc block as being that var's JSDoc. See pick in
+ lodash 4.13.1 for an example of failure.
 
 -Add php-auto-yasnippet-style function params to tern.js.
 

@@ -25,6 +25,12 @@
   ;; This is where PHP lives on my work machine.
   (setq php-executable "/Program Files (x86)/iis express/PHP/v5.4/php")
 
+  ;; On Windows7, this is the shortcut for moving between apps in the taskbar.
+  ;; I don't see much point in hearing about how it does nothing when I leave
+  ;; Emacs, so I bind it to a no-op to suppress that message.
+  (global-set-key (kbd "C-<rwindow>") 'ignore)
+  (global-set-key (kbd "C-<lwindow>") 'ignore)
+
   ;; Teach Windows about Cygwin paths.
   (cygwin-mount-activate)
 

@@ -16,6 +16,14 @@ recentf
 # And Tramp's history/computed settings too.
 tramp
 
+# guess-style can leave a settings file floating around, and its contents vary
+# from machine to machine.
+
+guess-style
+
+# Projectile is useful, but the cache does not need to be saved.
+projectile.cache
+
 # Because I don't like storing binaries in git repos, ignore this.
 # It holds Jedi's default virtualenv, IIRC.
 .python-environments

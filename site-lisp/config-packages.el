@@ -83,7 +83,7 @@
   :config (progn
             (flycheck-define-checker proselint
               "A linter for prose."
-              :command ("proselint" source-inplace)
+              :command ("proselint" source)
               :error-patterns
               ((warning line-start (file-name) ":" line ":" column ": "
                         (id (one-or-more (not (any " "))))

@@ -412,6 +412,18 @@
   :commands glasses-mode
   :diminish glasses-mode)
 
+(use-package diff-mode
+  :init (add-hook 'diff-mode-hook
+                  '(lambda ()
+                     ;; TODO Submit this as a patch to diff-mode.
+                     ;;
+                     ;; It already has these semantics, in that lines starting
+                     ;; with a # do not cause the hunk headers to adjust, so
+                     ;; that should probably be properly reflected.
+                     (setq-local comment-start "#")
+                     (text-mode-init)
+                     )))
+
 (use-package diffview
   :commands diffview-current)
 

@@ -233,6 +233,7 @@ attention to case differences."
     sass
     scala
     scala-scalastyle
+    scheme-chicken
     scss-lint
     scss
     sh-bash
@@ -2008,7 +2009,13 @@ BUFFER is the buffer being verified."
   (save-excursion
     (let ((end (point)))
       (backward-paragraph)
-      (fill-region-as-paragraph (point) end))))
+      (fill-region-as-paragraph (point) end)))
+
+  (princ "\n\n--------------------\n\n")
+  (princ (format "Flycheck version: %s\n" (flycheck-version)))
+  (princ (format "Emacs version:    %s\n" emacs-version))
+  (princ (format "System:           %s\n" system-configuration))
+  (princ (format "Window system:    %S\n" window-system)))
 
 (defun flycheck-verify-checker (checker)
   "Check whether a CHECKER can be used in this buffer.
@@ -5257,7 +5264,16 @@ function `buffer-file-name'."
       (when (seq-some (apply-partially #'flycheck-same-files-p
                                        (expand-file-name filename cwd))
                       buffer-files)
-        (setf (flycheck-error-filename err) (buffer-file-name)))))
+        (let ((new-filename (buffer-file-name)))
+          (setf (flycheck-error-filename err) new-filename)
+          (when new-filename
+            (setf (flycheck-error-message err)
+                  (replace-regexp-in-string
+                   (regexp-quote filename)
+                   new-filename
+                   (flycheck-error-message err)
+                   'fixed-case
+                   'literal)))))))
   err)
 
 
@@ -6838,7 +6854,7 @@ See URL `https://github.com/kisielk/errcheck'."
   :command ("errcheck" "-abspath" ".")
   :error-patterns
   ((warning line-start
-            (file-name) ":" line ":" column (or (one-or-more "\t") ": ")
+            (file-name) ":" line ":" column (or (one-or-more "\t") ": " ":\t")
             (message)
             line-end))
   :error-filter
@@ -7256,20 +7272,18 @@ See URL `http://www.jshint.com'."
   :modes (js-mode js2-mode js3-mode)
   :next-checkers ((warning . javascript-jscs)))
 
-(flycheck-def-option-var flycheck-eslint-rulesdir nil javascript-eslint
-  "The directory of custom rules for ESLint.
+(flycheck-def-option-var flycheck-eslint-rules-directories nil javascript-eslint
+  "A list of directories with custom rules for ESLint.
 
-The value of this variable is either a string containing the path
-to a directory with custom rules, or nil, to not give any custom
-rules to ESLint.
+The value of this variable is a list of strings, where each
+string is a directory with custom rules for ESLint.
 
 Refer to the ESLint manual at URL
 `https://github.com/eslint/eslint/tree/master/docs/command-line-interface#--rulesdir'
-for more information about the custom directory."
-  :type '(choice (const :tag "No custom rules directory" nil)
-                 (directory :tag "Custom rules directory"))
-  :safe #'stringp
-  :package-version '(flycheck . "0.16"))
+for more information about the custom directories."
+  :type '(repeat (directory :tag "Custom rules directory"))
+  :safe #'flycheck-string-list-p
+  :package-version '(flycheck . "29"))
 
 (flycheck-def-config-file-var flycheck-eslintrc javascript-eslint nil
   :safe #'stringp
@@ -7281,7 +7295,7 @@ for more information about the custom directory."
 See URL `https://github.com/eslint/eslint'."
   :command ("eslint" "--format=checkstyle"
             (config-file "--config" flycheck-eslintrc)
-            (option "--rulesdir" flycheck-eslint-rulesdir)
+            (option-list "--rulesdir" flycheck-eslint-rules-directories)
             "--stdin" "--stdin-filename" source-original)
   :standard-input t
   :error-parser flycheck-parse-checkstyle
@@ -7622,6 +7636,10 @@ See URL `https://puppet.com/'."
           (one-or-more (in "a-z" "0-9" "_")) ":"
           (message) " at line " line ":" column line-end)
    ;; Errors from Puppet < 4
+   (error line-start "Error: Could not parse for environment "
+          (one-or-more (in "a-z" "0-9" "_")) ":"
+          (message (minimal-match (one-or-more anything)))
+          " at line " line line-end)
    (error line-start
           ;; Skip over the path of the Puppet executable
           (minimal-match (zero-or-more not-newline))
@@ -7904,14 +7922,16 @@ See URL `https://github.com/jimhester/lintr'."
                 :message (if has-lintr "present" "missing")
                 :face (if has-lintr 'success '(bold error)))))))
 
-(defun flycheck-racket-has-expand-p (raco)
-  "Whether a RACO executable provides the `expand' command."
-  (with-temp-buffer
-    (call-process raco nil t nil "expand")
-    (goto-char (point-min))
-    (not (looking-at-p (rx bol (1+ not-newline)
-                           "Unrecognized command: expand"
-                           eol)))))
+(defun flycheck-racket-has-expand-p (checker)
+  "Whether the executable of CHECKER provides the `expand' command."
+  (let ((raco (flycheck-find-checker-executable checker)))
+    (when raco
+      (with-temp-buffer
+        (call-process raco nil t nil "expand")
+        (goto-char (point-min))
+        (not (looking-at-p (rx bol (1+ not-newline)
+                               "Unrecognized command: expand"
+                               eol)))))))
 
 (flycheck-define-checker racket
   "A Racket syntax checker with `raco expand'.
@@ -7928,16 +7948,27 @@ See URL `https://racket-lang.org/'."
              ;; being used
              (and (boundp 'geiser-impl--implementation)
                   (eq geiser-impl--implementation 'racket)))
-         (flycheck-racket-has-expand-p (flycheck-checker-executable 'racket))))
+         (flycheck-racket-has-expand-p 'racket)))
   :verify
   (lambda (checker)
-    (let ((has-expand (flycheck-racket-has-expand-p
-                       (flycheck-checker-executable checker))))
+    (let ((has-expand (flycheck-racket-has-expand-p checker))
+          (in-scheme-mode (eq major-mode 'scheme-mode))
+          (geiser-impl (bound-and-true-p geiser-impl--implementation)))
       (list
        (flycheck-verification-result-new
         :label "compiler-lib package"
         :message (if has-expand "present" "missing")
-        :face (if has-expand 'success '(bold error))))))
+        :face (if has-expand 'success '(bold error)))
+       (flycheck-verification-result-new
+        :label "Geiser Implementation"
+        :message (cond
+                  ((not in-scheme-mode) "Using Racket Mode")
+                  ((eq geiser-impl 'racket) "Racket")
+                  (geiser-impl (format "Other: %s" geiser-impl))
+                  (t "Geiser not active"))
+        :face (cond
+               ((or (not in-scheme-mode) (eq geiser-impl 'racket)) 'success)
+               (t '(bold error)))))))
   :error-filter
   (lambda (errors)
     (flycheck-sanitize-errors (flycheck-increment-error-columns errors)))
@@ -8426,6 +8457,45 @@ See URL `http://www.scalastyle.org'."
                        ((not flycheck-scalastylerc) '(bold warning))
                        ((not config-file) '(bold error))
                        (t 'success)))))))
+
+(flycheck-define-checker scheme-chicken
+  "A CHICKEN Scheme syntax checker using the CHICKEN compiler `csc'.
+
+See URL `http://call-cc.org/'."
+  :command ("csc" "-analyze-only" "-local" source)
+  :error-patterns
+  ((info line-start
+         "Note: " (zero-or-more not-newline) ":\n"
+         (one-or-more (any space)) "(" (file-name) ":" line ") " (message)
+         line-end)
+   (warning line-start
+            "Warning: " (zero-or-more not-newline) ":\n"
+            (one-or-more (any space)) "(" (file-name) ":" line ") " (message)
+            line-end)
+   (error line-start
+          "Error: " (zero-or-more not-newline) ":\n"
+          (one-or-more (any space)) "(" (file-name) ":" line ") " (message)
+          line-end))
+  :predicate
+  (lambda ()
+    ;; In `scheme-mode' we must check the current Scheme implementation
+    ;; being used
+    (and (boundp 'geiser-impl--implementation)
+         (eq geiser-impl--implementation 'chicken)))
+  :verify
+  (lambda (_checker)
+    (let ((geiser-impl (bound-and-true-p geiser-impl--implementation)))
+      (list
+       (flycheck-verification-result-new
+        :label "Geiser Implementation"
+        :message (cond
+                  ((eq geiser-impl 'chicken) "Chicken Scheme")
+                  (geiser-impl (format "Other: %s" geiser-impl))
+                  (t "Geiser not active"))
+        :face (cond
+               ((eq geiser-impl 'chicken) 'success)
+               (t '(bold error)))))))
+  :modes scheme-mode)
 
 (defconst flycheck-scss-lint-checkstyle-re
   (rx "cannot load such file" (1+ not-newline) "scss_lint_reporter_checkstyle")

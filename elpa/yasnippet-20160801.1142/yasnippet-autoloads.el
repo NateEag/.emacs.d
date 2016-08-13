@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "yasnippet" "yasnippet.el" (22410 4743 0 0))
+;;;### (autoloads nil "yasnippet" "yasnippet.el" (22446 30432 0 0))
 ;;; Generated autoloads from yasnippet.el
 
 (autoload 'yas-minor-mode "yasnippet" "\
@@ -50,7 +50,7 @@ A mode for editing yasnippets
 
 ;;;***
 
-;;;### (autoloads nil nil ("yasnippet-pkg.el") (22410 4743 860720
+;;;### (autoloads nil nil ("yasnippet-pkg.el") (22446 30432 726238
 ;;;;;;  0))
 
 ;;;***

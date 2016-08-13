@@ -4,9 +4,9 @@
 
 ;; Author: Justin Burkett <justin@burkett.cc>
 ;; Package-Requires: ((evil "1.2.3") (magit "2.6.0"))
-;; Package-Version: 20160714.1142
+;; Package-Version: 20160728.751
 ;; Homepage: https://github.com/justbur/evil-magit
-;; Version: 0.2
+;; Version: 0.4.1
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published
@@ -44,7 +44,7 @@
 ;; evil+magit behavior.
 
 ;; See the README at https://github.com/justbur/evil-magit for a table
-;; describing the key binding changes. 
+;; describing the key binding changes.
 
 ;;; Code:
 
@@ -150,6 +150,8 @@ should be a string suitable for `kbd'."
     magit-wip-after-save-local-mode
     magit-wip-after-apply-mode
     magit-wip-before-change-mode
+    ;; gh
+    magit-gh-pulls-mode
     ;; git-gutter
     git-gutter-mode
     git-gutter-mode-major-mode
@@ -178,20 +180,33 @@ evil-magit was loaded."
     (evil-set-initial-state mode evil-default-state)))
 
 (defvar evil-magit-section-maps
-  '(magit-tag-section-map
-    magit-hunk-section-map
-    magit-file-section-map
-    magit-stash-section-map
-    magit-staged-section-map
-    magit-remote-section-map
+  '(magit-branch-section-map
     magit-commit-section-map
-    magit-branch-section-map
+    magit-file-section-map
+    magit-hunk-section-map
+    magit-module-commit-section-map
+    magit-remote-section-map
+    magit-staged-section-map
+    magit-stash-section-map
     magit-stashes-section-map
+    magit-tag-section-map
     magit-unpulled-section-map
-    magit-unstaged-section-map
     magit-unpushed-section-map
+    magit-unstaged-section-map
     magit-untracked-section-map
-    magit-module-commit-section-map)
+
+    ;; new ones that I haven't looked at yet
+    magit-button-section-map
+    magit-commitbuf-section-map
+    magit-diffbuf-section-map
+    magit-diffstat-section-map
+    magit-headers-section-map
+    magit-message-section-map
+    magit-processbuf-section-map
+    magit-process-section-map
+    magit-pulls-section-map
+    magit-status-section-map
+    magit-worktree-section-map)
   "All magit section maps. For testing purposes only at the
 moment.")
 
@@ -250,7 +265,8 @@ moment.")
        (,states magit-mode-map "o"     magit-reset                    "x")
        (,states magit-mode-map "O"     magit-reset-popup              "X")
        (,states magit-mode-map "|"     magit-git-command              ":")
-       (,states magit-mode-map ">"     magit-submodule-popup          "o")
+       (,states magit-mode-map "'"     magit-submodule-popup          "o")
+       (,states magit-mode-map "\""    magit-subtree-popup            "O")
        (,states magit-mode-map "="     magit-diff-less-context        "-")
        (,states magit-mode-map "j"     evil-next-visual-line)
        (,states magit-mode-map "k"     evil-previous-visual-line)
@@ -502,7 +518,8 @@ evil-magit affects.")
                         (?y "Show Refs"       magit-show-refs-popup)
                         (?z "Stashing"        magit-stash-popup)
                         (?! "Running"         magit-run-popup)
-                        (?> "Submodules"      magit-submodule-popup)
+                        (?' "Submodules"      magit-submodule-popup)
+                        (?\" "Subtrees"       magit-subtree-popup)
                         (?_ "Reverting"       magit-revert-popup)
                         "Applying changes"
                         (?a "Apply"           magit-apply)

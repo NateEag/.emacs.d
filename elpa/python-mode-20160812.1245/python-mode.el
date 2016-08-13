@@ -1157,6 +1157,13 @@ Default is `t'."
   :tag "py-current-defun-delay"
   :group 'python-mode)
 
+(defcustom py--delete-temp-file-delay 1
+  "Used by `py--delete-temp-file'"
+
+  :type 'number
+  :tag "py--delete-temp-file-delay"
+  :group 'python-mode)
+
 (defcustom py-python-send-delay 5
   "Seconds to wait for output, used by `py--send-...' functions.
 
@@ -1254,7 +1261,7 @@ Default is \"\" "
   :tag "py-pylint-command"
   :group 'python-mode)
 
-(defcustom py-pylint-command-args "--errors-only"
+(defcustom py-pylint-command-args '("--errors-only")
   "String arguments to be passed to pylint.
 
 Default is \"--errors-only\" "
@@ -1442,6 +1449,9 @@ Else python"
 
 (defvar py-default-interpreter py-shell-name)
 
+(defvar py-tempfile nil
+  "Internally used")
+
 (defvar py-named-shells (list 'ipython 'ipython-dedicated 'ipython-no-switch 'ipython-switch 'ipython-switch-dedicated 'ipython2.7 'ipython2.7-dedicated 'ipython2.7-no-switch 'ipython2.7-switch 'ipython2.7-switch-dedicated 'ipython3 'ipython3-dedicated 'ipython3-no-switch 'ipython3-switch 'ipython3-switch-dedicated 'jython 'jython-dedicated 'jython-no-switch 'jython-switch 'jython-switch-dedicated 'python 'python-dedicated 'python-no-switch 'python-switch 'python-switch-dedicated 'python2 'python2-dedicated 'python2-no-switch 'python2-switch 'python2-switch-dedicated 'python3 'python3-dedicated 'python3-no-switch 'python3-switch 'python3-switch-dedicated))
 
 (defcustom py-python-command
@@ -1464,7 +1474,7 @@ Else /usr/bin/python"
 "
   :group 'python-mode)
 
-(defcustom py-python-command-args "-i"
+(defcustom py-python-command-args '("-i")
   "String arguments to be used when starting a Python shell."
   :type 'string
   :tag "py-python-command-args"
@@ -1489,7 +1499,7 @@ Else /usr/bin/python"
 "
   :group 'python-mode)
 
-(defcustom py-python2-command-args "-i"
+(defcustom py-python2-command-args '("-i")
   "String arguments to be used when starting a Python shell."
   :type '(repeat string)
   :tag "py-python2-command-args"
@@ -1514,7 +1524,7 @@ At GNU systems see /usr/bin/python3"
 "
   :group 'python-mode)
 
-(defcustom py-python3-command-args "-i"
+(defcustom py-python3-command-args '("-i")
   "String arguments to be used when starting a Python3 shell."
   :type '(repeat string)
   :tag "py-python3-command-args"
@@ -2049,7 +2059,7 @@ See also command `toggle-py-underscore-word-syntax-p' ")
 
 (defvar python-mode-message-string
   (if (or (string= "python-mode.el" (buffer-name))
-	  (ignore-errors (string-match "python-mode.el" (buffer-file-name))))
+	  (ignore-errors (string-match "python-mode.el" (py--buffer-filename-remote-maybe))))
       "python-mode.el"
     "python-components-mode.el")
   "Internally used. Reports the python-mode branch")
@@ -2167,7 +2177,6 @@ can write into: the value (if any) of the environment variable TMPDIR,
 (defvar py-pydbtrack-input-prompt "^[(]*ipydb[>)]+ "
   "Recognize the pydb-prompt. ")
 
-
 (defvar py-ipython-input-prompt-re "In \\[[0-9]+\\]:\\|^[ ]\\{3\\}[.]\\{3,\\}:"
   "A regular expression to match the IPython input prompt. ")
 
@@ -2273,7 +2282,6 @@ some logging etc. "
 See also `py-assignment-re' ")
 
 ;; (setq py-operator-re "[ \t]*\\(\\.\\|+\\|-\\|*\\|//\\|//\\|&\\|%\\||\\|\\^\\|>>\\|<<\\|<\\|<=\\|>\\|>=\\|==\\|!=\\|=\\)[ \t]*")
-
 
 (defvar py-assignment-re "[ \t]*=[^=]"
   "Matches assignment operator inclusive whitespaces around.
@@ -2972,7 +2980,7 @@ return `jython', otherwise return nil."
 
 Returns versioned string, nil if nothing appropriate found "
   (interactive)
-  (let ((path (buffer-file-name))
+  (let ((path (py--buffer-filename-remote-maybe))
                 (py-separator-char (or py-separator-char py-separator-char))
                 erg)
     (when (and path py-separator-char
@@ -3117,10 +3125,11 @@ if `(locate-library \"python-mode\")' is not succesful.
 
 Used only, if `py-install-directory' is empty. "
   (interactive)
-  (let ((erg (cond ((locate-library "python-mode")
+  (let (name
+	(erg (cond ((locate-library "python-mode")
                     (file-name-directory (locate-library "python-mode")))
-                   ((and (buffer-file-name)(string-match "python-mode" (buffer-file-name)))
-                    (file-name-directory (buffer-file-name)))
+                   ((and (setq name (py--buffer-filename-remote-maybe)) (string-match "python-mode" name))
+                    (file-name-directory name))
                    ((string-match "python-mode" (buffer-name))
                     default-directory))))
     (cond ((and (or (not py-install-directory) (string= "" py-install-directory)) erg)
@@ -3162,7 +3171,7 @@ See original source: http://pymacs.progiciels-bpi.ca"
 
 (when py-load-pymacs-p (py-load-pymacs))
 
-(when (or py-load-pymacs-p (featurep 'pymacs))
+(when (and py-load-pymacs-p (featurep 'pymacs))
   (defun py-load-pycomplete ()
     "Load Pymacs based pycomplete."
     (interactive)
@@ -3185,7 +3194,7 @@ See original source: http://pymacs.progiciels-bpi.ca"
             (add-hook 'python-mode-hook 'py-complete-initialize))
         (error "`py-install-directory' not set, see INSTALL")))))
 
-(and (or (eq py-complete-function 'py-complete-completion-at-point) py-load-pymacs-p (featurep 'pymacs))
+(when (functionp 'py-load-pycomplete)
   (py-load-pycomplete))
 
 (defun py-set-load-path ()
@@ -3285,7 +3294,6 @@ See http://debbugs.gnu.org/cgi/bugreport.cgi?bug=7115"
      (and (eq (char-before (point)) ?\\ )
           (py-escaped))))
 ;;
-
 
 (defvar python-mode-map nil)
 (setq python-mode-map
@@ -6050,46 +6058,41 @@ With BOL, return line-beginning-position"
 	       (setq erg (line-beginning-position))))
     (or erg (goto-char orig))))
 
-(defun py--backward-def-or-class-matcher (regexp indent)
+(defun py--backward-def-or-class-matcher (regexp indent origline)
   (let (done)
     (while (and
 	    (not done)
 	    (re-search-backward regexp nil 'move 1)
 	    (or
 	     (nth 8 (parse-partial-sexp (point-min) (point)))
+	     ;; (if
+	     ;; 	 ;; looking one level below
+	     ;; 	 (< 0 indent)
+	     ;; 	 (if
+	     ;; 	     (<= indent (current-indentation))
+	     ;; 	     t
+	     ;; 	   (setq done (match-beginning 0)))
 	     (if
-		 ;; looking one level below
-		 (< 0 indent)
-		 (if
-		     (<= indent (current-indentation))
-		     t
-		   (setq done (match-beginning 0)))
-	       (if
-		   (< indent (current-indentation))
-		   t
-		 (setq done (match-beginning 0)))))))
+		 (unless (eq (py-count-lines) origline)
+		   (and (not (bolp)) (<= indent (current-indentation))))
+
+		 t
+	       (setq done (match-beginning 0))))))
     done))
 
 (defun py--backward-def-or-class-intern (regexp &optional bol)
-  ;; get the right start-indent
-  ;; (when (empty-line-p)
-  ;;   (skip-chars-backward " \t\r\n\f"))
-  ;; ;; just behind a closing delimiter
-  ;; (when (and (eolp) (member (char-before) (list ?\) ?} ?\] ?\" ?')))
-  ;;   (forward-char -1))
-  (let ((indent (if (empty-line-p)
+  (let ((origline (py-count-lines))
+	(indent (if (empty-line-p)
 		    (current-indentation)
 		  (save-excursion
 		    (if (py--beginning-of-statement-p)
 			(current-indentation)
 		      (py-backward-statement)
 		      (current-indentation)))))
-
-	;; (progn (when (py-in-string-or-comment-p)
-	;; (py-backward-statement))
-	;; (current-indentation)))
 	erg)
-    (setq erg (py--backward-def-or-class-matcher regexp indent))
+    ;; (if (and (< (current-column) origindent) (looking-at regexp))
+    ;; (setq erg (point))
+    (setq erg (py--backward-def-or-class-matcher regexp indent origline))
     (and erg (looking-back "async ")
 	 (goto-char (match-beginning 0))
 	 (setq erg (point)))
@@ -7763,13 +7766,12 @@ Receives a buffer-name as argument"
 (defun py--provide-command-args (fast-process argprompt)
   (cond (fast-process nil)
 	((eq 2 (prefix-numeric-value argprompt))
-	 (read-string "Py-Shell arguments: "
-		      py-python-command-args))
+	 (mapconcat 'identity py-python2-command-args " "))
 	((string-match "^[Ii]" py-shell-name)
 	 py-ipython-command-args)
 	((string-match "^[^-]+3" py-shell-name)
-	 py-python3-command-args)
-	(t py-python-command-args)))
+	 (mapconcat 'identity py-python3-command-args " "))
+	(t (mapconcat 'identity py-python-command-args " "))))
 
 (defun py-shell (&optional argprompt dedicated shell buffer-name fast-process exception-buffer)
   "Start an interactive Python interpreter in another window.
@@ -7858,8 +7860,7 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 (defun py--close-execution (tempbuf tempfile)
   "Delete temporary buffer and and run `py--store-result-maybe'"
   (unless py-debug-p
-    (py-kill-buffer-unconditional tempbuf)
-    (py-delete-temporary tempfile tempbuf)))
+    (when tempfile (py-delete-temporary tempfile tempbuf))))
 
 (defun py--execute-base (&optional start end shell filename proc file wholebuf)
   "Update variables. "
@@ -7901,7 +7902,9 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 		((getenv "VIRTUAL_ENV"))
 		(t (getenv "HOME"))))
 	 (buffer (py--choose-buffer-name which-shell))
-	 (filename (or (and filename (expand-file-name filename)) (and (not (buffer-modified-p)) (buffer-file-name))))
+	 (filename (or (and filename (expand-file-name filename))
+		       ;; (and (not (buffer-modified-p)) (buffer-file-name))
+		       (py--buffer-filename-remote-maybe)))
 	 (py-orig-buffer-or-file (or filename (current-buffer)))
 	 (proc (cond (proc)
 		     ;; will deal with py-dedicated-process-p also
@@ -7930,6 +7933,26 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 				 output-buffer py-store-result-p py-return-result-p)
     (sit-for 0.1))))
 
+(defun py--delete-temp-file (tempfile &optional tempbuf)
+  "The called, after `py--execute-buffer-finally' returned. "
+  (sit-for py--delete-temp-file-delay t)
+  (py--close-execution tempbuf tempfile))
+
+(defun py--execute-buffer-finally (strg execute-directory wholebuf which-shell proc procbuf origline)
+  (let* ((temp (make-temp-name
+		;; FixMe: that should be simpler
+                (concat (replace-regexp-in-string py-separator-char "-" (replace-regexp-in-string (concat "^" py-separator-char) "" (replace-regexp-in-string ":" "-" (if (stringp which-shell) which-shell (prin1-to-string which-shell))))) "-")))
+         (tempbuf (get-buffer-create temp))
+	 erg)
+    (setq py-tempfile (concat (expand-file-name py-temp-directory) py-separator-char (replace-regexp-in-string py-separator-char "-" temp) ".py"))
+    (with-current-buffer tempbuf
+      ;; (when py-debug-p (message "py--execute-buffer-finally: py-split-window-on-execute: %s" py-split-window-on-execute))
+      (insert strg)
+      (write-file py-tempfile))
+    (unwind-protect
+	(setq erg (py--execute-file-base proc py-tempfile nil procbuf py-orig-buffer-or-file nil execute-directory py-exception-buffer origline)))
+    erg))
+
 (defun py--execute-base-intern (strg shell filename proc file wholebuf buffer origline execute-directory start end which-shell)
   "Select the handler.
 
@@ -7945,24 +7968,12 @@ When optional FILE is `t', no temporary file is needed. "
 	   (py--execute-ge24.3 start end filename execute-directory which-shell py-exception-buffer proc file origline))
 	  ((and filename wholebuf)
 	   (py--execute-file-base proc filename nil buffer nil filename execute-directory py-exception-buffer origline))
-	  (t (py--execute-buffer-finally strg execute-directory wholebuf which-shell proc buffer origline)))))
+	  (t
+	   (py--execute-buffer-finally strg execute-directory wholebuf which-shell proc buffer origline)
+	   (py--delete-temp-file py-tempfile)
+	   ;;
 
-(defun py--execute-buffer-finally (strg execute-directory wholebuf which-shell proc procbuf origline)
-  (let* ((temp (make-temp-name
-		;; FixMe: that should be simpler
-                (concat (replace-regexp-in-string py-separator-char "-" (replace-regexp-in-string (concat "^" py-separator-char) "" (replace-regexp-in-string ":" "-" (if (stringp which-shell) which-shell (prin1-to-string which-shell))))) "-")))
-         (tempfile (concat (expand-file-name py-temp-directory) py-separator-char (replace-regexp-in-string py-separator-char "-" temp) ".py"))
-         (tempbuf (get-buffer-create temp))
-	 erg)
-    (with-current-buffer tempbuf
-      ;; (when py-debug-p (message "py--execute-buffer-finally: py-split-window-on-execute: %s" py-split-window-on-execute))
-      (insert strg)
-      (write-file tempfile))
-    (unwind-protect
-	(setq erg (py--execute-file-base proc tempfile nil procbuf py-orig-buffer-or-file nil execute-directory py-exception-buffer origline)))
-    (sit-for 0.1 t)
-    (py--close-execution tempbuf tempfile)
-    erg))
+	   ))))
 
 (defun py--fetch-error (buf &optional origline)
   "Highlight exceptions found in BUF.
@@ -7988,7 +7999,7 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
     (when erg
       (goto-char erg)
       (save-match-data
-	(and (not (buffer-file-name
+	(and (not (py--buffer-filename-remote-maybe
 		   (or
 		    (get-buffer py-exception-buffer)
 		    (get-buffer (file-name-nondirectory py-exception-buffer)))))
@@ -8044,14 +8055,14 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
   "An alternative way to do it.
 
 May we get rid of the temporary file? "
-  (and (buffer-file-name) buffer-offer-save (buffer-modified-p) (y-or-n-p "Save buffer before executing? ")
-       (write-file (buffer-file-name)))
+  (and (py--buffer-filename-remote-maybe) buffer-offer-save (buffer-modified-p (py--buffer-filename-remote-maybe)) (y-or-n-p "Save buffer before executing? ")
+       (write-file (py--buffer-filename-remote-maybe)))
   (let* ((start (copy-marker start))
          (end (copy-marker end))
          (py-exception-buffer (or py-exception-buffer (current-buffer)))
          (line (py-count-lines (point-min) (if (eq start (line-beginning-position)) (1+ start) start)))
          (strg (buffer-substring-no-properties start end))
-         (tempfile (or (buffer-file-name) (concat (expand-file-name py-temp-directory) py-separator-char (replace-regexp-in-string py-separator-char "-" "temp") ".py")))
+         (tempfile (or (py--buffer-filename-remote-maybe) (concat (expand-file-name py-temp-directory) py-separator-char (replace-regexp-in-string py-separator-char "-" "temp") ".py")))
 
          (proc (or proc (if py-dedicated-process-p
                             (get-buffer-process (py-shell nil py-dedicated-process-p which-shell py-buffer-name))
@@ -8330,7 +8341,7 @@ This may be preferable to `\\[py-execute-buffer]' because:
                        (find-file-noselect filename))))
       (set-buffer buffer)))
   (let ((py-shell-name (or shell (py-choose-shell nil shell)))
-        (file (buffer-file-name (current-buffer))))
+        (file (py--buffer-filename-remote-maybe (current-buffer))))
     (if file
         (let ((proc (or
                      (ignore-errors (get-process (file-name-directory shell)))
@@ -8511,7 +8522,7 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
             ;; (skip-chars-backward "^\t\r\n\f")
             ;; (skip-chars-forward " \t")
             (save-match-data
-              (and (not (buffer-file-name
+              (and (not (py--buffer-filename-remote-maybe
                          (or
                           (get-buffer py-exception-buffer)
                           (get-buffer (file-name-nondirectory py-exception-buffer)))))
@@ -8887,7 +8898,8 @@ script, and set to python-mode, and pdbtrack will find it.)"
 
             (setq target_lineno (car target))
             (setq target_buffer (cadr target))
-            (setq target_fname (buffer-file-name target_buffer))
+            (setq target_fname
+		  (py--buffer-filename-remote-maybe target_buffer))
             (switch-to-buffer-other-window target_buffer)
             (goto-char (point-min))
             (forward-line (1- target_lineno))
@@ -9067,12 +9079,16 @@ At GNU Linux systems required pdb version should be detected by `py--pdb-version
 
 lp:963253"
   (interactive
-   (list (gud-query-cmdline
-	  (if (or (eq system-type 'ms-dos)(eq system-type 'windows-nt))
-	      (car (read-from-string py-python-ms-pdb-command))
-	    ;; sys.version_info[0]
-	    (car (read-from-string (py--pdb-version)))) "asdf")))
-  (pdb command-line (buffer-file-name)))
+   (progn
+     (require 'gud)
+     (list (gud-query-cmdline
+	    (if (or (eq system-type 'ms-dos)(eq system-type 'windows-nt))
+		(car (read-from-string py-python-ms-pdb-command))
+	      ;; sys.version_info[0]
+	      ;; (car (read-from-string (py--pdb-version)))
+	      'pdb)
+	    (py--buffer-filename-remote-maybe)))))
+  (pdb command-line))
 
 (defun py--pdb-current-executable ()
   "When py-pdb-executable is set, return it.
@@ -9095,10 +9111,10 @@ Otherwise return resuslt from `executable-find' "
 		      (t
 		       (py--pdb-current-executable))))
 	 ;; file to debug
-         (second (cond ((not (ignore-errors (buffer-file-name)))
+         (second (cond ((not (ignore-errors
+			       (py--buffer-filename-remote-maybe)))
 			(error "%s" "Buffer must be saved first."))
-		       ((buffer-file-name)
-			(buffer-file-name))
+		       ((py--buffer-filename-remote-maybe))
 		       (t (and gud-pdb-history (stringp (car gud-pdb-history)) (replace-regexp-in-string "^\\([^ ]+\\) +\\(.+\\)$" "\\2" (car gud-pdb-history))))))
          (erg (and first second (concat first " " second))))
     (when erg
@@ -9108,7 +9124,9 @@ Otherwise return resuslt from `executable-find' "
   "Provide a better default command line when called interactively."
   (interactive
    (list (gud-query-cmdline py-pdb-path
-                            (file-name-nondirectory buffer-file-name)))))
+                            ;; (file-name-nondirectory buffer-file-name)
+			    (file-name-nondirectory (py--buffer-filename-remote-maybe)) 
+			    ))))
 
 ;; python-components-help
 (defvar py-eldoc-string-code
@@ -9282,7 +9300,7 @@ not inside a defun."
   (let* ((beg (point))
 	 (end (progn (skip-chars-forward "a-zA-Z0-9_." (line-end-position))(point)))
 	 (sym (buffer-substring-no-properties beg end))
-	 (origfile (buffer-file-name))
+	 (origfile (py--buffer-filename-remote-maybe))
 	 (temp (md5 (buffer-name)))
 	 (file (concat (py--normalize-directory py-temp-directory) temp "-py-help-at-point.py"))
 	 (cmd (py-find-imports))
@@ -9795,16 +9813,16 @@ Imports done are displayed in message buffer. "
   "*Run pep8, check formatting - default on the file currently visited."
   (interactive
    (let ((default
-           (if (buffer-file-name)
+           (if (py--buffer-filename-remote-maybe)
                (format "%s %s %s" py-pep8-command
                        (mapconcat 'identity py-pep8-command-args " ")
-                       (buffer-file-name))
+                       (py--buffer-filename-remote-maybe))
              (format "%s %s" py-pep8-command
                      (mapconcat 'identity py-pep8-command-args " "))))
          (last (when py-pep8-history
                  (let* ((lastcmd (car py-pep8-history))
                         (cmd (cdr (reverse (split-string lastcmd))))
-                        (newcmd (reverse (cons (buffer-file-name) cmd))))
+                        (newcmd (reverse (cons (py--buffer-filename-remote-maybe) cmd))))
                    (mapconcat 'identity newcmd " ")))))
 
      (list
@@ -9837,36 +9855,29 @@ Imports done are displayed in message buffer. "
 ;;  Pylint
 (defalias 'pylint 'py-pylint-run)
 (defun py-pylint-run (command)
-  "*Run pylint (default on the file currently visited).
+  "Run pylint (default on the file currently visited).
 
 For help see M-x pylint-help resp. M-x pylint-long-help.
 Home-page: http://www.logilab.org/project/pylint "
   (interactive
-   (let ((default
-           (if (buffer-file-name)
-               (format "%s %s %s" py-pylint-command
-                       (mapconcat 'identity py-pylint-command-args " ")
-                       (buffer-file-name))
-             (format "%s %s %s" py-pylint-command
-                     (mapconcat 'identity py-pylint-command-args " ")
-                     (buffer-name (current-buffer)))))
+   (let ((default (format "%s %s %s" py-pylint-command
+			  (mapconcat 'identity py-pylint-command-args " ")
+			  (py--buffer-filename-remote-maybe)))
          (last (and py-pylint-history (car py-pylint-history)))
          erg)
 
-     (list
-      (if (fboundp 'read-shell-command)
-          (read-shell-command "Run pylint like this: "
-			      (or last default)
-                              'py-pylint-history)
-        (read-string "Run pylint like this: "
-		     (or default last)
-                     'py-pylint-history)))))
+     (list (funcall (if (fboundp 'read-shell-command)
+			'read-shell-command 'read-string)
+		    "Run pylint like this: "
+		    (or default last)
+		    'py-pylint-history))))
+  ;; (if py-pylint-offer-current-p (or default last) (or last default))
+  ;; 'py-pylint-history))))
   (save-some-buffers (not py-ask-about-save))
-  (if (or (not buffer-file-name)
-	  (not (file-readable-p buffer-file-name)))
-      (message "Warning: %s" "pylint needs a file"))
   (set-buffer (get-buffer-create "*Pylint*"))
   (erase-buffer)
+  (unless (file-readable-p (car (cddr (split-string command))))
+    (message "Warning: %s" "pylint needs a file"))
   (shell-command command "*Pylint*"))
 
 (defalias 'pylint-help 'py-pylint-help)
@@ -9898,16 +9909,16 @@ For help see M-x pyflakes-help resp. M-x pyflakes-long-help.
 Home-page: http://www.logilab.org/project/pyflakes "
   (interactive
    (let ((default
-           (if (buffer-file-name)
+           (if (py--buffer-filename-remote-maybe)
                (format "%s %s %s" py-pyflakes-command
                        (mapconcat 'identity py-pyflakes-command-args " ")
-                       (buffer-file-name))
+                       (py--buffer-filename-remote-maybe))
              (format "%s %s" py-pyflakes-command
                      (mapconcat 'identity py-pyflakes-command-args " "))))
          (last (when py-pyflakes-history
                  (let* ((lastcmd (car py-pyflakes-history))
                         (cmd (cdr (reverse (split-string lastcmd))))
-                        (newcmd (reverse (cons (buffer-file-name) cmd))))
+                        (newcmd (reverse (cons (py--buffer-filename-remote-maybe) cmd))))
                    (mapconcat 'identity newcmd " ")))))
 
      (list
@@ -9973,16 +9984,16 @@ Extracted from http://manpages.ubuntu.com/manpages/natty/man1/pyflakes.1.html"))
 "
   (interactive
    (let ((default
-           (if (buffer-file-name)
+           (if (py--buffer-filename-remote-maybe)
                (format "%s %s %s" py-pyflakespep8-command
                        (mapconcat 'identity py-pyflakespep8-command-args " ")
-                       (buffer-file-name))
+                       (py--buffer-filename-remote-maybe))
              (format "%s %s" py-pyflakespep8-command
                      (mapconcat 'identity py-pyflakespep8-command-args " "))))
          (last (when py-pyflakespep8-history
                  (let* ((lastcmd (car py-pyflakespep8-history))
                         (cmd (cdr (reverse (split-string lastcmd))))
-                        (newcmd (reverse (cons (buffer-file-name) cmd))))
+                        (newcmd (reverse (cons (py--buffer-filename-remote-maybe) cmd))))
                    (mapconcat 'identity newcmd " ")))))
 
      (list
@@ -10021,15 +10032,15 @@ Extracted from http://manpages.ubuntu.com/manpages/natty/man1/pyflakes.1.html"))
   "*Run pychecker (default on the file currently visited)."
   (interactive
    (let ((default
-           (if (buffer-file-name)
+           (if (py--buffer-filename-remote-maybe)
                (format "%s %s %s" py-pychecker-command
 		       py-pychecker-command-args
-		       (buffer-file-name))
+		       (py--buffer-filename-remote-maybe))
              (format "%s %s" py-pychecker-command py-pychecker-command-args)))
          (last (when py-pychecker-history
                  (let* ((lastcmd (car py-pychecker-history))
                         (cmd (cdr (reverse (split-string lastcmd))))
-                        (newcmd (reverse (cons (buffer-file-name) cmd))))
+                        (newcmd (reverse (cons (py--buffer-filename-remote-maybe) cmd))))
                    (mapconcat 'identity newcmd " ")))))
 
      (list
@@ -10060,7 +10071,7 @@ See `py-check-command' for the default."
   (interactive
    (list (read-string "Checker command: "
                       (concat py-check-command " "
-                              (let ((name (buffer-file-name)))
+                              (let ((name (py--buffer-filename-remote-maybe)))
                                 (if name
                                     (file-name-nondirectory name)))))))
   (require 'compile)                    ;To define compilation-* variables.
@@ -10093,17 +10104,17 @@ See `py-check-command' for the default."
 Consider \"pip install flake8\" resp. visit \"pypi.python.org\""))
              py-flake8-command))
           (default
-            (if (buffer-file-name)
+            (if (py--buffer-filename-remote-maybe)
                 (format "%s %s %s" py-flake8-command
                         py-flake8-command-args
-                        (buffer-file-name))
+                        (py--buffer-filename-remote-maybe))
               (format "%s %s" py-flake8-command
                       py-flake8-command-args)))
           (last
            (when py-flake8-history
              (let* ((lastcmd (car py-flake8-history))
                     (cmd (cdr (reverse (split-string lastcmd))))
-                    (newcmd (reverse (cons (buffer-file-name) cmd))))
+                    (newcmd (reverse (cons (py--buffer-filename-remote-maybe) cmd))))
                (mapconcat 'identity newcmd " ")))))
      (list
       (if (fboundp 'read-shell-command)
@@ -10191,15 +10202,15 @@ i.e. spaces, tabs, carriage returns, newlines and newpages. "
   (unless (string-match "pyflakespep8" name)
     (unless (executable-find name)
       (when py-verbose-p (message "Don't see %s. Use `easy_install' %s? " name name))))
-  (if (buffer-file-name)
+  (if (py--buffer-filename-remote-maybe)
       (let* ((temp-file (flymake-init-create-temp-buffer-copy
                          'flymake-create-temp-inplace))
              (local-file (file-relative-name
                           temp-file
-                          (file-name-directory buffer-file-name))))
+                          (file-name-directory (py--buffer-filename-remote-maybe)))))
         (add-to-list 'flymake-allowed-file-name-masks (car (read-from-string (concat "(\"\\.py\\'\" flymake-" name ")"))))
         (list command (list local-file)))
-    (message "%s" "flymake needs a `buffer-file-name'. Please save before calling.")))
+    (message "%s" "flymake needs a `file-name'. Please save before calling.")))
 
 (defun py-flycheck-mode (&optional arg)
   "Toggle `flycheck-mode'.
@@ -10281,7 +10292,7 @@ Maybe call M-x describe-variable RET to query its value. "
 
 (defun variables-base-state (py-exception-buffer orgname reSTname directory-in directory-out)
   (save-restriction
-    (let ((suffix (file-name-nondirectory (buffer-file-name)))
+    (let ((suffix (file-name-nondirectory (py--buffer-filename-remote-maybe)))
           variableslist)
       ;; (widen)
       (goto-char (point-min))
@@ -19834,6 +19845,13 @@ Use `py-fast-process' "
 (when py-org-cycle-p
   (define-key python-mode-map (kbd "<backtab>") 'org-cycle))
 
+(defun py--buffer-filename-remote-maybe (&optional buffer)
+  ((lambda (file-name)
+     (if (and (featurep 'tramp) (tramp-tramp-file-p file-name))
+	 (tramp-file-name-localname
+	  (tramp-dissect-file-name file-name))
+       file-name))
+   (buffer-file-name buffer)))
 
 (defun py-forward-buffer ()
   "A complementary form used by auto-generated commands.
@@ -21154,30 +21172,6 @@ Eval resulting buffer to install it, see customizable `py-extensions'. "
             (setq element (car element))
           (setq element (cdr element))))
       element)))
-
-;;  (defun py-shell-send-string (string &optional process msg filename)
-;;    "Send STRING to Python PROCESS.
-;;  When `py-verbose-p' and MSG is non-nil messages the first line of STRING."
-;;    (interactive "sPython command: ")
-;;    (let* ((process (or process (get-buffer-process (py-shell))))
-;;           (lines (split-string string "\n"))
-;;           (temp-file-name (concat (with-current-buffer (process-buffer process)
-;;                                     (file-remote-p default-directory))
-;;                                   (py--normalize-directory py-temp-directory)
-;;  				 ;; (md5 (user-login-name))
-;;                                   (md5 (concat (user-login-name)(prin1-to-string (current-time))))
-;;  				 "-psss-temp.py"))
-;;           (file-name (or filename (buffer-file-name) temp-file-name)))
-;;      (if (> (length lines) 1)
-;;  	(with-temp-file temp-file-name
-;;  	  (insert string)
-;;  	  (delete-trailing-whitespace)
-;;  	  (py-send-file temp-file-name process temp-file-name))
-;;        (comint-send-string process string)
-;;        (when (or (not (string-match "\n$" string))
-;;                  (string-match "\n[ \t].*\n?$" string))
-;;          (comint-send-string process "\n")))
-;;      (unless py-debug-p (when (file-readable-p temp-file-name)(delete-file temp-file-name)))))
 
 (defun py--delay-process-dependent (process)
   "Call a `py-ipython-send-delay' or `py-python-send-delay' according to process"
@@ -26502,7 +26496,7 @@ See available customizations listed in files variables-python-mode at directory 
                                                       (current-column))))
               (^ '(- (1+ (current-indentation)))))))
   (and py-guess-py-install-directory-p (py-set-load-path))
-  ;;  (unless gud-pdb-history (when (buffer-file-name) (add-to-list 'gud-pdb-history (buffer-file-name))))
+  ;;  (unless gud-pdb-history (when (buffer-file-name) (add-to-list 'gud-pdb-history (py--buffer-filename-remote-maybe)))) 
   (and py-autopair-mode
        (load-library "autopair")
        (add-hook 'python-mode-hook

@@ -5,7 +5,7 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Created: 20080830
 ;; Package-Requires: ((emacs "24.3") (dash "2.12.1") (packed "0.5.3"))
-;; Package-Version: 20160424.418
+;; Package-Version: 20160711.1012
 ;; Homepage: https://github.com/tarsius/auto-compile
 ;; Keywords: compile, convenience, lisp
 
@@ -763,6 +763,7 @@ file would get loaded."
           (when (setq el (packed-locate-library file nosuffix))
             (setq elc (byte-compile-dest-file el))
             (when (and (file-exists-p elc)
+                       (file-writable-p elc)
                        (file-newer-than-file-p el elc))
               (message "Recompiling %s..." el)
               (packed-byte-compile-file el)

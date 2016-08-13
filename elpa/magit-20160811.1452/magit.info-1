@@ -1209,7 +1209,7 @@ using an Auto-Revert mode, and should therefore be avoided.  If Emacs
 crashed or if you quit Emacs by mistake, then you would also lose the
 buffer content.  There would be no autosave file still containing the
 intermediate version (because that was deleted when you saved the
-buffer) and you would not be asked whether you want to safe the buffer
+buffer) and you would not be asked whether you want to save the buffer
 (because it isn’t modified).
 
 
@@ -2372,6 +2372,12 @@ File: magit.info,  Node: Log Buffer,  Next: Select from log,  Prev: Refreshing l
 
      Move forward in current buffer’s history.
 
+‘C-c C-n’     (‘magit-log-move-to-parent’)
+
+     Move to a parent of the current commit.  By default, this is the
+     first parent, but a numeric prefix can be used to specify another
+     parent.
+
 ‘SPC’     (‘magit-diff-show-or-scroll-up’)
 
      Update the commit or diff buffer for the thing at point.
@@ -2948,10 +2954,10 @@ you should also change the others to keep things aligned.  The following
 
    • ‘%n’ Name of this ref.
 
-   • ‘%u’ Upstream of this local branch and additional local vs.
-     upstream information.
+   • ‘%u’ Upstream of this local branch.
 
-   • ‘%U’ Upstream of this local branch.
+   • ‘%U’ Upstream of this local branch and additional local vs.
+     upstream information.
 
  -- Variable: magit-refs-local-branch-format
 
@@ -5953,7 +5959,7 @@ In order to update the status buffer, ‘git’ has to be run a few dozen
 times.  That is only problematic on Microsoft Windows, because that
 operating system is exceptionally slow at starting processes.  Sadly
 this is an issue that can only be fixed by Microsoft itself, and they
-don’t appear to particularly interested in doing so.
+don’t appear to be particularly interested in doing so.
 
    Beside the subprocess issue, there also exist other Window-specific
 performance issues, some of which can be worked around.  The maintainers
@@ -7330,7 +7336,7 @@ Appendix B Keystroke Index
 * ! S:                                   Running Git manually.
                                                               (line  38)
 * $:                                     Viewing Git output.  (line  11)
-* +:                                     Log Buffer.          (line  53)
+* +:                                     Log Buffer.          (line  59)
 * + <1>:                                 Refreshing diffs.    (line  58)
 * -:                                     Refreshing diffs.    (line  54)
 * 0:                                     Refreshing diffs.    (line  62)
@@ -7338,8 +7344,8 @@ Appendix B Keystroke Index
 * 2:                                     Section visibility.  (line  26)
 * 3:                                     Section visibility.  (line  26)
 * 4:                                     Section visibility.  (line  26)
-* =:                                     Log Buffer.          (line  47)
-* = <1>:                                 Log Buffer.          (line  57)
+* =:                                     Log Buffer.          (line  53)
+* = <1>:                                 Log Buffer.          (line  63)
 * ^:                                     Section movement.    (line  31)
 * a:                                     Applying.            (line  33)
 * A:                                     Cherry picking.      (line   8)
@@ -7400,6 +7406,7 @@ Appendix B Keystroke Index
                                                               (line  24)
 * C-c C-k <2>:                           Editing rebase sequences.
                                                               (line  11)
+* C-c C-n:                               Log Buffer.          (line  27)
 * C-c C-o:                               Editing commit messages.
                                                               (line 144)
 * C-c C-p:                               Editing commit messages.
@@ -7454,7 +7461,7 @@ Appendix B Keystroke Index
 * d u:                                   Diffing.             (line  55)
 * d w:                                   Diffing.             (line  43)
 * D w:                                   Refreshing diffs.    (line  28)
-* DEL:                                   Log Buffer.          (line  37)
+* DEL:                                   Log Buffer.          (line  43)
 * DEL <1>:                               Diff buffer.         (line  48)
 * DEL <2>:                               Blaming.             (line  44)
 * DEL <3>:                               Editing rebase sequences.
@@ -7636,7 +7643,7 @@ Appendix B Keystroke Index
 * s <1>:                                 Editing rebase sequences.
                                                               (line  59)
 * s-<tab>:                               Section visibility.  (line  22)
-* SPC:                                   Log Buffer.          (line  27)
+* SPC:                                   Log Buffer.          (line  33)
 * SPC <1>:                               Diff buffer.         (line  44)
 * SPC <2>:                               Blaming.             (line  34)
 * SPC <3>:                               Editing rebase sequences.

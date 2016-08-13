@@ -324,7 +324,7 @@ of the column.  FORMAT is a function that is called with one
 argument, the repository identification (usually its basename),
 and with `default-directory' bound to the toplevel of its working
 tree.  It has to return a string to be inserted or nil.  PROPS is
-an alist that supports the keys ~:right-align~ and ~:pad-right~."
+an alist that supports the keys `:right-align' and `:pad-right'."
   :package-version '(magit . "2.7.1")
   :group 'magit-commands
   :type `(repeat (list :tag "Column"
@@ -1281,12 +1281,14 @@ is done using `magit-find-index-noselect'."
           (let ((coding-system-for-write buffer-file-coding-system))
             (with-temp-file index
               (insert-buffer-substring buffer)))
-          (magit-call-git "update-index" "--cacheinfo"
-                          (substring (magit-git-string "ls-files" "-s" file) 0 6)
-                          (magit-git-string "hash-object" "-t" "blob" "-w"
-                                            (concat "--path=" file)
-                                            "--" index)
-                          file)
+          (magit-with-toplevel
+            (magit-call-git "update-index" "--cacheinfo"
+                            (substring (magit-git-string "ls-files" "-s" file)
+                                       0 6)
+                            (magit-git-string "hash-object" "-t" "blob" "-w"
+                                              (concat "--path=" file)
+                                              "--" index)
+                            file))
           (set-buffer-modified-p nil)
           (when magit-wip-after-apply-mode
             (magit-wip-commit-after-apply (list file) " after un-/stage")))
@@ -1918,7 +1920,7 @@ merge.
                      (magit-merge-arguments)
                      current-prefix-arg))
   (magit-merge-assert)
-  (magit-run-git "merge" (if nocommit "--no-commit" "--no-edit") args rev))
+  (magit-run-git-async "merge" (if nocommit "--no-commit" "--no-edit") args rev))
 
 ;;;###autoload
 (defun magit-merge-editmsg (rev &optional args)
@@ -1944,7 +1946,7 @@ inspect the merge and change the commit message.
                      (magit-merge-arguments)))
   (magit-merge-assert)
   (cl-pushnew "--no-ff" args :test #'equal)
-  (magit-run-git "merge" "--no-commit" args rev))
+  (magit-run-git-async "merge" "--no-commit" args rev))
 
 ;;;###autoload
 (defun magit-merge-preview (rev)
@@ -2811,6 +2813,14 @@ Usually this is just its basename."
         (concat " " v)
       v)))
 
+(defun magit-repolist-column-branch (_id)
+  "Insert the current branch."
+  (magit-get-current-branch))
+
+(defun magit-repolist-column-upstream (_id)
+  "Insert the upstream branch of the current branch."
+  (magit-get-current-branch))
+
 (defun magit-repolist-column-unpulled-from-upstream (_id)
   "Insert number of upstream commits not in the current branch."
   (--when-let (magit-get-upstream-branch)
@@ -2820,7 +2830,7 @@ Usually this is just its basename."
 (defun magit-repolist-column-unpulled-from-pushremote (_id)
   "Insert number of commits in the push branch but not the current branch."
   (--when-let (magit-get-push-branch)
-    (when (magit-rev-parse-p it)
+    (when (magit-rev-verify it)
       (let ((n (cadr (magit-rev-diff-count "HEAD" it))))
         (propertize (number-to-string n) 'face (if (> n 0) 'bold 'shadow))))))
 
@@ -2833,7 +2843,7 @@ Usually this is just its basename."
 (defun magit-repolist-column-unpushed-to-pushremote (_id)
   "Insert number of commits in the current branch but not its push branch."
   (--when-let (magit-get-push-branch)
-    (when (magit-rev-parse-p it)
+    (when (magit-rev-verify it)
       (let ((n (car (magit-rev-diff-count "HEAD" it))))
         (propertize (number-to-string n) 'face (if (> n 0) 'bold 'shadow))))))
 
@@ -3192,7 +3202,9 @@ Git, and Emacs in the echo area."
       (setq magit-version 'error)
       (when magit-version
         (push magit-version debug))
-      (message "Cannot determine Magit's version %S" debug))
+      (unless (not (equal (getenv "TRAVIS") "true"))
+        ;; The repository is a sparse clone.
+        (message "Cannot determine Magit's version %S" debug)))
     magit-version))
 
 (defun magit-startup-asserts ()

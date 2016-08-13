@@ -742,18 +742,18 @@ string \"true\", otherwise return nil."
 (defun magit-name-local-branch (rev &optional lax)
   (--when-let (magit-git-string "name-rev" "--name-only" "--no-undefined"
                                 "--refs=refs/heads/*" rev)
-    (and (or lax (not (string-match-p "~" it))) it)))
+    (and (or lax (not (string-match-p "[~^]" it))) it)))
 
 (defun magit-name-remote-branch (rev &optional lax)
   (--when-let (magit-git-string "name-rev" "--name-only" "--no-undefined"
                                 "--refs=refs/remotes/*" rev)
-    (and (or lax (not (string-match-p "~" it)))
+    (and (or lax (not (string-match-p "[~^]" it)))
          (substring it 8))))
 
 (defun magit-name-tag (rev &optional lax)
   (--when-let (magit-git-string "name-rev" "--name-only" "--no-undefined"
                                 "--refs=refs/tags/*" rev)
-    (and (or lax (not (string-match-p "~" it)))
+    (and (or lax (not (string-match-p "[~^]" it)))
          (substring it 5))))
 
 (defun magit-ref-fullname (name)
@@ -796,7 +796,8 @@ string \"true\", otherwise return nil."
   (or (magit-section-case
         (branch (magit-section-value it))
         (commit (let ((rev (magit-section-value it)))
-                  (or (magit-get-shortname rev) rev))))
+                  (or (magit-get-shortname rev) rev)))
+        (tag    (magit-section-value it)))
       (and (derived-mode-p 'magit-revision-mode)
            (car magit-refresh-args))))
 
@@ -1428,12 +1429,12 @@ Return a list of two integers: (A>B B>A)."
 
 (defun magit-get (&rest keys)
   "Return the value of Git config entry specified by KEYS."
-  (magit-git-str "config" (mapconcat 'identity keys ".")))
+  (car (apply 'magit-get-all keys)))
 
 (defun magit-get-all (&rest keys)
   "Return all values of the Git config entry specified by KEYS."
   (let ((magit-git-debug nil))
-    (magit-git-lines "config" "--get-all" (mapconcat 'identity keys "."))))
+    (magit-git-items "config" "-z" "--get-all" (mapconcat 'identity keys "."))))
 
 (defun magit-get-boolean (&rest keys)
   "Return the boolean value of Git config entry specified by KEYS."

@@ -5,7 +5,7 @@
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Created: 11 January 2013
 ;; Version: 0.48
-;; Package-Version: 20160702.1128
+;; Package-Version: 20160731.1323
 ;; Package-Requires: ((dash "2.8.0") (s "1.9.0") (cl-lib "0.5"))
 ;;; Commentary:
 
@@ -224,7 +224,7 @@ If REGEXP is non-nil, treat STRING as a regular expression."
       (setq arguments (cons "--nogroup" arguments)))
     (unless regexp
       (setq arguments (cons "--literal" arguments)))
-    (when (eq system-type 'windows-nt)
+    (when (or (eq system-type 'windows-nt) (eq system-type 'cygwin))
       ;; Use --vimgrep to work around issue #97 on Windows.
       (setq arguments (cons "--vimgrep" arguments)))
     (when (char-or-string-p file-regex)

@@ -137,19 +137,45 @@ new file for the first time."
 
 ;; Save when Emacs loses focus, when I change buffers, when I change windows,
 ;; and when it's been idle for a while.
+;;
+;; TODO Turn this into a standalone package? Not sure if anyone else would care
+;; to use it...
+
+(defun ne/should-autosave-buffer (buffer)
+  "Return `nil' if the passed buffer should not be autosaved.
+
+Primarily used to avoid autosaving buffers whose buffer-file-name
+is not an existing file, as such orphaned buffers tend to crop up
+when changing branches in git."
+
+  (when (buffer-file-name buffer)
+    (file-exists-p (buffer-file-name buffer))))
+
 (defun ne/save-when-file (&rest args)
-  "Save current buffer if it has an associated file.
+  "Save current buffer if it points to an existing file.
 
 Accepts unused `args' so it can be used as advice for arbitrary functions."
 
-  (when (buffer-file-name)
+  (when (ne/should-autosave-buffer (current-buffer))
     (save-buffer)))
+
+(defun ne/advise-focus-autosave-should-save-p (old-function &rest arguments)
+  "Prevent `focus-autosave-should-save-p' from running when the passed
+buffer's file does not exist."
+
+  (when (ne/should-autosave-buffer (nth 0 arguments))
+                  (apply old-function arguments)))
 
 (advice-add 'other-window :before #'ne/save-when-file)
 (advice-add 'switch-to-buffer :before #'ne/save-when-file)
+(advice-add 'focus-autosave-should-save-p
+            :around
+            #'ne/advise-focus-autosave-should-save-p)
+
 (focus-autosave-mode t)
 (diminish 'focus-autosave-mode)
-(run-with-idle-timer 5 t 'focus-autosave-save-all)
+;; Save this so I can turn off the save-on-idle feature if need be.
+(setq ne/save-on-idle-timer (run-with-idle-timer 5 t 'focus-autosave-save-all))
 
 
 ;; Save minibuffer data between sessions.

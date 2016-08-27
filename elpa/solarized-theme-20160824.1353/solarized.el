@@ -921,7 +921,8 @@ customize the resulting theme."
      `(go-direx-header ((,class (:foreground ,blue))))
      `(go-direx-label ((,class (:foreground ,green))))
      `(go-direx-package ((,class (:foreground ,base1 :weight bold))))
-
+;;;;;; go-guru
+     `(go-guru-hl-identifier-face ((,class (:foreground ,magenta))))
 ;;;;;; go-mode
      `(go-coverage-0 ((,class (:foreground ,orange))))
      `(go-coverage-1 ((,class (:foreground ,(solarized-color-blend blue yellow (/ 2.0 6))))))
@@ -1291,7 +1292,8 @@ customize the resulting theme."
      `(ledger-font-reconciler-pending-face ((t (:foreground ,yellow :weight normal))))
      `(ledger-font-report-clickable-face ((t (:foreground ,yellow :weight normal))))
 ;;;;; linum-mode
-     `(linum ((,class (:foreground ,s-fringe-fg :background ,s-fringe-bg))))
+     `(linum ((,class (:weight normal :underline nil :foreground ,s-fringe-fg :background ,s-fringe-bg))))
+     `(linum-relative-current-face ((,class (:inherit linum))))
 ;;;;; lusty-explorer
      `(lusty-directory-face ((,class (:inherit dired-directory))))
      `(lusty-file-face ((,class nil)))
@@ -1320,11 +1322,11 @@ customize the resulting theme."
      `(magit-diffstat-added              ((t (:foreground ,green))))
      `(magit-diffstat-removed            ((t (:foreground ,red))))
 ;;;;;; popup
-     `(magit-popup-heading             ((t (:foreground ,base1 :weight normal))))
-     `(magit-popup-key                 ((t (:foreground ,base1 :weight bold))))
-     `(magit-popup-argument            ((t (:foreground ,base1 :weight bold))))
-     `(magit-popup-disabled-argument   ((t (:foreground ,base01 :weight normal))))
-     `(magit-popup-option-value        ((t (:foreground ,base1 :weight bold))))
+     `(magit-popup-heading             ((t (:foreground ,yellow  :weight bold))))
+     `(magit-popup-key                 ((t (:foreground ,green-d :weight bold))))
+     `(magit-popup-argument            ((t (:foreground ,cyan-d  :weight bold))))
+     `(magit-popup-disabled-argument   ((t (:foreground ,base01  :weight normal))))
+     `(magit-popup-option-value        ((t (:foreground ,cyan    :weight bold))))
 ;;;;;; process
      `(magit-process-ok    ((t (:foreground ,green :weight bold))))
      `(magit-process-ng    ((t (:foreground ,red   :weight bold))))

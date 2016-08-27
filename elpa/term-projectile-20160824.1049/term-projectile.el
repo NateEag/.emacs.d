@@ -4,7 +4,7 @@
 
 ;; Author: Ivan Malison <IvanMalison@gmail.com>
 ;; Keywords: term manager projectile
-;; Package-Version: 20160620.304
+;; Package-Version: 20160824.1049
 ;; URL: https://www.github.com/IvanMalison/term-projectile
 ;; Version: 0.0.0
 ;; Package-Requires: ((term-manager "0.0.0") (projectile "0.13.0") (emacs "24"))
@@ -52,6 +52,20 @@
   (when (stringp directory) (setq directory (intern directory)))
   (term-manager-switch-to-buffer
    term-projectile-term-manager directory delta))
+
+(defun term-projectile-get-all-buffers ()
+  (term-manager-get-all-buffers term-projectile-term-manager))
+
+(defun term-projectile-select-existing ()
+  (completing-read "Select a term buffer: "
+                   (mapcar (imalison:compose-fn buffer-name car)
+                           (term-projectile-get-all-buffers))))
+
+;;;###autoload
+(defun term-projectile-switch-to ()
+  "Switch to an existing term-projectile buffer using `completing-read'."
+  (interactive)
+  (switch-to-buffer (term-projectile-select-existing)))
 
 ;;;###autoload
 (defun term-projectile-forward ()

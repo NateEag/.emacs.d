@@ -1,0 +1,1 @@
+(define-package "term-projectile" "20160824.1049" "projectile terminal management" '((term-manager "0.0.0") (projectile "0.13.0") (emacs "24")) :url "https://www.github.com/IvanMalison/term-projectile" :keywords '("term" "manager" "projectile"))

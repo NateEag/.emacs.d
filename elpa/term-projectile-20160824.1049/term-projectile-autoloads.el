@@ -3,9 +3,14 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "term-projectile" "term-projectile.el" (22382
-;;;;;;  47486 0 0))
+;;;### (autoloads nil "term-projectile" "term-projectile.el" (22465
+;;;;;;  938 0 0))
 ;;; Generated autoloads from term-projectile.el
+
+(autoload 'term-projectile-switch-to "term-projectile" "\
+Switch to an existing term-projectile buffer using `completing-read'.
+
+\(fn)" t nil)
 
 (autoload 'term-projectile-forward "term-projectile" "\
 Switch forward to the next term-projectile ansi-term buffer.

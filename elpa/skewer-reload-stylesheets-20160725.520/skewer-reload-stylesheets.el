@@ -42,8 +42,8 @@
 ;;
 ;;     (setq skewer-reload-stylesheets-compile-command "gulp css")
 ;;
-;; This variable is best set in per-project in .dir-locals.el, so it can be set
-;; correctly per-project.
+;; This variable is best set in .dir-locals.el, so it can be set correctly
+;; per-project.
 
 ;;; Usage
 

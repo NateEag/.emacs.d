@@ -5,8 +5,8 @@
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 11 July 2012
-;; Package-Requires: ((emacs "24.1") (visual-fill-column "1.4"))
-;; Version: 3.2
+;; Package-Requires: ((emacs "24.1") (visual-fill-column "1.9"))
+;; Version: 3.4
 ;; Keywords: text
 
 ;; Redistribution and use in source and binary forms, with or without

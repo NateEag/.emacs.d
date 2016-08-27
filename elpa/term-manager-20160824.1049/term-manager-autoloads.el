@@ -4,7 +4,7 @@
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
 ;;;### (autoloads nil nil ("term-manager-indexed-mapping.el" "term-manager-pkg.el"
-;;;;;;  "term-manager.el") (22382 47487 615793 0))
+;;;;;;  "term-manager.el") (22465 940 537687 0))
 
 ;;;***
 

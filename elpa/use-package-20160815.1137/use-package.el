@@ -7,7 +7,7 @@
 ;; Created: 17 Jun 2012
 ;; Modified: 6 Jul 2016
 ;; Version: 2.2
-;; Package-Version: 20160718.910
+;; Package-Version: 20160815.1137
 ;; Package-Requires: ((bind-key "1.0") (diminish "0.44"))
 ;; Keywords: dotemacs startup speed config package
 ;; URL: https://github.com/jwiegley/use-package
@@ -299,7 +299,7 @@ This is in contrast to merely setting it to 0."
   (let (p)
     (while plist
       (if (not (eq property (car plist)))
-	  (setq p (plist-put p (car plist) (nth 1 plist))))
+          (setq p (plist-put p (car plist) (nth 1 plist))))
       (setq plist (cddr plist)))
     p))
 
@@ -501,6 +501,9 @@ manually updated package."
 (defun use-package-ensure-elpa (package &optional no-refresh)
   (if (package-installed-p package)
       t
+    (if (and (not no-refresh)
+             (assoc package (bound-and-true-p package-pinned-packages)))
+        (package-read-all-archive-contents))
     (if (or (assoc package package-archive-contents) no-refresh)
         (package-install package)
       (progn

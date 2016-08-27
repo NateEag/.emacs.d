@@ -16,7 +16,7 @@
 ;;	Rémi Vanicat      <vanicat@debian.org>
 ;;	Yann Hodique      <yann.hodique@gmail.com>
 
-;; Package-Requires: ((emacs "24.4") (async "20150909.2257") (dash "20151021.113") (with-editor "20160408.201") (git-commit "20160425.430") (magit-popup "20160512.328"))
+;; Package-Requires: ((emacs "24.4") (async "20160711.223") (dash "20160820.501") (with-editor "20160812.1457") (git-commit "20160519.950") (magit-popup "20160813.642"))
 ;; Keywords: git tools vc
 ;; Homepage: https://github.com/magit/magit
 
@@ -297,7 +297,7 @@ the maximum depth to look for Git repositories.  If it is 0, then
 only add DIRECTORY itself.  For elements that are strings, the
 value of option `magit-repository-directories-depth' specifies
 the depth."
-  :package-version '(magit . "2.7.1")
+  :package-version '(magit . "2.8.0")
   :group 'magit
   :type '(repeat (choice (cons directory (integer :tag "Depth")) directory)))
 
@@ -325,7 +325,7 @@ argument, the repository identification (usually its basename),
 and with `default-directory' bound to the toplevel of its working
 tree.  It has to return a string to be inserted or nil.  PROPS is
 an alist that supports the keys `:right-align' and `:pad-right'."
-  :package-version '(magit . "2.7.1")
+  :package-version '(magit . "2.8.0")
   :group 'magit-commands
   :type `(repeat (list :tag "Column"
                        (string   :tag "Header Label")
@@ -590,11 +590,12 @@ detached `HEAD'."
   "Insert a header line about branch usually pulled into current branch."
   (when pull
     (magit-insert-section (branch pull)
-      (insert (format "%-10s"
-                      (or keyword
-                          (if (magit-get-boolean "branch" branch "rebase")
-                              "Rebase: "
-                            "Merge: "))))
+      (let ((rebase (magit-git-string "config"
+                                      (format "branch.%s.rebase" branch))))
+        (if (equal rebase "false")
+            (setq rebase nil)
+          (setq rebase (magit-get-boolean "pull.rebase")))
+        (insert (format "%-10s" (or keyword (if rebase "Rebase: " "Merge: ")))))
       (--when-let (and magit-status-show-hashes-in-headers
                        (magit-rev-format "%h" pull))
         (insert (propertize it 'face 'magit-hash) ?\s))
@@ -868,13 +869,13 @@ Insert a header line with the name and description of the
 current branch.  The description is taken from the Git variable
 `branch.<NAME>.description'; if that is undefined then no header
 line is inserted at all."
-  (-when-let* ((branch (magit-get-current-branch))
-               (desc (magit-get "branch" branch "description"))
-               (desc-lines (split-string desc "\n")))
-    (magit-insert-section (branchdesc branch t)
-      (magit-insert-heading branch ": " (car desc-lines))
-      (insert (mapconcat 'identity (cdr desc-lines) "\n"))
-      (insert "\n\n"))))
+  (let ((branch (magit-get-current-branch)))
+    (--when-let (magit-git-lines
+                 "config" (format "branch.%s.description" branch))
+      (magit-insert-section (branchdesc branch t)
+        (magit-insert-heading branch ": " (car it))
+        (insert (mapconcat 'identity (cdr it) "\n"))
+        (insert "\n\n")))))
 
 (defconst magit-refs-branch-line-re
   (concat "^"
@@ -2809,7 +2810,7 @@ Usually this is just its basename."
                ;; If there are no tags, use the date in MELPA format.
                (magit-git-string "show" "--no-patch" "--format=%cd-g%h"
                                  "--date=format:%Y%m%d.%H%M"))))
-    (if (string-match-p "\\`[0-9]" v)
+    (if (and v (string-match-p "\\`[0-9]" v))
         (concat " " v)
       v)))
 
@@ -3054,7 +3055,7 @@ like `kill-ring-save' would, instead of behaving as described
 above."
   (interactive)
   (if (use-region-p)
-      (copy-region-as-kill (mark) (point) 'region)
+      (copy-region-as-kill nil nil 'region)
     (-when-let* ((section (magit-current-section))
                  (value (magit-section-value section)))
       (magit-section-case
@@ -3097,7 +3098,7 @@ like `kill-ring-save' would, instead of behaving as described
 above."
   (interactive)
   (if (use-region-p)
-      (copy-region-as-kill (mark) (point) 'region)
+      (copy-region-as-kill nil nil 'region)
     (-when-let (rev (cond ((memq major-mode '(magit-cherry-mode
                                               magit-log-select-mode
                                               magit-reflog-mode
@@ -3202,7 +3203,7 @@ Git, and Emacs in the echo area."
       (setq magit-version 'error)
       (when magit-version
         (push magit-version debug))
-      (unless (not (equal (getenv "TRAVIS") "true"))
+      (unless (equal (getenv "TRAVIS") "true")
         ;; The repository is a sparse clone.
         (message "Cannot determine Magit's version %S" debug)))
     magit-version))

@@ -147,3 +147,17 @@ package.el while others are my own. There are probably some third-party
 libraries that I never realized are on package.el, too.
 
 snippets/ - my personal yasnippets, augmenting the base yasnippet collection.
+
+OS X Setup
+==========
+
+I use the [Emacs for OS X build](https://emacsformacosx.com/), and had a hard
+time making it play nicely with command-line tools that use emacs like
+[Cask](https://github.com/cask/cask).
+
+I eventually solved it by copying the shell script at
+`Emacs.app/Contents/MacOS/Emacs` to `Emacs.app/Contents/MacOS/emacs`, since
+`Emacs.app/Contents/MacOS/` was already on my `$PATH`.
+
+I'm not sure why just putting a symlink on `$PATH` didn't work for me, but it
+didn't.

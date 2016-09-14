@@ -427,6 +427,8 @@
 -Set up ispell to use run-together words *outside* of comments and strings in
  programming modes. It results in tons of noise everywhere else.
 
+-Delete trailing whitespace *only* from comments in diff-mode.
+
 -When I'm yanking something into an indented block, python-mode ought to assume
  that I want it indented to that block's depth and adjust the leading
  whitespace for each line accordingly. This applies to indentation in general;

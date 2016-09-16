@@ -16,7 +16,7 @@ library is made available as a separate package.  It also defines some
 additional functionality which makes it useful even for end-users, who
 don’t use Magit or another package which uses it internally.
 
-     Copyright (C) 2015 Jonas Bernoulli <jonas@bernoul.li>
+     Copyright (C) 2015-2016 Jonas Bernoulli <jonas@bernoul.li>
 
      You can redistribute this document and/or modify it under the terms
      of the GNU General Public License as published by the Free Software
@@ -53,7 +53,7 @@ library is made available as a separate package.  It also defines some
 additional functionality which makes it useful even for end-users, who
 don’t use Magit or another package which uses it internally.
 
-     Copyright (C) 2015 Jonas Bernoulli <jonas@bernoul.li>
+     Copyright (C) 2015-2016 Jonas Bernoulli <jonas@bernoul.li>
 
      You can redistribute this document and/or modify it under the terms
      of the GNU General Public License as published by the Free Software
@@ -77,7 +77,6 @@ Using the With-Editor package
 
 * Configuring With-Editor::
 * Using With-Editor commands::
-
 
 
 File: with-editor.info,  Node: Using the With-Editor package,  Next: Using With-Editor as a library,  Prev: Top,  Up: Top
@@ -172,7 +171,25 @@ it receives a signal.
      not a complete substitute for a proper Emacsclient, it can only be
      used as ‘$EDITOR’ of child process of the current Emacs instance.
 
-     It is unlikely that you should ever have to customize this option.
+     Some shells do not execute traps immediately when waiting for a
+     child process, but by default we do use such a blocking child
+     process.
+
+     If you use such a shell (e.g.  ‘csh’ on FreeBSD, but not Debian),
+     then you have to edit this option.  You can either replace ‘sh’
+     with ‘bash’ (and install that), or you can use the older, less
+     performant implementation:
+
+          "sh -c '\
+          echo \"WITH-EDITOR: $$ OPEN $0\"; \
+          trap \"exit 0\" USR1; \
+          trap \"exit 1\" USR2; \
+          while true; do sleep 1; done'"
+
+     This leads to a delay of up to a second.  The delay can be
+     shortened by replacing ‘sleep 1’ with ‘sleep 0.01’, or if your
+     implementation does not support floats, then by using ‘nanosleep
+     0.01’ instead.
 
 
 File: with-editor.info,  Node: Using With-Editor commands,  Prev: Configuring With-Editor,  Up: Using the With-Editor package
@@ -226,13 +243,13 @@ needs the editor set, or always arrange for the current Emacs instance
 to be used as editor by adding it to the appropriate mode hooks:
 
      (add-hook 'shell-mode-hook  'with-editor-export-editor)
-     (add-hook 'term-mode-hook   'with-editor-export-editor)
+     (add-hook 'term-exec-hook   'with-editor-export-editor)
      (add-hook 'eshell-mode-hook 'with-editor-export-editor)
 
    Some variants of this function exist; these two forms are equivalent:
 
      (add-hook 'shell-mode-hook
-               (apply-partially 'with-editor-export-editor "GIT_EDITOR"))
+     	  (apply-partially 'with-editor-export-editor "GIT_EDITOR"))
      (add-hook 'shell-mode-hook 'with-editor-export-git-editor)
 
  -- Command: with-editor-export-editor
@@ -308,12 +325,12 @@ what is the output of ‘M-x with-editor-debug’?
 
 
 Tag Table:
-Node: Top1540
-Node: Using the With-Editor package3227
-Node: Configuring With-Editor3843
-Node: Using With-Editor commands7450
-Node: Using With-Editor as a library10620
-Node: Debugging12292
+Node: Top1545
+Node: Using the With-Editor package3236
+Node: Configuring With-Editor3852
+Node: Using With-Editor commands8201
+Node: Using With-Editor as a library11364
+Node: Debugging13036
 
 End Tag Table
 

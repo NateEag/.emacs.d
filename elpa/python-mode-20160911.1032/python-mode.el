@@ -278,8 +278,8 @@ Default is t")
 
  where write-access is not given. "
 
-:type 'boolean
-:group 'python-mode)
+ :type 'boolean
+ :group 'python-mode)
 
 (defvar py--match-paren-forward-p nil
   "Internally used by `py-match-paren'. ")
@@ -2261,7 +2261,10 @@ some logging etc. "
   "py-expression assumes chars indicated possible composing a py-expression, when looking-at or -back. ")
 
 (defcustom py-paragraph-re "\\`[ \t\f]*\\'\n[^ \n\r\t\f]"
-  "An empty line followed by a non-whitespace at column 1")
+  "An empty line followed by a non-whitespace at column 1"
+  :type 'string
+  :tag "py-paragraph-re"
+  :group 'python-mode)
 
 (defvar py-not-expression-regexp "[ .=#\t\r\n\f)]+"
   "py-expression assumes chars indicated probably will not compose a py-expression. ")
@@ -2505,7 +2508,10 @@ See py-no-outdent-re-raw for better readable content ")
    "while"
    "with"
    )
-  "Matches the beginning of a compound statement or it's clause. ")
+  "Matches the beginning of a compound statement or it's clause. "
+  :type '(repeat string)
+  :tag "py-block-or-clause-re-raw"
+  :group 'python-mode)
 
 (defvar py-block-or-clause-re
   (concat
@@ -2522,7 +2528,10 @@ See py-no-outdent-re-raw for better readable content ")
    "try"
    "while"
    "with")
-  "Matches the beginning of a compound statement but not it's clause. ")
+  "Matches the beginning of a compound statement but not it's clause. "
+  :type '(repeat string)
+  :tag "py-block-re-raw"
+  :group 'python-mode)
 
 (defvar py-block-re
   (concat
@@ -2559,9 +2568,11 @@ See py-no-outdent-re-raw for better readable content ")
    "if"
    "try"
    "while"
-   "with"
-   )
-  "Matches the beginning of a compound statement or it's clause. ")
+   "with")
+  "Matches the beginning of a compound statement or it's clause. "
+  :type '(repeat string)
+  :tag "py-extended-block-or-clause-re-raw"
+  :group 'python-mode)
 
 (defconst py-extended-block-or-clause-re
   (concat
@@ -2575,7 +2586,11 @@ See py-no-outdent-re-raw for better readable content ")
    "^\\_<[a-zA-Z_]\\|^\\_<\\("
    (regexp-opt  py-extended-block-or-clause-re-raw)
    "\\)\\_>[( \t]*.*:?")
-  "A form which starts at zero indent level, but is not a comment. ")
+  "A form which starts at zero indent level, but is not a comment. "
+  :type '(regexp)
+  :tag "py-top-level-re"
+  :group 'python-mode
+  )
 
 (defconst py-block-keywords
   (concat
@@ -2593,7 +2608,10 @@ Customizing `py-block-or-clause-re-raw'  will change values here")
    "except"
    "finally"
    )
-  "Matches the beginning of a clause. ")
+  "Matches the beginning of a clause. "
+    :type '(repeat string)
+    :tag "py-clause-re-raw"
+    :group 'python-mode)
 
 (defconst py-clause-re
   (concat
@@ -4393,7 +4411,7 @@ downwards from beginning of block followed by a statement. Otherwise default-val
 If optional INDENT is given, use it"
   (interactive "*")
   (beginning-of-line)
-  (fixup-whitespace)
+  (when (member (char-after) (list 32 9 10 12 13)) (delete-region (point) (progn (skip-chars-forward " \t\r\n\f")(point)))) 
   (indent-to (or indent (py-compute-indentation)))
   (if (eobp)
       (newline-and-indent)
@@ -4405,11 +4423,13 @@ If optional INDENT is given, use it"
 
 Starts from second line of region specified"
   (goto-char beg)
+  (py-indent-and-forward) 
   ;; (forward-line 1)
-  (while (< (point) end)
+  (while (< (line-end-position) end)
     (if (empty-line-p)
 	(forward-line 1)
-      (py-indent-and-forward))))
+      (py-indent-and-forward)))
+  (unless (empty-line-p) (py-indent-and-forward)))
 
 (defun py-indent-region (start end &optional line-by-line)
   "Reindent a region of Python code.

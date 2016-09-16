@@ -6,7 +6,7 @@
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 11 July 2012
 ;; Package-Requires: ((emacs "24.1") (visual-fill-column "1.9"))
-;; Version: 3.4
+;; Version: 3.5
 ;; Keywords: text
 
 ;; Redistribution and use in source and binary forms, with or without
@@ -85,7 +85,7 @@ deactivated.")
                  (float :tag "Relative width:" :value 0.5)))
 
 (defcustom writeroom-mode-line nil
-  "The mode line format to use.
+  "The mode line format to use with `writeroom-mode'.
 By default, this option is set to nil, which disables the mode
 line when `writeroom-mode' is activated.  By setting this option
 to t, the standard mode line is retained.  Alternatively, it is
@@ -136,10 +136,23 @@ Effects'. This adds a border around the text area."
 
 (defcustom writeroom-major-modes '(text-mode)
   "List of major modes in which writeroom-mode is activated.
-This option is only relevant when activating `writeroom-mode'
-with `global-writeroom-mode'."
+The command `global-writeroom-mode' activates `writeroom-mode' in
+every buffer that has one of the major modes listed in this
+option.  Modes can be specified as symbols or as regular
+expressions.  If a buffer has one of the specified major modes or
+if its major mode name matches one of the regular expressions,
+`writeroom-mode' is activated."
   :group 'writeroom
-  :type '(repeat (symbol :tag "Major mode")))
+  :type '(repeat (choice (symbol :tag "Major mode")
+                         (string :tag "Regular expression"))))
+
+(defcustom writeroom-major-modes-exceptions nil
+  "List of major modes in which `writeroom-mode' should not be activated.
+This option lists exceptions to `writeroom-major-modes'.  Modes
+can be specified as symbols or as regular expressions."
+  :group 'writeroom
+  :type '(repeat (choice (symbol :tag "Major mode exception")
+                         (string :tag "Regular expression"))))
 
 (defcustom writeroom-restore-window-config nil
   "If set, restore window configuration after disabling `writeroom-mode'.
@@ -219,9 +232,26 @@ effect is deactivated."
 (defun turn-on-writeroom-mode ()
   "Turn on `writeroom-mode'.
 This function activates `writeroom-mode' in a buffer if that
-buffer's major mode is a member of `writeroom-major-modes'."
-  (if (memq major-mode writeroom-major-modes)
-      (writeroom-mode 1)))
+buffer's major mode matchs against one of `writeroom-major-modes'."
+  (unless (writeroom--match-mode major-mode writeroom-major-modes-exceptions)
+    (if (writeroom--match-mode major-mode writeroom-major-modes)
+        (writeroom-mode 1))))
+
+(defun writeroom--match-mode (mode modes)
+  "Match MODE against MODES.
+MODE should be a mode name (as a symbol), MODES a list of mode
+names (symbols) or regular expressions.  Return t if MODE matches
+one of the elements of MODES, nil otherwise.  Comparison is done
+with `eq` (for symbols in MODES) or with `string-match-p' (for
+strings in MODES).  That is, if MODE is e.g., `emacs-lisp-mode',
+it will not match the symbol `lisp-mode', but it will match the
+string \"lisp-mode\"."
+  (catch 'match
+    (dolist (elem modes)
+      (if (cond ((symbolp elem)
+                 (eq elem mode))
+                (t (string-match-p elem (symbol-name mode))))
+          (throw 'match t)))))
 
 (defvar writeroom-mode-map
   (let ((map (make-sparse-keymap)))

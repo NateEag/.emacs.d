@@ -3,12 +3,12 @@
 ;;; Code:
 (add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
 
-;;;### (autoloads nil "mocha-snippets" "mocha-snippets.el" (22276
-;;;;;;  14439 0 0))
+;;;### (autoloads nil "mocha-snippets" "mocha-snippets.el" (22492
+;;;;;;  20631 0 0))
 ;;; Generated autoloads from mocha-snippets.el
 
 (autoload 'mocha-snippets-initialize "mocha-snippets" "\
-
+Add mocha-snippets directories to YAS.
 
 \(fn)" nil nil)
 
@@ -16,8 +16,8 @@
 
 ;;;***
 
-;;;### (autoloads nil nil ("mocha-snippets-pkg.el") (22276 14439
-;;;;;;  930723 0))
+;;;### (autoloads nil nil ("mocha-snippets-pkg.el") (22492 20631
+;;;;;;  357421 0))
 
 ;;;***
 

@@ -54,6 +54,7 @@
 
 ;;;###autoload
 (defun mocha-snippets-initialize ()
+  "Add mocha-snippets directories to YAS."
   (let ((snip-dir (expand-file-name "snippets" mocha-snippets-root)))
     (when (boundp 'yas-snippet-dirs)
       (add-to-list 'yas-snippet-dirs snip-dir t))
@@ -62,6 +63,35 @@
 ;;;###autoload
 (eval-after-load "yasnippet"
   '(mocha-snippets-initialize))
+
+(defcustom mocha-snippets-string-delimiter "'"
+  "String delimiter will be used when expanding mocha snippets.
+Some people like to use single quotes, others double quotes.  This let's them
+choose."
+  :type 'string
+  :group 'mocha-snippets)
+
+(defcustom mocha-snippets-use-fat-arrows nil
+  "Use ES6 ()=> syntax for function declarations if non-nil."
+  :type 'boolean
+  :group 'mocha-snippets
+  :require 'mocha-snippets)
+
+
+(defun mocha-snippets-function-declaration (&optional params)
+  "Function head appropriate for the desired syntax.
+The user can configure whether to use the ES6 function syntax or the 'classic'
+function syntax.  This will return the appropriate declaration depending on
+which is configured: either 'function()' or '()=>'.
+
+PARAMS, will be substituded as the parameter list for the function.
+E.g.
+
+  (mocha-snippets-initialize \"hello, world\") => function(hello, world)"
+  (let ((params (if (not params) "" params)))
+      (if mocha-snippets-use-fat-arrows
+          (format  "(%s)=>" params)
+        (format "function(%s)" params))))
 
 (provide 'mocha-snippets)
 ;;; mocha-snippets.el ends here

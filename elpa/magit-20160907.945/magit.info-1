@@ -524,6 +524,8 @@ should.
    Instead of requiring the feature ‘magit’, you could load just the
 autoload definitions, by loading the file ‘magit-autoloads.el’.
 
+     (load "/path/to/magit/lisp/magit-autoloads")
+
    Instead of running Magit directly from the repository by adding that
 to the ‘load-path’, you might want to instead install it in some other
 directory using ‘sudo make install’ and setting ‘load-path’ accordingly.
@@ -1367,7 +1369,7 @@ but all you need to get started are the next two.
      Cycle the visibility of diff-related sections in the current
      buffer.
 
-‘s-<tab>’     (‘magit-section-cycle-global’)
+‘S-<tab>’     (‘magit-section-cycle-global’)
 
      Cycle the visibility of all sections in the current buffer.
 
@@ -7722,7 +7724,7 @@ Appendix B Keystroke Index
                                                               (line  37)
 * s <1>:                                 Editing rebase sequences.
                                                               (line  59)
-* s-<tab>:                               Section visibility.  (line  22)
+* S-<tab>:                               Section visibility.  (line  22)
 * SPC:                                   Log Buffer.          (line  33)
 * SPC <1>:                               Diff buffer.         (line  44)
 * SPC <2>:                               Blaming.             (line  34)

@@ -1323,8 +1323,8 @@ customize the resulting theme."
      `(magit-diffstat-removed            ((t (:foreground ,red))))
 ;;;;;; popup
      `(magit-popup-heading             ((t (:foreground ,yellow  :weight bold))))
-     `(magit-popup-key                 ((t (:foreground ,green-d :weight bold))))
-     `(magit-popup-argument            ((t (:foreground ,cyan-d  :weight bold))))
+     `(magit-popup-key                 ((t (:foreground ,base1   :weight bold))))
+     `(magit-popup-argument            ((t (:foreground ,cyan    :weight bold))))
      `(magit-popup-disabled-argument   ((t (:foreground ,base01  :weight normal))))
      `(magit-popup-option-value        ((t (:foreground ,cyan    :weight bold))))
 ;;;;;; process
@@ -2172,6 +2172,7 @@ customize the resulting theme."
      `(term-default-fg-color ,base0) ;; @deprecated24.3
      `(term-default-bg-color ,base03) ;; @deprecated24.3
 ;;;;; vc
+     `(vc-annotate-background-mode nil)
      `(vc-annotate-color-map
        '((20 . ,red)
          (40 . ,(solarized-color-blend yellow red (/ 2.0 4)))

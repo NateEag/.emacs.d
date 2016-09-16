@@ -225,6 +225,9 @@
 -Integrate what's useful from spacemacs: https://github.com/syl20bnr/spacemacs
  I've got most of what I want, but evil-little-word could be nice.
 
+-Add evil text object/motion for 'comment', 'inner comment', 'around comment',
+ etc. Sometimes I find myself trying to think in those terms.
+
 -Make comment auto-fill work with C++-style comments in js2-mode, not just
  C-style. Turns out it does - it's just that js2-mode thinks single-line
  comments are only block comments if there's a trailing single-line comment. A

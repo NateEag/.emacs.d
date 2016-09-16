@@ -5,7 +5,7 @@
 ;; Created    : Feburary 2005
 ;; Modified   : 2016
 ;; Version    : 0.9.0
-;; Package-Version: 20160808.1235
+;; Package-Version: 20160909.1316
 ;; Keywords   : c# languages oop mode
 ;; X-URL      : https://github.com/josteink/csharp-mode
 ;; Last-saved : 2016-May-28
@@ -287,10 +287,16 @@
 ;;    0.8.12 2016 January 6th
 ;;          - Various fixes and improvements for imenu indexing.
 ;;
-;;    0.9.0 2016 July...?
+;;    0.9.0 2016 September 9th
 ;;          - Fix issues with compilation-mode and lines with arrays.
 ;;          - Fontification of compiler directives.
 ;;          - Much faster, completely rewritten imenu-implementation.
+;;          - Fix indentation issues.
+;;          - Fix Emacs-25 related bugs.
+;;          - Cleaned up dead code.
+;;
+;;    0.9.1 2016 ....
+;;          - 
 ;;
 
 (require 'cc-mode)
@@ -3002,7 +3008,20 @@ Key bindings:
 
   ;; required since Emacs git master
   ;; https://github.com/emacs-mirror/emacs/commit/edcdf64960a2ab4e8d9ce4419874e43b6d3ccee4
-  (csharp-mode-syntax-propertize-function (point-min) (point-max)))
+  ;;
+  ;; Basically syntax-propertize-function is a construct which belongs
+  ;; to font-lock.  But correct indentation depends on
+  ;; syntax-properties of the text, and that should ideally be
+  ;; independent of font-lock being activated or not.
+  ;;
+  ;; For csharp-mode, this means that with font-lock disabled, we wont
+  ;; have our syntax-properties set correctly, and indentation will
+  ;; suffer.
+  ;;
+  ;; To patch our way around this, we issue a syntax-propertize call
+  ;; manually, font-lock enabled or not.
+  (with-silent-modifications
+    (csharp-mode-syntax-propertize-function (point-min) (point-max))))
 
 (provide 'csharp-mode)
 

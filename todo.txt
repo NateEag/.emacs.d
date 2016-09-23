@@ -1,5 +1,8 @@
 -Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
 
+-Suppress aggressive-fill-paragraph-mode while in markdown code blocks. I
+ ostensibly have code that does it, but it does not work when I delete things.
+
 -Split my tagedit/web-mode bridge out to a separate module, unless fxbois wants
  it in web-mode.
 
@@ -409,10 +412,6 @@
 -I'd also like context-sensitive paragraph filling. That is, in comments, my
  fill-column value is 79, but if I'm in a Python docstring, fill-column should
  be 72. Apparently this is fixed in a Jan. 2013 commit to python-mode.el.
-
--It would be nice if auto-fill refilled paragraphs when lines are shortened.
- fill-paragraph does what I want after I've made a few shorter, ragged lines,
- but it's annoying to have to type it myself.
 
 -Figure out what the best way to save/restore my Emacs sessions is. Ideally,
  find a solution that lets me save/restore buffer state for a whole directory,

@@ -152,9 +152,6 @@
   :defer t
   :diminish)
 
-(use-package conf-mode
-  :mode "/dotfiles/")
-
 (use-package sh-script
   :config (add-hook 'sh-mode-hook '(lambda ()
                                      (setq-local ne-yas-auto-insert-snippet-name

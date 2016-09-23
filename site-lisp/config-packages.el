@@ -298,7 +298,17 @@
   :mode (("\\.el\\'" . emacs-lisp-mode)
          ("/Cask\\'" . emacs-lisp-mode))
   :config
-  (add-hook 'emacs-lisp-mode-hook 'emacs-lisp-init))
+  ;; Wait to set up elisp customizations until initialization is done.
+  ;;
+  ;; Otherwise, the various elisp buffers like *scratch* that appear before my
+  ;; config is finished loading throw errors for all the dependencies that
+  ;; aren't loaded yet.
+  ;;
+  ;; This still results in *scratch* having the extras, though, since the hook
+  ;; runs first time it's set. For a workaround, this is a pretty seamless one.
+  (add-hook 'after-init-hook
+            '(lambda ()
+              (add-hook 'emacs-lisp-mode-hook 'emacs-lisp-init))))
 
 (use-package slime
   :config

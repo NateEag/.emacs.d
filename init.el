@@ -8,6 +8,12 @@
 
 ;;; Code:
 
+;; Appeasing package.el by leaving this commented line here, because it wanted
+;; me to do so.
+;;
+;; This actually happens in my site-lisp/bootstrap.el file.
+;(package-initialize)
+
 ;; Temporarily make the GC threshold large, to speed up startup.
 (setq ne/old-gc-cons-threshold gc-cons-threshold)
 (setq gc-cons-threshold 10000000)

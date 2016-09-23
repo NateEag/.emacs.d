@@ -285,7 +285,8 @@
   (add-hook 'web-mode-hook 'web-mode-init))
 
 (use-package css-mode
-  :mode "\\.scss\\'"
+  :mode (("\\.css\\'" . css-mode)
+         ("\\.scss\\'" . scss-mode))
   :config
   (add-hook 'scss-mode-hook
             (lambda ()

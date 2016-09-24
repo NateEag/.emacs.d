@@ -167,7 +167,7 @@ Primarily intended for use as advice to commonly-used functions like
 Note, however, that `delete-region' cannot be consistently advised.
 See `afp-advise-filled-functions' for a discussion of why."
 
-  (when aggressive-fill-paragraph-mode
+  (when (and aggressive-fill-paragraph-mode (not (afp-suppress-fill?)))
     (funcall (afp-choose-fill-function))))
 
 (defun aggressive-fill-paragraph-post-self-insert-function ()

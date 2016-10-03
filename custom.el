@@ -65,6 +65,7 @@
  '(magit-revert-buffers t t)
  '(magit-use-overlays nil)
  '(mailcap-download-directory "~/Downloads")
+ '(markdown-command "cmark")
  '(menu-bar-mode nil nil nil "I don't really use the menus, either.")
  '(message-kill-buffer-on-exit t nil nil "If I have sent a message, I have little reason to keep the buffer around.")
  '(mm-inline-large-images (quote resize))

@@ -1,9 +1,9 @@
 ;;; ace-window-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "ace-window" "ace-window.el" (22271 48935 0
+;;;### (autoloads nil "ace-window" "ace-window.el" (22515 42427 0
 ;;;;;;  0))
 ;;; Generated autoloads from ace-window.el
 
@@ -45,7 +45,8 @@ window.
 
 (defvar ace-window-display-mode nil "\
 Non-nil if Ace-Window-Display mode is enabled.
-See the command `ace-window-display-mode' for a description of this minor mode.
+See the `ace-window-display-mode' command
+for a description of this minor mode.
 Setting this variable directly does not take effect;
 either customize it (see the info node `Easy Customization')
 or call the function `ace-window-display-mode'.")

@@ -225,6 +225,10 @@
 -Extract jedi-force to be an ELPA package. I was thinking of adding more
  features, but it might be fine as it is.
 
+-Get evil-escape to recognize my escape keystroke when Caps Lock is on. That
+ might be simple, or it might be convoluted - not sure. Issue:
+ https://github.com/syl20bnr/evil-escape/issues/72
+
 -Integrate what's useful from spacemacs: https://github.com/syl20bnr/spacemacs
  I've got most of what I want, but evil-little-word could be nice.
 

@@ -289,10 +289,6 @@
 -File feature request to flycheck for being able to run checkers while in
  web-mode. May well get rejected, because supporting this would be pretty hard.
 
--Install and set up yatemplate: https://github.com/mineo/yatemplate
- It'd be nice, for instance, to have new '*.sh' files have '#! /bin/bash' and
- the standard "be sane" declarations by default.
-
 -Add keybindings for scrolling completion window by a full window-ful. C-v and
  M-v are the obvious ones. Useful when you're digging through something like wx
  or the JDK looking for a class that might apply.

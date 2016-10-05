@@ -287,7 +287,11 @@
 
 -Make smart-dash-mode in sh-mode prefer _s when typing var names, and -s when
  typing most other things (options, filenames, etc). I think that reflects my
- experience of having it active in sh-mode.
+ experience of having it active in sh-mode. I believe this behavior could be
+ built by offering a list of modes where $ should be treated as a variable
+ sigil, and in those modes no heuristic is necessary - if point is in a string
+ matching \$[a-zA-Z0-9_]+, you *know* you should insert a _. Should probably
+ file the suggestion with the author.
 
 -Derive a lightweight envrc-mode from sh-mode and add support for
  direnv-specific things like PATH_add. Google suggests none exists.

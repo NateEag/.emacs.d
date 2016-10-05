@@ -229,6 +229,14 @@
  might be simple, or it might be convoluted - not sure. Issue:
  https://github.com/syl20bnr/evil-escape/issues/72
 
+-Get evil-escape to play nicely with aggressive-fill-mode. When it enters the
+ first of your two characters, it can trigger a fill action. When it deletes
+ that character, aggressive-fill-mode is not triggered, so you can wind up with
+ improperly-wrapped paragraphs. I imagine some advice could solve this?
+ key-chord-mode does not have this issue, because it just doesn't enter text
+ until it's sure you're not doing a key chord, which is a little more seamless
+ for me, but I'm sure tastes vary.
+
 -Integrate what's useful from spacemacs: https://github.com/syl20bnr/spacemacs
  I've got most of what I want, but evil-little-word could be nice.
 
@@ -253,6 +261,10 @@
  if filled, becomes
 
  var foo = 'foo is a set of really short strings';
+
+ Smart prefix detection would be a nice bonus feature, as when writing shell
+ scripts I frequently find myself doing the 'echo "string"' dance, and the
+ default fill-paragraph command in sh-mode has no idea how to handle it.
 
 -Figure out why mo-git-blame isn't using mo-git-blame-git-blame-args.
 

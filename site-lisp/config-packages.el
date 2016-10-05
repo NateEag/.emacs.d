@@ -142,16 +142,18 @@
   :defer t
   :config (afp-advise-filled-functions))
 
-(use-package eclimd
-  :defer t
-  :diminish
-  :init
-  (progn
-    (autoload 'eclimd--running-p "eclimd" nil t)))
+;; Commented out because this is crashing my setup for some reason, and I'm not
+;; currently using eclim.
+;; (use-package eclimd
+;;   :defer t
+;;   :diminish
+;;   :init
+;;   (progn
+;;     (autoload 'eclimd--running-p "eclimd" nil t)))
 
-(use-package eclim
-  :defer t
-  :diminish)
+;; (use-package eclim
+;;   :defer t
+;;   :diminish)
 
 (use-package sh-script
   :mode ("\\.envrc\\'" . sh-mode)
@@ -377,26 +379,10 @@
   :config
   (progn
 
-    ;; Activate key-chord-mode so I can bind actions to character pairs.
-    ;; Since key-chord-mode is not a true minor mode, there's no need to diminish
-    ;; it.
-    (key-chord-mode t)
-
     ;; Use regular emacs keybindings for insert-mode.
     (setcdr evil-insert-state-map nil)
 
-    ;; Use 'jk' to go from insert-state to normal-state. It's easier to type than
-    ;; Escape.
-    (key-chord-define evil-insert-state-map "jk" 'evil-normal-state)
-    (key-chord-define evil-motion-state-map "jk" 'evil-normal-state)
-    (key-chord-define evil-visual-state-map "jk" 'evil-normal-state)
-    (key-chord-define evil-emacs-state-map "jk" 'evil-normal-state)
-
-    ;; Make sure it works even when Caps Lock is on.
-    (key-chord-define evil-insert-state-map "JK" 'evil-normal-state)
-    (key-chord-define evil-motion-state-map "JK" 'evil-normal-state)
-    (key-chord-define evil-visual-state-map "JK" 'evil-normal-state)
-    (key-chord-define evil-emacs-state-map "JK" 'evil-normal-state)
+    (evil-escape-mode)
 
     ;; Always use a leader key, because the leader is awesome.
     (global-evil-leader-mode)
@@ -417,6 +403,12 @@
     (evil-commentary-mode)
 
     (diminish 'evil-commentary-mode)))
+
+(use-package evil-escape
+  :diminish 'evil-escape-mode
+  :config
+  (setq-default evil-escape-key-sequence "jk")
+  (setq-default evil-escape-unordered-key-sequence t))
 
 (use-package glasses
   :commands glasses-mode

@@ -12,7 +12,7 @@
  '(afp-always-fill-on-self-insert t)
  '(afp-fill-after-functions
    (quote
-    (evil-delete backward-delete-char backward-delete-char-untabify kill-region evil-change yank yank-pop evil-paste-after)))
+    (evil-delete backward-delete-char backward-delete-char-untabify kill-region evil-change yank yank-pop evil-paste-after evil-escape--delete evil-escape--delete-2)))
  '(afp-fill-comments-only-mode-list
    (quote
     (emacs-lisp-mode sh-mode python-mode js-mode php-mode xml-mode nxml-mode diff-mode)))
@@ -87,7 +87,7 @@
  '(package-enable-at-startup nil)
  '(package-selected-packages
    (quote
-    (evil-escape helm-projectile helm-ag flycheck-package yaml-mode writeroom-mode web-mode virtualenvwrapper use-package unicode-troll-stopper toggle-quotes tern-auto-complete term-projectile tea-time tagedit sublimity string-inflection speed-type solarized-theme smartparens smart-tabs-mode skewer-reload-stylesheets scss-mode sane-term rainbow-mode python-mode pyimpsort pyenv-mode puppet-mode popwin pip-requirements php-auto-yasnippets omnisharp notmuch nginx-mode names multi-term mocha-snippets mo-git-blame minimap md-readme markdown-mode literate-coffee-mode know-your-http-well key-chord json-mode jscs js2-refactor js-doc jedi iss-mode hideshowvis helm-swoop helm-ls-git helm-git-files groovy-mode gitignore-mode gitconfig-mode gitattributes-mode git-timemachine frame-cmds focus-autosave-mode flycheck-css-colorguard expand-region exec-path-from-shell evil-tutor evil-surround evil-nerd-commenter evil-matchit evil-magit evil-leader evil-indent-textobject evil-exchange evil-commentary esup elisp-slime-nav el2markdown editorconfig diffview cygwin-mount cycle-quotes compact-docstrings cask-mode buttercup browse-url-dwim browse-kill-ring beacon bats-mode backup-walker auto-compile ascii apache-mode aggressive-indent aggressive-fill-paragraph ag ace-window ace-jump-mode ac-slime ac-ispell ac-html-csswatcher ac-html ac-helm ac-emmet)))
+    (helm evil-escape helm-projectile helm-ag flycheck-package yaml-mode writeroom-mode web-mode virtualenvwrapper use-package unicode-troll-stopper toggle-quotes tern-auto-complete term-projectile tea-time tagedit sublimity string-inflection speed-type solarized-theme smartparens smart-tabs-mode skewer-reload-stylesheets scss-mode sane-term rainbow-mode python-mode pyimpsort pyenv-mode puppet-mode popwin pip-requirements php-auto-yasnippets omnisharp notmuch nginx-mode names multi-term mocha-snippets mo-git-blame minimap md-readme markdown-mode literate-coffee-mode know-your-http-well key-chord json-mode jscs js2-refactor js-doc jedi iss-mode hideshowvis helm-swoop helm-ls-git helm-git-files groovy-mode gitignore-mode gitconfig-mode gitattributes-mode git-timemachine frame-cmds focus-autosave-mode flycheck-css-colorguard expand-region exec-path-from-shell evil-tutor evil-surround evil-nerd-commenter evil-matchit evil-magit evil-leader evil-indent-textobject evil-exchange evil-commentary esup elisp-slime-nav el2markdown editorconfig diffview cygwin-mount cycle-quotes compact-docstrings cask-mode buttercup browse-url-dwim browse-kill-ring beacon bats-mode backup-walker auto-compile ascii apache-mode aggressive-indent aggressive-fill-paragraph ag ace-window ace-jump-mode ac-slime ac-ispell ac-html-csswatcher ac-html ac-helm ac-emmet)))
  '(php-mode-coding-style (quote psr2) nil nil "PSR-2 is not ideal, but it's a standard.")
  '(projectile-indexing-method (quote alien))
  '(projectile-use-git-grep t)

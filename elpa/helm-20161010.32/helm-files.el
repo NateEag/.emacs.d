@@ -1688,20 +1688,39 @@ and should be used carefully elsewhere, or not at all, using
   (or helm-ff--tramp-methods
       (setq helm-ff--tramp-methods (mapcar 'car tramp-methods))))
 
+(defun helm-ff-previous-mh-tramp-method (str)
+  (save-match-data
+    (with-temp-buffer
+      (insert str)
+      (when (re-search-backward
+             (concat "\\([|]\\)\\("
+                     (mapconcat 'identity (helm-ff-get-tramp-methods) "\\|")
+                     "\\):")
+             nil t)
+        (list
+         (buffer-substring-no-properties (point-at-bol) (match-beginning 2))
+         (buffer-substring-no-properties (match-beginning 2) (match-end 2)))))))
+
 (cl-defun helm-ff-tramp-hostnames (&optional (pattern helm-pattern))
   "Get a list of hosts for tramp method found in `helm-pattern'.
 Argument PATTERN default to `helm-pattern', it is here only for debugging
 purpose."
   (when (string-match helm-tramp-file-name-regexp pattern)
-    (let ((method      (match-string 1 pattern))
-          (tn          (match-string 0 pattern))
-          (all-methods (helm-ff-get-tramp-methods)))
+    (let* ((mh-method   (helm-ff-previous-mh-tramp-method pattern))
+           (method      (or (cadr mh-method) (match-string 1 pattern)))
+           (current-mh-host (helm-aif (and mh-method
+                                           (helm-ff-get-host-from-tramp-invalid-fname pattern))
+                                (concat (car mh-method) method ":"
+                                        (car (split-string it "|" t)))))
+           (all-methods (helm-ff-get-tramp-methods)))
       (helm-fast-remove-dups
-       (cl-loop for (f . h) in (tramp-get-completion-function method)
-             append (cl-loop for e in (funcall f (car h))
-                          for host = (and (consp e) (cadr e))
-                          when (and host (not (member host all-methods)))
-                          collect (concat tn host)))
+       (cons current-mh-host
+             (cl-loop for (f . h) in (tramp-get-completion-function method)
+                      append (cl-loop for e in (funcall f (car h))
+                                      for host = (and (consp e) (cadr e))
+                                      when (and host (not (member host all-methods)))
+                                      collect (concat (or (car mh-method) "/")
+                                                      method ":" host))))
        :test 'equal))))
 
 (defun helm-ff-before-action-hook-fn ()
@@ -1720,7 +1739,7 @@ purpose."
   (string= (helm-ff-set-pattern pattern)
            "Invalid tramp file name"))
 
-(defun helm-ff-tramp-postfixed-p (str methods)
+(defun helm-ff-tramp-postfixed-p (str)
   (let (result)
     (save-match-data
       (with-temp-buffer
@@ -1728,8 +1747,9 @@ purpose."
         (helm-awhile (search-forward ":" nil t)
           (if (save-excursion
                 (forward-char -1)
-                (looking-back (mapconcat 'identity methods "\\|")
-                              (point-at-bol)))
+                (looking-back
+                 (mapconcat 'identity (helm-ff-get-tramp-methods) "\\|")
+                 (point-at-bol)))
               (setq result nil)
               (setq result it)))))
     result))
@@ -1738,7 +1758,7 @@ purpose."
   "Handle tramp filenames in `helm-pattern'."
   (let* ((methods (helm-ff-get-tramp-methods))
          ;; Returns the position of last ":" entered.
-         (postfixed (helm-ff-tramp-postfixed-p pattern methods))
+         (postfixed (helm-ff-tramp-postfixed-p pattern))
          (reg "\\`/\\([^[/:]+\\|[^/]+]\\):.*:")
          cur-method tramp-name)
     ;; In some rare cases tramp can return a nil input,
@@ -1808,8 +1828,7 @@ purpose."
              ;; An empty pattern
              (string= path "")
              (and (string-match-p ":\\'" path)
-                  (helm-ff-tramp-postfixed-p
-                   path (helm-ff-get-tramp-methods)))
+                  (helm-ff-tramp-postfixed-p path))
              ;; Check if base directory of PATH is valid.
              (helm-aif (file-name-directory path)
                  ;; If PATH is a valid directory IT=PATH,
@@ -2393,7 +2412,7 @@ This affect directly file CANDIDATE."
     (format "No program %s found to extract exif"
             helm-ff-exif-data-program)))
 
-(defun helm-find-files-persistent-action (candidate)
+(cl-defun helm-find-files-persistent-action (candidate)
   "Open subtree CANDIDATE without quitting helm.
 If CANDIDATE is not a directory expand CANDIDATE filename.
 If CANDIDATE is alone, open file CANDIDATE filename.
@@ -2402,6 +2421,7 @@ First hit on C-j expand CANDIDATE second hit open file.
 If a prefix arg is given or `helm-follow-mode' is on open file."
   (let* ((follow        (or (helm-follow-mode-p)
                             helm--temp-follow-flag))
+         (image-cand    (string-match-p (image-file-name-regexp) candidate))
          (new-pattern   (helm-get-selection))
          (num-lines-buf (with-current-buffer helm-buffer
                           (count-lines (point-min) (point-max))))
@@ -2412,6 +2432,11 @@ If a prefix arg is given or `helm-follow-mode' is on open file."
                                        (set-text-properties 0 (length fname)
                                                             nil fname)
                                        (insert fname))))))
+    (unless image-cand
+      (when follow
+        (helm-follow-mode -1)
+        (cl-return-from helm-find-files-persistent-action
+          (message "Helm-follow-mode allowed only on images, disabling"))))
     (cond ((and (helm-ff-invalid-tramp-name-p)
                 (string-match helm-tramp-file-name-regexp candidate))
            ;; First hit insert hostname and
@@ -2442,7 +2467,7 @@ If a prefix arg is given or `helm-follow-mode' is on open file."
            (funcall insert-in-minibuffer new-pattern))
           ;; An image file and it is the second hit on C-j,
           ;; show the file in `image-dired'.
-          ((string-match (image-file-name-regexp) candidate)
+          (image-cand
            (when (buffer-live-p (get-buffer image-dired-display-image-buffer))
              (kill-buffer image-dired-display-image-buffer))
            ;; Fix emacs bug never fixed upstream.
@@ -3711,6 +3736,36 @@ locate."
   (helm :sources 'helm-source-recentf
         :ff-transformer-show-only-basename nil
         :buffer "*helm recentf*"))
+
+;;;###autoload
+(defun helm-delete-tramp-connection ()
+  "Allow deleting tramp connection or marked tramp connections at once.
+
+This replace `tramp-cleanup-connection' which is partially broken in
+emacs < to 25.1.50.1 (See Emacs Bug#24432).
+
+It allows additionally to delete more than one connection at once."
+  (interactive)
+  (let ((helm-quit-if-no-candidate
+         (lambda ()
+           (message "No Tramp connection found"))))
+    (helm :sources (helm-build-sync-source "Tramp connections"
+                     :candidates (tramp-list-connections)
+                     :candidate-transformer (lambda (candidates)
+                                              (cl-loop for v in candidates
+                                                       for name = (apply #'tramp-make-tramp-file-name
+                                                                         (cl-loop for i across v collect i))
+                                                       when (or (processp (tramp-get-connection-process v))
+                                                                (buffer-live-p (get-buffer (tramp-buffer-name v))))
+                                                       collect (cons name v)))
+                     :action (lambda (_vec)
+                               (let ((vecs (helm-marked-candidates)))
+                                 (cl-loop for v in vecs
+                                          do (progn
+                                               (tramp-cleanup-connection v)
+                                               (remhash v tramp-cache-data))))))
+          :buffer "*helm tramp connections*")))
+
 
 (provide 'helm-files)
 

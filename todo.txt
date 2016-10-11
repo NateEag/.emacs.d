@@ -384,8 +384,13 @@
  every parameter you add, an @param line should be inserted in the header
  comment.
 
--bash snippets would be nice:
- https://github.com/bmaland/yasnippet-sh-mode
+-Jump-to-definition for bash could be handy, for those cases where the scripts
+ have grown enough to have a few different include files. Often that means you
+ should just rewrite in another language, but I can imagine legitimate cases. I
+ suspect you could roll your own with this snippet for figuring out where a
+ function came from: http://superuser.com/a/229038
+
+-bash snippets would be nice: https://github.com/bmaland/yasnippet-sh-mode
 
 -Write/get a PHP snippet for array keyval. '$key’ => $val,
 

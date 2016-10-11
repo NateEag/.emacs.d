@@ -96,7 +96,8 @@
           (set-visited-file-name new-name)
           (set-buffer-modified-p nil)
           (message "File '%s' successfully renamed to '%s'"
-                   name (file-name-nondirectory new-name)))))))
+                   name (file-name-nondirectory new-name))
+          (normal-mode))))))
 
 ;; Insert the current date.
 ;;;###autoload

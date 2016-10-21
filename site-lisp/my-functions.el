@@ -145,5 +145,17 @@ find the path to the project directory."
 
   (file-name-directory (ne/get-dir-locals-file)))
 
+(defun shell-command-on-buffer ()
+  "Update buffer contents with results of running shell command on it.
+
+Tweaked from here: http://stackoverflow.com/a/19160992/1128957"
+
+  (interactive)
+  (shell-command-on-region (point-min)
+                           (point-max)
+                           (read-shell-command "Shell command on buffer: ")
+                           t
+                           t))
+
 (provide 'my-functions)
 ;;; my-functions.el ends here

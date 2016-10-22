@@ -1,10 +1,10 @@
 ;;; aggressive-indent-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
 ;;;### (autoloads nil "aggressive-indent" "aggressive-indent.el"
-;;;;;;  (22382 47557 0 0))
+;;;;;;  (22538 56543 0 0))
 ;;; Generated autoloads from aggressive-indent.el
 
 (autoload 'aggressive-indent-indent-defun "aggressive-indent" "\
@@ -31,8 +31,9 @@ the mode if ARG is omitted or nil, and toggle it if ARG is `toggle'.
 \(fn &optional ARG)" t nil)
 
 (defvar global-aggressive-indent-mode nil "\
-Non-nil if Global-Aggressive-Indent mode is enabled.
-See the command `global-aggressive-indent-mode' for a description of this minor mode.
+Non-nil if Global Aggressive-Indent mode is enabled.
+See the `global-aggressive-indent-mode' command
+for a description of this minor mode.
 Setting this variable directly does not take effect;
 either customize it (see the info node `Easy Customization')
 or call the function `global-aggressive-indent-mode'.")
@@ -41,7 +42,7 @@ or call the function `global-aggressive-indent-mode'.")
 
 (autoload 'global-aggressive-indent-mode "aggressive-indent" "\
 Toggle Aggressive-Indent mode in all buffers.
-With prefix ARG, enable Global-Aggressive-Indent mode if ARG is positive;
+With prefix ARG, enable Global Aggressive-Indent mode if ARG is positive;
 otherwise, disable it.  If called from Lisp, enable the mode if
 ARG is omitted or nil.
 

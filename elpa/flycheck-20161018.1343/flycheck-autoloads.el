@@ -1,9 +1,9 @@
 ;;; flycheck-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "flycheck" "flycheck.el" (22492 20448 0 0))
+;;;### (autoloads nil "flycheck" "flycheck.el" (22538 56575 0 0))
 ;;; Generated autoloads from flycheck.el
 
 (autoload 'flycheck-manual "flycheck" "\
@@ -32,8 +32,9 @@ buffer manually.
 \(fn &optional ARG)" t nil)
 
 (defvar global-flycheck-mode nil "\
-Non-nil if Global-Flycheck mode is enabled.
-See the command `global-flycheck-mode' for a description of this minor mode.
+Non-nil if Global Flycheck mode is enabled.
+See the `global-flycheck-mode' command
+for a description of this minor mode.
 Setting this variable directly does not take effect;
 either customize it (see the info node `Easy Customization')
 or call the function `global-flycheck-mode'.")
@@ -42,7 +43,7 @@ or call the function `global-flycheck-mode'.")
 
 (autoload 'global-flycheck-mode "flycheck" "\
 Toggle Flycheck mode in all buffers.
-With prefix ARG, enable Global-Flycheck mode if ARG is positive;
+With prefix ARG, enable Global Flycheck mode if ARG is positive;
 otherwise, disable it.  If called from Lisp, enable the mode if
 ARG is omitted or nil.
 
@@ -102,7 +103,7 @@ The following PROPERTIES constitute an error level:
 
 \(fn LEVEL &rest PROPERTIES)" nil nil)
 
-(put 'flycheck-define-error-level 'lisp-indent-function '1)
+(function-put 'flycheck-define-error-level 'lisp-indent-function '1)
 
 (autoload 'flycheck-define-command-checker "flycheck" "\
 Define SYMBOL as syntax checker to run a command.
@@ -183,9 +184,9 @@ default `:verify' function of command checkers.
 
 \(fn SYMBOL DOCSTRING &rest PROPERTIES)" nil nil)
 
-(put 'flycheck-define-command-checker 'lisp-indent-function '1)
+(function-put 'flycheck-define-command-checker 'lisp-indent-function '1)
 
-(put 'flycheck-define-command-checker 'doc-string-elt '2)
+(function-put 'flycheck-define-command-checker 'doc-string-elt '2)
 
 (autoload 'flycheck-def-config-file-var "flycheck" "\
 Define SYMBOL as config file variable for CHECKER, with default FILE-NAME.
@@ -202,7 +203,7 @@ argument to `flycheck-define-checker'.
 
 \(fn SYMBOL CHECKER &optional FILE-NAME &rest CUSTOM-ARGS)" nil t)
 
-(put 'flycheck-def-config-file-var 'lisp-indent-function '3)
+(function-put 'flycheck-def-config-file-var 'lisp-indent-function '3)
 
 (autoload 'flycheck-def-option-var "flycheck" "\
 Define SYMBOL as option variable with INIT-VALUE for CHECKER.
@@ -219,14 +220,14 @@ Use this together with the `option', `option-list' and
 
 \(fn SYMBOL INIT-VALUE CHECKERS DOCSTRING &rest CUSTOM-ARGS)" nil t)
 
-(put 'flycheck-def-option-var 'lisp-indent-function '3)
+(function-put 'flycheck-def-option-var 'lisp-indent-function '3)
 
-(put 'flycheck-def-option-var 'doc-string-elt '4)
+(function-put 'flycheck-def-option-var 'doc-string-elt '4)
 
 ;;;***
 
 ;;;### (autoloads nil nil ("flycheck-buttercup.el" "flycheck-ert.el"
-;;;;;;  "flycheck-pkg.el") (22492 20448 715850 0))
+;;;;;;  "flycheck-pkg.el") (22538 56575 0 0))
 
 ;;;***
 

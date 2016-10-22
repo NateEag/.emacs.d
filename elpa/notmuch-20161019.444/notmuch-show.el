@@ -682,6 +682,9 @@ will return nil if the CID is unknown or cannot be retrieved."
       (indent-rigidly start (point) 1)))
   t)
 
+(defun notmuch-show-insert-part-application/pgp-encrypted (msg part content-type nth depth button)
+  t)
+
 (defun notmuch-show-insert-part-multipart/* (msg part content-type nth depth button)
   (let ((inner-parts (plist-get part :content))
 	(start (point)))
@@ -1171,13 +1174,15 @@ This also turns id:\"<message id>\"-parts and mid: links into
 buttons for a corresponding notmuch search."
   (goto-address-fontify-region start end)
   (save-excursion
-    (let (links)
-      (goto-char start)
-      (while (re-search-forward notmuch-id-regexp end t)
+    (let (links
+	  (beg-line (progn (goto-char start) (line-beginning-position)))
+	  (end-line (progn (goto-char end) (line-end-position))))
+      (goto-char beg-line)
+      (while (re-search-forward notmuch-id-regexp end-line t)
 	(push (list (match-beginning 0) (match-end 0)
 		    (match-string-no-properties 0)) links))
-      (goto-char start)
-      (while (re-search-forward notmuch-mid-regexp end t)
+      (goto-char beg-line)
+      (while (re-search-forward notmuch-mid-regexp end-line t)
 	(let* ((mid-cid (match-string-no-properties 1))
 	       (mid (save-match-data
 		      (string-match "^[^/]*" mid-cid)
@@ -1314,8 +1319,13 @@ If no messages match the query return NIL."
 
 This includes:
  - the list of open messages,
- - the current message."
-  (list (notmuch-show-get-message-id) (notmuch-show-get-message-ids-for-open-messages)))
+ - the combination of current message id with/for each visible window."
+  (let* ((win-list (get-buffer-window-list (current-buffer) nil t))
+	 (win-id-combo (mapcar (lambda (win)
+				 (with-selected-window win
+				   (list win (notmuch-show-get-message-id))))
+			       win-list)))
+    (list win-id-combo (notmuch-show-get-message-ids-for-open-messages))))
 
 (defun notmuch-show-get-query ()
   "Return the current query in this show buffer"
@@ -1342,8 +1352,8 @@ This includes:
 This includes:
  - opening the messages previously opened,
  - closing all other messages,
- - moving to the correct current message."
-  (let ((current (car state))
+ - moving to the correct current message in every displayed window."
+  (let ((win-msg-alist (car state))
 	(open (cadr state)))
 
     ;; Open those that were open.
@@ -1352,8 +1362,10 @@ This includes:
 					   (member (notmuch-show-get-message-id) open))
 	  until (not (notmuch-show-goto-message-next)))
 
-    ;; Go to the previously open message.
-    (notmuch-show-goto-message current)))
+    (dolist (win-msg-pair win-msg-alist)
+      (with-selected-window (car win-msg-pair)
+	;; Go to the previously open message in this window
+	(notmuch-show-goto-message (cadr win-msg-pair))))))
 
 (defun notmuch-show-refresh-view (&optional reset-state)
   "Refresh the current view.
@@ -1428,6 +1440,7 @@ reset based on the original query."
     (define-key map "V" 'notmuch-show-view-raw-message)
     (define-key map "c" 'notmuch-show-stash-map)
     (define-key map "h" 'notmuch-show-toggle-visibility-headers)
+    (define-key map "k" 'notmuch-tag-jump)
     (define-key map "*" 'notmuch-show-tag-all)
     (define-key map "-" 'notmuch-show-remove-tag)
     (define-key map "+" 'notmuch-show-add-tag)

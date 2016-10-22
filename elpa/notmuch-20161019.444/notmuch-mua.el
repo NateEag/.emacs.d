@@ -251,10 +251,17 @@ mutiple parts get a header."
 		       (notmuch-show-max-text-part-size 0)
 		       ;; Insert headers for parts as appropriate for replying.
 		       (notmuch-show-insert-header-p-function notmuch-mua-reply-insert-header-p-function)
+		       ;; Ensure that any encrypted parts are
+		       ;; decrypted during the generation of the reply
+		       ;; text.
+		       (notmuch-show-process-crypto process-crypto)
 		       ;; Don't indent multipart sub-parts.
 		       (notmuch-show-indent-multipart nil))
-		    (notmuch-show-insert-body original (plist-get original :body) 0)
-		    (buffer-substring-no-properties (point-min) (point-max)))))
+		    ;; We don't want sigstatus buttons (an information leak and usually wrong anyway).
+		    (letf (((symbol-function 'notmuch-crypto-insert-sigstatus-button) #'ignore)
+			   ((symbol-function 'notmuch-crypto-insert-encstatus-button) #'ignore))
+			  (notmuch-show-insert-body original (plist-get original :body) 0)
+			  (buffer-substring-no-properties (point-min) (point-max))))))
 
 	(set-mark (point))
 	(goto-char start)
@@ -487,15 +494,64 @@ will be addressed to all recipients of the source message."
     (notmuch-mua-reply query-string sender reply-all)
     (deactivate-mark)))
 
+(defun notmuch-mua-check-no-misplaced-secure-tag ()
+  "Query user if there is a misplaced secure mml tag.
+
+Emacs message-send will (probably) ignore a secure mml tag unless
+it is at the start of the body. Returns t if there is no such
+tag, or the user confirms they mean it."
+  (save-excursion
+    (let ((body-start (progn (message-goto-body) (point))))
+      (goto-char (point-max))
+      (or
+       ;; We are always fine if there is no secure tag.
+       (not (search-backward "<#secure" nil 't))
+       ;; There is a secure tag, so it must be at the start of the
+       ;; body, with no secure tag earlier (i.e., in the headers).
+       (and (= (point) body-start)
+	    (not (search-backward "<#secure" nil 't)))
+       ;; The user confirms they means it.
+       (yes-or-no-p "\
+There is a <#secure> tag not at the start of the body. It is
+likely that the message will be sent unsigned and unencrypted.
+Really send? ")))))
+
+(defun notmuch-mua-check-secure-tag-has-newline ()
+  "Query if the secure mml tag has a newline following it.
+
+Emacs message-send will (probably) ignore a correctly placed
+secure mml tag unless it is followed by a newline. Returns t if
+any secure tag is followed by a newline, or the user confirms
+they mean it."
+  (save-excursion
+    (message-goto-body)
+    (or
+     ;; There is no (correctly placed) secure tag.
+     (not (looking-at "<#secure"))
+     ;; The secure tag is followed by a newline.
+     (looking-at "<#secure[^\n>]*>\n")
+     ;; The user confirms they means it.
+     (yes-or-no-p "\
+The <#secure> tag at the start of the body is not followed by a
+newline. It is likely that the message will be sent unsigned and
+unencrypted.  Really send? "))))
+
+(defun notmuch-mua-send-common (arg &optional exit)
+  (interactive "P")
+  (when (and (notmuch-mua-check-no-misplaced-secure-tag)
+	     (notmuch-mua-check-secure-tag-has-newline))
+    (letf (((symbol-function 'message-do-fcc) #'notmuch-maildir-message-do-fcc))
+	  (if exit
+	      (message-send-and-exit arg)
+	    (message-send arg)))))
+
 (defun notmuch-mua-send-and-exit (&optional arg)
   (interactive "P")
-  (letf (((symbol-function 'message-do-fcc) #'notmuch-maildir-message-do-fcc))
-	(message-send-and-exit arg)))
+  (notmuch-mua-send-common arg 't))
 
 (defun notmuch-mua-send (&optional arg)
   (interactive "P")
-  (letf (((symbol-function 'message-do-fcc) #'notmuch-maildir-message-do-fcc))
-	(message-send arg)))
+  (notmuch-mua-send-common arg))
 
 (defun notmuch-mua-kill-buffer ()
   (interactive)

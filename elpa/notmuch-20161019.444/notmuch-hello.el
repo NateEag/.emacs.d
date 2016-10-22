@@ -604,10 +604,11 @@ with `notmuch-hello-query-counts'."
 
 (defimage notmuch-hello-logo ((:type png :file "notmuch-logo.png")))
 
-(defun notmuch-hello-update (&optional no-display)
-  "Update the current notmuch view."
+(defun notmuch-hello-update ()
+  "Update the notmuch-hello buffer."
   ;; Lazy - rebuild everything.
-  (notmuch-hello no-display))
+  (interactive)
+  (notmuch-hello t))
 
 (defun notmuch-hello-window-configuration-change ()
   "Hook function to update the hello buffer when it is switched to."

@@ -57,6 +57,10 @@
 
 (custom-add-to-group 'notmuch-send 'message 'custom-group)
 
+(defgroup notmuch-tag nil
+  "Tags and tagging in Notmuch."
+  :group 'notmuch)
+
 (defgroup notmuch-crypto nil
   "Processing and display of cryptographic MIME parts."
   :group 'notmuch)
@@ -147,6 +151,7 @@ For example, if you wanted to remove an \"inbox\" tag and add an
     (define-key map "z" 'notmuch-tree)
     (define-key map "m" 'notmuch-mua-new-mail)
     (define-key map "=" 'notmuch-refresh-this-buffer)
+    (define-key map (kbd "M-=") 'notmuch-refresh-all-buffers)
     (define-key map "G" 'notmuch-poll-and-refresh-this-buffer)
     (define-key map "j" 'notmuch-jump-search)
     map)
@@ -413,16 +418,29 @@ of its command symbol."
   "Refresh the current buffer."
   (interactive)
   (when notmuch-buffer-refresh-function
-    (if (commandp notmuch-buffer-refresh-function)
-	;; Pass prefix argument, etc.
-	(call-interactively notmuch-buffer-refresh-function)
-      (funcall notmuch-buffer-refresh-function))))
+    ;; Pass prefix argument, etc.
+    (call-interactively notmuch-buffer-refresh-function)))
 
 (defun notmuch-poll-and-refresh-this-buffer ()
   "Invoke `notmuch-poll' to import mail, then refresh the current buffer."
   (interactive)
   (notmuch-poll)
   (notmuch-refresh-this-buffer))
+
+(defun notmuch-refresh-all-buffers ()
+  "Invoke `notmuch-refresh-this-buffer' on all notmuch major-mode buffers.
+
+The buffers are silently refreshed, i.e. they are not forced to
+be displayed."
+  (interactive)
+  (dolist (buffer (buffer-list))
+    (let ((buffer-mode (buffer-local-value 'major-mode buffer)))
+      (when (memq buffer-mode '(notmuch-show-mode
+				notmuch-tree-mode
+				notmuch-search-mode
+				notmuch-hello-mode))
+	(with-current-buffer buffer
+	  (notmuch-refresh-this-buffer))))))
 
 (defun notmuch-prettify-subject (subject)
   ;; This function is used by `notmuch-search-process-filter' which

@@ -241,6 +241,8 @@ FUNC."
     (define-key map [remap notmuch-search] 'notmuch-tree-to-search)
     ;; Override because we want to close message pane first.
     (define-key map [remap notmuch-mua-new-mail] (notmuch-tree-close-message-pane-and #'notmuch-mua-new-mail))
+    ;; Override because we want to close message pane first.
+    (define-key map [remap notmuch-jump-search] (notmuch-tree-close-message-pane-and #'notmuch-jump-search))
 
     (define-key map "S" 'notmuch-search-from-tree-current-query)
 
@@ -249,6 +251,7 @@ FUNC."
     (define-key map "w" 'notmuch-show-save-attachments)
     (define-key map "v" 'notmuch-show-view-all-mime-parts)
     (define-key map "c" 'notmuch-show-stash-map)
+    (define-key map "b" 'notmuch-show-resend-message)
 
     ;; these apply to the message pane
     (define-key map (kbd "M-TAB") (notmuch-tree-to-message-pane #'notmuch-show-previous-button))
@@ -268,7 +271,6 @@ FUNC."
     (define-key map "x" 'notmuch-tree-quit)
     (define-key map "A" 'notmuch-tree-archive-thread)
     (define-key map "a" 'notmuch-tree-archive-message-then-next)
-    (define-key map "=" 'notmuch-tree-refresh-view)
     (define-key map "z" 'notmuch-tree-to-tree)
     (define-key map "n" 'notmuch-tree-next-matching-message)
     (define-key map "p" 'notmuch-tree-prev-matching-message)
@@ -276,11 +278,12 @@ FUNC."
     (define-key map "P" 'notmuch-tree-prev-message)
     (define-key map (kbd "M-p") 'notmuch-tree-prev-thread)
     (define-key map (kbd "M-n") 'notmuch-tree-next-thread)
+    (define-key map "k" 'notmuch-tag-jump)
     (define-key map "-" 'notmuch-tree-remove-tag)
     (define-key map "+" 'notmuch-tree-add-tag)
     (define-key map "*" 'notmuch-tree-tag-thread)
     (define-key map " " 'notmuch-tree-scroll-or-next)
-    (define-key map "b" 'notmuch-tree-scroll-message-window-back)
+    (define-key map (kbd "DEL") 'notmuch-tree-scroll-message-window-back)
     map))
 (fset 'notmuch-tree-mode-map notmuch-tree-mode-map)
 

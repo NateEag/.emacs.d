@@ -169,6 +169,7 @@ there will be called at other points of notmuch execution."
     (define-key map "t" 'notmuch-search-filter-by-tag)
     (define-key map "l" 'notmuch-search-filter)
     (define-key map [mouse-1] 'notmuch-search-show-thread)
+    (define-key map "k" 'notmuch-tag-jump)
     (define-key map "*" 'notmuch-search-tag-all)
     (define-key map "a" 'notmuch-search-archive-thread)
     (define-key map "-" 'notmuch-search-remove-tag)
@@ -313,7 +314,7 @@ there will be called at other points of notmuch execution."
 
 (defface notmuch-search-flagged-face
   '((t
-     (:weight bold)))
+     (:foreground "blue")))
   "Face used in search mode face for flagged threads.
 
 This face is the default value for the \"flagged\" tag in
@@ -323,7 +324,7 @@ This face is the default value for the \"flagged\" tag in
 
 (defface notmuch-search-unread-face
   '((t
-     (:foreground "blue")))
+     (:weight bold)))
   "Face used in search mode for unread threads.
 
 This face is the default value for the \"unread\" tag in
@@ -669,9 +670,16 @@ of the result."
 		  (goto-char (point-min))
 		  (forward-line (1- notmuch-search-target-line)))))))))
 
+(define-widget 'notmuch--custom-face-edit 'lazy
+  "Custom face edit with a tag Edit Face"
+  ;; I could not persuage custom-face-edit to respect the :tag
+  ;; property so create a widget specially
+  :tag "Manually specify face"
+  :type 'custom-face-edit)
+
 (defcustom notmuch-search-line-faces
-  '(("unread" 'notmuch-search-unread-face)
-    ("flagged" 'notmuch-search-flagged-face))
+  '(("unread" . notmuch-search-unread-face)
+    ("flagged" . notmuch-search-flagged-face))
   "Alist of tags to faces for line highlighting in notmuch-search.
 Each element looks like (TAG . FACE).
 A thread with TAG will have FACE applied.
@@ -689,7 +697,9 @@ matching tags are merged, with earlier attributes overriding
 later. A message having both \"deleted\" and \"unread\" tags with
 the above settings would have a green foreground and blue
 background."
-  :type '(alist :key-type (string) :value-type (custom-face-edit))
+  :type '(alist :key-type (string)
+		:value-type (radio (face :tag "Face name")
+				    (notmuch--custom-face-edit)))
   :group 'notmuch-search
   :group 'notmuch-faces)
 
@@ -891,9 +901,10 @@ PROMPT is the string to prompt with."
                 (process-lines notmuch-command "search" "--output=tags" "*")))
        (completions
 	 (append (list "folder:" "path:" "thread:" "id:" "date:" "from:" "to:"
-		       "subject:" "attachment:" "mimetype:")
+		       "subject:" "attachment:")
 		 (mapcar (lambda (tag) (concat "tag:" tag)) all-tags)
-		 (mapcar (lambda (tag) (concat "is:" tag)) all-tags))))
+		 (mapcar (lambda (tag) (concat "is:" tag)) all-tags)
+		 (mapcar (lambda (mimetype) (concat "mimetype:" mimetype)) (mailcap-mime-types)))))
     (let ((keymap (copy-keymap minibuffer-local-map))
 	  (current-query (case major-mode
 			   (notmuch-search-mode (notmuch-search-get-query))
@@ -924,7 +935,7 @@ PROMPT is the string to prompt with."
 
 ;;;###autoload
 (put 'notmuch-search 'notmuch-doc "Search for messages.")
-(defun notmuch-search (&optional query oldest-first target-thread target-line)
+(defun notmuch-search (&optional query oldest-first target-thread target-line no-display)
   "Display threads matching QUERY in a notmuch-search buffer.
 
 If QUERY is nil, it is read interactively from the minibuffer.
@@ -935,6 +946,9 @@ Other optional parameters are used as follows:
                  current if it appears in the search results.
   TARGET-LINE: The line number to move to if the target thread does not
                appear in the search results.
+  NO-DISPLAY: Do not try to foreground the search results buffer. If it is
+              already foregrounded i.e. displayed in a window, this has no
+              effect, meaning the buffer will remain visible.
 
 When called interactively, this will prompt for a query and use
 the configured default sort order."
@@ -948,7 +962,9 @@ the configured default sort order."
 
   (let* ((query (or query (notmuch-read-query "Notmuch search: ")))
 	 (buffer (get-buffer-create (notmuch-search-buffer-title query))))
-    (switch-to-buffer buffer)
+    (if no-display
+	(set-buffer buffer)
+      (switch-to-buffer buffer))
     (notmuch-search-mode)
     ;; Don't track undo information for this buffer
     (set 'buffer-undo-list t)
@@ -984,17 +1000,18 @@ the configured default sort order."
 (defun notmuch-search-refresh-view ()
   "Refresh the current view.
 
-Kills the current buffer and runs a new search with the same
+Erases the current buffer and runs a new search with the same
 query string as the current search. If the current thread is in
 the new search results, then point will be placed on the same
 thread. Otherwise, point will be moved to attempt to be in the
 same relative position within the new buffer."
+  (interactive)
   (let ((target-line (line-number-at-pos))
 	(oldest-first notmuch-search-oldest-first)
 	(target-thread (notmuch-search-find-thread-id 'bare))
 	(query notmuch-search-query-string))
-    (notmuch-bury-or-kill-this-buffer)
-    (notmuch-search query oldest-first target-thread target-line)
+    ;; notmuch-search erases the current buffer.
+    (notmuch-search query oldest-first target-thread target-line t)
     (goto-char (point-min))))
 
 (defun notmuch-search-toggle-order ()

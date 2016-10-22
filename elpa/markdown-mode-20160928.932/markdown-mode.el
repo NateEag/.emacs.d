@@ -33,7 +33,7 @@
 ;; Maintainer: Jason R. Blevins <jrblevin@sdf.org>
 ;; Created: May 24, 2007
 ;; Version: 2.1
-;; Package-Version: 20160830.820
+;; Package-Version: 20160928.932
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: http://jblevins.org/projects/markdown-mode/
@@ -1443,7 +1443,7 @@ Groups 1 and 3 match opening and closing dollar signs.
 Group 3 matches the mathematical expression contained within.")
 
 (defconst markdown-regex-math-display
-  "^\\(\\\\\\[\\)\\(\\(?:.\\|\n\\)*\\)?\\(\\\\\\]\\)$"
+  "^\\(\\\\\\[\\)\\(\\(?:.\\|\n\\)*?\\)?\\(\\\\\\]\\)$"
   "Regular expression for itex \[..\] display mode expressions.
 Groups 1 and 3 match the opening and closing delimiters.
 Group 2 matches the mathematical expression contained within.")
@@ -4299,14 +4299,16 @@ before the current point, then exdent the line one level.
 Otherwise, do normal delete by repeating
 `backward-delete-char-untabify' ARG times."
   (interactive "*p")
-  (let ((cur-pos (current-column))
-        (start-of-indention (save-excursion
-                              (back-to-indentation)
-                              (current-column)))
-        (positions (markdown-calc-indents)))
-    (if (and (> cur-pos 0) (= cur-pos start-of-indention))
-        (indent-line-to (markdown-exdent-find-next-position cur-pos positions))
-      (backward-delete-char-untabify arg))))
+  (if (use-region-p)
+      (backward-delete-char-untabify arg)
+    (let ((cur-pos (current-column))
+          (start-of-indention (save-excursion
+                                (back-to-indentation)
+                                (current-column)))
+          (positions (markdown-calc-indents)))
+      (if (and (> cur-pos 0) (= cur-pos start-of-indention))
+          (indent-line-to (markdown-exdent-find-next-position cur-pos positions))
+        (backward-delete-char-untabify arg)))))
 
 (defun markdown-find-leftmost-column (beg end)
   "Find the leftmost column in the region from BEG to END."
@@ -6475,9 +6477,9 @@ This is an exact copy of `line-number-at-pos' for use in emacs21."
     ;; Update font lock keywords with extensions
     (setq markdown-mode-font-lock-keywords
           (append
+           (markdown-mode-font-lock-keywords-math)
            markdown-mode-font-lock-keywords-basic
-           (markdown-mode-font-lock-keywords-wiki-links)
-           (markdown-mode-font-lock-keywords-math)))
+           (markdown-mode-font-lock-keywords-wiki-links)))
     ;; Update font lock defaults
     (setq font-lock-defaults
           '(markdown-mode-font-lock-keywords

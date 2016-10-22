@@ -43,9 +43,9 @@
   (unless (update-packages-newest-package-installed-p package)
     (let ((pkg-desc (car (cdr (assq package package-alist)))))
       (when pkg-desc
-        (package-delete pkg-desc))
+        (package-delete pkg-desc t))
       (and (assq package package-archive-contents)
-           (package-install package)))))
+           (package-install package t)))))
 
 (defun update-packages-upgrade-package-and-commit (package)
   "If PACKAGE can be upgraded, upgrade it and commit."

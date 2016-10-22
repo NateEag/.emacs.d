@@ -4,8 +4,8 @@
 ;;
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Created: 11 September 2014
-;; Version: 0.4
-;; Package-Version: 20160131.926
+;; Version: 0.6
+;; Package-Version: 20160930.2032
 ;; Package-Requires: ((dash "2.8.0"))
 
 ;;; License:
@@ -62,6 +62,10 @@
 ;;;###autoload
 (add-to-list 'auto-mode-alist
              `(,(rx "requirements" (zero-or-more anything) ".txt" string-end) . pip-requirements-mode))
+
+;;;###autoload
+(add-to-list 'auto-mode-alist
+             `(,(rx "requirements.in") . pip-requirements-mode))
 
 (defconst pip-requirements-name-regex
   (rx

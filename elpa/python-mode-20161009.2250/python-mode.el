@@ -4232,7 +4232,7 @@ When indent is set back manually, this is honoured in following lines. "
 	 (lkmd (prin1-to-string last-command))
 	 ;; lp:1280982, deliberatly dedented by user
 	 (this-dedent
-	  (when (and (or (eq 10 (char-after))(eobp))(looking-back "^[ \t]*"))
+	  (when (and (or (eq 10 (char-after))(eobp))(looking-back "^[ \t]*") (line-beginning-position))
 	    (current-column)))
 	 erg pos)
     (newline)
@@ -5366,7 +5366,7 @@ If already at the beginning or before a expression, go to next expression in buf
 	 ((nth 3 pps)
 	  (goto-char (nth 8 pps)))
 	 ;; after operator
-	 ((and (not done) (looking-back py-operator-re))
+	 ((and (not done) (looking-back py-operator-re (line-beginning-position)))
 	  (skip-chars-backward "^ \t\r\n\f")
 	  (skip-chars-backward " \t\r\n\f")
 	  (py-backward-expression orig done repeat))
@@ -5398,7 +5398,7 @@ Operators are ignored. "
 	  (or (< (point) (progn (forward-comment 1)(point)))(forward-line 1))
 	  (py-forward-expression orig done repeat))
 	 ;; empty before comment
-	 ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*"))
+	 ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*" (line-beginning-position)))
 	  (while (and (looking-at "[ \t]*#") (not (eobp)))
 	    (forward-line 1))
 	  (py-forward-expression orig done repeat))
@@ -5552,9 +5552,9 @@ computing indents"
 	  (forward-char -1)
 	  (py-backward-statement orig done limit ignore-in-string-p))
 	 ;; BOL or at space before comment
-         ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*"))
+         ((and (looking-at "[ \t]*#")(looking-back "^[ \t]*" (line-beginning-position)))
           (forward-comment -1)
-          (while (and (not (bobp)) (looking-at "[ \t]*#")(looking-back "^[ \t]*"))
+          (while (and (not (bobp)) (looking-at "[ \t]*#")(looking-back "^[ \t]*" (line-beginning-position)))
             (forward-comment -1))
           (unless (bobp)
             (py-backward-statement orig done limit ignore-in-string-p)))
@@ -5581,7 +5581,7 @@ computing indents"
 	 ((and (not done) (not (eq 0 (skip-chars-backward " \t\r\n\f"))))
 	  (py-backward-statement orig done limit ignore-in-string-p)))
 	;; return nil when before comment
-	(unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*"))
+	(unless (and (looking-at "[ \t]*#") (looking-back "^[ \t]*" (line-beginning-position)))
 	  (when (< (point) orig)(setq erg (point))))
 	(when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
 	erg))))
@@ -5985,7 +5985,7 @@ A `nomenclature' is a fancy way of saying AWordWithMixedCaseNotUnderscores."
         (setq arg (1+ arg))))
     (if (< (point) orig)
         (progn
-          (when (looking-back "[[:upper:]]")
+          (when (looking-back "[[:upper:]]" (line-beginning-position))
             ;; (looking-back "[[:blank:]]"
             (forward-char -1))
           (if (looking-at "[[:alnum:]ß]")
@@ -6062,7 +6062,7 @@ Return position if successful"
 		(nth 8 (parse-partial-sexp (point-min) (point)))
 		(goto-char (match-end 0))))
     (and last (goto-char last))
-    (when (and (looking-back py-section-end)(< orig (point)))
+    (when (and (looking-back py-section-end (line-beginning-position))(< orig (point)))
       (point))))
 
 (defun py--backward-def-or-class-decorator-maybe (&optional bol)
@@ -6113,7 +6113,7 @@ With BOL, return line-beginning-position"
     ;; (if (and (< (current-column) origindent) (looking-at regexp))
     ;; (setq erg (point))
     (setq erg (py--backward-def-or-class-matcher regexp indent origline))
-    (and erg (looking-back "async ")
+    (and erg (looking-back "async " (line-beginning-position))
 	 (goto-char (match-beginning 0))
 	 (setq erg (point)))
     ;; bol-forms at not at bol yet
@@ -7869,7 +7869,8 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
   (let* ((erg (py-which-python))
          (cmd (if (< erg 3)
                   (format "execfile(r'%s') # PYTHON-MODE\n" filename)
-                (format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" filename filename))))
+                (format "exec(compile(open(r'%s').read(), r'%s', 'exec')) # PYTHON-MODE\n" filename filename)
+		)))
     (when (called-interactively-p 'any) (message "%s" (prin1-to-string cmd)))
     cmd))
 
@@ -8158,10 +8159,8 @@ Make that process's buffer visible and force display.  Also make
 comint believe the user typed this string so that
 `kill-output-from-shell' does The Right Thing.
 Returns position where output starts. "
-  ;; (when py-debug-p (message "py--execute-file-base args: %s %s %s %s %s %s %s %s" proc filename cmd procbuf orig file execute-directory py-exception-buffer))
-  ;; (when py-debug-p (message "py--execute-file-base: py-split-window-on-execute: %s" py-split-window-on-execute))
   (let* ((origline (or (ignore-errors origline) 1))
-	 (cmd (or cmd (format "exec(compile(open('%s').read(), '%s', 'exec')) # PYTHON-MODE\n" filename filename)))
+	 (cmd (or cmd (py-which-execute-file-command filename)))
 	 (msg (and py-verbose-p (format "## executing %s...\n" filename)))
 	 (buffer (or procbuf (py-shell nil nil nil procbuf)))
 	 (proc (or proc (get-buffer-process buffer)))
@@ -8511,7 +8510,7 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
     (goto-char pmx)
     (sit-for 0.1 t)
     (save-excursion
-      (unless (looking-back py-pdbtrack-input-prompt)
+      (unless (looking-back py-pdbtrack-input-prompt (line-beginning-position))
         (forward-line -1)
         (end-of-line)
         (when (or (re-search-backward py-shell-prompt-regexp nil t 1)
@@ -8680,7 +8679,7 @@ completions on the current context."
 (defun py--try-completion-intern (input completion)
   (let (erg)
     (when (and (stringp (setq erg (try-completion input completion)))
-	       (looking-back input)
+	       (looking-back input (line-beginning-position))
 	       (not (string= input erg)))
       (delete-region (match-beginning 0) (match-end 0))
       (insert erg))
@@ -9364,7 +9363,7 @@ If symbol is defined in current buffer, jump to it's definition"
       (setq py-last-position orig))
     (unless (member (get-buffer-window "*Python-Help*")(window-list))
       (window-configuration-to-register py-windows-config-register))
-    (and (looking-back "(")(not (looking-at "\\sw")) (forward-char -1))
+    (and (looking-back "(" (line-beginning-position))(not (looking-at "\\sw")) (forward-char -1))
     (if (or (not (face-at-point)) (eq (face-at-point) 'font-lock-string-face)(eq (face-at-point) 'font-lock-comment-face)(eq (face-at-point) 'default))
 	(progn
 	  (py-restore-window-configuration)
@@ -10618,7 +10617,7 @@ With interactive call, send it to the message buffer too. "
 
 (defun py--match-paren-blocks ()
   (cond
-   ((and (looking-back "^[ \t]*")(if (eq last-command 'py-match-paren)(not py--match-paren-forward-p)t)
+   ((and (looking-back "^[ \t]*" (line-beginning-position))(if (eq last-command 'py-match-paren)(not py--match-paren-forward-p)t)
 	 ;; (looking-at py-extended-block-or-clause-re)
 	 (looking-at "[[:alpha:]_]"))
     ;; from beginning of top-level, block, clause, statement
@@ -11446,16 +11445,14 @@ With \\[universal-argument] \"#\" electric behavior is inhibited inside a string
   (if (and py-indent-comments py-electric-comment-p)
       (if (ignore-errors (eq 4 (car-safe arg)))
           (insert "#")
-        (when (and (eq last-command 'py-electric-comment) (looking-back " "))
+        (when (and (eq last-command 'py-electric-comment) (looking-back " " (line-beginning-position)))
           (forward-char -1))
         (if (called-interactively-p 'any) (self-insert-command (prefix-numeric-value arg))
           (insert "#"))
         (let ((orig (copy-marker (point)))
               (indent (py-compute-indentation)))
           (unless
-              ;; (or
-               (eq (current-indentation) indent)
-            ;; (looking-back "#[ \t]*"))
+	      (eq (current-indentation) indent)
             (goto-char orig)
             (beginning-of-line)
             (delete-horizontal-space)
@@ -11511,7 +11508,7 @@ Returns column reached. "
 		(boundp 'delete-active-region) delete-active-region)
 	   (backward-delete-char-untabify arg))
 	  ;; (delete-region (region-beginning) (region-end)))
-	  ((looking-back "^[ \t]+")
+	  ((looking-back "^[ \t]+" (line-beginning-position))
 	   (let* ((remains (% (current-column) py-indent-offset)))
 	     (if (< 0 remains)
 		 (delete-char (- remains))
@@ -20457,7 +20454,7 @@ LIEP stores line-end-position at point-of-interest
 				   0))
 			     (forward-char -1)
 			     (py-compute-indentation orig origline closing line nesting repeat indent-offset liep))))
-			((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")(not line)
+			((and (looking-at "[ \t]*#") (looking-back "^[ \t]*" (line-beginning-position))(not line)
 			      (eq liep (line-end-position)))
 			 (if py-indent-comments
 			     (progn
@@ -20469,7 +20466,7 @@ LIEP stores line-end-position at point-of-interest
 			       (py-backward-comment)
 			       (py-compute-indentation orig origline closing line nesting repeat indent-offset liep))
 			   0))
-			((and (looking-at "[ \t]*#") (looking-back "^[ \t]*")(not
+			((and (looking-at "[ \t]*#") (looking-back "^[ \t]*" (line-beginning-position))(not
 									      (eq liep (line-end-position))))
 			 (current-indentation))
 			((and (eq ?\# (char-after)) line py-indent-honors-inline-comment)
@@ -20488,7 +20485,7 @@ LIEP stores line-end-position at point-of-interest
 				    (py-closing-list-dedents-bos
 				     (goto-char (nth 1 pps))
 				     (current-indentation))
-				    ((looking-back "^[ \t]*")
+				    ((looking-back "^[ \t]*" (line-beginning-position))
 				     (current-column))
 				    ((and (looking-at "\\s([ \t]*$") py-closing-list-keeps-space)
 				     (+ (current-column) py-closing-list-space))
@@ -20840,7 +20837,7 @@ For stricter sense specify regexp. "
       (py-forward-statement)
       (py-backward-statement)
       (when (and
-             (<= (line-beginning-position) orig)(looking-back "^[ \t]*")(looking-at regexp))
+             (<= (line-beginning-position) orig)(looking-back "^[ \t]*" (line-beginning-position))(looking-at regexp))
         (setq erg (point))))
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
@@ -21348,7 +21345,7 @@ Returns beginning of FORM if successful, nil otherwise"
   (let ((orig (point))
         (indent
          (or indent
-	     (cond ((looking-back "^[ \t]*")
+	     (cond ((looking-back "^[ \t]*" (line-beginning-position))
 		    (current-indentation))
 		   (t (progn (back-to-indentation)
 			     (or (py--beginning-of-statement-p)

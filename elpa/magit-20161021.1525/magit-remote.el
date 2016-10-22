@@ -62,8 +62,7 @@ Then show the status buffer for the new repository."
                      (match-string 1 url))))))
   (setq directory (file-name-as-directory (expand-file-name directory)))
   (magit-run-git-async "clone" repository
-                       ;; Stop cygwin git making a "c:" directory.
-                       (magit-convert-git-filename directory))
+                       (magit-convert-filename-for-git directory))
   ;; Don't refresh the buffer we're calling from.
   (process-put magit-this-process 'inhibit-refresh t)
   (set-process-sentinel
@@ -560,9 +559,15 @@ Both the source and the target are read in the minibuffer."
   (interactive
    (let ((source (magit-read-local-branch-or-commit "Push")))
      (list source
-           (magit-read-remote-branch (format "Push %s to" source) nil
-                                     (magit-get-upstream-branch source)
-                                     source 'confirm)
+           (magit-read-remote-branch
+            (format "Push %s to" source) nil
+            (if (magit-local-branch-p source)
+                (or (magit-get-push-branch source)
+                    (magit-get-upstream-branch source))
+              (and (magit-rev-ancestor-p source "HEAD")
+                   (or (magit-get-push-branch)
+                       (magit-get-upstream-branch))))
+            source 'confirm)
            (magit-push-arguments))))
   (magit-git-push source target args))
 

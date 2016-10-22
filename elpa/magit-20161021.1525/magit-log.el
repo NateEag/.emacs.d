@@ -282,9 +282,6 @@ the upstream isn't ahead of the current branch) show."
   :group 'magit-status
   :type '(repeat (string :tag "Argument")))
 
-(define-obsolete-variable-alias 'magit-log-section-args
-  'magit-log-section-arguments "2.2.0")
-
 ;;; Commands
 
 (defvar magit-log-popup
@@ -1030,8 +1027,8 @@ Do not add this to a hook variable."
                                   'face 'magit-log-author)
                       " "))
          (propertize (magit-format-duration
-                      (abs (truncate (- (float-time)
-                                        (string-to-number date))))
+                      (abs (- (float-time)
+                              (string-to-number date)))
                       (symbol-value duration-spec)
                       unit-width)
                      'face 'magit-log-date)
@@ -1343,8 +1340,7 @@ Type \\[magit-reset] to reset HEAD to the commit at point.
       (magit-insert-heading
         (format (propertize "Unpulled from %s:" 'face 'magit-section-heading)
                 (magit-get-upstream-branch)))
-      (magit-insert-log "..@{upstream}" magit-log-section-arguments)
-      (magit-section-cache-visibility))))
+      (magit-insert-log "..@{upstream}" magit-log-section-arguments))))
 
 (magit-define-section-jumper magit-jump-to-unpulled-from-pushremote
   "Unpulled from <push-remote>" unpulled
@@ -1363,8 +1359,7 @@ Type \\[magit-reset] to reset HEAD to the commit at point.
         (magit-insert-heading
           (format (propertize "Unpulled from %s:" 'face 'magit-section-heading)
                   (propertize it 'face 'magit-branch-remote)))
-        (magit-insert-log (concat ".." it) magit-log-section-arguments)
-        (magit-section-cache-visibility)))))
+        (magit-insert-log (concat ".." it) magit-log-section-arguments)))))
 
 (defvar magit-unpushed-section-map
   (let ((map (make-sparse-keymap)))
@@ -1382,8 +1377,7 @@ Type \\[magit-reset] to reset HEAD to the commit at point.
       (magit-insert-heading
         (format (propertize "Unmerged into %s:" 'face 'magit-section-heading)
                 (magit-get-upstream-branch)))
-      (magit-insert-log "@{upstream}.." magit-log-section-arguments)
-      (magit-section-cache-visibility))))
+      (magit-insert-log "@{upstream}.." magit-log-section-arguments))))
 
 (magit-define-section-jumper magit-jump-to-unpushed-to-pushremote
   "Unpushed to <push-remote>" unpushed
@@ -1400,8 +1394,7 @@ Type \\[magit-reset] to reset HEAD to the commit at point.
         (magit-insert-heading
           (format (propertize "Unpushed to %s:" 'face 'magit-section-heading)
                   (propertize it 'face 'magit-branch-remote)))
-        (magit-insert-log (concat it "..") magit-log-section-arguments)
-        (magit-section-cache-visibility)))))
+        (magit-insert-log (concat it "..") magit-log-section-arguments)))))
 
 (defun magit-insert-recent-commits (&optional collapse)
   "Insert section showing recent commits.
@@ -1515,6 +1508,8 @@ and the respective options are `magit-log-show-margin' and
 
 ;;; magit-log.el ends soon
 
+(define-obsolete-variable-alias 'magit-log-section-args
+  'magit-log-section-arguments "Magit 2.2.0")
 (define-obsolete-function-alias 'magit-insert-unpulled-or-recent-commits
   'magit-insert-unpulled-from-upstream-or-recent "Magit 2.4.0")
 

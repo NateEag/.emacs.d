@@ -1957,8 +1957,12 @@ default the following functions are also members of that hook:
 
  -- Function: magit-insert-untracked-files
 
-     Maybe insert a list or tree of untracked files.  Do so depending on
-     the value of ‘status.showUntrackedFiles’.
+     Maybe insert a list or tree of untracked files.
+
+     Do so depending on the value of ‘status.showUntrackedFiles’.  Note
+     that even if the value is ‘all’, Magit still initially only shows
+     directories.  But the directory sections can then be expanded using
+     ‘TAB’.
 
  -- Function: magit-insert-unstaged-changes
 
@@ -2681,15 +2685,30 @@ File: magit.info,  Node: Diff buffer,  Next: Diff options,  Prev: Refreshing dif
      From a diff, visit the corresponding file at the appropriate
      position.
 
-     When the file is already being displayed in another window of the
-     same frame, then just select that window and adjust point.  With a
-     prefix argument also display in another window.
-
      If the diff shows changes in the worktree, the index, or ‘HEAD’,
-     then visit the actual file.  Otherwise when the diff is about an
-     older commit, then visit the respective blob using
-     ‘magit-find-file’.  Also see ‘magit-diff-visit-file-worktree’,
-     which, as the name suggests, always visits the actual file.
+     then visit the actual file.  Otherwise, when the diff is about an
+     older commit or a range, then visit the appropriate blob.
+
+     If point is on a removed line, then visit the blob for the first
+     parent of the commit which removed that line, i.e.  the last commit
+     where that line still existed.  Otherwise visit the blob for the
+     commit whose changes are being shown.
+
+     When the file or blob to be displayed is already being displayed in
+     another window of the same frame, then just select that window and
+     adjust point.  Otherwise, or with a prefix argument, display the
+     buffer in another window.
+
+ -- User Option: magit-diff-visit-previous-blob
+
+     This option controls whether ‘magit-diff-visit-file’ may visit the
+     previous blob.  When this is ‘t’ and point is on a removed line in
+     a diff for a committed change, then ‘magit-diff-visit-file’ visits
+     the blob from the last revision which still had that line.
+
+     Currently this is only supported for committed changes, for staged
+     and unstaged changes ‘magit-diff-visit-file’ always visits the file
+     in the working tree.
 
 ‘C-<return>’     (‘magit-diff-visit-file-worktree’)
 
@@ -2769,6 +2788,40 @@ File: magit.info,  Node: Diff options,  Next: Revision buffer,  Prev: Diff buffe
  -- User Option: magit-diff-hide-trailing-cr-characters
 
      Whether to hide ^M characters at the end of a line in diffs.
+
+ -- User Option: magit-diff-highlight-hunk-region-functions
+
+     This option specifies the functions used to highlight the
+     hunk-internal region.
+
+     ‘magit-diff-highlight-hunk-region-dim-outside’ overlays the outside
+     of the hunk internal selection with a face that causes the added
+     and removed lines to have the same background color as context
+     lines.  This function should not be removed from the value of this
+     option.
+
+     ‘magit-diff-highlight-hunk-region-using-overlays’ and
+     ‘magit-diff-highlight-hunk-region-using-underline’ emphasize the
+     region by placing delimiting horizonal lines before and after it.
+     Both of these functions have glitches which cannot be fixed due to
+     limitations of Emacs’ display engine.  For more information see
+     <https://github.com/magit/magit/issues/2758> ff.
+
+     Instead of, or in addition to, using delimiting horizontal lines,
+     to emphasize the boundaries, you may which to emphasize the text
+     itself, using ‘magit-diff-highlight-hunk-region-using-face’.
+
+     In terminal frames it’s not possible to draw lines as the overlay
+     and underline variants normally do, so there they fall back to
+     calling the face function instead.
+
+ -- User Option: magit-diff-unmarked-lines-keep-foreground
+
+     This option controls whether added and removed lines outside the
+     hunk-internal region only lose their distinct background color or
+     also the foreground color.  Whether the outside of the region is
+     dimmed at all depends on
+     ‘magit-diff-highlight-hunk-region-functions’.
 
 
 File: magit.info,  Node: Revision buffer,  Prev: Diff options,  Up: Diffing
@@ -3964,6 +4017,17 @@ features are available from separate popups.
      upstream of the starting-point may be used as the upstream of the
      new branch, instead of the starting-point itself.
 
+     If optional FROM is non-nil, then the source branch is reset to
+     that commit, instead of to the last commit it shares with its
+     upstream.  Interactively, FROM is non-nil, when the region selects
+     some commits, and among those commits, FROM it is the commit that
+     is the fewest commits ahead of the source branch.
+
+     The commit at the other end of the selection actually does not
+     matter, all commits between FROM and ‘HEAD’ are moved to the new
+     branch.  If FROM is not reachable from ‘HEAD’ or is reachable from
+     the source branch’s upstream, then an error is raised.
+
 ‘b x’     (‘magit-branch-reset’)
 
      This command resets a branch, defaulting to the branch at point, to
@@ -4016,12 +4080,21 @@ features are available from separate popups.
      remote branches, but not for local branches.
 
      You might prefer to always use some remote branch as upstream.  If
-     the chosen starting-point is (1) a local branch, (2) whose name is
-     a member of the value of this option, (3) the upstream of that
-     local branch is a remote branch with the same name, and (4) that
-     remote branch can be fast-forwarded to the local branch, then the
-     chosen branch is used as starting-point, but its own upstream is
-     used as the upstream of the new branch.
+     the chosen starting-point is (1) a local branch, (2) whose name
+     matches a member of the value of this option, (3) the upstream of
+     that local branch is a remote branch with the same name, and (4)
+     that remote branch can be fast-forwarded to the local branch, then
+     the chosen branch is used as starting-point, but its own upstream
+     is used as the upstream of the new branch.
+
+     Members of this option’s value are treated as branch names that
+     have to match exactly unless they contain a character that makes
+     them invalid as a branch name.  Recommended characters to use to
+     trigger interpretation as a regexp are "*" and "^".  Some other
+     characters which you might expect to be invalid, actually are not,
+     e.g.  ".+$" are all perfectly valid.  More precisely, if ‘git
+     check-ref-format –branch STRING’ exits with a non-zero status, then
+     treat STRING as a regexp.
 
      Assuming the chosen branch matches these conditions you would end
      up with with e.g.:
@@ -4035,6 +4108,48 @@ features are available from separate popups.
      Which you prefer is a matter of personal preference.  If you do
      prefer the former, then you should add branches such as ‘master’,
      ‘next’, and ‘maint’ to the value of this options.
+
+ -- User Option: magit-branch-adjust-remote-upstream-alist
+
+     The value of this option is an alist of branches to be used as the
+     upstream when branching a remote branch.
+
+     When creating a local branch from an ephemeral branch located on a
+     remote, e.g.  a feature or hotfix branch, then that remote branch
+     should usually not be used as the upstream branch, since the
+     push-remote already allows accessing it and having both the
+     upstream and the push-remote reference the same related branch
+     would be wasteful.  Instead a branch like "maint" or "master"
+     should be used as the upstream.
+
+     This option allows specifing the branch that should be used as the
+     upstream when branching certain remote branches.  The value is an
+     alist of the form ‘((UPSTREAM . RULE)...)’.  The first matching
+     element is used, the following elements are ignored.
+
+     UPSTREAM is the branch to be used as the upstream for branches
+     specified by RULE. It can be a local or a remote branch.
+
+     RULE can either be a regular expression, matching branches whose
+     upstream should be the one specified by UPSTREAM. Or it can be a
+     list of the only branches that should *not* use UPSTREAM; all other
+     branches will.  Matching is done after stripping the remote part of
+     the name of the branch that is being branched from.
+
+     If you use a finite set of non-ephemeral branches across all your
+     repositories, then you might use something like:
+
+          (("origin/master" "master" "next" "maint"))
+
+     Or if the names of all your ephemeral branches contain a slash, at
+     least in some repositories, then a good value could be:
+
+          (("origin/master" . "/"))
+
+     Of course you can also fine-tune:
+
+          (("origin/maint" . "\\`hotfix/")
+           ("origin/master" . "\\`feature/"))
 
  -- Command: magit-branch-orphan
 
@@ -4283,7 +4398,7 @@ e.g.:
      Take the red pill.
      >>>>>>> feature
 
-   In this case you have chosen to take the red pill on one bracnh and
+   In this case you have chosen to take the red pill on one branch and
 on another you picked the blue pill.  Now that you are merging these two
 diverging branches, Git cannot possibly know which pill you want to
 take.
@@ -4927,7 +5042,7 @@ Also see *note (gitman)git-stash:: .
      staged changes, apply without preserving the stash index and forgo
      removing the stash.
 
-‘z d’     (‘magit-stash-drop’)
+‘z k’     (‘magit-stash-drop’)
 
      Remove a stash from the stash list.  When the region is active,
      offer to drop all contained stashes.
@@ -6171,6 +6286,10 @@ packages, without having to depend on Magit.  These libraries are
 described in separate manuals, see *note (with-editor)Top:: and *note
 (magit-popup)Top::.
 
+   If you are trying to find an unused key that you can bound to a
+command provided by your own Magit extension, then checkout
+<https://github.com/magit/magit/wiki/Plugin-Dispatch-Key-Registry>.
+
 * Menu:
 
 * Calling Git::
@@ -6608,17 +6727,18 @@ File: magit.info,  Node: Matching sections,  Prev: Section selection,  Up: Secti
  -- Function: magit-section-match condition &optional section
 
      Return ‘t’ if SECTION matches CONDITION. SECTION defaults to the
-     section at point.
+     section at point.  If SECTION is not specified and there also is no
+     section at point, then return ‘nil’.
 
-     Conditions can take the following forms:
+     CONDITION can take the following forms:
         • ‘(CONDITION...)’
 
           matches if any of the CONDITIONs matches.
 
         • ‘[TYPE...]’
 
-          matches if the first TYPE matches the type of the section at
-          point, the second matches that of its parent, and so on.
+          matches if the first TYPE matches the type of the section, the
+          second matches that of its parent, and so on.
 
         • ‘[* TYPE...]’
 
@@ -6627,7 +6747,8 @@ File: magit.info,  Node: Matching sections,  Prev: Section selection,  Up: Secti
 
         • ‘TYPE’
 
-          matches TYPE regardless of its parents.
+          matches sections of TYPE regardless of the types of the parent
+          sections.
      Each TYPE is a symbol.  Note that it is not necessary to specify
      all TYPEs up to the root section as printed by
      ‘magit-describe-type’, unless of course you want to be that
@@ -6637,9 +6758,11 @@ File: magit.info,  Node: Matching sections,  Prev: Section selection,  Up: Secti
 
      If the section at point matches CONDITION evaluate BODY.
 
-     If the section matches evaluate BODY forms sequentially and return
-     the value of the last one, or if there are no BODY forms return the
-     value of the section.  If the section does not match return nil.
+     If the section matches, then evaluate BODY forms sequentially with
+     ‘it’ bound to the section and return the value of the last form.
+     If there are no BODY forms, then return the value of the section.
+     If the section does not match or if there is no section at point
+     then return nil.
 
      See ‘magit-section-match’ for the forms CONDITION can take.
 
@@ -7443,14 +7566,14 @@ Appendix B Keystroke Index
 * b c:                                   The branch popup.    (line  47)
 * B g:                                   Bisecting.           (line  36)
 * B k:                                   Bisecting.           (line  41)
-* b k:                                   The branch popup.    (line  88)
+* b k:                                   The branch popup.    (line  99)
 * b n:                                   The branch popup.    (line  37)
 * B r:                                   Bisecting.           (line  47)
-* b r:                                   The branch popup.    (line  94)
+* b r:                                   The branch popup.    (line 105)
 * B s:                                   Bisecting.           (line  16)
 * b s:                                   The branch popup.    (line  54)
 * B u:                                   Bisecting.           (line  24)
-* b x:                                   The branch popup.    (line  71)
+* b x:                                   The branch popup.    (line  82)
 * c:                                     Initiating a commit. (line   8)
 * c <1>:                                 Editing rebase sequences.
                                                               (line  72)
@@ -7463,7 +7586,7 @@ Appendix B Keystroke Index
 * c s:                                   Initiating a commit. (line  54)
 * c S:                                   Initiating a commit. (line  62)
 * c w:                                   Initiating a commit. (line  32)
-* C-<return>:                            Diff buffer.         (line  21)
+* C-<return>:                            Diff buffer.         (line  36)
 * C-<tab>:                               Section visibility.  (line  13)
 * C-c C-a:                               Editing commit messages.
                                                               (line 128)
@@ -7544,7 +7667,7 @@ Appendix B Keystroke Index
 * d w:                                   Diffing.             (line  43)
 * D w:                                   Refreshing diffs.    (line  28)
 * DEL:                                   Log Buffer.          (line  43)
-* DEL <1>:                               Diff buffer.         (line  48)
+* DEL <1>:                               Diff buffer.         (line  63)
 * DEL <2>:                               Blaming.             (line  44)
 * DEL <3>:                               Editing rebase sequences.
                                                               (line  28)
@@ -7578,7 +7701,7 @@ Appendix B Keystroke Index
                                                               (line  22)
 * G:                                     Automatic Refreshing of Magit Buffers.
                                                               (line  31)
-* j:                                     Diff buffer.         (line  38)
+* j:                                     Diff buffer.         (line  53)
 * k:                                     Viewing Git output.  (line  19)
 * k <1>:                                 Applying.            (line  40)
 * k <2>:                                 Editing rebase sequences.
@@ -7726,7 +7849,7 @@ Appendix B Keystroke Index
                                                               (line  59)
 * S-<tab>:                               Section visibility.  (line  22)
 * SPC:                                   Log Buffer.          (line  33)
-* SPC <1>:                               Diff buffer.         (line  44)
+* SPC <1>:                               Diff buffer.         (line  59)
 * SPC <2>:                               Blaming.             (line  34)
 * SPC <3>:                               Editing rebase sequences.
                                                               (line  21)
@@ -7781,10 +7904,10 @@ Appendix B Keystroke Index
 * z:                                     Stashing.            (line   8)
 * z a:                                   Stashing.            (line  58)
 * z b:                                   Stashing.            (line  84)
-* z d:                                   Stashing.            (line  71)
 * z f:                                   Stashing.            (line  88)
 * z i:                                   Stashing.            (line  20)
 * z I:                                   Stashing.            (line  46)
+* z k:                                   Stashing.            (line  71)
 * z l:                                   Stashing.            (line  76)
 * z p:                                   Stashing.            (line  64)
 * z v:                                   Stashing.            (line  80)

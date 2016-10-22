@@ -142,8 +142,22 @@
 
 ;;; Settings ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defvar js2r-use-strict nil
-  "When non-nil, js2r inserts strict declarations in IIFEs.")
+(defgroup js2-refactor nil
+  "Minor mode providing JavaScript refactorings."
+  :group 'tools
+  :prefix "js2r-"
+  :link '(url-link :tag "Repository" "https://github.com/magnars/js2-refactor.el"))
+
+(defcustom js2r-use-strict nil
+  "When non-nil, js2r inserts strict declarations in IIFEs."
+  :group 'js2-refactor
+  :type 'boolean)
+
+(defcustom js2r-prefered-quote-type 1
+  "The prefered quote style for strings."
+  :group 'js2-refactor
+  :type '(choice (const :tag "Double" 1)
+                 (const :tag "Single" 2)))
 
 ;;; Keybindings ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -171,6 +185,7 @@
   (define-key js2-refactor-mode-map (funcall key-fn "ip") #'js2r-introduce-parameter)
   (define-key js2-refactor-mode-map (funcall key-fn "lp") #'js2r-localize-parameter)
   (define-key js2-refactor-mode-map (funcall key-fn "tf") #'js2r-toggle-function-expression-and-declaration)
+  (define-key js2-refactor-mode-map (funcall key-fn "ta") #'js2r-toggle-arrow-function-and-expression)
   (define-key js2-refactor-mode-map (funcall key-fn "ao") #'js2r-arguments-to-object)
   (define-key js2-refactor-mode-map (funcall key-fn "uw") #'js2r-unwrap)
   (define-key js2-refactor-mode-map (funcall key-fn "wl") #'js2r-wrap-in-for-loop)

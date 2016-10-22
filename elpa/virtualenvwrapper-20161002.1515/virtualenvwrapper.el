@@ -4,7 +4,7 @@
 
 ;; Author: James J Porter <porterjamesj@gmail.com>
 ;; URL: http://github.com/porterjamesj/virtualenvwrapper.el
-;; Package-Version: 20151127.621
+;; Package-Version: 20161002.1515
 ;; Version: 20151123
 ;; Keywords: python, virtualenv, virtualenvwrapper
 ;; Package-Requires: ((dash "1.5.0") (s "1.6.1"))
@@ -35,10 +35,17 @@
   (expand-file-name (or (getenv "WORKON_HOME") "~/.virtualenvs/"))
   "The location(s) of your virtualenvs. This
 can be either a string, which indicates a single directory in which
-you keep all your virutalenvs, or a list of strings, in which case it
+you keep all your virtualenvs, or a list of strings, in which case it
 specifies disparate locations in which all your virtualenvs are kept.
 The default location is ~/.virtualenvs/, which is where your virtualenvs
 are stored if you use virtualenvwrapper in the shell."
+  :group 'virtualenvwrapper)
+
+(defcustom venv-dirlookup-names
+  '(".venv" "venv")
+  "Virtualenvs to search in the projectile-project-root
+to activate when one of them is found."
+  :type '(repeat file)
   :group 'virtualenvwrapper)
 
 ;; hooks
@@ -84,6 +91,18 @@ are stored if you use virtualenvwrapper in the shell."
   (if (eq system-type 'windows-nt) "Scripts" "bin")
   "The name of the directory containing executables. It is system dependent.")
 
+(defun venv-projectile-auto-workon ()
+  "If a venv in the projetile root exists, activates it.
+Set your common venvs names in `venv-dirlookup-names'"
+  (let ((path (--first
+                (file-exists-p it)
+                (--map (concat (projectile-project-root) it)
+                        venv-dirlookup-names))))
+    (when path
+      (setq venv-current-name path) ;; there's really nothing that feels good to do here ;_;
+      (venv--activate-dir path))))
+
+
 ;; internal utility functions
 
 (defun venv--set-venv-gud-pdb-command-name ()
@@ -93,7 +112,6 @@ are stored if you use virtualenvwrapper in the shell."
 (defun venv--set-system-gud-pdb-command-name ()
   "Set the system \\[pdb] command."
   (setq gud-pdb-command-name venv-system-gud-pdb-command-name))
-
 
 (defun venv-clear-history ()
   (setq venv-history nil))
@@ -164,25 +182,14 @@ of names that can be used in the completing read."
 (defun venv-get-stripped-path (path)
   "Return what the PATH would look like if we weren't in a
 virtualenv. PATH should be a list of strings specifiying directories."
-  (let ((func (if (stringp venv-location)
-                  (lambda (s) (not (s-contains?
-                                    (file-name-as-directory
-                                     (expand-file-name
-                                      venv-location)) (or s default-directory))))
-                (lambda (execs)
-                  (not (-filter (lambda (locs)
-                                  (s-contains?
-                                   (file-name-as-directory
-                                    (expand-file-name locs))
-                                   (file-name-as-directory
-                                    (expand-file-name execs))))
-                                venv-location))))))
-  (-filter func path)))
+  (-filter
+    (lambda (s) (not (s-equals? s (concat venv-current-dir venv-executables-dir))))
+    path))
 
 
 (defun venv--purge-history (candidates)
   "Remove history candidates that are not present in the list CANDIDATES"
-  (setq venv-history (-filter (lambda (s) (not (-contains? candidates s)))
+  (setq venv-history (-filter (lambda (s) (-contains? candidates s))
                               venv-history)))
 
 (defun venv-is-valid (name)
@@ -203,6 +210,22 @@ prompting the user with the string PROMPT"
 
 (defun venv-list-virtualenvs ()
   (s-join "\n" (venv-get-candidates)))
+
+(defun venv--activate-dir (dir)
+  "Given a directory corresponding to a virtualenv, activate it"
+  (run-hooks 'venv-preactivate-hook)
+  (setq venv-current-dir dir)
+  ;; setup the python shell
+  (setq python-shell-virtualenv-path venv-current-dir)
+  ;; setup emacs exec-path
+  (add-to-list 'exec-path (concat venv-current-dir venv-executables-dir))
+  ;; setup the environment for subprocesses
+  (setenv "PATH" (concat venv-current-dir venv-executables-dir path-separator (getenv "PATH")))
+  ;; keep eshell path in sync
+  (setq eshell-path-env (getenv "PATH"))
+  (setenv "VIRTUAL_ENV" venv-current-dir)
+  (venv--set-venv-gud-pdb-command-name)
+  (run-hooks 'venv-postactivate-hook))
 
 
 ;; potentially interactive user-exposed functions
@@ -243,44 +266,25 @@ This is useful e.g. when using tox."
   "Interactively switch to virtualenv NAME. Prompts for name if called
 interactively."
   (interactive)
-  (if name
-      ;; if called with argument, make sure it is valid
-      (progn
-        (when (not (venv-is-valid name))
-          (error "Invalid virtualenv specified!"))
-        ;; then deactivate
-        (venv-deactivate)
-        ;; then switch
-        (setq venv-current-name name))
-    ;; if without argument, deactivate first
-    (let ((old-venv venv-current-name))
-      (venv-deactivate)
-      ;; then read
-      (setq
-       venv-current-name
-       (venv-read-name
-        (if old-venv
-            (format "Choose a virtualenv (currently %s): " old-venv)
-          "Choose a virtualenv: ")))))
-  (run-hooks 'venv-preactivate-hook)
-  (setq venv-current-dir
-        (venv-name-to-dir venv-current-name))
+  ;; if without argument, read from user
+  (unless name
+    (setq name (venv-read-name
+                (if venv-current-name
+                    (format "Choose a virtualenv (currently %s): " venv-current-name)
+                  "Choose a virtualenv: "))))
+  ;; validate name
+  (when (not (venv-is-valid name))
+    (error (format "Invalid virtualenv %s specified!" name)))
+  ;; then deactivate
+  (venv-deactivate)
+  ;; then switch
+  (setq venv-current-name name)
   ;; push it onto the history
   (add-to-list 'venv-history venv-current-name)
-  ;; setup the python shell
-  (setq python-shell-virtualenv-path venv-current-dir)
-  ;; setup emacs exec-path
-  (add-to-list 'exec-path (concat venv-current-dir venv-executables-dir))
-  ;; setup the environment for subprocesses
-  (setenv "PATH" (concat venv-current-dir venv-executables-dir path-separator (getenv "PATH")))
-  ;; keep eshell path in sync
-  (setq eshell-path-env (getenv "PATH"))
-  (setenv "VIRTUAL_ENV" venv-current-dir)
-  (venv--set-venv-gud-pdb-command-name)
-  (run-hooks 'venv-postactivate-hook)
+  ;; actually activate it
+  (venv--activate-dir (venv-name-to-dir venv-current-name))
   (when (called-interactively-p 'interactive)
     (message (concat "Switched to virtualenv: " venv-current-name))))
-
 
 ;; for hilarious reasons to do with bytecompiling, this has to be here
 ;; instead of below
@@ -305,7 +309,7 @@ identifying a virtualenv."
 throwing an error if not"
   (unless (executable-find "virtualenv")
     (error "There doesn't appear to be a virtualenv executable on
-    your exec path. Unsure that you have virtualenv installed and
+    your exec path. Ensure that you have virtualenv installed and
     that the exec-path variable is set such that virtualenv can
     be found. A common cause of problems like this is GUI Emacs
     not having environment variables set up like the shell. Check
@@ -376,7 +380,8 @@ default-directory."
                                           (venv-dir-to-name locs))))
                      venv-location)))
     (run-hooks 'venv-postrmvirtualenv-hook)
-    (message (concat "Deleted virtualenv: " it))))
+    (when (called-interactively-p)
+      (message (concat "Deleted virtualenv: " it)))))
 
 ;;;###autoload
 (defun venv-lsvirtualenv ()

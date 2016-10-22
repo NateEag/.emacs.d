@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov
 ;; URL: https://github.com/bbatsov/helm-projectile
-;; Package-Version: 20160922.4
+;; Package-Version: 20161008.45
 ;; Created: 2011-31-07
 ;; Keywords: project, convenience
 ;; Version: 0.14.0
@@ -60,7 +60,7 @@
   "Helm support for projectile."
   :prefix "helm-projectile-"
   :group 'projectile
-  :link `(url-link :tag "helm-projectile homepage" "https://github.com/bbatsov/projectile"))
+  :link `(url-link :tag "GitHub" "https://github.com/bbatsov/helm-projectile"))
 
 (defvar helm-projectile-current-project-root)
 
@@ -116,7 +116,7 @@ If an INSTRUCTION is of the form \(FUNCTION . DESCRIPTION\), and
 if an action with function name FUNCTION exists in the original
 Helm action list, the action in the Helm action list, with
 function name FUNCTION will change it's description to
-DESCRIPTION. Otherwise, (FUNCTION . DESCRIPTION) will be added to
+DESCRIPTION.  Otherwise, (FUNCTION . DESCRIPTION) will be added to
 the action list.
 
 Please check out how `helm-projectile-file-actions' is defined
@@ -284,9 +284,9 @@ CANDIDATE is the selected file, but choose the marked files if available."
     (let ((files (cl-remove-if-not
                   (lambda (f)
                     (not (string= f "")))
-                          (mapcar (lambda (file)
-                                    (replace-regexp-in-string (projectile-project-root) "" file))
-                                  (helm-marked-candidates :with-wildcard t))))
+                  (mapcar (lambda (file)
+                            (replace-regexp-in-string (projectile-project-root) "" file))
+                          (helm-marked-candidates :with-wildcard t))))
           (new-name (completing-read "Select or enter a new buffer name: "
                                      (helm-projectile-all-dired-buffers)))
           (helm--reading-passwd-or-string t)
@@ -370,6 +370,12 @@ CANDIDATE is the selected file.  Used when no file is explicitly marked."
                                                       files)
                                             (list candidate))))
           (rename-buffer dired-buffer-name))))))
+
+(advice-add 'helm-find-file-or-marked :after
+            (lambda (orig-fun &rest args)
+              "Run `projectile-find-file-hook' if using projectile."
+              (when (and projectile-mode (projectile-project-p))
+                (run-hooks 'projectile-find-file-hook))))
 
 (defvar helm-projectile-find-file-map
   (let ((map (copy-keymap helm-find-files-map)))
@@ -662,13 +668,24 @@ Other file extensions can be customized with the variable `projectile-other-file
   '("Find file" helm-grep-action
     "Find file other frame" helm-grep-other-frame
     (lambda () (and (locate-library "elscreen")
-               "Find file in Elscreen"))
+                    "Find file in Elscreen"))
     helm-grep-jump-elscreen
     "Save results in grep buffer" helm-grep-save-results
     "Find file other window" helm-grep-other-window)
   "Available actions for `helm-projectile-grep-or-ack'.
 The contents of this list are passed as the arguments to `helm-make-actions'."
   :group 'helm-projectile)
+
+(defcustom helm-projectile-set-input-automatically t
+  "If non-nil, attempt to set search input automatically.
+Automatic input selection uses the region (if there is an active
+region), otherwise it uses the current symbol at point (if there
+is one). Applies to `helm-projectile-grep' and
+`helm-projectile-ack' only. If the `helm-ag' package is
+installed, then automatic input behavior for `helm-projectile-ag'
+can be customized using `helm-ag-insert-at-point'."
+  :group 'helm-projectile
+  :type 'boolean)
 
 (defun helm-projectile-grep-or-ack (&optional dir use-ack-p ack-ignored-pattern ack-executable)
   "Perform helm-grep at project root.
@@ -716,9 +733,10 @@ If it is nil, or ack/ack-grep not found then use default grep command."
             :requires-pattern 2))
     (helm
      :sources 'helm-source-grep
-     :input (if (region-active-p)
-                (buffer-substring-no-properties (region-beginning) (region-end))
-              (thing-at-point 'symbol))
+     :input (when helm-projectile-set-input-automatically
+              (if (region-active-p)
+                  (buffer-substring-no-properties (region-beginning) (region-end))
+                (thing-at-point 'symbol)))
      :buffer (format "*helm %s*" (if use-ack-p
                                      "ack"
                                    "grep"))
@@ -747,8 +765,8 @@ If it is nil, or ack/ack-grep not found then use default grep command."
 DIR is the project root, if not set then current directory is used"
   (interactive)
   (let ((project-root (or dir (projectile-project-root) (error "You're not in a project"))))
-    (funcall'run-with-timer 0.01 nil
-                              #'helm-projectile-grep-or-ack project-root nil)))
+    (funcall 'run-with-timer 0.01 nil
+             #'helm-projectile-grep-or-ack project-root nil)))
 
 ;;;###autoload
 (defun helm-projectile-ack (&optional dir)
@@ -766,7 +784,7 @@ DIR is the project root, if not set then current directory is used"
           (helm-ack-grep-executable (cond
                                      ((executable-find "ack") "ack")
                                      ((executable-find "ack-grep") "ack-grep")
-                                     (t (error "ack or ack-grep is not available.")))))
+                                     (t (error "ack or ack-grep is not available")))))
       (funcall 'run-with-timer 0.01 nil
                #'helm-projectile-grep-or-ack project-root t ack-ignored helm-ack-grep-executable))))
 

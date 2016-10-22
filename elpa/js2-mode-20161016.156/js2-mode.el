@@ -115,7 +115,7 @@
           decodeURI decodeURIComponent encodeURI
           encodeURIComponent escape eval isFinite isNaN
           parseFloat parseInt undefined unescape))
-"Ecma-262 externs.  Included in `js2-externs' by default.")
+"Ecma-262 externs.  Never highlighted as undeclared variables.")
 
 (defvar js2-browser-externs
   (mapcar 'symbol-name
@@ -789,27 +789,9 @@ Will only be used when we finish implementing the interpreter.")
 (defcustom js2-global-externs nil
   "A list of any extern names you'd like to consider always declared.
 This list is global and is used by all `js2-mode' files.
-You can create buffer-local externs list using `js2-additional-externs'.
-
-There is also a buffer-local variable `js2-default-externs',
-which is initialized by default to include the Ecma-262 externs
-and the standard browser externs.  The three lists are all
-checked during highlighting."
+You can create buffer-local externs list using `js2-additional-externs'."
   :type 'list
   :group 'js2-mode)
-
-(js2-deflocal js2-default-externs nil
-  "Default external declarations.
-
-These are currently only used for highlighting undeclared variables,
-which only worries about top-level (unqualified) references.
-As js2-mode's processing improves, we will flesh out this list.
-
-The initial value is set to `js2-ecma-262-externs', unless some
-of the `js2-include-?-externs' variables are set to t, in which
-case the browser, Rhino and/or Node.js externs are also included.
-
-See `js2-additional-externs' for more information.")
 
 (defcustom js2-include-browser-externs t
   "Non-nil to include browser externs in the master externs list.
@@ -834,7 +816,7 @@ See `js2-additional-externs' for more information about externs."
 (js2-deflocal js2-additional-externs nil
   "A buffer-local list of additional external declarations.
 It is used to decide whether variables are considered undeclared
-for purposes of highlighting.
+for purposes of highlighting.  See `js2-highlight-undeclared-vars'.
 
 Each entry is a Lisp string.  The string should be the fully qualified
 name of an external entity.  All externs should be added to this list,
@@ -1122,7 +1104,7 @@ another file, or you've got a potential bug."
 
 (defcustom js2-include-jslint-globals t
   "Non-nil to include the identifiers from JSLint global
-declaration (see http://www.jslint.com/lint.html#global) in the
+declaration (see http://www.jslint.com/help.html#global) in the
 buffer-local externs list.  See `js2-additional-externs' for more
 information."
   :type 'boolean
@@ -1130,7 +1112,6 @@ information."
 
 (defvar js2-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map [mouse-1] #'js2-mode-show-node)
     (define-key map (kbd "M-j") #'js2-line-break)
     (define-key map (kbd "C-c C-e") #'js2-mode-hide-element)
     (define-key map (kbd "C-c C-s") #'js2-mode-show-element)
@@ -3792,7 +3773,7 @@ You can tell the quote type by looking at the first character."
                (:include js2-node)
                (:constructor nil)
                (:constructor make-js2-template-node (&key (type js2-TEMPLATE_HEAD)
-                                                          beg len kids)))
+                                                          pos len kids)))
   "Template literal."
   kids)  ; `js2-string-node' is used for string segments, other nodes
          ; for substitutions inside.
@@ -3815,7 +3796,7 @@ You can tell the quote type by looking at the first character."
                (:include js2-node)
                (:constructor nil)
                (:constructor make-js2-tagged-template-node (&key (type js2-TAGGED_TEMPLATE)
-                                                                 beg len tag template)))
+                                                                 pos len tag template)))
   "Tagged template literal."
   tag       ; `js2-node' with the tag expression.
   template) ; `js2-template-node' with the template.
@@ -6396,14 +6377,14 @@ its relevant fields and puts it into `js2-ti-tokens'."
           js2-TEMPLATE_HEAD
         js2-NO_SUBS_TEMPLATE))))
 
-(defun js2-read-regexp (start-tt)
+(defun js2-read-regexp (start-tt start-pos)
   "Called by parser when it gets / or /= in literal context."
   (let (c err
         in-class  ; inside a '[' .. ']' character-class
         flags
         (continue t)
         (token (js2-new-token 0)))
-    (js2-record-text-property (1- js2-ts-cursor) js2-ts-cursor
+    (js2-record-text-property start-pos (1+ start-pos)
                               'syntax-table (string-to-syntax "\"/"))
     (setq js2-ts-string-buffer nil)
     (if (eq start-tt js2-ASSIGN_DIV)
@@ -7091,16 +7072,37 @@ later. NODE must be a name node."
 (defun js2-highlight-undeclared-vars ()
   "After entire parse is finished, look for undeclared variable references.
 We have to wait until entire buffer is parsed, since JavaScript permits var
-decls to occur after they're used.
+declarations to occur after they're used.
 
-If any undeclared var name is in `js2-externs' or `js2-additional-externs',
-it is considered declared."
-  (let (name)
+Some identifiers may be assumed to be externally defined.
+These externs are not highlighted, even if there is no declaration
+for them in the source code (in the current file).
+
+The list of externs consists of the following:
+
+  - `js2-ecma262-externs' for basic names from the ECMAScript language standard.
+  - Depending on the buffer-local variables `js2-include-*-externs'
+    the corresponding `js2-*-externs' to add names for certain environments
+    like the browser, Node or Rhino.
+  - Two customizable lists `js2-global-externs' and `js2-additional-externs',
+    the latter of which should be set per-buffer.
+
+See especially `js2-additional-externs' for further details about externs."
+  (let ((default-externs
+          (append js2-ecma-262-externs
+                  (if (and js2-include-browser-externs
+                           (>= js2-language-version 200)) js2-harmony-externs)
+                  (if js2-include-rhino-externs js2-rhino-externs)
+                  (if js2-include-node-externs js2-node-externs)
+                  (if (or js2-include-browser-externs js2-include-node-externs)
+                      js2-typed-array-externs)
+                  (if js2-include-browser-externs js2-browser-externs)))
+        name)
     (dolist (entry js2-recorded-identifiers)
       (cl-destructuring-bind (name-node scope pos end) entry
         (setq name (js2-name-node-name name-node))
         (unless (or (member name js2-global-externs)
-                    (member name js2-default-externs)
+                    (member name default-externs)
                     (member name js2-additional-externs)
                     (js2-get-defining-scope scope name pos))
           (js2-report-warning "msg.undeclared.variable" name pos (- end pos)
@@ -7260,19 +7262,6 @@ are ignored."
     (remove-hook 'js2-post-parse-callbacks
                  #'js2-highlight-unused-variables t)))
 
-(defun js2-set-default-externs ()
-  "Set the value of `js2-default-externs' based on the various
-`js2-include-?-externs' variables."
-  (setq js2-default-externs
-        (append js2-ecma-262-externs
-                (if js2-include-browser-externs js2-browser-externs)
-                (if (and js2-include-browser-externs
-                         (>= js2-language-version 200)) js2-harmony-externs)
-                (if js2-include-rhino-externs js2-rhino-externs)
-                (if js2-include-node-externs js2-node-externs)
-                (if (or js2-include-browser-externs js2-include-node-externs)
-                    js2-typed-array-externs))))
-
 (defun js2-apply-jslint-globals ()
   (setq js2-additional-externs
         (nconc (js2-get-jslint-globals)
@@ -7284,7 +7273,7 @@ are ignored."
            when (and (eq 'block (js2-comment-node-format node))
                      (save-excursion
                        (goto-char (js2-node-abs-pos node))
-                       (looking-at "/\\* *global ")))
+                       (looking-at "/\\* *global\\(?: \\|$\\)")))
            append (js2-get-jslint-globals-in
                    (match-end 0)
                    (js2-node-abs-end node))))
@@ -7735,14 +7724,14 @@ is only true until the node is added to its parent; i.e., while parsing."
         ;; Tell cc-engine the bounds of the comment.
         (js2-record-text-property beg (1- end) 'c-in-sws t)))))
 
-(defun js2-peek-token ()
+(defun js2-peek-token (&optional modifier)
   "Return the next token type without consuming it.
 If `js2-ti-lookahead' is positive, return the type of next token
 from `js2-ti-tokens'.  Otherwise, call `js2-get-token'."
   (if (not (zerop js2-ti-lookahead))
       (js2-token-type
        (aref js2-ti-tokens (mod (1+ js2-ti-tokens-cursor) js2-ti-ntokens)))
-    (let ((tt (js2-get-token-internal nil)))
+    (let ((tt (js2-get-token-internal modifier)))
       (js2-unget-token)
       tt)))
 
@@ -10168,9 +10157,9 @@ Returns an expression tree that includes PN, the parent node."
 
 (defun js2-parse-tagged-template (tag-node tpl-node)
   "Parse tagged template expression."
-  (let* ((beg (js2-node-pos tag-node))
-         (pn (make-js2-tagged-template-node :beg beg
-                                            :len (- (js2-current-token-end) beg)
+  (let* ((pos (js2-node-pos tag-node))
+         (pn (make-js2-tagged-template-node :pos pos
+                                            :len (- (js2-current-token-end) pos)
                                             :tag tag-node
                                             :template tpl-node)))
     (js2-node-add-children pn tag-node tpl-node)
@@ -10426,9 +10415,9 @@ array-literals, array comprehensions and regular expressions."
       (js2-parse-template-literal))
      ((or (= tt js2-DIV) (= tt js2-ASSIGN_DIV))
       ;; Got / or /= which in this context means a regexp literal
-      (let ((px-pos (js2-current-token-beg))
-            (flags (js2-read-regexp tt))
-            (end (js2-current-token-end)))
+      (let* ((px-pos (js2-current-token-beg))
+             (flags (js2-read-regexp tt px-pos))
+             (end (js2-current-token-end)))
         (prog1
             (make-js2-regexp-node :pos px-pos
                                   :len (- end px-pos)
@@ -10477,7 +10466,7 @@ array-literals, array comprehensions and regular expressions."
       (setq tt (js2-get-token 'TEMPLATE_TAIL))
       (push (make-js2-string-node :type tt) kids))
     (setq kids (nreverse kids))
-    (let ((tpl (make-js2-template-node :beg beg
+    (let ((tpl (make-js2-template-node :pos beg
                                        :len (- (js2-current-token-end) beg)
                                        :kids kids)))
       (apply #'js2-node-add-children tpl kids)
@@ -10806,7 +10795,7 @@ expression)."
         (when (and (>= js2-language-version 200)
                    (= js2-NAME tt)
                    (member prop '("get" "set" "async"))
-                   (member (js2-peek-token)
+                   (member (js2-peek-token 'KEYWORD_IS_NAME)
                            (list js2-NAME js2-STRING js2-NUMBER js2-LB)))
           (setq previous-token (js2-current-token)
                 tt (js2-get-prop-name-token))))
@@ -11400,7 +11389,6 @@ If so, we don't ever want to use bounce-indent."
 (defvar js2-minor-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "C-c C-`") #'js2-next-error)
-    (define-key map [mouse-1] #'js2-mode-show-node)
     map)
   "Keymap used when `js2-minor-mode' is active.")
 
@@ -11423,7 +11411,6 @@ highlighting features of `js2-mode'."
   (set (make-local-variable 'max-lisp-eval-depth)
        (max max-lisp-eval-depth 3000))
   (setq next-error-function #'js2-next-error)
-  (js2-set-default-externs)
   ;; Experiment:  make reparse-delay longer for longer files.
   (if (cl-plusp js2-dynamic-idle-timer-adjust)
       (setq js2-idle-timer-delay
@@ -11602,8 +11589,6 @@ Selecting an error will jump it to the corresponding source-buffer error.
         js2-mode-buffer-dirty-p t
         js2-mode-parsing nil)
 
-  (js2-set-default-externs)
-
   (when js2-include-jslint-globals
     (add-hook 'js2-post-parse-callbacks 'js2-apply-jslint-globals nil t))
 
@@ -11732,11 +11717,15 @@ buffer will only rebuild its `js2-mode-ast' if the buffer is dirty."
         (unless interrupted-p
           (setq js2-mode-parse-timer nil))))))
 
-(defun js2-mode-show-node (event)
+;; We bound it to [mouse-1] previously.  But the signature of
+;; mouse-set-point changed around 24.4, so it's kind of hard to keep
+;; it working in 24.1-24.3.  Since the command is not hugely
+;; important, we removed the binding (#356).  Maybe we'll bring it
+;; back when supporting <24.4 is not a goal anymore.
+(defun js2-mode-show-node (event &optional promote-to-region)
   "Debugging aid:  highlight selected AST node on mouse click."
-  (interactive "e")
-  (mouse-set-point event)
-  (setq deactivate-mark t)
+  (interactive "e\np")
+  (mouse-set-point event promote-to-region)
   (when js2-mode-show-overlay
     (let ((node (js2-node-at-point))
           beg end)

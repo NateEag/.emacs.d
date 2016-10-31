@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "notmuch" "notmuch.el" (22538 56571 0 0))
+;;;### (autoloads nil "notmuch" "notmuch.el" (22551 42494 0 0))
 ;;; Generated autoloads from notmuch.el
 
 (put 'notmuch-search 'notmuch-doc "Search for messages.")
@@ -23,8 +23,8 @@ notmuch buffers exist, run `notmuch'.
 
 ;;;***
 
-;;;### (autoloads nil "notmuch-company" "notmuch-company.el" (22538
-;;;;;;  56571 0 0))
+;;;### (autoloads nil "notmuch-company" "notmuch-company.el" (22551
+;;;;;;  42494 0 0))
 ;;; Generated autoloads from notmuch-company.el
 
 (autoload 'notmuch-company-setup "notmuch-company" "\
@@ -39,7 +39,7 @@ notmuch buffers exist, run `notmuch'.
 
 ;;;***
 
-;;;### (autoloads nil "notmuch-hello" "notmuch-hello.el" (22538 56571
+;;;### (autoloads nil "notmuch-hello" "notmuch-hello.el" (22551 42494
 ;;;;;;  0 0))
 ;;; Generated autoloads from notmuch-hello.el
 
@@ -50,7 +50,7 @@ Run notmuch and display saved searches, known tags, etc.
 
 ;;;***
 
-;;;### (autoloads nil "notmuch-jump" "notmuch-jump.el" (22538 56571
+;;;### (autoloads nil "notmuch-jump" "notmuch-jump.el" (22551 42494
 ;;;;;;  0 0))
 ;;; Generated autoloads from notmuch-jump.el
 
@@ -66,7 +66,7 @@ fast way to jump to a saved search from anywhere in Notmuch.
 
 ;;;***
 
-;;;### (autoloads nil "notmuch-show" "notmuch-show.el" (22538 56571
+;;;### (autoloads nil "notmuch-show" "notmuch-show.el" (22551 42494
 ;;;;;;  0 0))
 ;;; Generated autoloads from notmuch-show.el
 
@@ -100,7 +100,7 @@ matched.
 ;;;;;;  "notmuch-crypto.el" "notmuch-lib.el" "notmuch-maildir-fcc.el"
 ;;;;;;  "notmuch-message.el" "notmuch-mua.el" "notmuch-parser.el"
 ;;;;;;  "notmuch-pkg.el" "notmuch-print.el" "notmuch-query.el" "notmuch-tag.el"
-;;;;;;  "notmuch-tree.el" "notmuch-wash.el") (22538 56571 0 0))
+;;;;;;  "notmuch-tree.el" "notmuch-wash.el") (22551 42494 0 0))
 
 ;;;***
 

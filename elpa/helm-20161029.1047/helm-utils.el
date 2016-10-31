@@ -267,6 +267,8 @@ Default is `helm-current-buffer'."
 Animation is used unless NOANIM is non--nil."
   (helm-log-run-hook 'helm-goto-line-before-hook)
   (helm-match-line-cleanup)
+  (with-helm-current-buffer
+    (unless helm-yank-point (setq helm-yank-point (point))))
   (goto-char (point-min))
   (helm-goto-char (point-at-bol lineno))
   (unless noanim
@@ -611,7 +613,12 @@ If STRING is non--nil return instead a space separated string."
     (catch 'empty-line
       (cl-loop with ov
                for r in (helm-remove-if-match
-                         "\\`!" (split-string helm-input))
+                         "\\`!" (split-string
+                                 ;; Needed for highlighting AG matches.
+                                 (if (with-helm-buffer
+                                       (assq 'pcre (helm-get-current-source)))
+                                     (helm--translate-pcre-to-elisp helm-input)
+                                     helm-input)))
                do (save-excursion
                     (goto-char start-match)
                     (while (condition-case _err
@@ -628,6 +635,26 @@ If STRING is non--nil return instead a space separated string."
                           (overlay-put ov 'face 'helm-match-item)
                           (overlay-put ov 'priority 1)))))))
     (recenter)))
+
+(defun helm--translate-pcre-to-elisp (regexp)
+  "Should translate pcre REGEXP to elisp regexp.
+Assume regexp is a pcre based regexp."
+  (with-temp-buffer
+    (insert " " regexp " ")
+    (goto-char (point-min))
+    (save-excursion
+      ;; match (){}| unquoted
+      (helm-awhile (and (re-search-forward "\\([(){}|]\\)" nil t)
+                        (match-string 1))
+        (let ((pos (match-beginning 1)))
+          (if (eql (char-before pos) ?\\)
+              (delete-region pos (1- pos))
+              (replace-match (concat "\\" it) t t nil 1)))))
+    ;; match \s or \S
+    (helm-awhile (and (re-search-forward "\\S\\?\\(\\s\\[sS]\\)[^-]" nil t)
+                      (match-string 1))
+      (replace-match (concat it "-") t t nil 1))
+    (buffer-substring (1+ (point-min)) (1- (point-max)))))
 
 (defun helm-match-line-cleanup ()
   (when helm-match-line-overlay
@@ -766,8 +793,9 @@ If COUNT is non--nil add a number after each prompt."
         (when (re-search-forward url-regexp nil t)
           (setq url (match-string 0)))
         (when (re-search-forward bmk-regexp nil t)
-          (setq title (funcall helm-html-decode-entities-function
-                               (match-string 1))))
+          (setq title (url-unhex-string
+                       (funcall helm-html-decode-entities-function
+                               (match-string 1)))))
         (push (cons title url) bookmarks-alist)
         (forward-line)))
     (nreverse bookmarks-alist)))

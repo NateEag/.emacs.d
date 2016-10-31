@@ -34,6 +34,11 @@
           (const :tag "Show not installed packages" uninstalled)
           (const :tag "Show upgradable packages" upgrade)))
 
+(defcustom helm-el-truncate-lines t
+  "Truncate lines in helm-buffer when non--nil."
+  :group 'helm-el-package
+  :type 'boolean)
+
 ;; internals vars
 (defvar helm-el-package--show-only 'all)
 (defvar helm-el-package--initialized-p nil)
@@ -49,9 +54,11 @@
   (let (package-menu-async)
     (when (null package-alist)
       (setq helm-el-package--show-only 'all))
-    (when (fboundp 'package--removable-packages)
-      (setq helm-el-package--removable-packages
-            (package--removable-packages)))
+    (when (and (fboundp 'package--removable-packages)
+               (setq helm-el-package--removable-packages
+                     (package--removable-packages))
+               (fboundp 'package-autoremove))
+      (package-autoremove))
     (save-selected-window
       (if (and helm-el-package--initialized-p
                (fboundp 'package-show-package-list))
@@ -425,6 +432,8 @@
     (setq helm-source-list-el-package
           (helm-make-source "list packages" 'helm-list-el-package-source)))
   (helm :sources 'helm-source-list-el-package
+        :truncate-lines helm-el-truncate-lines
+        :full-frame t
         :buffer "*helm list packages*"))
 
 ;;;###autoload

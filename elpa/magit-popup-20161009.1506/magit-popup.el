@@ -12,7 +12,7 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 
-;; Package-Requires: ((emacs "24.4") (async "20150909.2257") (dash "20151021.113"))
+;; Package-Requires: ((emacs "24.4") (async "20160711.223") (dash "20160820.501"))
 ;; Keywords: bindings
 ;; Homepage: https://github.com/magit/magit
 
@@ -313,6 +313,9 @@ Use this inside the `interactive' form of a popup aware command
 to determine whether it was invoked from a popup and if so from
 which popup.  If the current command was invoked without the use
 of a popup then this is nil.")
+
+(defvar magit-current-popup-action nil
+  "The popup action now being executed.")
 
 (defvar magit-current-popup-args nil
   "The value of the popup arguments for this editing command.
@@ -812,9 +815,10 @@ TYPE is one of `:action', `:sequence-action', `:switch', or
       (setq action variable)
       (setq variable nil))
     (if (or action variable)
-        (let ((magit-current-popup magit-this-popup)
-              (magit-current-popup-args (magit-popup-get-args))
-              (command (magit-popup-event-fun (or action variable))))
+        (let* ((magit-current-popup magit-this-popup)
+               (magit-current-popup-args (magit-popup-get-args))
+               (command (magit-popup-event-fun (or action variable)))
+               (magit-current-popup-action command))
           (when action
             (magit-popup-quit))
           (call-interactively command)

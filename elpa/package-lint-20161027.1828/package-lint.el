@@ -1,11 +1,11 @@
-;;; package-lint.el --- A linting library for elisp package authors
+;;; package-lint.el --- A linting library for elisp package authors -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2014-2016  Steve Purcell, Fanael Linithien
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; Keywords: lisp
-;; Package-Version: 20161021.1231
+;; Package-Version: 20161027.1828
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24"))
 
@@ -56,69 +56,86 @@
   "List of errors and warnings for the current buffer.
 This is bound dynamically while the checks run.")
 
+(defmacro package-lint--match-symbols (&rest symbols)
+  "Return a regexp matching the string names of all given SYMBOLS."
+  (regexp-opt (mapcar #'symbol-name symbols)))
+
+(defconst package-lint--libraries-added-alist
+  (list (cons '(24 4)
+              (package-lint--match-symbols
+               nadvice subr-x)))
+  "An alist of library names and when they were added to Emacs.")
+
 (defconst package-lint--functions-and-macros-added-alist
-  (eval-when-compile
-    (list
-     (cons '(24)
-           (regexp-opt
-            '("bidi-string-mark-left-to-right" "condition-case-unless-debug"
-              "current-bidi-paragraph-direction" "file-selinux-context" "letrec"
-              "make-composed-keymap" "read-char-choice" "run-hook-wrapped"
-              "set-file-selinux-context" "server-eval-at" "special-variable-p"
-              "string-prefix-p" "url-queue-retrieve" "window-body-height"
-              "window-stage-get" "window-stage-put" "window-total-width"
-              "window-valid-p" "with-wrapper-hook")))
-     (cons '(24 3)
-           (regexp-opt
-            '("autoloadp" "autoload-do-load" "buffer-narrowed-p" "defvar-local"
-              "file-name-base" "function-get" "posnp" "setq-local"
-              "system-groups" "system-users" "url-encode-url"
-              "with-temp-buffer-window")))
-     (cons '(24 4)
-           (regexp-opt
-            '("add-face-text-property" "cl-tagbody"
-              "completion-table-with-cache" "completion-table-merge"
-              "define-alternative" "define-error"
-              "display-monitor-attributes-list" "file-acl"
-              "file-extended-attributes" "fill-single-char-nobreak-p"
-              "frame-monitor-attributes" "group-gid" "group-real-gid"
-              "get-pos-property" "macrop" "set-file-acl" "special-form-p"
-              "string-suffix-p" "window-bottom-divider-width"
-              "window-header-line-height" "window-mode-line-height"
-              "window-right-divider-width" "window-scroll-bar-width"
-              "window-text-pixel-size" "with-eval-after-load"
-              "zlib-decompress-region")))
-     (cons '(25)
-           (regexp-opt
-            '("alist-get" "backward-word-strictly"
-              "bidi-find-overridden-directionality"
-              "buffer-substring-with-bidi-context" "bufferpos-to-filepos"
-              "checkdoc-file" "char-fold-to-regexp" "cl-digit-char-p"
-              "cl-fresh-line" "cl-parse-integer" "default-font-width"
-              "define-advice" "define-inline" "directory-name-p"
-              "directory-files-recursively" "file-notify-valid-p"
-              "filepos-to-bufferpos" "forward-word-strictly" "format-message"
-              "frame-edges" "frame-geometry" "frame-scroll-bar-height"
-              "funcall-interactively" "function-put"
-              "horizontal-scroll-bars-available-p" "if-let" "macroexpand-1"
-              "make-process" "mouse-absolute-pixel-position" "set-binary-mode"
-              "set-mouse-absolute-pixel-position" "string-collate-equalp"
-              "string-collate-lessp" "string-greaterp" "thread-first"
-              "thread-last" "toggle-horizontal-scroll-bar" "when-let"
-              "window-absolute-pixel-position" "window-font-height"
-              "window-font-width" "window-max-chars-per-line"
-              "window-preserve-size" "window-scroll-bar-height"
-              "with-file-modes")))))
+  (list
+   (cons '(24)
+         (package-lint--match-symbols
+          bidi-string-mark-left-to-right condition-case-unless-debug
+          current-bidi-paragraph-direction file-selinux-context letrec
+          make-composed-keymap read-char-choice run-hook-wrapped
+          set-file-selinux-context server-eval-at special-variable-p
+          string-prefix-p url-queue-retrieve window-body-height
+          window-stage-get window-stage-put window-total-width
+          window-valid-p with-wrapper-hook))
+   (cons '(24 3)
+         (package-lint--match-symbols
+          autoloadp autoload-do-load buffer-narrowed-p defvar-local
+          file-name-base function-get posnp setq-local
+          system-groups system-users url-encode-url
+          with-temp-buffer-window))
+   (cons '(24 4)
+         (package-lint--match-symbols
+          add-function remove-function advice-add advice-remove
+          hash-table-keys hash-table-values string-empty-p string-join
+          string-join string-reverse string-trim-left
+          string-trim-right string-trim string-blank-p
+          string-remove-prefix string-remove-suffix
+          add-face-text-property cl-tagbody
+          completion-table-with-cache completion-table-merge
+          define-alternative define-error
+          display-monitor-attributes-list file-acl
+          file-extended-attributes fill-single-char-nobreak-p
+          frame-monitor-attributes group-gid group-real-gid
+          get-pos-property macrop set-file-acl special-form-p
+          string-suffix-p window-bottom-divider-width
+          window-header-line-height window-mode-line-height
+          window-right-divider-width window-scroll-bar-width
+          window-text-pixel-size with-eval-after-load
+          zlib-decompress-region))
+   (cons '(25)
+         (package-lint--match-symbols
+          alist-get backward-word-strictly
+          bidi-find-overridden-directionality
+          buffer-substring-with-bidi-context bufferpos-to-filepos
+          checkdoc-file char-fold-to-regexp cl-digit-char-p
+          cl-fresh-line cl-parse-integer default-font-width
+          define-advice define-inline directory-name-p
+          directory-files-recursively file-notify-valid-p
+          filepos-to-bufferpos forward-word-strictly format-message
+          frame-edges frame-geometry frame-scroll-bar-height
+          funcall-interactively function-put
+          horizontal-scroll-bars-available-p if-let macroexpand-1
+          make-process mouse-absolute-pixel-position set-binary-mode
+          set-mouse-absolute-pixel-position string-collate-equalp
+          string-collate-lessp string-greaterp thread-first
+          thread-last toggle-horizontal-scroll-bar when-let
+          window-absolute-pixel-position window-font-height
+          window-font-width window-max-chars-per-line
+          window-preserve-size window-scroll-bar-height
+          with-file-modes)))
   "An alist of function/macro names and when they were added to Emacs.")
 
-(defun package-lint--check-all ()
-  "Return a list of errors/warnings for the current buffer."
+(defun package-lint--check-all (force)
+  "Return a list of errors/warnings for the current buffer.
+
+With FORCE non-nil, lint the buffer even if neither Package-Requires nor
+Package-Version headers are present."
   (let ((package-lint--errors '()))
     (save-match-data
       (save-excursion
         (save-restriction
           (widen)
-          (when (package-lint--looks-like-a-package)
+          (when (or (package-lint--looks-like-a-package) force)
             (package-lint--check-keywords-list)
             (package-lint--check-package-version-present)
             (package-lint--check-lexical-binding-is-on-first-line)
@@ -127,6 +144,7 @@ This is bound dynamically while the checks run.")
                 (package-lint--check-package-summary desc)))
             (let ((deps (package-lint--check-dependency-list)))
               (package-lint--check-lexical-binding-requires-emacs-24 deps)
+              (package-lint--check-libraries-available-in-emacs deps)
               (package-lint--check-macros-functions-available-in-emacs deps))
             (let ((definitions (package-lint--get-defs)))
               (package-lint--check-defs-prefix definitions)
@@ -223,7 +241,7 @@ the form (PACKAGE-NAME PACKAGE-VERSION LINE-NO LINE-BEGINNING-OFFSET)."
         (unless (version-list-<= '(24) package-version)
           (package-lint--error
            line-no offset 'error
-           "You can only depend on Emacs version 24 or greater."))
+           "You can only depend on Emacs version 24 or greater: package.el for Emacs 23 does not support the \"emacs\" pseudopackage."))
       ;; Not 'emacs
       (let ((archive-entry (assq package-name package-archive-contents)))
         (if archive-entry
@@ -266,22 +284,44 @@ the form (PACKAGE-NAME PACKAGE-VERSION LINE-NO LINE-BEGINNING-OFFSET)."
          lexbind-line lexbind-col 'warning
          "You should depend on (emacs \"24\") if you need lexical-binding.")))))
 
-(defun package-lint--check-macros-functions-available-in-emacs (valid-deps)
-  "Warn about use of functions/macros that are not available in the Emacs version in VALID-DEPS."
+(defun package-lint--check-version-regexp-list (valid-deps list rx-start rx-end)
+  "Warn about matches of REGEXP when VERSION is not in VALID-DEPS.
+LIST is an alist of (VERSION . REGEXP*).
+REGEXP is (concat RX-START REGEXP* RX-END) for each REGEXP*."
   (let ((emacs-version-dep (or (cadr (assq 'emacs valid-deps)) '(0))))
-    (pcase-dolist (`(,added-in-version . ,regexp) package-lint--functions-and-macros-added-alist)
+    (pcase-dolist (`(,added-in-version . ,regexp) list)
       (when (version-list-< emacs-version-dep added-in-version)
         (goto-char (point-min))
-        (while (re-search-forward (concat "(\\s-*?\\(" regexp "\\)\\_>") nil t)
-          (unless (let ((ppss (syntax-ppss)))
+        (while (re-search-forward (concat rx-start regexp rx-end) nil t)
+          (unless (let ((ppss (save-match-data (syntax-ppss))))
                     (or (nth 3 ppss) (nth 4 ppss)))
             (package-lint--error
              (line-number-at-pos)
-             (current-column)
+             (save-excursion (goto-char (match-beginning 1)) (current-column))
              'warning
              (format "You should depend on (emacs \"%s\") if you need `%s'."
                      (mapconcat #'number-to-string added-in-version ".")
                      (match-string-no-properties 1)))))))))
+
+(defun package-lint--check-libraries-available-in-emacs (valid-deps)
+  "Warn about use of libraries that are not available in the Emacs version in VALID-DEPS."
+  (package-lint--check-version-regexp-list
+   valid-deps
+   package-lint--libraries-added-alist
+   "(\\s-*?require\\s-*?'\\("
+   ;; Match the ending paren so we can be sure it's a single argument
+   ;; `require'. If there are additional arguments, we don't want to warn,
+   ;; because (require 'foo nil t) indicates an optional dependency and
+   ;; (require 'foo "filename") is very uncommon.
+   "\\)\\_>\\s-*?)"))
+
+(defun package-lint--check-macros-functions-available-in-emacs (valid-deps)
+  "Warn about use of functions/macros that are not available in the Emacs version in VALID-DEPS."
+  (package-lint--check-version-regexp-list
+   valid-deps
+   package-lint--functions-and-macros-added-alist
+   "(\\s-*?\\("
+   "\\)\\_>"))
 
 (defun package-lint--check-lexical-binding-is-on-first-line ()
   "Check that any `lexical-binding' declaration is on the first line of the file."
@@ -303,6 +343,7 @@ the form (PACKAGE-NAME PACKAGE-VERSION LINE-NO LINE-BEGINNING-OFFSET)."
                 ;; Unfortunately, Emacsen that have this variable also have
                 ;; `hack-local-variables' that doesn't store `lexical-binding'
                 ;; in `file-local-variables-alist'.
+                (defvar enable-dir-local-variables)
                 (defvar hack-local-variables--warned-lexical)
                 (let ((hack-local-variables--warned-lexical nil)
                       (enable-dir-local-variables nil)
@@ -325,7 +366,7 @@ the form (PACKAGE-NAME PACKAGE-VERSION LINE-NO LINE-BEGINNING-OFFSET)."
              "`lexical-binding' must be set in the first line.")))))))
 
 (defun package-lint--check-do-not-depend-on-cl-lib-1.0 (valid-deps)
-  "Check that any dependency on \"cl-lib\" is on a remotely-installable version."
+  "Check that any dependency in VALID-DEPS on \"cl-lib\" is on a remotely-installable version."
   (let ((cl-lib-dep (assq 'cl-lib valid-deps)))
     (when cl-lib-dep
       (let ((cl-lib-version (nth 1 cl-lib-dep)))
@@ -516,8 +557,11 @@ Prefix is returned without any `-mode' suffix."
 ;;; Public interface
 
 ;;;###autoload
-(defun package-lint-buffer (&optional buffer)
+(defun package-lint-buffer (&optional buffer force)
   "Get linter errors and warnings for BUFFER.
+
+With FORCE non-nil, lint the buffer even if neither Package-Requires nor
+Package-Version headers are present.
 
 Returns a list, each element of which is list of
 
@@ -527,7 +571,7 @@ where TYPE is either 'warning or 'error.
 
 Current buffer is used if none is specified."
   (with-current-buffer (or buffer (current-buffer))
-    (package-lint--check-all)))
+    (package-lint--check-all force)))
 
 (defun package-lint-batch-and-exit ()
   "Run `package-lint-buffer' on the files remaining on the command line.

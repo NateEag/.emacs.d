@@ -1,9 +1,9 @@
 ;;; auto-complete-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "auto-complete" "auto-complete.el" (22492 20530
+;;;### (autoloads nil "auto-complete" "auto-complete.el" (22551 42504
 ;;;;;;  0 0))
 ;;; Generated autoloads from auto-complete.el
 
@@ -18,8 +18,9 @@ AutoComplete mode
 \(fn &optional ARG)" t nil)
 
 (defvar global-auto-complete-mode nil "\
-Non-nil if Global-Auto-Complete mode is enabled.
-See the command `global-auto-complete-mode' for a description of this minor mode.
+Non-nil if Global Auto-Complete mode is enabled.
+See the `global-auto-complete-mode' command
+for a description of this minor mode.
 Setting this variable directly does not take effect;
 either customize it (see the info node `Easy Customization')
 or call the function `global-auto-complete-mode'.")
@@ -28,7 +29,7 @@ or call the function `global-auto-complete-mode'.")
 
 (autoload 'global-auto-complete-mode "auto-complete" "\
 Toggle Auto-Complete mode in all buffers.
-With prefix ARG, enable Global-Auto-Complete mode if ARG is positive;
+With prefix ARG, enable Global Auto-Complete mode if ARG is positive;
 otherwise, disable it.  If called from Lisp, enable the mode if
 ARG is omitted or nil.
 
@@ -41,7 +42,7 @@ See `auto-complete-mode' for more information on Auto-Complete mode.
 ;;;***
 
 ;;;### (autoloads nil "auto-complete-config" "auto-complete-config.el"
-;;;;;;  (22492 20530 0 0))
+;;;;;;  (22551 42504 0 0))
 ;;; Generated autoloads from auto-complete-config.el
 
 (autoload 'ac-config-default "auto-complete-config" "\
@@ -51,7 +52,7 @@ See `auto-complete-mode' for more information on Auto-Complete mode.
 
 ;;;***
 
-;;;### (autoloads nil nil ("auto-complete-pkg.el") (22492 20530 494946
+;;;### (autoloads nil nil ("auto-complete-pkg.el") (22551 42504 0
 ;;;;;;  0))
 
 ;;;***

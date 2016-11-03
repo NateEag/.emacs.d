@@ -33,6 +33,7 @@
    (quote
     ("d677ef584c6dfc0697901a44b885cc18e206f05114c8a3b7fde674fce6180879" "8aebf25556399b58091e533e455dd50a6a9cba958cc4ebb0aab175863c25b9a4" default)))
  '(delete-selection-mode t)
+ '(evil-want-fine-undo t)
  '(exec-path-from-shell-arguments (quote ("-l")))
  '(fill-column 79 nil nil "Code should generally be under 80 columns wide for readability.")
  '(glasses-face (quote bold) nil nil "Bold isn't quite strong enough - I'll have to look into this further.")
@@ -87,7 +88,7 @@
  '(package-enable-at-startup nil)
  '(package-selected-packages
    (quote
-    (git-blamed regex-tool async dash s virtualenvwrapper undo-tree term-manager projectile term-projectile solarized-theme macrostep slime f python-mode puppet-mode pip-requirements omnisharp multiple-cursors markdown-mode helm-projectile groovy-mode flycheck-package expand-region evil-commentary beacon aggressive-indent ace-window evil-escape yaml-mode writeroom-mode unicode-troll-stopper toggle-quotes tern-auto-complete tea-time tagedit sublimity string-inflection speed-type smart-tabs-mode skewer-reload-stylesheets scss-mode sane-term rainbow-mode pyimpsort pyenv-mode popwin php-auto-yasnippets names multi-term mocha-snippets mo-git-blame minimap md-readme literate-coffee-mode know-your-http-well key-chord json-mode jscs js-doc jedi iss-mode hideshowvis helm-swoop helm-ls-git helm-git-files gitignore-mode gitconfig-mode gitattributes-mode git-timemachine frame-cmds focus-autosave-mode exec-path-from-shell evil-tutor evil-leader evil-indent-textobject evil-exchange esup elisp-slime-nav el2markdown editorconfig diffview cygwin-mount cycle-quotes compact-docstrings cask-mode buttercup browse-url-dwim browse-kill-ring bats-mode backup-walker auto-compile ascii apache-mode ace-jump-mode ac-slime ac-ispell ac-html-csswatcher ac-html ac-helm ac-emmet)))
+    (lorem-ipsum git-blamed regex-tool async dash s virtualenvwrapper undo-tree term-manager projectile term-projectile solarized-theme macrostep slime f python-mode puppet-mode pip-requirements omnisharp multiple-cursors markdown-mode helm-projectile groovy-mode flycheck-package expand-region evil-commentary beacon aggressive-indent ace-window evil-escape yaml-mode writeroom-mode unicode-troll-stopper toggle-quotes tern-auto-complete tea-time tagedit sublimity string-inflection speed-type smart-tabs-mode skewer-reload-stylesheets scss-mode sane-term rainbow-mode pyimpsort pyenv-mode popwin php-auto-yasnippets names multi-term mocha-snippets mo-git-blame minimap md-readme literate-coffee-mode know-your-http-well key-chord json-mode jscs js-doc jedi iss-mode hideshowvis helm-swoop helm-ls-git helm-git-files gitignore-mode gitconfig-mode gitattributes-mode git-timemachine frame-cmds focus-autosave-mode exec-path-from-shell evil-tutor evil-leader evil-indent-textobject evil-exchange esup elisp-slime-nav el2markdown editorconfig diffview cygwin-mount cycle-quotes compact-docstrings cask-mode buttercup browse-url-dwim browse-kill-ring bats-mode backup-walker auto-compile ascii apache-mode ace-jump-mode ac-slime ac-ispell ac-html-csswatcher ac-html ac-helm ac-emmet)))
  '(php-mode-coding-style (quote psr2) nil nil "PSR-2 is not ideal, but it's a standard.")
  '(projectile-indexing-method (quote alien))
  '(projectile-use-git-grep t)

@@ -63,6 +63,7 @@
               uniquify-ignore-buffers-re "^\\*"))
 
 (use-package projectile
+  :diminish projectile-mode
   :init (projectile-mode))
 
 (use-package helm-projectile

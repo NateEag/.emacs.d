@@ -370,13 +370,12 @@ buffer's file does not exist."
 (add-hook 'LilyPond-mode-hook (lambda () (turn-on-font-lock)))
 
 ;; Commit message mode.
-(defun git-commit-mode-hook ()
+(defun git-commit-mode-init ()
   "My settings for writing commit messages."
   (auto-fill-mode t)
   (setq fill-column 72)
   (turn-on-flyspell))
-(add-hook 'git-commit-mode-hook 'git-commit-mode-hook)
-(add-auto-mode 'git-commit-mode "COMMIT_EDITMSG$")
+(add-hook 'git-commit-mode-hook 'git-commit-mode-init)
 
 ;; General config mode hook.
 (defun conf-mode-init ()

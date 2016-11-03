@@ -131,6 +131,9 @@
 (use-package magit
   :defer t)
 
+(use-package git-commit
+  :init (global-git-commit-mode 1))
+
 (use-package abbrev
   :defer t
   :diminish abbrev-mode)

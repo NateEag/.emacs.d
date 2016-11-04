@@ -12,7 +12,7 @@
  '(afp-always-fill-on-self-insert t)
  '(afp-fill-after-functions
    (quote
-    (evil-delete backward-delete-char backward-delete-char-untabify kill-region evil-change yank yank-pop evil-paste-after evil-escape--delete evil-escape--delete-2)))
+    (evil-delete backward-delete-char backward-delete-char-untabify kill-region evil-change yank yank-pop evil-paste-after)))
  '(afp-fill-comments-only-mode-list
    (quote
     (emacs-lisp-mode sh-mode python-mode js-mode php-mode xml-mode nxml-mode diff-mode)))

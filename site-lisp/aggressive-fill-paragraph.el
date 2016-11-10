@@ -173,7 +173,12 @@ See `afp-advise-filled-functions' for a discussion of why."
 (defun aggressive-fill-paragraph-post-self-insert-function ()
   "Fill paragraph when space is inserted and fill is not disabled
 for any reason."
-  (when (and (or afp-fill-on-self-insert
+  (when (and (or (and afp-fill-on-self-insert
+                      ;; do not fill after whitespace, so that making new
+                      ;; paragraphs always works. Just a dumb hack to make my
+                      ;; life a little better - still need to think more about
+                      ;; how best to do this. 
+                      (not (-contains? '(?\n ?\s ?\t) last-command-event)))
                  (-contains? afp-fill-keys last-command-event))
              (not (afp-suppress-fill?)))
 

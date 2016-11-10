@@ -400,16 +400,27 @@
     ;; Turn on surround everywhere.
     (global-evil-surround-mode)
 
-    ;; Some modes it's better to start in insert-state for.
-    (require 'cl)
-    (loop for (mode . state) in '((git-commit-mode . insert))
-          do (evil-set-initial-state mode state))
-
     (evil-exchange-install)
 
     (evil-commentary-mode)
 
-    (diminish 'evil-commentary-mode)))
+    (diminish 'evil-commentary-mode)
+
+    ;; If a buffer is empty on evil-mode start, go directly to insert-mode,
+    ;; because we'll almost certainly want to start typing.
+    ;;
+    ;; An empty buffer isn't the *only* case where this is the case, but it's a
+    ;; starting point.
+    (add-hook 'evil-local-mode-hook
+              '(lambda ()
+                 (when (and evil-local-mode
+                            (= (buffer-size) 0)
+                            ;; HACK *scratch* buffer seems to start out at 0
+                            ;; length, so I explicitly ignore it.
+                            (not (string-equal (buffer-name) "*scratch*")))
+                   (evil-insert-state))))
+
+    ))
 
 (use-package evil-escape
   :diminish 'evil-escape-mode

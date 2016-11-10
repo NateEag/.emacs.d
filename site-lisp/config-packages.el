@@ -133,7 +133,8 @@
   :defer t)
 
 (use-package git-commit
-  :init (global-git-commit-mode 1))
+  :init (global-git-commit-mode 1)
+        (add-hook 'git-commit-mode-hook 'evil-insert-state))
 
 (use-package abbrev
   :defer t

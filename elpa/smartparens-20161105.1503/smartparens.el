@@ -645,6 +645,8 @@ You can enable pre-set bindings by customizing
     (define-key map [remap kill-word] 'sp-kill-word)
     (define-key map [remap kill-line] 'sp-kill-hybrid-sexp)
     (define-key map [remap backward-kill-word] 'sp-backward-kill-word)
+    (define-key map [remap kill-region] 'sp-kill-region)
+    (define-key map [remap delete-region] 'sp-delete-region)
     map)
   "Keymap used for `smartparens-strict-mode'.")
 
@@ -987,9 +989,19 @@ When non-nil, wrapping with opening pair always jumps to the
 beginning of the region and wrapping with closing pair always
 jumps to the end of the region.
 
+  |fooM -> [ -> |[foo]M
+  Mfoo| -> [ -> |[foo]M
+  |fooM -> ] -> M[foo]|
+  Mfoo| -> ] -> M[foo]|
+
 When nil, closing pair places the point at the end of the region
 and the opening pair leaves the point at its original
-position (before or after the region)."
+position (before or after the region).
+
+  |fooM -> [ -> [|fooM]
+  Mfoo| -> [ -> M[foo]|
+  |fooM -> ] -> M[foo]|
+  Mfoo| -> ] -> M[foo]|"
   :type 'boolean
   :group 'smartparens)
 
@@ -3264,10 +3276,14 @@ OPEN and CLOSE are the delimiters."
     (cond
      ((eq wrapping-end :open)
       (if sp-wrap-respect-direction
-          (goto-char (overlay-start obeg))
+          (progn
+            (set-mark (overlay-end oend))
+            (goto-char (overlay-start obeg)))
         (when (> sp-wrap-point sp-wrap-mark)
+          (set-mark (overlay-start obeg))
           (goto-char (overlay-end oend)))))
      ((eq wrapping-end :close)
+      (set-mark (overlay-start obeg))
       (goto-char (overlay-end oend))))
     (sp-wrap--clean-overlays)
     (sp--run-hook-with-args open :post-handlers 'wrap)))
@@ -4496,7 +4512,8 @@ on it when calling directly."
     ;; `sp-get-string'
     (if (and delimiter
              (= (length delimiter) 1)
-             (eq (char-syntax (string-to-char delimiter)) 34))
+             (eq (char-syntax (string-to-char delimiter)) 34)
+             (not (eq t (sp-point-in-string))))
         (sp-get-string back)
       (sp-get-stringlike-expression back))))
 
@@ -5238,7 +5255,9 @@ expressions are considered."
                   (sp-get-sexp t))
                  ((and (eq (char-syntax (preceding-char)) 34)
                        (not (sp-char-is-escaped-p (1- (point)))))
-                  (sp-get-string t))
+                  (if (eq t (sp-point-in-string))
+                      (sp-get-stringlike-expression t)
+                    (sp-get-string t)))
                  ((sp--valid-initial-delimiter-p (sp--looking-back (sp--get-stringlike-regexp) nil))
                   (sp-get-expression t))
                  ;; We might be somewhere inside the prefix of the
@@ -5275,7 +5294,17 @@ expressions are considered."
                 (sp-get-sexp nil))
                ((and (eq (char-syntax (following-char)) 34)
                      (not (sp-char-is-escaped-p)))
-                (sp-get-string nil))
+                ;; It might happen that the string delimiter we are
+                ;; looking at is nested inside another string
+                ;; delimited by string fences (for example nested "
+                ;; and ' in python).  In this case we can't use
+                ;; `sp-get-string' parser because it would pick up the
+                ;; outer string.  So if we are inside a string and
+                ;; `syntax-ppss' returns t as delimiter we need to use
+                ;; `sp-get-stringlike-expression'
+                (if (eq t (sp-point-in-string))
+                    (sp-get-stringlike-expression nil)
+                  (sp-get-string nil)))
                ((sp--valid-initial-delimiter-p (sp--looking-at (sp--get-stringlike-regexp)))
                 (sp-get-expression nil))
                ;; it can still be that we are looking at a /prefix/ of a
@@ -7987,8 +8016,8 @@ Examples:
                  (save-excursion (forward-char) (not (sp-point-in-string))))
             (setq n 0))
            ((sp--looking-at (sp--get-opening-regexp (sp--get-pair-list-context 'navigate)))
-            (if (save-match-data (sp-get-thing))
-                (goto-char (match-end 0))
+            (-if-let (thing (save-match-data (sp-get-thing)))
+                (goto-char (sp-get thing :beg-in))
               (delete-char (length (match-string 0))))
             ;; make this customizable
             (setq n (1- n)))
@@ -8063,8 +8092,8 @@ Examples:
                  (save-excursion (backward-char) (not (sp-point-in-string))))
             (setq n 0))
            ((sp--looking-back (sp--get-closing-regexp (sp--get-pair-list-context 'navigate)))
-            (if (save-match-data (sp-get-thing t))
-                (goto-char (match-beginning 0))
+            (-if-let (thing (save-match-data (sp-get-thing t)))
+                (goto-char (sp-get thing :end-in))
               (delete-char (- (length (match-string 0)))))
             ;; make this customizable
             (setq n (1- n)))
@@ -8237,6 +8266,34 @@ With ARG being Negative number -N, repeat that many times in
 backward direction."
   (interactive "p")
   (sp-backward-kill-symbol arg t))
+
+(defun sp-delete-region (beg end)
+  "Delete the text between point and mark, like `delete-region'.
+
+BEG and END are the bounds of region to be deleted.
+
+If that text is unbalanced, signal an error instead.
+With a prefix argument, skip the balance check."
+  (interactive "r")
+  (when (or current-prefix-arg
+            (sp-region-ok-p beg end)
+            (user-error "Unbalanced region"))
+    (setq this-command 'delete-region)
+    (delete-region beg end)))
+
+(defun sp-kill-region (beg end)
+  "Kill the text between point and mark, like `kill-region'.
+
+BEG and END are the bounds of region to be killed.
+
+If that text is unbalanced, signal an error instead.
+With a prefix argument, skip the balance check."
+  (interactive "r")
+  (when (or current-prefix-arg
+            (sp-region-ok-p beg end)
+            (user-error "Unbalanced region"))
+    (setq this-command 'kill-region)
+    (kill-region beg end)))
 
 (defun sp-indent-defun (&optional arg)
   "Reindent the current defun.

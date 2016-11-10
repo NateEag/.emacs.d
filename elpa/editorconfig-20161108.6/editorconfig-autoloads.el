@@ -1,9 +1,9 @@
 ;;; editorconfig-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "editorconfig" "editorconfig.el" (22492 20539
+;;;### (autoloads nil "editorconfig" "editorconfig.el" (22564 50438
 ;;;;;;  0 0))
 ;;; Generated autoloads from editorconfig.el
 
@@ -14,14 +14,15 @@ Display EditorConfig properties extracted for current buffer.
 
 (autoload 'editorconfig-apply "editorconfig" "\
 Apply EditorConfig properties for current buffer.
-This function ignores `editorconfig-exclude-modes' and always applies available
-properties.
+This function ignores `editorconfig-exclude-modes' and always
+applies available properties.
 
 \(fn)" t nil)
 
 (defvar editorconfig-mode nil "\
 Non-nil if Editorconfig mode is enabled.
-See the command `editorconfig-mode' for a description of this minor mode.
+See the `editorconfig-mode' command
+for a description of this minor mode.
 Setting this variable directly does not take effect;
 either customize it (see the info node `Easy Customization')
 or call the function `editorconfig-mode'.")
@@ -30,16 +31,16 @@ or call the function `editorconfig-mode'.")
 
 (autoload 'editorconfig-mode "editorconfig" "\
 Toggle EditorConfig feature.
-When enabled EditorConfig properties will be applied to buffers when first
-visiting files or changing major modes if the major mode is not listed in
-`editorconfig-exclude-modes'.
+When enabled EditorConfig properties will be applied to buffers
+when first visiting files or changing major modes if the major
+mode is not listed in `editorconfig-exclude-modes'.
 
 \(fn &optional ARG)" t nil)
 
 ;;;***
 
 ;;;### (autoloads nil "editorconfig-conf-mode" "editorconfig-conf-mode.el"
-;;;;;;  (22492 20539 0 0))
+;;;;;;  (22564 50438 0 0))
 ;;; Generated autoloads from editorconfig-conf-mode.el
 
 (autoload 'editorconfig-conf-mode "editorconfig-conf-mode" "\
@@ -52,7 +53,7 @@ Major mode for editing .editorconfig files.
 ;;;***
 
 ;;;### (autoloads nil "editorconfig-core" "editorconfig-core.el"
-;;;;;;  (22492 20539 0 0))
+;;;;;;  (22564 50438 0 0))
 ;;; Generated autoloads from editorconfig-core.el
 
 (autoload 'editorconfig-core-get-properties "editorconfig-core" "\
@@ -80,7 +81,7 @@ hash object instead.
 ;;;***
 
 ;;;### (autoloads nil "editorconfig-fnmatch" "editorconfig-fnmatch.el"
-;;;;;;  (22492 20539 0 0))
+;;;;;;  (22564 50438 0 0))
 ;;; Generated autoloads from editorconfig-fnmatch.el
 
 (autoload 'editorconfig-fnmatch-p "editorconfig-fnmatch" "\
@@ -104,7 +105,7 @@ be used:
 ;;;***
 
 ;;;### (autoloads nil nil ("editorconfig-core-handle.el" "editorconfig-pkg.el")
-;;;;;;  (22492 20539 475367 0))
+;;;;;;  (22564 50438 0 0))
 
 ;;;***
 

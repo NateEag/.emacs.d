@@ -3633,7 +3633,6 @@ Return the created overlay."
       (error "Undefined error level: %S" level))
     (setf (overlay-get overlay 'flycheck-overlay) t)
     (setf (overlay-get overlay 'flycheck-error) err)
-    ;; TODO: Consider hooks to re-check if overlay contents change
     (setf (overlay-get overlay 'category) category)
     (unless flycheck-highlighting-mode
       ;; Erase the highlighting from the overlay if requested by the user
@@ -3879,8 +3878,11 @@ message to stretch arbitrarily far."
         ;; `revert-buffer' updates the mode line for us, so all we need to do is
         ;; set the corresponding mode line construct.
         mode-line-buffer-identification flycheck-error-list-mode-line)
-  ;; See https://github.com/flycheck/flycheck/issues/1101
-  (setq-local truncate-string-ellipsis "…")
+  ;; Guard `truncate-string-ellipsis' for Emacs 24.
+  ;; TODO: Remove when dropping Emacs 24 compatibility
+  (when (boundp 'truncate-string-ellipsis)
+    ;; See https://github.com/flycheck/flycheck/issues/1101
+    (setq-local truncate-string-ellipsis "…"))
   (tabulated-list-init-header))
 
 (defvar-local flycheck-error-list-source-buffer nil
@@ -5570,8 +5572,6 @@ See URL `http://phpmd.org/' for more information about phpmd."
                 (pcase node
                   (`(violation ,vio-attrs ,(and message (pred stringp)))
                    (let-alist vio-attrs
-                     ;; TODO: Map priority to an error level?
-                     ;; TODO: Respect endline
                      (push
                       (flycheck-error-new-at
                        (flycheck-string-to-number-safe .beginline)
@@ -7090,6 +7090,7 @@ See URL `https://golang.org/cmd/go/' and URL
             (option "-printfuncs=" flycheck-go-vet-print-functions concat
                     flycheck-option-comma-separated-list)
             (option-flag "-shadow" flycheck-go-vet-shadow)
+            (option-list "-tags=" flycheck-go-build-tags concat)
             (eval (when (eq flycheck-go-vet-shadow 'strict) "-shadowstrict"))
             source)
   :error-patterns
@@ -7176,6 +7177,7 @@ Requires Go 1.6 or newer.  See URL `https://golang.org/cmd/go'."
 Requires Go 1.6 or newer.  See URL `https://golang.org/cmd/go'."
   :command ("go" "test"
             (option-flag "-i" flycheck-go-build-install-deps)
+            (option-list "-tags=" flycheck-go-build-tags concat)
             "-c" "-o" null-device)
   :error-patterns
   ((error line-start (file-name) ":" line ": "
@@ -7195,7 +7197,10 @@ Requires Go 1.6 or newer.  See URL `https://golang.org/cmd/go'."
 Requires errcheck newer than commit 8515d34 (Aug 28th, 2015).
 
 See URL `https://github.com/kisielk/errcheck'."
-  :command ("errcheck" "-abspath" ".")
+  :command ("errcheck"
+            "-abspath"
+            (option-list "-tags=" flycheck-go-build-tags concat)
+            ".")
   :error-patterns
   ((warning line-start
             (file-name) ":" line ":" column (or (one-or-more "\t") ": " ":\t")
@@ -8204,6 +8209,7 @@ This syntax checker requires Pylint 1.0 or newer.
 See URL `https://www.pylint.org/'."
   ;; -r n disables the scoring report
   :command ("pylint" "-r" "n"
+            "--output-format" "text"
             "--msg-template"
             (eval (if flycheck-pylint-use-symbolic-id
                       "{path}:{line}:{column}:{C}:{symbol}:{msg}"

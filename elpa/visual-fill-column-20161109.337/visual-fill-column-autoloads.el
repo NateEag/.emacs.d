@@ -1,10 +1,10 @@
 ;;; visual-fill-column-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
 ;;;### (autoloads nil "visual-fill-column" "visual-fill-column.el"
-;;;;;;  (22465 950 0 0))
+;;;;;;  (22564 50473 0 0))
 ;;; Generated autoloads from visual-fill-column.el
 
 (autoload 'visual-fill-column-mode "visual-fill-column" "\
@@ -13,8 +13,9 @@ Wrap lines according to `fill-column' in `visual-line-mode'.
 \(fn &optional ARG)" t nil)
 
 (defvar global-visual-fill-column-mode nil "\
-Non-nil if Global-Visual-Fill-Column mode is enabled.
-See the command `global-visual-fill-column-mode' for a description of this minor mode.
+Non-nil if Global Visual-Fill-Column mode is enabled.
+See the `global-visual-fill-column-mode' command
+for a description of this minor mode.
 Setting this variable directly does not take effect;
 either customize it (see the info node `Easy Customization')
 or call the function `global-visual-fill-column-mode'.")
@@ -23,7 +24,7 @@ or call the function `global-visual-fill-column-mode'.")
 
 (autoload 'global-visual-fill-column-mode "visual-fill-column" "\
 Toggle Visual-Fill-Column mode in all buffers.
-With prefix ARG, enable Global-Visual-Fill-Column mode if ARG is positive;
+With prefix ARG, enable Global Visual-Fill-Column mode if ARG is positive;
 otherwise, disable it.  If called from Lisp, enable the mode if
 ARG is omitted or nil.
 

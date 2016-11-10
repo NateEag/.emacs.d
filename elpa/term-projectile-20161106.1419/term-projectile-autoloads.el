@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "term-projectile" "term-projectile.el" (22538
-;;;;;;  56608 0 0))
+;;;### (autoloads nil "term-projectile" "term-projectile.el" (22564
+;;;;;;  50465 0 0))
 ;;; Generated autoloads from term-projectile.el
 
 (autoload 'term-projectile-switch-to "term-projectile" "\

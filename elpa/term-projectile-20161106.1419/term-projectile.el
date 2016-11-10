@@ -4,10 +4,10 @@
 
 ;; Author: Ivan Malison <IvanMalison@gmail.com>
 ;; Keywords: term manager projectile
-;; Package-Version: 20161003.1428
+;; Package-Version: 20161106.1419
 ;; URL: https://www.github.com/IvanMalison/term-manager
 ;; Version: 0.1.0
-;; Package-Requires: ((term-manager "0.1.0") (projectile "0.13.0"))
+;; Package-Requires: ((emacs "24") (term-manager "0.1.0") (projectile "0.13.0"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -56,11 +56,11 @@
 (defconst term-projectile-term-manager (term-projectile))
 
 (defun term-projectile-switch (&rest args)
-  (apply 'term-manager-switch-to-buffer term-projectile-term-manager args))
+  (apply 'term-manager-display-term term-projectile-term-manager args))
 
 (defun term-projectile-global-switch (&rest args)
   (let ((default-directory term-projectile-global-directory))
-    (switch-to-buffer (apply 'term-manager-get-next-global-buffer
+    (term-manager-display-buffer (apply 'term-manager-get-next-global-buffer
                              term-projectile-term-manager args))))
 
 (defun term-projectile-get-all-buffers ()
@@ -75,7 +75,7 @@
 (defun term-projectile-switch-to ()
   "Switch to an existing term-projectile buffer using `completing-read'."
   (interactive)
-  (switch-to-buffer (term-projectile-select-existing)))
+  (term-manager-display-buffer (term-projectile-select-existing)))
 
 ;;;###autoload
 (defun term-projectile-forward ()
@@ -97,7 +97,7 @@ Make a new one if none exists."
 If directory is nil, use the current projectile project"
   (interactive)
   (when (stringp directory) (setq directory (intern directory)))
-  (switch-to-buffer
+  (term-manager-display-buffer
    (term-manager-build-term term-projectile-term-manager directory)))
 
 ;;;###autoload

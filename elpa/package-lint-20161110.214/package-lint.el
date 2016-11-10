@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; Keywords: lisp
-;; Package-Version: 20161027.1828
+;; Package-Version: 20161110.214
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24"))
 
@@ -35,7 +35,7 @@
 ;;; Code:
 
 (eval-when-compile (require 'pcase))    ; `pcase-dolist' is not autoloaded
-(eval-when-compile (require 'cl-lib))
+(require 'cl-lib)
 (require 'package)
 (require 'lisp-mnt)
 (require 'finder)
@@ -76,11 +76,12 @@ This is bound dynamically while the checks run.")
           set-file-selinux-context server-eval-at special-variable-p
           string-prefix-p url-queue-retrieve window-body-height
           window-stage-get window-stage-put window-total-width
-          window-valid-p with-wrapper-hook))
+          window-valid-p with-wrapper-hook pcase pcase-let* pcase-let
+          pcase-dolist))
    (cons '(24 3)
          (package-lint--match-symbols
           autoloadp autoload-do-load buffer-narrowed-p defvar-local
-          file-name-base function-get posnp setq-local
+          file-name-base function-get posnp setq-local user-error
           system-groups system-users url-encode-url
           with-temp-buffer-window))
    (cons '(24 4)
@@ -122,7 +123,8 @@ This is bound dynamically while the checks run.")
           window-absolute-pixel-position window-font-height
           window-font-width window-max-chars-per-line
           window-preserve-size window-scroll-bar-height
-          with-file-modes)))
+          with-file-modes pcase-exhaustive pcase-lambda pcase-defmacro
+          with-displayed-buffer-window)))
   "An alist of function/macro names and when they were added to Emacs.")
 
 (defun package-lint--check-all (force)
@@ -163,11 +165,10 @@ Package-Version headers are present."
   (when (package-lint--goto-header "Keywords")
     (let ((line-no (line-number-at-pos))
           (keywords (lm-keywords-list)))
-      (dolist (keyword keywords)
-        (unless (assoc (intern keyword) finder-known-keywords)
-          (package-lint--error
-           line-no 1 'warning
-           (format "\"%s\" is not a standard package keyword: see `finder-known-keywords'." keyword)))))))
+      (unless (cl-some (lambda (keyword) (assoc (intern keyword) finder-known-keywords)) keywords)
+        (package-lint--error
+         line-no 1 'warning
+         (format "You should include standard keywords: see `finder-known-keywords'."))))))
 
 (defun package-lint--check-dependency-list ()
   "Check the contents of the \"Package-Requires\" header.
@@ -467,7 +468,7 @@ DESC is a struct as returned by `package-buffer-info'."
   (save-excursion
     (goto-char (point-min))
     (re-search-forward
-     (concat lm-header-prefix (rx (or "Package-Version" "Package-Requires")))
+     (concat lm-header-prefix (rx (or "Version" "Package-Version" "Package-Requires")))
      nil t)))
 
 (defun package-lint--lowest-installable-version-of (package)
@@ -573,6 +574,21 @@ Current buffer is used if none is specified."
   (with-current-buffer (or buffer (current-buffer))
     (package-lint--check-all force)))
 
+;;;###autoload
+(defun package-lint-current-buffer ()
+  "Display lint errors and warnings for the current buffer."
+  (interactive)
+  (let ((errs (package-lint-buffer nil t))
+        (buf "*Package-Lint*"))
+    (with-current-buffer (get-buffer-create buf)
+      (let ((buffer-read-only nil))
+        (erase-buffer)
+        (pcase-dolist (`(,line ,col ,type ,message) errs)
+          (insert (format "%d:%d: %s: %s\n" line col type message))))
+      (special-mode)
+      (view-mode 1))
+    (display-buffer buf)))
+
 (defun package-lint-batch-and-exit ()
   "Run `package-lint-buffer' on the files remaining on the command line.
 Use this only with -batch, it won't work interactively.
@@ -588,7 +604,7 @@ otherwise."
       (with-temp-buffer
         (insert-file-contents file t)
         (emacs-lisp-mode)
-        (let ((checking-result (package-lint-buffer)))
+        (let ((checking-result (package-lint-buffer nil t)))
           (when checking-result
             (setq success nil)
             (message "In `%s':" file)

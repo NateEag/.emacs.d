@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "package-lint" "package-lint.el" (22551 42497
+;;;### (autoloads nil "package-lint" "package-lint.el" (22564 50452
 ;;;;;;  0 0))
 ;;; Generated autoloads from package-lint.el
 
@@ -22,6 +22,11 @@ where TYPE is either 'warning or 'error.
 Current buffer is used if none is specified.
 
 \(fn &optional BUFFER FORCE)" nil nil)
+
+(autoload 'package-lint-current-buffer "package-lint" "\
+Display lint errors and warnings for the current buffer.
+
+\(fn)" t nil)
 
 ;;;***
 

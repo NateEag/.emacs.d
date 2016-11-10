@@ -218,6 +218,9 @@
   )
 
 (use-package json-mode
+  ;; There's nothing that needs to be configured, but don't forget the
+  ;; jq-interactively command. It can be very handy when trying to figure out
+  ;; how to transform some arbitrary JSON with jq.
   :config (add-hook 'json-mode-hook 'js-mode-init))
 
 (use-package jedi-force

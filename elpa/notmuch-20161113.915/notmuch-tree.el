@@ -266,7 +266,6 @@ FUNC."
     (define-key map (kbd "M-TAB") (notmuch-tree-to-message-pane #'notmuch-show-previous-button))
     (define-key map (kbd "<backtab>")  (notmuch-tree-to-message-pane #'notmuch-show-previous-button))
     (define-key map (kbd "TAB") (notmuch-tree-to-message-pane #'notmuch-show-next-button))
-    (define-key map "e" (notmuch-tree-to-message-pane #'notmuch-tree-button-activate))
     (define-key map "$" (notmuch-tree-to-message-pane #'notmuch-show-toggle-process-crypto))
 
     ;; bindings from show (or elsewhere) but we close the message pane first.
@@ -294,6 +293,7 @@ FUNC."
     (define-key map "*" 'notmuch-tree-tag-thread)
     (define-key map " " 'notmuch-tree-scroll-or-next)
     (define-key map (kbd "DEL") 'notmuch-tree-scroll-message-window-back)
+    (define-key map "e" 'notmuch-tree-resume-message)
     map))
 (fset 'notmuch-tree-mode-map notmuch-tree-mode-map)
 
@@ -405,6 +405,15 @@ NOT change the database."
   (interactive
    (list (notmuch-read-tag-changes (notmuch-tree-get-tags) "Tag message" "-")))
   (notmuch-tree-tag tag-changes))
+
+(defun notmuch-tree-resume-message ()
+  "Resume EDITING the current draft message."
+  (interactive)
+  (notmuch-tree-close-message-window)
+  (let ((id (notmuch-tree-get-message-id)))
+    (if id
+	(notmuch-draft-resume id)
+      (message "No message to resume!"))))
 
 ;; The next two functions close the message window before calling
 ;; notmuch-search or notmuch-tree but they do so after the user has

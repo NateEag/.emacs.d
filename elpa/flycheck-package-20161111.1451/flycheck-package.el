@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; Keywords: lisp
-;; Package-Version: 20161015.1803
+;; Package-Version: 20161111.1451
 ;; Version: 0
 ;; Package-Requires: ((flycheck "0.22") (package-lint "0.2"))
 
@@ -47,7 +47,8 @@
            (mapcar (lambda (x)
                      (apply #'flycheck-error-new-at `(,@x :checker ,checker)))
                    (condition-case err
-                       (package-lint-buffer (current-buffer))
+                       (when (package-lint-looks-like-a-package-p)
+                         (package-lint-buffer (current-buffer)))
                      (error
                       (funcall callback 'errored (error-message-string err))
                       (signal (car err) (cdr err)))))))

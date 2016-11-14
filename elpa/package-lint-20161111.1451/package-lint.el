@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; Keywords: lisp
-;; Package-Version: 20161110.214
+;; Package-Version: 20161111.1451
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24"))
 
@@ -127,30 +127,26 @@ This is bound dynamically while the checks run.")
           with-displayed-buffer-window)))
   "An alist of function/macro names and when they were added to Emacs.")
 
-(defun package-lint--check-all (force)
-  "Return a list of errors/warnings for the current buffer.
-
-With FORCE non-nil, lint the buffer even if neither Package-Requires nor
-Package-Version headers are present."
+(defun package-lint--check-all ()
+  "Return a list of errors/warnings for the current buffer."
   (let ((package-lint--errors '()))
     (save-match-data
       (save-excursion
         (save-restriction
           (widen)
-          (when (or (package-lint--looks-like-a-package) force)
-            (package-lint--check-keywords-list)
-            (package-lint--check-package-version-present)
-            (package-lint--check-lexical-binding-is-on-first-line)
-            (let ((desc (package-lint--check-package-el-can-parse)))
-              (when desc
-                (package-lint--check-package-summary desc)))
-            (let ((deps (package-lint--check-dependency-list)))
-              (package-lint--check-lexical-binding-requires-emacs-24 deps)
-              (package-lint--check-libraries-available-in-emacs deps)
-              (package-lint--check-macros-functions-available-in-emacs deps))
-            (let ((definitions (package-lint--get-defs)))
-              (package-lint--check-defs-prefix definitions)
-              (package-lint--check-symbol-separators definitions))))))
+          (package-lint--check-keywords-list)
+          (package-lint--check-package-version-present)
+          (package-lint--check-lexical-binding-is-on-first-line)
+          (let ((desc (package-lint--check-package-el-can-parse)))
+            (when desc
+              (package-lint--check-package-summary desc)))
+          (let ((deps (package-lint--check-dependency-list)))
+            (package-lint--check-lexical-binding-requires-emacs-24 deps)
+            (package-lint--check-libraries-available-in-emacs deps)
+            (package-lint--check-macros-functions-available-in-emacs deps))
+          (let ((definitions (package-lint--get-defs)))
+            (package-lint--check-defs-prefix definitions)
+            (package-lint--check-symbol-separators definitions)))))
     package-lint--errors))
 
 (defun package-lint--error (line col type message)
@@ -168,7 +164,7 @@ Package-Version headers are present."
       (unless (cl-some (lambda (keyword) (assoc (intern keyword) finder-known-keywords)) keywords)
         (package-lint--error
          line-no 1 'warning
-         (format "You should include standard keywords: see `finder-known-keywords'."))))))
+         (format "You should include standard keywords: see the variable `finder-known-keywords'."))))))
 
 (defun package-lint--check-dependency-list ()
   "Check the contents of the \"Package-Requires\" header.
@@ -463,14 +459,6 @@ DESC is a struct as returned by `package-buffer-info'."
 
 ;;; Helpers
 
-(defun package-lint--looks-like-a-package ()
-  "Return non-nil if this buffer appears to be intended as a package."
-  (save-excursion
-    (goto-char (point-min))
-    (re-search-forward
-     (concat lm-header-prefix (rx (or "Version" "Package-Version" "Package-Requires")))
-     nil t)))
-
 (defun package-lint--lowest-installable-version-of (package)
   "Return the lowest version of PACKAGE available for installation."
   (let ((descriptors (cdr (assq package package-archive-contents))))
@@ -558,11 +546,8 @@ Prefix is returned without any `-mode' suffix."
 ;;; Public interface
 
 ;;;###autoload
-(defun package-lint-buffer (&optional buffer force)
+(defun package-lint-buffer (&optional buffer)
   "Get linter errors and warnings for BUFFER.
-
-With FORCE non-nil, lint the buffer even if neither Package-Requires nor
-Package-Version headers are present.
 
 Returns a list, each element of which is list of
 
@@ -572,13 +557,13 @@ where TYPE is either 'warning or 'error.
 
 Current buffer is used if none is specified."
   (with-current-buffer (or buffer (current-buffer))
-    (package-lint--check-all force)))
+    (package-lint--check-all)))
 
 ;;;###autoload
 (defun package-lint-current-buffer ()
   "Display lint errors and warnings for the current buffer."
   (interactive)
-  (let ((errs (package-lint-buffer nil t))
+  (let ((errs (package-lint-buffer))
         (buf "*Package-Lint*"))
     (with-current-buffer (get-buffer-create buf)
       (let ((buffer-read-only nil))
@@ -589,6 +574,7 @@ Current buffer is used if none is specified."
       (view-mode 1))
     (display-buffer buf)))
 
+;;;###autoload
 (defun package-lint-batch-and-exit ()
   "Run `package-lint-buffer' on the files remaining on the command line.
 Use this only with -batch, it won't work interactively.
@@ -604,13 +590,26 @@ otherwise."
       (with-temp-buffer
         (insert-file-contents file t)
         (emacs-lisp-mode)
-        (let ((checking-result (package-lint-buffer nil t)))
+        (let ((checking-result (package-lint-buffer)))
           (when checking-result
             (setq success nil)
             (message "In `%s':" file)
             (pcase-dolist (`(,line ,col ,type ,message) checking-result)
               (message "  at %d:%d: %s: %s" line col type message))))))
     (kill-emacs (if success 0 1))))
+
+;;;###autoload
+(defun package-lint-looks-like-a-package-p ()
+  "Return non-nil if the current buffer appears to be intended as a package."
+  (save-match-data
+    (save-excursion
+      (save-restriction
+        (widen)
+        (goto-char (point-min))
+        (re-search-forward
+         (concat lm-header-prefix
+                 (rx (or "Version" "Package-Version" "Package-Requires")))
+         nil t)))))
 
 (provide 'package-lint)
 ;;; package-lint.el ends here

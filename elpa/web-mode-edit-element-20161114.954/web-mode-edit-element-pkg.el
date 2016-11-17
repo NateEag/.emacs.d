@@ -1,4 +1,4 @@
-(define-package "web-mode-edit-element" "20161109.734" "Helper-functions for attribute- and element-handling"
+(define-package "web-mode-edit-element" "20161114.954" "Helper-functions for attribute- and element-handling"
   '((emacs "24.4")
     (web-mode "14"))
   :url "https://github.com/jtkDvlp/web-mode-edit-element" :keywords

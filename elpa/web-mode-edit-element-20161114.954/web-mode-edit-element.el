@@ -2,7 +2,7 @@
 
 ;; Copyright 2016 Julian T. Knabenschuh
 
-;; Version: 2.0
+;; Version: 2.1
 ;; Author: Julian T. Knabenschuh <jtkdevelopments@gmail.com>
 ;; Homepage: https://github.com/jtkDvlp/web-mode-edit-element
 ;; License: GNU General Public License >= 2
@@ -32,6 +32,7 @@
   (make-keymap)
   "web-mode-edit-element-minor-mode keymap")
 
+;;;###autoload
 (define-minor-mode web-mode-edit-element-minor-mode
   "Minor mode to provide key-bindings for web-mode-edit-element functions"
   nil " web-mode-edit-element" 'web-mode-edit-element-minor-mode-map)

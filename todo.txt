@@ -1,3 +1,8 @@
+-Use <leader>-. and <leader>-, for 'jump to def' and 'back to prev', as they do
+ in most modes. IIRC this is not actually straightforward to do, but it would
+ sure beat hopping into insert mode and back out all the time when I'm
+ navigating.
+
 -Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
 
 -Suppress aggressive-fill-paragraph-mode while directly above or below markdown

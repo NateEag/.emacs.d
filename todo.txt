@@ -8,8 +8,10 @@
 -Suppress aggressive-fill-paragraph-mode while directly above or below markdown
  code blocks.
 
--Split my tagedit/web-mode bridge out to a separate module, unless fxbois wants
- it in web-mode.
+-Try integrating web-mode-edit-element into my markup editing style. If it
+ works out, delete my prototypical work on making tagedit work with web-mode in
+ favor of it, per this comment of mine:
+ https://github.com/magnars/tagedit/pull/15#issuecomment-260336539
 
 -Submit PR to make flycheck-eslint-rulesdir a list.
 

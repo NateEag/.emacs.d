@@ -10,6 +10,9 @@ obscurantist at best. I discovered that the default install is incredibly
 unwieldy, and I was not impressed with how little it believed in graphical
 environments.
 
+Nonetheless, I learned the basic keybindings and used it for assignments, often
+via a terminal over SSH.
+
 After a naive search for the perfect editor in my early twenties (I narrowly
 avoided wasting years writing one), in 2009 I decided to learn Emacs well,
 since I knew a lot of its shortcuts and had decided to stick with an editor.
@@ -24,7 +27,9 @@ Why Emacs (or: Hokey Religions and Ancient Weapons)
 Like all art forms, programming has technique.
 
 A musician's technique is how he makes the instrument produce sound.
+
 A painter's technique is how she puts paint on the canvas.
+
 A programmer's technique is how he gives the computer instructions.
 
 Despite the grumbling from the graphical language crowd, most programming comes

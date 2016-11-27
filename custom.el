@@ -49,7 +49,10 @@
      (nxml-child-indent . guess-style-guess-indent)
      (css-indent-offset . guess-style-guess-indent)
      (python-indent . guess-style-guess-indent)
-     (js2-indent-level . guess-style-guess-indent))))
+     (js2-indent-level . guess-style-guess-indent)
+     (web-mode-markup-indent-offset . guess-style-guess-indent)
+     (web-mode-css-indent-offset . guess-style-guess-indent)
+     (web-mode-code-indent-offset . guess-style-guess-indent))))
  '(helm-for-files-preferred-list
    (quote
     (helm-source-buffers-list helm-source-recentf helm-source-bookmarks helm-source-file-cache helm-source-files-in-current-dir)))

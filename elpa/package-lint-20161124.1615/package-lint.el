@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; Keywords: lisp
-;; Package-Version: 20161111.1451
+;; Package-Version: 20161124.1615
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24"))
 
@@ -126,6 +126,15 @@ This is bound dynamically while the checks run.")
           with-file-modes pcase-exhaustive pcase-lambda pcase-defmacro
           with-displayed-buffer-window)))
   "An alist of function/macro names and when they were added to Emacs.")
+
+(defconst package-lint--sane-prefixes
+  (rx
+   string-start
+   (or
+    "org-dblock-write:"
+    "org-babel-execute:"
+    "org-babel-default-header-args:"))
+  "A regexp matching whitelisted non-standard symbol prefixes.")
 
 (defun package-lint--check-all ()
   "Return a list of errors/warnings for the current buffer."
@@ -432,7 +441,8 @@ DESC is a struct as returned by `package-buffer-info'."
 (defun package-lint--check-symbol-separators (definitions)
   "Check that symbol DEFINITIONS don't contain non-standard separators."
   (pcase-dolist (`(,name . ,position) definitions)
-    (when (string-match "[:/]" name)
+    (when (and (string-match "[:/]" name)
+               (not (string-match-p package-lint--sane-prefixes name)))
       (let ((match-pos (match-beginning 0)))
         ;; As a special case, allow `/=' when at the end of a symbol.
         (when (or (not (string-match (rx "/=" string-end) name))
@@ -449,7 +459,8 @@ DESC is a struct as returned by `package-buffer-info'."
     (when prefix
       (let ((prefix-re (rx-to-string `(seq string-start ,prefix (or "-" string-end)))))
         (pcase-dolist (`(,name . ,position) definitions)
-          (unless (string-match-p prefix-re name)
+          (unless (or (string-match-p prefix-re name)
+                      (string-match-p package-lint--sane-prefixes name))
             (let ((line-no (line-number-at-pos position)))
               (package-lint--error
                line-no 1 'error

@@ -4,7 +4,7 @@
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
 ;; Version: 1.4.0
-;; Package-Version: 20160516.754
+;; Package-Version: 20161121.55
 ;; Keywords: convenience
 ;; Package-Requires: ((s "1.3.1") (dash "1.0.3"))
 
@@ -59,7 +59,7 @@
 ;; If you want tagedit to bind to the same keys as paredit, there's this:
 ;;
 ;; ```cl
-;; (eval-after-load "sgml-mode"
+;; (eval-after-load 'sgml-mode
 ;;   '(progn
 ;;      (require 'tagedit)
 ;;      (tagedit-add-paredit-like-keybindings)

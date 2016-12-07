@@ -1242,12 +1242,18 @@ results in
 
 ;; hybrid lines
 (defcustom sp-hybrid-kill-excessive-whitespace nil
-  "Determine whether `sp-kill-hybrid-sexp' kills excessive whitespace.
+  "Determine how `sp-kill-hybrid-sexp' kills excessive whitespace.
 
-If non-nil, `sp-kill-hybrid-sexp' will kill all whitespace up
-until next hybrid sexp if the point is at the end of line or on a
-blank line."
-  :type 'boolean
+If non-nil, `sp-kill-hybrid-sexp' will delete all whitespace
+up until next hybrid sexp if the point is at the end of line or
+on a blank line.
+
+When it is set to 'kill, whitespace will be appended to the sexp
+in kill ring."
+  :type '(choice
+          (const :tag "Delete" t)
+          (const :tag "Kill" kill)
+          (const :tag "Off" nil))
   :group 'smartparens)
 
 (defcustom sp-hybrid-kill-entire-symbol nil
@@ -4008,17 +4014,17 @@ If the point is not inside a quoted string, return nil."
             (looking-at "[[:space:]]+\\s<"))
     (let ((open (save-excursion
                   (while (and (not (bobp))
-                              (or (sp-point-in-comment)
-                                  (save-excursion
+                              (or (when (sp-point-in-comment)
                                     (backward-char 1)
-                                    (looking-at "[[:space:]]+\\s<"))))
-                    (backward-char 1))
-                  (when (not (or (bobp)
-                                 (or (sp-point-in-comment)
-                                     (save-excursion
-                                       (backward-char 1)
-                                       (looking-at "[[:space:]]+\\s<")))))
-                    (forward-char))
+                                    t)
+                                  (when (save-excursion
+                                          (beginning-of-line)
+                                          (looking-at "^[[:space:]]+\\s<"))
+                                    (when (>= (forward-line -1) 0)
+                                      (end-of-line))
+                                    t))))
+                  ;; this means we got here by `sp-point-in-comment' condition
+                  (forward-char)
                   (point)))
           (close (save-excursion
                    (while (and (not (eobp))
@@ -4027,18 +4033,18 @@ If the point is not inside a quoted string, return nil."
                      (forward-char 1))
                    (let ((pp (1- (point))))
                      (when (not (or (eobp)
-                                   (sp-point-in-comment)
-                                   (looking-at "[[:space:]]+\\s<")
-                                   (and (eq (char-syntax
-                                             (char-after pp)) ?>)
-                                        (not (eq (char-after pp) ?\n)))
-                                   (/= (logand
-                                        (lsh 1 18)
-                                        (car (syntax-after pp))) 0)
-                                   (/= (logand
-                                        (lsh 1 19)
-                                        (car (syntax-after pp))) 0)))
-                      (backward-char 1)))
+                                    (sp-point-in-comment)
+                                    (looking-at "[[:space:]]+\\s<")
+                                    (and (eq (char-syntax
+                                              (char-after pp)) ?>)
+                                         (not (eq (char-after pp) ?\n)))
+                                    (/= (logand
+                                         (lsh 1 18)
+                                         (car (syntax-after pp))) 0)
+                                    (/= (logand
+                                         (lsh 1 19)
+                                         (car (syntax-after pp))) 0)))
+                       (backward-char 1)))
                    (point))))
       (cons open close))))
 
@@ -6186,15 +6192,18 @@ Examples:
                      (sp-point-in-symbol))
             (sp-backward-sexp))
           (sp-get hl
-            (kill-region (point) (min (point-max) (if (looking-at "[ \t]*$") (1+ :end-suf) :end-suf)))
-            (when sp-hybrid-kill-excessive-whitespace
-              (cond
-               ((sp-point-in-blank-line)
-                (while (and (not (eobp))
-                            (sp-point-in-blank-line))
-                  (delete-region (line-beginning-position) (min (point-max) (1+ (line-end-position))))))
-               ((looking-at "[ \t]*$")
-                (delete-blank-lines)))))))
+            (let ((end (min (point-max) (if (looking-at "[ \t]*$")
+                                            (1+ :end-suf)
+                                          :end-suf))))
+              (when sp-hybrid-kill-excessive-whitespace
+                (save-excursion
+                  (goto-char end)
+                  (skip-chars-forward "\n\t\r\s")
+                  (cond
+                   ((eq 'kill sp-hybrid-kill-excessive-whitespace)
+                    (setq end (point)))
+                   (t (delete-region end (point))))))
+              (kill-region (point) end)))))
       (sp--cleanup-after-kill)
       ;; if we've killed the entire line, do *not* contract the indent
       ;; to just one space

@@ -579,7 +579,7 @@ The default is to enable this by default and then toggle
   :type 'boolean)
 
 (defcustom helm-echo-input-in-header-line nil
-  "Send current input in header-line."
+  "Send current input in header-line when non-nil."
   :group 'helm
   :type 'boolean)
 
@@ -3798,12 +3798,20 @@ mode and header lines."
                                 "->"
                                 'face 'helm-header-line-left-margin))))
            (pos  (- (point) beg)))
+      ;; Increment pos each time we find a "%" up to current-pos (#1648).
+      (cl-loop for c across (buffer-substring-no-properties beg (point))
+            when (eql c ?%) do (cl-incf pos))
+      ;; Increment pos when cursor is on a "%" to make it visible in header-line
+      ;; i.e "%%|" and not "%|%" (#1649).
+      (when (looking-at "%") (setq pos (1+ pos)))
+      (setq cont (replace-regexp-in-string "%" "%%" cont))
       (with-helm-buffer
         (setq header-line-format (concat pref cont " "))
         (put-text-property
          ;; Increment pos to handle the space before prompt (i.e `pref').
-         (1+ pos) (+ 2 pos)
-         'face ;don't just use 'cursor; this can hide the current character
+         (+ 1 pos) (+ 2 pos)
+         'face
+         ;; Don't just use 'cursor, this can hide the current character.
          (list :inverse-video t
                :foreground (face-background 'cursor)
                :background (face-background 'default))
@@ -4401,7 +4409,7 @@ Optional argument SOURCE is a Helm source object."
           (helm-pos-header-line-p)
           (bobp)))))
 
-(defun helm-edit-current-selection-internal (func)
+(defun helm--edit-current-selection-internal (func)
   (with-helm-window
     (forward-line 0)
     (let ((realvalue (get-text-property (point) 'helm-realvalue))
@@ -4412,7 +4420,9 @@ Optional argument SOURCE is a Helm source object."
            (put-text-property (point) (point-at-eol)
                               'helm-realvalue realvalue))
       (and multiline
-           (put-text-property (point) (point-at-eol)
+           (put-text-property (point)
+                              (or (helm-get-next-candidate-separator-pos)
+                                  (point-max))
                               'helm-multiline multiline))
       (helm-mark-current-line))))
 
@@ -4420,7 +4430,7 @@ Optional argument SOURCE is a Helm source object."
   "Evaluate FORMS at current selection in the helm buffer.
 Used generally to modify current selection."
   (declare (indent 0) (debug t))
-  `(helm-edit-current-selection-internal
+  `(helm--edit-current-selection-internal
     (lambda () ,@forms)))
 
 (defun helm--delete-minibuffer-contents-from (from-str)

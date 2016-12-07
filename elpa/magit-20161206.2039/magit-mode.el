@@ -34,6 +34,7 @@
 
 (require 'magit-section)
 (require 'magit-git)
+(require 'magit-popup)
 
 ;; For `magit-xref-insert-buttons' from `magit'
 (defvar magit-diff-show-xref-buttons)
@@ -58,13 +59,13 @@
 
 (defcustom magit-mode-setup-hook
   '(magit-maybe-save-repository-buffers
-    magit-maybe-show-margin)
+    magit-set-buffer-margin)
   "Hook run by `magit-mode-setup'."
   :package-version '(magit . "2.3.0")
   :group 'magit-modes
   :type 'hook
   :options '(magit-maybe-save-repository-buffers
-             magit-maybe-show-margin))
+             magit-set-buffer-margin))
 
 (defcustom magit-pre-refresh-hook '(magit-maybe-save-repository-buffers)
   "Hook run before refreshing in `magit-refresh'.
@@ -384,7 +385,10 @@ which deletes the thing at point."
 Where applicable, section-specific keymaps bind another command
 which visits the thing at point."
   (interactive)
-  (user-error "There is no thing at point that could be visited"))
+  (if (eq magit-current-popup 'magit-dispatch-popup)
+      (progn (setq magit-current-popup nil)
+             (call-interactively (key-binding (this-command-keys))))
+    (user-error "There is no thing at point that could be visited")))
 
 (easy-menu-define magit-mode-menu magit-mode-map
   "Magit menu"
@@ -894,10 +898,10 @@ Run hooks `magit-pre-refresh-hook' and `magit-post-refresh-hook'."
                         (or (get-buffer-window-list buffer nil t)
                             (list (selected-window))))))
         (deactivate-mark)
-        (setq magit-section-highlight-overlays nil
-              magit-section-highlighted-section nil
-              magit-section-highlighted-sections nil
-              magit-section-unhighlight-sections nil)
+        (setq magit-section-highlight-overlays nil)
+        (setq magit-section-highlighted-section nil)
+        (setq magit-section-highlighted-sections nil)
+        (setq magit-section-unhighlight-sections nil)
         (let ((inhibit-read-only t))
           (erase-buffer)
           (save-excursion

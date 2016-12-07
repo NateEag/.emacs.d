@@ -34,6 +34,7 @@
 
 (require 'magit-utils)
 
+(declare-function magit-maybe-make-margin-overlay 'magit-log)
 (defvar magit-keep-region-overlay)
 
 ;;; Options
@@ -555,11 +556,16 @@ Each TYPE is a symbol.  Note that it is not necessary to specify
 all TYPEs up to the root section as printed by
 `magit-describe-type', unless of course you want to be that
 precise."
-  ;; When recursing SECTION actually is a type list.  Matching
-  ;; macros also pass such a list instead of a section struct.
+  ;; For backward compatibility reasons SECTION can also be a
+  ;; type-list as understood by `magit-section-match-1'.  This
+  ;; includes uses of the macros `magit-section-when' and
+  ;; `magit-section-case' that did not get recompiled after
+  ;; this function was changed.
   (and section
        (magit-section-match-1 condition
-                              (mapcar #'car (magit-section-ident section)))))
+                              (if (magit-section-p section)
+                                  (mapcar #'car (magit-section-ident section))
+                                section))))
 
 (defun magit-section-match-1 (condition type-list)
   (if (listp condition)
@@ -592,6 +598,11 @@ See `magit-section-match' for the forms CONDITION can take."
   (declare (indent 1)
            (debug (sexp body)))
   `(--when-let (magit-current-section)
+     ;; Quoting CONDITION here often leads to double-quotes, which
+     ;; isn't an issue because `magit-section-match-1' implicitly
+     ;; deals with that.  We shouldn't force users of this function
+     ;; to not quote CONDITION because that would needlessly break
+     ;; backward compatibility.
      (when (magit-section-match ',condition it)
        ,@(or body '((magit-section-value it))))))
 
@@ -770,6 +781,7 @@ insert a newline character if necessary."
                 (propertize heading 'face 'magit-section-heading)))))
   (unless (bolp)
     (insert ?\n))
+  (magit-maybe-make-margin-overlay)
   (setf (magit-section-content magit-insert-section--current) (point-marker)))
 
 (defvar magit-insert-headers-hook nil "For internal use only.")
@@ -833,9 +845,10 @@ evaluated its BODY.  Admittedly that's a bit of a hack."
             (deactivate-mark nil)
             (selection (magit-region-sections)))
         (mapc #'delete-overlay magit-section-highlight-overlays)
+        (setq magit-section-highlight-overlays nil)
         (setq magit-section-unhighlight-sections
-              magit-section-highlighted-sections
-              magit-section-highlighted-sections nil)
+              magit-section-highlighted-sections)
+        (setq magit-section-highlighted-sections nil)
         (unless (eq section magit-root-section)
           (run-hook-with-args-until-success
            'magit-section-highlight-hook section selection))

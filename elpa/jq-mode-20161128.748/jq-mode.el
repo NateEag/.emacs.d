@@ -5,7 +5,7 @@
 ;; Author: Bjarte Johansen <Bjarte dot Johansen at gmail dot com>
 ;; Homepage: https://github.com/ljos/jq-mode
 ;; Package-Requires: ((emacs "24.3"))
-;; Version: 0.1.0
+;; Version: 0.2.0
 
 ;; This file is not part of GNU Emacs.
 
@@ -149,6 +149,11 @@
     syntax-table)
   "Syntax table for `jq-mode.'")
 
+(with-eval-after-load 'company-keywords
+  (add-to-list 'company-keywords-alist
+	       `(jq-mode . ,(append jq--keywords
+				    jq--builtins))))
+
 ;;;###autoload
 (define-derived-mode jq-mode prog-mode "jq"
   "Major mode for jq scripts.
@@ -156,14 +161,7 @@
   :group 'jq
   (setq-local indent-line-function #'jq-indent-line)
   (setq-local font-lock-defaults '(jq-font-lock-keywords))
-  (setq-local comment-start "# ")
-  (when (boundp 'company-mode)
-    (add-to-list 'company-keywords-alist
-		 `(jq-mode . ,(append jq--keywords
-				      jq--builtins)))))
-;;;###autoload
-(add-to-list 'auto-mode-alist '("\\.jq$" . jq-mode))
-
+  (setq-local comment-start "# "))
 
 ;;; jq-interactively
 (defgroup jq-interactive nil
@@ -193,19 +191,25 @@
 (defvar jq-interactive--overlay nil)
 
 (defun jq-interactive--run-command ()
-  (shell-command-to-string
-   (format "%s %s %s %s"
-	   jq-interactive-command
-	   jq-interactive-default-options
-	   (shell-quote-argument
-	    jq-interactive--last-minibuffer-contents)
-	   (let ((beg (car jq-interactive--positions))
-		 (end (cdr jq-interactive--positions))
-		 (tmp (make-temp-file "json-")))
-	     (with-temp-file tmp
-	       (insert (with-current-buffer jq-interactive--buffer
-			 (buffer-substring-no-properties beg end))))
-	     tmp))))
+  (with-temp-buffer
+    (let ((output (current-buffer)))
+      (with-current-buffer jq-interactive--buffer
+	(call-process-region (point-min)
+			     (point-max)
+                             shell-file-name
+			     nil
+			     output
+			     nil
+			     shell-command-switch
+			     (format "%s %s %s"
+				     jq-interactive-command
+				     jq-interactive-default-options
+				     (shell-quote-argument
+				      jq-interactive--last-minibuffer-contents))))
+      (ignore-errors
+	(json-mode)
+	(font-lock-fontify-region (point-min) (point-max)))
+      (buffer-string))))
 
 (defun jq-interactive--feedback ()
   (save-excursion
@@ -214,12 +218,7 @@
   (with-current-buffer jq-interactive--buffer
     (overlay-put jq-interactive--overlay
 		 'after-string
-		 (with-temp-buffer
-		   (insert (jq-interactive--run-command))
-		   (ignore-errors
-		     (json-mode)
-		     (font-lock-fontify-region (point-min) (point-max)))
-		   (buffer-string)))))
+		 (jq-interactive--run-command))))
 
 (defun jq-interactive--minibuffer-setup ()
   (setq-local font-lock-defaults '(jq-font-lock-keywords)))
@@ -244,7 +243,7 @@
   (jq-indent-line)
   (save-excursion
     (beginning-of-line)
-    (insert (make-string (length jq-interactive-default-prompt) ?\s)))
+    (insert-char ?\s (length jq-interactive-default-prompt)))
   (skip-chars-forward "[:space:]"))
 
 (defvar jq-interactive-map

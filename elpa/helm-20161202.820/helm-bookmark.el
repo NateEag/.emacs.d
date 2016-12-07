@@ -519,13 +519,24 @@ than `w3m-browse-url' use it."
 ;;; Addressbook.
 ;;
 ;;
-(defun helm-bookmark-addressbook-search-fn (pattern)
+(defun helm-bookmark--addressbook-search-mail (pattern)
   (helm-awhile (next-single-property-change (point) 'email)
     (goto-char it)
     (end-of-line)
     (when (string-match pattern
                         (get-text-property
                          0 'email (buffer-substring
+                                   (point-at-bol) (point-at-eol))))
+      (cl-return
+       (+ (point) (match-end 0))))))
+
+(defun helm-bookmark--addressbook-search-group (pattern)
+  (helm-awhile (next-single-property-change (point) 'group)
+    (goto-char it)
+    (end-of-line)
+    (when (string-match pattern
+                        (get-text-property
+                         0 'group (buffer-substring
                                    (point-at-bol) (point-at-eol))))
       (cl-return
        (+ (point) (match-end 0))))))
@@ -537,15 +548,24 @@ than `w3m-browse-url' use it."
                      (helm-init-candidates-in-buffer
                          'global
                        (cl-loop for b in (helm-bookmark-addressbook-setup-alist)
-                                collect (propertize
-                                         b 'email (bookmark-prop-get
-                                                   b 'email))))))
-   (search :initform 'helm-bookmark-addressbook-search-fn)
+                                collect (propertize b
+                                                    'email (bookmark-prop-get b 'email)
+                                                    'group (bookmark-prop-get b 'group))))))
+   (search :initform '(helm-bookmark--addressbook-search-group
+                       helm-bookmark--addressbook-search-mail))
    (persistent-action :initform
                       (lambda (candidate)
                         (let ((bmk (helm-bookmark-get-bookmark-from-name
                                     candidate)))
-                          (bookmark--jump-via bmk 'switch-to-buffer))))
+                          (if (and (get-buffer-window addressbook-buffer-name 'visible)
+                                   (string= bmk (with-current-buffer addressbook-buffer-name
+                                                  (save-excursion
+                                                    (search-forward "^Name: " nil t)
+                                                    (car (addressbook-get-contact-data))))))
+                              (kill-buffer addressbook-buffer-name)
+                              (when (buffer-live-p (get-buffer addressbook-buffer-name))
+                                (kill-buffer addressbook-buffer-name))
+                              (bookmark--jump-via bmk 'switch-to-buffer)))))
    (persistent-help :initform "Show contact - Prefix with C-u to append")
    (mode-line :initform (list "Contact(s)" helm-mode-line-string))
    (filtered-candidate-transformer :initform
@@ -771,11 +791,22 @@ e.g prepended with *."
 (defun helm-filtered-bookmarks ()
   "Preconfigured helm for bookmarks (filtered by category).
 Optional source `helm-source-bookmark-addressbook' is loaded
-only if external library addressbook-bookmark.el is available."
+only if external addressbook-bookmark package is installed."
   (interactive)
   (helm :sources helm-bookmark-default-filtered-sources
         :prompt "Search Bookmark: "
         :buffer "*helm filtered bookmarks*"
+        :default (list (thing-at-point 'symbol)
+                       (buffer-name helm-current-buffer))))
+
+;;;###autoload
+(defun helm-addressbook-bookmarks ()
+  "Preconfigured helm for addressbook bookmarks.
+Need addressbook-bookmark package as dependencie."
+  (interactive)
+  (helm :sources 'helm-source-bookmark-addressbook
+        :prompt "Search Contact: "
+        :buffer "*helm addressbook*"
         :default (list (thing-at-point 'symbol)
                        (buffer-name helm-current-buffer))))
 

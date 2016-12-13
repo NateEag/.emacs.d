@@ -195,24 +195,19 @@ It is added to `extended-command-history'.
 ;;; Minibuffer History
 ;;
 ;;
-(defvar helm-source-minibuffer-history
-  (helm-build-sync-source "Minibuffer History"
-    :header-name (lambda (name)
-                   (format "%s (%s)" name minibuffer-history-variable))
-    :candidates
-     (lambda ()
-       (let ((history (cl-loop for i in
-                               (symbol-value minibuffer-history-variable)
-                               unless (string= "" i) collect i)))
-         (if (consp (car history))
-             (mapcar 'prin1-to-string history)
-             history)))
-    :migemo t
-    :multiline t
-    :action (lambda (candidate)
-              (with-helm-current-buffer
-                (delete-minibuffer-contents)
-                (insert candidate)))))
+(defvar helm-minibuffer-history-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map helm-map)
+    (define-key map [remap helm-minibuffer-history] 'undefined)
+    map))
+
+(defcustom helm-minibuffer-history-must-match t
+  "Allow inserting non matching elements when nil or 'confirm."
+  :group 'helm-misc
+  :type '(choice
+          (const :tag "Must match" t)
+          (const :tag "Confirm" 'confirm)
+          (const :tag "Always allow" nil)))
 
 ;;; Shell history
 ;;
@@ -319,10 +314,27 @@ Default action change TZ environment variable locally to emacs."
 (defun helm-minibuffer-history ()
   "Preconfigured `helm' for `minibuffer-history'."
   (interactive)
-  (let ((enable-recursive-minibuffers t))
-    (helm :sources 'helm-source-minibuffer-history
-          :buffer "*helm minibuffer-history*"
-          :allow-nest t)))
+  (cl-assert (minibuffer-window-active-p (selected-window)) nil
+             "Error: Attempt to use minibuffer history outside a minibuffer")
+  (let ((enable-recursive-minibuffers t)
+        (elm (helm-comp-read "pattern: "
+                             (cl-loop for i in
+                                      (symbol-value minibuffer-history-variable)
+                                      unless (string= "" i) collect i into history
+                                      finally return
+                                      (if (consp (car history))
+                                          (mapcar 'prin1-to-string history)
+                                          history))
+                             :header-name
+                             (lambda (name)
+                               (format "%s (%s)" name minibuffer-history-variable))
+                             :buffer "*helm minibuffer-history*"
+                             :must-match helm-minibuffer-history-must-match
+                             :multiline t
+                             :keymap helm-minibuffer-history-map
+                             :allow-nest t)))
+    (delete-minibuffer-contents)
+    (insert elm)))
 
 ;;;###autoload
 (defun helm-comint-input-ring ()

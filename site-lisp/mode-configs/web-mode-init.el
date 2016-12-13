@@ -90,6 +90,12 @@ Stores keymaps stored in buffer-local `minor-mode-overriding-map-alist'."
   ;; jumping between () and [].
   (evil-matchit-mode t)
 
+  ;; Trying this out instead of tagedit (which I only had half-working anyway).
+  ;;
+  ;; TODO If it works well, update tagedit issue to reflect the fact that I'm
+  ;; no longer going to work on it.
+  (web-mode-edit-element-minor-mode t)
+
   (setq web-mode-ac-sources-alist
         '(("php" . (ac-source-yasnippet ac-source-php-auto-yasnippets))
           ("html" . (ac-source-emmet-html-aliases ac-source-emmet-html-snippets))
@@ -98,69 +104,7 @@ Stores keymaps stored in buffer-local `minor-mode-overriding-map-alist'."
                     ac-source-css-property-names
                     ac-source-emmet-css-snippets))))
 
-  (require 'tagedit)
-  (tagedit-add-paredit-like-keybindings)
-  (tagedit-mode 1)
-
-  ;; See if we can hack in support for tagedit at all... web-mode seems like it
-  ;; must already have most of these covered in some way.
-  (set (make-local-variable 'te/skip-tag-forward-fn)
-       'web-mode-te-skip-tag-forward-fn)
-
-  ;; Similarly
-  (set (make-local-variable 'te/skip-tag-backward-fn)
-       'web-mode-te-skip-tag-backward-fn)
-
-  (set (make-local-variable 'te/empty-tag-p-fn)
-       'web-mode-element-is-void)
-
-  (set (make-local-variable 'te/current-tag-fn)
-       'web-mode-te-current-tag-fn)
-
-  (define-key tagedit-mode-map (kbd "C-k") 'web-mode-tagedit-kill)
-
   (web-mode-install-smart-dash-insert))
-
-(defun web-mode-te-skip-tag-forward-fn ()
-  "Move to end of current (or next) tag.
-
-web-mode's nearest equivalent that I could find only handles current tag.
-Hence this wrapper."
-  (skip-syntax-forward " <")
-  (web-mode-element-end))
-
-(defun web-mode-te-skip-tag-backward-fn ()
-  "Move to beginning of current (or previous) tag.
-
-web-mode's nearest equivalent that I could find only handles current tag.
-Hence this wrapper."
-  (skip-syntax-backward " >")
-  (backward-char 1)
-  (web-mode-element-beginning))
-
-(defun web-mode-te-current-tag-fn ()
-  "Return current tag alist for tagedit."
-  (ignore-errors
-    (save-excursion
-     (let* ((beg (web-mode-element-beginning-position))
-            ;; web-mode's end-position gets the position of the closing >,
-            ;; while tagedit expects the position *after* it.
-            (end (+ 1 (web-mode-element-end-position)))
-            (name (get-text-property beg 'tag-name))
-            (self-closing (if (web-mode-element-is-void name)
-                              :t
-                            :f)))
-       `((:name . ,name)
-         (:self-closing . ,self-closing)
-         (:beg . ,beg)
-         (:end . ,end))))))
-
-(defun web-mode-tagedit-kill ()
-  "Call tagedit-kill if in HTML and kill-line otherwise."
-  (interactive)
-  (if (equal (web-mode-language-at-pos) "html")
-      (tagedit-kill)
-    (kill-line)))
 
 (provide 'web-mode-init)
 ;;; web-mode-init.el ends here

@@ -534,7 +534,9 @@ and `magit-post-display-buffer-hook'."
     (run-hooks 'magit-pre-display-buffer-hook))
   (let ((window (funcall magit-display-buffer-function buffer)))
     (unless magit-display-buffer-noselect
-      (select-window window)))
+      (select-frame-set-input-focus
+       (window-frame
+        (select-window window)))))
   (with-current-buffer buffer
     (run-hooks 'magit-post-display-buffer-hook)))
 
@@ -640,7 +642,8 @@ the mode of the current buffer derives from `magit-log-mode' or
 `magit-cherry-mode'."
   (display-buffer
    buffer
-   (cond ((and (derived-mode-p 'magit-log-mode 'magit-cherry-mode)
+   (cond ((and (or git-commit-mode
+                   (derived-mode-p 'magit-log-mode 'magit-cherry-mode))
                (with-current-buffer buffer
                  (derived-mode-p 'magit-diff-mode)))
           nil)

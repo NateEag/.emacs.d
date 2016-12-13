@@ -83,6 +83,13 @@ Stores keymaps stored in buffer-local `minor-mode-overriding-map-alist'."
                    (setq emmet-use-css-transform nil))
                  )))
 
+  ;; Use evil-matchit-mode to jump between tags.
+  ;;
+  ;; TODO Enable evil-matchit-mode in my evil setup. The problem is that it
+  ;; gives significantly worse results in at least sh-mode, where it breaks
+  ;; jumping between () and [].
+  (evil-matchit-mode t)
+
   (setq web-mode-ac-sources-alist
         '(("php" . (ac-source-yasnippet ac-source-php-auto-yasnippets))
           ("html" . (ac-source-emmet-html-aliases ac-source-emmet-html-snippets))

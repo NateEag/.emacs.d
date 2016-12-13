@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20161122.728
+;; Package-Version: 20161213.9
 ;; Keywords: project, convenience
 ;; Version: 0.15.0-cvs
 ;; Package-Requires: ((pkg-info "0.4"))
@@ -301,7 +301,6 @@ If variable `projectile-project-name' is non-nil, this function will not be used
     "requirements.txt"   ; Pip file
     "setup.py"           ; Setuptools file
     "tox.ini"            ; Tox file
-    "package.json"       ; npm package file
     "gulpfile.js"        ; Gulp build file
     "Gruntfile.js"       ; Grunt project file
     "bower.json"         ; Bower project file
@@ -1682,8 +1681,8 @@ https://github.com/abo-abo/swiper")))
     ("c" . ("h"))
     ("m" . ("h"))
     ("mm" . ("h"))
-    ("h" . ("c" "cpp" "ipp" "hpp" "cxx" "ixx" "hxx" "m" "mm"))
-    ("cc" . ("hh" "hpp"))
+    ("h" . ("c" "cc" "cpp" "ipp" "hpp" "cxx" "ixx" "hxx" "m" "mm"))
+    ("cc" . ("h" "hh" "hpp"))
     ("hh" . ("cc"))
 
     ;; vertex shader and fragment shader extensions in glsl
@@ -2170,11 +2169,14 @@ PROJECT-ROOT is the targeted directory.  If nil, use
 
 (defun projectile-create-test-file-for (impl-file-path)
   (let* ((test-file (projectile--test-name-for-impl-name impl-file-path))
-         (test-dir (replace-regexp-in-string "src/" "test/" (file-name-directory impl-file-path))))
-    (unless (file-exists-p (expand-file-name test-file test-dir))
+         (project-root (projectile-project-root))
+         (relative-dir (file-name-directory (file-relative-name impl-file-path project-root)))
+         (test-dir (expand-file-name (replace-regexp-in-string "src/" "test/" relative-dir) project-root))
+         (test-path (expand-file-name test-file test-dir)))
+    (unless (file-exists-p test-path)
       (progn (unless (file-exists-p test-dir)
                (make-directory test-dir :create-parents))
-             (concat test-dir test-file)))))
+             test-path))))
 
 (defcustom projectile-create-missing-test-files nil
   "During toggling, if non-nil enables creating test files if not found.

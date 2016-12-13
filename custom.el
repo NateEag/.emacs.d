@@ -64,6 +64,7 @@
  '(js2-mode-show-parse-errors nil)
  '(js2-mode-show-strict-warnings nil)
  '(line-number-mode t)
+ '(magit-diff-refine-hunk (quote all))
  '(magit-diff-use-overlays nil)
  '(magit-push-always-verify nil)
  '(magit-revert-buffers t t)

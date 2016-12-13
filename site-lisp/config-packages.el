@@ -183,6 +183,9 @@
                                      (setq-local ne-yas-auto-insert-snippet-name
                                            "shell-script"))))
 
+(use-package conf-mode
+  :mode "\\.slate\\'")
+
 (use-package tern
   :diminish tern-mode
   :config (add-hook 'tern-mode-hook '(lambda ()

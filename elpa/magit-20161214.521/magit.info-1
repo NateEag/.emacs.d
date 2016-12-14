@@ -4240,8 +4240,7 @@ features are available from separate popups.
 
      When the branch being reset is the current branch, then a hard
      reset is performed.  If there are any uncommitted changes, then the
-     user has to confirming the reset because those changes would be
-     lost.
+     user has to confirm the reset because those changes would be lost.
 
      This is useful when you have started work on a feature branch but
      realize it’s all crap and want to start over.
@@ -7657,10 +7656,10 @@ Appendix B Keystroke Index
 * b c:                                   The branch popup.    (line  47)
 * B g:                                   Bisecting.           (line  36)
 * B k:                                   Bisecting.           (line  41)
-* b k:                                   The branch popup.    (line  99)
+* b k:                                   The branch popup.    (line  98)
 * b n:                                   The branch popup.    (line  37)
 * B r:                                   Bisecting.           (line  47)
-* b r:                                   The branch popup.    (line 105)
+* b r:                                   The branch popup.    (line 104)
 * B s:                                   Bisecting.           (line  24)
 * b s:                                   The branch popup.    (line  54)
 * b x:                                   The branch popup.    (line  82)

@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20161213.9
+;; Package-Version: 20161218.148
 ;; Keywords: project, convenience
 ;; Version: 0.15.0-cvs
 ;; Package-Requires: ((pkg-info "0.4"))
@@ -895,17 +895,45 @@ A thin wrapper around `file-truename' that handles nil."
   "Default function used create project name to be displayed based on the value of PROJECT-ROOT."
   (file-name-nondirectory (directory-file-name project-root)))
 
+(defvar-local projectile-cached-project-name nil
+  "Cached name of the current Projectile project. If non-nil, it
+is used as the return value of `projectile-project-name' for
+performance (unless the variable `projectile-project-name' is
+also set). If nil, it is recalculated the next time
+`projectile-project-name' is called.
+
+This variable is reset automatically when Projectile detects that
+the `buffer-file-name' has changed. It can also be reset manually
+by calling `projectile-reset-cached-project-name'.")
+
+(defvar-local projectile-cached-buffer-file-name nil
+  "The last known value of `buffer-file-name' for the current
+buffer. This is used to detect a change in `buffer-file-name',
+which triggers a reset of `projectile-cached-project-name'.")
+
+(defun projectile-reset-cached-project-name ()
+  "Reset the value of `projectile-cached-project-name' to nil.
+
+This means that it is automatically recalculated the next time
+function `projectile-project-name' is called."
+  (interactive)
+  (setq projectile-cached-project-name nil))
+
 (defun projectile-project-name ()
   "Return project name."
-  (if projectile-project-name
-      projectile-project-name
-    (let ((project-root
-           (condition-case nil
-               (projectile-project-root)
-             (error nil))))
-      (if project-root
-          (funcall projectile-project-name-function project-root)
-        "-"))))
+  (or projectile-project-name
+      (and (equal projectile-cached-buffer-file-name buffer-file-name)
+           projectile-cached-project-name)
+      (progn
+        (setq projectile-cached-buffer-file-name buffer-file-name)
+        (setq projectile-cached-project-name
+              (let ((project-root
+                     (condition-case nil
+                         (projectile-project-root)
+                       (error nil))))
+                (if project-root
+                    (funcall projectile-project-name-function project-root)
+                  "-"))))))
 
 
 ;;; Project indexing
@@ -2341,6 +2369,15 @@ This is a subset of `grep-read-files', where either a matching entry from
   "Return ignored file suffixes as a list of glob patterns."
   (mapcar (lambda (pat) (concat "*" pat)) projectile-globally-ignored-file-suffixes))
 
+(defun projectile--read-search-string-with-default (prefix-label)
+  (let* ((prefix-label (projectile-prepend-project-name prefix-label))
+         (default-value (projectile-symbol-or-selection-at-point))
+         (default-label (if (or (not default-value)
+                                (string= default-value ""))
+                            ""
+                          (format " (default %s)" default-value))))
+    (read-string (format "%s%s: " prefix-label default-label) nil nil default-value)))
+
 ;;;###autoload
 (defun projectile-grep (&optional regexp arg)
   "Perform rgrep in the project.
@@ -2354,8 +2391,7 @@ With REGEXP given, don't query the user for a regexp."
   (require 'grep) ;; for `rgrep'
   (let* ((roots (projectile-get-project-directories))
          (search-regexp (or regexp
-                            (read-string (projectile-prepend-project-name "Grep for: ")
-                                         (projectile-symbol-or-selection-at-point))))
+                            (projectile--read-search-string-with-default "Grep for")))
          (files (and arg (or (and (equal current-prefix-arg '-)
                                   (projectile-grep-default-files))
                              (read-string (projectile-prepend-project-name "Grep in: ")
@@ -2389,9 +2425,8 @@ With REGEXP given, don't query the user for a regexp."
 With an optional prefix argument ARG SEARCH-TERM is interpreted as a
 regular expression."
   (interactive
-   (list (read-from-minibuffer
-          (projectile-prepend-project-name (format "Ag %ssearch for: " (if current-prefix-arg "regexp " "")))
-          (projectile-symbol-or-selection-at-point))
+   (list (projectile--read-search-string-with-default
+          (format "Ag %ssearch for" (if current-prefix-arg "regexp " "")))
          current-prefix-arg))
   (if (require 'ag nil 'noerror)
       (let ((ag-command (if arg 'ag-regexp 'ag))

@@ -3,10 +3,28 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "notmuch" "notmuch.el" (22573 51225 0 0))
+;;;### (autoloads nil "notmuch" "notmuch.el" (22615 58398 0 0))
 ;;; Generated autoloads from notmuch.el
 
-(put 'notmuch-search 'notmuch-doc "Search for messages.")
+(autoload 'notmuch-search "notmuch" "\
+Display threads matching QUERY in a notmuch-search buffer.
+
+If QUERY is nil, it is read interactively from the minibuffer.
+Other optional parameters are used as follows:
+
+  OLDEST-FIRST: A Boolean controlling the sort order of returned threads
+  TARGET-THREAD: A thread ID (without the thread: prefix) that will be made
+                 current if it appears in the search results.
+  TARGET-LINE: The line number to move to if the target thread does not
+               appear in the search results.
+  NO-DISPLAY: Do not try to foreground the search results buffer. If it is
+              already foregrounded i.e. displayed in a window, this has no
+              effect, meaning the buffer will remain visible.
+
+When called interactively, this will prompt for a query and use
+the configured default sort order.
+
+\(fn &optional QUERY OLDEST-FIRST TARGET-THREAD TARGET-LINE NO-DISPLAY)" t nil)
 
 (autoload 'notmuch "notmuch" "\
 Run notmuch and display saved searches, known tags, etc.
@@ -23,8 +41,8 @@ notmuch buffers exist, run `notmuch'.
 
 ;;;***
 
-;;;### (autoloads nil "notmuch-company" "notmuch-company.el" (22573
-;;;;;;  51225 0 0))
+;;;### (autoloads nil "notmuch-company" "notmuch-company.el" (22615
+;;;;;;  58398 0 0))
 ;;; Generated autoloads from notmuch-company.el
 
 (autoload 'notmuch-company-setup "notmuch-company" "\
@@ -39,7 +57,7 @@ notmuch buffers exist, run `notmuch'.
 
 ;;;***
 
-;;;### (autoloads nil "notmuch-hello" "notmuch-hello.el" (22573 51225
+;;;### (autoloads nil "notmuch-hello" "notmuch-hello.el" (22615 58398
 ;;;;;;  0 0))
 ;;; Generated autoloads from notmuch-hello.el
 
@@ -50,7 +68,7 @@ Run notmuch and display saved searches, known tags, etc.
 
 ;;;***
 
-;;;### (autoloads nil "notmuch-jump" "notmuch-jump.el" (22573 51225
+;;;### (autoloads nil "notmuch-jump" "notmuch-jump.el" (22615 58398
 ;;;;;;  0 0))
 ;;; Generated autoloads from notmuch-jump.el
 
@@ -66,7 +84,7 @@ fast way to jump to a saved search from anywhere in Notmuch.
 
 ;;;***
 
-;;;### (autoloads nil "notmuch-show" "notmuch-show.el" (22573 51225
+;;;### (autoloads nil "notmuch-show" "notmuch-show.el" (22615 58398
 ;;;;;;  0 0))
 ;;; Generated autoloads from notmuch-show.el
 
@@ -101,7 +119,7 @@ matched.
 ;;;;;;  "notmuch-lib.el" "notmuch-maildir-fcc.el" "notmuch-message.el"
 ;;;;;;  "notmuch-mua.el" "notmuch-parser.el" "notmuch-pkg.el" "notmuch-print.el"
 ;;;;;;  "notmuch-query.el" "notmuch-tag.el" "notmuch-tree.el" "notmuch-wash.el")
-;;;;;;  (22573 51225 0 0))
+;;;;;;  (22615 58398 0 0))
 
 ;;;***
 

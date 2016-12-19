@@ -1,14 +1,15 @@
 ;;; sublimity-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "sublimity" "sublimity.el" (22465 936 0 0))
+;;;### (autoloads nil "sublimity" "sublimity.el" (22615 58405 0 0))
 ;;; Generated autoloads from sublimity.el
 
 (defvar sublimity-mode nil "\
 Non-nil if Sublimity mode is enabled.
-See the command `sublimity-mode' for a description of this minor mode.
+See the `sublimity-mode' command
+for a description of this minor mode.
 Setting this variable directly does not take effect;
 either customize it (see the info node `Easy Customization')
 or call the function `sublimity-mode'.")
@@ -23,7 +24,7 @@ smooth-scrolling and minimap, like sublime editor
 ;;;***
 
 ;;;### (autoloads nil nil ("sublimity-attractive.el" "sublimity-map.el"
-;;;;;;  "sublimity-pkg.el" "sublimity-scroll.el") (22465 936 582825
+;;;;;;  "sublimity-pkg.el" "sublimity-scroll.el") (22615 58405 0
 ;;;;;;  0))
 
 ;;;***

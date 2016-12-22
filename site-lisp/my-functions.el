@@ -56,23 +56,33 @@
 ;; lot more languages than just PHP, since comma for separator is a really
 ;; common idiom, and it'd be easy to accept different delimiters.
 ;;;###autoload
-(defun wrap-args ()
-  "Split function arg/array contents to multiple lines in PHP code."
+(cl-defun wrap-args (&optional (start-delim "(") (end-delim ")"))
+  "Split comma-separated things inside a pair of delimiters to individual lines.
+
+By default it handles C-like function parameters, hence the name."
+
   (interactive)
-  (let ((close-paren-pos (search-forward ")" nil 't))
-        (open-paren-pos (search-backward "(" nil 't)))
+  (let ((close-delim-pos (search-forward end-delim nil 't))
+        (start-delim-pos (search-backward start-delim nil 't)))
 
-    (goto-char (- close-paren-pos 1))
+    (goto-char (- close-delim-pos 1))
     (insert "\n")
-    (setq close-paren-pos (+ close-paren-pos 1))
+    (setq close-delim-pos (+ close-delim-pos 1))
 
-    (goto-char (+ open-paren-pos 1))
+    (goto-char (+ start-delim-pos 1))
     (insert "\n")
 
-    (while (search-forward "," close-paren-pos 't)
+    (while (search-forward "," close-delim-pos 't)
       (insert "\n")
-      (setq close-paren-pos (+ close-paren-pos 1)))
-    (indent-region open-paren-pos (+ close-paren-pos 1))))
+      (setq close-delim-pos (+ close-delim-pos 1)))
+    (indent-region start-delim-pos (+ close-delim-pos 1))))
+
+(defun wrap-arr ()
+  "Split C-like arrays to one item per line."
+
+  (interactive)
+
+  (wrap-args "[" "]"))
 
 ;; Slightly tweaked from http://stackoverflow.com/a/25212377, to support moving
 ;; to a new directory.

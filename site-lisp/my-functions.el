@@ -52,9 +52,6 @@
           (add-to-list 'auto-mode-alist (cons pattern mode)))
         patterns))
 
-;; GRIPE If I just generalized a tiny bit, I could probably make this work in a
-;; lot more languages than just PHP, since comma for separator is a really
-;; common idiom, and it'd be easy to accept different delimiters.
 ;;;###autoload
 (cl-defun wrap-args (&optional (start-delim "(") (end-delim ")"))
   "Split comma-separated things inside a pair of delimiters to individual lines.

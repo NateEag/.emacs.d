@@ -100,7 +100,7 @@
   `("--no-pager" "--literal-pathspecs" "-c" "core.preloadindex=true"
     ,@(and (eq system-type 'windows-nt)
            (list "-c" "i18n.logOutputEncoding=UTF-8")))
-  "Global git arguments.
+  "Global Git arguments.
 
 The arguments set here are used every time the git executable is
 run as a subprocess.  They are placed right after the executable
@@ -114,11 +114,11 @@ know what you are doing.  And think very hard before adding
 something; it will be used every time Magit runs Git for any
 purpose."
   :package-version '(magit . "2.9.0")
-  :group 'magit
+  :group 'magit-git-arguments
   :group 'magit-process
   :type '(repeat string))
 
-(defcustom magit-git-debug nil
+(defvar magit-git-debug nil
   "Whether to enable additional reporting of git errors.
 
 Magit basically calls git for one of these two reasons: for
@@ -134,10 +134,7 @@ option is non-nil and git returns with a non-zero exit status,
 then at least its standard error is inserted into this buffer.
 
 This is only intended for debugging purposes.  Do not enable this
-permanently, that would negatively affect performance"
-  :group 'magit
-  :group 'magit-process
-  :type 'boolean)
+permanently, that would negatively affect performance.")
 
 (defcustom magit-ref-namespaces
   '(("^@$"                       magit-head nil)
@@ -164,7 +161,7 @@ font FONT.  If FORMATTER is non-nil it should be a function that
 takes two arguments, the full ref and the face.  It is supposed
 to return a propertized label that represents the ref."
   :package-version '(magit . "2.1.0")
-  :group 'magit-modes
+  :group 'magit-miscellanous
   :type '(repeat
           (list regexp
                 face

@@ -75,6 +75,7 @@
 
 (defgroup magit-status nil
   "Inspect and manipulate Git repositories."
+  :link '(info-link "(magit)Status Buffer")
   :group 'magit-modes)
 
 (defcustom magit-status-mode-hook nil
@@ -179,6 +180,7 @@ AUTHOR-WIDTH has to be an integer.  When the name of the author
 
 (defgroup magit-refs nil
   "Inspect and manipulate Git branches and tags."
+  :link '(info-link "(magit)References Buffer")
   :group 'magit-modes)
 
 (defcustom magit-refs-mode-hook nil
@@ -445,40 +447,47 @@ and change branch related variables."
 
 (defcustom magit-repository-directories nil
   "List of directories that are or contain Git repositories.
+
 Each element has the form (DIRECTORY . DEPTH) or, for backward
 compatibility, just DIRECTORY.  DIRECTORY has to be a directory
 or a directory file-name, a string.  DEPTH, an integer, specifies
 the maximum depth to look for Git repositories.  If it is 0, then
-only add DIRECTORY itself.  For elements that are strings, the
-value of option `magit-repository-directories-depth' specifies
-the depth."
+only add DIRECTORY itself.
+
+For backward compatibility reasons an element may be a string,
+instead of a cons-cell, in which case the value of the obsolete
+option `magit-repository-directories-depth' specifies the depth."
   :package-version '(magit . "2.8.0")
-  :group 'magit
+  :group 'magit-essentials
   :type '(repeat (choice (cons directory (integer :tag "Depth")) directory)))
 
-(defcustom magit-repository-directories-depth 3
+(defvar magit-repository-directories-depth 3
   "The maximum depth to look for Git repositories.
-This option is obsolete and only used for elements of the option
-`magit-repository-directories' (which see) that don't specify the
-depth directly."
-  :group 'magit
-  :type 'integer)
+This variable is obsolete and only used for elements of the
+option `magit-repository-directories' (which see) that don't
+specify the depth directly.")
 
-(unless (find-lisp-object-file-name 'magit-repolist-mode-hook 'defvar)
-  (add-hook 'magit-repolist-mode-hook 'hl-line-mode))
+;;;; Repolist Mode
+
+(defgroup magit-repolist nil
+  "List repositories in a buffer."
+  :link '(info-link "(magit)Repository List")
+  :group 'magit-modes)
+
 (defcustom magit-repolist-mode-hook '(hl-line-mode)
   "Hook run after entering Magit-Repolist mode."
   :package-version '(magit . "2.9.0")
-  :group 'magit-modes
+  :group 'magit-repolist
   :type 'hook
+  :get 'magit-hook-custom-get
   :options '(hl-line-mode))
 
 (defcustom magit-repolist-columns
   '(("Name"    25 magit-repolist-column-ident                  nil)
     ("Version" 25 magit-repolist-column-version                nil)
-    ("L<U"      3 magit-repolist-column-unpulled-from-upstream (:right-align t))
-    ("L>U"      3 magit-repolist-column-unpushed-to-upstream   (:right-align t))
-    ("Path"    99 magit-repolist-column-path))
+    ("L<U"      3 magit-repolist-column-unpulled-from-upstream ((:right-align t)))
+    ("L>U"      3 magit-repolist-column-unpushed-to-upstream   ((:right-align t)))
+    ("Path"    99 magit-repolist-column-path                   nil))
   "List of columns displayed by `magit-list-repositories'.
 
 Each element has the form (HEADER WIDTH FORMAT PROPS).
@@ -490,7 +499,7 @@ and with `default-directory' bound to the toplevel of its working
 tree.  It has to return a string to be inserted or nil.  PROPS is
 an alist that supports the keys `:right-align' and `:pad-right'."
   :package-version '(magit . "2.8.0")
-  :group 'magit-commands
+  :group 'magit-repolist
   :type `(repeat (list :tag "Column"
                        (string   :tag "Header Label")
                        (integer  :tag "Column Width")
@@ -1007,7 +1016,6 @@ Type \\[magit-reset] to reset HEAD to the commit at point.
 ;;;###autoload (autoload 'magit-show-refs-popup "magit" nil t)
 (magit-define-popup magit-show-refs-popup
   "Popup console for `magit-show-refs'."
-  'magit-refs
   :man-page "git-branch"
   :switches '((?m "Merged to HEAD"            "--merged")
               (?M "Merged to master"          "--merged=master")
@@ -1561,7 +1569,6 @@ Non-interactively DIRECTORY is (re-)initialized unconditionally."
 ;;;###autoload (autoload 'magit-branch-popup "magit" nil t)
 (magit-define-popup magit-branch-popup
   "Popup console for branch commands."
-  'magit-commands
   :man-page "git-branch"
   :actions '((?b "Checkout"              magit-checkout)
              (?n "Create new branch"     magit-branch)
@@ -2170,7 +2177,6 @@ When `never' (the default) then the variable is never set."
 ;;;###autoload (autoload 'magit-merge-popup "magit" nil t)
 (magit-define-popup magit-merge-popup
   "Popup console for merge commands."
-  'magit-commands
   :man-page "git-merge"
   :switches '((?f "Fast-forward only" "--ff-only")
               (?n "No fast-forward"   "--no-ff")
@@ -2321,7 +2327,6 @@ If no merge is in progress, do nothing."
 ;;;###autoload (autoload 'magit-reset-popup "magit" nil t)
 (magit-define-popup magit-reset-popup
   "Popup console for reset commands."
-  'magit-commands
   :man-page "git-reset"
   :actions '((?m "reset mixed  (HEAD and index)"         magit-reset-head)
              (?s "reset soft   (HEAD only)"              magit-reset-soft)
@@ -2568,7 +2573,6 @@ If there is only one worktree, then insert nothing."
 ;;;###autoload (autoload 'magit-tag-popup "magit" nil t)
 (magit-define-popup magit-tag-popup
   "Popup console for tag commands."
-  'magit-commands
   :man-page "git-tag"
   :switches '((?a "Annotate" "--annotate")
               (?s "Sign"     "--sign")
@@ -2635,7 +2639,6 @@ defaulting to the tag at point.
 ;;;###autoload (autoload 'magit-notes-popup "magit" nil t)
 (magit-define-popup magit-notes-popup
   "Popup console for notes commands."
-  'magit-commands
   :man-page "git-tag"
   :switches '("Switch for prune"
               (?n "Dry run"          "--dry-run"))
@@ -2852,7 +2855,7 @@ directory, while reading the FILENAME."
 (defvar magit-file-mode-lighter "")
 
 (define-minor-mode magit-file-mode
-  "Enable some Magit features in file-visiting buffers.
+  "Enable some Magit features in a file-visiting buffer.
 
 Currently this only adds the following key bindings.
 \n\\{magit-file-mode-map}"
@@ -2869,6 +2872,8 @@ Currently this only adds the following key bindings.
 (define-globalized-minor-mode global-magit-file-mode
   magit-file-mode magit-file-mode-turn-on
   :package-version '(magit . "2.2.0")
+  :link '(info-link "(magit)Minor Mode for Buffers Visiting Files")
+  :group 'magit-essentials
   :group 'magit-modes)
 
 ;;;; Blob Mode
@@ -2951,7 +2956,6 @@ Currently this only adds the following key bindings.
 ;;;###autoload (autoload 'magit-dispatch-popup "magit" nil t)
 (magit-define-popup magit-dispatch-popup
   "Popup console for dispatching other popups."
-  'magit-commands nil nil
   :actions '("Popup and dwim commands"
              (?A "Cherry-picking"  magit-cherry-pick-popup)
              (?b "Branching"       magit-branch-popup)
@@ -3035,7 +3039,6 @@ Currently this only adds the following key bindings.
 ;;;###autoload (autoload 'magit-run-popup "magit" nil t)
 (magit-define-popup magit-run-popup
   "Popup console for running raw Git commands."
-  'magit-commands nil nil
   :actions '((?! "Git Subcommand (in topdir)" magit-git-command-topdir)
              (?k "Gitk"                       magit-run-gitk)
              (?p "Git Subcommand (in pwd)"    magit-git-command)
@@ -3681,6 +3684,9 @@ use `magit-pre-refresh-hook', `magit-post-refresh-hook',
   If your hook function only has to be run once, when the buffer
   is first created, then `magit-status-mode-hook' instead.
 " "Magit 2.4.0")
+
+(make-obsolete-variable 'magit-repository-directories-depth
+                        'magit-repository-directories "Magit 2.8.0")
 
 (define-obsolete-function-alias 'global-magit-file-buffer-mode
   'global-magit-file-mode "Magit 2.3.0")

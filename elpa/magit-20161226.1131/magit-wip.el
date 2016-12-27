@@ -24,7 +24,7 @@
 ;;; Commentary:
 
 ;; This library defines tree global modes which automatically commit
-;; snapshots to branch specific work-in-progress refs before and after
+;; snapshots to branch-specific work-in-progress refs before and after
 ;; making changes, and two commands which can be used to do so on
 ;; demand.
 
@@ -37,7 +37,9 @@
 
 (defgroup magit-wip nil
   "Automatically commit to work-in-progress refs."
-  :group 'magit-extensions)
+  :link '(info-link "(magit)Wip Modes")
+  :group 'magit-modes
+  :group 'magit-essentials)
 
 (defcustom magit-wip-after-save-local-mode-lighter " sWip"
   "Lighter for Magit-Wip-After-Save-Local mode."

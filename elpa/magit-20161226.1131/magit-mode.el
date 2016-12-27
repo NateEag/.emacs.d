@@ -62,7 +62,13 @@
 (defcustom magit-mode-setup-hook
   '(magit-maybe-save-repository-buffers
     magit-set-buffer-margin)
-  "Hook run by `magit-mode-setup'."
+  "Hook run by `magit-mode-setup'.
+
+This is run right after displaying the buffer and right before
+generating or updating its content.  `magit-mode-hook' and other,
+more specific, `magit-mode-*-hook's on the other hand are run
+right before displaying the buffer.  Usually one of these hooks
+should be used instead of this one."
   :package-version '(magit . "2.3.0")
   :group 'magit-modes
   :type 'hook
@@ -79,7 +85,7 @@ To run a function with a particular buffer current, use
 `magit-refresh-buffer-hook' and use `derived-mode-p'
 inside your function."
   :package-version '(magit . "2.4.0")
-  :group 'magit-modes
+  :group 'magit-refresh
   :type 'hook
   :options '(magit-maybe-save-repository-buffers))
 
@@ -93,7 +99,7 @@ To run a function with a particular buffer current, use
 `magit-refresh-buffer-hook' and use `derived-mode-p'
 inside your function."
   :package-version '(magit . "2.4.0")
-  :group 'magit-modes
+  :group 'magit-refresh
   :type 'hook)
 
 (defcustom magit-display-buffer-function 'magit-display-buffer-traditional
@@ -103,7 +109,7 @@ All Magit buffers (buffers whose major-modes derive from
 `magit-mode') are displayed using `magit-display-buffer',
 which in turn uses the function specified here."
   :package-version '(magit . "2.3.0")
-  :group 'magit-modes
+  :group 'magit-buffers
   :type '(radio (function-item magit-display-buffer-traditional)
                 (function-item magit-display-buffer-same-window-except-diff-v1)
                 (function-item magit-display-buffer-fullframe-status-v1)
@@ -112,29 +118,27 @@ which in turn uses the function specified here."
                 (function-item display-buffer)
                 (function :tag "Function")))
 
-(unless (find-lisp-object-file-name 'magit-pre-display-buffer-hook 'defvar)
-  (add-hook 'magit-pre-display-buffer-hook 'magit-save-window-configuration))
 (defcustom magit-pre-display-buffer-hook '(magit-save-window-configuration)
   "Hook run by `magit-display-buffer' before displaying the buffer."
   :package-version '(magit . "2.3.0")
-  :group 'magit-modes
+  :group 'magit-buffers
   :type 'hook
+  :get 'magit-hook-custom-get
   :options '(magit-save-window-configuration))
 
-(unless (find-lisp-object-file-name 'magit-post-display-buffer-hook 'defvar)
-  (add-hook 'magit-post-display-buffer-hook 'magit-maybe-set-dedicated))
 (defcustom magit-post-display-buffer-hook '(magit-maybe-set-dedicated)
   "Hook run by `magit-display-buffer' after displaying the buffer."
   :package-version '(magit . "2.3.0")
-  :group 'magit-modes
+  :group 'magit-buffers
   :type 'hook
+  :get 'magit-hook-custom-get
   :options '(magit-maybe-set-dedicated))
 
 (defcustom magit-generate-buffer-name-function
   'magit-generate-buffer-name-default-function
   "The function used to generate the name for a Magit buffer."
   :package-version '(magit . "2.3.0")
-  :group 'magit-modes
+  :group 'magit-buffers
   :type '(radio (function-item magit-generate-buffer-name-default-function)
                 (function :tag "Function")))
 
@@ -167,19 +171,19 @@ If another `magit-generate-buffer-name-function' is used, then
 it may not respect this option, or on the contrary it may
 support additional %-sequences."
   :package-version '(magit . "2.3.0")
-  :group 'magit-modes
+  :group 'magit-buffers
   :type 'string)
 
 (defcustom magit-uniquify-buffer-names t
   "Whether to uniquify the names of Magit buffers."
   :package-version '(magit . "2.3.0")
-  :group 'magit-modes
+  :group 'magit-buffers
   :type 'boolean)
 
 (defcustom magit-bury-buffer-function 'magit-restore-window-configuration
   "The function used to bury or kill the current Magit buffer."
   :package-version '(magit . "2.3.0")
-  :group 'magit-modes
+  :group 'magit-buffers
   :type '(radio (function-item quit-window)
                 (function-item magit-mode-quit-window)
                 (function-item magit-restore-window-configuration)
@@ -188,25 +192,25 @@ support additional %-sequences."
 (defcustom magit-region-highlight-hook
   '(magit-section-update-region magit-diff-update-hunk-region)
   "Functions used to highlight the region.
+
 Each function is run with the current section as only argument
-until one of them returns non-nil.  When multiple sections are
-selected, then this hook does not run and the region is not
-displayed.  Otherwise fall back to regular region highlighting."
+until one of them returns non-nil.  If all functions return nil,
+then fall back to regular region highlighting."
   :package-version '(magit . "2.1.0")
-  :group 'magit-modes
+  :group 'magit-refresh
   :type 'hook
   :options '(magit-section-update-region magit-diff-update-hunk-region))
 
 (defcustom magit-refresh-verbose nil
   "Whether to revert Magit buffers verbosely."
   :package-version '(magit . "2.1.0")
-  :group 'magit-modes
+  :group 'magit-refresh
   :type 'boolean)
 
 (defcustom magit-refresh-buffer-hook nil
   "Normal hook for `magit-refresh-buffer' to run after refreshing."
   :package-version '(magit . "2.1.0")
-  :group 'magit-modes
+  :group 'magit-refresh
   :type 'hook)
 
 (defcustom magit-refresh-status-buffer t
@@ -219,19 +223,23 @@ current Magit buffer, which is always refreshed automatically.
 Only set this to nil after exhausting all other options to
 improve performance."
   :package-version '(magit . "2.4.0")
+  :group 'magit-refresh
   :group 'magit-status
   :type 'boolean)
 
 (defcustom magit-save-repository-buffers t
   "Whether to save file-visiting buffers when appropriate.
 
-If this is non-nil then all modified file-visiting buffers
-belonging to the current repository may be saved before running
-commands, before creating new Magit buffers, and before
-explicitly refreshing such buffers.  If this is `dontask' then
-this is done without user intervention, if it is t then the user
-has to confirm each save.  `dontask' is the recommended setting."
-  :group 'magit
+If non-nil then all modified file-visiting buffers belonging
+to the current repository may be saved before running Magit
+commands and before creating or refreshing Magit buffers.
+If `dontask' then this is done without user intervention, for
+any other non-nil value the user has to confirm each save.
+
+The default is t to avoid surprises, but `dontask' is the
+recommended value."
+  :group 'magit-essentials
+  :group 'magit-buffers
   :type '(choice (const :tag "Never" nil)
                  (const :tag "Ask" t)
                  (const :tag "Save without asking" dontask)))
@@ -280,7 +288,7 @@ because it doesn't cost much to offer this option we do so.
 However that might change.  If the existence of this option
 starts complicating other things, then it will be removed."
   :package-version '(magit . "2.3.0")
-  :group 'magit-modes
+  :group 'magit-miscellaneous
   :type 'boolean)
 
 ;;; Magit Mode
@@ -740,6 +748,10 @@ thinking a buffer belongs to a repo that it doesn't.")
     buffer))
 
 (defun magit-generate-buffer-name-default-function (mode &optional value)
+  "Generate buffer name for a MODE buffer in the current repository.
+The returned name is based on `magit-buffer-name-format' and
+takes `magit-uniquify-buffer-names' and VALUE, if non-nil, into
+account."
   (let ((m (substring (symbol-name mode) 0 -5))
         (v (and value (format "%s" (if (listp value) value (list value))))))
     (format-spec

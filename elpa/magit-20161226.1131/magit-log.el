@@ -52,17 +52,8 @@
 
 (defgroup magit-log nil
   "Inspect and manipulate Git history."
+  :link '(info-link "(magit)Logging")
   :group 'magit-modes)
-
-(defgroup magit-margin nil
-  "Information Magit displays in the margin.
-
-If you want to change the DATE-STYLE of all `magit-*-margin'
-options to the same value, you can do so by only customizing
-`magit-log-margin' *before* `magit' is loaded.  If you do so,
-then the respective value for the other options will default
-to what you have set for `magit-log-margin'."
-  :group 'magit-log)
 
 (defcustom magit-log-mode-hook nil
   "Hook run after entering Magit-Log mode."
@@ -72,8 +63,8 @@ to what you have set for `magit-log-margin'."
 (defcustom magit-log-arguments '("-n256" "--graph" "--decorate")
   "The log arguments used in `magit-log-mode' buffers."
   :package-version '(magit . "2.3.0")
+  :group 'magit-git-arguments
   :group 'magit-log
-  :group 'magit-commands
   :type '(repeat (string :tag "Argument")))
 
 (defcustom magit-log-remove-graph-args '("--follow" "--grep" "-G" "-S" "-L")
@@ -247,8 +238,7 @@ AUTHOR-WIDTH has to be an integer.  When the name of the author
 (defcustom magit-reflog-arguments '("-n256")
   "The log arguments used in `magit-reflog-mode' buffers."
   :package-version '(magit . "2.3.0")
-  :group 'magit-log
-  :group 'magit-commands
+  :group 'magit-git-arguments
   :type '(repeat (string :tag "Argument")))
 
 (defcustom magit-reflog-margin
@@ -329,6 +319,7 @@ the upstream isn't ahead of the current branch) show."
 (defcustom magit-log-section-arguments '("-n256" "--decorate")
   "The log arguments used in buffers that show other things besides logs."
   :package-version '(magit . "2.4.0")
+  :group 'magit-git-arguments
   :group 'magit-log
   :group 'magit-status
   :type '(repeat (string :tag "Argument")))
@@ -1081,9 +1072,15 @@ Do not add this to a hook variable."
   t)
 
 (defun magit-log-maybe-show-more-commits (section)
-  "Automatically insert more commit sections in a log.
-Only do so if `point' is on the \"show more\" section,
-and `magit-log-auto-more' is non-nil."
+  "When point is at the end of a log buffer, insert more commits.
+
+Log buffers end with a button \"Type + to show more history\".
+When the use of a section movement command puts point on that
+button, then automatically show more commits, without the user
+having to press \"+\".
+
+This function is called `magit-section-movement-hook',
+and exists mostly for backward compatibility reasons."
   (when (and (eq (magit-section-type section) 'longer)
              magit-log-auto-more)
     (magit-log-double-commit-limit)

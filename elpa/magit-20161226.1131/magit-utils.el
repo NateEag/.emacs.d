@@ -57,7 +57,7 @@ turn on `helm-mode' and leave this option set to the default
 value.  However, if you prefer to not use `helm-mode' but still
 want Magit to use Helm for completion, you can set this option to
 `helm--completing-read-default'."
-  :group 'magit
+  :group 'magit-essentials
   :type '(radio (function-item magit-builtin-completing-read)
                 (function-item magit-ido-completing-read)
                 (function-item helm--completing-read-default)
@@ -82,7 +82,7 @@ these commands do:
   `magit-branch-rename'
   `magit-tag'"
   :package-version '(magit . "2.9.0")
-  :group 'magit-commands
+  :group 'magit-miscellaneous
   :type '(list :convert-widget custom-hook-convert-widget)
   :options '(magit-branch
              magit-branch-and-checkout
@@ -196,7 +196,7 @@ Global settings:
   this mode is enabled then `safe-with-wip' has the same effect
   as adding all of these symbols individually."
   :package-version '(magit . "2.1.0")
-  :group 'magit
+  :group 'magit-essentials
   :group 'magit-commands
   :type `(choice (const :tag "Always require confirmation" nil)
                  (const :tag "Never require confirmation" t)
@@ -213,10 +213,10 @@ identifying actions, then `yes-or-no-p' is used for those,
 `y-or-no-p' for all others.  The list of actions is the same as
 for `magit-no-confirm' (which see)."
   :package-version '(magit . "2.9.0")
-  :group 'magit-commands
+  :group 'magit-miscellaneous
   :type `(choice (const :tag "Always ask \"yes or no\" questions" t)
                  (const :tag "Always ask \"y or n\" questions" nil)
-                 (set   :tag "Ask yes or no questions only for"
+                 (set   :tag "Ask \"yes or no\" questions only for"
                         ,@magit--confirm-actions)))
 
 (defcustom magit-no-message nil
@@ -239,13 +239,16 @@ some of these messages useless.
 Messages which can currently be suppressed using this option are:
 * \"Turning on magit-auto-revert-mode...\""
   :package-version '(magit . "2.8.0")
-  :group 'magit
+  :group 'magit-miscellaneous
   :type '(repeat string))
 
 (defcustom magit-ellipsis ?…
-  "Character used to abbreviate text."
+  "Character used to abbreviate text.
+
+Currently this is used to abbreviate author names in the margin
+and in process buffers to elide `magit-git-global-arguments'."
   :package-version '(magit . "2.1.0")
-  :group 'magit-modes
+  :group 'magit-miscellaneous
   :type 'character)
 
 (defcustom magit-update-other-window-delay 0.2
@@ -262,13 +265,13 @@ this option controls for how long.  For optimal experience you
 might have to adjust this delay and/or the keyboard repeat rate
 and delay of your graphical environment or operating system."
   :package-version '(magit . "2.3.0")
-  :group 'magit-modes
+  :group 'magit-miscellaneous
   :type 'number)
 
 (defcustom magit-view-git-manual-method 'info
   "How links to Git documentation are followed from Magit's Info manuals.
 
-`nil'   Follow the link to the node in the `gitman' Info manual
+`info'  Follow the link to the node in the `gitman' Info manual
         as usual.  Unfortunately that manual is not installed by
         default on some platforms, and when it is then the nodes
         look worse than the actual manpages.
@@ -277,8 +280,8 @@ and delay of your graphical environment or operating system."
 
 `woman' View the respective man-page using the `woman' package."
   :package-version '(magit . "2.9.0")
-  :group 'magit-modes
-  :type '(choice (const :tag "view info manual" nil)
+  :group 'magit-miscellaneous
+  :type '(choice (const :tag "view info manual" info)
                  (const :tag "view manpage using `man'" man)
                  (const :tag "view manpage using `woman'" woman)))
 
@@ -566,6 +569,8 @@ for an alternative."
 (advice-add 'whitespace-turn-on :before
             'whitespace-dont-turn-on-in-magit-mode)
 
+;;; Kludges for Custom
+
 (defun magit-custom-initialize-reset (symbol exp)
   "Initialize SYMBOL based on EXP.
 Set the symbol, using `set-default' (unlike
@@ -583,6 +588,32 @@ or (last of all) the value of EXP."
      (error
       (eval (let ((sv (get symbol 'saved-value)))
               (if sv (car sv) exp)))))))
+
+(defun magit-hook-custom-get (symbol)
+  (if (symbol-file symbol 'defvar)
+      (default-toplevel-value symbol)
+    ;;
+    ;; Called by `custom-initialize-reset' on behalf of `symbol's
+    ;; `defcustom', which is being evaluated for the first time to
+    ;; set the initial value, but there's already a default value,
+    ;; which most likely was stablished by one or more `add-hook'
+    ;; calls.
+    ;;
+    ;; We combine the `standard-value' and the current value, while
+    ;; preserving the order established by `:options', and return
+    ;; the result of that to be used as the "initial" default value.
+    ;;
+    (let ((standard (eval (car (get symbol 'standard-value))))
+          (current (default-toplevel-value symbol))
+          (value nil))
+      (dolist (fn (get symbol 'custom-options))
+        (when (or (memq fn standard)
+                  (memq fn current))
+          (push fn value)))
+      (dolist (fn current)
+        (unless (memq fn value)
+          (push fn value)))
+      (nreverse value))))
 
 ;;; Kludges for Info Manuals
 

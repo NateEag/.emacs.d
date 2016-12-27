@@ -34,7 +34,8 @@
 
 (defgroup magit-blame nil
   "Blame support for Magit."
-  :group 'magit-extensions)
+  :link '(info-link "(magit)Blaming")
+  :group 'magit-modes)
 
 (defcustom magit-blame-heading-format "%-20a %C %s"
   "Format string used for blame headings.
@@ -79,13 +80,12 @@ and then turned on again when turning off the latter."
   :group 'magit-blame
   :type '(choice (const :tag "No lighter" "") string))
 
-(unless (find-lisp-object-file-name 'magit-blame-goto-chunk-hook 'defvar)
-  (add-hook 'magit-blame-goto-chunk-hook 'magit-blame-maybe-update-revision-buffer))
 (defcustom magit-blame-goto-chunk-hook '(magit-blame-maybe-update-revision-buffer)
   "Hook run by `magit-blame-next-chunk' and `magit-blame-previous-chunk'."
   :package-version '(magit . "2.1.0")
   :group 'magit-blame
   :type 'hook
+  :get 'magit-hook-custom-get
   :options '(magit-blame-maybe-update-revision-buffer))
 
 (defface magit-blame-heading
@@ -100,22 +100,22 @@ and then turned on again when turning off the latter."
 
 (defface magit-blame-summary
   '((t :inherit magit-blame-heading))
-  "Face used for commit summary in blame headings."
+  "Face for commit summary in blame headings."
   :group 'magit-faces)
 
 (defface magit-blame-hash
   '((t :inherit magit-blame-heading))
-  "Face used for commit hash in blame headings."
+  "Face for commit hash in blame headings."
   :group 'magit-faces)
 
 (defface magit-blame-name
   '((t :inherit magit-blame-heading))
-  "Face used for author and committer names in blame headings."
+  "Face for author and committer names in blame headings."
   :group 'magit-faces)
 
 (defface magit-blame-date
   '((t :inherit magit-blame-heading))
-  "Face used for dates in blame headings."
+  "Face for dates in blame headings."
   :group 'magit-faces)
 
 ;;; Code
@@ -200,7 +200,6 @@ and then turned on again when turning off the latter."
 ;;;###autoload (autoload 'magit-blame-popup "magit-blame" nil t)
 (magit-define-popup magit-blame-popup
   "Popup console for blame commands."
-  'magit-commands
   :man-page "git-blame"
   :switches '((?w "Ignore whitespace" "-w")
               (?r "Do not treat root commits as boundaries" "--root"))

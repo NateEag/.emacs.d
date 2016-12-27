@@ -1,4 +1,4 @@
-(define-package "solarized-theme" "20161203.301" "The Solarized color theme, ported to Emacs."
+(define-package "solarized-theme" "20161222.109" "The Solarized color theme, ported to Emacs."
   '((emacs "24.1")
     (cl-lib "0.5")
     (dash "2.6.0")))

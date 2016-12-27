@@ -4,7 +4,7 @@
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
 ;;;### (autoloads nil "string-inflection" "string-inflection.el"
-;;;;;;  (22609 21820 0 0))
+;;;;;;  (22626 32078 0 0))
 ;;; Generated autoloads from string-inflection.el
 
 (autoload 'string-inflection-ruby-style-cycle "string-inflection" "\

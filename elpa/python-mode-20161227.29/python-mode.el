@@ -134,6 +134,9 @@ Results arrive in output buffer, which is not in comint-mode"
   :tag "py-fast-process-p"
   :group 'python-mode)
 
+(defvar py-fast-output-buffer "*Py-Fast-Output-Buffer*"
+  "Default buffer-name for fast-processes")
+
 (defvar py-this-result nil
   "Internally used, store return-value")
 
@@ -2050,12 +2053,20 @@ See also command `toggle-py-underscore-word-syntax-p' ")
 (defvar py-autofill-timer nil)
 (defvar py-fill-column-orig fill-column)
 
+;; defvared value isn't updated maybe
 (defvar python-mode-message-string
   (if (or (string= "python-mode.el" (buffer-name))
 	  (ignore-errors (string-match "python-mode.el" (py--buffer-filename-remote-maybe))))
       "python-mode.el"
-    "python-components-mode.el")
+    "python-components-mode")
   "Internally used. Reports the python-mode branch")
+
+;; defvared value isn't updated maybe
+(setq python-mode-message-string
+  (if (or (string= "python-mode.el" (buffer-name))
+	  (ignore-errors (string-match "python-mode.el" (py--buffer-filename-remote-maybe))))
+      "python-mode.el"
+    "python-components-mode"))
 
 (unless (fboundp 'string-to-syntax)
   ;; Skip's XE workaround
@@ -4772,6 +4783,7 @@ Returns beginning of `block-or-clause' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-extended-block-or-clause-re 'py-extended-block-or-clause-re (called-interactively-p 'any)))
 
+;;;###autoload
 (defun py-backward-class (&optional indent decorator bol)
   "Go to beginning of `class'.
 
@@ -4788,6 +4800,7 @@ Returns beginning of `clause' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-extended-block-or-clause-re 'py-extended-block-or-clause-re (called-interactively-p 'any)))
 
+;;;###autoload
 (defun py-backward-def (&optional indent decorator bol)
   "Go to beginning of `def'.
 
@@ -4796,6 +4809,7 @@ Returns beginning of `def' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-def-re 'py-def-re (called-interactively-p 'any) decorator bol))
 
+;;;###autoload
 (defun py-backward-def-or-class (&optional indent decorator bol)
   "Go to beginning of `def-or-class'.
 
@@ -4876,6 +4890,7 @@ Returns beginning of `block-or-clause' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-extended-block-or-clause-re 'py-extended-block-or-clause-re (called-interactively-p 'any) nil t))
 
+;;;###autoload
 (defun py-backward-class-bol (&optional indent decorator)
   "Go to beginning of `class', go to BOL.
 
@@ -4892,6 +4907,7 @@ Returns beginning of `clause' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-extended-block-or-clause-re 'py-extended-block-or-clause-re (called-interactively-p 'any) nil t))
 
+;;;###autoload
 (defun py-backward-def-bol (&optional indent decorator)
   "Go to beginning of `def', go to BOL.
 
@@ -4900,6 +4916,7 @@ Returns beginning of `def' if successful, nil otherwise"
   (interactive)
   (py--backward-prepare indent 'py-def-re 'py-extended-block-or-clause-re (called-interactively-p 'any) decorator t))
 
+;;;###autoload
 (defun py-backward-def-or-class-bol (&optional indent decorator)
   "Go to beginning of `def-or-class', go to BOL.
 
@@ -5013,6 +5030,7 @@ See also `py-down-block-or-clause': down from current definition to next beginni
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
+;;;###autoload
 (defun py-forward-class (&optional decorator bol)
   "Go to end of class.
 
@@ -5059,6 +5077,7 @@ See also `py-down-clause': down from current definition to next beginning of cla
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
+;;;###autoload
 (defun py-forward-def-or-class (&optional decorator bol)
   "Go to end of def-or-class.
 
@@ -5082,6 +5101,7 @@ See also `py-down-def-or-class': down from current definition to next beginning 
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
+;;;###autoload
 (defun py-forward-def (&optional decorator bol)
   "Go to end of def.
 
@@ -7517,20 +7537,22 @@ Internal use"
 	  (py--manage-windows-split py-exception-buffer)))
       (display-buffer output-buffer t))))
 
-(defun py--shell-manage-windows (output-buffer &optional exception-buffer)
+(defun py--shell-manage-windows (output-buffer &optional exception-buffer split switch)
   "Adapt or restore window configuration. Return nil "
   (let* ((py-exception-buffer (or exception-buffer (and py-exception-buffer (buffer-live-p py-exception-buffer) py-exception-buffer)))
 	 (output-buffer (or output-buffer py-buffer-name))
 	 (old-window-list (window-list))
-	 (number-of-windows (length old-window-list)))
+	 (number-of-windows (length old-window-list))
+	 (split (or split py-split-window-on-execute))
+	 (switch (or switch py-switch-buffers-on-execute-p)))
     ;; (output-buffer-displayed-p)
     (cond
      (py-keep-windows-configuration
       (py-restore-window-configuration)
       (set-buffer output-buffer)
       (goto-char (point-max)))
-     ((and (eq py-split-window-on-execute 'always)
-	   py-switch-buffers-on-execute-p)
+     ((and (eq split 'always)
+	   switch)
       (if (member (get-buffer-window output-buffer)(window-list))
 	  ;; (delete-window (get-buffer-window output-buffer))
 	  (select-window (get-buffer-window output-buffer))
@@ -7541,16 +7563,16 @@ Internal use"
 	  (switch-to-buffer output-buffer))
 	(display-buffer py-exception-buffer)))
      ((and
-       (eq py-split-window-on-execute 'always)
-       (not py-switch-buffers-on-execute-p))
+       (eq split 'always)
+       (not switch))
       (if (member (get-buffer-window output-buffer)(window-list))
 	  (select-window (get-buffer-window output-buffer))
 	(py--manage-windows-split py-exception-buffer)
 	(display-buffer output-buffer)
 	(pop-to-buffer py-exception-buffer)))
      ((and
-       (eq py-split-window-on-execute 'just-two)
-       py-switch-buffers-on-execute-p)
+       (eq split 'just-two)
+       switch)
       (switch-to-buffer (current-buffer))
       (delete-other-windows)
       ;; (sit-for py-new-shell-delay)
@@ -7560,8 +7582,8 @@ Internal use"
       (set-buffer output-buffer)
       (switch-to-buffer (current-buffer)))
      ((and
-       (eq py-split-window-on-execute 'just-two)
-       (not py-switch-buffers-on-execute-p))
+       (eq split 'just-two)
+       (not switch))
       (switch-to-buffer py-exception-buffer)
       (delete-other-windows)
       (unless
@@ -7574,15 +7596,13 @@ Internal use"
 	(goto-char (point-max))
 	(other-window 1)))
      ((and
-       py-split-window-on-execute
-       (not py-switch-buffers-on-execute-p))
+       split
+       (not switch))
       ;; https://bugs.launchpad.net/python-mode/+bug/1478122
       ;; > If the shell is visible in any of the windows it  should re-use that window
-      ;; > I did double check and py-keep-window-configuration is nil and py-split-window-on-execute is t.
+      ;; > I did double check and py-keep-window-configuration is nil and split is t.
       (py--split-t-not-switch-wm output-buffer number-of-windows))
-     ((and
-       py-split-window-on-execute
-       py-switch-buffers-on-execute-p)
+     ((and split switch)
       (unless
 	  (member (get-buffer-window output-buffer)(window-list))
 	(py--manage-windows-split py-exception-buffer))
@@ -7596,7 +7616,7 @@ Internal use"
 	(goto-char (point-max))
 	;; (other-window 1)
 	)
-     ((not py-switch-buffers-on-execute-p)
+     ((not switch)
       (let (pop-up-windows)
 	(py-restore-window-configuration))))))
 
@@ -7709,16 +7729,21 @@ Receives a buffer-name as argument"
 	 (mapconcat 'identity py-python3-command-args " "))
 	(t (mapconcat 'identity py-python-command-args " "))))
 
-(defun py-shell (&optional argprompt dedicated shell buffer-name fast exception-buffer)
+;;;###autoload 
+(defun py-shell (&optional argprompt dedicated shell buffer fast exception-buffer split switch)
   "Start an interactive Python interpreter in another window.
   Interactively, \\[universal-argument] prompts for a new buffer-name.
   \\[universal-argument] 2 prompts for `py-python-command-args'.
   If `default-directory' is a remote file name, it is also prompted
   to change if called with a prefix arg.
 
+  Optional string SHELL overrides default `py-shell-name'.
   Returns py-shell's buffer-name.
-  Optional string PYSHELLNAME overrides default `py-shell-name'.
   BUFFER allows specifying a name, the Python process is connected to
+  FAST process not in comint-mode buffer
+  EXCEPTION-BUFFER point to error
+  SPLIT see var `py-split-window-on-execute'
+  SWITCH see var `py-switch-buffers-on-execute-p'
   "
   (interactive "P")
   ;; done by py-shell-mode
@@ -7731,7 +7756,7 @@ Receives a buffer-name as argument"
 	 (args (py--provide-command-args fast argprompt))
 
 	 (py-use-local-default (py--determine-local-default))
-	 (py-buffer-name (or buffer-name (py--guess-buffer-name argprompt dedicated)))
+	 (py-buffer-name (or buffer (py--guess-buffer-name argprompt dedicated)))
 	 (py-buffer-name (or py-buffer-name (py--choose-buffer-name nil dedicated fast)))
 	 (executable (cond (py-shell-name)
 			   (py-buffer-name
@@ -7753,8 +7778,8 @@ Receives a buffer-name as argument"
 	(py--create-new-shell executable args py-buffer-name exception-buffer))
       (when (or (called-interactively-p 'any)
 		(eq 1 argprompt)
-		py-switch-buffers-on-execute-p)
-	(py--shell-manage-windows py-buffer-name py-exception-buffer)))
+		(or switch py-switch-buffers-on-execute-p))
+	(py--shell-manage-windows py-buffer-name py-exception-buffer split switch)))
     py-buffer-name))
 
 (defun py-shell-get-process (&optional argprompt dedicated shell buffer)
@@ -7792,10 +7817,10 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
   (unless py-debug-p
     (when tempfile (py-delete-temporary tempfile tempbuf))))
 
-(defun py--execute-base (&optional start end shell filename proc file wholebuf fast dedicated)
+(defun py--execute-base (&optional start end shell filename proc file wholebuf fast dedicated split switch)
   "Update variables. "
   (setq py-error nil)
-  (let* ((py-exception-buffer (or py-exception-buffer (current-buffer)))
+  (let* ((exception-buffer (current-buffer))
 	 (start (or start (and (use-region-p) (region-beginning)) (point-min)))
 	 (end (or end (and (use-region-p) (region-end)) (point-max)))
 	 (strg-raw (if py-if-name-main-permission-p
@@ -7832,11 +7857,11 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 		       (py--buffer-filename-remote-maybe)))
 	 (py-orig-buffer-or-file (or filename (current-buffer)))
 	 (proc (or proc (get-buffer-process buffer)
-		   (get-buffer-process (py-shell nil dedicated shell buffer)))))
+		   (get-buffer-process (py-shell nil dedicated shell buffer fast exception-buffer split switch)))))
     (setq py-buffer-name buffer)
     (py--execute-base-intern strg filename proc file wholebuf buffer origline execute-directory start end shell fast)
-    (when (or py-split-window-on-execute py-switch-buffers-on-execute-p)
-      (py--shell-manage-windows buffer py-exception-buffer))))
+    (when (or split py-split-window-on-execute py-switch-buffers-on-execute-p)
+      (py--shell-manage-windows buffer exception-buffer split switch))))
 
 (defun py--send-to-fast-process (strg proc output-buffer)
   "Called inside of `py--execute-base-intern' "
@@ -8623,7 +8648,7 @@ completions on the current context."
 	    py-shell-module-completion-code)))
   (py--shell-do-completion-at-point proc imports word exception-buffer code)))
 
-(defun py--complete-prepare (&optional shell debug beg end word fast-complete)
+(defun py--complete-prepare (&optional shell beg end word fast-complete)
   (let* ((exception-buffer (current-buffer))
          (pos (copy-marker (point)))
 	 (pps (parse-partial-sexp (or (ignore-errors (overlay-end comint-last-prompt-overlay))(line-beginning-position)) (point)))
@@ -8651,7 +8676,7 @@ completions on the current context."
 			 (list (replace-regexp-in-string "\n" "" (shell-command-to-string (concat "find / -maxdepth 1 -name " ausdruck))))))
          (imports (py-find-imports))
          py-fontify-shell-buffer-p erg)
-    (cond (fast-complete (py--fast-complete-base shell pos beg end word imports debug exception-buffer))
+    (cond (fast-complete (py--fast-complete-base shell pos word imports exception-buffer))
 	  ((and in-string filenames)
 	   (when (setq erg (try-completion (concat "/" word) filenames))
 	     (delete-region beg end)
@@ -8659,7 +8684,7 @@ completions on the current context."
 	  (t (py--complete-base shell word imports exception-buffer)))
     nil))
 
-(defun py-shell-complete (&optional shell debug beg end word)
+(defun py-shell-complete (&optional shell beg end word)
   "Complete word before point, if any. "
   (interactive)
   (save-excursion
@@ -8667,8 +8692,7 @@ completions on the current context."
 	 (py-kill-buffer-unconditional "*Python Completions*")))
   (setq py-last-window-configuration
         (current-window-configuration))
-  (when debug (setq py-shell-complete-debug nil))
-  (py--complete-prepare shell debug beg end word nil))
+  (py--complete-prepare shell beg end word nil))
 
 (defun py-indent-or-complete ()
   "Complete or indent depending on the context.
@@ -10842,297 +10866,268 @@ of the first definition found."
 
 ;; python-components-named-shells
 
-
-(defun ipython (&optional argprompt)
+;;;###autoload 
+(defun ipython (&optional argprompt buffer fast exception-buffer split switch)
   "Start an IPython interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (py-shell argprompt nil "ipython"))
+  (py-shell argprompt nil "ipython" buffer fast exception-buffer split switch))
 
-(defun ipython2.7 (&optional argprompt)
+;;;###autoload 
+(defun ipython2.7 (&optional argprompt buffer fast exception-buffer split switch)
   "Start an IPython2.7 interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (py-shell argprompt nil "ipython2.7"))
+  (py-shell argprompt nil "ipython2.7" buffer fast exception-buffer split switch))
 
-(defun ipython3 (&optional argprompt)
+;;;###autoload 
+(defun ipython3 (&optional argprompt buffer fast exception-buffer split switch)
   "Start an IPython3 interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (py-shell argprompt nil "ipython3"))
+  (py-shell argprompt nil "ipython3" buffer fast exception-buffer split switch))
 
-(defun jython (&optional argprompt)
+;;;###autoload 
+(defun jython (&optional argprompt buffer fast exception-buffer split switch)
   "Start an Jython interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (py-shell argprompt nil "jython"))
+  (py-shell argprompt nil "jython" buffer fast exception-buffer split switch))
 
-(defun python (&optional argprompt)
+;;;###autoload 
+(defun python (&optional argprompt buffer fast exception-buffer split switch)
   "Start an Python interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (py-shell argprompt nil "python"))
+  (py-shell argprompt nil "python" buffer fast exception-buffer split switch))
 
-(defun python2 (&optional argprompt)
+;;;###autoload 
+(defun python2 (&optional argprompt buffer fast exception-buffer split switch)
   "Start an Python2 interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (py-shell argprompt nil "python2"))
+  (py-shell argprompt nil "python2" buffer fast exception-buffer split switch))
 
-(defun python3 (&optional argprompt)
+;;;###autoload 
+(defun python3 (&optional argprompt buffer fast exception-buffer split switch)
   "Start an Python3 interpreter.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
-  (py-shell argprompt nil "python3"))
+  (py-shell argprompt nil "python3" buffer fast exception-buffer split switch))
 
 ;; dedicated
-(defun ipython-dedicated (&optional argprompt switch)
+(defun ipython-dedicated (&optional argprompt buffer fast exception-buffer split switch)
   "Start an unique IPython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-dedicated-process-p t))
-    (py-shell argprompt t "ipython")))
+  (py-shell argprompt t "ipython" buffer fast exception-buffer split switch))
 
-(defun ipython2.7-dedicated (&optional argprompt switch)
+(defun ipython2.7-dedicated (&optional argprompt buffer fast exception-buffer split switch)
   "Start an unique IPython2.7 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-dedicated-process-p t))
-    (py-shell argprompt t "ipython2.7")))
+  (py-shell argprompt t "ipython2.7" buffer fast exception-buffer split switch))
 
-(defun ipython3-dedicated (&optional argprompt switch)
+(defun ipython3-dedicated (&optional argprompt buffer fast exception-buffer split switch)
   "Start an unique IPython3 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-dedicated-process-p t))
-    (py-shell argprompt t "ipython3")))
+  (py-shell argprompt t "ipython3" buffer fast exception-buffer split switch))
 
-(defun jython-dedicated (&optional argprompt switch)
+(defun jython-dedicated (&optional argprompt buffer fast exception-buffer split switch)
   "Start an unique Jython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-dedicated-process-p t))
-    (py-shell argprompt t "jython")))
+  (py-shell argprompt t "jython" buffer fast exception-buffer split switch))
 
-(defun python-dedicated (&optional argprompt switch)
+(defun python-dedicated (&optional argprompt buffer fast exception-buffer split switch)
   "Start an unique Python interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-dedicated-process-p t))
-    (py-shell argprompt t "python")))
+  (py-shell argprompt t "python" buffer fast exception-buffer split switch))
 
-(defun python2-dedicated (&optional argprompt switch)
+(defun python2-dedicated (&optional argprompt buffer fast exception-buffer split switch)
   "Start an unique Python2 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-dedicated-process-p t))
-    (py-shell argprompt t "python2")))
+  (py-shell argprompt t "python2" buffer fast exception-buffer split switch))
 
-(defun python3-dedicated (&optional argprompt switch)
+(defun python3-dedicated (&optional argprompt buffer fast exception-buffer split switch)
   "Start an unique Python3 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-dedicated-process-p t))
-    (py-shell argprompt t "python3")))
+  (py-shell argprompt t "python3" buffer fast exception-buffer split switch))
 
 ;; switch
-(defun ipython-switch (&optional argprompt)
+(defun ipython-switch (&optional argprompt buffer fast exception-buffer split)
   "Switch to IPython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-switch-buffers-on-execute-p t))
-    (py-shell argprompt nil "ipython")))
+  (py-shell argprompt nil "ipython" buffer fast exception-buffer split t))
 
-(defun ipython2.7-switch (&optional argprompt)
+(defun ipython2.7-switch (&optional argprompt buffer fast exception-buffer split)
   "Switch to IPython2.7 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-switch-buffers-on-execute-p t))
-    (py-shell argprompt nil "ipython2.7")))
+  (py-shell argprompt nil "ipython2.7" buffer fast exception-buffer split t))
 
-(defun ipython3-switch (&optional argprompt)
+(defun ipython3-switch (&optional argprompt buffer fast exception-buffer split)
   "Switch to IPython3 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-switch-buffers-on-execute-p t))
-    (py-shell argprompt nil "ipython3")))
+  (py-shell argprompt nil "ipython3" buffer fast exception-buffer split t))
 
-(defun jython-switch (&optional argprompt)
+(defun jython-switch (&optional argprompt buffer fast exception-buffer split)
   "Switch to Jython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-switch-buffers-on-execute-p t))
-    (py-shell argprompt nil "jython")))
+  (py-shell argprompt nil "jython" buffer fast exception-buffer split t))
 
-(defun python-switch (&optional argprompt)
+(defun python-switch (&optional argprompt buffer fast exception-buffer split)
   "Switch to Python interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-switch-buffers-on-execute-p t))
-    (py-shell argprompt nil "python")))
+  (py-shell argprompt nil "python" buffer fast exception-buffer split t))
 
-(defun python2-switch (&optional argprompt)
+(defun python2-switch (&optional argprompt buffer fast exception-buffer split)
   "Switch to Python2 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-switch-buffers-on-execute-p t))
-    (py-shell argprompt nil "python2")))
+  (py-shell argprompt nil "python2" buffer fast exception-buffer split t))
 
-(defun python3-switch (&optional argprompt)
+(defun python3-switch (&optional argprompt buffer fast exception-buffer split)
   "Switch to Python3 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-switch-buffers-on-execute-p t))
-    (py-shell argprompt nil "python3")))
+  (py-shell argprompt nil "python3" buffer fast exception-buffer split t))
 
 ;; no-switch
-(defun ipython-no-switch (&optional argprompt)
+(defun ipython-no-switch (&optional argprompt buffer fast exception-buffer split)
   "Open an IPython interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let (py-switch-buffers-on-execute-p)
-    (py-shell argprompt nil "ipython")))
+  (py-shell argprompt nil "ipython" buffer fast exception-buffer split))
 
-(defun ipython2.7-no-switch (&optional argprompt)
+(defun ipython2.7-no-switch (&optional argprompt buffer fast exception-buffer split)
   "Open an IPython2.7 interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let (py-switch-buffers-on-execute-p)
-    (py-shell argprompt nil "ipython2.7")))
+  (py-shell argprompt nil "ipython2.7" buffer fast exception-buffer split))
 
-(defun ipython3-no-switch (&optional argprompt)
+(defun ipython3-no-switch (&optional argprompt buffer fast exception-buffer split)
   "Open an IPython3 interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let (py-switch-buffers-on-execute-p)
-    (py-shell argprompt nil "ipython3")))
+  (py-shell argprompt nil "ipython3" buffer fast exception-buffer split))
 
-(defun jython-no-switch (&optional argprompt)
+(defun jython-no-switch (&optional argprompt buffer fast exception-buffer split)
   "Open an Jython interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let (py-switch-buffers-on-execute-p)
-    (py-shell argprompt nil "jython")))
+  (py-shell argprompt nil "jython" buffer fast exception-buffer split))
 
-(defun python-no-switch (&optional argprompt)
+(defun python-no-switch (&optional argprompt buffer fast exception-buffer split)
   "Open an Python interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let (py-switch-buffers-on-execute-p)
-    (py-shell argprompt nil "python")))
+  (py-shell argprompt nil "python" buffer fast exception-buffer split))
 
-(defun python2-no-switch (&optional argprompt)
+(defun python2-no-switch (&optional argprompt buffer fast exception-buffer split)
   "Open an Python2 interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let (py-switch-buffers-on-execute-p)
-    (py-shell argprompt nil "python2")))
+  (py-shell argprompt nil "python2" buffer fast exception-buffer split))
 
-(defun python3-no-switch (&optional argprompt)
+(defun python3-no-switch (&optional argprompt buffer fast exception-buffer split)
   "Open an Python3 interpreter in another window, but do not switch to it.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let (py-switch-buffers-on-execute-p)
-    (py-shell argprompt nil "python3")))
+  (py-shell argprompt nil "python3" buffer fast exception-buffer split))
 
 ;; dedicated switch
 (defalias 'ipython-dedicated-switch 'ipython-switch-dedicated)
-(defun ipython-switch-dedicated (&optional argprompt)
+(defun ipython-switch-dedicated (&optional argprompt buffer fast exception-buffer split)
   "Switch to an unique IPython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-dedicated-process-p t)
-        (py-switch-buffers-on-execute-p t))
-    (py-shell argprompt t "ipython")))
+  (py-shell argprompt t "ipython" buffer fast exception-buffer split t))
 
 (defalias 'ipython2.7-dedicated-switch 'ipython2.7-switch-dedicated)
-(defun ipython2.7-switch-dedicated (&optional argprompt)
+(defun ipython2.7-switch-dedicated (&optional argprompt buffer fast exception-buffer split)
   "Switch to an unique IPython2.7 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-dedicated-process-p t)
-        (py-switch-buffers-on-execute-p t))
-    (py-shell argprompt t "ipython2.7")))
+  (py-shell argprompt t "ipython2.7" buffer fast exception-buffer split t))
 
 (defalias 'ipython3-dedicated-switch 'ipython3-switch-dedicated)
-(defun ipython3-switch-dedicated (&optional argprompt)
+(defun ipython3-switch-dedicated (&optional argprompt buffer fast exception-buffer split)
   "Switch to an unique IPython3 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-dedicated-process-p t)
-        (py-switch-buffers-on-execute-p t))
-    (py-shell argprompt t "ipython3")))
+  (py-shell argprompt t "ipython3" buffer fast exception-buffer split t))
 
 (defalias 'jython-dedicated-switch 'jython-switch-dedicated)
-(defun jython-switch-dedicated (&optional argprompt)
+(defun jython-switch-dedicated (&optional argprompt buffer fast exception-buffer split)
   "Switch to an unique Jython interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-dedicated-process-p t)
-        (py-switch-buffers-on-execute-p t))
-    (py-shell argprompt t "jython")))
+  (py-shell argprompt t "jython" buffer fast exception-buffer split t))
 
 (defalias 'python-dedicated-switch 'python-switch-dedicated)
-(defun python-switch-dedicated (&optional argprompt)
+(defun python-switch-dedicated (&optional argprompt buffer fast exception-buffer split)
   "Switch to an unique Python interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-dedicated-process-p t)
-        (py-switch-buffers-on-execute-p t))
-    (py-shell argprompt t "python")))
+  (py-shell argprompt t "python" buffer fast exception-buffer split t))
 
 (defalias 'python2-dedicated-switch 'python2-switch-dedicated)
-(defun python2-switch-dedicated (&optional argprompt)
+(defun python2-switch-dedicated (&optional argprompt buffer fast exception-buffer split)
   "Switch to an unique Python2 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-dedicated-process-p t)
-        (py-switch-buffers-on-execute-p t))
-    (py-shell argprompt t "python2")))
+  (py-shell argprompt t "python2" buffer fast exception-buffer split t))
 
 (defalias 'python3-dedicated-switch 'python3-switch-dedicated)
-(defun python3-switch-dedicated (&optional argprompt)
+(defun python3-switch-dedicated (&optional argprompt buffer fast exception-buffer split)
   "Switch to an unique Python3 interpreter in another window.
 
 Optional \\[universal-argument] prompts for path to the interpreter. "
   (interactive "p")
- (let ((py-dedicated-process-p t)
-        (py-switch-buffers-on-execute-p t))
-    (py-shell argprompt t "python3")))
+  (py-shell argprompt t "python3" buffer fast exception-buffer split t))
 
 ;; python-components-electric
 (defun py-electric-colon (arg)
@@ -12782,7 +12777,7 @@ Expects a quoted symbol 'REGEXP"
 	   (p-command (car (read-from-string (concat "py--beginning-of-" name "-p"))))
 	   (backward-command (car (read-from-string (concat "py-backward-" name))))
 	   (up-command (car (read-from-string (concat "py-up-" name))))
-	   (down-command (car (read-from-string (concat "py-down-" name))))
+	   ;; (down-command (car (read-from-string (concat "py-down-" name))))
            (forward-command (car (read-from-string (concat "py-forward-" name))))
            erg done start)
       (if (funcall p-command)
@@ -13022,491 +13017,491 @@ Return position if minor-block found, nil otherwise "
 ;; python-extended-executes
 
 
-(defun py-execute-block (&optional shell dedicated switch beg end fast)
+(defun py-execute-block (&optional shell dedicated fast split switch proc wholebuf)
   "Send block at point to  interpreter. "
   (interactive)
-  (py--execute-prepare 'block shell dedicated switch beg end nil fast))
+  (py--execute-prepare 'block shell dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-block-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-switch (&optional shell dedicated fast split proc wholebuf)
   "Send block at point to  interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'block shell dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'block shell dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-no-switch (&optional shell dedicated fast split  proc wholebuf)
   "Send block at point to  interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'block shell dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'block shell dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-block-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-dedicated (&optional shell fast split switch proc wholebuf)
   "Send block at point to  unique interpreter. "
   (interactive)
-  (py--execute-prepare 'block shell t switch beg end nil fast))
+  (py--execute-prepare 'block shell t switch nil fast proc wholebuf split))
 
-(defun py-execute-block-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-dedicated-switch (&optional shell  fast split  proc wholebuf)
   "Send block at point to  unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'block shell t 'switch beg end nil fast))
+  (py--execute-prepare 'block shell t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-ipython (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-ipython (&optional dedicated fast split switch proc wholebuf)
   "Send block at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'block 'ipython dedicated switch beg end nil fast))
+  (py--execute-prepare 'block 'ipython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-block-ipython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-ipython-switch (&optional dedicated fast split proc wholebuf)
   "Send block at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'block 'ipython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'block 'ipython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-ipython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-ipython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send block at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'block 'ipython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'block 'ipython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-block-ipython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-ipython-dedicated (&optional fast split switch proc wholebuf)
   "Send block at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'block 'ipython t switch beg end nil fast))
+  (py--execute-prepare 'block 'ipython t switch nil fast proc wholebuf split))
 
-(defun py-execute-block-ipython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-ipython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send block at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'block 'ipython t 'switch beg end nil fast))
+  (py--execute-prepare 'block 'ipython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-ipython2.7 (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-ipython2.7 (&optional dedicated fast split switch proc wholebuf)
   "Send block at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'block 'ipython2.7 dedicated switch beg end nil fast))
+  (py--execute-prepare 'block 'ipython2.7 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-block-ipython2.7-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-ipython2.7-switch (&optional dedicated fast split proc wholebuf)
   "Send block at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'block 'ipython2.7 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'block 'ipython2.7 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-ipython2.7-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-ipython2.7-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send block at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'block 'ipython2.7 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'block 'ipython2.7 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-block-ipython2.7-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-ipython2.7-dedicated (&optional fast split switch proc wholebuf)
   "Send block at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'block 'ipython2.7 t switch beg end nil fast))
+  (py--execute-prepare 'block 'ipython2.7 t switch nil fast proc wholebuf split))
 
-(defun py-execute-block-ipython2.7-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-ipython2.7-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send block at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'block 'ipython2.7 t 'switch beg end nil fast))
+  (py--execute-prepare 'block 'ipython2.7 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-ipython3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-ipython3 (&optional dedicated fast split switch proc wholebuf)
   "Send block at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'block 'ipython3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'block 'ipython3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-block-ipython3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-ipython3-switch (&optional dedicated fast split proc wholebuf)
   "Send block at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'block 'ipython3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'block 'ipython3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-ipython3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-ipython3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send block at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'block 'ipython3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'block 'ipython3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-block-ipython3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-ipython3-dedicated (&optional fast split switch proc wholebuf)
   "Send block at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'block 'ipython3 t switch beg end nil fast))
+  (py--execute-prepare 'block 'ipython3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-block-ipython3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-ipython3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send block at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'block 'ipython3 t 'switch beg end nil fast))
+  (py--execute-prepare 'block 'ipython3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-jython (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-jython (&optional dedicated fast split switch proc wholebuf)
   "Send block at point to Jython interpreter. "
   (interactive)
-  (py--execute-prepare 'block 'jython dedicated switch beg end nil fast))
+  (py--execute-prepare 'block 'jython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-block-jython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-jython-switch (&optional dedicated fast split proc wholebuf)
   "Send block at point to Jython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'block 'jython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'block 'jython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-jython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-jython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send block at point to Jython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'block 'jython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'block 'jython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-block-jython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-jython-dedicated (&optional fast split switch proc wholebuf)
   "Send block at point to Jython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'block 'jython t switch beg end nil fast))
+  (py--execute-prepare 'block 'jython t switch nil fast proc wholebuf split))
 
-(defun py-execute-block-jython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-jython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send block at point to Jython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'block 'jython t 'switch beg end nil fast))
+  (py--execute-prepare 'block 'jython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-python (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-python (&optional dedicated fast split switch proc wholebuf)
   "Send block at point to default interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'block 'python dedicated switch beg end nil fast))
+  (py--execute-prepare 'block 'python dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-block-python-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-python-switch (&optional dedicated fast split proc wholebuf)
   "Send block at point to default interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'block 'python dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'block 'python dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-python-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-python-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send block at point to default interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'block 'python dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'block 'python dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-block-python-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-python-dedicated (&optional fast split switch proc wholebuf)
   "Send block at point to default unique interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'block 'python t switch beg end nil fast))
+  (py--execute-prepare 'block 'python t switch nil fast proc wholebuf split))
 
-(defun py-execute-block-python-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-python-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send block at point to default unique interpreter and switch to result. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'block 'python t 'switch beg end nil fast))
+  (py--execute-prepare 'block 'python t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-python2 (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-python2 (&optional dedicated fast split switch proc wholebuf)
   "Send block at point to Python2 interpreter. "
   (interactive)
-  (py--execute-prepare 'block 'python2 dedicated switch beg end nil fast))
+  (py--execute-prepare 'block 'python2 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-block-python2-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-python2-switch (&optional dedicated fast split proc wholebuf)
   "Send block at point to Python2 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'block 'python2 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'block 'python2 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-python2-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-python2-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send block at point to Python2 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'block 'python2 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'block 'python2 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-block-python2-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-python2-dedicated (&optional fast split switch proc wholebuf)
   "Send block at point to Python2 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'block 'python2 t switch beg end nil fast))
+  (py--execute-prepare 'block 'python2 t switch nil fast proc wholebuf split))
 
-(defun py-execute-block-python2-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-python2-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send block at point to Python2 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'block 'python2 t 'switch beg end nil fast))
+  (py--execute-prepare 'block 'python2 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-python3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-python3 (&optional dedicated fast split switch proc wholebuf)
   "Send block at point to Python3 interpreter. "
   (interactive)
-  (py--execute-prepare 'block 'python3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'block 'python3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-block-python3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-python3-switch (&optional dedicated fast split proc wholebuf)
   "Send block at point to Python3 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'block 'python3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'block 'python3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-python3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-python3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send block at point to Python3 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'block 'python3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'block 'python3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-block-python3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-python3-dedicated (&optional fast split switch proc wholebuf)
   "Send block at point to Python3 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'block 'python3 t switch beg end nil fast))
+  (py--execute-prepare 'block 'python3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-block-python3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-python3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send block at point to Python3 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'block 'python3 t 'switch beg end nil fast))
+  (py--execute-prepare 'block 'python3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause (&optional shell dedicated fast split switch proc wholebuf)
   "Send block-or-clause at point to  interpreter. "
   (interactive)
-  (py--execute-prepare 'block-or-clause shell dedicated switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause shell dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-switch (&optional shell dedicated fast split proc wholebuf)
   "Send block-or-clause at point to  interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'block-or-clause shell dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause shell dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-no-switch (&optional shell dedicated fast split  proc wholebuf)
   "Send block-or-clause at point to  interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'block-or-clause shell dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause shell dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-dedicated (&optional shell fast split switch proc wholebuf)
   "Send block-or-clause at point to  unique interpreter. "
   (interactive)
-  (py--execute-prepare 'block-or-clause shell t switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause shell t switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-dedicated-switch (&optional shell  fast split  proc wholebuf)
   "Send block-or-clause at point to  unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'block-or-clause shell t 'switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause shell t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-ipython (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-ipython (&optional dedicated fast split switch proc wholebuf)
   "Send block-or-clause at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'ipython dedicated switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'ipython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-ipython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-ipython-switch (&optional dedicated fast split proc wholebuf)
   "Send block-or-clause at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'ipython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'ipython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-ipython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-ipython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send block-or-clause at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'ipython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'ipython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-ipython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-ipython-dedicated (&optional fast split switch proc wholebuf)
   "Send block-or-clause at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'ipython t switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'ipython t switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-ipython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-ipython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send block-or-clause at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'ipython t 'switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'ipython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-ipython2.7 (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-ipython2.7 (&optional dedicated fast split switch proc wholebuf)
   "Send block-or-clause at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'ipython2.7 dedicated switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'ipython2.7 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-ipython2.7-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-ipython2.7-switch (&optional dedicated fast split proc wholebuf)
   "Send block-or-clause at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'ipython2.7 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'ipython2.7 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-ipython2.7-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-ipython2.7-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send block-or-clause at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'ipython2.7 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'ipython2.7 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-ipython2.7-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-ipython2.7-dedicated (&optional fast split switch proc wholebuf)
   "Send block-or-clause at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'ipython2.7 t switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'ipython2.7 t switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-ipython2.7-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-ipython2.7-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send block-or-clause at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'ipython2.7 t 'switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'ipython2.7 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-ipython3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-ipython3 (&optional dedicated fast split switch proc wholebuf)
   "Send block-or-clause at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'ipython3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'ipython3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-ipython3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-ipython3-switch (&optional dedicated fast split proc wholebuf)
   "Send block-or-clause at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'ipython3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'ipython3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-ipython3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-ipython3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send block-or-clause at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'ipython3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'ipython3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-ipython3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-ipython3-dedicated (&optional fast split switch proc wholebuf)
   "Send block-or-clause at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'ipython3 t switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'ipython3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-ipython3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-ipython3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send block-or-clause at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'ipython3 t 'switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'ipython3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-jython (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-jython (&optional dedicated fast split switch proc wholebuf)
   "Send block-or-clause at point to Jython interpreter. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'jython dedicated switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'jython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-jython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-jython-switch (&optional dedicated fast split proc wholebuf)
   "Send block-or-clause at point to Jython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'jython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'jython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-jython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-jython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send block-or-clause at point to Jython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'jython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'jython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-jython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-jython-dedicated (&optional fast split switch proc wholebuf)
   "Send block-or-clause at point to Jython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'jython t switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'jython t switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-jython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-jython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send block-or-clause at point to Jython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'jython t 'switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'jython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-python (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-python (&optional dedicated fast split switch proc wholebuf)
   "Send block-or-clause at point to default interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'block-or-clause 'python dedicated switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'python dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-python-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-python-switch (&optional dedicated fast split proc wholebuf)
   "Send block-or-clause at point to default interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'block-or-clause 'python dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'python dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-python-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-python-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send block-or-clause at point to default interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'block-or-clause 'python dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'python dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-python-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-python-dedicated (&optional fast split switch proc wholebuf)
   "Send block-or-clause at point to default unique interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'block-or-clause 'python t switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'python t switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-python-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-python-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send block-or-clause at point to default unique interpreter and switch to result. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'block-or-clause 'python t 'switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'python t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-python2 (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-python2 (&optional dedicated fast split switch proc wholebuf)
   "Send block-or-clause at point to Python2 interpreter. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'python2 dedicated switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'python2 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-python2-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-python2-switch (&optional dedicated fast split proc wholebuf)
   "Send block-or-clause at point to Python2 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'python2 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'python2 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-python2-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-python2-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send block-or-clause at point to Python2 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'python2 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'python2 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-python2-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-python2-dedicated (&optional fast split switch proc wholebuf)
   "Send block-or-clause at point to Python2 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'python2 t switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'python2 t switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-python2-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-python2-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send block-or-clause at point to Python2 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'python2 t 'switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'python2 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-python3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-python3 (&optional dedicated fast split switch proc wholebuf)
   "Send block-or-clause at point to Python3 interpreter. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'python3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'python3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-python3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-python3-switch (&optional dedicated fast split proc wholebuf)
   "Send block-or-clause at point to Python3 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'python3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'python3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-python3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-python3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send block-or-clause at point to Python3 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'python3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'python3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-python3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-python3-dedicated (&optional fast split switch proc wholebuf)
   "Send block-or-clause at point to Python3 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'python3 t switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'python3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-block-or-clause-python3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-block-or-clause-python3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send block-or-clause at point to Python3 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'block-or-clause 'python3 t 'switch beg end nil fast))
+  (py--execute-prepare 'block-or-clause 'python3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-buffer (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer (&optional shell dedicated fast split switch proc wholebuf)
   "Send buffer at point to  interpreter. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13515,9 +13510,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer shell dedicated switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer shell dedicated switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-switch (&optional shell dedicated fast split proc wholebuf)
   "Send buffer at point to  interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
@@ -13528,9 +13523,9 @@ Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer shell dedicated 'switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer shell dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-no-switch (&optional shell dedicated fast split  proc wholebuf)
   "Send buffer at point to  interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
@@ -13541,9 +13536,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer shell dedicated 'no-switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer shell dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-dedicated (&optional shell fast split switch proc wholebuf)
   "Send buffer at point to  unique interpreter. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13552,9 +13547,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer shell t switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer shell t switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-dedicated-switch (&optional shell  fast split  proc wholebuf)
   "Send buffer at point to  unique interpreter and switch to result. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13563,9 +13558,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer shell t 'switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer shell t 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-ipython (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-ipython (&optional dedicated fast split switch proc wholebuf)
   "Send buffer at point to IPython interpreter. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13574,9 +13569,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'ipython dedicated switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'ipython dedicated switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-ipython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-ipython-switch (&optional dedicated fast split proc wholebuf)
   "Send buffer at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
@@ -13587,9 +13582,9 @@ Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'ipython dedicated 'switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'ipython dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-ipython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-ipython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send buffer at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
@@ -13600,9 +13595,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'ipython dedicated 'no-switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'ipython dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-ipython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-ipython-dedicated (&optional fast split switch proc wholebuf)
   "Send buffer at point to IPython unique interpreter. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13611,9 +13606,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'ipython t switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'ipython t switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-ipython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-ipython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send buffer at point to IPython unique interpreter and switch to result. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13622,9 +13617,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'ipython t 'switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'ipython t 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-ipython2.7 (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-ipython2.7 (&optional dedicated fast split switch proc wholebuf)
   "Send buffer at point to IPython interpreter. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13633,9 +13628,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'ipython2.7 dedicated switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'ipython2.7 dedicated switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-ipython2.7-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-ipython2.7-switch (&optional dedicated fast split proc wholebuf)
   "Send buffer at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
@@ -13646,9 +13641,9 @@ Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'ipython2.7 dedicated 'switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'ipython2.7 dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-ipython2.7-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-ipython2.7-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send buffer at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
@@ -13659,9 +13654,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'ipython2.7 dedicated 'no-switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'ipython2.7 dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-ipython2.7-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-ipython2.7-dedicated (&optional fast split switch proc wholebuf)
   "Send buffer at point to IPython unique interpreter. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13670,9 +13665,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'ipython2.7 t switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'ipython2.7 t switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-ipython2.7-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-ipython2.7-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send buffer at point to IPython unique interpreter and switch to result. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13681,9 +13676,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'ipython2.7 t 'switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'ipython2.7 t 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-ipython3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-ipython3 (&optional dedicated fast split switch proc wholebuf)
   "Send buffer at point to IPython interpreter. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13692,9 +13687,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'ipython3 dedicated switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'ipython3 dedicated switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-ipython3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-ipython3-switch (&optional dedicated fast split proc wholebuf)
   "Send buffer at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
@@ -13705,9 +13700,9 @@ Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'ipython3 dedicated 'switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'ipython3 dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-ipython3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-ipython3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send buffer at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
@@ -13718,9 +13713,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'ipython3 dedicated 'no-switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'ipython3 dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-ipython3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-ipython3-dedicated (&optional fast split switch proc wholebuf)
   "Send buffer at point to IPython unique interpreter. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13729,9 +13724,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'ipython3 t switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'ipython3 t switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-ipython3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-ipython3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send buffer at point to IPython unique interpreter and switch to result. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13740,9 +13735,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'ipython3 t 'switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'ipython3 t 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-jython (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-jython (&optional dedicated fast split switch proc wholebuf)
   "Send buffer at point to Jython interpreter. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13751,9 +13746,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'jython dedicated switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'jython dedicated switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-jython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-jython-switch (&optional dedicated fast split proc wholebuf)
   "Send buffer at point to Jython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
@@ -13764,9 +13759,9 @@ Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'jython dedicated 'switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'jython dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-jython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-jython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send buffer at point to Jython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
@@ -13777,9 +13772,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'jython dedicated 'no-switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'jython dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-jython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-jython-dedicated (&optional fast split switch proc wholebuf)
   "Send buffer at point to Jython unique interpreter. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13788,9 +13783,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'jython t switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'jython t switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-jython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-jython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send buffer at point to Jython unique interpreter and switch to result. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13799,9 +13794,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'jython t 'switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'jython t 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-python (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-python (&optional dedicated fast split switch proc wholebuf)
   "Send buffer at point to default interpreter. 
 
 For `default' see value of `py-shell-name'"
@@ -13812,9 +13807,9 @@ For `default' see value of `py-shell-name'"
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'python dedicated switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'python dedicated switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-python-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-python-switch (&optional dedicated fast split proc wholebuf)
   "Send buffer at point to default interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
@@ -13827,9 +13822,9 @@ For `default' see value of `py-shell-name'"
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'python dedicated 'switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'python dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-python-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-python-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send buffer at point to default interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
@@ -13842,9 +13837,9 @@ For `default' see value of `py-shell-name'"
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'python dedicated 'no-switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'python dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-python-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-python-dedicated (&optional fast split switch proc wholebuf)
   "Send buffer at point to default unique interpreter. 
 
 For `default' see value of `py-shell-name'"
@@ -13855,9 +13850,9 @@ For `default' see value of `py-shell-name'"
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'python t switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'python t switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-python-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-python-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send buffer at point to default unique interpreter and switch to result. 
 
 For `default' see value of `py-shell-name'"
@@ -13868,9 +13863,9 @@ For `default' see value of `py-shell-name'"
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'python t 'switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'python t 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-python2 (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-python2 (&optional dedicated fast split switch proc wholebuf)
   "Send buffer at point to Python2 interpreter. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13879,9 +13874,9 @@ For `default' see value of `py-shell-name'"
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'python2 dedicated switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'python2 dedicated switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-python2-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-python2-switch (&optional dedicated fast split proc wholebuf)
   "Send buffer at point to Python2 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
@@ -13892,9 +13887,9 @@ Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'python2 dedicated 'switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'python2 dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-python2-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-python2-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send buffer at point to Python2 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
@@ -13905,9 +13900,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'python2 dedicated 'no-switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'python2 dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-python2-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-python2-dedicated (&optional fast split switch proc wholebuf)
   "Send buffer at point to Python2 unique interpreter. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13916,9 +13911,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'python2 t switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'python2 t switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-python2-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-python2-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send buffer at point to Python2 unique interpreter and switch to result. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13927,9 +13922,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'python2 t 'switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'python2 t 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-python3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-python3 (&optional dedicated fast split switch proc wholebuf)
   "Send buffer at point to Python3 interpreter. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13938,9 +13933,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'python3 dedicated switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'python3 dedicated switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-python3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-python3-switch (&optional dedicated fast split proc wholebuf)
   "Send buffer at point to Python3 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
@@ -13951,9 +13946,9 @@ Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'python3 dedicated 'switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'python3 dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-python3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-python3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send buffer at point to Python3 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
@@ -13964,9 +13959,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'python3 dedicated 'no-switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'python3 dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-python3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-python3-dedicated (&optional fast split switch proc wholebuf)
   "Send buffer at point to Python3 unique interpreter. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13975,9 +13970,9 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'python3 t switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'python3 t switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-buffer-python3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-buffer-python3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send buffer at point to Python3 unique interpreter and switch to result. "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file))))
@@ -13986,3153 +13981,3153 @@ Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
 	     (buffer (or (get-file-buffer filename)
 			 (find-file-noselect filename))))
 	(set-buffer buffer))))
-  (py--execute-prepare 'buffer 'python3 t 'switch (point-min) (point-max) nil fast))
+  (py--execute-prepare 'buffer 'python3 t 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
-(defun py-execute-class (&optional shell dedicated switch beg end fast)
+(defun py-execute-class (&optional shell dedicated fast split switch proc wholebuf)
   "Send class at point to  interpreter. "
   (interactive)
-  (py--execute-prepare 'class shell dedicated switch beg end nil fast))
+  (py--execute-prepare 'class shell dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-class-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-switch (&optional shell dedicated fast split proc wholebuf)
   "Send class at point to  interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'class shell dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'class shell dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-class-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-no-switch (&optional shell dedicated fast split  proc wholebuf)
   "Send class at point to  interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'class shell dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'class shell dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-class-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-dedicated (&optional shell fast split switch proc wholebuf)
   "Send class at point to  unique interpreter. "
   (interactive)
-  (py--execute-prepare 'class shell t switch beg end nil fast))
+  (py--execute-prepare 'class shell t switch nil fast proc wholebuf split))
 
-(defun py-execute-class-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-dedicated-switch (&optional shell  fast split  proc wholebuf)
   "Send class at point to  unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'class shell t 'switch beg end nil fast))
+  (py--execute-prepare 'class shell t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-class-ipython (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-ipython (&optional dedicated fast split switch proc wholebuf)
   "Send class at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'class 'ipython dedicated switch beg end nil fast))
+  (py--execute-prepare 'class 'ipython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-class-ipython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-ipython-switch (&optional dedicated fast split proc wholebuf)
   "Send class at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'class 'ipython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'class 'ipython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-class-ipython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-ipython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send class at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'class 'ipython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'class 'ipython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-class-ipython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-ipython-dedicated (&optional fast split switch proc wholebuf)
   "Send class at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'class 'ipython t switch beg end nil fast))
+  (py--execute-prepare 'class 'ipython t switch nil fast proc wholebuf split))
 
-(defun py-execute-class-ipython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-ipython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send class at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'class 'ipython t 'switch beg end nil fast))
+  (py--execute-prepare 'class 'ipython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-class-ipython2.7 (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-ipython2.7 (&optional dedicated fast split switch proc wholebuf)
   "Send class at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'class 'ipython2.7 dedicated switch beg end nil fast))
+  (py--execute-prepare 'class 'ipython2.7 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-class-ipython2.7-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-ipython2.7-switch (&optional dedicated fast split proc wholebuf)
   "Send class at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'class 'ipython2.7 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'class 'ipython2.7 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-class-ipython2.7-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-ipython2.7-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send class at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'class 'ipython2.7 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'class 'ipython2.7 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-class-ipython2.7-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-ipython2.7-dedicated (&optional fast split switch proc wholebuf)
   "Send class at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'class 'ipython2.7 t switch beg end nil fast))
+  (py--execute-prepare 'class 'ipython2.7 t switch nil fast proc wholebuf split))
 
-(defun py-execute-class-ipython2.7-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-ipython2.7-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send class at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'class 'ipython2.7 t 'switch beg end nil fast))
+  (py--execute-prepare 'class 'ipython2.7 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-class-ipython3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-ipython3 (&optional dedicated fast split switch proc wholebuf)
   "Send class at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'class 'ipython3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'class 'ipython3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-class-ipython3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-ipython3-switch (&optional dedicated fast split proc wholebuf)
   "Send class at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'class 'ipython3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'class 'ipython3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-class-ipython3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-ipython3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send class at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'class 'ipython3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'class 'ipython3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-class-ipython3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-ipython3-dedicated (&optional fast split switch proc wholebuf)
   "Send class at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'class 'ipython3 t switch beg end nil fast))
+  (py--execute-prepare 'class 'ipython3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-class-ipython3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-ipython3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send class at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'class 'ipython3 t 'switch beg end nil fast))
+  (py--execute-prepare 'class 'ipython3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-class-jython (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-jython (&optional dedicated fast split switch proc wholebuf)
   "Send class at point to Jython interpreter. "
   (interactive)
-  (py--execute-prepare 'class 'jython dedicated switch beg end nil fast))
+  (py--execute-prepare 'class 'jython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-class-jython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-jython-switch (&optional dedicated fast split proc wholebuf)
   "Send class at point to Jython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'class 'jython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'class 'jython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-class-jython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-jython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send class at point to Jython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'class 'jython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'class 'jython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-class-jython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-jython-dedicated (&optional fast split switch proc wholebuf)
   "Send class at point to Jython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'class 'jython t switch beg end nil fast))
+  (py--execute-prepare 'class 'jython t switch nil fast proc wholebuf split))
 
-(defun py-execute-class-jython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-jython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send class at point to Jython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'class 'jython t 'switch beg end nil fast))
+  (py--execute-prepare 'class 'jython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-class-python (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-python (&optional dedicated fast split switch proc wholebuf)
   "Send class at point to default interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'class 'python dedicated switch beg end nil fast))
+  (py--execute-prepare 'class 'python dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-class-python-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-python-switch (&optional dedicated fast split proc wholebuf)
   "Send class at point to default interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'class 'python dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'class 'python dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-class-python-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-python-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send class at point to default interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'class 'python dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'class 'python dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-class-python-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-python-dedicated (&optional fast split switch proc wholebuf)
   "Send class at point to default unique interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'class 'python t switch beg end nil fast))
+  (py--execute-prepare 'class 'python t switch nil fast proc wholebuf split))
 
-(defun py-execute-class-python-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-python-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send class at point to default unique interpreter and switch to result. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'class 'python t 'switch beg end nil fast))
+  (py--execute-prepare 'class 'python t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-class-python2 (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-python2 (&optional dedicated fast split switch proc wholebuf)
   "Send class at point to Python2 interpreter. "
   (interactive)
-  (py--execute-prepare 'class 'python2 dedicated switch beg end nil fast))
+  (py--execute-prepare 'class 'python2 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-class-python2-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-python2-switch (&optional dedicated fast split proc wholebuf)
   "Send class at point to Python2 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'class 'python2 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'class 'python2 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-class-python2-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-python2-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send class at point to Python2 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'class 'python2 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'class 'python2 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-class-python2-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-python2-dedicated (&optional fast split switch proc wholebuf)
   "Send class at point to Python2 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'class 'python2 t switch beg end nil fast))
+  (py--execute-prepare 'class 'python2 t switch nil fast proc wholebuf split))
 
-(defun py-execute-class-python2-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-python2-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send class at point to Python2 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'class 'python2 t 'switch beg end nil fast))
+  (py--execute-prepare 'class 'python2 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-class-python3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-python3 (&optional dedicated fast split switch proc wholebuf)
   "Send class at point to Python3 interpreter. "
   (interactive)
-  (py--execute-prepare 'class 'python3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'class 'python3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-class-python3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-python3-switch (&optional dedicated fast split proc wholebuf)
   "Send class at point to Python3 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'class 'python3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'class 'python3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-class-python3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-python3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send class at point to Python3 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'class 'python3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'class 'python3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-class-python3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-python3-dedicated (&optional fast split switch proc wholebuf)
   "Send class at point to Python3 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'class 'python3 t switch beg end nil fast))
+  (py--execute-prepare 'class 'python3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-class-python3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-class-python3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send class at point to Python3 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'class 'python3 t 'switch beg end nil fast))
+  (py--execute-prepare 'class 'python3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-clause (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause (&optional shell dedicated fast split switch proc wholebuf)
   "Send clause at point to  interpreter. "
   (interactive)
-  (py--execute-prepare 'clause shell dedicated switch beg end nil fast))
+  (py--execute-prepare 'clause shell dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-switch (&optional shell dedicated fast split proc wholebuf)
   "Send clause at point to  interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'clause shell dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'clause shell dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-no-switch (&optional shell dedicated fast split  proc wholebuf)
   "Send clause at point to  interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'clause shell dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'clause shell dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-dedicated (&optional shell fast split switch proc wholebuf)
   "Send clause at point to  unique interpreter. "
   (interactive)
-  (py--execute-prepare 'clause shell t switch beg end nil fast))
+  (py--execute-prepare 'clause shell t switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-dedicated-switch (&optional shell  fast split  proc wholebuf)
   "Send clause at point to  unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'clause shell t 'switch beg end nil fast))
+  (py--execute-prepare 'clause shell t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-ipython (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-ipython (&optional dedicated fast split switch proc wholebuf)
   "Send clause at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'clause 'ipython dedicated switch beg end nil fast))
+  (py--execute-prepare 'clause 'ipython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-ipython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-ipython-switch (&optional dedicated fast split proc wholebuf)
   "Send clause at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'clause 'ipython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'clause 'ipython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-ipython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-ipython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send clause at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'clause 'ipython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'clause 'ipython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-ipython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-ipython-dedicated (&optional fast split switch proc wholebuf)
   "Send clause at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'clause 'ipython t switch beg end nil fast))
+  (py--execute-prepare 'clause 'ipython t switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-ipython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-ipython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send clause at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'clause 'ipython t 'switch beg end nil fast))
+  (py--execute-prepare 'clause 'ipython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-ipython2.7 (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-ipython2.7 (&optional dedicated fast split switch proc wholebuf)
   "Send clause at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'clause 'ipython2.7 dedicated switch beg end nil fast))
+  (py--execute-prepare 'clause 'ipython2.7 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-ipython2.7-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-ipython2.7-switch (&optional dedicated fast split proc wholebuf)
   "Send clause at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'clause 'ipython2.7 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'clause 'ipython2.7 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-ipython2.7-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-ipython2.7-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send clause at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'clause 'ipython2.7 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'clause 'ipython2.7 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-ipython2.7-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-ipython2.7-dedicated (&optional fast split switch proc wholebuf)
   "Send clause at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'clause 'ipython2.7 t switch beg end nil fast))
+  (py--execute-prepare 'clause 'ipython2.7 t switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-ipython2.7-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-ipython2.7-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send clause at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'clause 'ipython2.7 t 'switch beg end nil fast))
+  (py--execute-prepare 'clause 'ipython2.7 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-ipython3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-ipython3 (&optional dedicated fast split switch proc wholebuf)
   "Send clause at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'clause 'ipython3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'clause 'ipython3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-ipython3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-ipython3-switch (&optional dedicated fast split proc wholebuf)
   "Send clause at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'clause 'ipython3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'clause 'ipython3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-ipython3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-ipython3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send clause at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'clause 'ipython3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'clause 'ipython3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-ipython3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-ipython3-dedicated (&optional fast split switch proc wholebuf)
   "Send clause at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'clause 'ipython3 t switch beg end nil fast))
+  (py--execute-prepare 'clause 'ipython3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-ipython3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-ipython3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send clause at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'clause 'ipython3 t 'switch beg end nil fast))
+  (py--execute-prepare 'clause 'ipython3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-jython (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-jython (&optional dedicated fast split switch proc wholebuf)
   "Send clause at point to Jython interpreter. "
   (interactive)
-  (py--execute-prepare 'clause 'jython dedicated switch beg end nil fast))
+  (py--execute-prepare 'clause 'jython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-jython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-jython-switch (&optional dedicated fast split proc wholebuf)
   "Send clause at point to Jython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'clause 'jython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'clause 'jython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-jython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-jython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send clause at point to Jython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'clause 'jython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'clause 'jython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-jython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-jython-dedicated (&optional fast split switch proc wholebuf)
   "Send clause at point to Jython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'clause 'jython t switch beg end nil fast))
+  (py--execute-prepare 'clause 'jython t switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-jython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-jython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send clause at point to Jython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'clause 'jython t 'switch beg end nil fast))
+  (py--execute-prepare 'clause 'jython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-python (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-python (&optional dedicated fast split switch proc wholebuf)
   "Send clause at point to default interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'clause 'python dedicated switch beg end nil fast))
+  (py--execute-prepare 'clause 'python dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-python-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-python-switch (&optional dedicated fast split proc wholebuf)
   "Send clause at point to default interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'clause 'python dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'clause 'python dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-python-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-python-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send clause at point to default interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'clause 'python dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'clause 'python dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-python-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-python-dedicated (&optional fast split switch proc wholebuf)
   "Send clause at point to default unique interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'clause 'python t switch beg end nil fast))
+  (py--execute-prepare 'clause 'python t switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-python-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-python-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send clause at point to default unique interpreter and switch to result. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'clause 'python t 'switch beg end nil fast))
+  (py--execute-prepare 'clause 'python t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-python2 (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-python2 (&optional dedicated fast split switch proc wholebuf)
   "Send clause at point to Python2 interpreter. "
   (interactive)
-  (py--execute-prepare 'clause 'python2 dedicated switch beg end nil fast))
+  (py--execute-prepare 'clause 'python2 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-python2-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-python2-switch (&optional dedicated fast split proc wholebuf)
   "Send clause at point to Python2 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'clause 'python2 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'clause 'python2 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-python2-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-python2-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send clause at point to Python2 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'clause 'python2 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'clause 'python2 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-python2-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-python2-dedicated (&optional fast split switch proc wholebuf)
   "Send clause at point to Python2 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'clause 'python2 t switch beg end nil fast))
+  (py--execute-prepare 'clause 'python2 t switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-python2-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-python2-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send clause at point to Python2 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'clause 'python2 t 'switch beg end nil fast))
+  (py--execute-prepare 'clause 'python2 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-python3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-python3 (&optional dedicated fast split switch proc wholebuf)
   "Send clause at point to Python3 interpreter. "
   (interactive)
-  (py--execute-prepare 'clause 'python3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'clause 'python3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-python3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-python3-switch (&optional dedicated fast split proc wholebuf)
   "Send clause at point to Python3 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'clause 'python3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'clause 'python3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-python3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-python3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send clause at point to Python3 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'clause 'python3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'clause 'python3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-python3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-python3-dedicated (&optional fast split switch proc wholebuf)
   "Send clause at point to Python3 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'clause 'python3 t switch beg end nil fast))
+  (py--execute-prepare 'clause 'python3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-clause-python3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-clause-python3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send clause at point to Python3 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'clause 'python3 t 'switch beg end nil fast))
+  (py--execute-prepare 'clause 'python3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def (&optional shell dedicated switch beg end fast)
+(defun py-execute-def (&optional shell dedicated fast split switch proc wholebuf)
   "Send def at point to  interpreter. "
   (interactive)
-  (py--execute-prepare 'def shell dedicated switch beg end nil fast))
+  (py--execute-prepare 'def shell dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-def-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-switch (&optional shell dedicated fast split proc wholebuf)
   "Send def at point to  interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'def shell dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'def shell dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-no-switch (&optional shell dedicated fast split  proc wholebuf)
   "Send def at point to  interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'def shell dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'def shell dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-def-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-dedicated (&optional shell fast split switch proc wholebuf)
   "Send def at point to  unique interpreter. "
   (interactive)
-  (py--execute-prepare 'def shell t switch beg end nil fast))
+  (py--execute-prepare 'def shell t switch nil fast proc wholebuf split))
 
-(defun py-execute-def-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-dedicated-switch (&optional shell  fast split  proc wholebuf)
   "Send def at point to  unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'def shell t 'switch beg end nil fast))
+  (py--execute-prepare 'def shell t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-ipython (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-ipython (&optional dedicated fast split switch proc wholebuf)
   "Send def at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'def 'ipython dedicated switch beg end nil fast))
+  (py--execute-prepare 'def 'ipython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-def-ipython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-ipython-switch (&optional dedicated fast split proc wholebuf)
   "Send def at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'def 'ipython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'def 'ipython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-ipython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-ipython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send def at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'def 'ipython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'def 'ipython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-def-ipython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-ipython-dedicated (&optional fast split switch proc wholebuf)
   "Send def at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'def 'ipython t switch beg end nil fast))
+  (py--execute-prepare 'def 'ipython t switch nil fast proc wholebuf split))
 
-(defun py-execute-def-ipython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-ipython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send def at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'def 'ipython t 'switch beg end nil fast))
+  (py--execute-prepare 'def 'ipython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-ipython2.7 (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-ipython2.7 (&optional dedicated fast split switch proc wholebuf)
   "Send def at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'def 'ipython2.7 dedicated switch beg end nil fast))
+  (py--execute-prepare 'def 'ipython2.7 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-def-ipython2.7-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-ipython2.7-switch (&optional dedicated fast split proc wholebuf)
   "Send def at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'def 'ipython2.7 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'def 'ipython2.7 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-ipython2.7-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-ipython2.7-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send def at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'def 'ipython2.7 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'def 'ipython2.7 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-def-ipython2.7-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-ipython2.7-dedicated (&optional fast split switch proc wholebuf)
   "Send def at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'def 'ipython2.7 t switch beg end nil fast))
+  (py--execute-prepare 'def 'ipython2.7 t switch nil fast proc wholebuf split))
 
-(defun py-execute-def-ipython2.7-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-ipython2.7-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send def at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'def 'ipython2.7 t 'switch beg end nil fast))
+  (py--execute-prepare 'def 'ipython2.7 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-ipython3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-ipython3 (&optional dedicated fast split switch proc wholebuf)
   "Send def at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'def 'ipython3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'def 'ipython3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-def-ipython3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-ipython3-switch (&optional dedicated fast split proc wholebuf)
   "Send def at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'def 'ipython3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'def 'ipython3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-ipython3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-ipython3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send def at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'def 'ipython3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'def 'ipython3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-def-ipython3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-ipython3-dedicated (&optional fast split switch proc wholebuf)
   "Send def at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'def 'ipython3 t switch beg end nil fast))
+  (py--execute-prepare 'def 'ipython3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-def-ipython3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-ipython3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send def at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'def 'ipython3 t 'switch beg end nil fast))
+  (py--execute-prepare 'def 'ipython3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-jython (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-jython (&optional dedicated fast split switch proc wholebuf)
   "Send def at point to Jython interpreter. "
   (interactive)
-  (py--execute-prepare 'def 'jython dedicated switch beg end nil fast))
+  (py--execute-prepare 'def 'jython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-def-jython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-jython-switch (&optional dedicated fast split proc wholebuf)
   "Send def at point to Jython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'def 'jython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'def 'jython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-jython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-jython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send def at point to Jython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'def 'jython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'def 'jython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-def-jython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-jython-dedicated (&optional fast split switch proc wholebuf)
   "Send def at point to Jython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'def 'jython t switch beg end nil fast))
+  (py--execute-prepare 'def 'jython t switch nil fast proc wholebuf split))
 
-(defun py-execute-def-jython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-jython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send def at point to Jython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'def 'jython t 'switch beg end nil fast))
+  (py--execute-prepare 'def 'jython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-python (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-python (&optional dedicated fast split switch proc wholebuf)
   "Send def at point to default interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'def 'python dedicated switch beg end nil fast))
+  (py--execute-prepare 'def 'python dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-def-python-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-python-switch (&optional dedicated fast split proc wholebuf)
   "Send def at point to default interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'def 'python dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'def 'python dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-python-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-python-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send def at point to default interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'def 'python dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'def 'python dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-def-python-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-python-dedicated (&optional fast split switch proc wholebuf)
   "Send def at point to default unique interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'def 'python t switch beg end nil fast))
+  (py--execute-prepare 'def 'python t switch nil fast proc wholebuf split))
 
-(defun py-execute-def-python-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-python-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send def at point to default unique interpreter and switch to result. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'def 'python t 'switch beg end nil fast))
+  (py--execute-prepare 'def 'python t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-python2 (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-python2 (&optional dedicated fast split switch proc wholebuf)
   "Send def at point to Python2 interpreter. "
   (interactive)
-  (py--execute-prepare 'def 'python2 dedicated switch beg end nil fast))
+  (py--execute-prepare 'def 'python2 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-def-python2-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-python2-switch (&optional dedicated fast split proc wholebuf)
   "Send def at point to Python2 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'def 'python2 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'def 'python2 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-python2-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-python2-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send def at point to Python2 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'def 'python2 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'def 'python2 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-def-python2-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-python2-dedicated (&optional fast split switch proc wholebuf)
   "Send def at point to Python2 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'def 'python2 t switch beg end nil fast))
+  (py--execute-prepare 'def 'python2 t switch nil fast proc wholebuf split))
 
-(defun py-execute-def-python2-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-python2-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send def at point to Python2 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'def 'python2 t 'switch beg end nil fast))
+  (py--execute-prepare 'def 'python2 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-python3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-python3 (&optional dedicated fast split switch proc wholebuf)
   "Send def at point to Python3 interpreter. "
   (interactive)
-  (py--execute-prepare 'def 'python3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'def 'python3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-def-python3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-python3-switch (&optional dedicated fast split proc wholebuf)
   "Send def at point to Python3 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'def 'python3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'def 'python3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-python3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-python3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send def at point to Python3 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'def 'python3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'def 'python3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-def-python3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-python3-dedicated (&optional fast split switch proc wholebuf)
   "Send def at point to Python3 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'def 'python3 t switch beg end nil fast))
+  (py--execute-prepare 'def 'python3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-def-python3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-python3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send def at point to Python3 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'def 'python3 t 'switch beg end nil fast))
+  (py--execute-prepare 'def 'python3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class (&optional shell dedicated fast split switch proc wholebuf)
   "Send def-or-class at point to  interpreter. "
   (interactive)
-  (py--execute-prepare 'def-or-class shell dedicated switch beg end nil fast))
+  (py--execute-prepare 'def-or-class shell dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-switch (&optional shell dedicated fast split proc wholebuf)
   "Send def-or-class at point to  interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'def-or-class shell dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'def-or-class shell dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-no-switch (&optional shell dedicated fast split  proc wholebuf)
   "Send def-or-class at point to  interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'def-or-class shell dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'def-or-class shell dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-dedicated (&optional shell fast split switch proc wholebuf)
   "Send def-or-class at point to  unique interpreter. "
   (interactive)
-  (py--execute-prepare 'def-or-class shell t switch beg end nil fast))
+  (py--execute-prepare 'def-or-class shell t switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-dedicated-switch (&optional shell  fast split  proc wholebuf)
   "Send def-or-class at point to  unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'def-or-class shell t 'switch beg end nil fast))
+  (py--execute-prepare 'def-or-class shell t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-ipython (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-ipython (&optional dedicated fast split switch proc wholebuf)
   "Send def-or-class at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'ipython dedicated switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'ipython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-ipython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-ipython-switch (&optional dedicated fast split proc wholebuf)
   "Send def-or-class at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'ipython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'ipython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-ipython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-ipython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send def-or-class at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'def-or-class 'ipython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'ipython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-ipython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-ipython-dedicated (&optional fast split switch proc wholebuf)
   "Send def-or-class at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'ipython t switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'ipython t switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-ipython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-ipython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send def-or-class at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'ipython t 'switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'ipython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-ipython2.7 (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-ipython2.7 (&optional dedicated fast split switch proc wholebuf)
   "Send def-or-class at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'ipython2.7 dedicated switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'ipython2.7 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-ipython2.7-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-ipython2.7-switch (&optional dedicated fast split proc wholebuf)
   "Send def-or-class at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'ipython2.7 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'ipython2.7 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-ipython2.7-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-ipython2.7-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send def-or-class at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'def-or-class 'ipython2.7 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'ipython2.7 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-ipython2.7-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-ipython2.7-dedicated (&optional fast split switch proc wholebuf)
   "Send def-or-class at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'ipython2.7 t switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'ipython2.7 t switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-ipython2.7-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-ipython2.7-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send def-or-class at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'ipython2.7 t 'switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'ipython2.7 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-ipython3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-ipython3 (&optional dedicated fast split switch proc wholebuf)
   "Send def-or-class at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'ipython3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'ipython3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-ipython3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-ipython3-switch (&optional dedicated fast split proc wholebuf)
   "Send def-or-class at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'ipython3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'ipython3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-ipython3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-ipython3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send def-or-class at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'def-or-class 'ipython3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'ipython3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-ipython3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-ipython3-dedicated (&optional fast split switch proc wholebuf)
   "Send def-or-class at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'ipython3 t switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'ipython3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-ipython3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-ipython3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send def-or-class at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'ipython3 t 'switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'ipython3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-jython (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-jython (&optional dedicated fast split switch proc wholebuf)
   "Send def-or-class at point to Jython interpreter. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'jython dedicated switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'jython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-jython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-jython-switch (&optional dedicated fast split proc wholebuf)
   "Send def-or-class at point to Jython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'jython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'jython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-jython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-jython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send def-or-class at point to Jython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'def-or-class 'jython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'jython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-jython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-jython-dedicated (&optional fast split switch proc wholebuf)
   "Send def-or-class at point to Jython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'jython t switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'jython t switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-jython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-jython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send def-or-class at point to Jython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'jython t 'switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'jython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-python (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-python (&optional dedicated fast split switch proc wholebuf)
   "Send def-or-class at point to default interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'def-or-class 'python dedicated switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'python dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-python-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-python-switch (&optional dedicated fast split proc wholebuf)
   "Send def-or-class at point to default interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'def-or-class 'python dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'python dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-python-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-python-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send def-or-class at point to default interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'def-or-class 'python dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'python dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-python-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-python-dedicated (&optional fast split switch proc wholebuf)
   "Send def-or-class at point to default unique interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'def-or-class 'python t switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'python t switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-python-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-python-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send def-or-class at point to default unique interpreter and switch to result. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'def-or-class 'python t 'switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'python t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-python2 (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-python2 (&optional dedicated fast split switch proc wholebuf)
   "Send def-or-class at point to Python2 interpreter. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'python2 dedicated switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'python2 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-python2-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-python2-switch (&optional dedicated fast split proc wholebuf)
   "Send def-or-class at point to Python2 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'python2 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'python2 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-python2-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-python2-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send def-or-class at point to Python2 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'def-or-class 'python2 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'python2 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-python2-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-python2-dedicated (&optional fast split switch proc wholebuf)
   "Send def-or-class at point to Python2 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'python2 t switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'python2 t switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-python2-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-python2-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send def-or-class at point to Python2 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'python2 t 'switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'python2 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-python3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-python3 (&optional dedicated fast split switch proc wholebuf)
   "Send def-or-class at point to Python3 interpreter. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'python3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'python3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-python3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-python3-switch (&optional dedicated fast split proc wholebuf)
   "Send def-or-class at point to Python3 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'python3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'python3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-python3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-python3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send def-or-class at point to Python3 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'def-or-class 'python3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'python3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-python3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-python3-dedicated (&optional fast split switch proc wholebuf)
   "Send def-or-class at point to Python3 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'python3 t switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'python3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-def-or-class-python3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-def-or-class-python3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send def-or-class at point to Python3 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'def-or-class 'python3 t 'switch beg end nil fast))
+  (py--execute-prepare 'def-or-class 'python3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-expression (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression (&optional shell dedicated fast split switch proc wholebuf)
   "Send expression at point to  interpreter. "
   (interactive)
-  (py--execute-prepare 'expression shell dedicated switch beg end nil fast))
+  (py--execute-prepare 'expression shell dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-switch (&optional shell dedicated fast split proc wholebuf)
   "Send expression at point to  interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'expression shell dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'expression shell dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-no-switch (&optional shell dedicated fast split  proc wholebuf)
   "Send expression at point to  interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'expression shell dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'expression shell dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-dedicated (&optional shell fast split switch proc wholebuf)
   "Send expression at point to  unique interpreter. "
   (interactive)
-  (py--execute-prepare 'expression shell t switch beg end nil fast))
+  (py--execute-prepare 'expression shell t switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-dedicated-switch (&optional shell  fast split  proc wholebuf)
   "Send expression at point to  unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'expression shell t 'switch beg end nil fast))
+  (py--execute-prepare 'expression shell t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-ipython (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-ipython (&optional dedicated fast split switch proc wholebuf)
   "Send expression at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'expression 'ipython dedicated switch beg end nil fast))
+  (py--execute-prepare 'expression 'ipython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-ipython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-ipython-switch (&optional dedicated fast split proc wholebuf)
   "Send expression at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'expression 'ipython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'expression 'ipython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-ipython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-ipython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send expression at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'expression 'ipython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'expression 'ipython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-ipython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-ipython-dedicated (&optional fast split switch proc wholebuf)
   "Send expression at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'expression 'ipython t switch beg end nil fast))
+  (py--execute-prepare 'expression 'ipython t switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-ipython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-ipython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send expression at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'expression 'ipython t 'switch beg end nil fast))
+  (py--execute-prepare 'expression 'ipython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-ipython2.7 (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-ipython2.7 (&optional dedicated fast split switch proc wholebuf)
   "Send expression at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'expression 'ipython2.7 dedicated switch beg end nil fast))
+  (py--execute-prepare 'expression 'ipython2.7 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-ipython2.7-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-ipython2.7-switch (&optional dedicated fast split proc wholebuf)
   "Send expression at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'expression 'ipython2.7 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'expression 'ipython2.7 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-ipython2.7-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-ipython2.7-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send expression at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'expression 'ipython2.7 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'expression 'ipython2.7 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-ipython2.7-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-ipython2.7-dedicated (&optional fast split switch proc wholebuf)
   "Send expression at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'expression 'ipython2.7 t switch beg end nil fast))
+  (py--execute-prepare 'expression 'ipython2.7 t switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-ipython2.7-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-ipython2.7-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send expression at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'expression 'ipython2.7 t 'switch beg end nil fast))
+  (py--execute-prepare 'expression 'ipython2.7 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-ipython3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-ipython3 (&optional dedicated fast split switch proc wholebuf)
   "Send expression at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'expression 'ipython3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'expression 'ipython3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-ipython3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-ipython3-switch (&optional dedicated fast split proc wholebuf)
   "Send expression at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'expression 'ipython3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'expression 'ipython3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-ipython3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-ipython3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send expression at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'expression 'ipython3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'expression 'ipython3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-ipython3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-ipython3-dedicated (&optional fast split switch proc wholebuf)
   "Send expression at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'expression 'ipython3 t switch beg end nil fast))
+  (py--execute-prepare 'expression 'ipython3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-ipython3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-ipython3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send expression at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'expression 'ipython3 t 'switch beg end nil fast))
+  (py--execute-prepare 'expression 'ipython3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-jython (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-jython (&optional dedicated fast split switch proc wholebuf)
   "Send expression at point to Jython interpreter. "
   (interactive)
-  (py--execute-prepare 'expression 'jython dedicated switch beg end nil fast))
+  (py--execute-prepare 'expression 'jython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-jython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-jython-switch (&optional dedicated fast split proc wholebuf)
   "Send expression at point to Jython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'expression 'jython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'expression 'jython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-jython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-jython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send expression at point to Jython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'expression 'jython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'expression 'jython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-jython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-jython-dedicated (&optional fast split switch proc wholebuf)
   "Send expression at point to Jython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'expression 'jython t switch beg end nil fast))
+  (py--execute-prepare 'expression 'jython t switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-jython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-jython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send expression at point to Jython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'expression 'jython t 'switch beg end nil fast))
+  (py--execute-prepare 'expression 'jython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-python (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-python (&optional dedicated fast split switch proc wholebuf)
   "Send expression at point to default interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'expression 'python dedicated switch beg end nil fast))
+  (py--execute-prepare 'expression 'python dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-python-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-python-switch (&optional dedicated fast split proc wholebuf)
   "Send expression at point to default interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'expression 'python dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'expression 'python dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-python-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-python-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send expression at point to default interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'expression 'python dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'expression 'python dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-python-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-python-dedicated (&optional fast split switch proc wholebuf)
   "Send expression at point to default unique interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'expression 'python t switch beg end nil fast))
+  (py--execute-prepare 'expression 'python t switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-python-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-python-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send expression at point to default unique interpreter and switch to result. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'expression 'python t 'switch beg end nil fast))
+  (py--execute-prepare 'expression 'python t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-python2 (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-python2 (&optional dedicated fast split switch proc wholebuf)
   "Send expression at point to Python2 interpreter. "
   (interactive)
-  (py--execute-prepare 'expression 'python2 dedicated switch beg end nil fast))
+  (py--execute-prepare 'expression 'python2 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-python2-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-python2-switch (&optional dedicated fast split proc wholebuf)
   "Send expression at point to Python2 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'expression 'python2 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'expression 'python2 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-python2-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-python2-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send expression at point to Python2 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'expression 'python2 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'expression 'python2 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-python2-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-python2-dedicated (&optional fast split switch proc wholebuf)
   "Send expression at point to Python2 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'expression 'python2 t switch beg end nil fast))
+  (py--execute-prepare 'expression 'python2 t switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-python2-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-python2-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send expression at point to Python2 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'expression 'python2 t 'switch beg end nil fast))
+  (py--execute-prepare 'expression 'python2 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-python3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-python3 (&optional dedicated fast split switch proc wholebuf)
   "Send expression at point to Python3 interpreter. "
   (interactive)
-  (py--execute-prepare 'expression 'python3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'expression 'python3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-python3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-python3-switch (&optional dedicated fast split proc wholebuf)
   "Send expression at point to Python3 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'expression 'python3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'expression 'python3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-python3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-python3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send expression at point to Python3 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'expression 'python3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'expression 'python3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-python3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-python3-dedicated (&optional fast split switch proc wholebuf)
   "Send expression at point to Python3 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'expression 'python3 t switch beg end nil fast))
+  (py--execute-prepare 'expression 'python3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-expression-python3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-expression-python3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send expression at point to Python3 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'expression 'python3 t 'switch beg end nil fast))
+  (py--execute-prepare 'expression 'python3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-indent (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent (&optional shell dedicated fast split switch proc wholebuf)
   "Send indent at point to  interpreter. "
   (interactive)
-  (py--execute-prepare 'indent shell dedicated switch beg end nil fast))
+  (py--execute-prepare 'indent shell dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-switch (&optional shell dedicated fast split proc wholebuf)
   "Send indent at point to  interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'indent shell dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'indent shell dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-no-switch (&optional shell dedicated fast split  proc wholebuf)
   "Send indent at point to  interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'indent shell dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'indent shell dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-dedicated (&optional shell fast split switch proc wholebuf)
   "Send indent at point to  unique interpreter. "
   (interactive)
-  (py--execute-prepare 'indent shell t switch beg end nil fast))
+  (py--execute-prepare 'indent shell t switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-dedicated-switch (&optional shell  fast split  proc wholebuf)
   "Send indent at point to  unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'indent shell t 'switch beg end nil fast))
+  (py--execute-prepare 'indent shell t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-ipython (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-ipython (&optional dedicated fast split switch proc wholebuf)
   "Send indent at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'indent 'ipython dedicated switch beg end nil fast))
+  (py--execute-prepare 'indent 'ipython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-ipython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-ipython-switch (&optional dedicated fast split proc wholebuf)
   "Send indent at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'indent 'ipython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'indent 'ipython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-ipython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-ipython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send indent at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'indent 'ipython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'indent 'ipython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-ipython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-ipython-dedicated (&optional fast split switch proc wholebuf)
   "Send indent at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'indent 'ipython t switch beg end nil fast))
+  (py--execute-prepare 'indent 'ipython t switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-ipython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-ipython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send indent at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'indent 'ipython t 'switch beg end nil fast))
+  (py--execute-prepare 'indent 'ipython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-ipython2.7 (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-ipython2.7 (&optional dedicated fast split switch proc wholebuf)
   "Send indent at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'indent 'ipython2.7 dedicated switch beg end nil fast))
+  (py--execute-prepare 'indent 'ipython2.7 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-ipython2.7-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-ipython2.7-switch (&optional dedicated fast split proc wholebuf)
   "Send indent at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'indent 'ipython2.7 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'indent 'ipython2.7 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-ipython2.7-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-ipython2.7-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send indent at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'indent 'ipython2.7 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'indent 'ipython2.7 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-ipython2.7-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-ipython2.7-dedicated (&optional fast split switch proc wholebuf)
   "Send indent at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'indent 'ipython2.7 t switch beg end nil fast))
+  (py--execute-prepare 'indent 'ipython2.7 t switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-ipython2.7-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-ipython2.7-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send indent at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'indent 'ipython2.7 t 'switch beg end nil fast))
+  (py--execute-prepare 'indent 'ipython2.7 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-ipython3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-ipython3 (&optional dedicated fast split switch proc wholebuf)
   "Send indent at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'indent 'ipython3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'indent 'ipython3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-ipython3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-ipython3-switch (&optional dedicated fast split proc wholebuf)
   "Send indent at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'indent 'ipython3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'indent 'ipython3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-ipython3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-ipython3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send indent at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'indent 'ipython3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'indent 'ipython3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-ipython3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-ipython3-dedicated (&optional fast split switch proc wholebuf)
   "Send indent at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'indent 'ipython3 t switch beg end nil fast))
+  (py--execute-prepare 'indent 'ipython3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-ipython3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-ipython3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send indent at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'indent 'ipython3 t 'switch beg end nil fast))
+  (py--execute-prepare 'indent 'ipython3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-jython (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-jython (&optional dedicated fast split switch proc wholebuf)
   "Send indent at point to Jython interpreter. "
   (interactive)
-  (py--execute-prepare 'indent 'jython dedicated switch beg end nil fast))
+  (py--execute-prepare 'indent 'jython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-jython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-jython-switch (&optional dedicated fast split proc wholebuf)
   "Send indent at point to Jython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'indent 'jython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'indent 'jython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-jython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-jython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send indent at point to Jython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'indent 'jython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'indent 'jython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-jython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-jython-dedicated (&optional fast split switch proc wholebuf)
   "Send indent at point to Jython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'indent 'jython t switch beg end nil fast))
+  (py--execute-prepare 'indent 'jython t switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-jython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-jython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send indent at point to Jython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'indent 'jython t 'switch beg end nil fast))
+  (py--execute-prepare 'indent 'jython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-python (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-python (&optional dedicated fast split switch proc wholebuf)
   "Send indent at point to default interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'indent 'python dedicated switch beg end nil fast))
+  (py--execute-prepare 'indent 'python dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-python-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-python-switch (&optional dedicated fast split proc wholebuf)
   "Send indent at point to default interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'indent 'python dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'indent 'python dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-python-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-python-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send indent at point to default interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'indent 'python dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'indent 'python dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-python-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-python-dedicated (&optional fast split switch proc wholebuf)
   "Send indent at point to default unique interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'indent 'python t switch beg end nil fast))
+  (py--execute-prepare 'indent 'python t switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-python-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-python-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send indent at point to default unique interpreter and switch to result. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'indent 'python t 'switch beg end nil fast))
+  (py--execute-prepare 'indent 'python t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-python2 (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-python2 (&optional dedicated fast split switch proc wholebuf)
   "Send indent at point to Python2 interpreter. "
   (interactive)
-  (py--execute-prepare 'indent 'python2 dedicated switch beg end nil fast))
+  (py--execute-prepare 'indent 'python2 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-python2-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-python2-switch (&optional dedicated fast split proc wholebuf)
   "Send indent at point to Python2 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'indent 'python2 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'indent 'python2 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-python2-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-python2-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send indent at point to Python2 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'indent 'python2 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'indent 'python2 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-python2-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-python2-dedicated (&optional fast split switch proc wholebuf)
   "Send indent at point to Python2 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'indent 'python2 t switch beg end nil fast))
+  (py--execute-prepare 'indent 'python2 t switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-python2-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-python2-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send indent at point to Python2 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'indent 'python2 t 'switch beg end nil fast))
+  (py--execute-prepare 'indent 'python2 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-python3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-python3 (&optional dedicated fast split switch proc wholebuf)
   "Send indent at point to Python3 interpreter. "
   (interactive)
-  (py--execute-prepare 'indent 'python3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'indent 'python3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-python3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-python3-switch (&optional dedicated fast split proc wholebuf)
   "Send indent at point to Python3 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'indent 'python3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'indent 'python3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-python3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-python3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send indent at point to Python3 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'indent 'python3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'indent 'python3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-python3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-python3-dedicated (&optional fast split switch proc wholebuf)
   "Send indent at point to Python3 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'indent 'python3 t switch beg end nil fast))
+  (py--execute-prepare 'indent 'python3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-indent-python3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-indent-python3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send indent at point to Python3 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'indent 'python3 t 'switch beg end nil fast))
+  (py--execute-prepare 'indent 'python3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-line (&optional shell dedicated switch beg end fast)
+(defun py-execute-line (&optional shell dedicated fast split switch proc wholebuf)
   "Send line at point to  interpreter. "
   (interactive)
-  (py--execute-prepare 'line shell dedicated switch beg end nil fast))
+  (py--execute-prepare 'line shell dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-line-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-switch (&optional shell dedicated fast split proc wholebuf)
   "Send line at point to  interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'line shell dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'line shell dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-line-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-no-switch (&optional shell dedicated fast split  proc wholebuf)
   "Send line at point to  interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'line shell dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'line shell dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-line-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-dedicated (&optional shell fast split switch proc wholebuf)
   "Send line at point to  unique interpreter. "
   (interactive)
-  (py--execute-prepare 'line shell t switch beg end nil fast))
+  (py--execute-prepare 'line shell t switch nil fast proc wholebuf split))
 
-(defun py-execute-line-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-dedicated-switch (&optional shell  fast split  proc wholebuf)
   "Send line at point to  unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'line shell t 'switch beg end nil fast))
+  (py--execute-prepare 'line shell t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-line-ipython (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-ipython (&optional dedicated fast split switch proc wholebuf)
   "Send line at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'line 'ipython dedicated switch beg end nil fast))
+  (py--execute-prepare 'line 'ipython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-line-ipython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-ipython-switch (&optional dedicated fast split proc wholebuf)
   "Send line at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'line 'ipython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'line 'ipython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-line-ipython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-ipython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send line at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'line 'ipython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'line 'ipython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-line-ipython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-ipython-dedicated (&optional fast split switch proc wholebuf)
   "Send line at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'line 'ipython t switch beg end nil fast))
+  (py--execute-prepare 'line 'ipython t switch nil fast proc wholebuf split))
 
-(defun py-execute-line-ipython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-ipython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send line at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'line 'ipython t 'switch beg end nil fast))
+  (py--execute-prepare 'line 'ipython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-line-ipython2.7 (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-ipython2.7 (&optional dedicated fast split switch proc wholebuf)
   "Send line at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'line 'ipython2.7 dedicated switch beg end nil fast))
+  (py--execute-prepare 'line 'ipython2.7 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-line-ipython2.7-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-ipython2.7-switch (&optional dedicated fast split proc wholebuf)
   "Send line at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'line 'ipython2.7 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'line 'ipython2.7 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-line-ipython2.7-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-ipython2.7-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send line at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'line 'ipython2.7 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'line 'ipython2.7 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-line-ipython2.7-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-ipython2.7-dedicated (&optional fast split switch proc wholebuf)
   "Send line at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'line 'ipython2.7 t switch beg end nil fast))
+  (py--execute-prepare 'line 'ipython2.7 t switch nil fast proc wholebuf split))
 
-(defun py-execute-line-ipython2.7-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-ipython2.7-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send line at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'line 'ipython2.7 t 'switch beg end nil fast))
+  (py--execute-prepare 'line 'ipython2.7 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-line-ipython3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-ipython3 (&optional dedicated fast split switch proc wholebuf)
   "Send line at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'line 'ipython3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'line 'ipython3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-line-ipython3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-ipython3-switch (&optional dedicated fast split proc wholebuf)
   "Send line at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'line 'ipython3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'line 'ipython3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-line-ipython3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-ipython3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send line at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'line 'ipython3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'line 'ipython3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-line-ipython3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-ipython3-dedicated (&optional fast split switch proc wholebuf)
   "Send line at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'line 'ipython3 t switch beg end nil fast))
+  (py--execute-prepare 'line 'ipython3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-line-ipython3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-ipython3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send line at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'line 'ipython3 t 'switch beg end nil fast))
+  (py--execute-prepare 'line 'ipython3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-line-jython (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-jython (&optional dedicated fast split switch proc wholebuf)
   "Send line at point to Jython interpreter. "
   (interactive)
-  (py--execute-prepare 'line 'jython dedicated switch beg end nil fast))
+  (py--execute-prepare 'line 'jython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-line-jython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-jython-switch (&optional dedicated fast split proc wholebuf)
   "Send line at point to Jython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'line 'jython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'line 'jython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-line-jython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-jython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send line at point to Jython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'line 'jython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'line 'jython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-line-jython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-jython-dedicated (&optional fast split switch proc wholebuf)
   "Send line at point to Jython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'line 'jython t switch beg end nil fast))
+  (py--execute-prepare 'line 'jython t switch nil fast proc wholebuf split))
 
-(defun py-execute-line-jython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-jython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send line at point to Jython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'line 'jython t 'switch beg end nil fast))
+  (py--execute-prepare 'line 'jython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-line-python (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-python (&optional dedicated fast split switch proc wholebuf)
   "Send line at point to default interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'line 'python dedicated switch beg end nil fast))
+  (py--execute-prepare 'line 'python dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-line-python-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-python-switch (&optional dedicated fast split proc wholebuf)
   "Send line at point to default interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'line 'python dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'line 'python dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-line-python-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-python-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send line at point to default interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'line 'python dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'line 'python dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-line-python-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-python-dedicated (&optional fast split switch proc wholebuf)
   "Send line at point to default unique interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'line 'python t switch beg end nil fast))
+  (py--execute-prepare 'line 'python t switch nil fast proc wholebuf split))
 
-(defun py-execute-line-python-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-python-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send line at point to default unique interpreter and switch to result. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'line 'python t 'switch beg end nil fast))
+  (py--execute-prepare 'line 'python t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-line-python2 (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-python2 (&optional dedicated fast split switch proc wholebuf)
   "Send line at point to Python2 interpreter. "
   (interactive)
-  (py--execute-prepare 'line 'python2 dedicated switch beg end nil fast))
+  (py--execute-prepare 'line 'python2 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-line-python2-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-python2-switch (&optional dedicated fast split proc wholebuf)
   "Send line at point to Python2 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'line 'python2 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'line 'python2 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-line-python2-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-python2-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send line at point to Python2 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'line 'python2 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'line 'python2 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-line-python2-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-python2-dedicated (&optional fast split switch proc wholebuf)
   "Send line at point to Python2 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'line 'python2 t switch beg end nil fast))
+  (py--execute-prepare 'line 'python2 t switch nil fast proc wholebuf split))
 
-(defun py-execute-line-python2-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-python2-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send line at point to Python2 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'line 'python2 t 'switch beg end nil fast))
+  (py--execute-prepare 'line 'python2 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-line-python3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-python3 (&optional dedicated fast split switch proc wholebuf)
   "Send line at point to Python3 interpreter. "
   (interactive)
-  (py--execute-prepare 'line 'python3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'line 'python3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-line-python3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-python3-switch (&optional dedicated fast split proc wholebuf)
   "Send line at point to Python3 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'line 'python3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'line 'python3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-line-python3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-python3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send line at point to Python3 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'line 'python3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'line 'python3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-line-python3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-python3-dedicated (&optional fast split switch proc wholebuf)
   "Send line at point to Python3 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'line 'python3 t switch beg end nil fast))
+  (py--execute-prepare 'line 'python3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-line-python3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-line-python3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send line at point to Python3 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'line 'python3 t 'switch beg end nil fast))
+  (py--execute-prepare 'line 'python3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block (&optional shell dedicated fast split switch proc wholebuf)
   "Send minor-block at point to  interpreter. "
   (interactive)
-  (py--execute-prepare 'minor-block shell dedicated switch beg end nil fast))
+  (py--execute-prepare 'minor-block shell dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-switch (&optional shell dedicated fast split proc wholebuf)
   "Send minor-block at point to  interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'minor-block shell dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'minor-block shell dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-no-switch (&optional shell dedicated fast split  proc wholebuf)
   "Send minor-block at point to  interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'minor-block shell dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'minor-block shell dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-dedicated (&optional shell fast split switch proc wholebuf)
   "Send minor-block at point to  unique interpreter. "
   (interactive)
-  (py--execute-prepare 'minor-block shell t switch beg end nil fast))
+  (py--execute-prepare 'minor-block shell t switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-dedicated-switch (&optional shell  fast split  proc wholebuf)
   "Send minor-block at point to  unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'minor-block shell t 'switch beg end nil fast))
+  (py--execute-prepare 'minor-block shell t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-ipython (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-ipython (&optional dedicated fast split switch proc wholebuf)
   "Send minor-block at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'minor-block 'ipython dedicated switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'ipython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-ipython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-ipython-switch (&optional dedicated fast split proc wholebuf)
   "Send minor-block at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'minor-block 'ipython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'ipython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-ipython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-ipython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send minor-block at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'minor-block 'ipython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'ipython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-ipython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-ipython-dedicated (&optional fast split switch proc wholebuf)
   "Send minor-block at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'minor-block 'ipython t switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'ipython t switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-ipython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-ipython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send minor-block at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'minor-block 'ipython t 'switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'ipython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-ipython2.7 (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-ipython2.7 (&optional dedicated fast split switch proc wholebuf)
   "Send minor-block at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'minor-block 'ipython2.7 dedicated switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'ipython2.7 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-ipython2.7-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-ipython2.7-switch (&optional dedicated fast split proc wholebuf)
   "Send minor-block at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'minor-block 'ipython2.7 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'ipython2.7 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-ipython2.7-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-ipython2.7-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send minor-block at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'minor-block 'ipython2.7 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'ipython2.7 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-ipython2.7-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-ipython2.7-dedicated (&optional fast split switch proc wholebuf)
   "Send minor-block at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'minor-block 'ipython2.7 t switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'ipython2.7 t switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-ipython2.7-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-ipython2.7-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send minor-block at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'minor-block 'ipython2.7 t 'switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'ipython2.7 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-ipython3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-ipython3 (&optional dedicated fast split switch proc wholebuf)
   "Send minor-block at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'minor-block 'ipython3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'ipython3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-ipython3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-ipython3-switch (&optional dedicated fast split proc wholebuf)
   "Send minor-block at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'minor-block 'ipython3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'ipython3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-ipython3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-ipython3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send minor-block at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'minor-block 'ipython3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'ipython3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-ipython3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-ipython3-dedicated (&optional fast split switch proc wholebuf)
   "Send minor-block at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'minor-block 'ipython3 t switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'ipython3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-ipython3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-ipython3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send minor-block at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'minor-block 'ipython3 t 'switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'ipython3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-jython (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-jython (&optional dedicated fast split switch proc wholebuf)
   "Send minor-block at point to Jython interpreter. "
   (interactive)
-  (py--execute-prepare 'minor-block 'jython dedicated switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'jython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-jython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-jython-switch (&optional dedicated fast split proc wholebuf)
   "Send minor-block at point to Jython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'minor-block 'jython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'jython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-jython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-jython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send minor-block at point to Jython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'minor-block 'jython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'jython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-jython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-jython-dedicated (&optional fast split switch proc wholebuf)
   "Send minor-block at point to Jython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'minor-block 'jython t switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'jython t switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-jython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-jython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send minor-block at point to Jython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'minor-block 'jython t 'switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'jython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-python (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-python (&optional dedicated fast split switch proc wholebuf)
   "Send minor-block at point to default interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'minor-block 'python dedicated switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'python dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-python-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-python-switch (&optional dedicated fast split proc wholebuf)
   "Send minor-block at point to default interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'minor-block 'python dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'python dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-python-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-python-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send minor-block at point to default interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'minor-block 'python dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'python dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-python-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-python-dedicated (&optional fast split switch proc wholebuf)
   "Send minor-block at point to default unique interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'minor-block 'python t switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'python t switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-python-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-python-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send minor-block at point to default unique interpreter and switch to result. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'minor-block 'python t 'switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'python t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-python2 (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-python2 (&optional dedicated fast split switch proc wholebuf)
   "Send minor-block at point to Python2 interpreter. "
   (interactive)
-  (py--execute-prepare 'minor-block 'python2 dedicated switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'python2 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-python2-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-python2-switch (&optional dedicated fast split proc wholebuf)
   "Send minor-block at point to Python2 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'minor-block 'python2 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'python2 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-python2-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-python2-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send minor-block at point to Python2 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'minor-block 'python2 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'python2 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-python2-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-python2-dedicated (&optional fast split switch proc wholebuf)
   "Send minor-block at point to Python2 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'minor-block 'python2 t switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'python2 t switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-python2-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-python2-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send minor-block at point to Python2 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'minor-block 'python2 t 'switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'python2 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-python3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-python3 (&optional dedicated fast split switch proc wholebuf)
   "Send minor-block at point to Python3 interpreter. "
   (interactive)
-  (py--execute-prepare 'minor-block 'python3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'python3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-python3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-python3-switch (&optional dedicated fast split proc wholebuf)
   "Send minor-block at point to Python3 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'minor-block 'python3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'python3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-python3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-python3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send minor-block at point to Python3 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'minor-block 'python3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'python3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-python3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-python3-dedicated (&optional fast split switch proc wholebuf)
   "Send minor-block at point to Python3 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'minor-block 'python3 t switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'python3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-minor-block-python3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-minor-block-python3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send minor-block at point to Python3 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'minor-block 'python3 t 'switch beg end nil fast))
+  (py--execute-prepare 'minor-block 'python3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph (&optional shell dedicated fast split switch proc wholebuf)
   "Send paragraph at point to  interpreter. "
   (interactive)
-  (py--execute-prepare 'paragraph shell dedicated switch beg end nil fast))
+  (py--execute-prepare 'paragraph shell dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-switch (&optional shell dedicated fast split proc wholebuf)
   "Send paragraph at point to  interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'paragraph shell dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'paragraph shell dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-no-switch (&optional shell dedicated fast split  proc wholebuf)
   "Send paragraph at point to  interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'paragraph shell dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'paragraph shell dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-dedicated (&optional shell fast split switch proc wholebuf)
   "Send paragraph at point to  unique interpreter. "
   (interactive)
-  (py--execute-prepare 'paragraph shell t switch beg end nil fast))
+  (py--execute-prepare 'paragraph shell t switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-dedicated-switch (&optional shell  fast split  proc wholebuf)
   "Send paragraph at point to  unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'paragraph shell t 'switch beg end nil fast))
+  (py--execute-prepare 'paragraph shell t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-ipython (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-ipython (&optional dedicated fast split switch proc wholebuf)
   "Send paragraph at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'paragraph 'ipython dedicated switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'ipython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-ipython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-ipython-switch (&optional dedicated fast split proc wholebuf)
   "Send paragraph at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'paragraph 'ipython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'ipython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-ipython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-ipython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send paragraph at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'paragraph 'ipython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'ipython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-ipython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-ipython-dedicated (&optional fast split switch proc wholebuf)
   "Send paragraph at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'paragraph 'ipython t switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'ipython t switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-ipython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-ipython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send paragraph at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'paragraph 'ipython t 'switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'ipython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-ipython2.7 (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-ipython2.7 (&optional dedicated fast split switch proc wholebuf)
   "Send paragraph at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'paragraph 'ipython2.7 dedicated switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'ipython2.7 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-ipython2.7-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-ipython2.7-switch (&optional dedicated fast split proc wholebuf)
   "Send paragraph at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'paragraph 'ipython2.7 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'ipython2.7 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-ipython2.7-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-ipython2.7-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send paragraph at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'paragraph 'ipython2.7 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'ipython2.7 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-ipython2.7-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-ipython2.7-dedicated (&optional fast split switch proc wholebuf)
   "Send paragraph at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'paragraph 'ipython2.7 t switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'ipython2.7 t switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-ipython2.7-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-ipython2.7-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send paragraph at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'paragraph 'ipython2.7 t 'switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'ipython2.7 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-ipython3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-ipython3 (&optional dedicated fast split switch proc wholebuf)
   "Send paragraph at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'paragraph 'ipython3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'ipython3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-ipython3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-ipython3-switch (&optional dedicated fast split proc wholebuf)
   "Send paragraph at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'paragraph 'ipython3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'ipython3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-ipython3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-ipython3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send paragraph at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'paragraph 'ipython3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'ipython3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-ipython3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-ipython3-dedicated (&optional fast split switch proc wholebuf)
   "Send paragraph at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'paragraph 'ipython3 t switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'ipython3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-ipython3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-ipython3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send paragraph at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'paragraph 'ipython3 t 'switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'ipython3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-jython (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-jython (&optional dedicated fast split switch proc wholebuf)
   "Send paragraph at point to Jython interpreter. "
   (interactive)
-  (py--execute-prepare 'paragraph 'jython dedicated switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'jython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-jython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-jython-switch (&optional dedicated fast split proc wholebuf)
   "Send paragraph at point to Jython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'paragraph 'jython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'jython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-jython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-jython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send paragraph at point to Jython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'paragraph 'jython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'jython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-jython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-jython-dedicated (&optional fast split switch proc wholebuf)
   "Send paragraph at point to Jython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'paragraph 'jython t switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'jython t switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-jython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-jython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send paragraph at point to Jython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'paragraph 'jython t 'switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'jython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-python (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-python (&optional dedicated fast split switch proc wholebuf)
   "Send paragraph at point to default interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'paragraph 'python dedicated switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'python dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-python-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-python-switch (&optional dedicated fast split proc wholebuf)
   "Send paragraph at point to default interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'paragraph 'python dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'python dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-python-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-python-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send paragraph at point to default interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'paragraph 'python dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'python dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-python-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-python-dedicated (&optional fast split switch proc wholebuf)
   "Send paragraph at point to default unique interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'paragraph 'python t switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'python t switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-python-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-python-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send paragraph at point to default unique interpreter and switch to result. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'paragraph 'python t 'switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'python t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-python2 (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-python2 (&optional dedicated fast split switch proc wholebuf)
   "Send paragraph at point to Python2 interpreter. "
   (interactive)
-  (py--execute-prepare 'paragraph 'python2 dedicated switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'python2 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-python2-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-python2-switch (&optional dedicated fast split proc wholebuf)
   "Send paragraph at point to Python2 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'paragraph 'python2 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'python2 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-python2-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-python2-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send paragraph at point to Python2 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'paragraph 'python2 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'python2 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-python2-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-python2-dedicated (&optional fast split switch proc wholebuf)
   "Send paragraph at point to Python2 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'paragraph 'python2 t switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'python2 t switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-python2-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-python2-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send paragraph at point to Python2 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'paragraph 'python2 t 'switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'python2 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-python3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-python3 (&optional dedicated fast split switch proc wholebuf)
   "Send paragraph at point to Python3 interpreter. "
   (interactive)
-  (py--execute-prepare 'paragraph 'python3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'python3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-python3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-python3-switch (&optional dedicated fast split proc wholebuf)
   "Send paragraph at point to Python3 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'paragraph 'python3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'python3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-python3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-python3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send paragraph at point to Python3 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'paragraph 'python3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'python3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-python3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-python3-dedicated (&optional fast split switch proc wholebuf)
   "Send paragraph at point to Python3 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'paragraph 'python3 t switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'python3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-paragraph-python3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-paragraph-python3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send paragraph at point to Python3 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'paragraph 'python3 t 'switch beg end nil fast))
+  (py--execute-prepare 'paragraph 'python3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression (&optional shell dedicated fast split switch proc wholebuf)
   "Send partial-expression at point to  interpreter. "
   (interactive)
-  (py--execute-prepare 'partial-expression shell dedicated switch beg end nil fast))
+  (py--execute-prepare 'partial-expression shell dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-switch (&optional shell dedicated fast split proc wholebuf)
   "Send partial-expression at point to  interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'partial-expression shell dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'partial-expression shell dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-no-switch (&optional shell dedicated fast split  proc wholebuf)
   "Send partial-expression at point to  interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'partial-expression shell dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'partial-expression shell dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-dedicated (&optional shell fast split switch proc wholebuf)
   "Send partial-expression at point to  unique interpreter. "
   (interactive)
-  (py--execute-prepare 'partial-expression shell t switch beg end nil fast))
+  (py--execute-prepare 'partial-expression shell t switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-dedicated-switch (&optional shell  fast split  proc wholebuf)
   "Send partial-expression at point to  unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'partial-expression shell t 'switch beg end nil fast))
+  (py--execute-prepare 'partial-expression shell t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-ipython (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-ipython (&optional dedicated fast split switch proc wholebuf)
   "Send partial-expression at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'ipython dedicated switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'ipython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-ipython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-ipython-switch (&optional dedicated fast split proc wholebuf)
   "Send partial-expression at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'ipython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'ipython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-ipython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-ipython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send partial-expression at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'partial-expression 'ipython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'ipython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-ipython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-ipython-dedicated (&optional fast split switch proc wholebuf)
   "Send partial-expression at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'ipython t switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'ipython t switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-ipython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-ipython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send partial-expression at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'ipython t 'switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'ipython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-ipython2.7 (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-ipython2.7 (&optional dedicated fast split switch proc wholebuf)
   "Send partial-expression at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'ipython2.7 dedicated switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'ipython2.7 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-ipython2.7-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-ipython2.7-switch (&optional dedicated fast split proc wholebuf)
   "Send partial-expression at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'ipython2.7 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'ipython2.7 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-ipython2.7-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-ipython2.7-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send partial-expression at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'partial-expression 'ipython2.7 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'ipython2.7 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-ipython2.7-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-ipython2.7-dedicated (&optional fast split switch proc wholebuf)
   "Send partial-expression at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'ipython2.7 t switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'ipython2.7 t switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-ipython2.7-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-ipython2.7-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send partial-expression at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'ipython2.7 t 'switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'ipython2.7 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-ipython3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-ipython3 (&optional dedicated fast split switch proc wholebuf)
   "Send partial-expression at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'ipython3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'ipython3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-ipython3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-ipython3-switch (&optional dedicated fast split proc wholebuf)
   "Send partial-expression at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'ipython3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'ipython3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-ipython3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-ipython3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send partial-expression at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'partial-expression 'ipython3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'ipython3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-ipython3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-ipython3-dedicated (&optional fast split switch proc wholebuf)
   "Send partial-expression at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'ipython3 t switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'ipython3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-ipython3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-ipython3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send partial-expression at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'ipython3 t 'switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'ipython3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-jython (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-jython (&optional dedicated fast split switch proc wholebuf)
   "Send partial-expression at point to Jython interpreter. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'jython dedicated switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'jython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-jython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-jython-switch (&optional dedicated fast split proc wholebuf)
   "Send partial-expression at point to Jython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'jython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'jython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-jython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-jython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send partial-expression at point to Jython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'partial-expression 'jython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'jython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-jython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-jython-dedicated (&optional fast split switch proc wholebuf)
   "Send partial-expression at point to Jython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'jython t switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'jython t switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-jython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-jython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send partial-expression at point to Jython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'jython t 'switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'jython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-python (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-python (&optional dedicated fast split switch proc wholebuf)
   "Send partial-expression at point to default interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'partial-expression 'python dedicated switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'python dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-python-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-python-switch (&optional dedicated fast split proc wholebuf)
   "Send partial-expression at point to default interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'partial-expression 'python dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'python dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-python-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-python-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send partial-expression at point to default interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'partial-expression 'python dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'python dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-python-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-python-dedicated (&optional fast split switch proc wholebuf)
   "Send partial-expression at point to default unique interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'partial-expression 'python t switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'python t switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-python-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-python-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send partial-expression at point to default unique interpreter and switch to result. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'partial-expression 'python t 'switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'python t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-python2 (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-python2 (&optional dedicated fast split switch proc wholebuf)
   "Send partial-expression at point to Python2 interpreter. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'python2 dedicated switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'python2 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-python2-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-python2-switch (&optional dedicated fast split proc wholebuf)
   "Send partial-expression at point to Python2 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'python2 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'python2 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-python2-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-python2-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send partial-expression at point to Python2 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'partial-expression 'python2 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'python2 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-python2-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-python2-dedicated (&optional fast split switch proc wholebuf)
   "Send partial-expression at point to Python2 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'python2 t switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'python2 t switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-python2-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-python2-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send partial-expression at point to Python2 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'python2 t 'switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'python2 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-python3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-python3 (&optional dedicated fast split switch proc wholebuf)
   "Send partial-expression at point to Python3 interpreter. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'python3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'python3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-python3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-python3-switch (&optional dedicated fast split proc wholebuf)
   "Send partial-expression at point to Python3 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'python3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'python3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-python3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-python3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send partial-expression at point to Python3 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'partial-expression 'python3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'python3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-python3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-python3-dedicated (&optional fast split switch proc wholebuf)
   "Send partial-expression at point to Python3 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'python3 t switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'python3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-partial-expression-python3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-partial-expression-python3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send partial-expression at point to Python3 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'partial-expression 'python3 t 'switch beg end nil fast))
+  (py--execute-prepare 'partial-expression 'python3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-region (beg end &optional shell dedicated switch fast)
+(defun py-execute-region (beg end &optional shell dedicated fast split switch proc wholebuf)
   "Send region at point to  interpreter. "
   (interactive "r")
-  (py--execute-prepare 'region shell dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region shell dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-switch (beg end &optional shell dedicated fast split proc wholebuf)
   "Send region at point to  interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive "r")
-  (py--execute-prepare 'region shell dedicated 'switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region shell dedicated 'switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-no-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-no-switch (beg end &optional shell dedicated fast split  proc wholebuf)
   "Send region at point to  interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive "r")
-  (py--execute-prepare 'region shell dedicated 'no-switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region shell dedicated 'no-switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-dedicated (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-dedicated (beg end &optional shell fast split switch proc wholebuf)
   "Send region at point to  unique interpreter. "
   (interactive "r")
-  (py--execute-prepare 'region shell t switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region shell t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-dedicated-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-dedicated-switch (beg end &optional shell  fast split  proc wholebuf)
   "Send region at point to  unique interpreter and switch to result. "
   (interactive "r")
-  (py--execute-prepare 'region shell t 'switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region shell t 'switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-ipython (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-ipython (beg end &optional dedicated fast split switch proc wholebuf)
   "Send region at point to IPython interpreter. "
   (interactive "r")
-  (py--execute-prepare 'region 'ipython dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'ipython dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-ipython-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-ipython-switch (beg end &optional dedicated fast split proc wholebuf)
   "Send region at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive "r")
-  (py--execute-prepare 'region 'ipython dedicated 'switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'ipython dedicated 'switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-ipython-no-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-ipython-no-switch (beg end &optional dedicated fast split  proc wholebuf)
   "Send region at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive "r")
-  (py--execute-prepare 'region 'ipython dedicated 'no-switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'ipython dedicated 'no-switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-ipython-dedicated (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-ipython-dedicated (beg end &optional fast split switch proc wholebuf)
   "Send region at point to IPython unique interpreter. "
   (interactive "r")
-  (py--execute-prepare 'region 'ipython t switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'ipython t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-ipython-dedicated-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-ipython-dedicated-switch (beg end &optional  fast split  proc wholebuf)
   "Send region at point to IPython unique interpreter and switch to result. "
   (interactive "r")
-  (py--execute-prepare 'region 'ipython t 'switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'ipython t 'switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-ipython2.7 (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-ipython2.7 (beg end &optional dedicated fast split switch proc wholebuf)
   "Send region at point to IPython interpreter. "
   (interactive "r")
-  (py--execute-prepare 'region 'ipython2.7 dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'ipython2.7 dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-ipython2.7-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-ipython2.7-switch (beg end &optional dedicated fast split proc wholebuf)
   "Send region at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive "r")
-  (py--execute-prepare 'region 'ipython2.7 dedicated 'switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'ipython2.7 dedicated 'switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-ipython2.7-no-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-ipython2.7-no-switch (beg end &optional dedicated fast split  proc wholebuf)
   "Send region at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive "r")
-  (py--execute-prepare 'region 'ipython2.7 dedicated 'no-switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'ipython2.7 dedicated 'no-switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-ipython2.7-dedicated (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-ipython2.7-dedicated (beg end &optional fast split switch proc wholebuf)
   "Send region at point to IPython unique interpreter. "
   (interactive "r")
-  (py--execute-prepare 'region 'ipython2.7 t switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'ipython2.7 t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-ipython2.7-dedicated-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-ipython2.7-dedicated-switch (beg end &optional  fast split  proc wholebuf)
   "Send region at point to IPython unique interpreter and switch to result. "
   (interactive "r")
-  (py--execute-prepare 'region 'ipython2.7 t 'switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'ipython2.7 t 'switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-ipython3 (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-ipython3 (beg end &optional dedicated fast split switch proc wholebuf)
   "Send region at point to IPython interpreter. "
   (interactive "r")
-  (py--execute-prepare 'region 'ipython3 dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'ipython3 dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-ipython3-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-ipython3-switch (beg end &optional dedicated fast split proc wholebuf)
   "Send region at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive "r")
-  (py--execute-prepare 'region 'ipython3 dedicated 'switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'ipython3 dedicated 'switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-ipython3-no-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-ipython3-no-switch (beg end &optional dedicated fast split  proc wholebuf)
   "Send region at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive "r")
-  (py--execute-prepare 'region 'ipython3 dedicated 'no-switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'ipython3 dedicated 'no-switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-ipython3-dedicated (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-ipython3-dedicated (beg end &optional fast split switch proc wholebuf)
   "Send region at point to IPython unique interpreter. "
   (interactive "r")
-  (py--execute-prepare 'region 'ipython3 t switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'ipython3 t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-ipython3-dedicated-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-ipython3-dedicated-switch (beg end &optional  fast split  proc wholebuf)
   "Send region at point to IPython unique interpreter and switch to result. "
   (interactive "r")
-  (py--execute-prepare 'region 'ipython3 t 'switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'ipython3 t 'switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-jython (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-jython (beg end &optional dedicated fast split switch proc wholebuf)
   "Send region at point to Jython interpreter. "
   (interactive "r")
-  (py--execute-prepare 'region 'jython dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'jython dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-jython-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-jython-switch (beg end &optional dedicated fast split proc wholebuf)
   "Send region at point to Jython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive "r")
-  (py--execute-prepare 'region 'jython dedicated 'switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'jython dedicated 'switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-jython-no-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-jython-no-switch (beg end &optional dedicated fast split  proc wholebuf)
   "Send region at point to Jython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive "r")
-  (py--execute-prepare 'region 'jython dedicated 'no-switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'jython dedicated 'no-switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-jython-dedicated (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-jython-dedicated (beg end &optional fast split switch proc wholebuf)
   "Send region at point to Jython unique interpreter. "
   (interactive "r")
-  (py--execute-prepare 'region 'jython t switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'jython t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-jython-dedicated-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-jython-dedicated-switch (beg end &optional  fast split  proc wholebuf)
   "Send region at point to Jython unique interpreter and switch to result. "
   (interactive "r")
-  (py--execute-prepare 'region 'jython t 'switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'jython t 'switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-python (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-python (beg end &optional dedicated fast split switch proc wholebuf)
   "Send region at point to default interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive "r")
-  (py--execute-prepare 'region 'python dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'python dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-python-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-python-switch (beg end &optional dedicated fast split proc wholebuf)
   "Send region at point to default interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
 
 For `default' see value of `py-shell-name'"
   (interactive "r")
-  (py--execute-prepare 'region 'python dedicated 'switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'python dedicated 'switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-python-no-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-python-no-switch (beg end &optional dedicated fast split  proc wholebuf)
   "Send region at point to default interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
 
 For `default' see value of `py-shell-name'"
   (interactive "r")
-  (py--execute-prepare 'region 'python dedicated 'no-switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'python dedicated 'no-switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-python-dedicated (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-python-dedicated (beg end &optional fast split switch proc wholebuf)
   "Send region at point to default unique interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive "r")
-  (py--execute-prepare 'region 'python t switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'python t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-python-dedicated-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-python-dedicated-switch (beg end &optional  fast split  proc wholebuf)
   "Send region at point to default unique interpreter and switch to result. 
 
 For `default' see value of `py-shell-name'"
   (interactive "r")
-  (py--execute-prepare 'region 'python t 'switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'python t 'switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-python2 (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-python2 (beg end &optional dedicated fast split switch proc wholebuf)
   "Send region at point to Python2 interpreter. "
   (interactive "r")
-  (py--execute-prepare 'region 'python2 dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'python2 dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-python2-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-python2-switch (beg end &optional dedicated fast split proc wholebuf)
   "Send region at point to Python2 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive "r")
-  (py--execute-prepare 'region 'python2 dedicated 'switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'python2 dedicated 'switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-python2-no-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-python2-no-switch (beg end &optional dedicated fast split  proc wholebuf)
   "Send region at point to Python2 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive "r")
-  (py--execute-prepare 'region 'python2 dedicated 'no-switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'python2 dedicated 'no-switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-python2-dedicated (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-python2-dedicated (beg end &optional fast split switch proc wholebuf)
   "Send region at point to Python2 unique interpreter. "
   (interactive "r")
-  (py--execute-prepare 'region 'python2 t switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'python2 t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-python2-dedicated-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-python2-dedicated-switch (beg end &optional  fast split  proc wholebuf)
   "Send region at point to Python2 unique interpreter and switch to result. "
   (interactive "r")
-  (py--execute-prepare 'region 'python2 t 'switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'python2 t 'switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-python3 (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-python3 (beg end &optional dedicated fast split switch proc wholebuf)
   "Send region at point to Python3 interpreter. "
   (interactive "r")
-  (py--execute-prepare 'region 'python3 dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'python3 dedicated switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-python3-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-python3-switch (beg end &optional dedicated fast split proc wholebuf)
   "Send region at point to Python3 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive "r")
-  (py--execute-prepare 'region 'python3 dedicated 'switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'python3 dedicated 'switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-python3-no-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-python3-no-switch (beg end &optional dedicated fast split  proc wholebuf)
   "Send region at point to Python3 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive "r")
-  (py--execute-prepare 'region 'python3 dedicated 'no-switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'python3 dedicated 'no-switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-python3-dedicated (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-python3-dedicated (beg end &optional fast split switch proc wholebuf)
   "Send region at point to Python3 unique interpreter. "
   (interactive "r")
-  (py--execute-prepare 'region 'python3 t switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'python3 t switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-region-python3-dedicated-switch (beg end &optional shell dedicated switch fast)
+(defun py-execute-region-python3-dedicated-switch (beg end &optional  fast split  proc wholebuf)
   "Send region at point to Python3 unique interpreter and switch to result. "
   (interactive "r")
-  (py--execute-prepare 'region 'python3 t 'switch (or beg (region-beginning)) (or end (region-end)) nil fast))
+  (py--execute-prepare 'region 'python3 t 'switch (or beg (region-beginning)) (or end (region-end)) nil fast proc wholebuf split))
 
-(defun py-execute-statement (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement (&optional shell dedicated fast split switch proc wholebuf)
   "Send statement at point to  interpreter. "
   (interactive)
-  (py--execute-prepare 'statement shell dedicated switch beg end nil fast))
+  (py--execute-prepare 'statement shell dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-switch (&optional shell dedicated fast split proc wholebuf)
   "Send statement at point to  interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'statement shell dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'statement shell dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-no-switch (&optional shell dedicated fast split  proc wholebuf)
   "Send statement at point to  interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'statement shell dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'statement shell dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-dedicated (&optional shell fast split switch proc wholebuf)
   "Send statement at point to  unique interpreter. "
   (interactive)
-  (py--execute-prepare 'statement shell t switch beg end nil fast))
+  (py--execute-prepare 'statement shell t switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-dedicated-switch (&optional shell  fast split  proc wholebuf)
   "Send statement at point to  unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'statement shell t 'switch beg end nil fast))
+  (py--execute-prepare 'statement shell t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-ipython (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-ipython (&optional dedicated fast split switch proc wholebuf)
   "Send statement at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'statement 'ipython dedicated switch beg end nil fast))
+  (py--execute-prepare 'statement 'ipython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-ipython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-ipython-switch (&optional dedicated fast split proc wholebuf)
   "Send statement at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'statement 'ipython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'statement 'ipython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-ipython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-ipython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send statement at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'statement 'ipython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'statement 'ipython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-ipython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-ipython-dedicated (&optional fast split switch proc wholebuf)
   "Send statement at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'statement 'ipython t switch beg end nil fast))
+  (py--execute-prepare 'statement 'ipython t switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-ipython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-ipython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send statement at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'statement 'ipython t 'switch beg end nil fast))
+  (py--execute-prepare 'statement 'ipython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-ipython2.7 (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-ipython2.7 (&optional dedicated fast split switch proc wholebuf)
   "Send statement at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'statement 'ipython2.7 dedicated switch beg end nil fast))
+  (py--execute-prepare 'statement 'ipython2.7 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-ipython2.7-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-ipython2.7-switch (&optional dedicated fast split proc wholebuf)
   "Send statement at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'statement 'ipython2.7 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'statement 'ipython2.7 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-ipython2.7-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-ipython2.7-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send statement at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'statement 'ipython2.7 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'statement 'ipython2.7 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-ipython2.7-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-ipython2.7-dedicated (&optional fast split switch proc wholebuf)
   "Send statement at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'statement 'ipython2.7 t switch beg end nil fast))
+  (py--execute-prepare 'statement 'ipython2.7 t switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-ipython2.7-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-ipython2.7-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send statement at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'statement 'ipython2.7 t 'switch beg end nil fast))
+  (py--execute-prepare 'statement 'ipython2.7 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-ipython3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-ipython3 (&optional dedicated fast split switch proc wholebuf)
   "Send statement at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'statement 'ipython3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'statement 'ipython3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-ipython3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-ipython3-switch (&optional dedicated fast split proc wholebuf)
   "Send statement at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'statement 'ipython3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'statement 'ipython3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-ipython3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-ipython3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send statement at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'statement 'ipython3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'statement 'ipython3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-ipython3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-ipython3-dedicated (&optional fast split switch proc wholebuf)
   "Send statement at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'statement 'ipython3 t switch beg end nil fast))
+  (py--execute-prepare 'statement 'ipython3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-ipython3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-ipython3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send statement at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'statement 'ipython3 t 'switch beg end nil fast))
+  (py--execute-prepare 'statement 'ipython3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-jython (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-jython (&optional dedicated fast split switch proc wholebuf)
   "Send statement at point to Jython interpreter. "
   (interactive)
-  (py--execute-prepare 'statement 'jython dedicated switch beg end nil fast))
+  (py--execute-prepare 'statement 'jython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-jython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-jython-switch (&optional dedicated fast split proc wholebuf)
   "Send statement at point to Jython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'statement 'jython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'statement 'jython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-jython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-jython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send statement at point to Jython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'statement 'jython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'statement 'jython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-jython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-jython-dedicated (&optional fast split switch proc wholebuf)
   "Send statement at point to Jython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'statement 'jython t switch beg end nil fast))
+  (py--execute-prepare 'statement 'jython t switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-jython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-jython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send statement at point to Jython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'statement 'jython t 'switch beg end nil fast))
+  (py--execute-prepare 'statement 'jython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-python (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-python (&optional dedicated fast split switch proc wholebuf)
   "Send statement at point to default interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'statement 'python dedicated switch beg end nil fast))
+  (py--execute-prepare 'statement 'python dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-python-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-python-switch (&optional dedicated fast split proc wholebuf)
   "Send statement at point to default interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'statement 'python dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'statement 'python dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-python-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-python-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send statement at point to default interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'statement 'python dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'statement 'python dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-python-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-python-dedicated (&optional fast split switch proc wholebuf)
   "Send statement at point to default unique interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'statement 'python t switch beg end nil fast))
+  (py--execute-prepare 'statement 'python t switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-python-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-python-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send statement at point to default unique interpreter and switch to result. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'statement 'python t 'switch beg end nil fast))
+  (py--execute-prepare 'statement 'python t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-python2 (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-python2 (&optional dedicated fast split switch proc wholebuf)
   "Send statement at point to Python2 interpreter. "
   (interactive)
-  (py--execute-prepare 'statement 'python2 dedicated switch beg end nil fast))
+  (py--execute-prepare 'statement 'python2 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-python2-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-python2-switch (&optional dedicated fast split proc wholebuf)
   "Send statement at point to Python2 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'statement 'python2 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'statement 'python2 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-python2-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-python2-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send statement at point to Python2 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'statement 'python2 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'statement 'python2 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-python2-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-python2-dedicated (&optional fast split switch proc wholebuf)
   "Send statement at point to Python2 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'statement 'python2 t switch beg end nil fast))
+  (py--execute-prepare 'statement 'python2 t switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-python2-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-python2-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send statement at point to Python2 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'statement 'python2 t 'switch beg end nil fast))
+  (py--execute-prepare 'statement 'python2 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-python3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-python3 (&optional dedicated fast split switch proc wholebuf)
   "Send statement at point to Python3 interpreter. "
   (interactive)
-  (py--execute-prepare 'statement 'python3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'statement 'python3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-python3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-python3-switch (&optional dedicated fast split proc wholebuf)
   "Send statement at point to Python3 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'statement 'python3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'statement 'python3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-python3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-python3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send statement at point to Python3 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'statement 'python3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'statement 'python3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-python3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-python3-dedicated (&optional fast split switch proc wholebuf)
   "Send statement at point to Python3 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'statement 'python3 t switch beg end nil fast))
+  (py--execute-prepare 'statement 'python3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-statement-python3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-statement-python3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send statement at point to Python3 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'statement 'python3 t 'switch beg end nil fast))
+  (py--execute-prepare 'statement 'python3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level (&optional shell dedicated fast split switch proc wholebuf)
   "Send top-level at point to  interpreter. "
   (interactive)
-  (py--execute-prepare 'top-level shell dedicated switch beg end nil fast))
+  (py--execute-prepare 'top-level shell dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-switch (&optional shell dedicated fast split proc wholebuf)
   "Send top-level at point to  interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'top-level shell dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'top-level shell dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-no-switch (&optional shell dedicated fast split  proc wholebuf)
   "Send top-level at point to  interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'top-level shell dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'top-level shell dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-dedicated (&optional shell fast split switch proc wholebuf)
   "Send top-level at point to  unique interpreter. "
   (interactive)
-  (py--execute-prepare 'top-level shell t switch beg end nil fast))
+  (py--execute-prepare 'top-level shell t switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-dedicated-switch (&optional shell  fast split  proc wholebuf)
   "Send top-level at point to  unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'top-level shell t 'switch beg end nil fast))
+  (py--execute-prepare 'top-level shell t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-ipython (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-ipython (&optional dedicated fast split switch proc wholebuf)
   "Send top-level at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'top-level 'ipython dedicated switch beg end nil fast))
+  (py--execute-prepare 'top-level 'ipython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-ipython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-ipython-switch (&optional dedicated fast split proc wholebuf)
   "Send top-level at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'top-level 'ipython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'top-level 'ipython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-ipython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-ipython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send top-level at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'top-level 'ipython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'top-level 'ipython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-ipython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-ipython-dedicated (&optional fast split switch proc wholebuf)
   "Send top-level at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'top-level 'ipython t switch beg end nil fast))
+  (py--execute-prepare 'top-level 'ipython t switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-ipython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-ipython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send top-level at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'top-level 'ipython t 'switch beg end nil fast))
+  (py--execute-prepare 'top-level 'ipython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-ipython2.7 (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-ipython2.7 (&optional dedicated fast split switch proc wholebuf)
   "Send top-level at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'top-level 'ipython2.7 dedicated switch beg end nil fast))
+  (py--execute-prepare 'top-level 'ipython2.7 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-ipython2.7-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-ipython2.7-switch (&optional dedicated fast split proc wholebuf)
   "Send top-level at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'top-level 'ipython2.7 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'top-level 'ipython2.7 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-ipython2.7-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-ipython2.7-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send top-level at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'top-level 'ipython2.7 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'top-level 'ipython2.7 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-ipython2.7-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-ipython2.7-dedicated (&optional fast split switch proc wholebuf)
   "Send top-level at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'top-level 'ipython2.7 t switch beg end nil fast))
+  (py--execute-prepare 'top-level 'ipython2.7 t switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-ipython2.7-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-ipython2.7-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send top-level at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'top-level 'ipython2.7 t 'switch beg end nil fast))
+  (py--execute-prepare 'top-level 'ipython2.7 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-ipython3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-ipython3 (&optional dedicated fast split switch proc wholebuf)
   "Send top-level at point to IPython interpreter. "
   (interactive)
-  (py--execute-prepare 'top-level 'ipython3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'top-level 'ipython3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-ipython3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-ipython3-switch (&optional dedicated fast split proc wholebuf)
   "Send top-level at point to IPython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'top-level 'ipython3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'top-level 'ipython3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-ipython3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-ipython3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send top-level at point to IPython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'top-level 'ipython3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'top-level 'ipython3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-ipython3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-ipython3-dedicated (&optional fast split switch proc wholebuf)
   "Send top-level at point to IPython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'top-level 'ipython3 t switch beg end nil fast))
+  (py--execute-prepare 'top-level 'ipython3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-ipython3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-ipython3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send top-level at point to IPython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'top-level 'ipython3 t 'switch beg end nil fast))
+  (py--execute-prepare 'top-level 'ipython3 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-jython (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-jython (&optional dedicated fast split switch proc wholebuf)
   "Send top-level at point to Jython interpreter. "
   (interactive)
-  (py--execute-prepare 'top-level 'jython dedicated switch beg end nil fast))
+  (py--execute-prepare 'top-level 'jython dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-jython-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-jython-switch (&optional dedicated fast split proc wholebuf)
   "Send top-level at point to Jython interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'top-level 'jython dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'top-level 'jython dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-jython-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-jython-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send top-level at point to Jython interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'top-level 'jython dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'top-level 'jython dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-jython-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-jython-dedicated (&optional fast split switch proc wholebuf)
   "Send top-level at point to Jython unique interpreter. "
   (interactive)
-  (py--execute-prepare 'top-level 'jython t switch beg end nil fast))
+  (py--execute-prepare 'top-level 'jython t switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-jython-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-jython-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send top-level at point to Jython unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'top-level 'jython t 'switch beg end nil fast))
+  (py--execute-prepare 'top-level 'jython t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-python (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-python (&optional dedicated fast split switch proc wholebuf)
   "Send top-level at point to default interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'top-level 'python dedicated switch beg end nil fast))
+  (py--execute-prepare 'top-level 'python dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-python-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-python-switch (&optional dedicated fast split proc wholebuf)
   "Send top-level at point to default interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'top-level 'python dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'top-level 'python dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-python-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-python-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send top-level at point to default interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'top-level 'python dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'top-level 'python dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-python-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-python-dedicated (&optional fast split switch proc wholebuf)
   "Send top-level at point to default unique interpreter. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'top-level 'python t switch beg end nil fast))
+  (py--execute-prepare 'top-level 'python t switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-python-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-python-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send top-level at point to default unique interpreter and switch to result. 
 
 For `default' see value of `py-shell-name'"
   (interactive)
-  (py--execute-prepare 'top-level 'python t 'switch beg end nil fast))
+  (py--execute-prepare 'top-level 'python t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-python2 (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-python2 (&optional dedicated fast split switch proc wholebuf)
   "Send top-level at point to Python2 interpreter. "
   (interactive)
-  (py--execute-prepare 'top-level 'python2 dedicated switch beg end nil fast))
+  (py--execute-prepare 'top-level 'python2 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-python2-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-python2-switch (&optional dedicated fast split proc wholebuf)
   "Send top-level at point to Python2 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'top-level 'python2 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'top-level 'python2 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-python2-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-python2-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send top-level at point to Python2 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'top-level 'python2 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'top-level 'python2 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-python2-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-python2-dedicated (&optional fast split switch proc wholebuf)
   "Send top-level at point to Python2 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'top-level 'python2 t switch beg end nil fast))
+  (py--execute-prepare 'top-level 'python2 t switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-python2-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-python2-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send top-level at point to Python2 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'top-level 'python2 t 'switch beg end nil fast))
+  (py--execute-prepare 'top-level 'python2 t 'switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-python3 (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-python3 (&optional dedicated fast split switch proc wholebuf)
   "Send top-level at point to Python3 interpreter. "
   (interactive)
-  (py--execute-prepare 'top-level 'python3 dedicated switch beg end nil fast))
+  (py--execute-prepare 'top-level 'python3 dedicated switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-python3-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-python3-switch (&optional dedicated fast split proc wholebuf)
   "Send top-level at point to Python3 interpreter. 
 
 Switch to output buffer. Ignores `py-switch-buffers-on-execute-p'. "
   (interactive)
-  (py--execute-prepare 'top-level 'python3 dedicated 'switch beg end nil fast))
+  (py--execute-prepare 'top-level 'python3 dedicated 'switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-python3-no-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-python3-no-switch (&optional dedicated fast split  proc wholebuf)
   "Send top-level at point to Python3 interpreter. 
 
 Keep current buffer. Ignores `py-switch-buffers-on-execute-p' "
   (interactive)
-  (py--execute-prepare 'top-level 'python3 dedicated 'no-switch beg end nil fast))
+  (py--execute-prepare 'top-level 'python3 dedicated 'no-switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-python3-dedicated (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-python3-dedicated (&optional fast split switch proc wholebuf)
   "Send top-level at point to Python3 unique interpreter. "
   (interactive)
-  (py--execute-prepare 'top-level 'python3 t switch beg end nil fast))
+  (py--execute-prepare 'top-level 'python3 t switch nil fast proc wholebuf split))
 
-(defun py-execute-top-level-python3-dedicated-switch (&optional shell dedicated switch beg end fast)
+(defun py-execute-top-level-python3-dedicated-switch (&optional  fast split  proc wholebuf)
   "Send top-level at point to Python3 unique interpreter and switch to result. "
   (interactive)
-  (py--execute-prepare 'top-level 'python3 t 'switch beg end nil fast))
+  (py--execute-prepare 'top-level 'python3 t 'switch nil fast proc wholebuf split))
 
 ;; python-abbrev-propose
 
@@ -17571,7 +17566,6 @@ See lp:1066489 "
          (beg (copy-marker (if (< thisbeg parabeg) parabeg thisbeg)))
          (end (copy-marker (if (< thisend paraend) thisend paraend)))
 	 (multi-line-p (string-match "\n" (buffer-substring-no-properties thisbeg thisend)))
-	 erg
          first-line-p)
     ;;    (narrow-to-region beg end)
     (goto-char beg)
@@ -17617,7 +17611,6 @@ Fill according to `py-docstring-style' "
     (save-restriction
       (window-configuration-to-register py-windows-config-register)
       (let* ((pps (parse-partial-sexp (point-min) (point)))
-	     (orig (copy-marker (point)))
 	     (docstring (unless (not py-docstring-style)(py--in-or-behind-or-before-a-docstring)))
 	     (fill-column py-comment-fill-column))
 	(cond ((or (nth 4 pps)
@@ -17680,8 +17673,7 @@ Returns indentation reached. "
                        (save-excursion
                          (goto-char
                           (region-end))))
-                      (t (line-end-position))))
-           (orig end))
+                      (t (line-end-position)))))
       (setq beg (copy-marker beg))
       (setq end (copy-marker end))
       (if (< 0 count)
@@ -18719,12 +18711,12 @@ See also `py-fast-shell'
     (delete-region (point) (point-max))))
 
 
-(defun py--fast-send-string-no-output (string proc output-buffer)
+(defun py--fast-send-string-no-output (strg proc output-buffer)
   (with-current-buffer output-buffer
     (process-send-string proc "\n")
     (let ((orig (point-max)))
       (sit-for 1 t)
-      (process-send-string proc string)
+      (process-send-string proc strg)
       (process-send-string proc "\n")
       (accept-process-output proc 5)
       (sit-for 1 t)
@@ -19209,7 +19201,7 @@ completions on the current context."
 
     nil))
 
-(defun py--fast-complete-base (shell pos beg end word imports debug exception-buffer)
+(defun py--fast-complete-base (shell pos beg end word imports exception-buffer)
   (let* ((shell (or shell (py-choose-shell nil t)))
 	 (py-buffer-name (py-shell nil nil shell nil t))
 	 (proc (get-buffer-process py-buffer-name))
@@ -19259,7 +19251,7 @@ Returns beginning of FORM if successful, nil otherwise"
 			 (cdr (ar--go-to-keyword (symbol-value regexp) indent)))
                         (t (ignore-errors
                              (cdr (ar--go-to-keyword (symbol-value regexp)
-                                                    (- (progn (if (ar--beginning-of-statement-p) (current-indentation) (save-excursion (ar-backward-statement) (current-indentation)))) ar-indent-offset)))))))
+                                                    (- (progn (if (ar--beginning-of-statement-p) (current-indentation) (save-excursion (ar-backward-statement) (current-indentation)))) py-indent-offset)))))))
         (when lc (beginning-of-line) (setq erg (point)))))
     ;; (when (and ar-verbose-p iact) (message "%s" erg))
     erg))
@@ -19273,9 +19265,9 @@ Returns beginning of FORM if successful, nil otherwise"
 	       ((looking-at (symbol-value inter-re))
 		(current-indentation))
 	       (t
-		(if (<= ar-indent-offset (current-indentation))
-		    (- (current-indentation) (if ar-smart-indentation (ar-guess-indent-offset) ar-indent-offset))
-		  ar-indent-offset)))))
+		(if (<= py-indent-offset (current-indentation))
+		    (- (current-indentation) (if ar-smart-indentation (ar-guess-indent-offset) py-indent-offset))
+		  py-indent-offset)))))
 
 (defun ar--beginning-of-prepare (indent final-re &optional inter-re iact lc)
   (let ((orig (point))
@@ -19301,9 +19293,9 @@ Returns beginning of FORM if successful, nil otherwise"
                           ((looking-at (symbol-value inter-re))
                            (current-indentation))
                           (t
-                           (if (<= ar-indent-offset (current-indentation))
-                               (- (current-indentation) (if ar-smart-indentation (ar-guess-indent-offset) ar-indent-offset))
-                             ar-indent-offset))))))
+                           (if (<= py-indent-offset (current-indentation))
+                               (- (current-indentation) (if ar-smart-indentation (ar-guess-indent-offset) py-indent-offset))
+                             py-indent-offset))))))
         erg)
     (if (and (< orig (point)) (looking-at (symbol-value final-re)))
         (progn
@@ -19377,7 +19369,7 @@ Returns position reached if successful"
   (unless (bobp)
     (goto-char (point-min))))
 
-(defun py--execute-prepare (form &optional shell dedicated switch beg end file fast proc wholebuf)
+(defun py--execute-prepare (form &optional shell dedicated switch beg end file fast proc wholebuf split)
   "Used by python-extended-executes ."
   (save-excursion
     (let* ((form (prin1-to-string form))
@@ -19390,11 +19382,6 @@ Returns position reached if successful"
                           (push-mark)))))
            (end (unless file
                   (or end (funcall (intern-soft (concat "py-forward-" form))))))
-           (py-switch-buffers-on-execute-p (cond ((eq 'switch switch)
-                                                  t)
-                                                 ((eq 'no-switch switch)
-                                                  nil)
-                                                 (t py-switch-buffers-on-execute-p)))
            filename)
       (setq py-buffer-name nil)
       (if file
@@ -19403,7 +19390,7 @@ Returns position reached if successful"
             (if (file-readable-p filename)
                 (py--execute-file-base nil filename nil nil origline)
               (message "%s not readable. %s" file "Do you have write permissions?")))
-        (py--execute-base beg end shell filename proc file wholebuf fast dedicated)))))
+        (py--execute-base beg end shell filename proc file wholebuf fast dedicated split switch)))))
 
 (defun py-load-skeletons ()
   "Load skeletons from extensions. "
@@ -19640,7 +19627,7 @@ as it leaves your system default unchanged."
               ;; comment-start regex
               "#"
               ;; forward-sexp function
-              (lambda (arg)
+              (lambda ()
                 (py-forward-block-or-clause))
               nil) hs-special-modes-alist)
 
@@ -19692,7 +19679,7 @@ Don't save anything for STR matching `py-input-filter-re' "
   (when py-uncomment-indents-p
     (py-indent-region beg end)))
 
-(defun py-uncomment (&optional beg end)
+(defun py-uncomment (&optional beg)
   "Uncomment commented lines at point.
 
 If region is active, restrict uncommenting at region "
@@ -19768,7 +19755,7 @@ Use `defcustom' to keep value across sessions "
   "Return `t' if emacs major version is above 23"
   (< 23 (string-to-number (car (split-string emacs-version "\\.")))))
 
-(defun py--empty-arglist-indent (nesting py-indent-offset indent-offset)
+(defun py--empty-arglist-indent (nesting &optional indent-offset indent-offset)
   "Internally used by `py-compute-indentation'"
   (if
       (and (eq 1 nesting)
@@ -19778,7 +19765,7 @@ Use `defcustom' to keep value across sessions "
       (progn
         (back-to-indentation)
         (+ (current-column) (* 2 (or indent-offset py-indent-offset))))
-    (+ (current-indentation) py-indent-offset)))
+    (+ (current-indentation) (or indent-offset py-indent-offset))))
 
 (defun py-symbol-at-point ()
   "Return the current Python symbol."
@@ -19806,9 +19793,8 @@ Use `defcustom' to keep value across sessions "
 
 (defun py--line-backward-maybe ()
   "Return result of (< 0 (abs (skip-chars-backward \" \\t\\r\\n\\f\"))) "
-  (let ((orig (point)))
-    (skip-chars-backward " \t\f" (line-beginning-position))
-    (< 0 (abs (skip-chars-backward " \t\r\n\f")))))
+  (skip-chars-backward " \t\f" (line-beginning-position))
+  (< 0 (abs (skip-chars-backward " \t\r\n\f"))))
 
 (defun py--after-empty-line ()
   "Return `t' if line before contains only whitespace characters. "
@@ -20107,14 +20093,9 @@ LIEP stores line-end-position at point-of-interest
 (defun py-continuation-offset (&optional arg)
   "With numeric ARG different from 1 py-continuation-offset is set to that value; returns py-continuation-offset. "
   (interactive "p")
-  (let ((erg (if (eq 1 arg)
-                 py-continuation-offset
-               (when (numberp arg)
-                 (prog1
-                     arg
-                   (setq py-continuation-offset arg))))))
-    (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" py-continuation-offset))
-    py-continuation-offset))
+  (and (numberp arg) (not (eq 1 arg)) (setq py-continuation-offset arg))
+  (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" py-continuation-offset))
+  py-continuation-offset)
 
 (defalias 'pios 'py-indentation-of-statement)
 (defalias 'ios 'py-indentation-of-statement)
@@ -20134,11 +20115,7 @@ LIEP stores line-end-position at point-of-interest
   "Return lists beginning position, nil if not inside.
 
 Optional ARG indicates a start-position for `parse-partial-sexp'."
-  (interactive)
-  (let* ((ppstart (or start (point-min)))
-         (erg (nth 1 (parse-partial-sexp (point-min) (point)))))
-    (when (called-interactively-p 'any) (message "%s" erg))
-    erg))
+  (nth 1 (parse-partial-sexp (or start (point-min)) (point))))
 
 (defun py-end-of-list-position (&optional arg)
   "Return end position, nil if not inside.
@@ -20146,7 +20123,7 @@ Optional ARG indicates a start-position for `parse-partial-sexp'."
 Optional ARG indicates a start-position for `parse-partial-sexp'."
   (interactive)
   (let* ((ppstart (or arg (point-min)))
-         (erg (parse-partial-sexp (point-min) (point)))
+         (erg (parse-partial-sexp ppstart (point)))
          (beg (nth 1 erg))
          end)
     (when beg
@@ -20335,12 +20312,10 @@ Unclosed-string errors are not handled here, as made visible by fontification al
 	     (py-forward-statement)(setq last (point))))
     (and last (goto-char last))))
 
-(defun py--end-of-paragraph (regexp &optional orig repeat)
-  (let* ((repeat (or (and repeat (1+ repeat)) 999))
-	 (orig (or orig (point)))
-	 (regexp (if (symbolp regexp) (symbol-value regexp)
+(defun py--end-of-paragraph (regexp)
+  (let* ((regexp (if (symbolp regexp) (symbol-value regexp)
 		       regexp)))
-    (while (and (not (eobp)) (re-search-forward py-paragraph-re nil 'move 1)(nth 8 (parse-partial-sexp (point-min) (point)))))))
+    (while (and (not (eobp)) (re-search-forward regexp nil 'move 1)(nth 8 (parse-partial-sexp (point-min) (point)))))))
 
 
 (defun py--end-base (regexp &optional orig decorator bol indent done)
@@ -20368,7 +20343,7 @@ Must find start first "
 	      (if (and (looking-at thisregexp)(not (or (nth 1 pps) (nth 8 pps))))
 		  (point)
 		(py--go-to-keyword thisregexp indent)))
-	     ind erg last pps thisindent bofst err)
+	     erg)
 	(cond
 	 (this (setq erg (py--go-down-when-found-upward regexp)))
 	 (t (goto-char orig)))
@@ -20534,11 +20509,7 @@ This function does not modify point or mark."
   (interactive)
   (let ((erg (split-string (shell-command-to-string (concat "find " default-directory " -maxdepth 9 -type f -name \"*python\"")))))))
 
-;;  (defun py-install-local-epdfree ()
-;;    (interactive)
-;;    (py-install-local-shells "MY-PATH/epdfree"))
-
-(defun py-install-local-shells (&optional local path-prefix)
+(defun py-install-local-shells (&optional local)
   "Builds Python-shell commands from executable found in LOCAL.
 
 If LOCAL is empty, shell-command `find' searches beneath current directory.
@@ -20551,7 +20522,7 @@ Eval resulting buffer to install it, see customizable `py-extensions'. "
                              "/"
                            "\\" t))
          (shells (split-string (shell-command-to-string (concat "find " local-dir " -maxdepth 9 -type f -executable -name \"*python\""))))
-         erg newshell prefix akt end orig curexe aktpath)
+         prefix end orig curexe aktpath)
     (set-buffer (get-buffer-create py-extensions))
     (erase-buffer)
     (dolist (elt shells)
@@ -20625,7 +20596,7 @@ Eval resulting buffer to install it, see customizable `py-extensions'. "
       (sit-for py-ipython-send-delay t)
     (sit-for py-python-send-delay t)))
 
-(defun py--send-string-no-output (string &optional process msg)
+(defun py--send-string-no-output (strg &optional process msg)
   "Send STRING to PROCESS and inhibit output display.
 When MSG is non-nil messages the first line of STRING.  Return
 the output."
@@ -20634,17 +20605,17 @@ the output."
          (comint-preoutput-filter-functions
           (append comint-preoutput-filter-functions
                   '(ansi-color-filter-apply
-                    (lambda (string)
-                      (setq output string)
+                    (lambda (strg)
+                      (setq output strg)
                       "")))))
-    (py-send-string string process)
+    (py-send-string strg process)
     (sit-for 0.1 t)
     ;; (py--delay-process-dependent process)
     (when (and output (not (string= "" output)))
 	    (py--string-strip
 	     (format "[ \n]*%s[ \n]*" py-fast-filter-re)))))
 
-(defun py--send-string-return-output (string &optional process msg)
+(defun py--send-string-return-output (strg &optional process msg)
   "Send STRING to PROCESS and return output.
 
 When MSG is non-nil messages the first line of STRING.  Return
@@ -20655,12 +20626,9 @@ the output."
 	     (comint-preoutput-filter-functions
 	      (append comint-preoutput-filter-functions
 		      '(ansi-color-filter-apply
-			(lambda (string)
-			  string
-			;; (setq erg (concat erg string))
-			;; "")
-			)))))
-	(py-send-string string process)
+			(lambda (strg)
+			  strg)))))
+	(py-send-string strg process)
 	(accept-process-output process 5)
 	(sit-for 0.1 t)
 	(when (and erg (not (string= "" erg)))
@@ -20677,7 +20645,7 @@ the output."
 Returns \"???\" otherwise
 Used by variable `which-func-functions' "
   (interactive)
-  (let* ((orig (point))
+  (let* ((orig (or orig (point)))
 	 (backindent 99999)
 	 (re (concat py-def-or-class-re "\\([[:alnum:]_]+\\)"))
          erg forward indent backward limit)
@@ -20740,7 +20708,7 @@ Used by variable `which-func-functions' "
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
-(defun py--beginning-of-form-intern (final-re &optional inter-re iact indent orig lc)
+(defun py--beginning-of-form-intern (final-re &optional inter-re iact indent orig lc decorator)
   "Go to beginning of FORM.
 
 With INDENT, go to beginning one level above.
@@ -20810,7 +20778,7 @@ Returns beginning of FORM if successful, nil otherwise"
           (setq erg (point))
           (when (and py-verbose-p iact) (message "%s" erg))
           erg)
-      (py--beginning-of-form-intern final-re inter-re iact indent orig lc))))
+      (py--beginning-of-form-intern final-re inter-re iact indent orig lc decorator))))
 
 (defun py--fetch-first-python-buffer ()
   "Returns first (I)Python-buffer found in `buffer-list'"
@@ -20955,15 +20923,6 @@ Returns position successful, nil otherwise"
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-;; (defun py-up (&optional indent)
-;;   "Go to beginning of form indented one level less. "
-;;   (interactive "P")
-;;   (let ((pps (parse-partial-sexp (point-min) (point))))
-;;     (cond ((nth 8 pps) (goto-char (nth 8 pps)))
-;;           ((nth 1 pps) (goto-char (nth 1 pps)))
-;;           ((py--beginning-of-statement-p) (py--beginning-of-form-intern 'py-extended-block-or-clause-re (called-interactively-p 'any) t))
-;;           (t (py-backward-statement)))))
-
 (defun py-down (&optional indent)
   "Go to beginning one level below of compound statement or definition at point.
 
@@ -21033,7 +20992,6 @@ If BOL is t, mark from beginning-of-line"
   (let* ((begform (intern-soft (concat "py-backward-" form "-bol")))
          (endform (intern-soft (concat "py-forward-" form "-bol")))
          (begcheckform (intern-soft (concat "py--beginning-of-" form "-bol-p")))
-         (orig (point))
          beg end erg)
     (setq beg (if
                   (setq beg (funcall begcheckform))
@@ -21049,9 +21007,9 @@ If BOL is t, mark from beginning-of-line"
                   (setq end (point))))
     (cons beg end)))
 
-(defun py-mark-base (form &optional py-mark-decorators)
+(defun py-mark-base (form &optional mark-decorators)
   "Calls py--mark-base, returns bounds of form, a cons. "
-  (let* ((bounds (py--mark-base form py-mark-decorators))
+  (let* ((bounds (py--mark-base form mark-decorators))
          (beg (car bounds)))
     (push-mark beg t t)
     bounds))
@@ -21064,7 +21022,7 @@ Returns position if successful, nil otherwise"
   (interactive "P")
   (py--beginning-of-form-intern py-extended-block-or-clause-re (called-interactively-p 'any) indent))
 
-(defun py-end (&optional indent)
+(defun py-end ()
  "Go to end of of compound statement or definition at point.
 
 Returns position block if successful, nil otherwise"
@@ -25847,6 +25805,14 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."]
 	     (+ start i) (+ start next-change) plist)
 	    (setq i next-change)))))))
 
+(defun py-message-which-python-mode ()
+  (if (buffer-file-name)
+      (if (string= "python-mode-el" (buffer-file-name))
+	  (message "%s" "python-mode loaded from python-mode-el")
+	(message "%s" "python-mode loaded from python-components-mode"))
+    (message "python-mode loaded from: %s" python-mode-message-string)))
+
+;;;###autoload 
 (define-derived-mode py-auto-completion-mode python-mode "Pac"
   "Run auto-completion"
   ;; disable company
@@ -25866,7 +25832,7 @@ Don't use this function in a Lisp program; use `define-abbrev' instead."]
 	   #'py-complete-auto)))
   (force-mode-line-update))
 
-;;;
+;;;###autoload 
 (define-derived-mode python-mode prog-mode python-mode-modeline-display
   "Major mode for editing Python files.
 
@@ -25940,9 +25906,9 @@ See available customizations listed in files variables-python-mode at directory 
 	     (concat "\f\\|^[ \t]*$\\|^[ \t]*" comment-start "[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
 	(set (make-local-variable 'paragraph-separate)
 	     (concat "\f\\|^[ \t]*$\\|^[ \t]*" comment-start "[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$")))
-      ;; (progn
-      ;;   (set (make-local-variable 'paragraph-separate) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$")
-      ;;   (set (make-local-variable 'paragraph-start) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
+    ;; (progn
+    ;;   (set (make-local-variable 'paragraph-separate) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$")
+    ;;   (set (make-local-variable 'paragraph-start) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
     (set (make-local-variable 'paragraph-separate) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$")
     (set (make-local-variable 'paragraph-start) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
   (set (make-local-variable 'comment-column) 40)
@@ -25965,7 +25931,7 @@ See available customizations listed in files variables-python-mode at directory 
                                                       (current-column))))
               (^ '(- (1+ (current-indentation)))))))
   (and py-guess-py-install-directory-p (py-set-load-path))
-    (and py-autopair-mode
+  (and py-autopair-mode
        (load-library "autopair")
        (add-hook 'python-mode-hook
                  #'(lambda ()
@@ -26011,8 +25977,8 @@ See available customizations listed in files variables-python-mode at directory 
     (define-key python-mode-map [(control meta a)] 'py-backward-def-or-class)
     (define-key python-mode-map [(control meta e)] 'py-end-of-def-or-class))
   (when py-sexp-use-expression-p
-    	(define-key python-mode-map [(control meta f)] 'py-forward-expression)
-	(define-key python-mode-map [(control meta b)] 'py-backward-expression))
+    (define-key python-mode-map [(control meta f)] 'py-forward-expression)
+    (define-key python-mode-map [(control meta b)] 'py-backward-expression))
   (when (and py--imenu-create-index-p
              (fboundp 'imenu-add-to-menubar)
              (ignore-errors (require 'imenu)))
@@ -26028,7 +25994,8 @@ See available customizations listed in files variables-python-mode at directory 
     (easy-menu-add py-menu))
   (when py-hide-show-minor-mode-p (hs-minor-mode 1))
   (when py-outline-minor-mode-p (outline-minor-mode 1))
-  (when (called-interactively-p 'any) (message "python-mode loaded from: %s" python-mode-message-string))
+  (when (interactive-p)
+    (py-message-which-python-mode))
   (force-mode-line-update))
 
 (defun py--shell-setup-fontification (&optional style)
@@ -26103,6 +26070,7 @@ See available customizations listed in files variables-python-mode at directory 
   (set (make-local-variable 'inhibit-point-motion-hooks) t)
   (set (make-local-variable 'comint-input-sender) 'py--shell-simple-send))
 
+;;;###autoload 
 (define-derived-mode py-python-shell-mode comint-mode "Py"
   "Major mode for interacting with a Python process.
 A Python process can be started with \\[py-shell].
@@ -26156,6 +26124,7 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
     (easy-menu-add py-menu))
   (force-mode-line-update))
 
+;;;###autoload 
 (define-derived-mode py-ipython-shell-mode comint-mode "IPy"
   "Major mode for interacting with a Python process.
 A Python process can be started with \\[py-shell].

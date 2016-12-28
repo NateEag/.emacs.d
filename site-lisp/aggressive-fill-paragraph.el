@@ -33,12 +33,23 @@
   (and (string-equal major-mode "markdown-mode")
        (string-match-p "^    " (afp-current-line))))
 
-(defun afp-start-of-comment? ()
-  "Check if we have just started writing a new comment line (it's
-  annoying if you are trying to write a list but it keeps getting
-  filled before you can type the * which afp recognises as a
-  list)."
-  (and (string-match-p (concat))))
+(defun afp-start-of-paragraph? ()
+  "Return non-nil if we are starting a new paragraph in a comment.
+
+In programming modes that don't include a trailing space as part
+of the fill prefix (e.g. when it's just '#', not '# '), this
+makes it possible to start new paragraphs while
+`afp-fill-on-self-insert' is non-nil.
+
+Without this function in afp-suppress-fill-pfunction-list, it's
+annoying to do that, because pressing the spacebar to add the
+leading space manually results in a fill, deleting the new lines.
+
+TODO Figure out if this is just a hack. The problem lies in how
+we treat space characters while writing comments, and I'm not
+convinced this is a sane solution."
+
+  (string-match-p (concat "^\\s-*" comment-start "\\s-*") (afp-current-line)))
 
 (defun afp-in-bulleted-list? ()
   "Guess whether we are editing a bulleted list."
@@ -84,6 +95,7 @@ Note that `delete-region' will have no effect if entered here - see
 (defcustom afp-suppress-fill-pfunction-list
   (list
    #'afp-markdown-inside-code-block?
+   #'afp-start-of-paragraph?
    #'afp-in-bulleted-list?
    #'afp-bullet-list-in-comments?
    #'afp-in-org-table?

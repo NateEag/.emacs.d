@@ -221,15 +221,16 @@ for any reason."
 This makes it possible to work like you're in a word processor, by
 having deletes and pastes trigger filling.
 
-Note, however, that advising `delete-region' does not work,
+Note, however, that advising `delete-region' does not work reliably,
 because advice cannot be applied to native functions with their
 own bytecode operation, at least not in the face of byte-compiled
 elisp:
 
 http://nullprogram.com/blog/2013/01/22
 
-The only workaround I can think of for this is re-implementing `delete-region' in
-Emacs Lisp, as it would then be an advisable function even in byte-compiled code.
+The only workaround I can think of for this is re-implementing
+`delete-region' in Emacs Lisp, as it would then be an advisable
+function even in byte-compiled code.
 
 However, that sounds like crazy talk."
 

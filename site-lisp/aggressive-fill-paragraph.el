@@ -40,9 +40,12 @@
   list)."
   (and (string-match-p (concat))))
 
+(defun afp-in-bulleted-list? ()
+  "Guess whether we are editing a bulleted list."
+  (string-match-p "^\\s-*[-\\*\\+]" (afp-current-line)))
+
 (defun afp-bullet-list-in-comments? ()
-  "Try to check if we are inside a bullet pointed list bulleted
-by *, + or -."
+  "Guess whether we are editing a bulleted list in a comment."
   (and (afp-inside-comment?)
 
        ;; TODO: extend to match any line in paragraph
@@ -81,6 +84,7 @@ Note that `delete-region' will have no effect if entered here - see
 (defcustom afp-suppress-fill-pfunction-list
   (list
    #'afp-markdown-inside-code-block?
+   #'afp-in-bulleted-list?
    #'afp-bullet-list-in-comments?
    #'afp-in-org-table?
    )

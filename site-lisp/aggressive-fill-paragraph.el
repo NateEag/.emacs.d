@@ -181,7 +181,7 @@ for any reason."
                       ;; do not fill after whitespace, so that making new
                       ;; paragraphs always works. Just a dumb hack to make my
                       ;; life a little better - still need to think more about
-                      ;; how best to do this. 
+                      ;; how best to do this.
                       (not (-contains? '(?\n ?\s ?\t) last-command-event)))
                  (-contains? afp-fill-keys last-command-event))
              (not (afp-suppress-fill?)))

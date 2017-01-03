@@ -1,9 +1,9 @@
 ;;; frame-cmds-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "frame-cmds" "frame-cmds.el" (22276 14398 0
+;;;### (autoloads nil "frame-cmds" "frame-cmds.el" (22635 46932 0
 ;;;;;;  0))
 ;;; Generated autoloads from frame-cmds.el
 

@@ -4766,6 +4766,11 @@ Returns the string inserted. "
 
 ;; python-components-backward-forms
 
+(defun py-backward-region ()
+  "Go to the beginning of current region"
+  (interactive)
+  (let ((beg (region-beginning)))
+    (when beg (goto-char beg))))
 
 (defun py-backward-block (&optional indent)
   "Go to beginning of `block'.
@@ -4983,6 +4988,11 @@ Returns beginning of `try-block' if successful, nil otherwise"
 
 ;; python-components-forward-forms
 
+(defun py-forward-region ()
+  "Go to the end of current region"
+  (interactive)
+  (let ((end (region-end)))
+    (when end (goto-char end))))
 
 (defun py-forward-block (&optional decorator bol)
   "Go to end of block.
@@ -8485,11 +8495,11 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
   "Clear output buffer from py-shell-input prompt etc. "
   (interactive "*")
   (let ((beg (cond (beg)
-                   ((region-active-p)
+                   ((use-region-p)
                     (region-beginning))
                    (t (point-min))))
         (end (cond (end (copy-marker end))
-                   ((region-active-p)
+                   ((use-region-p)
                     (copy-marker (region-end)))
                    (t (copy-marker (point-max))))))
     (goto-char beg)
@@ -8700,13 +8710,13 @@ completions on the current context."
 If cursor is at end of a symbol, try to complete
 Otherwise call `py-indent-line'
 
-If `(region-active-p)' returns `t', indent region.
+If `(use-region-p)' returns `t', indent region.
 Use `C-q TAB' to insert a literally TAB-character
 
 In python-mode `py-complete-function' is called,
 in (I)Python shell-modes `py-shell-complete'"
   (interactive "*")
-  (cond ((region-active-p)
+  (cond ((use-region-p)
 	 (py-indent-region (region-beginning) (region-end)))
 	((or (bolp)
 	     (member (char-before)(list 9 10 12 13 32 ?: ?\) ?\] ?\}))
@@ -11235,7 +11245,7 @@ With \\[universal-argument] \"#\" electric behavior is inhibited inside a string
 (defun py-electric-backspace (&optional arg)
   "Delete preceding character or level of indentation.
 
-When `delete-active-region' and (region-active-p), delete region.
+When `delete-active-region' and (use-region-p), delete region.
 
 Unless at indentation:
   With `py-electric-kill-backward-p' delete whitespace before point.
@@ -11245,7 +11255,7 @@ Returns column reached. "
   (interactive "p*")
   (or arg (setq arg 1))
   (let (erg)
-    (cond ((and (region-active-p)
+    (cond ((and (use-region-p)
 		;; Emacs23 doesn't know that var
 		(boundp 'delete-active-region) delete-active-region)
 	   (backward-delete-char-untabify arg))
@@ -11267,10 +11277,10 @@ Returns column reached. "
 (defun py-electric-delete (&optional arg)
   "Delete following character or levels of whitespace.
 
-When `delete-active-region' and (region-active-p), delete region "
+When `delete-active-region' and (use-region-p), delete region "
   (interactive "*p")
   (let ((orig (point)))
-    (cond ((and (region-active-p)
+    (cond ((and (use-region-p)
 		;; Emacs23 doesn't know that var
 		(boundp 'delete-active-region) delete-active-region)
 	   (delete-region (region-beginning) (region-end)))
@@ -17663,13 +17673,15 @@ Returns indentation reached. "
     (let* ((inhibit-point-motion-hooks t)
            deactivate-mark
            (beg (cond (start)
-                      ((region-active-p)
+		      ;; (use-region-p)
+                      ((and (mark) (not (eq (mark) (point))))
                        (save-excursion
                          (goto-char
                           (region-beginning))))
                       (t (line-beginning-position))))
            (end (cond (end)
-                      ((region-active-p)
+		      ;; (use-region-p)
+                      ((and (mark) (not (eq (mark) (point)))) 
                        (save-excursion
                          (goto-char
                           (region-end))))
@@ -17685,21 +17697,26 @@ Returns indentation reached. "
     (py-indentation-of-statement)))
 
 (defun py--shift-forms-base (form arg &optional beg end)
-  (let* ((begform (intern-soft (concat "py-backward-" form)))
-         (endform (intern-soft (concat "py-forward-" form)))
+  (let* ((begform (concat "py-backward-" form))
+         (endform (concat "py-forward-" form))
          (orig (copy-marker (point)))
          (beg (cond (beg)
-                    ((region-active-p)
-                     (save-excursion
-                       (goto-char (region-beginning))
-                       (line-beginning-position)))
-                    (t (save-excursion
-                         (funcall begform)
-                         (line-beginning-position)))))
+                    ;; ((and (string-match "region" form) (mark) (not (eq (mark) (point)))(region-beginning)))
+		    ((use-region-p)
+		     (save-excursion
+		       (goto-char (region-beginning))
+		       (line-beginning-position)))
+		    (t (save-excursion
+			 (if
+			     (ignore-errors (funcall (car (read-from-string begform))))
+			     (line-beginning-position)
+			   (error "py--shift-forms-base: No active region"))))))
          (end (cond (end)
-                    ((region-active-p)
+                    (
+		     ;; (and (mark) (not (eq (mark) (point))))
+		     (use-region-p)
                      (region-end))
-                    (t (funcall endform))))
+                    (t (funcall (car (read-from-string endform))))))
          (erg (py--shift-intern arg beg end)))
     (goto-char orig)
     erg))

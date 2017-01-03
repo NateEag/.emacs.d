@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "speed-type" "speed-type.el" (22615 58404 0
+;;;### (autoloads nil "speed-type" "speed-type.el" (22635 46948 0
 ;;;;;;  0))
 ;;; Generated autoloads from speed-type.el
 
@@ -15,7 +15,7 @@ Open copy of [START,END] in a new buffer to speed type the text.
 (autoload 'speed-type-buffer "speed-type" "\
 Open copy of buffer contents in a new buffer to speed type the text.
 
-If using a prefix while calling this function (C-u), then the full text
+If using a prefix while calling this function (C-u), then the FULL text
 will be used. Else some text will be picked randomly.
 
 \(fn FULL)" t nil)

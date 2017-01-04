@@ -61,13 +61,15 @@ convinced this is a sane solution."
 
   (string-match-p (concat "^\\s-*" comment-start "\\s-*$") (afp-current-line)))
 
-(defun afp-bullet-list-in-comments? ()
-  "Guess whether we are editing a bulleted list in a comment."
-  (and (afp-inside-comment?)
+(defun afp-in-bulleted-list? ()
+  "Guess whether we are editing a bulleted list.
 
+Tries to handle comments and regular text, which may be a poor decision."
+  (if (afp-inside-comment?)
        ;; TODO: extend to match any line in paragraph
        (string-match-p (concat "^\\s-*" comment-start "\\s-*[-\\*\\+]")
-                       (afp-current-line))))
+                       (afp-current-line))
+    (string-match-p (concat "^\\s-*[-\\*\\+]") (afp-current-line))))
 
 ;; Org mode tables have their own filling behaviour which results in the
 ;; cursor being moved to the start of the table element, which is no good
@@ -102,7 +104,7 @@ Note that `delete-region' will have no effect if entered here - see
   (list
    #'afp-markdown-inside-code-block?
    #'afp-start-of-paragraph?
-   #'afp-bullet-list-in-comments?
+   #'afp-in-bulleted-list?
    #'afp-in-org-table?
    #'afp-outside-comment-and-comment-only-mode?
    )

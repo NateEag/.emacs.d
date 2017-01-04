@@ -22,11 +22,21 @@
 (defun afp-inside-comment? ()
   (nth 4 (syntax-ppss)))
 
+(defun afp-outside-comment? ()
+  (not (afp-inside-comment?)))
+
+(defun afp-comment-only-mode? ()
+  (apply #'derived-mode-p afp-fill-comments-only-mode-list))
+
 (defun afp-current-line ()
   (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
 
 
 ;; Functions for testing conditions to suppress fill-paragraph
+
+(defun afp-outside-comment-and-comment-only-mode? ()
+
+  (and (afp-comment-only-mode?) (afp-outside-comment?)))
 
 (defun afp-markdown-inside-code-block? ()
   """Basic test for indented code blocks in markdown."""
@@ -92,9 +102,9 @@ Note that `delete-region' will have no effect if entered here - see
   (list
    #'afp-markdown-inside-code-block?
    #'afp-start-of-paragraph?
-   #'afp-in-bulleted-list?
    #'afp-bullet-list-in-comments?
    #'afp-in-org-table?
+   #'afp-outside-comment-and-comment-only-mode?
    )
   "List of predicate functions of no arguments, if any of these
   functions returns false then paragraphs will not be
@@ -119,7 +129,8 @@ Note that `delete-region' will have no effect if entered here - see
 (defun afp-only-fill-comments (&optional justify)
   "Replacement fill-paragraph function which only fills comments
 and leaves everything else alone."
-  (fill-comment-paragraph justify)
+  (if (afp-inside-comment?)
+      (fill-comment-paragraph justify))
 
   ;; returning true says we are done with filling, don't fill anymore
   t)
@@ -153,8 +164,24 @@ taking care with special cases for documentation comments."
 
    ;; In certain modes it is better to use afp-only-fill-comments to avoid
    ;; strange behaviour in code.
-   ((apply #'derived-mode-p afp-fill-comments-only-mode-list)
-    #'afp-only-fill-comments)
+   ;;
+   ;; I have commented this out and hacked up an implementation of the
+   ;; only-fill-comments behavior that works in js2-mode based on a suppression
+   ;; function, because this logic overrides the use of fill-paragraph-function
+   ;; in js2-mode, which means that /*-style comments are not filled correctly
+   ;; (unless you run fill-paragraph by hand).
+   ;;
+   ;; In some sense doing this via a suppression function is more elegant.
+   ;;
+   ;; However, I'm not confident that it has the desired behavior in all the
+   ;; modes that rely on afp-fill-comments-only-mode-list. Will have to figure
+   ;; that out. Only triggering a fill inside a comment may not be the same
+   ;; thing as only filling the comment - I can imagine a (poorly-written?)
+   ;; fill function that fills both the comment and the code immediately
+   ;; following it.
+   ;;
+   ;; ((apply #'derived-mode-p afp-fill-comments-only-mode-list)
+   ;; #'afp-only-fill-comments)
 
    ;; For python we could also do something with let-binding
    ;; python-fill-paren-function so that code is left alone. This would

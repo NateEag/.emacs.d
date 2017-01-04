@@ -8,6 +8,12 @@
 -Suppress aggressive-fill-paragraph-mode while directly above or below markdown
  code blocks.
 
+-Consider using suppression functions to implement afp's fill-comments-only
+ feature? I feel like it would be more robust than the current approach, but
+ perhaps I'm mistaken. I also think it might solve some of my js2-mode issues,
+ though I'm not sure of that (I think changing the fill function from the
+ default is where they come from).
+
 -Try integrating web-mode-edit-element into my markup editing style. If it
  works out, delete my prototypical work on making tagedit work with web-mode in
  favor of it, per this comment of mine:

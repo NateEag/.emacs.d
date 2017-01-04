@@ -49,11 +49,7 @@ TODO Figure out if this is just a hack. The problem lies in how
 we treat space characters while writing comments, and I'm not
 convinced this is a sane solution."
 
-  (string-match-p (concat "^\\s-*" comment-start "\\s-*") (afp-current-line)))
-
-(defun afp-in-bulleted-list? ()
-  "Guess whether we are editing a bulleted list."
-  (string-match-p "^\\s-*[-\\*\\+]" (afp-current-line)))
+  (string-match-p (concat "^\\s-*" comment-start "\\s-*$") (afp-current-line)))
 
 (defun afp-bullet-list-in-comments? ()
   "Guess whether we are editing a bulleted list in a comment."

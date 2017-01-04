@@ -64,7 +64,10 @@ convinced this is a sane solution."
 (defun afp-in-bulleted-list? ()
   "Guess whether we are editing a bulleted list.
 
-Tries to handle comments and regular text, which may be a poor decision."
+Tries to handle comments and regular text, which may be a poor decision.
+
+TODO: handle modes with multi-line comment syntaxes correctly.
+This does not work in C-style comments."
   (if (afp-inside-comment?)
        ;; TODO: extend to match any line in paragraph
        (string-match-p (concat "^\\s-*" comment-start "\\s-*[-\\*\\+]")

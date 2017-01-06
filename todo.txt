@@ -74,23 +74,25 @@
 
  Why, that works just beautifully.
 
- So I guess afp-only-fill-comments should consider the value of
- fill-paragraph-function?
+ I am currently running with a change that makes the only-fill-comments mode
+ just suppress filling unless we're in a comment.
 
--Get aggressive-fill-paragraph-mode working in js2-mode. I'm not sure why, but
- it seems to have no effect in C-style comments.
+ As I suspected, though, that fails in modes whose fill logic does more than
+ just comments.
 
- ...trying my hack out for a day has persuaded me it's the wrong approach. I've
- just re-introduced his original issue, in that I sometimes get code filled for
- reasons unclear to me.
+ We could probably work around that by narrowing to the current comment before
+ filling takes place, via save-restriction.
 
- I think perhaps the right thing to do here is to add a customizable var that
- accepts a function, which tests if we're in a comment. We add that function to
- afp-suppress-fill-pfunction-list on mode start if the current major-mode is in
- afp-fill-comments-only-mode-list.
+ Finding the current comment's extent is not quite simple, alas. There does not
+ seem to be a built-in function for doing it.
 
- I'm hoping that would prevent us from filling while we're in code, but I don't
- fully understand what *does* trigger the fill-code behavior.
+ comment-search-{forward,backward} finds comment starts, but of course multiple
+ single-line comments in a row confuse it dreadfully. And I see no built-in way
+ to determine where a comment ends.
+
+ So, to go down this route, I would need to write a general function that can
+ find the bounds of the current comment, for both single- and multi-line
+ comments. :/
 
 -Add afp-super-aggressive to aggressive-fill-paragraph-mode to bundle up my
  proposed changes per the maintainer's suggestion.

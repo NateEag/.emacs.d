@@ -6,7 +6,7 @@
 ;; Created: 29 Oct 2007
 ;; Modified: 17 Nov 2007
 ;; Version: 1.2
-;; Package-Version: 20160907.2129
+;; Package-Version: 20170104.1118
 ;; Keywords: regex languages programming development
 ;; X-URL: http://www.newartisans.com/
 
@@ -50,6 +50,8 @@
 
 ;; 1.1 - Don't die horribly if the user simply types '^' or '$'
 ;; 1.2 - Include cl.el at compile time
+
+;;; Code:
 
 (eval-when-compile
   (require 'cl))

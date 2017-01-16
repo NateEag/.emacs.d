@@ -63,12 +63,12 @@
 
 (defcustom helm-boring-file-regexp-list
   (mapcar (lambda (f)
-            (concat
-             (rx-to-string
-              (replace-regexp-in-string
-               "/$" "" f) t) "$"))
+            (let ((rx (rx-to-string f t))) 
+              (if (string-match-p "[^/]$" f)
+                  (concat rx "$") rx)))
           completion-ignored-extensions)
-  "The regexp list matching boring files."
+  "The regexp list matching boring files.
+This list is build by default on `completion-ignored-extensions'."
   :group 'helm-files
   :type  '(repeat (choice regexp)))
 
@@ -1277,16 +1277,19 @@ This doesn't replace inside the files, only modify filenames."
 (defun helm-ff-locate (candidate)
   "Locate action function for `helm-find-files'."
   (helm-locate-set-command)
-  (let ((input (concat (helm-basename
+  (let ((default (concat (helm-basename
                         (expand-file-name
                          candidate
                          helm-ff-default-directory))
-                       ;; The locate '-b' option doesn't exists
-                       ;; in everything (es).
-                       (unless (and (eq system-type 'windows-nt)
-                                    (string-match "^es" helm-locate-command))
-                         " -b"))))
-    (helm-locate-1 helm-current-prefix-arg nil 'from-ff input)))
+                         (unless (or
+                                  ;; "-b" is already added when fuzzy matching.
+                                  helm-locate-fuzzy-match
+                                  ;; The locate '-b' option doesn't exists
+                                  ;; in everything (es).
+                                  (and (eq system-type 'windows-nt)
+                                       (string-match "^es" helm-locate-command)))
+                           " -b"))))
+    (helm-locate-1 helm-current-prefix-arg nil 'from-ff default)))
 
 (defun helm-ff-run-locate ()
   "Run locate action from `helm-source-find-files'."
@@ -2481,15 +2484,19 @@ If a prefix arg is given or `helm-follow-mode' is on open file."
           ;; An image file and it is the second hit on C-j,
           ;; show the file in `image-dired'.
           (image-cand
-           (let ((remove-buf-only
-                  (and (get-buffer-window
-                        image-dired-display-image-buffer 'visible)
-                       (file-equal-p candidate
-                                     (with-current-buffer
-                                         image-dired-display-image-buffer
-                                       (get-text-property
-                                        (point-min)
-                                        'original-file-name))))))
+           (let* ((win (get-buffer-window
+                        image-dired-display-image-buffer 'visible))
+                  (remove-buf-only
+                   (and win
+                        (with-helm-buffer
+                          (file-equal-p candidate
+                                        (with-current-buffer
+                                            image-dired-display-image-buffer
+                                          (get-text-property
+                                           (point-min)
+                                           'original-file-name)))))))
+             (when remove-buf-only
+               (set-window-buffer win helm-current-buffer))
              (when (buffer-live-p (get-buffer image-dired-display-image-buffer))
                (kill-buffer image-dired-display-image-buffer))
              (unless remove-buf-only
@@ -2692,15 +2699,28 @@ Use it for non--interactive calls of `helm-find-files'."
 
 (defun helm-find-files-initial-input (&optional input)
   "Return INPUT if present, otherwise try to guess it."
-  (let ((ffap-machine-p-known 'reject)
-        (ffap-alist (and helm-ff-guess-ffap-filenames ffap-alist))
-        (ffap-url-regexp (and helm-ff-guess-ffap-urls ffap-url-regexp)))
-    (unless (eq major-mode 'image-mode)
-      (or (and input (or (and (file-remote-p input) input)
-                         (expand-file-name input)))
-          (helm-find-files-input
-           (ffap-guesser)
-           (thing-at-point 'filename))))))
+  (unless (eq major-mode 'image-mode)
+    (or (and input (or (and (file-remote-p input) input)
+                       (expand-file-name input)))
+        (helm-find-files-input
+         (helm-ffap-guesser)
+         (thing-at-point 'filename)))))
+
+(defun helm-ffap-guesser ()
+  "Same as `ffap-guesser' but without gopher and machine support."
+  ;; Avoid "Stack overflow in regexp matcher" error
+  ;; in evil `ffap-guesser' by removing crap `ffap-gopher-at-point'
+  ;; (bug fixed in emacs-26 #25391) .
+  ;; `ffap-machine-at-point' have been removed too as it was anyway
+  ;; disabled with `ffap-machine-p-known' bound to 'reject.
+  ;; `ffap-file-at-point' can be neutralized with
+  ;; `helm-ff-guess-ffap-filenames' and `ffap-url-at-point' with
+  ;; `helm-ff-guess-ffap-urls'.
+  (let ((ffap-alist (and helm-ff-guess-ffap-filenames ffap-alist))) 
+    (or (and helm-ff-guess-ffap-urls ffap-url-regexp
+             (ffap-fixup-url (ffap-url-at-point)))
+        ;; may yield url!
+        (ffap-file-at-point))))
 
 (defun helm-find-files-input (file-at-pt thing-at-pt)
   "Try to guess a default input for `helm-find-files'."
@@ -3412,10 +3432,11 @@ See `helm-browse-project'."
 (defvar helm-source-session
   (helm-build-sync-source "Session"
     :candidates (lambda ()
-                  (cl-delete-if-not (lambda (f)
-                                        (or (string-match helm-tramp-file-name-regexp f)
-                                            (file-exists-p f)))
-                                    (mapcar 'car session-file-alist)))
+                  (cl-delete-if-not
+                   (lambda (f)
+                     (or (string-match helm-tramp-file-name-regexp f)
+                         (file-exists-p f)))
+                   (mapcar 'car session-file-alist)))
     :keymap helm-generic-files-map
     :help-message helm-generic-file-help-message
     :action 'helm-type-file-actions)
@@ -3428,33 +3449,38 @@ See `helm-browse-project'."
 (defun helm-highlight-files (files)
   "A basic transformer for helm files sources.
 Colorize only symlinks, directories and files."
-  (cl-loop for i in files
-        for disp = (if (and helm-ff-transformer-show-only-basename
-                            (not (helm-dir-is-dot i))
-                            (not (and ffap-url-regexp
-                                      (string-match ffap-url-regexp i)))
-                            (not (string-match helm-ff-url-regexp i)))
-                       (helm-basename i) i)
-        for type = (and (null helm-ff-tramp-not-fancy)
-                        (car (file-attributes i)))
-        collect
-        (cond ((and helm-ff-tramp-not-fancy
-                    (string-match helm-tramp-file-name-regexp i))
-               (cons disp i))
-              ((stringp type)
-               (cons (propertize disp
-                                 'face 'helm-ff-symlink
-                                 'help-echo (expand-file-name i))
-                     i))
-              ((eq type t)
-               (cons (propertize disp
-                                 'face 'helm-ff-directory
-                                 'help-echo (expand-file-name i))
-                     i))
-              (t (cons (propertize disp
-                                   'face 'helm-ff-file
-                                   'help-echo (expand-file-name i))
-                       i)))))
+  (cl-loop with mp-fn = (or (assoc-default
+                             'match-part (helm-get-current-source))
+                            'identity)
+           for i in files
+           for disp = (if (and helm-ff-transformer-show-only-basename
+                               (not (helm-dir-is-dot i))
+                               (not (and ffap-url-regexp
+                                         (string-match ffap-url-regexp i)))
+                               (not (string-match helm-ff-url-regexp i)))
+                          (helm-basename i) i)
+           for type = (car (file-attributes i))
+           collect
+           (cond ((and helm-ff-tramp-not-fancy
+                       (string-match helm-tramp-file-name-regexp i))
+                  (cons disp i))
+                 ((stringp type)
+                  (cons (propertize disp
+                                    'face 'helm-ff-symlink
+                                    'match-part (funcall mp-fn disp)
+                                    'help-echo (expand-file-name i))
+                        i))
+                 ((eq type t)
+                  (cons (propertize disp
+                                    'face 'helm-ff-directory
+                                    'match-part (funcall mp-fn disp)
+                                    'help-echo (expand-file-name i))
+                        i))
+                 (t (cons (propertize disp
+                                      'face 'helm-ff-file
+                                      'match-part (funcall mp-fn disp)
+                                      'help-echo (expand-file-name i))
+                          i)))))
 
 (defclass helm-files-in-current-dir-source (helm-source-sync helm-type-file)
   ((candidates :initform (lambda ()
@@ -3738,7 +3764,19 @@ locate."
     (setq helm-source-buffers-list
           (helm-make-source "Buffers" 'helm-source-buffers)))
   (setq helm-multi-files--toggle-locate nil)
+  (helm-set-local-variable 'helm-async-outer-limit-hook
+                           (list (lambda ()
+                                   (when (and helm-locate-fuzzy-match
+                                              (not (string-match-p
+                                                    "\\s-" helm-pattern)))
+                                     (helm-redisplay-buffer)))))
   (let ((sources (remove 'helm-source-locate helm-for-files-preferred-list))
+        (helm-locate-command
+         (if helm-locate-fuzzy-match
+             (unless (string-match-p "\\`locate -b" helm-locate-command)
+               (replace-regexp-in-string
+                "\\`locate" "locate -b" helm-locate-command))
+             helm-locate-command))
         (old-key (lookup-key
                   helm-map
                   (read-kbd-macro helm-multi-files-toggle-locate-binding))))

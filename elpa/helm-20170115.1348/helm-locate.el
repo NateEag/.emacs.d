@@ -48,23 +48,31 @@ Note that this happen only when locate is launched with a prefix arg."
 
 (defcustom helm-locate-command nil
   "A list of arguments for locate program.
-Normally the default value should work on any system.
 
-If nil it will be calculated when `helm-locate' startup
-with these default values for different systems:
+Helm will calculate a default value for your system on startup unless
+`helm-locate-command' is non-nil, here the default values it will use
+according to your system:
 
-Gnu/linux: \"locate %s -e --regex %s\"
+Gnu/linux:     \"locate %s -e -A --regex %s\"
 berkeley-unix: \"locate %s %s\"
-windows-nt: \"es %s %s\"
-Others: \"locate %s %s\"
+windows-nt:    \"es %s %s\"
+Others:        \"locate %s %s\"
 
 This string will be passed to format so it should end with `%s'.
 The first format spec is used for the \"-i\" value of locate/es,
 So don't set it directly but use `helm-locate-case-fold-search'
 for this.
+
 The last option must be the one preceding pattern i.e \"-r\" or \"--regex\".
+
 You will be able to pass other options such as \"-b\" or \"l\"
-during helm invocation after entering pattern."
+during helm invocation after entering pattern only when multi matching,
+not when fuzzy matching.
+
+Note that the \"-b\" option is added automatically by helm when
+var `helm-locate-fuzzy-match' is non-nil and switching back from
+multimatch to fuzzy matching (this is done automatically when a space
+is detected in pattern)."
   :type 'string
   :group 'helm-locate)
 
@@ -86,7 +94,14 @@ the opposite of \"locate\" command."
   :type 'symbol)
 
 (defcustom helm-locate-fuzzy-match nil
-  "Enable fuzzy matching in `helm-locate'."
+  "Enable fuzzy matching in `helm-locate'.
+Note that when this is enabled searching is done on basename."
+  :group 'helm-locate
+  :type 'boolean)
+
+(defcustom helm-locate-fuzzy-sort-fn
+  #'helm-locate-default-fuzzy-sort-fn
+  "Default fuzzy matching sort function for locate."
   :group 'helm-locate
   :type 'boolean)
 
@@ -211,7 +226,7 @@ See `helm-locate-with-db' and `helm-locate'."
   (unless helm-locate-command
     (setq helm-locate-command
           (cl-case system-type
-            (gnu/linux "locate %s -e --regex %s")
+            (gnu/linux "locate %s -e -A --regex %s")
             (berkeley-unix "locate %s %s")
             (windows-nt "es %s %s")
             (t "locate %s %s")))))
@@ -230,7 +245,8 @@ See also `helm-locate'."
          (if db
              (replace-regexp-in-string
               "locate"
-              (format "locate -d %s"
+              (format (if helm-locate-fuzzy-match
+                          "locate -b -d %s" "locate -d %s")
                       (mapconcat 'identity
                                  ;; Remove eventually
                                  ;; marked directories by error.
@@ -238,7 +254,11 @@ See also `helm-locate'."
                                        unless (file-directory-p i)
                                        collect i) ":"))
               helm-locate-command)
-           helm-locate-command)))
+           (if (and helm-locate-fuzzy-match
+                    (not (string-match-p "\\`locate -b" helm-locate-command)))
+               (replace-regexp-in-string
+                "\\`locate" "locate -b" helm-locate-command)
+               helm-locate-command))))
     (setq helm-file-name-history (mapcar 'helm-basename file-name-history))
     (helm :sources 'helm-source-locate
           :buffer "*helm locate*"
@@ -291,6 +311,9 @@ See also `helm-locate'."
                                       " command line was:\n\n "
                                       cmd)))))
                  ((string= event "finished\n")
+                  (when (and helm-locate-fuzzy-match
+                             (not (string-match-p "\\s-" helm-pattern)))
+                    (helm-redisplay-buffer))
                   (with-helm-window
                     (setq mode-line-format
                           '(" " mode-line-buffer-identification " "
@@ -306,26 +329,46 @@ See also `helm-locate'."
                   (helm-log "Error: Locate %s"
                             (replace-regexp-in-string "\n" "" event))))))))))
 
+(defun helm-locate-default-fuzzy-sort-fn (candidates)
+  "Default sort function for files in fuzzy matching.
+Sort is done on basename of CANDIDATES."
+  (helm-fuzzy-matching-default-sort-fn-1 candidates nil t))
+
 (defclass helm-locate-source (helm-source-async helm-type-file)
   ((init :initform 'helm-locate-set-command)
    (candidates-process :initform 'helm-locate-init)
    (requires-pattern :initform 3)
    (history :initform 'helm-file-name-history)
    (persistent-action :initform 'helm-ff-kill-or-find-buffer-fname)
-   (candidate-number-limit :initform 9999)))
+   (candidate-number-limit :initform 9999)
+   (redisplay :initform (progn helm-locate-fuzzy-sort-fn))))
 
 (defvar helm-source-locate
   (helm-make-source "Locate" 'helm-locate-source
-    :pattern-transformer 'helm-locate-pattern-transformer))
+    :pattern-transformer 'helm-locate-pattern-transformer
+    ;; :match-part is only used here to tell helm which part
+    ;; of candidate to highlight.
+    :match-part (lambda (candidate)
+                  (if (or (string-match-p " -b\\'" helm-pattern)
+                          (and helm-locate-fuzzy-match
+                               (not (string-match "\\s-" helm-pattern))))
+                      (helm-basename candidate)
+                      candidate))))
 
 (defun helm-locate-pattern-transformer (pattern)
   (if helm-locate-fuzzy-match
-      (cond ((string-match
-              " " (replace-regexp-in-string " -b" "" pattern)) pattern)
-            ((string-match "\\([^ ]*\\) -b" pattern)
-             (concat (helm--mapconcat-pattern
-                      (match-string 1 pattern)) " -b"))
-            (t (helm--mapconcat-pattern pattern)))
+      ;; When fuzzy is enabled helm add "-b" option on startup.
+      (cond ((string-match-p " " pattern)
+             (when (string-match "\\`locate -b" helm-locate-command)
+               (setq helm-locate-command
+                     (replace-match "locate" t t helm-locate-command)))
+             pattern)
+            (t
+             (unless (string-match-p "\\`locate -b" helm-locate-command)
+               (setq helm-locate-command
+                     (replace-regexp-in-string
+                      "\\`locate" "locate -b" helm-locate-command)))
+             (helm--mapconcat-pattern pattern)))
       pattern))
 
 (defun helm-locate-find-dbs-in-projects (&optional update)
@@ -398,6 +441,12 @@ To create a user specific db, use
 Where db_path is a filename matched by
 `helm-locate-db-file-regexp'."
   (interactive "P")
+  (helm-set-local-variable 'helm-async-outer-limit-hook
+                           (list (lambda ()
+                                   (when (and helm-locate-fuzzy-match
+                                              (not (string-match-p
+                                                    "\\s-" helm-pattern)))
+                                     (helm-redisplay-buffer)))))
   (setq helm-ff-default-directory default-directory)
   (helm-locate-1 arg nil nil (thing-at-point 'filename)))
 

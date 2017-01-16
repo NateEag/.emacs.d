@@ -77,6 +77,12 @@ choose."
   :group 'mocha-snippets
   :require 'mocha-snippets)
 
+(defcustom mocha-snippets-add-space-after-function-keyword nil
+  "Add space between function and ()
+or (in ES6) between () and => if non-nil."
+  :type 'boolean
+  :group 'mocha-snippets
+  :require 'mocha-snippets)
 
 (defun mocha-snippets-function-declaration (&optional params)
   "Function head appropriate for the desired syntax.
@@ -88,10 +94,11 @@ PARAMS, will be substituded as the parameter list for the function.
 E.g.
 
   (mocha-snippets-initialize \"hello, world\") => function(hello, world)"
-  (let ((params (if (not params) "" params)))
+  (let ((params (if (not params) "" params))
+        (space (if mocha-snippets-add-space-after-function-keyword " " "")))
       (if mocha-snippets-use-fat-arrows
-          (format  "(%s)=>" params)
-        (format "function(%s)" params))))
+          (format  "(%s)%s=>" params space)
+        (format "function%s(%s)" space params))))
 
 (provide 'mocha-snippets)
 ;;; mocha-snippets.el ends here

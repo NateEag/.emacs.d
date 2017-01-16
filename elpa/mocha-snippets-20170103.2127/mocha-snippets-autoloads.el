@@ -1,10 +1,10 @@
 ;;; mocha-snippets-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "mocha-snippets" "mocha-snippets.el" (22492
-;;;;;;  20631 0 0))
+;;;### (autoloads nil "mocha-snippets" "mocha-snippets.el" (22652
+;;;;;;  52983 0 0))
 ;;; Generated autoloads from mocha-snippets.el
 
 (autoload 'mocha-snippets-initialize "mocha-snippets" "\
@@ -16,8 +16,8 @@ Add mocha-snippets directories to YAS.
 
 ;;;***
 
-;;;### (autoloads nil nil ("mocha-snippets-pkg.el") (22492 20631
-;;;;;;  357421 0))
+;;;### (autoloads nil nil ("mocha-snippets-pkg.el") (22652 52983
+;;;;;;  0 0))
 
 ;;;***
 

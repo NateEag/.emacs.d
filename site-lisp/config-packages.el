@@ -468,6 +468,13 @@
 (use-package diffview
   :commands diffview-current)
 
+;; I'm not sure whether I'm actually going to like eldoc-overlay-mode.
+;;
+;; I figured it was worth trying, though.
+(use-package eldoc
+  :diminish
+  :init (add-hook 'eldoc-mode-hook 'eldoc-overlay-mode))
+
 (use-package flyspell
   :defer t
   :config

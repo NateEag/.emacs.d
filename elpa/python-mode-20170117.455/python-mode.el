@@ -79,7 +79,7 @@
   :group 'languages
   :prefix "py-")
 
-(defconst py-version "6.2.2+")
+(defconst py-version "6.2.3")
 
 (defcustom py-install-directory ""
   "Directory where python-mode.el and it's subdirectories should be installed. Needed for completion and other environment stuff only. "
@@ -3019,10 +3019,10 @@ Returns versioned string, nil if nothing appropriate found "
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
-(defun py-which-python ()
+(defun py-which-python (&optional shell)
   "Returns version of Python of current environment, a number. "
   (interactive)
-  (let* ((cmd (py-choose-shell))
+  (let* ((cmd (or shell (py-choose-shell)))
 	 (treffer (string-match "\\([23]*\\.?[0-9\\.]*\\)$" cmd))
          version erg)
     (if treffer
@@ -10304,7 +10304,6 @@ Receives a buffer-name as argument"
 	 (py-shell-name (or shell
 			    (py-choose-shell nil fast)))
 	 (args (py--provide-command-args fast argprompt))
-
 	 (py-use-local-default (py--determine-local-default))
 	 (py-buffer-name (or buffer (py--guess-buffer-name argprompt dedicated)))
 	 (py-buffer-name (or py-buffer-name (py--choose-buffer-name nil dedicated fast)))
@@ -10312,7 +10311,6 @@ Receives a buffer-name as argument"
 			   (py-buffer-name
 			    (py--report-executable py-buffer-name))))
 	 proc)
-    ;; lp:1169687, if called from within an existing py-shell, open a new one
     (and (bufferp (get-buffer py-buffer-name))(buffer-live-p (get-buffer py-buffer-name))(string= (buffer-name (current-buffer)) (buffer-name (get-buffer py-buffer-name)))
 	 (setq py-buffer-name (generate-new-buffer-name py-buffer-name)))
     (sit-for 0.1 t)
@@ -10349,14 +10347,7 @@ Receives a buffer-name as argument"
   "Return the command appropriate to Python version.
 
 Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for Python 2 series."
-  (interactive)
-  (let* ((erg (py-which-python))
-         (cmd (if (< erg 3)
-                  (format "execfile(r'%s') # PYTHON-MODE\n" filename)
-                (format "exec(compile(open(r'%s').read(), r'%s', 'exec')) # PYTHON-MODE\n" filename filename)
-		)))
-    (when (called-interactively-p 'any) (message "%s" (prin1-to-string cmd)))
-    cmd))
+  (format "exec(compile(open(r'%s').read(), r'%s', 'exec')) # PYTHON-MODE\n" filename filename))
 
 (defun py--store-result-maybe (erg)
   "If no error occurred and `py-store-result-p' store result for yank. "
@@ -10625,9 +10616,10 @@ comint believe the user typed this string so that
 `kill-output-from-shell' does The Right Thing.
 Returns position where output starts. "
   (let* ((origline (or (ignore-errors origline) 1))
-	 (cmd (or cmd (py-which-execute-file-command filename)))
 	 (buffer (or procbuf (py-shell nil nil nil procbuf)))
 	 (proc (or proc (get-buffer-process buffer)))
+	 (cmd (or cmd (py-which-execute-file-command filename)))
+
 	 ;; (windows-config (window-configuration-to-register py-windows-config-register))
 	 erg orig)
     (with-current-buffer buffer
@@ -13245,8 +13237,6 @@ alternative for finding the index.")
         (if (eq py--imenu-create-index-function 'py--imenu-create-index-new)
             (set (make-local-variable 'py--imenu-create-index-function) 'py--imenu-create-index)
           (set (make-local-variable 'py--imenu-create-index-function) 'py--imenu-create-index-new))
-        (when py-menu
-          (easy-menu-add py-menu))
         (when py-verbose-p (message "imenu-create-index-function: %s" (prin1-to-string py--imenu-create-index-function)))
         (funcall imenu-create-index-function))
     (error "%s" "Only available in buffers set to python-mode")))
@@ -21903,13 +21893,12 @@ Returns char found. "
 (when py-org-cycle-p
   (define-key python-mode-map (kbd "<backtab>") 'org-cycle))
 
-(defun py--buffer-filename-remote-maybe (&optional buffer)
-  (let (file-name)
+(defun py--buffer-filename-remote-maybe (&optional file-name buffer)
+  (let ((file-name (or file-name (buffer-file-name))))
     (if (and (featurep 'tramp) (tramp-tramp-file-p file-name))
 	(tramp-file-name-localname
 	 (tramp-dissect-file-name file-name))
-      file-name))
-  (buffer-file-name buffer))
+      (buffer-file-name (or buffer (current-buffer))))))
 
 (defun py-forward-buffer ()
   "A complementary form used by auto-generated commands.
@@ -26101,8 +26090,6 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
   (when py-sexp-use-expression-p
     (define-key py-python-shell-mode-map [(control meta f)] 'py-forward-expression)
     (define-key py-python-shell-mode-map [(control meta b)] 'py-backward-expression))
-  (when py-shell-menu
-    (easy-menu-add py-menu))
   (force-mode-line-update))
 
 ;;;###autoload
@@ -26137,9 +26124,6 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
     (add-hook 'completion-at-point-functions
               'py-shell-complete nil 'local)
     (push 'py-shell-complete  comint-dynamic-complete-functions))
-  (when py-shell-menu
-    (easy-menu-add py-menu))
-  ;; Running py-ipython-shell-mode-hook seems to need some delay
   (sit-for 0.5 t)
   (force-mode-line-update))
 

@@ -97,6 +97,10 @@ are for modes that didn't come with autoloading."
   ;; work. Therefore...
   (autoload 'tea-timer "tea-time.el")
 
+  ;; Manual autoloads for sdcv-mode, a dictionary lookup tool I use for access
+  ;; to Webster's 1913 dictionary.
+  (autoload 'sdcv-search "sdcv-mode.el" "Look up words in dictionary." t)
+
   (autoload 'update-packages-update-installed-packages "update-packages" nil t))
 
 (nateeag-autoloads-init)

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "helm" "helm.el" (22658 11466 0 0))
+;;;### (autoloads nil "helm" "helm.el" (22663 33897 0 0))
 ;;; Generated autoloads from helm.el
 
 (autoload 'helm-define-multi-key "helm" "\
@@ -121,11 +121,21 @@ Initially selected candidate.  Specified by exact candidate or a regexp.
 
 :buffer
 
-`helm-buffer' instead of *helm*.
+The buffer name for this helm session. `helm-buffer' will take this value.
 
 :keymap
 
-`helm-map' for current `helm' session.
+\[Obsolete]
+
+Keymap used at start of this Helm session.
+
+It is overridden by keymaps specified in sources, and is here
+only for backward compatibility.
+
+Keymaps should be specified in sources using the :keymap slot
+instead.
+
+This keymap is not restored by `helm-resume'.
 
 :default
 
@@ -188,7 +198,7 @@ Enable/disable helm debugging from outside of helm session.
 ;;;***
 
 ;;;### (autoloads nil nil ("helm-core-pkg.el" "helm-lib.el" "helm-multi-match.el"
-;;;;;;  "helm-source.el") (22658 11466 0 0))
+;;;;;;  "helm-source.el") (22663 33897 0 0))
 
 ;;;***
 

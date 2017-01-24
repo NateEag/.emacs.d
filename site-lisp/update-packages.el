@@ -38,9 +38,21 @@
            (version-list-= (package-desc-version local-pkg-desc)
                            (package-desc-version newest-pkg-desc))))))
 
+(defun update-packages-package-incompatible? (package)
+  "Return non-nil if package is not compatible with current environment.
+
+(we're just peeking inside package.el's internals to make sure
+installing this is not guaranteed to fail.)"
+
+(package--incompatible-p (update-packages-get-package-desc package
+                                                           package-archive-contents)))
+
 (defun update-packages-upgrade-or-install-package (package)
-  "Ensure latest version of PACKAGE is installed."
-  (unless (update-packages-newest-package-installed-p package)
+  "Ensure latest version of PACKAGE is installed.
+
+Does *not* install PACKAGE if it is known to not be installable."
+  (unless (or (update-packages-newest-package-installed-p package)
+              (update-packages-package-incompatible? package))
     (let ((pkg-desc (car (cdr (assq package package-alist)))))
       (when pkg-desc
         (package-delete pkg-desc t))
@@ -49,7 +61,8 @@
 
 (defun update-packages-upgrade-package-and-commit (package)
   "If PACKAGE can be upgraded, upgrade it and commit."
-  (unless (update-packages-newest-package-installed-p package)
+  (unless (or (update-packages-newest-package-installed-p package)
+              (update-packages-package-incompatible? package))
     (let ((package-desc (update-packages-get-package-desc package package-alist))
           (git-executable (executable-find "git"))
           (cwd default-directory)

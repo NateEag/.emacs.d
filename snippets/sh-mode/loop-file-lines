@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: loop-file-lines
+# key: loop-file-lines
+# binding: direct-keybinding
+# --
+while read -r $1 || [[ -n "\$$1" ]]; do
+    $0
+done < "$2"

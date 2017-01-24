@@ -392,8 +392,8 @@
         ;; order to avoid a never-ending recursion of defining keybindings. I
         ;; think it's some interaction between yasnippet and auto-complete, but
         ;; I'm not really sure.
-        (define-key yas-minor-mode-map (kbd "TAB") 'yas-expand)
-        (define-key yas-minor-mode-map (kbd "C-c y") 'yas-expand)
+        (define-key yas-minor-mode-map (kbd "TAB") yas-maybe-expand)
+        (define-key yas-minor-mode-map (kbd "C-c y") yas-maybe-expand)
         (define-key yas-minor-mode-map [(tab)] nil)))
 
 (use-package evil-exchange

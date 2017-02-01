@@ -781,12 +781,12 @@ otherwise do
 \"eshell-command command baz\"
 
 Note:
-If `eshell' or `eshell-command' have not been run once,
-or if you have no eshell aliases `eshell-command-aliases-list'
-will not be loaded first time you use this."
+You have to setup some aliases in eshell with the `alias' command or
+by editing yourself the file `eshell-aliases-file' to make this
+working."
+  (require 'em-alias) (eshell-read-aliases-list)
   (when (or eshell-command-aliases-list
-            (y-or-n-p "Eshell is not loaded, run eshell-command without alias anyway? "))
-    (and eshell-command-aliases-list (eshell-read-aliases-list))
+            (y-or-n-p "No eshell aliases found, run eshell-command without alias anyway? "))
     (let* ((cand-list (helm-marked-candidates))
            (default-directory (or helm-ff-default-directory
                                   ;; If candidate is an url *-ff-default-directory is nil
@@ -3470,11 +3470,17 @@ Colorize only symlinks, directories and files."
                                          (string-match ffap-url-regexp i)))
                                (not (string-match helm-ff-url-regexp i)))
                           (helm-basename i) i)
-           for type = (car (file-attributes i))
+           for isremote = (file-remote-p i)
+           ;; Call file-attributes only if:
+           ;; - file is not remote
+           ;; - helm-ff-tramp-not-fancy is nil and file is remote AND
+           ;; connected. (Issue #1679)
+           for type = (and (or (null isremote)
+                               (and (null helm-ff-tramp-not-fancy)
+                                    (file-remote-p i nil t)))
+                           (car (file-attributes i)))
            collect
-           (cond ((and helm-ff-tramp-not-fancy
-                       (string-match helm-tramp-file-name-regexp i))
-                  (cons disp i))
+           (cond ((and (null type) isremote) (cons disp i))
                  ((stringp type)
                   (cons (propertize disp
                                     'face 'helm-ff-symlink

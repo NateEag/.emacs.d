@@ -455,11 +455,62 @@ You can bookmark your `helm-find-files' session with `C-x r m'.
 You can retrieve later these bookmarks easily by using M-x helm-filtered-bookmarks
 or from the current `helm-find-files' session just hitting `C-x r b'.
 
-*** Run Gid from `helm-find-files'
+*** Grep files from `helm-find-files'
 
-You can navigate to a project containing an ID file created with the `mkid'
-command from id-utils, and run the `gid' command which will use the symbol at point
-in `helm-current-buffer' as default.
+You can grep individual files from `helm-find-files' by using
+\`\\<helm-find-files-map>\\[helm-ff-run-grep]'.  This same command can
+grep also recursively files from current directory when called with a
+prefix arg, you will be prompted in this case for the file extensions
+to use (grep backend) or the types of files to use (ack-grep backend),
+see the `helm-grep-default-command' documentation to setup this.
+For compressed files or archives, use zgrep with
+\`\\<helm-find-files-map>\\[helm-ff-run-zgrep]'.
+
+Otherwise you can use other recursive commands like
+\`\\<helm-find-files-map>\\[helm-ff-run-grep-ag]' or `\\<helm-find-files-map>\\[helm-ff-run-git-grep]' that are much more
+faster than using `\\<helm-find-files-map>\\[helm-ff-run-grep]' with a
+prefix arg.  See `helm-grep-ag-command' and
+`helm-grep-git-grep-command' to setup this.
+
+You can also use the gid shell command
+\`\\<helm-find-files-map>\\[helm-ff-run-gid]' from id-utils by creating
+an ID index file with the `mkid' shell command coming with the
+id-utils package.
+
+All these grep commands are using symbol at point as default pattern.
+Note that default is a different thing than input (nothing is added to
+prompt until you hit `M-n').
+
+*** Setting up aliases in eshell allows you to setup powerful customized commands
+
+Adding eshell aliases to your `eshell-aliases-file' or using the
+`alias' command from eshell allows you to create personalized commands
+not available in `helm-find-files' actions and use them from `\\<helm-find-files-map>\\[helm-ff-run-eshell-command-on-file]'.
+Example:
+You want a command to uncompress your \"*.tar.gz\" files from `helm-find-files':
+
+1) Create an alias named untargz (or whatever) in eshell with the
+command \"alias untargz tar zxvf $*\"
+
+2) Now from `helm-find-files' select your \"*.tar.gz\" file (you can
+mark files if needed) and hit `\\<helm-find-files-map>\\[helm-ff-run-eshell-command-on-file]'.
+
+Note:
+
+When using marked files with this, the meaning of prefix arg is quite
+subtil: Say you have foo, bar and baz marked, when you run the alias
+command `example' on these files with no prefix arg it will loop on
+the file list and run:
+
+example foo
+example bar
+example baz
+
+However with a prefix arg it will do
+
+example foo bar baz
+
+Of course the alias command should support this.
 
 ** Commands
 \\<helm-find-files-map>
@@ -1084,6 +1135,36 @@ you don't choose from there a command using helm completion.
 ** Commands
 \\<helm-kmacro-map>")
 
+;;; Kill-ring
+;;
+;;
+(defvar helm-kill-ring-help-message
+  "* Helm kill-ring
+
+** Tips
+
+You can bring any candidate on top of kill-ring by using `\\<helm-map>\\[helm-kill-selection-and-quit]'
+on it, contrarily to the regular helm command `helm-kill-selection-and-quit'
+which is bound in helm to same key, it is here killing the real value
+without the need of prefix argument.
+
+The view of truncated candidates can be toggled, see command list below.
+
+You can bind globally `M-y' to `helm-show-kill-ring' and once in the helm kill-ring session
+you can navigate for conveniency to next/previous line with `M-y' and `M-u'.
+Of course `C-n' and `C-p' are still available.
+
+** Commands
+\\<helm-kill-ring-map>
+\\[helm-next-line]\t\tNext line.
+\\[helm-previous-line]\t\tPrevious line.
+\\[helm-kill-ring-delete]\t\tDelete entry.
+\\[helm-kill-ring-toggle-truncated]\t\tToggle truncated view of candidate.
+\\[helm-kill-ring-kill-selection]\t\tKill real value of selection.")
+
+;;; Org headings
+;;
+;;
 (defvar helm-org-headings-help-message
   "* Helm org headings
 

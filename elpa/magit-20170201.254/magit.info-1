@@ -5950,22 +5950,22 @@ additional commit with the message "restart autosaving" is created on it
 
    Starting with
 
-      BI0---BI1    refs/wip/index/refs/heads/master
-     /
-A---B              refs/heads/master
-     \
-      BW0---BW1    refs/wip/wtree/refs/heads/master
+           BI0---BI1    refs/wip/index/refs/heads/master
+          /
+     A---B              refs/heads/master
+          \
+           BW0---BW1    refs/wip/wtree/refs/heads/master
 
    and committing the staged changes and editing and saving a file would
 result in
 
-      BI0---BI1        refs/wip/index/refs/heads/master
-     /
-A---B---C              refs/heads/master
-     \   \
-      \   CW0---CW1    refs/wip/wtree/refs/heads/master
-       \
-        BW0---BW1      refs/wip/wtree/refs/heads/master@{2}
+           BI0---BI1        refs/wip/index/refs/heads/master
+          /
+     A---B---C              refs/heads/master
+          \   \
+           \   CW0---CW1    refs/wip/wtree/refs/heads/master
+            \
+             BW0---BW1      refs/wip/wtree/refs/heads/master@{2}
 
    The fork-point of the index wip ref is not changed until some change
 is being staged.  Likewise just checking out a branch or creating a

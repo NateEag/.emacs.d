@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; Keywords: lisp
-;; Package-Version: 20161124.1615
+;; Package-Version: 20170127.1538
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24"))
 
@@ -63,7 +63,10 @@ This is bound dynamically while the checks run.")
 (defconst package-lint--libraries-added-alist
   (list (cons '(24 4)
               (package-lint--match-symbols
-               nadvice subr-x)))
+               nadvice subr-x))
+        (cons '(25 1)
+              (package-lint--match-symbols
+               pinentry cl-generic map thunk js-jsx-mode)))
   "An alist of library names and when they were added to Emacs.")
 
 (defconst package-lint--functions-and-macros-added-alist
@@ -82,7 +85,7 @@ This is bound dynamically while the checks run.")
          (package-lint--match-symbols
           autoloadp autoload-do-load buffer-narrowed-p defvar-local
           file-name-base function-get posnp setq-local user-error
-          system-groups system-users url-encode-url
+          system-groups system-users url-encode-url tty-top-frame
           with-temp-buffer-window))
    (cons '(24 4)
          (package-lint--match-symbols
@@ -304,7 +307,7 @@ REGEXP is (concat RX-START REGEXP* RX-END) for each REGEXP*."
             (package-lint--error
              (line-number-at-pos)
              (save-excursion (goto-char (match-beginning 1)) (current-column))
-             'warning
+             'error
              (format "You should depend on (emacs \"%s\") if you need `%s'."
                      (mapconcat #'number-to-string added-in-version ".")
                      (match-string-no-properties 1)))))))))

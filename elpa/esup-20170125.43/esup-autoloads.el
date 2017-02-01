@@ -1,9 +1,9 @@
 ;;; esup-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "esup" "esup.el" (22465 886 0 0))
+;;;### (autoloads nil "esup" "esup.el" (22674 645 0 0))
 ;;; Generated autoloads from esup.el
 
 (autoload 'esup "esup" "\
@@ -14,8 +14,8 @@ If INIT-FILE is non-nil, profile that instead of USER-INIT-FILE.
 
 ;;;***
 
-;;;### (autoloads nil nil ("esup-child.el" "esup-pkg.el") (22465
-;;;;;;  886 121706 0))
+;;;### (autoloads nil nil ("esup-child.el" "esup-pkg.el") (22674
+;;;;;;  645 0 0))
 
 ;;;***
 

@@ -1055,16 +1055,16 @@ Use optional arguments ARGS like in `format'."
     (with-current-buffer (get-buffer-create helm-debug-buffer)
       (outline-mode)
       (buffer-disable-undo)
-      (set (make-local-variable 'inhibit-read-only) t)
-      (goto-char (point-max))
-      (insert (let ((tm (current-time)))
-                (format (concat (if (string-match "Start session" format-string)
-                                    "* " "** ")
-                                "%s.%06d (%s)\n %s\n")
-                        (format-time-string "%H:%M:%S" tm)
-                        (nth 2 tm)
-                        (helm-log-get-current-function)
-                        (apply #'format (cons format-string args))))))))
+      (let ((inhibit-read-only t))
+        (goto-char (point-max))
+        (insert (let ((tm (current-time)))
+                  (format (concat (if (string-match "Start session" format-string)
+                                      "* " "** ")
+                                  "%s.%06d (%s)\n %s\n")
+                          (format-time-string "%H:%M:%S" tm)
+                          (nth 2 tm)
+                          (helm-log-get-current-function)
+                          (apply #'format (cons format-string args)))))))))
 
 (defun helm-log-run-hook (hook)
   "Run HOOK like `run-hooks' but write these actions to helm log buffer."
@@ -1887,7 +1887,7 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
                  (helm--remap-mouse-mode 1)) ; Disable mouse bindings.
                (add-hook 'post-command-hook 'helm--maybe-update-keymap)
                ;; Add also to update hook otherwise keymap is not updated
-               ;; until a key is hitted.
+               ;; until a key is hitted (Issue #1670).
                (add-hook 'helm-after-update-hook 'helm--maybe-update-keymap)
                (add-hook 'post-command-hook 'helm--update-header-line)
                (helm-log "show prompt")
@@ -2353,7 +2353,7 @@ Unuseful when used outside helm, don't use it.")
       (helm-log "kill local variables: %S" (buffer-local-variables))
       (kill-all-local-variables)
       (helm-major-mode)
-      (set (make-local-variable 'inhibit-read-only) t)
+      (set (make-local-variable 'buffer-read-only) nil)
       (buffer-disable-undo)
       (erase-buffer)
       (set (make-local-variable 'helm-map) helm-map)
@@ -2493,7 +2493,8 @@ For ANY-PRESELECT ANY-RESUME ANY-KEYMAP ANY-DEFAULT ANY-HISTORY, See `helm'."
                                     (save-selected-window
                                       (helm-check-minibuffer-input)
                                       (helm-print-error-messages))))))
-                         (helm--update-header-line)) ; minibuffer has already been filled here
+                         ;; minibuffer has already been filled here.
+                         (helm--update-header-line))
                      (read-from-minibuffer (or any-prompt "pattern: ")
                                            any-input helm-map
                                            nil hist tap
@@ -2502,7 +2503,8 @@ For ANY-PRESELECT ANY-RESUME ANY-KEYMAP ANY-DEFAULT ANY-HISTORY, See `helm'."
 
 (defun helm-toggle-suspend-update ()
   "Enable or disable update of display in helm.
-This can be useful for example for quietly writing a complex regexp."
+This can be useful for example for quietly writing a complex regexp
+without helm constantly updating."
   (interactive)
   (with-helm-alive-p
     (when (setq helm-suspend-update-flag (not helm-suspend-update-flag))
@@ -4633,7 +4635,7 @@ use `search', `get-line' and `match-part' attributes."
 
 (defun helm-search-from-candidate-buffer (pattern get-line-fn search-fns
                                           limit start-point match-part-fn source)
-  (let (buffer-read-only)
+  (let ((inhibit-read-only t))
     (helm--search-from-candidate-buffer-1
      (lambda ()
        (cl-loop with hash = (make-hash-table :test 'equal)
@@ -4737,16 +4739,30 @@ this function is always called."
     (delete-char 1)
     (set-buffer-modified-p nil)))
 
-(defun helm-candidate-buffer (&optional create-or-buffer)
+(defun helm-candidate-buffer (&optional buffer-spec)
   "Register and return a buffer storing candidates of current source.
 
-Acceptable values of CREATE-OR-BUFFER:
+This is used to initialize a buffer for storing candidates for a
+candidates-in-buffer source, candidates will be searched in this
+buffer and displayed in `helm-buffer'.
+This should be used only in init functions, don't relay on this in
+other places unless you know what you are doing.
+
+This function is still in public API only for backward compatibility,
+you should use instead `helm-init-candidates-in-buffer' for
+initializing your sources.
+
+Internally, this function is called without argument and returns the
+buffer corresponding to current source i.e `helm--source-name' which
+is available in only some places.
+
+Acceptable values of BUFFER-SPEC:
 
 - global (a symbol)
   Create a new global candidates buffer,
   named \" *helm candidates:SOURCE*\".
   This is used by `helm-init-candidates-in-buffer' and it is
-  the most common usage of CREATE-OR-BUFFER.
+  the most common usage of BUFFER-SPEC.
   The buffer will be killed and recreated at each new helm-session.
 
 - local (a symbol)
@@ -4755,12 +4771,11 @@ Acceptable values of CREATE-OR-BUFFER:
   You may want to use this when you want to have a different buffer
   each time source is used from a different `helm-current-buffer'.
   The buffer is erased and refilled at each new session but not killed.
-  You probably don't want to use this value for CREATE-OR-BUFFER.
+  You probably don't want to use this value for BUFFER-SPEC.
 
 - nil (omit)
-  Only return the candidates buffer if found
-  in `helm--candidate-buffer-alist' and it is alive.
-
+  Only return the candidates buffer of current source if found.
+  
 - A buffer
   Register a buffer as a candidates buffer.
   The buffer needs to exists, it is not created.
@@ -4776,62 +4791,80 @@ global one and is used instead."
         (local-bname (format " *helm candidates:%s*%s"
                              helm--source-name
                              (buffer-name helm-current-buffer))))
-    (when create-or-buffer
+    (when buffer-spec
       ;; Register buffer in `helm--candidate-buffer-alist'.
       ;; This is used only to retrieve buffer associated to current source
-      ;; when using named buffer as value of CREATE-OR-BUFFER.
+      ;; when using named buffer as value of BUFFER-SPEC.
       (setq helm--candidate-buffer-alist
-            (cons (cons helm--source-name create-or-buffer)
+            (cons (cons helm--source-name buffer-spec)
                   (delete (assoc helm--source-name
                                  helm--candidate-buffer-alist)
                           helm--candidate-buffer-alist)))
       ;; When using global or local as value of CREATE-OR-BUFFER
       ;; create the buffer global-bname or local-bname, otherwise
       ;; reuse the named buffer.
-      (unless (bufferp create-or-buffer)
-        ;; Global buffer are killed and recreated.
-        (and (eq create-or-buffer 'global)
-             (buffer-live-p global-bname)
+      (unless (bufferp buffer-spec)
+        ;; Global buffers are killed and recreated.
+        (and (eq buffer-spec 'global)
+             (buffer-live-p (get-buffer global-bname))
              (kill-buffer global-bname))
         ;; Create global or local buffer.
         ;; Local buffer, once created are reused and a new one
         ;; is created when `helm-current-buffer' change across sessions.
         (with-current-buffer (get-buffer-create
-                              (cl-ecase create-or-buffer
+                              (cl-ecase buffer-spec
                                 (global global-bname)
                                 (local  local-bname)))
-          (set (make-local-variable 'inhibit-read-only) t) ; Fix (#1176)
-          (buffer-disable-undo)
+          ;; We need a buffer not read-only to perhaps insert later
+          ;; text coming from read-only buffers (issue #1176).
+          (set (make-local-variable 'buffer-read-only) nil)
+          ;; Undo is automatically disabled in buffer names starting
+          ;; with a space, so no need to disable it.
           (erase-buffer)
           (font-lock-mode -1))))
     ;; Finally return the candidates buffer.
     (helm-acond ((get-buffer local-bname))
                 ((get-buffer global-bname))
                 ((assoc-default helm--source-name helm--candidate-buffer-alist)
-                 (and (buffer-live-p it) it)))))
+                 (and (or (stringp it) (bufferp it))
+                      (buffer-live-p (get-buffer it))
+                      it)))))
 
-(defun helm-init-candidates-in-buffer (buffer data)
-  "Register BUFFER with DATA for a helm candidates-in-buffer session.
-Arg BUFFER can be a string, a buffer object (bufferp), or a symbol,
-either 'local or 'global which is passed to `helm-candidate-buffer'.
+(defun helm-init-candidates-in-buffer (buffer-spec data)
+  "Register BUFFER-SPEC with DATA for a helm candidates-in-buffer session.
+
+Arg BUFFER-SPEC can be a buffer-name (stringp), a buffer-spec object
+\(bufferp), or a symbol, either 'local or 'global which is passed to
+`helm-candidate-buffer'.
+The most common usage of BUFFER-SPEC is 'global.
+
 Arg DATA can be either a list or a plain string.
-Returns the resulting buffer."
+Returns the resulting buffer.
+
+Use this in your init function to register a buffer for a
+`helm-source-in-buffer' session and feed it with DATA.
+You probably don't want to bother with this and use the :data slot
+when initializing a source with `helm-source-in-buffer' class."
   (declare (indent 1))
-  (let ((buf (helm-candidate-buffer
-              (if (or (stringp buffer)
-                      (bufferp buffer))
-                  (get-buffer-create buffer)
-                buffer)))) ; a symbol.
-    (with-current-buffer buf
-      (erase-buffer)
-      (cond ((listp data)
-             (insert (mapconcat (lambda (i)
-                                  (cond ((symbolp i) (symbol-name i))
-                                        ((numberp i) (number-to-string i))
-                                        (t i)))
-                                data "\n")))
-            ((stringp data) (insert data))))
-    buf))
+  (let ((caching (and (or (stringp buffer-spec)
+                          (bufferp buffer-spec))
+                      (buffer-live-p (get-buffer buffer-spec))))
+        (buf (helm-candidate-buffer
+              (if (or (stringp buffer-spec)
+                      (bufferp buffer-spec))
+                  (get-buffer-create buffer-spec)
+                buffer-spec)))) ; a symbol 'global or 'local.
+    (unless caching
+      (with-current-buffer buf
+        (erase-buffer)
+        (cond ((listp data)
+               (insert (mapconcat (lambda (i)
+                                    (cond ((symbolp i) (symbol-name i))
+                                          ((numberp i) (number-to-string i))
+                                          (t i)))
+                                  data "\n")))
+              ((stringp data) (insert data))))
+      buf)))
 
 
 ;;; Resplit helm window

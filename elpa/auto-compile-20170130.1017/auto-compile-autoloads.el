@@ -1,9 +1,9 @@
 ;;; auto-compile-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "auto-compile" "auto-compile.el" (22446 30359
+;;;### (autoloads nil "auto-compile" "auto-compile.el" (22674 643
 ;;;;;;  0 0))
 ;;; Generated autoloads from auto-compile.el
 
@@ -24,7 +24,8 @@ variant `auto-compile-on-save-mode'.  Also see the related
 
 (defvar auto-compile-on-save-mode nil "\
 Non-nil if Auto-Compile-On-Save mode is enabled.
-See the command `auto-compile-on-save-mode' for a description of this minor mode.
+See the `auto-compile-on-save-mode' command
+for a description of this minor mode.
 Setting this variable directly does not take effect;
 either customize it (see the info node `Easy Customization')
 or call the function `auto-compile-on-save-mode'.")
@@ -88,14 +89,15 @@ multiple files is toggled as follows:
   up-to-date.  Do so even for non-library source files.
 
 * Only enter subdirectories for which `packed-ignore-directory-p'
-  returns nil; most importantly don't enter hidden directories or
-  those containing a file named \".nosearch\".
+  returns nil; i.e. don't enter hidden directories or directories
+  containing a file named \".nosearch\".
 
 \(fn FILE ACTION)" t nil)
 
 (defvar auto-compile-on-load-mode nil "\
 Non-nil if Auto-Compile-On-Load mode is enabled.
-See the command `auto-compile-on-load-mode' for a description of this minor mode.
+See the `auto-compile-on-load-mode' command
+for a description of this minor mode.
 Setting this variable directly does not take effect;
 either customize it (see the info node `Easy Customization')
 or call the function `auto-compile-on-load-mode'.")

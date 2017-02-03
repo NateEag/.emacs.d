@@ -146,8 +146,72 @@
   :commands space-trail-activate
   :init (space-trail-activate))
 
+(use-package evil-exchange
+  :commands evil-exchange-install)
+
+(use-package evil-commentary
+  :commands evil-commentary-mode)
+
+(use-package evil
+  :commands evil-local-mode
+  :config
+  (progn
+
+    ;; Use regular emacs keybindings for insert-mode.
+    (setcdr evil-insert-state-map nil)
+
+    (evil-escape-mode)
+
+    ;; Always use a leader key, because the leader is awesome.
+    (global-evil-leader-mode)
+    (evil-leader/set-leader "<SPC>")
+
+    ;; See my-keybindings.el for my actual leader keybindings.
+
+    ;; Turn on surround everywhere.
+    (global-evil-surround-mode)
+
+    (evil-exchange-install)
+
+    (evil-commentary-mode)
+
+    (diminish 'evil-commentary-mode)
+
+    ;; If a buffer is empty on evil-mode start, go directly to insert-mode,
+    ;; because we'll almost certainly want to start typing.
+    ;;
+    ;; An empty buffer isn't the *only* case where this is the case, but it's a
+    ;; starting point.
+    (add-hook 'evil-local-mode-hook
+              '(lambda ()
+                 ;; HACK Magit buffers seem to start at size 0, but they
+                 ;; populate very quickly, so waiting just a bit before
+                 ;; checking whether we should be in insert-mode seems to work
+                 ;; okay in practice. Doesn't work for *scratch*, though.
+                 (run-at-time "0.1 sec"
+                              nil
+                              (lambda ()
+                                (when (and evil-local-mode
+                                           (= (buffer-size) 0)
+                                           ;; HACK *scratch* buffer seems to
+                                           ;; start out at 0 length, so I
+                                           ;; explicitly ignore it.
+                                           (not (string-equal (buffer-name)
+                                                              "*scratch*")))
+                                  (evil-insert-state))))))))
+
+(use-package evil-escape
+  :diminish 'evil-escape-mode
+  :config
+  (setq-default evil-escape-key-sequence "jk")
+  (setq-default evil-escape-unordered-key-sequence t))
+
 (use-package magit
-  :defer t)
+  :defer t
+  :config (require 'evil-magit)
+          (add-hook 'magit-status-mode-hook 'evil-local-mode)
+          ;; (add-hook 'magit-mode-hook 'evil-normal-state)
+          )
 
 (use-package git-commit
   :init (global-git-commit-mode 1)
@@ -395,59 +459,6 @@
         (define-key yas-minor-mode-map (kbd "TAB") yas-maybe-expand)
         (define-key yas-minor-mode-map (kbd "C-c y") yas-maybe-expand)
         (define-key yas-minor-mode-map [(tab)] nil)))
-
-(use-package evil-exchange
-  :commands evil-exchange-install)
-
-(use-package evil-commentary
-  :commands evil-commentary-mode)
-
-(use-package evil
-  :commands evil-local-mode
-  :config
-  (progn
-
-    ;; Use regular emacs keybindings for insert-mode.
-    (setcdr evil-insert-state-map nil)
-
-    (evil-escape-mode)
-
-    ;; Always use a leader key, because the leader is awesome.
-    (global-evil-leader-mode)
-    (evil-leader/set-leader "<SPC>")
-
-    ;; See my-keybindings.el for my actual leader keybindings.
-
-    ;; Turn on surround everywhere.
-    (global-evil-surround-mode)
-
-    (evil-exchange-install)
-
-    (evil-commentary-mode)
-
-    (diminish 'evil-commentary-mode)
-
-    ;; If a buffer is empty on evil-mode start, go directly to insert-mode,
-    ;; because we'll almost certainly want to start typing.
-    ;;
-    ;; An empty buffer isn't the *only* case where this is the case, but it's a
-    ;; starting point.
-    (add-hook 'evil-local-mode-hook
-              '(lambda ()
-                 (when (and evil-local-mode
-                            (= (buffer-size) 0)
-                            ;; HACK *scratch* buffer seems to start out at 0
-                            ;; length, so I explicitly ignore it.
-                            (not (string-equal (buffer-name) "*scratch*")))
-                   (evil-insert-state))))
-
-    ))
-
-(use-package evil-escape
-  :diminish 'evil-escape-mode
-  :config
-  (setq-default evil-escape-key-sequence "jk")
-  (setq-default evil-escape-unordered-key-sequence t))
 
 (use-package glasses
   :commands glasses-mode

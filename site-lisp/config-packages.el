@@ -75,6 +75,19 @@
   (progn
     (helm-mode 1)
 
+    ;; Yoinked from spacemacs:
+    ;;
+    ;; https://github.com/syl20bnr/spacemacs/blob/522366bbd179bc332a863efeb523daa09c603458/layers/+distribution/spacemacs-base/packages.el#L787-L795
+    (define-key helm-map (kbd "C-j") 'helm-next-line)
+    (define-key helm-map (kbd "C-k") 'helm-previous-line)
+    (define-key helm-map (kbd "C-h") 'helm-next-source)
+    (define-key helm-map (kbd "C-S-h") 'describe-key)
+    (define-key helm-map (kbd "C-l") (kbd "RET"))
+    (dolist (keymap (list helm-find-files-map helm-read-file-map))
+      (define-key keymap (kbd "C-l") 'helm-execute-persistent-action)
+      (define-key keymap (kbd "C-h") 'helm-find-files-up-one-level)
+      (define-key keymap (kbd "C-S-h") 'describe-key))
+
     (define-key helm-find-files-map (kbd "C-c d") 'insert-date)
     (global-set-key (kbd "M-x") 'helm-M-x)
     (global-set-key (kbd "C-x C-f") 'helm-find-files)))

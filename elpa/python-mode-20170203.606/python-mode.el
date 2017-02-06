@@ -7,15 +7,11 @@
 
 ;; Keywords: languages, processes, python, oop
 
-;; Version: "6.2.2"
-
-;; Copyright (C) 2015-2016 Andreas Röhler
-
-;; Author: Andreas Röhler <andreas.roehler@online.de>
+;; Version: "6.2.3"
 
 ;; Copyright (C) 1992,1993,1994  Tim Peters
 
-;; Author: 2015-     https://gitlab.com/groups/python-mode-devs
+;; Author: 2015-2016     https://gitlab.com/groups/python-mode-devs
 ;;         2003-2014 https://launchpad.net/python-mode
 ;;         1995-2002 Barry A. Warsaw
 ;;         1992-1994 Tim Peters
@@ -10058,11 +10054,12 @@ Internal use"
       (and (window-parent)(ignore-errors (split-window (window-parent))))
       (and (window-atom-root)(split-window (window-atom-root)))))
 
-(defun py--manage-windows-split (exception-buffer)
+(defun py--manage-windows-split (buffer)
   "If one window, split according to `py-split-windows-on-execute-function. "
   (interactive)
-  (set-buffer exception-buffer)
+  (set-buffer buffer)
   (or
+   ;; (split-window (selected-window) nil 'below)
    (ignore-errors (funcall py-split-windows-on-execute-function))
    ;; If call didn't succeed according to settings of
    ;; `split-height-threshold', `split-width-threshold'
@@ -10078,13 +10075,13 @@ Internal use"
 ;;       (display-buffer output-buffer)
 ;;       (select-window py-exception-window))
 
-(defun py--split-t-not-switch-wm (output-buffer number-of-windows)
+(defun py--split-t-not-switch-wm (output-buffer number-of-windows exception-buffer)
   (unless (window-live-p output-buffer)
-    (with-current-buffer (get-buffer output-buffer)
+    (with-current-buffer (get-buffer exception-buffer)
       (when (< number-of-windows py-split-window-on-execute-threshold)
 	(unless
 	    (member (get-buffer-window output-buffer)(window-list))
-	  (py--manage-windows-split py-exception-buffer)))
+	  (py--manage-windows-split exception-buffer)))
       (display-buffer output-buffer t))))
 
 (defun py--shell-manage-windows (output-buffer &optional exception-buffer split switch)
@@ -10151,7 +10148,7 @@ Internal use"
       ;; https://bugs.launchpad.net/python-mode/+bug/1478122
       ;; > If the shell is visible in any of the windows it  should re-use that window
       ;; > I did double check and py-keep-window-configuration is nil and split is t.
-      (py--split-t-not-switch-wm output-buffer number-of-windows))
+      (py--split-t-not-switch-wm output-buffer number-of-windows exception-buffer))
      ((and split switch)
       (unless
 	  (member (get-buffer-window output-buffer)(window-list))
@@ -20200,9 +20197,10 @@ Returns indentation reached. "
     (when (and (called-interactively-p 'any) py-verbose-p) (message "%s" erg))
     erg))
 
-(defun py--shift-intern (count &optional start end)
+(defun py--shift-intern (&optional count start end)
   (save-excursion
-    (let* ((inhibit-point-motion-hooks t)
+    (let* ((count (or count 1)) 
+	   (inhibit-point-motion-hooks t)
            deactivate-mark
            (beg (cond (start)
 		      ;; (use-region-p)
@@ -22194,30 +22192,39 @@ Don't save anything for STR matching `py-input-filter-re' "
 (push (cons (purecopy "\\.py\\'")  'python-mode)  auto-mode-alist)
 
 ;; Python Macro File
-(push (cons (purecopy "\.pym\'")  'python-mode)  auto-mode-alist)
 
-(push (cons (purecopy "\.pyc\'")  'python-mode)  auto-mode-alist)
+(unless (member '(".pym'" . python-mode) auto-mode-alist)
+  (push (cons (purecopy "\\.pym\\'")  'python-mode)  auto-mode-alist))
+
+(unless (member '(".pyc'" . python-mode)  auto-mode-alist)
+  (push (cons (purecopy "\\.pyc\\'")  'python-mode)  auto-mode-alist))
 
 ;; Pyrex Source
-(push (cons (purecopy "\.pyx\'")  'python-mode) auto-mode-alist)
+(unless (member '(".pyx'" . python-mode)  auto-mode-alist)
+  (push (cons (purecopy "\\.pyx\\'")  'python-mode) auto-mode-alist))
 
 ;; Python Optimized Code
-(push (cons (purecopy "\.pyo\'")  'python-mode) auto-mode-alist)
+(unless (member '(".pyo'" . python-mode)  auto-mode-alist)
+  (push (cons (purecopy "\\.pyo\\'")  'python-mode) auto-mode-alist))
 
 ;; Pyrex Definition File
-(push (cons (purecopy "\.pxd\'")  'python-mode) auto-mode-alist)
+(unless (member '(".pxd'" . python-mode)  auto-mode-alist)
+  (push (cons (purecopy "\\.pxd\\'")  'python-mode) auto-mode-alist))
 
 ;; Python Repository
-(push (cons (purecopy "\.pyr\'")  'python-mode)  auto-mode-alist)
+(unless (member '(".pyr'" . python-mode)  auto-mode-alist)
+  (push (cons (purecopy "\\.pyr\\'")  'python-mode)  auto-mode-alist))
 
 ;; Python Path Configuration
-(push (cons (purecopy "\.pth\'")  'python-mode)  auto-mode-alist)
+(unless (member '(".pth'" . python-mode)  auto-mode-alist)
+  (push (cons (purecopy "\\.pth\\'")  'python-mode)  auto-mode-alist))
 
 ;; Python Wheels
-(push (cons (purecopy "\.whl\'")  'python-mode)  auto-mode-alist)
+(unless (member '(".whl'" . python-mode)  auto-mode-alist)
+  (push (cons (purecopy "\\.whl\\'")  'python-mode)  auto-mode-alist))
 
-(push '("!#[ \t]*/.*[jp]ython[0-9.]*" . python-mode) magic-mode-alist
-	     )
+(unless (member '("!#[ 	]*/.*[jp]ython[0-9.]*" . python-mode) magic-mode-alist)
+  (push '("!#[ \\t]*/.*[jp]ython[0-9.]*" . python-mode) magic-mode-alist))
 
 ;;  lp:1355458, what about using `magic-mode-alist'?
 

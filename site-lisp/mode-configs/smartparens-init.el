@@ -60,6 +60,13 @@
   (define-key sp-keymap (kbd "H-s j") 'sp-join-sexp)
   (define-key sp-keymap (kbd "H-s s") 'sp-split-sexp))
 
+(defun ne-sp-point-after-colon (id action context)
+  "Return true if point is after a colon character. Else, return nil.
+
+Used to suppress pairing parens if I'm typing a frowny-face."
+  (when (eq action 'insert)
+    (sp--looking-back-p (concat ":" (regexp-quote id)))))
+
 (defun smartparens-init ()
   "My general smartparens settings, many snagged from the default config."
 
@@ -83,6 +90,9 @@
   ;; it's automatically turned into a pair of escaped quotes. That one's not so
   ;; soluble, but it bothers me more than it helps me.
   (setq sp-autoescape-string-quote nil)
+
+  ;; Do not autopair parens when typing the following: :(
+  (sp-pair "(" ")" :unless '(ne-sp-point-after-colon))
 
   ;; do not autoinsert ' pair if the point is preceded by word.  This
   ;; will handle the situation when ' is used as a contraction symbol in

@@ -418,7 +418,18 @@
  have grown enough to have a few different include files. Often that means you
  should just rewrite in another language, but I can imagine legitimate cases. I
  suspect you could roll your own with this snippet for figuring out where a
- function came from: http://superuser.com/a/229038
+ function came from, and some parsing of PATH for commands:
+ http://superuser.com/a/229038
+
+-Improved bash auto-complete while writing scripts would be nice, too. Search
+ "$PATH" when writing commands, for instance (first word on line/first word
+ inside subshells, first word in if, etc). Course, really you'd need a bash
+ parser to get that right, which is probably not worth the pain...
+
+-Adjust emacs env when editing files with a dominating direnv file (.envrc).
+ This might slow things down, because you might have to change the env every
+ time you changed buffers. Just a (crazy?) thought on how to make life a little
+ nicer.
 
 -bash snippets would be nice: https://github.com/bmaland/yasnippet-sh-mode
 

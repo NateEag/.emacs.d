@@ -347,7 +347,7 @@
 	       ((:keywords "calendar")
 		(:url . "http://elpa.gnu.org/packages/excorporate.html"))])
  (exwm .
-       [(0 12)
+       [(0 13)
 	((xelb
 	  (0 12)))
 	"Emacs X Window Manager" tar
@@ -650,7 +650,7 @@
 	     ((:url . "https://github.com/michael-heerdegen/on-screen.el")
 	      (:keywords "convenience"))])
  (org .
-      [(20170124)
+      [(20170210)
        nil "Outline-based notes management and organizer" tar nil])
  (osc .
       [(0 1)

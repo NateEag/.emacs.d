@@ -7,7 +7,7 @@
 ;; Created: 17 Jun 2012
 ;; Modified: 17 Oct 2016
 ;; Version: 2.3
-;; Package-Version: 20170116.1309
+;; Package-Version: 20170213.1353
 ;; Package-Requires: ((bind-key "1.0") (diminish "0.44"))
 ;; Keywords: dotemacs startup speed config package
 ;; URL: https://github.com/jwiegley/use-package
@@ -193,20 +193,73 @@ The default value uses package.el to install the package."
                  (function :tag "Custom"))
   :group 'use-package)
 
+(defcustom use-package-defaults
+  '((:config '(t) t)
+    (:ensure use-package-always-ensure use-package-always-ensure)
+    (:pin use-package-always-pin use-package-always-pin))
+  "Alist of default values for `use-package' keywords.
+Each entry in the alist is a list of three elements. The first
+element is the `use-package' keyword and the second is a form
+that can be evaluated to get the default value. The third element
+is a form that can be evaluated to determine whether or not to
+assign a default value; if it evaluates to nil, then the default
+value is not assigned even if the keyword is not present in the
+`use-package' form."
+  :type '(repeat (list symbol sexp sexp)))
+
 (when use-package-enable-imenu-support
-  ;; Not defined in Emacs 24
-  (defvar lisp-mode-symbol-regexp
-    "\\(?:\\sw\\|\\s_\\|\\\\.\\)+")
-  (add-to-list
-   'lisp-imenu-generic-expression
-   (list "Package"
-         (purecopy (concat "^\\s-*("
-                           (eval-when-compile
-                             (regexp-opt
-                              '("use-package" "require")
-                              t))
-                           "\\s-+\\(" lisp-mode-symbol-regexp "\\)"))
-         2)))
+  (eval-after-load 'lisp-mode
+    `(let ((sym-regexp (or (bound-and-true-p lisp-mode-symbol-regexp)
+                           "\\(?:\\sw\\|\\s_\\|\\\\.\\)+")))
+       (add-to-list
+        'lisp-imenu-generic-expression
+        (list "Packages"
+              (concat "^\\s-*("
+                      ,(eval-when-compile
+                         (regexp-opt '("use-package" "require") t))
+                      "\\s-+\\(" sym-regexp "\\)")
+              2)))))
+
+(defvar use-package-form-regexp "^\\s-*(\\s-*use-package\\s-+\\_<%s\\_>"
+  "Regexp used in `use-package-jump-to-package-form' to find use
+package forms in user files.")
+
+(defun use-package--find-require (package)
+  "Find file that required PACKAGE by searching
+`load-history'. Returns an absolute file path or nil if none is
+found."
+  (catch 'suspect
+    (dolist (filespec load-history)
+      (dolist (entry (cdr filespec))
+        (when (equal entry (cons 'require package))
+          (throw 'suspect (car filespec)))))))
+
+(defun use-package-jump-to-package-form (package)
+  "Attempt to find and jump to the `use-package' form that loaded
+PACKAGE. This will only find the form if that form actually
+required PACKAGE. If PACKAGE was previously required then this
+function will jump to the file that orginally required PACKAGE
+instead."
+  (interactive (list (completing-read "Package: " features)))
+  (let* ((package (if (stringp package) (intern package) package))
+         (requiring-file (use-package--find-require package))
+         file location)
+    (if (null requiring-file)
+        (user-error "Can't find file that requires this feature.")
+      (setq file (if (string= (file-name-extension requiring-file) "elc")
+                     (concat (file-name-sans-extension requiring-file) ".el")
+                   requiring-file))
+      (when (file-exists-p file)
+        (find-file-other-window file)
+        (save-excursion
+          (goto-char (point-min))
+          (setq location
+                (re-search-forward
+                 (format use-package-form-regexp package) nil t)))
+        (if (null location)
+            (message "No use-package form found.")
+          (goto-char location)
+          (beginning-of-line))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -1154,43 +1207,37 @@ this file.  Usage:
 :pin           Pin the package to an archive."
   (declare (indent 1))
   (unless (member :disabled args)
-    (let* ((name-symbol (if (stringp name) (intern name) name))
-           (args0 (use-package-plist-maybe-put
-                   (use-package-normalize-plist name args)
-                   :config '(t)))
-           (args* (use-package-sort-keywords
-                   (if use-package-always-ensure
-                       (use-package-plist-maybe-put
-                        args0 :ensure use-package-always-ensure)
-                     args0)))
-           (args* (use-package-sort-keywords
-                   (if use-package-always-pin
-                       (use-package-plist-maybe-put
-                        args* :pin use-package-always-pin)
-                     args*))))
+    (let ((name-symbol (if (stringp name) (intern name) name))
+          (args (use-package-normalize-plist name args)))
+      (dolist (spec use-package-defaults)
+        (setq args (use-package-sort-keywords
+                    (if (eval (nth 2 spec))
+                        (use-package-plist-maybe-put
+                         args (nth 0 spec) (eval (nth 1 spec)))
+                      args))))
 
       ;; When byte-compiling, pre-load the package so all its symbols are in
       ;; scope.
       (if (bound-and-true-p byte-compile-current-file)
-          (setq args*
+          (setq args
                 (use-package-plist-cons
-                 args* :preface
+                 args :preface
                  `(eval-when-compile
                     ,@(mapcar #'(lambda (var) `(defvar ,var))
-                              (plist-get args* :defines))
+                              (plist-get args :defines))
                     (with-demoted-errors
                         ,(format "Cannot load %s: %%S" name)
                       ,(if (eq use-package-verbose 'debug)
                            `(message "Compiling package %s" ',name-symbol))
-                      ,(unless (plist-get args* :no-require)
+                      ,(unless (plist-get args :no-require)
                          (use-package-load-name name)))))))
 
       (let ((body
              (macroexp-progn
               (use-package-process-keywords name
                 (if use-package-always-demand
-                    (append args* '(:demand t))
-                  args*)
+                    (append args '(:demand t))
+                  args)
                 (and use-package-always-defer (list :deferred t))))))
         (if use-package-debug
             (display-buffer

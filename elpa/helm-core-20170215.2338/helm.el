@@ -583,6 +583,22 @@ The default is to enable this by default and then toggle
   :group 'helm
   :type 'boolean)
 
+(defcustom helm-header-line-space-before-prompt 'left-fringe
+  "Specify the space before prompt in header-line.
+
+This will be used when `helm-echo-input-in-header-line' is non-nil.
+
+Value can be one of the symbols 'left-fringe or 'left-margin or an
+integer specifying the number of spaces before prompt.
+Note that on input longer that `window-width' the continuation string
+will be shown on left side of window without taking care of this."
+  :group 'helm
+  :type '(choice
+          (symbol
+           (const :tag "Fringe" 'left-fringe)
+           (const :tag "Margin" 'left-margin))
+          integer))
+
 (defcustom helm-tramp-connection-min-time-diff 5
   "Value of `tramp-connection-min-time-diff' for helm remote processes.
 If set to zero helm remote processes are not delayed.
@@ -854,6 +870,38 @@ surprising for new helm users that expect
 realized they are already completing something as soon as helm is
 started! See [[https://github.com/emacs-helm/helm/wiki#helm-completion-vs-emacs-completion][Helm wiki]]
 
+** Helm mode
+
+`helm-mode' allows you enabling helm completion in native emacs functions,
+so when you turn on `helm-mode' commands like e.g `switch-to-buffer' will use
+helm completion instead of the usual emacs completion buffer.
+
+*** What is helmized and not when `helm-mode' is enabled ?
+
+Helm is providing completion on all functions in emacs using `completing-read'
+and derived and `completion-in-region', it uses generic functions for this.
+
+For the functions using `completing-read' and derived e.g `read-file-name' helm
+have a user variable that allows controlling which function to use for a specific
+emacs command, it is `helm-completing-read-handlers-alist', it allows also
+disabling helm completion for a specific command when the specified
+function is nil.
+See its documentation for more infos.
+
+*** Helm functions vs helmized emacs functions
+
+Sometimes you have helm functions that do the same completion as other
+emacs vanilla helmized functions, e.g `switch-to-buffer' and
+`helm-buffers-list', you have to understand that the native helm
+functions like `helm-buffers-list' can receive new features, allow
+marking candidates, have several actions and much more whereas the
+emacs vanilla helmized functions have only a helm completion, one
+action and no more what emacs provide for this function, it is the
+intended behavior.
+
+So generally you have better time using the native helm command generally
+much more featured than the emacs function helmized than `helm-mode'.
+
 ** Helm Help
 
 \\[helm-help]\t\tShows this generic Helm help.
@@ -944,6 +992,7 @@ is non-nil.
 \\[helm-quit-and-find-file]\t\tDrop into `helm-find-files'.
 \\[helm-kill-selection-and-quit]\t\tKill display value of candidate and quit (with prefix arg, kill the real value).
 \\[helm-yank-selection]\t\tYank current selection into pattern.
+\\[helm-copy-to-buffer]\t\tCopy selected candidate at point in current-buffer.
 \\[helm-follow-mode]\t\tToggle automatic execution of persistent action.
 \\[helm-follow-action-forward]\tRun persistent action and then select next line.
 \\[helm-follow-action-backward]\t\tRun persistent action and then select previous line.
@@ -2997,7 +3046,12 @@ CANDIDATE. Contiguous matches get a coefficient of 2."
                    candidate (helm-stringify candidate)))
          (pat-lookup (helm--collect-pairs-in-string pattern))
          (str-lookup (helm--collect-pairs-in-string cand))
-         (bonus (if (equal (car pat-lookup) (car str-lookup)) 1 0))
+         (bonus (cond ((equal (car pat-lookup) (car str-lookup))
+                       1)
+                      ((and (null pat-lookup) ; length = 1
+                            (string= pattern (substring cand 0 1)))
+                       150)
+                      (t 0)))
          (bonus1 (and (string-match (concat "\\<" (regexp-quote pattern) "\\>")
                                     cand)
                       100)))
@@ -3921,7 +3975,7 @@ mode and header lines."
                   'display (if (string-match-p (regexp-opt `(,helm--prompt
                                                              ,helm--action-prompt))
                                                cont)
-                               '(space :width left-fringe)
+                               `(space :width ,helm-header-line-space-before-prompt)
                                (propertize
                                 "->"
                                 'face 'helm-header-line-left-margin))))

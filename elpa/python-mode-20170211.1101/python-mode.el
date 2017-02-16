@@ -133,6 +133,14 @@ Results arrive in output buffer, which is not in comint-mode"
   :tag "py-fast-process-p"
   :group 'python-mode)
 
+(defcustom py-shift-require-transient-mark-mode-p t
+ "If py-shift commands on active regions should require transient-mark-mode.
+
+Default is t " 
+
+:type 'boolean
+:group 'python-mode)
+
 (defvar py-fast-output-buffer "*Py-Fast-Output-Buffer*"
   "Default buffer-name for fast-processes")
 
@@ -1919,7 +1927,9 @@ See also `py-execute-directory'"
 (defvar ffap-alist nil)
 
 (defvar py-buffer-name nil
-  "Internal use. ")
+  "Internal use. 
+
+The buffer last output was sent to.")
 
 (defvar py-orig-buffer-or-file nil
   "Internal use. ")
@@ -20203,15 +20213,19 @@ Returns indentation reached. "
 	   (inhibit-point-motion-hooks t)
            deactivate-mark
            (beg (cond (start)
-		      ;; (use-region-p)
-                      ((and (mark) (not (eq (mark) (point))))
+		      ((and py-shift-require-transient-mark-mode-p
+			    (use-region-p))
+		       (region-beginning)) 
+                      ((and (not py-shift-require-transient-mark-mode-p)(mark) (not (eq (mark) (point))))
                        (save-excursion
                          (goto-char
                           (region-beginning))))
                       (t (line-beginning-position))))
            (end (cond (end)
-		      ;; (use-region-p)
-                      ((and (mark) (not (eq (mark) (point)))) 
+		      ((and py-shift-require-transient-mark-mode-p
+			    (use-region-p))
+		       (region-end)) 
+                      ((and (not py-shift-require-transient-mark-mode-p)(mark) (not (eq (mark) (point))))
                        (save-excursion
                          (goto-char
                           (region-end))))
@@ -21892,11 +21906,11 @@ Returns char found. "
   (define-key python-mode-map (kbd "<backtab>") 'org-cycle))
 
 (defun py--buffer-filename-remote-maybe (&optional file-name buffer)
-  (let ((file-name (or file-name (buffer-file-name))))
+  (let ((file-name (or file-name (ignore-errors (file-readable-p (buffer-file-name))))))
     (if (and (featurep 'tramp) (tramp-tramp-file-p file-name))
 	(tramp-file-name-localname
 	 (tramp-dissect-file-name file-name))
-      (buffer-file-name (or buffer (current-buffer))))))
+      file-name)))
 
 (defun py-forward-buffer ()
   "A complementary form used by auto-generated commands.

@@ -245,7 +245,7 @@ interpretation of evil."
 (defcustom evil-mode-line-format 'before
   "The position of the mode line tag.
 Either a symbol or a cons-cell. If it is a symbol it should be
-one of 'before, 'after or 'nil. 'before mean the the tag is
+one of 'before, 'after or 'nil. 'before means the tag is
 placed before the mode-list, 'after means it is placed after the
 mode-list, and 'nil means no mode line tag. If it is a cons cell
 it should have the form (WHERE . WHICH) where WHERE is either
@@ -1088,7 +1088,7 @@ always uses plain Emacs regular expressions."
   :group 'evil)
 
 (defcustom evil-ex-search-persistent-highlight t
-  "If non-nil matches remained highlighted when the search ends."
+  "If non-nil matches remain highlighted when the search ends."
   :type 'boolean
   :group 'evil)
 
@@ -1137,7 +1137,7 @@ the replacement is shown interactively."
   :group 'evil)
 
 (defcustom evil-ex-substitute-global nil
-  "If non-nil substitute patterns a global by default.
+  "If non-nil substitute patterns are global by default.
 Usually (if this variable is nil) a substitution works only on
 the first match of a pattern in a line unless the 'g' flag is
 given, in which case the substitution happens on all matches in a
@@ -1175,7 +1175,7 @@ Set to 0 to use the default height for `split-window'."
   "Show error output of a shell command in the error buffer.
 If this variable is non-nil the error output of a shell command
 goes to the messages buffer instead of being mixed with the
-regular output. This happens only of the exit status of the
+regular output. This happens only if the exit status of the
 command is non-zero."
   :type 'boolean
   :group 'evil)

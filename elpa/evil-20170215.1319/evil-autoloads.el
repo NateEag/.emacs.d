@@ -1,9 +1,9 @@
 ;;; evil-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "evil-core" "evil-core.el" (22492 20472 0 0))
+;;;### (autoloads nil "evil-core" "evil-core.el" (22693 52314 0 0))
 ;;; Generated autoloads from evil-core.el
  (autoload 'evil-mode "evil")
 
@@ -13,7 +13,7 @@
 ;;;;;;  "evil-common.el" "evil-digraphs.el" "evil-ex.el" "evil-integration.el"
 ;;;;;;  "evil-jumps.el" "evil-macros.el" "evil-maps.el" "evil-pkg.el"
 ;;;;;;  "evil-repeat.el" "evil-search.el" "evil-states.el" "evil-types.el"
-;;;;;;  "evil-vars.el" "evil.el") (22492 20472 894238 0))
+;;;;;;  "evil-vars.el" "evil.el") (22693 52314 0 0))
 
 ;;;***
 

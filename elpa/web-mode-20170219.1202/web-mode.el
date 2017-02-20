@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2017 François-Xavier Bois
 
-;; Version: 14.0.43
-;; Package-Version: 20170215.1023
+;; Version: 14.0.44
+;; Package-Version: 20170219.1202
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; URL: http://web-mode.org
@@ -22,7 +22,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "14.0.43"
+(defconst web-mode-version "14.0.44"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -9058,6 +9058,13 @@ Prompt user if TAG-NAME isn't provided."
          (when (web-mode-block-match)
            (setq end-inside (point))
            (setq end-outside (1+ (web-mode-block-end-position (point)))))
+         )
+        ;; *** html comment folding
+        ((eq (get-text-property (point) 'tag-type) 'comment)
+         (setq beg-outside (web-mode-tag-beginning-position))
+         (setq beg-inside (+ beg-outside 4))
+         (setq end-outside (web-mode-tag-end-position))
+         (setq end-inside (- end-outside 3))
          )
         ;; *** tag folding
         ((or (member (get-text-property (point) 'tag-type) '(start end))

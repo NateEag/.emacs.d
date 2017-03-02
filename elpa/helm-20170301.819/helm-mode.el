@@ -259,13 +259,19 @@ If COLLECTION is an `obarray', a TEST should be needed. See `obarray'."
         (cons (concat (propertize
                        " " 'display
                        (propertize "[?]" 'face 'helm-ff-prefix))
-                      c)
-              c)
+                      cand)
+              cand)
         into lst
-        else collect (if (and (stringp c)
-                              (string-match "\n" c))
-                         (cons (replace-regexp-in-string "\n" "->" c) c)
-                         c)
+        else collect (if (and (stringp cand)
+                              (string-match "\n" cand))
+                         (cons (replace-regexp-in-string "\n" "->" cand) cand)
+                         ;; FIXME: Only plain string is supported
+                         ;; here, if we use a cons a bug happen with
+                         ;; completion-at-point and fuzzy enabled,
+                         ;; where nil is passed to
+                         ;; helm--collect-pairs-in-string. It seems
+                         ;; cons are not handled in some places, fixit.
+                         cand)
         into lst
         finally return (helm-fast-remove-dups lst :test 'equal)))
 
@@ -1170,7 +1176,8 @@ Can be used as value for `completion-in-region-function'."
                           :must-match require-match))))
           (cond ((stringp result)
                  (choose-completion-string
-                  result (current-buffer)
+                  (replace-regexp-in-string "\\s\\" "" result)
+                  (current-buffer)
                   (list (+ start base-size) end)
                   completion-list-insert-choice-function))
                 ((consp result) ; crm.

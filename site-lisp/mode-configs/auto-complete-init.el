@@ -23,8 +23,11 @@
         (custom-set-variables
          '(ac-trigger-key "TAB"))
 
-        (define-key ac-completing-map "\C-n" 'ac-next)
-        (define-key ac-completing-map "\C-p" 'ac-previous)
+        ;; Those vim keybinds work their hooks deep into your soul after a
+        ;; while.
+        (define-key ac-completing-map "\C-j" 'ac-next)
+        (define-key ac-completing-map "\C-k" 'ac-previous)
+
         (setq ac-dwim t)
 
         (setq ac-initialized t))))

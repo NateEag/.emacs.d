@@ -1,12 +1,12 @@
 ;;; writeroom-mode.el --- Minor mode for distraction-free writing  -*- lexical-binding: t -*-
 
-;; Copyright (c) 2012-2014 Joost Kremers
+;; Copyright (c) 2012-2017 Joost Kremers
 
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 11 July 2012
 ;; Package-Requires: ((emacs "24.1") (visual-fill-column "1.9"))
-;; Version: 3.5
+;; Version: 3.6
 ;; Keywords: text
 
 ;; Redistribution and use in source and binary forms, with or without
@@ -100,6 +100,11 @@ format can be customized.  See the documentation for the variable
                  (sexp :tag "Customize mode line"
                        :value ("   " mode-line-modified "   " mode-line-buffer-identification))))
 
+(defcustom writeroom-bottom-divider-width 1
+  "Width of the bottom window divider in pixels."
+  :group 'writeroom
+  :type '(integer :tag "Width"))
+
 (make-obsolete-variable 'writeroom-disable-fringe
                         "The variable `writeroom-disable-fringe' is no longer used."
                         "`writeroom-mode' version 2.9")
@@ -176,7 +181,8 @@ buffer."
                              writeroom-set-alpha
                              writeroom-set-menu-bar-lines
                              writeroom-set-tool-bar-lines
-                             writeroom-set-vertical-scroll-bars)
+                             writeroom-set-vertical-scroll-bars
+                             writeroom-set-bottom-divider-width)
   "List of global effects for `writeroom-mode'.
 These effects are enabled when `writeroom-mode' is activated in
 the first buffer and disabled when it is deactivated in the last
@@ -187,6 +193,7 @@ buffer."
               (const :tag "Disable menu bar" writeroom-set-menu-bar-lines)
               (const :tag "Disable tool bar" writeroom-set-tool-bar-lines)
               (const :tag "Disable scroll bar" writeroom-set-vertical-scroll-bars)
+              (const :tag "Enable bottom window divider" writeroom-set-bottom-divider-width)
               (const :tag "Add border" writeroom-set-internal-border-width)
               (const :tag "Display frame on all workspaces" writeroom-set-sticky)
               (repeat :inline t :tag "Custom effects" function)))
@@ -228,6 +235,7 @@ effect is deactivated."
 (define-writeroom-global-effect tool-bar-lines 0)
 (define-writeroom-global-effect internal-border-width writeroom-border-width)
 (define-writeroom-global-effect sticky t)
+(define-writeroom-global-effect bottom-divider-width writeroom-bottom-divider-width)
 
 (defun turn-on-writeroom-mode ()
   "Turn on `writeroom-mode'.

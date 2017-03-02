@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "frame-cmds" "frame-cmds.el" (22693 52319 0
+;;;### (autoloads nil "frame-cmds" "frame-cmds.el" (22712 17908 0
 ;;;;;;  0))
 ;;; Generated autoloads from frame-cmds.el
 

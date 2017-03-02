@@ -3,16 +3,19 @@
 
 ;; Copyright 2011-2017 François-Xavier Bois
 
-;; Version: 14.0.44
-;; Package-Version: 20170219.1202
+;; Version: 14.1.1
+;; Package-Version: 20170225.1206
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
+;; Package-Requires: ((emacs "23.1"))
 ;; URL: http://web-mode.org
 ;; Repository: http://github.com/fxbois/web-mode
 ;; Created: July 2011
 ;; Keywords: languages
 ;; License: GNU General Public License >= 2
 ;; Distribution: This file is not part of Emacs
+
+;;; Commentary:
 
 ;;==============================================================================
 ;; WEB-MODE is sponsored by ** Kernix ** Best DigitalFactory & DataLab in Paris
@@ -22,7 +25,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "14.0.44"
+(defconst web-mode-version "14.1.1"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -10864,7 +10867,7 @@ Prompt user if TAG-NAME isn't provided."
       (when pos (setq pos (web-mode-tag-end-position pos)))
       )
     )
-   ((member (get-text-property pos 'tag-type) '(end void))
+   ((member (get-text-property pos 'tag-type) '(end void comment))
     (setq pos (web-mode-tag-end-position pos))
     )
    ((member (get-text-property pos 'tag-type) '(start))

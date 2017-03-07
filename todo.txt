@@ -30,6 +30,9 @@
 -Make the ansi-term tweaks suggested in this article:
  http://echosa.github.io/blog/2012/06/06/improving-ansi-term/
 
+-Consider using project-shells for managing shells? I've installed it just so I
+ have it around should I decide to try it.
+
 -Add keybindings for goto-chg commands and start using them.
 
 -Fix the issue where leaving a Python buffer reverts point to position 0. I'm

@@ -149,7 +149,16 @@
 (use-package undo-tree
   :diminish undo-tree-mode
   :init
-  (global-undo-tree-mode))
+  (global-undo-tree-mode)
+
+  ;; Evil has built-in logic to set up bindings in undo-tree mode.
+  ;;
+  ;; However, there doesn't seem to be a built-in way to say 'turn on
+  ;; evil-local-mode whenever we run undo-tree-visualize'.
+  ;;
+  ;; Therefore, set that up here.
+  (defadvice undo-tree-visualize (after evil-2 activate)
+    (evil-local-mode)))
 
 (use-package my-frame-setup
   :commands my-set-up-frame)

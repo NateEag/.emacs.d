@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "helm" "helm.el" (22712 17914 0 0))
+;;;### (autoloads nil "helm" "helm.el" (22727 58151 0 0))
 ;;; Generated autoloads from helm.el
 
 (autoload 'helm-define-multi-key "helm" "\
@@ -160,11 +160,8 @@ This keymap is not restored by `helm-resume'.
 Default value inserted into the minibuffer with
 \\<minibuffer-local-map>\\[next-history-element].
 
-One of the following:
-
-- String
-- List
-  - \\<minibuffer-local-map>\\[next-history-element] cycles through
+It can be a string or a list of strings, in this case
+\\<minibuffer-local-map>\\[next-history-element] cycles through
 the list items, starting with the first.
 
 If nil, `thing-at-point' is used.
@@ -222,7 +219,7 @@ Enable/disable helm debugging from outside of helm session.
 ;;;***
 
 ;;;### (autoloads nil nil ("helm-core-pkg.el" "helm-lib.el" "helm-multi-match.el"
-;;;;;;  "helm-source.el") (22712 17914 0 0))
+;;;;;;  "helm-source.el") (22727 58151 0 0))
 
 ;;;***
 

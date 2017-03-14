@@ -290,12 +290,12 @@ This discards all changes made since the sequence started."
 (magit-define-popup magit-rebase-popup
   "Key menu for rebasing."
   :man-page "git-rebase"
-  :switches '((?k "Keep empty commits"    "--keep-empty")
-              (?p "Preserve merges"       "--preserve-merges")
-              (?c "Lie about author date" "--committer-date-is-author-date")
-              (?a "Autosquash"            "--autosquash")
-              (?A "Autostash"             "--autostash")
-              (?i "Interactive"           "--interactive"))
+  :switches '((?k "Keep empty commits"       "--keep-empty")
+              (?p "Preserve merges"          "--preserve-merges")
+              (?c "Lie about committer date" "--committer-date-is-author-date")
+              (?a "Autosquash"               "--autosquash")
+              (?A "Autostash"                "--autostash")
+              (?i "Interactive"              "--interactive"))
   :actions  '((lambda ()
                 (concat (propertize "Rebase " 'face 'magit-popup-heading)
                         (propertize (or (magit-get-current-branch) "HEAD")
@@ -350,7 +350,7 @@ If that variable is unset, then rebase onto `remote.pushDefault'."
 ;;;###autoload
 (defun magit-rebase (target args)
   "Rebase the current branch onto a branch read in the minibuffer.
-All commits that are reachable from head but not from the
+All commits that are reachable from `HEAD' but not from the
 selected branch TARGET are being rebased."
   (interactive (list (magit-read-other-branch-or-commit "Rebase onto")
                      (magit-rebase-arguments)))
@@ -360,7 +360,7 @@ selected branch TARGET are being rebased."
 
 ;;;###autoload
 (defun magit-rebase-subset (newbase start args)
-  "Rebase a subset of the current branches history onto a new base.
+  "Rebase a subset of the current branch's history onto a new base.
 Rebase commits from START to `HEAD' onto NEWBASE.
 START has to be selected from a list of recent commits."
   (interactive (list (magit-read-other-branch-or-commit

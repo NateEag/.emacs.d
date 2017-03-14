@@ -21,7 +21,7 @@
 ;; -------------------------------------------------------------------------------------------
 
 ;; URL: http://github.com/ananthakumaran/typescript.el
-;; Package-Version: 20161130.1944
+;; Package-Version: 20170311.1208
 ;; Version: 0.1
 ;; Keywords: typescript languages
 ;; Package-Requires: ()
@@ -1643,9 +1643,12 @@ See `font-lock-keywords'.")
      "each"))
   "Regexp matching keywords optionally followed by an opening brace.")
 
+(defconst typescript--indent-keyword-re
+  (typescript--regexp-opt-symbol '("in" "instanceof"))
+  "Regexp matching keywords that affect indentation of continued expressions.")
+
 (defconst typescript--indent-operator-re
-  (concat "[-+*/%<>=&^|?:.]\\([^-+*/]\\|$\\)\\|"
-          (typescript--regexp-opt-symbol '("in" "instanceof")))
+  (concat "[-+*/%<>=&^|?:.]\\([^-+*/]\\|$\\)\\|" typescript--indent-keyword-re)
   "Regexp matching operators that affect indentation of continued expressions.")
 
 
@@ -1656,7 +1659,25 @@ See `font-lock-keywords'.")
          (or (not (looking-at ":"))
              (save-excursion
                (and (typescript--re-search-backward "[?:{]\\|\\_<case\\_>" nil t)
-                    (looking-at "?")))))))
+                    (looking-at "?"))))
+         ;; Do not identify methods, or fields, that are named "in" or
+         ;; "instanceof" as being operator keywords.
+         (not (and
+               (looking-at typescript--indent-keyword-re)
+               (save-excursion
+                 (typescript--backward-syntactic-ws)
+                 (memq (char-before) '(?, ?{ ?} ?\;)))))
+         (not (and
+               (looking-at "*")
+               ;; Generator method (possibly using computed property).
+               (looking-at (concat "\\* *\\(?:\\[\\|" typescript--name-re
+                                   " *(\\)"))
+               (save-excursion
+                 (typescript--backward-syntactic-ws)
+                 ;; We might misindent some expressions that would
+                 ;; return NaN anyway.  Shouldn't be a problem.
+                 (memq (char-before) '(?, ?} ?{ ?\;)))))))
+)
 
 
 (defun typescript--continued-expression-p ()

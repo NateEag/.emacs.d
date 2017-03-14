@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; URL: https://github.com/purcell/package-lint
-;; Package-Version: 20170219.2318
+;; Package-Version: 20170305.2112
 ;; Keywords: lisp
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24"))
@@ -112,6 +112,7 @@ This is bound dynamically while the checks run.")
           file-name-base
           function-get
           posnp
+          read-only-mode
           setq-local
           system-groups
           system-users

@@ -5,9 +5,9 @@
 ;; Author: "Huang, Ying" <huang.ying.caritas@gmail.com>
 ;; Maintainer: "Huang, Ying" <huang.ying.caritas@gmail.com>
 ;; URL: https://github.com/hying-caritas/project-shells
-;; Version: 20170305
-;; Package-Version: 20170306.353
-;; Package-X-Original-Version: 20170305
+;; Version: 20170311
+;; Package-Version: 20170311.409
+;; Package-X-Original-Version: 20170311
 ;; Package-Type: simple
 ;; Keywords: processes, terminals
 ;; Package-Requires: ((emacs "24.3") (seq "2.19"))
@@ -45,6 +45,8 @@
 ;; an Emacs program to let my life easier via helping me to manage all
 ;; these shell/terminal buffers.
 
+;; The ssh support code is based on Ian Eure's nssh.  Thanks Ian!
+
 ;;; Code:
 
 (require 'cl-lib)
@@ -57,6 +59,8 @@
 (defvar-local project-shells-project-root nil)
 
 (defconst project-shells-eshell-histfile-env "HISTFILE")
+
+(defvar project-shells--dest-history nil)
 
 ;;; Customization
 (defgroup project-shells nil
@@ -94,7 +98,7 @@ function (symbol or lambda)."
 		       :key-type  (string :tag "Key")
 		       :value-type (list :tag "Shell setup"
 					 (string :tag "Name")
-					 (string :tag "Directory")
+					 (choice :tag "Directory" string (const ask))
 					 (choice :tag "Type" (const term) (const shell))
 					 (choice :tag "Function" (const nil) function)))))
 
@@ -204,10 +208,15 @@ should be a subset of poject-shells-keys."
   (cl-defun project-shells--create (name dir &optional (type 'shell))
     (let ((default-directory (expand-file-name (or dir "~/"))))
       (cl-ecase type
-	(term (ansi-term "/bin/sh"))
-	(shell (shell))
-	(eshell (eshell)))
-      (rename-buffer name)
+	(term (ansi-term "/bin/sh")
+	      (rename-buffer name))
+	(shell (pop-to-buffer name)
+	       (unless (comint-check-proc (current-buffer))
+		 (setf comint-prompt-read-only t)
+		 (cd dir)
+		 (shell (current-buffer))))
+	(eshell (let ((eshell-buffer-name name))
+		  (eshell))))
       (push (current-buffer) saved-shell-buffer-list))))
 
 (cl-defun project-shells-send-shell-command (cmdline)
@@ -284,30 +293,43 @@ name, and the project root directory."
 	 (shell-name (format "*%s.%s.%s*" key name proj)))
     (unless (project-shells--switch shell-name t)
       (let* ((proj-root (or proj-root (project-shells--project-root proj)))
+	     (type (cond
+		    ((cl-third shell-info))
+		    ((member key project-shells-term-keys) 'term)
+		    ((member key project-shells-eshell-keys) 'eshell)
+		    (t 'shell)))
 	     (dir (or (cl-second shell-info) proj-root))
-	     (type (or (cl-third shell-info)
-		       (cond
-			((member key project-shells-term-keys) 'term)
-			((member key project-shells-eshell-keys) 'eshell)
-			(t 'shell))))
 	     (func (cl-fourth shell-info))
 	     (session-dir (expand-file-name (format "%s/%s" proj key)
 					    project-shells-session-root))
 	     (saved-env (project-shells--set-shell-env session-dir)))
-       (unwind-protect
-	   (progn
-	     (mkdir session-dir t)
-	     (project-shells--create shell-name dir type)
-	     (when (eq type 'term)
-	       (term-send-raw-string (project-shells--term-command-string)))
-	     (setf project-shells-project-name proj
-		   project-shells-project-root proj-root)
-	     (when project-shells-default-init-func
-	       (funcall project-shells-default-init-func session-dir type))
-	     (project-shells-mode)
-	     (when func
-	       (funcall func session-dir)))
-	 (project-shells--restore-shell-env saved-env))))))
+	(unwind-protect
+	    (progn
+	      (mkdir session-dir t)
+	      (when (eq dir 'ask)
+		(let* ((dest (completing-read
+			      "Destination: "
+			      project-shells--dest-history
+			      nil nil nil 'project-shells--dest-history)))
+		  (setf dir (if (or (string-prefix-p "/" dest)
+				    (string-prefix-p "~" dest))
+				dest
+			      (format "/ssh:%s:" dest)))))
+	      (project-shells--create shell-name dir type)
+	      (when (eq type 'term)
+		(term-send-raw-string (project-shells--term-command-string)))
+	      (when (or (string-prefix-p "/ssh:" dir)
+			(string-prefix-p "/sudo:" dir))
+		(set-process-sentinel (get-buffer-process (current-buffer))
+				      #'shell-write-history-on-exit))
+	      (setf project-shells-project-name proj
+		    project-shells-project-root proj-root)
+	      (when project-shells-default-init-func
+		(funcall project-shells-default-init-func session-dir type))
+	      (project-shells-mode)
+	      (when func
+		(funcall func session-dir)))
+	  (project-shells--restore-shell-env saved-env))))))
 
 ;;;###autoload
 (cl-defun project-shells-activate (p)

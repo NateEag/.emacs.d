@@ -51,19 +51,13 @@ activity it records, in the format 'YYYY-MM-DD.txt'."
   (let ((all-times (daily-log-get-time-deltas))
         (total-time (seconds-to-time 0)))
 
-    (message "There are %i time deltas." (list-length all-times))
     (dolist (time-delta all-times)
-      (message "Seconds worked: %s" (time-to-seconds time-delta))
-      (message "Time worked: %s" (format-seconds "%h hours, %m minutes" (time-to-seconds time-delta)))
-      (setq total-time (time-add time-delta total-time))
-      )
+      (setq total-time (time-add time-delta total-time)))
 
     (setq total-time (time-to-seconds total-time))
 
-    (message "In seconds: %i" total-time)
     (message "Total time worked: %s" (format-seconds "%h hours, %m minutes"
-                                                     total-time)))
-  )
+                                                     total-time))))
 
 (provide 'daily-log)
 ;;; daily-log.el ends here

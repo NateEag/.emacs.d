@@ -501,12 +501,14 @@
 (use-package diffview
   :commands diffview-current)
 
-;; I'm not sure whether I'm actually going to like eldoc-overlay-mode.
+;; eldoc-overlay mode is interesting, but has some quirks that make it kinda
+;; painful.
 ;;
-;; I figured it was worth trying, though.
-(use-package eldoc
-  :diminish
-  :init (add-hook 'eldoc-mode-hook 'eldoc-overlay-mode))
+;; Hence, just commenting this out for now.
+;;
+;; (use-package eldoc
+;;   :diminish
+;;   :init (add-hook 'eldoc-mode-hook 'eldoc-overlay-mode))
 
 (use-package flyspell
   :defer t

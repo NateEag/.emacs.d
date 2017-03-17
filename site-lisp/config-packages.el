@@ -20,7 +20,8 @@
             move-current-buffer insert-date insert-time unfill-paragraph
             add-auto-mode)
 
-(use-package daily-log)
+(use-package daily-log
+  :commands daily-log-show-total-time)
 
 (use-package my-keybindings)
 

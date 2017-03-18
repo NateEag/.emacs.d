@@ -69,7 +69,6 @@ activity it records, in the format 'YYYY-MM-DD.txt'."
 
   (interactive)
 
-  ;; For each log file that exists so far this week:
   (let* ((now (decode-time))
          (current-day-of-week (nth 6 now))
          (cur-time (current-time))
@@ -90,9 +89,7 @@ activity it records, in the format 'YYYY-MM-DD.txt'."
     (setq total-time (time-to-seconds total-time))
     (message "Total time worked this week: %s" (format-seconds
                                                 "%h hours, %m minutes"
-                                                total-time))
-    )
-  )
+                                                total-time))))
 
 (defun daily-log-show-total-time ()
   "Show the amount of time logged in current buffer."

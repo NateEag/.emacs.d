@@ -9,6 +9,12 @@
 ;; I keep a daily log, often with start/stop times.
 ;;
 ;; When I want to manipulate it somehow from Emacs, that code goes here.
+;;
+;; ...yes, I know I should just be using org-mode. No, I don't want to, because
+;; I already have enough fancy twiddly bits to play with instead of working.
+;;
+;; My file format is ad-hoc and undocumented, but it doesn't do much and meets
+;; my needs.
 
 ;;; Code:
 

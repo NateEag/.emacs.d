@@ -355,6 +355,12 @@ the command with `helm-locate-recursive-dirs-command'.
 Because this completion use an index, you may not have all the recent additions
 of directories until you update your index (with `updatedb' for locate).
 
+If for some reason you cannot use an index the find command from findutils can be
+used for this, it will be slower of course, you will have to pass the basedir as
+first argument of find and the subdir as the value for '-(i)regex' or '-(i)name'
+with the two format specs that are mandatory in `helm-locate-recursive-dirs-command',
+e.g \"find %s -type d -name '*%s*'\" or \"find %s -type d -regex .*%s.*$\".
+
 *** Insert filename at point or complete filename at point
 
 On insertion (no completion, i.e nothing at point):
@@ -511,6 +517,62 @@ However with a prefix arg it will apply `example' on each file:
     example foo bar baz
 
 Of course the alias command should support this.
+
+*** Using Tramp with `helm-find-files' to read remote directories
+
+`helm-find-files' is working fine with tramp with however some limitations.
+
+- By default filenames are not highlighted when working on remote directories,
+this is controled by `helm-ff-tramp-not-fancy' variable, if you change this,
+expect helm becoming very slow unless your connection is super fast.
+
+- Grepping files is not very well supported when used incrementally, see above
+grep section.
+
+- Locate is not working on remote directories.
+
+**** Some reminders about Tramp syntax
+
+Not exhaustive, please read Tramp documentation.
+
+- Connect to host 192.168.0.4 as foo user:
+
+    /scp:192.168.0.4@foo:
+
+- Connect to host 192.168.0.4 as foo user with port 2222:
+
+    /scp:192.168.0.4@foo#2222:
+
+- Connect to host 192.168.0.4 as root using multihops syntax:
+
+    /ssh:192.168.0.4@foo|sudo:192.168.0.4:
+
+Note: you can also use `tramp-default-proxies-alist' when connecting often to
+some hosts.
+
+Prefer generally scp method unless using multihops (works only with ssh method)
+specially when copying large files.
+
+Note also that you have to hit once `C-j' on top of directory at first connection
+to complete your pattern in minibuffer.
+
+**** Completing host
+
+As soon as you enter the first \":\" after method e.g =/scp:\= you will
+have some completion about previously used hosts or from your =~/.ssh/config\=
+file, hitting `C-j' or `right' on a candidate will insert this host in minibuffer
+without addind the ending \":\".
+As soon the last \":\" is entered Tramp will kick in and you should see the list
+of candidates a few seconds later.
+
+When your connection fails, be sure to delete your tramp connection before retrying
+with M-x `helm-delete-tramp-connection'.
+
+**** Editing local files as root
+
+Use the sudo method:
+
+    /sudo:host: or just /sudo::
 
 ** Commands
 \\<helm-find-files-map>

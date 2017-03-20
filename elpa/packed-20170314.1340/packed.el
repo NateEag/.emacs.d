@@ -5,7 +5,7 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/tarsius/packed
 ;; Keywords: compile, convenience, lisp, package, library
-;; Package-Version: 20170130.1015
+;; Package-Version: 20170314.1340
 ;; Package-Requires: ((emacs "24.3") (dash "2.12.1"))
 
 ;; This file is not part of GNU Emacs.
@@ -181,7 +181,7 @@ FILE should be an Emacs lisp source file."
                ,@body)))))))
 
 (defun packed-library-p (file)
-  "Return non-nil if FILE is an Emacs source library and part of PACKAGE.
+  "Return non-nil if FILE is an Emacs source library.
 Actually return the feature provided by FILE.
 
 An Emacs lisp file is considered to be a library if it provides
@@ -462,12 +462,14 @@ This can be used to determine if an Emacs lisp file should be considered
 a library.  Not every Emacs lisp file has to provide a feature / be a
 library.  If a file lacks an expected feature then loading it using
 `require' still succeeds but causes an error."
-  (let* ((name (file-name-sans-extension (file-name-sans-extension file)))
-         (symb (intern (file-name-nondirectory name))))
-    (--first (or (eq it symb)
-                 (string-suffix-p (convert-standard-filename (symbol-name it))
-                                  name))
-             (packed-with-file file (packed-provided)))))
+  (let* ((file (expand-file-name file))
+         (sans (file-name-sans-extension (file-name-sans-extension file)))
+         (last (file-name-nondirectory sans)))
+    (-first (lambda (feature)
+              (setq feature (symbol-name feature))
+              (or (equal feature last)
+                  (string-suffix-p (concat "/" feature) sans)))
+            (packed-with-file file (packed-provided)))))
 
 (defconst packed-required-regexp "\
 \(\\(?:cc-\\)?require[\s\t\n]+'\

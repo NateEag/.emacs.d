@@ -59,10 +59,11 @@ activity it records, in the format 'YYYY-MM-DD.txt'."
 (defun daily-log-get-file-time-deltas (path)
   "Return a list of time deltas from the file in PATH."
 
- (let ((target-buffer (find-file-noselect path)))
-   (with-current-buffer target-buffer
-    (daily-log-get-time-deltas))
-   ))
+  (when (file-exists-p path)
+    ;; TODO If the file was not open before this ran, close it afterwards.
+    (let ((target-buffer (find-file-noselect path)))
+      (with-current-buffer target-buffer
+        (daily-log-get-time-deltas)))))
 
 (defun daily-log-show-current-week-time ()
   "Show the amount of time logged so far this week."

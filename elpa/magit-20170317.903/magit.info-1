@@ -2668,8 +2668,8 @@ the default value of ‘magit-diff-arguments’ is used instead.
 
      RANGE should be a range (A..B or A…B) but can also be a single
      commit.  If one side of the range is omitted, then it defaults to
-     HEAD. If just a commit is given, then changes in the working tree
-     relative to that commit are shown.
+     ‘HEAD’.  If just a commit is given, then changes in the working
+     tree relative to that commit are shown.
 
      If the region is active, use the revisions on the first and last
      line of the region.  With a prefix argument, instead of diffing the
@@ -3047,7 +3047,7 @@ information on how to use Ediff itself, see *note (ediff)Top::.
 
 ‘E w’     (‘magit-ediff-show-working-tree’)
 
-     Show changes in a file between HEAD and working tree using Ediff.
+     Show changes in a file between ‘HEAD’ and working tree using Ediff.
 
 ‘E c’     (‘magit-ediff-show-commit’)
 
@@ -4656,7 +4656,7 @@ of commands and binding ‘C-c ^ C-h’ and press ‘RET’ while point is on a
 command name to read its documentation.
 
    Normally you would edit one version and then tell Smerge to keep only
-that version.  Use ‘C-c ^ m’ (‘smerge-keep-mine)’ to keep the "HEAD"
+that version.  Use ‘C-c ^ m’ (‘smerge-keep-mine’) to keep the ‘HEAD’
 version or ‘C-c ^ o’ (‘smerge-keep-other’) to keep the version that
 follows "|||||||".  Then use ‘C-c ^ n’ to move to the next conflicting
 area in the same file.  Once you are done resolving conflicts, return to
@@ -4718,7 +4718,7 @@ In-Progress Rebase.
      All commits that are reachable from head but not from the selected
      branch TARGET are being rebased."
 
-‘r o’     (‘magit-rebase-subset’)
+‘r s’     (‘magit-rebase-subset’)
 
      Start a non-interactive rebase sequence with commits from START to
      ‘HEAD’ onto NEWBASE. START has to be selected from a list of recent
@@ -7921,10 +7921,10 @@ Appendix B Keystroke Index
 * r f:                                   Rebasing.            (line  66)
 * r i:                                   Rebasing.            (line  62)
 * r m:                                   Rebasing.            (line  70)
-* r o:                                   Rebasing.            (line  40)
 * r p:                                   Rebasing.            (line  25)
 * r r:                                   Rebasing.            (line  81)
-* r s:                                   Rebasing.            (line  88)
+* r s:                                   Rebasing.            (line  40)
+* r s <1>:                               Rebasing.            (line  88)
 * r u:                                   Rebasing.            (line  30)
 * r w:                                   Rebasing.            (line  74)
 * RET:                                   Diff Buffer.         (line   6)

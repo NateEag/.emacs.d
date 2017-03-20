@@ -6,7 +6,7 @@
 ;; Maintainer: "Huang, Ying" <huang.ying.caritas@gmail.com>
 ;; URL: https://github.com/hying-caritas/project-shells
 ;; Version: 20170311
-;; Package-Version: 20170311.409
+;; Package-Version: 20170312.1912
 ;; Package-X-Original-Version: 20170311
 ;; Package-Type: simple
 ;; Keywords: processes, terminals
@@ -302,19 +302,20 @@ name, and the project root directory."
 	     (func (cl-fourth shell-info))
 	     (session-dir (expand-file-name (format "%s/%s" proj key)
 					    project-shells-session-root))
-	     (saved-env (project-shells--set-shell-env session-dir)))
+	     (saved-env nil))
+	(when (eq dir 'ask)
+	  (let* ((dest (completing-read
+			"Destination: "
+			project-shells--dest-history
+			nil nil nil 'project-shells--dest-history)))
+	    (setf dir (if (or (string-prefix-p "/" dest)
+			      (string-prefix-p "~" dest))
+			  dest
+			(format "/ssh:%s:" dest)))))
+	(setf saved-env (project-shells--set-shell-env session-dir))
 	(unwind-protect
 	    (progn
 	      (mkdir session-dir t)
-	      (when (eq dir 'ask)
-		(let* ((dest (completing-read
-			      "Destination: "
-			      project-shells--dest-history
-			      nil nil nil 'project-shells--dest-history)))
-		  (setf dir (if (or (string-prefix-p "/" dest)
-				    (string-prefix-p "~" dest))
-				dest
-			      (format "/ssh:%s:" dest)))))
 	      (project-shells--create shell-name dir type)
 	      (when (eq type 'term)
 		(term-send-raw-string (project-shells--term-command-string)))

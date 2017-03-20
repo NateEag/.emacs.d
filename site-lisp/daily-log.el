@@ -39,20 +39,19 @@ activity it records, in the format 'YYYY-MM-DD.txt'."
                    (not (equal "12" (format-time-string "%H" start-time))))
           (setq start-time (time-add start-time (days-to-time 0.5))))
 
-        (re-search-forward (concat "^Stopped: +" daily-log-time-regex))
-        (setq stop-time (date-to-time (concat (file-name-base)
-                                              " "
-                                              (match-string 1))))
-        ;; Apparently date-to-time ignores AM/PM?
-        ;;
-        ;; TODO Find a less-crazy way to do this. Emacs *must* have a way.
-        (when (and (s-ends-with? "PM" (match-string 1))
-                   (not (equal "12" (format-time-string "%H" stop-time))))
-          (setq stop-time (time-add stop-time (days-to-time 0.5))))
+        (when (re-search-forward (concat "^Stopped: +" daily-log-time-regex) nil t)
+          (setq stop-time (date-to-time (concat (file-name-base)
+                                                " "
+                                                (match-string 1))))
+          ;; Apparently date-to-time ignores AM/PM?
+          ;;
+          ;; TODO Find a less-crazy way to do this. Emacs *must* have a way.
+          (when (and (s-ends-with? "PM" (match-string 1))
+                     (not (equal "12" (format-time-string "%H" stop-time))))
+            (setq stop-time (time-add stop-time (days-to-time 0.5))))
 
-        (setq time-delta (time-subtract stop-time start-time))
-
-        (setq times (cons time-delta times)))
+          (setq time-delta (time-subtract stop-time start-time))
+          (setq times (cons time-delta times))))
 
       times)))
 

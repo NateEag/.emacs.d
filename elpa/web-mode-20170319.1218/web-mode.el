@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2017 François-Xavier Bois
 
-;; Version: 14.1.2
-;; Package-Version: 20170309.3
+;; Version: 14.1.3
+;; Package-Version: 20170319.1218
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Package-Requires: ((emacs "23.1"))
@@ -25,7 +25,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "14.1.2"
+(defconst web-mode-version "14.1.3"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -772,6 +772,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("freemarker"       . ())
     ("go"               . ("gtl"))
     ("hero"             . ())
+    ("json-t"           . ())
     ("jsp"              . ("grails"))
     ("mako"             . ())
     ("marko"            . ())
@@ -852,7 +853,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("mojolicious"      . "\\.epl?\\'")
     ("php"              . "\\.\\(p[hs]p\\|ctp\\|inc\\)\\'")
     ("python"           . "\\.pml\\'")
-    ("razor"            . "\\.\\(cs\\|vb\\)html\\'")
+    ("razor"            . "\\.\\(cs\\|vb\\)html\\|\\.razor\\'")
     ("riot"             . "\\.tag\\'")
     ("smarty"           . "\\.tpl\\'")
     ("template-toolkit" . "\\.tt.?\\'")
@@ -5092,6 +5093,10 @@ another auto-completion with different ac-sources (e.g. ac-php)")
             (goto-char pos))
           (forward-char)
           ) ;if
+        )
+       ((and (not (eobp)) (eq ?\< (char-after)) (looking-back "[a-z]"))
+        (unless (search-forward ">" (line-end-position) t)
+          (setq continue nil))
         )
        ((and (not (eobp)) (eq ?\. (char-after)))
         (forward-char))
@@ -9395,8 +9400,8 @@ Prompt user if TAG-NAME isn't provided."
   (let (beg end)
     (setq beg (web-mode-block-beginning-position pos)
           end (web-mode-block-end-position pos))
-    (web-mode-insert-text-at-pos "*/" (- end 1))
-    (web-mode-insert-text-at-pos "/*" (+ beg (if (web-mode-looking-at "<\\?php" beg) 5 3)))))
+    (web-mode-insert-text-at-pos "*/" (- end 2))
+    (web-mode-insert-text-at-pos "/*" (+ beg 1 (if (web-mode-looking-at "<\\?php" beg) 5 3)))))
 
 (defun web-mode-comment-boundaries (&optional pos)
   (interactive)

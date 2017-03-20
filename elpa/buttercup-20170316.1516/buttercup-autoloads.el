@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "buttercup" "buttercup.el" (22608 7047 0 0))
+;;;### (autoloads nil "buttercup" "buttercup.el" (22735 64452 0 0))
 ;;; Generated autoloads from buttercup.el
 
 (autoload 'buttercup-run-at-point "buttercup" "\
@@ -27,7 +27,7 @@ current directory.
 ;;;***
 
 ;;;### (autoloads nil nil ("buttercup-compat.el" "buttercup-pkg.el")
-;;;;;;  (22608 7047 0 0))
+;;;;;;  (22735 64452 0 0))
 
 ;;;***
 

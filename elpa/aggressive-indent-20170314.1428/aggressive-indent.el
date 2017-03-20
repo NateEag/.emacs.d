@@ -4,7 +4,7 @@
 
 ;; Author: Artur Malabarba <emacs@endlessparentheses.com>
 ;; URL: https://github.com/Malabarba/aggressive-indent-mode
-;; Package-Version: 20170310.828
+;; Package-Version: 20170314.1428
 ;; Version: 1.8.4
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: indent lisp maint tools
@@ -170,6 +170,7 @@ change."
     undo-in-progress
     (null (buffer-modified-p))
     (and (boundp 'smerge-mode) smerge-mode)
+    (equal (buffer-name) "*ediff-merge*")
     (let ((line (thing-at-point 'line)))
       (and (stringp line)
            ;; If the user is starting to type a comment.

@@ -520,7 +520,7 @@
        ((:url . "http://elpa.gnu.org/packages/lmc.html")
 	(:keywords))])
  (load-dir .
-	   [(0 0 3)
+	   [(0 0 4)
 	    nil "Load all Emacs Lisp files in a given directory" single
 	    ((:url . "http://elpa.gnu.org/packages/load-dir.html")
 	     (:keywords "lisp" "files" "convenience"))])

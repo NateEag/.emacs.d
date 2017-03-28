@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/avy
-;; Package-Version: 20170208.148
+;; Package-Version: 20170326.1157
 ;; Version: 0.4.0
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: point, location
@@ -135,6 +135,7 @@ If the commands isn't on the list, `avy-style' is used."
     (?X . avy-action-kill-stay)
     (?m . avy-action-mark)
     (?n . avy-action-copy)
+    (?y . avy-action-yank)
     (?i . avy-action-ispell))
   "List of actions for `avy-handler-default'.
 
@@ -532,6 +533,11 @@ Set `avy-style' according to COMMMAND as well."
      (window-frame (cdr dat)))
     (select-window (cdr dat))
     (goto-char (car dat))))
+
+(defun avy-action-yank (pt)
+  "Yank sexp starting at PT at the current point."
+  (avy-action-copy pt)
+  (yank))
 
 (defun avy-action-kill-move (pt)
   "Kill sexp at PT and move there."
@@ -1051,12 +1057,24 @@ the visible part of the current buffer following point."
       (isearch-done))))
 
 ;;;###autoload
-(defun avy-goto-word-0 (arg)
+(defun avy-goto-word-0 (arg &optional beg end)
   "Jump to a word start.
 The window scope is determined by `avy-all-windows' (ARG negates it)."
   (interactive "P")
   (avy-with avy-goto-word-0
-    (avy--generic-jump avy-goto-word-0-regexp arg avy-style)))
+    (avy--generic-jump avy-goto-word-0-regexp arg avy-style beg end)))
+
+(defun avy-goto-word-0-above (arg)
+  "Jump to a word start between window start and point."
+  (interactive "P")
+  (avy-with avy-goto-word-0
+    (avy-goto-word-0 arg (window-start) (point))))
+
+(defun avy-goto-word-0-below (arg)
+  "Jump to a word start between point and window end."
+  (interactive "P")
+  (avy-with avy-goto-word-0
+    (avy-goto-word-0 arg (point) (window-end (selected-window) t))))
 
 ;;;###autoload
 (defun avy-goto-word-1 (char &optional arg beg end symbol)

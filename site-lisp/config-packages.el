@@ -21,7 +21,9 @@
             add-auto-mode)
 
 (use-package daily-log
-  :commands daily-log-show-total-time)
+  :commands daily-log-show-total-time
+            daily-log-show-current-week-time
+            daily-log-show-current-week-time-remaining)
 
 (use-package my-keybindings)
 

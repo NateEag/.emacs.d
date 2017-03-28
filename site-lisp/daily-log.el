@@ -80,11 +80,8 @@ activity it records, in the format 'YYYY-MM-DD.txt'."
 
       time-deltas)))
 
-(defun daily-log-show-current-week-time ()
-  "Show the amount of time logged so far this week."
-
-  (interactive)
-
+(defun daily-log-get-current-week-time ()
+  "Get the number of hours I have logged so far this week."
   (let* ((now (decode-time))
          (current-day-of-week (nth 6 now))
          (cur-time (current-time))
@@ -102,10 +99,27 @@ activity it records, in the format 'YYYY-MM-DD.txt'."
           (setq total-time (time-add time-delta total-time)))
         ))
 
-    (setq total-time (time-to-seconds total-time))
-    (message "Total time worked this week: %s" (format-seconds
-                                                "%h hours, %m minutes"
-                                                total-time))))
+    (setq total-time (time-to-seconds total-time))))
+
+(defun daily-log-show-current-week-time ()
+  "Show the amount of time logged so far this week."
+
+  (interactive)
+
+  (message "Total time worked this week: %s"
+           (format-seconds "%h hours, %m minutes"
+                           (daily-log-get-current-week-time))))
+
+(defun daily-log-show-current-week-time-remaining ()
+  "Show the number of hours I still should work this week."
+
+  (interactive)
+
+  (let ((time-remaining (time-subtract (seconds-to-time (* 60 60 40))
+                                       (daily-log-get-current-week-time))))
+    (message "Total time remaining: %s" (format-seconds
+                                         "%h hours, %m minutes"
+                                         (time-to-seconds time-remaining)))))
 
 (defun daily-log-show-total-time ()
   "Show the amount of time logged in current buffer."

@@ -1,11 +1,11 @@
 ;;; package-lint.el --- A linting library for elisp package authors -*- lexical-binding: t -*-
 
-;; Copyright (C) 2014-2016  Steve Purcell, Fanael Linithien
+;; Copyright (C) 2014-2017  Steve Purcell, Fanael Linithien
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; URL: https://github.com/purcell/package-lint
-;; Package-Version: 20170305.2112
+;; Package-Version: 20170324.1727
 ;; Keywords: lisp
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24"))
@@ -615,10 +615,13 @@ The returned list is of the form (SYMBOL-NAME . POSITION)."
   ;; enabled, Imenu will use its index anyway.
   (let ((result '())
         (index
-         ;; In case it's actually Semantic, tell it not to decorate symbol
-         ;; names.
          (save-excursion
-           (let ((semantic-imenu-summary-function 'semantic-format-tag-name))
+           ;; Use the default imenu expression list so that we're not confused
+           ;; by user customizations.
+           (let ((imenu-generic-expression lisp-imenu-generic-expression)
+                 ;; In case it's actually Semantic, tell it not to decorate
+                 ;; symbol names.
+                 (semantic-imenu-summary-function 'semantic-format-tag-name))
              (funcall imenu-create-index-function)))))
     (dolist (entry index)
       (pcase entry

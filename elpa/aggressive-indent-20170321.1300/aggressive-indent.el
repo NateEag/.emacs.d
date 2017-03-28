@@ -4,7 +4,7 @@
 
 ;; Author: Artur Malabarba <emacs@endlessparentheses.com>
 ;; URL: https://github.com/Malabarba/aggressive-indent-mode
-;; Package-Version: 20170314.1428
+;; Package-Version: 20170321.1300
 ;; Version: 1.8.4
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: indent lisp maint tools
@@ -445,7 +445,8 @@ typing, try tweaking this number."
       (if (and global-aggressive-indent-mode
                (or (cl-member-if #'derived-mode-p aggressive-indent-excluded-modes)
                    (equal indent-line-function #'indent-relative)
-                   (memq major-mode '(text-mode fundamental-mode))
+                   (derived-mode-p 'text-mode)
+                   (eq major-mode 'fundamental-mode)
                    buffer-read-only))
           (aggressive-indent-mode -1)
         ;; Should electric indent be ON or OFF?

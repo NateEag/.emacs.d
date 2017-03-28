@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2017 François-Xavier Bois
 
-;; Version: 14.1.3
-;; Package-Version: 20170319.1218
+;; Version: 14.1.4
+;; Package-Version: 20170320.1240
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Package-Requires: ((emacs "23.1"))
@@ -25,7 +25,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "14.1.3"
+(defconst web-mode-version "14.1.4"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -1709,6 +1709,7 @@ shouldn't be moved back.)")
      ("\\([[:alnum:]_]+\\)\\([ ]*=[^,)]*\\)?[,)]" nil nil (1 'web-mode-variable-name-face)))
    '("\\([[:alnum:]_]+\\):" 1 'web-mode-variable-name-face)
    '("\\_<\\([[:alnum:]_-]+\\)[ ]?(" 1 'web-mode-function-call-face)
+   '("[a-zA-Z]<\\([a-zA-Z]+\\)[,>]" 1 'web-mode-type-face)
    ))
 
 (defvar web-mode-stylus-font-lock-keywords
@@ -4600,7 +4601,9 @@ another auto-completion with different ac-sources (e.g. ac-php)")
            ) ;cond
           )
 
-         ((eq ?\< ch-at)
+         ((and (eq ?\< ch-at)
+               (not (or (and (>= ch-before 97) (<= ch-before 122))
+                        (and (>= ch-before 65) (<= ch-before 90)))))
           ;;(message "before [%S>%S|%S] pt=%S" reg-beg reg-end depth (point))
           (search-backward "<")
           (if (web-mode-jsx-skip reg-end)

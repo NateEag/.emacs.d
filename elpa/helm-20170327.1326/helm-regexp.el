@@ -191,7 +191,14 @@ i.e Don't replace inside a word, regexp is surrounded with \\bregexp\\b."
       'global
     (cl-loop with buffers = (helm-attr 'moccur-buffers)
              for buf in buffers
-             for bufstr = (with-current-buffer buf (buffer-string))
+             for bufstr = (with-current-buffer buf
+                            ;; A leading space is needed to allow helm
+                            ;; searching the first line of buffer
+                            ;; (#1725).
+                            (concat (if (memql (char-after (point-min))
+                                               '(? ?\t ?\n))
+                                        "" " ")
+                                    (buffer-string)))
              do (add-text-properties
                  0 (length bufstr)
                  `(buffer-name ,(buffer-name (get-buffer buf)))
@@ -213,7 +220,8 @@ i.e Don't replace inside a word, regexp is surrounded with \\bregexp\\b."
                                  'buffer-name)
               (save-restriction
                 (narrow-to-region (or (previous-single-property-change
-                                       (point) 'buffer-name) 1)
+                                       (point) 'buffer-name)
+                                      (point-at-bol 2))
                                   (or (next-single-property-change
                                        (if (= beg end)
                                            (helm-moccur--next-or-previous-char)

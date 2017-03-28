@@ -43,12 +43,11 @@
           (const :tag "Man" Man-getpage-in-background)
           (const :tag "Woman" woman)))
 
-(defcustom helm-man-format-switches "-l %s"
+(defcustom helm-man-format-switches (cl-case system-type
+                                      ((darwin macos) "%s")
+                                      (t "-l %s"))
   "Arguments to pass to the `manual-entry' function.
-Arguments are passed to `manual-entry' with `format.'
-Default use \"-l\" which may not be supported on old man versions,
-in this case use \"%s\" as value to pass only the filename as argument.
-See Issue #1035"
+Arguments are passed to `manual-entry' with `format.'"
   :group 'helm-man
   :type 'string)
 

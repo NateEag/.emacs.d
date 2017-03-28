@@ -1531,7 +1531,10 @@ or hitting C-j on \"..\"."
 (defun helm-ff-move-to-first-real-candidate ()
   "When candidate is an incomplete file name move to first real candidate."
   (let* ((src (helm-get-current-source))
-         (name (assoc-default 'name src)))
+         (name (assoc-default 'name src))
+         ;; Ensure `helm-file-completion-source-p' returns nil on
+         ;; `helm-read-file-name' history.
+         minibuffer-completing-file-name)
     (helm-aif (and (helm-file-completion-source-p src)
                    (not (helm-empty-source-p))
                    ;; Prevent dired commands moving to first real
@@ -2648,7 +2651,8 @@ Show the first `helm-ff-history-max-length' elements of
            "Switch to Directory: "
            helm-ff-history
            :name "Helm Find Files History"
-           :must-match t)
+           :must-match t
+           :fuzzy (helm-ff-fuzzy-matching-p))
         helm-ff-history))))
 
 (defun helm-find-files-1 (fname &optional preselect)

@@ -7,7 +7,7 @@
 ;; Created: 17 Jun 2012
 ;; Modified: 17 Oct 2016
 ;; Version: 2.3
-;; Package-Version: 20170319.12
+;; Package-Version: 20170327.1449
 ;; Package-Requires: ((bind-key "1.0") (diminish "0.44"))
 ;; Keywords: dotemacs startup speed config package
 ;; URL: https://github.com/jwiegley/use-package
@@ -86,13 +86,18 @@ The check is performed by looking for the module using `locate-library'."
   :type 'boolean
   :group 'use-package)
 
+(defcustom use-package-always-defer-install nil
+  "If non-nil, assume `:defer-install t` unless `:defer-install nil` is given."
+  :type 'boolean
+  :group 'use-package)
+
 (defcustom use-package-always-ensure nil
   "Treat every package as though it had specified `:ensure SEXP`."
   :type 'sexp
   :group 'use-package)
 
 (defcustom use-package-always-pin nil
-  "Treat every package as though it had specified `:pin SYM."
+  "Treat every package as though it had specified `:pin SYM`."
   :type 'symbol
   :group 'use-package)
 
@@ -239,6 +244,9 @@ when the packages are actually requested."
 (defcustom use-package-defaults
   '((:config '(t) t)
     (:ensure use-package-always-ensure use-package-always-ensure)
+    (:defer-install
+     use-package-always-defer-install
+     use-package-always-defer-install)
     (:pin use-package-always-pin use-package-always-pin))
   "Alist of default values for `use-package' keywords.
 Each entry in the alist is a list of three elements. The first
@@ -1271,7 +1279,7 @@ deferred until the prefix key sequence is pressed."
                        `(,@(when (eq (plist-get state :defer-install) :ensure)
                              `((use-package-install-deferred-package
                                 'name :after)))
-                         '(require (quote ,name) nil t))))))
+                         (require (quote ,name) nil t))))))
      body)))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

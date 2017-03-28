@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "puppet-mode" "puppet-mode.el" (22735 64463
+;;;### (autoloads nil "puppet-mode" "puppet-mode.el" (22746 26704
 ;;;;;;  0 0))
 ;;; Generated autoloads from puppet-mode.el
 

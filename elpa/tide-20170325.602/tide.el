@@ -152,7 +152,8 @@ above."
        full-path))))
 
 (defun tide-project-name ()
-  (file-name-nondirectory (directory-file-name (tide-project-root))))
+  (let ((full-path (directory-file-name (tide-project-root))))
+    (concat (file-name-nondirectory full-path) "-" (substring (md5 full-path) 0 10))))
 
 ;;; Compatibility
 
@@ -811,10 +812,10 @@ Noise can be anything like braces, reserved keywords, etc."
 ;;; Auto completion
 
 (defun tide-completion-annotation (name)
-  (if tide-completion-detailed
+  (-if-let (meta (and tide-completion-detailed (tide-completion-meta name)))
       ;; Get everything before the first newline, if any, because company-mode
       ;; wants single-line annotations.
-      (car (split-string (tide-completion-meta name) "\n"))
+      (car (split-string meta "\n"))
     (pcase (plist-get (get-text-property 0 'completion name) :kind)
       ("keyword" " k")
       ("module" " M")
@@ -920,7 +921,7 @@ Noise can be anything like braces, reserved keywords, etc."
              (bound-and-true-p tide-mode)
              (-any-p #'derived-mode-p tide-supported-modes)
              (tide-current-server)
-             (not (company-in-string-or-comment))
+             (not (nth 4 (syntax-ppss)))
              (or (tide-completion-prefix) 'stop)))
     (candidates (cons :async
                       (lambda (cb)

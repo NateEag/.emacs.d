@@ -3,7 +3,7 @@
 ;; Copyright (C) 2010 Chris Wanstrath
 
 ;; Version: 0.6.3
-;; Package-Version: 20170315.2046
+;; Package-Version: 20170324.240
 ;; Keywords: CoffeeScript major mode
 ;; Author: Chris Wanstrath <chris@ozmm.org>
 ;; URL: http://github.com/defunkt/coffee-mode
@@ -495,7 +495,8 @@ called `coffee-compiled-buffer-name'."
     (,(lambda (limit)
         (let ((res nil)
               start)
-          (while (and (not res) (search-forward "#{" limit t))
+          (while (and (not res) (search-forward "#{" limit t)
+                      (not (coffee-in-comment-p)))
             (let ((restart-pos (match-end 0)))
               (setq start (match-beginning 0))
               (let (finish)

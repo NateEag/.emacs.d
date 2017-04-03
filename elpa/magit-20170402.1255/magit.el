@@ -218,7 +218,10 @@ merge failed to give the user the opportunity to inspect the
 merge.
 
 \(git merge --no-edit|--no-commit [ARGS] REV)"
-  (interactive (list (magit-read-other-branch-or-commit "Merge")
+  (interactive (list (magit-read-other-branch-or-commit
+                      "Merge" nil
+                      (and (derived-mode-p 'magit-merge-preview-mode)
+                           (car magit-refresh-args)))
                      (magit-merge-arguments)
                      current-prefix-arg))
   (magit-merge-assert)
@@ -600,18 +603,14 @@ Run Git in the top-level directory of the current repository.
   (magit-git-command args directory))
 
 ;;;###autoload
-(defun magit-shell-command (args directory)
+(defun magit-shell-command (cmd directory)
   "Execute a shell command asynchronously, displaying the output.
 With a prefix argument run the command in the root of the current
 repository, otherwise in `default-directory'."
   (interactive (magit-read-shell-command "Shell command (pwd: %s)"))
-  (require 'eshell)
-  (with-temp-buffer
-    (insert args)
-    (setq args (mapcar 'eval (eshell-parse-arguments (point-min)
-                                                     (point-max))))
-    (setq default-directory directory)
-    (apply #'magit-start-process (car args) nil (cdr args)))
+  (let ((default-directory directory))
+    (magit-start-process shell-file-name nil
+                         shell-command-switch cmd))
   (magit-process-buffer))
 
 ;;;###autoload
@@ -877,8 +876,8 @@ Git, and Emacs in the echo area."
         debug)
     (unless (and toplib
                  (equal (file-name-nondirectory toplib) "magit.el"))
-      (setq toplib (locate-library "magit.el"))
-      (setq toplib (and toplib (file-chase-links toplib))))
+      (setq toplib (locate-library "magit.el")))
+    (setq toplib (and toplib (file-chase-links toplib)))
     (push toplib debug)
     (when toplib
       (let* ((topdir (file-name-directory toplib))

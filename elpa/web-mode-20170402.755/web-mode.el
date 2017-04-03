@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2017 François-Xavier Bois
 
-;; Version: 14.1.4
-;; Package-Version: 20170320.1240
+;; Version: 14.1.8
+;; Package-Version: 20170402.755
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Package-Requires: ((emacs "23.1"))
@@ -25,7 +25,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "14.1.4"
+(defconst web-mode-version "14.1.8"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -763,7 +763,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("closure"          . ("soy"))
     ("ctemplate"        . ("mustache" "handlebars" "hapax" "ngtemplate" "ember"
                            "kite" "meteor" "blaze" "ractive" "velvet"))
-    ("django"           . ("dtl" "twig" "swig" "jinja" "erlydtl" "liquid"
+    ("django"           . ("dtl" "twig" "swig" "jinja" "jinja2" "erlydtl" "liquid"
                            "clabango" "selmer" "nunjucks"))
     ("dust"             . ("dustjs"))
     ("ejs"              . ())
@@ -1854,9 +1854,10 @@ shouldn't be moved back.)")
 
 (defvar web-mode-closure-font-lock-keywords
   (list
-   '("{/?\\([[:alpha:]]+\\)" 1 'web-mode-block-control-face)
-   '("{param[ ]+\\([[:alnum:]]+\\)" 1 'web-mode-symbol-face)
+   '("{\\([@/]?[[:alpha:]]+[?]?\\)" 1 'web-mode-block-control-face)
+   '("{[@]?param[?]?[ ]+\\([[:alnum:]]+[:]?\\)" 1 'web-mode-symbol-face)
    '("\\_<\\(true\\|false\\|null\\)\\_>" 1 'web-mode-type-face)
+   '("\\\_<[[:alpha:]]+:[ ]+\\([[:alpha:]]+\\)" 1 'web-mode-type-face)
    (cons (concat "\\_<\\(" web-mode-closure-keywords "\\)\\_>") '(1 'web-mode-keyword-face))
    '("{\\(alias\\|call\\|delcall\\|delpackage\\|deltemplate\\|namespace\\|template\\)[ ]+\\([[:alnum:].]+\\)" 2 'web-mode-constant-face)
    '("\\(allowemptydefault\\|data\\|desc\\|meaning\\|autoescape\\|private\\|variant\\)=" 0 'web-mode-block-attr-name-face)
@@ -5097,7 +5098,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
           (forward-char)
           ) ;if
         )
-       ((and (not (eobp)) (eq ?\< (char-after)) (looking-back "[a-z]"))
+       ((and (not (eobp)) (eq ?\< (char-after)) (looking-back "[a-z]" (point-min)))
         (unless (search-forward ">" (line-end-position) t)
           (setq continue nil))
         )
@@ -7127,8 +7128,12 @@ another auto-completion with different ac-sources (e.g. ac-php)")
               ) ;save-excursion
             )
            ((and (member language '("javascript" "jsx" "ejs"))
-                 (web-mode-is-relayql-string pos))
+                 (web-mode-is-prefixed-string pos "Relay\.QL"))
             (setq offset (web-mode-relayql-indentation pos))
+            )
+           ((and (member language '("javascript" "jsx" "ejs"))
+                 (web-mode-is-prefixed-string pos "gql"))
+            (setq offset (web-mode-relayql-indentation pos "gql"))
             )
            (t
             (setq offset nil))
@@ -7251,7 +7256,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
          ((or (member language '("html" "xml"))
               (and (member language '("jsx"))
                    (string= options "is-html")))
-          (when debug (message "I10"))
+          (when debug (message "I10: web-mode-markup-indentation"))
           (cond
            ((get-text-property pos 'tag-beg)
             ;;(message "ici")
@@ -7681,7 +7686,8 @@ another auto-completion with different ac-sources (e.g. ac-php)")
       (if (>= value 1) (current-indentation) nil)
       )))
 
-(defun web-mode-relayql-indentation (pos)
+(defun web-mode-relayql-indentation (pos &optional prefix)
+  (unless prefix (setq prefix "relayql"))
   (let (beg offset level char)
     (setq char (char-after))
     (setq beg (web-mode-part-token-beginning-position pos))
@@ -7691,7 +7697,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
       (setq offset (current-indentation))
       )
      ((member char '(?\) ?\} ?\]))
-      (web-mode-go (web-mode-token-opening-paren-position pos beg "relayql"))
+      (web-mode-go (web-mode-token-opening-paren-position pos beg prefix))
       (setq offset (current-indentation))
       )
      ((setq level (web-mode-bracket-level pos beg))
@@ -7704,17 +7710,12 @@ another auto-completion with different ac-sources (e.g. ac-php)")
     offset))
 
 (defun web-mode-markup-indentation (pos)
-  (let ((offset 0) beg ret depth-beg depth-pos)
-    (when (setq beg (web-mode-markup-indentation-origin pos))
-      (when (and (setq depth-pos (get-text-property pos 'jsx-depth))
-                 (setq depth-beg (get-text-property beg 'jsx-depth))
-                 (progn
-                   (when (and (get-text-property pos 'jsx-beg)
-                              (not (get-text-property pos 'tag-beg)))
-                     (setq depth-pos (1- depth-pos)))
-                   t)
-                 (not (eq depth-beg depth-pos)))
-        (setq beg (web-mode-jsx-depth-beginning-position pos)))
+  (let ((offset 0) beg ret jsx-depth)
+    (when (setq jsx-depth (get-text-property pos 'jsx-depth))
+      (when (and (get-text-property pos 'jsx-beg)
+                 (not (get-text-property pos 'tag-beg)))
+        (setq jsx-depth (1- jsx-depth))))
+    (when (setq beg (web-mode-markup-indentation-origin pos jsx-depth))
       (cond
        ((null (setq ret (web-mode-element-is-opened beg pos)))
         (setq offset (web-mode-indentation-at-pos beg)))
@@ -7725,6 +7726,32 @@ another auto-completion with different ac-sources (e.g. ac-php)")
        ) ;cond
       ) ;when beg
     offset))
+
+;; (defun web-mode-markup-indentation2 (pos)
+;;   (let ((offset 0) beg ret depth-beg depth-pos target-depth)
+;;     (when (setq beg (web-mode-markup-indentation-origin pos target-depth))
+;;       ;;(message "beg1=%S" beg)
+;;       (when (and (setq depth-pos (get-text-property pos 'jsx-depth))
+;;                  (setq depth-beg (get-text-property beg 'jsx-depth))
+;;                  (progn
+;;                    (when (and (get-text-property pos 'jsx-beg)
+;;                               (not (get-text-property pos 'tag-beg)))
+;;                      (setq depth-pos (1- depth-pos)))
+;;                    t)
+;;                  (not (eq depth-beg depth-pos)))
+;;         (setq beg (web-mode-jsx-depth-beginning-position pos))
+;;         (message "beg2=%S" beg)
+;;         ) ;when jsx-depth
+;;       (cond
+;;        ((null (setq ret (web-mode-element-is-opened beg pos)))
+;;         (setq offset (web-mode-indentation-at-pos beg)))
+;;        ((eq ret t)
+;;         (setq offset (+ (web-mode-indentation-at-pos beg) web-mode-markup-indent-offset)))
+;;        (t
+;;         (setq offset ret))
+;;        ) ;cond
+;;       ) ;when beg
+;;     offset))
 
 (defun web-mode-css-indentation (pos initial-column language-offset language &optional limit)
   (let ((open-ctx (web-mode-bracket-up pos language limit)) offset)
@@ -8158,33 +8185,39 @@ another auto-completion with different ac-sources (e.g. ac-php)")
         nil)
       )))
 
-(defun web-mode-markup-indentation-origin (pos)
+(defun web-mode-markup-indentation-origin (pos jsx-depth)
   (save-excursion
-    (let* ((continue (not (bobp)))
-           ;;         (pos (point))
-           (part-side (not (null (get-text-property pos 'part-side)))) ;part-side at the origin
-           (types '(start end void)))
-      (while continue
+    (let* ((found (bobp))
+           ;;(part-side (not (null (get-text-property pos 'part-side)))) ;part-side at the origin
+           ;; est ce partside est nécessaire avec jsx-depth ?
+           (types '(start end void))
+           (type nil))
+      (while (not found)
         (forward-line -1)
         (if (bobp)
             (setq pos (point)
-                  continue nil)
+                  found t)
           (back-to-indentation)
           (setq pos (point))
-          (setq continue (not (or (and (null part-side)
-                                       (null (get-text-property pos 'part-side))
-                                       (get-text-property pos 'tag-beg)
-                                       (member (get-text-property pos 'tag-type) types)
-                                       (null (get-text-property (1- pos) 'invisible)))
-                                  (and part-side
-                                       (get-text-property pos 'part-side)
-                                       (get-text-property pos 'tag-beg)
-                                       (member (get-text-property pos 'tag-type) types)
-                                       (null (get-text-property (1- pos) 'invisible)))
-                                  (and (get-text-property pos 'block-beg)
-                                       (not (get-text-property pos 'tag-type))
-                                       (web-mode-block-is-control pos)
-                                       (not (looking-at-p "{% comment"))))))
+          (setq type (get-text-property pos 'tag-type))
+          (setq found (or (and ;;(null part-side)
+                               (null jsx-depth)
+                               (null (get-text-property pos 'part-side))
+                               (get-text-property pos 'tag-beg)
+                               (member type types)
+                               (null (get-text-property (1- pos) 'invisible)))
+                          (and ;;part-side ;;remove?
+                               jsx-depth
+                               ;;(get-text-property pos 'part-side)
+                               (get-text-property pos 'tag-beg)
+                               (member type types)
+                               (null (get-text-property (1- pos) 'invisible))
+                               (eq (get-text-property pos 'jsx-depth) jsx-depth)
+                               ) ;part-side
+                          (and (get-text-property pos 'block-beg)
+                               (not type)
+                               (web-mode-block-is-control pos)
+                               (not (looking-at-p "{% comment")))))
           ) ;if
         ) ;while
       ;;(message "indent-origin=%S" pos)
@@ -11506,11 +11539,12 @@ Prompt user if TAG-NAME isn't provided."
     (if (null pos) pos (cons pos dot-pos))
     ))
 
-(defun web-mode-is-relayql-string (&optional pos)
+;; Relay.QL , gql
+(defun web-mode-is-prefixed-string (pos prefix-regexp)
   (let (beg)
     (cond
      ((and (setq beg (web-mode-part-token-beginning-position pos))
-           (web-mode-looking-back "Relay\.QL" beg))
+           (web-mode-looking-back prefix-regexp beg))
       beg)
      (t
       nil)

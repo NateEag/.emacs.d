@@ -870,6 +870,9 @@ surprising for new helm users that expect
 `\\[helm-select-action]' for completions and have not
 realized they are already completing something as soon as helm is
 started! See [[https://github.com/emacs-helm/helm/wiki#helm-completion-vs-emacs-completion][Helm wiki]]
+NOTE: In addition to this fixed actions list, you will notice that depending
+of the type of candidate selected you may have additional actions
+appearing and disapearing when you select another type of candidate.
 
 ** Helm mode
 
@@ -3127,15 +3130,16 @@ CANDIDATE. Contiguous matches get a coefficient of 2."
                              pat-lookup str-lookup :test 'equal))
                     2)))))
 
-(defun helm-fuzzy-matching-default-sort-fn-1 (candidates &optional use-real basename)
+(defun helm-fuzzy-matching-default-sort-fn-1 (candidates &optional use-real basename preserve-tie-order)
   "The transformer for sorting candidates in fuzzy matching.
 It sorts on the display part by default.
 
 Sorts CANDIDATES by their scores as calculated by
-`helm-score-candidate-for-pattern'. Ties in scores are sorted by
-length of the candidates. Set USE-REAL to non-`nil' to sort on the
-real part.  If BASENAME is non-nil assume we are completing filenames
-and sort on basename of candidates."
+`helm-score-candidate-for-pattern'.  Set USE-REAL to non-`nil' to
+sort on the real part.  If BASENAME is non-nil assume we are
+completing filenames and sort on basename of candidates.  If
+PRESERVE-TIE-ORDER is nil, ties in scores are sorted by length of
+the candidates."
   (if (string= helm-pattern "")
       candidates
     (let ((table-scr (make-hash-table :test 'equal)))
@@ -3171,12 +3175,21 @@ and sort on basename of candidates."
                      (scr1 (car data1))
                      (scr2 (car data2)))
                 (cond ((= scr1 scr2)
-                       (< len1 len2))
+                       (unless preserve-tie-order
+                         (< len1 len2)))
                       ((> scr1 scr2)))))))))
 
-(defun helm-fuzzy-matching-default-sort-fn (candidates _source &optional use-real)
+(defun helm-fuzzy-matching-default-sort-fn (candidates _source)
   "Default `filtered-candidate-transformer' to sort candidates in fuzzy matching."
-  (helm-fuzzy-matching-default-sort-fn-1 candidates use-real))
+  (helm-fuzzy-matching-default-sort-fn-1 candidates))
+
+(defun helm-fuzzy-matching-sort-fn-preserve-ties-order (candidates _source)
+  "`filtered-candidate-transformer' to sort candidates in fuzzy matching, preserving order of ties.
+The default function, `helm-fuzzy-matching-default-sort-fn',
+sorts ties by length, shortest first.  This function may be more
+useful when the order of the candidates is meaningful, e.g. with
+`recentf-list'."
+  (helm-fuzzy-matching-default-sort-fn-1 candidates nil t))
 
 (defun helm--maybe-get-migemo-pattern (pattern)
   (or (and helm-migemo-mode
@@ -3222,7 +3235,7 @@ to the matching method in use."
                 (cl-loop with multi-match = (string-match-p " " helm-pattern)
                          with patterns = (if multi-match
                                              (mapcar #'helm--maybe-get-migemo-pattern
-                                                     (split-string helm-pattern))
+                                                     (helm-mm-split-pattern helm-pattern))
                                              (split-string helm-pattern "" t))
                          for p in patterns
                          ;; Multi matches (regexps patterns).
@@ -4867,18 +4880,19 @@ use `search', `get-line' and `match-part' attributes."
                          and collect cand))))))
 
 (defun helm-search-match-part (candidate pattern)
-  "Match PATTERN only on part of CANDIDATE returned by MATCH-PART-FN.
+  "Match PATTERN only on match-part property value of CANDIDATE.
+
 Because `helm-search-match-part' maybe called even if unspecified
-in source (negation), MATCH-PART-FN default to `identity'
-to match whole candidate.
-When using fuzzy matching and negation (i.e \"!\"),
-this function is always called."
-  (let ((part (get-text-property 0 'match-part candidate))
+in source (negation or fuzzy), the part to match fallback to the whole
+candidate even if match-part haven't been computed by match-part-fn
+and stored in the match-part property."
+  (let ((part (or (get-text-property 0 'match-part candidate)
+                  candidate))
         (fuzzy-regexp (cadr (gethash 'helm-pattern helm--fuzzy-regexp-cache)))
         (matchfn (if helm-migemo-mode
                      'helm-mm-migemo-string-match 'string-match)))
     (if (string-match " " pattern)
-        (cl-loop for i in (split-string pattern) always
+        (cl-loop for i in (helm-mm-split-pattern pattern) always
                  (if (string-match "\\`!" i)
                      (not (funcall matchfn (substring i 1) part))
                      (funcall matchfn i part)))

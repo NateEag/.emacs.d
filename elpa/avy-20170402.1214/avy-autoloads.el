@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "avy" "avy.el" (22746 26689 0 0))
+;;;### (autoloads nil "avy" "avy.el" (22754 44844 0 0))
 ;;; Generated autoloads from avy.el
 
 (autoload 'avy-goto-char "avy" "\
@@ -155,7 +155,7 @@ The window scope is determined by `avy-all-windows' or
 \(fn ARG)" t nil)
 
 (autoload 'avy-move-region "avy" "\
-Select two lines and move the text between them here.
+Select two lines and move the text between them above the current line.
 
 \(fn)" t nil)
 

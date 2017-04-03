@@ -508,8 +508,7 @@ PHP does not have an \"enum\"-like keyword."
   php (append (c-lang-const c-class-decl-kwds) '("function")))
 
 (c-lang-defconst c-modifier-kwds
-  php '("abstract" "const" "final" "native" "static" "strictfp"
-        "synchronized" "transient" "volatile"))
+  php '("abstract" "const" "final" "static"))
 
 (c-lang-defconst c-protection-kwds
   "Access protection label keywords in classes."
@@ -1374,9 +1373,9 @@ a completion list."
     (,(rx "$" (in "A-Za-z_") (* (in "0-9A-Za-z_")))
      0 font-lock-variable-name-face prepend nil)
     (,(concat "\\s-@" (regexp-opt php-phpdoc-type-tags) "\\s-+"
-              "\\(" (rx (+ (? "\\") (+ (in "0-9A-Z_a-z")) (? "[]") (? "|"))) "\\)+")
+              "\\(" (rx (+ (? "?") (? "\\") (+ (in "0-9A-Z_a-z")) (? "[]") (? "|"))) "\\)+")
      1 font-lock-string-face prepend nil)
-    (,(concat "\\(?:|\\|\\s-\\)\\("
+    (,(concat "\\(?:|\\|\\?\\|\\s-\\)\\("
               (regexp-opt php-phpdoc-type-keywords 'words)
               "\\)")
      1 font-lock-type-face prepend nil)

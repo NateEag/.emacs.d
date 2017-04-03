@@ -52,7 +52,7 @@ there are ambiguous unresolved symbols after running omnisharp-fix-usings")
   "Whether to expand tabs to spaces in code format requests."
   :group 'omnisharp
   :type '(choice (const :tag "Yes" t)
-		 (const :tag "No" nil)))
+     (const :tag "No" nil)))
 
 (defvar omnisharp-mode-map
   (let ((map (make-sparse-keymap)))
@@ -60,23 +60,5 @@ there are ambiguous unresolved symbols after running omnisharp-fix-usings")
     ;;(define-key map (kbd "C-c f") 'insert-foo)
     map)
   "Keymap for omnisharp-mode.")
-
-;; Note that emacs seems to internally expect windows paths to have
-;; forward slashes.
-(eval-after-load 'omnisharp
-  '(defcustom omnisharp--windows-curl-tmp-file-path
-     (omnisharp--convert-backslashes-to-forward-slashes
-      (concat (getenv "USERPROFILE")
-              "/omnisharp-tmp-file.cs"))
-     "The full file path where to save temporary stuff that gets sent to
-the OmniSharp API. Only used on Windows.
-Must be writable by the current user."
-     :group 'omnisharp
-     :type 'file))
-
-(defcustom omnisharp--curl-executable-path
-  "curl"
-  "The absolute or relative path to the curl executable.")
-
 
 (provide 'omnisharp-settings)

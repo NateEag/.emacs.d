@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "omnisharp" "omnisharp.el" (22698 64107 0 0))
+;;;### (autoloads nil "omnisharp" "omnisharp.el" (22754 44855 0 0))
 ;;; Generated autoloads from omnisharp.el
 
 (autoload 'omnisharp-mode "omnisharp" "\
@@ -12,15 +12,10 @@ server backend.
 
 \(fn &optional ARG)" t nil)
 
-(autoload 'omnisharp-fix-code-issue-at-point "omnisharp" "\
-
-
-\(fn)" t nil)
-
 ;;;***
 
 ;;;### (autoloads nil "omnisharp-auto-complete-actions" "omnisharp-auto-complete-actions.el"
-;;;;;;  (22698 64107 0 0))
+;;;;;;  (22754 44855 0 0))
 ;;; Generated autoloads from omnisharp-auto-complete-actions.el
 
 (autoload 'company-omnisharp "omnisharp-auto-complete-actions" "\
@@ -30,14 +25,35 @@ server backend.
 
 ;;;***
 
+;;;### (autoloads nil "omnisharp-http-utils" "omnisharp-http-utils.el"
+;;;;;;  (22754 44855 0 0))
+;;; Generated autoloads from omnisharp-http-utils.el
+
+(autoload 'omnisharp-post-http-message "omnisharp-http-utils" "\
+Post http request to server. Return result.
+
+\(fn URL CALLBACK &optional PARAMS ASYNC)" nil nil)
+
+;;;***
+
 ;;;### (autoloads nil "omnisharp-server-actions" "omnisharp-server-actions.el"
-;;;;;;  (22698 64107 0 0))
+;;;;;;  (22754 44855 0 0))
 ;;; Generated autoloads from omnisharp-server-actions.el
 
 (autoload 'omnisharp-start-omnisharp-server "omnisharp-server-actions" "\
-Starts an OmniSharpServer for a given path to a solution file or a directory
+Starts an OmniSharp server for a given path to a project file or a directory
 
-\(fn PATH-TO-SOLUTION)" t nil)
+\(fn PATH-TO-PROJECT)" t nil)
+
+(autoload 'omnisharp-stop-server "omnisharp-server-actions" "\
+Stops Omnisharp server if running.
+
+\(fn)" t nil)
+
+(autoload 'omnisharp-reload-solution "omnisharp-server-actions" "\
+Restarts omnisharp server on solution last loaded
+
+\(fn)" t nil)
 
 (autoload 'omnisharp-check-alive-status "omnisharp-server-actions" "\
 Shows a message to the user describing whether the
@@ -58,9 +74,11 @@ finished loading the solution.
 
 ;;;***
 
-;;;### (autoloads nil nil ("example-config-for-evil-mode.el" "omnisharp-pkg.el"
-;;;;;;  "omnisharp-settings.el" "omnisharp-utils.el") (22698 64107
-;;;;;;  0 0))
+;;;### (autoloads nil nil ("omnisharp-current-symbol-actions.el"
+;;;;;;  "omnisharp-format-actions.el" "omnisharp-helm-integration.el"
+;;;;;;  "omnisharp-navigation-actions.el" "omnisharp-pkg.el" "omnisharp-server-management.el"
+;;;;;;  "omnisharp-settings.el" "omnisharp-solution-actions.el" "omnisharp-utils.el")
+;;;;;;  (22754 44855 0 0))
 
 ;;;***
 

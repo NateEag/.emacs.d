@@ -369,7 +369,8 @@ from its directory."
                          (eq major-mode 'org-agenda-mode))
                        org-directory
                        (expand-file-name org-directory))
-                  (with-current-buffer buf default-directory)))
+                  (with-current-buffer buf
+                    (expand-file-name default-directory))))
          ;; imenu (marker).
          (marker
           (or (buffer-file-name (marker-buffer (cdr sel)))
@@ -379,7 +380,7 @@ from its directory."
                   (if (and ffap-url-regexp
                            (string-match ffap-url-regexp it))
                       it (expand-file-name it))
-                default-directory))
+                (expand-file-name default-directory)))
          ((and (stringp sel) (or (file-remote-p sel)
                                  (file-exists-p sel)))
           (expand-file-name sel))
@@ -389,11 +390,11 @@ from its directory."
          ;; Occur.
          (grep-line
           (with-current-buffer (get-buffer (car grep-line))
-            (or (buffer-file-name) default-directory)))
+            (expand-file-name (or (buffer-file-name) default-directory))))
          ;; Url.
          ((and (stringp sel) ffap-url-regexp (string-match ffap-url-regexp sel)) sel)
          ;; Default.
-         (t default-preselection))))))
+         (t (expand-file-name default-preselection)))))))
 (put 'helm-quit-and-find-file 'helm-only t)
 
 (defun helm-generic-sort-fn (s1 s2)
@@ -404,7 +405,7 @@ that is sorting is done against real value of candidate."
          (reg1  (concat "\\_<" qpattern "\\_>"))
          (reg2  (concat "\\_<" qpattern))
          (reg3  helm-pattern)
-         (split (split-string helm-pattern))
+         (split (helm-mm-split-pattern helm-pattern))
          (str1  (if (consp s1) (cdr s1) s1))
          (str2  (if (consp s2) (cdr s2) s2))
          (score (lambda (str r1 r2 r3 lst)
@@ -621,7 +622,7 @@ If STRING is non--nil return instead a space separated string."
       (catch 'empty-line
         (cl-loop with ov
                  for r in (helm-remove-if-match
-                           "\\`!" (split-string
+                           "\\`!" (helm-mm-split-pattern
                                    (if (with-helm-buffer
                                          ;; Needed for highlighting AG matches.
                                          (assq 'pcre (helm-get-current-source)))

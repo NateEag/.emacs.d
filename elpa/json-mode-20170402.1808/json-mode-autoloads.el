@@ -1,9 +1,9 @@
 ;;; json-mode-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "json-mode" "json-mode.el" (22446 30447 0 0))
+;;;### (autoloads nil "json-mode" "json-mode.el" (22754 44851 0 0))
 ;;; Generated autoloads from json-mode.el
 
 (autoload 'json-mode "json-mode" "\
@@ -14,6 +14,8 @@ Major mode for editing JSON files
 (add-to-list 'auto-mode-alist '("\\.json$" . json-mode))
 
 (add-to-list 'auto-mode-alist '("\\.jsonld$" . json-mode))
+
+(add-to-list 'auto-mode-alist (cons (rx (or ".babelrc" ".bowerrc") eos) 'json-mode))
 
 (autoload 'json-mode-show-path "json-mode" "\
 

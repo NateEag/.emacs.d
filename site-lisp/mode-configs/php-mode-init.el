@@ -58,7 +58,7 @@
   (add-to-list 'ac-sources 'ac-source-words-in-same-mode-buffers t)
 
   ;; Yay for squiggly red lines!
-  (setq flycheck-phpcs-standard "NateEag")
+  (setq flycheck-phpcs-standard "PSR2")
   (setq flycheck-php-phpcs-executable "phpcs"))
 
 ;; Make this requireable.

@@ -22,6 +22,7 @@
  '(afp-fill-on-self-insert t)
  '(ag-ignore-list (quote ("node_modules")))
  '(auto-insert-query nil)
+ '(auto-revert-verbose t nil nil "I can't remember ever caring that auto-revert did its job. Thus, I'm asking it to stop telling me.")
  '(blink-cursor-blinks 0 nil nil "blink!!!!")
  '(blink-cursor-mode t nil nil "For some reason, I really like blinky cursors.")
  '(c-basic-offset 4 nil nil "4 spaces is, on average, the standard.")

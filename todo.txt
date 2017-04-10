@@ -427,7 +427,11 @@
 -Improved bash auto-complete while writing scripts would be nice, too. Search
  "$PATH" when writing commands, for instance (first word on line/first word
  inside subshells, first word in if, etc). Course, really you'd need a bash
- parser to get that right, which is probably not worth the pain...
+ parser to get that right, but a handful of simple cases could probably just be
+ hardcoded.
+
+-In bash, having smart-dash-mode prefer dashes if the current word begins with
+ '--' would probably make life a lot better.
 
 -Adjust emacs env when editing files with a dominating direnv file (.envrc).
  This might slow things down, because you might have to change the env every

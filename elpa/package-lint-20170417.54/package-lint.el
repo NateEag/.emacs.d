@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; URL: https://github.com/purcell/package-lint
-;; Package-Version: 20170402.1546
+;; Package-Version: 20170417.54
 ;; Keywords: lisp
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24"))
@@ -49,6 +49,11 @@
   (if (fboundp 'package-desc-summary)
       'package-desc-summary
     'package-desc-doc))
+
+(defalias 'package-lint--package-desc-name
+  (if (fboundp 'package-desc-name)
+      'package-desc-name
+    (lambda (desc) (intern (elt desc 0)))))
 
 
 ;;; Machinery
@@ -227,7 +232,8 @@ This is bound dynamically while the checks run.")
 
 (defun package-lint--check-all ()
   "Return a list of errors/warnings for the current buffer."
-  (let ((package-lint--errors '()))
+  (let ((package-lint--errors '())
+        (case-fold-search nil))
     (save-match-data
       (save-excursion
         (save-restriction
@@ -237,13 +243,15 @@ This is bound dynamically while the checks run.")
           (package-lint--check-lexical-binding-is-on-first-line)
           (let ((desc (package-lint--check-package-el-can-parse)))
             (when desc
-              (package-lint--check-package-summary desc)))
+              (package-lint--check-package-summary desc)
+              (package-lint--check-provide-form desc)))
           (let ((deps (package-lint--check-dependency-list)))
             (package-lint--check-lexical-binding-requires-emacs-24 deps)
             (package-lint--check-libraries-available-in-emacs deps)
             (package-lint--check-macros-functions-available-in-emacs deps))
           (package-lint--check-for-literal-emacs-path)
           (let ((definitions (package-lint--get-defs)))
+            (package-lint--check-autoloads-on-private-functions definitions)
             (package-lint--check-defs-prefix definitions)
             (package-lint--check-symbol-separators definitions)))))
     package-lint--errors))
@@ -255,14 +263,27 @@ This is bound dynamically while the checks run.")
 
 ;;; Checks
 
+(defun package-lint--check-autoloads-on-private-functions (definitions)
+  "Verify that private functions DEFINITIONS don't have autoload cookies."
+  (pcase-dolist (`(,symbol . ,position) definitions)
+    (when (string-match-p (rx "--") symbol)
+      (goto-char position)
+      (forward-line -1)
+      (when (looking-at-p (rx ";;;###autoload"))
+        (package-lint--error
+         (line-number-at-pos) (current-column) 'warning
+         "Private functions generally should not be autoloaded.")))))
+
 (defun package-lint--check-for-literal-emacs-path ()
   "Verify package does not refer to \"\.emacs\.d\" literally.
 Instead it should use `user-emacs-directory' or `locate-user-emacs-file'."
   (goto-char (point-min))
-  (while (re-search-forward (rx (syntax string-quote) (0+ (not (syntax string-quote))) (or "/" "\\") ".emacs.d") nil t)
-    (package-lint--error
-     (line-number-at-pos) (current-column) 'warning
-     "Use variable `user-emacs-directory' or function `locate-user-emacs-file' instead of a literal path to the Emacs user directory or files.")))
+  (while (re-search-forward "\\.emacs\\.d" nil t)
+    (unless (nth 4 (syntax-ppss))
+      ;; Not in a comment
+      (package-lint--error
+       (line-number-at-pos) (current-column) 'warning
+       "Use variable `user-emacs-directory' or function `locate-user-emacs-file' instead of a literal path to the Emacs user directory or files."))))
 
 (defun package-lint--check-keywords-list ()
   "Verify that package keywords are listed in `finder-known-keywords'."
@@ -537,6 +558,17 @@ DESC is a struct as returned by `package-buffer-info'."
        'warning
        "Including \"Emacs\" in the package description is usually redundant."))))
 
+(defun package-lint--check-provide-form (desc)
+  "Check the provide form for package with descriptor DESC.
+DESC is a struct as returned by `package-buffer-info'."
+  (let ((name (package-lint--package-desc-name desc))
+        (feature (package-lint--provided-feature)))
+    (unless (string-equal (symbol-name name) feature)
+      (package-lint--error
+       1 1
+       'error
+       (format "There is no (provide '%s) form." name)))))
+
 (defun package-lint--check-symbol-separators (definitions)
   "Check that symbol DEFINITIONS don't contain non-standard separators."
   (pcase-dolist (`(,name . ,position) definitions)
@@ -549,7 +581,7 @@ DESC is a struct as returned by `package-buffer-info'."
           (goto-char position)
           (package-lint--error
            (line-number-at-pos) 1 'error
-           (format "`%s' contains a non-standard separator `%s', use hyphens instead."
+           (format "`%s' contains a non-standard separator `%s', use hyphens instead (see Elisp Coding Conventions)."
                    name (substring-no-properties name match-pos (1+ match-pos)))))))))
 
 (defun package-lint--check-defs-prefix (definitions)
@@ -648,12 +680,19 @@ The returned list is of the form (SYMBOL-NAME . POSITION)."
         (setcdr entry (overlay-start (cdr entry)))))
     (nreverse result)))
 
+(defun package-lint--provided-feature ()
+  "Return the first-provided feature name, as a string, or nil if none."
+  (save-excursion
+    (goto-char (point-max))
+    (when (re-search-backward (rx "(provide '" (group (1+ (or (syntax word) (syntax symbol))))) nil t)
+      (match-string-no-properties 1))))
+
 (defun package-lint--get-package-prefix ()
   "Return package prefix string (i.e. the symbol the package `provide's).
 Prefix is returned without any `-mode' suffix."
-  (goto-char (point-max))
-  (when (re-search-backward (rx "(provide '" (group (1+ (or (syntax word) (syntax symbol))))) nil t)
-    (replace-regexp-in-string "-mode\\'" "" (match-string-no-properties 1))))
+  (let ((feature (package-lint--provided-feature)))
+    (when feature
+      (replace-regexp-in-string "-mode\\'" "" feature))))
 
 
 ;;; Public interface

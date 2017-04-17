@@ -1,4 +1,4 @@
-(define-package "omnisharp" "20170401.204" "Omnicompletion (intellisense) and more for C#"
+(define-package "omnisharp" "20170404.2224" "Omnicompletion (intellisense) and more for C#"
   '((json "1.2")
     (flycheck "30")
     (dash "2.12.1")

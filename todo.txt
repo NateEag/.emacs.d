@@ -25,7 +25,9 @@
  secondary to just establishing "terminal buffers get the bottom window". I
  have just installed term-projectile, which seems to handle the create and swap
  features - I just need to teach popwin how to force terminals to always
- display in the bottom half of a split panel properly.
+ display in the bottom half of a split panel properly. N.B.: shackle may be a
+ significantly better alternative to popwin:
+ https://github.com/wasamasa/shacklehttps://github.com/wasamasa/shacklo
 
 -Make the ansi-term tweaks suggested in this article:
  http://echosa.github.io/blog/2012/06/06/improving-ansi-term/

@@ -376,6 +376,16 @@
  plugin for code comprehension/refactoring/etc. If eclim works out, I might not
  need anything else. A few possibilities follow:
 
+-Get lsp-mode working with auto-complete for completions.
+
+-Get lsp-mode + php-language-server to not crash on syntax errors.
+
+-Consider integrating lsp-mode with php-auto-yasnippet? May or may not be worth
+ doing.
+
+-Get lsp-mode and php-language-server showing function summaries in minibuffer,
+ not just function signatures.
+
 -See if HipHopVM has any support for PHP auto-completion. It looks like it has
  some for Hack, anyway.
 

@@ -61,5 +61,19 @@
   (setq flycheck-phpcs-standard "PSR2")
   (setq flycheck-php-phpcs-executable "phpcs"))
 
+;; This is a very primitive config for using
+;; https://github.com/emacs-lsp/lsp-mode with
+;; https://github.com/felixfbecker/php-language-server (which I'm running
+;; straight out of a local dev repo) to get PHP intelligence inside Emacs.
+;;
+;; Thus far, I've only tried jump-to-def within the php-language-server project
+;; itself. That did work, so this is definitely a direction worth pursuing.
+(lsp-define-stdio-client 'php-mode "php" 'tcp
+                         ;; TODO Use Projectile to find project root.
+                         (lsp-make-traverser ".git")
+                         "php-lang-server"
+                         ;; TODO Quit using my own script for this.
+                         "php-lang-server")
+
 ;; Make this requireable.
 (provide 'php-mode-init)

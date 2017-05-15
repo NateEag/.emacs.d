@@ -1,4 +1,4 @@
-(define-package "flycheck" "20170415.1006" "On-the-fly syntax checking"
+(define-package "flycheck" "20170511.1425" "On-the-fly syntax checking"
   '((dash "2.12.1")
     (pkg-info "0.4")
     (let-alist "1.0.4")

@@ -110,6 +110,7 @@ ID, ACTION, CONTEXT."
   (eval-after-load it                      '(require 'smartparens-html)))
 (eval-after-load 'latex                    '(require 'smartparens-latex))
 (eval-after-load 'lua-mode                 '(require 'smartparens-lua))
+(eval-after-load 'markdown-mode            '(require 'smartparens-markdown))
 (--each '(python-mode python)
   (eval-after-load it                      '(require 'smartparens-python)))
 (eval-after-load 'racket-mode              '(require 'smartparens-racket))
@@ -119,6 +120,8 @@ ID, ACTION, CONTEXT."
 (eval-after-load 'tex-mode                 '(require 'smartparens-latex))
 (eval-after-load 'tuareg                   '(require 'smartparens-ml))
 (eval-after-load 'fsharp-mode              '(require 'smartparens-ml))
+(--each '(javascript-mode js2-mode)
+  (eval-after-load it                      '(require 'smartparens-javascript)))
 (provide 'smartparens-config)
 
 ;;; smartparens-config.el ends here

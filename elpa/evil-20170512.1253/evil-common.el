@@ -1529,8 +1529,9 @@ backwards."
         (setq reset-parser t))
       ;; global parser state is out of state, use local one
       (let* ((pnt (point))
-             (state (progn (beginning-of-defun)
-                           (parse-partial-sexp (point) pnt nil nil (syntax-ppss))))
+             (state (save-excursion
+                      (beginning-of-defun)
+                      (parse-partial-sexp (point) pnt nil nil (syntax-ppss))))
              (bnd (bounds-of-evil-string-at-point state)))
         (when (and bnd (< (point) (cdr bnd)))
           ;; currently within a string
@@ -2084,6 +2085,11 @@ The following special registers are supported.
 If REGISTER is an upcase character then text is appended to that
 register instead of replacing its content."
   (cond
+   ((not (characterp register))
+    (user-error "Invalid register"))
+   ;; don't allow modification of read-only registers
+   ((member register '(?: ?. ?%))
+    (user-error "Can't modify read-only register"))
    ((eq register ?\")
     (kill-new text))
    ((and (<= ?1 register) (<= register ?9))

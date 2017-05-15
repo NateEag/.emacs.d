@@ -894,6 +894,12 @@ be committed."
 
 (defvar-local magit-buffer-revision-hash nil)
 
+(defun magit-show-commit--arguments ()
+  (-let [(args diff-files) (magit-diff-arguments)]
+    (list args (if (derived-mode-p 'magit-log-mode)
+                   (nth 2 magit-refresh-args)
+                 diff-files))))
+
 ;;;###autoload
 (defun magit-show-commit (rev &optional args files module)
   "Visit the revision at point in another buffer.
@@ -904,12 +910,11 @@ for a revision."
           (atpoint (or (and (bound-and-true-p magit-blame-mode)
                             (magit-blame-chunk-get :hash))
                        mcommit
-                       magit-buffer-refname
                        (magit-branch-or-commit-at-point)
                        (magit-tag-at-point))))
      (nconc (cons (or (and (not current-prefix-arg) atpoint)
                       (magit-read-branch-or-commit "Show commit" atpoint))
-                  (magit-diff-arguments))
+                  (magit-show-commit--arguments))
             (and mcommit (list (magit-section-parent-value
                                 (magit-current-section)))))))
   (require 'magit)
@@ -1354,7 +1359,7 @@ commit or stash at point, then prompt for a commit."
                               (`scroll-down (point-max)))))))
           (let ((magit-display-buffer-noselect t))
             (if (eq cmd 'magit-show-commit)
-                (apply #'magit-show-commit rev (magit-diff-arguments))
+                (apply #'magit-show-commit rev (magit-show-commit--arguments))
               (funcall cmd rev))))
       (call-interactively #'magit-show-commit))))
 
@@ -1757,8 +1762,8 @@ Staging and applying changes is documented in info node
                             " " rev
                             (pcase (length files)
                               (0)
-                              (1 (concat " in file " (car files)))
-                              (_ (concat " in files "
+                              (1 (concat " limited to file " (car files)))
+                              (_ (concat " limited to files "
                                          (mapconcat #'identity files ", ")))))
                     'face 'magit-header-line))
   (setq magit-buffer-revision-hash (magit-rev-parse rev))
@@ -1933,6 +1938,24 @@ or a ref which is not a branch, then it inserts nothing."
                (if magit-revision-use-gravatar-kludge slice2 slice1)
                (if magit-revision-use-gravatar-kludge slice1 slice2)))))))
 
+(defvar-local magit-revision-files nil)
+
+(defun magit-revision-toggle-file-filter ()
+  "Toggle the file restriction of the current revision buffer."
+  (interactive)
+  (with-current-buffer (or (and (derived-mode-p 'magit-revision-mode)
+                                (current-buffer))
+                           (magit-mode-get-buffer 'magit-revision-mode)
+                           (user-error "No revision buffer found"))
+    (let ((files (nth 3 magit-refresh-args)))
+      (unless (or magit-revision-files files)
+        (user-error "No file filter to toggle"))
+      (setf (nth 3 magit-refresh-args) (if (not files)
+                                           magit-revision-files
+                                         (setq magit-revision-files files)
+                                         nil))
+      (magit-refresh))))
+
 ;;; Diff Sections
 
 (defvar magit-unstaged-section-map
@@ -2052,7 +2075,7 @@ starts and ends inside the body of a that section, then the type
 is `region'.  If the region is empty after a mouse click, then
 `hunk' is returned instead of `region'.
 
-If optional STRICT is non-nil then return nil if the diff type of
+If optional STRICT is non-nil, then return nil if the diff type of
 the section at point is `untracked' or the section at point is not
 actually a `diff' but a `diffstat' section."
   (let ((siblings (and (not ssection) (magit-region-sections))))
@@ -2101,7 +2124,7 @@ actually a `diff' but a `diffstat' section."
 (defun magit-diff-highlight (section selection)
   "Highlight the diff-related SECTION.
 If SECTION is not a diff-related section, then do nothing and
-return nil.  If SELECTION is non-nil then it is a list of sections
+return nil.  If SELECTION is non-nil, then it is a list of sections
 selected by the region, including SECTION.  All of these sections
 are highlighted."
   (if (and (magit-section-match 'commit section)

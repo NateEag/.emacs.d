@@ -54,6 +54,18 @@
   (list (format "INSIDE_EMACS=%s,magit" emacs-version))
   "Prepended to `process-environment' while running git.")
 
+(defcustom magit-git-output-coding-system
+  (and (eq system-type 'windows-nt) 'utf-8)
+  "Coding system for receiving output from Git.
+
+If non-nil, the Git config value `i18n.logOutputEncoding' should
+be set via `magit-git-global-arguments' to value consistent with
+this."
+  :package-version '(magit . "2.9.0")
+  :group 'magit-process
+  :type '(choice (coding-system :tag "Coding system to decode Git output")
+                 (const :tag "Use system default" nil)))
+
 (defcustom magit-git-executable
   ;; Git might be installed in a different location on a remote, so
   ;; it is better not to use the full path to the executable, except
@@ -96,6 +108,7 @@
 
 (defcustom magit-git-global-arguments
   `("--no-pager" "--literal-pathspecs" "-c" "core.preloadindex=true"
+    "-c" "log.showSignature=false"
     ,@(and (eq system-type 'windows-nt)
            (list "-c" "i18n.logOutputEncoding=UTF-8")))
   "Global Git arguments.
@@ -155,7 +168,7 @@ has the form (REGEXP FACE FORMATTER).  REGEXP is a regular
 expression used to match full refs.  The first entry whose REGEXP
 matches the reference is used.  The first regexp submatch becomes
 the \"label\" that represents the ref and is propertized with
-font FONT.  If FORMATTER is non-nil it should be a function that
+font FONT.  If FORMATTER is non-nil, it should be a function that
 takes two arguments, the full ref and the face.  It is supposed
 to return a propertized label that represents the ref."
   :package-version '(magit . "2.1.0")
@@ -234,7 +247,7 @@ framework ultimately determines how the collection is displayed."
          ;; `shell-quote-argument'), but Git for Windows expects shell
          ;; quoting in the dos style.
          (shell-file-name (if (and (eq system-type 'windows-nt)
-                                   ;; If we have Cygwin mount points
+                                   ;; If we have Cygwin mount points,
                                    ;; the git flavor is cygwin, so dos
                                    ;; shell quoting is probably wrong.
                                    (not magit-cygwin-mount-points))
@@ -269,8 +282,8 @@ to do the following.
 
 (defun magit-git-str (&rest args)
   "Execute Git with ARGS, returning the first line of its output.
-If there is no output return nil.  If the output begins with a
-newline return an empty string.  Like `magit-git-string' but
+If there is no output, return nil.  If the output begins with a
+newline, return an empty string.  Like `magit-git-string' but
 ignore `magit-git-debug'."
   (setq args (-flatten args))
   (magit--with-refresh-cache (cons default-directory args)
@@ -331,8 +344,8 @@ add a section in the respective process buffer."
 
 (defun magit-git-string (&rest args)
   "Execute Git with ARGS, returning the first line of its output.
-If there is no output return nil.  If the output begins with a
-newline return an empty string."
+If there is no output, return nil.  If the output begins with a
+newline, return an empty string."
   (setq args (-flatten args))
   (magit--with-refresh-cache (cons default-directory args)
     (with-temp-buffer
@@ -364,7 +377,7 @@ message and add a section in the respective process buffer."
 (defun magit-git-wash (washer &rest args)
   "Execute Git with ARGS, inserting washed output at point.
 Actually first insert the raw output at point.  If there is no
-output call `magit-cancel-section'.  Otherwise temporarily narrow
+output, call `magit-cancel-section'.  Otherwise temporarily narrow
 the buffer to the inserted text, move to its beginning, and then
 call function WASHER with ARGS as its sole argument."
   (declare (indent 1))
@@ -560,9 +573,9 @@ a bare repository."
 (defun magit-file-relative-name (&optional file tracked)
   "Return the path of FILE relative to the repository root.
 
-If optional FILE is nil or omitted return the relative path of
+If optional FILE is nil or omitted, return the relative path of
 the file being visited in the current buffer, if any, else nil.
-If the file is not inside a Git repository then return nil.
+If the file is not inside a Git repository, then return nil.
 
 If TRACKED is non-nil, return the path only if it matches a
 tracked file."
@@ -697,7 +710,10 @@ Sorted from longest to shortest CYGWIN name."
 
 (defun magit-decode-git-path (path)
   (if (eq (aref path 0) ?\")
-      (string-as-multibyte (read path))
+      (decode-coding-string (read path)
+                            (or magit-git-output-coding-system
+                                (car default-process-coding-system))
+                            t)
     path))
 
 (defun magit-file-at-point ()
@@ -750,12 +766,12 @@ are considered."
 
 (defun magit-rev-parse (&rest args)
   "Execute `git rev-parse ARGS', returning first line of output.
-If there is no output return nil."
+If there is no output, return nil."
   (apply #'magit-git-string "rev-parse" args))
 
 (defun magit-rev-parse-safe (&rest args)
   "Execute `git rev-parse ARGS', returning first line of output.
-If there is no output return nil.  Like `magit-rev-parse' but
+If there is no output, return nil.  Like `magit-rev-parse' but
 ignore `magit-git-debug'."
   (apply #'magit-git-str "rev-parse" args))
 
@@ -839,6 +855,26 @@ string \"true\", otherwise return nil."
 (defun magit-ref-exists-p (ref)
   (magit-git-success "show-ref" "--verify" ref))
 
+(defun magit-ref-equal (a b)
+  "Return t if the refs A and B are `equal'.
+A symbolic-ref pointing to some ref, is `equal' to that ref,
+as are two symbolic-refs pointing to the same ref."
+  (equal (magit-ref-fullname a)
+         (magit-ref-fullname b)))
+
+(defun magit-ref-eq (a b)
+  "Return t if the refs A and B are `eq'.
+A symbolic-ref is `eq' to itself, but not to the ref it points
+to, or to some other symbolic-ref that points to the same ref."
+  (let ((symbolic-a (magit-symbolic-ref-p a))
+        (symbolic-b (magit-symbolic-ref-p b)))
+    (or (and symbolic-a
+             symbolic-b
+             (equal a b))
+        (and (not symbolic-a)
+             (not symbolic-b)
+             (magit-ref-equal a b)))))
+
 (defun magit-headish ()
   "Return \"HEAD\" or if that doesn't exist the hash of the empty tree."
   (if (magit-no-commit-p)
@@ -870,7 +906,8 @@ string \"true\", otherwise return nil."
            (car magit-refresh-args))))
 
 (defun magit-branch-or-commit-at-point ()
-  (or (magit-section-case
+  (or magit-buffer-refname
+      (magit-section-case
         (branch (magit-section-value it))
         (commit (let ((rev (magit-section-value it)))
                   (or (magit-get-shortname rev) rev)))
@@ -981,6 +1018,33 @@ which is different from the current branch and still exists."
       (unless (equal remote ".")
         remote))))
 
+(defun magit-branch-merged-p (branch &optional target)
+  "Return non-nil if BRANCH is either merged into its upstream or TARGET.
+
+If optional TARGET is nil, then check whether BRANCH is merged
+into the current branch instead.  If TARGET is t, then check
+whether BRANCH is merged into any other local branch.  In both
+cases the upstream check is also performed.
+
+If BRANCH isn't merged into its upstream, TARGET is nil, and
+`HEAD' is detached, then return nil, even when BRANCH is merged
+into `HEAD' or some local branch.
+
+BRANCH can also be a revision or non-branch reference, though in
+that case the upstream check obviously is meaningless and always
+fails."
+  (or (magit-branch-merged-into-upstream-p branch)
+      (if (eq target t)
+          (delete (magit-name-local-branch branch)
+                  (magit-list-containing-branches branch))
+        (--when-let (or target (magit-get-current-branch))
+          (magit-git-success "merge-base" "--is-ancestor" branch it)))))
+
+(defun magit-branch-merged-into-upstream-p (branch)
+  "Return t if BRANCH is merged into its upstream."
+  (--when-let (magit-get-upstream-branch branch)
+    (magit-git-success "merge-base" "--is-ancestor" branch it)))
+
 (defun magit-split-branch-name (branch)
   (cond ((member branch (magit-list-local-branch-names))
          (cons "." branch))
@@ -993,7 +1057,7 @@ which is different from the current branch and still exists."
 (defun magit-get-current-tag (&optional rev with-distance)
   "Return the closest tag reachable from REV.
 
-If optional REV is nil then default to `HEAD'.
+If optional REV is nil, then default to `HEAD'.
 If optional WITH-DISTANCE is non-nil then return (TAG COMMITS),
 if it is `dirty' return (TAG COMMIT DIRTY). COMMITS is the number
 of commits in `HEAD' but not in TAG and DIRTY is t if there are
@@ -1012,10 +1076,10 @@ uncommitted changes, nil otherwise."
 (defun magit-get-next-tag (&optional rev with-distance)
   "Return the closest tag from which REV is reachable.
 
-If optional REV is nil then default to `HEAD'.
+If optional REV is nil, then default to `HEAD'.
 If no such tag can be found or if the distance is 0 (in which
-case it is the current tag, not the next) return nil instead.
-If optional WITH-DISTANCE is non-nil then return (TAG COMMITS)
+case it is the current tag, not the next), return nil instead.
+If optional WITH-DISTANCE is non-nil, then return (TAG COMMITS)
 where COMMITS is the number of commits in TAG but not in REV."
   (--when-let (magit-git-str "describe" "--contains" (or rev "HEAD"))
     (save-match-data
@@ -1131,6 +1195,18 @@ SORTBY is a key or list of keys to pass to the `--sort' flag of
                  (list (match-string 1 it)))
             (magit-git-items "ls-files" "-z" "--stage")))
 
+(defun magit-get-submodule-name (path)
+  "Return the name of the submodule at PATH.
+PATH has to be relative to the super-repository."
+  (cadr (split-string
+         (car (or (magit-git-items
+                   "config" "-z"
+                   "-f" (expand-file-name ".gitmodules" (magit-toplevel))
+                   "--get-regexp" "^submodule\\..*\\.path$"
+                   (concat "^" (regexp-quote (directory-file-name path)) "$"))
+                  (error "No such submodule `%s'" path)))
+         "\n")))
+
 (defun magit-list-worktrees ()
   (let (worktrees worktree)
     (dolist (line (let ((magit-git-global-arguments
@@ -1155,6 +1231,9 @@ SORTBY is a key or list of keys to pass to the `--sort' flag of
              (setf (nth 3 worktree) (substring line 18)))
             ((string-equal line "detached"))))
     (nreverse worktrees)))
+
+(defun magit-symbolic-ref-p (name)
+  (magit-git-success "symbolic-ref" "--quiet" name))
 
 (defun magit-ref-p (rev)
   (or (car (member rev (magit-list-refs)))
@@ -1330,7 +1409,9 @@ Return a list of two integers: (A>B B>A)."
 (defun magit-commit-tree (message &optional tree &rest parents)
   (magit-git-string "commit-tree" "--no-gpg-sign" "-m" message
                     (--mapcat (list "-p" it) (delq nil parents))
-                    (or tree (magit-git-string "write-tree"))))
+                    (or tree
+                        (magit-git-string "write-tree")
+                        (error "Cannot write tree"))))
 
 (defun magit-commit-worktree (message &optional arg &rest other-parents)
   (magit-with-temp-index "HEAD" arg

@@ -191,8 +191,8 @@ and change branch related variables."
 ;;;###autoload
 (defun magit-checkout (revision)
   "Checkout REVISION, updating the index and the working tree.
-If REVISION is a local branch then that becomes the current
-branch.  If it is something else then `HEAD' becomes detached.
+If REVISION is a local branch, then that becomes the current
+branch.  If it is something else, then `HEAD' becomes detached.
 Checkout fails if the working tree or the staging area contain
 changes.
 \n(git checkout REVISION)."
@@ -383,19 +383,16 @@ defaulting to the branch at point."
      (if (if (> (length branches) 1)
              (magit-confirm t nil "Delete %i branches" branches)
            (setq branches
-                 (list (magit-read-branch (if current-prefix-arg
+                 (list (magit-read-branch (if force
                                               "Force delete branch"
                                             "Delete branch")
                                           (magit-get-previous-branch)))))
          (unless force
-           (--when-let (-intersection
-                        (-union (magit-list-unmerged-branches)
-                                (magit-list-unmerged-to-upstream-branches))
-                        branches)
+           (--when-let (-remove #'magit-branch-merged-p branches)
              (if (magit-confirm 'delete-unmerged-branch
                    "Delete unmerged branch %s"
                    "Delete %i unmerged branches" it)
-                 (setq force t)
+                 (setq force branches)
                (or (setq branches (-difference branches it))
                    (user-error "Abort")))))
        (user-error "Abort"))
@@ -440,8 +437,22 @@ defaulting to the branch at point."
                      (?d "[d]etach HEAD & delete"     'detach)
                      (?c "[c]heckout master & delete" 'master)
                      (?a "[a]bort"                    'abort)))
-            (`detach (magit-call-git "checkout" "--detach"))
-            (`master (magit-call-git "checkout" "master"))
+            (`detach (unless (or (equal force '(4))
+                                 (member branch force)
+                                 (magit-branch-merged-p branch t)
+                                 (magit-confirm 'delete-unmerged-branch
+                                   "Delete unmerged branch %s" ""
+                                   (list branch)))
+                       (user-error "Abort"))
+                     (magit-call-git "checkout" "--detach"))
+            (`master (unless (or (equal force '(4))
+                                 (member branch force)
+                                 (magit-branch-merged-p branch "master")
+                                 (magit-confirm 'delete-unmerged-branch
+                                   "Delete unmerged branch %s" ""
+                                   (list branch)))
+                       (user-error "Abort"))
+                     (magit-call-git "checkout" "master"))
             (`abort  (user-error "Abort")))
           (setq force t))
         (magit-run-git "branch" (if force "-D" "-d") branch))))))

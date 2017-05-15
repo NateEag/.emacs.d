@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "inline-docs" "inline-docs.el" (22674 644 0
-;;;;;;  0))
+;;;### (autoloads nil "inline-docs" "inline-docs.el" (22809 42439
+;;;;;;  0 0))
 ;;; Generated autoloads from inline-docs.el
 
 (autoload 'inline-docs-display-docs-momentary "inline-docs" "\

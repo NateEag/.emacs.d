@@ -39,7 +39,12 @@
 
 ;;; Code:
 (require 'cl-lib)
-(eval-when-compile (require 'rx))
+(eval-when-compile
+  (require 'rx)
+  (defvar tex-indent-basic)
+  (defvar tex-indent-item)
+  (defvar tex-indent-arg)
+  (defvar evil-shift-width))
 
 (declare-function editorconfig-core-get-properties-hash
                   "editorconfig-core"
@@ -118,6 +123,8 @@ show line numbers on the left:
     (emacs-lisp-mode lisp-indent-offset)
     (erlang-mode erlang-indent-level)
     (ess-mode ess-indent-offset)
+    (feature-mode feature-indent-offset
+                  feature-indent-level)
     (fsharp-mode fsharp-continuation-offset
                  fsharp-indent-level
                  fsharp-indent-offset)

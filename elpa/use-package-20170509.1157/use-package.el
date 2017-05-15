@@ -7,7 +7,7 @@
 ;; Created: 17 Jun 2012
 ;; Modified: 17 Oct 2016
 ;; Version: 2.3
-;; Package-Version: 20170405.1028
+;; Package-Version: 20170509.1157
 ;; Package-Requires: ((bind-key "1.0") (diminish "0.44"))
 ;; Keywords: dotemacs startup speed config package
 ;; URL: https://github.com/jwiegley/use-package
@@ -1200,7 +1200,7 @@ deferred until the prefix key sequence is pressed."
        (if (bound-and-true-p use-package--recursive-autoload)
            (use-package-error
             (format "Autoloading failed to define function %S"
-                    command))
+                    ',command))
          (when (use-package-install-deferred-package
                 ',package-name :autoload)
            (require ',package-name)

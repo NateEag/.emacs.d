@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "ace-window" "ace-window.el" (22698 64095 0
+;;;### (autoloads nil "ace-window" "ace-window.el" (22809 42413 0
 ;;;;;;  0))
 ;;; Generated autoloads from ace-window.el
 
@@ -22,8 +22,8 @@ Ace swap window.
 
 \(fn)" t nil)
 
-(autoload 'ace-maximize-window "ace-window" "\
-Ace maximize window.
+(autoload 'ace-delete-other-windows "ace-window" "\
+Ace delete other windows.
 
 \(fn)" t nil)
 

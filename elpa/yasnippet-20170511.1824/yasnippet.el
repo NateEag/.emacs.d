@@ -580,7 +580,9 @@ conditions.
   "Holds the YASnippet menu.")
 
 (defun yas--maybe-expand-key-filter (cmd)
-  (if (yas--templates-for-key-at-point) cmd))
+  (when (let ((yas--condition-cache-timestamp (current-time)))
+          (yas--templates-for-key-at-point))
+    cmd))
 
 (defconst yas-maybe-expand
   '(menu-item "" yas-expand :filter yas--maybe-expand-key-filter)
@@ -2230,7 +2232,8 @@ object satisfying `yas--field-p' to restrict the expansion to."
       (yas--fallback))))
 
 (defun yas--maybe-expand-from-keymap-filter (cmd)
-  (let* ((vec (cl-subseq (this-command-keys-vector)
+  (let* ((yas--condition-cache-timestamp (current-time))
+         (vec (cl-subseq (this-command-keys-vector)
                          (if current-prefix-arg
                              (length (this-command-keys))
                            0)))
@@ -3290,7 +3293,8 @@ This renders the snippet as ordinary text."
                (overlay-buffer control-overlay))
       (setq yas-snippet-beg (overlay-start control-overlay))
       (setq yas-snippet-end (overlay-end control-overlay))
-      (delete-overlay control-overlay))
+      (delete-overlay control-overlay)
+      (setf (yas--snippet-control-overlay snippet) nil))
 
     (let ((yas--inhibit-overlay-hooks t))
       (when yas--active-field-overlay
@@ -3445,8 +3449,9 @@ If so cleans up the whole snippet up."
 ;;
 ;; This was found useful for performance reasons, so that an excessive
 ;; number of live markers aren't kept around in the
-;; `buffer-undo-list'.  We reuse the original marker object, although
-;; that's probably not necessary.
+;; `buffer-undo-list'.  We don't reuse the original marker object
+;; because that leaves an unreadable object in the history list and
+;; undo-tree persistence has trouble with that.
 ;;
 ;; This shouldn't bring horrible problems with undo/redo, but you
 ;; never know.
@@ -3454,16 +3459,13 @@ If so cleans up the whole snippet up."
 (defun yas--markers-to-points (snippet)
   "Save all markers of SNIPPET as positions."
   (yas--snippet-map-markers (lambda (m)
-                              (prog1 (cons (marker-position m) m)
+                              (prog1 (marker-position m)
                                 (set-marker m nil)))
                             snippet))
 
 (defun yas--points-to-markers (snippet)
   "Restore SNIPPET's marker positions, saved by `yas--markers-to-points'."
-  (yas--snippet-map-markers (lambda (p-m)
-                              (set-marker (cdr p-m) (car p-m))
-                              (cdr p-m))
-                            snippet))
+  (yas--snippet-map-markers #'copy-marker snippet))
 
 (defun yas--maybe-move-to-active-field (snippet)
   "Try to move to SNIPPET's active (or first) field and return it if found."
@@ -4349,7 +4351,8 @@ with their evaluated value into `yas--backquote-markers-and-strings'."
   (ignore-errors
     (save-match-data ; `scan-sexps' may modify match data.
       (with-syntax-table (standard-syntax-table)
-        (scan-sexps from count)))))
+        (let ((parse-sexp-lookup-properties nil))
+          (scan-sexps from count))))))
 
 (defun yas--make-marker (pos)
   "Create a marker at POS with nil `marker-insertion-type'."

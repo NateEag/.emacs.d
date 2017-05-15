@@ -4,9 +4,9 @@
 
 ;; Author: Felipe Ochoa <felipe@fov.space>
 ;; URL: https://github.com/felipeochoa/rjsx-mode/
-;; Package-Version: 20161115.456
+;; Package-Version: 20170422.832
 ;; Package-Requires: ((emacs "24.4") (js2-mode "20160623"))
-;; Version: 1.0
+;; Version: 1.1
 ;; Keywords: languages
 
 ;;; Commentary:
@@ -760,6 +760,13 @@ closing tag was parsed."
           (throw 'rjsx-eof-while-parsing t))
          (t (js2-add-to-string c)))))))
 
+(defun rjsx--tag-at-point ()
+  "Return the JSX tag at point, if any, or nil."
+  (let ((node (js2-node-at-point (point) t)))
+    (while (and node (not (rjsx-node-p node)))
+      (setq node (js2-node-parent node)))
+    node))
+
 
 ;;;; Interactive commands and keybindings
 (defun rjsx-electric-lt (n)
@@ -789,10 +796,10 @@ self-closing tag about to delete the slash.  If so, deletes the
 slash and inserts a matching end-tag."
   (interactive "p")
   (if (or killflag (/= 1 n) (not (eq (get-char-property (point) 'rjsx-class) 'self-closing-slash)))
-      (call-interactively 'delete-char)
-    (let ((node (js2-node-at-point (point) t)))
-      (while (and node (not (rjsx-node-p node)))
-        (setq node (js2-node-parent node)))
+      (if (called-interactively-p 'any)
+	  (call-interactively 'delete-forward-char)
+	(delete-char n killflag))
+    (let ((node (rjsx--tag-at-point)))
       (if node
           (progn
             (delete-char 1)
@@ -802,6 +809,25 @@ slash and inserts a matching end-tag."
         (delete-char 1)))))
 
 (define-key rjsx-mode-map (kbd "C-d") 'rjsx-delete-creates-full-tag)
+
+(defun rjsx-rename-tag-at-point (new-name)
+  "Prompt for a new name and modify the tag at point.
+NEW-NAME is the name to give the tag."
+  (interactive "sNew tag name: ")
+  (let ((tag (rjsx--tag-at-point)) closer)
+    (if tag
+        (let* ((head (rjsx-node-name tag))
+               (tail (when (setq closer (rjsx-node-closing-tag tag)) (rjsx-closing-tag-name closer)))
+               beg end)
+          (dolist (part (if tail (list tail head) (list head)))
+            (setq beg (js2-node-abs-pos part)
+                  end (+ beg (js2-node-len part)))
+            (delete-region beg end)
+            (save-excursion (goto-char beg) (insert new-name)))
+          (js2-reparse))
+      (message "No JSX tag found at point"))))
+
+(define-key rjsx-mode-map (kbd "C-c C-r") 'rjsx-rename-tag-at-point)
 
 
 (provide 'rjsx-mode)

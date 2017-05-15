@@ -2502,7 +2502,7 @@ See py-no-outdent-re-raw for better readable content ")
 (defconst py-if-block-re "[ \t]*\\_<if\\_> +[[:alpha:]_][[:alnum:]_]* *[: \n\t]"
   "Matches the beginning of an `if' block. ")
 
-(defconst py-else-block-re "[ \t]*\\_<else:[ \n\t]*"
+(defconst py-else-block-re "[ \t]*\\_<else:?[ \n\t]*"
   "Matches the beginning of an `else' block. ")
 
 (defconst py-elif-block-re "[ \t]*\\_<elif\\_> +[[:alpha:]_][[:alnum:]_]* *[: \n\t]"
@@ -8518,7 +8518,7 @@ From a programm use macro `py-backward-comment' instead "
                ;; doesn't mean nesting yet
                (setq count (1- count))
                (not (and (eq indent (current-indentation)) (looking-at "if"))))))
-         ((and (looking-at complement-re)(<= (current-indentation) maxindent))
+         ((and complement-re (looking-at complement-re)(<= (current-indentation) maxindent))
           (setq count (1- count)))
          (t (cond ((and (string-match "except" regexp)(looking-at py-block-re))
                    (setq count (1- count)))
@@ -11812,7 +11812,7 @@ If symbol is defined in current buffer, jump to it's definition"
     (unless (member (get-buffer-window "*Python-Help*")(window-list))
       (window-configuration-to-register py-windows-config-register))
     (and (looking-back "(" (line-beginning-position))(not (looking-at "\\sw")) (forward-char -1))
-    (if (or (not (face-at-point)) (eq (face-at-point) 'font-lock-string-face)(eq (face-at-point) 'font-lock-comment-face)(eq (face-at-point) 'default))
+    (if (or (eq (face-at-point) 'font-lock-string-face)(eq (face-at-point) 'font-lock-comment-face))
 	(progn
 	  (py-restore-window-configuration)
 	  (goto-char orig))

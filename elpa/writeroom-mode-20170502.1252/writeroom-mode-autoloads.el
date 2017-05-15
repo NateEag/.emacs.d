@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "writeroom-mode" "writeroom-mode.el" (22746
-;;;;;;  26723 0 0))
+;;;### (autoloads nil "writeroom-mode" "writeroom-mode.el" (22809
+;;;;;;  42504 0 0))
 ;;; Generated autoloads from writeroom-mode.el
 
 (autoload 'writeroom-mode "writeroom-mode" "\
@@ -36,7 +36,7 @@ See `writeroom-mode' for more information on Writeroom mode.
 
 ;;;***
 
-;;;### (autoloads nil nil ("writeroom-mode-pkg.el") (22746 26723
+;;;### (autoloads nil nil ("writeroom-mode-pkg.el") (22809 42504
 ;;;;;;  0 0))
 
 ;;;***

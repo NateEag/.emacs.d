@@ -271,6 +271,7 @@ interface TextDocumentItem {
     (setf (lsp--parser-workspace parser) lsp--cur-workspace)
     (setq response (lsp--send-request (lsp--make-request "initialize"
                                         `(:processId ,(emacs-pid) :rootPath ,root
+                                           :rootUri ,(concat "file://" root)
                                            :capabilities ,(lsp--client-capabilities)))))
     (unless response
       (signal 'lsp-empty-response-error nil))
@@ -329,7 +330,7 @@ disappearing, unset all the variables related to it."
 
 (defun lsp--client-textdocument-capabilities ()
   "Client Text document capabilities according to LSP"
-  (make-hash-table))
+  `(:synchronization (:didSave t)))
 
 (defun lsp--server-capabilities ()
   "Return the capabilities of the language server associated with the buffer."
@@ -421,6 +422,7 @@ disappearing, unset all the variables related to it."
           (lsp--workspace-cmd-proc lsp--cur-workspace) cmd-proc
 
           init-params `(:processId ,(emacs-pid) :rootPath ,root
+                         :rootUri ,(concat "file://" root)
                          :capabilities ,(lsp--client-capabilities)))
         (puthash root lsp--cur-workspace lsp--workspaces)
         (setf response (lsp--send-request (lsp--make-request "initialize" init-params)))
@@ -448,15 +450,14 @@ disappearing, unset all the variables related to it."
   (when lsp-enable-eldoc
     (eldoc-mode 1))
 
-  (when (and lsp-enable-flycheck (featurep 'flycheck))
+  (when (and lsp-enable-flycheck (featurep 'lsp-flycheck))
     (setq-local flycheck-check-syntax-automatically nil)
     (setq-local flycheck-checker 'lsp)
-    (unless (memq 'lsp flycheck-checkers)
-      (add-to-list 'flycheck-checkers 'lsp))
-    (unless (memq 'flycheck-buffer lsp-after-diagnostics-hook)
-      (add-hook 'lsp-after-diagnostics-hook (lambda ()
-                                              (when flycheck-mode
-                                                (flycheck-buffer))))))
+    (lsp-flycheck-add-mode major-mode)
+    (add-to-list 'flycheck-checkers 'lsp)
+    (add-hook 'lsp-after-diagnostics-hook (lambda ()
+					    (when flycheck-mode
+					      (flycheck-buffer)))))
 
   (when (and lsp-enable-indentation
           (lsp--capability "documentRangeFormattingProvider"))
@@ -706,7 +707,7 @@ to a text document."
 
 (defun lsp--push-change (change-event)
   "Push CHANGE-EVENT to the buffer change vector."
-  (message "lsp--push-change entered")
+  ;; (message "lsp--push-change entered")
   (setq lsp--changes (vconcat lsp--changes `(,change-event))))
 
 (defun lsp-on-change (start end length)
@@ -761,11 +762,10 @@ to a text document."
   "Executed when the file is closed, added to `kill-buffer-hook'."
   (lsp--send-changes lsp--cur-workspace)
   (let ((file-versions (lsp--workspace-file-versions lsp--cur-workspace))
-           (old-buffers (lsp--workspace-buffers lsp--cur-workspace)))
-      ;; remove buffer from the current workspace's list of buffers
-      ;; do a sanity check first
-      (cl-assert (memq (current-buffer) old-buffers) t
-        "Current buffer isn't in the workspace's list of buffers.")
+         (old-buffers (lsp--workspace-buffers lsp--cur-workspace)))
+    ;; remove buffer from the current workspace's list of buffers
+    ;; do a sanity check first
+    (when (memq (current-buffer) old-buffers)
       (setf (lsp--workspace-buffers lsp--cur-workspace)
         (delq (current-buffer) old-buffers))
 
@@ -775,7 +775,7 @@ to a text document."
           "textDocument/didClose"
           `(:textDocument ,(lsp--versioned-text-document-identifier))))
       (when (and (= 0 (hash-table-count file-versions)) (lsp--shut-down-p))
-        (lsp--shutdown-cur-workspace))))
+        (lsp--shutdown-cur-workspace)))))
 
 (defun lsp--text-document-did-save ()
   "Executed when the file is closed, added to `after-save-hook''."

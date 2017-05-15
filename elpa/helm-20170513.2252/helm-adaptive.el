@@ -110,8 +110,7 @@ Format: ((SOURCE-NAME (SELECTED-CANDIDATE (PATTERN . NUMBER-OF-USE) ...) ...) ..
     (setq helm-adaptive-done t)
     (let ((source (helm-adapt-use-adaptive-p)))
       (when source
-        (let* ((source-name (or (assoc-default 'type source)
-                                (assoc-default 'name source)))
+        (let* ((source-name (assoc-default 'name source))
                (source-info (or (assoc source-name helm-adaptive-history)
                                 (progn
                                   (push (list source-name) helm-adaptive-history)
@@ -185,8 +184,7 @@ Returns nil if `helm-adaptive-history-file' doesn't exist."
   "Sort the CANDIDATES for SOURCE by usage frequency.
 This is a filtered candidate transformer you can use with the
 `filtered-candidate-transformer' attribute."
-  (let* ((source-name (or (assoc-default 'type source)
-                          (assoc-default 'name source)))
+  (let* ((source-name (assoc-default 'name source))
          (source-info (assoc source-name helm-adaptive-history)))
     (if source-info
         (let ((usage
@@ -256,10 +254,11 @@ Useful when you have a old or corrupted `helm-adaptive-history-file'."
     (delete-file helm-adaptive-history-file)))
 
 (defun helm-adaptive-compare (x y)
-  "Compare candidates X and Y taking into account that the
-candidate can be in (DISPLAY . REAL) format."
-  (equal (if (listp x) (cdr x) x)
-         (if (listp y) (cdr y) y)))
+  "Compare display parts if some of candidates X and Y.
+
+Arguments X and Y are cons cell in (DISPLAY . REAL) format or atoms."
+  (equal (if (listp x) (car x) x)
+         (if (listp y) (car y) y)))
 
 
 (provide 'helm-adaptive)

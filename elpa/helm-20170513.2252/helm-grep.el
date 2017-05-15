@@ -124,6 +124,14 @@ when used matchs will be highlighted according to GREP_COLORS env var."
   :group 'helm-grep
   :type  'string)
 
+(defcustom helm-pdfgrep-default-recurse-command
+  "pdfgrep --color always -rniH %s %s"
+  "Default recurse command for pdfgrep.
+Option \"--color always\" is supported starting helm version 1.7.8,
+when used matchs will be highlighted according to GREP_COLORS env var."
+  :group 'helm-grep
+  :type  'string)
+
 (defcustom helm-grep-use-ioccur-style-keys t
   "Use Arrow keys to jump to occurences."
   :group 'helm-grep
@@ -552,7 +560,9 @@ It is intended to use as a let-bound variable, DON'T set this globaly.")
                                        ,(- (float-time) start-time)
                                        (helm-get-candidate-number))
                                       'face 'helm-grep-finish))))
-                      (force-mode-line-update)))
+                      (force-mode-line-update)
+                      (when helm-allow-mouse
+                        (helm--bind-mouse-for-selection helm-selection-point))))
                    ;; Catch error output in log.
                    (t (helm-log
                        "Error: %s %s"
@@ -580,7 +590,7 @@ WHERE can be one of other-window, other-frame."
                                    (if (eq major-mode 'helm-grep-mode)
                                        (current-buffer)
                                        helm-buffer)
-                                 (get-text-property (point-at-bol) 'help-echo))
+                                 (get-text-property (point-at-bol) 'helm-grep-fname))
                                (car split)))
          (tramp-method (file-remote-p (or helm-ff-default-directory
                                           default-directory) 'method))
@@ -655,7 +665,7 @@ If N is positive go forward otherwise go backward."
         (unless (or (string= current-fname
                              (car (helm-grep-split-line sel)))
                     (and (eq major-mode 'helm-grep-mode)
-                         (not (get-text-property (point-at-bol) 'help-echo))))
+                         (not (get-text-property (point-at-bol) 'helm-grep-fname))))
           (funcall mark-maybe)
           (throw 'break nil))))
     (cond ((and (> n 0) (eobp))
@@ -663,7 +673,7 @@ If N is positive go forward otherwise go backward."
            (forward-line 0)
            (funcall mark-maybe))
           ((and (< n 0) (bobp))
-           (helm-aif (next-single-property-change (point-at-bol) 'help-echo)
+           (helm-aif (next-single-property-change (point-at-bol) 'helm-grep-fname)
                (goto-char it)
              (forward-line 1))
            (funcall mark-maybe)))
@@ -745,17 +755,41 @@ If N is positive go forward otherwise go backward."
                                   (helm-default-directory)
                                   default-directory))
       (setq buffer-read-only t)
-      (let ((inhibit-read-only t))
+      (let ((inhibit-read-only t)
+            (map (make-sparse-keymap)))
         (erase-buffer)
         (insert "-*- mode: helm-grep -*-\n\n"
                 (format "%s Results for `%s':\n\n" src-name pattern))
         (save-excursion
           (insert (with-current-buffer helm-buffer
                     (goto-char (point-min)) (forward-line 1)
-                    (buffer-substring (point) (point-max))))))
+                    (buffer-substring (point) (point-max)))))
+        (save-excursion
+          (while (not (eobp))
+            (add-text-properties (point-at-bol) (point-at-eol)
+                                 `(keymap ,map
+                                          help-echo ,(concat
+                                                      (get-text-property
+                                                       (point) 'helm-grep-fname)
+                                                      "\nmouse-1: set point\nmouse-2: jump to selection")
+                                          mouse-face highlight))
+            (define-key map [mouse-1] 'mouse-set-point)
+            (define-key map [mouse-2] 'helm-grep-mode-mouse-jump)
+            (define-key map [mouse-3] 'ignore)
+            (forward-line 1))))
       (helm-grep-mode))
     (pop-to-buffer buf)
     (message "Helm %s Results saved in `%s' buffer" src-name buf)))
+
+(defun helm-grep-mode-mouse-jump (event)
+  (interactive "e")
+  (let* ((window (posn-window (event-end event)))
+         (pos    (posn-point (event-end event))))
+    (with-selected-window window
+      (when (eq major-mode 'helm-grep-mode)
+        (goto-char pos)
+        (helm-grep-mode-jump)))))
+(put 'helm-grep-mode-mouse-jump 'helm-only t)
 
 (define-derived-mode helm-grep-mode
     special-mode "helm-grep"
@@ -992,10 +1026,6 @@ It is used actually to specify 'zgrep' or 'git'.
 When BACKEND 'zgrep' is used don't prompt for a choice
 in recurse, and ignore EXTS, search being made recursively on files matching
 `helm-zgrep-file-extension-regexp' only."
-  (when (and (string-match-p "\\`ack" (helm-grep-command recurse backend))
-             helm-ff-default-directory
-             (file-remote-p helm-ff-default-directory))
-    (error "Error: Remote operation not supported with ack-grep."))
   (let* (non-essential
          (ack-rec-p (helm-grep-use-ack-p :where 'recursive))
          (exts (and recurse
@@ -1115,7 +1145,8 @@ in recurse, and ignore EXTS, search being made recursively on files matching
     (if (and display-fname lineno str)
         (cons (concat (propertize display-fname
                                   'face 'helm-grep-file
-                                  'help-echo fname)
+                                  'help-echo (abbreviate-file-name fname)
+                                  'helm-grep-fname fname)
                       ":"
                       (propertize lineno 'face 'helm-grep-lineno)
                       ":"
@@ -1218,7 +1249,7 @@ If a prefix arg is given run grep on all buffers ignoring non--file-buffers."
 ;;  and a pdf-reader (e.g xpdf) are needed.
 ;;
 (defvar helm-pdfgrep-default-function 'helm-pdfgrep-init)
-(defun helm-pdfgrep-init (only-files)
+(defun helm-pdfgrep-init (only-files &optional recurse)
   "Start an asynchronous pdfgrep process in ONLY-FILES list."
   (let* ((default-directory (or helm-ff-default-directory
                                 default-directory))
@@ -1229,7 +1260,9 @@ If a prefix arg is given run grep on all buffers ignoring non--file-buffers."
                                 only-files)
                       only-files)
                     default-directory))
-         (cmd-line (format helm-pdfgrep-default-command
+         (cmd-line (format (if recurse
+                               helm-pdfgrep-default-recurse-command
+                               helm-pdfgrep-default-command)
                            helm-pattern
                            fnargs))
          process-connection-type)
@@ -1254,15 +1287,17 @@ If a prefix arg is given run grep on all buffers ignoring non--file-buffers."
                                          (max (1- (count-lines
                                                    (point-min) (point-max))) 0))
                                  'face 'helm-grep-finish))))
-                 (force-mode-line-update))
+                 (force-mode-line-update)
+                 (when helm-allow-mouse
+                   (helm--bind-mouse-for-selection helm-selection-point)))
              (helm-log "Error: Pdf grep %s"
                        (replace-regexp-in-string "\n" "" event))))))))
 
-(defun helm-do-pdfgrep-1 (only)
+(defun helm-do-pdfgrep-1 (only &optional recurse)
   "Launch pdfgrep with a list of ONLY files."
   (unless (executable-find "pdfgrep")
     (error "Error: No such program `pdfgrep'."))
-  (let* (helm-grep-in-recurse) ; recursion is never used in pdfgrep.
+  (let (helm-grep-in-recurse) ; recursion is implemented differently in *pdfgrep.
     ;; When called as action from an other source e.g *-find-files
     ;; we have to kill action buffer.
     (when (get-buffer helm-action-buffer)
@@ -1276,7 +1311,8 @@ If a prefix arg is given run grep on all buffers ignoring non--file-buffers."
                         (setq helm-ff-default-directory (or helm-ff-default-directory
                                                             default-directory)))
                 :candidates-process (lambda ()
-                                      (funcall helm-pdfgrep-default-function helm-pdfgrep-targets))
+                                      (funcall helm-pdfgrep-default-function
+                                               helm-pdfgrep-targets recurse))
                 :nohighlight t
                 :nomark t
                 :filter-one-by-one #'helm-grep-filter-one-by-one
@@ -1383,8 +1419,13 @@ if available with current AG version."
 
 (defun helm-grep-ag-init (directory &optional type)
   "Start AG process in DIRECTORY maybe searching only files of type TYPE."
-  (let ((cmd-line (helm-grep-ag-prepare-cmd-line
-                   helm-pattern directory type))
+  (let ((default-directory (or helm-ff-default-directory
+                               (helm-default-directory)
+                               default-directory))
+        (cmd-line (helm-grep-ag-prepare-cmd-line
+                   helm-pattern (or (file-remote-p directory 'localname)
+                                    directory)
+                   type))
         (start-time (float-time))
         (proc-name (helm-grep--ag-command)))
     (set (make-local-variable 'helm-grep-last-cmd-line) cmd-line)
@@ -1393,7 +1434,7 @@ if available with current AG version."
     (helm-log "Command line used was:\n\n%s"
               (concat ">>> " cmd-line "\n\n"))
     (prog1
-        (start-process-shell-command
+        (start-file-process-shell-command
          proc-name helm-buffer cmd-line)
       (set-process-sentinel
        (get-buffer-process helm-buffer)
@@ -1430,7 +1471,9 @@ if available with current AG version."
                                      ,(- (float-time) start-time)
                                      (helm-get-candidate-number))
                                     'face 'helm-grep-finish))))
-                    (force-mode-line-update)))
+                    (force-mode-line-update)
+                    (when helm-allow-mouse
+                      (helm--bind-mouse-for-selection helm-selection-point))))
                  (t (helm-log
                      "Error: %s %s"
                      proc-name
@@ -1519,7 +1562,7 @@ arg INPUT is what you will have by default at prompt on startup."
   (require 'vc)
   (let* (helm-grep-default-recurse-command
          ;; Expand filename of each candidate with the git root dir.
-         ;; The filename will be in the help-echo prop.
+         ;; The filename will be in the helm-grep-fname prop.
          (helm-grep-default-directory-fn (lambda ()
                                            (vc-find-root directory ".git")))
          (helm-ff-default-directory (funcall helm-grep-default-directory-fn)))

@@ -37,12 +37,14 @@
     (trace-function . helm-completing-read-symbols)
     (trace-function-foreground . helm-completing-read-symbols)
     (trace-function-background . helm-completing-read-symbols)
-    (find-tag . helm-completing-read-with-cands-in-buffer)
+    (find-tag . helm-completing-read-default-find-tag)
     (org-capture . helm-org-completing-read-tags)
     (org-set-tags . helm-org-completing-read-tags)
     (ffap-alternate-file . nil)
     (tmm-menubar . nil)
     (find-file . nil)
+    (find-file-at-point . helm-completing-read-sync-default-handler)
+    (ffap . helm-completing-read-sync-default-handler)
     (execute-extended-command . nil))
   "Alist of handlers to replace `completing-read', `read-file-name' in `helm-mode'.
 Each entry is a cons cell like \(emacs_command . completing-read_handler\)
@@ -263,6 +265,9 @@ If COLLECTION is an `obarray', a TEST should be needed. See `obarray'."
 
 (defun helm-cr-default-transformer (candidates _source)
   "Default filter candidate function for `helm-comp-read'."
+  (when (and (null candidates) (not (string= helm-pattern "")))
+    (setq helm-cr--unknown-pattern-flag t
+          candidates (list helm-pattern)))
   (cl-loop for c in candidates
         for cand = (if (stringp c) (replace-regexp-in-string "\\s\\" "" c) c)
         for pat = (replace-regexp-in-string "\\s\\" "" helm-pattern)
@@ -463,7 +468,6 @@ that use `helm-comp-read' See `helm-M-x' for example."
             (lambda ()
               (let ((cands (helm-comp-read-get-candidates
                             collection test sort alistp)))
-                (setq helm-cr--unknown-pattern-flag nil)
                 (unless (or (eq must-match t)
                             (string= helm-pattern "")
                             (assoc helm-pattern cands)
@@ -508,6 +512,8 @@ that use `helm-comp-read' See `helm-M-x' for example."
                        :help-message help-message
                        :action action-fn))
            (src (helm-build-sync-source name
+                  :init (lambda ()
+                          (setq helm-cr--unknown-pattern-flag nil))
                   :candidates get-candidates
                   :match-part match-part
                   :multiline multiline
@@ -523,7 +529,12 @@ that use `helm-comp-read' See `helm-M-x' for example."
                   :action action-fn
                   :volatile volatile))
            (src-1 (helm-build-in-buffer-source name
-                    :data get-candidates
+                    :init (lambda ()
+                            (setq helm-cr--unknown-pattern-flag nil))
+                    :data  (lambda ()
+                             (let ((cands (helm-comp-read-get-candidates
+                                           collection test sort alistp)))
+                               (helm-cr-default default cands)))
                     :match-part match-part
                     :multiline multiline
                     :header-name header-name
@@ -638,7 +649,6 @@ Extra optional arg CANDS-IN-BUFFER mean use `candidates-in-buffer'
 method which is faster.
 It should be used when candidate list don't need to rebuild dynamically."
   (let ((history (or (car-safe hist) hist))
-        (alistp cands-in-buffer)
         (initial-input (helm-aif (pcase init
                                    ((pred (stringp)) init)
                                    ;; INIT is a cons cell.
@@ -652,7 +662,7 @@ It should be used when candidate list don't need to rebuild dynamically."
      :reverse-history helm-mode-reverse-history
      :input-history history
      :must-match require-match
-     :alistp alistp
+     :alistp nil
      :name name
      :requires-pattern (if (and (stringp default)
                                 (string= default "")
@@ -673,19 +683,38 @@ It should be used when candidate list don't need to rebuild dynamically."
      ;; helm-comp-read.
      :initial-input initial-input)))
 
-(defun helm-completing-read-with-cands-in-buffer
+(defun helm-completing-read-default-find-tag
     (prompt collection test require-match
      init hist default inherit-input-method
      name buffer)
-  "Same as `helm-completing-read-default-1' but use candidates-in-buffer."
+  "Specialized `helm-mode' handler for `find-tag'."
   ;; Some commands like find-tag may use `read-file-name' from inside
   ;; the calculation of collection. in this case it clash with
   ;; candidates-in-buffer that reuse precedent data (files) which is wrong.
   ;; So (re)calculate collection outside of main helm-session.
-  (let ((cands (all-completions (or init "") collection)))
+  (let* ((cands (helm-comp-read-get-candidates
+                 collection test nil nil "")))
     (helm-completing-read-default-1 prompt cands test require-match
                                     init hist default inherit-input-method
                                     name buffer t)))
+
+(defun helm-completing-read-sync-default-handler
+    (prompt collection test require-match
+     init hist default inherit-input-method
+     name buffer)
+  "`helm-mode' handler using sync source as backend."
+  (helm-completing-read-default-1 prompt collection test require-match
+                                  init hist default inherit-input-method
+                                  name buffer))
+
+(defun helm-completing-read-default-handler
+    (prompt collection test require-match
+     init hist default inherit-input-method
+     name buffer)
+  "Default `helm-mode' handler for all `completing-read'."
+  (helm-completing-read-default-1 prompt collection test require-match
+                                  init hist default inherit-input-method
+                                  name buffer t))
 
 (cl-defun helm--completing-read-default
     (prompt collection &optional
@@ -767,8 +796,10 @@ See documentation of `completing-read' and `all-completions' for details."
                 ;; If we are here `helm-mode' is now disabled.
                 def-com
                 (apply def-com def-args))
-               (t ; Fall back to classic `helm-comp-read'.
-                (helm-completing-read-default-1
+               (;; Use by default a cands-in-buffer handler which
+                ;; should work everywhere, it is much faster. 
+                t
+                (helm-completing-read-default-handler
                  prompt collection predicate require-match
                  initial-input hist def inherit-input-method
                  str-command buf-name)))

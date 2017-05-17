@@ -57,6 +57,10 @@
   (add-to-list 'ac-sources 'ac-source-php-auto-yasnippets t)
   (add-to-list 'ac-sources 'ac-source-words-in-same-mode-buffers t)
 
+  ;; Turn on lsp-mode by default. The server takes forever to analyze large
+  ;; projects, but you can mostly still use Emacs while it does it.
+  (lsp-mode 1)
+
   ;; Yay for squiggly red lines!
   (setq flycheck-phpcs-standard "PSR2")
   (setq flycheck-php-phpcs-executable "phpcs"))
@@ -68,6 +72,7 @@
 ;;
 ;; Thus far, I've only tried jump-to-def within the php-language-server project
 ;; itself. That did work, so this is definitely a direction worth pursuing.
+(require 'lsp-mode)
 (lsp-define-stdio-client 'php-mode "php" 'tcp
                          ;; TODO Use Projectile to find project root.
                          (lsp-make-traverser ".git")

@@ -10482,6 +10482,7 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
     (when py-debug-p (switch-to-buffer (current-buffer)))
     (goto-char (point-min))
     (when (re-search-forward "File \"\\(.+\\)\", line \\([0-9]+\\)\\(.*\\)$" nil t)
+      ;; (while (re-search-forward "File \"\\(.+\\)\", line \\([0-9]+\\)\\(.*\\)$" nil t))
       (setq erg (copy-marker (point)))
       ;; Replace hints to temp-file by orig-file
       (delete-region (progn (beginning-of-line)
@@ -10492,7 +10493,7 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
 				(goto-char (match-end 0))))
 
 			    (skip-chars-forward " \t\r\n\f")(point)) (line-end-position))
-      (insert (concat "    File " (buffer-name py-exception-buffer) ", line "
+      (insert (concat "    File " py-exception-buffer ", line "
 		      (prin1-to-string origline))))
     (when erg
       (goto-char erg)
@@ -12986,42 +12987,44 @@ With interactive call, send it to the message buffer too. "
    (t
     (py--match-paren-backward))))
 
-(defun py-match-paren ()
+(defun py-match-paren (&optional arg)
   "If at a beginning, jump to end and vice versa.
 
 When called from within, go to the start.
 Matches lists, but also block, statement, string and comment. "
-  (interactive)
-  (let ((pps (parse-partial-sexp (point-min) (point))))
-    (cond
-     ;; if inside string, go to beginning
-     ((nth 3 pps)
-      (goto-char (nth 8 pps)))
-     ;; if inside comment, go to beginning
-     ((nth 4 pps)
-      (py-backward-comment))
-     ;; at comment start, go to end of commented section
-     ((and
-       ;; unless comment starts where jumped to some end
-       (not py--match-paren-forward-p)
-       (eq 11 (car-safe (syntax-after (point)))))
-      (py-forward-comment))
-     ;; at string start, go to end
-     ((or (eq 15 (car-safe (syntax-after (point))))
-	  (eq 7 (car (syntax-after (point)))))
-      (goto-char (scan-sexps (point) 1))
-      (forward-char -1))
-     ;; open paren
-     ((eq 4 (car (syntax-after (point))))
-      (goto-char (scan-sexps (point) 1))
-      (forward-char -1))
-     ((eq 5 (car (syntax-after (point))))
-      (goto-char (scan-sexps (1+ (point)) -1)))
-     ((nth 1 pps)
-      (goto-char (nth 1 pps)))
-     (t
-      ;; Python specific blocks
-      (py--match-paren-blocks)))))
+  (interactive "*P")
+  (if (eq 4 (prefix-numeric-value arg))
+      (insert "%")
+    (let ((pps (parse-partial-sexp (point-min) (point))))
+      (cond
+       ;; if inside string, go to beginning
+       ((nth 3 pps)
+	(goto-char (nth 8 pps)))
+       ;; if inside comment, go to beginning
+       ((nth 4 pps)
+	(py-backward-comment))
+       ;; at comment start, go to end of commented section
+       ((and
+	 ;; unless comment starts where jumped to some end
+	 (not py--match-paren-forward-p)
+	 (eq 11 (car-safe (syntax-after (point)))))
+	(py-forward-comment))
+       ;; at string start, go to end
+       ((or (eq 15 (car-safe (syntax-after (point))))
+	    (eq 7 (car (syntax-after (point)))))
+	(goto-char (scan-sexps (point) 1))
+	(forward-char -1))
+       ;; open paren
+       ((eq 4 (car (syntax-after (point))))
+	(goto-char (scan-sexps (point) 1))
+	(forward-char -1))
+       ((eq 5 (car (syntax-after (point))))
+	(goto-char (scan-sexps (1+ (point)) -1)))
+       ((nth 1 pps)
+	(goto-char (nth 1 pps)))
+       (t
+	;; Python specific blocks
+	(py--match-paren-blocks))))))
 
 (unless (boundp 'empty-line-p-chars)
   (defvar empty-line-p-chars "^[ \t\f\r]*$"))
@@ -26105,9 +26108,8 @@ See available customizations listed in files variables-python-mode at directory 
 				   "\\|")
 			"\\)"))))
   (remove-hook 'comint-output-filter-functions 'font-lock-extend-jit-lock-region-after-change t)
-
-  (make-local-variable 'comint-output-filter-functions)
-  ;; (set (make-local-variable 'comint-input-filter) 'py--input-filter)
+  ;; (set (make-local-variable 'comint-output-filter-functions)
+  ;; 'set-text-properties comint-last-input-start comint-last-input-end 'nil)
   (set (make-local-variable 'comint-input-filter) 'py-history-input-filter)
   (set (make-local-variable 'comint-prompt-read-only) py-shell-prompt-read-only)
   ;; (set (make-local-variable 'comint-use-prompt-regexp) nil)

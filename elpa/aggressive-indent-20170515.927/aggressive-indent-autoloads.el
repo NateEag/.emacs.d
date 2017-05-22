@@ -4,7 +4,7 @@
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
 ;;;### (autoloads nil "aggressive-indent" "aggressive-indent.el"
-;;;;;;  (22746 26688 0 0))
+;;;;;;  (22818 57297 0 0))
 ;;; Generated autoloads from aggressive-indent.el
 
 (autoload 'aggressive-indent-indent-defun "aggressive-indent" "\

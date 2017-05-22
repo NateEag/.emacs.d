@@ -425,21 +425,27 @@ the upstream isn't ahead of the current branch) show."
     (?a "[a]uthor date"    "author-date")
     (?c "[c]ommitter date" "date")))
 
+(defun magit-log-get-buffer-args ()
+  (cond ((and magit-use-sticky-arguments
+              (derived-mode-p 'magit-log-mode))
+         (list (nth 1 magit-refresh-args)
+               (nth 2 magit-refresh-args)))
+        ((and (eq magit-use-sticky-arguments t)
+              (--when-let (magit-mode-get-buffer 'magit-log-mode)
+                (with-current-buffer it
+                  (list (nth 1 magit-refresh-args)
+                        (nth 2 magit-refresh-args))))))
+        (t
+         (list (default-value 'magit-log-arguments) nil))))
+
 (defun magit-log-arguments (&optional refresh)
   (cond ((memq magit-current-popup
                '(magit-log-popup magit-log-refresh-popup))
          (magit-popup-export-file-args magit-current-popup-args))
-        ((derived-mode-p 'magit-log-mode)
-         (list (nth 1 magit-refresh-args)
-               (nth 2 magit-refresh-args)))
-        (refresh
+        ((and refresh (not (derived-mode-p 'magit-log-mode)))
          (list magit-log-section-arguments nil))
         (t
-         (-if-let (buffer (magit-mode-get-buffer 'magit-log-mode))
-             (with-current-buffer buffer
-               (list (nth 1 magit-refresh-args)
-                     (nth 2 magit-refresh-args)))
-           (list (default-value 'magit-log-arguments) nil)))))
+         (magit-log-get-buffer-args))))
 
 (defun magit-log-popup (arg)
   "Popup console for log commands."
@@ -449,11 +455,7 @@ the upstream isn't ahead of the current branch) show."
            (`magit-log-mode magit-log-mode-refresh-popup)
            (_               magit-log-refresh-popup)))
         (magit-log-arguments
-         (-if-let (buffer (magit-mode-get-buffer 'magit-log-mode))
-             (with-current-buffer buffer
-               (magit-popup-import-file-args (nth 1 magit-refresh-args)
-                                             (nth 2 magit-refresh-args)))
-           (default-value 'magit-log-arguments))))
+         (apply #'magit-popup-import-file-args (magit-log-get-buffer-args))))
     (magit-invoke-popup 'magit-log-popup nil arg)))
 
 ;;;###autoload
@@ -781,7 +783,11 @@ Type \\[magit-reset] to reset `HEAD' to the commit at point.
 
 \\{magit-log-mode-map}"
   :group 'magit-log
-  (hack-dir-local-variables-non-file-buffer))
+  (hack-dir-local-variables-non-file-buffer)
+  (setq imenu-prev-index-position-function
+        #'magit-log-imenu-prev-index-position-function)
+  (setq imenu-extract-index-name-function
+        #'magit-log-imenu-extract-index-name-function))
 
 (defvar magit-log-disable-graph-hack-args
   '("-G" "--grep" "--author")
@@ -1518,6 +1524,26 @@ all others with \"-\"."
       (magit-insert-heading "Unpushed commits:")
       (magit-git-wash (apply-partially 'magit-log-wash-log 'cherry)
         "cherry" "-v" (magit-abbrev-arg) "@{upstream}"))))
+
+;;;; Imenu Support
+
+(defun magit-log-imenu-prev-index-position-function ()
+  "Move point to previous line in current buffer.
+This function is used as a value for
+`imenu-prev-index-position-function'."
+  (magit-section--backward-find
+   (lambda () (eq (magit-section-type (magit-current-section)) 'commit))))
+
+(defun magit-log-imenu-extract-index-name-function ()
+  "Return imenu name for line at point.
+This function is used as a value for
+`imenu-extract-index-name-function'.  Point should be at the
+beginning of the line."
+  (save-match-data
+    (looking-at "\\([^ ]+\\) [ *|]+ \\(.+\\)$")
+    (format "%s: %s"
+            (match-string-no-properties 1)
+            (match-string-no-properties 2))))
 
 (provide 'magit-log)
 ;;; magit-log.el ends here

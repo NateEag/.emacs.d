@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "add-hooks" "add-hooks.el" (22772 47624 0 0))
+;;;### (autoloads nil "add-hooks" "add-hooks.el" (22818 57296 0 0))
 ;;; Generated autoloads from add-hooks.el
 
 (autoload 'add-hooks-pair "add-hooks" "\
@@ -12,17 +12,15 @@ Call `add-hook' for each combined pair of items in HOOKS and FUNCTIONS.
 Either value can be a single symbol or a list of symbols, in
 which case a function can be added to multiple hooks and/or
 multiple functions can be added to a hook.  This behaves like
-`add-hook' when both values are atoms.
+`add-hook' when both values are atoms.  It is implied that hook
+symbols will end with `-hook'.
 
 Example:
 
-  (add-hooks-pair '(css-mode-hook sgml-mode-hook) 'emmet-mode)
-
-Result:
-
+  ELISP> (add-hooks-pair '(css-mode sgml-mode) 'emmet-mode)
+  nil
   ELISP> css-mode-hook
   (emmet-mode)
-
   ELISP> sgml-mode-hook
   (emmet-mode)
 
@@ -38,17 +36,14 @@ a single symbol or a list of symbols, as passed to
 
 Usage:
 
-  (add-hooks '((hook-or-hooks . function-or-functions)...))
+  (add-hooks ((HOOKS . FUNCTIONS)...))
 
 Example:
 
-  (add-hooks '(((css-mode-hook sgml-mode-hook) . emmet-mode)))
-
-Result:
-
+  ELISP> (add-hooks '(((css-mode sgml-mode) . emmet-mode)))
+  nil
   ELISP> css-mode-hook
   (emmet-mode)
-
   ELISP> sgml-mode-hook
   (emmet-mode)
 

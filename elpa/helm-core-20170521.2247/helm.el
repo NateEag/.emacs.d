@@ -47,14 +47,17 @@ If DELAY is specified, switch back to initial function of FUNCTIONS list
 after DELAY seconds.
 The functions in FUNCTIONS list take no args.
 e.g
-  \(defun foo ()
-    (message \"Run foo\"))
-  \(defun bar ()
-    (message \"Run bar\"))
-  \(defun baz ()
-    (message \"Run baz\"))
+    (defun foo ()
+      (interactive)
+      (message \"Run foo\"))
+    (defun bar ()
+      (interactive)
+      (message \"Run bar\"))
+    (defun baz ()
+      (interactive)
+      (message \"Run baz\"))
 
-\(helm-define-multi-key global-map \"<f5> q\" '(foo bar baz) 2)
+\(helm-define-multi-key global-map (kbd \"<f5> q\") '(foo bar baz) 2)
 
 Each time \"<f5> q\" is pressed, the next function is executed. Waiting
 more than 2 seconds between key presses switches back to executing the first
@@ -79,7 +82,9 @@ Run each function in the FUNCTIONS list in turn when called within DELAY seconds
         (iter (cl-gensym "helm-iter-key"))
         (timeout delay))
     (eval (list 'defvar iter nil))
-    (lambda () (interactive) (helm-run-multi-key-command funs iter timeout))))
+    (lambda ()
+      (interactive)
+      (helm-run-multi-key-command funs iter timeout))))
 
 (defun helm-run-multi-key-command (functions iterator delay)
   (let ((fn (lambda ()
@@ -94,9 +99,11 @@ Run each function in the FUNCTIONS list in turn when called within DELAY seconds
     (unless next
       (set iterator (helm-iter-list (funcall fn)))
       (setq next (helm-iter-next (symbol-value iterator))))
-    (and next (symbol-value iterator) (call-interactively (nth (1- next) functions)))
-    (when delay (run-with-idle-timer delay nil (lambda ()
-                                                 (setq iterator nil))))))
+    (and next (symbol-value iterator)
+         (call-interactively (nth (1- next) functions)))
+    (when delay (run-with-idle-timer
+                 delay nil (lambda ()
+                             (set iterator nil))))))
 
 (helm-multi-key-defun helm-toggle-resplit-and-swap-windows
     "Multi key command to re-split and swap helm window.
@@ -228,6 +235,7 @@ vectors, so don't use strings to define them."
     (define-key map (kbd "C-!")        'helm-toggle-suspend-update)
     (define-key map (kbd "C-x b")      'helm-resume-previous-session-after-quit)
     (define-key map (kbd "C-x C-b")    'helm-resume-list-buffers-after-quit)
+    (helm-define-key-with-subkeys map (kbd "C-c n") ?n 'helm-run-cycle-resume)
     ;; Disable `file-cache-minibuffer-complete'.
     (define-key map (kbd "<C-tab>")    'undefined)
     ;; Multi keys
@@ -884,34 +892,32 @@ value of this var.")
 
 (defvar helm-help-message
   "* Helm Generic Help
+** Basics
 
-\\<helm-map>`helm' is an Emacs framework for incremental
-completions and narrowing selections.
-
-Helm narrows the list of candidates as the pattern is typed and
+Helm allow you narrowing the list of candidates as the pattern is typed and
 updates the list in a live feedback.
 
 Helm accepts multiple patterns (entered with a space between patterns).
 Helm support also fuzzy matching in some places when specified.
 
 Helm uses familiar Emacs navigation keys to move up and down the list,
-however some keybindings maybe confusing for new users, here are some:
+however some keybindings are maybe confusing for new users, here are some:
 
 `\\[helm-maybe-exit-minibuffer]' selects the candidate from the list and execute default action
 on it, exiting helm session.
 
-`\\[helm-execute-persistent-action]' execute the default action
-but without exiting helm session, it may be not available in some places.
+`\\[helm-execute-persistent-action]' execute the default action but without exiting helm session,
+it may be not available in some places.
 
-`\\[helm-select-action]' show you a list of actions
-available on current candidate or all marked candidates, this maybe
-surprising for new helm users that expect
-`\\[helm-select-action]' for completions and have not
-realized they are already completing something as soon as helm is
-started! See [[https://github.com/emacs-helm/helm/wiki#helm-completion-vs-emacs-completion][Helm wiki]]
+`\\[helm-select-action]' show you a list of actions available on current candidate or all marked candidates,
+this maybe surprising for new helm users that expect `\\[helm-select-action]' for completions and have not
+realized they are already completing something as soon as helm is started!
+See [[https://github.com/emacs-helm/helm/wiki#helm-completion-vs-emacs-completion][Helm wiki]]
+
 NOTE: In addition to this fixed actions list, you will notice that depending
 of the type of candidate selected you may have additional actions
-appearing and disapearing when you select another type of candidate.
+appearing and disapearing when you select another type of candidate, they are called
+filtered actions.
 
 ** Helm mode
 
@@ -978,7 +984,6 @@ hardcoded and not modifiable, here they are:
 | M-<TAB>   |                  | Toggle visibility   |
 | M-w       |                  | Copy region         |
 | q         |                  | Quit                |
-
 
 ** Helm's Basic Operations and Default Key Bindings
 
@@ -1069,12 +1074,43 @@ is non-nil.
 \\[helm-refresh]\t\tRecalculate and redisplay candidates.
 \\[helm-toggle-suspend-update]\t\tSuspend/reenable updates to candidates list.
 
+** Moving in `helm-buffer'
+
+You can move in `helm-buffer' with usual commands used in emacs
+\(\\<helm-map>\\[helm-next-line], \\<helm-map>\\[helm-previous-line] etc... see above basic commands).
+When `helm-buffer' contains more than one source change source with \\<helm-map>\\[helm-next-source].
+
+NOTE: When at end of source \\<helm-map>\\[helm-next-line] will NOT go to next source if
+variable `helm-move-to-line-cycle-in-source' is non--nil, so you will have to use \\<helm-map>\\[helm-next-source].
+
+** Resume previous session from current helm session
+
+You can use `C-c n' which is bound to `helm-run-cycle-resume' to cycle in resumables sources.
+`C-c n' is a special key bound with `helm-define-key-with-subkeys' which allow you
+to hit `C-c n' at first and then continue cycling with only `n'.
+Tip: You can bound the same key in `global-map' to `helm-cycle-resume'
+     with `helm-define-key-with-subkeys' to allow you cycling transparently
+     from outside and inside helm session.
+     You can also bind the cycling commands to single key pressed (e.g S-f1) this time
+     with a simple `define-key' (note that S-f1 is not available in terminals).
+
+NOTE: `helm-define-key-with-subkeys' is available only once helm is loaded.
+
+You can also use  \\<helm-map>\\[helm-resume-previous-session-after-quit] to resume
+the previous session before this one, or \\<helm-map>\\[helm-resume-list-buffers-after-quit]
+to have completion on all resumables buffers.
+
 ** Global Commands
+
+*** Resume helm session from outside helm
 
 \\<global-map>\\[helm-resume] revives the last `helm' session.
 Very useful for resuming previous Helm. Binding a key to this
 command will greatly improve `helm' interactivity especially
 after an accidental exit.
+You can call  \\<global-map>\\[helm-resume] with a prefix arg to have completion on previous
+sources used and resumables.
+You can also cycle in these source with `helm-cycle-resume' (see above).
 
 ** Debugging helm
 
@@ -1240,6 +1276,7 @@ You should not modify this yourself unless you know what you are doing.")
 Should be set in candidates functions if needed, will be restored
 at end of session.")
 (defvar helm--action-prompt "Select action: ")
+(defvar helm--cycle-resume-iterator nil)
 
 ;; Utility: logging
 (defun helm-log (format-string &rest args)
@@ -2212,6 +2249,39 @@ Return nil if no `helm-buffer' found."
               :resume 'noresume
               :buffer "*helm resume*")
         (keyboard-quit))))
+
+;;;###autoload
+(defun helm-cycle-resume ()
+  "Cycle in `helm-buffers' list and resume when waiting more than 1.2s."
+  (interactive)
+  (cl-assert (and helm-buffers helm-last-buffer)
+             nil "No helm buffers to resume")
+  (setq helm--cycle-resume-iterator
+        (helm-iter-sub-next-circular
+         helm-buffers helm-last-buffer :test 'equal))
+  (helm--resume-or-iter))
+
+(defun helm--resume-or-iter (&optional from-helm)
+  (message "Resuming helm buffer `%s'" helm-last-buffer)
+  (if (sit-for 1.2)
+      (if from-helm
+          (helm-run-after-exit (lambda () (helm-resume helm-last-buffer)))
+        (helm-resume helm-last-buffer))
+    (message "Resuming helm buffer `%s'"
+             (setq helm-last-buffer
+                   (helm-iter-next helm--cycle-resume-iterator)))))
+
+(defun helm-run-cycle-resume ()
+  "Same as `helm-cycle-resume' but intended to be called only from helm."
+  (interactive)
+  (when (cdr helm-buffers)
+    (setq helm--cycle-resume-iterator
+          (helm-iter-sub-next-circular
+           helm-buffers helm-last-buffer :test 'equal))
+    (setq helm-last-buffer
+          (helm-iter-next helm--cycle-resume-iterator))
+    (helm--resume-or-iter 'from-helm)))
+(put 'helm-run-cycle-resume 'helm-only t)
 
 
 ;;;###autoload
@@ -3598,8 +3668,9 @@ pattern has changed.
 
 Selection is preserved to current candidate if it still exists after
 update or moved to PRESELECT, if specified.
-The helm-window is recentered at the end when RECENTER is non nil
-which is the default."
+The helm-window is recentered at the end when RECENTER is `t'
+which is the default, RECENTER can be also a number in this case it is
+passed as argument to `recenter'."
   (with-helm-window
     (let* ((source    (helm-get-current-source))
            (selection (helm-aif (helm-get-selection nil t source)
@@ -3610,7 +3681,7 @@ which is the default."
         (mapc 'helm-force-update--reinit
               (helm-get-sources)))
       (helm-update (or preselect selection) source)
-      (and recenter (recenter)))))
+      (and recenter (recenter (and (numberp recenter) recenter))))))
 
 (defun helm-refresh ()
   "Force recalculation and update of candidates."

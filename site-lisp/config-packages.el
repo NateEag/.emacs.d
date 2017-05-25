@@ -398,6 +398,7 @@
 (use-package web-mode
   :mode (("\\.html\\'" . web-mode)
          ("\\.tmpl\\'" . web-mode)
+         ("\\.blade.php\\'" . web-mode)
          ("\\.twig\\'" . web-mode)
          ("\\.hbs\\'" . web-mode)
          ("\\.handlebars\\'" . web-mode))

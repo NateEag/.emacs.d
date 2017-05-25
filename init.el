@@ -33,8 +33,9 @@
 
 ;;; General preferences.
 
-;; Let's try out the solarized theme. In theory, it should be easier on my
-;; eyes...
+;; Solarized is better than your theme.
+;;
+;; Sorry, it's just true.
 (load-theme 'solarized-dark t)
 
 ;; Most of the time, I want Unix-style line endings, and UTF-8 is generally a

@@ -3,7 +3,7 @@
 ;; Copyright (C) 2012 ~ 2015 Thierry Volpiatto <thierry.volpiatto@gmail.com>
 
 ;; Package-Requires: ((helm "1.7.8"))
-;; Package-Version: 20170520.840
+;; Package-Version: 20170523.1149
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -41,9 +41,9 @@
   "Helm completion for git repos."
   :group 'helm)
 
-(defcustom helm-ls-git-show-abs-or-relative 'absolute
+(defcustom helm-ls-git-show-abs-or-relative 'relative
   "Show full path or relative path to repo when using `helm-ff-toggle-basename'.
-Valid values are symbol 'abs (default) or 'relative."
+Valid values are symbol 'absolute or 'relative (default)."
   :group 'helm-ls-git
   :type  '(radio :tag "Show full path or relative path to Git repo when toggling"
            (const :tag "Show full path" absolute)

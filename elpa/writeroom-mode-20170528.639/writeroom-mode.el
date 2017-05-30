@@ -6,7 +6,7 @@
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 11 July 2012
 ;; Package-Requires: ((emacs "24.1") (visual-fill-column "1.9"))
-;; Version: 3.6
+;; Version: 3.7
 ;; Keywords: text
 
 ;; Redistribution and use in source and binary forms, with or without
@@ -63,10 +63,6 @@ These settings are restored when `writeroom-mode' is
 deactivated.")
 (make-variable-buffer-local 'writeroom--saved-data)
 
-(defvar writeroom--mode-line-showing nil
-  "Flag indicating whether the original mode line is displayed.")
-(make-variable-buffer-local 'writeroom--mode-line-showing)
-
 (defvar writeroom--saved-visual-fill-column nil
   "Status of `visual-fill-column-mode' before activating `writeroom-mode'.")
 (make-variable-buffer-local 'writeroom--saved-visual-fill-column)
@@ -96,12 +92,24 @@ possible to specify a special mode line for `writeroom-mode'
 buffers.  If this option is chosen, the default is to only show
 the buffer's modification status and the buffer name, but the
 format can be customized.  See the documentation for the variable
-`mode-line-format' for further information."
+`mode-line-format' for further information.  Note that if you set
+this option, it may be more visually pleasing to set
+`writeroom-bottom-divider-width' to 0."
   :group 'writeroom
   :type '(choice (const :tag "Disable the mode line" nil)
                  (const :tag "Use default mode line" t)
                  (sexp :tag "Customize mode line"
                        :value ("   " mode-line-modified "   " mode-line-buffer-identification))))
+
+(defcustom writeroom-mode-line-toggle-position 'header-line-format
+  "Position to temporarily show the mode line.
+When the mode line is disabled, the function
+`writeroom-toggle-mode-line' makes the mode line visible.  This
+option determines whether it is shown as the mode line or as the
+header line."
+  :group 'writeroom
+  :type '(choice (const :tag "Use the mode line" 'mode-line-format)
+                 (const :tag "Use the header line" 'header-line-format)))
 
 (defcustom writeroom-bottom-divider-width 1
   "Width of the bottom window divider in pixels."
@@ -325,18 +333,31 @@ The effects are activated if ARG is 1, deactivated if it is -1."
       (truncate (* (window-total-width) writeroom-width))
     writeroom-width))
 
+(defvar writeroom--mode-line-showing nil
+  "Flag indicating whether the original mode line is displayed.")
+(make-variable-buffer-local 'writeroom--mode-line-showing)
+
+(defvar writeroom--orig-header-line nil
+  "Original format of the header line.
+When the header line is used to temporarily display the mode
+line, its original format is saved here.")
+(make-variable-buffer-local 'writeroom--orig-header-line)
+
 (defun writeroom-toggle-mode-line ()
   "Toggle display of the original mode."
   (interactive)
   (unless (eq writeroom-mode-line t) ; This means the original mode-line is displayed already.
     (cond
      ((not writeroom--mode-line-showing)
-      (setq mode-line-format (or (cdr (assq 'mode-line-format writeroom--saved-data))
-                                 (default-value 'mode-line-format))
-            writeroom--mode-line-showing t))
+      (setq writeroom--orig-header-line header-line-format)
+      (set writeroom-mode-line-toggle-position (or (cdr (assq 'mode-line-format writeroom--saved-data))
+                                          (default-value 'mode-line-format)))
+      (setq writeroom--mode-line-showing t))
      (writeroom--mode-line-showing
-      (setq mode-line-format writeroom-mode-line
-            writeroom--mode-line-showing nil)))
+      (if (eq writeroom-mode-line-toggle-position 'header-line-format)
+          (setq header-line-format writeroom--orig-header-line)
+        (setq mode-line-format writeroom-mode-line))
+      (setq writeroom--mode-line-showing nil)))
     (force-mode-line-update)))
 
 (defun writeroom-adjust-width (amount)

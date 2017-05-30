@@ -483,7 +483,7 @@ Don't set it directly, use instead `helm-ff-auto-update-initial-value'.")
    "Find File" 'helm-find-file-or-marked
    "Find file in Dired" 'helm-point-file-in-dired
    "View file" 'view-file
-   "Query replace fnames on marked" 'helm-ff-query-replace-on-marked
+   "Query replace fnames on marked `M-%'" 'helm-ff-query-replace-on-marked
    "Query replace contents on marked" 'helm-ff-query-replace
    "Query replace regexp contents on marked" 'helm-ff-query-replace-regexp
    "Attach file(s) to mail buffer" 'helm-ff-mail-attach-files
@@ -561,7 +561,8 @@ Should not be used among other sources.")
     :initform 'helm-find-files-action-transformer)
    (action :initform 'helm-find-files-actions)
    (before-init-hook :initform 'helm-find-files-before-init-hook)
-   (after-init-hook :initform 'helm-find-files-after-init-hook)))
+   (after-init-hook :initform 'helm-find-files-after-init-hook)
+   (group :initform 'helm-files)))
 
 ;; Bookmark handlers.
 ;;
@@ -1746,10 +1747,19 @@ and should be used carefully elsewhere, or not at all, using
       (dired-goto-file target))))
 
 (defun helm-create-tramp-name (fname)
-  "Build filename for `helm-pattern' like /su:: or /sudo::."
+  "Build filename from `helm-pattern' like /su:: or /sudo::."
+  ;; `tramp-make-tramp-file-name' takes 7 args on emacs-26 whereas it
+  ;; takes only 5 args in emacs-24/25.
   (apply #'tramp-make-tramp-file-name
-         (cl-loop with v = (tramp-dissect-file-name fname)
-               for i across v collect i)))
+         ;; `tramp-dissect-file-name' returns a list in emacs-26
+         ;; whereas in 24.5 it returns a vector, thus the car is a
+         ;; symbol (`tramp-file-name') which is not needed as argument
+         ;; for `tramp-make-tramp-file-name' so transform the cdr in
+         ;; vector, and for 24.5 use directly the returned value.
+         (cl-loop with v = (pcase (tramp-dissect-file-name fname)
+                             (`(,_l . ,ll) (vconcat ll))
+                             ((and vec (pred vectorp)) vec))
+                  for i across v collect i)))
 
 (defun helm-ff-get-tramp-methods ()
   "Returns a list of the car of `tramp-methods'."

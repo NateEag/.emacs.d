@@ -2,7 +2,7 @@
 
 ;; Author: stardiviner <numbchild@gmail.com>
 ;; Keywords: inline docs overlay
-;; Package-Version: 20170428.632
+;; Package-Version: 20170522.2150
 ;; URL: https://github.com/stardiviner/inline-docs.el
 ;; Created: 20th Jan 2017
 ;; Version: 1.0.1
@@ -61,7 +61,7 @@ Set `inline-docs-position' to `up' to fix issue that `inline-docs' does not show
   :group 'inline-docs)
 
 (defface inline-docs-face
-  '((t (:inherit default)))
+  '((t (:inherit font-lock-string-face)))
   "Face for `inline-docs-mode'."
   :group 'inline-docs)
 
@@ -86,7 +86,7 @@ Set `inline-docs-position' to `up' to fix issue that `inline-docs' does not show
     (delete-overlay inline-docs-overlay))
   (remove-hook 'post-command-hook 'inline-docs--clear-overlay))
 
-(defun inline-docs--string-display-next-line (string apply-face)
+(defun inline-docs--string-display (string apply-face)
   "Show STRING contents below point line until next command with APPLY-FACE."
   (let* ((border-line (make-string (window-body-width) inline-docs-border-symbol))
          (offset (make-string
@@ -138,7 +138,7 @@ Set `inline-docs-position' to `up' to fix issue that `inline-docs' does not show
 (defun inline-docs-display-docs-momentary (format-string &rest args)
   "Display inline docs FORMAT-STRING under point with extra ARGS."
   (when format-string
-    (inline-docs--string-display-next-line
+    (inline-docs--string-display
      (apply 'format format-string args)
      t)))
 

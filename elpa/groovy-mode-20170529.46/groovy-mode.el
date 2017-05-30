@@ -4,6 +4,7 @@
 
 ;;  Author: Russel Winder <russel@winder.org.uk>, 2006–
 ;;	Jim Morris <morris@wolfman.com>, 2009–
+;;	Wilfred Hughes <me@wilfred.me.uk>, 2017–
 ;;  Maintainer:  Russel Winder <russel@winder.org.uk>
 ;;  Created: 2006-08-01
 ;;  Keywords: languages
@@ -80,6 +81,13 @@
 ;;;###autoload (add-to-list 'auto-mode-alist '("\\.g\\(?:ant\\|roovy\\|radle\\)\\'\\|Jenkinsfile\\'" . groovy-mode))
 ;;;###autoload (add-to-list 'interpreter-mode-alist '("groovy" . groovy-mode))
 
+;; Custom variables
+;;;###autoload
+(defcustom groovy-mode-hook nil
+  "*Hook called by `groovy-mode'."
+  :type 'hook
+  :group 'c)
+
 (defconst groovy-type-regexp
   (rx symbol-start
       (group
@@ -120,7 +128,7 @@
         (+ space))
        ;; or it may start with a type name.
        (seq (regexp ,groovy-type-regexp) (+ space))))
-     
+
      ;; The actual function name.
      (group (regexp ,groovy-symbol-regexp))
 
@@ -238,7 +246,7 @@ The function name is the second group in the regexp.")
     (,groovy-declaration-regexp
      2 font-lock-variable-name-face)
     ;; Highlight variables of the form 'foo = '
-    (,(rx 
+    (,(rx
        line-start (0+ space)
        (group (+ (or (syntax word) (syntax symbol))))
        (0+ space) "=")
@@ -301,6 +309,9 @@ The function name is the second group in the regexp.")
      (0 font-lock-variable-name-face t))))
 
 (eval-when-compile
+  ;; http://groovy-lang.org/syntax.html#_shebang_line
+  (defconst groovy-shebang-regex
+    (rx buffer-start "#"))
   (defconst groovy-triple-quoted-string-regex
     (rx "\"\"\""))
   (defconst groovy-dollar-slashy-open-regex
@@ -385,6 +396,11 @@ dollar-slashy-quoted strings."
 
 (defconst groovy-syntax-propertize-function
   (syntax-propertize-rules
+   ;; Treat the shebang as a comment. We reuse comment sequence b
+   ;; (which is the // comment) so Emacs treats \n as the end of the
+   ;; comment.
+   (groovy-shebang-regex
+    (0 "< b"))
    (groovy-triple-quoted-string-regex
     (0 (ignore (groovy-stringify-triple-quote))))
    ;; http://groovy-lang.org/syntax.html#_dollar_slashy_string
@@ -445,6 +461,7 @@ dollar-slashy-quoted strings."
     (when (>= point-offset 0)
       (move-to-column (+ (current-indentation) point-offset)))))
 
+;;;###autoload
 (define-derived-mode groovy-mode groovy-parent-mode "Groovy"
   "Major mode for editing Groovy code.
 

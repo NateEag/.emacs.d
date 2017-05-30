@@ -243,6 +243,7 @@ vectors, so don't use strings to define them."
     ;; Debugging command
     (define-key map (kbd "C-h C-d")    'undefined)
     (define-key map (kbd "C-h C-d")    'helm-enable-or-switch-to-debug)
+    (define-key map (kbd "C-h c")      'helm-customize-group)
     ;; Allow to eval keymap without errors.
     (define-key map [f1] nil)
     (define-key map (kbd "C-h C-h")    'undefined)
@@ -262,6 +263,14 @@ vectors, so don't use strings to define them."
                   (helm-select-nth-action ,n))))
     map)
   "Keymap for helm.")
+
+(defun helm-customize-group ()
+  "Jump to customization group of current source.
+
+Default to `helm' when group is not defined in source."
+  (interactive)
+  (helm-run-after-exit 'customize-group (helm-attr 'group)))
+(put 'helm-customize-group 'helm-only t)
 
 (defun helm--action-at-nth-set-fn-1 (value &optional negative)
   (cl-loop for n from 1 to 9
@@ -685,6 +694,12 @@ so it have only effect when `helm-always-two-windows' is non-nil."
           (const :tag "Split at left" left)
           (const :tag "Don't split" nil)
           (other :tag "Split at right" right)))
+
+(defcustom helm-cycle-resume-delay 1.0
+  "Delay used before resuming in `helm-run-cycle-resume'."
+  :type 'float
+  :group 'helm)
+
 
 ;;; Faces
 ;;
@@ -984,6 +999,14 @@ hardcoded and not modifiable, here they are:
 | M-<TAB>   |                  | Toggle visibility   |
 | M-w       |                  | Copy region         |
 | q         |                  | Quit                |
+
+** Customize helm
+
+Helm have a lot of user variables to configure it as you want,
+you can use from any helm session \\<helm-map>\\[helm-customize-group] to jump to the current source group.
+Helm have also a special group for faces you can access via M-x customize-group => helm-faces.
+
+NOTE: Some sources may not have their group set and default to `helm' group.
 
 ** Helm's Basic Operations and Default Key Bindings
 
@@ -2256,28 +2279,42 @@ Return nil if no `helm-buffer' found."
   (interactive)
   (cl-assert (and helm-buffers helm-last-buffer)
              nil "No helm buffers to resume")
-  (setq helm--cycle-resume-iterator
-        (helm-iter-sub-next-circular
-         helm-buffers helm-last-buffer :test 'equal))
+  ;; Setup a new iterator only on first hit on
+  ;; `helm-run-cycle-resume', subsequents hits should reuse same
+  ;; iterator.
+  (unless (and (eq last-command 'helm-cycle-resume)
+               helm--cycle-resume-iterator)
+    (setq helm--cycle-resume-iterator
+          (helm-iter-sub-next-circular
+           helm-buffers helm-last-buffer :test 'equal)))
   (helm--resume-or-iter))
 
 (defun helm--resume-or-iter (&optional from-helm)
   (message "Resuming helm buffer `%s'" helm-last-buffer)
-  (if (sit-for 1.2)
+  (if (sit-for helm-cycle-resume-delay)
+      ;; Delay expire, run helm-resume.
       (if from-helm
           (helm-run-after-exit (lambda () (helm-resume helm-last-buffer)))
         (helm-resume helm-last-buffer))
-    (message "Resuming helm buffer `%s'"
-             (setq helm-last-buffer
-                   (helm-iter-next helm--cycle-resume-iterator)))))
+    ;; key pressed before delay, cycle.
+    (unless from-helm ; cycling to next item already done.
+      (message "Resuming helm buffer `%s'"
+               (setq helm-last-buffer
+                     (helm-iter-next helm--cycle-resume-iterator))))))
 
 (defun helm-run-cycle-resume ()
   "Same as `helm-cycle-resume' but intended to be called only from helm."
   (interactive)
-  (when (cdr helm-buffers)
-    (setq helm--cycle-resume-iterator
-          (helm-iter-sub-next-circular
-           helm-buffers helm-last-buffer :test 'equal))
+  (when (cdr helm-buffers) ; only one session registered.
+    ;; Setup a new iterator only on first hit on
+    ;; `helm-run-cycle-resume', subsequents hits should reuse same
+    ;; iterator.
+    (unless (and (eq last-command 'helm-run-cycle-resume)
+                 helm--cycle-resume-iterator)
+      (setq helm--cycle-resume-iterator
+            (helm-iter-sub-next-circular
+             helm-buffers helm-last-buffer :test 'equal)))
+    ;; start at next buffer as we already are at `helm-last-buffer'.
     (setq helm-last-buffer
           (helm-iter-next helm--cycle-resume-iterator))
     (helm--resume-or-iter 'from-helm)))

@@ -98,8 +98,10 @@ are for modes that didn't come with autoloading."
   (autoload 'tea-timer "tea-time.el")
 
   ;; Manual autoloads for sdcv-mode, a dictionary lookup tool I use for access
-  ;; to Webster's 1913 dictionary.
+  ;; to Webster's 1913 dictionary. Also an alias because I keep forgetting the
+  ;; command I need to actually do this lookup.
   (autoload 'sdcv-search "sdcv-mode.el" "Look up words in dictionary." t)
+  (defalias 'ne-dictionary-lookup 'sdcv-search)
 
   (autoload 'update-packages-update-installed-packages "update-packages" nil t))
 

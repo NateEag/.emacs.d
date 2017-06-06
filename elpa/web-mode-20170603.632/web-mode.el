@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2017 François-Xavier Bois
 
-;; Version: 15.0.0
-;; Package-Version: 20170529.1030
+;; Version: 15.0.1
+;; Package-Version: 20170603.632
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Package-Requires: ((emacs "23.1"))
@@ -25,7 +25,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "15.0.0"
+(defconst web-mode-version "15.0.1"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -7959,10 +7959,10 @@ another auto-completion with different ac-sources (e.g. ac-php)")
         ;;(message "%S" prev-line)
         (setq prev-indentation (cdr h))
         (cond
-         ((string-match-p "^\\(end\\|else\\|elsif\\|when\\)" line)
+         ((string-match-p "^[ ]*\\(end\\|else\\|elsif\\|when\\)" line)
           (setq offset (- prev-indentation language-offset))
           )
-         ((string-match-p "\\(when\\|if\\|else\\|elsif\\|unless\\|for\\|while\\|def\\|class\\)" prev-line)
+         ((string-match-p "^[ ]*\\(when\\|if\\|else\\|elsif\\|unless\\|for\\|while\\|def\\|class\\)" prev-line)
           (setq offset (+ prev-indentation language-offset))
           )
          (t

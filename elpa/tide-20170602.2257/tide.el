@@ -36,6 +36,7 @@
 (require 'flycheck)
 (require 'imenu)
 (require 'thingatpt)
+(require 'tide-lv)
 
 ;; Silence compiler warnings
 
@@ -110,9 +111,24 @@ above."
   "Face for type in imenu list."
   :group 'tide)
 
+(defface tide-choice-face
+  '((t (:inherit font-lock-warning-face)))
+  "Face for choices used in popup window."
+  :group 'tide)
+
 (defcustom tide-jump-to-definition-reuse-window t
   "Reuse existing window when jumping to definition."
   :type 'boolean
+  :group 'tide)
+
+(defcustom tide-imenu-flatten nil
+  "Imenu index will be flattened if set to non-nil."
+  :type 'boolean
+  :group 'tide)
+
+(defcustom tide-allow-popup-select '(code-fix)
+  "The list of commands where popup selection is allowed."
+  :type '(set (const code-fix) (const jump-to-implementation))
   :group 'tide)
 
 (defmacro tide-def-permanent-buffer-local (name &optional init-value)
@@ -304,11 +320,37 @@ LINE is one based, OFFSET is one based and column is zero based"
     (local-set-key (kbd "q") #'quit-window)
     (current-buffer)))
 
-(defun tide-select-item-from-list (prompt list label-fn)
+
+(defvar tide-alphabets '(?a ?s ?d ?f ?j ?k ?l))
+
+(defun tide-popup-select-item (prompt list)
+  (let ((hints (-map-indexed
+                (lambda (i item)
+                  (concat (propertize (char-to-string (nth i tide-alphabets)) 'face 'tide-choice-face)
+                          "  "
+                          item))
+                list)))
+    (unwind-protect
+        (progn
+          (tide-lv-message (mapconcat 'identity hints "\n"))
+          (let ((selected (read-char-choice prompt (-take (length list) tide-alphabets))))
+            (nth (-find-index (lambda (char) (eql selected char)) tide-alphabets) list)))
+        (tide-lv-delete-window))))
+
+(defun tide-completing-read-select-item (prompt list)
+  (completing-read prompt list nil t))
+
+(defun tide-can-use-popup-p (feature)
+  (member feature tide-allow-popup-select))
+
+(defun tide-select-item-from-list (prompt list label-fn allow-popup)
   (let ((collection (make-hash-table :test 'equal)))
     (dolist (item list)
       (puthash (funcall label-fn item) item collection))
-    (let ((selected-text (completing-read prompt (hash-table-keys collection) nil t)))
+    (let ((selected-text
+           (if (and (<= (length list) (length tide-alphabets)) allow-popup)
+               (tide-popup-select-item prompt (hash-table-keys collection))
+             (tide-completing-read-select-item prompt (hash-table-keys collection)))))
       (gethash selected-text collection))))
 
 ;;; Events
@@ -520,7 +562,7 @@ implementations.  When invoked with a prefix arg, jump to the type definition."
   (interactive "P")
   (let ((cb (lambda (response)
               (tide-on-response-success response
-                (let ((filespan (car (plist-get response :body))))
+                (-when-let (filespan (car (plist-get response :body)))
                   ;; if we're still at the same location...
                   ;; maybe we're a abstract member which has impementations?
                   (if (and (not arg)
@@ -593,7 +635,7 @@ implementations.  When invoked with a prefix arg, jump to the type definition."
         (cond ((= 0 (length impls)) (message "No implementations available."))
               ((= 1 (length impls)) (tide-jump-to-filespan (car impls)))
               (t (tide-jump-to-filespan
-                  (tide-select-item-from-list "Select implementation: " impls #'tide-jump-to-implementation-format-item))))))))
+                  (tide-select-item-from-list "Select implementation: " impls #'tide-jump-to-implementation-format-item (tide-can-use-popup-p 'jump-to-implementation)))))))))
 
 ;;; Navigate to named member
 
@@ -822,7 +864,7 @@ Noise can be anything like braces, reserved keywords, etc."
         (cond ((= 0 (length fixes)) (message "No code-fixes available."))
               ((= 1 (length fixes)) (tide-apply-codefix (car fixes)))
               (t (tide-apply-codefix
-                  (tide-select-item-from-list "Select fix: " fixes #'tide-get-fix-description))))))))
+                  (tide-select-item-from-list "Select fix: " fixes #'tide-get-fix-description (tide-can-use-popup-p 'code-fix)))))))))
 
 
 ;;; Auto completion
@@ -1136,23 +1178,37 @@ number."
 
 ;;; Imenu
 
-(defun tide-flatten-navitem (items)
-  (if items
-      (nconc items (apply #'nconc (-map (lambda (item) (tide-flatten-navitem (plist-get item :childItems))) items)))
-    '()))
+(defun tide-build-flat-imenu-index (navtree &optional parent)
+  (let* ((child-items (plist-get navtree :childItems))
+         (text (plist-get navtree :text))
+         (new-text (if parent (concat parent imenu-level-separator text) text))
+         (node (cons (concat new-text " " (propertize (plist-get navtree :kind) 'face 'tide-imenu-type-face))
+                     (tide-span-to-position (plist-get (car (plist-get navtree :spans)) :start)))))
+    (if child-items
+        (-concat (list node) (-flatten (-map (lambda (i) (tide-build-flat-imenu-index i new-text)) child-items)))
+      (list node))))
+
+(defun tide-build-imenu-index (navtree)
+  (let* ((child-items (plist-get navtree :childItems))
+         (text (plist-get navtree :text))
+         (node (cons (concat text " " (propertize (plist-get navtree :kind) 'face 'tide-imenu-type-face))
+                     (tide-span-to-position (plist-get (car (plist-get navtree :spans)) :start)))))
+    (if child-items
+        (cons text
+              (-concat (list node)
+                       (-map #'tide-build-imenu-index child-items)))
+      node)))
 
 (defun tide-command:navbar ()
-  (tide-send-command-sync "navbar" `(:file ,buffer-file-name)))
+  (tide-send-command-sync "navtree" `(:file ,buffer-file-name)))
 
 (defun tide-imenu-index ()
   (let ((response (tide-command:navbar)))
-    (when (tide-response-success-p response)
-      (-map
-       (lambda (item)
-         (cons (concat (plist-get item :text) " " (propertize (plist-get item :kind) 'face 'tide-imenu-type-face))
-               (tide-span-to-position (plist-get (car (plist-get item :spans)) :start))))
-       (tide-flatten-navitem (plist-get response :body))))))
-
+    (tide-on-response-success response
+      (let ((navtree (plist-get response :body)))
+        (if tide-imenu-flatten
+            (-flatten (-map #'tide-build-flat-imenu-index (plist-get navtree :childItems)))
+          (list (tide-build-imenu-index navtree)))))))
 
 ;;; Rename
 

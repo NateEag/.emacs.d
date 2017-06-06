@@ -4959,7 +4959,7 @@ Display flake8 command line help messages."]
        ["Python-mode customize group" (customize-group 'python-mode)
 	:help "Open the customization buffer for Python mode"]
        ("Switches"
-	:help "Toggle useful modes like `highlight-indentation'"
+	:help "Toggle useful modes"
 	("Interpreter"
 
 	 ["Shell prompt read only"
@@ -5413,15 +5413,6 @@ equal <number>, `tab-width' is set to <number>, a message saying so is
 displayed in the echo area, and if `py-beep-if-tab-change' is non-nil
 the Emacs bell is also rung as a warning.Use `M-x customize-variable' to set it permanently"
 	   :style toggle :selected py-beep-if-tab-change]
-
-	  ["Highlight indentation" highlight-indentation
-	   :help "Toggle highlight indentation.
-
-Use `M-x customize-variable' to set it permanently
-
-Make sure `highlight-indentation' is installed"
-
-	   ]
 
 	  ["Electric comment "
 	   (setq py-electric-comment-p
@@ -6119,36 +6110,6 @@ Default is `t'")
 	(,(rx symbol-start (1+ digit) symbol-end) . py-number-face)))
 
 ;; python-components-switches
-
-;; Toggle highlight-indentation
-
-(defun py-toggle-highlight-indentation (&optional indent)
-  "If `highlight-indentation-p' should be on or off. "
-  (interactive "P")
-  ;; (let ((indent indent))
-  (unless (featurep 'highlight-indentation)
-    (load (concat (py--normalize-directory py-install-directory) "extensions" (char-to-string py-separator-char) "highlight-indentation.el")))
-  (highlight-indentation indent)
-  (when py-verbose-p (message "highlight-indent-active: %s" highlight-indent-active))
-  highlight-indent-active)
-
-(defun py-highlight-indentation-off ()
-  "If `highlight-indentation-p' should be on or off. "
-  (interactive)
-  (unless (featurep 'highlight-indentation)
-    (load (concat (py--normalize-directory py-install-directory) "extensions" (char-to-string py-separator-char) "highlight-indentation.el")))
-  (highlight-indentation-off)
-  (when py-verbose-p (message "highlight-indent-active: %s" highlight-indent-active))
-  highlight-indent-active)
-
-(defun py-highlight-indentation-on ()
-  "If `highlight-indentation-p' should be on or off. "
-  (interactive "P")
-  (unless (featurep 'highlight-indentation)
-    (load (concat (py--normalize-directory py-install-directory) "extensions" (char-to-string py-separator-char) "highlight-indentation.el")))
-  (highlight-indentation-on)
-  (when py-verbose-p (message "highlight-indent-active: %s" highlight-indent-active))
-  highlight-indent-active)
 
 ;;  Smart indentation
 (defalias 'toggle-py-smart-indentation 'py-toggle-smart-indentation)
@@ -10826,7 +10787,7 @@ This may be preferable to `\\[py-execute-buffer]' because:
                        (find-file-noselect filename))))
       (set-buffer buffer)))
   (let ((py-shell-name (or shell (py-choose-shell)))
-        (file (py--buffer-filename-remote-maybe (current-buffer))))
+        (file (py--buffer-filename-remote-maybe)))
     (if file
         (let ((proc (or
                      (ignore-errors (get-process (file-name-directory shell)))
@@ -21943,7 +21904,7 @@ Returns char found. "
 (when py-org-cycle-p
   (define-key python-mode-map (kbd "<backtab>") 'org-cycle))
 
-(defun py--buffer-filename-remote-maybe (&optional file-name buffer)
+(defun py--buffer-filename-remote-maybe (&optional file-name)
   (let ((file-name (or file-name
 		       (and
 			(ignore-errors (file-readable-p (buffer-file-name)))
@@ -24892,7 +24853,7 @@ Return the current Python symbol."]
 	  ["Python-mode customize group" (customize-group 'python-mode)
 	   :help "Open the customization buffer for Python mode"]
 	  ("Switches"
-	   :help "Toggle useful modes like `highlight-indentation'"
+	   :help "Toggle useful modes"
 	   ("Interpreter"
 
 	    ["Shell prompt read only"
@@ -25346,15 +25307,6 @@ equal <number>, `tab-width' is set to <number>, a message saying so is
 displayed in the echo area, and if `py-beep-if-tab-change' is non-nil
 the Emacs bell is also rung as a warning.Use `M-x customize-variable' to set it permanently"
 	      :style toggle :selected py-beep-if-tab-change]
-
-	     ["Highlight indentation" highlight-indentation
-	      :help "Toggle highlight indentation.
-
-Use `M-x customize-variable' to set it permanently
-
-Make sure `highlight-indentation' is installed"
-
-	      ]
 
 	     ["Electric comment "
 	      (setq py-electric-comment-p

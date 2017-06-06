@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (22809 42440
+;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (22838 44450
 ;;;;;;  0 0))
 ;;; Generated autoloads from lsp-methods.el
 
@@ -59,10 +59,10 @@ Indent regions using the file formatting functionality provided by the language 
 (defface lsp-face-highlight-textual '((t :background "yellow")) "\
 Face used for textual occurances of symbols." :group (quote lsp-faces))
 
-(defface lsp-face-hightlight-read '((t :background "red")) "\
+(defface lsp-face-highlight-read '((t :background "red")) "\
 Face used for highlighting symbols being read." :group (quote lsp-faces))
 
-(defface lsp-face-hightlight-write '((t :background "green")) "\
+(defface lsp-face-highlight-write '((t :background "green")) "\
 Face used for highlighting symbols being written to." :group (quote lsp-faces))
 
 (defvar lsp-change-idle-delay 0.5 "\
@@ -72,7 +72,7 @@ Number of seconds of idle timer to wait before sending file changes to the serve
 
 ;;;***
 
-;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (22809 42440 0 0))
+;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (22838 44450 0 0))
 ;;; Generated autoloads from lsp-mode.el
 
 (autoload 'lsp-mode "lsp-mode" "\
@@ -83,8 +83,8 @@ Number of seconds of idle timer to wait before sending file changes to the serve
 ;;;***
 
 ;;;### (autoloads nil nil ("lsp-common.el" "lsp-flycheck.el" "lsp-mode-pkg.el"
-;;;;;;  "lsp-notifications.el" "lsp-receive.el" "lsp-send.el") (22809
-;;;;;;  42440 0 0))
+;;;;;;  "lsp-notifications.el" "lsp-receive.el" "lsp-send.el") (22838
+;;;;;;  44450 0 0))
 
 ;;;***
 

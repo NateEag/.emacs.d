@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "php-current" "php-current.el" (22809 42454
+;;;### (autoloads nil "php-current" "php-current.el" (22855 54931
 ;;;;;;  0 0))
 ;;; Generated autoloads from php-current.el
 
@@ -19,7 +19,7 @@ Insert current namespace if cursor in in namespace context.
 
 ;;;***
 
-;;;### (autoloads nil "php-mode" "php-mode.el" (22809 42454 0 0))
+;;;### (autoloads nil "php-mode" "php-mode.el" (22855 54931 0 0))
 ;;; Generated autoloads from php-mode.el
 
 (let ((loads (get 'php 'custom-loads))) (if (member '"php-mode" loads) nil (put 'php 'custom-loads (cons '"php-mode" loads))))
@@ -29,7 +29,7 @@ A list of additional strings to treat as PHP constants.")
 
 (custom-autoload 'php-extra-constants "php-mode" nil)
 
-(add-to-list 'interpreter-mode-alist (cons "php" 'php-mode))
+(add-to-list 'interpreter-mode-alist (cons "php\\(?:-?[3457]\\(?:\\.[0-9]+\\)*\\)?" 'php-mode))
 
 (let ((loads (get 'php-faces 'custom-loads))) (if (member '"php-mode" loads) nil (put 'php-faces 'custom-loads (cons '"php-mode" loads))))
 
@@ -49,7 +49,7 @@ Major mode for editing PHP code.
 ;;;;;;  "php-exif.el" "php-ext.el" "php-filesystem.el" "php-gd.el"
 ;;;;;;  "php-math.el" "php-mode-pkg.el" "php-pcre.el" "php-regex.el"
 ;;;;;;  "php-simplexml.el" "php-strings.el" "php-var.el" "php-xmlparser.el"
-;;;;;;  "php-xmlreader.el") (22809 42454 0 0))
+;;;;;;  "php-xmlreader.el") (22855 54931 0 0))
 
 ;;;***
 

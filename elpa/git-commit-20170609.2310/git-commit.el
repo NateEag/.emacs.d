@@ -12,7 +12,7 @@
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 
 ;; Package-Requires: ((emacs "24.4") (dash "20170207.2056") (with-editor "20170111.609"))
-;; Package-Version: 20170510.910
+;; Package-Version: 20170609.2310
 ;; Keywords: git tools vc
 ;; Homepage: https://github.com/magit/magit
 
@@ -677,8 +677,8 @@ Added to `font-lock-extend-region-functions'."
               (summary-end (match-end 0)))
           (when (or (< summary-beg font-lock-beg summary-end)
                     (< summary-beg font-lock-end summary-end))
-            (setq font-lock-beg (min font-lock-beg summary-beg)
-                  font-lock-end (max font-lock-end summary-end))))))))
+            (setq font-lock-beg (min font-lock-beg summary-beg))
+            (setq font-lock-end (max font-lock-end summary-end))))))))
 
 (defun git-commit-mode-font-lock-keywords ()
   `(;; Comments

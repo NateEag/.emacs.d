@@ -1,4 +1,4 @@
-(define-package "async" "20170502.2343" "Asynchronous processing in Emacs" 'nil :keywords
+(define-package "async" "20170610.2241" "Asynchronous processing in Emacs" 'nil :keywords
   '("async")
   :url "https://github.com/jwiegley/emacs-async")
 ;; Local Variables:

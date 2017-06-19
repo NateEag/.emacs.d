@@ -3,7 +3,7 @@
 ;; Copyright (C) 2011-2017 EditorConfig Team
 
 ;; Author: EditorConfig Team <editorconfig@googlegroups.com>
-;; Version: 0.7.9
+;; Version: 0.7.10
 ;; URL: https://github.com/editorconfig/editorconfig-emacs#readme
 ;; Package-Requires: ((cl-lib "0.5"))
 
@@ -418,6 +418,16 @@ It calls `editorconfig-get-properties-from-exec' if
       (editorconfig-get-properties-from-exec)
     (require 'editorconfig-core)
     (editorconfig-core-get-properties-hash)))
+
+;;;###autoload
+(defun editorconfig-find-current-editorconfig ()
+  "Find the closest .editorconfig file for current file."
+  (interactive)
+  (eval-and-compile (require 'editorconfig-core))
+  (let ((file (editorconfig-core-get-nearest-editorconfig
+               default-directory)))
+    (when file
+      (find-file file))))
 
 ;;;###autoload
 (defun editorconfig-display-current-properties ()

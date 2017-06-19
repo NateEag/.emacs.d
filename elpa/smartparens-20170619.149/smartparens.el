@@ -731,19 +731,54 @@ See `sp--init'."
   (unless sp-pair-list
     (sp--init)))
 
+(defun sp--update-sp-pair-list ()
+  "Update `sp-pair-list' according to current value of `sp-local-pairs'."
+  (setq sp-pair-list
+        (->> sp-local-pairs
+             (--map (cons (plist-get it :open) (plist-get it :close)))
+             (-sort (lambda (x y) (> (length (car x)) (length (car y))))))))
+
 (defun sp--update-local-pairs ()
-  "Update local pairs after removal or at mode initialization."
+  "Update local pairs after change or at mode initialization.
+
+This commands load all the parent major mode definitions and
+merges them into current buffer's `sp-local-pairs'."
+  (let ((parent-modes (-fix (lambda (x)
+                              (--if-let (get (car x) 'derived-mode-parent)
+                                  (cons it x)
+                                x))
+                            (list major-mode))))
+    ;; Combine all the definitions from the most ancient parent to the
+    ;; most recent parent
+    (--each parent-modes (sp-update-local-pairs it))))
+
+(defun sp-update-local-pairs (configuration)
+  "Update `sp-local-pairs' with CONFIGURATION.
+
+The pairs are only updated in current buffer not in all buffers
+with the same major mode!  If you want to update all buffers of
+the specific major-modes use `sp-local-pair'.
+
+CONFIGURATION can be a symbol to be looked up in `sp-pairs' or a
+property list corresponding to the arguments of `sp-local-pair'
+or a list of such property lists."
   (setq sp-local-pairs
-        (->> (sp--merge-with-local major-mode)
-          (--filter (plist-get it :actions))))
+        (cond
+         ((symbolp configuration)
+          (sp--merge-pair-configurations (cdr (assq configuration sp-pairs))))
+         ((plist-member configuration :open)
+          (sp--merge-pair-configurations (list configuration)))
+         (t
+          (sp--merge-pair-configurations configuration))))
+
+  ;; Keep only those which have non-nil :actions
+  (setq sp-local-pairs (--filter (plist-get it :actions) sp-local-pairs))
+
   ;; update the `sp-pair-list'.  This is a list only containing
   ;; (open.close) cons pairs for easier querying.  We also must order
   ;; it by length of opening delimiter in descending order (first
   ;; value is the longest)
-  (setq sp-pair-list
-        (->> sp-local-pairs
-          (--map (cons (plist-get it :open) (plist-get it :close)))
-          (-sort (lambda (x y) (> (length (car x)) (length (car y))))))))
+  (sp--update-sp-pair-list))
 
 (defun sp--update-local-pairs-everywhere (&rest modes)
   "Run `sp--update-local-pairs' in all buffers.
@@ -756,7 +791,7 @@ MODES."
     (with-current-buffer it
       (when (and smartparens-mode
                  (or (not modes)
-                     (memq major-mode modes)))
+                     (--any? (derived-mode-p it) modes)))
         (sp--update-local-pairs)))))
 
 (defcustom smartparens-enabled-hook nil
@@ -1456,6 +1491,11 @@ P is the point at which we run `syntax-ppss'"
 (defun sp-point-in-string (&optional p)
   "Return non-nil if point is inside string or documentation string.
 
+This function actually returns the 3rd element of `syntax-ppss'
+which can be a number if the string is delimited by that
+character or t if the string is delimited by general string
+fences.
+
 If optional argument P is present test this instead of point."
   (ignore-errors
     (save-excursion
@@ -1978,10 +2018,13 @@ The value is fetched from `sp-local-pairs'.
 If PROP is non-nil, return the value of that property instead."
   (sp--get-pair-definition open sp-local-pairs prop))
 
-(defun sp--merge-with-local (mode)
-  "Merge the global pairs definitions with definitions for major mode MODE."
-  (let* ((global (cdr (assq t sp-pairs)))
-         (local (cdr (assq mode sp-pairs)))
+(defun sp--merge-pair-configurations (specific &optional current)
+  "Merge SPECIFIC pair configuration to the CURRENT configuration.
+
+CURRENT defaults to `sp-local-pairs' if it is non-nil or the
+global definition from `sp-pairs' if `sp-local-pairs' is nil."
+  (let* ((global (or current sp-local-pairs (cdr (assq t sp-pairs))))
+         (local specific)
          (result nil))
     ;; copy the pairs on global list first.  This creates new plists
     ;; so we can modify them without changing the global "template"
@@ -4484,6 +4527,8 @@ and the skip-match predicate."
 (defun sp-get-textmode-stringlike-expression (&optional back)
   "Find the nearest text-mode string-like expression.
 
+If BACK is non-nil search in the backwards direction.
+
 Text-mode string-like expression is one where the delimiters must
 be surrounded by whitespace from the outside.  For example,
 
@@ -4575,9 +4620,19 @@ on it when calling directly."
     ;; `sp-get-string'
     (if (and delimiter
              (= (length delimiter) 1)
-             (eq (char-syntax (string-to-char delimiter)) 34)
-             (not (eq t (sp-point-in-string))))
-        (sp-get-string back)
+             ;; TODO: this "smart" behaviour is duplicated in
+             ;; `sp-get-thing', maybe the whole string parsing could
+             ;; be extracted to some common function (actually we
+             ;; should probably use this one from `sp-get-thing')
+             (eq (char-syntax (string-to-char delimiter)) 34))
+        (if (eq t (sp-point-in-string))
+            (save-excursion
+              (save-restriction
+                (widen)
+                (-let (((beg . end) (sp-get-quoted-string-bounds)))
+                  (narrow-to-region beg end))
+                (sp-get-stringlike-expression back)))
+          (sp-get-string back))
       (sp-get-stringlike-expression back))))
 
 (defun sp-get-expression (&optional back)
@@ -5338,7 +5393,12 @@ expressions are considered."
                  ((and (eq (char-syntax (preceding-char)) 34)
                        (not (sp-char-is-escaped-p (1- (point)))))
                   (if (eq t (sp-point-in-string))
-                      (sp-get-stringlike-expression t)
+                      (save-excursion
+                        (save-restriction
+                          (widen)
+                          (-let (((beg . end) (sp-get-quoted-string-bounds)))
+                            (narrow-to-region beg end))
+                          (sp-get-stringlike-expression t)))
                     (sp-get-string t)))
                  ((sp--valid-initial-delimiter-p (sp--looking-back (sp--get-stringlike-regexp) nil))
                   (sp-get-expression t))
@@ -5374,6 +5434,8 @@ expressions are considered."
                 (sp-get-sexp nil))
                ((sp--valid-initial-delimiter-p (sp--looking-at (sp--get-closing-regexp (sp--get-allowed-pair-list))))
                 (sp-get-sexp nil))
+               ;; TODO: merge the following two conditions and use
+               ;; `sp-get-stringlike-or-textmode-expression'
                ((and (eq (char-syntax (following-char)) 34)
                      (not (sp-char-is-escaped-p)))
                 ;; It might happen that the string delimiter we are
@@ -5385,7 +5447,12 @@ expressions are considered."
                 ;; `syntax-ppss' returns t as delimiter we need to use
                 ;; `sp-get-stringlike-expression'
                 (if (eq t (sp-point-in-string))
-                    (sp-get-stringlike-expression nil)
+                    (save-excursion
+                      (save-restriction
+                        (widen)
+                        (-let (((beg . end) (sp-get-quoted-string-bounds)))
+                          (narrow-to-region beg end))
+                        (sp-get-stringlike-expression nil)))
                   (sp-get-string nil)))
                ((sp--valid-initial-delimiter-p (sp--looking-at (sp--get-stringlike-regexp)))
                 (sp-get-expression nil))
@@ -6414,8 +6481,8 @@ Examples:
 whitespace between them."
   (save-excursion
     (goto-char (sp-get second :beg-prf))
-    (let ((ins (sp-get second (delete-and-extract-region :beg-prf :end-suf)))
-          (between (delete-and-extract-region (sp-get first :end-suf) (point))))
+    (let ((ins (sp-get second (delete-and-extract-region :beg-prf :end)))
+          (between (delete-and-extract-region (sp-get first :end) (point))))
       (goto-char (sp-get first :beg-prf))
       (insert ins between))))
 
@@ -8295,7 +8362,13 @@ Examples:
             (setq n 0))
            ((sp--looking-at (sp--get-opening-regexp (sp--get-pair-list-context 'navigate)))
             (-if-let (thing (save-match-data (sp-get-thing)))
-                (goto-char (sp-get thing :beg-in))
+                (cond
+                 ((= (sp-get thing :end-in) (point))
+                  (setq n 0))
+                 ((= (sp-get thing :beg) (point))
+                  (goto-char (sp-get thing :beg-in)))
+                 (t
+                  (delete-char (length (match-string 0)))))
               (delete-char (length (match-string 0))))
             ;; make this customizable
             (setq n (1- n)))
@@ -8371,7 +8444,13 @@ Examples:
             (setq n 0))
            ((sp--looking-back (sp--get-closing-regexp (sp--get-pair-list-context 'navigate)))
             (-if-let (thing (save-match-data (sp-get-thing t)))
-                (goto-char (sp-get thing :end-in))
+                (cond
+                 ((= (sp-get thing :end) (point))
+                  (goto-char (sp-get thing :end-in)))
+                 ((= (sp-get thing :beg-in) (point))
+                  (setq n 0))
+                 (t
+                  (delete-char (- (length (match-string 0))))))
               (delete-char (- (length (match-string 0)))))
             ;; make this customizable
             (setq n (1- n)))
@@ -8500,6 +8579,34 @@ backward direction."
   (interactive "p")
   (sp-kill-symbol arg t))
 
+(defun sp-delete-symbol (&optional arg word)
+  "Delete a symbol forward, skipping over any intervening delimiters.
+
+Deleted symbol does not go to the clipboard or kill ring.
+
+With ARG being positive number N, repeat that many times.
+
+With ARG being Negative number -N, repeat that many times in
+backward direction.
+
+See `sp-forward-symbol' for what constitutes a symbol."
+  (interactive "p")
+  (let* ((kill-ring kill-ring)
+         (select-enable-clipboard nil))
+    (sp-kill-symbol arg word)))
+
+(defun sp-delete-word (&optional arg)
+  "Delete a word forward, skipping over intervening delimiters.
+  
+Deleted word does not go to the clipboard or kill ring.
+
+With ARG being positive number N, repeat that many times.
+
+With ARG being Negative number -N, repeat that many times in
+backward direction."
+  (interactive "p")
+  (sp-delete-symbol arg t))
+
 (defun sp-backward-kill-symbol (&optional arg word)
   "Kill a symbol backward, skipping over any intervening delimiters.
 
@@ -8546,6 +8653,34 @@ With ARG being Negative number -N, repeat that many times in
 backward direction."
   (interactive "p")
   (sp-backward-kill-symbol arg t))
+
+(defun sp-backward-delete-symbol (&optional arg word)
+  "Delete a symbol backward, skipping over any intervening delimiters.
+
+Deleted symbol does not go to the clipboard or kill ring.
+
+With ARG being positive number N, repeat that many times.
+
+With ARG being Negative number -N, repeat that many times in
+forward direction.
+
+See `sp-backward-symbol' for what constitutes a symbol."
+  (interactive "p")
+  (let* ((kill-ring kill-ring)
+         (select-enable-clipboard nil))
+    (sp-backward-kill-symbol arg word)))
+
+(defun sp-backward-delete-word (&optional arg)
+  "Delete a word backward, skipping over intervening delimiters.
+  
+Deleted word does not go to the clipboard or kill ring.
+
+With ARG being positive number N, repeat that many times.
+
+With ARG being Negative number -N, repeat that many times in
+backward direction."
+  (interactive "p")
+  (sp-backward-delete-symbol arg t))
 
 (defun sp-delete-region (beg end)
   "Delete the text between point and mark, like `delete-region'.
@@ -8821,7 +8956,12 @@ support custom pairs."
                      ;; pair opening, and so only the tag or the sexp can trigger.
                      (-if-let (ok (sp-get-thing back))
                          (sp-get ok
-                           (when (and (<= :beg (point)) (<= (point) :end))
+                           (when (or (and back
+                                          (or (= :end (point))
+                                              (= :end-in (point))))
+                                     (and (not back)
+                                          (or (= :beg (point))
+                                              (= :beg-in (point)))))
                              (sp-show--pair-create-overlays :beg :end :op-l :cl-l)))
                        (if back
                            (sp-show--pair-create-mismatch-overlay (- (point) (length match))

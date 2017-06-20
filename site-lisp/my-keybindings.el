@@ -51,11 +51,9 @@
 
 (defvar nateeag/command-mnemonics
   '(
-    ;; Jump to different parts of the screen quickly.
-    ("a w" . evil-ace-jump-word-mode)
+    ;; Jump to any place in the current buffer quickly.
+    ("a w" . evil-avy-goto-char)
     ("a p" . ace-window)
-    ("a l" . evil-ace-jump-line-mode)
-    ("a c" . evil-ace-jump-char-mode)
 
     ("e" . eval-buffer)
 

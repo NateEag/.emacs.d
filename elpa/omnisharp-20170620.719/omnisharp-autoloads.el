@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "omnisharp" "omnisharp.el" (22855 54928 0 0))
+;;;### (autoloads nil "omnisharp" "omnisharp.el" (22858 26562 0 0))
 ;;; Generated autoloads from omnisharp.el
 
 (autoload 'omnisharp-mode "omnisharp" "\
@@ -56,7 +56,7 @@ finished loading the solution.
 ;;;;;;  "omnisharp-http-utils.el" "omnisharp-navigation-actions.el"
 ;;;;;;  "omnisharp-pkg.el" "omnisharp-server-actions.el" "omnisharp-server-management.el"
 ;;;;;;  "omnisharp-settings.el" "omnisharp-solution-actions.el" "omnisharp-utils.el")
-;;;;;;  (22855 54928 0 0))
+;;;;;;  (22858 26562 0 0))
 
 ;;;***
 

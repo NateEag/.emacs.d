@@ -6,13 +6,13 @@
 
 ;; Author: Eric James Michael Ritz
 ;; URL: https://github.com/ejmr/php-mode
-;; Version: 1.18.2
+;; Version: 1.18.3
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 
 (defconst php-mode-version-number "1.18.3"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2017-04-19"
+(defconst php-mode-modified "2017-06-22"
   "PHP Mode build date.")
 
 ;;; License
@@ -1712,6 +1712,22 @@ The output will appear in the buffer *PHP*."
   (save-excursion
     (when (re-search-backward re-pattern nil t)
       (match-string-no-properties 1))))
+
+;;;###autoload
+(defun php-current-class ()
+  "Insert current class name if cursor in class context."
+  (interactive)
+  (let ((matched (php-get-current-element php--re-classlike-pattern)))
+    (when matched
+      (insert (concat matched php-class-suffix-when-insert)))))
+
+;;;###autoload
+(defun php-current-namespace ()
+  "Insert current namespace if cursor in in namespace context."
+  (interactive)
+  (let ((matched (php-get-current-element php--re-namespace-pattern)))
+    (when matched
+      (insert (concat matched php-namespace-suffix-when-insert)))))
 
 
 ;;;###autoload

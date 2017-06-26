@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; URL: https://github.com/purcell/package-lint
-;; Package-Version: 20170617.2227
+;; Package-Version: 20170624.1712
 ;; Keywords: lisp
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24"))
@@ -228,6 +228,8 @@ This is bound dynamically while the checks run.")
    (or
     "org-dblock-write:"
     "org-babel-execute:"
+    "org-babel-prep-session:"
+    "org-babel-variable-assignments:"
     "org-babel-default-header-args:"))
   "A regexp matching whitelisted non-standard symbol prefixes.")
 

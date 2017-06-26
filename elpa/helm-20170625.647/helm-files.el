@@ -403,7 +403,9 @@ A function that takes a directory name as only arg."
     (define-key map (kbd "C-c C-x")       'helm-ff-run-open-file-externally)
     (define-key map (kbd "C-c X")         'helm-ff-run-open-file-with-default-tool)
     (define-key map (kbd "M-!")           'helm-ff-run-eshell-command-on-file)
-    (define-key map (kbd "M-%")           'helm-ff-run-query-replace-on-marked)
+    (define-key map (kbd "M-@")           'helm-ff-run-query-replace-on-marked)
+    (define-key map (kbd "M-%")           'helm-ff-run-query-replace)
+    (define-key map (kbd "C-M-%")         'helm-ff-run-query-replace-regexp)
     (define-key map (kbd "C-c =")         'helm-ff-run-ediff-file)
     (define-key map (kbd "M-=")           'helm-ff-run-ediff-merge-file)
     (define-key map (kbd "M-p")           'helm-ff-run-switch-to-history)
@@ -492,33 +494,33 @@ Don't set it directly, use instead `helm-ff-auto-update-initial-value'.")
    "Find File" 'helm-find-file-or-marked
    "Find file in Dired" 'helm-point-file-in-dired
    "View file" 'view-file
-   "Query replace fnames on marked `M-%'" 'helm-ff-query-replace-on-marked
-   "Marked files in dired" 'helm-marked-files-in-dired
-   "Query replace contents on marked" 'helm-ff-query-replace
-   "Query replace regexp contents on marked" 'helm-ff-query-replace-regexp
-   "Attach file(s) to mail buffer" 'helm-ff-mail-attach-files
+   "Query replace fnames on marked `M-@'" 'helm-ff-query-replace-on-marked
+   "Marked files in dired `C-x C-q, C-u wdired'" 'helm-marked-files-in-dired
+   "Query replace contents on marked `M-%'" 'helm-ff-query-replace
+   "Query replace regexp contents on marked `C-M-%'" 'helm-ff-query-replace-regexp
+   "Attach file(s) to mail buffer `C-c C-a'" 'helm-ff-mail-attach-files
    "Serial rename files" 'helm-ff-serial-rename
    "Serial rename by symlinking files" 'helm-ff-serial-rename-by-symlink
    "Serial rename by copying files" 'helm-ff-serial-rename-by-copying
    "Open file with default tool" 'helm-open-file-with-default-tool
    "Find file in hex dump" 'hexl-find-file
-   "Browse project" 'helm-ff-browse-project
+   "Browse project `C-x C-d'" 'helm-ff-browse-project
    "Complete at point `C-c i'" 'helm-insert-file-name-completion-at-point
    "Insert as org link `C-c @'" 'helm-files-insert-as-org-link
    "Find shell command `C-c /'" 'helm-ff-find-sh-command
    "Add marked files to file-cache" 'helm-ff-cache-add-file
    "Open file externally `C-c C-x, C-u to choose'" 'helm-open-file-externally
    "Grep File(s) `C-s, C-u Recurse'" 'helm-find-files-grep
-   "Grep current directory with AG" 'helm-find-files-ag
-   "Git grep" 'helm-ff-git-grep
+   "Grep current directory with AG `M-g a, C-u select type'" 'helm-find-files-ag
+   "Git grep `M-g g, C-u from root'" 'helm-ff-git-grep
    "Zgrep File(s) `M-g z, C-u Recurse'" 'helm-ff-zgrep
-   "Gid" 'helm-ff-gid
+   "Gid `M-g i'" 'helm-ff-gid
    "Switch to Eshell `M-e'" 'helm-ff-switch-to-eshell
    "Etags `M-., C-u reload tag file'" 'helm-ff-etags-select
    "Eshell command on file(s) `M-!, C-u take all marked as arguments.'"
    'helm-find-files-eshell-command-on-file
    "Find file as root `C-c r'" 'helm-find-file-as-root
-   "Find alternate file" 'find-alternate-file
+   "Find alternate file `C-x C-v'" 'find-alternate-file
    "Ediff File `C-c ='" 'helm-find-files-ediff-files
    "Ediff Merge File `M-='" 'helm-find-files-ediff-merge-files
    "Delete File(s) `M-D'" 'helm-delete-marked-files
@@ -658,7 +660,12 @@ ACTION must be an action supported by `helm-dired-action'."
                                    (if helm-ff-transformer-show-only-basename
                                        (helm-basename cand) cand))
                       :initial-input (helm-dwim-target-directory)
-                      :history (helm-find-files-history :comp-read nil))))))
+                      :history (helm-find-files-history :comp-read nil)))))
+         (dest-dir-p (file-directory-p dest))
+         (dest-dir   (helm-basedir dest)))
+    (unless (or dest-dir-p (file-directory-p dest-dir))
+      (when (y-or-n-p (format "Create directory `%s'?" dest-dir))
+        (make-directory dest-dir t)))
     (helm-dired-action
      dest :files ifiles :action action :follow parg)))
 
@@ -1762,7 +1769,7 @@ and should be used carefully elsewhere, or not at all, using
 With a prefix arg toggle dired buffer to wdired mode."
   (advice-add 'wdired-finish-edit :override #'helm--advice-wdired-finish-edit)
   (advice-add 'wdired-get-filename :override #'helm--advice-wdired-get-filename)
-  (let* ((marked (helm-marked-candidates))
+  (let* ((marked (helm-marked-candidates :with-wildcard t))
          (current (car marked)))
     (unless (and ffap-url-regexp
                  (string-match-p ffap-url-regexp current))
@@ -2487,10 +2494,11 @@ e.g \"foo:12\"."
     (switch-to-buffer dest-buf)
     (save-restriction
       (widen)
-      (goto-char (point-max))
-      (cl-loop for f in flist
-               do (mml-attach-file f (or (mm-default-file-encoding f)
-                                         "application/octet-stream"))))))
+      (save-excursion
+        (goto-char (point-max))
+        (cl-loop for f in flist
+                 do (mml-attach-file f (or (mm-default-file-encoding f)
+                                           "application/octet-stream")))))))
 
 (defvar image-dired-display-image-buffer)
 (defun helm-ff-rotate-current-image-1 (file &optional num-arg)

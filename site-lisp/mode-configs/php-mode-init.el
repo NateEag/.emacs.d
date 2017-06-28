@@ -7,6 +7,14 @@
 ;;; are, as far as I know, an unsolved problem.
 ;;;
 ;;; Still, this setup eases many of the pain points of writing PHP.
+;;;
+;;; ...at least, it did five years ago. Now lsp-mode and the
+;;; php-language-server project promise to make hacking PHP in Emacs not suck,
+;;; but the edges are extremely rough so far.
+;;;
+;;; Since I'm writing PHP again for the first time in years, I'm starting to
+;;; work on getting a really good PHP env up and running, but my old config has
+;;; gotten quite broken in the meantime.
 
 
 ;;; Code:
@@ -73,7 +81,7 @@
 ;; Thus far, I've only tried jump-to-def within the php-language-server project
 ;; itself. That did work, so this is definitely a direction worth pursuing.
 (require 'lsp-mode)
-(lsp-define-stdio-client 'php-mode "php" 'tcp
+(lsp-define-stdio-client 'php-mode "php" 'stdio
                          ;; TODO Use Projectile to find project root.
                          (lsp-make-traverser ".git")
                          "php-lang-server"

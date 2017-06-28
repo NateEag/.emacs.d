@@ -381,7 +381,16 @@
 
 -Get lsp-mode working with auto-complete for completions.
 
--Get lsp-mode + php-language-server to not crash on syntax errors.
+ lsp-mode says completion-at-point should just work, but that has not been my
+ experience so far. It crashes with the error message "Wrong type argument:
+ stringp, nil".
+
+ completion-at-point-functions is just lsp-completion-at-point, which when run
+ at point returns something, so presumably what it returns isn't, in the end,
+ quite what completion-at-point needs.
+
+ Figuring out what's wrong here probably means a serious debugging session. It
+ probably can't hurt to file a bug report first, though.
 
 -Consider integrating lsp-mode with php-auto-yasnippet? May or may not be worth
  doing.
@@ -389,26 +398,8 @@
 -Get lsp-mode and php-language-server showing function summaries in minibuffer,
  not just function signatures.
 
--See if HipHopVM has any support for PHP auto-completion. It looks like it has
- some for Hack, anyway.
-
--Get PHP tags working well. After months of finding nothing that really worked,
- I got an email from a random netizen pointing me to pfff, a tool Facebook
- wrote in OCaml for analyzing php. You can compile stags from it, a command for
- making vim or emacs tagfiles. Try it out at work and see how it does. If it
- can tag everything relatively quickly, it might be worth a private githook or
- three to rebuild the TAGS file and tell Emacs "reload this tags file!" when
- it's done. A really clever monkey might even hack up a Frankenstein
- auto-completion rig cross-breeding tag completion with php-auto-yasnippet.
- ...years have passed, and phpctags seems to be the cool kid on the block now:
- https://github.com/vim-php/phpctags
-
 -ac-php looks like it does a lot of what I'd need, as a newcomer to the party:
  https://github.com/xcwen/ac-php
-
--Look into emacs-eclim for intelligent PHP support. Might take some elisp
- hacking, but I think that's all it would take, apart from installing Eclipse
- bits. https://github.com/senny/emacs-eclim
 
 -Install/configure php-scratch, as it could be handy for quick experiments.
 

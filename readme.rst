@@ -117,14 +117,17 @@ I use a combination of `js2-mode <https://github.com/mooz/js2-mode>`__,
 for live-editing browser-based JavaScript. In theory this should be awesome,
 and it's not bad, but there are some kinks to work out.
 
-My PHP setup is lacking smart code-completion and jump-to-definition, but
-otherwise, it's pretty solid. The last time I was hacking on PHP seriously I was
-on Windows, and I couldn't get `pfff <https://github.com/facebook/pfff>`__ to
-compile there, but on *nix that would be the next thing I'd add.
+My PHP setup has undergone bitrot over the past few years, but I'm starting to
+pay attention to it again. Felix Becker's excellent
+[php-language-server](https://github.com/felixfbecker/php-language-server)
+should mean really solid PHP intelligence in Emacs, but my first experiments
+aren't resulting in a working auto-complete with
+[lsp-mode](https://github.com/emacs-lsp/lsp-mode). Still, jump-to-definition
+works pretty solidly, and that's a huge step up from my past config.
 
-For editing web templates, I use the awesome `web-mode <http://web-mode.org/>`__
-with several extensions, including
-`emmet-mode <https://github.com/smihica/emmet-mode>`__.
+For editing web templates, I use the awesome `web-mode
+<http://web-mode.org/>`__ with several extensions, including `emmet-mode
+<https://github.com/smihica/emmet-mode>`__.
 
 I use css-mode for CSS, which is somewhat lacking, but I use
 `skewer-reload-stylesheets

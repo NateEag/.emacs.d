@@ -4,7 +4,7 @@
 
 ;; Author: Artur Malabarba <emacs@endlessparentheses.com>
 ;; URL: https://github.com/Malabarba/aggressive-indent-mode
-;; Package-Version: 20170515.927
+;; Package-Version: 20170627.1223
 ;; Version: 1.8.4
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: indent lisp maint tools
@@ -117,6 +117,7 @@ Please include this in your report!"
   '(inf-ruby-mode
     makefile-mode
     makefile-gmake-mode
+    python-mode
     text-mode
     yaml-mode)
   "Modes in which `aggressive-indent-mode' should not be activated.

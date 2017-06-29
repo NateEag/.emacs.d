@@ -801,7 +801,7 @@
 		 ((:url . "https://github.com/Malabarba/rich-minority")
 		  (:keywords "mode-line" "faces"))])
  (rnc-mode .
-	   [(0 1)
+	   [(0 2)
 	    nil "Emacs mode to edit Relax-NG Compact files" single
 	    ((:url . "http://elpa.gnu.org/packages/rnc-mode.html")
 	     (:keywords "xml" "relaxng"))])

@@ -88,6 +88,10 @@ are for modes that didn't come with autoloading."
   (autoload 'guess-style-guess-variable "guess-style")
   (autoload 'guess-style-guess-all "guess-style" nil t)
 
+  ;; Autoloads for svn-commit-msg-mode, which I just grabbed from some guy's
+  ;; .emacs.d.
+  (autoload 'svn-msg-mode "svn-msg" nil t)
+
   ;; I use python-mode.el, with the TQS-coloration patch applied.
   ;; I should probably try installing the latest version and seeing how it
   ;; holds up.

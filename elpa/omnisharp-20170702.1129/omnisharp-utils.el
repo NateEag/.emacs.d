@@ -214,7 +214,7 @@ moving point."
     (omnisharp--get-request-object))))
 
 ;; this is actually used in tests only
-(defun omnisharp--create-ecukes-test-server (omnisharp-emacs-root-path)
+(defun omnisharp--create-test-server (omnisharp-emacs-root-path)
   (condition-case nil
       (kill-process "OmniServer")
     (error nil))
@@ -292,5 +292,20 @@ the developer's emacs unusable."
   "Mockable wrapper for read-string, see
 `omnisharp--ido-completing-read' for the explanation."
   (apply 'read-string args))
+
+(defun omnisharp--mkdirp (dir)
+  "Makes a directory recursively, similarly to a 'mkdir -p'."
+  (let* ((absolute-dir (expand-file-name dir))
+         (components (f-split absolute-dir)))
+    (omnisharp--mkdirp-item (f-join (apply #'concat (-take 2 components))) (-drop 2 components))
+    absolute-dir))
+
+(defun omnisharp--mkdirp-item (dir remaining)
+  "Makes a directory if not exists,
+ and tries to do the same with the remaining components, recursively."
+  (unless (f-directory-p dir)
+    (f-mkdir dir))
+  (unless (not remaining)
+    (omnisharp--mkdirp-item (f-join dir (car (-take 1 remaining))) (-drop 1 remaining))))
 
 (provide 'omnisharp-utils)

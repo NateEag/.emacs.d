@@ -1184,6 +1184,19 @@ point (using `sp-previous-sexp')."
   :type 'boolean
   :group 'smartparens)
 
+(defcustom sp-navigate-interactive-always-progress-point nil
+  "Make point always move in the direction of navigation.
+
+If non-nil and the function is called interactively,
+`sp-next-sexp' and `sp-previous-sexp' will always move the point
+to the end/beg of such an expression where the point would end up
+being further in the direction of travel.
+
+Note: this behaviour will become default in release 2.0 and will
+cease to be configurable."
+  :type 'boolean
+  :group 'smartparens)
+
 (defcustom sp-sexp-prefix nil
   "Alist of `major-mode' specific prefix specification.
 
@@ -3647,80 +3660,101 @@ You can globally disable insertion of closing pair if point is
 followed by the matching opening pair.  It is disabled by
 default."
   (sp--with-case-sensitive
-    (-let* ((active-pair (unwind-protect
-                             ;; This fake insertion manufactures proper
-                             ;; context for the tests below... in effect
-                             ;; we must make it look as if the user
-                             ;; typed in the opening part themselves
-                             ;; TODO: it is duplicated in the test
-                             ;; below, maybe it wouldn't hurt to
-                             ;; restructure this function a bit
-                             (progn
-                               (when pair (insert pair))
-                               (sp--pair-to-insert))
-                           (when pair (delete-char (- (length pair))))))
-            ((open-pair close-pair trig) (sp--insert-pair-get-pair-info active-pair)))
-      (if (not (unwind-protect
-                   (progn
-                     (when pair (insert pair))
-                     ;; TODO: all these tests must go into `sp--pair-to-insert'
-                     (and sp-autoinsert-pair
-                          active-pair
-                          (if (memq sp-autoskip-closing-pair '(always always-end))
-                              (or (not (equal open-pair close-pair))
-                                  (not (sp-skip-closing-pair nil t)))
-                            t)
-                          (sp--do-action-p open-pair 'insert t)
-                          ;; was sp-autoinsert-if-followed-by-same
-                          (or (not (sp--get-active-overlay 'pair))
-                              (not (sp--looking-at (sp--strict-regexp-quote open-pair)))
-                              (and (equal open-pair close-pair)
-                                   (eq sp-last-operation 'sp-insert-pair)
-                                   (save-excursion
-                                     (backward-char (length trig))
-                                     (sp--looking-back (sp--strict-regexp-quote open-pair))))
-                              (not (equal open-pair close-pair)))))
-                 (when pair (delete-char (- (length pair))))))
-          ;; if this pair could not be inserted, we try the procedure
-          ;; again with this pair removed from sp-pair-list to give
-          ;; chance to other pairs sharing a common suffix (for
-          ;; example \[ and [)
-          (let ((new-sp-pair-list (--remove (equal (car it) open-pair) sp-pair-list))
-                (new-sp-local-pairs (--remove (equal (plist-get it :open) open-pair) sp-local-pairs)))
-            (when (> (length sp-pair-list) (length new-sp-pair-list))
-              (let ((sp-pair-list new-sp-pair-list)
-                    (sp-local-pairs new-sp-local-pairs))
-                (sp-insert-pair))))
-        ;; setup the delayed insertion here.
-        (if (sp-get-pair open-pair :when-cond)
-            (progn
-              (setq sp-delayed-pair (cons open-pair (- (point) (length open-pair))))
-              (setq sp-last-operation 'sp-insert-pair-delayed))
-          (unless pair (delete-char (- (length trig))))
-          (insert open-pair)
-          (sp--run-hook-with-args open-pair :pre-handlers 'insert)
-          (--when-let (sp--pair-to-uninsert)
-            (let ((cl (plist-get it :close)))
-              (when (and (sp--looking-at-p (sp--strict-regexp-quote cl))
-                         (not (string-prefix-p cl close-pair)))
-                (delete-char (length cl)))))
-          (insert close-pair)
-          (backward-char (length close-pair))
-          (sp--pair-overlay-create (- (point) (length open-pair))
-                                   (+ (point) (length close-pair))
-                                   open-pair)
-          (when sp-undo-pairs-separately
-            (sp--split-last-insertion-undo (+ (length open-pair) (length close-pair)))
-            ;; TODO: abc\{abc\} undo undo \{asd\} . next undo removes the
-            ;; entire \{asd\} if we do not insert two nils here.
-            ;; Normally, repeated nils are ignored so it shouldn't
-            ;; matter.  It would still be useful to inspect further.
-            (push nil buffer-undo-list)
-            (push nil buffer-undo-list))
-          (sp--run-hook-with-args open-pair :post-handlers 'insert)
-          (setq sp-last-inserted-pair open-pair)
-          (setf (sp-state-delayed-hook sp-state) (cons :next open-pair))
-          (setq sp-last-operation 'sp-insert-pair))))))
+    (catch 'done
+      (-let* ((active-pair (unwind-protect
+                               ;; This fake insertion manufactures proper
+                               ;; context for the tests below... in effect
+                               ;; we must make it look as if the user
+                               ;; typed in the opening part themselves
+                               ;; TODO: it is duplicated in the test
+                               ;; below, maybe it wouldn't hurt to
+                               ;; restructure this function a bit
+                               (progn
+                                 (when pair (insert pair))
+                                 (sp--pair-to-insert))
+                             (when pair (delete-char (- (length pair))))))
+              ((open-pair close-pair trig) (sp--insert-pair-get-pair-info active-pair)))
+        ;; We are not looking at a closing delimiter which might mean we
+        ;; are in an already existing sexp.  If the to-be-inserted pair
+        ;; has a prefix which is also a pair we migth be extending the
+        ;; opener of a sexp with this opener.  In which case we should
+        ;; probably rewrap.
+        (unless (sp--looking-at-p (sp--get-closing-regexp))
+          (when open-pair
+            (-when-let (prefix-pair (sp-get-pair (substring open-pair 0 -1)))
+              (let ((last-char-of-open-pair (substring open-pair -1)))
+                (unwind-protect
+                    (progn
+                      (delete-char -1)
+                      (--when-let (sp-get-thing t)
+                        (save-excursion
+                          (sp-get it
+                            (delete-region :end-in :end)
+                            (goto-char :end-in)
+                            (insert close-pair)))
+                        (throw 'done t)))
+                  (insert last-char-of-open-pair))))))
+        (if (not (unwind-protect
+                     (progn
+                       (when pair (insert pair))
+                       ;; TODO: all these tests must go into `sp--pair-to-insert'
+                       (and sp-autoinsert-pair
+                            active-pair
+                            (if (memq sp-autoskip-closing-pair '(always always-end))
+                                (or (not (equal open-pair close-pair))
+                                    (not (sp-skip-closing-pair nil t)))
+                              t)
+                            (sp--do-action-p open-pair 'insert t)
+                            ;; was sp-autoinsert-if-followed-by-same
+                            (or (not (sp--get-active-overlay 'pair))
+                                (not (sp--looking-at (sp--strict-regexp-quote open-pair)))
+                                (and (equal open-pair close-pair)
+                                     (eq sp-last-operation 'sp-insert-pair)
+                                     (save-excursion
+                                       (backward-char (length trig))
+                                       (sp--looking-back (sp--strict-regexp-quote open-pair))))
+                                (not (equal open-pair close-pair)))))
+                   (when pair (delete-char (- (length pair))))))
+            ;; if this pair could not be inserted, we try the procedure
+            ;; again with this pair removed from sp-pair-list to give
+            ;; chance to other pairs sharing a common suffix (for
+            ;; example \[ and [)
+            (let ((new-sp-pair-list (--remove (equal (car it) open-pair) sp-pair-list))
+                  (new-sp-local-pairs (--remove (equal (plist-get it :open) open-pair) sp-local-pairs)))
+              (when (> (length sp-pair-list) (length new-sp-pair-list))
+                (let ((sp-pair-list new-sp-pair-list)
+                      (sp-local-pairs new-sp-local-pairs))
+                  (sp-insert-pair))))
+          ;; setup the delayed insertion here.
+          (if (sp-get-pair open-pair :when-cond)
+              (progn
+                (setq sp-delayed-pair (cons open-pair (- (point) (length open-pair))))
+                (setq sp-last-operation 'sp-insert-pair-delayed))
+            (unless pair (delete-char (- (length trig))))
+            (insert open-pair)
+            (sp--run-hook-with-args open-pair :pre-handlers 'insert)
+            (--when-let (sp--pair-to-uninsert)
+              (let ((cl (plist-get it :close)))
+                (when (and (sp--looking-at-p (sp--strict-regexp-quote cl))
+                           (not (string-prefix-p cl close-pair)))
+                  (delete-char (length cl)))))
+            (insert close-pair)
+            (backward-char (length close-pair))
+            (sp--pair-overlay-create (- (point) (length open-pair))
+                                     (+ (point) (length close-pair))
+                                     open-pair)
+            (when sp-undo-pairs-separately
+              (sp--split-last-insertion-undo (+ (length open-pair) (length close-pair)))
+              ;; TODO: abc\{abc\} undo undo \{asd\} . next undo removes the
+              ;; entire \{asd\} if we do not insert two nils here.
+              ;; Normally, repeated nils are ignored so it shouldn't
+              ;; matter.  It would still be useful to inspect further.
+              (push nil buffer-undo-list)
+              (push nil buffer-undo-list))
+            (sp--run-hook-with-args open-pair :post-handlers 'insert)
+            (setq sp-last-inserted-pair open-pair)
+            (setf (sp-state-delayed-hook sp-state) (cons :next open-pair))
+            (setq sp-last-operation 'sp-insert-pair)))))))
 
 (defun sp--wrap-repeat-last (active-pair)
   "If the last operation was a wrap and `sp-wrap-repeat-last' is
@@ -4123,6 +4157,8 @@ If the point is not inside a quoted string, return nil."
   (when (or (sp-point-in-comment)
             (looking-at "[[:space:]]+\\s<"))
     (let ((open (save-excursion
+                  (--when-let (nth 8 (sp--syntax-ppss))
+                    (goto-char it))
                   (while (and (not (bobp))
                               (or (when (sp-point-in-comment)
                                     (backward-char 1)
@@ -4134,7 +4170,8 @@ If the point is not inside a quoted string, return nil."
                                       (end-of-line))
                                     t))))
                   ;; this means we got here by `sp-point-in-comment' condition
-                  (forward-char)
+                  (unless (and (bobp) (sp-point-in-comment))
+                    (forward-char))
                   (point)))
           (close (save-excursion
                    (while (and (not (eobp))
@@ -5576,6 +5613,11 @@ at current level, jump one level up (effectively doing
 `sp-backward-up-sexp').  Negative arg -N means move to the
 beginning of N-th previous balanced expression.
 
+If `sp-navigate-interactive-always-progress-point' is non-nil,
+and this is called interactively, the point will move to the
+first expression in forward direction where it will end up
+greater than the current location.
+
 With `sp-navigate-consider-symbols' symbols and strings are also
 considered balanced expressions.
 
@@ -5583,10 +5625,26 @@ Examples:
 
   ((foo) |bar (baz quux)) -> ((foo) bar |(baz quux))
 
-  ((foo) bar |(baz quux)) -> |((foo) bar (baz quux))"
+  ((foo) bar |(baz quux)) -> |((foo) bar (baz quux))
+
+and with non-nil `sp-navigate-interactive-always-progress-point'
+
+  (f|oo bar) -> (foo |bar)
+
+  ((fo|o) (bar)) -> ((foo) |(bar))"
   (interactive "^p")
   (setq arg (or arg 1))
-  (if (> arg 0)
+  (if (<= arg 0)
+      (sp-backward-sexp (- arg))
+    (if (and sp-navigate-interactive-always-progress-point
+             (called-interactively-p 'any))
+        (progn
+          (while (< 0 arg)
+            (let ((point-start (point)))
+              (while (--when-let (sp-forward-sexp)
+                       (<= (sp-get it :beg) point-start))))
+            (setq arg (1- arg)))
+          (goto-char (sp-get (sp-get-thing t) :beg)))
       (if (= arg 1)
           (-when-let (ok (sp-get-thing))
             (if (= (point) (sp-get ok :beg))
@@ -5595,8 +5653,7 @@ Examples:
               (goto-char (sp-get ok :beg))
               ok))
         (sp-forward-sexp arg)
-        (sp-backward-sexp))
-    (sp-backward-sexp (- arg))))
+        (sp-backward-sexp)))))
 
 (put 'sp-next-sexp 'CUA 'move)
 
@@ -5611,14 +5668,36 @@ N-th following balanced expression.
 With `sp-navigate-consider-symbols' symbols and strings are also
 considered balanced expressions.
 
+If `sp-navigate-interactive-always-progress-point' is non-nil,
+and this is called interactively, the point will move to the
+first expression in backward direction where it will end up
+less than the current location.
+
 Examples:
 
   ((foo) bar| (baz quux)) -> ((foo)| bar (baz quux))
 
-  ((foo)| bar (baz quux)) -> ((foo) bar (baz quux))|"
+  ((foo)| bar (baz quux)) -> ((foo) bar (baz quux))|
+
+and if `sp-navigate-interactive-always-progress-point' is non-nil
+
+  (foo b|ar baz) -> (foo| bar baz)
+
+  (foo (b|ar baz)) -> (foo| (bar baz))"
   (interactive "^p")
   (setq arg (or arg 1))
-  (if (> arg 0)
+  (if (<= arg 0)
+      (sp-forward-sexp (- arg))
+    (if (and sp-navigate-interactive-always-progress-point
+             ;; (called-interactively-p 'any)
+             )
+        (progn
+          (while (< 0 arg)
+            (let ((point-start (point)))
+              (while (--when-let (sp-backward-sexp)
+                       (>= (sp-get it :end) point-start))))
+            (setq arg (1- arg)))
+          (goto-char (sp-get (sp-get-thing) :end)))
       (if (= arg 1)
           (-when-let (ok (sp-get-thing t))
             (if (= (point) (sp-get ok :end))
@@ -5627,8 +5706,7 @@ Examples:
               (goto-char (sp-get ok :end))
               ok))
         (sp-backward-sexp arg)
-        (sp-forward-sexp))
-    (sp-forward-sexp (- arg))))
+        (sp-forward-sexp)))))
 
 (put 'sp-previous-sexp 'CUA 'move)
 
@@ -7700,6 +7778,8 @@ splice the resulting expression.  Wrap the current enclosing list
 with the delimiters of the spliced list and insert the saved
 expressions.
 
+If point is in a symbol, move to end of symbol before convolving.
+
 With ARG positive N, move up N lists before wrapping.
 
 Examples:
@@ -7716,6 +7796,10 @@ We want to move the `while' before the `let'.
   (forward-char (sp-get env |:op-l)) -> (sp-get env (forward-char |:op-l))"
   (interactive "p")
   (save-excursion
+    (when (sp-point-in-symbol)
+      (sp-forward-symbol))
+    (when (looking-at-p " ")
+      (just-one-space))
     (let* ((old-buffer-size (buffer-size))
            (enc (sp-get-enclosing-sexp))
            (inner-close (sp-get enc (delete-and-extract-region
@@ -8390,6 +8474,9 @@ Examples:
                 (setq n 0)
               (delete-char (length (match-string 0)))
               (setq n (1- n))))
+           ((bound-and-true-p hungry-delete-mode)
+            (hungry-delete-forward 1)
+            (setq n (1- n)))
            (t
             (delete-char 1)
             (setq n (1- n))))))
@@ -8472,6 +8559,9 @@ Examples:
                 (setq n 0)
               (delete-char (- (length (match-string 0))))
               (setq n (1- n))))
+           ((bound-and-true-p hungry-delete-mode)
+            (hungry-delete-backward 1)
+            (setq n (1- n)))
            (t
             (delete-char -1)
             (setq n (1- n))))))
@@ -8603,7 +8693,7 @@ See `sp-forward-symbol' for what constitutes a symbol."
 
 (defun sp-delete-word (&optional arg)
   "Delete a word forward, skipping over intervening delimiters.
-  
+
 Deleted word does not go to the clipboard or kill ring.
 
 With ARG being positive number N, repeat that many times.
@@ -8678,7 +8768,7 @@ See `sp-backward-symbol' for what constitutes a symbol."
 
 (defun sp-backward-delete-word (&optional arg)
   "Delete a word backward, skipping over intervening delimiters.
-  
+
 Deleted word does not go to the clipboard or kill ring.
 
 With ARG being positive number N, repeat that many times.

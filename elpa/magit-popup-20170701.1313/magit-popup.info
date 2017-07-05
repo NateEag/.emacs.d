@@ -1,11 +1,6 @@
 This is magit-popup.info, produced by makeinfo version 5.2 from
 magit-popup.texi.
 
-Taking inspiration from regular prefix commands and prefix arguments,
-this library implements a similar abstraction; a new kind of prefix
-command that is associated with a specific set of infix arguments and
-suffix commands.
-
      Copyright (C) 2015-2017 Jonas Bernoulli <jonas@bernoul.li>
 
      You can redistribute this document and/or modify it under the terms
@@ -690,14 +685,14 @@ directly.
 
 
 Tag Table:
-Node: Top994
-Node: Introduction2170
-Node: Usage4870
-Node: Customizing Existing Popups9567
-Node: Other Options15070
-Node: Defining Prefix and Suffix Commands16612
-Node: Defining Prefix Commands18764
-Node: Defining Suffix Commands25739
+Node: Top768
+Node: Introduction1944
+Node: Usage4644
+Node: Customizing Existing Popups9341
+Node: Other Options14844
+Node: Defining Prefix and Suffix Commands16386
+Node: Defining Prefix Commands18538
+Node: Defining Suffix Commands25513
 
 End Tag Table
 

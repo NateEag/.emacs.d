@@ -918,7 +918,8 @@ prefix arg eshell buffer doesn't exists, create it and switch to it."
                        collect b)))
     (helm-aif (and (null helm-current-prefix-arg)
                    (if (cdr bufs)
-                       (helm-comp-read "Switch to eshell buffer: " bufs)
+                       (helm-comp-read "Switch to eshell buffer: " bufs
+                                       :must-match t)
                      (car bufs)))
         (switch-to-buffer it)
       (eshell helm-current-prefix-arg))
@@ -1050,28 +1051,79 @@ This doesn't replace inside the files, only modify filenames."
     (let* ((regexp (read-string "Replace regexp on filename(s): "
                                 nil 'helm-ff-query-replace-history-from
                                 (helm-basename (car candidates))))
-           (str    (read-string (format "Replace regexp `%s' with: " regexp)
+           (rep    (read-string (format "Replace regexp `%s' with: " regexp)
                                 nil 'helm-ff-query-replace-history-to)))
       (cl-loop with query = "y"
                with count = 0
+               with target = nil
                for old in candidates
                for new = (concat (helm-basedir old)
                                  (replace-regexp-in-string
                                   (cond ((string= regexp "%.")
-                                         (regexp-quote (helm-basename old t)))
+                                         (regexp-quote
+                                          (setq target (helm-basename old t))))
                                         ((string= regexp ".%")
-                                         (regexp-quote (file-name-extension old)))
+                                         (regexp-quote
+                                          (setq target (file-name-extension old))))
                                         ((string= regexp "%")
-                                         (regexp-quote (helm-basename old)))
+                                         (regexp-quote
+                                          (setq target (helm-basename old))))
                                         (t regexp))
                                   (save-match-data
-                                    (cond ((string-match "\\\\#" str)
+                                    (cond (;; Handle incremental
+                                           ;; replacement with \# in
+                                           ;; search and replace
+                                           ;; feature in placeholder \@.
+                                           (string-match
+                                            "\\\\@/\\(.*\\)/\\(\\(?99:.*\\)\\\\#\\)"
+                                            rep)
+                                           (replace-regexp-in-string
+                                            (match-string 1 rep)
+                                            (concat (match-string 99 rep)
+                                                    (format "%03d" (1+ count)))
+                                            target))
+                                          ;; Incremental replacement
+                                          ;; before or after \@.
+                                          ((and (string-match-p "\\\\#" rep)
+                                                (string-match "\\\\@" rep))
+                                           (replace-regexp-in-string
+                                            "\\\\#" (format "%03d" (1+ count))
+                                            (replace-match target t t rep)))
+                                          ;; Simple incremental replacement.
+                                          ((string-match "\\\\#" rep)
                                            (replace-match
-                                            (format "%03d" (1+ count)) t t str))
-                                          ((string= str "%u") #'upcase)
-                                          ((string= str "%d") #'downcase)
-                                          ((string= str "%c") #'capitalize)
-                                          (t str)))
+                                            (format "%03d" (1+ count)) t t rep))
+                                          ;; Substring replacement in placeholder.
+                                          ((string-match
+                                            "\\\\@:\\([0-9]*\\):\\([0-9]*\\)" rep)
+                                           (replace-match (substring
+                                                           target
+                                                           (string-to-number
+                                                            (match-string 1 rep))
+                                                           (string-to-number
+                                                            (match-string 2 rep)))
+                                                          t t rep))
+                                          ;; Search and replace in
+                                          ;; placeholder. Doesn't
+                                          ;; handle incremental here.
+                                          ((string-match "\\\\@/\\(.*\\)/\\(.*\\)" rep)
+                                           (replace-match (replace-regexp-in-string
+                                                           (match-string 1 rep)
+                                                           (match-string 2 rep)
+                                                           target)
+                                                          t t rep))
+                                          ;; Simple replacement by placeholder.
+                                          ((string-match "\\\\@" rep)
+                                           (replace-match target t t rep))
+                                          ;; Replacement with
+                                          ;; upcase, downcase or
+                                          ;; capitalized text.
+                                          ((string= rep "%u") #'upcase)
+                                          ((string= rep "%d") #'downcase)
+                                          ((string= rep "%c") #'capitalize)
+                                          ;; Simple replacement with
+                                          ;; whole replacement regexp.
+                                          (t rep)))
                                   (helm-basename old) t))
                ;; If `regexp' is not matched in `old'
                ;; `replace-regexp-in-string' will

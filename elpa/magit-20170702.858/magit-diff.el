@@ -242,7 +242,7 @@ visits the file in the working tree."
   :link '(info-link "(magit)Revision Buffer")
   :group 'magit-modes)
 
-(defcustom magit-revision-mode-hook nil
+(defcustom magit-revision-mode-hook '(bug-reference-mode)
   "Hook run after entering Magit-Revision mode."
   :group 'magit-revision
   :type 'hook
@@ -1827,12 +1827,18 @@ or a ref which is not a branch, then it inserts nothing."
           (progn (backward-delete-char 2)
                  (insert "(no message)\n"))
         (goto-char beg)
-        (while (search-forward "\r\n" nil t) ; Remove trailing CRs.
-          (delete-region (match-beginning 0) (1+ (match-beginning 0))))
-        (goto-char beg)
-        (forward-line)
-        (put-text-property beg (point) 'face 'magit-section-secondary-heading)
-        (magit-insert-heading)
+        (save-excursion
+          (while (search-forward "\r\n" nil t) ; Remove trailing CRs.
+            (delete-region (match-beginning 0) (1+ (match-beginning 0)))))
+        (save-excursion
+          (forward-line)
+          (put-text-property beg (point) 'face 'magit-section-secondary-heading)
+          (magit-insert-heading))
+        (save-excursion
+          (while (re-search-forward "\\[[^[]*\\]" nil t)
+            (put-text-property (match-beginning 0)
+                               (match-end 0)
+                               'face 'magit-keyword)))
         (goto-char (point-max))))))
 
 (defun magit-insert-revision-notes (rev)

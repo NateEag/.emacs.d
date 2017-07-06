@@ -502,7 +502,9 @@
                      ;; that should probably be properly reflected.
                      (setq-local comment-start "#")
                      (text-mode-init)
-                     )))
+                     ))
+  :bind (:map diff-mode-map
+              ("M-\d" . backward-kill-word)))
 
 (use-package diffview
   :commands diffview-current)

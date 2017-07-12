@@ -46,6 +46,7 @@
 
 (require 'ansi-color)
 (require 'crm)
+(defvar bookmark-make-record-function)
 
 ;;; Options
 ;;;; Log Mode
@@ -795,7 +796,9 @@ Type \\[magit-reset] to reset `HEAD' to the commit at point.
   (setq imenu-prev-index-position-function
         'magit-imenu--log-prev-index-position-function)
   (setq imenu-extract-index-name-function
-        'magit-imenu--log-extract-index-name-function))
+        'magit-imenu--log-extract-index-name-function)
+  (setq-local bookmark-make-record-function
+              'magit-bookmark--log-make-record))
 
 (defvar magit-log-disable-graph-hack-args
   '("-G" "--grep" "--author")
@@ -881,10 +884,10 @@ Do not add this to a hook variable."
   (concat "^"
           "\\(?4:[-_/|\\*o. ]*\\)"                 ; graph
           "\\(?1:[0-9a-fA-F]+\\)"                  ; sha1
-          "\\(?3:[^\0]+)\\)?\0"                    ; refs
+          "\\(?3:[^\0\n]+)\\)?\0"                  ; refs
           "\\(?7:[BGUXYREN]\\)?\0"                 ; gpg
-          "\\(?5:[^\0]*\\)\0"                      ; author
-          "\\(?6:[^\0]+\\)\0"                      ; date
+          "\\(?5:[^\0\n]*\\)\0"                    ; author
+          "\\(?6:[^\0\n]+\\)\0"                    ; date
           "\\(?2:.*\\)$"))                         ; msg
 
 (defconst magit-log-cherry-re
@@ -903,20 +906,20 @@ Do not add this to a hook variable."
   (concat "^"
           "\\(?4:[-_/|\\*o. ]*\\)"                 ; graph
           "\\(?1:[0-9a-fA-F]+\\)"                  ; sha1
-          "\\(?3:[^\0]+)\\)?\0"                    ; refs
+          "\\(?3:[^\0\n]+)\\)?\0"                  ; refs
           "\\(?2:.*\\)$"))                         ; msg
 
 (defconst magit-log-bisect-log-re
   (concat "^# "
           "\\(?3:bad:\\|skip:\\|good:\\) "         ; "refs"
-          "\\[\\(?1:[^]]+\\)\\] "                  ; sha1
+          "\\[\\(?1:[^]\n]+\\)\\] "                ; sha1
           "\\(?2:.*\\)$"))                         ; msg
 
 (defconst magit-log-reflog-re
   (concat "^"
-          "\\(?1:[^\0]+\\)\0"                      ; sha1
-          "\\(?5:[^\0]*\\)\0"                      ; author
-          "\\(?:\\(?:[^@]+@{\\(?6:[^}]+\\)}\0"     ; date
+          "\\(?1:[^\0\n]+\\)\0"                    ; sha1
+          "\\(?5:[^\0\n]*\\)\0"                    ; author
+          "\\(?:\\(?:[^@\n]+@{\\(?6:[^}\n]+\\)}\0" ; date
           "\\(?10:merge \\|autosave \\|restart \\|[^:\n]+: \\)?" ; refsub
           "\\(?2:.*\\)?\\)\\|\0\\)$"))             ; msg
 
@@ -927,9 +930,9 @@ Do not add this to a hook variable."
 
 (defconst magit-log-stash-re
   (concat "^"
-          "\\(?1:[^\0]+\\)\0"                      ; "sha1"
-          "\\(?5:[^\0]*\\)\0"                      ; author
-          "\\(?6:[^\0]+\\)\0"                      ; date
+          "\\(?1:[^\0\n]+\\)\0"                    ; "sha1"
+          "\\(?5:[^\0\n]*\\)\0"                    ; author
+          "\\(?6:[^\0\n]+\\)\0"                    ; date
           "\\(?2:.*\\)$"))                         ; msg
 
 (defvar magit-log-count nil)
@@ -1321,7 +1324,9 @@ Type \\[magit-cherry-pick-popup] to apply the commit at point.
   :group 'magit-log
   (hack-dir-local-variables-non-file-buffer)
   (setq imenu-create-index-function
-        'magit-imenu--cherry-create-index-function))
+        'magit-imenu--cherry-create-index-function)
+  (setq-local bookmark-make-record-function
+              'magit-bookmark--cherry-make-record))
 
 ;;;###autoload
 (defun magit-cherry (head upstream)
@@ -1376,7 +1381,9 @@ Type \\[magit-reset] to reset `HEAD' to the commit at point.
 
 \\{magit-reflog-mode-map}"
   :group 'magit-log
-  (hack-dir-local-variables-non-file-buffer))
+  (hack-dir-local-variables-non-file-buffer)
+  (setq-local bookmark-make-record-function
+              'magit-bookmark--reflog-make-record))
 
 (defun magit-reflog-refresh-buffer (ref args)
   (setq header-line-format
@@ -1501,7 +1508,7 @@ Show the last `magit-log-section-commit-count' commits."
          (range (and (magit-rev-verify start)
                      (concat start "..HEAD"))))
     (magit-insert-section (recent range collapse)
-      (magit-insert-heading "Recent commits:")
+      (magit-insert-heading "Recent commits")
       (magit-insert-log range
                         (cons (format "-%d" magit-log-section-commit-count)
                               magit-log-section-arguments)))))

@@ -802,17 +802,25 @@ string \"true\", otherwise return nil."
            (equal (magit-rev-parse rev)
                   (magit-rev-parse "HEAD")))))
 
-(defun magit-rev-name (rev &optional pattern not-anchored)
+(defun magit-rev-name (rev &optional pattern)
   "Return a symbolic name for REV.
-PATTERN can be used to limit the result to a matching ref.
-Unless NOT-ANCHORED is non-nil, the beginning of the ref must
-match PATTERN."
-  (magit-git-string "name-rev" "--name-only" "--no-undefined"
-                    (and pattern (concat "--refs=" pattern))
-                    (and pattern
-                         (not not-anchored)
-                         (concat "--exclude=*/" pattern))
-                    rev))
+PATTERN is passed to the `--refs' flag of `git-name-rev' and can
+be used to limit the result to a matching ref.  When structured
+as \"refs/<subdir>/*\", PATTERN is taken as a namespace.  In this
+case, the name returned by `git-name-rev' is discarded if it
+corresponds to a ref outside of the namespace."
+  (--when-let (magit-git-string "name-rev" "--name-only" "--no-undefined"
+                                (and pattern (concat "--refs=" pattern))
+                                rev)
+    ;; We can't use name-rev's --exclude to filter out "*/PATTERN"
+    ;; because --exclude wasn't added until Git v2.13.0.
+    (if (and pattern
+             (string-match-p "\\`refs/[^/]+/\\*\\'" pattern))
+        (let ((namespace (substring pattern 0 -1)))
+          (unless (and (string-match-p namespace it)
+                       (not (magit-rev-verify (concat namespace it))))
+            it))
+      it)))
 
 (defun magit-rev-branch (rev)
   (--when-let (magit-rev-name rev "refs/heads/*")
@@ -981,10 +989,14 @@ which is different from the current branch and still exists."
          (and (string-prefix-p "refs/heads/" merge)
               (let* ((upstream (substring merge 11))
                      (upstream
-                      (if (string-equal remote ".")
-                          (propertize upstream 'face 'magit-branch-local)
-                        (propertize (concat remote "/" upstream)
-                                    'face 'magit-branch-remote))))
+                      (cond ((string-equal remote ".")
+                             (propertize upstream 'face 'magit-branch-local))
+                            ((string-match-p "[@:]" remote)
+                             (propertize (concat remote " " upstream)
+                                         'face 'magit-branch-remote))
+                            (t
+                             (propertize (concat remote "/" upstream)
+                                         'face 'magit-branch-remote)))))
                 (and (or (not verify)
                          (magit-rev-verify upstream))
                      upstream))))))
@@ -1061,6 +1073,9 @@ as into its upstream."
 (defun magit-split-branch-name (branch)
   (cond ((member branch (magit-list-local-branch-names))
          (cons "." branch))
+        ((string-match " " branch)
+         (pcase-let ((`(,url ,branch) (split-string branch " ")))
+           (cons url branch)))
         ((string-match "/" branch)
          (let ((remote (substring branch 0 (match-beginning 0))))
            (if (save-match-data (member remote (magit-list-remotes)))
@@ -1475,11 +1490,12 @@ Return a list of two integers: (A>B B>A)."
 
 (defvar magit-revision-history nil)
 
-(defun magit-read-branch (prompt &optional default)
+(defun magit-read-branch (prompt &optional secondary-default)
   (magit-completing-read prompt (magit-list-branch-names)
                          nil t nil 'magit-revision-history
                          (or (magit-branch-at-point)
-                             default (magit-get-current-branch))))
+                             secondary-default
+                             (magit-get-current-branch))))
 
 (defun magit-read-branch-or-commit (prompt &optional secondary-default)
   (or (magit-completing-read prompt (cons "HEAD" (magit-list-refnames))

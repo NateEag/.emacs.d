@@ -290,8 +290,9 @@ as well as the current repository's status buffer are refreshed.
 
 Process output goes into a new section in the buffer returned by
 `magit-process-buffer'."
-  (magit-call-git args)
-  (magit-refresh))
+  (let ((magit--refresh-cache (list (cons 0 0))))
+    (magit-call-git args)
+    (magit-refresh)))
 
 (defvar magit-pre-call-git-hook nil)
 
@@ -699,7 +700,7 @@ instead."
 (defun magit-process-match-prompt (prompts string)
   "Match STRING against PROMPTS and set match data.
 Return the matched string suffixed with \": \", if needed."
-  (when (--any? (string-match it string) prompts)
+  (when (--any-p (string-match it string) prompts)
     (let ((prompt (match-string 0 string)))
       (cond ((string-suffix-p ": " prompt) prompt)
             ((string-suffix-p ":"  prompt) (concat prompt " "))

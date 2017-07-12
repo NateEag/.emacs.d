@@ -50,6 +50,8 @@
 (require 'diff-mode)
 (require 'smerge-mode)
 
+(defvar bookmark-make-record-function)
+
 ;;; Options
 ;;;; Diff Mode
 
@@ -1410,7 +1412,9 @@ Staging and applying changes is documented in info node
   (setq imenu-prev-index-position-function
         'magit-imenu--diff-prev-index-position-function)
   (setq imenu-extract-index-name-function
-        'magit-imenu--diff-extract-index-name-function))
+        'magit-imenu--diff-extract-index-name-function)
+  (setq-local bookmark-make-record-function
+              'magit-bookmark--diff-make-record))
 
 (defun magit-diff-refresh-buffer (rev-or-range const _args files)
   "Refresh the current `magit-diff-mode' buffer.
@@ -1765,7 +1769,9 @@ Staging and applying changes is documented in info node
 
 \\{magit-revision-mode-map}"
   :group 'magit-revision
-  (hack-dir-local-variables-non-file-buffer))
+  (hack-dir-local-variables-non-file-buffer)
+  (setq-local bookmark-make-record-function
+              'magit-bookmark--revision-make-record))
 
 (defun magit-revision-refresh-buffer (rev __const _args files)
   (setq header-line-format
@@ -1938,22 +1944,19 @@ or a ref which is not a branch, then it inserts nothing."
              (align-to (+ offset (ceiling (/ size (aref font-obj 7) 1.0))))
              (gravatar-size (- size 2))
              (slice1  '(slice .0 .0 1.0 0.5))
-             (slice2  '(slice .0 .5 1.0 1.0)))
-        (gravatar-retrieve
-         email
-         (lambda (image offset align-to slice1 slice2)
-           (unless (eq image 'error)
-             (insert (propertize " " 'display `((,@image :ascent center :relief 1)
-                                                ,slice1)))
-             (insert (propertize " " 'display `((space :align-to ,align-to))))
-             (forward-line)
-             (forward-char offset)
-             (insert (propertize " " 'display `((,@image :ascent center :relief 1)
-                                                ,slice2)))
-             (insert (propertize " " 'display `((space :align-to ,align-to))))))
-         (list offset align-to
-               (if magit-revision-use-gravatar-kludge slice2 slice1)
-               (if magit-revision-use-gravatar-kludge slice1 slice2)))))))
+             (slice2  '(slice .0 .5 1.0 1.0))
+             (image    (gravatar-retrieve-synchronously email)))
+        (unless (eq image 'error)
+          (when magit-revision-use-gravatar-kludge
+            (cl-rotatef slice1 slice2))
+          (insert (propertize " " 'display `((,@image :ascent center :relief 1)
+                                             ,slice1)))
+          (insert (propertize " " 'display `((space :align-to ,align-to))))
+          (forward-line)
+          (forward-char offset)
+          (insert (propertize " " 'display `((,@image :ascent center :relief 1)
+                                             ,slice2)))
+          (insert (propertize " " 'display `((space :align-to ,align-to)))))))))
 
 (defvar-local magit-revision-files nil)
 

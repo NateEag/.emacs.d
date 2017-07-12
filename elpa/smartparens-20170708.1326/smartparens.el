@@ -1393,7 +1393,7 @@ kill \"subwords\" when `subword-mode' is active."
 
 (defadvice delete-selection-pre-hook (around fix-sp-wrap activate)
   "Fix `sp-wrap' in `delete-selection-mode'."
-  (unless (sp-wrap--can-wrap-p)
+  (unless (and smartparens-mode (sp-wrap--can-wrap-p))
     ad-do-it))
 
 
@@ -4034,13 +4034,16 @@ is remove the just added wrapping."
               (setq sp-last-operation 'sp-delete-pair-opening))))
            ;; we're inside a pair
            ((and inside-pair sp-autodelete-pair)
-            (let* ((end (save-excursion
+            (let* ((beg (save-excursion
+                          (search-backward (car inside-pair))))
+                   (end (save-excursion
                           (search-forward (cdr inside-pair))))
                    (cs (sp--get-context p))
                    (ce (sp--get-context end))
                    (current-sexp (sp-get-sexp)))
               (when (and (or (not (eq cs 'comment)) ;; a => b <=> ~a v b
                              (eq ce 'comment))
+                         (eq beg (sp-get current-sexp :beg))
                          (eq end (sp-get current-sexp :end))
                          (equal (sp-get current-sexp :op) (car inside-pair))
                          (equal (sp-get current-sexp :cl) (cdr inside-pair)))
@@ -4481,10 +4484,10 @@ and the skip-match predicate."
         (unless (or (save-match-data
                       (save-excursion
                         (goto-char (match-beginning 0))
-                        (or (looking-back "\\\\") ;; assumes \ is always the escape... bad?
+                        (or (sp--looking-back-p "\\\\" 2) ;; assumes \ is always the escape... bad?
                             (and (eq major-mode 'emacs-lisp-mode)
                                  (not (sp-point-in-string))
-                                 (looking-back "?")))))
+                                 (sp--looking-back-p "?" 1)))))
                     ;; TODO: HACK: global-skip is hack here!!!
                     (sp--skip-match-p match (match-beginning 0) (match-end 0) :pair-skip skip-fn :global-skip nil))
           (setq hit t))))
@@ -6362,9 +6365,9 @@ Note: prefix argument is shown after the example in
 (defun sp--cleanup-after-kill ()
   (unless (looking-back "^[\t\s]+")
     (let ((bdel (save-excursion
-                  (when (looking-back " ")
+                  (when (sp--looking-back-p " " 1)
                     (skip-chars-backward " \t")
-                    (when (not (looking-back (sp--get-opening-regexp)))
+                    (when (not (sp--looking-back-p (sp--get-opening-regexp)))
                       (forward-char)))
                   (point)))
           (edel (save-excursion
@@ -7750,7 +7753,7 @@ Examples:
                                 (sp-point-in-comment)
                                 (save-excursion
                                   (skip-chars-backward "\t ")
-                                  (looking-back "^")))
+                                  (bolp)))
                        (cons (point) (sp-get next :end-suf)))))
                   ;; similarly, if there is a comment before
                   ;; this sexp, keep it.
@@ -7762,7 +7765,7 @@ Examples:
                                 (> (point) (sp-get ok :beg))
                                 (save-excursion
                                   (skip-chars-backward "\t ")
-                                  (looking-back "^")))
+                                  (bolp)))
                        (cons (point) (sp-get next :end-suf)))))
                   (t (sp-get next (cons :beg-prf :end-suf))))))
           (sp--splice-sexp-do-killing from to
@@ -7920,7 +7923,9 @@ If the raw prefix is negative, this behaves as \\[universal-argument] `sp-backwa
         (setq b (region-beginning))
         (setq e (region-end))
         (goto-char (sp-get enc :end-in))
-        (if (looking-back "\n[ \t]*")
+        (if (save-excursion
+              (skip-chars-backward "\t ")
+              (bolp))
             (let ((whitespace (sp-get-whitespace)))
               (sp-get whitespace (when (= :beg e)
                                    (delete-region :beg :end))))
@@ -7965,7 +7970,9 @@ expressions up until the start of enclosing list."
         (setq b (region-beginning))
         (setq e (region-end))
         (goto-char (sp-get enc :end-in))
-        (if (looking-back "\n[ \t]*")
+        (if (save-excursion
+              (skip-chars-backward "\t ")
+              (bolp))
             (let ((whitespace (sp-get-whitespace)))
               (sp-get whitespace
                 (when (= :beg e)

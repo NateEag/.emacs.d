@@ -156,6 +156,7 @@
  '(transient-mark-mode 1 nil nil "I like seeing my selections.")
  '(user-mail-address "nate@nateeag.com")
  '(visible-bell t nil nil "STOP THE RINGING")
+ '(word-wrap t nil nil "I can't believe I went this long not realizing I could just set this to get more readable word wrap, while still seeing logical lines as logical lines.")
  '(yas-also-auto-indent-first-line t)
  '(yas-expand-only-for-last-commands
    (quote

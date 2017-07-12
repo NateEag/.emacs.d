@@ -15,7 +15,7 @@
                          'face 'helm-grep-lineno)
              (cdr (assoc 'Text candidate)))
      candidate))
-  
+
   (defun omnisharp--helm-got-usages (quickfixes)
     (setq omnisharp-helm-usage-candidates (mapcar 'omnisharp--helm-usage-transform-candidate quickfixes))
     (helm :sources (helm-make-source "Omnisharp - Symbol Usages" 'helm-source-sync
@@ -36,7 +36,7 @@
 
   (defun omnisharp--helm-jump-to-candidate (json-result)
     (omnisharp-go-to-file-line-and-column json-result)
-    (helm-highlight-current-line nil nil nil nil t))
+    (helm-highlight-current-line))
 
   ;;; Helm find symbols
   (defun omnisharp-helm-find-symbols ()

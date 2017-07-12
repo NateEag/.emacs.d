@@ -975,8 +975,6 @@ Keys description:
                  (file-equal-p result initial-input)
                  default)
             (if (listp default) (car default) default))
-           ((and result (stringp result))
-            (expand-file-name result))
            ((and result (listp result))
             (mapcar #'expand-file-name result))
            (t result))
@@ -1019,6 +1017,9 @@ Don't use it directly, use instead `helm-read-file-name' in your programs."
          helm-completion-mode-start-message ; Be quiet
          helm-completion-mode-quit-message  ; Same here
          fname)
+    ;; Build `default-filename' with `dir'+`initial' when
+    ;; `default-filename' is not specified.
+    ;; See `read-file-name' docstring for more infos.
     (setq default-filename (helm-mode--default-filename
                             default-filename dir initial))
     ;; Some functions that normally call `completing-read' can switch

@@ -18,7 +18,12 @@
   (if (not (eq major-mode 'json-mode))
       ;; I prefer eslint to jshint. If a project uses jshint, I use
       ;; .dir-locals.el to override this setting.
-      (setq flycheck-checker 'javascript-eslint))
+      (setq flycheck-checker 'javascript-eslint)
+
+    ;; aggressive-fill-mode isn't really useful in json-mode, since there's
+    ;; nothing you can sanely auto-fill (no comments, and strings must *not* be
+    ;; line-broken, because ES 5 string syntax).
+    (aggressive-fill-paragraph-mode -1))
 
   (setq ac-sources '(ac-source-yasnippet))
 

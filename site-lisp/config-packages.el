@@ -269,7 +269,8 @@
 ;;   :diminish)
 
 (use-package sh-script
-  :mode ("\\.envrc\\'" . sh-mode)
+  :mode (("\\.envrc\\'" . sh-mode)
+         ("\\.env" . sh-mode))
   :config (add-hook 'sh-mode-hook '(lambda ()
                                      (setq-local ne-yas-auto-insert-snippet-name
                                            "shell-script"))))

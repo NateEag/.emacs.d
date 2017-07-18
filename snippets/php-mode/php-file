@@ -1,0 +1,8 @@
+# It would be cool if this could guess namespace based on the PSR autoloader in
+# effect for this project.
+#
+# -*- mode: snippet -*-
+# name: php-file
+# key: php-file
+# --
+<?php

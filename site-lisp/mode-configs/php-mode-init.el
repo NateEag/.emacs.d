@@ -40,7 +40,10 @@
 
 (defun php-mode-init ()
   "Load my particular tweaks for php-mode."
+
   (interactive)
+
+  (setq-local ne-yas-auto-insert-snippet-name "php-file")
 
   ;; Initialize my php-sql submode.
   ;; Commented, because it breaks even worse than it used to under Emacs 24.

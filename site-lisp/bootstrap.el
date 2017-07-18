@@ -53,6 +53,12 @@
 ;; I use Flycheck, so I don't need to see the compilation errors buffer.
 (setq auto-compile-display-buffer nil)
 
+;;
+(defvar my-autosaves-dir (make-emacs-dir-path "autosaves/")
+  "Path to my autosaves directory.
+
+It's defined in here because I need it to precede usage in config-packages.el.")
+
 
 ;; Set up manually-maintained autoloads.
 (defun nateeag-autoloads-init ()

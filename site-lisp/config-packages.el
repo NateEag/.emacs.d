@@ -156,6 +156,11 @@
   :init
   (global-undo-tree-mode)
 
+  ;; Store undo history in my autosaves directory (which is configured
+  ;; elsewhere).
+  (setq undo-tree-auto-save-history t)
+  (setq undo-tree-history-directory-alist `(("." . ,my-autosaves-dir)))
+
   ;; Evil has built-in logic to set up bindings in undo-tree mode.
   ;;
   ;; However, there doesn't seem to be a built-in way to say 'turn on

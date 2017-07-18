@@ -81,11 +81,14 @@
 ;; https://github.com/felixfbecker/php-language-server (which I'm running
 ;; straight out of a local dev repo) to get PHP intelligence inside Emacs.
 ;;
-;; Thus far, I've only tried jump-to-def within the php-language-server project
-;; itself. That did work, so this is definitely a direction worth pursuing.
+;; jump-to-def seems to work pretty well, so I'd like to continue figuring this
+;; out. However, auto-completion is broken in my current setup.
+;;
+;; lsp-mode can in principle do a lot more than that, but if I got those two
+;; things working I'd be pretty happy.
 (require 'lsp-mode)
 (lsp-define-stdio-client 'php-mode "php" 'stdio
-                         ;; TODO Use Projectile to find project root.
+                         ;; FIXME Don't just assume git repo.
                          (lsp-make-traverser ".git")
                          "php-lang-server"
                          ;; TODO Quit using my own script for this.

@@ -334,6 +334,7 @@ In each clause of CLAUSES, the result of the car of clause
 is stored in a temporary variable called `it' and usable in the cdr
 of this same clause.  Each `it' variable is independent of its clause.
 The usage is the same as `cond'."
+  (declare (debug cond))
   (unless (null clauses)
     (helm-with-gensyms (sym)
       (let ((clause1 (car clauses)))
@@ -344,6 +345,13 @@ The usage is the same as `cond'."
                  it)
              (helm-acond ,@(cdr clauses))))))))
 
+(defmacro helm-aand (&rest conditions)
+  "Anaphoric version of `and'."
+  (declare (debug (&rest form)))
+  (cond ((null conditions) t)
+        ((null (cdr conditions)) (car conditions))
+        (t `(helm-aif ,(car conditions)
+                (helm-aand ,@(cdr conditions))))))
 
 ;;; Fuzzy matching routines
 ;;
@@ -1061,6 +1069,8 @@ That is what completion commands operate on."
                  (buffer-string)))
              (funcall fwd-fn arg)
              (concat
+              ;; Allow yankink beyond eol allow inserting e.g long
+              ;; urls in mail buffers.
               helm-pattern (replace-regexp-in-string
                             "\\`\n" ""
                             (buffer-substring-no-properties

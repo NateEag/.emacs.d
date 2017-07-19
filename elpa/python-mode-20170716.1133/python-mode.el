@@ -697,7 +697,7 @@ def foo():
             baz):
         bar()
 
-Default lines up with first element:
+If nil line up with first element:
 
 def foo():
     if (foo &&
@@ -22533,9 +22533,12 @@ LIEP stores line-end-position at point-of-interest
 				 (cond ((looking-at "\\s([ \t]*$")
 					(py--empty-arglist-indent nesting py-indent-offset indent-offset))
 				       ((looking-at "\\s([ \t]*\\([^ \t]+.*\\)$")
-					(goto-char (match-beginning 1))
-					(if py-indent-paren-spanned-multilines-p
-					    (+ (current-column) py-indent-offset)
+					(if
+					    (and (or (bolp) (eq (char-before) 32)) py-indent-paren-spanned-multilines-p)
+					    (progn
+					      (goto-char (match-beginning 1))
+					      (+ (current-column) py-indent-offset))
+					  (goto-char (match-beginning 1))
 					  (current-column)))
 				       (t (+ (current-column) (* (nth 0 pps)))))))
 			      ((nth 1 (parse-partial-sexp (point-min) (point)))
@@ -25887,7 +25890,7 @@ See available customizations listed in files variables-python-mode at directory 
                           (mapcar #'(lambda (x) (concat "^\\s-*" x "\\_>"))
                                   py-outline-mode-keywords)
                           "\\|")))
-  (when (eq 0 (string-match "25" emacs-version))
+  (when (>= emacs-major-version 25)
     (global-eldoc-mode -1))
   (if py-use-font-lock-doc-face-p
       (set (make-local-variable 'font-lock-defaults)

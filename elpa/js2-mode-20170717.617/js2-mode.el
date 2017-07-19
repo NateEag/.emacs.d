@@ -7205,6 +7205,10 @@ When STRICT, signal an error if NODE is not one of the expected types."
             (setq targets (append
                            (js2--collect-target-symbols subexpr strict)
                            targets))))))
+     ((js2-assign-node-p node)
+      (setq targets (append (js2--collect-target-symbols
+                             (js2-assign-node-left node) strict)
+                            targets)))
      (strict
       (js2-report-error "msg.no.parm" nil (js2-node-abs-pos node)
                         (js2-node-len node))
@@ -9890,8 +9894,11 @@ If NODE is non-nil, it is the AST node associated with the symbol."
           (js2-record-imenu-functions right left))
         ;; do this last so ide checks above can use absolute positions
         (js2-node-add-children pn left right))
-       ((and (= tt js2-ARROW)
-             (>= js2-language-version 200))
+       ((and (>= js2-language-version 200)
+             (or
+              (= tt js2-ARROW)
+              (and async-p
+                   (= (js2-peek-token) js2-ARROW))))
         (js2-ts-seek ts-state)
         (when async-p
           (js2-record-face 'font-lock-keyword-face)

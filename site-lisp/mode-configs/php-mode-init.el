@@ -59,6 +59,12 @@
   (require 'php-auto-yasnippets)
   (define-key php-mode-map (kbd "C-c C-y") 'yas/create-php-snippet)
 
+  ;; Delete php-mode's tab keybinding, which was interfering with my
+  ;; auto-complete setup. Perhaps related to this issue:
+  ;;
+  ;; https://github.com/ejmr/php-mode/issues/91
+  (define-key php-mode-map (kbd "<tab>") nil)
+
   ;; Set up ac-sources. We have to call payas/ac-setup to make sure the
   ;; ac-source-php-auto-yasnippets is defined, but we don't want it to be the
   ;; first source...

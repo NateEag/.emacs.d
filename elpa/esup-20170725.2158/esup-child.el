@@ -1,5 +1,4 @@
 ;;; esup-child.el --- lisp file for child Emacs to run. -*- lexical-binding: t -*-
-
 ;; Copyright (C) 2014-2017 Joe Schafer
 
 ;; Author: Joe Schafer <joe@jschaf.com>
@@ -92,6 +91,13 @@ network process.")
 We send our results back to the parent Emacs via this network
 process.")
 
+(defvar esup-child-result-separator "\n;;ESUP-RESULT-SEPARATOR;;\n"
+  "The separator between results.
+The parent Emacs uses the separator to know when the child has
+sent a full result.  Emacs accepts network input only when it's
+not busy and in bunches of about 500 bytes.  So, we might not get
+a complete result.")
+
 (defun esup-child-connect-to-parent (port)
   "Connect to the parent process at PORT."
   (let ((port-num (if (stringp port) (string-to-number port) port)))
@@ -114,35 +120,37 @@ process.")
   (process-send-string esup-child-parent-log-process
                        (apply 'format (concat "LOG: " format-str) args)))
 
-(defun esup-child-send-result (result &optional no-serialize)
-  "Send RESULT to the parent process.
-If NO-SERIALIZE is non-nil then don't serialize RESULT with
-`prin1-to-string'."
+(defun esup-child-send-result-separator ()
+  "Send the result separator to the parent process."
   (process-send-string esup-child-parent-results-process
-                       (if no-serialize
-                           result
-                         (prin1-to-string result))))
+                       esup-child-result-separator))
+
+(defun esup-child-send-result (results)
+  "Send RESULTS to the parent process."
+  (process-send-string esup-child-parent-results-process
+                       (esup-child-serialize-results results)))
 
 (defun esup-child-send-eof ()
   "Make process see end-of-file in its input."
   (process-send-eof esup-child-parent-log-process))
 
-(defvar esup-child-result-separator "\n;;ESUP-RESULT-SEPARATOR;;\n"
-  "The separator between results.
-The parent Emacs uses the separator to know when the child has
-sent a full result.  Emacs accepts network input only when it's
-not busy and in bunches of about 500 bytes.  So, we might not get
-a complete result.")
+(defun esup-child-log-invocation-options ()
+  "Log the invocation options that esup-child was started with."
+  (let ((invocation-binary (concat invocation-directory invocation-name)))
+    (esup-child-send-log "binary: %s\n" invocation-binary)))
 
-(defun esup-child-run (init-file port)
-  "Profile INIT-FILE and send results to localhost:PORT."
-
+(defun esup-child-init-streams (port)
+  "Initialize the streams for logging and results on PORT."
   (setq esup-child-parent-log-process
         (esup-child-init-stream port "LOGSTREAM"))
   (setq esup-child-parent-results-process
-        (esup-child-init-stream port "RESULTSSTREAM"))
+        (esup-child-init-stream port "RESULTSSTREAM")))
 
+(defun esup-child-run (init-file port)
+  "Profile INIT-FILE and send results to localhost:PORT."
+  (esup-child-init-streams port)
   (setq enable-local-variables :safe)
+  (esup-child-log-invocation-options)
   (prog1
       (esup-child-profile-file init-file 0)
     (kill-emacs)))
@@ -169,7 +177,7 @@ LEVEL is the number of `load's or `require's we've stepped into."
           ;; TODO: A file with no sexps (either nothing or comments) will
           ;; cause an error.
           (message "esup: loading %s" abs-file-path)
-          (esup-child-send-log (format "loading %s\n" abs-file-path))
+          (esup-child-send-log "loading %s\n" abs-file-path)
           (esup-child-profile-buffer (find-file-noselect abs-file-path) level))
       ;; The file doesn't exist, return an empty list of `esup-result'
       '())))
@@ -193,10 +201,8 @@ LEVEL is the number of `load's or `require's we've stepped into."
         ;; white-space and comments.
         (let ((buffer-read-only t)
               (last-start -1)
-              (end (progn (forward-sexp 1)
-                          (point)))
-              (start (progn (forward-sexp -1)
-                            (point)))
+              (end (progn (forward-sexp 1) (point)))
+              (start (progn (forward-sexp -1) (point)))
               results
               (after-init-time nil))
           (while (> start last-start)
@@ -249,14 +255,15 @@ LEVEL is the number of `load's or `require's we've stepped into."
            ((and (< level esup-child-profile-require-level)
                  (looking-at "(require "))
             ;; TODO: See if symbol already provided.  #38
-            (esup-child-profile-file (esup-child-require-to-load sexp) (1+ level)))
+            (esup-child-profile-file (esup-child-require-to-load sexp)
+                                     (1+ level)))
 
            (t
             (setq esup--profile-results
                   (list (esup-child-profile-string
                          sexp-string file-name line-number start end)))
             (esup-child-send-result esup--profile-results)
-            (esup-child-send-result esup-child-result-separator 'no-serialize)
+            (esup-child-send-result-separator)
             esup--profile-results)))
       (error
        (message "ERROR: %s" error-message)
@@ -293,6 +300,32 @@ SEXP-STRING appears in FILE-NAME."
         (filename (when (>= (length sexp) 2)
                     (nth 2 sexp))))
     (or filename library)))
+
+(defun esup-child-serialize-result (esup-result)
+  "Serialize an ESUP-RESULT into a `read'able string.
+We need this because `prin1-to-string' isn't stable between Emacs 25 and 26."
+  (format
+   (concat
+    "(esup-result \"esup-result\" "
+    (format ":file %s "
+            (prin1-to-string (oref esup-result :file)))
+    (format ":start-point %d " (oref esup-result :start-point))
+    (format ":line-number %d " (oref esup-result :line-number))
+    (format ":expression-string %s "
+            (prin1-to-string (oref esup-result :expression-string)))
+    (format ":end-point %d " (oref esup-result :end-point))
+    (format ":exec-time %f " (oref esup-result :exec-time))
+    (format ":gc-number %d " (oref esup-result :gc-number))
+    (format ":gc-time %f" (oref esup-result :gc-time))
+    ")")))
+
+(defun esup-child-serialize-results (esup-results)
+  "Serialize a list of ESUP-RESULTS into a `read'able string."
+  (format "(list\n  %s)"
+          (mapconcat 'identity
+                     (cl-loop for result in esup-results
+                              collect (esup-child-serialize-result result))
+                     "\n  ")))
 
 (provide 'esup-child)
 ;;; esup-child.el ends here

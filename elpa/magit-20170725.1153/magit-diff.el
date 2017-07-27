@@ -294,8 +294,8 @@ inserted inside the text that was previously inserted according
 to `magit-revision-header-format'.
 
 Both cells are regular expressions.  The car specifies where to
-insert the author gravatar image.  The top halve of the image is
-inserted right after the matched text, the bottom halve on the
+insert the author gravatar image.  The top half of the image is
+inserted right after the matched text, the bottom half on the
 next line at the same offset.  The cdr specifies where to insert
 the committer image, accordingly.  Either the car or the cdr may
 be nil."
@@ -568,7 +568,8 @@ and `:slant'."
                (?x "Disallow external diff drivers" "--no-ext-diff"))
     :actions  ((?g "Refresh"                magit-diff-refresh)
                (?t "Toggle hunk refinement" magit-diff-toggle-refine-hunk)
-               (?s "Set defaults"           magit-diff-set-default-arguments) nil
+               (?s "Set defaults"           magit-diff-set-default-arguments)
+               (?F "Toggle file filter"     magit-diff-toggle-file-filter)
                (?w "Save defaults"          magit-diff-save-default-arguments))
     :max-action-columns 2))
 
@@ -584,7 +585,8 @@ and `:slant'."
                (?s "Set defaults"           magit-diff-set-default-arguments)
                (?r "Switch range type"      magit-diff-switch-range-type)
                (?w "Save defaults"          magit-diff-save-default-arguments)
-               (?f "Flip revisions"         magit-diff-flip-revs))
+               (?f "Flip revisions"         magit-diff-flip-revs) nil
+               (?F "Toggle file filter"     magit-diff-toggle-file-filter))
     :max-action-columns 2))
 
 (defvar magit-revision-mode-refresh-popup
@@ -596,7 +598,8 @@ and `:slant'."
                (?s "Show stats"                     "--stat"))
     :actions  ((?g "Refresh"                magit-diff-refresh)
                (?t "Toggle hunk refinement" magit-diff-toggle-refine-hunk)
-               (?s "Set defaults"           magit-diff-set-default-arguments) nil
+               (?s "Set defaults"           magit-diff-set-default-arguments)
+               (?F "Toggle file filter"     magit-diff-toggle-file-filter)
                (?w "Save defaults"          magit-diff-save-default-arguments))
     :max-action-columns 2))
 
@@ -901,7 +904,8 @@ be committed."
 (defun magit-show-commit--arguments ()
   (-let [(args diff-files) (magit-diff-arguments)]
     (list args (if (derived-mode-p 'magit-log-mode)
-                   (nth 2 magit-refresh-args)
+                   (and (not (member "--follow" (nth 1 magit-refresh-args)))
+                        (nth 2 magit-refresh-args))
                  diff-files))))
 
 ;;;###autoload
@@ -1005,6 +1009,34 @@ Change \"revA..revB\" to \"revB..revA\"."
                           (match-string 1 range)))
           (magit-refresh))
       (user-error "No range to swap"))))
+
+(defvar-local magit-diff--last-file-args nil)
+(defun magit-diff--toggle-file-args (files)
+  (cond (files
+         (setq magit-diff--last-file-args files)
+               nil)
+        (magit-diff--last-file-args)
+        (t
+         (user-error "No diff file filter to toggle"))))
+
+(defun magit-diff-toggle-file-filter ()
+  "Toggle the file restriction of the current buffer's diffs.
+If the current buffer's mode is derived from `magit-log-mode',
+toggle the file restriction in the repository's revision buffer
+instead."
+  (interactive)
+  (--if-let (and (derived-mode-p 'magit-log-mode)
+                 (magit-mode-get-buffer 'magit-revision-mode))
+      (with-current-buffer it
+        (setf (nth 3 magit-refresh-args)
+              (magit-diff--toggle-file-args (nth 3 magit-refresh-args)))
+        (magit-refresh))
+    (if (derived-mode-p 'magit-diff-mode)
+        (setf (nth 3 magit-refresh-args)
+              (magit-diff--toggle-file-args (nth 3 magit-refresh-args)))
+      (setq-local magit-diff-section-file-args
+                  (magit-diff--toggle-file-args magit-diff-section-file-args)))
+    (magit-refresh)))
 
 (defun magit-diff-less-context (&optional count)
   "Decrease the context for diff hunks by COUNT lines."
@@ -1952,29 +1984,13 @@ or a ref which is not a branch, then it inserts nothing."
           (insert (propertize " " 'display `((,@image :ascent center :relief 1)
                                              ,slice1)))
           (insert (propertize " " 'display `((space :align-to ,align-to))))
+          (insert " ")
           (forward-line)
           (forward-char offset)
           (insert (propertize " " 'display `((,@image :ascent center :relief 1)
                                              ,slice2)))
-          (insert (propertize " " 'display `((space :align-to ,align-to)))))))))
-
-(defvar-local magit-revision-files nil)
-
-(defun magit-revision-toggle-file-filter ()
-  "Toggle the file restriction of the current revision buffer."
-  (interactive)
-  (with-current-buffer (or (and (derived-mode-p 'magit-revision-mode)
-                                (current-buffer))
-                           (magit-mode-get-buffer 'magit-revision-mode)
-                           (user-error "No revision buffer found"))
-    (let ((files (nth 3 magit-refresh-args)))
-      (unless (or magit-revision-files files)
-        (user-error "No file filter to toggle"))
-      (setf (nth 3 magit-refresh-args) (if (not files)
-                                           magit-revision-files
-                                         (setq magit-revision-files files)
-                                         nil))
-      (magit-refresh))))
+          (insert (propertize " " 'display `((space :align-to ,align-to))))
+          (insert " "))))))
 
 ;;; Diff Sections
 

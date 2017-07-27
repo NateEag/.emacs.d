@@ -2807,6 +2807,16 @@ the status buffer.
      This command swaps revisions in the diff range from "revA..revB" to
      "revB..revA", or vice versa.
 
+‘D F’     (‘magit-diff-toggle-file-filter’)
+
+     This command toggles the file restriction of the diffs in the
+     current buffer, allowing you to quickly switch between viewing all
+     the changes in the commit and the restricted subset.  As a special
+     case, when this command is called from a log buffer, it toggles the
+     file restriction in the repository’s revision buffer, which is
+     useful when you display a revision from a log buffer that is
+     restricted to a file or files.
+
    In addition to the above popup, which allows changing any of the
 supported arguments, there also exist some commands which change a
 particular argument.
@@ -3015,20 +3025,25 @@ File: magit.info,  Node: Revision Buffer,  Prev: Diff Options,  Up: Diffing
      ‘magit-revision-header-format’.
 
      Both cells are regular expressions.  The car specifies where to
-     insert the author gravatar image.  The top halve of the image is
-     inserted right after the matched text, the bottom halve on the next
+     insert the author gravatar image.  The top half of the image is
+     inserted right after the matched text, the bottom half on the next
      line at the same offset.  The cdr specifies where to insert the
      committer image, accordingly.  Either the car or the cdr may be
      nil.
 
-‘M-x magit-revision-toggle-file-filter’     (‘magit-revision-toggle-file-filter’)
+   The diffs shown in the revision buffer may be automatically
+restricted to a subset of the changed files.  If the revision buffer is
+displayed from a log buffer, the revision buffer will share the same
+file restriction as that log buffer (also see the command
+‘magit-diff-toggle-file-filter’).  Note, however, that the log’s file
+restriction will be ignored when ‘magit-log-arguments’ includes
+‘--follow’.  In this case, the ‘-u’ argument of the log popup can be
+used to show the file-restricted diffs inline.
 
-     This command toggles the file restriction of the current revision
-     buffer.  It is particularly useful when you display a revision from
-     a log buffer that is restricted to a file or files.  In this case,
-     the revision buffer is also restricted to these files, and this
-     command allows you to quickly switch between viewing all the
-     changes in the commit and the restricted subset.
+   If the revision buffer is not displayed from a log buffer, the file
+restriction is determined by the file restriction in the repository’s
+diff buffer, if it exists, and the value of the option
+‘magit-use-sticky-arguments’.
 
 
 File: magit.info,  Node: Ediffing,  Next: References Buffer,  Prev: Diffing,  Up: Inspecting
@@ -7761,9 +7776,9 @@ Appendix C Keystroke Index
                                                               (line  39)
 * $:                                     Viewing Git Output.  (line  11)
 * +:                                     Log Buffer.          (line  59)
-* + <1>:                                 Refreshing Diffs.    (line  58)
-* -:                                     Refreshing Diffs.    (line  54)
-* 0:                                     Refreshing Diffs.    (line  62)
+* + <1>:                                 Refreshing Diffs.    (line  68)
+* -:                                     Refreshing Diffs.    (line  64)
+* 0:                                     Refreshing Diffs.    (line  72)
 * 1:                                     Section Visibility.  (line  26)
 * 2:                                     Section Visibility.  (line  27)
 * 3:                                     Section Visibility.  (line  28)
@@ -7810,7 +7825,7 @@ Appendix C Keystroke Index
 * C-c C-a:                               Editing Commit Messages.
                                                               (line 128)
 * C-c C-b:                               Log Buffer.          (line  19)
-* C-c C-b <1>:                           Refreshing Diffs.    (line  80)
+* C-c C-b <1>:                           Refreshing Diffs.    (line  90)
 * C-c C-c:                               Popup Buffers and Prefix Commands.
                                                               (line  20)
 * C-c C-c <1>:                           Select from Log.     (line  20)
@@ -7818,11 +7833,11 @@ Appendix C Keystroke Index
                                                               (line  19)
 * C-c C-c <3>:                           Editing Rebase Sequences.
                                                               (line   6)
-* C-c C-d:                               Refreshing Diffs.    (line  70)
+* C-c C-d:                               Refreshing Diffs.    (line  80)
 * C-c C-d <1>:                           Editing Commit Messages.
                                                               (line  57)
 * C-c C-f:                               Log Buffer.          (line  23)
-* C-c C-f <1>:                           Refreshing Diffs.    (line  84)
+* C-c C-f <1>:                           Refreshing Diffs.    (line  94)
 * C-c C-i:                               Editing Commit Messages.
                                                               (line 153)
 * C-c C-k:                               Select from Log.     (line  26)
@@ -7874,6 +7889,7 @@ Appendix C Keystroke Index
 * d c:                                   Diffing.             (line  67)
 * d d:                                   Diffing.             (line  25)
 * D f:                                   Refreshing Diffs.    (line  45)
+* D F:                                   Refreshing Diffs.    (line  50)
 * D g:                                   Refreshing Diffs.    (line  16)
 * d p:                                   Diffing.             (line  59)
 * d r:                                   Diffing.             (line  29)
@@ -7991,7 +8007,6 @@ Appendix C Keystroke Index
                                                               (line  87)
 * M-x magit-reverse-in-index:            Staging and Unstaging.
                                                               (line  62)
-* M-x magit-revision-toggle-file-filter: Revision Buffer.     (line  26)
 * M-x magit-stage-file:                  Staging from File-Visiting Buffers.
                                                               (line  10)
 * M-x magit-toggle-buffer-lock:          Modes and Buffers.   (line  17)

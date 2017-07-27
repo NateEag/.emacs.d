@@ -812,10 +812,7 @@ This hook runs after `helm-buffer' is created but not from
 (make-obsolete-variable 'helm-update-hook 'helm-after-update-hook "1.9.9")
 
 (defvar helm-after-update-hook nil
-  "Runs after updating the helm buffer with the new input pattern.
-This is very similar to `helm-update-hook' except the selection
-is not moved. Hook is useful for selecting a particular object
-instead of the first one.")
+  "Runs after updating the helm buffer with the new input pattern.")
 
 (defvar helm-cleanup-hook nil
   "Runs after exiting the minibuffer and before performing an
@@ -3705,6 +3702,11 @@ without recomputing them, it should be a list of lists."
              ;; to avoid cursor moving upside down (issue #1703).
              (helm--update-move-first-line)
              (helm--reset-update-flag)))
+      ;; When there is only one async source, update mode-line and run
+      ;; `helm-after-update-hook' in `helm-output-filter--post-process',
+      ;; when there is more than one source, update mode-line and run
+      ;; `helm-after-update-hook' now even if an async source is
+      ;; present and running in BG.
       (let ((src (or source (helm-get-current-source))))
         (unless (assq 'candidates-process src)
           (helm-display-mode-line src)
@@ -3730,7 +3732,7 @@ without recomputing them, it should be a list of lists."
          ;; Entering repeatedly these strings (*, ?) takes 100% CPU
          ;; and hang emacs on MacOs preventing deleting backward those
          ;; characters (issue #1802).
-         (not (string-match-p "[*]\\{2,\\}\\|[?]\\{3,\\}" helm-pattern))
+         (not (string-match-p "\\`[*]+\\'" helm-pattern))
          ;; These incomplete regexps hang helm forever
          ;; so defer update. Maybe replace spaces quoted when using
          ;; multi-match.

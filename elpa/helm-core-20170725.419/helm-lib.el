@@ -738,6 +738,51 @@ Add spaces at end if needed to reach WIDTH when STR is shorter than WIDTH."
   "Current line string without properties."
   (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
 
+(defun helm--replace-regexp-in-buffer-string (regexp rep str &optional fixedcase literal subexp start)
+  "Replace REGEXP by REP in string STR.
+
+Same as `replace-regexp-in-string' but handle properly REP as
+function with SUBEXP specified.
+
+e.g
+
+    (helm--replace-regexp-in-buffer-string \"e\\\\(m\\\\)acs\" 'upcase \"emacs\" t nil 1)
+    => \"eMacs\"
+
+    (replace-regexp-in-string \"e\\\\(m\\\\)acs\" 'upcase \"emacs\" t nil 1)
+    => \"eEMACSacs\"
+
+Also START argument behave as expected unlike
+`replace-regexp-in-string'.
+
+e.g
+
+    (helm--replace-regexp-in-buffer-string \"f\" \"r\" \"foofoo\" t nil nil 3)
+    => \"fooroo\"
+
+    (replace-regexp-in-string \"f\" \"r\" \"foofoo\" t nil nil 3)
+    => \"roo\"
+
+Unlike `replace-regexp-in-string' this function is buffer-based
+implemented i.e replacement is computed inside a temp buffer, so
+REGEXP should be used differently than with
+`replace-regexp-in-string'.
+
+NOTE: This function is used internally for
+`helm-ff-query-replace-on-filenames' and builded for this.
+You should use `replace-regexp-in-string' instead unless the behavior
+of this function is really needed."
+  (with-temp-buffer
+    (insert str)
+    (goto-char (or start (point-min)))
+    (while (re-search-forward regexp nil t)
+      (replace-match (cond ((and (functionp rep) subexp)
+                            (funcall rep (match-string subexp)))
+                           ((functionp rep)
+                            (funcall rep str))
+                           (t rep))
+                     fixedcase literal nil subexp))
+    (buffer-string)))
 
 ;;; Symbols routines
 ;;

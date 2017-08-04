@@ -1,9 +1,9 @@
 ;;; pyenv-mode-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "pyenv-mode" "pyenv-mode.el" (22276 14453 0
+;;;### (autoloads nil "pyenv-mode" "pyenv-mode.el" (22916 31989 0
 ;;;;;;  0))
 ;;; Generated autoloads from pyenv-mode.el
 
@@ -19,7 +19,8 @@ Unset python shell version.
 
 (defvar pyenv-mode nil "\
 Non-nil if Pyenv mode is enabled.
-See the command `pyenv-mode' for a description of this minor mode.
+See the `pyenv-mode' command
+for a description of this minor mode.
 Setting this variable directly does not take effect;
 either customize it (see the info node `Easy Customization')
 or call the function `pyenv-mode'.")

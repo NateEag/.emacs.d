@@ -125,6 +125,7 @@ Status Buffer
 
 * Status Sections::
 * Status Header Sections::
+* Status Module Sections::
 * Status Options::
 
 
@@ -1892,6 +1893,7 @@ that it should be bound globally.  We recommend using ‘C-x g’:
 
 * Status Sections::
 * Status Header Sections::
+* Status Module Sections::
 * Status Options::
 
 
@@ -2012,40 +2014,6 @@ default the following functions are also members of that hook:
      ‘magit-insert-unpulled-or-recent-commits’ (provided there are no
      unpulled commits) show.
 
- -- Function: magit-insert-modules-unpulled-from-upstream
-
-     Insert sections for modules that haven’t been pulled from the
-     upstream yet.  These sections can be expanded to show the
-     respective commits.
-
- -- Function: magit-insert-modules-unpulled-from-pushremote
-
-     Insert sections for modules that haven’t been pulled from the
-     push-remote yet.  These sections can be expanded to show the
-     respective commits.
-
- -- Function: magit-insert-modules-unpushed-to-upstream
-
-     Insert sections for modules that haven’t been pushed to the
-     upstream yet.  These sections can be expanded to show the
-     respective commits.
-
- -- Function: magit-insert-modules-unpushed-to-pushremote
-
-     Insert sections for modules that haven’t been pushed to the
-     push-remote yet.  These sections can be expanded to show the
-     respective commits.
-
- -- Function: magit-insert-submodules
-
-     Insert sections for all submodules.  For each section insert the
-     path, the branch, and the output of ‘git describe --tags’.
-
-     Press ‘RET’ on such a submodule section to show its own status
-     buffer.  Press ‘RET’ on the "Modules" section to display a list of
-     submodules in a separate buffer.  This shows additional information
-     not displayed in the super-repository’s status buffer.
-
  -- Function: magit-insert-unpulled-cherries
 
      Insert section showing unpulled commits.  Like
@@ -2065,15 +2033,16 @@ default the following functions are also members of that hook:
 could be used here.
 
 
-File: magit.info,  Node: Status Header Sections,  Next: Status Options,  Prev: Status Sections,  Up: Status Buffer
+File: magit.info,  Node: Status Header Sections,  Next: Status Module Sections,  Prev: Status Sections,  Up: Status Buffer
 
 5.1.2 Status Header Sections
 ----------------------------
 
 The contents of status buffers is controlled using the hook
-‘magit-status-sections-hook’, as described in the previous section.  By
-default ‘magit-insert-status-headers’ is the first member of that hook
-variable.
+‘magit-status-sections-hook’ (see *note Status Sections::).
+
+   By default ‘magit-insert-status-headers’ is the first member of that
+hook variable.
 
  -- Function: magit-insert-status-headers
 
@@ -2142,9 +2111,76 @@ variable.
      Insert a header line about the current user.
 
 
-File: magit.info,  Node: Status Options,  Prev: Status Header Sections,  Up: Status Buffer
+File: magit.info,  Node: Status Module Sections,  Next: Status Options,  Prev: Status Header Sections,  Up: Status Buffer
 
-5.1.3 Status Options
+5.1.3 Status Module Sections
+----------------------------
+
+The contents of status buffers is controlled using the hook
+‘magit-status-sections-hook’ (see *note Status Sections::).
+
+   By default ‘magit-insert-modules’ is _not_ a member of that hook
+variable.
+
+ -- Function: magit-insert-modules
+
+     Insert submodule sections.
+
+     Hook ‘magit-module-sections-hook’ controls which module sections
+     are inserted, and option ‘magit-insert-modules-nested’ controls
+     whether they are wrapped in an additional section.
+
+   • Option: magit-module-sections-hook
+
+     Hook run by ‘magit-insert-modules’.
+
+   • Option: magit-module-sections-nested
+
+     This option controls whether ‘magit-insert-modules’ wraps inserted
+     sections in an additional section.
+
+     If this is non-nil, then only a single top-level section is
+     inserted.  If it is nil, then all sections listed in
+     ‘magit-module-sections-hook’ become top-level sections.
+
+ -- Function: magit-insert-modules-overview
+
+     Insert sections for all submodules.  For each section insert the
+     path, the branch, and the output of ‘git describe --tags’.
+
+     Press ‘RET’ on such a submodule section to show its own status
+     buffer.  Press ‘RET’ on the "Modules" section to display a list of
+     submodules in a separate buffer.  This shows additional information
+     not displayed in the super-repository’s status buffer.
+
+ -- Function: magit-insert-modules-unpulled-from-upstream
+
+     Insert sections for modules that haven’t been pulled from the
+     upstream yet.  These sections can be expanded to show the
+     respective commits.
+
+ -- Function: magit-insert-modules-unpulled-from-pushremote
+
+     Insert sections for modules that haven’t been pulled from the
+     push-remote yet.  These sections can be expanded to show the
+     respective commits.
+
+ -- Function: magit-insert-modules-unpushed-to-upstream
+
+     Insert sections for modules that haven’t been pushed to the
+     upstream yet.  These sections can be expanded to show the
+     respective commits.
+
+ -- Function: magit-insert-modules-unpushed-to-pushremote
+
+     Insert sections for modules that haven’t been pushed to the
+     push-remote yet.  These sections can be expanded to show the
+     respective commits.
+
+
+File: magit.info,  Node: Status Options,  Prev: Status Module Sections,  Up: Status Buffer
+
+5.1.4 Status Options
 --------------------
 
  -- User Option: magit-status-refresh-hook
@@ -4330,23 +4366,22 @@ features are available from separate popups.
      This option specifies whether remote upstreams are favored over
      local upstreams when creating new branches.
 
-     When a new branch is created, Magit offers the branch, commit, or
-     stash as the default starting point of the new branch.  If there is
-     no such thing at point, then it falls back to offer the current
-     branch as starting-point.  The user may then accept that default or
-     pick something else.
+     When a new branch is created, then the branch, commit, or stash at
+     point is suggested as the starting point of the new branch, or if
+     there is no such revision at point the current branch.  In either
+     case the user may choose another starting point.
 
-     If the chosen starting-point is a branch, then it may also be set
+     If the chosen starting point is a branch, then it may also be set
      as the upstream of the new branch, depending on the value of the
      Git variable ‘branch.autoSetupMerge’.  By default this is done for
      remote branches, but not for local branches.
 
      You might prefer to always use some remote branch as upstream.  If
-     the chosen starting-point is (1) a local branch, (2) whose name
+     the chosen starting point is (1) a local branch, (2) whose name
      matches a member of the value of this option, (3) the upstream of
      that local branch is a remote branch with the same name, and (4)
      that remote branch can be fast-forwarded to the local branch, then
-     the chosen branch is used as starting-point, but its own upstream
+     the chosen branch is used as starting point, but its own upstream
      is used as the upstream of the new branch.
 
      Members of this option’s value are treated as branch names that
@@ -6195,7 +6230,8 @@ few key bindings, but this might be extended in the future.
 
      This command shows the log for the file of blob that the current
      buffer visits.  Renames are followed when a prefix argument is used
-     or when ‘--follow’ is part of ‘magit-log-arguments’.
+     or when ‘--follow’ is part of ‘magit-log-arguments’.  When the
+     region is active, the log is restricted to the selected line range.
 
  -- User Option: magit-log-buffer-file-locked
 
@@ -7861,7 +7897,7 @@ Appendix C Keystroke Index
 * C-c M-g:                               Minor Mode for Buffers Visiting Files.
                                                               (line  19)
 * C-c M-g b:                             Minor Mode for Buffers Visiting Files.
-                                                              (line  75)
+                                                              (line  76)
 * C-c M-g c:                             Minor Mode for Buffers Visiting Files.
                                                               (line  33)
 * C-c M-g D:                             Minor Mode for Buffers Visiting Files.
@@ -7873,7 +7909,7 @@ Appendix C Keystroke Index
 * C-c M-g l:                             Minor Mode for Buffers Visiting Files.
                                                               (line  64)
 * C-c M-g p:                             Minor Mode for Buffers Visiting Files.
-                                                              (line  81)
+                                                              (line  82)
 * C-c M-g s:                             Minor Mode for Buffers Visiting Files.
                                                               (line  24)
 * C-c M-g u:                             Minor Mode for Buffers Visiting Files.

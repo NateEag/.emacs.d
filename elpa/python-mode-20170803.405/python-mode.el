@@ -8235,8 +8235,8 @@ Optional argument REPEAT, the number of loops done already, is checked for py-ma
 	      (skip-chars-forward " \t\r\n\f#'\"")
 	    (end-of-line)
 	    (skip-chars-backward " \t\r\n\f" orig))
-	  ;; point at orig due to a trailing whitespace 
-	  (and (eq (point) orig) (skip-chars-forward " \t\r\n\f")) 
+	  ;; point at orig due to a trailing whitespace
+	  (and (eq (point) orig) (skip-chars-forward " \t\r\n\f"))
 	  (setq done t)
 	  (py-forward-statement orig done repeat))
 	 ((eq (current-indentation) (current-column))
@@ -8372,6 +8372,17 @@ From a programm use macro `py-backward-comment' instead "
 	(setq done t)))
     erg))
 
+(defun py--go-to-keyword-bol (regexp)
+  (let ((orig (point))
+	done pps)
+    (while (and (not done) (not (bobp)) (re-search-backward (concat "^" regexp) nil t 1))
+      (setq pps (parse-partial-sexp (point-min) (point)))
+      (or
+       (nth 8 pps)(nth 1 pps)
+       ;; (member (char-after)(list 32 9 ?# ?' ?\"))
+       (setq done (point))))
+    (when (< (point) orig) (point))))
+
 (defun py--go-to-keyword (regexp &optional maxindent)
   "Returns a list, whose car is indentation, cdr position. "
   (let ((maxindent
@@ -8384,21 +8395,24 @@ From a programm use macro `py-backward-comment' instead "
 		   ;; make maxindent large enough if not set
 		   (* 99 py-indent-offset)))))
         done erg)
-    (while (and (not done) (not (bobp)))
-      (py-backward-statement)
-      (cond ((eq 0 (current-indentation))
-	     (when (looking-at regexp) (setq erg (point)))
-	     (setq done t))
-	    ;; ((and (< (current-indentation) maxindent)
-	    ;; 	  (setq maxindent (current-indentation))
-	    ;; 	  (looking-at regexp))
-	    ;;  (setq erg (point))
-	    ;;  (setq done t))
-	    ((and (<= (current-indentation) maxindent)
-		  (setq maxindent (current-indentation))
-		  (looking-at regexp))
-	     (setq erg (point))
-	     (setq done t))))
+    (if (eq 0 maxindent)
+	;; faster jump to top-level forms
+	(setq erg (py--go-to-keyword-bol regexp))
+      (while (and (not done) (not (bobp)))
+	(py-backward-statement)
+	(cond ((eq 0 (current-indentation))
+	       (when (looking-at regexp) (setq erg (point)))
+	       (setq done t))
+	      ;; ((and (< (current-indentation) maxindent)
+	      ;; 	  (setq maxindent (current-indentation))
+	      ;; 	  (looking-at regexp))
+	      ;;  (setq erg (point))
+	      ;;  (setq done t))
+	      ((and (<= (current-indentation) maxindent)
+		    (setq maxindent (current-indentation))
+		    (looking-at regexp))
+	       (setq erg (point))
+	       (setq done t)))))
     (when (and py-mark-decorators (looking-at py-def-or-class-re))
       (setq done (py--up-decorators-maybe (current-indentation)))
       (when done (setq erg done)))
@@ -10389,7 +10403,7 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
   (with-current-buffer output-buffer
     (py--fast-send-string-intern strg
 				 proc
-				 output-buffer py-return-result-p)
+				 output-buffer return)
     (sit-for 0.1))))
 
 (defun py--delete-temp-file (tempfile &optional tempbuf)
@@ -20060,7 +20074,7 @@ See lp:1066489 "
       (unless (empty-line-p) (newline)))
     (py--fill-fix-end thisend orig docstring delimiters-style)))
 
-(defun py--fill-docstring-last-line (thisend beg end)
+(defun py--fill-docstring-last-line (thisend beg end multi-line-p)
   (widen)
   ;; (narrow-to-region thisbeg thisend)
   (goto-char thisend)
@@ -20122,7 +20136,7 @@ See lp:1066489 "
           ((save-excursion (goto-char end)
 			   (or (member (char-after) (list ?\" ?\'))
 			       (member (char-before) (list ?\" ?\'))))
-           (py--fill-docstring-last-line thisend beg end))
+           (py--fill-docstring-last-line thisend beg end multi-line-p))
           (t ;; (narrow-to-region beg end)
 	     (fill-region beg end justify)))
     (py--fill-docstring-base thisbeg thisend style multi-line-p first-line-p beg end py-current-indent orig docstring)))
@@ -23305,6 +23319,11 @@ Used by variable `which-func-functions' "
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
+
+(defun py--trim-regexp-empty-spaces-left (regexp)
+    (let ((erg (symbol-value regexp)))
+      (substring erg (1+ (string-match "\*" erg)))))
+
 (defun py--beginning-of-form-intern (final-re &optional inter-re iact indent orig lc decorator)
   "Go to beginning of FORM.
 
@@ -23316,7 +23335,9 @@ Returns beginning of FORM if successful, nil otherwise"
   (let ((regexp
 	 ;; (if inter-re
 	 ;; (concat (symbol-value inter-re) "\\|" (symbol-value final-re))
-		  (symbol-value final-re))
+	 (if (eq 0 indent)
+	     (py--trim-regexp-empty-spaces-left final-re)
+		  (symbol-value final-re)))
 		  ;; ))
 	erg)
     (unless (bobp)
@@ -23353,16 +23374,18 @@ Returns beginning of FORM if successful, nil otherwise"
 		(or (py--beginning-of-statement-p)
 		    (py-backward-statement))
 		;; maybe after last statement?
-		(when (save-excursion
-			(< (py-forward-statement) orig))
-		  (goto-char orig))
-		(cond ((looking-back "^[ \t]*" (line-beginning-position))
-		       (current-indentation))
-		      (t (progn (back-to-indentation)
-				(cond ((eq 0 (current-indentation))
-				       (current-indentation))
-				      ((and inter-re (looking-at (symbol-value inter-re)))
-				       (current-indentation)))))))))
+		(if (save-excursion
+		      (< (py-forward-statement) orig))
+		    (progn (goto-char orig)
+			   (back-to-indentation) 
+			   (current-indentation))
+		  (cond ((looking-back "^[ \t]*" (line-beginning-position))
+			 (current-indentation))
+			(t (progn (back-to-indentation)
+				  (cond ((eq 0 (current-indentation))
+					 (current-indentation))
+					((and inter-re (looking-at (symbol-value inter-re)))
+					 (current-indentation))))))))))
 	 erg)
     ;; def and class need lesser value
     (when (and
@@ -23453,12 +23476,14 @@ Returns `t' if point was moved"
 
 Returns position if successful, nil otherwise "
   (interactive)
-  (let (erg)
+  (let (erg done)
     (unless (bobp)
-      (while (and (not (bobp))
-		  (setq erg (re-search-backward "^[[:alpha:]_'\"]" nil t 1))
-		  (nth 8 (parse-partial-sexp (point-min) (point)))
-		  (setq erg nil)))
+      (while (and (not done)(not (bobp))
+		  (setq erg (re-search-backward "^[[:alpha:]_'\"]" nil t 1)))
+	(if
+	    (nth 8 (parse-partial-sexp (point-min) (point)))
+	    (setq erg nil)
+	  (setq done t)))
       (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
       erg)))
 

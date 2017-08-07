@@ -6,7 +6,7 @@
 ;; URL: http://github.com/ananthakumaran/tide
 ;; Version: 2.4.2
 ;; Keywords: typescript
-;; Package-Requires: ((dash "2.10.0") (flycheck "27") (typescript-mode "0.1") (cl-lib "0.5"))
+;; Package-Requires: ((dash "2.10.0") (s "1.11.0") (flycheck "27") (typescript-mode "0.1") (cl-lib "0.5"))
 
 ;; This program is free software: you can redistribute it and/or modify it
 ;; under the terms of the GNU General Public License as published by
@@ -33,6 +33,7 @@
 (require 'cl-lib)
 (require 'eldoc)
 (require 'dash)
+(require 's)
 (require 'flycheck)
 (require 'imenu)
 (require 'thingatpt)
@@ -126,9 +127,9 @@ above."
   :type 'boolean
   :group 'tide)
 
-(defcustom tide-allow-popup-select '(code-fix)
+(defcustom tide-allow-popup-select '(code-fix refactor)
   "The list of commands where popup selection is allowed."
-  :type '(set (const code-fix) (const jump-to-implementation))
+  :type '(set (const code-fix) (const jump-to-implementation) (const refactor))
   :group 'tide)
 
 (defcustom tide-always-show-documentation nil
@@ -241,8 +242,11 @@ ones and overrule settings in the other lists."
 (defun tide-tsserver-version-not-supported ()
   (error "Only tsserver 2.0 or greater is supported. Upgrade your tsserver or use older version of tide."))
 
+(defun tide-tsserver-feature-not-supported (min-version)
+  (error "tsserver %S or greater is required for this feature." min-version))
+
 (defmacro tide-on-response-success (response ignore-empty-response &rest body)
-  (declare (indent 1))
+  (declare (indent 2))
   `(if (tide-response-success-p ,response)
        ,@body
      (-when-let (msg (plist-get response :message))
@@ -251,7 +255,7 @@ ones and overrule settings in the other lists."
      nil))
 
 (defmacro tide-on-response-success-callback (response ignore-empty-response &rest body)
-  (declare (indent 1))
+  (declare (indent 2))
   `(lambda (,response)
      (tide-on-response-success ,response ,ignore-empty-response
        ,@body)))
@@ -763,16 +767,44 @@ Noise can be anything like braces, reserved keywords, etc."
 (defun tide-method-call-p ()
   (or (looking-at "[(,]") (and (not (looking-at "\\sw")) (looking-back "[(,]\n?\\s-*"))))
 
-(defun tide-quickinfo-text (response)
-  (or (tide-plist-get response :body :displayString) ;; old
+(defun tide-doc-text (quickinfo-or-completion-detail)
+  (or (plist-get quickinfo-or-completion-detail :displayString) ;; old
       (tide-annotate-display-parts
-       (tide-plist-get response :body :displayParts))))
+       (plist-get quickinfo-or-completion-detail :displayParts))))
 
-(defun tide-quickinfo-documentation (response)
-  (let ((documentation (tide-plist-get response :body :documentation)))
+(defun tide-doc-documentation (quickinfo-or-completion-detail)
+  (let ((documentation (plist-get quickinfo-or-completion-detail :documentation)))
     (if (stringp documentation) ;; old
         documentation
       (tide-annotate-display-parts documentation))))
+
+(defun tide-format-jsdoc (name text)
+  (setq text (s-trim (or text "")))
+  (concat (propertize (concat "@" name) 'face 'font-lock-keyword-face)
+          (if (s-contains? "\n" text) "\n" " ")
+          text
+          "\n"))
+
+(defun tide-doc-jsdoc (quickinfo-or-completion-detail)
+  (tide-join
+   (-map
+    (lambda (tag)
+      (tide-format-jsdoc (plist-get tag :name) (plist-get tag :text)))
+    (plist-get quickinfo-or-completion-detail :tags))))
+
+(defun tide-construct-documentation (quickinfo-or-completion-detail)
+  (when quickinfo-or-completion-detail
+    (let* ((display-string (tide-doc-text quickinfo-or-completion-detail))
+           (documentation (tide-doc-documentation quickinfo-or-completion-detail))
+           (jsdoc (tide-doc-jsdoc quickinfo-or-completion-detail)))
+      (when (or (or (not (s-blank? documentation))
+                    (not (s-blank? jsdoc)))
+                tide-always-show-documentation)
+        (tide-doc-buffer
+         (tide-join
+          (-concat (list display-string "\n\n")
+                   (if (not (s-blank? documentation)) (list documentation "\n\n") '())
+                   (list jsdoc))))))))
 
 (defun tide-command:quickinfo-old (cb)
   (tide-send-command "quickinfo" `(:file ,buffer-file-name :line ,(tide-line-number-at-pos) :offset ,(tide-current-offset)) cb))
@@ -791,7 +823,7 @@ Noise can be anything like braces, reserved keywords, etc."
       (when (looking-at "\\s_\\|\\sw")
         (tide-command:quickinfo
          (tide-on-response-success-callback response t
-           (tide-eldoc-maybe-show (tide-quickinfo-text response)))))))
+           (tide-eldoc-maybe-show (tide-doc-text (plist-get response :body))))))))
   nil)
 
 
@@ -811,14 +843,9 @@ Noise can be anything like braces, reserved keywords, etc."
   (interactive)
   (tide-command:quickinfo
    (tide-on-response-success-callback response nil
-     (let ((documentation
-            (-when-let* ((display-string (tide-quickinfo-text response))
-                         (documentation (tide-quickinfo-documentation response)))
-              (when (or (not (equal documentation "")) tide-always-show-documentation)
-                (tide-join (list display-string "\n\n" documentation))))))
-       (if documentation
-           (display-buffer (tide-doc-buffer documentation) t)
-         (message "No documentation available."))))))
+     (-if-let (buffer (tide-construct-documentation (plist-get response :body)))
+         (display-buffer buffer t)
+       (message "No documentation available.")))))
 
 ;;; Buffer Sync
 
@@ -843,6 +870,13 @@ Noise can be anything like braces, reserved keywords, etc."
 
 ;;; Code-fixes
 
+(defun tide-apply-code-edits (file-code-edits)
+  (save-excursion
+    (dolist (file-code-edit file-code-edits)
+      (with-current-buffer (find-file-noselect (plist-get file-code-edit :fileName))
+        (tide-format-regions (tide-apply-edits (plist-get file-code-edit :textChanges)))
+        (basic-save-buffer)))))
+
 (defun tide-get-flycheck-errors-ids-at-point ()
   (-map #'flycheck-error-id (flycheck-overlay-errors-at (point))))
 
@@ -854,12 +888,7 @@ Noise can be anything like braces, reserved keywords, etc."
 
 (defun tide-apply-codefix (fix)
   "Apply a single `FIX', which may apply to several files."
-  (let ((file-changes (plist-get fix :changes)))
-    (save-excursion
-      (dolist (file-change file-changes)
-        (with-current-buffer (find-file-noselect (plist-get file-change :fileName))
-          (tide-format-regions (tide-apply-edits (plist-get file-change :textChanges)))
-          (basic-save-buffer))))))
+  (tide-apply-code-edits (plist-get fix :changes)))
 
 
 (defun tide-fix ()
@@ -875,6 +904,44 @@ Noise can be anything like braces, reserved keywords, etc."
               (t (tide-apply-codefix
                   (tide-select-item-from-list "Select fix: " fixes #'tide-get-fix-description (tide-can-use-popup-p 'code-fix)))))))))
 
+;;; Refactor
+
+(defun tide-command:getEditsForRefactor (refactor action)
+  (tide-send-command-sync "getEditsForRefactor"
+                          `(:refactor ,refactor :action ,action :file ,buffer-file-name :line ,(tide-line-number-at-pos) :offset ,(tide-current-offset))))
+
+(defun tide-command:getApplicableRefactors ()
+  (tide-send-command-sync "getApplicableRefactors" `(:file ,buffer-file-name :line ,(tide-line-number-at-pos) :offset ,(tide-current-offset))))
+
+(defun tide-get-refactor-description (refactor)
+  (plist-get refactor :description))
+
+(defun tide-select-refactor (applicable-refactor-infos)
+  (let ((available-refactors
+         (-mapcat
+          (lambda (applicable-refactor-info)
+            (-map (lambda (refactor-action-info)
+                    `(:action ,(plist-get refactor-action-info :name)
+                              :refactor ,(plist-get applicable-refactor-info :name)
+                              :inlineable ,(plist-get applicable-refactor-info :inlineable)
+                              :description ,(plist-get refactor-action-info :description)))
+                  (plist-get applicable-refactor-info :actions)))
+          applicable-refactor-infos)))
+    (tide-select-item-from-list "Select refactor: " available-refactors #'tide-get-refactor-description (tide-can-use-popup-p 'refactor))))
+
+(defun tide-apply-refactor (selected)
+  (let ((response (tide-command:getEditsForRefactor (plist-get selected :refactor) (plist-get selected :action))))
+    (tide-on-response-success response nil
+      (tide-apply-code-edits (tide-plist-get response :body :edits)))))
+
+(defun tide-refactor ()
+  "Refactor code at point"
+  (interactive)
+  (let ((response (tide-command:getApplicableRefactors)))
+    (cond ((tide-command-unknown-p response) (tide-tsserver-feature-not-supported "2.4"))
+          ((tide-response-success-p response) (tide-apply-refactor
+                                               (tide-select-refactor (plist-get response :body))))
+          (t (message "No refactors available. (NOTE: As of typescript 2.4.1, refactors are only available for js files)")))))
 
 ;;; Auto completion
 
@@ -976,10 +1043,6 @@ Noise can be anything like braces, reserved keywords, etc."
         (when (tide-response-success-p response)
           (tide-annotate-completions (plist-get response :body) prefix file-location)))))))
 
-(defun tide-format-detail-type (detail)
-  (tide-join
-   (-map (lambda (part) (tide-annotate-display-part part)) (plist-get detail :displayParts))))
-
 (defun tide-command:completionEntryDetails (name)
   (let ((arguments (-concat (get-text-property 0 'file-location name)
                             `(:entryNames (,name)))))
@@ -997,17 +1060,12 @@ Noise can be anything like braces, reserved keywords, etc."
 (defun tide-completion-meta (name)
   (-when-let* ((response (tide-completion-entry-details name))
                (detail (car (plist-get response :body))))
-    (tide-format-detail-type detail)))
+    (tide-doc-text detail)))
 
 (defun tide-completion-doc-buffer (name)
   (-when-let* ((response (tide-completion-entry-details name))
-               (detail (car (plist-get response :body)))
-               (documentation (plist-get detail :documentation)))
-    (tide-doc-buffer
-     (tide-join
-      (list (tide-format-detail-type detail)
-            "\n\n"
-            (tide-join (-map #'tide-annotate-display-part documentation)))))))
+               (detail (car (plist-get response :body))))
+    (tide-construct-documentation detail)))
 
 ;;;###autoload
 (defun company-tide (command &optional arg &rest ignored)

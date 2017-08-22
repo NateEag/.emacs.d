@@ -223,8 +223,10 @@
     ;; Turn on surround everywhere.
     (global-evil-surround-mode)
 
+    ;; Use 'gx' for swapping vim textobjects/motions.
     (evil-exchange-install)
 
+    ;; Add vim operator for commenting things.
     (evil-commentary-mode)
 
     (diminish 'evil-commentary-mode)

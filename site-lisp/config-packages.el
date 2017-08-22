@@ -189,9 +189,29 @@
   :config
   (progn
 
-    ;; Use regular emacs keybindings for insert-mode.
-    (setcdr evil-insert-state-map nil)
+    ;; Use regular emacs keybindings for insert-mode (except for ESC-ESC-ESC,
+    ;; because vim keybindings are still vim).
+    (setq evil-insert-state-map (make-sparse-keymap))
+    (define-key evil-insert-state-map (kbd "<escape>") 'evil-normal-state)
 
+    ;; Use evil-escape for custom keybindings to get me back into normal-mode.
+    ;;
+    ;; I'm increasingly unhappy with this - its hackery breaks
+    ;; aggressive-fill-paragraph-mode, and my readline hacks to do the same
+    ;; thing in readline-based software can cause issues too (for instance,
+    ;; when I paste an identifier containing 'jk' into such a program).
+    ;;
+    ;; What I should do instead is make it easier to send an Escape keycode
+    ;; from my various input devices, via whatever mechanisms are available on
+    ;; my current platforms.
+    ;;
+    ;; Since I pretty much just use an ErgoDox and MacBook for typing, this is
+    ;; almost solved - my ErgoDox layout uses the same physical key for Escape
+    ;; and Control, and my Karabiner layout for OS X maps the Shift keys to
+    ;; Control.
+    ;;
+    ;; All I need to do now is teach Karabiner to send Escape when Control is
+    ;; tapped with no modifiers, then retrain my fingers.
     (evil-escape-mode)
 
     ;; Always use a leader key, because the leader is awesome.

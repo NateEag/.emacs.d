@@ -124,6 +124,10 @@
  blocks. I thought it was supposed to, but in the traditional four-space
  indented code blocks, it doesn't seem to work for me.
 
+-Figure out why entering '/**<RET>' in js2-mode results in a proper comment
+ block if you wait a bit before pressing Enter, but a weird string
+ concatenation if you press it quickly.
+
 -Make json-mode.el print paths more minimally (use .name instead of ["name"])?
  Maybe it's that way cause it's not supported everywhere.
 

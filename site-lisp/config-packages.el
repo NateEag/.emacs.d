@@ -338,7 +338,7 @@
   ;; should prevent other people who use an ac-trigger-key from having the same
   ;; issue.
   (defadvice ac-trigger-key-command (around add-tern-ac-candidates first activate)
-    "Load tern-js canditates before ac-start."
+    "Load tern-js candidates before ac-start."
     (if (and tern-ac-sync
              (memq major-mode tern-ac-js-major-modes)
              (not (or (ac-menu-live-p) (ac-inline-live-p)))

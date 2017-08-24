@@ -261,7 +261,11 @@ applies)."
 (defcustom yas-also-auto-indent-first-line nil
   "Non-nil means also auto indent first line according to mode.
 
-Naturally this is only valid when `yas-indent-line' is `auto'"
+Naturally this is only valid when `yas-indent-line' is `auto'."
+  :type 'boolean)
+
+(defcustom yas-also-indent-empty-lines nil
+  "Non-nil means also indent empty lines according to mode."
   :type 'boolean)
 
 (defcustom yas-snippet-revival t
@@ -3839,9 +3843,14 @@ considered when expanding the snippet."
              (when first-field
                (sit-for 0) ;; fix issue 125
                (yas--letenv (yas--snippet-expand-env snippet)
-                 (yas--move-to-field snippet first-field))))
+                 (yas--move-to-field snippet first-field))
+               (when (and (eq (yas--field-number first-field) 0)
+                          (> (length (yas--field-text-for-display
+                                      first-field))
+                             0))
+                 ;; Keep region for ${0:exit text}.
+                 (setq deactivate-mark nil))))
            (yas--message 4 "snippet %d expanded." (yas--snippet-id snippet))
-           (setq deactivate-mark nil)
            t))))
 
 (defun yas--take-care-of-redo (_beg _end snippet)
@@ -4222,7 +4231,9 @@ The SNIPPET's markers are preserved."
         (goto-char from)
         (cl-loop for bol = (line-beginning-position)
                  for eol = (line-end-position)
-                 if (/= bol eol) do
+                 if (or yas-also-indent-empty-lines
+                        (/= bol eol))
+                 do
                  ;; Indent each non-empty line.
                  (let ((remarkers nil))
                    (dolist (m snippet-markers)

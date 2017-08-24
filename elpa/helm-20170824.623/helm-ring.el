@@ -142,6 +142,9 @@ Same as `helm-kill-selection-and-quit' called with a prefix arg."
 
 (defun helm-kill-ring-action-yank (str)
   "Insert STR in `kill-ring' and set STR to the head.
+
+When called with a prefix arg, point and mark are exchanged without
+activating region.
 If this action is executed just after `yank',
 replace with STR as yanked string."
   (with-helm-current-buffer
@@ -155,7 +158,22 @@ replace with STR as yanked string."
            (when (and (region-active-p) delete-selection-mode)
              (delete-region (region-beginning) (region-end)))
            (if (not (eq (helm-attr 'last-command helm-source-kill-ring) 'yank))
-               (insert-for-yank str)
+               (progn
+                 ;; Ensure mark is at beginning of inserted text.
+                 (push-mark)
+                 ;; When yanking in a helm minibuffer we need a small
+                 ;; delay to detect the mark in previous minibuffer. [1]
+                 (run-with-timer
+                  0.01 nil
+                  (lambda ()
+                    (insert-for-yank str)
+                    (when helm-current-prefix-arg
+                      ;; Same as exchange-point-and-mark but without
+                      ;; activating region.
+                      (goto-char (prog1 (mark t)
+                                   (set-marker (mark-marker)
+                                               (point)
+                                               helm-current-buffer)))))))
                ;; from `yank-pop'
                (let ((inhibit-read-only t)
                      (before (< (point) (mark t))))
@@ -164,7 +182,8 @@ replace with STR as yanked string."
                      (funcall (or yank-undo-function 'delete-region) (mark t) (point)))
                  (setq yank-undo-function nil)
                  (set-marker (mark-marker) (point) helm-current-buffer)
-                 (insert-for-yank str)
+                 ;; Same as [1]
+                 (run-with-timer 0.01 nil (lambda () (insert-for-yank str)))
                  ;; Set the window start back where it was in the yank command,
                  ;; if possible.
                  (set-window-start (selected-window) yank-window-start t)

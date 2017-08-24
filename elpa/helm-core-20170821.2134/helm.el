@@ -1197,6 +1197,9 @@ It also accepts function or variable symbol.")
 (defvar helm-async-outer-limit-hook nil
   "A hook that run in async sources when process output comes out of `candidate-number-limit'.
 Should be set locally to `helm-buffer' with `helm-set-local-variable'.")
+
+(defvar helm-quit-hook nil
+  "A hook that run when quitting helm.")
 
 ;;; Internal Variables
 ;;
@@ -2194,6 +2197,7 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
                  (helm-log (concat "[End session] " (make-string 41 ?-)))))
            (quit
             (helm-restore-position-on-quit)
+            (helm-log-run-hook 'helm-quit-hook)
             (helm-log (concat "[End session (quit)] " (make-string 34 ?-)))
             nil))
       (when (fboundp 'advice-remove)
@@ -3764,12 +3768,9 @@ passed as argument to `recenter'."
   (with-helm-window
     (let* ((source    (helm-get-current-source))
            (selection (helm-aif (helm-get-selection nil t source)
-                          (regexp-quote it)
-                        it)))
+                          (regexp-quote it))))
       (setq helm--force-updating-p t)
-      (when source
-        (mapc 'helm-force-update--reinit
-              (helm-get-sources)))
+      (mapc 'helm-force-update--reinit (helm-get-sources))
       (helm-update (or preselect selection) source)
       (and recenter (recenter (and (numberp recenter) recenter))))))
 
@@ -3782,8 +3783,12 @@ passed as argument to `recenter'."
 
 (defun helm-force-update--reinit (source)
   "Reinit SOURCE by calling its update and init functions."
-  (helm-aif (helm-funcall-with-source
-             source 'helm-candidate-buffer)
+  ;; When using a specific buffer as cache, don't kill it.
+  (helm-aif (and (null (bufferp (assoc-default
+                                 (helm-attr 'name source)
+                                 helm--candidate-buffer-alist)))
+                 (helm-funcall-with-source
+                  source 'helm-candidate-buffer))
       (kill-buffer it))
   (cl-dolist (attr '(update init))
     (helm-aif (assoc-default attr source)
@@ -5279,13 +5284,21 @@ Acceptable values of BUFFER-SPEC:
 - A buffer
   Register a buffer as a candidates buffer.
   The buffer needs to exists, it is not created.
-  This allow you to use the buffer as a cache.
-  The buffer is not erased, it's up to you to maintain
-  it in the init function.
-
+  This allow you to use the buffer as a cache, it is faster because
+  the buffer is already drawn, but be careful when using this as you
+  may mangle your buffer depending what you write in your init(s)
+  function, IOW don't modify the contents of the buffer in init(s)
+  function but in a transformer.
+  The buffer is not erased nor deleted.
+  Generally it is safer to use a copy of buffer inserted
+  in a global or local buffer.
+  
 If for some reasons a global buffer and a local buffer exist and are
 belonging to the same source, the local buffer takes precedence on the
-global one and is used instead."
+global one and is used instead.
+
+When forcing update only the global and local buffers are killed
+before running again the init function."
   (let ((global-bname (format " *helm candidates:%s*"
                               helm--source-name))
         (local-bname (format " *helm candidates:%s*%s"

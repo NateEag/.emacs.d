@@ -7,7 +7,7 @@
 ;; Maintainer: Jason R. Blevins <jblevins@xbeta.org>
 ;; Created: May 24, 2007
 ;; Version: 2.3-dev
-;; Package-Version: 20170803.1101
+;; Package-Version: 20170823.1201
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: http://jblevins.org/projects/markdown-mode/
@@ -64,7 +64,16 @@
 
 ;;; Installation:
 
-;; The recommended way to install markdown-mode is to install the package
+;; _Note:_ To use all of the features of `markdown-mode', you'll need
+;; to install the Emacs package itself and also have a local Markdown
+;; processor installed (e.g., Markdown.pl, MultiMarkdown, or Pandoc).
+;; The external processor is not required for editing, but will be
+;; used for rendering HTML for preview and export. After installing
+;; the Emacs package, be sure to configure `markdown-command' to point
+;; to the preferred Markdown executable on your system.  See the
+;; Customization section below for more details.
+
+;; The recommended way to install `markdown-mode' is to install the package
 ;; from [MELPA Stable](https://stable.melpa.org/#/markdown-mode)
 ;; using `package.el'. First, configure `package.el' and the MELPA Stable
 ;; repository by adding the following to your `.emacs', `init.el',
@@ -345,7 +354,7 @@
 ;;     `markdown-live-preview-window-function' can be customized to open
 ;;     in a browser other than `eww'.  If you want to force the
 ;;     preview window to appear at the bottom or right, you can
-;;     customize `markdown-split-window-direction`.
+;;     customize `markdown-split-window-direction'.
 ;;
 ;;     To summarize:
 ;;
@@ -766,6 +775,11 @@
 ;;      the variable `markdown-code-lang-modes'.  This can be toggled
 ;;      interactively by pressing `C-c C-x C-f`
 ;;      (`markdown-toggle-fontify-code-blocks-natively').
+;;
+;;   * `markdown-gfm-uppercase-checkbox' - When non-nil, complete GFM
+;;     task list items with `[X]` instead of `[x]` (default: `nil').
+;;     This is useful for compatibility with `org-mode', which doesn't
+;;     recognize the lowercase variant.
 ;;
 ;; Additionally, the faces used for syntax highlighting can be modified to
 ;; your liking by issuing `M-x customize-group RET markdown-faces`
@@ -1347,6 +1361,12 @@ This applies to insertions done with
 `markdown-electric-backquote'."
   :group 'markdown
   :type 'boolean)
+
+(defcustom markdown-gfm-uppercase-checkbox nil
+  "If non-nil, use [X] for completed checkboxes, [x] otherwise."
+  :group 'markdown
+  :type 'boolean
+  :safe 'booleanp)
 
 (defcustom markdown-hide-urls nil
   "Hide URLs of inline links and reference tags of reference links.
@@ -2288,7 +2308,15 @@ is non-nil.
 Set this to a non-nil value to turn this feature on by default.
 You can interactively toggle the value of this variable with
 `markdown-toggle-markup-hiding', \\[markdown-toggle-markup-hiding],
-or from the Markdown > Show & Hide menu."
+or from the Markdown > Show & Hide menu.
+
+Markup hiding works by adding text properties to positions in the
+buffer---either the `invisible' property or the `display' property
+in cases where alternative glyphs are used (e.g., list bullets).
+This does not, however, affect printing or other output.
+Functions such as `htmlfontify-buffer' and `ps-print-buffer' will
+not honor these text properties.  For printing, it would be better
+to first convert to HTML or PDF (e.g,. using Pandoc)."
   :group 'markdown
   :type 'boolean
   :safe 'booleanp
@@ -2298,7 +2326,8 @@ or from the Markdown > Show & Hide menu."
 (defun markdown-toggle-markup-hiding (&optional arg)
   "Toggle the display or hiding of markup.
 With a prefix argument ARG, enable markup hiding if ARG is positive,
-and disable it otherwise."
+and disable it otherwise.
+See `markdown-hide-markup' for additional details."
   (interactive (list (or current-prefix-arg 'toggle)))
   (setq markdown-hide-markup
         (if (eq arg 'toggle)
@@ -5669,6 +5698,18 @@ Assumes match data is available for `markdown-regex-italic'."
    (propertize "- = hr" 'face 'markdown-hr-face) ", "
    "C-h = more"))
 
+(defun markdown--command-map-prompt ()
+  "Return prompt for Markdown buffer-wide commands."
+  (concat
+   "Command: "
+   (propertize "m" 'face 'markdown-bold-face) "arkdown, "
+   (propertize "p" 'face 'markdown-bold-face) "review, "
+   (propertize "o" 'face 'markdown-bold-face) "pen, "
+   (propertize "e" 'face 'markdown-bold-face) "xport, "
+   "export & pre" (propertize "v" 'face 'markdown-bold-face) "iew, "
+   (propertize "c" 'face 'markdown-bold-face) "heck refs, "
+   "C-h = more"))
+
 (defvar markdown-mode-style-map
   (let ((map (make-keymap (markdown--style-map-prompt))))
     (define-key map (kbd "1") 'markdown-insert-header-atx-1)
@@ -5700,6 +5741,21 @@ Assumes match data is available for `markdown-regex-italic'."
     map)
   "Keymap for Markdown text styling commands.")
 
+(defvar markdown-mode-command-map
+  (let ((map (make-keymap (markdown--command-map-prompt))))
+    (define-key map (kbd "m") 'markdown-other-window)
+    (define-key map (kbd "p") 'markdown-preview)
+    (define-key map (kbd "e") 'markdown-export)
+    (define-key map (kbd "v") 'markdown-export-and-preview)
+    (define-key map (kbd "o") 'markdown-open)
+    (define-key map (kbd "l") 'markdown-live-preview-mode)
+    (define-key map (kbd "w") 'markdown-kill-ring-save)
+    (define-key map (kbd "c") 'markdown-check-refs)
+    (define-key map (kbd "n") 'markdown-cleanup-list-numbers)
+    (define-key map (kbd "]") 'markdown-complete-buffer)
+    map)
+  "Keymap for Markdown buffer-wide commands.")
+
 (defvar markdown-mode-map
   (let ((map (make-keymap)))
     ;; Markup insertion & removal
@@ -5713,6 +5769,7 @@ Assumes match data is available for `markdown-regex-italic'."
     ;; Following and doing things
     (define-key map (kbd "C-c C-o") 'markdown-follow-thing-at-point)
     (define-key map (kbd "C-c C-d") 'markdown-do)
+    (define-key map (kbd "C-c '") 'markdown-edit-code-block)
     ;; Indentation
     (define-key map (kbd "C-m") 'markdown-enter-key)
     (define-key map (kbd "DEL") 'markdown-outdent-or-delete)
@@ -5730,17 +5787,7 @@ Assumes match data is available for `markdown-regex-italic'."
     (define-key map (kbd "C-c C-b") 'markdown-outline-previous-same-level)
     (define-key map (kbd "C-c C-u") 'markdown-outline-up)
     ;; Buffer-wide commands
-    (define-key map (kbd "C-c C-c m") 'markdown-other-window)
-    (define-key map (kbd "C-c C-c p") 'markdown-preview)
-    (define-key map (kbd "C-c C-c e") 'markdown-export)
-    (define-key map (kbd "C-c C-c v") 'markdown-export-and-preview)
-    (define-key map (kbd "C-c C-c o") 'markdown-open)
-    (define-key map (kbd "C-c C-c l") 'markdown-live-preview-mode)
-    (define-key map (kbd "C-c C-c w") 'markdown-kill-ring-save)
-    (define-key map (kbd "C-c C-c c") 'markdown-check-refs)
-    (define-key map (kbd "C-c C-c n") 'markdown-cleanup-list-numbers)
-    (define-key map (kbd "C-c C-c ]") 'markdown-complete-buffer)
-    (define-key map (kbd "C-c '") 'markdown-edit-code-block)
+    (define-key map (kbd "C-c C-c") markdown-mode-command-map)
     ;; Subtree and list editing
     (define-key map (kbd "C-c <up>") 'markdown-move-up)
     (define-key map (kbd "C-c <down>") 'markdown-move-down)
@@ -6586,7 +6633,7 @@ the surrounding context in light of Markdown syntax.  For that, see
   "Move the point to the start of the current paragraph.
 With argument ARG, do it ARG times; a negative argument ARG = -N
 means move forward N blocks."
-  (interactive "p")
+  (interactive "^p")
   (or arg (setq arg 1))
   (if (< arg 0)
       (markdown-forward-paragraph (- arg))
@@ -6640,7 +6687,7 @@ means move forward N blocks."
   "Move forward to the next end of a paragraph.
 With argument ARG, do it ARG times; a negative argument ARG = -N
 means move backward N blocks."
-  (interactive "p")
+  (interactive "^p")
   (or arg (setq arg 1))
   (if (< arg 0)
       (markdown-backward-paragraph (- arg))
@@ -6691,7 +6738,7 @@ Moves across complete code blocks, list items, and blockquotes,
 but otherwise stops at blank lines, headers, and horizontal
 rules.  With argument ARG, do it ARG times; a negative argument
 ARG = -N means move forward N blocks."
-  (interactive "p")
+  (interactive "^p")
   (or arg (setq arg 1))
   (if (< arg 0)
       (markdown-forward-block (- arg))
@@ -6738,7 +6785,7 @@ Moves across complete code blocks, list items, and blockquotes,
 but otherwise stops at blank lines, headers, and horizontal
 rules.  With argument ARG, do it ARG times; a negative argument
 ARG = -N means move backward N blocks."
-  (interactive "p")
+  (interactive "^p")
   (or arg (setq arg 1))
   (if (< arg 0)
       (markdown-backward-block (- arg))
@@ -8496,7 +8543,9 @@ Returns nil if there is no task list item at the point."
           ;; Advance to column of first non-whitespace after marker
           (forward-char (cl-fourth bounds))
           (cond ((looking-at "\\[ \\]")
-                 (replace-match "[x]" nil t)
+                 (replace-match
+                  (if markdown-gfm-uppercase-checkbox "[X]" "[x]")
+                  nil t)
                  (match-string-no-properties 0))
                 ((looking-at "\\[[xX]\\]")
                  (replace-match "[ ]" nil t)

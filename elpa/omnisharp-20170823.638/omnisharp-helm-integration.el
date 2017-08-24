@@ -56,33 +56,37 @@
     (interactive)
     (helm :sources (helm-make-source "Omnisharp - Find Symbols" 'helm-source-sync
                                      :action 'omnisharp--helm-jump-to-candidate
-                                     :matchplugin nil
-                                     :match '((lambda (candidate) (string-match-p
-                                                                   helm-pattern
-                                                                   (nth 1 (split-string
-                                                                           candidate ":" t)))))
-                                     :candidates (omnisharp--helm-find-symbols-candidates))
-          :buffer "*Omnisharp Symbols*"
+                                     :volatile t
+                                     :candidates 'omnisharp--helm-find-symbols-candidates)
           :truncate-lines t))
 
   (defun omnisharp--helm-find-symbols-candidates ()
-    (let (candidates)
-      (omnisharp--send-command-to-server-sync
-       "findsymbols"
-       '((Filter . ""))
-       (-lambda ((&alist 'QuickFixes quickfixes))
-                (setq candidates
-                      (-map 'omnisharp--helm-find-symbols-transform-candidate
-                            quickfixes))))
-      candidates))
+    (if (string= helm-pattern "")
+        ;; we want to wait for at least one char before we trigger
+        ;; server search because listing all the symbols can take a lot
+        ;; of time on large projects
+        nil
+
+      (let (candidates)
+        (omnisharp--send-command-to-server-sync
+         "findsymbols"
+         `((Filter . ,helm-pattern))
+         (-lambda ((&alist 'QuickFixes quickfixes))
+           (setq candidates
+                 (-map 'omnisharp--helm-find-symbols-transform-candidate
+                       quickfixes))))
+        candidates)))
 
   (defun omnisharp--helm-find-symbols-transform-candidate (candidate)
     "Convert a quickfix entry into helm output"
     (cons
-     (format "%s : %s"
+     (format "%s : %s(%s)"
+             (propertize (nth 0 (split-string (cdr (assoc 'Text candidate)) "("))
+                         'face 'helm-grep-match)
              (propertize (omnisharp--get-filename candidate)
                          'face 'helm-grep-file)
-             (nth 0 (split-string (cdr (assoc 'Text candidate)) "(")))
+             (propertize (number-to-string (cdr (assoc 'Line candidate)))
+                         'face 'helm-grep-lineno))
      candidate)))
 
 (provide 'omnisharp-helm-integration)

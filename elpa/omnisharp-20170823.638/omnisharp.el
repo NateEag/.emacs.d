@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2013-2017 Mika Vilpas and others (GPLv3)
 ;; Author: Mika Vilpas and others
-;; Version: 4.0
+;; Version: 4.1
 ;; License: GNU General Public License version 3, or (at your option) any later version
 ;; Url: https://github.com/Omnisharp/omnisharp-emacs
 ;; Package-Requires: ((emacs "24") (flycheck "30") (dash "2.12.0") (auto-complete "1.4") (popup "0.5.1") (csharp-mode "0.8.7") (cl-lib "0.5") (s "1.10.0") (shut-up "0.3.2") (f "0.19.0"))
@@ -28,6 +28,9 @@
 ;; that works in the background.
 ;;
 ;; See the project home page for more information.
+
+
+(require 'csharp-mode)
 (require 'json)
 (require 'cl-lib)
 (require 'files)
@@ -43,6 +46,7 @@
 (require 'shut-up)
 (require 'f)
 
+(require 'omnisharp-settings)
 (require 'omnisharp-server-management)
 (require 'omnisharp-utils)
 (require 'omnisharp-http-utils)
@@ -50,7 +54,6 @@
 (require 'omnisharp-auto-complete-actions)
 (require 'omnisharp-current-symbol-actions)
 (require 'omnisharp-navigation-actions)
-(require 'omnisharp-settings)
 (require 'omnisharp-helm-integration)
 (require 'omnisharp-solution-actions)
 (require 'omnisharp-format-actions)
@@ -92,10 +95,10 @@ server backend."
 ;;
 
 ;;;###autoload
-(defun omnisharp-start-omnisharp-server (path-to-project)
-  "Starts an OmniSharp server for a given path to a project file or a directory"
-  (interactive "GStart OmniSharp for project folder or solution file: ")
-  (omnisharp--start-omnisharp-server path-to-project))
+(defun omnisharp-start-omnisharp-server (&optional no-autodetect)
+  "Starts an OmniSharp server for a given path to a project or solution file"
+  (interactive "P")
+  (omnisharp--start-omnisharp-server no-autodetect))
 
 ;;;###autoload
 (defun omnisharp-stop-server ()

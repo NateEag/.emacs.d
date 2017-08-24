@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "omnisharp" "omnisharp.el" (22920 25209 0 0))
+;;;### (autoloads nil "omnisharp" "omnisharp.el" (22942 58623 0 0))
 ;;; Generated autoloads from omnisharp.el
 
 (autoload 'omnisharp-mode "omnisharp" "\
@@ -13,9 +13,9 @@ server backend.
 \(fn &optional ARG)" t nil)
 
 (autoload 'omnisharp-start-omnisharp-server "omnisharp" "\
-Starts an OmniSharp server for a given path to a project file or a directory
+Starts an OmniSharp server for a given path to a project or solution file
 
-\(fn PATH-TO-PROJECT)" t nil)
+\(fn &optional NO-AUTODETECT)" t nil)
 
 (autoload 'omnisharp-stop-server "omnisharp" "\
 Stops Omnisharp server if running.
@@ -61,8 +61,8 @@ Installs OmniSharp server locally into ~/.emacs/cache/omnisharp/server/$(version
 ;;;;;;  "omnisharp-http-utils.el" "omnisharp-navigation-actions.el"
 ;;;;;;  "omnisharp-pkg.el" "omnisharp-server-actions.el" "omnisharp-server-installation.el"
 ;;;;;;  "omnisharp-server-management.el" "omnisharp-settings.el"
-;;;;;;  "omnisharp-solution-actions.el" "omnisharp-utils.el") (22920
-;;;;;;  25209 0 0))
+;;;;;;  "omnisharp-solution-actions.el" "omnisharp-utils.el") (22942
+;;;;;;  58623 0 0))
 
 ;;;***
 

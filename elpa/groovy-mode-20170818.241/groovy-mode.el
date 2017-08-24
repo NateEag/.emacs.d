@@ -179,7 +179,11 @@ The function name is the second group in the regexp.")
     (nth 3 (syntax-ppss pos))))
 
 (defvar groovy-font-lock-keywords
-  `((,(regexp-opt
+  ;; Annotations are defined with the @interface, which is a keyword:
+  ;; http://groovy-lang.org/objectorientation.html#_annotation
+  ;; but it's nicer to use annotation highlighting.
+  `(("@interface" . groovy-annotation-face)
+    (,(regexp-opt
        ;; http://docs.groovy-lang.org/latest/html/documentation/#_keywords
        '("as"
          "assert"
@@ -238,7 +242,7 @@ The function name is the second group in the regexp.")
      . font-lock-variable-name-face)
     ;; Annotations
     (,(rx "@" symbol-start (+ (or (syntax word) (syntax symbol))) symbol-end)
-     . c-annotation-face)
+     . groovy-annotation-face)
     (,groovy-type-regexp
      1 font-lock-type-face)
     ;; Highlight function names.
@@ -288,21 +292,26 @@ The function name is the second group in the regexp.")
           (while (and
                   (not res)
                   (search-forward "${" limit t))
-            (when (and (groovy--in-string-p)
-                       (not (eq (char-before (- (point) 2))
-                                ?\\)))
-              (setq start (match-beginning 0))
-              (let ((restart-pos (match-end 0)))
-                (let (finish)
-                  ;; Search forward for the } that matches the opening {.
-                  (while (and (not res) (search-forward "}" limit t))
-                    (let ((end-pos (point)))
-                      (save-excursion
-                        (when (and (ignore-errors (backward-list 1))
-                                   (= start (1- (point))))
-                          (setq res end-pos)))))
-                  (unless res
-                    (goto-char restart-pos))))))
+            (let* ((string-delimiter-pos (nth 8 (syntax-ppss)))
+                   (string-delimiter (char-after string-delimiter-pos))
+                   (escaped-p (eq (char-before (- (point) 2))
+                                  ?\\)))
+              (when (and (groovy--in-string-p)
+                         ;; Interpolation does not apply in single-quoted strings.
+                         (not (eq string-delimiter ?'))
+                         (not escaped-p))
+                (setq start (match-beginning 0))
+                (let ((restart-pos (match-end 0)))
+                  (let (finish)
+                    ;; Search forward for the } that matches the opening {.
+                    (while (and (not res) (search-forward "}" limit t))
+                      (let ((end-pos (point)))
+                        (save-excursion
+                          (when (and (ignore-errors (backward-list 1))
+                                     (= start (1- (point))))
+                            (setq res end-pos)))))
+                    (unless res
+                      (goto-char restart-pos)))))))
           ;; Set match data and return point so we highlight this
           ;; instance.
           (when res
@@ -452,6 +461,12 @@ dollar-slashy-quoted strings."
   :safe #'integerp
   :group 'groovy)
 
+(defvar groovy-annotation-face 'groovy-annotation-face)
+(defface groovy-annotation-face
+  '((default :inherit font-lock-constant-face))
+  "Face for highlighting annotations in Groovy mode."
+  :group 'groovy)
+
 (defun groovy--ends-with-infix-p (str)
   "Does STR end with an infix operator?"
   (string-match-p
@@ -559,7 +574,8 @@ Then this function returns (\"def\" \"if\" \"switch\")."
      ;; correctly.
      ((and (not (s-blank-str? text-after-paren))
            (not has-closing-paren)
-           (not (equal text-after-paren "->")))
+           ;; ensure we don't indent closures
+           (not (string-match (rx "->" eol) text-after-paren)))
       (let (open-paren-column)
         (save-excursion
           (goto-char current-paren-pos)

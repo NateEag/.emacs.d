@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; URL: https://github.com/purcell/package-lint
-;; Package-Version: 20170709.120
+;; Package-Version: 20170823.919
 ;; Keywords: lisp
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24"))
@@ -243,9 +243,19 @@ This is bound dynamically while the checks run.")
       (save-excursion
         (save-restriction
           (widen)
+          (package-lint--check-reserved-keybindings)
           (package-lint--check-keywords-list)
+          (package-lint--check-url-header)
           (package-lint--check-package-version-present)
           (package-lint--check-lexical-binding-is-on-first-line)
+          (package-lint--check-objects-by-regexp
+           "(define-minor-mode\\s-"
+           #'package-lint--check-minor-mode)
+          (package-lint--check-objects-by-regexp
+           "(define-global\\(?:ized\\)?-minor-mode\\s-"
+           #'package-lint--check-globalized-minor-mode)
+          (package-lint--check-objects-by-regexp
+           "(defgroup\\s-" #'package-lint--check-defgroup)
           (let ((desc (package-lint--check-package-el-can-parse)))
             (when desc
               (package-lint--check-package-summary desc)
@@ -274,8 +284,27 @@ This is bound dynamically while the checks run.")
   "Construct a datum for error at LINE and COL with TYPE and MESSAGE."
   (push (list line col type message) package-lint--errors))
 
+(defun package-lint--error-at-point (type message)
+  "Construct a datum for error at the point with TYPE and MESSAGE."
+  (package-lint--error (line-number-at-pos) (current-column) type message))
+
 
 ;;; Checks
+
+(defun package-lint--check-reserved-keybindings ()
+  "Warn about reserved keybindings."
+  (let ((re (rx "(" (*? space) (or "kbd" "global-set-key" "local-set-key" "define-key") symbol-end)))
+    (goto-char (point-min))
+    (while (re-search-forward re nil t)
+      (unless (nth 8 (save-match-data (syntax-ppss)))
+        ;; Read form and get key-sequence
+        (goto-char (match-beginning 0))
+        (let ((seq (package-lint--extract-key-sequence
+                    (read (current-buffer)))))
+          (when seq
+            (let ((message (package-lint--test-keyseq seq)))
+              (when message
+                (package-lint--error-at-point 'warning message)))))))))
 
 (defun package-lint--check-commentary-existence ()
   "Warn about nonexistent or empty commentary section."
@@ -289,8 +318,8 @@ This is bound dynamically while the checks run.")
       (forward-line)
       (when (package-lint--region-empty-p (point) (lm-commentary-end))
         (goto-char start)
-        (package-lint--error
-         (line-number-at-pos) (current-column) 'error
+        (package-lint--error-at-point
+         'error
          "Package should have a non-empty ;;; Commentary section.")))))
 
 (defun package-lint--check-autoloads-on-private-functions (definitions)
@@ -300,19 +329,22 @@ This is bound dynamically while the checks run.")
       (goto-char position)
       (forward-line -1)
       (when (looking-at-p (rx ";;;###autoload"))
-        (package-lint--error
-         (line-number-at-pos) (current-column) 'warning
+        (package-lint--error-at-point
+         'warning
          "Private functions generally should not be autoloaded.")))))
 
 (defun package-lint--check-for-literal-emacs-path ()
   "Verify package does not refer to \"\.emacs\.d\" literally.
 Instead it should use `user-emacs-directory' or `locate-user-emacs-file'."
   (goto-char (point-min))
-  (while (re-search-forward "\\.emacs\\.d" nil t)
+  ;; \b won't find a word boundary between a symbol and the "." in
+  ;; ".emacs.d". / is a valid symbol constituent in Emacs Lisp, so
+  ;; must be explicitly blacklisted.
+  (while (re-search-forward "\\(?:\\_<\\|/\\)\\.emacs\\.d\\b" nil t)
     (unless (nth 4 (syntax-ppss))
       ;; Not in a comment
-      (package-lint--error
-       (line-number-at-pos) (current-column) 'warning
+      (package-lint--error-at-point
+       'warning
        "Use variable `user-emacs-directory' or function `locate-user-emacs-file' instead of a literal path to the Emacs user directory or files."))))
 
 (defun package-lint--check-keywords-list ()
@@ -324,6 +356,22 @@ Instead it should use `user-emacs-directory' or `locate-user-emacs-file'."
         (package-lint--error
          line-no 1 'warning
          (format "You should include standard keywords: see the variable `finder-known-keywords'."))))))
+
+(defun package-lint--check-url-header ()
+  "Verify that the package has an HTTPS or HTTP URL header."
+  (if (package-lint--goto-header "URL")
+      (let ((url (match-string 3))
+            (url-start (match-beginning 3)))
+        (unless (and (equal (thing-at-point 'url) url)
+                     (string-match-p "^https?://" url))
+          (package-lint--error
+           (line-number-at-pos)
+           (1+ (- url-start (line-beginning-position)))
+           'error
+           "Package URLs should be a single HTTPS or HTTP URL.")))
+    (package-lint--error
+     1 1 'error
+     "Package should have a URL header.")))
 
 (defun package-lint--check-dependency-list ()
   "Check the contents of the \"Package-Requires\" header.
@@ -454,7 +502,7 @@ the form (PACKAGE-NAME PACKAGE-VERSION LINE-NO LINE-BEGINNING-OFFSET)."
            (not (package-lint--inside-comment-or-string-p))))))
 
 (defun package-lint--check-version-regexp-list (valid-deps list rx-start rx-end)
-  "Warn about matches of REGEXP when VERSION is not in VALID-DEPS.
+  "Warn about any match of REGEXP when VERSION is not in VALID-DEPS.
 LIST is an alist of (VERSION . REGEXP*).
 REGEXP is (concat RX-START REGEXP* RX-END) for each REGEXP*."
   (let ((emacs-version-dep (or (cadr (assq 'emacs valid-deps)) '(0))))
@@ -465,13 +513,13 @@ REGEXP is (concat RX-START REGEXP* RX-END) for each REGEXP*."
           (unless (package-lint--inside-comment-or-string-p)
             (let ((sym (match-string-no-properties 1)))
               (unless (package-lint--seen-fboundp-check-for sym)
-                (package-lint--error
-                 (line-number-at-pos)
-                 (save-excursion (goto-char (match-beginning 1)) (current-column))
-                 'error
-                 (format "You should depend on (emacs \"%s\") if you need `%s'."
-                         (mapconcat #'number-to-string added-in-version ".")
-                         sym))))))))))
+                (save-excursion
+                  (goto-char (match-beginning 1))
+                  (package-lint--error-at-point
+                   'error
+                   (format "You should depend on (emacs \"%s\") if you need `%s'."
+                           (mapconcat #'number-to-string added-in-version ".")
+                           sym)))))))))))
 
 (defun package-lint--check-libraries-available-in-emacs (valid-deps)
   "Warn about use of libraries that are not available in the Emacs version in VALID-DEPS."
@@ -595,7 +643,7 @@ DESC is a struct as returned by `package-buffer-info'."
        "The package summary is too long. It should be at most 50 characters.")))
     (when (save-match-data
             (let ((case-fold-search t))
-              (and (string-match "\\<emacs\\>" summary)
+              (and (string-match "[^.]\\<emacs\\>" summary)
                    (not (string-match-p "[[:space:]]+lisp" summary (match-end 0))))))
       (package-lint--error
        1 1
@@ -653,8 +701,72 @@ DESC is a struct as returned by `package-buffer-info'."
                (format "\"%s\" doesn't start with package's prefix \"%s\"."
                        name prefix)))))))))
 
+(defun package-lint--check-minor-mode (def)
+  "Offer up concerns about the minor mode definition DEF."
+  (when (cl-search '(:global t) def)
+    (package-lint--check-globalized-minor-mode def)))
+
+(defun package-lint--check-globalized-minor-mode (def)
+  "Offer up concerns about the global minor mode definition DEF."
+  (unless (eq 'define-globalized-minor-mode (car def))
+    (package-lint--error-at-point
+     'warning
+     "Use `define-globalized-minor-mode' to define global minor modes."))
+  (let ((feature (intern (package-lint--provided-feature))))
+    (unless (cl-search `(:require ',feature) def :test #'equal)
+      (package-lint--error-at-point
+       'error
+       (format
+        "Global minor modes must `:require' their defining file (i.e. \":require '%s\"), to support the customization variable of the same name." feature)))))
+
+(defun package-lint--check-defgroup (def)
+  "Offer up concerns about the customization group definition DEF."
+  (when (symbolp (cadr def))
+    (let ((group-name (symbol-name (cadr def))))
+      (when (string-match "\\(.*\\)-mode$" group-name)
+        (let ((parent (intern (match-string 1 group-name))))
+          (unless (cl-search `(:group ',parent) def :test #'equal)
+            (package-lint--error-at-point
+             'error
+             "Customization groups should not end in \"-mode\" unless that name would conflict with their parent group.")))))))
+
 
 ;;; Helpers
+
+(defun package-lint--extract-key-sequence (form)
+  "Extract the key sequence from FORM."
+  (pcase form
+    (`(kbd ,seq)
+     (package-lint--extract-key-sequence seq))
+    ((or `(global-set-key ,seq ,_) `(local-set-key ,seq ,_))
+     (package-lint--extract-key-sequence seq))
+    (`(define-key ,_ ,seq ,_)
+     (package-lint--extract-key-sequence seq))
+    ((pred stringp)
+     (listify-key-sequence (read-kbd-macro form)))
+    ((pred vectorp)
+     (unless (listp (elt form 0))
+       (listify-key-sequence form)))))
+
+(defun package-lint--test-keyseq (lks)
+  "Return a message if the listified key sequence LKS is invalid, otherwise nil."
+  (let* ((modifiers (event-modifiers lks))
+         (basic-type (event-basic-type lks)))
+    (when (or (equal (car (last lks)) ?\C-g)
+              (and (equal (car (last lks)) ?\e)
+                   (not (equal (nthcdr (- (length lks) 2) lks)
+                               '(?\e ?\e))))
+              (equal (car (last lks)) ?\C-h)
+              (and (equal modifiers '(control))
+                   (= ?c basic-type)
+                   (cdr lks)
+                   (let ((v (event-basic-type (cdr lks)))
+                         (m (event-modifiers (cdr lks))))
+                     (and (<= v ?z)
+                          (>= v ?a)
+                          (or (null m) (equal '(shift) m)))))
+              (member basic-type '(f5 f6 f7 f8 f9)))
+      "This key sequence is reserved (see Key Binding Conventions in the Emacs Lisp manual)")))
 
 (defun package-lint--region-empty-p (start end)
   "Return t iff the region between START and END has no non-empty lines.
@@ -761,6 +873,23 @@ Prefix is returned without any `-mode' suffix."
   (let ((feature (package-lint--provided-feature)))
     (when feature
       (replace-regexp-in-string "-mode\\'" "" feature))))
+
+(defun package-lint--check-objects-by-regexp (regexp function)
+  "Check all objects with the literal printed form matching REGEXP.
+
+The objects are parsed with `read'. The FUNCTION is passed the
+read object, with the point at the beginning of the match.
+
+S-expressions in comments or comments, partial s-expressions, or
+otherwise invalid read forms are ignored."
+  (goto-char (point-min))
+  (while (re-search-forward regexp nil t)
+    (save-excursion
+      (goto-char (match-beginning 0))
+      (let ((obj (unless (package-lint--inside-comment-or-string-p)
+                   (save-excursion
+                     (ignore-errors (read (current-buffer)))))))
+        (when obj (funcall function obj))))))
 
 
 ;;; Public interface

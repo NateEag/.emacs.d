@@ -351,6 +351,23 @@ MATCHER is either a matcher defined with
                 (buttercup-spec-description spec))
       (buttercup-spec-description spec))))
 
+(defun buttercup--full-spec-names (spec-or-suite-list)
+  "Return full names of all specs in SPEC-OR-SUITE-LIST."
+  (cl-loop
+   for x in (buttercup--specs-and-suites spec-or-suite-list)
+   if (buttercup-spec-p x)
+   collect (buttercup-spec-full-name x)))
+
+(defun buttercup--find-duplicate-spec-names (spec-or-suite-list)
+  "Return duplicate full spec names among SPEC-OR-SUITE-LIST."
+  (let ((seen '())
+        (duplicates '()))
+    (dolist (name (buttercup--full-spec-names spec-or-suite-list)
+                  (nreverse duplicates))
+      (if (member name seen)
+          (push name duplicates)
+        (push name seen)))))
+
 ;;;;;;;;;;;;;;;;;;;;
 ;;; Suites: describe
 
@@ -385,6 +402,12 @@ form.")
     (if enclosing-suite
         (buttercup-suite-add-child enclosing-suite
                                    buttercup--current-suite)
+      ;; At top level, warn about duplicate spec names
+      (let ((dups (buttercup--find-duplicate-spec-names
+                   (list buttercup--current-suite))))
+        (when dups
+          (message "Found duplicate spec names in suite: %S"
+                   (delete-dups dups))))
       (setq buttercup-suites (append buttercup-suites
                                      (list buttercup--current-suite))))))
 
@@ -395,11 +418,15 @@ form.")
   "Define a spec."
   (declare (indent 1) (debug (&define sexp def-body)))
   (if body
-      `(buttercup-it ,description (lambda () ,@body))
+      `(buttercup-it ,description
+         (lambda ()
+           (buttercup-with-converted-ert-signals
+             ,@body)))
     `(buttercup-xit ,description)))
 
 (defun buttercup-it (description body-function)
   "Function to handle an `it' form."
+  (declare (indent 1))
   (when (not buttercup--current-suite)
     (error "`it' has to be called from within a `describe' form."))
   (buttercup-suite-add-child buttercup--current-suite
@@ -485,6 +512,7 @@ A disabled spec is not run."
   "Like `buttercup-it', but mark the spec as disabled.
 
 A disabled spec is not run."
+  (declare (indent 1))
   (buttercup-it description (lambda ()
                               (signal 'buttercup-pending "PENDING")))
   (let ((spec (car (last (buttercup-suite-children
@@ -522,28 +550,54 @@ KEYWORD can have one of the following values:
       the original function.
 
   nil -- Track calls, but simply return nil instead of calling
-      the original function."
-  (cond
-   ((eq keyword :and-call-through)
-    (let ((orig (symbol-function symbol)))
-      (buttercup--spy-on-and-call-fake symbol
-                                       (lambda (&rest args)
-                                         (apply orig args)))))
-   ((eq keyword :and-return-value)
-    (buttercup--spy-on-and-call-fake symbol
-                                     (lambda (&rest args)
-                                       arg)))
-   ((eq keyword :and-call-fake)
-    (buttercup--spy-on-and-call-fake symbol
-                                     arg))
-   ((eq keyword :and-throw-error)
-    (buttercup--spy-on-and-call-fake symbol
-                                     (lambda (&rest args)
-                                       (signal arg "Stubbed error"))))
-   (t
-    (buttercup--spy-on-and-call-fake symbol
-                                     (lambda (&rest args)
-                                       nil)))))
+      the original function.
+
+If the original function was a command, the generated spy will
+also be a command with the same interactive form, unless
+`:and-call-fake' is used, in which case it is the caller's
+responsibility to ensure ARG is a command."
+  ;; We need to load an autoloaded function before spying on it
+  (when (autoloadp (symbol-function symbol))
+    (autoload-do-load (symbol-function symbol) symbol))
+  (cl-assert (not (autoloadp (symbol-function symbol))))
+  (let* ((orig (symbol-function symbol))
+         (orig-intform (interactive-form orig))
+         (replacement
+          (pcase
+              keyword
+            (:and-call-through
+             (when arg
+               (error "`spy-on' with `:and-call-through' does not take an ARG"))
+             `(lambda (&rest args)
+                ,orig-intform
+                (apply ',orig args)))
+            (:and-return-value
+             `(lambda (&rest args)
+                ,orig-intform
+                ,arg))
+            (:and-call-fake
+             (let ((replacement-intform (interactive-form arg)))
+               (when (and replacement-intform
+                          (not (equal orig-intform replacement-intform)))
+                 (display-warning 'buttercup
+                                  "While spying on `%S': replacement does not have the same interactive form"))
+               `(lambda (&rest args)
+                  ,(or replacement-intform orig-intform)
+                  (apply (function ,arg) args))))
+            (:and-throw-error
+             `(lambda (&rest args)
+                ,orig-intform
+                (signal ',(or arg 'error) "Stubbed error")))
+            ;; No keyword: just spy
+            (`nil
+             (when arg
+               (error "`spy-on' with no KEYWORD does not take an ARG."))
+             `(lambda (&rest args)
+                ,orig-intform
+                nil))
+            (_
+             (error "Invalid `spy-on' keyword: `%S'" keyword)))))
+    (buttercup--spy-on-and-call-fake symbol replacement)))
 
 (defun buttercup--spy-on-and-call-fake (spy fake-function)
   "Replace the function in symbol SPY with a spy that calls FAKE-FUNCTION."
@@ -564,6 +618,12 @@ KEYWORD can have one of the following values:
                                  :return-value return-value
                                  :current-buffer (current-buffer)))
               return-value)))
+    ;; Add the interactive form from `fake-function', if any
+    (when (interactive-form fake-function)
+      (setq this-spy-function
+            `(lambda (&rest args)
+               ,(interactive-form fake-function)
+               (apply ',this-spy-function args))))
     this-spy-function))
 
 (defvar buttercup--cleanup-functions nil)
@@ -688,6 +748,14 @@ current directory."
         (args command-line-args-left))
     (while args
       (cond
+       ((member (car args) '("--traceback"))
+        (when (not (cdr args))
+          (error "Option requires argument: %s" (car args)))
+        ;; Make sure it's a valid style by trying to format a dummy
+        ;; frame with it
+        (buttercup--format-stack-frame '(t myfun 1 2) (intern (cadr args)))
+        (setq buttercup-stack-frame-style (intern (cadr args)))
+        (setq args (cddr args)))
        ((member (car args) '("-p" "--pattern"))
         (when (not (cdr args))
           (error "Option requires argument: %s" (car args)))
@@ -917,11 +985,8 @@ Calls either `buttercup-reporter-batch' or
            (when stack
              (buttercup--print "\nTraceback (most recent call last):\n")
              (dolist (frame stack)
-               (let ((line (format "  %S" (cdr frame))))
-                 (when (> (length line) 79)
-                   (setq line (concat (substring line 0 76)
-                                      "...")))
-                 (buttercup--print "%s\n" line))))
+               (let ((frame-text (buttercup--format-stack-frame frame)))
+                 (buttercup--print "%s\n" frame-text))))
            (cond
             ((stringp description)
              (buttercup--print "FAILED: %s\n" description))
@@ -963,22 +1028,22 @@ Calls either `buttercup-reporter-batch' or
          (buttercup--print (buttercup-colorize "\r%s%s\n" 'green)
                            (make-string (* 2 level) ?\s)
                            (buttercup-spec-description arg)))
-      ((eq (buttercup-spec-status arg) 'failed)
-       (buttercup--print (buttercup-colorize "\r%s%s  FAILED\n" 'red)
-                         (make-string (* 2 level) ?\s)
-                         (buttercup-spec-description arg))
-       (setq buttercup-reporter-batch--failures
-             (append buttercup-reporter-batch--failures
-                     (list arg))))
-      ((eq (buttercup-spec-status arg) 'pending)
-       (if (equal (buttercup-spec-failure-description arg) "SKIPPED")
-           (buttercup--print "  %s\n" (buttercup-spec-failure-description arg))
-         (buttercup--print (buttercup-colorize "\r%s%s  %s\n" 'yellow)
+        ((eq (buttercup-spec-status arg) 'failed)
+         (buttercup--print (buttercup-colorize "\r%s%s  FAILED\n" 'red)
                            (make-string (* 2 level) ?\s)
-                           (buttercup-spec-description arg)
-                           (buttercup-spec-failure-description arg))))
-      (_
-       (error "Unknown spec status %s" (buttercup-spec-status arg))))))
+                           (buttercup-spec-description arg))
+         (setq buttercup-reporter-batch--failures
+               (append buttercup-reporter-batch--failures
+                       (list arg))))
+        ((eq (buttercup-spec-status arg) 'pending)
+         (if (equal (buttercup-spec-failure-description arg) "SKIPPED")
+             (buttercup--print "  %s\n" (buttercup-spec-failure-description arg))
+           (buttercup--print (buttercup-colorize "\r%s%s  %s\n" 'yellow)
+                             (make-string (* 2 level) ?\s)
+                             (buttercup-spec-description arg)
+                             (buttercup-spec-failure-description arg))))
+        (_
+         (error "Unknown spec status %s" (buttercup-spec-status arg))))))
 
     (`buttercup-done
      (dolist (failed buttercup-reporter-batch--failures)
@@ -989,11 +1054,8 @@ Calls either `buttercup-reporter-batch' or
          (when stack
            (buttercup--print "\nTraceback (most recent call last):\n")
            (dolist (frame stack)
-             (let ((line (format "  %S" (cdr frame))))
-               (when (> (length line) 79)
-                 (setq line (concat (substring line 0 76)
-                                    "...")))
-               (buttercup--print "%s\n" line))))
+             (let ((frame-text (buttercup--format-stack-frame frame)))
+               (buttercup--print "%s\n" frame-text))))
          (cond
           ((stringp description)
            (buttercup--print (concat (buttercup-colorize "FAILED" 'red ) ": %s\n")
@@ -1125,6 +1187,56 @@ failed -- The second value is the description of the expectation
       (setq n (1+ n)
             frame (backtrace-frame n)))
     frame-list))
+
+(defvar buttercup-stack-frame-style (car '(crop full pretty))
+  "Style to use when printing stack traces of tests.
+
+`full' is roughly the same style as normal Emacs stack traces:
+print each stack frame in full with no line breaks. `crop' is
+like full, but truncates each line to 80 characters. `pretty'
+uses `pp' to generate a multi-line indented representation of
+each frame, and prefixes each stack frame with lambda or M to
+indicate whether it represents a normal evaluated function call
+or a macro/special form.")
+
+(defun buttercup--format-stack-frame (frame &optional style)
+  (pcase (or style buttercup-stack-frame-style 'crop)
+    (`full (format "  %S" (cdr frame)))
+    (`crop
+     (let ((line (buttercup--format-stack-frame frame 'full)))
+       ;; Note: this could be done sith `s-truncate' from the s
+       ;; package
+       (when (> (length line) 79)
+         (setq line (concat (substring line 0 76)
+                            "...")))
+       line))
+    (`pretty
+     (thread-last (pp-to-string (cdr frame))
+       ;; Delete empty trailing line
+       (replace-regexp-in-string "\n[[:space:]]*\\'"
+                                 "")
+       ;; Indent 2 spaces
+       (replace-regexp-in-string "^"
+                                 "  ")
+       ;; Prefix first line with lambda for function call and M for
+       ;; macro/special form
+       (replace-regexp-in-string "\\` "
+                                 (if (car frame) "λ" "M"))))
+    (_ (error "Unknown stack trace style: %S" style))))
+
+(defmacro buttercup-with-converted-ert-signals (&rest body)
+  "Convert ERT signals to buttercup signals in BODY.
+
+Specifically, `ert-test-failed' is converted to
+`buttercup-failed' and `ert-test-skipped' is converted to
+`buttercup-pending'."
+  (declare (indent 0))
+  `(condition-case err
+       (progn ,@body)
+     (ert-test-failed
+      (buttercup-fail "%S" err))
+     (ert-test-skipped
+      (buttercup-skip "Skipping: %S" err))))
 
 ;;;###autoload
 (define-minor-mode buttercup-minor-mode

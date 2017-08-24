@@ -21,7 +21,7 @@
 ;; -------------------------------------------------------------------------------------------
 
 ;; URL: http://github.com/ananthakumaran/typescript.el
-;; Package-Version: 20170710.427
+;; Package-Version: 20170823.1000
 ;; Version: 0.1
 ;; Keywords: typescript languages
 ;; Package-Requires: ()
@@ -692,7 +692,6 @@ macro as normal text."
 (defun typescript--re-search-backward-inner (regexp &optional bound count)
   "Auxiliary function for `typescript--re-search-backward'."
   (let ((parse)
-        str-terminator
         (orig-macro-start
          (save-excursion
            (and (typescript--beginning-of-macro)
@@ -703,22 +702,18 @@ macro as normal text."
                  (save-excursion (backward-char) (looking-at "/[/*]")))
         (forward-char))
       (setq parse (syntax-ppss))
-      (cond ((setq str-terminator (nth 3 parse))
-             (when (eq str-terminator t)
-               (setq str-terminator ?/))
-             (re-search-backward
-              (concat "\\([^\\]\\|^\\)" (string str-terminator))
-              (save-excursion (beginning-of-line) (point)) t))
-            ((nth 7 parse)
-             (goto-char (nth 8 parse)))
-            ((or (nth 4 parse)
-                 (and (eq (char-before) ?/) (eq (char-after) ?*)))
-             (re-search-backward "/\\*"))
-            ((and (not (and orig-macro-start
-                            (>= (point) orig-macro-start)))
-                  (typescript--beginning-of-macro)))
-            (t
-             (setq count (1- count))))))
+      (cond
+       ;; If we are in a comment or a string, jump back to the start
+       ;; of the comment or string.
+       ((nth 8 parse)
+        (goto-char (nth 8 parse)))
+       ((and (eq (char-before) ?/) (eq (char-after) ?*))
+        (re-search-backward "/\\*"))
+       ((and (not (and orig-macro-start
+                       (>= (point) orig-macro-start)))
+             (typescript--beginning-of-macro)))
+       (t
+        (setq count (1- count))))))
   (point))
 
 
@@ -1809,18 +1804,24 @@ moved on success."
           (save-excursion
             (loop named search-loop
                   do (progn
-                       (if (eq (char-before) ?>)
-                           (if (looking-back "=>" (- (point) 2))
-                               ;; Move back over the arrow of an arrow function.
-                               (backward-char 2)
-                             ;; Otherwise, we are looking at the end of the parameters
-                             ;; list of a generic. We need to move back over the list.
-                             (backward-char)
-                             (typescript--backward-over-generic-parameter-list))
-                         ;; General case: we just move back over the current sexp.
+                       (cond
+                        ;; Looking at the arrow of an arrow function:
+                        ;; move back over the arrow.
+                        ((looking-back "=>" (- (point) 2))
+                         (backward-char 2))
+                        ;; Looking at the end of the parameters list
+                        ;; of a generic: move back over the list.
+                        ((eq (char-before) ?>)
+                         (backward-char)
+                         (typescript--backward-over-generic-parameter-list))
+                        ;; Looking at a union: skip over the character.
+                        ((eq (char-before) ?|)
+                         (backward-char))
+                        ;; General case: we just move back over the current sexp.
+                        (t
                          (condition-case nil
                              (backward-sexp)
-                           (scan-error nil)))
+                           (scan-error nil))))
                        (typescript--backward-syntactic-ws)
                        (let ((before (char-before)))
                          ;; Check whether we are at "):".
@@ -1885,11 +1886,6 @@ moved on success."
                    (when (or (typescript--backward-to-parameter-list)
                              (eq (char-before) ?\)))
                      (backward-list))
-                   ;; If the parameter list is preceded by (, take the
-                   ;; start of the parameter list as our reference.
-                   ;; This allows handling functions in parameter
-                   ;; lists. Otherwise, we want to go back to the
-                   ;; start of function declaration.
                    (back-to-indentation)
                    (cond (same-indent-p
                           (current-column))

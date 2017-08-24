@@ -205,6 +205,7 @@ attention to case differences."
     json-python-json
     less
     less-stylelint
+    llvm-llc
     lua-luacheck
     lua
     perl
@@ -2743,12 +2744,14 @@ buffer."
           (flycheck-buffer-automatically 'new-line 'force-deferred)
         (setq flycheck-idle-change-timer
               (run-at-time flycheck-idle-change-delay nil
-                           #'flycheck-handle-idle-change))))))
+                           #'flycheck-handle-idle-change (current-buffer)))))))
 
-(defun flycheck-handle-idle-change ()
-  "Handle an expired idle time since the last change."
-  (flycheck-clear-idle-change-timer)
-  (flycheck-buffer-automatically 'idle-change))
+(defun flycheck-handle-idle-change (buffer)
+  "Handle an expired idle timer in BUFFER since the last change."
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (flycheck-clear-idle-change-timer)
+      (flycheck-buffer-automatically 'idle-change))))
 
 (defun flycheck-handle-save ()
   "Handle a save of the buffer."
@@ -8215,6 +8218,24 @@ See URL `http://stylelint.io/'."
   :standard-input t
   :error-parser flycheck-parse-stylelint
   :modes (less-css-mode))
+
+(flycheck-define-checker llvm-llc
+  "Flycheck LLVM IR checker using llc.
+
+See URL `http://llvm.org/docs/CommandGuide/llc.html'."
+  :command ("llc" "-o" null-device source)
+  :error-patterns
+  ((error line-start
+          ;; llc prints the executable path
+          (zero-or-one (minimal-match (one-or-more not-newline)) ": ")
+          (file-name) ":" line ":" column ": error: " (message)
+          line-end))
+  :error-filter
+  (lambda (errors)
+    ;; sanitize errors occurring in inline assembly
+    (flycheck-sanitize-errors
+     (flycheck-remove-error-file-names "<inline asm>" errors)))
+  :modes llvm-mode)
 
 (flycheck-def-config-file-var flycheck-luacheckrc lua-luacheck ".luacheckrc"
   :safe #'stringp)

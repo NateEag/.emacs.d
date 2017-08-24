@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20170727.2351
+;; Package-Version: 20170820.2210
 ;; Keywords: project, convenience
 ;; Version: 0.15.0-cvs
 ;; Package-Requires: ((emacs "24.1") (pkg-info "0.4"))
@@ -1446,6 +1446,13 @@ choices."
    (projectile-read-buffer-to-switch "Switch to buffer: ")))
 
 ;;;###autoload
+(defun projectile-switch-to-buffer-other-frame ()
+  "Switch to a project buffer and show it in another window."
+  (interactive)
+  (switch-to-buffer-other-frame
+   (projectile-read-buffer-to-switch "Switch to buffer: ")))
+
+;;;###autoload
 (defun projectile-display-buffer ()
   "Display a project buffer in another window without selecting it."
   (interactive)
@@ -1794,26 +1801,34 @@ https://github.com/abo-abo/swiper")))
   file."
   :type 'alist)
 
+(defun projectile--find-other-file (&optional flex-matching ff-variant)
+  "Switch between files with the same name but different extensions.
+With FLEX-MATCHING, match any file that contains the base name of current file.
+Other file extensions can be customized with the variable
+`projectile-other-file-alist'.  With FF-VARIANT set to a defun, use that
+instead of `find-file'.   A typical example of such a defun would be
+`find-file-other-window' or `find-file-other-frame'"
+  (let ((ff (or ff-variant #'find-file))
+        (other-files (projectile-get-other-files
+                      (buffer-file-name)
+                      (projectile-current-project-files)
+                      flex-matching)))
+    (if other-files
+        (let ((file-name (if (= (length other-files) 1)
+                             (car other-files)
+                           (projectile-completing-read "Switch to: "
+                                                       other-files))))
+          (funcall ff (expand-file-name file-name
+                                        (projectile-project-root))))
+      (error "No other file found"))))
+
 ;;;###autoload
 (defun projectile-find-other-file (&optional flex-matching)
   "Switch between files with the same name but different extensions.
 With FLEX-MATCHING, match any file that contains the base name of current file.
 Other file extensions can be customized with the variable `projectile-other-file-alist'."
   (interactive "P")
-  (let (other-files)
-    (if (setq other-files (projectile-get-other-files
-                           (buffer-file-name)
-                           (projectile-current-project-files)
-                           flex-matching))
-        (if (= (length other-files) 1)
-            (find-file (expand-file-name (car other-files) (projectile-project-root)))
-          (find-file
-           (expand-file-name
-            (projectile-completing-read
-             "Switch to: "
-             other-files)
-            (projectile-project-root))))
-      (error "No other file found"))))
+  (projectile--find-other-file flex-matching))
 
 ;;;###autoload
 (defun projectile-find-other-file-other-window (&optional flex-matching)
@@ -1821,24 +1836,17 @@ Other file extensions can be customized with the variable `projectile-other-file
 With FLEX-MATCHING, match any file that contains the base name of current file.
 Other file extensions can be customized with the variable `projectile-other-file-alist'."
   (interactive "P")
-  (let (other-files)
-    (if (setq other-files
-              (projectile-get-other-files
-               (buffer-file-name)
-               (projectile-current-project-files)
-               flex-matching))
-        (if (= (length other-files) 1)
-            (find-file-other-window
-             (expand-file-name
-              (car other-files)
-              (projectile-project-root)))
-          (find-file-other-window
-           (expand-file-name
-            (projectile-completing-read
-             "Switch to: "
-             other-files)
-            (projectile-project-root))))
-      (error "No other file found"))))
+  (projectile--find-other-file flex-matching
+                               #'find-file-other-window))
+
+;;;###autoload
+(defun projectile-find-other-file-other-frame (&optional flex-matching)
+  "Switch between files with the same name but different extensions in other window.
+With FLEX-MATCHING, match any file that contains the base name of current file.
+Other file extensions can be customized with the variable `projectile-other-file-alist'."
+  (interactive "P")
+  (projectile--find-other-file flex-matching
+                               #'find-file-other-frame))
 
 (defun projectile--file-name-sans-extensions (file-name)
   "Return FILE-NAME sans any extensions.
@@ -1930,6 +1938,29 @@ With a prefix ARG invalidates the cache first."
                   nil)))
     files))
 
+(defun projectile--find-file-dwim (invalidate-cache &optional ff-variant)
+  "Jump to a project's files using completion based on context.
+
+With a INVALIDATE-CACHE invalidates the cache first.
+
+With FF-VARIANT set to a defun, use that instead of `find-file'.
+A typical example of such a defun would be `find-file-other-window' or
+`find-file-other-frame'
+
+Subroutine for `projectile-find-file-dwim' and
+`projectile-find-file-dwim-other-window'"
+  (let* ((project-files (projectile-current-project-files))
+         (files (projectile-select-files project-files invalidate-cache))
+         (file (cond ((= (length files) 1)
+                      (car files))
+                     ((> (length files) 1)
+                      (projectile-completing-read "Switch to: " files))
+                     (t
+                      (projectile-completing-read "Switch to: " project-files))))
+         (ff (or ff-variant #'find-file)))
+    (funcall ff (expand-file-name file (projectile-project-root)))
+    (run-hooks 'projectile-find-file-hook)))
+
 ;;;###autoload
 (defun projectile-find-file-dwim (&optional arg)
   "Jump to a project's files using completion based on context.
@@ -1943,27 +1974,19 @@ file in project:
 if the filename is incomplete, but there's only a single file in the current project
 that matches the filename at point.  For example, if there's only a single file named
 \"projectile/projectile.el\" but the current filename is \"projectile/proj\" (incomplete),
-`projectile-find-file' still switches to \"projectile/projectile.el\" immediately
+`projectile-find-file-dwim' still switches to \"projectile/projectile.el\" immediately
  because this is the only filename that matches.
 
 - If it finds a list of files, the list is displayed for selecting.  A list of
 files is displayed when a filename appears more than one in the project or the
 filename at point is a prefix of more than two files in a project.  For example,
-if `projectile-find-file' is executed on a filepath like \"projectile/\", it lists
+if `projectile-find-file-dwim' is executed on a filepath like \"projectile/\", it lists
 the content of that directory.  If it is executed on a partial filename like
  \"projectile/a\", a list of files with character 'a' in that directory is presented.
 
 - If it finds nothing, display a list of all files in project for selecting."
   (interactive "P")
-  (let* ((project-files (projectile-current-project-files))
-         (files (projectile-select-files project-files arg)))
-    (cond
-     ((= (length files) 1)
-      (find-file (expand-file-name (car files) (projectile-project-root))))
-     ((> (length files) 1)
-      (find-file (expand-file-name (projectile-completing-read "Switch to: " files) (projectile-project-root))))
-     (t (find-file (expand-file-name (projectile-completing-read "Switch to: " project-files) (projectile-project-root)))))
-    (run-hooks 'projectile-find-file-hook)))
+  (projectile--find-file-dwim arg))
 
 ;;;###autoload
 (defun projectile-find-file-dwim-other-window (&optional arg)
@@ -1978,27 +2001,60 @@ file in project:
 if the filename is incomplete, but there's only a single file in the current project
 that matches the filename at point.  For example, if there's only a single file named
 \"projectile/projectile.el\" but the current filename is \"projectile/proj\" (incomplete),
-`projectile-find-file' still switches to \"projectile/projectile.el\"
+`projectile-find-file-dwim-other-window' still switches to \"projectile/projectile.el\"
 immediately because this is the only filename that matches.
 
 - If it finds a list of files, the list is displayed for selecting.  A list of
 files is displayed when a filename appears more than one in the project or the
 filename at point is a prefix of more than two files in a project.  For example,
-if `projectile-find-file' is executed on a filepath like \"projectile/\", it lists
+if `projectile-find-file-dwim-other-window' is executed on a filepath like \"projectile/\", it lists
 the content of that directory.  If it is executed on a partial filename
 like \"projectile/a\", a list of files with character 'a' in that directory
 is presented.
 
 - If it finds nothing, display a list of all files in project for selecting."
   (interactive "P")
-  (let* ((project-files (projectile-current-project-files))
-         (files (projectile-select-files project-files arg)))
-    (cond
-     ((= (length files) 1)
-      (find-file-other-window (expand-file-name (car files) (projectile-project-root))))
-     ((> (length files) 1)
-      (find-file-other-window (expand-file-name (projectile-completing-read "Switch to: " files) (projectile-project-root))))
-     (t (find-file-other-window (expand-file-name (projectile-completing-read "Switch to: " project-files) (projectile-project-root)))))
+  (projectile--find-file-dwim arg #'find-file-other-window))
+
+;;;###autoload
+(defun projectile-find-file-dwim-other-frame (&optional arg)
+  "Jump to a project's files using completion based on context in other frame.
+
+With a prefix ARG invalidates the cache first.
+
+If point is on a filename, Projectile first tries to search for that
+file in project:
+
+- If it finds just a file, it switches to that file instantly.  This works even
+if the filename is incomplete, but there's only a single file in the current project
+that matches the filename at point.  For example, if there's only a single file named
+\"projectile/projectile.el\" but the current filename is \"projectile/proj\" (incomplete),
+`projectile-find-file-dwim-other-frame' still switches to \"projectile/projectile.el\"
+immediately because this is the only filename that matches.
+
+- If it finds a list of files, the list is displayed for selecting.  A list of
+files is displayed when a filename appears more than one in the project or the
+filename at point is a prefix of more than two files in a project.  For example,
+if `projectile-find-file-dwim-other-frame' is executed on a filepath like \"projectile/\", it lists
+the content of that directory.  If it is executed on a partial filename
+like \"projectile/a\", a list of files with character 'a' in that directory
+is presented.
+
+- If it finds nothing, display a list of all files in project for selecting."
+  (interactive "P")
+  (projectile--find-file-dwim arg #'find-file-other-frame))
+
+(defun projectile--find-file (invalidate-cache &optional ff-variant)
+  "Jump to a project's file using completion.
+With INVALIDATE-CACHE invalidates the cache first.  With FF-VARIANT set to a
+defun, use that instead of `find-file'.   A typical example of such a defun
+would be `find-file-other-window' or `find-file-other-frame'"
+  (interactive "P")
+  (projectile-maybe-invalidate-cache invalidate-cache)
+  (let ((file (projectile-completing-read "Find file: "
+                                          (projectile-current-project-files)))
+        (ff (or ff-variant #'find-file)))
+    (funcall ff (expand-file-name file (projectile-project-root)))
     (run-hooks 'projectile-find-file-hook)))
 
 ;;;###autoload
@@ -2006,13 +2062,7 @@ is presented.
   "Jump to a project's file using completion.
 With a prefix ARG invalidates the cache first."
   (interactive "P")
-  (projectile-maybe-invalidate-cache arg)
-  (projectile-completing-read
-   "Find file: "
-   (projectile-current-project-files)
-   :action `(lambda (file)
-              (find-file (expand-file-name file ,(projectile-project-root)))
-              (run-hooks 'projectile-find-file-hook))))
+  (projectile--find-file arg))
 
 ;;;###autoload
 (defun projectile-find-file-other-window (&optional arg)
@@ -2020,11 +2070,15 @@ With a prefix ARG invalidates the cache first."
 
 With a prefix ARG invalidates the cache first."
   (interactive "P")
-  (projectile-maybe-invalidate-cache arg)
-  (let ((file (projectile-completing-read "Find file: "
-                                          (projectile-current-project-files))))
-    (find-file-other-window (expand-file-name file (projectile-project-root)))
-    (run-hooks 'projectile-find-file-hook)))
+  (projectile--find-file arg #'find-file-other-window))
+
+;;;###autoload
+(defun projectile-find-file-other-frame (&optional arg)
+  "Jump to a project's file using completion and show it in another frame.
+
+With a prefix ARG invalidates the cache first."
+  (interactive "P")
+  (projectile--find-file arg #'find-file-other-frame))
 
 (defun projectile-sort-files (files)
   "Sort FILES according to `projectile-sort-order'."
@@ -2067,16 +2121,25 @@ With a prefix ARG invalidates the cache first."
              (file2-atime (nth 4 (file-attributes file2))))
          (not (time-less-p file1-atime file2-atime)))))))
 
+(defun projectile--find-dir (invalidate-cache &optional dired-variant)
+  "Jump to a project's directory using completion.
+
+With INVALIDATE-CACHE invalidates the cache first.  With DIRED-VARIANT set to a
+defun, use that instead of `dired'.  A typical example of such a defun would be
+`dired-other-window' or `dired-other-frame'"
+  (projectile-maybe-invalidate-cache invalidate-cache)
+  (let ((dir (projectile-complete-dir))
+        (dired-v (or dired-variant #'dired)))
+    (funcall dired-v (expand-file-name dir (projectile-project-root)))
+    (run-hooks 'projectile-find-dir-hook)))
+
 ;;;###autoload
 (defun projectile-find-dir (&optional arg)
   "Jump to a project's directory using completion.
 
 With a prefix ARG invalidates the cache first."
   (interactive "P")
-  (projectile-maybe-invalidate-cache arg)
-  (let ((dir (projectile-complete-dir)))
-    (dired (expand-file-name dir (projectile-project-root)))
-    (run-hooks 'projectile-find-dir-hook)))
+  (projectile--find-dir arg))
 
 ;;;###autoload
 (defun projectile-find-dir-other-window (&optional arg)
@@ -2084,11 +2147,15 @@ With a prefix ARG invalidates the cache first."
 
 With a prefix ARG invalidates the cache first."
   (interactive "P")
-  (when arg
-    (projectile-invalidate-cache nil))
-  (let ((dir (projectile-complete-dir)))
-    (dired-other-window (expand-file-name dir (projectile-project-root)))
-    (run-hooks 'projectile-find-dir-hook)))
+  (projectile--find-dir arg #'dired-other-window))
+
+;;;###autoload
+(defun projectile-find-dir-other-frame (&optional arg)
+  "Jump to a project's directory in other window using completion.
+
+With a prefix ARG invalidates the cache first."
+  (interactive "P")
+  (projectile--find-dir arg #'dired-other-frame))
 
 (defun projectile-complete-dir ()
   (projectile-completing-read
@@ -2376,6 +2443,13 @@ It assumes the test/ folder is at the same level as src/."
   "Open matching implementation or test file in other window."
   (interactive)
   (find-file-other-window
+   (projectile-find-implementation-or-test (buffer-file-name))))
+
+;;;###autoload
+(defun projectile-find-implementation-or-test-other-frame ()
+  "Open matching implementation or test file in other frame."
+  (interactive)
+  (find-file-other-frame
    (projectile-find-implementation-or-test (buffer-file-name))))
 
 ;;;###autoload
@@ -2890,6 +2964,18 @@ to run the replacement."
   "Open `dired' at the root of the project."
   (interactive)
   (dired (projectile-project-root)))
+
+;;;###autoload
+(defun projectile-dired-other-window ()
+  "Open `dired'  at the root of the project in another window."
+  (interactive)
+  (dired-other-window (projectile-project-root)))
+
+;;;###autoload
+(defun projectile-dired-other-frame ()
+  "Open `dired' at the root of the project in another frame."
+  (interactive)
+  (dired-other-frame (projectile-project-root)))
 
 ;;;###autoload
 (defun projectile-vc (&optional project-root)
@@ -3540,9 +3626,17 @@ is chosen."
     (define-key map (kbd "4 b") #'projectile-switch-to-buffer-other-window)
     (define-key map (kbd "4 C-o") #'projectile-display-buffer)
     (define-key map (kbd "4 d") #'projectile-find-dir-other-window)
+    (define-key map (kbd "4 D") #'projectile-dired-other-window)
     (define-key map (kbd "4 f") #'projectile-find-file-other-window)
     (define-key map (kbd "4 g") #'projectile-find-file-dwim-other-window)
     (define-key map (kbd "4 t") #'projectile-find-implementation-or-test-other-window)
+    (define-key map (kbd "5 a") #'projectile-find-other-file-other-frame)
+    (define-key map (kbd "5 b") #'projectile-switch-to-buffer-other-frame)
+    (define-key map (kbd "5 d") #'projectile-find-dir-other-frame)
+    (define-key map (kbd "5 D") #'projectile-dired-other-frame)
+    (define-key map (kbd "5 f") #'projectile-find-file-other-frame)
+    (define-key map (kbd "5 g") #'projectile-find-file-dwim-other-frame)
+    (define-key map (kbd "5 t") #'projectile-find-implementation-or-test-other-frame)
     (define-key map (kbd "!") #'projectile-run-shell-command-in-root)
     (define-key map (kbd "&") #'projectile-run-async-shell-command-in-root)
     (define-key map (kbd "a") #'projectile-find-other-file)

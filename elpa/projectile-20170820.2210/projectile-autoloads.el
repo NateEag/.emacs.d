@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "projectile" "projectile.el" (22916 31998 0
+;;;### (autoloads nil "projectile" "projectile.el" (22942 58640 0
 ;;;;;;  0))
 ;;; Generated autoloads from projectile.el
 
@@ -62,6 +62,11 @@ Switch to a project buffer and show it in another window.
 
 \(fn)" t nil)
 
+(autoload 'projectile-switch-to-buffer-other-frame "projectile" "\
+Switch to a project buffer and show it in another window.
+
+\(fn)" t nil)
+
 (autoload 'projectile-display-buffer "projectile" "\
 Display a project buffer in another window without selecting it.
 
@@ -93,6 +98,13 @@ Other file extensions can be customized with the variable `projectile-other-file
 
 \(fn &optional FLEX-MATCHING)" t nil)
 
+(autoload 'projectile-find-other-file-other-frame "projectile" "\
+Switch between files with the same name but different extensions in other window.
+With FLEX-MATCHING, match any file that contains the base name of current file.
+Other file extensions can be customized with the variable `projectile-other-file-alist'.
+
+\(fn &optional FLEX-MATCHING)" t nil)
+
 (autoload 'projectile-find-file-dwim "projectile" "\
 Jump to a project's files using completion based on context.
 
@@ -105,13 +117,13 @@ file in project:
 if the filename is incomplete, but there's only a single file in the current project
 that matches the filename at point.  For example, if there's only a single file named
 \"projectile/projectile.el\" but the current filename is \"projectile/proj\" (incomplete),
-`projectile-find-file' still switches to \"projectile/projectile.el\" immediately
+`projectile-find-file-dwim' still switches to \"projectile/projectile.el\" immediately
  because this is the only filename that matches.
 
 - If it finds a list of files, the list is displayed for selecting.  A list of
 files is displayed when a filename appears more than one in the project or the
 filename at point is a prefix of more than two files in a project.  For example,
-if `projectile-find-file' is executed on a filepath like \"projectile/\", it lists
+if `projectile-find-file-dwim' is executed on a filepath like \"projectile/\", it lists
 the content of that directory.  If it is executed on a partial filename like
  \"projectile/a\", a list of files with character 'a' in that directory is presented.
 
@@ -131,13 +143,40 @@ file in project:
 if the filename is incomplete, but there's only a single file in the current project
 that matches the filename at point.  For example, if there's only a single file named
 \"projectile/projectile.el\" but the current filename is \"projectile/proj\" (incomplete),
-`projectile-find-file' still switches to \"projectile/projectile.el\"
+`projectile-find-file-dwim-other-window' still switches to \"projectile/projectile.el\"
 immediately because this is the only filename that matches.
 
 - If it finds a list of files, the list is displayed for selecting.  A list of
 files is displayed when a filename appears more than one in the project or the
 filename at point is a prefix of more than two files in a project.  For example,
-if `projectile-find-file' is executed on a filepath like \"projectile/\", it lists
+if `projectile-find-file-dwim-other-window' is executed on a filepath like \"projectile/\", it lists
+the content of that directory.  If it is executed on a partial filename
+like \"projectile/a\", a list of files with character 'a' in that directory
+is presented.
+
+- If it finds nothing, display a list of all files in project for selecting.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'projectile-find-file-dwim-other-frame "projectile" "\
+Jump to a project's files using completion based on context in other frame.
+
+With a prefix ARG invalidates the cache first.
+
+If point is on a filename, Projectile first tries to search for that
+file in project:
+
+- If it finds just a file, it switches to that file instantly.  This works even
+if the filename is incomplete, but there's only a single file in the current project
+that matches the filename at point.  For example, if there's only a single file named
+\"projectile/projectile.el\" but the current filename is \"projectile/proj\" (incomplete),
+`projectile-find-file-dwim-other-frame' still switches to \"projectile/projectile.el\"
+immediately because this is the only filename that matches.
+
+- If it finds a list of files, the list is displayed for selecting.  A list of
+files is displayed when a filename appears more than one in the project or the
+filename at point is a prefix of more than two files in a project.  For example,
+if `projectile-find-file-dwim-other-frame' is executed on a filepath like \"projectile/\", it lists
 the content of that directory.  If it is executed on a partial filename
 like \"projectile/a\", a list of files with character 'a' in that directory
 is presented.
@@ -159,6 +198,13 @@ With a prefix ARG invalidates the cache first.
 
 \(fn &optional ARG)" t nil)
 
+(autoload 'projectile-find-file-other-frame "projectile" "\
+Jump to a project's file using completion and show it in another frame.
+
+With a prefix ARG invalidates the cache first.
+
+\(fn &optional ARG)" t nil)
+
 (autoload 'projectile-find-dir "projectile" "\
 Jump to a project's directory using completion.
 
@@ -167,6 +213,13 @@ With a prefix ARG invalidates the cache first.
 \(fn &optional ARG)" t nil)
 
 (autoload 'projectile-find-dir-other-window "projectile" "\
+Jump to a project's directory in other window using completion.
+
+With a prefix ARG invalidates the cache first.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'projectile-find-dir-other-frame "projectile" "\
 Jump to a project's directory in other window using completion.
 
 With a prefix ARG invalidates the cache first.
@@ -187,6 +240,11 @@ Display info for current project.
 
 (autoload 'projectile-find-implementation-or-test-other-window "projectile" "\
 Open matching implementation or test file in other window.
+
+\(fn)" t nil)
+
+(autoload 'projectile-find-implementation-or-test-other-frame "projectile" "\
+Open matching implementation or test file in other frame.
 
 \(fn)" t nil)
 
@@ -282,6 +340,16 @@ Save all project buffers.
 
 (autoload 'projectile-dired "projectile" "\
 Open `dired' at the root of the project.
+
+\(fn)" t nil)
+
+(autoload 'projectile-dired-other-window "projectile" "\
+Open `dired'  at the root of the project in another window.
+
+\(fn)" t nil)
+
+(autoload 'projectile-dired-other-frame "projectile" "\
+Open `dired' at the root of the project in another frame.
 
 \(fn)" t nil)
 

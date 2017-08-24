@@ -5247,8 +5247,7 @@ appearing in a statement context will have a parent that is a
     (if (or (null parent)
             (js2-stmt-node-p parent)
             (and (js2-function-node-p parent)
-                 (not (eq (js2-function-node-form parent)
-                          'FUNCTION_EXPRESSION))))
+                 (eq (js2-function-node-form parent) 'FUNCTION_STATEMENT)))
         parent
       (js2-node-parent-stmt parent))))
 
@@ -6925,6 +6924,8 @@ of a simple name.  Called before EXPR has a parent node."
              "requires"
              "return"
              "returns"
+             "yield"
+             "yields"
              "throw"
              "throws"))
           "\\)\\)\\s-*\\({[^}]+}\\)?")
@@ -9044,14 +9045,20 @@ invalid export statements."
         (setq from-clause (js2-parse-from-clause))))
      ((js2-match-token js2-DEFAULT)
       (setq default (cond ((js2-match-token js2-CLASS)
-                           (js2-parse-class-expr))
+                           (if (eq (js2-peek-token) js2-NAME)
+                               (js2-parse-class-stmt)
+                             (js2-parse-class-expr)))
                           ((js2-match-token js2-NAME)
                            (if (js2-match-async-function)
-                               (js2-parse-function-expr t)
+                               (if (eq (js2-peek-token) js2-NAME)
+                                   (js2-parse-async-function-stmt)
+                                 (js2-parse-function-expr t))
                              (js2-unget-token)
                              (js2-parse-expr)))
                           ((js2-match-token js2-FUNCTION)
-                           (js2-parse-function-expr))
+                           (if (eq (js2-peek-token) js2-NAME)
+                               (js2-parse-function-stmt)
+                             (js2-parse-function-expr)))
                           (t (js2-parse-expr)))))
      ((or (js2-match-token js2-VAR) (js2-match-token js2-CONST) (js2-match-token js2-LET))
       (setq declaration (js2-parse-variables (js2-current-token-type) (js2-current-token-beg))))

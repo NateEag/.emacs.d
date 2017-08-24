@@ -337,11 +337,12 @@ disappearing, unset all the variables related to it."
   (lsp--workspace-server-capabilities lsp--cur-workspace))
 
 (defun lsp--set-sync-method ()
-  (setq lsp--server-sync-method (or lsp-document-sync-method
-                                  (alist-get
-                                    (gethash "textDocumentSync"
-                                      (lsp--server-capabilities))
-                                    lsp--sync-methods))))
+  (let* ((sync (gethash "textDocumentSync" (lsp--server-capabilities)))
+         (kind (if (hash-table-p sync) (gethash "change" sync) sync))
+         (method (alist-get kind lsp--sync-methods))
+         )
+    (setq lsp--server-sync-method (or lsp-document-sync-method
+                                      method))))
 
 (defun lsp--client-request-handlers ()
   "Handlers for requests originating from the server"
@@ -1090,11 +1091,17 @@ interface DocumentRangeFormattingParams {
 ;;   nil)
 
 (cl-defmethod xref-backend-definitions ((_backend (eql xref-lsp)) identifier)
-  (let* ((properties (text-properties-at 0 identifier))
-          (params (plist-get properties 'def-params))
-          (def (lsp--send-request (lsp--make-request
-                                    "textDocument/definition"
-                                    params))))
+  (let* ((maybeparams (get-text-property 0 'def-params identifier))
+         ;; In some modes (such as haskell-mode), xref-find-definitions gets
+         ;; called directly without applying the properties expected here. So we
+         ;; must test if the properties are present, and if not use the current
+         ;; point location.
+         (params (if (null maybeparams)
+                     (lsp--text-document-position-params)
+                   maybeparams))
+         (def (lsp--send-request (lsp--make-request
+                                  "textDocument/definition"
+                                  params))))
     (if (consp def)
       (mapcar 'lsp--location-to-xref def)
       (and def `(,(lsp--location-to-xref def))))))

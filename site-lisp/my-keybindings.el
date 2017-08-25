@@ -52,7 +52,7 @@
 (defvar nateeag/command-mnemonics
   '(
     ;; Jump to any place in the current buffer quickly.
-    ("a w" . evil-avy-goto-char)
+    ("a w" . evil-avy-goto-word-1)
     ("a p" . ace-window)
 
     ("e" . eval-buffer)

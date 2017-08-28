@@ -29,6 +29,10 @@
  significantly better alternative to popwin:
  https://github.com/wasamasa/shacklehttps://github.com/wasamasa/shacklo
 
+-Figure out why git-rebase-mode doesn't always have the keybindings it claims
+ to. I think it happens the first time I rebase after starting Emacs, so it's
+ likely an initialization problem, but I'm not really sure.
+
 -Use smtpmail-queue-mail and some network up/down notifier to automatically
  queue mail if offline and to automatically send it when back online.
 

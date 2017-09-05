@@ -536,6 +536,18 @@
   :defer t
   :config
   (progn
+    ;; The below configures flyspell/ispell to allow run-together words in
+    ;; source code buffers, to deal with camelCaseNames sanely.
+    ;;
+    ;; Unfortunately, something about this setup causes Emacs to bog in some
+    ;; cases and I have not yet figured out why. I've been able to make it
+    ;; happen right after starting to edit a JS file and deleting a character
+    ;; from a camelCasedIdentifier that becomes misspelled when I do that.
+    ;;
+    ;; Starting and stopping the mode a few times usually seems to make the
+    ;; freeze stop. I don't know why.
+    (require 'ne-spell-check)
+
     ;; Function to use popup.el menu for flyspell instead of the GUI menu.
     ;; From Emacswiki: http://www.emacswiki.org/emacs/FlySpell#toc11
     ;; It'd be nice to convert this to a package.

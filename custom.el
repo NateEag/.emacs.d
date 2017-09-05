@@ -37,6 +37,7 @@
  '(evil-want-fine-undo t)
  '(exec-path-from-shell-arguments (quote ("-l")))
  '(fill-column 79 nil nil "Code should generally be under 80 columns wide for readability.")
+ '(flyspell-issue-message-flag nil)
  '(glasses-face (quote bold) nil nil "Bold isn't quite strong enough - I'll have to look into this further.")
  '(glasses-original-separator "" nil nil "Don't change existing separators.")
  '(glasses-separate-parentheses-p nil nil nil "spaces before parens are ugly.")

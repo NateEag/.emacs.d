@@ -290,7 +290,7 @@ buffer's file does not exist."
   (which-function-mode t)
 
   ;; Everyone likes spell-checking.
-  (flyspell-prog-mode)
+  (flyspell-mode)
   (diminish 'flyspell-mode)
 
   ;; Highlight TODO and friends as warnings. Yanked from this blog post:

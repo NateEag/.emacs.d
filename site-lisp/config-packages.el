@@ -188,37 +188,29 @@
   :commands evil-local-mode
   :config
   (progn
+    ;; I used to use evil-escape to let me use 'jk' to return to
+    ;; evil-normal-state from evil-insert-state.
+    ;;
+    ;; I have abandoned that by making Control with no other keys send Escape
+    ;; on my keyboards.
+    ;;
+    ;; This change was largely motivated by typing 'jk' way more often than I
+    ;; meant to when working on a machine other than my own. By conforming to
+    ;; standard Vim keybindings and just making it easier to trigger them, I
+    ;; still have a comfortable personal environment but find it way easier to
+    ;; work in foreign ones.
+    ;;
+    ;; ...at least that's the hope.
 
     ;; Use regular emacs keybindings for insert-mode (except for ESC-ESC-ESC,
     ;; because vim keybindings are still vim).
     (setq evil-insert-state-map (make-sparse-keymap))
     (define-key evil-insert-state-map (kbd "<escape>") 'evil-normal-state)
 
-    ;; Use evil-escape for custom keybindings to get me back into normal-mode.
-    ;;
-    ;; I'm increasingly unhappy with this - its hackery breaks
-    ;; aggressive-fill-paragraph-mode, and my readline hacks to do the same
-    ;; thing in readline-based software can cause issues too (for instance,
-    ;; when I paste an identifier containing 'jk' into such a program).
-    ;;
-    ;; What I should do instead is make it easier to send an Escape keycode
-    ;; from my various input devices, via whatever mechanisms are available on
-    ;; my current platforms.
-    ;;
-    ;; Since I pretty much just use an ErgoDox and MacBook for typing, this is
-    ;; almost solved - my ErgoDox layout uses the same physical key for Escape
-    ;; and Control, and my Karabiner layout for OS X maps the Shift keys to
-    ;; Control.
-    ;;
-    ;; All I need to do now is teach Karabiner to send Escape when Control is
-    ;; tapped with no modifiers, then retrain my fingers.
-    (evil-escape-mode)
-
-    ;; Always use a leader key, because the leader is awesome.
+    ;; Always use a leader key, because the leader is awesome. See
+    ;; my-keybindings.el for my actual leader keybindings.
     (global-evil-leader-mode)
     (evil-leader/set-leader "<SPC>")
-
-    ;; See my-keybindings.el for my actual leader keybindings.
 
     ;; Turn on surround everywhere.
     (global-evil-surround-mode)
@@ -253,12 +245,6 @@
                                            (not (string-equal (buffer-name)
                                                               "*scratch*")))
                                   (evil-insert-state))))))))
-
-(use-package evil-escape
-  :diminish 'evil-escape-mode
-  :config
-  (setq-default evil-escape-key-sequence "jk")
-  (setq-default evil-escape-unordered-key-sequence t))
 
 (use-package magit
   :defer t

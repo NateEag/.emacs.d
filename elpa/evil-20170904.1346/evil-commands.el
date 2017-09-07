@@ -31,6 +31,7 @@
 (require 'evil-types)
 (require 'evil-command-window)
 (require 'evil-jumps)
+(require 'flyspell)
 
 ;;; Motions
 
@@ -307,7 +308,7 @@ If point is at the end of the buffer and cannot be moved signal
       (evil-forward-beginning thing count))
      ;; the evil-change operator, maybe behave like ce or cE
      ((and evil-want-change-word-to-end
-           (eq evil-this-operator #'evil-change)
+           (memq evil-this-operator evil-change-commands)
            (< orig (or (cdr-safe (bounds-of-thing-at-point thing)) orig)))
       ;; forward-thing moves point to the correct position because
       ;; this is an exclusive motion
@@ -550,9 +551,6 @@ and jump to the corresponding one."
        ((< open close) (goto-char open-pair))
        (t (goto-char close-pair)))))))
 
-(eval-when-compile
-  (require 'flyspell))
-
 (defun evil--flyspell-overlays-in-p (beg end)
   (let ((ovs (overlays-in beg end))
         done)
@@ -589,7 +587,6 @@ and jump to the corresponding one."
     done))
 
 (defun evil--next-flyspell-error (forwardp)
-  (require 'flyspell)
   (when (evil--flyspell-overlays-in-p (point-min) (point-max))
     (let ((pos (point))
           limit

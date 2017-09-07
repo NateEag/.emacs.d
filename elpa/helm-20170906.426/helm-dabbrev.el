@@ -85,7 +85,7 @@ bound to a function that doesn't handle this var."
   :group 'helm-dabbrev
   :type 'integer)
 
-(defcustom helm-dabbrev-cycle-threshold nil
+(defcustom helm-dabbrev-cycle-threshold 5
   "Number of time helm-dabbrev cycle before displaying helm completion.
 When nil or 0 disable cycling."
   :group 'helm-dabbrev
@@ -101,7 +101,8 @@ but the initial search for all candidates in buffer(s)."
           (const :tag "Respect case" nil)
           (other :tag "Smart" 'smart)))
 
-(defvar helm-dabbrev-separator-regexp "\\s-\\|\t\\|[(\[\{\"'`=<$;,@.#+]\\|\\s\\\\|^"
+;; Check for beginning of line should happen last (^\n\\|^). 
+(defvar helm-dabbrev-separator-regexp "\\s-\\|\t\\|[(\[\{\"'`=<$;,@.#+]\\|\\s\\\\|^\n\\|^"
   "Regexp matching the start of a dabbrev candidate.")
 (defvaralias 'helm-dabbrev--regexp 'helm-dabbrev-separator-regexp)
 (make-obsolete-variable 'helm-dabbrev--regexp 'helm-dabbrev-separator-regexp "2.8.3")
@@ -140,29 +141,30 @@ but the initial search for all candidates in buffer(s)."
          result pos-before pos-after
          (search-and-store
           (lambda (pattern direction)
-            (while (cl-case direction
-                     (1   (search-forward pattern nil t))
-                     (-1  (search-backward pattern nil t))
-                     (2   (let ((pos
-                                 (save-excursion
-                                   (forward-line
-                                    helm-dabbrev-lineno-around)
-                                   (point))))
-                            (setq pos-after pos)
-                            (search-forward pattern pos t)))
-                     (-2  (let ((pos
-                                 (save-excursion
-                                   (forward-line
-                                    (- helm-dabbrev-lineno-around))
-                                   (point))))
-                            (setq pos-before pos)
-                            (search-backward pattern pos t))))
+            (while (and (<= (length result) limit)
+                        (cl-case direction
+                          (1   (search-forward pattern nil t))
+                          (-1  (search-backward pattern nil t))
+                          (2   (let ((pos
+                                      (save-excursion
+                                        (forward-line
+                                         helm-dabbrev-lineno-around)
+                                        (point))))
+                                 (setq pos-after pos)
+                                 (search-forward pattern pos t)))
+                          (-2  (let ((pos
+                                      (save-excursion
+                                        (forward-line
+                                         (- helm-dabbrev-lineno-around))
+                                        (point))))
+                                 (setq pos-before pos)
+                                 (search-backward pattern pos t)))))
               (let* ((pbeg (match-beginning 0))
                      (replace-regexp (concat "\\(" helm-dabbrev-separator-regexp
                                              "\\)\\'"))
-                     (match-word (helm--dabbrev--search
+                     (match-word (helm-dabbrev--search
                                   pattern pbeg replace-regexp)))
-                (unless (member match-word result)
+                (when (and match-word (not (member match-word result)))
                   (push match-word result)))))))
     (cl-loop for buf in (if all (helm-dabbrev--buffer-list)
                           (list (current-buffer)))
@@ -181,29 +183,43 @@ but the initial search for all candidates in buffer(s)."
                       (funcall search-and-store str 2)) ; store pos [2]
                     (save-excursion
                       ;; Search all before point.
-                      (goto-char pos-before) ; start from [1]
-                      (funcall search-and-store str -1))
+                      ;; If limit is reached in previous call of
+                      ;; search-and-store pos-before is never set and
+                      ;; goto-char will fail, so check it.
+                      (when pos-before
+                        (goto-char pos-before) ; start from [1]
+                        (funcall search-and-store str -1)))
                     (save-excursion
                       ;; Search all after point.
-                      (goto-char pos-after) ; start from [2]
-                      (funcall search-and-store str 1))))
-             when (> (length result) limit) return (nreverse result)
+                      ;; Same comment as above for pos-after.
+                      (when pos-after
+                        (goto-char pos-after) ; start from [2]
+                        (funcall search-and-store str 1)))))
+             when (>= (length result) limit) return (nreverse result)
              finally return (nreverse result))))
 
-(defun helm--dabbrev--search (pattern beg sep-regexp)
-  (save-excursion
-    (goto-char (1- beg))
-    (when (re-search-forward
-           (concat "\\("
-                   helm-dabbrev-separator-regexp
-                   "\\)"
-                   "\\(?99:\\("
-                   (regexp-quote pattern)
-                   "\\(\\sw\\|\\s_\\)+\\)\\)")
-           (point-at-eol) t)
-      (replace-regexp-in-string
-       sep-regexp ""
-       (match-string-no-properties 99)))))
+(defun helm-dabbrev--search (pattern beg sep-regexp)
+  "Search word or symbol at point matching PATTERN.
+Argument BEG is corresponding to the previous match-beginning search.
+The search starts at (1- BEG) with a regexp starting with
+`helm-dabbrev-separator-regexp' followed by PATTERN followed by a
+regexp matching syntactically any word or symbol.
+The possible false positives matching SEP-REGEXP at end are finally
+removed."
+  (let ((eol (point-at-eol))) 
+    (save-excursion
+      (goto-char (1- beg))
+      (when (re-search-forward
+             (concat "\\("
+                     helm-dabbrev-separator-regexp
+                     "\\)"
+                     "\\(?99:\\("
+                     (regexp-quote pattern)
+                     "\\(\\sw\\|\\s_\\)+\\)\\)")
+             eol t)
+        (replace-regexp-in-string
+         sep-regexp ""
+         (match-string-no-properties 99))))))
 
 (defun helm-dabbrev--get-candidates (abbrev)
   (cl-assert abbrev nil "[No Match]")

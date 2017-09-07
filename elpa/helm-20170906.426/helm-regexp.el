@@ -66,11 +66,27 @@ Any other non--nil value update after confirmation."
   :type 'boolean)
 
 (defcustom helm-moccur-show-buffer-fontification nil
-  "Show fontification of searched buffer in results when non nil."
+  "Show fontification of searched buffer in results when non nil.
+
+This enable or disable fontification globally in results, but you can
+override this default setting with `helm-moccur-buffer-substring-fn-for-modes'."
   :group 'helm-regexp
   :type '(radio :tag "Allow preserving fontification of searched buffer in results"
                 (const :tag "Don't preserve buffer fontification" nil)
                 (const :tag "Preserve buffer fontification" t)))
+
+(defcustom helm-moccur-buffer-substring-fn-for-modes
+  '((mu4e-headers-mode . buffer-substring)
+    (package-menu-mode . buffer-substring-no-properties))
+  "Alist that allow configuring the function to use for storing a buffer.
+
+Can be one of `buffer-substring' or `buffer-substring-no-properties'.
+Allow overriding the global effect of `helm-moccur-show-buffer-fontification'
+for a specific mode."
+  :group 'helm-regexp
+  :type '(alist :key-type (symbol :tag "Mode")
+                :value-type (radio (const :tag "With text properties" buffer-substring)
+                                   (const :tag "Without text properties" buffer-substring-no-properties))))
 
 (defcustom helm-occur-show-buffer-name nil
   "Show buffer name in `helm-occur' results when non-nil.
@@ -213,6 +229,9 @@ Should be a local var to helm-buffer to allow resuming.")
                                    #'buffer-substring #'buffer-substring-no-properties)
              for buf in buffers
              for bufstr = (with-current-buffer buf
+                            (helm-aif (assq major-mode
+                                            helm-moccur-buffer-substring-fn-for-modes)
+                                (setq bsubstring (cdr it)))
                             ;; A leading space is needed to allow helm
                             ;; searching the first line of buffer
                             ;; (#1725).

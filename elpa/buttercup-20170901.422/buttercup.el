@@ -1,8 +1,8 @@
 ;;; buttercup.el --- Behavior-Driven Emacs Lisp Testing -*-lexical-binding:t-*-
 
-;; Copyright (C) 2015  Jorgen Schaefer <contact@jorgenschaefer.de>
+;; Copyright (C) 2015-2017  Jorgen Schaefer <contact@jorgenschaefer.de>
 
-;; Version: 1.7
+;; Version: 1.8
 ;; Author: Jorgen Schaefer <contact@jorgenschaefer.de>
 
 ;; This program is free software; you can redistribute it and/or
@@ -41,6 +41,59 @@
 
 (require 'cl-lib)
 (require 'buttercup-compat)
+(require 'format-spec)
+(require 'ert nil t)
+(require 'warnings)
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; wrapper function manipulation
+
+(defun buttercup--enclosed-expr (fun)
+  "Given a zero-arg function, return its unevaluated expression.
+
+The function MUST have one of the following forms:
+
+\(lambda () EXPR)
+\(closure (ENVLIST) () EXPR)
+\(lambda () (quote EXPR) EXPR)
+\(closure (ENVLIST) () (quote EXPR) EXPR)
+
+and the return value will be EXPR, unevaluated. The latter 2
+forms are useful if EXPR is a macro call, in which case the
+`quote' ensures access to the un-expanded form."
+  (pcase fun
+    (`(closure ,(pred listp) nil ,expr) expr)
+    (`(closure ,(pred listp) nil (quote ,expr) . ,rest) expr)
+    (`(closure ,(pred listp) nil ,expr . ,(pred identity))
+     (error "Closure contains multiple expressions: %S" fun))
+    (`(closure ,(pred listp) ,(pred identity) . ,(pred identity))
+     (error "Closure has nonempty arglist: %S" fun))
+    (`(lambda nil ,expr) expr)
+    (`(lambda nil (quote ,expr) . ,rest) expr)
+    (`(lambda nil ,expr . ,(pred identity))
+     (error "Function contains multiple expressions: %S" fun))
+        (`(lambda ,(pred identity) . ,(pred identity))
+     (error "Function has nonempty arglist: %S" fun))
+    (_ (error "Not a zero-arg one-expression closure: %S" fun))))
+
+(defun buttercup--expr-and-value (fun)
+  "Given a function, return its quoted expression and value.
+
+FUN must be a zero-argument one-expression function, i.e.
+something that satisfies `buttercup--wrapper-fun-p'. The return
+value is `(cons EXPR VALUE)', where EXPR is the unevaluated
+expression in the function, and VALUE is the result of calling
+the function (thus evaluating EXPR in the proper lexical
+environment)."
+  (cons (buttercup--enclosed-expr fun)
+        (funcall fun)))
+
+(defun buttercup--wrapper-fun-p (fun)
+  "Returns non-nil if FUN is a zero-arg one-expression function."
+  (condition-case nil
+      (prog1 t
+        (buttercup--enclosed-expr fun))
+    (error nil)))
 
 ;;;;;;;;;;
 ;;; expect
@@ -65,35 +118,31 @@ This macro knows three forms:
 
 \(expect ARG)
   Fail the current test iff ARG is not true."
-  (cond
-   ((and (not matcher)
-         (consp arg))
-    `(buttercup-expect ,(cadr arg)
-                       #',(car arg)
-                       ,@(cddr arg)))
-   ((and (not matcher)
-         (not (consp arg)))
-    `(buttercup-expect ,arg))
-   (t
-    `(buttercup-expect ,arg ,matcher ,@args))))
+  (let ((wrapped-args
+         (mapcar (lambda (expr) `(lambda () (quote ,expr) ,expr)) args)))
+    `(buttercup-expect
+      (lambda () (quote ,arg) ,arg)
+      ,(or matcher :to-be-truthy)
+      ,@wrapped-args)))
 
 (defun buttercup-expect (arg &optional matcher &rest args)
-  "The function for the `expect' macro.
-
-See the macro documentation for details."
+  (cl-assert (cl-every #'buttercup--wrapper-fun-p (cons arg args)) t)
   (if (not matcher)
-      (when (not arg)
-        (buttercup-fail "Expected %S to be non-nil" arg))
+      (progn
+        (cl-assert (not args) t)
+        (when (not (funcall arg))
+          (buttercup-fail "Expected %S to be non-nil"
+                          (buttercup--enclosed-expr arg))))
     (let ((result (buttercup--apply-matcher matcher (cons arg args))))
       (if (consp result)
           (when (not (car result))
             (buttercup-fail "%s" (cdr result)))
         (when (not result)
-          (buttercup-fail "Expected %S %S %S"
-                          arg
+          (buttercup-fail "Expected %S %S %s"
+                          (buttercup--enclosed-expr arg)
                           matcher
                           (mapconcat (lambda (obj)
-                                       (format "%S" obj))
+                                       (format "%S" (funcall obj)))
                                      args
                                      " ")))))))
 
@@ -121,119 +170,469 @@ MESSAGE is omitted or nil show the condition form instead."
 (defmacro buttercup-define-matcher (matcher args &rest body)
   "Define a matcher to be used in `expect'.
 
-The BODY should return either a simple boolean, or a cons cell of
-the form (RESULT . MESSAGE). If RESULT is nil, MESSAGE should
-describe why the matcher failed. If RESULT is non-nil, MESSAGE
-should describe why a negated matcher failed."
+The BODY will receive ARGS as functions that can be called (using
+`funcall') to get their values. BODY should return either a
+simple boolean, or a cons cell of the form (RESULT . MESSAGE). If
+RESULT is nil, MESSAGE should describe why the matcher failed. If
+RESULT is non-nil, MESSAGE should describe why a negated matcher
+failed."
   (declare (indent defun))
   `(put ,matcher 'buttercup-matcher
         (lambda ,args
           ,@body)))
 
+(defun buttercup--function-as-matcher (fun)
+  (cl-assert (functionp fun) t)
+  (lambda (&rest args)
+    (apply fun (mapcar #'funcall args))))
+
+(defun buttercup--find-matcher-function (matcher)
+  (let ((matcher-prop
+         (when (symbolp matcher)
+           (get matcher 'buttercup-matcher))))
+    (cond
+     ;; Use `buttercup-matcher' property if it's a function
+     ((functionp matcher-prop)
+      matcher-prop)
+     (matcher-prop
+      (error "%S %S has a `buttercup-matcher' property that is not a function. Buttercup has been misconfigured."
+             (if (keywordp matcher) "Keyword" "Symbol") matcher))
+     ;; Otherwise just use `matcher' as a function, wrapping it in
+     ;; code to unpack function-wrapped arguments.
+     ((functionp matcher)
+      (buttercup--function-as-matcher matcher))
+     (matcher (error "Not a test: `%S'" matcher))
+     ;; If `matcher' is nil, then we just want a basic truth test
+     ((null matcher)
+      (buttercup--find-matcher-function :to-be-truthy))
+     (t (error "This line should never run")))))
+
 (defun buttercup--apply-matcher (matcher args)
   "Apply MATCHER to ARGS.
 
-MATCHER is either a matcher defined with
+ARGS is a list of functions that must be `funcall'ed to get their
+values.
+
+MATCHER is either a matcher keyword defined with
 `buttercup-define-matcher', or a function."
-  (let ((function (or (get matcher 'buttercup-matcher)
-                      matcher)))
-    (when (not (functionp function))
-      (error "Not a test: %S" matcher))
+  (cl-assert (cl-every #'buttercup--wrapper-fun-p args) t)
+  (let ((function
+         (buttercup--find-matcher-function matcher)))
     (apply function args)))
+
+(cl-defmacro buttercup--test-expectation
+    (expr &key expect-match-phrase expect-mismatch-phrase)
+  "Wrapper for the common matcher case of two possible messages.
+
+The logic for the return values of buttercup matchers can be
+unintuitive, since the return value is a cons cell whose first
+element is t for a mismatch and nil for a match. In the simple
+case where there are only two possible messages (one for a match
+and one for a mismatch), this macro allows you to simply specify
+those two phrases and the expression to test."
+  (declare (indent 1))
+  (cl-assert expect-match-phrase)
+  (cl-assert expect-mismatch-phrase)
+  `(let ((value ,expr))
+     (if value
+         (cons t ,expect-mismatch-phrase)
+       (cons nil ,expect-match-phrase))))
+
+(cl-defmacro buttercup-define-matcher-for-unary-function
+    (matcher function &key
+             expect-match-phrase expect-mismatch-phrase function-name)
+  "Shortcut to define a macther for a 1-argument function.
+
+When the matcher is used, keyword arguments EXPECT-MATCH-PHRASE
+and EXPECT-MISMATCH-PHRASE are used to construct the return
+message. It may contain `%f', `%A', and `%a', which will be
+replaced with the function name, the expression of the argument
+the matcher was called on, and the value of that argument,
+respectively. If not provided, the default EXPECT-MATCH-PHRASE
+is:
+
+    Expected `%A' to match `%f', but instead it was `%a'.
+
+Similarly, the default EXPECT-MISMATCH-PHRASE is:
+
+    Expected `%A' not to match `%f', but it was `%a'.
+
+To include a literal `%' in either message, use `%%'.
+
+If FUNCTION is passed as a lambda expression or other non-symbol, then
+you must provide a keyword argument FUNCTION-NAME to be used in
+the match/mismatch messages. Otherwise, FUNCTION-NAME will be
+used instead of FUNCTION if both are non-nil SYMBOLS.
+
+If FUNCTION (or FUNCTION-NAME) has an `ert-explainer' property,
+this will be used to generate the default EXPECT-MATCH-PHRASE.
+
+See also `buttercup-define-matcher'."
+  (declare (indent 2))
+  ;; Use the ERT explainer for FUNCTION if available to generate the
+  ;; default expect-match phrase.
+  (let ((explainer (or (when function-name
+                         (get function-name 'ert-explainer))
+                       (when (symbolp function)
+                         (get function 'ert-explainer)))))
+    (cl-assert (symbolp function-name) t)
+    (cl-assert (functionp function) t)
+    (unless expect-match-phrase
+      (setq expect-match-phrase
+            (if explainer
+                ;; %x is the undocumented substitution for the
+                ;; explainer's output
+                "Expected `%A' to match `%f', but instead it was `%a' which did not match because: %x."
+              "Expected `%A' to match `%f', but instead it was `%a'.")))
+    (unless expect-mismatch-phrase
+      (setq expect-mismatch-phrase
+            "Expected `%A' not to match `%f', but it was `%a'."))
+    (when (and (null function-name)
+               ;; Only need a function name if either phrase contains
+               ;; an unescaped `%f'.
+               (string-match-p
+                "%f"
+                (replace-regexp-in-string
+                 "%%" ""
+                 (concat expect-match-phrase " "
+                         expect-mismatch-phrase))))
+      (if (symbolp function)
+          (setq function-name function)
+        (error "The `:function-name' keyword is required if FUNCTION is not a symbol")))
+    `(buttercup-define-matcher ,matcher (arg)
+       (let* ((expr (buttercup--enclosed-expr arg))
+              (value (funcall arg))
+              (explanation (and ',explainer (funcall ',explainer arg)))
+              (spec (format-spec-make
+                     ?f ',function-name
+                     ?A (format "%S" expr)
+                     ?a (format "%S" value)
+                     ?x (format "%S" explanation))))
+         (buttercup--test-expectation (funcall ',function value)
+           :expect-match-phrase (format-spec ,expect-match-phrase spec)
+           :expect-mismatch-phrase (format-spec ,expect-mismatch-phrase spec))))))
+
+(cl-defmacro buttercup-define-matcher-for-binary-function
+    (matcher function &key
+             expect-match-phrase expect-mismatch-phrase function-name)
+  "Shortcut to define a macther for a 2-argument function.
+
+When the matcher is used, keyword arguments EXPECT-MATCH-PHRASE
+and EXPECT-MISMATCH-PHRASE are used to construct the return
+message. It may contain `%f', `%A', `%a', `%B', and `%b'. The
+token `%f' will be replaced with the function name. `%A' and `%B'
+will be replaced with the unevaluted expressions of the two
+arguments passed to the function, while `%a' and `%b' will be
+replaced with their values. not provided, the default
+EXPECT-MATCH-PHRASE is:
+
+    Expected `%A' to be `%f' to `%b', but instead it was `%a'.
+
+Similarly, the default EXPECT-MISMATCH-PHRASE is:
+
+    Expected `%A' not to be `%f' to `%b', but it was.
+
+To include a literal `%' in either message, use `%%'.
+
+If FUNCTION is passed as a lambda expression or other non-symbol, then
+you must provide a keyword argument FUNCTION-NAME to be used in
+the match/mismatch messages (unless neither one contains `%f').
+If both are non-nil symbols, FUNCTION-NAME will be used instead
+of FUNCTION in messages.
+
+If FUNCTION (or FUNCTION-NAME) has an `ert-explainer' property,
+this will be used to generate the default EXPECT-MATCH-PHRASE.
+
+See also `buttercup-define-matcher'."
+  (declare (indent 2))
+  ;; Use the ERT explainer for FUNCTION if available to generate the
+  ;; default expect-match phrase.
+  (let ((explainer (or (when function-name
+                         (get function-name 'ert-explainer))
+                       (when (symbolp function)
+                         (get function 'ert-explainer)))))
+    (cl-assert (symbolp function-name) t)
+    (cl-assert (functionp function) t)
+    (unless expect-match-phrase
+      (setq expect-match-phrase
+            (if explainer
+                ;; %x is the undocumented substitution for the
+                ;; explainer's output
+                "Expected `%A' to be `%f' to `%b', but instead it was `%a' which does not match because: %x."
+              "Expected `%A' to be `%f' to `%b', but instead it was `%a'.")))
+    (unless expect-mismatch-phrase
+      (setq expect-mismatch-phrase
+            "Expected `%A' not to be `%f' to `%b', but it was."))
+    (when (and (null function-name)
+               ;; Only need a function name if either phrase contains
+               ;; an unescaped `%f'.
+               (string-match-p
+                "%f"
+                (replace-regexp-in-string
+                 "%%" ""
+                 (concat expect-match-phrase " "
+                         expect-mismatch-phrase))))
+      (if (symbolp function)
+          (setq function-name function)
+        (error "The `:function-name' keyword is required if FUNCTION is not a symbol")))
+    `(buttercup-define-matcher ,matcher (a b)
+       (cl-destructuring-bind
+           ((a-expr . a) (b-expr . b))
+           (mapcar #'buttercup--expr-and-value (list a b))
+         (let* ((explanation (and ',explainer (funcall ',explainer a b)))
+                (spec (format-spec-make
+                       ?f ',function-name
+                       ?A (format "%S" a-expr)
+                       ?a (format "%S" a)
+                       ?B (format "%S" b-expr)
+                       ?b (format "%S" b)
+                       ?x (format "%S" explanation))))
+           (buttercup--test-expectation (funcall #',function a b)
+             :expect-match-phrase (format-spec ,expect-match-phrase spec)
+             :expect-mismatch-phrase (format-spec ,expect-mismatch-phrase spec)))))))
 
 ;;;;;;;;;;;;;;;;;;;;;
 ;;; Built-in matchers
 
+(buttercup-define-matcher-for-unary-function :to-be-truthy identity
+  :expect-match-phrase "Expected `%A' to be non-nil, but instead it was nil."
+  :expect-mismatch-phrase "Expected `%A' to be nil, but instead it was `%a'.")
+
+(buttercup-define-matcher-for-binary-function :to-be eq)
+(buttercup-define-matcher-for-binary-function :to-equal equal)
+
 (buttercup-define-matcher :not (obj matcher &rest args)
-  (let ((result (buttercup--apply-matcher matcher (cons obj args))))
+  (let* ((matcher (funcall matcher))
+         (result (buttercup--apply-matcher matcher (cons obj args))))
     (if (consp result)
         (cons (not (car result))
               (cdr result))
       (not result))))
 
-(buttercup-define-matcher :to-be (a b)
-  (if (eq a b)
-      (cons t (format "Expected %S not to be `eq' to %S" a b))
-    (cons nil (format "Expected %S to be `eq' to %S" a b))))
-
-(buttercup-define-matcher :to-equal (a b)
-  (if (equal a b)
-      (cons t (format "Expected %S not to `equal' %S" a b))
-    (cons nil (format "Expected %S to `equal' %S" a b))))
-
 (buttercup-define-matcher :to-have-same-items-as (a b)
-  (if (and (cl-subsetp a b :test #'equal)
-           (cl-subsetp b a :test #'equal))
-      (cons t (format "Expected %S not to have same items as %S" a b))
-    (cons nil (format "Expected %S to have same items as %S" a b))))
+  (cl-destructuring-bind
+      ((a-expr . a) (b-expr . b))
+      (mapcar #'buttercup--expr-and-value (list a b))
+    (let* ((a-uniques (cl-set-difference a b :test #'equal))
+           (b-uniques (cl-set-difference b a :test #'equal))
+           (spec (format-spec-make
+                  ?A (format "%S" a-expr)
+                  ?a (format "%S" a)
+                  ?B (format "%S" b-expr)
+                  ?b (format "%S" b)
+                  ?m (format "%S" b-uniques)
+                  ?p (format "%S" a-uniques))))
+      (cond
+       ((and a-uniques b-uniques)
+        (cons nil (format-spec
+                 "Expected `%A' to contain the same items as `%b', but `%m' are missing and `%p' are present unexpectedly."
+                 spec)))
+       (a-uniques
+        (cons nil (format-spec
+                 "Expected `%A' to contain the e items as `%b', but `%p' are present unexprctedly."
+                 spec)))
+       (b-uniques
+        (cons nil (format-spec
+                 "Expected `%A' to contain the same items as `%b', but `%m' are missing."
+                 spec)))
+       (t
+        (cons t (format-spec
+                 "Expected `%A' not to have same items as `%b'"
+                 spec)))))))
 
 (buttercup-define-matcher :to-match (text regexp)
-  (if (string-match regexp text)
-      (cons t (format "Expected %S not to match the regexp %S"
-                      text regexp))
-    (cons nil (format "Expected %S to match the regexp %S"
-                      text regexp))))
+  (cl-destructuring-bind
+      ((text-expr . text) (regexp-expr . regexp))
+      (mapcar #'buttercup--expr-and-value (list text regexp))
+    (let* (;; For string literals, juse use them normally, but for
+           ;; expressions, show both the expr and its string value
+           (text-is-literal (equal text-expr text))
+           (regexp-is-literal (equal regexp-expr regexp))
+           (text-desc
+            (if text-is-literal
+                text-expr
+              (format "`%S' with value %S"
+                      text-expr text)))
+           (regexp-desc
+            (if regexp-is-literal
+                regexp-expr
+              (format "`%S' with value %S"
+                      regexp-expr regexp)))
+           (match-p (string-match regexp text))
+           ;; Get some more details about the match
+           (start
+            (when match-p
+              (match-beginning 0)))
+           (end
+            (when match-p
+              (match-end 0)))
+           (matched-substring
+            (when match-p
+              (substring text start end)))
+           (spec (format-spec-make
+                  ?T text-desc
+                  ?t (format "%S" text)
+                  ?R regexp-desc
+                  ?r (format "%S" regexp)
+                  ?m (format "%S" matched-substring)
+                  ?a start
+                  ?z end)))
+      (buttercup--test-expectation match-p
+        :expect-match-phrase
+        (format-spec "Expected %T to match the regexp %r, but instead it was %t."
+                     spec)
+        :expect-mismatch-phrase
+        (format-spec "Expected %T not to match the regexp %r, but it matched the substring %m from position %a to %z."
+                     spec)))))
 
-(buttercup-define-matcher :to-be-truthy (arg)
-  (if arg
-      (cons t (format "Expected %S not to be true" arg))
-    (cons nil (format "Expected %S to be true" arg))))
+(buttercup-define-matcher-for-binary-function
+    :to-be-in member
+  :expect-match-phrase "Expected `%A' to be an element of `%b', but it was `%a'."
+  :expect-mismatch-phrase "Expected `%A' not to be an element of `%b', but it was `%a'.")
 
-(buttercup-define-matcher :to-contain (seq elt)
-  (if (member elt seq)
-      (cons t (format "Expected %S not to contain %S" seq elt))
-    (cons nil (format "Expected %S to contain %S" seq elt))))
+(buttercup-define-matcher-for-binary-function
+    ;; Reverse the args
+    :to-contain (lambda (a b) (member b a))
+  :expect-match-phrase "Expected `%A' to be a list containing `%b', but instead it was `%a'."
+  :expect-mismatch-phrase "Expected `%A' to be a list not containing `%b', but instead it was `%a'.")
 
-(buttercup-define-matcher :to-be-less-than (a b)
-  (if (< a b)
-      (cons t (format "Expected %S not to be less than %S" a b))
-    (cons nil (format "Expected %S to be less than %S" a b))))
-
-(buttercup-define-matcher :to-be-greater-than (a b)
-  (if (> a b)
-      (cons t (format "Expected %S not to be greater than %S" a b))
-    (cons nil (format "Expected %S to be greater than %S" a b))))
+(buttercup-define-matcher-for-binary-function
+    :to-be-less-than <
+  :expect-match-phrase "Expected `%A' < %b, but `%A' was %a."
+  :expect-mismatch-phrase "Expected `%A' >= %b, but `%A' was %a.")
+(buttercup-define-matcher-for-binary-function
+    :to-be-greater-than >
+  :expect-match-phrase "Expected `%A' > %b, but `%A' was %a."
+  :expect-mismatch-phrase "Expected `%A' <= %b, but `%A' was %a.")
+(buttercup-define-matcher-for-binary-function
+    :to-be-weakly-less-than <=
+  :expect-match-phrase "Expected `%A' <= %b, but `%A' was %a."
+  :expect-mismatch-phrase "Expected `%A' > %b, but `%A' was %a.")
+(buttercup-define-matcher-for-binary-function
+    :to-be-weakly-greater-than >=
+  :expect-match-phrase "Expected `%A' >= %b, but `%A' was %a."
+  :expect-mismatch-phrase "Expected `%A' < %b, but `%A' was %a.")
 
 (buttercup-define-matcher :to-be-close-to (a b precision)
-  (if (< (abs (- a b))
-         (/ 1 (expt 10.0 precision)))
-      (cons t (format "Expected %S not to be close to %S to %s positions"
-                      a b precision))
-    (cons nil (format "Expected %S to be greater than %S to %s positions"
-                      a b precision))))
+  (cl-destructuring-bind
+      (precision (a-expr . a) (b-expr . b))
+      (cons (funcall precision)
+            (mapcar #'buttercup--expr-and-value (list a b)))
+    (let ((tolerance (expt 10.0 (- precision))))
+      (buttercup--test-expectation
+          (< (abs (- a b)) tolerance)
+        :expect-match-phrase
+        (format "Expected `%S' to be within %s of %s, but instead it was %s, with a difference of %s"
+                a-expr tolerance b a (abs (- a b)))
+        :expect-mismatch-phrase
+        (format "Expected `%S' to differ from %s by more than %s, but instead it was %s, with a difference of %s"
+                a-expr b tolerance a (abs (- a b)))))))
 
-(buttercup-define-matcher :to-throw (function &optional signal signal-args)
-  ;; This will trigger errors relating to FUNCTION not being a
-  ;; function outside the following `condition-case'.
-  (when (not (functionp function))
-    (funcall function))
-  (condition-case err
-      (progn
-        (funcall function)
-        (cons nil (format "Expected %S to throw an error" function)))
-    (error
-     (cond
-      ((and signal signal-args)
-       (cond
-        ((not (memq signal (get (car err) 'error-conditions)))
-         (cons nil (format "Expected %S to throw a child signal of %S, not %S"
-                           function signal (car err))))
-        ((not (equal signal-args (cdr err)))
-         (cons nil (format "Expected %S to throw %S with args %S, not %S with %S"
-                           function signal signal-args (car err) (cdr err))))
-        (t
-         (cons t (format (concat "Expected %S not to throw a child signal "
-                                 "of %S with args %S, but it did throw %S")
-                         function signal signal-args (car err))))))
-      (signal
-       (if (not (memq signal (get (car err) 'error-conditions)))
-           (cons nil (format "Expected %S to throw a child signal of %S, not %S"
-                             function signal (car err)))
-         (cons t (format (concat "Expected %S not to throw a child signal "
-                                 "of %S, but it threw %S")
-                         function signal (car err)))))
-      (t
-       (cons t (format "Expected %S not to throw an error" function)))))))
+(buttercup-define-matcher :to-throw (expr &optional signal signal-args)
+  (let ((expected-signal-symbol (or (and signal (funcall signal)) 'error))
+        (expected-signal-args (and signal-args (funcall signal-args)))
+        (unevaluated-expr (buttercup--enclosed-expr expr))
+        expr-value
+        thrown-signal
+        thrown-signal-symbol
+        thrown-signal-args)
+    (when (and (functionp unevaluated-expr)
+               (member (car unevaluated-expr) '(lambda closure)))
+      (display-warning
+       'buttercup
+       (buttercup-colorize
+        (format "Probable incorrect use of `:to-throw' matcher: pass an expression instead of a function: `%S'"
+                unevaluated-expr)
+        'yellow)))
+    ;; If no signal specificaiton, use `error' as the signal symbol
+    (when (and (null expected-signal-symbol)
+               (null expected-signal-args))
+      (setq expected-signal-symbol 'error))
+    ;; Set the above 4 variables
+    (condition-case err
+        (setq expr-value
+              (funcall expr))
+      (error
+       (setq thrown-signal err
+             thrown-signal-symbol (car err)
+             thrown-signal-args (cdr err))
+       nil))
+    (let*
+        ((matched
+          (and thrown-signal
+               (or (null expected-signal-symbol)
+                   (memq expected-signal-symbol (get thrown-signal-symbol 'error-conditions)))
+               (or (null expected-signal-args)
+                   (equal thrown-signal-args expected-signal-args))))
+         (spec (format-spec-make
+                ?E (format "%S" unevaluated-expr)
+                ?e (format "%S" expr-value)
+                ?t (format "%S" thrown-signal)
+                ?s (if expected-signal-symbol
+                       (format "a child signal of `%S'" expected-signal-symbol)
+                     "a signal")
+                ?a (if expected-signal-args
+                       (format " with args `%S'" expected-signal-args)
+                     "")))
+         (result-text
+          (if thrown-signal
+              (format-spec "it threw %t" spec)
+            (format-spec "it evaluated successfully, returning value `%e'" spec)))
+
+         (expect-match-text
+          (concat (format-spec "Expected `%E' to throw %s%a" spec)
+                  ", but instead "
+                  result-text))
+         (expect-mismatch-text
+          (concat (format-spec "Expected `%E' not to throw %s%a" spec)
+                  ", but "
+                  result-text)))
+      (buttercup--test-expectation matched
+                                   :expect-match-phrase expect-match-text
+                                   :expect-mismatch-phrase expect-mismatch-text))))
+
+(buttercup-define-matcher :to-have-been-called (spy)
+  (setq spy (funcall spy))
+  (cl-assert (symbolp spy))
+  (if (spy-calls-all (funcall spy))
+      t
+    nil))
+
+(buttercup-define-matcher :to-have-been-called-with (spy &rest args)
+  (setq spy (funcall spy))
+  (cl-assert (symbolp spy))
+  (setq args (mapcar #'funcall args))
+  (let* ((calls (mapcar 'spy-context-args (spy-calls-all spy))))
+    (cond
+     ((not calls)
+      (cons nil
+            (format "Expected `%s' to have been called with %s, but it was not called at all" spy args)))
+     ((not (member args calls))
+      (cons nil
+            (format "Expected `%s' to have been called with %s, but it was called with %s"
+                    spy
+                    args
+                    (mapconcat (lambda (args)
+                                 (format "%S" args))
+                               calls
+                               ", "))))
+     (t
+      t))))
+
+(buttercup-define-matcher :to-have-been-called-times (spy number)
+  (setq spy (funcall spy)
+        number (funcall number))
+  (cl-assert (symbolp spy))
+  (let* ((call-count (length (spy-calls-all spy))))
+    (cond
+     ((= number call-count)
+      t)
+     (t
+      (cons nil
+            (format "Expected `%s' to have been called %s %s, but it was called %s %s"
+                    spy
+                    number (if (= number 1) "time" "times")
+                    call-count (if (= call-count 1) "time" "times")))))))
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Suite and spec data structures
@@ -406,8 +805,11 @@ form.")
       (let ((dups (buttercup--find-duplicate-spec-names
                    (list buttercup--current-suite))))
         (when dups
-          (message "Found duplicate spec names in suite: %S"
-                   (delete-dups dups))))
+          ;; TODO: Use `buttercup--warn'
+          (display-warning
+           'buttercup
+           (format "Found duplicate spec names in suite: %S"
+                   (delete-dups dups)))))
       (setq buttercup-suites (append buttercup-suites
                                      (list buttercup--current-suite))))))
 
@@ -574,13 +976,15 @@ responsibility to ensure ARG is a command."
             (:and-return-value
              `(lambda (&rest args)
                 ,orig-intform
-                ,arg))
+                ',arg))
             (:and-call-fake
              (let ((replacement-intform (interactive-form arg)))
                (when (and replacement-intform
                           (not (equal orig-intform replacement-intform)))
-                 (display-warning 'buttercup
-                                  "While spying on `%S': replacement does not have the same interactive form"))
+                 (display-warning
+                  'buttercup
+                  (format "While spying on `%S': replacement does not have the same interactive form"
+                          symbol)))
                `(lambda (&rest args)
                   ,(or replacement-intform orig-intform)
                   (apply (function ,arg) args))))
@@ -659,39 +1063,9 @@ responsibility to ensure ARG is a command."
            buttercup--spy-contexts))
 
 (buttercup-define-matcher :to-have-been-called (spy)
-  (if (spy-calls-all spy)
+  (if (spy-calls-all (funcall spy))
       t
     nil))
-
-(buttercup-define-matcher :to-have-been-called-with (spy &rest args)
-  (let* ((calls (mapcar 'spy-context-args (spy-calls-all spy))))
-    (cond
-     ((not calls)
-      (cons nil
-            (format "Expected `%s' to have been called with %s, but it was not called at all" spy args)))
-     ((not (member args calls))
-      (cons nil
-            (format "Expected `%s' to have been called with %s, but it was called with %s"
-                    spy
-                    args
-                    (mapconcat (lambda (args)
-                                 (format "%S" args))
-                               calls
-                               ", "))))
-     (t
-      t))))
-
-(buttercup-define-matcher :to-have-been-called-times (spy number)
-  (let* ((call-count (length (spy-calls-all spy))))
-    (cond
-     ((= number call-count)
-      t)
-     (t
-      (cons nil
-            (format "Expected `%s' to have been called %s %s, but it was called %s %s"
-                    spy
-                    number (if (= number 1) "time" "times")
-                    call-count (if (= call-count 1) "time" "times")))))))
 
 (defun spy-calls-any (spy)
   "Return t iff SPY has been called at all, nil otherwise."
@@ -725,6 +1099,53 @@ responsibility to ensure ARG is a command."
 
 ;;;;;;;;;;;;;;;;
 ;;; Test Runners
+
+;; These variables are generally used in the test runners, but set
+;; elsewhere. They must be defined here before their first use.
+(defvar buttercup-reporter #'buttercup-reporter-adaptive
+  "The reporter function for buttercup test runs.
+
+During a run of buttercup, the value of this variable is called
+as a function with two arguments. The first argument is a symbol
+describing the event, the second depends on the event.
+
+The following events are known:
+
+buttercup-started -- The test run is starting. The argument is a
+  list of suites this run will execute.
+
+suite-started -- A suite is starting. The argument is the suite.
+  See `make-buttercup-suite' for details on this structure.
+
+spec-started -- A spec in is starting. The argument is the spec.
+  See `make-buttercup-spec' for details on this structure.
+
+spec-done -- A spec has finished executing. The argument is the
+  spec.
+
+suite-done -- A suite has finished. The argument is the spec.
+
+buttercup-done -- All suites have run, the test run is over.")
+
+(defvar buttercup-stack-frame-style (car '(crop full pretty))
+  "Style to use when printing stack traces of tests.
+
+`full' is roughly the same style as normal Emacs stack traces:
+print each stack frame in full with no line breaks. `crop' is
+like full, but truncates each line to 80 characters. `pretty'
+uses `pp' to generate a multi-line indented representation of
+each frame, and prefixes each stack frame with lambda or M to
+indicate whether it represents a normal evaluated function call
+or a macro/special form.")
+
+(defvar buttercup-color t
+  "Whether to use colors in output.")
+
+(defconst buttercup-warning-buffer-name " *Buttercup-Warnings*"
+  "Buffer name used to collect warnings issued while running a spec.
+
+A buffer with this name should only exist while running a test
+spec, and should be killed after running the spec.")
 
 ;;;###autoload
 (defun buttercup-run-at-point ()
@@ -772,10 +1193,7 @@ current directory."
       (dolist (file (directory-files-recursively
                      dir "\\`test-.*\\.el\\'\\|-tests?\\.el\\'"))
         (when (not (string-match "\\(^\\|/\\)\\." (file-relative-name file)))
-          (condition-case err
-              (load file nil t)
-            (error
-             (message (format "Error while loading %s:\n%s" file (error-message-string err))))))))
+          (load file nil t))))
     (when patterns
       (let ((suites-or-specs buttercup-suites))
         (while suites-or-specs
@@ -800,11 +1218,13 @@ current directory."
     (dolist (file command-line-args-left)
       (with-current-buffer (find-file-noselect file)
         (goto-char (point-min))
-        (while (re-search-forward "```lisp\n\\(\\(?:.\\|\n\\)*?\\)```"
-                                  nil t)
-          (let ((code (match-string 1)))
-            (with-current-buffer lisp-buffer
-              (insert code))))))
+        (let ((case-fold-search t))
+          (while (re-search-forward
+                  "```\\(?:emacs-\\|e\\)?lisp\n\\(\\(?:.\\|\n\\)*?\\)```"
+                  nil t)
+            (let ((code (match-string 1)))
+              (with-current-buffer lisp-buffer
+                (insert code)))))))
     (with-current-buffer lisp-buffer
       (setq lexical-binding t)
       (eval-region (point-min)
@@ -848,14 +1268,31 @@ Do not change the global value.")
     (funcall buttercup-reporter 'suite-done suite)))
 
 (defun buttercup--run-spec (spec)
-  (funcall buttercup-reporter 'spec-started spec)
-  (buttercup-with-cleanup
-   (dolist (f buttercup--before-each)
-     (buttercup--update-with-funcall spec f))
-   (buttercup--update-with-funcall spec (buttercup-spec-function spec))
-   (dolist (f buttercup--after-each)
-     (buttercup--update-with-funcall spec f)))
-  (funcall buttercup-reporter 'spec-done spec))
+  (unwind-protect
+      (progn
+        ;; Kill any previous warning buffer, just in case
+        (when (get-buffer buttercup-warning-buffer-name)
+          (kill-buffer buttercup-warning-buffer-name))
+        (get-buffer-create buttercup-warning-buffer-name)
+
+        (funcall buttercup-reporter 'spec-started spec)
+        (buttercup-with-cleanup
+         (dolist (f buttercup--before-each)
+           (buttercup--update-with-funcall spec f))
+         (buttercup--update-with-funcall spec (buttercup-spec-function spec))
+         (dolist (f buttercup--after-each)
+           (buttercup--update-with-funcall spec f)))
+        (funcall buttercup-reporter 'spec-done spec)
+        ;; Display warnings that were issued while running the the
+        ;; spec, if any
+        (with-current-buffer buttercup-warning-buffer-name
+          (when (string-match-p "[^[:space:]\n\r]" (buffer-string))
+            (buttercup--print
+             (buttercup-colorize
+              (buffer-string)
+              'yellow)))))
+    (when (get-buffer buttercup-warning-buffer-name)
+      (kill-buffer buttercup-warning-buffer-name))))
 
 (defun buttercup--update-with-funcall (suite-or-spec function &rest args)
   (let* ((result (apply 'buttercup--funcall function args))
@@ -885,34 +1322,6 @@ Do not change the global value.")
 
 ;;;;;;;;;;;;;
 ;;; Reporters
-
-(defvar buttercup-reporter #'buttercup-reporter-adaptive
-  "The reporter function for buttercup test runs.
-
-During a run of buttercup, the value of this variable is called
-as a function with two arguments. The first argument is a symbol
-describing the event, the second depends on the event.
-
-The following events are known:
-
-buttercup-started -- The test run is starting. The argument is a
-  list of suites this run will execute.
-
-suite-started -- A suite is starting. The argument is the suite.
-  See `make-buttercup-suite' for details on this structure.
-
-spec-started -- A spec in is starting. The argument is the spec.
-  See `make-buttercup-spec' for details on this structure.
-
-spec-done -- A spec has finished executing. The argument is the
-  spec.
-
-suite-done -- A suite has finished. The argument is the spec.
-
-buttercup-done -- All suites have run, the test run is over.")
-
-(defvar buttercup-color t
-  "Whether to use colors in output.")
 
 (defun buttercup-reporter-adaptive (event arg)
   "A reporter that handles both interactive and noninteractive sessions.
@@ -969,7 +1378,7 @@ Calls either `buttercup-reporter-batch' or
                        (list arg))))
         ((eq (buttercup-spec-status arg) 'pending)
          (buttercup--print "  %s\n" (buttercup-spec-failure-description arg)))
-        (_
+        (t
          (error "Unknown spec status %s" (buttercup-spec-status arg)))))
 
       (`suite-done
@@ -1042,7 +1451,7 @@ Calls either `buttercup-reporter-batch' or
                              (make-string (* 2 level) ?\s)
                              (buttercup-spec-description arg)
                              (buttercup-spec-failure-description arg))))
-        (_
+        (t
          (error "Unknown spec status %s" (buttercup-spec-status arg))))))
 
     (`buttercup-done
@@ -1100,6 +1509,29 @@ Calls either `buttercup-reporter-batch' or
 
 (defun buttercup--print (fmt &rest args)
   (send-string-to-terminal (apply #'format fmt args)))
+
+
+(defadvice display-warning (around buttercup-defer-warnings activate)
+  "Log all warnings to a special buffer while running buttercup tests.
+
+Emacs' normal display logic for warnings doesn't mix well with
+buttercup, for several reasons. So instead, while a buttercup
+test is running, BUFFER-NAME defaults to a special buffer that
+exists only during the test (see
+`buttercup-warning-buffer-name'). When logging to this buffer,
+`warning-minimum-level' is set to `:emergency' and the `message'
+function is disabled to suppress display of all warning messages.
+The contents of this buffer are then displayed after the test
+finishes."
+  (when (and (null buffer-name)
+             (get-buffer buttercup-warning-buffer-name))
+    (setq buffer-name buttercup-warning-buffer-name))
+  (if (equal buffer-name buttercup-warning-buffer-name)
+      (cl-letf
+          ((warning-minimum-level :emergency)
+           ((symbol-function 'message) 'ignore))
+        ad-do-it)
+    ad-do-it))
 
 (defconst buttercup-colors
   '((black   . 30)
@@ -1188,17 +1620,6 @@ failed -- The second value is the description of the expectation
             frame (backtrace-frame n)))
     frame-list))
 
-(defvar buttercup-stack-frame-style (car '(crop full pretty))
-  "Style to use when printing stack traces of tests.
-
-`full' is roughly the same style as normal Emacs stack traces:
-print each stack frame in full with no line breaks. `crop' is
-like full, but truncates each line to 80 characters. `pretty'
-uses `pp' to generate a multi-line indented representation of
-each frame, and prefixes each stack frame with lambda or M to
-indicate whether it represents a normal evaluated function call
-or a macro/special form.")
-
 (defun buttercup--format-stack-frame (frame &optional style)
   (pcase (or style buttercup-stack-frame-style 'crop)
     (`full (format "  %S" (cdr frame)))
@@ -1211,17 +1632,23 @@ or a macro/special form.")
                             "...")))
        line))
     (`pretty
-     (thread-last (pp-to-string (cdr frame))
+     (let ((text (pp-to-string (cdr frame))))
        ;; Delete empty trailing line
-       (replace-regexp-in-string "\n[[:space:]]*\\'"
-                                 "")
+       (setq text
+             (replace-regexp-in-string
+              "\n[[:space:]]*\\'" ""
+              text))
        ;; Indent 2 spaces
-       (replace-regexp-in-string "^"
-                                 "  ")
+       (setq text
+             (replace-regexp-in-string
+              "^" "  "
+              text))
        ;; Prefix first line with lambda for function call and M for
        ;; macro/special form
-       (replace-regexp-in-string "\\` "
-                                 (if (car frame) "λ" "M"))))
+       (setq text
+             (replace-regexp-in-string
+              "\\` " (if (car frame) "λ" "M")
+              text))))
     (_ (error "Unknown stack trace style: %S" style))))
 
 (defmacro buttercup-with-converted-ert-signals (&rest body)

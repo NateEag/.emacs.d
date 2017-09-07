@@ -24,7 +24,7 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'dired)
+(eval-when-compile (require 'wdired))
 
 (declare-function helm-get-sources "helm.el")
 (declare-function helm-marked-candidates "helm.el")
@@ -34,8 +34,6 @@
 (declare-function org-open-at-point "org.el")
 (declare-function org-content "org.el")
 (defvar helm-current-position)
-
-(eval-when-compile (require 'wdired))
 (defvar wdired-old-marks)
 
 ;;; User vars.
@@ -942,6 +940,31 @@ Useful in dired buffers when there is inserted subdirs."
    (if (eq major-mode 'dired-mode)
        (dired-current-directory)
        default-directory)))
+
+(defun helm-shadow-boring-files (files)
+  "Files matching `helm-boring-file-regexp' will be
+displayed with the `file-name-shadow' face if available."
+  (helm-shadow-entries files helm-boring-file-regexp-list))
+
+(defun helm-skip-boring-files (files)
+  "Files matching `helm-boring-file-regexp' will be skipped."
+  (helm-skip-entries files helm-boring-file-regexp-list))
+
+(defun helm-skip-current-file (files)
+  "Current file will be skipped."
+  (remove (buffer-file-name helm-current-buffer) files))
+
+(defun helm-w32-pathname-transformer (args)
+  "Change undesirable features of windows pathnames to ones more acceptable to
+other candidate transformers."
+  (if (eq system-type 'windows-nt)
+      (helm-transform-mapcar
+       (lambda (x)
+         (replace-regexp-in-string
+          "/cygdrive/\\(.\\)" "\\1:"
+          (replace-regexp-in-string "\\\\" "/" x)))
+       args)
+    args))
 
 (defun helm-w32-prepare-filename (file)
   "Convert filename FILE to something usable by external w32 executables."

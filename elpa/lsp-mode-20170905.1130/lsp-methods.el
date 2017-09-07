@@ -277,45 +277,42 @@ interface TextDocumentItem {
       (signal 'lsp-empty-response-error nil))
     (setf (lsp--workspace-server-capabilities lsp--cur-workspace)
       (gethash "capabilities" response))
-    (run-hooks lsp-after-initialize-hook)
+    (run-hooks 'lsp-after-initialize-hook)
     ;; Version 3.0 now sends an "initialized" notification to allow registration
     ;; of server capabilities
     (lsp--send-notification (lsp--make-notification "initialized" nil))))
 
 (defun lsp--shutdown-cur-workspace ()
   "Shut down the language server process for lsp--cur-workspace"
-  (lsp--send-request (lsp--make-request "shutdown" (make-hash-table)))
-  (lsp--send-notification (lsp--make-notification "exit" nil))
+  (ignore-errors
+    (lsp--send-request (lsp--make-request "shutdown" (make-hash-table)))
+    (lsp--send-notification (lsp--make-notification "exit" nil)))
   (lsp--uninitialize-workspace))
-
 
 ;; Clean up the entire state of lsp mode when Emacs is killed, to get rid of any
 ;; pending language servers.
 (add-hook 'kill-emacs-hook #'lsp--global-teardown)
 
 (defun lsp--global-teardown ()
-  (maphash (lambda (key value) (lsp--teardown-client value)) lsp--workspaces)
-  )
+  (maphash (lambda (key value) (lsp--teardown-client value)) lsp--workspaces))
 
 (defun lsp--teardown-client (client)
   (setq lsp--cur-workspace client)
-  (lsp--shutdown-cur-workspace)
-  )
-
-
-
+  (lsp--shutdown-cur-workspace))
 
 (defun lsp--uninitialize-workspace ()
   "When a workspace is shut down, by request or from just
 disappearing, unset all the variables related to it."
   (remhash (lsp--workspace-root lsp--cur-workspace) lsp--workspaces)
-  (let ((old-root (lsp--workspace-root lsp--cur-workspace)))
+  (let ((old-root (lsp--workspace-root lsp--cur-workspace))
+         proc)
     (with-current-buffer (current-buffer)
-      (kill-process (lsp--workspace-proc lsp--cur-workspace))
+      (setq proc (lsp--workspace-proc lsp--cur-workspace))
+      (unless (eq (process-status proc) 'exit)
+        (kill-process (lsp--workspace-proc lsp--cur-workspace)))
       (setq lsp--cur-workspace nil)
       (lsp--unset-variables)
-      (kill-local-variable 'lsp--cur-workspace))
-    (message "workspace uninitialized: %s" old-root)))
+      (kill-local-variable 'lsp--cur-workspace))))
 
 ;; NOTE: Possibly make this function subject to a setting, if older LSP servers
 ;; are unhappy
@@ -434,7 +431,7 @@ disappearing, unset all the variables related to it."
         ;; Version 3.0 now sends an "initialized" notification to allow registration
         ;; of server capabilities
         (lsp--send-notification (lsp--make-notification "initialized" nil))
-        (run-hooks lsp-after-initialize-hook))
+        (run-hooks 'lsp-after-initialize-hook))
       (lsp--text-document-did-open))))
 
 (defun lsp--text-document-did-open ()
@@ -736,7 +733,14 @@ to a text document."
     (setq lsp--has-changes t)
     (lsp--rem-idle-timer)
     (when (eq lsp--server-sync-method 'incremental)
-      (lsp--push-change (lsp--text-document-content-change-event start end length)))
+      ;; (lsp--push-change (lsp--text-document-content-change-event start end length)))
+
+      ;; Each change needs to be wrt to the current doc, so send immediately.
+      ;; Otherwise we need to adjust the coordinates of the new change according
+      ;; to the cumulative changes already queued.
+      (progn
+        (lsp--push-change (lsp--text-document-content-change-event start end length))
+        (lsp--send-changes lsp--cur-workspace)))
     (if (lsp--workspace-change-timer-disabled lsp--cur-workspace)
       (lsp--send-changes lsp--cur-workspace)
       (lsp--set-idle-timer lsp--cur-workspace))))
@@ -1349,6 +1353,9 @@ Each option is a plist of (:key :default :title) wherein:
     (cl-loop for v in variables do
              (set (make-local-variable v) (buffer-local-value v buffer)))))
 
+(defun lsp--set-configuration (settings)
+  "Set the configuration for the lsp server."
+  (lsp--send-notification (lsp--make-notification "workspace/didChangeConfiguration" `(:settings , settings))))
 
 (provide 'lsp-methods)
 ;;; lsp-methods.el ends here

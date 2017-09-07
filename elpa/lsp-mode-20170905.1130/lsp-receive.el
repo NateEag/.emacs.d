@@ -24,13 +24,12 @@
 (cl-defstruct lsp--parser
   (waiting-for-response nil)
   (response-result nil)
-  (cur-token nil) ;; the current token being parsed
-  (raw "") ;; raw data received from the server, for debugging purposes
   (headers '()) ;; alist of headers
   (body nil) ;; message body
   (reading-body nil) ;; If non-nil, reading body
-  (last-terminate nil) ;; If non-nil, last token was '\r\n'
-  (prev-char nil)
+  (body-length nil) ;; length of current message body
+  (body-received 0) ;; amount of current message body currently stored in 'body'
+  (leftovers nil) ;; Leftover data from previous chunk; to be processed
 
   (queued-notifications nil)
   (queued-requests nil)
@@ -119,8 +118,14 @@ Else it is queued (unless DONT-QUEUE is non-nil)"
 	    message
 	    (or (car (alist-get code lsp--errors)) "Unknown error"))))
 
-(defun lsp--parser-length-header (p)
-  (string-to-number (cdr (assoc "Content-Length" (lsp--parser-headers p)))))
+(defun lsp--get-body-length (headers)
+	(let ((content-length (cdr (assoc "Content-Length" headers))))
+		(if content-length
+				(string-to-number content-length)
+
+			;; This usually means either the server our our parser is
+			;; screwed up with a previous Content-Length
+			(error "No Content-Length header"))))
 
 (defun lsp--parse-header (s)
   "Parse string S as a LSP (KEY . VAL) header."
@@ -137,30 +142,21 @@ Else it is queued (unless DONT-QUEUE is non-nil)"
         nil (format "Invalid Content-Length value: %s" val)))
     (cons key val)))
 
-(defun lsp--flush-header (p)
-  (push (lsp--parse-header (substring (lsp--parser-cur-token p) 0
-                             (1- (length (lsp--parser-cur-token p)))))
-    (lsp--parser-headers p))
-  (setf (lsp--parser-cur-token p) nil))
-
-(defun lsp--cur-body-length (p)
-  (string-bytes (lsp--parser-body p)))
-
 (defun lsp--parser-reset (p)
-  (setf (lsp--parser-cur-token p) nil
-    (lsp--parser-raw p) ""
-    (lsp--parser-headers p) '()
-    (lsp--parser-body p) nil
-    (lsp--parser-reading-body p) nil
-    (lsp--parser-last-terminate p) nil
-    (lsp--parser-prev-char p) nil))
+  (setf
+   (lsp--parser-leftovers p) ""
+   (lsp--parser-body-length p) nil
+   (lsp--parser-body-received p) nil
+   (lsp--parser-headers p) '()
+   (lsp--parser-body p) nil
+   (lsp--parser-reading-body p) nil))
 
-(defun lsp--parser-on-message (p)
+(defun lsp--parser-on-message (p msg)
   "Called when the parser reads a complete message from the server."
   (let* ((json-array-type 'list)
           (json-object-type 'hash-table)
           (json-false nil)
-          (json-data (json-read-from-string (lsp--parser-body p))))
+          (json-data (json-read-from-string msg)))
     (pcase (lsp--get-message-type json-data)
       ('response (setf (lsp--parser-response-result p)
                    (and json-data (gethash "result" json-data nil))
@@ -174,47 +170,79 @@ Else it is queued (unless DONT-QUEUE is non-nil)"
       ('request      (lsp--on-request p json-data))))
   (lsp--parser-reset p))
 
-(defun lsp--parser-read (p output)
+(defun lsp--parser-read (p chunk)
   (cl-assert (lsp--parser-workspace p) nil "Parser workspace cannot be nil.")
-  (cl-loop for c being the elements of output do
-    (if (eq c ?\n)
-      (when (eq ?\r (lsp--parser-prev-char p))
-        (unless (setf (lsp--parser-reading-body p)
-                  (lsp--parser-last-terminate p))
-          (lsp--flush-header p))
-        (setf (lsp--parser-last-terminate p) t))
-      (unless (eq c ?\r)
-        (setf (lsp--parser-last-terminate p) nil))
-      (if (lsp--parser-reading-body p)
-        (progn (setf (lsp--parser-body p)
-                 (concat (lsp--parser-body p) (list c)))
-          (when (= (lsp--parser-length-header p)
-                  (lsp--cur-body-length p))
-            (when lsp-print-io
-              (message "Output from language server: %s"
-                (lsp--parser-body p)))
-            (lsp--parser-on-message p)))
-        (setf (lsp--parser-cur-token p)
-          (concat (lsp--parser-cur-token p) (list c)))))
-    (setf (lsp--parser-raw p)
-      (concat (lsp--parser-raw p) (list c))
-      (lsp--parser-prev-char p) c)))
+
+  (let ((messages '()))
+    (while (not (string-empty-p chunk))
+      (if (not (lsp--parser-reading-body p))
+					(let* ((full-chunk (concat (lsp--parser-leftovers p) chunk))
+								 (body-sep-pos (string-match-p "\r\n\r\n" chunk)))
+						(if body-sep-pos
+								;; We've got all the headers, handle them all at once:
+								(let* ((header-raw (substring chunk 0 body-sep-pos))
+											 (content (substring chunk (+ body-sep-pos 4)))
+											 (headers
+												(mapcar 'lsp--parse-header
+																(split-string header-raw "\r\n")))
+											 (body-length (lsp--get-body-length headers)))
+									(setf
+									 (lsp--parser-headers p) headers
+									 (lsp--parser-reading-body p) t
+									 (lsp--parser-body-length p) body-length
+									 (lsp--parser-body-received p) 0
+									 (lsp--parser-body p) (make-string body-length ?\0)
+									 (lsp--parser-leftovers p) nil)
+									(setq chunk content))
+
+							;; Haven't found the end of the headers yet, save everything
+							;; for when the next chunk arrives:
+							(setf (lsp--parser-leftovers p) full-chunk)
+							(setq chunk "")))
+
+        ;; Read body
+        (let* ((total-body-length (lsp--parser-body-length p))
+							 (received-body-length (lsp--parser-body-received p))
+							 (chunk-length (string-bytes chunk))
+							 (left-to-receive (- total-body-length received-body-length))
+							 (this-body
+								(substring chunk 0 (min left-to-receive chunk-length)))
+							 (leftovers (substring chunk (string-bytes this-body))))
+          (store-substring (lsp--parser-body p) received-body-length this-body)
+          (setf (lsp--parser-body-received p) (+ (lsp--parser-body-received p)
+																								 (string-bytes this-body)))
+          (when (>= chunk-length left-to-receive)
+						;; TODO: keep track of the Content-Type header, if
+						;; present, and use its value instead of just defaulting
+						;; to utf-8
+            (push (decode-coding-string (lsp--parser-body p) 'utf-8) messages)
+            (lsp--parser-reset p))
+
+          (setq chunk leftovers))))
+
+    (reverse messages)))
 
 (defun lsp--parser-make-filter (p ignore-regexps)
   #'(lambda (proc output)
       (setq lsp--no-response nil)
       (when (cl-loop for r in ignore-regexps
-              ;; check if the output is to be ignored or not
-              ;; TODO: Would this ever result in false positives?
-              when (string-match r output) return nil
-              finally return t)
-        (condition-case err
-          (lsp--parser-read p output)
-          (error
-            (progn (lsp--parser-reset p)
-              (setf (lsp--parser-response-result p) nil
-                (lsp--parser-waiting-for-response p) nil)
-              (error "Error parsing language server output: %s" err)))))
+										 ;; check if the output is to be ignored or not
+										 ;; TODO: Would this ever result in false positives?
+										 when (string-match r output) return nil
+										 finally return t)
+        (let ((messages
+							 (condition-case err
+									 (lsp--parser-read p output)
+								 (error
+									(progn
+										(lsp--parser-reset p)
+										(setf (lsp--parser-response-result p) nil
+													(lsp--parser-waiting-for-response p) nil)
+										(error "Error parsing language server output: %s" err))))))
+
+          (dolist (m messages)
+            (when lsp-print-io (message "Output from language server: %s" m))
+            (lsp--parser-on-message p m))))
       (when (lsp--parser-waiting-for-response p)
         (with-local-quit (accept-process-output proc)))))
 

@@ -93,7 +93,10 @@ I use `undo-tree <http://www.dr-qubit.org/emacs.php#undo-tree>`__ to make
 Emacs' infinite-undo feature more usable. I have occasionally been bitten by a
 bug that loses part of undo history, but have not been able to reproduce it
 consistently - it may relate to `undo in region
-<https://lists.gnu.org/archive/html/bug-gnu-emacs/2014-01/msg01106.html>`__.
+<https://lists.gnu.org/archive/html/bug-gnu-emacs/2014-01/msg01106.html>`__. I
+just upgraded to Emacs 25.2.1, which the author says `should mean this stops
+happening <https://debbugs.gnu.org/cgi/bugreport.cgi?bug=16377#52>`__. If it
+happens to me post-upgrade, I'll note that here.
 
 I use `helm <http://emacs-helm.github.io/helm/>`__ to find files and commands
 quickly and easily. `helm-swoop

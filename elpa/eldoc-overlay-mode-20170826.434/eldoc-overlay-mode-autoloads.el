@@ -4,7 +4,7 @@
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
 ;;;### (autoloads nil "eldoc-overlay-mode" "eldoc-overlay-mode.el"
-;;;;;;  (22674 644 0 0))
+;;;;;;  (22961 29449 0 0))
 ;;; Generated autoloads from eldoc-overlay-mode.el
 
 (defvar eldoc-overlay-mode t "\

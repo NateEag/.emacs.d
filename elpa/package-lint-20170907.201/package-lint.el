@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; URL: https://github.com/purcell/package-lint
-;; Package-Version: 20170823.919
+;; Package-Version: 20170907.201
 ;; Keywords: lisp
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24"))
@@ -708,10 +708,6 @@ DESC is a struct as returned by `package-buffer-info'."
 
 (defun package-lint--check-globalized-minor-mode (def)
   "Offer up concerns about the global minor mode definition DEF."
-  (unless (eq 'define-globalized-minor-mode (car def))
-    (package-lint--error-at-point
-     'warning
-     "Use `define-globalized-minor-mode' to define global minor modes."))
   (let ((feature (intern (package-lint--provided-feature))))
     (unless (cl-search `(:require ',feature) def :test #'equal)
       (package-lint--error-at-point
@@ -728,7 +724,12 @@ DESC is a struct as returned by `package-buffer-info'."
           (unless (cl-search `(:group ',parent) def :test #'equal)
             (package-lint--error-at-point
              'error
-             "Customization groups should not end in \"-mode\" unless that name would conflict with their parent group.")))))))
+             "Customization groups should not end in \"-mode\" unless that name would conflict with their parent group."))))))
+
+  (unless (memq :group def)
+    (package-lint--error-at-point
+     'error
+     "Customization groups should specify a parent via `:group'.")))
 
 
 ;;; Helpers
@@ -752,13 +753,13 @@ DESC is a struct as returned by `package-buffer-info'."
   "Return a message if the listified key sequence LKS is invalid, otherwise nil."
   (let* ((modifiers (event-modifiers lks))
          (basic-type (event-basic-type lks)))
-    (when (or (equal (car (last lks)) ?\C-g)
+    (when (or (and (> (length lks) 1) (equal (car (last lks)) ?\C-g))
               (and (equal (car (last lks)) ?\e)
                    (not (equal (nthcdr (- (length lks) 2) lks)
                                '(?\e ?\e))))
               (equal (car (last lks)) ?\C-h)
               (and (equal modifiers '(control))
-                   (= ?c basic-type)
+                   (equal ?c basic-type)
                    (cdr lks)
                    (let ((v (event-basic-type (cdr lks)))
                          (m (event-modifiers (cdr lks))))

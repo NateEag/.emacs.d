@@ -28,6 +28,14 @@
 (setq custom-file (make-emacs-dir-path "custom.el"))
 (load custom-file)
 
+;; Set up exec-path to inherit values from the shell.
+(when (memq window-system '(mac ns))
+  (exec-path-from-shell-initialize))
+
+;; Load Windows-specific tweaks to environment, if we're running Windows.
+(if (eq system-type 'windows-nt)
+    (set-windows-env))
+
 ;; Set up package-specific autoloads and settings.
 (load-file (make-emacs-dir-path "site-lisp/config-packages.el"))
 
@@ -179,14 +187,6 @@ buffer's file does not exist."
 ;; Save minibuffer data between sessions.
 (setq savehist-file (make-emacs-dir-path "tmp/savehist"))
 (savehist-mode t)
-
-;; Set up exec-path to inherit values from the shell.
-(when (memq window-system '(mac ns))
-  (exec-path-from-shell-initialize))
-
-;; Load Windows-specific tweaks to environment, if we're running Windows.
-(if (eq system-type 'windows-nt)
-    (set-windows-env))
 
 ;; Tramp provides secure remote editing, via SFTP/SSH.
 ;; We don't load it by default, but we do config it. To load it, just do

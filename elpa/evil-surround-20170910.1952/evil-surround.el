@@ -10,7 +10,7 @@
 ;; Current Maintainer: ninrod (github.com/ninrod)
 ;; Created: July 23 2011
 ;; Version: 0.1
-;; Package-Version: 20170124.1110
+;; Package-Version: 20170910.1952
 ;; Package-Requires: ((evil "1.2.12"))
 ;; Mailing list: <implementations-list at lists.ourproject.org>
 ;;      Subscribe: http://tinyurl.com/implementations-list
@@ -259,7 +259,6 @@ If OPERATION is `change', call `evil-surround-change'.
 if OPERATION is `delete', call `evil-surround-delete'.
 Otherwise call `evil-surround-region'."
   (interactive (evil-surround-interactive-setup))
-  (message "%s" operation)
   (cond
    ((eq operation 'change)
     (call-interactively 'evil-surround-change))
@@ -274,7 +273,6 @@ Otherwise call `evil-surround-region'."
 
 It does nothing for change / delete."
   (interactive (evil-surround-interactive-setup))
-  (message "%s" operation)
   (cond
    ((eq operation 'change) nil)
    ((eq operation 'delete) nil)

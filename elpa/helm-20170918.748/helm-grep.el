@@ -205,7 +205,7 @@ Possible value are:
    "Find File" 'helm-grep-action
    "Find file other frame" 'helm-grep-other-frame
    "Save results in grep buffer" 'helm-grep-save-results
-   "Find file other window" 'helm-grep-other-window)
+   "Find file other window (C-u vertically)" 'helm-grep-other-window)
   "Actions for helm grep."
   :group 'helm-grep
   :type '(alist :key-type string :value-type function))
@@ -267,7 +267,7 @@ You probably don't need to use this unless you know what you are doing."
   :group 'helm-grep-faces)
 
 (defface helm-grep-cmd-line
-    '((t (:inherit diff-added)))
+    '((t (:inherit font-lock-type-face)))
   "Face used to highlight grep command line when no results."
   :group 'helm-grep-faces)
 
@@ -586,6 +586,7 @@ It is intended to use as a let-bound variable, DON'T set this globaly.")
   "Define a default action for `helm-do-grep-1' on CANDIDATE.
 WHERE can be one of other-window, other-frame."
   (let* ((split        (helm-grep-split-line candidate))
+         (split-pat    (helm-mm-split-pattern helm-input))
          (lineno       (string-to-number (nth 1 split)))
          (loc-fname        (or (with-current-buffer
                                    (if (eq major-mode 'helm-grep-mode)
@@ -601,7 +602,8 @@ WHERE can be one of other-window, other-frame."
          (fname        (if tramp-host
                            (concat tramp-prefix loc-fname) loc-fname)))
     (cl-case where
-      (other-window (find-file-other-window fname))
+      (other-window (helm-switch-to-buffer-other-window
+                     (find-file-noselect fname)))
       (other-frame  (find-file-other-frame fname))
       (grep         (helm-grep-save-results-1))
       (pdf          (if helm-pdfgrep-default-read-command
@@ -610,6 +612,16 @@ WHERE can be one of other-window, other-frame."
       (t            (find-file fname)))
     (unless (or (eq where 'grep) (eq where 'pdf))
       (helm-goto-line lineno))
+    ;; Move point to the nearest matching regexp from bol.
+    (cl-loop for reg in split-pat
+             when (save-excursion
+                    (condition-case _err
+                        (if helm-migemo-mode
+                            (helm-mm-migemo-forward reg (point-at-eol) t)
+                          (re-search-forward reg (point-at-eol) t))
+                      (invalid-regexp nil)))
+             collect (match-beginning 0) into pos-ls
+             finally (when pos-ls (goto-char (apply #'min pos-ls))))
     (when mark
       (set-marker (mark-marker) (point))
       (push-mark (point) 'nomsg))
@@ -950,6 +962,7 @@ These extensions will be added to command line with --include arg of grep."
 
 (defun helm-grep-get-file-extensions (files)
   "Try to return a list of file extensions to pass to '--include' arg of grep."
+  (require 'helm-adaptive)
   (let* ((all-exts (helm-grep-guess-extensions
                     (mapcar 'expand-file-name files)))
          (extensions (helm-comp-read "Search Only in: " all-exts
@@ -1534,6 +1547,7 @@ if available with current AG version."
 (defun helm-grep-ag (directory with-types)
   "Start grep AG in DIRECTORY.
 When WITH-TYPES is non-nil provide completion on AG types."
+  (require 'helm-adaptive)
   (helm-grep-ag-1 directory
                   (helm-aif (and with-types
                                  (helm-grep-ag-get-types))

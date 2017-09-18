@@ -54,7 +54,7 @@ Any other non--nil value update after confirmation."
 
 (defcustom helm-source-multi-occur-actions
   '(("Go to Line" . helm-moccur-goto-line)
-    ("Goto line other window" . helm-moccur-goto-line-ow)
+    ("Goto line other window (C-u vertically)" . helm-moccur-goto-line-ow)
     ("Goto line new frame" . helm-moccur-goto-line-of))
   "Actions for helm-occur and helm-moccur."
   :group 'helm-regexp
@@ -287,7 +287,7 @@ arg METHOD can be one of buffer, buffer-other-window, buffer-other-frame."
          (split-pat (helm-mm-split-pattern helm-input)))
     (cl-case method
       (buffer              (switch-to-buffer buf))
-      (buffer-other-window (switch-to-buffer-other-window buf))
+      (buffer-other-window (helm-display-buffers-other-windows buf))
       (buffer-other-frame  (switch-to-buffer-other-frame buf)))
     (with-current-buffer buf
       (helm-goto-line lineno)

@@ -91,7 +91,10 @@ Only buffer names are fuzzy matched when this is enabled,
 (defcustom helm-mini-default-sources '(helm-source-buffers-list
                                        helm-source-recentf
                                        helm-source-buffer-not-found)
-  "Default sources list used in `helm-mini'."
+  "Default sources list used in `helm-mini'.
+
+When adding a source here it is up to you to ensure the library of
+this source is accessible and properly loaded."
   :group 'helm-buffers
   :type '(repeat (choice symbol)))
 
@@ -118,6 +121,11 @@ Only buffer names are fuzzy matched when this is enabled,
 (defface helm-buffer-not-saved
     '((t (:foreground "Indianred2")))
   "Face used for buffer files not already saved on disk."
+  :group 'helm-buffers-faces)
+
+(defface helm-buffer-modified
+    '((t :inherit font-lock-comment-face))
+  "Face used for modified buffers."
   :group 'helm-buffers-faces)
 
 (defface helm-buffer-size
@@ -362,7 +370,7 @@ See `ido-make-buffer-list' for more infos."
         ((and file-name (buffer-modified-p buf))
          (helm-buffer--show-details
           name name-prefix file-name size mode dir
-          'helm-ff-symlink 'helm-buffer-process nil details 'mod))
+          'helm-buffer-modified 'helm-buffer-process nil details 'mod))
         ;; A buffer file not modified and saved on disk.=>green
         (file-name
          (helm-buffer--show-details
@@ -732,7 +740,7 @@ If REGEXP-FLAG is given use `query-replace-regexp'."
   "Run switch to other window action from `helm-source-buffers-list'."
   (interactive)
   (with-helm-alive-p
-    (helm-exit-and-execute-action 'helm-switch-to-buffers-other-window)))
+    (helm-exit-and-execute-action 'helm-display-buffers-other-windows)))
 (put 'helm-buffer-switch-other-window 'helm-only t)
 
 (defun helm-buffer-switch-other-frame ()
@@ -791,8 +799,7 @@ If REGEXP-FLAG is given use `query-replace-regexp'."
                           (format "^%s"
                                   (helm-buffers--quote-truncated-buffer b)))
                          (save-selected-window
-                           (when (y-or-n-p (format "kill buffer (%s)? " b))
-                             (helm-buffers-persistent-kill-1 b)))
+                           (helm-buffers-persistent-kill-1 b))
                          (message nil)
                          (helm--remove-marked-and-update-mode-line b)))
       (with-helm-buffer
@@ -918,7 +925,7 @@ displayed with the `file-name-shadow' face if available."
 (defun helm-mini ()
   "Preconfigured `helm' lightweight version \(buffer -> recentf\)."
   (interactive)
-  (require 'helm-for-files)
+  (require 'helm-x-files)
   (unless helm-source-buffers-list
     (setq helm-source-buffers-list
           (helm-make-source "Buffers" 'helm-source-buffers)))

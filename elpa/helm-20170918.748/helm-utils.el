@@ -219,28 +219,71 @@ In this case last position is added to the register
 ;;
 (defun helm-switch-to-buffers (buffer-or-name &optional other-window)
   "Switch to buffer BUFFER-OR-NAME.
+
 If more than one buffer marked switch to these buffers in separate windows.
 If OTHER-WINDOW is specified keep current-buffer and switch to others buffers
-in separate windows."
-  (let* ((mkds (helm-marked-candidates))
-         (size (/ (window-height) (length mkds))))
-    (or (<= window-min-height size)
-        (error "Too many buffers to visit simultaneously."))
+in separate windows.
+If a prefix arg is given split windows vertically."
+  (let ((mkds (helm-marked-candidates)))
     (helm-aif (cdr mkds)
         (progn
           (if other-window
-              (switch-to-buffer-other-window (car mkds))
+              (helm-switch-to-buffer-other-window (car mkds))
             (switch-to-buffer (car mkds)))
           (save-selected-window
-            (cl-loop for b in it
-                  do (progn
-                       (select-window (split-window))
-                       (switch-to-buffer b)))))
+            (cl-loop with nosplit
+                     for b in it
+                     when nosplit return
+                     (message "Too many buffers to visit simultaneously")
+                     do (condition-case _err
+                            (helm-switch-to-buffer-other-window b 'balance)
+                          (error (setq nosplit t) nil)))))
       (if other-window
-          (switch-to-buffer-other-window buffer-or-name)
+          (helm-switch-to-buffer-other-window buffer-or-name)
         (switch-to-buffer buffer-or-name)))))
 
-(defun helm-switch-to-buffers-other-window (buffer-or-name)
+(defun helm-simultaneous-find-file (files)
+  "Find files in FILES list in separate windows.
+If frame is too small to display all windows, continue finding files
+in background.
+When called with a prefix arg split is done vertically."
+  (helm-aif (cdr files)
+      (progn
+        (switch-to-buffer (find-file-noselect (car files)))
+        (save-selected-window
+          (cl-loop with nosplit
+                   with len = (length it)
+                   with remaining = 0
+                   with displayed = 0
+                   for f in it
+                   for count from 1
+                   for buf = (find-file-noselect f)
+                   unless nosplit do
+                   (condition-case-unless-debug _err
+                       (helm-switch-to-buffer-other-window buf 'balance)
+                     (error
+                      (setq nosplit t)
+                      (message
+                       "%d files displayed, %d files opening in background..."
+                       (setq displayed count)
+                       (setq remaining (- len count)))
+                      nil))
+                   finally
+                   (when nosplit
+                     (message
+                      "%d files displayed, %d files opened in background"
+                      displayed remaining)))))))
+
+(defun helm-switch-to-buffer-other-window (buffer-or-name &optional balance)
+  "Switch to buffer-or-name in other window.
+If a prefix arg is detected split vertically.
+When argument balance is provided `balance-windows'."
+  (select-window (split-window
+                  nil nil helm-current-prefix-arg))
+  (and balance (balance-windows))
+  (switch-to-buffer buffer-or-name))
+
+(defun helm-display-buffers-other-windows (buffer-or-name)
   "switch to buffer BUFFER-OR-NAME in other window.
 See `helm-switch-to-buffers' for switching to marked buffers."
   (helm-switch-to-buffers buffer-or-name t))
@@ -429,15 +472,6 @@ that is sorting is done against real value of candidate."
           ((= sc1 sc2)
            (< (length str1) (length str2)))
           (t (> sc1 sc2)))))
-
-(defun helm-ff-get-host-from-tramp-invalid-fname (fname)
-  "Extract hostname from an incomplete tramp file name.
-Return nil on valid file name remote or not."
-  (let* ((str (helm-basename fname))
-         (split (split-string str ":" t))
-         (meth (car (member (car split)
-                            (helm-ff-get-tramp-methods))))) 
-    (when meth (car (last split)))))
 
 (cl-defun helm-file-human-size (size &optional (kbsize helm-default-kbsize))
   "Return a string showing SIZE of a file in human readable form.

@@ -18,8 +18,28 @@
 ;;; Code:
 
 (require 'helm-files)
+(require 'helm-external)
+(require 'helm-bookmark)
 
-
+(defcustom helm-multi-files-toggle-locate-binding "C-c p"
+  "Default binding to switch back and forth locate in `helm-multi-files'."
+  :group 'helm-files
+  :type 'string)
+
+(defcustom helm-for-files-preferred-list
+  '(helm-source-buffers-list
+    helm-source-recentf
+    helm-source-bookmarks
+    helm-source-file-cache
+    helm-source-files-in-current-dir
+    helm-source-locate)
+  "Your preferred sources for `helm-for-files' and `helm-multi-files'.
+
+When adding a source here it is up to you to ensure the library of
+this source is accessible and properly loaded."
+  :type '(repeat (choice symbol))
+  :group 'helm-files)
+
 ;;; File Cache
 ;;
 ;;
@@ -187,14 +207,14 @@ Colorize only symlinks, directories and files."
 
 (defvar helm-source-files-in-current-dir
   (helm-make-source "Files from Current Directory"
-      helm-files-in-current-dir-source))
+      'helm-files-in-current-dir-source))
 
 ;;;###autoload
 (defun helm-for-files ()
   "Preconfigured `helm' for opening files.
 Run all sources defined in `helm-for-files-preferred-list'."
   (interactive)
-  (require 'helm-bookmark)
+  (require 'helm-x-files)
   (unless helm-source-buffers-list
     (setq helm-source-buffers-list
           (helm-make-source "Buffers" 'helm-source-buffers)))
@@ -229,7 +249,7 @@ Allow toggling back and forth from locate to others sources with
 This avoid launching needlessly locate when what you search is already
 found."
   (interactive)
-  (require 'helm-bookmark)
+  (require 'helm-x-files)
   (unless helm-source-buffers-list
     (setq helm-source-buffers-list
           (helm-make-source "Buffers" 'helm-source-buffers)))

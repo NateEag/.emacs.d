@@ -2468,7 +2468,7 @@ File: magit.info,  Node: Log Buffer,  Next: Log Margin,  Prev: Refreshing Logs, 
 
      Double the number of commits the current log buffer is limited to.
 
-‘=’     (‘magit-log-half-commit-limit’)
+‘-’     (‘magit-log-half-commit-limit’)
 
      Half the number of commits the current log buffer is limited to.
 
@@ -3961,7 +3961,7 @@ is stored at the beginning and the end of an edit session (regardless of
 whether the session is finished successfully or was canceled).  It is
 sometimes useful to bring back messages from that ring.
 
-‘C-s M-s’     (‘git-commit-save-message’)
+‘C-c M-s’     (‘git-commit-save-message’)
 
      Save the current buffer content to the commit message ring.
 
@@ -5839,7 +5839,7 @@ File: magit.info,  Node: Listing Submodules,  Next: Submodule Popup,  Up: Submod
 8.3.1 Listing Submodules
 ------------------------
 
-The command ‘magit-list-submodule’ displays a list of the current
+The command ‘magit-list-submodules’ displays a list of the current
 repository’s submodules in a separate buffer.  It’s also possible to
 display information about submodules directly in the status buffer of
 the super-repository by adding ‘magit-insert-submodules’ to the hook
@@ -7813,14 +7813,14 @@ Appendix C Keystroke Index
 * $:                                     Viewing Git Output.  (line  11)
 * +:                                     Log Buffer.          (line  59)
 * + <1>:                                 Refreshing Diffs.    (line  68)
-* -:                                     Refreshing Diffs.    (line  64)
+* -:                                     Log Buffer.          (line  63)
+* - <1>:                                 Refreshing Diffs.    (line  64)
 * 0:                                     Refreshing Diffs.    (line  72)
 * 1:                                     Section Visibility.  (line  26)
 * 2:                                     Section Visibility.  (line  27)
 * 3:                                     Section Visibility.  (line  28)
 * 4:                                     Section Visibility.  (line  29)
 * =:                                     Log Buffer.          (line  53)
-* = <1>:                                 Log Buffer.          (line  63)
 * ^:                                     Section Movement.    (line  31)
 * a:                                     Applying.            (line  33)
 * A:                                     Cherry Picking.      (line   8)
@@ -7914,7 +7914,7 @@ Appendix C Keystroke Index
                                                               (line  24)
 * C-c M-g u:                             Minor Mode for Buffers Visiting Files.
                                                               (line  28)
-* C-s M-s:                               Editing Commit Messages.
+* C-c M-s:                               Editing Commit Messages.
                                                               (line  35)
 * C-w:                                   Common Commands.     (line  21)
 * C-x g:                                 Status Buffer.       (line  22)

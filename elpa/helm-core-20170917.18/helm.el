@@ -559,7 +559,7 @@ source name in this variable."
   :type 'boolean)
 
 (defcustom helm-allow-mouse nil
-  "Prevent mouse usage during the helm session when non-nil.
+  "Allow mouse usage during the helm session when non-nil.
 
 Note that this also allow moving out of minibuffer when clicking
 outside of `helm-buffer', up to you to get back to helm by clicking
@@ -965,7 +965,10 @@ much more featured than the emacs function helmized than `helm-mode'.
 
 ** Helm Help
 
-\\[helm-help]\t\tShows this generic Helm help.
+\\[helm-documentation] Shows all helm documentations concatenated in one org file.
+
+When you are in an helm session, just hit \\<helm-map>\\[helm-help] to have the documentation
+for the current source followed for conveniences by the global helm documentation.
 
 While in the help buffer, you have most of the regular keybindings
 available in emacs buffers, the most important are shown in

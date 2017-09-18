@@ -335,7 +335,7 @@
 	     ((:keywords "killing" "convenience")
 	      (:url . "https://github.com/leoliu/easy-kill"))])
  (ebdb .
-       [(0 3 1)
+       [(0 3 2)
 	((emacs
 	  (25 1))
 	 (cl-lib
@@ -475,7 +475,7 @@
 		 ((:keywords "gnome" "c" "coding style")
 		  (:url . "http://elpa.gnu.org/packages/gnome-c-style.html"))])
  (gnorb .
-	[(1 2 3)
+	[(1 2 4)
 	 ((cl-lib
 	   (0 5)))
 	 "Glue code between Gnus, Org, and BBDB" tar
@@ -763,7 +763,7 @@
 	     ((:url . "https://github.com/michael-heerdegen/on-screen.el")
 	      (:keywords "convenience"))])
  (org .
-      [(20170906)
+      [(20170918)
        nil "Outline-based notes management and organizer" tar nil])
  (org-edna .
 	   [(1 0 -3 1)
@@ -943,8 +943,10 @@
 	       ((:keywords "soap" "web-services" "comm" "hypermedia")
 		(:url . "http://elpa.gnu.org/packages/soap-client.html"))])
  (sokoban .
-	  [(1 4 5)
-	   nil "Implementation of Sokoban for Emacs." tar
+	  [(1 4 6)
+	   ((emacs
+	     (23 1)))
+	   "Implementation of Sokoban for Emacs." tar
 	   ((:keywords "games")
 	    (:url . "http://elpa.gnu.org/packages/sokoban.html"))])
  (sotlisp .

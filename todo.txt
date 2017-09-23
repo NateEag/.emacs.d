@@ -238,6 +238,10 @@
  multi-character sequences from smartparens, and I don't want to lose pairing
  braces in CSS and JS.
 
+ Years later, I just realized it would help to only activate smartparens when
+ I'm in JS, CSS, or a server-side language, since I'm usually writing '{{' and
+ '{%' in markup, not genuine languages.
+
 -I should have Twig/Django snippets. 'block' is the obvious one, but probably
  snippets for all the major bits of syntax would be handy, and someone out
  there must have written such things.

@@ -650,6 +650,7 @@ that use `helm-comp-read' See `helm-M-x' for example."
                                                  (not (keywordp x))))
                                           (or (car-safe default) default)))
                :filtered-candidate-transformer 'helm-apropos-default-sort-fn
+               :help-message #'helm-comp-read-help-message
                :fuzzy-match helm-mode-fuzzy-match
                :persistent-action
                (lambda (candidate)
@@ -691,6 +692,7 @@ It should be used when candidate list don't need to rebuild dynamically."
      :input-history history
      :must-match require-match
      :alistp nil
+     :help-message #'helm-comp-read-help-message
      :name name
      :requires-pattern (if (and (stringp default)
                                 (string= default "")
@@ -935,6 +937,7 @@ Keys description:
                  helm-read-file-map))
          (minibuffer-completion-predicate test)
          (minibuffer-completing-file-name t)
+         (helm--completing-file-name t)
          (helm-read-file-name-mode-line-string
           (replace-regexp-in-string "helm-maybe-exit-minibuffer"
                                     "helm-confirm-and-exit-minibuffer"

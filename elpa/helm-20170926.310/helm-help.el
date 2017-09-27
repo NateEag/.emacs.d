@@ -58,31 +58,30 @@
                                  helm-semantic-help-message
                                  helm-kmacro-help-message))
 
+(defvar helm-documentation-buffer-name "*helm documentation*")
 
 ;;;###autoload
-(defun helm-documentation (arg)
+(defun helm-documentation ()
   "Preconfigured Helm for Helm documentation.
 With a prefix arg refresh the documentation.
 
 Find here the documentation of all documented sources."
-  (interactive "P")
+  (interactive)
   (require 'helm-org)
-  (when arg (delete-file helm-documentation-file)
-        (helm-aif (get-file-buffer helm-documentation-file)
-            (kill-buffer it)))
-  (unless (file-exists-p helm-documentation-file)
-    (with-temp-file helm-documentation-file
+  (with-current-buffer (get-buffer-create helm-documentation-buffer-name)
+    (let ((inhibit-read-only t))
       (erase-buffer)
       (cl-loop for elm in helm-help--string-list
-               for str = (symbol-value elm)
-               do (insert (substitute-command-keys
-                           (if (functionp str) (funcall str) str))
-                          "\n\n"))))
+               for str = (helm-interpret-value elm)
+               do (insert (substitute-command-keys str) "\n\n"))
+      (org-mode))
+    (setq buffer-read-only t)
+    (view-mode))
   (let ((helm-org-headings--nofilename t))
     (helm :sources (helm-source-org-headings-for-files
-                    (list helm-documentation-file))
+                    (list (get-buffer helm-documentation-buffer-name)))
           :candidate-number-limit 99999
-          :buffer "*helm documentation*")))
+          :buffer "*helm doc*")))
 
 ;;; Local help messages.
 
@@ -256,7 +255,7 @@ It behaves differently depending on `helm-selection' (current candidate in helm-
 Note that when copying, renaming, etc. from `helm-find-files' the
 destination file is selected with `helm-read-file-name'.
 
-To void confusion when using `read-file-name' or `read-directory-name', `RET'
+To avoid confusion when using `read-file-name' or `read-directory-name', `RET'
 follows its standard Emacs behaviour, i.e. it exits the minibuffer as soon as
 you press `RET'.  If you want the same behavior as in `helm-find-files', bind
 `helm-ff-RET' to the `helm-read-file-map':
@@ -840,14 +839,19 @@ buffer is kept and files are displayed next to it.
 ;;; Help for `helm-read-file-name'
 ;;
 ;;
-(defvar helm-read-file-name-help-message
-  "* Helm read file name
+(defun helm-read-file-name-help-message ()
+  (let ((name (if helm-alive-p
+                  (assoc-default 'name (helm-get-current-source))
+                "generic")))
+    (format 
+     "* Helm `%s' read file name completion
+
+This is `%s' read file name completion that have been \"helmized\"
+because you have enabled [[Helm mode][helm-mode]]'.
+Don't confuse this with `helm-find-files' which is a native helm command,
+see [[Helm functions vs helmized emacs functions]].
 
 ** Tips
-
-If you are here, you are probably using a vanilla command like `find-file'
-helmized by `helm-mode', which is cool, but for an even better file navigation
-experience, give the full-featured `helm-find-files' a try.
 
 *** Navigation
 
@@ -913,6 +917,11 @@ File and directory creation works only with some commands (e.g. `find-file')
 and it will not work with others where it is not intended to return a file or
 a directory \(e.g `list-directory').
 
+*** Exiting minibuffer with empty string
+
+You can exit minibuffer with empty string with \\<helm-read-file--map>\\[helm-cr-empty-string].
+It is useful when some commands are prompting continuously until you enter an empty prompt.
+
 ** Commands
 \\<helm-read-file-map>
 \\[helm-find-files-up-one-level]\t\tGo to parent directory.
@@ -921,7 +930,8 @@ a directory \(e.g `list-directory').
 \\[helm-ff-file-name-history]\t\tFile name history.
 C/\\[helm-cr-empty-string]\t\tReturn empty string unless `must-match' is non-nil.
 \\[helm-next-source]\t\tGo to next source.
-\\[helm-previous-source]\t\tGo to previous source.")
+\\[helm-previous-source]\t\tGo to previous source."
+     name name)))
 
 ;;; Generic file help - Used by locate.
 ;;
@@ -1510,6 +1520,34 @@ actions menu.
 \\[helm-org-run-refile-heading-to]\t\tRefile current or marked headings to selection.
 \\[helm-org-run-insert-link-to-heading-at-marker]\t\tInsert link at point to selection."
   )
+
+;;; Completing-read
+;;
+(defun helm-comp-read-help-message ()
+  (let ((com (assoc-default 'name (helm-get-current-source))))
+    (format
+     "* Helm completing-read completion for `%s'
+
+Command `%s' is using a `completing-read' for completion on your input,
+this completion have been \"helmized\" because you have enabled [[Helm mode][helm-mode]]'.
+
+** Tips
+
+*** Disabling or use something else than helm for completion of some commands
+
+You can disable helm completion or use something else for specific commands of your choice,
+for this customize variable `helm-completing-read-handlers-alist'.
+
+*** Exiting minibuffer with empty string
+
+You can exit minibuffer with empty string with \\<helm-comp-read-map>\\[helm-cr-empty-string].
+It is useful when some commands are prompting continuously until you enter an empty prompt.
+
+** Commands
+\\<helm-comp-read-map>
+\\[helm-cr-empty-string]\t\tExit minibuffer with empty string."
+     com com)))
+
 
 ;;; Mode line strings
 ;;

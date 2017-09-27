@@ -217,6 +217,25 @@ In this case last position is added to the register
 ;;; Utils functions
 ;;
 ;;
+(defcustom helm-switch-to-buffer-ow-vertically nil
+  "Maybe switch to other window vertically when non nil.
+
+Possible values are `t', `nil' and `decide'.
+
+When `t' switch vertically.
+When nil switch horizontally.
+When `decide' try to guess if it is possible to switch vertically
+according to the setting of `split-width-threshold' and the size of
+the window from where splitting is done.
+
+Note that when using `decide' and `split-width-threshold' is nil, the
+behavior is the same that with a nil value."
+  :group 'helm-utils
+  :type '(choice
+           (const :tag "Split window vertically" t)
+           (const :tag "Split window horizontally" nil)
+           (symbol :tag "Guess how to split window" 'decide)))
+
 (defun helm-switch-to-buffers (buffer-or-name &optional other-window)
   "Switch to buffer BUFFER-OR-NAME.
 
@@ -224,11 +243,14 @@ If more than one buffer marked switch to these buffers in separate windows.
 If OTHER-WINDOW is specified keep current-buffer and switch to others buffers
 in separate windows.
 If a prefix arg is given split windows vertically."
-  (let ((mkds (helm-marked-candidates)))
+  (let ((mkds          (helm-marked-candidates))
+        (initial-ow-fn (if (cdr (window-list))
+                           #'switch-to-buffer-other-window
+                         #'helm-switch-to-buffer-other-window)))
     (helm-aif (cdr mkds)
         (progn
           (if other-window
-              (helm-switch-to-buffer-other-window (car mkds))
+              (funcall initial-ow-fn (car mkds))
             (switch-to-buffer (car mkds)))
           (save-selected-window
             (cl-loop with nosplit
@@ -239,7 +261,7 @@ If a prefix arg is given split windows vertically."
                             (helm-switch-to-buffer-other-window b 'balance)
                           (error (setq nosplit t) nil)))))
       (if other-window
-          (helm-switch-to-buffer-other-window buffer-or-name)
+          (funcall initial-ow-fn buffer-or-name)
         (switch-to-buffer buffer-or-name)))))
 
 (defun helm-simultaneous-find-file (files)
@@ -278,10 +300,18 @@ When called with a prefix arg split is done vertically."
   "Switch to buffer-or-name in other window.
 If a prefix arg is detected split vertically.
 When argument balance is provided `balance-windows'."
-  (select-window (split-window
-                  nil nil helm-current-prefix-arg))
-  (and balance (balance-windows))
-  (switch-to-buffer buffer-or-name))
+  (let* ((helm-switch-to-buffer-ow-vertically
+          (if (eq helm-switch-to-buffer-ow-vertically 'decide)
+              (and (numberp split-width-threshold)
+                   (>= (window-width (selected-window))
+                       split-width-threshold))
+            helm-switch-to-buffer-ow-vertically))
+         (right-side (if helm-switch-to-buffer-ow-vertically
+                        (not helm-current-prefix-arg)
+                      helm-current-prefix-arg)))
+    (select-window (split-window nil nil right-side))
+    (and balance (balance-windows))
+    (switch-to-buffer buffer-or-name)))
 
 (defun helm-display-buffers-other-windows (buffer-or-name)
   "switch to buffer BUFFER-OR-NAME in other window.
@@ -594,6 +624,13 @@ If STRING is non--nil return instead a space separated string."
             (mapconcat 'identity (list type user group other) " ")
           (list :mode-type type :user user :group group :other other))))
 
+(defun helm-format-columns-of-files (files)
+  "Same as `dired-format-columns-of-files'.
+Inlined here for compatibility."
+  (let ((beg (point)))
+    (completion--insert-strings files)
+    (put-text-property beg (point) 'mouse-face nil)))
+
 (defmacro with-helm-display-marked-candidates (buffer-or-name candidates &rest body)
   (declare (indent 0) (debug t))
   (helm-with-gensyms (buffer window)
@@ -606,7 +643,7 @@ If STRING is non--nil return instead a space separated string."
             helm-reuse-last-window-split-state
             ,window)
        (with-current-buffer ,buffer
-         (dired-format-columns-of-files ,candidates))
+         (helm-format-columns-of-files ,candidates))
        (unwind-protect
             (with-selected-window
                 (setq ,window (temp-buffer-window-show

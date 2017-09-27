@@ -685,12 +685,14 @@ belonging to each window."
 (defun helm-find-files-do-action (action)
   "Generic function for creating actions from `helm-source-find-files'.
 ACTION must be an action supported by `helm-dired-action'."
+  (require 'dired-async)
   (let* ((ifiles (mapcar 'expand-file-name ; Allow modify '/foo/.' -> '/foo'
                          (helm-marked-candidates :with-wildcard t)))
          (cand   (helm-get-selection)) ; Target
          (prefarg helm-current-prefix-arg)
          (prompt (format "%s %s file(s) to: "
-                         (if (and dired-async-mode
+                         (if (and (and (fboundp 'dired-async-mode)
+                                       dired-async-mode)
                                   (null prefarg))
                              (concat "Async " (symbol-name action)) 
                            (capitalize (symbol-name action)))
@@ -745,10 +747,15 @@ This reproduce the behavior of \"cp --backup=numbered from to\"."
   (helm-find-files-do-action 'hardlink))
 
 (defun helm-find-files-other-window (_candidate)
-  "Keep current-buffer and open files in separate windows."
-  (let* ((files (helm-marked-candidates))
-         (buffers (mapcar 'find-file-noselect files)))
-    (helm-switch-to-buffer-other-window (car buffers))
+  "Keep current-buffer and open files in separate windows.
+When a prefix arg is detected files are opened in a vertical windows
+layout."
+  (let* ((files         (helm-marked-candidates))
+         (buffers       (mapcar 'find-file-noselect files))
+         (initial-ow-fn (if (cdr (window-list))
+                           #'switch-to-buffer-other-window
+                         #'helm-switch-to-buffer-other-window)))
+    (funcall initial-ow-fn (car buffers))
     (helm-aif (cdr buffers)
         (save-selected-window
           (cl-loop for buffer in it
@@ -846,6 +853,9 @@ This reproduce the behavior of \"cp --backup=numbered from to\"."
 This is done possibly with an eshell alias, if no alias found, you can type in
 an eshell command.
 
+Only aliases accepting a file as argument at the end of command line
+are collected, i.e aliases ending with \"$1\" or \"$*\".
+
 Basename of CANDIDATE can be a wild-card.
 e.g you can do \"eshell-command command *.el\"
 Where \"*.el\" is the CANDIDATE.
@@ -880,9 +890,11 @@ working."
                                   default-directory))
            (command (helm-comp-read
                      "Command: "
-                     (cl-loop for (a . c) in eshell-command-aliases-list
-                              when (string-match "\\(\\$1\\|\\$\\*\\)$" (car c))
-                              collect (propertize a 'help-echo (car c)) into ls
+                     (cl-loop for (a c) in (eshell-read-aliases-list)
+                              ;; Positional arguments may be double
+                              ;; quoted (Issue #1881).
+                              when (string-match "[\"]?.*\\(\\$1\\|\\$\\*\\)[\"]?\\'" c)
+                              collect (propertize a 'help-echo c) into ls
                               finally return (sort ls 'string<))
                      :buffer "*helm eshell on file*"
                      :name "Eshell command"
@@ -1457,7 +1469,8 @@ Behave differently depending of `helm-selection':
 (put 'helm-ff-run-switch-to-eshell 'helm-only t)
 
 (defun helm-ff-run-switch-other-window ()
-  "Run switch to other window action from `helm-source-find-files'."
+  "Run switch to other window action from `helm-source-find-files'.
+When a prefix arg is provided, split is done vertically."
   (interactive)
   (with-helm-alive-p
     (helm-exit-and-execute-action 'helm-find-files-other-window)))
@@ -3157,6 +3170,7 @@ Where ACTION is a symbol that can be one of:
 'copy, 'rename, 'symlink,'relsymlink, 'hardlink or 'backup.
 Argument FOLLOW when non--nil specify to follow FILES to destination for the actions
 copy and rename."
+  (require 'dired-async)
   (when (get-buffer dired-log-buffer) (kill-buffer dired-log-buffer))
   ;; When default-directory in current-buffer is an invalid directory,
   ;; (e.g buffer-file directory have been renamed somewhere else)
@@ -3271,6 +3285,7 @@ following files to destination."
 (defun helm-delete-file (file &optional error-if-dot-file-p synchro)
   "Delete the given file after querying the user.
 Ask to kill buffers associated with that file, too."
+  (require 'dired)
   (when (and error-if-dot-file-p
              (helm-ff-dot-file-p file))
     (error "Error: Cannot operate on `.' or `..'"))

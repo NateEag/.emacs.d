@@ -961,7 +961,8 @@ and are defined in `magit-popup-mode-map' (which see)."
               (split-window-below)
               (with-no-warnings ; display-buffer-function is obsolete
                 (let ((display-buffer-alist nil)
-                      (display-buffer-function nil))
+                      (display-buffer-function nil)
+                      (display-buffer-overriding-action nil))
                   (woman topic)))
               (setq buffer (current-buffer)))
       (`man   (cl-letf (((symbol-function #'fboundp) (lambda (_) nil)))
@@ -990,7 +991,9 @@ and are defined in `magit-popup-mode-map' (which see)."
     (other-window 1)
     (with-no-warnings ; display-buffer-function is obsolete
       (let ((display-buffer-alist '(("" display-buffer-use-some-window)))
-            (display-buffer-function nil))
+            (display-buffer-function nil)
+            (display-buffer-overriding-action nil)
+            (help-window-select nil))
         (describe-function function)))
     (fit-window-to-buffer)
     (other-window 1)

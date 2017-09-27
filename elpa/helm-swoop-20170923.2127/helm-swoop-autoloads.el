@@ -1,9 +1,9 @@
 ;;; helm-swoop-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "helm-swoop" "helm-swoop.el" (22382 47595 0
+;;;### (autoloads nil "helm-swoop" "helm-swoop.el" (22988 10003 0
 ;;;;;;  0))
 ;;; Generated autoloads from helm-swoop.el
 
@@ -17,7 +17,7 @@ List the all lines to another buffer, which is able to squeeze by
  any words you input. At the same time, the original buffer's cursor
  is jumping line to line according to moving up and down the list.
 
-\(fn &key $QUERY $SOURCE ($multiline current-prefix-arg))" t nil)
+\(fn &key $QUERY $SOURCE ($MULTILINE current-prefix-arg))" t nil)
 
 (autoload 'helm-swoop-from-isearch "helm-swoop" "\
 Invoke `helm-swoop' from isearch.

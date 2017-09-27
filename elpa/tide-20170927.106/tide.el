@@ -169,7 +169,7 @@ above."
 (defvar tide-servers (make-hash-table :test 'equal))
 (defvar tide-response-callbacks (make-hash-table :test 'equal))
 
-(defvar tide-source-root-directory (file-name-directory load-file-name))
+(defvar tide-source-root-directory (file-name-directory (or load-file-name buffer-file-name)))
 (defvar tide-tsserver-directory (expand-file-name "tsserver" tide-source-root-directory))
 
 (defun tide-project-root ()
@@ -260,7 +260,8 @@ ones and overrule settings in the other lists."
 (defmacro tide-on-response-success (response ignore-empty-response &rest body)
   (declare (indent 2))
   `(if (tide-response-success-p ,response)
-       ,@body
+       (progn
+         ,@body)
      (-when-let (msg (plist-get response :message))
        (unless (and ,ignore-empty-response (string-equal msg "No content available."))
          (message "%s" msg)))
@@ -970,7 +971,13 @@ Noise can be anything like braces, reserved keywords, etc."
 (defun tide-apply-refactor (selected)
   (let ((response (tide-command:getEditsForRefactor (plist-get selected :refactor) (plist-get selected :action))))
     (tide-on-response-success response nil
-      (tide-apply-code-edits (tide-plist-get response :body :edits)))))
+      (deactivate-mark)
+      (tide-apply-code-edits (tide-plist-get response :body :edits))
+      (-when-let (rename-location (tide-plist-get response :body :renameLocation))
+        (with-current-buffer (find-file-noselect (tide-plist-get response :body :renameFilename))
+          (tide-move-to-location rename-location)
+          (when (tide-can-rename-symbol-p)
+            (tide-rename-symbol)))))))
 
 (defun tide-refactor ()
   "Refactor code at point or current region"
@@ -1343,6 +1350,12 @@ number."
         (error "Invalid name")
       new-symbol)))
 
+(defun tide-can-rename-symbol-p ()
+  (let ((response (tide-command:rename)))
+    (and
+     (tide-response-success-p response)
+     (eq (tide-plist-get response :body :info :canRename) t))))
+
 (defun tide-rename-symbol ()
   "Rename symbol at point."
   (interactive)
@@ -1458,15 +1471,21 @@ code-analysis."
 (defun tide-setup ()
   "Setup `tide-mode' in current buffer."
   (interactive)
-  (tide-start-server-if-required)
-  (tide-mode 1)
-  (set (make-local-variable 'eldoc-documentation-function)
-       'tide-eldoc-function)
-  (set (make-local-variable 'imenu-auto-rescan) t)
-  (set (make-local-variable 'imenu-create-index-function)
-       'tide-imenu-index)
 
-  (tide-configure-buffer))
+  ;; skip buffers where buffer-file-name is not defined, such as org-mode code
+  ;; blocks as they are fontified for html export
+  (if (stringp buffer-file-name)
+      (progn
+        (tide-start-server-if-required)
+        (tide-mode 1)
+        (set (make-local-variable 'eldoc-documentation-function)
+             'tide-eldoc-function)
+        (set (make-local-variable 'imenu-auto-rescan) t)
+        (set (make-local-variable 'imenu-create-index-function)
+             'tide-imenu-index)
+
+        (tide-configure-buffer))
+    (display-warning 'tide "A file backed buffer is required to start the tsserver.")))
 
 ;;;###autoload
 (define-minor-mode tide-mode

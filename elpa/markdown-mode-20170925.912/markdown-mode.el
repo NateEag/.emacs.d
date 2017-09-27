@@ -6,8 +6,8 @@
 ;; Author: Jason R. Blevins <jblevins@xbeta.org>
 ;; Maintainer: Jason R. Blevins <jblevins@xbeta.org>
 ;; Created: May 24, 2007
-;; Version: 2.3
-;; Package-Version: 20170918.632
+;; Version: 2.4-dev
+;; Package-Version: 20170925.912
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: https://jblevins.org/projects/markdown-mode/
@@ -580,7 +580,10 @@
 ;;
 ;;   * `markdown-command' - the command used to run Markdown (default:
 ;;     `markdown`).  This variable may be customized to pass
-;;     command-line options to your Markdown processor of choice.
+;;     command-line options to your Markdown processor of choice.  It can
+;;     also be a function; in this case `markdown' will call it with three
+;;     arguments: the beginning and end of the region to process, and
+;;     a buffer to write the output to.
 ;;
 ;;   * `markdown-command-needs-filename' - set to `t' if
 ;;     `markdown-command' does not accept standard input (default:
@@ -589,7 +592,9 @@
 ;;     When set to `t', `markdown-mode' will pass the name of the file
 ;;     as the final command-line argument to `markdown-command'.  Note
 ;;     that in the latter case, you will only be able to run
-;;     `markdown-command' from buffers which are visiting a file.
+;;     `markdown-command' from buffers which are visiting a file.  If
+;;     `markdown-command' is a function, `markdown-command-needs-filename'
+;;     is ignored.
 ;;
 ;;   * `markdown-open-command' - the command used for calling a standalone
 ;;     Markdown previewer which is capable of opening Markdown source files
@@ -598,6 +603,8 @@
 ;;     A representative program is the Mac app [Marked 2][], a
 ;;     live-updating Markdown previewer which can be [called from a
 ;;     simple shell script](https://jblevins.org/log/marked-2-command).
+;;     This variable can also be a function; in this case `markdown-open'
+;;     will call it without arguments to preview the current buffer.
 ;;
 ;;   * `markdown-hr-strings' - list of strings to use when inserting
 ;;     horizontal rules.  Different strings will not be distinguished
@@ -976,6 +983,7 @@
 (require 'url-parse)
 (require 'button)
 (require 'color)
+(require 'rx)
 
 (defvar jit-lock-start)
 (defvar jit-lock-end)
@@ -987,7 +995,7 @@
 
 ;;; Constants =================================================================
 
-(defconst markdown-mode-version "2.3"
+(defconst markdown-mode-version "2.4-dev"
   "Markdown mode version number.")
 
 (defconst markdown-output-buffer-name "*markdown-output*"
@@ -1034,7 +1042,7 @@ Any changes to the output buffer made by this hook will be saved.")
 (defcustom markdown-command "markdown"
   "Command to run markdown."
   :group 'markdown
-  :type 'string)
+  :type '(choice (string :tag "Shell command") function))
 
 (defcustom markdown-command-needs-filename nil
   "Set to non-nil if `markdown-command' does not accept input from stdin.
@@ -1048,9 +1056,10 @@ buffers which are visiting a file."
   "Command used for opening Markdown files directly.
 For example, a standalone Markdown previewer.  This command will
 be called with a single argument: the filename of the current
-buffer."
+buffer.  It can also be a function, which will be called without
+arguments."
   :group 'markdown
-  :type 'string)
+  :type '(choice file function (const :tag "None" nil)))
 
 (defcustom markdown-hr-strings
   '("-------------------------------------------------------------------------------"
@@ -1065,7 +1074,7 @@ horizontal rule.  Strings should be listed in decreasing order of
 prominence (as in headings from level one to six) for use with
 promotion and demotion functions."
   :group 'markdown
-  :type 'list)
+  :type '(repeat string))
 
 (defcustom markdown-bold-underscore nil
   "Use two underscores when inserting bold text instead of two asterisks."
@@ -1170,7 +1179,7 @@ cause lag when typing on slower machines."
     "telnet" "tip" "urn" "vemmi" "wais")
   "Link types for syntax highlighting of URIs."
   :group 'markdown
-  :type 'list)
+  :type '(repeat (string :tag "URI scheme")))
 
 (defcustom markdown-url-compose-char
   (cond
@@ -2516,7 +2525,7 @@ See `markdown-hide-markup' for additional details."
   :group 'markdown-faces)
 
 (defface markdown-inline-code-face
-  '((t (:inherit markdown-code-face font-lock-constant-face)))
+  '((t (:inherit (markdown-code-face font-lock-constant-face))))
   "Face for inline code."
   :group 'markdown-faces)
 
@@ -4736,7 +4745,9 @@ region.  The characters PREFIX will appear at the beginning
 of each line."
   (save-excursion
     (let* ((end-marker (make-marker))
-           (beg-marker (make-marker)))
+           (beg-marker (make-marker))
+           (prefix-without-trailing-whitespace
+            (replace-regexp-in-string (rx (+ blank) eos) "" prefix)))
       ;; Ensure blank line after and remove extra whitespace
       (goto-char end)
       (skip-syntax-backward "-")
@@ -4753,7 +4764,8 @@ of each line."
       (goto-char beg-marker)
       (while (and (< (line-beginning-position) end-marker)
                   (not (eobp)))
-        (insert prefix)
+        ;; Don’t insert trailing whitespace.
+        (insert (if (eolp) prefix-without-trailing-whitespace prefix))
         (forward-line)))))
 
 (defun markdown-blockquote-region (beg end)
@@ -7483,7 +7495,7 @@ Return the name of the output buffer used."
         (setq output-buffer-name markdown-output-buffer-name))
       (cond
        ;; Handle case when `markdown-command' does not read from stdin
-       (markdown-command-needs-filename
+       ((and (stringp markdown-command) markdown-command-needs-filename)
         (if (not buffer-file-name)
             (user-error "Must be visiting a file")
           (shell-command (concat markdown-command " "
@@ -7495,9 +7507,11 @@ Return the name of the output buffer used."
           (with-current-buffer buf
             (setq buffer-read-only nil)
             (erase-buffer))
-          (call-process-region begin-region end-region
-                               shell-file-name nil buf nil
-                               shell-command-switch markdown-command)))))
+          (if (stringp markdown-command)
+              (call-process-region begin-region end-region
+                                   shell-file-name nil buf nil
+                                   shell-command-switch markdown-command)
+            (funcall markdown-command begin-region end-region buf))))))
     output-buffer-name))
 
 (defun markdown-standalone (&optional output-buffer-name)
@@ -7812,12 +7826,14 @@ update this buffer's contents."
 (defun markdown-open ()
   "Open file for the current buffer with `markdown-open-command'."
   (interactive)
-  (if (not markdown-open-command)
-      (user-error "Variable `markdown-open-command' must be set")
-    (if (not buffer-file-name)
-        (user-error "Must be visiting a file")
-      (call-process markdown-open-command
-                    nil nil nil buffer-file-name))))
+  (unless markdown-open-command
+    (user-error "Variable `markdown-open-command' must be set"))
+  (if (stringp markdown-open-command)
+      (if (not buffer-file-name)
+          (user-error "Must be visiting a file")
+        (call-process markdown-open-command nil nil nil buffer-file-name))
+    (funcall markdown-open-command))
+  nil)
 
 (defun markdown-kill-ring-save ()
   "Run Markdown on file and store output in the kill ring."

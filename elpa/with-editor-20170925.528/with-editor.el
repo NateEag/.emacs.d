@@ -80,6 +80,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'pcase)
 (require 'server)
 (require 'shell)
 
@@ -446,7 +447,7 @@ ENVVAR is provided then bind that environment variable instead.
     ;; As last resort fallback to the sleeping editor.
     (push (concat "ALTERNATE_EDITOR=" with-editor-sleeping-editor)
           process-environment)))
-  
+
 (defun with-editor-server-window ()
   (or (and buffer-file-name
            (cdr (cl-find-if (lambda (cons)
@@ -521,7 +522,7 @@ which may or may not insert the text into the PROCESS' buffer."
               (file (match-string 2 string)))
           (with-current-buffer
               (find-file-noselect
-               (if (file-name-absolute-p file)
+               (if (and (file-name-absolute-p file) default-directory)
                    (concat (file-remote-p default-directory) file)
                  (expand-file-name file)))
             (with-editor-mode 1)
@@ -546,8 +547,7 @@ which may or may not insert the text into the PROCESS' buffer."
 
 (defun server-visit-files--with-editor-file-name-history-exclude
     (files _proc &optional _nowait)
-  (dolist (file files)
-    (setq  file (car file))
+  (pcase-dolist (`(,file . ,_) files)
     (when (cl-find-if (lambda (regexp)
                         (string-match-p regexp file))
                       with-editor-file-name-history-exclude)
@@ -566,14 +566,12 @@ This works in `shell-mode', `term-mode' and `eshell-mode'."
   (interactive (list (with-editor-read-envvar)))
   (cond
    ((derived-mode-p 'comint-mode 'term-mode)
-    (let* ((process (get-buffer-process (current-buffer)))
-           (filter  (process-filter process)))
+    (let ((process (get-buffer-process (current-buffer))))
       (goto-char (process-mark process))
       (process-send-string
        process (format " export %s=%s\n" envvar
                        (shell-quote-argument with-editor-sleeping-editor)))
       (while (accept-process-output process 0.1))
-      (set-process-filter process filter)
       (if (derived-mode-p 'term-mode)
           (with-editor-set-process-filter process 'with-editor-emulate-terminal)
         (add-hook 'comint-output-filter-functions 'with-editor-output-filter
@@ -643,7 +641,7 @@ the COMMAND's output at point.
 CLIENT is automatically generated; ENVVAR=CLIENT instructs
 COMMAND to use to the current Emacs instance as \"the editor\",
 assuming it respects ENVVAR as an \"EDITOR\"-like variable.
-CLIENT maybe the path to an appropriate emacsclient executable
+CLIENT may be the path to an appropriate emacsclient executable
 with arguments, or a script which also works over Tramp.
 
 Also see `async-shell-command' and `shell-command'."

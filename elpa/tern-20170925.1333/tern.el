@@ -2,7 +2,7 @@
 
 ;; Author: Marijn Haverbeke
 ;; URL: http://ternjs.net/
-;; Package-Version: 20161222.850
+;; Package-Version: 20170925.1333
 ;; Version: 0.0.1
 ;; Package-Requires: ((json "1.2") (cl-lib "0.5") (emacs "24"))
 
@@ -29,7 +29,8 @@
          (deactivate-mark nil) ; Prevents json-encode from interfering with shift-selection-mode
          (url-request-data (encode-coding-string (json-encode doc) 'utf-8))
          (url-show-status nil)
-         (url (url-parse-make-urlobj "http" nil nil tern-server port "/" nil nil nil)))
+         (url (url-parse-make-urlobj "http" nil nil tern-server port "/" nil nil nil))
+         (url-current-object url))
     (url-http url #'tern-req-finished (list c))))
 
 (defun tern-req-finished (c)
@@ -83,8 +84,6 @@
                    (funcall c (tern-known-port) nil))))
     (if tern-explicit-port
         (funcall c tern-explicit-port nil)
-      (unless (buffer-file-name)
-        (cl-return (funcall c nil "Buffer is not associated with a file")))
       (let ((deactivate-mark nil)
             (port-file (expand-file-name ".tern-port" (tern-project-dir))))
         (when (file-exists-p port-file)

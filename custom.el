@@ -67,7 +67,7 @@
  '(js2-mode-show-parse-errors nil)
  '(js2-mode-show-strict-warnings nil)
  '(line-number-mode t)
- '(lsp-print-io t nil nil "I'm turning this on to help me debug the occasional issues I have with the php-language-server.")
+ '(lsp-print-io nil)
  '(magit-diff-refine-hunk (quote all))
  '(magit-diff-use-overlays nil)
  '(magit-push-always-verify nil)

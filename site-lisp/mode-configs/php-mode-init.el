@@ -93,6 +93,16 @@
 ;; lsp-mode can in principle do a lot more than that, but if I got those two
 ;; things working I'd be pretty happy.
 (require 'lsp-mode)
+
+;; Override a function that doesn't work with the php-language-server while I
+;; wait to hear back about whether a PR will be merged:
+(defun lsp--make-completion-item (item)
+  (propertize (or (gethash "insertText" item (gethash "label" item))
+                  (gethash "label" item))
+    'lsp-completion-item
+    item))
+
+
 (lsp-define-stdio-client 'php-mode "php" 'stdio
                          ;; FIXME Don't just assume git repo.
                          (lsp-make-traverser ".git")

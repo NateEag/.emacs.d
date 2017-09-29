@@ -4,7 +4,7 @@
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
 ;; Version: 2.13.0
-;; Package-Version: 20161121.55
+;; Package-Version: 20170924.2240
 ;; Keywords: lists
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -98,7 +98,7 @@ the target form."
 (defun -each-indexed (list fn)
   "Call (FN index item) for each item in LIST.
 
-In the anaphoric form `--each-indexed', the index is exposed as `it-index`.
+In the anaphoric form `--each-indexed', the index is exposed as symbol `it-index'.
 
 See also: `-map-indexed'."
   (--each list (funcall fn it-index it)))
@@ -127,7 +127,7 @@ Return nil, used for side-effects only."
 (put '-each-while 'lisp-indent-function 2)
 
 (defmacro --dotimes (num &rest body)
-  "Repeatedly executes BODY (presumably for side-effects) with `it` bound to integers from 0 through NUM-1."
+  "Repeatedly executes BODY (presumably for side-effects) with symbol `it' bound to integers from 0 through NUM-1."
   (declare (debug (form body))
            (indent 1))
   (let ((n (make-symbol "num")))
@@ -166,7 +166,7 @@ item, etc. If LIST contains no items, return INITIAL-VALUE and
 FN is not called.
 
 In the anaphoric form `--reduce-from', the accumulated value is
-exposed as `acc`.
+exposed as symbol `acc'.
 
 See also: `-reduce', `-reduce-r'"
   (--reduce-from (funcall fn acc it) initial-value list))
@@ -188,7 +188,7 @@ reduce return the result of calling FN with no arguments. If
 LIST has only 1 item, it is returned and FN is not called.
 
 In the anaphoric form `--reduce', the accumulated value is
-exposed as `acc`.
+exposed as symbol `acc'.
 
 See also: `-reduce-from', `-reduce-r'"
   (if list
@@ -346,7 +346,7 @@ If you want to select the original items satisfying a predicate use `-filter'."
 (defun -map-indexed (fn list)
   "Return a new list consisting of the result of (FN index item) for each item in LIST.
 
-In the anaphoric form `--map-indexed', the index is exposed as `it-index`.
+In the anaphoric form `--map-indexed', the index is exposed as symbol `it-index'.
 
 See also: `-each-indexed'."
   (--map-indexed (funcall fn it-index it) list))
@@ -389,7 +389,7 @@ See also: `-map-when', `-replace-first'"
   `(-map-first (lambda (it) ,pred) (lambda (it) (ignore it) ,rep) ,list))
 
 (defun -map-last (pred rep list)
-  "Replace first item in LIST satisfying PRED with result of REP called on this item.
+  "Replace last item in LIST satisfying PRED with result of REP called on this item.
 
 See also: `-map-when', `-replace-last'"
   (nreverse (-map-first pred rep (reverse list))))
@@ -579,6 +579,11 @@ Alias: `-any'"
 
 \(fn LIST)")
 
+;; Ensure that calls to `-first-item' are compiled to a single opcode,
+;; just like `car'.
+(put '-first-item 'byte-opcode 'byte-car)
+(put '-first-item 'byte-compile 'byte-compile-one-arg)
+
 ;; TODO: emacs23 support, when dropped remove the condition
 (eval-when-compile
   (require 'cl)
@@ -625,7 +630,7 @@ Alias: `-any'"
 (defmacro --any? (form list)
   "Anaphoric form of `-any?'."
   (declare (debug (form form)))
-  `(---truthy? (--first ,form ,list)))
+  `(---truthy? (--some ,form ,list)))
 
 (defun -any? (pred list)
   "Return t if (PRED x) is non-nil for any x in LIST, else nil.
@@ -1028,6 +1033,36 @@ returns the header value, but only after seeing at least one
 other value (the body)."
   (--partition-by-header (funcall fn it) list))
 
+(defun -partition-after-pred (pred list)
+  "Partition directly after each time PRED is true on an element of LIST."
+  (when list
+    (let ((rest (-partition-after-pred pred
+                                       (cdr list))))
+      (if (funcall pred (car list))
+          ;;split after (car list)
+          (cons (list (car list))
+                rest)
+
+        ;;don't split after (car list)
+        (cons (cons (car list)
+                    (car rest))
+              (cdr rest))))))
+
+(defun -partition-before-pred (pred list)
+  "Partition directly before each time PRED is true on an element of LIST."
+  (nreverse (-map #'reverse
+                  (-partition-after-pred pred (reverse list)))))
+
+(defun -partition-after-item (item list)
+  "Partition directly after each time ITEM appears in LIST."
+  (-partition-after-pred (lambda (ele) (equal ele item))
+                         list))
+
+(defun -partition-before-item (item list)
+  "Partition directly before each time ITEM appears in LIST."
+  (-partition-before-pred (lambda (ele) (equal ele item))
+                          list))
+
 (defmacro --group-by (form list)
   "Anaphoric form of `-group-by'."
   (declare (debug t))
@@ -1079,7 +1114,7 @@ elements of LIST.  Keys are compared by `equal'."
 (defmacro --zip-with (form list1 list2)
   "Anaphoric form of `-zip-with'.
 
-The elements in list1 is bound as `it`, the elements in list2 as `other`."
+The elements in list1 are bound as symbol `it', the elements in list2 as symbol `other'."
   (declare (debug (form form form)))
   (let ((r (make-symbol "result"))
         (l1 (make-symbol "list1"))
@@ -1101,8 +1136,8 @@ function is applied pairwise taking as first argument element of
 LIST1 and as second argument element of LIST2 at corresponding
 position.
 
-The anaphoric form `--zip-with' binds the elements from LIST1 as `it`,
-and the elements from LIST2 as `other`."
+The anaphoric form `--zip-with' binds the elements from LIST1 as symbol `it',
+and the elements from LIST2 as symbol `other'."
   (--zip-with (funcall fn it other) list1 list2))
 
 (defun -zip (&rest lists)
@@ -1350,17 +1385,29 @@ last item in second form, etc."
                   (list form x)))
    (:else `(->> (->> ,x ,form) ,@more))))
 
-(defmacro --> (x form &rest more)
-  "Thread the expr through the forms. Insert X at the position
-signified by the token `it' in the first form. If there are more
-forms, insert the first form at the position signified by `it' in
-in second form, etc."
-  (declare (debug (form &rest [&or symbolp (sexp &rest [&or "it" form])])))
-  (if (null more)
-      (if (listp form)
-          (--map-when (eq it 'it) x form)
-        (list form x))
-    `(--> (--> ,x ,form) ,@more)))
+(defmacro --> (x &rest forms)
+  "Starting with the value of X, thread each expression through FORMS.
+
+Insert X at the position signified by the symbol `it' in the first
+form.  If there are more forms, insert the first form at the position
+signified by `it' in in second form, etc."
+  (declare (debug (form body)))
+  `(-as-> ,x it ,@forms))
+
+(defmacro -as-> (value variable &rest forms)
+  "Starting with VALUE, thread VARIABLE through FORMS.
+
+In the first form, bind VARIABLE to VALUE.  In the second form, bind
+VARIABLE to the result of the first form, and so forth."
+  (declare (debug (form symbolp body)))
+  (if (null forms)
+      `,value
+    `(let ((,variable ,value))
+       (-as-> ,(if (symbolp (car forms))
+                 (list (car forms) variable)
+               (car forms))
+            ,variable
+              ,@(cdr forms)))))
 
 (defmacro -some-> (x &optional form &rest more)
   "When expr is non-nil, thread it through the first form (via `->'),
@@ -1881,15 +1928,17 @@ encountered."
 
 (defmacro -if-let (var-val then &rest else)
   "If VAL evaluates to non-nil, bind it to VAR and do THEN,
-otherwise do ELSE. VAR-VAL should be a (VAR VAL) pair.
+otherwise do ELSE.
 
-Note: binding is done according to `-let'."
+Note: binding is done according to `-let'.
+
+\(fn (VAR VAL) THEN &rest ELSE)"
   (declare (debug ((sexp form) form body))
            (indent 2))
   `(-if-let* (,var-val) ,then ,@else))
 
 (defmacro --if-let (val then &rest else)
-  "If VAL evaluates to non-nil, bind it to `it' and do THEN,
+  "If VAL evaluates to non-nil, bind it to symbol `it' and do THEN,
 otherwise do ELSE."
   (declare (debug (form form body))
            (indent 2))
@@ -1909,16 +1958,17 @@ encountered."
 
 (defmacro -when-let (var-val &rest body)
   "If VAL evaluates to non-nil, bind it to VAR and execute body.
-VAR-VAL should be a (VAR VAL) pair.
 
-Note: binding is done according to `-let'."
+Note: binding is done according to `-let'.
+
+\(fn (VAR VAL) &rest BODY)"
   (declare (debug ((sexp form) body))
            (indent 1))
   `(-if-let ,var-val (progn ,@body)))
 
 (defmacro --when-let (val &rest body)
-  "If VAL evaluates to non-nil, bind it to `it' and execute
-body."
+  "If VAL evaluates to non-nil, bind it to symbol `it' and
+execute body."
   (declare (debug (form body))
            (indent 1))
   `(--if-let ,val (progn ,@body)))

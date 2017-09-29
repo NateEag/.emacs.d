@@ -1018,7 +1018,7 @@
 	((:keywords "convenience")
 	 (:url . "https://github.com/abo-abo/tiny"))])
  (tramp-theme .
-	      [(0 1 1)
+	      [(0 2)
 	       ((emacs
 		 (24 1)))
 	       "Custom theme for remote buffers" single

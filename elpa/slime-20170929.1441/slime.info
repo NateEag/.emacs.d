@@ -15,7 +15,7 @@ SLIME
 *****
 
 SLIME is the “Superior Lisp Interaction Mode for Emacs”.  This is the
-manual for version 2.20.  (Last updated September 27, 2017)
+manual for version 2.20.  (Last updated September 30, 2017)
 
    Written by Luke Gorrie and others.
 
@@ -1891,7 +1891,7 @@ arguments.  Some of these arguments are
      (swank:create-server :port 4005  :dont-close t :coding-system "utf-8-unix")
    On the emacs side you will use something like
      (setq slime-net-coding-system 'utf-8-unix)
-     (slime-connect "127.0.0.1" 4005))
+     (slime-connect "localhost" 4005))
    to connect to this lisp image from the same machine.
 
    ---------- Footnotes ----------
@@ -1912,7 +1912,7 @@ File: slime.info,  Node: Setting up Emacs,  Next: Setting up pathname translatio
 Now we need to create the tunnel between the local machine and the
 remote machine.
 
-     ssh -L4005:127.0.0.1:4005 username@remote.example.com
+     ssh -L4005:localhost:4005 username@remote.example.com
 
    That ssh invocation creates an ssh tunnel between the port 4005 on
 our local machine and the port 4005 on the remote machine(1).
@@ -1922,9 +1922,9 @@ our local machine and the port 4005 on the remote machine(1).
      M-x slime-connect RET RET
 
    The ‘RET RET’ sequence just means that we want to use the default
-host (‘127.0.0.1’) and the default port (‘4005’).  Even though we’re
+host (‘localhost’) and the default port (‘4005’).  Even though we’re
 connecting to a remote machine the ssh tunnel fools Emacs into thinking
-it’s actually ‘127.0.0.1’.
+it’s actually ‘localhost’.
 
    ---------- Footnotes ----------
 

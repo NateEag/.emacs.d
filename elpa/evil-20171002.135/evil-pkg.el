@@ -1,4 +1,4 @@
-(define-package "evil" "20170904.1346" "Extensible Vi layer for Emacs."
+(define-package "evil" "20171002.135" "Extensible Vi layer for Emacs."
   '((emacs "24.1")
     (undo-tree "0.6.3")
     (goto-chg "1.6")

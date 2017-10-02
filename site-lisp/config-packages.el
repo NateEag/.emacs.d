@@ -47,14 +47,26 @@
         (interactive (notmuch-search-interactive-region))
         (notmuch-search-tag (list "+deleted" "-unread") beg end)))
 
+    (define-key notmuch-search-mode-map "s"
+      (lambda (&optional beg end)
+        "mark message as spam"
+        (interactive (notmuch-search-interactive-region))
+        (notmuch-search-tag (list "+spam" "-inbox") beg end)))
+
+    ;; Be evil-ish, because I want that.
+    (define-key notmuch-show-mode-map "j" 'next-line)
+    (define-key notmuch-show-mode-map "k" 'previous-line)
+    (define-key notmuch-search-mode-map "j" 'next-line)
+    (define-key notmuch-search-mode-map "k" 'previous-line)
+
     (define-key notmuch-show-mode-map (kbd "o")
       'notmuch-show-interactively-view-part)
 
     (require 'notmuch-address)
     (notmuch-address-setup)
-    ;; TODO Get address completion to work reliably.
-    ;; I can trigger it now, but the UI is all mangled, I'm guessing because I
-    ;; have Helm active?
+    ;; TODO Get address completion to work correctly. I can trigger it now, but
+    ;; it assumes I want the first result, which is not often true and thus
+    ;; forces me to type more than I want to.
     (define-key notmuch-message-mode-map
                 (kbd "<backtab>")
                 '(lambda () (interactive) (notmuch-address-expand-name)))))

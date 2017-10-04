@@ -12,9 +12,9 @@
        ((:keywords "tools" "processes" "convenience")
 	(:url . "https://github.com/leoliu/ack-el"))])
  (ada-mode .
-	   [(5 2 2)
+	   [(5 3 1)
 	    ((wisi
-	      (1 1 5))
+	      (1 1 6))
 	     (cl-lib
 	      (0 4))
 	     (emacs
@@ -70,7 +70,7 @@
 	     ((:url . "http://elpa.gnu.org/packages/arbitools.html")
 	      (:keywords))])
  (ascii-art-to-unicode .
-		       [(1 9)
+		       [(1 11)
 			nil "a small artist adjunct" single
 			((:url . "http://www.gnuvola.org/software/aa2u/")
 			 (:keywords "ascii" "unicode" "box-drawing"))])
@@ -1131,11 +1131,11 @@
 	      ((:url . "http://elpa.gnu.org/packages/windresize.html")
 	       (:keywords "window"))])
  (wisi .
-       [(1 1 5)
+       [(1 1 6)
 	((cl-lib
 	  (0 4))
 	 (emacs
-	  (24 2)))
+	  (24 3)))
 	"Utilities for implementing an indentation/navigation engine using a generalized LALR parser" tar
 	((:keywords "parser" "indentation" "navigation")
 	 (:url . "http://www.nongnu.org/ada-mode/wisi/wisi.html"))])

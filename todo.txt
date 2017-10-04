@@ -316,18 +316,6 @@
  scripts I frequently find myself doing the 'echo "string"' dance, and the
  default fill-paragraph command in sh-mode has no idea how to handle it.
 
--Figure out why mo-git-blame isn't using mo-git-blame-git-blame-args.
-
--Use zebra striping to make mo-git-blame/target buffer more readable.
- https://github.com/sabof/stripe-buffer might do the job...
-
--Get mo-git-blame set up to spawn a new frame of a useful size. It's hard to
- use in a regular frame.
-
--Figure out how to use mo-git-blame a little better. It's supposed to support
- iterative blame (e.g. "blame from previous commit"), but I don't see how so
- far.
-
 -If I ever get minimap.el usable on OS X, when active it should appear between
  my two panes. That way it's always close to whichever buffer it applies to.
  Note: the sublimity package looks like it may be more maintained.

@@ -21,8 +21,6 @@
 ;;
 ;; and seem to work in C-like languages, elisp, and Python.
 ;;
-;; FIXME They do not, alas, catch trailing semicolons in JS.
-;;
 ;; Renamed the prefix just for the sake of file namespacing.
 
 (evil-define-text-object ne/textobj-inner-c-defun (count &optional beg end type)
@@ -33,6 +31,9 @@
     (re-search-backward "}")
     (evil-range (region-beginning) (region-end) type :expanded t)))
 
+;; FIXME Include trailing semicolons in JS.
+;;
+;; FIXME Include comments immediately preceding the functions.
 (evil-define-text-object ne/textobj-outer-c-defun (count &optional beg end type)
   :type line
   (save-excursion

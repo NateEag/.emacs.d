@@ -44,6 +44,10 @@
 
 -Add keybindings for goto-chg commands and start using them.
 
+-Add mechanism for viewing keymaps in readable form via
+ substitute-command-keys. Sample usage:
+ (substitute-command-keys "\\{evil-inner-text-objects-map}")
+
 -Fix the issue where leaving a Python buffer reverts point to position 0. I'm
  guessing this is due to some piece of python-mode config I have, likely Jedi?
  It seems the most likely offender.

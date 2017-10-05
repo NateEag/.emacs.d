@@ -21,6 +21,8 @@
 ;;
 ;; and seem to work in C-like languages, elisp, and Python.
 ;;
+;; FIXME They do not, alas, catch trailing semicolons in JS.
+;;
 ;; Renamed the prefix just for the sake of file namespacing.
 
 (evil-define-text-object ne/textobj-inner-c-defun (count &optional beg end type)
@@ -49,8 +51,8 @@
 
   ;; FIXME 'd' might be a terrible binding for this. It's a reference to Emacs
   ;; Lisps' defun.
-  (define-key evil-inner-text-objects-map "D" 'ne/textobj-inner-c-defun)
-  (define-key evil-outer-text-objects-map "D" 'ne/textobj-outer-c-defun)
+  (define-key evil-inner-text-objects-map "d" 'ne/textobj-inner-c-defun)
+  (define-key evil-outer-text-objects-map "d" 'ne/textobj-outer-c-defun)
 
   )
 

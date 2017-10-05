@@ -196,6 +196,9 @@
 (use-package evil-commentary
   :commands evil-commentary-mode)
 
+(use-package ne-evil-textobjects
+  :commands ne/install-textobjects)
+
 (use-package evil
   :commands evil-local-mode
   :config
@@ -234,6 +237,9 @@
     (evil-commentary-mode)
 
     (diminish 'evil-commentary-mode)
+
+    ;; Set up my custom textobjects.
+    (ne/install-textobjects)
 
     ;; If a buffer is empty on evil-mode start, go directly to insert-mode,
     ;; because we'll almost certainly want to start typing.

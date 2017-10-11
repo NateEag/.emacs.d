@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2017 François-Xavier Bois
 
-;; Version: 15.0.11
-;; Package-Version: 20170906.214
+;; Version: 15.0.14
+;; Package-Version: 20171002.1316
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Package-Requires: ((emacs "23.1"))
@@ -25,7 +25,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "15.0.11"
+(defconst web-mode-version "15.0.14"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -758,7 +758,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     ))
 
 (defvar web-mode-engines
-  '(("angular"          . ("angularjs" "angular.js"))
+  '(("angular"          . ("angularjs"))
     ("archibus"         . ())
     ("asp"              . ())
     ("aspx"             . ())
@@ -833,7 +833,8 @@ Must be used in conjunction with web-mode-enable-block-face."
     ))
 
 (defvar web-mode-engine-file-regexps
-  '(("asp"              . "\\.asp\\'")
+  '(("angular"          . "\\.component.html\\'")
+    ("asp"              . "\\.asp\\'")
     ("aspx"             . "\\.as[cp]x\\'")
     ("archibus"         . "\\.axvw\\'")
     ("blade"            . "\\.blade\\.php\\'")
@@ -1173,7 +1174,7 @@ Must be used in conjunction with web-mode-enable-block-face."
    '("php"              . "<\\?")
    '("python"           . "<\\?")
    '("razor"            . "@.\\|^[ \t]*}")
-   '("riot"             . "{.")
+   '("riot"             . "{.\\|/// begin script")
    '("smarty"           . "{[[:alpha:]#$/*\"]")
    '("spip"             . "\\[(#REM)\\|(\\|#[A-Z0-9_]\\|{\\|<:")
    '("template-toolkit" . "\\[%.\\|%%#")
@@ -2991,7 +2992,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
 
          ((and (string= web-mode-engine "riot")
                (not (get-text-property open 'part-side)))
-          (setq closing-string "}"
+          (setq closing-string (if (string= tagopen "{") "}" "/// end script")
                 delim-open "{"
                 delim-close "}")
           ) ;riot
@@ -7237,8 +7238,8 @@ another auto-completion with different ac-sources (e.g. ac-php)")
               )
              ((looking-at-p "<!--\\[if")
               (setq offset (+ offset web-mode-markup-indent-offset)))
-             ((eq ?\- curr-char)
-              (setq offset (+ offset 3)))
+             ((string-match-p "-->" curr-line)
+              (setq offset offset))
              (t
               (setq offset (+ offset 5)))
              ) ;cond
@@ -7261,8 +7262,17 @@ another auto-completion with different ac-sources (e.g. ac-php)")
                (or (web-mode-block-is-close pos)
                    (web-mode-block-is-inside pos)))
           (when debug (message "I150(%S) block-match" pos))
-          (when (web-mode-block-match)
-            (setq offset (current-indentation))))
+          (cond
+           ((not (web-mode-block-match))
+            )
+           ((and (string= web-mode-engine "closure")
+                 (string-match-p "{\\(case\\|default\\)" curr-line))
+            (setq offset (+ (current-indentation) web-mode-markup-indent-offset)))
+           (t
+            (setq offset (current-indentation))
+            )
+           ) ;cond
+          )
 
          ((eq (get-text-property pos 'block-token) 'delimiter-end)
           (when debug (message "I160(%S) block-beginning" pos))
@@ -7359,6 +7369,13 @@ another auto-completion with different ac-sources (e.g. ac-php)")
                   ) ;when
                 )) ;save-excursion let
             ) ;when web-mode-enable-optional-tags
+          (when (string= web-mode-engine "closure")
+            (save-excursion
+              (when (and (re-search-backward "{/?switch" nil t)
+                         (string= (match-string-no-properties 0) "{switch"))
+                (setq offset (+ (current-indentation) (* 2 web-mode-markup-indent-offset)))
+                )
+              ))
           (cond
            ((not (null offset))
             )

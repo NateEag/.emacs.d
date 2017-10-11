@@ -4,7 +4,7 @@
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
 ;; Version: 2.13.0
-;; Package-Version: 20170924.2240
+;; Package-Version: 20171010.131
 ;; Keywords: lists
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -237,7 +237,9 @@ See also: `-reduce-r-from', `-reduce'"
   `(-reduce-r (lambda (&optional it acc) ,form) ,list))
 
 (defmacro --filter (form list)
-  "Anaphoric form of `-filter'."
+  "Anaphoric form of `-filter'.
+
+See also: `--remove'."
   (declare (debug (form form)))
   (let ((r (make-symbol "result")))
     `(let (,r)
@@ -249,21 +251,25 @@ See also: `-reduce-r-from', `-reduce'"
 
 Alias: `-select'
 
-See also: `-keep'"
+See also: `-keep', `-remove'."
   (--filter (funcall pred it) list))
 
 (defalias '-select '-filter)
 (defalias '--select '--filter)
 
 (defmacro --remove (form list)
-  "Anaphoric form of `-remove'."
+  "Anaphoric form of `-remove'.
+
+See also `--filter'."
   (declare (debug (form form)))
   `(--filter (not ,form) ,list))
 
 (defun -remove (pred list)
   "Return a new list of the items in LIST for which PRED returns nil.
 
-Alias: `-reject'"
+Alias: `-reject'
+
+See also: `-filter'."
   (--remove (funcall pred it) list))
 
 (defalias '-reject '-remove)
@@ -577,12 +583,42 @@ Alias: `-any'"
 (defalias '-first-item 'car
   "Return the first item of LIST, or nil on an empty list.
 
+See also: `-second-item', `-last-item'.
+
 \(fn LIST)")
 
 ;; Ensure that calls to `-first-item' are compiled to a single opcode,
 ;; just like `car'.
 (put '-first-item 'byte-opcode 'byte-car)
 (put '-first-item 'byte-compile 'byte-compile-one-arg)
+
+(defalias '-second-item 'cadr
+  "Return the second item of LIST, or nil if LIST is too short.
+
+See also: `-third-item'.
+
+\(fn LIST)")
+
+(defalias '-third-item 'caddr
+  "Return the third item of LIST, or nil if LIST is too short.
+
+See also: `-fourth-item'.
+
+\(fn LIST)")
+
+(defun -fourth-item (list)
+  "Return the fourth item of LIST, or nil if LIST is too short.
+
+See also: `-fifth-item'."
+  (declare (pure t) (side-effect-free t))
+  (car (cdr (cdr (cdr list)))))
+
+(defun -fifth-item (list)
+  "Return the fifth item of LIST, or nil if LIST is too short.
+
+See also: `-last-item'."
+  (declare (pure t) (side-effect-free t))
+  (car (cdr (cdr (cdr (cdr list))))))
 
 ;; TODO: emacs23 support, when dropped remove the condition
 (eval-when-compile
@@ -1105,11 +1141,12 @@ elements of LIST.  Keys are compared by `equal'."
 (defun -interleave (&rest lists)
   "Return a new list of the first item in each list, then the second etc."
   (declare (pure t) (side-effect-free t))
-  (let (result)
-    (while (-none? 'null lists)
-      (--each lists (!cons (car it) result))
-      (setq lists (-map 'cdr lists)))
-    (nreverse result)))
+  (when lists
+    (let (result)
+      (while (-none? 'null lists)
+        (--each lists (!cons (car it) result))
+        (setq lists (-map 'cdr lists)))
+      (nreverse result))))
 
 (defmacro --zip-with (form list1 list2)
   "Anaphoric form of `-zip-with'.
@@ -1151,16 +1188,17 @@ of cons cells. Otherwise, return the groupings as a list of lists.
 Please note! This distinction is being removed in an upcoming 3.0
 release of Dash. If you rely on this behavior, use -zip-pair instead."
   (declare (pure t) (side-effect-free t))
-  (let (results)
-    (while (-none? 'null lists)
-      (setq results (cons (mapcar 'car lists) results))
-      (setq lists (mapcar 'cdr lists)))
-    (setq results (nreverse results))
-    (if (= (length lists) 2)
-        ;; to support backward compatability, return
-        ;; a cons cell if two lists were provided
-        (--map (cons (car it) (cadr it)) results)
-      results)))
+  (when lists
+    (let (results)
+      (while (-none? 'null lists)
+        (setq results (cons (mapcar 'car lists) results))
+        (setq lists (mapcar 'cdr lists)))
+      (setq results (nreverse results))
+      (if (= (length lists) 2)
+          ;; to support backward compatability, return
+          ;; a cons cell if two lists were provided
+          (--map (cons (car it) (cadr it)) results)
+        results))))
 
 (defalias '-zip-pair '-zip)
 

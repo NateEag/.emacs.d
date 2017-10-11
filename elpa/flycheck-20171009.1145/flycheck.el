@@ -9,7 +9,7 @@
 ;;             fmdkdd <fmdkdd@gmail.com>
 ;; URL: http://www.flycheck.org
 ;; Keywords: convenience, languages, tools
-;; Version: 31-cvs
+;; Version: 32-cvs
 ;; Package-Requires: ((dash "2.12.1") (pkg-info "0.4") (let-alist "1.0.4") (seq "1.11") (emacs "24.3"))
 
 ;; This file is not part of GNU Emacs.
@@ -203,6 +203,7 @@ attention to case differences."
     javascript-standard
     json-jsonlint
     json-python-json
+    jsonnet
     less
     less-stylelint
     llvm-llc
@@ -3268,7 +3269,7 @@ nil."
                    (if (or .error .warning)
                        (format ":%s/%s" (or .error 0) (or .warning 0))
                      "")))
-                (`interrupted "-")
+                (`interrupted ".")
                 (`suspicious "?"))))
     (concat " " flycheck-mode-line-prefix text)))
 
@@ -9991,6 +9992,16 @@ See URL `http://www.ruby-doc.org/stdlib-2.0.0/libdoc/yaml/rdoc/YAML.html'."
   ((error line-start "stdin:" (zero-or-more not-newline) ":" (message)
           "at line " line " column " column line-end))
   :modes yaml-mode)
+
+(flycheck-define-checker jsonnet
+  "A Jsonnet syntax checker using the jsonnet binary.
+
+See URL `https://jsonnet.org'."
+  :command ("jsonnet" source-inplace)
+  :error-patterns
+  ((error line-start "STATIC ERROR: " (file-name) ":" line ":" column (zero-or-one (group "-" (one-or-more digit))) ": " (message) line-end)
+   (error line-start "RUNTIME ERROR: " (message) "\n" (one-or-more space) (file-name) ":" (zero-or-one "(") line ":" column (zero-or-more not-newline) line-end))
+  :modes jsonnet-mode)
 
 (provide 'flycheck)
 

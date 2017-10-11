@@ -623,13 +623,13 @@ and jump to the corresponding one."
 (evil-define-motion evil-previous-open-paren (count)
   "Go to [count] previous unmatched '('."
   :type exclusive
-  (evil-up-paren ?( ?) (- (or count 1))))
+  (evil-up-paren ?\( ?\) (- (or count 1))))
 
 (evil-define-motion evil-next-close-paren (count)
   "Go to [count] next unmatched ')'."
   :type exclusive
   (forward-char)
-  (evil-up-paren ?( ?) (or count 1))
+  (evil-up-paren ?\( ?\) (or count 1))
   (backward-char))
 
 (evil-define-motion evil-previous-open-brace (count)
@@ -1189,12 +1189,12 @@ or line COUNT to the top of the window."
 (evil-define-text-object evil-a-paren (count &optional beg end type)
   "Select a parenthesis."
   :extend-selection nil
-  (evil-select-paren ?( ?) beg end type count t))
+  (evil-select-paren ?\( ?\) beg end type count t))
 
 (evil-define-text-object evil-inner-paren (count &optional beg end type)
   "Select inner parenthesis."
   :extend-selection nil
-  (evil-select-paren ?( ?) beg end type count))
+  (evil-select-paren ?\( ?\) beg end type count))
 
 (evil-define-text-object evil-a-bracket (count &optional beg end type)
   "Select a square bracket."
@@ -2021,15 +2021,6 @@ The return value is the yanked text."
 (defvar evil-macro-buffer nil
   "The buffer that has been active on macro recording.")
 
-(defun evil-abort-macro ()
-  "Abort macro recording when the buffer is changed.
-Macros are aborted when the the current buffer
-is changed during macro recording."
-  (unless (or (minibufferp) (eq (current-buffer) evil-macro-buffer))
-    (remove-hook 'post-command-hook #'evil-abort-macro)
-    (end-kbd-macro)
-    (message "Abort macro recording (changed buffer)")))
-
 (evil-define-command evil-record-macro (register)
   "Record a keyboard macro into REGISTER.
 If REGISTER is :, /, or ?, the corresponding command line window
@@ -2043,7 +2034,6 @@ will be opened instead."
    ((eq register ?\C-g)
     (keyboard-quit))
    ((and evil-this-macro defining-kbd-macro)
-    (remove-hook 'post-command-hook #'evil-abort-macro)
     (setq evil-macro-buffer nil)
     (condition-case nil
         (end-kbd-macro)
@@ -2066,8 +2056,7 @@ will be opened instead."
     (setq evil-this-macro register)
     (evil-set-register evil-this-macro nil)
     (start-kbd-macro nil)
-    (setq evil-macro-buffer (current-buffer))
-    (add-hook 'post-command-hook #'evil-abort-macro))
+    (setq evil-macro-buffer (current-buffer)))
    (t (error "Invalid register"))))
 
 (evil-define-command evil-execute-macro (count macro)
@@ -2704,7 +2693,8 @@ Handler errors will be demoted, so a problem in one handler will (hopefully)
 not interfere with another."
   (if (null list)
       (user-error
-       "Folding is not supported for any of these major/minor modes")
+       "Enable one of the following modes for folding to work: %s"
+       (mapconcat 'symbol-name (mapcar 'caar evil-fold-list) ", "))
     (let* ((modes (caar list)))
       (if (evil--mode-p modes)
           (let* ((actions (cdar list))
@@ -3166,7 +3156,7 @@ If FORCE is non-nil all local marks except 0-9 are removed.
       (while (< i n)
         (cond
          ;; skip spaces
-         ((= (aref marks i) ?\ ) (cl-incf i))
+         ((= (aref marks i) ?\s) (cl-incf i))
          ;; ranges of marks
          ((and (< (+ i 2) n)
                (= (aref marks (1+ i)) ?-)

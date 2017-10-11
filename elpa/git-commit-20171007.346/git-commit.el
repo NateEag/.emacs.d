@@ -12,7 +12,7 @@
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 
 ;; Package-Requires: ((emacs "24.4") (dash "20170810") (with-editor "20170817"))
-;; Package-Version: 20170914.258
+;; Package-Version: 20171007.346
 ;; Keywords: git tools vc
 ;; Homepage: https://github.com/magit/magit
 
@@ -279,7 +279,7 @@ already using it, then you probably shouldn't start doing so."
 
 (defface git-commit-pseudo-header
   '((t :inherit font-lock-string-face))
-  "Font used for pseudo headers in commit messages."
+  "Face used for pseudo headers in commit messages."
   :group 'git-commit-faces)
 
 (defface git-commit-known-pseudo-header
@@ -397,6 +397,8 @@ already using it, then you probably shouldn't start doing so."
        (string-match-p git-commit-filename-regexp buffer-file-name)
        (git-commit-setup)))
 
+(defvar git-commit-mode)
+
 ;;;###autoload
 (defun git-commit-setup ()
   ;; cygwin git will pass a cygwin path (/cygdrive/c/foo/.git/...),
@@ -418,10 +420,17 @@ already using it, then you probably shouldn't start doing so."
     (let ((auto-mode-alist (list (cons (concat "\\`"
                                                (regexp-quote buffer-file-name)
                                                "\\'")
-                                       git-commit-major-mode))))
+                                       git-commit-major-mode)))
+          ;; The major-mode hook might want to consult these minor
+          ;; modes, while the minor-mode hooks might want to consider
+          ;; the major mode.
+          (git-commit-mode t)
+          (with-editor-mode t))
       (normal-mode t)))
   (setq with-editor-show-usage nil)
-  (with-editor-mode 1)
+  (unless with-editor-mode
+    ;; Maybe already enabled when using `shell-command' or an Emacs shell.
+    (with-editor-mode 1))
   (add-hook 'with-editor-finish-query-functions
             'git-commit-finish-query-functions nil t)
   (add-hook 'with-editor-pre-finish-hook
@@ -665,7 +674,9 @@ With a numeric prefix ARG, go forward ARG comments."
     "Untracked files:"
     "Changed but not updated:"
     "Changes not staged for commit:"
-    "Unmerged paths:"))
+    "Unmerged paths:"
+    "Author:"
+    "Date:"))
 
 (defun git-commit-summary-regexp ()
   (concat

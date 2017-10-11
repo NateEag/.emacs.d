@@ -2395,11 +2395,11 @@ Result: \"\\nIn [10]:    ....:    ....:    ....: 1\\n\\nIn [11]: \"
 
 ;; Constants
 (defconst py-block-closing-keywords-re
-  "[ \t]*\\_<\\(return\\|raise\\|break\\|continue\\|pass\\)\\_>[ \n\t]"
+  "[ \t]*\\_<\\(return\\|raise\\|break\\b\\|continue\\|pass\\)\\_>[ \n\t]"
   "Matches the beginning of a class, method or compound statement. ")
 
 (setq py-block-closing-keywords-re
-  "[ \t]*\\_<return\\|raise\\|break\\|continue\\|pass\\_>[ \n\t]")
+  "[ \t]*\\_<return\\|raise\\|break\\b\\|continue\\|pass\\_>[ \n\t]")
 
 (defconst py-finally-re
   "[ \t]*\\_<finally\\_>[: \n\t]"
@@ -6069,7 +6069,7 @@ Default is `t'")
 	   (or space line-start (not (any ".(")))
 	   symbol-start
 	   (group (or "_" "__doc__" "__import__" "__name__" "__package__" "abs" "all"
-		      "any" "apply" "basestring" "bin" "bool" "buffer" "bytearray"
+		      "any" "apply" "basestring" "bin" "bool" "breakpoint" "buffer" "bytearray"
 		      "bytes" "callable" "chr" "classmethod" "cmp" "coerce" "compile"
 		      "complex" "delattr" "dict" "dir" "divmod" "enumerate" "eval"
 		      "execfile" "filter" "float" "format" "frozenset"

@@ -228,6 +228,12 @@ visits the file in the working tree."
   :group 'magit-diff
   :type 'boolean)
 
+(defcustom magit-diff-highlight-keywords t
+  "Whether to highlight bracketed keywords in commit messages."
+  :package-version '(magit . "2.12.0")
+  :group 'magit-diff
+  :type 'boolean)
+
 ;;;; File Diff
 
 (defcustom magit-diff-buffer-file-locked t
@@ -1874,11 +1880,12 @@ or a ref which is not a branch, then it inserts nothing."
           (forward-line)
           (put-text-property beg (point) 'face 'magit-section-secondary-heading)
           (magit-insert-heading))
-        (save-excursion
-          (while (re-search-forward "\\[[^[]*\\]" nil t)
-            (put-text-property (match-beginning 0)
-                               (match-end 0)
-                               'face 'magit-keyword)))
+        (when magit-diff-highlight-keywords
+          (save-excursion
+            (while (re-search-forward "\\[[^[]*\\]" nil t)
+              (put-text-property (match-beginning 0)
+                                 (match-end 0)
+                                 'face 'magit-keyword))))
         (goto-char (point-max))))))
 
 (defun magit-insert-revision-notes (rev)
@@ -2029,11 +2036,13 @@ or a ref which is not a branch, then it inserts nothing."
 
 (defun magit-insert-staged-changes ()
   "Insert section showing staged changes."
-  (magit-insert-section (staged)
-    (magit-insert-heading "Staged changes:")
-    (magit-git-wash #'magit-diff-wash-diffs
-      "diff" "--cached" magit-diff-section-arguments "--no-prefix"
-      "--" magit-diff-section-file-args)))
+  ;; Avoid listing all files as deleted when visiting a bare repo.
+  (unless (magit-bare-repo-p)
+    (magit-insert-section (staged)
+      (magit-insert-heading "Staged changes:")
+      (magit-git-wash #'magit-diff-wash-diffs
+        "diff" "--cached" magit-diff-section-arguments "--no-prefix"
+        "--" magit-diff-section-file-args))))
 
 ;;; Diff Type
 
@@ -2448,6 +2457,13 @@ https://github.com/magit/magit/pull/2293 for more details)."
               ;; This prevents the cursor from being rendered at the
               ;; edge of the window.
               'cursor t))
+
+;;; Hunk Utilities
+
+(defun magit-diff-inside-hunk-body-p ()
+  "Return non-nil if point is inside the body of a hunk."
+  (and (magit-section-match 'hunk)
+       (> (point) (magit-section-content (magit-current-section)))))
 
 ;;; Diff Extract
 

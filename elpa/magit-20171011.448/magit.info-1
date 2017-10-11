@@ -30,6 +30,8 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
+     This manual is for Magit version 2.11.0 (2.11.0-55-g7edecce4+1).
+
      Copyright (C) 2015-2017 Jonas Bernoulli <jonas@bernoul.li>
 
      You can redistribute this document and/or modify it under the terms
@@ -856,9 +858,14 @@ File: magit.info,  Node: Naming Buffers,  Next: Quitting Windows,  Prev: Switchi
           The top-level directory of the working tree of the repository,
           or if ‘magit-uniquify-buffer-names’ is non-nil an abbreviation
           of that.
-     The value should always contain either ‘%m’ or ‘%M’, ‘%v’ or ‘%V’,
-     and ‘%t’.  If ‘magit-uniquify-buffer-names’ is non-nil, then the
-     value must end with ‘%t’.
+
+        • ‘%T’
+
+          Like ‘%t’, but append an asterisk if and only if
+          ‘magit-uniquify-buffer-names’ is nil.
+     The value should always contain ‘%m’ or ‘%M’, ‘%v’ or ‘%V’, and
+     ‘%t’ or ‘%T’.  If ‘magit-uniquify-buffer-names’ is non-nil, then
+     the value must end with ‘%t’ or ‘%T’ (see issue #2841).
 
  -- User Option: magit-uniquify-buffer-names
 
@@ -2090,7 +2097,8 @@ hook variable.
 
  -- Function: magit-insert-tags-header
 
-     Insert a header line about the current and/or next tag.
+     Insert a header line about the current and/or next tag, along with
+     the number of commits between the tag and ‘HEAD’.
 
    The following functions can also be added to the above hook:
 
@@ -2146,7 +2154,8 @@ variable.
  -- Function: magit-insert-modules-overview
 
      Insert sections for all submodules.  For each section insert the
-     path, the branch, and the output of ‘git describe --tags’.
+     path, the branch, and the output of ‘git describe --tags’, or,
+     failing that, the abbreviated HEAD commit hash.
 
      Press ‘RET’ on such a submodule section to show its own status
      buffer.  Press ‘RET’ on the "Modules" section to display a list of
@@ -4453,6 +4462,28 @@ features are available from separate popups.
      This command creates and checks out a new orphan branch with
      contents from a given revision.
 
+ -- Command: magit-branch-or-checkout
+
+     This command is a hybrid between ‘magit-checkout’ and
+     ‘magit-branch-and-checkout’ and is intended as a replacement for
+     the former in ‘magit-branch-popup’.
+
+     It first asks the user for an existing branch or revision.  If the
+     user input actually can be resolved as a branch or revision, then
+     it checks that out, just like ‘magit-checkout’ would.
+
+     Otherwise it creates and checks out a new branch using the input as
+     its name.  Before doing so it reads the starting-point for the new
+     branch.  This is similar to what ‘magit-branch-and-checkout’ does.
+
+     To use this command instead of ‘magit-checkout’ add this to your
+     init file:
+
+          (magit-remove-popup-key 'magit-branch-popup :action ?b)
+          (magit-define-popup-action 'magit-branch-popup
+            ?b "Checkout" 'magit-branch-or-checkout
+            'magit-branch t)
+
 
 File: magit.info,  Node: The Branch Config Popup,  Prev: The Branch Popup,  Up: Branching
 
@@ -4817,9 +4848,17 @@ See *note Information About In-Progress Rebase::.
      ‘HEAD’ onto NEWBASE. START has to be selected from a list of recent
      commits.
 
-   Note that the popup also features the infix argument ‘--interactive’.
-This can be used to turn one of the above non-interactive rebase
-variants into an interactive rebase.
+   By default Magit uses the ‘--autostash’ argument, which causes
+uncommitted changes to be stored in a stash before the rebase begins.
+These changes are restored after the rebase completes and if possible
+the stash is removed.  If the stash does not apply cleanly, then the
+stash is not removed.  In case something goes wrong when resolving the
+conflicts, this allows you to start over.
+
+   Even though one of the actions is dedicated to interactive rebases,
+the popup also features the infix argument ‘--interactive’.  This can be
+used to turn one of the other, non-interactive rebase variants into an
+interactive rebase.
 
    For example if you want to clean up a feature branch and at the same
 time rebase it onto ‘master’, then you could use ‘r-iu’.  But we
@@ -5870,7 +5909,8 @@ the super-repository by adding ‘magit-insert-submodules’ to the hook
  -- Function: magit-insert-submodules
 
      Insert sections for all submodules.  For each section insert the
-     path, the branch, and the output of ‘git describe --tags’.
+     path, the branch, and the output of ‘git describe --tags’, or,
+     failing that, the abbreviated HEAD commit hash.
 
      Press ‘RET’ on such a submodule section to show its own status
      buffer.  Press ‘RET’ on the "Modules" section to display a list of
@@ -7782,417 +7822,4 @@ issue.  Please include all relevant output when reporting an issue.
      Also see *note (with-editor)Debugging::.
 
    Please also see the *note FAQ::.
-
-
-File: magit.info,  Node: Keystroke Index,  Next: Command Index,  Prev: Debugging Tools,  Up: Top
-
-Appendix C Keystroke Index
-**************************
-
- [index ]
-* Menu:
-
-* !:                                     Running Git Manually.
-                                                              (line  12)
-* ! !:                                   Running Git Manually.
-                                                              (line  16)
-* ! a:                                   Running Git Manually.
-                                                              (line  57)
-* ! b:                                   Running Git Manually.
-                                                              (line  61)
-* ! g:                                   Running Git Manually.
-                                                              (line  65)
-* ! k:                                   Running Git Manually.
-                                                              (line  53)
-* ! p:                                   Running Git Manually.
-                                                              (line  24)
-* ! s:                                   Running Git Manually.
-                                                              (line  34)
-* ! S:                                   Running Git Manually.
-                                                              (line  39)
-* $:                                     Viewing Git Output.  (line  11)
-* +:                                     Log Buffer.          (line  59)
-* + <1>:                                 Refreshing Diffs.    (line  68)
-* -:                                     Log Buffer.          (line  63)
-* - <1>:                                 Refreshing Diffs.    (line  64)
-* 0:                                     Refreshing Diffs.    (line  72)
-* 1:                                     Section Visibility.  (line  26)
-* 2:                                     Section Visibility.  (line  27)
-* 3:                                     Section Visibility.  (line  28)
-* 4:                                     Section Visibility.  (line  29)
-* =:                                     Log Buffer.          (line  53)
-* ^:                                     Section Movement.    (line  31)
-* a:                                     Applying.            (line  33)
-* A:                                     Cherry Picking.      (line   8)
-* A A:                                   Cherry Picking.      (line  16)
-* A a:                                   Cherry Picking.      (line  22)
-* A A <1>:                               Cherry Picking.      (line  35)
-* A a <1>:                               Cherry Picking.      (line  43)
-* A s:                                   Cherry Picking.      (line  39)
-* B:                                     Bisecting.           (line   8)
-* b:                                     The Branch Popup.    (line  12)
-* B B:                                   Bisecting.           (line  16)
-* B b:                                   Bisecting.           (line  31)
-* b b:                                   The Branch Popup.    (line  29)
-* b c:                                   The Branch Popup.    (line  47)
-* B g:                                   Bisecting.           (line  36)
-* B k:                                   Bisecting.           (line  41)
-* b k:                                   The Branch Popup.    (line 100)
-* b n:                                   The Branch Popup.    (line  37)
-* B r:                                   Bisecting.           (line  47)
-* b r:                                   The Branch Popup.    (line 106)
-* B s:                                   Bisecting.           (line  24)
-* b s:                                   The Branch Popup.    (line  54)
-* b x:                                   The Branch Popup.    (line  84)
-* c:                                     Initiating a Commit. (line   8)
-* c <1>:                                 Editing Rebase Sequences.
-                                                              (line  72)
-* c a:                                   Initiating a Commit. (line  18)
-* c A:                                   Initiating a Commit. (line  66)
-* c c:                                   Initiating a Commit. (line  13)
-* c e:                                   Initiating a Commit. (line  22)
-* c f:                                   Initiating a Commit. (line  42)
-* c F:                                   Initiating a Commit. (line  50)
-* c s:                                   Initiating a Commit. (line  54)
-* c S:                                   Initiating a Commit. (line  62)
-* c w:                                   Initiating a Commit. (line  32)
-* C-<return>:                            Diff Buffer.         (line  36)
-* C-<tab>:                               Section Visibility.  (line  13)
-* C-c C-a:                               Editing Commit Messages.
-                                                              (line 128)
-* C-c C-b:                               Log Buffer.          (line  19)
-* C-c C-b <1>:                           Refreshing Diffs.    (line  90)
-* C-c C-c:                               Popup Buffers and Prefix Commands.
-                                                              (line  20)
-* C-c C-c <1>:                           Select from Log.     (line  20)
-* C-c C-c <2>:                           Editing Commit Messages.
-                                                              (line  19)
-* C-c C-c <3>:                           Editing Rebase Sequences.
-                                                              (line   6)
-* C-c C-d:                               Refreshing Diffs.    (line  80)
-* C-c C-d <1>:                           Editing Commit Messages.
-                                                              (line  57)
-* C-c C-f:                               Log Buffer.          (line  23)
-* C-c C-f <1>:                           Refreshing Diffs.    (line  94)
-* C-c C-i:                               Editing Commit Messages.
-                                                              (line 153)
-* C-c C-k:                               Select from Log.     (line  26)
-* C-c C-k <1>:                           Editing Commit Messages.
-                                                              (line  24)
-* C-c C-k <2>:                           Editing Rebase Sequences.
-                                                              (line  11)
-* C-c C-n:                               Log Buffer.          (line  27)
-* C-c C-o:                               Editing Commit Messages.
-                                                              (line 144)
-* C-c C-p:                               Editing Commit Messages.
-                                                              (line 148)
-* C-c C-r:                               Editing Commit Messages.
-                                                              (line 132)
-* C-c C-s:                               Editing Commit Messages.
-                                                              (line 136)
-* C-c C-t:                               Editing Commit Messages.
-                                                              (line 140)
-* C-c C-w:                               Editing Commit Messages.
-                                                              (line  63)
-* C-c M-g:                               Minor Mode for Buffers Visiting Files.
-                                                              (line  19)
-* C-c M-g b:                             Minor Mode for Buffers Visiting Files.
-                                                              (line  76)
-* C-c M-g c:                             Minor Mode for Buffers Visiting Files.
-                                                              (line  33)
-* C-c M-g D:                             Minor Mode for Buffers Visiting Files.
-                                                              (line  39)
-* C-c M-g d:                             Minor Mode for Buffers Visiting Files.
-                                                              (line  47)
-* C-c M-g L:                             Minor Mode for Buffers Visiting Files.
-                                                              (line  57)
-* C-c M-g l:                             Minor Mode for Buffers Visiting Files.
-                                                              (line  64)
-* C-c M-g p:                             Minor Mode for Buffers Visiting Files.
-                                                              (line  82)
-* C-c M-g s:                             Minor Mode for Buffers Visiting Files.
-                                                              (line  24)
-* C-c M-g u:                             Minor Mode for Buffers Visiting Files.
-                                                              (line  28)
-* C-c M-s:                               Editing Commit Messages.
-                                                              (line  35)
-* C-w:                                   Common Commands.     (line  21)
-* C-x g:                                 Status Buffer.       (line  22)
-* C-x u:                                 Editing Rebase Sequences.
-                                                              (line  89)
-* d:                                     Diffing.             (line  20)
-* D:                                     Refreshing Diffs.    (line  11)
-* d c:                                   Diffing.             (line  67)
-* d d:                                   Diffing.             (line  25)
-* D f:                                   Refreshing Diffs.    (line  45)
-* D F:                                   Refreshing Diffs.    (line  50)
-* D g:                                   Refreshing Diffs.    (line  16)
-* d p:                                   Diffing.             (line  59)
-* d r:                                   Diffing.             (line  29)
-* D r:                                   Refreshing Diffs.    (line  40)
-* d s:                                   Diffing.             (line  49)
-* D s:                                   Refreshing Diffs.    (line  21)
-* d t:                                   Diffing.             (line  72)
-* D t:                                   Refreshing Diffs.    (line  36)
-* d u:                                   Diffing.             (line  55)
-* d w:                                   Diffing.             (line  43)
-* D w:                                   Refreshing Diffs.    (line  28)
-* DEL:                                   Log Buffer.          (line  43)
-* DEL <1>:                               Diff Buffer.         (line  63)
-* DEL <2>:                               Blaming.             (line  44)
-* DEL <3>:                               Editing Rebase Sequences.
-                                                              (line  28)
-* e:                                     Ediffing.            (line   9)
-* E:                                     Ediffing.            (line  21)
-* e <1>:                                 Editing Rebase Sequences.
-                                                              (line  55)
-* E c:                                   Ediffing.            (line  65)
-* E i:                                   Ediffing.            (line  57)
-* E m:                                   Ediffing.            (line  35)
-* E r:                                   Ediffing.            (line  26)
-* E s:                                   Ediffing.            (line  48)
-* E u:                                   Ediffing.            (line  53)
-* E w:                                   Ediffing.            (line  61)
-* E z:                                   Ediffing.            (line  69)
-* f:                                     Editing Rebase Sequences.
-                                                              (line  63)
-* f <1>:                                 Fetching.            (line  11)
-* F:                                     Pulling.             (line  11)
-* f a:                                   Fetching.            (line  38)
-* f e:                                   Fetching.            (line  24)
-* F e:                                   Pulling.             (line  24)
-* f m:                                   Fetching.            (line  42)
-* f o:                                   Fetching.            (line  28)
-* f p:                                   Fetching.            (line  16)
-* F p:                                   Pulling.             (line  16)
-* f r:                                   Fetching.            (line  33)
-* f u:                                   Fetching.            (line  20)
-* F u:                                   Pulling.             (line  20)
-* g:                                     Automatic Refreshing of Magit Buffers.
-                                                              (line  22)
-* G:                                     Automatic Refreshing of Magit Buffers.
-                                                              (line  31)
-* j:                                     Diff Buffer.         (line  53)
-* k:                                     Viewing Git Output.  (line  19)
-* k <1>:                                 Applying.            (line  40)
-* k <2>:                                 Editing Rebase Sequences.
-                                                              (line  68)
-* k <3>:                                 Stashing.            (line  88)
-* l:                                     Logging.             (line  28)
-* L:                                     Refreshing Logs.     (line  11)
-* L <1>:                                 Log Buffer.          (line   6)
-* L <2>:                                 Log Margin.          (line  47)
-* l a:                                   Logging.             (line  58)
-* l b:                                   Logging.             (line  54)
-* L d:                                   Log Margin.          (line  64)
-* L g:                                   Refreshing Logs.     (line  16)
-* l h:                                   Logging.             (line  46)
-* l H:                                   Reflog.              (line  19)
-* l l:                                   Logging.             (line  33)
-* l L:                                   Logging.             (line  50)
-* L L:                                   Log Margin.          (line  56)
-* L l:                                   Log Margin.          (line  60)
-* l o:                                   Logging.             (line  39)
-* l O:                                   Reflog.              (line  15)
-* l r:                                   Reflog.              (line  11)
-* L s:                                   Refreshing Logs.     (line  21)
-* L t:                                   Refreshing Logs.     (line  36)
-* L w:                                   Refreshing Logs.     (line  28)
-* m:                                     Merging.             (line   9)
-* M:                                     Remotes.             (line   8)
-* m a:                                   Merging.             (line  57)
-* M a:                                   Remotes.             (line  13)
-* m e:                                   Merging.             (line  30)
-* M k:                                   Remotes.             (line  28)
-* m m:                                   Merging.             (line  17)
-* m m <1>:                               Merging.             (line  52)
-* m n:                                   Merging.             (line  37)
-* m p:                                   Merging.             (line  44)
-* M r:                                   Remotes.             (line  18)
-* M u:                                   Remotes.             (line  23)
-* M-1:                                   Section Visibility.  (line  33)
-* M-2:                                   Section Visibility.  (line  34)
-* M-3:                                   Section Visibility.  (line  35)
-* M-4:                                   Section Visibility.  (line  36)
-* M-<tab>:                               Section Visibility.  (line  17)
-* M-n:                                   Section Movement.    (line  26)
-* M-n <1>:                               Editing Commit Messages.
-                                                              (line  45)
-* M-n <2>:                               Editing Rebase Sequences.
-                                                              (line  47)
-* M-p:                                   Section Movement.    (line  20)
-* M-p <1>:                               Editing Commit Messages.
-                                                              (line  39)
-* M-p <2>:                               Editing Rebase Sequences.
-                                                              (line  43)
-* M-w:                                   Blaming.             (line  75)
-* M-w <1>:                               Common Commands.     (line  10)
-* M-x magit-blame:                       Blaming.             (line   8)
-* M-x magit-blame-popup:                 Blaming.             (line  24)
-* M-x magit-clone:                       Repository Setup.    (line  16)
-* M-x magit-debug-git-executable:        Git Executable.      (line  45)
-* M-x magit-debug-git-executable <1>:    Debugging Tools.     (line  27)
-* M-x magit-describe-section:            Section Types and Values.
-                                                              (line  13)
-* M-x magit-describe-section <1>:        Matching Sections.   (line   6)
-* M-x magit-emacs-Q-command:             Debugging Tools.     (line  16)
-* M-x magit-find-file:                   Visiting Blobs.      (line   6)
-* M-x magit-find-file-other-window:      Visiting Blobs.      (line  11)
-* M-x magit-init:                        Repository Setup.    (line   6)
-* M-x magit-reset-index:                 Staging and Unstaging.
-                                                              (line  87)
-* M-x magit-reverse-in-index:            Staging and Unstaging.
-                                                              (line  62)
-* M-x magit-stage-file:                  Staging from File-Visiting Buffers.
-                                                              (line  10)
-* M-x magit-toggle-buffer-lock:          Modes and Buffers.   (line  17)
-* M-x magit-unstage-file:                Staging from File-Visiting Buffers.
-                                                              (line  18)
-* M-x magit-version:                     Git Executable.      (line  17)
-* M-x magit-version <1>:                 Debugging Tools.     (line  10)
-* M-x magit-wip-commit:                  Wip Modes.           (line 129)
-* M-x with-editor-debug:                 Debugging Tools.     (line  35)
-* n:                                     Section Movement.    (line  16)
-* n <1>:                                 Blaming.             (line  54)
-* N:                                     Blaming.             (line  58)
-* n <2>:                                 Editing Rebase Sequences.
-                                                              (line  39)
-* n <3>:                                 Minor Mode for Buffers Visiting Blobs.
-                                                              (line  16)
-* o:                                     Submodule Popup.     (line   6)
-* O:                                     Subtree.             (line   8)
-* o a:                                   Submodule Popup.     (line  11)
-* O a:                                   Subtree.             (line  20)
-* o b:                                   Submodule Popup.     (line  17)
-* O c:                                   Subtree.             (line  24)
-* o f:                                   Submodule Popup.     (line  35)
-* O f:                                   Subtree.             (line  32)
-* o i:                                   Submodule Popup.     (line  22)
-* o i <1>:                               Submodule Popup.     (line  39)
-* O m:                                   Subtree.             (line  28)
-* O p:                                   Subtree.             (line  36)
-* o s:                                   Submodule Popup.     (line  31)
-* O s:                                   Subtree.             (line  41)
-* o u:                                   Submodule Popup.     (line  26)
-* p:                                     Section Movement.    (line  10)
-* p <1>:                                 Blaming.             (line  62)
-* P:                                     Blaming.             (line  66)
-* p <2>:                                 Editing Rebase Sequences.
-                                                              (line  35)
-* P <1>:                                 Pushing.             (line  11)
-* p <3>:                                 Minor Mode for Buffers Visiting Blobs.
-                                                              (line  12)
-* P e:                                   Pushing.             (line  35)
-* P m:                                   Pushing.             (line  53)
-* P o:                                   Pushing.             (line  39)
-* P p:                                   Pushing.             (line  16)
-* P r:                                   Pushing.             (line  44)
-* P t:                                   Pushing.             (line  59)
-* P T:                                   Pushing.             (line  65)
-* P u:                                   Pushing.             (line  26)
-* q:                                     Quitting Windows.    (line   6)
-* q <1>:                                 Log Buffer.          (line  12)
-* q <2>:                                 Blaming.             (line  70)
-* q <3>:                                 Minor Mode for Buffers Visiting Blobs.
-                                                              (line  20)
-* r:                                     Rebasing.            (line   9)
-* r <1>:                                 Editing Rebase Sequences.
-                                                              (line  51)
-* r a:                                   Rebasing.            (line  95)
-* r e:                                   Rebasing.            (line  33)
-* r e <1>:                               Rebasing.            (line  91)
-* r f:                                   Rebasing.            (line  65)
-* r i:                                   Rebasing.            (line  61)
-* r m:                                   Rebasing.            (line  69)
-* r p:                                   Rebasing.            (line  24)
-* r r:                                   Rebasing.            (line  80)
-* r s:                                   Rebasing.            (line  39)
-* r s <1>:                               Rebasing.            (line  87)
-* r u:                                   Rebasing.            (line  29)
-* r w:                                   Rebasing.            (line  73)
-* RET:                                   Diff Buffer.         (line   6)
-* RET <1>:                               References Buffer.   (line 117)
-* RET <2>:                               Blaming.             (line  29)
-* RET <3>:                               Editing Rebase Sequences.
-                                                              (line  16)
-* s:                                     Staging and Unstaging.
-                                                              (line  28)
-* S:                                     Staging and Unstaging.
-                                                              (line  36)
-* s <1>:                                 Editing Rebase Sequences.
-                                                              (line  59)
-* S-<tab>:                               Section Visibility.  (line  22)
-* SPC:                                   Log Buffer.          (line  33)
-* SPC <1>:                               Diff Buffer.         (line  59)
-* SPC <2>:                               Blaming.             (line  34)
-* SPC <3>:                               Editing Rebase Sequences.
-                                                              (line  21)
-* t:                                     Blaming.             (line  82)
-* t <1>:                                 Tagging.             (line   8)
-* T:                                     Notes.               (line   8)
-* T a:                                   Notes.               (line  70)
-* T c:                                   Notes.               (line  65)
-* t k:                                   Tagging.             (line  18)
-* T m:                                   Notes.               (line  56)
-* t p:                                   Tagging.             (line  24)
-* T p:                                   Notes.               (line  29)
-* T r:                                   Notes.               (line  21)
-* T s:                                   Notes.               (line  33)
-* T S:                                   Notes.               (line  44)
-* t t:                                   Tagging.             (line  13)
-* T T:                                   Notes.               (line  13)
-* TAB:                                   Section Visibility.  (line   9)
-* u:                                     Staging and Unstaging.
-                                                              (line  43)
-* U:                                     Staging and Unstaging.
-                                                              (line  52)
-* v:                                     Applying.            (line  44)
-* V:                                     Reverting.           (line   6)
-* V A:                                   Reverting.           (line  30)
-* V a:                                   Reverting.           (line  38)
-* V s:                                   Reverting.           (line  34)
-* V V:                                   Reverting.           (line  14)
-* V v:                                   Reverting.           (line  20)
-* W:                                     Creating and Sending Patches.
-                                                              (line   6)
-* w:                                     Applying Patches.    (line   8)
-* w a:                                   Applying Patches.    (line  31)
-* w m:                                   Applying Patches.    (line  19)
-* W p:                                   Creating and Sending Patches.
-                                                              (line  11)
-* W r:                                   Creating and Sending Patches.
-                                                              (line  17)
-* w s:                                   Applying Patches.    (line  27)
-* w w:                                   Applying Patches.    (line  13)
-* w w <1>:                               Applying Patches.    (line  23)
-* x:                                     Editing Rebase Sequences.
-                                                              (line  76)
-* x <1>:                                 Resetting.           (line   8)
-* X f:                                   Resetting.           (line  37)
-* X h:                                   Resetting.           (line  25)
-* X i:                                   Resetting.           (line  30)
-* X m:                                   Resetting.           (line  14)
-* X s:                                   Resetting.           (line  19)
-* Y:                                     Cherries.            (line  17)
-* y:                                     References Buffer.   (line   6)
-* y <1>:                                 Editing Rebase Sequences.
-                                                              (line  85)
-* y c:                                   References Buffer.   (line  19)
-* y o:                                   References Buffer.   (line  24)
-* y y:                                   References Buffer.   (line  14)
-* z:                                     Stashing.            (line   8)
-* z a:                                   Stashing.            (line  58)
-* z b:                                   Stashing.            (line  80)
-* z f:                                   Stashing.            (line  84)
-* z i:                                   Stashing.            (line  20)
-* z I:                                   Stashing.            (line  46)
-* z k:                                   Stashing.            (line  71)
-* z l:                                   Stashing.            (line  92)
-* z p:                                   Stashing.            (line  64)
-* z v:                                   Stashing.            (line  76)
-* z w:                                   Stashing.            (line  25)
-* z W:                                   Stashing.            (line  51)
-* z x:                                   Stashing.            (line  32)
-* z z:                                   Stashing.            (line  13)
-* z Z:                                   Stashing.            (line  39)
 

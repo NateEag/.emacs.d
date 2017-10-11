@@ -31,6 +31,7 @@
 
 ;;; Code:
 
+(require 'ansi-color)
 (require 'cl-lib)
 (require 'dash)
 
@@ -100,8 +101,9 @@ When this is nil, no sections are ever removed."
 
 (defcustom magit-credential-cache-daemon-socket
   (--some (-let [(prog . args) (split-string it)]
-            (if (string-match-p
-                 "\\`\\(?:\\(?:/.*/\\)?git-credential-\\)?cache\\'" prog)
+            (if (and prog
+                     (string-match-p
+                      "\\`\\(?:\\(?:/.*/\\)?git-credential-\\)?cache\\'" prog))
                 (or (cl-loop for (opt val) on args
                              if (string= opt "--socket")
                              return val)
@@ -795,6 +797,8 @@ as argument."
 
 (defvar-local magit-this-error nil)
 
+(defvar magit-process-finish-apply-ansi-colors nil)
+
 (defun magit-process-finish (arg &optional process-buf command-buf
                                  default-dir section)
   (unless (integerp arg)
@@ -820,6 +824,9 @@ as argument."
                                         'magit-process-ok
                                       'magit-process-ng)))
           (set-marker-insertion-type marker t))
+        (when magit-process-finish-apply-ansi-colors
+          (ansi-color-apply-on-region (magit-section-content section)
+                                      (magit-section-end section)))
         (if (= (magit-section-end section)
                (+ (line-end-position) 2))
             (save-excursion

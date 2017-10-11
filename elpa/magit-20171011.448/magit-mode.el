@@ -142,7 +142,7 @@ which in turn uses the function specified here."
   :type '(radio (function-item magit-generate-buffer-name-default-function)
                 (function :tag "Function")))
 
-(defcustom magit-buffer-name-format "*%M%v: %t"
+(defcustom magit-buffer-name-format "*%M%v: %T"
   "The format string used to name Magit buffers.
 
 The following %-sequences are supported:
@@ -152,25 +152,28 @@ The following %-sequences are supported:
 
 `%M' Like \"%m\" but abbreviate `magit-status-mode' as `magit'.
 
-`%v' The value the buffer is locked to, in parentheses, or an empty
-     string if the buffer is not locked to a value.
+`%v' The value the buffer is locked to, in parentheses, or an
+     empty string if the buffer is not locked to a value.
 
-`%V' Like \"%v\", but the string is prefixed with a space, unless it
-     is an empty string.
+`%V' Like \"%v\", but the string is prefixed with a space, unless
+     it is an empty string.
 
 `%t' The top-level directory of the working tree of the
      repository, or if `magit-uniquify-buffer-names' is non-nil
      an abbreviation of that.
 
-The value should always contain either \"%m\" or \"%M\" as well as
-\"%t\".  If `magit-uniquify-buffer-names' is non-nil, then the
-value must end with \"%t\".
+`%T' Like \"%t\", but append an asterisk if and only if
+     `magit-uniquify-buffer-names' is nil.
+
+The value should always contain \"%m\" or \"%M\", \"%v\" or \"%V\",
+and \"%t\" or \"%T\".  If `magit-uniquify-buffer-names' is non-nil,
+then the value must end with \"%t\" or \"%T\" (see issue #2841).
 
 This is used by `magit-generate-buffer-name-default-function'.
 If another `magit-generate-buffer-name-function' is used, then
 it may not respect this option, or on the contrary it may
 support additional %-sequences."
-  :package-version '(magit . "2.3.0")
+  :package-version '(magit . "2.12.0")
   :group 'magit-buffers
   :type 'string)
 
@@ -357,10 +360,8 @@ starts complicating other things, then it will be removed."
            (define-key map (kbd "C-i") 'magit-section-toggle)
            (define-key map [C-tab]     'magit-section-cycle)
            (define-key map [M-tab]     'magit-section-cycle-diffs)
-           (define-key map [S-tab]     'magit-section-cycle-global)
-           ;; Next two are for backward compatibility.
-           (define-key map [s-tab]     'magit-section-cycle-global)
-           (define-key map   [backtab] 'magit-section-cycle-global)
+           ;; [backtab] is the most portable binding for Shift+Tab.
+           (define-key map [backtab]   'magit-section-cycle-global)
            (define-key map (kbd   "^") 'magit-section-up)
            (define-key map (kbd   "p") 'magit-section-backward)
            (define-key map (kbd   "n") 'magit-section-forward)
@@ -790,17 +791,19 @@ The returned name is based on `magit-buffer-name-format' and
 takes `magit-uniquify-buffer-names' and VALUE, if non-nil, into
 account."
   (let ((m (substring (symbol-name mode) 0 -5))
-        (v (and value (format "%s" (if (listp value) value (list value))))))
+        (v (and value (format "%s" (if (listp value) value (list value)))))
+        (n (if magit-uniquify-buffer-names
+               (file-name-nondirectory
+                (directory-file-name default-directory))
+             (abbreviate-file-name default-directory))))
     (format-spec
      magit-buffer-name-format
      `((?m . ,m)
        (?M . ,(if (eq mode 'magit-status-mode) "magit" m))
        (?v . ,(or v ""))
        (?V . ,(if v (concat " " v) ""))
-       (?t . ,(if magit-uniquify-buffer-names
-                  (file-name-nondirectory
-                   (directory-file-name default-directory))
-                (abbreviate-file-name default-directory)))))))
+       (?t . ,n)
+       (?T . ,(if magit-uniquify-buffer-names n (concat n "*")))))))
 
 (defun magit-toggle-buffer-lock ()
   "Lock the current buffer to its value or unlock it.

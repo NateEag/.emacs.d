@@ -121,6 +121,12 @@ This is useful if you use really long branch names."
   :group 'magit-log
   :type 'boolean)
 
+(defcustom magit-log-highlight-keywords t
+  "Whether to highlight bracketed keywords in commit summaries."
+  :package-version '(magit . "2.12.0")
+  :group 'magit-log
+  :type 'boolean)
+
 (defface magit-log-graph
   '((((class color) (background light)) :foreground "grey30")
     (((class color) (background  dark)) :foreground "grey80"))
@@ -1034,9 +1040,10 @@ Do not add this to a hook variable."
           (let ((start 0))
             (while (string-match "\\[[^[]*\\]" msg start)
               (setq start (match-end 0))
-              (put-text-property (match-beginning 0)
-                                 (match-end 0)
-                                 'face 'magit-keyword msg)))
+              (when magit-log-highlight-keywords
+                (put-text-property (match-beginning 0)
+                                   (match-end 0)
+                                   'face 'magit-keyword msg))))
           (insert msg))
         (when (and refs magit-log-show-refname-after-summary)
           (insert ?\s)
@@ -1261,11 +1268,11 @@ Type \\[magit-log-select-quit] to abort without selecting a commit."
 (defvar-local magit-log-select-pick-function nil)
 (defvar-local magit-log-select-quit-function nil)
 
-(defun magit-log-select (pick &optional msg quit branch)
+(defun magit-log-select (pick &optional msg quit branch args)
   (declare (indent defun))
   (magit-mode-setup #'magit-log-select-mode
                     (or branch (magit-get-current-branch) "HEAD")
-                    magit-log-select-arguments)
+                    (append args magit-log-select-arguments))
   (magit-log-goto-same-commit)
   (setq magit-log-select-pick-function pick)
   (setq magit-log-select-quit-function quit)

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "projectile" "projectile.el" (22976 1866 0
+;;;### (autoloads nil "projectile" "projectile.el" (23006 14132 0
 ;;;;;;  0))
 ;;; Generated autoloads from projectile.el
 
@@ -463,7 +463,7 @@ Edit or create a .dir-locals.el file of the project.
 
 \(fn)" t nil)
 
-(defvar projectile-mode-line '(:eval (format " Projectile[%s]" (projectile-project-name))) "\
+(defvar projectile-mode-line '(:eval (format " Projectile[%s(%s)]" (projectile-project-name) (projectile-project-type))) "\
 Mode line lighter for Projectile.
 
 The value of this variable is a mode line template as in
@@ -472,7 +472,7 @@ details about mode line templates.
 
 Customize this variable to change how Projectile displays its
 status in the mode line.  The default value displays the project
-name.  Set this variable to nil to disable the mode line
+name and type.  Set this variable to nil to disable the mode line
 entirely.")
 
 (custom-autoload 'projectile-mode-line "projectile" t)

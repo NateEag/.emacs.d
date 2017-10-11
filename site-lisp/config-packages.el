@@ -199,6 +199,9 @@
 (use-package ne-evil-textobjects
   :commands ne/install-textobjects)
 
+(use-package crontab-mode
+  :mode "\\.cron\\(tab\\)?\\'")
+
 (use-package evil
   :commands evil-local-mode
   :config

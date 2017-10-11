@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (22994 15468
+;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (23006 14115
 ;;;;;;  0 0))
 ;;; Generated autoloads from lsp-methods.el
 
@@ -11,7 +11,7 @@
 
 (let ((loads (get 'lsp-faces 'custom-loads))) (if (member '"lsp-methods" loads) nil (put 'lsp-faces 'custom-loads (cons '"lsp-methods" loads))))
 
-(defvar lsp-document-sync-method 'full "\
+(defvar lsp-document-sync-method nil "\
 How to sync the document with the language server.")
 
 (custom-autoload 'lsp-document-sync-method "lsp-methods" t)
@@ -72,7 +72,7 @@ Number of seconds of idle timer to wait before sending file changes to the serve
 
 ;;;***
 
-;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (22994 15468 0 0))
+;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23006 14115 0 0))
 ;;; Generated autoloads from lsp-mode.el
 
 (autoload 'lsp-mode "lsp-mode" "\
@@ -83,8 +83,8 @@ Number of seconds of idle timer to wait before sending file changes to the serve
 ;;;***
 
 ;;;### (autoloads nil nil ("lsp-common.el" "lsp-flycheck.el" "lsp-mode-pkg.el"
-;;;;;;  "lsp-notifications.el" "lsp-receive.el" "lsp-send.el") (22994
-;;;;;;  15468 0 0))
+;;;;;;  "lsp-notifications.el" "lsp-receive.el" "lsp-send.el") (23006
+;;;;;;  14115 0 0))
 
 ;;;***
 

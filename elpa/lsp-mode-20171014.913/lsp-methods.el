@@ -479,7 +479,9 @@ interface Position {
   "Convert POINT to Position."
   (save-excursion
     (goto-char point)
-    (lsp--cur-position)))
+    (save-restriction
+      (widen) ;; May be in a narrowed region
+      (lsp--cur-position))))
 
 (defun lsp--position-p (p)
   (and (numberp (plist-get p :line))
@@ -621,10 +623,7 @@ interface Range {
                                   (plist-get lsp--before-change-vals :end-pos))
                      :rangeLength ,length
                      :text "")
-          (progn
-            (message "lsp--text-document-content-change-event: mismatch (%s /= %s)"
-                     (start end length) lsp--before-change-vals)
-            (lsp--full-change-event)))
+          (lsp--change-for-mismatch start end length))
       ;; Deleting some things, adding others
       (if (lsp--bracketed-change-p start end length)
           ;; The before-change value is valid, use it
@@ -632,11 +631,14 @@ interface Range {
                                 (plist-get lsp--before-change-vals :end-pos))
                    :rangeLength ,length
                    :text ,(buffer-substring-no-properties start end))
-        (progn
-          (message "lsp--text-document-content-change-event: mismatch (%s /= %s)"
-                   (start end length) lsp--before-change-vals)
-          (lsp--full-change-event)))
-       )))
+        (lsp--change-for-mismatch start end length)))))
+
+
+(defun lsp--change-for-mismatch (start end length)
+  "If the current change is not fully bracketed, report it and
+return the full contents of the buffer as the change."
+  (lsp--full-change-event))
+
 
 ;; TODO: Add tests for this function.
 (defun lsp--bracketed-change-p (start end length)
@@ -659,7 +661,9 @@ is the size of the start range, we are probably good."
 
 
 (defun lsp--full-change-event ()
-  `(:text ,(buffer-substring-no-properties (point-min) (point-max))))
+  (save-restriction
+    (widen)
+    `(:text ,(buffer-substring-no-properties (point-min) (point-max)))))
 
 ;;;###autoload
 (defcustom lsp-change-idle-delay 0.5
@@ -890,8 +894,23 @@ to a text document."
      (17 . "File")
      (18 . "Reference")))
 
+(defun lsp--gethash (key table &optional dflt)
+  "Look up KEY in TABLE and return its associated value,
+unless KEY not found or its value is falsy, when it returns DFLT.
+DFLT defaults to nil.
+
+Needed for completion request fallback behavior for the fields
+'sortText', 'filterText', and 'insertText' as described here:
+
+https://github.com/Microsoft/language-server-protocol/blob/master/protocol.md#completion-request"
+
+  (let ((result (gethash key table dflt)))
+    (when (member result '(nil "" 0 :json-false))
+        (setq result dflt))
+    result))
+
 (defun lsp--make-completion-item (item)
-  (propertize (gethash "insertText" item (gethash "label" item))
+  (propertize (lsp--gethash "insertText" item (gethash "label" item ""))
     'lsp-completion-item
     item))
 
@@ -906,7 +925,7 @@ to a text document."
       (when kind (format "(%s)" kind)))))
 
 (defun lsp--sort-string (c)
-  (gethash "sortText" c (gethash "label" c "")))
+  (lsp--gethash "sortText" c (gethash "label" c "")))
 
 (defun lsp--sort-completions (completions)
   (sort completions #'(lambda (c1 c2)

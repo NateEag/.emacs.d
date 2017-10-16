@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "async" "async.el" (22976 1872 0 0))
+;;;### (autoloads nil "async" "async.el" (23012 44770 0 0))
 ;;; Generated autoloads from async.el
 
 (autoload 'async-start-process "async" "\
@@ -68,8 +68,8 @@ returns nil.  It can still be useful, however, as an argument to
 
 ;;;***
 
-;;;### (autoloads nil "async-bytecomp" "async-bytecomp.el" (22976
-;;;;;;  1872 0 0))
+;;;### (autoloads nil "async-bytecomp" "async-bytecomp.el" (23012
+;;;;;;  44770 0 0))
 ;;; Generated autoloads from async-bytecomp.el
 
 (autoload 'async-byte-recompile-directory "async-bytecomp" "\
@@ -97,7 +97,7 @@ Async compilation of packages can be controlled by
 
 ;;;***
 
-;;;### (autoloads nil "dired-async" "dired-async.el" (22976 1872
+;;;### (autoloads nil "dired-async" "dired-async.el" (23012 44770
 ;;;;;;  0 0))
 ;;; Generated autoloads from dired-async.el
 
@@ -116,10 +116,30 @@ Do dired actions asynchronously.
 
 \(fn &optional ARG)" t nil)
 
+(autoload 'dired-async-do-copy "dired-async" "\
+Run ‘dired-do-copy’ asynchronously.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'dired-async-do-symlink "dired-async" "\
+Run ‘dired-do-symlink’ asynchronously.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'dired-async-do-hardlink "dired-async" "\
+Run ‘dired-do-hardlink’ asynchronously.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'dired-async-do-rename "dired-async" "\
+Run ‘dired-do-rename’ asynchronously.
+
+\(fn &optional ARG)" t nil)
+
 ;;;***
 
-;;;### (autoloads nil nil ("async-pkg.el" "smtpmail-async.el") (22976
-;;;;;;  1872 0 0))
+;;;### (autoloads nil nil ("async-pkg.el" "smtpmail-async.el") (23012
+;;;;;;  44770 0 0))
 
 ;;;***
 

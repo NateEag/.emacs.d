@@ -1,4 +1,4 @@
-;;; js2-refactor.el --- The beginnings of a JavaScript refactoring library in emacs.
+;;; js2-refactor.el --- The beginnings of a JavaScript refactoring library in emacs.    -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2012-2014 Magnar Sveen
 ;; Copyright (C) 2015-2016 Magnar Sveen and Nicolas Petton
@@ -170,6 +170,8 @@ This only affects arrow functions with one parameter."
   :group 'js2-refactor
   :type 'boolean)
 
+(defcustom js2r-prefer-let-over-var nil
+  "When non-nil, js2r uses let constructs over var when performing refactorings.")
 
 ;;; Keybindings ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

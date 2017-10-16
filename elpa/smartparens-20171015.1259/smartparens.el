@@ -3116,12 +3116,6 @@ last form; otherwise do nothing."
 
 (add-hook 'pre-command-hook 'sp--save-pre-command-state)
 
-(defun sp--pre-command-hook-handler ()
-  "Main handler of pre-command-hook.
-
-Handle the `delete-selection-mode' or `cua-delete-selection'
-stuff here.")
-
 (defun sp--get-pair-list ()
   "Get all non-stringlike pairs.
 
@@ -4517,8 +4511,11 @@ and the skip-match predicate."
                                  (not (sp-point-in-string))
                                  (sp--looking-back-p "?" 1)))))
                     ;; TODO: HACK: global-skip is hack here!!!
-                    (sp--skip-match-p match (match-beginning 0) (match-end 0) :pair-skip skip-fn :global-skip nil))
-          (setq hit t))))
+                    (sp--skip-match-p match (match-beginning 0) (match-end 0)
+                                      :pair-skip (or skip-fn
+                                                     (sp-get-pair match :skip-match))
+                                      :global-skip nil))
+          (setq hit (match-data)))))
     hit))
 
 (defun sp-get-stringlike-expression (&optional back)
@@ -4726,9 +4723,13 @@ By default, this is enabled in all modes derived from
     (setq ps (if (equal pre "") ps
                (or (save-excursion (funcall search-fn pre nil t)) ps)))
     (setq ss (if (equal sre "") ss
-               (or (--when-let (save-excursion (funcall search-fn sre nil t))
+               (or (--when-let (save-excursion
+                                 (sp--find-next-stringlike-delimiter sre search-fn))
                      (setq string-delim (match-string 0))
-                     it) ss)))
+                     (save-match-data
+                       (set-match-data it)
+                       (if back (match-beginning 0) (match-end 0))))
+                   ss)))
     ;; TODO: simplify this logic somehow... (this really depends
     ;; on a rewrite of the core parser logic: separation of "find
     ;; the valid opening" and "parse it")
@@ -5053,11 +5054,12 @@ is used to retrieve the prefix instead of the global setting."
         ;; closing delimiter which is allowed for parsing in current
         ;; context
         (goto-char p)
-        (if (or (sp--do-action-p prefix 'navigate)
-                (sp--do-action-p
-                 (car (--first (equal (cdr it) prefix)
-                               sp-pair-list))
-                 'navigate))
+        (if (and (< 0 (length prefix))
+                 (or (sp--do-action-p prefix 'navigate)
+                     (sp--do-action-p
+                      (car (--first (equal (cdr it) prefix)
+                                    sp-pair-list))
+                      'navigate)))
             ""
           prefix)))))
 
@@ -5094,11 +5096,12 @@ is used to retrieve the suffix instead of the global setting."
         ;; closing delimiter which is allowed for parsing in current
         ;; context
         (goto-char p)
-        (if (or (sp--do-action-p suffix 'navigate)
-                (sp--do-action-p
-                 (car (--first (equal (cdr it) suffix)
-                               sp-pair-list))
-                 'navigate))
+        (if (and (< 0 (length suffix))
+                 (or (sp--do-action-p suffix 'navigate)
+                     (sp--do-action-p
+                      (car (--first (equal (cdr it) suffix)
+                                    sp-pair-list))
+                      'navigate)))
             ""
           suffix)))))
 
@@ -5464,7 +5467,7 @@ expressions are considered."
                   (sp-get-sexp t))
                  ((sp--valid-initial-delimiter-p (sp--looking-back (sp--get-opening-regexp (sp--get-allowed-pair-list)) nil))
                   (sp-get-sexp t))
-                 ((and (eq (char-syntax (preceding-char)) 34)
+                 ((and (eq (syntax-class (syntax-after (1- (point)))) 7)
                        (not (sp-char-is-escaped-p (1- (point)))))
                   (if (eq t (sp-point-in-string))
                       (save-excursion
@@ -5510,7 +5513,7 @@ expressions are considered."
                 (sp-get-sexp nil))
                ;; TODO: merge the following two conditions and use
                ;; `sp-get-stringlike-or-textmode-expression'
-               ((and (eq (char-syntax (following-char)) 34)
+               ((and (eq (syntax-class (syntax-after (point))) 7)
                      (not (sp-char-is-escaped-p)))
                 ;; It might happen that the string delimiter we are
                 ;; looking at is nested inside another string
@@ -9225,7 +9228,6 @@ has been created."
   (save-match-data
     (sp-delete-pair (ad-get-arg 0))))
 (add-hook 'post-command-hook 'sp--post-command-hook-handler)
-(add-hook 'pre-command-hook 'sp--pre-command-hook-handler)
 (sp--set-base-key-bindings)
 (sp--update-override-key-bindings)
 

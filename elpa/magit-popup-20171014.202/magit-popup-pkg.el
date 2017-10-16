@@ -1,4 +1,4 @@
-(define-package "magit-popup" "20171009.258" "Define prefix-infix-suffix command combos"
+(define-package "magit-popup" "20171014.202" "Define prefix-infix-suffix command combos"
   '((emacs "24.4")
     (async "20170823")
     (dash "20170810"))

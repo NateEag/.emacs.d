@@ -200,7 +200,8 @@
   :commands ne/install-textobjects)
 
 (use-package crontab-mode
-  :mode "\\.cron\\(tab\\)?\\'")
+  :mode "\\.cron\\(tab\\)?\\'"
+  :config (add-hook 'crontab-mode-hook 'conf-mode-init))
 
 (use-package evil
   :commands evil-local-mode

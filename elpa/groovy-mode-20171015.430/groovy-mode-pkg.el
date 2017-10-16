@@ -1,4 +1,4 @@
-(define-package "groovy-mode" "20171009.1042" "Major mode for Groovy source files"
+(define-package "groovy-mode" "20171015.430" "Major mode for Groovy source files"
   '((s "1.12.0"))
   :keywords
   '("languages"))

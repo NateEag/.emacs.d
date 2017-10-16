@@ -1,9 +1,9 @@
 ;;; names-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "names" "names.el" (22132 53940 0 0))
+;;;### (autoloads nil "names" "names.el" (23012 44757 0 0))
 ;;; Generated autoloads from names.el
 
 (defvar names--inside-make-autoload nil "\
@@ -68,7 +68,7 @@ and a description of their effects, see the variable
 
 \(fn NAME [KEYWORD ...] BODY)" nil t)
 
-(put 'define-namespace 'lisp-indent-function '(lambda (&rest x) 0))
+(function-put 'define-namespace 'lisp-indent-function '(lambda (&rest x) 0))
 
 (eval-after-load 'find-func '(defadvice find-function-search-for-symbol (around names-around-find-function-search-for-symbol-advice (symbol type library) activate) "Make sure `find-function-search-for-symbol' understands namespaces." ad-do-it (ignore-errors (unless (cdr ad-return-value) (with-current-buffer (car ad-return-value) (search-forward-regexp "^(define-namespace\\_>") (skip-chars-forward "\n[:blank:]") (let* ((names--regexp (concat "\\`" (regexp-quote (symbol-name (read (current-buffer)))))) (short-symbol (let ((name (symbol-name symbol))) (when (string-match names--regexp name) (intern (replace-match "" nil nil name)))))) (when short-symbol (ad-set-arg 0 short-symbol) ad-do-it)))))))
 
@@ -79,8 +79,8 @@ Use the `names--inside-make-autoload' variable to indicate to
 
 ;;;***
 
-;;;### (autoloads nil nil ("names-dev.el" "names-pkg.el") (22132
-;;;;;;  53940 937702 0))
+;;;### (autoloads nil nil ("names-dev.el" "names-pkg.el") (23012
+;;;;;;  44757 0 0))
 
 ;;;***
 

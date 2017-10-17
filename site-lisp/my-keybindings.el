@@ -77,6 +77,7 @@
     ;; files live or whether I've opened it unless necessary.
     ("p f" . helm-projectile-find-file)
     ("p s" . helm-projectile-ag)
+    ("p b" . helm-projectile-switch-to-buffer)
 
     ;; Look up URLs quickly.
     ("u" . browse-url)

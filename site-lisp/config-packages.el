@@ -310,9 +310,6 @@
                                      (setq-local ne-yas-auto-insert-snippet-name
                                            "shell-script"))))
 
-(use-package conf-mode
-  :mode "\\.slate\\'")
-
 (use-package tern
   :diminish tern-mode
   :config (add-hook 'tern-mode-hook '(lambda ()
@@ -603,5 +600,10 @@
                     base-menu)))
         (cadr (assoc (popup-menu* menu :scroll-bar t) base-menu))))
     (fset 'flyspell-emacs-popup 'flyspell-emacs-popup-textual)))
+
+(use-package conf-mode
+  ;; As a rule of thumb, if it's in dotfiles/src and it doesn't match a
+  ;; more-specific regex, it should probably open in conf-mode.
+  :mode "dotfiles/src/.+")
 
 ;;; config-packages.el ends here

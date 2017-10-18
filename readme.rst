@@ -95,8 +95,15 @@ bug that loses part of undo history, but have not been able to reproduce it
 consistently - it may relate to `undo in region
 <https://lists.gnu.org/archive/html/bug-gnu-emacs/2014-01/msg01106.html>`__. I
 just upgraded to Emacs 25.2.1, which the author says `should mean this stops
-happening <https://debbugs.gnu.org/cgi/bugreport.cgi?bug=16377#52>`__. If it
-happens to me post-upgrade, I'll note that here.
+happening <https://debbugs.gnu.org/cgi/bugreport.cgi?bug=16377#52>`__. Alas, I
+have seen it happen since then, as have some people in this thread:
+https://github.com/syl20bnr/spacemacs/issues/298 . Some on the net have
+proposed that setting `undo-tree-enable-undo-in-region` to `nil` might solve
+the issue, which at least one person in that thread says did not work. Others
+have suggested it seems to relate to persistent undo history or perhaps to
+working in version control repos, and certainly it seems to be more common for
+evil-mode users than others. I'm turning off undo in region and undo history
+persistence to see if that makes the issue stop.
 
 I use `helm <http://emacs-helm.github.io/helm/>`__ to find files and commands
 quickly and easily. `helm-swoop
@@ -123,10 +130,10 @@ and it's not bad, but there are some kinks to work out.
 My PHP setup has undergone bitrot over the past few years, but I'm starting to
 pay attention to it again. Felix Becker's excellent
 [php-language-server](https://github.com/felixfbecker/php-language-server)
-should mean really solid PHP intelligence in Emacs, but my first experiments
-aren't resulting in a working auto-complete with
-[lsp-mode](https://github.com/emacs-lsp/lsp-mode). Still, jump-to-definition
-works pretty solidly, and that's a huge step up from my past config.
+should mean really solid PHP intelligence in Emacs is possible. After some
+tinkering and a PR to [lsp-mode](https://github.com/emacs-lsp/lsp-mode) I do
+have jump-to-definition and completion-at-point working, and that's a huge step
+up from my past configs.
 
 For editing web templates, I use the awesome `web-mode
 <http://web-mode.org/>`__ with several extensions, including `emmet-mode

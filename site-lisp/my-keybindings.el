@@ -78,6 +78,7 @@
     ("p f" . helm-projectile-find-file)
     ("p s" . helm-projectile-ag)
     ("p b" . helm-projectile-switch-to-buffer)
+    ("p p" . helm-projectile-switch-project)
 
     ;; Look up URLs quickly.
     ("u" . browse-url)

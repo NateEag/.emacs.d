@@ -41,6 +41,15 @@
 (use-package notmuch
   :config
   (progn
+    ;; TODO Stop marking deleted and spam messages as read.
+    ;;
+    ;; I'm marking them as read just to keep the gmail inbox semi-usable, and
+    ;; to make sure the next time I change my sync program and therefore have
+    ;; to re-index from scratch, it's not as *much* of a disaster, in that I'll
+    ;; at least have a clear record of what I've processed and what I haven't.
+    ;;
+    ;; ...granted, the right answer here is to figure out how to sync notmuch
+    ;; tags to IMAP folders. Someday.
     (define-key notmuch-search-mode-map "d"
       (lambda (&optional beg end)
         "mark message as deleted"
@@ -51,7 +60,7 @@
       (lambda (&optional beg end)
         "mark message as spam"
         (interactive (notmuch-search-interactive-region))
-        (notmuch-search-tag (list "+spam" "-inbox") beg end)))
+        (notmuch-search-tag (list "+spam" "-inbox" "-unread") beg end)))
 
     ;; Be evil-ish, because I want that.
     (define-key notmuch-show-mode-map "j" 'next-line)

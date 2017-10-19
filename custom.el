@@ -81,6 +81,7 @@
  '(mo-git-blame-git-blame-args "-M -C -w" nil nil "Follow movement in a file, look for movement between files in the same commit, and ignore whitespace changes.")
  '(multi-term-dedicated-window-height 24)
  '(notmuch-address-command (quote internal))
+ '(notmuch-archive-tags (quote ("-inbox" "-unread")))
  '(notmuch-saved-searches
    (quote
     ((:name "Learn Tech" :query "tag:learn-tech")

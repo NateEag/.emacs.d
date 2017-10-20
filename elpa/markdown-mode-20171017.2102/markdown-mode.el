@@ -7,7 +7,7 @@
 ;; Maintainer: Jason R. Blevins <jblevins@xbeta.org>
 ;; Created: May 24, 2007
 ;; Version: 2.4-dev
-;; Package-Version: 20171015.1901
+;; Package-Version: 20171017.2102
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: https://jblevins.org/projects/markdown-mode/
@@ -634,6 +634,12 @@
 ;;     used when `markdown-header-scaling' is non-nil
 ;;     (default: `(2.0 1.7 1.4 1.1 1.0 1.0)`).
 ;;
+;;   * `markdown-marginalize-headers' - put opening atx header markup
+;;     in the left margin when non-nil (default: `nil').
+;;
+;;   * `markdown-marginalize-headers-margin-width' - width of margin
+;;     used for marginalized headers (default: 6).
+;;
 ;;   * `markdown-list-indent-width' - depth of indentation for lists
 ;;     when inserting, promoting, and demoting list items (default: 4).
 ;;
@@ -1087,6 +1093,28 @@ promotion and demotion functions."
   "Use underscores when inserting italic text instead of asterisks."
   :group 'markdown
   :type 'boolean)
+
+(defcustom markdown-marginalize-headers nil
+  "When non-nil, put opening atx header markup in a left margin.
+
+This setting goes well with `markdown-asymmetric-header'.  But
+sadly it conflicts with `linum-mode' since they both use the
+same margin."
+  :group 'markdown
+  :type 'boolean
+  :safe 'booleanp
+  :package-version '(markdown-mode . "2.4"))
+
+(defcustom markdown-marginalize-headers-margin-width 6
+  "Character width of margin used for marginalized headers.
+The default value is based on there being six heading levels
+defined by Markdown and HTML.  Increasing this produces extra
+whitespace on the left.  Decreasing it may be preferred when
+fewer than six nested heading levels are used."
+  :group 'markdown
+  :type 'natnump
+  :safe 'natnump
+  :package-version '(markdown-mode . "2.4"))
 
 (defcustom markdown-asymmetric-header nil
   "Determines if atx header style will be asymmetric.
@@ -2508,13 +2536,12 @@ See `markdown-hide-markup' for additional details."
   :group 'markdown-faces)
 
 (defface markdown-code-face
-  (let* ((default-bg (or (face-background 'default) "unspecified-bg"))
-         (light-bg (if (equal default-bg "unspecified-bg")
-                       "unspecified-bg"
-                     (color-darken-name default-bg 3)))
-         (dark-bg (if (equal default-bg "unspecified-bg")
-                       "unspecified-bg"
-                     (color-lighten-name default-bg 3))))
+  (let ((default-bg (face-background 'default))
+        light-bg dark-bg)
+    (if (member default-bg '(nil unspecified "unspecified-bg" "SystemWindow"))
+        (setq light-bg "unspecified-bg" dark-bg "unspecified-bg")
+      (setq light-bg (color-darken-name default-bg 3)
+            dark-bg (color-lighten-name default-bg 3)))
     `((default :inherit fixed-pitch)
       (((type graphic) (class color) (background dark)) (:background ,dark-bg))
       (((type graphic) (class color) (background light)) (:background ,light-bg))))
@@ -3989,6 +4016,26 @@ Group 7: closing filename delimiter"
 
 ;;; Markdown Font Fontification Functions =====================================
 
+(defun markdown--marginalize-string (level)
+  "Generate atx markup string of given LEVEL for left margin."
+  (let ((margin-left-space-count
+         (- markdown-marginalize-headers-margin-width level)))
+    (concat (make-string margin-left-space-count ? )
+                           (make-string level ?#))))
+
+(defun markdown-marginalize-update-current ()
+  "Update the window configuration to create a left margin."
+  ;; Emacs 25 or later is needed for window-font-width and default-font-width.
+  (if (and (fboundp 'window-font-width) (fboundp 'default-font-width))
+      (let* ((header-delimiter-font-width
+              (window-font-width nil 'markdown-header-delimiter-face))
+             (margin-pixel-width (* markdown-marginalize-headers-margin-width
+                                    header-delimiter-font-width))
+             (margin-char-width (/ margin-pixel-width (default-font-width))))
+        (set-window-margins nil margin-char-width))
+    ;; As a fallback, simply set margin based on character count.
+    (set-window-margins nil markdown-marginalize-headers-margin-width)))
+
 (defun markdown-fontify-headings (last)
   "Add text properties to headings from point to LAST."
   (when (markdown-match-propertized-text 'markdown-heading last)
@@ -3996,8 +4043,17 @@ Group 7: closing filename delimiter"
            (heading-face
             (intern (format "markdown-header-face-%d" level)))
            (heading-props `(face ,heading-face))
-           (markup-props `(face markdown-header-delimiter-face
-                                ,@(when markdown-hide-markup `(display ""))))
+           (left-markup-props
+            `(face markdown-header-delimiter-face
+                   ,@(cond
+                      (markdown-hide-markup
+                       `(display ""))
+                      (markdown-marginalize-headers
+                       `(display ((margin left-margin)
+                                  ,(markdown--marginalize-string level)))))))
+           (right-markup-props
+            `(face markdown-header-delimiter-face
+                   ,@(when markdown-hide-markup `(display ""))))
            (rule-props `(face markdown-header-rule-face
                               ,@(when markdown-hide-markup `(display "")))))
       (if (match-end 1)
@@ -4011,12 +4067,12 @@ Group 7: closing filename delimiter"
                     (match-beginning 3) (match-end 3) rule-props)))
         ;; atx heading
         (add-text-properties
-         (match-beginning 4) (match-end 4) markup-props)
+         (match-beginning 4) (match-end 4) left-markup-props)
         (add-text-properties
          (match-beginning 5) (match-end 5) heading-props)
         (when (match-end 6)
           (add-text-properties
-           (match-beginning 6) (match-end 6) markup-props))))
+           (match-beginning 6) (match-end 6) right-markup-props))))
     t))
 
 (defun markdown-fontify-blockquotes (last)
@@ -7838,7 +7894,8 @@ update this buffer's contents."
   (if (stringp markdown-open-command)
       (if (not buffer-file-name)
           (user-error "Must be visiting a file")
-        (call-process markdown-open-command nil nil nil buffer-file-name))
+        (save-buffer)
+        (call-process markdown-open-command nil 0 nil buffer-file-name))
     (funcall markdown-open-command))
   nil)
 
@@ -9049,6 +9106,11 @@ position."
   (add-hook 'edit-indirect-after-commit-functions
             #'markdown--edit-indirect-after-commit-function
             nil 'local)
+
+  ;; Marginalized headings
+  (when markdown-marginalize-headers
+    (add-hook 'window-configuration-change-hook
+              #'markdown-marginalize-update-current nil t))
 
   ;; add live preview export hook
   (add-hook 'after-save-hook #'markdown-live-preview-if-markdown t t)

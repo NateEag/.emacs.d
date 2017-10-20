@@ -4,7 +4,7 @@
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
 ;;;### (autoloads nil "js-auto-format-mode" "js-auto-format-mode.el"
-;;;;;;  (23012 43515 0 0))
+;;;;;;  (23018 873 0 0))
 ;;; Generated autoloads from js-auto-format-mode.el
 
 (autoload 'js-auto-format-execute "js-auto-format-mode" "\

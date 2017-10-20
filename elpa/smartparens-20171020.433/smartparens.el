@@ -50,6 +50,7 @@
 ;;; Code:
 
 (eval-when-compile (require 'cl)) ; for `lexical-let'
+(eval-when-compile (require 'subr-x)) ; for `string-trim'
 (require 'cl-lib)
 (require 'dash)
 (require 'thingatpt)
@@ -164,6 +165,25 @@ better orientation."
         (help-make-xrefs)
         (goto-char (point-min))))
     (pop-to-buffer "*Smartparens cheat sheet*")))
+
+(defun sp-describe-system ()
+  "Describe user's system.
+
+The output of this function can be used in bug reports."
+  (interactive)
+  (kill-new
+   (format "- `smartparens` version: %s
+- Active major-mode: %s
+- Emacs version (`M-x emacs-version`): %s
+- Spacemacs/Evil/Other starterkit (specify which)/Vanilla: %s
+- OS: %s"
+           (--if-let (cadr (assoc 'smartparens package-alist))
+               (package-version-join (package-desc-version it))
+             "<Please specify manually>")
+           (symbol-name major-mode)
+           (replace-regexp-in-string "\n" "" (emacs-version))
+           "<Please specify manually>"
+           (symbol-name system-type))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -1071,23 +1091,6 @@ position (before or after the region).
   :type '(repeat symbol)
   :group 'smartparens)
 
-(defcustom sp-navigate-consider-stringlike-sexp '(
-                                                  latex-mode
-                                                  )
-  "List of modes where string-like sexps are considered to be sexps.
-
-A string-like sexp is an expression where opening and closing
-delimeter is the same sequence of characters.  For example: *...*,
-$...$.
-
-Warning: these are problematic in modes where the symbol might
-have multiple functions, such as * in markdown, where it denotes
-start of list item (unary) OR emphatic text (binary)."
-  :type '(repeat symbol)
-  :group 'smartparens)
-(make-obsolete-variable 'sp-navigate-consider-stringlike-sexp
-                        "It no longer has any effect, strings are now enabled globally."
-                        "1.8")
 
 (defcustom sp-navigate-use-textmode-stringlike-parser '((derived . text-mode))
   "List of modes where textmode stringlike parser is used.

@@ -429,6 +429,34 @@ This variable can take one of the following symbol values:
     map)
   "Keymap for `php-mode'")
 
+(c-lang-defconst c-get-state-before-change-functions
+  ;; const might be a symbol in older versions
+  php (let ((const (c-lang-const c-get-state-before-change-functions)))
+        (cl-set-difference (if (listp const) const (list const))
+                           '(c-parse-quotes-before-change))))
+
+(defun php-unescape-identifiers (beg end &optional old-len)
+  "Change syntax of backslashes in identifiers between BEG and END, ignore OLD-LEN."
+  (c-save-buffer-state (num-beg num-end)
+    (save-restriction
+      (goto-char c-new-BEG)
+      (while (and (< (point) c-new-END)
+		  (search-forward "\\" c-new-END 'limit))
+        (if (and (not (php-in-string-p))
+                 (looking-at-p c-identifier-key))
+            ;; within function `c-forward-name' when looking at
+            ;; `c-identifier-key' ensure that `c-simple-skip-symbol-backward'
+            ;; skips over backslashes too in making it at word entry.
+	    (c-put-char-property (1- (point)) 'syntax-table '(2)))))))
+
+(c-lang-defconst c-before-font-lock-functions
+  ;; const might be a symbol in older versions
+  php (let ((const (c-lang-const c-before-font-lock-functions)))
+        (append (cl-set-difference (if (listp const) const (list const))
+                                   '(c-restore-<>-properties
+                                     c-parse-quotes-after-change))
+                '(php-unescape-identifiers))))
+
 (c-lang-defconst c-mode-menu
   php (append '(["Complete function name" php-complete-function t]
                 ["Browse manual" php-browse-manual t]
@@ -929,9 +957,8 @@ the string HEREDOC-START."
 
 (defun php-syntax-propertize-function (start end)
   "Apply propertize rules from START to END."
-  ;; (defconst php-syntax-propertize-function
-  ;;   (syntax-propertize-rules
-  ;;    (php-heredoc-start-re (0 (ignore (php-heredoc-syntax))))))
+  ;; versions < git-snapshot as of 2017-10 need this here
+  (php-unescape-identifiers start end)
   (goto-char start)
   (while (and (< (point) end)
               (re-search-forward php-heredoc-start-re end t))
@@ -1123,15 +1150,9 @@ After setting the stylevars run hooks according to STYLENAME
   (set (make-local-variable font-lock-constant-face) 'php-constant)
 
   (modify-syntax-entry ?_    "_" php-mode-syntax-table)
-  (modify-syntax-entry ?`    "\"" php-mode-syntax-table)
-  (modify-syntax-entry ?\"   "\"" php-mode-syntax-table)
   (modify-syntax-entry ?#    "< b" php-mode-syntax-table)
   (modify-syntax-entry ?\n   "> b" php-mode-syntax-table)
   (modify-syntax-entry ?$    "'" php-mode-syntax-table)
-
-  (set (make-local-variable 'syntax-propertize-via-font-lock)
-       '(("\\(\"\\)\\(\\\\.\\|[^\"\n\\]\\)*\\(\"\\)" (1 "\"") (3 "\""))
-         ("\\(\'\\)\\(\\\\.\\|[^\'\n\\]\\)*\\(\'\\)" (1 "\"") (3 "\""))))
 
   (add-to-list (make-local-variable 'syntax-propertize-extend-region-functions)
                #'php-syntax-propertize-extend-region)
@@ -1581,17 +1602,26 @@ a completion list."
 ;;; Provide support for Flymake so that users can see warnings and
 ;;; errors in real-time as they write code.
 
-(defun flymake-php-init ()
-  (let* ((temp-file (flymake-init-create-temp-buffer-copy
-                     'flymake-create-temp-inplace))
+(defun php-flymake-php-init ()
+  "PHP specific init-cleanup routines.
+
+This is an alternative function of `flymake-php-init'.
+Look at the `php-executable' variable instead of the constant \"php\" command."
+  (let* ((temp-file
+          (funcall
+           (eval-when-compile
+             (if (fboundp 'flymake-proc-init-create-temp-buffer-copy)
+                 'flymake-proc-init-create-temp-buffer-copy
+               'flymake-init-create-temp-buffer-copy))
+           'flymake-create-temp-inplace))
          (local-file (file-relative-name
                       temp-file
                       (file-name-directory buffer-file-name))))
     (list php-executable (list "-f" local-file "-l"))))
 
 (add-to-list 'flymake-allowed-file-name-masks
-             '("\\.php[345s]?$"
-               flymake-php-init
+             '("\\.php[345s]?\\'"
+               php-flymake-php-init
                flymake-simple-cleanup
                flymake-get-real-file-name))
 
@@ -1649,19 +1679,6 @@ The output will appear in the buffer *PHP*."
 
 (ad-activate 'fixup-whitespace)
 
-;; Advice `font-lock-fontify-keywords-region' to support namespace
-;; separators in class names. Use word syntax for backslashes when
-;; doing keyword fontification, but not when doing syntactic
-;; fontification because that breaks \ as escape character in strings.
-;;
-;; Special care is taken to restore the original syntax, because we
-;; want \ not to be word for functions like forward-word.
-(defadvice font-lock-fontify-keywords-region (around backslash-as-word activate)
-  "Fontify keywords with backslash as word character."
-  (let ((old-syntax (string (char-syntax ?\\))))
-    (modify-syntax-entry ?\\ "w")
-    ad-do-it
-    (modify-syntax-entry ?\\ old-syntax)))
 
 
 (defcustom php-class-suffix-when-insert "::"

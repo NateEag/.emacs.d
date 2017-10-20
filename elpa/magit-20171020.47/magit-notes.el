@@ -34,7 +34,7 @@
 ;;;###autoload (autoload 'magit-notes-popup "magit" nil t)
 (magit-define-popup magit-notes-popup
   "Popup console for notes commands."
-  :man-page "git-tag"
+  :man-page "git-notes"
   :switches '("Switch for prune"
               (?n "Dry run"          "--dry-run"))
   :options  '("Option for edit and remove"
@@ -170,7 +170,7 @@ the current repository."
   (magit-refresh))
 
 (defun magit-notes-read-args (prompt)
- (list (magit-read-branch-or-commit prompt)
+ (list (magit-read-branch-or-commit prompt (magit-stash-at-point))
        (--when-let (--first (string-match "^--ref=\\(.+\\)" it)
                             (magit-notes-arguments))
          (match-string 1 it))))

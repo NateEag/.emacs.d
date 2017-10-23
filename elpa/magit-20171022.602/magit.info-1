@@ -30,7 +30,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-     This manual is for Magit version 2.11.0 (2.11.0-124-g15cecfc6+1).
+     This manual is for Magit version 2.11.0 (2.11.0-137-gc20d047f+1).
 
      Copyright (C) 2015-2017 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -210,7 +210,10 @@ Transferring
 * Creating and Sending Patches::
 * Applying Patches::
 
+Remotes
 
+* The Remote Popup::
+* The Remote Config Popup::
 
 Miscellaneous
 
@@ -4307,6 +4310,14 @@ features are available from separate popups.
      ‘magit-branch-config-popup’ has to be used instead to view and
      change branch related variables.
 
+‘b C’     (‘magit-branch-config-popup’)
+
+     This command shows branch related variables in a separate popup.
+     By default this asks the user for which branch the variables should
+     be shown.  When ‘magit-branch-popup-show-variables’ is ‘nil’, then
+     it shows the variables for the current branch, unless a prefix
+     argument is used.
+
 ‘b b’     (‘magit-checkout’)
 
      Checkout a revision read in the minibuffer and defaulting to the
@@ -4516,7 +4527,7 @@ File: magit.info,  Node: The Branch Config Popup,  Prev: The Branch Popup,  Up: 
 6.5.3 The Branch Config Popup
 -----------------------------
 
- -- Command: magit-branch-popup
+ -- Command: magit-branch-config-popup
 
      This prefix command shows the following branch-related Git
      variables in a popup buffer.  The values can be changed from that
@@ -5414,7 +5425,14 @@ Also see *note (gitman)git-stash::.
 
 ‘z b’     (‘magit-stash-branch’)
 
-     Create and checkout a new BRANCH from STASH.
+     Create and checkout a new BRANCH from STASH. The branch starts at
+     the commit that was current when the stash was created.
+
+‘z B’     (‘magit-stash-branch-here’)
+
+     Create and checkout a new BRANCH using ‘magit-branch’ with the
+     current branch or ‘HEAD’ as the starting-point.  Then apply STASH,
+     dropping it if it applies cleanly.
 
 ‘z f’     (‘magit-stash-format-patch’)
 
@@ -5475,12 +5493,45 @@ File: magit.info,  Node: Remotes,  Next: Fetching,  Up: Transferring
 7.1 Remotes
 ===========
 
-Also see *note (gitman)git-remote::.
+* Menu:
+
+* The Remote Popup::
+* The Remote Config Popup::
+
+
+File: magit.info,  Node: The Remote Popup,  Next: The Remote Config Popup,  Up: Remotes
+
+7.1.1 The Remote Popup
+----------------------
+
+The popup ‘magit-remote-popup’ is used to add remotes and to make
+changes to existing remotes.  This popup only deals with remotes
+themselves, not with branches or the transfer of commits.  Those
+features are available from separate popups.
+
+   Also see *note (gitman)git-remote::.
 
 ‘M’     (‘magit-remote-popup’)
 
      This prefix command shows the following suffix commands along with
      the appropriate infix arguments in a popup buffer.
+
+ -- User Option: magit-remote-popup-show-variables
+
+     This option controls whether the ‘magit-remote-popup’ shows remote
+     related Git variables.  When set to nil, no variables are displayed
+     directly in this popup, and the sub-popup
+     ‘magit-remote-config-popup’ has to be used instead to view and
+     change remote related variables.
+
+‘M C’     (‘magit-remote-config-popup’)
+
+     This command shows remote related variables in a separate popup.
+     By default this asks the user for which remote the variables should
+     be shown.  When ‘magit-remote-popup-show-variables’ is ‘nil’, then
+     it shows the variables for the upstream of the current branch or
+     "origin" it that branch has no remote upstream.  To select another
+     remote use a prefix argument.
 
 ‘M a’     (‘magit-remote-add’)
 
@@ -5511,6 +5562,55 @@ Also see *note (gitman)git-remote::.
      If the value is a string, then set without asking, provided that
      the name of the added remote is equal to that string and the
      variable isn’t already set.
+
+
+File: magit.info,  Node: The Remote Config Popup,  Prev: The Remote Popup,  Up: Remotes
+
+7.1.2 The Remote Config Popup
+-----------------------------
+
+ -- Command: magit-remote-config-popup
+
+     This prefix command shows the following remote-related Git
+     variables in a popup buffer.  The values can be changed from that
+     buffer.
+
+     This popup is a sub-popup of the ‘magit-remote-popup’ in which "C"
+     is bound to this popup.
+
+   The following variables are used to configure a specific remote.  The
+values are being displayed for the upstream remote of the current
+branch.  To change the value for another remote invoke
+‘magit-remote-config-popup’ with a prefix argument.
+
+ -- Variable: remote.NAME.url
+
+     This variable specifies the url of the remote named NAME. It can
+     have multiple values.
+
+ -- Variable: remote.NAME.fetch
+
+     The refspec used when fetching from the remote named NAME. It can
+     have multiple values.
+
+ -- Variable: remote.NAME.pushurl
+
+     This variable specifies the url used for fetching from the remote
+     named NAME. If it is not specified, then ‘remote.NAME.url’ is used
+     instead.  It can have multiple values.
+
+ -- Variable: remote.NAME.push
+
+     The refspec used when pushing to the remote named NAME. It can have
+     multiple values.
+
+ -- Variable: remote.NAME.tagOpts
+
+     This variable specifies what tags are fetched by default.  If the
+     value is ‘--no-tags’ then no tags are fetched.  If the value is
+     ‘--tags’, then all tags are fetched.  If this variable has not
+     value, then only tags are fetched that are reachable from fetched
+     branches.
 
 
 File: magit.info,  Node: Fetching,  Next: Pulling,  Prev: Remotes,  Up: Transferring
@@ -5734,13 +5834,16 @@ File: magit.info,  Node: Creating and Sending Patches,  Next: Applying Patches, 
 
      Request that upstream pulls from your public repository.
 
+   It is also possible to save a plain patch file by using ‘C-x C-w’
+inside a ‘magit-diff-mode’ or ‘magit-revision-mode’ buffer.
+
 
 File: magit.info,  Node: Applying Patches,  Prev: Creating and Sending Patches,  Up: Transferring
 
 7.6 Applying Patches
 ====================
 
-Also see *note (gitman)git-am::.
+Also see *note (gitman)git-am::.  and *note (gitman)git-apply::.
 
 ‘w’     (‘magit-am-popup’)
 
@@ -5757,6 +5860,9 @@ Also see *note (gitman)git-am::.
 
      Apply the patches from a maildir.
 
+   When an "am" operation is in progress, then the popup buffer features
+these commands instead.
+
 ‘w w’     (‘magit-am-continue’)
 
      Resume the current patch applying sequence.
@@ -5769,6 +5875,19 @@ Also see *note (gitman)git-am::.
 
      Abort the current patch applying sequence.  This discards all
      changes made since the sequence started.
+
+   In addition to the commands listed at the top, the "am" popup also
+has a binding for the related "patch" popup.
+
+‘w a’     (‘magit-patch-apply-popup’)
+
+     This prefix command shows the following suffix commands along with
+     the appropriate infix arguments in a popup buffer.
+
+‘w a a’     (‘magit-patch-apply’)
+
+     This command applies a simple patch file, which may not contain any
+     Git metadata in addition to the actual diff.
 
 
 File: magit.info,  Node: Miscellaneous,  Next: Customizing,  Prev: Transferring,  Up: Top
@@ -7711,86 +7830,4 @@ you are using on the shell.
 
    If SOMETHING is "passphrase caching with gpg-agent for commit and/or
 tag signing", then you’ll also need to synchronize ‘$GPG_AGENT_INFO’.
-
-
-File: magit.info,  Node: Diffs contain control sequences,  Next: Expanding a file to show the diff causes it to disappear,  Prev: I am using OS X and SOMETHING works in shell but not in Magit,  Up: FAQ - Issues and Errors
-
-A.2.6 Diffs contain control sequences
--------------------------------------
-
-This happens when you configure Git to always color diffs and/or all of
-its output.  The valid values for relevant Git variables ‘color.ui’ and
-‘color.diff’ are ‘false’, ‘true’ and ‘always’, and the default is
-‘true’.  You should leave it that because then you get colorful output
-in terminals but git’s output is consumed by something else, then no
-colors are used.
-
-   If you actually use some other tool which expects that requires that
-you force git to output control sequences (which is highly unlikely),
-then you can override these settings just for Magit by using:
-
-     (setq magit-git-global-arguments
-           (nconc magit-git-global-arguments
-                  '("-c" "color.ui=false"
-                    "-c" "color.diff=false")))
-
-
-File: magit.info,  Node: Expanding a file to show the diff causes it to disappear,  Next: Point is wrong in the ‘COMMIT_EDITMSG’ buffer,  Prev: Diffs contain control sequences,  Up: FAQ - Issues and Errors
-
-A.2.7 Expanding a file to show the diff causes it to disappear
---------------------------------------------------------------
-
-This is probably caused by a change of a ‘diff.*’ Git variable.  You
-probably set that variable for a reason, and should therefore only undo
-that setting in Magit by customizing ‘magit-git-global-arguments’.
-
-
-File: magit.info,  Node: Point is wrong in the ‘COMMIT_EDITMSG’ buffer,  Next: The mode-line information isn't always up-to-date,  Prev: Expanding a file to show the diff causes it to disappear,  Up: FAQ - Issues and Errors
-
-A.2.8 Point is wrong in the ‘COMMIT_EDITMSG’ buffer
----------------------------------------------------
-
-Neither Magit nor ‘git-commit‘ fiddle with point in the buffer used to
-write commit messages, so something else must be doing it.
-
-   You have probably globally enabled a mode which does restore point in
-file-visiting buffers.  It might be a bit surprising, but when you write
-a commit message, then you are actually editing a file.
-
-   So you have to figure out which package is doing.  ‘saveplace’,
-‘pointback’, and ‘session’ are likely candidates.  These snippets might
-help:
-
-     (setq session-name-disable-regexp "\\(?:\\`'\\.git/[A-Z_]+\\'\\)")
-
-     (with-eval-after-load 'pointback
-       (lambda ()
-         (when (or git-commit-mode git-rebase-mode)
-           (pointback-mode -1))))
-
-
-File: magit.info,  Node: The mode-line information isn't always up-to-date,  Next: Emacs 245 hangs when loading Magit,  Prev: Point is wrong in the ‘COMMIT_EDITMSG’ buffer,  Up: FAQ - Issues and Errors
-
-A.2.9 The mode-line information isn’t always up-to-date
--------------------------------------------------------
-
-Magit is not responsible for the version control information that is
-being displayed in the mode-line and looks something like ‘Git-master’.
-The built-in "Version Control" package, also known as "VC", updates that
-information, and can be told to do so more often:
-
-     (setq auto-revert-check-vc-info t)
-
-   But doing so isn’t good for performance.  For more (overly
-optimistic) information see *note (emacs)VC Mode Line::.
-
-   If you don’t really care about seeing that information in the
-mode-line, but just don’t want to see _incorrect_ information, then
-consider disabling VC when using Git:
-
-     (setq vc-handled-backends (delq 'Git vc-handled-backends))
-
-   Or to disable it completely:
-
-     (setq vc-handled-backends nil)
 

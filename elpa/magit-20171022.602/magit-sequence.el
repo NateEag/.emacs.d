@@ -73,6 +73,11 @@
   "Face used in sequence sections."
   :group 'magit-faces)
 
+(defface magit-sequence-exec
+  '((t :inherit magit-hash))
+  "Face used in sequence sections."
+  :group 'magit-faces)
+
 ;;; Common
 
 ;;;###autoload
@@ -228,10 +233,12 @@ without prompting."
               (?D "Use committer date as author date" "--ignore-date"))
   :options  '((?p "Remove leading slashes from paths" "-p"
                   magit-popup-read-number))
-  :actions  '((?w "Apply patches" magit-am-apply-patches)
-              (?m "Apply maildir" magit-am-apply-maildir))
+  :actions  '((?m "Apply maildir"     magit-am-apply-maildir)
+              (?w "Apply patches"     magit-am-apply-patches)
+              (?a "Apply plain patch" magit-patch-apply-popup))
   :default-arguments '("--3way")
   :default-actions 'magit-am-apply-patches
+  :max-action-columns 1
   :sequence-actions '((?w "Continue" magit-am-continue)
                       (?s "Skip"     magit-am-skip)
                       (?a "Abort"    magit-am-abort))
@@ -586,16 +593,21 @@ If no such sequence is in progress, do nothing."
         (insert ?\n)))))
 
 (defun magit-rebase-insert-merge-sequence (onto)
-  (dolist (line (nreverse
-                 (magit-file-lines
-                  (magit-git-dir "rebase-merge/git-rebase-todo"))))
-    (when (string-match (format "^\\([^%c ]+\\) \\([^ ]+\\) .*$"
-                                (string-to-char
-                                 (or (magit-get "core.commentChar") "#")))
-                        line)
-      (magit-bind-match-strings (action hash) line
-        (unless (equal action "exec")
-          (magit-sequence-insert-commit action hash 'magit-sequence-pick)))))
+  (let (exec)
+    (dolist (line (nreverse
+                   (magit-file-lines
+                    (magit-git-dir "rebase-merge/git-rebase-todo"))))
+      (cond ((string-prefix-p "exec" line)
+             (setq exec (substring line 5)))
+            ((string-match (format "^\\([^%c ]+\\) \\([^ ]+\\) .*$"
+                                   (string-to-char
+                                    (or (magit-get "core.commentChar") "#")))
+                           line)
+             (magit-bind-match-strings (action hash) line
+               (unless (equal action "exec")
+                 (magit-sequence-insert-commit
+                  action hash 'magit-sequence-pick exec)))
+             (setq exec nil)))))
   (magit-sequence-insert-sequence
    (magit-file-line (magit-git-dir "rebase-merge/stopped-sha"))
    onto
@@ -681,10 +693,13 @@ If no such sequence is in progress, do nothing."
                                     'magit-sequence-head
                                   'magit-sequence-onto))))
 
-(defun magit-sequence-insert-commit (type hash face)
+(defun magit-sequence-insert-commit (type hash face &optional exec)
   (magit-insert-section (commit hash)
-    (insert (propertize type 'face face)    ?\s
-            (magit-format-rev-summary hash) ?\n)))
+    (magit-insert-heading
+      (concat (propertize type 'face face)    "\s"
+              (magit-format-rev-summary hash) "\n"))
+    (when exec
+      (insert (propertize "exec" 'face 'magit-sequence-onto) "\s" exec "\n"))))
 
 (provide 'magit-sequence)
 ;;; magit-sequence.el ends here

@@ -397,9 +397,18 @@ Maximum length of opening or closing pair is
   ;; The last point checked by sp--syntax-ppss and its result, used for
   ;; memoization
   last-syntax-ppss-point
-  last-syntax-ppss-result)
+  last-syntax-ppss-result
+  ;; Value of `sp-pair-list' for this buffer.  Note that this might
+  ;; differ from `sp-pair-list' which is often changed by dynamic
+  ;; binding
+  pair-list
+  ;; Value of `sp-local-pairs' for this buffer.  Note that this might
+  ;; differ from `sp-local-pairs' which is often changed by dynamic
+  ;; binding
+  local-pairs
+  )
 
-(defvar sp-state nil
+(defvar sp-state (make-sp-state)
   "Smartparens state for the current buffer.")
 (make-variable-buffer-local 'sp-state)
 
@@ -736,7 +745,6 @@ after the smartparens indicator in the mode list."
 
  This includes pair bindings and other buffer local variables
 that depend on the active `major-mode'."
-  ;; setup local state
   (setq sp-state (make-sp-state))
   ;; setup local pair replacements
   (sp--update-local-pairs)
@@ -803,7 +811,9 @@ or a list of such property lists."
   ;; (open.close) cons pairs for easier querying.  We also must order
   ;; it by length of opening delimiter in descending order (first
   ;; value is the longest)
-  (sp--update-sp-pair-list))
+  (sp--update-sp-pair-list)
+  (setf (sp-state-local-pairs sp-state) sp-local-pairs)
+  (setf (sp-state-pair-list sp-state) sp-pair-list))
 
 (defun sp--update-local-pairs-everywhere (&rest modes)
   "Run `sp--update-local-pairs' in all buffers.
@@ -3749,10 +3759,20 @@ default."
             (unless pair (delete-char (- (length trig))))
             (insert open-pair)
             (sp--run-hook-with-args open-pair :pre-handlers 'insert)
-            (--when-let (sp--pair-to-uninsert)
+            ;; The re-binding of these dynamic variables is a hack to
+            ;; combat the similar rebinding in the branch above where
+            ;; we retry `sp-insert-pair' with some pairs removed.
+            ;; This however causes them to be uninserted improperly,
+            ;; so for this one operation we need to restore the state
+            ;; to the "full" pair list.  TODO: in the future we might
+            ;; want to pass the state around explicitly so we have
+            ;; better control.
+            (--when-let (let ((sp-pair-list (sp-state-pair-list sp-state))
+                              (sp-local-pairs (sp-state-local-pairs sp-state)))
+                          (sp--pair-to-uninsert))
               (let ((cl (plist-get it :close)))
                 (when (and (sp--looking-at-p (sp--strict-regexp-quote cl))
-                           (not (string-prefix-p cl close-pair)))
+                           (> (- (length close-pair) (length cl)) 0))
                   (delete-char (length cl)))))
             (insert close-pair)
             (backward-char (length close-pair))

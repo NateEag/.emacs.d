@@ -610,6 +610,9 @@
         (cadr (assoc (popup-menu* menu :scroll-bar t) base-menu))))
     (fset 'flyspell-emacs-popup 'flyspell-emacs-popup-textual)))
 
+(use-package atomic-chrome
+  :init (atomic-chrome-start-server))
+
 (use-package conf-mode
   ;; As a rule of thumb, if it's in dotfiles/src and it doesn't match a
   ;; more-specific regex, it should probably open in conf-mode.

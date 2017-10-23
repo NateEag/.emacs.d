@@ -5,7 +5,7 @@
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 22 Jan 2016
 ;; Version: 0.0.3
-;; Package-Version: 20170610.2104
+;; Package-Version: 20171022.2229
 ;; Package-Requires: ((emacs "24.3") (s "1.9.0") (f "0.17"))
 ;; Keywords: processes php
 ;; URL: https://github.com/zonuexe/psysh.el
@@ -82,6 +82,7 @@
 ;;; Code:
 (require 'cc-mode)
 (require 'comint)
+(require 'thingatpt)
 (require 's)
 (require 'f)
 ;; (require 'xdg) ; Emacs 25.3?
@@ -303,7 +304,7 @@ See `psysh-mode-output-syntax-table'."
           "Input class or function name: "
           (if (region-active-p)
               (buffer-substring-no-properties (region-beginning) (region-end))
-            ""))))
+            (thing-at-point 'symbol)))))
   (funcall psysh-doc-display-function (psysh-doc-buffer target)))
 
 

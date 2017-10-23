@@ -4,7 +4,7 @@
 
 ;; Author: James J Porter <porterjamesj@gmail.com>
 ;; URL: http://github.com/porterjamesj/virtualenvwrapper.el
-;; Package-Version: 20161002.1515
+;; Package-Version: 20171022.1831
 ;; Version: 20151123
 ;; Keywords: python, virtualenv, virtualenvwrapper
 ;; Package-Requires: ((dash "1.5.0") (s "1.6.1"))
@@ -214,15 +214,19 @@ prompting the user with the string PROMPT"
 (defun venv--activate-dir (dir)
   "Given a directory corresponding to a virtualenv, activate it"
   (run-hooks 'venv-preactivate-hook)
-  (setq venv-current-dir dir)
+  (setq venv-current-dir (file-name-as-directory dir))
   ;; setup the python shell
   (setq python-shell-virtualenv-path venv-current-dir)
   ;; setup emacs exec-path
   (add-to-list 'exec-path (concat venv-current-dir venv-executables-dir))
   ;; setup the environment for subprocesses
-  (setenv "PATH" (concat venv-current-dir venv-executables-dir path-separator (getenv "PATH")))
-  ;; keep eshell path in sync
-  (setq eshell-path-env (getenv "PATH"))
+  (let ((path (concat venv-current-dir
+               venv-executables-dir
+               path-separator
+               (getenv "PATH"))))
+    (setenv "PATH" path)
+    ;; keep eshell path in sync
+    (setq eshell-path-env path))
   (setenv "VIRTUAL_ENV" venv-current-dir)
   (venv--set-venv-gud-pdb-command-name)
   (run-hooks 'venv-postactivate-hook))
@@ -255,7 +259,7 @@ prompting the user with the string PROMPT"
 This is useful e.g. when using tox."
   (interactive)
   (when (not location)
-    (setq location (read-directory-name "New virtualenv: ")))
+    (setq location (read-directory-name "New virtualenv location: " venv-location)))
   (venv-deactivate)
   (setq venv-location location)
   (when (called-interactively-p 'interactive)

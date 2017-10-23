@@ -4,8 +4,8 @@
 
 ;; Author: George Pittarelli <g@gjp.cc>
 ;; Version: 1.0
-;; Package-Version: 20171011.904
-;; Package-Requires: ((lsp-mode "2.0"))
+;; Package-Version: 20171021.253
+;; Package-Requires: ((lsp-mode "3.0"))
 ;; Keywords: javascript typescript lsp
 ;; URL: https://github.com/emacs-lsp/lsp-javascript
 
@@ -34,14 +34,8 @@
 (defconst lsp-javascript--get-root (lsp-make-traverser #'(lambda (dir)
 							   (directory-files dir nil "package.json"))))
 
-(defconst lsp-js-ts--major-modes
-  '(js-mode js2-mode js3-mode rjsx-mode))
-
-(dolist (mode lsp-js-ts--major-modes)
-  (lsp-define-stdio-client mode "JavaScript" 'stdio
-			   lsp-javascript--get-root
-			   "JavaScript Language Server"
-			   '("javascript-typescript-stdio")))
+(lsp-define-stdio-client lsp-javascript-typescript "javascript"
+			 #'lsp-javascript--get-root '("javascript-typescript-stdio"))
 
 (provide 'lsp-javascript-typescript)
 ;;; lsp-javascript-typescript.el ends here

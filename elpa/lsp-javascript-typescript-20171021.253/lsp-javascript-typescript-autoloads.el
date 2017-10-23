@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil nil ("lsp-javascript-typescript.el") (23012
-;;;;;;  43515 0 0))
+;;;### (autoloads nil nil ("lsp-javascript-typescript.el") (23021
+;;;;;;  60962 0 0))
 
 ;;;***
 

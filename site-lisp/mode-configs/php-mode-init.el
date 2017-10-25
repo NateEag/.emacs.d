@@ -38,6 +38,29 @@
 ;;     (mmm-add-mode-ext-class 'php-mode "\\.php$" 'embedded-sql)
 ;;     (setq php-sql-mmm-submode-enabled t)))
 
+
+;; This is a basic config for using https://github.com/emacs-lsp/lsp-mode with
+;; https://github.com/felixfbecker/php-language-server (which I'm running
+;; straight out of a local dev repo) to get PHP intelligence inside Emacs.
+;;
+;; jump-to-def and completion-at-point are both working in my current setup.
+;;
+;; lsp-mode can in principle support a lot more than that, and I have hopes of
+;; eventually getting to a state where I can do exploratory programming
+;; (relying on auto-complete to show you what's available and give you docs on
+;; the different options).
+;;
+;; The PHP language server itself could still use plenty of improvement, too,
+;; but it does seem to be making forward headway.
+(require 'lsp-mode)
+
+(lsp-define-stdio-client lsp-php "php"
+                         ;; FIXME Don't just assume git repo.
+                         (lsp-make-traverser ".git")
+                         ;; TODO Quit using my own script for this.
+                         "php-lang-server")
+
+
 (defun php-mode-init ()
   "Load my particular tweaks for php-mode."
 
@@ -74,32 +97,15 @@
   (add-to-list 'ac-sources 'ac-source-php-auto-yasnippets t)
   (add-to-list 'ac-sources 'ac-source-words-in-same-mode-buffers t)
 
-  ;; Turn on lsp-mode by default. The server takes forever to analyze large
-  ;; projects, but you can mostly still use Emacs while it does it.
-  (lsp-mode 1)
-
   ;; Yay for squiggly red lines!
   (setq flycheck-phpcs-standard "PSR2")
-  (setq flycheck-php-phpcs-executable "phpcs"))
+  (setq flycheck-php-phpcs-executable "phpcs")
 
-;; This is a very primitive config for using
-;; https://github.com/emacs-lsp/lsp-mode with
-;; https://github.com/felixfbecker/php-language-server (which I'm running
-;; straight out of a local dev repo) to get PHP intelligence inside Emacs.
-;;
-;; jump-to-def seems to work pretty well, so I'd like to continue figuring this
-;; out. However, auto-completion is broken in my current setup.
-;;
-;; lsp-mode can in principle do a lot more than that, but if I got those two
-;; things working I'd be pretty happy.
-(require 'lsp-mode)
-
-(lsp-define-stdio-client 'php-mode "php" 'stdio
-                         ;; FIXME Don't just assume git repo.
-                         (lsp-make-traverser ".git")
-                         "php-lang-server"
-                         ;; TODO Quit using my own script for this.
-                         "php-lang-server")
+  ;; How about PHP intelligence?
+  ;;
+  ;; The server takes forever to analyze large projects, but you can mostly
+  ;; still use Emacs while it does it.
+  (lsp-php-enable))
 
 ;; Make this requireable.
 (provide 'php-mode-init)

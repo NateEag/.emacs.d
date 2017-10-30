@@ -93,7 +93,7 @@ these commands do:
   `magit-branch-rename'
   `magit-tag'"
   :package-version '(magit . "2.9.0")
-  :group 'magit-miscellaneous
+  :group 'magit-commands
   :type '(list :convert-widget custom-hook-convert-widget)
   :options '(magit-branch
              magit-branch-and-checkout
@@ -105,8 +105,8 @@ these commands do:
 (defconst magit--confirm-actions
   '((const reverse)           (const discard)
     (const rename)            (const resurrect)
-    (const trash)             (const delete)
-    (const abort-rebase)
+    (const untrack)           (const trash)
+    (const delete)            (const abort-rebase)
     (const abort-merge)       (const merge-dirty)
     (const drop-stashes)      (const resect-bisect)
     (const kill-process)      (const delete-unmerged-branch)
@@ -152,6 +152,8 @@ Files:
   `resurrect' A deleted file can easily be resurrected by
   \"deleting\" the deletion, which is done using the same command
   that was used to delete the same file in the first place.
+
+  `untrack' Untracking a file can be undone by tracking it again.
 
   `rename' Renaming a file can easily be undone.
 
@@ -299,7 +301,7 @@ and delay of your graphical environment or operating system."
 ;;; User Input
 
 (defun magit-completing-read
-  (prompt collection &optional predicate require-match initial-input hist def)
+    (prompt collection &optional predicate require-match initial-input hist def)
   "Magit wrapper around `completing-read' or an alternative function.
 
 Option `magit-completing-read-function' can be used to wrap

@@ -458,7 +458,8 @@ to delete those, otherwise prompt for a single tag to be deleted,
 defaulting to the tag at point.
 \n(git tag -d TAGS)"
   (interactive (list (--if-let (magit-region-values 'tag)
-                         (magit-confirm t nil "Delete %i tags" it)
+                         (or (magit-confirm t nil "Delete %i tags" it)
+                             (user-error "Abort"))
                        (magit-read-tag "Delete tag" t))))
   (magit-run-git "tag" "-d" tags))
 
@@ -519,6 +520,7 @@ defaulting to the tag at point.
              (?y "Show Refs"       magit-show-refs-popup)
              (?z "Stashing"        magit-stash-popup)
              (?! "Running"         magit-run-popup)
+             (?% "Worktree"        magit-worktree-popup)
              "Applying changes"
              (?a "Apply"           magit-apply)
              (?s "Stage"           magit-stage)

@@ -1169,6 +1169,15 @@ SORTBY is a key or list of keys to pass to the `--sort' flag of
               (member it (magit-list-unmerged-branches upstream)))
             (magit-list-local-branch-names)))
 
+(defun magit-list-branches-pointing-at (commit)
+  (let ((re (format "\\`%s refs/\\(heads\\|remotes\\)/\\(.*\\)\\'"
+                   (magit-rev-verify commit))))
+    (--keep (and (string-match re it)
+                 (let ((name (match-string 2 it)))
+                   (and (not (string-suffix-p "HEAD" name))
+                        name)))
+            (magit-git-lines "show-ref"))))
+
 (defun magit-list-refnames (&optional namespaces)
   (magit-list-refs namespaces "%(refname:short)"))
 
@@ -1498,12 +1507,11 @@ Return a list of two integers: (A>B B>A)."
                              (magit-get-current-branch))))
 
 (defun magit-read-branch-or-commit (prompt &optional secondary-default)
-  (or (magit-completing-read prompt (cons "HEAD" (magit-list-refnames))
-                             nil nil nil 'magit-revision-history
-                             (or (magit-branch-or-commit-at-point)
-                                 secondary-default
-                                 (magit-get-current-branch)))
-      (user-error "Nothing selected")))
+  (magit-completing-read prompt (cons "HEAD" (magit-list-refnames))
+                         nil t nil 'magit-revision-history
+                         (or (magit-branch-or-commit-at-point)
+                             secondary-default
+                             (magit-get-current-branch))))
 
 (defun magit-read-range-or-commit (prompt &optional secondary-default)
   (magit-read-range
@@ -1592,6 +1600,18 @@ Return a list of two integers: (A>B B>A)."
                                nil nil nil 'magit-revision-history default)
         (user-error "Nothing selected"))))
 
+(defun magit-read-branch-prefer-other (prompt)
+  (let* ((current (magit-get-current-branch))
+         (commit  (magit-commit-at-point))
+         (atpoint (and commit (magit-list-branches-pointing-at commit))))
+    (magit-completing-read prompt (magit-list-branch-names)
+                           nil t nil 'magit-revision-history
+                           (or (magit-section-when 'branch)
+                               (and (not (cdr atpoint)) (car atpoint))
+                               (--first (not (equal it current)) atpoint)
+                               (magit-get-previous-branch)
+                               (car atpoint)))))
+
 (cl-defun magit-read-upstream-branch
     (&optional (branch (magit-get-current-branch)) prompt)
   (magit-completing-read
@@ -1612,11 +1632,19 @@ Return a list of two integers: (A>B B>A)."
        (let ((previous (magit-get-previous-branch)))
          (and (not (equal previous branch)) previous)))))
 
-(defun magit-read-starting-point (prompt)
-  (or (magit-completing-read (concat prompt " starting at")
-                             (cons "HEAD" (magit-list-refnames))
-                             nil nil nil 'magit-revision-history
-                             (magit--default-starting-point))
+(defun magit-read-starting-point (prompt &optional branch)
+  (or (magit-completing-read
+       (concat prompt
+               (and branch
+                    (if (bound-and-true-p ivy-mode)
+                        ;; Ivy-mode strips faces from prompt.
+                        (format  " `%s'" branch)
+                      (concat " "
+                              (propertize branch 'face 'magit-branch-local))))
+               " starting at")
+       (cons "HEAD" (magit-list-refnames))
+       nil nil nil 'magit-revision-history
+       (magit--default-starting-point))
       (user-error "Nothing selected")))
 
 (defun magit--default-starting-point ()

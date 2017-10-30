@@ -30,7 +30,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-     This manual is for Magit version 2.11.0 (2.11.0-137-gc20d047f+1).
+     This manual is for Magit version 2.11.0 (2.11.0-179-ga12cdfcf+1).
 
      Copyright (C) 2015-2017 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -296,6 +296,7 @@ FAQ - Issues and Errors
 * Point is wrong in the ‘COMMIT_EDITMSG’ buffer::
 * The mode-line information isn't always up-to-date::
 * Emacs 24.5 hangs when loading Magit: Emacs 245 hangs when loading Magit. 
+* A branch and tag sharing the same name breaks SOMETHING::
 
 
 File: magit.info,  Node: Introduction,  Next: Installation,  Prev: Top,  Up: Top
@@ -3597,8 +3598,8 @@ file-visiting buffers that are being blamed.
      This command saves the hash of the current chunk’s commit to the
      kill ring.
 
-     When the region is active, then it save that to the ‘kill-ring’,
-     like ‘kill-ring-save’ would.
+     When the region is active, the command saves the region’s content
+     instead of the hash, like ‘kill-ring-save’ would.
 
 ‘t’     (‘magit-blame-toggle-headings’)
 
@@ -7770,6 +7771,7 @@ A.2 FAQ - Issues and Errors
 * Point is wrong in the ‘COMMIT_EDITMSG’ buffer::
 * The mode-line information isn't always up-to-date::
 * Emacs 24.5 hangs when loading Magit: Emacs 245 hangs when loading Magit. 
+* A branch and tag sharing the same name breaks SOMETHING::
 
 
 File: magit.info,  Node: Magit is slow,  Next: I changed several thousand files at once and now Magit is unusable,  Up: FAQ - Issues and Errors
@@ -7815,19 +7817,4 @@ push on the command line.
 
    Detailed setup instructions can be found at
 <https://github.com/magit/magit/wiki/Pushing-with-Magit-from-Windows>.
-
-
-File: magit.info,  Node: I am using OS X and SOMETHING works in shell but not in Magit,  Next: Diffs contain control sequences,  Prev: I am using MS Windows and cannot push with Magit,  Up: FAQ - Issues and Errors
-
-A.2.5 I am using OS X and SOMETHING works in shell, but not in Magit
---------------------------------------------------------------------
-
-This usually occurs because Emacs doesn’t have the same environment
-variables as your shell.  Try installing and configuring
-<https://github.com/purcell/exec-path-from-shell>.  By default it
-synchronizes ‘$PATH’, which helps Magit find the same ‘git’ as the one
-you are using on the shell.
-
-   If SOMETHING is "passphrase caching with gpg-agent for commit and/or
-tag signing", then you’ll also need to synchronize ‘$GPG_AGENT_INFO’.
 

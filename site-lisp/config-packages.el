@@ -611,7 +611,31 @@
     (fset 'flyspell-emacs-popup 'flyspell-emacs-popup-textual)))
 
 (use-package atomic-chrome
-  :init (atomic-chrome-start-server))
+  :demand
+  :functions (atomic-chrome-start-server atomic-chrome-stop-server)
+  :config (progn
+          ;; Keep Atomic Chrome from trying to start if another Emacs instance
+          ;; is already running it. Since I do a fair bit of elisp hacking, I
+          ;; start a second Emacs pretty often as part of my workflow, to
+          ;; verify that my init code is doing what I expect.
+          ;;
+          ;; TODO Get this fixed upstream. A real pidfile could be an option.
+          (defun ne/atomic-chrome-mark-server-started ()
+              (write-region "" nil "~/.atomic-chrome-running"))
+
+          (defun ne/atomic-chrome-mark-server-stopped ()
+              (delete-file "~/.atomic-chrome-running"))
+
+          (advice-add 'atomic-chrome-start-server :before
+                      #'ne/atomic-chrome-mark-server-started)
+
+          (advice-add 'atomic-chrome-stop-server :before
+                      #'ne/atomic-chrome-mark-server-stopped)
+
+          (when (not (file-exists-p "~/.atomic-chrome-running"))
+                (atomic-chrome-start-server))
+          )
+  )
 
 (use-package conf-mode
   ;; As a rule of thumb, if it's in dotfiles/src and it doesn't match a

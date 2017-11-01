@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "projectile" "projectile.el" (23006 14132 0
+;;;### (autoloads nil "projectile" "projectile.el" (23033 51142 0
 ;;;;;;  0))
 ;;; Generated autoloads from projectile.el
 
@@ -463,7 +463,7 @@ Edit or create a .dir-locals.el file of the project.
 
 \(fn)" t nil)
 
-(defvar projectile-mode-line '(:eval (format " Projectile[%s(%s)]" (projectile-project-name) (projectile-project-type))) "\
+(defvar projectile-mode-line '(:eval (format " Projectile[%s]" (projectile-project-name))) "\
 Mode line lighter for Projectile.
 
 The value of this variable is a mode line template as in

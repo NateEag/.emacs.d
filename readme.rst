@@ -128,12 +128,12 @@ for live-editing browser-based JavaScript. In theory this should be awesome,
 and it's not bad, but there are some kinks to work out.
 
 My PHP setup has undergone bitrot over the past few years, but I'm starting to
-pay attention to it again. Felix Becker's excellent
-[php-language-server](https://github.com/felixfbecker/php-language-server)
-should mean really solid PHP intelligence in Emacs is possible. After some
-tinkering and a PR to [lsp-mode](https://github.com/emacs-lsp/lsp-mode) I do
-have jump-to-definition and completion-at-point working, and that's a huge step
-up from my past configs.
+pay attention to it again. Felix Becker's excellent `php-language-server
+<https://github.com/felixfbecker/php-language-server>`__ means good PHP
+intelligence in Emacs is possible. After some tinkering and a PR to `lsp-mode
+<https://github.com/emacs-lsp/lsp-mode>`__ I have jump-to-definition and
+completion-at-point working. It's a huge step up from my past setup, but it can
+certainly be much better.
 
 For editing web templates, I use the awesome `web-mode
 <http://web-mode.org/>`__ with several extensions, including `emmet-mode
@@ -169,9 +169,9 @@ snippets/ - my personal yasnippets, augmenting the base yasnippet collection.
 OS X Setup
 ==========
 
-I use the [Emacs for OS X build](https://emacsformacosx.com/), and had a hard
-time making it play nicely with command-line tools that use emacs like
-[Cask](https://github.com/cask/cask).
+I use the `Emacs for OS X build <https://emacsformacosx.com/>`__, and had a
+hard time making it play nicely with command-line tools that use emacs like
+`Cask <https://github.com/cask/cask>`__.
 
 I eventually solved it by copying the shell script at
 `Emacs.app/Contents/MacOS/Emacs` to `Emacs.app/Contents/MacOS/emacs`, since

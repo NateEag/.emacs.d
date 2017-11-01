@@ -11,7 +11,7 @@
 
 ;; Copyright (C) 1992,1993,1994  Tim Peters
 
-;; Author: 2015-2016     https://gitlab.com/groups/python-mode-devs
+;; Author: 2015-2017     https://gitlab.com/groups/python-mode-devs
 ;;         2003-2014 https://launchpad.net/python-mode
 ;;         1995-2002 Barry A. Warsaw
 ;;         1992-1994 Tim Peters
@@ -11257,6 +11257,113 @@ in (I)Python shell-modes `py-shell-complete'"
 
 ;; python-components-pdb
 
+(defun py-execute-statement-pdb ()
+  "Execute statement running pdb. "
+  (interactive)
+  (let ((py-python-command-args "-i -m pdb"))
+    (py-execute-statement)))
+
+(defun py-execute-region-pdb (beg end)
+  (interactive "r")
+  (let ((py-python-command-args "-i -m pdb")))
+    (py-execute-region beg end))
+
+(defun py-pdb-execute-statement ()
+  (interactive)
+  (let ((stm (progn (py-statement) (car kill-ring))))
+    (py-execute-string (concat "import pdb;pdb.run('" stm "')"))))
+
+(defun py-pdb-help ()
+  "Print generic pdb.help() message "
+  (interactive)
+  (py-execute-string "import pdb;pdb.help()"))
+
+(defun py-pdb-break (&optional line file condition)
+  (interactive)
+  (py-execute-string (concat "import pdb;pdb.break('" stm "')")))
+
+
+(defun py--pdb-versioned ()
+  "Guess existing pdb version from py-shell-name
+
+Return \"pdb[VERSION]\" if executable found, just \"pdb\" otherwise"
+  (interactive)
+  (let ((erg (when (string-match "[23]" py-shell-name)
+	       ;; versions-part
+	       (substring py-shell-name (string-match "[23]" py-shell-name)))))
+    (if erg
+      (cond ((executable-find (concat "pdb" erg))
+	     (concat "pdb" erg))
+	    ((and (string-match "\\." erg)
+		  (executable-find (concat "pdb" (substring erg 0 (string-match "\\." erg)))))
+	     (concat "pdb" (substring erg 0 (string-match "\\." erg)))))
+      "pdb")))
+
+(defun py-pdb (command-line)
+  "Run pdb on program FILE in buffer `*gud-FILE*'.
+The directory containing FILE becomes the initial working directory
+and source-file directory for your debugger.
+
+At GNU Linux systems required pdb version should be detected by `py--pdb-version', at Windows configure `py-python-ms-pdb-command'
+
+lp:963253"
+  (interactive
+   (progn
+     (require 'gud)
+     (list (gud-query-cmdline
+	    (if (or (eq system-type 'ms-dos)(eq system-type 'windows-nt))
+		(car (read-from-string py-python-ms-pdb-command))
+	      ;; sys.version_info[0]
+	      ;; (car (read-from-string (py--pdb-version)))
+	      'pdb)
+	    (py--buffer-filename-remote-maybe)))))
+  (pdb command-line))
+
+(defun py--pdb-current-executable ()
+  "When py-pdb-executable is set, return it.
+
+Otherwise return resuslt from `executable-find' "
+  (or py-pdb-executable
+      (executable-find "pdb")))
+
+(defun py-update-gud-pdb-history ()
+  "If pdb is called at a Python buffer, put it's file name at the head of `gud-pdb-history'. "
+  (interactive)
+  (let* (;; PATH/TO/pdb
+	 (first (cond ((and gud-pdb-history (ignore-errors (car gud-pdb-history)))
+		       (replace-regexp-in-string "^\\([^ ]+\\) +.+$" "\\1" (car gud-pdb-history)))
+		      (py-pdb-executable
+		       py-pdb-executable)
+		      ((or (eq system-type 'ms-dos)(eq system-type 'windows-nt))
+		       ;; lp:963253
+		       "c:/python27/python\ -i\ c:/python27/Lib/pdb.py")
+		      (t
+		       (py--pdb-current-executable))))
+	 ;; file to debug
+         (second (cond ((not (ignore-errors
+			       (py--buffer-filename-remote-maybe)))
+			(error "%s" "Buffer must be saved first."))
+		       ((py--buffer-filename-remote-maybe))
+		       (t (and gud-pdb-history (stringp (car gud-pdb-history)) (replace-regexp-in-string "^\\([^ ]+\\) +\\(.+\\)$" "\\2" (car gud-pdb-history))))))
+         (erg (and first second (concat first " " second))))
+    (when erg
+      (push erg gud-pdb-history))))
+
+(defadvice pdb (before gud-query-cmdline activate)
+  "Provide a better default command line when called interactively."
+  (interactive
+   (list (gud-query-cmdline py-pdb-path
+                            ;; (file-name-nondirectory buffer-file-name)
+			    (file-name-nondirectory (py--buffer-filename-remote-maybe)) 
+			    ))))
+
+;; tbreak [ ([filename:]lineno | function) [, condition] ]
+;;         Same arguments as break, but sets a temporary breakpoint: it
+;;         is automatically deleted when first hit.
+
+
+;; python-components-pdbtrack
+
 ;; pdbtrack constants
 (defconst py-pdbtrack-stack-entry-regexp
    (concat ".*\\("py-shell-input-prompt-1-regexp">\\|>\\) *\\(.*\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>()]+\\)()")
@@ -11467,106 +11574,6 @@ named for funcname or define a function funcname."
 (defun turn-off-pdbtrack ()
   (interactive)
   (py-pdbtrack-toggle-stack-tracking 0))
-
-(defun py-execute-statement-pdb ()
-  "Execute statement running pdb. "
-  (interactive)
-  (let ((py-python-command-args "-i -m pdb"))
-    (py-execute-statement)))
-
-(defun py-execute-region-pdb (beg end)
-  (interactive "r")
-  (let ((py-python-command-args "-i -m pdb")))
-    (py-execute-region beg end))
-
-(defun py-pdb-execute-statement ()
-  (interactive)
-  (let ((stm (progn (py-statement) (car kill-ring))))
-    (py-execute-string (concat "import pdb;pdb.run('" stm "')"))))
-
-(defun py-pdb-help ()
-  "Print generic pdb.help() message "
-  (interactive)
-  (py-execute-string "import pdb;pdb.help()"))
-
-(defun py-pdb-break (&optional line file condition)
-  (interactive)
-  (py-execute-string (concat "import pdb;pdb.break('" stm "')")))
-
-
-(defun py--pdb-versioned ()
-  "Guess existing pdb version from py-shell-name
-
-Return \"pdb[VERSION]\" if executable found, just \"pdb\" otherwise"
-  (interactive)
-  (let ((erg (when (string-match "[23]" py-shell-name)
-	       ;; versions-part
-	       (substring py-shell-name (string-match "[23]" py-shell-name)))))
-    (if erg
-      (cond ((executable-find (concat "pdb" erg))
-	     (concat "pdb" erg))
-	    ((and (string-match "\\." erg)
-		  (executable-find (concat "pdb" (substring erg 0 (string-match "\\." erg)))))
-	     (concat "pdb" (substring erg 0 (string-match "\\." erg)))))
-      "pdb")))
-
-(defun py-pdb (command-line)
-  "Run pdb on program FILE in buffer `*gud-FILE*'.
-The directory containing FILE becomes the initial working directory
-and source-file directory for your debugger.
-
-At GNU Linux systems required pdb version should be detected by `py--pdb-version', at Windows configure `py-python-ms-pdb-command'
-
-lp:963253"
-  (interactive
-   (progn
-     (require 'gud)
-     (list (gud-query-cmdline
-	    (if (or (eq system-type 'ms-dos)(eq system-type 'windows-nt))
-		(car (read-from-string py-python-ms-pdb-command))
-	      ;; sys.version_info[0]
-	      ;; (car (read-from-string (py--pdb-version)))
-	      'pdb)
-	    (py--buffer-filename-remote-maybe)))))
-  (pdb command-line))
-
-(defun py--pdb-current-executable ()
-  "When py-pdb-executable is set, return it.
-
-Otherwise return resuslt from `executable-find' "
-  (or py-pdb-executable
-      (executable-find "pdb")))
-
-(defun py-update-gud-pdb-history ()
-  "If pdb is called at a Python buffer, put it's file name at the head of `gud-pdb-history'. "
-  (interactive)
-  (let* (;; PATH/TO/pdb
-	 (first (cond ((and gud-pdb-history (ignore-errors (car gud-pdb-history)))
-		       (replace-regexp-in-string "^\\([^ ]+\\) +.+$" "\\1" (car gud-pdb-history)))
-		      (py-pdb-executable
-		       py-pdb-executable)
-		      ((or (eq system-type 'ms-dos)(eq system-type 'windows-nt))
-		       ;; lp:963253
-		       "c:/python27/python\ -i\ c:/python27/Lib/pdb.py")
-		      (t
-		       (py--pdb-current-executable))))
-	 ;; file to debug
-         (second (cond ((not (ignore-errors
-			       (py--buffer-filename-remote-maybe)))
-			(error "%s" "Buffer must be saved first."))
-		       ((py--buffer-filename-remote-maybe))
-		       (t (and gud-pdb-history (stringp (car gud-pdb-history)) (replace-regexp-in-string "^\\([^ ]+\\) +\\(.+\\)$" "\\2" (car gud-pdb-history))))))
-         (erg (and first second (concat first " " second))))
-    (when erg
-      (push erg gud-pdb-history))))
-
-(defadvice pdb (before gud-query-cmdline activate)
-  "Provide a better default command line when called interactively."
-  (interactive
-   (list (gud-query-cmdline py-pdb-path
-                            ;; (file-name-nondirectory buffer-file-name)
-			    (file-name-nondirectory (py--buffer-filename-remote-maybe)) 
-			    ))))
 
 ;; python-components-help
 (defvar py-eldoc-string-code

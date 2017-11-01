@@ -37,10 +37,12 @@
  queue mail if offline and to automatically send it when back online.
 
 -Figure out what mime-type should be used for emailing bash scripts as an
- attachment, and whether a text/plain attachment which started with just line
- feeds should have gotten CRs added to it. Not sure if that was an Emacs bug or
- expected behavior, since I don't know much about SMTP. To avoid that I can
- just use application/octet-stream for now.
+ attachment.
+
+-Understand how text/plain email attachments get converted from just LF to
+ CRLF. I suspect it's notmuch's compose mode making sure my attachment conforms
+ to RFC 2046, section 4.1.1, which specifies CRLF *must* be used for text/plain
+ content.
 
 -Make the ansi-term tweaks suggested in this article:
  http://echosa.github.io/blog/2012/06/06/improving-ansi-term/

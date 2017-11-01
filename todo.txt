@@ -27,7 +27,7 @@
  features - I just need to teach popwin how to force terminals to always
  display in the bottom half of a split panel properly. N.B.: shackle may be a
  significantly better alternative to popwin:
- https://github.com/wasamasa/shacklehttps://github.com/wasamasa/shacklo
+ https://github.com/wasamasa/shackle
 
 -Figure out why git-rebase-mode doesn't always have the keybindings it claims
  to. I think it happens the first time I rebase after starting Emacs, so it's

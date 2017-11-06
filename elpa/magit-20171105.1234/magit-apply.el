@@ -175,7 +175,7 @@ so causes the change to be applied to the index as well."
       (magit-refresh))))
 
 (defun magit-apply--get-selection ()
-  (or (magit-region-sections 'hunk 'file)
+  (or (magit-region-sections '(hunk file) t)
       (let ((section (magit-current-section)))
         (pcase (magit-section-type section)
           ((or `hunk `file) section)
@@ -208,8 +208,8 @@ at point, stage the file but not its content."
         (`(unstaged    hunk) (magit-apply-hunk   it "--cached"))
         (`(unstaged   hunks) (magit-apply-hunks  it "--cached"))
         (`(unstaged    file) (magit-stage-1 "-u" (list (magit-section-value it))))
-        (`(unstaged   files) (magit-stage-1 "-u" (magit-region-values)))
-        (`(unstaged    list) (magit-stage-1 "-u"))
+        (`(unstaged   files) (magit-stage-1 "-u" (magit-region-values nil t)))
+        (`(unstaged    list) (magit-stage-modified))
         (`(staged        ,_) (user-error "Already staged"))
         (`(committed     ,_) (user-error "Cannot stage committed changes"))
         (`(undefined     ,_) (user-error "Cannot stage this change")))
@@ -240,12 +240,11 @@ requiring confirmation."
 Stage all new content of tracked files and remove tracked files
 that no longer exist in the working tree from the index also.
 With a prefix argument also stage previously untracked (but not
-ignored) files.
-\('git add --update|--all .')."
-  (interactive (progn (unless (or (not (magit-anything-staged-p))
-                                  (magit-confirm 'stage-all-changes))
-                        (user-error "Abort"))
-                      (list current-prefix-arg)))
+ignored) files."
+  (interactive "P")
+  (when (magit-anything-staged-p)
+    (unless (magit-confirm 'stage-all-changes)
+      (user-error "Abort")))
   (magit-with-toplevel
     (magit-stage-1 (if all "--all" "-u"))))
 
@@ -260,7 +259,7 @@ ignored) files.
   (let* ((section (magit-current-section))
          (files (pcase (magit-diff-scope)
                   (`file  (list (magit-section-value section)))
-                  (`files (magit-region-values))
+                  (`files (magit-region-values nil t))
                   (`list  (magit-untracked-files))))
          plain repos)
     (dolist (file files)
@@ -301,7 +300,7 @@ ignored) files.
       (`(staged      hunk) (magit-apply-hunk   it "--reverse" "--cached"))
       (`(staged     hunks) (magit-apply-hunks  it "--reverse" "--cached"))
       (`(staged      file) (magit-unstage-1 (list (magit-section-value it))))
-      (`(staged     files) (magit-unstage-1 (magit-region-values)))
+      (`(staged     files) (magit-unstage-1 (magit-region-values nil t)))
       (`(staged      list) (magit-unstage-all))
       (`(committed     ,_) (if magit-unstage-committed
                                (magit-reverse-in-index)
@@ -337,12 +336,13 @@ without requiring confirmation."
 (defun magit-unstage-all ()
   "Remove all changes from the staging area."
   (interactive)
-  (when (or (and (not (magit-anything-unstaged-p))
-                 (not (magit-untracked-files)))
-            (magit-confirm 'unstage-all-changes))
-    (magit-wip-commit-before-change nil " before unstage")
-    (magit-run-git "reset" "HEAD" "--")
-    (magit-wip-commit-after-apply nil " after unstage")))
+  (when (or (magit-anything-unstaged-p)
+            (magit-untracked-files))
+    (unless (magit-confirm 'unstage-all-changes)
+      (user-error "Abort")))
+  (magit-wip-commit-before-change nil " before unstage")
+  (magit-run-git "reset" "HEAD" "--")
+  (magit-wip-commit-after-apply nil " after unstage"))
 
 ;;;; Discard
 
@@ -460,8 +460,9 @@ without requiring confirmation."
     (let ((delete-by-moving-to-trash magit-delete-by-moving-to-trash))
       (dolist (file files)
         (if (memq (magit-diff-type) '(unstaged untracked))
-            (dired-delete-file file dired-recursive-deletes
-                               magit-delete-by-moving-to-trash)
+            (progn (dired-delete-file file dired-recursive-deletes
+                                      magit-delete-by-moving-to-trash)
+                   (dired-clean-up-after-deletion file))
           (pcase (nth 3 (assoc file status))
             (?  (delete-file file t)
                 (magit-call-git "rm" "--cached" "--" file))

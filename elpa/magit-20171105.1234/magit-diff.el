@@ -729,7 +729,7 @@ The information can be in three forms:
 
 If no DWIM context is found, nil is returned."
   (cond
-   ((--when-let (magit-region-values 'commit 'branch)
+   ((--when-let (magit-region-values '(commit branch) t)
       (deactivate-mark)
       (concat (car (last it)) ".." (car it))))
    (magit-buffer-refname
@@ -774,7 +774,7 @@ If no DWIM context is found, nil is returned."
 If MBASE is non-nil, prompt for which rev to place at the end of
 a \"revA...revB\" range.  Otherwise, always construct
 \"revA..revB\" range."
-  (--if-let (magit-region-values 'commit 'branch)
+  (--if-let (magit-region-values '(commit branch) t)
       (let ((revA (car (last it)))
             (revB (car it)))
         (deactivate-mark)
@@ -853,34 +853,38 @@ a commit read from the minibuffer."
   (magit-diff-setup nil nil args files))
 
 ;;;###autoload
-(defun magit-diff-while-committing (&optional args files)
+(defun magit-diff-while-committing (&optional args)
   "While committing, show the changes that are about to be committed.
 While amending, invoking the command again toggles between
 showing just the new changes or all the changes that will
 be committed."
-  (interactive (magit-diff-arguments))
-  (let ((toplevel (magit-toplevel))
+  (interactive (list (car (magit-diff-arguments))))
+  (unless (magit-commit-message-buffer)
+    (user-error "No commit in progress"))
+  (let ((magit-display-buffer-noselect t)
         (diff-buf (magit-mode-get-buffer 'magit-diff-mode)))
-    (if (magit-commit-message-buffer)
-        (if (and (or ;; most likely an explicit amend
-                     (not (magit-anything-staged-p))
-                     ;; explicitly toggled from within diff
-                     (and (eq (current-buffer) diff-buf)))
-                 (or (not diff-buf)
-                     (with-current-buffer diff-buf
-                       (or ;; default to include last commit
-                           (not (equal (magit-toplevel) toplevel))
-                           ;; toggle to include last commit
-                           (not (car magit-refresh-args))))))
-            (magit-diff-while-amending args files)
-          (magit-diff-staged nil args files))
-      (user-error "No commit in progress"))))
+    (if (get-buffer-window diff-buf)
+        (with-current-buffer diff-buf
+          (pcase-let ((`(,rev ,arg . ,_) magit-refresh-args))
+            (cond ((and (equal rev "HEAD^")
+                        (equal arg '("--cached")))
+                   (magit-diff-staged nil args))
+                  ((and (equal rev nil)
+                        (equal arg '("--cached")))
+                   (magit-diff-while-amending args))
+                  ((magit-anything-staged-p)
+                   (magit-diff-staged nil args))
+                  (t
+                   (magit-diff-while-amending args)))))
+      (if (magit-anything-staged-p)
+          (magit-diff-staged nil args)
+        (magit-diff-while-amending args)))))
 
 (define-key git-commit-mode-map
   (kbd "C-c C-d") 'magit-diff-while-committing)
 
-(defun magit-diff-while-amending (&optional args files)
-  (magit-diff-setup "HEAD^" (list "--cached") args files))
+(defun magit-diff-while-amending (&optional args)
+  (magit-diff-setup "HEAD^" (list "--cached") args nil))
 
 ;;;###autoload
 (defun magit-diff-buffer-file ()
@@ -2124,7 +2128,7 @@ is `region'.  If the region is empty after a mouse click, then
 If optional STRICT is non-nil, then return nil if the diff type of
 the section at point is `untracked' or the section at point is not
 actually a `diff' but a `diffstat' section."
-  (let ((siblings (and (not ssection) (magit-region-sections))))
+  (let ((siblings (and (not ssection) (magit-region-sections nil t))))
     (setq section (or section (car siblings) (magit-current-section)))
     (when (and section
                (or (not strict)

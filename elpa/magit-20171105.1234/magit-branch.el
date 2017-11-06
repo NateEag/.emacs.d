@@ -176,7 +176,15 @@ and change branch related variables."
              (?x "Reset"                 magit-branch-reset) nil nil
              (?k "Delete"                magit-branch-delete))
   :default-action 'magit-checkout
-  :max-action-columns 3)
+  :max-action-columns 3
+  :setup-function 'magit-branch-popup-setup)
+
+(defun magit-branch-popup-setup (val def)
+  (magit-popup-default-setup val def)
+  (use-local-map (copy-keymap magit-popup-mode-map))
+  (dolist (ev (-filter #'magit-popup-event-p (magit-popup-get :variables)))
+    (local-set-key (vector (magit-popup-event-key ev))
+                   'magit-invoke-popup-action)))
 
 ;;; Branch Commands
 
@@ -304,8 +312,7 @@ to `FROM~', instead of to the last commit it shares with its
 upstream.  Interactively, FROM is only ever non-nil, if the
 region selects some commits, and among those commits, FROM is
 the commit that is the fewest commits ahead of the source
-branch.  (It not yet possible to spin off a single commit,
-unless it is the only unpushed commit.  See #2920.)
+branch.
 
 The commit at the other end of the selection actually does not
 matter, all commits between FROM and `HEAD' are moved to the new
@@ -390,7 +397,7 @@ defaulting to the branch at point."
   ;; a bit of extra functionality into this one.  And once it's there,
   ;; you cannot remove it anymore. (I tried, it causes protests.)
   (interactive
-   (let ((branches (magit-region-values 'branch))
+   (let ((branches (magit-region-values 'branch t))
          (force current-prefix-arg))
      (if (if (> (length branches) 1)
              (magit-confirm t nil "Delete %i branches" branches)
@@ -559,7 +566,11 @@ With prefix, forces the rename even if NEW already exists.
 
 (defun magit-branch-config-popup-setup (val def)
   (magit-popup-default-setup val def)
-  (setq-local magit-branch-config-branch magit-branch-config-branch))
+  (setq-local magit-branch-config-branch magit-branch-config-branch)
+  (use-local-map (copy-keymap magit-popup-mode-map))
+  (dolist (ev (-filter #'magit-popup-event-p (magit-popup-get :variables)))
+    (local-set-key (vector (magit-popup-event-key ev))
+                   'magit-invoke-popup-action)))
 
 (defun magit-branch-config-branch (&optional prompt)
   (if prompt

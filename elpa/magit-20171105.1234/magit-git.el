@@ -430,9 +430,11 @@ it has to be a path relative to the control directory and its
 absolute path is returned."
   (magit--with-refresh-cache (list default-directory 'magit-git-dir path)
     (magit--with-safe-default-directory nil
-      (--when-let (magit-rev-parse-safe "--git-dir")
-        (setq it (file-name-as-directory (magit-expand-git-file-name it)))
-        (if path (expand-file-name (convert-standard-filename path) it) it)))))
+      (-when-let (dir (magit-rev-parse-safe "--git-dir"))
+        (setq dir (file-name-as-directory
+                   (concat (file-remote-p default-directory)
+                           (magit-expand-git-file-name dir))))
+        (if path (expand-file-name (convert-standard-filename path) dir) dir)))))
 
 (defvar magit--separated-gitdirs nil)
 
@@ -1517,7 +1519,7 @@ Return a list of two integers: (A>B B>A)."
 (defun magit-read-range-or-commit (prompt &optional secondary-default)
   (magit-read-range
    prompt
-   (or (--when-let (magit-region-values 'commit 'branch)
+   (or (--when-let (magit-region-values '(commit branch) t)
          (deactivate-mark)
          (concat (car (last it)) ".." (car it)))
        (magit-branch-or-commit-at-point)

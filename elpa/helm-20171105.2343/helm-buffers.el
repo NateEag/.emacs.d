@@ -197,15 +197,19 @@ this source is accessible and properly loaded."
     map))
 
 
-(defvar helm-buffers-list-cache nil)
 (defvar helm-buffer-max-len-mode nil)
 (defvar helm-buffers-in-project-p nil)
 
 (defun helm-buffers-list--init ()
   (require 'dired)
   ;; Issue #51 Create the list before `helm-buffer' creation.
-  (setq helm-buffers-list-cache (funcall (helm-attr 'buffer-list)))
-  (let ((result (cl-loop for b in helm-buffers-list-cache
+  ;; We were using a global cache in the past and 'candidates was
+  ;; bound to this cache, this was a problem when using more than one
+  ;; source with a different 'buffer-list fn as the same cache was
+  ;; reused in each source (issue #1907), now 'candidates attr is set
+  ;; directly so that each list of candidates is local to source.
+  (helm-attrset 'candidates (funcall (helm-attr 'buffer-list)))
+  (let ((result (cl-loop for b in (helm-attr 'candidates)
                          maximize (length b) into len-buf
                          maximize (length (with-current-buffer b
                                             (format-mode-line mode-name)))
@@ -224,15 +228,9 @@ this source is accessible and properly loaded."
     :documentation
     "  A function with no arguments to create buffer list.")
    (init :initform 'helm-buffers-list--init)
-   (candidates :initform helm-buffers-list-cache)
    (multimatch :initform nil)
    (match :initform 'helm-buffers-match-function)
    (persistent-action :initform 'helm-buffers-list-persistent-action)
-   (resume :initform (lambda ()
-                       (run-with-idle-timer
-                        0.1 nil (lambda ()
-                                  (with-helm-buffer
-                                    (helm-force-update))))))
    (keymap :initform helm-buffer-map)
    (migemo :initform 'nomultimatch)
    (volatile :initform t)
@@ -387,36 +385,41 @@ See `ido-make-buffer-list' for more infos."
   "Transformer function to highlight BUFFERS list.
 Should be called after others transformers i.e (boring buffers)."
   (cl-loop for i in buffers
-        for (name size mode meta) = (if helm-buffer-details-flag
-                                        (helm-buffer--details i 'details)
-                                      (helm-buffer--details i))
-        for truncbuf = (if (> (string-width name) helm-buffer-max-length)
-                           (helm-substring-by-width
-                            name helm-buffer-max-length
-                            helm-buffers-end-truncated-string)
-                         (concat name
-                                 (make-string
-                                       (- (+ helm-buffer-max-length
-                                             (length helm-buffers-end-truncated-string))
-                                          (string-width name)) ? )))
-        for len = (length mode)
-        when (> len helm-buffer-max-len-mode)
-        do (setq helm-buffer-max-len-mode len)
-        for fmode = (concat (make-string
-                             (- (max helm-buffer-max-len-mode len) len) ? )
-                            mode)
-        ;; The max length of a number should be 1023.9X where X is the
-        ;; units, this is 7 characters.
-        for formatted-size = (and size (format "%7s" size))
-        collect           (let ((helm-pattern (helm-buffers--pattern-sans-filters
-                                               (and helm-buffers-fuzzy-matching ""))))
-                            (cons (if helm-buffer-details-flag
-                                      (concat
-                                       (funcall helm-fuzzy-matching-highlight-fn truncbuf)
-                                       "\t" formatted-size
-                                       "  " fmode "  " meta)
-                                      (funcall helm-fuzzy-matching-highlight-fn name))
-                                  (get-buffer i)))))
+           for (name size mode meta) = (if helm-buffer-details-flag
+                                           (helm-buffer--details i 'details)
+                                         (helm-buffer--details i))
+           for truncbuf = (if (> (string-width name) helm-buffer-max-length)
+                              (helm-substring-by-width
+                               name (- helm-buffer-max-length
+                                       (length
+                                        helm-buffers-end-truncated-string))
+                               helm-buffers-end-truncated-string)
+                            (concat name
+                                    (make-string
+                                     (- (+ helm-buffer-max-length
+                                           (length
+                                            helm-buffers-end-truncated-string))
+                                        (string-width name))
+                                     ? )))
+           for len = (length mode)
+           when (> len helm-buffer-max-len-mode)
+           do (setq helm-buffer-max-len-mode len)
+           for fmode = (concat (make-string
+                                (- (max helm-buffer-max-len-mode len) len) ? )
+                               mode)
+           ;; The max length of a number should be 1023.9X where X is the
+           ;; units, this is 7 characters.
+           for formatted-size = (and size (format "%7s" size))
+           collect (let ((helm-pattern (helm-buffers--pattern-sans-filters
+                                        (and helm-buffers-fuzzy-matching ""))))
+                     (cons (if helm-buffer-details-flag
+                               (concat
+                                (funcall helm-fuzzy-matching-highlight-fn
+                                         truncbuf)
+                                "\t" formatted-size
+                                "  " fmode "  " meta)
+                             (funcall helm-fuzzy-matching-highlight-fn name))
+                           (get-buffer i)))))
 
 (defun helm-buffer--get-preselection (buffer)
   (let ((bufname (buffer-name buffer)))
@@ -427,19 +430,24 @@ Should be called after others transformers i.e (boring buffers)."
                         helm-buffer-max-length))
                 (regexp-quote
                  (helm-substring-by-width
-                  bufname helm-buffer-max-length
+                  bufname (- helm-buffer-max-length
+                             (length helm-buffers-end-truncated-string))
                   helm-buffers-end-truncated-string))
-                (concat (regexp-quote bufname)
-                        (if helm-buffer-details-flag
-                            "$" "[[:blank:]]+"))))))
+              (concat (regexp-quote bufname)
+                      (if helm-buffer-details-flag
+                          "$" "[[:blank:]]+"))))))
 
 (defun helm-toggle-buffers-details ()
   (interactive)
   (with-helm-alive-p
-    (let ((preselect (helm-buffer--get-preselection
-                      (helm-get-selection))))
+    (let* ((buf (helm-get-selection))
+           (preselect (helm-buffer--get-preselection buf)))
       (setq helm-buffer-details-flag (not helm-buffer-details-flag))
-      (helm-update preselect))))
+      (helm-update (lambda ()
+                     (helm-awhile (re-search-forward preselect nil t)
+                       (helm-mark-current-line)
+                       (when (equal buf (helm-get-selection))
+                         (cl-return t))))))))
 (put 'helm-toggle-buffers-details 'helm-only t)
 
 (defun helm-buffers--pattern-sans-filters (&optional separator)

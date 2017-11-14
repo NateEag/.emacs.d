@@ -10480,10 +10480,16 @@ Indicate LINE if code wasn't run from a file, thus remember line of source buffe
 
 (defun py--fetch-result (orig)
   "Return buffer-substring from orig to point-max. "
-  (replace-regexp-in-string
-   (format "[ \n]*%s[ \n]*" py-fast-filter-re)
-   ""
-   (buffer-substring-no-properties orig (point-max))))
+  (switch-to-buffer (current-buffer))
+  (goto-char orig)
+  (if (derived-mode-p 'comint-mode)
+      (replace-regexp-in-string
+       (format "[ \n]*%s[ \n]*" py-fast-filter-re)
+       ""
+       (buffer-substring-no-properties orig (point-max)))
+    (while (re-search-forward (format "[ \n]*%s[ \n]*" py-fast-filter-re) nil t 1)
+      (replace-match ""))
+    (buffer-substring-no-properties orig (point-max))))
 
 (defun py--postprocess-comint (output-buffer origline orig)
   "Provide return values, check result for error, manage windows. "
@@ -11278,10 +11284,14 @@ in (I)Python shell-modes `py-shell-complete'"
   (interactive)
   (py-execute-string "import pdb;pdb.help()"))
 
-(defun py-pdb-break (&optional line file condition)
-  (interactive)
-  (py-execute-string (concat "import pdb;pdb.break('" stm "')")))
+;; https://stackoverflow.com/questions/6980749/simpler-way-to-put-pdb-breakpoints-in-python-code
+;; breakpoint at line 3 
 
+;; python -m pdb -c "b 3" -c c your_script.py
+
+(defun py-pdb-break-at-current-line (&optional line file condition)
+  (interactive)
+  (py-execute-string (concat "import pdb;pdb.break('" (py-count-lines)  "')")))
 
 (defun py--pdb-versioned ()
   "Guess existing pdb version from py-shell-name
@@ -11354,12 +11364,21 @@ Otherwise return resuslt from `executable-find' "
   (interactive
    (list (gud-query-cmdline py-pdb-path
                             ;; (file-name-nondirectory buffer-file-name)
-			    (file-name-nondirectory (py--buffer-filename-remote-maybe)) 
-			    ))))
+			    (file-name-nondirectory (py--buffer-filename-remote-maybe)) ))))
 
 ;; tbreak [ ([filename:]lineno | function) [, condition] ]
 ;;         Same arguments as break, but sets a temporary breakpoint: it
 ;;         is automatically deleted when first hit.
+
+;; python -m pdb -c "b 3" -c c your_script.py
+
+(defun py-pdb-tbreak ()
+  (interactive)
+  (let (
+	(py-python-command-args '("-i -c \"b 30\" -c c \"eyp.py\""))
+	(py-python3-command-args '("-i -c \"b 30\" -c c \"eyp.py\""))
+	)
+    (py-execute-buffer)))
 
 
 ;; python-components-pdbtrack
@@ -21238,7 +21257,10 @@ Return code of `py-top-level' at point, a string. "
   "Set `py-result' according to `py-fast-filter-re'.
 
 Remove trailing newline"
-    (replace-regexp-in-string (format "[ \n]*%s[ \n]*" py-fast-filter-re) "" (ansi-color-filter-apply strg)))
+  ;; (replace-regexp-in-string (format "[ \n]*%s[ \n]*" py-fast-filter-re) ""
+  (ansi-color-filter-apply strg)
+  ;;)
+  )
 
 (defun py-fast-process (&optional buffer)
   "Connect am (I)Python process suitable for large output.

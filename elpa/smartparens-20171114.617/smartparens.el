@@ -56,10 +56,21 @@
 (require 'thingatpt)
 (require 'help-mode) ;; for help-xref-following #85
 
-(eval-when-compile (defvar cua--region-keymap))
-(declare-function cua-replace-region "cua-base")
-(declare-function cua--pre-command-handler "cua-base")
-(declare-function delete-selection-pre-hook "delsel")
+(declare-function cua-replace-region "cua-base") ; FIXME: remove this when we drop support for old emacs
+(declare-function cua-delete-region "cua-base")
+(declare-function cua--fallback "cua-base")
+
+(declare-function subword-kill "subword")
+(declare-function subword-forward "subword")
+(declare-function subword-backward "subword")
+
+(declare-function hungry-delete-backward "hungry-delete")
+(declare-function hungry-delete-forward "hungry-delete")
+
+(declare-function evil-get-register "evil-common")
+(declare-function evil-set-register "evil-common")
+(defvar evil-this-register)
+
 
 ;;; backport for older emacsen
 
@@ -97,7 +108,6 @@ better orientation."
                           smartparens-global-mode
                           turn-on-smartparens-mode
                           turn-off-smartparens-mode
-                          sp--cua-replace-region
                           sp-wrap-cancel
                           sp-remove-active-pair-overlay
                           sp-splice-sexp-killing-around ;; is aliased to `sp-raise-sexp'
@@ -594,44 +604,48 @@ Symbol is defined as a chunk of text recognized by
 
 (defvar sp-message-alist
   '((:unmatched-expression
-     "Search failed. This means there is an unmatched expression somewhere or we are at the beginning/end of file."
-     "Unmatched expression.")
+     "Search failed: there is an unmatched expression somewhere or we are at the beginning/end of file"
+     "Unmatched expression")
+    (:unbalanced-region
+     "Can not kill the region: the buffer would end up in an unbalanced state after deleting the active region"
+     "Killing the region would make the buffer unbalanced"
+     "Unbalanced region")
     (:delimiter-in-string
-     "Opening or closing pair is inside a string or comment and matching pair is outside (or vice versa). Ignored.")
+     "Ignored: opening or closing pair is inside a string or comment and matching pair is outside (or vice versa)")
     (:no-matching-tag
-     "Search failed. No matching tag found."
-     "No matching tag.")
+     "Search failed: no matching tag found"
+     "No matching tag")
     (:invalid-context-prev
-     "Invalid context: previous h-sexp ends after the next one."
-     "Invalid context.")
+     "Invalid context: previous h-sexp ends after the next one"
+     "Invalid context")
     (:invalid-context-cur
-     "Invalid context: current h-sexp starts after the next one."
-     "Invalid context.")
+     "Invalid context: current h-sexp starts after the next one"
+     "Invalid context")
     (:no-structure-found
-     "Previous sexp starts after current h-sexp or no structure was found."
-     "No valid structure found.")
+     "Previous sexp starts after current h-sexp or no structure was found"
+     "No valid structure found")
     (:invalid-structure
-     "This operation would result in invalid structure. Ignored."
-     "Ignored because of invalid structure.")
+     "Ignored: this operation would result in invalid structure"
+     "Ignored because of invalid structure")
     (:cant-slurp
-     "We can't slurp without breaking strictly balanced expression. Ignored."
-     "Can't slurp without breaking balance.")
+     "Ignored: we can not slurp without breaking strictly balanced expression"
+     "Can not slurp without breaking balance")
     (:cant-slurp-context
-     "We can't slurp into different context (comment -> code). Ignored."
-     "Can't slurp into different context.")
+     "Ignored: we can not slurp into different context (comment -> code)"
+     "Can not slurp into different context")
     (:cant-insert-closing-delimiter
-     "We can not insert unbalanced closing delimiter in strict mode."
-     "Can't insert unbalanced delimiter.")
+     "We can not insert unbalanced closing delimiter in strict mode"
+     "Can not insert unbalanced delimiter")
     (:blank-sexp
-     "Point is in blank sexp, nothing to barf."
-     "Point is in blank sexp.")
+     "Point is in blank sexp, nothing to barf"
+     "Point is in blank sexp")
     (:point-not-deep-enough
-     "Point has to be at least two levels deep to swap the enclosing delimiters."
-     "Point has to be at least two levels deep."
-     "Point not deep enough.")
+     "Point has to be at least two levels deep to swap the enclosing delimiters"
+     "Point has to be at least two levels deep"
+     "Point not deep enough")
     (:different-type
-     "The expressions to be joined are of different type."
-     "Expressions are of different type."))
+     "The expressions to be joined are of different type"
+     "Expressions are of different type"))
   "List of predefined messages to be displayed by `sp-message'.
 
 Each element is a list consisting of a keyword and one or more
@@ -664,7 +678,9 @@ You can enable pre-set bindings by customizing
   (if smartparens-mode
       (progn
         (sp--init)
+        (add-hook 'self-insert-uses-region-functions 'sp-wrap--can-wrap-p nil 'local)
         (run-hooks 'smartparens-enabled-hook))
+    (remove-hook 'self-insert-uses-region-functions 'sp-wrap--can-wrap-p 'local)
     (run-hooks 'smartparens-disabled-hook)))
 
 (defvar smartparens-strict-mode-map
@@ -705,9 +721,15 @@ after the smartparens indicator in the mode list."
         (unless (-find-indices (lambda (it) (eq (car it) 'smartparens-strict-mode)) minor-mode-overriding-map-alist)
           (setq minor-mode-overriding-map-alist
                 (cons `(smartparens-strict-mode . ,smartparens-strict-mode-map) minor-mode-overriding-map-alist)))
+        (put 'sp-backward-delete-char 'delete-selection 'sp--delete-selection-supersede-p)
+        (put 'sp-delete-char 'delete-selection 'sp--delete-selection-supersede-p)
+        (add-hook 'self-insert-uses-region-functions 'sp--self-insert-uses-region-strict-p nil 'local)
         (setq sp-autoskip-closing-pair 'always))
     (setq minor-mode-overriding-map-alist
           (-remove (lambda (it) (eq (car it) 'smartparens-strict-mode)) minor-mode-overriding-map-alist))
+    (put 'sp-backward-delete-char 'delete-selection 'supersede)
+    (put 'sp-delete-char 'delete-selection 'supersede)
+    (remove-hook 'self-insert-uses-region-functions 'sp--self-insert-uses-region-strict-p 'local)
     (let ((std-val (car (plist-get (symbol-plist 'sp-autoskip-closing-pair) 'standard-value)))
           (saved-val (car (plist-get (symbol-plist 'sp-autoskip-closing-pair) 'saved-value))))
       (setq sp-autoskip-closing-pair (eval (or saved-val std-val))))))
@@ -1415,17 +1437,54 @@ kill \"subwords\" when `subword-mode' is active."
   (or (and (boundp 'delete-selection-mode) delete-selection-mode)
       (and (boundp 'cua-delete-selection) cua-delete-selection cua-mode)))
 
+(defun sp--delete-selection-supersede-p ()
+  "Decide if the current command should delete the region or not.
+
+This check is used as value of 'delete-selection property on the
+command symbol."
+  (if (or (equal current-prefix-arg '(4))
+          (sp-region-ok-p (region-beginning) (region-end)))
+      'supersede
+    (sp-message :unbalanced-region)
+    ;; Since this check runs in the pre-command-hook we can change the
+    ;; command to be executed... in this case we set it to ignore
+    ;; because we don't want to do anything.
+    (setq this-command 'ignore)
+    nil))
+
+(defun sp--self-insert-uses-region-strict-p ()
+  "Decide if the current `self-insert-command' should be able to
+replace the region.
+
+This check is added to the special hook
+`self-insert-uses-region-functions' which is checked by
+`delete-selection-uses-region-p'."
+  (if (or (equal current-prefix-arg '(4))
+          (sp-region-ok-p (region-beginning) (region-end)))
+      ;; region is OK or we are allowed to replace it, just say nil so
+      ;; that delsel handles this
+      nil
+    ;; in case region is bad we interrupt the insertion
+    (setq this-command 'ignore)
+    t))
+
+;; TODO: this function was removed from Emacs, we should get rid of
+;; the advice in time.
 (defadvice cua-replace-region (around fix-sp-wrap activate)
   "Fix `sp-wrap' in `cua-selection-mode'."
   (if (sp-wrap--can-wrap-p)
       (cua--fallback)
     ad-do-it))
 
-(defadvice delete-selection-pre-hook (around fix-sp-wrap activate)
-  "Fix `sp-wrap' in `delete-selection-mode'."
-  (unless (and smartparens-mode
-               (sp--delete-selection-p) (use-region-p) (not buffer-read-only)
-               (sp-wrap--can-wrap-p))
+(defadvice cua-delete-region (around fix-sp-delete-region activate)
+  "If `smartparens-strict-mode' is enabled, perform a region
+check before deleting."
+  (if smartparens-strict-mode
+      (progn
+        (unless (or current-prefix-arg
+                    (sp-region-ok-p (region-beginning) (region-end)))
+          (user-error (sp-message :unbalanced-region :return)))
+        ad-do-it)
     ad-do-it))
 
 
@@ -1915,19 +1974,21 @@ which to do the comparsion (default to WHAT-A)."
   (setq what-b (or what-b what-a))
   `(,fun (sp-get ,a ,what-a) (sp-get ,b ,what-b)))
 
-(defun sp-message (key)
+(defun sp-message (key &optional return)
   "Display a message.
 
 KEY is either a string or list of strings, or a keyword,
 in which case the string list is looked up in
 `sp-message-alist'.  The string to be displayed is chosen based on
-the `sp-message-width' variable."
+the `sp-message-width' variable.
+
+If RETURN is non-nil return the string instead of printing it."
   (let ((msgs (cond ((listp key) key)
                     ((stringp key) (list key))
                     (t (cdr (assq key sp-message-alist))))))
     (when (and msgs sp-message-width)
       (if (eq sp-message-width t)
-          (message (car msgs))
+          (if return (car msgs) (message "%s." (car msgs)))
         (let ((maxlen (if (eq sp-message-width 'frame)
                           (frame-width)
                         sp-message-width))
@@ -1937,7 +1998,7 @@ the `sp-message-width' variable."
                      (> (length msg) (length s)))
                 (setf s msg)))
           (when s
-            (message s)))))))
+            (if return s (message "%s." s))))))))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2750,12 +2811,13 @@ On escape action use the value of CONTEXT."
   "Return t if point is inside elisp docstring, nil otherwise."
   (and (eq context 'string)
        (save-excursion
-         (goto-char (car (sp-get-quoted-string-bounds)))
-         (ignore-errors (backward-sexp 3))
-         (looking-at-p (regexp-opt '("defun" "defmacro"
-                                     "cl-defun" "cl-defmacro"
-                                     "defun*" "defmacro*"
-                                     "lambda" "-lambda"))))))
+         (--when-let (car (sp-get-quoted-string-bounds))
+           (goto-char it)
+           (ignore-errors (backward-sexp 3))
+           (looking-at-p (regexp-opt '("defun" "defmacro"
+                                       "cl-defun" "cl-defmacro"
+                                       "defun*" "defmacro*"
+                                       "lambda" "-lambda")))))))
 
 (defun sp-in-code-p (_id _action context)
   "Return t if point is inside code, nil otherwise."
@@ -5071,7 +5133,7 @@ is used to retrieve the prefix instead of the global setting."
                       (skip-syntax-backward (cadr mmode-prefix))
                       (buffer-substring-no-properties (point) p))
                      (t ""))
-                  (skip-syntax-backward "'")
+                  (backward-prefix-chars)
                   (buffer-substring-no-properties (point) p)))))
         ;; do not consider it a prefix if it matches some opening or
         ;; closing delimiter which is allowed for parsing in current
@@ -5157,24 +5219,22 @@ returned by `sp-get-sexp'."
     (unless last-or-first
       (list :beg b :end e :op "" :cl "" :prefix (sp--get-prefix b) :suffix (sp--get-suffix e)))))
 
-;; this +/- 1 nonsense comes from sp-get-quoted-string-bounds. That
-;; should go to hell after the parser rewrite
 (defun sp--get-string (bounds)
   "Return the `sp-get-sexp' format info about the string.
 
 This function simply transforms BOUNDS, which is a cons (BEG
 . END) into format compatible with `sp-get-sexp'."
-  (let* (;; if the closing and opening isn't the same token, we should
-         ;; return nil
-         (op (char-to-string (char-after (car bounds))))
+  (let* ((op (char-to-string (char-after (car bounds))))
          (cl (char-to-string (char-before (cdr bounds)))))
+    ;; if the closing and opening isn't the same token, we should
+    ;; return nil
     (when (equal op cl)
       (list :beg (car bounds)
             :end (cdr bounds)
             :op cl
             :cl cl
-            :prefix ""
-            :suffix ""))))
+            :prefix (sp--get-prefix (car bounds) op)
+            :suffix (sp--get-suffix (cdr bounds) cl)))))
 
 (defun sp-get-string (&optional back)
   "Find the nearest string after point, or before if BACK is non-nil.
@@ -5563,7 +5623,7 @@ expressions are considered."
                          (sym-string (and sym (sp-get sym (buffer-substring-no-properties :beg :end))))
                          (point-before-prefix (point)))
                     (when sym-string
-                      (if (sp--valid-initial-delimiter-p (sp--search-forward-regexp (sp--get-opening-regexp (sp--get-allowed-pair-list)) nil t))
+                      (if (sp--valid-initial-delimiter-p (sp--search-forward-regexp (sp--get-opening-regexp (sp--get-pair-list-context 'navigate)) nil t))
                           (let* ((ms (match-string 0))
                                  (pref (progn
                                          ;; need to move before the
@@ -6417,7 +6477,7 @@ Note: prefix argument is shown after the example in
               (kill-append sp-last-kill-whitespace nil)))))))))
 
 (defun sp--cleanup-after-kill ()
-  (unless (looking-back "^[\t\s]+")
+  (unless (save-match-data (looking-back "^[\t\s]+" (1- (line-beginning-position))))
     (let ((bdel (save-excursion
                   (when (sp--looking-back-p " " 1)
                     (skip-chars-backward " \t")
@@ -7273,6 +7333,7 @@ Examples:
         (forward-fn (if forward 'forward-char 'backward-char))
         (next-char-fn (if forward 'following-char 'preceding-char))
         (looking (if forward 'sp--looking-at 'sp--looking-back))
+        (prefix-fn (if forward 'sp--get-suffix 'sp--get-prefix))
         (eob-test (if forward '(eobp) '(bobp)))
         (comment-bound (if forward 'cdr 'car)))
     `(let ((in-comment (sp-point-in-comment))
@@ -7280,7 +7341,8 @@ Examples:
            ;; pair that was not allowed before.  However, such a call is
            ;; never made in SP, so it's OK for now
            (allowed-pairs (sp--get-allowed-regexp))
-           (allowed-strings (sp--get-stringlike-regexp)))
+           (allowed-strings (sp--get-stringlike-regexp))
+           (prefix nil))
        (while (and (not (or ,eob-test
                             (and stop-after-string
                                  (not (sp-point-in-string))
@@ -7296,11 +7358,32 @@ Examples:
                             (and (,looking allowed-strings)
                                  (or in-comment (not (sp-point-in-comment))))))
                    (or (member (char-syntax (,next-char-fn)) '(?< ?> ?! ?| ?\ ?\\ ?\" ?' ?.))
-                       (unless in-comment (sp-point-in-comment))))
-         (when (and (not in-comment)
-                    (sp-point-in-comment))
-           (goto-char (,comment-bound (sp-get-comment-bounds))))
-         (when (not ,eob-test) (,forward-fn 1))))))
+                       (/= 0 (logand (lsh 1 20) (car (syntax-after
+                                                      ,(if forward
+                                                           '(point)
+                                                         '(1- (point)))))))
+                       (unless in-comment (sp-point-in-comment))
+                       ;; This is the case where we are starting at
+                       ;; pair (looking at it) and there is some
+                       ;; prefix which is not recognized by syntax,
+                       ;; i.e. defined by regexp.  This should only be
+                       ;; tested once in principle before the next
+                       ;; time we land on a delimiter this whole loop
+                       ;; stops based on the first branch of the `and'
+                       ;; condition in `while' so using expensive
+                       ;; functions here is not a bg deal.
+                       (and (or (,(if forward 'sp--looking-back 'sp--looking-at) allowed-pairs)
+                                (,(if forward 'sp--looking-back 'sp--looking-at) allowed-strings))
+                            (progn
+                              (setq prefix (,prefix-fn))
+                              (> (length prefix) 0)))))
+         (if (and (not in-comment)
+                  (sp-point-in-comment))
+             (progn
+               (goto-char (,comment-bound (sp-get-comment-bounds)))
+               (unless ,eob-test (,forward-fn 1)))
+           (unless ,eob-test
+             (,forward-fn (max (length prefix) 1))))))))
 
 (defun sp-skip-forward-to-symbol (&optional stop-at-string stop-after-string stop-inside-string)
   "Skip whitespace and comments moving forward.
@@ -7454,6 +7537,10 @@ Examples:
                                  (sp--valid-initial-delimiter-p (sp--looking-back close))))
                         (memq (char-syntax (preceding-char)) '(?w ?_)))
               (backward-char))
+            ;; skip characters which are symbols with prefix flag
+            (while (and (not (eobp))
+                        (/= 0 (logand (lsh 1 20) (car (syntax-after (point))))))
+              (forward-char 1))
             (setq n (1- n)))
         (sp-forward-symbol n)))))
 
@@ -8688,10 +8775,6 @@ This is the case if `subword-mode' is enabled and
 `sp-use-subword' is non-nil."
   (and sp-use-subword (bound-and-true-p subword-mode)))
 
-(declare-function subword-kill "subword")
-(declare-function subword-forward "subword")
-(declare-function subword-backward "subword")
-
 (defun sp--kill-word (&optional n)
   "Kill N words or subwords."
   (let ((n (or n 1)))
@@ -8869,7 +8952,7 @@ With a prefix argument, skip the balance check."
   (interactive "r")
   (when (or current-prefix-arg
             (sp-region-ok-p beg end)
-            (user-error "Unbalanced region"))
+            (user-error (sp-message :unbalanced-region :return)))
     (setq this-command 'delete-region)
     (delete-region beg end)))
 
@@ -8883,7 +8966,7 @@ With a prefix argument, skip the balance check."
   (interactive "r")
   (when (or current-prefix-arg
             (sp-region-ok-p beg end)
-            (user-error "Unbalanced region"))
+            (user-error (sp-message :unbalanced-region :return)))
     (setq this-command 'kill-region)
     (kill-region beg end)))
 

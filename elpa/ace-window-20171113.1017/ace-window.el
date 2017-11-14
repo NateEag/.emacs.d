@@ -5,7 +5,7 @@
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; Maintainer: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Package-Version: 20171108.1053
+;; Package-Version: 20171113.1017
 ;; Version: 0.9.0
 ;; Package-Requires: ((avy "0.2.0"))
 ;; Keywords: window, location
@@ -479,6 +479,7 @@ Windows are numbered top down, left to right."
                              (or description fn))))
                  aw-dispatch-alist
                  "\n"))
+  (mapc #'delete-overlay aw-overlays-back)
   (call-interactively 'ace-window))
 
 (defun aw-delete-window (window)
@@ -496,7 +497,9 @@ Windows are numbered top down, left to right."
 (defun aw-switch-buffer-in-window (window)
   "Select buffer in WINDOW."
   (aw-switch-to-window window)
-  (call-interactively 'switch-to-buffer))
+  (if (bound-and-true-p ivy-mode)
+      (ivy-switch-buffer)
+    (call-interactively 'switch-to-buffer)))
 
 (defcustom aw-swap-invert nil
   "When non-nil, the other of the two swapped windows gets the point."

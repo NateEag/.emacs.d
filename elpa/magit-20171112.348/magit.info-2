@@ -17,6 +17,351 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: magit.info,  Node: Conventions,  Prev: Refreshing Buffers,  Up: Plumbing
+
+10.4 Conventions
+================
+
+Also see *note Completion and Confirmation::.
+
+* Menu:
+
+* Theming Faces::
+
+
+File: magit.info,  Node: Theming Faces,  Up: Conventions
+
+10.4.1 Theming Faces
+--------------------
+
+The default theme uses blue for local branches, green for remote
+branches, and goldenrod (brownish yellow) for tags.  When creating a new
+theme, you should probably follow that example.  If your theme already
+uses other colors, then stick to that.
+
+   In older releases these reference faces used to have a background
+color and a box around them.  The basic default faces no longer do so,
+to make Magit buffers much less noisy, and you should follow that
+example at least with regards to boxes.  (Boxes were used in the past to
+work around a conflict between the highlighting overlay and text
+property backgrounds.  That’s no longer necessary because highlighting
+no longer causes other background colors to disappear.)  Alternatively
+you can keep the background color and/or box, but then have to take
+special care to adjust ‘magit-branch-current’ accordingly.  By default
+it looks mostly like ‘magit-branch-local’, but with a box (by default
+the former is the only face that uses a box, exactly so that it sticks
+out).  If the former also uses a box, then you have to make sure that it
+differs in some other way from the latter.
+
+   The most difficult faces to theme are those related to diffs,
+headings, highlighting, and the region.  There are faces that fall into
+all four groups - expect to spend some time getting this right.
+
+   The ‘region’ face in the default theme, in both the light and dark
+variants, as well as in many other themes, distributed with Emacs or by
+third-parties, is very ugly.  It is common to use a background color
+that really sticks out, which is ugly but if that were the only problem
+then it would be acceptable.  Unfortunately many themes also set the
+foreground color, which ensures that all text within the region is
+readable.  Without doing that there might be cases where some foreground
+color is too close to the region background color to still be readable.
+But it also means that text within the region loses all syntax
+highlighting.
+
+   I consider the work that went into getting the ‘region’ face right to
+be a good indicator for the general quality of a theme.  My
+recommendation for the ‘region’ face is this: use a background color
+slightly different from the background color of the ‘default’ face, and
+do not set the foreground color at all.  So for a light theme you might
+use a light (possibly tinted) gray as the background color of ‘default’
+and a somewhat darker gray for the background of ‘region’.  That should
+usually be enough to not collide with the foreground color of any other
+face.  But if some other faces also set a light gray as background
+color, then you should also make sure it doesn’t collide with those (in
+some cases it might be acceptable though).
+
+   Magit only uses the ‘region’ face when the region is "invalid" by its
+own definition.  In a Magit buffer the region is used to either select
+multiple sibling sections, so that commands which support it act on all
+of these sections instead of just the current section, or to select
+lines within a single hunk section.  In all other cases, the section is
+considered invalid and Magit won’t act on it.  But such invalid sections
+happen, either because the user has not moved point enough yet to make
+it valid or because she wants to use a non-magit command to act on the
+region, e.g.  ‘kill-region’.
+
+   So using the regular ‘region’ face for invalid sections is a feature.
+It tells the user that Magit won’t be able to act on it.  It’s
+acceptable if that face looks a bit odd and even (but less so) if it
+collides with the background colors of section headings and other things
+that have a background color.
+
+   Magit highlights the current section.  If a section has subsections,
+then all of them are highlighted.  This is done using faces that have
+"highlight" in their names.  For most sections,
+‘magit-section-highlight’ is used for both the body and the heading.
+Like the ‘region’ face, it should only set the background color to
+something similar to that of ‘default’.  The highlight background color
+must be different from both the ‘region’ background color and the
+‘default’ background color.
+
+   For diff related sections Magit uses various faces to highlight
+different parts of the selected section(s).  Note that hunk headings,
+unlike all other section headings, by default have a background color,
+because it is useful to have very visible separators between hunks.
+That face ‘magit-diff-hunk-heading’, should be different from both
+‘magit-diff-hunk-heading-highlight’ and ‘magit-section-highlight’, as
+well as from ‘magit-diff-context’ and ‘magit-diff-context-highlight’.
+By default we do that by changing the foreground color.  Changing the
+background color would lead to complications, and there are already
+enough we cannot get around.  (Also note that it is generally a good
+idea for section headings to always be bold, but only for sections that
+have subsections).
+
+   When there is a valid region selecting diff-related sibling sections,
+i.e.  multiple files or hunks, then the bodies of all these sections use
+the respective highlight faces, but additionally the headings instead
+use one of the faces ‘magit-diff-file-heading-selection’ or
+‘magit-diff-hunk-heading-selection’.  These faces have to be different
+from the regular highlight variants to provide explicit visual
+indication that the region is active.
+
+   When theming diff related faces, start by setting the option
+‘magit-diff-refine-hunk’ to ‘all’.  You might personally prefer to only
+refine the current hunk or not use hunk refinement at all, but some of
+the users of your theme want all hunks to be refined, so you have to
+cater to that.
+
+   (Also turn on ‘magit-diff-highlight-indentation’,
+‘magit-diff-highlight-trailing’, and ‘magit-diff-paint-whitespace’; and
+insert some whitespace errors into the code you use for testing.)
+
+   For e.g.  "added lines" you have to adjust three faces:
+‘magit-diff-added’, ‘magit-diff-added-highlight’, and
+‘smerge-refined-added’.  Make sure that the latter works well with both
+of the former, as well as ‘smerge-other’ and ‘diff-added’.  Then do the
+same for the removed lines, context lines, lines added by us, and lines
+added by them.  Also make sure the respective added, removed, and
+context faces use approximately the same saturation for both the
+highlighted and unhighlighted variants.  Also make sure the file and
+diff headings work nicely with context lines (e.g.  make them look
+different).  Line faces should set both the foreground and the
+background color.  For example, for added lines use two different
+greens.
+
+   It’s best if the foreground color of both the highlighted and the
+unhighlighted variants are the same, so you will need to have to find a
+color that works well on the highlight and unhighlighted background, the
+refine background, and the highlight context background.  When there is
+an hunk internal region, then the added- and removed-lines background
+color is used only within that region.  Outside the region the
+highlighted context background color is used.  This makes it easier to
+see what is being staged.  With an hunk internal region the hunk heading
+is shown using ‘magit-diff-hunk-heading-selection’, and so are the thin
+lines that are added around the lines that fall within the region.  The
+background color of that has to be distinct enough from the various
+other involved background colors.
+
+   Nobody said this would be easy.  If your theme restricts itself to a
+certain set of colors, then you should make an exception here.
+Otherwise it would be impossible to make the diffs look good in each and
+every variation.  Actually you might want to just stick to the default
+definitions for these faces.  You have been warned.  Also please note
+that if you do not get this right, this will in some cases look to users
+like bugs in Magit - so please do it right or not at all.
+
+
+File: magit.info,  Node: FAQ,  Next: Debugging Tools,  Prev: Plumbing,  Up: Top
+
+Appendix A FAQ
+**************
+
+The next two nodes lists frequently asked questions.  For a list of
+frequently *and recently* asked questions, i.e.  questions that haven’t
+made it into the manual yet, see
+<https://github.com/magit/magit/wiki/FAQ>.
+
+   Please also use the *note Debugging Tools::.
+
+* Menu:
+
+* FAQ - How to …?::
+* FAQ - Issues and Errors::
+
+
+File: magit.info,  Node: FAQ - How to …?,  Next: FAQ - Issues and Errors,  Up: FAQ
+
+A.1 FAQ - How to …?
+===================
+
+* Menu:
+
+* How to show git's output?::
+* How to install the gitman info manual?::
+* How to show diffs for gpg-encrypted files?::
+* How does branching and pushing work?::
+* Can Magit be used as ‘ediff-version-control-package’?::
+
+
+File: magit.info,  Node: How to show git's output?,  Next: How to install the gitman info manual?,  Up: FAQ - How to …?
+
+A.1.1 How to show git’s output?
+-------------------------------
+
+To show the output of recently run git commands, press ‘$’ (or, if that
+isn’t available, ‘M-x magit-process-buffer’).  This will show a buffer
+containing a section per git invocation; as always press ‘TAB’ to expand
+or collapse them.
+
+   By default, git’s output is only inserted into the process buffer if
+it is run for side-effects.  When the output is consumed in some way,
+also inserting it into the process buffer would be too expensive.  For
+debugging purposes, it’s possible to do so anyway by setting
+‘magit-git-debug’ to ‘t’.
+
+
+File: magit.info,  Node: How to install the gitman info manual?,  Next: How to show diffs for gpg-encrypted files?,  Prev: How to show git's output?,  Up: FAQ - How to …?
+
+A.1.2 How to install the gitman info manual?
+--------------------------------------------
+
+Git’s manpages can be exported as an info manual called ‘gitman’.
+Magit’s own info manual links to nodes in that manual instead of the
+actual manpages because Info doesn’t support linking to manpages.
+
+   Unfortunately some distributions do not install the ‘gitman’ manual
+by default and you will have to install a separate documentation package
+to get it.
+
+   Magit patches Info adding the ability to visit links to the ‘gitman’
+Info manual by instead viewing the respective manpage.  If you prefer
+that approach, then set the value of ‘magit-view-git-manual-method’ to
+one of the supported packages ‘man’ or ‘woman’, e.g.:
+
+     (setq magit-view-git-manual-method 'man)
+
+
+File: magit.info,  Node: How to show diffs for gpg-encrypted files?,  Next: How does branching and pushing work?,  Prev: How to install the gitman info manual?,  Up: FAQ - How to …?
+
+A.1.3 How to show diffs for gpg-encrypted files?
+------------------------------------------------
+
+Git supports showing diffs for encrypted files, but has to be told to do
+so.  Since Magit just uses Git to get the diffs, configuring Git also
+affects the diffs displayed inside Magit.
+
+     git config --global diff.gpg.textconv "gpg --no-tty --decrypt"
+     echo "*.gpg filter=gpg diff=gpg" > .gitattributes
+
+
+File: magit.info,  Node: How does branching and pushing work?,  Next: Can Magit be used as ‘ediff-version-control-package’?,  Prev: How to show diffs for gpg-encrypted files?,  Up: FAQ - How to …?
+
+A.1.4 How does branching and pushing work?
+------------------------------------------
+
+Please see *note Branching:: and
+<http://emacsair.me/2016/01/18/magit-2.4>
+
+
+File: magit.info,  Node: Can Magit be used as ‘ediff-version-control-package’?,  Prev: How does branching and pushing work?,  Up: FAQ - How to …?
+
+A.1.5 Can Magit be used as ‘ediff-version-control-package’?
+-----------------------------------------------------------
+
+No, it cannot.  For that to work the functions ‘ediff-magit-internal’
+and ‘ediff-magit-merge-internal’ would have to be implemented, and they
+are not.  These two functions are only used by the three commands
+‘ediff-revision’, ‘ediff-merge-revisions-with-ancestor’, and
+‘ediff-merge-revisions’.
+
+   These commands only delegate the task of populating buffers with
+certain revisions to the "internal" functions.  The equally important
+task of determining which revisions are to be compared/merged is not
+delegated.  Instead this is done without any support whatsoever from the
+version control package/system - meaning that the user has to enter the
+revisions explicitly.  Instead of implementing ‘ediff-magit-internal’ we
+provide ‘magit-ediff-compare’, which handles both tasks like it is 2005.
+
+   The other commands ‘ediff-merge-revisions’ and
+‘ediff-merge-revisions-with-ancestor’ are normally not what you want
+when using a modern version control system like Git.  Instead of letting
+the user resolve only those conflicts which Git could not resolve on its
+own, they throw away all work done by Git and then expect the user to
+manually merge all conflicts, including those that had already been
+resolved.  That made sense back in the days when version control systems
+couldn’t merge (or so I have been told), but not anymore.  Once in a
+blue moon you might actually want to see all conflicts, in which case
+you *can* use these commands, which then use ‘ediff-vc-merge-internal’.
+So we don’t actually have to implement ‘ediff-magit-merge-internal’.
+Instead we provide the more useful command ‘magit-ediff-resolve’ which
+only shows yet-to-be resolved conflicts.
+
+
+File: magit.info,  Node: FAQ - Issues and Errors,  Prev: FAQ - How to …?,  Up: FAQ
+
+A.2 FAQ - Issues and Errors
+===========================
+
+* Menu:
+
+* Magit is slow::
+* I changed several thousand files at once and now Magit is unusable::
+* I am having problems committing::
+* I am using MS Windows and cannot push with Magit::
+* I am using OS X and SOMETHING works in shell, but not in Magit: I am using OS X and SOMETHING works in shell but not in Magit. 
+* Diffs contain control sequences::
+* Expanding a file to show the diff causes it to disappear::
+* Point is wrong in the ‘COMMIT_EDITMSG’ buffer::
+* The mode-line information isn't always up-to-date::
+* Emacs 24.5 hangs when loading Magit: Emacs 245 hangs when loading Magit. 
+* A branch and tag sharing the same name breaks SOMETHING::
+
+
+File: magit.info,  Node: Magit is slow,  Next: I changed several thousand files at once and now Magit is unusable,  Up: FAQ - Issues and Errors
+
+A.2.1 Magit is slow
+-------------------
+
+See *note Performance::.
+
+
+File: magit.info,  Node: I changed several thousand files at once and now Magit is unusable,  Next: I am having problems committing,  Prev: Magit is slow,  Up: FAQ - Issues and Errors
+
+A.2.2 I changed several thousand files at once and now Magit is unusable
+------------------------------------------------------------------------
+
+Magit is *currently* not expected to work under such conditions.  It
+sure would be nice if it did, and v2.5 will hopefully be a big step into
+that direction.  But it might take until v3.1 to accomplish fully
+satisfactory performance, because that requires some heavy refactoring.
+
+   But for now we recommend you use the command line to complete this
+one commit.  Also see *note Performance::.
+
+
+File: magit.info,  Node: I am having problems committing,  Next: I am using MS Windows and cannot push with Magit,  Prev: I changed several thousand files at once and now Magit is unusable,  Up: FAQ - Issues and Errors
+
+A.2.3 I am having problems committing
+-------------------------------------
+
+That likely means that Magit is having problems finding an appropriate
+emacsclient executable.  See *note (with-editor)Configuring
+With-Editor:: and *note (with-editor)Debugging::.
+
+
+File: magit.info,  Node: I am using MS Windows and cannot push with Magit,  Next: I am using OS X and SOMETHING works in shell but not in Magit,  Prev: I am having problems committing,  Up: FAQ - Issues and Errors
+
+A.2.4 I am using MS Windows and cannot push with Magit
+------------------------------------------------------
+
+It’s almost certain that Magit is only incidental to this issue.  It is
+much more likely that this is a configuration issue, even if you can
+push on the command line.
+
+   Detailed setup instructions can be found at
+<https://github.com/magit/magit/wiki/Pushing-with-Magit-from-Windows>.
+
+
 File: magit.info,  Node: I am using OS X and SOMETHING works in shell but not in Magit,  Next: Diffs contain control sequences,  Prev: I am using MS Windows and cannot push with Magit,  Up: FAQ - Issues and Errors
 
 A.2.5 I am using OS X and SOMETHING works in shell, but not in Magit
@@ -242,13 +587,14 @@ Appendix C Keystroke Index
 * b c:                                   The Branch Popup.    (line  55)
 * B g:                                   Bisecting.           (line  36)
 * B k:                                   Bisecting.           (line  41)
-* b k:                                   The Branch Popup.    (line 108)
+* b k:                                   The Branch Popup.    (line 129)
+* b l:                                   The Branch Popup.    (line  62)
 * b n:                                   The Branch Popup.    (line  45)
 * B r:                                   Bisecting.           (line  47)
-* b r:                                   The Branch Popup.    (line 114)
+* b r:                                   The Branch Popup.    (line 135)
 * B s:                                   Bisecting.           (line  24)
-* b s:                                   The Branch Popup.    (line  62)
-* b x:                                   The Branch Popup.    (line  92)
+* b s:                                   The Branch Popup.    (line  85)
+* b x:                                   The Branch Popup.    (line 113)
 * c:                                     Initiating a Commit. (line   8)
 * c <1>:                                 Editing Rebase Sequences.
                                                               (line  72)
@@ -472,10 +818,10 @@ Appendix C Keystroke Index
 * O a:                                   Subtree.             (line  20)
 * o b:                                   Submodule Popup.     (line  17)
 * O c:                                   Subtree.             (line  24)
+* o d:                                   Submodule Popup.     (line  39)
 * o f:                                   Submodule Popup.     (line  35)
 * O f:                                   Subtree.             (line  32)
 * o i:                                   Submodule Popup.     (line  22)
-* o i <1>:                               Submodule Popup.     (line  39)
 * O m:                                   Subtree.             (line  28)
 * O p:                                   Subtree.             (line  36)
 * o s:                                   Submodule Popup.     (line  31)
@@ -519,7 +865,7 @@ Appendix C Keystroke Index
 * r u:                                   Rebasing.            (line  29)
 * r w:                                   Rebasing.            (line  81)
 * RET:                                   Diff Buffer.         (line   6)
-* RET <1>:                               References Buffer.   (line 117)
+* RET <1>:                               References Buffer.   (line 118)
 * RET <2>:                               Blaming.             (line  55)
 * RET <3>:                               Editing Rebase Sequences.
                                                               (line  16)
@@ -705,16 +1051,17 @@ Appendix D Command Index
                                                               (line  12)
 * magit-branch:                          The Branch Popup.    (line  45)
 * magit-branch-and-checkout:             The Branch Popup.    (line  55)
+* magit-branch-checkout:                 The Branch Popup.    (line  62)
 * magit-branch-config-popup:             The Branch Popup.    (line  29)
 * magit-branch-config-popup <1>:         The Branch Config Popup.
                                                               (line   6)
-* magit-branch-delete:                   The Branch Popup.    (line 108)
-* magit-branch-or-checkout:              The Branch Popup.    (line 218)
-* magit-branch-orphan:                   The Branch Popup.    (line 213)
+* magit-branch-delete:                   The Branch Popup.    (line 129)
+* magit-branch-or-checkout:              The Branch Popup.    (line 239)
+* magit-branch-orphan:                   The Branch Popup.    (line 234)
 * magit-branch-popup:                    The Branch Popup.    (line  12)
-* magit-branch-rename:                   The Branch Popup.    (line 114)
-* magit-branch-reset:                    The Branch Popup.    (line  92)
-* magit-branch-spinoff:                  The Branch Popup.    (line  62)
+* magit-branch-rename:                   The Branch Popup.    (line 135)
+* magit-branch-reset:                    The Branch Popup.    (line 113)
+* magit-branch-spinoff:                  The Branch Popup.    (line  85)
 * magit-checkout:                        The Branch Popup.    (line  37)
 * magit-cherry:                          Cherries.            (line  17)
 * magit-cherry-apply:                    Cherry Picking.      (line  22)
@@ -999,10 +1346,10 @@ Appendix D Command Index
 * magit-stash-worktree:                  Stashing.            (line  25)
 * magit-status:                          Status Buffer.       (line  22)
 * magit-submodule-add:                   Submodule Popup.     (line  11)
+* magit-submodule-deinit:                Submodule Popup.     (line  39)
 * magit-submodule-fetch:                 Fetching.            (line  42)
 * magit-submodule-fetch <1>:             Submodule Popup.     (line  35)
 * magit-submodule-init:                  Submodule Popup.     (line  22)
-* magit-submodule-init <1>:              Submodule Popup.     (line  39)
 * magit-submodule-popup:                 Submodule Popup.     (line   6)
 * magit-submodule-setup:                 Submodule Popup.     (line  17)
 * magit-submodule-sync:                  Submodule Popup.     (line  31)
@@ -1032,7 +1379,7 @@ Appendix D Command Index
                                                               (line  28)
 * magit-version:                         Git Executable.      (line  17)
 * magit-version <1>:                     Debugging Tools.     (line  10)
-* magit-visit-ref:                       References Buffer.   (line 117)
+* magit-visit-ref:                       References Buffer.   (line 118)
 * magit-wip-commit:                      Wip Modes.           (line 129)
 * magit-wip-log:                         Wip Modes.           (line  69)
 * magit-wip-log-current:                 Wip Modes.           (line  77)
@@ -1077,19 +1424,21 @@ Appendix E Function Index
                                                               (line  56)
 * magit-branch-config-popup:             The Branch Config Popup.
                                                               (line   6)
-* magit-branch-or-checkout:              The Branch Popup.    (line 218)
-* magit-branch-orphan:                   The Branch Popup.    (line 213)
-* magit-builtin-completing-read:         Completion and Confirmation.
-                                                              (line  23)
+* magit-branch-or-checkout:              The Branch Popup.    (line 239)
+* magit-branch-orphan:                   The Branch Popup.    (line 234)
+* magit-builtin-completing-read:         Support for Completion Frameworks.
+                                                              (line  42)
 * magit-call-git:                        Calling Git for Effect.
                                                               (line  28)
 * magit-call-process:                    Calling Git for Effect.
                                                               (line  32)
 * magit-cancel-section:                  Creating Sections.   (line  71)
+* magit-completing-read:                 Support for Completion Frameworks.
+                                                              (line  60)
 * magit-current-section:                 Section Selection.   (line   6)
 * magit-define-section-jumper:           Creating Sections.   (line  77)
-* magit-diff-scope:                      Matching Sections.   (line 110)
-* magit-diff-type:                       Matching Sections.   (line  87)
+* magit-diff-scope:                      Matching Sections.   (line 111)
+* magit-diff-type:                       Matching Sections.   (line  88)
 * magit-display-buffer:                  Switching Buffers.   (line   6)
 * magit-display-buffer-fullcolumn-most-v1: Switching Buffers. (line  72)
 * magit-display-buffer-fullframe-status-topleft-v1: Switching Buffers.
@@ -1127,8 +1476,8 @@ Appendix E Function Index
 * magit-git-wash:                        Calling Git for Effect.
                                                               (line  70)
 * magit-hunk-set-window-start:           Section Movement.    (line  44)
-* magit-ido-completing-read:             Completion and Confirmation.
-                                                              (line  28)
+* magit-ido-completing-read:             Support for Completion Frameworks.
+                                                              (line  48)
 * magit-insert-am-sequence:              Status Sections.     (line  28)
 * magit-insert-bisect-log:               Status Sections.     (line  46)
 * magit-insert-bisect-output:            Status Sections.     (line  38)
@@ -1227,7 +1576,7 @@ Appendix E Function Index
 * magit-run-git-with-logfile:            Calling Git for Effect.
                                                               (line  56)
 * magit-save-window-configuration:       Switching Buffers.   (line  86)
-* magit-section-case:                    Matching Sections.   (line  63)
+* magit-section-case:                    Matching Sections.   (line  64)
 * magit-section-hide:                    Section Visibility.  (line  49)
 * magit-section-hide-children:           Section Visibility.  (line  64)
 * magit-section-ident:                   Matching Sections.   (line  11)
@@ -1237,7 +1586,7 @@ Appendix E Function Index
 * magit-section-show-children:           Section Visibility.  (line  58)
 * magit-section-show-headings:           Section Visibility.  (line  53)
 * magit-section-toggle-children:         Section Visibility.  (line  68)
-* magit-section-when:                    Matching Sections.   (line  51)
+* magit-section-when:                    Matching Sections.   (line  52)
 * magit-start-git:                       Calling Git for Effect.
                                                               (line 105)
 * magit-start-process:                   Calling Git for Effect.
@@ -1270,9 +1619,9 @@ Appendix F Variable Index
 * auto-revert-verbose:                   Automatic Reverting of File-Visiting Buffers.
                                                               (line 103)
 * branch.autoSetupMerge:                 The Branch Config Popup.
-                                                              (line  93)
+                                                              (line  94)
 * branch.autoSetupRebase:                The Branch Config Popup.
-                                                              (line 110)
+                                                              (line 111)
 * branch.NAME.description:               The Branch Config Popup.
                                                               (line  61)
 * branch.NAME.merge:                     The Branch Config Popup.
@@ -1315,10 +1664,10 @@ Appendix F Variable Index
 * magit-blame-show-headings:             Blaming.             (line 120)
 * magit-blame-time-format:               Blaming.             (line 116)
 * magit-branch-adjust-remote-upstream-alist: The Branch Popup.
-                                                              (line 171)
+                                                              (line 192)
 * magit-branch-popup-show-variables:     The Branch Popup.    (line  21)
-* magit-branch-prefer-remote-upstream:   The Branch Popup.    (line 126)
-* magit-branch-read-upstream-first:      The Branch Popup.    (line 120)
+* magit-branch-prefer-remote-upstream:   The Branch Popup.    (line 147)
+* magit-branch-read-upstream-first:      The Branch Popup.    (line 141)
 * magit-buffer-name-format:              Naming Buffers.      (line  27)
 * magit-bury-buffer-function:            Quitting Windows.    (line  11)
 * magit-cherry-margin:                   Cherries.            (line  22)
@@ -1327,8 +1676,8 @@ Appendix F Variable Index
 * magit-commit-extend-override-date:     Initiating a Commit. (line  79)
 * magit-commit-reword-override-date:     Initiating a Commit. (line  83)
 * magit-commit-squash-confirm:           Initiating a Commit. (line  87)
-* magit-completing-read-function:        Completion and Confirmation.
-                                                              (line  10)
+* magit-completing-read-function:        Support for Completion Frameworks.
+                                                              (line  27)
 * magit-diff-buffer-file-locked:         Minor Mode for Buffers Visiting Files.
                                                               (line  52)
 * magit-diff-hide-trailing-cr-characters: Diff Options.       (line  45)
@@ -1341,6 +1690,8 @@ Appendix F Variable Index
 * magit-diff-visit-previous-blob:        Diff Buffer.         (line  25)
 * magit-display-buffer-function:         Switching Buffers.   (line  23)
 * magit-display-buffer-noselect:         Switching Buffers.   (line  14)
+* magit-dwim-selection:                  Completion and Confirmation.
+                                                              (line  42)
 * magit-ediff-dwim-show-on-hunks:        Ediffing.            (line  73)
 * magit-ediff-quit-hook:                 Ediffing.            (line  88)
 * magit-ediff-show-stash-with-index:     Ediffing.            (line  81)
@@ -1353,8 +1704,9 @@ Appendix F Variable Index
 * magit-git-executable:                  Git Executable.      (line  39)
 * magit-git-global-arguments:            Global Git Arguments.
                                                               (line   6)
-* magit-list-refs-sortby:                Completion and Confirmation.
-                                                              (line  36)
+* magit-keep-region-overlay:             The Selection.       (line  52)
+* magit-list-refs-sortby:                Additional Completion Options.
+                                                              (line   6)
 * magit-log-auto-more:                   Log Buffer.          (line  67)
 * magit-log-buffer-file-locked:          Minor Mode for Buffers Visiting Files.
                                                               (line  71)
@@ -1363,14 +1715,13 @@ Appendix F Variable Index
 * magit-log-section-commit-count:        Status Sections.     (line 112)
 * magit-log-select-margin:               Select from Log.     (line  30)
 * magit-log-show-refname-after-summary:  Log Buffer.          (line  73)
-* magit-no-confirm:                      Completion and Confirmation.
-                                                              (line  50)
+* magit-no-confirm:                      Action Confirmation. (line  18)
 * magit-pop-revision-stack-format:       Editing Commit Messages.
                                                               (line  92)
 * magit-post-display-buffer-hook:        Switching Buffers.   (line  92)
 * magit-pre-display-buffer-hook:         Switching Buffers.   (line  81)
 * magit-prefer-remote-upstream:          The Branch Config Popup.
-                                                              (line 138)
+                                                              (line 139)
 * magit-process-raise-error:             Calling Git for Effect.
                                                               (line 151)
 * magit-push-current-set-remote-if-missing: Pushing.          (line  96)
@@ -1381,14 +1732,14 @@ Appendix F Variable Index
 * magit-refresh-function:                Refreshing Buffers.  (line  48)
 * magit-refresh-status-buffer:           Automatic Refreshing of Magit Buffers.
                                                               (line  46)
-* magit-refs-indent-cherry-lines:        References Buffer.   (line 112)
-* magit-refs-local-branch-format:        References Buffer.   (line 100)
-* magit-refs-margin:                     References Buffer.   (line  40)
-* magit-refs-margin-for-tags:            References Buffer.   (line  66)
-* magit-refs-remote-branch-format:       References Buffer.   (line 104)
+* magit-refs-indent-cherry-lines:        References Buffer.   (line 113)
+* magit-refs-local-branch-format:        References Buffer.   (line 101)
+* magit-refs-margin:                     References Buffer.   (line  41)
+* magit-refs-margin-for-tags:            References Buffer.   (line  67)
+* magit-refs-remote-branch-format:       References Buffer.   (line 105)
 * magit-refs-sections-hook:              References Sections. (line  13)
 * magit-refs-show-commit-count:          References Buffer.   (line  29)
-* magit-refs-tags-format:                References Buffer.   (line 108)
+* magit-refs-tags-format:                References Buffer.   (line 109)
 * magit-remote-add-set-remote.pushDefault: The Remote Popup.  (line  54)
 * magit-remote-popup-show-variables:     The Remote Popup.    (line  18)
 * magit-repolist-columns:                Repository List.     (line  14)
@@ -1396,7 +1747,8 @@ Appendix F Variable Index
 * magit-repository-directories-depth:    Status Buffer.       (line  40)
 * magit-revision-insert-related-refs:    Revision Buffer.     (line   6)
 * magit-revision-show-gravatar:          Revision Buffer.     (line  10)
-* magit-root-section:                    Matching Sections.   (line  79)
+* magit-revision-use-hash-sections:      Revision Buffer.     (line  26)
+* magit-root-section:                    Matching Sections.   (line  80)
 * magit-save-repository-buffers:         Automatic Saving of File-Visiting Buffers.
                                                               (line  13)
 * magit-section-movement-hook:           Section Movement.    (line  39)
@@ -1413,13 +1765,13 @@ Appendix F Variable Index
 * magit-submodule-list-columns:          Listing Submodules.  (line  20)
 * magit-this-process:                    Calling Git for Effect.
                                                               (line 146)
-* magit-uniquify-buffer-names:           Naming Buffers.      (line  66)
+* magit-uniquify-buffer-names:           Naming Buffers.      (line  67)
 * magit-unstage-committed:               Staging and Unstaging.
                                                               (line  56)
 * magit-update-other-window-delay:       Section Movement.    (line  87)
 * magit-use-sticky-arguments:            Popup Buffers and Prefix Commands.
                                                               (line  36)
-* magit-visit-ref-behavior:              References Buffer.   (line 128)
+* magit-visit-ref-behavior:              References Buffer.   (line 129)
 * magit-wip-after-apply-mode:            Wip Modes.           (line  99)
 * magit-wip-after-apply-mode-lighter:    Wip Modes.           (line 141)
 * magit-wip-after-save-local-mode-lighter: Wip Modes.         (line 137)
@@ -1440,5 +1792,5 @@ Appendix F Variable Index
 * remote.NAME.url:                       The Remote Config Popup.
                                                               (line  20)
 * remote.pushDefault:                    The Branch Config Popup.
-                                                              (line  83)
+                                                              (line  84)
 

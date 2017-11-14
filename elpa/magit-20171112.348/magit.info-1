@@ -30,7 +30,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-     This manual is for Magit version 2.11.0 (2.11.0-179-ga12cdfcf+1).
+     This manual is for Magit version 2.11.0 (2.11.0-235-gc5ba3819a+1).
 
      Copyright (C) 2015-2017 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -65,22 +65,18 @@ itself deserve to be called porcelains.
 
 — The Detailed Node Listing —
 
-
 Installation
 
 * Installing from an Elpa Archive::
 * Installing from the Git Repository::
 * Post-Installation Tasks::
 
-
-
-
 Interface Concepts
 
 * Modes and Buffers::
 * Sections::
 * Popup Buffers and Prefix Commands::
-* Completion and Confirmation::
+* Completion, Confirmation and the Selection: Completion Confirmation and the Selection. 
 * Running Git::
 
 Modes and Buffers
@@ -102,6 +98,14 @@ Sections
 * Section Options::
 
 
+Completion, Confirmation and the Selection
+
+* Action Confirmation::
+* Completion and Confirmation::
+* The Selection::
+* The hunk-internal region::
+* Support for Completion Frameworks::
+* Additional Completion Options::
 
 
 Running Git
@@ -110,6 +114,7 @@ Running Git
 * Running Git Manually::
 * Git Executable::
 * Global Git Arguments::
+
 
 Inspecting
 
@@ -131,7 +136,6 @@ Status Buffer
 * Status Options::
 
 
-
 Logging
 
 * Refreshing Logs::
@@ -150,10 +154,10 @@ Diffing
 * Revision Buffer::
 
 
-
 References Buffer
 
 * References Sections::
+
 
 Manipulating
 
@@ -169,11 +173,9 @@ Manipulating
 * Resetting::
 * Stashing::
 
-
 Staging and Unstaging
 
 * Staging from File-Visiting Buffers::
-
 
 
 Committing
@@ -189,8 +191,6 @@ Branching
 * The Branch Config Popup::
 
 
-
-
 Rebasing
 
 * Editing Rebase Sequences::
@@ -200,6 +200,7 @@ Rebasing
 Cherry Picking
 
 * Reverting::
+
 
 Transferring
 
@@ -215,6 +216,7 @@ Remotes
 * The Remote Popup::
 * The Remote Config Popup::
 
+
 Miscellaneous
 
 * Tagging::
@@ -226,23 +228,22 @@ Miscellaneous
 * Minor Mode for Buffers Visiting Files::
 * Minor Mode for Buffers Visiting Blobs::
 
-
-
 Submodules
 
 * Listing Submodules::
 * Submodule Popup::
+
 
 Customizing
 
 * Per-Repository Configuration::
 * Essential Settings::
 
-
 Essential Settings
 
 * Safety::
 * Performance::
+
 
 Plumbing
 
@@ -264,11 +265,10 @@ Section Plumbing
 * Matching Sections::
 
 
-
 Conventions
 
-* Confirmation and Completion::
 * Theming Faces::
+
 
 FAQ
 
@@ -297,6 +297,8 @@ FAQ - Issues and Errors
 * The mode-line information isn't always up-to-date::
 * Emacs 24.5 hangs when loading Magit: Emacs 245 hangs when loading Magit. 
 * A branch and tag sharing the same name breaks SOMETHING::
+
+
 
 
 File: magit.info,  Node: Introduction,  Next: Installation,  Prev: Top,  Up: Top
@@ -652,7 +654,7 @@ File: magit.info,  Node: Interface Concepts,  Next: Inspecting,  Prev: Getting S
 * Modes and Buffers::
 * Sections::
 * Popup Buffers and Prefix Commands::
-* Completion and Confirmation::
+* Completion, Confirmation and the Selection: Completion Confirmation and the Selection. 
 * Running Git::
 
 
@@ -867,6 +869,7 @@ File: magit.info,  Node: Naming Buffers,  Next: Quitting Windows,  Prev: Switchi
 
           Like ‘%t’, but append an asterisk if and only if
           ‘magit-uniquify-buffer-names’ is nil.
+
      The value should always contain ‘%m’ or ‘%M’, ‘%v’ or ‘%V’, and
      ‘%t’ or ‘%T’.  If ‘magit-uniquify-buffer-names’ is non-nil, then
      the value must end with ‘%t’ or ‘%T’ (see issue #2841).
@@ -1494,7 +1497,7 @@ certain type of sections.  As you can see there are not many of those.
      only affects sections that could benefit from this information.
 
 
-File: magit.info,  Node: Popup Buffers and Prefix Commands,  Next: Completion and Confirmation,  Prev: Sections,  Up: Interface Concepts
+File: magit.info,  Node: Popup Buffers and Prefix Commands,  Next: Completion Confirmation and the Selection,  Prev: Sections,  Up: Interface Concepts
 
 4.3 Popup Buffers and Prefix Commands
 =====================================
@@ -1548,40 +1551,397 @@ differently, depending on the value of ‘magit-use-sticky-arguments’.
      ‘magit-diff-arguments’ is always used.
 
 
-File: magit.info,  Node: Completion and Confirmation,  Next: Running Git,  Prev: Popup Buffers and Prefix Commands,  Up: Interface Concepts
+File: magit.info,  Node: Completion Confirmation and the Selection,  Next: Running Git,  Prev: Popup Buffers and Prefix Commands,  Up: Interface Concepts
 
-4.4 Completion and Confirmation
-===============================
+4.4 Completion, Confirmation and the Selection
+==============================================
 
-Many commands read a value from the user.  By default this is done using
-the built-in function ‘completing-read’, but Magit can instead use
-another completion framework.
+* Menu:
+
+* Action Confirmation::
+* Completion and Confirmation::
+* The Selection::
+* The hunk-internal region::
+* Support for Completion Frameworks::
+* Additional Completion Options::
+
+
+File: magit.info,  Node: Action Confirmation,  Next: Completion and Confirmation,  Up: Completion Confirmation and the Selection
+
+4.4.1 Action Confirmation
+-------------------------
+
+By default many actions that could potentially lead to data loss have to
+be confirmed.  This includes many very common actions, so this can
+quickly become annoying.  Many of these actions can be undone and if you
+have thought about how to undo certain mistakes, then it should be safe
+to disable confirmation for the respective actions.
+
+   The option ‘magit-no-confirm’ can be used to tell Magit to perform
+certain actions without the user having to confirm them.  Note that
+while this option can only be used to disable confirmation for a
+specific set of actions, the next section explains another way of
+telling Magit to ask fewer questions.
+
+ -- User Option: magit-no-confirm
+
+     The value of this option is a list of symbols, representing actions
+     that do not have to be confirmed by the user before being carried
+     out.
+
+     By default many potentially dangerous commands ask the user for
+     confirmation.  Each of the below symbols stands for an action
+     which, when invoked unintentionally or without being fully aware of
+     the consequences, could lead to tears.  In many cases there are
+     several commands that perform variations of a certain action, so we
+     don’t use the command names but more generic symbols.
+
+        • Applying changes:
+
+             • ‘discard’ Discarding one or more changes (i.e.  hunks or
+               the complete diff for a file) loses that change,
+               obviously.
+
+             • ‘reverse’ Reverting one or more changes can usually be
+               undone by reverting the reversion.
+
+             • ‘stage-all-changes’, ‘unstage-all-changes’ When there are
+               both staged and unstaged changes, then un-/staging
+               everything would destroy that distinction.  Of course
+               that also applies when un-/staging a single change, but
+               then less is lost and one does that so often that having
+               to confirm every time would be unacceptable.
+
+        • Files:
+
+             • ‘delete’ When a file that isn’t yet tracked by Git is
+               deleted, then it is completely lost, not just the last
+               changes.  Very dangerous.
+
+             • ‘trash’ Instead of deleting a file it can also be move to
+               the system trash.  Obviously much less dangerous than
+               deleting it.
+
+               Also see option ‘magit-delete-by-moving-to-trash’.
+
+             • ‘resurrect’ A deleted file can easily be resurrected by
+               "deleting" the deletion, which is done using the same
+               command that was used to delete the same file in the
+               first place.
+
+             • ‘untrack’ Untracking a file can be undone by tracking it
+               again.
+
+             • ‘rename’ Renaming a file can easily be undone.
+
+        • Sequences:
+
+             • ‘reset-bisect’ Aborting (known to Git as "resetting") a
+               bisect operation loses all information collected so far.
+
+             • ‘abort-rebase’ Aborting a rebase throws away all already
+               modified commits, but it’s possible to restore those from
+               the reflog.
+
+             • ‘abort-merge’ Aborting a merge throws away all conflict
+               resolutions which have already been carried out by the
+               user.
+
+             • ‘merge-dirty’ Merging with a dirty worktree can make it
+               hard to go back to the state before the merge was
+               initiated.
+
+        • References:
+
+             • ‘delete-unmerged-branch’ Once a branch has been deleted,
+               it can only be restored using low-level recovery tools
+               provided by Git.  And even then the reflog is gone.  The
+               user always has to confirm the deletion of a branch by
+               accepting the default choice (or selecting another
+               branch), but when a branch has not been merged yet, also
+               make sure the user is aware of that.
+
+             • ‘drop-stashes’ Dropping a stash is dangerous because Git
+               stores stashes in the reflog.  Once a stash is removed,
+               there is no going back without using low-level recovery
+               tools provided by Git.  When a single stash is dropped,
+               then the user always has to confirm by accepting the
+               default (or selecting another).  This action only
+               concerns the deletion of multiple stashes at once.
+
+        • Various:
+
+             • ‘kill-process’ There seldom is a reason to kill a
+               process.
+
+        • Global settings:
+
+          Instead of adding all of the above symbols to the value of
+          this option, you can also set it to the atom ‘t’, which has
+          the same effect as adding all of the above symbols.  Doing
+          that most certainly is a bad idea, especially because other
+          symbols might be added in the future.  So even if you don’t
+          want to be asked for confirmation for any of these actions,
+          you are still better of adding all of the respective symbols
+          individually.
+
+          When ‘magit-wip-before-change-mode’ is enabled, then the
+          following actions can be undone fairly easily: ‘discard’,
+          ‘reverse’, ‘stage-all-changes’, and ‘unstage-all-changes’.  If
+          and only if this mode is enabled, then ‘safe-with-wip’ has the
+          same effect as adding all of these symbols individually.
+
+
+File: magit.info,  Node: Completion and Confirmation,  Next: The Selection,  Prev: Action Confirmation,  Up: Completion Confirmation and the Selection
+
+4.4.2 Completion and Confirmation
+---------------------------------
+
+Many Magit commands ask the user to select from a list of possible
+things to act on, while offering the most likely choice as the default.
+For many of these commands the default is the thing at point, provided
+that it actually is a valid thing to act on.  For many commands that act
+on a branch, the current branch serves as the default if there is no
+branch at point.
+
+   These commands combine asking for confirmation and asking for a
+target to act on into a single action.  The user can confirm the default
+target using ‘RET’ or abort using ‘C-g’.  This is similar to a
+‘y-or-n-p’ prompt, but the keys to confirm or abort differ.
+
+   At the same time the user is also given the opportunity to select
+another target, which is useful because for some commands and/or in some
+situations you might want to select the action before selecting the
+target by moving to it.
+
+   However you might find that for some commands you always want to use
+the default target, if any, or even that you want the command to act on
+the default without requiring any confirmation at all.  The option
+‘magit-dwim-selection’ can be used to configure certain commands to that
+effect.
+
+   Note that when the region is active then many commands act on the
+things that are selected using a mechanism based on the region, in many
+cases after asking for confirmation.  This region-based mechanism is
+called the "selection" and is described in detail in the next section.
+When a selection exists that is valid for the invoked command, then that
+command never offers to act on something else, and whether it asks for
+confirmation is not controlled by this option.
+
+   Also note that Magit asks for confirmation of certain actions that
+are not coupled with completion (or the selection).  Such dialogs are
+also not affected by this option and are described in the previous
+section.
+
+ -- User Option: magit-dwim-selection
+
+   This option can be used to tell certain commands to use the thing at
+point instead of asking the user to select a candidate to act on, with
+or without confirmation.
+
+   The value has the form ‘((COMMAND nil|PROMPT DEFAULT)...)’.
+
+   • COMMAND is the command that should not prompt for a choice.  To
+     have an effect, the command has to use the function
+     ‘magit-completing-read’ or a utility function which in turn uses
+     that function.
+
+   • If the command uses ‘magit-completing-read’ multiple times, then
+     PROMPT can be used to only affect one of these uses.  PROMPT, if
+     non-nil, is a regular expression that is used to match against the
+     PROMPT argument passed to ‘magit-completing-read’.
+
+   • DEFAULT specifies how to use the default.  If it is ‘t’, then the
+     DEFAULT argument passed to ‘magit-completing-read’ is used without
+     confirmation.  If it is ‘ask’, then the user is given a chance to
+     abort.  DEFAULT can also be ‘nil’, in which case the entry has no
+     effect.
+
+
+File: magit.info,  Node: The Selection,  Next: The hunk-internal region,  Prev: Completion and Confirmation,  Up: Completion Confirmation and the Selection
+
+4.4.3 The Selection
+-------------------
+
+If the region is active, then many Magit commands act on the things that
+are selected using a mechanism based on the region instead of one single
+thing.  When the region is not active, then these commands act on the
+thing at point or read a single thing to act on.  This is described in
+the previous section — this section only covers how multiple things are
+selected, how that is visualized, and how certain commands behave when
+that is the case.
+
+   Magit’s mechanism for selecting multiple things, or rather sections
+that represent these things, is based on the Emacs region, but the area
+that Magit considers to be selected is typically larger than the region
+and additional restrictions apply.
+
+   Magit makes a distinction between a region that qualifies as forming
+a valid Magit selection and a region that does not.  If the region does
+not qualify, then it is displayed as it is in other Emacs buffers.  If
+the region does qualify as a Magit selection, then the selection is
+always visualized, while the region itself is only visualized if it
+begins and ends on the same line.
+
+   For a region to qualify as a Magit selection, it must begin in the
+heading of one section and end in the heading of a sibling section.
+Note that if the end of the region is at the very beginning of section
+heading (i.e.  at the very beginning of a line) then that section is
+considered to be *inside* the selection.
+
+   This is not consistent with how the region is normally treated in
+Emacs — if the region ends at the beginning of a line, then that line is
+outside the region.  Due to how Magit visualizes the selection, it
+should be obvious that this difference exists.
+
+   Not every command acts on every valid selection.  Some commands do
+not even consider the location of point, others may act on the section
+at point but not support acting on the selection, and even commands that
+do support the selection of course only do so if it selects things that
+they can act on.
+
+   This is the main reason why the selection must include the section at
+point.  Even if a selection exists, the invoked command may disregard
+it, in which case it may act on the current section only.  It is much
+safer to only act on the current section but not the other selected
+sections than it is to act on the current section *instead* of the
+selected sections.  The latter would be much more surprising and if the
+current section always is part of the selection, then that cannot
+happen.
+
+ -- Variable: magit-keep-region-overlay
+
+     This variable controls whether the region is visualized as usual
+     even when a valid Magit selection or a hunk-internal region exists.
+     See the doc-string for more information.
+
+
+File: magit.info,  Node: The hunk-internal region,  Next: Support for Completion Frameworks,  Prev: The Selection,  Up: Completion Confirmation and the Selection
+
+4.4.4 The hunk-internal region
+------------------------------
+
+Somewhat related to the Magit selection described in the previous
+section is the hunk-internal region.
+
+   Like the selection, the hunk-internal region is based on the Emacs
+region but causes that region to not be visualized as it would in other
+Emacs buffers, and includes the line on which the region ends even if it
+ends at the very beginning of that line.
+
+   Unlike the selection, which is based on a region that must begin in
+the heading of one section and ends in the section of a sibling section,
+the hunk-internal region must begin inside the *body* of a hunk section
+and end in the body of the *same* section.
+
+   The hunk-internal region is honored by "apply" commands, which can,
+among other targets, act on a hunk.  If the hunk-internal region is
+active, then such commands act only on the marked part of the hunk
+instead of on the complete hunk.
+
+
+File: magit.info,  Node: Support for Completion Frameworks,  Next: Additional Completion Options,  Prev: The hunk-internal region,  Up: Completion Confirmation and the Selection
+
+4.4.5 Support for Completion Frameworks
+---------------------------------------
+
+The built-in option ‘completing-read-function’ specifies the low-level
+function used by ‘completing-read’ to ask a user to select from a list
+of choices.  Its default value is ‘completing-read-default’.
+Alternative completion frameworks typically activate themselves by
+substituting their own implementation.
+
+   Mostly for historic reasons Magit provides a similar option named
+‘magit-completing-read-function’, which only controls the low-level
+function used by ‘magit-completing-read’.  This option also makes it
+possible to use a different completing mechanism for Magit than for the
+rest of Emacs, but doing that is not recommend.
+
+   You most likely don’t have to customize the magit-specific option to
+use an alternative completion framework.  For example, if you enable
+‘ivy-mode’, then Magit will respect that, and if you enable ‘helm-mode’,
+then you are done too.
+
+   However if you want to use Ido, then ‘ido-mode’ won’t do the trick.
+You will also have to install the ‘ido-completing-read+’ package and use
+‘magit-ido-completing-read’ as ‘magit-completing-read-function’.
 
  -- User Option: magit-completing-read-function
 
-     The value of this variable is the function used to perform
-     completion.  Because functions _intended_ to replace
-     ‘completing-read’ often are not fully compatible drop-in
-     replacements, and also because Magit expects them to add the
-     default choice to the prompt themselves, such functions should not
-     be used directly.  Instead a wrapper function has to be used.
+     The value of this variable is the low-level function used to
+     perform completion by code that uses ‘magit-completing-read’ (as
+     opposed to the built-in ‘completing-read’).
 
-   Currently only the real ‘completing-read’ and Ido
-(http://www.emacswiki.org/emacs/InteractivelyDoThings) are fully
-supported.  More frameworks will be supported in the future.
+     The default value, ‘magit-builtin-completing-read’, is suitable for
+     the standard completion mechanism, ‘ivy-mode’, and ‘helm-mode’ at
+     least.
+
+     The built-in ‘completing-read’ and ‘completing-read-default’ are
+     *not* suitable to be used here.  ‘magit-builtin-completing-read’
+     performs some additional work, and any function used in its place
+     has to do the same.
 
  -- Function: magit-builtin-completing-read prompt choices &optional
           predicate require-match initial-input hist def
 
-     Perform completion using ‘completion-read’.
+     This function performs completion using the built-in
+     ‘completion-read’ and does some additional magit-specific work.
 
  -- Function: magit-ido-completing-read prompt choices &optional
           predicate require-match initial-input hist def
 
-     Perform completion using ‘ido-completing-read+’ from the package by
-     the same name (which you have to explicitly install).  Ido itself
-     comes with a supposed drop-in replacement ‘ido-completing-read’,
-     but that has too many deficits to serve our needs.
+     This function performs completion using ‘ido-completing-read+’ from
+     the package by the same name (which you have to explicitly install)
+     and does some additional magit-specific work.
+
+     We have to use ‘ido-completing-read+’ instead of the
+     ‘ido-completing-read’ that comes with Ido itself, because the
+     latter, while intended as a drop-in replacement, cannot serve that
+     purpose because it violates too many of the implicit conventions.
+
+ -- Function: magit-completing-read prompt choices &optional predicate
+          require-match initial-input hist def fallback
+
+     This is the function that Magit commands use when they need the
+     user to select a single thing to act on.  The arguments have the
+     same meaning as for ‘completing-read’, except for FALLBACK, which
+     is unique to this function and is described below.
+
+     Instead of asking the user to choose from a list of possible
+     candidates, this function may just return the default specified by
+     DEF, with or without requiring user confirmation.  Whether that is
+     the case depends on PROMPT, ‘this-command’ and
+     ‘magit-dwim-selection’.  See the documentation of the latter for
+     more information.
+
+     If it does read a value in the minibuffer, then this function acts
+     similar to ‘completing-read’, except for the following:
+
+        • If REQUIRE-MATCH is ‘nil’ and the user exits without a choice,
+          then ‘nil’ is returned instead of an empty string.
+
+        • If REQUIRE-MATCH is non-nil and the users exits without a
+          choice, an user-error is raised.
+
+        • FALLBACK specifies a secondary default that is only used if
+          the primary default DEF is ‘nil’.  The secondary default is
+          not subject to ‘magit-dwim-selection’ — if DEF is ‘nil’ but
+          FALLBACK is not, then this function always asks the user to
+          choose a candidate, just as if both defaults were ‘nil’.
+
+        • ": " is appended to PROMPT.
+
+        • PROMPT is modified to end with \" (default DEF|FALLBACK): \"
+          provided that DEF or FALLBACK is non-nil, that neither
+          ‘ivy-mode’ nor ‘helm-mode’ is enabled, and that
+          ‘magit-completing-read-function’ is set to its default value
+          of ‘magit-builtin-completing-read’.
+
+
+File: magit.info,  Node: Additional Completion Options,  Prev: Support for Completion Frameworks,  Up: Completion Confirmation and the Selection
+
+4.4.6 Additional Completion Options
+-----------------------------------
 
  -- User Option: magit-list-refs-sortby
 
@@ -1591,37 +1951,8 @@ supported.  More frameworks will be supported in the future.
      for-each-ref’.  By default, refs are sorted alphabetically by their
      full name (e.g., "refs/heads/master").
 
-   By default many commands that could potentially lead to data loss
-have to be confirmed.  This includes many very common commands, so this
-can become annoying quickly.  Many of these actions can be undone,
-provided ‘magit-wip-before-change-mode’ is turned on (which it is not by
-default, due to performance concerns).
-
- -- User Option: magit-no-confirm
-
-     The value of this option is a list of symbols, representing
-     commands which do not have to be confirmed by the user before being
-     carried out.
-
-     When the global mode ‘magit-wip-before-change-mode’ is enabled then
-     many commands can be undone.  If that mode is enabled then adding
-     ‘safe-with-wip’ to this list has the same effect as adding
-     ‘discard’, ‘reverse’, ‘stage-all-changes’, and
-     ‘unstage-all-changes’.
-
-          (add-to-list 'magit-no-confirm 'safe-with-wip)
-
-     For a list of all symbols that can be added to the value of this
-     variable, see the doc-string.
-
-   Note that there are commands that ignore this option and always
-require confirmation, or which can be told not to do so using another
-dedicated option.  Also most commands, when acting on multiple sections
-at once always, require confirmation, even when they do respect this
-option when acting on a single section.
-
 
-File: magit.info,  Node: Running Git,  Prev: Completion and Confirmation,  Up: Interface Concepts
+File: magit.info,  Node: Running Git,  Prev: Completion Confirmation and the Selection,  Up: Interface Concepts
 
 4.5 Running Git
 ===============
@@ -2139,7 +2470,7 @@ variable.
      Insert submodule sections.
 
      Hook ‘magit-module-sections-hook’ controls which module sections
-     are inserted, and option ‘magit-insert-modules-nested’ controls
+     are inserted, and option ‘magit-module-sections-nested’ controls
      whether they are wrapped in an additional section.
 
    • Option: magit-module-sections-hook
@@ -3080,6 +3411,28 @@ File: magit.info,  Node: Revision Buffer,  Prev: Diff Options,  Up: Diffing
      committer image, accordingly.  Either the car or the cdr may be
      nil.
 
+ -- User Option: magit-revision-use-hash-sections
+
+     Whether to turn hashes inside the commit message into sections.
+
+     If non-nil, then hashes inside the commit message are turned into
+     ‘commit’ sections.  There is a trade off to be made between
+     performance and reliability:
+
+        • ‘slow’ calls git for every word to be absolutely sure.
+
+        • ‘quick’ skips words less than seven characters long.
+
+        • ‘quicker’ additionally skips words that don’t contain a
+          number.
+
+        • ‘quickest’ uses all words that are at least seven characters
+          long and which contain at least one number as well as at least
+          one letter.
+
+     If nil, then no hashes are turned into sections, but you can still
+     visit the commit at point using "RET".
+
    The diffs shown in the revision buffer may be automatically
 restricted to a subset of the changed files.  If the revision buffer is
 displayed from a log buffer, the revision buffer will share the same
@@ -3230,6 +3583,7 @@ File: magit.info,  Node: References Buffer,  Next: Bisecting,  Prev: Ediffing,  
         • ‘branch’ Show counts for branches only.
 
         • ‘nil’ Never show counts.
+
      The default is ‘nil’ because anything else can be very expensive.
 
  -- User Option: magit-refs-margin
@@ -4344,6 +4698,29 @@ features are available from separate popups.
 
      Also see option ‘magit-branch-prefer-remote-upstream’.
 
+‘b l’     (‘magit-branch-checkout’)
+
+     This command checks out an existing or new local branch.  It reads
+     a branch name from the user offering all local branches and a
+     subset of remote branches as candidates.  Remote branches for which
+     a local branch by the same name exists are omitted from the list of
+     candidates.  The user can also enter a completely new branch name.
+
+        • If the user selects an existing local branch, then that is
+          checked out.
+
+        • If the user selects a remote branch, then it creates and
+          checks out a new local branch with the same name, and
+          configures the selected remote branch as the push target.
+
+        • If the user enters a new branch name, then it creates and
+          checks that out, after also reading the starting-point from
+          the user.
+
+     In the latter two cases the upstream is also set.  Whether it is
+     set to the chosen starting point or something else depends on the
+     value of ‘magit-branch-adjust-remote-upstream-alist’.
+
 ‘b s’     (‘magit-branch-spinoff’)
 
      This command creates and checks out a new branch starting at and
@@ -4365,9 +4742,7 @@ features are available from separate popups.
      ‘FROM~’, instead of to the last commit it shares with its upstream.
      Interactively, FROM is only ever non-nil, if the region selects
      some commits, and among those commits, FROM is the commit that is
-     the fewest commits ahead of the source branch.  (It not yet
-     possible to spin off a single commit, unless it is the only
-     unpushed commit.  See #2920.)
+     the fewest commits ahead of the source branch.
 
      The commit at the other end of the selection actually does not
      matter, all commits between FROM and ‘HEAD’ are moved to the new
@@ -4600,6 +4975,7 @@ branch-specific variables are not set.
         • When ‘true’ then pulling is done by rebasing.
 
         • When ‘false’ (the default) then pulling is done by merging.
+
      Since it is never a good idea to merge the upstream branch into a
      feature or hotfix branch and most branches are such branches, you
      should consider setting this to ‘true’, and ‘branch.master.rebase’
@@ -6106,7 +6482,7 @@ File: magit.info,  Node: Submodule Popup,  Prev: Listing Submodules,  Up: Submod
 
      Fetch submodule.  With a prefix argument fetch all remotes.
 
-‘o i’     (‘magit-submodule-init’)
+‘o d’     (‘magit-submodule-deinit’)
 
      Unregister the submodule at PATH.
 
@@ -7301,6 +7677,7 @@ File: magit.info,  Node: Matching Sections,  Prev: Section Selection,  Up: Secti
 
           matches sections of TYPE regardless of the types of the parent
           sections.
+
      Each TYPE is a symbol.  Note that it is not necessary to specify
      all TYPEs up to the root section as printed by
      ‘magit-describe-type’, unless of course you want to be that
@@ -7455,366 +7832,4 @@ where ‘*’ may be something like ‘diff’) with the value of
      ‘magit-diff-default-context’ change just the ‘-U<N>’ argument.  In
      both case this is done by changing the value of this variable and
      then calling this ‘magit-refresh-function’.
-
-
-File: magit.info,  Node: Conventions,  Prev: Refreshing Buffers,  Up: Plumbing
-
-10.4 Conventions
-================
-
-* Menu:
-
-* Confirmation and Completion::
-* Theming Faces::
-
-
-File: magit.info,  Node: Confirmation and Completion,  Next: Theming Faces,  Up: Conventions
-
-10.4.1 Confirmation and Completion
-----------------------------------
-
-Dangerous operations that may lead to data loss have to be confirmed by
-default.  With a multi-section selection, this is done using questions
-that can be answered with "yes" or "no".  When the region isn’t active,
-or if it doesn’t constitute a valid section selection, then such
-commands instead read a single item in the minibuffer.  When the value
-of the current section is among the possible choices, then that is
-presented as default choice.  To confirm the action on a single item,
-the user has to answer ‘RET’ (instead of "yes"), and to abort, ‘C-g’
-(instead of "no").  But alternatively the user may also select another
-item, just like if the command had been invoked with no suitable section
-at point at all.
-
-
-File: magit.info,  Node: Theming Faces,  Prev: Confirmation and Completion,  Up: Conventions
-
-10.4.2 Theming Faces
---------------------
-
-The default theme uses blue for local branches, green for remote
-branches, and goldenrod (brownish yellow) for tags.  When creating a new
-theme, you should probably follow that example.  If your theme already
-uses other colors, then stick to that.
-
-   In older releases these reference faces used to have a background
-color and a box around them.  The basic default faces no longer do so,
-to make Magit buffers much less noisy, and you should follow that
-example at least with regards to boxes.  (Boxes were used in the past to
-work around a conflict between the highlighting overlay and text
-property backgrounds.  That’s no longer necessary because highlighting
-no longer causes other background colors to disappear.)  Alternatively
-you can keep the background color and/or box, but then have to take
-special care to adjust ‘magit-branch-current’ accordingly.  By default
-it looks mostly like ‘magit-branch-local’, but with a box (by default
-the former is the only face that uses a box, exactly so that it sticks
-out).  If the former also uses a box, then you have to make sure that it
-differs in some other way from the latter.
-
-   The most difficult faces to theme are those related to diffs,
-headings, highlighting, and the region.  There are faces that fall into
-all four groups - expect to spend some time getting this right.
-
-   The ‘region’ face in the default theme, in both the light and dark
-variants, as well as in many other themes, distributed with Emacs or by
-third-parties, is very ugly.  It is common to use a background color
-that really sticks out, which is ugly but if that were the only problem
-then it would be acceptable.  Unfortunately many themes also set the
-foreground color, which ensures that all text within the region is
-readable.  Without doing that there might be cases where some foreground
-color is too close to the region background color to still be readable.
-But it also means that text within the region loses all syntax
-highlighting.
-
-   I consider the work that went into getting the ‘region’ face right to
-be a good indicator for the general quality of a theme.  My
-recommendation for the ‘region’ face is this: use a background color
-slightly different from the background color of the ‘default’ face, and
-do not set the foreground color at all.  So for a light theme you might
-use a light (possibly tinted) gray as the background color of ‘default’
-and a somewhat darker gray for the background of ‘region’.  That should
-usually be enough to not collide with the foreground color of any other
-face.  But if some other faces also set a light gray as background
-color, then you should also make sure it doesn’t collide with those (in
-some cases it might be acceptable though).
-
-   Magit only uses the ‘region’ face when the region is "invalid" by its
-own definition.  In a Magit buffer the region is used to either select
-multiple sibling sections, so that commands which support it act on all
-of these sections instead of just the current section, or to select
-lines within a single hunk section.  In all other cases, the section is
-considered invalid and Magit won’t act on it.  But such invalid sections
-happen, either because the user has not moved point enough yet to make
-it valid or because she wants to use a non-magit command to act on the
-region, e.g.  ‘kill-region’.
-
-   So using the regular ‘region’ face for invalid sections is a feature.
-It tells the user that Magit won’t be able to act on it.  It’s
-acceptable if that face looks a bit odd and even (but less so) if it
-collides with the background colors of section headings and other things
-that have a background color.
-
-   Magit highlights the current section.  If a section has subsections,
-then all of them are highlighted.  This is done using faces that have
-"highlight" in their names.  For most sections,
-‘magit-section-highlight’ is used for both the body and the heading.
-Like the ‘region’ face, it should only set the background color to
-something similar to that of ‘default’.  The highlight background color
-must be different from both the ‘region’ background color and the
-‘default’ background color.
-
-   For diff related sections Magit uses various faces to highlight
-different parts of the selected section(s).  Note that hunk headings,
-unlike all other section headings, by default have a background color,
-because it is useful to have very visible separators between hunks.
-That face ‘magit-diff-hunk-heading’, should be different from both
-‘magit-diff-hunk-heading-highlight’ and ‘magit-section-highlight’, as
-well as from ‘magit-diff-context’ and ‘magit-diff-context-highlight’.
-By default we do that by changing the foreground color.  Changing the
-background color would lead to complications, and there are already
-enough we cannot get around.  (Also note that it is generally a good
-idea for section headings to always be bold, but only for sections that
-have subsections).
-
-   When there is a valid region selecting diff-related sibling sections,
-i.e.  multiple files or hunks, then the bodies of all these sections use
-the respective highlight faces, but additionally the headings instead
-use one of the faces ‘magit-diff-file-heading-selection’ or
-‘magit-diff-hunk-heading-selection’.  These faces have to be different
-from the regular highlight variants to provide explicit visual
-indication that the region is active.
-
-   When theming diff related faces, start by setting the option
-‘magit-diff-refine-hunk’ to ‘all’.  You might personally prefer to only
-refine the current hunk or not use hunk refinement at all, but some of
-the users of your theme want all hunks to be refined, so you have to
-cater to that.
-
-   (Also turn on ‘magit-diff-highlight-indentation’,
-‘magit-diff-highlight-trailing’, and ‘magit-diff-paint-whitespace’; and
-insert some whitespace errors into the code you use for testing.)
-
-   For e.g.  "added lines" you have to adjust three faces:
-‘magit-diff-added’, ‘magit-diff-added-highlight’, and
-‘smerge-refined-added’.  Make sure that the latter works well with both
-of the former, as well as ‘smerge-other’ and ‘diff-added’.  Then do the
-same for the removed lines, context lines, lines added by us, and lines
-added by them.  Also make sure the respective added, removed, and
-context faces use approximately the same saturation for both the
-highlighted and unhighlighted variants.  Also make sure the file and
-diff headings work nicely with context lines (e.g.  make them look
-different).  Line faces should set both the foreground and the
-background color.  For example, for added lines use two different
-greens.
-
-   It’s best if the foreground color of both the highlighted and the
-unhighlighted variants are the same, so you will need to have to find a
-color that works well on the highlight and unhighlighted background, the
-refine background, and the highlight context background.  When there is
-an hunk internal region, then the added- and removed-lines background
-color is used only within that region.  Outside the region the
-highlighted context background color is used.  This makes it easier to
-see what is being staged.  With an hunk internal region the hunk heading
-is shown using ‘magit-diff-hunk-heading-selection’, and so are the thin
-lines that are added around the lines that fall within the region.  The
-background color of that has to be distinct enough from the various
-other involved background colors.
-
-   Nobody said this would be easy.  If your theme restricts itself to a
-certain set of colors, then you should make an exception here.
-Otherwise it would be impossible to make the diffs look good in each and
-every variation.  Actually you might want to just stick to the default
-definitions for these faces.  You have been warned.  Also please note
-that if you do not get this right, this will in some cases look to users
-like bugs in Magit - so please do it right or not at all.
-
-
-File: magit.info,  Node: FAQ,  Next: Debugging Tools,  Prev: Plumbing,  Up: Top
-
-Appendix A FAQ
-**************
-
-The next two nodes lists frequently asked questions.  For a list of
-frequently *and recently* asked questions, i.e.  questions that haven’t
-made it into the manual yet, see
-<https://github.com/magit/magit/wiki/FAQ>.
-
-   Please also use the *note Debugging Tools::.
-
-* Menu:
-
-* FAQ - How to …?::
-* FAQ - Issues and Errors::
-
-
-File: magit.info,  Node: FAQ - How to …?,  Next: FAQ - Issues and Errors,  Up: FAQ
-
-A.1 FAQ - How to …?
-===================
-
-* Menu:
-
-* How to show git's output?::
-* How to install the gitman info manual?::
-* How to show diffs for gpg-encrypted files?::
-* How does branching and pushing work?::
-* Can Magit be used as ‘ediff-version-control-package’?::
-
-
-File: magit.info,  Node: How to show git's output?,  Next: How to install the gitman info manual?,  Up: FAQ - How to …?
-
-A.1.1 How to show git’s output?
--------------------------------
-
-To show the output of recently run git commands, press ‘$’ (or, if that
-isn’t available, ‘M-x magit-process-buffer’).  This will show a buffer
-containing a section per git invocation; as always press ‘TAB’ to expand
-or collapse them.
-
-   By default, git’s output is only inserted into the process buffer if
-it is run for side-effects.  When the output is consumed in some way,
-also inserting it into the process buffer would be too expensive.  For
-debugging purposes, it’s possible to do so anyway by setting
-‘magit-git-debug’ to ‘t’.
-
-
-File: magit.info,  Node: How to install the gitman info manual?,  Next: How to show diffs for gpg-encrypted files?,  Prev: How to show git's output?,  Up: FAQ - How to …?
-
-A.1.2 How to install the gitman info manual?
---------------------------------------------
-
-Git’s manpages can be exported as an info manual called ‘gitman’.
-Magit’s own info manual links to nodes in that manual instead of the
-actual manpages because Info doesn’t support linking to manpages.
-
-   Unfortunately some distributions do not install the ‘gitman’ manual
-by default and you will have to install a separate documentation package
-to get it.
-
-   Magit patches Info adding the ability to visit links to the ‘gitman’
-Info manual by instead viewing the respective manpage.  If you prefer
-that approach, then set the value of ‘magit-view-git-manual-method’ to
-one of the supported packages ‘man’ or ‘woman’, e.g.:
-
-     (setq magit-view-git-manual-method 'man)
-
-
-File: magit.info,  Node: How to show diffs for gpg-encrypted files?,  Next: How does branching and pushing work?,  Prev: How to install the gitman info manual?,  Up: FAQ - How to …?
-
-A.1.3 How to show diffs for gpg-encrypted files?
-------------------------------------------------
-
-Git supports showing diffs for encrypted files, but has to be told to do
-so.  Since Magit just uses Git to get the diffs, configuring Git also
-affects the diffs displayed inside Magit.
-
-     git config --global diff.gpg.textconv "gpg --no-tty --decrypt"
-     echo "*.gpg filter=gpg diff=gpg" > .gitattributes
-
-
-File: magit.info,  Node: How does branching and pushing work?,  Next: Can Magit be used as ‘ediff-version-control-package’?,  Prev: How to show diffs for gpg-encrypted files?,  Up: FAQ - How to …?
-
-A.1.4 How does branching and pushing work?
-------------------------------------------
-
-Please see *note Branching:: and
-<http://emacsair.me/2016/01/18/magit-2.4>
-
-
-File: magit.info,  Node: Can Magit be used as ‘ediff-version-control-package’?,  Prev: How does branching and pushing work?,  Up: FAQ - How to …?
-
-A.1.5 Can Magit be used as ‘ediff-version-control-package’?
------------------------------------------------------------
-
-No, it cannot.  For that to work the functions ‘ediff-magit-internal’
-and ‘ediff-magit-merge-internal’ would have to be implemented, and they
-are not.  These two functions are only used by the three commands
-‘ediff-revision’, ‘ediff-merge-revisions-with-ancestor’, and
-‘ediff-merge-revisions’.
-
-   These commands only delegate the task of populating buffers with
-certain revisions to the "internal" functions.  The equally important
-task of determining which revisions are to be compared/merged is not
-delegated.  Instead this is done without any support whatsoever from the
-version control package/system - meaning that the user has to enter the
-revisions explicitly.  Instead of implementing ‘ediff-magit-internal’ we
-provide ‘magit-ediff-compare’, which handles both tasks like it is 2005.
-
-   The other commands ‘ediff-merge-revisions’ and
-‘ediff-merge-revisions-with-ancestor’ are normally not what you want
-when using a modern version control system like Git.  Instead of letting
-the user resolve only those conflicts which Git could not resolve on its
-own, they throw away all work done by Git and then expect the user to
-manually merge all conflicts, including those that had already been
-resolved.  That made sense back in the days when version control systems
-couldn’t merge (or so I have been told), but not anymore.  Once in a
-blue moon you might actually want to see all conflicts, in which case
-you *can* use these commands, which then use ‘ediff-vc-merge-internal’.
-So we don’t actually have to implement ‘ediff-magit-merge-internal’.
-Instead we provide the more useful command ‘magit-ediff-resolve’ which
-only shows yet-to-be resolved conflicts.
-
-
-File: magit.info,  Node: FAQ - Issues and Errors,  Prev: FAQ - How to …?,  Up: FAQ
-
-A.2 FAQ - Issues and Errors
-===========================
-
-* Menu:
-
-* Magit is slow::
-* I changed several thousand files at once and now Magit is unusable::
-* I am having problems committing::
-* I am using MS Windows and cannot push with Magit::
-* I am using OS X and SOMETHING works in shell, but not in Magit: I am using OS X and SOMETHING works in shell but not in Magit. 
-* Diffs contain control sequences::
-* Expanding a file to show the diff causes it to disappear::
-* Point is wrong in the ‘COMMIT_EDITMSG’ buffer::
-* The mode-line information isn't always up-to-date::
-* Emacs 24.5 hangs when loading Magit: Emacs 245 hangs when loading Magit. 
-* A branch and tag sharing the same name breaks SOMETHING::
-
-
-File: magit.info,  Node: Magit is slow,  Next: I changed several thousand files at once and now Magit is unusable,  Up: FAQ - Issues and Errors
-
-A.2.1 Magit is slow
--------------------
-
-See *note Performance::.
-
-
-File: magit.info,  Node: I changed several thousand files at once and now Magit is unusable,  Next: I am having problems committing,  Prev: Magit is slow,  Up: FAQ - Issues and Errors
-
-A.2.2 I changed several thousand files at once and now Magit is unusable
-------------------------------------------------------------------------
-
-Magit is *currently* not expected to work under such conditions.  It
-sure would be nice if it did, and v2.5 will hopefully be a big step into
-that direction.  But it might take until v3.1 to accomplish fully
-satisfactory performance, because that requires some heavy refactoring.
-
-   But for now we recommend you use the command line to complete this
-one commit.  Also see *note Performance::.
-
-
-File: magit.info,  Node: I am having problems committing,  Next: I am using MS Windows and cannot push with Magit,  Prev: I changed several thousand files at once and now Magit is unusable,  Up: FAQ - Issues and Errors
-
-A.2.3 I am having problems committing
--------------------------------------
-
-That likely means that Magit is having problems finding an appropriate
-emacsclient executable.  See *note (with-editor)Configuring
-With-Editor:: and *note (with-editor)Debugging::.
-
-
-File: magit.info,  Node: I am using MS Windows and cannot push with Magit,  Next: I am using OS X and SOMETHING works in shell but not in Magit,  Prev: I am having problems committing,  Up: FAQ - Issues and Errors
-
-A.2.4 I am using MS Windows and cannot push with Magit
-------------------------------------------------------
-
-It’s almost certain that Magit is only incidental to this issue.  It is
-much more likely that this is a configuration issue, even if you can
-push on the command line.
-
-   Detailed setup instructions can be found at
-<https://github.com/magit/magit/wiki/Pushing-with-Magit-from-Windows>.
 

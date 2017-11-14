@@ -29,7 +29,7 @@ command that is associated with a specific set of infix arguments and
 suffix commands.
 
      This manual is for Magit-Popup version 2.11.0
-     (2.11.0-145-g892ca025a+1).
+     (2.11.0-217-ge5f626de8+1).
 
      Copyright (C) 2015-2017 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -51,18 +51,16 @@ suffix commands.
 
 — The Detailed Node Listing —
 
-
 Usage
 
 * Customizing Existing Popups::
 * Other Options::
 
-
-
 Defining Prefix and Suffix Commands
 
 * Defining Prefix Commands::
 * Defining Suffix Commands::
+
 
 
 File: magit-popup.info,  Node: Introduction,  Next: Usage,  Prev: Top,  Up: Top
@@ -408,6 +406,7 @@ File: magit-popup.info,  Node: Other Options,  Prev: Customizing Existing Popups
         • ‘nil’
 
           Ignore prefix arguments.
+
      This option can be overridden for individual popups.
      ‘magit-show-refs-popup’ for example defaults to invoking the
      default action directly.  It only shows the popup buffer when a
@@ -694,13 +693,13 @@ directly.
 
 Tag Table:
 Node: Top768
-Node: Introduction2028
-Node: Usage4727
-Node: Customizing Existing Popups9424
-Node: Other Options15170
-Node: Defining Prefix and Suffix Commands16712
-Node: Defining Prefix Commands18864
-Node: Defining Suffix Commands25839
+Node: Introduction2026
+Node: Usage4725
+Node: Customizing Existing Popups9422
+Node: Other Options15168
+Node: Defining Prefix and Suffix Commands16711
+Node: Defining Prefix Commands18863
+Node: Defining Suffix Commands25838
 
 End Tag Table
 

@@ -632,6 +632,8 @@
           (advice-add 'atomic-chrome-stop-server :before
                       #'ne/atomic-chrome-mark-server-stopped)
 
+          (add-hook 'kill-emacs-hook 'ne/atomic-chrome-mark-server-stopped)
+
           (when (not (file-exists-p "~/.atomic-chrome-running"))
                 (atomic-chrome-start-server))
           )

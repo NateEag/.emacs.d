@@ -3,62 +3,71 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "python-mode" "python-mode.el" (23051 4380
+;;;### (autoloads nil "python-mode" "python-mode.el" (23053 42225
 ;;;;;;  0 0))
 ;;; Generated autoloads from python-mode.el
 
 (autoload 'py-backward-class "python-mode" "\
-Go to beginning of `class'.
+Go to beginning of ‘class’ according to INDENT.
 
-If already at beginning, go one `class' backward.
-Returns beginning of `class' if successful, nil otherwise
+If already at beginning, go one ‘class’ backward.
+Optional DECORATOR BOL
+
+Return beginning of ‘class’ if successful, nil otherwise
 
 \(fn &optional INDENT DECORATOR BOL)" t nil)
 
 (autoload 'py-backward-def "python-mode" "\
-Go to beginning of `def'.
+Go to beginning of ‘def’ according to INDENT.
 
-If already at beginning, go one `def' backward.
-Returns beginning of `def' if successful, nil otherwise
+If already at beginning, go one ‘def’ backward.
+Optional DECORATOR BOL
+
+Return beginning of ‘def’ if successful, nil otherwise
 
 \(fn &optional INDENT DECORATOR BOL)" t nil)
 
 (autoload 'py-backward-def-or-class "python-mode" "\
-Go to beginning of `def-or-class'.
+Go to beginning of ‘def-or-class’ according to INDENT.
 
-If already at beginning, go one `def-or-class' backward.
-Returns beginning of `def-or-class' if successful, nil otherwise
+If already at beginning, go one ‘def-or-class’ backward.
+Optional DECORATOR BOL
+
+Return beginning of ‘def-or-class’ if successful, nil otherwise
 
 \(fn &optional INDENT DECORATOR BOL)" t nil)
 
 (autoload 'py-backward-class-bol "python-mode" "\
-Go to beginning of `class', go to BOL.
+Go to beginning of ‘class’ according to INDENT, go to BOL.
+Optional DECORATOR BOL
 
-If already at beginning, go one `class' backward.
-Returns beginning of `class' if successful, nil otherwise
+If already at beginning, go one ‘class’ backward.
+Return beginning of ‘class’ if successful, nil otherwise
 
 \(fn &optional INDENT DECORATOR)" t nil)
 
 (autoload 'py-backward-def-bol "python-mode" "\
-Go to beginning of `def', go to BOL.
+Go to beginning of ‘def’ according to INDENT, go to BOL.
+Optional DECORATOR BOL
 
-If already at beginning, go one `def' backward.
-Returns beginning of `def' if successful, nil otherwise
+If already at beginning, go one ‘def’ backward.
+Return beginning of ‘def’ if successful, nil otherwise
 
 \(fn &optional INDENT DECORATOR)" t nil)
 
 (autoload 'py-backward-def-or-class-bol "python-mode" "\
-Go to beginning of `def-or-class', go to BOL.
+Go to beginning of ‘def-or-class’ according to INDENT, go to BOL.
+Optional DECORATOR BOL
 
-If already at beginning, go one `def-or-class' backward.
-Returns beginning of `def-or-class' if successful, nil otherwise
+If already at beginning, go one ‘def-or-class’ backward.
+Return beginning of ‘def-or-class’ if successful, nil otherwise
 
 \(fn &optional INDENT DECORATOR)" t nil)
 
 (autoload 'py-forward-class "python-mode" "\
 Go to end of class.
 
-Returns end of class if successful, nil otherwise
+Return end of class if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match.
 
@@ -67,7 +76,7 @@ With optional BOL, go to beginning of line following match.
 (autoload 'py-forward-def-or-class "python-mode" "\
 Go to end of def-or-class.
 
-Returns end of def-or-class if successful, nil otherwise
+Return end of def-or-class if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match.
 
@@ -76,7 +85,7 @@ With optional BOL, go to beginning of line following match.
 (autoload 'py-forward-def "python-mode" "\
 Go to end of def.
 
-Returns end of def if successful, nil otherwise
+Return end of def if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match.
 
@@ -84,68 +93,67 @@ With optional BOL, go to beginning of line following match.
 
 (autoload 'py-shell "python-mode" "\
 Start an interactive Python interpreter in another window.
-  Interactively, \\[universal-argument] prompts for a new buffer-name.
-  \\[universal-argument] 2 prompts for `py-python-command-args'.
-  If `default-directory' is a remote file name, it is also prompted
+Interactively, \\[universal-argument] prompts for a new ‘buffer-name’.
+  \\[universal-argument] 2 prompts for ‘py-python-command-args’.
+  If ‘default-directory’ is a remote file name, it is also prompted
   to change if called with a prefix arg.
-
-  Optional string SHELL overrides default `py-shell-name'.
-  Returns py-shell's buffer-name.
+  Optional ARGPROMPT DEDICATED
+  Optional string SHELL overrides default ‘py-shell-name’.
+  Returns py-shell's ‘buffer-name’.
   BUFFER allows specifying a name, the Python process is connected to
-  FAST process not in comint-mode buffer
+  FAST process not in ‘comint-mode’ buffer
   EXCEPTION-BUFFER point to error
-  SPLIT see var `py-split-window-on-execute'
-  SWITCH see var `py-switch-buffers-on-execute-p'
-
+  SPLIT see var ‘py-split-window-on-execute’
+  SWITCH see var ‘py-switch-buffers-on-execute-p’
 
 \(fn &optional ARGPROMPT DEDICATED SHELL BUFFER FAST EXCEPTION-BUFFER SPLIT SWITCH)" t nil)
 
 (autoload 'ipython "python-mode" "\
 Start an IPython interpreter.
 
-Optional \\[universal-argument] prompts for path to the interpreter.
+Optional ARG \\[universal-argument] prompts for path to the interpreter.
 
 \(fn &optional ARGPROMPT BUFFER FAST EXCEPTION-BUFFER SPLIT SWITCH)" t nil)
 
 (autoload 'ipython2\.7 "python-mode" "\
 Start an IPython2.7 interpreter.
 
-Optional \\[universal-argument] prompts for path to the interpreter.
+Optional ARG \\[universal-argument] prompts for path to the interpreter.
 
 \(fn &optional ARGPROMPT BUFFER FAST EXCEPTION-BUFFER SPLIT SWITCH)" t nil)
 
 (autoload 'ipython3 "python-mode" "\
 Start an IPython3 interpreter.
 
-Optional \\[universal-argument] prompts for path to the interpreter.
+Optional ARG \\[universal-argument] prompts for path to the interpreter.
 
 \(fn &optional ARGPROMPT BUFFER FAST EXCEPTION-BUFFER SPLIT SWITCH)" t nil)
 
 (autoload 'jython "python-mode" "\
 Start an Jython interpreter.
 
-Optional \\[universal-argument] prompts for path to the interpreter.
+Optional ARG \\[universal-argument] prompts for path to the interpreter.
 
 \(fn &optional ARGPROMPT BUFFER FAST EXCEPTION-BUFFER SPLIT SWITCH)" t nil)
 
 (autoload 'python "python-mode" "\
 Start an Python interpreter.
 
-Optional \\[universal-argument] prompts for path to the interpreter.
+Optional ARG \\[universal-argument] prompts for path to the interpreter.
 
 \(fn &optional ARGPROMPT BUFFER FAST EXCEPTION-BUFFER SPLIT SWITCH)" t nil)
 
 (autoload 'python2 "python-mode" "\
 Start an Python2 interpreter.
 
-Optional \\[universal-argument] prompts for path to the interpreter.
+Optional ARG \\[universal-argument] prompts for path to the interpreter.
 
 \(fn &optional ARGPROMPT BUFFER FAST EXCEPTION-BUFFER SPLIT SWITCH)" t nil)
 
 (autoload 'python3 "python-mode" "\
 Start an Python3 interpreter.
 
-Optional \\[universal-argument] prompts for path to the interpreter.
+Optional ARG \\[universal-argument] prompts for path to the interpreter.
 
 \(fn &optional ARGPROMPT BUFFER FAST EXCEPTION-BUFFER SPLIT SWITCH)" t nil)
 
@@ -216,7 +224,7 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
 
 ;;;***
 
-;;;### (autoloads nil nil ("python-mode-pkg.el") (23051 4380 0 0))
+;;;### (autoloads nil nil ("python-mode-pkg.el") (23053 42225 0 0))
 
 ;;;***
 

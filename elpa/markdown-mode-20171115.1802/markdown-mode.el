@@ -7,7 +7,7 @@
 ;; Maintainer: Jason R. Blevins <jblevins@xbeta.org>
 ;; Created: May 24, 2007
 ;; Version: 2.4-dev
-;; Package-Version: 20171114.1801
+;; Package-Version: 20171115.1802
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: https://jblevins.org/projects/markdown-mode/
@@ -1413,6 +1413,15 @@ exporting with `markdown-export'."
                  (const :tag "At the end of the subtree" subtree)
                  (const :tag "Before next header" header)))
 
+(defcustom markdown-footnote-display '((raise 0.2) (height 0.8))
+  "Display specification for footnote markers and inline footnotes.
+By default, footnote text is reduced in size and raised.  Set to
+nil to disable this."
+  :group 'markdown
+  :type '(choice (sexp :tag "Display specification")
+                 (const :tag "Don't set display property" nil))
+  :package-version '(markdown-mode . "2.4"))
+
 (defcustom markdown-unordered-list-item-prefix "  * "
   "String inserted before unordered list items."
   :group 'markdown
@@ -2490,10 +2499,6 @@ START and END delimit region to propertize."
   '(face markdown-link-title-face invisible markdown-markup)
   "List of properties and values to apply to included code titles.")
 
-(defconst markdown-inline-footnote-properties
-  '(face nil display ((raise 0.2) (height 0.8)))
-  "Properties to apply to footnote markers and inline footnotes.")
-
 (defcustom markdown-hide-markup nil
   "Determines whether markup in the buffer will be hidden.
 When set to nil, all markup is displayed in the buffer as it
@@ -2905,6 +2910,18 @@ Depending on your font, some reasonable choices are:
   :type '(repeat (string :tag "Bullet character"))
   :package-version '(markdown-mode . "2.3"))
 
+(defun markdown--footnote-marker-properties ()
+  "Return a font-lock facespec expression for footnote marker text."
+  `(face markdown-footnote-marker-face
+         ,@(when markdown-hide-markup
+             `(display ,markdown-footnote-display))))
+
+(defun markdown--pandoc-inline-footnote-properties ()
+  "Return a font-lock facespec expression for Pandoc inline footnote text."
+  `(face markdown-footnote-text-face
+         ,@(when markdown-hide-markup
+             `(display ,markdown-footnote-display))))
+
 (defvar markdown-mode-font-lock-keywords-basic
   `((markdown-match-yaml-metadata-begin . ((1 markdown-markup-face)))
     (markdown-match-yaml-metadata-end . ((1 markdown-markup-face)))
@@ -2958,14 +2975,12 @@ Depending on your font, some reasonable choices are:
                                     (4 'markdown-html-attr-value-face nil t)))))
     (,markdown-regex-html-entity . 'markdown-html-entity-face)
     (markdown-fontify-list-items)
-    (,markdown-regex-footnote . ((0 markdown-inline-footnote-properties)
-                                 (1 markdown-markup-properties)    ; [^
-                                 (2 markdown-footnote-marker-face) ; label
+    (,markdown-regex-footnote . ((1 markdown-markup-properties)    ; [^
+                                 (2 (markdown--footnote-marker-properties)) ; label
                                  (3 markdown-markup-properties)))  ; ]
-    (,markdown-regex-pandoc-inline-footnote . ((0 markdown-inline-footnote-properties)
-                                               (1 markdown-markup-properties)   ; ^
+    (,markdown-regex-pandoc-inline-footnote . ((1 markdown-markup-properties)   ; ^
                                                (2 markdown-markup-properties)   ; [
-                                               (3 'markdown-footnote-text-face) ; text
+                                               (3 (markdown--pandoc-inline-footnote-properties)) ; text
                                                (4 markdown-markup-properties))) ; ]
     (markdown-match-includes . ((1 markdown-markup-properties)
                                 (2 markdown-markup-properties nil t)
@@ -7709,7 +7724,7 @@ This puts point at the start of the current subtree, and mark at the end."
   (interactive)
   (let ((beg))
     (if (markdown-heading-at-point)
-	(beginning-of-line)
+        (beginning-of-line)
       (markdown-previous-visible-heading 1))
     (setq beg (point))
     (markdown-end-of-subtree)
@@ -7724,9 +7739,9 @@ This puts point at the start of the current subtree, and mark at the end."
       (narrow-to-region
        (progn (markdown-back-to-heading-over-code-block t) (point))
        (progn (markdown-end-of-subtree)
-	      (if (and (markdown-heading-at-point) (not (eobp)))
-		  (backward-char 1))
-	      (point))))))
+          (if (and (markdown-heading-at-point) (not (eobp)))
+          (backward-char 1))
+          (point))))))
 
 
 ;;; Generic Structure Editing, Completion, and Cycling Commands ===============
@@ -9282,6 +9297,12 @@ This version removes characters with invisibility property
 
 ;; Functions for maintaining tables
 
+(defvar markdown-table-at-point-p-function nil
+  "Function to decide if point is inside a table.
+
+The indirection serves to differentiate between standard markdown
+tables and gfm tables which are less strict about the markup.")
+
 (defconst markdown-table-line-regexp "^[ \t]*|"
   "Regexp matching any line inside a table.")
 
@@ -9291,15 +9312,57 @@ This version removes characters with invisibility property
 (defconst markdown-table-dline-regexp "^[ \t]*|[^-:]"
   "Regexp matching dline inside a table.")
 
-(defconst markdown-table-border-regexp "^[ \t]*[^| \t]"
-  "Regexp matching any line outside a table.")
-
 (defun markdown-table-at-point-p ()
+  "Return non-nil when point is inside a table."
+  (if (functionp markdown-table-at-point-p-function)
+      (funcall markdown-table-at-point-p-function)
+    (markdown--table-at-point-p)))
+
+(defun markdown--table-at-point-p ()
   "Return non-nil when point is inside a table."
   (save-excursion
     (beginning-of-line)
     (and (looking-at-p markdown-table-line-regexp)
          (not (markdown-code-block-at-point-p)))))
+
+(defconst gfm-table-line-regexp "^.?*|"
+  "Regexp matching any line inside a table.")
+
+(defconst gfm-table-hline-regexp "^-+\\(|-\\)+"
+  "Regexp matching hline inside a table.")
+
+;; GFM simplified tables syntax is as follows:
+;; - A header line for the column names, this is any text
+;;   separated by `|'.
+;; - Followed by a string -|-|- ..., the number of dashes is optional
+;;   but must be higher than 1. The number of separators should match
+;;   the number of columns.
+;; - Followed by the rows of data, which has the same format as the
+;;   header line.
+;; Example:
+;;
+;; foo | bar
+;; ------|---------
+;; bar | baz
+;; bar | baz
+(defun gfm--table-at-point-p ()
+  "Return non-nil when point is inside a gfm-compatible table."
+  (or (markdown--table-at-point-p)
+      (save-excursion
+        (beginning-of-line)
+        (when (looking-at-p gfm-table-line-regexp)
+          ;; we might be at the first line of the table, check if the
+          ;; line below is the hline
+          (or (save-excursion
+                (forward-line 1)
+                (looking-at-p gfm-table-hline-regexp))
+              ;; go up to find the header
+              (catch 'done
+                (while (looking-at-p gfm-table-line-regexp)
+                  (when (looking-at-p gfm-table-hline-regexp)
+                    (throw 'done t))
+                  (forward-line -1))
+                nil))))))
 
 (defun markdown-table-hline-at-point-p ()
   "Return non-nil when point is on a hline in a table.
@@ -9311,22 +9374,22 @@ This function assumes point is on a table."
 (defun markdown-table-begin ()
   "Find the beginning of the table and return its position.
 This function assumes point is on a table."
-  (cond
-   ((save-excursion
-      (and (re-search-backward markdown-table-border-regexp nil t)
-           (line-beginning-position 2))))
-   (t (point-min))))
+  (save-excursion
+    (while (and (not (bobp))
+                (markdown-table-at-point-p))
+      (forward-line -1))
+    (unless (bobp)
+      (forward-line 1))
+    (point)))
 
 (defun markdown-table-end ()
   "Find the end of the table and return its position.
 This function assumes point is on a table."
   (save-excursion
-    (cond
-     ((re-search-forward markdown-table-border-regexp nil t)
-      (match-beginning 0))
-     (t (goto-char (point-max))
-        (skip-chars-backward " \t")
-        (if (bolp) (point) (line-end-position))))))
+    (while (and (not (eobp))
+                (markdown-table-at-point-p))
+      (forward-line 1))
+    (point)))
 
 (defun markdown-table-get-dline ()
   "Return index of the table data line at point.
@@ -9618,7 +9681,7 @@ Create new table lines if required."
   (if (or (looking-at "[ \t]*$")
           (save-excursion (skip-chars-backward " \t") (bolp)))
       (newline)
-	(markdown-table-align)
+    (markdown-table-align)
     (let ((col (markdown-table-get-column)))
       (beginning-of-line 2)
       (if (or (not (markdown-table-at-point-p))
@@ -10062,6 +10125,7 @@ spaces, or alternatively a TAB should be used as the separator."
   (setq markdown-link-space-sub-char "-")
   (setq markdown-wiki-link-search-subdirectories t)
   (setq-local font-lock-defaults '(gfm-font-lock-keywords))
+  (setq-local markdown-table-at-point-p-function 'gfm--table-at-point-p)
   ;; do the initial link fontification
   (markdown-gfm-parse-buffer-for-languages))
 

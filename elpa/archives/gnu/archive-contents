@@ -369,7 +369,7 @@
 	     ((:url . "http://elpa.gnu.org/packages/ediprolog.html")
 	      (:keywords "languages" "processes"))])
  (el-search .
-	    [(1 3 2)
+	    [(1 4)
 	     ((emacs
 	       (25))
 	      (stream
@@ -531,7 +531,7 @@
 	 ((:keywords "bindings")
 	  (:url . "https://github.com/abo-abo/hydra"))])
  (hyperbole .
-	    [(6 0 2)
+	    [(7 0 0)
 	     ((emacs
 	       (24 4)))
 	     "GNU Hyperbole: The Everyday Hypertextual Information Manager" tar

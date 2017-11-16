@@ -213,7 +213,7 @@ and then turned on again when turning off the latter."
   :options  '((?M "Detect lines moved or copied within a file" "-M")
               (?C "Detect lines moved or copied between files" "-C"))
   :actions  '((?b "Show blob touching these lines" magit-blame)
-              (?f "Show blob removing these lines" magit-blame-reverse))
+              (?f "Show last blob with these lines" magit-blame-reverse))
   :default-arguments '("-w")
   :max-action-columns 1
   :default-action 'magit-blame)
@@ -240,7 +240,7 @@ and then turned on again when turning off the latter."
 
 ;;;###autoload
 (defun magit-blame-reverse (revision file &optional args line)
-  "For each line show the subsequent revision that removes it.
+  "For each line show the last revision in which a line still existed.
 \n(fn REVISION FILE &optional ARGS)" ; LINE is for internal use
   (interactive (magit-blame-arguments* t))
   (magit-blame revision file (cons "--reverse" args) line))

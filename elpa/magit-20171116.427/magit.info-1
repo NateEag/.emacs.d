@@ -30,7 +30,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-     This manual is for Magit version 2.11.0 (2.11.0-235-gc5ba3819a+1).
+     This manual is for Magit version 2.11.0 (2.11.0-249-gcf6d30833+1).
 
      Copyright (C) 2015-2017 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -2827,6 +2827,26 @@ File: magit.info,  Node: Log Buffer,  Next: Log Margin,  Prev: Refreshing Logs, 
      Whether to show the refnames after the commit summaries.  This is
      useful if you use really long branch names.
 
+   Magit displays references in logs a bit differently from how Git does
+it.
+
+   Local branches are blue and remote branches are green.  Of course
+that depends on the used theme, as do the colors used for other types of
+references.  The current branch has a box around it, as do remote
+branches that are their respective remote’s ‘HEAD’ branch.
+
+   If a local branch and its push-target point at the same commit, then
+their names are combined to preserve space and to make that relationship
+visible.  For example:
+
+     origin/feature
+     [green][blue-]
+
+     instead of
+
+     feature origin/feature
+     [blue-] [green-------]
+
    For a description of ‘magit-log-margin’ see *note Log Margin::.
 
 
@@ -3879,8 +3899,8 @@ having to type out the command name.
 ‘M-x magit-blame-reverse’     (‘magit-blame-reverse’)
 
      This command augments each line or chunk of lines in the current
-     file- or blob-visiting buffer with information about what
-     subsequent commit removes these lines.
+     file- or blob-visiting buffer with information about the last
+     revision in which a line still existed.
 
      Like ‘magit-blame’, this command can be used recursively.
 
@@ -3890,7 +3910,7 @@ having to type out the command name.
      appropriate infix arguments in a popup buffer.
 
    The above commands are also bound in the keymaps
-‘magit-blame-mode-map and ~magit-blob-mode-map’, and in the popup
+‘magit-blame-mode-map’ and ‘magit-blob-mode-map’, and in the popup
 ‘magit-file-popup’.  Once Magit-Blame mode is enabled in a file-visiting
 buffer, you can use ‘B’ to show the blaming popup, ‘b’ to blame
 recursively going backward in time, and ‘f’ to blame recursively going

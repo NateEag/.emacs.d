@@ -3,6 +3,15 @@
  sure beat hopping into insert mode and back out all the time when I'm
  navigating.
 
+-Figure out how to make smartparens interact nicely with web-mode. '{{' and
+ '{%' don't work right when both are on, but I don't see a way to ban
+ multi-character sequences from smartparens, and I don't want to lose pairing
+ braces in CSS and JS.
+
+ Years later, I just realized it would help to only activate smartparens when
+ I'm in JS, CSS, or a server-side language, since I'm usually writing '{{' and
+ '{%' in markup, not genuine languages.
+
 -Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
 
 -Suppress aggressive-fill-paragraph-mode while directly above or below markdown
@@ -244,15 +253,6 @@
  src="/...". Actually, it might work better if it was just activated for any
  string beginning with '/'. Some hints:
  http://superuser.com/questions/67170/how-do-i-complete-file-paths-in-emacs
-
--Figure out how to make smartparens interact nicely with web-mode. '{{' and
- '{%' don't work right when both are on, but I don't see a way to ban
- multi-character sequences from smartparens, and I don't want to lose pairing
- braces in CSS and JS.
-
- Years later, I just realized it would help to only activate smartparens when
- I'm in JS, CSS, or a server-side language, since I'm usually writing '{{' and
- '{%' in markup, not genuine languages.
 
 -I should have Twig/Django snippets. 'block' is the obvious one, but probably
  snippets for all the major bits of syntax would be handy, and someone out

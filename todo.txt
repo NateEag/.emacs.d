@@ -10,7 +10,9 @@
 
  Years later, I just realized it would help to only activate smartparens when
  I'm in JS, CSS, or a server-side language, since I'm usually writing '{{' and
- '{%' in markup, not genuine languages.
+ '{%' in markup, not genuine languages. Basically advise smartparens key
+ handlers if you're in web-mode and only let them fire when you're not in
+ markup.
 
 -Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
 

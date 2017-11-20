@@ -12,7 +12,8 @@
  I'm in JS, CSS, or a server-side language, since I'm usually writing '{{' and
  '{%' in markup, not genuine languages. Basically advise smartparens key
  handlers if you're in web-mode and only let them fire when you're not in
- markup.
+ markup. Note that it's only really braces I'd want to turn off pairing for -
+ most other pairs don't have this issue.
 
 -Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
 
@@ -46,6 +47,9 @@
 
 -Use smtpmail-queue-mail and some network up/down notifier to automatically
  queue mail if offline and to automatically send it when back online.
+
+ Update: I have just installed the 'network-watch' package from MELPA, so this
+ should be just about trivial to do now.
 
 -Figure out what mime-type should be used for emailing bash scripts as an
  attachment.

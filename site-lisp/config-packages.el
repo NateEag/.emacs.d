@@ -208,6 +208,12 @@
 (use-package ne-evil-textobjects
   :commands ne/install-textobjects)
 
+;; Adds a text object to evil for selecting HTML attributes, bound by default
+;; to 'x'.
+;;
+;; I do this often enough it seemed worth installing.
+(use-package exato)
+
 (use-package crontab-mode
   :mode "\\.cron\\(tab\\)?\\'"
   :config (add-hook 'crontab-mode-hook 'conf-mode-init))

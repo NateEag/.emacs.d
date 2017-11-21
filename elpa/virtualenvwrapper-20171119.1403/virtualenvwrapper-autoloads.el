@@ -4,7 +4,7 @@
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
 ;;;### (autoloads nil "virtualenvwrapper" "virtualenvwrapper.el"
-;;;;;;  (23021 60976 0 0))
+;;;;;;  (23060 12785 0 0))
 ;;; Generated autoloads from virtualenvwrapper.el
 
 (autoload 'venv-deactivate "virtualenvwrapper" "\
@@ -24,11 +24,19 @@ interactively.
 
 \(fn &optional NAME)" t nil)
 
+(autoload 'venv-mkvirtualenv-using "virtualenvwrapper" "\
+Create new virtualenvs NAMES using INTERPRETER. If venv-location
+is a single directory, the new virtualenvs are made there; if it
+is a list of directories, the new virtualenvs are made in the
+current `default-directory'.
+
+\(fn INTERPRETER &rest NAMES)" t nil)
+
 (autoload 'venv-mkvirtualenv "virtualenvwrapper" "\
 Create new virtualenvs NAMES. If venv-location is a single
 directory, the new virtualenvs are made there; if it is a list of
 directories, the new virtualenvs are made in the current
-default-directory.
+`default-directory'.
 
 \(fn &rest NAMES)" t nil)
 

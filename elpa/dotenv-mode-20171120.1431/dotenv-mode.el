@@ -2,7 +2,7 @@
 
 ;; Author: Preetpal S. Sohal
 ;; URL: https://github.com/preetpalS/emacs-dotenv-mode
-;; Package-Version: 20171119.1023
+;; Package-Version: 20171120.1431
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24.3"))
 ;; License: GNU General Public License Version 3
@@ -43,7 +43,7 @@
     (modify-syntax-entry ?\" "\"" table) ; ?\" is a string delimiter
     (modify-syntax-entry ?# "<" table)   ; ?# starts comments
     (modify-syntax-entry ?\n ">" table)  ; ?\n ends comments
-    (modify-syntax-entry ?_ "_" table)   ; \_ can be used in variable and command names
+    (modify-syntax-entry ?_ "_" table)   ; ?_ can be used in variable and command names
     (modify-syntax-entry ?\\ "\\" table) ; ?\\ is an escape sequence character
     table))
 

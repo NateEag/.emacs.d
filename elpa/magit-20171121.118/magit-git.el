@@ -38,7 +38,7 @@
 (declare-function magit-process-buffer 'magit-process)
 (declare-function magit-process-file 'magit-process)
 (declare-function magit-process-insert-section 'magit-process)
-(defvar magit-process-error-message-re)
+(defvar magit-process-error-message-regexps)
 (defvar magit-refresh-args) ; from `magit-mode' for `magit-current-file'
 (defvar magit-branch-prefer-remote-upstream)
 
@@ -234,8 +234,17 @@ pass arguments through this function before handing them to Git,
 to do the following.
 
 * Flatten ARGS, removing nil arguments.
-* Prepend `magit-git-global-arguments' to ARGS."
-  (append magit-git-global-arguments (-flatten args)))
+* Prepend `magit-git-global-arguments' to ARGS.
+* On w32 systems, encode to `w32-ansi-code-page'."
+  (setq args (append magit-git-global-arguments (-flatten args)))
+  (if (and (eq system-type 'windows-nt) (boundp 'w32-ansi-code-page))
+      ;; On w32, the process arguments *must* be encoded in the
+      ;; current code-page (see #3250).
+      (mapcar (lambda (arg)
+                (encode-coding-string
+                 arg (intern (format "cp%d" w32-ansi-code-page))))
+              args)
+    args))
 
 (defun magit-git-exit-code (&rest args)
   "Execute Git with ARGS, returning its exit code."
@@ -298,9 +307,10 @@ add a section in the respective process buffer."
                                   (cond
                                    ((functionp magit-git-debug)
                                     (funcall magit-git-debug (buffer-string)))
-                                   ((re-search-backward
-                                     magit-process-error-message-re nil t)
-                                    (match-string 1)))))
+                                   ((run-hook-wrapped
+                                     'magit-process-error-message-regexps
+                                     (lambda (re) (re-search-backward re nil t)))
+                                    (match-string-no-properties 1)))))
                       (let ((magit-git-debug nil))
                         (with-current-buffer (magit-process-buffer t)
                           (magit-process-insert-section default-directory
@@ -1185,6 +1195,12 @@ SORTBY is a key or list of keys to pass to the `--sort' flag of
 (defun magit-list-stashes (&optional format)
   (magit-git-lines "stash" "list" (concat "--format=" (or format "%gd"))))
 
+(defun magit-list-active-notes-refs ()
+  "Return notes refs according to `core.notesRef' and `notes.displayRef'."
+  (magit-git-lines "for-each-ref" "--format=%(refname)"
+                   (magit-get "core.notesRef")
+                   (magit-get-all "notes.displayRef")))
+
 (defun magit-list-notes-refnames ()
   (--map (substring it 6) (magit-list-refnames "refs/notes")))
 
@@ -1405,19 +1421,21 @@ the reference is used.  The first regexp submatch becomes the
               (magit-branch-remote  (push name remotes))
               (t                    (push name other)))))
         (setq remotes
-              (-keep (lambda (name)
-                       (string-match "\\`\\([^/]*\\)/\\(.*\\)\\'" name)
-                       (let ((r (match-string 1 name))
-                             (b (match-string 2 name)))
-                         (and (not (equal b "HEAD"))
-                              (if (equal (concat "refs/remotes/" name)
-                                         (magit-git-string
-                                          "symbolic-ref"
-                                          (format "refs/remotes/%s/HEAD" r)))
-                                  (propertize name
-                                              'face 'magit-branch-remote-head)
-                                name))))
-                     remotes))
+              (-keep
+               (lambda (name)
+                 (if (string-match "\\`\\([^/]*\\)/\\(.*\\)\\'" name)
+                     (let ((r (match-string 1 name))
+                           (b (match-string 2 name)))
+                       (and (not (equal b "HEAD"))
+                            (if (equal (concat "refs/remotes/" name)
+                                       (magit-git-string
+                                        "symbolic-ref"
+                                        (format "refs/remotes/%s/HEAD" r)))
+                                (propertize name
+                                            'face 'magit-branch-remote-head)
+                              name)))
+                   name))
+               remotes))
         (dolist (name branches)
           (let ((push (car (member (magit-get-push-branch name) remotes))))
             (when push

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "jq-mode" "jq-mode.el" (22600 4652 0 0))
+;;;### (autoloads nil "jq-mode" "jq-mode.el" (23060 12778 0 0))
 ;;; Generated autoloads from jq-mode.el
 
 (autoload 'jq-mode "jq-mode" "\
@@ -19,7 +19,7 @@ Runs jq interactively on a json buffer.
 
 ;;;***
 
-;;;### (autoloads nil nil ("jq-mode-pkg.el" "ob-jq.el") (22600 4652
+;;;### (autoloads nil nil ("jq-mode-pkg.el" "ob-jq.el") (23060 12778
 ;;;;;;  0 0))
 
 ;;;***

@@ -46,13 +46,8 @@
   (save-excursion
     (goto-char (point-min))
     (forward-line (gethash "line" params))
-    (move-to-column (gethash "character" params))
+    (forward-char (gethash "character" params))
     (point)))
-
-(defun lsp--assert-type (obj pred)
-  (if (funcall pred obj)
-      obj
-    (signal 'wrong-type-argument `(,pred ,obj))))
 
 (defun lsp-make-traverser (name)
   "Return a closure that walks up the current directory until NAME is found.

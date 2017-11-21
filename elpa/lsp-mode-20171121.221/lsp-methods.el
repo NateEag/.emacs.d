@@ -410,7 +410,7 @@ Return the merged plist."
 
 (defun lsp--client-textdocument-capabilities ()
   "Client Text document capabilities according to LSP."
-  `(:synchronization (:didSave t)))
+  `(:synchronization (:willSave t :didSave t)))
 
 (defun lsp-register-client-capabilities (package-name caps)
   "Register extra client capabilities for the current workspace.
@@ -489,7 +489,7 @@ directory."
       (member root lsp-project-whitelist)
     (not (member root lsp-project-blacklist))))
 
-(defun lsp--start (client)
+(defun lsp--start (client &optional extra-init-params)
   (when lsp--cur-workspace
     (user-error "LSP mode is already enabled for this buffer"))
   (let* ((root (funcall (lsp--client-get-root client)))
@@ -521,10 +521,17 @@ directory."
 
       (puthash root lsp--cur-workspace lsp--workspaces)
       (run-hooks 'lsp-before-initialize-hook)
-      (setq init-params `(:processId ,(emacs-pid) :rootPath ,root
-                           :rootUri ,(concat "file://" root)
-                           :capabilities ,(lsp--client-capabilities)))
-      (setf response (lsp--send-request (lsp--make-request "initialize" init-params)))
+      (setq init-params
+            (lsp--merge-plists
+             `(:processId ,(emacs-pid)
+                :rootPath ,root
+                :rootUri ,(concat "file://" root)
+                :capabilities ,(lsp--client-capabilities)
+                :initializationOptions ,(if (functionp extra-init-params)
+                                            (funcall extra-init-params lsp--cur-workspace)
+                                          extra-init-params))))
+      (setf response (lsp--send-request
+                      (lsp--make-request "initialize" init-params)))
       (unless response
         (signal 'lsp-empty-response-error (list "initialize")))
       (setf (lsp--workspace-server-capabilities lsp--cur-workspace)
@@ -579,6 +586,8 @@ directory."
   ;; Make sure the hook is local (last param) otherwise we see all changes for all buffers
   (add-hook 'before-change-functions #'lsp-before-change nil t)
   (add-hook 'after-change-functions #'lsp-on-change nil t)
+  (add-hook 'before-save-hook #'lsp--before-save nil t)
+  (add-hook 'auto-save-hook #'lsp--on-auto-save nil t)
   (lsp--set-sync-method)
   (run-hooks 'lsp-after-open-hook))
 
@@ -942,9 +951,6 @@ Added to `after-change-functions'."
         (lsp--send-changes lsp--cur-workspace)
       (lsp--set-idle-timer lsp--cur-workspace))))
 
-(defun lsp--shut-down-p ()
-  (y-or-n-p "Close the language server for this workspace? "))
-
 (defun lsp--text-document-did-close ()
   "Executed when the file is closed, added to `kill-buffer-hook'."
   (lsp--send-changes lsp--cur-workspace)
@@ -961,8 +967,24 @@ Added to `after-change-functions'."
        (lsp--make-notification
         "textDocument/didClose"
         `(:textDocument ,(lsp--versioned-text-document-identifier))))
-      (when (and (= 0 (hash-table-count file-versions)) (lsp--shut-down-p))
+      (when (= 0 (hash-table-count file-versions))
         (lsp--shutdown-cur-workspace)))))
+
+(defun lsp--before-save ()
+  (when lsp--cur-workspace
+    (lsp--send-changes lsp--cur-workspace)
+    (lsp--send-notification
+      (lsp--make-notification "textDocument/willSave"
+        `(:textDocument ,(lsp--text-document-identifier)
+           :reason 1)))))
+
+(defun lsp--on-auto-save ()
+  (when lsp--cur-workspace
+    (lsp--send-changes lsp--cur-workspace)
+    (lsp--send-notification
+      (lsp--make-notification "textDocument/willSave"
+        `(:textDocument ,(lsp--text-document-identifier)
+           :reason 2)))))
 
 (defun lsp--text-document-did-save ()
   "Executed when the file is closed, added to `after-save-hook''."
@@ -1158,10 +1180,12 @@ type MarkedString = string | { language: string; value: string };"
                                         (lsp--text-document-position-params))))
               (contents (gethash "contents" hover))
               (client (lsp--workspace-client lsp--cur-workspace))
-              (renderers (lsp--client-string-renderers client)))
+              (renderers (lsp--client-string-renderers client))
+              renderer)
         (mapconcat #'(lambda (e)
                        (if (hash-table-p e)
-                         (if-let* ((renderer (cdr (assoc-string (gethash "language" e) renderers))))
+                         (if (setq renderer (cdr (assoc-string
+                                                   (gethash "language" e) renderers)))
                            (funcall renderer (gethash "value" e))
                            (gethash "value" e))
                          e))

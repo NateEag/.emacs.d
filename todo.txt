@@ -374,6 +374,13 @@
  on whether there are any characters before point *and* whether autocompletion
  has been invoked before while in this field. or something like that.
 
+-Think about how backup-walker, undo-tree, and magit ought to intersect,
+ ideally. Really this is less about any of those packages and more about the
+ theoretical interplay between version control, explicit commits, implicit
+ savepoints, and an editor's in-memory undo support. Note that the
+ extraordinary John Wiegley has touched on some of this in his package
+ git-undo.el: https://github.com/jwiegley/git-undo-el
+
 -Add a command to backup-walker to revert to the selected backup file. 'r'
  would be a good keybinding. If this doesn't already exist, it might make sense
  to wrap this up with my other backup settings as 'sane-autosaves'. See if

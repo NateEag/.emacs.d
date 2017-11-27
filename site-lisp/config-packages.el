@@ -168,10 +168,12 @@
     (ne-yas-auto-insert-activate)
     (auto-insert-mode)))
 
-;; It seems to me that undo-tree-mode and backup-walker might be good candidates
-;; for merging somehow - they're like two sides of the same coin. I'll need a
-;; lot more hands-on experience with both to have any idea how that would look
-;; in practice.
+;; undo-tree improves on emacs' default infinite undo by teaching it to be
+;; intelligent in how it handles branching, and offering a nice UI for
+;; comparing things across branches.
+;;
+;; If it weren't for the bug that destroys undo history, it would be an
+;; unmitigated spectacular win.
 (use-package undo-tree
   :diminish undo-tree-mode
   :init

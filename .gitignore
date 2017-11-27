@@ -27,3 +27,8 @@ projectile.cache
 # Because I don't like storing binaries in git repos, ignore this.
 # It holds Jedi's default virtualenv, IIRC.
 .python-environments
+
+# Behold: The pdf-tools package installs and builds binaries. Cool trick and
+# all, but I don't want those in a repo that's meant to move from machine to
+# machine, possibly across CPU architectures.
+epdfinfo

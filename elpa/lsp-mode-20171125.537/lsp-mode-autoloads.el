@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (23060 12757
+;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (23068 16111
 ;;;;;;  0 0))
 ;;; Generated autoloads from lsp-methods.el
 
@@ -72,7 +72,7 @@ Number of seconds of idle timer to wait before sending file changes to the serve
 
 ;;;***
 
-;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23060 12757 0 0))
+;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23068 16111 0 0))
 ;;; Generated autoloads from lsp-mode.el
 
 (autoload 'lsp-mode "lsp-mode" "\
@@ -83,8 +83,8 @@ Number of seconds of idle timer to wait before sending file changes to the serve
 ;;;***
 
 ;;;### (autoloads nil nil ("lsp-common.el" "lsp-flycheck.el" "lsp-mode-pkg.el"
-;;;;;;  "lsp-notifications.el" "lsp-receive.el" "lsp-send.el") (23060
-;;;;;;  12757 0 0))
+;;;;;;  "lsp-notifications.el" "lsp-receive.el" "lsp-send.el") (23068
+;;;;;;  16111 0 0))
 
 ;;;***
 

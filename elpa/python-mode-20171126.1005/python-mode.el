@@ -719,26 +719,27 @@ It will be lined up under the first character of
 
 my_list = [
     1, 2, 3,
-    4, 5, 6,
+    4, 5, 6
 ]
 
 result = some_function_that_takes_arguments(
     'a', 'b', 'c',
-    'd', 'e', 'f',
+    'd', 'e', 'f'
 )
 
 Default is nil, i.e.
 
 my_list = [
     1, 2, 3,
-    4, 5, 6,
+    4, 5, 6
     ]
 result = some_function_that_takes_arguments(
     'a', 'b', 'c',
-    'd', 'e', 'f',
+    'd', 'e', 'f'
     )
 
-Examples from PEP8"
+Examples from PEP8
+URL: https://www.python.org/dev/peps/pep-0008/#indentation"
 
   :type 'boolean
   :tag "py-closing-list-dedents-bos"
@@ -2956,7 +2957,8 @@ See also `py-object-reference-face'"
 
 (defun py--python-send-setup-code-intern (name &optional msg)
   (let ((setup-file (concat (py--normalize-directory py-temp-directory) "py-" name "-setup-code.py"))
-	(buf (current-buffer)))
+	(buf (current-buffer))
+	py-return-result-p py-store-result-p)
     (unless (file-readable-p setup-file)
       (with-temp-buffer
 	(insert (eval (car (read-from-string (concat "py-" name "-setup-code")))))
@@ -10522,7 +10524,7 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 	 (proc (or proc (get-buffer-process buffer)
 		   (get-buffer-process (py-shell nil dedicated shell buffer fast exception-buffer split switch))))
 	 (fast (or fast py-fast-process-p))
-	 (return (or return py-return-result-p)))
+	 (return (or return py-return-result-p py-return-store-p)))
     (setq py-buffer-name buffer)
     (py--execute-base-intern strg filename proc file wholebuf buffer origline execute-directory start end shell fast return)
     (when (or split py-split-window-on-execute py-switch-buffers-on-execute-p)
@@ -10619,7 +10621,8 @@ Indicate LINE if code wasn't run from a file, thus remember ORIGLINE of source b
 
 (defun py--fetch-result (orig)
   "Return ‘buffer-substring’ from ORIG to ‘point-max’."
-  (switch-to-buffer (current-buffer))
+  ;; (switch-to-buffer (current-buffer))
+  ;; otherwise py-ert-fast-complete-1 fails
   (goto-char orig)
   (if (derived-mode-p 'comint-mode)
       (replace-regexp-in-string
@@ -10644,7 +10647,7 @@ According to OUTPUT-BUFFER ORIGLINE ORIG"
     ;; (when py-debug-p (message "py-result: %s" py-result))
     (and (string-match "\n$" py-result)
 	 (setq py-result (replace-regexp-in-string py-fast-filter-re "" (substring py-result 0 (match-beginning 0)))))
-    (if py-result
+    (if (and py-result (not (string= "" py-result)))
 	(if (string-match "^Traceback" py-result)
 	    (progn
 	      (with-temp-buffer
@@ -10771,7 +10774,7 @@ Returns position where output starts."
       (goto-char (point-max))
       (setq orig (copy-marker (point)))
       (py-send-string cmd proc)
-      (when py-return-result-p
+      (when (or py-return-result-p py-store-result-p)
 	(setq erg (py--postprocess-comint buffer origline orig))
 	(if py-error
 	    (setq py-error (prin1-to-string py-error))
@@ -11005,7 +11008,7 @@ Optional OUTPUT-BUFFER and ERROR-BUFFER might be given."
     (unless (buffer-live-p output-buffer)
       (set-buffer (get-buffer-create output-buffer)))
     (shell-command (concat pcmd " " filename) output-buffer error-buffer)
-    (when (called-interactively-p 'any) (switch-to-buffer output-buffer))))
+    (when py-switch-buffers-on-execute-p (switch-to-buffer output-buffer))))
 
 (defvar py-last-exeption-buffer nil
   "Internal use only - when ‘py-up-exception’ is called.
@@ -16287,7 +16290,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer shell dedicated switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16300,7 +16304,8 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer shell dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16313,7 +16318,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer shell dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16324,7 +16330,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer shell t switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16335,7 +16342,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer shell t 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16346,7 +16354,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'ipython dedicated switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16359,7 +16368,8 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'ipython dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16372,7 +16382,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'ipython dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16383,7 +16394,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'ipython t switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16394,7 +16406,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'ipython t 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16405,7 +16418,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'ipython2.7 dedicated switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16418,7 +16432,8 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'ipython2.7 dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16431,7 +16446,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'ipython2.7 dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16442,7 +16458,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'ipython2.7 t switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16453,7 +16470,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'ipython2.7 t 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16464,7 +16482,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'ipython3 dedicated switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16477,7 +16496,8 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'ipython3 dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16490,7 +16510,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'ipython3 dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16501,7 +16522,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'ipython3 t switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16512,7 +16534,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'ipython3 t 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16523,7 +16546,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'jython dedicated switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16536,7 +16560,8 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'jython dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16549,7 +16574,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'jython dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16560,7 +16586,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'jython t switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16571,7 +16598,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'jython t 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16584,7 +16612,8 @@ For ‘default’ see value of ‘py-shell-name’"
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'python dedicated switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16599,7 +16628,8 @@ For ‘default’ see value of ‘py-shell-name’"
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'python dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16614,7 +16644,8 @@ For ‘default’ see value of ‘py-shell-name’"
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'python dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16627,7 +16658,8 @@ For ‘default’ see value of ‘py-shell-name’"
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'python t switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16640,7 +16672,8 @@ For ‘default’ see value of ‘py-shell-name’"
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'python t 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16651,7 +16684,8 @@ For ‘default’ see value of ‘py-shell-name’"
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'python2 dedicated switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16664,7 +16698,8 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'python2 dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16677,7 +16712,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'python2 dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16688,7 +16724,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'python2 t switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16699,7 +16736,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'python2 t 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16710,7 +16748,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'python3 dedicated switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16723,7 +16762,8 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'python3 dedicated 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16736,7 +16776,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'python3 dedicated 'no-switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16747,7 +16788,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'python3 t switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -16758,7 +16800,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
     (when py-master-file
       (let* ((filename (expand-file-name py-master-file))
 	     (buffer (or (get-file-buffer filename)
-			 (find-file-noselect filename))))
+			 (find-file-noselect filename)))
+             (wholebuf t))
 	(set-buffer buffer))))
   (py--execute-prepare 'buffer 'python3 t 'switch (point-min) (point-max) nil fast proc wholebuf split))
 
@@ -21966,7 +22009,7 @@ completions on the current context."
 (defun py--fast--do-completion-at-point (process imports input orig code output-buffer)
   "Do completion at point for PROCESS."
   ;; send setup-code
-  (let (py-return-result-p)
+  (let (py-store-result-p)
     (when imports
       ;; (message "%s" imports)
       (py--fast-send-string-no-output imports process output-buffer)))

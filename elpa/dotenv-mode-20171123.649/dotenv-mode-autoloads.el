@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "dotenv-mode" "dotenv-mode.el" (23060 12750
+;;;### (autoloads nil "dotenv-mode" "dotenv-mode.el" (23068 16117
 ;;;;;;  0 0))
 ;;; Generated autoloads from dotenv-mode.el
 

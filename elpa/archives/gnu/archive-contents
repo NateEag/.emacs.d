@@ -369,7 +369,7 @@
 	     ((:url . "http://elpa.gnu.org/packages/ediprolog.html")
 	      (:keywords "languages" "processes"))])
  (el-search .
-	    [(1 4)
+	    [(1 4 0 2)
 	     ((emacs
 	       (25))
 	      (stream
@@ -422,7 +422,7 @@
 	       ((:keywords "calendar")
 		(:url . "http://elpa.gnu.org/packages/excorporate.html"))])
  (exwm .
-       [(0 15)
+       [(0 16)
 	((xelb
 	  (0 12)))
 	"Emacs X Window Manager" tar
@@ -469,6 +469,13 @@
 	 "Operate on Git branches like dired" tar
 	 ((:keywords "git" "vc" "convenience")
 	  (:url . "http://elpa.gnu.org/packages/gited.html"))])
+ (gle-mode .
+	   [(1 0)
+	    ((cl-lib
+	      (0 5)))
+	    "Major mode to edit Graphics Layout Engine files" single
+	    ((:url . "http://elpa.gnu.org/packages/gle-mode.html")
+	     (:keywords))])
  (gnome-c-style .
 		[(0 1)
 		 nil "minor mode for editing GNOME-style C source code" tar
@@ -531,7 +538,7 @@
 	 ((:keywords "bindings")
 	  (:url . "https://github.com/abo-abo/hydra"))])
  (hyperbole .
-	    [(7 0 0)
+	    [(7 0 2)
 	     ((emacs
 	       (24 4)))
 	     "GNU Hyperbole: The Everyday Hypertextual Information Manager" tar
@@ -772,7 +779,7 @@
 	     ((:url . "https://github.com/michael-heerdegen/on-screen.el")
 	      (:keywords "convenience"))])
  (org .
-      [(20171120)
+      [(20171127)
        nil "Outline-based notes management and organizer" tar nil])
  (org-edna .
 	   [(1 0 -3 1)

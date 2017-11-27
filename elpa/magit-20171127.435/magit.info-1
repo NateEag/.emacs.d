@@ -30,7 +30,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-     This manual is for Magit version 2.11.0 (2.11.0-249-gcf6d30833+1).
+     This manual is for Magit version 2.11.0 (2.11.0-283-g2d82dc0e5+1).
 
      Copyright (C) 2015-2017 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -441,16 +441,16 @@ File: magit.info,  Node: Installing from the Git Repository,  Next: Post-Install
 2.2 Installing from the Git Repository
 ======================================
 
-Magit depends on the ‘dash’ and ‘with-editor’ library which are
-available from Melpa and Melpa-Stable.  Install them using ‘M-x
-package-install RET <package> RET’.  Of course you may also install them
-manually from their development repository, but I won’t cover that here.
+Magit depends on the ‘dash’, ‘magit-popup’ and ‘with-editor’ libraries
+which are available from Melpa and Melpa-Stable.  Install them using
+‘M-x package-install RET <package> RET’.  Of course you may also install
+them manually from their development repository.
 
-   (An older release of Magit is also available from Marmalade, but no
-new versions will be uploaded in the future.  Marmalade’s maintainer has
-stopped responding to requests from package maintainers who are having
-difficulties or require him to create an account so that they can upload
-their packages in the first place.)
+   (An ancient release of Magit is also available from Marmalade, but no
+new versions will be uploaded.  Marmalade is unmaintained — its
+maintainer has stopped responding to support requests from package
+authors or even just to create new accounts so that new authors can
+upload their packages in the first place.)
 
    Then clone the Magit repository:
 
@@ -461,13 +461,14 @@ their packages in the first place.)
 
      $ make
 
-   If you haven’t installed ‘dash’ and ‘with-editor’ using Elpa or at
-‘/path/to/magit/../<package>’, then you have to tell ‘make’ where to
-find them.  To do so create ‘/path/to/magit/config.mk’ with the
-following content before running ‘make’:
+   If you haven’t installed ‘dash’, ‘magit-popup’ and ‘with-editor’ from
+Melpa or at ‘/path/to/magit/../<package>’, then you have to tell ‘make’
+where to find them.  To do so create the file ‘/path/to/magit/config.mk’
+with the following content before running ‘make’:
 
      LOAD_PATH  = -L /path/to/magit/lisp
      LOAD_PATH += -L /path/to/dash
+     LOAD_PATH += -L /path/to/magit-popup
      LOAD_PATH += -L /path/to/with-editor
 
    Finally add this to your init file:
@@ -5621,16 +5622,17 @@ features the following commands.
 
 ‘A A’     (‘magit-cherry-pick’)
 
-     Cherry-pick a commit.  Prompt for a commit, defaulting to the
-     commit at point.  If the region selects multiple commits, then pick
-     all of them, without prompting.
+     This command copies COMMITS from another branch onto the current
+     branch.  If the region selects multiple commits, then those are
+     copied, without prompting.  Otherwise the user is prompted for a
+     commit or range, defaulting to the commit at point.
 
 ‘A a’     (‘magit-cherry-apply’)
 
-     Apply the changes in a commit to the working tree, but do not
-     commit them.  Prompt for a commit, defaulting to the commit at
-     point.  If the region selects multiple commits, then apply all of
-     them, without prompting.
+     This command applies the changes in COMMITS from another branch
+     onto the current branch.  If the region selects multiple commits,
+     then those are used, without prompting.  Otherwise the user is
+     prompted for a commit or range, defaulting to the commit at point.
 
      This command also has a top-level binding, which can be invoked
      without using the popup by typing ‘a’ at the top-level.
@@ -6364,25 +6366,6 @@ Also see *note (gitman)git-notes::.
 
      Remove notes about unreachable commits.
 
-‘T s’     (‘magit-notes-set-ref’)
-
-     Set the current notes ref to a the value read from the user.  The
-     ref is made current by setting the value of the Git variable
-     ‘core.notesRef’.  With a prefix argument change the global value
-     instead of the value in the current repository.  When this is
-     undefined, then "refs/notes/commit" is used.
-
-     Other ‘magit-notes-*’ commands, as well as the sub-commands of
-     Git’s ‘note’ command, default to operate on that ref.
-
-‘T S’     (‘magit-notes-set-display-refs’)
-
-     Set notes refs to be display in addition to "core.notesRef".  This
-     reads a colon separated list of notes refs from the user.  The
-     values are stored in the Git variable ‘notes.displayRef’.  With a
-     prefix argument GLOBAL change the global values instead of the
-     values in the current repository.
-
    It is possible to merge one note ref into another.  That may result
 in conflicts which have to resolved in the temporary worktree
 ".git/NOTES_MERGE_WORKTREE".
@@ -6404,6 +6387,22 @@ following suffix commands, instead of those listed above.
 ‘T a’     (‘magit-notes-merge-abort’)
 
      Abort the current notes ref merge.
+
+   The following variables control what notes reference ‘magit-notes-*’,
+‘git notes’ and ‘git show’ act on and display.  Both the local and
+global values are displayed and can be modified.
+
+ -- Variable: core.notesRef
+
+     This variable specifies the notes ref that is displayed by default
+     and which commands act on by default.
+
+ -- Variable: notes.displayRef
+
+     This variable specifies additional notes ref to be displayed in
+     addition to the ref specified by ‘core.notesRef’.  It can have
+     multiple values and may end with ‘*’ to display all refs in the
+     ‘refs/notes/’ namespace (or ‘**’ if some names contain slashes).
 
 
 File: magit.info,  Node: Submodules,  Next: Subtree,  Prev: Notes,  Up: Miscellaneous

@@ -140,30 +140,46 @@ This discards all changes made since the sequence started."
         (magit-cherry-pick-arguments)))
 
 ;;;###autoload
-(defun magit-cherry-pick (commit &optional args)
-  "Cherry-pick COMMIT.
+(defun magit-cherry-pick (commits &optional args)
+  "Copy COMMITS from another branch onto the current branch.
 Prompt for a commit, defaulting to the commit at point.  If
 the region selects multiple commits, then pick all of them,
 without prompting."
   (interactive (magit-cherry-pick-read-args "Cherry-pick"))
-  (unless (--any (string-prefix-p "--mainline" it) args)
-    (magit-assert-one-parent (car (if (listp commit)
-                                      commit
-                                    (split-string commit "\\.\\.")))
-                             "cherry-pick"))
-  (magit-run-git-sequencer "cherry-pick" args commit))
+  (magit--cherry-pick commits args))
 
 ;;;###autoload
-(defun magit-cherry-apply (commit &optional args)
-  "Apply the changes in COMMIT but do not commit them.
+(defun magit-cherry-apply (commits &optional args)
+  "Apply the changes in COMMITS but do not commit them.
 Prompt for a commit, defaulting to the commit at point.  If
 the region selects multiple commits, then apply all of them,
 without prompting."
   (interactive (magit-cherry-pick-read-args "Apply changes from commit"))
-  (unless (--any (string-prefix-p "--mainline" it) args)
-    (magit-assert-one-parent commit "cherry-pick"))
-  (magit-run-git-sequencer "cherry-pick" "--no-commit"
-                           (remove "--ff" args) commit))
+  (magit--cherry-pick commits (cons "--no-commit" (remove "--ff" args))))
+
+(defun magit--cherry-pick (commits args &optional revert)
+  (let ((command (if revert "revert" "cherry-pick")))
+    (when (stringp commits)
+      (setq commits (if (string-match-p "\\.\\." commits)
+                        (split-string commits "\\.\\.")
+                      (list commits))))
+    (magit-run-git-sequencer
+     (if revert "revert" "cherry-pick")
+     (pcase-let ((`(,merge ,non-merge)
+                  (-separate 'magit-merge-commit-p commits)))
+       (cond
+        ((not merge)
+         (--remove (string-prefix-p "--mainline=" it) args))
+        (non-merge
+         (user-error "Cannot %s merge and non-merge commits at once"
+                     command))
+        ((--first (string-prefix-p "--mainline=" it) args)
+         args)
+        (t
+         (cons (format "--mainline=%s"
+                       (read-number "Replay merges relative to parent: "))
+               args))))
+     commits)))
 
 (defun magit-cherry-pick-in-progress-p ()
   ;; .git/sequencer/todo does not exist when there is only one commit left.
@@ -201,9 +217,7 @@ Prompt for a commit, defaulting to the commit at point.  If
 the region selects multiple commits, then revert all of them,
 without prompting."
   (interactive (magit-revert-read-args "Revert commit"))
-  (unless (--any (string-prefix-p "--mainline" it) args)
-    (magit-assert-one-parent commit "revert"))
-  (magit-run-git-sequencer "revert" args commit))
+  (magit--cherry-pick commit args t))
 
 ;;;###autoload
 (defun magit-revert-no-commit (commit &optional args)
@@ -212,9 +226,7 @@ Prompt for a commit, defaulting to the commit at point.  If
 the region selects multiple commits, then revert all of them,
 without prompting."
   (interactive (magit-revert-read-args "Revert changes"))
-  (unless (--any (string-prefix-p "--mainline" it) args)
-    (magit-assert-one-parent commit "revert"))
-  (magit-run-git-sequencer "revert" "--no-commit" args commit))
+  (magit--cherry-pick commit (cons "--no-commit" args) t))
 
 (defun magit-revert-in-progress-p ()
   ;; .git/sequencer/todo does not exist when there is only one commit left.

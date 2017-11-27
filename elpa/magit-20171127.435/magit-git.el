@@ -30,6 +30,7 @@
 (require 'cl-lib)
 (require 'dash)
 
+(require 'magit-popup)
 (require 'magit-utils)
 (require 'magit-section)
 
@@ -38,6 +39,7 @@
 (declare-function magit-process-buffer 'magit-process)
 (declare-function magit-process-file 'magit-process)
 (declare-function magit-process-insert-section 'magit-process)
+(declare-function magit-refresh 'magit-mode)
 (defvar magit-process-error-message-regexps)
 (defvar magit-refresh-args) ; from `magit-mode' for `magit-current-file'
 (defvar magit-branch-prefer-remote-upstream)
@@ -411,9 +413,9 @@ absolute path is returned."
   (magit--with-refresh-cache (list default-directory 'magit-git-dir path)
     (magit--with-safe-default-directory nil
       (-when-let (dir (magit-rev-parse-safe "--git-dir"))
-        (setq dir (file-name-as-directory
-                   (concat (file-remote-p default-directory)
-                           (magit-expand-git-file-name dir))))
+        (setq dir (file-name-as-directory (magit-expand-git-file-name dir)))
+        (unless (file-remote-p dir)
+          (setq dir (concat (file-remote-p default-directory) dir)))
         (if path (expand-file-name (convert-standard-filename path) dir) dir)))))
 
 (defvar magit--separated-gitdirs nil)
@@ -710,6 +712,10 @@ Sorted from longest to shortest CYGWIN name."
 (defun magit-no-commit-p ()
   "Return t if there is no commit in the current Git repository."
   (not (magit-rev-verify "HEAD")))
+
+(defun magit-merge-commit-p (commit)
+  "Return t if COMMIT is a merge commit."
+  (> (length (magit-commit-parents commit)) 1))
 
 (defun magit-anything-staged-p (&optional ignore-submodules &rest files)
   "Return t if there are any staged changes.
@@ -1198,7 +1204,7 @@ SORTBY is a key or list of keys to pass to the `--sort' flag of
 (defun magit-list-active-notes-refs ()
   "Return notes refs according to `core.notesRef' and `notes.displayRef'."
   (magit-git-lines "for-each-ref" "--format=%(refname)"
-                   (magit-get "core.notesRef")
+                   (or (magit-get "core.notesRef") "refs/notes/commits")
                    (magit-get-all "notes.displayRef")))
 
 (defun magit-list-notes-refnames ()
@@ -1329,10 +1335,6 @@ Return a list of two integers: (A>B B>A)."
 (defun magit-commit-parents (commit)
   (--when-let (magit-git-string "rev-list" "-1" "--parents" commit)
     (cdr (split-string it))))
-
-(defun magit-assert-one-parent (commit command)
-  (when (> (length (magit-commit-parents commit)) 1)
-    (user-error "Cannot %s a merge commit" command)))
 
 (defun magit-patch-id (rev)
   (with-temp-buffer
@@ -1778,34 +1780,133 @@ the reference is used.  The first regexp submatch becomes the
        configs))))
 
 (defun magit-get (&rest keys)
-  "Return the value of Git config entry specified by KEYS."
+  "Return the value of the Git variable specified by KEYS."
   (car (last (apply 'magit-get-all keys))))
 
 (defun magit-get-all (&rest keys)
-  "Return all values of the Git config entry specified by KEYS."
+  "Return all values of the Git variable specified by KEYS."
   (let ((magit-git-debug nil)
+        (arg (and (or (string-prefix-p "--" (car keys))
+                      (null (car keys)))
+                  (pop keys)))
         (key (mapconcat 'identity keys ".")))
-    (if magit--refresh-cache
+    (if (and magit--refresh-cache (not arg))
         (magit-config-get-from-cached-list key)
-      (magit-git-items "config" "-z" "--get-all" key))))
+      (magit-git-items "config" arg "-z" "--get-all" key))))
 
 (defun magit-get-boolean (&rest keys)
-  "Return the boolean value of Git config entry specified by KEYS."
+  "Return the boolean value of the Git variable specified by KEYS."
   (let ((key (mapconcat 'identity keys ".")))
     (if magit--refresh-cache
         (equal "true" (car (magit-config-get-from-cached-list key)))
       (magit-git-true "config" "--bool" key))))
 
-(defun magit-set (val &rest keys)
-  "Set Git config settings specified by KEYS to VAL."
-  (let ((key (mapconcat 'identity keys ".")))
-    (if val
-        (magit-git-success "config" key val)
-      (magit-git-success "config" "--unset" key))
-    val))
+(defun magit-set (value &rest keys)
+  "Set the value of the Git variable specified by KEYS to VALUE."
+  (let ((arg (and (or (string-prefix-p "--" (car keys))
+                      (null (car keys)))
+                  (pop keys)))
+        (key (mapconcat 'identity keys ".")))
+    (if value
+        (magit-git-success "config" arg key value)
+      (magit-git-success "config" arg "--unset" key))
+    value))
 
 (gv-define-setter magit-get (val &rest keys)
   `(magit-set ,val ,@keys))
+
+(defun magit-set-all (values* &rest keys)
+  "Set all values of the Git variable specified by KEYS to VALUES.
+\n(fn VALUES &rest KEYS)"
+  (let ((arg (and (or (string-prefix-p "--" (car keys))
+                      (null (car keys)))
+                  (pop keys)))
+        (var (mapconcat 'identity keys ".")))
+    (when (magit-get var)
+      (magit-call-git "config" arg "--unset-all" var))
+    (dolist (v values*)
+      (magit-call-git "config" arg "--add" var v))))
+
+;;;; Variables in Popups
+
+(defun magit--format-popup-variable:value (variable width &optional global)
+  (concat variable
+          (make-string (max 1 (- width 3 (length variable))) ?\s)
+          (-if-let (value (magit-get (and global "--global") variable))
+              (propertize value 'face 'magit-popup-option-value)
+            (propertize "unset" 'face 'magit-popup-disabled-argument))))
+
+(defun magit--format-popup-variable:values (variable width &optional global)
+  (concat variable
+          (make-string (max 1 (- width 3 (length variable))) ?\s)
+          (-if-let (values (magit-get-all (and global "--global") variable))
+              (concat
+               (propertize (car values) 'face 'magit-popup-option-value)
+               (mapconcat
+                (lambda (value)
+                  (concat "\n" (make-string width ?\s)
+                          (propertize value
+                                      'face 'magit-popup-option-value)))
+                (cdr values) ""))
+            (propertize "unset" 'face 'magit-popup-disabled-argument))))
+
+(defun magit--set-popup-variable
+    (variable choices &optional default other)
+  (magit-set (--if-let (magit-git-string "config" "--local" variable)
+                 (cadr (member it choices))
+               (car choices))
+             variable)
+  (magit-with-pre-popup-buffer
+    (magit-refresh))
+  (message "%s %s" variable
+           (magit--format-popup-variable:choices*
+            variable choices default other)))
+
+(defun magit--format-popup-variable:choices
+    (variable choices &optional default other width)
+  (concat variable
+          (if width (make-string (- width (length variable)) ?\s) " ")
+          (magit--format-popup-variable:choices*
+           variable choices default other)))
+
+(defun magit--format-popup-variable:choices*
+    (variable choices &optional default other)
+  (let ((local  (magit-git-string "config" "--local"  variable))
+        (global (magit-git-string "config" "--global" variable)))
+    (when other
+      (setq other (--when-let (magit-get other)
+                    (concat other ":" it))))
+    (concat
+     (propertize "[" 'face 'magit-popup-disabled-argument)
+     (mapconcat
+      (lambda (choice)
+        (propertize choice 'face (if (equal choice local)
+                                     'magit-popup-option-value
+                                   'magit-popup-disabled-argument)))
+      choices
+      (propertize "|" 'face 'magit-popup-disabled-argument))
+     (when (or global other default)
+       (concat
+        (propertize "|" 'face 'magit-popup-disabled-argument)
+        (cond (global
+               (propertize (concat "global:" global)
+                           'face (cond (local
+                                        'magit-popup-disabled-argument)
+                                       ((member global choices)
+                                        'magit-popup-option-value)
+                                       (t
+                                        'font-lock-warning-face))))
+              (other
+               (propertize other
+                           'face (if local
+                                     'magit-popup-disabled-argument
+                                   'magit-popup-option-value)))
+              (default
+               (propertize (concat "default:" default)
+                           'face (if local
+                                     'magit-popup-disabled-argument
+                                   'magit-popup-option-value))))))
+     (propertize "]" 'face 'magit-popup-disabled-argument))))
 
 (provide 'magit-git)
 ;;; magit-git.el ends here

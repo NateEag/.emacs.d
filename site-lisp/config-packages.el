@@ -71,6 +71,15 @@
     (define-key notmuch-show-mode-map (kbd "o")
       'notmuch-show-interactively-view-part)
 
+    (defun ne/notmuch-tag-sent-emails (&optional arg)
+      "Use shell command to tag sent emails as sent and read.
+
+The shell command lives in my dotfiles repo."
+
+      (start-process "tag-sent-emails" nil "tag-sent-emails"))
+
+    (advice-add 'notmuch-mua-send-and-exit :after #'ne/notmuch-tag-sent-emails)
+
     (require 'notmuch-address)
     (notmuch-address-setup)
     ;; TODO Get address completion to work correctly. I can trigger it now, but

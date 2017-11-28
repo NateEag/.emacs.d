@@ -94,7 +94,7 @@
      (:name "drafts" :query "tag:draft" :key "d" :sort-order newest-first)
      (:name "all mail" :query "*" :key "a" :sort-order newest-first)
      (:name "Bug Reports" :query "tag:bug-reports"))))
- '(notmuch-search-oldest-first nil)
+ '(notmuch-search-oldest-first t nil nil "I tried setting this to off. Quite a while later, I'm admitting that whoever chose that default knew what they were doing.")
  '(package-enable-at-startup nil)
  '(package-selected-packages
    (quote

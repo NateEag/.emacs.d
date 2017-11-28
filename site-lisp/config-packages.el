@@ -622,17 +622,27 @@
   :demand
   :functions (atomic-chrome-start-server atomic-chrome-stop-server)
   :config (progn
-          ;; Keep Atomic Chrome from trying to start if another Emacs instance
-          ;; is already running it. Since I do a fair bit of elisp hacking, I
-          ;; start a second Emacs pretty often as part of my workflow, to
-          ;; verify that my init code is doing what I expect.
+          ;; Don't start Atomic Chrome if another Emacs instance is already
+          ;; running it, and don't kill it if we didn't start the server.
+          ;;
+          ;; Since I do a fair bit of elisp hacking, I start a second Emacs
+          ;; pretty often as part of my workflow, to verify that my init code
+          ;; is doing what I expect, and vanilla Atomic Chrome causes startup
+          ;; failures.
           ;;
           ;; TODO Get this fixed upstream. A real pidfile could be an option.
+
+          (defvar ne/atomic-chrome-started-by-us nil
+            "Whether this Emacs instance started an Atomic Chrome server.")
+
           (defun ne/atomic-chrome-mark-server-started ()
-              (write-region "" nil "~/.atomic-chrome-running"))
+            (when (not (file-exists-p "~/.atomic-chrome-running"))
+              (setq ne/atomic-chrome-started-by-us t)
+              (write-region "" nil "~/.atomic-chrome-running")))
 
           (defun ne/atomic-chrome-mark-server-stopped ()
-              (delete-file "~/.atomic-chrome-running"))
+            (when ne/atomic-chrome-started-by-us
+              (delete-file "~/.atomic-chrome-running")))
 
           (advice-add 'atomic-chrome-start-server :before
                       #'ne/atomic-chrome-mark-server-started)

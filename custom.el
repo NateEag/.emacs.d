@@ -37,6 +37,7 @@
  '(delete-selection-mode t)
  '(evil-want-fine-undo t)
  '(exec-path-from-shell-arguments (quote ("-l")))
+ '(exec-path-from-shell-variables (quote ("PATH" "MANPATH" "EMAIL")) nil nil "Since I use notmuch and mbsync at work and home, it's convenient to have Emacs pick up my EMAIL var.")
  '(fill-column 79 nil nil "Code should generally be under 80 columns wide for readability.")
  '(flyspell-issue-message-flag nil)
  '(glasses-face (quote bold) nil nil "Bold isn't quite strong enough - I'll have to look into this further.")

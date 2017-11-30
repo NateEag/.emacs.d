@@ -1236,21 +1236,50 @@ type MarkedString = string | { language: string; value: string };"
 ;; NOTE: the code actions cannot currently be applied. There is some non-GNU
 ;; code to do this in the lsp-haskell module. We still need a GNU version, here.
 ;; PRs accepted.
-(defvar lsp-code-actions nil
+(defvar-local lsp-code-actions nil
   "Code actions for the buffer.")
 
 (defun lsp--text-document-code-action ()
   "Request code action to automatically fix issues reported by
-the diagnostics"
+the diagnostics."
   (lsp--cur-workspace-check)
   (lsp--send-request-async (lsp--make-request
                             "textDocument/codeAction"
-                            (lsp--text-document-code-action-params))
-                           #'lsp--text-document-code-action-callback))
+                             (lsp--text-document-code-action-params))
+    (lsp--make-code-action-callback (current-buffer))))
 
-(defun lsp--text-document-code-action-callback (actions)
-  "Callback to process the reply to a 'textDocument/codeAction' request."
-  (setq lsp-code-actions (cl-union actions lsp-code-actions)))
+(defun lsp--command-get-title (cmd)
+  "Given a Command object CMD, get the title.
+If title is nil, return the name for the command handler."
+  (gethash "title" cmd (gethash "command" cmd)))
+
+(defun lsp--make-code-action-callback (buf)
+  (lambda (actions)
+    (with-current-buffer buf
+      (setq lsp-code-actions actions))))
+
+(defun lsp--command-p (cmd)
+  (and (cl-typep cmd 'hash-table)
+    (cl-typep (gethash "title" cmd) 'string)
+    (cl-typep (gethash "command" cmd) 'string)))
+
+(defun lsp-execute-code-action (action)
+  "Execute code action ACTION."
+  (interactive (list (completing-read "Select code action: "
+                       (seq-group-by #'lsp--command-get-title lsp-code-actions))))
+  (lsp--execute-command action))
+
+(defvar-local lsp-code-lenses nil
+  "A list of code lenses computed for the buffer.")
+
+(defun lsp--update-code-lenses ()
+  (lsp--cur-workspace-check)
+  (lsp--send-request-async (lsp--make-request "textDocument/codeLens"
+                               (lsp--text-document-identifier))
+      (let ((buf (current-buffer)))
+        #'(lambda (lenses)
+            (with-current-buffer buf
+              (setq lsp-code-lenses lenses))))))
 
 (defun lsp--make-document-formatting-options ()
   (let ((json-false :json-false))
@@ -1294,30 +1323,32 @@ interface DocumentRangeFormattingParams {
   "Highlight all relevant references to the symbol under point."
   (interactive)
   (lsp--send-changes lsp--cur-workspace)
-  (lsp--send-request-async (lsp--make-request
-                            "textDocument/documentHighlight"
-                            (lsp--text-document-position-params))
-                           #'lsp--symbol-highlight-callback))
+  (lsp--send-request-async (lsp--make-request "textDocument/documentHighlight"
+                             (lsp--text-document-position-params))
+    (lsp--make-symbol-highlight-callback (current-buffer))))
 
-(defun lsp--symbol-highlight-callback (highlights)
-  "Callback function to process the reply of a
-'textDocument/documentHightlight' message.
+(defun lsp--make-symbol-highlight-callback (buf)
+  "Create a callback to process the reply of a
+'textDocument/documentHightlight' message for the buffer BUF.
 A reference is highlighted only if it is visible in a window."
-  (lsp--remove-cur-overlays)
-  (let ((windows-on-buffer (get-buffer-window-list nil nil 'visible)))
-    (dolist (highlight highlights)
-      (let* ((range (gethash "range" highlight nil))
-             (kind (gethash "kind" highlight 1))
-             (start-point (lsp--position-to-point (gethash "start" range)))
-             (end-point (lsp--position-to-point (gethash "end" range)))
-             overlay)
-        (dolist (win windows-on-buffer)
-          (when (or (pos-visible-in-window-group-p start-point win t)
-                    (pos-visible-in-window-group-p end-point win t))
-            (setq overlay (make-overlay start-point end-point))
-            (overlay-put overlay 'face
-                         (cdr (assq kind lsp--highlight-kind-face)))
-            (push overlay (lsp--workspace-highlight-overlays lsp--cur-workspace))))))))
+  (cl-check-type buf buffer)
+  (lambda (highlights)
+    (with-current-buffer buf
+      (lsp--remove-cur-overlays)
+      (let ((windows-on-buffer (get-buffer-window-list nil nil 'visible)))
+        (dolist (highlight highlights)
+          (let* ((range (gethash "range" highlight nil))
+                  (kind (gethash "kind" highlight 1))
+                  (start-point (lsp--position-to-point (gethash "start" range)))
+                  (end-point (lsp--position-to-point (gethash "end" range)))
+                  overlay)
+            (dolist (win windows-on-buffer)
+              (when (or (pos-visible-in-window-group-p start-point win t)
+                      (pos-visible-in-window-group-p end-point win t))
+                (setq overlay (make-overlay start-point end-point))
+                (overlay-put overlay 'face
+                  (cdr (assq kind lsp--highlight-kind-face)))
+                (push overlay (lsp--workspace-highlight-overlays lsp--cur-workspace))))))))))
 
 (defconst lsp--symbol-kind
   '((1 . "File")
@@ -1434,13 +1465,16 @@ interface RenameParams {
                                    (lsp--make-document-rename-params newname)))))
     (lsp--apply-workspace-edits edits)))
 
-(defun lsp--execute-lsp-server-command (command)
-  "Given a COMMAND returned from the server via e.g.
-'textDocument/codeAction' ceate and send a
-'workspace/executeCommand' message"
-
-  (lsp--send-execute-command (gethash "command" command) (gethash "arguments" command nil))
-  )
+(define-inline lsp--execute-command (command)
+  "Given a COMMAND returned from the server, create and send a
+'workspace/executeCommand' message."
+  (inline-letevals (command)
+    (inline-quote
+      (progn
+        (cl-check-type ,command (satisfies lsp--command-p))
+        (lsp--send-execute-command
+          (gethash "command" ,command)
+          (gethash "arguments" ,command nil))))))
 
 (defun lsp--send-execute-command (command &optional args)
   "Create and send a 'workspace/executeCommand' message having

@@ -3879,6 +3879,8 @@ respectively `helm-cand-num' and `helm-cur-source'."
                (not (zerop (length dispvalue))))
       (funcall insert-function dispvalue)
       (setq end (point-at-eol))
+      ;; Some strings may handle another keymap prop.
+      (remove-text-properties start end '(keymap nil))
       (put-text-property start end 'read-only nil)
       ;; Some sources with candidates-in-buffer have already added
       ;; 'helm-realvalue property when creating candidate buffer.
@@ -3886,10 +3888,7 @@ respectively `helm-cand-num' and `helm-cur-source'."
         (and realvalue
              (put-text-property start end
                                 'helm-realvalue realvalue)))
-      (when (and map
-                 ;; Don't overwrite mouse properties when
-                 ;; redisplaying.
-                 (not (get-text-property start 'keymap)))
+      (when map
         (define-key map [mouse-1] 'helm-mouse-select-candidate)
         (define-key map [mouse-2] 'ignore)
         (define-key map [mouse-3] 'helm-select-action)
@@ -3897,9 +3896,10 @@ respectively `helm-cand-num' and `helm-cur-source'."
          start end
          `(mouse-face highlight
            keymap ,map
-           help-echo ,(helm-aif (get-text-property start 'help-echo)
-                         (concat it "\nmouse-1: select candidate\nmouse-3: menu actions")
-                       "mouse-1: select candidate\nmouse-3: menu actions"))))
+           help-echo ,(pcase (get-text-property start 'help-echo)
+                        ((and it (pred stringp))
+                         (concat it "\nmouse-1: select candidate\nmouse-3: menu actions"))
+                        (_ "mouse-1: select candidate\nmouse-3: menu actions")))))
       (when num
         (put-text-property start end 'helm-cand-num num))
       (when source
@@ -3911,7 +3911,7 @@ respectively `helm-cand-num' and `helm-cur-source'."
          (start (overlay-start helm-selection-overlay))
          (end   (overlay-end helm-selection-overlay))
          (help-echo (get-text-property start 'help-echo)))
-    (when (and help-echo
+    (when (and (stringp help-echo)
                (string-match "mouse-2: execute action" help-echo))
       (put-text-property
        start end
@@ -3927,9 +3927,10 @@ respectively `helm-cand-num' and `helm-cur-source'."
        helm-selection-point
        (overlay-end helm-selection-overlay)
        'help-echo (helm-aif (get-text-property pos 'help-echo)
-                      (if (string-match "mouse-1: select candidate" it)
+                      (if (and (stringp it)
+                               (string-match "mouse-1: select candidate" it))
                           (replace-match "mouse-2: execute action" t t it)
-                          "mouse-2: execute action\nmouse-3: menu actions")
+                        "mouse-2: execute action\nmouse-3: menu actions")
                     "mouse-2: execute action\nmouse-3: menu actions")))))
 
 (defun helm-mouse-select-candidate (event)
@@ -5730,20 +5731,22 @@ Meaning of prefix ARG is the same as in `reposition-window'."
     (cl-pushnew o helm-visible-mark-overlays)
     (push (cons source sel) helm-marked-candidates)))
 
-(defun helm-toggle-visible-mark ()
+(defun helm-toggle-visible-mark (arg)
   "Toggle helm visible mark at point."
-  (interactive)
+  (interactive "p")
   (with-helm-alive-p
     (with-helm-window
       (let ((nomark (assq 'nomark (helm-get-current-source))))
         (if nomark
             (message "Marking not allowed in this source")
-            (helm-aif (helm-this-visible-mark)
-                (helm-delete-visible-mark it)
-              (helm-make-visible-mark))
-            (if (helm-end-of-source-p)
-                (helm-display-mode-line (helm-get-current-source))
-                (helm-next-line)))))))
+          (cl-loop repeat arg do
+                   (progn
+                     (helm-aif (helm-this-visible-mark)
+                         (helm-delete-visible-mark it)
+                       (helm-make-visible-mark))
+                     (if (helm-end-of-source-p)
+                         (helm-display-mode-line (helm-get-current-source))
+                       (helm-next-line)))))))))
 (put 'helm-toggle-visible-mark 'helm-only t)
 
 (defun helm-file-completion-source-p (&optional source)

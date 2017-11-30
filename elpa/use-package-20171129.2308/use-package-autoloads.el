@@ -3,21 +3,21 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "use-package" "use-package.el" (23068 16094
+;;;### (autoloads nil "use-package" "use-package.el" (23072 13036
 ;;;;;;  0 0))
 ;;; Generated autoloads from use-package.el
 
 (autoload 'use-package-autoload-keymap "use-package" "\
 Loads PACKAGE and then binds the key sequence used to invoke
-this function to KEYMAP-SYMBOL.  It then simulates pressing the
-same key sequence a again, so that the next key pressed is routed
-to the newly loaded keymap.
+  this function to KEYMAP-SYMBOL.  It then simulates pressing the
+  same key sequence a again, so that the next key pressed is routed
+  to the newly loaded keymap.
 
-This function supports use-package's :bind-keymap keyword.  It
-works by binding the given key sequence to an invocation of this
-function for a particular keymap.  The keymap is expected to be
-defined by the package.  In this way, loading the package is
-deferred until the prefix key sequence is pressed.
+  This function supports use-package's :bind-keymap keyword.  It
+  works by binding the given key sequence to an invocation of this
+  function for a particular keymap.  The keymap is expected to be
+  defined by the package.  In this way, loading the package is
+  deferred until the prefix key sequence is pressed.
 
 \(fn KEYMAP-SYMBOL PACKAGE OVERRIDE)" nil nil)
 
@@ -41,7 +41,6 @@ this file.  Usage:
 :mode            Form to be added to `auto-mode-alist'.
 :magic           Form to be added to `magic-mode-alist'.
 :magic-fallback  Form to be added to `magic-fallback-mode-alist'.
-:mode            Form to be added to `auto-mode-alist'.
 :interpreter     Form to be added to `interpreter-mode-alist'.
 
 :commands        Define autoloads for commands that will be defined by the

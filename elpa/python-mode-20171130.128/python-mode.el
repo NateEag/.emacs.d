@@ -3053,9 +3053,9 @@ return `jython', otherwise return nil."
     mode))
 
 (defun py-choose-shell-by-path (&optional separator-char)
-  "SEPARATOR-CHAR according to system ‘path-separator’."
-  "Select Python executable according to version desplayed in path.
+  "SEPARATOR-CHAR according to system ‘path-separator’.
 
+Select Python executable according to version desplayed in path.
 Returns versioned string, nil if nothing appropriate found"
   (interactive)
   (let ((path (py--buffer-filename-remote-maybe))
@@ -10524,7 +10524,7 @@ Per default it's \"(format \"execfile(r'%s') # PYTHON-MODE\\n\" filename)\" for 
 	 (proc (or proc (get-buffer-process buffer)
 		   (get-buffer-process (py-shell nil dedicated shell buffer fast exception-buffer split switch))))
 	 (fast (or fast py-fast-process-p))
-	 (return (or return py-return-result-p py-return-store-p)))
+	 (return (or return py-return-result-p py-store-result-p)))
     (setq py-buffer-name buffer)
     (py--execute-base-intern strg filename proc file wholebuf buffer origline execute-directory start end shell fast return)
     (when (or split py-split-window-on-execute py-switch-buffers-on-execute-p)
@@ -11180,6 +11180,7 @@ Depends from kind of Python shell."
 (defalias 'py-ipython-shell-command-on-region 'py-execute-region-ipython)
 (defalias 'py-shell-command-on-region 'py-execute-region)
 (defalias 'py-send-region-ipython 'py-execute-region-ipython)
+(defalias 'py-send-region 'py-execute-region)
 
 ;; python-components-send
 (defun py-output-buffer-filter (&optional beg end)
@@ -11360,7 +11361,9 @@ Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
 (defun py--complete-prepare (&optional shell beg end word fast-complete)
   (let* ((exception-buffer (current-buffer))
          (pos (copy-marker (point)))
-	 (pps (parse-partial-sexp (or (ignore-errors (overlay-end comint-last-prompt-overlay))(line-beginning-position)) (point)))
+	 (pps (parse-partial-sexp (or
+				   (ignore-errors comint-last-prompt)
+				   (line-beginning-position)) (point)))
 	 (in-string (when (nth 3 pps) (nth 8 pps)))
          (beg
 	  (save-excursion
@@ -11462,7 +11465,7 @@ in (I)Python shell-modes `py-shell-complete'"
 
 ;; python -m pdb -c "b 3" -c c your_script.py
 
-(defun py-pdb-break-at-current-line (&optional line file condition)
+(defun py-pdb-break-at-current-line ()
   "Set breakpoint at current line.
 
 Optional LINE FILE CONDITION"
@@ -11676,8 +11679,10 @@ problem as best as we can determine."
            ;; (not (string-match py-pydbtrack-stack-entry-regexp block))
 	   )
       "Traceback cue not found"
-    (let* ((filename (match-string
-                      py-pdbtrack-marker-regexp-file-group block))
+    (let* ((remote-prefix (or (file-remote-p default-directory) ""))
+           (filename (concat remote-prefix
+                             (match-string
+                              py-pdbtrack-marker-regexp-file-group block)))
            (lineno (string-to-number (match-string
                                       py-pdbtrack-marker-regexp-line-group
                                       block)))
@@ -12918,6 +12923,17 @@ Keegan Carruthers-Smith"
     (flymake-mode)))
 
 ;; ;
+(defun variables-prepare (kind)
+  "Used by variable-finds, variable-states. "
+  (let* ((oldbuf (buffer-name (or buffer (current-buffer))))
+         ;; (file (buffer-file-name))
+         (orgname (concat (substring oldbuf 0 (string-match "\\." oldbuf)) ".org"))
+         (reSTname (concat (substring oldbuf 0 (string-match "\\." oldbuf)) ".rst"))
+         (directory-in default-directory)
+         (directory-out (or directory-out (expand-file-name finds-directory-out)))
+	 (command (concat "variables-base-" kind)))
+    (funcall (intern-soft command) oldbuf orgname reSTname directory-in directory-out)))
+
 (defun variables-state (&optional buffer directory-in directory-out)
   "Diplays state of ‘python-mode’ variables in an ‘org-mode’ BUFFER.
 
@@ -20300,7 +20316,7 @@ See lp:1066489 "
   ;; (py-indent-region docstring thisend)
   (goto-char orig))
 
-(defun py--fill-docstring-base (thisbeg thisend style multi-line-p first-line-p beg end py-current-indent orig docstring)
+(defun py--fill-docstring-base (thisbeg thisend style multi-line-p beg end py-current-indent orig docstring)
   ;; (widen)
   ;; fill-paragraph causes wrong indent, lp:1397936
   ;; (narrow-to-region thisbeg thisend)
@@ -20350,27 +20366,25 @@ See lp:1066489 "
     ;; adjust the region to fill according to style
     (goto-char end)))
 
-  ;;   (py--fill-docstring-base thisbeg thisend style multi-line-p first-line-p beg end py-current-indent orig docstring))
-  ;; (goto-char orig))
-
 (defun py--fill-docstring-first-line (beg end thisbeg thisend style)
   "Refill first line after newline maybe. "
-  (fill-region beg (line-end-position))
-  (forward-line 1)
-  (fill-region (line-beginning-position) end)
-  (save-restriction
-    (widen)
-    (setq multi-line-p (string-match "\n" (buffer-substring-no-properties thisbeg thisend))))
-  (when multi-line-p
-    ;; adjust the region to fill according to style
-    (goto-char beg)
-    (skip-chars-forward "\"'")
-    ;; style might be nil
-    (when style
-      (unless (or (eq style 'pep-257-nn)(eq style 'pep-257)(eq (char-after) ?\n))
-	(newline-and-indent)
-	;; if TQS is at a single line, re-fill remaining line
-	(fill-region (point) end)))))
+  (let (multi-line-p)
+    (fill-region beg (line-end-position))
+    (forward-line 1)
+    (fill-region (line-beginning-position) end)
+    (save-restriction
+      (widen)
+      (setq multi-line-p (string-match "\n" (buffer-substring-no-properties thisbeg thisend))))
+    (when multi-line-p
+      ;; adjust the region to fill according to style
+      (goto-char beg)
+      (skip-chars-forward "\"'")
+      ;; style might be nil
+      (when style
+	(unless (or (eq style 'pep-257-nn)(eq style 'pep-257)(eq (char-after) ?\n))
+	  (newline-and-indent)
+	  ;; if TQS is at a single line, re-fill remaining line
+	  (fill-region (point) end))))))
 
 (defun py--fill-docstring (justify style docstring orig py-current-indent)
   ;; Delete spaces after/before string fence
@@ -20402,7 +20416,7 @@ See lp:1066489 "
            (py--fill-docstring-last-line thisend beg end multi-line-p))
           (t ;; (narrow-to-region beg end)
 	     (fill-region beg end justify)))
-    (py--fill-docstring-base thisbeg thisend style multi-line-p first-line-p beg end py-current-indent orig docstring)))
+    (py--fill-docstring-base thisbeg thisend style multi-line-p beg end py-current-indent orig docstring)))
 
 (defun py-fill-string (&optional justify style docstring)
   "String fill function for `py-fill-paragraph'.

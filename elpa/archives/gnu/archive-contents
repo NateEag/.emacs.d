@@ -369,7 +369,7 @@
 	     ((:url . "http://elpa.gnu.org/packages/ediprolog.html")
 	      (:keywords "languages" "processes"))])
  (el-search .
-	    [(1 4 0 4)
+	    [(1 4 0 6)
 	     ((emacs
 	       (25))
 	      (stream
@@ -557,7 +557,7 @@
 	     ((:url . "http://elpa.gnu.org/packages/iterators.html")
 	      (:keywords "extensions" "elisp"))])
  (ivy .
-      [(0 9 1)
+      [(0 10 0)
        ((emacs
 	 (24 1)))
        "Incremental Vertical completYon" tar
@@ -779,7 +779,7 @@
 	     ((:url . "https://github.com/michael-heerdegen/on-screen.el")
 	      (:keywords "convenience"))])
  (org .
-      [(20171127)
+      [(20171204)
        nil "Outline-based notes management and organizer" tar nil])
  (org-edna .
 	   [(1 0 -3 1)
@@ -977,6 +977,11 @@
 	   nil "Add spinners and progress-bars to the mode-line for ongoing operations" single
 	   ((:url . "https://github.com/Malabarba/spinner.el")
 	    (:keywords "processes" "mode-line"))])
+ (sql-indent .
+	     [(1 0)
+	      nil "Support for indenting code in SQL files." tar
+	      ((:keywords "languages" "sql")
+	       (:url . "http://elpa.gnu.org/packages/sql-indent.html"))])
  (stream .
 	 [(2 2 4)
 	  ((emacs

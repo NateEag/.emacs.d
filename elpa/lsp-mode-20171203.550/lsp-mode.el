@@ -1,6 +1,6 @@
 ;;; lsp-mode.el --- Minor mode for interacting with Language Servers -*- lexical-binding: t -*-
 
-;; Copyright (C) 2016  Vibhav Pant <vibhavp@gmail.com>
+;; Copyright (C) 2016-2017  Vibhav Pant <vibhavp@gmail.com>
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -79,6 +79,35 @@
                 "lsp-define-client: :ignore-regexps element %s is not a string"
                 e))))
 
+(cl-defmacro lsp-define-whitelist-enable (name get-root
+                                               &key docstring)
+  "Define a function to add the project root for the current buffer to the whitleist.
+NAME is the base name for the command.
+GET-ROOT is the language-specific function to determint the project root for the current buffer."
+  (let ((whitelist-add      (intern (format "%s-whitelist-add" name)))
+        (enable-interactive (intern (format "%s-enable" name))))
+    `(defun ,whitelist-add ()
+       ,docstring
+       (interactive)
+       (let ((root (funcall ,get-root)))
+         (customize-save-variable 'lsp-project-whitelist
+                                  (add-to-list 'lsp-project-whitelist root))
+         (,enable-interactive)
+         ))))
+
+(cl-defmacro lsp-define-whitelist-disable (name get-root
+                                               &key docstring)
+  "Define a function to remove the project root for the current buffer from the whitleist.
+NAME is the base name for the command.
+GET-ROOT is the language-specific function to determint the project root for the current buffer."
+  (let ((whitelist-remove (intern (format "%s-whitelist-remove" name))))
+    `(defun ,whitelist-remove ()
+       ,docstring
+       (interactive)
+       (let ((root (funcall ,get-root)))
+         (customize-save-variable 'lsp-project-whitelist
+                                  (remove root 'lsp-project-whitelist ))))))
+
 (cl-defmacro lsp-define-stdio-client (name language-id get-root command
                                        &key docstring
                                        language-id-fn
@@ -92,6 +121,9 @@ LANGUAGE-ID is the language id to be used when communication with
 the Language Server.  COMMAND is the command to run.
 
 Optional arguments:
+`:docstring' is an optional docstring used for the entrypoint function created by
+`lsp-define-stdio-client'.
+
 `:ignore-regexps' is a list of regexps which when matched will be ignored by the
  output parser.
 
@@ -108,14 +140,18 @@ Optional arguments:
 `:initialize' is a function called when the client is intiailized. It takes a
  single argument, the newly created client."
   (let ((enable (intern (format "%s-enable" name))))
-    `(defun ,enable ()
-       ,docstring
-       (interactive)
-       (let ((client (make-lsp--client
-                       :language-id (if ,language-id-fn ,language-id-fn #'(lambda (_) ,language-id))
-                       :send-sync #'lsp--stdio-send-sync
-                       :send-async #'lsp--stdio-send-async
-                       :new-connection (lsp--make-stdio-connection
+    `(progn
+       (lsp-define-whitelist-enable ,name ,get-root)
+       (lsp-define-whitelist-disable ,name ,get-root)
+
+       (defun ,enable ()
+         ,docstring
+         (interactive)
+         (let ((client (make-lsp--client
+                        :language-id (if ,language-id-fn ,language-id-fn #'(lambda (_) ,language-id))
+                        :send-sync #'lsp--stdio-send-sync
+                        :send-async #'lsp--stdio-send-async
+                        :new-connection (lsp--make-stdio-connection
                                          ,(symbol-name name)
                                          ,command
                                          ,command-fn)
@@ -129,7 +165,7 @@ Optional arguments:
                (progn
                  (lsp-mode 1)
                  (lsp--start client ,extra-init-params))
-               (message "Not initializing project %s" root))))))))
+               (message "Not initializing project %s" root)))))))))
 
 (cl-defmacro lsp-define-tcp-client (name language-id get-root command host port
                                      &key docstring
@@ -161,14 +197,18 @@ Optional arguments:
 `:initialize' is a function called when the client is initialized. It takes a
   single argument, the newly created client."
   (let ((enable (intern (format "%s-enable" name))))
-    `(defun ,enable ()
-       ,docstring
-       (interactive)
-       (let ((client (make-lsp--client
-                       :language-id (if ,language-id-fn ,language-id-fn #'(lambda (_) ,language-id))
-                       :send-sync #'lsp--stdio-send-sync
-                       :send-async #'lsp--stdio-send-async
-                       :new-connection (lsp--make-tcp-connection
+    `(progn
+       (lsp-define-whitelist-enable ,name ,get-root)
+       (lsp-define-whitelist-disable ,name ,get-root)
+
+       (defun ,enable ()
+         ,docstring
+         (interactive)
+         (let ((client (make-lsp--client
+                        :language-id (if ,language-id-fn ,language-id-fn #'(lambda (_) ,language-id))
+                        :send-sync #'lsp--stdio-send-sync
+                        :send-async #'lsp--stdio-send-async
+                        :new-connection (lsp--make-tcp-connection
                                          ,(symbol-name name)
                                          ,command
                                          ,command-fn
@@ -183,7 +223,7 @@ Optional arguments:
                (progn
                  (lsp-mode 1)
                  (lsp--start client ,extra-init-params))
-               (message "Not initializing project %s" root))))))))
+               (message "Not initializing project %s" root)))))))))
 
 (defvar-local lsp-status nil
   "The current status of the LSP server.")

@@ -1,4 +1,4 @@
-;; Copyright (C) 2016  Vibhav Pant <vibhavp@gmail.com> -*- lexical-binding: t -*-
+;; Copyright (C) 2016-2017  Vibhav Pant <vibhavp@gmail.com> -*- lexical-binding: t -*-
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -163,27 +163,28 @@ Else it is queued (unless DONT-QUEUE is non-nil)"
 (defun lsp--parser-on-message (p msg)
   "Called when the parser reads a complete message from the server."
   (let* ((json-array-type 'list)
-         (json-object-type 'hash-table)
-         (json-false nil)
-         (json-data (json-read-from-string msg))
-         (id (gethash "id" json-data nil))
-         (client (lsp--workspace-client (lsp--parser-workspace p)))
-         callback)
+          (json-object-type 'hash-table)
+          (json-false nil)
+          (json-data (json-read-from-string msg))
+          (id (gethash "id" json-data nil))
+          (client (lsp--workspace-client (lsp--parser-workspace p)))
+          callback)
     (pcase (lsp--get-message-type json-data)
       ('response
-       (cl-assert id)
-       (setq callback (gethash id (lsp--client-response-handlers client) nil))
-       (if callback
-           (progn (funcall callback (gethash "result" json-data nil))
-                  (remhash id (lsp--client-response-handlers client)))
-         (setf (lsp--parser-response-result p)
-               (and json-data (gethash "result" json-data nil))
-               (lsp--parser-waiting-for-response p) nil)))
-      ('response-error (setf (lsp--parser-response-result p) nil)
-                       (when json-data
-                         (message (lsp--error-string (gethash "error" json-data nil))))
-                       (setf (lsp--parser-response-result p) nil
-                             (lsp--parser-waiting-for-response p) nil))
+        (cl-assert id)
+        (setq callback (gethash id (lsp--client-response-handlers client) nil))
+        (if callback
+          (progn (funcall callback (gethash "result" json-data nil))
+            (remhash id (lsp--client-response-handlers client)))
+          (setf (lsp--parser-response-result p)
+            (and json-data (gethash "result" json-data nil))
+            (lsp--parser-waiting-for-response p) nil)))
+      ('response-error
+        (setf (lsp--parser-response-result p) nil)
+        (when json-data
+          (message (lsp--error-string (gethash "error" json-data nil))))
+        (setf (lsp--parser-response-result p) nil
+          (lsp--parser-waiting-for-response p) nil))
       ('notification (lsp--on-notification p json-data))
       ('request      (lsp--on-request p json-data)))))
 

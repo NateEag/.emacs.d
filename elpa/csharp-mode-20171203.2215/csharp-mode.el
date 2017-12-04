@@ -5,7 +5,7 @@
 ;; Created    : Feburary 2005
 ;; Modified   : 2016
 ;; Version    : 0.9.1
-;; Package-Version: 20170927.816
+;; Package-Version: 20171203.2215
 ;; Keywords   : c# languages oop mode
 ;; X-URL      : https://github.com/josteink/csharp-mode
 ;; Last-saved : 2017-Jan-11
@@ -2284,7 +2284,7 @@ your `csharp-mode-hook' function:
                  ;; contains only an open-curly.  In this case, insert a
                  ;; summary element pair.
                  (preceding-line-is-empty
-                  (setq text-to-insert  "/ <summary>\n///   \n/// </summary>"
+                  (setq text-to-insert  "/ <summary>\n ///   \n /// </summary>"
                         flavor 1) )
 
                  ;; The preceding word closed a summary element.  In this case,
@@ -2292,13 +2292,13 @@ your `csharp-mode-hook' function:
                  ;; insert a remarks element.
                  ((and (string-equal word-back "summary") (eq char0 ?/)  (eq char1 ?<))
                   (if (not (and (string-equal word-fore "remarks") (eq char-0 ?<)))
-                      (setq text-to-insert "/ <remarks>\n///   <para>\n///     \n///   </para>\n/// </remarks>"
+                      (setq text-to-insert "/ <remarks>\n ///   <para>\n ///     \n ///   </para>\n /// </remarks>"
                             flavor 2)))
 
                  ;; The preceding word closed the remarks section.  In this case,
                  ;; insert an example element.
                  ((and (string-equal word-back "remarks")  (eq char0 ?/)  (eq char1 ?<))
-                  (setq text-to-insert "/ <example>\n///   \n/// </example>"
+                  (setq text-to-insert "/ <example>\n ///   \n /// </example>"
                         flavor 3))
 
                  ;; The preceding word closed the example section.  In this
@@ -2340,7 +2340,7 @@ your `csharp-mode-hook' function:
                     (if (string-equal word-back "remarks")
                         (setq spacer (concat spacer "   ")))
 
-                    (setq text-to-insert (format "/%s<para>\n///%s  \n///%s</para>"
+                    (setq text-to-insert (format "/%s<para>\n ///%s  \n ///%s</para>"
                                                  spacer spacer spacer)
                           flavor 6)))
 

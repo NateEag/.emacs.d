@@ -1537,13 +1537,13 @@ the reference is used.  The first regexp submatch becomes the
           "\\([^.][^ \t]*\\)?\\'"))     ; revB
 
 (defun magit-split-range (range)
-  (when (string-match magit-range-re range)
-    (let ((beg (or (match-string 1 range) "HEAD"))
-          (end (or (match-string 3 range) "HEAD")))
-      (cons (if (string-equal (match-string 2 range) "...")
-                (magit-git-string "merge-base" beg end)
-              beg)
-            end))))
+  (and (string-match magit-range-re range)
+       (let ((beg (or (match-string 1 range) "HEAD"))
+             (end (or (match-string 3 range) "HEAD")))
+         (cons (if (string-equal (match-string 2 range) "...")
+                   (magit-git-string "merge-base" beg end)
+                 beg)
+               end))))
 
 (defvar magit-thingatpt--git-revision-chars "-./[:alnum:]@{}^~!"
   "Characters allowable in filenames, excluding space and colon.")
@@ -1786,8 +1786,8 @@ the reference is used.  The first regexp submatch becomes the
 (defun magit-get-all (&rest keys)
   "Return all values of the Git variable specified by KEYS."
   (let ((magit-git-debug nil)
-        (arg (and (or (string-prefix-p "--" (car keys))
-                      (null (car keys)))
+        (arg (and (or (null (car keys))
+                      (string-prefix-p "--" (car keys)))
                   (pop keys)))
         (key (mapconcat 'identity keys ".")))
     (if (and magit--refresh-cache (not arg))
@@ -1803,8 +1803,8 @@ the reference is used.  The first regexp submatch becomes the
 
 (defun magit-set (value &rest keys)
   "Set the value of the Git variable specified by KEYS to VALUE."
-  (let ((arg (and (or (string-prefix-p "--" (car keys))
-                      (null (car keys)))
+  (let ((arg (and (or (null (car keys))
+                      (string-prefix-p "--" (car keys)))
                   (pop keys)))
         (key (mapconcat 'identity keys ".")))
     (if value
@@ -1818,8 +1818,8 @@ the reference is used.  The first regexp submatch becomes the
 (defun magit-set-all (values* &rest keys)
   "Set all values of the Git variable specified by KEYS to VALUES.
 \n(fn VALUES &rest KEYS)"
-  (let ((arg (and (or (string-prefix-p "--" (car keys))
-                      (null (car keys)))
+  (let ((arg (and (or (null (car keys))
+                      (string-prefix-p "--" (car keys)))
                   (pop keys)))
         (var (mapconcat 'identity keys ".")))
     (when (magit-get var)

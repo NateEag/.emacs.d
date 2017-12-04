@@ -1060,10 +1060,17 @@ current selected candidate only.  (See bindings below.)  Most Helm actions
 operate on marked candidates unless candidate-marking is explicitely forbidden
 for a specific source.
 
-To mark/unmark a candidate, use \\[helm-toggle-visible-mark].  (See bindings below.)
-To mark all visible unmarked candidates at once in current source use \\[helm-mark-all].
-To mark/unmark all candidates at once use \\[helm-toggle-all-marks].
-With a prefix argument, those bindings let you mark candidates in all sources.
+- To mark/unmark a candidate, use \\[helm-toggle-visible-mark].  (See bindings below.)
+With a numeric prefix arg mark ARG candidates forward, if ARG is negative
+mark ARG candidates backward.
+
+- To mark all visible unmarked candidates at once in current source use \\[helm-mark-all].
+With a prefix argument, mark all candidates in all sources.
+
+- To unmark all visible marked candidates at once use \\[helm-unmark-all].
+
+- To mark/unmark all candidates at once use \\[helm-toggle-all-marks].
+With a prefix argument, mark/unmark all candidates in all sources.
 
 Note: When multiple candidates are selected across different sources, only the
 candidates of the current source will be used when executing most actions (as
@@ -1133,7 +1140,7 @@ this command will greatly improve `helm' interactivity, e.g. when quitting Helm
 accidentally.
 
 You can call \\<global-map>\\[helm-resume] with a prefix argument to choose
-(with completion!) which session you'd like to resume.  You can also cycle in
+\(with completion!) which session you'd like to resume.  You can also cycle in
 these sources with `helm-cycle-resume' (see above).
 
 ** Debugging Helm
@@ -5732,21 +5739,28 @@ Meaning of prefix ARG is the same as in `reposition-window'."
     (push (cons source sel) helm-marked-candidates)))
 
 (defun helm-toggle-visible-mark (arg)
-  "Toggle helm visible mark at point."
+  "Toggle helm visible mark at point ARG times.
+If ARG is negative toggle backward."
   (interactive "p")
   (with-helm-alive-p
     (with-helm-window
-      (let ((nomark (assq 'nomark (helm-get-current-source))))
+      (let ((nomark (assq 'nomark (helm-get-current-source)))
+            (next-fns (if (< arg 0)
+                          '(helm-beginning-of-source-p . helm-previous-line)
+                        '(helm-end-of-source-p . helm-next-line))))
         (if nomark
             (message "Marking not allowed in this source")
-          (cl-loop repeat arg do
+          (cl-loop with n = (if (< arg 0) (* arg -1) arg)
+                   repeat n do
                    (progn
                      (helm-aif (helm-this-visible-mark)
                          (helm-delete-visible-mark it)
                        (helm-make-visible-mark))
-                     (if (helm-end-of-source-p)
-                         (helm-display-mode-line (helm-get-current-source))
-                       (helm-next-line)))))))))
+                     (if (funcall (car next-fns))
+                         (progn
+                           (helm-display-mode-line (helm-get-current-source))
+                           (cl-return nil))
+                       (funcall (cdr next-fns))))))))))
 (put 'helm-toggle-visible-mark 'helm-only t)
 
 (defun helm-file-completion-source-p (&optional source)

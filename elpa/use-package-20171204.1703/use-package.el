@@ -7,7 +7,6 @@
 ;; Created: 17 Jun 2012
 ;; Modified: 29 Nov 2017
 ;; Version: 2.4
-;; Package-Version: 20171203.1313
 ;; Package-Requires: ((emacs "24.3") (bind-key "2.4"))
 ;; Keywords: dotemacs startup speed config package
 ;; URL: https://github.com/jwiegley/use-package
@@ -40,18 +39,16 @@
 
 ;;; Code:
 
-(require 'up-core)
+(require 'use-package-core)
 
-(require 'up-ensure)
-(require 'up-diminish)
-(require 'up-delight)
+(require 'use-package-bind-key)
+(require 'use-package-diminish)
+(require 'use-package-delight)
+(require 'use-package-ensure)
 
-(autoload #'use-package-jump-to-package-form "up-jump" nil t)
+(declare-function use-package-jump-to-package-form "use-package-jump")
+(autoload #'use-package-jump-to-package-form "use-package-jump" nil t)
 
 (provide 'use-package)
-
-;; Local Variables:
-;; indent-tabs-mode: nil
-;; End:
 
 ;;; use-package.el ends here

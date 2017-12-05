@@ -3,13 +3,18 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "direnv" "direnv.el" (22907 27728 0 0))
+;;;### (autoloads nil "direnv" "direnv.el" (23078 43117 0 0))
 ;;; Generated autoloads from direnv.el
 
 (autoload 'direnv-update-environment "direnv" "\
 Update the environment for FILE-NAME.
 
 \(fn &optional FILE-NAME)" t nil)
+
+(autoload 'direnv-update-directory-environment "direnv" "\
+Update the environment for DIRECTORY.
+
+\(fn &optional DIRECTORY FORCE-SUMMARY)" t nil)
 
 (autoload 'direnv-edit "direnv" "\
 Edit the .envrc associated with the current directory.

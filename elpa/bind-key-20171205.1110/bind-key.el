@@ -7,7 +7,7 @@
 ;; Created: 16 Jun 2012
 ;; Modified: 29 Nov 2017
 ;; Version: 2.4
-;; Package-Version: 20171204.1555
+;; Package-Version: 20171205.1110
 ;; Keywords: keys keybinding config dotemacs
 ;; URL: https://github.com/jwiegley/use-package
 
@@ -223,8 +223,10 @@ function symbol (unquoted)."
   ;; jww (2016-02-26): This is a hack; this whole function needs to be
   ;; rewritten to normalize arguments the way that use-package.el does.
   (if (and (eq (car args) :package)
-           (not (eq (car (cdr (cdr args))) :map)))
+           (not (eq (car (cdr (cdr args))) :map))
+           (not keymap))
       (setq args (cons :map (cons 'global-map args))))
+
   (let ((map keymap)
         doc
         prefix-map
@@ -236,14 +238,20 @@ function symbol (unquoted)."
     ;; Process any initial keyword arguments
     (let ((cont t))
       (while (and cont args)
-        (if (pcase (car args)
-              (`:map (setq map (cadr args)))
-              (`:prefix-docstring (setq doc (cadr args)))
-              (`:prefix-map (setq prefix-map (cadr args)))
-              (`:prefix (setq prefix (cadr args)))
-              (`:filter (setq filter (cadr args)) t)
-              (`:menu-name (setq menu-name (cadr args)))
-              (`:package (setq pkg (cadr args))))
+        (if (cond ((eq :map (car args))
+                   (setq map (cadr args)))
+                  ((eq :prefix-docstring (car args))
+                   (setq doc (cadr args)))
+                  ((eq :prefix-map (car args))
+                   (setq prefix-map (cadr args)))
+                  ((eq :prefix (car args))
+                   (setq prefix (cadr args)))
+                  ((eq :filter (car args))
+                   (setq filter (cadr args)) t)
+                  ((eq :menu-name (car args))
+                   (setq menu-name (cadr args)))
+                  ((eq :package (car args))
+                   (setq pkg (cadr args))))
             (setq args (cddr args))
           (setq cont nil))))
 
@@ -268,7 +276,7 @@ function symbol (unquoted)."
 
       (cl-flet
           ((wrap (map bindings)
-                 (if (and map pkg (not (eq map 'global-map)))
+                 (if (and map pkg (not (memq map '(global-map override-global-map))))
                      `((if (boundp ',map)
                            (progn ,@bindings)
                          (eval-after-load
@@ -321,8 +329,7 @@ function symbol (unquoted)."
 
 ;;;###autoload
 (defmacro bind-keys* (&rest args)
-  (macroexp-progn
-   (bind-keys-form args 'override-global-map)))
+  (macroexp-progn (bind-keys-form args 'override-global-map)))
 
 (defun get-binding-description (elem)
   (cond

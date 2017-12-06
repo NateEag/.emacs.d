@@ -88,6 +88,11 @@ above."
   :type 'hook
   :group 'tide)
 
+(defcustom tide-sort-completions-by-kind nil
+  "Whether completions should be sorted by kind"
+  :type 'boolean
+  :group 'tide)
+
 (defcustom tide-format-options '()
   "Format options plist."
   :type '(plist :value-type sexp)
@@ -1132,12 +1137,13 @@ Noise can be anything like braces, reserved keywords, etc."
        (put-text-property 0 1 'file-location file-location name)
        (put-text-property 0 1 'completion completion name)
        name))
-   (-sort
-    'tide-compare-completions
-    (-filter
-     (lambda (completion)
-       (string-prefix-p prefix (plist-get completion :name)))
-     completions))))
+   (let ((filtered
+          (-filter (lambda (completion)
+                     (string-prefix-p prefix (plist-get completion :name)))
+                   completions)))
+     (if tide-sort-completions-by-kind
+         (-sort 'tide-compare-completions filtered)
+       filtered))))
 
 (defun tide-command:completions (prefix cb)
   (let* ((file-location
@@ -1261,15 +1267,12 @@ Noise can be anything like braces, reserved keywords, etc."
     (define-key map (kbd "p") #'tide-find-previous-reference)
     (define-key map (kbd "C-m") #'tide-goto-reference)
     (define-key map [mouse-1] #'tide-goto-reference)
-    (define-key map (kbd "q") #'quit-window)
     map))
 
-(define-derived-mode tide-references-mode nil "tide-references"
+(define-derived-mode tide-references-mode special-mode "tide-references"
   "Major mode for tide references list.
 
 \\{tide-references-mode-map}"
-  (use-local-map tide-references-mode-map)
-  (setq buffer-read-only t)
   (setq next-error-function #'tide-next-reference-function))
 
 (defun tide-command:references ()
@@ -1393,10 +1396,10 @@ number."
 (defun tide-imenu-index ()
   (let ((response (tide-command:navbar)))
     (tide-on-response-success response nil
-      (let ((navtree (plist-get response :body)))
+      (let ((children (tide-plist-get response :body :childItems)))
         (if tide-imenu-flatten
-            (-flatten (-map #'tide-build-flat-imenu-index (plist-get navtree :childItems)))
-          (list (tide-build-imenu-index navtree)))))))
+            (-flatten (-map #'tide-build-flat-imenu-index children))
+          (mapcar #'tide-build-imenu-index children))))))
 
 ;;; Rename
 
@@ -1820,15 +1823,12 @@ code-analysis."
     (define-key map (kbd "n") #'tide-find-next-error)
     (define-key map (kbd "p") #'tide-find-previous-error)
     (define-key map (kbd "C-m") #'tide-goto-error)
-    (define-key map (kbd "q") #'quit-window)
     map))
 
-(define-derived-mode tide-project-errors-mode nil "tide-project-errors"
+(define-derived-mode tide-project-errors-mode special-mode "tide-project-errors"
   "Major mode for tide project-errors list.
 
 \\{tide-project-errors-mode-map}"
-  (use-local-map tide-project-errors-mode-map)
-  (setq buffer-read-only t)
   (setq next-error-function #'tide-next-error-function))
 
 ;;;###autoload

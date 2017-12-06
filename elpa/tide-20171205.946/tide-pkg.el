@@ -1,4 +1,4 @@
-(define-package "tide" "20171202.19" "Typescript Interactive Development Environment"
+(define-package "tide" "20171205.946" "Typescript Interactive Development Environment"
   '((dash "2.10.0")
     (s "1.11.0")
     (flycheck "27")

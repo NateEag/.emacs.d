@@ -1,4 +1,4 @@
-(define-package "lsp-mode" "20171203.550" "Minor mode for interacting with Language Servers"
+(define-package "lsp-mode" "20171205.1957" "Minor mode for interacting with Language Servers"
   '((emacs "25.1")
     (flycheck "30"))
   :url "https://github.com/emacs-lsp/lsp-mode")

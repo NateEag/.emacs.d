@@ -1,10 +1,10 @@
 ;;; csv-mode.el --- Major mode for editing comma/char separated values  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2003, 2004, 2012-2016  Free Software Foundation, Inc
+;; Copyright (C) 2003, 2004, 2012-2017  Free Software Foundation, Inc
 
 ;; Author: "Francis J. Wright" <F.J.Wright@qmul.ac.uk>
 ;; Time-stamp: <23 August 2004>
-;; Version: 1.6
+;; Version: 1.7
 ;; Keywords: convenience
 
 ;; This package is free software; you can redistribute it and/or modify
@@ -161,7 +161,7 @@ All must be different from the field quote characters, `csv-field-quotes'."
 
 (defcustom csv-field-quotes '("\"")
   "Field quotes: a list of *single-character* strings.
-For example: (\"\\\"\"), the default, or (\"\\\"\" \"'\" \"`\").
+For example: (\"\\\"\"), the default, or (\"\\\"\" \"\\='\" \"\\=`\").
 A field can be delimited by a pair of any of these characters.
 All must be different from the field separators, `csv-separators'."
   :type '(repeat string)
@@ -219,7 +219,7 @@ Changing this variable does not affect any existing CSV mode buffer."
 	 (set-default 'csv-comment-start value)))
 
 (defcustom csv-align-style 'left
-  "Aligned field style: one of 'left, 'centre, 'right or 'auto.
+  "Aligned field style: one of `left', `centre', `right' or `auto'.
 Alignment style used by `csv-align-fields'.
 Auto-alignment means left align text and right align numbers."
   :type '(choice (const left) (const centre)
@@ -402,13 +402,13 @@ Usually they sort in order of ascending sort key.")
      :help "Rewrite rows (which may have different lengths) as columns"]
     "--"
     ["Forward Field" forward-sexp :active t
-     :help "Move forward across one field\; with ARG, do it that many times"]
+     :help "Move forward across one field; with ARG, do it that many times"]
     ["Backward Field" backward-sexp :active t
-     :help "Move backward across one field\; with ARG, do it that many times"]
+     :help "Move backward across one field; with ARG, do it that many times"]
     ["Kill Field Forward" kill-sexp :active t
-     :help "Kill field following cursor\; with ARG, do it that many times"]
+     :help "Kill field following cursor; with ARG, do it that many times"]
     ["Kill Field Backward" backward-kill-sexp :active t
-     :help "Kill field preceding cursor\; with ARG, do it that many times"]
+     :help "Kill field preceding cursor; with ARG, do it that many times"]
     "--"
     ("Alignment Style"
      ["Left" (setq csv-align-style 'left) :active t
@@ -425,6 +425,7 @@ Usually they sort in order of ascending sort key.")
       :help "\
 If selected, `csv-align-fields' left aligns text and right aligns numbers"]
      )
+    ["Set header line" csv-header-line :active t]
     ["Show Current Field Index" csv-field-index-mode :active t
      :style toggle :selected csv-field-index-mode
      :help "If selected, display current field index in mode line"]
@@ -447,8 +448,8 @@ Assumes point is at beginning of line."
 (defun csv-interactive-args (&optional type)
   "Get arg or field(s) and region interactively, offering sensible defaults.
 Signal an error if the buffer is read-only.
-If TYPE is noarg then return a list `(beg end)'.
-Otherwise, return a list `(arg beg end)', where arg is:
+If TYPE is noarg then return a list (beg end).
+Otherwise, return a list (arg beg end), where arg is:
   the raw prefix argument by default\;
   a single field index if TYPE is single\;
   a list of field indices or index ranges if TYPE is multiple.
@@ -1277,8 +1278,75 @@ Modifies the match data; use `save-match-data' if necessary."
 	(push (substring string start) list))
     (nreverse list)))
 
+(defvar-local csv--header-line nil)
+(defvar-local csv--header-hscroll nil)
+(defvar-local csv--header-string nil)
+
+(defun csv-header-line (&optional use-current-line)
+  "Set/unset the header line.
+If the optional prefix arg USE-CURRENT-LINE is nil, use the first line
+as the header line.
+If there is already a header line, then unset the header line."
+  (interactive "P")
+  (if csv--header-line
+      (progn
+        (setq csv--header-line nil)
+        (kill-local-variable 'header-line-format))
+    (setq csv--header-line (copy-marker
+                            (if use-current-line
+                                (line-beginning-position)
+                              (point-min))))
+    (setq csv--header-hscroll nil)
+    (setq header-line-format
+          '(:eval (progn
+                    ;; FIXME: Won't work with multiple windows showing that
+                    ;; same buffer.
+		    (if (eq (window-hscroll) csv--header-hscroll)
+                        csv--header-string
+		      (setq csv--header-hscroll (window-hscroll))
+		      (setq csv--header-string
+                            (csv--compute-header-string))))))))
+
+(defun csv--compute-header-string ()
+  (save-excursion
+    (goto-char csv--header-line)
+    (move-to-column csv--header-hscroll)
+    (let ((str (buffer-substring (point) (line-end-position)))
+          (i 0))
+      (while (and i (< i (length str)))
+        (let ((prop (get-text-property i 'display str)))
+          (and (eq (car-safe prop) 'space)
+               (eq (car-safe (cdr prop)) :align-to)
+               (let* ((x (nth 2 prop))
+                      (nexti (next-single-property-change i 'display str))
+                      (newprop
+                       `(space :align-to
+                               ,(if (numberp x) (- x csv--header-hscroll)
+                                  `(- ,x csv--header-hscroll)))))
+                 (put-text-property i (or nexti (length str))
+                                    'display newprop str)
+                 (setq i nexti))))
+        (setq i (next-single-property-change i 'display str)))
+      (concat (propertize " " 'display '((space :align-to 0))) str))))
+
 ;;;; ChangeLog:
 
+;; 2017-12-05  Stefan Monnier  <monnier@iro.umontreal.ca>
+;; 
+;; 	* csv-mode/csv-mode.el (csv-header-line): New command
+;; 
+;; 	(csv-menu): Add an entry for it.
+;; 	(csv--header-line, csv--header-hscroll, csv--header-string): New vars.
+;; 	(csv--compute-header-string): New function.
+;; 
+;; 2016-07-11  Paul Eggert	 <eggert@cs.ucla.edu>
+;; 
+;; 	Fix some quoting problems in doc strings
+;; 
+;; 	Most of these are minor issues involving, e.g., quoting `like this' 
+;; 	instead of 'like this'.	 A few involve escaping ` and ' with a preceding
+;; 	\= when the characters should not be turned into curved single quotes.
+;; 
 ;; 2016-04-21  Leo Liu  <sdl.web@gmail.com>
 ;; 
 ;; 	Fix csv-mode to delete its own overlays only

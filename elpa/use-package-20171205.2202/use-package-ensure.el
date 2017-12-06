@@ -132,22 +132,25 @@ manually updated package."
 
 (defvar package-archive-contents)
 
+;;;###autoload
 (defun use-package-normalize/:ensure (name keyword args)
   (if (null args)
       (list t)
     (use-package-only-one (symbol-name keyword) args
       #'(lambda (label arg)
-          (pcase arg
-            ((pred symbolp)
-             (list arg))
-            (`(,(and pkg (pred symbolp))
-               :pin ,(and repo (or (pred stringp)
-                                   (pred symbolp))))
-             (list (cons pkg repo)))
-            (_
-             (use-package-error
-              (concat ":ensure wants an optional package name "
-                      "(an unquoted symbol name), or (<symbol> :pin <string>)"))))))))
+          (cond
+           ((symbolp arg)
+            (list arg))
+           ((and (listp arg) (= 3 (length arg))
+                 (symbolp (nth 0 arg))
+                 (eq :pin (nth 1 arg))
+                 (or (stringp (nth 2 arg))
+                     (symbolp (nth 2 arg))))
+            (list (cons (nth 0 arg) (nth 2 arg))))
+           (t
+            (use-package-error
+             (concat ":ensure wants an optional package name "
+                     "(an unquoted symbol name), or (<symbol> :pin <string>)"))))))))
 
 (defun use-package-ensure-elpa (name args state &optional no-refresh)
   (dolist (ensure args)
@@ -180,6 +183,7 @@ manually updated package."
                                        name (error-message-string err))
                                :error)))))))))
 
+;;;###autoload
 (defun use-package-handler/:ensure (name keyword ensure rest state)
   (let* ((body (use-package-process-keywords name rest state)))
     ;; We want to avoid installing packages when the `use-package' macro is

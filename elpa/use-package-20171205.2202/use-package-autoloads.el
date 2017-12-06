@@ -3,30 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "bind-chord" "bind-chord.el" (23078 43115 0
-;;;;;;  0))
-;;; Generated autoloads from bind-chord.el
-
-(autoload 'bind-chord "bind-chord" "\
-Bind CHORD to COMMAND in KEYMAP (`global-map' if not passed).
-
-\(fn CHORD COMMAND &optional KEYMAP)" nil t)
-
-(autoload 'bind-chords "bind-chord" "\
-Bind multiple chords at once.
-
-Accepts keyword argument:
-:map - a keymap into which the keybindings should be added
-
-The rest of the arguments are conses of keybinding string and a
-function symbol (unquoted).
-
-\(fn &rest ARGS)" nil t)
-
-;;;***
-
 ;;;### (autoloads nil "use-package-bind-key" "use-package-bind-key.el"
-;;;;;;  (23078 43115 0 0))
+;;;;;;  (23080 440 0 0))
 ;;; Generated autoloads from use-package-bind-key.el
 
 (autoload 'use-package-autoload-keymap "use-package-bind-key" "\
@@ -43,10 +21,33 @@ deferred until the prefix key sequence is pressed.
 
 \(fn KEYMAP-SYMBOL PACKAGE OVERRIDE)" nil nil)
 
+(defalias 'use-package-normalize/:bind 'use-package-normalize-binder)
+
+(defalias 'use-package-normalize/:bind* 'use-package-normalize-binder)
+
+(autoload 'use-package-handler/:bind "use-package-bind-key" "\
+
+
+\(fn NAME KEYWORD ARGS REST STATE &optional BIND-MACRO)" nil nil)
+
+(defalias 'use-package-normalize/:bind-keymap 'use-package-normalize-binder)
+
+(defalias 'use-package-normalize/:bind-keymap* 'use-package-normalize-binder)
+
+(autoload 'use-package-handler/:bind-keymap "use-package-bind-key" "\
+
+
+\(fn NAME KEYWORD ARG REST STATE &optional OVERRIDE)" nil nil)
+
+(autoload 'use-package-handler/:bind-keymap* "use-package-bind-key" "\
+
+
+\(fn NAME KEYWORD ARG REST STATE)" nil nil)
+
 ;;;***
 
-;;;### (autoloads nil "use-package-core" "use-package-core.el" (23078
-;;;;;;  43115 0 0))
+;;;### (autoloads nil "use-package-core" "use-package-core.el" (23080
+;;;;;;  440 0 0))
 ;;; Generated autoloads from use-package-core.el
 
 (autoload 'use-package "use-package-core" "\
@@ -110,8 +111,56 @@ this file.  Usage:
 
 ;;;***
 
-;;;### (autoloads nil "use-package-jump" "use-package-jump.el" (23078
-;;;;;;  43115 0 0))
+;;;### (autoloads nil "use-package-delight" "use-package-delight.el"
+;;;;;;  (23080 440 0 0))
+;;; Generated autoloads from use-package-delight.el
+
+(autoload 'use-package-normalize/:delight "use-package-delight" "\
+Normalize arguments to delight.
+
+\(fn NAME KEYWORD ARGS)" nil nil)
+
+(autoload 'use-package-handler/:delight "use-package-delight" "\
+
+
+\(fn NAME KEYWORD ARGS REST STATE)" nil nil)
+
+;;;***
+
+;;;### (autoloads nil "use-package-diminish" "use-package-diminish.el"
+;;;;;;  (23080 440 0 0))
+;;; Generated autoloads from use-package-diminish.el
+
+(autoload 'use-package-normalize/:diminish "use-package-diminish" "\
+
+
+\(fn NAME KEYWORD ARGS)" nil nil)
+
+(autoload 'use-package-handler/:diminish "use-package-diminish" "\
+
+
+\(fn NAME KEYWORD ARG REST STATE)" nil nil)
+
+;;;***
+
+;;;### (autoloads nil "use-package-ensure" "use-package-ensure.el"
+;;;;;;  (23080 440 0 0))
+;;; Generated autoloads from use-package-ensure.el
+
+(autoload 'use-package-normalize/:ensure "use-package-ensure" "\
+
+
+\(fn NAME KEYWORD ARGS)" nil nil)
+
+(autoload 'use-package-handler/:ensure "use-package-ensure" "\
+
+
+\(fn NAME KEYWORD ENSURE REST STATE)" nil nil)
+
+;;;***
+
+;;;### (autoloads nil "use-package-jump" "use-package-jump.el" (23080
+;;;;;;  440 0 0))
 ;;; Generated autoloads from use-package-jump.el
 
 (autoload 'use-package-jump-to-package-form "use-package-jump" "\
@@ -125,10 +174,8 @@ instead.
 
 ;;;***
 
-;;;### (autoloads nil nil ("use-package-chords.el" "use-package-delight.el"
-;;;;;;  "use-package-diminish.el" "use-package-ensure-system-package.el"
-;;;;;;  "use-package-ensure.el" "use-package-pkg.el" "use-package.el")
-;;;;;;  (23078 43115 0 0))
+;;;### (autoloads nil nil ("use-package-pkg.el" "use-package.el")
+;;;;;;  (23080 440 0 0))
 
 ;;;***
 

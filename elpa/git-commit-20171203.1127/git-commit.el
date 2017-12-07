@@ -12,7 +12,7 @@
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 
 ;; Package-Requires: ((emacs "24.4") (dash "20170810") (with-editor "20170817"))
-;; Package-Version: 20171123.752
+;; Package-Version: 20171203.1127
 ;; Keywords: git tools vc
 ;; Homepage: https://github.com/magit/magit
 
@@ -504,7 +504,15 @@ finally check current non-comment text."
   (turn-on-flyspell)
   (setq flyspell-generic-check-word-predicate
         'git-commit-flyspell-verify)
-  (flyspell-buffer))
+  (let (end)
+    (save-excursion
+      (goto-char (point-max))
+      (while (and (not (bobp)) (looking-at "^\\(#\\|$\\)"))
+        (forward-line -1))
+      (unless (looking-at "^\\(#\\|$\\)")
+        (forward-line))
+      (setq end (point)))
+    (flyspell-region (point-min) end)))
 
 (defun git-commit-flyspell-verify ()
   (not (= (char-after (line-beginning-position)) ?#)))

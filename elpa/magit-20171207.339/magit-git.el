@@ -1038,6 +1038,14 @@ which is different from the current branch and still exists."
       (unless (equal remote ".")
         remote))))
 
+(defun magit-get-some-remote (&optional branch)
+  (or (magit-get-remote branch)
+      (and (magit-branch-p "master")
+           (magit-get-remote "master"))
+      (let ((remotes (magit-list-remotes)))
+        (or (car (member "origin" remotes))
+            (car remotes)))))
+
 (defun magit-branch-merged-p (branch &optional target)
   "Return non-nil if BRANCH is merged into its upstream and TARGET.
 
@@ -1815,16 +1823,15 @@ the reference is used.  The first regexp submatch becomes the
 (gv-define-setter magit-get (val &rest keys)
   `(magit-set ,val ,@keys))
 
-(defun magit-set-all (values* &rest keys)
-  "Set all values of the Git variable specified by KEYS to VALUES.
-\n(fn VALUES &rest KEYS)"
+(defun magit-set-all (values &rest keys)
+  "Set all values of the Git variable specified by KEYS to VALUES."
   (let ((arg (and (or (null (car keys))
                       (string-prefix-p "--" (car keys)))
                   (pop keys)))
         (var (mapconcat 'identity keys ".")))
     (when (magit-get var)
       (magit-call-git "config" arg "--unset-all" var))
-    (dolist (v values*)
+    (dolist (v values)
       (magit-call-git "config" arg "--add" var v))))
 
 ;;;; Variables in Popups

@@ -15,6 +15,11 @@
  markup. Note that it's only really braces I'd want to turn off pairing for -
  most other pairs don't have this issue.
 
+-Set up an ne/html-scratchpad function that starts a new HTML buffer, serves it
+ up through some scratchpad directory, and opens a link to it in the browser.
+ Should be pretty trivial and make it easy to start experiments - just need to
+ customize httpd-root and write a little code. Think of it as a local JSFiddle.
+
 -Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
 
 -Suppress aggressive-fill-paragraph-mode while directly above or below markdown

@@ -4,7 +4,7 @@
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
 ;;;### (autoloads nil "use-package-bind-key" "use-package-bind-key.el"
-;;;;;;  (23081 28877 0 0))
+;;;;;;  (23082 38961 0 0))
 ;;; Generated autoloads from use-package-bind-key.el
 
 (autoload 'use-package-autoload-keymap "use-package-bind-key" "\
@@ -30,6 +30,10 @@ deferred until the prefix key sequence is pressed.
 
 (defalias 'use-package-normalize/:bind* 'use-package-normalize-binder)
 
+(defalias 'use-package-autoloads/:bind 'use-package-autoloads-mode)
+
+(defalias 'use-package-autoloads/:bind* 'use-package-autoloads-mode)
+
 (autoload 'use-package-handler/:bind "use-package-bind-key" "\
 
 
@@ -42,7 +46,7 @@ deferred until the prefix key sequence is pressed.
 (autoload 'use-package-handler/:bind-keymap "use-package-bind-key" "\
 
 
-\(fn NAME KEYWORD ARG REST STATE &optional OVERRIDE)" nil nil)
+\(fn NAME KEYWORD ARGS REST STATE &optional OVERRIDE)" nil nil)
 
 (autoload 'use-package-handler/:bind-keymap* "use-package-bind-key" "\
 
@@ -51,8 +55,8 @@ deferred until the prefix key sequence is pressed.
 
 ;;;***
 
-;;;### (autoloads nil "use-package-core" "use-package-core.el" (23081
-;;;;;;  28877 0 0))
+;;;### (autoloads nil "use-package-core" "use-package-core.el" (23082
+;;;;;;  38961 0 0))
 ;;; Generated autoloads from use-package-core.el
 
 (autoload 'use-package "use-package-core" "\
@@ -117,7 +121,7 @@ this file.  Usage:
 ;;;***
 
 ;;;### (autoloads nil "use-package-delight" "use-package-delight.el"
-;;;;;;  (23081 28877 0 0))
+;;;;;;  (23082 38961 0 0))
 ;;; Generated autoloads from use-package-delight.el
 
 (autoload 'use-package-normalize/:delight "use-package-delight" "\
@@ -133,7 +137,7 @@ Normalize arguments to delight.
 ;;;***
 
 ;;;### (autoloads nil "use-package-diminish" "use-package-diminish.el"
-;;;;;;  (23081 28877 0 0))
+;;;;;;  (23082 38961 0 0))
 ;;; Generated autoloads from use-package-diminish.el
 
 (autoload 'use-package-normalize/:diminish "use-package-diminish" "\
@@ -149,7 +153,7 @@ Normalize arguments to delight.
 ;;;***
 
 ;;;### (autoloads nil "use-package-ensure" "use-package-ensure.el"
-;;;;;;  (23081 28877 0 0))
+;;;;;;  (23082 38961 0 0))
 ;;; Generated autoloads from use-package-ensure.el
 
 (autoload 'use-package-normalize/:ensure "use-package-ensure" "\
@@ -164,8 +168,8 @@ Normalize arguments to delight.
 
 ;;;***
 
-;;;### (autoloads nil "use-package-jump" "use-package-jump.el" (23081
-;;;;;;  28877 0 0))
+;;;### (autoloads nil "use-package-jump" "use-package-jump.el" (23082
+;;;;;;  38961 0 0))
 ;;; Generated autoloads from use-package-jump.el
 
 (autoload 'use-package-jump-to-package-form "use-package-jump" "\
@@ -179,8 +183,21 @@ instead.
 
 ;;;***
 
+;;;### (autoloads nil "use-package-lint" "use-package-lint.el" (23082
+;;;;;;  38961 0 0))
+;;; Generated autoloads from use-package-lint.el
+
+(autoload 'use-package-lint "use-package-lint" "\
+Check for errors in use-package declarations.
+For example, if the module's `:if' condition is met, but even
+with the specified `:load-path' the module cannot be found.
+
+\(fn)" t nil)
+
+;;;***
+
 ;;;### (autoloads nil nil ("use-package-pkg.el" "use-package.el")
-;;;;;;  (23081 28877 0 0))
+;;;;;;  (23082 38961 0 0))
 
 ;;;***
 

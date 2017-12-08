@@ -15,7 +15,7 @@ SLIME
 *****
 
 SLIME is the “Superior Lisp Interaction Mode for Emacs”.  This is the
-manual for version 2.20.  (Last updated November 6, 2017)
+manual for version 2.20.  (Last updated December 7, 2017)
 
    Written by Luke Gorrie and others.
 
@@ -2495,6 +2495,10 @@ pressing SPC.
    If ‘slime-autodoc-use-multiline-p’ is set to non-nil, allow long
 autodoc messages to resize echo area display.
 
+   ‘slime-autodoc-mode-string’ is a string that will be displayed in the
+mode line when autodoc-mode is enabled, or nil, if you prefer no
+indication.  You can customize this variable.
+
 
 File: slime.info,  Node: ASDF,  Next: Banner,  Prev: slime-autodoc-mode,  Up: Contributed Packages
 
@@ -3565,6 +3569,7 @@ Variable and Concept Index
 * Presentations:                         Presentations.        (line  6)
 * Shortcuts:                             Shortcuts.            (line  6)
 * sldb-hook:                             Hooks.                (line 17)
+* slime-autodoc-mode-string:             slime-autodoc-mode.   (line 32)
 * slime-autodoc-use-multiline-p:         slime-autodoc-mode.   (line 29)
 * slime-completion-at-point-functions:   Emacs-side customization.
                                                                (line 17)
@@ -3692,28 +3697,28 @@ Ref: Compound Completion-Footnote-182355
 Node: Fuzzy Completion82479
 Ref: slime-fuzzy-complete-symbol82732
 Node: slime-autodoc-mode86024
-Node: ASDF87253
-Node: Banner89211
-Node: Editing Commands89657
-Node: Fancy Inspector91284
-Node: Presentations92015
-Ref: Presentations-Footnote-198571
-Node: Typeout frames98812
-Node: TRAMP99936
-Node: Documentation Links100212
-Node: Xref and Class Browser100637
-Node: Highlight Edits101229
-Node: Scratch Buffer101701
-Ref: slime-scratch101863
-Node: SLIME Trace Dialog102518
-Node: slime-sprof106768
-Node: SLIME Enhanced M-.107756
-Node: slime-fancy108138
-Node: Quicklisp108414
-Node: Credits108942
-Node: Key Index113698
-Node: Command Index125561
-Node: Variable Index140876
+Node: ASDF87442
+Node: Banner89400
+Node: Editing Commands89846
+Node: Fancy Inspector91473
+Node: Presentations92204
+Ref: Presentations-Footnote-198760
+Node: Typeout frames99001
+Node: TRAMP100125
+Node: Documentation Links100401
+Node: Xref and Class Browser100826
+Node: Highlight Edits101418
+Node: Scratch Buffer101890
+Ref: slime-scratch102052
+Node: SLIME Trace Dialog102707
+Node: slime-sprof106957
+Node: SLIME Enhanced M-.107945
+Node: slime-fancy108327
+Node: Quicklisp108603
+Node: Credits109131
+Node: Key Index113887
+Node: Command Index125750
+Node: Variable Index141065
 
 End Tag Table
 

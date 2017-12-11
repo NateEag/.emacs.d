@@ -446,17 +446,6 @@ Default is nil"
   :tag "py-modeline-acronym-display-home-p"
   :group 'python-mode)
 
-(defun py-smart-operator-check ()
-  "Check, if ‘smart-operator-mode’ is loaded resp. available.
-
-Give some hints, if not."
-  (interactive)
-  (if (featurep 'smart-operator)
-      't
-    (progn
-      (and (boundp 'py-smart-operator-mode-p) py-smart-operator-mode-p (message "%s" "Don't see smart-operator.el. Make sure, it's installed. See in menu Options, Manage Emacs Packages. Or get it from source: URL: http://xwl.appspot.com/ref/smart-operator.el")
-           nil))))
-
 (defun py-autopair-check ()
   "Check, if ‘autopair-mode’ is available.
 
@@ -468,7 +457,6 @@ Give some hints, if not."
       (message "py-autopair-check: %s" "Don't see autopair.el. Make sure, it's installed. If not, maybe see source: URL: http://autopair.googlecode.com")
       nil)))
 
-(defvar smart-operator-mode nil)
 (defvar highlight-indent-active nil)
 (defvar autopair-mode nil)
 
@@ -506,15 +494,6 @@ Give some hints, if not."
 
   :type 'boolean
   :tag "py-timer-close-completions-p"
-  :group 'python-mode)
-
-(defcustom py-smart-operator-mode-p nil
-  "If ‘python-mode’ calls smart-operator-mode-on.
-
-Default is nil."
-
-  :type 'boolean
-  :tag "py-smart-operator-mode-p"
   :group 'python-mode)
 
 (defcustom py-autopair-mode nil
@@ -2013,7 +1992,7 @@ Output buffer is created dynamically according to Python version and kind of pro
 (make-variable-buffer-local 'py-output-buffer)
 
 (defcustom py-force-default-output-buffer-p nil
-  "Enforce sending output to the default output buffer-name.
+  "Enforce sending output to the default output ‘buffer-name’.
 
 Set by defvar ‘py-output-buffer’
 Bug #31 - wrong fontification caused by string-delimiters in output"
@@ -6231,31 +6210,6 @@ Returns value of `py-autopair-mode'."
 Returns value of `py-autopair-mode'."
   (interactive)
   (setq py-autopair-mode (autopair-mode 0)))
-
-;; Smart operator
-;; py-smart-operator-mode-p forms
-(defun toggle-py-smart-operator-mode-p ()
-  "If `py-smart-operator-mode-p' should be on or off.
-
-  Returns value of `py-smart-operator-mode-p' switched to."
-  (interactive)
-  (and (py-smart-operator-check)
-       (setq py-smart-operator-mode-p (smart-operator-mode (if smart-operator-mode 0 1)))))
-
-(defun py-smart-operator-mode-p-on ()
-  "Make sure, py-smart-operator-mode-p' is on.
-
-Returns value of `py-smart-operator-mode-p'."
-  (interactive)
-  (and (py-smart-operator-check)
-       (setq py-smart-operator-mode-p (smart-operator-mode 1))))
-
-(defun py-smart-operator-mode-p-off ()
-  "Make sure, py-smart-operator-mode-p' is off.
-
-Returns value of `py-smart-operator-mode-p'."
-  (interactive)
-  (setq py-smart-operator-mode-p (smart-operator-mode 0)))
 
 ;;  py-switch-buffers-on-execute-p forms
 (defun toggle-py-switch-buffers-on-execute-p (&optional arg)
@@ -11341,7 +11295,6 @@ Interal used. Takes INPUT COMPLETION"
   "Do completion at point for PROCESS.
 
 Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
-  ;; (py--send-string-no-output py-shell-completion-setup-code process)
   (when imports
     (py--send-string-no-output imports process))
   ;; (py--delay-process-dependent process)
@@ -11371,7 +11324,7 @@ Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
 
 (defun py--complete-prepare (&optional shell beg end word fast-complete)
   (let* ((exception-buffer (current-buffer))
-         (pos (copy-marker (point)))
+         ;; (pos (copy-marker (point)))
 	 (pps (parse-partial-sexp (or
 				   (ignore-errors comint-last-prompt)
 				   (line-beginning-position)) (point)))
@@ -11399,7 +11352,7 @@ Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
 			 (list (replace-regexp-in-string "\n" "" (shell-command-to-string (concat "find / -maxdepth 1 -name " ausdruck))))))
          (imports (py-find-imports))
          py-fontify-shell-buffer-p erg)
-    (cond (fast-complete (py--fast-complete-base shell pos word imports exception-buffer))
+    (cond (fast-complete (py--fast-complete-base shell word imports))
 	  ((and in-string filenames)
 	   (when (setq erg (try-completion (concat "/" word) filenames))
 	     (delete-region beg end)
@@ -11472,7 +11425,7 @@ in (I)Python shell-modes `py-shell-complete'"
   (py-execute-string "import pdb;pdb.help()"))
 
 ;; https://stackoverflow.com/questions/6980749/simpler-way-to-put-pdb-breakpoints-in-python-code
-;; breakpoint at line 3 
+;; breakpoint at line 3
 
 ;; python -m pdb -c "b 3" -c c your_script.py
 
@@ -11484,7 +11437,7 @@ Optional LINE FILE CONDITION"
   (py-execute-string (concat "import pdb;pdb.break('" (py-count-lines)  "')")))
 
 (defun py--pdb-versioned ()
-  "Guess existing pdb version from py-shell-name
+  "Guess existing pdb version from ‘py-shell-name’.
 
 Return \"pdb[VERSION]\" if executable found, just \"pdb\" otherwise"
   (interactive)
@@ -11504,9 +11457,11 @@ Return \"pdb[VERSION]\" if executable found, just \"pdb\" otherwise"
 The directory containing FILE becomes the initial working directory
 and source-file directory for your debugger.
 
-At GNU Linux systems required pdb version should be detected by `py--pdb-version', at Windows configure `py-python-ms-pdb-command'
+At GNU Linux required pdb version should be detected by `py--pdb-version'
+at Windows configure `py-python-ms-pdb-command'
 
-lp:963253"
+lp:963253
+Argument COMMAND-LINE TBD."
   (interactive
    (progn
      (require 'gud)
@@ -11520,14 +11475,14 @@ lp:963253"
   (pdb command-line))
 
 (defun py--pdb-current-executable ()
-  "When py-pdb-executable is set, return it.
+  "When ‘py-pdb-executable’ is set, return it.
 
-Otherwise return resuslt from `executable-find' "
+Otherwise return resuslt from `executable-find'"
   (or py-pdb-executable
       (executable-find "pdb")))
 
 (defun py-update-gud-pdb-history ()
-  "If pdb is called at a Python buffer, put it's file name at the head of `gud-pdb-history'. "
+  "If pdb is called at a Python buffer, put it's file name at the head of `gud-pdb-history'."
   (interactive)
   (let* (;; PATH/TO/pdb
 	 (first (cond ((and gud-pdb-history (ignore-errors (car gud-pdb-history)))
@@ -11563,6 +11518,7 @@ Otherwise return resuslt from `executable-find' "
 ;; python -m pdb -c "b 3" -c c your_script.py
 
 (defun py-pdb-tbreak ()
+  "Insert a temporary break."
   (interactive)
   (let (
 	(py-python-command-args '("-i -c \"b 30\" -c c \"eyp.py\""))
@@ -16382,7 +16338,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to  interpreter."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16396,7 +16353,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
 Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16410,7 +16368,8 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
 Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16422,7 +16381,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to  unique interpreter."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16434,7 +16394,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to  unique interpreter and switch to result."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16446,7 +16407,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to IPython interpreter."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16460,7 +16422,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
 Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16474,7 +16437,8 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
 Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16486,7 +16450,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to IPython unique interpreter."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16498,7 +16463,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to IPython unique interpreter and switch to result."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16510,7 +16476,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to IPython interpreter."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16524,7 +16491,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
 Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16538,7 +16506,8 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
 Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16550,7 +16519,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to IPython unique interpreter."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16562,7 +16532,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to IPython unique interpreter and switch to result."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16574,7 +16545,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to IPython interpreter."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16588,7 +16560,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
 Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16602,7 +16575,8 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
 Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16614,7 +16588,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to IPython unique interpreter."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16626,7 +16601,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to IPython unique interpreter and switch to result."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16638,7 +16614,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to Jython interpreter."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16652,7 +16629,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
 Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16666,7 +16644,8 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
 Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16678,7 +16657,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to Jython unique interpreter."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16690,7 +16670,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to Jython unique interpreter and switch to result."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16704,7 +16685,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16720,7 +16702,8 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’.
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16736,7 +16719,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16750,7 +16734,8 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16764,7 +16749,8 @@ For ‘default’ see value of ‘py-shell-name’"
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16776,7 +16762,8 @@ For ‘default’ see value of ‘py-shell-name’"
   "Send buffer at point to Python2 interpreter."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16790,7 +16777,8 @@ For ‘default’ see value of ‘py-shell-name’"
 Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16804,7 +16792,8 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
 Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16816,7 +16805,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to Python2 unique interpreter."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16828,7 +16818,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to Python2 unique interpreter and switch to result."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16840,7 +16831,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to Python3 interpreter."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16854,7 +16846,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
 Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16868,7 +16861,8 @@ Switch to output buffer. Ignores ‘py-switch-buffers-on-execute-p’."
 Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16880,7 +16874,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to Python3 unique interpreter."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -16892,7 +16887,8 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   "Send buffer at point to Python3 unique interpreter and switch to result."
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
-        (wholebuf t))
+        (wholebuf t)
+        filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
 	    buffer (or (get-file-buffer filename)
@@ -20901,7 +20897,7 @@ See lp:1066489 "
     (forward-char 1))
   (skip-chars-forward "\'\""))
 
-(defun py--fill-fix-end (thisend orig docstring delimiters-style)
+(defun py--fill-fix-end (thisend orig delimiters-style)
   ;; Add the number of newlines indicated by the selected style
   ;; at the end.
   ;; (widen)
@@ -20915,7 +20911,7 @@ See lp:1066489 "
   ;; (py-indent-region docstring thisend)
   (goto-char orig))
 
-(defun py--fill-docstring-base (thisbeg thisend style multi-line-p beg end py-current-indent orig docstring)
+(defun py--fill-docstring-base (thisbeg thisend style multi-line-p beg end py-current-indent orig)
   ;; (widen)
   ;; fill-paragraph causes wrong indent, lp:1397936
   ;; (narrow-to-region thisbeg thisend)
@@ -20950,7 +20946,7 @@ See lp:1066489 "
       (forward-line 1)
       (beginning-of-line)
       (unless (empty-line-p) (newline)))
-    (py--fill-fix-end thisend orig docstring delimiters-style)))
+    (py--fill-fix-end thisend orig delimiters-style)))
 
 (defun py--fill-docstring-last-line (thisend beg end multi-line-p)
   (widen)
@@ -21015,7 +21011,7 @@ See lp:1066489 "
            (py--fill-docstring-last-line thisend beg end multi-line-p))
           (t ;; (narrow-to-region beg end)
 	     (fill-region beg end justify)))
-    (py--fill-docstring-base thisbeg thisend style multi-line-p beg end py-current-indent orig docstring)))
+    (py--fill-docstring-base thisbeg thisend style multi-line-p beg end py-current-indent orig)))
 
 (defun py-fill-string (&optional justify style docstring)
   "String fill function for `py-fill-paragraph'.
@@ -21787,7 +21783,7 @@ the default"
                              py-block-comment-prefix
                            comment-start))
           (beg (or beg (py--beginning-of-block-position)))
-          (end (or end (py-end-of-block-position))))
+          (end (or end (py--end-of-block-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21804,7 +21800,7 @@ the default"
                              py-block-comment-prefix
                            comment-start))
           (beg (or beg (py--beginning-of-block-or-clause-position)))
-          (end (or end (py-end-of-block-or-clause-position))))
+          (end (or end (py--end-of-block-or-clause-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21821,7 +21817,7 @@ the default"
                              py-block-comment-prefix
                            comment-start))
           (beg (or beg (py--beginning-of-class-position)))
-          (end (or end (py-end-of-class-position))))
+          (end (or end (py--end-of-class-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21838,7 +21834,7 @@ the default"
                              py-block-comment-prefix
                            comment-start))
           (beg (or beg (py--beginning-of-clause-position)))
-          (end (or end (py-end-of-clause-position))))
+          (end (or end (py--end-of-clause-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21855,7 +21851,7 @@ the default"
                              py-block-comment-prefix
                            comment-start))
           (beg (or beg (py--beginning-of-def-position)))
-          (end (or end (py-end-of-def-position))))
+          (end (or end (py--end-of-def-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21872,7 +21868,7 @@ the default"
                              py-block-comment-prefix
                            comment-start))
           (beg (or beg (py--beginning-of-def-or-class-position)))
-          (end (or end (py-end-of-def-or-class-position))))
+          (end (or end (py--end-of-def-or-class-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21889,7 +21885,7 @@ the default"
                              py-block-comment-prefix
                            comment-start))
           (beg (or beg (py--beginning-of-indent-position)))
-          (end (or end (py-end-of-indent-position))))
+          (end (or end (py--end-of-indent-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21906,7 +21902,7 @@ the default"
                              py-block-comment-prefix
                            comment-start))
           (beg (or beg (py--beginning-of-minor-block-position)))
-          (end (or end (py-end-of-minor-block-position))))
+          (end (or end (py--end-of-minor-block-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21923,7 +21919,7 @@ the default"
                              py-block-comment-prefix
                            comment-start))
           (beg (or beg (py--beginning-of-section-position)))
-          (end (or end (py-end-of-section-position))))
+          (end (or end (py--end-of-section-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21940,7 +21936,7 @@ the default"
                              py-block-comment-prefix
                            comment-start))
           (beg (or beg (py--beginning-of-statement-position)))
-          (end (or end (py-end-of-statement-position))))
+          (end (or end (py--end-of-statement-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -21957,7 +21953,7 @@ the default"
                              py-block-comment-prefix
                            comment-start))
           (beg (or beg (py--beginning-of-top-level-position)))
-          (end (or end (py-end-of-top-level-position))))
+          (end (or end (py--end-of-top-level-position))))
       (goto-char beg)
       (push-mark)
       (goto-char end)
@@ -22619,7 +22615,7 @@ completions on the current context."
     (when (> (length completions) 2)
       (split-string completions "^'\\|^\"\\|;\\|'$\\|\"$" t))))
 
-(defun py--fast--do-completion-at-point (process imports input orig code output-buffer)
+(defun py--fast--do-completion-at-point (process imports input code output-buffer)
   "Do completion at point for PROCESS."
   ;; send setup-code
   (let (py-store-result-p)
@@ -22650,7 +22646,7 @@ completions on the current context."
 
     nil))
 
-(defun py--fast-complete-base (shell pos word imports exception-buffer)
+(defun py--fast-complete-base (shell word imports)
   (let* ((shell (or shell (py-choose-shell nil t)))
 	 (py-buffer-name (py-shell nil nil shell nil t))
 	 (proc (get-buffer-process py-buffer-name))
@@ -22659,9 +22655,9 @@ completions on the current context."
 		 py-shell-module-completion-code)))
     (with-current-buffer py-buffer-name
       (erase-buffer))
-    (py--fast--do-completion-at-point proc imports word pos code py-buffer-name)))
+    (py--fast--do-completion-at-point proc imports word code py-buffer-name)))
 
-(defun py-fast-complete (&optional shell debug beg end word)
+(defun py-fast-complete (&optional shell beg end word)
   "Complete word before point, if any.
 
 Use `py-fast-process' "
@@ -22673,37 +22669,6 @@ Use `py-fast-process' "
 ;; python-components-intern
 
 ;;  Keymap
-
-(defun py--beginning-of-form-intern (regexp &optional iact indent orig lc)
-  "Go to beginning of FORM.
-
-With INDENT, go to beginning one level above.
-Whit IACT, print result in message buffer.
-
-Returns beginning of FORM if successful, nil otherwise"
-  (interactive "P")
-  (let (erg)
-    (unless (bobp)
-      (let* ((orig (or orig (point)))
-             (indent (or indent (progn
-                                  (back-to-indentation)
-                                  (or (py--beginning-of-statement-p)
-                                      (ar-backward-statement))
-                                  (current-indentation)))))
-        (setq erg (cond ((and (< (point) orig) (looking-at (symbol-value regexp)))
-                         (point))
-                        ((and (eq 0 (current-column)) (numberp indent) (< 0 indent))
-                         (when (< 0 (abs (skip-chars-backward " \t\r\n\f")))
-                           (ar-backward-statement)
-                           (unless (looking-at (symbol-value regexp))
-                             (cdr (py--go-to-keyword (symbol-value regexp) (current-indentation))))))
-                        ((numberp indent)
-			 (cdr (py--go-to-keyword (symbol-value regexp) indent)))
-                        (t (ignore-errors
-                             (cdr (py--go-to-keyword (symbol-value regexp)
-                                                    (- (progn (if (py--beginning-of-statement-p) (current-indentation) (save-excursion (ar-backward-statement) (current-indentation)))) py-indent-offset)))))))
-        (when lc (beginning-of-line) (setq erg (point)))))
-    erg))
 
 (defun py--indent-prepare (inter-re)
   (progn (back-to-indentation)
@@ -22717,42 +22682,6 @@ Returns beginning of FORM if successful, nil otherwise"
 		(if (<= py-indent-offset (current-indentation))
 		    (- (current-indentation) (if ar-smart-indentation (ar-guess-indent-offset) py-indent-offset))
 		  py-indent-offset)))))
-
-(defun py--beginning-of-prepare (indent final-re &optional inter-re iact lc)
-  (let ((orig (point))
-        (indent (or indent (py--indent-prepare inter-re)))
-        erg)
-    (if (and (< (point) orig) (looking-at (symbol-value final-re)))
-        (progn
-          (and lc (beginning-of-line))
-          (setq erg (point))
-          ;; (when (and ar-verbose-p iact) (message "%s" erg))
-          erg)
-      (py--beginning-of-form-intern final-re iact indent orig lc))))
-
-(defun py--end-of-prepare (indent final-re &optional inter-re iact lc)
-  (let ((orig (point))
-        (indent
-         (or indent
-             (progn (back-to-indentation)
-                    (or (py--beginning-of-statement-p)
-                        (ar-backward-statement))
-                    (cond ((eq 0 (current-indentation))
-                           (current-indentation))
-                          ((looking-at (symbol-value inter-re))
-                           (current-indentation))
-                          (t
-                           (if (<= py-indent-offset (current-indentation))
-                               (- (current-indentation) (if ar-smart-indentation (ar-guess-indent-offset) py-indent-offset))
-                             py-indent-offset))))))
-        erg)
-    (if (and (< orig (point)) (looking-at (symbol-value final-re)))
-        (progn
-          (and lc (beginning-of-line))
-          (setq erg (point))
-          ;; (when (and ar-verbose-p iact) (message "%s" erg))
-          erg)
-      (py--beginning-of-form-intern final-re iact indent orig lc))))
 
 (defun py-separator-char ()
   "Return the file-path separator char from current machine.
@@ -23805,8 +23734,8 @@ Must find start first "
 	     (indent (or indent
 			 ;; avoid costly moves by statement
 			 (when (and (not (nth 8 pps))
-				    (or (looking-back py-decorator-re)
-					(looking-back (concat (symbol-value regexp) ".+"))))
+				    (or (looking-back py-decorator-re (line-beginning-position))
+					(looking-back (concat (symbol-value regexp) ".+") (line-beginning-position))))
 			   (current-indentation))
 			 (if (py--beginning-of-statement-p)
 			     (current-indentation)
@@ -23816,12 +23745,12 @@ Must find start first "
 	     (this
 	      (cond ((and (looking-at thisregexp) (not (or (nth 1 pps) (nth 8 pps))))
 		     (point))
-		    ((and (not (nth 8 pps))(looking-back py-decorator-re))
+		    ((and (not (nth 8 pps))(looking-back py-decorator-re (line-beginning-position)))
 		     (and (re-search-forward thisregexp nil t 1)
 			  (match-beginning 0)))
 		    ;; when building the index, avoid costly moves by
 		    ;; statement
-		    ((and (not (nth 8 pps))(looking-back (symbol-value regexp)))
+		    ((and (not (nth 8 pps))(looking-back (symbol-value regexp) (line-beginning-position)))
 		     (match-beginning 0))
 		    (t (py--go-to-keyword thisregexp indent))))
 	     ;; (done done)
@@ -23870,13 +23799,13 @@ If succesful return position. "
                        (- (current-indentation) py-indent-offset)))))
           (orig (or orig (point)))
           (regexp (or regexp py-extended-block-or-clause-re))
-          erg last)
+          erg)
       (end-of-line)
       (when (re-search-forward regexp nil t 1)
         (when (nth 8 (parse-partial-sexp (point-min) (point)))
           (while (and (re-search-forward regexp nil t 1)
                       (nth 8 (parse-partial-sexp (point-min) (point))))))
-        (setq last (point))
+        ;; (setq last (point))
         (back-to-indentation)
         (unless (and (looking-at py-clause-re)
                      (not (nth 8 (parse-partial-sexp (point-min) (point)))) (eq (current-indentation) ind))
@@ -23949,7 +23878,7 @@ Put point inside the parentheses of a multiline import and hit
 Optional argument LIM indicates the beginning of the containing form,
 i.e. the limit on how far back to scan."
   (let* ((lim (or lim (point-min)))
-         (state (parse-partial-sexp (point-min) (point))))
+         (state (parse-partial-sexp lim (point))))
     (cond
      ((nth 3 state) 'string)
      ((nth 4 state) 'comment))))
@@ -23992,10 +23921,6 @@ This function does not modify point or mark."
                ((eq position 'bos) (py-backward-statement))
                (t (error "Unknown buffer position requested: %s" position))) (point))))
     erg))
-
-(defun py-install-search-local ()
-  (interactive)
-  (let ((erg (split-string (shell-command-to-string (concat "find " default-directory " -maxdepth 9 -type f -name \"*python\"")))))))
 
 (defun py-install-local-shells (&optional local)
   "Builds Python-shell commands from executable found in LOCAL.
@@ -24061,9 +23986,6 @@ Eval resulting buffer to install it, see customizable `py-extensions'. "
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
 
-;;  (goto-char (match-end 0))
-;;  (search-forward (match-string-no-properties 0))))
-
 (defun py--until-found (search-string liste)
   "Search liste for search-string until found. "
   (let ((liste liste) element)
@@ -24084,7 +24006,7 @@ Eval resulting buffer to install it, see customizable `py-extensions'. "
       (sit-for py-ipython-send-delay t)
     (sit-for py-python-send-delay t)))
 
-(defun py--send-string-no-output (strg &optional process msg)
+(defun py--send-string-no-output (strg &optional process)
   "Send STRING to PROCESS and inhibit output display.
 When MSG is non-nil messages the first line of STRING.  Return
 the output."
@@ -24103,7 +24025,7 @@ the output."
 	    (py--string-strip
 	     (format "[ \n]*%s[ \n]*" py-fast-filter-re)))))
 
-(defun py--send-string-return-output (strg &optional process msg)
+(defun py--send-string-return-output (strg &optional process)
   "Send STRING to PROCESS and return output.
 
 When MSG is non-nil messages the first line of STRING.  Return
@@ -24203,7 +24125,7 @@ Used by variable `which-func-functions' "
     (let ((erg (symbol-value regexp)))
       (substring erg (1+ (string-match "\*" erg)))))
 
-(defun py--beginning-of-form-intern (final-re &optional inter-re iact indent orig lc decorator)
+(defun py--beginning-of-form-intern (final-re &optional inter-re iact indent orig lc)
   "Go to beginning of FORM.
 
 With INDENT, go to beginning one level above.
@@ -24256,7 +24178,7 @@ Returns beginning of FORM if successful, nil otherwise"
 		(if (save-excursion
 		      (< (py-forward-statement) orig))
 		    (progn (goto-char orig)
-			   (back-to-indentation) 
+			   (back-to-indentation)
 			   (current-indentation))
 		  (cond ((looking-back "^[ \t]*" (line-beginning-position))
 			 (current-indentation))
@@ -24277,7 +24199,7 @@ Returns beginning of FORM if successful, nil otherwise"
           (setq erg (point))
           (when (and py-verbose-p iact) (message "%s" erg))
           erg)
-      (py--beginning-of-form-intern final-re inter-re iact indent orig lc decorator))))
+      (py--beginning-of-form-intern final-re inter-re iact indent orig lc))))
 
 (defun py--fetch-first-python-buffer ()
   "Returns first (I)Python-buffer found in `buffer-list'"
@@ -24433,12 +24355,14 @@ Returns position if successful, nil otherwise"
   (interactive "P")
   (let* ((orig (point))
          erg
-         (indent (if
-                     (py--beginning-of-statement-p)
-                     (current-indentation)
-                   (progn
-                     (py-backward-statement)
-                     (current-indentation))))
+         (indent (or
+		  indent
+		  (if
+		      (py--beginning-of-statement-p)
+		      (current-indentation)
+		    (progn
+		      (py-backward-statement)
+		      (current-indentation)))))
          last)
     (while (and (setq last (point)) (py-forward-statement) (py-forward-statement) (py-backward-statement) (eq (current-indentation) indent)))
     (if (< indent (current-indentation))
@@ -24489,7 +24413,7 @@ If BOL is t, mark from beginning-of-line"
 	(cons beg end)
       nil)))
 
-(defun py--mark-base-bol (form &optional py-mark-decorators)
+(defun py--mark-base-bol (form &optional mark-decorators)
   (let* ((begform (intern-soft (concat "py-backward-" form "-bol")))
          (endform (intern-soft (concat "py-forward-" form "-bol")))
          (begcheckform (intern-soft (concat "py--beginning-of-" form "-bol-p")))
@@ -24498,7 +24422,7 @@ If BOL is t, mark from beginning-of-line"
                   (setq beg (funcall begcheckform))
                   beg
                 (funcall begform)))
-    (when py-mark-decorators
+    (when mark-decorators
       (save-excursion
         (when (setq erg (py-backward-decorator))
           (setq beg erg))))

@@ -169,6 +169,34 @@ t      show fine differences for the current diff hunk only.
 
 (put 'magit-diff-refine-hunk 'permanent-local t)
 
+(defcustom magit-diff-adjust-tab-width nil
+  "Whether to adjust the width of tabs in diffs.
+
+Determining the correct width can be expensive if it requires
+opening large and/or many files, so the widths are cached in
+the variable `magit-diff--tab-width-cache'.  Set that to nil
+to invalidate the cache.
+
+nil       Never ajust tab width.  Use `tab-width's value from
+          the Magit buffer itself instead.
+
+t         If the corresponding file-visiting buffer exits, then
+          use `tab-width's value from that buffer.  Doing this is
+          cheap, so this value is used even if a corresponding
+          cache entry exists.
+
+`always'  If there is no such buffer, then temporarily visit the
+          file to determine the value.
+
+NUMBER    Like `always', but don't visit files larger than NUMBER
+          bytes."
+  :package-version '(magit . "2.12.0")
+  :group 'magit-diff
+  :type '(choice (const :tag "Never" nil)
+                 (const :tag "If file-visiting buffer exists" t)
+                 (const :tag "... or file isn't larger than bytes" all)
+                 (const :tag "Always" always)))
+
 (defcustom magit-diff-paint-whitespace t
   "Specify where to highlight whitespace errors.
 See `magit-diff-highlight-trailing',
@@ -1145,10 +1173,17 @@ parent of the commit which removed that line, i.e. the last
 commit where that line still existed.  Otherwise visit the blob
 for the commit whose changes are being shown.
 
-When the file or blob to be displayed is already being displayed
-in another window of the same frame, then just select that window
-and adjust point.  Otherwise, or with a prefix argument, display
-the buffer in another window."
+Interactively, when the file or blob to be displayed is already
+being displayed in another window of the same frame, then just
+select that window and adjust point.  Otherwise, or with a prefix
+argument, display the buffer in another window.  The meaning of
+the prefix argument can be inverted or further modified using the
+option `magit-display-file-buffer-function'.  Non-interactively
+the optional OTHER-WINDOW argument is taken literally.
+
+The optional FORCE-WORKTREE means to force visiting the worktree
+version of the file.  To do this interactively use the command
+`magit-diff-visit-file-worktree' instead."
   (interactive (list (--if-let (magit-file-at-point)
                          (expand-file-name it)
                        (user-error "No file at point"))
@@ -1170,7 +1205,12 @@ the buffer in another window."
                      (magit-find-file-noselect rev file)
                    (or (get-file-buffer file)
                        (find-file-noselect file)))))
-      (magit-display-file-buffer buf)
+      (cond ((called-interactively-p 'any)
+             (magit-display-file-buffer buf))
+            ((or other-window (get-buffer-window buf))
+             (switch-to-buffer-other-window buf))
+            (t
+             (pop-to-buffer buf)))
       (with-selected-window
           (or (get-buffer-window buf 'visible)
               (error "File buffer is not visible"))
@@ -1195,6 +1235,23 @@ the buffer in another window."
         (when (magit-anything-unmerged-p file)
           (smerge-start-session))
         (run-hooks 'magit-diff-visit-file-hook)))))
+
+(defun magit-diff-visit-file-other-window (file)
+  "From a diff, visit the corresponding file at the appropriate position.
+The file is shown in another window.
+
+If the diff shows changes in the worktree, the index, or `HEAD',
+then visit the actual file.  Otherwise, when the diff is about an
+older commit or a range, then visit the appropriate blob.
+
+If point is on a removed line, then visit the blob for the first
+parent of the commit which removed that line, i.e. the last
+commit where that line still existed.  Otherwise visit the blob
+for the commit whose changes are being shown."
+  (interactive (list (--if-let (magit-file-at-point)
+                         (expand-file-name it)
+                       (user-error "No file at point"))))
+  (magit-diff-visit-file file t))
 
 (defvar magit-display-file-buffer-function
   'magit-display-file-buffer-traditional
@@ -2337,7 +2394,9 @@ are highlighted."
         (goto-char (magit-section-start section))
         (let ((end (magit-section-end section))
               (merging (looking-at "@@@"))
-              (stage nil))
+              (stage nil)
+              (tab-width (magit-diff-tab-width
+                          (magit-section-parent-value section))))
           (forward-line)
           (while (< (point) end)
             (when (and magit-diff-hide-trailing-cr-characters
@@ -2358,25 +2417,54 @@ are highlighted."
                              (`(">" nil) nil)))
                'magit-diff-conflict-heading)
               ((looking-at (if merging "^\\(\\+\\| \\+\\)" "^\\+"))
-               (magit-diff-paint-tab merging)
+               (magit-diff-paint-tab merging tab-width)
                (magit-diff-paint-whitespace merging)
                (or stage
                    (if highlight 'magit-diff-added-highlight 'magit-diff-added)))
               ((looking-at (if merging "^\\(-\\| -\\)" "^-"))
-               (magit-diff-paint-tab merging)
+               (magit-diff-paint-tab merging tab-width)
                (if highlight 'magit-diff-removed-highlight 'magit-diff-removed))
               (t
-               (magit-diff-paint-tab merging)
+               (magit-diff-paint-tab merging tab-width)
                (if highlight 'magit-diff-context-highlight 'magit-diff-context))))
             (forward-line))))))
   (magit-diff-update-hunk-refinement section))
 
-(defun magit-diff-paint-tab (merging)
+(defvar magit-diff--tab-width-cache nil)
+
+(defun magit-diff-tab-width (file)
+  (setq file (expand-file-name file))
+  (cl-flet ((cache (value)
+                   (let ((elt (assoc file magit-diff--tab-width-cache)))
+                     (if elt
+                         (setcdr elt value)
+                       (setq magit-diff--tab-width-cache
+                             (cons (cons file value)
+                                   magit-diff--tab-width-cache))))
+                   value))
+    (cond
+     ((not magit-diff-adjust-tab-width)
+      tab-width)
+     ((--when-let (find-buffer-visiting file)
+        (cache (buffer-local-value 'tab-width it))))
+     ((--when-let (assoc file magit-diff--tab-width-cache)
+        (or (cdr it)
+            tab-width)))
+     ((or (eq magit-diff-adjust-tab-width 'always)
+          (and (numberp magit-diff-adjust-tab-width)
+               (>= magit-diff-adjust-tab-width
+                   (nth 7 (file-attributes file)))))
+      (cache (buffer-local-value 'tab-width (find-file-noselect file))))
+     (t
+      (cache nil)
+      tab-width))))
+
+(defun magit-diff-paint-tab (merging width)
   (save-excursion
     (forward-char (if merging 2 1))
     (while (= (char-after) ?\t)
       (put-text-property (point) (1+ (point))
-                         'display (list (list 'space :width tab-width)))
+                         'display (list (list 'space :width width)))
       (forward-char))))
 
 (defun magit-diff-paint-whitespace (merging)

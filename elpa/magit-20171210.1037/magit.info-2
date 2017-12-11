@@ -17,6 +17,138 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: magit.info,  Node: Matching Sections,  Prev: Section Selection,  Up: Section Plumbing
+
+10.2.3 Matching Sections
+------------------------
+
+‘M-x magit-describe-section’     (‘magit-describe-section’)
+
+     Show information about the section at point.  This command is
+     intended for debugging purposes.
+
+ -- Function: magit-section-ident
+
+     Return an unique identifier for SECTION. The return value has the
+     form ‘((TYPE . VALUE)...)’.
+
+ -- Function: magit-get-section
+
+     Return the section identified by IDENT. IDENT has to be a list as
+     returned by ‘magit-section-ident’.
+
+ -- Function: magit-section-match condition &optional section
+
+     Return ‘t’ if SECTION matches CONDITION. SECTION defaults to the
+     section at point.  If SECTION is not specified and there also is no
+     section at point, then return ‘nil’.
+
+     CONDITION can take the following forms:
+        • ‘(CONDITION...)’
+
+          matches if any of the CONDITIONs matches.
+
+        • ‘[TYPE...]’
+
+          matches if the first TYPE matches the type of the section, the
+          second matches that of its parent, and so on.
+
+        • ‘[* TYPE...]’
+
+          matches sections that match [TYPE…] and also recursively all
+          their child sections.
+
+        • ‘TYPE’
+
+          matches sections of TYPE regardless of the types of the parent
+          sections.
+
+     Each TYPE is a symbol.  Note that it is not necessary to specify
+     all TYPEs up to the root section as printed by
+     ‘magit-describe-type’, unless of course you want to be that
+     precise.
+
+ -- Function: magit-section-when condition &rest body
+
+     If the section at point matches CONDITION evaluate BODY.
+
+     If the section matches, then evaluate BODY forms sequentially with
+     ‘it’ bound to the section and return the value of the last form.
+     If there are no BODY forms, then return the value of the section.
+     If the section does not match or if there is no section at point
+     then return nil.
+
+     See ‘magit-section-match’ for the forms CONDITION can take.
+
+ -- Function: magit-section-case &rest clauses
+
+     Choose among clauses on the type of the section at point.
+
+     Each clause looks like (CONDITION BODY…).  The type of the section
+     is compared against each CONDITION; the BODY forms of the first
+     match are evaluated sequentially and the value of the last form is
+     returned.  Inside BODY the symbol ‘it’ is bound to the section at
+     point.  If no clause succeeds or if there is no section at point
+     return nil.
+
+     See ‘magit-section-match’ for the forms CONDITION can take.
+     Additionally a CONDITION of t is allowed in the final clause and
+     matches if no other CONDITION match, even if there is no section at
+     point.
+
+ -- Variable: magit-root-section
+
+     The root section in the current buffer.  All other sections are
+     descendants of this section.  The value of this variable is set by
+     ‘magit-insert-section’ and you should never modify it.
+
+   For diff related sections a few additional tools exist.
+
+ -- Function: magit-diff-type &optional section
+
+     Return the diff type of SECTION.
+
+     The returned type is one of the symbols ‘staged’, ‘unstaged’,
+     ‘committed’, or ‘undefined’.  This type serves a similar purpose as
+     the general type common to all sections (which is stored in the
+     ‘type’ slot of the corresponding ‘magit-section’ struct) but takes
+     additional information into account.  When the SECTION isn’t
+     related to diffs and the buffer containing it also isn’t a
+     diff-only buffer, then return nil.
+
+     Currently the type can also be one of ‘tracked’ and ‘untracked’,
+     but these values are not handled explicitly in every place they
+     should be.  A possible fix could be to just return nil here.
+
+     The section has to be a ‘diff’ or ‘hunk’ section, or a section
+     whose children are of type ‘diff’.  If optional SECTION is nil,
+     return the diff type for the current section.  In buffers whose
+     major mode is ‘magit-diff-mode’ SECTION is ignored and the type is
+     determined using other means.  In ‘magit-revision-mode’ buffers the
+     type is always ‘committed’.
+
+ -- Function: magit-diff-scope &optional section strict
+
+     Return the diff scope of SECTION or the selected section(s).
+
+     A diff’s "scope" describes what part of a diff is selected, it is a
+     symbol, one of ‘region’, ‘hunk’, ‘hunks’, ‘file’, ‘files’, or
+     ‘list’.  Do not confuse this with the diff "type", as returned by
+     ‘magit-diff-type’.
+
+     If optional SECTION is non-nil, then return the scope of that,
+     ignoring the sections selected by the region.  Otherwise return the
+     scope of the current section, or if the region is active and
+     selects a valid group of diff related sections, the type of these
+     sections, i.e.  ‘hunks’ or ‘files’.  If SECTION (or if the current
+     section that is nil) is a ‘hunk’ section and the region starts and
+     ends inside the body of a that section, then the type is ‘region’.
+
+     If optional STRICT is non-nil then return nil if the diff type of
+     the section at point is ‘untracked’ or the section at point is not
+     actually a ‘diff’ but a ‘diffstat’ section.
+
+
 File: magit.info,  Node: Refreshing Buffers,  Next: Conventions,  Prev: Section Plumbing,  Up: Plumbing
 
 10.3 Refreshing Buffers
@@ -629,7 +761,7 @@ Appendix C Keystroke Index
                                                               (line  34)
 * ! S:                                   Running Git Manually.
                                                               (line  39)
-* $:                                     Viewing Git Output.  (line  11)
+* $:                                     Viewing Git Output.  (line  14)
 * +:                                     Log Buffer.          (line  59)
 * + <1>:                                 Refreshing Diffs.    (line  68)
 * -:                                     Log Buffer.          (line  63)
@@ -660,10 +792,10 @@ Appendix C Keystroke Index
 * b k:                                   The Branch Popup.    (line 237)
 * b l:                                   The Branch Popup.    (line  62)
 * b n:                                   The Branch Popup.    (line  45)
-* b p:                                   The Branch Popup.    (line 113)
-* b p <1>:                               The Branch Popup.    (line 215)
 * B r:                                   Bisecting.           (line  47)
-* b r:                                   The Branch Popup.    (line 243)
+* b R:                                   The Branch Popup.    (line 113)
+* b r:                                   The Branch Popup.    (line 215)
+* b r <1>:                               The Branch Popup.    (line 243)
 * B s:                                   Bisecting.           (line  24)
 * b s:                                   The Branch Popup.    (line  85)
 * b x:                                   The Branch Popup.    (line 221)
@@ -761,7 +893,7 @@ Appendix C Keystroke Index
 * d w:                                   Diffing.             (line  43)
 * D w:                                   Refreshing Diffs.    (line  28)
 * DEL:                                   Log Buffer.          (line  43)
-* DEL <1>:                               Diff Buffer.         (line  63)
+* DEL <1>:                               Diff Buffer.         (line  68)
 * DEL <2>:                               Blaming.             (line  69)
 * DEL <3>:                               Editing Rebase Sequences.
                                                               (line  28)
@@ -795,8 +927,8 @@ Appendix C Keystroke Index
                                                               (line  22)
 * G:                                     Automatic Refreshing of Magit Buffers.
                                                               (line  31)
-* j:                                     Diff Buffer.         (line  53)
-* k:                                     Viewing Git Output.  (line  19)
+* j:                                     Diff Buffer.         (line  58)
+* k:                                     Viewing Git Output.  (line  22)
 * k <1>:                                 Applying.            (line  40)
 * k <2>:                                 Editing Rebase Sequences.
                                                               (line  68)
@@ -949,7 +1081,7 @@ Appendix C Keystroke Index
                                                               (line  59)
 * S-<tab>:                               Section Visibility.  (line  22)
 * SPC:                                   Log Buffer.          (line  33)
-* SPC <1>:                               Diff Buffer.         (line  59)
+* SPC <1>:                               Diff Buffer.         (line  64)
 * SPC <2>:                               Blaming.             (line  59)
 * SPC <3>:                               Editing Rebase Sequences.
                                                               (line  21)
@@ -1186,6 +1318,7 @@ Appendix D Command Index
 * magit-diff-toggle-refine-hunk:         Refreshing Diffs.    (line  36)
 * magit-diff-unstaged:                   Diffing.             (line  55)
 * magit-diff-visit-file:                 Diff Buffer.         (line   6)
+* magit-diff-visit-file-other-window:    Diff Buffer.         (line  53)
 * magit-diff-visit-file-worktree:        Diff Buffer.         (line  36)
 * magit-diff-while-committing:           Refreshing Diffs.    (line  80)
 * magit-diff-while-committing <1>:       Editing Commit Messages.
@@ -1228,7 +1361,7 @@ Appendix D Command Index
 * magit-go-forward:                      Log Buffer.          (line  23)
 * magit-go-forward <1>:                  Refreshing Diffs.    (line  94)
 * magit-init:                            Repository Setup.    (line   6)
-* magit-jump-to-diffstat-or-diff:        Diff Buffer.         (line  53)
+* magit-jump-to-diffstat-or-diff:        Diff Buffer.         (line  58)
 * magit-kill-this-buffer:                Minor Mode for Buffers Visiting Blobs.
                                                               (line  20)
 * magit-list-repositories:               Repository List.     (line   6)
@@ -1278,8 +1411,8 @@ Appendix D Command Index
                                                               (line   6)
 * magit-pop-revision-stack:              Editing Commit Messages.
                                                               (line  63)
-* magit-process:                         Viewing Git Output.  (line  11)
-* magit-process-kill:                    Viewing Git Output.  (line  19)
+* magit-process:                         Viewing Git Output.  (line  14)
+* magit-process-kill:                    Viewing Git Output.  (line  22)
 * magit-pull:                            Pulling.             (line  24)
 * magit-pull-from-pushremote:            Pulling.             (line  16)
 * magit-pull-from-upstream:              Pulling.             (line  20)
@@ -1453,8 +1586,8 @@ Appendix D Command Index
 * magit-wip-commit:                      Wip Modes.           (line 129)
 * magit-wip-log:                         Wip Modes.           (line  69)
 * magit-wip-log-current:                 Wip Modes.           (line  77)
-* scroll-down:                           Diff Buffer.         (line  63)
-* scroll-up:                             Diff Buffer.         (line  59)
+* scroll-down:                           Diff Buffer.         (line  68)
+* scroll-up:                             Diff Buffer.         (line  64)
 * with-editor-cancel:                    Editing Commit Messages.
                                                               (line  24)
 * with-editor-cancel <1>:                Editing Rebase Sequences.
@@ -1509,6 +1642,7 @@ Appendix E Function Index
 * magit-define-section-jumper:           Creating Sections.   (line  77)
 * magit-diff-scope:                      Matching Sections.   (line 111)
 * magit-diff-type:                       Matching Sections.   (line  88)
+* magit-diff-visit-file-other-window:    Diff Buffer.         (line  53)
 * magit-display-buffer:                  Switching Buffers.   (line   6)
 * magit-display-buffer-fullcolumn-most-v1: Switching Buffers. (line  72)
 * magit-display-buffer-fullframe-status-topleft-v1: Switching Buffers.
@@ -1545,7 +1679,7 @@ Appendix E Function Index
                                                               (line  24)
 * magit-git-wash:                        Calling Git for Effect.
                                                               (line  70)
-* magit-hunk-set-window-start:           Section Movement.    (line  44)
+* magit-hunk-set-window-start:           Section Movement.    (line  43)
 * magit-ido-completing-read:             Support for Completion Frameworks.
                                                               (line  48)
 * magit-insert-am-sequence:              Status Sections.     (line  28)
@@ -1609,8 +1743,8 @@ Appendix E Function Index
 * magit-list-repositories:               Repository List.     (line   6)
 * magit-list-submodules:                 Listing Submodules.  (line  12)
 * magit-log-maybe-show-more-commits:     Section Movement.    (line  57)
-* magit-log-maybe-update-blob-buffer:    Section Movement.    (line  69)
-* magit-log-maybe-update-revision-buffer: Section Movement.   (line  63)
+* magit-log-maybe-update-blob-buffer:    Section Movement.    (line  71)
+* magit-log-maybe-update-revision-buffer: Section Movement.   (line  64)
 * magit-maybe-set-dedicated:             Switching Buffers.   (line  97)
 * magit-mode-display-buffer:             Refreshing Buffers.  (line  32)
 * magit-mode-quit-window:                Quitting Windows.    (line  31)
@@ -1661,9 +1795,9 @@ Appendix E Function Index
                                                               (line 105)
 * magit-start-process:                   Calling Git for Effect.
                                                               (line 124)
-* magit-status-maybe-update-blob-buffer: Section Movement.    (line  81)
+* magit-status-maybe-update-blob-buffer: Section Movement.    (line  83)
 * magit-status-maybe-update-revision-buffer: Section Movement.
-                                                              (line  75)
+                                                              (line  77)
 * magit-wip-log:                         Wip Modes.           (line  69)
 * magit-wip-log-current:                 Wip Modes.           (line  77)
 * with-editor-usage-message:             Editing Commit Messages.
@@ -1749,15 +1883,16 @@ Appendix F Variable Index
 * magit-commit-squash-confirm:           Initiating a Commit. (line  87)
 * magit-completing-read-function:        Support for Completion Frameworks.
                                                               (line  27)
+* magit-diff-adjust-tab-width:           Diff Options.        (line  16)
 * magit-diff-buffer-file-locked:         Minor Mode for Buffers Visiting Files.
                                                               (line  52)
-* magit-diff-hide-trailing-cr-characters: Diff Options.       (line  45)
-* magit-diff-highlight-hunk-region-functions: Diff Options.   (line  49)
-* magit-diff-highlight-indentation:      Diff Options.        (line  30)
-* magit-diff-highlight-trailing:         Diff Options.        (line  25)
-* magit-diff-paint-whitespace:           Diff Options.        (line  16)
+* magit-diff-hide-trailing-cr-characters: Diff Options.       (line  67)
+* magit-diff-highlight-hunk-region-functions: Diff Options.   (line  71)
+* magit-diff-highlight-indentation:      Diff Options.        (line  52)
+* magit-diff-highlight-trailing:         Diff Options.        (line  47)
+* magit-diff-paint-whitespace:           Diff Options.        (line  38)
 * magit-diff-refine-hunk:                Diff Options.        (line   6)
-* magit-diff-unmarked-lines-keep-foreground: Diff Options.    (line  75)
+* magit-diff-unmarked-lines-keep-foreground: Diff Options.    (line  97)
 * magit-diff-visit-previous-blob:        Diff Buffer.         (line  25)
 * magit-display-buffer-function:         Switching Buffers.   (line  23)
 * magit-display-buffer-noselect:         Switching Buffers.   (line  14)
@@ -1769,7 +1904,7 @@ Appendix F Variable Index
 * magit-file-mode:                       Minor Mode for Buffers Visiting Files.
                                                               (line  11)
 * magit-generate-buffer-name-function:   Naming Buffers.      (line   6)
-* magit-git-debug:                       Viewing Git Output.  (line  23)
+* magit-git-debug:                       Viewing Git Output.  (line  26)
 * magit-git-debug <1>:                   Getting a Value from Git.
                                                               (line  64)
 * magit-git-executable:                  Git Executable.      (line  39)
@@ -1822,7 +1957,7 @@ Appendix F Variable Index
 * magit-root-section:                    Matching Sections.   (line  80)
 * magit-save-repository-buffers:         Automatic Saving of File-Visiting Buffers.
                                                               (line  13)
-* magit-section-movement-hook:           Section Movement.    (line  39)
+* magit-section-movement-hook:           Section Movement.    (line  38)
 * magit-section-set-visibility-hook:     Section Visibility.  (line  78)
 * magit-section-show-child-count:        Section Options.     (line   9)
 * magit-shell-command-verbose-prompt:    Running Git Manually.
@@ -1839,7 +1974,7 @@ Appendix F Variable Index
 * magit-uniquify-buffer-names:           Naming Buffers.      (line  67)
 * magit-unstage-committed:               Staging and Unstaging.
                                                               (line  56)
-* magit-update-other-window-delay:       Section Movement.    (line  87)
+* magit-update-other-window-delay:       Section Movement.    (line  89)
 * magit-use-sticky-arguments:            Popup Buffers and Prefix Commands.
                                                               (line  36)
 * magit-visit-ref-behavior:              References Buffer.   (line 129)

@@ -30,7 +30,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-     This manual is for Magit version 2.11.0 (2.11.0-302-gac281d7f1+1).
+     This manual is for Magit version 2.11.0 (2.11.0-328-gd6a02d1a+1).
 
      Copyright (C) 2015-2017 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -1244,8 +1244,7 @@ section use the following commands.
      Move to the beginning of the parent of the current section.
 
    The above commands all call the hook ‘magit-section-movement-hook’.
-And, except for the second, the below functions are all members of that
-hook’s default value.
+Any of the functions listed below can be used as members of this hook.
 
  -- Variable: magit-section-movement-hook
 
@@ -1256,7 +1255,8 @@ hook’s default value.
 
      This hook function ensures that the beginning of the current
      section is visible, provided it is a ‘hunk’ section.  Otherwise, it
-     does nothing.
+     does nothing.  This function is a member of the hook’s default
+     value.
 
  -- Function: magit-section-set-window-start
 
@@ -1269,13 +1269,15 @@ hook’s default value.
 
      This hook function only has an effect in log buffers, and ‘point’
      is on the "show more" section.  If that is the case, then it
-     doubles the number of commits that are being shown.
+     doubles the number of commits that are being shown.  This function
+     is a member of the hook’s default value.
 
  -- Function: magit-log-maybe-update-revision-buffer
 
      When moving inside a log buffer, then this function updates the
      revision buffer, provided it is already being displayed in another
-     window of the same frame.
+     window of the same frame.  This function is a member of the hook’s
+     default value.
 
  -- Function: magit-log-maybe-update-blob-buffer
 
@@ -1981,8 +1983,11 @@ File: magit.info,  Node: Viewing Git Output,  Next: Running Git Manually,  Up: R
 
 Magit runs Git either for side-effects (e.g.  when pushing) or to get
 some value (e.g.  the name of the current branch).  When Git is run for
-side-effects then the output goes into a per-repository log buffer,
-which can be consulted when things don’t go as expected.
+side-effects, the mode line displays a process status indicator (using
+the ‘magit-mode-line-process’ face), and the process output goes into a
+per-repository log buffer, which can be consulted when things don’t go
+as expected.  Process errors are indicated at the top of the status
+buffer.
 
 ‘$’     (‘magit-process’)
 
@@ -3317,6 +3322,11 @@ File: magit.info,  Node: Diff Buffer,  Next: Diff Options,  Prev: Refreshing Dif
      unless the diff shows changes in the worktree, the index, or
      ‘HEAD’.
 
+ -- Command: magit-diff-visit-file-other-window
+
+     From a diff, visit the corresponding file at the appropriate
+     position in another window.
+
 ‘j’     (‘magit-jump-to-diffstat-or-diff’)
 
      Jump to the diffstat or diff.  When point is on a file inside the
@@ -3346,6 +3356,28 @@ File: magit.info,  Node: Diff Options,  Next: Revision Buffer,  Prev: Diff Buffe
         • ‘t’ show fine differences for the current diff hunk only.
 
         • ‘all’ show fine differences for all displayed diff hunks.
+
+ -- User Option: magit-diff-adjust-tab-width
+
+     Whether to adjust the width of tabs in diffs.
+
+     Determining the correct width can be expensive if it requires
+     opening large and/or many files, so the widths are cached in the
+     variable ‘magit-diff--tab-width-cache’.  Set that to nil to
+     invalidate the cache.
+
+        • ‘nil’ Never ajust tab width.  Use ‘tab-width’s value from the
+          Magit buffer itself instead.
+
+        • ‘t’ If the corresponding file-visiting buffer exits, then use
+          ‘tab-width’’s value from that buffer.  Doing this is cheap, so
+          this value is used even if a corresponding cache entry exists.
+
+        • ‘always’ If there is no such buffer, then temporarily visit
+          the file to determine the value.
+
+        • NUMBER Like ‘always’, but don’t visit files larger than NUMBER
+          bytes.
 
  -- User Option: magit-diff-paint-whitespace
 
@@ -4778,7 +4810,7 @@ features are available from separate popups.
      branch.  If FROM is not reachable from ‘HEAD’ or is reachable from
      the source branch’s upstream, then an error is raised.
 
-‘b p’     (‘magit-branch-pull-request’)
+‘b R’     (‘magit-branch-pull-request’)
 
      This command creates and configures a new branch from a Github
      pull-request, creating and configuring a new remote if necessary.
@@ -4880,7 +4912,7 @@ features are available from separate popups.
      cleanup mentioned in the previous paragraph is not performed if you
      do that.
 
-‘b p’     (‘magit-checkout-pull-request’)
+‘b r’     (‘magit-checkout-pull-request’)
 
      This command creates and configures a new branch from a pull
      request, the same way ‘magit-branch-pull-request’ does.
@@ -5583,17 +5615,17 @@ File: magit.info,  Node: Information About In-Progress Rebase,  Prev: Editing Re
 ------------------------------------------
 
 While a rebase sequence is in progress, the status buffer features a
-section which lists the commits that have already been applied as well
-as the commits that still have to be applied.
+section that lists the commits that have already been applied as well as
+the commits that still have to be applied.
 
    The commits are split in two halves.  When rebase stops at a commit,
-either because the user has to deal with a conflict or explicitly
-requested that rebase stops at that commit, then point is placed on the
-commit that separates the two groups, i.e.  on ‘HEAD’.  The commits
-above it have not been applied yet, while it and the commits below it
-have already been applied.  In between these two groups of applied and
-yet-to-be applied commits, there sometimes is a commit which has been
-dropped.
+either because the user has to deal with a conflict or because s/he
+explicitly requested that rebase stops at that commit, then point is
+placed on the commit that separates the two groups, i.e.  on ‘HEAD’.
+The commits above it have not been applied yet, while the ‘HEAD’ and the
+commits below it have already been applied.  In between these two groups
+of applied and yet-to-be applied commits, there sometimes is a commit
+which has been dropped.
 
    Each commit is prefixed with a word and these words are additionally
 shown in different colors to indicate the status of the commits.
@@ -5609,8 +5641,8 @@ shown in different colors to indicate the status of the commits.
    • The green commit is the commit the rebase sequence stopped at.  If
      this is the same commit as ‘HEAD’ (e.g.  because you haven’t done
      anything yet after rebase stopped at the commit, then this commit
-     is shown in blue, not green.  There can only be a green and a blue
-     commit at the same time, if you create one or more new commits
+     is shown in blue, not green.  There can only be a green *and* a
+     blue commit at the same time, if you create one or more new commits
      after rebase stops at a commit.
 
    • Red commits have been dropped.  They are shown for reference only,
@@ -5625,78 +5657,113 @@ shown in different colors to indicate the status of the commits.
      meaning here as they do in the buffer used to edit the rebase
      sequence.  See *note Editing Rebase Sequences::.
 
-   • The commit prefixed with ‘onto’ is the commit on top of which all
-     the other commits are being re-applied.  Like the commits that have
-     already been re-applied, it is reachable from ‘HEAD’, but unlike
-     those it has not actually been re-applied during the current
-     session - it wasn’t touched at all.
+   • Commits prefixed with ‘done’ and ‘onto’ have already been applied.
+     It is possible for such a commit to be the ‘HEAD’, in which case it
+     is blue.  Otherwise it is grey.
 
-   • Commits prefixed with ‘done’ have already been re-applied.  Not all
-     commits that have already been applied are prefixed with this word,
-     though.
+        • The commit prefixed with ‘onto’ is the commit on top of which
+          all the other commits are being re-applied.  This commit
+          itself did not have to be re-applied, it is the commit rebase
+          did rewind to before starting to re-apply other commits.
 
-   • When a commit is prefixed with ‘void’, then that indicates that
-     Magit knows for sure that all the changes in that commit have been
-     applied using several new commits.  This commit is no longer
-     reachable from ‘HEAD’, and it also isn’t one of the commits that
-     will be applied when resuming the session.
+        • Commits prefixed with ‘done’ have already been re-applied.
+          This includes commits that have been re-applied but also new
+          commits that you have created during the rebase.
 
-   • When a commit is prefixed with ‘join’, then that indicates that the
-     rebase sequence stopped at that commit due to a conflict - you now
-     have to join (merge) the changes with what has already been
-     applied.  In a sense this is the commit rebase stopped at, but
-     while its effect is already in the index and in the worktree (with
-     conflict markers), the commit itself has not actually been applied
-     yet (it isn’t the ‘HEAD’).  So it is shown in yellow, like the
-     other commits that still have to be applied.
+   • All other commits, those not prefixed with any of the above words,
+     are in some way related to the commit at which rebase stopped.
 
-   • When a commit is prefixed with ‘goal’, ‘same’, or ‘work’, then that
-     indicates that you reset to an earlier commit (and that this commit
-     therefore is no longer reachable from ‘HEAD’), but that it might
-     still be possible to create a new commit with the exact same tree
-     or at least the same patch-id (1), without manually editing any
-     file.  Or at the very least that there are some uncommitted
-     remaining, which may or may not originate from that commit.
+     To determine whether a commit is related to the stopped-at commit
+     their hashes, trees and patch-ids (1) are being compared.  The
+     commit message is not used for this purpose.
 
-        • When a commit is prefixed with ‘goal’, then that indicates
-          that it is still possible to create a commit with the exact
-          same tree (the "goal") without manually editing a file, by
-          simply committing the index (or, provided nothing is already
-          staged, by staging all unstaged changes and then committing
-          that).  This is the case when the original tree exists in the
-          index or worktree in untainted form.
+     Generally speaking commits that are related to the stopped-at
+     commit can have any of the used colors, though not all color/word
+     combinations are possible.
 
-        • When a commit is prefixed with ‘same’, then that indicates
-          that it is no longer possible to create a commit with the
-          exact same tree, but that it is still possible to create a
-          commit with the same patch-id.  This would be the case if you
-          created a new commit with other changes, but the changes from
-          the original commit still exist in the index and/or working
-          tree in untainted form.
+     Words used for stopped-at commits are:
 
-        • When a commit is prefixed with ‘work’, then that indicates
-          that you are working with the changes from that commit after
-          resetting to an earlier commit.  There are changes in the
-          index and/or working tree and some of them likely originate
-          from that commit.
+        • When a commit is prefixed with ‘void’, then that indicates
+          that Magit knows for sure that all the changes in that commit
+          have been applied using several new commits.  This commit is
+          no longer reachable from ‘HEAD’, and it also isn’t one of the
+          commits that will be applied when resuming the session.
 
-   • When a commit is prefixed with ‘poof’ or ‘gone’, then that
-     indicates that you reset to an earlier commit (and that this commit
-     therefore is no longer reachable from ‘HEAD’), and that there are
-     no uncommitted changes remaining which might allow you to create a
-     new commit with the same tree or at least the same patch-id.
+        • When a commit is prefixed with ‘join’, then that indicates
+          that the rebase sequence stopped at that commit due to a
+          conflict - you now have to join (merge) the changes with what
+          has already been applied.  In a sense this is the commit
+          rebase stopped at, but while its effect is already in the
+          index and in the worktree (with conflict markers), the commit
+          itself has not actually been applied yet (it isn’t the
+          ‘HEAD’).  So it is shown in yellow, like the other commits
+          that still have to be applied.
 
-        • When a commit is prefixed with ‘poof’, then that indicates
-          that it is no longer reachable from ‘HEAD’, but that it has
-          been replaced with one or more commits, which together have
-          the exact same effect.
+        • When a commit is prefixed with ‘stop’ or a _blue_ or _green_
+          ‘same’, then that indicates that rebase stopped at this
+          commit, that it is still applied or has been applied again,
+          and that at least its patch-id is unchanged.
 
-        • When a commit is prefixed with ‘gone’, then that indicates
-          that it is no longer reachable from ‘HEAD’ and that we also
-          cannot determine whether its changes are still in effect in
-          one or more new commits.  They might be, but if so, then there
-          must also be other changes which makes it impossible to know
-          for sure.
+             • When a commit is prefixed with ‘stop’, then that
+               indicates that rebase stopped at that commit because you
+               requested that earlier, and its patch-id is unchanged.
+               It might even still be the exact same commit.
+
+             • When a commit is prefixed with a _blue_ or _green_
+               ‘same’, then that indicates that while its tree or hash
+               changed, its patch-id did not.  If it is blue, then it is
+               the ‘HEAD’ commit (as always for blue).  When it is
+               green, then it no longer is ‘HEAD’ because other commit
+               have been created since (but before continuing the
+               rebase).
+
+        • When a commit is prefixed with ‘goal’, a _yellow_ ‘same,’ or
+          ‘work’, then that indicates that rebase applied that commit
+          but that you then reset ‘HEAD’ to an earlier commit (likely to
+          split it up into multiple commits), and that there are some
+          uncommitted changes remaining which likely (but not
+          necessarily) originate from that commit.
+
+             • When a commit is prefixed with ‘goal’, then that
+               indicates that it is still possible to create a new
+               commit with the exact same tree (the "goal") without
+               manually editing any files, by committing the index, or
+               by staging all changes and then committing that.  This is
+               the case when the original tree still exists in the index
+               or worktree in untainted form.
+
+             • When a commit is prefixed with a yellow ‘same’, then that
+               indicates that it is no longer possible to create a
+               commit with the exact same tree, but that it is still
+               possible to create a commit with the same patch-id.  This
+               would be the case if you created a new commit with other
+               changes, but the changes from the original commit still
+               exist in the index or working tree in untainted form.
+
+             • When a commit is prefixed with ‘work’, then that
+               indicates that you reset ‘HEAD’ to an earlier commit, and
+               that there are some staged and/or unstaged changes
+               (likely, but not necessarily) originating from that
+               commit.  However it is no longer possible to create a new
+               commit with the same tree or at least the same patch-id
+               because you have already made other changes.
+
+        • When a commit is prefixed with ‘poof’ or ‘gone’, then that
+          indicates that rebase applied that commit but that you then
+          reset ‘HEAD’ to an earlier commit (likely to split it up into
+          multiple commits), and that there are no uncommitted changes.
+
+             • When a commit is prefixed with ‘poof’, then that
+               indicates that it is no longer reachable from ‘HEAD’, but
+               that it has been replaced with one or more commits, which
+               together have the exact same effect.
+
+             • When a commit is prefixed with ‘gone’, then that
+               indicates that it is no longer reachable from ‘HEAD’ and
+               that we also cannot determine whether its changes are
+               still in effect in one or more new commits.  They might
+               be, but if so, then there must also be other changes
+               which makes it impossible to know for sure.
 
    Do not worry if you do not fully understand the above.  That’s okay,
 you will acquire a good enough understanding through practice.
@@ -5710,15 +5777,15 @@ commits which have already been applied.
 
    ---------- Footnotes ----------
 
-   (1) The patch-id is a hash of the _changes_ introduced by commit.  It
-differs from hash of the commit itself, which is a hash of the result of
-applying that change (i.e.  the resulting trees and blobs) as well as
-author and committer information, the commit message, and the hashes of
-the parents of the commit.  The patch-id hash on the other hand is
-created only from the added and removed lines, even line numbers and
-whitespace are created when calculating the hash.  The patch-ids of two
-commits can be used to answer the question "Do these two commits make
-the same change?".
+   (1) The patch-id is a hash of the _changes_ introduced by a commit.
+It differs from the hash of the commit itself, which is a hash of the
+result of applying that change (i.e.  the resulting trees and blobs) as
+well as author and committer information, the commit message, and the
+hashes of the parents of the commit.  The patch-id hash on the other
+hand is created only from the added and removed lines, even line numbers
+and whitespace changes are ignored when calculating this hash.  The
+patch-ids of two commits can be used to answer the question "Do these
+commits make the same change?".
 
 
 File: magit.info,  Node: Cherry Picking,  Next: Resetting,  Prev: Rebasing,  Up: Manipulating
@@ -7765,136 +7832,4 @@ File: magit.info,  Node: Section Selection,  Next: Matching Sections,  Prev: Cre
      TYPES is non-nil then the selection not only has to be valid; the
      types of all selected sections additionally have to match one of
      TYPES, or nil is returned.
-
-
-File: magit.info,  Node: Matching Sections,  Prev: Section Selection,  Up: Section Plumbing
-
-10.2.3 Matching Sections
-------------------------
-
-‘M-x magit-describe-section’     (‘magit-describe-section’)
-
-     Show information about the section at point.  This command is
-     intended for debugging purposes.
-
- -- Function: magit-section-ident
-
-     Return an unique identifier for SECTION. The return value has the
-     form ‘((TYPE . VALUE)...)’.
-
- -- Function: magit-get-section
-
-     Return the section identified by IDENT. IDENT has to be a list as
-     returned by ‘magit-section-ident’.
-
- -- Function: magit-section-match condition &optional section
-
-     Return ‘t’ if SECTION matches CONDITION. SECTION defaults to the
-     section at point.  If SECTION is not specified and there also is no
-     section at point, then return ‘nil’.
-
-     CONDITION can take the following forms:
-        • ‘(CONDITION...)’
-
-          matches if any of the CONDITIONs matches.
-
-        • ‘[TYPE...]’
-
-          matches if the first TYPE matches the type of the section, the
-          second matches that of its parent, and so on.
-
-        • ‘[* TYPE...]’
-
-          matches sections that match [TYPE…] and also recursively all
-          their child sections.
-
-        • ‘TYPE’
-
-          matches sections of TYPE regardless of the types of the parent
-          sections.
-
-     Each TYPE is a symbol.  Note that it is not necessary to specify
-     all TYPEs up to the root section as printed by
-     ‘magit-describe-type’, unless of course you want to be that
-     precise.
-
- -- Function: magit-section-when condition &rest body
-
-     If the section at point matches CONDITION evaluate BODY.
-
-     If the section matches, then evaluate BODY forms sequentially with
-     ‘it’ bound to the section and return the value of the last form.
-     If there are no BODY forms, then return the value of the section.
-     If the section does not match or if there is no section at point
-     then return nil.
-
-     See ‘magit-section-match’ for the forms CONDITION can take.
-
- -- Function: magit-section-case &rest clauses
-
-     Choose among clauses on the type of the section at point.
-
-     Each clause looks like (CONDITION BODY…).  The type of the section
-     is compared against each CONDITION; the BODY forms of the first
-     match are evaluated sequentially and the value of the last form is
-     returned.  Inside BODY the symbol ‘it’ is bound to the section at
-     point.  If no clause succeeds or if there is no section at point
-     return nil.
-
-     See ‘magit-section-match’ for the forms CONDITION can take.
-     Additionally a CONDITION of t is allowed in the final clause and
-     matches if no other CONDITION match, even if there is no section at
-     point.
-
- -- Variable: magit-root-section
-
-     The root section in the current buffer.  All other sections are
-     descendants of this section.  The value of this variable is set by
-     ‘magit-insert-section’ and you should never modify it.
-
-   For diff related sections a few additional tools exist.
-
- -- Function: magit-diff-type &optional section
-
-     Return the diff type of SECTION.
-
-     The returned type is one of the symbols ‘staged’, ‘unstaged’,
-     ‘committed’, or ‘undefined’.  This type serves a similar purpose as
-     the general type common to all sections (which is stored in the
-     ‘type’ slot of the corresponding ‘magit-section’ struct) but takes
-     additional information into account.  When the SECTION isn’t
-     related to diffs and the buffer containing it also isn’t a
-     diff-only buffer, then return nil.
-
-     Currently the type can also be one of ‘tracked’ and ‘untracked’,
-     but these values are not handled explicitly in every place they
-     should be.  A possible fix could be to just return nil here.
-
-     The section has to be a ‘diff’ or ‘hunk’ section, or a section
-     whose children are of type ‘diff’.  If optional SECTION is nil,
-     return the diff type for the current section.  In buffers whose
-     major mode is ‘magit-diff-mode’ SECTION is ignored and the type is
-     determined using other means.  In ‘magit-revision-mode’ buffers the
-     type is always ‘committed’.
-
- -- Function: magit-diff-scope &optional section strict
-
-     Return the diff scope of SECTION or the selected section(s).
-
-     A diff’s "scope" describes what part of a diff is selected, it is a
-     symbol, one of ‘region’, ‘hunk’, ‘hunks’, ‘file’, ‘files’, or
-     ‘list’.  Do not confuse this with the diff "type", as returned by
-     ‘magit-diff-type’.
-
-     If optional SECTION is non-nil, then return the scope of that,
-     ignoring the sections selected by the region.  Otherwise return the
-     scope of the current section, or if the region is active and
-     selects a valid group of diff related sections, the type of these
-     sections, i.e.  ‘hunks’ or ‘files’.  If SECTION (or if the current
-     section that is nil) is a ‘hunk’ section and the region starts and
-     ends inside the body of a that section, then the type is ‘region’.
-
-     If optional STRICT is non-nil then return nil if the diff type of
-     the section at point is ‘untracked’ or the section at point is not
-     actually a ‘diff’ but a ‘diffstat’ section.
 

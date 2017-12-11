@@ -5,7 +5,7 @@
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; Maintainer: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Package-Version: 20171125.30
+;; Package-Version: 20171210.415
 ;; Version: 0.9.0
 ;; Package-Requires: ((avy "0.2.0"))
 ;; Keywords: window, location
@@ -81,6 +81,10 @@
           (const :tag "global" global)
           (const :tag "frame" frame)))
 
+(defcustom aw-minibuffer-flag nil
+  "When non-nil, also display `ace-window-mode' string in the minibuffer when ace-window is active."
+  :type 'boolean)
+
 (defcustom aw-ignored-buffers '("*Calc Trail*" "*LV*")
   "List of buffers to ignore when selecting window."
   :type '(repeat string))
@@ -119,6 +123,17 @@ This will make `ace-window' act different from `other-window' for
 the reverse of `frame-list'"
   :type 'boolean)
 
+(defcustom aw-frame-offset '(13 . 23)
+  "Increase in pixel offset for new ace-window frames relative to the selected frame.
+Its value is an (x-offset . y-offset) pair in pixels."
+  :type '(cons integer integer))
+
+(defcustom aw-frame-size nil
+  "Frame size to make new ace-window frames.
+Its value is a (width . height) pair in pixels or nil for the default frame size.
+(0 . 0) is special and means make the frame size the same as the last selected frame size."
+  :type '(cons integer integer))
+
 (defface aw-leading-char-face
   '((((class color)) (:foreground "red"))
     (((background dark)) (:foreground "gray100"))
@@ -145,7 +160,13 @@ the reverse of `frame-list'"
            (member (buffer-name (window-buffer window))
                    aw-ignored-buffers))
       (and aw-ignore-current
-           (equal window (selected-window)))))
+           (equal window (selected-window)))
+      (unless ignore-window-parameters
+        (cl-case this-command
+          (ace-select-window (window-parameter window 'no-other-window))
+          (ace-delete-window (window-parameter window 'no-delete-other-windows))
+          (ace-delete-other-windows (window-parameter
+                                     window 'no-delete-other-windows))))))
 
 (defun aw-window-list ()
   "Return the list of interesting windows."
@@ -266,11 +287,12 @@ LEAF is (PT . WND)."
 (defun aw-set-mode-line (str)
   "Set mode line indicator to STR."
   (setq ace-window-mode str)
+  (if aw-minibuffer-flag (message "%s" str))
   (force-mode-line-update))
 
 (defvar aw-dispatch-alist
   '((?x aw-delete-window "Delete Window")
-    (?m aw-swap-window "Swap Window")
+    (?m aw-swap-window "Swap Windows")
     (?M aw-move-window "Move Window")
     (?j aw-switch-buffer-in-window "Select Buffer")
     (?n aw-flip-window)
@@ -278,7 +300,6 @@ LEAF is (PT . WND)."
     (?c aw-split-window-fair "Split Fair Window")
     (?v aw-split-window-vert "Split Vert Window")
     (?b aw-split-window-horz "Split Horz Window")
-    (?i delete-other-windows "Delete Other Windows")
     (?o delete-other-windows)
     (?? aw-show-dispatch-help))
   "List of actions for `aw-dispatch-default'.")
@@ -287,19 +308,69 @@ LEAF is (PT . WND)."
   "Return item from `aw-dispatch-alist' matching CHAR."
   (assoc char aw-dispatch-alist))
 
+(defun aw-make-frame ()
+  "Make a new Emacs frame using the values of `aw-frame-size' and `aw-frame-offset'."
+  (make-frame
+   (delq nil
+         (list (when aw-frame-size
+                 (cons 'width
+                       (if (zerop (car aw-frame-size))
+                           (frame-width)
+                         (car aw-frame-size))))
+               (when aw-frame-size
+                 (cons 'height
+                       (if (zerop (cdr aw-frame-size))
+                           (frame-height)
+                         (car aw-frame-size))))
+               (cons 'left (+ (car aw-frame-offset)
+                              (car (frame-position))))
+               (cons 'top (+ (cdr aw-frame-offset)
+                             (cdr (frame-position))))))))
+
+(defun aw-use-frame (window)
+  "Create a new frame using the contents of WINDOW.
+
+The same size as the previous frame, offset by `aw-frame-offset'
+pixels."
+  (aw-switch-to-window window)
+  (aw-make-frame))
+
+(defun aw-set-make-frame-char (symbol value)
+  "Set SYMBOL `aw-make-frame-char' to VALUE after checking it."
+  (when value
+    (cond ((not (characterp value))
+           (user-error
+            "must be a character, not `%s'" value))
+          ((memq value aw-keys)
+           (user-error
+            "`%c' conflicts with the same character in `aw-keys'" value))
+          ((assq value aw-dispatch-alist)
+           (user-error
+            "`%c' conflicts with the same character in `aw-dispatch-alist'" value))))
+  (set symbol value))
+
+(defcustom aw-make-frame-char ?z
+  "Character that triggers creation of a new single-window frame for display."
+  :set 'aw-set-make-frame-char
+  :type 'character)
+
 (defun aw-dispatch-default (char)
   "Perform an action depending on CHAR."
-  (if (= char (aref (kbd "C-g") 0))
-      (throw 'done 'exit)
-    (let ((action (aw--dispatch-action char)))
-      (cl-destructuring-bind (_key fn &optional description) (aw--dispatch-action char)
-        (if action
-            (if (and fn description)
-                (prog1 (setq aw-action fn)
-                  (aw-set-mode-line (format " Ace - %s" description)))
-              (funcall fn)
-              (throw 'done 'exit))
-          (avy-handler-default char))))))
+  (cond ((= char (aref (kbd "C-g") 0))
+         (throw 'done 'exit))
+        ((= char aw-make-frame-char)
+         (aw-use-frame (selected-window))
+         (throw 'done 'exit))
+        (t
+         (let ((action (aw--dispatch-action char)))
+           (cl-destructuring-bind (_key fn &optional description) action
+             (if action
+                 (if (and fn description)
+                     (prog1 (setq aw-action fn)
+                       (aw-set-mode-line (format " Ace - %s" description)))
+                   (funcall fn)
+                   (throw 'done 'exit))
+               (avy-handler-default char)))))))
 
 (defun aw-select (mode-line &optional action)
   "Return a selected other window.

@@ -448,8 +448,10 @@ has to provide several values including their password."
           ;; Auth-Source caches the information that there is no
           ;; value, but in our case that is a situation that needs
           ;; fixing so we want to keep trying by invalidating that
-          ;; information.
-          (auth-source-forget (list :host host :user user))
+          ;; information.  The (:max 1) is needed for Emacs releases
+          ;; before 26.1.
+          (auth-source-forget (list :max 1 :host host :user
+          user))
           (and (not nocreate)
                (ghub--confirm-create-token host username package))))))
 
@@ -486,9 +488,10 @@ has to provide several values including their password."
   (let* ((ident (ghub--ident-github package))
          (scopes (ghub--package-scopes package))
          (max-mini-window-height 40))
-    (if (yes-or-no-p
-         (format
-          "Such a Github API token is not available:
+    (if (let ((message-log-max nil))
+          (yes-or-no-p
+           (format
+            "Such a Github API token is not available:
 
   Host:    %s
   User:    %s
@@ -509,9 +512,9 @@ you might have to provide a passphrase and confirm that you
 really want to save the token.
 
 Create and store such a token? "
-          host username package package
-          (mapconcat (lambda (scope) (format "    %s" scope)) scopes "\n")
-          auth-sources ident))
+            host username package package
+            (mapconcat (lambda (scope) (format "    %s" scope)) scopes "\n")
+            auth-sources ident)))
         (progn
           (when (ghub--get-token-id host username package)
             (if (yes-or-no-p

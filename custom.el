@@ -96,6 +96,7 @@
      (:name "all mail" :query "*" :key "a" :sort-order newest-first)
      (:name "Bug Reports" :query "tag:bug-reports"))))
  '(notmuch-search-oldest-first t nil nil "I tried setting this to off. Quite a while later, I'm admitting that whoever chose that default knew what they were doing.")
+ '(notmuch-show-all-tags-list t nil nil "I like seeing these. I'm not exactly sure why.")
  '(package-enable-at-startup nil)
  '(package-selected-packages
    (quote

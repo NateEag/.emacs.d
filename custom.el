@@ -92,6 +92,7 @@
      (:name "unread" :query "tag:unread" :key "u" :sort-order newest-first)
      (:name "flagged" :query "tag:flagged" :key "f" :sort-order newest-first)
      (:name "sent" :query "tag:sent" :key "t" :sort-order newest-first)
+     (:name "Unread Emails In Watched Threads" :query "tag:watched and tag:unread" :key "w")
      (:name "drafts" :query "tag:draft" :key "d" :sort-order newest-first)
      (:name "all mail" :query "*" :key "a" :sort-order newest-first)
      (:name "Bug Reports" :query "tag:bug-reports"))))

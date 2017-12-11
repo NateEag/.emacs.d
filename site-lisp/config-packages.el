@@ -296,6 +296,7 @@ The shell command lives in my dotfiles repo."
 
 (use-package magit
   :defer t
+  :hook (magit-mode . magit-svn-mode)
   :config (require 'evil-magit)
           (add-hook 'magit-status-mode-hook 'evil-local-mode)
           ;; (add-hook 'magit-mode-hook 'evil-normal-state)

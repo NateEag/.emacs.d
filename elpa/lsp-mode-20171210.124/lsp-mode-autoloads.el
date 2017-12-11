@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (23080 451 0
-;;;;;;  0))
+;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (23086 39396
+;;;;;;  0 0))
 ;;; Generated autoloads from lsp-methods.el
 
 (let ((loads (get 'lsp-mode 'custom-loads))) (if (member '"lsp-methods" loads) nil (put 'lsp-mode 'custom-loads (cons '"lsp-methods" loads))))
@@ -65,14 +65,9 @@ Face used for highlighting symbols being read." :group (quote lsp-faces))
 (defface lsp-face-highlight-write '((t :background "green")) "\
 Face used for highlighting symbols being written to." :group (quote lsp-faces))
 
-(defvar lsp-change-idle-delay 0.5 "\
-Number of seconds of idle timer to wait before sending file changes to the server.")
-
-(custom-autoload 'lsp-change-idle-delay "lsp-methods" t)
-
 ;;;***
 
-;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23080 451 0 0))
+;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23086 39396 0 0))
 ;;; Generated autoloads from lsp-mode.el
 
 (autoload 'lsp-mode "lsp-mode" "\
@@ -84,7 +79,7 @@ Number of seconds of idle timer to wait before sending file changes to the serve
 
 ;;;### (autoloads nil nil ("lsp-common.el" "lsp-flycheck.el" "lsp-imenu.el"
 ;;;;;;  "lsp-mode-pkg.el" "lsp-notifications.el" "lsp-receive.el"
-;;;;;;  "lsp-send.el") (23080 451 0 0))
+;;;;;;  "lsp-send.el") (23086 39396 0 0))
 
 ;;;***
 

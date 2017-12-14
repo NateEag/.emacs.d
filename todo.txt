@@ -56,6 +56,11 @@
  Update: I have just installed the 'network-watch' package from MELPA, so this
  should be just about trivial to do now.
 
+-Auto-resize embedded images in emails to fit in the current window. I've set
+ `mm-inline-large-images` to 'resize', which ought to do this job, but it
+ doesn't work for me because Emacs for OS X does not include ImageMagick
+ support, AFAICT. Try a homebrew-based build, perhaps?
+
 -Figure out what mime-type should be used for emailing bash scripts as an
  attachment.
 

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "speed-type" "speed-type.el" (22635 46948 0
+;;;### (autoloads nil "speed-type" "speed-type.el" (23095 50542 0
 ;;;;;;  0))
 ;;; Generated autoloads from speed-type.el
 

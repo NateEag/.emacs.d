@@ -39,7 +39,7 @@ adoption would make life easier for users and maintainers alike, because
 then all packages that talk to the Github API could be configured the
 same way.
 
-     This manual is for Ghub version 1.3.0 (v1.3.0-22-g45cd8c8+1).
+This manual is for Ghub version 1.3.0 (v1.3.0-30-g4d3d3a0+1).
 
      Copyright (C) 2017 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -842,19 +842,19 @@ machine, which is done using a lisp variable.
 
 Tag Table:
 Node: Top757
-Node: Introduction2786
-Node: Limitations5322
-Node: Getting Started7463
-Node: Setting the Username7965
-Node: Interactively Creating and Storing a Token9390
-Node: Manually Creating and Storing a Token15345
-Node: How Ghub uses Auth-Source16433
-Node: Using Ghub in Personal Scripts18003
-Node: Using Ghub in a Package19452
-Node: API22017
-Node: Making Requests22444
-Node: Authentication31001
-Node: Configuration Variables32800
+Node: Introduction2781
+Node: Limitations5317
+Node: Getting Started7458
+Node: Setting the Username7960
+Node: Interactively Creating and Storing a Token9385
+Node: Manually Creating and Storing a Token15340
+Node: How Ghub uses Auth-Source16428
+Node: Using Ghub in Personal Scripts17998
+Node: Using Ghub in a Package19447
+Node: API22012
+Node: Making Requests22439
+Node: Authentication30996
+Node: Configuration Variables32795
 
 End Tag Table
 

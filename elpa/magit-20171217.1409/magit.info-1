@@ -30,7 +30,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-     This manual is for Magit version 2.11.0 (2.11.0-328-gd6a02d1a+1).
+This manual is for Magit version 2.11.0 (2.11.0-350-g2eb2f60d3+1).
 
      Copyright (C) 2015-2017 Jonas Bernoulli <jonas@bernoul.li>
 

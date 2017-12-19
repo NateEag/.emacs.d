@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (23086 39396
+;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (23097 7207
 ;;;;;;  0 0))
 ;;; Generated autoloads from lsp-methods.el
 
@@ -67,7 +67,7 @@ Face used for highlighting symbols being written to." :group (quote lsp-faces))
 
 ;;;***
 
-;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23086 39396 0 0))
+;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23097 7207 0 0))
 ;;; Generated autoloads from lsp-mode.el
 
 (autoload 'lsp-mode "lsp-mode" "\
@@ -79,7 +79,7 @@ Face used for highlighting symbols being written to." :group (quote lsp-faces))
 
 ;;;### (autoloads nil nil ("lsp-common.el" "lsp-flycheck.el" "lsp-imenu.el"
 ;;;;;;  "lsp-mode-pkg.el" "lsp-notifications.el" "lsp-receive.el"
-;;;;;;  "lsp-send.el") (23086 39396 0 0))
+;;;;;;  "lsp-send.el") (23097 7207 0 0))
 
 ;;;***
 

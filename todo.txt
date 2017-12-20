@@ -1,7 +1,9 @@
 -Use <leader>-. and <leader>-, for 'jump to def' and 'back to prev', as they do
  in most modes. IIRC this is not actually straightforward to do, but it would
  sure beat hopping into insert mode and back out all the time when I'm
- navigating.
+ navigating. ...note that in stock evil, 'gd.' will attempt a jump to def, so
+ maybe I just need to get used to normal-mode's C-o binding for jumping back
+ where you last came from?
 
 -Figure out how to make smartparens interact nicely with web-mode. '{{' and
  '{%' don't work right when both are on, but I don't see a way to ban

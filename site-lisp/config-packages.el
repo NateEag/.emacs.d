@@ -566,6 +566,9 @@ The shell command lives in my dotfiles repo."
   :bind (:map diff-mode-map
               ("M-\d" . backward-kill-word)))
 
+(use-package apache-mode
+  :hook (apache-mode . conf-mode-init))
+
 (use-package diffview
   :commands diffview-current)
 

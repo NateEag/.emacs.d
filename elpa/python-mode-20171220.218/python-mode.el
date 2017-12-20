@@ -1793,11 +1793,15 @@ Use the following as the value of this variable:
   "';'.join(module_completion('''%s'''))"
   "See also `py-ipython-module-completion-code'.")
 
-(defcustom py--imenu-create-index-function 'py--imenu-create-index
+(defcustom py--imenu-create-index-function 'py--imenu-index
   "Switch between `py--imenu-create-index-new', which also lists modules variables,  and series 5. index-machine."
-  :type '(choice (const :tag "'py--imenu-create-index-new, also lists modules variables " py--imenu-create-index-new)
+  :type '(choice
+	  (const :tag "'py--imenu-create-index-new, also lists modules variables " py--imenu-create-index-new)
 
-                 (const :tag "py--imenu-create-index, series 5. index-machine" py--imenu-create-index))
+	  (const :tag "py--imenu-create-index, series 5. index-machine" py--imenu-create-index)
+	  (const :tag "py--imenu-index, honor type annotations" py--imenu-index)
+
+	  )
   :tag "py--imenu-create-index-function"
   :group 'python-mode)
 
@@ -13340,14 +13344,27 @@ I.e. switch it from \"True\" to \"False\" and vice versa"
    "\\(class[ \t]+[a-zA-Z0-9_]+\\)"     ; class name
                                         ; possibly multiple superclasses
    "\\([ \t]*\\((\\([a-zA-Z0-9_,. \t\n]\\)*)\\)?\\)"
-   "[ \t]*-?>?[ \t]*"                   ; maybe arrow in whitespace
-   ".*"                              ; maybe return value annotation
-   ;; "[ \t]*"
-   ":"                            ; and the final :
+   "[ \t]*:"                            ; and the final :
    "\\)"                                ; >>classes<<
    )
   "Regexp for Python classes for use with the Imenu package."
   )
+
+;; (defvar py-imenu-method-regexp
+;;   (concat                               ; <<methods and functions>>
+;;    "\\("                                ;
+;;    "^[ \t]*"                            ; new line and maybe whitespace
+;;    "\\(def[ \t]+"                       ; function definitions start with def
+;;    "\\([a-zA-Z0-9_]+\\)"                ;   name is here
+;;                                         ;   function arguments...
+;;    ;;   "[ \t]*(\\([-+/a-zA-Z0-9_=,\* \t\n.()\"'#]*\\))"
+;;    "[ \t]*(\\([^:#]*\\))"
+;;    "\\)"                                ; end of def
+;;    "[ \t]*:"                            ; and then the :
+;;    "\\)"                                ; >>methods and functions<<
+;;    )
+;;   "Regexp for Python methods/functions for use with the Imenu package."
+;;   )
 
 (defvar py-imenu-method-regexp
   (concat                               ; <<methods and functions>>
@@ -13357,13 +13374,16 @@ I.e. switch it from \"True\" to \"False\" and vice versa"
    "\\([a-zA-Z0-9_]+\\)"                ;   name is here
                                         ;   function arguments...
    ;;   "[ \t]*(\\([-+/a-zA-Z0-9_=,\* \t\n.()\"'#]*\\))"
-   "[ \t]*(\\([^:#]*\\))"
+   "[ \t]*(\\(.*\\))"
    "\\)"                                ; end of def
    "[ \t]*:"                            ; and then the :
    "\\)"                                ; >>methods and functions<<
    )
-  "Regexp for Python methods/functions for use with the Imenu package."
-  )
+  "Regexp for Python methods/functions for use with the Imenu package.")
+
+
+
+
 
 (defvar py-imenu-method-no-arg-parens '(2 8)
   "Indices into groups of the Python regexp for use with Imenu.
@@ -13398,22 +13418,10 @@ Used by setting the variable `imenu-generic-expression' to this value.
 Also, see the function \\[py--imenu-create-index] for a better
 alternative for finding the index.")
 
-;; These next two variables are used when searching for the Python
-;; class/definitions. Just saving some time in accessing the
-;; generic-python-expression, really.
-;; (set (make-local-variable 'imenu-generic-expression) 'py-imenu-generic-regexp)
 
 (defvar py-imenu-generic-regexp nil)
 (defvar py-imenu-generic-parens nil)
 
-(defun py-switch-imenu-index-function ()
-  "Switch between series 5. index machine `py--imenu-create-index' and `py--imenu-create-index-new', which also lists modules variables "
-  (interactive)
-  (if (eq py--imenu-create-index-function 'py--imenu-create-index-new)
-      (set (make-local-variable 'py--imenu-create-index-function) 'py--imenu-create-index)
-    (set (make-local-variable 'py--imenu-create-index-function) 'py--imenu-create-index-new))
-  (when py-verbose-p (message "imenu-create-index-function: %s" (prin1-to-string py--imenu-create-index-function)))
-  (funcall imenu-create-index-function))
 
 (defun py--imenu-create-index ()
   "Python interface function for the Imenu package.
@@ -13469,6 +13477,7 @@ of the first definition found."
         cur-indent def-pos
         (class-paren (first py-imenu-generic-parens))
         (def-paren (second py-imenu-generic-parens)))
+    (switch-to-buffer (current-buffer))
     (setq looking-p
           (re-search-forward py-imenu-generic-regexp (point-max) t))
     (while looking-p
@@ -13580,6 +13589,105 @@ of the first definition found."
             index-alist))
     (goto-char orig)
     index-alist))
+
+;; A modified slice from python.el
+(defvar py-imenu-format-item-label-function
+  'py-imenu-format-item-label
+  "Imenu function used to format an item label.
+It must be a function with two arguments: TYPE and NAME.")
+
+(defvar py-imenu-format-parent-item-label-function
+  'py-imenu-format-parent-item-label
+  "Imenu function used to format a parent item label.
+It must be a function with two arguments: TYPE and NAME.")
+
+(defvar py-imenu-format-parent-item-jump-label-function
+  'py-imenu-format-parent-item-jump-label
+  "Imenu function used to format a parent jump item label.
+It must be a function with two arguments: TYPE and NAME.")
+
+(defun py-imenu-format-item-label (type name)
+  "Return Imenu label for single node using TYPE and NAME."
+  (format "%s (%s)" name type))
+
+(defun py-imenu-format-parent-item-label (type name)
+  "Return Imenu label for parent node using TYPE and NAME."
+  (format "%s..." (py-imenu-format-item-label type name)))
+
+;; overengineering?
+(defun py-imenu-format-parent-item-jump-label (type _name)
+  "Return Imenu label for parent node jump using TYPE and NAME."
+  (if (string= type "class")
+      "*class definition*"
+    "*function definition*"))
+
+(defun py-imenu--put-parent (type name pos tree)
+  "Add the parent with TYPE, NAME and POS to TREE."
+  (let* ((label
+         (funcall py-imenu-format-item-label-function type name))
+        ;; (jump-label
+	;; (funcall py-imenu-format-parent-item-jump-label-function type name))
+	(jump-label label
+         ;; (funcall py-imenu-format-parent-item-jump-label-function type name)
+	 )
+	)
+    (if (not tree)
+        (cons label pos)
+      (cons label (cons (cons jump-label pos) tree)))))
+
+(defun py-imenu--build-tree (&optional min-indent prev-indent tree)
+  "Recursively build the tree of nested definitions of a node.
+Arguments MIN-INDENT, PREV-INDENT and TREE are internal and should
+not be passed explicitly unless you know what you are doing."
+  (setq min-indent (or min-indent 0)
+        prev-indent (or prev-indent py-indent-offset))
+  (save-restriction
+    (narrow-to-region (point-min) (point))
+    (let* ((pos
+	    (progn
+	      ;; finds a top-level class
+	      (py-backward-def-or-class)
+	      ;; stops behind the indented form at EOL
+	      (py-forward-def-or-class)
+	      ;; may find an inner def-or-class
+	      (py-backward-def-or-class)))
+	   type
+	   (name (when (and pos (looking-at py-def-or-class-re))
+		   (let ((split (split-string (match-string-no-properties 0))))
+		     (setq type (car split))
+		     (cadr split))))
+	   (label (when name
+		    (funcall py-imenu-format-item-label-function type name)))
+	   (indent (current-indentation))
+	   (children-indent-limit (+ py-indent-offset min-indent)))
+      (cond ((not pos)
+	     ;; Nothing found, probably near to bobp.
+	     nil)
+	    ((<= indent min-indent)
+	     ;; The current indentation points that this is a parent
+	     ;; node, add it to the tree and stop recursing.
+	     (py-imenu--put-parent type name pos tree))
+	    (t
+	     (py-imenu--build-tree
+	      min-indent
+	      indent
+	      (if (<= indent children-indent-limit)
+		  (cons (cons label pos) tree)
+		(cons
+		 (py-imenu--build-tree
+		  prev-indent indent (list (cons label pos)))
+		 tree))))))))
+
+(defun py--imenu-index ()
+  "Return tree Imenu alist for the current Python buffer. "
+  ;; (switch-to-buffer (current-buffer))
+  (save-excursion
+    (goto-char (point-max))
+    (let ((index)
+	  (tree))
+      (while (setq tree (py-imenu--build-tree))
+	(setq index (cons tree index)))
+      index)))
 
 ;; python-components-named-shells
 
@@ -26786,6 +26894,16 @@ See available customizations listed in files variables-python-mode at directory 
                            (list #'autopair-default-handle-action
                                  #'autopair-python-triple-quote-action))))
        (py-autopair-mode-on))
+  (when (and py--imenu-create-index-p
+             (fboundp 'imenu-add-to-menubar)
+             (ignore-errors (require 'imenu)))
+    (setq imenu-create-index-function 'py--imenu-create-index-function)
+    (setq imenu--index-alist (funcall py--imenu-create-index-function))
+    ;; fallback
+    (unless imenu--index-alist
+      (setq imenu--index-alist (py--imenu-create-index-new)))
+    ;; (message "imenu--index-alist: %s" imenu--index-alist)
+    (imenu-add-to-menubar "PyIndex"))
   (when py-trailing-whitespace-smart-delete-p
     (add-hook 'before-save-hook 'delete-trailing-whitespace nil 'local))
   (when py-pdbtrack-do-tracking-p
@@ -26826,16 +26944,7 @@ See available customizations listed in files variables-python-mode at directory 
   (when py-sexp-use-expression-p
     (define-key python-mode-map [(control meta f)] 'py-forward-expression)
     (define-key python-mode-map [(control meta b)] 'py-backward-expression))
-  (when (and py--imenu-create-index-p
-             (fboundp 'imenu-add-to-menubar)
-             (ignore-errors (require 'imenu)))
-    (setq imenu-create-index-function 'py--imenu-create-index-function)
-    (setq imenu--index-alist (funcall py--imenu-create-index-function))
-    ;; fallback
-    (unless imenu--index-alist
-      (setq imenu--index-alist (py--imenu-create-index-new)))
-    ;; (message "imenu--index-alist: %s" imenu--index-alist)
-    (imenu-add-to-menubar "PyIndex"))
+
   (when py-hide-show-minor-mode-p (hs-minor-mode 1))
   (when py-outline-minor-mode-p (outline-minor-mode 1))
   (when (interactive-p)

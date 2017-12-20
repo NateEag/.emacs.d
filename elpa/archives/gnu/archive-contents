@@ -63,7 +63,7 @@
 	((:url . "http://elpa.gnu.org/packages/ampc.html")
 	 (:keywords "ampc" "mpc" "mpd"))])
  (arbitools .
-	    [(0 71)
+	    [(0 91)
 	     ((cl-lib
 	       (0 5)))
 	     "Package for chess tournaments administration" single
@@ -107,6 +107,12 @@
        "tree-based completion" tar
        ((:keywords "point" "location")
 	(:url . "https://github.com/abo-abo/avy"))])
+ (bbdb .
+       [(3 2)
+	((emacs
+	  (24)))
+	"core of BBDB" tar
+	((:url . "http://elpa.gnu.org/packages/bbdb.html"))])
  (beacon .
 	 [(1 3 3)
 	  ((seq

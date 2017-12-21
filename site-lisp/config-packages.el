@@ -159,6 +159,9 @@ The shell command lives in my dotfiles repo."
 
             (add-hook 'flycheck-mode-hook #'my/use-eslint-from-node-modules)))
 
+(use-package ledger-mode
+  :hook (ledger-mode . evil-ledger-mode))
+
 ;; Since emacs 24.4 made revert undoable, this option is perfectly safe and
 ;; pretty convenient.
 (use-package autorevert

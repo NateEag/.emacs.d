@@ -56,6 +56,12 @@
         (interactive (notmuch-search-interactive-region))
         (notmuch-search-tag (list "+deleted" "-unread") beg end)))
 
+    (define-key notmuch-search-mode-map "r"
+      (lambda (&optional beg end)
+        "mark message as an archived receipt"
+        (interactive (notmuch-search-interactive-region))
+        (notmuch-search-tag (list "+receipts" "-unread" "-inbox") beg end)))
+
     (define-key notmuch-search-mode-map "s"
       (lambda (&optional beg end)
         "mark message as spam"

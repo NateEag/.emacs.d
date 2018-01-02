@@ -559,6 +559,15 @@ extending any keys already present."
   (let* ((name-symbol (if (stringp name) (intern name) name))
          (name-string (symbol-name name-symbol)))
 
+    ;; The function `elisp--local-variables' inserts this unbound variable into
+    ;; macro forms to determine the locally bound variables for
+    ;; `elisp-completion-at-point'. It ends up throwing a lot of errors since it
+    ;; can occupy the position of a keyword (or look like a second argument to a
+    ;; keyword that takes one). Deleting it when it's at the top level should be
+    ;; harmless since there should be no locally bound variables to discover
+    ;; here anyway.
+    (setq args (delq 'elisp--witness--lisp args))
+
     ;; Reduce the set of keywords down to its most fundamental expression.
     (setq args (use-package-unalias-keywords name-symbol args))
 
@@ -972,6 +981,9 @@ meaning:
                      (float-time (gethash :preface-secs hash 0))
                      (float-time (gethash :use-package-secs hash 0))))))
      use-package-statistics)
+    (goto-char (point-min))
+    (orgtbl-mode)
+    (orgtbl-ctrl-c-ctrl-c nil)
     (display-buffer (current-buffer))))
 
 (defun use-package-statistics-gather (keyword name after)
@@ -1351,7 +1363,7 @@ no keyword implies `:all'."
             (spec (nth 1 def)))
         (when (or (not face)
                   (not spec)
-                  (> (length arg) 2))
+                  (> (length def) 2))
           (use-package-error error-msg))))))
 
 (defun use-package-handler/:custom-face (name keyword args rest state)

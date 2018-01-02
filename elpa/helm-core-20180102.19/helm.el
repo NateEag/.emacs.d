@@ -703,6 +703,15 @@ so it have only effect when `helm-always-two-windows' is non-nil."
   :type 'float
   :group 'helm)
 
+(defcustom helm-display-buffer-width 60
+  "Frame width when displaying helm-buffer in own frame."
+  :group 'helm
+  :type 'integer)
+
+(defcustom helm-display-buffer-height 20
+  "Frame height when displaying helm-buffer in own frame."
+  :group 'helm
+  :type 'integer)
 
 ;;; Faces
 ;;
@@ -1315,6 +1324,8 @@ Should be set in candidates functions if needed, will be restored
 at end of session.")
 (defvar helm--action-prompt "Select action: ")
 (defvar helm--cycle-resume-iterator nil)
+(defvar helm--buffer-in-new-frame-p nil)
+(defvar helm-initial-frame nil)
 
 ;; Utility: logging
 (defun helm-log (format-string &rest args)
@@ -2144,6 +2155,7 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
   ;; Activate the advice for `tramp-read-passwd' and cua.
   ;; Advices will be available only in >=emacs-24.4, but
   ;; allow compiling without errors on lower emacs.
+  (setq helm-initial-frame (selected-frame))
   (when (fboundp 'advice-add)
     (advice-add 'tramp-read-passwd :around #'helm--advice-tramp-read-passwd)
     (advice-add 'ange-ftp-get-passwd :around #'helm--advice-ange-ftp-get-passwd)
@@ -2216,6 +2228,7 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
       (helm-log "helm-alive-p = %S" (setq helm-alive-p nil))
       (helm--remap-mouse-mode -1)       ; Reenable mouse bindings.
       (setq helm-alive-p nil)
+      (setq helm--buffer-in-new-frame-p nil)
       ;; Reset helm-pattern so that lambda's using it
       ;; before running helm will not start with its old value.
       (setq helm-pattern "")
@@ -2371,6 +2384,9 @@ Don't use this directly, use instead `helm' with the keyword
           (orig-helm-last-frame-or-window-configuration
            helm-last-frame-or-window-configuration)
           (orig-one-window-p helm-onewindow-p))
+      ;; FIXME Using helm-full-frame here allow showing the new
+      ;; helm-buffer in the same window as old helm-buffer, why? 
+      (helm-set-local-variable 'helm-full-frame t)
       (unwind-protect
           (let (helm-current-position
                 helm-current-buffer
@@ -2380,12 +2396,12 @@ Don't use this directly, use instead `helm' with the keyword
                                  "*Helm*"))
                 helm-sources
                 helm-compiled-sources
-                (helm-full-frame t)
                 (enable-recursive-minibuffers t))
             (apply #'helm same-as-helm))
         (with-current-buffer orig-helm-buffer
           (setq helm-alive-p t) ; Nested session set this to nil on exit.
           (setq helm-buffer orig-helm-buffer)
+          (setq helm-full-frame nil)
           (setq helm--prompt orig-helm--prompt)
           (setq helm--in-fuzzy orig-helm--in-fuzzy)
           (helm-initialize-overlays helm-buffer)
@@ -2562,6 +2578,8 @@ Arg ENABLE is the value of `no-other-window' window property."
 
 (defun helm-default-display-buffer (buffer)
   "Default function to display `helm-buffer' BUFFER.
+
+It is the default value of `helm-display-function'
 It uses `switch-to-buffer' or `display-buffer' depending on the
 value of `helm-full-frame' or `helm-split-window-default-side'."
   (if (or (buffer-local-value 'helm-full-frame (get-buffer buffer))
@@ -2578,6 +2596,46 @@ value of `helm-full-frame' or `helm-split-window-default-side'."
     (display-buffer
      buffer `(nil . ((window-height . ,helm-display-buffer-default-height)
                      (window-width  . ,helm-display-buffer-default-width))))
+    (helm-log-run-hook 'helm-window-configuration-hook)))
+
+(defun helm-display-buffer-in-own-frame (buffer)
+  "Display `helm-buffer' in a separate frame.
+
+Function suitable for `helm-display-function',
+`helm-completion-in-region-display-function'
+and/or `helm-show-completion-default-display-function'.
+
+See `helm-display-buffer-height' and `helm-display-buffer-width' to
+configure frame size."
+  (if (not (display-graphic-p))
+      ;; Fallback to default when frames are not usable.
+      (helm-default-display-buffer buffer)
+    (setq helm--buffer-in-new-frame-p t)
+    (let* ((pos (window-absolute-pixel-position))
+           (half-screen-size (/ (display-pixel-height x-display-name) 2))
+           (default-frame-alist
+            `((width . ,helm-display-buffer-width)
+              (height . ,helm-display-buffer-height)
+              (tool-bar-lines . 0)
+              (left . ,(car pos))
+              ;; Try to put frame at the best possible place.
+              ;; Frame should be below point if enough
+              ;; place, otherwise above point and
+              ;; current line should not be hidden
+              ;; by helm frame.
+              (top . ,(if (> (cdr pos) half-screen-size)
+                          ;; Above point
+                          (- (cdr pos) half-screen-size)
+                        ;; Below point
+                        (+ (cdr pos) (frame-char-height))))
+              (title . "Helm")
+              (vertical-scroll-bars . nil)
+              (menu-bar-lines . 0)
+              (fullscreen . nil)
+              (minibuffer . ,(null helm-echo-input-in-header-line))))
+           display-buffer-alist)
+      (display-buffer
+       buffer '(display-buffer-pop-up-frame . nil)))
     (helm-log-run-hook 'helm-window-configuration-hook)))
 
 
@@ -2990,7 +3048,9 @@ WARNING: Do not use this mode yourself, it is internal to helm."
     (remove-hook 'post-command-hook 'helm--maybe-update-keymap)
     (remove-hook 'post-command-hook 'helm--update-header-line)
     ;; Be sure we call this from helm-buffer.
-    (helm-funcall-foreach 'cleanup))
+    (helm-funcall-foreach 'cleanup)
+    (when helm--buffer-in-new-frame-p
+      (delete-frame)))
   (helm-kill-async-processes)
   ;; Remove the temporary hooks added
   ;; by `with-helm-temp-hook' that
@@ -3010,6 +3070,7 @@ WARNING: Do not use this mode yourself, it is internal to helm."
   ;; be a helm buffer.
   (replace-buffer-in-windows helm-buffer)
   (setq helm-alive-p nil)
+  (setq helm--buffer-in-new-frame-p nil)
   ;; This is needed in some cases where last input
   ;; is yielded infinitely in minibuffer after helm session.
   (helm-clean-up-minibuffer))
@@ -5466,12 +5527,17 @@ If N is positive enlarge, if negative narrow."
     (helm-enlarge-window-1 1)))
 (put 'helm-enlarge-window 'helm-only t)
 
-(defun helm-toggle-full-frame ()
+(defun helm-toggle-full-frame (&optional arg)
   "Toggle helm-buffer full-frame view."
-  (interactive)
+  (interactive "p")
+  (cl-assert (null (helm-action-window))
+             nil "Unable to toggle full frame from action window")
+  (when arg ; Called interactively
+    (cl-assert (null helm--buffer-in-new-frame-p)
+               nil "Can't toggle full frame when using helm own frame"))
   (if (or helm-onewindow-p
           (buffer-local-value 'helm-full-frame (get-buffer helm-buffer)))
-      (with-helm-buffer
+      (with-helm-window
         (setq-local helm-full-frame nil)
         (setq helm-onewindow-p nil)
         (let ((split-window-preferred-function
@@ -5625,38 +5691,40 @@ window to maintain visibility."
                             (cdr attr-val)))
              (cursor-in-echo-area t)
              mode-line-in-non-selected-windows)
-        (when (and helm-onewindow-p (null no-split))
-          (helm-toggle-full-frame))
-        (when (eq fn 'ignore)
-          (cl-return-from helm-execute-persistent-action nil))
-        (when source
-          (with-helm-window
-            (save-selected-window
-              (if no-split
-                  (helm-select-persistent-action-window)
-                (helm-select-persistent-action-window
-                 (or split-onewindow helm-onewindow-p)))
-              (helm-log "current-buffer = %S" (current-buffer))
-              (let ((helm-in-persistent-action t)
-                    (same-window-regexps '("."))
-                    display-buffer-function pop-up-windows pop-up-frames
-                    special-display-regexps special-display-buffer-names)
-                (helm-execute-selection-action-1
-                 selection (or fn (helm-get-actions-from-current-source source)) t)
-                (unless (helm-action-window)
-                  (helm-log-run-hook 'helm-after-persistent-action-hook)))
-              ;; A typical case is when a persistent action delete
-              ;; the buffer already displayed in
-              ;; `helm-persistent-action-display-window' and `helm-full-frame'
-              ;; is enabled, we end up with the `helm-buffer'
-              ;; displayed in two windows.
-              (when (and helm-onewindow-p
-                         (> (length (window-list)) 1)
-                         (equal (buffer-name
-                                 (window-buffer
-                                  helm-persistent-action-display-window))
-                                (helm-buffer-get)))
-                (delete-other-windows)))))))))
+        (progn
+          (when (and helm-onewindow-p (null no-split)
+                     (null helm--buffer-in-new-frame-p))
+            (helm-toggle-full-frame))
+          (when (eq fn 'ignore)
+            (cl-return-from helm-execute-persistent-action nil))
+          (when source
+            (with-helm-window
+              (save-selected-window
+                (if no-split
+                    (helm-select-persistent-action-window)
+                  (helm-select-persistent-action-window
+                   (or split-onewindow helm-onewindow-p)))
+                (helm-log "current-buffer = %S" (current-buffer))
+                (let ((helm-in-persistent-action t)
+                      (same-window-regexps '("."))
+                      display-buffer-function pop-up-windows pop-up-frames
+                      special-display-regexps special-display-buffer-names)
+                  (helm-execute-selection-action-1
+                   selection (or fn (helm-get-actions-from-current-source source)) t)
+                  (unless (helm-action-window)
+                    (helm-log-run-hook 'helm-after-persistent-action-hook)))
+                ;; A typical case is when a persistent action delete
+                ;; the buffer already displayed in
+                ;; `helm-persistent-action-display-window' and `helm-full-frame'
+                ;; is enabled, we end up with the `helm-buffer'
+                ;; displayed in two windows.
+                (when (and helm-onewindow-p
+                           (> (length (window-list)) 1)
+                           (equal (buffer-name
+                                   (window-buffer
+                                    helm-persistent-action-display-window))
+                                  (helm-buffer-get)))
+                  (delete-other-windows))))))))))
 (put 'helm-execute-persistent-action 'helm-only t)
 
 (defun helm-persistent-action-display-window (&optional split-onewindow)
@@ -5664,7 +5732,12 @@ window to maintain visibility."
 If SPLIT-ONEWINDOW is non-`nil' window is split in persistent action."
   (with-helm-window
     (setq helm-persistent-action-display-window
-          (cond ((and (window-live-p helm-persistent-action-display-window)
+          (cond ((and helm--buffer-in-new-frame-p
+                      helm-initial-frame)
+                 (select-window
+                  (setq minibuffer-scroll-window
+                        (with-selected-frame helm-initial-frame (selected-window)))))
+                ((and (window-live-p helm-persistent-action-display-window)
                       (not (member helm-persistent-action-display-window
                                    (get-buffer-window-list helm-buffer))))
                  helm-persistent-action-display-window)
@@ -5866,13 +5939,16 @@ is not needed."
                            (or (helm-this-visible-mark)
                                (string= prefix "[?]") ; doesn't match
                                (and filecomp-p
-                                    (or (string-match-p ; autosave or dot files
-                                         "^[.]?#.*#?$\\|[^#]*[.]\\{1,2\\}$" bn)
-                                        ;; We need to test here when not using
-                                        ;; a transformer that put a prefix tag
-                                        ;; before candidate.
-                                        ;; (i.e no [?] prefix on tramp).
-                                        (and remote-p (not (file-exists-p cand))))))
+                                    (or
+                                     ;; autosave files
+                                     (string-match-p "^[.]?#.*#?$" bn)
+                                     ;; dot files
+                                     (member bn '("." ".."))
+                                     ;; We need to test here when not using
+                                     ;; a transformer that put a prefix tag
+                                     ;; before candidate.
+                                     ;; (i.e no [?] prefix on tramp).
+                                     (and remote-p (not (file-exists-p cand))))))
                          (helm-make-visible-mark src cand)))
                      (when (helm-pos-multiline-p)
                        (goto-char

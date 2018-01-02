@@ -1,4 +1,4 @@
-;;; js2-mode.el --- Improved JavaScript editing mode
+;;; js2-mode.el --- Improved JavaScript editing mode -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2009, 2011-2017  Free Software Foundation, Inc.
 
@@ -2375,10 +2375,7 @@ NAME can be a Lisp symbol or string.  SYMBOL is a `js2-symbol'."
                (:include js2-scope)
                (:constructor make-js2-script-node (&key (type js2-SCRIPT)
                                                         (pos (js2-current-token-beg))
-                                                        len
-                                                        ;; FIXME: What are those?
-                                                        var-decls
-                                                        fun-decls)))
+                                                        len)))
   functions   ; Lisp list of nested functions
   regexps     ; Lisp list of (string . flags)
   symbols     ; alist (every symbol gets unique index)
@@ -11095,7 +11092,7 @@ and expression closure style is also supported
 
   { get foo() x, set foo(x) _x = x }
 
-POS is the start position of the `get' or `set' keyword.
+POS is the start position of the `get' or `set' keyword, if any.
 PROP is the `js2-name-node' representing the property name.
 TYPE-STRING is a string `get', `set', `*', or nil, indicating a found keyword."
   (let* ((type (or (cdr (assoc type-string '(("get" . GET)
@@ -11103,7 +11100,7 @@ TYPE-STRING is a string `get', `set', `*', or nil, indicating a found keyword."
                                              ("async" . ASYNC))))
                    'FUNCTION))
          result end
-         (pos (js2-current-token-beg))
+         (pos (or pos (js2-current-token-beg)))
          (_ (js2-must-match js2-LP "msg.no.paren.parms"))
          (fn (js2-parse-function 'FUNCTION_EXPRESSION pos
                                  (string= type-string "*")

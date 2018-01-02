@@ -2,26 +2,27 @@
 
 ;;  Copyright © 2006, 2009–2010, 2012–2016  Russel Winder
 
-;;  Author: Russel Winder <russel@winder.org.uk>, 2006–
-;;	Jim Morris <morris@wolfman.com>, 2009–
-;;	Wilfred Hughes <me@wilfred.me.uk>, 2017–
-;;  Maintainer:  Russel Winder <russel@winder.org.uk>
-;;  Created: 2006-08-01
-;;  Keywords: languages
-;; Package-Requires: ((s "1.12.0"))
+;; Author: Russel Winder <russel@winder.org.uk>, 2006–
+;;    Jim Morris <morris@wolfman.com>, 2009–
+;;    Wilfred Hughes <me@wilfred.me.uk>, 2017–
+;; Maintainer:  Russel Winder <russel@winder.org.uk>
+;; Created: 2006-08-01
+;; Keywords: languages
+;; Version: 2.1
+;; Package-Requires: ((s "1.12.0") (emacs "24.3"))
 
-;;  This program is free software: you can redistribute it and/or modify
-;;  it under the terms of the GNU General Public License as published by
-;;  the Free Software Foundation, either version 3 of the License, or
-;;  (at your option) any later version.
+;; This program is free software: you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation, either version 3 of the License, or
+;; (at your option) any later version.
 ;;
-;;  This program is distributed in the hope that it will be useful,
-;;  but WITHOUT ANY WARRANTY; without even the implied warranty of
-;;  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-;;  GNU General Public License for more details.
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 ;;
-;;  You should have received a copy of the GNU General Public License
-;;  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; You should have received a copy of the GNU General Public License
+;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 ;;; Usage:
 ;; If you install using the packaging system no further set up should be needed. If you install this mode
@@ -30,32 +31,13 @@
 ;;   (autoload 'groovy-mode "groovy-mode" "Major mode for editing Groovy code." t)
 ;;   (add-to-list 'auto-mode-alist '("\\.groovy\\'" . groovy-mode))
 
-;;; Commentary:
-;;  This mode was initially developed using the Java and Awk modes that are part of CC Mode (the 5.31 source
-;;  was used) and C# Mode from Dylan R. E. Moonfire <contact@mfgames.com> (the 0.5.0 source was used).  This
-;;  code may contain some code fragments from those sources that was cut-and-pasted then edited.  All other
-;;  code was newly entered by the author.  Obviously changes have been made since then.
-
 ;;; Bugs:
 ;;  Bug tracking is currently handled using the GitHub issue tracker at
 ;;  https://github.com/Groovy-Emacs-Modes/groovy-emacs-modes/issues
 
-;;; Versions:
-;;  This mode is available on MELPA which tracks the mainline Git repository on GitHub, so there is a rolling release
-;;  system based on commits to the mainline.
-
 ;;; Notes:
 ;;  Should we support GString / template markup ( e.g. `<%' and `%>') specially?
 
-;;;  TODO:
-;;   Issues with this code are managed via the project issue management
-;;   on GitHub: https://github.com/Groovy-Emacs-Modes/groovy-emacs-modes/issues?state=open
-
-;; History:
-;;   History is tracked in the Git repository rather than in this file.
-;;   See https://github.com/Groovy-Emacs-Modes/groovy-emacs-modes/commits/master
-
-;;----------------------------------------------------------------------------
 ;;; Code:
 
 (require 's)

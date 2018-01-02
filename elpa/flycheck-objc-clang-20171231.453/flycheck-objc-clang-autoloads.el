@@ -4,7 +4,7 @@
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
 ;;;### (autoloads nil "flycheck-objc-clang" "flycheck-objc-clang.el"
-;;;;;;  (23012 44742 0 0))
+;;;;;;  (23115 46372 0 0))
 ;;; Generated autoloads from flycheck-objc-clang.el
 
 (autoload 'flycheck-objc-clang-setup "flycheck-objc-clang" "\

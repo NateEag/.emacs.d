@@ -15,7 +15,7 @@ SLIME
 *****
 
 SLIME is the “Superior Lisp Interaction Mode for Emacs”.  This is the
-manual for version 2.20.  (Last updated December 7, 2017)
+manual for version 2.20.  (Last updated December 30, 2017)
 
    Written by Luke Gorrie and others.
 
@@ -1113,7 +1113,8 @@ programs.  For details see the ‘inspect-for-emacs’ generic function in
 
 ‘e’
 ‘M-x slime-inspector-eval’
-     Evaluate an expression in the context of the inspected object.
+     Evaluate an expression in the context of the inspected object.  The
+     variable ‘*’ will be bound to the inspected object.
 
 ‘v’
 ‘M-x slime-inspector-toggle-verbose’
@@ -3152,10 +3153,10 @@ Key (Character) Index
  [index ]
 * Menu:
 
-* .:                                     Inspector.           (line  60)
+* .:                                     Inspector.           (line  61)
 * ::                                     Miscellaneous.       (line  28)
 * <:                                     Frame Navigation.    (line  23)
-* >:                                     Inspector.           (line  64)
+* >:                                     Inspector.           (line  65)
 * > <1>:                                 Frame Navigation.    (line  19)
 * a:                                     Restarts.            (line   8)
 * A:                                     Miscellaneous.       (line  31)
@@ -3256,7 +3257,7 @@ Key (Character) Index
 * d <3>:                                 slime-sprof.         (line  30)
 * e:                                     Inspector.           (line  31)
 * e <1>:                                 Examining frames.    (line  19)
-* g:                                     Inspector.           (line  48)
+* g:                                     Inspector.           (line  49)
 * g <1>:                                 slime-macroexpansion-minor-mode.
                                                               (line  17)
 * g <2>:                                 Multiple connections.
@@ -3264,7 +3265,7 @@ Key (Character) Index
 * g <3>:                                 SLIME Trace Dialog.  (line  82)
 * G:                                     SLIME Trace Dialog.  (line  85)
 * i:                                     Examining frames.    (line  34)
-* l:                                     Inspector.           (line  40)
+* l:                                     Inspector.           (line  41)
 * M-,:                                   Finding definitions. (line  18)
 * M-.:                                   Finding definitions. (line  13)
 * M-C-a:                                 Editing Commands.    (line  38)
@@ -3276,15 +3277,15 @@ Key (Character) Index
 * M-p <1>:                               Frame Navigation.    (line  12)
 * M-p <2>:                               Input Navigation.    (line  18)
 * M-r:                                   Input Navigation.    (line  25)
-* M-RET:                                 Inspector.           (line  68)
+* M-RET:                                 Inspector.           (line  69)
 * M-s:                                   Input Navigation.    (line  25)
 * M-TAB:                                 Completion.          (line  13)
-* n:                                     Inspector.           (line  44)
+* n:                                     Inspector.           (line  45)
 * n <1>:                                 Frame Navigation.    (line   8)
 * o:                                     Stepping.            (line  21)
-* p:                                     Inspector.           (line  56)
+* p:                                     Inspector.           (line  57)
 * p <1>:                                 Frame Navigation.    (line   8)
-* q:                                     Inspector.           (line  52)
+* q:                                     Inspector.           (line  53)
 * q <1>:                                 Restarts.            (line  12)
 * q <2>:                                 slime-macroexpansion-minor-mode.
                                                               (line  22)
@@ -3303,14 +3304,14 @@ Key (Character) Index
 * RET <4>:                               slime-sprof.         (line  24)
 * s:                                     Stepping.            (line  11)
 * s <1>:                                 slime-sprof.         (line  33)
-* S-TAB:                                 Inspector.           (line  73)
+* S-TAB:                                 Inspector.           (line  74)
 * Space:                                 Xref buffer commands.
                                                               (line  15)
 * SPC:                                   Documentation.       (line  12)
 * t:                                     Examining frames.    (line  10)
-* TAB:                                   Inspector.           (line  73)
+* TAB:                                   Inspector.           (line  74)
 * TAB <1>:                               REPL commands.       (line  20)
-* v:                                     Inspector.           (line  35)
+* v:                                     Inspector.           (line  36)
 * v <1>:                                 Examining frames.    (line  14)
 * v <2>:                                 slime-sprof.         (line  27)
 * x:                                     Stepping.            (line  17)
@@ -3419,20 +3420,20 @@ Command and Function Index
 * slime-insert-balanced-comments:        Editing Commands.    (line  29)
 * slime-inspect:                         Inspector.           (line  16)
 * slime-inspect-presentation-at-point:   Presentations.       (line 111)
-* slime-inspector-copy-down:             Inspector.           (line  68)
+* slime-inspector-copy-down:             Inspector.           (line  69)
 * slime-inspector-describe:              Inspector.           (line  27)
 * slime-inspector-eval:                  Inspector.           (line  31)
-* slime-inspector-fetch-all:             Inspector.           (line  64)
-* slime-inspector-next:                  Inspector.           (line  44)
-* slime-inspector-next-inspectable-object: Inspector.         (line  73)
+* slime-inspector-fetch-all:             Inspector.           (line  65)
+* slime-inspector-next:                  Inspector.           (line  45)
+* slime-inspector-next-inspectable-object: Inspector.         (line  74)
 * slime-inspector-operate-on-point:      Inspector.           (line  22)
-* slime-inspector-pop:                   Inspector.           (line  40)
-* slime-inspector-pprint:                Inspector.           (line  56)
-* slime-inspector-previous-inspectable-object: Inspector.     (line  73)
-* slime-inspector-quit:                  Inspector.           (line  52)
-* slime-inspector-reinspect:             Inspector.           (line  48)
-* slime-inspector-show-source:           Inspector.           (line  60)
-* slime-inspector-toggle-verbose:        Inspector.           (line  35)
+* slime-inspector-pop:                   Inspector.           (line  41)
+* slime-inspector-pprint:                Inspector.           (line  57)
+* slime-inspector-previous-inspectable-object: Inspector.     (line  74)
+* slime-inspector-quit:                  Inspector.           (line  53)
+* slime-inspector-reinspect:             Inspector.           (line  49)
+* slime-inspector-show-source:           Inspector.           (line  61)
+* slime-inspector-toggle-verbose:        Inspector.           (line  36)
 * slime-interactive-eval:                Evaluation.          (line  33)
 * slime-interactive-eval <1>:            Miscellaneous.       (line  28)
 * slime-interrupt:                       Recovery.            (line   8)
@@ -3613,112 +3614,112 @@ Variable and Concept Index
 
 Tag Table:
 Node: Top285
-Node: Introduction2527
-Node: Getting started3808
-Node: Platforms4082
-Node: Downloading5280
-Node: Git5781
-Node: Git Incantations6799
-Node: Installation7329
-Node: Running8595
-Node: Setup Tuning9138
-Node: Basic customization9669
-Node: Multiple Lisps10735
-Node: Loading Swank faster13229
-Ref: init-example14322
-Node: SLIME mode14611
-Node: User-interface conventions15209
-Node: Temporary buffers15618
-Node: Inferior-lisp17071
-Node: Multithreading17896
-Node: Key bindings19141
-Ref: describe-key20607
-Ref: describe-bindings20750
-Ref: describe-mode20893
-Ref: view-lossage21077
-Node: Evaluation22268
-Node: Compilation24399
-Node: Completion27158
-Node: Finding definitions27789
-Node: Documentation28929
-Node: Cross-reference31096
-Node: Xref buffer commands32833
-Node: Macro-expansion33392
-Node: Disassembly34412
-Node: Recovery34957
-Node: Inspector35726
-Node: Profiling37898
-Node: Other38695
-Node: Semantic indentation38948
-Ref: Semantic indentation-Footnote-141079
-Node: Reader conditionals41174
-Node: Debugger41525
-Node: Examining frames42165
-Node: Restarts43297
-Ref: sldb-quit43511
-Node: Frame Navigation43938
-Node: Stepping44638
-Node: Miscellaneous45310
-Node: Misc46249
-Node: slime-selector46436
-Node: slime-macroexpansion-minor-mode47818
-Node: Multiple connections48673
-Node: Customization51733
-Node: Emacs-side customization51908
-Ref: slime-completion-at-point-functions52601
-Ref: slime-net-coding-system53492
-Node: Hooks54165
-Ref: slime-connected-hook54530
-Node: Lisp-side55014
-Node: Communication style55424
-Node: Other configurables57982
-Ref: *SLDB-QUIT-RESTART*59219
-Node: Tips and Tricks61810
-Node: Connecting to a remote lisp62035
-Node: Setting up the lisp image62740
-Ref: Setting up the lisp image-Footnote-164628
-Ref: Setting up the lisp image-Footnote-264708
-Node: Setting up Emacs64884
-Ref: Setting up Emacs-Footnote-165720
-Node: Setting up pathname translations65900
-Node: Global IO Redirection67541
-Node: Auto-SLIME68629
-Node: Contributed Packages69050
-Node: Loading Contribs69799
-Node: REPL72118
-Node: REPL commands73532
-Node: Input Navigation74693
-Node: Shortcuts76217
-Node: slime-mrepl77713
-Node: inferior-slime-mode78221
-Node: Compound Completion78926
-Ref: slime-complete-symbol*79103
-Ref: Compound Completion-Footnote-182355
-Node: Fuzzy Completion82479
-Ref: slime-fuzzy-complete-symbol82732
-Node: slime-autodoc-mode86024
-Node: ASDF87442
-Node: Banner89400
-Node: Editing Commands89846
-Node: Fancy Inspector91473
-Node: Presentations92204
-Ref: Presentations-Footnote-198760
-Node: Typeout frames99001
-Node: TRAMP100125
-Node: Documentation Links100401
-Node: Xref and Class Browser100826
-Node: Highlight Edits101418
-Node: Scratch Buffer101890
-Ref: slime-scratch102052
-Node: SLIME Trace Dialog102707
-Node: slime-sprof106957
-Node: SLIME Enhanced M-.107945
-Node: slime-fancy108327
-Node: Quicklisp108603
-Node: Credits109131
-Node: Key Index113887
-Node: Command Index125750
-Node: Variable Index141065
+Node: Introduction2528
+Node: Getting started3809
+Node: Platforms4083
+Node: Downloading5281
+Node: Git5782
+Node: Git Incantations6800
+Node: Installation7330
+Node: Running8596
+Node: Setup Tuning9139
+Node: Basic customization9670
+Node: Multiple Lisps10736
+Node: Loading Swank faster13230
+Ref: init-example14323
+Node: SLIME mode14612
+Node: User-interface conventions15210
+Node: Temporary buffers15619
+Node: Inferior-lisp17072
+Node: Multithreading17897
+Node: Key bindings19142
+Ref: describe-key20608
+Ref: describe-bindings20751
+Ref: describe-mode20894
+Ref: view-lossage21078
+Node: Evaluation22269
+Node: Compilation24400
+Node: Completion27159
+Node: Finding definitions27790
+Node: Documentation28930
+Node: Cross-reference31097
+Node: Xref buffer commands32834
+Node: Macro-expansion33393
+Node: Disassembly34413
+Node: Recovery34958
+Node: Inspector35727
+Node: Profiling37965
+Node: Other38762
+Node: Semantic indentation39015
+Ref: Semantic indentation-Footnote-141146
+Node: Reader conditionals41241
+Node: Debugger41592
+Node: Examining frames42232
+Node: Restarts43364
+Ref: sldb-quit43578
+Node: Frame Navigation44005
+Node: Stepping44705
+Node: Miscellaneous45377
+Node: Misc46316
+Node: slime-selector46503
+Node: slime-macroexpansion-minor-mode47885
+Node: Multiple connections48740
+Node: Customization51800
+Node: Emacs-side customization51975
+Ref: slime-completion-at-point-functions52668
+Ref: slime-net-coding-system53559
+Node: Hooks54232
+Ref: slime-connected-hook54597
+Node: Lisp-side55081
+Node: Communication style55491
+Node: Other configurables58049
+Ref: *SLDB-QUIT-RESTART*59286
+Node: Tips and Tricks61877
+Node: Connecting to a remote lisp62102
+Node: Setting up the lisp image62807
+Ref: Setting up the lisp image-Footnote-164695
+Ref: Setting up the lisp image-Footnote-264775
+Node: Setting up Emacs64951
+Ref: Setting up Emacs-Footnote-165787
+Node: Setting up pathname translations65967
+Node: Global IO Redirection67608
+Node: Auto-SLIME68696
+Node: Contributed Packages69117
+Node: Loading Contribs69866
+Node: REPL72185
+Node: REPL commands73599
+Node: Input Navigation74760
+Node: Shortcuts76284
+Node: slime-mrepl77780
+Node: inferior-slime-mode78288
+Node: Compound Completion78993
+Ref: slime-complete-symbol*79170
+Ref: Compound Completion-Footnote-182422
+Node: Fuzzy Completion82546
+Ref: slime-fuzzy-complete-symbol82799
+Node: slime-autodoc-mode86091
+Node: ASDF87509
+Node: Banner89467
+Node: Editing Commands89913
+Node: Fancy Inspector91540
+Node: Presentations92271
+Ref: Presentations-Footnote-198827
+Node: Typeout frames99068
+Node: TRAMP100192
+Node: Documentation Links100468
+Node: Xref and Class Browser100893
+Node: Highlight Edits101485
+Node: Scratch Buffer101957
+Ref: slime-scratch102119
+Node: SLIME Trace Dialog102774
+Node: slime-sprof107024
+Node: SLIME Enhanced M-.108012
+Node: slime-fancy108394
+Node: Quicklisp108670
+Node: Credits109198
+Node: Key Index113954
+Node: Command Index125817
+Node: Variable Index141132
 
 End Tag Table
 

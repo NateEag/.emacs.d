@@ -88,6 +88,7 @@ to use server installed via `omnisharp-install-server`.
                             "OmniServer" ; process name
                             "OmniServer" ; buffer name
                             server-executable-path
+                            "--encoding" "utf-8"
                             "--stdio" "-s" (omnisharp--path-to-server (expand-file-name path-to-project)))))
              (buffer-disable-undo (process-buffer omnisharp-process))
              (set-process-filter omnisharp-process 'omnisharp--handle-server-message)
@@ -356,7 +357,8 @@ have not been returned before."
   "Checks if the server for the project of the buffer is running
 and attempts to start it if it is not."
 
-  (unless (omnisharp--buffer-contains-metadata)
+  (unless (or (omnisharp--buffer-contains-metadata)
+              (not (buffer-file-name)))
     (let* ((filename (buffer-file-name))
            (server-project-root (if omnisharp--server-info (cdr (assoc :project-root omnisharp--server-info)) nil))
            (filename-in-scope (and server-project-root

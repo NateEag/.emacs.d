@@ -38,14 +38,7 @@
   :group 'helm)
 
 (defcustom helm-turn-on-show-completion t
-  "Display candidate in buffer while moving selection when non--nil."
-  :group 'helm-elisp
-  :type  'boolean)
-
-(defcustom helm-show-completion-use-special-display t
-  "A special display will be used in Lisp completion if non--nil.
-All functions that are wrapped in macro `with-helm-show-completion'
-will be affected."
+  "Display candidate in `current-buffer' while moving selection when non--nil."
   :group 'helm-elisp
   :type  'boolean)
 
@@ -101,6 +94,14 @@ fuzzy completion is not available in `completion-at-point'."
   :group 'helm-elisp
   :type '(repeat (choice symbol)))
 
+(defcustom helm-show-completion-display-function
+  #'helm-show-completion-default-display-function
+  "The function used to display helm completion buffer.
+
+This function is used by `with-helm-show-completion', when nil
+fallback to `helm-default-display-buffer'."
+  :group 'helm-elisp
+  :type 'function)
 
 ;;; Faces
 ;;
@@ -154,7 +155,7 @@ fuzzy completion is not available in `completion-at-point'."
   (overlay-put helm-show-completion-overlay
                'face 'helm-lisp-show-completion))
 
-(defun helm-show-completion-display-function (buffer &rest _args)
+(defun helm-show-completion-default-display-function (buffer &rest _args)
   "A special resized helm window is used depending on position in BUFFER."
   (with-selected-window (selected-window)
     (if (window-dedicated-p)
@@ -192,9 +193,8 @@ If `helm-turn-on-show-completion' is nil do nothing."
                   helm-reuse-last-window-split-state)
               (helm-set-local-variable
                'helm-display-function
-               (if helm-show-completion-use-special-display
-                   'helm-show-completion-display-function
-                 'helm-default-display-buffer))
+               (or helm-show-completion-display-function
+                   'helm-default-display-buffer))
               (helm-show-completion-init-overlay ,beg ,end)
               ,@body)
           ,@body)
@@ -311,7 +311,10 @@ Return a cons \(beg . end\)."
           (helm
            :sources (helm-build-in-buffer-source "Lisp completion"
                       :data helm-lisp-completion--cache
-                      :persistent-action 'helm-lisp-completion-persistent-action
+                      :persistent-action `(helm-lisp-completion-persistent-action .
+                                           ,(and (eq helm-elisp-help-function
+                                                     'helm-elisp-show-doc-modeline)
+                                                 'never-split))
                       :nomark t
                       :match-part (lambda (c) (car (split-string c)))
                       :fuzzy-match helm-lisp-fuzzy-completion

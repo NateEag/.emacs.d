@@ -67,11 +67,8 @@
               (if (string-match-p "[^/]$" f)
                   ;; files: e.g .o => \\.o$
                   (concat rgx "$")
-                ;; directories: e.g .git/ => \\.git/\\|\\.git$
-                (format "%s\\|%s"
-                        rgx
-                        (concat (substring
-                                 rgx 0 (1- (length rgx))) "$")))))
+                ;; directories: e.g .git/ => \\.git/?$
+                (concat rgx "?$"))))
           completion-ignored-extensions)
   "A list of regexps matching boring files.
 
@@ -1871,9 +1868,9 @@ or when `helm-pattern' is equal to \"~/\"."
                 (string-match-p "/\\'" helm-pattern))
            (helm-ff-recursive-dirs helm-pattern)
            (with-helm-window (helm-check-minibuffer-input)))
-          ((and (string-match
-                 "\\(?:\\`~/\\)\\|/?\\$.*/\\|/\\./\\|/\\.\\./\\|/~.*/\\|//\\|\\(/[[:alpha:]]:/\\|\\s\\+\\)"
-                 helm-pattern))
+          ((string-match
+            "\\(?:\\`~/\\)\\|/?\\$.*/\\|/\\./\\|/\\.\\./\\|/~.*/\\|//\\|\\(/[[:alpha:]]:/\\|\\s\\+\\)"
+            helm-pattern)
            (let* ((match (match-string 0 helm-pattern))
                   (input (cond ((string= match "/./")
                                 (expand-file-name default-directory))
@@ -2083,6 +2080,9 @@ purpose."
            (substitute-in-file-name pattern))
           ((string= pattern "") "")
           ((string-match "\\`[.]\\{1,2\\}/\\'" pattern)
+           (expand-file-name pattern))
+          ;; Directories ending by a dot (issue #1940)
+          ((string-match "[^/][.]/\\'" pattern)
            (expand-file-name pattern))
           ((string-match ".*\\(~?/?[.]\\{1\\}/\\)\\'" pattern)
            (expand-file-name default-directory))
@@ -2471,7 +2471,7 @@ Never kill `helm-current-buffer'.
 Never kill buffer modified.
 This is called normally on third hit of \
 \\<helm-map>\\[helm-execute-persistent-action]
-in `helm-find-files-persistent-action'."
+in `helm-find-files-persistent-action-if'."
   (let* ((buf      (get-file-buffer candidate))
          (buf-name (buffer-name buf))
          (win (get-buffer-window buf))
@@ -2552,8 +2552,7 @@ Return candidates prefixed with basename of `helm-input' first."
   ;; Prevent user doing silly thing like
   ;; adding the dotted files to boring regexps (#924).
   (and (not (string-match "\\.$" file))
-       (cl-loop for r in helm-boring-file-regexp-list
-                thereis (string-match r file))))
+       (string-match (mapconcat 'identity helm-boring-file-regexp-list "\\|") file)))
 
 (defun helm-ff-filter-candidate-one-by-one (file)
   "`filter-one-by-one' Transformer function for `helm-source-find-files'."
@@ -3048,7 +3047,14 @@ Use it for non--interactive calls of `helm-find-files'."
     (helm-ff-setup-update-hook)
     (unwind-protect
          (helm :sources 'helm-source-find-files
-               :input fname
+               ;; When `helm-find-files-1' is used directly from lisp
+               ;; and FNAME is an abbreviated path, for some reasons
+               ;; `helm-update' is called many times before resolving
+               ;; the abbreviated path so ensure it is expanded
+               ;; here (Issue #1939) but only on abbreviated paths,
+               ;; url's should not be expanded.
+               :input (if (string-match-p "\\`~" fname)
+                          (expand-file-name fname) fname)
                :case-fold-search helm-file-name-case-fold-search
                :preselect preselect
                :ff-transformer-show-only-basename

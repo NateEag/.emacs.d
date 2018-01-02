@@ -156,6 +156,13 @@ So you should not change the default setting of this variable unless you
 know what you are doing."
   :group 'helm-mode
   :type 'boolean)
+
+(defcustom helm-completion-in-region-display-function nil
+  "Function used to display helm window in `completion-in-region'.
+
+Default is `helm-display-function' value."
+  :group 'helm-mode
+  :type 'function)
 
 (defvar helm-comp-read-map
   (let ((map (make-sparse-keymap)))
@@ -860,7 +867,7 @@ See documentation of `completing-read' and `all-completions' for details."
        (candidate-number-limit helm-ff-candidate-number-limit)
        nomark
        (alistp t)
-       (persistent-action 'helm-find-files-persistent-action)
+       (persistent-action-if 'helm-find-files-persistent-action-if)
        (persistent-help "Hit1 Expand Candidate, Hit2 or (C-u) Find file")
        (mode-line helm-read-file-name-mode-line-string))
   "Read a file name with helm completion.
@@ -894,7 +901,7 @@ Keys description:
 
 - ALISTP: Don't use `all-completions' in history (take effect only on history).
 
-- PERSISTENT-ACTION: a persistent action function.
+- PERSISTENT-ACTION-IF: a persistent if action function.
 
 - PERSISTENT-HELP: persistent help message.
 
@@ -920,7 +927,6 @@ Keys description:
          (helm-ff-auto-update-initial-value
           (and helm-ff-auto-update-initial-value
                (not (minibuffer-window-active-p (minibuffer-window)))))
-         helm-full-frame
          helm-follow-mode-persistent
          (helm-ff-fuzzy-matching
           (and fuzzy
@@ -958,7 +964,7 @@ Keys description:
              :candidates hist
              :nohighlight t
              :fuzzy-match fuzzy
-             :persistent-action persistent-action
+             :persistent-action-if persistent-action-if
              :persistent-help persistent-help
              :keymap cmap
              :nomark nomark
@@ -990,7 +996,7 @@ Keys description:
                            (helm-find-files-get-candidates must-match))))
              :filtered-candidate-transformer 'helm-ff-sort-candidates
              :filter-one-by-one 'helm-ff-filter-candidate-one-by-one
-             :persistent-action persistent-action
+             :persistent-action-if persistent-action-if
              :persistent-help persistent-help
              :volatile t
              :keymap cmap
@@ -1008,6 +1014,7 @@ Keys description:
                   :case-fold-search case-fold
                   :default default
                   :buffer buffer
+                  :full-frame nil
                   :preselect preselect)))
     (or
      (cond ((and result (stringp result)
@@ -1165,7 +1172,9 @@ Can be used as value for `completion-in-region-function'."
      'lisp--local-variables
      :around #'helm-mode--advice-lisp--local-variables)
     (unwind-protect
-        (let* ((enable-recursive-minibuffers t)
+        (let* ((helm-display-function (or helm-completion-in-region-display-function
+                                          helm-display-function))
+               (enable-recursive-minibuffers t)
                (input (buffer-substring-no-properties start end))
                (current-command (or (helm-this-command) this-command))
                (crm (eq current-command 'crm-complete))

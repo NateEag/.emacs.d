@@ -10861,11 +10861,17 @@ See ‘py-if-name-main-permission-p’"
 Takes STRG
 Avoid empty lines at the beginning."
   ;; (when py-debug-p (message "py--fix-start:"))
-  (with-temp-buffer
-    (python-mode)
-    (let (erg)
+  (let (py--imenu-create-index-p
+	py-guess-py-install-directory-p
+	py-autopair-mode
+	py-complete-function
+	py-load-pymacs-p
+	py-load-skeletons-p
+	erg)
+    (with-temp-buffer
+      (python-mode)
       (insert strg)
-      (goto-char 1)
+      (goto-char (point-min)) 
       (when (< 0 (setq erg (skip-chars-forward " \t\r\n\f" (line-end-position))))
 	(dotimes (_ erg)
 	  (indent-rigidly-left (point-min) (point-max))))
@@ -12929,7 +12935,6 @@ Assumes vars are defined in current source buffer"
             (message "don't see a state for %s" (prin1-to-string name))))
         (forward-line 1))
       (setq variableslist (nreverse variableslist))
-      ;; (with-temp-buffer
       (set-buffer (get-buffer-create "State-of-Python-mode-variables.org"))
       (erase-buffer)
       ;; org
@@ -24366,7 +24371,7 @@ Returns `t' if point was moved"
               (forward-comment 99999)))
   ;; forward-comment fails sometimes
   (and (eq pos (point)) (prog1 (forward-line 1) (back-to-indentation))
-       (while (member (char-after) (list comment-start 10))(forward-line 1)(back-to-indentation))))
+       (while (member (char-after) (list  (string-to-char comment-start) 10))(forward-line 1)(back-to-indentation))))
 
 (defun py--skip-to-comment-or-semicolon (done)
   "Returns position if comment or semicolon found. "
@@ -26861,9 +26866,6 @@ See available customizations listed in files variables-python-mode at directory 
 	     (concat "\f\\|^[ \t]*$\\|^[ \t]*" comment-start "[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
 	(set (make-local-variable 'paragraph-separate)
 	     (concat "\f\\|^[ \t]*$\\|^[ \t]*" comment-start "[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$")))
-    ;; (progn
-    ;;   (set (make-local-variable 'paragraph-separate) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$")
-    ;;   (set (make-local-variable 'paragraph-start) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
     (set (make-local-variable 'paragraph-separate) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$")
     (set (make-local-variable 'paragraph-start) "\f\\|^[ \t]*$\\|^[ \t]*#[ \t]*$\\|^[ \t\f]*:[[:alpha:]]+ [[:alpha:]]+:.+$"))
   (set (make-local-variable 'comment-column) 40)

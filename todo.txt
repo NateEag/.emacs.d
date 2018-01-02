@@ -432,6 +432,8 @@
  Figuring out what's wrong here probably means a serious debugging session. It
  probably can't hurt to file a bug report first, though.
 
+-Configure lsp-ui package to taste. I've installed it.
+
 -Consider integrating lsp-mode with php-auto-yasnippet? May or may not be worth
  doing.
 

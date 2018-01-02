@@ -552,6 +552,9 @@
 -Think about whether I should pull ropemode back into python-mode; I never
  really used the refactoring tools, but maybe I should.
 
+-Integrate elpygen into my python development workflow? I've installed it but
+ haven't thought about setup at all.
+
 -Set up ispell to use run-together words *outside* of comments and strings in
  programming modes. It results in tons of noise everywhere else.
 

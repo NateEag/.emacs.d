@@ -18,7 +18,7 @@
 (require 'xref)
 (require 'subr-x)
 (require 'widget)
-(require 'lsp-receive)
+(require 'lsp-io)
 (require 'lsp-common)
 (require 'pcase)
 (require 'inline)
@@ -27,10 +27,12 @@
 
 (cl-defstruct lsp--client
   (language-id nil :read-only t)
-  ;; function to send a message and waits for the next message from the server
+  
+  ;; send-async and send-sync are unused field, but haven't been
+  ;; removed so as to avoid breaking byte-compiled clients.
   (send-sync nil :read-only t)
-  ;; function to send a message and not wait for the next response
   (send-async nil :read-only t)
+
   (type nil :read-only t)
   (new-connection nil :read-only t)
   (get-root nil :read-only t)
@@ -79,6 +81,17 @@ indexed by the project root directory.
 
 This is populated when the user declines to open a workspace
 for a file in the workspace.")
+
+(defcustom lsp-render-markdown-markup-content nil
+  "Function to be use for rendering MarkupContent.
+
+It should take two arguments - a string denoting the type of markup content
+and a string containing the text to be rendered.  The returned value should
+be a string that may be fontified/propertized.
+
+When nil, MarkupContent is rendered as plain text."
+  :type 'function
+  :group 'lsp-mode)
 
 (defcustom lsp-before-initialize-hook nil
   "List of functions to be called before a Language Server has been initialized
@@ -246,11 +259,12 @@ initialized. When set this turns off use of
          (body (json-encode params)))
     (format "Content-Length: %d\r\n\r\n%s" (string-bytes body) body)))
 
-(defun lsp--send-notification (body)
+(define-inline lsp--send-notification (body)
   "Send BODY as a notification to the language server."
-  (funcall (lsp--client-send-async (lsp--workspace-client lsp--cur-workspace))
-           (lsp--make-message body)
-           (lsp--workspace-proc lsp--cur-workspace)))
+  (inline-quote
+    (lsp--send-no-wait
+      (lsp--make-message ,body)
+      (lsp--workspace-proc lsp--cur-workspace))))
 
 (define-inline lsp--cur-workspace-check ()
   (inline-quote (cl-assert lsp--cur-workspace nil
@@ -262,18 +276,13 @@ initialized. When set this turns off use of
 (defun lsp--send-request (body &optional no-wait)
   "Send BODY as a request to the language server, get the response.
 If NO-WAIT is non-nil, don't synchronously wait for a response."
-  ;; lsp-send-sync should loop until lsp--from-server returns nil
-  ;; in the case of Rust Language Server, this can be done with
-  ;; 'accept-process-output`.'
-  (let* ((client (lsp--workspace-client lsp--cur-workspace))
-         (parser (lsp--cur-parser))
-         (send-func (if no-wait
-                        (lsp--client-send-async client)
-                      (lsp--client-send-sync client))))
+  (let* ((parser (lsp--cur-parser))
+          (message (lsp--make-message body))
+          (process (lsp--workspace-proc lsp--cur-workspace)))
     (setf (lsp--parser-waiting-for-response parser) (not no-wait))
-    (funcall send-func
-             (lsp--make-message body)
-             (lsp--workspace-proc lsp--cur-workspace))
+    (if no-wait
+      (lsp--send-no-wait message process)
+      (lsp--send-wait message process))
     (when (not no-wait)
       (prog1 (lsp--parser-response-result parser)
         (setf (lsp--parser-response-result parser) nil)))))
@@ -285,7 +294,7 @@ the response recevied from the server asynchronously."
         (id (plist-get body :id)))
     (cl-assert id nil "body missing id field")
     (puthash id callback (lsp--client-response-handlers client))
-    (funcall (lsp--client-send-async client) (lsp--make-message body)
+    (lsp--send-no-wait (lsp--make-message body)
       (lsp--workspace-proc lsp--cur-workspace))
     body))
 
@@ -430,11 +439,13 @@ Return the merged plist."
 
 (defun lsp--client-workspace-capabilities ()
   "Client Workspace capabilities according to LSP."
-  `(:executeCommand (:dynamicRegistration t)))
+  `(:applyEdit t
+     :executeCommand (:dynamicRegistration t)))
 
 (defun lsp--client-textdocument-capabilities ()
   "Client Text document capabilities according to LSP."
-  `(:synchronization (:willSave t :didSave t)))
+  `(:synchronization (:willSave t :didSave t)
+     :symbol (:symbolKind (:valueSet ,(cl-loop for kind from 1 to 25 collect kind)))))
 
 (defun lsp-register-client-capabilities (package-name caps)
   "Register extra client capabilities for the current workspace.
@@ -482,16 +493,13 @@ registered client capabilities by calling
 
 (defun lsp--set-sync-method ()
   (let* ((sync (gethash "textDocumentSync" (lsp--server-capabilities)))
-         (kind (if (hash-table-p sync) (gethash "change" sync) sync))
-         (method (alist-get kind lsp--sync-methods))
-         )
+          (kind (if (hash-table-p sync) (gethash "change" sync) sync))
+          (method (alist-get kind lsp--sync-methods)))
     (setq lsp--server-sync-method (or lsp-document-sync-method
-                                      method))))
+                                    method))))
 
 (defun lsp--workspace-apply-edit-handler (_workspace params)
-  (lsp--apply-workspace-edits (gethash "edit" params))
-  ;; TODO: send reply
-  )
+  (lsp--apply-workspace-edit (gethash "edit" params)))
 
 (defun lsp--make-sentinel (buffer)
   (lambda (_p exit-str)
@@ -710,25 +718,59 @@ interface Range {
   "Return the end line for a given LSP range, in LSP coordinates"
   (inline-quote (plist-get (plist-get ,range :end) :line)))
 
-(defun lsp--apply-workspace-edits (edits)
-  (cl-letf (((lsp--workspace-change-timer-disabled lsp--cur-workspace) t))
-    (maphash (lambda (key value)
-               (lsp--apply-workspace-edit key value))
-             (gethash "changes" edits))))
+(defun lsp--apply-workspace-edit (edit)
+  "Apply the WorkspaceEdit object EDIT.
 
-(defun lsp--apply-workspace-edit (uri edits)
-  (let ((filename (string-remove-prefix lsp--uri-file-prefix uri)))
-    ;; TODO: What if the buffer has been modified?
-    ;;       Although, for incremental sync that should be fine
-    (when (not (find-buffer-visiting filename))
-      (progn (find-file filename)
-             (lsp--text-document-did-open)))
-    (lsp--apply-text-edits edits)))
+interface WorkspaceEdit {
+	changes?: { [uri: string]: TextEdit[]; };
+	documentChanges?: TextDocumentEdit[];
+}"
+  (let ((changes (gethash "changes" edit))
+         (document-changes (gethash "documentChanges" edit)))
+    (if document-changes
+      (mapc #'lsp--apply-text-document-edit document-changes)
 
-(defun lsp--apply-text-edits (edits)
+      (when (hash-table-p changes)
+        (maphash
+          (lambda (uri text-edits)
+            (let ((filename (string-remove-prefix lsp--uri-file-prefix uri)))
+              (with-current-buffer (find-file-noselect filename)
+                (lsp--apply-text-edits text-edits))))
+          changes)))))
+
+(defun lsp--apply-text-document-edit (edit)
+  "Apply the TextDocumentEdit object EDIT.
+If the file is not being visited by any buffer, it is opened with
+`find-file-noselect'.
+Because lsp-mode does not store previous document versions, the edit is only
+applied if the version of the textDocument matches the version of the
+corresponding file.
+
+interface TextDocumentEdit {
+	textDocument: VersionedTextDocumentIdentifier;
+	edits: TextEdit[];
+}"
+  (let* ((ident (gethash "textDocument" edit))
+          (filename (string-remove-prefix lsp--uri-file-prefix (gethash "uri" ident)))
+          (version (gethash "version" ident)))
+    (with-current-buffer (find-file-noselect filename)
+      (when (= version (lsp--cur-file-version))
+        (lsp--apply-text-edits (gethash "edits" edit))))))
+
+(defun lsp--text-edit-sort-predicate (e1 e2)
+  (let ((start1 (lsp--position-to-point (gethash "start" (gethash "range" e1))))
+          (start2 (lsp--position-to-point (gethash "start" (gethash "range" e2)))))
+    (if (= start1 start2)
+      (let ((end1 (lsp--position-to-point (gethash "end" (gethash "range" e1))))
+             (end2 (lsp--position-to-point (gethash "end" (gethash "range" e2)))))
+        (> end1 end2))
+
+      (> start1 start2))))
+
+(define-inline lsp--apply-text-edits (edits)
   "Apply the edits described in the TextEdit[] object in EDITS."
-  (dolist (edit edits)
-    (lsp--apply-text-edit edit)))
+  (inline-quote
+    (mapc #'lsp--apply-text-edit (sort ,edits #'lsp--text-edit-sort-predicate))))
 
 (defun lsp--apply-text-edit (text-edit)
   "Apply the edits described in the TextEdit object in TEXT-EDIT."
@@ -884,18 +926,19 @@ Added to `after-change-functions'."
   ;; So (47 47 7) means delete 7 chars starting at pos 47
   ;; (message "lsp-on-change:(start,end,length)=(%s,%s,%s)" start end length)
   ;; (message "lsp-on-change:(lsp--before-change-vals)=%s" lsp--before-change-vals)
-  (when lsp--cur-workspace
-    (lsp--inc-cur-file-version)
-    (unless (eq lsp--server-sync-method 'none)
-      (lsp--send-notification
-        (lsp--make-notification "textDocument/didChange"
-          `(:textDocument ,(lsp--versioned-text-document-identifier)
-             :contentChanges
-             ,(pcase lsp--server-sync-method
-                ('incremental (vector (lsp--text-document-content-change-event
-                                        start end length)))
+  (save-match-data
+    (when lsp--cur-workspace
+      (lsp--inc-cur-file-version)
+      (unless (eq lsp--server-sync-method 'none)
+        (lsp--send-notification
+          (lsp--make-notification "textDocument/didChange"
+            `(:textDocument ,(lsp--versioned-text-document-identifier)
+               :contentChanges
+               ,(pcase lsp--server-sync-method
+                  ('incremental (vector (lsp--text-document-content-change-event
+                                          start end length)))
 
-                ('full (vector (lsp--full-change-event))))))))))
+                  ('full (vector (lsp--full-change-event)))))))))))
 
 (defun lsp--text-document-did-close ()
   "Executed when the file is closed, added to `kill-buffer-hook'."
@@ -1181,30 +1224,60 @@ type MarkedString = string | { language: string; value: string };"
         lsp--cur-hover-request-id (plist-get body :id))
       (cl-assert (integerp lsp--cur-hover-request-id)))))
 
+(defun lsp--render-markup-content (content)
+  "Render MarkupContent object CONTENT.
+
+export interface MarkupContent {
+	      kind: MarkupKind;
+	      value: string;
+}"
+  (let ((kind (gethash "kind" content))
+         (content (gethash "value" content))
+         out)
+    (if (functionp lsp-render-markdown-markup-content)
+      (progn
+        (setq out (funcall lsp-render-markdown-markup-content kind content))
+        (cl-assert (stringp out) t
+          "value returned by lsp-render-markdown-markup-content should be a string")
+        out)
+      content)))
+
 (define-inline lsp--point-is-within-bounds-p (start end)
   "Return whether the current point is within START and END."
   (inline-quote
     (let ((p (point)))
       (and (>= p ,start) (<= p ,end)))))
 
+(define-inline lsp--markup-content-p (obj)
+  (inline-letevals (obj)
+    (inline-quote (and (hash-table-p ,obj)
+                    (gethash "kind" ,obj nil) (gethash "value" ,obj nil)))))
+
 ;; start and end are the bounds of the symbol at point
 (defun lsp--make-hover-callback (renderers start end buffer)
   (lambda (hover)
-    (setq lsp--cur-hover-request-id nil)
+    (with-current-buffer buffer
+      (setq lsp--cur-hover-request-id nil))
     (when (and hover
             (lsp--point-is-within-bounds-p start end)
             (eq (current-buffer) buffer) (eldoc-display-message-p))
       (let ((contents (gethash "contents" hover)))
         (eldoc-message
-          (mapconcat (lambda (e)
-                       (let (renderer)
-                         (if (hash-table-p e)
-                           (if (setq renderer (cdr (assoc-string
-                                                     (gethash "language" e) renderers)))
-                             (funcall renderer (gethash "value" e))
-                             (gethash "value" e))
-                           e)))
-            (if (listp contents) contents (list contents)) "\n"))))))
+          ;; contents: MarkedString | MarkedString[] | MarkupContent
+          (if (lsp--markup-content-p contents)
+            (lsp--render-markup-content hover)
+
+            (mapconcat (lambda (e)
+                         (let (renderer)
+                           (if (hash-table-p e)
+                             (if (setq renderer
+                                   (cdr (assoc-string
+                                          (gethash "language" e)
+                                          renderers)))
+                               (funcall renderer (gethash "value" e))
+                               (gethash "value" e))
+                             e)))
+              (if (listp contents) contents (list contents)) "\n")))))))
 
 (defun lsp-provide-marked-string-renderer (client language renderer)
   (cl-check-type language string)
@@ -1277,10 +1350,9 @@ If title is nil, return the name for the command handler."
   "Ask the server to format this document."
   (interactive)
   (let ((edits (lsp--send-request (lsp--make-request
-                                   "textDocument/formatting"
-                                   (lsp--make-document-formatting-params)))))
-    (dolist (edit edits)
-      (lsp--apply-text-edit edit))))
+                                    "textDocument/formatting"
+                                    (lsp--make-document-formatting-params)))))
+    (lsp--apply-text-edits edits)))
 
 (defun lsp--make-document-range-formatting-params (start end)
   "Make DocumentRangeFormattingParams for selected region.
@@ -1457,7 +1529,7 @@ interface RenameParams {
   (let ((edits (lsp--send-request (lsp--make-request
                                    "textDocument/rename"
                                    (lsp--make-document-rename-params newname)))))
-    (lsp--apply-workspace-edits edits)))
+    (lsp--apply-workspace-edit edits)))
 
 (define-inline lsp--execute-command (command)
   "Given a COMMAND returned from the server, create and send a

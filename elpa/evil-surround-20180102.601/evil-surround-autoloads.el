@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "evil-surround" "evil-surround.el" (23086 39389
+;;;### (autoloads nil "evil-surround" "evil-surround.el" (23118 12547
 ;;;;;;  0 0))
 ;;; Generated autoloads from evil-surround.el
 

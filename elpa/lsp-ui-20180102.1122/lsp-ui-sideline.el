@@ -128,7 +128,7 @@ INDEX is the line number (relative to the current line)."
         (when (>= (- win-width (current-column)) str-len)
           eol)))))
 
-(defun lsp-ui-sideline--find-line (win-width str-len &optional up)
+(defun lsp-ui-sideline--find-line (str-len &optional up)
   "Find a line where the string can be inserted.
 It loops on the nexts lines to find enough space.
 Returns the point of the last character on the line.
@@ -136,7 +136,8 @@ Returns the point of the last character on the line.
 WIN-WIDTH is the window width.
 STR-LEN is the string size.
 if UP is non-nil, it loops on the previous lines.."
-  (let (pos (index 1))
+  (let ((win-width (lsp-ui-sideline--window-width))
+        (index 1) pos)
     (while (and (null pos) (<= (abs index) 30))
       (setq index (if up (1- index) (1+ index)))
       (setq pos (lsp-ui-sideline--calc-space win-width str-len index)))
@@ -202,13 +203,14 @@ MARKED-STRING is the string returned by `lsp-ui-sideline--extract-info'."
 INFO is the information to display.
 SYMBOL is the symbol associated to the info.
 CURRENT is non-nil when the point is on the symbol."
-  (let* ((str (if lsp-ui-sideline-show-symbol
-                  (concat info " " (propertize (concat " " symbol " ")
-                                               'face (if current 'lsp-ui-sideline-current-symbol 'lsp-ui-sideline-symbol)))
+  (let* ((face (if current 'lsp-ui-sideline-current-symbol 'lsp-ui-sideline-symbol))
+         (str (if lsp-ui-sideline-show-symbol
+                  (concat info " " (propertize (concat " " symbol " ") 'face face))
                 info))
-         (len (length str)))
+         (len (length str))
+         (margin (lsp-ui-sideline--margin-width)))
     (concat
-     (propertize " " 'display `(space :align-to (- right-fringe ,(+ 1 len))))
+     (propertize " " 'display `(space :align-to (- right-fringe ,(+ 1 len margin))))
      str)))
 
 (defun lsp-ui-sideline--check-duplicate (symbol info)
@@ -217,6 +219,15 @@ CURRENT is non-nil when the point is on the symbol."
          (--any (and (string= (overlay-get it 'symbol) symbol)
                      (string= (overlay-get it 'info) info))
                 lsp-ui-sideline--ovs))))
+
+(defun lsp-ui-sideline--margin-width ()
+  "."
+  (if fringes-outside-margins right-margin-width 0))
+
+(defun lsp-ui-sideline--window-width ()
+  "."
+  (- (window-text-width)
+     (lsp-ui-sideline--margin-width)))
 
 (defun lsp-ui-sideline--push-info (symbol line bounds info)
   "SYMBOL LINE BOUNDS INFO."
@@ -228,7 +239,7 @@ CURRENT is non-nil when the point is on the symbol."
       (when (and (> (length info) 0)
                  (lsp-ui-sideline--check-duplicate symbol info))
         (let* ((final-string (lsp-ui-sideline--make-display-string info symbol current))
-               (pos-ov (lsp-ui-sideline--find-line (window-text-width) (length final-string)))
+               (pos-ov (lsp-ui-sideline--find-line (length final-string)))
                (ov (when pos-ov (make-overlay pos-ov pos-ov))))
           (when pos-ov
             (overlay-put ov 'info info)
@@ -267,12 +278,13 @@ CURRENT is non-nil when the point is on the symbol."
       (let* ((message (->> (flycheck-error-format-message-and-id e)
                            (replace-regexp-in-string "[\n\t]+" " ")))
 	     (level (flycheck-error-level e))
-	     (string (concat (propertize " " 'display `(space :align-to (- right-fringe ,(1+ (length message)))))
+             (margin (lsp-ui-sideline--margin-width))
+	     (string (concat (propertize " " 'display `(space :align-to (- right-fringe ,(+ 1 (length message) margin))))
                              (propertize message 'face (pcase level
                                                          ('error 'error)
                                                          ('warning 'warning)
                                                          (_ 'success)))))
-             (pos-ov (lsp-ui-sideline--find-line (window-text-width) (length message) t))
+             (pos-ov (lsp-ui-sideline--find-line (length message) t))
              (ov (and pos-ov (make-overlay pos-ov pos-ov))))
         (when pos-ov
           (overlay-put ov 'after-string string)
@@ -280,13 +292,18 @@ CURRENT is non-nil when the point is on the symbol."
 
 (defun lsp-ui-sideline--code-actions (actions)
   "Show code ACTIONS."
-  (dolist (action (if actions actions '()))
+  (dolist (action actions)
     (-let* ((title (->> (gethash "title" action)
                         (replace-regexp-in-string "[\n\t]+" " ")
                         (concat lsp-ui-sideline-code-actions-prefix)))
-            (string (concat (propertize " " 'display `(space :align-to (- right-fringe ,(1+ (length title)))))
-                            (propertize title 'face 'lsp-ui-sideline-code-action)))
-            (pos-ov (lsp-ui-sideline--find-line (window-text-width) (length title) t))
+            (margin (lsp-ui-sideline--margin-width))
+            (keymap (let ((map (make-sparse-keymap)))
+                      (define-key map [down-mouse-1] (lambda () (interactive) (lsp-execute-code-action action)))
+                      map))
+            (string (concat (propertize " " 'display `(space :align-to (- right-fringe ,(+ 1 (length title) margin))))
+                            (propertize title 'face 'lsp-ui-sideline-code-action
+                                        'keymap keymap 'mouse-face 'highlight)))
+            (pos-ov (lsp-ui-sideline--find-line (length title) t))
             (ov (and pos-ov (make-overlay pos-ov pos-ov))))
       (when pos-ov
         (overlay-put ov 'after-string string)
@@ -313,7 +330,7 @@ to the language server."
         (when lsp-ui-sideline-show-code-actions
           (lsp--send-request-async (lsp--make-request
                                     "textDocument/codeAction"
-                                    (list :textDocument (lsp--text-document-identifier)
+                                    (list :textDocument doc-id
                                           :range (lsp--region-to-range bol eol)
                                           :context (list :diagnostics (lsp--cur-line-diagnotics))))
                                    #'lsp-ui-sideline--code-actions))
@@ -364,9 +381,7 @@ to the language server."
 
 (defun lsp-ui-sideline-enable (enable)
   "ENABLE/disable lsp-ui-sideline-mode."
-  (if enable
-      (lsp-ui-sideline-mode 1)
-    (lsp-ui-sideline-mode -1)))
+  (lsp-ui-sideline-mode (if enable 1 -1)))
 
 (provide 'lsp-ui-sideline)
 ;;; lsp-ui-sideline.el ends here

@@ -5,17 +5,18 @@
 ;;               2011, 2012, 2013, 2014, 2015, 2016, 2017 Eric James Michael Ritz
 
 ;; Author: Eric James Michael Ritz
+;; Maintainer: USAMI Kenta <tadsan@zonu.me>
 ;; URL: https://github.com/ejmr/php-mode
+;; Keywords: languages php
 ;; Version: 1.18.4
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
+;; License: GPL-3.0-or-later
 
 (defconst php-mode-version-number "1.18.4"
   "PHP Mode version number.")
 
 (defconst php-mode-modified "2017-12-03"
   "PHP Mode build date.")
-
-;;; License
 
 ;; This file is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License
@@ -32,25 +33,6 @@
 ;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 ;; 02110-1301, USA.
 
-;;; Usage
-
-;; Put this file in your Emacs lisp path (eg. site-lisp) and add to
-;; your .emacs file:
-;;
-;;   (require 'php-mode)
-
-;; To use abbrev-mode, add lines like this:
-;;   (add-hook 'php-mode-hook
-;;     '(lambda () (define-abbrev php-mode-abbrev-table "ex" "extends")))
-
-;; To make php-mode compatible with html-mode, see http://php-mode.sf.net
-
-;; Many options available under Help:Customize
-;; Options specific to php-mode are in
-;;  Programming/Languages/Php
-;; Since it inherits much functionality from c-mode, look there too
-;;  Programming/Languages/C
-
 ;;; Commentary:
 
 ;; PHP Mode is a major mode for editing PHP source code.  It's an
@@ -59,6 +41,26 @@
 ;; indents according to the PEAR coding guidelines.  It also includes
 ;; a couple handy IDE-type features such as documentation search and a
 ;; source and class browser.
+
+;; ## Usage
+
+;; Put this file in your Emacs lisp path (eg. site-lisp) and add to
+;; your .emacs file:
+
+;;   (require 'php-mode)
+
+;; To use abbrev-mode, add lines like this:
+
+;;   (add-hook 'php-mode-hook
+;;     '(lambda () (define-abbrev php-mode-abbrev-table "ex" "extends")))
+
+;; To make php-mode compatible with html-mode, see http://php-mode.sf.net
+
+;; Many options available under Help:Customize
+;; Options specific to php-mode are in
+;;  Programming/Languages/PHP
+;; Since it inherits much functionality from c-mode, look there too
+;;  Programming/Languages/C
 
 ;;; Code:
 
@@ -114,7 +116,7 @@
 ;; Local variables
 ;;;###autoload
 (defgroup php nil
-  "Major mode `php-mode' for editing PHP code."
+  "Major mode for editing PHP code."
   :tag "PHP"
   :prefix "php-"
   :group 'languages
@@ -171,7 +173,7 @@ Turning this on will open it whenever `php-mode' is loaded."
            "\\)\\>[^_]?"))
 
 (defun php-mode-extra-constants-set(sym value)
-  "Apply the list of extra constant keywords VALUE.
+  "Apply the list of extra constant keywords `VALUE'.
 
 This function is called when the custom variable php-extra-constants
 is updated. The web-mode-extra-constants list is appended to the list
@@ -372,6 +374,31 @@ This variable can take one of the following symbol values:
   (interactive)
   (message "PHP Mode %s of %s"
            php-mode-version-number php-mode-modified))
+
+(defvar php-available-project-root-files
+  '((projectile ".projectile")
+    (composer   "composer.json" "composer.lock")
+    (git        ".git")
+    (mercurial  ".hg")
+    (subversion ".svn")
+    ;; NOTICE: This method does not detect the top level of .editorconfig
+    ;;         However, we can integrate it by adding the editorconfig.el's API.
+    ;;(editorconfig . ".editorconfig")
+    ))
+
+;;;###autoload
+(progn
+  (defvar php-project-root 'auto
+    "Method of searching for the top level directory.
+
+`auto' (default)
+      Try to search file in order of `php-available-project-root-files'.
+
+SYMBOL
+      Key of `php-available-project-root-files'.")
+  (make-variable-buffer-local 'php-project-root)
+  (put 'php-project-root 'safe-local-variable
+       #'(lambda (v) (assq v php-available-project-root-files))))
 
 (defvar php-mode-map
   (let ((map (make-sparse-keymap)))
@@ -653,8 +680,7 @@ but only if the setting is enabled"
    (tab-width . 4)))
 
 (defun php-enable-pear-coding-style ()
-  "Sets up php-mode to use the coding styles preferred for PEAR
-code and modules."
+  "Set up php-mode to use the coding styles preferred for PEAR code and modules."
   (interactive)
   (php-set-style "pear"))
 
@@ -668,8 +694,7 @@ code and modules."
    (php-style-delete-trailing-whitespace . t)))
 
 (defun php-enable-drupal-coding-style ()
-  "Makes php-mode use coding styles that are preferable for
-working with Drupal."
+  "Make php-mode use coding styles that are preferable for working with Drupal."
   (interactive)
   (php-set-style "drupal"))
 
@@ -919,8 +944,7 @@ this ^ lineup"
   "Regular expression for the start of a PHP heredoc.")
 
 (defun php-heredoc-end-re (heredoc-start)
-  "Build a regular expression for the end of a heredoc started by
-the string HEREDOC-START."
+  "Build a regular expression for the end of a heredoc started by the string HEREDOC-START."
   ;; Extract just the identifier without <<< and quotes.
   (string-match "\\w+" heredoc-start)
   (concat "^\\(" (match-string 0 heredoc-start) "\\)\\W"))
@@ -951,8 +975,7 @@ the string HEREDOC-START."
   (c-put-char-property (1- (point)) 'syntax-table (string-to-syntax "|")))
 
 (defun php-syntax-propertize-extend-region (start end)
-  "Extend the propertize region if START or END falls inside a
-PHP heredoc."
+  "Extend the propertize region if START or END falls inside a PHP heredoc."
   (let ((new-start)
         (new-end))
     (goto-char start)
@@ -1608,7 +1631,7 @@ Look at the `php-executable' variable instead of the constant \"php\" command."
 
 
 (defun php-send-region (start end)
-  "Send the region between `start' and `end' to PHP for execution.
+  "Send the region between `START' and `END' to PHP for execution.
 The output will appear in the buffer *PHP*."
   (interactive "r")
   (let ((php-buffer (get-buffer-create "*PHP*"))
@@ -1693,6 +1716,18 @@ The output will appear in the buffer *PHP*."
   (save-excursion
     (when (re-search-backward re-pattern nil t)
       (match-string-no-properties 1))))
+
+;;;###autoload
+(defun php-project-get-root-dir ()
+  "Return path to current PHP project."
+  (let ((detect-method (if (stringp php-project-root)
+                           (list php-project-root)
+                         (if (eq php-project-root 'auto)
+                             (cl-loop for m in php-available-project-root-files
+                                      append (cdr m))
+                           (cdr-safe (assq php-project-root php-available-project-root-files))))))
+    (cl-loop for m in detect-method
+             thereis (locate-dominating-file default-directory m))))
 
 ;;;###autoload
 (defun php-current-class ()

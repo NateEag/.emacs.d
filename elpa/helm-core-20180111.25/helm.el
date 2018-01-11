@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2007         Tamas Patrovics
 ;;               2008 ~ 2011  rubikitch <rubikitch@ruby-lang.org>
-;;               2011 ~ 2017  Thierry Volpiatto <thierry.volpiatto@gmail.com>
+;;               2011 ~ 2018  Thierry Volpiatto <thierry.volpiatto@gmail.com>
 
 ;; This is a fork of anything.el wrote by Tamas Patrovics.
 
@@ -393,17 +393,18 @@ the default has changed now to avoid flickering."
 (defcustom helm-display-function 'helm-default-display-buffer
   "Function used to display `helm-buffer'.
 
-When set globally it will affect all helm sessions however it is
-possible to set it locally to helm-buffer in helm sources by using
-`helm-set-local-variable' in init function or by using
-:display-function slot in `helm' call.  It is also easy to set it
-locally for any helm command with a before advice e.g.
-
-    (advice-add 'helm-find-files
-                :before (lambda (&rest args)
-                          (helm-set-local-variable
-                           'helm-display-function
-                           'helm-display-buffer-in-own-frame)))"
+Local value in `helm-buffer' will take precedence on this default
+value. Commands that are in `helm-commands-using-frame' will have
+`helm-buffer' displayed in frame, `helm-display-function' being
+ignored.
+If no local value found and current command is not one of
+`helm-commands-using-frame' use this default value.
+Function in charge of deciding which value use is
+`helm-resolve-display-function'.
+ 
+To set it locally to `helm-buffer' in helm sources use
+`helm-set-local-variable' in init function or use
+:display-function slot in `helm' call."
   :group 'helm
   :type 'symbol)
 
@@ -722,6 +723,29 @@ so it have only effect when `helm-always-two-windows' is non-nil."
   "Frame height when displaying helm-buffer in own frame."
   :group 'helm
   :type 'integer)
+
+(defcustom helm-display-buffer-reuse-frame nil
+  "When non nil helm frame is not deleted and reused in next sessions.
+
+Probably you don't need to change this unless you use emacs-26+ where
+frame displaying is much more slower than on emacs-24/25 series (emacs
+regression)."
+  :group 'helm
+  :type 'boolean)
+
+(defcustom helm-commands-using-frame nil
+  "A list of commands where `helm-buffer' is displayed in a frame."
+  :group 'helm
+  :type '(repeat symbol))
+
+(defcustom helm-actions-inherit-frame-settings nil
+  "Actions inherit frame settings of initial command when non nil.
+
+The actions running from commands that are in
+`helm-commands-using-frame' that are themselves running helm will have
+a frame to display their `helm-buffer' when non nil."
+  :group 'helm
+  :type 'boolean)
 
 ;;; Faces
 ;;
@@ -1224,6 +1248,14 @@ Should be set locally to `helm-buffer' with `helm-set-local-variable'.")
 
 (defvar helm-quit-hook nil
   "A hook that run when quitting helm.")
+
+(defvar helm-inhibit-minibuffer-in-header-line nil
+  "Don't show minibuffer in header line when non-nil.
+
+This affects only helm sessions displayed in a separate frame.
+It is intended to not be used globally, but let-bounded.
+It is useful for helm sessions having actions using recursive
+minibuffer, in this case frame is created with a minibuffer.")
 
 ;;; Internal Variables
 ;;
@@ -1335,7 +1367,15 @@ at end of session.")
 (defvar helm--action-prompt "Select action: ")
 (defvar helm--cycle-resume-iterator nil)
 (defvar helm--buffer-in-new-frame-p nil)
-(defvar helm-initial-frame nil)
+(defvar helm-initial-frame nil
+  "The selected frame before starting helm.")
+(defvar helm-popup-frame nil
+  "The frame where helm is displayed.
+
+This is only used when helm is using
+`helm-display-buffer-in-own-frame' as `helm-display-function' and
+`helm-display-buffer-reuse-frame' is non nil.")
+(defvar helm--nested nil)
 
 ;; Utility: logging
 (defun helm-log (format-string &rest args)
@@ -2162,10 +2202,10 @@ example, :candidate-number-limit is bound to
   "The internal helm function called by `helm'.
 For ANY-SOURCES ANY-INPUT ANY-PROMPT ANY-RESUME ANY-PRESELECT ANY-BUFFER and
 ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
+  (unless helm--nested (setq helm-initial-frame (selected-frame)))
   ;; Activate the advice for `tramp-read-passwd' and cua.
   ;; Advices will be available only in >=emacs-24.4, but
   ;; allow compiling without errors on lower emacs.
-  (setq helm-initial-frame (selected-frame))
   (when (fboundp 'advice-add)
     (advice-add 'tramp-read-passwd :around #'helm--advice-tramp-read-passwd)
     (advice-add 'ange-ftp-get-passwd :around #'helm--advice-ange-ftp-get-passwd)
@@ -2377,6 +2417,9 @@ Return nil if no `helm-buffer' found."
 Call `helm' only with ANY-SOURCES and ANY-BUFFER as args."
   (helm :sources any-sources :buffer any-buffer))
 
+;;; Nested sessions
+;;
+;;
 (defun helm--nest (&rest same-as-helm)
   "[internal]Allows calling `helm' within a running helm session.
 
@@ -2391,9 +2434,11 @@ Don't use this directly, use instead `helm' with the keyword
           (orig-helm-buffer helm-buffer)
           (orig-helm--prompt helm--prompt)
           (orig-helm--in-fuzzy helm--in-fuzzy)
+          (orig-helm--display-frame helm--buffer-in-new-frame-p)
           (orig-helm-last-frame-or-window-configuration
            helm-last-frame-or-window-configuration)
-          (orig-one-window-p helm-onewindow-p))
+          (orig-one-window-p helm-onewindow-p)
+          (helm--nested t))
       ;; FIXME Using helm-full-frame here allow showing the new
       ;; helm-buffer in the same window as old helm-buffer, why? 
       (helm-set-local-variable 'helm-full-frame t)
@@ -2409,6 +2454,8 @@ Don't use this directly, use instead `helm' with the keyword
                 (enable-recursive-minibuffers t))
             (apply #'helm same-as-helm))
         (with-current-buffer orig-helm-buffer
+          (setq helm--nested nil)
+          (setq helm--buffer-in-new-frame-p orig-helm--display-frame)
           (setq helm-alive-p t) ; Nested session set this to nil on exit.
           (setq helm-buffer orig-helm-buffer)
           (setq helm-full-frame nil)
@@ -2553,14 +2600,25 @@ value of `split-window-preferred-function' will be used by `display-buffer'."
 ;;; Display helm buffer
 ;;
 ;;
+(defun helm-resolve-display-function (com)
+  "Decide which display function use according to `helm-commands-using-frame'.
+
+The `helm-display-function' buffer local value takes precedence on
+`helm-commands-using-frame'.
+Fallback to global value of `helm-display-function' when no local
+value found and current command is not in `helm-commands-using-frame'."
+  (or (with-helm-buffer helm-display-function)
+      (and (memq com helm-commands-using-frame)
+           #'helm-display-buffer-in-own-frame)
+      (default-value 'helm-display-function)))
+
 (defun helm-display-buffer (buffer)
   "Display BUFFER.
 
 The function used to display `helm-buffer' by calling
 `helm-display-function' which split window with
 `helm-split-window-preferred-function'."
-  (let (pop-up-frames
-        (split-window-preferred-function
+  (let ((split-window-preferred-function
          helm-split-window-preferred-function)
         (helm-split-window-default-side
          (if (and (not helm-full-frame)
@@ -2569,9 +2627,14 @@ The function used to display `helm-buffer' by calling
                    ((eq helm-split-window-default-side 'other) 'other)
                    (helm--window-side-state)
                    (t helm-split-window-default-side))
-           helm-split-window-default-side)))
+           helm-split-window-default-side))
+        (disp-fn (with-current-buffer buffer
+                   (helm-resolve-display-function
+                    (if helm-actions-inherit-frame-settings
+                        (helm-this-command) this-command)))))
     (prog1
-        (funcall (with-current-buffer buffer helm-display-function) buffer)
+        (funcall disp-fn buffer)
+      (with-helm-buffer (setq-local helm-display-function disp-fn))
       (setq helm-onewindow-p (one-window-p t))
       ;; Don't allow other-window and friends switching out of minibuffer.
       (when helm-prevent-escaping-from-minibuffer
@@ -2592,21 +2655,22 @@ Arg ENABLE is the value of `no-other-window' window property."
 It is the default value of `helm-display-function'
 It uses `switch-to-buffer' or `display-buffer' depending on the
 value of `helm-full-frame' or `helm-split-window-default-side'."
-  (if (or (buffer-local-value 'helm-full-frame (get-buffer buffer))
-          (and (eq helm-split-window-default-side 'same)
-               (one-window-p t)))
-      (progn (and (not (minibufferp helm-current-buffer))
-                  (delete-other-windows))
-             (switch-to-buffer buffer))
-    (when (and (or helm-always-two-windows helm-autoresize-mode)
-               (not (eq helm-split-window-default-side 'same))
-               (not (minibufferp helm-current-buffer))
-               (not helm-split-window-inside-p))
-      (delete-other-windows))
-    (display-buffer
-     buffer `(nil . ((window-height . ,helm-display-buffer-default-height)
-                     (window-width  . ,helm-display-buffer-default-width))))
-    (helm-log-run-hook 'helm-window-configuration-hook)))
+  (let (pop-up-frames)
+    (if (or (buffer-local-value 'helm-full-frame (get-buffer buffer))
+            (and (eq helm-split-window-default-side 'same)
+                 (one-window-p t)))
+        (progn (and (not (minibufferp helm-current-buffer))
+                    (delete-other-windows))
+               (switch-to-buffer buffer))
+      (when (and (or helm-always-two-windows helm-autoresize-mode)
+                 (not (eq helm-split-window-default-side 'same))
+                 (not (minibufferp helm-current-buffer))
+                 (not helm-split-window-inside-p))
+        (delete-other-windows))
+      (display-buffer
+       buffer `(nil . ((window-height . ,helm-display-buffer-default-height)
+                       (window-width  . ,helm-display-buffer-default-width))))
+      (helm-log-run-hook 'helm-window-configuration-hook))))
 
 (defun helm-display-buffer-in-own-frame (buffer)
   "Display `helm-buffer' in a separate frame.
@@ -2623,11 +2687,20 @@ configure frame size."
     (setq helm--buffer-in-new-frame-p t)
     (let* ((pos (window-absolute-pixel-position))
            (half-screen-size (/ (display-pixel-height x-display-name) 2))
+           (minibuf (or helm-inhibit-minibuffer-in-header-line
+                        (> (cdr pos) half-screen-size)))
+           (frame-info (frame-geometry))
+           (prmt-size (length helm--prompt))
+           (line-height (frame-char-height))
            (default-frame-alist
             `((width . ,helm-display-buffer-width)
               (height . ,helm-display-buffer-height)
               (tool-bar-lines . 0)
-              (left . ,(car pos))
+              (left . ,(- (car pos)
+                          (* (frame-char-width)
+                             (if (< (- (point) (point-at-bol)) prmt-size)
+                                 (- (point) (point-at-bol))
+                               prmt-size))))
               ;; Try to put frame at the best possible place.
               ;; Frame should be below point if enough
               ;; place, otherwise above point and
@@ -2635,19 +2708,53 @@ configure frame size."
               ;; by helm frame.
               (top . ,(if (> (cdr pos) half-screen-size)
                           ;; Above point
-                          (- (cdr pos) half-screen-size)
+                          (- (cdr pos)
+                             ;; add 2 lines to make sure there is always a gap
+                             (* (+ helm-display-buffer-height 2) line-height)
+                             ;; account for title bar height too
+                             (cddr (assq 'title-bar-size frame-info)))
                         ;; Below point
-                        (+ (cdr pos) (frame-char-height))))
+                        (+ (cdr pos) line-height)))
               (title . "Helm")
               (vertical-scroll-bars . nil)
               (menu-bar-lines . 0)
               (fullscreen . nil)
-              (minibuffer . ,(null helm-echo-input-in-header-line))))
+              (visible . ,(null helm-display-buffer-reuse-frame))
+              (minibuffer . ,minibuf)))
            display-buffer-alist)
-      (display-buffer
-       buffer '(display-buffer-pop-up-frame . nil)))
+      ;; Add the hook inconditionally, if
+      ;; helm-echo-input-in-header-line is nil helm-hide-minibuffer-maybe
+      ;; will have anyway no effect so no need to remove the hook.
+      (add-hook 'helm-minibuffer-set-up-hook 'helm-hide-minibuffer-maybe)
+      (with-helm-buffer
+        (setq-local helm-echo-input-in-header-line (not minibuf)))
+      (helm-display-buffer-popup-frame buffer default-frame-alist))
     (helm-log-run-hook 'helm-window-configuration-hook)))
 
+(defun helm-display-buffer-popup-frame (buffer frame-alist)
+  (if helm-display-buffer-reuse-frame
+      (let* ((x (cdr (assoc 'left frame-alist)))
+             (y (cdr (assoc 'top frame-alist)))
+             (frame-live-p (frame-live-p helm-popup-frame))
+             (minibuf (and frame-live-p
+                           (frame-parameter helm-popup-frame 'minibuffer))))
+        ;; Minibuffer frame-parameter is not modifiable once frame is
+        ;; created so frame needs to be deleted and recreated when the
+        ;; minibuffer parameter change in FRAME-ALIST.
+        (unless (and frame-live-p
+                     (eq minibuf (assoc-default 'minibuffer frame-alist)))
+          (and frame-live-p (delete-frame helm-popup-frame))
+          (setq helm-popup-frame (make-frame frame-alist)))
+        (select-frame helm-popup-frame)
+        (set-frame-position helm-popup-frame x y)
+        (switch-to-buffer buffer)
+        (raise-frame helm-popup-frame))
+    ;; If user have changed `helm-display-buffer-reuse-frame' to nil
+    ;; maybe kill the frame.
+    (when (frame-live-p helm-popup-frame)
+      (delete-frame helm-popup-frame))
+    (display-buffer
+     buffer '(display-buffer-pop-up-frame . nil))))
 
 ;;; Initialize
 ;;
@@ -2812,7 +2919,7 @@ Unuseful when used outside helm, don't use it.")
       (set (make-local-variable 'helm-map) helm-map)
       (set (make-local-variable 'helm-source-filter) nil)
       (make-local-variable 'helm-sources)
-      (set (make-local-variable 'helm-display-function) helm-display-function)
+      (set (make-local-variable 'helm-display-function) nil)
       (set (make-local-variable 'helm-selection-point) nil)
       (set (make-local-variable 'scroll-margin)
            (if helm-display-source-at-screen-top
@@ -3059,8 +3166,9 @@ WARNING: Do not use this mode yourself, it is internal to helm."
     (remove-hook 'post-command-hook 'helm--update-header-line)
     ;; Be sure we call this from helm-buffer.
     (helm-funcall-foreach 'cleanup)
-    (when helm--buffer-in-new-frame-p
-      (delete-frame)))
+    (when (and helm--buffer-in-new-frame-p (null helm--nested))
+      (if helm-display-buffer-reuse-frame
+          (make-frame-invisible) (delete-frame))))
   (helm-kill-async-processes)
   ;; Remove the temporary hooks added
   ;; by `with-helm-temp-hook' that
@@ -5742,15 +5850,12 @@ window to maintain visibility."
 If SPLIT-ONEWINDOW is non-`nil' window is split in persistent action."
   (with-helm-window
     (setq helm-persistent-action-display-window
-          (cond ((and helm--buffer-in-new-frame-p
-                      helm-initial-frame)
-                 (select-window
-                  (setq minibuffer-scroll-window
-                        (with-selected-frame helm-initial-frame (selected-window)))))
-                ((and (window-live-p helm-persistent-action-display-window)
+          (cond ((and (window-live-p helm-persistent-action-display-window)
                       (not (member helm-persistent-action-display-window
                                    (get-buffer-window-list helm-buffer))))
                  helm-persistent-action-display-window)
+                ((and helm--buffer-in-new-frame-p helm-initial-frame)
+                 (with-selected-frame helm-initial-frame (selected-window)))
                 (split-onewindow (split-window))
                 ((get-buffer-window helm-current-buffer))
                 (t (next-window (selected-window) 1))))))
@@ -5771,7 +5876,15 @@ See `helm-persistent-action-display-window' for how to use SPLIT-ONEWINDOW."
 (defun helm-other-window-base (command &optional arg)
   (let ((minibuffer-scroll-window
          (helm-persistent-action-display-window)))
-    (funcall command (or arg helm-scroll-amount))))
+    (if (and helm--buffer-in-new-frame-p
+             (with-helm-buffer
+               helm-echo-input-in-header-line))
+        ;; helm is displayed in a frame with no minibuffer, scroll OW
+        ;; from helm-window.
+        (with-helm-window
+          (funcall command (or arg helm-scroll-amount)))
+      ;; Otherwise scroll according to minibuffer-scroll-window.
+      (funcall command (or arg helm-scroll-amount)))))
 
 (defun helm-scroll-other-window (&optional arg)
   "Scroll other window upward ARG many lines.

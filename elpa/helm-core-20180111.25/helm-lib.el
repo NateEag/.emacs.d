@@ -1,6 +1,6 @@
 ;;; helm-lib.el --- Helm routines. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015 ~ 2017  Thierry Volpiatto <thierry.volpiatto@gmail.com>
+;; Copyright (C) 2015 ~ 2018  Thierry Volpiatto <thierry.volpiatto@gmail.com>
 
 ;; Author: Thierry Volpiatto <thierry.volpiatto@gmail.com>
 ;; URL: http://github.com/emacs-helm/helm
@@ -35,6 +35,7 @@
 (declare-function org-content "org.el")
 (defvar helm-current-position)
 (defvar wdired-old-marks)
+(defvar helm-persistent-action-display-window)
 
 ;;; User vars.
 ;;
@@ -865,7 +866,7 @@ of this function is really needed."
   "Used to build persistent actions describing CANDIDATE with FUN.
 Argument NAME is used internally to know which command to use when
 symbol CANDIDATE refers at the same time to variable and a function.
-See `helm-elisp--show-help'."
+See `helm-elisp-show-help'."
   (let ((hbuf (get-buffer (help-buffer))))
     (cond  ((helm-follow-mode-p)
             (if name
@@ -877,9 +878,9 @@ See `helm-elisp--show-help'."
               ;; When started from a help buffer,
               ;; Don't kill this buffer as it is helm-current-buffer.
               (unless (equal hbuf helm-current-buffer)
-                (kill-buffer hbuf)
                 (set-window-buffer (get-buffer-window hbuf)
-                                   helm-current-buffer))
+                                   helm-current-buffer)
+                (kill-buffer hbuf))
               (helm-attrset 'help-running-p nil)))
            (t
             (if name

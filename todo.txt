@@ -513,6 +513,9 @@
 - If particularly bored, try getting GEBEN set up for debugging PHP. I'm
   uncertain whether this would actually be worth the effort.
 
+- Try integrating the fancy new SQL indentation minor-mode:
+  https://github.com/alex-hhh/emacs-sql-indent
+
 - Next time I have to work against a DB server, install emacs-edbi and
   edbi-minor-mode:
   https://github.com/kiwanami/emacs-edbi,

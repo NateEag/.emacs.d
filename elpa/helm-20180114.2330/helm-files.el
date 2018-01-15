@@ -65,14 +65,16 @@
   (mapcar (lambda (f)
             (let ((rgx (regexp-quote f)))
               (if (string-match-p "[^/]$" f)
-                  ;; files: e.g .o => \\.o$
-                  (concat rgx "$")
-                ;; directories: e.g .git/ => \\.git/?$
-                (concat rgx "?$"))))
+                  ;; files: e.g .o => \\.o
+                  rgx
+                ;; directories: e.g .git/ => \\.git/?
+                (concat rgx "?"))))
           completion-ignored-extensions)
   "A list of regexps matching boring files.
 
-This list is build by default on `completion-ignored-extensions'."
+This list is build by default on `completion-ignored-extensions'.
+Don't add a final \"$\" at end of your regexps, helm will add it when
+needed."
   :group 'helm-files
   :type  '(repeat (choice regexp)))
 
@@ -697,6 +699,11 @@ ACTION must be an action supported by `helm-dired-action'."
          helm-ff--move-to-first-real-candidate
          helm-display-source-at-screen-top ; prevent setting window-start.
          helm-ff-auto-update-initial-value
+         ;; It is not possible to rename a file to a boring name when
+         ;; helm-ff-skip-boring-files is enabled
+         helm-ff-skip-boring-files
+         ;; If HFF is using a frame use a frame as well.
+         (helm-actions-inherit-frame-settings t)
          (dest   (with-helm-display-marked-candidates
                    helm-marked-buffer-name
                    (helm-ff--count-and-collect-dups ifiles)
@@ -2552,7 +2559,7 @@ Return candidates prefixed with basename of `helm-input' first."
   ;; Prevent user doing silly thing like
   ;; adding the dotted files to boring regexps (#924).
   (and (not (string-match "\\.$" file))
-       (string-match (mapconcat 'identity helm-boring-file-regexp-list "\\|") file)))
+       (string-match (mapconcat 'identity helm-boring-file-regexp-list "$\\|") file)))
 
 (defun helm-ff-filter-candidate-one-by-one (file)
   "`filter-one-by-one' Transformer function for `helm-source-find-files'."
@@ -3046,8 +3053,7 @@ Use it for non--interactive calls of `helm-find-files'."
                (not (minibuffer-window-active-p (minibuffer-window)))))
          (tap (thing-at-point 'filename))
          (def (and tap (or (file-remote-p tap)
-                           (expand-file-name tap))))
-         (helm-inhibit-minibuffer-in-header-line t))
+                           (expand-file-name tap)))))
     (helm-set-local-variable 'helm-follow-mode-persistent nil)
     (unless helm-source-find-files
       (setq helm-source-find-files (helm-make-source

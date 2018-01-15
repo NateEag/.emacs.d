@@ -502,9 +502,6 @@
   concatenation, which some do (especially in crappy legacy codebases). See my
   email inbox for examples.
 
-- Try using polymode to get YaML + markdown-mode for working in nateeag.com page
-  files.
-
 - yaml-mode syntax highlighting breaks if you use possessives, and no one has a
   clear fix. The package itself announces in the readme that it's abandonware,
   but the author says they'd take a co-maintainer, so a fix could perhaps be

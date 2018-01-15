@@ -61,7 +61,8 @@
 (defcustom lsp-ui-doc-position 'top
   "Where to display the doc."
   :type '(choice (const :tag "Top" top)
-                 (const :tag "Bottom" bottom))
+                 (const :tag "Bottom" bottom)
+                 (const :tag "At point" at-point))
   :group 'lsp-ui-doc)
 
 (defcustom lsp-ui-doc-background "#031A25"
@@ -89,6 +90,7 @@ ble `lsp-ui-doc-frame-parameters'"
 (defvar lsp-ui-doc-frame-parameters
   '((left . -1)
     (no-accept-focus . t)
+    (no-focus-on-map . t)
     (min-width  . 0)
     (width  . 0)
     (min-height  . 0)
@@ -108,6 +110,8 @@ ble `lsp-ui-doc-frame-parameters'"
     (mouse-wheel-frame . nil)
     (no-other-frame . t)
     (cursor-type . nil)
+    (inhibit-double-buffering . t)
+    (drag-internal-border . t)
     (no-special-glyphs . t))
   "Frame parameters used to create the frame.")
 
@@ -116,6 +120,15 @@ ble `lsp-ui-doc-frame-parameters'"
 The function takes a string as parameter and should return a string.
 If this variable is nil (the default), the documentation will be rendered
 as markdown.")
+
+(defvar lsp-ui-doc-custom-markup-modes
+  '((rust-mode "no_run" "rust,no_run" "rust,ignore" "rust,should_panic"))
+  "Mode to uses with markdown code blocks.
+They are added to `markdown-code-lang-modes'")
+
+(defvar lsp-ui-doc-frame-hook nil
+  "Hooks run on child-frame creation.
+The functions receive 2 parameters: the frame and its window.")
 
 (defvar-local lsp-ui-doc--bounds nil)
 (defvar-local lsp-ui-doc--string-eldoc nil)
@@ -152,7 +165,7 @@ Because some variables are buffer local.")
 
 (defun lsp-ui-doc--make-buffer-name ()
   "Construct the buffer name, it should be unique for each frame."
-  (concat "*lsp-ui-doc-"
+  (concat " *lsp-ui-doc-"
           (or (frame-parameter nil 'window-id)
               (frame-parameter nil 'name))
           "*"))
@@ -165,7 +178,20 @@ Because some variables are buffer local.")
 
 (defun lsp-ui-doc--eldoc (&rest _)
   "."
+  (when (and (lsp--capability "documentHighlightProvider")
+             lsp-highlight-symbol-at-point)
+    (lsp-symbol-highlight))
   lsp-ui-doc--string-eldoc)
+
+(defun lsp-ui-doc--setup-markdown (mode)
+  "Setup the markdown-mode in the frame.
+MODE is the mode used in the parent frame."
+  (make-local-variable 'markdown-code-lang-modes)
+  (dolist (mark (alist-get mode lsp-ui-doc-custom-markup-modes))
+    (add-to-list 'markdown-code-lang-modes (cons mark mode)))
+  (setq-local markdown-fontify-code-blocks-natively t)
+  (setq-local markdown-fontify-code-block-default-mode mode)
+  (setq-local markdown-hide-markup t))
 
 (defun lsp-ui-doc--extract-marked-string (marked-string)
   "Render the MARKED-STRING."
@@ -177,15 +203,18 @@ Because some variables are buffer local.")
           (language (and with-lang (gethash "language" marked-string)))
           (render-fn (if with-lang (lsp-ui-sideline--get-renderer language)
                        (and (functionp lsp-ui-doc-render-function)
-                            lsp-ui-doc-render-function))))
+                            lsp-ui-doc-render-function)))
+          (mode major-mode))
      (if render-fn
          (funcall render-fn string)
        (with-temp-buffer
          (insert string)
          (delay-mode-hooks
            (funcall (cond ((and with-lang (string= "text" language)) 'text-mode)
-                          ((fboundp 'markdown-view-mode) 'markdown-view-mode)
+                          ((fboundp 'gfm-view-mode) 'gfm-view-mode)
                           (t 'markdown-mode)))
+           (when (derived-mode-p 'markdown-mode)
+             (lsp-ui-doc--setup-markdown mode))
            (ignore-errors
              (font-lock-ensure)))
          (buffer-string))))))
@@ -289,22 +318,40 @@ BUFFER is the buffer where the request has been made."
       (lsp-ui-doc--with-buffer
        (fill-region (point-min) (point-max))))))
 
+(defun lsp-ui-doc--mv-at-point (frame height start-x start-y)
+  "Move the FRAME at point.
+HEIGHT is the child frame height.
+START-X is the position x of the current window.
+START-Y is the position y of the current window."
+  (-let* (((x . y) (--> (bounds-of-thing-at-point 'symbol)
+                        (nth 2 (posn-at-point (car it)))))
+          (mode-line-y (lsp-ui-doc--line-height 'mode-line))
+          (char-height (frame-char-height))
+          (y (or (and (> y (/ mode-line-y 2))
+                      (<= (- mode-line-y y) (+ char-height height))
+                      (> (- y height) 0)
+                      (- y height))
+                 (+ y char-height))))
+    (set-frame-position frame (+ x start-x) (+ y start-y))))
+
 (defun lsp-ui-doc--move-frame (frame)
   "Place our FRAME on screen."
   (lsp-ui-doc--resize-buffer)
-  (-let* (((_left top right _bottom) (window-edges nil nil nil t))
+  (-let* (((left top right _bottom) (window-edges nil nil nil t))
           (window (frame-root-window frame))
           ((width . height) (window-text-pixel-size window nil nil 10000 10000))
           (width (+ width (* (frame-char-width frame) 2))) ;; margins
           (frame-resize-pixelwise t))
     (set-window-margins window 1 1)
     (set-frame-size frame width height t)
-    (set-frame-position frame (- right width 10)
-                        (pcase lsp-ui-doc-position
-                          ('top (+ top 10))
-                          ('bottom (- (lsp-ui-doc--line-height 'mode-line)
-                                      height
-                                      10))))))
+    (if (eq lsp-ui-doc-position 'at-point)
+        (lsp-ui-doc--mv-at-point frame height left top)
+      (set-frame-position frame (- right width 10)
+                          (pcase lsp-ui-doc-position
+                            ('top (+ top 10))
+                            ('bottom (- (lsp-ui-doc--line-height 'mode-line)
+                                        height
+                                        10)))))))
 
 (defun lsp-ui-doc--visit-file (filename)
   "Visit FILENAME in the parent frame."
@@ -382,7 +429,8 @@ SYMBOL STRING."
   (lsp-ui-doc--delete-frame)
   (let* ((after-make-frame-functions nil)
          (before-make-frame-hook nil)
-         (buffer (get-buffer (lsp-ui-doc--make-buffer-name)))
+         (name-buffer (lsp-ui-doc--make-buffer-name))
+         (buffer (get-buffer name-buffer))
          (params (append lsp-ui-doc-frame-parameters
                          `((default-minibuffer-frame . ,(selected-frame))
                            (minibuffer . ,(minibuffer-window))
@@ -391,18 +439,21 @@ SYMBOL STRING."
                   buffer
                   `((child-frame-parameters . ,params))))
          (frame (window-frame window)))
+    (set-frame-parameter nil 'lsp-ui-doc-buffer buffer)
     (set-window-dedicated-p window t)
+    (redirect-frame-focus frame (frame-parent frame))
     (set-face-background 'internal-border lsp-ui-doc-border frame)
+    (run-hook-with-args 'lsp-ui-doc-frame-hook frame window)
     frame))
 
 (defun lsp-ui-doc--delete-frame ()
   "Delete the child frame if it exists."
-  (when-let* ((frame (lsp-ui-doc--get-frame)))
+  (-when-let (frame (lsp-ui-doc--get-frame))
     (delete-frame frame)
     (lsp-ui-doc--set-frame nil)))
 
 (defadvice select-window (after lsp-ui-doc--select-window activate)
-  "Make powerline aware of window change."
+  "Delete the child fram if window changes."
   (lsp-ui-doc--hide-frame))
 
 (defadvice load-theme (after lsp-ui-doc--delete-frame-on-theme-load activate)
@@ -413,6 +464,13 @@ SYMBOL STRING."
   "."
   (setq-local eldoc-documentation-function 'lsp-ui-doc--eldoc))
 
+(defun lsp-ui-doc--on-delete (frame)
+  "Function called when a FRAME is deleted."
+  (-some--> (frame-parameter frame 'lsp-ui-doc-buffer)
+            (get-buffer it)
+            (and (buffer-live-p it) it)
+            (kill-buffer it)))
+
 (define-minor-mode lsp-ui-doc-mode
   "Minor mode for showing hover information in child frame."
   :init-value nil
@@ -422,9 +480,21 @@ SYMBOL STRING."
     (cond
      (lsp-ui-doc-mode
       (progn
+        (with-eval-after-load 'frameset
+          ;; The documentation frame can’t be properly restored.  Especially
+          ;; ‘desktop-save’ will misbehave and save a bogus string "Unprintable
+          ;; entity" in the desktop file.  Therefore we have to prevent
+          ;; ‘frameset-save’ from saving the parameter.
+          (unless (assq 'lsp-ui-doc-frame frameset-filter-alist)
+            ;; Copy the variable first.  See the documentation of
+            ;; ‘frameset-filter-alist’ for explanation.
+            (cl-callf copy-tree frameset-filter-alist)
+            (push '(lsp-ui-doc-frame . :never) frameset-filter-alist)))
         (add-hook 'lsp-after-open-hook 'lsp-ui-doc-enable-eldoc nil t)
-        (add-hook 'post-command-hook 'lsp-ui-doc--make-request nil t)))
+        (add-hook 'post-command-hook 'lsp-ui-doc--make-request nil t)
+        (add-hook 'delete-frame-functions 'lsp-ui-doc--on-delete nil t)))
      (t
+      (remove-hook 'delete-frame-functions 'lsp-ui-doc--on-delete t)
       (remove-hook 'post-command-hook 'lsp-ui-doc--make-request t)
       (remove-hook 'lsp-after-open-hook 'lsp-ui-doc-enable-eldoc t)
       (setq-local eldoc-documentation-function 'lsp--on-hover)))))

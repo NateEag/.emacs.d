@@ -1244,35 +1244,45 @@ Currently `magit-log-mode', `magit-reflog-mode',
 (defun magit-repository-local-set (key value &optional repository)
   "Set the repository-local VALUE for KEY.
 
-KEY should be a symbol, or otherwise comparable by `eq'.
+Unless specified, REPOSITORY is the current buffer's repository.
 
-Unless specified, REPOSITORY is the current buffer's repository."
+If REPOSITORY is nil (meaning there is no current repository),
+then the value is not cached, and we return nil."
   (let* ((repokey (or repository (magit-repository-local-repository)))
          (cache (assoc repokey magit-repository-local-cache)))
-    (if cache
-        (let ((keyvalue (assq key (cdr cache))))
-          (if keyvalue
-              ;; Update pre-existing value for key.
-              (setcdr keyvalue value)
-            ;; No such key in repository-local cache.
-            (push (cons key value) (cdr cache))))
-      ;; No cache for this repository.
-      (push (cons repokey (list (cons key value)))
-            magit-repository-local-cache))))
+    ;; Don't cache values for a nil REPOSITORY, as the 'set' and 'get'
+    ;; calls for some KEY may happen in unrelated contexts.
+    (when repokey
+      (if cache
+          (let ((keyvalue (assoc key (cdr cache))))
+            (if keyvalue
+                ;; Update pre-existing value for key.
+                (setcdr keyvalue value)
+              ;; No such key in repository-local cache.
+              (push (cons key value) (cdr cache))))
+        ;; No cache for this repository.
+        (push (cons repokey (list (cons key value)))
+              magit-repository-local-cache)))))
 
 (defun magit-repository-local-exists-p (key &optional repository)
   "Non-nil when a repository-local value exists for KEY.
+
+Returns a (KEY . value) cons cell.
+
+The KEY is matched using `equal'.
 
 Unless specified, REPOSITORY is the current buffer's repository."
   (let* ((repokey (or repository (magit-repository-local-repository)))
          (cache (assoc repokey magit-repository-local-cache)))
     (and cache
-         (assq key (cdr cache)))))
+         (assoc key (cdr cache)))))
 
 (defun magit-repository-local-get (key &optional default repository)
   "Return the repository-local value for KEY.
 
 Return DEFAULT if no value for KEY exists.
+
+The KEY is matched using `equal'.
 
 Unless specified, REPOSITORY is the current buffer's repository."
   (let ((keyvalue (magit-repository-local-exists-p key repository)))
@@ -1287,7 +1297,9 @@ Unless specified, REPOSITORY is the current buffer's repository."
   (let* ((repokey (or repository (magit-repository-local-repository)))
          (cache (assoc repokey magit-repository-local-cache)))
     (when cache
-      (setf cache (assq-delete-all key cache)))))
+      ;; There is no `assoc-delete-all'.
+      (setf (cdr cache)
+            (cl-delete key (cdr cache) :key #'car :test #'equal)))))
 
 (provide 'magit-mode)
 ;;; magit-mode.el ends here

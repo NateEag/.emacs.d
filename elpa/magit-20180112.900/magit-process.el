@@ -719,9 +719,11 @@ If found, return the password.  Otherwise, return nil."
 
 (defun magit-process-password-prompt (process string)
   "Find a password based on prompt STRING and send it to git.
-First try the functions in `magit-process-find-password-functions'.
-If none of them returns a password, then read it from the user
-instead."
+Use `magit-process-password-prompt-regexps' to find a known
+prompt.  If and only if one is found, then call functions in
+`magit-process-find-password-functions' until one of them returns
+the password.  If all function return nil, then read the password
+from the user."
   (--when-let (magit-process-match-prompt
                magit-process-password-prompt-regexps string)
     (process-send-string
@@ -909,7 +911,8 @@ If STR is supplied, it replaces the `mode-line-process' text."
 
 (defvar magit-process-error-message-regexps
   (list "^\\*ERROR\\*: Canceled by user$"
-        "^\\(?:error\\|fatal\\|git\\): \\(.*\\)$"))
+        "^\\(?:error\\|fatal\\|git\\): \\(.*\\)$"
+        "^\\(Cannot rebase:.*\\)$"))
 
 (define-error 'magit-git-error "Git error")
 
@@ -924,7 +927,8 @@ If STR is supplied, it replaces the `mode-line-process' text."
                      'magit-process-error-message-regexps
                      (lambda (re)
                        (save-excursion
-                         (and (re-search-backward re nil t)
+                         (and (re-search-backward
+                               re (magit-section-start section) t)
                               (or (match-string-no-properties 1)
                                   (and (not magit-process-raise-error)
                                        'suppressed))))))))))

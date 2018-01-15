@@ -74,8 +74,29 @@
     (define-key notmuch-search-mode-map "j" 'next-line)
     (define-key notmuch-search-mode-map "k" 'previous-line)
 
+    ;; Make it easier to open attachments in the corresponding tool.
     (define-key notmuch-show-mode-map (kbd "o")
       'notmuch-show-interactively-view-part)
+
+    (define-key notmuch-show-mode-map "w"
+      (lambda ()
+        "Mark message as watched and reply to the sender."
+        (interactive)
+        (notmuch-show-tag (list "+watched"))
+        (notmuch-show-reply-sender)))
+
+    (define-key notmuch-show-mode-map "W"
+      (lambda ()
+        "Mark message as watched and reply to all."
+        (interactive)
+        (notmuch-show-tag (list "+watched"))
+        (notmuch-show-reply)))
+
+    ;; Download an attachment locally.
+    ;;
+    ;; A rebinding of the standard 'w' keybinding, since I use 'w' for
+    ;; something else."
+    (define-key notmuch-show-mode-map "d" 'notmuch-show-save-attachments)
 
     (defun ne/notmuch-tag-sent-emails (&optional arg)
       "Use shell command to tag sent emails as sent and read.

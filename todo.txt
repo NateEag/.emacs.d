@@ -1,605 +1,605 @@
--Use <leader>-. and <leader>-, for 'jump to def' and 'back to prev', as they do
- in most modes. IIRC this is not actually straightforward to do, but it would
- sure beat hopping into insert mode and back out all the time when I'm
- navigating. ...note that in stock evil, 'gd.' will attempt a jump to def, so
- maybe I just need to get used to normal-mode's C-o binding for jumping back
- where you last came from?
-
--Figure out how to make smartparens interact nicely with web-mode. '{{' and
- '{%' don't work right when both are on, but I don't see a way to ban
- multi-character sequences from smartparens, and I don't want to lose pairing
- braces in CSS and JS.
+- Use <leader>-. and <leader>-, for 'jump to def' and 'back to prev', as they do
+  in most modes. IIRC this is not actually straightforward to do, but it would
+  sure beat hopping into insert mode and back out all the time when I'm
+  navigating. ...note that in stock evil, 'gd.' will attempt a jump to def, so
+  maybe I just need to get used to normal-mode's C-o binding for jumping back
+  where you last came from?
+
+- Figure out how to make smartparens interact nicely with web-mode. '{{' and
+  '{%' don't work right when both are on, but I don't see a way to ban
+  multi-character sequences from smartparens, and I don't want to lose pairing
+  braces in CSS and JS.
 
- Years later, I just realized it would help to only activate smartparens when
- I'm in JS, CSS, or a server-side language, since I'm usually writing '{{' and
- '{%' in markup, not genuine languages. Basically advise smartparens key
- handlers if you're in web-mode and only let them fire when you're not in
- markup. Note that it's only really braces I'd want to turn off pairing for -
- most other pairs don't have this issue.
+  Years later, I just realized it would help to only activate smartparens when
+  I'm in JS, CSS, or a server-side language, since I'm usually writing '{{' and
+  '{%' in markup, not genuine languages. Basically advise smartparens key
+  handlers if you're in web-mode and only let them fire when you're not in
+  markup. Note that it's only really braces I'd want to turn off pairing for -
+  most other pairs don't have this issue.
 
--Set up an ne/html-scratchpad function that starts a new HTML buffer, serves it
- up through some scratchpad directory, and opens a link to it in the browser.
- Should be pretty trivial and make it easy to start experiments - just need to
- customize httpd-root and write a little code. Think of it as a local JSFiddle.
+- Set up an ne/html-scratchpad function that starts a new HTML buffer, serves it
+  up through some scratchpad directory, and opens a link to it in the browser.
+  Should be pretty trivial and make it easy to start experiments - just need to
+  customize httpd-root and write a little code. Think of it as a local JSFiddle.
 
--Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
+- Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
 
--Suppress aggressive-fill-paragraph-mode while directly above or below markdown
- code blocks.
+- Suppress aggressive-fill-paragraph-mode while directly above or below markdown
+  code blocks.
 
--Try integrating web-mode-edit-element into my markup editing style. If it
- works out, delete my prototypical work on making tagedit work with web-mode in
- favor of it, per this comment of mine:
- https://github.com/magnars/tagedit/pull/15#issuecomment-260336539
+- Try integrating web-mode-edit-element into my markup editing style. If it
+  works out, delete my prototypical work on making tagedit work with web-mode in
+  favor of it, per this comment of mine:
+  https://github.com/magnars/tagedit/pull/15#issuecomment-260336539
 
--Submit PR to make flycheck-eslint-rulesdir a list.
+- Submit PR to make flycheck-eslint-rulesdir a list.
 
--Make js-doc use Tern (when available) to guess types for function params.
+- Make js-doc use Tern (when available) to guess types for function params.
 
--I'd like to have a hotkey that brings up my most recent terminal. I'd also
- like terminal windows to always appear in a bottom window of my current frame,
- which is probably a need popwin would achieve admirably. I used to think I
- wanted something more like a tabbed terminal emulator, and maybe I will want
- some keybindings for flipping between groups of terminal buffers, but that's
- secondary to just establishing "terminal buffers get the bottom window". I
- have just installed term-projectile, which seems to handle the create and swap
- features - I just need to teach popwin how to force terminals to always
- display in the bottom half of a split panel properly. N.B.: shackle may be a
- significantly better alternative to popwin:
- https://github.com/wasamasa/shackle
+- I'd like to have a hotkey that brings up my most recent terminal. I'd also
+  like terminal windows to always appear in a bottom window of my current frame,
+  which is probably a need popwin would achieve admirably. I used to think I
+  wanted something more like a tabbed terminal emulator, and maybe I will want
+  some keybindings for flipping between groups of terminal buffers, but that's
+  secondary to just establishing "terminal buffers get the bottom window". I
+  have just installed term-projectile, which seems to handle the create and swap
+  features - I just need to teach popwin how to force terminals to always
+  display in the bottom half of a split panel properly. N.B.: shackle may be a
+  significantly better alternative to popwin:
+  https://github.com/wasamasa/shackle
 
--Figure out why git-rebase-mode doesn't always have the keybindings it claims
- to. I think it happens the first time I rebase after starting Emacs, so it's
- likely an initialization problem, but I'm not really sure.
+- Figure out why git-rebase-mode doesn't always have the keybindings it claims
+  to. I think it happens the first time I rebase after starting Emacs, so it's
+  likely an initialization problem, but I'm not really sure.
 
--Come up with a way to send emails and flag the newly-made thread as 'watched'.
- Incident count: 1
+- Come up with a way to send emails and flag the newly-made thread as 'watched'.
+  Incident count: 1
 
--Use smtpmail-queue-mail and some network up/down notifier to automatically
- queue mail if offline and to automatically send it when back online.
+- Use smtpmail-queue-mail and some network up/down notifier to automatically
+  queue mail if offline and to automatically send it when back online.
 
- Update: I have just installed the 'network-watch' package from MELPA, so this
- should be just about trivial to do now.
+  Update: I have just installed the 'network-watch' package from MELPA, so this
+  should be just about trivial to do now.
 
--Auto-resize embedded images in emails to fit in the current window. I've set
- `mm-inline-large-images` to 'resize', which ought to do this job, but it
- doesn't work for me because Emacs for OS X does not include ImageMagick
- support, AFAICT. Try a homebrew-based build, perhaps?
+- Auto-resize embedded images in emails to fit in the current window. I've set
+  `mm-inline-large-images` to 'resize', which ought to do this job, but it
+  doesn't work for me because Emacs for OS X does not include ImageMagick
+  support, AFAICT. Try a homebrew-based build, perhaps?
 
--Figure out what mime-type should be used for emailing bash scripts as an
- attachment.
+- Figure out what mime-type should be used for emailing bash scripts as an
+  attachment.
 
--Set up a keybinding to send a new email and start watching the thread it
- spawns. Incident count: 1
+- Set up a keybinding to send a new email and start watching the thread it
+  spawns. Incident count: 1
 
--Understand how text/plain email attachments get converted from just LF to
- CRLF. I suspect it's notmuch's compose mode making sure my attachment conforms
- to RFC 2046, section 4.1.1, which specifies CRLF *must* be used for text/plain
- content.
+- Understand how text/plain email attachments get converted from just LF to
+  CRLF. I suspect it's notmuch's compose mode making sure my attachment conforms
+  to RFC 2046, section 4.1.1, which specifies CRLF *must* be used for text/plain
+  content.
 
--Make the ansi-term tweaks suggested in this article:
- http://echosa.github.io/blog/2012/06/06/improving-ansi-term/
+- Make the ansi-term tweaks suggested in this article:
+  http://echosa.github.io/blog/2012/06/06/improving-ansi-term/
 
--Consider using project-shells for managing shells? I've installed it just so I
- have it around should I decide to try it.
+- Consider using project-shells for managing shells? I've installed it just so I
+  have it around should I decide to try it.
 
--Add keybindings for goto-chg commands and start using them.
+- Add keybindings for goto-chg commands and start using them.
 
--Add mechanism for viewing keymaps in readable form via
- substitute-command-keys. Sample usage:
- (substitute-command-keys "\\{evil-inner-text-objects-map}")
+- Add mechanism for viewing keymaps in readable form via
+  substitute-command-keys. Sample usage:
+  (substitute-command-keys "\\{evil-inner-text-objects-map}")
 
--Fix the issue where leaving a Python buffer reverts point to position 0. I'm
- guessing this is due to some piece of python-mode config I have, likely Jedi?
- It seems the most likely offender.
+- Fix the issue where leaving a Python buffer reverts point to position 0. I'm
+  guessing this is due to some piece of python-mode config I have, likely Jedi?
+  It seems the most likely offender.
 
--Figure out why I'm not getting js2-mode as my javascript mode. I thought I
- was, but something has clearly changed that...
+- Figure out why I'm not getting js2-mode as my javascript mode. I thought I
+  was, but something has clearly changed that...
 
--js2-mode indents constructs like this:
+- js2-mode indents constructs like this:
 
- var foo = {
-         bar: 'baz'
-     },
-     biz = 12;
+  var foo = {
+          bar: 'baz'
+      },
+      biz = 12;
 
- incorrectly (or at least not how I like it to). Figure out why, fix it.
+  incorrectly (or at least not how I like it to). Figure out why, fix it.
 
--Make aggressive-fill-paragraph-mode work better in js2-mode. Right now, if you
- fill a comment of the form
+- Make aggressive-fill-paragraph-mode work better in js2-mode. Right now, if you
+  fill a comment of the form
 
- /**
-  *      This is a paragraph that goes for a way and then eventually should wrap to a second line.
-  */
+  /**
+   *      This is a paragraph that goes for a way and then eventually should wrap to a second line.
+   */
 
- it does not properly indent the second line up to the first.
+  it does not properly indent the second line up to the first.
 
- Research suggests afp-only-fill-comments uses fill-comment-paragraph, which
- seems to work with //-style comments, but not C-style comments, I think due to
- comment-start being // in js2-mode.
+  Research suggests afp-only-fill-comments uses fill-comment-paragraph, which
+  seems to work with //-style comments, but not C-style comments, I think due to
+  comment-start being // in js2-mode.
 
- js-mode itself uses js-c-fill-paragraph when you press M-q - it's the value
- of fill-paragraph-function.
+  js-mode itself uses js-c-fill-paragraph when you press M-q - it's the value
+  of fill-paragraph-function.
 
- So what if we hack the comment-filling code to use it?
+  So what if we hack the comment-filling code to use it?
 
- Why, that works just beautifully.
+  Why, that works just beautifully.
 
- I am currently running with a change that makes the only-fill-comments mode
- just suppress filling unless we're in a comment.
+  I am currently running with a change that makes the only-fill-comments mode
+  just suppress filling unless we're in a comment.
 
- As I suspected, though, that fails in modes whose fill logic does more than
- just comments.
+  As I suspected, though, that fails in modes whose fill logic does more than
+  just comments.
 
- We could probably work around that by narrowing to the current comment before
- filling takes place, via save-restriction.
+  We could probably work around that by narrowing to the current comment before
+  filling takes place, via save-restriction.
 
- Finding the current comment's extent is not quite simple, alas. There does not
- seem to be a built-in function for doing it.
+  Finding the current comment's extent is not quite simple, alas. There does not
+  seem to be a built-in function for doing it.
 
- comment-search-{forward,backward} finds comment starts, but of course multiple
- single-line comments in a row confuse it dreadfully. And I see no built-in way
- to determine where a comment ends.
+  comment-search-{forward,backward} finds comment starts, but of course multiple
+  single-line comments in a row confuse it dreadfully. And I see no built-in way
+  to determine where a comment ends.
 
- So, to go down this route, I would need to write a general function that can
- find the bounds of the current comment, for both single- and multi-line
- comments. :/
+  So, to go down this route, I would need to write a general function that can
+  find the bounds of the current comment, for both single- and multi-line
+  comments. :/
 
- On reflection, that shouldn't be too hard. For multiline comments, just find
- the comment's start and the comment's end.
+  On reflection, that shouldn't be too hard. For multiline comments, just find
+  the comment's start and the comment's end.
 
- For single-line comments, from the current line, work backwards until you find
- a line that doesn't contain just whitespace or comment syntax. Then work
- forward until you find a line that doesn't contain just whitespace/comment
- syntax. Maybe require that the comments all be indented to the same depth,
- too.
+  For single-line comments, from the current line, work backwards until you find
+  a line that doesn't contain just whitespace or comment syntax. Then work
+  forward until you find a line that doesn't contain just whitespace/comment
+  syntax. Maybe require that the comments all be indented to the same depth,
+  too.
 
- ...furthermore, if I actually got this working generically, I could finally
- have my stupid 'comment' text object for evil.
+  ...furthermore, if I actually got this working generically, I could finally
+  have my stupid 'comment' text object for evil.
 
- http://emacs.stackexchange.com/a/19711 claims the general feature for both
- single- and multi-line comments exists, and points to the Emacs docs, so yay.
+  http://emacs.stackexchange.com/a/19711 claims the general feature for both
+  single- and multi-line comments exists, and points to the Emacs docs, so yay.
 
--Consider using suppression functions to implement afp's fill-comments-only
- feature? I feel like it would be more robust than the current approach, but
- perhaps I'm mistaken. I also think it might solve some of my js2-mode issues,
- though I'm not sure of that (I think changing the fill function from the
- default is where they come from).
+- Consider using suppression functions to implement afp's fill-comments-only
+  feature? I feel like it would be more robust than the current approach, but
+  perhaps I'm mistaken. I also think it might solve some of my js2-mode issues,
+  though I'm not sure of that (I think changing the fill function from the
+  default is where they come from).
 
--Add afp-super-aggressive to aggressive-fill-paragraph-mode to bundle up my
- proposed changes per the maintainer's suggestion.
+- Add afp-super-aggressive to aggressive-fill-paragraph-mode to bundle up my
+  proposed changes per the maintainer's suggestion.
 
--Make aggressive-fill-paragraph-mode suppress auto-fill in markdown-mode code
- blocks. I thought it was supposed to, but in the traditional four-space
- indented code blocks, it doesn't seem to work for me.
+- Make aggressive-fill-paragraph-mode suppress auto-fill in markdown-mode code
+  blocks. I thought it was supposed to, but in the traditional four-space
+  indented code blocks, it doesn't seem to work for me.
 
--Figure out why entering '/**<RET>' in js2-mode results in a proper comment
- block if you wait a bit before pressing Enter, but a weird string
- concatenation if you press it quickly.
+- Figure out why entering '/**<RET>' in js2-mode results in a proper comment
+  block if you wait a bit before pressing Enter, but a weird string
+  concatenation if you press it quickly.
 
--Make json-mode.el print paths more minimally (use .name instead of ["name"])?
- Maybe it's that way cause it's not supported everywhere.
+- Make json-mode.el print paths more minimally (use .name instead of ["name"])?
+  Maybe it's that way cause it's not supported everywhere.
 
--Add function for injecting JS from arbitrary URL into documents.
- There's already one for using bower, but being able to just grab any URL could
- be handy, especially if you're in a locked-down environment.
+- Add function for injecting JS from arbitrary URL into documents.
+  There's already one for using bower, but being able to just grab any URL could
+  be handy, especially if you're in a locked-down environment.
 
--Look into integrating jscs.el with my JS editing flow. I've already installed
- the elisp library just so I have it around. I much prefer ESLint for style
- checking, but if jscs can *fix* the style failures for me, that would be quite
- nice. Note that newer ESLint versions have some support for fixing violations.
+- Look into integrating jscs.el with my JS editing flow. I've already installed
+  the elisp library just so I have it around. I much prefer ESLint for style
+  checking, but if jscs can *fix* the style failures for me, that would be quite
+  nice. Note that newer ESLint versions have some support for fixing violations.
 
--Add tern-lint.el to my JS setup. Static type checking is a handy thing (and I
- personally find flow's comment-annotation syntax too intrusive for good
- readability).
+- Add tern-lint.el to my JS setup. Static type checking is a handy thing (and I
+  personally find flow's comment-annotation syntax too intrusive for good
+  readability).
 
--Report issue with Tern seeing 'this' as the global namespace in Angular
- controller functions. Controllers always have constructor semantics, and
- should be treated as such.
+- Report issue with Tern seeing 'this' as the global namespace in Angular
+  controller functions. Controllers always have constructor semantics, and
+  should be treated as such.
 
--Report dontLoad being overridden by loadEagerly in .tern-project. I would
- expect the opposite behavior.
+- Report dontLoad being overridden by loadEagerly in .tern-project. I would
+  expect the opposite behavior.
 
--For vars that are assigned a function directly, tern should treat any
- immediately-preceding JSDoc block as being that var's JSDoc. See pick in
- lodash 4.13.1 for an example of failure.
+- For vars that are assigned a function directly, tern should treat any
+  immediately-preceding JSDoc block as being that var's JSDoc. See pick in
+  lodash 4.13.1 for an example of failure.
 
--Add php-auto-yasnippet-style function params to tern.js.
+- Add php-auto-yasnippet-style function params to tern.js.
 
--I'd like yasnippets for JavaScript. I don't much like the defaults.
+- I'd like yasnippets for JavaScript. I don't much like the defaults.
 
--Report and/or fix yasnippet issue where loading js2-mode's snippets doesn't
- load its parent-mode's snippets.
+- Report and/or fix yasnippet issue where loading js2-mode's snippets doesn't
+  load its parent-mode's snippets.
 
--Add flycheck-css-colorguard: http://melpa.org/#/flycheck-css-colorguard
+- Add flycheck-css-colorguard: http://melpa.org/#/flycheck-css-colorguard
 
--css-mode should have working comment fill. Right now it only believes in
- single-line comments, which gets clumsy and annoying fast.
+- css-mode should have working comment fill. Right now it only believes in
+  single-line comments, which gets clumsy and annoying fast.
 
-...it looks like someone may have actually fixed this:
- https://lists.gnu.org/archive/html/emacs-diffs/2015-04/msg00293.html
+  ...it looks like someone may have actually fixed this:
+  https://lists.gnu.org/archive/html/emacs-diffs/2015-04/msg00293.html
 
- Further research shows that css-fill-paragraph works, but there are two issues
- with my current setup using current css-mode:
+  Further research shows that css-fill-paragraph works, but there are two issues
+  with my current setup using current css-mode:
 
-     * RET binding does not insert the appropriate comment prefix.
+      * RET binding does not insert the appropriate comment prefix.
 
-       php-mode gets this right. So does c-mode. Ah, right - because php-mode is
-       a big hack on top of c-mode.
+        php-mode gets this right. So does c-mode. Ah, right - because php-mode is
+        a big hack on top of c-mode.
 
-       It looks like c-mode has its own function implementing the
-       comment-and-newline behavior, while I'm using comment-indent-new-line.
-       It works fine in most modes, but not css-mode.
+        It looks like c-mode has its own function implementing the
+        comment-and-newline behavior, while I'm using comment-indent-new-line.
+        It works fine in most modes, but not css-mode.
 
-       Supposedly setting 'comment-multi-line' to non-nil should solve this, but
-       it doesn't.
+        Supposedly setting 'comment-multi-line' to non-nil should solve this, but
+        it doesn't.
 
-       ...inspection via edebug suggests comment-indent-new-line is expecting
-       fill-prefix to be set by adaptive-fill, but it's nil. How's that
-       supposed to work?
+        ...inspection via edebug suggests comment-indent-new-line is expecting
+        fill-prefix to be set by adaptive-fill, but it's nil. How's that
+        supposed to work?
 
-       fill-prefix is used on the assumption that it's a normal fill-prefix,
-       then a few lines later it's used as if it's chosen by adaptive-fill, but
-       with no logic to actually invoke adaptive-fill.
+        fill-prefix is used on the assumption that it's a normal fill-prefix,
+        then a few lines later it's used as if it's chosen by adaptive-fill, but
+        with no logic to actually invoke adaptive-fill.
 
-       If I run fill-context-prefix manually on a decent-sized hunk of CSS
-       comment, it returns " * ", as you'd hope.
+        If I run fill-context-prefix manually on a decent-sized hunk of CSS
+        comment, it returns " * ", as you'd hope.
 
-       So how can I make that apply in this context?
+        So how can I make that apply in this context?
 
-     * fill-paragraph does not work correctly on a one-line paragraph that is
-       wider than fill-column. It works fine in other cases, and auto-fill
-       itself *does* work fine in that case.
+      * fill-paragraph does not work correctly on a one-line paragraph that is
+        wider than fill-column. It works fine in other cases, and auto-fill
+        itself *does* work fine in that case.
 
--ac-source-css-property and ac-source-css-property-names are missing a bunch of
- bleeding-edge CSS 3 stuff. Get that in there. Ideally, generated from the
- spec, along with basic docs, and adding ';' at the end of property values.
+- ac-source-css-property and ac-source-css-property-names are missing a bunch of
+  bleeding-edge CSS 3 stuff. Get that in there. Ideally, generated from the
+  spec, along with basic docs, and adding ';' at the end of property values.
 
--Maybe add ac-html-csswatcher package to my setup. Parses CSS/LESS files in your
- project to give you a class/ID ac-source when writing HTML.
+- Maybe add ac-html-csswatcher package to my setup. Parses CSS/LESS files in your
+  project to give you a class/ID ac-source when writing HTML.
 
--It would be awesome to have a flycheck module that gave warnings/errors based
- on (configurable) browsers you just violated support for. The caniuse data
- makes this feasible, but maybe a royal pain.
+- It would be awesome to have a flycheck module that gave warnings/errors based
+  on (configurable) browsers you just violated support for. The caniuse data
+  makes this feasible, but maybe a royal pain.
 
--Bind '<leader> p s' to helm-projectile-ag, with fallback to the regular grep
- command. (feature request in helm-projectile-ag?)
+- Bind '<leader> p s' to helm-projectile-ag, with fallback to the regular grep
+  command. (feature request in helm-projectile-ag?)
 
--Make projectile refresh cache on idle, and always use cache? I can touch
- .projectile if I want to force a refresh. Then again, this is only noticeable
- on my work machine... Enable if file listing takes more than N milliseconds?
+- Make projectile refresh cache on idle, and always use cache? I can touch
+  .projectile if I want to force a refresh. Then again, this is only noticeable
+  on my work machine... Enable if file listing takes more than N milliseconds?
 
--Fix ':' choking projectile grep searches on Windows.
+- Fix ':' choking projectile grep searches on Windows.
 
--I would like an auto-complete source for existing files that is based on a
- per-project 'docroot/static' variable. I would like that source to be
- activated when I am working in a template and have entered an href="/..." or a
- src="/...". Actually, it might work better if it was just activated for any
- string beginning with '/'. Some hints:
- http://superuser.com/questions/67170/how-do-i-complete-file-paths-in-emacs
+- I would like an auto-complete source for existing files that is based on a
+  per-project 'docroot/static' variable. I would like that source to be
+  activated when I am working in a template and have entered an href="/..." or a
+  src="/...". Actually, it might work better if it was just activated for any
+  string beginning with '/'. Some hints:
+  http://superuser.com/questions/67170/how-do-i-complete-file-paths-in-emacs
 
--I should have Twig/Django snippets. 'block' is the obvious one, but probably
- snippets for all the major bits of syntax would be handy, and someone out
- there must have written such things.
+- I should have Twig/Django snippets. 'block' is the obvious one, but probably
+  snippets for all the major bits of syntax would be handy, and someone out
+  there must have written such things.
 
--Figure out how to run afp-fill-paragraph after kill-region *only* if the user
- called it interactively. It's often used in code which can lead to weird
- results inside comments.
+- Figure out how to run afp-fill-paragraph after kill-region *only* if the user
+  called it interactively. It's often used in code which can lead to weird
+  results inside comments.
 
--Make afp-fill-paragraph play better with <RET> <RET> in emacs lisp comments.
- The second <RET> loses the leading space, so you then have to type a space
- with something other than self-insert-function to actually make your new
- paragraph.
+- Make afp-fill-paragraph play better with <RET> <RET> in emacs lisp comments.
+  The second <RET> loses the leading space, so you then have to type a space
+  with something other than self-insert-function to actually make your new
+  paragraph.
 
--Use Consolas-10 as font by default on Windows.
+- Use Consolas-10 as font by default on Windows.
 
--Look into midi-kbd.el and lily-midi.el as an aid in creating lilypond files
- with MIDI instruments.
+- Look into midi-kbd.el and lily-midi.el as an aid in creating lilypond files
+  with MIDI instruments.
 
--Try using avy-mode instead of ace-jump-mode. It lets you see both chars for
- the target at once, which should make jumping significantly smoother.
+- Try using avy-mode instead of ace-jump-mode. It lets you see both chars for
+  the target at once, which should make jumping significantly smoother.
 
--Try smooth-scrolling package and see if it makes my life any better:
- https://github.com/aspiers/smooth-scrolling
+- Try smooth-scrolling package and see if it makes my life any better:
+  https://github.com/aspiers/smooth-scrolling
 
--Simpler alternative to file watchers, perhaps:
- https://github.com/wasamasa/firestarter
+- Simpler alternative to file watchers, perhaps:
+  https://github.com/wasamasa/firestarter
 
--Get ac-isearch working when auto-completion is active. I think my
- global-set-key of C-s to regex searching currently overrides it.
+- Get ac-isearch working when auto-completion is active. I think my
+  global-set-key of C-s to regex searching currently overrides it.
 
--Extract jedi-force to be an ELPA package. I was thinking of adding more
- features, but it might be fine as it is.
+- Extract jedi-force to be an ELPA package. I was thinking of adding more
+  features, but it might be fine as it is.
 
--Get evil-escape to recognize my escape keystroke when Caps Lock is on. That
- might be simple, or it might be convoluted - not sure. Issue:
- https://github.com/syl20bnr/evil-escape/issues/72
+- Get evil-escape to recognize my escape keystroke when Caps Lock is on. That
+  might be simple, or it might be convoluted - not sure. Issue:
+  https://github.com/syl20bnr/evil-escape/issues/72
 
--Get evil-escape to play nicely with aggressive-fill-mode. When it enters the
- first of your two characters, it can trigger a fill action. When it deletes
- that character, aggressive-fill-mode is not triggered, so you can wind up with
- improperly-wrapped paragraphs. I imagine some advice could solve this?
- key-chord-mode does not have this issue, because it just doesn't enter text
- until it's sure you're not doing a key chord, which is a little more seamless
- for me, but I'm sure tastes vary.
+- Get evil-escape to play nicely with aggressive-fill-mode. When it enters the
+  first of your two characters, it can trigger a fill action. When it deletes
+  that character, aggressive-fill-mode is not triggered, so you can wind up with
+  improperly-wrapped paragraphs. I imagine some advice could solve this?
+  key-chord-mode does not have this issue, because it just doesn't enter text
+  until it's sure you're not doing a key chord, which is a little more seamless
+  for me, but I'm sure tastes vary.
 
--Integrate what's useful from spacemacs: https://github.com/syl20bnr/spacemacs
- I've got most of what I want, but evil-little-word could be nice.
+- Integrate what's useful from spacemacs: https://github.com/syl20bnr/spacemacs
+  I've got most of what I want, but evil-little-word could be nice.
 
--Add evil text object/motion for 'comment', 'inner comment', 'around comment',
- etc. Sometimes I find myself trying to think in those terms.
+- Add evil text object/motion for 'comment', 'inner comment', 'around comment',
+  etc. Sometimes I find myself trying to think in those terms.
 
--Make comment auto-fill work with C++-style comments in js2-mode, not just
- C-style. Turns out it does - it's just that js2-mode thinks single-line
- comments are only block comments if there's a trailing single-line comment. A
- better test might be "is there a preceding single-line comment". See
- js2-mode-extend-comment for the logic that would need tweaking.
+- Make comment auto-fill work with C++-style comments in js2-mode, not just
+  C-style. Turns out it does - it's just that js2-mode thinks single-line
+  comments are only block comments if there's a trailing single-line comment. A
+  better test might be "is there a preceding single-line comment". See
+  js2-mode-extend-comment for the logic that would need tweaking.
 
--Make auto-fill apply to strings in emacs-lisp-mode. Really seems like this
- should already be happening. Dunno why it doesn't.
+- Make auto-fill apply to strings in emacs-lisp-mode. Really seems like this
+  should already be happening. Dunno why it doesn't.
 
--Get Emacs to auto-fill with string concatenation in JS (and similar langs).
- That is, something like this
- var foo = 'foo is ' +
-           'a set of ' +
-           'really short strings';
+- Get Emacs to auto-fill with string concatenation in JS (and similar langs).
+  That is, something like this
+  var foo = 'foo is ' +
+            'a set of ' +
+            'really short strings';
 
- if filled, becomes
+  if filled, becomes
 
- var foo = 'foo is a set of really short strings';
+  var foo = 'foo is a set of really short strings';
 
- Smart prefix detection would be a nice bonus feature, as when writing shell
- scripts I frequently find myself doing the 'echo "string"' dance, and the
- default fill-paragraph command in sh-mode has no idea how to handle it.
+  Smart prefix detection would be a nice bonus feature, as when writing shell
+  scripts I frequently find myself doing the 'echo "string"' dance, and the
+  default fill-paragraph command in sh-mode has no idea how to handle it.
 
--If I ever get minimap.el usable on OS X, when active it should appear between
- my two panes. That way it's always close to whichever buffer it applies to.
- Note: the sublimity package looks like it may be more maintained.
+- If I ever get minimap.el usable on OS X, when active it should appear between
+  my two panes. That way it's always close to whichever buffer it applies to.
+  Note: the sublimity package looks like it may be more maintained.
 
--Tweak md-readme.el so that author/created/requires lines are headers *without*
- colons, whose bodies are the text following the colon-delimited field names.
- el2markdown is another package to do a similar job - maybe it's better?
+- Tweak md-readme.el so that author/created/requires lines are headers *without*
+  colons, whose bodies are the text following the colon-delimited field names.
+  el2markdown is another package to do a similar job - maybe it's better?
 
--File feature request to flycheck for being able to run checkers while in
- web-mode. May well get rejected, because supporting this would be pretty hard.
+- File feature request to flycheck for being able to run checkers while in
+  web-mode. May well get rejected, because supporting this would be pretty hard.
 
--Add keybindings for scrolling completion window by a full window-ful. C-v and
- M-v are the obvious ones. Useful when you're digging through something like wx
- or the JDK looking for a class that might apply.
+- Add keybindings for scrolling completion window by a full window-ful. C-v and
+  M-v are the obvious ones. Useful when you're digging through something like wx
+  or the JDK looking for a class that might apply.
 
--Make smart-dash-mode in sh-mode prefer _s when typing var names, and -s when
- typing most other things (options, filenames, etc). I think that reflects my
- experience of having it active in sh-mode. I believe this behavior could be
- built by offering a list of modes where $ should be treated as a variable
- sigil, and in those modes no heuristic is necessary - if point is in a string
- matching \$[a-zA-Z0-9_]+, you *know* you should insert a _. Should probably
- file the suggestion with the author.
+- Make smart-dash-mode in sh-mode prefer _s when typing var names, and -s when
+  typing most other things (options, filenames, etc). I think that reflects my
+  experience of having it active in sh-mode. I believe this behavior could be
+  built by offering a list of modes where $ should be treated as a variable
+  sigil, and in those modes no heuristic is necessary - if point is in a string
+  matching \$[a-zA-Z0-9_]+, you *know* you should insert a _. Should probably
+  file the suggestion with the author.
 
--Derive a lightweight envrc-mode from sh-mode and add support for
- direnv-specific things like PATH_add. Google suggests none exists.
+- Derive a lightweight envrc-mode from sh-mode and add support for
+  direnv-specific things like PATH_add. Google suggests none exists.
 
--Make a PR to auto-complete for supporting smart-dash-mode.
+- Make a PR to auto-complete for supporting smart-dash-mode.
 
--Add a workaround to web-mode-init so smart-dash-mode knows when we're in a
- comment.
+- Add a workaround to web-mode-init so smart-dash-mode knows when we're in a
+  comment.
 
--Make a PR to yasnippet for my solution to the 'once' snippet overriding the
- 'require_once' snippet.
+- Make a PR to yasnippet for my solution to the 'once' snippet overriding the
+  'require_once' snippet.
 
--Find a workaround that will let me use auto-complete in a yasnippet tab field.
- A keybinding other than Tab for auto-complete would work, but it might be
- possible to bind something clever to Tab that picks which maneuver to do based
- on whether there are any characters before point *and* whether autocompletion
- has been invoked before while in this field. or something like that.
+- Find a workaround that will let me use auto-complete in a yasnippet tab field.
+  A keybinding other than Tab for auto-complete would work, but it might be
+  possible to bind something clever to Tab that picks which maneuver to do based
+  on whether there are any characters before point *and* whether autocompletion
+  has been invoked before while in this field. or something like that.
 
--Think about how backup-walker, undo-tree, and magit ought to intersect,
- ideally. Really this is less about any of those packages and more about the
- theoretical interplay between version control, explicit commits, implicit
- savepoints, and an editor's in-memory undo support. Note that the
- extraordinary John Wiegley has touched on some of this in his package
- git-undo.el: https://github.com/jwiegley/git-undo-el
+- Think about how backup-walker, undo-tree, and magit ought to intersect,
+  ideally. Really this is less about any of those packages and more about the
+  theoretical interplay between version control, explicit commits, implicit
+  savepoints, and an editor's in-memory undo support. Note that the
+  extraordinary John Wiegley has touched on some of this in his package
+  git-undo.el: https://github.com/jwiegley/git-undo-el
 
--Add a command to backup-walker to revert to the selected backup file. 'r'
- would be a good keybinding. If this doesn't already exist, it might make sense
- to wrap this up with my other backup settings as 'sane-autosaves'. See if
- backups-mode makes this work nicely?
- https://github.com/chadbraunduin/backups-mode
+- Add a command to backup-walker to revert to the selected backup file. 'r'
+  would be a good keybinding. If this doesn't already exist, it might make sense
+  to wrap this up with my other backup settings as 'sane-autosaves'. See if
+  backups-mode makes this work nicely?
+  https://github.com/chadbraunduin/backups-mode
 
--Add a command to backup-walker to ediff against the current file.
+- Add a command to backup-walker to ediff against the current file.
 
--Generate autoloads for my mode configs (and other code I've hacked up myself)
- from autoload cookie comments, rather than maintaining them manually. Might
- fit well into my commit hook setup?
+- Generate autoloads for my mode configs (and other code I've hacked up myself)
+  from autoload cookie comments, rather than maintaining them manually. Might
+  fit well into my commit hook setup?
 
--As a simple exercise to start learning macros, try implementing PHP's
- "defaulting" ternary operator behavior. The example I emailed myself was
- (setq (default (= 3 foo) 5)), where 'default' is the macro, presumably.
+- As a simple exercise to start learning macros, try implementing PHP's
+  "defaulting" ternary operator behavior. The example I emailed myself was
+  (setq (default (= 3 foo) 5)), where 'default' is the macro, presumably.
 
--If I ever start using multiple windows more seriously, window-numbering-mode
- might be handy. http://nschum.de/src/emacs/window-numbering-mode/
+- If I ever start using multiple windows more seriously, window-numbering-mode
+  might be handy. http://nschum.de/src/emacs/window-numbering-mode/
 
--Research PHP parsing tools/infrastructure that might be adapted to an Emacs
- plugin for code comprehension/refactoring/etc. If eclim works out, I might not
- need anything else. A few possibilities follow:
+- Research PHP parsing tools/infrastructure that might be adapted to an Emacs
+  plugin for code comprehension/refactoring/etc. If eclim works out, I might not
+  need anything else. A few possibilities follow:
 
--Get lsp-mode working with auto-complete for completions.
+- Get lsp-mode working with auto-complete for completions.
 
- lsp-mode says completion-at-point should just work, but that has not been my
- experience so far. It crashes with the error message "Wrong type argument:
- stringp, nil".
+  lsp-mode says completion-at-point should just work, but that has not been my
+  experience so far. It crashes with the error message "Wrong type argument:
+  stringp, nil".
 
- completion-at-point-functions is just lsp-completion-at-point, which when run
- at point returns something, so presumably what it returns isn't, in the end,
- quite what completion-at-point needs.
+  completion-at-point-functions is just lsp-completion-at-point, which when run
+  at point returns something, so presumably what it returns isn't, in the end,
+  quite what completion-at-point needs.
 
- Figuring out what's wrong here probably means a serious debugging session. It
- probably can't hurt to file a bug report first, though.
+  Figuring out what's wrong here probably means a serious debugging session. It
+  probably can't hurt to file a bug report first, though.
 
--Configure lsp-ui package to taste. I've installed it.
+- Configure lsp-ui package to taste. I've installed it.
 
--Consider integrating lsp-mode with php-auto-yasnippet? May or may not be worth
- doing.
+- Consider integrating lsp-mode with php-auto-yasnippet? May or may not be worth
+  doing.
 
--Get lsp-mode and php-language-server showing function summaries in minibuffer,
- not just function signatures.
+- Get lsp-mode and php-language-server showing function summaries in minibuffer,
+  not just function signatures.
 
--ac-php looks like it does a lot of what I'd need, as a newcomer to the party:
- https://github.com/xcwen/ac-php
+- ac-php looks like it does a lot of what I'd need, as a newcomer to the party:
+  https://github.com/xcwen/ac-php
 
--Install/configure php-scratch, as it could be handy for quick experiments.
+- Install/configure php-scratch, as it could be handy for quick experiments.
 
--If I ever have to go back to programming Java, try using emacs-eclim for
- auto-complete and jump-to-def. It should let me stay in Emacs while getting
- Eclipse's most useful features.
+- If I ever have to go back to programming Java, try using emacs-eclim for
+  auto-complete and jump-to-def. It should let me stay in Emacs while getting
+  Eclipse's most useful features.
 
--php-mode should not move sigils when swapping words with M-t.
- $this_thing => thing_$this is not what we want.
+- php-mode should not move sigils when swapping words with M-t.
+  $this_thing => thing_$this is not what we want.
 
--It would be really sweet to get yasnippet's bracket placement to do the Right
- Thing based on major-mode, placing them on the newline or on the same line
- intelligently. I'm guessing that can be achieved by applying elisp to the
- templates. This was inspired by making changes to the php-mode snippets to do
- bracket placement the way I like. Someone's done some work that was approved
- of by another guy on the yasnippet blog, and they've said any extensions would
- not be accepted into yasnippet:
- http://comments.gmane.org/gmane.emacs.yasnippet.devel/403
+- It would be really sweet to get yasnippet's bracket placement to do the Right
+  Thing based on major-mode, placing them on the newline or on the same line
+  intelligently. I'm guessing that can be achieved by applying elisp to the
+  templates. This was inspired by making changes to the php-mode snippets to do
+  bracket placement the way I like. Someone's done some work that was approved
+  of by another guy on the yasnippet blog, and they've said any extensions would
+  not be accepted into yasnippet:
+  http://comments.gmane.org/gmane.emacs.yasnippet.devel/403
 
--The PHP function/method snippets should have a header comment by default. For
- every parameter you add, an @param line should be inserted in the header
- comment.
+- The PHP function/method snippets should have a header comment by default. For
+  every parameter you add, an @param line should be inserted in the header
+  comment.
 
--Jump-to-definition for bash could be handy, for those cases where the scripts
- have grown enough to have a few different include files. Often that means you
- should just rewrite in another language, but I can imagine legitimate cases. I
- suspect you could roll your own with this snippet for figuring out where a
- function came from, and some parsing of PATH for commands:
- http://superuser.com/a/229038
+- Jump-to-definition for bash could be handy, for those cases where the scripts
+  have grown enough to have a few different include files. Often that means you
+  should just rewrite in another language, but I can imagine legitimate cases. I
+  suspect you could roll your own with this snippet for figuring out where a
+  function came from, and some parsing of PATH for commands:
+  http://superuser.com/a/229038
 
--Improved bash auto-complete while writing scripts would be nice, too. Search
- "$PATH" when writing commands, for instance (first word on line/first word
- inside subshells, first word in if, etc). Course, really you'd need a bash
- parser to get that right, but a handful of simple cases could probably just be
- hardcoded.
+- Improved bash auto-complete while writing scripts would be nice, too. Search
+  "$PATH" when writing commands, for instance (first word on line/first word
+  inside subshells, first word in if, etc). Course, really you'd need a bash
+  parser to get that right, but a handful of simple cases could probably just be
+  hardcoded.
 
--In bash, having smart-dash-mode prefer dashes if the current word begins with
- '--' would probably make life a lot better.
+- In bash, having smart-dash-mode prefer dashes if the current word begins with
+  '--' would probably make life a lot better.
 
--Adjust emacs env when editing files with a dominating direnv file (.envrc).
- This might slow things down, because you might have to change the env every
- time you changed buffers. Just a (crazy?) thought on how to make life a little
- nicer.
+- Adjust emacs env when editing files with a dominating direnv file (.envrc).
+  This might slow things down, because you might have to change the env every
+  time you changed buffers. Just a (crazy?) thought on how to make life a little
+  nicer.
 
--bash snippets would be nice: https://github.com/bmaland/yasnippet-sh-mode
+- bash snippets would be nice: https://github.com/bmaland/yasnippet-sh-mode
 
--Write/get a PHP snippet for array keyval. '$key’ => $val,
+- Write/get a PHP snippet for array keyval. '$key’ => $val,
 
--Write/get a PHP snippet for constructors. Really, this should just be a part
- of a class snippet. The point is that it would save a lot of typing to have
- one in the style of the Python one, especially since args should be
- initialized at the class level.
+- Write/get a PHP snippet for constructors. Really, this should just be a part
+  of a class snippet. The point is that it would save a lot of typing to have
+  one in the style of the Python one, especially since args should be
+  initialized at the class level.
 
--My SQL-in-PHP code does not work with queries that are built using
- concatenation, which some do (especially in crappy legacy codebases). See my
- email inbox for examples.
+- My SQL-in-PHP code does not work with queries that are built using
+  concatenation, which some do (especially in crappy legacy codebases). See my
+  email inbox for examples.
 
--Try using polymode to get YaML + markdown-mode for working in nateeag.com page
- files.
+- Try using polymode to get YaML + markdown-mode for working in nateeag.com page
+  files.
 
--yaml-mode syntax highlighting breaks if you use possessives, and no one has a
- clear fix. The package itself announces in the readme that it's abandonware,
- but the author says they'd take a co-maintainer, so a fix could perhaps be
- merged: https://github.com/yoshiki/yaml-mode/issues/20
+- yaml-mode syntax highlighting breaks if you use possessives, and no one has a
+  clear fix. The package itself announces in the readme that it's abandonware,
+  but the author says they'd take a co-maintainer, so a fix could perhaps be
+  merged: https://github.com/yoshiki/yaml-mode/issues/20
 
--Debug mmm-mode, php-mode, and sql-mode enough to uncomment my sql-mode
- embedding in php-mode.
+- Debug mmm-mode, php-mode, and sql-mode enough to uncomment my sql-mode
+  embedding in php-mode.
 
--If particularly bored, try getting GEBEN set up for debugging PHP. I'm
- uncertain whether this would actually be worth the effort.
+- If particularly bored, try getting GEBEN set up for debugging PHP. I'm
+  uncertain whether this would actually be worth the effort.
 
--Next time I have to work against a DB server, install emacs-edbi and
- edbi-minor-mode:
- https://github.com/kiwanami/emacs-edbi,
- https://github.com/proofit404/edbi-minor-mode
- Looks like it should beat the pants off sql-mode, even if it does depend on
- Perl.
+- Next time I have to work against a DB server, install emacs-edbi and
+  edbi-minor-mode:
+  https://github.com/kiwanami/emacs-edbi,
+  https://github.com/proofit404/edbi-minor-mode
+  Looks like it should beat the pants off sql-mode, even if it does depend on
+  Perl.
 
--sql-mode appears to be a far more powerful beast than I had ever really
- appreciated. I should look into setting up and learning the server
- interaction components, which could make my life so much less painful. Of
- particular note is http://www.emacswiki.org/emacs/SqlWithPlaceholders.
+- sql-mode appears to be a far more powerful beast than I had ever really
+  appreciated. I should look into setting up and learning the server
+  interaction components, which could make my life so much less painful. Of
+  particular note is http://www.emacswiki.org/emacs/SqlWithPlaceholders.
 
--Look into sql-mode-driven autocompletion. It might be useful.
+- Look into sql-mode-driven autocompletion. It might be useful.
 
--I would like my sql-mode to do a better job with font-lock. It does very
- poorly at dealing with strings that have backslashed quotes. Could this be
- solved by some regex-tweaking? Scuttlebutt on the net suggests that there's a
- toggleable setting.
+- I would like my sql-mode to do a better job with font-lock. It does very
+  poorly at dealing with strings that have backslashed quotes. Could this be
+  solved by some regex-tweaking? Scuttlebutt on the net suggests that there's a
+  toggleable setting.
 
--I should enable the rst-mode yasnippets when in rst-mode.
+- I should enable the rst-mode yasnippets when in rst-mode.
 
--I'd also like context-sensitive paragraph filling. That is, in comments, my
- fill-column value is 79, but if I'm in a Python docstring, fill-column should
- be 72. Apparently this is fixed in a Jan. 2013 commit to python-mode.el.
+- I'd also like context-sensitive paragraph filling. That is, in comments, my
+  fill-column value is 79, but if I'm in a Python docstring, fill-column should
+  be 72. Apparently this is fixed in a Jan. 2013 commit to python-mode.el.
 
--Figure out what the best way to save/restore my Emacs sessions is. Ideally,
- find a solution that lets me save/restore buffer state for a whole directory,
- but not for ones I haven't configured. I bet combining one of the existing
- packages with a bit of elisp and .dir-locals.el would do the job.
+- Figure out what the best way to save/restore my Emacs sessions is. Ideally,
+  find a solution that lets me save/restore buffer state for a whole directory,
+  but not for ones I haven't configured. I bet combining one of the existing
+  packages with a bit of elisp and .dir-locals.el would do the job.
 
--Figure out/steal/write a good cross-file find-and-replace. I can see why so
- many guys just use a Perl one-liner (which I have), but being able to do this
- from inside your editor is pretty convenient, especially if you want to do
- query-replace.
+- Figure out/steal/write a good cross-file find-and-replace. I can see why so
+  many guys just use a Perl one-liner (which I have), but being able to do this
+  from inside your editor is pretty convenient, especially if you want to do
+  query-replace.
 
--Look into anaconda-mode. It appears to be a wrapper around Jedi that might add
- a bit more intelligence, or something? Popped up in list-packages today.
+- Look into anaconda-mode. It appears to be a wrapper around Jedi that might add
+  a bit more intelligence, or something? Popped up in list-packages today.
 
--Think about whether I should pull ropemode back into python-mode; I never
- really used the refactoring tools, but maybe I should.
+- Think about whether I should pull ropemode back into python-mode; I never
+  really used the refactoring tools, but maybe I should.
 
--Integrate elpygen into my python development workflow? I've installed it but
- haven't thought about setup at all.
+- Integrate elpygen into my python development workflow? I've installed it but
+  haven't thought about setup at all.
 
--Set up ispell to use run-together words *outside* of comments and strings in
- programming modes. It results in tons of noise everywhere else.
+- Set up ispell to use run-together words *outside* of comments and strings in
+  programming modes. It results in tons of noise everywhere else.
 
--Delete trailing whitespace *only* from comments in diff-mode.
+- Delete trailing whitespace *only* from comments in diff-mode.
 
--When I'm yanking something into an indented block, python-mode ought to assume
- that I want it indented to that block's depth and adjust the leading
- whitespace for each line accordingly. This applies to indentation in general;
- it might work in most modes, for all I know. With Python, there's the
- perennial problem of no delimiters; it's not necessarily right to go to the
- highest possible indentation on a newline. For yanking, though, I'll bet it's
- the right call most of the time. If it's not, you're just an indent command
- away from having the right depth.
+- When I'm yanking something into an indented block, python-mode ought to assume
+  that I want it indented to that block's depth and adjust the leading
+  whitespace for each line accordingly. This applies to indentation in general;
+  it might work in most modes, for all I know. With Python, there's the
+  perennial problem of no delimiters; it's not necessarily right to go to the
+  highest possible indentation on a newline. For yanking, though, I'll bet it's
+  the right call most of the time. If it's not, you're just an indent command
+  away from having the right depth.
 
--Figure out why pyimpsort.el throws an error for me. It has something to do
- with my config - emacs -Q with package set up, then requiring python-mode and
- pyimpsort works. One of my addons (possibly jedi-force?) is causing the error.
+- Figure out why pyimpsort.el throws an error for me. It has something to do
+  with my config - emacs -Q with package set up, then requiring python-mode and
+  pyimpsort works. One of my addons (possibly jedi-force?) is causing the error.
 
--Fix which-func-ff-hook error: (void-function py--imenu-create-index-function).
- Might be related to above - they both seem likely to involve a variable being
- defined at the wrong time.
+- Fix which-func-ff-hook error: (void-function py--imenu-create-index-function).
+  Might be related to above - they both seem likely to involve a variable being
+  defined at the wrong time.
 
--Frequently, especially when writing prose, I find my fingers doing the dance
- any given editor requires to swap elements in a comma-separated list. Seems
- like that shouldn't require too many keystrokes. I'm sure Emacs can do this
- with a bit of hacking, and maybe it already does...
+- Frequently, especially when writing prose, I find my fingers doing the dance
+  any given editor requires to swap elements in a comma-separated list. Seems
+  like that shouldn't require too many keystrokes. I'm sure Emacs can do this
+  with a bit of hacking, and maybe it already does...
 
--A mode in which English grammatical rules are automatically applied to
- anything that looks like a sentence. For instance, when I refactor a sentence,
- it ought to know that the first word gets capitalized. That might be the only
- thing I actually want, come to think of it...
+- A mode in which English grammatical rules are automatically applied to
+  anything that looks like a sentence. For instance, when I refactor a sentence,
+  it ought to know that the first word gets capitalized. That might be the only
+  thing I actually want, come to think of it...
 
--I would like multiline comments to be hidden after the first line by default,
- with an easy way to toggle full comment display.
+- I would like multiline comments to be hidden after the first line by default,
+  with an easy way to toggle full comment display.
 
--I'd really like a code folding minor-mode - just lets you hide/show blocks of
- code, by saying basically "fold at this line" and "unfold at this line".
- I have started playing with hide/show mode, and it's not perfect, but it does
- more or less what I want for now.
+- I'd really like a code folding minor-mode - just lets you hide/show blocks of
+  code, by saying basically "fold at this line" and "unfold at this line".
+  I have started playing with hide/show mode, and it's not perfect, but it does
+  more or less what I want for now.
 
--It might be nice to store all byte-compiled files in a single byte-cache
- folder. It's probably not worth much hassle, though, since I have hooks
- generating them and they're gitignored.
+- It might be nice to store all byte-compiled files in a single byte-cache
+  folder. It's probably not worth much hassle, though, since I have hooks
+  generating them and they're gitignored.

@@ -30,7 +30,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-This manual is for Magit version 2.11.0 (2.11.0-381-g1c3529a54+1).
+This manual is for Magit version 2.11.0 (2.11.0-400-g00552fd10+1).
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -1392,6 +1392,15 @@ while others are not.  This is hard coded.  When a buffer is refreshed
 then the previous visibility is preserved.  The initial visibility of
 certain sections can also be overwritten using the hook
 ‘magit-section-set-visibility-hook’.
+
+ -- User Option: magit-section-cache-visibility-types
+
+     This option controls for which sections the previous visibility
+     state should be restored if a section disappears and later appears
+     again.  The value is a list of section types.
+
+     This requires that ‘magit-section-cached-visibility’ is a member of
+     ‘magit-section-set-visibility-hook’.
 
  -- Variable: magit-section-set-visibility-hook
 
@@ -6163,6 +6172,12 @@ features are available from separate popups.
 ‘M k’     (‘magit-remote-remove’)
 
      Delete a remote, read from the minibuffer.
+
+‘M p’     (‘magit-remote-prune-refspecs’)
+
+     Remove stale refspecs and tracking branches for REMOTE. If there
+     are only stale refspecs, then offer to either delete the remote or
+     replace the refspecs with the default refspec instead.
 
  -- User Option: magit-remote-add-set-remote.pushDefault
 

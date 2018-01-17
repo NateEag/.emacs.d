@@ -1004,6 +1004,7 @@ Appendix C Keystroke Index
 * m m <1>:                               Merging.             (line  52)
 * m n:                                   Merging.             (line  37)
 * m p:                                   Merging.             (line  44)
+* M p:                                   The Remote Popup.    (line  54)
 * M r:                                   The Remote Popup.    (line  40)
 * M u:                                   The Remote Popup.    (line  45)
 * M-1:                                   Section Visibility.  (line  33)
@@ -1494,6 +1495,7 @@ Appendix D Command Index
 * magit-remote-config-popup <1>:         The Remote Config Popup.
                                                               (line   6)
 * magit-remote-popup:                    The Remote Popup.    (line  13)
+* magit-remote-prune-refspecs:           The Remote Popup.    (line  54)
 * magit-remote-remove:                   The Remote Popup.    (line  50)
 * magit-remote-rename:                   The Remote Popup.    (line  40)
 * magit-remote-set-url:                  The Remote Popup.    (line  45)
@@ -1986,7 +1988,7 @@ Appendix F Variable Index
 * magit-refs-sections-hook:              References Sections. (line  13)
 * magit-refs-show-commit-count:          References Buffer.   (line  29)
 * magit-refs-tags-format:                References Buffer.   (line 109)
-* magit-remote-add-set-remote.pushDefault: The Remote Popup.  (line  54)
+* magit-remote-add-set-remote.pushDefault: The Remote Popup.  (line  60)
 * magit-remote-popup-show-variables:     The Remote Popup.    (line  18)
 * magit-repolist-columns:                Repository List.     (line  14)
 * magit-repository-directories:          Status Buffer.       (line  30)
@@ -1997,8 +1999,9 @@ Appendix F Variable Index
 * magit-root-section:                    Matching Sections.   (line  80)
 * magit-save-repository-buffers:         Automatic Saving of File-Visiting Buffers.
                                                               (line  13)
+* magit-section-cache-visibility-types:  Section Visibility.  (line  78)
 * magit-section-movement-hook:           Section Movement.    (line  38)
-* magit-section-set-visibility-hook:     Section Visibility.  (line  78)
+* magit-section-set-visibility-hook:     Section Visibility.  (line  87)
 * magit-section-show-child-count:        Section Options.     (line   9)
 * magit-shell-command-verbose-prompt:    Running Git Manually.
                                                               (line  46)

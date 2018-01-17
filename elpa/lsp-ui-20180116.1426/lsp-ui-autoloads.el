@@ -3,9 +3,9 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil nil ("lsp-ui-doc.el" "lsp-ui-flycheck.el" "lsp-ui-peek.el"
-;;;;;;  "lsp-ui-pkg.el" "lsp-ui-sideline.el" "lsp-ui.el") (23132
-;;;;;;  47212 0 0))
+;;;### (autoloads nil nil ("lsp-ui-doc.el" "lsp-ui-flycheck.el" "lsp-ui-imenu.el"
+;;;;;;  "lsp-ui-peek.el" "lsp-ui-pkg.el" "lsp-ui-sideline.el" "lsp-ui.el")
+;;;;;;  (23135 29924 0 0))
 
 ;;;***
 

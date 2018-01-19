@@ -28,7 +28,7 @@ this library implements a similar abstraction; a new kind of prefix
 command that is associated with a specific set of infix arguments and
 suffix commands.
 
-This manual is for Magit-Popup version 2.12.1.
+This manual is for Magit-Popup version 2.12.2.
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 

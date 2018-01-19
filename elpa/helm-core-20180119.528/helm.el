@@ -199,6 +199,7 @@ vectors, so don't use strings to define them."
     (define-key map (kbd "M-o")        'helm-previous-source)
     (define-key map (kbd "C-l")        'helm-recenter-top-bottom-other-window)
     (define-key map (kbd "M-C-l")      'helm-reposition-window-other-window)
+    (define-key map (kbd "C-c &")      'helm-restore-last-frame-position)
     (define-key map (kbd "C-M-v")      'helm-scroll-other-window)
     (define-key map (kbd "M-<next>")   'helm-scroll-other-window)
     (define-key map (kbd "C-M-y")      'helm-scroll-other-window-down)
@@ -744,6 +745,13 @@ regression)."
 The actions running from commands that are in
 `helm-commands-using-frame' that are themselves running helm will have
 a frame to display their `helm-buffer' when non nil."
+  :group 'helm
+  :type 'boolean)
+
+(defcustom helm-use-undecorated-frame-option nil
+  "Display helm frame undecorated when non nil.
+
+This option have no effect with emacs versions lower than 26."
   :group 'helm
   :type 'boolean)
 
@@ -1369,6 +1377,7 @@ This is only used when helm is using
 `helm-display-buffer-in-own-frame' as `helm-display-function' and
 `helm-display-buffer-reuse-frame' is non nil.")
 (defvar helm--nested nil)
+(defvar helm--last-frame-position nil)
 
 ;; Utility: logging
 (defun helm-log (format-string &rest args)
@@ -2712,6 +2721,7 @@ Note that this feature is available only with emacs-25+."
                         ;; Below point
                         (+ (cdr pos) line-height)))
               (title . "Helm")
+              (undecorated . ,helm-use-undecorated-frame-option)
               (vertical-scroll-bars . nil)
               (menu-bar-lines . 0)
               (fullscreen . nil)
@@ -2746,6 +2756,16 @@ Note that this feature is available only with emacs-25+."
       (delete-frame helm-popup-frame))
     (display-buffer
      buffer '(display-buffer-pop-up-frame . nil))))
+
+(defun helm-restore-last-frame-position ()
+  "Restore last helm frame position."
+  (interactive)
+  (with-helm-alive-p
+    (with-helm-window
+      (set-frame-position (selected-frame)
+                          (car helm--last-frame-position)
+                          (cdr helm--last-frame-position)))))
+(put 'helm-restore-last-frame-position 'helm-only t)
 
 ;;; Initialize
 ;;
@@ -3158,6 +3178,7 @@ WARNING: Do not use this mode yourself, it is internal to helm."
     ;; Be sure we call this from helm-buffer.
     (helm-funcall-foreach 'cleanup)
     (when (and helm--buffer-in-new-frame-p (null helm--nested))
+      (setq helm--last-frame-position (frame-position))
       (if helm-display-buffer-reuse-frame
           (make-frame-invisible) (delete-frame))))
   (helm-kill-async-processes)
@@ -4592,7 +4613,8 @@ It has no effect if `helm-echo-input-in-header-line' is nil."
   (when (with-helm-buffer helm-echo-input-in-header-line)
     (let ((ov (make-overlay (point-min) (point-max) nil nil t)))
       (overlay-put ov 'window (selected-window))
-      (helm-aif (helm-attr 'persistent-help)
+      (helm-aif (and helm-display-header-line
+                     (helm-attr 'persistent-help))
           (progn
             (overlay-put ov 'display
                          (truncate-string-to-width

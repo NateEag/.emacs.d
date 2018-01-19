@@ -20,7 +20,17 @@
 ;;;###autoload
 (defcustom lsp-php-server-install-dir (file-truename (locate-user-emacs-file "php-language-server/"))
   "Install directory for php-language-server.
-The slash is expected at the end."
+
+It should include a trailing slash."
+  :group 'lsp-mode
+  :risky t
+  :type 'directory)
+
+;;;###autoload
+(defcustom lsp-php-server-development-checkout nil
+  "If set, the path to a user's development checkout of php-language-server.
+
+It should include a trailing slash."
   :group 'lsp-mode
   :risky t
   :type 'directory)
@@ -29,6 +39,11 @@ The slash is expected at the end."
   "Lsp php command."
   (let ((php-language-server-file
 	 (concat lsp-php-server-install-dir "vendor/felixfbecker/language-server/bin/php-language-server.php")))
+
+	(when lsp-php-server-development-checkout
+	  (setq php-language-server-file
+			(concat lsp-php-server-development-checkout "bin/php-language-server")))
+
     `("php"
       ,php-language-server-file)))
 

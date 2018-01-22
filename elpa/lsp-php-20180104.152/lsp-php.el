@@ -42,7 +42,7 @@ It should include a trailing slash."
 
 	(when lsp-php-server-development-checkout
 	  (setq php-language-server-file
-			(concat lsp-php-server-development-checkout "bin/php-language-server")))
+			(concat lsp-php-server-development-checkout "bin/php-language-server.php")))
 
     `("php"
       ,php-language-server-file)))

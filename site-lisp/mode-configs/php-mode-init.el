@@ -54,12 +54,7 @@
 ;; but it does seem to be making forward headway.
 (require 'lsp-mode)
 
-(lsp-define-stdio-client lsp-php "php"
-                         ;; FIXME Don't just assume git repo.
-                         (lsp-make-traverser ".git")
-                         ;; TODO Quit using my own script for this.
-                         "php-lang-server")
-
+(require 'lsp-php)
 
 (defun php-mode-init ()
   "Load my particular tweaks for php-mode."

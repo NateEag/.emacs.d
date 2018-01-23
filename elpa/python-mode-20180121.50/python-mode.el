@@ -3119,47 +3119,44 @@ This does the following:
 
 When interactivly called, messages the shell name.
 
-With \\[universal-argument] 4 is called `py-switch-shell'.
-Optional argument ARG switch shell with universal argument.
 Optional argument FAST use fast-process."
   (interactive "P")
-  (if (eq 4 (prefix-numeric-value arg))
-      (py-switch-shell '(4))
-    (let* (res done
-	       (erg (cond (py-force-py-shell-name-p
-			   (default-value 'py-shell-name))
-			  (py-use-local-default
-			   (if (not (string= "" py-shell-local-path))
-			       (expand-file-name py-shell-local-path)
-			     (message "Abort: `py-use-local-default' is set to `t' but `py-shell-local-path' is empty. Maybe call `py-toggle-local-default-use'")))
-			  ((and (or fast py-fast-process-p)
-				(comint-check-proc (current-buffer))
-				(string-match "ython" (process-name (get-buffer-process (current-buffer)))))
-			   (progn
-			     (setq res (process-name (get-buffer-process (current-buffer))))
-			     (py--cleanup-process-name res)))
-			  ((and (not py-fast-process-p)
-				(comint-check-proc (current-buffer))
-				(setq done t)
-				(string-match "ython" (process-name (get-buffer-process (current-buffer)))))
-			   (setq res (process-name (get-buffer-process (current-buffer))))
-			   (py--cleanup-process-name res))
-			  ((py-choose-shell-by-shebang))
-			  ((py--choose-shell-by-import))
-			  ((py-choose-shell-by-path))
-			  (t (or
-			      (default-value 'py-shell-name)
-			      "python"))))
-	       (cmd (if (or
-			 ;; comint-check-proc was succesful
-			 done
-			 py-edit-only-p) erg
-		      (executable-find erg))))
-      (if cmd
-          (when (called-interactively-p 'any)
-            (message "%s" cmd))
-        (when (called-interactively-p 'any) (message "%s" "Could not detect Python on your system. Maybe set `py-edit-only-p'?")))
-      erg)))
+  (let* (res
+	 done
+	 (erg (cond (py-force-py-shell-name-p
+		     (default-value 'py-shell-name))
+		    (py-use-local-default
+		     (if (not (string= "" py-shell-local-path))
+			 (expand-file-name py-shell-local-path)
+		       (message "Abort: `py-use-local-default' is set to `t' but `py-shell-local-path' is empty. Maybe call `py-toggle-local-default-use'")))
+		    ((and (or fast py-fast-process-p)
+			  (comint-check-proc (current-buffer))
+			  (string-match "ython" (process-name (get-buffer-process (current-buffer)))))
+		     (progn
+		       (setq res (process-name (get-buffer-process (current-buffer))))
+		       (py--cleanup-process-name res)))
+		    ((and (not py-fast-process-p)
+			  (comint-check-proc (current-buffer))
+			  (setq done t)
+			  (string-match "ython" (process-name (get-buffer-process (current-buffer)))))
+		     (setq res (process-name (get-buffer-process (current-buffer))))
+		     (py--cleanup-process-name res))
+		    ((py-choose-shell-by-shebang))
+		    ((py--choose-shell-by-import))
+		    ((py-choose-shell-by-path))
+		    (t (or
+			(default-value 'py-shell-name)
+			"python"))))
+	 (cmd (if (or
+		   ;; comint-check-proc was succesful
+		   done
+		   py-edit-only-p) erg
+		(executable-find erg))))
+    (if cmd
+	(when (called-interactively-p 'any)
+	  (message "%s" cmd))
+      (when (called-interactively-p 'any) (message "%s" "Could not detect Python on your system. Maybe set `py-edit-only-p'?")))
+    erg))
 
 
 (defun py--normalize-directory (directory)
@@ -6106,7 +6103,14 @@ Default is t")
                   "SyntaxWarning" "SystemError" "SystemExit" "TabError" "TypeError"
                   "UnboundLocalError" "UnicodeDecodeError" "UnicodeEncodeError"
                   "UnicodeError" "UnicodeTranslateError" "UnicodeWarning"
-                  "UserWarning" "ValueError" "Warning" "ZeroDivisionError")
+                  "UserWarning" "ValueError" "Warning" "ZeroDivisionError"
+                  ;; OSError subclasses
+                  "BlockIOError" "ChildProcessError" "ConnectionError"
+                  "BrokenPipError" "ConnectionAbortedError"
+                  "ConnectionRefusedError" "ConnectionResetError"
+                  "FileExistsError" "FileNotFoundError" "InterruptedError"
+                  "IsADirectoryError" "NotADirectoryError" "PermissionError"
+                  "ProcessLookupError" "TimeoutError")
               word-end) . py-exception-name-face)
         ;; Builtins
         (,(rx
@@ -23014,78 +23018,6 @@ Start a new process if necessary. "
              (define-key py-mode-output-map key
                #'(lambda () (interactive) (beep))))
            (where-is-internal 'self-insert-command)))
-
-;;  backward compatibility
-(defalias 'py-switch-shells 'py-switch-shell)
-(defalias 'py-toggle-shell 'py-switch-shell)
-(defun py-switch-shell (&optional arg)
-  "Toggles between the interpreter customized in `py-shell-toggle-1' resp. `py-shell-toggle-2'. Was hard-coded CPython and Jython in earlier versions, now starts with Python2 and Python3 by default.
-
-ARG might be a python-version string to set to.
-
-\\[universal-argument] `py-toggle-shell' prompts to specify a reachable Python command.
-\\[universal-argument] followed by numerical arg 2 or 3, `py-toggle-shell' opens a respective Python shell.
-\\[universal-argument] followed by numerical arg 5 opens a Jython shell.
-
-Should you need more shells to select, extend this command by adding inside the first cond:
-
-                    ((eq NUMBER (prefix-numeric-value arg))
-                     \"MY-PATH-TO-SHELL\")"
-  (interactive "P")
-  (let ((name (cond ((eq 2 (prefix-numeric-value arg))
-                     "python2")
-                    ((eq 3 (prefix-numeric-value arg))
-                     "python3")
-                    ((eq 4 (prefix-numeric-value arg))
-                     (py--string-strip
-                      (read-from-minibuffer "Python Shell: " py-shell-name) "\" " "\" "
-                      ))
-                    ((eq 5 (prefix-numeric-value arg))
-                     "jython")
-                    (t (if (string-match py-shell-name
-                                         py-shell-toggle-1)
-                           py-shell-toggle-2
-                         py-shell-toggle-1))))
-        erg msg)
-    (cond ((or (string= "ipython" name)
-               (string= "IPython" name))
-           (setq py-shell-name name
-                 py-which-bufname "IPython"
-                 msg "IPython"
-                 mode-name "IPython"))
-          ((string-match "python3" name)
-           (setq py-shell-name name
-                 py-which-bufname (py--choose-buffer-name)
-                 msg "CPython"
-                 mode-name (py--choose-buffer-name)))
-          ((string-match "jython" name)
-           (setq py-shell-name name
-                 py-which-bufname (py--choose-buffer-name)
-                 msg "Jython"
-                 mode-name (py--choose-buffer-name)))
-          ((string-match "python" name)
-           (setq py-shell-name name
-                 py-which-bufname (py--choose-buffer-name)
-                 msg "CPython"
-                 mode-name py-which-bufname))
-          (t
-           (setq py-shell-name name
-                 py-which-bufname name
-                 msg name
-                 mode-name name)))
-    ;; py-edit-only-p has no interpreter
-    ;; (if py-edit-only-p
-    ;; (setq erg py-shell-name)
-    (setq erg (executable-find py-shell-name))
-    ;;)
-    (if erg
-        (progn
-          (force-mode-line-update)
-          (when (called-interactively-p 'any)
-            (message "Using the %s shell, %s" msg erg))
-          (setq py-output-buffer (format "*%s Output*" py-which-bufname)))
-      (error (concat "Could not detect " py-shell-name " on your sys
-tem")))))
 
 (defun py-toggle-local-default-use ()
   (interactive)

@@ -5,8 +5,6 @@
 ;; Author: Sebastien Chapuis <sebastien@chapu.is>
 ;; URL: https://github.com/emacs-lsp/lsp-ui
 ;; Keywords: lsp, ui
-;; Version: 0.0.1
-;; Package-Requires: ((emacs "26") (lsp-mode "3.4") (markdown-mode "1.0"))
 
 ;;; License
 ;;
@@ -65,15 +63,26 @@
                  (const :tag "At point" at-point))
   :group 'lsp-ui-doc)
 
-(defcustom lsp-ui-doc-background "#031A25"
-  "Background color of the frame.  To more customize the frame, see the varia..
-ble `lsp-ui-doc-frame-parameters'"
+(defcustom lsp-ui-doc-background "#272A36"
+  "Background color of the frame.
+To more customize the frame, see the variable
+`lsp-ui-doc-frame-parameters'."
   :type 'color
   :group 'lsp-ui-doc)
 
 (defcustom lsp-ui-doc-border "white"
   "Border color of the frame."
   :type 'color
+  :group 'lsp-ui-doc)
+
+(defcustom lsp-ui-doc-max-width 150
+  "Maximum number of columns of the frame."
+  :type 'integer
+  :group 'lsp-ui-doc)
+
+(defcustom lsp-ui-doc-max-height 30
+  "Maximum number of lines in the frame."
+  :type 'integer
   :group 'lsp-ui-doc)
 
 (defface lsp-ui-doc-header
@@ -156,7 +165,7 @@ Because some variables are buffer local.")
   `(plist-get lsp-ui-doc--parent-vars ,var))
 
 (defmacro lsp-ui-doc--set-frame (frame)
-  "Set the frame parameter 'lsp-ui-doc-frame to FRAME."
+  "Set the frame parameter ‘lsp-ui-doc-frame’ to FRAME."
   `(set-frame-parameter nil 'lsp-ui-doc-frame ,frame))
 
 (defmacro lsp-ui-doc--get-frame ()
@@ -171,20 +180,22 @@ Because some variables are buffer local.")
           "*"))
 
 (defun lsp-ui-doc--set-eldoc (marked-string)
-  "MARKED-STRING."
   (when marked-string
     (let ((string (lsp-ui-doc--extract-marked-string marked-string)))
       (setq lsp-ui-doc--string-eldoc string))))
 
 (defun lsp-ui-doc--eldoc (&rest _)
-  "."
   (when (and (lsp--capability "documentHighlightProvider")
              lsp-highlight-symbol-at-point)
     (lsp-symbol-highlight))
   lsp-ui-doc--string-eldoc)
 
+;; ‘markdown-fontify-code-block-default-mode’ isn’t yet available in
+;; Markdown 2.3.
+(defvar markdown-fontify-code-block-default-mode)
+
 (defun lsp-ui-doc--setup-markdown (mode)
-  "Setup the markdown-mode in the frame.
+  "Setup the ‘markdown-mode’ in the frame.
 MODE is the mode used in the parent frame."
   (make-local-variable 'markdown-code-lang-modes)
   (dolist (mark (alist-get mode lsp-ui-doc-custom-markup-modes))
@@ -220,7 +231,6 @@ MODE is the mode used in the parent frame."
          (buffer-string))))))
 
 (defun lsp-ui-doc--filter-marked-string (list-marked-string)
-  "LIST-MARKED-STRING."
   (let ((groups (--separate (and (hash-table-p it)
                                  (lsp-ui-sideline--get-renderer (gethash "language" it)))
                             list-marked-string)))
@@ -304,7 +314,6 @@ BUFFER is the buffer where the request has been made."
                   (window-line-height line)))))
 
 (defun lsp-ui-doc--sideline-pos-y ()
-  "."
   (-> (when (bound-and-true-p lsp-ui-sideline--occupied-lines)
         (-min lsp-ui-sideline--occupied-lines))
       (line-number-at-pos)
@@ -313,8 +322,8 @@ BUFFER is the buffer where the request has been made."
 (defun lsp-ui-doc--resize-buffer ()
   "If the buffer's width is larger than the current window, resize it."
   (let* ((window-width (window-width))
-         (fill-column (- window-width 5)))
-    (when (> (lsp-ui-doc--buffer-width) window-width)
+         (fill-column (min lsp-ui-doc-max-width (- window-width 5))))
+    (when (> (lsp-ui-doc--buffer-width) (min lsp-ui-doc-max-width window-width))
       (lsp-ui-doc--with-buffer
        (fill-region (point-min) (point-max))))))
 
@@ -341,6 +350,8 @@ START-Y is the position y of the current window."
           (window (frame-root-window frame))
           ((width . height) (window-text-pixel-size window nil nil 10000 10000))
           (width (+ width (* (frame-char-width frame) 2))) ;; margins
+          (char-h (frame-char-height))
+          (height (min (- (* lsp-ui-doc-max-height char-h) (/ char-h 2)) height))
           (frame-resize-pixelwise t))
     (set-window-margins window 1 1)
     (set-frame-size frame width height t)
@@ -397,8 +408,7 @@ FN is the function to call on click."
       (search-failed nil))))
 
 (defun lsp-ui-doc--render-buffer (string symbol)
-  "Set the BUFFER with STRING.
-SYMBOL."
+  "Set the buffer with STRING."
   (lsp-ui-doc--with-buffer
    (erase-buffer)
    (insert (concat (propertize "\n" 'face '(:height 0.2))
@@ -412,8 +422,7 @@ SYMBOL."
          cursor-type nil)))
 
 (defun lsp-ui-doc--display (symbol string)
-  "Display the documentation on screen.
-SYMBOL STRING."
+  "Display the documentation on screen."
   (if (or (null string)
           (string-empty-p string))
       (lsp-ui-doc--hide-frame)
@@ -453,15 +462,14 @@ SYMBOL STRING."
     (lsp-ui-doc--set-frame nil)))
 
 (defadvice select-window (after lsp-ui-doc--select-window activate)
-  "Delete the child fram if window changes."
+  "Delete the child frame if window changes."
   (lsp-ui-doc--hide-frame))
 
 (defadvice load-theme (after lsp-ui-doc--delete-frame-on-theme-load activate)
-  "Force a frame refresh on theme reload"
+  "Force a frame refresh on theme reload."
   (lsp-ui-doc--delete-frame))
 
 (defun lsp-ui-doc-enable-eldoc ()
-  "."
   (setq-local eldoc-documentation-function 'lsp-ui-doc--eldoc))
 
 (defun lsp-ui-doc--on-delete (frame)
@@ -500,7 +508,7 @@ SYMBOL STRING."
       (setq-local eldoc-documentation-function 'lsp--on-hover)))))
 
 (defun lsp-ui-doc-enable (enable)
-  "ENABLE/disable lsp-ui-doc-mode.
+  "Enable/disable ‘lsp-ui-doc-mode’.
 It is supposed to be called from `lsp-ui--toggle'"
   (lsp-ui-doc-mode (if enable 1 -1)))
 

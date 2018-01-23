@@ -6,7 +6,6 @@
 ;; URL: https://github.com/emacs-lsp/lsp-ui
 ;; Keywords: lsp, ui
 ;; Version: 0.0.1
-;; Package-Requires: ((emacs "25.1") (lsp-mode "3.4") (dash "0.13"))
 
 ;;; License
 ;;
@@ -48,7 +47,7 @@
   :link '(info-link "(lsp-ui-peek) Customizing"))
 
 (defcustom lsp-ui-peek-enable t
-  "Whether or not to enable lsp-ui-peek."
+  "Whether or not to enable ‘lsp-ui-peek’."
   :type 'boolean
   :group 'lsp-ui)
 
@@ -63,8 +62,8 @@
   :group 'lsp-ui-peek)
 
 (defcustom lsp-ui-peek-force-fontify nil
-  "Force to fontify chunks of code (use semantics colors).  WARNING:
-This can heavily slow the processing."
+  "Force to fontify chunks of code (use semantics colors).
+WARNING: This can heavily slow the processing."
   :type 'boolean
   :group 'lsp-ui-peek)
 
@@ -105,9 +104,10 @@ By default, the peek view isn't shown if there is 1 xref."
        :foreground "black"
        :distant-foreground "white"
        :box (:line-width -1 :color "white")))
-  "Face used to highlight the reference/definition.  Do not use box,
-underline or overline prop. If you want to use box, use a negative value for
-its width. Thoses properties deform the whole overlay."
+  "Face used to highlight the reference/definition.
+Do not use box, underline or overline prop.  If you want to use
+box, use a negative value for its width.  Those properties deform
+the whole overlay."
   :group 'lsp-ui-peek)
 
 (defface lsp-ui-peek-header
@@ -118,15 +118,16 @@ its width. Thoses properties deform the whole overlay."
 
 (defface lsp-ui-peek-footer
   '((t :inherit lsp-ui-peek-header))
-  "Face used for the footers. Only the background of this face is used."
+  "Face used for the footers.  Only the background of this face is used."
   :group 'lsp-ui-peek)
 
 (defface lsp-ui-peek-selection
   '((((background light)) :background "grey30" :foreground "white")
     (t :background "white" :foreground "black"))
-  "Face used for the current selection. Do not use box, underline or overline..
- prop. If you want to use box, use a negative value for its width.
-Thoses properties deform the whole overlay."
+  "Face used for the current selection.
+Do not use box, underline or overline prop.  If you want to use
+box, use a negative value for its width.  Those properties
+deform the whole overlay."
   :group 'lsp-ui-peek)
 
 (defvar lsp-ui-peek-expand-function 'lsp-ui-peek--expand-buffer
@@ -148,53 +149,53 @@ It should returns a list of filenames to expand.")
 (defvar lsp-ui-peek--jumps (make-hash-table)
   "Hashtable which stores all jumps on a per window basis.")
 
+(defvar evil--jumps-window-jumps)  ; defined in evil-jumps.el
+
 (defmacro lsp-ui-peek--with-evil-jumps (&rest body)
   "Make `evil-jumps.el' commands work on `lsp-ui-peek--jumps'."
   (declare (indent 1))
-  `(let ((evil--jumps-window-jumps ,lsp-ui-peek--jumps))
+  `(let ((evil--jumps-window-jumps lsp-ui-peek--jumps))
      ,@body))
 
 (with-eval-after-load 'evil-jumps
-  (evil-define-motion lsp-ui-peek-jump-backward (count)
-    (lsp-ui-peek--with-evil-jumps
-        (evil--jump-backward count)
-      (run-hooks 'xref-after-return-hook)))
-  (evil-define-motion lsp-ui-peek-jump-forward (count)
-    (lsp-ui-peek--with-evil-jumps
-        (evil--jump-forward count)
-      (run-hooks 'xref-after-return-hook))))
+  ;; We need to jump through some hoops to prevent the byte-compiler from
+  ;; compiling this code.  We can’t compile the code without requiring
+  ;; ‘evil-macros’.
+  (eval '(progn
+          (evil-define-motion lsp-ui-peek-jump-backward (count)
+            (lsp-ui-peek--with-evil-jumps
+             (evil--jump-backward count)
+             (run-hooks 'xref-after-return-hook)))
+          (evil-define-motion lsp-ui-peek-jump-forward (count)
+            (lsp-ui-peek--with-evil-jumps
+             (evil--jump-forward count)
+             (run-hooks 'xref-after-return-hook))))
+        t))
 
 (defmacro lsp-ui-peek--prop (prop &optional string)
-  "PROP STRING."
   `(get-text-property 0 ,prop (or ,string (lsp-ui-peek--get-text-selection) "")))
 
 (defmacro lsp-ui-peek--add-prop (prop &optional string)
-  "PROP STRING."
   `(let ((obj (or ,string (lsp-ui-peek--get-text-selection))))
      (add-text-properties 0 (length obj) ,prop obj)
      obj))
 
 (defun lsp-ui-peek--truncate (len s)
-  "LEN S."
   (if (> (string-width s) len)
       (format "%s.." (substring s 0 (- len 2)))
     s))
 
 (defun lsp-ui-peek--get-text-selection (&optional n)
-  "N."
   (nth (or n lsp-ui-peek--selection)
        (--remove (get-text-property 0 'lsp-ui-peek-hidden it) lsp-ui-peek--list)))
 
 (defun lsp-ui-peek--get-selection ()
-  "."
   (get-text-property 0 'lsp-ui-peek (or (lsp-ui-peek--get-text-selection) "")))
 
 (defun lsp-ui-peek--visual-index ()
-  "."
   (- lsp-ui-peek--selection lsp-ui-peek--offset))
 
 (defun lsp-ui-peek--make-line (index src)
-  "INDEX SRC."
   (-let* (((s1 . s2) src)
           (len-s1 (length s1))
           (len-s2 (length s2))
@@ -221,13 +222,11 @@ It should returns a list of filenames to expand.")
      (propertize "\n" 'face face-right))))
 
 (defun lsp-ui-peek--adjust (width strings)
-  "WIDTH STRINGS."
   (-let* (((s1 . s2) strings))
     (cons (lsp-ui-peek--truncate (- width (1+ lsp-ui-peek-list-width)) s1)
           (lsp-ui-peek--truncate (1- lsp-ui-peek-list-width) s2))))
 
 (defun lsp-ui-peek--make-footer ()
-  "."
   ;; Character-only terminals don't support characters of different height
   (when (display-graphic-p)
     (list
@@ -244,7 +243,6 @@ It should returns a list of filenames to expand.")
       (propertize "\n" 'face '(:height 0.5))))))
 
 (defun lsp-ui-peek--peek-new (src1 src2)
-  "SRC1 SRC2."
   (-let* ((win-width (window-text-width))
           (string (-some--> (-zip-fill "" src1 src2)
                             (--map (lsp-ui-peek--adjust win-width it) it)
@@ -257,12 +255,12 @@ It should returns a list of filenames to expand.")
     (overlay-put ov 'after-string (mapconcat 'identity string ""))
     (overlay-put ov 'window (get-buffer-window))))
 
-(defun lsp-ui-peek--expand-buffer (_)
-  "."
-  (list buffer-file-name))
+(defun lsp-ui-peek--expand-buffer (files)
+  (if (--any? (equal (car it) buffer-file-name) files)
+      (list buffer-file-name)
+    (list (caar files))))
 
 (defun lsp-ui-peek--expand (xrefs)
-  "XREFS."
   (let* ((to-expand (->> (--map (cons (plist-get it :file) (plist-get it :count)) xrefs)
                          (funcall lsp-ui-peek-expand-function)))
          first)
@@ -278,7 +276,7 @@ It should returns a list of filenames to expand.")
 
 (defun lsp-ui-peek--show (xrefs)
   "Create a window to list references/defintions.
-XREFS is a list of list of references/definitions."
+XREFS is a list of references/definitions."
   (setq lsp-ui-peek--win-start (window-start)
         lsp-ui-peek--selection 0
         lsp-ui-peek--offset 0
@@ -306,13 +304,11 @@ XREFS is a list of list of references/definitions."
   (lsp-ui-peek--peek))
 
 (defun lsp-ui-peek--recenter ()
-  "."
   (let ((half-height (/ lsp-ui-peek-peek-height 2)))
     (when (> lsp-ui-peek--selection half-height)
       (setq lsp-ui-peek--offset (- lsp-ui-peek--selection (1- half-height))))))
 
 (defun lsp-ui-peek--fill (min-len list)
-  "MIN-LEN LIST."
   (let ((len (length list)))
     (if (< len min-len)
         (append list (-repeat (- min-len len) ""))
@@ -338,26 +334,22 @@ XREFS is a list of list of references/definitions."
     (lsp-ui-peek--peek-new ref-view list-refs)))
 
 (defun lsp-ui-peek--toggle-text-prop (s)
-  "S."
   (let ((state (lsp-ui-peek--prop 'lsp-ui-peek-hidden s)))
     (lsp-ui-peek--add-prop `(lsp-ui-peek-hidden ,(not state)) s)))
 
 (defun lsp-ui-peek--toggle-hidden (file)
-  "FILE."
   (setq lsp-ui-peek--list
         (--map-when (string= (plist-get (lsp-ui-peek--prop 'lsp-ui-peek it) :file) file)
                     (prog1 it (lsp-ui-peek--toggle-text-prop it))
                     lsp-ui-peek--list)))
 
 (defun lsp-ui-peek--remove-hidden (file)
-  "FILE."
   (setq lsp-ui-peek--list
         (--map-when (string= (plist-get (lsp-ui-peek--prop 'lsp-ui-peek it) :file) file)
                     (prog1 it (lsp-ui-peek--add-prop '(lsp-ui-peek-hidden nil) it))
                     lsp-ui-peek--list)))
 
 (defun lsp-ui-peek--make-ref-line (xref)
-  "XREF."
   (-let* (((&plist :summary summary :line line :file file) xref)
           (string (format "%-3s %s"
                           (propertize (number-to-string (1+ line))
@@ -366,7 +358,6 @@ XREFS is a list of list of references/definitions."
     (lsp-ui-peek--add-prop `(lsp-ui-peek ,xref file ,file) string)))
 
 (defun lsp-ui-peek--insert-xrefs (xrefs filename index)
-  "XREFS FILENAME INDEX."
   (setq lsp-ui-peek--list (--> (lsp-ui-peek--get-xrefs-in-file (cons filename xrefs))
                                (-map 'lsp-ui-peek--make-ref-line it)
                                (-insert-at (1+ index) it lsp-ui-peek--list)
@@ -374,7 +365,6 @@ XREFS is a list of list of references/definitions."
   (lsp-ui-peek--add-prop '(xrefs nil)))
 
 (defun lsp-ui-peek--toggle-file (&optional no-update)
-  "NO-UPDATE."
   (interactive)
   (-if-let* ((xrefs (lsp-ui-peek--prop 'xrefs))
              (filename (lsp-ui-peek--prop 'file))
@@ -389,11 +379,9 @@ XREFS is a list of list of references/definitions."
     (lsp-ui-peek--peek)))
 
 (defun lsp-ui-peek--select (index)
-  "INDEX."
   (setq lsp-ui-peek--selection (+ lsp-ui-peek--selection index)))
 
 (defun lsp-ui-peek--select-next (&optional no-update)
-  "NO-UPDATE."
   (interactive)
   (when (lsp-ui-peek--get-text-selection (1+ lsp-ui-peek--selection))
     (lsp-ui-peek--select 1)
@@ -403,7 +391,6 @@ XREFS is a list of list of references/definitions."
       (lsp-ui-peek--peek))))
 
 (defun lsp-ui-peek--select-prev (&optional no-update)
-  "NO-UPDATE."
   (interactive)
   (when (> lsp-ui-peek--selection 0)
     (lsp-ui-peek--select -1)
@@ -413,7 +400,6 @@ XREFS is a list of list of references/definitions."
     (lsp-ui-peek--peek)))
 
 (defun lsp-ui-peek--select-prev-file ()
-  "."
   (interactive)
   (let ((last-file (lsp-ui-peek--prop 'file)))
     (lsp-ui-peek--select-prev t)
@@ -431,7 +417,6 @@ XREFS is a list of list of references/definitions."
     (lsp-ui-peek--select-next)))
 
 (defun lsp-ui-peek--select-next-file ()
-  "."
   (interactive)
   (-let* ((last-file (lsp-ui-peek--prop 'file))
           (last-selection lsp-ui-peek--selection)
@@ -473,11 +458,11 @@ XREFS is a list of list of references/definitions."
     (funcall fn)))
 
 (defun lsp-ui-peek--goto-xref (&optional x other-window)
-  "Go to a reference/definition.
-X OTHER-WINDOW."
+  "Go to a reference/definition."
   (interactive)
   (-if-let (xref (or x (lsp-ui-peek--get-selection)))
-      (-let* (((&plist :file file :line line :column column) xref))
+      (-let (((&plist :file file :line line :column column) xref)
+             (buffer (current-buffer)))
         (if (not (file-readable-p file))
             (user-error "File not readable: %s" file)
           (setq lsp-ui-peek--win-start nil)
@@ -493,10 +478,11 @@ X OTHER-WINDOW."
                               (forward-char column)
                               (point-marker)))))
                 (current-workspace lsp--cur-workspace))
-            (lsp-ui-peek--deactivate-keymap)
             (if other-window
                 (pop-to-buffer (marker-buffer marker))
               (switch-to-buffer (marker-buffer marker)))
+            (with-current-buffer buffer
+              (lsp-ui-peek-mode -1))
             (unless lsp--cur-workspace
               (setq lsp--cur-workspace current-workspace))
             (unless lsp-mode
@@ -507,26 +493,30 @@ X OTHER-WINDOW."
     (lsp-ui-peek--toggle-file)))
 
 (defun lsp-ui-peek--goto-xref-other-window ()
-  "."
   (interactive)
   (lsp-ui-peek--goto-xref nil t))
 
 (defvar lsp-ui-peek-mode-map nil
-  "Keymap uses with ‘lsp-ui-peek-mode’.")
+  "Keymap for ‘lsp-ui-peek-mode’.")
 (unless lsp-ui-peek-mode-map
   (let ((map (make-sparse-keymap)))
     (suppress-keymap map t)
     (define-key map "\e\e\e" 'lsp-ui-peek--abort)
     (define-key map "\C-g" 'lsp-ui-peek--abort)
+    (define-key map (kbd "M-n") 'lsp-ui-peek--select-next-file)
     (define-key map (kbd "<right>") 'lsp-ui-peek--select-next-file)
+    (define-key map (kbd "M-p") 'lsp-ui-peek--select-prev-file)
     (define-key map (kbd "<left>") 'lsp-ui-peek--select-prev-file)
+    (define-key map (kbd "C-n") 'lsp-ui-peek--select-next)
+    (define-key map (kbd "n") 'lsp-ui-peek--select-next)
     (define-key map (kbd "<down>") 'lsp-ui-peek--select-next)
+    (define-key map (kbd "C-p") 'lsp-ui-peek--select-prev)
+    (define-key map (kbd "p") 'lsp-ui-peek--select-prev)
     (define-key map (kbd "<up>") 'lsp-ui-peek--select-prev)
-    (define-key map (kbd "<tab>") 'lsp-ui-peek--toggle-file)
+    (define-key map (kbd "TAB") 'lsp-ui-peek--toggle-file)
     (define-key map (kbd "q") 'lsp-ui-peek--abort)
-    (define-key map (kbd "<return>") 'lsp-ui-peek--goto-xref)
-    (define-key map (kbd "<M-return>") 'lsp-ui-peek--goto-xref-other-window)
-    (define-key map [t]'lsp-ui-peek--abort)
+    (define-key map (kbd "RET") 'lsp-ui-peek--goto-xref)
+    (define-key map (kbd "M-RET") 'lsp-ui-peek--goto-xref-other-window)
     (setq lsp-ui-peek-mode-map map)))
 
 (defun lsp-ui-peek--disable ()
@@ -536,7 +526,6 @@ X OTHER-WINDOW."
     (lsp-ui-peek--peek-hide)))
 
 (defun lsp-ui-peek--abort ()
-  "."
   (interactive)
   ;; The timer fixes https://github.com/emacs-lsp/lsp-ui/issues/33
   (run-with-idle-timer 0 nil 'lsp-ui-peek--disable))
@@ -546,12 +535,12 @@ X OTHER-WINDOW."
   :init-value nil
   (if lsp-ui-peek-mode
       (setq lsp-ui-peek--deactivate-keymap-fn (set-transient-map lsp-ui-peek-mode-map t 'lsp-ui-peek--abort))
-    (lsp-ui-peek--deactivate-keymap)))
+    (lsp-ui-peek--deactivate-keymap)
+    (lsp-ui-peek--peek-hide)))
 
 (defun lsp-ui-peek--find-xrefs (input kind &optional request param)
   "Find INPUT references.
-KIND is 'references, 'definitions or a custom kind.
-REQUEST PARAM."
+KIND is ‘references’, ‘definitions’ or a custom kind."
   (setq lsp-ui-peek--kind kind)
   (let ((xrefs (lsp-ui-peek--get-references kind request param)))
     (unless xrefs
@@ -565,7 +554,7 @@ REQUEST PARAM."
         (-let* ((xref (car (plist-get (car xrefs) :xrefs)))
                 ((&hash "uri" file "range" range) xref)
                 ((&hash "line" line "character" col) (gethash "start" range))
-                (file (string-remove-prefix "file://" file)))
+                (file (lsp--uri-to-path file)))
           (lsp-ui-peek--goto-xref `(:file ,file :line ,line :column ,col)))
       (lsp-ui-peek-mode)
       (lsp-ui-peek--show xrefs))))
@@ -603,8 +592,7 @@ PARAM is the method parameter.  If nil, it default to TextDocumentPositionParams
   (lsp-ui-peek--find-xrefs (symbol-at-point) kind request param))
 
 (defun lsp-ui-peek--extract-chunk-from-buffer (pos start end)
-  "Return the chunk of code pointed to by POS (a Position object)..
-in the current buffer.
+  "Return the chunk of code pointed to by POS (a Position object) in the current buffer.
 START and END are delimiters."
   (let* ((point (lsp--position-to-point pos))
          (inhibit-field-text-motion t)
@@ -640,7 +628,6 @@ LOCATION can be either a LSP Location or SymbolInformation."
           :len (- end start))))
 
 (defun lsp-ui-peek--fontify-buffer (filename)
-  "FILENAME."
   (when lsp-ui-peek-force-fontify
     (unless buffer-file-name
       (make-local-variable 'delay-mode-hooks)
@@ -684,15 +671,13 @@ interface Location {
 	uri: DocumentUri;
 	range: Range;
 }"
-  (-some--> (lambda (loc) (string-remove-prefix "file://"
-                                                (gethash "uri" (or (gethash "location" loc) loc))))
+  (-some--> (lambda (loc) (lsp--uri-to-path (gethash "uri" (or (gethash "location" loc) loc))))
             (seq-group-by it locations)
             (mapcar #'lsp-ui-peek--get-xrefs-list it)))
 
 (defun lsp-ui-peek--get-references (_kind request &optional param)
   "Get all references/definitions for the symbol under point.
-Returns item(s).
-KIND REQUEST PARAM."
+Returns item(s)."
   (-some->> (lsp--send-request (lsp--make-request
                                 request
                                 (or param (lsp--text-document-position-params))))
@@ -701,21 +686,16 @@ KIND REQUEST PARAM."
 
 (defvar lsp-ui-mode-map)
 
-(defun lsp-ui-peek-enable (enable)
-  "ENABLE."
+(defun lsp-ui-peek-enable (_enable)
   (interactive)
   (unless (bound-and-true-p lsp-ui-mode-map)
-    (user-error "Please load lsp-ui before trying to enable lsp-ui-peek"))
-  (if enable
-      (progn
-        (define-key lsp-ui-mode-map [remap xref-find-definitions] #'lsp-ui-peek-find-definitions)
-        (define-key lsp-ui-mode-map [remap xref-find-references] #'lsp-ui-peek-find-references))
-    (define-key lsp-ui-mode-map [remap xref-find-definitions] nil)
-    (define-key lsp-ui-mode-map [remap xref-find-references] nil)))
+    (user-error "Please load lsp-ui before trying to enable lsp-ui-peek")))
 
 ;; lsp-ui.el loads lsp-ui-peek.el, so we can’t ‘require’ lsp-ui.
 ;; FIXME: Remove this cyclic dependency.
 (declare-function lsp-ui--workspace-path "lsp-ui" (path))
+
+(declare-function evil-set-jump "evil-jumps.el" (&optional pos))
 
 (provide 'lsp-ui-peek)
 ;;; lsp-ui-peek.el ends here

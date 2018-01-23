@@ -5,7 +5,7 @@
 ;; Author:  Tobias Pisani <topisani@hamsterpoison.com>
 ;; Keywords: lsp
 ;; URL: https://github.com/emacs-lsp/lsp-ui
-;; Package-Requires: ((emacs "25.1") (flycheck "30") (lsp-mode "3.4") (markdown-mode "2.0"))
+;; Package-Requires: ((emacs "25.1") (dash "2.13") (flycheck "31") (lsp-mode "3.4") (markdown-mode "2.3"))
 ;; Version: 0.0.1
 
 ;; Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -34,7 +34,7 @@
 ;;; Code:
 
 (defgroup lsp-ui nil
-  "lsp-ui contains a series of useful UI integrations for lsp-mode."
+  "‘lsp-ui’ contains a series of useful UI integrations for ‘lsp-mode’."
   :group 'tools
   :group 'convenience
   :link '(custom-manual "(lsp-ui) Top")
@@ -51,8 +51,8 @@
   (require 'lsp-ui-doc))
 
 (defun lsp-ui--workspace-path (path)
-  "Return the path relative to the workspace.
-If the path is not in the workspace, it returns the original PATH."
+  "Return the PATH relative to the workspace.
+If the PATH is not in the workspace, it returns the original PATH."
   (let* ((root (lsp--workspace-root lsp--cur-workspace))
          (in-workspace (string-prefix-p root path)))
     (if in-workspace
@@ -60,7 +60,6 @@ If the path is not in the workspace, it returns the original PATH."
       path)))
 
 (defun lsp-ui--toggle (enable)
-  "ENABLE."
   (dolist (feature '(lsp-ui-flycheck lsp-ui-peek lsp-ui-sideline lsp-ui-doc))
     (when (featurep feature)
       (let* ((sym (intern-soft (concat (symbol-name feature) "-enable")))
@@ -88,11 +87,62 @@ omitted or nil, and toggle it if ARG is ‘toggle’."
 ;; regex quotes the pattern. The language server likely knows more about how
 ;; to do fuzzy matching.
 (defun lsp-ui-find-workspace-symbol (pattern)
-  "List project-wide symbols matching the query string"
+  "List project-wide symbols matching the query string PATTERN."
   (interactive (list (read-string
                       "workspace/symbol: "
                       nil 'xref--read-pattern-history)))
   (xref--find-xrefs pattern 'apropos pattern nil))
+
+(defun lsp-ui--location< (x y)
+  "Compares two triples X and Y.
+Both should have the form (FILENAME LINE COLUMN)."
+  (if (not (string= (car x) (car y)))
+      (string< (car x) (car y))
+    (if (not (= (cadr x) (cadr y)))
+        (< (cadr x) (cadr y))
+      (< (caddr x) (caddr y)))))
+
+(defun lsp-ui--reference-triples ()
+  "Return references as a list of (FILENAME LINE COLUMN) triples."
+  (let ((refs (lsp--send-request (lsp--make-request
+                                  "textDocument/references"
+                                  (lsp--make-reference-params)))))
+    (sort
+     (mapcar
+      (lambda (ref)
+        (-let* (((&hash "uri" uri "range" range) ref)
+                ((&hash "line" line "character" col) (gethash "start" range)))
+          (list (lsp--uri-to-path uri) line col))) refs)
+     #'lsp-ui--location<)))
+
+;; TODO Make it efficient
+(defun lsp-ui-find-next-reference ()
+  "Find next reference of the symbol at point."
+  (interactive)
+  (let* ((cur (list buffer-file-name (lsp--cur-line) (lsp--cur-column)))
+         (refs (lsp-ui--reference-triples))
+         (res (-first (lambda (ref) (lsp-ui--location< cur ref)) refs)))
+    (when res
+      (find-file (car res))
+      (goto-char 1)
+      (forward-line (cadr res))
+      (forward-char (caddr res))
+      nil)))
+
+;; TODO Make it efficient
+(defun lsp-ui-find-previous-reference ()
+  "Find previous reference of the symbol at point."
+  (interactive)
+  (let* ((cur (list buffer-file-name (lsp--cur-line) (lsp--cur-column)))
+         (refs (lsp-ui--reference-triples))
+         (res (-last (lambda (ref) (lsp-ui--location< ref cur)) refs)))
+    (when res
+      (find-file (car res))
+      (goto-char 1)
+      (forward-line (cadr res))
+      (forward-char (caddr res))
+      nil)))
+
 
 (provide 'lsp-ui)
 ;;; lsp-ui.el ends here

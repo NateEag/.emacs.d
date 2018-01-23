@@ -18,13 +18,9 @@
 
 
 ;; Set up the package library per my desires.
-(require 'package)
-(setq package-user-dir (make-emacs-dir-path "elpa/"))
-(add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/"))
-(add-to-list 'package-archives '("melpa" .
-                                 "http://melpa.milkbox.net/packages/"))
-(package-initialize)
+(load-file (make-emacs-dir-path "site-lisp/ne-package-init.el"))
 
+;; Add my local dirs to the load path.
 (add-subdirs-to-front-of-load-path (make-emacs-dir-path "site-lisp"))
 
 ;; I'm starting to flirt with ledger for handling financial tracking. In

@@ -1223,17 +1223,7 @@ Currently `magit-log-mode', `magit-reflog-mode',
   (setq magit-refresh-args (cdr args))
   (magit-refresh-buffer))
 
-;;; Utilities
-
-(defun magit-run-hook-with-benchmark (hook)
-  (when hook
-    (if magit-refresh-verbose
-        (let ((start (current-time)))
-          (message "Running %s..." hook)
-          (run-hooks hook)
-          (message "Running %s...done (%.3fs)" hook
-                   (float-time (time-subtract (current-time) start))))
-      (run-hooks hook))))
+;;; Repository-Local Cache
 
 (defvar magit-repository-local-cache nil
   "Alist mapping `magit-toplevel' paths to alists of key/value pairs.")
@@ -1302,6 +1292,33 @@ Unless specified, REPOSITORY is the current buffer's repository."
       ;; There is no `assoc-delete-all'.
       (setf (cdr cache)
             (cl-delete key (cdr cache) :key #'car :test #'equal)))))
+
+(defun magit-zap-caches ()
+  "Zap caches for the current repository.
+Remove the repository's entry from `magit-repository-cache'
+and set `magit-section-visibility-cache' to nil in all of the
+repository's Magit buffers."
+  (interactive)
+  (magit-with-toplevel
+    (setq magit-repository-local-cache
+          (cl-delete default-directory
+                     magit-repository-local-cache
+                     :key #'car :test #'equal)))
+  (dolist (buffer (magit-mode-get-buffers))
+    (with-current-buffer buffer
+      (setq magit-section-visibility-cache nil))))
+
+;;; Utilities
+
+(defun magit-run-hook-with-benchmark (hook)
+  (when hook
+    (if magit-refresh-verbose
+        (let ((start (current-time)))
+          (message "Running %s..." hook)
+          (run-hooks hook)
+          (message "Running %s...done (%.3fs)" hook
+                   (float-time (time-subtract (current-time) start))))
+      (run-hooks hook))))
 
 (provide 'magit-mode)
 ;;; magit-mode.el ends here

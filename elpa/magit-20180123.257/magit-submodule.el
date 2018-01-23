@@ -96,14 +96,7 @@ an alist that supports the keys `:right-align' and `:pad-right'."
                                                (symbol))
                                        (sexp   :tag "Value"))))))
 
-(defcustom magit-submodule-fetch-jobs 4
-  "Number of submodules to fetch in parallel.
-Ignored for Git versions before v2.8.0."
-  :package-version '(magit . "2.12.0")
-  :group 'magit-commands
-  :type '(choice (const :tag "one at a time" nil) number))
-
-;;; Commands
+;;; Popup
 
 ;;;###autoload (autoload 'magit-submodule-popup "magit-submodule" nil t)
 (magit-define-popup magit-submodule-popup
@@ -114,20 +107,21 @@ Ignored for Git versions before v2.8.0."
               (?i "Init"   magit-submodule-init)
               (?u "Update" magit-submodule-update)
               (?s "Sync"   magit-submodule-sync)
-              (?f "Fetch"  magit-submodule-fetch)
               (?d "Deinit" magit-submodule-deinit)
+              (?f "Fetch"  magit-fetch-modules)
               (?l "List"   magit-list-submodules)))
+
+;;; Commands
+;;;; Add
 
 ;;;###autoload
 (defun magit-submodule-add (url &optional path name)
-  "Add the repository at URL as a submodule.
+  "Add the repository at URL as a module.
 
-Optional PATH is the path to the submodule relative to the root
-of the superproject.  If it is nil, then the path is determined
-based on the URL.
-
-Optional NAME is the name of the submodule.  If it is nil, then
-PATH also becomes the name."
+Optional PATH is the path to the module relative to the root of
+the superproject.  If it is nil, then the path is determined
+based on the URL.  Optional NAME is the name of the module.  If
+it is nil, then PATH also becomes the name."
   (interactive
    (magit-with-toplevel
      (let* ((url (magit-read-string-ns "Add submodule (remote url)"))
@@ -163,63 +157,50 @@ PATH also becomes the name."
                  (magit-git-lines "config" "--list" "-f" ".gitmodules"))
          (if prefer-short name path)))))
 
-;;;###autoload
-(defun magit-submodule-setup ()
-  "Clone and register missing submodules and checkout appropriate commits."
-  (interactive)
-  (magit-with-toplevel
-    (--if-let (--filter (not (file-exists-p (expand-file-name ".git" it)))
-                        (magit-get-submodules))
-        (magit-run-git-async "submodule" "update" "--init" "--" it)
-      (message "All submodules already setup"))))
+;;;; Initialize
 
 ;;;###autoload
 (defun magit-submodule-init ()
-  "Register submodules listed in \".gitmodules\" into \".git/config\"."
+  "Register all remaining modules."
   (interactive)
   (magit-with-toplevel
     (magit-run-git-async "submodule" "init")))
 
 ;;;###autoload
-(defun magit-submodule-update (&optional init)
-  "Clone missing submodules and checkout appropriate commits.
-With a prefix argument also register submodules in \".git/config\"."
-  (interactive "P")
+(defun magit-submodule-setup ()
+  "Register and clone all remaining modules, checking out the recorded tips."
+  (interactive)
   (magit-with-toplevel
-    (magit-run-git-async "submodule" "update" (and init "--init"))))
+    (magit-run-git-async "submodule" "update" "--init")))
+
+;;;; Update
+
+;;;###autoload
+(defun magit-submodule-update ()
+  "Update all modules by checking out the recorded tips."
+  (interactive)
+  (magit-with-toplevel
+    (magit-run-git-async "submodule" "update")))
+
+;;;; Synchronize
 
 ;;;###autoload
 (defun magit-submodule-sync ()
-  "Update each submodule's remote URL according to \".gitmodules\"."
+  "Synchronize each module's remote configuration."
   (interactive)
   (magit-with-toplevel
     (magit-run-git-async "submodule" "sync")))
 
-;;;###autoload
-(defun magit-submodule-fetch (&optional all)
-  "Fetch all submodules.
-
-Option `magit-submodule-fetch-jobs' controls how many submodules
-are being fetched in parallel.  Also fetch the super-repository,
-because `git-fetch' does not support not doing that.  With a
-prefix argument fetch all remotes."
-  (interactive "P")
-  (magit-with-toplevel
-    (magit-run-git-async
-     "fetch" "--verbose" "--recurse-submodules"
-     (and magit-submodule-fetch-jobs
-          (version<= "2.8.0" (magit-git-version))
-          (list "-j" (number-to-string magit-submodule-fetch-jobs)))
-     (and all "--all"))))
+;;;; De-initialize
 
 ;;;###autoload
 (defun magit-submodule-deinit (path)
-  "Unregister the submodule at PATH."
+  "Unregister the module at PATH."
   (interactive
-   (list (magit-completing-read "Deinit module" (magit-get-submodules)
+   (list (magit-completing-read "Deinit module" (magit-list-module-paths)
                                 nil t nil nil (magit-section-when module))))
   (magit-with-toplevel
-    (magit-run-git-async "submodule" "deinit" path)))
+    (magit-run-git-async "submodule" "deinit" "--" path)))
 
 ;;; Sections
 
@@ -229,7 +210,7 @@ prefix argument fetch all remotes."
 Hook `magit-module-sections-hook' controls which module sections
 are inserted, and option `magit-module-sections-nested' controls
 whether they are wrapped in an additional section."
-  (-when-let (modules (magit-get-submodules))
+  (-when-let (modules (magit-list-module-paths))
     (if magit-module-sections-nested
         (magit-insert-section section (submodules nil t)
           (magit-insert-heading
@@ -249,7 +230,7 @@ whether they are wrapped in an additional section."
   "Insert sections for all modules.
 For each section insert the path and the output of `git describe --tags',
 or, failing that, the abbreviated HEAD commit hash."
-  (-when-let (modules (magit-get-submodules))
+  (-when-let (modules (magit-list-module-paths))
     (magit-insert-section section (submodules nil t)
       (magit-insert-heading
         (format "%s (%s)"
@@ -263,7 +244,7 @@ or, failing that, the abbreviated HEAD commit hash."
 
 (defun magit--insert-modules-overview (&optional _section)
   (magit-with-toplevel
-    (let* ((modules (magit-get-submodules))
+    (let* ((modules (magit-list-module-paths))
            (path-format (format "%%-%is "
                                 (min (apply 'max (mapcar 'length modules))
                                      (/ (window-width) 2))))
@@ -366,7 +347,7 @@ These sections can be expanded to show the respective commits."
 
 (defun magit--insert-modules-logs (heading type range)
   "For internal use, don't add to a hook."
-  (-when-let (modules (magit-get-submodules))
+  (-when-let (modules (magit-list-module-paths))
     (magit-insert-section section ((eval type) nil t)
       (string-match "\\`\\(.+\\) \\([^ ]+\\)\\'" heading)
       (magit-insert-heading
@@ -406,7 +387,7 @@ These sections can be expanded to show the respective commits."
                     (list module
                           (vconcat (--map (or (funcall (nth 2 it) module) "")
                                           magit-submodule-list-columns)))))
-                (magit-get-submodules)))
+                (magit-list-module-paths)))
   (tabulated-list-print))
 
 (defvar magit-submodule-list-mode-map

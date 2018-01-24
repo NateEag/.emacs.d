@@ -152,9 +152,12 @@ Layout
 ======
 
 elpa/ - elisp packages installed via package.el. I keep this under version
-control so that I can always return to a known-good state if an upgrade has
-unwanted effects, and so my configuration is less dependent on third-party
-services.
+control to make installing my config simpler, so I can always return to a
+known-good state if an upgrade has unwanted effects, and so my configuration is
+less dependent on third-party services. `This
+<https://github.com/syl20bnr/spacemacs/issues/10244>`__ is a good example of
+why I do this - none of the reporters in that thread would have had a problem
+if they kept this dir in their config repos.
 
 githooks/ - a few git hooks to aid in hacking on this config, mostly useful
 when pushing config changes between multiple machines.

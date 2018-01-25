@@ -253,6 +253,7 @@ It should returns a list of filenames to expand.")
                   (make-overlay next-line next-line))))
     (setq lsp-ui-peek--overlay ov)
     (overlay-put ov 'after-string (mapconcat 'identity string ""))
+    (overlay-put ov 'display-line-numbers-disable t)
     (overlay-put ov 'window (get-buffer-window))))
 
 (defun lsp-ui-peek--expand-buffer (files)
@@ -399,49 +400,40 @@ XREFS is a list of references/definitions."
   (unless no-update
     (lsp-ui-peek--peek)))
 
+(defun lsp-ui-peek--skip-refs (fn)
+  (let ((last-file (lsp-ui-peek--prop 'file))
+        last-selection)
+    (when (lsp-ui-peek--get-selection)
+      (while (and (equal (lsp-ui-peek--prop 'file) last-file)
+                  (not (equal last-selection lsp-ui-peek--selection)))
+        (setq last-selection lsp-ui-peek--selection)
+        (funcall fn t)))))
+
 (defun lsp-ui-peek--select-prev-file ()
   (interactive)
-  (let ((last-file (lsp-ui-peek--prop 'file)))
-    (lsp-ui-peek--select-prev t)
-    (when (and (equal last-file (lsp-ui-peek--prop 'file))
-               (not (plist-get (lsp-ui-peek--get-selection) :line)))
-      (lsp-ui-peek--select-prev t))
-    (when (or (equal last-file (lsp-ui-peek--prop 'file))
-              (plist-get (lsp-ui-peek--get-selection) :line))
-      (setq last-file (lsp-ui-peek--prop 'file))
-      (while (and (equal last-file (lsp-ui-peek--prop 'file))
-                  (plist-get (lsp-ui-peek--get-selection) :line))
-        (lsp-ui-peek--select-prev t)))
-    (lsp-ui-peek--remove-hidden (lsp-ui-peek--prop 'file))
-    (lsp-ui-peek--recenter)
-    (lsp-ui-peek--select-next)))
+  (if (not (lsp-ui-peek--get-selection))
+      (lsp-ui-peek--select-prev)
+    (lsp-ui-peek--skip-refs 'lsp-ui-peek--select-prev)
+    (when (lsp-ui-peek--get-selection)
+      (lsp-ui-peek--skip-refs 'lsp-ui-peek--select-prev)
+      (unless (= lsp-ui-peek--selection 0)
+        (lsp-ui-peek--select-next t))))
+  (if (lsp-ui-peek--prop 'xrefs)
+      (lsp-ui-peek--toggle-file)
+    (lsp-ui-peek--remove-hidden (lsp-ui-peek--prop 'file)))
+  (lsp-ui-peek--select-next t)
+  (lsp-ui-peek--recenter)
+  (lsp-ui-peek--peek))
 
 (defun lsp-ui-peek--select-next-file ()
   (interactive)
-  (-let* ((last-file (lsp-ui-peek--prop 'file))
-          (last-selection lsp-ui-peek--selection)
-          (current-file nil))
-    ;; Unfold
-    (lsp-ui-peek--remove-hidden last-file)
-    (if (plist-get (lsp-ui-peek--get-selection) :line)
-        ;; Not on a file, skip all entries of the same file
-        (progn
-          (while
-              (progn
-                (lsp-ui-peek--select-next t)
-                (setq current-file (lsp-ui-peek--prop 'file))
-                (and (equal current-file last-file)
-                     (not (= lsp-ui-peek--selection last-selection))))
-            (setq last-file current-file)
-            (setq last-selection lsp-ui-peek--selection))
-          ;; Unfold the next file if necessary
-          (when (null (plist-get (lsp-ui-peek--get-selection) :line))
-            (lsp-ui-peek--remove-hidden (lsp-ui-peek--prop 'file))
-            (lsp-ui-peek--select-next t)))
-      ;; On a file, move to the first entry
-      (lsp-ui-peek--select-next t))
-    (lsp-ui-peek--recenter)
-    (lsp-ui-peek--peek)))
+  (lsp-ui-peek--skip-refs 'lsp-ui-peek--select-next)
+  (if (lsp-ui-peek--prop 'xrefs)
+      (lsp-ui-peek--toggle-file)
+    (lsp-ui-peek--remove-hidden (lsp-ui-peek--prop 'file)))
+  (lsp-ui-peek--select-next t)
+  (lsp-ui-peek--recenter)
+  (lsp-ui-peek--peek))
 
 (defun lsp-ui-peek--peek-hide ()
   "Hide the chunk of code and restore previous state."
@@ -675,12 +667,18 @@ interface Location {
             (seq-group-by it locations)
             (mapcar #'lsp-ui-peek--get-xrefs-list it)))
 
+(defun lsp-ui-peek--to-sequence (maybe-sequence)
+  "If maybe-sequence is not a sequence, wraps it into a single-element sequence."
+  (if (sequencep maybe-sequence) maybe-sequence (list maybe-sequence)))
+
 (defun lsp-ui-peek--get-references (_kind request &optional param)
   "Get all references/definitions for the symbol under point.
 Returns item(s)."
   (-some->> (lsp--send-request (lsp--make-request
                                 request
                                 (or param (lsp--text-document-position-params))))
+            ;; Language servers may return a single LOCATION instead of a sequence of them.
+            (lsp-ui-peek--to-sequence)
             (lsp-ui-peek--locations-to-xref-items)
             (-filter 'identity)))
 

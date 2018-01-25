@@ -710,4 +710,7 @@ The shell command lives in my dotfiles repo."
 (use-package ascii
   :commands ascii-on ascii-off ascii-display ascii-customize)
 
+(use-package frame-cmds
+  :commands maximize-frame-vertically)
+
 ;;; config-packages.el ends here

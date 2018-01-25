@@ -704,4 +704,10 @@ The shell command lives in my dotfiles repo."
   ;; more-specific regex, it should probably open in conf-mode.
   :mode "dotfiles/src/.+")
 
+;; EmacsWiki-based packages that used to be on MELPA but are no more:
+;;
+;; https://github.com/melpa/melpa/pull/5008#issuecomment-360098939
+(use-package ascii
+  :commands ascii-on ascii-off ascii-display ascii-customize)
+
 ;;; config-packages.el ends here

@@ -111,9 +111,6 @@ an alist that supports the keys `:right-align' and `:pad-right'."
               (?f "Fetch"  magit-fetch-modules)
               (?l "List"   magit-list-submodules)))
 
-;;; Commands
-;;;; Add
-
 ;;;###autoload
 (defun magit-submodule-add (url &optional path name)
   "Add the repository at URL as a module.
@@ -142,7 +139,10 @@ it is nil, then PATH also becomes the name."
        (list url
              (directory-file-name path)
              (magit-submodule-read-name-for-path path)))))
-  (magit-run-git "submodule" "add" (and name (list "--name" name)) url path))
+  (magit-with-toplevel
+    (magit-call-git "submodule" "add" (and name (list "--name" name)) url path)
+    (magit-call-git "submodule" "absorbgitdirs" path)
+    (magit-refresh)))
 
 ;;;###autoload
 (defun magit-submodule-read-name-for-path (path &optional prefer-short)
@@ -156,8 +156,6 @@ it is nil, then PATH also becomes the name."
                         (cadr (split-string var "\\."))))
                  (magit-git-lines "config" "--list" "-f" ".gitmodules"))
          (if prefer-short name path)))))
-
-;;;; Initialize
 
 ;;;###autoload
 (defun magit-submodule-init ()
@@ -173,8 +171,6 @@ it is nil, then PATH also becomes the name."
   (magit-with-toplevel
     (magit-run-git-async "submodule" "update" "--init")))
 
-;;;; Update
-
 ;;;###autoload
 (defun magit-submodule-update ()
   "Update all modules by checking out the recorded tips."
@@ -182,16 +178,12 @@ it is nil, then PATH also becomes the name."
   (magit-with-toplevel
     (magit-run-git-async "submodule" "update")))
 
-;;;; Synchronize
-
 ;;;###autoload
 (defun magit-submodule-sync ()
   "Synchronize each module's remote configuration."
   (interactive)
   (magit-with-toplevel
     (magit-run-git-async "submodule" "sync")))
-
-;;;; De-initialize
 
 ;;;###autoload
 (defun magit-submodule-deinit (path)
@@ -356,17 +348,18 @@ These sections can be expanded to show the respective commits."
          (propertize (match-string 2 heading) 'face 'magit-branch-remote) ":"))
       (magit-with-toplevel
         (dolist (module modules)
-          (let ((default-directory
-                  (expand-file-name (file-name-as-directory module))))
-            (when (magit-file-accessible-directory-p default-directory)
-              (magit-insert-section sec (file module t)
-                (magit-insert-heading
-                  (concat (propertize module 'face 'magit-diff-file-heading) ":"))
-                (magit-git-wash (apply-partially 'magit-log-wash-log 'module)
-                  "-c" "push.default=current" "log" "--oneline" range)
-                (when (> (point)
-                         (oref sec content))
-                  (delete-char -1)))))))
+          (when (magit-module-worktree-p module)
+            (let ((default-directory
+                    (expand-file-name (file-name-as-directory module))))
+              (when (magit-file-accessible-directory-p default-directory)
+                (magit-insert-section sec (file module t)
+                  (magit-insert-heading
+                    (concat (propertize module 'face 'magit-diff-file-heading) ":"))
+                  (magit-git-wash (apply-partially 'magit-log-wash-log 'module)
+                    "-c" "push.default=current" "log" "--oneline" range)
+                  (when (> (point)
+                           (oref sec content))
+                    (delete-char -1))))))))
       (if (> (point)
              (oref section content))
           (insert ?\n)

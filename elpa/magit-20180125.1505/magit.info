@@ -19,7 +19,7 @@ END-INFO-DIR-ENTRY
 
 Indirect:
 magit.info-1: 752
-magit.info-2: 303253
+magit.info-2: 303612
 
 Tag Table:
 (Indirect)
@@ -121,56 +121,56 @@ Node: Notes251868
 Node: Submodules254179
 Node: Listing Submodules254393
 Node: Submodule Popup256270
-Node: Subtree257483
-Node: Common Commands258730
-Node: Wip Modes260476
-Node: Minor Mode for Buffers Visiting Files267273
-Node: Minor Mode for Buffers Visiting Blobs270622
-Node: Customizing271435
-Node: Per-Repository Configuration273103
-Node: Essential Settings274750
-Node: Safety275074
-Node: Performance276839
-Node: Microsoft Windows Performance283687
-Node: MacOS Performance284878
-Ref: MacOS Performance-Footnote-1286114
-Ref: MacOS Performance-Footnote-2286196
-Ref: MacOS Performance-Footnote-3286256
-Node: Plumbing286422
-Node: Calling Git287245
-Node: Getting a Value from Git288770
-Node: Calling Git for Effect291856
-Node: Section Plumbing298374
-Node: Creating Sections298602
-Node: Section Selection303253
-Node: Matching Sections304933
-Node: Refreshing Buffers310366
-Node: Conventions313501
-Node: Theming Faces313693
-Node: FAQ321808
-Node: FAQ - How to …?322250
-Node: How to show git's output?322614
-Node: How to install the gitman info manual?323368
-Node: How to show diffs for gpg-encrypted files?324338
-Node: How does branching and pushing work?324934
-Node: Can Magit be used as ‘ediff-version-control-package’?325303
-Node: FAQ - Issues and Errors327298
-Node: Magit is slow328102
-Node: I changed several thousand files at once and now Magit is unusable328316
-Node: I am having problems committing329045
-Node: I am using MS Windows and cannot push with Magit329526
-Node: I am using OS X and SOMETHING works in shell but not in Magit330143
-Node: Diffs contain control sequences330949
-Node: Expanding a file to show the diff causes it to disappear332023
-Node: Point is wrong in the ‘COMMIT_EDITMSG’ buffer332580
-Node: The mode-line information isn't always up-to-date333632
-Node: Emacs 245 hangs when loading Magit334699
-Node: A branch and tag sharing the same name breaks SOMETHING335313
-Node: Debugging Tools336119
-Node: Keystroke Index337854
-Node: Command Index367861
-Node: Function Index399469
-Node: Variable Index413518
+Node: Subtree257842
+Node: Common Commands259089
+Node: Wip Modes260835
+Node: Minor Mode for Buffers Visiting Files267632
+Node: Minor Mode for Buffers Visiting Blobs270981
+Node: Customizing271794
+Node: Per-Repository Configuration273462
+Node: Essential Settings275109
+Node: Safety275433
+Node: Performance277198
+Node: Microsoft Windows Performance284046
+Node: MacOS Performance285237
+Ref: MacOS Performance-Footnote-1286473
+Ref: MacOS Performance-Footnote-2286555
+Ref: MacOS Performance-Footnote-3286615
+Node: Plumbing286781
+Node: Calling Git287604
+Node: Getting a Value from Git289129
+Node: Calling Git for Effect292215
+Node: Section Plumbing298733
+Node: Creating Sections298961
+Node: Section Selection303612
+Node: Matching Sections305292
+Node: Refreshing Buffers310725
+Node: Conventions313860
+Node: Theming Faces314052
+Node: FAQ322167
+Node: FAQ - How to …?322609
+Node: How to show git's output?322973
+Node: How to install the gitman info manual?323727
+Node: How to show diffs for gpg-encrypted files?324697
+Node: How does branching and pushing work?325293
+Node: Can Magit be used as ‘ediff-version-control-package’?325662
+Node: FAQ - Issues and Errors327657
+Node: Magit is slow328461
+Node: I changed several thousand files at once and now Magit is unusable328675
+Node: I am having problems committing329404
+Node: I am using MS Windows and cannot push with Magit329885
+Node: I am using OS X and SOMETHING works in shell but not in Magit330502
+Node: Diffs contain control sequences331308
+Node: Expanding a file to show the diff causes it to disappear332382
+Node: Point is wrong in the ‘COMMIT_EDITMSG’ buffer332939
+Node: The mode-line information isn't always up-to-date333991
+Node: Emacs 245 hangs when loading Magit335058
+Node: A branch and tag sharing the same name breaks SOMETHING335672
+Node: Debugging Tools336478
+Node: Keystroke Index338213
+Node: Command Index368293
+Node: Function Index399974
+Node: Variable Index414023
 
 End Tag Table
 

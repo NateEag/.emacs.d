@@ -30,7 +30,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-This manual is for Magit version 2.11.0 (2.11.0-448-gf18957a17+1).
+This manual is for Magit version 2.11.0 (2.11.0-459-gcf60b1039+1).
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -6728,9 +6728,10 @@ File: magit.info,  Node: Submodule Popup,  Prev: Listing Submodules,  Up: Submod
 
 ‘o a’     (‘magit-submodule-add’)
 
-     Add the repository at URL as a submodule.  Optional PATH is the
-     path to the submodule relative to the root of the super-project.
-     If it is nil then the path is determined based on URL.
+     This commands adds the repository at URL as a module.  Optional
+     PATH is the path to the module relative to the root of the
+     super-project.  If it is nil then the path is determined based on
+     URL.
 
 ‘o i’     (‘magit-submodule-init’)
 
@@ -6745,10 +6746,6 @@ File: magit.info,  Node: Submodule Popup,  Prev: Listing Submodules,  Up: Submod
 
      Clone missing submodules and checkout appropriate commits.
 
-‘o f’     (‘magit-submodule-fetch’)
-
-     Fetch submodule.  With a prefix argument fetch all remotes.
-
 ‘o s’     (‘magit-submodule-sync’)
 
      Update each submodule’s remote URL according to ".gitmodules".
@@ -6756,6 +6753,19 @@ File: magit.info,  Node: Submodule Popup,  Prev: Listing Submodules,  Up: Submod
 ‘o d’     (‘magit-submodule-deinit’)
 
      Unregister the submodule at PATH.
+
+‘o l’     (‘magit-list-submodules’)
+
+     This command displays a list of the current repository’s modules.
+
+‘o f’     (‘magit-fetch-modules’)
+
+     This command fetches all modules.
+
+     Option ‘magit-fetch-modules-jobs’ controls how many submodules are
+     being fetched in parallel.  Also fetch the super-repository,
+     because ‘git fetch’ does not support not doing that.  With a prefix
+     argument fetch all remotes.
 
 
 File: magit.info,  Node: Subtree,  Next: Common Commands,  Prev: Submodules,  Up: Miscellaneous

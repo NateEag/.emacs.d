@@ -29,6 +29,7 @@
  '(c-basic-offset 4 nil nil "4 spaces is, on average, the standard.")
  '(c-default-style (quote ((php-mode . "php") (cc-mode . "linux"))))
  '(column-number-mode t)
+ '(cquery-executable "~/third-party/cquery/build/release/bin/cquery")
  '(create-lockfiles nil nil nil "Since these lockfiles are only respected by Emacs, and I don't think I've ever even shared a machine with another emacser, let alone a specific file, I'm turning this off. It horked the build process for a project at work.")
  '(cursor-type (quote bar) nil nil "I use vertical bar so I can tell quickly when I'm in a buffer without evil-mode.")
  '(custom-safe-themes

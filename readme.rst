@@ -120,6 +120,13 @@ I have a decent Python setup, with `Jedi
 and docstring display. I taught it to auto-detect virtualenvs in a project's
 directory with jedi-force.el.
 
+I don't write much C these days, but I do use it to customize my ErgoDox EZ's
+keymap, and I do read C codebases occasionally. Thus, I have c-mode set up to
+use `cquery <https://github.com/cquery-project/cquery>`__ so I can jump to
+definitions easily (paired with `intercept-build
+<https://github.com/rizsotto/scan-build>`__ to generate
+`compile_commands.json`) .
+
 I use a combination of `js2-mode <https://github.com/mooz/js2-mode>`__,
 `Tern.js <http://ternjs.net/>`__,
 `eslint <http://eslint.org/>`__ (via flycheck),

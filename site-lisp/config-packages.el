@@ -446,10 +446,13 @@ The shell command lives in my dotfiles repo."
   :config
   (add-hook 'csharp-mode-hook 'omnisharp-mode))
 
+(use-package cquery)
+
 ;; cc-mode defines several derived packages, so this setup will probably grow
 ;; to cover more than one mode.
 (use-package cc-mode
   :defer t
+  :hook ((c-mode . lsp-cquery-enable))
   :config
   (progn
     ;; java-mode setup

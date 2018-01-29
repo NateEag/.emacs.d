@@ -52,8 +52,8 @@
   to. I think it happens the first time I rebase after starting Emacs, so it's
   likely an initialization problem, but I'm not really sure.
 
-- Come up with a way to send emails and flag the newly-made thread as 'watched'.
-  Incident count: 1
+- Come up with a way to send emails and flag the newly-made thread as
+  'watched'. Incident count: 2
 
 - Use smtpmail-queue-mail and some network up/down notifier to automatically
   queue mail if offline and to automatically send it when back online.

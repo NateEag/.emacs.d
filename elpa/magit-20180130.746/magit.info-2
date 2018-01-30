@@ -17,6 +17,100 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: magit.info,  Node: Section Plumbing,  Next: Refreshing Buffers,  Prev: Calling Git,  Up: Plumbing
+
+10.2 Section Plumbing
+=====================
+
+* Menu:
+
+* Creating Sections::
+* Section Selection::
+* Matching Sections::
+
+
+File: magit.info,  Node: Creating Sections,  Next: Section Selection,  Up: Section Plumbing
+
+10.2.1 Creating Sections
+------------------------
+
+ -- Macro: magit-insert-section &rest args
+
+     Insert a section at point.
+
+     TYPE is the section type, a symbol.  Many commands that act on the
+     current section behave differently depending on that type.  Also if
+     a variable ‘magit-TYPE-section-map’ exists, then use that as the
+     text-property ‘keymap’ of all text belonging to the section (but
+     this may be overwritten in subsections).  TYPE can also have the
+     form ‘(eval FORM)’ in which case FORM is evaluated at runtime.
+
+     Optional VALUE is the value of the section, usually a string that
+     is required when acting on the section.
+
+     When optional HIDE is non-nil collapse the section body by default,
+     i.e.  when first creating the section, but not when refreshing the
+     buffer.  Otherwise, expand it by default.  This can be overwritten
+     using ‘magit-section-set-visibility-hook’.  When a section is
+     recreated during a refresh, then the visibility of predecessor is
+     inherited and HIDE is ignored (but the hook is still honored).
+
+     BODY is any number of forms that actually insert the section’s
+     heading and body.  Optional NAME, if specified, has to be a symbol,
+     which is then bound to the struct of the section being inserted.
+
+     Before BODY is evaluated the ‘start’ of the section object is set
+     to the value of ‘point’ and after BODY was evaluated its ‘end’ is
+     set to the new value of ‘point’; BODY is responsible for moving
+     ‘point’ forward.
+
+     If it turns out inside BODY that the section is empty, then
+     ‘magit-cancel-section’ can be used to abort and remove all traces
+     of the partially inserted section.  This can happen when creating a
+     section by washing Git’s output and Git didn’t actually output
+     anything this time around.
+
+ -- Function: magit-insert-heading &rest args
+
+     Insert the heading for the section currently being inserted.
+
+     This function should only be used inside ‘magit-insert-section’.
+
+     When called without any arguments, then just set the ‘content’ slot
+     of the object representing the section being inserted to a marker
+     at ‘point’.  The section should only contain a single line when
+     this function is used like this.
+
+     When called with arguments ARGS, which have to be strings, then
+     insert those strings at point.  The section should not contain any
+     text before this happens and afterwards it should again only
+     contain a single line.  If the ‘face’ property is set anywhere
+     inside any of these strings, then insert all of them unchanged.
+     Otherwise use the ‘magit-section-heading’ face for all inserted
+     text.
+
+     The ‘content’ property of the section struct is the end of the
+     heading (which lasts from ‘start’ to ‘content’) and the beginning
+     of the body (which lasts from ‘content’ to ‘end’).  If the value of
+     ‘content’ is nil, then the section has no heading and its body
+     cannot be collapsed.  If a section does have a heading then its
+     height must be exactly one line, including a trailing newline
+     character.  This isn’t enforced; you are responsible for getting it
+     right.  The only exception is that this function does insert a
+     newline character if necessary.
+
+ -- Function: magit-cancel-section
+
+     Cancel the section currently being inserted.  This exits the
+     innermost call to ‘magit-insert-section’ and removes all traces of
+     what has already happened inside that call.
+
+ -- Function: magit-define-section-jumper sym title &optional value
+
+     Define an interactive function to go to section SYM. TITLE is the
+     displayed title of the section.
+
+
 File: magit.info,  Node: Section Selection,  Next: Matching Sections,  Prev: Creating Sections,  Up: Section Plumbing
 
 10.2.2 Section Selection
@@ -1059,20 +1153,20 @@ Appendix C Keystroke Index
                                                               (line  16)
 * o:                                     Submodule Popup.     (line   6)
 * O:                                     Subtree.             (line   8)
-* o a:                                   Submodule Popup.     (line  11)
+* o a:                                   Submodule Popup.     (line  19)
 * O a:                                   Subtree.             (line  20)
-* o b:                                   Submodule Popup.     (line  22)
 * O c:                                   Subtree.             (line  24)
-* o d:                                   Submodule Popup.     (line  35)
-* o f:                                   Submodule Popup.     (line  43)
+* o d:                                   Submodule Popup.     (line  49)
+* o f:                                   Submodule Popup.     (line  57)
 * O f:                                   Subtree.             (line  32)
-* o i:                                   Submodule Popup.     (line  18)
-* o l:                                   Submodule Popup.     (line  39)
+* o l:                                   Submodule Popup.     (line  53)
 * O m:                                   Subtree.             (line  28)
+* o p:                                   Submodule Popup.     (line  33)
 * O p:                                   Subtree.             (line  36)
-* o s:                                   Submodule Popup.     (line  31)
+* o r:                                   Submodule Popup.     (line  26)
+* o s:                                   Submodule Popup.     (line  43)
 * O s:                                   Subtree.             (line  41)
-* o u:                                   Submodule Popup.     (line  27)
+* o u:                                   Submodule Popup.     (line  38)
 * p:                                     Section Movement.    (line  10)
 * p <1>:                                 Blaming.             (line  87)
 * P:                                     Blaming.             (line  91)
@@ -1111,7 +1205,7 @@ Appendix C Keystroke Index
 * r u:                                   Rebasing.            (line  29)
 * r w:                                   Rebasing.            (line  81)
 * RET:                                   Diff Buffer.         (line   6)
-* RET <1>:                               References Buffer.   (line 118)
+* RET <1>:                               References Buffer.   (line 135)
 * RET <2>:                               Blaming.             (line  55)
 * RET <3>:                               Editing Rebase Sequences.
                                                               (line  16)
@@ -1385,7 +1479,7 @@ Appendix D Command Index
 * magit-fetch-branch:                    Fetching.            (line  28)
 * magit-fetch-from-pushremote:           Fetching.            (line  16)
 * magit-fetch-from-upstream:             Fetching.            (line  20)
-* magit-fetch-modules:                   Submodule Popup.     (line  43)
+* magit-fetch-modules:                   Submodule Popup.     (line  57)
 * magit-fetch-popup:                     Fetching.            (line  11)
 * magit-fetch-refspec:                   Fetching.            (line  33)
 * magit-file-checkout:                   Resetting.           (line  37)
@@ -1409,7 +1503,7 @@ Appendix D Command Index
                                                               (line  20)
 * magit-list-repositories:               Repository List.     (line   6)
 * magit-list-submodules:                 Listing Submodules.  (line  12)
-* magit-list-submodules <1>:             Submodule Popup.     (line  39)
+* magit-list-submodules <1>:             Submodule Popup.     (line  53)
 * magit-log:                             Logging.             (line  39)
 * magit-log-all:                         Logging.             (line  58)
 * magit-log-all-branches:                Logging.             (line  54)
@@ -1593,14 +1687,14 @@ Appendix D Command Index
 * magit-stash-show <1>:                  Stashing.            (line  76)
 * magit-stash-worktree:                  Stashing.            (line  25)
 * magit-status:                          Status Buffer.       (line  22)
-* magit-submodule-add:                   Submodule Popup.     (line  11)
-* magit-submodule-deinit:                Submodule Popup.     (line  35)
+* magit-submodule-add:                   Submodule Popup.     (line  19)
 * magit-submodule-fetch:                 Fetching.            (line  42)
-* magit-submodule-init:                  Submodule Popup.     (line  18)
+* magit-submodule-populate:              Submodule Popup.     (line  33)
 * magit-submodule-popup:                 Submodule Popup.     (line   6)
-* magit-submodule-setup:                 Submodule Popup.     (line  22)
-* magit-submodule-sync:                  Submodule Popup.     (line  31)
-* magit-submodule-update:                Submodule Popup.     (line  27)
+* magit-submodule-register:              Submodule Popup.     (line  26)
+* magit-submodule-synchronize:           Submodule Popup.     (line  43)
+* magit-submodule-unpopulate:            Submodule Popup.     (line  49)
+* magit-submodule-update:                Submodule Popup.     (line  38)
 * magit-subtree-add:                     Subtree.             (line  20)
 * magit-subtree-add-commit:              Subtree.             (line  24)
 * magit-subtree-merge:                   Subtree.             (line  28)
@@ -1626,7 +1720,7 @@ Appendix D Command Index
                                                               (line  28)
 * magit-version:                         Git Executable.      (line  17)
 * magit-version <1>:                     Debugging Tools.     (line  10)
-* magit-visit-ref:                       References Buffer.   (line 118)
+* magit-visit-ref:                       References Buffer.   (line 135)
 * magit-wip-commit:                      Wip Modes.           (line 129)
 * magit-wip-log:                         Wip Modes.           (line  69)
 * magit-wip-log-current:                 Wip Modes.           (line  77)
@@ -1982,14 +2076,15 @@ Appendix F Variable Index
 * magit-refresh-function:                Refreshing Buffers.  (line  48)
 * magit-refresh-status-buffer:           Automatic Refreshing of Magit Buffers.
                                                               (line  46)
-* magit-refs-indent-cherry-lines:        References Buffer.   (line 113)
-* magit-refs-local-branch-format:        References Buffer.   (line 101)
+* magit-refs-filter-alist:               References Buffer.   (line 101)
+* magit-refs-indent-cherry-lines:        References Buffer.   (line 130)
+* magit-refs-local-branch-format:        References Buffer.   (line 118)
 * magit-refs-margin:                     References Buffer.   (line  41)
 * magit-refs-margin-for-tags:            References Buffer.   (line  67)
-* magit-refs-remote-branch-format:       References Buffer.   (line 105)
+* magit-refs-remote-branch-format:       References Buffer.   (line 122)
 * magit-refs-sections-hook:              References Sections. (line  13)
 * magit-refs-show-commit-count:          References Buffer.   (line  29)
-* magit-refs-tags-format:                References Buffer.   (line 109)
+* magit-refs-tags-format:                References Buffer.   (line 126)
 * magit-remote-add-set-remote.pushDefault: The Remote Popup.  (line  60)
 * magit-remote-popup-show-variables:     The Remote Popup.    (line  18)
 * magit-repolist-columns:                Repository List.     (line  14)
@@ -2023,7 +2118,7 @@ Appendix F Variable Index
 * magit-update-other-window-delay:       Section Movement.    (line  89)
 * magit-use-sticky-arguments:            Popup Buffers and Prefix Commands.
                                                               (line  36)
-* magit-visit-ref-behavior:              References Buffer.   (line 129)
+* magit-visit-ref-behavior:              References Buffer.   (line 146)
 * magit-wip-after-apply-mode:            Wip Modes.           (line  99)
 * magit-wip-after-apply-mode-lighter:    Wip Modes.           (line 141)
 * magit-wip-after-save-local-mode-lighter: Wip Modes.         (line 137)

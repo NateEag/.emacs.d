@@ -30,7 +30,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-This manual is for Magit version 2.11.0 (2.11.0-459-gcf60b1039+1).
+This manual is for Magit version 2.11.0 (2.11.0-471-g4e637088f+1).
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -3771,6 +3771,23 @@ you should also change the others to keep things aligned.  The following
    • ‘%U’ Upstream of this local branch and additional local vs.
      upstream information.
 
+ -- User Option: magit-refs-filter-alist
+
+     This alist controls which tags and branches are omitted from being
+     displayed in ‘magit-refs-mode’ buffers.  If it is ‘nil’, then all
+     refs are displayed (subject to ‘magit-refs-sections-hook’).
+
+     All keys are tried in order until one matches.  Then its value is
+     used and subsequent elements are ignored.  If the value is non-nil,
+     then the reference is displayed, otherwise it is not.  If no
+     element matches, then the reference is displayed.
+
+     A key can either be a regular expression that the refname has to
+     match, or a function that takes the refname as only argument and
+     returns a boolean.  Contrary to how they are displayed in the
+     buffer, for comparison each tag begins with "tags/" and each remote
+     branch with "<remote>/".
+
  -- Variable: magit-refs-local-branch-format
 
      Format used for local branches in refs buffers.
@@ -6726,6 +6743,14 @@ File: magit.info,  Node: Submodule Popup,  Prev: Listing Submodules,  Up: Submod
      This prefix command shows the following suffix commands along with
      the appropriate infix arguments in a popup buffer.
 
+   Some of the below commands default to act on the modules that are
+selected using the region.  For brevity their description talk about
+"the selected modules", but if no modules are selected, then the act on
+the current module instead, or if point isn’t on a module, then the read
+a single module to act on.  With a prefix argument these commands ignore
+the selection and the current module and instead act on all suitable
+modules.
+
 ‘o a’     (‘magit-submodule-add’)
 
      This commands adds the repository at URL as a module.  Optional
@@ -6733,26 +6758,32 @@ File: magit.info,  Node: Submodule Popup,  Prev: Listing Submodules,  Up: Submod
      super-project.  If it is nil then the path is determined based on
      URL.
 
-‘o i’     (‘magit-submodule-init’)
+‘o r’     (‘magit-submodule-register’)
 
-     Register submodules listed in ".gitmodules" into ".git/config".
+     This command registers the selected modules by copying their urls
+     from ".gitmodules" to "$GIT_DIR/config".  These values can then be
+     edited before running ‘magit-submodule-populate’.  If you don’t
+     need to edit any urls, then use the latter directly.
 
-‘o b’     (‘magit-submodule-setup’)
+‘o p’     (‘magit-submodule-populate’)
 
-     Clone and register missing submodules and checkout appropriate
-     commits.
+     This command creates the working directory or directories of the
+     selected modules, checking out the recorded commits.
 
 ‘o u’     (‘magit-submodule-update’)
 
-     Clone missing submodules and checkout appropriate commits.
+     This command updates the selected modules checking out the recorded
+     commits.
 
-‘o s’     (‘magit-submodule-sync’)
+‘o s’     (‘magit-submodule-synchronize’)
 
-     Update each submodule’s remote URL according to ".gitmodules".
+     This command synchronizes the urls of the selected modules, copying
+     the values from ".gitmodules" to the ".git/config" of the
+     super-project as well those of the modules.
 
-‘o d’     (‘magit-submodule-deinit’)
+‘o d’     (‘magit-submodule-unpopulate’)
 
-     Unregister the submodule at PATH.
+     This command removes the working directory of the selected modules.
 
 ‘o l’     (‘magit-list-submodules’)
 
@@ -7777,98 +7808,4 @@ refresh because that also automatically moves to the next change.
 
      When this is non-nil, then ‘magit-process-sentinel’ raises an error
      if git exits with a non-zero exit status.  For debugging purposes.
-
-
-File: magit.info,  Node: Section Plumbing,  Next: Refreshing Buffers,  Prev: Calling Git,  Up: Plumbing
-
-10.2 Section Plumbing
-=====================
-
-* Menu:
-
-* Creating Sections::
-* Section Selection::
-* Matching Sections::
-
-
-File: magit.info,  Node: Creating Sections,  Next: Section Selection,  Up: Section Plumbing
-
-10.2.1 Creating Sections
-------------------------
-
- -- Macro: magit-insert-section &rest args
-
-     Insert a section at point.
-
-     TYPE is the section type, a symbol.  Many commands that act on the
-     current section behave differently depending on that type.  Also if
-     a variable ‘magit-TYPE-section-map’ exists, then use that as the
-     text-property ‘keymap’ of all text belonging to the section (but
-     this may be overwritten in subsections).  TYPE can also have the
-     form ‘(eval FORM)’ in which case FORM is evaluated at runtime.
-
-     Optional VALUE is the value of the section, usually a string that
-     is required when acting on the section.
-
-     When optional HIDE is non-nil collapse the section body by default,
-     i.e.  when first creating the section, but not when refreshing the
-     buffer.  Otherwise, expand it by default.  This can be overwritten
-     using ‘magit-section-set-visibility-hook’.  When a section is
-     recreated during a refresh, then the visibility of predecessor is
-     inherited and HIDE is ignored (but the hook is still honored).
-
-     BODY is any number of forms that actually insert the section’s
-     heading and body.  Optional NAME, if specified, has to be a symbol,
-     which is then bound to the struct of the section being inserted.
-
-     Before BODY is evaluated the ‘start’ of the section object is set
-     to the value of ‘point’ and after BODY was evaluated its ‘end’ is
-     set to the new value of ‘point’; BODY is responsible for moving
-     ‘point’ forward.
-
-     If it turns out inside BODY that the section is empty, then
-     ‘magit-cancel-section’ can be used to abort and remove all traces
-     of the partially inserted section.  This can happen when creating a
-     section by washing Git’s output and Git didn’t actually output
-     anything this time around.
-
- -- Function: magit-insert-heading &rest args
-
-     Insert the heading for the section currently being inserted.
-
-     This function should only be used inside ‘magit-insert-section’.
-
-     When called without any arguments, then just set the ‘content’ slot
-     of the object representing the section being inserted to a marker
-     at ‘point’.  The section should only contain a single line when
-     this function is used like this.
-
-     When called with arguments ARGS, which have to be strings, then
-     insert those strings at point.  The section should not contain any
-     text before this happens and afterwards it should again only
-     contain a single line.  If the ‘face’ property is set anywhere
-     inside any of these strings, then insert all of them unchanged.
-     Otherwise use the ‘magit-section-heading’ face for all inserted
-     text.
-
-     The ‘content’ property of the section struct is the end of the
-     heading (which lasts from ‘start’ to ‘content’) and the beginning
-     of the body (which lasts from ‘content’ to ‘end’).  If the value of
-     ‘content’ is nil, then the section has no heading and its body
-     cannot be collapsed.  If a section does have a heading then its
-     height must be exactly one line, including a trailing newline
-     character.  This isn’t enforced; you are responsible for getting it
-     right.  The only exception is that this function does insert a
-     newline character if necessary.
-
- -- Function: magit-cancel-section
-
-     Cancel the section currently being inserted.  This exits the
-     innermost call to ‘magit-insert-section’ and removes all traces of
-     what has already happened inside that call.
-
- -- Function: magit-define-section-jumper sym title &optional value
-
-     Define an interactive function to go to section SYM. TITLE is the
-     displayed title of the section.
 

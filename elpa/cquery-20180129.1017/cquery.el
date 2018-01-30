@@ -3,7 +3,7 @@
 ;; Copyright (C) 2017 Tobias Pisani
 
 ;; Author:  Tobias Pisani
-;; Package-Version: 20180125.1037
+;; Package-Version: 20180129.1017
 ;; Package-X-Original-Version: 20180122.1
 ;; Version: 0.1
 ;; Homepage: https://github.com/jacobdufault/cquery
@@ -69,7 +69,7 @@
 (defalias 'cquery-additional-arguments 'cquery-extra-args)
 
 (defcustom cquery-cache-dir
-  ".vscode/cquery_cached_index/"
+  ".cquery_cached_index/"
   "Directory in which cquery will store its index cache.
 Relative to the project root directory."
   :type 'directory
@@ -294,15 +294,17 @@ If nil, disable semantic highlighting."
                     (cl-loop
                      for (start end face) in ranges do
                      (forward-line (- (car start) last-line-number))
-                     (move-to-column (cdr start))
+                     (forward-char (cdr start))
                      ;; start of range
                      (setq range-start (point))
-                     (forward-line (- (car end) (car start)))
-                     (move-to-column (cdr end))
-                     ;; end of range
-                     (setq range-end (point))
+                     (setq last-line-number (car start))
+                     (save-excursion
+                       (forward-line (- (car end) (car start)))
+                       (forward-char (cdr end))
+                       ;; end of range
+                       (setq range-end (point)))
                      (cquery--make-sem-highlight (cons range-start range-end) buffer face)
-                     (setq last-line-number (car end)))))))))))))
+                     )))))))))))
 
 (defmacro cquery-use-default-rainbow-sem-highlight ()
   "Use default rainbow semantic highlighting theme."
@@ -386,6 +388,17 @@ If nil, disable semantic highlighting."
 ;; ---------------------------------------------------------------------
 ;;   Other cquery-specific methods
 ;; ---------------------------------------------------------------------
+
+(defun cquery-freshen-index (&optional whitelist blacklist)
+  "Rebuild indexes for matched files.
+`whitelist' and `blacklist' are ECMAScript regex used by std::regex_match
+`regexp-quote' quotes in elisp flavored regex, so some metacharacters may fail."
+  (interactive (list (list (concat "^" (regexp-quote buffer-file-name) "$")) (list ".")))
+  (lsp--cur-workspace-check)
+  (lsp--send-notification
+   (lsp--make-notification "$cquery/freshenIndex"
+                           (list :whitelist (or whitelist [])
+                                 :blacklist (or blacklist [])))))
 
 (defun cquery-xref-find-custom (method &optional display-action)
   "Find cquery-specific cross references.
@@ -604,7 +617,7 @@ Keep an eye on https://github.com/jacobdufault/cquery/issues/283"
 ;;;###autoload (autoload 'lsp-cquery-enable "cquery")
 (lsp-define-stdio-client
  lsp-cquery "cpp" #'cquery--get-root
- `(,cquery-executable "--language-server" ,@cquery-extra-args)
+ `(,cquery-executable ,@cquery-extra-args)
  :initialize #'cquery--initialize-client
  :extra-init-params #'cquery--get-init-params)
 

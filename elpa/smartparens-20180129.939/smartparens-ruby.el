@@ -1,4 +1,4 @@
-;;; smartparens-ruby.el --- Additional configuration for Ruby based modes.
+;;; smartparens-ruby.el --- Additional configuration for Ruby based modes.  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2013-2014 Jean-Louis Giordano
 
@@ -48,6 +48,11 @@
 
 (require 'smartparens)
 
+(declare-function enh-ruby-forward-sexp "ruby")
+(declare-function ruby-forward-sexp "ruby")
+(declare-function enh-ruby-backward-sexp "ruby")
+(declare-function ruby-backward-sexp "ruby")
+
 (defun sp-ruby-forward-sexp ()
   "Wrapper for `ruby-forward-sexp' based on `enh-ruby-mode'."
   (interactive)
@@ -64,14 +69,14 @@
 
 (defun sp-ruby-maybe-one-space ()
   "Turn whitespace around point to just one space."
-  (while (looking-back " ") (backward-char))
+  (while (looking-back " " nil) (backward-char))
   (when (or (looking-at-p " ")
             (looking-at-p "}")
-            (looking-back "{")
+            (looking-back "{" nil)
             (and (looking-at-p "\\sw")
-                 (looking-back ":")))
+                 (looking-back ":" nil)))
     (save-excursion (just-one-space)))
-  (when (and (not (looking-back "^.?"))
+  (when (and (not (looking-back "^.?" nil))
              (save-excursion
                (backward-char 2)
                (or (looking-at-p ".[^:] [.([,;]")
@@ -108,7 +113,7 @@ ID, ACTION, CONTEXT."
     (delete-char 1))
   (sp-ruby-post-handler id action context))
 
-(defun sp-ruby-post-handler (id action context)
+(defun sp-ruby-post-handler (_id action _context)
   "Ruby post handler.
 ID, ACTION, CONTEXT."
   (-let (((&plist :arg arg :enc enc) sp-handler-context))
@@ -130,7 +135,7 @@ ID, ACTION, CONTEXT."
             (sp-ruby-delete-indentation -1))
           (indent-according-to-mode))))))
 
-(defun sp-ruby-pre-handler (id action context)
+(defun sp-ruby-pre-handler (_id action _context)
   "Handler for ruby slurp and barf.
 ID, ACTION, CONTEXT."
   (let ((enc (plist-get sp-handler-context :enc)))
@@ -146,14 +151,14 @@ ID, ACTION, CONTEXT."
             (when (not (= (line-number-at-pos) end-line))
               (sp-ruby-delete-indentation -1)))
           (when (looking-at-p "::")
-            (while (and (looking-back "\\sw")
+            (while (and (looking-back "\\sw" nil)
                         (--when-let (sp-get-symbol t)
                           (sp-get it (goto-char :beg-prf))))))
           (while (thing-at-point-looking-at "\\.[[:blank:]\n]*")
             (sp-backward-sexp))
-          (when (looking-back "[@$:&?!]")
+          (when (looking-back "[@$:&?!]" nil)
             (backward-char)
-            (when (looking-back "[@&:]")
+            (when (looking-back "[@&:]" nil)
               (backward-char)))
           (just-one-space)
           (save-excursion
@@ -172,7 +177,7 @@ ID, ACTION, CONTEXT."
         (when (equal action 'slurp-forward)
           (save-excursion
             (sp-backward-sexp)
-            (when (looking-back "\.") (backward-char))
+            (when (looking-back "\." nil) (backward-char))
             (sp-ruby-maybe-one-space)
             (when (not (= (line-number-at-pos) beg-line))
               (if (thing-at-point-looking-at "\\.[[:blank:]\n]*")
@@ -187,28 +192,28 @@ ID, ACTION, CONTEXT."
             (newline)))
 
         (when (equal action 'barf-forward)
-          (when (looking-back "\\.") (backward-char))
+          (when (looking-back "\\." nil) (backward-char))
           (when (looking-at-p "::")
-            (while (and (looking-back "\\sw")
+            (while (and (looking-back "\\sw" nil)
                         (--when-let (sp-get-symbol t)
                           (sp-get it (goto-char :beg-prf))))))
           (if (= (line-number-at-pos) end-line)
               (insert " ")
-            (if (looking-back "^[[:blank:]]*")
+            (if (looking-back "^[[:blank:]]*" nil)
                 (save-excursion (newline))
               (newline))))))))
 
 (defun sp-ruby-inline-p (id)
   "Test if ID is inline."
   (save-excursion
-    (when (looking-back id)
+    (when (looking-back id nil)
       (backward-word))
-    (when (not (or (looking-back "^[[:blank:]]*")
-                   (looking-back "= *")))
+    (when (not (or (looking-back "^[[:blank:]]*" nil)
+                   (looking-back "= *" nil)))
       (or (save-excursion
-               (forward-symbol -1)
-               (forward-symbol 1)
-               (looking-at-p (concat " *" id)))
+            (forward-symbol -1)
+            (forward-symbol 1)
+            (looking-at-p (concat " *" id)))
           (save-excursion
             ;; This does not seem to make emacs snapshot happy
             (ignore-errors
@@ -219,30 +224,30 @@ ID, ACTION, CONTEXT."
 (defun sp-ruby-method-p (id)
   "Test if ID is a method."
   (save-excursion
-    (when (looking-back id)
+    (when (looking-back id nil)
       (backward-word))
     (and (looking-at-p id)
          (or
           ;; fix for def_foo
           (looking-at-p (concat id "[_?!:]"))
           ;; fix for foo_def
-          (looking-back "[_:@$.]")
+          (looking-back "[_:@$.]" nil)
           ;; fix for def for; end
-          (looking-back "def \\|class \\|module ")
+          (looking-back "def \\|class \\|module " nil)
           ;; Check if multiline method call
           ;; But beware of comments!
-          (and (looking-back "\\.[[:blank:]\n]*")
+          (and (looking-back "\\.[[:blank:]\n]*" nil)
                (not (save-excursion
                       (search-backward ".")
                       (sp-point-in-comment))))))))
 
-(defun sp-ruby-skip-inline-match-p (ms mb me)
+(defun sp-ruby-skip-inline-match-p (ms _mb _me)
   "If non-nil, skip inline match.
 MS, MB, ME."
   (or (sp-ruby-method-p ms)
       (sp-ruby-inline-p ms)))
 
-(defun sp-ruby-skip-method-p (ms mb me)
+(defun sp-ruby-skip-method-p (ms _mb _me)
   "If non-nil, skip method.
 MS, MB, ME."
   (sp-ruby-method-p ms))
@@ -251,18 +256,18 @@ MS, MB, ME."
   "Test if point is inside string or word.
 ID, ACTION, CONTEXT."
   (or (sp-in-string-p id action context)
-      (and (looking-back id)
-           (not (looking-back (sp--strict-regexp-quote id))))
+      (and (looking-back id nil)
+           (not (looking-back (sp--strict-regexp-quote id) nil)))
       (sp-ruby-method-p id)))
 
 (defun sp-ruby-in-string-word-or-inline-p (id action context)
   "Test if point is inside string, word or inline.
 ID, ACTION, CONTEXT."
   (or (sp-ruby-in-string-or-word-p id action context)
-      (and (looking-back id)
+      (and (looking-back id nil)
            (sp-ruby-inline-p id))))
 
-(defun sp-ruby-pre-pipe-handler (id action context)
+(defun sp-ruby-pre-pipe-handler (id action _context)
   "Ruby pipe handler.
 ID, ACTION, CONTEXT."
   (when (equal action 'insert)
@@ -272,7 +277,7 @@ ID, ACTION, CONTEXT."
       (search-backward id)
       (just-one-space))))
 
-(defun sp-ruby-should-insert-pipe-close (id action context)
+(defun sp-ruby-should-insert-pipe-close (id action _context)
   "Test whether to insert the closing pipe for a lambda-binding pipe pair.
 ID, ACTION, CONTEXT"
   (if (eq action 'insert)

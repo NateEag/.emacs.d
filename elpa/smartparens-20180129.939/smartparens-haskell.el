@@ -1,4 +1,4 @@
-;;; smartparens-haskell.el --- Additional configuration for Haskell based modes.
+;;; smartparens-haskell.el --- Additional configuration for Haskell based modes.  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015 Michael Xavier
 
@@ -46,7 +46,7 @@
 ;;; Code:
 (require 'smartparens)
 
-(defun sp-haskell-skip-apostrophe (ms mb me)
+(defun sp-haskell-skip-apostrophe (_ms mb _me)
   (save-excursion
     ;; We test the syntax class because haskell mode overrides
     ;; the class for ' on the fly when it run the syntax pass of

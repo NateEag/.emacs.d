@@ -1,4 +1,4 @@
-;;; smartparens-ess.el --- Smartparens Extension for Emacs Speaks Statistics
+;;; smartparens-ess.el --- Smartparens Extension for Emacs Speaks Statistics  -*- lexical-binding: t; -*-
 
 ;; Copyright (c) 2015-2016 Bernhard Pröll
 
@@ -39,6 +39,10 @@
 (require 'smartparens)
 (require 'rx)
 
+(defvar ess-roxy-str)
+
+(declare-function ess-roxy-indent-on-newline "ess-roxy")
+
 
 ;; avoid traveling commas when slurping
 ;; (|a, b), c ---> (|a, b, c)
@@ -52,7 +56,7 @@
 
 ;; slurping follows Google's R style guide
 ;; see https://google.github.io/styleguide/Rguide.xml
-(defun sp-ess-pre-handler (id action context)
+(defun sp-ess-pre-handler (_id action _context)
   "Remove spaces before opening parenthesis in a function call.
 Remove redundant space around commas.
 ID, ACTION, CONTEXT."
@@ -62,35 +66,35 @@ ID, ACTION, CONTEXT."
         (goto-char (sp-get sxp :beg-prf))
         ;; (|)   x ---> (x)
         (when (looking-back (rx (syntax open-parenthesis)
-                                (one-or-more space)))
+                                (one-or-more space)) nil)
           (cycle-spacing 0 nil 'single-shot))
         (cond
-          ;; (|)if(cond) ---> (|if (cond))
-          ((member (sp-get sxp :prefix) '("if" "for" "while"))
-           (goto-char (sp-get sxp :beg))
-           (cycle-spacing 1 nil 'single-shot))
-          ;; (|)v [,2] <- if(x > 1) ---> (v[,2] <- if (x > 1))
-          ((and
-            (member (sp-get sxp :op) '("[" "("))
-            (equal (sp-get sxp :prefix) "")
-            (looking-back
-             (rx (and (not-char "%" ",")
-                      (not (syntax close-parenthesis)))
-                 (one-or-more space)))
-            (not (member
-                  (save-excursion
-                    (sp-backward-sexp)
-                    (thing-at-point 'word 'noprop))
-                  '("if" "for" "while"))))
-           (cycle-spacing 0 nil 'single-shot))
-          ;; (|[...])%in% ---> ([...] %in%|)
-          ((or (looking-at "%") (looking-back "%"))
-           (just-one-space))
-          ;; (|)a , b,    c ---> (|a, b, c)
-          ((looking-back
-            (rx (zero-or-more space) "," (zero-or-more space))
-            (line-beginning-position) 'greedy)
-           (replace-match ", "))))))
+         ;; (|)if(cond) ---> (|if (cond))
+         ((member (sp-get sxp :prefix) '("if" "for" "while"))
+          (goto-char (sp-get sxp :beg))
+          (cycle-spacing 1 nil 'single-shot))
+         ;; (|)v [,2] <- if(x > 1) ---> (v[,2] <- if (x > 1))
+         ((and
+           (member (sp-get sxp :op) '("[" "("))
+           (equal (sp-get sxp :prefix) "")
+           (looking-back
+            (rx (and (not-char "%" ",")
+                     (not (syntax close-parenthesis)))
+                (one-or-more space)) nil)
+           (not (member
+                 (save-excursion
+                   (sp-backward-sexp)
+                   (thing-at-point 'word 'noprop))
+                 '("if" "for" "while"))))
+          (cycle-spacing 0 nil 'single-shot))
+         ;; (|[...])%in% ---> ([...] %in%|)
+         ((or (looking-at "%") (looking-back "%" nil))
+          (just-one-space))
+         ;; (|)a , b,    c ---> (|a, b, c)
+         ((looking-back
+           (rx (zero-or-more space) "," (zero-or-more space))
+           (line-beginning-position) 'greedy)
+          (replace-match ", "))))))
   (when (equal action 'slurp-backward)
     (let ((sxp (sp-get-thing)))
       (save-excursion
@@ -129,7 +133,7 @@ ID, ACTION, CONTEXT."
 ;; ##' \tabular{rrr}{
 ;; ##'   |
 ;; ##' }
-(defun sp-ess-open-sexp-indent (&rest args)
+(defun sp-ess-open-sexp-indent (&rest _args)
   "Open new brace or bracket with indentation.
 ARGS."
   (if (and (fboundp 'ess-roxy-entry-p) (ess-roxy-entry-p))
@@ -142,7 +146,7 @@ ARGS."
     (forward-line -1)
     (indent-according-to-mode)))
 
-(defun sp-ess-roxy-str-p (id action context)
+(defun sp-ess-roxy-str-p (_id action _context)
   "Test if looking back at `ess-roxy-re'.
 ID, ACTION, CONTEXT."
   (when (and (boundp 'ess-roxy-re) (eq action 'insert))

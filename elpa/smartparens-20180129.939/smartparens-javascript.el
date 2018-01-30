@@ -1,11 +1,10 @@
-;;; smartparens-latex.el --- Additional configuration for text-mode.
+;;; smartparens-javascript.el --- Additional configuration for JavaScript based modes.  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2017 Matus Goljer
-
-;; Author: Matus Goljer <matus.goljer@gmail.com>
-;; Maintainer: Matus Goljer <matus.goljer@gmail.com>
-;; Created: 16 July 2017
-;; Keywords: abbrev convenience editing
+;; Copyright (c) 2017 Marinin Tim
+;; Author: Tim Marinin <mt@marinin.xyz>
+;; Maintainer: Tim Marinin <mt@marinin.xyz>
+;; Created: 2017-03-03
+;; Keywords: abbrev convenience editing javascript
 ;; URL: https://github.com/Fuco1/smartparens
 
 ;; This file is not part of GNU Emacs.
@@ -29,17 +28,17 @@
 
 ;;; Commentary:
 
-;; This file provides some additional configuration for `text-mode'.
-;; To use it, simply add:
+;; This file provides some additional configuration for JavaScript based
+;; modes.  To use it, simply add:
 ;;
-;; (require 'smartparens-text)
+;; (require 'smartparens-javascript)
 ;;
 ;; into your configuration.  You can use this in conjunction with the
 ;; default config or your own configuration.
-
+;;
 ;; If you have good ideas about what should be added please file an
 ;; issue on the github tracker.
-
+;;
 ;; For more info, see github readme at
 ;; https://github.com/Fuco1/smartparens
 
@@ -47,19 +46,10 @@
 
 (require 'smartparens)
 
-(defun sp-text-mode-emoticon-p (_id action _context)
-  (when (memq action '(insert navigate))
-    (sp--looking-back-p ":-?[()]" 3)))
+;; (|sys).path.append---the dot should not travel with the closing
+;; paren
+(--each '(js-mode javascript-mode js2-mode typescript-mode)
+  (add-to-list 'sp-sexp-suffix (list it 'regexp "")))
 
-(defun sp-text-mode-skip-emoticon (ms mb me)
-  (when (member ms '("(" ")"))
-    (save-excursion
-      (goto-char mb)
-      (sp--looking-back-p ":-?" 2))))
-
-(sp-local-pair 'text-mode "(" nil
-               :unless '(:add sp-text-mode-emoticon-p)
-               :skip-match 'sp-text-mode-skip-emoticon)
-
-(provide 'smartparens-text)
-;;; smartparens-text.el ends here
+(provide 'smartparens-javascript)
+;;; smartparens-javasript.el ends here

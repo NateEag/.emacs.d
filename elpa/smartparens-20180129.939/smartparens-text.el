@@ -1,13 +1,11 @@
-;;; smartparens-ml.el --- Additional configuration for ML languages
+;;; smartparens-latex.el --- Additional configuration for text-mode.  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2016-2017 Ta Quang Trung
 ;; Copyright (C) 2017 Matus Goljer
 
-;; Author: Ta Quang Trung <taquangtrungvn@gmail.com>
-;;         Matus Goljer <matus.goljer@gmail.com>
+;; Author: Matus Goljer <matus.goljer@gmail.com>
 ;; Maintainer: Matus Goljer <matus.goljer@gmail.com>
-;; Created: 14 July 2016
-;; Keywords: smartparens, ML, ocaml, reason
+;; Created: 16 July 2017
+;; Keywords: abbrev convenience editing
 ;; URL: https://github.com/Fuco1/smartparens
 
 ;; This file is not part of GNU Emacs.
@@ -31,17 +29,17 @@
 
 ;;; Commentary:
 
-;; This file provides some additional configuration for ML languages.
+;; This file provides some additional configuration for `text-mode'.
 ;; To use it, simply add:
 ;;
-;; (require 'smartparens-ml)
+;; (require 'smartparens-text)
 ;;
 ;; into your configuration.  You can use this in conjunction with the
 ;; default config or your own configuration.
-;;
+
 ;; If you have good ideas about what should be added please file an
 ;; issue on the github tracker.
-;;
+
 ;; For more info, see github readme at
 ;; https://github.com/Fuco1/smartparens
 
@@ -49,9 +47,19 @@
 
 (require 'smartparens)
 
-;;; Local pairs for ML-family languages
-(sp-with-modes '(tuareg-mode fsharp-mode) (sp-local-pair "(*" "*)" ))
-(sp-with-modes '(reason-mode) (sp-local-pair "/*" "*/" ))
+(defun sp-text-mode-emoticon-p (_id action _context)
+  (when (memq action '(insert navigate))
+    (sp--looking-back-p ":-?[()]" 3)))
 
-(provide 'smartparens-ml)
-;;; smartparens-ml.el ends here
+(defun sp-text-mode-skip-emoticon (ms mb _me)
+  (when (member ms '("(" ")"))
+    (save-excursion
+      (goto-char mb)
+      (sp--looking-back-p ":-?" 2))))
+
+(sp-local-pair 'text-mode "(" nil
+               :unless '(:add sp-text-mode-emoticon-p)
+               :skip-match 'sp-text-mode-skip-emoticon)
+
+(provide 'smartparens-text)
+;;; smartparens-text.el ends here

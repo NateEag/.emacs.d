@@ -1,4 +1,4 @@
-;;; smartparens-rust.el --- Additional configuration for Rust based modes.
+;;; smartparens-rust.el --- Additional configuration for Rust based modes.  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2015 Wilfred Hughes
 
@@ -44,7 +44,9 @@
 ;;; Code:
 (require 'smartparens)
 
-(defun sp-in-rust-lifetime-context (&rest args)
+(declare-function rust-mode "rust-mode")
+
+(defun sp-in-rust-lifetime-context (&rest _args)
   "Return t if point is in a Rust context where ' represents a lifetime.
 If we return nil, ' should be used for character literals.
 ARGS."
@@ -63,7 +65,7 @@ ARGS."
             (goto-char paren-pos)
             (looking-at "<"))))))
 
-(defun sp-rust-skip-match-angle-bracket (ms mb me)
+(defun sp-rust-skip-match-angle-bracket (_ms _mb me)
   "Non-nil if we should ignore the bracket as valid delimiter."
   (save-excursion
     (goto-char me)
@@ -80,7 +82,7 @@ ARGS."
                                nil)))
       (or on-comparison on-fn-return-type on-match-branch))))
 
-(defun sp-rust-filter-angle-brackets (id action context)
+(defun sp-rust-filter-angle-brackets (_id action context)
   "Non-nil if we should allow ID's ACTION in CONTEXT for angle brackets."
   ;; See the docstring for `sp-pair' for the possible values of ID,
   ;; ACTION and CONTEXT.

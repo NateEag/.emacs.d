@@ -34,12 +34,12 @@ expected.
 
    Ghub is intentionally limited to only provide these two essential
 features — basic request functions and guided setup — to avoid being too
-opinionated, which would hinder wide adaption.  It is assumed that wide
+opinionated, which would hinder wide adoption.  It is assumed that wide
 adoption would make life easier for users and maintainers alike, because
 then all packages that talk to the Github API could be configured the
 same way.
 
-This manual is for Ghub version 1.3.0 (v1.3.0-36-gca466a0+1).
+This manual is for Ghub version 1.3.0 (v1.3.0-39-gf1b647f+1).
 
      Copyright (C) 2017-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -96,7 +96,7 @@ expected.
 
    Ghub is intentionally limited to only provide these two essential
 features — basic request functions and guided setup — to avoid being too
-opinionated, which would hinder wide adaption.
+opinionated, which would hinder wide adoption.
 
    Fancier interfaces can implemented on top of Ghub, and one such
 wrapper — named simply Ghub+ — has already been implemented.  The
@@ -138,7 +138,7 @@ As mentioned, Ghub restricts itself to provide core functionality and
 leaves it to other libraries to do opinionated things on top of that.
 But currently there also are some limitations that concern the core
 parts.  Obviously these limitations have to be lifted to maximize
-adaption and so they will.
+adoption and so they will.
 
    These secondary features already exist (just mentioning them, so you
 don’t assume that they don’t):

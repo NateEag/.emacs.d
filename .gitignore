@@ -32,3 +32,7 @@ projectile.cache
 # all, but I don't want those in a repo that's meant to move from machine to
 # machine, possibly across CPU architectures.
 epdfinfo
+
+# While backups of edited files are lovely to have, I don't want to commit them
+# to this repo.
+autosaves/

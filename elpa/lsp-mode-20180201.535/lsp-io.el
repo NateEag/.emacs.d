@@ -28,21 +28,24 @@
   :type 'number
   :group 'lsp-mode)
 
-(defvar lsp--no-response)
-
-(defun lsp--send-wait (message proc)
+(defun lsp--send-wait (message proc parser)
   "Send MESSAGE to PROC and wait for output from the process."
   (when lsp-print-io
     (message "lsp--stdio-wait: %s" message))
   (when (memq (process-status proc) '(stop exit closed failed nil))
     (error "%s: Cannot communicate with the process (%s)" (process-name proc)
-           (process-status proc)))
+      (process-status proc)))
   (process-send-string proc message)
-  (setq lsp--no-response t)
   (with-local-quit
-    (accept-process-output proc lsp-response-timeout))
-  (when lsp--no-response
-    (signal 'lsp-timed-out-error nil)))
+    (let* ((send-time (time-to-seconds (current-time)))
+            ;; max time by which we must get a response
+           (expected-time (+ send-time lsp-response-timeout)))
+      (while (lsp--parser-waiting-for-response parser)
+        ;; Wait for expected-time - current-time
+        (accept-process-output proc (- expected-time (time-to-seconds (current-time))))
+        ;; We have timed out when expected-time < (current-time)
+        (when (< expected-time (time-to-seconds (current-time)))
+          (signal 'lsp-timed-out-error nil))))))
 
 (defun lsp--send-no-wait (message proc)
   "Send MESSAGE to PROC without waiting for further output."
@@ -99,12 +102,15 @@
       'notification
       (signal 'lsp-unknown-message-type (list json-data)))))
 
+(defun lsp--default-message-handler (workspace params)
+  (lsp--window-show-message params workspace))
+
 (defconst lsp--default-notification-handlers
   #s(hash-table
      test equal
      data
-     ("window/showMessage" (lambda (_w params) (lsp--window-show-message params))
-      "window/logMessage" (lambda (_w params) (lsp--window-show-message params))
+     ("window/showMessage" lsp--default-message-handler
+      "window/logMessage" lsp--default-message-handler
       "textDocument/publishDiagnostics" (lambda (w p) (lsp--on-diagnostics p w))
       "textDocument/diagnosticsEnd" ignore
       "textDocument/diagnosticsBegin" ignore)))
@@ -210,12 +216,15 @@
    (lsp--parser-body p) nil
    (lsp--parser-reading-body p) nil))
 
+(defun lsp--read-json (str)
+  (let* ((json-array-type 'list)
+         (json-object-type 'hash-table)
+         (json-false nil))
+    (json-read-from-string str)))
+
 (defun lsp--parser-on-message (p msg)
   "Called when the parser reads a complete message from the server."
-  (let* ((json-array-type 'list)
-          (json-object-type 'hash-table)
-          (json-false nil)
-          (json-data (json-read-from-string msg))
+  (let* ((json-data (lsp--read-json msg))
           (id (gethash "id" json-data nil))
           (client (lsp--workspace-client (lsp--parser-workspace p)))
           callback)
@@ -292,8 +301,7 @@
     (nreverse messages)))
 
 (defun lsp--parser-make-filter (p ignore-regexps)
-  #'(lambda (proc output)
-      (setq lsp--no-response nil)
+  #'(lambda (_proc output)
       (when (cl-loop for r in ignore-regexps
                      ;; check if the output is to be ignored or not
                      ;; TODO: Would this ever result in false positives?
@@ -311,9 +319,7 @@
 
           (dolist (m messages)
             (when lsp-print-io (message "Output from language server: %s" m))
-            (lsp--parser-on-message p m))))
-      (when (lsp--parser-waiting-for-response p)
-        (with-local-quit (accept-process-output proc)))))
+            (lsp--parser-on-message p m))))))
 
 (declare-function lsp--client-notification-handlers "lsp-methods" (client))
 (declare-function lsp--client-request-handlers "lsp-methods" (client))

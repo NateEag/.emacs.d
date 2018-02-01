@@ -38,6 +38,7 @@
   (stderr nil :read-only t)
   (get-root nil :read-only t)
   (ignore-regexps nil :read-only t)
+  (ignore-messages nil :read-only t)
 
   (notification-handlers (make-hash-table :test 'equal) :read-only t)
   (request-handlers (make-hash-table :test 'equal) :read-only t)
@@ -277,7 +278,7 @@ If NO-WAIT is non-nil, don't synchronously wait for a response."
     (setf (lsp--parser-waiting-for-response parser) (not no-wait))
     (if no-wait
       (lsp--send-no-wait message process)
-      (lsp--send-wait message process))
+      (lsp--send-wait message process parser))
     (when (not no-wait)
       (prog1 (lsp--parser-response-result parser)
         (setf (lsp--parser-response-result parser) nil)))))
@@ -1182,12 +1183,13 @@ Returns xref-item(s)."
     ;; textDocument/definition returns Location | Location[]
     (lsp--locations-to-xref-items (if (listp defs) defs (list defs)))))
 
-(defun lsp--make-reference-params (&optional td-position)
+(defun lsp--make-reference-params (&optional td-position include-declaration)
   "Make a ReferenceParam object.
-If TD-POSITION is non-nil, use it as TextDocumentPositionParams object instead."
+If TD-POSITION is non-nil, use it as TextDocumentPositionParams object instead.
+If INCLUDE-DECLARATION is non-nil, request the server to include declarations."
   (let ((json-false :json-false))
     (plist-put (or td-position (lsp--text-document-position-params))
-               :context `(:includeDeclaration ,json-false))))
+      :context `(:includeDeclaration ,(or include-declaration json-false)))))
 
 (defun lsp--get-references ()
   "Get all references for the symbol under point.

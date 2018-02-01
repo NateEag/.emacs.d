@@ -1,0 +1,17 @@
+# -*- mode: snippet; require-final-newline: nil -*-
+# name: reject-recruiter
+# key: reject-recruiter
+# binding: direct-keybinding
+# --
+Hi $0,
+
+Thanks very much for getting in touch. I appreciate the interest.
+
+At present, I'm not interested in this position.
+
+As I said, though, I appreciate your interest, and wish you good luck filling
+the position.
+
+-Nate
+
+http://www.nateeag.com

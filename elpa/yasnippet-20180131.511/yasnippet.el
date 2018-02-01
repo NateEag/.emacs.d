@@ -6,7 +6,7 @@
 ;;          Noam Postavsky <npostavs@gmail.com>
 ;; Maintainer: Noam Postavsky <npostavs@gmail.com>
 ;; Version: 0.12.2
-;; Package-Version: 20180124.1445
+;; Package-Version: 20180131.511
 ;; X-URL: http://github.com/joaotavora/yasnippet
 ;; Keywords: convenience, emulation
 ;; URL: http://github.com/joaotavora/yasnippet
@@ -2512,10 +2512,11 @@ where snippets of table might exist."
         (tables (if table (list table)
                   (yas--get-snippet-tables))))
     ;; HACK! the snippet table created here is actually registered!
-    ;;
-    (unless (or table (gethash major-mode yas--tables))
-      (push (yas--table-get-create major-mode)
-            tables))
+    (unless table
+      ;; The major mode is probably the best guess, put it first.
+      (let ((major-mode-table (yas--table-get-create major-mode)))
+        (cl-callf2 delq major-mode-table tables)
+        (push major-mode-table tables)))
 
     (mapcar #'(lambda (table)
                 (cons table
@@ -4815,6 +4816,31 @@ and return the directory.  Return nil if not found."
                                          (directory-file-name file))))
                  (setq file nil))))
         root))))
+
+;;; Unloading
+
+(defvar unload-function-defs-list) ; loadhist.el
+
+(defun yasnippet-unload-function ()
+  "Disable minor modes when calling `unload-feature'."
+  ;; Disable `yas-minor-mode' everywhere it's enabled.
+  (yas-global-mode -1)
+  (save-current-buffer
+    (dolist (buffer (buffer-list))
+      (set-buffer buffer)
+      (when yas-minor-mode
+        (yas-minor-mode -1))))
+  ;; Remove symbol properties of all our functions, this avoids
+  ;; Bug#25088 in Emacs 25.1, where the compiler macro on
+  ;; `cl-defstruct' created functions hang around in the symbol plist
+  ;; and cause errors when loading again (we don't *need* to clean
+  ;; *all* symbol plists, but it's easier than being precise).
+  (dolist (def unload-function-defs-list)
+    (when (eq (car-safe def) 'defun)
+      (setplist (cdr def) nil)))
+  ;; Return nil so that `unload-feature' will take of undefining
+  ;; functions, and changing any buffers using `snippet-mode'.
+  nil)
 
 
 ;;; Backward compatibility to yasnippet <= 0.7

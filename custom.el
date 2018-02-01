@@ -70,7 +70,6 @@
  '(js2-mode-show-parse-errors nil)
  '(js2-mode-show-strict-warnings nil)
  '(line-number-mode t)
- '(lsp-php-server-development-checkout "/Users/neagleson/third-party/php-language-server/")
  '(lsp-print-io nil)
  '(magit-diff-refine-hunk (quote all))
  '(magit-diff-use-overlays nil)

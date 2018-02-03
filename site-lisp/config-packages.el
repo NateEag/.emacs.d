@@ -509,6 +509,9 @@ The shell command lives in my dotfiles repo."
   :config
   (add-hook 'web-mode-hook 'web-mode-init))
 
+(use-package html-scratchpad
+  :commands html-scratchpad-make-new)
+
 (use-package css-mode
   :mode (("\\.css\\'" . css-mode)
          ("\\.scss\\'" . scss-mode))

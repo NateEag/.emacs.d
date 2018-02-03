@@ -21,7 +21,6 @@
 ;;;
 ;;; TODO:
 ;;;
-;;;   * Make template play nicely with skewer-reload-stylesheets (or vice versa)
 ;;;   * Add a few functions for pulling in common libs locally?
 ;;;   * Add a function to get a share URL (i.e. get public IP address/domain)
 ;;;   * Split out to standalone package?
@@ -54,6 +53,10 @@
   "Create a new HTML scratchpad and make sure the webserver is live."
   (interactive "MName scratchpad: ")
 
+  ;; FIXME Do not require/restart webserver every time we call this.
+  (require 'simple-httpd)
+  (httpd-start)
+
   (let* ((scratchpad-path (expand-file-name subdir httpd-root))
         (scratchpad-html-path (expand-file-name "index.html" scratchpad-path))
         (scratchpad-css-path (expand-file-name "styles.css" scratchpad-path))
@@ -74,7 +77,7 @@
     (insert html-scratchpad-index-page)
     (save-buffer)
 
-    (browse-url (concat (format "http://localhost:%d/" httpd-port) subdir))))
+    (browse-url (concat (format "http://localhost:%d/" httpd-port) subdir "/"))))
 
 (provide 'html-scratchpad)
 ;;; html-scratchpad.el ends here

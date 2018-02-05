@@ -6,7 +6,7 @@
 ;;          Noam Postavsky <npostavs@gmail.com>
 ;; Maintainer: Noam Postavsky <npostavs@gmail.com>
 ;; Version: 0.12.2
-;; Package-Version: 20180131.511
+;; Package-Version: 20180204.1613
 ;; X-URL: http://github.com/joaotavora/yasnippet
 ;; Keywords: convenience, emulation
 ;; URL: http://github.com/joaotavora/yasnippet
@@ -397,13 +397,21 @@ It must be set to nil before loading yasnippet to take effect."
 
 ;;; User-visible variables
 
+(defconst yas-maybe-skip-and-clear-field
+  '(menu-item "" yas-skip-and-clear-field
+              :filter yas--maybe-clear-field-filter)
+  "A conditional key definition.
+This can be used as a key definition in keymaps to bind a key to
+`yas-skip-and-clear-field' only when at the beginning of an
+unmodified snippey field.")
+
 (defvar yas-keymap  (let ((map (make-sparse-keymap)))
                       (define-key map [(tab)]       'yas-next-field-or-maybe-expand)
                       (define-key map (kbd "TAB")   'yas-next-field-or-maybe-expand)
                       (define-key map [(shift tab)] 'yas-prev-field)
                       (define-key map [backtab]     'yas-prev-field)
                       (define-key map (kbd "C-g")   'yas-abort-snippet)
-                      (define-key map (kbd "C-d")   'yas-skip-and-clear-or-delete-char)
+                      (define-key map (kbd "C-d")   yas-maybe-skip-and-clear-field)
                       map)
   "The active keymap while a snippet expansion is in progress.")
 
@@ -3548,22 +3556,37 @@ holds the keymap."
     (overlay-put overlay 'yas--snippet snippet)
     overlay))
 
+(defun yas-current-field ()
+  "Return the currently active field."
+  (and yas--active-field-overlay
+       (overlay-buffer yas--active-field-overlay)
+       (overlay-get yas--active-field-overlay 'yas--field)))
+
+(defun yas--maybe-clear-field-filter (cmd)
+  "Return CMD if at start of unmodified snippet field.
+Use as a `:filter' argument for a conditional keybinding."
+  (let ((field (yas-current-field)))
+    (when (and field
+               (not (yas--field-modified-p field))
+               (eq (point) (marker-position (yas--field-start field))))
+      cmd)))
+
+(defun yas-skip-and-clear-field (&optional field)
+  "Clears unmodified FIELD if at field start, skips to next tab."
+  (interactive)
+  (yas--skip-and-clear (or field (yas-current-field)))
+  (yas-next-field 1))
+
 (defun yas-skip-and-clear-or-delete-char (&optional field)
   "Clears unmodified field if at field start, skips to next tab.
 
 Otherwise deletes a character normally by calling `delete-char'."
   (interactive)
-  (let ((field (or field
-                   (and yas--active-field-overlay
-                        (overlay-buffer yas--active-field-overlay)
-                        (overlay-get yas--active-field-overlay 'yas--field)))))
-    (cond ((and field
-                (not (yas--field-modified-p field))
-                (eq (point) (marker-position (yas--field-start field))))
-           (yas--skip-and-clear field)
-           (yas-next-field 1))
-          (t
-           (call-interactively 'delete-char)))))
+  (declare (obsolete "Bind to `yas-maybe-skip-and-clear-field' instead." "0.13"))
+  (cond ((yas--maybe-clear-field-filter t)
+         (yas--skip-and-clear (or field (yas-current-field)))
+         (yas-next-field 1))
+        (t (call-interactively 'delete-char))))
 
 (defun yas--skip-and-clear (field &optional from)
   "Deletes the region of FIELD and sets it's modified state to t.
@@ -4065,11 +4088,6 @@ next FOM.  Works its way up recursively for parents of parents."
   "When expanding the snippet the \"parse-create\" functions add
 cons cells to this var.")
 
-(defvar yas--backquote-markers-and-strings nil
-  "List of (MARKER . STRING) marking where the values from
-backquoted Lisp expressions should be inserted at the end of
-expansion.")
-
 (defvar yas--indent-markers nil
   "List of markers for manual indentation.")
 
@@ -4078,15 +4096,16 @@ expansion.")
 necessary fields, mirrors and exit points.
 
 Meant to be called in a narrowed buffer, does various passes"
-  (let ((parse-start (point)))
+  (let ((saved-quotes nil)
+        (parse-start (point)))
     ;; Avoid major-mode's syntax propertizing function, since we
     ;; change the syntax-table while calling `scan-sexps'.
     (let ((syntax-propertize-function nil))
       (setq yas--dollar-regions nil)  ; Reset the yas--dollar-regions.
       (yas--protect-escapes nil '(?`))  ; Protect just the backquotes.
       (goto-char parse-start)
-      (yas--save-backquotes)     ; Replace all backquoted expressions.
-      (yas--protect-escapes)     ; Protect escaped characters.
+      (setq saved-quotes (yas--save-backquotes)) ; `expressions`.
+      (yas--protect-escapes)            ; Protect escaped characters.
       (goto-char parse-start)
       (yas--indent-parse-create)        ; Parse indent markers: `$>'.
       (goto-char parse-start)
@@ -4116,7 +4135,7 @@ Meant to be called in a narrowed buffer, does various passes"
                 (get-register yas-wrap-around-region))
            (insert (prog1 (get-register yas-wrap-around-region)
                      (set-register yas-wrap-around-region nil)))))
-    (yas--restore-backquotes)  ; Restore backquoted expression values.
+    (yas--restore-backquotes saved-quotes)  ; Restore `expression` values.
     (goto-char parse-start)
     (yas--restore-escapes)        ; Restore escapes.
     (yas--update-mirrors snippet) ; Update mirrors for the first time.
@@ -4331,9 +4350,11 @@ With optional string TEXT do it in string instead of the buffer."
     changed-text))
 
 (defun yas--save-backquotes ()
-  "Save all the \"\\=`(lisp-expression)\\=`\"-style expressions
-with their evaluated value into `yas--backquote-markers-and-strings'."
-  (let* ((yas--snippet-buffer (current-buffer))
+  "Save all \"\\=`(lisp-expression)\\=`\"-style expressions.
+Return a list of (MARKER . STRING) entires for each backquoted
+Lisp expression."
+  (let* ((saved-quotes nil)
+         (yas--snippet-buffer (current-buffer))
          (yas--change-detected nil)
          (detect-change (lambda (_beg _end)
                           (when (eq (current-buffer) yas--snippet-buffer)
@@ -4356,29 +4377,28 @@ with their evaluated value into `yas--backquote-markers-and-strings'."
               (insert "Y") ;; quite horrendous, I love it :)
               (set-marker marker (point))
               (insert "Y"))
-            (push (cons marker transformed) yas--backquote-markers-and-strings)))))
+            (push (cons marker transformed) saved-quotes)))))
     (when yas--change-detected
       (lwarn '(yasnippet backquote-change) :warning
              "`%s' modified buffer in a backquote expression.
   To hide this warning, add (yasnippet backquote-change) to `warning-suppress-types'."
              (if yas--current-template
                  (yas--template-name yas--current-template)
-               "Snippet")))))
+               "Snippet")))
+    saved-quotes))
 
-(defun yas--restore-backquotes ()
-  "Replace markers in `yas--backquote-markers-and-strings' with their values."
-  (while yas--backquote-markers-and-strings
-    (let* ((marker-and-string (pop yas--backquote-markers-and-strings))
-           (marker (car marker-and-string))
-           (string (cdr marker-and-string)))
-      (save-excursion
-        (goto-char marker)
-        (save-restriction
-          (widen)
-          (delete-char -1)
-          (insert string)
-          (delete-char 1))
-        (set-marker marker nil)))))
+(defun yas--restore-backquotes (saved-quotes)
+  "Replace markers in SAVED-QUOTES with their values.
+SAVED-QUOTES is the in format returned by `yas--save-backquotes'."
+  (cl-loop for (marker . string) in saved-quotes do
+           (save-excursion
+             (goto-char marker)
+             (save-restriction
+               (widen)
+               (delete-char -1)
+               (insert string)
+               (delete-char 1))
+             (set-marker marker nil))))
 
 (defun yas--scan-sexps (from count)
   (ignore-errors

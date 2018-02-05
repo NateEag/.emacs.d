@@ -529,7 +529,7 @@ directory."
   (when lsp--cur-workspace
     (user-error "LSP mode is already enabled for this buffer"))
   (cl-assert client)
-  (let* ((root (funcall (lsp--client-get-root client)))
+  (let* ((root (file-truename (funcall (lsp--client-get-root client))))
          (workspace (gethash root lsp--workspaces))
          new-conn response init-params
          parser proc cmd-proc)
@@ -1282,23 +1282,24 @@ export interface MarkupContent {
             (lsp--point-is-within-bounds-p start end)
             (eq (current-buffer) buffer) (eldoc-display-message-p))
       (let ((contents (gethash "contents" hover)))
-        (eldoc-message
-          ;; contents: MarkedString | MarkedString[] | MarkupContent
-          (if (lsp--markup-content-p contents)
-            (lsp--render-markup-content hover)
+        (when contents
+          (eldoc-message
+           ;; contents: MarkedString | MarkedString[] | MarkupContent
+           (if (lsp--markup-content-p contents)
+               (lsp--render-markup-content hover)
 
-            (mapconcat (lambda (e)
-                         (let (renderer)
-                           (if (hash-table-p e)
-                             (if (setq renderer
-                                   (cdr (assoc-string
-                                          (gethash "language" e)
-                                          renderers)))
-                               (when (gethash "value" e nil)
-                                 (funcall renderer (gethash "value" e)))
-                               (gethash "value" e))
-                             e)))
-              (if (listp contents) contents (list contents)) "\n")))))))
+             (mapconcat (lambda (e)
+                          (let (renderer)
+                            (if (hash-table-p e)
+                                (if (setq renderer
+                                          (cdr (assoc-string
+                                                (gethash "language" e)
+                                                renderers)))
+                                    (when (gethash "value" e nil)
+                                      (funcall renderer (gethash "value" e)))
+                                  (gethash "value" e))
+                              e)))
+                        (if (listp contents) contents (list contents)) "\n"))))))))
 
 (defun lsp-provide-marked-string-renderer (client language renderer)
   (cl-check-type language string)
@@ -1424,21 +1425,18 @@ If title is nil, return the name for the command handler."
 
 (defun lsp-format-buffer ()
   "Ask the server to format this document."
-  (interactive)
+  (interactive "*")
   (let ((edits (lsp--send-request (lsp--make-request
                                    "textDocument/formatting"
                                    (lsp--make-document-formatting-params)))))
     (if (fboundp 'replace-buffer-contents)
-        (let ((current-buffer (current-buffer))
-              (buffer (generate-new-buffer " *lsp-formatting*")))
-          (unwind-protect
-              (replace-buffer-contents
-               (with-current-buffer buffer
-                 (erase-buffer)
-                 (insert-buffer-substring-no-properties current-buffer)
-                 (lsp--apply-text-edits edits)
-                 (current-buffer)))
-            (kill-buffer buffer)))
+        (let ((current-buffer (current-buffer)))
+          (with-temp-buffer
+            (insert-buffer-substring-no-properties current-buffer)
+            (lsp--apply-text-edits edits)
+            (let ((temp-buffer (current-buffer)))
+              (with-current-buffer current-buffer
+                (replace-buffer-contents temp-buffer)))))
       (let ((point (point))
             (w-start (window-start)))
         (lsp--apply-text-edits edits)
@@ -1614,14 +1612,15 @@ interface RenameParams {
 
 (defun lsp-rename (newname)
   "Rename the symbol (and all references to it) under point to NEWNAME."
-  (interactive "sRename to: ")
+  (interactive "*sRename to: ")
   (lsp--cur-workspace-check)
   (unless (lsp--capability "renameProvider")
     (signal 'lsp-capability-not-supported (list "renameProvider")))
   (let ((edits (lsp--send-request (lsp--make-request
                                    "textDocument/rename"
                                    (lsp--make-document-rename-params newname)))))
-    (lsp--apply-workspace-edit edits)))
+    (when edits
+      (lsp--apply-workspace-edit edits))))
 
 (define-inline lsp--execute-command (command)
   "Given a COMMAND returned from the server, create and send a

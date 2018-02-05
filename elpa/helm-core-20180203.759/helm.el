@@ -1852,7 +1852,8 @@ i.e functions called with RET."
   (setq helm--executing-helm-action t)
   ;; Ensure action use same display function as initial helm-buffer when
   ;; helm-actions-inherit-frame-settings is non nil.
-  (when helm-actions-inherit-frame-settings
+  (when (and helm-actions-inherit-frame-settings
+             helm--buffer-in-new-frame-p)
     (helm-set-local-variable 'helm-display-function
                              (with-helm-buffer helm-display-function)
                              'helm--last-frame-parameters
@@ -1912,6 +1913,22 @@ IOW Don't use VALUE of previous VAR to set the VALUE of next VAR.
             (append (cl-loop for i on args by #'cddr
                              collect (cons (car i) (cadr i)))
                     helm--local-variables))))
+
+(defun helm--set-local-variables-internal ()
+  (cl-loop for (var . val) in helm--local-variables
+           ;; If `helm-set-local-variable' is called twice or more
+           ;; on same variable use the last value entered which is
+           ;; the first on stack e.g.
+           ;; (helm-set-local-variable 'helm-foo 1)
+           ;; (helm-set-local-variable 'helm-foo 2)
+           ;; helm--local-variables => 
+           ;; '((helm-foo . 2) (helm-foo. 1))
+           ;; (helm-foo . 2) is retained and (helm-foo . 1)
+           ;; ignored.
+           unless (memq var computed)
+           do (set (make-local-variable var) val)
+           collect var into computed
+           finally (setq helm--local-variables nil)))
 
 
 ;; API helper
@@ -2983,9 +3000,7 @@ Unuseful when used outside helm, don't use it.")
       (helm-initialize-persistent-action)
       (helm-log "helm-display-function = %S" helm-display-function)
       (helm-log "helm--local-variables = %S" helm--local-variables)
-      (cl-loop for (var . val) in helm--local-variables
-               do (set (make-local-variable var) val)
-               finally (setq helm--local-variables nil))
+      (helm--set-local-variables-internal)
       (setq truncate-lines helm-truncate-lines) ; already local.
       (setq cursor-type nil))
     (helm-initialize-overlays helm-buffer)

@@ -35,20 +35,20 @@
 (require 'magit-wip)
 
 ;; For `magit-apply'
-(declare-function magit-am-popup 'magit-sequence)
-(declare-function magit-patch-apply-popup 'magit-files)
+(declare-function magit-am-popup "magit-sequence" (&optional arg))
+(declare-function magit-patch-apply-popup "magit-files" (&optional arg))
 ;; For `magit-discard-files'
-(declare-function magit-checkout-stage 'magit)
-(declare-function magit-checkout-read-stage 'magit)
+(declare-function magit-checkout-stage "magit-merge" (file arg))
+(declare-function magit-checkout-read-stage "magit-merge" (file))
 (defvar auto-revert-verbose)
 ;; For `magit-stage-untracked'
-(declare-function magit-submodule-add 'magit-submodule)
-(declare-function magit-submodule-read-name-for-path 'magit-submodule)
-(declare-function borg--maybe-absorb-gitdir 'borg)
-(declare-function borg--sort-submodule-sections 'borg)
+(declare-function magit-submodule-add "magit-submodule"
+                  (url &optional path name args))
+(declare-function magit-submodule-read-name-for-path "magit-submodule"
+                  (path &optional prefer-short))
+(declare-function borg--maybe-absorb-gitdir "borg" (pkg))
+(declare-function borg--sort-submodule-sections "borg" (file))
 (defvar borg-user-emacs-directory)
-
-(require 'dired)
 
 ;;; Options
 
@@ -547,7 +547,7 @@ without requiring confirmation."
       (let ((binaries (magit-staged-binary-files)))
         (when binaries
           (setq sections
-                (--filter (not (member (oref it value) binaries))
+                (--remove (member (oref it value) binaries)
                           sections)))
         (cond ((= (length sections) 1)
                (magit-discard-apply (car sections) 'magit-apply-diff))

@@ -34,12 +34,13 @@
 (require 'magit-utils)
 (require 'magit-section)
 
-(declare-function magit-call-git 'magit-process)
-(declare-function magit-maybe-make-margin-overlay 'magit-log)
-(declare-function magit-process-buffer 'magit-process)
-(declare-function magit-process-file 'magit-process)
-(declare-function magit-process-insert-section 'magit-process)
-(declare-function magit-refresh 'magit-mode)
+(declare-function magit-call-git "magit-process" (&rest args))
+(declare-function magit-maybe-make-margin-overlay "magit-margin" ())
+(declare-function magit-process-buffer "magit-process" (&optional nodisplay))
+(declare-function magit-process-file "magit-process" (&rest args))
+(declare-function magit-process-insert-section "magit-process"
+                  (pwe program args &optional errcode errlog))
+(declare-function magit-refresh "magit-mode" ())
 (defvar magit-process-error-message-regexps)
 (defvar magit-refresh-args) ; from `magit-mode' for `magit-current-file'
 (defvar magit-branch-prefer-remote-upstream)
@@ -1149,18 +1150,24 @@ where COMMITS is the number of commits in TAG but not in REV."
 When NAMESPACES is non-nil, list refs from these namespaces
 rather than those from `magit-list-refs-namespaces'.
 
-FORMAT is passed to the `--format' flag of `git for-each-ref' and
-defaults to \"%(refname)\".
+FORMAT is passed to the `--format' flag of `git for-each-ref'
+and defaults to \"%(refname)\".  If the format is \"%(refname)\"
+or \"%(refname:short)\", then drop the symbolic-ref \"HEAD\".
 
 SORTBY is a key or list of keys to pass to the `--sort' flag of
 `git for-each-ref'.  When nil, use `magit-list-refs-sortby'"
-  (magit-git-lines "for-each-ref"
-                   (concat "--format=" (or format "%(refname)"))
-                   (--map (concat "--sort=" it)
-                          (pcase (or sortby magit-list-refs-sortby)
-                            ((and val (pred stringp)) (list val))
-                            ((and val (pred listp)) val)))
-                   (or namespaces magit-list-refs-namespaces)))
+  (unless format
+    (setq format "%(refname)"))
+  (let ((refs (magit-git-lines "for-each-ref"
+                               (concat "--format=" format)
+                               (--map (concat "--sort=" it)
+                                      (pcase (or sortby magit-list-refs-sortby)
+                                        ((and val (pred stringp)) (list val))
+                                        ((and val (pred listp)) val)))
+                               (or namespaces magit-list-refs-namespaces))))
+    (if (member format '("%(refname)" "%(refname:short)"))
+        (--remove (string-match-p "\\(\\`\\|/\\)HEAD\\'" it) refs)
+      refs)))
 
 (defun magit-list-branches ()
   (magit-list-refs (list "refs/heads" "refs/remotes")))
@@ -1172,17 +1179,17 @@ SORTBY is a key or list of keys to pass to the `--sort' flag of
   (magit-list-refs (concat "refs/remotes/" remote)))
 
 (defun magit-list-containing-branches (&optional commit)
-  (--filter (not (string-match-p "\\`(HEAD" it))
+  (--remove (string-match-p "\\`(HEAD" it)
             (--map (substring it 2)
                    (magit-git-lines "branch" "--contains" commit))))
 
 (defun magit-list-merged-branches (&optional commit)
-  (--filter (not (string-match-p "\\`(HEAD" it))
+  (--remove (string-match-p "\\`(HEAD" it)
             (--map (substring it 2)
                    (magit-git-lines "branch" "--merged" commit))))
 
 (defun magit-list-unmerged-branches (&optional commit)
-  (--filter (not (string-match-p "\\`(HEAD" it))
+  (--remove (string-match-p "\\`(HEAD" it)
             (--map (substring it 2)
                    (magit-git-lines "branch" "--no-merged" commit))))
 
@@ -1706,6 +1713,20 @@ the reference is used.  The first regexp submatch becomes the
     (or (magit-completing-read prompt (delete exclude (magit-list-refnames))
                                nil nil nil 'magit-revision-history default)
         (user-error "Nothing selected"))))
+
+(defun magit-read-other-local-branch
+    (prompt &optional exclude secondary-default no-require-match)
+  (let* ((current (magit-get-current-branch))
+         (atpoint (magit-local-branch-at-point))
+         (exclude (or exclude current))
+         (default (or (and (not (equal atpoint exclude)) atpoint)
+                      (and (not (equal current exclude)) current)
+                      secondary-default
+                      (magit-get-previous-branch))))
+    (magit-completing-read prompt
+                           (delete exclude (magit-list-local-branch-names))
+                           nil (not no-require-match)
+                           nil 'magit-revision-history default)))
 
 (defun magit-read-branch-prefer-other (prompt)
   (let* ((current (magit-get-current-branch))

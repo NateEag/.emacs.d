@@ -32,20 +32,23 @@
 (require 'magit-core)
 
 ;; For `magit-diff-popup'
-(declare-function magit-stash-show 'magit-stash)
+(declare-function magit-stash-show "magit-stash" (stash &optional args files))
 ;; For `magit-diff-visit-file'
-(declare-function dired-jump 'dired-x)
-(declare-function magit-find-file-noselect 'magit)
-(declare-function magit-status-internal 'magit)
+(declare-function dired-jump "dired-x" (&optional other-window file-name))
+(declare-function magit-find-file-noselect "magit-files" (rev file))
+(declare-function magit-status-internal "magit-status" (directory))
 ;; For `magit-diff-while-committing'
-(declare-function magit-commit-message-buffer 'magit)
+(declare-function magit-commit-message-buffer "magit-commit" ())
 ;; For `magit-insert-revision-gravatar'
 (defvar gravatar-size)
 ;; For `magit-show-commit' and `magit-diff-show-or-scroll'
-(declare-function magit-blame-chunk-get 'magit-blame)
-(declare-function magit-blame-mode 'magit-blame)
+(declare-function magit-blame-chunk-get "magit-blame" (key &optional pos))
+(declare-function magit-blame-mode "magit-blame" (&optional arg))
 (defvar magit-blame-mode)
 (defvar git-rebase-line)
+;; For `magit-diff-unmerged'
+(declare-function magit-merge-in-progress-p "magit-merge" ())
+(declare-function magit--merge-range "magit-merge" (&optional head))
 
 (require 'diff-mode)
 (require 'smerge-mode)
@@ -757,8 +760,14 @@ buffer."
   "Show changes for the thing at point."
   (interactive (magit-diff-arguments))
   (pcase (magit-diff--dwim)
+    (`unmerged (magit-diff-unmerged args files))
     (`unstaged (magit-diff-unstaged args files))
-    (`staged (magit-diff-staged nil args files))
+    (`staged
+     (let ((file (magit-file-at-point)))
+       (if (and file (equal (cddr (car (magit-file-status file))) '(?D ?U)))
+           ;; File was deleted by us and modified by them.  Show the latter.
+           (magit-diff-unmerged args (list file))
+         (magit-diff-staged nil args files))))
     (`(commit . ,value)
      (magit-diff (format "%s^..%s" value value) args files))
     (`(stash  . ,value) (magit-stash-show value args))
@@ -773,8 +782,8 @@ buffer."
 The information can be in three forms:
 1. TYPE
    A symbol describing a type of diff where no additional information
-   is needed to generate the diff.  Currently, this includes `staged'
-   and `unstaged'.
+   is needed to generate the diff.  Currently, this includes `staged',
+   `unstaged' and `unmerged'.
 2. (TYPE . VALUE)
    Like #1 but the diff requires additional information, which is
    given by VALUE.  Currently, this includes `commit' and `stash',
@@ -808,6 +817,7 @@ If no DWIM context is found, nil is returned."
     (magit-section-case
       ([* unstaged] 'unstaged)
       ([* staged] 'staged)
+      (unmerged 'unmerged)
       (unpushed (oref it value))
       (unpulled (oref it value))
       (branch (let ((current (magit-get-current-branch))
@@ -906,6 +916,14 @@ a commit read from the minibuffer."
   "Show changes between the working tree and the index."
   (interactive (magit-diff-arguments))
   (magit-diff-setup nil nil args files))
+
+;;;###autoload
+(defun magit-diff-unmerged (&optional args files)
+  "Show changes that are being merged."
+  (interactive (magit-diff-arguments))
+  (unless (magit-merge-in-progress-p)
+    (user-error "No merge is in progress"))
+  (magit-diff-setup (magit--merge-range) nil args files))
 
 ;;;###autoload
 (defun magit-diff-while-committing (&optional args)
@@ -1187,13 +1205,15 @@ version of the file.  To do this interactively use the command
   (if (magit-file-accessible-directory-p file)
       (magit-diff-visit-directory file other-window)
     (let* ((hunk (magit-diff-visit--hunk))
+           (last (and magit-diff-visit-previous-blob
+                      (not force-worktree)
+                      (magit-section-match 'hunk)
+                      (save-excursion
+                        (goto-char (line-beginning-position))
+                        (looking-at "-"))))
            (line (and hunk (magit-diff-hunk-line   hunk)))
-           (col  (and hunk (magit-diff-hunk-column hunk)))
-           (rev  (if (and magit-diff-visit-previous-blob
-                          (magit-section-match 'hunk)
-                          (save-excursion
-                            (goto-char (line-beginning-position))
-                            (looking-at "-")))
+           (col  (and hunk (magit-diff-hunk-column hunk last)))
+           (rev  (if last
                      (magit-diff-visit--range-beginning)
                    (magit-diff-visit--range-end)))
            (buf  (if (and (not force-worktree)
@@ -1402,10 +1422,11 @@ or `HEAD'."
         (forward-line)))
     (list line offset)))
 
-(defun magit-diff-hunk-column (section)
+(defun magit-diff-hunk-column (section visit-beginning)
   (if (or (< (point)
              (oref section content))
-          (save-excursion (beginning-of-line) (looking-at-p "-")))
+          (and (not visit-beginning)
+               (save-excursion (beginning-of-line) (looking-at-p "-"))))
       0
     (max 0 (- (+ (current-column) 2)
               (length (oref section value))))))
@@ -1715,9 +1736,9 @@ section or a child thereof."
         (magit-bind-match-strings (side _blob name) nil
           (pcase side
             ("result" (setq file name))
-            ("our" (setq orig name))
-            ("their" (setq file name))
-            ("base" (setq base name))))
+            ("our"    (setq orig name))
+            ("their"  (setq file name))
+            ("base"   (setq base name))))
         (magit-delete-line))
       (when orig (setq orig (magit-decode-git-path orig)))
       (when file (setq file (magit-decode-git-path file)))

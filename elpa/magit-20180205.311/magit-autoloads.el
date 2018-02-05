@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "git-rebase" "git-rebase.el" (23155 32322 0
+;;;### (autoloads nil "git-rebase" "git-rebase.el" (23160 26804 0
 ;;;;;;  0))
 ;;; Generated autoloads from git-rebase.el
 
@@ -23,117 +23,8 @@ running 'man git-rebase' at the command line) for details.
 
 ;;;***
 
-;;;### (autoloads nil "magit" "magit.el" (23155 32322 0 0))
+;;;### (autoloads nil "magit" "magit.el" (23160 26804 0 0))
 ;;; Generated autoloads from magit.el
- (autoload 'magit-merge-popup "magit" nil t)
-
-(autoload 'magit-merge "magit" "\
-Merge commit REV into the current branch; using default message.
-
-Unless there are conflicts or a prefix argument is used create a
-merge commit using a generic commit message and without letting
-the user inspect the result.  With a prefix argument pretend the
-merge failed to give the user the opportunity to inspect the
-merge.
-
-\(git merge --no-edit|--no-commit [ARGS] REV)
-
-\(fn REV &optional ARGS NOCOMMIT)" t nil)
-
-(autoload 'magit-merge-editmsg "magit" "\
-Merge commit REV into the current branch; and edit message.
-Perform the merge and prepare a commit message but let the user
-edit it.
-
-\(git merge --edit --no-ff [ARGS] REV)
-
-\(fn REV &optional ARGS)" t nil)
-
-(autoload 'magit-merge-nocommit "magit" "\
-Merge commit REV into the current branch; pretending it failed.
-Pretend the merge failed to give the user the opportunity to
-inspect the merge and change the commit message.
-
-\(git merge --no-commit --no-ff [ARGS] REV)
-
-\(fn REV &optional ARGS)" t nil)
-
-(autoload 'magit-merge-squash "magit" "\
-Squash commit REV into the current branch; don't create a commit.
-
-\(git merge --squash REV)
-
-\(fn REV)" t nil)
-
-(autoload 'magit-merge-preview "magit" "\
-Preview result of merging REV into the current branch.
-
-\(fn REV)" t nil)
-
-(autoload 'magit-merge-abort "magit" "\
-Abort the current merge operation.
-
-\(git merge --abort)
-
-\(fn)" t nil)
- (autoload 'magit-reset-popup "magit" nil t)
-
-(autoload 'magit-reset-index "magit" "\
-Reset the index to COMMIT.
-Keep the head and working tree as-is, so if COMMIT refers to the
-head this effectively unstages all changes.
-
-\(git reset COMMIT .)
-
-\(fn COMMIT)" t nil)
-
-(autoload 'magit-reset "magit" "\
-Reset the head and index to COMMIT, but not the working tree.
-With a prefix argument also reset the working tree.
-
-\(git reset --mixed|--hard COMMIT)
-
-\(fn COMMIT &optional HARD)" t nil)
-
-(autoload 'magit-reset-head "magit" "\
-Reset the head and index to COMMIT, but not the working tree.
-
-\(git reset --mixed COMMIT)
-
-\(fn COMMIT)" t nil)
-
-(autoload 'magit-reset-soft "magit" "\
-Reset the head to COMMIT, but not the index and working tree.
-
-\(git reset --soft REVISION)
-
-\(fn COMMIT)" t nil)
-
-(autoload 'magit-reset-hard "magit" "\
-Reset the head, index, and working tree to COMMIT.
-
-\(git reset --hard REVISION)
-
-\(fn COMMIT)" t nil)
- (autoload 'magit-tag-popup "magit" nil t)
-
-(autoload 'magit-tag "magit" "\
-Create a new tag with the given NAME at REV.
-With a prefix argument annotate the tag.
-
-\(git tag [--annotate] NAME REV)
-
-\(fn NAME REV &optional ARGS)" t nil)
-
-(autoload 'magit-tag-delete "magit" "\
-Delete one or more tags.
-If the region marks multiple tags (and nothing else), then offer
-to delete those, otherwise prompt for a single tag to be deleted,
-defaulting to the tag at point.
-
-\(git tag -d TAGS)
-
-\(fn TAGS)" t nil)
  (autoload 'magit-dispatch-popup "magit" nil t)
  (autoload 'magit-run-popup "magit" nil t)
 
@@ -187,7 +78,7 @@ and Emacs to it.
 
 ;;;***
 
-;;;### (autoloads nil "magit-apply" "magit-apply.el" (23155 32322
+;;;### (autoloads nil "magit-apply" "magit-apply.el" (23160 26804
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-apply.el
 
@@ -223,8 +114,8 @@ Remove all changes from the staging area.
 
 ;;;***
 
-;;;### (autoloads nil "magit-autorevert" "magit-autorevert.el" (23155
-;;;;;;  32322 0 0))
+;;;### (autoloads nil "magit-autorevert" "magit-autorevert.el" (23160
+;;;;;;  26804 0 0))
 ;;; Generated autoloads from magit-autorevert.el
 
 (defvar magit-revert-buffers t)
@@ -253,7 +144,7 @@ See `auto-revert-mode' for more information on Auto-Revert mode.
 
 ;;;***
 
-;;;### (autoloads nil "magit-bisect" "magit-bisect.el" (23155 32322
+;;;### (autoloads nil "magit-bisect" "magit-bisect.el" (23160 26804
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-bisect.el
  (autoload 'magit-bisect-popup "magit-bisect" nil t)
@@ -305,7 +196,7 @@ bisect run'.
 
 ;;;***
 
-;;;### (autoloads nil "magit-blame" "magit-blame.el" (23155 32322
+;;;### (autoloads nil "magit-blame" "magit-blame.el" (23160 26804
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-blame.el
  (autoload 'magit-blame-popup "magit-blame" nil t)
@@ -335,8 +226,8 @@ only arguments available from `magit-blame-popup' should be used.
 
 ;;;***
 
-;;;### (autoloads nil "magit-bookmark" "magit-bookmark.el" (23155
-;;;;;;  32322 0 0))
+;;;### (autoloads nil "magit-bookmark" "magit-bookmark.el" (23160
+;;;;;;  26804 0 0))
 ;;; Generated autoloads from magit-bookmark.el
 
 (autoload 'magit-bookmark--status-jump "magit-bookmark" "\
@@ -441,7 +332,7 @@ Create a Magit submodule list bookmark.
 
 ;;;***
 
-;;;### (autoloads nil "magit-branch" "magit-branch.el" (23155 32322
+;;;### (autoloads nil "magit-branch" "magit-branch.el" (23160 26804
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-branch.el
  (autoload 'magit-branch-popup "magit" nil t)
@@ -720,7 +611,7 @@ When `never' (the default) then the variable is never set.
 
 ;;;***
 
-;;;### (autoloads nil "magit-collab" "magit-collab.el" (23155 32322
+;;;### (autoloads nil "magit-collab" "magit-collab.el" (23160 26804
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-collab.el
 
@@ -734,7 +625,7 @@ be lifted eventually to support other Git forges.
 
 ;;;***
 
-;;;### (autoloads nil "magit-commit" "magit-commit.el" (23155 32322
+;;;### (autoloads nil "magit-commit" "magit-commit.el" (23160 26804
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-commit.el
 
@@ -817,7 +708,7 @@ Create a squash commit targeting COMMIT and instantly rebase.
 
 ;;;***
 
-;;;### (autoloads nil "magit-diff" "magit-diff.el" (23155 32322 0
+;;;### (autoloads nil "magit-diff" "magit-diff.el" (23160 26804 0
 ;;;;;;  0))
 ;;; Generated autoloads from magit-diff.el
 
@@ -875,6 +766,11 @@ Show changes between the working tree and the index.
 
 \(fn &optional ARGS FILES)" t nil)
 
+(autoload 'magit-diff-unmerged "magit-diff" "\
+Show changes that are being merged.
+
+\(fn &optional ARGS FILES)" t nil)
+
 (autoload 'magit-diff-while-committing "magit-diff" "\
 While committing, show the changes that are about to be committed.
 While amending, invoking the command again toggles between
@@ -902,7 +798,7 @@ for a revision.
 
 ;;;***
 
-;;;### (autoloads nil "magit-ediff" "magit-ediff.el" (23155 32322
+;;;### (autoloads nil "magit-ediff" "magit-ediff.el" (23160 26804
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-ediff.el
  (autoload 'magit-ediff-popup "magit-ediff" nil t)
@@ -991,7 +887,7 @@ stash that were staged.
 
 ;;;***
 
-;;;### (autoloads nil "magit-extras" "magit-extras.el" (23155 32322
+;;;### (autoloads nil "magit-extras" "magit-extras.el" (23160 26804
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-extras.el
 
@@ -1127,6 +1023,48 @@ on a position in a file-visiting buffer.
 
 \(fn &optional WHOAMI FILE-NAME)" t nil)
 
+(autoload 'magit-copy-section-value "magit-extras" "\
+Save the value of the current section for later use.
+
+Save the section value to the `kill-ring', and, provided that
+the current section is a commit, branch, or tag section, push
+the (referenced) revision to the `magit-revision-stack' for use
+with `magit-pop-revision-stack'.
+
+When the current section is a branch or a tag, and a prefix
+argument is used, then save the revision at its tip to the
+`kill-ring' instead of the reference name.
+
+When the region is active, then save that to the `kill-ring',
+like `kill-ring-save' would, instead of behaving as described
+above.
+
+\(fn)" t nil)
+
+(autoload 'magit-copy-buffer-revision "magit-extras" "\
+Save the revision of the current buffer for later use.
+
+Save the revision shown in the current buffer to the `kill-ring'
+and push it to the `magit-revision-stack'.
+
+This command is mainly intended for use in `magit-revision-mode'
+buffers, the only buffers where it is always unambiguous exactly
+which revision should be saved.
+
+Most other Magit buffers usually show more than one revision, in
+some way or another, so this command has to select one of them,
+and that choice might not always be the one you think would have
+been the best pick.
+
+In such buffers it is often more useful to save the value of
+the current section instead, using `magit-copy-section-value'.
+
+When the region is active, then save that to the `kill-ring',
+like `kill-ring-save' would, instead of behaving as described
+above.
+
+\(fn)" t nil)
+
 (autoload 'magit-abort-dwim "magit-extras" "\
 Abort current operation.
 Depending on the context, this will abort a merge, a rebase, a
@@ -1136,7 +1074,7 @@ patch application, a cherry-pick, a revert, or a bisect.
 
 ;;;***
 
-;;;### (autoloads nil "magit-files" "magit-files.el" (23155 32322
+;;;### (autoloads nil "magit-files" "magit-files.el" (23160 26804
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-files.el
 
@@ -1184,7 +1122,7 @@ Checkout FILE from REV.
 
 ;;;***
 
-;;;### (autoloads nil "magit-imenu" "magit-imenu.el" (23155 32322
+;;;### (autoloads nil "magit-imenu" "magit-imenu.el" (23160 26804
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-imenu.el
 
@@ -1301,7 +1239,7 @@ beginning of the line.
 
 ;;;***
 
-;;;### (autoloads nil "magit-log" "magit-log.el" (23155 32322 0 0))
+;;;### (autoloads nil "magit-log" "magit-log.el" (23160 26804 0 0))
 ;;; Generated autoloads from magit-log.el
 
 (autoload 'magit-log-buffer-file-popup "magit-log" "\
@@ -1384,14 +1322,95 @@ Show commits in a branch that are not merged in the upstream branch.
 
 ;;;***
 
-;;;### (autoloads nil "magit-notes" "magit-notes.el" (23155 32322
+;;;### (autoloads nil "magit-merge" "magit-merge.el" (23160 26804
+;;;;;;  0 0))
+;;; Generated autoloads from magit-merge.el
+ (autoload 'magit-merge-popup "magit" nil t)
+
+(autoload 'magit-merge "magit-merge" "\
+Merge commit REV into the current branch; using default message.
+
+Unless there are conflicts or a prefix argument is used create a
+merge commit using a generic commit message and without letting
+the user inspect the result.  With a prefix argument pretend the
+merge failed to give the user the opportunity to inspect the
+merge.
+
+\(git merge --no-edit|--no-commit [ARGS] REV)
+
+\(fn REV &optional ARGS NOCOMMIT)" t nil)
+
+(autoload 'magit-merge-editmsg "magit-merge" "\
+Merge commit REV into the current branch; and edit message.
+Perform the merge and prepare a commit message but let the user
+edit it.
+
+\(git merge --edit --no-ff [ARGS] REV)
+
+\(fn REV &optional ARGS)" t nil)
+
+(autoload 'magit-merge-nocommit "magit-merge" "\
+Merge commit REV into the current branch; pretending it failed.
+Pretend the merge failed to give the user the opportunity to
+inspect the merge and change the commit message.
+
+\(git merge --no-commit --no-ff [ARGS] REV)
+
+\(fn REV &optional ARGS)" t nil)
+
+(autoload 'magit-merge-into "magit-merge" "\
+Merge the current branch into BRANCH and remove the former.
+
+Before merging, force push the source branch to its push-remote,
+provided the respective remote branch already exists, ensuring
+that the respective pull-request (if any) won't get stuck on some
+obsolete version of the commits that are being merged.  Finally
+if `magit-branch-pull-request' was used to create the merged
+branch, then also remove the respective remote branch.
+
+\(fn BRANCH &optional ARGS)" t nil)
+
+(autoload 'magit-merge-absorb "magit-merge" "\
+Merge BRANCH into the current branch and remove the former.
+
+Before merging, force push the source branch to its push-remote,
+provided the respective remote branch already exists, ensuring
+that the respective pull-request (if any) won't get stuck on some
+obsolete version of the commits that are being merged.  Finally
+if `magit-branch-pull-request' was used to create the merged
+branch, then also remove the respective remote branch.
+
+\(fn BRANCH &optional ARGS)" t nil)
+
+(autoload 'magit-merge-squash "magit-merge" "\
+Squash commit REV into the current branch; don't create a commit.
+
+\(git merge --squash REV)
+
+\(fn REV)" t nil)
+
+(autoload 'magit-merge-preview "magit-merge" "\
+Preview result of merging REV into the current branch.
+
+\(fn REV)" t nil)
+
+(autoload 'magit-merge-abort "magit-merge" "\
+Abort the current merge operation.
+
+\(git merge --abort)
+
+\(fn)" t nil)
+
+;;;***
+
+;;;### (autoloads nil "magit-notes" "magit-notes.el" (23160 26804
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-notes.el
  (autoload 'magit-notes-popup "magit" nil t)
 
 ;;;***
 
-;;;### (autoloads nil "magit-refs" "magit-refs.el" (23155 32322 0
+;;;### (autoloads nil "magit-refs" "magit-refs.el" (23160 26804 0
 ;;;;;;  0))
 ;;; Generated autoloads from magit-refs.el
 
@@ -1421,7 +1440,7 @@ Refs are compared with a branch read from the user.
 
 ;;;***
 
-;;;### (autoloads nil "magit-remote" "magit-remote.el" (23155 32322
+;;;### (autoloads nil "magit-remote" "magit-remote.el" (23160 26804
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-remote.el
 
@@ -1671,7 +1690,7 @@ is asked to pull.  START has to be reachable from that commit.
 
 ;;;***
 
-;;;### (autoloads nil "magit-repos" "magit-repos.el" (23155 32322
+;;;### (autoloads nil "magit-repos" "magit-repos.el" (23160 26804
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-repos.el
 
@@ -1686,8 +1705,53 @@ control which repositories are displayed.
 
 ;;;***
 
-;;;### (autoloads nil "magit-sequence" "magit-sequence.el" (23155
-;;;;;;  32322 0 0))
+;;;### (autoloads nil "magit-reset" "magit-reset.el" (23160 26804
+;;;;;;  0 0))
+;;; Generated autoloads from magit-reset.el
+ (autoload 'magit-reset-popup "magit" nil t)
+
+(autoload 'magit-reset-index "magit-reset" "\
+Reset the index to COMMIT.
+Keep the head and working tree as-is, so if COMMIT refers to the
+head this effectively unstages all changes.
+
+\(git reset COMMIT .)
+
+\(fn COMMIT)" t nil)
+
+(autoload 'magit-reset "magit-reset" "\
+Reset the head and index to COMMIT, but not the working tree.
+With a prefix argument also reset the working tree.
+
+\(git reset --mixed|--hard COMMIT)
+
+\(fn COMMIT &optional HARD)" t nil)
+
+(autoload 'magit-reset-head "magit-reset" "\
+Reset the head and index to COMMIT, but not the working tree.
+
+\(git reset --mixed COMMIT)
+
+\(fn COMMIT)" t nil)
+
+(autoload 'magit-reset-soft "magit-reset" "\
+Reset the head to COMMIT, but not the index and working tree.
+
+\(git reset --soft REVISION)
+
+\(fn COMMIT)" t nil)
+
+(autoload 'magit-reset-hard "magit-reset" "\
+Reset the head, index, and working tree to COMMIT.
+
+\(git reset --hard REVISION)
+
+\(fn COMMIT)" t nil)
+
+;;;***
+
+;;;### (autoloads nil "magit-sequence" "magit-sequence.el" (23160
+;;;;;;  26804 0 0))
 ;;; Generated autoloads from magit-sequence.el
 
 (autoload 'magit-sequencer-continue "magit-sequence" "\
@@ -1722,6 +1786,38 @@ the region selects multiple commits, then apply all of them,
 without prompting.
 
 \(fn COMMITS &optional ARGS)" t nil)
+
+(autoload 'magit-cherry-harvest "magit-sequence" "\
+Move COMMITS from another BRANCH onto the current branch.
+Remove the COMMITS from BRANCH and stay on the current branch.
+If a conflict occurs, then you have to fix that and finish the
+process manually.
+
+\(fn COMMITS BRANCH &optional ARGS)" t nil)
+
+(autoload 'magit-cherry-donate "magit-sequence" "\
+Move COMMITS from the current branch onto another existing BRANCH.
+Remove COMMITS from the current branch and stay on that branch.
+If a conflict occurs, then you have to fix that and finish the
+process manually.
+
+\(fn COMMITS BRANCH &optional ARGS)" t nil)
+
+(autoload 'magit-cherry-spinout "magit-sequence" "\
+Move COMMITS from the current branch onto a new BRANCH.
+Remove COMMITS from the current branch and stay on that branch.
+If a conflict occurs, then you have to fix that and finish the
+process manually.
+
+\(fn COMMITS BRANCH START-POINT &optional ARGS)" t nil)
+
+(autoload 'magit-cherry-spinoff "magit-sequence" "\
+Move COMMITS from the current branch onto a new BRANCH.
+Remove COMMITS from the current branch and checkout BRANCH.
+If a conflict occurs, then you have to fix that and finish
+the process manually.
+
+\(fn COMMITS BRANCH START-POINT &optional ARGS)" t nil)
  (autoload 'magit-revert-popup "magit-sequence" nil t)
 
 (autoload 'magit-revert "magit-sequence" "\
@@ -1842,7 +1938,7 @@ Abort the current rebase operation, restoring the original branch.
 
 ;;;***
 
-;;;### (autoloads nil "magit-stash" "magit-stash.el" (23155 32322
+;;;### (autoloads nil "magit-stash" "magit-stash.el" (23160 26804
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-stash.el
  (autoload 'magit-stash-popup "magit-stash" nil t)
@@ -1949,7 +2045,7 @@ Show all diffs of a stash in a buffer.
 
 ;;;***
 
-;;;### (autoloads nil "magit-status" "magit-status.el" (23155 32322
+;;;### (autoloads nil "magit-status" "magit-status.el" (23160 26804
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-status.el
 
@@ -1981,8 +2077,8 @@ then offer to initialize it as a new repository.
 
 ;;;***
 
-;;;### (autoloads nil "magit-submodule" "magit-submodule.el" (23155
-;;;;;;  32322 0 0))
+;;;### (autoloads nil "magit-submodule" "magit-submodule.el" (23160
+;;;;;;  26804 0 0))
 ;;; Generated autoloads from magit-submodule.el
  (autoload 'magit-submodule-popup "magit-submodule" nil t)
 
@@ -2072,7 +2168,7 @@ Display a list of the current repository's submodules.
 
 ;;;***
 
-;;;### (autoloads nil "magit-subtree" "magit-subtree.el" (23155 32322
+;;;### (autoloads nil "magit-subtree" "magit-subtree.el" (23160 26804
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-subtree.el
  (autoload 'magit-subtree-popup "magit-subtree" nil t)
@@ -2109,7 +2205,31 @@ Extract the history of the subtree PREFIX.
 
 ;;;***
 
-;;;### (autoloads nil "magit-utils" "magit-utils.el" (23155 32322
+;;;### (autoloads nil "magit-tag" "magit-tag.el" (23160 26804 0 0))
+;;; Generated autoloads from magit-tag.el
+ (autoload 'magit-tag-popup "magit" nil t)
+
+(autoload 'magit-tag "magit-tag" "\
+Create a new tag with the given NAME at REV.
+With a prefix argument annotate the tag.
+
+\(git tag [--annotate] NAME REV)
+
+\(fn NAME REV &optional ARGS)" t nil)
+
+(autoload 'magit-tag-delete "magit-tag" "\
+Delete one or more tags.
+If the region marks multiple tags (and nothing else), then offer
+to delete those, otherwise prompt for a single tag to be deleted,
+defaulting to the tag at point.
+
+\(git tag -d TAGS)
+
+\(fn TAGS)" t nil)
+
+;;;***
+
+;;;### (autoloads nil "magit-utils" "magit-utils.el" (23160 26804
 ;;;;;;  0 0))
 ;;; Generated autoloads from magit-utils.el
 
@@ -2135,7 +2255,7 @@ See info node `(magit)Debugging Tools' for more information.
 
 ;;;***
 
-;;;### (autoloads nil "magit-wip" "magit-wip.el" (23155 32322 0 0))
+;;;### (autoloads nil "magit-wip" "magit-wip.el" (23160 26804 0 0))
 ;;; Generated autoloads from magit-wip.el
 
 (defvar magit-wip-after-save-mode nil "\
@@ -2203,8 +2323,8 @@ command which is about to be called are committed.
 
 ;;;***
 
-;;;### (autoloads nil "magit-worktree" "magit-worktree.el" (23155
-;;;;;;  32322 0 0))
+;;;### (autoloads nil "magit-worktree" "magit-worktree.el" (23160
+;;;;;;  26804 0 0))
 ;;; Generated autoloads from magit-worktree.el
  (autoload 'magit-worktree-popup "magit-worktree" nil t)
 
@@ -2222,7 +2342,7 @@ Create a new BRANCH and check it out in a new worktree at PATH.
 
 ;;;### (autoloads nil nil ("magit-core.el" "magit-git.el" "magit-margin.el"
 ;;;;;;  "magit-mode.el" "magit-obsolete.el" "magit-pkg.el" "magit-process.el"
-;;;;;;  "magit-section.el") (23155 32322 0 0))
+;;;;;;  "magit-section.el") (23160 26804 0 0))
 
 ;;;***
 

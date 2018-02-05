@@ -1,10 +1,9 @@
-;;; lsp-javascript-typescript.el --- Javascript/Typescript support for lsp-mode  -*- lexical-binding: t; -*-
+;;; lsp-typescript.el --- Javascript/Typescript support for lsp-mode  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2017 George Pittarelli <g@gjp.cc>
 
 ;; Author: George Pittarelli <g@gjp.cc>
 ;; Version: 1.0
-;; Package-Version: 20180124.2058
 ;; Package-Requires: ((lsp-mode "3.0"))
 ;; Keywords: javascript typescript lsp
 ;; URL: https://github.com/emacs-lsp/lsp-javascript
@@ -24,18 +23,18 @@
 
 ;;; Commentary:
 
-;; Javascript and Typescript support for lsp-mode using Sourcegraph's
-;; javascript-typescript-langserver server.
+;; Javascript and Typescript support for lsp-mode using Theia's
+;; typescript-language-server server.
 
 ;;; Code:
 
 (require 'lsp-mode)
 
-(defconst lsp-javascript--get-root (lsp-make-traverser #'(lambda (dir)
+(defconst lsp-typescript--get-root (lsp-make-traverser #'(lambda (dir)
 							   (directory-files dir nil "package.json"))))
 
-(lsp-define-stdio-client lsp-javascript-typescript "javascript"
-                         lsp-javascript--get-root '("javascript-typescript-stdio"))
+(lsp-define-stdio-client lsp-typescript "javascript"
+                         lsp-typescript--get-root '("typescript-language-server" "--stdio"))
 
-(provide 'lsp-javascript-typescript)
-;;; lsp-javascript-typescript.el ends here
+(provide 'lsp-typescript)
+;;; lsp-typescript.el ends here

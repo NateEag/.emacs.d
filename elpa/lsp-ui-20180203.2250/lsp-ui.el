@@ -5,7 +5,7 @@
 ;; Author:  Tobias Pisani <topisani@hamsterpoison.com>
 ;; Keywords: lsp
 ;; URL: https://github.com/emacs-lsp/lsp-ui
-;; Package-Requires: ((emacs "25.1") (dash "2.13") (flycheck "31") (lsp-mode "3.4") (markdown-mode "2.3"))
+;; Package-Requires: ((emacs "25.1") (dash "2.13") (flycheck "31") (lsp-mode "3.4"))
 ;; Version: 0.0.1
 
 ;; Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -53,7 +53,8 @@
 (defun lsp-ui--workspace-path (path)
   "Return the PATH relative to the workspace.
 If the PATH is not in the workspace, it returns the original PATH."
-  (let* ((root (lsp--workspace-root lsp--cur-workspace))
+  (let* ((path (file-truename path))
+         (root (lsp--workspace-root lsp--cur-workspace))
          (in-workspace (string-prefix-p root path)))
     (if in-workspace
         (substring path (length root))

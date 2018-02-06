@@ -245,7 +245,8 @@ CURRENT is non-nil when the point is on the symbol."
      (lsp-ui-sideline--margin-width)))
 
 (defun lsp-ui-sideline--push-info (symbol line bounds info)
-  (when (= line (line-number-at-pos))
+  (when (and (= line (line-number-at-pos))
+             (not (lsp-ui-sideline--stop-p)))
     (let* ((info (concat (thread-first (gethash "contents" info)
                            lsp-ui-sideline--extract-info
                            lsp-ui-sideline--format-info)))
@@ -360,8 +361,9 @@ to the language server."
           (while (and (<= (point) eol) (< (point) eob))
             (let ((symbol (thing-at-point 'symbol t))
                   (bounds (bounds-of-thing-at-point 'symbol))
-                  (column (lsp--cur-column)))
-              (when symbol
+                  (column (lsp--cur-column))
+                  (in-string (nth 3 (syntax-ppss))))
+              (when (and symbol (not in-string))
                 (lsp--send-request-async
                  (lsp--make-request
                   "textDocument/hover"
@@ -370,14 +372,24 @@ to the language server."
                  (lambda (info) (if info (lsp-ui-sideline--push-info symbol line bounds info)))))
               (forward-symbol 1))))))))
 
+(defun lsp-ui-sideline--stop-p ()
+  "Return non-nil if the sideline should not be display"
+  (or (region-active-p)
+      (bound-and-true-p company-pseudo-tooltip-overlay)
+      (bound-and-true-p lsp-ui-peek--overlay)))
+
+(defun lsp-ui-sideline--hide-before-company (command)
+  "Disable the sideline before company's overlay appears.
+COMMAND is `company-pseudo-tooltip-frontend' parameter."
+  (when (memq command '(post-command update))
+    (lsp-ui-sideline--delete-ov)
+    (setq lsp-ui-sideline--line nil)))
+
 (defun lsp-ui-sideline ()
   "Show informations of the current line."
-  (if (or (region-active-p)
-          (bound-and-true-p company-pseudo-tooltip-overlay)
-          (bound-and-true-p lsp-ui-peek--overlay))
-      (progn
-        (setq lsp-ui-sideline--line nil)
-        (lsp-ui-sideline--delete-ov))
+  (if (lsp-ui-sideline--stop-p)
+      (progn (setq lsp-ui-sideline--line nil)
+             (lsp-ui-sideline--delete-ov))
     (if (and (equal (line-number-at-pos) lsp-ui-sideline--line)
              (equal (window-text-width) lsp-ui-sideline--last-width))
         (lsp-ui-sideline--highlight-current (point))
@@ -403,9 +415,11 @@ This does not toggle display of flycheck diagnostics or code actions."
   (cond
    (lsp-ui-sideline-mode
     (add-hook 'post-command-hook 'lsp-ui-sideline nil t)
+    (advice-add 'company-pseudo-tooltip-frontend :before 'lsp-ui-sideline--hide-before-company)
     (setq-local flycheck-display-errors-function nil))
    (t
     (setq lsp-ui-sideline--line nil)
+    (advice-remove 'company-pseudo-tooltip-frontend 'lsp-ui-sideline--hide-before-company)
     (lsp-ui-sideline--delete-ov)
     (remove-hook 'post-command-hook 'lsp-ui-sideline t))
    ))

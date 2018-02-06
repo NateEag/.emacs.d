@@ -509,6 +509,8 @@ The shell command lives in my dotfiles repo."
   :config
   (add-hook 'web-mode-hook 'web-mode-init))
 
+;; TODO Extract html-scratchpad to a standalone package with autoloads. Then I
+;; wouldn't have to declare the command.
 (use-package html-scratchpad
   :commands html-scratchpad-make-new)
 

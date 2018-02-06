@@ -27,7 +27,8 @@
   '--' would probably make life a lot better. Bonus points: use underscores in
   variable names and dashes in executable names (yes, requires a bash parser to
   get perfect but a basic approximation would probably make life better in
-  practice).
+  practice - starts with '$' or ends with '=' should catch most var references,
+  and if it doesn't do one of those it's likely a command or func name).
 
 - ac-source-css-property and ac-source-css-property-names are missing a bunch of
   bleeding-edge CSS 3 stuff. Get that in there. Ideally, generated from the

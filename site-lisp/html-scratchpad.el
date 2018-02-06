@@ -27,22 +27,24 @@
 
 ;;; Code:
 
+(require 'simple-httpd)
+
 (defvar html-scratchpad-index-page "<!doctype html>
 <html lang=\"en\">
 
 <head>
-  <meta charset=\"utf-8\">
-  <meta http-equiv=\"x-ua-compatible\" content=\"ie=edge\">
-  <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
+    <meta charset=\"utf-8\">
+    <meta http-equiv=\"x-ua-compatible\" content=\"ie=edge\">
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
 
-  <title></title>
+    <title></title>
 
-  <link rel=\"stylesheet\" href=\"styles.css\">
+    <link rel=\"stylesheet\" href=\"styles.css\">
 </head>
 
 <body>
 
-  <script src=\"main.js\"></script>
+    <script src=\"main.js\"></script>
 </body>
 
 </html>"
@@ -53,9 +55,8 @@
   "Create a new HTML scratchpad and make sure the webserver is live."
   (interactive "MName scratchpad: ")
 
-  ;; FIXME Do not require/restart webserver every time we call this.
-  (require 'simple-httpd)
-  (httpd-start)
+  (when (not (httpd-running-p))
+    (httpd-start))
 
   (let* ((scratchpad-path (expand-file-name subdir httpd-root))
         (scratchpad-html-path (expand-file-name "index.html" scratchpad-path))

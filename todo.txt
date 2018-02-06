@@ -17,30 +17,41 @@
   markup. Note that it's only really braces I'd want to turn off pairing for -
   most other pairs don't have this issue.
 
+- Try integrating web-mode-edit-element into my markup editing style, or else
+  figuring out how to get smartparens slurp/barf/etc working in web-mode. If it
+  works out, delete my prototypical work on making tagedit work with web-mode
+  in favor of it, per this comment of mine:
+  https://github.com/magnars/tagedit/pull/15#issuecomment-260336539
+
+- In bash, having smart-dash-mode prefer dashes if the current word begins with
+  '--' would probably make life a lot better. Bonus points: use underscores in
+  variable names and dashes in executable names (yes, requires a bash parser to
+  get perfect but a basic approximation would probably make life better in
+  practice).
+
+- ac-source-css-property and ac-source-css-property-names are missing a bunch of
+  bleeding-edge CSS 3 stuff. Get that in there. Ideally, generated from the
+  spec, along with basic docs, and adding ';' at the end of property values.
+
 - Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
 
 - Suppress aggressive-fill-paragraph-mode while directly above or below markdown
   code blocks.
-
-- Try integrating web-mode-edit-element into my markup editing style. If it
-  works out, delete my prototypical work on making tagedit work with web-mode in
-  favor of it, per this comment of mine:
-  https://github.com/magnars/tagedit/pull/15#issuecomment-260336539
 
 - Submit PR to make flycheck-eslint-rulesdir a list.
 
 - Make js-doc use Tern (when available) to guess types for function params.
 
 - I'd like to have a hotkey that brings up my most recent terminal. I'd also
-  like terminal windows to always appear in a bottom window of my current frame,
-  which is probably a need popwin would achieve admirably. I used to think I
-  wanted something more like a tabbed terminal emulator, and maybe I will want
-  some keybindings for flipping between groups of terminal buffers, but that's
-  secondary to just establishing "terminal buffers get the bottom window". I
-  have just installed term-projectile, which seems to handle the create and swap
-  features - I just need to teach popwin how to force terminals to always
-  display in the bottom half of a split panel properly. N.B.: shackle may be a
-  significantly better alternative to popwin:
+  like terminal windows to always appear in a bottom window of my current
+  frame, which is probably a need popwin would achieve admirably. I used to
+  think I wanted something more like a tabbed terminal emulator, and maybe I
+  will want some keybindings for flipping between groups of terminal buffers,
+  but that's secondary to just establishing "terminal buffers get and/or create
+  the bottom window". I have just installed term-projectile, which seems to
+  handle the create and swap features - I just need to teach popwin how to
+  force terminals to always display in the bottom half of a split panel
+  properly. N.B.: shackle may be a significantly better alternative to popwin:
   https://github.com/wasamasa/shackle
 
 - Figure out why git-rebase-mode doesn't always have the keybindings it claims
@@ -59,7 +70,8 @@
 - Auto-resize embedded images in emails to fit in the current window. I've set
   `mm-inline-large-images` to 'resize', which ought to do this job, but it
   doesn't work for me because Emacs for OS X does not include ImageMagick
-  support, AFAICT. Try a homebrew-based build, perhaps?
+  support, AFAICT (https://github.com/caldwell/build-emacs/issues/1). Try a
+  homebrew-based build, perhaps?
 
 - Figure out what mime-type should be used for emailing bash scripts as an
   attachment.
@@ -87,9 +99,6 @@
 - Fix the issue where leaving a Python buffer reverts point to position 0. I'm
   guessing this is due to some piece of python-mode config I have, likely Jedi?
   It seems the most likely offender.
-
-- Figure out why I'm not getting js2-mode as my javascript mode. I thought I
-  was, but something has clearly changed that...
 
 - js2-mode indents constructs like this:
 
@@ -249,10 +258,6 @@
         wider than fill-column. It works fine in other cases, and auto-fill
         itself *does* work fine in that case.
 
-- ac-source-css-property and ac-source-css-property-names are missing a bunch of
-  bleeding-edge CSS 3 stuff. Get that in there. Ideally, generated from the
-  spec, along with basic docs, and adding ';' at the end of property values.
-
 - Maybe add ac-html-csswatcher package to my setup. Parses CSS/LESS files in your
   project to give you a class/ID ac-source when writing HTML.
 
@@ -294,9 +299,6 @@
 - Look into midi-kbd.el and lily-midi.el as an aid in creating lilypond files
   with MIDI instruments.
 
-- Try using avy-mode instead of ace-jump-mode. It lets you see both chars for
-  the target at once, which should make jumping significantly smoother.
-
 - Try smooth-scrolling package and see if it makes my life any better:
   https://github.com/aspiers/smooth-scrolling
 
@@ -308,18 +310,6 @@
 
 - Extract jedi-force to be an ELPA package. I was thinking of adding more
   features, but it might be fine as it is.
-
-- Get evil-escape to recognize my escape keystroke when Caps Lock is on. That
-  might be simple, or it might be convoluted - not sure. Issue:
-  https://github.com/syl20bnr/evil-escape/issues/72
-
-- Get evil-escape to play nicely with aggressive-fill-mode. When it enters the
-  first of your two characters, it can trigger a fill action. When it deletes
-  that character, aggressive-fill-mode is not triggered, so you can wind up with
-  improperly-wrapped paragraphs. I imagine some advice could solve this?
-  key-chord-mode does not have this issue, because it just doesn't enter text
-  until it's sure you're not doing a key chord, which is a little more seamless
-  for me, but I'm sure tastes vary.
 
 - Integrate what's useful from spacemacs: https://github.com/syl20bnr/spacemacs
   I've got most of what I want, but evil-little-word could be nice.
@@ -416,22 +406,10 @@
 - If I ever start using multiple windows more seriously, window-numbering-mode
   might be handy. http://nschum.de/src/emacs/window-numbering-mode/
 
-- Research PHP parsing tools/infrastructure that might be adapted to an Emacs
-  plugin for code comprehension/refactoring/etc. If eclim works out, I might not
-  need anything else. A few possibilities follow:
-
-- Get lsp-mode working with auto-complete for completions.
-
-  lsp-mode says completion-at-point should just work, but that has not been my
-  experience so far. It crashes with the error message "Wrong type argument:
-  stringp, nil".
-
-  completion-at-point-functions is just lsp-completion-at-point, which when run
-  at point returns something, so presumably what it returns isn't, in the end,
-  quite what completion-at-point needs.
-
-  Figuring out what's wrong here probably means a serious debugging session. It
-  probably can't hurt to file a bug report first, though.
+- Define a really good ac-source for use with lsp-mode. Seems like most of what
+  we need to do here could be set up generically based on the features a given
+  server offers, but I suppose working on this could show me I'm wrong about
+  that.
 
 - Configure lsp-ui package to taste. I've installed it.
 
@@ -446,9 +424,9 @@
 
 - Install/configure php-scratch, as it could be handy for quick experiments.
 
-- If I ever have to go back to programming Java, try using emacs-eclim for
-  auto-complete and jump-to-def. It should let me stay in Emacs while getting
-  Eclipse's most useful features.
+- If I ever have to go back to programming Java, try using lsp-java with
+  lsp-mode. Looks like a much better alternative to eclim, IMO, since it ties
+  directly to a supported Eclipse project.
 
 - php-mode should not move sigils when swapping words with M-t.
   $this_thing => thing_$this is not what we want.
@@ -466,21 +444,18 @@
   every parameter you add, an @param line should be inserted in the header
   comment.
 
-- Jump-to-definition for bash could be handy, for those cases where the scripts
-  have grown enough to have a few different include files. Often that means you
-  should just rewrite in another language, but I can imagine legitimate cases. I
-  suspect you could roll your own with this snippet for figuring out where a
-  function came from, and some parsing of PATH for commands:
-  http://superuser.com/a/229038
-
 - Improved bash auto-complete while writing scripts would be nice, too. Search
   "$PATH" when writing commands, for instance (first word on line/first word
   inside subshells, first word in if, etc). Course, really you'd need a bash
   parser to get that right, but a handful of simple cases could probably just be
   hardcoded.
 
-- In bash, having smart-dash-mode prefer dashes if the current word begins with
-  '--' would probably make life a lot better.
+- Jump-to-definition for bash could be handy, for those cases where the scripts
+  have grown enough to have a few different include files. Often that means you
+  should just rewrite in another language, but I can imagine legitimate cases. I
+  suspect you could roll your own with this snippet for figuring out where a
+  function came from, and some parsing of PATH for commands:
+  http://superuser.com/a/229038
 
 - Adjust emacs env when editing files with a dominating direnv file (.envrc).
   This might slow things down, because you might have to change the env every

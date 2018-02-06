@@ -271,13 +271,13 @@ parent.  Set this variable to t if you want to use
 enabled."
   :type 'boolean)
 
-(defcustom php-site-url "http://php.net/"
+(defcustom php-site-url "https://secure.php.net/"
   "Default PHP.net site URL.
 
 The URL to use open PHP manual and search word.
 You can find a mirror site closer to you."
   :type 'string
-  :link '(url-link :tag "List of Mirror Sites" "http://php.net/mirrors.php"))
+  :link '(url-link :tag "List of Mirror Sites" "https://secure.php.net/mirrors.php"))
 
 (defcustom php-manual-url 'en
   "URL at which to find PHP manual.
@@ -1565,8 +1565,8 @@ a completion list."
      (")\\s-*:\\s-*\\??\\(array\\)\\b" 1 font-lock-type-face)
 
      ;; namespaces
-     ("\\(\\([a-zA-Z0-9]+\\\\\\)+[a-zA-Z0-9]+\\|\\(\\\\[a-zA-Z0-9]+\\)+\\)[^:a-zA-Z0-9\\\\]" 1 'font-lock-type-face)
-     ("\\(\\([a-zA-Z0-9]+\\\\\\)+[a-zA-Z0-9]+\\|\\(\\\\[a-zA-Z0-9]+\\)+\\)::" 1 'php-constant)
+     ("\\(\\([a-zA-Z0-9_]+\\\\\\)+[a-zA-Z0-9_]+\\|\\(\\\\[a-zA-Z0-9_]+\\)+\\)[^:a-zA-Z0-9_\\\\]" 1 'font-lock-type-face)
+     ("\\(\\([a-zA-Z0-9_]+\\\\\\)+[a-zA-Z0-9_]+\\|\\(\\\\[a-zA-Z0-9_]+\\)+\\)::" 1 'php-constant)
 
      ;; Support the ::class constant in PHP5.6
      ("\\sw+\\(::\\)\\(class\\)\\b" (1 'php-paamayim-nekudotayim) (2 'php-constant)))

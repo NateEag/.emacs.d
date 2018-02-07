@@ -77,6 +77,14 @@ Stores keymaps stored in buffer-local `minor-mode-overriding-map-alist'."
                    (setq emmet-use-css-transform nil))
                  )))
 
+  (setq web-mode-ac-sources-alist
+        '(("php" . (ac-source-yasnippet ac-source-php-auto-yasnippets))
+          ("html" . (ac-source-emmet-html-aliases ac-source-emmet-html-snippets))
+          ("javascript" . (ac-source-yasnippet))
+          ("css" . (ac-source-css-property
+                    ac-source-css-property-names
+                    ac-source-emmet-css-snippets))))
+
   ;; Use evil-matchit-mode to jump between tags.
   ;;
   ;; TODO Enable evil-matchit-mode in my evil setup. The problem is that it
@@ -89,14 +97,6 @@ Stores keymaps stored in buffer-local `minor-mode-overriding-map-alist'."
   ;; TODO If it works well, update tagedit issue to reflect the fact that I'm
   ;; no longer going to work on it.
   (web-mode-edit-element-minor-mode t)
-
-  (setq web-mode-ac-sources-alist
-        '(("php" . (ac-source-yasnippet ac-source-php-auto-yasnippets))
-          ("html" . (ac-source-emmet-html-aliases ac-source-emmet-html-snippets))
-          ("javascript" . (ac-source-yasnippet))
-          ("css" . (ac-source-css-property
-                    ac-source-css-property-names
-                    ac-source-emmet-css-snippets))))
 
   (web-mode-install-smart-dash-insert))
 

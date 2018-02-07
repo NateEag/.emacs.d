@@ -348,6 +348,9 @@ The shell command lives in my dotfiles repo."
 (use-package simple
   :diminish auto-fill-function)
 
+(use-package set-minor-mode-key
+  :commands set-minor-mode-key)
+
 (use-package aggressive-fill-paragraph
   :defer t
   :config (afp-advise-filled-functions))

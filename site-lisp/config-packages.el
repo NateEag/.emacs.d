@@ -637,16 +637,8 @@ The shell command lives in my dotfiles repo."
   :defer t
   :config
   (progn
-    ;; The below configures flyspell/ispell to allow run-together words in
-    ;; source code buffers, to deal with camelCaseNames sanely.
-    ;;
-    ;; Unfortunately, something about this setup causes Emacs to bog in some
-    ;; cases and I have not yet figured out why. I've been able to make it
-    ;; happen right after starting to edit a JS file and deleting a character
-    ;; from a camelCasedIdentifier that becomes misspelled when I do that.
-    ;;
-    ;; Starting and stopping the mode a few times usually seems to make the
-    ;; freeze stop. I don't know why.
+    ;; Load code to deal with camelCaseNames semi-sanely, so I get
+    ;; spellchecking in code buffers.
     (require 'ne-spell-check)
 
     ;; Function to use popup.el menu for flyspell instead of the GUI menu.

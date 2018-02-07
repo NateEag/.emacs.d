@@ -56,6 +56,7 @@
      (css-indent-offset . guess-style-guess-indent)
      (python-indent . guess-style-guess-indent)
      (js2-indent-level . guess-style-guess-indent)
+     (js-switch-indent-offset . guess-style-guess-indent)
      (web-mode-markup-indent-offset . guess-style-guess-indent)
      (web-mode-css-indent-offset . guess-style-guess-indent)
      (web-mode-code-indent-offset . guess-style-guess-indent))))

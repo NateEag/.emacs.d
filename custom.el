@@ -113,7 +113,9 @@
  '(require-final-newline t)
  '(safe-local-variable-values
    (quote
-    ((ne-yas-auto-insert-snippet-name . "how-i-code-post")
+    ((helm-ag--extra-options . "--ignore elpa/archives")
+     (helm-ag--extra-options "--ignore elpa/archives")
+     (ne-yas-auto-insert-snippet-name . "how-i-code-post")
      (ne-yas-auto-insert-snippet-name . "package")
      (eval setq flycheck-eslint-rulesdir
            (concat nateeag/dir-locals-dir "node_modules/camel_case"))

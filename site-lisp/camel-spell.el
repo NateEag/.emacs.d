@@ -97,6 +97,15 @@ position of the STR exclusive."
   (let ((case-fold-search nil))
     (setq str (replace-regexp-in-string
                "\\([a-z0-9]\\)\\([A-Z]\\)" "\\1 \\2" str))
+
+    ;; Handle NamesWithABBREVIATIONSInThem
+    (setq str (replace-regexp-in-string
+               "\\([A-Z]+\\)\\([A-Z][a-z0-9]\\)" "\\1 \\2" str))
+
+    ;; Handle NamesEndingInABBREVIATIONS.
+    (setq str (replace-regexp-in-string
+               "\\([a-z0-9]\\)\\([A-Z]\\'\\)" "\\1 \\2" str))
+
     (split-string str)))
 
 (defun camel-spell-break-camel-case-results (word-info)
@@ -118,10 +127,10 @@ one word info."
   "Advises `ispell-get-word' to correctly spell check camel cased words."
   (if (camel-spell-sub-word-list-has-entries-p)
       (camel-spell-pop-sub-word-list)
-    
+
     (let* ((word-info (apply orig-ispell-get-words args))
            (camel-infos (camel-spell-break-camel-case-results word-info)))
-      
+
       (setq camel-spell-sub-word-list
             (append camel-spell-sub-word-list (cdr-safe camel-infos)))
       (car camel-infos))))

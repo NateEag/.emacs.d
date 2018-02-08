@@ -633,17 +633,33 @@ The shell command lives in my dotfiles repo."
 ;;   :diminish
 ;;   :init (add-hook 'eldoc-mode-hook 'eldoc-overlay-mode))
 
+;; Use camel-spell to spell-check camel-cased words, mostly to catch spelling
+;; errors in source code.
+;;
+;; In principle I think the algorithm it applies should be supported at the
+;; spellchecker level, because then you can apply the tool generally, not just
+;; in Emacs - spell-check your code as part of your build process, for
+;; instance.
+;;
+;; The algorithm can even be a bit smarter, which I intend to fix - with words
+;; like SimpleHTTPServer, you can and should split between 'P' and 'S', as the
+;; closing capital letter is part of the next word, by very strong convention.
+;;
+;; For now, though, this works, and is a big improvement on what I had before.
+;;
+;; TODO Get an open-source spellchecker to add support for camelCasing words.
+(use-package camel-spell)
+
 (use-package flyspell
   :defer t
   :config
   (progn
-    ;; Load code to deal with camelCaseNames semi-sanely, so I get
-    ;; spellchecking in code buffers.
-    (require 'ne-spell-check)
-
-    ;; Function to use popup.el menu for flyspell instead of the GUI menu.
-    ;; From Emacswiki: http://www.emacswiki.org/emacs/FlySpell#toc11
-    ;; It'd be nice to convert this to a package.
+    ;; Function to use popup.el menu for flyspell instead of the GUI menu. From
+    ;; Emacswiki: http://www.emacswiki.org/emacs/FlySpell#toc11 It'd be nice to
+    ;; convert this to a package.
+    ;;
+    ;; FIXME Get this working with camel-spell. For some reason it doesn't seem
+    ;; to want to.
     (defun flyspell-emacs-popup-textual (event poss word)
       "A textual flyspell popup menu."
       (require 'popup)

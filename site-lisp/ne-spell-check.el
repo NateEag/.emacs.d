@@ -36,6 +36,51 @@
 ;; detectable.
 ;;
 ;; TODO Split camel-case words and send each subword to flyspell.
+;;
+;; TODO Throw this all away in favor of camel-spell if it works. It's a much
+;; smarter approach, in theory. https://github.com/jschaf/camel-spell
+;;
+;; I'm not sure I'll actually get anywhere with this, but I realized tonight
+;; that it should be supported at the spellchecker level. If the option is
+;; passed (something like --check-camel-cased-words), do the following:
+;;
+;; If a word contains uppercase characters internally, then split it into
+;; multiple words and check each one individually.
+;;
+;; That should be far more efficient than using --run-together,
+;; --run-together-min, and --run-together-limit as I have been doing to deal
+;; with camelCaseNames in source code, as you only have to check N words, where
+;; N is the number of word boundaries. Perhaps that combination is not so
+;; inefficient, but in practice it certainly feels like it is (I have crashed
+;; aspell by using a min length of 2 and a limit of 8).
+;;
+;; When the feature is active, if a word has a mixture of lowercase and capital
+;; letters, it is checked as a camelCase word.
+;;
+;; camelCase words are checked by breaking them into subwords and checking each
+;; subword distinctly.
+;;
+;; To get the set of words to split, copy the camelCaseWord into a temporary
+;; string.
+;;
+;; Find all sequences of more than one capital letter in the word. Take
+;; positions 0 to sequence_length - 1 of each CAPPED word as a subword and
+;; remove that substring from the source string.
+;;
+;; We have now captured capitalized abbreviations, like 'HTTP' in
+;; SimpleHTTPServer.
+;;
+;; Split the remaining string on capital letters, and voila - you have your
+;; list of subwords.
+;;
+;; Now run each one through the usual spell-checking dance, remembering where
+;; in the file they begin and end.
+;;
+;; That last bit probably makes some huge assumptions about how a spellchecker
+;; like aspell or hunspell works under the hood, but I think it would still be
+;; better. Keeping this logic in the editor means you can't do things like run
+;; spellcheck on your codebase as part of the build process, so it really is
+;; the wrong place to do it.
 
 ;;; Code:
 

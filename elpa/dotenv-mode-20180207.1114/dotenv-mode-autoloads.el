@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "dotenv-mode" "dotenv-mode.el" (23163 4277
+;;;### (autoloads nil "dotenv-mode" "dotenv-mode.el" (23165 43786
 ;;;;;;  0 0))
 ;;; Generated autoloads from dotenv-mode.el
 
@@ -12,9 +12,7 @@ Major mode for `.env' files.
 
 \(fn)" t nil)
 
-(add-to-list 'auto-mode-alist '("\\.env\\'" . dotenv-mode))
-
-(add-to-list 'auto-mode-alist '("\\.env\\.example\\'" . dotenv-mode))
+(mapc (lambda (s) (add-to-list 'auto-mode-alist `(,s . dotenv-mode))) '("\\.env\\'" "\\.env\\.example\\'"))
 
 ;;;***
 

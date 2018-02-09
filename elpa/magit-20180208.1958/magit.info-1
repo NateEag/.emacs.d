@@ -30,7 +30,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-This manual is for Magit version 2.11.0 (2.11.0-491-g893c35f52+1).
+This manual is for Magit version 2.11.0 (2.11.0-507-g07ce57181+1).
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -5356,8 +5356,9 @@ following commands.
 
 ‘m i’     (‘magit-merge-into’)
 
-     This command merges another local branch into the current branch
-     and then removes the former.
+     This command merges the current branch into another local branch
+     and then removes the former.  The latter becomes the new current
+     branch.
 
      Before the source branch is merged, it is first force pushed to its
      push-remote, provided the respective remote branch already exists.

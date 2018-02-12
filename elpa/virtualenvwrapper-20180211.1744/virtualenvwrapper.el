@@ -4,7 +4,7 @@
 
 ;; Author: James J Porter <porterjamesj@gmail.com>
 ;; URL: http://github.com/porterjamesj/virtualenvwrapper.el
-;; Package-Version: 20171119.1403
+;; Package-Version: 20180211.1744
 ;; Version: 20151123
 ;; Keywords: python, virtualenv, virtualenvwrapper
 ;; Package-Requires: ((dash "1.5.0") (s "1.6.1"))
@@ -91,6 +91,7 @@ to activate when one of them is found."
   (if (eq system-type 'windows-nt) "Scripts" "bin")
   "The name of the directory containing executables. It is system dependent.")
 
+;;;###autoload
 (defun venv-projectile-auto-workon ()
   "If a venv in the projetile root exists, activates it.
 Set your common venvs names in `venv-dirlookup-names'"
@@ -228,9 +229,17 @@ prompting the user with the string PROMPT"
     ;; keep eshell path in sync
     (setq eshell-path-env path))
   (setenv "VIRTUAL_ENV" venv-current-dir)
+  (venv--switch-to-project-dir)
   (venv--set-venv-gud-pdb-command-name)
   (run-hooks 'venv-postactivate-hook))
 
+(defun venv--switch-to-project-dir ()
+  "If we find the project file, cd into that directory"
+  (let ((proj-file (expand-file-name ".project" venv-current-dir)))
+    (when (file-exists-p proj-file)
+      (cd (with-temp-buffer
+            (insert-file-contents proj-file)
+            (string-trim (buffer-string)))))))
 
 ;; potentially interactive user-exposed functions
 

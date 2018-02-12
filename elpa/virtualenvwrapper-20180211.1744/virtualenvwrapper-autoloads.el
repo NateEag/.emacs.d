@@ -4,8 +4,14 @@
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
 ;;;### (autoloads nil "virtualenvwrapper" "virtualenvwrapper.el"
-;;;;;;  (23060 12785 0 0))
+;;;;;;  (23169 41583 0 0))
 ;;; Generated autoloads from virtualenvwrapper.el
+
+(autoload 'venv-projectile-auto-workon "virtualenvwrapper" "\
+If a venv in the projetile root exists, activates it.
+Set your common venvs names in `venv-dirlookup-names'
+
+\(fn)" nil nil)
 
 (autoload 'venv-deactivate "virtualenvwrapper" "\
 Deactivate the current venv.

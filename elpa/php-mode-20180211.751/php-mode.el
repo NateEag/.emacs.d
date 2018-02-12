@@ -44,7 +44,7 @@
 
 ;; ## Usage
 
-;; Put this file in your Emacs lisp path (eg. site-lisp) and add to
+;; Put this file in your Emacs Lisp path (eg. site-lisp) and add to
 ;; your .emacs file:
 
 ;;   (require 'php-mode)
@@ -485,9 +485,11 @@ SYMBOL
   php nil)
 
 (c-lang-defconst c-before-font-lock-functions
-  php (if (fboundp #'c-depropertize-new-text)
-          '(c-depropertize-new-text)
-        nil))
+  php (let (functions)
+        (when (fboundp #'c-change-expand-fl-region)
+          (cl-pushnew 'c-change-expand-fl-region functions))
+        (when (fboundp #'c-depropertize-new-text)
+          (cl-pushnew 'c-depropertize-new-text functions))))
 
 ;; Make php-mode recognize opening tags as preprocessor macro's.
 ;;
@@ -1190,11 +1192,10 @@ After setting the stylevars run hooks according to STYLENAME
 
   (php-set-style (symbol-name php-mode-coding-style))
 
-  (if (or php-mode-force-pear
-          (and (stringp buffer-file-name)
-               (string-match "PEAR\\|pear"
-                             (buffer-file-name))
-               (string-match "\\.php$" (buffer-file-name))))
+  (when (or php-mode-force-pear
+            (and (stringp buffer-file-name)
+                 (string-match "PEAR\\|pear" buffer-file-name)
+                 (string-match "\\.php\\'" buffer-file-name)))
       (php-set-style "pear"))
 
   (setq indent-line-function 'php-cautious-indent-line)

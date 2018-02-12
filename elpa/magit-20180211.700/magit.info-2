@@ -2126,7 +2126,7 @@ Appendix F Variable Index
 * magit-submodule-list-columns:          Listing Submodules.  (line  20)
 * magit-this-process:                    Calling Git for Effect.
                                                               (line 146)
-* magit-uniquify-buffer-names:           Naming Buffers.      (line  67)
+* magit-uniquify-buffer-names:           Naming Buffers.      (line  74)
 * magit-unstage-committed:               Staging and Unstaging.
                                                               (line  56)
 * magit-update-other-window-delay:       Section Movement.    (line  89)

@@ -5,7 +5,7 @@
 
 ;;;### (autoloads nil nil ("lsp-ui-doc.el" "lsp-ui-flycheck.el" "lsp-ui-imenu.el"
 ;;;;;;  "lsp-ui-peek.el" "lsp-ui-pkg.el" "lsp-ui-sideline.el" "lsp-ui.el")
-;;;;;;  (23163 4281 0 0))
+;;;;;;  (23169 41568 0 0))
 
 ;;;***
 

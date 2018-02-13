@@ -368,12 +368,18 @@ The shell command lives in my dotfiles repo."
 ;;   :defer t
 ;;   :diminish)
 
+(use-package ne-smart-dash-hacks
+  :commands ne-smart-dash-hacks-sh-mode-install)
+
+(use-package smart-dash
+  :hook ((smart-dash-mode . (lambda () (when (equal major-mode 'sh-mode)
+                                        (ne-smart-dash-hacks-sh-mode-install))))))
+
 (use-package sh-script
   :mode (("\\.envrc\\'" . sh-mode)
          ("\\.env" . sh-mode))
-  :config (add-hook 'sh-mode-hook '(lambda ()
-                                     (setq-local ne-yas-auto-insert-snippet-name
-                                           "shell-script"))))
+  :hook ((sh-mode . (lambda () (setq-local ne-yas-auto-insert-snippet-name
+                                           "shell-script")))))
 
 (use-package tern
   :diminish tern-mode

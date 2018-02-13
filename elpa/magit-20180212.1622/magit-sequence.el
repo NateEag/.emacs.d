@@ -148,8 +148,10 @@ This discards all changes made since the sequence started."
 (defun magit--cherry-move-read-args (verb away fn)
   (declare (indent defun))
    (let ((commits (or (nreverse (magit-region-values 'commit))
-                      (list (magit-read-other-branch-or-commit
-                             (format "%s cherry" (capitalize verb))))))
+                      (list (funcall (if away
+                                         'magit-read-branch-or-commit
+                                       'magit-read-other-branch-or-commit)
+                                     (format "%s cherry" (capitalize verb))))))
          (current (magit-get-current-branch)))
      (unless current
        (user-error "Cannot %s cherries while HEAD is detached" verb))
@@ -158,7 +160,7 @@ This discards all changes made since the sequence started."
        (pcase (list away reachable)
          (`(nil t) (user-error msg verb "are"))
          (`(t nil) (user-error msg verb "are not"))))
-     `(,(reverse commits)
+     `(,commits
        ,@(funcall fn commits)
        ,(magit-cherry-pick-arguments))))
 
@@ -201,9 +203,8 @@ process manually."
                  (1 (car branches))
                  (_ (magit-completing-read
                      (format "Remove %s cherries from branch" (length commits))
-                     branches nil t))))
-             (magit-cherry-pick-arguments)))))
-  (magit--cherry-move commits branch (magit-get-current-branch) args))
+                     branches nil t))))))))
+  (magit--cherry-move commits branch (magit-get-current-branch) args nil t))
 
 ;;;###autoload
 (defun magit-cherry-donate (commits branch &optional args)
@@ -276,7 +277,7 @@ the process manually."
                  (let ((process-environment process-environment))
                    (push (format "%s=perl -i -ne '/^pick (%s)/ or print'"
                                  "GIT_SEQUENCE_EDITOR"
-                                 (mapconcat #'identity commits "|"))
+                                 (mapconcat #'magit-rev-abbrev commits "|"))
                          process-environment)
                    (magit-run-git-sequencer "rebase" "-i" keep))
                  (when checkout-dst

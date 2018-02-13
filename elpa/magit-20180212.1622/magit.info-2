@@ -849,6 +849,9 @@ issue.  Please include all relevant output when reporting an issue.
      installed packages are loaded.  This makes it easier to determine
      whether some issue lays with Magit or something else.
 
+     If you run Magit from its Git repository, then you should be able
+     to use ‘make emacs-Q’ instead of the output of this command.
+
 ‘M-x magit-debug-git-executable’     (‘magit-debug-git-executable’)
 
      This command displays a buffer containing information about the
@@ -1130,7 +1133,7 @@ Appendix C Keystroke Index
 * M-x magit-blame-reverse:               Blaming.             (line  29)
 * M-x magit-clone:                       Repository Setup.    (line  16)
 * M-x magit-debug-git-executable:        Git Executable.      (line  45)
-* M-x magit-debug-git-executable <1>:    Debugging Tools.     (line  27)
+* M-x magit-debug-git-executable <1>:    Debugging Tools.     (line  30)
 * M-x magit-describe-section:            Section Types and Values.
                                                               (line  13)
 * M-x magit-describe-section <1>:        Matching Sections.   (line   6)
@@ -1150,7 +1153,7 @@ Appendix C Keystroke Index
 * M-x magit-version:                     Git Executable.      (line  17)
 * M-x magit-version <1>:                 Debugging Tools.     (line  10)
 * M-x magit-wip-commit:                  Wip Modes.           (line 129)
-* M-x with-editor-debug:                 Debugging Tools.     (line  35)
+* M-x with-editor-debug:                 Debugging Tools.     (line  38)
 * n:                                     Section Movement.    (line  16)
 * n <1>:                                 Blaming.             (line  79)
 * N:                                     Blaming.             (line  83)
@@ -1407,7 +1410,11 @@ Appendix D Command Index
 * magit-branch-pull-request:             The Branch Popup.    (line 113)
 * magit-branch-rename:                   The Branch Popup.    (line 243)
 * magit-branch-reset:                    The Branch Popup.    (line 221)
+* magit-branch-shelve:                   Auxillary Branch Commands.
+                                                              (line   8)
 * magit-branch-spinoff:                  The Branch Popup.    (line  85)
+* magit-branch-unshelve:                 Auxillary Branch Commands.
+                                                              (line  19)
 * magit-checkout:                        The Branch Popup.    (line  37)
 * magit-checkout-pull-request:           The Branch Popup.    (line 215)
 * magit-cherry:                          Cherries.            (line  17)
@@ -1435,7 +1442,7 @@ Appendix D Command Index
 * magit-copy-section-value:              Common Commands.     (line  10)
 * magit-cycle-margin-style:              Log Margin.          (line  60)
 * magit-debug-git-executable:            Git Executable.      (line  45)
-* magit-debug-git-executable <1>:        Debugging Tools.     (line  27)
+* magit-debug-git-executable <1>:        Debugging Tools.     (line  30)
 * magit-describe-section:                Section Types and Values.
                                                               (line  13)
 * magit-describe-section <1>:            Matching Sections.   (line   6)
@@ -1744,7 +1751,7 @@ Appendix D Command Index
                                                               (line  24)
 * with-editor-cancel <1>:                Editing Rebase Sequences.
                                                               (line  11)
-* with-editor-debug:                     Debugging Tools.     (line  35)
+* with-editor-debug:                     Debugging Tools.     (line  38)
 * with-editor-finish:                    Editing Commit Messages.
                                                               (line  19)
 * with-editor-finish <1>:                Editing Rebase Sequences.
@@ -1781,6 +1788,10 @@ Appendix E Function Index
                                                               (line   6)
 * magit-branch-or-checkout:              The Branch Popup.    (line 347)
 * magit-branch-orphan:                   The Branch Popup.    (line 342)
+* magit-branch-shelve:                   Auxillary Branch Commands.
+                                                              (line   8)
+* magit-branch-unshelve:                 Auxillary Branch Commands.
+                                                              (line  19)
 * magit-builtin-completing-read:         Support for Completion Frameworks.
                                                               (line  42)
 * magit-call-git:                        Calling Git for Effect.

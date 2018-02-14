@@ -65,7 +65,7 @@
     (helm-source-buffers-list helm-source-recentf helm-source-bookmarks helm-source-file-cache helm-source-files-in-current-dir)))
  '(indent-tabs-mode nil nil nil "I dislike using tabs for indentation. Spaces are a simpler way to indent.")
  '(inhibit-startup-screen t nil nil "The emacs startup message is a needless annoyance.")
- '(ispell-extra-args nil)
+ '(ispell-extra-args (quote ("--ignore-case")) nil nil "When programming, sometimes you lowercase things that are normally uppercased. I should figure out how to do this only in prog-modes, but I'm lazy and I rarely screw up capitalization.")
  '(ispell-program-name "aspell")
  '(js2-indent-switch-body t nil nil "Crockford may not like it, but I do.")
  '(js2-mode-show-parse-errors nil)

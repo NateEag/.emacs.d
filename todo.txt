@@ -78,7 +78,7 @@
   attachment.
 
 - Set up a keybinding to send a new email and start watching the thread it
-  spawns. Incident count: 1
+  spawns. Incident count: 2
 
 - Understand how text/plain email attachments get converted from just LF to
   CRLF. I suspect it's notmuch's compose mode making sure my attachment conforms
@@ -453,10 +453,11 @@
 
 - Jump-to-definition for bash could be handy, for those cases where the scripts
   have grown enough to have a few different include files. Often that means you
-  should just rewrite in another language, but I can imagine legitimate cases. I
-  suspect you could roll your own with this snippet for figuring out where a
+  should just rewrite in another language, but I can imagine legitimate cases.
+  I suspect you could roll your own with this snippet for figuring out where a
   function came from, and some parsing of PATH for commands:
-  http://superuser.com/a/229038
+  http://superuser.com/a/229038 Alternatively, I could just install dumb-jump
+  and use it for bash, since I believe it supports it.
 
 - Adjust emacs env when editing files with a dominating direnv file (.envrc).
   This might slow things down, because you might have to change the env every
@@ -534,8 +535,16 @@
 - Integrate elpygen into my python development workflow? I've installed it but
   haven't thought about setup at all.
 
-- Set up ispell to use run-together words *outside* of comments and strings in
-  programming modes. It results in tons of noise everywhere else.
+- Split my personal aspell wordlist out into a few different wordlists, so I
+  can distinguish between things like 'technical abbreviations', 'personal
+  terminology', etc.
+
+- Figure out how to get ispell to not spellcheck options or command names in
+  sh-mode. By itself that's easy, but you probably *do* want to spell-check
+  options you're defining yourself, and that's kind of a parser-ish problem. A
+  crazy alternative might be a script that builds a dictionary of all known
+  command-line options on the system and using that dictionary for sh-derived
+  modes?
 
 - Delete trailing whitespace *only* from comments in diff-mode.
 
@@ -570,9 +579,11 @@
   with an easy way to toggle full comment display.
 
 - I'd really like a code folding minor-mode - just lets you hide/show blocks of
-  code, by saying basically "fold at this line" and "unfold at this line".
-  I have started playing with hide/show mode, and it's not perfect, but it does
-  more or less what I want for now.
+  code, by saying basically "fold at this line" and "unfold at this line". I
+  have started playing with hide/show mode, and it's not perfect, but it does
+  more or less what I want for now. I've installed origami-mode and it works
+  fine, perhaps better, for some things, but what I really want is the ability
+  to fold comments and long strings, which it doesn't seem to support.
 
 - It might be nice to store all byte-compiled files in a single byte-cache
   folder. It's probably not worth much hassle, though, since I have hooks

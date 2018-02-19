@@ -1852,7 +1852,7 @@ i.e functions called with RET."
   (setq helm-saved-action action)
   (setq helm-saved-selection (or (helm-get-selection) ""))
   (setq helm--executing-helm-action t)
-  ;; Ensure action use same display function as initial helm-buffer when
+  ;; Ensure next action use same display function as initial helm-buffer when
   ;; helm-actions-inherit-frame-settings is non nil.
   (when (and helm-actions-inherit-frame-settings
              helm--buffer-in-new-frame-p)
@@ -1860,7 +1860,15 @@ i.e functions called with RET."
                              (with-helm-buffer helm-display-function)
                              'helm--last-frame-parameters
                              (with-helm-buffer
-                               (helm--get-frame-parameters))))
+                               (helm--get-frame-parameters)))
+    ;; The helm-buffer keeps `helm-display-function' and
+    ;; `helm--get-frame-parameters' values during 0.5 seconds, just
+    ;; the time to execute the possible helm action with those values.
+    ;; If no helm based action run within 0.5 seconds, the next helm
+    ;; session will have to resolve again those variable values.
+    (run-with-idle-timer 0.5 nil
+      (lambda () (helm-set-local-variable 'helm-display-function nil 
+                                          'helm--last-frame-parameters nil))))
   (helm-exit-minibuffer))
 
 (defun helm--get-frame-parameters (&optional frame)
@@ -3085,7 +3093,8 @@ For ANY-PRESELECT ANY-RESUME ANY-KEYMAP ANY-DEFAULT ANY-HISTORY, See `helm'."
                       (funcall helm-execute-action-at-once-if-one)
                     helm-execute-action-at-once-if-one)
                   (= (helm-get-candidate-number
-                      (eq helm-execute-action-at-once-if-one 'current-source)) 1))
+                      (eq helm-execute-action-at-once-if-one 'current-source))
+                     1))
              (ignore))              ; Don't enter the minibuffer loop.
             ((and helm-quit-if-no-candidate
                   (= (helm-get-candidate-number) 0))

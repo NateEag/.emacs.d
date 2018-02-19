@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "lsp-php" "lsp-php.el" (23178 65190 0 0))
+;;;### (autoloads nil "lsp-php" "lsp-php.el" (23138 842 0 0))
 ;;; Generated autoloads from lsp-php.el
 
 (defvar lsp-php-server-install-dir (file-truename (locate-user-emacs-file "php-language-server/")) "\

@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: trap
+# key: trap
+# --
+$1 () {
+   $0
+}
+trap $1 INT TERM ${2:EXIT}

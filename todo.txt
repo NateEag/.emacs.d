@@ -43,6 +43,10 @@
 
 - Make js-doc use Tern (when available) to guess types for function params.
 
+- Try dtrt-indent as an alternative to guess-style, since guess-style does fail
+  to guess what I want fairly often (particularly in package.json files):
+  https://github.com/jscheid/dtrt-indent
+
 - I'd like to have a hotkey that brings up my most recent terminal. I'd also
   like terminal windows to always appear in a bottom window of my current
   frame, which is probably a need popwin would achieve admirably. I used to

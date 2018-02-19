@@ -20,10 +20,16 @@
   ;; For a robust solution you would need a bash parser. I'm just trying to get
   ;; by on hardcoding a few special cases.
   (let ((bash-var-chars "[a-zA-Z0-9_]+"))
-    (or (thing-at-point-looking-at (concat "\\(export\\w+\\)?"
+    (or
+     ;; This first case only works for typing new vars if you start with '='
+     ;; then stick the varname in before it. You have to do something like
+     ;; that, though, if you want dashes to be used in command names, because
+     ;; otherwise you can't distinguish between "I am typing a command" and "I
+     ;; am typing a variable name."
+     (thing-at-point-looking-at (concat "\\(export\\w+\\)?"
                                            bash-var-chars
                                            "="))
-        (thing-at-point-looking-at (concat "\\${?" bash-var-chars)))))
+     (thing-at-point-looking-at (concat "\\${?" bash-var-chars)))))
 
 (defun ne-smart-dash-hacks-sh-mode-insert ()
   (interactive)

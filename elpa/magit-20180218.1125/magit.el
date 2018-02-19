@@ -200,10 +200,28 @@ own faces for the `header-line', or for parts of the
 
 ;;; Dispatch Popup
 
+(defvar magit-file-popup-actions
+  '((?s "Stage"     magit-stage-file)
+    (?D "Diff..."   magit-diff-buffer-file-popup)
+    (?L "Log..."    magit-log-buffer-file-popup)
+    (?B "Blame..."  magit-blame-popup) nil
+    (?u "Unstage"   magit-unstage-file)
+    (?d "Diff"      magit-diff-buffer-file)
+    (?l "Log"       magit-log-buffer-file)
+    (?b "Blame"     magit-blame)
+    (?p "Prev blob" magit-blob-previous)
+    (?c "Commit"    magit-commit-popup) nil nil
+    (?r (lambda ()
+          (with-current-buffer magit-pre-popup-buffer
+            (and (not buffer-file-name)
+                 (propertize "...reverse" 'face 'default))))
+        magit-blame-reverse)
+    (?n "Next blob" magit-blob-next)))
+
 ;;;###autoload (autoload 'magit-dispatch-popup "magit" nil t)
 (magit-define-popup magit-dispatch-popup
   "Popup console for dispatching other popups."
-  :actions '("Popup and dwim commands"
+  :actions `("Popup and dwim commands"
              (?A "Cherry-picking"  magit-cherry-pick-popup)
              (?b "Branching"       magit-branch-popup)
              (?B "Bisecting"       magit-bisect-popup)
@@ -232,7 +250,10 @@ own faces for the `header-line', or for parts of the
              (?z "Stashing"        magit-stash-popup)
              (?! "Running"         magit-run-popup)
              (?% "Worktree"        magit-worktree-popup)
-             "Applying changes"
+             (lambda ()
+               (and (with-current-buffer magit-pre-popup-buffer
+                      (derived-mode-p 'magit-mode))
+                    (propertize "Applying changes" 'face 'magit-popup-heading)))
              (?a "Apply"           magit-apply)
              (?s "Stage"           magit-stage)
              (?u "Unstage"         magit-unstage)
@@ -240,20 +261,29 @@ own faces for the `header-line', or for parts of the
              (?S "Stage all"       magit-stage-modified)
              (?U "Unstage all"     magit-unstage-all)
              (?k "Discard"         magit-discard)
-             "Essential commands"
+             (lambda ()
+               (and (with-current-buffer magit-pre-popup-buffer
+                      (derived-mode-p 'magit-mode))
+                    (propertize "Essential commands" 'face 'magit-popup-heading)))
              (?g  "    refresh current buffer"   magit-refresh)
              ;; These bindings only work because of :setup-function.
              (?\t   "  toggle section at point"  magit-section-toggle)
              (?\r   "  visit thing at point"     magit-visit-thing)
              ;; This binding has no effect and only appears to do
              ;; so because it is identical to the global binding.
-             ("C-h m" "show all key bindings"    describe-mode))
+             ("C-h m" "show all key bindings"    describe-mode)
+             (lambda ()
+               (and (with-current-buffer magit-pre-popup-buffer
+                      buffer-file-name)
+                    (propertize "File commands" 'face 'magit-popup-heading)))
+             ,@magit-file-popup-actions)
   :setup-function 'magit-dispatch-popup-setup
   :max-action-columns (lambda (heading)
                         (pcase heading
                           ("Popup and dwim commands" 4)
                           ("Applying changes" 3)
-                          ("Essential commands" 1))))
+                          ("Essential commands" 1)
+                          ("File commands" 5))))
 
 (defvar magit-dispatch-popup-map
   (let ((map (make-sparse-keymap)))

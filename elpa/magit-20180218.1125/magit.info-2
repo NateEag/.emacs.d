@@ -17,6 +17,162 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: magit.info,  Node: Calling Git for Effect,  Prev: Getting a Value from Git,  Up: Calling Git
+
+10.1.2 Calling Git for Effect
+-----------------------------
+
+These functions are used to run git to produce some effect.  Most Magit
+commands that actually run git do so by using such a function.
+
+   Because we do not need to consume git’s output when using these
+functions, their output is instead logged into a per-repository buffer,
+which can be shown using ‘$’ from a Magit buffer or ‘M-x magit-process’
+elsewhere.
+
+   These functions can have an effect in two distinct ways.  Firstly,
+running git may change something, i.e.  create or push a new commit.
+Secondly, that change may require that Magit buffers are refreshed to
+reflect the changed state of the repository.  But refreshing isn’t
+always desirable, so only some of these functions do perform such a
+refresh after git has returned.
+
+   Sometimes it is useful to run git asynchronously.  For example, when
+the user has just initiated a push, then there is no reason to make her
+wait until that has completed.  In other cases it makes sense to wait
+for git to complete before letting the user do something else.  For
+example after staging a change it is useful to wait until after the
+refresh because that also automatically moves to the next change.
+
+ -- Function: magit-call-git &rest args
+
+     Calls git synchronously with ARGS.
+
+ -- Function: magit-call-process program &rest args
+
+     Calls PROGRAM synchronously with ARGS.
+
+ -- Function: magit-run-git &rest args
+
+     Calls git synchronously with ARGS and then refreshes.
+
+ -- Function: magit-run-git-with-input input &rest args
+
+     Calls git synchronously with ARGS and sends it INPUT on standard
+     input.
+
+     INPUT should be a buffer or the name of an existing buffer.  The
+     content of that buffer is used as the process’ standard input.
+     After the process returns a refresh is performed.
+
+     As a special case, INPUT may also be nil.  In that case the content
+     of the current buffer is used as standard input and *no* refresh is
+     performed.
+
+     This function actually runs git asynchronously.  But then it waits
+     for the process to return, so the function itself is synchronous.
+
+ -- Function: magit-run-git-with-logfile file &rest args
+
+     Calls git synchronously with ARGS. The process’ output is saved in
+     FILE. This is rarely useful and so this function might be removed
+     in the future.
+
+     This function actually runs git asynchronously.  But then it waits
+     for the process to return, so the function itself is synchronous.
+
+ -- Function: magit-git &rest args
+
+     Calls git synchronously with ARGS for side-effects only.  This
+     function does not refresh the buffer.
+
+ -- Function: magit-git-wash washer &rest args
+
+     Execute Git with ARGS, inserting washed output at point.  Actually
+     first insert the raw output at point.  If there is no output call
+     ‘magit-cancel-section’.  Otherwise temporarily narrow the buffer to
+     the inserted text, move to its beginning, and then call function
+     WASHER with ARGS as its sole argument.
+
+   And now for the asynchronous variants.
+
+ -- Function: magit-run-git-async &rest args
+
+     Start Git, prepare for refresh, and return the process object.
+     ARGS is flattened and then used as arguments to Git.
+
+     Display the command line arguments in the echo area.
+
+     After Git returns some buffers are refreshed: the buffer that was
+     current when this function was called (if it is a Magit buffer and
+     still alive), as well as the respective Magit status buffer.
+     Unmodified buffers visiting files that are tracked in the current
+     repository are reverted if ‘magit-revert-buffers’ is non-nil.
+
+ -- Function: magit-run-git-with-editor &rest args
+
+     Export GIT_EDITOR and start Git.  Also prepare for refresh and
+     return the process object.  ARGS is flattened and then used as
+     arguments to Git.
+
+     Display the command line arguments in the echo area.
+
+     After Git returns some buffers are refreshed: the buffer that was
+     current when this function was called (if it is a Magit buffer and
+     still alive), as well as the respective Magit status buffer.
+
+ -- Function: magit-start-git &rest args
+
+     Start Git, prepare for refresh, and return the process object.
+
+     If INPUT is non-nil, it has to be a buffer or the name of an
+     existing buffer.  The buffer content becomes the processes standard
+     input.
+
+     Option ‘magit-git-executable’ specifies the Git executable and
+     option ‘magit-git-global-arguments’ specifies constant arguments.
+     The remaining arguments ARGS specify arguments to Git.  They are
+     flattened before use.
+
+     After Git returns, some buffers are refreshed: the buffer that was
+     current when this function was called (if it is a Magit buffer and
+     still alive), as well as the respective Magit status buffer.
+     Unmodified buffers visiting files that are tracked in the current
+     repository are reverted if ‘magit-revert-buffers’ is non-nil.
+
+ -- Function: magit-start-process &rest args
+
+     Start PROGRAM, prepare for refresh, and return the process object.
+
+     If optional argument INPUT is non-nil, it has to be a buffer or the
+     name of an existing buffer.  The buffer content becomes the
+     processes standard input.
+
+     The process is started using ‘start-file-process’ and then setup to
+     use the sentinel ‘magit-process-sentinel’ and the filter
+     ‘magit-process-filter’.  Information required by these functions is
+     stored in the process object.  When this function returns the
+     process has not started to run yet so it is possible to override
+     the sentinel and filter.
+
+     After the process returns, ‘magit-process-sentinel’ refreshes the
+     buffer that was current when ‘magit-start-process’ was called (if
+     it is a Magit buffer and still alive), as well as the respective
+     Magit status buffer.  Unmodified buffers visiting files that are
+     tracked in the current repository are reverted if
+     ‘magit-revert-buffers’ is non-nil.
+
+ -- Variable: magit-this-process
+
+     The child process which is about to start.  This can be used to
+     change the filter and sentinel.
+
+ -- Variable: magit-process-raise-error
+
+     When this is non-nil, then ‘magit-process-sentinel’ raises an error
+     if git exits with a non-zero exit status.  For debugging purposes.
+
+
 File: magit.info,  Node: Section Plumbing,  Next: Refreshing Buffers,  Prev: Calling Git,  Up: Plumbing
 
 10.2 Section Plumbing
@@ -1215,7 +1371,7 @@ Appendix C Keystroke Index
 * r u:                                   Rebasing.            (line  29)
 * r w:                                   Rebasing.            (line  81)
 * RET:                                   Diff Buffer.         (line   6)
-* RET <1>:                               References Buffer.   (line 135)
+* RET <1>:                               References Buffer.   (line 166)
 * RET <2>:                               Blaming.             (line  55)
 * RET <3>:                               Editing Rebase Sequences.
                                                               (line  16)
@@ -1741,7 +1897,7 @@ Appendix D Command Index
                                                               (line  28)
 * magit-version:                         Git Executable.      (line  17)
 * magit-version <1>:                     Debugging Tools.     (line  10)
-* magit-visit-ref:                       References Buffer.   (line 135)
+* magit-visit-ref:                       References Buffer.   (line 166)
 * magit-wip-commit:                      Wip Modes.           (line 129)
 * magit-wip-log:                         Wip Modes.           (line  69)
 * magit-wip-log-current:                 Wip Modes.           (line  77)
@@ -2101,15 +2257,15 @@ Appendix F Variable Index
 * magit-refresh-function:                Refreshing Buffers.  (line  48)
 * magit-refresh-status-buffer:           Automatic Refreshing of Magit Buffers.
                                                               (line  46)
-* magit-refs-filter-alist:               References Buffer.   (line 101)
-* magit-refs-indent-cherry-lines:        References Buffer.   (line 130)
-* magit-refs-local-branch-format:        References Buffer.   (line 118)
-* magit-refs-margin:                     References Buffer.   (line  41)
-* magit-refs-margin-for-tags:            References Buffer.   (line  67)
-* magit-refs-remote-branch-format:       References Buffer.   (line 122)
+* magit-refs-filter-alist:               References Buffer.   (line 149)
+* magit-refs-focus-column-width:         References Buffer.   (line  74)
+* magit-refs-margin:                     References Buffer.   (line  89)
+* magit-refs-margin-for-tags:            References Buffer.   (line 115)
+* magit-refs-pad-commit-counts:          References Buffer.   (line  41)
+* magit-refs-primary-column-width:       References Buffer.   (line  61)
 * magit-refs-sections-hook:              References Sections. (line  13)
 * magit-refs-show-commit-count:          References Buffer.   (line  29)
-* magit-refs-tags-format:                References Buffer.   (line 126)
+* magit-refs-show-remote-prefix:         References Buffer.   (line  54)
 * magit-remote-add-set-remote.pushDefault: The Remote Popup.  (line  60)
 * magit-remote-popup-show-variables:     The Remote Popup.    (line  18)
 * magit-repolist-columns:                Repository List.     (line  14)
@@ -2143,7 +2299,7 @@ Appendix F Variable Index
 * magit-update-other-window-delay:       Section Movement.    (line  89)
 * magit-use-sticky-arguments:            Popup Buffers and Prefix Commands.
                                                               (line  36)
-* magit-visit-ref-behavior:              References Buffer.   (line 146)
+* magit-visit-ref-behavior:              References Buffer.   (line 177)
 * magit-wip-after-apply-mode:            Wip Modes.           (line  99)
 * magit-wip-after-apply-mode-lighter:    Wip Modes.           (line 141)
 * magit-wip-after-save-local-mode-lighter: Wip Modes.         (line 137)

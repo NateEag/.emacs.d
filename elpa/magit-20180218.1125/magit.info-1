@@ -30,7 +30,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-This manual is for Magit version 2.11.0 (2.11.0-530-gbe3882621+1).
+This manual is for Magit version 2.11.0 (2.11.0-558-gee6a6d86+1).
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -3719,6 +3719,54 @@ File: magit.info,  Node: References Buffer,  Next: Bisecting,  Prev: Ediffing,  
 
      The default is ‘nil’ because anything else can be very expensive.
 
+ -- User Option: magit-refs-pad-commit-counts
+
+     Whether to pad all commit counts on all sides in Magit-Refs mode
+     buffers.
+
+     If this is nil, then some commit counts are displayed right next to
+     one of the branches that appear next to the count, without any
+     space in between.  This might look bad if the branch name faces
+     look too similar to ‘magit-dimmed’.
+
+     If this is non-nil, then spaces are placed on both sides of all
+     commit counts.
+
+ -- User Option: magit-refs-show-remote-prefix
+
+     Whether to show the remote prefix in lists of remote branches.
+
+     Showing the prefix is redundant because the name of the remote is
+     already shown in the heading preceeding the list of its branches.
+
+ -- User Option: magit-refs-primary-column-width
+
+     Width of the primary column in ‘magit-refs-mode’ buffers.  The
+     primary column is the column that contains the name of the branch
+     that the current row is about.
+
+     If this is an integer, then the column is that many columns wide.
+     Otherwise it has to be a cons-cell of two integers.  The first
+     specifies the minimal width, the second the maximal width.  In that
+     case the actual width is determined using the length of the names
+     of the shown local branches.  (Remote branches and tags are not
+     taken into account when calculating to optimal width.)
+
+ -- User Option: magit-refs-focus-column-width
+
+     Width of the focus column in ‘magit-refs-mode’ buffers.
+
+     The focus column is the first column, which marks one branch
+     (usually the current branch) as the focused branch using ‘*’ or
+     ‘@’.  For each other reference, this column optionally shows how
+     many commits it is ahead of the focused branch and ‘<’, or if it
+     isn’t ahead then the commits it is behind and ‘>’, or if it isn’t
+     behind either, then a ‘=’.
+
+     This column may also display only ‘*’ or ‘@’ for the focused
+     branch, in which case this option is ignored.  Use ‘L v’ to change
+     the verbosity of this column.
+
  -- User Option: magit-refs-margin
 
      This option specifies whether the margin is initially shown in
@@ -3795,23 +3843,6 @@ you should also change the others to keep things aligned.  The following
      returns a boolean.  Contrary to how they are displayed in the
      buffer, for comparison each tag begins with "tags/" and each remote
      branch with "<remote>/".
-
- -- Variable: magit-refs-local-branch-format
-
-     Format used for local branches in refs buffers.
-
- -- Variable: magit-refs-remote-branch-format
-
-     Format used for remote branches in refs buffers.
-
- -- Variable: magit-refs-tags-format
-
-     Format used for tags in refs buffers.
-
- -- Variable: magit-refs-indent-cherry-lines
-
-     Indentation of cherries in refs buffers.  This should be N-1 where
-     N is taken from "%Nc" in the above format strings.
 
 ‘RET’     (‘magit-visit-ref’)
 
@@ -7779,160 +7810,4 @@ need to be able to debug them.
      function while handing an error could cause yet another error and
      therefore lead to an infinite recursion.  You probably won’t ever
      need to use this function.
-
-
-File: magit.info,  Node: Calling Git for Effect,  Prev: Getting a Value from Git,  Up: Calling Git
-
-10.1.2 Calling Git for Effect
------------------------------
-
-These functions are used to run git to produce some effect.  Most Magit
-commands that actually run git do so by using such a function.
-
-   Because we do not need to consume git’s output when using these
-functions, their output is instead logged into a per-repository buffer,
-which can be shown using ‘$’ from a Magit buffer or ‘M-x magit-process’
-elsewhere.
-
-   These functions can have an effect in two distinct ways.  Firstly,
-running git may change something, i.e.  create or push a new commit.
-Secondly, that change may require that Magit buffers are refreshed to
-reflect the changed state of the repository.  But refreshing isn’t
-always desirable, so only some of these functions do perform such a
-refresh after git has returned.
-
-   Sometimes it is useful to run git asynchronously.  For example, when
-the user has just initiated a push, then there is no reason to make her
-wait until that has completed.  In other cases it makes sense to wait
-for git to complete before letting the user do something else.  For
-example after staging a change it is useful to wait until after the
-refresh because that also automatically moves to the next change.
-
- -- Function: magit-call-git &rest args
-
-     Calls git synchronously with ARGS.
-
- -- Function: magit-call-process program &rest args
-
-     Calls PROGRAM synchronously with ARGS.
-
- -- Function: magit-run-git &rest args
-
-     Calls git synchronously with ARGS and then refreshes.
-
- -- Function: magit-run-git-with-input input &rest args
-
-     Calls git synchronously with ARGS and sends it INPUT on standard
-     input.
-
-     INPUT should be a buffer or the name of an existing buffer.  The
-     content of that buffer is used as the process’ standard input.
-     After the process returns a refresh is performed.
-
-     As a special case, INPUT may also be nil.  In that case the content
-     of the current buffer is used as standard input and *no* refresh is
-     performed.
-
-     This function actually runs git asynchronously.  But then it waits
-     for the process to return, so the function itself is synchronous.
-
- -- Function: magit-run-git-with-logfile file &rest args
-
-     Calls git synchronously with ARGS. The process’ output is saved in
-     FILE. This is rarely useful and so this function might be removed
-     in the future.
-
-     This function actually runs git asynchronously.  But then it waits
-     for the process to return, so the function itself is synchronous.
-
- -- Function: magit-git &rest args
-
-     Calls git synchronously with ARGS for side-effects only.  This
-     function does not refresh the buffer.
-
- -- Function: magit-git-wash washer &rest args
-
-     Execute Git with ARGS, inserting washed output at point.  Actually
-     first insert the raw output at point.  If there is no output call
-     ‘magit-cancel-section’.  Otherwise temporarily narrow the buffer to
-     the inserted text, move to its beginning, and then call function
-     WASHER with ARGS as its sole argument.
-
-   And now for the asynchronous variants.
-
- -- Function: magit-run-git-async &rest args
-
-     Start Git, prepare for refresh, and return the process object.
-     ARGS is flattened and then used as arguments to Git.
-
-     Display the command line arguments in the echo area.
-
-     After Git returns some buffers are refreshed: the buffer that was
-     current when this function was called (if it is a Magit buffer and
-     still alive), as well as the respective Magit status buffer.
-     Unmodified buffers visiting files that are tracked in the current
-     repository are reverted if ‘magit-revert-buffers’ is non-nil.
-
- -- Function: magit-run-git-with-editor &rest args
-
-     Export GIT_EDITOR and start Git.  Also prepare for refresh and
-     return the process object.  ARGS is flattened and then used as
-     arguments to Git.
-
-     Display the command line arguments in the echo area.
-
-     After Git returns some buffers are refreshed: the buffer that was
-     current when this function was called (if it is a Magit buffer and
-     still alive), as well as the respective Magit status buffer.
-
- -- Function: magit-start-git &rest args
-
-     Start Git, prepare for refresh, and return the process object.
-
-     If INPUT is non-nil, it has to be a buffer or the name of an
-     existing buffer.  The buffer content becomes the processes standard
-     input.
-
-     Option ‘magit-git-executable’ specifies the Git executable and
-     option ‘magit-git-global-arguments’ specifies constant arguments.
-     The remaining arguments ARGS specify arguments to Git.  They are
-     flattened before use.
-
-     After Git returns, some buffers are refreshed: the buffer that was
-     current when this function was called (if it is a Magit buffer and
-     still alive), as well as the respective Magit status buffer.
-     Unmodified buffers visiting files that are tracked in the current
-     repository are reverted if ‘magit-revert-buffers’ is non-nil.
-
- -- Function: magit-start-process &rest args
-
-     Start PROGRAM, prepare for refresh, and return the process object.
-
-     If optional argument INPUT is non-nil, it has to be a buffer or the
-     name of an existing buffer.  The buffer content becomes the
-     processes standard input.
-
-     The process is started using ‘start-file-process’ and then setup to
-     use the sentinel ‘magit-process-sentinel’ and the filter
-     ‘magit-process-filter’.  Information required by these functions is
-     stored in the process object.  When this function returns the
-     process has not started to run yet so it is possible to override
-     the sentinel and filter.
-
-     After the process returns, ‘magit-process-sentinel’ refreshes the
-     buffer that was current when ‘magit-start-process’ was called (if
-     it is a Magit buffer and still alive), as well as the respective
-     Magit status buffer.  Unmodified buffers visiting files that are
-     tracked in the current repository are reverted if
-     ‘magit-revert-buffers’ is non-nil.
-
- -- Variable: magit-this-process
-
-     The child process which is about to start.  This can be used to
-     change the filter and sentinel.
-
- -- Variable: magit-process-raise-error
-
-     When this is non-nil, then ‘magit-process-sentinel’ raises an error
-     if git exits with a non-zero exit status.  For debugging purposes.
 

@@ -1,4 +1,4 @@
-;; Copyright (C) 2016-2017  Vibhav Pant <vibhavp@gmail.com>  -*- lexical-binding: t -*-
+;; Copyright (C) 2016-2018  Vibhav Pant <vibhavp@gmail.com>  -*- lexical-binding: t -*-
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -17,6 +17,7 @@
 
 (require 'compile)
 (require 'url-util)
+(require 'url-parse)
 (require 'subr-x)
 
 (defconst lsp--message-type-face
@@ -73,7 +74,17 @@ If no such directory could be found, log a warning and return `default-directory
 
 (defun lsp--uri-to-path (uri)
   "Convert URI to a file path."
-  (string-remove-prefix lsp--uri-file-prefix (url-unhex-string uri)))
+  (let* ((url (url-generic-parse-url (url-unhex-string uri)))
+         (type (url-type url))
+         (file (url-filename url)))
+    (when (and type (not (string= type "file")))
+      (error "Unsupported file scheme: %s" uri))
+    ;; `url-generic-parse-url' is buggy on windows:
+    ;; https://github.com/emacs-lsp/lsp-mode/pull/265
+    (or (and (eq system-type 'windows-nt)
+             (eq (elt file 0) ?\/)
+             (substring file 1))
+        file)))
 
 (defun lsp--path-to-uri (path)
   "Convert PATH to a uri."

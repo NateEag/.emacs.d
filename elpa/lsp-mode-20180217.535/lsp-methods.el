@@ -1,4 +1,4 @@
-;; Copyright (C) 2016-2017  Vibhav Pant <vibhavp@gmail.com>  -*- lexical-binding: t -*-
+;; Copyright (C) 2016-2018  Vibhav Pant <vibhavp@gmail.com>  -*- lexical-binding: t -*-
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -55,7 +55,7 @@
 (cl-defstruct lsp--workspace
   (parser nil :read-only t)
   ;; file-versions is a hashtable of files "owned" by the workspace
-  (file-versions nil)
+  (file-versions nil :read-only t)
   (server-capabilities nil)
   (registered-server-capabilities nil)
   (root nil :ready-only t)
@@ -199,6 +199,13 @@ whitelist, or does not match any pattern in the blacklist."
   :group 'lsp-mode)
 
 ;;;###autoload
+(defcustom lsp-before-save-edits t
+  "If non-nil, `lsp-mode' will apply edits suggested by the language server
+before saving a document."
+  :type 'boolean
+  :group 'lsp-mode)
+
+;;;###autoload
 (defface lsp-face-highlight-textual
   '((t :background "yellow"))
   "Face used for textual occurances of symbols."
@@ -263,8 +270,11 @@ whitelist, or does not match any pattern in the blacklist."
       (lsp--workspace-proc lsp--cur-workspace))))
 
 (define-inline lsp--cur-workspace-check ()
-  (inline-quote (cl-assert lsp--cur-workspace nil
-                  "No language server is associated with this buffer.")))
+  (inline-quote
+    (progn
+      (cl-assert lsp--cur-workspace nil
+        "No language server is associated with this buffer.")
+      (cl-assert (lsp--workspace-p lsp--cur-workspace)))))
 
 (define-inline lsp--cur-parser ()
   (inline-quote (lsp--workspace-parser lsp--cur-workspace)))
@@ -488,6 +498,36 @@ registered client capabilities by calling
   "Return the capabilities of the language server associated with the buffer."
   (inline-quote (lsp--workspace-server-capabilities lsp--cur-workspace)))
 
+(defun lsp--server-has-sync-options-p ()
+  "Return whether the server has a TextDocumentSyncOptions object in
+ServerCapabilities.textDocumentSync."
+  (hash-table-p (gethash "textDocumentSync" (lsp--server-capabilities))))
+
+(defun lsp--send-open-close-p ()
+  "Return whether open and close notifications should be sent to the server."
+  (let ((sync (gethash "textDocumentSync" (lsp--server-capabilities))))
+    (and (hash-table-p sync)
+      (gethash "openClose" sync))))
+
+(defun lsp--send-will-save-p ()
+  "Return whether will save notifications should be sent to the server."
+  (let ((sync (gethash "textDocumentSync" (lsp--server-capabilities))))
+    (and (hash-table-p sync)
+      (gethash "willSave" sync))))
+
+(defun lsp--send-will-save-wait-until-p ()
+  "Return whether will save wait until notifications should be sent to the server."
+  (let ((sync (gethash "textDocumentSync" (lsp--server-capabilities))))
+      (and (hash-table-p sync)
+        (gethash "willSaveWaitUntil" sync))))
+
+(defun lsp--save-include-text-p ()
+  "Return whether save notifications should include the text document's contents."
+  (let ((sync (gethash "textDocumentSync" (lsp--server-capabilities))))
+    (and (hash-table-p sync)
+      (hash-table-p (gethash "save" sync nil))
+      (gethash "includeText" (gethash "save" sync)))))
+
 (defun lsp--set-sync-method ()
   (let* ((sync (gethash "textDocumentSync" (lsp--server-capabilities)))
           (kind (if (hash-table-p sync) (gethash "change" sync) sync))
@@ -498,22 +538,31 @@ registered client capabilities by calling
 (defun lsp--workspace-apply-edit-handler (_workspace params)
   (lsp--apply-workspace-edit (gethash "edit" params)))
 
-(defun lsp--make-sentinel (buffer stderr)
+(defun lsp--make-sentinel (workspace)
+  (cl-check-type workspace lsp--workspace)
   (lambda (process exit-str)
-    (if (buffer-live-p buffer)
-        (with-current-buffer buffer
-          (dolist (buf (lsp--workspace-buffers lsp--cur-workspace))
-            (with-current-buffer buf
-              (message "%s: %s has exited (%s)"
-                       (lsp--workspace-root lsp--cur-workspace)
-                       (process-name (lsp--workspace-proc lsp--cur-workspace))
-                       exit-str)
-              (lsp--uninitialize-workspace))))
-      (let ((status (process-status process))
-            (buffer-stderr (get-buffer stderr)))
-        (and (buffer-live-p buffer-stderr)
-             (memq status '(exit signal))
-             (kill-buffer stderr))))))
+    (let ((status (process-status process)))
+      (when (memq status '(exit signal))
+        ;; Server has exited.  Uninitialize all buffer-local state for this
+        ;; workspace.
+        (message "%s: %s has exited (%s)"
+                 (lsp--workspace-root workspace)
+                 (process-name (lsp--workspace-proc workspace))
+                 exit-str)
+        (dolist (buf (lsp--workspace-buffers workspace))
+          (with-current-buffer buf
+            (lsp--uninitialize-workspace)))
+        ;; Kill standard error buffer only if the process exited normally.
+        ;; Leave it intact otherwise for debugging purposes.
+        (when (and (eq status 'exit) (zerop (process-exit-status process)))
+          ;; FIXME: The client structure should store the standard error
+          ;; buffer, not its name.
+          ;; FIXME: Probably the standard error buffer should be per workspace,
+          ;; not per client.
+          (let ((stderr (get-buffer (lsp--client-stderr
+                                     (lsp--workspace-client workspace)))))
+            (when (buffer-live-p stderr)
+              (kill-buffer stderr))))))))
 
 (defun lsp--should-start-p (root)
   "Consult `lsp-project-blacklist' and `lsp-project-whitelist' to
@@ -549,7 +598,7 @@ directory."
        new-conn (funcall
                  (lsp--client-new-connection client)
                  (lsp--parser-make-filter parser (lsp--client-ignore-regexps client))
-                 (lsp--make-sentinel (current-buffer) (lsp--client-stderr client)))
+                 (lsp--make-sentinel lsp--cur-workspace))
        ;; the command line process invoked
        cmd-proc (if (consp new-conn) (car new-conn) new-conn)
        ;; the process we actually communicate with
@@ -597,8 +646,10 @@ directory."
   (add-hook 'after-save-hook #'lsp-on-save nil t)
   (add-hook 'kill-buffer-hook #'lsp--text-document-did-close nil t)
 
-  (setq-local eldoc-documentation-function #'lsp--on-hover)
   (when lsp-enable-eldoc
+    ;; XXX: The documentation for `eldoc-documentation-function' suggests
+    ;; using `add-function' for modifying its value, use that instead?
+    (setq-local eldoc-documentation-function #'lsp--on-hover)
     (eldoc-mode 1))
 
   (when (and lsp-enable-flycheck (featurep 'lsp-flycheck))
@@ -969,23 +1020,31 @@ Added to `after-change-functions'."
           (when (= 0 (hash-table-count file-versions))
             (lsp--shutdown-cur-workspace)))))))
 
+(define-inline lsp--will-save-text-document-params (reason)
+  (cl-check-type reason number)
+  (inline-quote
+    (list :textDocument (lsp--text-document-identifier)
+      :reason ,reason)))
+
 (defun lsp--before-save ()
   (when lsp--cur-workspace
     (with-demoted-errors "Error in ‘lsp--before-save’: %S"
-      (lsp--send-notification
-       (lsp--make-notification
-        "textDocument/willSave"
-        (list :textDocument (lsp--text-document-identifier)
-              :reason 1))))))
+      (let ((params (lsp--will-save-text-document-params 1)))
+        (if (lsp--send-will-save-p)
+          (lsp--send-notification
+            (lsp--make-notification "textDocument/willSave" params))
+          (when (and (lsp--send-will-save-wait-until-p) lsp-before-save-edits)
+            (lsp--apply-text-edits
+              (lsp--send-request (lsp--make-request
+                                   "textDocument/willSaveWaitUntil" params)))))))))
 
 (defun lsp--on-auto-save ()
-  (when lsp--cur-workspace
+  (when (and lsp--cur-workspace
+          (lsp--send-will-save-p))
     (with-demoted-errors "Error in ‘lsp--on-auto-save’: %S"
       (lsp--send-notification
-       (lsp--make-notification
-        "textDocument/willSave"
-        (list :textDocument (lsp--text-document-identifier)
-              :reason 2))))))
+        (lsp--make-notification
+          "textDocument/willSave" (lsp--will-save-text-document-params 2))))))
 
 (defun lsp--text-document-did-save ()
   "Executed when the file is closed, added to `after-save-hook''."
@@ -994,7 +1053,12 @@ Added to `after-change-functions'."
       (lsp--send-notification
        (lsp--make-notification
         "textDocument/didSave"
-        `(:textDocument ,(lsp--versioned-text-document-identifier)))))))
+         `(:textDocument ,(lsp--versioned-text-document-identifier)
+            :includeText ,(if (lsp--save-include-text-p)
+                            (save-excursion
+                              (widen)
+                              (buffer-substring-no-properties (point-min) (point-max)))
+                            nil)))))))
 
 (define-inline lsp--text-document-position-params ()
   "Make TextDocumentPositionParams for the current point in the current document."
@@ -1019,7 +1083,6 @@ Added to `after-change-functions'."
                               (and (>= line start-line) (<= line end-line))))
                           diags)))
     (cl-coerce (mapcar #'lsp-diagnostic-original diags-in-range) 'vector)))
-
 
 (defconst lsp--completion-item-kind
   `(
@@ -1407,14 +1470,20 @@ If title is nil, return the name for the command handler."
 (defvar-local lsp-code-lenses nil
   "A list of code lenses computed for the buffer.")
 
-(defun lsp--update-code-lenses ()
+(defun lsp--update-code-lenses (&optional callback)
+  "Update the list of code lenses for the current buffer.
+Optionally, CALLBACK is a function that accepts a single argument, the code lens object."
   (lsp--cur-workspace-check)
-  (lsp--send-request-async (lsp--make-request "textDocument/codeLens"
-                               (lsp--text-document-identifier))
+  (when callback
+    (cl-check-type callback function))
+  (when (gethash "codeLensProvider" (lsp--server-capabilities))
+    (lsp--send-request-async (lsp--make-request "textDocument/codeLens"
+                               `(:textDocument ,(lsp--text-document-identifier)))
       (let ((buf (current-buffer)))
         #'(lambda (lenses)
             (with-current-buffer buf
-              (setq lsp-code-lenses lenses))))))
+              (setq lsp-code-lenses lenses)
+              (funcall callback lenses)))))))
 
 (defun lsp--make-document-formatting-options ()
   (let ((json-false :json-false))

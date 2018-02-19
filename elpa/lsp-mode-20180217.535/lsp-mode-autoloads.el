@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (23169 41570
+;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (23178 65192
 ;;;;;;  0 0))
 ;;; Generated autoloads from lsp-methods.el
 
@@ -58,6 +58,12 @@ Indent regions using the file formatting functionality provided by the language 
 
 (custom-autoload 'lsp-enable-indentation "lsp-methods" t)
 
+(defvar lsp-before-save-edits t "\
+If non-nil, `lsp-mode' will apply edits suggested by the language server
+before saving a document.")
+
+(custom-autoload 'lsp-before-save-edits "lsp-methods" t)
+
 (defface lsp-face-highlight-textual '((t :background "yellow")) "\
 Face used for textual occurances of symbols." :group (quote lsp-faces))
 
@@ -69,7 +75,7 @@ Face used for highlighting symbols being written to." :group (quote lsp-faces))
 
 ;;;***
 
-;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23169 41570 0 0))
+;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23178 65192 0 0))
 ;;; Generated autoloads from lsp-mode.el
 
 (autoload 'lsp-mode "lsp-mode" "\
@@ -80,8 +86,8 @@ Face used for highlighting symbols being written to." :group (quote lsp-faces))
 ;;;***
 
 ;;;### (autoloads nil nil ("lsp-common.el" "lsp-flycheck.el" "lsp-imenu.el"
-;;;;;;  "lsp-io.el" "lsp-mode-pkg.el" "lsp-notifications.el") (23169
-;;;;;;  41570 0 0))
+;;;;;;  "lsp-io.el" "lsp-mode-pkg.el" "lsp-notifications.el") (23178
+;;;;;;  65192 0 0))
 
 ;;;***
 

@@ -1,4 +1,4 @@
-;; Copyright (C) 2016-2017  Vibhav Pant <vibhavp@gmail.com> -*- lexical-binding: t -*-
+;; Copyright (C) 2016-2018  Vibhav Pant <vibhavp@gmail.com> -*- lexical-binding: t -*-
 
 ;; This program is free software: you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -205,7 +205,7 @@
       (signal 'lsp-invalid-header-name (list s)))
     (setq key (substring s 0 pos)
           val (substring s (+ 2 pos)))
-    (when (equal key "Content-Length")
+    (when (string-equal key "Content-Length")
       (cl-assert (cl-loop for c being the elements of val
                           when (or (> c ?9) (< c ?0)) return nil
                           finally return t)

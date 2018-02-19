@@ -39,7 +39,7 @@ adoption would make life easier for users and maintainers alike, because
 then all packages that talk to the Github API could be configured the
 same way.
 
-This manual is for Ghub version 1.3.0 (v1.3.0-41-g595ba4f+1).
+This manual is for Ghub version 1.3.0 (v1.3.0-46-g1fe02f3+1).
 
      Copyright (C) 2017-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -61,6 +61,7 @@ This manual is for Ghub version 1.3.0 (v1.3.0-41-g595ba4f+1).
 * Using Ghub in Personal Scripts::
 * Using Ghub in a Package::
 * API::
+* Gitlab Support::
 
 — The Detailed Node Listing —
 
@@ -147,11 +148,24 @@ don’t assume that they don’t):
 
    • Support for token scope validation.
 
-   These features will likely never be implemented in Ghub:
+   • Basic support for GraphQL.
+
+   • Support for Gitlab is implemented in the ‘glab.el’ library, which
+     is maintained in the same repository as ‘ghub.el’ but distributed
+     as a separate package.
+
+   These features will likely never be implemented in Ghub itself:
 
    • Functions for particular resources.
 
-   • Returning and consuming data as anything but json-like alists.
+     See ‘ghub+.el’ for a package that provides such functionality.  It
+     is built on top of ‘ghub.el’.
+
+   • Returning and consuming data as anything but JSON-like alists, or
+     in the case of GraphQL queries and mutations, plain strings.
+
+     See ‘graphql.el’ for a package that provides such functionality.
+     It can be used along-side ‘ghub.el’.
 
    • Retrieving an existing token.  Github does not support it so we
      cannot do it either.  If you lose your local copy of a token, then
@@ -161,7 +175,8 @@ don’t assume that they don’t):
 
    • Asynchronous requests are not supported yet.
 
-   • The Github GraphQL API is not supported yet.
+   • Controlled pagination for both the REST and GraphQL APIs have not
+     been implemented yet.
 
    • If a request fails due to a missing scope, then that isn’t handled
      by ‘ghub-request’ yet.  For now package authors just have to hope
@@ -175,14 +190,6 @@ don’t assume that they don’t):
      that it previously did not need.  I am not quite sure yet whether
      Ghub should support that.  An alternative would be to let packages
      at least invalidate their own tokens.
-
-   • Other Git forges (Gitlab, Bitbucket…) are not supported.
-
-     Support for other forges will likely be implemented using *other*
-     libraries that are very similar to this library.  Whether common
-     code will be factored out into a library to be used by all these
-     libraries or whether some code duplication is to be preferred, has
-     not been decided yet.
 
 
 File: ghub.info,  Node: Getting Started,  Next: Using Ghub in Personal Scripts,  Prev: Limitations,  Up: Top
@@ -392,6 +399,7 @@ the variable named ‘PACKAGE-ghub-token-scopes’.  The doc-string of such
 variables should document what the various scopes are needed for.
 
    To create or edit a token go to <https://github.com/settings/tokens>.
+For Gitlab.com use <https://gitlab.com/profile/personal_access_tokens>.
 
    Finally store the token in a place where Ghub looks for it, as
 described in *note How Ghub uses Auth-Source::.
@@ -427,10 +435,16 @@ those three slots, and it does that by using "USERNAME^PACKAGE" as the
 "login".
 
    Assuming your username is "ziggy",the package is named "stardust",
-and you want to access Github.com an entry in one of the three mentioned
-files would then look like this:
+and you want to access *Github.com* an entry in one of the three
+mentioned files would then look like this:
 
      machine api.github.com login ziggy^stardust password 012345abcdef...
+
+   Assuming your username is "ziggy",the package is named "stardust",
+and you want to access *Gitlab.com* an entry in one of the three
+mentioned files would then look like this:
+
+     machine gitlab.com/api/v4 login ziggy^stardust password 012345abcdef...
 
 
 File: ghub.info,  Node: Using Ghub in Personal Scripts,  Next: Using Ghub in a Package,  Prev: Getting Started,  Up: Top
@@ -525,7 +539,7 @@ PACKAGE as the value of its AUTH argument.
           Scopes for USERNAME^PACKAGE@HOST: (SCOPE...)
 
 
-File: ghub.info,  Node: API,  Prev: Using Ghub in a Package,  Up: Top
+File: ghub.info,  Node: API,  Next: Gitlab Support,  Prev: Using Ghub in a Package,  Up: Top
 
 6 API
 *****
@@ -579,6 +593,9 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
              • Use QUERY to explicitly transmit data as a query.
 
              • Use PAYLOAD to explicitly transmit data as a payload.
+               Instead of an alist, PAYLOAD may also be a string, in
+               which case it gets encoded as UTF-8 but is otherwise
+               transmitted as-is.
 
              • Use HEADERS for those rare resources that require that
                the data is transmitted as headers instead of as a query
@@ -633,6 +650,11 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
           to specify that using the Git variable ‘github.host’ instead
           of using this argument.
 
+        • If FORGE is ‘gitlab’, then connect to Gitlab.com or, depending
+          on HOST to another Gitlab instance.  This is only intended for
+          internal use.  Instead of using this argument you should use
+          function ‘glab-request’ and other ‘glab-*’ functions.
+
  -- Variable: ghub-response-headers
 
      A select few Github API resources respond by transmitting data in
@@ -653,7 +675,7 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
  -- Variable: ghub-github-token-scopes
  -- Variable: PACKAGE-github-token-scopes
 
-     Such a variables define the token scopes requested by the
+     Such a variable defines the token scopes requested by the
      respective package PACKAGE given by the first word in the variable
      name.  ‘ghub’ itself is treated like any other package.  Also see
      *note Using Ghub in a Package::.
@@ -721,6 +743,18 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
 
      See ‘ghub-request’’s documentation above for information about the
      other arguments.
+
+ -- Function: ghub-graphql graphql &optional variables &key username
+          auth host
+
+     This function makes a GraphQL request using GRAPHQL and VARIABLES
+     as inputs.  GRAPHQL is a GraphQL string.  VARIABLES is a JSON-like
+     alist.  The other arguments behave like for ‘ghub-request’ (which
+     see).
+
+     The response is returned as a JSON-like alist.  Even if the
+     response contains ‘errors’, this function does not raise an error.
+     Likewise cursor-handling too is left to the caller.
 
 
 File: ghub.info,  Node: Authentication,  Next: Configuration Variables,  Prev: Making Requests,  Up: API
@@ -842,23 +876,61 @@ machine, which is done using a lisp variable.
      will then be used to identify the local machine instead of the
      value returned by ‘system-name’.
 
+
+File: ghub.info,  Node: Gitlab Support,  Prev: API,  Up: Top
+
+7 Gitlab Support
+****************
+
+Support for Gitlab.com and other Gitlab instances is implemented in the
+library ‘glab.el’.  This library is build on top of ‘ghub.el’ and is
+maintained in the same repository, but it is distributed as a separate
+package.
+
+   When accessing Gitlab.com or another Gitlab instance, use
+‘glab-request’ instead of ‘ghub-request’, ‘glab-get’ instead of
+‘ghub-request’, etc.  Likewise use the Git variables in the ‘gitlab’
+group instead of those in the ‘github’ group, i.e.  ‘gitlab.user’,
+‘gitlab.HOST.user’ and ‘gitlab.host’.
+
+   The Gitlab API cannot be used to create tokens, so Glab cannot
+provide a setup wizard like Ghub does.  As a consequence if the user
+makes a request and the necessary token cannot be found, then that
+results in an error.
+
+   You have to manually create and store the necessary tokens.  Tokens
+can be created at <https://gitlab.com/profile/personal_access_tokens>,
+or the equivalent URL for another Gitlab instance.  To store the token
+locally, follow the instructions in *note Manually Creating and Storing
+a Token:: and *note How Ghub uses Auth-Source::.
+
+   Packages can that use Glab, can define ‘PACKAGE-gitlab-token-scopes’
+for documentation purposes.  But unlike ‘PACKAGE-github-token-scopes’,
+which is used by the setup wizard this is optional.
+
+   And a random hint: where you would use ‘user/repo’ when accessing
+Github, you have to use ‘user%2Frepo’ when accessing Gitlab, e.g.:
+
+     (glab-get "/projects/python-mode-devs%2Fpython-mode")
+
 
 
 Tag Table:
 Node: Top762
-Node: Introduction2791
-Node: Limitations5327
-Node: Getting Started7439
-Node: Setting the Username7941
-Node: Interactively Creating and Storing a Token9366
-Node: Manually Creating and Storing a Token15384
-Node: How Ghub uses Auth-Source16474
-Node: Using Ghub in Personal Scripts18148
-Node: Using Ghub in a Package19597
-Node: API22162
-Node: Making Requests22589
-Node: Authentication31274
-Node: Configuration Variables33076
+Node: Introduction2810
+Node: Limitations5346
+Node: Getting Started7657
+Node: Setting the Username8159
+Node: Interactively Creating and Storing a Token9584
+Node: Manually Creating and Storing a Token15602
+Node: How Ghub uses Auth-Source16764
+Node: Using Ghub in Personal Scripts18697
+Node: Using Ghub in a Package20146
+Node: API22711
+Node: Making Requests23161
+Node: Authentication32832
+Node: Configuration Variables34634
+Node: Gitlab Support38327
 
 End Tag Table
 

@@ -879,11 +879,16 @@ TYPE is one of `:action', `:sequence-action', `:switch', or
 
 (defun magit-popup-set-variable
     (variable choices &optional default other)
-  (magit-set (--if-let (magit-git-string "config" "--local" variable)
-                 (cadr (member it choices))
-               (car choices))
-             variable)
-  (magit-refresh)
+  (let* ((curval (lambda ()
+                   (or (magit-git-string "config" variable)
+                       default)))
+         (old (funcall curval)))
+    (magit-set (--if-let (magit-git-string "config" "--local" variable)
+                   (cadr (member it choices))
+                 (car choices))
+               variable)
+    (unless (equal old (funcall curval))
+      (magit-refresh)))
   (message "%s %s" variable
            (magit-popup-format-variable-1 variable choices default other)))
 
@@ -1212,13 +1217,6 @@ of events shared by all popups and before point is adjusted.")
                                     (button-type-get type 'property)))))
            (maxcols (button-type-get type 'maxcols))
            (pred (magit-popup-get :sequence-predicate)))
-      (if (and pred (funcall pred))
-          (setq maxcols nil)
-        (cl-typecase maxcols
-          (keyword (setq maxcols (magit-popup-get maxcols)))
-          (symbol  (setq maxcols (symbol-value maxcols)))))
-      (when (functionp maxcols)
-        (setq maxcols (funcall maxcols heading)))
       (when items
         (if (functionp heading)
             (when (setq heading (funcall heading))
@@ -1228,6 +1226,13 @@ of events shared by all popups and before point is adjusted.")
           (insert (propertize heading 'face 'magit-popup-heading))
           (unless (string-match "\n$" heading)
             (insert "\n")))
+        (if (and pred (funcall pred))
+            (setq maxcols nil)
+          (cl-typecase maxcols
+            (keyword (setq maxcols (magit-popup-get maxcols)))
+            (symbol  (setq maxcols (symbol-value maxcols)))))
+        (when (functionp maxcols)
+          (setq maxcols (funcall maxcols heading)))
         (when heading
           (let ((colwidth
                  (+ (apply 'max (mapcar (lambda (e) (length (car e))) items))

@@ -1151,6 +1151,28 @@ After setting the stylevars run hooks according to STYLENAME
 
 (put 'php-set-style 'interactive-form (interactive-form 'c-set-style))
 
+(defun php-mode-debug ()
+  "Display informations useful for debugging PHP Mode."
+  (interactive)
+  (message "--- PHP-MODE DEBUG BEGIN ---")
+  (message "versions: %s; %s" (emacs-version) (php-mode-version))
+  (message "major-mode: %s" major-mode)
+  (message "minor-modes: %s" (cl-remove-if
+                              (lambda (s) (string-match-p "global" (symbol-name s)))
+                              minor-mode-list))
+  (message "variables: %s"
+           (cl-loop for v in '(indent-tabs-mode tab-width)
+                    collect (list v (symbol-value v))))
+  (message "custom variables: %s"
+           (cl-loop for (v type) in (custom-group-members 'php nil)
+                    if (eq type 'custom-variable)
+                    collect (list v (symbol-value v))))
+  (message "c-indentation-style: %s" c-indentation-style)
+  (message "c-style-variables: %s" (c-get-style-variables c-indentation-style nil))
+  (message "--- PHP-MODE DEBUG END ---")
+  (switch-to-buffer "*Messages*")
+  (goto-char (point-max)))
+
 ;;;###autoload
 (define-derived-mode php-mode c-mode "PHP"
   "Major mode for editing PHP code.
@@ -1175,7 +1197,7 @@ After setting the stylevars run hooks according to STYLENAME
   (modify-syntax-entry ?\n   "> b" php-mode-syntax-table)
   (modify-syntax-entry ?$    "'" php-mode-syntax-table)
 
-  (setq-local syntax-propertize-function #'php-syntax-propertize-function)
+  (set (make-local-variable 'syntax-propertize-function) #'php-syntax-propertize-function)
   (add-to-list (make-local-variable 'syntax-propertize-extend-region-functions)
                #'php-syntax-propertize-extend-region)
 

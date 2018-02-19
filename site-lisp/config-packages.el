@@ -279,8 +279,6 @@ The shell command lives in my dotfiles repo."
     ;; standard Vim keybindings and just making it easier to trigger them, I
     ;; still have a comfortable personal environment but find it way easier to
     ;; work in foreign ones.
-    ;;
-    ;; ...at least that's the hope.
 
     ;; Use regular emacs keybindings for insert-mode (except for ESC-ESC-ESC,
     ;; because vim keybindings are still vim).

@@ -113,7 +113,13 @@ activate it if the current major mode is listed in
                           (looking-back " *# *include +[<\"].*"
                                         (save-excursion (beginning-of-line)
                                                         (point))))))
-    (and (not in-string)
+    ;; HACK Commenting this for bash/PHP, where vars in strings are common.
+    ;;
+    ;; FIXME Figure out how to sanely handle languages where embedding
+    ;; variables in strings is a common idiom. PHP and bash both use sigils, so
+    ;; maybe we can use that somehow (along with reworking my nasty hack to
+    ;; handle sigils elsewhere in this code)...
+    (and ;; (not in-string)
          (not in-comment)
          (not in-include))))
 

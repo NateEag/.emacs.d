@@ -3,6 +3,10 @@
 # key: trap
 # --
 $1 () {
-   $0
+   exit_status=$?
+
+   if [ $exit_status -ne 0 ]; then
+       $0
+   fi
 }
-trap $1 INT TERM ${2:EXIT}
+trap $1 INT TERM EXIT

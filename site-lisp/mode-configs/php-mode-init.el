@@ -56,7 +56,7 @@
 
 (require 'lsp-php)
 
- (setq lsp-php-server-development-checkout
+(setq lsp-php-server-development-checkout
        (expand-file-name "~/third-party/php-language-server/"))
 
 (defun php-mode-init ()

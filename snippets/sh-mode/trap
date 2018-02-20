@@ -1,4 +1,11 @@
 # -*- mode: snippet -*-
+#
+# Insert a bash trap that should execute when the script is terminated,
+# interrupted, or invokes exit with a non-zero status itself.
+#
+# Thus, this provides a much more robust idiom for handling cleanup actions
+# than manually doing it throughout the script.
+#
 # name: trap
 # key: trap
 # --

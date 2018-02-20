@@ -70,6 +70,7 @@
  '(js2-indent-switch-body t nil nil "Crockford may not like it, but I do.")
  '(js2-mode-show-parse-errors nil)
  '(js2-mode-show-strict-warnings nil)
+ '(ledger-reconcile-default-commodity "USD" nil nil "I'm not sure whether I should use '$' or 'USD', but I have USD at present.")
  '(line-number-mode t)
  '(lsp-print-io nil)
  '(magit-diff-refine-hunk (quote all))

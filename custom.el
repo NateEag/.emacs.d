@@ -115,7 +115,6 @@
  '(safe-local-variable-values
    (quote
     ((helm-ag--extra-options . "--ignore elpa/archives")
-     (helm-ag--extra-options "--ignore elpa/archives")
      (ne-yas-auto-insert-snippet-name . "how-i-code-post")
      (ne-yas-auto-insert-snippet-name . "package")
      (eval setq flycheck-eslint-rulesdir

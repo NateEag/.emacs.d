@@ -39,10 +39,6 @@
 ;;     (setq php-sql-mmm-submode-enabled t)))
 
 
-;; This is a basic config for using https://github.com/emacs-lsp/lsp-mode with
-;; https://github.com/felixfbecker/php-language-server (which I'm running
-;; straight out of a local dev repo) to get PHP intelligence inside Emacs.
-;;
 ;; jump-to-def and completion-at-point are both working in my current setup.
 ;;
 ;; lsp-mode can in principle support a lot more than that, and I have hopes of

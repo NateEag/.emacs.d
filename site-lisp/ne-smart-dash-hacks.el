@@ -29,7 +29,12 @@
      (thing-at-point-looking-at (concat "\\(export[:space:]+\\)?"
                                            bash-var-chars
                                            "="))
-     (thing-at-point-looking-at (concat "\\${?" bash-var-chars)))))
+     (thing-at-point-looking-at (concat "\\${?" bash-var-chars))
+     ;; If thing-at-point has an underscore in it, we should probably keep
+     ;; using underscores. Generally, bash commands and inputs lean towards
+     ;; dashes, but sometimes they have underscores, and I have yet to type a
+     ;; command where a single word uses both.
+     (thing-at-point-looking-at "[:space:]+[a-zA-Z0-9]+_+[a-zA-Z0-9_]*"))))
 
 (defun ne-smart-dash-hacks-sh-mode-insert ()
   (interactive)

@@ -274,68 +274,75 @@ The shell command lives in my dotfiles repo."
   :mode "\\.cron\\(tab\\)?\\'"
   :config (add-hook 'crontab-mode-hook 'conf-mode-init))
 
+(use-package evil-smartparens
+  :commands evil-sp-smartparens-config)
+
 (use-package evil
   :commands evil-local-mode
   :config
-  (progn
-    ;; I used to use evil-escape to let me use 'jk' to return to
-    ;; evil-normal-state from evil-insert-state.
-    ;;
-    ;; I have abandoned that by making Control with no other keys send Escape
-    ;; on my keyboards.
-    ;;
-    ;; This change was largely motivated by typing 'jk' way more often than I
-    ;; meant to when working on a machine other than my own. By conforming to
-    ;; standard Vim keybindings and just making it easier to trigger them, I
-    ;; still have a comfortable personal environment but find it way easier to
-    ;; work in foreign ones.
+  ;; I used to use evil-escape to let me use 'jk' to return to
+  ;; evil-normal-state from evil-insert-state.
+  ;;
+  ;; I have abandoned that by making Control with no other keys send Escape
+  ;; on my keyboards.
+  ;;
+  ;; This change was largely motivated by typing 'jk' way more often than I
+  ;; meant to when working on a machine other than my own. By conforming to
+  ;; standard Vim keybindings and just making it easier to trigger them, I
+  ;; still have a comfortable personal environment but find it way easier to
+  ;; work in foreign ones.
 
-    ;; Use regular emacs keybindings for insert-mode (except for ESC-ESC-ESC,
-    ;; because vim keybindings are still vim).
-    (setq evil-insert-state-map (make-sparse-keymap))
-    (define-key evil-insert-state-map (kbd "<escape>") 'evil-normal-state)
+  ;; (setq evil-mode-line-format nil)
 
-    ;; Always use a leader key, because the leader is awesome. See
-    ;; my-keybindings.el for my actual leader keybindings.
-    (global-evil-leader-mode)
-    (evil-leader/set-leader "<SPC>")
+  ;; Use regular emacs keybindings for insert-mode (except for ESC-ESC-ESC,
+  ;; because vim keybindings are still vim).
+  (setq evil-insert-state-map (make-sparse-keymap))
+  (define-key evil-insert-state-map (kbd "<escape>") 'evil-normal-state)
 
-    ;; Turn on surround everywhere.
-    (global-evil-surround-mode)
+  ;; Trying out evil-smartparens. We'll see if it works out.
+  (evil-sp-smartparens-config)
 
-    ;; Use 'gx' for swapping vim textobjects/motions.
-    (evil-exchange-install)
+  ;; Always use a leader key, because the leader is awesome. See
+  ;; my-keybindings.el for my actual leader keybindings.
+  (global-evil-leader-mode)
+  (evil-leader/set-leader "<SPC>")
 
-    ;; Add vim operator for commenting things.
-    (evil-commentary-mode)
+  ;; Turn on surround everywhere.
+  (global-evil-surround-mode)
 
-    (diminish 'evil-commentary-mode)
+  ;; Use 'gx' for swapping vim textobjects/motions.
+  (evil-exchange-install)
 
-    ;; Set up my custom textobjects.
-    (ne/install-textobjects)
+  ;; Add vim operator for commenting things.
+  (evil-commentary-mode)
 
-    ;; If a buffer is empty on evil-mode start, go directly to insert-mode,
-    ;; because we'll almost certainly want to start typing.
-    ;;
-    ;; An empty buffer isn't the *only* case where this is the case, but it's a
-    ;; starting point.
-    (add-hook 'evil-local-mode-hook
-              '(lambda ()
-                 ;; HACK Magit buffers seem to start at size 0, but they
-                 ;; populate very quickly, so waiting just a bit before
-                 ;; checking whether we should be in insert-mode seems to work
-                 ;; okay in practice. Doesn't work for *scratch*, though.
-                 (run-at-time "0.1 sec"
-                              nil
-                              (lambda ()
-                                (when (and evil-local-mode
-                                           (= (buffer-size) 0)
-                                           ;; HACK *scratch* buffer seems to
-                                           ;; start out at 0 length, so I
-                                           ;; explicitly ignore it.
-                                           (not (string-equal (buffer-name)
-                                                              "*scratch*")))
-                                  (evil-insert-state))))))))
+  (diminish 'evil-commentary-mode)
+
+  ;; Set up my custom textobjects.
+  (ne/install-textobjects)
+
+  ;; If a buffer is empty on evil-mode start, go directly to insert-mode,
+  ;; because we'll almost certainly want to start typing.
+  ;;
+  ;; An empty buffer isn't the *only* case where this is the case, but it's a
+  ;; starting point.
+  (add-hook 'evil-local-mode-hook
+            '(lambda ()
+               ;; HACK Magit buffers seem to start at size 0, but they
+               ;; populate very quickly, so waiting just a bit before
+               ;; checking whether we should be in insert-mode seems to work
+               ;; okay in practice. Doesn't work for *scratch*, though.
+               (run-at-time "0.1 sec"
+                            nil
+                            (lambda ()
+                              (when (and evil-local-mode
+                                         (= (buffer-size) 0)
+                                         ;; HACK *scratch* buffer seems to
+                                         ;; start out at 0 length, so I
+                                         ;; explicitly ignore it.
+                                         (not (string-equal (buffer-name)
+                                                            "*scratch*")))
+                                (evil-insert-state)))))))
 
 (use-package magit
   :defer t

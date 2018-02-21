@@ -5,6 +5,10 @@
   maybe I just need to get used to normal-mode's C-o binding for jumping back
   where you last came from?
 
+- Try out evil-smartparens, once I'm a little more used to smartparens itself.
+  Looks like it might do some neat stuff.
+  https://github.com/jschaf/evil-smartparens/
+
 - Figure out how to make smartparens interact nicely with web-mode. '{{' and
   '{%' don't work right when both are on, but I don't see a way to ban
   multi-character sequences from smartparens, and I don't want to lose pairing

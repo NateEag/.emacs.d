@@ -27,12 +27,21 @@
   in favor of it, per this comment of mine:
   https://github.com/magnars/tagedit/pull/15#issuecomment-260336539
 
-- In bash, having smart-dash-mode prefer dashes if the current word begins with
-  '--' would probably make life a lot better. Bonus points: use underscores in
-  variable names and dashes in executable names (yes, requires a bash parser to
-  get perfect but a basic approximation would probably make life better in
-  practice - starts with '$' or ends with '=' should catch most var references,
-  and if it doesn't do one of those it's likely a command or func name).
+- Consider upstreaming a cleaned-up version of my smart-dash-mode hacks file?
+  It's handy for bash but not sure how generally applicable it is. Teaching
+  smart-dash-mode to be smarter about languages with variable sigils could be
+  useful, though (especially for languages like PHP and bash where vars can be
+  embedded in strings, since smart-dash-mode just turns itself off in strings).
+
+- Add a customizable variable to smart-dash-mode that lists modes where
+  variables start with a sigil (e.g. '$'), and in those modes no heuristic is
+  necessary - if point is in a string matching \$[a-zA-Z0-9_]+, you *know* you
+  should insert a _. You can maybe do smarter stuff than just that, too.
+
+- Make a PR to auto-complete for supporting smart-dash-mode.
+
+- Add a workaround to web-mode-init so smart-dash-mode knows when we're in a
+  comment.
 
 - ac-source-css-property and ac-source-css-property-names are missing a bunch of
   bleeding-edge CSS 3 stuff. Get that in there. Ideally, generated from the
@@ -367,21 +376,8 @@
   M-v are the obvious ones. Useful when you're digging through something like wx
   or the JDK looking for a class that might apply.
 
-- Make smart-dash-mode in sh-mode prefer _s when typing var names, and -s when
-  typing most other things (options, filenames, etc). I think that reflects my
-  experience of having it active in sh-mode. I believe this behavior could be
-  built by offering a list of modes where $ should be treated as a variable
-  sigil, and in those modes no heuristic is necessary - if point is in a string
-  matching \$[a-zA-Z0-9_]+, you *know* you should insert a _. Should probably
-  file the suggestion with the author.
-
 - Derive a lightweight envrc-mode from sh-mode and add support for
   direnv-specific things like PATH_add. Google suggests none exists.
-
-- Make a PR to auto-complete for supporting smart-dash-mode.
-
-- Add a workaround to web-mode-init so smart-dash-mode knows when we're in a
-  comment.
 
 - Make a PR to yasnippet for my solution to the 'once' snippet overriding the
   'require_once' snippet.

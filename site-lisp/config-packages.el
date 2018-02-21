@@ -78,6 +78,16 @@
     (define-key notmuch-show-mode-map (kbd "o")
       'notmuch-show-interactively-view-part)
 
+    (define-key notmuch-show-mode-map (kbd "D")
+      (lambda ()
+        "Delete current message and move to the next message or thread.
+
+TODO Make this delete all messages in buffer, a la notmuch-show-archive-thread-then-next?"
+        (interactive)
+        (notmuch-show-tag (list "+deleted" "-inbox" "-unread"))
+        (unless (notmuch-show-next-open-message)
+          (notmuch-show-next-thread t))))
+
     (define-key notmuch-show-mode-map "w"
       (lambda ()
         "Mark message as watched and reply to the sender."

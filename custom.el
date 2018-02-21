@@ -101,7 +101,7 @@
      (:name "all mail" :query "*" :key "a" :sort-order nil)
      (:name "Bug Reports" :query "tag:bug-reports")
      (:name "Sent" :query "from:neagleson@nxtbookmedia.com" :sort-order newest-first :search-type nil))) nil nil "Oldest first is generally the most convenient sort order, but in a few cases I have customized it, such as in Sent, where I'm usually looking for something I sent recently.")
- '(notmuch-search-oldest-first t nil nil "I tried setting this to off. Quite a while later, I'm admitting that whoever chose that default knew what they were doing.")
+ '(notmuch-search-oldest-first t nil nil "This is the default value, but I wanted to explicitly record that I prefer it, after trying both. If you're running a workflow, you usually want to see the oldest thing first, as all else being equal older emails should get responses sooner than newer ones. When you're just searching, if you get lots of results you can just refine your search to find what you're looking for, so the order isn't really relevant there.")
  '(notmuch-show-all-tags-list t nil nil "I like seeing these. I'm not exactly sure why.")
  '(package-enable-at-startup nil)
  '(package-selected-packages

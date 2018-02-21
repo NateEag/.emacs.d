@@ -36,6 +36,9 @@
 
 - Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
 
+- Emacs 26: Move package config into early-init.el, per recently-landed patch
+  in Emacs trunk.
+
 - Suppress aggressive-fill-paragraph-mode while directly above or below markdown
   code blocks.
 

@@ -33,6 +33,9 @@
   useful, though (especially for languages like PHP and bash where vars can be
   embedded in strings, since smart-dash-mode just turns itself off in strings).
 
+- Get smart-dash-mode usable in CSS. Some styles of class naming involve
+  underscores, so it would be nice to have it do the right thing automatically.
+
 - Add a customizable variable to smart-dash-mode that lists modes where
   variables start with a sigil (e.g. '$'), and in those modes no heuristic is
   necessary - if point is in a string matching \$[a-zA-Z0-9_]+, you *know* you

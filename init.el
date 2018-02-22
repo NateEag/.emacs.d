@@ -240,6 +240,10 @@ buffer's file does not exist."
   (unicode-troll-stopper-mode)
   (diminish 'unicode-troll-stopper-mode)
 
+  ;; Not all software uses git, but git-gutter does the right thing if it can't
+  ;; find a parent git repo.
+  (git-gutter-mode)
+
   ;; Auto-fill comments, but not code.
   (comment-auto-fill)
   ;; And do it aggressively.

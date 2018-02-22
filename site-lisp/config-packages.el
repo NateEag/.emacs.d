@@ -344,6 +344,10 @@ The shell command lives in my dotfiles repo."
                                                             "*scratch*")))
                                 (evil-insert-state)))))))
 
+;; Keep git-gutter from showing up in the modeline.
+(use-package git-gutter
+  :diminish)
+
 (use-package magit
   :defer t
   :hook ((magit-mode . magit-svn-mode)

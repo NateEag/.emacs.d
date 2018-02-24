@@ -5,6 +5,11 @@
   maybe I just need to get used to normal-mode's C-o binding for jumping back
   where you last came from?
 
+- Add function to spawn an emacs instance with my installed packages but none
+  of my customizations looking at exactly the file and location I'm currently
+  in. The idea is to make it easy to answer the question "Is a behavior my
+  fault or is it a lower-level bug in my dependencies?"
+
 - Try out evil-smartparens, once I'm a little more used to smartparens itself.
   Looks like it might do some neat stuff.
   https://github.com/jschaf/evil-smartparens/
@@ -536,6 +541,7 @@
   but not for ones I haven't configured. I bet combining one of the existing
   packages with a bit of elisp and .dir-locals.el would do the job.
 
+- Fix M-<backspace> deleting past underscores in python-mode.
 
 - Look into anaconda-mode. It appears to be a wrapper around Jedi that might add
   a bit more intelligence, or something? Popped up in list-packages today.

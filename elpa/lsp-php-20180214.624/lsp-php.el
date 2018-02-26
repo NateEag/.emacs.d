@@ -4,7 +4,7 @@
 ;;
 ;; Author: zg <13853850881@163.com>
 ;; URL: https://github.com/tszg/lsp-php
-;; Package-Version: 20180104.152
+;; Package-Version: 20180214.624
 ;; Package-X-Original-Version: 0
 ;; Package-Requires: ((emacs "25.1") (lsp-mode "3.0"))
 ;; Keywords: convenience, php
@@ -20,17 +20,7 @@
 ;;;###autoload
 (defcustom lsp-php-server-install-dir (file-truename (locate-user-emacs-file "php-language-server/"))
   "Install directory for php-language-server.
-
-It should include a trailing slash."
-  :group 'lsp-mode
-  :risky t
-  :type 'directory)
-
-;;;###autoload
-(defcustom lsp-php-server-development-checkout nil
-  "If set, the path to a user's development checkout of php-language-server.
-
-It should include a trailing slash."
+The slash is expected at the end."
   :group 'lsp-mode
   :risky t
   :type 'directory)
@@ -39,11 +29,6 @@ It should include a trailing slash."
   "Lsp php command."
   (let ((php-language-server-file
 	 (concat lsp-php-server-install-dir "vendor/felixfbecker/language-server/bin/php-language-server.php")))
-
-	(when lsp-php-server-development-checkout
-	  (setq php-language-server-file
-			(concat lsp-php-server-development-checkout "bin/php-language-server.php")))
-
     `("php"
       ,php-language-server-file)))
 

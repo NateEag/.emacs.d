@@ -1121,8 +1121,6 @@ Otherwise this function creates a temporary file with
 `flycheck-temp-prefix' and a random suffix.  The path of the file
 is added to `flycheck-temporaries'.
 
-Add the path of the file to `flycheck-temporaries'.
-
 Return the path of the file."
   (let ((tempfile (convert-standard-filename
                    (if filename
@@ -1151,6 +1149,29 @@ Return the path of the file."
         (push tempfile flycheck-temporaries)
         tempfile)
     (flycheck-temp-file-system filename)))
+
+(defun flycheck-temp-directory (checker)
+  "Return the directory where CHECKER writes temporary files.
+
+Return nil if the CHECKER does not write temporary files."
+  (let ((args (flycheck-checker-arguments checker)))
+    (cond
+     ((memq 'source args) temporary-file-directory)
+     ((memq 'source-inplace args)
+      (if buffer-file-name (file-name-directory buffer-file-name)
+        temporary-file-directory))
+     (t nil))))
+
+(defun flycheck-temp-files-writable-p (checker)
+  "Whether CHECKER can write temporary files.
+
+If CHECKER has `source' or `source-inplace' in its `:command',
+return whether flycheck has the permissions to create the
+respective temporary files.
+
+Return t if CHECKER does not use temporary files."
+  (let ((dir (flycheck-temp-directory checker)))
+    (or (not dir) (file-writable-p dir))))
 
 (defun flycheck-save-buffer-to-file (file-name)
   "Save the contents of the current buffer to FILE-NAME."
@@ -4667,6 +4688,7 @@ default `:verify' function of command checkers."
           (plist-put properties :enabled
                      (lambda ()
                        (and (flycheck-find-checker-executable symbol)
+                            (flycheck-temp-files-writable-p symbol)
                             (or (not enabled) (funcall enabled))))))
 
     (apply #'flycheck-define-generic-checker symbol docstring
@@ -5072,7 +5094,13 @@ CHECKER."
             (list (flycheck-verification-result-new
                    :label "configuration file"
                    :message (if path (format "Found at %S" path) "Not found")
-                   :face (if path 'success 'warning))))))))
+                   :face (if path 'success 'warning)))))
+      ,@(when (not (flycheck-temp-files-writable-p checker))
+          (list (flycheck-verification-result-new
+                 :label "temp directory"
+                 :message (format "%s is not writable"
+                                  (flycheck-temp-directory checker))
+                 :face 'error))))))
 
 
 ;;; Process management for command syntax checkers
@@ -5972,7 +6000,7 @@ otherwise."
                      filename))))))
 
 (defun flycheck-parse-error-with-patterns (err patterns checker)
-  "Parse a gle ERR with error PATTERNS for CHECKER.
+  "Parse a single ERR with error PATTERNS for CHECKER.
 
 Apply each pattern in PATTERNS to ERR, in the given order, and
 return the first parsed error."
@@ -7168,7 +7196,7 @@ See Info Node `(elisp)Byte Compilation'."
             (message (zero-or-more not-newline)
                      (zero-or-more "\n    " (zero-or-more not-newline)))
             line-end)
-   (warning line-start (file-name) ":" line ":" column
+   (warning line-start (file-name) ":" line (optional ":" column)
             ":Warning (check-declare): said\n"
             (message (zero-or-more "    " (zero-or-more not-newline))
                      (zero-or-more "\n    " (zero-or-more not-newline)))
@@ -8568,7 +8596,7 @@ See URL `http://proselint.com/'."
   :command ("proselint" "--json" "-")
   :standard-input t
   :error-parser flycheck-proselint-parse-errors
-  :modes (text-mode markdown-mode gfm-mode))
+  :modes (text-mode markdown-mode gfm-mode message-mode))
 
 (flycheck-define-checker protobuf-protoc
   "A protobuf syntax checker using the protoc compiler.

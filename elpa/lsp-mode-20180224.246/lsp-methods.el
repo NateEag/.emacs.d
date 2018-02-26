@@ -25,26 +25,104 @@
 
 ;;; Code:
 
+;; A ‘lsp--client’ object describes the client-side behavior of a language
+;; server.  It is used to start individual server processes, each of which is
+;; represented by a ‘lsp--workspace’ object.  Client objects are normally
+;; created using ‘lsp-define-stdio-client’ or ‘lsp-define-tcp-client’.  Each
+;; workspace refers to exactly one client, but there can be multiple workspaces
+;; for a single client.
 (cl-defstruct lsp--client
+  ;; ‘language-id’ is a function that receives a buffer as a single argument
+  ;; and should return the language identifier for that buffer.  See
+  ;; https://microsoft.github.io/language-server-protocol/specification#textdocumentitem
+  ;; for a list of language identifiers.  Also consult the documentation for
+  ;; the language server represented by this client to find out what language
+  ;; identifiers it supports or expects.
   (language-id nil :read-only t)
 
   ;; send-async and send-sync are unused field, but haven't been
   ;; removed so as to avoid breaking byte-compiled clients.
+  ;; FIXME: We shouldn’t need to take binary compatibility into account,
+  ;; especially since the ‘lsp--client’ structure is internal.  These fields
+  ;; should just be removed.
   (send-sync nil :read-only t)
   (send-async nil :read-only t)
 
+  ;; FIXME: This field is apparently unused and should be removed.
   (type nil :read-only t)
+
+  ;; ‘new-connection’ is a function that should start a language server process
+  ;; and return a cons (COMMAND-PROCESS . COMMUNICATION-PROCESS).
+  ;; COMMAND-PROCESS must be a process object representing the server process
+  ;; just started.  COMMUNICATION-PROCESS must be a process (including pipe and
+  ;; network processes) that ‘lsp-mode’ uses to communicate with the language
+  ;; server using the language server protocol.  COMMAND-PROCESS and
+  ;; COMMUNICATION-PROCESS may be the same process; in that case
+  ;; ‘new-connection’ may also return that process as a single
+  ;; object. ‘new-connection’ is called with two arguments, FILTER and
+  ;; SENTINEL.  FILTER should be used as process filter for
+  ;; COMMUNICATION-PROCESS, and SENTINEL should be used as process sentinel for
+  ;; COMMAND-PROCESS.
   (new-connection nil :read-only t)
+
+  ;; ‘stderr’ is the name of a buffer to write the standard error to.
+  ;; FIXME: ‘stderr’ should be the actual buffer, and it should be a field of
+  ;; the ‘lsp--workspace’.
   (stderr nil :read-only t)
+
+  ;; ‘get-root’ is a function that should return the workspace root directory
+  ;; for the current buffer.  It may return either a directory name or a
+  ;; directory file name.  The ‘get-root’ function is called without arguments.
+  ;; ‘lsp-mode’ will start one server process per client and root directory.
+  ;; It passes the root directory to the ‘initialize’ method of the language
+  ;; server; see
+  ;; https://microsoft.github.io/language-server-protocol/specification#initialize.
+  ;; Also consult the documentation of your language server for information
+  ;; about what it expects as workspace root.
   (get-root nil :read-only t)
+
+  ;; ‘ignore-regexps’ is a list of regexps.  When a data packet from the
+  ;; language server matches any of these regexps, it will be ignored.  This is
+  ;; intended for dealing with language servers that output non-protocol data.
   (ignore-regexps nil :read-only t)
+
+  ;; ‘ignore-messages’ is a list of regexps.  When a message from the language
+  ;; server matches any of these regexps, it will be ignored.  This is useful
+  ;; for filtering out unwanted messages; such as servers that send nonstandard
+  ;; message types, or extraneous log messages.
   (ignore-messages nil :read-only t)
 
+  ;; ‘notification-handlers’ is a hash table mapping notification method names
+  ;; (strings) to functions handling the respective notifications.  Upon
+  ;; receiving a notification, ‘lsp-mode’ will call the associated handler
+  ;; function passing two arguments, the ‘lsp--workspace’ object and the
+  ;; deserialized notification parameters.
   (notification-handlers (make-hash-table :test 'equal) :read-only t)
+
+  ;; ‘notification-handlers’ is a hash table mapping request method names
+  ;; (strings) to functions handling the respective notifications.  Upon
+  ;; receiving a request, ‘lsp-mode’ will call the associated handler function
+  ;; passing two arguments, the ‘lsp--workspace’ object and the deserialized
+  ;; request parameters.
   (request-handlers (make-hash-table :test 'equal) :read-only t)
+
+  ;; ‘response-handlers’ is a hash table mapping integral JSON-RPC request
+  ;; identifiers for pending asynchronous requests to functions handling the
+  ;; respective responses.  Upon receiving a response from the language server,
+  ;; ‘lsp-mode’ will call the associated response handler function with a
+  ;; single argument, the deserialized response parameters.
   (response-handlers (make-hash-table :test 'eq) :read-only t)
 
+  ;; ‘string-renderers’ is an alist mapping MarkedString language identifiers
+  ;; (see
+  ;; https://microsoft.github.io/language-server-protocol/specification#textDocument_hover)
+  ;; to functions that can render the respective languages.  The rendering
+  ;; functions are called with a single argument, the MarkedString value.  They
+  ;; should return a propertized string with the rendered output.
   (string-renderers '())
+
+  ;; ‘last-id’ is the last JSON-RPC identifier used.
+  ;; FIXME: ‘last-id’ should be in ‘lsp--workspace’.
   (last-id 0))
 
 (cl-defstruct lsp--registered-capability
@@ -52,19 +130,58 @@
   (method " " :type string)
   (options nil))
 
+;; A ‘lsp--workspace’ object represents exactly one language server process.
 (cl-defstruct lsp--workspace
+  ;; ‘parser’ is a ‘lsp--parser’ object used to parse messages for this
+  ;; workspace.  Parsers are not shared between workspaces.
   (parser nil :read-only t)
-  ;; file-versions is a hashtable of files "owned" by the workspace
+
+  ;; ‘file-versions’ is a hashtable of files "owned" by the workspace.  It maps
+  ;; file names to file versions.  See
+  ;; https://microsoft.github.io/language-server-protocol/specification#versionedtextdocumentidentifier.
   (file-versions nil :read-only t)
+
+  ;; ‘server-capabilities’ is a hash table of the language server capabilities.
+  ;; It is the hash table representation of a LSP ServerCapabilities structure;
+  ;; cf. https://microsoft.github.io/language-server-protocol/specification#initialize.
   (server-capabilities nil)
+
+  ;; ‘registered-server-capabilities’ is a list of hash tables that represent
+  ;; dynamically-registered Registration objects.  See
+  ;; https://microsoft.github.io/language-server-protocol/specification#client_registerCapability.
   (registered-server-capabilities nil)
+
+  ;; ‘root’ is a directory name or a directory file name for the workspace
+  ;; root.  ‘lsp-mode’ passes this directory to the ‘initialize’ method of the
+  ;; language server; see
+  ;; https://microsoft.github.io/language-server-protocol/specification#initialize.
   (root nil :ready-only t)
+
+  ;; ‘client’ is the ‘lsp--client’ object associated with this workspace.
   (client nil :read-only t)
+
+  ;; FIXME: ‘change-timer-disabled’ is unused and should be removed.
   (change-timer-disabled nil)
-  (proc nil) ;; the process we communicate with
-  (cmd-proc nil) ;; the process we launch initially
-  (buffers nil) ;; a list of buffers associated with this workspace
-  (highlight-overlays nil) ;; a list of overlays used for highlighting the symbol under point
+
+  ;; ‘proc’ is a process object; it may represent a regular process, a pipe, or
+  ;; a network connection.  ‘lsp-mode’ communicates with ‘proc’ using the
+  ;; language server protocol.  ‘proc’ corresponds to the COMMUNICATION-PROCESS
+  ;; element of the return value of the client’s ‘get-root’ field, which see.
+  (proc nil)
+
+  ;; ‘proc’ is a process object; it must represent a regular process, not a
+  ;; pipe or network process.  It represents the actual server process that
+  ;; corresponds to this workspace.  ‘cmd-proc’ corresponds to the
+  ;; COMMAND-PROCESS element of the return value of the client’s ‘get-root’
+  ;; field, which see.
+  (cmd-proc nil)
+
+  ;; ‘buffers’ is a list of buffers associated with this workspace.
+  (buffers nil)
+
+  ;; ‘highlight-overlays’ is a hash table mapping buffers to a list of overlays
+  ;; used for highlighting the symbol under point.
+  (highlight-overlays (make-hash-table :test 'eq) :read-only t)
 
   ;; Extra client capabilities provided by third-party packages using
   ;; `lsp-register-client-capabilities'. It's value is an alist of (PACKAGE-NAME
@@ -1060,10 +1177,13 @@ Added to `after-change-functions'."
                               (buffer-substring-no-properties (point-min) (point-max)))
                             nil)))))))
 
-(define-inline lsp--text-document-position-params ()
-  "Make TextDocumentPositionParams for the current point in the current document."
-  (inline-quote (list :textDocument (lsp--text-document-identifier)
-                  :position (lsp--position (lsp--cur-line) (lsp--cur-column)))))
+(define-inline lsp--text-document-position-params (&optional identifier position)
+  "Make TextDocumentPositionParams for the current point in the current document.
+If IDENTIFIER and POSITION are non-nil, they will be used as the document identifier
+and the position respectively."
+  (inline-quote (list :textDocument (or ,identifier (lsp--text-document-identifier))
+                  :position (or ,position
+                              (lsp--position (lsp--cur-line) (lsp--cur-column))))))
 
 (define-inline lsp--text-document-code-action-params ()
   "Make CodeActionParams for the current region in the current document."
@@ -1139,11 +1259,10 @@ https://microsoft.github.io/language-server-protocol/specification#textDocument_
   (lsp--gethash "sortText" c (gethash "label" c "")))
 
 (defun lsp--sort-completions (completions)
-  (sort completions #'(lambda (c1 c2)
-                        (when (string-lessp
-                               (lsp--sort-string c1)
-                               (lsp--sort-string c2))
-                          t))))
+  (sort completions (lambda (c1 c2)
+                      (string-lessp
+                        (lsp--sort-string c1)
+                        (lsp--sort-string c2)))))
 
 (defun lsp--get-completions ()
   (with-demoted-errors "Error in ‘lsp--get-completions’: %S"
@@ -1531,8 +1650,11 @@ interface DocumentRangeFormattingParams {
     (3 . lsp-face-highlight-write)))
 
 (defun lsp--remove-cur-overlays ()
-  (dolist (overlay (lsp--workspace-highlight-overlays lsp--cur-workspace))
-    (delete-overlay overlay)))
+  (let ((overlays (lsp--workspace-highlight-overlays lsp--cur-workspace))
+         (buf (current-buffer)))
+    (dolist (overlay (gethash buf overlays))
+      (delete-overlay overlay))
+    (remhash buf overlays)))
 
 (defun lsp-symbol-highlight ()
   "Highlight all relevant references to the symbol under point."
@@ -1549,20 +1671,24 @@ A reference is highlighted only if it is visible in a window."
   (lambda (highlights)
     (with-current-buffer buf
       (lsp--remove-cur-overlays)
-      (let ((windows-on-buffer (get-buffer-window-list nil nil 'visible)))
-        (dolist (highlight highlights)
-          (let* ((range (gethash "range" highlight nil))
-                  (kind (gethash "kind" highlight 1))
-                  (start-point (lsp--position-to-point (gethash "start" range)))
-                  (end-point (lsp--position-to-point (gethash "end" range)))
-                  overlay)
-            (dolist (win windows-on-buffer)
-              (when (or (pos-visible-in-window-group-p start-point win t)
-                      (pos-visible-in-window-group-p end-point win t))
-                (setq overlay (make-overlay start-point end-point))
-                (overlay-put overlay 'face
-                  (cdr (assq kind lsp--highlight-kind-face)))
-                (push overlay (lsp--workspace-highlight-overlays lsp--cur-workspace))))))))))
+      (when (and highlights (/= (length highlights) 0))
+        (let* ((windows-on-buffer (get-buffer-window-list nil nil 'visible))
+                (overlays (lsp--workspace-highlight-overlays lsp--cur-workspace))
+                (buf-overlays (gethash (current-buffer) overlays)))
+          (dolist (highlight highlights)
+            (let* ((range (gethash "range" highlight nil))
+                    (kind (gethash "kind" highlight 1))
+                    (start-point (lsp--position-to-point (gethash "start" range)))
+                    (end-point (lsp--position-to-point (gethash "end" range)))
+                    overlay)
+              (dolist (win windows-on-buffer)
+                (when (or (pos-visible-in-window-group-p start-point win t)
+                        (pos-visible-in-window-group-p end-point win t))
+                  (setq overlay (make-overlay start-point end-point))
+                  (overlay-put overlay 'face
+                    (cdr (assq kind lsp--highlight-kind-face)))
+                  (push overlay buf-overlays)
+                  (puthash (current-buffer) buf-overlays overlays))))))))))
 
 (defconst lsp--symbol-kind
   '((1 . "File")
@@ -1617,9 +1743,10 @@ A reference is highlighted only if it is visible in a window."
                   :position ,(gethash "start" (gethash "range" location))))
 
 (defun lsp--symbol-info-to-identifier (symbol)
-  (propertize (gethash "name" symbol)
-              'ref-params (lsp--make-reference-params
-                           (lsp--location-to-td-position (gethash "location" symbol)))))
+  (let ((td-params (lsp--location-to-td-position (gethash "location" symbol))))
+    (propertize (gethash "name" symbol)
+      'ref-params (lsp--make-reference-params td-params)
+      'def-params td-params)))
 
 (defun lsp--get-document-symbols ()
   (lsp--cur-workspace-check)

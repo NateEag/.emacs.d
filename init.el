@@ -437,11 +437,32 @@ buffer's file does not exist."
                "\\.*jshintrc\\'"
                "\\.tern-project\\'")
 
-;; If we're running in a window system, start an emacs server, so emacsclient
-;; can connect to this instance.
-(require 'server)
-(when (and (display-graphic-p) (not (eq t (server-running-p))))
-    (server-start))
+;; Start an emacs server as needed so emacsclient has something to connect to.
+(when (display-graphic-p)
+  (require 'server)
+
+  ;; I start a second Emacs instance relatively often to test my init code,
+  ;; and sometimes I wind up killing the original and carrying on in the new
+  ;; one.
+  ;;
+  ;; When that happens, this ensures the server get itself running so that
+  ;; shell commands depending on $EDITOR Just Work.
+  ;;
+  ;; TODO Use server-mode-hook and/or kill-emacs-hook to push a notification to
+  ;; other Emacsen that the server has died, thereby avoiding the various
+  ;; issues attendant on polling. Probably not worth fixing until it actually
+  ;; causes me an issue, though.
+
+  (setq ne-start-emacs-server-timer (run-at-time (current-time)
+                                                 30
+                                                 #'ne-maybe-start-emacs-server))
+  (defun ne-maybe-start-emacs-server ()
+    (message "Checking for server...")
+    (if (not (eq t (server-running-p)))
+        (progn
+          (message "Starting server...")
+          (server-start)
+          (cancel-timer ne-start-emacs-server-timer)))))
 
 ;; Just for grins, see how long starting up took.
 (add-hook 'after-init-hook

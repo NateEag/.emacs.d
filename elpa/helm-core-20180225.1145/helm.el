@@ -225,6 +225,7 @@ vectors, so don't use strings to define them."
     (define-key map (kbd "C-{")        'helm-enlarge-window)
     (define-key map (kbd "C-c -")      'helm-swap-windows)
     (define-key map (kbd "C-c _")      'helm-toggle-full-frame)
+    (define-key map (kbd "C-c %")      'helm-exchange-minibuffer-and-header-line)
     (define-key map (kbd "C-c C-y")    'helm-yank-selection)
     (define-key map (kbd "C-c C-k")    'helm-kill-selection-and-quit)
     (define-key map (kbd "C-c C-i")    'helm-copy-to-buffer)
@@ -1380,14 +1381,16 @@ This is only used when helm is using
 (defconst helm--frame-default-attributes
   '(width height tool-bar-lines left top
     title undecorated vertical-scroll-bars
-    visible fullscreen menu-bar-lines undecorated)
+    visibility fullscreen menu-bar-lines undecorated)
   "Frame parameters to save in `helm--last-frame-parameters'.")
 (defvar helm--last-frame-parameters nil
   "Frame parameters to save for later resuming.
 Local to `helm-buffer'.")
 (defvar helm--executing-helm-action nil
   "Non nil when action is triggering a new helm-session.
-This happen when action is executed from `helm-exit-and-execute-action'")
+This may be let bounded in other places to notify the display function
+to reuse the same frame parameters as the previous helm session just
+like resume would do.")
 
 ;; Utility: logging
 (defun helm-log (format-string &rest args)
@@ -1734,12 +1737,14 @@ If NO-UPDATE is non-`nil', skip executing `helm-update'."
 
 (defun helm-get-selection (&optional buffer force-display-part source)
   "Return the currently selected item or nil.
+
 if BUFFER is nil or unspecified, use helm-buffer as default value.
 If FORCE-DISPLAY-PART is non-`nil', return the display string.
-If FORCE-DISPLAY-PART value is 'withprop the display string is returned
+If FORCE-DISPLAY-PART value is `withprop' the display string is returned
 with its properties."
   (setq buffer (or buffer helm-buffer))
-  (unless (helm-empty-buffer-p buffer)
+  (unless (or (helm-empty-buffer-p buffer)
+              (helm-pos-header-line-p))
     (with-current-buffer buffer
       (let* ((disp-fn (if (eq force-display-part 'withprop)
                           'buffer-substring
@@ -1852,6 +1857,10 @@ i.e functions called with RET."
   (setq helm-saved-action action)
   (setq helm-saved-selection (or (helm-get-selection) ""))
   (setq helm--executing-helm-action t)
+  ;; When toggling minibuffer and header-line, we want next action
+  ;; inherit this setting.
+  (helm-set-local-variable 'helm-echo-input-in-header-line
+                           (with-helm-buffer helm-echo-input-in-header-line))
   ;; Ensure next action use same display function as initial helm-buffer when
   ;; helm-actions-inherit-frame-settings is non nil.
   (when (and helm-actions-inherit-frame-settings
@@ -2304,8 +2313,15 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
                    (helm-buffer (or any-buffer helm-buffer)))
                (helm-initialize
                 any-resume any-input any-default any-sources)
-               (helm-display-buffer helm-buffer any-resume)
-               (select-window (helm-window))
+               ;; We don't display helm-buffer here to avoid popping
+               ;; up a window or a frame when exiting immediately when
+               ;; only one candidate (this avoid having the helm frame
+               ;; flashing), lets first compute candidates and if more
+               ;; than one display helm-buffer (this is done later in
+               ;; helm-read-pattern-maybe).
+               (unless helm-execute-action-at-once-if-one
+                 (helm-display-buffer helm-buffer any-resume)
+                 (select-window (helm-window)))
                ;; We are now in helm-buffer.
                (unless helm-allow-mouse
                  (helm--remap-mouse-mode 1)) ; Disable mouse bindings.
@@ -2786,16 +2802,21 @@ Note that this feature is available only with emacs-25+."
                 (vertical-scroll-bars . nil)
                 (menu-bar-lines . 0)
                 (fullscreen . nil)
-                (visible . ,(null helm-display-buffer-reuse-frame))
+                (visibility . ,(null helm-display-buffer-reuse-frame))
                 (minibuffer . t))))
            display-buffer-alist)
-      ;; Add the hook inconditionally, if
-      ;; helm-echo-input-in-header-line is nil helm-hide-minibuffer-maybe
-      ;; will have anyway no effect so no need to remove the hook.
-      (add-hook 'helm-minibuffer-set-up-hook 'helm-hide-minibuffer-maybe)
-      (with-helm-buffer
-        (setq-local helm-echo-input-in-header-line
-                    (not (> (cdr pos) half-screen-size))))
+      ;; Display minibuffer above or below only in initial session,
+      ;; not on a session triggered by action, this way if user have
+      ;; toggled minibuffer and header-line manually she keeps this
+      ;; setting in next action.
+      (unless (or helm--executing-helm-action resume)
+        ;; Add the hook inconditionally, if
+        ;; helm-echo-input-in-header-line is nil helm-hide-minibuffer-maybe
+        ;; will have anyway no effect so no need to remove the hook.
+        (add-hook 'helm-minibuffer-set-up-hook 'helm-hide-minibuffer-maybe)
+        (with-helm-buffer
+          (setq-local helm-echo-input-in-header-line
+                      (not (> (cdr pos) half-screen-size)))))
       (helm-display-buffer-popup-frame buffer default-frame-alist)
       ;; When frame size have been modified manually by user restore
       ;; it to default value unless resuming or not using
@@ -3032,17 +3053,17 @@ please don't use it outside helm.
   (setq helm--maybe-use-default-as-input nil))
 
 (defun helm-read-pattern-maybe (any-prompt any-input
-                                           any-preselect any-resume any-keymap
-                                           any-default any-history)
+                                any-preselect any-resume any-keymap
+                                any-default any-history)
   "Read pattern with prompt ANY-PROMPT and initial input ANY-INPUT.
 For ANY-PRESELECT ANY-RESUME ANY-KEYMAP ANY-DEFAULT ANY-HISTORY, See `helm'."
-  (if (and (helm-resume-p any-resume)
+  (with-helm-buffer
+    (if (and (helm-resume-p any-resume)
            ;; When no source, helm-buffer is empty
            ;; or contain non--candidate lines (e.g grep exit status)
            (helm-get-current-source))
       (helm-mark-current-line t)
     (helm-update any-preselect))
-  (with-helm-buffer
     (let* ((src        (helm-get-current-source))
            (src-keymap (assoc-default 'keymap src))
            (hist       (or (and any-history (symbolp any-history) any-history)
@@ -3105,6 +3126,9 @@ For ANY-PRESELECT ANY-RESUME ANY-KEYMAP ANY-DEFAULT ANY-HISTORY, See `helm'."
              (let ((tap (or any-default
                             (with-helm-current-buffer
                               (thing-at-point 'symbol)))))
+               (when helm-execute-action-at-once-if-one
+                 (helm-display-buffer helm-buffer any-resume)
+                 (select-window (helm-window)))
                (unwind-protect
                    (minibuffer-with-setup-hook
                        (lambda ()
@@ -3950,10 +3974,14 @@ without recomputing them, it should be a list of lists."
   ;; we have two windows even with `helm-full-frame'.
   ;; So go back to one window when updating if `helm-full-frame'
   ;; is non-`nil'.
-  (with-helm-window
-    (when (and helm-onewindow-p
-               (not (helm-action-window)))
-      (delete-other-windows)))
+  (when (with-helm-buffer
+          (and helm-onewindow-p
+               ;; We are not displaying helm-buffer in a frame and
+               ;; helm-window is already displayed.
+               (not helm--buffer-in-new-frame-p)
+               (helm-window)
+               (not (helm-action-window))))
+    (with-helm-window (delete-other-windows)))
   (with-current-buffer (helm-buffer-get)
     (set (make-local-variable 'helm-input-local) helm-pattern)
     (unwind-protect
@@ -3996,12 +4024,14 @@ without recomputing them, it should be a list of lists."
           (helm-log-run-hook 'helm-after-update-hook)))
       (when preselect
         (helm-log "Update preselect candidate %s" preselect)
-        (helm-preselect preselect source))
+        (if (helm-window)
+            (with-helm-window (helm-preselect preselect source))
+          (helm-preselect preselect source)))
       (setq helm--force-updating-p nil))
     (helm-log "end update")))
 
 (defun helm-update-source-p (source)
-  "Whether SOURCE need updating or not."
+  "Whether SOURCE needs updating or not."
   (let ((len (string-width
               (if (assq 'multimatch source)
                   ;; Don't count spaces entered when using
@@ -4025,9 +4055,13 @@ without recomputing them, it should be a list of lists."
 (defun helm--update-move-first-line ()
   "Goto first line of `helm-buffer'."
   (goto-char (point-min))
-  (helm-move-selection-common :where 'line
-                              :direction 'next
-                              :follow t))
+  (if (helm-window)
+      (helm-move-selection-common :where 'line
+                                  :direction 'next
+                                  :follow t)
+    (forward-line 1)
+    (helm-mark-current-line)
+    (helm-follow-execute-persistent-action-maybe)))
 
 (cl-defun helm-force-update (&optional preselect (recenter t))
   "Force recalculation and update of candidates.
@@ -4042,14 +4076,16 @@ update or moved to PRESELECT, if specified.
 The helm-window is recentered at the end when RECENTER is `t'
 which is the default, RECENTER can be also a number in this case it is
 passed as argument to `recenter'."
-  (with-helm-window
+  (with-helm-buffer
     (let* ((source    (helm-get-current-source))
            (selection (helm-aif (helm-get-selection nil t source)
                           (regexp-quote it))))
       (setq helm--force-updating-p t)
       (mapc 'helm-force-update--reinit (helm-get-sources))
       (helm-update (or preselect selection) source)
-      (and recenter (recenter (and (numberp recenter) recenter))))))
+      (when (and (helm-window) recenter)
+        (with-helm-window
+          (recenter (and (numberp recenter) recenter)))))))
 
 (defun helm-refresh ()
   "Force recalculation and update of candidates."
@@ -4541,7 +4577,7 @@ Returns nil for any other value of UNIT."
   "Skip source header or candidates separator when going in DIRECTION.
 DIRECTION is either 'next or 'previous.
 Same as `helm-skip-header-and-separator-line' but ensure
-point is moved to the right place when at bop or eob."
+point is moved to the right place when at bob or eob."
   (helm-skip-header-and-separator-line direction)
   (and (bobp) (forward-line 1))     ; Skip first header.
   (and (eobp) (forward-line -1)))   ; Avoid last empty line.
@@ -4671,6 +4707,23 @@ mode and header lines."
                :background (face-background 'default))
          header-line-format)
         (when update (force-mode-line-update))))))
+
+(defun helm-exchange-minibuffer-and-header-line ()
+  "Display minibuffer in header-line and vice versa for current helm session.
+
+This is a toggle command."
+  (interactive)
+  (with-helm-window
+    (add-hook 'helm-minibuffer-set-up-hook 'helm-hide-minibuffer-maybe)
+    (setq-local helm-echo-input-in-header-line
+                (not helm-echo-input-in-header-line))
+    (with-selected-window (minibuffer-window)
+      (if (with-helm-buffer helm-echo-input-in-header-line)
+          (helm-hide-minibuffer-maybe)
+        (remove-overlays)
+        (setq cursor-type t)))
+    (helm-display-mode-line (helm-get-current-source) t)))
+(put 'helm-exchange-minibuffer-and-header-line 'helm-only t)
 
 (defun helm--update-header-line ()
   ;; This should be used in `post-command-hook',
@@ -4992,9 +5045,12 @@ first source."
 
 (defun helm-mark-current-line (&optional resumep nomouse)
   "Move `helm-selection-overlay' to current line.
-Note that this is unrelated to visible marks used for marking
+When RESUMEP is non nil move overlay to `helm-selection-point'.
+When NOMOUSE is specified do not set mouse bindings.
+
+Note that selection is unrelated to visible marks used for marking
 candidates."
-  (with-helm-window
+  (with-helm-buffer
     (when resumep
       (goto-char helm-selection-point))
     (move-overlay
@@ -5213,7 +5269,7 @@ element of the cons cell, then the second, and so on. This allows
 selection of duplicate candidates after the first.
 
 Optional argument SOURCE is a Helm source object."
-  (with-helm-window
+  (with-helm-buffer
     (when candidate-or-regexp
       (if source
           (helm-goto-source source)
@@ -6477,7 +6533,6 @@ or `helm-follow-input-idle-delay' or `helm-input-idle-delay' secs."
                         (member (assoc-default 'name src)
                                 helm-source-names-using-follow)))
                (null (eq (assoc-default 'follow src) 'never))
-               (helm-window)
                (helm-get-selection nil nil src))
       (helm-follow-mode-set-source 1 src)
       (run-with-idle-timer at nil (lambda ()
@@ -6495,7 +6550,7 @@ or `helm-follow-input-idle-delay' or `helm-input-idle-delay' secs."
 ;;; Auto-resize mode
 ;;
 (defun helm--autoresize-hook (&optional max-height min-height)
-  (with-helm-window
+  (with-helm-buffer
     (fit-window-to-buffer nil
                           (/ (* (frame-height)
                                 (or max-height helm-autoresize-max-height))

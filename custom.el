@@ -73,6 +73,7 @@
  '(js2-mode-show-strict-warnings nil)
  '(ledger-reconcile-default-commodity "USD" nil nil "I'm not sure whether I should use '$' or 'USD', but I have USD at present.")
  '(line-number-mode t)
+ '(lsp-php-show-file-parse-notifications nil nil nil "I don't really care about these messages. I just want to know when things fail.")
  '(lsp-print-io nil)
  '(magit-diff-refine-hunk (quote all))
  '(magit-diff-use-overlays nil)

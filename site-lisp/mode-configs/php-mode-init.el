@@ -52,9 +52,6 @@
 
 (require 'lsp-php)
 
-(setq lsp-php-server-development-checkout
-       (expand-file-name "~/third-party/php-language-server/"))
-
 (defun php-mode-init ()
   "Load my particular tweaks for php-mode."
 
@@ -99,6 +96,10 @@
   ;;
   ;; The server takes forever to analyze large projects, but you can mostly
   ;; still use Emacs while it does it.
+
+  (setq lsp-php-language-server-command
+        (list "php"
+              (expand-file-name "~/third-party/php-language-server/bin/php-language-server.php")))
 
   (lsp-php-enable))
 

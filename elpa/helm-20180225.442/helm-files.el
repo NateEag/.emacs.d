@@ -415,7 +415,7 @@ Of course you can also write your own function to do something else."
     (define-key map (kbd "C-M-%")         'helm-ff-run-query-replace-regexp)
     (define-key map (kbd "C-c =")         'helm-ff-run-ediff-file)
     (define-key map (kbd "M-=")           'helm-ff-run-ediff-merge-file)
-    (define-key map (kbd "M-p")           'helm-ff-run-switch-to-history)
+    (define-key map (kbd "M-p")           'helm-find-files-history)
     (define-key map (kbd "C-c h")         'helm-ff-file-name-history)
     (define-key map (kbd "M-i")           'helm-ff-properties-persistent)
     (define-key map (kbd "C-}")           'helm-narrow-window)
@@ -538,7 +538,6 @@ Don't set it directly, use instead `helm-ff-auto-update-initial-value'.")
    "Relsymlink file(s) `C-u to follow'" 'helm-find-files-relsymlink
    "Hardlink file(s) `M-H, C-u to follow'" 'helm-find-files-hardlink
    "Find file other window `C-c o'" 'helm-find-files-other-window
-   "Switch to history `M-p'" 'helm-find-files-switch-to-hist
    "Find file other frame `C-c C-o'" 'find-file-other-frame
    "Print File `C-c p, C-u to refresh'" 'helm-ff-print
    "Locate `C-x C-f, C-u to specify locate db'" 'helm-ff-locate)
@@ -714,7 +713,7 @@ ACTION must be an action supported by `helm-dired-action'."
                                      (if helm-ff-transformer-show-only-basename
                                          (helm-basename cand) cand))))
                       :initial-input (helm-dwim-target-directory)
-                      :history (helm-find-files-history :comp-read nil)))))
+                      :history (helm-find-files-history nil :comp-read nil)))))
          (dest-dir-p (file-directory-p dest))
          (dest-dir   (helm-basedir dest)))
     (unless (or dest-dir-p (file-directory-p dest-dir))
@@ -837,10 +836,6 @@ layout."
                                 helm-ff-default-directory
                               (file-name-directory candidate))))
     (helm-etags-select helm-current-prefix-arg)))
-
-(defun helm-find-files-switch-to-hist (_candidate)
-  "Switch to helm-find-files history."
-  (helm-find-files t))
 
 (defvar eshell-command-aliases-list nil)
 (defvar helm-eshell-command-on-file-input-history nil)
@@ -1348,15 +1343,6 @@ Behave differently depending of `helm-selection':
   "Same as `helm-ff-RET' but used in must-match map."
   (interactive)
   (helm-ff-RET-1 t))
-
-(defun helm-ff-run-switch-to-history ()
-  "Run Switch to history action from `helm-source-find-files'."
-  (interactive)
-  (with-helm-alive-p
-    (when (helm-file-completion-source-p)
-      (let ((helm-actions-inherit-frame-settings t))
-        (helm-exit-and-execute-action 'helm-find-files-switch-to-hist)))))
-(put 'helm-ff-run-switch-to-history 'helm-only t)
 
 (defun helm-ff-run-grep ()
   "Run Grep action from `helm-source-find-files'."
@@ -2859,8 +2845,8 @@ If a prefix arg is given or `helm-follow-mode' is on open file."
                  (unless (file-directory-p image-dired-dir)
                    (make-directory image-dired-dir))
                  (switch-to-buffer image-dired-display-image-buffer)
-                 (image-dired-display-image candidate)
-                 (message nil)
+                 (cl-letf (((symbol-function 'message) #'ignore))
+                   (image-dired-display-image candidate))
                  (with-current-buffer image-dired-display-image-buffer
                    (let ((exif-data (helm-ff-exif-data candidate)))
                      (setq default-directory helm-ff-default-directory)
@@ -3016,10 +3002,11 @@ If a prefix arg is given or `helm-follow-mode' is on open file."
            (file-relative-name candidate))
           (t candidate))))
 
-(cl-defun helm-find-files-history (&key (comp-read t))
+(cl-defun helm-find-files-history (arg &key (comp-read t))
   "The `helm-find-files' history.
 Show the first `helm-ff-history-max-length' elements of
 `helm-ff-history' in an `helm-comp-read'."
+  (interactive "p")
   (let ((history (when helm-ff-history
                    (helm-fast-remove-dups helm-ff-history
                                           :test 'equal))))
@@ -3029,14 +3016,21 @@ Show the first `helm-ff-history-max-length' elements of
                 (cl-subseq history 0 helm-ff-history-max-length)
               history))
       (if comp-read
-          (helm-comp-read
-           "Switch to Directory: "
-           helm-ff-history
-           :name "Helm Find Files History"
-           :must-match t
-           :fuzzy (helm-ff-fuzzy-matching-p)
-           :buffer helm-ff-history-buffer-name)
+          (let ((src (helm-build-sync-source "Helm Find Files History"
+                       :candidates helm-ff-history
+                       :fuzzy-match (helm-ff-fuzzy-matching-p)
+                       :persistent-action 'ignore
+                       :migemo t
+                       :action (lambda (candidate)
+                                 (if arg
+                                     (helm-set-pattern
+                                      (expand-file-name candidate))
+                                   (identity candidate))))))
+            (helm :sources src
+                  :buffer helm-ff-history-buffer-name
+                  :allow-nest t))
         helm-ff-history))))
+(put 'helm-find-files-history 'helm-only t)
 
 (defun helm-find-files-1 (fname &optional preselect)
   "Find FNAME filename with PRESELECT filename preselected.
@@ -3763,7 +3757,7 @@ Called with a prefix arg show history if some.
 Don't call it from programs, use `helm-find-files-1' instead.
 This is the starting point for nearly all actions you can do on files."
   (interactive "P")
-  (let* ((hist            (and arg helm-ff-history (helm-find-files-history)))
+  (let* ((hist            (and arg helm-ff-history (helm-find-files-history nil)))
          (smart-input     (or hist (helm-find-files-initial-input)))
          (default-input   (expand-file-name (helm-current-directory)))
          (input           (cond (helm-find-files-ignore-thing-at-point
@@ -3793,11 +3787,17 @@ This is the starting point for nearly all actions you can do on files."
     (when (and hist (buffer-live-p (get-buffer helm-ff-history-buffer-name)))
       (helm-set-local-variable 'helm-display-function
                                (with-current-buffer helm-ff-history-buffer-name
-                                 helm-display-function)))
+                                 helm-display-function)
+                               'helm--last-frame-parameters
+                               (with-current-buffer helm-ff-history-buffer-name
+                                 helm--last-frame-parameters)))
     (set-text-properties 0 (length input) nil input)
     (setq current-prefix-arg nil)
-    (helm-find-files-1 input (and presel (null helm-ff-no-preselect)
-                                  (concat "^" (regexp-quote presel))))))
+    ;; Allow next helm session to reuse helm--last-frame-parameters as
+    ;; resume would do.
+    (let ((helm--executing-helm-action (not (null hist))))
+      (helm-find-files-1 input (and presel (null helm-ff-no-preselect)
+                                    (concat "^" (regexp-quote presel)))))))
 
 ;;;###autoload
 (defun helm-delete-tramp-connection ()

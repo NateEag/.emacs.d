@@ -211,6 +211,7 @@ Italic     => A non-file buffer.
 \\[helm-buffer-save-persistent]\t\tSave buffer without leaving Helm.
 \\[helm-buffer-run-kill-buffers]\t\tDelete marked buffers and leave Helm.
 \\[helm-buffer-run-kill-persistent]\t\tDelete buffer without leaving Helm.
+\\[helm-buffer-run-rename-buffer]\t\tRename buffer.
 \\[helm-toggle-all-marks]\t\tToggle all marks.
 \\[helm-mark-all]\t\tMark all.
 \\[helm-toggle-buffers-details]\t\tToggle details.
@@ -820,7 +821,7 @@ buffer is kept and files are displayed next to it.
 \\[helm-ff-rotate-left-persistent]\t\tRotate image left.
 \\[helm-ff-rotate-right-persistent]\t\tRotate image right.
 \\[helm-find-files-up-one-level]\t\tGo to parent directory.
-\\[helm-ff-run-switch-to-history]\t\tSwitch to the vistied-directory history.
+\\[helm-find-files-history]\t\tSwitch to the visited-directory history.
 \\[helm-ff-file-name-history]\t\tSwitch to file name history.
 \\[helm-ff-properties-persistent]\t\tShow file properties in a tooltip.
 \\[helm-mark-all]\t\tMark all visible candidates.

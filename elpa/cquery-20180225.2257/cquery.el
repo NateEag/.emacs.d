@@ -39,6 +39,9 @@
 (require 'cquery-semantic-highlighting)
 (require 'cquery-codelens)
 (require 'cquery-tree)
+(require 'cquery-call-hierarchy)
+(require 'cquery-inheritance-hierarchy)
+(require 'cquery-member-hierarchy)
 
 ;; ---------------------------------------------------------------------
 ;;   Customization
@@ -69,6 +72,31 @@ Relative to the project root directory."
   nil
   "Additional initializationOptions passed to cquery."
   :type '(repeat string)
+  :group 'cquery)
+
+(defcustom cquery-project-root-function
+  nil
+  "A function used to find the project root.
+
+The following methods are applied in order to get the project root.
+* `cquery-project-root-function'
+* `cquery-project-roots'
+* projectile
+* `.cquery' or `compile_commands.json'
+"
+  :type 'function
+  :group 'cquery)
+
+(defcustom cquery-project-roots
+  nil
+  "A list of project roots that will be matched against the source filename first
+to get the project root, before consulting `projectile' or `project'.
+
+This is useful when your project has subprojects. Otherwise `projectile' and
+`project' may think the file resides in a subproject and thus the file
+does not belong to the current workspace.
+"
+  :type '(repeat directory)
   :group 'cquery)
 
 ;; ---------------------------------------------------------------------

@@ -30,7 +30,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-This manual is for Magit version 2.11.0 (2.11.0-558-gee6a6d86+1).
+This manual is for Magit version 2.11.0 (2.11.0-566-g7c534123c+1).
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -2553,11 +2553,11 @@ variable.
      are inserted, and option ‘magit-module-sections-nested’ controls
      whether they are wrapped in an additional section.
 
-   • Option: magit-module-sections-hook
+ -- User Option: magit-module-sections-hook
 
      Hook run by ‘magit-insert-modules’.
 
-   • Option: magit-module-sections-nested
+ -- User Option: magit-module-sections-nested
 
      This option controls whether ‘magit-insert-modules’ wraps inserted
      sections in an additional section.
@@ -6855,7 +6855,8 @@ The command ‘magit-list-submodules’ displays a list of the current
 repository’s submodules in a separate buffer.  It’s also possible to
 display information about submodules directly in the status buffer of
 the super-repository by adding ‘magit-insert-submodules’ to the hook
-‘magit-status-sections-hook’.
+‘magit-status-sections-hook’ as described in *note Status Module
+Sections::.
 
  -- Command: magit-list-submodules
 
@@ -6903,7 +6904,7 @@ File: magit.info,  Node: Submodule Popup,  Prev: Listing Submodules,  Up: Submod
 
    Some of the below commands default to act on the modules that are
 selected using the region.  For brevity their description talk about
-"the selected modules", but if no modules are selected, then the act on
+"the selected modules", but if no modules are selected, then they act on
 the current module instead, or if point isn’t on a module, then the read
 a single module to act on.  With a prefix argument these commands ignore
 the selection and the current module and instead act on all suitable

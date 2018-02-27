@@ -25,6 +25,58 @@
 (defun afp-outside-comment? ()
   (not (afp-inside-comment?)))
 
+(defun afp-get-comment-bounds ()
+  "Return a list containing the current comment's start and end points.
+
+Return `nil' if point is not currently inside a comment.
+
+FIXME This doesn't work in single-line comment blocks if point is on
+a comment-start sequence, because syntax-ppss doesn't think those are
+comment characters (and I have to admit it has a point).
+
+TODO Factor this out to a standalone package, because it isn't specific to
+aggressive-fill-paragraph."
+
+  (when (afp-inside-comment?)
+    (save-excursion
+      (let ((comment-start-pos)
+            (comment-end-pos))
+        ;; Move to beginning of current comment. In a multiline comment block,
+        ;; this puts point directly after the comment starter - in a single-line
+        ;; comment block, it does the same, but since each line of the block is
+        ;; considered an independent comment, you may be in the middle of the
+        ;; comment.
+        ;;
+        ;; However, since we're at *a* comment start either way...
+        (goto-char (comment-beginning))
+
+        ;; ...comment-forward with a negative buffer-size get us all the way
+        ;; back to the first non-comment-or-whitespace character before the
+        ;; comment block we were in to start with.
+        (forward-comment (* -1 (buffer-size)))
+
+        ;; At this point, if we search to the first non-whitespace character
+        ;; (including newlines) then go back one character, we should be at the
+        ;; actual start of the current comment.
+        (re-search-forward "[^[:space:]\n\r]")
+        (backward-char)
+
+        (setq comment-start-pos (point))
+
+        ;; Finally, we can now use forward-comment to move to the first
+        ;; non-whitespace-or-comment character *after the current comment-block.
+        (forward-comment (buffer-size))
+
+        ;; ...which means searching backward for the first non-whitespace
+        ;; character takes us to the comment-closer (and we have to move
+        ;; forward a char afterwards so we're actually after it).
+        (re-search-backward "[^[:space:]\n\r]")
+        (forward-char)
+        (setq comment-end-pos (point))
+
+        ;; Return the comment's start and end positions.
+        (list comment-start-pos comment-end-pos)))))
+
 (defun afp-comment-only-mode? ()
   (apply #'derived-mode-p afp-fill-comments-only-mode-list))
 

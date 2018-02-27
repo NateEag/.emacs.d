@@ -1,4 +1,4 @@
-(define-package "lsp-ui" "20180224.2300" "UI modules for lsp-mode"
+(define-package "lsp-ui" "20180226.1854" "UI modules for lsp-mode"
   '((emacs "25.1")
     (dash "2.13")
     (flycheck "31")

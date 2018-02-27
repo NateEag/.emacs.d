@@ -31,6 +31,11 @@
   "."
   :group 'cquery)
 
+(defcustom cquery-inheritance-hierarchy-use-detailed-name t
+  "Use detailed name for types in inheritance hierarchy"
+  :group 'cquery
+  :type 'boolean)
+
 (cl-defstruct cquery-inheritance-hierarchy-node
   id
   kind
@@ -39,7 +44,7 @@
 (defun cquery-inheritance-hierarchy--read-node (data &optional parent)
   "Construct a call tree node from hashmap DATA and give it the parent PARENT"
   (-let* ((location (gethash "location" data '(nil . nil)))
-          (filename (string-remove-prefix lsp--uri-file-prefix (gethash "uri" location)))
+          (filename (lsp--uri-to-path (gethash "uri" location)))
           ((&hash "id" id "kind" kind "name" name) data)
           (node
            (make-cquery-tree-node
@@ -67,21 +72,21 @@
                      (lsp--make-request "$cquery/inheritanceHierarchyExpand"
                                         `(:id ,id :kind ,kind
                                               :derived ,derived
-                                              :detailedName t :levels 1)))))))
+                                              :detailedName ,(if cquery-inheritance-hierarchy-use-detailed-name t :json-false)
+                                              :levels ,cquery-tree-initial-levels)))))))
 
 (defun cquery-inheritance-hierarchy--request-init (derived)
   "."
   (cquery--cquery-buffer-check)
   (lsp--send-request
-    (lsp--make-request "$cquery/inheritanceHierarchyInitial"
-                       `(
-                         :textDocument (:uri ,(concat lsp--uri-file-prefix buffer-file-name))
-                         :position ,(lsp--cur-position)
+   (lsp--make-request "$cquery/inheritanceHierarchyInitial"
+                      `(
+                        :textDocument (:uri ,(concat lsp--uri-file-prefix buffer-file-name))
+                        :position ,(lsp--cur-position)
 
-                         :derived ,derived
-                         :detailedName t
-                         :levels 1
-                         ))))
+                        :derived ,derived
+                        :detailedName ,(if cquery-inheritance-hierarchy-use-detailed-name t :json-false)
+                        :levels 1))))
 
 (defun cquery-inheritance-hierarchy--make-string (node _depth)
   "Propertize the name of NODE with the correct properties"
@@ -89,20 +94,24 @@
          (name (cquery-inheritance-hierarchy-node-name data)))
     (if (string-equal name "[[Base]]")
         (propertize "Bases" 'face 'cquery-inheritance-hierarchy-base-face)
-      (cquery--render-string name))))
+      (cquery--render-type name))))
 
 (defun cquery-inheritance-hierarchy (derived)
   (interactive "P")
   (cquery--cquery-buffer-check)
-  (setq derived (if derived t :json-false))
-  (cquery-tree--open
-   (make-cquery-tree-client
-    :name "inheritance hierarchy"
-    :mode-line-format (propertize "Inheritance hierarchy" 'face 'cquery-tree-mode-line-face)
-    :make-string-f 'cquery-inheritance-hierarchy--make-string
-    :read-node-f 'cquery-inheritance-hierarchy--read-node
-    :request-children-f (apply-partially #'cquery-inheritance-hierarchy--request-children derived)
-    :request-init-f (lambda () (cquery-inheritance-hierarchy--request-init derived)))))
+  (let ((json-derived (if derived t :json-false)))
+    (cquery-tree--open
+     (make-cquery-tree-client
+      :name "inheritance hierarchy"
+      :mode-line-format (propertize (if derived
+                                        "Inheritance Hierarchy: Subclasses"
+                                      "Inheritance Hierarchy: Bases")
+                                    'face 'cquery-tree-mode-line-face)
+      :top-line-f (lambda () (propertize (if derived "Derive from" "Bases of") 'face 'cquery-tree-mode-line-face))
+      :make-string-f 'cquery-inheritance-hierarchy--make-string
+      :read-node-f 'cquery-inheritance-hierarchy--read-node
+      :request-children-f (apply-partially #'cquery-inheritance-hierarchy--request-children json-derived)
+      :request-init-f (lambda () (cquery-inheritance-hierarchy--request-init json-derived))))))
 
 (provide 'cquery-inheritance-hierarchy)
 ;;; cquery-inheritance-hierarchy.el ends here

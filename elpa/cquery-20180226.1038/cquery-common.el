@@ -40,9 +40,6 @@
 ;;   Utility
 ;; ---------------------------------------------------------------------
 
-(defun cquery--uri-to-file (uri)
-  (string-remove-prefix lsp--uri-file-prefix uri))
-
 (defun cquery--read-range (range)
   (cons (lsp--position-to-point (gethash "start" range))
         (lsp--position-to-point (gethash "end" range))))
@@ -84,6 +81,10 @@
 (defun cquery--render-string (str)
   (funcall (cquery--get-renderer) str))
 
+(defun cquery--render-type (str)
+  "Render a string as a type"
+  (string-remove-suffix " a;" (cquery--render-string (format "%s a;" str))))
+
 ;; ---------------------------------------------------------------------
 ;;   Notification handlers
 ;; ---------------------------------------------------------------------
@@ -103,7 +104,7 @@ lsp-workspace, and PARAMS is a hashmap of the params recieved with the notificat
   (let* ((uri (car arguments))
          (data (cdr arguments)))
     (save-current-buffer
-      (find-file (cquery--uri-to-file uri))
+      (find-file (lsp--uri-to-path uri))
       (pcase command
         ;; Code actions
         ('"cquery._applyFixIt"
@@ -117,9 +118,9 @@ lsp-workspace, and PARAMS is a hashmap of the params recieved with the notificat
         ('"cquery._insertInclude"
          (cquery--select-textedit data "Include: "))
         ('"cquery.showReferences" ;; Used by code lenses
-         (let ((pos (lsp--position-to-point (car data))))
-           (goto-char pos)
-           (xref-find-references (xref-backend-identifier-at-point (xref-find-backend)))))))))
+         (xref--show-xrefs (lsp--locations-to-xref-items (cadr data)) nil))
+        (_
+         (message "unknown command: %s" command))))))
 
 (defun cquery--select-textedit (edit-list prompt)
   "Show a list of possible textedits, and apply the selected.

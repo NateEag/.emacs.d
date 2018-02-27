@@ -44,6 +44,10 @@
   "."
   :group 'cquery)
 
+(defcustom cquery-call-hierarchy-use-detailed-name nil
+  "Use detailed name for call hierarchy"
+  :group 'cquery
+  :type 'boolean)
 
 ;; ---------------------------------------------------------------------
 ;;   Tree node
@@ -57,7 +61,7 @@
 (defun cquery-call-hierarchy--read-node (data &optional parent)
   "Construct a call tree node from hashmap DATA and give it the parent PARENT"
   (-let* ((location (gethash "location" data))
-          (filename (string-remove-prefix lsp--uri-file-prefix (gethash "uri" location)))
+          (filename (lsp--uri-to-path (gethash "uri" location)))
           ((&hash "id" id "name" name "callType" call-type) data))
     (make-cquery-tree-node
      :location (cons filename (gethash "start" (gethash "range" location)))
@@ -80,7 +84,9 @@
                                         `(:id ,id
                                               :callee ,callee
                                               :callType 3
-                                              :detailedName t)))))))
+                                              :levels ,cquery-tree-initial-levels
+                                              :detailedName ,(if cquery-call-hierarchy-use-detailed-name t :json-false)
+                                              )))))))
 
 (defun cquery-call-hierarchy--request-init (callee)
   "."
@@ -91,7 +97,8 @@
                                       :position ,(lsp--cur-position)
                                       :callee ,callee
                                       :callType 3
-                                      :detailedName t))))
+                                      :detailedName ,(if cquery-call-hierarchy-use-detailed-name t :json-false)
+                                      ))))
 
 (defun cquery-call-hierarchy--make-string (node depth)
   "Propertize the name of NODE with the correct properties"
@@ -107,7 +114,7 @@
        (propertize (format " (%s:%s)"
                            (file-name-nondirectory (car (cquery-tree-node-location node)))
                            (gethash "line" (cdr (cquery-tree-node-location node))))
-                   'face 'cquery-call-hierarchy-mode-line-face)))))
+                   'face 'cquery-mode-line-face)))))
 
 (defun cquery-call-hierarchy (callee)
   (interactive "P")
@@ -121,7 +128,7 @@
                               (propertize "Normal" 'face 'cquery-call-hierarchy-node-normal-face)
                               (propertize "Base" 'face 'cquery-call-hierarchy-node-base-face)
                               (propertize "Derived" 'face 'cquery-call-hierarchy-node-derived-face))
-    :top-line-f (lambda () (propertize (if (eq callee t) "Callees of " "Callers of") 'face '(:height 1.0 :inherit cquery-tree-mode-line-face)))
+    :top-line-f (lambda () (propertize (if (eq callee t) "Callees of " "Callers of") 'face 'cquery-tree-mode-line-face))
     :make-string-f 'cquery-call-hierarchy--make-string
     :read-node-f 'cquery-call-hierarchy--read-node
     :request-children-f (apply-partially #'cquery-call-hierarchy--request-children callee)

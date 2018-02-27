@@ -25,6 +25,11 @@
 (require 'cquery-common)
 (require 'cquery-tree)
 
+(defcustom cquery-member-hierarchy-use-detailed-name t
+  "Use detailed name for member hierarchy"
+  :group 'cquery
+  :type 'boolean)
+
 ;; ---------------------------------------------------------------------
 ;;   Tree node
 ;; ---------------------------------------------------------------------
@@ -36,22 +41,25 @@
 
 (defun cquery-member-hierarchy--read-node (data &optional parent)
   "Construct a call tree node from hashmap DATA and give it the parent PARENT"
-  (let* ((location (gethash "location" data))
-         (filename (string-remove-prefix lsp--uri-file-prefix (gethash "uri" location)))
-         (node
-          (make-cquery-tree-node
-           :location (cons filename (gethash "start" (gethash "range" location)))
-           :has-children (< 0 (gethash "numChildren" data))
-           :parent parent
-           :expanded nil
-           :children nil
-           :data (make-cquery-member-hierarchy-node
-                  :name (gethash "name" data)
-                  :field-name (gethash "fieldName" data)
-                  :id (gethash "id" data)))))
+  (-let* (((&hash "location" location "numChildren" nchildren "name" name "fieldName" field-name "id" id "children" children) data)
+          (filename (lsp--uri-to-path (gethash "uri" location)))
+          (node
+           (make-cquery-tree-node
+            :location (cons filename (gethash "start" (gethash "range" location)))
+            ;; With a little bit of luck, this only filters out enums
+            :has-children (not (or (>= 0 nchildren)
+                                   (null parent)
+                                   (= id (cquery-member-hierarchy-node-id (cquery-tree-node-data parent)))))
+            :parent parent
+            :expanded nil
+            :children nil
+            :data (make-cquery-member-hierarchy-node
+                   :name name
+                   :field-name field-name
+                   :id id))))
     (setf (cquery-tree-node-children node)
           (--map (cquery-member-hierarchy--read-node it node)
-                 (gethash "children" data)))
+                 children))
     node))
 
 (defun cquery-member-hierarchy--request-children (node)
@@ -61,7 +69,8 @@
            (gethash "children" (lsp--send-request
                                 (lsp--make-request "$cquery/memberHierarchyExpand"
                                                    `(:id ,id
-                                                         :levels 1 :detailedName t)))))))
+                                                         :levels ,cquery-tree-initial-levels
+                                                         :detailedName ,(if cquery-member-hierarchy-use-detailed-name t :json-false))))))))
 
 (defun cquery-member-hierarchy--request-init ()
   "."
@@ -72,8 +81,7 @@
                         :textDocument (:uri ,(concat lsp--uri-file-prefix buffer-file-name))
                         :position ,(lsp--cur-position)
                         :levels 1
-                        :detailedName t
-                        ))))
+                        :detailedName ,(if cquery-member-hierarchy-use-detailed-name t :json-false)))))
 
 (defun cquery-member-hierarchy--make-string (node depth)
   "Propertize the name of NODE with the correct properties"

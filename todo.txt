@@ -63,6 +63,14 @@
 - Suppress aggressive-fill-paragraph-mode while directly above or below markdown
   code blocks.
 
+- Prevent my aggressive-fill-paragraph-mode from filling rst titles when
+  deleting a preceding paragraph (and maybe just prevent it from filling
+  titles in general).
+
+- Prevent aggressive-fill-paragraph-mode from filling paragraphs that look
+  hand-formatted. A decent heuristic might be "if the majority of lines are less
+  than three-quarters the width of fill-column"?
+
 - Submit PR to make flycheck-eslint-rulesdir a list.
 
 - Make js-doc use Tern (when available) to guess types for function params.

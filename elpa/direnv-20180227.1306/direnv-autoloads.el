@@ -3,18 +3,20 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "direnv" "direnv.el" (23178 65182 0 0))
+;;;### (autoloads nil "direnv" "direnv.el" (23192 5431 0 0))
 ;;; Generated autoloads from direnv.el
 
 (autoload 'direnv-update-environment "direnv" "\
 Update the environment for FILE-NAME.
 
-\(fn &optional FILE-NAME)" t nil)
+See `direnv-update-directory-environment' for FORCE-SUMMARY.
+
+\(fn &optional FILE-NAME FORCE-SUMMARY)" t nil)
 
 (autoload 'direnv-update-directory-environment "direnv" "\
 Update the environment for DIRECTORY.
 
-When FORCE-SUMMARY is non-nil, a summary message is always shown.
+When FORCE-SUMMARY is non-nil or when called interactively, show a summary message.
 
 \(fn &optional DIRECTORY FORCE-SUMMARY)" t nil)
 

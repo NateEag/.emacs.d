@@ -47,7 +47,12 @@
 
 (defun ne-smart-dash-hacks-sh-mode-install ()
   (set-minor-mode-key 'smart-dash-mode "-" 'ne-smart-dash-hacks-sh-mode-insert)
-  (set-minor-mode-key 'smart-dash-mode (kbd "<kp-subtract>") 'ne-smart-dash-hacks-sh-mode-insert))
+  (set-minor-mode-key 'smart-dash-mode (kbd "<kp-subtract>") 'ne-smart-dash-hacks-sh-mode-insert)
+
+  ;; FIXME Add the hack function to ac-trigger-commands-on-completing, so
+  ;; typing underscore with it doesn't terminate completion. For the moment I
+  ;; just put it in custom.el.
+  )
 
 (provide 'ne-smart-dash-hacks)
 ;;; ne-smart-dash-hacks.el ends here

@@ -1,4 +1,4 @@
-(define-package "cquery" "20180226.1038" "cquery client for lsp-mode"
+(define-package "cquery" "20180227.2156" "cquery client for lsp-mode"
   '((emacs "25.1")
     (lsp-mode "3.4")
     (dash "0.13"))

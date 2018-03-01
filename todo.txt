@@ -68,8 +68,9 @@
   titles in general).
 
 - Prevent aggressive-fill-paragraph-mode from filling paragraphs that look
-  hand-formatted. A decent heuristic might be "if the majority of lines are less
-  than three-quarters the width of fill-column"?
+  hand-formatted. A decent heuristic might be "if the majority of lines are
+  less than three-quarters the width of fill-column"? Note that we should
+  probably ignore the last line, though, since by definition it'll be trailing.
 
 - Submit PR to make flycheck-eslint-rulesdir a list.
 

@@ -83,6 +83,7 @@
 (require 'etags)
 (require 'speedbar)
 (require 'imenu)
+(require 'php-project nil t)
 
 (require 'cl-lib)
 (require 'mode-local)
@@ -388,30 +389,8 @@ This variable can take one of the following symbol values:
   (message "PHP Mode %s of %s"
            php-mode-version-number php-mode-modified))
 
-(defvar php-available-project-root-files
-  '((projectile ".projectile")
-    (composer   "composer.json" "composer.lock")
-    (git        ".git")
-    (mercurial  ".hg")
-    (subversion ".svn")
-    ;; NOTICE: This method does not detect the top level of .editorconfig
-    ;;         However, we can integrate it by adding the editorconfig.el's API.
-    ;;(editorconfig . ".editorconfig")
-    ))
-
 ;;;###autoload
-(progn
-  (defvar php-project-root 'auto
-    "Method of searching for the top level directory.
-
-`auto' (default)
-      Try to search file in order of `php-available-project-root-files'.
-
-SYMBOL
-      Key of `php-available-project-root-files'.")
-  (make-variable-buffer-local 'php-project-root)
-  (put 'php-project-root 'safe-local-variable
-       #'(lambda (v) (assq v php-available-project-root-files))))
+(define-obsolete-variable-alias 'php-available-project-root-files 'php-project-available-root-files "1.19.0")
 
 (defvar php-mode-map
   (let ((map (make-sparse-keymap)))
@@ -682,7 +661,6 @@ but only if the setting is enabled"
    (indent-tabs-mode . nil)
    (tab-width . ,(default-value 'tab-width))
    (fill-column . ,(default-value 'fill-column))
-   (require-final-newline . ,(default-value 'require-final-newline))
    (show-trailing-whitespace . ,(default-value 'show-trailing-whitespace))
    (php-style-delete-trailing-whitespace . nil)))
 
@@ -736,8 +714,7 @@ but only if the setting is enabled"
   '("php"
     (c-offsets-alist . ((statement-cont . php-lineup-hanging-semicolon)))
     (c-indent-comments-syntactically-p . t)
-    (fill-column . 78)
-    (require-final-newline . t)))
+    (fill-column . 78)))
 
 (defun php-enable-symfony2-coding-style ()
   "Make php-mode use coding styles that are preferable for working with Symfony2."
@@ -750,7 +727,6 @@ but only if the setting is enabled"
     (c-offsets-alist . ((statement-cont . +)))
     (c-indent-comments-syntactically-p . t)
     (fill-column . 78)
-    (require-final-newline . t)
     (show-trailing-whitespace . t)
     (php-style-delete-trailing-whitespace . t)))
 
@@ -1202,12 +1178,6 @@ After setting the stylevars run hooks according to STYLENAME
 
   ;; PHP vars are case-sensitive
   (setq case-fold-search t)
-
-  ;; Do not force newline at end of file.  Such newlines can cause
-  ;; trouble if the PHP file is included in another file before calls
-  ;; to header() or cookie().
-  (set (make-local-variable 'require-final-newline) nil)
-  (set (make-local-variable 'next-line-add-newlines) nil)
 
   (php-set-style (symbol-name php-mode-coding-style))
 
@@ -1751,18 +1721,6 @@ The output will appear in the buffer *PHP*."
   (save-excursion
     (when (re-search-backward re-pattern nil t)
       (match-string-no-properties 1))))
-
-;;;###autoload
-(defun php-project-get-root-dir ()
-  "Return path to current PHP project."
-  (let ((detect-method (if (stringp php-project-root)
-                           (list php-project-root)
-                         (if (eq php-project-root 'auto)
-                             (cl-loop for m in php-available-project-root-files
-                                      append (cdr m))
-                           (cdr-safe (assq php-project-root php-available-project-root-files))))))
-    (cl-loop for m in detect-method
-             thereis (locate-dominating-file default-directory m))))
 
 ;;;###autoload
 (defun php-current-class ()

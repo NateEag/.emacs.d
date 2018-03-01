@@ -1,13 +1,13 @@
 ;;; js2-mode.el --- Improved JavaScript editing mode -*- lexical-binding: t -*-
 
-;; Copyright (C) 2009, 2011-2017  Free Software Foundation, Inc.
+;; Copyright (C) 2009, 2011-2018  Free Software Foundation, Inc.
 
 ;; Author: Steve Yegge <steve.yegge@gmail.com>
 ;;         mooz <stillpedant@gmail.com>
 ;;         Dmitry Gutov <dgutov@yandex.ru>
 ;; URL:  https://github.com/mooz/js2-mode/
 ;;       http://code.google.com/p/js2-mode/
-;; Version: 20170721
+;; Version: 20180301
 ;; Keywords: languages, javascript
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 
@@ -7620,7 +7620,7 @@ For instance, processing a nested scope requires a parent function node."
   (let (result fn parent-qname p elem)
     (dolist (entry js2-imenu-recorder)
       ;; function node goes first
-      (cl-destructuring-bind (current-fn &rest (&whole chain head &rest _)) entry
+      (cl-destructuring-bind (current-fn &rest (&whole chain head &rest)) entry
         ;; Examine head's defining scope:
         ;; Pre-processed chain, or top-level/external, keep as-is.
         (if (or (stringp head) (js2-node-top-level-decl-p head))

@@ -7,7 +7,7 @@
  '(ac-max-width 0.5)
  '(ac-trigger-commands-on-completing
    (quote
-    (delete-backward-char backward-delete-char backward-delete-char-untabify autopair-backspace paredit-backward-delete paredit-backward-delete-word smart-dash-insert)))
+    (delete-backward-char backward-delete-char backward-delete-char-untabify autopair-backspace paredit-backward-delete paredit-backward-delete-word smart-dash-insert ne-smart-dash-hacks-sh-mode-insert)))
  '(ac-trigger-key "TAB")
  '(afp-always-fill-on-self-insert t)
  '(afp-fill-after-functions

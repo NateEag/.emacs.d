@@ -457,10 +457,8 @@ buffer's file does not exist."
                                                  30
                                                  #'ne-maybe-start-emacs-server))
   (defun ne-maybe-start-emacs-server ()
-    (message "Checking for server...")
     (if (not (eq t (server-running-p)))
         (progn
-          (message "Starting server...")
           (server-start)
           (cancel-timer ne-start-emacs-server-timer)))))
 

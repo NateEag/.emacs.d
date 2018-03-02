@@ -332,6 +332,9 @@
   with something other than self-insert-function to actually make your new
   paragraph.
 
+- Try using elisp-def as an enhancement to slime-nav-mode? It's installed, just
+  have to try configuring it and seeing if it makes life any better.
+
 - Use Consolas-10 as font by default on Windows.
 
 - Look into midi-kbd.el and lily-midi.el as an aid in creating lilypond files

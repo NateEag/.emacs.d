@@ -184,23 +184,31 @@ better orientation."
         (goto-char (point-min))))
     (pop-to-buffer "*Smartparens cheat sheet*")))
 
-(defun sp-describe-system ()
+(defun sp-describe-system (starterkit)
   "Describe user's system.
 
 The output of this function can be used in bug reports."
-  (interactive)
+  (interactive
+   (list (completing-read "Starterkit/Distribution used: "
+                          (list
+                           "Spacemacs"
+                           "Evil"
+                           "Vanilla"
+                           ))))
   (kill-new
    (format "- `smartparens` version: %s
-- Active major-mode: %s
+- Active `major-mode`: `%s`
+- Smartparens strict mode: %s
 - Emacs version (`M-x emacs-version`): %s
-- Spacemacs/Evil/Other starterkit (specify which)/Vanilla: %s
+- Starterkit/Distribution: %s
 - OS: %s"
            (--if-let (cadr (assoc 'smartparens package-alist))
                (package-version-join (package-desc-version it))
              "<Please specify manually>")
            (symbol-name major-mode)
+           (bound-and-true-p smartparens-strict-mode)
            (replace-regexp-in-string "\n" "" (emacs-version))
-           "<Please specify manually>"
+           starterkit
            (symbol-name system-type))))
 
 
@@ -4241,6 +4249,32 @@ pairs!"
   (sp--with-case-sensitive
     (search-forward-regexp regexp bound noerror count)))
 
+(defun sp--search-forward-in-context (regexp &optional bound noerror count)
+  "Just like `sp--search-forward-regexp' but only accept results in same context.
+
+The context at point is considered the reference context."
+  (let ((context (sp--get-context))
+        (re))
+    (--dotimes (or count 1)
+      (save-excursion
+        (while (and (setq re (sp--search-forward-regexp regexp bound noerror))
+                    (not (eq (sp--get-context) context)))))
+      (when re (goto-char re)))
+    re))
+
+(defun sp--search-backward-in-context (regexp &optional bound noerror count)
+  "Just like `sp--search-backward-regexp' but only accept results in same context.
+
+The context at point is considered the reference context."
+  (let ((context (sp--get-context))
+        (re))
+    (--dotimes (or count 1)
+      (save-excursion
+        (while (and (setq re (sp--search-backward-regexp regexp bound noerror))
+                    (not (eq (sp--get-context) context))))
+        (when re (goto-char re))))
+    re))
+
 (defun sp-get-quoted-string-bounds (&optional point)
   "Return the bounds of the string around POINT.
 
@@ -4810,7 +4844,7 @@ By default, this is enabled in all modes derived from
 `sp-navigate-use-textmode-stringlike-parser'."
   (let ((pre (sp--get-allowed-regexp))
         (sre (sp--get-stringlike-regexp))
-        (search-fn (if (not back) 'sp--search-forward-regexp 'sp--search-backward-regexp))
+        (search-fn (if (not back) 'sp--search-forward-in-context 'sp--search-backward-in-context))
         (ps (if back (1- (point-min)) (1+ (point-max))))
         (ss (if back (1- (point-min)) (1+ (point-max))))
         (string-delim nil))

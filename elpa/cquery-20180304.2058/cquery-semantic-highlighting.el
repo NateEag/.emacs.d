@@ -28,10 +28,15 @@
 ;;   Customization
 ;; ---------------------------------------------------------------------
 
+(defgroup cquery-sem nil
+  "cquery semantic highlighting."
+  :group 'tools
+  :group 'cquery)
+
 (defface cquery-inactive-region-face
   '((t :inherit shadow))
   "The face used to mark inactive regions."
-  :group 'cquery)
+  :group 'cquery-sem)
 
 (defvar cquery-sem-face-function 'cquery-sem--default-face
   "Function used to determine the face of a symbol in semantic highlighting.")
@@ -39,52 +44,52 @@
 (defface cquery-sem-member-face
   '((t :slant italic))
   "The extra face applied to member functions/variables."
-  :group 'cquery)
+  :group 'cquery-sem)
 
 (defface cquery-sem-static-face
   '((t :weight bold))
   "The additional face for variables with static storage."
-  :group 'cquery)
+  :group 'cquery-sem)
 
 (defface cquery-sem-static-field-face
   '((t :inherit cquery-sem-static-face))
   "The additional face for static member variables."
-  :group 'cquery)
+  :group 'cquery-sem)
 
 (defface cquery-sem-static-method-face
   '((t :inherit cquery-sem-static-face))
   "The additional face for static member functions."
-  :group 'cquery)
+  :group 'cquery-sem)
 
 (defcustom cquery-sem-function-faces [font-lock-function-name-face]
   "Faces for functions."
   :type '(repeat face)
-  :group 'cquery)
+  :group 'cquery-sem)
 
 (defcustom cquery-sem-macro-faces [font-lock-variable-name-face]
   "Faces for macros."
   :type '(repeat face)
-  :group 'cquery)
+  :group 'cquery-sem)
 
 (defcustom cquery-sem-namespace-faces [font-lock-constant-face]
   "Faces for namespaces."
   :type '(repeat face)
-  :group 'cquery)
+  :group 'cquery-sem)
 
 (defcustom cquery-sem-parameter-faces [font-lock-variable-name-face]
   "Faces for parameters."
   :type '(repeat face)
-  :group 'cquery)
+  :group 'cquery-sem)
 
 (defcustom cquery-sem-type-faces [font-lock-type-face]
   "Faces used to mark types."
   :type '(repeat face)
-  :group 'cquery)
+  :group 'cquery-sem)
 
 (defcustom cquery-sem-variable-faces [font-lock-variable-name-face]
   "Faces for variables."
   :type '(repeat face)
-  :group 'cquery)
+  :group 'cquery-sem)
 
 ;; Default colors used by `cquery-use-default-rainbow-sem-highlight'
 (defcustom cquery-sem-function-colors
@@ -92,57 +97,47 @@
     "#88651e" "#e4b953" "#a36526" "#b28927" "#d69855")
   "Default colors for `cquery-sem-function-faces'."
   :type '(repeat color)
-  :group 'cquery)
+  :group 'cquery-sem)
 
 (defcustom cquery-sem-macro-colors
   '("#e79528" "#c5373d" "#e8a272" "#d84f2b" "#a67245"
     "#e27a33" "#9b4a31" "#b66a1e" "#e27a71" "#cf6d49")
   "Default colors for `cquery-sem-macro-faces'."
   :type '(repeat color)
-  :group 'cquery)
+  :group 'cquery-sem)
 
 (defcustom cquery-sem-namespace-colors
   '("#429921" "#58c1a4" "#5ec648" "#36815b" "#83c65d"
     "#417b2f" "#43cc71" "#7eb769" "#58bf89" "#3e9f4a")
   "Default colors for `cquery-sem-namespace-faces'."
   :type '(repeat color)
-  :group 'cquery)
+  :group 'cquery-sem)
 
 (defcustom cquery-sem-parameter-colors
   '("#429921" "#58c1a4" "#5ec648" "#36815b" "#83c65d"
     "#417b2f" "#43cc71" "#7eb769" "#58bf89" "#3e9f4a")
   "Default colors for `cquery-sem-parameter-faces'."
   :type '(repeat color)
-  :group 'cquery)
+  :group 'cquery-sem)
 
 (defcustom cquery-sem-type-colors
   '("#e1afc3" "#d533bb" "#9b677f" "#e350b6" "#a04360"
     "#dd82bc" "#de3864" "#ad3f87" "#dd7a90" "#e0438a")
   "Default colors for `cquery-sem-type-faces'."
   :type '(repeat color)
-  :group 'cquery)
+  :group 'cquery-sem)
 
 (defcustom cquery-sem-variable-colors
   cquery-sem-parameter-colors
   "Default colors for `cquery-sem-variable-faces'."
   :type '(repeat color)
-  :group 'cquery)
-
-(defface cquery-code-lens-face
-  '((t :inherit shadow))
-  "The face used for code lens overlays."
-  :group 'cquery)
-
-(defface cquery-code-lens-mouse-face
-  '((t :box t))
-  "The face used for code lens overlays."
-  :group 'cquery)
+  :group 'cquery-sem)
 
 (defcustom cquery-enable-inactive-region
   t
   "Enable inactive region.
 Regions that are disabled by preprocessors will be displayed in shadow."
-  :group 'cquery
+  :group 'cquery-sem
   :type 'bool)
 
 (defcustom cquery-sem-highlight-method
@@ -150,7 +145,7 @@ Regions that are disabled by preprocessors will be displayed in shadow."
   "The method used to draw semantic highlighting.
 overlays are more accurate than font-lock, but slower.
 If nil, disable semantic highlighting."
-  :group 'cquery
+  :group 'cquery-sem
   :type '(radio
           (const nil)
           (const :tag "overlay" overlay)
@@ -160,25 +155,17 @@ If nil, disable semantic highlighting."
 ;;   Semantic highlighting
 ;; ---------------------------------------------------------------------
 
+(defvar-local cquery--inactive-overlays nil "Inactive overlays.")
+(defvar-local cquery--sem-overlays nil "Semantic highlighting overlays.")
+
 (defun cquery--clear-sem-highlights ()
   "."
   (pcase cquery-sem-highlight-method
     ('overlay
-     (dolist (ov (overlays-in (point-min) (point-max)))
-       (when (overlay-get ov 'cquery-sem-highlight)
-         (delete-overlay ov))))
+     (while cquery--sem-overlays
+       (delete-overlay (pop cquery--sem-overlays))))
     ('font-lock
      (font-lock-ensure))))
-
-(defun cquery--make-sem-highlight (region buffer face)
-  "Highlight a REGION in BUFFER with FACE."
-  (pcase cquery-sem-highlight-method
-    ('overlay
-     (let ((ov (make-overlay (car region) (cdr region) buffer)))
-       (overlay-put ov 'face face)
-       (overlay-put ov 'cquery-sem-highlight t)))
-    ('font-lock
-     (put-text-property (car region) (cdr region) 'font-lock-face face buffer))))
 
 (defun cquery-sem--default-face (symbol)
   "Get semantic highlighting face of SYMBOL."
@@ -231,32 +218,53 @@ If nil, disable semantic highlighting."
            (1 (funcall fn cquery-sem-function-faces))
            (_ (funcall fn cquery-sem-variable-faces)))))))
 
-(defun cquery--read-semantic-ranges (symbol face)
-  (--map (let ((start (gethash "start" it))
-               (end (gethash "end" it)))
-           (list (cons (gethash "line" start)
-                       (gethash "character" start))
-                 (cons (gethash "line" end)
-                       (gethash "character" end))
-                 face))
-         (gethash "ranges" symbol)))
-
 (defun cquery--publish-semantic-highlighting (_workspace params)
   "Publish semantic highlighting information according to PARAMS."
   (when cquery-sem-highlight-method
-    (let* ((file (lsp--uri-to-path (gethash "uri" params)))
-           (buffer (find-buffer-visiting file))
-           (symbols (gethash "symbols" params)))
-      (when buffer
-        (with-current-buffer buffer
-          (save-excursion
-            (with-silent-modifications
-              (cquery--clear-sem-highlights)
+    (when-let* ((file (lsp--uri-to-path (gethash "uri" params)))
+                (buffer (find-buffer-visiting file))
+                (symbols (gethash "symbols" params)))
+      (with-current-buffer buffer
+        (save-excursion
+          (with-silent-modifications
+            (cquery--clear-sem-highlights)
+            (let (ranges point0 point1 (line 0) overlays)
               (dolist (symbol symbols)
-                (-when-let (face (funcall cquery-sem-face-function symbol))
-                  (dolist (range
-                           (mapcar 'cquery--read-range (gethash "ranges" symbol)))
-                    (cquery--make-sem-highlight range buffer face)))))))))))
+                (when-let* ((face (funcall cquery-sem-face-function symbol)))
+                  (dolist (range (gethash "ranges" symbol))
+                    (-let (((&hash "start" start "end" end) range))
+                      (push (list (gethash "line" start) (gethash "character" start)
+                                  (gethash "line" end) (gethash "character" end) face) ranges)))))
+              ;; Sort by start-line ASC, start-character ASC.
+              ;; The server guarantees the ranges are non-overlapping.
+              (setq ranges
+                    (sort ranges (lambda (x y)
+                                   (let ((x0 (car x)) (y0 (car y)))
+                                     (if (/= x0 y0)
+                                         (< x0 y0)
+                                       (< (cadr x) (cadr y)))))))
+              (widen)
+              (goto-char 1)
+              (dolist (range ranges)
+                (-let (((l0 c0 l1 c1 face) range))
+                  (forward-line (- l0 line))
+                  (forward-char c0)
+                  (setq point0 (point))
+                  (forward-line (- l1 l0))
+                  (forward-char c1)
+                  (setq point1 (point))
+                  (setq line l1)
+                  (push (list point0 point1 face) overlays)))
+              (pcase cquery-sem-highlight-method
+                ('font-lock
+                 (dolist (x overlays)
+                   (add-text-properties (car x) (cadr x) `(face ,(caddr x) fontified t))))
+                ('overlay
+                 (dolist (x overlays)
+                   (let ((ov (make-overlay (car x) (cadr x))))
+                     (overlay-put ov 'face (caddr x))
+                     (overlay-put ov 'cquery-sem-highlight t)
+                     (push ov cquery--sem-overlays))))))))))))
 
 (defmacro cquery-use-default-rainbow-sem-highlight ()
   "Use default rainbow semantic highlighting theme."
@@ -268,7 +276,7 @@ If nil, disable semantic highlighting."
           (append
            (--map-indexed
             `(defface ,(intern (format "cquery-sem-%s-face-%S" kind it-index))
-               '((t :foreground ,it)) "." :group 'cquery)
+               '((t :foreground ,it)) "." :group 'cquery-sem)
             (symbol-value colors))
            (list
             `(setq ,(intern (format "cquery-sem-%s-faces" kind))
@@ -285,10 +293,9 @@ If nil, disable semantic highlighting."
 ;; ---------------------------------------------------------------------
 
 (defun cquery--clear-inactive-regions ()
-  "."
-  (dolist (ov (overlays-in (point-min) (point-max)))
-    (when (overlay-get ov 'cquery-inactive)
-      (delete-overlay ov))))
+  "Clean up overlays."
+  (while cquery--inactive-overlays
+    (delete-overlay (pop cquery--inactive-overlays))))
 
 (defun cquery--set-inactive-regions (_workspace params)
   "Put overlays on (preprocessed) inactive regions according to PARAMS."
@@ -304,7 +311,8 @@ If nil, disable semantic highlighting."
             (dolist (region regions)
               (let ((ov (make-overlay (car region) (cdr region) buffer)))
                 (overlay-put ov 'face 'cquery-inactive-region-face)
-                (overlay-put ov 'cquery-inactive t)))))))))
+                (overlay-put ov 'cquery-inactive t)
+                (push ov cquery--inactive-overlays)))))))))
 
 ;; Add handler
 (push '("$cquery/setInactiveRegions" . (lambda (w p) (cquery--set-inactive-regions w p)))

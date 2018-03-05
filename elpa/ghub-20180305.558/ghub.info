@@ -26,11 +26,11 @@ Ghub is a library that provides basic support for using the Github API
 from Emacs packages.  It abstracts access to API resources using only a
 handful of functions that are not resource-specific.
 
-   It also handles the creation, storage and use of access tokens using
-a setup wizard, to make it easier for users to get started and to reduce
+   Ghub handles the creation, storage and use of access tokens using a
+setup wizard to make it easier for users to get started and to reduce
 the support burden imposed on package maintainers.  It also comes with a
 comprehensive manual to address the cases when things don’t just work as
-expected.
+expected or in case you don’t want to use the wizard.
 
    Ghub is intentionally limited to only provide these two essential
 features — basic request functions and guided setup — to avoid being too
@@ -39,7 +39,7 @@ adoption would make life easier for users and maintainers alike, because
 then all packages that talk to the Github API could be configured the
 same way.
 
-This manual is for Ghub version 1.3.0 (v1.3.0-47-g1eed838+1).
+This manual is for Ghub version 1.3.0 (v1.3.0-49-gbe18238+1).
 
      Copyright (C) 2017-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -917,20 +917,20 @@ Github, you have to use ‘user%2Frepo’ when accessing Gitlab, e.g.:
 
 Tag Table:
 Node: Top762
-Node: Introduction2810
-Node: Limitations5346
-Node: Getting Started7657
-Node: Setting the Username8159
-Node: Interactively Creating and Storing a Token9584
-Node: Manually Creating and Storing a Token15648
-Node: How Ghub uses Auth-Source16810
-Node: Using Ghub in Personal Scripts18743
-Node: Using Ghub in a Package20192
-Node: API22757
-Node: Making Requests23207
-Node: Authentication32878
-Node: Configuration Variables34680
-Node: Gitlab Support38373
+Node: Introduction2852
+Node: Limitations5388
+Node: Getting Started7699
+Node: Setting the Username8201
+Node: Interactively Creating and Storing a Token9626
+Node: Manually Creating and Storing a Token15690
+Node: How Ghub uses Auth-Source16852
+Node: Using Ghub in Personal Scripts18785
+Node: Using Ghub in a Package20234
+Node: API22799
+Node: Making Requests23249
+Node: Authentication32920
+Node: Configuration Variables34722
+Node: Gitlab Support38415
 
 End Tag Table
 

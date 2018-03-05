@@ -1777,7 +1777,7 @@ or when `helm-pattern' is equal to \"~/\"."
     (when (and (helm-file-completion-source-p src)
                (not (get-buffer-window helm-action-buffer 'visible))
                (not (helm-ff--invalid-tramp-name-p)))
-      (with-helm-window
+      (with-helm-buffer
         (let* ((history-p   (string= (assoc-default 'name src)
                                      "Read File Name History"))
                (pat         (if (string-match helm-tramp-file-name-regexp
@@ -2859,7 +2859,7 @@ If a prefix arg is given or `helm-follow-mode' is on open file."
                        it)
                       (helm-ff-file-compressed-p candidate))
            (cons (lambda (_candidate)
-                   (funcall insert-in-minibuffer (concat candidate "#")))
+                   (funcall insert-in-minibuffer (concat candidate "#/")))
                  'never-split))
           ;; File doesn't exists and basename starts with ".." or "  ",
           ;; Start a recursive search for directories.

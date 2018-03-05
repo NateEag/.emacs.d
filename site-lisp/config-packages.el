@@ -263,12 +263,7 @@ The shell command lives in my dotfiles repo."
 ;; to 'x'.
 ;;
 ;; I do this often enough it seemed worth installing.
-;;
-;; ...commented because this requires thingatpt+ as a package, and that package
-;; is no longer available on MELPA.
-;;
-;; I've filed an issue so if it gets addressed I should hear about it.
-;(use-package exato)
+(use-package exato)
 
 (use-package crontab-mode
   :mode "\\.cron\\(tab\\)?\\'"

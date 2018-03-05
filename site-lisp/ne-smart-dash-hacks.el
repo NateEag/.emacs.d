@@ -21,14 +21,23 @@
   ;; by on hardcoding a few special cases.
   (let ((bash-var-chars "[a-zA-Z0-9_]+"))
     (or
-     ;; This first case only works for typing new vars if you start with '='
-     ;; then stick the varname in before it. You have to do something like
-     ;; that, though, if you want dashes to be used in command names, because
-     ;; otherwise you can't distinguish between "I am typing a command" and "I
-     ;; am typing a variable name."
-     (thing-at-point-looking-at (concat "\\(export[:space:]+\\)?"
+     ;; Handle export statements.
+     ;;
+     ;; FIXME Stop using smart-dashes while typing the assignment. I don't use
+     ;; the export-while-assigning feature of bash much, so this shouldn't get
+     ;; in my way much.
+     (thing-at-point-looking-at (concat "\\(export[[:space:]]+\\)?"
                                            bash-var-chars
-                                           "="))
+                                           "\\(=[^[:space:]]*\\)?"))
+
+     ;; Handle vanilla variable assignments. It only works for typing new vars
+     ;; if you start with '=' then stick the varname in before it, which is why
+     ;; ne-smart-dash-hacks-sh-mode-insert exists. You have to do something
+     ;; like that, though, if you want dashes to be used in command names,
+     ;; because otherwise you can't distinguish between "I am typing a command"
+     ;; and "I am typing a variable name."
+     (thing-at-point-looking-at (concat "[[:space]]" bash-var-chars "*="))
+
      (thing-at-point-looking-at (concat "\\${?" bash-var-chars))
      ;; If thing-at-point has an underscore in it, we should probably keep
      ;; using underscores. Generally, bash commands and inputs lean towards
@@ -39,6 +48,8 @@
      ;; first character.
      (thing-at-point-looking-at "[:space:]+[a-zA-Z0-9]+_+[a-zA-Z0-9_]*"))))
 
+;; TODO Maybe snippetize this, so it's easy to write the assignment half once
+;; you've typed your varname?
 (defun ne-smart-dash-hacks-sh-mode-insert ()
   (interactive)
   (if (ne-smart-dash-hacks-sh-mode-should-use-smart-dash)

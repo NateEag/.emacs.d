@@ -600,9 +600,10 @@
   with a bit of hacking, and maybe it already does...
 
 - A mode in which English grammatical rules are automatically applied to
-  anything that looks like a sentence. For instance, when I refactor a sentence,
-  it ought to know that the first word gets capitalized. That might be the only
-  thing I actually want, come to think of it...
+  anything that looks like a sentence. For instance, when I refactor a
+  sentence, it ought to know that the first word gets capitalized. That might
+  be the only thing I actually want, come to think of it... Looks like someone
+  may have built this: https://www.emacswiki.org/emacs/auto-capitalize.el
 
 - I would like multiline comments to be hidden after the first line by default,
   with an easy way to toggle full comment display.

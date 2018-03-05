@@ -126,7 +126,13 @@
 
   ;; Function to enable the client for the current buffer, called without
   ;; arguments.
-  (enable-function nil :read-only t))
+  (enable-function nil :read-only t)
+
+  ;; ‘prefix-function’ is called for getting the prefix for completion.
+  ;; The function takes no parameter and returns a cons (start . end) representing
+  ;; the start and end bounds of the prefix. If it's not set, the client uses a
+  ;; default prefix function."
+  (prefix-function nil :read-only t))
 
 (cl-defstruct lsp--registered-capability
   (id "" :type string)
@@ -307,12 +313,6 @@ whitelist, or does not match any pattern in the blacklist."
   :group 'lsp-mode)
 
 ;;;###autoload
-(defcustom lsp-enable-flycheck t
-  "Enable flycheck integration."
-  :type 'boolean
-  :group 'lsp-mode)
-
-;;;###autoload
 (defcustom lsp-enable-indentation t
   "Indent regions using the file formatting functionality provided by the language server."
   :type 'boolean
@@ -376,11 +376,12 @@ before saving a document."
     (progn (cl-check-type ,method string)
       (list :jsonrpc "2.0" :method ,method :params ,params))))
 
-(defun lsp--make-message (params)
+(define-inline lsp--make-message (params)
   "Create a LSP message from PARAMS, after encoding it to a JSON string."
-  (let* ((json-false :json-false)
-         (body (json-encode params)))
-    (format "Content-Length: %d\r\n\r\n%s" (string-bytes body) body)))
+  (inline-quote
+    (let* ((json-false :json-false)
+            (body (json-encode ,params)))
+      (format "Content-Length: %d\r\n\r\n%s" (string-bytes body) body))))
 
 (define-inline lsp--send-notification (body)
   "Send BODY as a notification to the language server."
@@ -729,8 +730,6 @@ directory."
          (workspace (gethash root lsp--workspaces))
          new-conn response init-params
          parser proc cmd-proc)
-    (when (boundp 'projectile-project-root)
-      (setq-local projectile-project-root root))
     (if workspace
         (setq lsp--cur-workspace workspace)
 
@@ -776,12 +775,6 @@ directory."
       (run-hooks 'lsp-after-initialize-hook))
     (lsp--text-document-did-open)))
 
-;; Forward-declare variables defined in flycheck.el.
-(defvar flycheck-mode)
-(defvar flycheck-checkers)
-(defvar flycheck-checker)
-(defvar flycheck-check-syntax-automatically)
-
 (defun lsp--text-document-did-open ()
   (run-hooks 'lsp-before-open-hook)
   (puthash buffer-file-name 0 (lsp--workspace-file-versions lsp--cur-workspace))
@@ -798,15 +791,6 @@ directory."
     ;; using `add-function' for modifying its value, use that instead?
     (setq-local eldoc-documentation-function #'lsp--on-hover)
     (eldoc-mode 1))
-
-  (when (and lsp-enable-flycheck (featurep 'lsp-flycheck))
-    (setq-local flycheck-check-syntax-automatically nil)
-    (setq-local flycheck-checker 'lsp)
-    (lsp-flycheck-add-mode major-mode)
-    (add-to-list 'flycheck-checkers 'lsp)
-    (add-hook 'lsp-after-diagnostics-hook (lambda ()
-                                            (when flycheck-mode
-                                              (flycheck-buffer)))))
 
   (when (and lsp-enable-indentation
              (lsp--capability "documentRangeFormattingProvider"))
@@ -1294,9 +1278,15 @@ https://microsoft.github.io/language-server-protocol/specification#textDocument_
                         (lsp--sort-string c1)
                         (lsp--sort-string c2)))))
 
+(defun lsp--default-prefix-function ()
+  (bounds-of-thing-at-point 'symbol))
+
 (defun lsp--get-completions ()
   (with-demoted-errors "Error in ‘lsp--get-completions’: %S"
-    (let ((bounds (bounds-of-thing-at-point 'symbol)))
+    (let* ((prefix-function (or (lsp--client-prefix-function
+                                  (lsp--workspace-client lsp--cur-workspace))
+                             #'lsp--default-prefix-function))
+            (bounds (funcall prefix-function)))
       (list
        (if bounds (car bounds) (point))
        (if bounds (cdr bounds) (point))
@@ -1884,7 +1874,6 @@ command COMMAND and optionsl ARGS"
 (defalias 'lsp-on-save #'lsp--text-document-did-save)
 ;; (defalias 'lsp-on-change #'lsp--text-document-did-change)
 (defalias 'lsp-completion-at-point #'lsp--get-completions)
-(defalias 'lsp-error-explainer #'lsp--error-explainer)
 
 (defun lsp--unset-variables ()
   (when lsp-enable-eldoc
@@ -1896,21 +1885,13 @@ command COMMAND and optionsl ARGS"
   (remove-hook 'after-change-functions #'lsp-on-change t)
   (remove-hook 'before-change-functions #'lsp-before-change t))
 
-(defun lsp--error-explainer (fc-error)
-  "Proof of concept to use this flycheck function to apply a codeAction.
-This should eventually make use of the completion of
-https://github.com/flycheck/flycheck/pull/1022 and
-https://github.com/flycheck/flycheck/issues/530#issuecomment-235224763."
-  (message "lsp--error-explainer: got %s" fc-error))
-
 (defun lsp--set-configuration (settings)
   "Set the configuration for the lsp server."
   (lsp--send-notification (lsp--make-notification
                            "workspace/didChangeConfiguration"
                            `(:settings , settings))))
 
-(declare-function lsp-flycheck-add-mode "lsp-flycheck" (mode))
-(declare-function flycheck-buffer "flycheck" ())
+(declare-function lsp-mode "lsp-mode" (&optional arg))
 
 (provide 'lsp-methods)
 ;;; lsp-methods.el ends here

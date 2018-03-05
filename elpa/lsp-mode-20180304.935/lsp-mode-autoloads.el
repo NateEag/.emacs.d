@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (23192 5436
+;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (23197 20913
 ;;;;;;  0 0))
 ;;; Generated autoloads from lsp-methods.el
 
@@ -48,11 +48,6 @@ Enable xref integration.")
 
 (custom-autoload 'lsp-enable-xref "lsp-methods" t)
 
-(defvar lsp-enable-flycheck t "\
-Enable flycheck integration.")
-
-(custom-autoload 'lsp-enable-flycheck "lsp-methods" t)
-
 (defvar lsp-enable-indentation t "\
 Indent regions using the file formatting functionality provided by the language server.")
 
@@ -75,7 +70,7 @@ Face used for highlighting symbols being written to." :group (quote lsp-faces))
 
 ;;;***
 
-;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23192 5436 0 0))
+;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23197 20913 0 0))
 ;;; Generated autoloads from lsp-mode.el
 
 (autoload 'lsp-mode "lsp-mode" "\
@@ -86,8 +81,8 @@ Face used for highlighting symbols being written to." :group (quote lsp-faces))
 ;;;***
 
 ;;;### (autoloads nil nil ("lsp-common.el" "lsp-flycheck.el" "lsp-imenu.el"
-;;;;;;  "lsp-io.el" "lsp-mode-pkg.el" "lsp-notifications.el") (23192
-;;;;;;  5436 0 0))
+;;;;;;  "lsp-io.el" "lsp-mode-pkg.el" "lsp-notifications.el") (23197
+;;;;;;  20913 0 0))
 
 ;;;***
 

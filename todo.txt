@@ -599,6 +599,16 @@
   like that shouldn't require too many keystrokes. I'm sure Emacs can do this
   with a bit of hacking, and maybe it already does...
 
+- A minor-mode to automatically turn on Caps Lock if it seems appropriate. For
+  instance, in bash the var names in an export statement should almost always
+  be capitalized. Similarly constant names in many other languages (modern JS,
+  C, Java, etc...). caps-lock mode
+  (http://elpa.gnu.org/packages/caps-lock.html) is probably a starting place -
+  just need some wrappers around it to figure out when it should be active. I'm
+  not at all sure this is a good idea, though - just using Caps Lock itself
+  might be a much simpler answer to this problem (it's not currently bound on
+  my main keyboard).
+
 - A mode in which English grammatical rules are automatically applied to
   anything that looks like a sentence. For instance, when I refactor a
   sentence, it ought to know that the first word gets capitalized. That might

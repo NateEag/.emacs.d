@@ -1,8 +1,8 @@
 ;;; elisp-def.el --- macro-aware go-to-definition for elisp  -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018  Wilfred Hughes
-;; Version: 0.1
-;; Package-Version: 20180224.717
+;; Version: 1.1
+;; Package-Version: 20180302.1402
 
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Keywords: lisp
@@ -28,8 +28,14 @@
 ;; bindings.
 ;;
 ;; See full docs at https://github.com/Wilfred/elisp-def
+
+;;; Usage:
+
+;; Once this file is installed (e.g. with MELPA), add the following to
+;; your Emacs configuration:
 ;;
-;; TODO: fonts
+;; (dolist (hook '(emacs-lisp-mode-hook ielm-mode-hook))
+;;   (add-hook hook #'elisp-def-mode))
 
 ;;; Code:
 
@@ -64,6 +70,17 @@ source code: they have e.g. org.elc but no org.el."
       (or (eq filename 'C-source)
           (and (stringp filename)
                (equal (file-name-extension filename) "c"))))))
+
+(defun elisp-def--find-face (sym)
+  "Find the buffer and position where face SYM is defined."
+  (let (buf pos)
+    (condition-case nil
+        (progn
+          (find-face-definition sym)
+          (setq buf (current-buffer))
+          (setq pos (point)))
+      (error nil))
+    (list buf pos)))
 
 (defun elisp-def--find-feature (sym)
   "Find the buffer and position where feature SYM is defined."
@@ -155,7 +172,7 @@ This is the function _slot_ of SYM, so SYM may be a function or macro."
 
 (defun elisp-def--defined-in (sym)
   "All the namespaces that SYM is globally defined in.
-Returns a list '(function variable).
+Returns a list containing at most '(function variable face).
 
 Note that macros are in the same namespace as functions."
   (let (result)
@@ -164,6 +181,8 @@ Note that macros are in the same namespace as functions."
     ;; Function or macro.
     (when (fboundp sym)
       (push 'function result))
+    (when (facep sym)
+      (push 'face result))
     result))
 
 (defun elisp-def--sharp-quoted-p ()
@@ -545,10 +564,12 @@ positions of the form."
         (if string-start-pos
             (goto-char string-start-pos)
           (goto-char enclosing-start-pos))))
-    (list (point)
-          (progn
-            (forward-sexp)
-            (point)))))
+    (let (start-pos end-pos)
+      (forward-sexp)
+      (setq end-pos (point))
+      (backward-sexp)
+      (setq start-pos (point))
+      (list start-pos end-pos))))
 
 (defun elisp-def--binding-form-start ()
   "Return the start position of the form enclosing point
@@ -733,7 +754,9 @@ Or for let-bound variables:
             ((eq namespace 'variable)
              (elisp-def--find-variable sym))
             ((eq namespace 'function)
-             (elisp-def--find-function sym)))]
+             (elisp-def--find-function sym))
+            ((eq namespace 'face)
+             (elisp-def--find-face sym)))]
       (unless (and buf pos)
         ;; todo: mention if it's due to being a primitive
         (user-error "Couldn't find definition for %s %s"

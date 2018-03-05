@@ -1,8 +1,8 @@
-(define-package "lsp-ui" "20180226.1854" "UI modules for lsp-mode"
+(define-package "lsp-ui" "20180302.2057" "UI modules for lsp-mode"
   '((emacs "25.1")
     (dash "2.13")
     (flycheck "31")
-    (lsp-mode "3.4")
+    (lsp-mode "4.0")
     (markdown-mode "2.3"))
   :url "https://github.com/emacs-lsp/lsp-ui" :keywords
   '("lsp"))

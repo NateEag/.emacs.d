@@ -5,7 +5,7 @@
 ;; Author:  Tobias Pisani <topisani@hamsterpoison.com>
 ;; Keywords: lsp
 ;; URL: https://github.com/emacs-lsp/lsp-ui
-;; Package-Requires: ((emacs "25.1") (dash "2.13") (flycheck "31") (lsp-mode "3.4") (markdown-mode "2.3"))
+;; Package-Requires: ((emacs "25.1") (dash "2.13") (flycheck "31") (lsp-mode "4.0") (markdown-mode "2.3"))
 ;; Version: 0.0.1
 
 ;; Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -67,6 +67,7 @@ If the PATH is not in the workspace, it returns the original PATH."
 
 (defvar lsp-ui-mode-map (make-sparse-keymap))
 
+;;;###autoload
 (define-minor-mode lsp-ui-mode
   "Toggle language server UI mode on or off.
 ‘lsp-ui-mode’ is a minor mode that contains a series of useful UI

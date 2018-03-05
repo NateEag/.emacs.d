@@ -1,4 +1,4 @@
-(define-package "php-mode" "20180301.243" "Major mode for editing PHP code"
+(define-package "php-mode" "20180304.411" "Major mode for editing PHP code"
   '((emacs "24")
     (cl-lib "0.5"))
   :url "https://github.com/ejmr/php-mode" :keywords

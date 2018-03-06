@@ -63,6 +63,10 @@
 - Suppress aggressive-fill-paragraph-mode while directly above or below markdown
   code blocks.
 
+- Suppress aggressive-fill-paragraph-mode when point is preceded and followed
+  by blank lines (would solve the case where filling after deletion hits the
+  next paragraph)?
+
 - Prevent my aggressive-fill-paragraph-mode from filling rst titles when
   deleting a preceding paragraph (and maybe just prevent it from filling
   titles in general).

@@ -8,14 +8,14 @@
 ;; Maintainer: USAMI Kenta <tadsan@zonu.me>
 ;; URL: https://github.com/ejmr/php-mode
 ;; Keywords: languages php
-;; Version: 1.18.4
+;; Version: 1.19.0
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; License: GPL-3.0-or-later
 
-(defconst php-mode-version-number "1.18.4"
+(defconst php-mode-version-number "1.19.0"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2018-01-30"
+(defconst php-mode-modified "2018-03-05"
   "PHP Mode build date.")
 
 ;; This file is free software; you can redistribute it and/or
@@ -422,11 +422,8 @@ local variables, set NIL."
     ;;
     ;;     https://www.gnu.org/software/emacs/manual/html_node/ccmode/Subword-Movement.html
     ;;
-    ;; for more information about Submode Word.
-    (if (boundp 'subword-mode)
-        (if subword-mode
-            (subword-mode nil)
-          (subword-mode t)))
+    ;; for more information about Subword mode.
+    (define-key map (kbd "C-c C-w") 'subword-mode)
 
     ;; We inherit c-beginning-of-defun and c-end-of-defun from CC Mode
     ;; but we have two replacement functions specifically for PHP.  We
@@ -1138,9 +1135,11 @@ After setting the stylevars run hooks according to STYLENAME
   (message "--- PHP-MODE DEBUG BEGIN ---")
   (message "versions: %s; %s" (emacs-version) (php-mode-version))
   (message "major-mode: %s" major-mode)
-  (message "minor-modes: %s" (cl-remove-if
-                              (lambda (s) (string-match-p "global" (symbol-name s)))
-                              minor-mode-list))
+  (message "minor-modes: %s"
+           (cl-loop for s in minor-mode-list
+                    unless (string-match-p "global" (symbol-name s))
+                    if (and (boundp s) (symbol-value s))
+                    collect s))
   (message "variables: %s"
            (cl-loop for v in '(indent-tabs-mode tab-width)
                     collect (list v (symbol-value v))))

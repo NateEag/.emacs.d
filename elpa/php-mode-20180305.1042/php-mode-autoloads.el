@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "php-mode" "php-mode.el" (23197 20919 0 0))
+;;;### (autoloads nil "php-mode" "php-mode.el" (23198 48319 0 0))
 ;;; Generated autoloads from php-mode.el
 
 (let ((loads (get 'php 'custom-loads))) (if (member '"php-mode" loads) nil (put 'php 'custom-loads (cons '"php-mode" loads))))
@@ -40,7 +40,7 @@ Insert current namespace if cursor in namespace context.
 
 ;;;***
 
-;;;### (autoloads nil "php-project" "php-project.el" (23197 20919
+;;;### (autoloads nil "php-project" "php-project.el" (23198 48319
 ;;;;;;  0 0))
 ;;; Generated autoloads from php-project.el
 
@@ -57,6 +57,16 @@ SYMBOL
 
 (put 'php-project-root 'safe-local-variable #'(lambda (v) (assq v php-project-available-root-files)))
 
+(defvar php-project-bootstrap-scripts nil "\
+List of path to bootstrap php script file.
+
+The ideal bootstrap file is silent, it only includes dependent files,
+defines constants, and sets the class loaders.")
+
+(make-variable-buffer-local 'php-project-bootstrap-scripts)
+
+(put 'php-project-bootstrap-scripts 'safe-local-variable #'php-project--eval-bootstrap-scripts)
+
 (defvar php-project-coding-style nil "\
 Symbol value of the coding style of the project that PHP major mode refers to.
 
@@ -65,6 +75,11 @@ Typically it is `pear', `drupal', `wordpress', `symfony2' and `psr2'.")
 (make-variable-buffer-local 'php-project-coding-style)
 
 (put 'php-project-coding-style 'safe-local-variable #'symbolp)
+
+(autoload 'php-project-get-bootstrap-scripts "php-project" "\
+Return list of bootstrap script.
+
+\(fn)" nil nil)
 
 (autoload 'php-project-get-root-dir "php-project" "\
 Return path to current PHP project.
@@ -78,7 +93,7 @@ Return path to current PHP project.
 ;;;;;;  "php-exif.el" "php-ext.el" "php-filesystem.el" "php-gd.el"
 ;;;;;;  "php-math.el" "php-mode-pkg.el" "php-pcre.el" "php-regex.el"
 ;;;;;;  "php-simplexml.el" "php-strings.el" "php-var.el" "php-xmlparser.el"
-;;;;;;  "php-xmlreader.el") (23197 20919 0 0))
+;;;;;;  "php-xmlreader.el") (23198 48319 0 0))
 
 ;;;***
 

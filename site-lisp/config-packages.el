@@ -399,7 +399,7 @@ The shell command lives in my dotfiles repo."
 (use-package sh-script
   :config (defun ne-sh-mode-maybe-insert-equals ()
             (interactive)
-            (if (looking-back "^[[:space:]]*")
+            (if (looking-back "^[[:space:]]*" nil)
                 (progn (self-insert-command 1)
                        (backward-char))
               (self-insert-command 1)))

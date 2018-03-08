@@ -69,8 +69,9 @@
 
 - Prevent aggressive-fill-paragraph-mode from filling paragraphs that look
   hand-formatted. A decent heuristic might be "if the majority of lines are
-  less than three-quarters the width of fill-column"? Note that we should
-  probably ignore the last line, though, since by definition it'll be trailing.
+  less than three-quarters the width of fill-column"? A better heuristic is
+  probably 'Are lines other than the last one and the one before / after point
+  less than three-quarters of fill-column?'
 
 - Submit PR to make flycheck-eslint-rulesdir a list.
 

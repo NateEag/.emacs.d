@@ -63,6 +63,9 @@
 - Suppress aggressive-fill-paragraph-mode while directly above or below markdown
   code blocks.
 
+- Make aggressive-fill-paragraph-mode fill paragraphs in front of point when
+  you've pressed return several times to split a paragraph into two paragraphs.
+
 - Prevent my aggressive-fill-paragraph-mode from filling rst titles when
   deleting a preceding paragraph (and maybe just prevent it from filling
   titles in general).

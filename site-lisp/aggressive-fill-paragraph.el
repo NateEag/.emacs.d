@@ -86,6 +86,28 @@ aggressive-fill-paragraph."
 
 ;; Functions for testing conditions to suppress fill-paragraph
 
+(defun afp-point-in-blank-lines? ()
+  "Return true if point is preceded and followed by blank lines.
+
+This is a workaround to avoid filling of the next paragraph after
+deleting the current one, because in its current state the super
+aggressive fill winds up filling the next paragraph right after a
+delete.
+
+TODO Look for a cleaner solution. This is only needed after
+deletion."
+
+  (save-excursion
+    ;; When the current line is empty
+    (when (looking-at "^$")
+      ;; and the previous and next lines are both empty
+      (let ((previous-line-empty (progn (previous-line)
+                                        (looking-at "^$")))
+            (next-line-empty (progn (next-line)
+                                    (next-line)
+                                    (looking-at "^$"))))
+      (and previous-line-empty next-line-empty)))))
+
 (defun afp-outside-comment-and-comment-only-mode? ()
 
   (and (afp-comment-only-mode?) (afp-outside-comment?)))
@@ -158,6 +180,7 @@ Note that `delete-region' will have no effect if entered here - see
 (defcustom afp-suppress-fill-pfunction-list
   (list
    #'afp-markdown-inside-code-block?
+   #'afp-point-in-blank-lines?
    #'afp-start-of-paragraph?
    #'afp-in-bulleted-list?
    #'afp-in-org-table?

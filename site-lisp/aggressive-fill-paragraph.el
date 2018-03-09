@@ -87,26 +87,18 @@ aggressive-fill-paragraph."
 ;; Functions for testing conditions to suppress fill-paragraph
 
 (defun afp-point-in-blank-lines? ()
-  "Return true if point is preceded and followed by blank lines.
+  "Return true if point is on a blank line.
 
 This is a workaround to avoid filling of the next paragraph after
 deleting the current one, because in its current state the super
 aggressive fill winds up filling the next paragraph right after a
-delete.
+delete of the current one, which is not what we want.
 
 TODO Look for a cleaner solution. This is only needed after
-deletion."
+deletion, so it definitely feels like a workaround."
 
-  (save-excursion
-    ;; When the current line is empty
-    (when (looking-at "^$")
-      ;; and the previous and next lines are both empty
-      (let ((previous-line-empty (progn (previous-line)
-                                        (looking-at "^$")))
-            (next-line-empty (progn (next-line)
-                                    (next-line)
-                                    (looking-at "^$"))))
-      (and previous-line-empty next-line-empty)))))
+  ;; TODO Rename this as afp-point-on-blank-line? if this logic works out.
+  (looking-at "^$"))
 
 (defun afp-outside-comment-and-comment-only-mode? ()
 

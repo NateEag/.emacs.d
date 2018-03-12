@@ -376,21 +376,16 @@ If BUFFER is nil, use current buffer."
       (save-excursion
         (goto-char (point-min))
         (let (result (count 1))
-          (helm-awhile (helm-eshell-next-prompt)
-            (push (list (buffer-substring-no-properties
-                         it (point-at-eol))
-                        it (buffer-name) count)
-                  result)
-            (setq count (1+ count)))
+          (helm-awhile (re-search-forward eshell-prompt-regexp nil t)
+            (when (or (and eshell-highlight-prompt
+                           (get-text-property (match-beginning 0) 'read-only))
+                      (null eshell-highlight-prompt))
+              (push (list (buffer-substring-no-properties
+                           it (point-at-eol))
+                          it (buffer-name) count)
+                    result)
+              (setq count (1+ count))))
           (nreverse result))))))
-
-(defun helm-eshell-next-prompt ()
-  ;; eshell-next-prompt seems unreliable on emacs-26+ see emacs bug
-  ;; #27405.
-  (helm-aif (and eshell-highlight-prompt
-                 (next-single-property-change (point) 'read-only))
-      (progn (goto-char it) (eshell-skip-prompt))
-    (re-search-forward eshell-prompt-regexp nil t 1)))
 
 (defun helm-eshell-prompts-list-all ()
   "List the prompts of all Eshell buffers.

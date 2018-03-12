@@ -70,7 +70,7 @@ even if not using a single source to display imenu in all buffers."
 (defcustom helm-imenu-type-faces
   '(("^Variables$" . font-lock-variable-name-face)
     ("^\\(Function\\|Functions\\|Defuns\\)$" . font-lock-function-name-face)
-    ("^\\(Types\\|Provides\\|Requires\\|Classes\\|Includes\\|Imports\\|Misc\\|Code\\)$" . font-lock-type-face))
+    ("^\\(Types\\|Provides\\|Requires\\|Classes\\|Class\\|Includes\\|Imports\\|Misc\\|Code\\)$" . font-lock-type-face))
   "Faces for showing type in helm-imenu.
 This is a list of cons cells.  The cdr of each cell is a face to be used,
 and it can also just be like \\='(:foreground \"yellow\").
@@ -273,24 +273,25 @@ Each car is a regexp match pattern of the imenu type string."
 
 (defun helm-imenu-transformer (candidates)
   (cl-loop for (k . v) in candidates
-        for types = (or (helm-imenu--get-prop k)
-                        (list "Function" k))
-        for bufname = (buffer-name
-                       (pcase v
-                         ((pred overlayp) (overlay-buffer v))
-                         ((or (pred markerp) (pred integerp))
-                          (marker-buffer v))))
-        for disp1 = (mapconcat
-                     (lambda (x)
-                       (propertize
-                        x 'face
-                        (cl-loop for (p . f) in helm-imenu-type-faces
-                                 when (string-match p x)
-                                 return f)))
-                     types helm-imenu-delimiter)
-        for disp = (propertize disp1 'help-echo bufname)
-        collect
-        (cons disp (cons k v))))
+           ;; (k . v) == (symbol-name . marker)
+           for types = (or (helm-imenu--get-prop k)
+                           (list "Function" k))
+           for bufname = (buffer-name
+                          (pcase v
+                            ((pred overlayp) (overlay-buffer v))
+                            ((or (pred markerp) (pred integerp))
+                             (marker-buffer v))))
+           for disp1 = (mapconcat
+                        (lambda (x)
+                          (propertize
+                           x 'face
+                           (cl-loop for (p . f) in helm-imenu-type-faces
+                                    when (string-match p x) return f
+                                    finally return 'default)))
+                        types helm-imenu-delimiter)
+           for disp = (propertize disp1 'help-echo bufname)
+           collect
+           (cons disp (cons k v))))
 
 ;;;###autoload
 (defun helm-imenu ()

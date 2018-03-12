@@ -31,6 +31,7 @@
 
 (require 'lsp-mode)
 (require 'dash)
+(require 'dash-functional)
 (require 'markdown-mode)
 
 (defgroup lsp-ui-doc nil
@@ -63,13 +64,6 @@
                  (const :tag "At point" at-point))
   :group 'lsp-ui-doc)
 
-(defcustom lsp-ui-doc-background "#272A36"
-  "Background color of the frame.
-To more customize the frame, see the variable
-`lsp-ui-doc-frame-parameters'."
-  :type 'color
-  :group 'lsp-ui-doc)
-
 (defcustom lsp-ui-doc-border "white"
   "Border color of the frame."
   :type 'color
@@ -83,6 +77,19 @@ To more customize the frame, see the variable
 (defcustom lsp-ui-doc-max-height 30
   "Maximum number of lines in the frame."
   :type 'integer
+  :group 'lsp-ui-doc)
+
+(defcustom lsp-ui-doc-use-childframe t
+  "Whether to display documentation in a child-frame or the current frame.
+Child frames requires GNU/Emacs version >= 26 and graphical frames."
+  :type 'boolean
+  :group 'lsp-ui-doc)
+
+(defface lsp-ui-doc-background
+  '((((background light)) :background "#b3b3b3")
+    (t :background "#272A36"))
+  "Background color of the documentation.
+Only the `background' is used in this face."
   :group 'lsp-ui-doc)
 
 (defface lsp-ui-doc-header
@@ -434,21 +441,50 @@ FN is the function to call on click."
   (lsp-ui-doc--with-buffer
    (length (split-string (buffer-string) "\n"))))
 
-(defun lsp-ui-doc--truncate (len s)
-  (if (> (string-width s) len)
-      (format "%s.." (substring s 0 (- len 2)))
-    s))
+(defun lsp-ui-doc--truncate (len s &optional suffix)
+  (let ((suffix (or suffix "")))
+    (if (> (lsp-ui-doc--inline-width-string s) len)
+        (format (concat "%s" suffix) (substring s 0 (max (- len (length suffix)) 0)))
+      s)))
+
+(defvar-local lsp-ui-doc--inline-width nil)
+
+(defun lsp-ui-doc--inline-width-string (string)
+  "Returns numbers of characters that are display in STRING.
+Use because `string-width' counts invisible characters."
+  (with-temp-buffer
+    (insert string)
+    (goto-char (point-max))
+    (current-column)))
 
 (defun lsp-ui-doc--inline-zip (s1 s2)
   (let* ((width (- (window-body-width) 1))
-         (spaces (- width (length s1) (length s2))))
+         (max-s1 (- width lsp-ui-doc--inline-width 2))
+         (spaces (- width (length s1) (lsp-ui-doc--inline-width-string s2))))
     (lsp-ui-doc--truncate
      width
-     (concat s1 (make-string (max spaces 0) ?\s) s2))))
+     (concat (lsp-ui-doc--truncate max-s1 s1) (make-string (max spaces 0) ?\s) s2))))
+
+(defun lsp-ui-doc--inline-padding (string len)
+  (let ((string (concat " " string (make-string (- len (lsp-ui-doc--inline-width-string string)) ?\s) " ")))
+    (add-face-text-property 0 (length string) (list :background (face-background 'lsp-ui-doc-background nil t)) t string)
+    string))
+
+(defun lsp-ui-doc--inline-faking-frame (doc-strings)
+  (let* ((len-max (length (-max-by (-on '> 'string-width) doc-strings))))
+    (setq lsp-ui-doc--inline-width len-max)
+    (--map (lsp-ui-doc--inline-padding it len-max) doc-strings)))
+
+(defun lsp-ui-doc--inline-untab (string)
+  (replace-regexp-in-string "\t" (make-string tab-width ?\s) string nil t))
 
 (defun lsp-ui-doc--inline-merge (strings)
-  (let* ((buffer-strings (split-string strings "\n"))
-         (merged (--> (split-string (lsp-ui-doc--with-buffer (buffer-string)) "\n")
+  (let* ((buffer-strings (-> (lsp-ui-doc--inline-untab strings)
+                             (split-string "\n")))
+         (doc-strings (-> (lsp-ui-doc--with-buffer (buffer-string))
+                          (lsp-ui-doc--inline-untab)
+                          (split-string "\n")))
+         (merged (--> (lsp-ui-doc--inline-faking-frame doc-strings)
                       (-zip-with 'lsp-ui-doc--inline-zip buffer-strings it)
                       (string-join it "\n")
                       (concat it "\n"))))
@@ -467,12 +503,20 @@ HEIGHT is the documentation number of lines."
   (let* ((w-start (window-start))
          (w-end (lsp-ui-doc--inline-pos-at w-start (window-body-height)))
          (ov-end (lsp-ui-doc--inline-pos-at w-start height)))
-    (if (< (lsp-ui-doc--inline-pos-at ov-end 1)
-           (point))
-        (cons w-start ov-end)
-      ;; TODO: Handle when the documentation is too long
+    (cond
+     ;; Display on top ?
+     ((< (lsp-ui-doc--inline-pos-at ov-end 1) (point))
+      (cons w-start ov-end))
+     ;; Display at the bottom ?
+     ((>= (lsp-ui-doc--inline-pos-at w-end (- height))
+          (lsp-ui-doc--inline-pos-at (point) 2))
       (cons (lsp-ui-doc--inline-pos-at w-end (- height))
-            w-end))))
+            w-end))
+     ;; The doc is too long to display it fixed to the bottom ?
+     ;; Then display 2 lines after `point'
+     ;; The end of the documentation won't be visible in the window
+     (t (cons (lsp-ui-doc--inline-pos-at (point) 2)
+              (lsp-ui-doc--inline-pos-at (point) (+ height 2)))))))
 
 (defun lsp-ui-doc--inline ()
   "Display the doc in the buffer."
@@ -488,7 +532,8 @@ HEIGHT is the documentation number of lines."
 
 (defun lsp-ui-doc--inline-p ()
   "Return non-nil when the documentation should be display without a child frame."
-  (or (not (display-graphic-p))
+  (or (not lsp-ui-doc-use-childframe)
+      (not (display-graphic-p))
       (not (fboundp 'display-buffer-in-child-frame))))
 
 (defun lsp-ui-doc--display (symbol string)
@@ -514,7 +559,7 @@ HEIGHT is the documentation number of lines."
          (params (append lsp-ui-doc-frame-parameters
                          `((default-minibuffer-frame . ,(selected-frame))
                            (minibuffer . ,(minibuffer-window))
-                           (background-color . ,lsp-ui-doc-background))))
+                           (background-color . ,(face-background 'lsp-ui-doc-background nil t)))))
          (window (display-buffer-in-child-frame
                   buffer
                   `((child-frame-parameters . ,params))))

@@ -58,12 +58,11 @@
     (point)))
 
 ;;; TODO: Use the current LSP client name instead of lsp-mode for the type.
-(define-inline lsp-warn (message &rest args)
+(defun lsp-warn (message &rest args)
   "Display a warning message made from (`format-message' MESSAGE ARGS...).
 This is equivalent to `display-warning', using `lsp-mode' as the type and
 `:warning' as the level."
-  (inline-quote
-    (display-warning 'lsp-mode (apply #'format-message ,message ,args))))
+  (display-warning 'lsp-mode (apply #'format-message message args)))
 
 (defun lsp-make-traverser (name)
   "Return a closure that walks up the current directory until NAME is found.
@@ -71,14 +70,13 @@ NAME can either be a string or a predicate used for `locate-dominating-file'.
 The value returned by the function will be the directory name for NAME.
 
 If no such directory could be found, log a warning and return `default-directory'"
-  #'(lambda ()
-      (let ((dir (locate-dominating-file "." name)))
-        (expand-file-name
-         (if dir
-             dir
-           (message
-            "Couldn't find project root, using the current directory as the root.")
-           default-directory)))))
+  (lambda ()
+    (let ((dir (locate-dominating-file "." name)))
+      (if dir
+        (file-truename dir)
+        (lsp-warn
+          "Couldn't find project root, using the current directory as the root.")
+        default-directory))))
 
 (defun lsp--uri-to-path (uri)
   "Convert URI to a file path."

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (23197 20913
+;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (23206 33852
 ;;;;;;  0 0))
 ;;; Generated autoloads from lsp-methods.el
 
@@ -59,18 +59,18 @@ before saving a document.")
 
 (custom-autoload 'lsp-before-save-edits "lsp-methods" t)
 
-(defface lsp-face-highlight-textual '((t :background "yellow")) "\
+(defface lsp-face-highlight-textual '((((background dark)) :background "saddle brown") (((background light)) :background "yellow")) "\
 Face used for textual occurances of symbols." :group (quote lsp-faces))
 
-(defface lsp-face-highlight-read '((t :background "red")) "\
+(defface lsp-face-highlight-read '((((background dark)) :background "firebrick") (((background light)) :background "red")) "\
 Face used for highlighting symbols being read." :group (quote lsp-faces))
 
-(defface lsp-face-highlight-write '((t :background "green")) "\
+(defface lsp-face-highlight-write '((((background dark)) :background "sea green") (((background light)) :background "green")) "\
 Face used for highlighting symbols being written to." :group (quote lsp-faces))
 
 ;;;***
 
-;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23197 20913 0 0))
+;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23206 33852 0 0))
 ;;; Generated autoloads from lsp-mode.el
 
 (autoload 'lsp-mode "lsp-mode" "\
@@ -81,8 +81,8 @@ Face used for highlighting symbols being written to." :group (quote lsp-faces))
 ;;;***
 
 ;;;### (autoloads nil nil ("lsp-common.el" "lsp-flycheck.el" "lsp-imenu.el"
-;;;;;;  "lsp-io.el" "lsp-mode-pkg.el" "lsp-notifications.el") (23197
-;;;;;;  20913 0 0))
+;;;;;;  "lsp-io.el" "lsp-mode-pkg.el" "lsp-notifications.el") (23206
+;;;;;;  33852 0 0))
 
 ;;;***
 

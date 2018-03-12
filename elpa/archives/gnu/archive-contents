@@ -716,7 +716,7 @@
 	      ((:keywords "processes")
 	       (:url . "https://github.com/kenmanheimer/EmacsMultishell"))])
  (muse .
-       [(3 20)
+       [(3 20 1)
 	nil "Authoring and publishing tool for Emacs" tar
 	((:keywords "hypermedia")
 	 (:url . "http://mwolson.org/projects/EmacsMuse.html"))])
@@ -845,7 +845,7 @@
 	 ((:url . "http://elpa.gnu.org/packages/poker.html")
 	  (:keywords "games"))])
  (posframe .
-	   [(0 1 0)
+	   [(0 3 0)
 	    ((emacs
 	      (26)))
 	    "Pop a posframe (just a frame) at point" single

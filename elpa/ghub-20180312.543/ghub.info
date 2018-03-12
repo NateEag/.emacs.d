@@ -39,7 +39,7 @@ adoption would make life easier for users and maintainers alike, because
 then all packages that talk to the Github API could be configured the
 same way.
 
-This manual is for Ghub version 1.3.0 (v1.3.0-49-gbe18238+1).
+This manual is for Ghub version 1.3.0 (v1.3.0-65-gcfe3cc1+1).
 
      Copyright (C) 2017-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -161,8 +161,12 @@ don’t assume that they don’t):
      See ‘ghub+.el’ for a package that provides such functionality.  It
      is built on top of ‘ghub.el’.
 
-   • Returning and consuming data as anything but JSON-like alists, or
-     in the case of GraphQL queries and mutations, plain strings.
+   • Returning objects instead of JSON-like alists.
+
+     Implementing such functionality on top of ‘ghub.el’ should be easy
+     though.
+
+   • A GraphQL DSL.
 
      See ‘graphql.el’ for a package that provides such functionality.
      It can be used along-side ‘ghub.el’.
@@ -174,9 +178,6 @@ don’t assume that they don’t):
    These features are not supported yet:
 
    • Asynchronous requests are not supported yet.
-
-   • Controlled pagination for both the REST and GraphQL APIs have not
-     been implemented yet.
 
    • If a request fails due to a missing scope, then that isn’t handled
      by ‘ghub-request’ yet.  For now package authors just have to hope
@@ -602,12 +603,14 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
                or payload.  When that is the case, then the Github API
                documentation usually mentions it explicitly.
 
-        • If UNPAGINATE is non-nil, then this function makes multiple
-          requests if necessary to get all items at RESOURCE. For
-          forward compatibility avoid using a function as value.
+        • If UNPAGINATE is t, then this function make as many requests
+          as necessary to get all values.  If UNPAGINATE is a natural
+          number, then it gets at most that many pages.  For any other
+          non-nil value it raises an error.
 
         • If NOERROR is non-nil, then no error is raised if the request
-          fails and ‘nil’ is returned instead.
+          fails and ‘nil’ is returned instead.  If UNPAGINATE is
+          non-nil, then this argument is ignored.
 
         • If READER is non-nil, then it is used to read and return from
           the response buffer.  The default is
@@ -655,6 +658,9 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
           internal use.  Instead of using this argument you should use
           function ‘glab-request’ and other ‘glab-*’ functions.
 
+        • URL is intended for internal use only.  If it is non-nil, then
+          some other arguments are ignored or expected to be nil.
+
  -- Variable: ghub-response-headers
 
      A select few Github API resources respond by transmitting data in
@@ -664,6 +670,11 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
 
      To access the response headers use this variable after
      ‘ghub-request’ has returned.
+
+ -- Function: ghub-response-link-relations
+
+     This function returns an alist of the link relations in
+     ‘ghub-response-headers’.
 
  -- Variable: ghub-override-system-name
 
@@ -919,18 +930,18 @@ Tag Table:
 Node: Top762
 Node: Introduction2852
 Node: Limitations5388
-Node: Getting Started7699
-Node: Setting the Username8201
-Node: Interactively Creating and Storing a Token9626
-Node: Manually Creating and Storing a Token15690
-Node: How Ghub uses Auth-Source16852
-Node: Using Ghub in Personal Scripts18785
-Node: Using Ghub in a Package20234
-Node: API22799
-Node: Making Requests23249
-Node: Authentication32920
-Node: Configuration Variables34722
-Node: Gitlab Support38415
+Node: Getting Started7626
+Node: Setting the Username8128
+Node: Interactively Creating and Storing a Token9553
+Node: Manually Creating and Storing a Token15617
+Node: How Ghub uses Auth-Source16779
+Node: Using Ghub in Personal Scripts18712
+Node: Using Ghub in a Package20161
+Node: API22726
+Node: Making Requests23176
+Node: Authentication33252
+Node: Configuration Variables35054
+Node: Gitlab Support38747
 
 End Tag Table
 

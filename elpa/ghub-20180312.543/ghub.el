@@ -93,6 +93,19 @@ response header in this variable.")
 
 (defvar ghub-raw-response-body nil)
 
+(cl-defun ghub-graphql (graphql &optional variables &key username auth host)
+  "Make a GraphQL request using GRAPHQL and VARIABLES.
+Return the response as a json-like alist.  Even if the response
+contains `errors', do not raise an error.  GRAPHQL is a GraphQL
+string.  VARIABLES is a json-like alist.  The other arguments
+behave like for `ghub-request' (which see)."
+  (cl-assert (stringp graphql))
+  (cl-assert (not (stringp variables)))
+  (ghub-request "POST" "/graphql" nil :payload
+                (json-encode `(("query" . ,graphql)
+                               ,@(and variables `(("variables" ,@variables)))))
+                :username username :auth auth :host host))
+
 (cl-defun ghub-head (resource &optional params
                               &key query payload headers
                               unpaginate noerror reader
@@ -175,7 +188,8 @@ Like calling `ghub-request' (which see) with \"DELETE\" as METHOD."
 (cl-defun ghub-request (method resource &optional params
                                &key query payload headers
                                unpaginate noerror reader
-                               username auth host forge)
+                               username auth host forge
+                               url)
   "Make a request for RESOURCE and return the response body.
 
 Also place the response header in `ghub-response-headers'.
@@ -201,11 +215,13 @@ Use HEADERS for those rare resources that require that the data
   When that is the case, then the API documentation usually
   mentions it explicitly.
 
-If UNPAGINATE is non-nil, then make multiple requests if necessary
-  to get all items at RESOURCE.  For forward-compatibility avoid
-  using a function as value.
+If UNPAGINATE is t, then make as many requests as necessary to
+  get all values.  If UNPAGINATE is a natural number, then get
+  at most that many pages.  For any other non-nil value raise
+  an error.
 If NOERROR is non-nil, then do not raise an error if the request
-  fails and return nil instead.
+  fails and return nil instead.  If UNPAGINATE is non-nil, then
+  this argument is ignored.
 If READER is non-nil, then it is used to read and return from the
   response buffer.  The default is `ghub--read-json-response'.
   For the very few resources that do not return json, you might
@@ -246,88 +262,65 @@ If HOST is non-nil, then connect to that Github instance.  This
 If FORGE is `gitlab', then connect to Gitlab.com or, depending
   on HOST to another Gitlab instance.  This is only intended for
   internal use.  Instead of using this argument you should use
-  function `glab-request' and other `glab-*' functions."
-  (unless (string-prefix-p "/" resource)
-    (setq resource (concat "/" resource)))
-  (unless host
-    (setq host (ghub--host forge)))
-  (cond
-   ((not params))
-   ((memq method '("GET" "HEAD"))
-    (when query
-      (error "PARAMS and QUERY are mutually exclusive for METHOD %S" method))
-    (setq query params))
-   (t
+  function `glab-request' and other `glab-*' functions.
+
+URL is intended for internal use only.  If it is non-nil, then
+  some other arguments are ignored or expected to be nil."
+  (cl-assert (or (booleanp unpaginate) (natnump unpaginate)))
+  (unless url
+    (unless (string-prefix-p "/" resource)
+      (setq resource (concat "/" resource)))
+    (unless host
+      (setq host (ghub--host forge)))
+    (cond ((not params))
+          ((member method '("GET" "HEAD"))
+           (when query
+             (error "PARAMS and QUERY are mutually exclusive for METHOD %S"
+                    method))
+           (setq query params))
+          (t
+           (when payload
+             (error "PARAMS and PAYLOAD are mutually exclusive for METHOD %S"
+                    method))
+           (setq payload params)))
     (when payload
-      (error "PARAMS and PAYLOAD are mutually exclusive for METHOD %S" method))
-    (setq payload params)))
-  (when payload
-    (unless (stringp payload)
-      (setq payload (json-encode-list payload)))
-    (setq payload (encode-coding-string payload 'utf-8)))
-  (let* ((qry (and query (concat "?" (ghub--url-encode-params query))))
-         (buf (let ((url-request-extra-headers
-                     `(("Content-Type" . "application/json")
-                       ,@(and (not (eq auth 'none))
-                              (list (ghub--auth host auth username forge)))
-                       ,@headers))
-                    ;; Encode in case caller used (symbol-name 'GET).  #35
-                    (url-request-method (encode-coding-string method 'utf-8))
-                    (url-request-data payload))
-                (url-retrieve-synchronously
-                 (concat "https://" host resource qry)))))
+      (unless (stringp payload)
+        (setq payload (json-encode-list payload)))
+      (setq payload (encode-coding-string payload 'utf-8)))
+    (when unpaginate
+      (setq noerror nil))
+    (setq url
+          (concat "https://" host resource
+                  (and query (concat "?" (ghub--url-encode-params query))))))
+  (let ((buf (let ((url-request-extra-headers
+                    `(("Content-Type" . "application/json")
+                      ,@(and (not (eq auth 'none))
+                             (list (ghub--auth host auth username forge)))
+                      ,@headers))
+                   ;; Encode in case caller used (symbol-name 'GET).  #35
+                   (url-request-method (encode-coding-string method 'utf-8))
+                   (url-request-data payload))
+               (url-retrieve-synchronously url))))
     (unwind-protect
         (with-current-buffer buf
           (set-buffer-multibyte t)
-          (let (link body)
-            (goto-char (point-min))
-            (let (headers)
-              (while (re-search-forward "^\\([^:]*\\): \\(.+\\)"
-                                        url-http-end-of-headers t)
-                (push (cons (match-string 1)
-                            (match-string 2))
-                      headers))
-              (and (setq link (cdr (assoc "Link" headers)))
-                   (setq link (car (rassoc
-                                    (list "rel=\"next\"")
-                                    (mapcar (lambda (elt) (split-string elt "; "))
-                                            (split-string link ",")))))
-                   (string-match "[?&]page=\\([^&>]+\\)" link)
-                   (setq link (match-string 1 link)))
-              (setq ghub-response-headers (nreverse headers)))
-            (unless url-http-end-of-headers
-              (error "ghub: url-http-end-of-headers is nil when it shouldn't"))
-            (goto-char (1+ url-http-end-of-headers))
-            (setq body (funcall (or reader 'ghub--read-json-response)
-                                url-http-response-status))
-            (unless (or noerror
-                        (= (/ url-http-response-status 100) 2)
-                        (= url-http-response-status 304)) ; gitlab only
-              (let ((data (list method resource qry payload body)))
-                (pcase url-http-response-status
-                  (301 (signal 'ghub-301 data))
-                  (400 (signal 'ghub-400 data))
-                  (401 (signal 'ghub-401 data))
-                  (403 (signal 'ghub-403 data))
-                  (404 (signal 'ghub-404 data))
-                  (405 (signal 'ghub-405 data)) ; gitlab only
-                  (409 (signal 'ghub-409 data))
-                  (412 (signal 'ghub-412 data)) ; gitlab only
-                  (422 (signal 'ghub-422 data))
-                  (500 (signal 'ghub-500 data))
-                  (_   (signal 'ghub-http-error
-                               (cons url-http-response-status data))))))
-            (if (and link unpaginate)
-                (nconc body
-                       (ghub-request
-                        method resource nil
-                        :query (cons (cons 'page link)
-                                     (cl-delete 'page query :key #'car))
-                        :payload payload
-                        :headers headers
-                        :unpaginate t :noerror noerror :reader reader
-                        :username username :auth auth :host host))
-              body)))
+          (ghub--handle-response-headers)
+          (let ((value (ghub--handle-response-body reader)))
+            (ghub--handle-response-status noerror method url payload value)
+            (if (and unpaginate
+                     (or (eq unpaginate t)
+                         (>  unpaginate 1)))
+                (let ((next (cdr (assq 'next (ghub-response-link-relations)))))
+                  (when (numberp unpaginate)
+                    (cl-decf unpaginate))
+                  (if next
+                      (nconc value
+                             (ghub-request
+                              method nil nil :url next :unpaginate unpaginate
+                              :headers headers :reader reader
+                              :username username :auth auth :host host))
+                    value))
+              value)))
       (kill-buffer buf))))
 
 (defun ghub-wait (resource &optional username auth host duration)
@@ -359,20 +352,33 @@ See `ghub-request' for information about the other arguments."
                 (cl-incf total wait))
             (sit-for (setq total 2))))))))
 
-(cl-defun ghub-graphql (graphql &optional variables &key username auth host)
-  "Make a GraphQL request using GRAPHQL and VARIABLES.
-Return the response as a json-like alist.  Even if the response
-contains `errors', do not raise an error.  GRAPHQL is a GraphQL
-string.  VARIABLES is a json-like alist.  The other arguments
-behave like for `ghub-request' (which see)."
-  (cl-assert (stringp graphql))
-  (cl-assert (not (stringp variables)))
-  (ghub-request "POST" "/graphql" nil :payload
-                (json-encode `(("query" . ,graphql)
-                               ,@(and variables `(("variables" ,@variables)))))
-                :username username :auth auth :host host))
+(defun ghub-response-link-relations ()
+  "Return an alist of link relations in `ghub-response-headers'."
+  (let ((rels (cdr (assoc "Link" ghub-response-headers))))
+    (and rels (mapcar (lambda (elt)
+                        (pcase-let ((`(,url ,rel) (split-string elt "; ")))
+                          (cons (intern (substring rel 5 -1))
+                                (substring url 1 -1))))
+                      (split-string rels ", ")))))
 
 ;;;; Internal
+
+(defun ghub--handle-response-headers ()
+  (goto-char (point-min))
+  (let (headers)
+    (while (re-search-forward "^\\([^:]*\\): \\(.+\\)"
+                              url-http-end-of-headers t)
+      (push (cons (match-string 1)
+                  (match-string 2))
+            headers))
+    (setq ghub-response-headers (nreverse headers)))
+  (unless url-http-end-of-headers
+    (error "ghub: url-http-end-of-headers is nil when it shouldn't"))
+  (goto-char (1+ url-http-end-of-headers)))
+
+(defun ghub--handle-response-body (reader)
+  (funcall (or reader 'ghub--read-json-response)
+           url-http-response-status))
 
 (defun ghub--read-json-response (status)
   (let ((raw (ghub--read-raw-response)))
@@ -410,10 +416,32 @@ behave like for `ghub-request' (which see)."
       (invalid_comment  . "Message consists of strings found in the html.")
       (message          . ,content))))
 
+(defun ghub--handle-response-status (noerror method url payload value)
+  (unless (or noerror
+              (= (/ url-http-response-status 100) 2)
+              (= url-http-response-status 304)) ; gitlab only
+    (let ((data (list method url payload value)))
+      (pcase url-http-response-status
+        (301 (signal 'ghub-301 data))
+        (400 (signal 'ghub-400 data))
+        (401 (signal 'ghub-401 data))
+        (403 (signal 'ghub-403 data))
+        (404 (signal 'ghub-404 data))
+        (405 (signal 'ghub-405 data)) ; gitlab only
+        (409 (signal 'ghub-409 data))
+        (412 (signal 'ghub-412 data)) ; gitlab only
+        (422 (signal 'ghub-422 data))
+        (500 (signal 'ghub-500 data))
+        (_   (signal 'ghub-http-error
+                     (cons url-http-response-status data)))))))
+
 (defun ghub--url-encode-params (params)
   (mapconcat (lambda (param)
-               (concat (url-hexify-string (symbol-name (car param))) "="
-                       (url-hexify-string (cdr param))))
+               (pcase-let ((`(,key . ,val) param))
+                 (concat (url-hexify-string (symbol-name key)) "="
+                         (if (integerp val)
+                             (number-to-string val)
+                           (url-hexify-string val)))))
              params "&"))
 
 ;;; Authentication

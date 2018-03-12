@@ -102,6 +102,12 @@ TODO Make this delete all messages in buffer, a la notmuch-show-archive-thread-t
         (notmuch-show-tag (list "+watched"))
         (notmuch-show-reply)))
 
+    ;; Reminder to myself: "SPC" is the built-in notmuch binding to scroll the
+    ;; thread until you're done, then move to the next thread.
+    ;;
+    ;; When you want to leave a thread in your inbox for further review, that
+    ;; can be handy.
+
     ;; Download an attachment locally.
     ;;
     ;; A rebinding of the standard 'w' keybinding, since I use 'w' for

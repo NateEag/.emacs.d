@@ -750,6 +750,11 @@ regression)."
 This option have no effect with emacs versions lower than 26."
   :group 'helm
   :type 'boolean)
+
+(defcustom helm-use-frame-when-more-than-two-windows nil
+  "Display helm buffer in frame when more than two windows."
+  :group 'helm
+  :type 'boolean)
 
 ;;; Faces
 ;;
@@ -2685,6 +2690,9 @@ Fallback to global value of `helm-display-function' when no local
 value found and current command is not in `helm-commands-using-frame'."
   (or (with-helm-buffer helm-display-function)
       (and (or (memq com helm-commands-using-frame)
+               (and helm-use-frame-when-more-than-two-windows
+                    (null helm--nested)
+                    (> (length (window-list)) 2))
                (null (frame-parameter helm-initial-frame 'minibuffer)))
            #'helm-display-buffer-in-own-frame)
       (default-value 'helm-display-function)))
@@ -6029,15 +6037,7 @@ See `helm-persistent-action-display-window' for how to use SPLIT-ONEWINDOW."
 (defun helm-other-window-base (command &optional arg)
   (let ((minibuffer-scroll-window
          (helm-persistent-action-display-window)))
-    (if (and helm--buffer-in-new-frame-p
-             (with-helm-buffer
-               helm-echo-input-in-header-line))
-        ;; helm is displayed in a frame with no minibuffer, scroll OW
-        ;; from helm-window.
-        (with-helm-window
-          (funcall command (or arg helm-scroll-amount)))
-      ;; Otherwise scroll according to minibuffer-scroll-window.
-      (funcall command (or arg helm-scroll-amount)))))
+    (funcall command (or arg helm-scroll-amount))))
 
 (defun helm-scroll-other-window (&optional arg)
   "Scroll other window upward ARG many lines.

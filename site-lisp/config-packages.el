@@ -102,11 +102,10 @@ TODO Make this delete all messages in buffer, a la notmuch-show-archive-thread-t
         (notmuch-show-tag (list "+watched"))
         (notmuch-show-reply)))
 
-    ;; Reminder to myself: "SPC" is the built-in notmuch binding to scroll the
-    ;; thread until you're done, then move to the next thread.
-    ;;
-    ;; When you want to leave a thread in your inbox for further review, that
-    ;; can be handy.
+    ;; I already have a keybinding for 'archive thread', so rebind Spacebar to
+    ;; just let me advance the thread and move to the next one when I'm done
+    ;; with it, rather than moving to the next one and archiving.
+    (define-key notmuch-show-mode-map " " 'notmuch-show-advance)
 
     ;; Download an attachment locally.
     ;;

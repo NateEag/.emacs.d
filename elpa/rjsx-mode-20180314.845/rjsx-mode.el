@@ -4,7 +4,7 @@
 
 ;; Author: Felipe Ochoa <felipe@fov.space>
 ;; URL: https://github.com/felipeochoa/rjsx-mode/
-;; Package-Version: 20180306.1832
+;; Package-Version: 20180314.845
 ;; Package-Requires: ((emacs "24.4") (js2-mode "20170504"))
 ;; Version: 1.1
 ;; Keywords: languages
@@ -131,8 +131,8 @@ the `:around' combinator.  JS2-PARSER is the original XML parser."
                                    name
                                    rjsx-props
                                    kids)))
-  name         ; AST node containing the parsed xml name
-  rjsx-props    ; linked list of AST nodes (both attributes and spreads)
+  name         ; AST node containing the parsed xml name or nil for fragments
+  rjsx-props   ; linked list of AST nodes (both attributes and spreads)
   kids         ; linked list of child xml nodes
   closing-tag) ; AST node with the tag closer
 
@@ -141,7 +141,8 @@ the `:around' combinator.  JS2-PARSER is the original XML parser."
 (js2--struct-put 'rjsx-node 'js2-printer 'rjsx-node-print)
 (defun rjsx-node-visit (ast callback)
   "Visit the `rjsx-node' children of AST, invoking CALLBACK on them."
-  (js2-visit-ast (rjsx-node-name ast) callback)
+  (let ((name (rjsx-node-name ast)))
+    (when name (js2-visit-ast name callback)))
   (dolist (prop (rjsx-node-rjsx-props ast))
     (js2-visit-ast prop callback))
   (dolist (prop (rjsx-node-kids ast))
@@ -152,7 +153,8 @@ the `:around' combinator.  JS2-PARSER is the original XML parser."
 (defun rjsx-node-print (node indent-level)
   "Print the `rjsx-node' NODE at indent level INDENT-LEVEL."
   (insert (js2-make-pad indent-level) "<")
-  (js2-print-ast (rjsx-node-name node) 0)
+  (let ((name-n (rjsx-node-name node)))
+   (when name-n (js2-print-ast name-n 0)))
   (dolist (attr (rjsx-node-rjsx-props node))
     (insert " ")
     (js2-print-ast attr 0))
@@ -168,10 +170,10 @@ the `:around' combinator.  JS2-PARSER is the original XML parser."
   "Return a string with NODE's opening tag including any namespace and member operations."
   (let ((name-n (rjsx-node-name node)))
     (cond
+     ((null name-n) "")                 ; fragment
      ((rjsx-member-p name-n) (rjsx-member-full-name name-n))
      ((rjsx-identifier-p name-n) (rjsx-identifier-full-name name-n))
-     ;; Otherwise it's either nil or an error. Either way, no name :(
-     (t ""))))
+     (t ""))))                          ; js2-error-node
 
 (defun rjsx-node-push-prop (n rjsx-prop)
   "Extend rjsx-node N's rjsx-props with js2-node RJSX-PROP.
@@ -196,7 +198,7 @@ Sets KID's parent to N."
                (:include js2-node (type rjsx-JSX-CLOSE))
                (:constructor nil)
                (:constructor make-rjsx-closing-tag (&key pos len name)))
-  name) ; A rjsx-identifier or rjsx-member node
+  name) ; An rjsx-identifier or rjsx-member node or nil for fragments
 
 (js2--struct-put 'rjsx-closing-tag 'js2-visitor 'rjsx-closing-tag-visit)
 (js2--struct-put 'rjsx-closing-tag 'js2-printer 'rjsx-closing-tag-print)
@@ -213,6 +215,7 @@ Sets KID's parent to N."
   "Return the string with N's fully-namespaced name, or just name if it's not namespaced."
   (let ((child (rjsx-closing-tag-name n)))
     (cond
+     ((null child) "")                  ; fragment
      ((rjsx-member-p child) (rjsx-member-full-name child))
      ((rjsx-identifier-p child) (rjsx-identifier-full-name child))
      (t ""))))
@@ -380,29 +383,31 @@ This is the entry point when ‘js2-parse-unary-expr’ finds a '<' character"
 (defun rjsx-parse-xml ()
   "Parse a complete xml node from start to end tag."
   (rjsx-record-tag-bracket-face)
-  (let ((pn (make-rjsx-node)) self-closing name-n name-str child child-name-str)
+  (let ((pn (make-rjsx-node)) self-closing name-n name-str child child-name-str is-fragment)
     (rjsx-maybe-message "Starting rjsx-parse-xml after <")
     (if (setq child (rjsx-parse-empty-tag))
         child
-      (setf (rjsx-node-name pn) (setq name-n (rjsx-parse-member-or-ns 'rjsx-tag)))
-      (if (js2-error-node-p name-n)
-          (progn (rjsx-maybe-message "could not parse tag name")
-                 (make-js2-error-node :pos (js2-node-pos pn) :len (1+ (js2-node-len name-n))))
-        (js2-node-add-children pn name-n)
-        (setq name-str (if (rjsx-member-p name-n) (rjsx-member-full-name name-n)
-                         (rjsx-identifier-full-name name-n)))
-        (if js2-highlight-external-variables
-            (let ((name-node (rjsx-identifier-name
-                              (if (rjsx-member-p name-n)
-                                  (car (rjsx-member-idents name-n))
-                                name-n)))
-                  (case-fold-search nil))
-              (when (string-match-p "^[[:upper:]]" (js2-name-node-name name-node))
-                (js2-record-name-node name-node))))
+      (if (eq (js2-peek-token) js2-GT)
+          (setq is-fragment t)
+        (setf (rjsx-node-name pn) (setq name-n (rjsx-parse-member-or-ns 'rjsx-tag)))
+        (if (js2-error-node-p name-n)
+            (progn (rjsx-maybe-message "could not parse tag name")
+                   (make-js2-error-node :pos (js2-node-pos pn) :len (1+ (js2-node-len name-n))))
+          (js2-node-add-children pn name-n)
+          (if js2-highlight-external-variables
+              (let ((name-node (rjsx-identifier-name
+                                (if (rjsx-member-p name-n)
+                                    (car (rjsx-member-idents name-n))
+                                  name-n)))
+                    (case-fold-search nil))
+                (when (string-match-p "^[[:upper:]]" (js2-name-node-name name-node))
+                  (js2-record-name-node name-node)))))
         (rjsx-maybe-message "cleared tag name: '%s'" name-str)
         ;; Now parse the attributes
         (rjsx-parse-attributes pn)
-        (rjsx-maybe-message "cleared attributes")
+        (rjsx-maybe-message "cleared attributes"))
+      (setq name-str (rjsx-node-opening-tag-name pn))
+      (progn
         ;; Now parse either a self closing tag or the end of the opening tag
         (rjsx-maybe-message "next type: `%s'" (js2-peek-token))
         (if (setq self-closing (js2-match-token js2-DIV))
@@ -419,7 +424,7 @@ This is the entry point when ‘js2-parse-unary-expr’ finds a '<' character"
         (rjsx-maybe-message "cleared opener closer, self-closing: %s" self-closing)
         (if self-closing
             (setf (js2-node-len pn) (- (js2-current-token-end) (js2-node-pos pn)))
-          (while (not (rjsx-closing-tag-p (setq child (rjsx-parse-child))))
+          (while (not (rjsx-closing-tag-p (setq child (rjsx-parse-child is-fragment))))
             ;; rjsx-parse-child calls our scanner, which always moves
             ;; forward at least one character. If it hits EOF, it
             ;; signals to our caller, so we don't have to worry about infinite loops here
@@ -713,16 +718,19 @@ parse."
     pn))
 
 
-(defun rjsx-parse-child ()
+(defun rjsx-parse-child (expect-fragment)
   "Parse an XML child node.
 Child nodes include plain (unquoted) text, other XML elements,
-and {}-bracketed expressions.  Return the parsed child."
+and {}-bracketed expressions.  Return the parsed child.
+
+EXPECT-FRAGMENT if t, indicates that `</>' should be parsed
+as a fragment closing node, and not as an empty tag."
   (let ((tt (rjsx-get-next-xml-token)))
     (rjsx-maybe-message "child type `%s'" tt)
     (cond
      ((= tt js2-LT)
       (rjsx-maybe-message "xml-or-close")
-      (rjsx-parse-xml-or-closing-tag))
+      (rjsx-parse-xml-or-closing-tag expect-fragment))
 
      ((= tt js2-LC)
       (rjsx-maybe-message "parsing expression { %s" (js2-peek-token))
@@ -740,19 +748,24 @@ and {}-bracketed expressions.  Return the parsed child."
 
      (t (error "Unexpected token type: %s" (js2-peek-token))))))
 
-(defun rjsx-parse-xml-or-closing-tag ()
+(defun rjsx-parse-xml-or-closing-tag (expect-fragment)
   "Parse a JSX tag, which could be a child or a closing tag.
 Return the parsed child, which is a `rjsx-closing-tag' if a
-closing tag was parsed."
+closing tag was parsed.
+
+EXPECT-FRAGMENT if t, indicates that `</>' should be parsed
+as a fragment closing node, and not as an empty tag."
   (let ((beg (js2-current-token-beg)) pn)
     (rjsx-record-tag-bracket-face)
-    (if (setq pn (rjsx-parse-empty-tag))
+    (if (and (not expect-fragment) (setq pn (rjsx-parse-empty-tag)))
         pn
       (if (js2-match-token js2-DIV)
           (progn (rjsx-record-tag-bracket-face)
-                 (setq pn (make-rjsx-closing-tag :pos beg
-                                                 :name (rjsx-parse-member-or-ns 'rjsx-tag)))
-                 (js2-node-add-children pn (rjsx-closing-tag-name pn))
+                 (if (and expect-fragment (eq (js2-peek-token) js2-GT))
+                     (setq pn (make-rjsx-closing-tag :pos beg))
+                   (setq pn (make-rjsx-closing-tag :pos beg
+                                                   :name (rjsx-parse-member-or-ns 'rjsx-tag)))
+                   (js2-node-add-children pn (rjsx-closing-tag-name pn)))
                  (if (js2-must-match js2-GT "msg.no.gt.in.closer" beg (- (js2-current-token-end) beg))
                      (rjsx-record-tag-bracket-face)
                    (rjsx-maybe-message "missing closing `>'"))
@@ -852,6 +865,15 @@ inserts `</>' and places the cursor inside the new tag."
 
 (define-key rjsx-mode-map "<" 'rjsx-electric-lt)
 
+(defun rjsx-expand-self-closing-tag (node)
+  "Expand NODE into a balanced tag.
+Assumes NODE is self-closing `rjsx-node', and that point is at
+the self-closing slash."
+  (delete-char 1)
+  (search-forward ">")
+  (save-excursion
+    (insert "</" (rjsx-node-opening-tag-name node) ">")))
+
 (defun rjsx-electric-gt (n)
   "Insert a context-sensitive greater-than sign.
 Optional prefix argument N indicates how many signs to insert.
@@ -865,11 +887,7 @@ the tags."
       (insert (make-string n ?>))
     (let ((node (rjsx--tag-at-point)))
       (if node
-          (progn
-            (delete-char 1)
-            (search-forward ">")
-            (save-excursion
-              (insert "</" (rjsx-node-opening-tag-name node) ">")))
+          (rjsx-expand-self-closing-tag node)
         (insert (make-string n ?>))))))
 
 (define-key rjsx-mode-map ">" 'rjsx-electric-gt)
@@ -886,11 +904,7 @@ slash and inserts a matching end-tag."
 	(delete-char n killflag))
     (let ((node (rjsx--tag-at-point)))
       (if node
-          (progn
-            (delete-char 1)
-            (search-forward ">" )
-            (save-excursion
-              (insert "</" (rjsx-node-opening-tag-name node) ">")))
+          (rjsx-expand-self-closing-tag node)
         (delete-char 1)))))
 
 (define-key rjsx-mode-map (kbd "C-d") 'rjsx-delete-creates-full-tag)
@@ -899,18 +913,28 @@ slash and inserts a matching end-tag."
   "Prompt for a new name and modify the tag at point.
 NEW-NAME is the name to give the tag."
   (interactive "sNew tag name: ")
-  (let ((tag (rjsx--tag-at-point)) closer)
-    (if tag
-        (let* ((head (rjsx-node-name tag))
-               (tail (when (setq closer (rjsx-node-closing-tag tag)) (rjsx-closing-tag-name closer)))
-               beg end)
-          (dolist (part (if tail (list tail head) (list head)))
-            (setq beg (js2-node-abs-pos part)
-                  end (+ beg (js2-node-len part)))
-            (delete-region beg end)
-            (save-excursion (goto-char beg) (insert new-name)))
-          (js2-reparse))
-      (message "No JSX tag found at point"))))
+  (let* ((tag (rjsx--tag-at-point))
+         (closer (and tag (rjsx-node-closing-tag tag))))
+    (cond
+     ((null tag) (message "No JSX tag found at point"))
+     ((null (rjsx-node-name tag))       ; fragment
+      (cl-assert closer nil "Fragment has no closing-tag")
+      (save-excursion
+        (goto-char (+ 2 (js2-node-abs-pos closer)))
+        (insert new-name)
+        (goto-char (1+ (js2-node-abs-pos tag)))
+        (insert new-name))
+      (js2-reparse))
+     (t
+      (let* ((head (rjsx-node-name tag))
+             (tail (when closer (rjsx-closing-tag-name closer)))
+             beg end)
+        (dolist (part (if tail (list tail head) (list head)))
+          (setq beg (js2-node-abs-pos part)
+                end (+ beg (js2-node-len part)))
+          (delete-region beg end)
+          (save-excursion (goto-char beg) (insert new-name)))
+        (js2-reparse))))))
 
 (define-key rjsx-mode-map (kbd "C-c C-r") 'rjsx-rename-tag-at-point)
 

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "rjsx-mode" "rjsx-mode.el" (23206 33861 0 0))
+;;;### (autoloads nil "rjsx-mode" "rjsx-mode.el" (23210 30801 0 0))
 ;;; Generated autoloads from rjsx-mode.el
 
 (autoload 'rjsx-mode "rjsx-mode" "\

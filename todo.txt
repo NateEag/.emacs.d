@@ -46,6 +46,12 @@
   necessary - if point is in a string matching \$[a-zA-Z0-9_]+, you *know* you
   should insert a _. You can maybe do smarter stuff than just that, too.
 
+- Generate autoloads for my mode configs (and other code I've hacked up myself)
+  from autoload cookie comments, rather than maintaining them manually.
+  Apparently auto-compile has `auto-compile-update-autoloads' for this purpose.
+  As long as you commit those changes along with the others, that would
+  probably work pretty well.
+
 - Make a PR to auto-complete for supporting smart-dash-mode.
 
 - Add a workaround to web-mode-init so smart-dash-mode knows when we're in a
@@ -63,7 +69,7 @@
 - Suppress aggressive-fill-paragraph-mode while directly above or below markdown
   code blocks.
 
-- Make aggressive-fill-paragraph-mode fill paragraphs in front of point when
+- Make aggressive-fill-paragraph-mode fill paragraph in front of point when
   you've pressed return several times to split a paragraph into two paragraphs.
 
 - Prevent my aggressive-fill-paragraph-mode from filling rst titles when
@@ -431,10 +437,6 @@
   https://github.com/chadbraunduin/backups-mode
 
 - Add a command to backup-walker to ediff against the current file.
-
-- Generate autoloads for my mode configs (and other code I've hacked up myself)
-  from autoload cookie comments, rather than maintaining them manually. Might
-  fit well into my commit hook setup?
 
 - As a simple exercise to start learning macros, try implementing PHP's
   "defaulting" ternary operator behavior. The example I emailed myself was

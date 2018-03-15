@@ -86,8 +86,16 @@
 
 ;; Autosave's defaults are not very nice. Here, we fix them.
 ;; Create autosave dir if it doesn't exist.
+;;
 ;; TODO Put autosaves outside my .emacs.d. I don't back .emacs.d up, since
 ;; I have it on GitHub, but I should really back up my backups...
+;;
+;; Figure out when to suppress autosaves if editing in a file that's sometimes
+;; updated by an external process while you're in it - this autosave setup can
+;; wind up racing with that, and sometimes it wins. Basically I need to add a
+;; second suppression function to the one I already have for when files
+;; disappear due to changing branches, but I'm not sure what the logic in this
+;; suppression function would be. Something involving auto-revert-mode?
 (make-directory my-autosaves-dir t)
 (setq
    ; Don't clobber symlinks.

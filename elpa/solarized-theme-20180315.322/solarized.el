@@ -454,6 +454,44 @@ customize the resulting theme."
                              :inverse-video nil))))
      `(ace-jump-face-foreground
        ((,class (:foreground ,red :background ,base03 :inverse-video nil :weight bold))))
+;;;;; all-the-icons, all-the-icons-dired, spaceline-all-the-icons
+     `(spaceline-all-the-icons-info-face ((,class (:foreground ,blue))))
+     `(spaceline-all-the-icons-sunrise-face ((,class (:foreground ,yellow))))
+     `(spaceline-all-the-icons-sunrise-face ((,class (:foreground ,orange))))
+     `(all-the-icons-dired-dir-face ((,class (:foreground ,base0))))
+     `(all-the-icons-red ((,class (:foreground ,red))))
+     `(all-the-icons-lred ((,class (:foreground ,red-lc))))
+     `(all-the-icons-dred ((,class (:foreground ,red-hc))))
+     `(all-the-icons-red-alt ((,class (:foreground ,red))))
+     `(all-the-icons-green ((,class (:foreground ,green))))
+     `(all-the-icons-lgreen ((,class (:foreground ,green-lc))))
+     `(all-the-icons-dgreen ((,class (:foreground ,green-hc))))
+     `(all-the-icons-yellow ((,class (:foreground ,yellow))))
+     `(all-the-icons-lyellow ((,class (:foreground ,yellow-lc))))
+     `(all-the-icons-dyellow ((,class (:foreground ,yellow-hc))))
+     `(all-the-icons-blue ((,class (:foreground ,blue))))
+     `(all-the-icons-blue-alt ((,class (:foreground ,blue))))
+     `(all-the-icons-lblue ((,class (:foreground ,blue-lc))))
+     `(all-the-icons-dblue ((,class (:foreground ,blue-hc))))
+     `(all-the-icons-maroon ((,class (:foreground ,magenta-d))))
+     `(all-the-icons-lmaroon ((,class (:foreground ,magenta-d))))
+     `(all-the-icons-dmaroon ((,class (:foreground ,magenta-d))))
+     `(all-the-icons-purple ((,class (:foreground ,violet))))
+     `(all-the-icons-lpurple ((,class (:foreground ,violet-lc))))
+     `(all-the-icons-dpurple ((,class (:foreground ,violet-hc))))
+     `(all-the-icons-orange ((,class (:foreground ,orange))))
+     `(all-the-icons-lorange ((,class (:foreground ,orange-lc))))
+     `(all-the-icons-dorange ((,class (:foreground ,orange-hc))))
+     `(all-the-icons-cyan ((,class (:foreground ,cyan))))
+     `(all-the-icons-cyan-alt ((,class (:foreground ,cyan))))
+     `(all-the-icons-lcyan ((,class (:foreground ,cyan-lc))))
+     `(all-the-icons-dcyan ((,class (:foreground ,cyan-hc))))
+     `(all-the-icons-pink ((,class (:foreground ,magenta))))
+     `(all-the-icons-lpink ((,class (:foreground ,magenta-lc))))
+     `(all-the-icons-dpink ((,class (:foreground ,magenta-hc))))
+     `(all-the-icons-silver ((,class (:foreground ,base0))))
+     `(all-the-icons-lsilver ((,class (:foreground ,base01))))
+     `(all-the-icons-dsilver ((,class (:foreground ,base1))))
 ;;;;; android-mode
      `(android-mode-debug-face ((,class (:foreground ,green))))
      `(android-mode-error-face ((,class (:foreground ,orange :weight bold))))
@@ -613,118 +651,45 @@ customize the resulting theme."
      `(custom-button-unraised ((,class (:inherit underline))))
      `(custom-button-pressed-unraised ((,class (:inherit custom-button-unraised :foreground ,magenta))))
 ;;;;; diff
-     `(diff-added   ((,class (:foreground ,green))))
-     `(diff-changed ((,class (:foreground ,blue))))
-     `(diff-removed ((,class (:foreground ,red))))
-     `(diff-refine-added
-       ((,light-class
-         (:background ,(solarized-color-blend "#ddffdd" green 0.7)))
-        (,dark-class
-         (:background ,(solarized-color-blend "#446644" green 0.7)))))
-     `(diff-refine-changed
-       ((,light-class
-         (:background ,(solarized-color-blend "#ddddff" blue 0.7)))
-        (,dark-class
-         (:background ,(solarized-color-blend "#444466" blue 0.7)))))
-     `(diff-refine-removed
-       ((,light-class
-         (:background ,(solarized-color-blend "#ffdddd" red 0.7)))
-        (,dark-class
-         (:background ,(solarized-color-blend "#664444" red 0.7)))))
+     `(diff-added ((,class (:background ,green-lc :foreground ,base3 :weight normal :slant normal))))
+     `(diff-changed ((,class (:background ,yellow-lc :foreground ,base3 :weight normal :slant normal))))
+     `(diff-removed ((,class (:background ,orange-lc :foreground ,base3 :weight normal :slant normal))))
+     `(diff-refine-added ((,class (:foreground ,green-hc :underline t))))
+     `(diff-refine-changed ((,class (:foreground ,yellow-hc :underline t))))
+     `(diff-refine-removed ((,class (:foreground ,orange-hc :underline t))))
      `(diff-header  ((,class (:background ,base03))))
      `(diff-file-header
        ((,class (:background ,base03 :foreground ,base0 :weight bold))))
 ;;;;; diff-hl
-     `(diff-hl-change ((,class (:background ,blue-lc  :foreground ,blue-hc))))
-     `(diff-hl-delete ((,class (:background ,red-lc  :foreground ,red-hc))))
-     `(diff-hl-insert ((,class (:background ,green-lc  :foreground ,green-hc))))
-     `(diff-hl-unknown ((,class (:background ,cyan-lc   :foreground ,cyan-hc))))
+     `(diff-hl-change ((,class (:background ,blue-lc :foreground ,blue-hc))))
+     `(diff-hl-delete ((,class (:background ,orange-lc :foreground ,orange-hc))))
+     `(diff-hl-insert ((,class (:background ,green-lc :foreground ,green-hc))))
+     `(diff-hl-unknown ((,class (:background ,yellow-lc :foreground ,yellow-hc))))
 ;;;;; ediff
-     `(ediff-fine-diff-A ((,class (:background ,orange-lc))))
-     `(ediff-fine-diff-B ((,class (:background ,green-lc))))
-     `(ediff-fine-diff-C ((,class (:background ,yellow-lc))))
-
-     `(ediff-current-diff-C ((,class (:background ,blue-lc))))
-
-     `(ediff-even-diff-A ((,class (:background ,base01
-                                               :foreground ,base3 ))))
-     `(ediff-odd-diff-A ((,class (:background ,base01
-                                              :foreground ,base03 ))))
-     `(ediff-even-diff-B ((,class (:background ,base01
-                                               :foreground ,base03 ))))
-     `(ediff-odd-diff-B ((,class (:background ,base01
-                                              :foreground ,base03 ))))
-     `(ediff-even-diff-C ((,class (:background ,base01
-                                               :foreground ,base0 ))))
-     `(ediff-odd-diff-C ((,class (:background ,base01
-                                              :foreground ,base03 ))))
-
-;;;;;; alternative ediff (not finished)
-     ;; `(ediff-fine-diff-A ((,class (
-     ;;                               :background ,(solarized-color-blend blue base03 0.25))
-     ;;                              )))
-     ;; `(ediff-fine-diff-B ((,class (
-     ;;                               :background ,(solarized-color-blend violet base03 0.25))
-     ;;                              )))
-     ;; `(ediff-fine-diff-C ((,class (
-     ;;                               :background ,(solarized-color-blend yellow base03 0.25))
-     ;;                              )))
-     ;; `(ediff-current-diff-A ((,class (
-     ;;                                  :background ,(solarized-color-blend blue base03 0.15)
-     ;;                                              ))))
-     ;; `(ediff-current-diff-B ((,class (
-     ;;                                   :background ,(solarized-color-blend violet base03 0.15)
-     ;;                                              ))))
-     ;; `(ediff-current-diff-C ((,class (
-     ;;                                  :background ,(solarized-color-blend yellow base03 0.15)
-     ;;                                              ))))
-     ;; `(ediff-even-diff-A ((,class (
-     ;;                                ;; :background ,(solarized-color-blend base0 base03 0.15)
-     ;;                               :background ,base02
-     ;;                               ;; :foreground ,base2
-     ;;                                ;; :background ,(solarized-color-blend green base02 0.15)
-     ;;                                           ))))
-     ;; `(ediff-even-diff-B ((,class (
-     ;;                               ;; :background ,base01
-     ;;                               :background ,base02
-     ;;                               ;; :foreground ,base2
-     ;;                                           ))))
-     ;; `(ediff-even-diff-C ((,class (
-     ;;                               ;; :background ,base01
-     ;;                               :background ,base02
-     ;;                                           ;; :foreground ,base2
-     ;;                                           ))))
-     ;; `(ediff-odd-diff-A ((,class (
-     ;;                              ;; :background ,base01
-     ;;                                          :background ,base02
-     ;;                                          ))))
-     ;; `(ediff-odd-diff-B ((,class (
-     ;;                              ;; :background ,base01
-     ;;                                          :background ,base02
-     ;;                                          ))))
-     ;; `(ediff-odd-diff-C ((,class (
-     ;;                              ;; :background ,base01
-     ;;                                          :background ,base03
-     ;;                                          ))))
-     ;; `(ediff-current-diff-Ancestor ((,class (:background "VioletRed" :foreground "Black"))))
-     ;; `(ediff-even-diff-Ancestor ((,class (:background "Grey" :foreground "White"))))
-     ;; `(ediff-fine-diff-Ancestor ((,class (:background "Green" :foreground "Black"))))
-     ;; `(ediff-odd-diff-Ancestor ((,class (:background "gray40" :foreground "cyan3"))))
-     ;; `(ediff-even-diff-A ((,class (:underline ,base01))))
-     ;; `(ediff-odd-diff-A ((,class (:underline ,base01
-     ;;                                          ))))
-     ;; `(ediff-even-diff-B ((,class (:background ,base01
-     ;;                                           :foreground ,base03
-     ;;                                           ))))
-     ;; `(ediff-odd-diff-B ((,class (:background ,base01
-     ;;                                          :foreground ,base03
-     ;;                                          ))))
-     ;; `(ediff-even-diff-C ((,class (:background ,base01
-     ;;                                           :foreground ,base0
-     ;;                                           ))))
-     ;; `(ediff-odd-diff-C ((,class (:background ,base01
-     ;;                                          :foreground ,base03
-     ;;                                          ))))
+     `(ediff-fine-diff-A ((,class (:foreground ,orange-hc :underline t))))
+     `(ediff-fine-diff-B ((,class (:foreground ,green-hc :underline t))))
+     `(ediff-fine-diff-C ((,class (:foreground ,cyan-hc :underline t))))
+     `(ediff-fine-diff-Ancestor ((,class (:background ,green))))
+     `(ediff-current-diff-A ((,class (:background ,orange-lc :foreground ,base3 :weight normal :slant normal))))
+     `(ediff-current-diff-B ((,class (:background ,green-lc :foreground ,base3 :weight normal :slant normal))))
+     `(ediff-current-diff-C ((,class (:background ,cyan-lc :foreground ,base3 :weight normal :slant normal))))
+     `(ediff-current-diff-Ancestor ((,class (:background ,magenta :weight normal :slant normal))))
+     `(ediff-even-diff-A ((,class (:background ,base02 :foreground ,base3 :weight normal :slant normal))))
+     `(ediff-even-diff-B ((,class (:background ,base02 :foreground ,base3 :weight normal :slant normal))))
+     `(ediff-even-diff-C ((,class (:background ,base02 :foreground ,base3 :weight normal :slant normal))))
+     `(ediff-even-diff-Ancestor ((,class (:background ,(color-lighten-name base02 0.5) :weight normal :slant normal))))
+     `(ediff-odd-diff-A ((,class (:background ,base02 :foreground ,base3 :weight normal :slant normal))))
+     `(ediff-odd-diff-B ((,class (:background ,base02 :foreground ,base3 :weight normal :slant normal))))
+     `(ediff-odd-diff-C ((,class (:background ,base02 :foreground ,base3 :weight normal :slant normal))))
+     `(ediff-odd-diff-Ancestor ((,class (:background ,(color-lighten-name base02 0.5) :weight normal :slant normal))))
+;;;;;; smerge
+     `(smerge-markers ((,class (:background ,base02))))
+     `(smerge-base ((,class (:background ,yellow-lc :foreground ,base3 :weight normal :slant normal))))
+     `(smerge-mine ((,class (:background ,green-lc :foreground ,base3 :weight normal :slant normal))))
+     `(smerge-other ((,class (:background ,orange-lc :foreground ,base3 :weight normal :slant normal))))
+     `(smerge-refined-added ((,class (:foreground ,green-hc :underline t))))
+     `(smerge-refined-changed ((,class (:background ,blue-lc :foreground ,cyan-hc :underline t))))
+     `(smerge-refined-removed ((,class (:foreground ,orange-hc :underline t))))
 ;;;;; edts
      `(edts-face-error-line
        ((,(append '((supports :underline (:style line))) light-class)
@@ -1323,11 +1288,15 @@ customize the resulting theme."
 ;;;;; linum-mode
      `(linum ((,class (:weight normal :underline nil :foreground ,s-fringe-fg :background ,s-fringe-bg))))
      `(linum-relative-current-face ((,class (:inherit linum))))
+;;;;; lsp-ui
+     `(lsp-ui-sideline-code-action ((,class (:foreground ,yellow :weight normal))))
 ;;;;; lusty-explorer
      `(lusty-directory-face ((,class (:inherit dired-directory))))
      `(lusty-file-face ((,class nil)))
      `(lusty-match-face ((,class (:inherit ido-first-match))))
      `(lusty-slash-face ((,class (:foreground ,cyan :weight bold))))
+;;;;; macrostep
+     `(macrostep-expansion-highlight-face ((,class (:background ,base02))))
 ;;;;; magit
 ;;;;;; headings and diffs
      `(magit-section-highlight           ((t (:background ,base02))))
@@ -2189,6 +2158,8 @@ customize the resulting theme."
               ,blue-d ,cyan ,magenta ,violet))
 ;;;;; highlight-changes
      `(highlight-changes-colors '(,magenta ,violet))
+;;;;; highlight-parentheses
+     `(hl-paren-colors '(,cyan ,yellow ,blue ,violet ,green))
 ;;;;; highlight-symbol
      `(highlight-symbol-foreground-color ,base1)
      `(highlight-symbol-colors

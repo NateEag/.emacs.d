@@ -224,7 +224,7 @@ It should returns a list of filenames to expand.")
 (defun lsp-ui-peek--adjust (width strings)
   (-let* (((s1 . s2) strings))
     (cons (lsp-ui-peek--truncate (- width (1+ lsp-ui-peek-list-width)) s1)
-          (lsp-ui-peek--truncate (1- lsp-ui-peek-list-width) s2))))
+          (lsp-ui-peek--truncate (- lsp-ui-peek-list-width 2) s2))))
 
 (defun lsp-ui-peek--make-footer ()
   ;; Character-only terminals don't support characters of different height
@@ -644,7 +644,8 @@ references.  The function returns a list of `ls-xref-item'."
          (fn (lambda (loc) (lsp-ui-peek--xref-make-item filename loc))))
     (cond
      (visiting
-      (with-current-buffer visiting
+      (with-temp-buffer
+        (insert-buffer-substring-no-properties visiting)
         (lsp-ui-peek--fontify-buffer filename)
         (mapcar fn (cdr file))))
      ((file-readable-p filename)

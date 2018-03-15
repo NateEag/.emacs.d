@@ -307,7 +307,7 @@ BUFFER is the buffer where the request has been made."
   (when (lsp-ui-doc--get-frame)
     (lsp-ui-doc--with-buffer
      (erase-buffer))
-    (lsp-ui-doc--delete-frame)))
+    (make-frame-invisible (lsp-ui-doc--get-frame))))
 
 (defun lsp-ui-doc--buffer-width ()
   "Calcul the max width of the buffer."
@@ -582,9 +582,8 @@ HEIGHT is the documentation number of lines."
   (unless (equal (ad-get-arg 0) (selected-window))
     (lsp-ui-doc--hide-frame)))
 
-(defadvice load-theme (after lsp-ui-doc--delete-frame-on-theme-load activate)
-  "Force a frame refresh on theme reload."
-  (lsp-ui-doc--delete-frame))
+(advice-add 'load-theme :before (lambda (&rest _) (lsp-ui-doc--delete-frame)))
+(add-hook 'window-configuration-change-hook #'lsp-ui-doc--delete-frame)
 
 (defun lsp-ui-doc-enable-eldoc ()
   (setq-local eldoc-documentation-function 'lsp-ui-doc--eldoc))

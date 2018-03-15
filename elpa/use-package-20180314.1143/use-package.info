@@ -142,13 +142,13 @@ yourself with it by reading the documentation in the Emacs manual, see
 
      (require 'package)
      (add-to-list 'package-archives
-     	     '("melpa" . "http://melpa.org/packages/") t)
+     	     '("melpa" . "https://melpa.org/packages/") t)
 
    • To use Melpa-Stable:
 
      (require 'package)
      (add-to-list 'package-archives
-     	     '("melpa-stable" . "http://stable.melpa.org/packages/") t)
+     	     '("melpa-stable" . "https://stable.melpa.org/packages/") t)
 
    Once you have added your preferred archive, you need to update the
 local package list using:
@@ -1001,39 +1001,39 @@ Node: Top784
 Node: Introduction3024
 Node: Installation3151
 Node: Installing from an Elpa Archive3503
-Node: Installing from the Git Repository4616
-Node: Post-Installation Tasks6152
-Node: Getting Started6865
-Node: Keywords7037
-Node: ‘after’8161
-Node: ‘bind-keymap’ ‘bind-keymap*’9711
-Node: ‘bind’ ‘bind*’10794
-Node: Binding to local keymaps12864
-Node: ‘commands’13967
-Node: ‘preface’ ‘init’ ‘config’14145
-Node: ‘custom’16253
-Node: ‘custom-face’16723
-Node: ‘defer’ ‘demand’17067
-Node: ‘defines’ ‘functions’17909
-Node: ‘diminish’ ‘delight’19090
-Node: ‘disabled’21063
-Node: ‘ensure’ ‘pin’21588
-Node: ‘hook’24342
-Node: ‘if’ ‘when’ ‘unless’25796
-Node: ‘load-path’26772
-Node: ‘mode’ ‘interpreter’27954
-Node: ‘magic’ ‘magic-fallback’29295
-Node: ‘no-require’30170
-Node: ‘requires’30898
-Node: FAQ31797
-Node: FAQ - How to …?32080
-Node: This is a question32250
-Node: FAQ - Issues and Errors32398
-Node: This is an issues32581
-Node: Debugging Tools32736
-Node: Command Index32910
-Node: Function Index33066
-Node: Variable Index33223
+Node: Installing from the Git Repository4618
+Node: Post-Installation Tasks6154
+Node: Getting Started6867
+Node: Keywords7039
+Node: ‘after’8163
+Node: ‘bind-keymap’ ‘bind-keymap*’9713
+Node: ‘bind’ ‘bind*’10796
+Node: Binding to local keymaps12866
+Node: ‘commands’13969
+Node: ‘preface’ ‘init’ ‘config’14147
+Node: ‘custom’16255
+Node: ‘custom-face’16725
+Node: ‘defer’ ‘demand’17069
+Node: ‘defines’ ‘functions’17911
+Node: ‘diminish’ ‘delight’19092
+Node: ‘disabled’21065
+Node: ‘ensure’ ‘pin’21590
+Node: ‘hook’24344
+Node: ‘if’ ‘when’ ‘unless’25798
+Node: ‘load-path’26774
+Node: ‘mode’ ‘interpreter’27956
+Node: ‘magic’ ‘magic-fallback’29297
+Node: ‘no-require’30172
+Node: ‘requires’30900
+Node: FAQ31799
+Node: FAQ - How to …?32082
+Node: This is a question32252
+Node: FAQ - Issues and Errors32400
+Node: This is an issues32583
+Node: Debugging Tools32738
+Node: Command Index32912
+Node: Function Index33068
+Node: Variable Index33225
 
 End Tag Table
 

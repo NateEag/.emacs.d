@@ -371,7 +371,8 @@ The shell command lives in my dotfiles repo."
 (use-package magit
   :defer t
   :hook ((magit-mode . magit-svn-mode)
-         (magit-status-mode . evil-local-mode))
+         (magit-status-mode . evil-local-mode)
+         (magit-rebase-mode . evil-local-mode))
   :config (require 'evil-magit)
           ;; I never use magit's gitignore editing and because evil-magit
           ;; doesn't have support for everything I want to do from

@@ -48,11 +48,6 @@
 
 ;;; General preferences.
 
-;; Solarized is better than your theme.
-;;
-;; Sorry, it's just true.
-(load-theme 'solarized-dark t)
-
 ;; Most of the time, I want Unix-style line endings, and UTF-8 is generally a
 ;; good thing.
 (setq-default buffer-file-coding-system 'utf-8-unix)

@@ -38,6 +38,26 @@
   :init (beacon-mode 1)
   :diminish beacon-mode)
 
+;; Solarized is better than your theme.
+;;
+;; Sorry, it's just true.
+(use-package solarized-theme
+  :config
+  (load-theme 'solarized-dark t)
+  (let ((line (face-attribute 'mode-line :underline)))
+    (set-face-attribute 'mode-line nil :overline line)
+    (set-face-attribute 'mode-line nil :underline line)
+    (set-face-attribute 'mode-line-inactive nil :overline line)
+    (set-face-attribute 'mode-line-inactive nil :underline line)
+    (set-face-attribute 'mode-line nil :box nil)
+    (set-face-attribute 'mode-line-inactive nil :box nil)))
+
+(use-package moody
+  :config
+  (setq x-underline-at-descent-line t)
+  (moody-replace-mode-line-buffer-identification)
+  (moody-replace-vc-mode))
+
 (use-package notmuch
   :config
   (progn

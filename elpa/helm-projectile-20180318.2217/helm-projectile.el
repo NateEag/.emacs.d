@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov
 ;; URL: https://github.com/bbatsov/helm-projectile
-;; Package-Version: 20180228.1125
+;; Package-Version: 20180318.2217
 ;; Created: 2011-31-07
 ;; Keywords: project, convenience
 ;; Version: 0.14.0
@@ -223,11 +223,7 @@ It is there because Helm requires it."
 
 (defvar helm-source-projectile-projects
   (helm-build-sync-source "Projectile projects"
-    :candidates (lambda ()
-                  (if (projectile-project-p)
-                      (cons (abbreviate-file-name (projectile-project-root))
-                            (projectile-relevant-known-projects))
-                    projectile-known-projects))
+    :candidates (lambda () projectile-known-projects)
     :fuzzy-match helm-projectile-fuzzy-match
     :keymap helm-projectile-projects-map
     :mode-line helm-read-file-name-mode-line-string

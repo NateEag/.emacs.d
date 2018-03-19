@@ -6,7 +6,7 @@
 ;; Homepage: https://github.com/tarsius/moody
 
 ;; Package-Requires: ((emacs "25.3"))
-;; Package-Version: 20180316.340
+;; Package-Version: 20180318.1329
 
 ;; This file is not part of GNU Emacs.
 
@@ -82,7 +82,8 @@
 ;;; Options
 
 (defcustom moody-mode-line-height
-  (* 2 (aref (font-info (face-font 'mode-line)) 2))
+  (let ((font (face-font 'mode-line)))
+    (if font (* 2 (aref (font-info font) 2)) 30))
   "When using `moody', height of the mode line in pixels.
 This should be an even number."
   :type 'integer
@@ -290,14 +291,21 @@ to the command loop."
     (unless (minibuffer-window-active-p win)
       (setq moody--active-window win))))
 
+(add-hook 'after-make-frame-functions       'moody--set-active-window)
 (add-hook 'window-configuration-change-hook 'moody--set-active-window)
 (add-hook 'focus-in-hook                    'moody--set-active-window)
-(advice-add 'handle-switch-frame :after     'moody--set-active-window)
 (advice-add 'select-window :after           'moody--set-active-window)
+(advice-add 'select-frame :after            'moody--set-active-window)
+(advice-add 'delete-frame :after            'moody--set-active-window)
 
 ;;; Kludges
 
+(declare-function color-srgb-to-xyz "color" (red green blue))
+(declare-function color-rgb-to-hex "color" (red green blue &optional
+                                                digits-per-component))
+
 (defun moody-slant-apple-rgb (direction c1 c2 c3 &optional height)
+  (require (quote color))
   (cl-flet ((cnv (color)
                  (pcase-let*
                      ((`(,r ,g ,b) (color-name-to-rgb color))

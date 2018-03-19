@@ -54,6 +54,7 @@
 
 (defvar url-callback-arguments)
 (defvar url-http-end-of-headers)
+(defvar url-http-extra-headers)
 (defvar url-http-response-status)
 
 ;;; Settings
@@ -86,6 +87,25 @@ If this is nil, then the value returned by `system-name' is
 used instead.")
 
 ;;; Request
+;;;; Object
+
+(cl-defstruct (ghub--req
+               (:constructor ghub--make-req)
+               (:copier nil))
+  (url        nil :read-only nil)
+  (silent     nil :read-only t)
+  (method     nil :read-only t)
+  (headers    nil :read-only t)
+  (unpaginate nil :read-only nil)
+  (noerror    nil :read-only t)
+  (reader     nil :read-only t)
+  (callback   nil :read-only t)
+  (errorback  nil :read-only t)
+  (value      nil :read-only nil)
+  (extra      nil :read-only nil))
+
+(defalias 'ghub-req-extra 'ghub--req-extra)
+
 ;;;; API
 
 (define-error 'ghub-error "Ghub/Url Error" 'error)
@@ -98,7 +118,8 @@ response header in this variable.")
 
 (cl-defun ghub-graphql (graphql &optional variables
                                 &key username auth host
-                                callback errorback)
+                                silent
+                                callback errorback extra)
   "Make a GraphQL request using GRAPHQL and VARIABLES.
 Return the response as a json-like alist.  Even if the response
 contains `errors', do not raise an error.  GRAPHQL is a GraphQL
@@ -109,94 +130,99 @@ behave like for `ghub-request' (which see)."
   (ghub-request "POST" "/graphql" nil :payload
                 (json-encode `(("query" . ,graphql)
                                ,@(and variables `(("variables" ,@variables)))))
+                :silent silent
                 :username username :auth auth :host host
-                :callback callback :errorback errorback))
+                :callback callback :errorback errorback :extra extra))
 
 (cl-defun ghub-head (resource &optional params
                               &key query payload headers
-                              unpaginate noerror reader
+                              silent unpaginate noerror reader
                               username auth host
-                             callback errorback)
+                              callback errorback extra)
   "Make a `HEAD' request for RESOURCE, with optional query PARAMS.
 Like calling `ghub-request' (which see) with \"HEAD\" as METHOD."
   (ghub-request "HEAD" resource params
                 :query query :payload payload :headers headers
-                :unpaginate unpaginate :noerror noerror :reader reader
+                :silent silent :unpaginate unpaginate
+                :noerror noerror :reader reader
                 :username username :auth auth :host host
-                :callback callback :errorback errorback))
+                :callback callback :errorback errorback :extra extra))
 
 (cl-defun ghub-get (resource &optional params
                              &key query payload headers
-                             unpaginate noerror reader
+                             silent unpaginate noerror reader
                              username auth host
-                             callback errorback)
+                             callback errorback extra)
   "Make a `GET' request for RESOURCE, with optional query PARAMS.
 Like calling `ghub-request' (which see) with \"GET\" as METHOD."
   (ghub-request "GET" resource params
                 :query query :payload payload :headers headers
-                :unpaginate unpaginate :noerror noerror :reader reader
+                :silent silent :unpaginate unpaginate
+                :noerror noerror :reader reader
                 :username username :auth auth :host host
-                :callback callback :errorback errorback))
+                :callback callback :errorback errorback :extra extra))
 
 (cl-defun ghub-put (resource &optional params
                              &key query payload headers
-                             unpaginate noerror reader
+                             silent unpaginate noerror reader
                              username auth host
-                             callback errorback)
+                             callback errorback extra)
   "Make a `PUT' request for RESOURCE, with optional payload PARAMS.
 Like calling `ghub-request' (which see) with \"PUT\" as METHOD."
   (ghub-request "PUT" resource params
                 :query query :payload payload :headers headers
-                :unpaginate unpaginate :noerror noerror :reader reader
+                :silent silent :unpaginate unpaginate
+                :noerror noerror :reader reader
                 :username username :auth auth :host host
-                :callback callback :errorback errorback))
+                :callback callback :errorback errorback :extra extra))
 
 (cl-defun ghub-post (resource &optional params
                               &key query payload headers
-                              unpaginate noerror reader
+                              silent unpaginate noerror reader
                               username auth host
-                              callback errorback)
+                              callback errorback extra)
   "Make a `POST' request for RESOURCE, with optional payload PARAMS.
 Like calling `ghub-request' (which see) with \"POST\" as METHOD."
   (ghub-request "POST" resource params
                 :query query :payload payload :headers headers
-                :unpaginate unpaginate :noerror noerror :reader reader
+                :silent silent :unpaginate unpaginate
+                :noerror noerror :reader reader
                 :username username :auth auth :host host
-                :callback callback :errorback errorback))
+                :callback callback :errorback errorback :extra extra))
 
 (cl-defun ghub-patch (resource &optional params
                                &key query payload headers
-                               unpaginate noerror reader
+                               silent unpaginate noerror reader
                                username auth host
-                               callback errorback)
+                               callback errorback extra)
   "Make a `PATCH' request for RESOURCE, with optional payload PARAMS.
 Like calling `ghub-request' (which see) with \"PATCH\" as METHOD."
   (ghub-request "PATCH" resource params
                 :query query :payload payload :headers headers
-                :unpaginate unpaginate :noerror noerror :reader reader
+                :silent silent :unpaginate unpaginate
+                :noerror noerror :reader reader
                 :username username :auth auth :host host
-                :callback callback :errorback errorback))
+                :callback callback :errorback errorback :extra extra))
 
 (cl-defun ghub-delete (resource &optional params
                                 &key query payload headers
-                                unpaginate noerror reader
+                                silent unpaginate noerror reader
                                 username auth host
-                                callback errorback)
+                                callback errorback extra)
   "Make a `DELETE' request for RESOURCE, with optional payload PARAMS.
 Like calling `ghub-request' (which see) with \"DELETE\" as METHOD."
   (ghub-request "DELETE" resource params
                 :query query :payload payload :headers headers
-                :unpaginate unpaginate :noerror noerror :reader reader
+                :silent silent :unpaginate unpaginate
+                :noerror noerror :reader reader
                 :username username :auth auth :host host
-                :callback callback :errorback errorback))
+                :callback callback :errorback errorback :extra extra))
 
 (cl-defun ghub-request (method resource &optional params
                                &key query payload headers
-                               unpaginate noerror reader
+                               silent unpaginate noerror reader
                                username auth host forge
-                               callback errorback
-                               url value error extra
-                               ((:method method*)))
+                               callback errorback extra)
   "Make a request for RESOURCE and return the response body.
 
 Also place the response header in `ghub-response-headers'.
@@ -221,6 +247,9 @@ Use HEADERS for those rare resources that require that the data
   is transmitted as headers instead of as a query or payload.
   When that is the case, then the API documentation usually
   mentions it explicitly.
+
+If SILENT is non-nil, then don't message progress reports and
+  the like.
 
 If UNPAGINATE is t, then make as many requests as necessary to
   get all values.  If UNPAGINATE is a natural number, then get
@@ -286,99 +315,65 @@ Both callbacks are called with four arguments.
   3. Status information provided by `url-retrieve'. Its `:error'
      property holds the same information as ERRORBACK's first
      argument.
-  4. A plist containing arguments that have to be passed to
-     `ghub-continue' (which see) to retrieve the next page.
-
-The remaining arguments are intended for internal use only.  They
-are provided by `ghub-continue' (which see) to fetch another page."
+  4. A `ghub--req' struct, which can be passed to `ghub-continue'
+     (which see) to retrieve the next page, if any."
   (cl-assert (or (booleanp unpaginate) (natnump unpaginate)))
-  (if url
-      (setq method method*)
-    ;; #35: Encode in case caller used (symbol-name 'GET).
-    (setq method (encode-coding-string method 'utf-8))
-    (unless (string-prefix-p "/" resource)
-      (setq resource (concat "/" resource)))
-    (unless host
-      (setq host (ghub--host forge)))
-    (unless (or username (stringp auth) (eq auth 'none))
-      (setq username (ghub--username host forge)))
-    (cond ((not params))
-          ((member method '("GET" "HEAD"))
-           (when query
-             (error "PARAMS and QUERY are mutually exclusive for METHOD %S"
-                    method))
-           (setq query params))
-          (t
-           (when payload
-             (error "PARAMS and PAYLOAD are mutually exclusive for METHOD %S"
-                    method))
-           (setq payload params)))
-    (when payload
-      (unless (stringp payload)
-        (setq payload (json-encode-list payload)))
-      (setq payload (encode-coding-string payload 'utf-8)))
-    (when (or callback errorback)
-      (setq noerror t))
-    (setq url
+  (unless (string-prefix-p "/" resource)
+    (setq resource (concat "/" resource)))
+  (unless host
+    (setq host (ghub--host forge)))
+  (unless (or username (stringp auth) (eq auth 'none))
+    (setq username (ghub--username host forge)))
+  (cond ((not params))
+        ((member method '("GET" "HEAD"))
+         (when query
+           (error "PARAMS and QUERY are mutually exclusive for METHOD %S"
+                  method))
+         (setq query params))
+        (t
+         (when payload
+           (error "PARAMS and PAYLOAD are mutually exclusive for METHOD %S"
+                  method))
+         (setq payload params)))
+  (when payload
+    (unless (stringp payload)
+      (setq payload (json-encode-list payload)))
+    (setq payload (encode-coding-string payload 'utf-8)))
+  (when (or callback errorback)
+    (setq noerror t))
+  (ghub--retrieve
+   payload
+   (ghub--make-req
+    :url (url-generic-parse-url
           (concat "https://" host resource
-                  (and query (concat "?" (ghub--url-encode-params query))))))
-  (let ((url-request-extra-headers
-         `(("Content-Type" . "application/json")
-           ,@(and (not (eq auth 'none))
-                  (list (ghub--auth host auth username forge)))
-           ,@headers))
-        (url-request-method method)
-        (url-request-data payload)
-        (args (list :method     method
-                    :headers    headers
-                    :unpaginate unpaginate
-                    :noerror    noerror
-                    :reader     reader
-                    :username   username
-                    :auth       auth
-                    :host       host
-                    :forge      forge
-                    :callback   callback
-                    :errorback  errorback
-                    :url        url
-                    :value      value
-                    :error      error
-                    :extra      extra)))
-    (if (or callback errorback)
-        (url-retrieve url 'ghub--handle-response (list args))
-      (with-current-buffer (url-retrieve-synchronously url)
-        (ghub--handle-response (car url-callback-arguments) args)))))
+                  (and query (concat "?" (ghub--url-encode-params query)))))
+    :silent silent
+    ;; Encode in case caller used (symbol-name 'GET). #35
+    :method     (encode-coding-string method 'utf-8)
+    :headers    (ghub--headers headers host auth username forge)
+    :unpaginate unpaginate
+    :noerror    noerror
+    :reader     reader
+    :callback   callback
+    :errorback  errorback
+    :extra      extra)))
 
-(defun ghub-continue (args)
+(defun ghub-continue (req)
   "If there is a next page, then retrieve that.
 
-This function is only intended to be called from callbacks.
-If there is a next page, then retrieve that and return the
-buffer that the result will be loaded into, or t if the
-process has already completed.  Otherwise return nil.
+This function is only intended to be called from callbacks.  If
+there is a next page, then retrieve that and return the buffer
+that the result will be loaded into, or t if the process has
+already completed.  Otherwise return nil.
 
 Callbacks are called with four arguments (see `ghub-request').
-The forth argument is a plist and its value should be used as
-the argument to this function.  The plist contains most but
-not all of the keyword arguments of `ghub-request' and a few
-additional properties.
-
-`:url' is the URL for the next page and is retrieved from the
-  previous response header.  It replaces the optional RESOURCE,
-  PARAMS and QUERY arguments.  This keyword argument is more
-  important than the others in that it signals to `ghub-request'
-  that it is being called recursively, in which case it ignores
-  some of its the other arguments, using the ones describe here
-  instead.
-`:method' replaces `ghub-request's mandatory METHOD argument.
-`:value' contains the value that was collected so far.
-`:extra' can be used to pass additional information from one
-  callback to its next incarnation.  This is the only property
-  whose value callbacks may change.  Callback must not add any
-  additional properties.  Setting `:extra' (and only that) in
-  the initial call to `ghub-request' is allowed."
+The forth argument is a `ghub--req' struct, intended to be passed
+to this function.  A callbacks may use the struct's `extra' slot
+to pass additional information to the callback that will be
+called after the next request has finished.  Use the function
+`ghub-req-extra' to get and set the value of this slot."
   (and (assq 'next (ghub-response-link-relations))
-       (or (apply #'ghub-request nil nil nil args) t)))
+       (or (ghub--retrieve nil req) t)))
 
 (cl-defun ghub-wait (resource &optional duration &key username auth host)
   "Busy-wait up to DURATION seconds for RESOURCE to become available.
@@ -421,41 +416,60 @@ in `ghub-response-headers'."
 
 ;;;; Internal
 
-(defun ghub--handle-response (status args)
+(cl-defun ghub--retrieve (payload req)
+  (let ((url-request-extra-headers
+         (let ((headers (ghub--req-headers req)))
+           (if (functionp headers) (funcall headers) headers)))
+        (url-request-method (ghub--req-method req))
+        (url-request-data payload)
+        (url (ghub--req-url req))
+        (silent (ghub--req-silent req)))
+    (if (or (ghub--req-callback  req)
+            (ghub--req-errorback req))
+        (url-retrieve url 'ghub--handle-response (list req) silent)
+      (with-current-buffer
+          (let ((url-registered-auth-schemes
+                 '(("basic" ghub--basic-auth-errorback . 10))))
+            (url-retrieve-synchronously url silent))
+        (ghub--handle-response (car url-callback-arguments) req)))))
+
+(defun ghub--handle-response (status req)
   (let ((buffer (current-buffer)))
     (unwind-protect
         (progn
           (set-buffer-multibyte t)
-          (let* ((unpaginate (plist-get args :unpaginate))
-                 (headers    (ghub--handle-response-headers status args))
-                 (payload    (ghub--handle-response-payload args))
-                 (payload    (ghub--handle-response-error status payload args))
-                 (value      (nconc (plist-get args :value) payload))
+          (let* ((unpaginate (ghub--req-unpaginate req))
+                 (headers    (ghub--handle-response-headers status req))
+                 (payload    (ghub--handle-response-payload req))
+                 (payload    (ghub--handle-response-error status payload req))
+                 (value      (nconc (ghub--req-value req) payload))
                  (next       (cdr (assq 'next (ghub-response-link-relations
                                                headers)))))
             (when (numberp unpaginate)
               (cl-decf unpaginate))
-            (plist-put args :url next)
-            (plist-put args :value value)
-            (plist-put args :unpaginate unpaginate)
+            (setf (ghub--req-url req)
+                  (url-generic-parse-url next))
+            (setf (ghub--req-value req) value)
+            (setf (ghub--req-unpaginate req) unpaginate)
             (or (and next
                      unpaginate
                      (or (eq unpaginate t)
                          (>  unpaginate 0))
-                     (ghub-continue args))
-                (let ((callback  (plist-get args :callback))
-                      (errorback (plist-get args :errorback))
+                     (ghub-continue req))
+                (let ((callback  (ghub--req-callback req))
+                      (errorback (ghub--req-errorback req))
                       (err       (plist-get status :error)))
-                  (if (or callback errorback)
-                      (if (and err errorback)
-                          (funcall errorback err headers status args)
-                        (funcall callback  value headers status args))
-                    value)))))
+                  (cond ((and err errorback)
+                         (funcall errorback err headers status req))
+                        (callback
+                         (funcall callback value headers status req))
+                        (t value))))))
       (when (buffer-live-p buffer)
         (kill-buffer buffer)))))
 
-(defun ghub--handle-response-headers (status args)
+(defun ghub--handle-response-headers (status req)
   (goto-char (point-min))
+  (forward-line 1)
   (let (headers)
     (while (re-search-forward "^\\([^:]*\\): \\(.+\\)"
                               url-http-end-of-headers t)
@@ -466,13 +480,14 @@ in `ghub-response-headers'."
     (unless url-http-end-of-headers
       (error "BUG: missing headers %s" (plist-get status :error)))
     (goto-char (1+ url-http-end-of-headers))
-    (if (plist-get args :callback)
+    (if (or (ghub--req-callback req)
+            (ghub--req-errorback req))
         (setq-local ghub-response-headers headers)
       (setq-default ghub-response-headers headers))
     headers))
 
-(defun ghub--handle-response-error (status payload args)
-  (let ((noerror (plist-get args :noerror))
+(defun ghub--handle-response-error (status payload req)
+  (let ((noerror (ghub--req-noerror req))
         (err (plist-get status :error)))
     (if err
         (if noerror
@@ -492,8 +507,8 @@ in `ghub-response-headers'."
               (signal symb data))))
       payload)))
 
-(defun ghub--handle-response-payload (args)
-  (funcall (or (plist-get args :reader)
+(defun ghub--handle-response-payload (req)
+  (funcall (or (ghub--req-reader req)
                'ghub--read-json-payload)
            url-http-response-status))
 
@@ -507,9 +522,9 @@ in `ghub-response-headers'."
                    (json-false       nil)
                    (json-null        nil))
                (json-read-from-string raw))
-           (json-readable-error
-            (if (= status 500)
-                nil
+           (json-readtable-error
+            (if (memq status (list 400 422 500))
+                "and Github didn't return JSON"
               (signal (car err) (cdr err))))))))
 
 (defun ghub--decode-payload (&optional _status)
@@ -551,7 +566,7 @@ SCOPES are the scopes the token is given access to."
                         ","))
             "," t "[\s\t]+"))))
   (let ((user (ghub--ident username package)))
-    (cl-destructuring-bind (_save token)
+    (cl-destructuring-bind (save token)
         (ghub--auth-source-get (list :save-function :secret)
           :create t :host host :user user
           :secret
@@ -561,6 +576,7 @@ SCOPES are the scopes the token is given access to."
                       `((scopes . ,scopes)
                         (note   . ,(ghub--ident-github package)))
                       :username username :auth 'basic :host host))))
+      (funcall save)
       ;; If the Auth-Source cache contains the information that there
       ;; is no value, then setting the value does not invalidate that
       ;; now incorrect information.
@@ -584,6 +600,20 @@ has to provide several values including their password."
     scopes))
 
 ;;;; Internal
+
+(defun ghub--headers (headers host auth username forge)
+  (push (cons "Content-Type" "application/json") headers)
+  (if (eq auth 'none)
+      headers
+    (unless (or username (stringp auth))
+      (setq username (ghub--username host forge)))
+    (lambda ()
+      (if (eq auth 'basic)
+          (if (eq forge 'gitlab)
+              (error "Gitlab does not support basic authentication")
+            (cons (cons "Authorization" (ghub--basic-auth host username))
+                  headers))
+        (cons (ghub--auth host auth username forge) headers)))))
 
 (defun ghub--auth (host auth &optional username forge)
   (unless username
@@ -611,9 +641,34 @@ has to provide several values including their password."
     (setf (url-user url) username)
     (url-basic-auth url t)))
 
+(defun ghub--basic-auth-errorback (url &optional prompt _overwrite _realm _args)
+  ;; This gets called twice.  Do nothing the first time,
+  ;; when PROMPT is nil.  See `url-get-authentication'.
+  (when prompt
+    (let ((otp (assoc "X-GitHub-OTP" (ghub--handle-response-headers nil nil))))
+      (if otp
+          (progn
+            (setq url-http-extra-headers
+                  `(("Content-Type" . "application/json")
+                    ("X-GitHub-OTP" . ,(ghub--read-2fa-code))
+                    ;; Without "Content-Type" and "Authorization".
+                    ;; The latter gets re-added from the return value.
+                    ,@(cddr url-http-extra-headers)))
+            ;; Return the cached values, they are correct.
+            (url-basic-auth url nil nil nil))
+        ;; Remove the invalid cached values and fail, which
+        ;; is better than the invalid values sticking around.
+        (setq url-http-real-basic-auth-storage
+              (cl-delete (format "%s:%d" (url-host url) (url-port url))
+                         url-http-real-basic-auth-storage
+                         :test #'equal :key #'car))
+        nil))))
+
 (defun ghub--token (host username package &optional nocreate forge)
-  (let ((user (ghub--ident username package)))
-    (or (ghub--auth-source-get :secret :host host :user user)
+  (let* ((user (ghub--ident username package))
+         (token (car (ghub--auth-source-get (list :secret)
+                       :host host :user user))))
+    (or (if (functionp token) (funcall token) token)
         (progn
           ;; Auth-Source caches the information that there is no
           ;; value, but in our case that is a situation that needs
@@ -683,9 +738,6 @@ has to provide several values including their password."
   Store on Github as:\n    %S
   Store locally according to option `auth-sources':\n    %S
 %s
-WARNING: If you have enabled two-factor authentication,
-         then you have to abort and create the token manually.
-
 If in doubt, then abort and first view the section of the Ghub
 documentation called \"Manually Creating and Storing a Token\".
 
@@ -721,7 +773,8 @@ WARNING: The token will be stored unencrypted in %S.
     (cl-some (lambda (x)
                (let-alist x
                  (and (equal .app.name ident) .id)))
-             (ghub-get "/authorizations" nil
+             (ghub-get "/authorizations"
+                       '((per_page . 100))
                        :unpaginate t
                        :username username :auth 'basic :host host))))
 
@@ -741,14 +794,25 @@ WARNING: The token will be stored unencrypted in %S.
           (read-string "Username: " (ghub--username host))
           (intern (read-string "Package: " "ghub")))))
 
-(defun ghub--auth-source-get (key:s &rest spec)
+(defvar ghub--2fa-cache nil)
+
+(defun ghub--read-2fa-code ()
+  (let ((code (read-number "Two-factor authentication code: "
+                           (and ghub--2fa-cache
+                                (< (float-time (time-subtract
+                                                (current-time)
+                                                (cdr ghub--2fa-cache)))
+                                   25)
+                                (car ghub--2fa-cache)))))
+    (setq ghub--2fa-cache (cons code (current-time)))
+    (number-to-string code)))
+
+(defun ghub--auth-source-get (keys &rest spec)
   (declare (indent 1))
   (let ((plist (car (apply #'auth-source-search :max 1 spec))))
-    (cl-flet ((value (k) (let ((v (plist-get plist k)))
-                           (if (functionp v) (funcall v) v))))
-      (if (listp key:s)
-          (mapcar #'value key:s)
-        (value key:s)))))
+    (mapcar (lambda (k)
+              (plist-get plist k))
+            keys)))
 
 (advice-add 'auth-source-netrc-parse-next-interesting :around
             'auth-source-netrc-parse-next-interesting@save-match-data)
@@ -759,7 +823,7 @@ won't see the secret from a line that is followed by a commented
 line."
   (save-match-data (funcall fn)))
 
-;;; ghub.el ends soon
+;;; _
 (provide 'ghub)
 ;; Local Variables:
 ;; indent-tabs-mode: nil

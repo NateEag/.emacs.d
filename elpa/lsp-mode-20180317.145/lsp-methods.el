@@ -111,7 +111,7 @@
   ;; respective responses.  Upon receiving a response from the language server,
   ;; ‘lsp-mode’ will call the associated response handler function with a
   ;; single argument, the deserialized response parameters.
-  (response-handlers (make-hash-table :test 'eq) :read-only t)
+  (response-handlers (make-hash-table :test 'eql) :read-only t)
 
   ;; ‘string-renderers’ is an alist mapping MarkedString language identifiers
   ;; (see
@@ -699,7 +699,7 @@ ServerCapabilities.textDocumentSync."
         (message "%s: %s has exited (%s)"
                  (lsp--workspace-root workspace)
                  (process-name (lsp--workspace-proc workspace))
-                 exit-str)
+                 (string-trim-right exit-str))
         (dolist (buf (lsp--workspace-buffers workspace))
           (with-current-buffer buf
             (lsp--uninitialize-workspace)))

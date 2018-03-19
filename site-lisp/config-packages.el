@@ -204,6 +204,8 @@ The shell command lives in my dotfiles repo."
 
             (add-to-list 'flycheck-checkers 'proselint)
 
+            (flycheck-objc-clang-setup)
+
             ;; Prefer locally-installed eslint, if available.
             ;;
             ;; Yanked from lunaryorn himself:

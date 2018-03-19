@@ -2812,7 +2812,7 @@ Default is nil"
   "Internal use, unfontify BUFFER."
   (save-excursion
     (goto-char (point-min))
-    (let ((erg (or (ignore-errors (car comint-last-prompt))
+    (let ((erg (or (ignore-errors (car-safe comint-last-prompt))
 		   (and
 		    (re-search-forward py-fast-filter-re nil t 1)
 		    (match-beginning 0))
@@ -11340,9 +11340,12 @@ Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
 (defun py--complete-prepare (&optional shell beg end word fast-complete)
   (let* ((exception-buffer (current-buffer))
          ;; (pos (copy-marker (point)))
-	 (pps (parse-partial-sexp (or
-				   (ignore-errors comint-last-prompt)
-				   (line-beginning-position)) (point)))
+	 (pps (parse-partial-sexp
+	       (or
+		(ignore-errors (cdr-safe comint-last-prompt))
+		(ignore-errors comint-last-prompt)
+		(line-beginning-position))
+	       (point)))
 	 (in-string (when (nth 3 pps) (nth 8 pps)))
          (beg
 	  (save-excursion
@@ -22473,6 +22476,7 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
 (defun py-show-base (form &optional beg end)
   "Remove invisibility of existing form at point."
   (save-excursion
+    (hs-discard-overlays (line-beginning-position) (point))
     (let* ((form (prin1-to-string form))
            (beg (or beg (or (funcall (intern-soft (concat "py--beginning-of-" form "-p")))
                             (funcall (intern-soft (concat "py-backward-" form))))))
@@ -22887,7 +22891,7 @@ Returns position reached if successful"
            (end (unless file
                   (or end (funcall (intern-soft (concat "py-forward-" form))))))
            filename)
-      (setq py-buffer-name nil)
+      ;; (setq py-buffer-name nil)
       (if file
           (progn
             (setq filename (expand-file-name form))

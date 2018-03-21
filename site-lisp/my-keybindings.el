@@ -142,15 +142,16 @@ Used to define keyboard shortcuts.")
   (dolist (elt nateeag/command-mnemonics)
     (let ((mnemonic (car elt))
           (command (cdr elt)))
-      ;; Set up my mnemonics in the Emacs-approved user keybinding space,
-      ;; just because I occasionally use them out of habit.
-      ;; TODO I should probably bind them to a lambda that messages me
-      ;; saying "Don't use those keybindings!" then runs the command.
-      (global-set-key (kbd (concat "C-c " mnemonic)) command)
 
-      ;; Use Super for my personal keybindings. The Emacs manual says that
-      ;; C-c <key> is reserved for user keybindings, but in practice
-      ;; there's not a lot mapped to the Super key.
+      ;; Use Super for my personal keybindings. The Emacs manual says that C-c
+      ;; <key> is reserved for user keybindings, but in practice there's not a
+      ;; lot mapped to the Super key.
+      ;;
+      ;; TODO Stop using Super bindings? Or at least use them for something
+      ;; else. I'm becoming so much a vimmer that I almost only need the leader
+      ;; key.
+      ;;
+      ;; I should probably look into hydra, too, if it comes to that...
       (global-set-key (kbd (concat "s-" mnemonic)) command)
 
       ;; Tell evil-leader-mode to use the mnemonic for this command.

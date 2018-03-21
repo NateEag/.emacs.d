@@ -118,8 +118,8 @@
 - Auto-resize embedded images in emails to fit in the current window. I've set
   `mm-inline-large-images` to 'resize', which ought to do this job, but it
   doesn't work for me because Emacs for OS X does not include ImageMagick
-  support, AFAICT (https://github.com/caldwell/build-emacs/issues/1). Try a
-  homebrew-based build, perhaps?
+  support, AFAICT (https://github.com/caldwell/build-emacs/issues/1). Try this
+  build, perhaps: https://github.com/renard/emacs-build-macosx
 
 - Figure out what mime-type should be used for emailing bash scripts as an
   attachment.
@@ -138,15 +138,13 @@
 - Consider using project-shells for managing shells? I've installed it just so I
   have it around should I decide to try it.
 
-- Add keybindings for goto-chg commands and start using them.
+- Add keybindings for git-gutter:next-hunk and git-gutter:previous-hunk. Maybe
+  move magit status to <leader> g g, then put next hunk/prev hunk/diff on
+  <leader> g j/k/d?
 
 - Add mechanism for viewing keymaps in readable form via
   substitute-command-keys. Sample usage:
   (substitute-command-keys "\\{evil-inner-text-objects-map}")
-
-- Fix the issue where leaving a Python buffer reverts point to position 0. I'm
-  guessing this is due to some piece of python-mode config I have, likely Jedi?
-  It seems the most likely offender.
 
 - js2-mode indents constructs like this:
 
@@ -211,6 +209,9 @@
 
   http://emacs.stackexchange.com/a/19711 claims the general feature for both
   single- and multi-line comments exists, and points to the Emacs docs, so yay.
+
+  I hacked this up a few weeks ago so in theory I just need to tell my copy of
+  aggressive-fill-paragraph mode to use it in restricting fill operations.
 
 - Consider using suppression functions to implement afp's fill-comments-only
   feature? I feel like it would be more robust than the current approach, but
@@ -387,10 +388,6 @@
 
   var foo = 'foo is a set of really short strings';
 
-  Smart prefix detection would be a nice bonus feature, as when writing shell
-  scripts I frequently find myself doing the 'echo "string"' dance, and the
-  default fill-paragraph command in sh-mode has no idea how to handle it.
-
 - If I ever get minimap.el usable on OS X, when active it should appear between
   my two panes. That way it's always close to whichever buffer it applies to.
   Note: the sublimity package looks like it may be more maintained.
@@ -496,6 +493,8 @@
   function came from, and some parsing of PATH for commands:
   http://superuser.com/a/229038 Alternatively, I could just install dumb-jump
   and use it for bash, since I believe it supports it.
+  https://github.com/mads-hartmann/bash-language-server looks like the current
+  state of the art...
 
 - Adjust emacs env when editing files with a dominating direnv file (.envrc).
   This might slow things down, because you might have to change the env every

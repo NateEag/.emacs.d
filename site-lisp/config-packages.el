@@ -366,9 +366,12 @@ The shell command lives in my dotfiles repo."
                                                             "*scratch*")))
                                 (evil-insert-state)))))))
 
-;; Keep git-gutter from showing up in the modeline.
 (use-package git-gutter
-  :diminish)
+  :diminish
+  :config
+  (add-to-list 'git-gutter:update-hooks 'focus-in-hook)
+  (add-to-list 'git-gutter:update-hooks 'magit-post-refresh-hook)
+  )
 
 (use-package magit
   :defer t

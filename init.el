@@ -245,6 +245,8 @@ buffer's file does not exist."
   ;; Fortunately, it's possible to write a great text editor for a great OS..."
   ;; -- some wag discussing evil-mode
 
+  ;; TODO Just call text-mode-init in here rather than having similar
+  ;; initializations in both of them...
   (evil-local-mode)
 
   (unicode-troll-stopper-mode)
@@ -359,6 +361,10 @@ buffer's file does not exist."
   "Configuration that is shared across my various text modes."
 
   (evil-local-mode)
+
+  ;; Not all software uses git, but git-gutter does the right thing if it can't
+  ;; find a parent git repo.
+  (git-gutter-mode)
 
   (turn-on-flyspell)
   (ac-ispell-setup)

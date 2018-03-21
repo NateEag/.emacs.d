@@ -84,7 +84,11 @@
     ("u" . browse-url)
 
     ;; g is for git, which is oh so much fun.
-    ("g" . magit-status)
+    ("g g" . magit-status)
+    ("g n" . git-gutter:next-hunk)
+    ("g p" . git-gutter:previous-hunk)
+    ("g d" . git-gutter:popup-diff)
+    ("g r" . git-gutter:revert-hunk)
 
     ;; Dates and times are handy to be able to insert.
     ("d" . insert-date)
@@ -133,6 +137,7 @@ Used to define keyboard shortcuts.")
   ;; TODO Should unset prefix keys by parsing mnemonic in the loop. This is WET.
   (global-unset-key (kbd "s-a"))
   (global-unset-key (kbd "s-p"))
+  (global-unset-key (kbd "s-g"))
 
   (dolist (elt nateeag/command-mnemonics)
     (let ((mnemonic (car elt))

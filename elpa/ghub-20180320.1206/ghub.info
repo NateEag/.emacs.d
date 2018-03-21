@@ -39,7 +39,7 @@ adoption would make life easier for users and maintainers alike, because
 then all packages that talk to the Github API could be configured the
 same way.
 
-This manual is for Ghub version 1.3.0 (v1.3.0-102-g4819141+1).
+This manual is for Ghub version 2.0.0.
 
      Copyright (C) 2017-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -88,15 +88,18 @@ Ghub is a library that provides basic support for using the Github API
 from Emacs packages.  It abstracts access to API resources using only a
 handful of functions that are not resource-specific.
 
-   It also handles the creation, storage and use of access tokens using
-a setup wizard, to make it easier for users to get started and to reduce
+   Ghub handles the creation, storage and use of access tokens using a
+setup wizard to make it easier for users to get started and to reduce
 the support burden imposed on package maintainers.  It also comes with a
 comprehensive manual to address the cases when things don’t just work as
-expected.
+expected or in case you don’t want to use the wizard.
 
    Ghub is intentionally limited to only provide these two essential
 features — basic request functions and guided setup — to avoid being too
-opinionated, which would hinder wide adoption.
+opinionated, which would hinder wide adoption.  It is assumed that wide
+adoption would make life easier for users and maintainers alike, because
+then all packages that talk to the Github API could be configured the
+same way.
 
    Fancier interfaces can implemented on top of Ghub, and one such
 wrapper — named simply Ghub+ — has already been implemented.  The
@@ -894,8 +897,8 @@ package.
 
    When accessing Gitlab.com or another Gitlab instance, use
 ‘glab-request’ instead of ‘ghub-request’, ‘glab-get’ instead of
-‘ghub-request’, etc.  Likewise use the Git variables in the ‘gitlab’
-group instead of those in the ‘github’ group, i.e.  ‘gitlab.user’,
+‘ghub-get’, etc.  Likewise use the Git variables in the ‘gitlab’ group
+instead of those in the ‘github’ group, i.e.  ‘gitlab.user’,
 ‘gitlab.HOST.user’ and ‘gitlab.host’.
 
    The Gitlab API cannot be used to create tokens, so Glab cannot
@@ -922,19 +925,19 @@ Github, you have to use ‘user%2Frepo’ when accessing Gitlab, e.g.:
 
 Tag Table:
 Node: Top762
-Node: Introduction2837
-Node: Getting Started5377
-Node: Setting the Username5880
-Node: Interactively Creating and Storing a Token7305
-Node: Manually Creating and Storing a Token12948
-Node: How Ghub uses Auth-Source13892
-Node: Using Ghub in Personal Scripts15825
-Node: Using Ghub in a Package17274
-Node: API19839
-Node: Making Requests20289
-Node: Authentication33631
-Node: Configuration Variables35433
-Node: Gitlab Support39126
+Node: Introduction2813
+Node: Getting Started5573
+Node: Setting the Username6076
+Node: Interactively Creating and Storing a Token7501
+Node: Manually Creating and Storing a Token13144
+Node: How Ghub uses Auth-Source14088
+Node: Using Ghub in Personal Scripts16021
+Node: Using Ghub in a Package17470
+Node: API20035
+Node: Making Requests20485
+Node: Authentication33827
+Node: Configuration Variables35629
+Node: Gitlab Support39322
 
 End Tag Table
 

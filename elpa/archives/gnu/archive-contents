@@ -80,7 +80,7 @@
 	 ((:keywords "async")
 	  (:url . "http://elpa.gnu.org/packages/async.html"))])
  (auctex .
-	 [(12 1 0)
+	 [(12 1 1)
 	  nil "Integrated environment for *TeX*" tar
 	  ((:url . "http://www.gnu.org/software/auctex/"))])
  (aumix-mode .
@@ -795,6 +795,11 @@
 	     "guide your eyes while scrolling" single
 	     ((:url . "https://github.com/michael-heerdegen/on-screen.el")
 	      (:keywords "convenience"))])
+ (org .
+      [(9 1 7)
+       nil "Outline-based notes management and organizer" tar
+       ((:keywords "outlines" "hypermedia" "calendar" "wp")
+	(:url . "http://elpa.gnu.org/packages/org.html"))])
  (org-edna .
 	   [(1 0 -2 6)
 	    ((emacs

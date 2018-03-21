@@ -370,8 +370,7 @@ The shell command lives in my dotfiles repo."
   :diminish
   :config
   (add-to-list 'git-gutter:update-hooks 'focus-in-hook)
-  (add-to-list 'git-gutter:update-hooks 'magit-post-refresh-hook)
-  )
+  (add-to-list 'git-gutter:update-hooks 'magit-post-refresh-hook))
 
 (use-package magit
   :defer t

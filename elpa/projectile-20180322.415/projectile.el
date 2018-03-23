@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20180317.2220
+;; Package-Version: 20180322.415
 ;; Keywords: project, convenience
 ;; Version: 0.15.0-cvs
 ;; Package-Requires: ((emacs "24.3") (pkg-info "0.4"))
@@ -3130,8 +3130,15 @@ to run the replacement."
   "Open `vc-dir' at the root of the project.
 
 For git projects `magit-status-internal' is used if available.
-For hg projects `monky-status' is used if available."
-  (interactive)
+For hg projects `monky-status' is used if available.
+
+If PROJECT-ROOT is given, it is opened instead of the project
+root directory of the current buffer file.  If interactively
+called with a prefix argument, the user is prompted for a project
+directory to open."
+  (interactive (list (projectile-completing-read
+                      "Open project VC in: "
+                      projectile-known-projects)))
   (or project-root (setq project-root (projectile-project-root)))
   (let ((vcs (projectile-project-vcs project-root)))
     (cl-case vcs

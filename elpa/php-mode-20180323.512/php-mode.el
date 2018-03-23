@@ -15,7 +15,7 @@
 (defconst php-mode-version-number "1.19.0"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2018-03-05"
+(defconst php-mode-modified "2018-03-23"
   "PHP Mode build date.")
 
 ;; This file is free software; you can redistribute it and/or
@@ -83,6 +83,7 @@
 (require 'etags)
 (require 'speedbar)
 (require 'imenu)
+(require 'nadvice nil t)
 (require 'php-project nil t)
 
 (require 'cl-lib)
@@ -1068,7 +1069,7 @@ this ^ lineup"
   "PHP Mode face used to highlight sigils($) of $this variable."
   :group 'php-faces)
 
-(defface php-php-tag '((t (:inherit font-lock-constant-face)))
+(defface php-php-tag '((t (:inherit font-lock-preprocessor-face)))
   "PHP Mode face used to highlight PHP tags."
   :group 'php-faces)
 
@@ -1094,6 +1095,9 @@ this ^ lineup"
 
 (define-obsolete-face-alias 'php-annotations-annotation-face 'php-doc-annotation-tag "1.19.0")
 
+(defvar php-mode--delayed-set-style nil)
+(make-variable-buffer-local 'php-mode--delayed-set-style)
+
 (defun php-set-style (stylename &optional dont-override)
   "Set the current `php-mode' buffer to use the style STYLENAME.
 STYLENAME is one of the names selectable in `php-mode-coding-style'.
@@ -1110,6 +1114,7 @@ After setting the stylevars run hooks according to STYLENAME
   \"symfony2\"  `php-mode-symfony2-hook'
   \"psr2\"      `php-mode-psr2-hook'"
   (interactive)
+  (php-mode--disable-delay-set-style)
   (c-set-style stylename dont-override)
   (if (eq (symbol-value 'php-style-delete-trailing-whitespace) t)
       (add-hook 'before-save-hook 'delete-trailing-whitespace nil t)
@@ -1122,12 +1127,19 @@ After setting the stylevars run hooks according to STYLENAME
 
 (put 'php-set-style 'interactive-form (interactive-form 'c-set-style))
 
+(defun php-mode--disable-delay-set-style (&rest args)
+  "Disable php-mode-set-style-delay on after hook.  `ARGS' be ignore."
+  (setq php-mode--delayed-set-style nil)
+  (when (fboundp 'advice-remove)
+    (advice-remove #'php-mode--disable-delay-set-style #'c-set-style)))
+
 (defun php-mode-set-style-delay ()
   "Set the current `php-mode' buffer to use the style by custom or local variables."
-  (let ((coding-style (or (and (boundp 'php-project-coding-style) php-project-coding-style)
-                          php-mode-coding-style)))
-    (prog1 (php-set-style (symbol-name coding-style))
-      (remove-hook 'hack-local-variables-hook #'php-mode-set-style-delay))))
+  (when php-mode--delayed-set-style
+    (let ((coding-style (or (and (boundp 'php-project-coding-style) php-project-coding-style)
+                            php-mode-coding-style)))
+      (prog1 (php-set-style (symbol-name coding-style))
+        (remove-hook 'hack-local-variables-hook #'php-mode-set-style-delay)))))
 
 (defun php-mode-debug ()
   "Display informations useful for debugging PHP Mode."
@@ -1163,12 +1175,13 @@ After setting the stylevars run hooks according to STYLENAME
   (c-init-language-vars php-mode)
   (c-common-init 'php-mode)
 
-  (set (make-local-variable font-lock-string-face) 'php-string)
-  (set (make-local-variable font-lock-keyword-face) 'php-keyword)
-  (set (make-local-variable font-lock-builtin-face) 'php-builtin)
-  (set (make-local-variable font-lock-function-name-face) 'php-function-name)
-  (set (make-local-variable font-lock-variable-name-face) 'php-variable-name)
-  (set (make-local-variable font-lock-constant-face) 'php-constant)
+  (set (make-local-variable 'font-lock-string-face) 'php-string)
+  (set (make-local-variable 'font-lock-keyword-face) 'php-keyword)
+  (set (make-local-variable 'font-lock-builtin-face) 'php-builtin)
+  (set (make-local-variable 'c-preprocessor-face-name) 'php-php-tag)
+  (set (make-local-variable 'font-lock-function-name-face) 'php-function-name)
+  (set (make-local-variable 'font-lock-variable-name-face) 'php-variable-name)
+  (set (make-local-variable 'font-lock-constant-face) 'php-constant)
 
   (modify-syntax-entry ?_    "_" php-mode-syntax-table)
   (modify-syntax-entry ?`    "\"" php-mode-syntax-table)
@@ -1190,7 +1203,11 @@ After setting the stylevars run hooks according to STYLENAME
   ;; Since it depends on the timing at which the file local variable is set.
   ;; File local variables are set after initialization of major mode except `run-hook' is complete.
   (if php-mode-enable-project-coding-style
-      (add-hook 'hack-local-variables-hook #'php-mode-set-style-delay t t)
+      (progn
+        (add-hook 'hack-local-variables-hook #'php-mode-set-style-delay t t)
+        (setq php-mode--delayed-set-style t)
+        (when (fboundp 'advice-add)
+          (advice-add #'c-set-style :after #'php-mode--disable-delay-set-style '(local))))
     (php-set-style (symbol-name php-mode-coding-style)))
 
   (when (or php-mode-force-pear
@@ -1539,7 +1556,7 @@ a completion list."
    ;; php-mode patterns *before* cc-mode:
    ;;  only add patterns here if you want to prevent cc-mode from applying
    ;;  a different face.
-   '(
+   `(
      ;; Highlight variables, e.g. 'var' in '$var' and '$obj->var', but
      ;; not in $obj->var()
      ("\\(->\\)\\(\\sw+\\)\\s-*(" (1 'php-object-op) (2 'php-method-call))
@@ -1571,7 +1588,22 @@ a completion list."
      ("\\(\\([a-zA-Z0-9_]+\\\\\\)+[a-zA-Z0-9_]+\\|\\(\\\\[a-zA-Z0-9_]+\\)+\\)::" 1 'php-constant)
 
      ;; Support the ::class constant in PHP5.6
-     ("\\sw+\\(::\\)\\(class\\)\\b" (1 'php-paamayim-nekudotayim) (2 'php-constant)))
+     ("\\sw+\\(::\\)\\(class\\)\\b" (1 'php-paamayim-nekudotayim) (2 'php-constant))
+
+     ;; While c-opt-cpp-* highlights the <?php opening tags, it is not
+     ;; possible to make it highlight short open tags and closing tags
+     ;; as well. So we force the correct face on all cases that
+     ;; c-opt-cpp-* lacks for this purpose.
+     ;;
+     ;; Note that starting a file with <% breaks indentation, a
+     ;; limitation we can/should live with.
+     (,(regexp-opt '("<?php" "<?=" "?>"
+                     "<?"      ;; obsolete short open tag
+                     "<%" "%>" ;; obsolete ASP tag
+                     ;; Obsoleted tags were deleted in PHP 7.
+                     ;; @see http://php.net/manual/language.basic-syntax.phptags.php
+                     ))
+      0 'php-php-tag))
 
    ;; cc-mode patterns
    (c-lang-const c-matchers-3 php)
@@ -1611,15 +1643,7 @@ a completion list."
 
      ;; Highlight class names used as nullable type hints
      ("\\?\\(\\(:?\\sw\\|\\s_\\)+\\)\\s-+\\$" 1 font-lock-type-face)
-
-     ;; While c-opt-cpp-* highlights the <?php opening tags, it is not
-     ;; possible to make it highlight short open tags and closing tags
-     ;; as well. So we force the correct face on all cases that
-     ;; c-opt-cpp-* lacks for this purpose.
-     ;;
-     ;; Note that starting a file with <% breaks indentation, a
-     ;; limitation we can/should live with.
-     (,(regexp-opt '("?>" "<?" "<%" "%>")) 0 'php-php-tag)))
+     ))
   "Detailed highlighting for PHP Mode.")
 
 (defvar php-font-lock-keywords php-font-lock-keywords-3

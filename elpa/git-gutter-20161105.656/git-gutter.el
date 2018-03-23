@@ -575,7 +575,7 @@ gutter information of other windows."
       (or diffinfos git-gutter:unchanged-sign)
     (or global-git-gutter-mode git-gutter:unchanged-sign diffinfos)))
 
-(defun git-gutter:show-gutter (diffinfos)
+(defun git-gutter:show-gutter   (diffinfos)
   (when (git-gutter:show-gutter-p diffinfos)
     (git-gutter:set-window-margin (git-gutter:window-margin))))
 

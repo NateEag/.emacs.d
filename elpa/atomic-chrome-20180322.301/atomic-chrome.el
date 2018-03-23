@@ -4,7 +4,7 @@
 
 ;; Author: alpha22jp <alpha22jp@gmail.com>
 ;; Package-Requires: ((emacs "24.3") (let-alist "1.0.4") (websocket "1.4"))
-;; Package-Version: 20171116.2332
+;; Package-Version: 20180322.301
 ;; Keywords: chrome edit textarea
 ;; URL: https://github.com/alpha22jp/atomic-chrome
 ;; Version: 2.0.0
@@ -156,7 +156,8 @@ from `atomic-chrome-buffer-table'."
         (if (eq (websocket-server-conn socket) atomic-chrome-server-ghost-text)
             (list (cons "text" text))
           (list '("type" . "updateText")
-                (cons "payload" (list (cons "text" text))))))))))
+                (cons "payload" (list (cons "text" text))))))))
+    (set-buffer-modified-p nil)))
 
 (defun atomic-chrome-set-major-mode (url)
   "Set major mode for editing buffer depending on URL.
@@ -195,7 +196,7 @@ or raising the selected frame depending on `atomic-chrome-buffer-open-style'."
   "Create buffer associated with websocket specified by SOCKET.
 URL is used to determine the major mode of the buffer created,
 TITLE is used for the buffer name and TEXT is inserted to the buffer."
-  (let ((buffer (generate-new-buffer title)))
+  (let ((buffer (generate-new-buffer (if (string-empty-p title) "No title" title))))
     (with-current-buffer buffer
       (puthash buffer
              (list socket (atomic-chrome-show-edit-buffer buffer title))
@@ -217,7 +218,9 @@ TITLE is used for the buffer name and TEXT is inserted to the buffer."
 (defun atomic-chrome-close-current-buffer ()
   "Close current buffer and connection from client."
   (interactive)
-  (atomic-chrome-close-edit-buffer (current-buffer)))
+  (when (or (not (buffer-modified-p))
+	    (yes-or-no-p "Buffer has not been saved, close anyway? "))
+    (atomic-chrome-close-edit-buffer (current-buffer))))
 
 (defun atomic-chrome-update-buffer (socket text)
   "Update text on buffer associated with SOCKET to TEXT."

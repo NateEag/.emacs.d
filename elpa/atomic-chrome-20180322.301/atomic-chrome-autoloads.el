@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "atomic-chrome" "atomic-chrome.el" (23060 12769
+;;;### (autoloads nil "atomic-chrome" "atomic-chrome.el" (23221 3747
 ;;;;;;  0 0))
 ;;; Generated autoloads from atomic-chrome.el
 

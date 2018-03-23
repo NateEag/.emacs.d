@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov
 ;; URL: https://github.com/bbatsov/helm-projectile
-;; Package-Version: 20180319.1414
+;; Package-Version: 20180322.1850
 ;; Created: 2011-31-07
 ;; Keywords: project, convenience
 ;; Version: 0.14.0
@@ -497,20 +497,57 @@ CANDIDATE is the selected file.  Used when no file is explicitly marked."
      . "Add files to Dired buffer `C-c a'"))
   "Action for files.")
 
+(defun helm-projectile--move-selection-p (selection)
+  "Return non-nil if should move Helm selector after SELECTION.
+
+SELECTION should be moved unless it's one of:
+
+- Non-string
+- Existing file
+- Non-remote file that matches `helm-tramp-file-name-regexp'"
+  (not (or (not (stringp selection))
+         (file-exists-p selection)
+         (and (string-match helm-tramp-file-name-regexp selection)
+              (not (file-remote-p selection nil t))))))
+
+(defun helm-projectile--move-to-real ()
+  "Move to first real candidate.
+
+Similar to `helm-ff--move-to-first-real-candidate', but without
+unnecessary complexity."
+  (while (let* ((src (helm-get-current-source))
+                (selection (and (not (helm-empty-source-p))
+                                (helm-get-selection nil nil src))))
+           (and (not (helm-end-of-source-p))
+                (helm-projectile--move-selection-p selection)))
+    (helm-next-line)))
+
 (defvar helm-source-projectile-files-list
   (helm-build-sync-source "Projectile files"
     :candidates (lambda ()
+                  (add-hook 'helm-update-hook #'helm-projectile--move-to-real)
                   (with-helm-current-buffer
                     (cl-loop with root = (projectile-project-root)
+                             with file-at-root = (file-relative-name (expand-file-name helm-pattern root))
                              for display in (projectile-current-project-files)
-                             collect (cons display (expand-file-name display root)))))
+                             collect (cons display (expand-file-name display root)) into files
+                             finally return
+                             (if (or (string-empty-p helm-pattern)
+                                     (assoc helm-pattern files))
+                                 files
+                               (cl-pairlis (list (helm-ff-prefix-filename helm-pattern nil t)
+                                                 (helm-ff-prefix-filename file-at-root nil t))
+                                           (list (expand-file-name helm-pattern)
+                                                 (expand-file-name helm-pattern root))
+                                           files)))))
     :fuzzy-match helm-projectile-fuzzy-match
     :keymap helm-projectile-find-file-map
     :help-message 'helm-ff-help-message
     :mode-line helm-read-file-name-mode-line-string
     :action helm-projectile-file-actions
     :persistent-action #'helm-projectile-file-persistent-action
-    :persistent-help "Preview file")
+    :persistent-help "Preview file"
+    :volatile t)
   "Helm source definition for Projectile files.")
 
 (defvar helm-source-projectile-files-in-all-projects-list
@@ -680,10 +717,11 @@ With a prefix ARG invalidates the cache first."
      (let ((helm-ff-transformer-show-only-basename nil)
            ;; for consistency, we should just let Projectile take care of ignored files
            (helm-boring-file-regexp-list nil))
-       (helm :sources ,source
-             :buffer (concat "*helm projectile: " (projectile-project-name) "*")
-             :truncate-lines ,truncate-lines-var
-             :prompt (projectile-prepend-project-name ,prompt)))))
+       (unwind-protect (helm :sources ,source
+                             :buffer (concat "*helm projectile: " (projectile-project-name) "*")
+                             :truncate-lines ,truncate-lines-var
+                             :prompt (projectile-prepend-project-name ,prompt))
+         (remove-hook 'helm-update-hook #'helm-projectile--move-to-real)))))
 
 (helm-projectile-command "switch-project" 'helm-source-projectile-projects "Switch to project: " t)
 (helm-projectile-command "find-file" helm-source-projectile-files-and-dired-list "Find file: ")

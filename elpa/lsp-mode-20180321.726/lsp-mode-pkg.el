@@ -1,4 +1,4 @@
-(define-package "lsp-mode" "20180317.145" "Minor mode for interacting with Language Servers"
+(define-package "lsp-mode" "20180321.726" "Minor mode for interacting with Language Servers"
   '((emacs "25.1"))
   :url "https://github.com/emacs-lsp/lsp-mode")
 ;; Local Variables:

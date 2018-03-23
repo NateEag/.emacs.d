@@ -334,10 +334,10 @@ BUFFER is the buffer where the request has been made."
       (lsp-ui-doc--line-height)))
 
 (defun lsp-ui-doc--resize-buffer ()
-  "If the buffer's width is larger than the current window, resize it."
-  (let* ((window-width (window-width))
-         (fill-column (min lsp-ui-doc-max-width (- window-width 5))))
-    (when (> (lsp-ui-doc--buffer-width) (min lsp-ui-doc-max-width window-width))
+  "If the buffer's width is larger than the current frame, resize it."
+  (let* ((frame-width (frame-width))
+         (fill-column (min lsp-ui-doc-max-width (- frame-width 5))))
+    (when (> (lsp-ui-doc--buffer-width) (min lsp-ui-doc-max-width frame-width))
       (lsp-ui-doc--with-buffer
        (fill-region (point-min) (point-max))))))
 
@@ -360,7 +360,7 @@ START-Y is the position y of the current window."
 (defun lsp-ui-doc--move-frame (frame)
   "Place our FRAME on screen."
   (lsp-ui-doc--resize-buffer)
-  (-let* (((left top right _bottom) (window-edges nil nil nil t))
+  (-let* (((left top _right _bottom) (window-edges nil nil nil t))
           (window (frame-root-window frame))
           ((width . height) (window-text-pixel-size window nil nil 10000 10000))
           (width (+ width (* (frame-char-width frame) 1))) ;; margins
@@ -370,7 +370,10 @@ START-Y is the position y of the current window."
     (set-frame-size frame width height t)
     (if (eq lsp-ui-doc-position 'at-point)
         (lsp-ui-doc--mv-at-point frame height left top)
-      (set-frame-position frame (- right width 10 (frame-char-width))
+      (set-frame-position frame
+                          (if (>= left (+ width 10 (frame-char-width)))
+                              10
+                            (- (frame-pixel-width) width 10 (frame-char-width)))
                           (pcase lsp-ui-doc-position
                             ('top (+ top 10))
                             ('bottom (- (lsp-ui-doc--line-height 'mode-line)
@@ -439,44 +442,34 @@ FN is the function to call on click."
   (lsp-ui-doc--with-buffer
    (length (split-string (buffer-string) "\n"))))
 
-(defun lsp-ui-doc--truncate (len s &optional suffix)
-  (let ((suffix (or suffix "")))
-    (if (> (lsp-ui-doc--inline-width-string s) len)
-        (format (concat "%s" suffix) (substring s 0 (max (- len (length suffix)) 0)))
-      s)))
+;; TODO Optimize this function
+(defun lsp-ui-doc--remove-invisibles (string)
+  "Remove invisible characters in STRING."
+  (let ((res ""))
+    (dotimes (i (length string))
+      (unless (get-text-property i 'invisible string)
+        (setq res (concat res (substring string i (1+ i))))))
+    res))
 
 (defvar-local lsp-ui-doc--inline-width nil)
 
-(defun lsp-ui-doc--inline-width-string (string)
-  "Returns numbers of characters that are display in STRING.
-Use because `string-width' counts invisible characters."
-  (with-temp-buffer
-    (insert string)
-    (goto-char (point-max))
-    (current-column)))
-
-(defun lsp-ui-doc--inline-line-number-width ()
-  "Return the line number width."
-  (+ (if (bound-and-true-p display-line-numbers-mode)
+(defun lsp-ui-doc--inline-window-width nil
+  (- (min (window-text-width)
+          (window-body-width))
+     (if (bound-and-true-p display-line-numbers-mode)
          (+ 2 (line-number-display-width))
        0)
-     (if (bound-and-true-p linum-mode)
-         (cond ((stringp linum-format) linum-format)
-               ((eq linum-format 'dynamic)
-                (+ 2 (length (number-to-string
-                              (count-lines (point-min) (point-max)))))))
-       0)))
+     1))
 
 (defun lsp-ui-doc--inline-zip (s1 s2)
-  (let* ((width (- (window-body-width) (lsp-ui-doc--inline-line-number-width) 1))
-         (max-s1 (- width lsp-ui-doc--inline-width 2))
-         (spaces (- width (length s1) (lsp-ui-doc--inline-width-string s2))))
-    (lsp-ui-doc--truncate
-     width
-     (concat (lsp-ui-doc--truncate max-s1 s1) (make-string (max spaces 0) ?\s) s2))))
+  (let* ((width (lsp-ui-doc--inline-window-width))
+         (max-s1 (- width lsp-ui-doc--inline-width 2)))
+    (truncate-string-to-width
+     (concat (truncate-string-to-width s1 max-s1 nil ?\s) s2)
+     width nil ?\s)))
 
 (defun lsp-ui-doc--inline-padding (string len)
-  (let ((string (concat " " string (make-string (- len (lsp-ui-doc--inline-width-string string)) ?\s) " ")))
+  (let ((string (concat " " string (make-string (- len (string-width string)) ?\s) " ")))
     (add-face-text-property 0 (length string) (list :background (face-background 'lsp-ui-doc-background nil t)) t string)
     string))
 
@@ -490,9 +483,11 @@ Use because `string-width' counts invisible characters."
 
 (defun lsp-ui-doc--inline-merge (strings)
   (let* ((buffer-strings (-> (lsp-ui-doc--inline-untab strings)
+                             (lsp-ui-doc--remove-invisibles)
                              (split-string "\n")))
          (doc-strings (-> (lsp-ui-doc--with-buffer (buffer-string))
                           (lsp-ui-doc--inline-untab)
+                          (lsp-ui-doc--remove-invisibles)
                           (split-string "\n")))
          (merged (--> (lsp-ui-doc--inline-faking-frame doc-strings)
                       (-zip-with 'lsp-ui-doc--inline-zip buffer-strings it)

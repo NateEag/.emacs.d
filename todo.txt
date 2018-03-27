@@ -20,6 +20,9 @@
   can uninstall it once I upgrade.
   https://github.com/DamienCassou/auth-password-store
 
+- Start using package-quickstart to speed up start times once Emacs 27.1 is
+  released.
+
 - Figure out how to make smartparens interact nicely with web-mode. '{{' and
   '{%' don't work right when both are on, but I don't see a way to ban
   multi-character sequences from smartparens, and I don't want to lose pairing

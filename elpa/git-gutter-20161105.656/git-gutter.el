@@ -617,7 +617,7 @@ gutter information of other windows."
   (git-gutter:show-gutter diffinfos))
 
 (defsubst git-gutter:reset-window-margin-p ()
-  (or git-gutter:hide-gutter (not global-git-gutter-mode)))
+  (when git-gutter:hide-gutter))
 
 (defun git-gutter:clear-diff-infos ()
   (when (git-gutter:reset-window-margin-p)

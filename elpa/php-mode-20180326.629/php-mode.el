@@ -15,7 +15,7 @@
 (defconst php-mode-version-number "1.19.0"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2018-03-23"
+(defconst php-mode-modified "2018-03-26"
   "PHP Mode build date.")
 
 ;; This file is free software; you can redistribute it and/or
@@ -384,6 +384,13 @@ This variable can take one of the following symbol values:
 
 If you want to suppress styles from being overwritten by directory / file
 local variables, set NIL."
+  :type 'boolean)
+
+(defcustom php-mode-enable-backup-style-variables t
+  "When set to `T', back up values set by hook and buffer local variables.
+
+This function may interfere with other hooks and other behaviors.
+In that case set to `NIL'."
   :type 'boolean)
 
 (defun php-mode-version ()
@@ -1115,7 +1122,20 @@ After setting the stylevars run hooks according to STYLENAME
   \"psr2\"      `php-mode-psr2-hook'"
   (interactive)
   (php-mode--disable-delay-set-style)
-  (c-set-style stylename dont-override)
+
+  ;; Back up manually set variables
+  (let* (value
+         (backup-vars
+          (and php-mode-enable-backup-style-variables
+               (cl-loop for name in c-style-variables
+                        do (setq value (symbol-value name))
+                        if (and value (not (eq 'set-from-style value)))
+                        collect (cons name value)))))
+    (c-set-style stylename dont-override)
+    ;; Restore variables
+    (cl-loop for (name . value) in backup-vars
+             do (set (make-local-variable name) value)))
+
   (if (eq (symbol-value 'php-style-delete-trailing-whitespace) t)
       (add-hook 'before-save-hook 'delete-trailing-whitespace nil t)
     (remove-hook 'before-save-hook 'delete-trailing-whitespace t))
@@ -1144,6 +1164,7 @@ After setting the stylevars run hooks according to STYLENAME
 (defun php-mode-debug ()
   "Display informations useful for debugging PHP Mode."
   (interactive)
+  (require 'cus-edit)
   (message "--- PHP-MODE DEBUG BEGIN ---")
   (message "versions: %s; %s" (emacs-version) (php-mode-version))
   (message "major-mode: %s" major-mode)
@@ -1160,7 +1181,9 @@ After setting the stylevars run hooks according to STYLENAME
                     if (eq type 'custom-variable)
                     collect (list v (symbol-value v))))
   (message "c-indentation-style: %s" c-indentation-style)
-  (message "c-style-variables: %s" (c-get-style-variables c-indentation-style nil))
+  (message "c-style-variables: %s"
+           (cl-loop for v in c-style-variables
+                    collect (list v (symbol-value v))))
   (message "--- PHP-MODE DEBUG END ---")
   (switch-to-buffer "*Messages*")
   (goto-char (point-max)))
@@ -1770,8 +1793,23 @@ The output will appear in the buffer *PHP*."
 
 
 ;;;###autoload
-(dolist (pattern '("\\.php[s345t]?\\'" "/\\.php_cs\\(\\.dist\\)?\\'" "\\.phtml\\'" "/Amkfile\\'" "\\.amk\\'"))
-  (add-to-list 'auto-mode-alist `(,pattern . php-mode) t))
+(add-to-list 'auto-mode-alist
+             (cons
+              (eval-when-compile
+                (rx (or
+                     ;; File name extensions  (ex. "*.php", "*.phtml")
+                     (: "."
+                        (or (: "php" (? (in "s345t")))
+                            "amk"
+                            "phtml"))
+                     ;; Full file names  (ex. "/Makefile", "/Amkfile")
+                     (: "/"
+                        (or "Amkfile"
+                            ".php_cs"
+                            ".php_cs.dist")))
+                    string-end))
+              'php-mode)
+             t)
 
 (provide 'php-mode)
 

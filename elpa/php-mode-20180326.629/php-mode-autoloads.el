@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "php-mode" "php-mode.el" (23221 3788 0 0))
+;;;### (autoloads nil "php-mode" "php-mode.el" (23227 36887 0 0))
 ;;; Generated autoloads from php-mode.el
 
 (let ((loads (get 'php 'custom-loads))) (if (member '"php-mode" loads) nil (put 'php 'custom-loads (cons '"php-mode" loads))))
@@ -36,11 +36,11 @@ Insert current namespace if cursor in namespace context.
 
 \(fn)" t nil)
 
-(dolist (pattern '("\\.php[s345t]?\\'" "/\\.php_cs\\(\\.dist\\)?\\'" "\\.phtml\\'" "/Amkfile\\'" "\\.amk\\'")) (add-to-list 'auto-mode-alist `(,pattern . php-mode) t))
+(add-to-list 'auto-mode-alist (cons (eval-when-compile (rx (or (: "." (or (: "php" (32 (in "s345t"))) "amk" "phtml")) (: "/" (or "Amkfile" ".php_cs" ".php_cs.dist"))) string-end)) 'php-mode) t)
 
 ;;;***
 
-;;;### (autoloads nil "php-project" "php-project.el" (23221 3788
+;;;### (autoloads nil "php-project" "php-project.el" (23227 36887
 ;;;;;;  0 0))
 ;;; Generated autoloads from php-project.el
 
@@ -107,7 +107,7 @@ Return path to current PHP project.
 ;;;;;;  "php-exif.el" "php-ext.el" "php-filesystem.el" "php-gd.el"
 ;;;;;;  "php-math.el" "php-mode-pkg.el" "php-pcre.el" "php-regex.el"
 ;;;;;;  "php-simplexml.el" "php-strings.el" "php-var.el" "php-xmlparser.el"
-;;;;;;  "php-xmlreader.el") (23221 3788 0 0))
+;;;;;;  "php-xmlreader.el") (23227 36887 0 0))
 
 ;;;***
 

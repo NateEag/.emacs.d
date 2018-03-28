@@ -981,13 +981,24 @@ prefix arg eshell buffer doesn't exists, create it and switch to it."
       (funcall cd-eshell))))
 
 (defun helm-ff-touch-files (_candidate)
+  "The touch files action for helm-find-files."
   (let* ((files (helm-marked-candidates))
+         (split (if (or (cdr files)
+                        helm-current-prefix-arg
+                        (file-exists-p (car files)))
+                    files
+                  (cl-loop for f in (split-string (car files) ", ?")
+                           collect (expand-file-name
+                                    f helm-ff-default-directory))))
          (timestamp (helm-comp-read
                      "Timestamp (default Now): "
-                     (cl-loop for f in files
-                              for date = (format-time-string
-                                          "%Y-%m-%d %H:%M:%S"
-                                          (nth 5 (file-attributes f)))
+                     (cl-loop for f in split
+                              for time = (file-attributes f)
+                              for date = (and time
+                                              (format-time-string
+                                               "%Y-%m-%d %H:%M:%S"
+                                               (nth 5 time)))
+                              when date
                               collect (cons (format "%s: %s"
                                                     (helm-basename f) date)
                                             date))
@@ -995,9 +1006,11 @@ prefix arg eshell buffer doesn't exists, create it and switch to it."
                      (format-time-string "%Y-%m-%d %H:%M:%S"
                                          (current-time))))
          (failures
-          (cl-loop for f in files
-                   when (> (call-process
-                            "touch" nil nil nil "-d" timestamp f)
+          (cl-loop with default-directory = helm-ff-default-directory
+                   for f in split
+                   for file = (or (file-remote-p f 'localname) f)
+                   when (> (process-file
+                            "touch" nil nil nil "-d" timestamp file)
                            0)
                    collect f)))
     (when failures
@@ -1006,6 +1019,7 @@ prefix arg eshell buffer doesn't exists, create it and switch to it."
                (mapconcat (lambda (f) (format "- %s\n" f)) failures "")))))
 
 (defun helm-ff-run-touch-files ()
+  "Used to interactively run touch file action from keyboard."
   (interactive)
   (with-helm-alive-p
     (helm-exit-and-execute-action 'helm-ff-touch-files)))
@@ -2360,12 +2374,12 @@ Note that only existing directories are saved here."
 (add-hook 'helm-cleanup-hook 'helm-ff-save-history)
 
 (defun helm-files-save-file-name-history (&optional force)
-  "Save selected file to `file-name-history'."
+  "Save marked files to `file-name-history'."
   (let* ((src (helm-get-current-source))
          (src-name (assoc-default 'name src)))
     (when (or force (helm-file-completion-source-p src)
               (member src-name helm-files-save-history-extra-sources))
-      (let ((mkd (helm-marked-candidates))
+      (let ((mkd (helm-marked-candidates :with-wildcard t))
             (history-delete-duplicates t))
         (cl-loop for sel in mkd
               when (and sel

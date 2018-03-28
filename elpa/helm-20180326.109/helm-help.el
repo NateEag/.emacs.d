@@ -798,7 +798,10 @@ the first candidate or the timestamp of one of the selected files.
 If you need to use something else, use \\<helm-map>\\[next-history-element] and edit
 the date in minibuffer.
 It is also a way to quickly create a new file without opening a buffer, saving it
-and killing it. 
+and killing it.
+To touch more than one new file, separate you filenames with a comma (\",\").
+If one wants to create (touch) a new file with comma inside the name use a prefix arg,
+this will prevent splitting the name and create multiple files.
 
 ** Commands
 \\<helm-find-files-map>
@@ -1163,7 +1166,8 @@ leaving Helm.
 \\[helm-ucs-persistent-insert]\t\tInsert character.
 \\[helm-ucs-persistent-forward]\t\tForward character.
 \\[helm-ucs-persistent-backward]\t\tBackward character.
-\\[helm-ucs-persistent-delete]\t\tDelete character backward.")
+\\[helm-ucs-persistent-delete]\t\tDelete character backward.
+\\[helm-ucs-persistent-insert-space]\t\tInsert space.")
 
 ;;; Bookmark help
 ;;

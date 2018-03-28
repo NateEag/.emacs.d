@@ -233,9 +233,10 @@ MODE is the mode used in the parent frame."
        (with-temp-buffer
          (insert string)
          (delay-mode-hooks
-           (funcall (cond ((and with-lang (string= "text" language)) 'text-mode)
-                          ((fboundp 'gfm-view-mode) 'gfm-view-mode)
-                          (t 'markdown-mode)))
+           (let ((inhibit-message t))
+             (funcall (cond ((and with-lang (string= "text" language)) 'text-mode)
+                            ((fboundp 'gfm-view-mode) 'gfm-view-mode)
+                            (t 'markdown-mode))))
            (when (derived-mode-p 'markdown-mode)
              (lsp-ui-doc--setup-markdown mode))
            (ignore-errors
@@ -442,14 +443,15 @@ FN is the function to call on click."
   (lsp-ui-doc--with-buffer
    (length (split-string (buffer-string) "\n"))))
 
-;; TODO Optimize this function
 (defun lsp-ui-doc--remove-invisibles (string)
   "Remove invisible characters in STRING."
-  (let ((res ""))
-    (dotimes (i (length string))
-      (unless (get-text-property i 'invisible string)
-        (setq res (concat res (substring string i (1+ i))))))
-    res))
+  (let* ((start (text-property-not-all 0 (length string) 'invisible nil string)))
+    (while start
+      (setq string (concat (substring string 0 start)
+                           (-some->> (next-single-property-change start 'invisible string)
+                                     (substring string))))
+      (setq start (text-property-not-all 0 (length string) 'invisible nil string)))
+    string))
 
 (defvar-local lsp-ui-doc--inline-width nil)
 

@@ -75,6 +75,9 @@
 - Emacs 26: Move package config into early-init.el, per recently-landed patch
   in Emacs trunk.
 
+- aggressive-fill-paragraph-mode should auto-fill after breaking a paragraph
+  into two paragraphs (RET RET, basically).
+
 - Suppress aggressive-fill-paragraph-mode while directly above or below markdown
   code blocks.
 

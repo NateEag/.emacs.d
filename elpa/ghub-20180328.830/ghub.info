@@ -1,4 +1,4 @@
-This is ghub.info, produced by makeinfo version 5.2 from ghub.texi.
+This is ghub.info, produced by makeinfo version 6.1 from ghub.texi.
 
      Copyright (C) 2017-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -39,7 +39,7 @@ adoption would make life easier for users and maintainers alike, because
 then all packages that talk to the Github API could be configured the
 same way.
 
-This manual is for Ghub version 2.0.0.
+This manual is for Ghub version 2.0.0 (v2.0.0+1).
 
      Copyright (C) 2017-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -542,9 +542,8 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
 
         • If READER is non-nil, then it is used to read and return from
           the response buffer.  The default is
-          ‘ghub--read-json-response’.  For the very few resources that
-          do not return json, you might want to use
-          ‘ghub--read-raw-response’.
+          ‘ghub--read-json-payload’.  For the very few resources that do
+          not return json, you might want to use ‘ghub--decode-payload’.
 
         • If USERNAME is non-nil, then the request is made on behalf of
           that user.  It is better to specify the user using the Git
@@ -925,19 +924,19 @@ Github, you have to use ‘user%2Frepo’ when accessing Gitlab, e.g.:
 
 Tag Table:
 Node: Top762
-Node: Introduction2813
-Node: Getting Started5573
-Node: Setting the Username6076
-Node: Interactively Creating and Storing a Token7501
-Node: Manually Creating and Storing a Token13144
-Node: How Ghub uses Auth-Source14088
-Node: Using Ghub in Personal Scripts16021
-Node: Using Ghub in a Package17470
-Node: API20035
-Node: Making Requests20485
-Node: Authentication33827
-Node: Configuration Variables35629
-Node: Gitlab Support39322
+Node: Introduction2824
+Node: Getting Started5584
+Node: Setting the Username6087
+Node: Interactively Creating and Storing a Token7512
+Node: Manually Creating and Storing a Token13155
+Node: How Ghub uses Auth-Source14099
+Node: Using Ghub in Personal Scripts16032
+Node: Using Ghub in a Package17481
+Node: API20046
+Node: Making Requests20496
+Node: Authentication33824
+Node: Configuration Variables35626
+Node: Gitlab Support39319
 
 End Tag Table
 

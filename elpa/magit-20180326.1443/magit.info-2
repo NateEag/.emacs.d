@@ -1,4 +1,4 @@
-This is magit.info, produced by makeinfo version 5.2 from magit.texi.
+This is magit.info, produced by makeinfo version 6.1 from magit.texi.
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -345,7 +345,7 @@ File: magit.info,  Node: Matching Sections,  Prev: Section Selection,  Up: Secti
 
         • ‘[* TYPE...]’
 
-          matches sections that match [TYPE…] and also recursively all
+          matches sections that match [TYPE...] and also recursively all
           their child sections.
 
         • ‘TYPE’
@@ -374,12 +374,12 @@ File: magit.info,  Node: Matching Sections,  Prev: Section Selection,  Up: Secti
 
      Choose among clauses on the type of the section at point.
 
-     Each clause looks like (CONDITION BODY…).  The type of the section
-     is compared against each CONDITION; the BODY forms of the first
-     match are evaluated sequentially and the value of the last form is
-     returned.  Inside BODY the symbol ‘it’ is bound to the section at
-     point.  If no clause succeeds or if there is no section at point
-     return nil.
+     Each clause looks like (CONDITION BODY...).  The type of the
+     section is compared against each CONDITION; the BODY forms of the
+     first match are evaluated sequentially and the value of the last
+     form is returned.  Inside BODY the symbol ‘it’ is bound to the
+     section at point.  If no clause succeeds or if there is no section
+     at point return nil.
 
      See ‘magit-section-match’ for the forms CONDITION can take.
      Additionally a CONDITION of t is allowed in the final clause and
@@ -677,14 +677,14 @@ made it into the manual yet, see
 
 * Menu:
 
-* FAQ - How to …?::
+* FAQ - How to ...?::
 * FAQ - Issues and Errors::
 
 
-File: magit.info,  Node: FAQ - How to …?,  Next: FAQ - Issues and Errors,  Up: FAQ
+File: magit.info,  Node: FAQ - How to ...?,  Next: FAQ - Issues and Errors,  Up: FAQ
 
-A.1 FAQ - How to …?
-===================
+A.1 FAQ - How to ...?
+=====================
 
 * Menu:
 
@@ -692,10 +692,10 @@ A.1 FAQ - How to …?
 * How to install the gitman info manual?::
 * How to show diffs for gpg-encrypted files?::
 * How does branching and pushing work?::
-* Can Magit be used as ‘ediff-version-control-package’?::
+* Can Magit be used as ediff-version-control-package?::
 
 
-File: magit.info,  Node: How to show git's output?,  Next: How to install the gitman info manual?,  Up: FAQ - How to …?
+File: magit.info,  Node: How to show git's output?,  Next: How to install the gitman info manual?,  Up: FAQ - How to ...?
 
 A.1.1 How to show git’s output?
 -------------------------------
@@ -712,7 +712,7 @@ debugging purposes, it’s possible to do so anyway by setting
 ‘magit-git-debug’ to ‘t’.
 
 
-File: magit.info,  Node: How to install the gitman info manual?,  Next: How to show diffs for gpg-encrypted files?,  Prev: How to show git's output?,  Up: FAQ - How to …?
+File: magit.info,  Node: How to install the gitman info manual?,  Next: How to show diffs for gpg-encrypted files?,  Prev: How to show git's output?,  Up: FAQ - How to ...?
 
 A.1.2 How to install the gitman info manual?
 --------------------------------------------
@@ -733,7 +733,7 @@ one of the supported packages ‘man’ or ‘woman’, e.g.:
      (setq magit-view-git-manual-method 'man)
 
 
-File: magit.info,  Node: How to show diffs for gpg-encrypted files?,  Next: How does branching and pushing work?,  Prev: How to install the gitman info manual?,  Up: FAQ - How to …?
+File: magit.info,  Node: How to show diffs for gpg-encrypted files?,  Next: How does branching and pushing work?,  Prev: How to install the gitman info manual?,  Up: FAQ - How to ...?
 
 A.1.3 How to show diffs for gpg-encrypted files?
 ------------------------------------------------
@@ -746,7 +746,7 @@ affects the diffs displayed inside Magit.
      echo "*.gpg filter=gpg diff=gpg" > .gitattributes
 
 
-File: magit.info,  Node: How does branching and pushing work?,  Next: Can Magit be used as ‘ediff-version-control-package’?,  Prev: How to show diffs for gpg-encrypted files?,  Up: FAQ - How to …?
+File: magit.info,  Node: How does branching and pushing work?,  Next: Can Magit be used as ediff-version-control-package?,  Prev: How to show diffs for gpg-encrypted files?,  Up: FAQ - How to ...?
 
 A.1.4 How does branching and pushing work?
 ------------------------------------------
@@ -755,7 +755,7 @@ Please see *note Branching:: and
 <http://emacsair.me/2016/01/18/magit-2.4>
 
 
-File: magit.info,  Node: Can Magit be used as ‘ediff-version-control-package’?,  Prev: How does branching and pushing work?,  Up: FAQ - How to …?
+File: magit.info,  Node: Can Magit be used as ediff-version-control-package?,  Prev: How does branching and pushing work?,  Up: FAQ - How to ...?
 
 A.1.5 Can Magit be used as ‘ediff-version-control-package’?
 -----------------------------------------------------------
@@ -789,7 +789,7 @@ Instead we provide the more useful command ‘magit-ediff-resolve’ which
 only shows yet-to-be resolved conflicts.
 
 
-File: magit.info,  Node: FAQ - Issues and Errors,  Prev: FAQ - How to …?,  Up: FAQ
+File: magit.info,  Node: FAQ - Issues and Errors,  Prev: FAQ - How to ...?,  Up: FAQ
 
 A.2 FAQ - Issues and Errors
 ===========================
@@ -803,7 +803,7 @@ A.2 FAQ - Issues and Errors
 * I am using OS X and SOMETHING works in shell, but not in Magit: I am using OS X and SOMETHING works in shell but not in Magit. 
 * Diffs contain control sequences::
 * Expanding a file to show the diff causes it to disappear::
-* Point is wrong in the ‘COMMIT_EDITMSG’ buffer::
+* Point is wrong in the COMMIT_EDITMSG buffer::
 * The mode-line information isn't always up-to-date::
 * Emacs 24.5 hangs when loading Magit: Emacs 245 hangs when loading Magit. 
 * A branch and tag sharing the same name breaks SOMETHING::
@@ -891,7 +891,7 @@ then you can override these settings just for Magit by using:
                     "-c" "color.diff=false")))
 
 
-File: magit.info,  Node: Expanding a file to show the diff causes it to disappear,  Next: Point is wrong in the ‘COMMIT_EDITMSG’ buffer,  Prev: Diffs contain control sequences,  Up: FAQ - Issues and Errors
+File: magit.info,  Node: Expanding a file to show the diff causes it to disappear,  Next: Point is wrong in the COMMIT_EDITMSG buffer,  Prev: Diffs contain control sequences,  Up: FAQ - Issues and Errors
 
 A.2.7 Expanding a file to show the diff causes it to disappear
 --------------------------------------------------------------
@@ -901,7 +901,7 @@ probably set that variable for a reason, and should therefore only undo
 that setting in Magit by customizing ‘magit-git-global-arguments’.
 
 
-File: magit.info,  Node: Point is wrong in the ‘COMMIT_EDITMSG’ buffer,  Next: The mode-line information isn't always up-to-date,  Prev: Expanding a file to show the diff causes it to disappear,  Up: FAQ - Issues and Errors
+File: magit.info,  Node: Point is wrong in the COMMIT_EDITMSG buffer,  Next: The mode-line information isn't always up-to-date,  Prev: Expanding a file to show the diff causes it to disappear,  Up: FAQ - Issues and Errors
 
 A.2.8 Point is wrong in the ‘COMMIT_EDITMSG’ buffer
 ---------------------------------------------------
@@ -925,7 +925,7 @@ help:
            (pointback-mode -1))))
 
 
-File: magit.info,  Node: The mode-line information isn't always up-to-date,  Next: Emacs 245 hangs when loading Magit,  Prev: Point is wrong in the ‘COMMIT_EDITMSG’ buffer,  Up: FAQ - Issues and Errors
+File: magit.info,  Node: The mode-line information isn't always up-to-date,  Next: Emacs 245 hangs when loading Magit,  Prev: Point is wrong in the COMMIT_EDITMSG buffer,  Up: FAQ - Issues and Errors
 
 A.2.9 The mode-line information isn’t always up-to-date
 -------------------------------------------------------

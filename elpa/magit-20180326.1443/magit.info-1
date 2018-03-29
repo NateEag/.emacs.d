@@ -1,4 +1,4 @@
-This is magit.info, produced by makeinfo version 5.2 from magit.texi.
+This is magit.info, produced by makeinfo version 6.1 from magit.texi.
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -274,16 +274,16 @@ Conventions
 
 FAQ
 
-* FAQ - How to …?::
+* FAQ - How to ...?::
 * FAQ - Issues and Errors::
 
-FAQ - How to …?
+FAQ - How to ...?
 
 * How to show git's output?::
 * How to install the gitman info manual?::
 * How to show diffs for gpg-encrypted files?::
 * How does branching and pushing work?::
-* Can Magit be used as ‘ediff-version-control-package’?::
+* Can Magit be used as ediff-version-control-package?::
 
 
 FAQ - Issues and Errors
@@ -295,7 +295,7 @@ FAQ - Issues and Errors
 * I am using OS X and SOMETHING works in shell, but not in Magit: I am using OS X and SOMETHING works in shell but not in Magit. 
 * Diffs contain control sequences::
 * Expanding a file to show the diff causes it to disappear::
-* Point is wrong in the ‘COMMIT_EDITMSG’ buffer::
+* Point is wrong in the COMMIT_EDITMSG buffer::
 * The mode-line information isn't always up-to-date::
 * Emacs 24.5 hangs when loading Magit: Emacs 245 hangs when loading Magit. 
 * A branch and tag sharing the same name breaks SOMETHING::
@@ -1511,7 +1511,7 @@ but knowing them can be handy at times.
 ‘M-x magit-describe-section’     (‘magit-describe-section’)
 
      Show information about the section at point in the echo area, as
-     "VALUE [TYPE PARENT-TYPE…] BEGINNING-END".
+     "VALUE [TYPE PARENT-TYPE...] BEGINNING-END".
 
    Many commands behave differently depending on the type of the section
 at point and/or somehow consume the value of that section.  But that is
@@ -3189,7 +3189,7 @@ Buffers and Prefix Commands::).
 
      Show differences between two commits.
 
-     RANGE should be a range (A..B or A…B) but can also be a single
+     RANGE should be a range (A..B or A...B) but can also be a single
      commit.  If one side of the range is omitted, then it defaults to
      ‘HEAD’.  If just a commit is given, then changes in the working
      tree relative to that commit are shown.
@@ -3197,7 +3197,7 @@ Buffers and Prefix Commands::).
      If the region is active, use the revisions on the first and last
      line of the region.  With a prefix argument, instead of diffing the
      revisions, choose a revision to view changes along, starting at the
-     common ancestor of both revisions (i.e., use a "…" range).
+     common ancestor of both revisions (i.e., use a "..." range).
 
 ‘d w’     (‘magit-diff-working-tree’)
 
@@ -3286,7 +3286,7 @@ the status buffer.
 ‘D r’     (‘magit-diff-switch-range-type’)
 
      This command converts the diff range type from "revA..revB" to
-     "revB…revA", or vice versa.
+     "revB...revA", or vice versa.
 
 ‘D f’     (‘magit-diff-flip-revs’)
 
@@ -3613,7 +3613,7 @@ information on how to use Ediff itself, see *note (ediff)Top::.
      If the region is active, use the revisions on the first and last
      line of the region.  With a prefix argument, instead of diffing the
      revisions, choose a revision to view changes along, starting at the
-     common ancestor of both revisions (i.e., use a "…" range).
+     common ancestor of both revisions (i.e., use a "..." range).
 
 ‘E m’     (‘magit-ediff-resolve’)
 
@@ -4614,7 +4614,7 @@ those that are already committed.
      determined in the previous step.
 
      Both formats, if non-nil and after removing %N, are then expanded
-     using ‘git show –format=FORMAT …’ inside TOPLEVEL.
+     using ‘git show –format=FORMAT ...’ inside TOPLEVEL.
 
      The expansion of POINT-FORMAT is inserted at point, and the
      expansion of EOB-FORMAT is inserted at the end of the buffer (if

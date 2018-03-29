@@ -1694,21 +1694,11 @@ The checksum is copied to kill-ring."
 
 (defun helm-reduce-file-name (fname level)
   "Reduce FNAME by number LEVEL from end."
-  (cl-loop with result
-           with iter = (helm-iter-reduce-fname (expand-file-name fname))
-           repeat level do (setq result (helm-iter-next iter))
-           finally return (or result (expand-file-name "/"))))
-
-(defun helm-iter-reduce-fname (fname)
-  "Yield FNAME reduced by one level at each call."
-  (let ((split (split-string fname "/" t)))
-    (unless (or (null split)
-                (string-match "\\`\\(~\\|[[:alpha:]]:\\)" (car split)))
-      (setq split (cons "/" split)))
-    (lambda ()
-      (when (and split (cdr split))
-        (cl-loop for i in (setq split (butlast split))
-                 concat (if (string= i "/") i (concat i "/")))))))
+  ;; This version comes from issue #2004 (UNC paths) and should fix it.
+  (while (> level 0)
+    (setq fname (expand-file-name (concat fname "/../")))
+    (setq level (1- level)))
+  fname)
 
 (defvar helm-find-files--level-tree nil)
 (defvar helm-find-files--level-tree-iterator nil)
@@ -1824,7 +1814,9 @@ or when `helm-pattern' is equal to \"~/\"."
   (let ((src (helm-get-current-source)))
     (when (and (helm-file-completion-source-p src)
                (not (get-buffer-window helm-action-buffer 'visible))
-               (not (helm-ff--invalid-tramp-name-p)))
+               (not (helm-ff--invalid-tramp-name-p))
+               (not (string-match-p "\\`[.]\\{2\\}[^/]+"
+                                    (helm-basename helm-pattern))))
       (with-helm-buffer
         (let* ((history-p   (string= (assoc-default 'name src)
                                      "Read File Name History"))
@@ -1935,18 +1927,26 @@ or when `helm-pattern' is equal to \"~/\"."
 
 (defun helm-ff--expand-file-name-no-dot (name &optional directory)
   "Prevent expanding \"/home/user/.\" to \"/home/user\"."
-  ;; Issue #1844.
+  ;; Issue #1844 - If user enter "~/." to type an hidden filename
+  ;; don't expand to /home/him e.g.
+  ;; (expand-file-name "~/.") =>"/home/thierry"
+  ;; (helm-ff--expand-substitued-pattern "~/.") =>"/home/thierry/."
   (concat (expand-file-name name directory)
           (and (string-match "[^.]\\.\\'" name) "/.")))
 
 (defun helm-ff--expand-substitued-pattern (pattern)
-  (helm-ff--expand-file-name-no-dot
-   (helm-substitute-in-filename pattern)
-   ;; [Windows] On UNC paths "/" expand to current machine,
-   ;; so use the root of current Drive. (i.e "C:/")
-   (and (memq system-type '(windows-nt ms-dos))
-        (getenv "SystemDrive"))         ; nil on Unix.
-   ))
+  ;; [Windows] On UNC paths "/" expand to current machine,
+  ;; so use the root of current Drive. (i.e "C:/")
+  (let* ((directory (and (memq system-type '(windows-nt ms-dos))
+                         (getenv "SystemDrive")))
+         ;; On Windows use a simple call to `expand-file-name' to
+         ;; avoid Issue #2004.
+         (expand-fn (if directory
+                        #'expand-file-name
+                      #'helm-ff--expand-file-name-no-dot)))
+    (funcall expand-fn (helm-substitute-in-filename pattern)
+             ;; directory is nil on Nix.
+             directory)))
 
 (defun helm-substitute-in-filename (fname)
   "Substitute all parts of FNAME from start up to \"~/\" or \"/\".
@@ -1966,7 +1966,8 @@ and should be used carefully elsewhere, or not at all, using
          (with-temp-buffer
            (insert fname)
            (goto-char (point-min))
-           (skip-chars-forward "/") ;; Avoid infloop in UNC paths Issue #424
+           (when (memq system-type '(windows-nt ms-dos))
+             (skip-chars-forward "/")) ;; Avoid infloop in UNC paths Issue #424
            (if (re-search-forward "~.*/?\\|//\\|/[[:alpha:]]:/" nil t)
                (let ((match (match-string 0)))
                  (goto-char (if (or (string= match "//")
@@ -3462,7 +3463,9 @@ Ask to kill buffers associated with that file, too."
 
 (defun helm-find-file-or-marked (candidate)
   "Open file CANDIDATE or open helm marked files in separate windows.
-Called with a prefix arg open files in background without selecting them."
+Called with one prefix arg open files in separate windows in a
+vertical split.
+Called with two prefix arg open files in background without selecting them."
   (let ((marked (helm-marked-candidates :with-wildcard t))
         (url-p (and helm--url-regexp ; we should have only one candidate.
                     (string-match helm--url-regexp candidate)))
@@ -3470,9 +3473,11 @@ Called with a prefix arg open files in background without selecting them."
         (find-file-wildcards nil)
         (helm--reading-passwd-or-string t))
     (if (cdr marked)
-        ;; If helm-current-prefix-arg is detected split is done
-        ;; vertically.
-        (helm-window-show-buffers (mapcar 'find-file-noselect marked))
+        (if (equal helm-current-prefix-arg '(16))
+            (mapcar 'find-file-noselect marked)
+          ;; If helm-current-prefix-arg is detected split is done
+          ;; vertically.
+          (helm-window-show-buffers (mapcar 'find-file-noselect marked)))
       (let ((dir (and (not url-p) (helm-basedir candidate))))
         (cond ((and dir (file-directory-p dir))
                (find-file (substitute-in-file-name candidate)))

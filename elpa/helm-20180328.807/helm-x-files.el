@@ -72,41 +72,28 @@
 ;;; External searching file tools.
 ;;
 ;; Tracker desktop search
-(defvar helm-source-tracker-cand-incomplete nil "Contains incomplete candidate")
+
 (defun helm-source-tracker-transformer (candidates _source)
-  (helm-log "received: %S" candidates)
+  ;; loop through tracker candidates selecting out file:// lines
+  ;; then select part after file:// and url decode to get straight filenames
   (cl-loop for cand in candidates
-           for path = (when (stringp helm-source-tracker-cand-incomplete)
-                        (caar (helm-highlight-files
-                               (list helm-source-tracker-cand-incomplete)
-                               nil)))
-           for built = (if (not (stringp cand)) cand
-                         (let ((snippet cand))
-                           (unless (or (null path)
-                                      (string= "" path)
-                                      (not (string-match-p
-                                          "\\`[[:space:]]*\\.\\.\\."
-                                          snippet)))
-                             (let ((complete-candidate
-                                    (cons (concat path "\n" snippet) path)))
-                               (setq helm-source-tracker-cand-incomplete nil)
-                               (helm-log "built: %S" complete-candidate)
-                               complete-candidate))))
            when (and (stringp cand)
-                   (string-match "\\`[[:space:]]*file://" cand))
-           do (setq helm-source-tracker-cand-incomplete ; save path
-                    (replace-match "" t t cand)) end
-           collect built))
+                     (string-match "\\`[[:space:]]*file://\\(.*\\)" cand))
+           collect (url-unhex-string(match-string 1 cand))))
 
 (defvar helm-source-tracker-search
   (helm-build-async-source "Tracker Search"
     :candidates-process
      (lambda ()
+       ;; the tracker-search command has been deprecated, now invoke via tracker
+       ;; also, disable the contextual snippets which we don't currently use
        (start-process "tracker-search-process" nil
-                      "tracker-search"
+                      "tracker" "search"
+                      "--disable-snippets"
                       "--disable-color"
                       "--limit=512"
                       helm-pattern))
+    ;; new simplified transformer of tracker search results
     :filtered-candidate-transformer #'helm-source-tracker-transformer
     ;;(multiline) ; https://github.com/emacs-helm/helm/issues/529
     :keymap helm-generic-files-map

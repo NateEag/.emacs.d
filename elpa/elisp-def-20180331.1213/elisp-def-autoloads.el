@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "elisp-def" "elisp-def.el" (23206 33837 0 0))
+;;;### (autoloads nil "elisp-def" "elisp-def.el" (23234 10989 0 0))
 ;;; Generated autoloads from elisp-def.el
 
 (autoload 'elisp-def "elisp-def" "\

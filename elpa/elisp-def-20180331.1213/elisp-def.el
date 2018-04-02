@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2018  Wilfred Hughes
 ;; Version: 1.1
-;; Package-Version: 20180309.1434
+;; Package-Version: 20180331.1213
 
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Keywords: lisp
@@ -183,6 +183,8 @@ Note that macros are in the same namespace as functions."
       (push 'function result))
     (when (facep sym)
       (push 'face result))
+    (when (memq sym features)
+      (push 'library result))
     result))
 
 (defun elisp-def--sharp-quoted-p ()

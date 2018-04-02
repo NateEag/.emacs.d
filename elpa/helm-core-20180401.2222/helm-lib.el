@@ -94,8 +94,8 @@ much more convenient to use a simple boolean value here."
               (if (string-match-p "[^/]$" f)
                   ;; files: e.g .o => \\.o$
                   (concat rgx "$")
-                ;; directories: e.g .git/ => \\.git/?
-                (concat rgx "?"))))
+                ;; directories: e.g .git/ => \.git\\(/\\|$\\)
+                (concat (substring rgx 0 -1) "\\(/\\|$\\)"))))
           completion-ignored-extensions)
   "A list of regexps matching boring files.
 
@@ -878,6 +878,22 @@ of this function is really needed."
                             (funcall rep str))
                            (t rep))
                      fixedcase literal nil subexp))
+    (buffer-string)))
+
+(defun helm-url-unhex-string (str)
+  "Same as `url-unhex-string' but ensure STR is completely decoded.
+
+Doesn't work properly with accentued characters."
+  (setq str (or str ""))
+  (with-temp-buffer
+    (save-excursion (insert str))
+    (while (re-search-forward "%[A-Za-z0-9]\\{2\\}" nil t)
+      (replace-match (string (string-to-number
+			      (substring (match-string 0) 1)
+                              16))
+                     t t)
+      ;; Restart from beginning until string is completely decoded.
+      (goto-char (point-min)))
     (buffer-string)))
 
 ;;; Symbols routines

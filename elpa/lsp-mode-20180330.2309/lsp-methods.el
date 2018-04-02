@@ -982,7 +982,14 @@ interface TextDocumentEdit {
 (define-inline lsp--apply-text-edits (edits)
   "Apply the edits described in the TextEdit[] object in EDITS."
   (inline-quote
-    (mapc #'lsp--apply-text-edit (sort ,edits #'lsp--text-edit-sort-predicate))))
+    ;; We sort text edits so as to apply edits that modify earlier parts of the
+    ;; document first. Furthermore, because the LSP spec dictates that:
+    ;; "If multiple inserts have the same position, the order in the array
+    ;; defines which edit to apply first."
+    ;; We reverse the initial list to make sure that the order among edits with
+    ;; the same position is preserved.
+
+    (mapc #'lsp--apply-text-edit (sort (nreverse ,edits) #'lsp--text-edit-sort-predicate))))
 
 (defun lsp--apply-text-edit (text-edit)
   "Apply the edits described in the TextEdit object in TEXT-EDIT."
@@ -1345,7 +1352,8 @@ https://microsoft.github.io/language-server-protocol/specification#textDocument_
          (inhibit-field-text-motion t))
     (save-excursion
       (goto-char point)
-      (buffer-substring (line-beginning-position) (line-end-position)))))
+      (buffer-substring-no-properties (line-beginning-position)
+                                      (line-end-position)))))
 
 (defun lsp--xref-make-item (filename location)
   "Return a xref-item from a LOCATION in FILENAME."
@@ -1876,6 +1884,34 @@ interface RenameParams {
                                    (lsp--make-document-rename-params newname)))))
     (when edits
       (lsp--apply-workspace-edit edits))))
+
+(defun lsp-goto-implementation ()
+  "Resolve, and go to the implementation(s) of the symbol under point."
+  (interactive)
+  (lsp--cur-workspace-check)
+  (unless (lsp--capability "implementationProvider")
+    (signal 'lsp-capability-not-supported (list "implementationProvider")))
+  (let ((loc (lsp--send-request (lsp--make-request "textDocument/implementation"
+                                  (lsp--text-document-position-params)))))
+    (if loc
+      (progn
+        (setq loc (if (listp loc) loc (list loc)))
+        (xref--show-xrefs (lsp--locations-to-xref-items loc) nil))
+      (message "No implementations found for: %s" (thing-at-point 'symbol t)))))
+
+(defun lsp-goto-type-definition ()
+  "Resolve, and go to the type definition(s) of the symbol under point."
+  (interactive)
+  (lsp--cur-workspace-check)
+  (unless (lsp--capability "typeDefinitionProvider")
+    (signal 'lsp-capability-not-supported (list "typeDefinitionProvider")))
+  (let ((loc (lsp--send-request (lsp--make-request "textDocument/typeDefinition"
+                                  (lsp--text-document-position-params)))))
+    (if loc
+      (progn
+        (setq loc (if (listp loc) loc (list loc)))
+        (xref--show-xrefs (lsp--locations-to-xref-items loc) nil))
+      (message "No type definitions found for: %s" (thing-at-point 'symbol t)))))
 
 (define-inline lsp--execute-command (command)
   "Given a COMMAND returned from the server, create and send a

@@ -153,6 +153,11 @@ this source is accessible and properly loaded."
   "Face for buffer file names in `helm-buffers-list'."
   :group 'helm-buffers-faces)
 
+(defface helm-buffer-archive
+    '((t (:foreground "Gold")))
+  "Face for archive file names in `helm-buffers-list'."
+  :group 'helm-buffers-faces)
+
 (defface helm-non-file-buffer
     '((t (:inherit italic)))
   "Face used for non-file buffers in `helm-buffers-list'."
@@ -238,7 +243,9 @@ Note that this variable is buffer-local.")
                                      helm-source-buffers-list))
                          maximize (length b) into len-buf
                          maximize (length (with-current-buffer b
-                                            (format-mode-line mode-name)))
+                                            (if (stringp mode-name)
+                                                mode-name
+                                              (format-mode-line mode-name))))
                          into len-mode
                          finally return (cons len-buf len-mode))))
     (unless (default-value 'helm-buffer-max-length)
@@ -361,56 +368,68 @@ See `ido-make-buffer-list' for more infos."
          (size (propertize (helm-buffer-size buf)
                            'face 'helm-buffer-size))
          (proc (get-buffer-process buf))
-         (dir (with-current-buffer buffer (helm-aif default-directory (abbreviate-file-name it))))
+         (dir (with-current-buffer buffer
+                (helm-aif default-directory (abbreviate-file-name it))))
          (file-name (helm-aif (buffer-file-name buf) (abbreviate-file-name it)))
          (name (buffer-name buf))
          (name-prefix (when (and dir (file-remote-p dir))
-                        (propertize "@ " 'face 'helm-ff-prefix))))
-    ;; No fancy things on remote buffers.
-    (if (and name-prefix helm-buffer-skip-remote-checking)
+                        (propertize "@ " 'face 'helm-ff-prefix)))
+         (archive-p (and (fboundp 'tramp-archive-file-name-p)
+                         (tramp-archive-file-name-p dir))))
+    (when name-prefix
+      ;; Remote tramp buffer names may be hexified, make them more readable.
+      (setq dir  (helm-url-unhex-string dir)
+            name (helm-url-unhex-string name)))
+    ;; Handle tramp archive buffers specially.
+    (if archive-p
         (helm-buffer--show-details
          name name-prefix file-name size mode dir
-         'helm-buffer-file 'helm-buffer-process nil details 'filebuf)
-      (cond
-        ( ;; A dired buffer.
-         (rassoc buf dired-buffers)
-         (helm-buffer--show-details
-          name name-prefix dir size mode dir
-          'helm-buffer-directory 'helm-buffer-process nil details 'dired))
-        ;; A buffer file modified somewhere outside of emacs.=>red
-        ((and file-name
-              (file-exists-p file-name)
-              (not (verify-visited-file-modtime buf)))
-         (helm-buffer--show-details
-          name name-prefix file-name size mode dir
-          'helm-buffer-saved-out 'helm-buffer-process nil details 'modout))
-        ;; A new buffer file not already saved on disk (or a deleted file) .=>indianred2
-        ((and file-name (not (file-exists-p file-name)))
-         (helm-buffer--show-details
-          name name-prefix file-name size mode dir
-          'helm-buffer-not-saved 'helm-buffer-process nil details 'notsaved))
-        ;; A buffer file modified and not saved on disk.=>orange
-        ((and file-name (buffer-modified-p buf))
-         (helm-buffer--show-details
-          name name-prefix file-name size mode dir
-          'helm-buffer-modified 'helm-buffer-process nil details 'mod))
-        ;; A buffer file not modified and saved on disk.=>green
-        (file-name
-         (helm-buffer--show-details
-          name name-prefix file-name size mode dir
-          'helm-buffer-file 'helm-buffer-process nil details 'filebuf))
-        ;; A non-file, modified buffer
-        ((with-current-buffer name
-           (and helm-buffers-tick-counter
-                (/= helm-buffers-tick-counter (buffer-modified-tick))))
-         (helm-buffer--show-details
-          name (and proc name-prefix) dir size mode dir
-          'helm-buffer-modified 'helm-buffer-process proc details 'nofile-mod))
-        ;; Any non--file buffer.=>italic
-        (t
-         (helm-buffer--show-details
-          name (and proc name-prefix) dir size mode dir
-          'helm-non-file-buffer 'helm-buffer-process proc details 'nofile))))))
+         'helm-buffer-archive 'helm-buffer-process nil details 'filebuf)
+      ;; No fancy things on remote buffers.
+      (if (and name-prefix helm-buffer-skip-remote-checking)
+          (helm-buffer--show-details
+           name name-prefix file-name size mode dir
+           'helm-buffer-file 'helm-buffer-process nil details 'filebuf)
+        (cond
+          (;; A dired buffer.
+           (rassoc buf dired-buffers)
+           (helm-buffer--show-details
+            name name-prefix dir size mode dir
+            'helm-buffer-directory 'helm-buffer-process nil details 'dired))
+          ;; A buffer file modified somewhere outside of emacs.=>red
+          ((and file-name
+                (file-exists-p file-name)
+                (not (verify-visited-file-modtime buf)))
+           (helm-buffer--show-details
+            name name-prefix file-name size mode dir
+            'helm-buffer-saved-out 'helm-buffer-process nil details 'modout))
+          ;; A new buffer file not already saved on disk (or a deleted file) .=>indianred2
+          ((and file-name (not (file-exists-p file-name)))
+           (helm-buffer--show-details
+            name name-prefix file-name size mode dir
+            'helm-buffer-not-saved 'helm-buffer-process nil details 'notsaved))
+          ;; A buffer file modified and not saved on disk.=>orange
+          ((and file-name (buffer-modified-p buf))
+           (helm-buffer--show-details
+            name name-prefix file-name size mode dir
+            'helm-buffer-modified 'helm-buffer-process nil details 'mod))
+          ;; A buffer file not modified and saved on disk.=>green
+          (file-name
+           (helm-buffer--show-details
+            name name-prefix file-name size mode dir
+            'helm-buffer-file 'helm-buffer-process nil details 'filebuf))
+          ;; A non-file, modified buffer
+          ((with-current-buffer name
+             (and helm-buffers-tick-counter
+                  (/= helm-buffers-tick-counter (buffer-modified-tick))))
+           (helm-buffer--show-details
+            name (and proc name-prefix) dir size mode dir
+            'helm-buffer-modified 'helm-buffer-process proc details 'nofile-mod))
+          ;; Any non--file buffer.=>italic
+          (t
+           (helm-buffer--show-details
+            name (and proc name-prefix) dir size mode dir
+            'helm-non-file-buffer 'helm-buffer-process proc details 'nofile)))))))
 
 (defun helm-highlight-buffers (buffers _source)
   "Transformer function to highlight BUFFERS list.
@@ -456,6 +475,10 @@ Should be called after others transformers i.e (boring buffers)."
 
 (defun helm-buffer--get-preselection (buffer)
   (let ((bufname (buffer-name buffer)))
+    (when (and bufname
+               (file-remote-p (with-current-buffer bufname
+                                default-directory)))
+      (setq bufname (concat "@ " (helm-url-unhex-string bufname))))
     (concat "^"
             (if (and (null helm-buffer-details-flag)
                      (numberp helm-buffer-max-length)
@@ -846,6 +869,10 @@ If a prefix arg is given split windows vertically."
 (defun helm-buffers--quote-truncated-buffer (buffer)
   (let ((bufname (and (bufferp buffer)
                       (buffer-name buffer))))
+    (when (and bufname
+               (file-remote-p (with-current-buffer bufname
+                                default-directory)))
+      (setq bufname (concat "@ " (helm-url-unhex-string bufname))))
     (when bufname
       (regexp-quote
        (if (and helm-buffer-max-length

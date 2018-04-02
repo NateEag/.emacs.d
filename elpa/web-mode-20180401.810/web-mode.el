@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2018 François-Xavier Bois
 
-;; Version: 16.0.2
-;; Package-Version: 20180326.451
+;; Version: 16.0.4
+;; Package-Version: 20180401.810
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Package-Requires: ((emacs "23.1"))
@@ -25,7 +25,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "16.0.2"
+(defconst web-mode-version "16.0.4"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -933,6 +933,8 @@ Must be used in conjunction with web-mode-enable-block-face."
   "XML chars")
 
 (defvar web-mode-html-entities
+  ;; #985
+  ;; remove ("gt" . 62) ("lt" . 60) ("amp" . 38)
   '(("AElig" . 198) ("Aacute" . 193) ("Acirc" . 194) ("Agrave" . 192)
     ("Alpha" . 913) ("Aring" . 197) ("Atilde" . 195) ("Auml" . 196)
     ("Beta" . 914)
@@ -961,7 +963,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("Yacute" . 221) ("Yuml" . 376)
     ("Zeta" . 918)
     ("aacute" . 225) ("acirc" . 226) ("acute" . 180) ("aelig" . 230)
-    ("agrave" . 224) ("alefsym" . 8501) ("alpha" . 945) ("amp" . 38)
+    ("agrave" . 224) ("alefsym" . 8501) ("alpha" . 945)
     ("ang" . 8736) ("apos" . 39) ("aring" . 229) ("asymp" . 8776)
     ("atilde" . 227) ("auml" . 228)
     ("bdquo" . 8222) ("beta" . 946) ("brvbar" . 166) ("bull" . 8226)
@@ -975,7 +977,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("eta" . 951) ("eth" . 240) ("euml" . 235) ("euro" . 8364) ("exist" . 8707)
     ("fnof" . 402) ("forall" . 8704) ("frac12" . 189) ("frac14" . 188)
     ("frac34" . 190) ("frasl" . 8260)
-    ("gamma" . 947) ("ge" . 8805) ("gt" . 62)
+    ("gamma" . 947) ("ge" . 8805)
     ("hArr" . 8660) ("harr" . 8596) ("hearts" . 9829) ("hellip" . 8230)
     ("iacute" . 237) ("icirc" . 238) ("iexcl" . 161) ("igrave" . 236)
     ("image" . 8465) ("infin" . 8734) ("int" . 8747) ("iota" . 953)
@@ -984,7 +986,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("lArr" . 8656) ("lambda" . 955) ("lang" . 9001) ("laquo" . 171)
     ("larr" . 8592) ("lceil" . 8968) ("ldquo" . 8220) ("le" . 8804)
     ("lfloor" . 8970) ("lowast" . 8727) ("loz" . 9674) ("lrm" . 8206)
-    ("lsaquo" . 8249) ("lsquo" . 8249) ("lt" . 60)
+    ("lsaquo" . 8249) ("lsquo" . 8249)
     ("macr" . 175) ("mdash" . 8212) ("micro" . 181) ("middot" . 183)
     ("minus" . 8722) ("mu" . 956)
     ("nabla" . 8711) ("nbsp" . 160) ("ndash" . 8211) ("ne" . 8800)
@@ -2227,7 +2229,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
     (define-key map [menu-bar wm dom dom-ent] '(menu-item "Replace html entities" web-mode-dom-entities-replace))
     (define-key map [menu-bar wm dom dom-quo] '(menu-item "Replace dumb quotes" web-mode-dom-quotes-replace))
     (define-key map [menu-bar wm dom dom-apo] '(menu-item "Replace apostrophes" web-mode-dom-apostrophes-replace))
-    (define-key map [menu-bar wm dom dom-nor] '(menu-item "Normalise" web-mode-dom-normalize))
+    (define-key map [menu-bar wm dom dom-nor] '(menu-item "Normalize" web-mode-dom-normalize))
 
     (define-key map [menu-bar wm blk blk-sel] '(menu-item "Select" web-mode-block-select))
     (define-key map [menu-bar wm blk blk-pre] '(menu-item "Previous" web-mode-block-previous))
@@ -8041,67 +8043,75 @@ another auto-completion with different ac-sources (e.g. ac-php)")
 (defun web-mode-html-indentation (pos)
   (save-excursion
     (let (beg (continue t) end level map offset regexp tag val void)
-    (goto-char pos)
-    (setq beg (web-mode-part-token-beginning-position pos))
-    (cond
-     ((eq (char-after pos) ?\`)
-      (setq offset (web-mode-indentation-at-pos beg)))
-     ((web-mode-looking-back "`[ \n\t]*" pos)
-      (setq offset (+ (web-mode-indentation-at-pos beg) web-mode-markup-indent-offset)))
-     ((looking-at "</\\([a-zA-Z]+\\)")
-      (setq tag (match-string-no-properties 1)
-            regexp (concat "</?" tag)
-            level -1)
-      (while (and continue (re-search-backward regexp beg t))
-        (if (eq (aref (match-string-no-properties 0) 1) ?\/)
-            (setq level (1- level))
-          (setq level (1+ level)))
-        (when (= level 0)
-          (setq continue nil
-                offset (current-indentation)))
-        ) ;while
-      )
-     ((looking-at "[a-zA-Z-]+[ ]?=")
-      (re-search-backward "<[a-zA-Z]+[ ]*" beg t)
-      (setq offset (+ (current-column) (length (match-string-no-properties 0))))
-      )
-     ((looking-at-p "/>")
-      (search-backward "<" beg t)
-      (setq offset (current-column))
-      )
-     (t
-      (setq regexp "</?\\([a-zA-Z]+\\)")
-      ;;(message "point=%S" (point))
-      (while (and continue (re-search-backward regexp beg t))
+      (goto-char pos)
+      (setq beg (web-mode-part-token-beginning-position pos))
+      (cond
+       ((eq (char-after pos) ?\`)
+        (setq offset (web-mode-indentation-at-pos beg)))
+       ((web-mode-looking-back "`[ \n\t]*" pos)
+        (setq offset (+ (web-mode-indentation-at-pos beg) web-mode-markup-indent-offset)))
+       ((looking-at "</\\([a-zA-Z]+\\)")
         (setq tag (match-string-no-properties 1)
-              end nil
-              void nil)
+              regexp (concat "</?" tag)
+              level -1)
+        (while (and continue (re-search-backward regexp beg t))
+          (if (eq (aref (match-string-no-properties 0) 1) ?\/)
+              (setq level (1- level))
+          (setq level (1+ level)))
+          (when (= level 0)
+            (setq continue nil
+                  offset (current-indentation)))
+          ) ;while
+        )
+       ((looking-at "[a-zA-Z-]+[ ]?=")
+        (re-search-backward "<[a-zA-Z]+[ ]*" beg t)
+        (setq offset (+ (current-column) (length (match-string-no-properties 0))))
+        )
+       ((looking-at-p "/>")
+        (search-backward "<" beg t)
+        (setq offset (current-column))
+        )
+       (t
+        (setq regexp "</?\\([a-zA-Z]+\\)")
+        ;;(message "point=%S" (point))
+        (while (and continue (re-search-backward regexp beg t))
+          (setq tag (downcase (match-string-no-properties 1))
+                end nil
+                void nil)
+          (cond
+           ((eq (aref (match-string-no-properties 0) 1) ?/)
+            (setq end t))
+           ((web-mode-element-is-void tag)
+            (setq void t))
+           (t
+            (save-excursion
+              (when (and (search-forward ">" pos t) (eq (char-before) ?\/))
+                (setq void t))
+              ) ;save-excursion
+            ) ;t
+           ) ;cond
+          (unless void
+            (setq val (or (lax-plist-get map tag) 0))
+            (setq val (if end (1- val) (1+ val)))
+            (setq map (lax-plist-put map tag val))
+            ;;(message "val=%S tag=%S end=%S | %S" val tag end (plist-get map tag))
+            (setq continue (not (> val 0)))
+            ) ;unless
+          ;;(message "pos=%S tag=%S val=%S end=%S void=%S" (point) tag val end void)
+          ) ;while
         (cond
-         ((eq (aref (match-string-no-properties 0) 1) ?/)
-          (setq end t))
-         ((web-mode-element-is-void tag)
-          (setq void t))
+         ((> val 0)
+          ;;(message "point=%S" (point))
+          ;;(goto-char (1+ beg))
+          ;;(forward-char)
+          ;;(re-search-forward "[[:space:]]*")
+          (setq offset (+ (current-indentation) web-mode-markup-indent-offset)))
          (t
-          (save-excursion
-            (when (and (search-forward ">" pos t) (eq (char-before) ?\/))
-              (setq void t))
-            ) ;save-excursion
-          ) ;t
-         ) ;cond
-        (unless void
-          (setq val (or (plist-get map tag) 0))
-          (setq val (if end (1- val) (1+ val)))
-          (setq map (plist-put map tag val))
-          (setq continue (not (> val 0)))
-          ) ;unless
-        ;;(message "pos=%S tag=%S val=%S end=%S void=%S" (point) tag val end void)
-        ) ;while
-      (setq offset (if (and val (> val 0))
-                       (+ (current-indentation) web-mode-markup-indent-offset)
-                     nil))
-      ) ;t
-     ) ;cond
-    offset)))
+          (setq offset nil))
+         )
+        ) ;t
+       ) ;cond
+      offset)))
 
 (defun web-mode-styled-component-indentation (pos)
   (save-excursion

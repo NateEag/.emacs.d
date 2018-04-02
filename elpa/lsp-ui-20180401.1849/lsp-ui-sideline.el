@@ -52,7 +52,7 @@
   :group 'lsp-ui-sideline)
 
 (defcustom lsp-ui-sideline-show-symbol t
-  "Whether to show the symbol on the right of the information."
+  "When t, show the symbol name on the right of the information."
   :type 'boolean
   :group 'lsp-ui-sideline)
 
@@ -357,6 +357,7 @@ to the language server."
           (eob (buffer-end 1))
           (bol (line-beginning-position))
           (line (line-number-at-pos))
+          (line-widen (save-restriction (widen) (line-number-at-pos)))
           (doc-id (lsp--text-document-identifier)))
       (save-excursion
         (goto-char bol)
@@ -384,12 +385,12 @@ to the language server."
                  (lsp--make-request
                   "textDocument/hover"
                   (list :textDocument doc-id
-                        :position (lsp--position (1- line) (if (= column 0) 0 (1- column)))))
+                        :position (lsp--position (1- line-widen) (if (= column 0) 0 (1- column)))))
                  (lambda (info) (if info (lsp-ui-sideline--push-info symbol line bounds info)))))
               (forward-symbol 1))))))))
 
 (defun lsp-ui-sideline--stop-p ()
-  "Return non-nil if the sideline should not be display"
+  "Return non-nil if the sideline should not be display."
   (or (region-active-p)
       (bound-and-true-p company-pseudo-tooltip-overlay)
       (bound-and-true-p lsp-ui-peek--overlay)))
@@ -441,7 +442,7 @@ This does not toggle display of flycheck diagnostics or code actions."
    ))
 
 (defun lsp-ui-sideline-enable (enable)
-  "Enable/disable ‘lsp-ui-sideline-mode’."
+  "Enable/disable `lsp-ui-sideline-mode'."
   (lsp-ui-sideline-mode (if enable 1 -1)))
 
 (provide 'lsp-ui-sideline)

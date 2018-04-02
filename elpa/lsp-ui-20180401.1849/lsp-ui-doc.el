@@ -363,7 +363,7 @@ START-Y is the position y of the current window."
   (lsp-ui-doc--resize-buffer)
   (-let* (((left top _right _bottom) (window-edges nil nil nil t))
           (window (frame-root-window frame))
-          ((width . height) (window-text-pixel-size window nil nil 10000 10000))
+          ((width . height) (window-text-pixel-size window nil nil 10000 10000 t))
           (width (+ width (* (frame-char-width frame) 1))) ;; margins
           (char-h (frame-char-height))
           (height (min (- (* lsp-ui-doc-max-height char-h) (/ char-h 2)) height))
@@ -430,7 +430,7 @@ FN is the function to call on click."
    (erase-buffer)
    (let ((inline-p (lsp-ui-doc--inline-p)))
      (insert (concat (unless inline-p (propertize "\n" 'face '(:height 0.2)))
-                     string
+                     (string-trim-right string)
                      (unless inline-p (propertize "\n\n" 'face '(:height 0.3))))))
    (lsp-ui-doc--make-clickable-link)
    (setq-local face-remapping-alist `((header-line lsp-ui-doc-header)))

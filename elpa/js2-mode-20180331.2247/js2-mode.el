@@ -290,7 +290,7 @@ even if this flag is non-nil."
   :type 'boolean
   :group 'js2-mode)
 
-(defcustom js2-strict-trailing-comma-warning t
+(defcustom js2-strict-trailing-comma-warning nil
   "Non-nil to warn about trailing commas in array literals.
 Ecma-262-5.1 allows them, but older versions of IE raise an error."
   :type 'boolean
@@ -852,6 +852,9 @@ be added to `js2-additional-externs'.
 Your post-parse callback may of course also use the simpler and
 faster (but perhaps less robust) approach of simply scanning the
 buffer text for your imports, using regular expressions.")
+
+(put 'js2-additional-externs 'safe-local-variable
+     (lambda (val) (cl-every #'stringp val)))
 
 ;; SKIP:  decompiler
 ;; SKIP:  encoded-source
@@ -12405,6 +12408,8 @@ move backward across N balanced expressions."
     (let (forward-sexp-function
           node (start (point)) pos lp rp child)
       (cond
+       ((js2-string-node-p (js2-node-at-point))
+        (forward-sexp arg))
        ;; backward-sexp
        ;; could probably make this better for some cases:
        ;;  - if in statement block (e.g. function body), go to parent

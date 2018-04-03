@@ -70,6 +70,9 @@
   bleeding-edge CSS 3 stuff. Get that in there. Ideally, generated from the
   spec, along with basic docs, and adding ';' at the end of property values.
 
+- Try elfeed as my RSS reader? I don't use RSS for much but in principle it
+  could save me a little suffering.
+
 - Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
 
 - Emacs 26: Move package config into early-init.el, per recently-landed patch

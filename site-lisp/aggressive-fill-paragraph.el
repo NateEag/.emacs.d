@@ -141,6 +141,41 @@ This does not work in C-style comments."
                        (afp-current-line))
     (string-match-p (concat "^\\s-*[-\\*\\+]") (afp-current-line))))
 
+(defun afp-in-formatted-paragraph? ()
+  "Return non-nil if we are in a paragraph that looks hand-formatted.
+
+The current heuristic is just 'Does it have some lines that are
+significantly narrower than the fill-column?'
+
+There may be a better one awaiting discovery."
+
+  (save-excursion
+    (forward-paragraph)
+
+    (let* ((end (point))
+           (start (progn (backward-paragraph)
+                         (point)))
+           (lengths))
+      (narrow-to-region start end)
+      ;; Line length calculation code yanked from
+      ;; https://emacs.stackexchange.com/a/17848/351
+      ;;
+      ;; It would be better to ignore lines that are just a fill-prefix, as
+      ;; empty comment lines don't tell you much about whether text is being
+      ;; formatted.
+      (while (not (eobp))
+        (push (- (line-end-position)
+                 (line-beginning-position))
+              lengths)
+        (forward-line))
+      (widen)
+
+      ;; FIXME Remove dependency on dash.el? Just trying to get this working
+      ;; for now.
+      (and (> (length lengths) 2)
+           ;; FIXME I should ignore the last line, since it's usually a widow.
+           (-any? (lambda (x) (> x (- fill-column 10))) lengths)))))
+
 ;; Org mode tables have their own filling behaviour which results in the
 ;; cursor being moved to the start of the table element, which is no good
 ;; for us! See issue #6.
@@ -176,6 +211,7 @@ Note that `delete-region' will have no effect if entered here - see
    #'afp-point-in-blank-lines?
    #'afp-start-of-paragraph?
    #'afp-in-bulleted-list?
+   #'afp-in-formatted-paragraph?
    #'afp-in-org-table?
    #'afp-outside-comment-and-comment-only-mode?
    )

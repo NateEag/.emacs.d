@@ -30,9 +30,10 @@
 
 Return `nil' if point is not currently inside a comment.
 
-FIXME This doesn't work in single-line comment blocks if point is on
+This returns nil in single-line comment blocks if point is on
 a comment-start sequence, because syntax-ppss doesn't think those are
-comment characters (and I have to admit it has a point).
+comment characters (and I have to admit it has a point). At first I
+thought that was an issue but I'm no longer convinced of that.
 
 TODO Factor this out to a standalone package, because it isn't specific to
 aggressive-fill-paragraph."

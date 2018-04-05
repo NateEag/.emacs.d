@@ -26,22 +26,19 @@
          ;; However, if it doesn't, there may be several good reasons *to* use
          ;; underscores...
          (or
-          ;; Handle export statements.
-          ;;
-          ;; FIXME Stop using smart-dashes while typing the assignment. I don't
-          ;; use the export-while-assigning feature of bash much, so this
-          ;; shouldn't get in my way much.
-          (thing-at-point-looking-at (concat "\\(export[[:space:]]+\\)?"
-                                             bash-var-chars
-                                             "\\(=[^[:space:]]*\\)?"))
+          ;; Export statements are for variable names, which should underscore.
+          (thing-at-point-looking-at (concat "export[[:space:]]+"
+                                             bash-var-chars))
 
-          ;; Handle vanilla variable assignments. It only works for typing new
-          ;; vars if you start with '=' then stick the varname in before it,
-          ;; which is why ne-smart-dash-hacks-sh-mode-insert exists. You have
-          ;; to do something like that, though, if you want dashes to be used
-          ;; in command names, because otherwise you can't distinguish between
-          ;; "I am typing a command" and "I am typing a variable name."
-          (thing-at-point-looking-at (concat "[[:space]]" bash-var-chars "*="))
+          ;; Vanilla variable assignments should underscore.
+          ;;
+          ;; This only works for typing new vars if you start with '=' then
+          ;; stick the varname in before it, which is why
+          ;; ne-smart-dash-hacks-sh-mode-insert exists. You have to do
+          ;; something like that, though, if you want dashes to be used in
+          ;; command names, because otherwise you can't distinguish between "I
+          ;; am typing a command" and "I am typing a variable name."
+          (thing-at-point-looking-at (concat "[[:space]]*" bash-var-chars "*="))
 
           (thing-at-point-looking-at (concat "\\${?" bash-var-chars))
           ;; If thing-at-point has an underscore in it, we should probably keep

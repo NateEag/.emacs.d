@@ -37,7 +37,8 @@
 
 (lsp-define-stdio-client
  lsp-javascript-flow "javascript"
- lsp-javascript--get-root '("flow-language-server" "--stdio"))
+ lsp-javascript--get-root '("flow-language-server" "--stdio")
+ :ignore-messages '("\[INFO].*?nuclide"))
 
 (provide 'lsp-javascript-flow)
 ;;; lsp-javascript-flow.el ends here

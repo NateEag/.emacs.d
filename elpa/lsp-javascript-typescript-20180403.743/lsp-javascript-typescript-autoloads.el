@@ -4,8 +4,8 @@
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
 ;;;### (autoloads nil nil ("lsp-javascript-flow.el" "lsp-javascript-typescript-pkg.el"
-;;;;;;  "lsp-javascript-typescript.el" "lsp-typescript.el") (23160
-;;;;;;  26796 0 0))
+;;;;;;  "lsp-javascript-typescript.el" "lsp-typescript.el") (23243
+;;;;;;  34498 0 0))
 
 ;;;***
 

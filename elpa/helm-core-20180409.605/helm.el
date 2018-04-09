@@ -1400,6 +1400,7 @@ Local to `helm-buffer'.")
 This may be let bounded in other places to notify the display function
 to reuse the same frame parameters as the previous helm session just
 like resume would do.")
+(defvar helm--current-buffer-narrowed-p nil)
 
 ;; Utility: logging
 (defun helm-log (format-string &rest args)
@@ -2387,16 +2388,19 @@ as a string with ARG."
     (unless (buffer-live-p helm-current-buffer)
       ;; `helm-current-buffer' may have been killed.
       (setq helm-current-buffer (current-buffer)))
-    ;; Restart with same `default-directory' value this session
-    ;; was initially started with.
-    (with-helm-default-directory cur-dir
-        (helm
-         :sources (buffer-local-value
-                   'helm-sources (get-buffer any-buffer))
-         :input (buffer-local-value 'helm-input-local (get-buffer any-buffer))
-         :prompt (buffer-local-value 'helm--prompt (get-buffer any-buffer))
-         :resume t
-         :buffer any-buffer))))
+    (save-restriction
+      (helm-aif (with-current-buffer any-buffer helm--current-buffer-narrowed-p)
+          (apply #'narrow-to-region it))
+      ;; Restart with same `default-directory' value this session
+      ;; was initially started with.
+      (with-helm-default-directory cur-dir
+          (helm
+           :sources (buffer-local-value
+                     'helm-sources (get-buffer any-buffer))
+           :input (buffer-local-value 'helm-input-local (get-buffer any-buffer))
+           :prompt (buffer-local-value 'helm--prompt (get-buffer any-buffer))
+           :resume t
+           :buffer any-buffer)))))
 
 (defun helm-resume-previous-session-after-quit (arg)
   "Resume previous helm session within a running helm."
@@ -2982,6 +2986,10 @@ See :after-init-hook and :before-init-hook in `helm-source'."
         helm-buffer-file-name buffer-file-name
         helm-issued-errors nil
         helm-saved-current-source nil)
+  (when (and (with-helm-current-buffer (buffer-narrowed-p))
+             (not helm--nested))
+    (helm-set-local-variable 'helm--current-buffer-narrowed-p
+                             (list (region-beginning) (region-end))))
   (unless (and (or helm-split-window-state
                    helm--window-side-state)
                helm-reuse-last-window-split-state)
@@ -3263,21 +3271,23 @@ WARNING: Do not use this mode yourself, it is internal to helm."
   "Clean up the mess when helm exit or quit."
   (helm-log "start cleanup")
   (with-current-buffer helm-buffer
-    (setq cursor-type t)
-    (remove-hook 'post-command-hook 'helm--maybe-update-keymap)
-    (remove-hook 'post-command-hook 'helm--update-header-line)
-    ;; Be sure we call cleanup functions from helm-buffer.
-    (helm-funcall-foreach 'cleanup)
-    ;; Delete or make invisible helm frame.
-    (when (and helm--buffer-in-new-frame-p (null helm--nested))
-      (with-helm-buffer
-        (setq-local helm--last-frame-parameters
-                    (helm--get-frame-parameters))
-        (if helm-display-buffer-reuse-frame
-            (make-frame-invisible) (delete-frame))))
-    ;; bury-buffer from this window.
-    ;; Do it at end to make sure buffer is still current.
-    (bury-buffer)) ;[1]
+    (let ((frame (selected-frame)))
+      (setq cursor-type t)
+      (remove-hook 'post-command-hook 'helm--maybe-update-keymap)
+      (remove-hook 'post-command-hook 'helm--update-header-line)
+      ;; Be sure we call cleanup functions from helm-buffer.
+      (helm-funcall-foreach 'cleanup)
+      ;; Delete or make invisible helm frame.
+      (if (and helm--buffer-in-new-frame-p (null helm--nested))
+          (progn
+            (setq-local helm--last-frame-parameters
+                        (helm--get-frame-parameters))
+            (bury-buffer)
+            (if helm-display-buffer-reuse-frame
+                (make-frame-invisible frame) (delete-frame frame)))
+        ;; bury-buffer from this window [1].
+        ;; Do it at end to make sure buffer is still current.
+        (bury-buffer))))
   (helm-kill-async-processes)
   ;; Remove the temporary hooks added
   ;; by `with-helm-temp-hook' that

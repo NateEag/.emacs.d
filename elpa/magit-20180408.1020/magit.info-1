@@ -30,7 +30,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-This manual is for Magit version 2.12.1.
+This manual is for Magit version 2.12.1 (2.12.1-9-g9453a96ff+1).
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -4054,8 +4054,8 @@ having to type out the command name.
 
      If Magit-Blame mode is already turned on in the current buffer then
      blaming is done recursively, by visiting REVISION:FILE (using
-     ‘magit-find-file’), where REVISION is the revision before the
-     revision that added the current line or chunk of lines.
+     ‘magit-find-file’), where REVISION is a parent of the revision that
+     added the current line or chunk of lines.
 
 ‘M-x magit-blame-reverse’     (‘magit-blame-reverse’)
 
@@ -4931,7 +4931,7 @@ features are available from separate popups.
      branch.  If FROM is not reachable from ‘HEAD’ or is reachable from
      the source branch’s upstream, then an error is raised.
 
-‘b R’     (‘magit-branch-pull-request’)
+‘b Y’     (‘magit-branch-pull-request’)
 
      This command creates and configures a new branch from a Github
      pull-request, creating and configuring a new remote if necessary.
@@ -5033,7 +5033,7 @@ features are available from separate popups.
      cleanup mentioned in the previous paragraph is not performed if you
      do that.
 
-‘b r’     (‘magit-checkout-pull-request’)
+‘b y’     (‘magit-checkout-pull-request’)
 
      This command creates and configures a new branch from a pull
      request, the same way ‘magit-branch-pull-request’ does.

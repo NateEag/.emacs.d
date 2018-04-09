@@ -15,7 +15,7 @@
 (defconst php-mode-version-number "1.19.0"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2018-03-28"
+(defconst php-mode-modified "2018-04-08"
   "PHP Mode build date.")
 
 ;; This file is free software; you can redistribute it and/or
@@ -84,7 +84,7 @@
 (require 'speedbar)
 (require 'imenu)
 (require 'nadvice nil t)
-(require 'php-project nil t)
+(require 'package)
 
 (require 'cl-lib)
 (require 'mode-local)
@@ -485,6 +485,9 @@ In that case set to `NIL'."
 ;; Note that submatches or \\| here are not expected by cc-mode.
 (c-lang-defconst c-opt-cpp-prefix
   php "\\s-*<\\?")
+
+(c-lang-defconst c-anchored-cpp-prefix
+  php "\\s-*\\(<\\?(=\\|\\sw+)\\)")
 
 (c-lang-defconst c-identifier-ops
   php '(
@@ -1179,6 +1182,8 @@ After setting the stylevars run hooks according to STYLENAME
   (declare (indent 1))
   (php-mode-debug--buffer 'insert (apply #'format format-string args) "\n"))
 
+(declare-function custom-group-members "cus-edit" (symbol groups-only))
+
 (defun php-mode-debug ()
   "Display informations useful for debugging PHP Mode."
   (interactive)
@@ -1264,7 +1269,8 @@ After setting the stylevars run hooks according to STYLENAME
         (setq php-mode--delayed-set-style t)
         (when (fboundp 'advice-add)
           (advice-add #'c-set-style :after #'php-mode--disable-delay-set-style '(local))))
-    (php-set-style (symbol-name php-mode-coding-style)))
+    (let ((php-mode-enable-backup-style-variables nil))
+      (php-set-style (symbol-name php-mode-coding-style))))
 
   (when (or php-mode-force-pear
             (and (stringp buffer-file-name)
@@ -1305,6 +1311,9 @@ After setting the stylevars run hooks according to STYLENAME
       (save-excursion
         (php-syntax-propertize-function (point-min) (point-max))))))
 
+
+(declare-function semantic-create-imenu-index "semantic/imenu" (&optional stream))
+
 (defvar-mode-local php-mode imenu-create-index-function
   (if php-do-not-use-semantic-imenu
       #'imenu-default-create-index-function
@@ -1342,11 +1351,12 @@ for \\[find-tag] (which see)."
                  (delete-region beg (point))
                  (insert completion))
                 (t
-                 (message "Making completion list...")
-                 (with-output-to-temp-buffer "*Completions*"
-                   (display-completion-list
-                    (all-completions pattern php-functions)))
-                 (message "Making completion list...%s" "done")))))))
+                 (let ((selected (completing-read
+                                  "Select completion: "
+                                  (all-completions pattern php-functions)
+                                  nil t pattern)))
+                   (delete-region beg (point))
+                   (insert selected))))))))
 
 (defun php-completion-table ()
   "Build variable `php-completion-table' on demand.
@@ -1363,7 +1373,8 @@ current `tags-file-name'."
              (cond ((and (not (string= "" php-completion-file))
                          (file-readable-p php-completion-file))
                     (php-build-table-from-file php-completion-file))
-                   (php-manual-path
+                   ((and (not (string= "" php-manual-path))
+                         (file-directory-p php-manual-path))
                     (php-build-table-from-path php-manual-path))
                    (t nil))))
         (unless (or php-table tags-table)
@@ -1372,8 +1383,10 @@ current `tags-file-name'."
                    "`php-completion-file' or `php-manual-path' set")))
         (when tags-table
           ;; Combine the tables.
-          (mapatoms (lambda (sym) (intern (symbol-name sym) php-table))
-                    tags-table))
+          (if (obarrayp tags-table)
+              (mapatoms (lambda (sym) (intern (symbol-name sym) php-table))
+                        tags-table)
+            (setq php-table (append tags-table php-table))))
         (setq php-completion-table php-table))))
 
 (defun php-build-table-from-file (filename)
@@ -1390,19 +1403,11 @@ current `tags-file-name'."
     table))
 
 (defun php-build-table-from-path (path)
-  (let ((table (make-vector 1022 0))
-        (files (directory-files
-                path
-                nil
-                "^function\\..+\\.html$")))
-    (mapc (lambda (file)
-            (string-match "\\.\\([-a-zA-Z_0-9]+\\)\\.html$" file)
-            (intern
-             (replace-regexp-in-string
-              "-" "_" (substring file (match-beginning 1) (match-end 1)) t)
-             table))
-          files)
-    table))
+  "Return list of PHP function name from `PATH' directory."
+  (cl-loop for file in (directory-files path nil "^function\\..+\\.html$")
+           if (string-match "\\.\\([-a-zA-Z_0-9]+\\)\\.html$" file)
+           collect (replace-regexp-in-string
+                    "-" "_" (substring file (match-beginning 1) (match-end 1)) t)))
 
 ;; Find the pattern we want to complete
 ;; find-tag-default from GNU Emacs etags.el

@@ -2217,13 +2217,15 @@ purpose."
        "Pattern=%S"
        (setq helm-pattern (helm-ff--transform-pattern-for-completion path)))
       ;; This have to be set after [1] to allow deleting char backward.
-      (setq basedir (expand-file-name
-                     (if (and dir-p helm-ff-auto-update-flag)
-                         ;; Add the final "/" to path
-                         ;; when `helm-ff-auto-update-flag' is enabled.
-                         (file-name-as-directory path)
-                         (if (string= path "")
-                             "/" (file-name-directory path)))))
+      (setq basedir (or (helm-aand
+                         (if (and dir-p helm-ff-auto-update-flag)
+                             ;; Add the final "/" to path
+                             ;; when `helm-ff-auto-update-flag' is enabled.
+                             (file-name-as-directory path)
+                           (if (string= path "")
+                               "/" (file-name-directory path)))
+                         (expand-file-name it))
+                        default-directory))
       (setq helm-ff-default-directory
             (if (string= helm-pattern "")
                 (expand-file-name "/")  ; Expand to "/" or "c:/"
@@ -2600,73 +2602,74 @@ Return candidates prefixed with basename of `helm-input' first."
 (defun helm-ff-filter-candidate-one-by-one (file)
   "`filter-one-by-one' Transformer function for `helm-source-find-files'."
   ;; Handle boring files
-  (unless (and helm-ff-skip-boring-files
-               (helm-ff-boring-file-p file))
-    ;; Handle tramp files.
-    (if (and (or (string-match-p helm-tramp-file-name-regexp helm-pattern)
-                 (helm-file-on-mounted-network-p helm-pattern))
-             helm-ff-tramp-not-fancy)
-        (if helm-ff-transformer-show-only-basename
-            (if (helm-dir-is-dot file)
-                file
-              (cons (or (helm-ff--get-host-from-tramp-invalid-fname file)
-                        (helm-basename file))
-                    file))
-          file)
-      ;; Now highlight.
-      (let* ((disp (if (and helm-ff-transformer-show-only-basename
-                            (not (helm-dir-is-dot file))
-                            (not (and helm--url-regexp
-                                      (string-match helm--url-regexp file)))
-                            (not (string-match helm-ff-url-regexp file)))
-                       (or (helm-ff--get-host-from-tramp-invalid-fname file)
-                           (helm-basename file)) file))
-             (attr (file-attributes file))
-             (type (car attr)))
+  (let ((basename (helm-basename file)))
+    (unless (and helm-ff-skip-boring-files
+                 (helm-ff-boring-file-p basename))
+      ;; Handle tramp files.
+      (if (and (or (string-match-p helm-tramp-file-name-regexp helm-pattern)
+                   (helm-file-on-mounted-network-p helm-pattern))
+               helm-ff-tramp-not-fancy)
+          (if helm-ff-transformer-show-only-basename
+              (if (helm-dir-is-dot file)
+                  file
+                (cons (or (helm-ff--get-host-from-tramp-invalid-fname file)
+                          basename)
+                      file))
+            file)
+        ;; Now highlight.
+        (let* ((disp (if (and helm-ff-transformer-show-only-basename
+                              (not (helm-dir-is-dot file))
+                              (not (and helm--url-regexp
+                                        (string-match helm--url-regexp file)))
+                              (not (string-match helm-ff-url-regexp file)))
+                         (or (helm-ff--get-host-from-tramp-invalid-fname file)
+                             basename) file))
+               (attr (file-attributes file))
+               (type (car attr)))
 
-        (cond ((string-match "file-error" file) file)
-              ( ;; A not already saved file.
-               (and (stringp type)
-                    (not (helm-ff-valid-symlink-p file))
-                    (not (string-match "^\.#" (helm-basename file))))
-               (cons (helm-ff-prefix-filename
-                      (propertize disp 'face 'helm-ff-invalid-symlink) t)
-                     file))
-              ;; A dotted directory symlinked.
-              ((and (helm-ff-dot-file-p file) (stringp type))
-               (cons (helm-ff-prefix-filename
-                      (propertize disp 'face 'helm-ff-dotted-symlink-directory) t)
-                     file))
-              ;; A dotted directory.
-              ((helm-ff-dot-file-p file)
-               (cons (helm-ff-prefix-filename
-                      (propertize disp 'face 'helm-ff-dotted-directory) t)
-                     file))
-              ;; A symlink.
-              ((stringp type)
-               (cons (helm-ff-prefix-filename
-                      (propertize disp 'face 'helm-ff-symlink) t)
-                     file))
-              ;; A directory.
-              ((eq t type)
-               (cons (helm-ff-prefix-filename
-                      (propertize disp 'face 'helm-ff-directory) t)
-                     file))
-              ;; An executable file.
-              ((and attr (string-match "x" (nth 8 attr)))
-               (cons (helm-ff-prefix-filename
-                      (propertize disp 'face 'helm-ff-executable) t)
-                     file))
-              ;; A file.
-              ((and attr (null type))
-               (cons (helm-ff-prefix-filename
-                      (propertize disp 'face 'helm-ff-file) t)
-                     file))
-              ;; A non--existing file.
-              (t
-               (cons (helm-ff-prefix-filename
-                      (propertize disp 'face 'helm-ff-file) nil 'new-file)
-                     file)))))))
+          (cond ((string-match "file-error" file) file)
+                ( ;; A not already saved file.
+                 (and (stringp type)
+                      (not (helm-ff-valid-symlink-p file))
+                      (not (string-match "^\.#" basename)))
+                 (cons (helm-ff-prefix-filename
+                        (propertize disp 'face 'helm-ff-invalid-symlink) t)
+                       file))
+                ;; A dotted directory symlinked.
+                ((and (helm-ff-dot-file-p file) (stringp type))
+                 (cons (helm-ff-prefix-filename
+                        (propertize disp 'face 'helm-ff-dotted-symlink-directory) t)
+                       file))
+                ;; A dotted directory.
+                ((helm-ff-dot-file-p file)
+                 (cons (helm-ff-prefix-filename
+                        (propertize disp 'face 'helm-ff-dotted-directory) t)
+                       file))
+                ;; A symlink.
+                ((stringp type)
+                 (cons (helm-ff-prefix-filename
+                        (propertize disp 'face 'helm-ff-symlink) t)
+                       file))
+                ;; A directory.
+                ((eq t type)
+                 (cons (helm-ff-prefix-filename
+                        (propertize disp 'face 'helm-ff-directory) t)
+                       file))
+                ;; An executable file.
+                ((and attr (string-match "x" (nth 8 attr)))
+                 (cons (helm-ff-prefix-filename
+                        (propertize disp 'face 'helm-ff-executable) t)
+                       file))
+                ;; A file.
+                ((and attr (null type))
+                 (cons (helm-ff-prefix-filename
+                        (propertize disp 'face 'helm-ff-file) t)
+                       file))
+                ;; A non--existing file.
+                (t
+                 (cons (helm-ff-prefix-filename
+                        (propertize disp 'face 'helm-ff-file) nil 'new-file)
+                       file))))))))
 
 (defun helm-find-files-action-transformer (actions candidate)
   "Action transformer for `helm-source-find-files'."
@@ -3584,7 +3587,9 @@ Don't use it in your own code unless you know what you are doing.")
 
 (defun helm-file-name-history-transformer (candidates _source)
   (cl-loop for c in candidates collect
-        (cond ((file-remote-p c)
+        (cond ((or (file-remote-p c)
+                   (and (fboundp 'tramp-archive-file-name-p)
+                        (tramp-archive-file-name-p c)))
                (cons (propertize c 'face 'helm-history-remote) c))
               ((file-exists-p c)
                (cons (propertize c 'face 'helm-ff-file) c))
@@ -3598,6 +3603,7 @@ Don't use it in your own code unless you know what you are doing.")
           (helm-build-sync-source "File name history"
             :init (lambda ()
                     (with-helm-alive-p
+                      (require 'tramp-archive nil t)
                       (when helm-ff-file-name-history-use-recentf
                         (require 'recentf)
                         (or recentf-mode (recentf-mode 1)))))

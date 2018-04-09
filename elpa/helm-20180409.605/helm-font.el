@@ -20,8 +20,8 @@
 (require 'cl-lib)
 (require 'helm)
 (require 'helm-help)
-(require 'ring)
 
+
 (defgroup helm-font nil
   "Related applications to display fonts in helm."
   :group 'helm)
@@ -31,13 +31,23 @@
   :type 'integer
   :group 'helm-font)
 
+(defcustom helm-ucs-actions
+  '(("Insert character"             . helm-ucs-insert-char)
+    ("Insert character name"        . helm-ucs-insert-name)
+    ("Insert character code in hex" . helm-ucs-insert-code)
+    ("Kill marked characters"       . helm-ucs-kill-char)
+    ("Kill name"                    . helm-ucs-kill-name)
+    ("Kill code"                    . helm-ucs-kill-code))
+  "Actions for `helm-source-ucs'."
+  :group 'helm-font
+  :type '(alist :key-type string :value-type function))
+
 (defvar helm-ucs-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
     (define-key map (kbd "<C-backspace>") 'helm-ucs-persistent-delete)
     (define-key map (kbd "<C-left>")      'helm-ucs-persistent-backward)
     (define-key map (kbd "<C-right>")     'helm-ucs-persistent-forward)
-    (define-key map (kbd "<C-return>")    'helm-ucs-persistent-insert)
     (define-key map (kbd "C-c SPC")       'helm-ucs-persistent-insert-space)
     map)
   "Keymap for `helm-ucs'.")
@@ -46,7 +56,7 @@
   '((((class color) (background dark))  (:foreground "Gold")))
   "Face used to display ucs characters."
   :group 'helm-font)
-
+
 ;;; Xfont selection
 ;;
 ;;
@@ -75,12 +85,15 @@
                          (kill-new new-font))
     :persistent-help "Preview font and copy to kill-ring"))
 
+
 ;;; 𝕌𝕔𝕤 𝕊𝕪𝕞𝕓𝕠𝕝 𝕔𝕠𝕞𝕡𝕝𝕖𝕥𝕚𝕠𝕟
 ;;
 ;;
 (defvar helm-ucs--max-len nil)
 (defvar helm-ucs--names nil)
 (defvar helm-ucs-history nil)
+(defvar helm-ucs-recent nil
+  "Ring of recent `helm-ucs' selections.")
 
 (defun helm-calculate-ucs-alist-max-len (names)
   "Calculate the length of the longest NAMES list candidate."
@@ -178,9 +191,17 @@ Where N=1 is the ucs code, N=2 the ucs char and N=3 the ucs name."
          candidate)
     (match-string n candidate)))
 
+(defun helm-ucs-save-recentest (candidate)
+  (let ((lst (cons candidate (delete candidate helm-ucs-recent))))
+    (setq helm-ucs-recent
+          (if (> (length lst) helm-ucs-recent-size)
+              (nbutlast lst 1)
+            lst))))
+
 (defun helm-ucs-insert (candidate n)
   "Insert the N part of CANDIDATE."
   (with-helm-current-buffer
+    (helm-ucs-save-recentest candidate)
     (insert (helm-ucs-match candidate n))))
 
 (defun helm-ucs-insert-char (candidate)
@@ -195,25 +216,22 @@ Where N=1 is the ucs code, N=2 the ucs char and N=3 the ucs name."
   "Insert ucs name part of CANDIDATE at point."
   (helm-ucs-insert candidate 3))
 
-(defun helm-ucs-persistent-insert ()
-  "Insert ucs char without quitting helm."
-  (interactive)
-  (with-helm-alive-p
-    (helm-attrset 'action-insert 'helm-ucs-insert-char)
-    (helm-execute-persistent-action 'action-insert)))
-(put 'helm-ucs-persistent-insert 'helm-only t)
-
 ;; Kill actions
 (defun helm-ucs-kill-char (_candidate)
   "Action that concatenate ucs marked chars."
-  (kill-new (mapconcat (lambda (x)
-                         (helm-ucs-match x 2))
-                       (helm-marked-candidates) "")))
+  (let ((marked (helm-marked-candidates)))
+    (cl-loop for candidate in marked
+             do (helm-ucs-save-recentest candidate))
+    (kill-new (mapconcat (lambda (x)
+                           (helm-ucs-match x 2))
+                         marked ""))))
 
 (defun helm-ucs-kill-code (candidate)
+  (helm-ucs-save-recentest candidate)
   (kill-new (helm-ucs-match candidate 1)))
 
 (defun helm-ucs-kill-name (candidate)
+  (helm-ucs-save-recentest candidate)
   (kill-new (helm-ucs-match candidate 3)))
 
 ;; Navigation in current-buffer (persistent)
@@ -261,27 +279,10 @@ Where N=1 is the ucs code, N=2 the ucs char and N=3 the ucs name."
     (helm-attrset 'action-insert-space 'helm-ucs-insert-space)
     (helm-execute-persistent-action 'action-insert-space)))
 
-(defvar helm-ucs-recent (make-ring helm-ucs-recent-size)
-  "Ring of recent `helm-ucs' selections.")
-
-(defvar helm-ucs-actions
-  (let ((actions '(("Insert character" . helm-ucs-insert-char)
-                   ("Insert character name" . helm-ucs-insert-name)
-                   ("Insert character code in hex" . helm-ucs-insert-code)
-                   ("Kill marked characters" . helm-ucs-kill-char)
-                   ("Kill name" . helm-ucs-kill-name)
-                   ("Kill code" . helm-ucs-kill-code))))
-    (cl-loop for (name . action) in actions
-             for new-action = `(lambda (candidate)
-                                 (ring-remove+insert+extend helm-ucs-recent candidate)
-                                 (funcall #',action candidate))
-             collect (cons name new-action)))
-  "Actions for `helm-source-ucs'.")
-
 (defvar helm-source-ucs-recent
   (helm-build-sync-source "Recent UCS"
     :action helm-ucs-actions
-    :candidates (lambda () (ring-elements helm-ucs-recent))
+    :candidates (lambda () helm-ucs-recent)
     :help-message helm-ucs-help-message
     :keymap helm-ucs-map
     :match-part (lambda (candidate) (cadr (split-string candidate ":")))
@@ -296,9 +297,12 @@ Where N=1 is the ucs code, N=2 the ucs char and N=3 the ucs name."
     :filtered-candidate-transformer
     (lambda (candidates _source) (sort candidates #'helm-generic-sort-fn))
     :action helm-ucs-actions
+    :persistent-action (lambda (candidate)
+                         (helm-ucs-insert-char candidate)
+                         (helm-force-update))
     :keymap helm-ucs-map)
   "Source for collecting `ucs-names' math symbols.")
-
+
 ;;;###autoload
 (defun helm-select-xfont ()
   "Preconfigured `helm' to select Xfont."

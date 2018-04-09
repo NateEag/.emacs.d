@@ -4,7 +4,7 @@
 ;; Copyright 2011-2018 François-Xavier Bois
 
 ;; Version: 16.0.4
-;; Package-Version: 20180401.810
+;; Package-Version: 20180407.300
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Package-Requires: ((emacs "23.1"))
@@ -898,12 +898,12 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("razor"            . "\\.\\(cs\\|vb\\)html\\|\\.razor\\'")
     ("riot"             . "\\.tag\\'")
     ("smarty"           . "\\.tpl\\'")
-    ("spip"             . "spip")
     ("template-toolkit" . "\\.tt.?\\'")
     ("thymeleaf"        . "\\.thtml\\'")
     ("velocity"         . "\\.v\\(sl\\|tl\\|m\\)\\'")
     ("xoops"            . "\\.xoops'")
 
+    ("spip"             . "spip")
     ("django"           . "[st]wig")
     ("razor"            . "scala")
 
@@ -1198,7 +1198,7 @@ Must be used in conjunction with web-mode-enable-block-face."
    '("ctemplate"        . "[$]?{[{~].")
    '("django"           . "{[#{%]")
    '("dust"             . "{.")
-   '("elixir"           . "<%.")
+   '("elixir"           . "<%")
    '("ejs"              . "<%")
    '("erb"              . "<%\\|^%.")
    '("freemarker"       . "<%\\|${\\|</?[[:alpha:]]+:[[:alpha:]]\\|</?[@#]\\|\\[/?[@#].")
@@ -2719,9 +2719,9 @@ another auto-completion with different ac-sources (e.g. ac-php)")
 
          ((string= web-mode-engine "elixir")
           (cond
-           ((string= tagopen "<%#")
+           ((member (char-after) '(?\#))
             (setq closing-string "%>"))
-           ((string= sub2 "<%")
+           (t
             (setq closing-string "%>"
                   delim-open "<%[=%]?"
                   delim-close "%>"))
@@ -3379,16 +3379,27 @@ another auto-completion with different ac-sources (e.g. ac-php)")
         (forward-char)
         )
        ((and (not (eobp)) (eq ?\( (char-after)))
-        (if (looking-at-p "[ \n]*[<@]")
-            (setq continue nil)
-          (when (setq pos (web-mode-closing-paren-position))
-            (goto-char pos))
-          (forward-char)
-          ) ;if
+        (cond
+         ((looking-at-p "[ \n]*[<@]")
+          (setq continue nil))
+         ((setq pos (web-mode-closing-paren-position))
+          (goto-char pos)
+          (forward-char))
+         (t
+          (forward-char))
+         ) ;cond
         )
        ((and (not (eobp)) (eq ?\< (char-after)) (looking-back "[a-z]" (point-min)))
-        (unless (search-forward ">" (line-end-position) t)
+        (setq pos (point))
+        (cond
+         ;; #988
+         ((search-forward ">" (line-end-position) t)
+          (goto-char pos)
+          (setq continue nil)
+          )
+         (t
           (setq continue nil))
+         ) ;cond
         )
        ((and (not (eobp)) (eq ?\. (char-after)))
         (forward-char))
@@ -3736,10 +3747,10 @@ another auto-completion with different ac-sources (e.g. ac-php)")
 
       (goto-char reg-beg)
 
-      (when (> reg-beg reg-end)
-        (message "block-tokenize ** reg-beg(%S) reg-end(%S) **" reg-beg reg-end))
+      (when (> (point) reg-end)
+        (message "block-tokenize ** reg-beg(%S) > reg-end(%S) **" reg-beg reg-end))
 
-      (while (and (< reg-beg reg-end) (re-search-forward regexp reg-end t))
+      (while (and (< (point) reg-end) (re-search-forward regexp reg-end t))
         (setq beg (match-beginning 0)
               match (match-string 0)
               continue t
@@ -3752,7 +3763,6 @@ another auto-completion with different ac-sources (e.g. ac-php)")
           (goto-char token-end))
 
          ((and (string= web-mode-engine "razor") (eq char ?\'))
-
           (cond
            ((looking-at-p "\\(.\\|[\\][bfntr]\\|[\\]u....\\)'")
             (search-forward "'" reg-end t)
@@ -3761,24 +3771,19 @@ another auto-completion with different ac-sources (e.g. ac-php)")
            (t
             (re-search-forward "[[:alnum:]_-]+")
             (setq token-type 'symbol)
-            ) ;t
-           ) ;cond
-
-          )
+            )))
 
          ((eq char ?\')
           (setq token-type 'string)
           (while (and continue (search-forward "'" reg-end t))
             (setq continue (web-mode-string-continue-p reg-beg))
-            )
-          )
+            ))
 
          ((eq char ?\")
           (setq token-type 'string)
           (while (and continue (search-forward "\"" reg-end t))
             (setq continue (web-mode-string-continue-p reg-beg))
-            )
-          )
+            ))
 
          ((string= match "//")
           (goto-char token-end))
@@ -3811,8 +3816,6 @@ another auto-completion with different ac-sources (e.g. ac-php)")
           (setq token-type nil))
 
          ) ;cond
-
-        ;;(when (eq token-type 'comment) (message "comment: %S %S" beg (point)))
 
         (put-text-property beg (point) 'block-token token-type)
 
@@ -4478,7 +4481,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
               (setq element-content-type "markdown"))
              ((string-match-p " type[ ]*=[ ]*[\"']text/ruby" script)
               (setq element-content-type "ruby"))
-             ((string-match-p " type[ ]*=[ ]*[\"']text/\\(x-handlebars\\|x-jquery-tmpl\\|x-jsrender\\|html\\|ng-template\\|template\\|mustache\\|x-dust-template\\)" script)
+             ((string-match-p " type[ ]*=[ ]*[\"']text/\\(x-handlebars\\|x-jquery-tmpl\\|x-jsrender\\|html\\|ng-template\\|template\\|x-template\\|mustache\\|x-dust-template\\)" script)
               (setq element-content-type "html"
                     part-close-tag nil))
              ((string-match-p " type[ ]*=[ ]*[\"']application/\\(ld\\+json\\|json\\)" script)
@@ -8097,7 +8100,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
             ;;(message "val=%S tag=%S end=%S | %S" val tag end (plist-get map tag))
             (setq continue (not (> val 0)))
             ) ;unless
-          ;;(message "pos=%S tag=%S val=%S end=%S void=%S" (point) tag val end void)
+          ;(message "pos=%S tag=%S val=%S end=%S void=%S" (point) tag val end void)
           ) ;while
         (cond
          ((> val 0)
@@ -8107,7 +8110,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
           ;;(re-search-forward "[[:space:]]*")
           (setq offset (+ (current-indentation) web-mode-markup-indent-offset)))
          (t
-          (setq offset nil))
+          (setq offset (current-indentation)))
          )
         ) ;t
        ) ;cond

@@ -313,7 +313,7 @@
     (groovy-special-variable-search 1 font-lock-variable-name-face)
     (groovy-function-name-search 1 font-lock-function-name-face)))
 
-(eval-when-compile
+(eval-and-compile
   ;; http://groovy-lang.org/syntax.html#_shebang_line
   (defconst groovy-shebang-regex
     (rx buffer-start "#"))

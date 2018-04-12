@@ -2,7 +2,7 @@
 
 ;; Author: Wouter Bolsterlee <wouter@bolsterl.ee>
 ;; Version: 1.4.0
-;; Package-Version: 20180307.748
+;; Package-Version: 20180410.203
 ;; Package-Requires: ((emacs "24.4") (dash "2.12.0") (with-editor "2.5.10"))
 ;; Keywords: direnv, environment, processes, unix, tools
 ;; URL: https://github.com/wbolster/emacs-direnv
@@ -89,19 +89,21 @@ In these modes, direnv will use `default-directory' instead of
     (setq direnv--installed (direnv--detect)))
   (unless direnv--installed
     (user-error "Could not find the direnv executable. Is exec-path correct?"))
-  (with-current-buffer (get-buffer-create direnv--output-buffer-name)
-    (erase-buffer)
-    (let* ((default-directory directory)
-           (exit-code (call-process "direnv" nil '(t t) nil "export" "json")))
-      (unless (zerop exit-code)
-        (display-buffer (current-buffer))
-        (error "Error running direnv: exit code %s; output is in buffer '%s'"
-               exit-code direnv--output-buffer-name))
-      (unless (zerop (buffer-size))
-        (goto-char (point-max))
-        (re-search-backward "^{")
-        (let ((json-key-type 'string))
-          (json-read-object))))))
+  (let ((environment process-environment))
+    (with-current-buffer (get-buffer-create direnv--output-buffer-name)
+      (erase-buffer)
+      (let* ((default-directory directory)
+             (process-environment environment)
+             (exit-code (call-process "direnv" nil '(t t) nil "export" "json")))
+        (unless (zerop exit-code)
+          (display-buffer (current-buffer))
+          (error "Error running direnv: exit code %s; output is in buffer '%s'"
+                 exit-code direnv--output-buffer-name))
+        (unless (zerop (buffer-size))
+          (goto-char (point-max))
+          (re-search-backward "^{")
+          (let ((json-key-type 'string))
+            (json-read-object)))))))
 
 (defun direnv--enable ()
   "Enable direnv mode."

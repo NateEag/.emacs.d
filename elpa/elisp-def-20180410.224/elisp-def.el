@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2018  Wilfred Hughes
 ;; Version: 1.1
-;; Package-Version: 20180331.1213
+;; Package-Version: 20180410.224
 
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Keywords: lisp
@@ -828,18 +828,19 @@ Or for let-bound variables:
         ;; works for e.g. `point', but not for `re-search-forward'.
         (elisp-def--flash-region (point) sym-end-pos)))))
 
-;;;###autoload
-(define-minor-mode elisp-def-mode
-  "Minor mode for finding definitions with `elisp-def'.
-
-\\{elisp-def-mode-map}")
-
 (defvar elisp-def-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (kbd "M-.") #'elisp-def)
     (define-key map (kbd "M-,") #'xref-pop-marker-stack)
     map)
   "Keymap used in command `elisp-def-mode'.")
+
+;;;###autoload
+(define-minor-mode elisp-def-mode
+  "Minor mode for finding definitions with `elisp-def'.
+
+\\{elisp-def-mode-map}"
+  nil " ElispDef" elisp-def-mode-map)
 
 (provide 'elisp-def)
 ;;; elisp-def.el ends here

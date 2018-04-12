@@ -313,7 +313,7 @@
     (groovy-special-variable-search 1 font-lock-variable-name-face)
     (groovy-function-name-search 1 font-lock-function-name-face)))
 
-(eval-and-compile
+(eval-when-compile
   ;; http://groovy-lang.org/syntax.html#_shebang_line
   (defconst groovy-shebang-regex
     (rx buffer-start "#"))
@@ -328,9 +328,10 @@
   (defconst groovy-dollar-slashy-open-regex
     (rx "$/"))
   (defconst groovy-dollar-slashy-close-regex
-    (rx "/$"))
-  (defconst groovy-postfix-operator-regex
-    (rx (or "++" "--"))))
+    (rx "/$")))
+
+(defconst groovy-postfix-operator-regex
+  (rx (or "++" "--")))
 
 (defun groovy-special-variable-search (limit)
   "Search for text marked with `groovy-special-variable' to LIMIT."
@@ -564,7 +565,9 @@ dollar-slashy-quoted strings."
          ;; set yet. Using `parse-partial-sexp' ensures that the
          ;; highlighting is correct even when the mode is started
          ;; initially.
-         (in-string (nth 3 (parse-partial-sexp (point-min) delimiter-end-pos))))
+         (ppss (parse-partial-sexp (point-min) delimiter-end-pos))
+         (in-string (nth 3 ppss))
+         (string-start-pos (nth 8 ppss)))
     (cond
      ((groovy--comment-p delimiter-end-pos)
       ;; Do nothing inside comments.
@@ -581,10 +584,12 @@ dollar-slashy-quoted strings."
       ;; Ignore $/$ as it's escaped and not a /$ close delimiter.
       nil)
      (t
-      ;; Otherwise, this is indeed closing a dollar-slashy-string.
-      ;; Mark the $ in /$ as a generic string delimiter.
-      (put-text-property (- delimiter-end-pos 1) delimiter-end-pos
-                         'syntax-table (string-to-syntax "|"))))))
+      ;; Otherwise, we're in a string.
+      (when (eq (char-after string-start-pos) ?$)
+        ;; If this string opened with $, this is a string of the form
+        ;; $/foo/$. Mark the final $ as a generic string delimiter.
+        (put-text-property (- delimiter-end-pos 1) delimiter-end-pos
+                           'syntax-table (string-to-syntax "|")))))))
 
 
 (defconst groovy-syntax-propertize-function

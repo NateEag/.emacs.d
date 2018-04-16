@@ -41,6 +41,8 @@
   in favor of it, per this comment of mine:
   https://github.com/magnars/tagedit/pull/15#issuecomment-260336539
 
+- Make smart-dash-mode aware of it when I'm editing a bash variable.
+
 - Consider upstreaming a cleaned-up version of my smart-dash-mode hacks file?
   It's handy for bash but not sure how generally applicable it is. Teaching
   smart-dash-mode to be smarter about languages with variable sigils could be

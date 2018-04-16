@@ -173,8 +173,13 @@ There may be a better one awaiting discovery."
       ;; FIXME Remove dependency on dash.el? Just trying to get this working
       ;; for now.
       (and (> (length lengths) 2)
-           ;; FIXME I should ignore the last line, since it's usually a widow.
-           (-any? (lambda (x) (> x (- fill-column 10))) lengths)))))
+           ;; Are all lines other than the last one more than 10 characters shy
+           ;; of fill-column? The last line of a paragraph tends to be a widow,
+           ;; and thus very short, which is why we ignore it.
+           (-all? (lambda (x)
+                    (< x (- fill-column 10)))
+                  ;; Ignore the last line, since it's usually a widow.
+                  (-slice lengths 0 -1))))))
 
 ;; Org mode tables have their own filling behaviour which results in the
 ;; cursor being moved to the start of the table element, which is no good

@@ -49,7 +49,6 @@
 (declare-function helm-ls-git-ls "ext:helm-ls-git")
 (declare-function helm-hg-find-files-in-project "ext:helm-ls-hg")
 (declare-function helm-gid "helm-id-utils.el")
-(declare-function helm-ls-svn-ls "ext:helm-ls-svn")
 (declare-function helm-find-1 "helm-find")
 (declare-function helm-get-default-program-for-file "helm-external")
 
@@ -2878,15 +2877,14 @@ If a prefix arg is given or `helm-follow-mode' is on open file."
              (require 'image-dired)
              (let* ((win (get-buffer-window
                           image-dired-display-image-buffer 'visible))
-                    (remove-buf-only
-                     (and win
-                          (with-helm-buffer
-                            (file-equal-p candidate
-                                          (with-current-buffer
-                                              image-dired-display-image-buffer
-                                            (get-text-property
-                                             (point-min)
-                                             'original-file-name)))))))
+                    (fname (and (buffer-live-p image-dired-display-image-buffer)
+                                (with-current-buffer image-dired-display-image-buffer
+                                  (get-text-property (point-min)
+                                                     'original-file-name))))
+                    (remove-buf-only (and win
+                                          fname
+                                          (with-helm-buffer
+                                            (file-equal-p candidate fname)))))
                (when remove-buf-only
                  (set-window-buffer win helm-current-buffer))
                (when (buffer-live-p (get-buffer image-dired-display-image-buffer))
@@ -2896,8 +2894,10 @@ If a prefix arg is given or `helm-follow-mode' is on open file."
                  (unless (file-directory-p image-dired-dir)
                    (make-directory image-dired-dir))
                  (switch-to-buffer image-dired-display-image-buffer)
+                 (message "Resizing image...")
                  (cl-letf (((symbol-function 'message) #'ignore))
                    (image-dired-display-image candidate))
+                 (message "Resizing image done")
                  (with-current-buffer image-dired-display-image-buffer
                    (let ((exif-data (helm-ff-exif-data candidate)))
                      (setq default-directory helm-ff-default-directory)
@@ -3734,9 +3734,7 @@ NOTE: The prefix ARG have no effect on the VCS controlled directories.
 Needed dependencies for VCS:
 <https://github.com/emacs-helm/helm-ls-git>
 and
-<https://github.com/emacs-helm/helm-ls-hg>
-and
-<http://melpa.org/#/helm-ls-svn>."
+<https://github.com/emacs-helm/helm-ls-hg>."
   (interactive "P")
   (let ((helm-type-buffer-actions
          (remove (assoc "Browse project from buffer"
@@ -3756,11 +3754,6 @@ and
                         (helm-hg-root))
                    (push-to-hist it)
                    (helm-hg-find-files-in-project))
-                  ((and (require 'helm-ls-svn nil t)
-                        (fboundp 'helm-ls-svn-root-dir)
-                        (helm-ls-svn-root-dir))
-                   (push-to-hist it)
-                   (helm-ls-svn-ls))
                   ((helm-browse-project-get--root-dir (helm-current-directory))
                    (if (or arg (gethash it helm--browse-project-cache))
                        (progn

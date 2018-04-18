@@ -39,7 +39,7 @@ adoption would make life easier for users and maintainers alike, because
 then all packages that talk to the Github API could be configured the
 same way.
 
-This manual is for Ghub version 2.0.0 (v2.0.0+1).
+This manual is for Ghub version 2.0.0 (v2.0.0-8-g7f23879+1).
 
      Copyright (C) 2017-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -137,9 +137,56 @@ File: ghub.info,  Node: Getting Started,  Next: Using Ghub in Personal Scripts, 
 2 Getting Started
 *****************
 
-If you would like to use a package that uses this library, then just do
-so.  If the necessary information isn’t available when it attempts to
-make a request, then you will be asked to provide it.
+Each package that uses Ghub uses its own token.  Despite that, changes
+are good that after successfully configuring one package you can just
+start using another package pretty much instantly.
+
+   If the necessary token is not available when a package makes an API
+request, then a setup wizard pops up, and after answering a few
+questions you are good to go.  Even the request that caused the wizard
+to be summoned should succeed and for most users this should be true
+even when configuring the very first token.
+
+   However, in some situations some manual configuration is necessary
+*before* using the wizard, or the wizard cannot be used at all:
+
+   • If you don’t want to use the wizard then you don’t have to and can
+     create tokens manually as describe in *note Manually Creating and
+     Storing a Token::.
+
+   • If you want to access Gitlab.com or another Gitlab instance, then
+     you have to create the token manually as describe in *note Manually
+     Creating and Storing a Token::.  Also see *note Gitlab Support::.
+
+   • If you want to access a Github Enterprise instance, then you have
+     to tell Ghub about that before the wizard makes its appearance by
+     setting the Git variable ‘github.host’.  You also have to tell Ghub
+     your username for that instance using the variable
+     ‘github.HOST.user’ even if it is the same as on Github.com.
+
+   • If the variable ‘github.user’ (or ‘github.HOST.user’ for an
+     Enterprise instance) is unset when the wizard is first summoned,
+     then you are asked to provide your username.  That value is then
+     stored *globally* to avoid having to ask you that question once per
+     repository.  If you have multiple accounts on Github.com (or an
+     Enterprise instance), then you have to explicitly tell Ghub about
+     that.  This can be done by setting the repository-local values of
+     the appropriate variable *before* the wizard is invoked.
+
+   • You might forget to do the above, which is why it is important to
+     carefully read the output of the wizard.  If it turns out that you
+     forgot to set a variable, then you must abort, set the variable,
+     and repeat the request to trigger the wizard again.
+
+   • The setup wizard should work even if you have enabled two-factor
+     authentication.  However it your Github Enterprise instance
+     enforces Single Sign-On as an additional security measure, then you
+     are out of luck and have to create the token manually as describe
+     in *note Manually Creating and Storing a Token::.
+
+   The variables mentioned above — and others — are documented in *note
+Configuration Variables:: and the setup wizard is documented in *note
+Interactively Creating and Storing a Token::.
 
 * Menu:
 
@@ -231,12 +278,13 @@ of the doubts that you might have:
    • ‘Host’ usually is "api.github.com" and that is usually what you
      want.  If you are trying to access a Github Enterprise instance,
      then it should be something else and you have to set the value
-     manually as described in the next section.
+     manually before the setup wizard is summoned, as described in the
+     parent section.
 
    • ‘User’ should be your Github.com (or Github Enterprise instance)
-     username.  If it is something else, then you made a mistake at the
-     first prompt or during the step described in the previous section
-     and have to refer to that in order to fix this issue.
+     username.  If it is something else and it doesn’t look like a
+     simple typo, then you should read the parent section again.  In
+     either case you have to abort.
 
    • ‘Package’ should be the name of the package you are using to access
      the Github API.
@@ -328,6 +376,11 @@ For Gitlab.com use <https://gitlab.com/profile/personal_access_tokens>.
 
    Finally store the token in a place where Ghub looks for it, as
 described in *note How Ghub uses Auth-Source::.
+
+   If you store the token in a file like ‘~/.authinfo’, then note that
+‘auth-source’’s parsing of that file is brittle.  Make sure the file
+ends with a newline character, that there are no empty or invalid lines,
+and that all comments are prefixed with ‘#’.
 
 
 File: ghub.info,  Node: How Ghub uses Auth-Source,  Prev: Manually Creating and Storing a Token,  Up: Getting Started
@@ -911,9 +964,9 @@ or the equivalent URL for another Gitlab instance.  To store the token
 locally, follow the instructions in *note Manually Creating and Storing
 a Token:: and *note How Ghub uses Auth-Source::.
 
-   Packages can that use Glab, can define ‘PACKAGE-gitlab-token-scopes’
-for documentation purposes.  But unlike ‘PACKAGE-github-token-scopes’,
-which is used by the setup wizard this is optional.
+   Packages that use Glab, can define ‘PACKAGE-gitlab-token-scopes’ for
+documentation purposes.  But unlike ‘PACKAGE-github-token-scopes’, which
+is used by the setup wizard this is optional.
 
    And a random hint: where you would use ‘user/repo’ when accessing
 Github, you have to use ‘user%2Frepo’ when accessing Gitlab, e.g.:
@@ -924,19 +977,19 @@ Github, you have to use ‘user%2Frepo’ when accessing Gitlab, e.g.:
 
 Tag Table:
 Node: Top762
-Node: Introduction2824
-Node: Getting Started5584
-Node: Setting the Username6087
-Node: Interactively Creating and Storing a Token7512
-Node: Manually Creating and Storing a Token13155
-Node: How Ghub uses Auth-Source14099
-Node: Using Ghub in Personal Scripts16032
-Node: Using Ghub in a Package17481
-Node: API20046
-Node: Making Requests20496
-Node: Authentication33824
-Node: Configuration Variables35626
-Node: Gitlab Support39319
+Node: Introduction2835
+Node: Getting Started5595
+Node: Setting the Username8651
+Node: Interactively Creating and Storing a Token10076
+Node: Manually Creating and Storing a Token15735
+Node: How Ghub uses Auth-Source16952
+Node: Using Ghub in Personal Scripts18885
+Node: Using Ghub in a Package20334
+Node: API22899
+Node: Making Requests23349
+Node: Authentication36677
+Node: Configuration Variables38479
+Node: Gitlab Support42172
 
 End Tag Table
 

@@ -427,6 +427,13 @@ in `ghub-response-headers'."
     (if (or (ghub--req-callback  req)
             (ghub--req-errorback req))
         (url-retrieve url 'ghub--handle-response (list req) silent)
+      ;; When this function has already been called, then it is a
+      ;; no-op.  Otherwise it sets `url-registered-auth-schemes' among
+      ;; other things.  If we didn't ensure that it has been run, then
+      ;; `url-retrieve-synchronously' would do it, which would cause
+      ;; the value that we let-bind below to be overwritten, and the
+      ;; "default" value to be lost outside the let-binding.
+      (url-do-setup)
       (with-current-buffer
           (let ((url-registered-auth-schemes
                  '(("basic" ghub--basic-auth-errorback . 10))))
@@ -576,7 +583,11 @@ SCOPES are the scopes the token is given access to."
                       `((scopes . ,scopes)
                         (note   . ,(ghub--ident-github package)))
                       :username username :auth 'basic :host host))))
-      (funcall save)
+      ;; Build-in back-ends return a function that does the actual
+      ;; saving, while for some third-party back-ends ":create t"
+      ;; is enough.
+      (when (functionp save)
+        (funcall save))
       ;; If the Auth-Source cache contains the information that there
       ;; is no value, then setting the value does not invalidate that
       ;; now incorrect information.
@@ -645,24 +656,23 @@ has to provide several values including their password."
   ;; This gets called twice.  Do nothing the first time,
   ;; when PROMPT is nil.  See `url-get-authentication'.
   (when prompt
-    (let ((otp (assoc "X-GitHub-OTP" (ghub--handle-response-headers nil nil))))
-      (if otp
-          (progn
-            (setq url-http-extra-headers
-                  `(("Content-Type" . "application/json")
-                    ("X-GitHub-OTP" . ,(ghub--read-2fa-code))
-                    ;; Without "Content-Type" and "Authorization".
-                    ;; The latter gets re-added from the return value.
-                    ,@(cddr url-http-extra-headers)))
-            ;; Return the cached values, they are correct.
-            (url-basic-auth url nil nil nil))
-        ;; Remove the invalid cached values and fail, which
-        ;; is better than the invalid values sticking around.
-        (setq url-http-real-basic-auth-storage
-              (cl-delete (format "%s:%d" (url-host url) (url-port url))
-                         url-http-real-basic-auth-storage
-                         :test #'equal :key #'car))
-        nil))))
+    (if (assoc "X-GitHub-OTP" (ghub--handle-response-headers nil nil))
+        (progn
+          (setq url-http-extra-headers
+                `(("Content-Type" . "application/json")
+                  ("X-GitHub-OTP" . ,(ghub--read-2fa-code))
+                  ;; Without "Content-Type" and "Authorization".
+                  ;; The latter gets re-added from the return value.
+                  ,@(cddr url-http-extra-headers)))
+          ;; Return the cached values, they are correct.
+          (url-basic-auth url nil nil nil))
+      ;; Remove the invalid cached values and fail, which
+      ;; is better than the invalid values sticking around.
+      (setq url-http-real-basic-auth-storage
+            (cl-delete (format "%s:%d" (url-host url) (url-port url))
+                       url-http-real-basic-auth-storage
+                       :test #'equal :key #'car))
+      nil)))
 
 (defun ghub--token (host username package &optional nocreate forge)
   (let* ((user (ghub--ident username package))

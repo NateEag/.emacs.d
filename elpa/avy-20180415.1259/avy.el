@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/avy
-;; Package-Version: 20180322.1333
+;; Package-Version: 20180415.1259
 ;; Version: 0.4.0
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: point, location
@@ -1342,10 +1342,11 @@ This variable is used by `avy-goto-subword-0' and `avy-goto-subword-1'."
   :type '(repeat character))
 
 ;;;###autoload
-(defun avy-goto-subword-0 (&optional arg predicate)
+(defun avy-goto-subword-0 (&optional arg predicate beg end)
   "Jump to a word or subword start.
 
 The window scope is determined by `avy-all-windows' (ARG negates it).
+BEG and END narrow the scope where candidates are searched.
 
 When PREDICATE is non-nil it's a function of zero parameters that
 should return true."
@@ -1361,10 +1362,10 @@ should return true."
           (dolist (char avy-subword-extra-word-chars)
             (modify-syntax-entry char "w" syn-tbl))
           (with-syntax-table syn-tbl
-            (let ((ws (window-start))
+            (let ((ws (or beg (window-start)))
                   window-cands)
               (save-excursion
-                (goto-char (window-end (selected-window) t))
+                (goto-char (or end (window-end (selected-window) t)))
                 (subword-backward)
                 (while (> (point) ws)
                   (when (or (null predicate)

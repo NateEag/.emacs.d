@@ -176,7 +176,6 @@ attention to case differences."
     cwl
     d-dmd
     dockerfile-hadolint
-    elixir-dogma
     emacs-lisp
     emacs-lisp-checkdoc
     erlang-rebar3
@@ -7017,65 +7016,6 @@ See URL `http://hadolint.lukasmartinelli.ch/'."
      (flycheck-remove-error-file-names "/dev/stdin" errors)))
   :modes dockerfile-mode)
 
-(defun flycheck-elixir--find-default-directory (_checker)
-  "Come up with a suitable default directory to run CHECKER in.
-
-This will either be the directory that contains `mix.exs' or,
-if no such file is found in the directory hierarchy, the directory
-of the current file."
-  (or
-   (and
-    buffer-file-name
-    (locate-dominating-file buffer-file-name "mix.exs"))
-   default-directory))
-
-(defun flycheck-elixir--parse-dogma-json (output checker buffer)
-  "Parse Dogma errors from JSON OUTPUT.
-
-CHECKER and BUFFER denote the CHECKER that returned OUTPUT and
-the BUFFER that was checked respectively.
-
-See URL `https://github.com/lpil/dogma' for more information
-about dogma."
-  (let* ((json-object-type 'alist)
-         (json-array-type  'list)
-         (dogma-json-output
-          (car (cdr (assq 'files (json-read-from-string output)))))
-         (dogma-errors-list (cdr (assq 'errors dogma-json-output)))
-         (dogma-filename (cdr (assq 'path dogma-json-output)))
-         errors)
-    (dolist (emessage dogma-errors-list)
-      (let-alist emessage
-        (push (flycheck-error-new-at
-               .line
-               1
-               'error .message
-               :id .rule
-               :checker checker
-               :buffer buffer
-               :filename dogma-filename)
-              errors)))
-    (nreverse errors)))
-
-(defun flycheck-elixir--check-for-dogma ()
-  "Check if `dogma' is installed.
-
-Check by looking for deps/dogma in this directory or a parent to
-handle umbrella apps.
-Used as a predicate for enabling the checker."
-  (and buffer-file-name
-       (locate-dominating-file buffer-file-name "deps/dogma")))
-
-(flycheck-define-checker elixir-dogma
-  "An Elixir syntax checker using the Dogma analysis tool.
-
-See URL `https://github.com/lpil/dogma/'."
-  :command ("mix" "dogma" "--format=json" source)
-  :error-parser flycheck-elixir--parse-dogma-json
-  :working-directory flycheck-elixir--find-default-directory
-  :predicate flycheck-elixir--check-for-dogma
-  :modes elixir-mode)
-
 (defconst flycheck-this-emacs-executable
   (concat invocation-directory invocation-name)
   "The path to the currently running Emacs executable.")
@@ -8157,7 +8097,9 @@ See URL `https://github.com/ndmitchell/hlint'."
   "A HTML syntax and style checker using Tidy.
 
 See URL `https://github.com/htacg/tidy-html5'."
-  :command ("tidy" (config-file "-config" flycheck-tidyrc) "-e" "-q")
+  :command ("tidy" (config-file "-config" flycheck-tidyrc)
+            "-lang" "en"
+            "-e" "-q")
   :standard-input t
   :error-patterns
   ((error line-start
@@ -8209,6 +8151,9 @@ See URL `http://www.jshint.com'."
     (flycheck-remove-error-file-names
      "stdin" (flycheck-dequalify-error-ids errors)))
   :modes (js-mode js2-mode js3-mode rjsx-mode))
+
+(flycheck-def-args-var flycheck-eslint-args javascript-eslint
+  :package-version '(flycheck . "32"))
 
 (flycheck-def-option-var flycheck-eslint-rules-directories nil javascript-eslint
   "A list of directories with custom rules for ESLint.
@@ -8277,6 +8222,7 @@ hierarchy, it looks first for `.eslintignore' and then for
 See URL `http://eslint.org/'."
   :command ("eslint" "--format=json"
             (option-list "--rulesdir" flycheck-eslint-rules-directories)
+            (eval flycheck-eslint-args)
             "--stdin" "--stdin-filename" source-original)
   :standard-input t
   :error-parser flycheck-parse-eslint

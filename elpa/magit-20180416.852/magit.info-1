@@ -30,7 +30,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-This manual is for Magit version 2.12.1 (2.12.1-9-g9453a96ff+1).
+This manual is for Magit version 2.12.1 (2.12.1-38-g5a41957d4+1).
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -299,6 +299,7 @@ FAQ - Issues and Errors
 * The mode-line information isn't always up-to-date::
 * Emacs 24.5 hangs when loading Magit: Emacs 245 hangs when loading Magit. 
 * A branch and tag sharing the same name breaks SOMETHING::
+* My Git hooks work on the command line but not in Magit::
 
 
 
@@ -4151,8 +4152,13 @@ file-visiting buffers that are being blamed.
  -- User Option: magit-blame-show-headings
 
      This option controls whether blame block headings are initially
-     shown.  The headings can also be toggled locally using the command
-     ‘magit-blame-toggle-headings’.
+     shown.  Whether blame headings are shown in the current buffer can
+     be changed using the command ‘magit-blame-toggle-headings’.
+
+     When headings are not shown, then the information for the current
+     chunk is shown in the echo-area instead.  If you do not want that,
+     then remove ‘magit-blame-maybe-show-message’ from
+     ‘magit-blame-goto-chunk-hook’.
 
  -- User Option: magit-blame-goto-chunk-hook
 

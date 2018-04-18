@@ -807,6 +807,7 @@ A.2 FAQ - Issues and Errors
 * The mode-line information isn't always up-to-date::
 * Emacs 24.5 hangs when loading Magit: Emacs 245 hangs when loading Magit. 
 * A branch and tag sharing the same name breaks SOMETHING::
+* My Git hooks work on the command line but not in Magit::
 
 
 File: magit.info,  Node: Magit is slow,  Next: I changed several thousand files at once and now Magit is unusable,  Up: FAQ - Issues and Errors
@@ -963,7 +964,7 @@ can work around the problem by setting
 Google’s ‘8.8.8.8’) may also be sufficient to work around the issue.
 
 
-File: magit.info,  Node: A branch and tag sharing the same name breaks SOMETHING,  Prev: Emacs 245 hangs when loading Magit,  Up: FAQ - Issues and Errors
+File: magit.info,  Node: A branch and tag sharing the same name breaks SOMETHING,  Next: My Git hooks work on the command line but not in Magit,  Prev: Emacs 245 hangs when loading Magit,  Up: FAQ - Issues and Errors
 
 A.2.11 A branch and tag sharing the same name breaks SOMETHING
 --------------------------------------------------------------
@@ -977,6 +978,17 @@ ambiguous refnames unsupported and recommend that you use a
 non-ambiguous naming scheme.  However, if you do work with a repository
 that has ambiguous refnames, please report any issues you encounter so
 that we can investigate whether there is a simple fix.
+
+
+File: magit.info,  Node: My Git hooks work on the command line but not in Magit,  Prev: A branch and tag sharing the same name breaks SOMETHING,  Up: FAQ - Issues and Errors
+
+A.2.12 My Git hooks work on the command line but not in Magit
+-------------------------------------------------------------
+
+When Magit calls ‘git’ it adds a few global arguments including
+‘--literal-pathspecs’ and the ‘git’ process started by Magit then passes
+that setting on to other ‘git’ process it starts itself.  This setting
+can be reverted in hook scripts using ‘unset GIT_LITERAL_PATHSPECS’.
 
 
 File: magit.info,  Node: Debugging Tools,  Next: Keystroke Index,  Prev: FAQ,  Up: Top
@@ -2185,7 +2197,7 @@ Appendix F Variable Index
 * magit-auto-revert-tracked-only:        Automatic Reverting of File-Visiting Buffers.
                                                               (line  55)
 * magit-bisect-show-graph:               Bisecting.           (line  55)
-* magit-blame-goto-chunk-hook:           Blaming.             (line 126)
+* magit-blame-goto-chunk-hook:           Blaming.             (line 131)
 * magit-blame-heading-format:            Blaming.             (line 112)
 * magit-blame-show-headings:             Blaming.             (line 120)
 * magit-blame-time-format:               Blaming.             (line 116)

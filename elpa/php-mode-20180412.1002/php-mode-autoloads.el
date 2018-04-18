@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "php-mode" "php-mode.el" (23243 34517 0 0))
+;;;### (autoloads nil "php-mode" "php-mode.el" (23255 16966 0 0))
 ;;; Generated autoloads from php-mode.el
 
 (let ((loads (get 'php 'custom-loads))) (if (member '"php-mode" loads) nil (put 'php 'custom-loads (cons '"php-mode" loads))))
@@ -40,7 +40,7 @@ Insert current namespace if cursor in namespace context.
 
 ;;;***
 
-;;;### (autoloads nil "php-project" "php-project.el" (23243 34517
+;;;### (autoloads nil "php-project" "php-project.el" (23255 16966
 ;;;;;;  0 0))
 ;;; Generated autoloads from php-project.el
 
@@ -51,11 +51,16 @@ Method of searching for the top level directory.
       Try to search file in order of `php-project-available-root-files'.
 
 SYMBOL
-      Key of `php-project-available-root-files'.")
+      Key of `php-project-available-root-files'.
+
+STRING
+      A file/directory name of top level marker.
+      If the string is an actual directory path, it is set as the absolute path
+      of the root directory, not the marker.")
 
 (make-variable-buffer-local 'php-project-root)
 
-(put 'php-project-root 'safe-local-variable #'(lambda (v) (assq v php-project-available-root-files)))
+(put 'php-project-root 'safe-local-variable #'(lambda (v) (or (stringp v) (assq v php-project-available-root-files))))
 
 (defvar php-project-bootstrap-scripts nil "\
 List of path to bootstrap php script file.
@@ -107,7 +112,7 @@ Return path to current PHP project.
 ;;;;;;  "php-exif.el" "php-ext.el" "php-filesystem.el" "php-gd.el"
 ;;;;;;  "php-math.el" "php-mode-pkg.el" "php-pcre.el" "php-regex.el"
 ;;;;;;  "php-simplexml.el" "php-strings.el" "php-var.el" "php-xmlparser.el"
-;;;;;;  "php-xmlreader.el") (23243 34517 0 0))
+;;;;;;  "php-xmlreader.el") (23255 16967 0 0))
 
 ;;;***
 

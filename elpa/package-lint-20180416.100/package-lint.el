@@ -5,7 +5,6 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; URL: https://github.com/purcell/package-lint
-;; Package-Version: 20180323.1852
 ;; Keywords: lisp
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24"))
@@ -138,6 +137,7 @@ This is bound dynamically while the checks run.")
           define-alternative
           define-error
           display-monitor-attributes-list
+          eieio-object-class
           file-acl
           file-extended-attributes
           fill-single-char-nobreak-p

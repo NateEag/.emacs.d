@@ -132,7 +132,10 @@
   ;; The function takes no parameter and returns a cons (start . end) representing
   ;; the start and end bounds of the prefix. If it's not set, the client uses a
   ;; default prefix function."
-  (prefix-function nil :read-only t))
+  (prefix-function nil :read-only t)
+  ;; Contains mapping of scheme to the function that is going to be used to load
+  ;; the file.
+  (uri-handlers (make-hash-table :test #'equal) :read-only t))
 
 (cl-defstruct lsp--registered-capability
   (id "" :type string)
@@ -346,6 +349,12 @@ before saving a document."
   "Face used for highlighting symbols being written to."
   :group 'lsp-faces)
 
+(defun lsp-client-register-uri-handler (client scheme handler)
+  (cl-check-type client lsp--client)
+  (cl-check-type scheme string)
+  (cl-check-type handler function)
+  (puthash scheme handler (lsp--client-uri-handlers client)))
+
 (defun lsp-client-on-notification (client method callback)
   (cl-check-type client lsp--client)
   (cl-check-type method string)
@@ -468,7 +477,7 @@ interface TextDocumentItem {
 }"
   (inline-quote
     (let ((language-id-fn (lsp--client-language-id (lsp--workspace-client lsp--cur-workspace))))
-      (list :uri (lsp--path-to-uri buffer-file-name)
+      (list :uri (lsp--buffer-uri)
 	      :languageId (funcall language-id-fn (current-buffer))
 	      :version (lsp--cur-file-version)
 	      :text (buffer-substring-no-properties (point-min) (point-max))))))
@@ -840,7 +849,7 @@ directory."
 interface TextDocumentIdentifier {
     uri: string;
 }"
-  (inline-quote (list :uri (lsp--path-to-uri buffer-file-name))))
+  (inline-quote (list :uri (lsp--buffer-uri))))
 
 (define-inline lsp--versioned-text-document-identifier ()
   "Make VersionedTextDocumentIdentifier.
@@ -934,8 +943,8 @@ interface Range {
   "Apply the WorkspaceEdit object EDIT.
 
 interface WorkspaceEdit {
-	changes?: { [uri: string]: TextEdit[]; };
-	documentChanges?: TextDocumentEdit[];
+  changes?: { [uri: string]: TextEdit[]; };
+  documentChanges?: TextDocumentEdit[];
 }"
   (let ((changes (gethash "changes" edit))
          (document-changes (gethash "documentChanges" edit)))
@@ -959,8 +968,8 @@ applied if the version of the textDocument matches the version of the
 corresponding file.
 
 interface TextDocumentEdit {
-	textDocument: VersionedTextDocumentIdentifier;
-	edits: TextEdit[];
+  textDocument: VersionedTextDocumentIdentifier;
+  edits: TextEdit[];
 }"
   (let* ((ident (gethash "textDocument" edit))
           (filename (lsp--uri-to-path (gethash "uri" ident)))
@@ -1343,8 +1352,8 @@ https://microsoft.github.io/language-server-protocol/specification#textDocument_
   (if (gethash "resolveProvider" (lsp--capability "completionProvider"))
     (lsp--send-request
       (lsp--make-request
-	      "completionItem/resolve"
-	      item))
+        "completionItem/resolve"
+        item))
     item))
 
 (defun lsp--extract-line-from-buffer (pos)
@@ -1395,8 +1404,8 @@ references.  The function returns a list of `xref-item'."
 LOCATIONS is an array of Location objects:
 
 interface Location {
-	uri: DocumentUri;
-	range: Range;
+  uri: DocumentUri;
+  range: Range;
 }"
   (when locations
     (let* ((fn (lambda (loc) (lsp--uri-to-path (gethash "uri" loc))))
@@ -1484,8 +1493,8 @@ type MarkedString = string | { language: string; value: string };"
   "Render MarkupContent object CONTENT.
 
 export interface MarkupContent {
-	      kind: MarkupKind;
-	      value: string;
+        kind: MarkupKind;
+        value: string;
 }"
   (let ((kind (gethash "kind" content))
          (content (gethash "value" content))
@@ -1668,6 +1677,8 @@ Optionally, CALLBACK is a function that accepts a single argument, the code lens
 (defun lsp-format-buffer ()
   "Ask the server to format this document."
   (interactive "*")
+  (unless (lsp--capability "documentFormattingProvider")
+    (signal 'lsp-capability-not-supported (list "documentFormattingProvider")))
   (let ((edits (lsp--send-request (lsp--make-request
                                    "textDocument/formatting"
                                    (lsp--make-document-formatting-params)))))

@@ -214,7 +214,7 @@ MARKED-STRING is the string returned by `lsp-ui-sideline--extract-info'."
                               value))))
     (add-face-text-property 0 (length marked-string) 'lsp-ui-sideline-symbol-info nil marked-string)
     (add-face-text-property 0 (length marked-string) 'default t marked-string)
-    (replace-regexp-in-string "[\n\t]+" " " marked-string)))
+    (replace-regexp-in-string "[\n\t ]+" " " marked-string)))
 
 (defun lsp-ui-sideline--align (&rest lengths)
   (+ (apply '+ lengths)
@@ -306,7 +306,7 @@ CURRENT is non-nil when the point is on the symbol."
     (dolist (e (flycheck-overlay-errors-in bol (1+ eol)))
       (let* ((message (--> (flycheck-error-format-message-and-id e)
                            (car (split-string it "\n"))
-                           (replace-regexp-in-string "[\n\t]+" " " it)))
+                           (replace-regexp-in-string "[\n\t ]+" " " it)))
              (len (length message))
 	         (level (flycheck-error-level e))
              (face (if (eq level 'info) 'success level))
@@ -322,11 +322,27 @@ CURRENT is non-nil when the point is on the symbol."
           (overlay-put ov 'after-string string)
           (push ov lsp-ui-sideline--ovs))))))
 
+(defvar-local lsp-ui-sideline--code-actions nil)
+
+(defun lsp-ui-sideline-apply-code-actions nil
+  "Choose and apply code action(s) on the current line."
+  (interactive)
+  (unless lsp-ui-sideline--code-actions
+    (user-error "No code actions on the current line"))
+  (let* ((actions lsp-ui-sideline--code-actions)
+         (title (completing-read "Apply: " (--map (gethash "title" it) actions)
+                                 nil t))
+         (action (--first (equal (gethash "title" it) title) actions)))
+    (unless action
+      (error "Fail to apply action"))
+    (lsp-execute-code-action action)))
+
 (defun lsp-ui-sideline--code-actions (actions)
   "Show code ACTIONS."
+  (setq lsp-ui-sideline--code-actions actions)
   (dolist (action actions)
     (-let* ((title (->> (gethash "title" action)
-                        (replace-regexp-in-string "[\n\t]+" " ")
+                        (replace-regexp-in-string "[\n\t ]+" " ")
                         (concat lsp-ui-sideline-code-actions-prefix)))
             (margin (lsp-ui-sideline--margin-width))
             (keymap (let ((map (make-sparse-keymap)))

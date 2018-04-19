@@ -38,11 +38,11 @@
           ;; something like that, though, if you want dashes to be used in
           ;; command names, because otherwise you can't distinguish between "I
           ;; am typing a command" and "I am typing a variable name."
-          (thing-at-point-looking-at (concat "[[:space]]*" bash-var-chars "*="))
+          (thing-at-point-looking-at (concat "[[:space:]]*" bash-var-chars "*="))
 
           ;; Return true when editing an established variable name. Alas,
           ;; smart-dash-mode itself seems to return a - in that case.
-          (thing-at-point-looking-at (concat "[[:space]]*" bash-var-chars "*=.*"))
+          (thing-at-point-looking-at (concat "[[:space:]]*" bash-var-chars "*=.*"))
 
           (thing-at-point-looking-at (concat "\\${?" bash-var-chars))
           ;; If thing-at-point has an underscore in it, we should probably keep

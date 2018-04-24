@@ -30,7 +30,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-This manual is for Magit version 2.12.1 (2.12.1-38-g5a41957d4+1).
+This manual is for Magit version 2.12.1 (2.12.1-55-g3e8538d96+1).
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -784,8 +784,8 @@ File: magit.info,  Node: Switching Buffers,  Next: Naming Buffers,  Up: Modes an
 
      This function displays most buffers so that they fill the entire
      height of the frame.  However, the buffer is displayed in another
-     window if 1) the buffer’s mode derives from ‘magit-process-mode’,
-     or 2) the buffer’s mode derives from ‘magit-diff-mode’, provided
+     window if (1) the buffer’s mode derives from ‘magit-process-mode’,
+     or (2) the buffer’s mode derives from ‘magit-diff-mode’, provided
      that the mode of the current buffer derives from ‘magit-log-mode’
      or ‘magit-cherry-mode’.
 
@@ -5833,7 +5833,7 @@ shown in different colors to indicate the status of the commits.
    • The green commit is the commit the rebase sequence stopped at.  If
      this is the same commit as ‘HEAD’ (e.g.  because you haven’t done
      anything yet after rebase stopped at the commit, then this commit
-     is shown in blue, not green.  There can only be a green *and* a
+     is shown in blue, not green).  There can only be a green *and* a
      blue commit at the same time, if you create one or more new commits
      after rebase stops at a commit.
 
@@ -7393,7 +7393,7 @@ file-visiting buffers in just one huge repository use this:
 
    • ‘/path/to/huge/repo/.dir-locals.el’
 
-          ((nil . ((magit-refresh-buffers . nil))
+          ((nil . ((magit-refresh-buffers . nil))))
 
    If you want to apply the same settings to several, but not all,
 repositories then keeping the repository-local config files in sync

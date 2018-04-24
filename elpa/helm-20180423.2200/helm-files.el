@@ -982,13 +982,15 @@ prefix arg eshell buffer doesn't exists, create it and switch to it."
 (defun helm-ff-touch-files (_candidate)
   "The touch files action for helm-find-files."
   (let* ((files (helm-marked-candidates))
-         (split (if (or (cdr files)
-                        helm-current-prefix-arg
-                        (file-exists-p (car files)))
-                    files
-                  (cl-loop for f in (split-string (car files) ", ?")
-                           collect (expand-file-name
-                                    f helm-ff-default-directory))))
+         (split (cl-loop for f in files
+                         for spt = (unless helm-current-prefix-arg
+                                     (cons (helm-basedir f)
+                                           (split-string f ", ?")))
+                         if spt
+                         append (cl-loop with dir = (car spt)
+                                         for ff in (cdr spt)
+                                         collect (expand-file-name ff dir))
+                         else collect f))
          (timestamp (helm-comp-read
                      "Timestamp (default Now): "
                      (cl-loop for f in split
@@ -2562,12 +2564,12 @@ return FNAME prefixed with [?]."
       200
       (helm-score-candidate-for-pattern str pattern)))
 
-(defun helm-ff-sort-candidates (candidates _source)
+(defun helm-ff-sort-candidates-1 (candidates input)
   "Sort function for `helm-source-find-files'.
-Return candidates prefixed with basename of `helm-input' first."
-  (if (or (and (file-directory-p helm-input)
-               (string-match "/\\'" helm-input))
-          (string-match "\\`\\$" helm-input)
+Return candidates prefixed with basename of INPUT first."
+  (if (or (and (file-directory-p input)
+               (string-match "/\\'" input))
+          (string-match "\\`\\$" input)
           (null candidates))
       candidates
       (let* ((c1        (car candidates))
@@ -2579,7 +2581,7 @@ Return candidates prefixed with basename of `helm-input' first."
                         (lambda (s1 s2)
                             (let* ((score (lambda (str)
                                             (helm-ff-score-candidate-for-pattern
-                                             str (helm-basename helm-input))))
+                                             str (helm-basename input))))
                                    (bn1 (helm-basename (if (consp s1) (cdr s1) s1)))
                                    (bn2 (helm-basename (if (consp s2) (cdr s2) s2)))
                                    (sc1 (or (gethash bn1 memo-src)
@@ -2591,6 +2593,11 @@ Return candidates prefixed with basename of `helm-input' first."
                                         (string-width bn2)))
                                     ((> sc1 sc2))))))))
         (if cand1 (cons cand1 all) all))))
+
+(defun helm-ff-sort-candidates (candidates _source)
+  "Sort function for `helm-source-find-files'.
+Return candidates prefixed with basename of `helm-input' first."
+  (helm-ff-sort-candidates-1 candidates helm-input))
 
 (defun helm-ff-boring-file-p (file)
   ;; Prevent user doing silly thing like
@@ -2953,7 +2960,8 @@ If a prefix arg is given or `helm-follow-mode' is on open file."
     (helm :sources
           (helm-make-source
               "Recursive directories" 'helm-locate-subdirs-source
-            :basedir (if (string-match-p "\\`es" helm-locate-recursive-dirs-command)
+            :basedir (if (string-match-p
+                          "\\`es" helm-locate-recursive-dirs-command)
                          directory
                        (shell-quote-argument directory))
             :subdir (shell-quote-argument input)
@@ -2966,7 +2974,9 @@ If a prefix arg is given or `helm-follow-mode' is on open file."
                                    (string-match-p ,(regexp-quote input)
                                                    (helm-basename c)))
                          collect (propertize c 'face 'helm-ff-dirs)))
-              helm-w32-pathname-transformer)
+              helm-w32-pathname-transformer
+              (lambda (candidates)
+                (helm-ff-sort-candidates-1 candidates ,input)))
             :persistent-action 'ignore
             :action (lambda (c)
                       (helm-set-pattern

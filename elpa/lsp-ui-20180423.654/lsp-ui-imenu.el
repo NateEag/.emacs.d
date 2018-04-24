@@ -80,10 +80,7 @@
                        (propertize (car entry) 'face 'default)
                        "\n"))
          (len (length text)))
-    (add-text-properties 0 len `(index ,index) text)
-    (add-text-properties 0 len `(title ,title) text)
-    (add-text-properties 0 len `(marker ,(cdr entry)) text)
-    (add-text-properties 0 len `(padding ,padding) text)
+    (add-text-properties 0 len `(index ,index title ,title marker ,(cdr entry) padding ,padding) text)
     text))
 
 (defvar-local lsp-ui-imenu-ov nil)
@@ -128,45 +125,40 @@
       (overlay-put
        ov 'after-string
        (concat (lsp-ui-imenu--pad " " padding color t)
-               title
                "\n"
-               (propertize "\n" 'face '(:height 0.3)))))))
+               title
+               (propertize "\n" 'face '(:height 1)))))))
 
 (defun lsp-ui-imenu nil
   (interactive)
   (setq lsp-ui-imenu--origin (current-buffer))
   (imenu--make-index-alist)
-  (let ((list imenu--index-alist)
-        queue)
+  (let ((list imenu--index-alist))
     (with-current-buffer (get-buffer-create "*lsp-ui-imenu*")
-      (setq buffer-read-only nil)
-      (remove-overlays)
-      (erase-buffer)
-      (let ((padding (or (and (eq lsp-ui-imenu-kind-position 'top) 1)
-                         (--> (--filter (imenu--subalist-p it) list)
-                              (--map (length (car it)) it)
-                              (-max (or it '(1))))))
-            (color-index 0))
-        (--each-indexed list
-          (-let* (((title . entries) it))
-            (if (not (imenu--subalist-p it))
-                (push it queue)
-              (when queue
-                (--each queue
-                  (insert (lsp-ui-imenu--make-line " " 0 padding it color-index)))
-                (lsp-ui-imenu--put-separator)
-                (setq color-index (1+ color-index))
-                (setq queue nil))
-              (lsp-ui-imenu--put-kind title padding color-index)
-              (--each-indexed entries
-                (insert (lsp-ui-imenu--make-line title it-index padding it color-index)))
-              (lsp-ui-imenu--put-separator)
-              (setq color-index (1+ color-index))
-              )))
-        (--each queue
-          (insert (lsp-ui-imenu--make-line " " 0 padding it color-index)))
+      (let* ((padding (or (and (eq lsp-ui-imenu-kind-position 'top) 1)
+                          (--> (-filter 'imenu--subalist-p list)
+                               (--map (length (car it)) it)
+                               (-max (or it '(1))))))
+             (grouped-by-subs (-partition-by 'imenu--subalist-p list))
+             (color-index 0)
+             buffer-read-only)
+        (remove-overlays)
+        (erase-buffer)
+        (lsp-ui-imenu--put-separator)
+        (dolist (group grouped-by-subs)
+          (if (imenu--subalist-p (car group))
+              (dolist (kind group)
+                (-let* (((title . entries) kind))
+                  (lsp-ui-imenu--put-kind title padding color-index)
+                  (--each-indexed entries
+                    (insert (lsp-ui-imenu--make-line title it-index padding it color-index)))
+                  (lsp-ui-imenu--put-separator)
+                  (setq color-index (1+ color-index))))
+            (--each-indexed group
+              (insert (lsp-ui-imenu--make-line " " it-index padding it color-index)))
+            (lsp-ui-imenu--put-separator)
+            (setq color-index (1+ color-index))))
         (lsp-ui-imenu-mode)
-        (setq header-line-format " ")
         (setq mode-line-format '(:eval (lsp-ui-imenu--win-separator)))
         (goto-char 1)
         (add-hook 'post-command-hook 'lsp-ui-imenu--post-command nil t)
@@ -209,14 +201,14 @@
   (while (not (= (get-text-property (point) 'index) 0))
     (forward-line -1)))
 
-(defun lsp-ui-imenu--go nil
+(defun lsp-ui-imenu--visit nil
   (interactive)
   (let ((marker (get-text-property (point) 'marker)))
     (select-window (get-buffer-window lsp-ui-imenu--origin))
     (goto-char marker)
     (pulse-momentary-highlight-one-line (point) 'next-error)))
 
-(defun lsp-ui-imenu--look nil
+(defun lsp-ui-imenu--view nil
   (interactive)
   (let ((marker (get-text-property (point) 'marker)))
     (with-selected-window (get-buffer-window lsp-ui-imenu--origin)
@@ -231,8 +223,8 @@
     (define-key map (kbd "q") 'lsp-ui-imenu--kill)
     (define-key map (kbd "<right>") 'lsp-ui-imenu--next-kind)
     (define-key map (kbd "<left>") 'lsp-ui-imenu--prev-kind)
-    (define-key map (kbd "<return>") 'lsp-ui-imenu--look)
-    (define-key map (kbd "<M-return>") 'lsp-ui-imenu--go)
+    (define-key map (kbd "<return>") 'lsp-ui-imenu--view)
+    (define-key map (kbd "<M-return>") 'lsp-ui-imenu--visit)
     (setq lsp-ui-imenu-mode-map map)))
 
 (define-derived-mode lsp-ui-imenu-mode special-mode "lsp-ui-imenu"

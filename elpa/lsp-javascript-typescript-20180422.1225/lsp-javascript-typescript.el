@@ -4,7 +4,7 @@
 
 ;; Author: George Pittarelli <g@gjp.cc>
 ;; Version: 1.0
-;; Package-Requires: ((lsp-mode "3.0"))
+;; Package-Requires: ((lsp-mode "3.0") (typescript-mode "0.1"))
 ;; Keywords: javascript typescript lsp
 ;; URL: https://github.com/emacs-lsp/lsp-javascript
 
@@ -29,13 +29,30 @@
 ;;; Code:
 
 (require 'lsp-mode)
+(require 'typescript-mode)
 
-(defconst lsp-javascript--get-root (lsp-make-traverser #'(lambda (dir)
-							   (directory-files dir nil "package.json"))))
+(defconst lsp-javascript--get-root
+  (lsp-make-traverser #'(lambda (dir)
+						  (directory-files dir nil "package.json"))))
+
+(defun lsp-javascript-typescript--render-string (str)
+  (ignore-errors
+    (with-temp-buffer
+      (typescript-mode)
+      (insert str)
+      (font-lock-ensure)
+      (buffer-string))))
+
+(defun lsp-javascript-typescript--initialize-client (client)
+  (lsp-provide-marked-string-renderer
+   client "typescript" 'lsp-javascript-typescript--render-string)
+  (lsp-provide-marked-string-renderer
+   client "javascript" 'lsp-javascript-typescript--render-string))
 
 (lsp-define-stdio-client lsp-javascript-typescript "javascript"
                          lsp-javascript--get-root '("javascript-typescript-stdio")
-                         :ignore-messages '("readFile .*? requested by TypeScript but content not available"))
+                         :ignore-messages '("readFile .*? requested by TypeScript but content not available")
+                         :initialize 'lsp-javascript-typescript--initialize-client)
 
 (provide 'lsp-javascript-typescript)
 ;;; lsp-javascript-typescript.el ends here

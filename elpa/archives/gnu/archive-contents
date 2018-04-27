@@ -751,9 +751,9 @@
 	 ((:keywords "extensions" "lisp")
 	  (:url . "https://github.com/Malabarba/names"))])
  (nhexl-mode .
-	     [(0 7)
+	     [(0 8)
 	      ((emacs
-		(24))
+		(24 4))
 	       (cl-lib
 		(0 5)))
 	      "Minor mode to edit files via hex-dump format" single

@@ -3,7 +3,7 @@
 ;; Copyright (C) 2012 ~ 2015 Thierry Volpiatto <thierry.volpiatto@gmail.com>
 
 ;; Package-Requires: ((helm "1.7.8"))
-;; Package-Version: 20180415.2336
+;; Package-Version: 20180426.1126
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -509,6 +509,15 @@ and launch git-grep from there.
                                          do (insert (concat bname "\n"))
                                          do (setq last-bname bname))
                                    (save-buffer))))))))
+          ((string-match "^A " disp)
+           (append actions '(("Commit staged file(s)"
+                              . helm-ls-git-commit)
+                             ("Extend commit"
+                              . helm-ls-git-extend-commit)
+                             ("Amend commit"
+                              . helm-ls-git-amend-commit)
+                             ("Unstage file(s)"
+                              . helm-ls-git-unstage-files))))
           ;; Modified but not staged
           ((string-match "^ M+ *" disp)
            (append actions (helm-append-at-nth

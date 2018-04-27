@@ -99,7 +99,7 @@
   ;; deserialized notification parameters.
   (notification-handlers (make-hash-table :test 'equal) :read-only t)
 
-  ;; ‘notification-handlers’ is a hash table mapping request method names
+  ;; ‘request-handlers’ is a hash table mapping request method names
   ;; (strings) to functions handling the respective notifications.  Upon
   ;; receiving a request, ‘lsp-mode’ will call the associated handler function
   ;; passing two arguments, the ‘lsp--workspace’ object and the deserialized
@@ -133,9 +133,15 @@
   ;; the start and end bounds of the prefix. If it's not set, the client uses a
   ;; default prefix function."
   (prefix-function nil :read-only t)
+
   ;; Contains mapping of scheme to the function that is going to be used to load
   ;; the file.
-  (uri-handlers (make-hash-table :test #'equal) :read-only t))
+  (uri-handlers (make-hash-table :test #'equal) :read-only t)
+  ;; ‘action-handlers’ is a hash table mapping action to a handler function. It
+  ;; can be used in `lsp-execute-code-action' to determine whether the action
+  ;; current client is interested in executing the action instead of sending it
+  ;; to the server.
+  (action-handlers (make-hash-table :test 'equal) :read-only t))
 
 (cl-defstruct lsp--registered-capability
   (id "" :type string)
@@ -200,7 +206,10 @@
   ;; . CAPS), where PACKAGE-NAME is a symbol of the third-party package name,
   ;; and CAPS is either a plist of the client capabilities, or a function that
   ;; takes no argument and returns a plist of the client capabilities or nil.")
-  (extra-client-capabilities nil))
+  (extra-client-capabilities nil)
+
+  ;; Workspace status
+  (status nil))
 
 (defvar-local lsp--cur-workspace nil)
 (defvar lsp--workspaces (make-hash-table :test #'equal)
@@ -367,6 +376,12 @@ before saving a document."
   (cl-check-type callback function)
   (puthash method callback (lsp--client-request-handlers client)))
 
+(defun lsp-client-on-action (client method callback)
+  (cl-check-type client lsp--client)
+  (cl-check-type method string)
+  (cl-check-type callback function)
+  (puthash method callback (lsp--client-action-handlers client)))
+
 (define-inline lsp--make-request (method &optional params)
   "Create request body for method METHOD and parameters PARAMS."
   (inline-quote
@@ -458,13 +473,13 @@ the response recevied from the server asynchronously."
 (defalias 'lsp-send-request-async 'lsp--send-request-async)
 
 (define-inline lsp--inc-cur-file-version ()
-  (inline-quote (cl-incf (gethash buffer-file-name
+  (inline-quote (cl-incf (gethash (current-buffer)
                            (lsp--workspace-file-versions lsp--cur-workspace)))))
 
 (define-inline lsp--cur-file-version ()
   "Return the file version number.  If INC, increment it before."
   (inline-quote
-    (gethash buffer-file-name (lsp--workspace-file-versions lsp--cur-workspace))))
+    (gethash (current-buffer) (lsp--workspace-file-versions lsp--cur-workspace))))
 
 (define-inline lsp--make-text-document-item ()
   "Make TextDocumentItem for the currently opened file.
@@ -809,7 +824,7 @@ directory."
 
 (defun lsp--text-document-did-open ()
   (run-hooks 'lsp-before-open-hook)
-  (puthash buffer-file-name 0 (lsp--workspace-file-versions lsp--cur-workspace))
+  (puthash (current-buffer) 0 (lsp--workspace-file-versions lsp--cur-workspace))
   (push (current-buffer) (lsp--workspace-buffers lsp--cur-workspace))
   (lsp--send-notification (lsp--make-notification
                            "textDocument/didOpen"
@@ -838,6 +853,7 @@ directory."
   ;; Make sure the hook is local (last param) otherwise we see all changes for all buffers
   (add-hook 'before-change-functions #'lsp-before-change nil t)
   (add-hook 'after-change-functions #'lsp-on-change nil t)
+  (add-hook 'after-revert-hook #'lsp-on-revert nil t)
   (add-hook 'before-save-hook #'lsp--before-save nil t)
   (add-hook 'auto-save-hook #'lsp--on-auto-save nil t)
   (lsp--set-sync-method)
@@ -1157,7 +1173,12 @@ Added to `after-change-functions'."
   ;; (message "lsp-on-change:(lsp--before-change-vals)=%s" lsp--before-change-vals)
   (with-demoted-errors "Error in ‘lsp-on-change’: %S"
     (save-match-data
-      (when lsp--cur-workspace
+      ;; A (revert-buffer) call with the 'preserve-modes parameter (eg, as done
+      ;; by auto-revert-mode) will cause this hander to get called with a nil
+      ;; buffer-file-name. We need the buffer-file-name to send notifications;
+      ;; so we skip handling revert-buffer-caused changes and instead handle
+      ;; reverts separately in lsp-on-revert
+      (when (and lsp--cur-workspace (not revert-buffer-in-progress-p))
         (lsp--inc-cur-file-version)
         (unless (eq lsp--server-sync-method 'none)
           (lsp--send-notification
@@ -1171,6 +1192,13 @@ Added to `after-change-functions'."
                                         start end length)))
                  ('full (vector (lsp--full-change-event))))))))))))
 
+(defun lsp-on-revert ()
+  "Executed when a file is reverted.
+Added to `after-revert-hook'."
+  (let ((n (buffer-size))
+        (revert-buffer-in-progress-p nil))
+    (lsp-on-change 0 n n)))
+
 (defun lsp--text-document-did-close ()
   "Executed when the file is closed, added to `kill-buffer-hook'."
   (when lsp--cur-workspace
@@ -1183,7 +1211,7 @@ Added to `after-change-functions'."
           (setf (lsp--workspace-buffers lsp--cur-workspace)
                 (delq (current-buffer) old-buffers))
 
-          (remhash buffer-file-name file-versions)
+          (remhash (current-buffer) file-versions)
           (with-demoted-errors "Error sending didClose notification in ‘lsp--text-document-did-close’: %S"
             (lsp--send-notification
              (lsp--make-notification
@@ -1641,11 +1669,28 @@ If title is nil, return the name for the command handler."
     (cl-typep (gethash "title" cmd) 'string)
     (cl-typep (gethash "command" cmd) 'string)))
 
+(defun lsp--select-action (actions)
+  "Select an action to execute."
+  (let ((name->action (mapcar (lambda (a)
+                                 (list (lsp--command-get-title a) a))
+                         actions)))
+    (cadr (assoc
+            (completing-read "Select code action: " name->action)
+            name->action))))
+
 (defun lsp-execute-code-action (action)
-  "Execute code action ACTION."
-  (interactive (list (completing-read "Select code action: "
-                       (seq-group-by #'lsp--command-get-title lsp-code-actions))))
-  (lsp--execute-command action))
+  "Execute code action ACTION.
+
+If ACTION is not set it will be selected from `lsp-code-actions'."
+  (interactive (list (lsp--select-action lsp-code-actions)))
+  (lsp--cur-workspace-check)
+  (let* ((command (gethash "command" action))
+         (action-handler (gethash command
+                           (lsp--client-action-handlers
+                             (lsp--workspace-client lsp--cur-workspace)))))
+    (if action-handler
+      (funcall action-handler action)
+      (lsp--execute-command action))))
 
 (defvar-local lsp-code-lenses nil
   "A list of code lenses computed for the buffer.")
@@ -1968,6 +2013,7 @@ command COMMAND and optionsl ARGS"
   (when lsp-enable-completion-at-point
     (remove-hook 'completion-at-point-functions #'lsp-completion-at-point t))
   (remove-hook 'after-change-functions #'lsp-on-change t)
+  (remove-hook 'after-revert-hook #'lsp-on-revert t)
   (remove-hook 'before-change-functions #'lsp-before-change t))
 
 (defun lsp--set-configuration (settings)

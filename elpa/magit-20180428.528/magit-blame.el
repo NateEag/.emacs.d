@@ -146,11 +146,22 @@ and then turned on again when turning off the latter."
   (--any (overlay-get it 'magit-blame)
          (overlays-at pos)))
 
-(defun magit-blame-overlay-at (&optional pos)
-  (--first (overlay-get it 'magit-blame)
-           (overlays-at (or pos (point)))))
+(defun magit-blame--overlay-at (&optional pos key)
+  (unless pos
+    (setq pos (point)))
+  (--first (overlay-get it (or key 'magit-blame))
+           (nconc (overlays-at pos)
+                  (overlays-in pos pos))))
 
-;;; Mode
+;;; Keymaps
+
+(defvar magit-blame-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-q") 'magit-blame-quit)
+    map)
+  "Keymap for `magit-blame-mode'.
+Note that most blaming key bindings are defined
+in `magit-blame-read-only-mode-map' instead.")
 
 (defvar magit-blame-read-only-mode-map
   (let ((map (make-sparse-keymap)))
@@ -182,28 +193,8 @@ and then turned on again when turning off the latter."
     map)
   "Keymap for `magit-blame-read-only-mode'.")
 
-(define-minor-mode magit-blame-read-only-mode
-  "Provide keybindings for Magit-Blame mode.
-
-This minor-mode provides the key bindings for Magit-Blame mode,
-but only when Read-Only mode is also enabled because these key
-bindings would otherwise conflict badly with regular bindings.
-
-When both Magit-Blame mode and Read-Only mode are enabled, then
-this mode gets automatically enabled too and when one of these
-modes is toggled, then this mode also gets toggled automatically.
-
-\\{magit-blame-read-only-mode-map}")
-
-(defun magit-blame-put-keymap-before-view-mode ()
-  "Put `magit-blame-read-only-mode' ahead of `view-mode' in `minor-mode-map-alist'."
-  (--when-let (assq 'magit-blame-read-only-mode
-                    (cl-member 'view-mode minor-mode-map-alist :key #'car))
-    (setq minor-mode-map-alist
-          (cons it (delq it minor-mode-map-alist))))
-  (remove-hook 'view-mode-hook #'magit-blame-put-keymap-before-view-mode))
-
-(add-hook 'view-mode-hook #'magit-blame-put-keymap-before-view-mode)
+;;; Modes
+;;;; Variables
 
 (defvar-local magit-blame-buffer-read-only nil)
 (defvar-local magit-blame-cache nil)
@@ -214,13 +205,7 @@ modes is toggled, then this mode also gets toggled automatically.
 (defvar-local magit-blame-separator nil)
 (defvar-local magit-blame-previous-chunk nil)
 
-(defvar magit-blame-mode-map
-  (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-q") 'magit-blame-quit)
-    map)
-  "Keymap for `magit-blame-read-only-mode'.
-Note that most blaming key bindings are defined
-in `magit-blame-read-only-mode-map' instead.")
+;;;; Base Mode
 
 (define-minor-mode magit-blame-mode
   "Display blame information inline."
@@ -241,8 +226,12 @@ in `magit-blame-read-only-mode-map' instead.")
            (when (and (boundp mode) (symbol-value mode))
              (funcall mode -1)
              (push mode magit-blame-disabled-modes)))
-         (setq magit-blame-separator (magit-blame-format-separator)))
+         (setq magit-blame-separator (magit-blame--format-separator)))
         (t
+         (when (process-live-p magit-blame-process)
+           (kill-process magit-blame-process)
+           (while magit-blame-process
+             (sit-for 0.01))) ; avoid racing the sentinal
          (remove-hook 'after-save-hook     'magit-blame--run t)
          (remove-hook 'post-command-hook   'magit-blame-goto-chunk-hook t)
          (remove-hook 'read-only-mode-hook 'magit-blame-toggle-read-only t)
@@ -251,17 +240,11 @@ in `magit-blame-read-only-mode-map' instead.")
          (magit-blame-read-only-mode -1)
          (dolist (mode magit-blame-disabled-modes)
            (funcall mode 1))
-         (when (process-live-p magit-blame-process)
-           (kill-process magit-blame-process))
-         (magit-blame--clear-overlays))))
-
-(defun magit-blame--clear-overlays ()
-  (save-excursion
-    (save-restriction
-      (widen)
-      (dolist (ov (overlays-in (point-min) (point-max)))
-        (when (overlay-get ov 'magit-blame)
-          (delete-overlay ov))))))
+         (kill-local-variable 'magit-blame-disabled-modes)
+         (kill-local-variable 'magit-blame-type)
+         (unless buffer-read-only
+           (kill-local-variable 'magit-blame-show-headings))
+         (magit-blame--remove-overlays))))
 
 (defun magit-blame-goto-chunk-hook ()
   (let ((chunk (magit-blame-chunk-at (point))))
@@ -273,40 +256,39 @@ in `magit-blame-read-only-mode-map' instead.")
 (defun magit-blame-toggle-read-only ()
   (magit-blame-read-only-mode (if buffer-read-only 1 -1)))
 
+;;;; Read-Only Mode
+
+(define-minor-mode magit-blame-read-only-mode
+  "Provide keybindings for Magit-Blame mode.
+
+This minor-mode provides the key bindings for Magit-Blame mode,
+but only when Read-Only mode is also enabled because these key
+bindings would otherwise conflict badly with regular bindings.
+
+When both Magit-Blame mode and Read-Only mode are enabled, then
+this mode gets automatically enabled too and when one of these
+modes is toggled, then this mode also gets toggled automatically.
+
+\\{magit-blame-read-only-mode-map}")
+
+;;;; Kludges
+
+(defun magit-blame-put-keymap-before-view-mode ()
+  "Put `magit-blame-read-only-mode' ahead of `view-mode' in `minor-mode-map-alist'."
+  (--when-let (assq 'magit-blame-read-only-mode
+                    (cl-member 'view-mode minor-mode-map-alist :key #'car))
+    (setq minor-mode-map-alist
+          (cons it (delq it minor-mode-map-alist))))
+  (remove-hook 'view-mode-hook #'magit-blame-put-keymap-before-view-mode))
+
+(add-hook 'view-mode-hook #'magit-blame-put-keymap-before-view-mode)
+
 (defun auto-revert-handler--unless-magit-blame-mode ()
   "If Magit-Blame mode is on, then do nothing.  See #1731."
   magit-blame-mode)
 
 (advice-add 'auto-revert-handler :before-until
             'auto-revert-handler--unless-magit-blame-mode)
-
-;;; Popup
-
-;;;###autoload (autoload 'magit-blame-popup "magit-blame" nil t)
-(magit-define-popup magit-blame-popup
-  "Popup console for blame commands."
-  :man-page "git-blame"
-  :switches '((?w "Ignore whitespace" "-w")
-              (?r "Do not treat root commits as boundaries" "--root"))
-  :options  '((?M "Detect lines moved or copied within a file" "-M")
-              (?C "Detect lines moved or copied between files" "-C"))
-  :actions  '((?b "Show commits adding lines" magit-blame)
-              (?r (lambda ()
-                    (with-current-buffer magit-pre-popup-buffer
-                      (and (not buffer-file-name)
-                           (propertize "Show commits removing lines"
-                                       'face 'default))))
-                  magit-blame-removal)
-              (?f (lambda ()
-                    (with-current-buffer magit-pre-popup-buffer
-                      (and (not buffer-file-name)
-                           (propertize "Show last commits that still have lines"
-                                       'face 'default))))
-                  magit-blame-reverse)
-              (?h "Toggle chunk headings" magit-blame-toggle-headings))
-  :default-arguments '("-w")
-  :max-action-columns 1
-  :default-action 'magit-blame)
 
 ;;; Process
 
@@ -357,8 +339,11 @@ in `magit-blame-read-only-mode-map' instead.")
             (message "Blaming...done"))
         (magit-blame-assert-buffer process)
         (with-current-buffer (process-get process 'command-buf)
-          (magit-blame-mode -1))
-        (message "Blaming...failed")))))
+          (if magit-blame-mode
+              (progn (magit-blame-mode -1)
+                     (message "Blaming...failed"))
+            (message "Blaming...aborted"))))
+      (kill-local-variable 'magit-blame-process))))
 
 (defun magit-blame-process-filter (process string)
   (internal-default-process-filter process string)
@@ -403,7 +388,7 @@ in `magit-blame-read-only-mode-map' instead.")
                               (puthash orig-rev
                                        (magit-blame--commit-alist orig-rev)
                                        cache))))
-            (magit-blame-make-overlay buf chunk alist)
+            (magit-blame--make-overlays buf chunk alist)
             (setq alist nil)
             (process-put process 'parsed (point))))))))
 
@@ -423,42 +408,58 @@ in `magit-blame-read-only-mode-map' instead.")
 
 ;;; Display
 
-(defun magit-blame-make-overlay (buf chunk alist)
+(defun magit-blame--make-overlays (buf chunk alist)
   (with-current-buffer buf
-    (with-slots (orig-rev final-line num-lines) chunk
-      (let ((ov (save-excursion
-                  (save-restriction
-                    (widen)
-                    (goto-char (point-min))
-                    (forward-line (1- final-line))
-                    (--when-let (magit-blame-overlay-at)
-                      (delete-overlay it))
-                    (make-overlay (point)
-                                  (progn (forward-line num-lines)
-                                         (point))))))
-            (heading (cdr (assq 'heading alist))))
-        (unless heading
-          (setq heading (magit-blame-format-heading orig-rev alist))
-          (nconc alist (list (cons 'heading heading))))
-        (overlay-put ov 'magit-blame chunk)
-        (overlay-put ov 'magit-blame-heading heading)
-        (overlay-put ov 'before-string
-                     (if magit-blame-show-headings
-                         heading
-                       magit-blame-separator))))))
+    (save-excursion
+      (save-restriction
+        (widen)
+        (goto-char (point-min))
+        (forward-line (1- (oref chunk final-line)))
+        (let ((beg (point))
+              (end (save-excursion
+                     (forward-line (oref chunk num-lines))
+                     (point))))
+          (magit-blame--make-heading-overlay chunk alist beg end))))))
 
-(defun magit-blame-format-separator ()
+(defun magit-blame--make-heading-overlay (chunk alist beg end)
+  (--when-let (magit-blame--overlay-at beg)
+    (delete-overlay it))
+  (let ((heading (cdr (assq 'heading alist))))
+    (unless heading
+      (setq heading
+            (magit-blame--format-rev (oref chunk orig-rev) alist
+                                     (concat magit-blame-heading-format "\n")))
+      (nconc alist (list (cons 'heading heading))))
+    (let ((ov (make-overlay beg end)))
+      (overlay-put ov 'magit-blame chunk)
+      (overlay-put ov 'magit-blame-heading heading)
+      (magit-blame--update-heading-overlay ov))))
+
+(defun magit-blame--update-overlays ()
+  (save-restriction
+    (widen)
+    (dolist (ov (overlays-in (point-min) (point-max)))
+      (cond ((overlay-get ov 'magit-blame)
+             (magit-blame--update-heading-overlay ov))
+            ))))
+
+(defun magit-blame--update-heading-overlay (ov)
+  (overlay-put ov 'before-string
+               (if magit-blame-show-headings
+                   (overlay-get ov 'magit-blame-heading)
+                 magit-blame-separator)))
+
+(defun magit-blame--format-separator ()
   (propertize
    (concat (propertize " "  'display '(space :height (2)))
            (propertize "\n" 'line-height t))
    'face (list :background (face-attribute 'magit-blame-heading :background))))
 
-(defun magit-blame-format-heading (rev alist)
+(defun magit-blame--format-rev (rev alist format)
   (if (equal rev "0000000000000000000000000000000000000000")
       (propertize "Not Yet Committed\n" 'face 'magit-blame-heading)
     (magit--format-spec
-     (propertize (concat magit-blame-heading-format "\n")
-                 'face 'magit-blame-heading)
+     (propertize format 'face 'magit-blame-heading)
      `((?H . ,(propertize rev 'face 'magit-blame-hash))
        (?s . ,(propertize (cdr (assoc "summary" alist))
                           'face 'magit-blame-summary))
@@ -466,21 +467,28 @@ in `magit-blame-read-only-mode-map' instead.")
                           'face 'magit-blame-name))
        (?c . ,(propertize (cdr (assoc "committer" alist))
                           'face 'magit-blame-name))
-       (?A . ,(propertize (magit-blame-format-time-string
+       (?A . ,(propertize (magit-blame--format-time-string
                            (cdr (assoc "author-time" alist))
                            (cdr (assoc "author-tz" alist)))
                           'face 'magit-blame-date))
-       (?C . ,(propertize (magit-blame-format-time-string
+       (?C . ,(propertize (magit-blame--format-time-string
                            (cdr (assoc "committer-time" alist))
                            (cdr (assoc "committer-tz" alist)))
                           'face 'magit-blame-date))))))
 
-(defun magit-blame-format-time-string (time tz)
+(defun magit-blame--format-time-string (time tz)
   (setq time (string-to-number time))
   (setq tz   (string-to-number tz))
   (format-time-string
    magit-blame-time-format
    (seconds-to-time (+ time (* (/ tz 100) 60 60) (* (% tz 100) 60)))))
+
+(defun magit-blame--remove-overlays ()
+  (save-restriction
+    (widen)
+    (dolist (ov (overlays-in (point-min) (point-max)))
+      (when (overlay-get ov 'magit-blame)
+        (delete-overlay ov)))))
 
 (defun magit-blame-maybe-show-message ()
   (unless magit-blame-show-headings
@@ -512,7 +520,7 @@ not turn on `read-only-mode'."
       (let ((magit-blame-read-only nil))
         (magit-blame))
     (read-only-mode -1)
-    (magit-blame-update-separators)))
+    (magit-blame--update-overlays)))
 
 ;;;###autoload
 (defun magit-blame ()
@@ -565,7 +573,7 @@ not turn on `read-only-mode'."
           (setq-local magit-blame-recursive-p t)
           ;; Set window-start for the benefit of quickstart.
           (redisplay))
-      (magit-blame--clear-overlays)))
+      (magit-blame--remove-overlays)))
   (setq magit-blame-type type))
 
 (defun magit-blame-visit-other-file ()
@@ -596,10 +604,6 @@ not turn on `read-only-mode'."
 If the buffer was created during a recursive blame,
 then also kill the buffer."
   (interactive)
-  (kill-local-variable 'magit-blame-type)
-  (kill-local-variable 'magit-blame-disable-modes)
-  (unless buffer-read-only
-    (kill-local-variable 'magit-blame-show-headings))
   (magit-blame-mode -1)
   (when magit-blame-recursive-p
     (kill-buffer)))
@@ -631,7 +635,7 @@ then also kill the buffer."
                                      'previous-single-char-property-change
                                    'next-single-char-property-change)
                                  pos 'magit-blame)))
-            (--when-let (magit-blame-overlay-at pos)
+            (--when-let (magit-blame--overlay-at pos)
               (when (equal (oref (magit-blame-chunk-at pos) orig-rev) rev)
                 (setq ov it)))))
         (if ov
@@ -648,21 +652,7 @@ then also kill the buffer."
   "Show or hide blame chunk headings."
   (interactive)
   (setq-local magit-blame-show-headings (not magit-blame-show-headings))
-  (magit-blame-update-separators))
-
-(defun magit-blame-update-separators ()
-  (save-excursion
-    (save-restriction
-      (widen)
-      (goto-char (point-min))
-      (while (not (eobp))
-        (let ((next (next-single-char-property-change (point) 'magit-blame)))
-          (--when-let (magit-blame-overlay-at (point))
-            (overlay-put it 'before-string
-                         (if magit-blame-show-headings
-                             (overlay-get it 'magit-blame-heading)
-                           magit-blame-separator)))
-          (goto-char (or next (point-max))))))))
+  (magit-blame--update-overlays))
 
 (defun magit-blame-copy-hash ()
   "Save hash of the current chunk's commit to the kill ring.
@@ -673,6 +663,34 @@ instead of the hash, like `kill-ring-save' would."
   (if (use-region-p)
       (copy-region-as-kill nil nil 'region)
     (kill-new (message "%s" (oref (magit-current-blame-chunk) orig-rev)))))
+
+;;; Popup
+
+;;;###autoload (autoload 'magit-blame-popup "magit-blame" nil t)
+(magit-define-popup magit-blame-popup
+  "Popup console for blame commands."
+  :man-page "git-blame"
+  :switches '((?w "Ignore whitespace" "-w")
+              (?r "Do not treat root commits as boundaries" "--root"))
+  :options  '((?M "Detect lines moved or copied within a file" "-M")
+              (?C "Detect lines moved or copied between files" "-C"))
+  :actions  '((?b "Show commits adding lines" magit-blame)
+              (?r (lambda ()
+                    (with-current-buffer magit-pre-popup-buffer
+                      (and (not buffer-file-name)
+                           (propertize "Show commits removing lines"
+                                       'face 'default))))
+                  magit-blame-removal)
+              (?f (lambda ()
+                    (with-current-buffer magit-pre-popup-buffer
+                      (and (not buffer-file-name)
+                           (propertize "Show last commits that still have lines"
+                                       'face 'default))))
+                  magit-blame-reverse)
+              (?h "Toggle chunk headings" magit-blame-toggle-headings))
+  :default-arguments '("-w")
+  :max-action-columns 1
+  :default-action 'magit-blame)
 
 ;;; Utilities
 

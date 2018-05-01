@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: find-env-var-sources
+# key: find-env-var-sources
+# --
+PS4='+$BASH_SOURCE> ' BASH_XTRACEFD=7 bash -xl 7>&2

@@ -21,7 +21,7 @@
 ;; -------------------------------------------------------------------------------------------
 
 ;; URL: http://github.com/ananthakumaran/typescript.el
-;; Package-Version: 20180409.422
+;; Package-Version: 20180510.1032
 ;; Version: 0.1
 ;; Keywords: typescript languages
 ;; Package-Requires: ()
@@ -56,16 +56,11 @@
   (require 'compile)
   (require 'cc-mode)
   (require 'font-lock)
-  (require 'newcomment)
-  (require 'etags)
-  (require 'thingatpt)
-  (require 'ido)
-  (require 'json nil t))
+  (require 'rx)
+  (require 'newcomment))
 
 (eval-when-compile
   (require 'cl))
-
-(declare-function ido-mode "ido")
 
 ;;; Constants
 
@@ -1784,6 +1779,24 @@ and searches for the next token to be highlighted."
     ("\\.\\(prototype\\)\\_>"
      (1 font-lock-constant-face))
 
+    (,(rx symbol-start "class" (+ space) (group (+ (or (syntax word) (syntax symbol)))))
+     (1 font-lock-type-face))
+
+    (,(rx symbol-start "extends" (+ space) (group (+ (or (syntax word) (syntax symbol)))))
+     (1 font-lock-type-face))
+
+    (,(rx symbol-start "implements" (+ space) (group (+ (or (syntax word) (syntax symbol)))))
+     (1 font-lock-type-face))
+
+    (,(rx symbol-start "interface" (+ space) (group (+ (or (syntax word) (syntax symbol)))))
+     (1 font-lock-type-face))
+
+    (,(rx symbol-start "type" (+ space) (group (+ (or (syntax word) (syntax symbol)))))
+     (1 font-lock-type-face))
+
+    (,(rx symbol-start "enum" (+ space) (group (+ (or (syntax word) (syntax symbol)))))
+     (1 font-lock-type-face))
+
     ;; Highlights class being declared, in parts
     (typescript--class-decl-matcher
      ,(concat "\\(" typescript--name-re "\\)\\(?:\\.\\|.*$\\)")
@@ -2686,9 +2699,6 @@ Key bindings:
 
   ;; Frameworks
   (typescript--update-quick-match-re)
-
-  (setq major-mode 'typescript-mode)
-  (setq mode-name "typescript")
 
   ;; for filling, pretend we're cc-mode
   (setq c-comment-prefix-regexp "//+\\|\\**"

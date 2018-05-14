@@ -3,12 +3,12 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "atomic-chrome" "atomic-chrome.el" (23263 11523
+;;;### (autoloads nil "atomic-chrome" "atomic-chrome.el" (23289 36081
 ;;;;;;  0 0))
 ;;; Generated autoloads from atomic-chrome.el
 
 (autoload 'atomic-chrome-start-server "atomic-chrome" "\
-Start websocket server for atomic-chrome.
+Start websocket server for atomic-chrome.  Fails silently if a server is already running.
 
 \(fn)" t nil)
 

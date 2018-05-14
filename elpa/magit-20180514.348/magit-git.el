@@ -684,6 +684,10 @@ tracked file."
 (defun magit-unmerged-files ()
   (magit-git-items "diff-files" "-z" "--name-only" "--diff-filter=U"))
 
+(defun magit-ignored-files ()
+  (magit-git-items "ls-files" "-z" "--others" "--ignored"
+                   "--exclude-standard" "--directory"))
+
 (defun magit-revision-files (rev)
   (magit-with-toplevel
     (magit-git-items "ls-tree" "-z" "-r" "--name-only" rev)))
@@ -917,7 +921,7 @@ corresponds to a ref outside of the namespace."
 
 (defun magit-rev-branch (rev)
   (--when-let (magit-rev-name rev "refs/heads/*")
-    (unless (string-match-p "~" it) it)))
+    (unless (string-match-p "[~^]" it) it)))
 
 (defun magit-get-shortname (rev)
   (let* ((fn (apply-partially 'magit-rev-name rev))
@@ -1271,20 +1275,23 @@ SORTBY is a key or list of keys to pass to the `--sort' flag of
 (defun magit-list-remote-branches (&optional remote)
   (magit-list-refs (concat "refs/remotes/" remote)))
 
-(defun magit-list-containing-branches (&optional commit)
-  (--remove (string-match-p "\\`(HEAD" it)
+(defun magit-list-related-branches (relation &optional commit arg)
+  (--remove (string-match-p "\\(\\`(HEAD\\|HEAD -> \\)" it)
             (--map (substring it 2)
-                   (magit-git-lines "branch" "--contains" commit))))
+                   (magit-git-lines "branch" arg relation commit))))
 
-(defun magit-list-merged-branches (&optional commit)
-  (--remove (string-match-p "\\`(HEAD" it)
-            (--map (substring it 2)
-                   (magit-git-lines "branch" "--merged" commit))))
+(defun magit-list-containing-branches (&optional commit arg)
+  (magit-list-related-branches "--contains" commit arg))
 
-(defun magit-list-unmerged-branches (&optional commit)
-  (--remove (string-match-p "\\`(HEAD" it)
-            (--map (substring it 2)
-                   (magit-git-lines "branch" "--no-merged" commit))))
+(defun magit-list-publishing-branches (&optional commit)
+  (--filter (member it magit-published-branches)
+            (magit-list-containing-branches commit "--remote")))
+
+(defun magit-list-merged-branches (&optional commit arg)
+  (magit-list-related-branches "--merged" commit arg))
+
+(defun magit-list-unmerged-branches (&optional commit arg)
+  (magit-list-related-branches "--no-merged" commit arg))
 
 (defun magit-list-unmerged-to-upstream-branches ()
   (--filter (-when-let (upstream (magit-get-upstream-branch it))

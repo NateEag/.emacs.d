@@ -9,7 +9,7 @@ This is magit.info, produced by makeinfo version 6.1 from magit.texi.
 
      This document is distributed in the hope that it will be useful,
      but WITHOUT ANY WARRANTY; without even the implied warranty of
-     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
      General Public License for more details.
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -30,7 +30,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-This manual is for Magit version 2.12.1 (2.12.1-55-g3e8538d96+1).
+This manual is for Magit version 2.12.1 (2.12.1-114-gfd19cb8d+1).
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -41,7 +41,7 @@ This manual is for Magit version 2.12.1 (2.12.1-55-g3e8538d96+1).
 
      This document is distributed in the hope that it will be useful,
      but WITHOUT ANY WARRANTY; without even the implied warranty of
-     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
      General Public License for more details.
 
 * Menu:
@@ -1477,11 +1477,11 @@ this manual along with the appropriate "section inserter functions".
 
      If optional AT is non-nil and a member of the hook list, then add
      FUNCTION next to that instead.  Add before or after AT, or replace
-     AT with FUNCTION depending on APPEND. If APPEND is the symbol
-     ‘replace’, then replace AT with FUNCTION. For any other non-nil
-     value place FUNCTION right after AT. If nil, then place FUNCTION
-     right before AT. If FUNCTION already is a member of the list but AT
-     is not, then leave FUNCTION where ever it already is.
+     AT with FUNCTION depending on APPEND.  If APPEND is the symbol
+     ‘replace’, then replace AT with FUNCTION.  For any other non-nil
+     value place FUNCTION right after AT.  If nil, then place FUNCTION
+     right before AT.  If FUNCTION already is a member of the list but
+     AT is not, then leave FUNCTION where ever it already is.
 
      If optional LOCAL is non-nil, then modify the hook’s buffer-local
      value rather than its global value.  This makes the hook local by
@@ -1719,6 +1719,30 @@ telling Magit to ask fewer questions.
                then the user always has to confirm by accepting the
                default (or selecting another).  This action only
                concerns the deletion of multiple stashes at once.
+
+        • Edit published history:
+
+          Without adding these symbols here, you will be warned before
+          editing commits that have already been pushed to one of the
+          branches listed in ‘magit-published-branches’.
+
+             • ‘amend-published’ Affects most commands that amend to
+               "HEAD".
+
+             • ‘rebase-published’ Affects commands that perform
+               interactive rebases.  This includes commands from the
+               commit popup that modify a commit other than "HEAD",
+               namely the various fixup and squash variants.
+
+             • ‘edit-published’ Affects the commands
+               ‘magit-edit-line-commit’ and
+               ‘magit-diff-edit-hunk-commit’.  These two commands make
+               it quite easy to accidentally edit a published commit, so
+               you should think twice before configuring them not to ask
+               for confirmation.
+
+          To disable confirmation completely, add all three symbols here
+          or set ‘magit-published-branches’ to ‘nil’.
 
         • Various:
 
@@ -2279,8 +2303,8 @@ that it should be bound globally.  We recommend using ‘C-x g’:
 
      List of directories that are or contain Git repositories.  Each
      element has the form ‘(DIRECTORY . DEPTH)’ or, for backward
-     compatibility, just DIRECTORY. DIRECTORY has to be a directory or a
-     directory file-name, a string.  DEPTH, an integer, specifies the
+     compatibility, just DIRECTORY.  DIRECTORY has to be a directory or
+     a directory file-name, a string.  DEPTH, an integer, specifies the
      maximum depth to look for Git repositories.  If it is 0, then only
      add DIRECTORY itself.  For elements that are strings, the value of
      option ‘magit-repository-directories-depth’ specifies the depth.
@@ -4021,7 +4045,7 @@ File: magit.info,  Node: Visiting Blobs,  Next: Blaming,  Prev: Bisecting,  Up: 
 
 ‘M-x magit-find-file’     (‘magit-find-file’)
 
-     View FILE from REV. Switch to a buffer visiting blob REV:FILE,
+     View FILE from REV.  Switch to a buffer visiting blob REV:FILE,
      creating one if none already exists.
 
 ‘M-x magit-find-file-other-window’     (‘magit-find-file-other-window’)
@@ -4037,13 +4061,16 @@ File: magit.info,  Node: Blaming,  Prev: Visiting Blobs,  Up: Inspecting
 
 Also see *note (gitman)git-blame::.
 
-   To start blaming use ‘M-x’ in a file-visiting buffer to invoke one of
-the next tree commands.  In a blob-visiting buffer you can also use the
-key bindings described below, and when Magit-File mode is enabled, then
-you can at least use ‘C-c M-g’ to enter the blaming popup instead of
-having to type out the command name.
+   To start blaming you can use ‘M-x’ in a file-visiting buffer to
+invoke one of the following commands.  You can also invoke these
+commands using the blame popup, which is available on ‘b’ in
+file-visiting buffers that already contain blame information and, also
+on ‘b’, in all blob-visiting buffers.  You can also enter the blame
+popup from the file popup, which is available on ‘C-c M-g’, provided
+‘magit-file-mode’ is enabled, see *note Minor Mode for Buffers Visiting
+Files::.
 
-‘M-x magit-blame’     (‘magit-blame’)
+ -- Command: magit-blame
 
      This command augments each line or chunk of lines in the current
      file- or blob-visiting buffer with information about what commits
@@ -4058,7 +4085,21 @@ having to type out the command name.
      ‘magit-find-file’), where REVISION is a parent of the revision that
      added the current line or chunk of lines.
 
-‘M-x magit-blame-reverse’     (‘magit-blame-reverse’)
+ -- Command: magit-blame-echo
+
+     This command is like ‘magit-blame’ except that it doesn’t turn on
+     ‘read-only-mode’ and that it initially uses the visualization style
+     specified by option ‘magit-blame-echo-style’.
+
+ -- Command: magit-blame-removal
+
+     This command augments each line or chunk of lines in the current
+     blob-visiting buffer with information about the revision that
+     removes it.  It cannot be used in file-visiting buffers.
+
+     Like ‘magit-blame’, this command can be used recursively.
+
+ -- Command: magit-blame-reverse
 
      This command augments each line or chunk of lines in the current
      file- or blob-visiting buffer with information about the last
@@ -4066,23 +4107,10 @@ having to type out the command name.
 
      Like ‘magit-blame’, this command can be used recursively.
 
-‘M-x magit-blame-popup’     (‘magit-blame-popup’)
-
-     This prefix command shows the above suffix command along with the
-     appropriate infix arguments in a popup buffer.
-
-   The above commands are also bound in the keymaps
-‘magit-blame-mode-map’ and ‘magit-blob-mode-map’, and in the popup
-‘magit-file-popup’.  Once Magit-Blame mode is enabled in a file-visiting
-buffer, you can use ‘B’ to show the blaming popup, ‘b’ to blame
-recursively going backward in time, and ‘f’ to blame recursively going
-forward in time (i.e.  blame in reverse).  These bindings are always
-available in blob-visiting buffers.
-
-   Additionally the following key bindings are available when
-Magit-Blame mode is enabled.  These commands are also available in other
-buffers; here only the behavior is described that is relevant in
-file-visiting buffers that are being blamed.
+   The following key bindings are available when Magit-Blame mode is
+enabled and Read-Only mode is not enabled.  These commands are also
+available in other buffers; here only the behavior is described that is
+relevant in file-visiting buffers that are being blamed.
 
 ‘RET’     (‘magit-show-commit’)
 
@@ -4107,6 +4135,14 @@ file-visiting buffers that are being blamed.
      displayed in the current frame and if that buffer contains
      information about that commit, then the buffer is scrolled down
      instead.
+
+   The following key bindings are available when Magit-Blame mode is
+enabled and Read-Only mode is not enabled.
+
+‘b’     (‘magit-blame-popup’)
+
+     This prefix command shows the above suffix command along with the
+     appropriate infix arguments in a popup buffer.
 
 ‘n’     (‘magit-blame-next-chunk’)
 
@@ -4137,33 +4173,45 @@ file-visiting buffers that are being blamed.
      When the region is active, the command saves the region’s content
      instead of the hash, like ‘kill-ring-save’ would.
 
-‘t’     (‘magit-blame-toggle-headings’)
+‘c’     (‘magit-blame-cycle-style’)
 
-     This command shows or hides blame chunk headings.
+     This command changes how blame information is visualized in the
+     current buffer by cycling through the styles specified using the
+     option ‘magit-blame-styles’.
 
- -- User Option: magit-blame-heading-format
+   Blaming is also controlled using the following options.
 
-     The format string used for blame headings.
+ -- User Option: magit-blame-styles
+
+     This option defines a list of styles used to visualize blame
+     information.  For now see its doc-string to learn more.
+
+ -- User Option: magit-blame-echo-style
+
+     This option specifies the blame visualization style used by the
+     command ‘magit-blame-echo’.  This must be a symbol that is used as
+     the identifier for one of the styles defined in
+     ‘magit-blame-styles’.
 
  -- User Option: magit-blame-time-format
 
-     The format string used for time strings in blame headings.
+     This option specifies the format string used to display times when
+     showing blame information.
 
- -- User Option: magit-blame-show-headings
+ -- User Option: magit-blame-read-only
 
-     This option controls whether blame block headings are initially
-     shown.  Whether blame headings are shown in the current buffer can
-     be changed using the command ‘magit-blame-toggle-headings’.
+     This option controls whether blaming a buffer also makes
+     temporarily read-only.
 
-     When headings are not shown, then the information for the current
-     chunk is shown in the echo-area instead.  If you do not want that,
-     then remove ‘magit-blame-maybe-show-message’ from
-     ‘magit-blame-goto-chunk-hook’.
+ -- User Option: magit-blame-disable-modes
+
+     This option lists incompatible minor-modes that should be disabled
+     temporarily when a buffer contains blame information.  They are
+     enabled again when the buffer no longer shows blame information.
 
  -- User Option: magit-blame-goto-chunk-hook
 
-     This hook is run by ‘magit-blame-next-chunk’ and
-     ‘magit-blame-previous-chunk’.
+     This hook is run when moving between chunks.
 
 
 File: magit.info,  Node: Manipulating,  Next: Transferring,  Prev: Inspecting,  Up: Top
@@ -5143,10 +5191,10 @@ features are available from separate popups.
      element is used, the following elements are ignored.
 
      UPSTREAM is the branch to be used as the upstream for branches
-     specified by RULE. It can be a local or a remote branch.
+     specified by RULE.  It can be a local or a remote branch.
 
      RULE can either be a regular expression, matching branches whose
-     upstream should be the one specified by UPSTREAM. Or it can be a
+     upstream should be the one specified by UPSTREAM.  Or it can be a
      list of the only branches that should *not* use UPSTREAM; all other
      branches will.  Matching is done after stripping the remote part of
      the name of the branch that is being branched from.
@@ -5219,13 +5267,13 @@ prefix argument.
  -- Variable: branch.NAME.merge
 
      Together with ‘branch.NAME.remote’ this variable defines the
-     upstream branch of the local branch named NAME. The value of this
+     upstream branch of the local branch named NAME.  The value of this
      variable is the full reference of the upstream _branch_.
 
  -- Variable: branch.NAME.remote
 
      Together with ‘branch.NAME.merge’ this variable defines the
-     upstream branch of the local branch named NAME. The value of this
+     upstream branch of the local branch named NAME.  The value of this
      variable is the name of the upstream _remote_.
 
  -- Variable: branch.NAME.rebase
@@ -5256,7 +5304,7 @@ prefix argument.
 
  -- Variable: branch.NAME.description
 
-     This variable can be used to describe the branch named NAME. That
+     This variable can be used to describe the branch named NAME.  That
      description is used e.g.  when turning the branch into a series of
      patches.
 
@@ -5620,8 +5668,8 @@ See *note Information About In-Progress Rebase::.
 ‘r s’     (‘magit-rebase-subset’)
 
      Start a non-interactive rebase sequence with commits from START to
-     ‘HEAD’ onto NEWBASE. START has to be selected from a list of recent
-     commits.
+     ‘HEAD’ onto NEWBASE.  START has to be selected from a list of
+     recent commits.
 
    By default Magit uses the ‘--autostash’ argument, which causes
 uncommitted changes to be stored in a stash before the rebase begins.
@@ -6252,7 +6300,7 @@ Also see *note (gitman)git-stash::.
 
 ‘z b’     (‘magit-stash-branch’)
 
-     Create and checkout a new BRANCH from STASH. The branch starts at
+     Create and checkout a new BRANCH from STASH.  The branch starts at
      the commit that was current when the stash was created.
 
 ‘z B’     (‘magit-stash-branch-here’)
@@ -6436,24 +6484,24 @@ branch.  To change the value for another remote invoke
 
  -- Variable: remote.NAME.url
 
-     This variable specifies the url of the remote named NAME. It can
+     This variable specifies the url of the remote named NAME.  It can
      have multiple values.
 
  -- Variable: remote.NAME.fetch
 
-     The refspec used when fetching from the remote named NAME. It can
+     The refspec used when fetching from the remote named NAME.  It can
      have multiple values.
 
  -- Variable: remote.NAME.pushurl
 
      This variable specifies the url used for fetching from the remote
-     named NAME. If it is not specified, then ‘remote.NAME.url’ is used
+     named NAME.  If it is not specified, then ‘remote.NAME.url’ is used
      instead.  It can have multiple values.
 
  -- Variable: remote.NAME.push
 
-     The refspec used when pushing to the remote named NAME. It can have
-     multiple values.
+     The refspec used when pushing to the remote named NAME.  It can
+     have multiple values.
 
  -- Variable: remote.NAME.tagOpts
 
@@ -6772,8 +6820,8 @@ Also see *note (gitman)git-tag::.
 
 ‘t t’     (‘magit-tag’)
 
-     Create a new tag with the given NAME at REV. With a prefix argument
-     annotate the tag.
+     Create a new tag with the given NAME at REV.  With a prefix
+     argument annotate the tag.
 
 ‘t k’     (‘magit-tag-delete’)
 
@@ -7509,7 +7557,7 @@ current repository when the visited file changes on disk.  That is
 implemented on top of ‘auto-revert-mode’ from the built-in library
 ‘autorevert’.  To figure out whether that impacts performance, check
 whether performance is significantly worse, when many buffers exist
-and/or when some buffers visit files using TRAMP. If so, then this
+and/or when some buffers visit files using TRAMP.  If so, then this
 should help.
 
      (setq auto-revert-buffer-list-filter
@@ -7754,85 +7802,4 @@ refresh when the executable has finished.
 
 * Getting a Value from Git::
 * Calling Git for Effect::
-
-
-File: magit.info,  Node: Getting a Value from Git,  Next: Calling Git for Effect,  Up: Calling Git
-
-10.1.1 Getting a Value from Git
--------------------------------
-
-These functions run Git in order to get a value, an exit status, or
-output.  Of course you could also use them to run Git commands that have
-side-effects, but that should be avoided.
-
- -- Function: magit-git-exit-code &rest args
-
-     Executes git with ARGS and returns its exit code.
-
- -- Function: magit-git-success &rest args
-
-     Executes git with ARGS and returns ‘t’ if the exit code is ‘0’,
-     ‘nil’ otherwise.
-
- -- Function: magit-git-failure &rest args
-
-     Executes git with ARGS and returns ‘t’ if the exit code is ‘1’,
-     ‘nil’ otherwise.
-
- -- Function: magit-git-true &rest args
-
-     Executes git with ARGS and returns ‘t’ if the first line printed by
-     git is the string "true", ‘nil’ otherwise.
-
- -- Function: magit-git-false &rest args
-
-     Executes git with ARGS and returns ‘t’ if the first line printed by
-     git is the string "false", ‘nil’ otherwise.
-
- -- Function: magit-git-insert &rest args
-
-     Executes git with ARGS and inserts its output at point.
-
- -- Function: magit-git-string &rest args
-
-     Executes git with ARGS and returns the first line of its output.
-     If there is no output or if it begins with a newline character,
-     then this returns ‘nil’.
-
- -- Function: magit-git-lines &rest args
-
-     Executes git with ARGS and returns its output as a list of lines.
-     Empty lines anywhere in the output are omitted.
-
- -- Function: magit-git-items &rest args
-
-     Executes git with ARGS and returns its null-separated output as a
-     list.  Empty items anywhere in the output are omitted.
-
-     If the value of option ‘magit-git-debug’ is non-nil and git exits
-     with a non-zero exit status, then warn about that in the echo area
-     and add a section containing git’s standard error in the current
-     repository’s process buffer.
-
-   If an error occurs when using one of the above functions, then that
-is usually due to a bug, i.e.  using an argument which is not actually
-supported.  Such errors are usually not reported, but when they occur we
-need to be able to debug them.
-
- -- User Option: magit-git-debug
-
-     Whether to report errors that occur when using ‘magit-git-insert’,
-     ‘magit-git-string’, ‘magit-git-lines’, or ‘magit-git-items’.  This
-     does not actually raise an error.  Instead a message is shown in
-     the echo area, and git’s standard error is insert into a new
-     section in the current repository’s process buffer.
-
- -- Function: magit-git-str &rest args
-
-     This is a variant of ‘magit-git-string’ that ignores the option
-     ‘magit-git-debug’.  It is mainly intended to be used while handling
-     errors in functions that do respect that option.  Using such a
-     function while handing an error could cause yet another error and
-     therefore lead to an infinite recursion.  You probably won’t ever
-     need to use this function.
 

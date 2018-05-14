@@ -9,12 +9,93 @@ This is magit.info, produced by makeinfo version 6.1 from magit.texi.
 
      This document is distributed in the hope that it will be useful,
      but WITHOUT ANY WARRANTY; without even the implied warranty of
-     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
      General Public License for more details.
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Magit: (magit).       Using Git from Emacs with Magit.
 END-INFO-DIR-ENTRY
+
+
+File: magit.info,  Node: Getting a Value from Git,  Next: Calling Git for Effect,  Up: Calling Git
+
+10.1.1 Getting a Value from Git
+-------------------------------
+
+These functions run Git in order to get a value, an exit status, or
+output.  Of course you could also use them to run Git commands that have
+side-effects, but that should be avoided.
+
+ -- Function: magit-git-exit-code &rest args
+
+     Executes git with ARGS and returns its exit code.
+
+ -- Function: magit-git-success &rest args
+
+     Executes git with ARGS and returns ‘t’ if the exit code is ‘0’,
+     ‘nil’ otherwise.
+
+ -- Function: magit-git-failure &rest args
+
+     Executes git with ARGS and returns ‘t’ if the exit code is ‘1’,
+     ‘nil’ otherwise.
+
+ -- Function: magit-git-true &rest args
+
+     Executes git with ARGS and returns ‘t’ if the first line printed by
+     git is the string "true", ‘nil’ otherwise.
+
+ -- Function: magit-git-false &rest args
+
+     Executes git with ARGS and returns ‘t’ if the first line printed by
+     git is the string "false", ‘nil’ otherwise.
+
+ -- Function: magit-git-insert &rest args
+
+     Executes git with ARGS and inserts its output at point.
+
+ -- Function: magit-git-string &rest args
+
+     Executes git with ARGS and returns the first line of its output.
+     If there is no output or if it begins with a newline character,
+     then this returns ‘nil’.
+
+ -- Function: magit-git-lines &rest args
+
+     Executes git with ARGS and returns its output as a list of lines.
+     Empty lines anywhere in the output are omitted.
+
+ -- Function: magit-git-items &rest args
+
+     Executes git with ARGS and returns its null-separated output as a
+     list.  Empty items anywhere in the output are omitted.
+
+     If the value of option ‘magit-git-debug’ is non-nil and git exits
+     with a non-zero exit status, then warn about that in the echo area
+     and add a section containing git’s standard error in the current
+     repository’s process buffer.
+
+   If an error occurs when using one of the above functions, then that
+is usually due to a bug, i.e.  using an argument which is not actually
+supported.  Such errors are usually not reported, but when they occur we
+need to be able to debug them.
+
+ -- User Option: magit-git-debug
+
+     Whether to report errors that occur when using ‘magit-git-insert’,
+     ‘magit-git-string’, ‘magit-git-lines’, or ‘magit-git-items’.  This
+     does not actually raise an error.  Instead a message is shown in
+     the echo area, and git’s standard error is insert into a new
+     section in the current repository’s process buffer.
+
+ -- Function: magit-git-str &rest args
+
+     This is a variant of ‘magit-git-string’ that ignores the option
+     ‘magit-git-debug’.  It is mainly intended to be used while handling
+     errors in functions that do respect that option.  Using such a
+     function while handing an error could cause yet another error and
+     therefore lead to an infinite recursion.  You probably won’t ever
+     need to use this function.
 
 
 File: magit.info,  Node: Calling Git for Effect,  Prev: Getting a Value from Git,  Up: Calling Git
@@ -74,8 +155,8 @@ refresh because that also automatically moves to the next change.
 
  -- Function: magit-run-git-with-logfile file &rest args
 
-     Calls git synchronously with ARGS. The process’ output is saved in
-     FILE. This is rarely useful and so this function might be removed
+     Calls git synchronously with ARGS.  The process’ output is saved in
+     FILE.  This is rarely useful and so this function might be removed
      in the future.
 
      This function actually runs git asynchronously.  But then it waits
@@ -263,7 +344,7 @@ File: magit.info,  Node: Creating Sections,  Next: Section Selection,  Up: Secti
 
  -- Function: magit-define-section-jumper sym title &optional value
 
-     Define an interactive function to go to section SYM. TITLE is the
+     Define an interactive function to go to section SYM.  TITLE is the
      displayed title of the section.
 
 
@@ -319,17 +400,17 @@ File: magit.info,  Node: Matching Sections,  Prev: Section Selection,  Up: Secti
 
  -- Function: magit-section-ident
 
-     Return an unique identifier for SECTION. The return value has the
+     Return an unique identifier for SECTION.  The return value has the
      form ‘((TYPE . VALUE)...)’.
 
  -- Function: magit-get-section
 
-     Return the section identified by IDENT. IDENT has to be a list as
+     Return the section identified by IDENT.  IDENT has to be a list as
      returned by ‘magit-section-ident’.
 
  -- Function: magit-section-match condition &optional section
 
-     Return ‘t’ if SECTION matches CONDITION. SECTION defaults to the
+     Return ‘t’ if SECTION matches CONDITION.  SECTION defaults to the
      section at point.  If SECTION is not specified and there also is no
      section at point, then return ‘nil’.
 
@@ -465,8 +546,9 @@ where ‘*’ may be something like ‘diff’) with the value of
      ‘magit-mode-display-buffer’ with BUFFER, MODE and SWITCH-FUNC as
      arguments.  Then it sets the local value of
      ‘magit-refresh-function’ to REFRESH-FUNC and that of
-     ‘magit-refresh-args’ to REFRESH-ARGS. Finally it creates the buffer
-     content by calling REFRESH-FUNC with REFRESH-ARGS as arguments.
+     ‘magit-refresh-args’ to REFRESH-ARGS.  Finally it creates the
+     buffer content by calling REFRESH-FUNC with REFRESH-ARGS as
+     arguments.
 
      All arguments are evaluated before switching to BUFFER.
 
@@ -481,10 +563,10 @@ where ‘*’ may be something like ‘diff’) with the value of
      previous window configuration as a buffer local value, so that it
      can later be restored by ‘magit-mode-bury-buffer’.
 
-     The buffer is displayed and selected using SWITCH-FUNCTION. If that
-     is ‘nil’ then ‘pop-to-buffer’ is used if the current buffer’s major
-     mode derives from ‘magit-mode’.  Otherwise ‘switch-to-buffer’ is
-     used.
+     The buffer is displayed and selected using SWITCH-FUNCTION.  If
+     that is ‘nil’ then ‘pop-to-buffer’ is used if the current buffer’s
+     major mode derives from ‘magit-mode’.  Otherwise ‘switch-to-buffer’
+     is used.
 
  -- Variable: magit-refresh-function
 
@@ -1090,7 +1172,8 @@ Appendix C Keystroke Index
 * A s:                                   Cherry Picking.      (line  75)
 * A s <1>:                               Cherry Picking.      (line  93)
 * B:                                     Bisecting.           (line   8)
-* b:                                     The Branch Popup.    (line  12)
+* b:                                     Blaming.             (line  86)
+* b <1>:                                 The Branch Popup.    (line  12)
 * B B:                                   Bisecting.           (line  16)
 * B b:                                   Bisecting.           (line  31)
 * b b:                                   The Branch Popup.    (line  37)
@@ -1108,8 +1191,9 @@ Appendix C Keystroke Index
 * b x:                                   The Branch Popup.    (line 221)
 * b Y:                                   The Branch Popup.    (line 113)
 * b y:                                   The Branch Popup.    (line 215)
-* c:                                     Initiating a Commit. (line   8)
-* c <1>:                                 Editing Rebase Sequences.
+* c:                                     Blaming.             (line 120)
+* c <1>:                                 Initiating a Commit. (line   8)
+* c <2>:                                 Editing Rebase Sequences.
                                                               (line  72)
 * c a:                                   Initiating a Commit. (line  18)
 * c A:                                   Initiating a Commit. (line  66)
@@ -1203,7 +1287,7 @@ Appendix C Keystroke Index
 * D w:                                   Refreshing Diffs.    (line  28)
 * DEL:                                   Log Buffer.          (line  43)
 * DEL <1>:                               Diff Buffer.         (line  68)
-* DEL <2>:                               Blaming.             (line  69)
+* DEL <2>:                               Blaming.             (line  73)
 * DEL <3>:                               Editing Rebase Sequences.
                                                               (line  28)
 * e:                                     Ediffing.            (line   9)
@@ -1295,11 +1379,8 @@ Appendix C Keystroke Index
                                                               (line  39)
 * M-p <2>:                               Editing Rebase Sequences.
                                                               (line  43)
-* M-w:                                   Blaming.             (line 100)
+* M-w:                                   Blaming.             (line 112)
 * M-w <1>:                               Common Commands.     (line  10)
-* M-x magit-blame:                       Blaming.             (line  14)
-* M-x magit-blame-popup:                 Blaming.             (line  37)
-* M-x magit-blame-reverse:               Blaming.             (line  29)
 * M-x magit-clone:                       Repository Setup.    (line  16)
 * M-x magit-debug-git-executable:        Git Executable.      (line  45)
 * M-x magit-debug-git-executable <1>:    Debugging Tools.     (line  30)
@@ -1324,8 +1405,8 @@ Appendix C Keystroke Index
 * M-x magit-wip-commit:                  Wip Modes.           (line 129)
 * M-x with-editor-debug:                 Debugging Tools.     (line  38)
 * n:                                     Section Movement.    (line  16)
-* n <1>:                                 Blaming.             (line  79)
-* N:                                     Blaming.             (line  83)
+* n <1>:                                 Blaming.             (line  91)
+* N:                                     Blaming.             (line  95)
 * n <2>:                                 Editing Rebase Sequences.
                                                               (line  39)
 * n <3>:                                 Minor Mode for Buffers Visiting Blobs.
@@ -1347,8 +1428,8 @@ Appendix C Keystroke Index
 * O s:                                   Subtree.             (line  41)
 * o u:                                   Submodule Popup.     (line  38)
 * p:                                     Section Movement.    (line  10)
-* p <1>:                                 Blaming.             (line  87)
-* P:                                     Blaming.             (line  91)
+* p <1>:                                 Blaming.             (line  99)
+* P:                                     Blaming.             (line 103)
 * p <2>:                                 Editing Rebase Sequences.
                                                               (line  35)
 * P <1>:                                 Pushing.             (line  11)
@@ -1364,7 +1445,7 @@ Appendix C Keystroke Index
 * P u:                                   Pushing.             (line  26)
 * q:                                     Quitting Windows.    (line   6)
 * q <1>:                                 Log Buffer.          (line  12)
-* q <2>:                                 Blaming.             (line  95)
+* q <2>:                                 Blaming.             (line 107)
 * q <3>:                                 Minor Mode for Buffers Visiting Blobs.
                                                               (line  20)
 * r:                                     Rebasing.            (line   9)
@@ -1385,7 +1466,7 @@ Appendix C Keystroke Index
 * r w:                                   Rebasing.            (line  81)
 * RET:                                   Diff Buffer.         (line   6)
 * RET <1>:                               References Buffer.   (line 166)
-* RET <2>:                               Blaming.             (line  55)
+* RET <2>:                               Blaming.             (line  59)
 * RET <3>:                               Editing Rebase Sequences.
                                                               (line  16)
 * s:                                     Staging and Unstaging.
@@ -1397,11 +1478,10 @@ Appendix C Keystroke Index
 * S-<tab>:                               Section Visibility.  (line  22)
 * SPC:                                   Log Buffer.          (line  33)
 * SPC <1>:                               Diff Buffer.         (line  64)
-* SPC <2>:                               Blaming.             (line  59)
+* SPC <2>:                               Blaming.             (line  63)
 * SPC <3>:                               Editing Rebase Sequences.
                                                               (line  21)
-* t:                                     Blaming.             (line 108)
-* t <1>:                                 Tagging.             (line   8)
+* t:                                     Tagging.             (line   8)
 * T:                                     Notes.               (line   8)
 * T a:                                   Notes.               (line  51)
 * T c:                                   Notes.               (line  46)
@@ -1548,18 +1628,20 @@ Appendix D Command Index
 * magit-bisect-run:                      Bisecting.           (line  24)
 * magit-bisect-skip:                     Bisecting.           (line  41)
 * magit-bisect-start:                    Bisecting.           (line  16)
-* magit-blame:                           Blaming.             (line  14)
-* magit-blame-copy-hash:                 Blaming.             (line 100)
-* magit-blame-next-chunk:                Blaming.             (line  79)
-* magit-blame-next-chunk-same-commit:    Blaming.             (line  83)
-* magit-blame-popup:                     Blaming.             (line  37)
+* magit-blame:                           Blaming.             (line  17)
+* magit-blame-copy-hash:                 Blaming.             (line 112)
+* magit-blame-cycle-style:               Blaming.             (line 120)
+* magit-blame-echo:                      Blaming.             (line  32)
+* magit-blame-next-chunk:                Blaming.             (line  91)
+* magit-blame-next-chunk-same-commit:    Blaming.             (line  95)
+* magit-blame-popup:                     Blaming.             (line  86)
 * magit-blame-popup <1>:                 Minor Mode for Buffers Visiting Files.
                                                               (line  76)
-* magit-blame-previous-chunk:            Blaming.             (line  87)
-* magit-blame-previous-chunk-same-commit: Blaming.            (line  91)
-* magit-blame-quit:                      Blaming.             (line  95)
-* magit-blame-reverse:                   Blaming.             (line  29)
-* magit-blame-toggle-headings:           Blaming.             (line 108)
+* magit-blame-previous-chunk:            Blaming.             (line  99)
+* magit-blame-previous-chunk-same-commit: Blaming.            (line 103)
+* magit-blame-quit:                      Blaming.             (line 107)
+* magit-blame-removal:                   Blaming.             (line  38)
+* magit-blame-reverse:                   Blaming.             (line  46)
 * magit-blob-next:                       Minor Mode for Buffers Visiting Blobs.
                                                               (line  16)
 * magit-blob-previous:                   Minor Mode for Buffers Visiting Files.
@@ -1632,9 +1714,9 @@ Appendix D Command Index
 * magit-diff-save-default-arguments:     Refreshing Diffs.    (line  28)
 * magit-diff-set-default-arguments:      Refreshing Diffs.    (line  21)
 * magit-diff-show-or-scroll-down:        Log Buffer.          (line  43)
-* magit-diff-show-or-scroll-down <1>:    Blaming.             (line  69)
+* magit-diff-show-or-scroll-down <1>:    Blaming.             (line  73)
 * magit-diff-show-or-scroll-up:          Log Buffer.          (line  33)
-* magit-diff-show-or-scroll-up <1>:      Blaming.             (line  59)
+* magit-diff-show-or-scroll-up <1>:      Blaming.             (line  63)
 * magit-diff-staged:                     Diffing.             (line  49)
 * magit-diff-switch-range-type:          Refreshing Diffs.    (line  40)
 * magit-diff-toggle-file-filter:         Refreshing Diffs.    (line  50)
@@ -1846,7 +1928,7 @@ Appendix D Command Index
 * magit-shell-command-topdir:            Running Git Manually.
                                                               (line  34)
 * magit-show-commit:                     Diffing.             (line  67)
-* magit-show-commit <1>:                 Blaming.             (line  55)
+* magit-show-commit <1>:                 Blaming.             (line  59)
 * magit-show-refs:                       References Buffer.   (line  24)
 * magit-show-refs-current:               References Buffer.   (line  19)
 * magit-show-refs-head:                  References Buffer.   (line  14)
@@ -1954,6 +2036,10 @@ Appendix E Function Index
 * magit-add-section-hook:                Section Hooks.       (line  18)
 * magit-after-save-refresh-status:       Automatic Refreshing of Magit Buffers.
                                                               (line  56)
+* magit-blame:                           Blaming.             (line  17)
+* magit-blame-echo:                      Blaming.             (line  32)
+* magit-blame-removal:                   Blaming.             (line  38)
+* magit-blame-reverse:                   Blaming.             (line  46)
 * magit-branch-config-popup:             The Branch Config Popup.
                                                               (line   6)
 * magit-branch-or-checkout:              The Branch Popup.    (line 347)
@@ -2079,7 +2165,7 @@ Appendix E Function Index
 * magit-log-maybe-update-blob-buffer:    Section Movement.    (line  71)
 * magit-log-maybe-update-revision-buffer: Section Movement.   (line  64)
 * magit-maybe-set-dedicated:             Switching Buffers.   (line  97)
-* magit-mode-display-buffer:             Refreshing Buffers.  (line  32)
+* magit-mode-display-buffer:             Refreshing Buffers.  (line  33)
 * magit-mode-quit-window:                Quitting Windows.    (line  31)
 * magit-mode-setup:                      Refreshing Buffers.  (line  17)
 * magit-push-implicitly:                 Pushing.             (line  73)
@@ -2197,10 +2283,12 @@ Appendix F Variable Index
 * magit-auto-revert-tracked-only:        Automatic Reverting of File-Visiting Buffers.
                                                               (line  55)
 * magit-bisect-show-graph:               Bisecting.           (line  55)
-* magit-blame-goto-chunk-hook:           Blaming.             (line 131)
-* magit-blame-heading-format:            Blaming.             (line 112)
-* magit-blame-show-headings:             Blaming.             (line 120)
-* magit-blame-time-format:               Blaming.             (line 116)
+* magit-blame-disable-modes:             Blaming.             (line 150)
+* magit-blame-echo-style:                Blaming.             (line 133)
+* magit-blame-goto-chunk-hook:           Blaming.             (line 156)
+* magit-blame-read-only:                 Blaming.             (line 145)
+* magit-blame-styles:                    Blaming.             (line 128)
+* magit-blame-time-format:               Blaming.             (line 140)
 * magit-branch-adjust-remote-upstream-alist: The Branch Popup.
                                                               (line 300)
 * magit-branch-popup-show-variables:     The Branch Popup.    (line  21)
@@ -2269,10 +2357,10 @@ Appendix F Variable Index
                                                               (line 151)
 * magit-push-current-set-remote-if-missing: Pushing.          (line  96)
 * magit-reflog-margin:                   Reflog.              (line  23)
-* magit-refresh-args:                    Refreshing Buffers.  (line  54)
+* magit-refresh-args:                    Refreshing Buffers.  (line  55)
 * magit-refresh-buffer-hook:             Automatic Refreshing of Magit Buffers.
                                                               (line  40)
-* magit-refresh-function:                Refreshing Buffers.  (line  48)
+* magit-refresh-function:                Refreshing Buffers.  (line  49)
 * magit-refresh-status-buffer:           Automatic Refreshing of Magit Buffers.
                                                               (line  46)
 * magit-refs-filter-alist:               References Buffer.   (line 149)

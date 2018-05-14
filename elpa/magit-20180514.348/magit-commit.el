@@ -165,6 +165,7 @@ With a prefix argument, amend to the commit at `HEAD' instead.
   "Amend the last commit.
 \n(git commit --amend ARGS)"
   (interactive (list (magit-commit-arguments)))
+  (magit-commit-amend-assert)
   (magit-run-git-with-editor "commit" "--amend" args))
 
 ;;;###autoload
@@ -180,6 +181,7 @@ to inverse the meaning of the prefix argument.  \n(git commit
                          (not magit-commit-extend-override-date)
                        magit-commit-extend-override-date)))
   (when (setq args (magit-commit-assert args (not override-date)))
+    (magit-commit-amend-assert)
     (let ((process-environment process-environment))
       (unless override-date
         (push (magit-rev-format "GIT_COMMITTER_DATE=%cD") process-environment))
@@ -200,6 +202,7 @@ and ignore the option.
                      (if current-prefix-arg
                          (not magit-commit-reword-override-date)
                        magit-commit-reword-override-date)))
+  (magit-commit-amend-assert)
   (let ((process-environment process-environment))
     (unless override-date
       (push (magit-rev-format "GIT_COMMITTER_DATE=%cD") process-environment))
@@ -263,7 +266,7 @@ depending on the value of option `magit-commit-squash-confirm'."
           (?s "[s]elect other"            (setq commit nil))
           (?a "[a]bort"                   (user-error "Quit")))))
     (when commit
-      (setq commit (magit-rebase-interactive-assert commit)))
+      (setq commit (magit-rebase-interactive-assert commit t)))
     (if (and commit
              (or confirmed
                  (not (or rebase
@@ -287,15 +290,25 @@ depending on the value of option `magit-commit-squash-confirm'."
           (when (and (magit-commit-squash-internal option commit args
                                                    rebase edit t)
                      rebase)
+            (magit-commit-amend-assert commit)
             (magit-rebase-interactive-1 commit
                 (list "--autosquash" "--autostash")
-              "" "true" t)))
+              "" "true" nil t)))
         (format "Type %%p on a commit to %s into it,"
                 (substring option 2))
         nil nil (list "--graph"))
       (when magit-commit-show-diff
         (let ((magit-display-buffer-noselect t))
           (apply #'magit-diff-staged nil (magit-diff-arguments)))))))
+
+(defun magit-commit-amend-assert (&optional commit)
+  (--when-let (magit-list-publishing-branches commit)
+    (let ((m1 "This commit has already been published to ")
+          (m2 ".\nDo you really want to modify it"))
+      (magit-confirm 'amend-published
+        (concat m1 "%s" m2)
+        (concat m1 "%i public branches" m2)
+        nil it))))
 
 (defun magit-commit-assert (args &optional strict)
   (cond

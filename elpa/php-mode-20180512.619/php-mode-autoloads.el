@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "php-mode" "php-mode.el" (23263 11568 0 0))
+;;;### (autoloads nil "php-mode" "php-mode.el" (23289 36131 0 0))
 ;;; Generated autoloads from php-mode.el
 
 (let ((loads (get 'php 'custom-loads))) (if (member '"php-mode" loads) nil (put 'php 'custom-loads (cons '"php-mode" loads))))
@@ -40,11 +40,11 @@ Insert current namespace if cursor in namespace context.
 
 ;;;***
 
-;;;### (autoloads nil "php-project" "php-project.el" (23263 11568
+;;;### (autoloads nil "php-project" "php-project.el" (23289 36130
 ;;;;;;  0 0))
 ;;; Generated autoloads from php-project.el
 
-(defvar php-project-root 'auto "\
+(defvar-local php-project-root 'auto "\
 Method of searching for the top level directory.
 
 `auto' (default)
@@ -58,40 +58,30 @@ STRING
       If the string is an actual directory path, it is set as the absolute path
       of the root directory, not the marker.")
 
-(make-variable-buffer-local 'php-project-root)
-
 (put 'php-project-root 'safe-local-variable #'(lambda (v) (or (stringp v) (assq v php-project-available-root-files))))
 
-(defvar php-project-bootstrap-scripts nil "\
+(defvar-local php-project-bootstrap-scripts nil "\
 List of path to bootstrap php script file.
 
 The ideal bootstrap file is silent, it only includes dependent files,
 defines constants, and sets the class loaders.")
 
-(make-variable-buffer-local 'php-project-bootstrap-scripts)
-
 (put 'php-project-bootstrap-scripts 'safe-local-variable #'php-project--eval-bootstrap-scripts)
 
-(defvar php-project-php-executable nil "\
+(defvar-local php-project-php-executable nil "\
 Path to php executable file.")
-
-(make-variable-buffer-local 'php-project-php-executable)
 
 (put 'php-project-php-executable 'safe-local-variable #'(lambda (v) (and (stringp v) (file-executable-p v))))
 
-(defvar php-project-phan-executable nil "\
+(defvar-local php-project-phan-executable nil "\
 Path to phan executable file.")
-
-(make-variable-buffer-local 'php-project-phan-executable)
 
 (put 'php-project-phan-executable 'safe-local-variable #'php-project--eval-bootstrap-scripts)
 
-(defvar php-project-coding-style nil "\
+(defvar-local php-project-coding-style nil "\
 Symbol value of the coding style of the project that PHP major mode refers to.
 
 Typically it is `pear', `drupal', `wordpress', `symfony2' and `psr2'.")
-
-(make-variable-buffer-local 'php-project-coding-style)
 
 (put 'php-project-coding-style 'safe-local-variable #'symbolp)
 
@@ -112,7 +102,7 @@ Return path to current PHP project.
 ;;;;;;  "php-exif.el" "php-ext.el" "php-filesystem.el" "php-gd.el"
 ;;;;;;  "php-math.el" "php-mode-pkg.el" "php-pcre.el" "php-regex.el"
 ;;;;;;  "php-simplexml.el" "php-strings.el" "php-var.el" "php-xmlparser.el"
-;;;;;;  "php-xmlreader.el") (23263 11568 0 0))
+;;;;;;  "php-xmlreader.el") (23289 36131 0 0))
 
 ;;;***
 

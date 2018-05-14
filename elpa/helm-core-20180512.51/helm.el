@@ -1452,11 +1452,13 @@ e.g (helm-log-error \"Error %s: %s\" (car err) (cdr err))."
       (cl-pushnew msg helm-issued-errors :test 'equal))))
 
 (defun helm-log-save-maybe ()
-  "Save log buffer if `helm-debug-root-directory' is set to a valid directory.
+  "Save log buffer when `helm-debug-root-directory' is non nil.
+Create `helm-debug-root-directory' directory if necessary.
 Messages are logged to a file named with todays date and time in this directory."
   (when (and (stringp helm-debug-root-directory)
-             (file-directory-p helm-debug-root-directory)
-             helm-debug)
+             (not (file-directory-p helm-debug-root-directory)))
+    (make-directory helm-debug-root-directory t))
+  (when helm-debug
     (let ((logdir (expand-file-name (concat "helm-debug-"
                                             (format-time-string "%Y%m%d"))
                                     helm-debug-root-directory)))
@@ -1749,12 +1751,18 @@ with its properties."
                   ;; It is needed to return properties of DISP in some case,
                   ;; e.g for `helm-confirm-and-exit-minibuffer',
                   ;; so use `buffer-substring' here when 'withprop is specified.
-                  (let ((disp (funcall
-                               disp-fn
-                               (overlay-start helm-selection-overlay)
-                               (1- (overlay-end helm-selection-overlay))))
-                        (src (or source (helm-get-current-source))))
-                    (helm-aif (and (not force-display-part)
+                  (let* ((beg  (overlay-start helm-selection-overlay))
+                         (end  (overlay-end helm-selection-overlay))
+                         ;; If there is no selection at point, the
+                         ;; overlay is at its initial pos, (point-min)
+                         ;; (point-min), that's mean the helm-buffer
+                         ;; is not empty but have no selection yet,
+                         ;; this happen with grep sentinel sending an
+                         ;; error message in helm-buffer when no matches.
+                         (disp (unless (= beg end) (funcall disp-fn beg (1- end))))
+                         (src (or source (helm-get-current-source))))
+                    (helm-aif (and src disp
+                                   (not force-display-part)
                                    (assoc-default 'display-to-real src))
                         (helm-funcall-with-source source it disp)
                       disp)))))
@@ -6113,9 +6121,12 @@ Meaning of prefix ARG is the same as in `reposition-window'."
 
 (defun helm-make-visible-mark (&optional src selection)
   (let* ((source (or src  (helm-get-current-source)))
-         (sel    (or selection (helm-get-selection nil nil source)))
+         (sel    (or selection (helm-get-selection
+                                nil (helm-attr 'marked-with-props source)
+                                source)))
          (selection-end (if (helm-pos-multiline-p)
-                            (or (helm-get-next-candidate-separator-pos)  ; Stays within source
+                            ;; Stays within source
+                            (or (helm-get-next-candidate-separator-pos)
                                 (helm-get-next-header-pos)
                                 (point-max))
                           ;; Not multiline
@@ -6313,7 +6324,10 @@ sources."
                     finally return (or cands
                                        (append
                                         (helm--compute-marked
-                                         (helm-get-selection nil nil current-src)
+                                         (helm-get-selection
+                                          nil (helm-attr 'marked-with-props
+                                                         current-src)
+                                          current-src)
                                          current-src
                                          with-wildcard)
                                         cands)))))

@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20180324.2226
+;; Package-Version: 20180507.129
 ;; Keywords: project, convenience
 ;; Version: 0.15.0-cvs
 ;; Package-Requires: ((emacs "24.3") (pkg-info "0.4"))
@@ -299,6 +299,7 @@ If variable `projectile-project-name' is non-nil, this function will not be used
   '("rebar.config"       ; Rebar project file
     "project.clj"        ; Leiningen project file
     "build.boot"         ; Boot-clj project file
+    "deps.edn"           ; Clojure CLI project file
     "SConstruct"         ; Scons project file
     "pom.xml"            ; Maven project file
     "build.sbt"          ; SBT project file
@@ -2432,6 +2433,8 @@ TEST-DIR which specifies the path to the tests relative to the project root."
 (projectile-register-project-type 'boot-clj '("build.boot")
                                   :compile "boot aot"
                                   :test "boot test"
+                                  :test-suffix "_test")
+(projectile-register-project-type 'clojure-cli '("deps.edn")
                                   :test-suffix "_test")
 ;; Ruby
 (projectile-register-project-type 'ruby-rspec '("Gemfile" "lib" "spec")

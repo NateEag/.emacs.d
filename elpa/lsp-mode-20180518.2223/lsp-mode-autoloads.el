@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (23289 36114
+;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (23296 4707
 ;;;;;;  0 0))
 ;;; Generated autoloads from lsp-methods.el
 
@@ -59,6 +59,11 @@ before saving a document.")
 
 (custom-autoload 'lsp-before-save-edits "lsp-methods" t)
 
+(defvar lsp-hover-text-function 'lsp--text-document-hover-string "\
+The LSP method to use to display text on hover.")
+
+(custom-autoload 'lsp-hover-text-function "lsp-methods" t)
+
 (defface lsp-face-highlight-textual '((((background dark)) :background "saddle brown") (((background light)) :background "yellow")) "\
 Face used for textual occurances of symbols." :group (quote lsp-faces))
 
@@ -70,7 +75,7 @@ Face used for highlighting symbols being written to." :group (quote lsp-faces))
 
 ;;;***
 
-;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23289 36114 0 0))
+;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23296 4707 0 0))
 ;;; Generated autoloads from lsp-mode.el
 
 (autoload 'lsp-mode "lsp-mode" "\
@@ -81,8 +86,8 @@ Face used for highlighting symbols being written to." :group (quote lsp-faces))
 ;;;***
 
 ;;;### (autoloads nil nil ("lsp-common.el" "lsp-flycheck.el" "lsp-imenu.el"
-;;;;;;  "lsp-io.el" "lsp-mode-pkg.el" "lsp-notifications.el") (23289
-;;;;;;  36114 0 0))
+;;;;;;  "lsp-io.el" "lsp-mode-pkg.el" "lsp-notifications.el") (23296
+;;;;;;  4707 0 0))
 
 ;;;***
 

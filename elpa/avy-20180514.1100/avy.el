@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/avy
-;; Package-Version: 20180415.1259
+;; Package-Version: 20180514.1100
 ;; Version: 0.4.0
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: point, location
@@ -692,8 +692,8 @@ Set `avy-style' according to COMMMAND as well."
 (defun avy-action-zap-to-char (pt)
   "Kill from point up to PT."
   (if (> pt (point))
-      (kill-region (point) (1+ pt))
-    (kill-region pt (1+ (point)))))
+      (kill-region (point) pt)
+    (kill-region pt (point))))
 
 (defun avy-action-teleport (pt)
   "Kill sexp starting on PT and yank into the current location."

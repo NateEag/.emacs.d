@@ -521,6 +521,36 @@ set to `other'."
   :group 'helm
   :type 'boolean)
 
+(defcustom helm-display-buffer-width 72
+  "Frame width when displaying helm-buffer in own frame."
+  :group 'helm
+  :type 'integer)
+
+(defcustom helm-display-buffer-height 20
+  "Frame height when displaying helm-buffer in own frame."
+  :group 'helm
+  :type 'integer)
+
+(defcustom helm-default-display-buffer-functions nil
+  "Action functions to pass to `display-buffer'.
+See (info \"(elisp) Display Action Functions\").
+
+Have no effect when `helm-always-two-windows' is non-nil and may
+override other settings like `helm-split-window-inside-p'."
+  :group 'helm
+  :type '(repeat symbol))
+
+(defcustom helm-default-display-buffer-alist nil
+  "Additional alist to pass to `display-buffer' action.
+See (info \"(elisp) Display Action Functions\").
+
+Have no effect when `helm-always-two-windows' is non-nil and may
+override other settings like `helm-split-window-inside-p'.
+Note that window-height and window-width have to be configured in
+`helm-display-buffer-height' and `helm-display-buffer-width'."
+  :group 'helm
+  :type '(alist :key-type symbol :value-type sexp))
+
 (defcustom helm-sources-using-default-as-input '(helm-source-imenu
                                                  helm-source-imenu-all
                                                  helm-source-info-elisp
@@ -715,16 +745,6 @@ so it have only effect when `helm-always-two-windows' is non-nil."
   :type 'float
   :group 'helm)
 
-(defcustom helm-display-buffer-width 72
-  "Frame width when displaying helm-buffer in own frame."
-  :group 'helm
-  :type 'integer)
-
-(defcustom helm-display-buffer-height 20
-  "Frame height when displaying helm-buffer in own frame."
-  :group 'helm
-  :type 'integer)
-
 (defcustom helm-display-buffer-reuse-frame nil
   "When non nil helm frame is not deleted and reused in next sessions.
 
@@ -757,7 +777,7 @@ This option have no effect with emacs versions lower than 26."
   :type 'boolean)
 
 (defcustom helm-default-prompt-display-function
-  #'helm--set-default-prompt-display
+  #'helm-set-default-prompt-display
   "The function to use to set face of fake cursor in header-line."
   :group 'helm
   :type 'function)
@@ -2763,8 +2783,10 @@ value of `helm-full-frame' or `helm-split-window-default-side'."
                  (not helm-split-window-inside-p))
         (delete-other-windows))
       (display-buffer
-       buffer `(nil . ((window-height . ,helm-display-buffer-default-height)
-                       (window-width  . ,helm-display-buffer-default-width))))
+       buffer `(,helm-default-display-buffer-functions
+                . ,(append helm-default-display-buffer-alist
+                           `((window-height . ,helm-display-buffer-default-height)
+                             (window-width  . ,helm-display-buffer-default-width)))))
       (helm-log-run-hook 'helm-window-configuration-hook))))
 
 (defun helm-display-buffer-in-own-frame (buffer &optional resume)
@@ -4502,6 +4524,12 @@ Coerce source with coerce function."
       (cdar action)
     action))
 
+(defun helm--show-action-window-other-window-p ()
+  (and helm-show-action-window-other-window
+       (or helm-always-two-windows
+           helm--buffer-in-new-frame-p)
+       (eq helm-split-window-state 'vertical)))
+
 (defun helm-select-action ()
   "Select an action for the currently selected candidate.
 If action buffer is selected, back to the helm buffer."
@@ -4515,9 +4543,7 @@ If action buffer is selected, back to the helm buffer."
             (helm-acond ((get-buffer-window helm-action-buffer 'visible)
                          (set-window-buffer it helm-buffer)
                          (helm--set-action-prompt 'restore)
-                         (when (and helm-show-action-window-other-window
-                                    helm-always-two-windows
-                                    (eq helm-split-window-state 'vertical))
+                         (when (helm--show-action-window-other-window-p)
                            (delete-window it))
                          (kill-buffer helm-action-buffer)
                          (setq helm-saved-selection nil)
@@ -4558,9 +4584,7 @@ If action buffer is selected, back to the helm buffer."
     (erase-buffer)
     (buffer-disable-undo)
     (setq cursor-type nil)
-    (set-window-buffer (if (and helm-show-action-window-other-window
-                                helm-always-two-windows
-                                (eq helm-split-window-state 'vertical))
+    (set-window-buffer (if (helm--show-action-window-other-window-p)
                            (split-window (get-buffer-window helm-buffer)
                                          nil helm-show-action-window-other-window)
                            (get-buffer-window helm-buffer))
@@ -4729,7 +4753,7 @@ mode and header lines."
         (funcall helm-default-prompt-display-function pos)
         (when update (force-mode-line-update))))))
 
-(defun helm--set-default-prompt-display (pos)
+(defun helm-set-default-prompt-display (pos)
   (put-text-property
    ;; Increment pos to handle the space before prompt (i.e `pref').
    (+ 1 pos) (+ 2 pos)

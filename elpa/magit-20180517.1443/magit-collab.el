@@ -139,9 +139,9 @@ exist, then raise an error."
                 host)))))
 
 (defun magit--github-remote-p (remote)
-  (or (--when-let (magit-get "remote" remote "pushurl")
+  (or (--when-let (magit-git-string "remote" "get-url" "--push" remote)
         (magit--github-url-p it))
-      (--when-let (magit-get "remote" remote "url")
+      (--when-let (magit-git-string "remote" "get-url" "--all" remote)
         (magit--github-url-p it))))
 
 (defun magit--github-url-equal (r1 r2)
@@ -152,6 +152,22 @@ exist, then raise an error."
               (n2 (and (string-match magit--github-url-regexp r2)
                        (match-string 2 r2))))
           (and n1 n2 (equal n1 n2))))))
+
+(defun magit--pullreq-from-upstream-p (pr)
+  (let-alist pr
+    (equal .head.repo.full_name
+           .base.repo.full_name)))
+
+(defun magit--pullreq-branch (pr &optional assert-new)
+  (let-alist pr
+    (let ((branch .head.ref))
+      (when (and (not (magit--pullreq-from-upstream-p pr))
+                 (or (not .maintainer_can_modify)
+                     (magit-branch-p branch)))
+        (setq branch (format "pr-%s" .number)))
+      (when (and assert-new (magit-branch-p branch))
+        (user-error "Branch `%s' already exists" branch))
+      branch)))
 
 (provide 'magit-collab)
 ;;; magit-collab.el ends here

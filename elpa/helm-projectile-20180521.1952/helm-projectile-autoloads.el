@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "helm-projectile" "helm-projectile.el" (23263
-;;;;;;  11533 0 0))
+;;;### (autoloads nil "helm-projectile" "helm-projectile.el" (23300
+;;;;;;  6313 0 0))
 ;;; Generated autoloads from helm-projectile.el
 
 (defvar helm-projectile-fuzzy-match t "\
@@ -50,6 +50,11 @@ Helm version of projectile-ack.
 Helm version of `projectile-ag'.
 
 \(fn &optional OPTIONS)" t nil)
+
+(autoload 'helm-projectile-rg "helm-projectile" "\
+Projectile version of `helm-rg'.
+
+\(fn)" t nil)
 
 (autoload 'helm-projectile-toggle "helm-projectile" "\
 Toggle Helm version of Projectile commands.

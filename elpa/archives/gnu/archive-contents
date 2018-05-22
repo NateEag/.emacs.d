@@ -375,14 +375,14 @@
 	     ((:url . "http://elpa.gnu.org/packages/ediprolog.html")
 	      (:keywords "languages" "processes"))])
  (eglot .
-	[(0 3)
+	[(0 4)
 	 ((emacs
 	   (26 1)))
 	 "Client for Language Server Protocol (LSP) servers" tar
 	 ((:keywords "convenience" "languages")
 	  (:url . "https://github.com/joaotavora/eglot"))])
  (el-search .
-	    [(1 6 8)
+	    [(1 6 9)
 	     ((emacs
 	       (25))
 	      (stream
@@ -476,7 +476,7 @@
 	  ((:url . "https://github.com/leoliu/ggtags")
 	   (:keywords "tools" "convenience"))])
  (gited .
-	[(0 5 1)
+	[(0 5 3)
 	 ((emacs
 	   (24 4))
 	  (cl-lib
@@ -902,7 +902,7 @@
 	 ((:url . "http://www.dr-qubit.org/emacs.php")
 	  (:keywords "extensions" "data structures" "queue"))])
  (rainbow-mode .
-	       [(1 0)
+	       [(1 0 1)
 		nil "Colorize color names in buffers" single
 		((:url . "http://elpa.gnu.org/packages/rainbow-mode.html")
 		 (:keywords "faces"))])

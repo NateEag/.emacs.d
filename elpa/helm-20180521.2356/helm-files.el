@@ -489,7 +489,11 @@ Don't set it directly, use instead `helm-ff-auto-update-initial-value'.")
 (defvar helm-ff-url-regexp
   "\\`\\(news\\(post\\)?:\\|nntp:\\|mailto:\\|file:\\|\\(ftp\\|https?\\|telnet\\|gopher\\|www\\|wais\\):/?/?\\).*"
   "Same as `ffap-url-regexp' but match earlier possible url.")
-(defvar helm-tramp-file-name-regexp "\\`/\\([^[/:]+\\|[^/]+]\\):")
+;; helm-tramp-file-name-regexp is based on old version of
+;; tramp-file-name-regexp i.e. "\\`/\\([^[/:]+\\|[^/]+]\\):" but it
+;; seems it is wrong and a simpler regexp is enough, let's try it and
+;; watch out!
+(defvar helm-tramp-file-name-regexp "\\`/\\([^/:|]+\\):")
 (defvar helm-marked-buffer-name "*helm marked*")
 (defvar helm-ff--auto-update-state nil)
 (defvar helm-ff--deleting-char-backward nil)
@@ -2060,11 +2064,22 @@ With a prefix arg toggle dired buffer to wdired mode."
 (defun helm-ff--get-host-from-tramp-invalid-fname (fname)
   "Extract hostname from an incomplete tramp file name.
 Return nil on valid file name remote or not."
-  (let* ((str (helm-basename fname))
-         (split (split-string str ":" t))
-         (meth (car (member (car split)
-                            (helm-ff--get-tramp-methods)))))
-    (when meth (car (last split)))))
+  ;; Check first if whole file is remote (file-remote-p is inefficient
+  ;; in this case) otherwise we are matching e.g. /home/you/ssh:foo/
+  ;; which is not a remote name.
+  ;; FIXME this will not work with a directory or a file named like
+  ;; "ssh:foo" and located at root (/) but it seems there is no real
+  ;; solution apart disabling tramp-mode when a file/dir located at /
+  ;; is matching helm-tramp-file-name-regexp; This would prevent usage
+  ;; of tramp if one have such a directory at / (who would want to
+  ;; have such a dir at / ???)  See emacs-bug#31489.
+  (when (string-match-p helm-tramp-file-name-regexp fname)
+    (let* ((bn    (helm-basename fname))
+           (bd    (replace-regexp-in-string bn "" fname))
+           (split (split-string bn ":" t))
+           (meth  (car (member (car split)
+                               (helm-ff--get-tramp-methods)))))
+      (and meth (string= bd "/") (car (last split))))))
 
 (cl-defun helm-ff--tramp-hostnames (&optional (pattern helm-pattern))
   "Get a list of hosts for tramp method found in `helm-pattern'.
@@ -2077,15 +2092,15 @@ purpose."
                                            (helm-ff--get-host-from-tramp-invalid-fname pattern))
                                 (concat (car mh-method) method ":"
                                         (car (split-string it "|" t)))))
-           (all-methods (helm-ff--get-tramp-methods)))
+           (all-methods (helm-ff--get-tramp-methods))
+           (comps (cl-loop for (f . h) in (tramp-get-completion-function method)
+                           append (cl-loop for e in (funcall f (car h))
+                                           for host = (and (consp e) (cadr e))
+                                           when (and host (not (member host all-methods)))
+                                           collect (concat (or (car mh-method) "/")
+                                                           method ":" host)))))
       (helm-fast-remove-dups
-       (cons current-mh-host
-             (cl-loop for (f . h) in (tramp-get-completion-function method)
-                      append (cl-loop for e in (funcall f (car h))
-                                      for host = (and (consp e) (cadr e))
-                                      when (and host (not (member host all-methods)))
-                                      collect (concat (or (car mh-method) "/")
-                                                      method ":" host))))
+       (delq nil (cons current-mh-host comps))
        :test 'equal))))
 
 (defun helm-ff-before-action-hook-fn ()

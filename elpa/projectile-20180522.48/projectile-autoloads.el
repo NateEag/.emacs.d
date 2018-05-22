@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "projectile" "projectile.el" (23289 36139 0
+;;;### (autoloads nil "projectile" "projectile.el" (23300 6339 0
 ;;;;;;  0))
 ;;; Generated autoloads from projectile.el
 
@@ -271,6 +271,13 @@ With an optional prefix argument ARG SEARCH-TERM is interpreted as a
 regular expression.
 
 \(fn SEARCH-TERM &optional ARG)" t nil)
+
+(autoload 'projectile-ripgrep "projectile" "\
+Run a Ripgrep search with `SEARCH-TERM' at current project root.
+
+SEARCH-TERM is a regexp.
+
+\(fn SEARCH-TERM)" t nil)
 
 (autoload 'projectile-regenerate-tags "projectile" "\
 Regenerate the project's [e|g]tags.

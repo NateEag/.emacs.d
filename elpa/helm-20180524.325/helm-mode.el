@@ -842,7 +842,16 @@ See documentation of `completing-read' and `all-completions' for details."
                    collect h))
          ;; Disable hack that could be used before `completing-read'.
          ;; i.e (push ?\t unread-command-events).
-         unread-command-events)
+         unread-command-events
+         (default-handler
+          ;; Typically when COLLECTION is a function, we can assume
+          ;; the intention is completing dynamically according to
+          ;; input; If one want to use in-buffer handler for specific
+          ;; usage with a function as collection he can specify it in
+          ;; helm-completing-read-handlers-alist.
+          (if (functionp collection)
+              #'helm-completing-read-sync-default-handler
+            #'helm-completing-read-default-handler)))
     (when (eq def-com 'ido) (setq def-com 'ido-completing-read))
     (unless (or (not entry) def-com)
       ;; An entry in *read-handlers-alist exists but have
@@ -877,13 +886,13 @@ See documentation of `completing-read' and `all-completions' for details."
                 ;; If we are here `helm-mode' is now disabled.
                 def-com
                 (apply def-com def-args))
-               (;; Use by default a cands-in-buffer handler which
-                ;; should work everywhere, it is much faster. 
+               (;; Use by default a in-buffer handler unless
+                ;; COLLECTION is a function. 
                 t
-                (helm-completing-read-default-handler
-                 prompt collection predicate require-match
-                 initial-input hist def inherit-input-method
-                 str-command buf-name)))
+                (funcall default-handler
+                         prompt collection predicate require-match
+                         initial-input hist def inherit-input-method
+                         str-command buf-name)))
       (helm-mode 1)
       ;; When exiting minibuffer, `this-command' is set to
       ;; `helm-exit-minibuffer', which is unwanted when starting

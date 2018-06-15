@@ -606,17 +606,24 @@ customize the resulting theme."
      `(column-enforce-face ((,class (:background unspecified :foreground ,magenta
                                                  :inverse-video unspecified))))
 ;;;;; company-mode
-     `(company-template-field ((,class (:background ,yellow :foreground ,base02))))
-     `(company-tooltip ((,class (:background ,base02 :foreground ,cyan))))
-     `(company-tooltip-selection ((,class (:background ,cyan-lc :foreground ,cyan-hc))))
-     `(company-tooltip-mouse ((,class (:background ,cyan-hc :foreground ,cyan-lc))))
-     `(company-tooltip-common ((,class (:foreground ,base1 :underline t))))
-     `(company-tooltip-common-selection ((,class (:foreground ,base1 :underline t))))
-     `(company-tooltip-annotation ((,class (:foreground ,base1 :background ,base02))))
-     `(company-scrollbar-fg ((,class (:foreground ,base03 :background ,base0))))
+     `(company-echo ((,class nil)))
+     `(company-echo-common ((,class (:background ,red))))
+     `(company-preview ((,class (:background ,base02 :foreground ,base1))))
+     `(company-preview-common ((,class (:foreground ,base1))))
+     `(company-preview-search ((,class (:foreground ,magenta))))
      `(company-scrollbar-bg ((,class (:background ,base02 :foreground ,cyan))))
-     `(company-preview ((,class (:background ,base02 :foreground ,cyan))))
-     `(company-preview-common ((,class (:foreground ,base1 :underline t))))
+     `(company-scrollbar-fg ((,class (:foreground ,base03 :background ,base0))))
+     `(company-template-field ((,class (:background ,yellow :foreground ,base02))))
+     `(company-tooltip ((,class (:foreground ,base1 :background ,base02))))
+     `(company-tooltip-annotation ((,class (:foreground ,cyan))))
+     `(company-tooltip-annotation-selection ((,class (:foreground ,cyan))))
+     `(company-tooltip-common ((,class (:foreground ,base0))))
+     `(company-tooltip-common-selection ((,class (:weight bold))))
+     `(company-tooltip-mouse ((,class (:background ,cyan-hc :foreground ,cyan-lc))))
+     `(company-tooltip-search ((,class (:foreground ,magenta))))
+     `(company-tooltip-search-selection ((,class (:foreground ,magenta :weight bold))))
+     `(company-tooltip-selection ((,class (:weight bold))))
+
 ;;;;; cperl-mode
      `(cperl-array-face ((,class (:background unspecified :foreground ,blue))))
      `(cperl-hash-face ((,class (:background unspecified :foreground ,blue))))
@@ -1361,6 +1368,8 @@ customize the resulting theme."
 ;;;;; linum-mode
      `(linum ((,class (:weight normal :underline nil :foreground ,s-fringe-fg :background ,s-fringe-bg))))
      `(linum-relative-current-face ((,class (:inherit linum))))
+;;;;; display-line-number-mode
+     `(line-number ((,class (:weight normal :underline nil :foreground ,s-fringe-fg :background ,s-fringe-bg))))
 ;;;;; lsp-ui
      `(lsp-ui-sideline-code-action ((,class (:foreground ,yellow :weight normal))))
 ;;;;; lusty-explorer
@@ -1668,7 +1677,9 @@ customize the resulting theme."
                           :foreground ,blue :background ,base03))))
      `(org-agenda-done ((,class (:foreground ,base01 :slant italic))))
      `(org-archived ((,class (:foreground ,base01 :weight normal))))
-     `(org-block ((,class (:foreground ,base01))))
+     `(org-block ((,class nil)))
+     `(org-block-begin-line ((,class (:inherit org-meta-line :underline t))))
+     `(org-block-end-line ((,class (:inherit org-meta-line :overline t))))
      `(org-checkbox ((,class (:background ,base03 :foreground ,base0
                                           :box (:line-width 1 :style released-button)))))
      `(org-code ((,class (:foreground ,base01))))

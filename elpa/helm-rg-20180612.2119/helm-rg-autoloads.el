@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "helm-rg" "helm-rg.el" (23289 36098 0 0))
+;;;### (autoloads nil "helm-rg" "helm-rg.el" (23332 10320 0 0))
 ;;; Generated autoloads from helm-rg.el
 
 (autoload 'helm-rg "helm-rg" "\
@@ -17,11 +17,13 @@ If PATHS is non-nil, ripgrep will search only those paths, relative to the
 process's cwd. Otherwise, the process's cwd will be searched.
 
 Note that ripgrep respects glob patterns from .gitignore, .rgignore, and .ignore
-files. This composes with the glob defined by `helm-rg-default-glob-string', or
-overridden with `helm-rg--set-glob', which is defined in `helm-rg-map'.
+files, excluding files matching those patterns. This composes with the glob
+defined by `helm-rg-default-glob-string', which only finds files matching the
+glob, and can be overridden with `helm-rg--set-glob', which is defined in
+`helm-rg-map'.
 
-The ripgrep command's help output can be printed into its own buffer for reference
-with the interactive command `helm-rg-display-help'.
+The ripgrep command's help output can be printed into its own buffer for
+reference with the interactive command `helm-rg-display-help'.
 
 \\{helm-rg-map}
 

@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/avy
-;; Package-Version: 20180514.1100
+;; Package-Version: 20180615.801
 ;; Version: 0.4.0
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: point, location
@@ -726,6 +726,29 @@ Set `avy-style' according to COMMMAND as well."
          (when (looking-at-p "\\b")
            (ispell-word)))))))
 
+(defun avy--process-1 (candidates overlay-fn)
+  (let ((len (length candidates)))
+    (cond ((= len 0)
+           nil)
+          ((= len 1)
+           (car candidates))
+          (t
+           (unwind-protect
+                (progn
+                  (avy--make-backgrounds
+                   (avy-window-list))
+                  (cond ((eq avy-style 'de-bruijn)
+                         (avy-read-de-bruijn
+                          candidates avy-keys))
+                        ((eq avy-style 'words)
+                         (avy-read-words
+                          candidates avy-words))
+                        (t
+                         (avy-read (avy-tree candidates avy-keys)
+                                   overlay-fn
+                                   #'avy--remove-leading-chars))))
+             (avy--done))))))
+
 (defun avy--process (candidates overlay-fn)
   "Select one of CANDIDATES using `avy-read'.
 Use OVERLAY-FN to visualize the decision overlay."
@@ -734,47 +757,31 @@ Use OVERLAY-FN to visualize the decision overlay."
     (setq candidates
           (mapcar (lambda (x) (cons x (selected-window)))
                   candidates)))
-  (let ((len (length candidates))
-        (cands (copy-sequence candidates))
-        res)
-    (if (= len 0)
-        (message "zero candidates")
-      (if (= len 1)
-          (setq res (car candidates))
-        (unwind-protect
-             (progn
-               (avy--make-backgrounds
-                (avy-window-list))
-               (setq res (cond ((eq avy-style 'de-bruijn)
-                                (avy-read-de-bruijn
-                                 candidates avy-keys))
-                               ((eq avy-style 'words)
-                                (avy-read-words
-                                 candidates avy-words))
-                               (t
-                                (avy-read (avy-tree candidates avy-keys)
-                                          overlay-fn
-                                          #'avy--remove-leading-chars)))))
-          (avy--done)))
-      (cond ((eq res 'restart)
-             (avy--process cands overlay-fn))
-            ;; ignore exit from `avy-handler-function'
-            ((eq res 'exit))
-            (t
-             (avy-push-mark)
-             (when (and (consp res)
-                        (windowp (cdr res)))
-               (let* ((window (cdr res))
-                      (frame (window-frame window)))
-                 (unless (equal frame (selected-frame))
-                   (select-frame-set-input-focus frame))
-                 (select-window window))
-               (setq res (car res)))
+  (let ((original-cands (copy-sequence candidates))
+        (res (avy--process-1 candidates overlay-fn)))
+    (cond
+      ((null res)
+       (message "zero candidates")
+       t)
+      ((eq res 'restart)
+       (avy--process original-cands overlay-fn))
+      ;; ignore exit from `avy-handler-function'
+      ((eq res 'exit))
+      (t
+       (avy-push-mark)
+       (when (and (consp res)
+                  (windowp (cdr res)))
+         (let* ((window (cdr res))
+                (frame (window-frame window)))
+           (unless (equal frame (selected-frame))
+             (select-frame-set-input-focus frame))
+           (select-window window))
+         (setq res (car res)))
 
-             (funcall (or avy-action 'avy-action-goto)
-                      (if (consp res)
-                          (car res)
-                        res)))))))
+       (funcall (or avy-action 'avy-action-goto)
+                (if (consp res)
+                    (car res)
+                  res))))))
 
 (defvar avy--overlays-back nil
   "Hold overlays for when `avy-background' is t.")
@@ -1344,12 +1351,12 @@ This variable is used by `avy-goto-subword-0' and `avy-goto-subword-1'."
 ;;;###autoload
 (defun avy-goto-subword-0 (&optional arg predicate beg end)
   "Jump to a word or subword start.
-
 The window scope is determined by `avy-all-windows' (ARG negates it).
-BEG and END narrow the scope where candidates are searched.
 
 When PREDICATE is non-nil it's a function of zero parameters that
-should return true."
+should return true.
+
+BEG and END narrow the scope where candidates are searched."
   (interactive "P")
   (require 'subword)
   (avy-with avy-goto-subword-0
@@ -1406,11 +1413,12 @@ Which one depends on variable `subword-mode'."
 
 (defvar visual-line-mode)
 
-(defun avy--line-cands (&optional arg beg end)
+(defun avy--line-cands (&optional arg beg end bottom-up)
   "Get candidates for selecting a line.
 The window scope is determined by `avy-all-windows'.
 When ARG is non-nil, do the opposite of `avy-all-windows'.
-BEG and END narrow the scope where candidates are searched."
+BEG and END narrow the scope where candidates are searched.
+When BOTTOM-UP is non-nil, display avy candidates from top to bottom"
   (let (candidates)
     (avy-dowindows arg
       (let ((ws (or beg (window-start))))
@@ -1431,7 +1439,9 @@ BEG and END narrow the scope where candidates are searched."
                     (setq temporary-goal-column 0)
                     (line-move-visual 1 t))
                 (forward-line 1)))))))
-    (nreverse candidates)))
+    (if bottom-up
+        candidates
+      (nreverse candidates))))
 
 (defun avy--linum-strings ()
   "Get strings for `avy-linum-mode'."
@@ -1516,14 +1526,15 @@ BEG and END narrow the scope where candidates are searched."
                       (frame-char-width)))))
     (set-window-margins win width (cdr (window-margins win)))))
 
-(defun avy--line (&optional arg beg end)
+(defun avy--line (&optional arg beg end bottom-up)
   "Select a line.
 The window scope is determined by `avy-all-windows'.
 When ARG is non-nil, do the opposite of `avy-all-windows'.
-BEG and END narrow the scope where candidates are searched."
+BEG and END narrow the scope where candidates are searched.
+When BOTTOM-UP is non-nil, display avy candidates from top to bottom"
   (let ((avy-action #'identity))
     (avy--process
-     (avy--line-cands arg beg end)
+     (avy--line-cands arg beg end bottom-up)
      (if avy-linum-mode
          (progn (message "Goto line:")
                 'ignore)
@@ -1567,23 +1578,35 @@ Otherwise, forward to `goto-line' with ARG."
           (avy-action-goto r))))))
 
 ;;;###autoload
-(defun avy-goto-line-above ()
-  "Goto visible line above the cursor."
+(defun avy-goto-line-above (&optional offset bottom-up)
+  "Goto visible line above the cursor.
+OFFSET changes the distance between the closest key to the cursor and
+the cursor
+When BOTTOM-UP is non-nil, display avy candidates from top to bottom"
   (interactive)
+  (if offset
+    (setq offset (+ 2 (- offset))))
   (let* ((avy-all-windows nil)
          (r (avy--line nil (window-start)
-                       (line-beginning-position))))
+                       (line-beginning-position (or offset 1))
+		       bottom-up)))
     (unless (eq r t)
       (avy-action-goto r))))
 
 ;;;###autoload
-(defun avy-goto-line-below ()
-  "Goto visible line below the cursor."
+(defun avy-goto-line-below (&optional offset bottom-up)
+  "Goto visible line below the cursor.
+OFFSET changes the distance between the closest key to the cursor and
+the cursor
+When BOTTOM-UP is non-nil, display avy candidates from top to bottom"
   (interactive)
+  (if offset
+    (setq offset (+ offset 1)))
   (let* ((avy-all-windows nil)
          (r (avy--line
-             nil (line-beginning-position 2)
-             (window-end (selected-window) t))))
+             nil (line-beginning-position (or offset 2))
+             (window-end (selected-window) t)
+	     bottom-up)))
     (unless (eq r t)
       (avy-action-goto r))))
 

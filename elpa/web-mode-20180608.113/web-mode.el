@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2018 François-Xavier Bois
 
-;; Version: 16.0.11
-;; Package-Version: 20180522.817
+;; Version: 16.0.12
+;; Package-Version: 20180608.113
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Package-Requires: ((emacs "23.1"))
@@ -25,7 +25,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "16.0.11"
+(defconst web-mode-version "16.0.12"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -835,6 +835,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("thymeleaf"        . ())
     ("underscore"       . ("underscore.js"))
     ("velocity"         . ("vtl" "cheetah" "ssp"))
+    ("vue"              . ("vuejs" "vue.js"))
     ("web2py"           . ())
     ("xoops"            . ())
     )
@@ -851,7 +852,8 @@ Must be used in conjunction with web-mode-enable-block-face."
 
 (defvar web-mode-engine-attr-regexps
   '(("angular"   . "ng-")
-    ("thymeleaf" . "th:"))
+    ("thymeleaf" . "th:")
+    ("vue"       . "v-"))
   "Engine custom attributes")
 
 (defvar web-mode-last-enabled-feature nil)
@@ -908,6 +910,7 @@ Must be used in conjunction with web-mode-enable-block-face."
     ("template-toolkit" . "\\.tt.?\\'")
     ("thymeleaf"        . "\\.thtml\\'")
     ("velocity"         . "\\.v\\(sl\\|tl\\|m\\)\\'")
+    ("vue"              . "\\.vue\\'")
     ("xoops"            . "\\.xoops'")
 
     ("spip"             . "spip")
@@ -1143,6 +1146,7 @@ Must be used in conjunction with web-mode-enable-block-face."
                            ("[%#" . " | %]")))
     ("riot"             . (("={ " . " }")))
     ("underscore"       . (("<% " . " %>")))
+    ("vue"              . (("{{ " . " }}")))
     ("web2py"           . (("{{ " . " }}")
                            ("{{=" . "}}")))
     (nil                . (("<!-" . "- | -->")))
@@ -1226,6 +1230,7 @@ Must be used in conjunction with web-mode-enable-block-face."
    '("template-toolkit" . "\\[%.\\|%%#")
    '("underscore"       . "<%")
    '("velocity"         . "#[[:alpha:]#*]\\|$[[:alpha:]!{]")
+   '("vue"              . "{{")
    '("web2py"           . "{{")
    '("xoops"            . "<{[[:alpha:]#$/*\"]")
    )
@@ -1961,6 +1966,12 @@ shouldn't be moved back.)")
      (2 'web-mode-variable-name-face))
    ))
 
+(defvar web-mode-vue-font-lock-keywords
+  (list
+   '("\\_<\\([[:alnum:]_-]+\\)[ ]?(" 1 'web-mode-function-call-face)
+   '("[[:alpha:]_]" 0 'web-mode-variable-name-face)
+   ))
+
 (defvar web-mode-engine-tag-font-lock-keywords
   (list
    '("</?\\([[:alpha:]]+\\(?:Template\\|[:.][[:alpha:]-]+\\)\\)" 1 'web-mode-block-control-face)
@@ -2184,6 +2195,7 @@ shouldn't be moved back.)")
     ("underscore"       . web-mode-underscore-font-lock-keywords)
     ("web2py"           . web-mode-web2py-font-lock-keywords)
     ("velocity"         . web-mode-velocity-font-lock-keywords)
+    ("vue"              . web-mode-vue-font-lock-keywords)
     ("xoops"            . web-mode-smarty-font-lock-keywords)
     )
   "Engines font-lock keywords")
@@ -2935,6 +2947,12 @@ another auto-completion with different ac-sources (e.g. ac-php)")
                 delim-close "}}")
           ) ;angular
 
+         ((string= web-mode-engine "vue")
+          (setq closing-string "}}"
+                delim-open "{{"
+                delim-close "}}")
+          ) ;vue
+
          ((string= web-mode-engine "mason")
           (cond
            ((and (member sub2 '("<%" "</"))
@@ -3682,6 +3700,9 @@ another auto-completion with different ac-sources (e.g. ac-php)")
 
      ((string= web-mode-engine "angular")
       ) ;angular
+
+     ((string= web-mode-engine "vue")
+      ) ;vue
 
      ((string= web-mode-engine "smarty")
       (cond
@@ -7368,7 +7389,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
              (options (plist-get ctx :options))
              (chars (list curr-char prev-char))
              (tmp nil)
-             (is_js (member language '("javascript" "jsx" "ejs"))))
+             (is-js (member language '("javascript" "jsx" "ejs"))))
 
         ;;(message "%S" language)
         ;;(message "curr-char=[%c] prev-char=[%c]\n%S" curr-char prev-char ctx)
@@ -7403,23 +7424,23 @@ another auto-completion with different ac-sources (e.g. ac-php)")
                 )
               ) ;save-excursion
             )
-           ((and is_js
+           ((and is-js
                  (web-mode-is-ql-string pos "Relay\.QL"))
             (setq offset (web-mode-relayql-indentation pos))
             )
-           ((and is_js
+           ((and is-js
                  (web-mode-is-ql-string pos "gql"))
             (setq offset (web-mode-relayql-indentation pos "gql"))
             )
-           ((and is_js
+           ((and is-js
                  (web-mode-is-ql-string pos "graphql"))
             (setq offset (web-mode-relayql-indentation pos "graphql"))
             )
-           ((and is_js
+           ((and is-js
                  (web-mode-is-styled-component-string pos))
             (setq offset (web-mode-styled-component-indentation pos))
             )
-           ((and is_js
+           ((and is-js
                  (web-mode-is-html-string pos))
             (setq offset (web-mode-html-indentation pos))
             )
@@ -7738,7 +7759,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
           (search-backward "case ")
           (setq offset (current-column)))
 
-         ((and is_js
+         ((and is-js
                (member ?\. chars)
                (not (string-match-p "^\\.\\.\\." curr-line)))
           (when debug (message "I320(%S) javascript-calls" pos))
@@ -7773,7 +7794,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
             ) ;let
           )
 
-         ((and is_js
+         ((and is-js
                (member ?\+ chars))
           (when debug (message "I330(%S) javascript-string" pos))
           ;;(message "js-concat")
@@ -7802,7 +7823,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
           ;;(message "ici%S" offset)
           )
 
-         ;; #446, #638, #800, #978
+         ;; #446, #638, #800, #978, #998
          ((and (member language '("javascript" "jsx" "ejs" "php"))
                (or (string-match-p "[&|?:+-]$" prev-line)
                    (string-match-p "^[&|?:+-]" curr-line))
@@ -7811,41 +7832,43 @@ another auto-completion with different ac-sources (e.g. ac-php)")
                (not (and (string= language "php")
                          (string-match-p "\\(else[ ]?:\\|if[ ]?([^)]*)[ ]?:\\)" prev-line)))
                (not (string-match-p "^\\(++\\|--\\)" curr-line))
-               (not (and is_js
+               (not (and is-js
                          (string-match-p "]:" prev-line)))
                (not (and (eq prev-char ?\:)
                          (string-match-p "^\\(case\\|default\\)" prev-line)))
                )
-          (when debug (message "I350(%S) ternary" pos))
-          (cond
-           ((not (funcall (if is_js
-                              'web-mode-javascript-statement-beginning
-                            'web-mode-block-statement-beginning)
-                          pos reg-beg))
-            )
-           ((null (cdr (assoc "lineup-ternary" web-mode-indentation-params)))
-            ;;(message "ici %S %S" (current-indentation) web-mode-code-indent-offset)
-            (setq offset (+ (current-indentation) web-mode-code-indent-offset)))
-           (t
-            (setq offset (current-column))
-            ;;(message "%S %S" pos offset)
-            (when (and (member curr-char '(?\+ ?\- ?\& ?\| ?\? ?\:))
-                       (not (looking-back "\\(^[ \t]+\\|if[ ]*[(]?\\)" (point-min)))) ; #743
-              (goto-char pos)
-              (looking-at "\\(||\\|&&\\|[&|?:+-]\\)[ \t\n]*")
-              (setq offset (- offset (length (match-string-no-properties 0)))))
-            )
-           ) ;cond
+          (when debug (message "I350(%S) multiline statement" pos))
+          (let (is-ternary)
+            (setq is-ternary (or (string-match-p "[?:]$" prev-line)
+                                 (string-match-p "^[?:]" curr-line)))
+            (cond
+             ((not (funcall (if is-js
+                                'web-mode-javascript-statement-beginning
+                              'web-mode-block-statement-beginning)
+                            pos reg-beg is-ternary))
+              )
+             ((null (cdr (assoc "lineup-ternary" web-mode-indentation-params)))
+              (setq offset (+ (current-indentation) web-mode-code-indent-offset)))
+             (t
+              (setq offset (current-column))
+              (when (and (member curr-char '(?\+ ?\- ?\& ?\| ?\? ?\:))
+                         (not (looking-back "\\(^[ \t]+\\|if[ ]*[(]?\\)" (point-min)))) ; #743
+                (goto-char pos)
+                (looking-at "\\(||\\|&&\\|[&|?:+-]\\)[ \t\n]*")
+                (setq offset (- offset (length (match-string-no-properties 0)))))
+              )
+             ) ;cond
+            ) ;let
           )
 
-         ((and is_js
+         ((and is-js
                (eq prev-char ?\()
                (string-match-p "=>[ ]*([ ]*$" prev-line))
           (when debug (message "I355(%S) => (" pos))
           (setq offset (+ prev-indentation web-mode-code-indent-offset))
           )
 
-         ((and is_js
+         ((and is-js
                (or (member ?\, chars)
                    (member prev-char '(?\( ?\[))))
           (when debug (message "I360(%S) javascript-args" pos))
@@ -7871,7 +7894,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
            ) ;cond
           )
 
-         ((and is_js
+         ((and is-js
                (or (eq prev-char ?\))
                    (string-match-p "^else$" prev-line)))
           (when debug (message "I370(%S)" pos))
@@ -7901,7 +7924,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
          ((and (member language '("php"))
                (or (and (eq prev-char ?\))
                         (string-match-p "^\\(for\\|if\\|else[ ]*if\\|while\\)[ ]*(" prev-line))
-                   (and is_js
+                   (and is-js
                         (web-mode-part-is-opener prev-pos reg-beg))
                    (string-match-p "^else$" prev-line))
                (not (string-match-p "^\\([{.]\\|->\\)" curr-line)))
@@ -11749,7 +11772,7 @@ Prompt user if TAG-NAME isn't provided."
     ;;(message "pos=%S" pos)
     pos))
 
-(defun web-mode-block-statement-beginning-position (pos &optional block-beg)
+(defun web-mode-block-statement-beginning-position (pos block-beg is-ternary)
   (unless pos (setq pos (point)))
   (setq pos (1- pos))
   (unless block-beg (setq block-beg (web-mode-block-beginning-position pos)))
@@ -11923,7 +11946,7 @@ Prompt user if TAG-NAME isn't provided."
 ;; TODO: skipper les expr dont la depth est superieure
 
 ;; NOTE: blockside is useful for ejs
-(defun web-mode-javascript-statement-beginning-position (pos &optional reg-beg)
+(defun web-mode-javascript-statement-beginning-position (pos reg-beg is-ternary)
   (unless pos (setq pos (point)))
   (setq pos (1- pos))
   (let ((char nil)
@@ -11931,7 +11954,10 @@ Prompt user if TAG-NAME isn't provided."
         (i 0)
         (is-jsx (string= web-mode-content-type "jsx"))
         (depth-o nil) (depth-l nil)
-        (continue (not (null pos))))
+        (continue (not (null pos)))
+        (regexp "[\]\[}{)(=:]\\|\\(return\\)"))
+    (when is-ternary
+      (setq regexp (concat regexp "\\|[><]")))
     (setq depth-o (get-text-property pos 'jsx-depth))
     (unless reg-beg
       (cond
@@ -11984,7 +12010,7 @@ Prompt user if TAG-NAME isn't provided."
        ((and (eq char ?\=)
              (web-mode-looking-back "[<>!=]+" pos reg-beg t))
         (setq pos (- pos 1 (length (match-string-no-properties 0)))))
-       ((member char '(?\( ?\{ ?\[ ?\=))
+       ((member char '(?\( ?\{ ?\[ ?\= ?\< ?\>))
         (web-mode-looking-at ".[ \t\n]*" pos)
         (setq continue nil
               pos (+ pos (length (match-string-no-properties 0)))))
@@ -11998,7 +12024,7 @@ Prompt user if TAG-NAME isn't provided."
         (setq continue nil
               pos (+ pos (length (match-string-no-properties 0)))))
        (t
-        (setq pos (web-mode-rsb-position pos "[\]\[}{)(=:]\\|\\(return\\)" reg-beg))
+        (setq pos (web-mode-rsb-position pos regexp reg-beg))
         (when (not pos)
           (cond
            (is-jsx
@@ -12641,10 +12667,10 @@ Prompt user if TAG-NAME isn't provided."
   (unless block-beg (setq block-beg (web-mode-block-beginning-position pos)))
   (web-mode-go (web-mode-block-string-beginning-position pos block-beg)))
 
-(defun web-mode-block-statement-beginning (&optional pos block-beg)
+(defun web-mode-block-statement-beginning (pos block-beg is-ternary)
   (unless pos (setq pos (point)))
   (unless block-beg (setq block-beg (web-mode-block-beginning-position pos)))
-  (web-mode-go (web-mode-block-statement-beginning-position pos block-beg)))
+  (web-mode-go (web-mode-block-statement-beginning-position pos block-beg is-ternary)))
 
 (defun web-mode-block-args-beginning (&optional pos block-beg)
   (unless pos (setq pos (point)))
@@ -12664,13 +12690,13 @@ Prompt user if TAG-NAME isn't provided."
       (setq reg-beg (web-mode-part-beginning-position pos))))
   (web-mode-go (web-mode-javascript-string-beginning-position pos reg-beg)))
 
-(defun web-mode-javascript-statement-beginning (&optional pos reg-beg)
+(defun web-mode-javascript-statement-beginning (pos reg-beg is-ternary)
   (unless pos (setq pos (point)))
   (unless reg-beg
     (if (get-text-property pos 'block-side)
         (setq reg-beg (web-mode-block-beginning-position pos))
       (setq reg-beg (web-mode-part-beginning-position pos))))
-  (web-mode-go (web-mode-javascript-statement-beginning-position pos reg-beg)))
+  (web-mode-go (web-mode-javascript-statement-beginning-position pos reg-beg is-ternary)))
 
 (defun web-mode-javascript-args-beginning (&optional pos reg-beg)
   (unless pos (setq pos (point)))

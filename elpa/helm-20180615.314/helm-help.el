@@ -809,6 +809,49 @@ To touch more than one new file, separate you filenames with a comma (\",\").
 If one wants to create (touch) a new file with comma inside the name use a prefix arg,
 this will prevent splitting the name and create multiple files.
 
+*** Delete files
+
+You can delete files without quitting helm with
+`\\<helm-find-files-map>\\[helm-ff-persistent-delete]' or delete files and quit helm with `\\[helm-ff-run-delete-file]'.
+
+In the second method you can choose to
+make this command asynchronous by customizing
+\`helm-ff-delete-files-function'.
+
+_WARNING_: When deleting files asynchronously you will NOT be
+WARNED if directories are not empty, that's mean non empty directories will
+be deleted in background without asking.
+
+A good compromise is to trash your files
+when using asynchronous method (see [[Trashing files][Trashing files]]).
+
+Note that emacs is always making a backup of your files when
+deleting, medias though are definitely deleted with no backup.
+
+When choosing synchronous delete, you can allow recursive
+deletion of directories with `helm-ff-allow-recursive-deletes'.
+Note that when trashing (synchronous) you are not asked for recursive deletion.
+
+Note that `helm-ff-allow-recursive-deletes' have no effect when
+deleting asynchronously.
+
+First method (persistent delete) is always synchronous.
+
+Note that delete async and delete sync are always accessible from
+actions menu so that you can use one or the other if needed.
+
+Note that when a prefix arg is given, trashing is disabled see [[Trashing files][Trashing files]].
+
+**** Trashing files
+
+If you want to trash your files instead of deleting them you can
+set `delete-by-moving-to-trash' to non nil, like this your files
+will be moved to trash instead of beeing deleted.
+
+Note that all the delete commands called with a prefix arg (C-u)
+disable `delete-by-moving-to-trash' and BTW delete files instead
+of trashing them.
+
 ** Commands
 \\<helm-find-files-map>
 \\[helm-ff-run-locate]\t\tRun `locate' (`\\[universal-argument]' to specify locate database, `M-n' to insert basename of candidate).
@@ -828,6 +871,7 @@ this will prevent splitting the name and create multiple files.
 \\[helm-ff-run-load-file]\t\tLoad Files.
 \\[helm-ff-run-symlink-file]\t\tSymlink Files.
 \\[helm-ff-run-hardlink-file]\t\tHardlink files.
+\\[helm-ff-run-relsymlink-file]\t\tRelative symlink Files.
 \\[helm-ff-run-delete-file]\t\tDelete Files.
 \\[helm-ff-run-touch-files]\t\tTouch files.
 \\[helm-ff-run-kill-buffer-persistent]\t\tKill buffer candidate without leaving Helm.
@@ -840,6 +884,7 @@ this will prevent splitting the name and create multiple files.
 \\[helm-ff-run-switch-other-window]\t\tSwitch to other window.
 \\[helm-ff-run-switch-other-frame]\t\tSwitch to other frame.
 \\[helm-ff-run-open-file-externally]\t\tOpen file with external program (`\\[universal-argument]' to choose).
+\\[helm-ff-run-preview-file-externally]\t\tPreview file with external program.
 \\[helm-ff-run-open-file-with-default-tool]\t\tOpen file externally with default tool.
 \\[helm-ff-rotate-left-persistent]\t\tRotate image left.
 \\[helm-ff-rotate-right-persistent]\t\tRotate image right.

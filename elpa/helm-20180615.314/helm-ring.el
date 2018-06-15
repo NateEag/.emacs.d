@@ -155,7 +155,7 @@ use `helm-kill-ring-separator' as default."
      (cl-loop for c in (butlast marked)
               concat (concat c sep) into str
               finally return (concat str (car (last marked)))))))
-  
+
 (defun helm-kill-ring-action-yank-1 (str)
   "Insert STR in `kill-ring' and set STR to the head.
 
@@ -275,7 +275,7 @@ This is a command for `helm-kill-ring-map'."
 (defvar helm-source-mark-ring
   (helm-build-sync-source "mark-ring"
     :candidates #'helm-mark-ring-get-candidates
-    :action '(("Goto line" . helm-mark-ring-default-action)) 
+    :action '(("Goto line" . helm-mark-ring-default-action))
     :persistent-help "Show this line"
     :group 'helm-ring))
 
@@ -506,7 +506,9 @@ This command is useful when used with persistent action."
              "Concat marked macros"
              'helm-kbd-macro-concat-macros
              "Delete marked macros"
-             'helm-kbd-macro-delete-macro)
+             'helm-kbd-macro-delete-macro
+             "Edit marked macro"
+             'helm-kbd-macro-edit-macro)
             :group 'helm-ring)
           :buffer "*helm kmacro*")))
 
@@ -535,9 +537,16 @@ This command is useful when used with persistent action."
 
 (defun helm-kbd-macro-delete-macro (_candidate)
   (let ((mkd (helm-marked-candidates)))
+    (kmacro-push-ring)
     (cl-loop for km in mkd
              do (setq kmacro-ring (delete km kmacro-ring)))
     (kmacro-pop-ring1)))
+
+(defun helm-kbd-macro-edit-macro (candidate)
+  (kmacro-push-ring)
+  (setq kmacro-ring (delete candidate kmacro-ring))
+  (kmacro-split-ring-element candidate)
+  (kmacro-edit-macro))
 
 (provide 'helm-ring)
 

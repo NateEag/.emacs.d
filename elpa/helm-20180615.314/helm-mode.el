@@ -47,7 +47,12 @@
     (find-file . nil)
     (find-file-at-point . helm-completing-read-sync-default-handler)
     (ffap . helm-completing-read-sync-default-handler)
-    (execute-extended-command . nil))
+    (execute-extended-command . nil)
+    (dired-do-rename . helm-read-file-name-handler-1)
+    (dired-do-copy . helm-read-file-name-handler-1)
+    (dired-do-symlink . helm-read-file-name-handler-1)
+    (dired-do-relsymlink . helm-read-file-name-handler-1)
+    (dired-do-hardlink . helm-read-file-name-handler-1))
   "Completing read functions for specific Emacs commands.
 
 By default `helm-mode' use `helm-completing-read-default-handler' to
@@ -1039,6 +1044,7 @@ Keys description:
              :candidates
              (lambda ()
                (append (and (not (file-exists-p helm-pattern))
+                            (not (helm-ff--invalid-tramp-name-p helm-pattern))
                             (list helm-pattern))
                        (if test
                            (cl-loop with hn = (helm-ff--tramp-hostnames)
@@ -1114,6 +1120,7 @@ Don't use it directly, use instead `helm-read-file-name' in your programs."
                       helm-completing-read-handlers-alist))
          (def-com  (cdr-safe entry))
          (str-defcom (and def-com (helm-symbol-name def-com)))
+         ;; Don't modify the original args list for emacs generic functions.
          (def-args (list prompt dir default-filename mustmatch initial predicate))
          ;; Append the two extra args needed to set the buffer and source name
          ;; in helm specialized functions.
@@ -1154,7 +1161,11 @@ Don't use it directly, use instead `helm-read-file-name' in your programs."
     (unwind-protect
          (setq fname
                (cond (;; A specialized function exists, run it
-                      ;; with the two extra args specific to helm..
+                      ;; with the two extra args specific to helm.
+                      ;; Note that the helm handler should ensure
+                      ;; :initial-input is not nil i.e. Use init
+                      ;; which fallback to default-directory instead
+                      ;; of INITIAL.
                       (and def-com helm-mode
                            (not (eq def-com 'ido-read-file-name))
                            (not (eq def-com 'incompatible)))
@@ -1174,6 +1185,7 @@ Don't use it directly, use instead `helm-read-file-name' in your programs."
                        :name str-command
                        :buffer buf-name
                        :default default-filename
+                       ;; Helm handlers should always have a non nil INITIAL arg.
                        :initial-input (expand-file-name init dir)
                        :alistp nil
                        :must-match mustmatch
@@ -1198,16 +1210,24 @@ Don't use it directly, use instead `helm-read-file-name' in your programs."
 Can be added to `helm-completing-read-handlers-alist' for functions
 that need a `read-file-name' function with directory history.
 The `helm-find-files' history `helm-ff-history' is used here."
-  (helm-read-file-name
-   prompt
-   :name name
-   :history helm-ff-history
-   :buffer buffer
-   :default default-filename
-   :initial-input (expand-file-name initial dir)
-   :alistp nil
-   :must-match mustmatch
-   :test predicate))
+  (let ((helm-always-two-windows t)
+        (helm-split-window-default-side
+         (if (eq helm-split-window-default-side 'same)
+             'below helm-split-window-default-side))
+        helm-split-window-inside-p
+        helm-reuse-last-window-split-state
+        ;; Helm handlers should always have a non nil INITIAL arg.
+        (init (or initial dir default-directory)))
+    (helm-read-file-name
+     prompt
+     :name name
+     :history helm-ff-history
+     :buffer buffer
+     :default default-filename
+     :initial-input (expand-file-name init dir)
+     :alistp nil
+     :must-match mustmatch
+     :test predicate)))
 
 
 ;;; Completion in region

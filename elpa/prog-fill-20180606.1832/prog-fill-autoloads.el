@@ -3,14 +3,11 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "prog-fill" "prog-fill.el" (23151 27453 0 0))
+;;;### (autoloads nil "prog-fill" "prog-fill.el" (23332 10346 0 0))
 ;;; Generated autoloads from prog-fill.el
 
 (autoload 'prog-fill "prog-fill" "\
-Split multi-argument call into one per line.
-
-TODO: Handle string quotations (do not break them apart).
-TODO: Handle different arg separators (Lisp style).
+Either use the custom fill, or standard fill if in a comment region.
 
 \(fn)" t nil)
 

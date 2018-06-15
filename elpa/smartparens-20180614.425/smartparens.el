@@ -253,6 +253,7 @@ function will be considered."
                               ("M-<up>" . sp-splice-sexp-killing-backward)
                               ("M-<down>" . sp-splice-sexp-killing-forward)
                               ("M-r" . sp-splice-sexp-killing-around)
+                              ("M-(" . sp-wrap-round)
                               ("C-)" . sp-forward-slurp-sexp) ;; barf/slurp
                               ("C-<right>" . sp-forward-slurp-sexp)
                               ("C-}" . sp-forward-barf-sexp)
@@ -262,6 +263,8 @@ function will be considered."
                               ("C-{" . sp-backward-barf-sexp)
                               ("C-M-<right>" . sp-backward-barf-sexp)
                               ("M-S" . sp-split-sexp) ;; misc
+                              ("M-j" . sp-join-sexp)
+                              ("M-?" . sp-convolute-sexp)
                               )
   "Paredit inspired bindings.
 
@@ -2649,7 +2652,11 @@ works again as usual.")
 
 (defvar sp-pair-overlay-keymap (make-sparse-keymap)
   "Keymap for the pair overlays.")
-(define-key sp-pair-overlay-keymap (kbd "C-g") 'sp-remove-active-pair-overlay)
+(define-key sp-pair-overlay-keymap (kbd "C-g")
+  '(menu-item nil sp-remove-active-pair-overlay :filter
+              (lambda (cmd)
+                (unless (bound-and-true-p company-my-keymap)
+                  cmd))))
 
 (defvar sp-wrap-overlay-keymap (make-sparse-keymap)
   "Keymap for the wrap overlays.")
@@ -8881,15 +8888,19 @@ See `sp-forward-symbol' for what constitutes a symbol."
                   (p (point)))
               (when s
                 (sp-get s
-                  (let ((delims (buffer-substring :beg-prf p)))
+                  (cl-letf ((delims (buffer-substring :beg-prf p))
+                            ((symbol-function 'sp--get-kill-end)
+                             (lambda (s)
+                               (min (save-excursion (sp--forward-word) (point))
+                                    (sp-get s :end-suf)))))
                     (if (string-match-p "\\`\\(\\s.\\|\\s-\\)*\\'" delims)
                         (if word
-                            (kill-region p (save-excursion (sp--forward-word) (point)))
+                            (kill-region p (sp--get-kill-end s))
                           (kill-region p :end))
                       (let ((kill-from (if (> p :beg-prf) :beg :beg-prf)))
                         (goto-char kill-from)
                         (if word
-                            (kill-region kill-from (save-excursion (sp--forward-word) (point)))
+                            (kill-region kill-from (sp--get-kill-end s))
                           (kill-region kill-from :end)))))))))
           (sp--cleanup-after-kill)
           (setq arg (1- arg)))
@@ -8952,7 +8963,11 @@ See `sp-backward-symbol' for what constitutes a symbol."
                   (p (point)))
               (when s
                 (sp-get s
-                  (let ((delims (buffer-substring :end p)))
+                  (cl-letf ((delims (buffer-substring :end p))
+                            ((symbol-function 'sp--get-kill-beg)
+                             (lambda (s)
+                               (max (save-excursion (sp--backward-word) (point))
+                                    (sp-get s :beg-prf)))))
                     (if (string-match-p "\\`\\(\\s.\\|\\s-\\)*\\'" delims)
                         ;; Note: the arguments to kill-region are
                         ;; "reversed" (end before beg) so that the
@@ -8960,11 +8975,11 @@ See `sp-backward-symbol' for what constitutes a symbol."
                         ;; ring. See the implementation of
                         ;; `kill-region' for more info
                         (if word
-                            (kill-region p (save-excursion (sp--backward-word) (point)))
+                            (kill-region p (sp--get-kill-beg s))
                           (kill-region p :beg-prf))
                       (goto-char :end)
                       (if word
-                          (kill-region :end (save-excursion (sp--backward-word) (point)))
+                          (kill-region :end (sp--get-kill-beg s))
                         (kill-region :end :beg-prf))))))))
           (sp--cleanup-after-kill)
           (setq arg (1- arg)))
@@ -9144,6 +9159,21 @@ comment."
             (save-excursion
               (forward-line 1)
               (indent-according-to-mode))))))))
+
+(defun sp-wrap-round ()
+  "Wrap following sexp in round parentheses."
+  (interactive)
+  (sp-wrap-with-pair "("))
+
+(defun sp-wrap-square ()
+  "Wrap following sexp in square brackets."
+  (interactive)
+  (sp-wrap-with-pair "["))
+
+(defun sp-wrap-curly ()
+  "Wrap following sexp in curly braces."
+  (interactive)
+  (sp-wrap-with-pair "{"))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

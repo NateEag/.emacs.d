@@ -74,12 +74,12 @@ behalf of some private tool.
 
 By default the only requested scope is `repo' because that is
 sufficient as well as required for most common uses.  This and
-other scopes are documented at https://magit.vc/goto/2e586d36.
+other scopes are documented at URL `https://magit.vc/goto/2e586d36'.
 
 If your private tools need other scopes, then you have to add
 them here *before* creating the token.  Alternatively you can
 edit the scopes of an existing token using the web interface
-at https://github.com/settings/tokens.")
+at URL `https://github.com/settings/tokens'.")
 
 (defvar ghub-override-system-name nil
   "If non-nil, the string used to identify the local machine.
@@ -114,17 +114,17 @@ used instead.")
 (defvar ghub-response-headers nil
   "The headers returned in response to the last request.
 `ghub-request' returns the response body and stores the
-response header in this variable.")
+response headers in this variable.")
 
 (cl-defun ghub-graphql (graphql &optional variables
                                 &key username auth host
                                 silent
                                 callback errorback extra)
   "Make a GraphQL request using GRAPHQL and VARIABLES.
-Return the response as a json-like alist.  Even if the response
+Return the response as a JSON-like alist.  Even if the response
 contains `errors', do not raise an error.  GRAPHQL is a GraphQL
-string.  VARIABLES is a json-like alist.  The other arguments
-behave like for `ghub-request' (which see)."
+string.  VARIABLES is a JSON-like alist.  The other arguments
+behave as for `ghub-request' (which see)."
   (cl-assert (stringp graphql))
   (cl-assert (not (stringp variables)))
   (ghub-request "POST" "/graphql" nil :payload
@@ -227,7 +227,7 @@ Like calling `ghub-request' (which see) with \"DELETE\" as METHOD."
 
 Also place the response header in `ghub-response-headers'.
 
-METHOD is the http method, given as a string.
+METHOD is the HTTP method, given as a string.
 RESOURCE is the resource to access, given as a string beginning
   with a slash.
 
@@ -260,7 +260,7 @@ If NOERROR is non-nil, then do not raise an error if the request
   return the error payload instead of nil.
 If READER is non-nil, then it is used to read and return from the
   response buffer.  The default is `ghub--read-json-payload'.
-  For the very few resources that do not return json, you might
+  For the very few resources that do not return JSON, you might
   want to use `ghub--decode-payload'.
 
 If USERNAME is non-nil, then make a request on behalf of that
@@ -275,8 +275,8 @@ Each package that uses `ghub' should use its own token. If AUTH
   to identify itself, using a symbol matching its name.
 
   Package authors who find this inconvenient should write a
-  wrapper around this function and possibly for the method
-  specific functions also.
+  wrapper around this function and possibly for the
+  method-specific functions as well.
 
   Some symbols have a special meaning.  `none' means to make an
   unauthorized request.  `basic' means to make a password based
@@ -296,7 +296,7 @@ If HOST is non-nil, then connect to that Github instance.  This
   argument.
 
 If FORGE is `gitlab', then connect to Gitlab.com or, depending
-  on HOST to another Gitlab instance.  This is only intended for
+  on HOST, to another Gitlab instance.  This is only intended for
   internal use.  Instead of using this argument you should use
   function `glab-request' and other `glab-*' functions.
 
@@ -309,7 +309,7 @@ If CALLBACK and/or ERRORBACK is non-nil, then make one or more
 
 Both callbacks are called with four arguments.
   1. For CALLBACK, the combined value of the retrieved pages.
-     For ERRORBACk, the error that occured when retrieving the
+     For ERRORBACK, the error that occured when retrieving the
      last page.
   2. The headers of the last page as an alist.
   3. Status information provided by `url-retrieve'. Its `:error'

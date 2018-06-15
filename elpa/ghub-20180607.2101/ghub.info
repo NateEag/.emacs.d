@@ -9,7 +9,7 @@ This is ghub.info, produced by makeinfo version 6.1 from ghub.texi.
 
      This document is distributed in the hope that it will be useful,
      but WITHOUT ANY WARRANTY; without even the implied warranty of
-     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
      General Public License for more details.
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -39,7 +39,7 @@ adoption would make life easier for users and maintainers alike, because
 then all packages that talk to the Github API could be configured the
 same way.
 
-This manual is for Ghub version 2.0.0 (v2.0.0-8-g7f23879+1).
+This manual is for Ghub version 2.0.1 (v2.0.1-7-g6ffc1d6+1).
 
      Copyright (C) 2017-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -50,7 +50,7 @@ This manual is for Ghub version 2.0.0 (v2.0.0-8-g7f23879+1).
 
      This document is distributed in the hope that it will be useful,
      but WITHOUT ANY WARRANTY; without even the implied warranty of
-     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
      General Public License for more details.
 
 * Menu:
@@ -101,14 +101,14 @@ adoption would make life easier for users and maintainers alike, because
 then all packages that talk to the Github API could be configured the
 same way.
 
-   Fancier interfaces can implemented on top of Ghub, and one such
+   Fancier interfaces can be implemented on top of Ghub, and one such
 wrapper — named simply Ghub+ — has already been implemented.  The
 benefit of basing various opinionated interfaces on top of a single
 library that provides only the core functionality is that choosing the
-programming interface does no longer also dictate how access tokens are
-handled.  Users can then use multiple packages that access the Github
-API without having to learn the various incompatible ways packages
-expects the appropriate token to be made available to them.
+programming interface no longer dictates how access tokens are handled.
+Users can then use multiple packages that access the Github API without
+having to learn the various incompatible ways packages expect the
+appropriate token to be made available to them.
 
    Ghub uses the built-in ‘auth-source’ library to store access tokens.
 That library is very flexible and supports multiple backends, which
@@ -116,7 +116,7 @@ means that it is up to the user how secrets are stored.  They can, among
 other things, choose between storing secrets in plain text for ease of
 use, or encrypted for better security.
 
-   Previously (as in until this library is widely adapted) it was up to
+   Previously (as in until this library is widely adopted) it was up to
 package authors to decide if things should be easy or secure.  (Note
 that ‘auth-source’ defaults to "easy" — you have been warned.)
 
@@ -125,11 +125,11 @@ of sharing a single token between all packages that rely on it.  That
 means that users cannot configure Ghub once and later start using a new
 package without any additional setup.  But Ghub helps with that.
 
-   When the user invokes some command defined in some package and that
-ultimately results in ‘ghub-request’ being called and the appropriate
-token is not available yet, then the user is guided through the process
-of creating and storing a new token, and at the end of that process the
-request is carried out as if the token had been available to begin with.
+   When the user invokes some command that ultimately results in
+‘ghub-request’ being called and the appropriate token is not available
+yet, then the user is guided through the process of creating and storing
+a new token, and at the end of that process the request is carried out
+as if the token had been available to begin with.
 
 
 File: ghub.info,  Node: Getting Started,  Next: Using Ghub in Personal Scripts,  Prev: Introduction,  Up: Top
@@ -137,7 +137,7 @@ File: ghub.info,  Node: Getting Started,  Next: Using Ghub in Personal Scripts, 
 2 Getting Started
 *****************
 
-Each package that uses Ghub uses its own token.  Despite that, changes
+Each package that uses Ghub uses its own token.  Despite that, chances
 are good that after successfully configuring one package you can just
 start using another package pretty much instantly.
 
@@ -151,7 +151,7 @@ even when configuring the very first token.
 *before* using the wizard, or the wizard cannot be used at all:
 
    • If you don’t want to use the wizard then you don’t have to and can
-     create tokens manually as describe in *note Manually Creating and
+     create tokens manually as described in *note Manually Creating and
      Storing a Token::.
 
    • If you want to access Gitlab.com or another Gitlab instance, then
@@ -179,9 +179,9 @@ even when configuring the very first token.
      and repeat the request to trigger the wizard again.
 
    • The setup wizard should work even if you have enabled two-factor
-     authentication.  However it your Github Enterprise instance
+     authentication.  However if your Github Enterprise instance
      enforces Single Sign-On as an additional security measure, then you
-     are out of luck and have to create the token manually as describe
+     are out of luck and have to create the token manually as described
      in *note Manually Creating and Storing a Token::.
 
    The variables mentioned above — and others — are documented in *note
@@ -299,7 +299,7 @@ of the doubts that you might have:
      the variable ‘ghub-github-token-scopes’ before triggering the
      wizard again.
 
-   • Each PACKAGE has to specify the tokens that it needs using a
+   • Each ‘PACKAGE’ has to specify the tokens that it needs using a
      variable named ‘PACKAGE-github-token-scopes’.  The doc-string of
      that variable should document why the various scopes are needed.
 
@@ -367,7 +367,7 @@ If you cannot or don’t want to use the wizard then you have to (1)
 figure out what scopes a package wants, (2) create such a token using
 the web interface and (3) store the token where Ghub expects to find it.
 
-   A package named PACKAGE has to specify the scopes that it wants in
+   A package named ‘PACKAGE’ has to specify the scopes that it wants in
 the variable named ‘PACKAGE-ghub-token-scopes’.  The doc-string of such
 variables should document what the various scopes are needed for.
 
@@ -431,7 +431,7 @@ File: ghub.info,  Node: Using Ghub in Personal Scripts,  Next: Using Ghub in a P
 ********************************
 
 You can use ‘ghub-request’ and its wrapper functions in your personal
-scripts of course.  Unlike when you use Ghub from a package that you
+scripts, of course.  Unlike when you use Ghub from a package that you
 distribute for others to use, you don’t have to specify a package in
 personal scripts.
 
@@ -444,8 +444,8 @@ personal scripts.
      ;; In packages you have to specify the package using AUTH.
      (ghub-get "/user" nil :auth 'foobar)
 
-   When you do not specify the AUTH argument, then a request is made on
-behalf of the ‘ghub’ package itself.  Like for any package that uses
+   When you do not specify the ‘AUTH’ argument, then a request is made
+on behalf of the ‘ghub’ package itself.  Like for any package that uses
 Ghub, ‘ghub’ has to declare what scopes it needs, using, in this case,
 the variable ‘ghub-github-token-scopes’.
 
@@ -470,21 +470,21 @@ of some package to only request access to API scopes that are actually
 needed, which in turn might make it easier for users to trust your
 package not to do unwanted things.
 
-   The scopes used by PACKAGE have to be defined using the variable
+   The scopes used by ‘PACKAGE’ have to be defined using the variable
 ‘PACKAGE-github-token-scopes’, and you have to tell ‘ghub-request’ on
-behalf of what package a request is being made by passing the symbol
-PACKAGE as the value of its AUTH argument.
+behalf of which package a request is being made by passing the symbol
+‘PACKAGE’ as the value of its ‘AUTH’ argument.
 
      (ghub-request "GET" "/user" nil :auth 'PACKAGE)
 
  -- Variable: PACKAGE-github-token-scopes
 
      This variable defines the token scopes requested by the package
-     named PACKAGE. The doc-string should explain what the various
-     scopes are needed for to prevent users from giving PACKAGE fewer
+     named ‘PACKAGE’.  The doc-string should explain what the various
+     scopes are needed for to prevent users from giving ‘PACKAGE’ fewer
      permissions than it absolutely needs and also to give them greater
-     confidence that PACKAGE is only requesting the permissions that it
-     actually need.
+     confidence that ‘PACKAGE’ is only requesting the permissions that
+     it actually needs.
 
      The value of this variable does not necessarily correspond to the
      scopes that the respective token actually gives access to.  There
@@ -506,13 +506,13 @@ PACKAGE as the value of its AUTH argument.
      correctly determine the used scopes manually.
 
      Just tell users to run ‘M-x ghub-token-scopes’ and to provide the
-     correct values for the HOST, USERNAME and PACKAGE when prompted,
-     and to then post the output.
+     correct values for the ‘HOST’, ‘USERNAME’ and ‘PACKAGE’ when
+     prompted, and to then post the output.
 
      It is to be expected that users will occasionally mess that up so
-     this command does not only output the scopes but also the user
-     input so that you can have greater confidence in the validity of
-     the user’s answer.
+     this command outputs not only the scopes but also the user input so
+     that you can have greater confidence in the validity of the user’s
+     answer.
 
           Scopes for USERNAME^PACKAGE@HOST: (SCOPE...)
 
@@ -522,7 +522,7 @@ File: ghub.info,  Node: API,  Next: Gitlab Support,  Prev: Using Ghub in a Packa
 5 API
 *****
 
-This section describes the Ghub API. In other words it describes the
+This section describes the Ghub API.  In other words it describes the
 public functions and variables provided by the Ghub library and not the
 Github API that can be accessed by using those functions.  The latter is
 documented at <https://developer.github.com/v3>.
@@ -543,77 +543,77 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
           payload headers unpaginate noerror reader username auth host
           callback errorback url value error extra method*
 
-     This function makes a request for RESOURCE using METHOD. PARAMS,
-     QUERY, PAYLOAD and/or HEADERS are alists holding additional request
-     data.  The response body is returned and the response header in
-     stored in the variable ‘ghub-response-headers’.
+     This function makes a request for ‘RESOURCE’ using ‘METHOD’.
+     ‘PARAMS’, ‘QUERY’, ‘PAYLOAD’ and/or ‘HEADERS’ are alists holding
+     additional request data.  The response body is returned and the
+     response header is stored in the variable ‘ghub-response-headers’.
 
-        • METHOD is the http method, given as a string.
+        • ‘METHOD’ is the HTTP method, given as a string.
 
-        • RESOURCE is the resource to access, given as a string
+        • ‘RESOURCE’ is the resource to access, given as a string
           beginning with a slash.
 
-        • PARAMS, QUERY, PAYLOAD and HEADERS are alists and are used to
-          specify request data.  All these arguments are alists that
-          resemble the json expected and returned by the Github API. The
-          keys are symbols and the values are stored in the ‘cdr’ (not
-          the ‘cadr’) and can be strings, integers and lists of strings
+        • ‘PARAMS’, ‘QUERY’, ‘PAYLOAD’ and ‘HEADERS’ are alists and are
+          used to specify request data.  All these arguments are alists
+          that resemble the JSON expected and returned by the Github
+          API.  The keys are symbols and the values stored in the ‘cdr’
+          (not the ‘cadr’) can be strings, integers, or lists of strings
           and integers.
 
           The Github API documentation is vague on how data has to be
           transmitted and for a particular resource usually just talks
-          about "parameters".  Generally speaking when the METHOD is
+          about "parameters".  Generally speaking when the ‘METHOD’ is
           "HEAD" or "GET", then they have to be transmitted as a query,
           otherwise as a payload.
 
-             • Use PARAMS to automatically transmit like QUERY or
-               PAYLOAD would depending on METHOD.
+             • Use ‘PARAMS’ to automatically transmit like ‘QUERY’ or
+               ‘PAYLOAD’ would depending on ‘METHOD’.
 
-             • Use QUERY to explicitly transmit data as a query.
+             • Use ‘QUERY’ to explicitly transmit data as a query.
 
-             • Use PAYLOAD to explicitly transmit data as a payload.
-               Instead of an alist, PAYLOAD may also be a string, in
+             • Use ‘PAYLOAD’ to explicitly transmit data as a payload.
+               Instead of an alist, ‘PAYLOAD’ may also be a string, in
                which case it gets encoded as UTF-8 but is otherwise
                transmitted as-is.
 
-             • Use HEADERS for those rare resources that require that
+             • Use ‘HEADERS’ for those rare resources that require that
                the data is transmitted as headers instead of as a query
                or payload.  When that is the case, then the Github API
                documentation usually mentions it explicitly.
 
-        • If SILENT is non-nil, then progress reports and the like are
+        • If ‘SILENT’ is non-nil, then progress reports and the like are
           not messaged.
 
-        • If UNPAGINATE is t, then this function make as many requests
-          as necessary to get all values.  If UNPAGINATE is a natural
+        • If ‘UNPAGINATE’ is t, then this function make as many requests
+          as necessary to get all values.  If ‘UNPAGINATE’ is a natural
           number, then it gets at most that many pages.  For any other
           non-nil value it raises an error.
 
-        • If NOERROR is non-nil, then no error is raised if the request
-          fails and ‘nil’ is returned instead.  If NOERROR is ‘return’,
-          then the error payload is returned instead of ‘nil’.
+        • If ‘NOERROR’ is non-nil, then no error is raised if the
+          request fails and ‘nil’ is returned instead.  If ‘NOERROR’ is
+          ‘return’, then the error payload is returned instead of ‘nil’.
 
-        • If READER is non-nil, then it is used to read and return from
-          the response buffer.  The default is
+        • If ‘READER’ is non-nil, then it is used to read and return
+          from the response buffer.  The default is
           ‘ghub--read-json-payload’.  For the very few resources that do
-          not return json, you might want to use ‘ghub--decode-payload’.
+          not return JSON, you might want to use ‘ghub--decode-payload’.
 
-        • If USERNAME is non-nil, then the request is made on behalf of
-          that user.  It is better to specify the user using the Git
+        • If ‘USERNAME’ is non-nil, then the request is made on behalf
+          of that user.  It is better to specify the user using the Git
           variable ‘github.user’ for "api.github.com", or
           ‘github.HOST.user’ if connecting to a Github Enterprise
           instance.
 
-        • Each package that uses Ghub should use its own token.  If AUTH
-          is ‘nil’ or unspecified, then the generic ‘ghub’ token is used
-          instead.  This is only acceptable for personal utilities.  A
-          packages that is distributed to other users should always use
-          this argument to identify itself, using a symbol matching its
-          name.
+        • Each package that uses Ghub should use its own token.  If
+          ‘AUTH’ is ‘nil’ or unspecified, then the generic ‘ghub’ token
+          is used instead.  This is only acceptable for personal
+          utilities.  A packages that is distributed to other users
+          should always use this argument to identify itself, using a
+          symbol matching its name.
 
           Package authors who find this inconvenient should write a
-          wrapper around this function and possibly for the method
-          specific functions also.
+          wrapper around this function and possibly for the
+          method-specific functions as well.
 
           Beside ‘nil’, some other symbols have a special meaning too.
           ‘none’ means to make an unauthorized request.  ‘basic’ means
@@ -622,41 +622,42 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
           explicit token string are only intended for internal and
           debugging uses.
 
-          If AUTH is a package symbol, then the scopes are specified
+          If ‘AUTH’ is a package symbol, then the scopes are specified
           using the variable ‘AUTH-github-token-scopes’.  It is an error
           if that is not specified.  See ‘ghub-github-token-scopes’ for
           an example.
 
-        • If HOST is non-nil, then connect to that Github instance.
+        • If ‘HOST’ is non-nil, then connect to that Github instance.
           This defaults to "api.github.com".  When a repository is
           connected to a Github Enterprise instance, then it is better
           to specify that using the Git variable ‘github.host’ instead
           of using this argument.
 
-        • If FORGE is ‘gitlab’, then connect to Gitlab.com or, depending
-          on HOST to another Gitlab instance.  This is only intended for
-          internal use.  Instead of using this argument you should use
-          function ‘glab-request’ and other ‘glab-*’ functions.
+        • If ‘FORGE’ is ‘gitlab’, then connect to Gitlab.com or,
+          depending on ‘HOST’, to another Gitlab instance.  This is only
+          intended for internal use.  Instead of using this argument you
+          should use function ‘glab-request’ and other ‘glab-*’
+          functions.
 
-        • If CALLBACK and/or ERRORBACK is non-nil, then this function
-          makes one or more asynchronous requests and calls CALLBACK or
-          ERRORBACK when finished.  If an error occurred, then it calls
-          ERRORBACK, or if that is ‘nil’, then CALLBACK. When no error
-          occurred then it calls CALLBACK. When making asynchronous
-          requests, then no errors are signaled, regardless of the value
-          of NOERROR.
+        • If ‘CALLBACK’ and/or ‘ERRORBACK’ is non-nil, then this
+          function makes one or more asynchronous requests and calls
+          ‘CALLBACK’ or ‘ERRORBACK’ when finished.  If an error
+          occurred, then it calls ‘ERRORBACK’, or if that is ‘nil’, then
+          ‘CALLBACK’.  When no error occurred then it calls ‘CALLBACK’.
+          When making asynchronous requests, then no errors are
+          signaled, regardless of the value of ‘NOERROR’.
 
           Both callbacks are called with four arguments.
 
-             • For CALLBACK, the combined value of the retrieved pages.
-               For ERRORBACk, the error that occured when retrieving the
-               last page.
+             • For ‘CALLBACK’, the combined value of the retrieved
+               pages.  For ‘ERRORBACK’, the error that occured when
+               retrieving the last page.
 
              • The headers of the last page as an alist.
 
              • Status information provided by ‘url-retrieve’.  Its
-               ‘:error’ property holds the same information as
-               ERRORBACK’s first argument.
+               ‘:error’ property holds the same information as the first
+               argument to ‘ERRORBACK’.
 
              • A ‘ghub--req’ struct, which can be passed to
                ‘ghub-continue’ (which see) to retrieve the next page, if
@@ -715,8 +716,9 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
 
  -- Function: ghub-response-link-relations headers
 
-     This function returns an alist of the link relations in HEADERS, or
-     if optional HEADERS is nil, then those in ‘ghub-response-headers’.
+     This function returns an alist of the link relations in ‘HEADERS’,
+     or if optional ‘HEADERS’ is nil, then those in
+     ‘ghub-response-headers’.
 
  -- Variable: ghub-override-system-name
 
@@ -729,9 +731,9 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
  -- Variable: PACKAGE-github-token-scopes
 
      Such a variable defines the token scopes requested by the
-     respective package PACKAGE given by the first word in the variable
-     name.  ‘ghub’ itself is treated like any other package.  Also see
-     *note Using Ghub in a Package::.
+     respective package ‘PACKAGE’ given by the first word in the
+     variable name.  ‘ghub’ itself is treated like any other package.
+     Also see *note Using Ghub in a Package::.
 
  -- Function: ghub-head resource &optional params &key query payload
           headers unpaginate noerror reader username auth host callback
@@ -742,13 +744,13 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
 
      These functions are simple wrappers around ‘ghub-request’.  Their
      signature is identical to that of the latter, except that they do
-     not have an argument named METHOD. The http method is instead given
-     by the second word in the function name.
+     not have an argument named ‘METHOD’.  The HTTP method is instead
+     given by the second word in the function name.
 
      As described in the documentation for ‘ghub-request’, it depends on
-     the used method whether the value of the PARAMS argument is used as
-     the query or the payload.  For the "HEAD" and "GET" methods it is
-     used as the query.
+     the used method whether the value of the ‘PARAMS’ argument is used
+     as the query or the payload.  For the "HEAD" and "GET" methods it
+     is used as the query.
 
  -- Function: ghub-put resource &optional params &key query payload
           headers unpaginate noerror reader username auth host callback
@@ -765,12 +767,12 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
 
      These functions are simple wrappers around ‘ghub-request’.  Their
      signature is identical to that of the latter, except that they do
-     not have an argument named METHOD. The http method is instead given
-     by the second word in the function name.
+     not have an argument named ‘METHOD’.  The HTTP method is instead
+     given by the second word in the function name.
 
      As described in the documentation for ‘ghub-request’, it depends on
-     the used method whether the value of the PARAMS argument is used as
-     the query or the payload.  For the "PUT", "POST", "PATCH" and
+     the used method whether the value of the ‘PARAMS’ argument is used
+     as the query or the payload.  For the "PUT", "POST", "PATCH" and
      "DELETE" methods it is used as the payload.
 
  -- Function: ghub-wait resource &optional duration &key username auth
@@ -790,16 +792,16 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
      or until the timeout exceeds.  In the latter case it signals
      ‘ghub-error’.
 
-     RESOURCE specifies the resource that this function waits for.
+     ‘RESOURCE’ specifies the resource that this function waits for.
 
-     DURATION specifies for how many seconds to wait at most, defaulting
-     to 64 seconds.  Emacs will block during that time, but the user can
-     abort using ‘C-g’.
+     ‘DURATION’ specifies the maximum number of seconds to wait for,
+     defaulting to 64 seconds.  Emacs will block during that time, but
+     the user can abort using ‘C-g’.
 
-     The first attempt is made immediately and often that will actually
-     succeed.  If not, then another attempt is made after two seconds,
-     and each subsequent attempt is made after waiting as long as we
-     already waited between all preceding attempts combined.
+     The first attempt is made immediately and will often succeed.  If
+     not, then another attempt is made after two seconds, and each
+     subsequent attempt is made after waiting as long as we already
+     waited between all preceding attempts combined.
 
      See ‘ghub-request’’s documentation above for information about the
      other arguments.
@@ -807,14 +809,14 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
  -- Function: ghub-graphql graphql &optional variables &key username
           auth host callback
 
-     This function makes a GraphQL request using GRAPHQL and VARIABLES
-     as inputs.  GRAPHQL is a GraphQL string.  VARIABLES is a JSON-like
-     alist.  The other arguments behave like for ‘ghub-request’ (which
-     see).
+     This function makes a GraphQL request using ‘GRAPHQL’ and
+     ‘VARIABLES’ as inputs.  ‘GRAPHQL’ is a GraphQL string.  ‘VARIABLES’
+     is a JSON-like alist.  The other arguments behave as for
+     ‘ghub-request’ (which see).
 
      The response is returned as a JSON-like alist.  Even if the
      response contains ‘errors’, this function does not raise an error.
-     Likewise cursor-handling too is left to the caller.
+     Cursor-handling is likewise left to the caller.
 
 
 File: ghub.info,  Node: Authentication,  Next: Configuration Variables,  Prev: Making Requests,  Up: API
@@ -825,8 +827,8 @@ File: ghub.info,  Node: Authentication,  Next: Configuration Variables,  Prev: M
  -- Command: ghub-create-token
 
      This command creates a new token using the values it reads from the
-     user and then stores it according to variable ‘auth-sources’.  It
-     can also be called non-interactively, but you shouldn’t do that
+     user and then stores it according to the variable ‘auth-sources’.
+     It can also be called non-interactively, but you shouldn’t do that
      yourself.
 
      This is useful if you want to fully setup things before attempting
@@ -837,15 +839,16 @@ File: ghub.info,  Node: Authentication,  Next: Configuration Variables,  Prev: M
      command you can also just repeat the initial request after making
      the desired adjustments — that is easier.)
 
-     This command reads, in that order, the HOST (Github instance), the
-     USERNAME, the PACKAGE and the SCOPES in the minibuffer, providing
-     reasonable default choices.  SCOPES defaults to the scopes that
-     PACKAGE requests using the variable ‘PACKAGE-github-token-scopes’.
+     This command reads, in order, the ‘HOST’ (Github instance), the
+     ‘USERNAME’, the ‘PACKAGE’, and the ‘SCOPES’ in the minibuffer,
+     providing reasonable default choices.  ‘SCOPES’ defaults to the
+     scopes that ‘PACKAGE’ requests using the variable
+     ‘PACKAGE-github-token-scopes’.
 
  -- Command: ghub-token-scopes
 
      Users are free to give a token access to fewer scopes than what the
-     respective package requested.  That can of course lead to issues
+     respective package requested.  That can, of course, lead to issues,
      and package maintainers have to be able to quickly determine if
      such a (mis-)configuration is the root cause when users report
      issues.
@@ -877,7 +880,7 @@ machine, which is done using a lisp variable.
  -- Variable: github.HOST.user
 
      This variable serves the same purpose as ‘github.user’ but for the
-     Github Enterprise instance identified by HOST.
+     Github Enterprise instance identified by ‘HOST’.
 
      The reason why separate variables are used is that this makes it
      possible to set both values globally instead of having to set one
@@ -893,40 +896,40 @@ machine, which is done using a lisp variable.
      Enterprise instance, including those that should actually be
      connected to Github.com.
 
-     When this is undefined, then "api.github.com" is used (define in
-     the constant ‘ghub-default-host-host’, which you should never
-     attempt to change.)
+     When this is undefined, then "api.github.com" is used (defined in
+     the constant ‘ghub-default-host’, which you should never attempt to
+     change.)
 
  -- Variable: ghub-override-system-name
 
      Ghub uses a different token for each quadruple ‘(USERNAME PACKAGE
-     HOST LOCAL-MACHINE)‘.  Theoretically it could reuse tokens to some
-     extend but that would be more difficult to implement, less
+     HOST LOCAL-MACHINE)’.  Theoretically it could reuse tokens to some
+     extent but that would be more difficult to implement, less
      flexible, and less secure (though slightly more convenient).
 
      A token is identified on the respective Github instance (Github.com
      or a Github Enterprise instance) using the pair ‘(PACKAGE .
-     LOCAL-MACHINE)‘, or more precisely the string "Emacs package
-     PACKAGE @ LOCAL-MACHINE". USERNAME and HOST do not have to be
-     encoded because the token is stored for USERNAME on HOST and cannot
-     be used by another user and/or on another instance.
+     LOCAL-MACHINE)’, or more precisely the string "Emacs package
+     PACKAGE @ LOCAL-MACHINE". ‘USERNAME’ and ‘HOST’ do not have to be
+     encoded because the token is stored for ‘USERNAME’ on ‘HOST’ and
+     cannot be used by another user and/or on another instance.
 
      There is one potential problem though; for any given ‘(PACKAGE .
-     LOCAL-MACHINE)‘ there can only be one token identified by "Emacs
-     package PACKAGE @ LOCAL-MACHINE", Github does not allow multiple
+     LOCAL-MACHINE)’ there can only be one token identified by "Emacs
+     package PACKAGE @ LOCAL-MACHINE"; Github does not allow multiple
      tokens with the same description because it uses the description as
-     the identifier.  (It could use some hash instead, but alas it does
-     not.)
+     the identifier (it could use some hash instead, but alas it does
+     not).
 
      If you have multiple machines and some of them have the same name,
-     then you should probably change that as this is not how thing ought
-     to be.  However if you dual-boot, then it might make sense to give
-     that machine the same name regardless of what operating system you
-     have booted into.
+     then you should probably change that as this is not how things
+     ought to be.  However if you dual-boot, then it might make sense to
+     give that machine the same name regardless of what operating system
+     you have booted into.
 
      You could use the same token on both operating systems, but setting
      that up might be somewhat difficult because it is not possible to
-     download an existing token from Github.  You could of course
+     download an existing token from Github.  You could, of course,
      locally copy the token, but that is inconvenient and would make it
      harder to only revoke the token used on your infected Windows
      installation without also revoking it for your totally safe *BSD
@@ -954,7 +957,7 @@ instead of those in the ‘github’ group, i.e.  ‘gitlab.user’,
 ‘gitlab.HOST.user’ and ‘gitlab.host’.
 
    The Gitlab API cannot be used to create tokens, so Glab cannot
-provide a setup wizard like Ghub does.  As a consequence if the user
+provide a setup wizard like Ghub does.  As a consequence, if the user
 makes a request and the necessary token cannot be found, then that
 results in an error.
 
@@ -964,9 +967,9 @@ or the equivalent URL for another Gitlab instance.  To store the token
 locally, follow the instructions in *note Manually Creating and Storing
 a Token:: and *note How Ghub uses Auth-Source::.
 
-   Packages that use Glab, can define ‘PACKAGE-gitlab-token-scopes’ for
+   Packages that use Glab can define ‘PACKAGE-gitlab-token-scopes’ for
 documentation purposes.  But unlike ‘PACKAGE-github-token-scopes’, which
-is used by the setup wizard this is optional.
+is used by the setup wizard, this is optional.
 
    And a random hint: where you would use ‘user/repo’ when accessing
 Github, you have to use ‘user%2Frepo’ when accessing Gitlab, e.g.:
@@ -976,20 +979,20 @@ Github, you have to use ‘user%2Frepo’ when accessing Gitlab, e.g.:
 
 
 Tag Table:
-Node: Top762
-Node: Introduction2835
-Node: Getting Started5595
-Node: Setting the Username8651
-Node: Interactively Creating and Storing a Token10076
-Node: Manually Creating and Storing a Token15735
-Node: How Ghub uses Auth-Source16952
-Node: Using Ghub in Personal Scripts18885
-Node: Using Ghub in a Package20334
-Node: API22899
-Node: Making Requests23349
-Node: Authentication36677
-Node: Configuration Variables38479
-Node: Gitlab Support42172
+Node: Top763
+Node: Introduction2837
+Node: Getting Started5561
+Node: Setting the Username8619
+Node: Interactively Creating and Storing a Token10044
+Node: Manually Creating and Storing a Token15709
+Node: How Ghub uses Auth-Source16932
+Node: Using Ghub in Personal Scripts18865
+Node: Using Ghub in a Package20321
+Node: API22939
+Node: Making Requests23390
+Node: Authentication37063
+Node: Configuration Variables38908
+Node: Gitlab Support42628
 
 End Tag Table
 

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "quick-peek" "quick-peek.el" (23289 36136 0
+;;;### (autoloads nil "quick-peek" "quick-peek.el" (23332 10347 0
 ;;;;;;  0))
 ;;; Generated autoloads from quick-peek.el
 
@@ -22,8 +22,8 @@ window to expand past the bottom of the current Emacs window.
 
 (autoload 'quick-peek-hide "quick-peek" "\
 Hide inline windows.
-With non-nil POS, clear only windows on line below pos.
-Return number of windows hidden.
+With non-nil POS, clear only overlays on line of POS.
+Return the number of overlays hidden.
 
 \(fn &optional POS)" t nil)
 

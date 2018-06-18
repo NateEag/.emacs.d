@@ -99,6 +99,8 @@
   probably 'Are lines other than the last one and the one before / after point
   less than three-quarters of fill-column?'
 
+- Use gmailieer to sync notmuch tags to gmail: https://github.com/gauteh/gmailieer
+
 - Submit PR to make flycheck-eslint-rulesdir a list.
 
 - Make js-doc use Tern (when available) to guess types for function params.

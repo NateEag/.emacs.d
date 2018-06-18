@@ -125,7 +125,16 @@ TODO Make this delete all messages in buffer, a la notmuch-show-archive-thread-t
     ;; I already have a keybinding for 'archive thread', so rebind Spacebar to
     ;; just let me advance the thread and move to the next one when I'm done
     ;; with it, rather than moving to the next one and archiving.
-    (define-key notmuch-show-mode-map " " 'notmuch-show-advance)
+    (define-key notmuch-show-mode-map (kbd "SPC")
+      (lambda ()
+        "Move to the next message or thread.
+
+I feel like this should be built-in somewhere to notmuch-mode, but I haven't
+found it."
+        (interactive)
+
+        (if (notmuch-show-advance)
+          (notmuch-show-next-thread t))))
 
     ;; Download an attachment locally.
     ;;

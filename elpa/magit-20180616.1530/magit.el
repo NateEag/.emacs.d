@@ -135,12 +135,17 @@ own faces for the `header-line', or for parts of the
 
 (defface magit-refname-stash
   '((t :inherit magit-refname))
-  "Face for wip refnames."
+  "Face for stash refnames."
   :group 'magit-faces)
 
 (defface magit-refname-wip
   '((t :inherit magit-refname))
   "Face for wip refnames."
+  :group 'magit-faces)
+
+(defface magit-refname-pullreq
+  '((t :inherit magit-refname))
+  "Face for pullreq refnames."
   :group 'magit-faces)
 
 (defface magit-keyword

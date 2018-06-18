@@ -4,7 +4,7 @@
 
 ;; Author: alpha22jp <alpha22jp@gmail.com>
 ;; Package-Requires: ((emacs "24.3") (let-alist "1.0.4") (websocket "1.4"))
-;; Package-Version: 20180526.447
+;; Package-Version: 20180617.24
 ;; Keywords: chrome edit textarea
 ;; URL: https://github.com/alpha22jp/atomic-chrome
 ;; Version: 2.0.0
@@ -43,6 +43,7 @@
 (eval-when-compile (require 'cl))
 (require 'json)
 (require 'let-alist)
+(require 'subr-x)
 (require 'websocket)
 
 (defgroup atomic-chrome nil

@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20180602.2253
+;; Package-Version: 20180616.252
 ;; Keywords: project, convenience
 ;; Version: 0.15.0-cvs
 ;; Package-Requires: ((emacs "24.3") (pkg-info "0.4"))
@@ -3636,7 +3636,7 @@ See `projectile-cleanup-known-projects'."
   (unless (projectile-ignored-project-p project-root)
     (setq projectile-known-projects
           (delete-dups
-           (cons (abbreviate-file-name project-root)
+           (cons (file-name-as-directory (abbreviate-file-name project-root))
                  projectile-known-projects)))))
 
 (defun projectile-load-known-projects ()

@@ -69,10 +69,11 @@
 
   (interactive "N")
 
-  ;; 2 extra chars for the fringe on either side.
-  (set-frame-width (selected-frame) (* 82 num-windows))
+  ;; 2 extra chars for the fringe on either side, plus 1 for git
+  ;; status characters in the gutter.
+  (set-frame-width (selected-frame) (* 83 num-windows))
 
-  ;;HACK I never use more than two windows.
+  ;; HACK I never use more than two windows.
  (if (= 2 num-windows)
         (split-window-right)))
 

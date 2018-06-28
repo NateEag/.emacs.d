@@ -63,7 +63,7 @@
 	((:url . "http://elpa.gnu.org/packages/ampc.html")
 	 (:keywords "ampc" "mpc" "mpd"))])
  (arbitools .
-	    [(0 94)
+	    [(0 95)
 	     ((cl-lib
 	       (0 5)))
 	     "Package for chess tournaments administration" single
@@ -89,7 +89,7 @@
 	      ((:url . "http://user42.tuxfamily.org/aumix-mode/index.html")
 	       (:keywords "multimedia" "mixer" "aumix"))])
  (auto-correct .
-	       [(1 1 3)
+	       [(1 1 4)
 		nil "Remembers and automatically fixes past corrections" single
 		((:url . "http://elpa.gnu.org/packages/auto-correct.html")
 		 (:keywords "editing"))])
@@ -375,14 +375,14 @@
 	     ((:url . "http://elpa.gnu.org/packages/ediprolog.html")
 	      (:keywords "languages" "processes"))])
  (eglot .
-	[(0 10)
+	[(1 0)
 	 ((emacs
 	   (26 1)))
 	 "Client for Language Server Protocol (LSP) servers" tar
 	 ((:keywords "convenience" "languages")
 	  (:url . "https://github.com/joaotavora/eglot"))])
  (el-search .
-	    [(1 6 10)
+	    [(1 7 1)
 	     ((emacs
 	       (25))
 	      (stream
@@ -716,7 +716,7 @@
 	   ((:url . "http://elpa.gnu.org/packages/minimap.html")
 	    (:keywords))])
  (mmm-mode .
-	   [(0 5 6)
+	   [(0 5 7)
 	    ((cl-lib
 	      (0 2)))
 	    "Allow Multiple Major Modes in a buffer" tar
@@ -1197,7 +1197,7 @@
 	     ((:keywords "communication" "websocket" "server")
 	      (:url . "http://elpa.gnu.org/packages/websocket.html"))])
  (which-key .
-	    [(3 1 0)
+	    [(3 3 0)
 	     ((emacs
 	       (24 4)))
 	     "Display available keybindings in popup" tar

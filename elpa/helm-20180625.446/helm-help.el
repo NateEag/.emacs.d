@@ -351,6 +351,12 @@ Simply write the path in the prompt and press `RET', e.g.
 
 *** To create a new file, enter a filename not ending with \"/\"
 
+Note that when you enter a new name, this one is prefixed with
+\[?] if you are in a writable directory.  If you are in a directory
+where you have no write permission the new file name is not
+prefixed and is colored in red.  There is not such distinction
+when using tramp, new filename just appear on top of buffer.
+
 *** Recursive search from Helm-find-files
 
 **** You can use Helm-browse-project (see binding below)
@@ -707,10 +713,6 @@ Of course the alias command should support this.
 
 `helm-find-files' works fine with TRAMP despite some limitations.
 
-- By default filenames are not highlighted when working on remote directories,
-this is controled by `helm-ff-tramp-not-fancy' variable.  If you change this,
-expect Helm to be very slow unless your connection is super fast.
-
 - Grepping files is not very well supported when used incrementally.
 See [[Grepping on remote files]].
 
@@ -741,6 +743,16 @@ works with the ssh method), especially when copying large files.
 You need to hit `C-j' once on top of a directory on the first connection
 to complete the pattern in the minibuffer.
 
+**** Display color for directories, symlinks etc... with tramp
+
+Starting at helm version 2.9.7 it is somewhat possible to
+colorize fnames by listing files without loosing performances with
+external commands (ls and awk) if your system is compatible.
+For this you can use `helm-list-dir-external' as value
+for `helm-list-directory-function'.
+
+See `helm-list-directory-function' documentation for more infos.
+ 
 **** Completing host
 
 As soon as you enter the first \":\" after method e.g =/scp:\= you will

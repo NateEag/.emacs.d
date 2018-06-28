@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "python-mode" "python-mode.el" (23215 48794
+;;;### (autoloads nil "python-mode" "python-mode.el" (23349 13400
 ;;;;;;  0 0))
 ;;; Generated autoloads from python-mode.el
 
@@ -71,7 +71,7 @@ Return end of class if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match.
 
-\(fn &optional DECORATOR BOL)" t nil)
+\(fn &optional ARG DECORATOR BOL)" t nil)
 
 (autoload 'py-forward-def-or-class "python-mode" "\
 Go to end of def-or-class.
@@ -80,7 +80,7 @@ Return end of def-or-class if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match.
 
-\(fn &optional DECORATOR BOL)" t nil)
+\(fn &optional ARG DECORATOR BOL)" t nil)
 
 (autoload 'py-forward-def "python-mode" "\
 Go to end of def.
@@ -89,7 +89,7 @@ Return end of def if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match.
 
-\(fn &optional DECORATOR BOL)" t nil)
+\(fn &optional ARG DECORATOR BOL)" t nil)
 
 (autoload 'py-shell "python-mode" "\
 Start an interactive Python interpreter in another window.
@@ -106,7 +106,7 @@ Interactively, \\[universal-argument] prompts for a new ‘buffer-name’.
   SPLIT see var ‘py-split-window-on-execute’
   SWITCH see var ‘py-switch-buffers-on-execute-p’
 
-\(fn &optional ARGPROMPT DEDICATED SHELL BUFFER FAST EXCEPTION-BUFFER SPLIT SWITCH)" t nil)
+\(fn &optional ARGPROMPT DEDICATED SHELL BUFFER FAST EXCEPTION-BUFFER SPLIT SWITCH INPUT-PROMPT)" t nil)
 
 (autoload 'ipython "python-mode" "\
 Start an IPython interpreter.
@@ -224,7 +224,7 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
 
 ;;;***
 
-;;;### (autoloads nil nil ("python-mode-pkg.el") (23215 48794 0 0))
+;;;### (autoloads nil nil ("python-mode-pkg.el") (23349 13400 0 0))
 
 ;;;***
 

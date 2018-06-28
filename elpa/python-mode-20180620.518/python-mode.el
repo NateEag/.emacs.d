@@ -78,6 +78,7 @@
 
 (defconst py-version "6.2.3")
 
+(defvar py-install-directory "")
 (defcustom py-install-directory ""
   "Directory where python-mode.el and it's subdirectories should be installed.
 
@@ -2207,7 +2208,7 @@ can write into: the value (if any) of the environment variable TMPDIR,
 
                           `py-custom-temp-directory' will take precedence when setq")
 
-(defvar py-pdbtrack-input-prompt "^[(<]*[Ii]?[Pp]y?db[>)]+ "
+(defvar py-pdbtrack-input-prompt "^[(<]*[Ii]?[Pp]y?db[>)]+ *"
   "Recognize the prompt.")
 
 (defvar py-pydbtrack-input-prompt "^[(]*ipydb[>)]+ "
@@ -2217,7 +2218,7 @@ can write into: the value (if any) of the environment variable TMPDIR,
   "A regular expression to match the IPython input prompt.")
 
  ;; prevent ipython.el's setting
-(setq py-ipython-input-prompt-re   "In \\[[0-9]+\\]:\\|^[ ]\\{3\\}[.]\\{3,\\}:" )
+(setq py-ipython-input-prompt-re   "[IO][un]t? \\[[0-9]+\\]:\\|^[ ]\\{3\\}[.]\\{3,\\}:" )
 
 (defvar py-exec-command nil
   "Internally used.")
@@ -7553,17 +7554,20 @@ Return beginning of ‘try-block’ if successful, nil otherwise"
   (let ((end (region-end)))
     (when end (goto-char end))))
 
-(defun py-forward-block (&optional decorator bol)
+(defun py-forward-block (&optional arg decorator bol)
   "Go to end of block.
 
 Return end of block if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
-  (interactive)
-  (let* ((orig (point))
-         (erg (py--end-base 'py-block-re orig decorator bol)))
+  (interactive "p")
+  (let (erg)
+    (dotimes (i (or arg 1))
+      (let ((orig (point)))
+	(setq erg (py--end-base 'py-block-re orig decorator bol))))
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
+
 
 (defun py-forward-block-bol ()
   "Goto beginning of line following end of block.
@@ -7576,17 +7580,20 @@ See also ‘py-down-block’: down from current definition to next beginning of 
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
-(defun py-forward-block-or-clause (&optional decorator bol)
+(defun py-forward-block-or-clause (&optional arg decorator bol)
   "Go to end of block-or-clause.
 
 Return end of block-or-clause if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
-  (interactive)
-  (let* ((orig (point))
-         (erg (py--end-base 'py-block-or-clause-re orig decorator bol)))
+  (interactive "p")
+  (let (erg)
+    (dotimes (i (or arg 1))
+      (let ((orig (point)))
+	(setq erg (py--end-base 'py-block-or-clause-re orig decorator bol))))
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
+
 
 (defun py-forward-block-or-clause-bol ()
   "Goto beginning of line following end of block-or-clause.
@@ -7600,17 +7607,20 @@ See also ‘py-down-block-or-clause’: down from current definition to next beg
     erg))
 
 ;;;###autoload
-(defun py-forward-class (&optional decorator bol)
+(defun py-forward-class (&optional arg decorator bol)
   "Go to end of class.
 
 Return end of class if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
-  (interactive)
-  (let* ((orig (point))
-         (erg (py--end-base 'py-class-re orig decorator bol)))
+  (interactive "p")
+  (let (erg)
+    (dotimes (i (or arg 1))
+      (let ((orig (point)))
+	(setq erg (py--end-base 'py-class-re orig decorator bol))))
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
+
 
 (defun py-forward-class-bol ()
   "Goto beginning of line following end of class.
@@ -7623,17 +7633,20 @@ See also ‘py-down-class’: down from current definition to next beginning of 
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
-(defun py-forward-clause (&optional decorator bol)
+(defun py-forward-clause (&optional arg decorator bol)
   "Go to end of clause.
 
 Return end of clause if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
-  (interactive)
-  (let* ((orig (point))
-         (erg (py--end-base 'py-clause-re orig decorator bol)))
+  (interactive "p")
+  (let (erg)
+    (dotimes (i (or arg 1))
+      (let ((orig (point)))
+	(setq erg (py--end-base 'py-clause-re orig decorator bol))))
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
+
 
 (defun py-forward-clause-bol ()
   "Goto beginning of line following end of clause.
@@ -7647,17 +7660,20 @@ See also ‘py-down-clause’: down from current definition to next beginning of
     erg))
 
 ;;;###autoload
-(defun py-forward-def-or-class (&optional decorator bol)
+(defun py-forward-def-or-class (&optional arg decorator bol)
   "Go to end of def-or-class.
 
 Return end of def-or-class if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
-  (interactive)
-  (let* ((orig (point))
-         (erg (py--end-base 'py-def-or-class-re orig decorator bol)))
+  (interactive "p")
+  (let (erg)
+    (dotimes (i (or arg 1))
+      (let ((orig (point)))
+	(setq erg (py--end-base 'py-def-or-class-re orig decorator bol))))
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
+
 
 (defun py-forward-def-or-class-bol ()
   "Goto beginning of line following end of def-or-class.
@@ -7671,17 +7687,20 @@ See also ‘py-down-def-or-class’: down from current definition to next beginn
     erg))
 
 ;;;###autoload
-(defun py-forward-def (&optional decorator bol)
+(defun py-forward-def (&optional arg decorator bol)
   "Go to end of def.
 
 Return end of def if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
-  (interactive)
-  (let* ((orig (point))
-         (erg (py--end-base 'py-def-re orig decorator bol)))
+  (interactive "p")
+  (let (erg)
+    (dotimes (i (or arg 1))
+      (let ((orig (point)))
+	(setq erg (py--end-base 'py-def-re orig decorator bol))))
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
+
 
 (defun py-forward-def-bol ()
   "Goto beginning of line following end of def.
@@ -7694,17 +7713,20 @@ See also ‘py-down-def’: down from current definition to next beginning of de
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
-(defun py-forward-if-block (&optional decorator bol)
+(defun py-forward-if-block (&optional arg decorator bol)
   "Go to end of if-block.
 
 Return end of if-block if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
-  (interactive)
-  (let* ((orig (point))
-         (erg (py--end-base 'py-if-block-re orig decorator bol)))
+  (interactive "p")
+  (let (erg)
+    (dotimes (i (or arg 1))
+      (let ((orig (point)))
+	(setq erg (py--end-base 'py-if-block-re orig decorator bol))))
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
+
 
 (defun py-forward-if-block-bol ()
   "Goto beginning of line following end of if-block.
@@ -7717,17 +7739,20 @@ See also ‘py-down-if-block’: down from current definition to next beginning 
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
-(defun py-forward-elif-block (&optional decorator bol)
+(defun py-forward-elif-block (&optional arg decorator bol)
   "Go to end of elif-block.
 
 Return end of elif-block if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
-  (interactive)
-  (let* ((orig (point))
-         (erg (py--end-base 'py-elif-block-re orig decorator bol)))
+  (interactive "p")
+  (let (erg)
+    (dotimes (i (or arg 1))
+      (let ((orig (point)))
+	(setq erg (py--end-base 'py-elif-block-re orig decorator bol))))
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
+
 
 (defun py-forward-elif-block-bol ()
   "Goto beginning of line following end of elif-block.
@@ -7740,17 +7765,20 @@ See also ‘py-down-elif-block’: down from current definition to next beginnin
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
-(defun py-forward-else-block (&optional decorator bol)
+(defun py-forward-else-block (&optional arg decorator bol)
   "Go to end of else-block.
 
 Return end of else-block if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
-  (interactive)
-  (let* ((orig (point))
-         (erg (py--end-base 'py-else-block-re orig decorator bol)))
+  (interactive "p")
+  (let (erg)
+    (dotimes (i (or arg 1))
+      (let ((orig (point)))
+	(setq erg (py--end-base 'py-else-block-re orig decorator bol))))
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
+
 
 (defun py-forward-else-block-bol ()
   "Goto beginning of line following end of else-block.
@@ -7763,17 +7791,20 @@ See also ‘py-down-else-block’: down from current definition to next beginnin
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
-(defun py-forward-for-block (&optional decorator bol)
+(defun py-forward-for-block (&optional arg decorator bol)
   "Go to end of for-block.
 
 Return end of for-block if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
-  (interactive)
-  (let* ((orig (point))
-         (erg (py--end-base 'py-for-block-re orig decorator bol)))
+  (interactive "p")
+  (let (erg)
+    (dotimes (i (or arg 1))
+      (let ((orig (point)))
+	(setq erg (py--end-base 'py-for-block-re orig decorator bol))))
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
+
 
 (defun py-forward-for-block-bol ()
   "Goto beginning of line following end of for-block.
@@ -7786,17 +7817,20 @@ See also ‘py-down-for-block’: down from current definition to next beginning
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
-(defun py-forward-except-block (&optional decorator bol)
+(defun py-forward-except-block (&optional arg decorator bol)
   "Go to end of except-block.
 
 Return end of except-block if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
-  (interactive)
-  (let* ((orig (point))
-         (erg (py--end-base 'py-except-block-re orig decorator bol)))
+  (interactive "p")
+  (let (erg)
+    (dotimes (i (or arg 1))
+      (let ((orig (point)))
+	(setq erg (py--end-base 'py-except-block-re orig decorator bol))))
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
+
 
 (defun py-forward-except-block-bol ()
   "Goto beginning of line following end of except-block.
@@ -7809,17 +7843,20 @@ See also ‘py-down-except-block’: down from current definition to next beginn
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
-(defun py-forward-try-block (&optional decorator bol)
+(defun py-forward-try-block (&optional arg decorator bol)
   "Go to end of try-block.
 
 Return end of try-block if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
-  (interactive)
-  (let* ((orig (point))
-         (erg (py--end-base 'py-try-block-re orig decorator bol)))
+  (interactive "p")
+  (let (erg)
+    (dotimes (i (or arg 1))
+      (let ((orig (point)))
+	(setq erg (py--end-base 'py-try-block-re orig decorator bol))))
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
+
 
 (defun py-forward-try-block-bol ()
   "Goto beginning of line following end of try-block.
@@ -7832,17 +7869,20 @@ See also ‘py-down-try-block’: down from current definition to next beginning
     (when (called-interactively-p 'any) (message "%s" erg))
     erg))
 
-(defun py-forward-minor-block (&optional decorator bol)
+(defun py-forward-minor-block (&optional arg decorator bol)
   "Go to end of minor-block.
 
 Return end of minor-block if successful, nil otherwise
 Optional arg DECORATOR is used if form supports one
 With optional BOL, go to beginning of line following match."
-  (interactive)
-  (let* ((orig (point))
-         (erg (py--end-base 'py-minor-block-re orig decorator bol)))
+  (interactive "p")
+  (let (erg)
+    (dotimes (i (or arg 1))
+      (let ((orig (point)))
+	(setq erg (py--end-base 'py-minor-block-re orig decorator bol))))
     (when (and py-verbose-p (called-interactively-p 'any)) (message "%s" erg))
     erg))
+
 
 (defun py-forward-minor-block-bol ()
   "Goto beginning of line following end of minor-block.
@@ -10376,7 +10416,7 @@ Receives a ‘buffer-name’ as argument"
 	(t (mapconcat 'identity py-python-command-args " "))))
 
 ;;;###autoload
-(defun py-shell (&optional argprompt dedicated shell buffer fast exception-buffer split switch)
+(defun py-shell (&optional argprompt dedicated shell buffer fast exception-buffer split switch input-prompt)
   "Start an interactive Python interpreter in another window.
 Interactively, \\[universal-argument] prompts for a new ‘buffer-name’.
   \\[universal-argument] 2 prompts for ‘py-python-command-args’.
@@ -10392,7 +10432,11 @@ Interactively, \\[universal-argument] prompts for a new ‘buffer-name’.
   SWITCH see var ‘py-switch-buffers-on-execute-p’"
   (interactive "P")
   ;; done by py-shell-mode
-  (let* (
+  (let* ((py-pdbtrack-input-prompt
+	  (or input-prompt
+	      (pcase shell
+		(ipython py-pydbtrack-input-prompt)
+		(_  py-pdbtrack-input-prompt)))) 
 	 ;; (windows-config (window-configuration-to-register 313465889))
 	 (fast (or fast py-fast-process-p))
 	 (dedicated (or dedicated py-dedicated-process-p))
@@ -11549,7 +11593,7 @@ Otherwise return resuslt from `executable-find'"
 
 ;; pdbtrack constants
 (defconst py-pdbtrack-stack-entry-regexp
-   (concat ".*\\("py-shell-input-prompt-1-regexp">\\|>\\) *\\(.*\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>()]+\\)()")
+   (concat ".*\\("py-shell-input-prompt-1-regexp">\\|"py-ipython-input-prompt-re">\\|>\\) *\\(.*\\)(\\([0-9]+\\))\\([?a-zA-Z0-9_<>()]+\\)()")
   "Regular expression pdbtrack uses to find a stack trace entry.")
 
 (defconst py-pdbtrack-marker-regexp-file-group 2
@@ -11663,7 +11707,9 @@ problem as best as we can determine."
            ;; pydb integration still to be done
            ;; (not (string-match py-pydbtrack-stack-entry-regexp block))
 	   )
-      "Traceback cue not found"
+      (prog1
+	  "Traceback cue not found"
+	(message "Block: %s" block))
     (let* ((remote-prefix (or (file-remote-p default-directory) ""))
            (filename (concat remote-prefix
                              (match-string
@@ -11743,12 +11789,12 @@ named for funcname or define a function funcname."
          (setq py-pdbtrack-do-tracking-p nil))
         ((> (prefix-numeric-value arg) 0)
          (setq py-pdbtrack-do-tracking-p t)))
-  (if py-pdbtrack-do-tracking-p
-      (progn
-        (add-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file t)
-        (remove-hook 'comint-output-filter-functions 'python-pdbtrack-track-stack-file t))
-    (remove-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file t)
-    )
+  ;; (if py-pdbtrack-do-tracking-p
+  ;;     (progn
+  ;;       (add-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file t)
+  ;;       (remove-hook 'comint-output-filter-functions 'python-pdbtrack-track-stack-file t))
+  ;;   (remove-hook 'comint-output-filter-functions 'py--pdbtrack-track-stack-file t)
+  ;;   )
   (message "%sabled Python's pdbtrack"
            (if py-pdbtrack-do-tracking-p "En" "Dis")))
 
@@ -13711,7 +13757,7 @@ not be passed explicitly unless you know what you are doing."
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter."
   (interactive "P")
-  (py-shell argprompt nil "ipython" buffer fast exception-buffer split switch))
+  (py-shell argprompt nil "ipython" buffer fast exception-buffer split switch py-ipython-input-prompt-re))
 
 ;;;###autoload
 (defun ipython2.7 (&optional argprompt buffer fast exception-buffer split switch)

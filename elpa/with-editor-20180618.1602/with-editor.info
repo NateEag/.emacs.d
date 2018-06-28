@@ -10,7 +10,7 @@ with-editor.texi.
 
      This document is distributed in the hope that it will be useful,
      but WITHOUT ANY WARRANTY; without even the implied warranty of
-     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
      General Public License for more details.
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
@@ -38,7 +38,7 @@ library is made available as a separate package.  It also defines some
 additional functionality which makes it useful even for end-users, who
 don’t use Magit or another package which uses it internally.
 
-This manual is for With-Editor version 2.7.1.
+This manual is for With-Editor version 2.7.3 (v2.7.3+1).
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -49,7 +49,7 @@ This manual is for With-Editor version 2.7.1.
 
      This document is distributed in the hope that it will be useful,
      but WITHOUT ANY WARRANTY; without even the implied warranty of
-     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
      General Public License for more details.
 
 * Menu:
@@ -292,7 +292,7 @@ package::.
      This is done by wrapping the two filter functions using a lambda,
      which becomes the actual filter.  It calls
      ‘with-editor-process-filter’ first, passing ‘t’ as
-     NO-STANDARD-FILTER. Then it calls FILTER.
+     NO-STANDARD-FILTER.  Then it calls FILTER.
 
 
 File: with-editor.info,  Node: Debugging,  Prev: Using With-Editor as a library,  Up: Top
@@ -316,12 +316,12 @@ Emacs and what is the output of ‘M-x with-editor-debug RET’.
 
 
 Tag Table:
-Node: Top771
-Node: Using the With-Editor package2510
-Node: Configuring With-Editor3096
-Node: Using With-Editor commands7493
-Node: Using With-Editor as a library10756
-Node: Debugging12451
+Node: Top772
+Node: Using the With-Editor package2523
+Node: Configuring With-Editor3109
+Node: Using With-Editor commands7506
+Node: Using With-Editor as a library10769
+Node: Debugging12465
 
 End Tag Table
 

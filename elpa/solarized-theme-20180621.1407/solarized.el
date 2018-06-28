@@ -922,6 +922,9 @@ customize the resulting theme."
        ((,(append '((supports :underline (:style wave))) class)
          (:underline (:style wave :color ,red) :inherit unspecified))
         (,class (:foreground ,red :weight bold :underline t))))
+;;;;; form-feed
+     `(form-feed-line
+       ((,class (:strike-through ,s-line))))
 ;;;;; git-commit
      `(git-commit-comment-action  ((,class (:foreground ,base0  :weight bold))))
      `(git-commit-comment-branch ; obsolete
@@ -1169,6 +1172,11 @@ customize the resulting theme."
      `(ido-virtual ((,class (:foreground ,cyan))))
 ;;;;; iedit-mode
      `(iedit-occurrence ((,class (:background ,base03 :foreground ,magenta :bold t))))
+;;;;; imenu-list
+     `(imenu-list-entry-face-0 ((,class (:inherit font-lock-type-face))))
+     `(imenu-list-entry-face-1 ((,class (:inherit font-lock-function-name-face))))
+     `(imenu-list-entry-face-2 ((,class (:inherit font-lock-variable-name-face))))
+     `(imenu-list-entry-face-3 ((,class (:inherit font-lock-string-face))))
 ;;;;; info
      `(info-title-1 ((,class (:foreground ,base1 :weight bold))))
      `(info-title-2 ((,class (:foreground ,base1 :weight bold))))
@@ -1348,6 +1356,11 @@ customize the resulting theme."
      `(kite-tag-delimiter-face ((,class (:inherit kite-delimiter-face))))
      `(kite-tag-slash-face ((,class (:inherit kite-name-face))))
      `(kite-undefined ((,class (:inherit font-lock-constant-face))))
+;;;;; langtool
+     `(langtool-errline ((,(append '((supports :underline (:style wave))) class)
+                          (:underline (:style wave :color ,green) :inherit unspecified))
+                         (,class (:foreground ,red :weight bold :underline t))))
+     `(langtool-correction-face ((,class (:inherit default :weight bold))))
 ;;;;; ledger-mode
      `(ledger-font-payee-uncleared-face ((t (:foreground ,red))))
      `(ledger-font-payee-cleared-face ((t (:foreground ,green :weight normal))))
@@ -1366,10 +1379,10 @@ customize the resulting theme."
      `(ledger-font-reconciler-pending-face ((t (:foreground ,yellow :weight normal))))
      `(ledger-font-report-clickable-face ((t (:foreground ,yellow :weight normal))))
 ;;;;; linum-mode
-     `(linum ((,class (:weight normal :underline nil :foreground ,s-fringe-fg :background ,s-fringe-bg))))
+     `(linum ((,class (:weight thin :underline nil :foreground ,s-fringe-fg :background ,s-fringe-bg))))
      `(linum-relative-current-face ((,class (:inherit linum))))
 ;;;;; display-line-number-mode
-     `(line-number ((,class (:weight normal :underline nil :foreground ,s-fringe-fg :background ,s-fringe-bg))))
+     `(line-number ((,class (:weight thin :underline nil :foreground ,s-fringe-fg :background ,s-fringe-bg))))
 ;;;;; lsp-ui
      `(lsp-ui-sideline-code-action ((,class (:foreground ,yellow :weight normal))))
 ;;;;; lusty-explorer
@@ -1711,6 +1724,7 @@ customize the resulting theme."
                                       :foreground ,blue))))
      `(org-link ((,class (:foreground ,yellow :underline t))))
      `(org-meta-line ((,class (:foreground ,base01 :slant italic))))
+     `(org-macro ((,class (:foreground ,s-base1))))
      `(org-sexp-date ((,class (:foreground ,violet))))
      `(org-scheduled ((,class (:foreground ,green))))
      `(org-scheduled-previously ((,class (:foreground ,cyan))))

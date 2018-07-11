@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "python-mode" "python-mode.el" (23349 13400
-;;;;;;  0 0))
+;;;### (autoloads nil "python-mode" "python-mode.el" (23366 418 0
+;;;;;;  0))
 ;;; Generated autoloads from python-mode.el
 
 (autoload 'py-backward-class "python-mode" "\
@@ -92,7 +92,8 @@ With optional BOL, go to beginning of line following match.
 \(fn &optional ARG DECORATOR BOL)" t nil)
 
 (autoload 'py-shell "python-mode" "\
-Start an interactive Python interpreter in another window.
+Start a Python interpreter.
+
 Interactively, \\[universal-argument] prompts for a new ‘buffer-name’.
   \\[universal-argument] 2 prompts for ‘py-python-command-args’.
   If ‘default-directory’ is a remote file name, it is also prompted
@@ -103,10 +104,14 @@ Interactively, \\[universal-argument] prompts for a new ‘buffer-name’.
   BUFFER allows specifying a name, the Python process is connected to
   FAST process not in ‘comint-mode’ buffer
   EXCEPTION-BUFFER point to error
-  SPLIT see var ‘py-split-window-on-execute’
-  SWITCH see var ‘py-switch-buffers-on-execute-p’
+  Optional SPLIT see var ‘py-split-window-on-execute’
+  Optional SWITCH see var ‘py-switch-buffers-on-execute-p’
+  Optional INPUT-PROMPT permit command to set prompt
+  Optional INTERNAL shell will be invisible for users
 
-\(fn &optional ARGPROMPT DEDICATED SHELL BUFFER FAST EXCEPTION-BUFFER SPLIT SWITCH INPUT-PROMPT)" t nil)
+ \\[describe-mode] in the process buffer provides more info.
+
+\(fn &optional ARGPROMPT DEDICATED SHELL BUFFER FAST EXCEPTION-BUFFER SPLIT SWITCH INPUT-PROMPT INTERNAL)" t nil)
 
 (autoload 'ipython "python-mode" "\
 Start an IPython interpreter.
@@ -210,10 +215,10 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
 \(fn)" t nil)
 
 (autoload 'py-ipython-shell-mode "python-mode" "\
-Major mode for interacting with a Python process.
+Major mode for interacting with a (I)Python process.
 A Python process can be started with \\[py-shell].
 
-You can send text to the Python process from other buffers
+You can send text to the (I)Python process from other buffers
 containing Python source.
  * \\[py-execute-region] sends the current region to the Python process.
 
@@ -224,7 +229,7 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
 
 ;;;***
 
-;;;### (autoloads nil nil ("python-mode-pkg.el") (23349 13400 0 0))
+;;;### (autoloads nil nil ("python-mode-pkg.el") (23366 418 0 0))
 
 ;;;***
 

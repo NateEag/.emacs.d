@@ -755,10 +755,10 @@ See `helm-list-directory-function' documentation for more infos.
  
 **** Completing host
 
-As soon as you enter the first \":\" after method e.g =/scp:\= you will
-have some completion about previously used hosts or from your =~/.ssh/config\=
+As soon as you enter the first \":\" after method e.g =/scp:= you will
+have some completion about previously used hosts or from your =~/.ssh/config=
 file, hitting `\\[helm-execute-persistent-action]' or `right' on a candidate will insert this host in minibuffer
-without addind the ending \":\".
+without addind the ending \":\", second hit insert the last \":\".
 As soon the last \":\" is entered TRAMP will kick in and you should see the list
 of candidates soon after.
 
@@ -837,9 +837,6 @@ be deleted in background without asking.
 A good compromise is to trash your files
 when using asynchronous method (see [[Trashing files][Trashing files]]).
 
-Note that emacs is always making a backup of your files when
-deleting, medias though are definitely deleted with no backup.
-
 When choosing synchronous delete, you can allow recursive
 deletion of directories with `helm-ff-allow-recursive-deletes'.
 Note that when trashing (synchronous) you are not asked for recursive deletion.
@@ -849,10 +846,8 @@ deleting asynchronously.
 
 First method (persistent delete) is always synchronous.
 
-Note that delete async and delete sync are always accessible from
-actions menu so that you can use one or the other if needed.
-
-Note that when a prefix arg is given, trashing is disabled see [[Trashing files][Trashing files]].
+Note that when a prefix arg is given, trashing behavior is inversed.
+See [[Trashing files][Trashing files]].
 
 **** Trashing files
 
@@ -860,9 +855,33 @@ If you want to trash your files instead of deleting them you can
 set `delete-by-moving-to-trash' to non nil, like this your files
 will be moved to trash instead of beeing deleted.
 
-Note that all the delete commands called with a prefix arg (C-u)
-disable `delete-by-moving-to-trash' and BTW delete files instead
-of trashing them.
+You can reverse at any time the behavior of `delete-by-moving-to-trash' by using
+a prefix arg with any of the delete files command.
+
+On GNULinux distribution, when navigating to a Trash directory you
+can restore any file in ..Trash/files directory with the 'Restore
+from trash' action you will find in action menu (needs the
+trash-cli package installed).
+
+_WARNING:_
+
+If you have an ENV var XDG_DATA_HOME in your .profile or .bash_profile
+and this var is set to something like $HOME/.local/share (like preconized)
+`move-file-to-trash' may try to create $HOME/.local/share/Trash (literally)
+and its subdirs in the directory where you are actually trying to trash files.
+because `move-file-to-trash' is interpreting XDG_DATA_HOME literally instead
+of evaling its value (with `substitute-in-file-name').
+
+***** Trashing remote files with tramp
+
+Trashing remote files (or local files with sudo method) is disabled by default
+because tramp is requiring the 'trash' command to be installed, if you want to
+trash your remote files, customize `helm-trash-remote-files'.
+The package on most GNU/Linux based distributions is trash-cli, it is available [[https://github.com/andreafrancia/trash-cli][here]].
+
+NOTE:
+When deleting your files with sudo method, your trashed files will not be listed
+with trash-list until you log in as root.
 
 ** Commands
 \\<helm-find-files-map>
@@ -1590,12 +1609,34 @@ You can refile one or more headings at a time.
 
 To refile one heading, move the point to the entry you want to refile and run
 \\[helm-org-in-buffer-headings].  Then select the heading you want to refile to
-and press \\[C-c w] or select the refile action from the actions menu.
+and press \\<helm-org-headings-map>\\[helm-org-run-refile-heading-to] or select the refile action from the actions menu.
 
 To refile multiple headings, run \\[helm-org-in-buffer-headings] and mark the
 headings you want to refile.  Then select the heading you want to refile to
-\(without marking it) and press \\[C-c w] or select the refile action from the
+\(without marking it) and press \\<helm-org-headings-map>\\[helm-org-run-refile-heading-to] or select the refile action from the
 actions menu.
+
+*** Tags completion
+
+Tags completion use `completing-read-multiple', perhaps have a
+look at its docstring.
+
+**** Single tag
+
+From an org heading hit C-c C-c which provide a
+\"Tags\" prompt, then hit TAB and RET if you want to enter an
+existing tag or write a new tag in prompt.  At this point you end
+up with an entry in your prompt, if you enter RET, the entry is
+added as tag in your org header.
+
+**** Multiple tags
+
+If you want to add more tag to your org header, add a separator[1] after
+your tag and write a new tag or hit TAB to find another existing
+tag, and so on until you have all the tags you want
+e.g \"foo,bar,baz\" then press RET to finally add the tags to your
+org header.
+Note: [1] A separator can be a comma, a colon i.e. [,:] or a space.
 
 ** Commands
 \\<helm-org-headings-map>

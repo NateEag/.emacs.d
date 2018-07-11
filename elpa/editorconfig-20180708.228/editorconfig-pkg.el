@@ -1,4 +1,4 @@
-(define-package "editorconfig" "20180619.908" "EditorConfig Emacs Plugin"
+(define-package "editorconfig" "20180708.228" "EditorConfig Emacs Plugin"
   '((cl-lib "0.5"))
   :url "https://github.com/editorconfig/editorconfig-emacs#readme")
 ;; Local Variables:

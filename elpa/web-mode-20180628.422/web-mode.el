@@ -4,7 +4,7 @@
 ;; Copyright 2011-2018 François-Xavier Bois
 
 ;; Version: 16.0.12
-;; Package-Version: 20180620.110
+;; Package-Version: 20180628.422
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Package-Requires: ((emacs "23.1"))
@@ -4284,6 +4284,8 @@ another auto-completion with different ac-sources (e.g. ac-php)")
          ((web-mode-block-starts-with "else" reg-beg)
           (setq controls (append controls (list (cons 'inside "ctrl")))))
          ((web-mode-block-ends-with " do" reg-beg)
+          (setq controls (append controls (list (cons 'open "ctrl")))))
+         ((web-mode-block-ends-with " ->" reg-beg)
           (setq controls (append controls (list (cons 'open "ctrl")))))
          )
         ) ;elixir

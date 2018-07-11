@@ -3,7 +3,7 @@
 ;; Copyright (C) 2012 ~ 2015 Thierry Volpiatto <thierry.volpiatto@gmail.com>
 
 ;; Package-Requires: ((helm "1.7.8"))
-;; Package-Version: 20180601.812
+;; Package-Version: 20180711.223
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -188,14 +188,33 @@ as `magit-status' is working only interactively (it will not work from helm-ls-g
 
 *** Git grep usage
 
+The behavior is not exactly the same as what you have when you
+launch git-grep from `helm-find-files', here in what it differ:
+
+1) The prefix arg allow to grep only the `default-directory' whereas
+with `helm-find-files' the prefix arg allow browsing the whole repo.
+So with `helm-ls-git' the default is to grep the whole repo.
+
+2) With `helm-ls-git', because you have the whole list of files of the repo
+you can mark some of the files to grep only those, if no files are marked grep
+the whole repo or the files under current directory depending of prefix arg.
+
+NOTE: The previous behavior was prompting user for the file
+extensions to grep, this is non sense because we have here the
+whole list of files (recursive) of current repo and not only the
+file under current directory, so we have better time
+selectionning the files we want to grep.
+
 **** With no prefix arg.
 
 Git grep all files in current repository.
 
 **** With one prefix arg.
 
-Git grep all files in current repository with a specific extension,
-\(you will be prompted for choosing extension\).
+Git grep all files in current directory i.e. `default-directory'.
+It may be the `default-directory' from the buffer you started
+from or the directory from where you launched `helm-ls-git' from
+`helm-find-files'.
 
 **** Grep a subdirectory of current repository.
 
@@ -331,7 +350,7 @@ and launch git-grep from there.
                       (lambda (_candidate)
                         (funcall helm-ls-git-status-command
                                  (helm-default-directory)))
-                      "Git grep files (`C-u' only with ext)"
+                      "Git grep files (`C-u' only current directory)"
                       'helm-ls-git-grep
                       "Gid" 'helm-ff-gid
                       "Search in Git log (C-u show patch)"
@@ -384,19 +403,15 @@ and launch git-grep from there.
 (defun helm-ls-git-grep (_candidate)
   (let* ((helm-grep-default-command helm-ls-git-grep-command)
          helm-grep-default-recurse-command
-         (files (cond ((equal helm-current-prefix-arg '(4))
-                       (list (format helm-ls-git-format-glob-string
-                                     (mapconcat
-                                      'identity
-                                      (helm-grep-get-file-extensions
-                                       (helm-marked-candidates))
-                                      " "))))
-                      (t '(""))))
+         (mkd (helm-marked-candidates))
+         (files (if (cdr mkd) mkd '("")))
          ;; Expand filename of each candidate with the git root dir.
          ;; The filename will be in the help-echo prop.
          (helm-grep-default-directory-fn 'helm-ls-git-root-dir)
          ;; set `helm-ff-default-directory' to the root of project.
-         (helm-ff-default-directory (helm-ls-git-root-dir)))
+         (helm-ff-default-directory (if helm-current-prefix-arg
+                                        default-directory
+                                      (helm-ls-git-root-dir))))
     (helm-do-grep-1 files)))
 
 (defun helm-ls-git-run-grep ()
@@ -491,7 +506,7 @@ and launch git-grep from there.
                                       (file-name-directory candidate))
                                      (marked (helm-marked-candidates)))
                                  (vc-call-backend 'Git 'register marked))))
-                         '("Delete file(s)" . helm-delete-marked-files)
+                         '("Delete file(s)" . helm-ff-delete-files)
                          '("Copy bnames to .gitignore"
                            . (lambda (candidate)
                                (let ((default-directory
@@ -688,20 +703,23 @@ Do nothing when `helm-source-ls-git-buffers' is not member of
 ;;;###autoload
 (defun helm-ls-git-ls (&optional arg)
   (interactive "p")
-  (when (and arg (helm-ls-git-not-inside-git-repo))
-    (error "Not inside a Git repository"))
-  (unless (cl-loop for s in helm-ls-git-default-sources
-                   always (symbol-value s))
-    (setq helm-source-ls-git-status
-          (helm-ls-git-build-git-status-source)
-          helm-source-ls-git
-          (helm-ls-git-build-ls-git-source)
-          helm-source-ls-git-buffers
-          (helm-ls-git-build-buffers-source)))
-  (helm-set-local-variable 'helm-ls-git--current-branch (helm-ls-git--branch))
-  (helm :sources helm-ls-git-default-sources
-        :ff-transformer-show-only-basename nil
-        :buffer "*helm lsgit*"))
+  (let ((helm-ff-default-directory
+         (or helm-ff-default-directory
+             default-directory)))
+    (when (and arg (helm-ls-git-not-inside-git-repo))
+      (error "Not inside a Git repository"))
+    (unless (cl-loop for s in helm-ls-git-default-sources
+                     always (symbol-value s))
+      (setq helm-source-ls-git-status
+            (helm-ls-git-build-git-status-source)
+            helm-source-ls-git
+            (helm-ls-git-build-ls-git-source)
+            helm-source-ls-git-buffers
+            (helm-ls-git-build-buffers-source)))
+    (helm-set-local-variable 'helm-ls-git--current-branch (helm-ls-git--branch))
+    (helm :sources helm-ls-git-default-sources
+          :ff-transformer-show-only-basename nil
+          :buffer "*helm lsgit*")))
 
 
 (provide 'helm-ls-git)

@@ -1894,8 +1894,16 @@ Appendix D Command Index
 * magit-fetch-popup:                     Fetching.            (line  11)
 * magit-fetch-refspec:                   Fetching.            (line  33)
 * magit-file-checkout:                   Resetting.           (line  37)
+* magit-file-checkout <1>:               Minor Mode for Buffers Visiting Files.
+                                                              (line 131)
+* magit-file-delete:                     Minor Mode for Buffers Visiting Files.
+                                                              (line 123)
 * magit-file-popup:                      Minor Mode for Buffers Visiting Files.
                                                               (line  19)
+* magit-file-rename:                     Minor Mode for Buffers Visiting Files.
+                                                              (line 119)
+* magit-file-untrack:                    Minor Mode for Buffers Visiting Files.
+                                                              (line 127)
 * magit-find-file:                       Visiting Blobs.      (line   6)
 * magit-find-file-other-window:          Visiting Blobs.      (line  11)
 * magit-format-patch:                    Creating and Sending Patches.
@@ -2222,6 +2230,14 @@ Appendix E Function Index
 * magit-display-buffer-same-window-except-diff-v1: Switching Buffers.
                                                               (line  50)
 * magit-display-buffer-traditional:      Switching Buffers.   (line  42)
+* magit-file-checkout:                   Minor Mode for Buffers Visiting Files.
+                                                              (line 131)
+* magit-file-delete:                     Minor Mode for Buffers Visiting Files.
+                                                              (line 123)
+* magit-file-rename:                     Minor Mode for Buffers Visiting Files.
+                                                              (line 119)
+* magit-file-untrack:                    Minor Mode for Buffers Visiting Files.
+                                                              (line 127)
 * magit-generate-buffer-name-default-function: Naming Buffers.
                                                               (line  17)
 * magit-get-section:                     Matching Sections.   (line  16)

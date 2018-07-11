@@ -30,7 +30,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-This manual is for Magit version 2.13.0 (2.13.0-59-g2e84b68f+1).
+This manual is for Magit version 2.13.0 (2.13.0-69-gbc8b275e+1).
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -7488,6 +7488,38 @@ few key bindings, but this might be extended in the future.
 ‘C-c M-g p’     (‘magit-blob-previous’)
 
      Visit the previous blob which modified the current file.
+
+   There are a few additional commands that operate on a single file but
+are not available from the file popup by default:
+
+ -- Command: magit-file-rename
+
+     This command renames a file read from the user.
+
+ -- Command: magit-file-delete
+
+     This command deletes a file read from the user.
+
+ -- Command: magit-file-untrack
+
+     This command untracks a file read from the user.
+
+ -- Command: magit-file-checkout
+
+     This command updates a file in the working tree and index to the
+     contents from a revision.  Both the revision and file are read from
+     the user.
+
+   You could add them to the popup like so:
+
+     (magit-define-popup-action 'magit-file-popup
+       ?R "Rename file" 'magit-file-rename)
+     (magit-define-popup-action 'magit-file-popup
+       ?K "Delete file" 'magit-file-delete)
+     (magit-define-popup-action 'magit-file-popup
+       ?U "Untrack file" 'magit-file-untrack)
+     (magit-define-popup-action 'magit-file-popup
+       ?C "Checkout file" 'magit-file-checkout)
 
 
 File: magit.info,  Node: Minor Mode for Buffers Visiting Blobs,  Prev: Minor Mode for Buffers Visiting Files,  Up: Miscellaneous

@@ -1,9 +1,31 @@
-- Use <leader>-. and <leader>-, for 'jump to def' and 'back to prev', as they
-  do in most modes. IIRC this is not actually straightforward to do, but it
-  would sure beat hopping into insert mode and back out all the time when I'm
-  navigating. ...note that in stock evil, 'gd.' will attempt a jump to def, so
-  maybe I just need to get used to normal-mode's C-o binding for jumping back
-  where you last came from?
+- Use <leader>-. and <leader>-, for 'jump to def' and 'back to prev', as M-.
+  and M-, do in most modes. IIRC this is not actually straightforward to do,
+  but it would sure beat hopping into insert mode and back out all the time
+  when I'm navigating. ...note that in stock evil, 'gd.' will attempt a jump to
+  def, so maybe I just need to get used to normal-mode's C-o binding for
+  jumping back where you last came from?
+
+- Try integrating web-mode-edit-element into my markup editing style, or else
+  figuring out how to get smartparens slurp/barf/etc working in web-mode. If it
+  works out, delete my prototypical work on making tagedit work with web-mode
+  in favor of it, per this comment of mine:
+  https://github.com/magnars/tagedit/pull/15#issuecomment-260336539
+
+- Look at using lsp-html with web-mode. See what it might buy me.
+
+- Figure out how to make smartparens interact nicely with web-mode. '{{' and
+  '{%' don't work right when both are on, but I don't see a way to ban
+  multi-character sequences from smartparens, and I don't want to lose pairing
+  braces in CSS and JS.
+
+  Years later, I just realized it would help to only activate smartparens when
+  I'm in JS, CSS, or a server-side language, since I'm usually writing '{{' and
+  '{%' in markup, not genuine languages. Basically advise smartparens key
+  handlers if you're in web-mode and only let them fire when you're not in
+  markup. Note that it's only really braces I'd want to turn off pairing for -
+  most other pairs don't have this issue.
+
+- Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
 
 - Add function to spawn an emacs instance with my installed packages but none
   of my customizations looking at exactly the file and location I'm currently
@@ -22,24 +44,6 @@
 
 - Start using package-quickstart to speed up start times once Emacs 27.1 is
   released.
-
-- Figure out how to make smartparens interact nicely with web-mode. '{{' and
-  '{%' don't work right when both are on, but I don't see a way to ban
-  multi-character sequences from smartparens, and I don't want to lose pairing
-  braces in CSS and JS.
-
-  Years later, I just realized it would help to only activate smartparens when
-  I'm in JS, CSS, or a server-side language, since I'm usually writing '{{' and
-  '{%' in markup, not genuine languages. Basically advise smartparens key
-  handlers if you're in web-mode and only let them fire when you're not in
-  markup. Note that it's only really braces I'd want to turn off pairing for -
-  most other pairs don't have this issue.
-
-- Try integrating web-mode-edit-element into my markup editing style, or else
-  figuring out how to get smartparens slurp/barf/etc working in web-mode. If it
-  works out, delete my prototypical work on making tagedit work with web-mode
-  in favor of it, per this comment of mine:
-  https://github.com/magnars/tagedit/pull/15#issuecomment-260336539
 
 - Make smart-dash-mode aware of it when I'm editing a bash variable.
 
@@ -74,8 +78,6 @@
 
 - Try elfeed as my RSS reader? I don't use RSS for much but in principle it
   could save me a little suffering.
-
-- Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
 
 - Emacs 26: Move package config into early-init.el, per recently-landed patch
   in Emacs trunk.
@@ -387,6 +389,10 @@
 
 - Add evil text object/motion for 'comment', 'inner comment', 'around comment',
   etc. Sometimes I find myself trying to think in those terms.
+
+- Add a mechanism to collapse/expand all comments (and docstrings?) in a file.
+  bicycle-mode is a wrapper around hs-mode that might be a starting place. I
+  installed it for future reference.
 
 - Make comment auto-fill work with C++-style comments in js2-mode, not just
   C-style. Turns out it does - it's just that js2-mode thinks single-line

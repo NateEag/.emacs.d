@@ -39,7 +39,7 @@ adoption would make life easier for users and maintainers alike, because
 then all packages that talk to the Github API could be configured the
 same way.
 
-This manual is for Ghub version 2.0.1 (v2.0.1-7-g6ffc1d6+1).
+This manual is for Ghub version 2.0.1 (v2.0.1-10-g85b5ae3+1).
 
      Copyright (C) 2017-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -670,7 +670,7 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
      This function is only intended to be called from callbacks.  If
      there is a next page, then that is retrieve and the buffer that the
      result will be loaded into is returned, or t if the process has
-     already completed.  Otherwise nil is returned.
+     already completed.  If there is no next page, then return nil.
 
      Callbacks are called with four arguments (see ‘ghub-request’).  The
      forth argument is a ‘ghub--req’ struct, intended to be passed to
@@ -980,19 +980,19 @@ Github, you have to use ‘user%2Frepo’ when accessing Gitlab, e.g.:
 
 Tag Table:
 Node: Top763
-Node: Introduction2837
-Node: Getting Started5561
-Node: Setting the Username8619
-Node: Interactively Creating and Storing a Token10044
-Node: Manually Creating and Storing a Token15709
-Node: How Ghub uses Auth-Source16932
-Node: Using Ghub in Personal Scripts18865
-Node: Using Ghub in a Package20321
-Node: API22939
-Node: Making Requests23390
-Node: Authentication37063
-Node: Configuration Variables38908
-Node: Gitlab Support42628
+Node: Introduction2838
+Node: Getting Started5562
+Node: Setting the Username8620
+Node: Interactively Creating and Storing a Token10045
+Node: Manually Creating and Storing a Token15710
+Node: How Ghub uses Auth-Source16933
+Node: Using Ghub in Personal Scripts18866
+Node: Using Ghub in a Package20322
+Node: API22940
+Node: Making Requests23391
+Node: Authentication37080
+Node: Configuration Variables38925
+Node: Gitlab Support42645
 
 End Tag Table
 

@@ -364,7 +364,7 @@ Both callbacks are called with four arguments.
 This function is only intended to be called from callbacks.  If
 there is a next page, then retrieve that and return the buffer
 that the result will be loaded into, or t if the process has
-already completed.  Otherwise return nil.
+already completed.  If there is no next page, then return nil.
 
 Callbacks are called with four arguments (see `ghub-request').
 The forth argument is a `ghub--req' struct, intended to be passed
@@ -520,10 +520,10 @@ in `ghub-response-headers'."
                'ghub--read-json-payload)
            url-http-response-status))
 
-(defun ghub--read-json-payload (status)
+(defun ghub--read-json-payload (_status)
   (let ((raw (ghub--decode-payload)))
     (and raw
-         (condition-case err
+         (condition-case nil
              (let ((json-object-type 'alist)
                    (json-array-type  'list)
                    (json-key-type    'symbol)
@@ -531,9 +531,15 @@ in `ghub-response-headers'."
                    (json-null        nil))
                (json-read-from-string raw))
            (json-readtable-error
-            (if (memq status (list 400 422 500))
-                "and Github didn't return JSON"
-              (signal (car err) (cdr err))))))))
+            `((message
+               . ,(if (looking-at "<!DOCTYPE html>")
+                      (if (re-search-forward
+                           "<p>\\(?:<strong>\\)?\\([^<]+\\)" nil t)
+                          (match-string 1)
+                        "error description missing")
+                    (string-trim (buffer-substring (point) (point-max)))))
+              (documentation_url
+               . "https://github.com/magit/ghub/wiki/Github-Errors")))))))
 
 (defun ghub--decode-payload (&optional _status)
   (and (not (eobp))

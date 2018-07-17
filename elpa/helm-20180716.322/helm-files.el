@@ -2629,7 +2629,7 @@ Note that only existing directories are saved here."
              (access             (cl-getf all :access-time))
              (ext                (helm-get-default-program-for-file candidate))
              (tooltip-hide-delay (or helm-tooltip-hide-delay tooltip-hide-delay)))
-        (if (and (window-system) tooltip-mode)
+        (if (and (display-graphic-p) tooltip-mode)
             (tooltip-show
              (concat
               (helm-basename candidate) "\n"
@@ -2925,7 +2925,8 @@ Return candidates prefixed with basename of `helm-input' first."
                 (executable-find "trash"))
            (helm-append-at-nth
             actions
-            '(("Restore file(s) from trash" . helm-restore-file-from-trash))
+            '(("Restore file(s) from trash" . helm-restore-file-from-trash)
+              ("Delete file(s) from trash" . helm-ff-trash-rm))
             1))
           ((and helm--url-regexp
                 (not (string-match-p helm--url-regexp str-at-point))
@@ -2957,46 +2958,78 @@ Return candidates prefixed with basename of `helm-input' first."
             actions '(("Pdfgrep File(s)" . helm-ff-pdfgrep)) 4))
           (t actions))))
 
-(defun helm-restore-file-from-trash (_candidate)
-    "Restore marked-files from a Trash directory.
+(defun helm-ff-trash-action (fn names &rest args)
+  "Execute a trash action FN on marked files.
 
-The Trash directory should be a directory compliant with
-<http://freedesktop.org/wiki/Specifications/trash-spec> and each file
-should have its '*.trashinfo' correspondent file in Trash/info
-directory."
-  (let* ((mkd (helm-marked-candidates :with-wildcard t))
-         (default-directory (file-name-as-directory
-                             helm-ff-default-directory))
-         (trashed-files (with-temp-buffer
-                          (process-file "trash-list" nil t nil)
-                          (split-string (buffer-string) "\n")))
-         errors)
-    (when trashed-files
-      (with-helm-display-marked-candidates
+Arg NAMES is a list of strings to pass to messages
+e.g. '(\"delete\" \"deleting\"), ARGS are other args to be passed to FN."
+  (let ((mkd (helm-marked-candidates))
+        errors)
+    (with-helm-display-marked-candidates
         helm-marked-buffer-name
         (helm-ff--count-and-collect-dups (mapcar 'helm-basename mkd))
-        (when (y-or-n-p (format "Restore %s files from trash? "
+        (when (y-or-n-p (format "%s %s files from trash? "
+                                (capitalize (car names))
                                 (length mkd)))
-          (message "Restoring files from trash...")
+          (message "%s files from trash..." (capitalize (cadr names)))
           (cl-loop for f in mkd do
                    (condition-case err
-                       (helm-restore-file-from-trash-1 f trashed-files)
+                       (apply fn f args)
                      (error (push (format "%s" (cadr err)) errors)
-                            nil))))))
+                            nil)))))
     (if errors
         (display-warning 'helm
                          (with-temp-buffer
                            (insert (format-time-string "%Y-%m-%d %H:%M:%S\n"
                                                        (current-time)))
                            (insert (format
-                                    "Failed to restore %s/%s files from trash\n"
-                                    (length errors) (length mkd)))
+                                    "Failed to %s %s/%s files from trash\n"
+                                    (car names) (length errors) (length mkd)))
                            (insert (mapconcat 'identity errors "\n") "\n")
                            (buffer-string))
                          :error
                          "*helm restore warnings*")
-      (message "Restored %s files from trash done" (length mkd)))))
-  
+      (message "%s %s files from trash done"
+               (capitalize (cadr names)) (length mkd)))))
+
+(defun helm-ff-trash-rm (_candidate)
+  "Delete marked-files from a Trash directory.
+
+The Trash directory should be a directory compliant with
+<http://freedesktop.org/wiki/Specifications/trash-spec> and each file
+should have its '*.trashinfo' correspondent file in Trash/info
+directory."
+  (helm-ff-trash-action 'helm-ff-trash-rm-1 '("delete" "deleting")))
+
+(defun helm-restore-file-from-trash (_candidate)
+  "Restore marked-files from a Trash directory.
+
+The Trash directory should be a directory compliant with
+<http://freedesktop.org/wiki/Specifications/trash-spec> and each file
+should have its '*.trashinfo' correspondent file in Trash/info
+directory."
+  (let* ((default-directory (file-name-as-directory
+                             helm-ff-default-directory))
+         (trashed-files (with-temp-buffer
+                          (process-file "trash-list" nil t nil)
+                          (split-string (buffer-string) "\n"))))
+    (helm-ff-trash-action 'helm-restore-file-from-trash-1
+                          '("restore" "restoring")
+                          trashed-files)))
+
+(defun helm-ff-trash-rm-1 (file)
+  (let ((info-file (concat (helm-reduce-file-name file 2)
+                           "info/" (helm-basename file)
+                           ".trashinfo")))
+    (cl-assert (file-exists-p file)
+               nil (format "No such file or directory `%s'"
+                           file))
+    (cl-assert (file-exists-p info-file)
+               nil (format "No such file or directory `%s'"
+                           info-file))
+    (delete-file file)
+    (delete-file info-file)))
+
 (defun helm-restore-file-from-trash-1 (file trashed-files)
   "Restore FILE from a trash directory.
 Arg TRASHED-FILES is the list of files in the trash directory obtained

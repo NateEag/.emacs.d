@@ -1,10 +1,3 @@
-- Use <leader>-. and <leader>-, for 'jump to def' and 'back to prev', as M-.
-  and M-, do in most modes. IIRC this is not actually straightforward to do,
-  but it would sure beat hopping into insert mode and back out all the time
-  when I'm navigating. ...note that in stock evil, 'gd.' will attempt a jump to
-  def, so maybe I just need to get used to normal-mode's C-o binding for
-  jumping back where you last came from?
-
 - Try integrating web-mode-edit-element into my markup editing style, or else
   figuring out how to get smartparens slurp/barf/etc working in web-mode. If it
   works out, delete my prototypical work on making tagedit work with web-mode

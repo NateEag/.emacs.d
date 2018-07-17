@@ -115,6 +115,13 @@
     ;; M-x is too much work, and F8 is a bit of a reach.
     ("x" . helm-M-x)
 
+    ;; Jump-to-def and go-back-where-I-came from are things I like to be able
+    ;; to do from normal-mode.
+    ;;
+    ;; TODO Do this in a smarter way.
+    ("." . xref-find-definitions)
+    ("," . xref-pop-marker-stack)
+
     ;; DEBUG These don't do what I'd like. They open new windows, and I'd like
     ;; them to just move to the next term-buffer in my selected window.
     ("[" . multi-term-prev)

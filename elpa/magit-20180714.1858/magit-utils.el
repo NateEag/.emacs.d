@@ -402,12 +402,12 @@ acts similarly to `completing-read', except for the following:
   `magit-completing-read-function' is set to its default value of
   `magit-builtin-completing-read'."
   (setq magit-completing-read--silent-default nil)
-  (if-let (dwim (and def
-                     (nth 2 (-first (pcase-lambda (`(,cmd ,re ,_))
-                                      (and (eq this-command cmd)
-                                           (or (not re)
-                                               (string-match-p re prompt))))
-                                    magit-dwim-selection))))
+  (if-let ((dwim (and def
+                      (nth 2 (-first (pcase-lambda (`(,cmd ,re ,_))
+                                       (and (eq this-command cmd)
+                                            (or (not re)
+                                                (string-match-p re prompt))))
+                                     magit-dwim-selection)))))
       (if (eq dwim 'ask)
           (if (y-or-n-p (format "%s %s? " prompt def))
               def
@@ -434,6 +434,8 @@ acts similarly to `completing-read', except for the following:
     (if (eq action 'metadata)
         '(metadata (display-sort-function . identity))
       (complete-with-action action collection string pred))))
+
+(defvar ivy-sort-functions-alist)
 
 (defun magit-builtin-completing-read
   (prompt choices &optional predicate require-match initial-input hist def)

@@ -637,8 +637,8 @@ missing.  To add them use something like:
 
 (defun magit-git-pull (source args)
   (run-hooks 'magit-credential-hook)
-  (-let [(remote . branch)
-         (magit-split-branch-name source)]
+  (pcase-let ((`(,remote . ,branch)
+               (magit-split-branch-name source)))
     (magit-run-git-with-editor "pull" args remote branch)))
 
 ;;;###autoload
@@ -730,8 +730,8 @@ removed after restarting Emacs."
 
 (defun magit-git-push (branch target args)
   (run-hooks 'magit-credential-hook)
-  (-let [(remote . target)
-         (magit-split-branch-name target)]
+  (pcase-let ((`(,remote . ,target)
+               (magit-split-branch-name target)))
     (magit-run-git-async "push" "-v" args remote
                          (format "%s:refs/heads/%s" branch target))))
 
@@ -759,7 +759,7 @@ the push-remote can be changed before pushed to it."
                           "remote.pushDefault"
                         (format "branch.%s.pushRemote" it)))
                      push-remote))
-             (if-let (remote (magit-get-push-remote it))
+             (if-let ((remote (magit-get-push-remote it)))
                  (if (member remote (magit-list-remotes))
                      (magit-git-push it (concat remote "/" it) args)
                    (user-error "Remote `%s' doesn't exist" remote))
@@ -799,7 +799,7 @@ upstream can be changed before pushed to it."
       (progn
         (when upstream
           (magit-set-branch*merge/remote it upstream))
-        (if-let (target (magit-get-upstream-branch it))
+        (if-let ((target (magit-get-upstream-branch it)))
             (magit-git-push it target args)
           (user-error "No upstream is configured for %s" it)))
     (user-error "No branch is checked out")))
@@ -1010,7 +1010,7 @@ changes introduced by that commit (unlike 'git format-patch'
 which creates patches for all commits that are reachable from
 `HEAD' but not from the specified commit)."
   (interactive
-   (list (if-let (revs (magit-region-values 'commit t))
+   (list (if-let ((revs (magit-region-values 'commit t)))
              (concat (car (last revs)) "^.." (car revs))
            (let ((range (magit-read-range-or-commit "Format range or commit")))
              (if (string-match-p "\\.\\." range)

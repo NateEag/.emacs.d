@@ -127,7 +127,7 @@ With a prefix argument, visit in another window.  If there
 is no file at point, then instead visit `default-directory'."
   (interactive "P")
   (dired-jump other-window
-              (when-let (file (magit-file-at-point))
+              (when-let ((file (magit-file-at-point)))
                 (expand-file-name (if (file-directory-p file)
                                       (file-name-as-directory file)
                                     file)))))
@@ -136,7 +136,7 @@ is no file at point, then instead visit `default-directory'."
 (defun magit-dired-log (&optional follow)
   "Show log for all marked files, or the current file."
   (interactive "P")
-  (if-let (topdir (magit-toplevel default-directory))
+  (if-let ((topdir (magit-toplevel default-directory)))
       (let ((args (car (magit-log-arguments)))
             (files (dired-get-marked-files nil nil #'magit-file-tracked-p)))
         (unless files
@@ -284,7 +284,7 @@ With a prefix argument only ignore locally."
           (delete-dups
            (--mapcat
             (cons (concat "/" it)
-                  (when-let (ext (file-name-extension it))
+                  (when-let ((ext (file-name-extension it)))
                     (list (concat "/" (file-name-directory "foo") "*." ext)
                           (concat "*." ext))))
             (magit-untracked-files)))))
@@ -555,7 +555,8 @@ the minibuffer too."
      (push (caar magit-revision-stack) magit-revision-history)
      (pop magit-revision-stack)))
   (if rev
-      (-let [(pnt-format eob-format idx-format) magit-pop-revision-stack-format]
+      (pcase-let ((`(,pnt-format ,eob-format ,idx-format)
+                   magit-pop-revision-stack-format))
         (let ((default-directory toplevel)
               (idx (and idx-format
                         (save-excursion
@@ -661,21 +662,21 @@ above."
   (interactive)
   (if (use-region-p)
       (copy-region-as-kill nil nil 'region)
-    (when-let (rev (cond ((memq major-mode '(magit-cherry-mode
-                                             magit-log-select-mode
-                                             magit-reflog-mode
-                                             magit-refs-mode
-                                             magit-revision-mode
-                                             magit-stash-mode
-                                             magit-stashes-mode))
-                          (car magit-refresh-args))
-                         ((memq major-mode '(magit-diff-mode
-                                             magit-log-mode))
-                          (let ((r (caar magit-refresh-args)))
-                            (if (string-match "\\.\\.\\.?\\(.+\\)" r)
-                                (match-string 1 r)
-                              r)))
-                         ((eq major-mode 'magit-status-mode) "HEAD")))
+    (when-let ((rev (cond ((memq major-mode '(magit-cherry-mode
+                                              magit-log-select-mode
+                                              magit-reflog-mode
+                                              magit-refs-mode
+                                              magit-revision-mode
+                                              magit-stash-mode
+                                              magit-stashes-mode))
+                           (car magit-refresh-args))
+                          ((memq major-mode '(magit-diff-mode
+                                              magit-log-mode))
+                           (let ((r (caar magit-refresh-args)))
+                             (if (string-match "\\.\\.\\.?\\(.+\\)" r)
+                                 (match-string 1 r)
+                               r)))
+                          ((eq major-mode 'magit-status-mode) "HEAD"))))
       (when (magit-rev-verify-commit rev)
         (setq rev (magit-rev-parse rev))
         (push (list rev default-directory) magit-revision-stack)

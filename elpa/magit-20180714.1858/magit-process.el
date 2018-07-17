@@ -109,7 +109,7 @@ displays the text of `magit-process-error-summary' instead."
                  integer))
 
 (defcustom magit-credential-cache-daemon-socket
-  (--some (-let [(prog . args) (split-string it)]
+  (--some (pcase-let ((`(,prog . ,args) (split-string it)))
             (if (and prog
                      (string-match-p
                       "\\`\\(?:\\(?:/.*/\\)?git-credential-\\)?cache\\'" prog))
@@ -347,7 +347,8 @@ Process output goes into a new section in the buffer returned by
   "Call PROGRAM synchronously in a separate process.
 Process output goes into a new section in the buffer returned by
 `magit-process-buffer'."
-  (-let [(process-buf . section) (magit-process-setup program args)]
+  (pcase-let ((`(,process-buf . ,section)
+               (magit-process-setup program args)))
     (magit-process-finish
      (let ((inhibit-read-only t))
        (apply #'magit-process-file program nil process-buf nil args))
@@ -407,12 +408,12 @@ flattened before use."
                     (eq (process-status magit-this-process) 'run))
           (sleep-for 0.005)))
     (run-hooks 'magit-pre-call-git-hook)
-    (-let* ((process-environment (magit-process-environment))
-            (default-process-coding-system (magit--process-coding-system))
-            (flat-args (magit-process-git-arguments args))
-            ((process-buf . section)
-             (magit-process-setup magit-git-executable flat-args))
-            (inhibit-read-only t))
+    (pcase-let* ((process-environment (magit-process-environment))
+                 (default-process-coding-system (magit--process-coding-system))
+                 (flat-args (magit-process-git-arguments args))
+                 (`(,process-buf . ,section)
+                  (magit-process-setup magit-git-executable flat-args))
+                 (inhibit-read-only t))
       (magit-process-finish
        (apply #'call-process-region (point-min) (point-max)
               magit-git-executable nil process-buf nil flat-args)
@@ -519,18 +520,19 @@ After the process returns, `magit-process-sentinel' refreshes the
 buffer that was current when `magit-start-process' was called (if
 it is a Magit buffer and still alive), as well as the respective
 Magit status buffer."
-  (-let* (((process-buf . section)
-           (magit-process-setup program args))
-          (process
-           (let ((process-connection-type
-                  ;; Don't use a pty, because it would set icrnl
-                  ;; which would modify the input (issue #20).
-                  (and (not input) magit-process-connection-type))
-                 (process-environment (magit-process-environment))
-                 (default-process-coding-system (magit--process-coding-system)))
-             (apply #'start-file-process
-                    (file-name-nondirectory program)
-                    process-buf program args))))
+  (pcase-let*
+      ((`(,process-buf . ,section)
+        (magit-process-setup program args))
+       (process
+        (let ((process-connection-type
+               ;; Don't use a pty, because it would set icrnl
+               ;; which would modify the input (issue #20).
+               (and (not input) magit-process-connection-type))
+              (process-environment (magit-process-environment))
+              (default-process-coding-system (magit--process-coding-system)))
+          (apply #'start-file-process
+                 (file-name-nondirectory program)
+                 process-buf program args))))
     (with-editor-set-process-filter process #'magit-process-filter)
     (set-process-sentinel process #'magit-process-sentinel)
     (set-process-buffer   process process-buf)
@@ -662,10 +664,10 @@ Magit status buffer."
   "Special sentinel used by `magit-run-git-sequencer'."
   (when (memq (process-status process) '(exit signal))
     (magit-process-sentinel process event)
-    (when-let (process-buf (process-buffer process))
+    (when-let ((process-buf (process-buffer process)))
       (when (buffer-live-p process-buf)
-        (when-let (status-buf (with-current-buffer process-buf
-                                (magit-mode-get-buffer 'magit-status-mode)))
+        (when-let ((status-buf (with-current-buffer process-buf
+                                 (magit-mode-get-buffer 'magit-status-mode))))
           (with-current-buffer status-buf
             (--when-let
                 (magit-get-section
@@ -715,7 +717,7 @@ Magit status buffer."
 
 (defun magit-process-yes-or-no-prompt (process string)
   "Forward Yes-or-No prompts to the user."
-  (when-let (beg (string-match magit-process-yes-or-no-prompt-regexp string))
+  (when-let ((beg (string-match magit-process-yes-or-no-prompt-regexp string)))
     (let ((max-mini-window-height 30))
       (process-send-string
        process
@@ -799,8 +801,9 @@ as argument."
               (memq magit-credential-cache-daemon-process
                     (list-system-processes)))
     (setq magit-credential-cache-daemon-process
-          (or (--first (-let (((&alist 'comm comm 'user user)
-                               (process-attributes it)))
+          (or (--first (let* ((attr (process-attributes it))
+                              (comm (cdr (assq 'comm attr)))
+                              (user (cdr (assq 'user attr))))
                          (and (string= comm "git-credential-cache--daemon")
                               (string= user user-login-name)))
                        (list-system-processes))
@@ -1040,14 +1043,14 @@ Limited by `magit-process-error-tooltip-max-lines'."
        ((not (eq msg 'suppressed))
         (when (buffer-live-p process-buf)
           (with-current-buffer process-buf
-            (when-let (status-buf (magit-mode-get-buffer 'magit-status-mode))
+            (when-let ((status-buf (magit-mode-get-buffer 'magit-status-mode)))
               (with-current-buffer status-buf
                 (setq magit-this-error msg)))))
         (message "%s ... [%s buffer %s for details]" msg
-                 (if-let (key (and (buffer-live-p command-buf)
-                                   (with-current-buffer command-buf
-                                     (car (where-is-internal
-                                           'magit-process-buffer)))))
+                 (if-let ((key (and (buffer-live-p command-buf)
+                                    (with-current-buffer command-buf
+                                      (car (where-is-internal
+                                            'magit-process-buffer))))))
                      (format "Hit %s to see" (key-description key))
                    "See")
                  (buffer-name process-buf))))))

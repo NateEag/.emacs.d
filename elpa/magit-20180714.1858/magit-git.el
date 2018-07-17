@@ -436,7 +436,7 @@ call function WASHER with ARGS as its sole argument."
 
 (defmacro magit--with-safe-default-directory (file &rest body)
   (declare (indent 1) (debug (form body)))
-  `(when-let (default-directory (magit--safe-default-directory ,file))
+  `(when-let ((default-directory (magit--safe-default-directory ,file)))
      ,@body))
 
 (defun magit-git-dir (&optional path)
@@ -447,7 +447,7 @@ it has to be a path relative to the control directory and its
 absolute path is returned."
   (magit--with-refresh-cache (list default-directory 'magit-git-dir path)
     (magit--with-safe-default-directory nil
-      (when-let (dir (magit-rev-parse-safe "--git-dir"))
+      (when-let ((dir (magit-rev-parse-safe "--git-dir")))
         (setq dir (file-name-as-directory (magit-expand-git-file-name dir)))
         (unless (file-remote-p dir)
           (setq dir (concat (file-remote-p default-directory) dir)))
@@ -490,7 +490,7 @@ returning the truename."
   (magit--with-refresh-cache
       (cons (or directory default-directory) 'magit-toplevel)
     (magit--with-safe-default-directory directory
-      (if-let (topdir (magit-rev-parse-safe "--show-toplevel"))
+      (if-let ((topdir (magit-rev-parse-safe "--show-toplevel")))
           (let (updir)
             (setq topdir (magit-expand-git-file-name topdir))
             (if (and
@@ -520,7 +520,7 @@ returning the truename."
                 updir
               (concat (file-remote-p default-directory)
                       (file-name-as-directory topdir))))
-        (when-let (gitdir (magit-rev-parse-safe "--git-dir"))
+        (when-let ((gitdir (magit-rev-parse-safe "--git-dir")))
           (setq gitdir (file-name-as-directory
                         (if (file-name-absolute-p gitdir)
                             ;; We might have followed a symlink.
@@ -1304,7 +1304,7 @@ SORTBY is a key or list of keys to pass to the `--sort' flag of
   (magit-list-related-branches "--no-merged" commit arg))
 
 (defun magit-list-unmerged-to-upstream-branches ()
-  (--filter (when-let (upstream (magit-get-upstream-branch it))
+  (--filter (when-let ((upstream (magit-get-upstream-branch it)))
               (member it (magit-list-unmerged-branches upstream)))
             (magit-list-local-branch-names)))
 
@@ -1474,13 +1474,13 @@ Return a list of two integers: (A>B B>A)."
   (magit-rev-parse (magit-abbrev-arg "short") rev))
 
 (defun magit-commit-children (commit &optional args)
-  (-map #'car
-        (--filter (member commit (cdr it))
-                  (--map (split-string it " ")
-                         (magit-git-lines
-                          "log" "--format=%H %P"
-                          (or args (list "--branches" "--tags" "--remotes"))
-                          "--not" commit)))))
+  (mapcar #'car
+          (--filter (member commit (cdr it))
+                    (--map (split-string it " ")
+                           (magit-git-lines
+                            "log" "--format=%H %P"
+                            (or args (list "--branches" "--tags" "--remotes"))
+                            "--not" commit)))))
 
 (defun magit-commit-parents (commit)
   (--when-let (magit-git-string "rev-list" "-1" "--parents" commit)
@@ -2027,14 +2027,14 @@ the reference is used.  The first regexp submatch becomes the
 (defun magit--format-popup-variable:value (variable width &optional global)
   (concat variable
           (make-string (max 1 (- width 3 (length variable))) ?\s)
-          (if-let (value (magit-get (and global "--global") variable))
+          (if-let ((value (magit-get (and global "--global") variable)))
               (propertize value 'face 'magit-popup-option-value)
             (propertize "unset" 'face 'magit-popup-disabled-argument))))
 
 (defun magit--format-popup-variable:values (variable width &optional global)
   (concat variable
           (make-string (max 1 (- width 3 (length variable))) ?\s)
-          (if-let (values (magit-get-all (and global "--global") variable))
+          (if-let ((values (magit-get-all (and global "--global") variable)))
               (concat
                (propertize (car values) 'face 'magit-popup-option-value)
                (mapconcat

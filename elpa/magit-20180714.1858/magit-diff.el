@@ -718,10 +718,10 @@ This is a variant of `magit-diff-popup' which shows the same popup
 but which limits the diff to the file being visited in the current
 buffer."
   (interactive)
-  (if-let (file (magit-file-relative-name))
+  (if-let ((file (magit-file-relative-name)))
       (let ((magit-diff-arguments
              (magit-popup-import-file-args
-              (if-let (buffer (magit-mode-get-buffer 'magit-diff-mode))
+              (if-let ((buffer (magit-mode-get-buffer 'magit-diff-mode)))
                   (with-current-buffer buffer
                     (nth 3 magit-refresh-args))
                 (default-value 'magit-diff-arguments))
@@ -964,7 +964,7 @@ be committed."
   "Show diff for the blob or file visited in the current buffer."
   (interactive)
   (require 'magit)
-  (if-let (file (magit-file-relative-name))
+  (if-let ((file (magit-file-relative-name)))
       (magit-mode-setup-internal #'magit-diff-mode
                                  (list (or magit-buffer-refname
                                            (magit-get-current-branch)
@@ -989,7 +989,7 @@ be committed."
 (defvar-local magit-buffer-revision-hash nil)
 
 (defun magit-show-commit--arguments ()
-  (-let [(args diff-files) (magit-diff-arguments)]
+  (pcase-let ((`(,args ,diff-files) (magit-diff-arguments)))
     (list args (if (derived-mode-p 'magit-log-mode)
                    (and (not (member "--follow" (nth 1 magit-refresh-args)))
                         (nth 2 magit-refresh-args))
@@ -1348,7 +1348,7 @@ or `HEAD'."
            rev))))
 
 (defun magit-diff-visit--hunk ()
-  (when-let (scope (magit-diff-scope))
+  (when-let ((scope (magit-diff-scope)))
     (let ((section (magit-current-section)))
       (cl-case scope
         ((file files)
@@ -2098,7 +2098,7 @@ or a ref which is not a branch, then it inserts nothing."
               (insert "Parent:     ")
               (insert (propertize hash 'face 'magit-hash))
               (insert " " msg "\n")))))
-      (when-let (merged (magit-list-merged-branches rev))
+      (when-let ((merged (magit-list-merged-branches rev)))
         (insert "Merged:    ")
         (let (branch)
           (while (and (< (+ (- (point) (line-beginning-position))
@@ -2111,7 +2111,7 @@ or a ref which is not a branch, then it inserts nothing."
         (when merged
           (insert (format " (%s more)" (length merged))))
         (insert ?\n))
-      (when-let (containing (magit-list-containing-branches rev))
+      (when-let ((containing (magit-list-containing-branches rev)))
         (insert "Containing:")
         (let (branch)
           (while (and (< (+ (- (point) (line-beginning-position))
@@ -2124,7 +2124,7 @@ or a ref which is not a branch, then it inserts nothing."
         (when containing
           (insert (format " (%s more)" (length containing))))
         (insert ?\n))
-      (when-let (follows (magit-get-current-tag rev t))
+      (when-let ((follows (magit-get-current-tag rev t)))
         (let ((tag (car  follows))
               (cnt (cadr follows)))
           (magit-insert-section (tag tag)
@@ -2132,7 +2132,7 @@ or a ref which is not a branch, then it inserts nothing."
                             (propertize tag 'face 'magit-tag)
                             (propertize (number-to-string cnt)
                                         'face 'magit-branch-local))))))
-      (when-let (precedes (magit-get-next-tag rev t))
+      (when-let ((precedes (magit-get-next-tag rev t)))
         (let ((tag (car  precedes))
               (cnt (cadr precedes)))
           (magit-insert-section (tag tag)
@@ -2169,7 +2169,7 @@ or a ref which is not a branch, then it inserts nothing."
 
 (defun magit-insert-revision-gravatar-cb (image rev marker align-to column)
   (unless (eq image 'error)
-    (when-let (buffer (marker-buffer marker))
+    (when-let ((buffer (marker-buffer marker)))
       (with-current-buffer buffer
         (save-excursion
           (goto-char marker)
@@ -2378,7 +2378,7 @@ are highlighted."
                    (magit-diff-highlight-list section selection))
                (magit-diff-highlight-list section))
              t)
-    (when-let (scope (magit-diff-scope section t))
+    (when-let ((scope (magit-diff-scope section t)))
       (cond ((eq scope 'region)
              (magit-diff-paint-hunk section selection t))
             (selection

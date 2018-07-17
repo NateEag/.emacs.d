@@ -227,8 +227,8 @@ When the region is active offer to drop all contained stashes."
              (magit-rev-parse "--short" stash))
     (magit-call-git "rev-parse" stash)
     (magit-call-git "reflog" "delete" "--updateref" "--rewrite" stash))
-  (when-let (ref (and (string-match "\\(.+\\)@{[0-9]+}$" stash)
-                      (match-string 1 stash)))
+  (when-let ((ref (and (string-match "\\(.+\\)@{[0-9]+}$" stash)
+                       (match-string 1 stash))))
     (unless (string-match "^refs/" ref)
       (setq ref (concat "refs/" ref)))
     (unless (magit-rev-verify (concat ref "@{0}"))
@@ -423,7 +423,7 @@ instead of \"Stashes:\"."
   (interactive (cons (or (and (not current-prefix-arg)
                               (magit-stash-at-point))
                          (magit-read-stash "Show stash"))
-                     (-let [(args files) (magit-diff-arguments)]
+                     (pcase-let ((`(,args ,files) (magit-diff-arguments)))
                        (list (delete "--stat" args) files))))
   (magit-mode-setup #'magit-stash-mode stash nil args files))
 

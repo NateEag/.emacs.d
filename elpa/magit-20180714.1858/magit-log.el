@@ -504,10 +504,10 @@ This is a variant of `magit-log-popup' which shows the same popup
 but which limits the log to the file being visited in the current
 buffer."
   (interactive)
-  (if-let (file (magit-file-relative-name))
+  (if-let ((file (magit-file-relative-name)))
       (let ((magit-log-arguments
              (magit-popup-import-file-args
-              (if-let (buffer (magit-mode-get-buffer 'magit-log-mode))
+              (if-let ((buffer (magit-mode-get-buffer 'magit-log-mode)))
                   (with-current-buffer buffer
                     (nth 2 magit-refresh-args))
                 (default-value 'magit-log-arguments))
@@ -688,7 +688,7 @@ active, restrict the log to the lines that the region touches."
                            ;; of a trailing newline.
                            (1- end)))))))))
   (require 'magit)
-  (if-let (file (magit-file-relative-name))
+  (if-let ((file (magit-file-relative-name)))
       (magit-mode-setup-internal
        #'magit-log-mode
        (list (list (or magit-buffer-refname
@@ -823,10 +823,10 @@ is displayed in the current frame."
   (when (derived-mode-p 'magit-log-mode)
     (magit-section-when commit
       (let ((parent-rev (format "%s^%s" (oref it value) (or n 1))))
-        (if-let (parent-hash (magit-rev-parse "--short" parent-rev))
-            (if-let (section (--first (equal (oref it value)
-                                             parent-hash)
-                                      (magit-section-siblings it 'next)))
+        (if-let ((parent-hash (magit-rev-parse "--short" parent-rev)))
+            (if-let ((section (--first (equal (oref it value)
+                                              parent-hash)
+                                       (magit-section-siblings it 'next))))
                 (magit-section-goto section)
               (user-error
                (substitute-command-keys
@@ -1194,6 +1194,11 @@ Do not add this to a hook variable."
 
 (defun magit-log-propertize-keywords (_rev msg)
   (let ((start 0))
+    (when (string-match "^\\(squash\\|fixup\\)! " msg start)
+      (setq start (match-end 0))
+      (put-text-property (match-beginning 0)
+                         (match-end 0)
+                         'face 'magit-keyword-squash msg))
     (while (string-match "\\[[^[]*\\]" msg start)
       (setq start (match-end 0))
       (when magit-log-highlight-keywords
@@ -1235,7 +1240,7 @@ If there is no revision buffer in the same frame, then do nothing."
        magit-update-other-window-delay nil
        (let ((args (magit-show-commit--arguments)))
          (lambda ()
-           (-let [(rev buf) magit--update-revision-buffer]
+           (pcase-let ((`(,rev ,buf) magit--update-revision-buffer))
              (setq magit--update-revision-buffer nil)
              (when (buffer-live-p buf)
                (let ((magit-display-buffer-noselect t))
@@ -1254,12 +1259,12 @@ If there is no blob buffer in the same frame, then do nothing."
   (unless magit--update-revision-buffer
     (when-let ((commit (magit-section-when 'commit))
                (buffer (--first (with-current-buffer it magit-buffer-revision)
-                                (-map #'window-buffer (window-list)))))
+                                (mapcar #'window-buffer (window-list)))))
         (setq magit--update-blob-buffer (list commit buffer))
         (run-with-idle-timer
          magit-update-other-window-delay nil
          (lambda ()
-           (-let [(rev buf) magit--update-blob-buffer]
+           (pcase-let ((`(,rev ,buf) magit--update-blob-buffer))
              (setq magit--update-blob-buffer nil)
              (when (buffer-live-p buf)
                (save-excursion
@@ -1283,10 +1288,10 @@ If there is no blob buffer in the same frame, then do nothing."
 ;;; Log Margin
 
 (defun magit-log-format-margin (author date)
-  (when-let (option (magit-margin-option))
-    (-let [(_ style width details details-width)
-           (or magit-buffer-margin
-               (symbol-value option))]
+  (when-let ((option (magit-margin-option)))
+    (pcase-let ((`(,_ ,style ,width ,details ,details-width)
+                 (or magit-buffer-margin
+                     (symbol-value option))))
       (magit-make-margin-overlay
        (concat (and details
                     (concat (propertize (truncate-string-to-width
@@ -1300,8 +1305,8 @@ If there is no blob buffer in the same frame, then do nothing."
                     (format-time-string
                      style
                      (seconds-to-time (string-to-number date)))
-                  (-let* ((abbr (eq style 'age-abbreviated))
-                          ((cnt unit) (magit--age date abbr)))
+                  (pcase-let* ((abbr (eq style 'age-abbreviated))
+                               (`(,cnt ,unit) (magit--age date abbr)))
                     (format (format (if abbr "%%2i%%-%ic" "%%2i %%-%is")
                                     (- width (if details (1+ details-width) 0)))
                             cnt unit)))

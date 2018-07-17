@@ -496,7 +496,7 @@ from the source branch's upstream, then an error is raised."
                      (magit-branch-arguments)))
   (when (magit-branch-p branch)
     (user-error "Cannot spin off %s.  It already exists" branch))
-  (if-let (current (magit-get-current-branch))
+  (if-let ((current (magit-get-current-branch)))
       (let ((tracked (magit-get-upstream-branch current))
             base)
         (when from
@@ -577,7 +577,7 @@ defaulting to the branch at point."
              (list (magit-read-branch-prefer-other
                     (if force "Force delete branch" "Delete branch")))))
      (unless force
-       (when-let (unmerged (-remove #'magit-branch-merged-p branches))
+       (when-let ((unmerged (-remove #'magit-branch-merged-p branches)))
          (if (magit-confirm 'delete-unmerged-branch
                "Delete unmerged branch %s"
                "Delete %i unmerged branches"
@@ -586,7 +586,7 @@ defaulting to the branch at point."
            (or (setq branches (-difference branches unmerged))
                (user-error "Abort")))))
      (list branches force)))
-  (let* ((refs (-map #'magit-ref-fullname branches))
+  (let* ((refs (mapcar #'magit-ref-fullname branches))
          (ambiguous (--remove it refs)))
     (when ambiguous
       (user-error
@@ -651,7 +651,7 @@ defaulting to the branch at point."
 (put 'magit-branch-delete 'interactive-only t)
 
 (defun magit-branch-maybe-delete-pr-remote (branch)
-  (when-let (remote (magit-get "branch" branch "pullRequestRemote"))
+  (when-let ((remote (magit-get "branch" branch "pullRequestRemote")))
     (let* ((variable (format "remote.%s.fetch" remote))
            (refspecs (magit-get-all variable)))
       (unless (member (format "+refs/heads/*:refs/remotes/%s/*" remote)
@@ -682,7 +682,7 @@ defaulting to the branch at point."
   (when (memq (process-status process) '(exit signal))
     (if (= (process-exit-status process) 0)
         (magit-process-sentinel process event)
-      (if-let (rest (-filter #'magit-ref-exists-p refs))
+      (if-let ((rest (-filter #'magit-ref-exists-p refs)))
           (progn
             (process-put process 'inhibit-refresh t)
             (magit-process-sentinel process event)
@@ -885,7 +885,7 @@ variable `branch.<name>.description'."
          (width (+ (length branch) 19))
          (var (format "branch.%s.description" branch)))
     (concat var " " (make-string (- width (length var)) ?\s)
-            (if-let (value (magit-get var))
+            (if-let ((value (magit-get var)))
                 (propertize (car (split-string value "\n"))
                             'face 'magit-popup-option-value)
               (propertize "unset" 'face 'magit-popup-disabled-argument)))))
@@ -912,7 +912,7 @@ already set.  When nil, then always unset."
      (list branch (and (not (magit-get-upstream-branch branch))
                        (magit-read-upstream-branch branch)))))
   (if upstream
-      (-let (((remote . merge) (magit-split-branch-name upstream)))
+      (pcase-let ((`(,remote . ,merge) (magit-split-branch-name upstream)))
         (setf (magit-get (format "branch.%s.remote" branch)) remote)
         (setf (magit-get (format "branch.%s.merge"  branch))
               (concat "refs/heads/" merge)))
@@ -929,11 +929,11 @@ already set.  When nil, then always unset."
                    'magit-branch-local
                  'magit-branch-remote)))
     (concat varM (make-string (- width (length varM)) ?\s)
-            (if-let (value (magit-get varM))
+            (if-let ((value (magit-get varM)))
                 (propertize value 'face face)
               (propertize "unset" 'face 'magit-popup-disabled-argument))
             "\n   " varR (make-string (- width (length varR)) ?\s)
-            (if-let (value (magit-get varR))
+            (if-let ((value (magit-get varR)))
                 (propertize value 'face face)
               (propertize "unset" 'face 'magit-popup-disabled-argument)))))
 

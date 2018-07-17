@@ -1829,8 +1829,6 @@ Use the following as the value of this variable:
   "Input matching this regexp is not saved on the history list.
 Default ignores all inputs of 0, 1, or 2 non-blank characters.")
 
-(defvaralias 'inferior-python-filter-regexp 'py-input-filter-re)
-
 (defvar strip-chars-before  "\\`[ \t\r\n]*"
   "Regexp indicating which chars shall be stripped before STRING - which is defined by `string-chars-preserve'.")
 
@@ -10394,28 +10392,40 @@ Receives a ‘buffer-name’ as argument"
   (py--send-string-no-output "import sys")
   (py--fast-send-string-intern "sys.ps1" proc buffer t))
 
+;; (defun py--start-fast-process (shell buffer)
+;;   (let ((proc))
+;;     (with-current-buffer buffer
+;;       (erase-buffer))
+;;     (start-process shell buffer shell)
+;;     proc))
+
 (defun py--start-fast-process (shell buffer)
-  (let ((proc))
+  (let ((proc (start-process shell buffer shell)))
     (with-current-buffer buffer
       (erase-buffer))
-    (start-process shell buffer shell)
     proc))
 
+;; (defun py--shell-fast-proceeding (proc buffer shell setup-code)
+;;   (let ((proc proc))
+;;     (unless proc
+;;       (or (setq proc (get-buffer-process (get-buffer buffer)))
+;; 	  (setq proc (start-process shell buffer shell)))
+;;       (py--fast-send-string-no-output setup-code proc buffer))
+;;     proc))
+
 (defun py--shell-fast-proceeding (proc buffer shell setup-code)
-  (let ((proc proc))
-    (unless proc
-      (or (setq proc (get-buffer-process (get-buffer buffer)))
-	  (setq proc (start-process shell buffer shell)))
-      (py--fast-send-string-no-output setup-code proc buffer))
-    proc))
+  (unless (get-buffer-process (get-buffer buffer))
+    (setq proc (py--start-fast-process shell buffer))
+    (setq py-output-buffer buffer)
+    (py--fast-send-string-no-output setup-code proc buffer)))
 
 (defun py--reuse-existing-shell (exception-buffer)
   (setq py-exception-buffer (or exception-buffer (and py-exception-buffer (buffer-live-p py-exception-buffer) py-exception-buffer) py-buffer-name)))
 
-(defun py--create-new-shell (executable args buffer-name exception-buffer)
-  (let ((buf (current-buffer)))
-    (with-current-buffer
-	(apply #'make-comint-in-buffer executable buffer-name executable nil (split-string-and-unquote args))
+(defun py--create-new-shell (executable args buffer exception-buffer)
+  (let ((buf (or exception-buffer (current-buffer))))
+    (with-current-buffer (get-buffer-create buffer)
+	(apply #'make-comint-in-buffer executable buffer executable nil (split-string-and-unquote args))
       (let ((proc (get-buffer-process (current-buffer))))
 	(if (string-match "^i" (process-name proc))
 	    (py-ipython-shell-mode)
@@ -10470,40 +10480,43 @@ Interactively, \\[universal-argument] prompts for a new ‘buffer-name’.
       (y-or-n-p "Make dedicated process? ")
       (= (prefix-numeric-value current-prefix-arg) 4))))
   ;; (list (python-shell-calculate-command) nil t)))
-  (set (make-local-variable 'py-last-exeption-buffer) (or exception-buffer (current-buffer)))
   ;; (message "py-last-exeption-buffer: %s" py-last-exeption-buffer)
-  (let* ((fast (or fast py-fast-process-p))
+  (let* ((exception-buffer (or exception-buffer (current-buffer)))
+	 (fast (or fast py-fast-process-p))
 	 (dedicated (or dedicated py-dedicated-process-p))
-	 (py-shell-name (or shell
-			    (py-choose-shell nil fast)))
+	 (shell (or shell
+		    (py-choose-shell nil fast)))
 	 (args (py--provide-command-args fast argprompt))
 	 (py-use-local-default (py--determine-local-default))
-	 (py-buffer-name-raw (or buffer (py--guess-buffer-name argprompt dedicated)))
-	 (py-buffer-name (if internal
-			     ;; make unvisible for users
-			     (concat " " (or py-buffer-name-raw (py--choose-buffer-name nil dedicated fast)))
-			   (or py-buffer-name-raw (py--choose-buffer-name nil dedicated fast))))
-	 (executable (cond (py-shell-name)
-			   (py-buffer-name
-			    (py--report-executable py-buffer-name))))
-	 (cmd (format "%s %s" executable args))
-	 buffer)
+	 (buffer-raw (or buffer
+			 ;; Guess according to ARGPROMPT DEDICATED.
+			 (py--guess-buffer-name argprompt dedicated)))
+	 (buffer (if internal
+		     ;; make unvisible for users
+		     (concat " " (or buffer-raw (py--choose-buffer-name nil dedicated fast)))
+		   (or buffer-raw (py--choose-buffer-name shell dedicated fast))))
+	 (executable (cond
+		      (shell)
+		      (py-shell-name)
+		      (buffer
+		       (py--report-executable buffer))))
+	 (cmd (format "%s %s" executable args)))
+    (set (make-local-variable 'py-last-exeption-buffer) exception-buffer)
     (if fast
 	;; user rather wants an interactive shell
-	(py--shell-fast-proceeding nil py-buffer-name py-shell-name py-shell-completion-setup-code)
-      (if (comint-check-proc py-buffer-name)
+	(py--shell-fast-proceeding nil buffer shell py-shell-completion-setup-code)
+      (if (comint-check-proc buffer)
       	  (py--reuse-existing-shell exception-buffer)
       	;; buffer might exist but not being empty
-      	(when (buffer-live-p py-buffer-name)
-      	  (with-current-buffer py-buffer-name
+      	(when (buffer-live-p buffer)
+      	  (with-current-buffer buffer
       	    (erase-buffer)))
-      	(py--create-new-shell executable args py-buffer-name exception-buffer)))
+      	(py--create-new-shell executable args buffer exception-buffer)))
     (when (or (called-interactively-p 'any)
     	      (eq 1 argprompt)
     	      (or switch py-switch-buffers-on-execute-p py-split-window-on-execute))
-      ;; (pop-to-buffer py-buffer-name t)
       (py--shell-manage-windows buffer exception-buffer split switch))
-    py-buffer-name))
+    buffer))
 
 (defun py-shell-get-process (&optional argprompt dedicated shell buffer)
   "Get appropriate Python process for current buffer and return it.
@@ -11348,7 +11361,7 @@ Takes END"
 
 (defun py--try-completion-intern (input completion)
   (let (erg)
-    (when (and (stringp (setq erg (try-completion input completion)))
+    (when (and (setq erg (try-completion input completion))
 	       (looking-back input (line-beginning-position))
 	       (not (string= input erg)))
       (delete-region (match-beginning 0) (match-end 0))
@@ -11368,11 +11381,8 @@ Interal used. Takes INPUT COMPLETION"
       (if (< 1 (length newlist))
 	  (with-output-to-temp-buffer py-python-completions
 	    (display-completion-list
-	     (all-completions input (or newlist completion))))
-	(when newlist (py--try-completion erg newlist)))
-      (skip-chars-forward "^ \t\r\n\f")
-      ;; (move-marker orig (point))
-      nil)))
+	     (all-completions input (or newlist completion)))))
+      (skip-chars-forward "^ \t\r\n\f"))))
 
 (defun py--shell-insert-completion-maybe (completion input)
   (cond ((eq completion t)
@@ -11478,12 +11488,13 @@ Takes PROCESS IMPORTS INPUT EXCEPTION-BUFFER CODE"
 
 Optional SHELL BEG END WORD"
   (interactive)
-  (save-excursion
-    (and (buffer-live-p (get-buffer "*Python Completions*"))
-	 (py-kill-buffer-unconditional "*Python Completions*")))
+  ;; (save-excursion
+  ;;   (and (buffer-live-p (get-buffer "*Python Completions*"))
+  ;; 	 (py-kill-buffer-unconditional "*Python Completions*")))
   (setq py-last-window-configuration
         (current-window-configuration))
-  (py--complete-prepare shell beg end word nil))
+  ;; fast-complete is called
+  (py--complete-prepare shell beg end word t))
 
 (defun py-indent-or-complete ()
   "Complete or indent depending on the context.
@@ -11502,13 +11513,12 @@ in (I)Python shell-modes `py-shell-complete'"
 	((or (bolp)
 	     (member (char-before)(list 9 10 12 13 32 ?: ?\) ?\] ?\}))
 	     (not (looking-at "[ \t]*$")))
-	 ;; (not (eolp)))
 	 (py-indent-line))
 	((or (eq major-mode 'python-mode)(derived-mode-p 'python-mode))	 (if (string-match "ipython" (py-choose-shell))
 	     (py-shell-complete)
 	   (funcall py-complete-function)))
 	((comint-check-proc (current-buffer))
-	 (py-shell-complete (process-name (get-buffer-process (current-buffer)))))
+	 (py-shell-complete (substring (process-name (get-buffer-process (current-buffer))) 0 (string-match "<" (process-name (get-buffer-process (current-buffer)))))))
 	(t
 	 (funcall py-complete-function))))
 
@@ -22852,12 +22862,14 @@ completions on the current context."
 	   nil)
 	  ((null completion)
 	   (and py-verbose-p (message "py--fast--do-completion-at-point %s" "Don't see a completion"))
+	   (set-window-configuration py-last-window-configuration)
 	   nil)
 	  ((and completion
 		(or (and (listp completion)
 			 (string= input (car completion)))
 		    (and (stringp completion)
 			 (string= input completion))))
+	   (set-window-configuration py-last-window-configuration)
 	   nil)
 	  ((and completion (stringp completion)(not (string= input completion)))
 	   (progn (delete-char (- (length input)))
@@ -22876,8 +22888,8 @@ completions on the current context."
 	 (code (if (string-match "[Ii][Pp]ython*" shell)
 		   (py-set-ipython-completion-command-string shell)
 		 py-shell-module-completion-code)))
-    (with-current-buffer py-buffer-name
-      (erase-buffer))
+    ;; (with-current-buffer py-buffer-name
+    ;;   (erase-buffer))
     (py--fast--do-completion-at-point proc imports word code py-buffer-name)))
 
 (defun py-fast-complete (&optional shell beg end word)
@@ -24724,7 +24736,6 @@ Use current region unless optional args BEG END are delivered."
     (indent-to-column cui)
     cui))
 
-;; /usr/lib/python2.7/pdb.py eyp.py
 (defalias 'IPython 'ipython)
 (defalias 'Ipython 'ipython)
 (defalias 'Python 'python)
@@ -27131,16 +27142,14 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
   (set-syntax-table python-mode-syntax-table)
   (set (make-local-variable 'comint-output-filter-functions)
        '(ansi-color-process-output
-         ;; python-shell-comint-watch-for-first-prompt-output-filter
          py-pdbtrack-comint-output-filter-function
-         ;; python-comint-postoutput-scroll-to-bottom
          comint-watch-for-password-prompt))
   (if py-auto-complete-p
       (add-hook 'py-shell-mode-hook 'py--run-completion-timer)
     (remove-hook 'py-shell-mode-hook 'py--run-completion-timer))
   ;; comint settings
   (set (make-local-variable 'comint-prompt-regexp)
-       (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" py-buffer-name)
+       (cond ((string-match "[iI][pP]ython[[:alnum:]*-]*$" (buffer-name (current-buffer)))
 	      (concat "\\("
 		      (mapconcat 'identity
 				 (delq nil (list py-shell-input-prompt-1-regexp py-shell-input-prompt-2-regexp py-ipython-input-prompt-re py-ipython-output-prompt-re py-pdbtrack-input-prompt py-pydbtrack-input-prompt))

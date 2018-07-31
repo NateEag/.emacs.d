@@ -1,10 +1,10 @@
 ;;; ac-html-csswatcher-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
 ;;;### (autoloads nil "ac-html-csswatcher" "ac-html-csswatcher.el"
-;;;;;;  (22410 5572 0 0))
+;;;;;;  (23391 48573 0 0))
 ;;; Generated autoloads from ac-html-csswatcher.el
 
 (autoload 'ac-html-csswatcher-refresh "ac-html-csswatcher" "\

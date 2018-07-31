@@ -171,6 +171,7 @@
  '(smtpmail-stream-type (quote ssl))
  '(tab-width 4 nil nil "When a project prefers tabs, this is the width I usually see.")
  '(tool-bar-mode nil nil nil "The toolbar is an even more needless annoyance.")
+ '(tramp-default-method "ssh" t)
  '(transient-mark-mode 1 nil nil "I like seeing my selections.")
  '(undo-tree-auto-save-history nil nil nil "This is disabled in hopes of working around an intermittent bug in undo-tree.el that eats undo history. Rumor has it turning this off may help.")
  '(undo-tree-enable-undo-in-region nil nil nil "I have turned this off in hopes of defeating the horrible history-eating bug in undo-tree.el that's documented in my readme.")

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "ac-capf" "ac-capf.el" (23097 6958 0 0))
+;;;### (autoloads nil "ac-capf" "ac-capf.el" (23391 48549 0 0))
 ;;; Generated autoloads from ac-capf.el
 
 (autoload 'ac-capf-setup "ac-capf" "\

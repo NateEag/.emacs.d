@@ -10,6 +10,10 @@ skewer.reloadStylesheets = (function () {
         return str.indexOf(suffix, str.length - suffix.length) !== -1;
     };
 
+    var pathMatches = function (path, href) {
+        return endsWith(path, href);
+    }
+
     /**
      * Ensure `link`'s associated contents are refreshed from server.
      *
@@ -61,6 +65,7 @@ skewer.reloadStylesheets = (function () {
         //
         //     <link href="/css/main.css" />
         //     <link href="/bazinator/plugins/bar/css/main.css" />
+        console.log(link_elts);
         for (var i = 0; i < link_elts.length; i++) {
             cur_href = link_elts[i].getAttribute('href');
 
@@ -70,7 +75,7 @@ skewer.reloadStylesheets = (function () {
                 cur_href = cur_href.substring(0, query_pos);
             }
 
-            if (endsWith(path, cur_href) && cur_href.length > max_href_len) {
+            if (pathMatches(path) && cur_href.length > max_href_len) {
                 target_link = link_elts[i];
                 max_href_len = cur_href.length;
             }

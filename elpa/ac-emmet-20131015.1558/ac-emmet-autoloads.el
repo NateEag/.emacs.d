@@ -1,10 +1,9 @@
 ;;; ac-emmet-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads (ac-emmet-css-setup ac-emmet-html-setup) "ac-emmet"
-;;;;;;  "ac-emmet.el" (21240 15515 0 0))
+;;;### (autoloads nil "ac-emmet" "ac-emmet.el" (23391 48551 0 0))
 ;;; Generated autoloads from ac-emmet.el
 
 (defface ac-emmet-candidate-face '((t (:inherit ac-candidate-face))) "\
@@ -39,16 +38,9 @@ This affects only the current buffer.
 
 ;;;***
 
-;;;### (autoloads nil nil ("ac-emmet-pkg.el") (21240 15515 560406
-;;;;;;  0))
-
-;;;***
-
-(provide 'ac-emmet-autoloads)
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
-;; coding: utf-8
 ;; End:
 ;;; ac-emmet-autoloads.el ends here

@@ -172,10 +172,18 @@ There may be a better one awaiting discovery."
 
       ;; FIXME Remove dependency on dash.el? Just trying to get this working
       ;; for now.
-      (and (> (length lengths) 2)
+      (and (> (length lengths) 1)
            ;; Are all lines other than the last one more than 10 characters shy
            ;; of fill-column? The last line of a paragraph tends to be a widow,
            ;; and thus very short, which is why we ignore it.
+           ;;
+           ;; This logic does not work in source code comments, at least not in
+           ;; sh-mode or emacs-lisp-mode. Looks like I'd need a
+           ;; forward/backward paragraph that accounted for fill-prefixes when
+           ;; computing paragraph boundaries.
+           ;;
+           ;; ...it's peculiar that fill-paragraph works in comments but
+           ;; forward-paragraph and backward-paragraph don't.
            (-all? (lambda (x)
                     (< x (- fill-column 10)))
                   ;; Ignore the last line, since it's usually a widow.

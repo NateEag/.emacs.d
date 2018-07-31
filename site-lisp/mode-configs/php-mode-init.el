@@ -2,19 +2,10 @@
 
 ;;; Commentary:
 ;;;
-;;; Emacs is not a first-class environment for editing PHP. php-mode has some
-;;; neat features, but really good jump-to-def and context-aware auto-complete
-;;; are, as far as I know, an unsolved problem.
-;;;
-;;; Still, this setup eases many of the pain points of writing PHP.
-;;;
-;;; ...at least, it did five years ago. Now lsp-mode and the
-;;; php-language-server project promise to make hacking PHP in Emacs not suck,
-;;; but the edges are extremely rough so far.
-;;;
-;;; Since I'm writing PHP again for the first time in years, I'm starting to
-;;; work on getting a really good PHP env up and running, but my old config has
-;;; gotten quite broken in the meantime.
+;;; This is a rough-around-the-edges setup for hacking on PHP in emacs. It uses
+;;; lsp-mode and the php-language-server project for PHP intelligence (e.g.,
+;;; jump-to-definition and auto-completion), and has scraps of other stuff
+;;; floating around the edges (including cruft from probably a decade ago).
 
 
 ;;; Code:

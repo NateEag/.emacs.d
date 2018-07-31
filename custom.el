@@ -75,6 +75,7 @@
  '(line-number-mode t)
  '(lsp-php-show-file-parse-notifications nil nil nil "I don't really care about these messages. I just want to know when things fail.")
  '(lsp-print-io nil)
+ '(magit-blame-arguments (quote ("-w" "-M" "-C" "-C" "-C")) nil nil "Look hard for places other than right here that the text may have originated. See git-blame manual page for details.")
  '(magit-diff-refine-hunk (quote all))
  '(magit-diff-use-overlays nil)
  '(magit-push-always-verify nil)

@@ -1,9 +1,9 @@
 ;;; string-utils-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "string-utils" "string-utils.el" (21592 11308
+;;;### (autoloads nil "string-utils" "string-utils.el" (23400 19374
 ;;;;;;  0 0))
 ;;; Generated autoloads from string-utils.el
 

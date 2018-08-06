@@ -5,8 +5,8 @@
 ;; Author: Roland Walker <walker@pobox.com>
 ;; Homepage: http://github.com/rolandwalker/string-utils
 ;; URL: http://raw.githubusercontent.com/rolandwalker/string-utils/master/string-utils.el
-;; Version: 20140508.1341
-;; X-Original-Version: 0.3.2
+;; Package-Version: 20140508.2041
+;; Version: 0.3.2
 ;; Last-Updated: 22 Oct 2013
 ;; Package-Requires: ((list-utils "0.4.2"))
 ;; EmacsWiki: StringUtils

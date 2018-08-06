@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "json-mode" "json-mode.el" (22906 17543 0 0))
+;;;### (autoloads nil "json-mode" "json-mode.el" (23400 19222 0 0))
 ;;; Generated autoloads from json-mode.el
 
 (defconst json-mode-standard-file-ext '(".json" ".jsonld") "\
@@ -33,7 +33,7 @@ Major mode for editing JSON files
 \(fn)" t nil)
 
 (autoload 'json-mode-show-path "json-mode" "\
-
+Print the path to the node at point to the minibuffer, and yank to the kill ring.
 
 \(fn)" t nil)
 

@@ -3,8 +3,8 @@
 ;; Copyright (C) 2013 Michael Markert
 ;; Author: Michael Markert <markert.michael@gmail.com>
 ;; Created: 2013-08-31
-;; Version: 20130831.1519
-;; X-Original-Version: 0.2
+;; Version: 0.2
+;; Package-Version: 20130831.2219
 ;; Keywords: convenience evil
 ;; URL: http://github.com/cofi/evil-indent-textobject
 ;; Package-Requires: ((evil "0"))

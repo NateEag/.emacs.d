@@ -6,7 +6,7 @@
 ;; URL: https://github.com/Simplify/flycheck-css-colorguard/
 ;; Keywords: flycheck, CSS, Colorguard
 ;; Version: 0.20.1
-;; Package-Version: 20161031.422
+;; Package-Version: 20161031.1122
 ;; Package-X-Original-Version: 0.20.1
 ;; Package-Requires: ((flycheck "0.22") (emacs "24"))
 

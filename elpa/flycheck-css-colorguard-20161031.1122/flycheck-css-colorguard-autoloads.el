@@ -4,7 +4,7 @@
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
 ;;;### (autoloads nil "flycheck-css-colorguard" "flycheck-css-colorguard.el"
-;;;;;;  (22551 42486 0 0))
+;;;;;;  (23400 19169 0 0))
 ;;; Generated autoloads from flycheck-css-colorguard.el
 
 (autoload 'flycheck-css-colorguard-setup "flycheck-css-colorguard" "\

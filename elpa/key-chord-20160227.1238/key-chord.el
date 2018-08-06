@@ -25,7 +25,7 @@
 ;; Author: David Andersson <l.david.andersson(at)sverige.nu>
 ;; Created: 27 April 2003
 ;; Version: 0.6 (2012-10-23)
-;; Package-Version: 20160227.438
+;; Package-Version: 20160227.1238
 ;; Keywords: keyboard chord input
 
 ;;; Commentary:

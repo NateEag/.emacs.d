@@ -5,8 +5,8 @@
 ;; Author: Roland Walker <walker@pobox.com>
 ;; Homepage: http://github.com/rolandwalker/browse-url-dwim
 ;; URL: http://raw.githubusercontent.com/rolandwalker/browse-url-dwim/master/browse-url-dwim.el
-;; Version: 20140731.1222
-;; X-Original-Version: 0.6.8
+;; Package-Version: 20140731.1922
+;; Version: 0.6.8
 ;; Last-Updated: 31 Jul 2014
 ;; EmacsWiki: BrowseUrlDwim
 ;; Keywords: hypermedia

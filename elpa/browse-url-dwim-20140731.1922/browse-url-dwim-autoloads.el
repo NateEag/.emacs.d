@@ -1,10 +1,10 @@
 ;;; browse-url-dwim-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "browse-url-dwim" "browse-url-dwim.el" (21592
-;;;;;;  11309 0 0))
+;;;### (autoloads nil "browse-url-dwim" "browse-url-dwim.el" (23400
+;;;;;;  19104 0 0))
 ;;; Generated autoloads from browse-url-dwim.el
 
 (let ((loads (get 'browse-url-dwim 'custom-loads))) (if (member '"browse-url-dwim" loads) nil (put 'browse-url-dwim 'custom-loads (cons '"browse-url-dwim" loads))))
@@ -13,7 +13,8 @@
 
 (defvar browse-url-dwim-mode nil "\
 Non-nil if Browse-Url-Dwim mode is enabled.
-See the command `browse-url-dwim-mode' for a description of this minor mode.
+See the `browse-url-dwim-mode' command
+for a description of this minor mode.
 Setting this variable directly does not take effect;
 either customize it (see the info node `Easy Customization')
 or call the function `browse-url-dwim-mode'.")

@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "project-shells" "project-shells.el" (23041
-;;;;;;  59744 0 0))
+;;;### (autoloads nil "project-shells" "project-shells.el" (23400
+;;;;;;  19305 0 0))
 ;;; Generated autoloads from project-shells.el
 
 (autoload 'project-shells-activate-for-key "project-shells" "\

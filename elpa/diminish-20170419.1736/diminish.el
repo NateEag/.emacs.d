@@ -5,7 +5,7 @@
 ;; Author: Will Mengarini <seldon@eskimo.com>
 ;; Maintainer: Martin Yrjölä <martin.yrjola@gmail.com>
 ;; URL: <https://github.com/myrjola/diminish.el>
-;; Package-Version: 20170419.1036
+;; Package-Version: 20170419.1736
 ;; Created: Th 19 Feb 98
 ;; Version: 0.45
 ;; Keywords: extensions, diminish, minor, codeprose

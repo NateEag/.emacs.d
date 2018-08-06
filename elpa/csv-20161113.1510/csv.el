@@ -6,7 +6,7 @@
 ;; Filename:   csv.el
 ;; Created:    August 19 2001
 ;; Keywords:   extensions, data, csv
-;; Package-Version: 20161113.710
+;; Package-Version: 20161113.1510
 ;; Version:    2.1
 
 (defconst csv-version 2.1 "Version number of csv.el.")

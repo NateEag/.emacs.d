@@ -1,10 +1,10 @@
 ;;; backup-walker-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads (backup-walker-start) "backup-walker" "backup-walker.el"
-;;;;;;  (21227 38351 0 0))
+;;;### (autoloads nil "backup-walker" "backup-walker.el" (23400 19099
+;;;;;;  0 0))
 ;;; Generated autoloads from backup-walker.el
 
 (autoload 'backup-walker-start "backup-walker" "\
@@ -16,16 +16,9 @@ with universal arg, ask for a file-name.
 
 ;;;***
 
-;;;### (autoloads nil nil ("backup-walker-pkg.el") (21227 38351 500398
-;;;;;;  0))
-
-;;;***
-
-(provide 'backup-walker-autoloads)
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
-;; coding: utf-8
 ;; End:
 ;;; backup-walker-autoloads.el ends here

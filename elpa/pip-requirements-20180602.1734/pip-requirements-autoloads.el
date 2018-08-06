@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "pip-requirements" "pip-requirements.el" (23332
-;;;;;;  10345 0 0))
+;;;### (autoloads nil "pip-requirements" "pip-requirements.el" (23400
+;;;;;;  19297 0 0))
 ;;; Generated autoloads from pip-requirements.el
 
 (add-to-list 'auto-mode-alist `(,(rx ".pip" string-end) . pip-requirements-mode))

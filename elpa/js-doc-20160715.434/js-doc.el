@@ -2,7 +2,7 @@
 
 ;; Author: mooz <stillpedant@gmail.com>
 ;; Version: 0.0.5
-;; Package-Version: 20160714.2134
+;; Package-Version: 20160715.434
 ;; Keywords: document, comment
 ;; URL: https://github.com/mooz/js-doc
 

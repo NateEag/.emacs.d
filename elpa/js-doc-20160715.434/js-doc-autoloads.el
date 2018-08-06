@@ -1,9 +1,9 @@
 ;;; js-doc-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "js-doc" "js-doc.el" (22420 58709 0 0))
+;;;### (autoloads nil "js-doc" "js-doc.el" (23400 19218 0 0))
 ;;; Generated autoloads from js-doc.el
 
 (autoload 'js-doc-insert-file-doc "js-doc" "\

@@ -10,7 +10,7 @@
 ;; Maintainer: Bozhidar Batsov <bozhidar@batsov.com>
 ;;     Sebastian Wiesner <swiesner@lunaryorn.com>
 ;; URL: https://github.com/voxpupuli/puppet-mode
-;; Package-Version: 20171220.2249
+;; Package-Version: 20171221.649
 ;; Keywords: languages
 ;; Version: 0.4-cvs
 ;; Package-Requires: ((emacs "24.1") (pkg-info "0.4"))

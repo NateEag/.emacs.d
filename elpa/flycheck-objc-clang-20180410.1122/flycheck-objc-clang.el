@@ -4,7 +4,7 @@
 
 ;; Author: Goichi Hirakawa <gooichi@gyazsquare.com>
 ;; URL: https://github.com/GyazSquare/flycheck-objc-clang
-;; Package-Version: 20180410.422
+;; Package-Version: 20180410.1122
 ;; Version: 2.0.2
 ;; Keywords: convenience, languages, tools
 ;; Package-Requires: ((emacs "24.4") (flycheck "26"))

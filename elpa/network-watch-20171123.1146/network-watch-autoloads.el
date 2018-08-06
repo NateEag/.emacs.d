@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "network-watch" "network-watch.el" (23068 16119
+;;;### (autoloads nil "network-watch" "network-watch.el" (23400 19261
 ;;;;;;  0 0))
 ;;; Generated autoloads from network-watch.el
 

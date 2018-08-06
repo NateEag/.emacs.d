@@ -1,10 +1,10 @@
 ;;; skewer-reload-stylesheets-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
 ;;;### (autoloads nil "skewer-reload-stylesheets" "skewer-reload-stylesheets.el"
-;;;;;;  (22465 925 0 0))
+;;;;;;  (23400 19336 0 0))
 ;;; Generated autoloads from skewer-reload-stylesheets.el
 
 (autoload 'skewer-reload-stylesheets-start-editing "skewer-reload-stylesheets" "\
@@ -22,8 +22,8 @@ Minor mode for interactively reloading CSS stylesheets.
 
 ;;;***
 
-;;;### (autoloads nil nil ("skewer-reload-stylesheets-pkg.el" "skewer-reload-stylesheets-test.el")
-;;;;;;  (22465 925 608272 0))
+;;;### (autoloads nil nil ("skewer-reload-stylesheets-pkg.el") (23400
+;;;;;;  19336 0 0))
 
 ;;;***
 

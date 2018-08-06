@@ -118,7 +118,11 @@
     ;; Jump-to-def and go-back-where-I-came from are things I like to be able
     ;; to do from normal-mode.
     ;;
-    ;; TODO Do this in a smarter way.
+    ;; TODO Do this in a smarter way. Binding straight to these function defs
+    ;; doesn't work for non-LSP backends like Tern.
+    ;;
+    ;; ...though I probably am going to move away from Tern soon since it's not
+    ;; supported any more, so y'know. Mileage may vary.
     ("." . xref-find-definitions)
     ("," . xref-pop-marker-stack)
 

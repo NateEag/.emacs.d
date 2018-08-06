@@ -1,9 +1,9 @@
 ;;; evil-leader-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "evil-leader" "evil-leader.el" (21479 57302
+;;;### (autoloads nil "evil-leader" "evil-leader.el" (23400 19135
 ;;;;;;  0 0))
 ;;; Generated autoloads from evil-leader.el
 

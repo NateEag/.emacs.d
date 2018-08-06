@@ -187,7 +187,7 @@ Decrement the depth level after complete."
      (setq esup-child-last-call-intercept-results '())
      (prog1
          ;; This is cleared after `esup-child-profile-string' completes.
-         (setq esup-child-last-call-intercept-results 
+         (setq esup-child-last-call-intercept-results
                (progn ,@body))
        (setq esup-child-current-depth
              (1- esup-child-current-depth)))))
@@ -273,7 +273,7 @@ BUFFER defaults to the current buffer."
 
 (defun esup-child-profile-buffer (buffer)
   "Profile BUFFER and return the benchmarked expressions."
-  (condition-case error-message
+  (condition-case-unless-debug error-message
       (with-current-buffer buffer
         (goto-char (point-min))
         (forward-comment (buffer-size))
@@ -317,7 +317,7 @@ Returns a list of class `esup-result'."
      (esup-child-create-location-info-string)
      (buffer-substring-no-properties start (min end (+ 30 start))))
 
-    (condition-case error-message
+    (condition-case-unless-debug error-message
         (progn
           (setq sexp (if (string-equal sexp-string "")
                          ""
@@ -421,4 +421,3 @@ We need this because `prin1-to-string' isn't stable between Emacs 25 and 26."
 
 (provide 'esup-child)
 ;;; esup-child.el ends here
-

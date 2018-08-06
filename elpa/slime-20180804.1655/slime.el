@@ -3,7 +3,7 @@
 ;; URL: https://github.com/slime/slime
 ;; Package-Requires: ((cl-lib "0.5") (macrostep "0.9"))
 ;; Keywords: languages, lisp, slime
-;; Version: 2.21
+;; Version: 2.22
 
 ;;;; License and Commentary
 
@@ -3785,10 +3785,12 @@ FILE-ALIST is an alist of the form ((FILENAME . (XREF ...)) ...)."
 
 (defun slime-pop-to-location (location &optional where)
   (slime-goto-source-location location)
-  (cl-ecase where
-    ((nil)     (switch-to-buffer (current-buffer)))
-    (window    (pop-to-buffer (current-buffer) t))
-    (frame     (let ((pop-up-frames t)) (pop-to-buffer (current-buffer) t)))))
+  (let ((point (point)))
+    (cl-ecase where
+      ((nil)  (switch-to-buffer (current-buffer)))
+      (window (pop-to-buffer (current-buffer) t))
+      (frame  (let ((pop-up-frames t)) (pop-to-buffer (current-buffer) t))))
+    (goto-char point)))
 
 (defun slime-postprocess-xref (original-xref)
   "Process (for normalization purposes) an Xref comming directly

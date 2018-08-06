@@ -4,8 +4,8 @@
 
 ;; Author: INA Lintaro <tarao.gnn at gmail.com>
 ;;         TAKAGI Kentaro <kentaro0910_at_gmail.com>
-;; Version: 20141212.517
-;; X-Original-Version: 0.1
+;; Version: 0.1
+;; Package-Version: 20141212.1317
 ;; Package-Requires: ((helm "1.5.9"))
 ;; Keywords: helm, git
 

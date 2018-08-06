@@ -1,10 +1,10 @@
 ;;; helm-git-files-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "helm-git-files" "helm-git-files.el" (21643
-;;;;;;  25696 0 0))
+;;;### (autoloads nil "helm-git-files" "helm-git-files.el" (23400
+;;;;;;  19192 0 0))
 ;;; Generated autoloads from helm-git-files.el
 
 (autoload 'helm-git-files:git-p "helm-git-files" "\

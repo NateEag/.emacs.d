@@ -4,7 +4,7 @@
 
 ;; Author: Adam Patterson <adam@adamrt.com>
 ;; URL: http://github.com/adamrt/sane-term
-;; Package-Version: 20160620.647
+;; Package-Version: 20160620.1347
 ;; Version: 0.4
 ;; Package-Requires: ((emacs "24.1"))
 

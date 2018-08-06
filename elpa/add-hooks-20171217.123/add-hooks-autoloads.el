@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "add-hooks" "add-hooks.el" (23095 50522 0 0))
+;;;### (autoloads nil "add-hooks" "add-hooks.el" (23400 19087 0 0))
 ;;; Generated autoloads from add-hooks.el
 
 (autoload 'add-hooks-pair "add-hooks" "\

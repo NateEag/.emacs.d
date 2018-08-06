@@ -4,7 +4,7 @@
 ;; Author: Robert Weiner <rsw@gnu.org>
 ;; Maintainer: stardiviner <numbchild@gmail.com>
 ;; Keywords: documentation, eldoc, overlay
-;; Package-Version: 20171219.140
+;; Package-Version: 20171219.940
 ;; URL: https://github.com/stardiviner/eldoc-overlay
 ;; Created:  14th Jan 2017
 ;; Modified: 18th Dec 2017

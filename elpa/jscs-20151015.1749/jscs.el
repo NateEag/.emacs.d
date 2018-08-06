@@ -4,7 +4,7 @@
 
 ;; Author: papaeye <papaeye@gmail.com>
 ;; Keywords: languages, convenience
-;; Package-Version: 20151015.1049
+;; Package-Version: 20151015.1749
 ;; Version: 0.2.0alpha
 ;; Homepage: https://github.com/papaeye/emacs-jscs
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))

@@ -1,9 +1,9 @@
 ;;; list-utils-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "list-utils" "list-utils.el" (22331 51902 0
+;;;### (autoloads nil "list-utils" "list-utils.el" (23400 19375 0
 ;;;;;;  0))
 ;;; Generated autoloads from list-utils.el
 

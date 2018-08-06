@@ -4,7 +4,7 @@
 
 ;; Author: Jorge Dias <jorge@mrdias.com>
 ;; URL: https://github.com/diasjorge/emacs-load-env-vars
-;; Package-Version: 20180511.1510
+;; Package-Version: 20180511.2210
 ;; Keywords: lisp
 ;; Version: 0.0.2
 ;; Package-Requires: ((emacs "24"))

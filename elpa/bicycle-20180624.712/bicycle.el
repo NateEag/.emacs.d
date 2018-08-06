@@ -5,7 +5,7 @@
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/tarsius/bicycle
 ;; Keywords: outlines
-;; Package-Version: 20180624.12
+;; Package-Version: 20180624.712
 
 ;; Package-Requires: ((emacs "25.1"))
 

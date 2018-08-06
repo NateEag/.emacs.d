@@ -468,6 +468,9 @@ The shell command lives in my dotfiles repo."
                                       (add-to-list 'ac-sources
                                                    'ac-source-tern-completion))))
 
+(use-package ac-ispell
+  :commands ac-ispell-setup)
+
 (use-package tern-auto-complete
   :commands tern-ac-setup
   :config

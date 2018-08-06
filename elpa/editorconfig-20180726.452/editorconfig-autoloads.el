@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "editorconfig" "editorconfig.el" (23366 401
+;;;### (autoloads nil "editorconfig" "editorconfig.el" (23400 19117
 ;;;;;;  0 0))
 ;;; Generated autoloads from editorconfig.el
 
@@ -45,7 +45,7 @@ mode is not listed in `editorconfig-exclude-modes'.
 ;;;***
 
 ;;;### (autoloads nil "editorconfig-conf-mode" "editorconfig-conf-mode.el"
-;;;;;;  (23366 401 0 0))
+;;;;;;  (23400 19117 0 0))
 ;;; Generated autoloads from editorconfig-conf-mode.el
 
 (autoload 'editorconfig-conf-mode "editorconfig-conf-mode" "\
@@ -58,7 +58,7 @@ Major mode for editing .editorconfig files.
 ;;;***
 
 ;;;### (autoloads nil "editorconfig-core" "editorconfig-core.el"
-;;;;;;  (23366 401 0 0))
+;;;;;;  (23400 19117 0 0))
 ;;; Generated autoloads from editorconfig-core.el
 
 (autoload 'editorconfig-core-get-nearest-editorconfig "editorconfig-core" "\
@@ -91,11 +91,11 @@ hash object instead.
 ;;;***
 
 ;;;### (autoloads nil "editorconfig-fnmatch" "editorconfig-fnmatch.el"
-;;;;;;  (23366 401 0 0))
+;;;;;;  (23400 19117 0 0))
 ;;; Generated autoloads from editorconfig-fnmatch.el
 
 (autoload 'editorconfig-fnmatch-p "editorconfig-fnmatch" "\
-Test whether NAME match PATTERN.
+Test whether STRING match PATTERN.
 
 Matching ignores case if `case-fold-search' is non-nil.
 
@@ -110,12 +110,12 @@ be used:
 {s1,s2,s3}  Matches any of the strings given (separated by commas)
 {min..max}  Matches any number between min and max
 
-\(fn NAME PATTERN)" nil nil)
+\(fn STRING PATTERN)" nil nil)
 
 ;;;***
 
 ;;;### (autoloads nil nil ("editorconfig-core-handle.el" "editorconfig-pkg.el")
-;;;;;;  (23366 401 0 0))
+;;;;;;  (23400 19117 0 0))
 
 ;;;***
 

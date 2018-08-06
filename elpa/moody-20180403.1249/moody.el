@@ -6,7 +6,7 @@
 ;; Homepage: https://github.com/tarsius/moody
 
 ;; Package-Requires: ((emacs "25.3"))
-;; Package-Version: 20180403.549
+;; Package-Version: 20180403.1249
 
 ;; This file is not part of GNU Emacs.
 

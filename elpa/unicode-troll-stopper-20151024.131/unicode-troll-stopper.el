@@ -4,7 +4,7 @@
 ;; Author: Cam Saül <cammsaul@gmail.com>
 ;; Maintainer: Cam Saül <cammsaul@gmail.com>
 ;; URL: https://github.com/camsaul/emacs-unicode-troll-stopper
-;; Package-Version: 20151023.1831
+;; Package-Version: 20151024.131
 ;; Created: 23rd October 2015
 ;; Version: 1.0
 ;; Keywords: unicode

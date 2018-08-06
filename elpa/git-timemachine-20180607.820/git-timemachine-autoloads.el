@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "git-timemachine" "git-timemachine.el" (23332
-;;;;;;  10318 0 0))
+;;;### (autoloads nil "git-timemachine" "git-timemachine.el" (23400
+;;;;;;  19181 0 0))
 ;;; Generated autoloads from git-timemachine.el
 
 (autoload 'git-timemachine-toggle "git-timemachine" "\

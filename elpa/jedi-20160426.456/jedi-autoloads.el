@@ -1,9 +1,9 @@
 ;;; jedi-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "jedi" "jedi.el" (22331 51953 0 0))
+;;;### (autoloads nil "jedi" "jedi.el" (23400 19210 0 0))
 ;;; Generated autoloads from jedi.el
 
 (autoload 'jedi:ac-setup "jedi" "\
@@ -23,7 +23,7 @@ in their Emacs configuration.
 (autoload 'jedi:complete "jedi" "\
 Complete code at point.
 
-\(fn &key (expand ac-expand-on-auto-complete))" t nil)
+\(fn &key (EXPAND ac-expand-on-auto-complete))" t nil)
 
 (autoload 'jedi:auto-complete-mode "jedi" "\
 

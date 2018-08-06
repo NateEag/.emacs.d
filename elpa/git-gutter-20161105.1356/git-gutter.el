@@ -4,7 +4,7 @@
 
 ;; Author: Syohei YOSHIDA <syohex@gmail.com>
 ;; URL: https://github.com/syohex/emacs-git-gutter
-;; Package-Version: 20161105.656
+;; Package-Version: 20161105.1356
 ;; Version: 0.90
 ;; Package-Requires: ((emacs "24.3"))
 
@@ -575,7 +575,7 @@ gutter information of other windows."
       (or diffinfos git-gutter:unchanged-sign)
     (or global-git-gutter-mode git-gutter:unchanged-sign diffinfos)))
 
-(defun git-gutter:show-gutter   (diffinfos)
+(defun git-gutter:show-gutter (diffinfos)
   (when (git-gutter:show-gutter-p diffinfos)
     (git-gutter:set-window-margin (git-gutter:window-margin))))
 
@@ -617,7 +617,7 @@ gutter information of other windows."
   (git-gutter:show-gutter diffinfos))
 
 (defsubst git-gutter:reset-window-margin-p ()
-  (when git-gutter:hide-gutter))
+  (or git-gutter:hide-gutter (not global-git-gutter-mode)))
 
 (defun git-gutter:clear-diff-infos ()
   (when (git-gutter:reset-window-margin-p)

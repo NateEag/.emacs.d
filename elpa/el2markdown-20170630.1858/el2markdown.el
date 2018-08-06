@@ -4,7 +4,7 @@
 
 ;; Author: Anders Lindgren
 ;; Version: 0.0.7
-;; Package-Version: 20170630.1158
+;; Package-Version: 20170630.1858
 ;; Created: 2013-03-26
 ;; URL: https://github.com/Lindydancer/el2markdown
 

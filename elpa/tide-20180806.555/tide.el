@@ -779,7 +779,7 @@ implementations.  When invoked with a prefix arg, jump to the type definition."
 (defun tide-recenter-in-same-buffer-p (filespan)
   (let* ((newpos (plist-get (plist-get filespan :start) :line))
          (line-diff (abs (- (line-number-at-pos) newpos))))
-    (> line-diff (count-screen-lines))))
+    (> line-diff (window-body-height))))
 
 (defun tide-jump-to-filespan (filespan &optional reuse-window no-marker)
   (let ((file (plist-get filespan :file))
@@ -1866,11 +1866,11 @@ code-analysis."
         (add-hook 'hack-local-variables-hook 'tide-configure-buffer nil t)
         (when (commandp 'typescript-insert-and-indent)
           (eldoc-add-command 'typescript-insert-and-indent)))
-    (remove-hook 'after-save-hook 'tide-sync-buffer-contents)
-    (remove-hook 'after-save-hook 'tide-auto-compile-file)
-    (remove-hook 'after-change-functions 'tide-handle-change)
-    (remove-hook 'kill-buffer-hook 'tide-cleanup-buffer)
-    (remove-hook 'hack-local-variables-hook 'tide-configure-buffer)
+    (remove-hook 'after-save-hook 'tide-sync-buffer-contents t)
+    (remove-hook 'after-save-hook 'tide-auto-compile-file t)
+    (remove-hook 'after-change-functions 'tide-handle-change t)
+    (remove-hook 'kill-buffer-hook 'tide-cleanup-buffer t)
+    (remove-hook 'hack-local-variables-hook 'tide-configure-buffer t)
     (tide-cleanup-buffer)))
 
 

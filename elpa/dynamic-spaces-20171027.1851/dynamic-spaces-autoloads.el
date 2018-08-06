@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "dynamic-spaces" "dynamic-spaces.el" (23031
-;;;;;;  12986 0 0))
+;;;### (autoloads nil "dynamic-spaces" "dynamic-spaces.el" (23400
+;;;;;;  19116 0 0))
 ;;; Generated autoloads from dynamic-spaces.el
 
 (autoload 'dynamic-spaces-mode "dynamic-spaces" "\

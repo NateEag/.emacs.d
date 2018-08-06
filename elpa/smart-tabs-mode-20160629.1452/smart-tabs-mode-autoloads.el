@@ -1,10 +1,10 @@
 ;;; smart-tabs-mode-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "smart-tabs-mode" "smart-tabs-mode.el" (22410
-;;;;;;  4775 0 0))
+;;;### (autoloads nil "smart-tabs-mode" "smart-tabs-mode.el" (23400
+;;;;;;  19363 0 0))
 ;;; Generated autoloads from smart-tabs-mode.el
 
 (autoload 'smart-tabs-when "smart-tabs-mode" "\
@@ -12,7 +12,7 @@
 
 \(fn CONDITION ADVICE-LIST)" nil t)
 
-(put 'smart-tabs-when 'lisp-indent-function '1)
+(function-put 'smart-tabs-when 'lisp-indent-function '1)
 
 (autoload 'smart-tabs-create-advice-list "smart-tabs-mode" "\
 
@@ -28,7 +28,7 @@ simplifies the creation of such a cons cell.
 
 \(fn LANG MODE-HOOK ADVICE-LIST &rest BODY)" nil t)
 
-(put 'smart-tabs-create-language-advice 'lisp-indent-function '2)
+(function-put 'smart-tabs-create-language-advice 'lisp-indent-function '2)
 
 (autoload 'smart-tabs-mode "smart-tabs-mode" "\
 Intelligently indent with tabs, align with spaces!
@@ -58,7 +58,7 @@ Add support for a language not already in the `smart-tabs-insinuate-alist'.
 
 \(fn LANG MODE-HOOK ADVICE-LIST &rest BODY)" nil t)
 
-(put 'smart-tabs-add-language-support 'lisp-indent-function '2)
+(function-put 'smart-tabs-add-language-support 'lisp-indent-function '2)
 
 ;;;***
 

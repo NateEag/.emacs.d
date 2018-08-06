@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "ac-slime" "ac-slime.el" (23031 13207 0 0))
+;;;### (autoloads nil "ac-slime" "ac-slime.el" (23400 19084 0 0))
 ;;; Generated autoloads from ac-slime.el
 
 (defface ac-slime-menu-face '((t (:inherit ac-candidate-face))) "\

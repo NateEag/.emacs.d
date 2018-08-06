@@ -4,7 +4,7 @@
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; URL: https://github.com/purcell/ac-slime
-;; Package-Version: 20171027.1400
+;; Package-Version: 20171027.2100
 ;; Package-X-Original-Version: 0
 ;; Package-Requires: ((auto-complete "1.4") (slime "2.9") (cl-lib "0.5"))
 

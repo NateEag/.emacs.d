@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: navigation slime elisp emacs-lisp
 ;; URL: https://github.com/purcell/elisp-slime-nav
-;; Package-Version: 20160128.1109
+;; Package-Version: 20160128.1909
 ;; Package-X-Original-Version: 0
 ;; Package-Requires: ((cl-lib "0.2"))
 

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "lsp-ui" "lsp-ui.el" (23349 13391 0 0))
+;;;### (autoloads nil "lsp-ui" "lsp-ui.el" (23400 19236 0 0))
 ;;; Generated autoloads from lsp-ui.el
 
 (autoload 'lsp-ui-mode "lsp-ui" "\
@@ -19,8 +19,8 @@ omitted or nil, and toggle it if ARG is ‘toggle’.
 ;;;***
 
 ;;;### (autoloads nil nil ("lsp-ui-doc.el" "lsp-ui-flycheck.el" "lsp-ui-imenu.el"
-;;;;;;  "lsp-ui-peek.el" "lsp-ui-pkg.el" "lsp-ui-sideline.el") (23349
-;;;;;;  13391 0 0))
+;;;;;;  "lsp-ui-peek.el" "lsp-ui-pkg.el" "lsp-ui-sideline.el") (23400
+;;;;;;  19236 0 0))
 
 ;;;***
 

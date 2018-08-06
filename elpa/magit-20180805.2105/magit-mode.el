@@ -437,6 +437,7 @@ starts complicating other things, then it will be removed."
     (define-key map "Z" 'magit-stash-popup)
     (define-key map ":" 'magit-git-command)
     (define-key map "!" 'magit-run-popup)
+    (define-key map (kbd "C-c C-b") 'magit-browse-thing)
     (define-key map (kbd "C-c C-c") 'magit-dispatch-popup)
     (define-key map (kbd "C-c C-e") 'magit-dispatch-popup)
     (define-key map (kbd "C-x a")   'magit-add-change-log-entry)
@@ -464,6 +465,23 @@ which visits the thing at point."
       (progn (setq magit-current-popup nil)
              (call-interactively (key-binding (this-command-keys))))
     (user-error "There is no thing at point that could be visited")))
+
+(defun magit-edit-thing ()
+  "This is a placeholder command.
+Where applicable, section-specific keymaps bind another command
+which lets you edit the thing at point, likely in another buffer."
+  (interactive)
+  (if (eq magit-current-popup 'magit-dispatch-popup)
+      (progn (setq magit-current-popup nil)
+             (call-interactively (key-binding (this-command-keys))))
+    (user-error "There is no thing at point that could be visited")))
+
+(defun magit-browse-thing ()
+  "This is a placeholder command.
+Where applicable, section-specific keymaps bind another command
+which visits the thing at point using `browse-url'."
+  (interactive)
+  (user-error "There is no thing at point that could be browsed"))
 
 (easy-menu-define magit-mode-menu magit-mode-map
   "Magit menu"
@@ -866,15 +884,16 @@ An alist of symbols to functions.
 
 The symbol must be the major-mode the locked buffer will have.
 
-The function must take a list of arguments and return a value
-that identifies the buffer (i.e., its 'lock value').  If the
-third-party mode is invoked as
+The function must take a single argument, a list of refresh
+arguments (the value of `magit-refresh-args') and return a
+value that identifies the buffer (i.e., its 'lock value').
+If the third-party mode is invoked as
 
     (magit-mode-setup-internal #\\='my-mode \\='(1 2 3) t)
 
 the function will be invoked as
 
-    (apply lock-func \\='(1 2 3))
+    (funcall lock-func \\='(1 2 3))
 
 if the cons (my-mode . lock-func) is in this list.
 
@@ -918,7 +937,7 @@ See also `magit-buffer-lock-functions'."
      (car args))
     (t
      (--when-let (cdr (assq mode magit-buffer-lock-functions))
-       (apply it args)))))
+       (funcall it args)))))
 
 (defun magit-mode-bury-buffer (&optional kill-buffer)
   "Bury the current buffer.

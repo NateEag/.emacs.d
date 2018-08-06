@@ -1001,16 +1001,18 @@ be committed."
 If there is no revision at point or with a prefix argument prompt
 for a revision."
   (interactive
-   (let* ((mcommit (magit-section-when module-commit))
-          (atpoint (or (and (bound-and-true-p magit-blame-mode)
-                            (oref (magit-current-blame-chunk) orig-rev))
-                       mcommit
-                       (magit-branch-or-commit-at-point))))
-     (nconc (cons (or (and (not current-prefix-arg) atpoint)
-                      (magit-read-branch-or-commit "Show commit" atpoint))
-                  (magit-show-commit--arguments))
-            (and mcommit (list (magit-section-parent-value
-                                (magit-current-section)))))))
+   (pcase-let* ((mcommit (magit-section-when module-commit))
+                (atpoint (or (and (bound-and-true-p magit-blame-mode)
+                                  (oref (magit-current-blame-chunk) orig-rev))
+                             mcommit
+                             (magit-branch-or-commit-at-point)))
+                (`(,args ,files) (magit-show-commit--arguments)))
+     (list (or (and (not current-prefix-arg) atpoint)
+               (magit-read-branch-or-commit "Show commit" atpoint))
+           args
+           files
+           (and mcommit (list (magit-section-parent-value
+                               (magit-current-section)))))))
   (require 'magit)
   (magit-with-toplevel
     (when module
@@ -2005,9 +2007,13 @@ or a ref which is not a branch, then it inserts nothing."
 
 (defun magit-insert-revision-message (rev)
   "Insert the commit message into a revision buffer."
-  (magit-insert-section (commit-message)
+  (magit-insert-section section (commit-message)
+    (oset section heading-highlight-face 'magit-diff-hunk-heading-highlight)
     (let ((beg (point)))
-      (magit-rev-insert-format "%B" rev)
+      (insert (save-excursion ; The risky var query can move point.
+                (with-temp-buffer
+                  (magit-rev-insert-format "%B" rev)
+                  (magit-revision--wash-message))))
       (if (= (point) (+ beg 2))
           (progn (backward-delete-char 2)
                  (insert "(no message)\n"))
@@ -2044,7 +2050,7 @@ or a ref which is not a branch, then it inserts nothing."
                           (goto-char end))))))))))
         (save-excursion
           (forward-line)
-          (put-text-property beg (point) 'face 'magit-section-secondary-heading)
+          (add-face-text-property beg (point) 'magit-diff-hunk-heading)
           (magit-insert-heading))
         (when magit-diff-highlight-keywords
           (save-excursion
@@ -2059,23 +2065,36 @@ or a ref which is not a branch, then it inserts nothing."
   (let* ((var "core.notesRef")
          (def (or (magit-get var) "refs/notes/commits")))
     (dolist (ref (or (magit-list-active-notes-refs)))
-      (magit-insert-section (notes ref (not (equal ref def)))
+      (magit-insert-section section (notes ref (not (equal ref def)))
+        (oset section heading-highlight-face 'magit-diff-hunk-heading-highlight)
         (let ((beg (point)))
-          (magit-git-insert "-c" (concat "core.notesRef=" ref)
-                            "notes" "show" rev)
+          (insert (with-temp-buffer
+                    (magit-git-insert "-c" (concat "core.notesRef=" ref)
+                                      "notes" "show" rev)
+                    (magit-revision--wash-message)))
           (if (= (point) beg)
               (magit-cancel-section)
             (goto-char beg)
             (end-of-line)
-            (put-text-property beg (point) 'face 'magit-section-secondary-heading)
             (insert (format " (%s)"
                             (propertize (if (string-prefix-p "refs/notes/" ref)
                                             (substring ref 11)
                                           ref)
                                         'face 'magit-refname)))
+            (forward-char)
+            (add-face-text-property beg (point) 'magit-diff-hunk-heading)
             (magit-insert-heading)
             (goto-char (point-max))
             (insert ?\n)))))))
+
+(defun magit-revision--wash-message ()
+  (let ((major-mode 'git-commit-mode))
+    (hack-dir-local-variables)
+    (hack-local-variables-apply))
+  (unless (memq git-commit-major-mode '(nil text-mode))
+    (funcall git-commit-major-mode)
+    (font-lock-ensure))
+  (buffer-string))
 
 (defun magit-insert-revision-headers (rev)
   "Insert headers about the commit into a revision buffer."

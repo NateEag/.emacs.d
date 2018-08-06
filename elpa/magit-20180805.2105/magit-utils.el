@@ -86,7 +86,14 @@ alphabetical order, depending on your version of Ivy."
     (magit-stash-branch-here  nil t)
     (magit-stash-format-patch nil t)
     (magit-stash-drop         nil ask)
-    (magit-stash-pop          nil ask))
+    (magit-stash-pop          nil ask)
+    (forge-browse-commit      nil t)
+    (forge-browse-branch      nil t)
+    (forge-browse-remote      nil t)
+    (forge-browse-issue       nil t)
+    (forge-browse-pullreq     nil t)
+    (forge-visit-issue        nil t)
+    (forge-visit-pullreq      nil t))
   "When not to offer alternatives and ask for confirmation.
 
 Many commands by default ask the user to select from a list of
@@ -265,7 +272,7 @@ Global settings:
   :group 'magit-commands
   :type `(choice (const :tag "Always require confirmation" nil)
                  (const :tag "Never require confirmation" t)
-                 (set   :tag "Require confirmation only for"
+                 (set   :tag "Require confirmation except for"
                         ,@magit--confirm-actions)))
 
 (defcustom magit-slow-confirm '(drop-stashes)
@@ -416,13 +423,15 @@ acts similarly to `completing-read', except for the following:
         def)
     (unless def
       (setq def fallback))
-    (let ((reply (funcall magit-completing-read-function
+    (let ((command this-command)
+          (reply (funcall magit-completing-read-function
                           (concat prompt ": ")
                           (if (and def (not (member def collection)))
                               (cons def collection)
                             collection)
                           predicate
                           require-match initial-input hist def)))
+      (setq this-command command)
       (if (string= reply "")
           (if require-match
               (user-error "Nothing selected")
@@ -959,6 +968,12 @@ Like `message', except that if the users configured option
 `magit-no-message' to prevent the message corresponding to
 FORMAT-STRING to be displayed, then don't."
   (unless (--first (string-prefix-p it format-string) magit-no-message)
+    (apply #'message format-string args)))
+
+(defun magit-msg (format-string &rest args)
+  "Display a message at the bottom of the screen, but don't log it.
+Like `message', except that `message-log-max' is bound to nil."
+  (let ((message-log-max nil))
     (apply #'message format-string args)))
 
 (provide 'magit-utils)

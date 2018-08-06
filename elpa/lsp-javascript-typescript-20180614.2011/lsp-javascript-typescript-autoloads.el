@@ -4,7 +4,7 @@
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
 ;;;### (autoloads nil "lsp-javascript-typescript" "lsp-javascript-typescript.el"
-;;;;;;  (23332 10325 0 0))
+;;;;;;  (23400 19235 0 0))
 ;;; Generated autoloads from lsp-javascript-typescript.el
 
 (defvar lsp-javascript-typescript-server "javascript-typescript-stdio" "\

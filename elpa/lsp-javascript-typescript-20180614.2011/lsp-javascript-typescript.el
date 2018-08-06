@@ -4,7 +4,7 @@
 
 ;; Author: George Pittarelli <g@gjp.cc>
 ;; Version: 1.0
-;; Package-Version: 20180614.1311
+;; Package-Version: 20180614.2011
 ;; Package-Requires: ((lsp-mode "3.0") (typescript-mode "0.1") (emacs "25.1"))
 ;; Keywords: languages tools
 ;; URL: https://github.com/emacs-lsp/lsp-javascript

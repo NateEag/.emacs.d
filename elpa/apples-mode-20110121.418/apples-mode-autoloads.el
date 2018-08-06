@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "apples-mode" "apples-mode.el" (22869 3469
+;;;### (autoloads nil "apples-mode" "apples-mode.el" (23400 19094
 ;;;;;;  0 0))
 ;;; Generated autoloads from apples-mode.el
 
@@ -19,7 +19,7 @@ Happy AppleScripting!
 
 ;;;***
 
-;;;### (autoloads nil nil ("apples-mode-pkg.el") (22869 3469 0 0))
+;;;### (autoloads nil nil ("apples-mode-pkg.el") (23400 19094 0 0))
 
 ;;;***
 

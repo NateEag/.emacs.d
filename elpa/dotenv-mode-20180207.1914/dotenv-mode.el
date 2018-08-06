@@ -2,7 +2,7 @@
 
 ;; Author: Preetpal S. Sohal
 ;; URL: https://github.com/preetpalS/emacs-dotenv-mode
-;; Package-Version: 20180207.1114
+;; Package-Version: 20180207.1914
 ;; Version: 0.2.4
 ;; Package-Requires: ((emacs "24.3"))
 ;; License: GNU General Public License Version 3

@@ -1,9 +1,9 @@
 ;;; diffview-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "diffview" "diffview.el" (22028 22775 0 0))
+;;;### (autoloads nil "diffview" "diffview.el" (23400 19112 0 0))
 ;;; Generated autoloads from diffview.el
 
 (autoload 'diffview-current "diffview" "\

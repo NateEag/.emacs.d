@@ -5,7 +5,7 @@
 ;; Author: Mitchel Humpherys <mitch.special@gmail.com>
 ;; Maintainer: Mitchel Humpherys <mitch.special@gmail.com>
 ;; Keywords: convenience, diff
-;; Package-Version: 20150928.2211
+;; Package-Version: 20150929.511
 ;; Version: 1.0
 ;; URL: https://github.com/mgalgs/diffview-mode
 

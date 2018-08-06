@@ -3,7 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "projectile" "projectile.el" (23366 441 0 0))
+;;;### (autoloads nil "projectile" "projectile.el" (23400 19383 0
+;;;;;;  0))
 ;;; Generated autoloads from projectile.el
 
 (autoload 'projectile-version "projectile" "\
@@ -306,15 +307,28 @@ Invoke `async-shell-command' in the project's root.
 (autoload 'projectile-run-shell "projectile" "\
 Invoke `shell' in the project's root.
 
+Switch to the project specific shell buffer if it already exists.
+
 \(fn)" t nil)
 
 (autoload 'projectile-run-eshell "projectile" "\
 Invoke `eshell' in the project's root.
 
+Switch to the project specific eshell buffer if it already exists.
+
+\(fn)" t nil)
+
+(autoload 'projectile-run-ielm "projectile" "\
+Invoke `ielm' in the project's root.
+
+Switch to the project specific ielm buffer if it already exists.
+
 \(fn)" t nil)
 
 (autoload 'projectile-run-term "projectile" "\
 Invoke `term' in the project's root.
+
+Switch to the project specific term buffer if it already exists.
 
 \(fn PROGRAM)" t nil)
 

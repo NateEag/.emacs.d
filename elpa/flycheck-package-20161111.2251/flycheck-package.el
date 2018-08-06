@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; Keywords: lisp
-;; Package-Version: 20161111.1451
+;; Package-Version: 20161111.2251
 ;; Version: 0
 ;; Package-Requires: ((flycheck "0.22") (package-lint "0.2"))
 

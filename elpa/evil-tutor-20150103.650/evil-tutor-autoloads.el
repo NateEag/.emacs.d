@@ -1,9 +1,9 @@
 ;;; evil-tutor-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "evil-tutor" "evil-tutor.el" (21671 61006 0
+;;;### (autoloads nil "evil-tutor" "evil-tutor.el" (23400 19150 0
 ;;;;;;  0))
 ;;; Generated autoloads from evil-tutor.el
 
@@ -16,8 +16,7 @@ Start a evil-tutor session.
 
 ;;;***
 
-;;;### (autoloads nil nil ("evil-tutor-pkg.el") (21671 61006 85004
-;;;;;;  0))
+;;;### (autoloads nil nil ("evil-tutor-pkg.el") (23400 19150 0 0))
 
 ;;;***
 

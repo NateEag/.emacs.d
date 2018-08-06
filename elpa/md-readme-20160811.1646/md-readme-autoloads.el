@@ -1,10 +1,10 @@
 ;;; md-readme-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil nil ("md-readme-pkg.el" "md-readme.el") (22446
-;;;;;;  30457 159966 0))
+;;;### (autoloads nil nil ("md-readme-pkg.el" "md-readme.el") (23400
+;;;;;;  19252 0 0))
 
 ;;;***
 

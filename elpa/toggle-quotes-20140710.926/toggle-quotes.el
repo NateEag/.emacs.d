@@ -4,8 +4,8 @@
 
 ;; Author: Jim Tian <tianjin.sc@gmail.com>
 ;; URL: https://github.com/toctan/toggle-quotes.el
-;; Version: 20140710.226
-;; X-Original-Version: 0.1.0
+;; Package-Version: 20140710.926
+;; Version: 0.1.0
 ;; Keywords: convenience, quotes
 
 ;; This file is NOT part of GNU Emacs.

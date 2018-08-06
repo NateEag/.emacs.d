@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "vc-msg" "vc-msg.el" (23332 10377 0 0))
+;;;### (autoloads nil "vc-msg" "vc-msg.el" (23400 19415 0 0))
 ;;; Generated autoloads from vc-msg.el
 
 (autoload 'vc-msg-show "vc-msg" "\
@@ -13,7 +13,7 @@ Show commit message of current line.
 
 ;;;***
 
-;;;### (autoloads nil "vc-msg-git" "vc-msg-git.el" (23332 10377 0
+;;;### (autoloads nil "vc-msg-git" "vc-msg-git.el" (23400 19415 0
 ;;;;;;  0))
 ;;; Generated autoloads from vc-msg-git.el
 
@@ -39,7 +39,7 @@ Format the message for popup from INFO.
 
 ;;;***
 
-;;;### (autoloads nil "vc-msg-hg" "vc-msg-hg.el" (23332 10377 0 0))
+;;;### (autoloads nil "vc-msg-hg" "vc-msg-hg.el" (23400 19415 0 0))
 ;;; Generated autoloads from vc-msg-hg.el
 
 (autoload 'vc-msg-hg-execute "vc-msg-hg" "\
@@ -56,7 +56,7 @@ Format popup message from INFO.
 
 ;;;***
 
-;;;### (autoloads nil "vc-msg-p4" "vc-msg-p4.el" (23332 10377 0 0))
+;;;### (autoloads nil "vc-msg-p4" "vc-msg-p4.el" (23400 19415 0 0))
 ;;; Generated autoloads from vc-msg-p4.el
 
 (autoload 'vc-msg-p4-execute "vc-msg-p4" "\
@@ -73,7 +73,7 @@ Format the INFO into a string.
 
 ;;;***
 
-;;;### (autoloads nil "vc-msg-svn" "vc-msg-svn.el" (23332 10377 0
+;;;### (autoloads nil "vc-msg-svn" "vc-msg-svn.el" (23400 19415 0
 ;;;;;;  0))
 ;;; Generated autoloads from vc-msg-svn.el
 
@@ -91,8 +91,8 @@ Format the message to display from INFO.
 
 ;;;***
 
-;;;### (autoloads nil nil ("vc-msg-pkg.el" "vc-msg-sdk.el") (23332
-;;;;;;  10377 0 0))
+;;;### (autoloads nil nil ("vc-msg-pkg.el" "vc-msg-sdk.el") (23400
+;;;;;;  19415 0 0))
 
 ;;;***
 

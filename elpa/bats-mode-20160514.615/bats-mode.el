@@ -2,7 +2,7 @@
 
 ;; Author: Doug MacEachern
 ;; URL: https://github.com/dougm/bats-mode
-;; Package-Version: 20160513.2315
+;; Package-Version: 20160514.615
 ;; Version: 0.1.0
 ;; Keywords: bats, tests
 

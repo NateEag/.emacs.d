@@ -1,10 +1,10 @@
 ;;; js-auto-format-mode.el --- Minor mode for auto-formatting JavaScript code  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2017 ybiquitous <ybiquitous@gmail.com>
+;; Copyright (C) 2017 Masafumi Koba <ybiquitous@gmail.com>
 
-;; Author:  ybiquitous <ybiquitous@gmail.com>
+;; Author: Masafumi Koba <ybiquitous@gmail.com>
 ;; Version: 1.1.0
-;; Package-Version: 20180123.830
+;; Package-Version: 20180729.740
 ;; Package-Requires: ((emacs "24"))
 ;; Keywords: languages
 ;; URL: https://github.com/ybiquitous/js-auto-format-mode

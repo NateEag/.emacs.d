@@ -4,7 +4,7 @@
 
 ;; Author: Andrew Hyatt <ahyatt@gmail.com>
 ;; Keywords: Communication, Websocket, Server
-;; Package-Version: 20180422.1716
+;; Package-Version: 20180423.16
 ;; Version: 1.9
 ;; Package-Requires: ((cl-lib "0.5"))
 ;;

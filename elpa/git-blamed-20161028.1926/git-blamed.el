@@ -7,7 +7,7 @@
 ;; Message-ID: <87iren2vqx.fsf@morpheus.local>
 ;; License:    GPL
 ;; Keywords:   git, version control, release management
-;; Package-Version: 20161028.1226
+;; Package-Version: 20161028.1926
 ;;
 ;; Compatibility: Emacs21, Emacs22 and EmacsCVS
 ;;                Git 1.5 and up

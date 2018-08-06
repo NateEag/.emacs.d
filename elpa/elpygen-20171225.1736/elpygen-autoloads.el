@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "elpygen" "elpygen.el" (23115 45391 0 0))
+;;;### (autoloads nil "elpygen" "elpygen.el" (23400 19123 0 0))
 ;;; Generated autoloads from elpygen.el
 
 (autoload 'elpygen-implement "elpygen" "\

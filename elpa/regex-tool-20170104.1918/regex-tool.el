@@ -6,7 +6,7 @@
 ;; Created: 29 Oct 2007
 ;; Modified: 17 Nov 2007
 ;; Version: 1.2
-;; Package-Version: 20170104.1118
+;; Package-Version: 20170104.1918
 ;; Keywords: regex languages programming development
 ;; X-URL: http://www.newartisans.com/
 

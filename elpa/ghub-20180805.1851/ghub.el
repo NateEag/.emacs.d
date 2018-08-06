@@ -96,6 +96,7 @@ used instead.")
   (silent     nil :read-only t)
   (method     nil :read-only t)
   (headers    nil :read-only t)
+  (handler    nil :read-only t)
   (unpaginate nil :read-only nil)
   (noerror    nil :read-only t)
   (reader     nil :read-only t)
@@ -115,24 +116,6 @@ used instead.")
   "The headers returned in response to the last request.
 `ghub-request' returns the response body and stores the
 response headers in this variable.")
-
-(cl-defun ghub-graphql (graphql &optional variables
-                                &key username auth host
-                                silent
-                                callback errorback extra)
-  "Make a GraphQL request using GRAPHQL and VARIABLES.
-Return the response as a JSON-like alist.  Even if the response
-contains `errors', do not raise an error.  GRAPHQL is a GraphQL
-string.  VARIABLES is a JSON-like alist.  The other arguments
-behave as for `ghub-request' (which see)."
-  (cl-assert (stringp graphql))
-  (cl-assert (not (stringp variables)))
-  (ghub-request "POST" "/graphql" nil :payload
-                (json-encode `(("query" . ,graphql)
-                               ,@(and variables `(("variables" ,@variables)))))
-                :silent silent
-                :username username :auth auth :host host
-                :callback callback :errorback errorback :extra extra))
 
 (cl-defun ghub-head (resource &optional params
                               &key query payload headers
@@ -222,7 +205,7 @@ Like calling `ghub-request' (which see) with \"DELETE\" as METHOD."
                                &key query payload headers
                                silent unpaginate noerror reader
                                username auth host forge
-                               callback errorback extra)
+                               callback errorback value extra)
   "Make a request for RESOURCE and return the response body.
 
 Also place the response header in `ghub-response-headers'.
@@ -335,14 +318,10 @@ Both callbacks are called with four arguments.
            (error "PARAMS and PAYLOAD are mutually exclusive for METHOD %S"
                   method))
          (setq payload params)))
-  (when payload
-    (unless (stringp payload)
-      (setq payload (json-encode-list payload)))
-    (setq payload (encode-coding-string payload 'utf-8)))
   (when (or callback errorback)
     (setq noerror t))
   (ghub--retrieve
-   payload
+   (ghub--encode-payload payload)
    (ghub--make-req
     :url (url-generic-parse-url
           (concat "https://" host resource
@@ -351,11 +330,13 @@ Both callbacks are called with four arguments.
     ;; Encode in case caller used (symbol-name 'GET). #35
     :method     (encode-coding-string method 'utf-8)
     :headers    (ghub--headers headers host auth username forge)
+    :handler    'ghub--handle-response
     :unpaginate unpaginate
     :noerror    noerror
     :reader     reader
     :callback   callback
     :errorback  errorback
+    :value      value
     :extra      extra)))
 
 (defun ghub-continue (req)
@@ -423,11 +404,12 @@ in `ghub-response-headers'."
         (url-request-method (ghub--req-method req))
         (url-request-data payload)
         (url-show-status nil)
-        (url (ghub--req-url req))
-        (silent (ghub--req-silent req)))
+        (url     (ghub--req-url req))
+        (handler (ghub--req-handler req))
+        (silent  (ghub--req-silent req)))
     (if (or (ghub--req-callback  req)
             (ghub--req-errorback req))
-        (url-retrieve url 'ghub--handle-response (list req) silent)
+        (url-retrieve url handler (list req) silent)
       ;; When this function has already been called, then it is a
       ;; no-op.  Otherwise it sets `url-registered-auth-schemes' among
       ;; other things.  If we didn't ensure that it has been run, then
@@ -439,7 +421,7 @@ in `ghub-response-headers'."
           (let ((url-registered-auth-schemes
                  '(("basic" ghub--basic-auth-errorback . 10))))
             (url-retrieve-synchronously url silent))
-        (ghub--handle-response (car url-callback-arguments) req)))))
+        (funcall handler (car url-callback-arguments) req)))))
 
 (defun ghub--handle-response (status req)
   (let ((buffer (current-buffer)))
@@ -503,17 +485,20 @@ in `ghub-response-headers'."
                 payload
               (setcdr (last err) (list payload))
               nil)
-          (pcase-let ((`(,symb . ,data) err))
-            (if (eq symb 'error)
-                (if (eq (car-safe data) 'http)
-                    (signal 'ghub-http-error
-                            (let ((code (car (cdr-safe data))))
-                              (list code
-                                    (nth 2 (assq code url-http-codes))
-                                    payload)))
-                  (signal 'ghub-error data))
-              (signal symb data))))
+          (ghub--signal-error err payload))
       payload)))
+
+(defun ghub--signal-error (err &optional payload)
+  (pcase-let ((`(,symb . ,data) err))
+    (if (eq symb 'error)
+        (if (eq (car-safe data) 'http)
+            (signal 'ghub-http-error
+                    (let ((code (car (cdr-safe data))))
+                      (list code
+                            (nth 2 (assq code url-http-codes))
+                            payload)))
+          (signal 'ghub-error data))
+      (signal symb data))))
 
 (defun ghub--handle-response-payload (req)
   (funcall (or (ghub--req-reader req)
@@ -546,6 +531,13 @@ in `ghub-response-headers'."
        (decode-coding-string
         (buffer-substring-no-properties (point) (point-max))
         'utf-8)))
+
+(defun ghub--encode-payload (payload)
+  (and payload
+       (progn
+         (unless (stringp payload)
+           (setq payload (json-encode-list payload)))
+         (encode-coding-string payload 'utf-8))))
 
 (defun ghub--url-encode-params (params)
   (mapconcat (lambda (param)
@@ -690,9 +682,10 @@ has to provide several values including their password."
                 ;; Auth-Source caches the information that there is no
                 ;; value, but in our case that is a situation that needs
                 ;; fixing so we want to keep trying by invalidating that
-                ;; information.  The (:max 1) is needed for Emacs releases
-                ;; before 26.1.
-                (auth-source-forget (list :max 1 :host host :user user))
+                ;; information.
+                ;; The (:max 1) is needed and has to be placed at the
+                ;; end for Emacs releases before 26.1.  See #24, #64.
+                (auth-source-forget (list :host host :user user :max 1))
                 (and (not nocreate)
                      (if (eq forge 'gitlab)
                          (error
@@ -827,7 +820,8 @@ WARNING: The token will be stored unencrypted in %S.
 
 (defun ghub--auth-source-get (keys &rest spec)
   (declare (indent 1))
-  (let ((plist (car (apply #'auth-source-search :max 1 spec))))
+  (let ((plist (car (apply #'auth-source-search
+                           (append spec (list :max 1))))))
     (mapcar (lambda (k)
               (plist-get plist k))
             keys)))
@@ -843,7 +837,5 @@ line."
 
 ;;; _
 (provide 'ghub)
-;; Local Variables:
-;; indent-tabs-mode: nil
-;; End:
+(require 'ghub-graphql)
 ;;; ghub.el ends here

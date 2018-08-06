@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "python-mode" "python-mode.el" (23374 11349
+;;;### (autoloads nil "python-mode" "python-mode.el" (23400 19318
 ;;;;;;  0 0))
 ;;; Generated autoloads from python-mode.el
 
@@ -111,7 +111,7 @@ Interactively, \\[universal-argument] prompts for a new ‘buffer-name’.
 
  \\[describe-mode] in the process buffer provides more info.
 
-\(fn &optional ARGPROMPT DEDICATED SHELL BUFFER FAST EXCEPTION-BUFFER SPLIT SWITCH INPUT-PROMPT INTERNAL)" t nil)
+\(fn &optional ARGPROMPT DEDICATED SHELL BUFFER FAST EXCEPTION-BUFFER SPLIT SWITCH INTERNAL)" t nil)
 
 (autoload 'ipython "python-mode" "\
 Start an IPython interpreter.
@@ -229,7 +229,7 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
 
 ;;;***
 
-;;;### (autoloads nil nil ("python-mode-pkg.el") (23374 11349 0 0))
+;;;### (autoloads nil nil ("python-mode-pkg.el") (23400 19318 0 0))
 
 ;;;***
 

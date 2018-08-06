@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/avy
-;; Package-Version: 20180615.801
+;; Package-Version: 20180806.855
 ;; Version: 0.4.0
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: point, location
@@ -1615,6 +1615,13 @@ When BOTTOM-UP is non-nil, display avy candidates from top to bottom"
   :type '(choice
           (const :tag "Above" above)
           (const :tag "Below" below)))
+
+;;;###autoload
+(defun avy-goto-end-of-line (&optional arg)
+  "Call `avy-goto-line' and move to the end of the line."
+  (interactive "p")
+  (avy-goto-line arg)
+  (end-of-line))
 
 ;;;###autoload
 (defun avy-copy-line (arg)

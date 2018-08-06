@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "avy" "avy.el" (23332 10313 0 0))
+;;;### (autoloads nil "avy" "avy.el" (23400 19097 0 0))
 ;;; Generated autoloads from avy.el
 
 (autoload 'avy-goto-char "avy" "\
@@ -160,6 +160,11 @@ the cursor
 When BOTTOM-UP is non-nil, display avy candidates from top to bottom
 
 \(fn &optional OFFSET BOTTOM-UP)" t nil)
+
+(autoload 'avy-goto-end-of-line "avy" "\
+Call `avy-goto-line' and move to the end of the line.
+
+\(fn &optional ARG)" t nil)
 
 (autoload 'avy-copy-line "avy" "\
 Copy a selected line above the current line.

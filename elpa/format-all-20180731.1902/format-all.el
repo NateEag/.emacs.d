@@ -1,8 +1,8 @@
-;;; format-all.el --- Auto-format C, C++, JS, Python, Ruby and 20 other languages -*- lexical-binding: t -*-
+;;; format-all.el --- Auto-format C, C++, JS, Python, Ruby and 25 other languages -*- lexical-binding: t -*-
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20180710.329
+;; Package-Version: 20180731.1902
 ;; Version: 0.1.0
 ;; Package-Requires: ((cl-lib "0.5"))
 ;; Keywords: languages util
@@ -20,6 +20,7 @@
 ;; Supported languages:
 ;;
 ;; - C/C++/Objective-C (clang-format)
+;; - Crystal (crystal tool format)
 ;; - CSS/Less/SCSS (prettier)
 ;; - D (dfmt)
 ;; - Elixir (mix format)
@@ -28,17 +29,21 @@
 ;; - Go (gofmt)
 ;; - GraphQL (prettier)
 ;; - Haskell (hindent)
+;; - HTML/XHTML/XML (tidy)
+;; - Java (clang-format)
 ;; - JavaScript/JSON/JSX/TypeScript/Vue (prettier)
 ;; - Kotlin (ktlint)
 ;; - Markdown (prettier)
 ;; - OCaml (ocp-indent)
 ;; - Perl (perltidy)
+;; - Protocol Buffers (clang-format)
 ;; - Python (autopep8)
 ;; - Ruby (rufo)
 ;; - Rust (rustfmt)
 ;; - Shell script (shfmt)
 ;; - SQL (sqlformat)
 ;; - Swift (swiftformat)
+;; - YAML (yq)
 ;;
 ;; You will need to install external programs to do the formatting.
 ;; If `format-all-buffer` can't find the right program, it will try to
@@ -170,10 +175,25 @@ EXECUTABLE is the full path to the formatter."
   (format-all-buffer-process executable nil nil "-"))
 
 (defun format-all-buffer-clang-format (executable)
-  "Format the current buffer as C/C++ using \"clang-format\".
+  "Format the current buffer as C/C++/Java/Objective-C using \"clang-format\".
 
 EXECUTABLE is the full path to the formatter."
-  (format-all-buffer-process executable))
+  (format-all-buffer-process
+   executable nil nil
+   (concat "-assume-filename="
+           (or (buffer-file-name)
+               (cl-ecase major-mode
+                 (c-mode ".c")
+                 (c++-mode ".cpp")
+                 (java-mode ".java")
+                 (objc-mode ".m")
+                 (protobuf-mode ".proto"))))))
+
+(defun format-all-buffer-crystal (executable)
+  "Format the current buffer as Crystal using \"crystal tool format\".
+
+EXECUTABLE is the full path to the formatter."
+  (format-all-buffer-process executable nil nil "tool" "format" "-"))
 
 (defun format-all-buffer-dfmt (executable)
   "Format the current buffer as D using \"dfmt\".
@@ -213,6 +233,15 @@ EXECUTABLE is the full path to the formatter."
 
 EXECUTABLE is the full path to the formatter."
   (format-all-buffer-process executable))
+
+(defun format-all-buffer-html-tidy (executable)
+  "Format the current buffer as HTML/XHTML/XML using \"tidy\".
+
+EXECUTABLE is the full path to the formatter."
+  (apply 'format-all-buffer-process executable '(0 1) nil
+         (append '("-q" "-indent")
+                 (when (member major-mode '(nxml-mode xml-mode))
+                   '("-xml")))))
 
 (defun format-all-buffer-ktlint (executable)
   "Format the current buffer as Kotlin using \"ktlint\".
@@ -324,7 +353,13 @@ EXECUTABLE is the full path to the formatter."
   "Format the current buffer as Swift using \"swiftformat\".
 
 EXECUTABLE is the full path to the formatter."
-  (format-all-buffer-process executable nil "error:"))
+  (format-all-buffer-process executable))
+
+(defun format-all-buffer-yq (executable)
+  "Format the current buffer as YAML using \"yq\".
+
+EXECUTABLE is the full path to the formatter."
+  (format-all-buffer-process executable nil nil "read" "-"))
 
 (defconst format-all-formatters
   '((autopep8
@@ -336,7 +371,12 @@ EXECUTABLE is the full path to the formatter."
      (:executable "clang-format")
      (:install (macos "brew install clang-format"))
      (:function format-all-buffer-clang-format)
-     (:modes c-mode c++-mode objc-mode))
+     (:modes c-mode c++-mode java-mode objc-mode protobuf-mode))
+    (crystal
+     (:executable "crystal")
+     (:install (macos "brew install crystal"))
+     (:function format-all-buffer-crystal)
+     (:modes crystal-mode))
     (dfmt
      (:executable "dfmt")
      (:install (macos "brew install dfmt"))
@@ -362,9 +402,16 @@ EXECUTABLE is the full path to the formatter."
      (:install "stack install hindent")
      (:function format-all-buffer-hindent)
      (:modes haskell-mode))
+    (html-tidy
+     (:executable "tidy")
+     (:install (macos "brew install tidy-html5"))
+     (:function format-all-buffer-html-tidy)
+     (:modes
+      html-helper-mode html-mode mhtml-mode nxhtml-mode nxml-mode web-mode
+      xml-mode))
     (ktlint
      (:executable "ktlint")
-     (:install nil)
+     (:install (macos "brew install ktlint"))
      (:function format-all-buffer-ktlint)
      (:modes kotlin-mode))
     (mix-format
@@ -419,7 +466,12 @@ EXECUTABLE is the full path to the formatter."
      (:executable "swiftformat")
      (:install (macos "brew install swiftformat"))
      (:function format-all-buffer-swiftformat)
-     (:modes swift-mode swift3-mode)))
+     (:modes swift-mode swift3-mode))
+    (yq
+     (:executable "yq")
+     (:install (macos "brew install yq"))
+     (:function format-all-buffer-yq)
+     (:modes yaml-mode)))
   "Table of source code formatters supported by format-all.")
 
 (defun format-all-property-list (property formatter)

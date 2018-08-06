@@ -7,7 +7,7 @@
 ;; Maintainer: Jason R. Blevins <jblevins@xbeta.org>
 ;; Created: May 24, 2007
 ;; Version: 2.4-dev
-;; Package-Version: 20180707.555
+;; Package-Version: 20180731.1830
 ;; Package-Requires: ((emacs "24.4") (cl-lib "0.5"))
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: https://jblevins.org/projects/markdown-mode/
@@ -325,17 +325,17 @@ Math support can be enabled, disabled, or toggled later using
   :group 'markdown
   :type '(repeat (string :tag "CSS File Path")))
 
-(defcustom markdown-content-type ""
+(defcustom markdown-content-type "text/html"
   "Content type string for the http-equiv header in XHTML output.
-When set to a non-empty string, insert the http-equiv attribute.
-Otherwise, this attribute is omitted."
+When set to an empty string, this attribute is omitted.  Defaults to
+`text/html'."
   :group 'markdown
   :type 'string)
 
 (defcustom markdown-coding-system nil
   "Character set string for the http-equiv header in XHTML output.
 Defaults to `buffer-file-coding-system' (and falling back to
-`iso-8859-1' when not available).  Common settings are `utf-8'
+`utf-8' when not available).  Common settings are `iso-8859-1'
 and `iso-latin-1'.  Use `list-coding-systems' for more choices."
   :group 'markdown
   :type 'coding-system)
@@ -7314,7 +7314,7 @@ Standalone XHTML output is identified by an occurrence of
           "<head>\n<title>")
   (insert title)
   (insert "</title>\n")
-  (when (> (length markdown-content-type) 0)
+  (unless (= (length markdown-content-type) 0)
     (insert
      (format
       "<meta http-equiv=\"Content-Type\" content=\"%s;charset=%s\"/>\n"
@@ -7326,7 +7326,7 @@ Standalone XHTML output is identified by an occurrence of
           (and (fboundp 'coding-system-get)
                (coding-system-get buffer-file-coding-system
                                   'mime-charset))
-          "iso-8859-1"))))
+          "utf-8"))))
   (if (> (length markdown-css-paths) 0)
       (insert (mapconcat #'markdown-stylesheet-link-string
                          markdown-css-paths "\n")))

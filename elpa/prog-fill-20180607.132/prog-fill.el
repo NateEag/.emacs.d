@@ -5,7 +5,7 @@
 ;; Author: Matthew Carter <m@ahungry.com>
 ;; Maintainer: Matthew Carter <m@ahungry.com>
 ;; URL: https://github.com/ahungry/prog-fill
-;; Package-Version: 20180606.1832
+;; Package-Version: 20180607.132
 ;; Version: 1.0.0
 ;; Keywords: ahungry convenience c formatting editing
 ;; Package-Requires: ((emacs "25.1") (cl-lib "0.6.1"))

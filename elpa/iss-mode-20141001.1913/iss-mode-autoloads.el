@@ -1,9 +1,9 @@
 ;;; iss-mode-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "iss-mode" "iss-mode.el" (21550 36478 0 0))
+;;;### (autoloads nil "iss-mode" "iss-mode.el" (23400 19209 0 0))
 ;;; Generated autoloads from iss-mode.el
 
 (autoload 'iss-mode "iss-mode" "\

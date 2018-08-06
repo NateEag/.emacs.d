@@ -5,8 +5,8 @@
 ;; Emacs Lisp Archive Entry
 ;; Filename: iss-mode.el
 ;; Author: Stefan Reichoer, <stefan@xsteve.at>
-;; Version: 20141001.1213
-;; X-Original-Version: 1.1d
+;; Version: 1.1d
+;; Package-Version: 20141001.1913
 
 ;; iss-mode.el is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

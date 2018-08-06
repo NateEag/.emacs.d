@@ -4,7 +4,7 @@
 
 ;; Author: Clément Pit-Claudel <clement.pitclaudel@live.com>
 ;; Keywords: tools help doc convenience
-;; Package-Version: 20180525.711
+;; Package-Version: 20180525.1411
 ;; Package-Requires: ((emacs "24.3"))
 ;; Version: 1.0
 

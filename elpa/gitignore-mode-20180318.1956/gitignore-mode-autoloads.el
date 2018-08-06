@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "gitignore-mode" "gitignore-mode.el" (23215
-;;;;;;  48780 0 0))
+;;;### (autoloads nil "gitignore-mode" "gitignore-mode.el" (23400
+;;;;;;  19184 0 0))
 ;;; Generated autoloads from gitignore-mode.el
 
 (autoload 'gitignore-mode "gitignore-mode" "\

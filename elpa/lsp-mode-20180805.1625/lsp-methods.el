@@ -1082,6 +1082,18 @@ interface TextDocumentEdit {
   "Get the value of capability CAP.  If CAPABILITIES is non-nil, use them instead."
   (inline-quote (gethash ,cap (or ,capabilities (lsp--server-capabilities) (make-hash-table)))))
 
+(define-inline lsp--registered-capability (method)
+  (inline-quote
+   (seq-find (lambda (reg) (equal (lsp--registered-capability-method reg) ,method))
+             (lsp--workspace-registered-server-capabilities lsp--cur-workspace)
+             nil)))
+
+(define-inline lsp--registered-capability-by-id (id)
+  (inline-quote
+   (seq-find (lambda (reg) (equal (lsp--registered-capability-id reg) ,id))
+             (lsp--workspace-registered-server-capabilities lsp--cur-workspace)
+             nil)))
+
 (defvar-local lsp--before-change-vals nil
   "Store the positions from the `lsp-before-change' function
   call, for validation and use in the `lsp-on-change' function.")
@@ -1755,6 +1767,8 @@ type MarkupKind = 'plaintext' | 'markdown';"
   "Request code action to automatically fix issues reported by
 the diagnostics."
   (lsp--cur-workspace-check)
+  (unless (lsp--capability "codeActionProvider")
+    (signal 'lsp-capability-not-supported (list "codeActionProvider")))
   (let ((params (lsp--text-document-code-action-params)))
     (lsp--send-request-async
      (lsp--make-request "textDocument/codeAction" params)
@@ -1852,7 +1866,8 @@ Optionally, CALLBACK is a function that accepts a single argument, the code lens
 (defun lsp-format-buffer ()
   "Ask the server to format this document."
   (interactive "*")
-  (unless (lsp--capability "documentFormattingProvider")
+  (unless (or (lsp--capability "documentFormattingProvider")
+              (lsp--registered-capability "textDocument/formatting"))
     (signal 'lsp-capability-not-supported (list "documentFormattingProvider")))
   (let ((edits (lsp--send-request (lsp--make-request
                                    "textDocument/formatting"
@@ -2115,6 +2130,8 @@ interface RenameParams {
   "Create and send a 'workspace/executeCommand' message having
 command COMMAND and optionsl ARGS"
   (lsp--cur-workspace-check)
+  (unless (lsp--capability "executeCommandProvider")
+    (signal 'lsp-capability-not-supported (list "executeCommandProvider")))
   (lsp--send-request
    (lsp--make-request
     "workspace/executeCommand"

@@ -1,0 +1,2 @@
+;;; -*- no-byte-compile: t -*-
+(define-package "aggressive-fill-paragraph" "20170902.1405" "A mode to automatically keep paragraphs filled" '((dash "2.10.0")) :commit "bcbc63d1c93cd8dc5bf2fc6eb4988fa76375c631" :keywords '("fill-paragraph" "automatic" "comments") :authors '(("David Shepherd" . "davidshepherd7@gmail.com")) :maintainer '("David Shepherd" . "davidshepherd7@gmail.com") :url "https://github.com/davidshepherd7/aggressive-fill-paragraph-mode")

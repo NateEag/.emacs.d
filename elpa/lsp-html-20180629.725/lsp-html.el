@@ -4,7 +4,7 @@
 
 ;; Author: Vibhav Pant <vibhavp@gmail.com>
 ;; Version: 1.0
-;; Package-Version: 20180629.25
+;; Package-Version: 20180629.725
 ;; Package-Requires: ((lsp-mode "4.2"))
 ;; Keywords: languages, html, lsp
 ;; URL: https://github.com/emacs-lsp/lsp-html

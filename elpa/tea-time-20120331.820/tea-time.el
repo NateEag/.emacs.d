@@ -2,8 +2,8 @@
 
 ;; Author: konsty <antipin.konstantin@googlemail.com>
 ;; Maintainer: Gabriel Saldana <gsaldana@gmail.com>
-;; Version: 20120331.120
-;; X-Original-Version: 1.0
+;; Version: 1.0
+;; Package-Version: 20120331.820
 ;; Keywords: timer tea-time
 
 ;; Copyright (C) 2011-2012 Gabriel Saldana <gsaldana@gmail.com>

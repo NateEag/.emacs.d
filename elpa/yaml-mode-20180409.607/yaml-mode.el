@@ -6,7 +6,7 @@
 ;;         Marshall T. Vandegrift <llasram@gmail.com>
 ;; Maintainer: Vasilij Schneidermann <v.schneidermann@gmail.com>
 ;; Package-Requires: ((emacs "24.1"))
-;; Package-Version: 20180408.2307
+;; Package-Version: 20180409.607
 ;; Keywords: data yaml
 ;; Version: 0.0.13
 

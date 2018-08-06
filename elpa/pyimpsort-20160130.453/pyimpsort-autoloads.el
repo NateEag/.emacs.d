@@ -1,9 +1,9 @@
 ;;; pyimpsort-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (or (file-name-directory #$) (car load-path)))
+(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "pyimpsort" "pyimpsort.el" (22276 14456 0 0))
+;;;### (autoloads nil "pyimpsort" "pyimpsort.el" (23400 19309 0 0))
 ;;; Generated autoloads from pyimpsort.el
 
 (autoload 'pyimpsort-region "pyimpsort" "\
@@ -18,8 +18,7 @@ Sort python imports from current buffer.
 
 ;;;***
 
-;;;### (autoloads nil nil ("pyimpsort-pkg.el") (22276 14456 163277
-;;;;;;  0))
+;;;### (autoloads nil nil ("pyimpsort-pkg.el") (23400 19309 0 0))
 
 ;;;***
 

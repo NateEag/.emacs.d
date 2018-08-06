@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "string-edit" "string-edit.el" (22560 48271
+;;;### (autoloads nil "string-edit" "string-edit.el" (23400 19371
 ;;;;;;  0 0))
 ;;; Generated autoloads from string-edit.el
 

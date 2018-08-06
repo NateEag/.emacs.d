@@ -4,7 +4,7 @@
 
 ;; Author: Alp Aker <alp.tekin.aker@gmail.com>
 ;; Version: 1.90
-;; Package-Version: 20171209.1124
+;; Package-Version: 20171209.1924
 ;; Keywords: convenience
 
 ;; This program is free software; you can redistribute it and/or

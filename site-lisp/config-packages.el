@@ -415,6 +415,9 @@ The shell command lives in my dotfiles repo."
   :defer t
   :config (afp-advise-filled-functions))
 
+(use-package string-edit
+  :hook ((string-edit-mode . evil-local-mode)))
+
 ;; Commented out because this is crashing my setup for some reason, and I'm not
 ;; currently using eclim.
 ;; (use-package eclimd

@@ -452,6 +452,9 @@ The shell command lives in my dotfiles repo."
   :hook ((sh-mode . (lambda () (setq-local ne-yas-auto-insert-snippet-name
                                            "shell-script")))))
 
+(use-package gnuplot-mode
+  :interpreter "gnuplot")
+
 (use-package tern
   :diminish tern-mode
   :config (add-hook 'tern-mode-hook '(lambda ()

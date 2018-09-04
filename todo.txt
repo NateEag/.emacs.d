@@ -104,6 +104,11 @@
   to guess what I want fairly often (particularly in package.json files):
   https://github.com/jscheid/dtrt-indent
 
+- See how hard it would be to be content with shell-pop as my terminal manager.
+  It only supports a single terminal session, and automatically changes
+  directories based on the buffer you spawned it from. If I could figure out
+  how to work within that constraint, it might be reasonably usable.
+
 - I'd like to have a hotkey that brings up my most recent terminal. I'd also
   like terminal windows to always appear in a bottom window of my current
   frame, which is probably a need popwin would achieve admirably. I used to

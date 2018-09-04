@@ -58,6 +58,18 @@
   (moody-replace-mode-line-buffer-identification)
   (moody-replace-vc-mode))
 
+(use-package shell-pop
+  ;; Make shell-pop's shell appear in the window it created for it. Workaround
+  ;; from open GitHub issue:
+  ;;
+  ;; https://github.com/kyagi/shell-pop-el/issues/51#issuecomment-297470855
+  :config (push (cons "\\*shell\\*" display-buffer--same-window-action) display-buffer-alist)
+          (setq shell-pop-full-span t
+                shell-pop-universal-key "C-'"
+                shell-pop-shell-type '("ansi-term" "*ansi-term*"
+                                       (lambda nil
+                                         (ansi-term shell-pop-term-shell)))))
+
 (use-package notmuch
   :config
   (progn

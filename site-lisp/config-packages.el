@@ -58,6 +58,10 @@
   (moody-replace-mode-line-buffer-identification)
   (moody-replace-vc-mode))
 
+;; N.B.: I can get colors from Git by setting TERM=ansi after the session
+;; starts. I suppose I should figure out the right solution to that problem
+;; then turn it into code.
+
 (use-package shell-pop
   ;; Make shell-pop's shell appear in the window it created for it. Workaround
   ;; from open GitHub issue:

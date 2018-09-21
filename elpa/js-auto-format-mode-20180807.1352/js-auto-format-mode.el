@@ -3,8 +3,8 @@
 ;; Copyright (C) 2017 Masafumi Koba <ybiquitous@gmail.com>
 
 ;; Author: Masafumi Koba <ybiquitous@gmail.com>
-;; Version: 1.1.0
-;; Package-Version: 20180729.740
+;; Version: 1.1.1
+;; Package-Version: 20180807.1352
 ;; Package-Requires: ((emacs "24"))
 ;; Keywords: languages
 ;; URL: https://github.com/ybiquitous/js-auto-format-mode
@@ -63,14 +63,16 @@
   :type 'boolean
   :safe #'booleanp)
 
-(defconst js-auto-format-buffer "*JS Auto Format*")
-
 (defun js-auto-format-full-command ()
   "Return full command with all arguments."
   (format "%s %s %s"
     (shell-quote-argument (executable-find js-auto-format-command))
     js-auto-format-command-args
     (shell-quote-argument (expand-file-name buffer-file-name))))
+
+(defun js-auto-format-buffer-name (_arg)
+  "Return this mode's buffer name."
+  "*JS Auto Format*")
 
 ;;;###autoload
 (defun js-auto-format-enabled-p ()
@@ -86,19 +88,20 @@
   "Format JavaScript source code."
   (interactive)
   (when (js-auto-format-enabled-p)
-    (let* ((command (js-auto-format-full-command))
-            (buffer js-auto-format-buffer)
-            (saved-current-buffer (current-buffer)))
-
-      (message "js-auto-format-execute: %s" command)
-
-      (with-output-to-temp-buffer buffer
-        (let* ((exit-status (call-process-shell-command command nil buffer nil)))
-          (revert-buffer t t t)
-          (pop-to-buffer buffer)
-          (if (zerop exit-status) (quit-window t) (shrink-window-if-larger-than-buffer))
-          (pop-to-buffer saved-current-buffer)
-          (if (fboundp 'flycheck-buffer) (flycheck-buffer)))))))
+    (let* ((saved-current-buffer (current-buffer))
+            (compile-buffer (compilation-start (js-auto-format-full-command) nil #'js-auto-format-buffer-name)))
+      (with-current-buffer compile-buffer
+        (add-hook 'compilation-finish-functions
+          (lambda (buffer _message)
+            ;; `compilation-num-errors-found' is private API
+            (if (= compilation-num-errors-found 0)
+              (quit-window t (get-buffer-window buffer t))
+              (shrink-window-if-larger-than-buffer (get-buffer-window buffer t)))
+            (with-current-buffer saved-current-buffer
+              (revert-buffer t t t)
+              (if (fboundp 'flycheck-buffer) (flycheck-buffer))))
+          t t))
+      )))
 
 ;;;###autoload
 (define-minor-mode js-auto-format-mode

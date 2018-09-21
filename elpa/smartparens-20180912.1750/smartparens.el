@@ -605,6 +605,7 @@ Symbol is defined as a chunk of text recognized by
                                              coffee-mode
                                              asm-mode
                                              makefile-gmake-mode
+                                             haml-mode
                                              )
   "List of modes that should not reindent after kill."
   :type '(repeat symbol)
@@ -7754,6 +7755,38 @@ Examples:
       (kill-region :beg-in :end-in)
       (goto-char :beg-in))))
 
+(defun sp-change-enclosing ()
+  "Change the inside of the enclosing expression.
+
+Whitespace on both sides of the inner items is preserved if it
+contains newlines.  Invoking this function on a blank sexp will
+wipe out remaining whitespace (see `sp-point-in-blank-sexp').
+
+Move the point to the beginning of the original content.
+
+Examples:
+
+  (f|oo [bar] baz) -> (|)
+
+  {'f|oo': 'bar'}  -> {'|': 'bar'}"
+  (interactive)
+  (-when-let (ok (sp-get-enclosing-sexp))
+    (sp-get ok
+      (if (sp-point-in-blank-sexp)
+          (progn
+            (kill-region :beg-in :end-in)
+            (goto-char :beg-in))
+        (let ((beg (progn
+                     (goto-char :beg-in)
+                     (skip-chars-forward "\t\n ")
+                     (point)))
+              (end (progn
+                     (goto-char :end-in)
+                     (skip-chars-backward "\t\n ")
+                     (point))))
+          (kill-region beg end)
+          (goto-char beg))))))
+
 (defun sp-unwrap-sexp (&optional arg)
   "Unwrap the following expression.
 
@@ -9364,7 +9397,8 @@ matching paren in the echo area if not visible on screen."
          (oright (make-overlay (- end clen) end nil t nil)))
     (setq sp-show-pair-overlays (list oleft omiddle oright))
     (overlay-put oleft 'face 'sp-show-pair-match-face)
-    (overlay-put omiddle 'face 'sp-show-pair-match-content-face)
+    (unless (use-region-p)
+      (overlay-put omiddle 'face 'sp-show-pair-match-content-face))
     (overlay-put oright 'face 'sp-show-pair-match-face)
     (overlay-put oleft 'priority 1000)
     (overlay-put omiddle 'priority 1000)

@@ -4,7 +4,7 @@
 
 ;; Author: Artem Malyshev <proofit404@gmail.com>
 ;; URL: https://github.com/proofit404/pythonic
-;; Package-Version: 20180728.1943
+;; Package-Version: 20180920.2315
 ;; Version: 0.1.1
 ;; Package-Requires: ((emacs "25") (s "1.9") (f "0.17.2"))
 
@@ -42,7 +42,8 @@
 
 (defun pythonic-remote-p ()
   "Determine remote virtual environment."
-  (tramp-tramp-file-p (pythonic-aliased-path default-directory)))
+  (and (tramp-tramp-file-p (pythonic-aliased-path default-directory))
+       t))
 
 (defun pythonic-remote-docker-p ()
   "Determine docker remote virtual environment."
@@ -78,9 +79,12 @@
 
 (defun pythonic-remote-port ()
   "Get port of the connection to the remote python interpreter."
-  (let ((hostname (tramp-file-name-host (tramp-dissect-file-name (pythonic-aliased-path default-directory)))))
-    (when (s-contains-p "#" hostname)
-      (string-to-number (replace-regexp-in-string "\\`.*#" "" hostname)))))
+  (let ((port (tramp-file-name-port (tramp-dissect-file-name (pythonic-aliased-path default-directory)))))
+    ;; In Emacs 25, `tramp-file-name-port' returns number,
+    ;; in Emacs 26, it returns string. This condition makes them compatible.
+    (if (stringp port)
+        (string-to-number port)
+      port)))
 
 
 ;;; File names.

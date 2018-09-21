@@ -453,23 +453,38 @@ commands through `bundle exec', `nix-shell' or similar wrappers."
   :package-version '(flycheck . "0.25")
   :risky t)
 
-(defcustom flycheck-executable-find #'executable-find
+(defcustom flycheck-executable-find #'flycheck-default-executable-find
   "Function to search for executables.
 
 The value of this option is a function which is given the name or
 path of an executable and shall return the full path to the
 executable, or nil if the executable does not exit.
 
-The default is the standard `executable-find' function which
-searches `exec-path'.  You can customize this option to search
-for checkers in other environments such as bundle or NixOS
+The default is `flycheck-default-executable-find', which searches
+`exec-path' when given a command name, and resolves paths to
+absolute ones.  You can customize this option to search for
+checkers in other environments such as bundle or NixOS
 sandboxes."
   :group 'flycheck
   :type '(choice
-          (const :tag "Search executables in `exec-path'" executable-find)
+          (const :tag "Search executables in `exec-path'"
+                 flycheck-default-executable-find)
           (function :tag "Search executables with a custom function"))
-  :package-version '(flycheck . "0.25")
+  :package-version '(flycheck . "32")
   :risky t)
+
+(defun flycheck-default-executable-find (executable)
+  "Resolve EXECUTABLE to a full path.
+
+If given just a command name (no directory component), search
+`exec-path' using the standard `executable-find' function;
+otherwise, resolve any relative paths to absolute ones."
+  ;; file-name-directory returns non-nil iff the given path has a
+  ;; directory component.
+  (if (file-name-directory executable)
+      (when (file-executable-p executable)
+        (expand-file-name executable))
+    (executable-find executable)))
 
 (defcustom flycheck-indication-mode 'left-fringe
   "The indication mode for Flycheck errors and warnings.
@@ -9014,12 +9029,15 @@ See URL `https://docs.python.org/3.4/library/py_compile.html'."
 
 See URL `http://mypy-lang.org/'."
   :command ("mypy"
+            "--show-column-numbers"
             (config-file "--config-file" flycheck-python-mypy-ini)
             (option "--cache-dir" flycheck-python-mypy-cache-dir)
             source-original)
   :error-patterns
-  ((error line-start (file-name) ":" line ": error:" (message) line-end)
-   (warning line-start (file-name) ":" line ": warning:" (message) line-end))
+  ((error line-start (file-name) ":" line ":" column ": error:" (message)
+          line-end)
+   (warning line-start (file-name) ":" line ":" column  ": warning:" (message)
+            line-end))
   :modes python-mode
   ;; Ensure the file is saved, to work around
   ;; https://github.com/python/mypy/issues/4746.
@@ -9546,6 +9564,18 @@ ignored."
   :package-version '(flycheck . "28"))
 (make-variable-buffer-local 'flycheck-rust-binary-name)
 
+(flycheck-def-option-var flycheck-rust-features nil rust-cargo
+  "List of features to activate during build or check.
+
+The value of this variable is a list of strings denoting features
+that will be activated to build the target to check. Features will
+be passed to `cargo check --features=FEATURES'."
+  :type '(repeat :tag "Features to activate"
+                 (string :tag "Feature"))
+  :safe #'flycheck-string-list-p
+  :package-version '(flycheck . "32"))
+(make-variable-buffer-local 'flycheck-rust-features)
+
 (flycheck-def-option-var flycheck-rust-library-path nil rust
   "A list of library directories for Rust.
 
@@ -9569,16 +9599,17 @@ Relative paths are relative to the file being checked."
      (or
       ;; Macro errors emit a diagnostic in a phony file,
       ;; e.g. "<println macros>".
-      (string-match-p
-       (rx "macros>" line-end)
-       (flycheck-error-filename err))
+      (-when-let (filename (flycheck-error-filename err))
+        (string-match-p (rx "macros>" line-end) filename))
       ;; Redundant message giving the number of failed errors
-      (string-match-p
-       (rx (or (: "aborting due to " (optional (one-or-more num) " ")
-                  "previous error")
-               (: "For more information about this error, try `rustc --explain "
-                  (one-or-more alnum) "`.")))
-       (flycheck-error-message err))))
+      (-when-let (msg (flycheck-error-message err))
+        (string-match-p
+         (rx
+          (or (: "aborting due to " (optional (one-or-more num) " ")
+                 "previous error")
+              (: "For more information about this error, try `rustc --explain "
+                 (one-or-more alnum) "`.")))
+         msg))))
    errors))
 
 (defun flycheck-rust-manifest-directory ()
@@ -9638,6 +9669,8 @@ This syntax checker requires Rust 1.17 or newer.  See URL
             (eval (when (and flycheck-rust-crate-type
                              (not (string= flycheck-rust-crate-type "lib")))
                     flycheck-rust-binary-name))
+            (option "--features=" flycheck-rust-features concat
+                    flycheck-option-comma-separated-list)
             (eval flycheck-cargo-check-args)
             "--message-format=json")
   :error-parser flycheck-parse-cargo-rustc
@@ -9691,10 +9724,11 @@ This syntax checker requires Rust 1.17 or newer.  See URL
 (flycheck-define-checker rust
   "A Rust syntax checker using Rust compiler.
 
-This syntax checker needs Rust 1.7 or newer.  See URL
+This syntax checker needs Rust 1.18 or newer.  See URL
 `https://www.rust-lang.org'."
   :command ("rustc"
             (option "--crate-type" flycheck-rust-crate-type)
+            "--emit=mir" "-o" "/dev/null" ; avoid creating binaries
             "--error-format=json"
             (option-flag "--test" flycheck-rust-check-tests)
             (option-list "-L" flycheck-rust-library-path concat)
@@ -9878,6 +9912,11 @@ See URL `http://call-cc.org/'."
          (one-or-more (any space)) "(" (file-name) ":" line ") " (message)
          line-end)
    (warning line-start
+            "Warning: " (zero-or-more not-newline) ",\n"
+            (one-or-more (any space)) (zero-or-more not-newline) ":\n"
+            (one-or-more (any space)) "(" (file-name) ":" line ") " (message)
+            line-end)
+   (warning line-start
             "Warning: " (zero-or-more not-newline) ":\n"
             (one-or-more (any space)) "(" (file-name) ":" line ") " (message)
             line-end)
@@ -9890,10 +9929,28 @@ See URL `http://call-cc.org/'."
                                  (zero-or-more not-newline))
                    (one-or-more space) "<--")
           line-end)
+   ;; A of version 4.12.0, the chicken compiler doesn't provide a
+   ;; line number for this error.
+   (error line-start "Syntax error: "
+          (message (one-or-more not-newline)
+                   (zero-or-more "\n"
+                                 (zero-or-more space)
+                                 (zero-or-more not-newline))
+                   (one-or-more space) "<--")
+          line-end)
    (error line-start
           "Error: " (zero-or-more not-newline) ":\n"
           (one-or-more (any space)) "(" (file-name) ":" line ") " (message)
-          line-end))
+          line-end)
+   ;; A of version 4.12.0, the chicken compiler doesn't provide a
+   ;; line number for this error.
+   (error line-start "Error: "
+          (message (one-or-more not-newline)
+                   (zero-or-more "\n"
+                                 (zero-or-more space)
+                                 (zero-or-more not-newline))
+                   (one-or-more space) "<--")))
+  :error-filter flycheck-fill-empty-line-numbers
   :predicate
   (lambda ()
     ;; In `scheme-mode' we must check the current Scheme implementation

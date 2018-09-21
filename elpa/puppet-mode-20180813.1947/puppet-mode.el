@@ -10,7 +10,7 @@
 ;; Maintainer: Bozhidar Batsov <bozhidar@batsov.com>
 ;;     Sebastian Wiesner <swiesner@lunaryorn.com>
 ;; URL: https://github.com/voxpupuli/puppet-mode
-;; Package-Version: 20171221.649
+;; Package-Version: 20180813.1947
 ;; Keywords: languages
 ;; Version: 0.4-cvs
 ;; Package-Requires: ((emacs "24.1") (pkg-info "0.4"))
@@ -316,7 +316,11 @@ Return nil, if there is no special context at POS, or one of
                           "default" "define" "else" "elsif" "environment"
                           "false" "function" "if" "import" "in" "inherits"
                           "node" "or" "private" "produces" "site" "true"
-                          "type" "undef" "unless")))
+                          "type" "undef" "unless"
+                          ;; Bolt
+                          ;; https://puppet.com/docs/bolt/0.x/writing_plans.html
+                          "plan"
+                          )))
       ;; http://docs.puppetlabs.com/references/latest/function.html
       (builtin-function . ,(rx (or "alert" "assert_type" "binary_file" "break"
                                    "contain" "create_resources" "crit" "debug"
@@ -332,6 +336,15 @@ Return nil, if there is no special context at POS, or one of
                                    "shellquote" "slice" "split" "sprintf"
                                    "step" "strftime" "tag" "tagged" "template"
                                    "then" "type" "versioncmp" "warning" "with"
+                                   ;; Bolt
+                                   ;; https://puppet.com/docs/bolt/0.x/plan_functions.html
+                                   ;; https://puppet.com/docs/bolt/0.x/writing_plans.html#concept-4926
+                                   "apply" "apply_prep" "add_facts" "facts"
+                                   "fail_plan" "file_upload" "get_targets"
+                                   "puppetdb_fact" "puppetdb_query"
+                                   "run_command" "run_plan" "run_script"
+                                   "run_task" "set_feature" "set_var" "vars"
+                                   "without_default_logging" 
                                    )))
       ;; http://docs.puppetlabs.com/references/latest/type.html
       (builtin-type . ,(rx (or "augeas" "computer" "cron" "exec" "file"
@@ -376,6 +389,10 @@ Return nil, if there is no special context at POS, or one of
                          ;; Platform Types:
                          "Callable" "Default" "Runtime" "Sensitive" "Type"
                          "Undef"
+                         ;; Bolt types:
+                         ;; https://puppet.com/docs/bolt/0.x/writing_plans.html
+                         "Error" "PlanResult" "Result" "ResultSet" "Target"
+                         "TargetSpec"
                          )))
       ;; http://docs.puppetlabs.com/puppet/latest/reference/lang_reserved.html#classes-and-types
       (resource-name . ,(rx
@@ -791,7 +808,7 @@ of the initial include plus puppet-include-indent."
     ;; Variables
     (,(puppet-rx "$" (symbol variable-name)) 0 font-lock-variable-name-face)
     ;; Class and type declarations
-    (,(puppet-rx (symbol (or "class" "define"))
+    (,(puppet-rx (symbol (or "class" "define" "plan"))
                  (one-or-more space)
                  (group (symbol resource-name)))
      1 font-lock-type-face)

@@ -175,7 +175,7 @@ This is useful if you use really long branch names."
 
 ;;;; Select Mode
 
-(defcustom magit-log-select-arguments '("-n256" "--decorate")
+(defcustom magit-log-select-arguments '("-n256" "--graph" "--decorate")
   "The log arguments used in `magit-log-select-mode' buffers."
   :package-version '(magit . "2.3.0")
   :group 'magit-log
@@ -818,13 +818,14 @@ is displayed in the current frame."
   "Move to the Nth parent of the current commit."
   (interactive "p")
   (when (derived-mode-p 'magit-log-mode)
-    (magit-section-when commit
-      (let ((parent-rev (format "%s^%s" (oref it value) (or n 1))))
+    (when (magit-section-match 'commit)
+      (let* ((section (magit-current-section))
+             (parent-rev (format "%s^%s" (oref section value) (or n 1))))
         (if-let ((parent-hash (magit-rev-parse "--short" parent-rev)))
-            (if-let ((section (--first (equal (oref it value)
-                                              parent-hash)
-                                       (magit-section-siblings it 'next))))
-                (magit-section-goto section)
+            (if-let ((parent (--first (equal (oref section value)
+                                             parent-hash)
+                                      (magit-section-siblings section 'next))))
+                (magit-section-goto parent)
               (user-error
                (substitute-command-keys
                 (concat "Parent " parent-hash " not found.  Try typing "
@@ -976,7 +977,9 @@ Do not add this to a hook variable."
           "\\(?3:[^\0\n]+)\\)?\0"                  ; refs
           "\\(?7:[BGUXYREN]\\)?\0"                 ; gpg
           "\\(?5:[^\0\n]*\\)\0"                    ; author
-          "\\(?6:[^\0\n]+\\)\0"                    ; date
+          ;; Note: Date is optional because, prior to Git v2.19.0,
+          ;; `git rebase -i --root` corrupts the root's author date.
+          "\\(?6:[^\0\n]*\\)\0"                    ; date
           "\\(?2:.*\\)$"))                         ; msg
 
 (defconst magit-log-cherry-re
@@ -1230,7 +1233,7 @@ If there is no revision buffer in the same frame, then do nothing."
 
 (defun magit-log-maybe-update-revision-buffer-1 ()
   (unless magit--update-revision-buffer
-    (when-let ((commit (magit-section-when 'commit))
+    (when-let ((commit (magit-section-value-if 'commit))
                (buffer (magit-mode-get-buffer 'magit-revision-mode nil t)))
       (setq magit--update-revision-buffer (list commit buffer))
       (run-with-idle-timer
@@ -1254,7 +1257,7 @@ If there is no blob buffer in the same frame, then do nothing."
 
 (defun magit-log-maybe-update-blob-buffer-1 ()
   (unless magit--update-revision-buffer
-    (when-let ((commit (magit-section-when 'commit))
+    (when-let ((commit (magit-section-value-if 'commit))
                (buffer (--first (with-current-buffer it magit-buffer-revision)
                                 (mapcar #'window-buffer (window-list)))))
         (setq magit--update-blob-buffer (list commit buffer))
@@ -1485,7 +1488,7 @@ Type \\[magit-cherry-pick-popup] to apply the commit at point.
 
 (defun magit-cherry-refresh-buffer (_upstream _head)
   (magit-insert-section (cherry)
-    (run-hooks 'magit-cherry-sections-hook)))
+    (magit-run-section-hook 'magit-cherry-sections-hook)))
 
 (defun magit-insert-cherry-headers ()
   "Insert headers appropriate for `magit-cherry-mode' buffers."

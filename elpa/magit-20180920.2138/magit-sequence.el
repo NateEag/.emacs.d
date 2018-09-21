@@ -276,7 +276,7 @@ the process manually."
                      (magit-run-git "checkout" src)
                    (magit-refresh)))
                 (t
-                 (magit-call-git "checkout" src)
+                 (magit-git "checkout" src)
                  (let ((process-environment process-environment))
                    (push (format "%s=%s -i -ne '/^pick (%s)/ or print'"
                                  "GIT_SEQUENCE_EDITOR"
@@ -899,8 +899,8 @@ If no such sequence is in progress, do nothing."
 (defun magit-sequence-insert-commit (type hash face &optional exec)
   (magit-insert-section (commit hash)
     (magit-insert-heading
-      (concat (propertize type 'face face)    "\s"
-              (magit-format-rev-summary hash) "\n"))
+      (propertize type 'face face)    "\s"
+      (magit-format-rev-summary hash) "\n")
     (when exec
       (insert (propertize "exec" 'face 'magit-sequence-onto) "\s" exec "\n"))))
 

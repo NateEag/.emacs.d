@@ -592,23 +592,36 @@ and `:slant'."
 ;;; Commands
 ;;;; Diff popups
 
-(defconst magit-diff-popup-common
+(defconst magit-diff-popup-common-keywords
   '(:variable magit-diff-arguments
-    :man-page "git-diff"
-    :options  ((?f "Limit to files" "-- " magit-read-files)
-               (?u "Context lines"  "-U")
-               (?m "Detect renames" "-M")
-               (?c "Detect copies"  "-C")
-               (?a "Diff algorithm" "--diff-algorithm="
-                   magit-diff-select-algorithm))))
+              :man-page "git-diff"))
+
+(defconst magit-diff-popup-common-options
+  '((?f "Limit to files" "-- " magit-read-files)
+    (?u "Context lines"  "-U")
+    (?m "Detect renames" "-M")
+    (?c "Detect copies"  "-C")
+    (?a "Diff algorithm" "--diff-algorithm=" magit-diff-select-algorithm)
+    (?i "Ignore submodules" "--ignore-submodules="
+        magit-diff-select-ignore-submodules)))
+
+(defun magit-diff-select-ignore-submodules (&rest _ignored)
+  (magit-read-char-case "Ignore submodules " t
+    (?u "[u]ntracked" "untracked")
+    (?d "[d]irty"     "dirty")
+    (?a "[a]ll"       "all")))
+
+(defconst magit-diff-popup-common-switches
+  '((?f "Show surrounding functions"     "--function-context")
+    (?b "Ignore whitespace changes"      "--ignore-space-change")
+    (?w "Ignore all whitespace"          "--ignore-all-space")
+    (?x "Disallow external diff drivers" "--no-ext-diff")))
 
 (defvar magit-diff-popup
-  `(,@magit-diff-popup-common
-    :switches ((?f "Show surrounding functions"     "--function-context")
-               (?b "Ignore whitespace changes"      "--ignore-space-change")
-               (?w "Ignore all whitespace"          "--ignore-all-space")
-               (?x "Disallow external diff drivers" "--no-ext-diff")
-               (?s "Show stats"                     "--stat"))
+  `(,@magit-diff-popup-common-keywords
+    :options  ,magit-diff-popup-common-options
+    :switches (,@magit-diff-popup-common-switches
+               (?s "Show stats" "--stat"))
     :actions  ((?d "Dwim"          magit-diff-dwim)
                (?u "Diff unstaged" magit-diff-unstaged)
                (?c "Show commit"   magit-show-commit)
@@ -621,11 +634,9 @@ and `:slant'."
     :max-action-columns 3))
 
 (defvar magit-diff-refresh-popup
-  `(,@magit-diff-popup-common
-    :switches ((?f "Show surrounding functions"     "--function-context")
-               (?b "Ignore whitespace changes"      "--ignore-space-change")
-               (?w "Ignore all whitespace"          "--ignore-all-space")
-               (?x "Disallow external diff drivers" "--no-ext-diff"))
+  `(,@magit-diff-popup-common-keywords
+    :options  ,magit-diff-popup-common-options
+    :switches ,magit-diff-popup-common-switches
     :actions  ((?g "Refresh"                magit-diff-refresh)
                (?t "Toggle hunk refinement" magit-diff-toggle-refine-hunk)
                (?s "Set defaults"           magit-diff-set-default-arguments)
@@ -634,12 +645,10 @@ and `:slant'."
     :max-action-columns 2))
 
 (defvar magit-diff-mode-refresh-popup
-  `(,@magit-diff-popup-common
-    :switches ((?f "Show surrounding functions"     "--function-context")
-               (?b "Ignore whitespace changes"      "--ignore-space-change")
-               (?w "Ignore all whitespace"          "--ignore-all-space")
-               (?x "Disallow external diff drivers" "--no-ext-diff")
-               (?s "Show stats"                     "--stat"))
+  `(,@magit-diff-popup-common-keywords
+    :options  ,magit-diff-popup-common-options
+    :switches (,@magit-diff-popup-common-switches
+               (?s "Show stats" "--stat"))
     :actions  ((?g "Refresh"                magit-diff-refresh)
                (?t "Toggle hunk refinement" magit-diff-toggle-refine-hunk)
                (?s "Set defaults"           magit-diff-set-default-arguments)
@@ -650,7 +659,7 @@ and `:slant'."
     :max-action-columns 2))
 
 (defvar magit-revision-mode-refresh-popup
-  `(,@magit-diff-popup-common
+  `(,@magit-diff-popup-common-keywords
     :switches ((?f "Show surrounding functions"     "--function-context")
                (?b "Ignore whitespace changes"      "--ignore-space-change")
                (?w "Ignore all whitespace"          "--ignore-all-space")
@@ -1001,7 +1010,7 @@ be committed."
 If there is no revision at point or with a prefix argument prompt
 for a revision."
   (interactive
-   (pcase-let* ((mcommit (magit-section-when module-commit))
+   (pcase-let* ((mcommit (magit-section-value-if 'module-commit))
                 (atpoint (or (and (bound-and-true-p magit-blame-mode)
                                   (oref (magit-current-blame-chunk) orig-rev))
                              mcommit
@@ -1011,8 +1020,8 @@ for a revision."
                (magit-read-branch-or-commit "Show commit" atpoint))
            args
            files
-           (and mcommit (list (magit-section-parent-value
-                               (magit-current-section)))))))
+           (and mcommit
+                (magit-section-parent-value (magit-current-section))))))
   (require 'magit)
   (magit-with-toplevel
     (when module
@@ -1593,7 +1602,7 @@ is set in `magit-mode-setup'."
                (_ (concat " in files "
                           (mapconcat #'identity files ", ")))))))
   (magit-insert-section (diffbuf)
-    (run-hook-with-args 'magit-diff-sections-hook rev-or-range)))
+    (magit-run-section-hook 'magit-diff-sections-hook rev-or-range)))
 
 (defun magit-insert-diff (rev-or-range)
   "Insert the diff into this `magit-diff-mode' buffer."
@@ -1844,21 +1853,21 @@ section or a child thereof."
           (when rewind
             (setq range (replace-regexp-in-string "[^.]\\(\\.\\.\\)[^.]"
                                                   "..." range t t 1)))
-          (magit-insert-section (file module t)
+          (magit-insert-section (magit-module-section module t)
             (magit-insert-heading
-              (concat (propertize (concat "modified   " module)
-                                  'face 'magit-diff-file-heading)
-                      " ("
-                      (cond (rewind "rewind")
-                            ((string-match-p "\\.\\.\\." range) "non-ff")
-                            (t "new commits"))
-                      (and (or modified untracked)
-                           (concat ", "
-                                   (and modified "modified")
-                                   (and modified untracked " and ")
-                                   (and untracked "untracked")
-                                   " content"))
-                      ")"))
+              (propertize (concat "modified   " module)
+                          'face 'magit-diff-file-heading)
+              " ("
+              (cond (rewind "rewind")
+                    ((string-match-p "\\.\\.\\." range) "non-ff")
+                    (t "new commits"))
+              (and (or modified untracked)
+                   (concat ", "
+                           (and modified "modified")
+                           (and modified untracked " and ")
+                           (and untracked "untracked")
+                           " content"))
+              ")")
             (let ((default-directory
                     (file-name-as-directory
                      (expand-file-name module (magit-toplevel)))))
@@ -1869,21 +1878,21 @@ section or a child thereof."
              (equal (match-string 1) module))
         (magit-bind-match-strings (_module _range msg) nil
           (magit-delete-line)
-          (magit-insert-section (file module)
+          (magit-insert-section (magit-module-section module)
             (magit-insert-heading
-              (concat (propertize (concat "submodule  " module)
-                                  'face 'magit-diff-file-heading)
-                      " (" msg ")")))))
+              (propertize (concat "submodule  " module)
+                          'face 'magit-diff-file-heading)
+              " (" msg ")"))))
        (t
-        (magit-insert-section (file module)
+        (magit-insert-section (magit-module-section module)
           (magit-insert-heading
-            (concat (propertize (concat "modified   " module)
-                                'face 'magit-diff-file-heading)
-                    " ("
-                    (and modified "modified")
-                    (and modified untracked " and ")
-                    (and untracked "untracked")
-                    " content)"))))))))
+            (propertize (concat "modified   " module)
+                        'face 'magit-diff-file-heading)
+            " ("
+            (and modified "modified")
+            (and modified untracked " and ")
+            (and untracked "untracked")
+            " content)")))))))
 
 (defun magit-diff-wash-hunk ()
   (when (looking-at "^@\\{2,\\} \\(.+?\\) @\\{2,\\}\\(?: \\(.*\\)\\)?")
@@ -1946,7 +1955,7 @@ Staging and applying changes is documented in info node
                         (mapconcat #'identity files ", "))))))
   (setq magit-buffer-revision-hash (magit-rev-parse rev))
   (magit-insert-section (commitbuf)
-    (run-hook-with-args 'magit-revision-sections-hook rev)))
+    (magit-run-section-hook 'magit-revision-sections-hook rev)))
 
 (defun magit-insert-revision-diff (rev)
   "Insert the diff into this `magit-revision-mode' buffer."
@@ -2055,9 +2064,13 @@ or a ref which is not a branch, then it inserts nothing."
         (when magit-diff-highlight-keywords
           (save-excursion
             (while (re-search-forward "\\[[^[]*\\]" nil t)
-              (put-text-property (match-beginning 0)
-                                 (match-end 0)
-                                 'face 'magit-keyword))))
+              (let ((beg (match-beginning 0))
+                    (end (match-end 0)))
+                (put-text-property
+                 beg end 'face
+                 (if-let ((face (get-text-property beg 'face)))
+                     (list face 'magit-keyword)
+                   'magit-keyword))))))
         (goto-char (point-max))))))
 
 (defun magit-insert-revision-notes (rev)
@@ -2289,7 +2302,8 @@ Do not confuse this with `magit-diff-scope' (which see)."
            (let ((range (nth 0 magit-refresh-args))
                  (const (nth 1 magit-refresh-args)))
              (cond ((member "--no-index" const) 'undefined)
-                   ((not range)
+                   ((or (not range)
+                        (magit-rev-eq range "HEAD"))
                     (if (member "--cached" const)
                         'staged
                       'unstaged))

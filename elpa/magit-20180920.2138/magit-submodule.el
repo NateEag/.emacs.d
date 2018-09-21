@@ -164,7 +164,7 @@ it is nil, then PATH also becomes the name."
   (magit-with-toplevel
     (magit-call-git "submodule" "add" (and name (list "--name" name))
                     args "--" url path)
-    (unless (version< (magit-git-version) "2.11.0")
+    (unless (version< (magit-git-version) "2.12.0")
       (magit-call-git "submodule" "absorbgitdirs" path))
     (magit-refresh)))
 
@@ -280,7 +280,7 @@ are inserted, and option `magit-module-sections-nested' controls
 whether they are wrapped in an additional section."
   (when-let ((modules (magit-list-module-paths)))
     (if magit-module-sections-nested
-        (magit-insert-section section (submodules nil t)
+        (magit-insert-section section (modules nil t)
           (magit-insert-heading
             (format "%s (%s)"
                     (propertize "Modules" 'face 'magit-section-heading)
@@ -299,7 +299,7 @@ whether they are wrapped in an additional section."
 For each section insert the path and the output of `git describe --tags',
 or, failing that, the abbreviated HEAD commit hash."
   (when-let ((modules (magit-list-module-paths)))
-    (magit-insert-section section (submodules nil t)
+    (magit-insert-section section (modules nil t)
       (magit-insert-heading
         (format "%s (%s)"
                 (propertize "Modules overview" 'face 'magit-section-heading)
@@ -320,7 +320,7 @@ or, failing that, the abbreviated HEAD commit hash."
       (dolist (module modules)
         (let ((default-directory
                 (expand-file-name (file-name-as-directory module))))
-          (magit-insert-section (submodule module t)
+          (magit-insert-section (magit-module-section module t)
             (insert (propertize (format path-format module)
                                 'face 'magit-diff-file-heading))
             (if (not (file-exists-p ".git"))
@@ -339,13 +339,13 @@ or, failing that, the abbreviated HEAD commit hash."
             (insert ?\n))))))
   (insert ?\n))
 
-(defvar magit-submodules-section-map
+(defvar magit-modules-section-map
   (let ((map (make-sparse-keymap)))
     (define-key map [remap magit-visit-thing] 'magit-list-submodules)
     map)
-  "Keymap for `submodules' sections.")
+  "Keymap for `modules' sections.")
 
-(defvar magit-submodule-section-map
+(defvar magit-module-section-map
   (let ((map (make-sparse-keymap)))
     (unless (featurep 'jkl)
       (define-key map "\C-j"   'magit-submodule-visit))
@@ -355,13 +355,13 @@ or, failing that, the abbreviated HEAD commit hash."
     (define-key map "K" 'magit-file-untrack)
     (define-key map "R" 'magit-file-rename)
     map)
-  "Keymap for `submodule' sections.")
+  "Keymap for `module' sections.")
 
 (defun magit-submodule-visit (module &optional other-window)
   "Visit MODULE by calling `magit-status' on it.
 Offer to initialize MODULE if it's not checked out yet.
 With a prefix argument, visit in another window."
-  (interactive (list (or (magit-section-when submodule)
+  (interactive (list (or (magit-section-value-if 'module)
                          (magit-read-module-path "Visit module"))
                      current-prefix-arg))
   (magit-with-toplevel
@@ -393,7 +393,7 @@ These sections can be expanded to show the respective commits."
 (defun magit-insert-modules-unpulled-from-pushremote ()
   "Insert sections for modules that haven't been pulled from the push-remote.
 These sections can be expanded to show the respective commits."
-  (magit--insert-modules-logs "Modules unpulled from ${push}"
+  (magit--insert-modules-logs "Modules unpulled from @{push}"
                               'modules-unpulled-from-pushremote
                               "HEAD..@{push}"))
 
@@ -411,35 +411,36 @@ These sections can be expanded to show the respective commits."
 These sections can be expanded to show the respective commits."
   (magit--insert-modules-logs "Modules unpushed to @{push}"
                               'modules-unpushed-to-pushremote
-                              "${push}..HEAD"))
+                              "@{push}..HEAD"))
 
 (defun magit--insert-modules-logs (heading type range)
   "For internal use, don't add to a hook."
-  (when-let ((modules (magit-list-module-paths)))
-    (magit-insert-section section ((eval type) nil t)
-      (string-match "\\`\\(.+\\) \\([^ ]+\\)\\'" heading)
-      (magit-insert-heading
-        (concat
-         (propertize (match-string 1 heading) 'face 'magit-section-heading) " "
-         (propertize (match-string 2 heading) 'face 'magit-branch-remote) ":"))
-      (magit-with-toplevel
-        (dolist (module modules)
-          (when (magit-module-worktree-p module)
-            (let ((default-directory
-                    (expand-file-name (file-name-as-directory module))))
-              (when (magit-file-accessible-directory-p default-directory)
-                (magit-insert-section sec (file module t)
-                  (magit-insert-heading
-                    (concat (propertize module 'face 'magit-diff-file-heading) ":"))
-                  (magit-git-wash (apply-partially 'magit-log-wash-log 'module)
-                    "-c" "push.default=current" "log" "--oneline" range)
-                  (when (> (point)
-                           (oref sec content))
-                    (delete-char -1))))))))
-      (if (> (point)
-             (oref section content))
-          (insert ?\n)
-        (magit-cancel-section)))))
+  (unless (magit-ignore-submodules-p)
+    (when-let ((modules (magit-list-module-paths)))
+      (magit-insert-section section ((eval type) nil t)
+        (string-match "\\`\\(.+\\) \\([^ ]+\\)\\'" heading)
+        (magit-insert-heading
+          (propertize (match-string 1 heading) 'face 'magit-section-heading) " "
+          (propertize (match-string 2 heading) 'face 'magit-branch-remote) ":")
+        (magit-with-toplevel
+          (dolist (module modules)
+            (when (magit-module-worktree-p module)
+              (let ((default-directory
+                      (expand-file-name (file-name-as-directory module))))
+                (when (magit-file-accessible-directory-p default-directory)
+                  (magit-insert-section sec (magit-module-section module t)
+                    (magit-insert-heading
+                      (propertize module 'face 'magit-diff-file-heading) ":")
+                    (magit-git-wash
+                        (apply-partially 'magit-log-wash-log 'module)
+                      "-c" "push.default=current" "log" "--oneline" range)
+                    (when (> (point)
+                             (oref sec content))
+                      (delete-char -1))))))))
+        (if (> (point)
+               (oref section content))
+            (insert ?\n)
+          (magit-cancel-section))))))
 
 ;;; List
 
@@ -447,7 +448,10 @@ These sections can be expanded to show the respective commits."
 (defun magit-list-submodules ()
   "Display a list of the current repository's submodules."
   (interactive)
-  (magit-display-buffer (magit-mode-get-buffer 'magit-submodule-list-mode t))
+  (magit-display-buffer
+   (or (magit-mode-get-buffer 'magit-submodule-list-mode)
+       (magit-with-toplevel
+         (magit-generate-new-buffer 'magit-submodule-list-mode))))
   (magit-submodule-list-mode)
   (magit-submodule-list-refresh)
   (tabulated-list-print))

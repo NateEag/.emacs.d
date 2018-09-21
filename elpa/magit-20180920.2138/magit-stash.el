@@ -238,7 +238,7 @@ When the region is active offer to drop all contained stashes."
 ;;;###autoload
 (defun magit-stash-clear (ref)
   "Remove all stashes saved in REF's reflog by deleting REF."
-  (interactive (let ((ref (or (magit-section-when 'stashes) "refs/stash")))
+  (interactive (let ((ref (or (magit-section-value-if 'stashes) "refs/stash")))
                  (magit-confirm t (format "Drop all stashes in %s" ref))
                  (list ref)))
   (magit-run-git "update-ref" "-d" ref))
@@ -441,7 +441,7 @@ instead of \"Stashes:\"."
            (magit-rev-format "%s" stash)))
   (setq magit-buffer-revision-hash (magit-rev-parse stash))
   (magit-insert-section (stash)
-    (run-hooks 'magit-stash-sections-hook)))
+    (magit-run-section-hook 'magit-stash-sections-hook)))
 
 (defun magit-stash-insert-section (commit range message &optional files)
   (magit-insert-section (commit commit)

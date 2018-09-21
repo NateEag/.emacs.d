@@ -295,8 +295,7 @@ depending on the value of option `magit-commit-squash-confirm'."
                 (list "--autosquash" "--autostash")
               "" "true" nil t)))
         (format "Type %%p on a commit to %s into it,"
-                (substring option 2))
-        nil nil (list "--graph"))
+                (substring option 2)))
       (when magit-commit-show-diff
         (let ((magit-display-buffer-noselect t))
           (apply #'magit-diff-staged nil (magit-diff-arguments)))))))
@@ -460,8 +459,9 @@ If no commit is in progress, then initiate it.  Use the function
 specified by variable `magit-commit-add-log-insert-function' to
 actually insert the entry."
   (interactive)
-  (let ((hunk (magit-section-when 'hunk it))
-        (log (magit-commit-message-buffer)) buf pos)
+  (let ((hunk (and (magit-section-match 'hunk)
+                   (magit-current-section)))
+        (log  (magit-commit-message-buffer)) buf pos)
     (save-window-excursion
       (call-interactively #'magit-diff-visit-file)
       (setq buf (current-buffer))

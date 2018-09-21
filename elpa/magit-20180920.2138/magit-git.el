@@ -45,6 +45,7 @@
 (defvar magit-refresh-args) ; from `magit-mode' for `magit-current-file'
 (defvar magit-branch-prefer-remote-upstream)
 (defvar magit-published-branches)
+(defvar magit-diff-section-arguments)
 
 (defvar magit-tramp-process-environment nil)
 
@@ -85,43 +86,31 @@ successfully.")
   ;; than using "bin/git.exe" directly.
   (or (and (eq system-type 'windows-nt)
            (--when-let (executable-find "git")
-             (or (ignore-errors
-                   ;; Git for Windows 2.x provides cygpath so we can
-                   ;; ask it for native paths.  Using an upper case
-                   ;; alias makes this fail on 1.x (which is good,
-                   ;; because we would not want to end up using some
-                   ;; other cygpath).
-                   (let* ((core-exe
-                           (car
-                            (process-lines
-                             it "-c"
-                             "alias.X=!x() { which \"$1\" | cygpath -mf -; }; x"
-                             "X" "git")))
-                          (hack-entry (assoc core-exe magit-git-w32-path-hack))
-                          ;; Running the libexec/git-core executable
-                          ;; requires some extra PATH entries.
-                          (path-hack
-                           (list (concat "PATH="
-                                         (car (process-lines
-                                               it "-c"
-                                               "alias.P=!cygpath -wp \"$PATH\""
-                                               "P"))))))
-                     ;; The defcustom STANDARD expression can be
-                     ;; evaluated many times, so make sure it is
-                     ;; idempotent.
-                     (if hack-entry
-                         (setcdr hack-entry path-hack)
-                       (push (cons core-exe path-hack) magit-git-w32-path-hack))
-                     core-exe))
-                 ;; For 1.x, we search for bin/ next to cmd/.
-                 (let ((alt (directory-file-name (file-name-directory it))))
-                   (if (and (equal (file-name-nondirectory alt) "cmd")
-                            (setq alt (expand-file-name
-                                       (convert-standard-filename "bin/git.exe")
-                                       (file-name-directory alt)))
-                            (file-executable-p alt))
-                       alt
-                     it)))))
+             (ignore-errors
+               ;; Git for Windows 2.x provides cygpath so we can
+               ;; ask it for native paths.
+               (let* ((core-exe
+                       (car
+                        (process-lines
+                         it "-c"
+                         "alias.X=!x() { which \"$1\" | cygpath -mf -; }; x"
+                         "X" "git")))
+                      (hack-entry (assoc core-exe magit-git-w32-path-hack))
+                      ;; Running the libexec/git-core executable
+                      ;; requires some extra PATH entries.
+                      (path-hack
+                       (list (concat "PATH="
+                                     (car (process-lines
+                                           it "-c"
+                                           "alias.P=!cygpath -wp \"$PATH\""
+                                           "P"))))))
+                 ;; The defcustom STANDARD expression can be
+                 ;; evaluated many times, so make sure it is
+                 ;; idempotent.
+                 (if hack-entry
+                     (setcdr hack-entry path-hack)
+                   (push (cons core-exe path-hack) magit-git-w32-path-hack))
+                 core-exe))))
       "git")
   "The Git executable used by Magit."
   :group 'magit-process
@@ -836,6 +825,11 @@ are considered."
 (defun magit-module-no-worktree-p (module)
   (not (magit-module-worktree-p module)))
 
+(defun magit-ignore-submodules-p ()
+  (cl-find-if (lambda (arg)
+                (string-prefix-p "--ignore-submodules" arg))
+              magit-diff-section-arguments))
+
 ;;; Revisions and References
 
 (defun magit-rev-parse (&rest args)
@@ -878,8 +872,9 @@ string \"true\", otherwise return nil."
   (magit-git-success "diff" "--quiet" a b))
 
 (defun magit-rev-eq (a b)
-  (equal (magit-rev-verify a)
-         (magit-rev-verify b)))
+  (let ((a (magit-rev-verify a))
+        (b (magit-rev-verify b)))
+    (and a b (equal a b))))
 
 (defun magit-rev-ancestor-p (a b)
   "Return non-nil if commit A is an ancestor of commit B."
@@ -1042,7 +1037,7 @@ to, or to some other symbolic-ref that points to the same ref."
                 (magit-name-remote-branch (oref it value))))))
 
 (defun magit-commit-at-point ()
-  (or (magit-section-when commit)
+  (or (magit-section-value-if 'commit)
       (and (derived-mode-p 'magit-revision-mode)
            (car magit-refresh-args))))
 
@@ -1067,7 +1062,7 @@ to, or to some other symbolic-ref that points to the same ref."
     (commit (magit-name-tag (oref it value)))))
 
 (defun magit-stash-at-point ()
-  (magit-section-when stash))
+  (magit-section-value-if 'stash))
 
 (defun magit-remote-at-point ()
   (magit-section-case
@@ -1075,13 +1070,8 @@ to, or to some other symbolic-ref that points to the same ref."
     (branch (magit-section-parent-value it))))
 
 (defun magit-module-at-point (&optional predicate)
-  (magit-section-when
-      '(submodule
-        [file modules-unpulled-from-upstream]
-        [file modules-unpulled-from-pushremote]
-        [file modules-unpushed-to-upstream]
-        [file modules-unpushed-to-pushremote])
-    (let ((module (oref it value)))
+  (when (magit-section-match 'magit-module-section)
+    (let ((module (oref (magit-current-section) value)))
       (and (or (not predicate)
                (funcall predicate module))
            module))))
@@ -1576,7 +1566,7 @@ the reference is used.  The first regexp submatch becomes the
                           (replace-regexp-in-string "tag: " "refs/tags/" string)
                           regexp t))))
         (setq names (split-string string regexp t)))
-      (let (state head tags branches remotes other combined)
+      (let (state head upstream tags branches remotes other combined)
         (dolist (ref names)
           (let* ((face (cdr (--first (string-match (car it) ref)
                                      magit-ref-namespaces)))
@@ -1606,20 +1596,42 @@ the reference is used.  The first regexp submatch becomes the
                               name)))
                    name))
                remotes))
-        (dolist (name branches)
-          (let ((push (car (member (magit-get-push-branch name) remotes))))
-            (when push
-              (setq remotes (delete push remotes))
-              (string-match "^[^/]*/" push)
-              (setq push (substring push 0 (match-end 0))))
-            (if (equal name (magit-get-current-branch))
+        (let* ((current (magit-get-current-branch))
+               (target  (magit-get-upstream-branch current t)))
+          (dolist (name branches)
+            (let ((push (car (member (magit-get-push-branch name) remotes))))
+              (when push
+                (setq remotes (delete push remotes))
+                (string-match "^[^/]*/" push)
+                (setq push (substring push 0 (match-end 0))))
+              (cond
+               ((equal name current)
                 (setq head
                       (concat push
-                              (propertize name 'face 'magit-branch-current)))
-              (push (concat push name) combined))))
+                              (propertize name 'face 'magit-branch-current))))
+               ((equal name target)
+                (setq upstream
+                      (concat push
+                              (propertize name 'face '(magit-branch-upstream
+                                                       magit-branch-local)))))
+               (t
+                (push (concat push name) combined)))))
+          (when (and target (not upstream))
+            (if (member target remotes)
+                (progn
+                  (add-face-text-property 0 (length target)
+                                          'magit-branch-upstream nil target)
+                  (setq upstream target)
+                  (setq remotes  (delete target remotes)))
+              (when-let ((target (car (member target combined))))
+                (add-face-text-property 0 (length target)
+                                        'magit-branch-upstream nil target)
+                (setq upstream target)
+                (setq combined (delete target combined))))))
         (mapconcat #'identity
                    (-flatten `(,state
                                ,head
+                               ,upstream
                                ,@(nreverse tags)
                                ,@(nreverse combined)
                                ,@(nreverse remotes)
@@ -1864,7 +1876,7 @@ the reference is used.  The first regexp submatch becomes the
          (atpoint (magit--painted-branch-at-point)))
     (magit-completing-read prompt (magit-list-branch-names)
                            nil t nil 'magit-revision-history
-                           (or (magit-section-when 'branch)
+                           (or (magit-section-value-if 'branch)
                                atpoint
                                (and (not (cdr atrev)) (car atrev))
                                (--first (not (equal it current)) atrev)
@@ -1962,12 +1974,7 @@ the reference is used.  The first regexp submatch becomes the
             (if predicate
                 (user-error "No modules satisfying %s available" predicate)
               (user-error "No modules available"))))
-      (setq modules (magit-region-values
-                     '(submodule
-                       [file modules-unpulled-from-upstream]
-                       [file modules-unpulled-from-pushremote]
-                       [file modules-unpushed-to-upstream]
-                       [file modules-unpushed-to-pushremote])))
+      (setq modules (magit-region-values 'magit-module-section))
       (when modules
         (when predicate
           (setq modules (-filter predicate modules)))

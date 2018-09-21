@@ -368,8 +368,9 @@ Currently this only adds the following key bindings.
 If FILE isn't tracked in Git, fallback to using `rename-file'."
   (interactive
    (let* ((file (magit-read-file "Rename file"))
+          (dir (file-name-directory file))
           (newname (read-file-name (format "Rename %s to file: " file)
-                                   (expand-file-name (file-name-directory file)))))
+                                   (and dir (expand-file-name dir)))))
      (list (expand-file-name file (magit-toplevel))
            (expand-file-name newname))))
   (if (magit-file-tracked-p (magit-convert-filename-for-git file))
@@ -446,11 +447,11 @@ Git, then fallback to using `delete-file'."
 (defun magit-read-file (prompt &optional tracked-only)
   (let ((choices (nconc (magit-list-files)
                         (unless tracked-only (magit-untracked-files)))))
-    (magit-completing-read prompt choices nil t nil nil
-                           (car (member (or (magit-section-when (file submodule))
-                                            (magit-file-relative-name
-                                             nil tracked-only))
-                                        choices)))))
+    (magit-completing-read
+     prompt choices nil t nil nil
+     (car (member (or (magit-section-value-if '(file submodule))
+                      (magit-file-relative-name nil tracked-only))
+                  choices)))))
 
 (defun magit-read-tracked-file (prompt)
   (magit-read-file prompt t))

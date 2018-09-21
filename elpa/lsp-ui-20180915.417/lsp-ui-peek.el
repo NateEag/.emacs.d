@@ -607,12 +607,13 @@ The symbols are found matching PATTERN."
                            "workspace/symbol"
                            (list :query pattern)))
 
-(defun lsp-ui-peek-find-custom (kind request &optional param)
+(defun lsp-ui-peek-find-custom (kind request &optional extra)
   "Find custom references.
 KIND is a symbol to name the references (definition, reference, ..).
 REQUEST is the method string to send the the language server.
-PARAM is the method parameter.  If nil, it default to TextDocumentPositionParams."
-  (lsp-ui-peek--find-xrefs (symbol-at-point) kind request param))
+EXTRA is a plist of extra parameters."
+  (lsp-ui-peek--find-xrefs (symbol-at-point) kind request
+                           (append extra (lsp--text-document-position-params))))
 
 (defun lsp-ui-peek--extract-chunk-from-buffer (pos start end)
   "Return the chunk of code pointed to by POS (a Position object) in the current buffer.
@@ -627,8 +628,8 @@ START and END are delimiters."
              (line (buffer-substring (line-beginning-position) (line-end-position)))
              (after (buffer-substring (line-end-position) (line-end-position line-end)))
              (len (length line)))
-        (add-face-text-property (max (min start len) 0)
-                                (max (min end len) 0)
+        (add-face-text-property (min start len)
+                                (if (null end) len (min end len))
                                 'lsp-ui-peek-highlight t line)
         `(,line . ,(concat before line after))))))
 
@@ -640,15 +641,15 @@ LOCATION can be either a LSP Location or SymbolInformation."
   (-let* ((location (or (gethash "location" location) location))
           (range (gethash "range" location))
           ((&hash "start" pos-start "end" pos-end) range)
-          (start (gethash "character" pos-start))
-          (end (gethash "character" pos-end))
-          ((line . chunk) (lsp-ui-peek--extract-chunk-from-buffer pos-start start end)))
+          ((&hash "line" start-line "character" start-col) pos-start)
+          ((&hash "line" end-line "character" end-col) pos-end)
+          ((line . chunk) (lsp-ui-peek--extract-chunk-from-buffer pos-start start-col
+                                                                  (when (= start-line end-line) end-col))))
     (list :summary (or line filename)
           :chunk (or chunk filename)
           :file filename
           :line (gethash "line" pos-start)
-          :column start
-          :len (- end start))))
+          :column start-col)))
 
 (defun lsp-ui-peek--fontify-buffer (filename)
   (when (eq lsp-ui-peek-fontify 'always)

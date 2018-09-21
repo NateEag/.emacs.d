@@ -181,9 +181,10 @@ Because some variables are buffer local.")
   "Set the frame parameter ‘lsp-ui-doc-frame’ to FRAME."
   `(set-frame-parameter nil 'lsp-ui-doc-frame ,frame))
 
-(defmacro lsp-ui-doc--get-frame ()
+(defun lsp-ui-doc--get-frame (&optional include-deleted-frame)
   "Return the child frame."
-  `(frame-parameter nil 'lsp-ui-doc-frame))
+  (let ((frame (frame-parameter nil 'lsp-ui-doc-frame)))
+    (and (frame-live-p frame) frame)))
 
 (defun lsp-ui-doc--make-buffer-name ()
   "Construct the buffer name, it should be unique for each frame."
@@ -247,7 +248,7 @@ MODE is the mode used in the parent frame."
 (defun lsp-ui-doc--filter-marked-string (list-marked-string)
   (let ((groups (--separate (and (hash-table-p it)
                                  (lsp-ui-sideline--get-renderer (gethash "language" it)))
-                            list-marked-string)))
+                            (append list-marked-string nil))))
     (lsp-ui-doc--set-eldoc (caar groups))
     (if lsp-ui-doc-include-signature
         list-marked-string
@@ -261,7 +262,7 @@ We don't extract the string that `lps-line' is already displaying."
   (when contents
     (cond
      ((stringp contents) contents)
-     ((listp contents) ;; MarkedString[]
+     ((sequencep contents) ;; MarkedString[]
       (mapconcat 'lsp-ui-doc--extract-marked-string
                  (lsp-ui-doc--filter-marked-string contents)
                  "\n\n"
@@ -274,7 +275,8 @@ We don't extract the string that `lps-line' is already displaying."
 (defun lsp-ui-doc--make-request ()
   "Request the documentation to the LS."
   (when (and (bound-and-true-p lsp--cur-workspace)
-             (not (bound-and-true-p lsp-ui-peek-mode)))
+             (not (bound-and-true-p lsp-ui-peek-mode))
+             (lsp--capability "hoverProvider"))
     (if (symbol-at-point)
         (let ((bounds (bounds-of-thing-at-point 'symbol)))
           (unless (equal lsp-ui-doc--bounds bounds)
@@ -563,7 +565,7 @@ HEIGHT is the documentation number of lines."
     (lsp-ui-doc--render-buffer string symbol)
     (if (lsp-ui-doc--inline-p)
         (lsp-ui-doc--inline)
-      (unless (frame-live-p (lsp-ui-doc--get-frame))
+      (unless (lsp-ui-doc--get-frame)
         (lsp-ui-doc--set-frame (lsp-ui-doc--make-frame)))
       (lsp-ui-doc--move-frame (lsp-ui-doc--get-frame))
       (unless (frame-visible-p (lsp-ui-doc--get-frame))

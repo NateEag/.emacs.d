@@ -159,6 +159,10 @@ Should take same args as `message'."
                            'dired-async-failures
                            (car operation) (length skipped) total
                            (dired-plural-s total))))
+           (when dired-buffers
+             (cl-loop for (_f . b) in dired-buffers
+                      when (buffer-live-p b)
+                      do (with-current-buffer b (revert-buffer nil t))))
            ;; Finally send the success message.
            (funcall dired-async-message-function
                     "Asynchronous %s of %s on %s file%s done"

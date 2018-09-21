@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil nil ("sicp-pkg.el" "sicp.el") (23400 19335
+;;;### (autoloads nil nil ("sicp-pkg.el" "sicp.el") (23460 60038
 ;;;;;;  0 0))
 
 ;;;***

@@ -213,7 +213,7 @@ know what you are doing."
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
     (define-key map (kbd "<C-return>") 'helm-cr-empty-string)
-    (define-key map (kbd "<M-RET>") 'helm-cr-empty-string)
+    (define-key map (kbd "M-RET")      'helm-cr-empty-string)
     map)
   "Keymap for `helm-comp-read'.")
 
@@ -802,6 +802,13 @@ It should be used when candidate list don't need to rebuild dynamically."
                                   name buffer
                                   (null helm-completing-read-dynamic-complete)))
 
+(defun helm--generic-read-buffer (prompt &optional default require-match predicate)
+  "The `read-buffer-function' for `helm-mode'.
+Affects `switch-to-buffer' and related."
+  (let ((collection (helm-buffer-list)))
+    (helm--completing-read-default
+     prompt collection predicate require-match nil nil default)))
+
 (cl-defun helm--completing-read-default
     (prompt collection &optional
                          predicate require-match
@@ -1382,8 +1389,13 @@ Can be used as value for `completion-in-region-function'."
 All functions in Emacs that use `completing-read'
 or `read-file-name' and friends will use helm interface
 when this mode is turned on.
+
 However you can modify this behavior for functions of your choice
 with `helm-completing-read-handlers-alist'.
+
+Also commands using `completion-in-region' will be helmized when
+`helm-mode-handle-completion-in-region' is non nil, you can modify
+this behavior with `helm-mode-no-completion-in-region-in-modes'.
 
 Called with a positive arg, turn on unconditionally, with a
 negative arg turn off.
@@ -1396,8 +1408,8 @@ with a nil value.
 
 About `ido-mode':
 When you are using `helm-mode', DO NOT use `ido-mode', instead if you
-want some commands use `ido' add these commands to
-`helm-completing-read-handlers-alist' with ido as value.
+want some commands use `ido', add these commands to
+`helm-completing-read-handlers-alist' with `ido' as value.
 
 Note: This mode is incompatible with Emacs23."
   :group 'helm-mode
@@ -1412,11 +1424,14 @@ Note: This mode is incompatible with Emacs23."
                           #'helm--completing-read-default)
             (add-function :override read-file-name-function
                           #'helm--generic-read-file-name)
+            (add-function :override read-buffer-function
+                          #'helm--generic-read-buffer)
             (when helm-mode-handle-completion-in-region
               (add-function :override completion-in-region-function
                             #'helm--completion-in-region)))
           (setq completing-read-function 'helm--completing-read-default
-                read-file-name-function  'helm--generic-read-file-name)
+                read-file-name-function  'helm--generic-read-file-name
+                read-buffer-function     'helm--generic-read-buffer)
           (when (and (boundp 'completion-in-region-function)
                      helm-mode-handle-completion-in-region)
             (setq completion-in-region-function #'helm--completion-in-region))
@@ -1425,11 +1440,13 @@ Note: This mode is incompatible with Emacs23."
           (progn
             (remove-function completing-read-function #'helm--completing-read-default)
             (remove-function read-file-name-function #'helm--generic-read-file-name)
+            (remove-function read-buffer-function #'helm--generic-read-buffer)
             (remove-function completion-in-region-function #'helm--completion-in-region))
           (setq completing-read-function (and (fboundp 'completing-read-default)
                                         'completing-read-default)
                 read-file-name-function  (and (fboundp 'read-file-name-default)
-                                              'read-file-name-default))
+                                              'read-file-name-default)
+                read-buffer-function     (and (fboundp 'read-buffer) 'read-buffer))
           (when (and (boundp 'completion-in-region-function)
                      (boundp 'helm--old-completion-in-region-function))
             (setq completion-in-region-function helm--old-completion-in-region-function))

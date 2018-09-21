@@ -540,7 +540,7 @@ NOTE that `helm-list-dir-external' needs ls and awk as dependencies."
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
     (define-key map (kbd "<C-return>")    'helm-cr-empty-string)
-    (define-key map (kbd "<M-RET>")       'helm-cr-empty-string)
+    (define-key map (kbd "M-RET")         'helm-cr-empty-string)
     (define-key map (kbd "C-]")           'helm-ff-run-toggle-basename)
     (define-key map (kbd "C-.")           'helm-find-files-up-one-level)
     (define-key map (kbd "C-l")           'helm-find-files-up-one-level)
@@ -2449,7 +2449,7 @@ transformer."
                   ;; that we need an extra step to remove the quotes
                   ;; at the end which impact performances.
                   "ls -A -1 -F -b -Q | awk -v dir=%s '{print dir $1}'"
-                  default-directory)
+                  (shell-quote-argument default-directory))
                  nil t nil)
                 0)
         (goto-char (point-min))
@@ -4389,7 +4389,8 @@ This is the starting point for nearly all actions you can do on files."
   (let* ((hist            (and arg helm-ff-history (helm-find-files-history nil)))
          (smart-input     (or hist (helm-find-files-initial-input)))
          (default-input   (expand-file-name (helm-current-directory)))
-         (input           (cond (helm-find-files-ignore-thing-at-point
+         (input           (cond ((and (null hist)
+                                      helm-find-files-ignore-thing-at-point)
                                  default-input)
                                 ((and (eq major-mode 'org-agenda-mode)
                                       org-directory

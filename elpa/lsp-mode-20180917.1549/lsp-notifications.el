@@ -24,6 +24,11 @@
   :type 'boolean
   :group 'lsp-mode)
 
+(defcustom lsp-report-if-no-buffer t
+  "If non nil the errors will be reported even when the file is not open."
+  :type 'boolean
+  :group 'lsp-mode)
+
 (defun lsp--window-show-message (params &optional workspace)
   "Send the server's messages to message, inhibit if `lsp-inhibit-message' is set,
 or the message matches one of this client's :ignore-messages"
@@ -102,11 +107,14 @@ interface PublishDiagnosticsParams {
 }"
   (let ((file (lsp--uri-to-path (gethash "uri" params)))
         (diagnostics (gethash "diagnostics" params)) buffer)
-    (puthash file (mapcar #'lsp--make-diag diagnostics) lsp--diagnostics)
     (setq buffer (cl-loop for buffer in (lsp--workspace-buffers workspace)
                           when (lsp--equal-files (buffer-file-name buffer) file)
                           return buffer
                           finally return nil))
+
+    (when (or lsp-report-if-no-buffer buffer)
+      (puthash file (mapcar #'lsp--make-diag diagnostics) lsp--diagnostics))
+
     (when buffer
       (with-current-buffer buffer
         (run-hooks 'lsp-after-diagnostics-hook)))))

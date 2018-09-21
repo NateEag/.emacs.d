@@ -4,8 +4,8 @@
 
 ;; Author: akicho8 <akicho8@gmail.com>
 ;; Keywords: elisp
-;; Package-Version: 20180723.441
-;; Version: 1.0.8
+;; Package-Version: 20180827.1301
+;; Version: 1.0.10
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -29,7 +29,7 @@
 ;;   1. For Ruby -> string-inflection-ruby-style-cycle  (foo_bar => FOO_BAR => FooBar => foo_bar)
 ;;   2. For Python -> string-inflection-python-style-cycle  (foo_bar => FOO_BAR => FooBar => foo_bar)
 ;;   3. For Java -> string-inflection-java-style-cycle  (fooBar  => FOO_BAR => FooBar => fooBar)
-;;   4. For All  -> string-inflection-all-cycle         (foo_bar => FOO_BAR => FooBar => fooBar => foo-bar => foo_bar)
+;;   4. For All  -> string-inflection-all-cycle         (foo_bar => FOO_BAR => FooBar => fooBar => foo-bar => Foo_Bar => foo_bar)
 ;;
 ;;
 ;; Setting Example 1
@@ -117,7 +117,7 @@
 
 ;;;###autoload
 (defun string-inflection-all-cycle ()
-  "foo_bar => FOO_BAR => FooBar => fooBar => foo-bar => foo_bar"
+  "foo_bar => FOO_BAR => FooBar => fooBar => foo-bar => Foo_Bar => foo_bar"
   (interactive)
   (string-inflection-insert
    (string-inflection-all-cycle-function (string-inflection-get-current-word))))
@@ -134,35 +134,42 @@
   "FooBar format"
   (interactive)
   (string-inflection-insert
-   (string-inflection-pascal-case-function (string-inflection-get-current-word t))))
+   (string-inflection-pascal-case-function (string-inflection-get-current-word))))
 
 ;;;###autoload
 (defun string-inflection-lower-camelcase ()
   "fooBar format"
   (interactive)
   (string-inflection-insert
-   (string-inflection-camelcase-function (string-inflection-get-current-word t))))
+   (string-inflection-camelcase-function (string-inflection-get-current-word))))
 
 ;;;###autoload
 (defun string-inflection-underscore ()
   "foo_bar format"
   (interactive)
   (string-inflection-insert
-   (string-inflection-underscore-function (string-inflection-get-current-word t))))
+   (string-inflection-underscore-function (string-inflection-get-current-word))))
+
+;;;###autoload
+(defun string-inflection-capital-underscore ()
+  "Foo_Bar format"
+  (interactive)
+  (string-inflection-insert
+   (string-inflection-capital-underscore-function (string-inflection-get-current-word))))
 
 ;;;###autoload
 (defun string-inflection-upcase ()
   "FOO_BAR format"
   (interactive)
   (string-inflection-insert
-   (string-inflection-upcase-function (string-inflection-get-current-word t))))
+   (string-inflection-upcase-function (string-inflection-get-current-word))))
 
 ;;;###autoload
 (defun string-inflection-kebab-case ()
   "foo-bar format"
   (interactive)
   (string-inflection-insert
-   (string-inflection-kebab-case-function (string-inflection-get-current-word t))))
+   (string-inflection-kebab-case-function (string-inflection-get-current-word))))
 
 (fset 'string-inflection-lisp 'string-inflection-kebab-case)
 
@@ -175,11 +182,9 @@
 (defun string-inflection-non-word-chars ()
   (concat "^" string-inflection-word-chars))
 
-(defun string-inflection-get-current-word (&optional skip)
-  "Gets the symbol near the cursor.  If SKIP is non-nil, skip non-word characters forward."
+(defun string-inflection-get-current-word ()
+  "Gets the symbol near the cursor"
   (interactive)
-  (and skip
-       (skip-chars-forward (string-inflection-non-word-chars)))
   (let* ((start (if mark-active
                     (region-end)
                   (progn
@@ -193,7 +198,7 @@
          (str (buffer-substring start end)))
     (prog1
         (if mark-active
-            (replace-regexp-in-string "[[:space:]]+" "_" str)
+            (replace-regexp-in-string "[[:space:].:]+" "_" str) ; 'aa::bb.cc dd' => 'aa_bb_cc_dd'
           str)
       (delete-region start end))))
 
@@ -227,6 +232,11 @@
     (setq str (replace-regexp-in-string "_+" "_" str))
     (downcase str)))
 
+(defun string-inflection-capital-underscore-function (str)
+  "foo_bar => Foo_Bar"
+  (setq str (string-inflection-underscore-function str))
+  (mapconcat 'capitalize (split-string str "_") "_"))
+
 (defun string-inflection-kebab-case-function (str)
   "foo_bar => foo-bar"
   (let ((case-fold-search nil))
@@ -234,7 +244,7 @@
     (setq str (replace-regexp-in-string "_" "-" str))))
 
 (defun string-inflection-all-cycle-function (str)
-  "foo_bar => FOO_BAR => FooBar => fooBar => foo-bar => foo_bar
+  "foo_bar => FOO_BAR => FooBar => fooBar => foo-bar => Foo_Bar => foo_bar
    foo     => FOO     => Foo    => foo"
   (cond
    ;; foo => FOO
@@ -253,6 +263,9 @@
    ;; fooBar => foo-bar
    ((string-inflection-camelcase-p str)
     (string-inflection-kebab-case-function str))
+   ;; foo-bar => Foo_Bar
+   ((string-inflection-kebab-case-p str)
+    (string-inflection-capital-underscore-function str))
    ;; foo-bar => foo_bar
    (t
     (string-inflection-underscore-function str))))
@@ -331,6 +344,14 @@
 (defun string-inflection-kebab-case-p (str)
   "if foo-bar => t"
   (string-match "-" str))
+
+(defun string-inflection-capital-underscore-p (str)
+  "if Foo_Bar => t"
+  (let ((case-fold-search nil))
+    (and
+     (string-match "[A-Z]" str)
+     (string-match "_" str)
+     (string-match "\\`[A-Z][a-zA-Z0-9_]+\\'" str))))
 
 (provide 'string-inflection)
 ;;; string-inflection.el ends here

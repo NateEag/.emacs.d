@@ -5,7 +5,7 @@
 ;; Created    : Feburary 2005
 ;; Modified   : 2018
 ;; Version    : 0.9.2
-;; Package-Version: 20180708.1352
+;; Package-Version: 20180831.1024
 ;; Keywords   : c# languages oop mode
 ;; X-URL      : https://github.com/josteink/csharp-mode
 ;; Last-saved : 2018-Jul-08
@@ -987,7 +987,7 @@ to work properly with code that includes attributes."
                                                       'c-decl-id-start)
                                  (c-forward-syntactic-ws))
                                (save-match-data
-                                 (ignore-errors
+                                 (with-no-warnings
                                    (condition-case nil
                                        (c-font-lock-declarators limit t nil)
                                      (wrong-number-of-arguments
@@ -1129,6 +1129,12 @@ to work properly with code that includes attributes."
            ;; due to the energetic efforts of c-forward-type.
            ,`("\\<\\(namespace\\)[ \t\n\r\f\v]+\\(\\(?:[A-Za-z0-9_]+\\.\\)*[A-Za-z0-9_]+\\)"
               2 font-lock-constant-face t)
+
+
+           ;; Highlight function-invocation.
+           ;; (this may in the future use font-lock-function-call-face, if standardized)
+           ,`(,"\\.\\([A-Za-z0-9_]+\\)("
+              1 font-lock-function-name-face t)
 
 
            ))

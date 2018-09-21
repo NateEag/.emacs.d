@@ -153,7 +153,7 @@
   "Enable inactive region.
 Regions that are disabled by preprocessors will be displayed in shadow."
   :group 'cquery-sem
-  :type 'bool)
+  :type 'boolean)
 
 (defcustom cquery-sem-highlight-method
   nil

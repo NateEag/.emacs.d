@@ -5,7 +5,7 @@
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; Maintainer: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Package-Version: 20180607.1923
+;; Package-Version: 20180814.1516
 ;; Version: 0.9.0
 ;; Package-Requires: ((avy "0.2.0"))
 ;; Keywords: window, location
@@ -560,8 +560,13 @@ window."
 ;;* Utility
 (unless (fboundp 'frame-position)
   (defun frame-position (&optional frame)
-    (cons (frame-parameter frame 'left)
-          (frame-parameter frame 'top))))
+    (let ((pl (frame-parameter frame 'left))
+          (pt (frame-parameter frame 'top)))
+      (when (consp pl)
+        (setq pl (eval pl)))
+      (when (consp pt)
+        (setq pt (eval pt)))
+      (cons pl pt))))
 
 (defun aw-window< (wnd1 wnd2)
   "Return true if WND1 is less than WND2.

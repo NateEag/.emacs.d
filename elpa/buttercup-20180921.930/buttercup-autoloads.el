@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "buttercup" "buttercup.el" (23400 19105 0 0))
+;;;### (autoloads nil "buttercup" "buttercup.el" (23460 59969 0 0))
 ;;; Generated autoloads from buttercup.el
 
 (autoload 'buttercup-run-at-point "buttercup" "\
@@ -19,11 +19,24 @@ current directory.
 
 \(fn)" nil nil)
 
+(autoload 'buttercup-run-markdown-buffer "buttercup" "\
+Run all test suites defined in MARKDOWN-BUFFERS.
+A suite must be defined within a Markdown \"lisp\" code block.
+If MARKDOWN-BUFFERS is empty (nil), use the current buffer.
+
+\(fn &rest MARKDOWN-BUFFERS)" t nil)
+
 (autoload 'buttercup-run-markdown "buttercup" "\
 Run all test suites defined in Markdown files passed as arguments.
 A suite must be defined within a Markdown \"lisp\" code block.
 
 \(fn)" nil nil)
+
+(autoload 'buttercup-run-markdown-file "buttercup" "\
+Run all test suites defined in Markdown FILE.
+A suite must be defined within a Markdown \"lisp\" code block.
+
+\(fn FILE)" t nil)
 
 (autoload 'buttercup-minor-mode "buttercup" "\
 Activate buttercup minor mode.
@@ -40,7 +53,7 @@ With buttercup minor mode active the following is activated:
 ;;;***
 
 ;;;### (autoloads nil nil ("buttercup-compat.el" "buttercup-pkg.el")
-;;;;;;  (23400 19105 0 0))
+;;;;;;  (23460 59969 0 0))
 
 ;;;***
 

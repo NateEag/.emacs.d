@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/avy
-;; Package-Version: 20180806.855
+;; Package-Version: 20180913.1819
 ;; Version: 0.4.0
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: point, location
@@ -79,28 +79,38 @@ keys different than the following: a, e, i, o, u, y"
                               (character :tag "char")
                               (symbol :tag "non-printing key"))))
 
+(defconst avy--key-type
+  '(choice :tag "Command"
+    (const avy-goto-char)
+    (const avy-goto-char-2)
+    (const avy-isearch)
+    (const avy-goto-line)
+    (const avy-goto-subword-0)
+    (const avy-goto-subword-1)
+    (const avy-goto-word-0)
+    (const avy-goto-word-1)
+    (const avy-copy-line)
+    (const avy-copy-region)
+    (const avy-move-line)
+    (const avy-move-region)
+    (const avy-kill-whole-line)
+    (const avy-kill-region)
+    (const avy-kill-ring-save-whole-line)
+    (const avy-kill-ring-save-region)
+    (function :tag "Other command")))
+
 (defcustom avy-keys-alist nil
   "Alist of avy-jump commands to `avy-keys' overriding the default `avy-keys'."
-  :type '(alist
-          :key-type (choice :tag "Command"
-                     (const avy-goto-char)
-                     (const avy-goto-char-2)
-                     (const avy-isearch)
-                     (const avy-goto-line)
-                     (const avy-goto-subword-0)
-                     (const avy-goto-subword-1)
-                     (const avy-goto-word-0)
-                     (const avy-goto-word-1)
-                     (const avy-copy-line)
-                     (const avy-copy-region)
-                     (const avy-move-line)
-                     (const avy-move-region)
-                     (const avy-kill-whole-line)
-                     (const avy-kill-region)
-                     (const avy-kill-ring-save-whole-line)
-                     (const avy-kill-ring-save-region)
-                     (function :tag "Other command"))
+  :type `(alist
+          :key-type ,avy--key-type
           :value-type (repeat :tag "Keys" character)))
+
+(defcustom avy-orders-alist '((avy-goto-char . avy-order-closest))
+  "Alist of candidate ordering functions.
+Usually, candidates appear in their point position order."
+  :type `(alist
+          :key-type ,avy--key-type
+          :value-type function))
 
 (defcustom avy-words
   '("am" "by" "if" "is" "it" "my" "ox" "up"
@@ -363,11 +373,22 @@ SEQ-LEN is how many elements of KEYS it takes to identify a match."
                   lst (cdr lst))))))
     (nreverse path-alist)))
 
+(defun avy-order-closest (x)
+  (abs (- (caar x) (point))))
+
+(defvar avy-command nil
+  "Store the current command symbol.
+E.g. 'avy-goto-line or 'avy-goto-char.")
+
 (defun avy-tree (lst keys)
   "Coerce LST into a balanced tree.
 The degree of the tree is the length of KEYS.
 KEYS are placed appropriately on internal nodes."
-  (let ((len (length keys)))
+  (let* ((len (length keys))
+         (order-fn (cdr (assq avy-command avy-orders-alist)))
+         (lst (if order-fn
+                  (cl-sort lst #'< :key order-fn)
+                lst)))
     (cl-labels
         ((rd (ls)
            (let ((ln (length ls)))
@@ -605,10 +626,6 @@ multiple DISPLAY-FN invocations."
   "Stub to hold last avy command.
 Commands using `avy-with' macro can be resumed."
   (interactive))
-
-(defvar avy-command nil
-  "Store the current command symbol.
-E.g. 'avy-goto-line or 'avy-goto-char.")
 
 (defmacro avy-with (command &rest body)
   "Set `avy-keys' according to COMMAND and execute BODY.
@@ -1413,6 +1430,10 @@ Which one depends on variable `subword-mode'."
 
 (defvar visual-line-mode)
 
+(defcustom avy-indent-line-overlay nil
+  "When non-nil, `avy-goto-line' will display the line overlay next to the first non-whitespace character of each line."
+  :type 'boolean)
+
 (defun avy--line-cands (&optional arg beg end bottom-up)
   "Get candidates for selecting a line.
 The window scope is determined by `avy-all-windows'.
@@ -1432,7 +1453,10 @@ When BOTTOM-UP is non-nil, display avy candidates from top to bottom"
                 (push (cons
                        (if (eq avy-style 'post)
                            (line-end-position)
-                         (point))
+                         (save-excursion
+                           (when avy-indent-line-overlay
+                             (skip-chars-forward " \t"))
+                           (point)))
                        (selected-window)) candidates))
               (if visual-line-mode
                   (progn
@@ -1894,6 +1918,9 @@ Otherwise, the whole regex is highlighted."
                 (let ((l (length str)))
                   (when (>= l 1)
                     (setq str (substring str 0 (1- l))))))
+               ;; Handle ESC
+               ((= char 27)
+                (keyboard-quit))
                (t
                 (setq str (concat str (list char)))))
              ;; Highlight

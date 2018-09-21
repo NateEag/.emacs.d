@@ -7,7 +7,7 @@
 ;; Maintainer: Jason R. Blevins <jblevins@xbeta.org>
 ;; Created: May 24, 2007
 ;; Version: 2.4-dev
-;; Package-Version: 20180731.1830
+;; Package-Version: 20180904.1601
 ;; Package-Requires: ((emacs "24.4") (cl-lib "0.5"))
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: https://jblevins.org/projects/markdown-mode/
@@ -1560,11 +1560,13 @@ start which was previously propertized."
   (save-excursion
     (goto-char start)
     (while (re-search-forward markdown-regex-hr end t)
-      (unless (or (markdown-on-heading-p)
-                  (markdown-code-block-at-point-p))
-        (put-text-property (match-beginning 0) (match-end 0)
-                           'markdown-hr
-                           (match-data t))))))
+      (let ((beg (match-beginning 0))
+            (end (match-end 0)))
+        (goto-char beg)
+        (unless (or (markdown-on-heading-p)
+                    (markdown-code-block-at-point-p))
+          (put-text-property beg end 'markdown-hr (match-data t)))
+        (goto-char end)))))
 
 (defun markdown-syntax-propertize-yaml-metadata (start end)
   "Propertize elements inside YAML metadata blocks from START to END.
@@ -1602,7 +1604,8 @@ region of a YAML metadata block as propertized by
 
 (defun markdown-syntax-propertize-comments (start end)
   "Match HTML comments from the START to END."
-  (let* ((in-comment (nth 4 (syntax-ppss))))
+  (let* ((in-comment (nth 4 (syntax-ppss)))
+         (comment-begin (nth 8 (syntax-ppss))))
     (goto-char start)
     (cond
      ;; Comment start
@@ -1616,10 +1619,9 @@ region of a YAML metadata block as propertized by
         (markdown-syntax-propertize-comments
          (min (1+ (match-end 0)) end (point-max)) end)))
      ;; Comment end
-     ((and in-comment
+     ((and in-comment comment-begin
            (re-search-forward markdown-regex-comment-end end t))
-      (let ((comment-end (match-end 0))
-            (comment-begin (nth 8 (syntax-ppss))))
+      (let ((comment-end (match-end 0)))
         (put-text-property (1- comment-end) comment-end
                            'syntax-table (string-to-syntax ">"))
         ;; Remove any other text properties inside the comment
@@ -2850,12 +2852,12 @@ Like `markdown-inline-code-at-pos`, but preserves match data."
 See `markdown-inline-code-at-pos' for details."
   (markdown-inline-code-at-pos (point)))
 
-(defun markdown-inline-code-at-point-p ()
-  "Return non-nil if there is inline code at the point.
+(defun markdown-inline-code-at-point-p (&optional pos)
+  "Return non-nil if there is inline code at the POS.
 This is a predicate function counterpart to
 `markdown-inline-code-at-point' which does not modify the match
 data.  See `markdown-code-block-at-point-p' for code blocks."
-  (save-match-data (markdown-inline-code-at-pos (point))))
+  (save-match-data (markdown-inline-code-at-pos (or pos (point)))))
 
 (make-obsolete 'markdown-code-at-point-p 'markdown-inline-code-at-point-p "v2.2")
 
@@ -2864,29 +2866,30 @@ data.  See `markdown-code-block-at-point-p' for code blocks."
 Uses text properties at the beginning of the line position.
 This includes pre blocks, tilde-fenced code blocks, and GFM
 quoted code blocks.  Return nil otherwise."
-  (setq pos (save-excursion (goto-char pos) (point-at-bol)))
-  (or (get-text-property pos 'markdown-pre)
-      (markdown-get-enclosing-fenced-block-construct pos)
-      ;; polymode removes text properties set by markdown-mode, so
-      ;; check if `poly-markdown-mode' is active and whether the
-      ;; `chunkmode' property is non-nil at POS.
-      (and (bound-and-true-p poly-markdown-mode)
-           (get-text-property pos 'chunkmode))))
+  (let ((bol (save-excursion (goto-char pos) (point-at-bol))))
+    (or (get-text-property bol 'markdown-pre)
+        (let* ((bounds (markdown-get-enclosing-fenced-block-construct pos))
+               (second (cl-second bounds)))
+          (if second
+              ;; chunks are right open
+              (when (< pos second)
+                bounds)
+            bounds)))))
 
 ;; Function was renamed to emphasize that it does not modify match-data.
 (defalias 'markdown-code-block-at-point 'markdown-code-block-at-point-p)
 
-(defun markdown-code-block-at-point-p ()
-  "Return non-nil if there is a code block at the point.
+(defun markdown-code-block-at-point-p (&optional pos)
+  "Return non-nil if there is a code block at the POS.
 This includes pre blocks, tilde-fenced code blocks, and GFM
 quoted code blocks.  This function does not modify the match
 data.  See `markdown-inline-code-at-point-p' for inline code."
-  (save-match-data (markdown-code-block-at-pos (point))))
+  (save-match-data (markdown-code-block-at-pos (or pos (point)))))
 
-(defun markdown-heading-at-point ()
-  "Return non-nil if there is a heading at the point.
+(defun markdown-heading-at-point (&optional pos)
+  "Return non-nil if there is a heading at the POS.
 Set match data for `markdown-regex-header'."
-  (let ((match-data (get-text-property (point) 'markdown-heading)))
+  (let ((match-data (get-text-property (or pos (point)) 'markdown-heading)))
     (when match-data
       (set-match-data match-data)
       t)))
@@ -3072,7 +3075,8 @@ Restore match data previously stored in PROPERTY."
         pos)
     (unless saved
       (setq pos (next-single-property-change (point) property nil last))
-      (setq saved (get-text-property pos property)))
+      (unless (= pos last)
+        (setq saved (get-text-property pos property))))
     (when saved
       (set-match-data saved)
       ;; Step at least one character beyond point. Otherwise
@@ -5684,7 +5688,7 @@ See `imenu-create-index-function' and `imenu--index-alist' for details."
       ;; Headings
       (goto-char (point-min))
       (while (re-search-forward markdown-regex-header (point-max) t)
-        (when (and (not (markdown-code-block-at-point-p))
+        (when (and (not (markdown-code-block-at-point-p (point-at-bol)))
                    (not (markdown-text-property-at-point 'markdown-yaml-metadata-begin)))
           (cond
            ((setq heading (match-string-no-properties 1))

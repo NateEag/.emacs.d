@@ -21,7 +21,7 @@
 ;; -------------------------------------------------------------------------------------------
 
 ;; URL: http://github.com/ananthakumaran/typescript.el
-;; Package-Version: 20180802.1114
+;; Package-Version: 20180918.934
 ;; Version: 0.1
 ;; Keywords: typescript languages
 ;; Package-Requires: ()
@@ -423,7 +423,13 @@ Match group 1 is MUMBLE.")
 (defconst typescript-jsdoc-param-tag-regexp
   (concat typescript-jsdoc-before-tag-regexp
           "\\(@"
-          "\\(?:param\\|arg\\(?:ument\\)?\\|prop\\(?:erty\\)?\\)"
+          (regexp-opt
+           '("arg"
+             "argument"
+             "param"
+             "prop"
+             "property"
+             "typedef"))
           "\\)"
           "\\s-*\\({[^}]+}\\)?"         ; optional type
           "\\s-*\\[?\\([[:alnum:]_$\.]+\\)?\\]?"  ; name
@@ -431,9 +437,10 @@ Match group 1 is MUMBLE.")
   "Matches jsdoc tags with optional type and optional param name.")
 
 ;; This was taken from js2-mode.
+;; and extended with tags in http://usejsdoc.org/
 (defconst typescript-jsdoc-typed-tag-regexp
   (concat typescript-jsdoc-before-tag-regexp
-          "\\(@\\(?:"
+          "\\(@"
           (regexp-opt
            '("enum"
              "extends"
@@ -447,55 +454,75 @@ Match group 1 is MUMBLE.")
              "returns"
              "throw"
              "throws"
-             "type"))
-          "\\)\\)\\s-*\\({[^}]+}\\)?")
+             "type"
+             "yield"
+             "yields"))
+          "\\)\\s-*\\({[^}]+}\\)?")
   "Matches jsdoc tags with optional type.")
 
 ;; This was taken from js2-mode.
+;; and extended with tags in http://usejsdoc.org/
 (defconst typescript-jsdoc-arg-tag-regexp
   (concat typescript-jsdoc-before-tag-regexp
-          "\\(@\\(?:"
+          "\\(@"
           (regexp-opt
-           '("alias"
+           '("access"
+             "alias"
              "augments"
-             "borrows"
-             "callback"
-             "bug"
              "base"
+             "borrows"
+             "bug"
+             "callback"
              "config"
              "default"
              "define"
              "emits"
              "exception"
+             "extends"
+             "external"
              "fires"
              "func"
              "function"
+             "host"
+             "kind"
+             "listens"
              "member"
-             "memberOf"
+             "memberof"
              "method"
+             "mixes"
+             "module"
              "name"
              "namespace"
+             "requires"
              "since"
              "suppress"
              "this"
              "throws"
+             "var"
+             "variation"
              "version"))
-          "\\)\\)\\s-+\\([^ \t]+\\)")
+          "\\)\\s-+\\([^ \t]+\\)")
   "Matches jsdoc tags with a single argument.")
 
-;; This was taken from js2-mode.
+;; This was taken from js2-mode
+;; and extended with tags in http://usejsdoc.org/
 (defconst typescript-jsdoc-empty-tag-regexp
   (concat typescript-jsdoc-before-tag-regexp
-          "\\(@\\(?:"
+          "\\(@"
           (regexp-opt
-           '("addon"
+           '("abstract"
+             "addon"
+             "async"
              "author"
              "class"
+             "classdesc"
              "const"
              "constant"
              "constructor"
              "constructs"
              "copyright"
+             "default"
+             "defaultvalue"
              "deprecated"
              "desc"
              "description"
@@ -503,32 +530,45 @@ Match group 1 is MUMBLE.")
              "example"
              "exec"
              "export"
+             "exports"
+             "file"
              "fileoverview"
              "final"
              "func"
              "function"
+             "generator"
+             "global"
              "hidden"
+             "hideconstructor"
              "ignore"
-             "implicitCast"
-             "inheritDoc"
+             "implicitcast"
+             "inheritdoc"
              "inner"
+             "instance"
              "interface"
              "license"
              "method"
+             "mixin"
              "noalias"
              "noshadow"
              "notypecheck"
              "override"
+             "overview"
              "owner"
+             "package"
              "preserve"
-             "preserveTry"
+             "preservetry"
              "private"
              "protected"
              "public"
+             "readonly"
              "static"
+             "summary"
              "supported"
-             ))
-          "\\)\\)\\s-*")
+             "todo"
+             "tutorial"
+             "virtual"))
+          "\\)\\s-*")
   "Matches empty jsdoc tags.")
 
 ;; Note that this regexp by itself would match tslint flags that appear inside
@@ -2004,8 +2044,7 @@ This performs fontification according to `typescript--class-styles'."
 
 (defconst typescript--possibly-braceless-keyword-re
   (typescript--regexp-opt-symbol
-   '("catch" "do" "else" "finally" "for" "if" "try" "while" "with"
-     "each"))
+   '("catch" "do" "else" "finally" "for" "if" "try" "while" "with"))
   "Regexp matching keywords optionally followed by an opening brace.")
 
 (defconst typescript--indent-keyword-re
@@ -2032,6 +2071,52 @@ This performs fontification according to `typescript--class-styles'."
   "\\(?:NaN\\|-?\\(?:0[Bb][01]+\\|0[Oo][0-7]+\\|0[Xx][0-9a-fA-F]+\\|Infinity\\|\\(?:[[:digit:]]*\\.[[:digit:]]+\\|[[:digit:]]+\\)\\(?:[Ee][+-]?[[:digit:]]+\\)?\\)\\)"
   "Regexp that matches number literals.")
 
+(defconst typescript--reserved-start-keywords-re
+  (typescript--regexp-opt-symbol '("const" "export" "function" "let" "var"))
+  "These keywords cannot be variable or type names and start a new sentence.
+Note that the \"import\" keyword can be a type import since TS2.9, so it might
+not start a sentence!")
+
+(defconst typescript--type-vs-ternary-re
+  (concat "[?]\\|" (typescript--regexp-opt-symbol '("as" "class" "interface" "private" "public" "readonly")))
+  "Keywords/Symbols that help tell apart colon for types vs ternary operators.")
+
+(defun typescript--search-backward-matching-angle-bracket-inner (depth)
+  "Auxiliary function for `typescript--search-backward-matching-angle-bracket'.
+DEPTH indicates how nested we think we are: it increases when we cross closing
+brackets, and decreases when we cross opening brackets."
+  ;; We look backwards for a "<" that would correspond to the ">" we started
+  ;; from.  However, there is no guarantee that it exists, since our ">" could
+  ;; be a greater-than operation.  Some symbols will make it clear that we are
+  ;; *not* in a type annotation, so we can return nil.  Otherwise, we keep
+  ;; looking for the matching one.
+  (or (<= depth 0)
+      (and
+       ;; If we cross over a reserved start keyword, we abandon hope of finding
+       ;; a matching angle bracket.  This prevents extreme recursion depths.
+       (typescript--re-search-backward (concat "[<>]\\|" typescript--reserved-start-keywords-re) nil t)
+       (case (char-after)
+         (?< (typescript--search-backward-matching-angle-bracket-inner (- depth 1)))
+         (?> (typescript--search-backward-matching-angle-bracket-inner (+ depth 1)))))))
+
+(defun typescript--search-backward-matching-angle-bracket ()
+  "Search for matching \"<\" preceding a starting \">\".
+DEPTH indicates how nested we think we are.  Assumes the starting position is
+right before the closing \">\".  Returns nil when a match was not found,
+otherwise returns t and the current position is right before the matching
+\"<\"."
+  (typescript--search-backward-matching-angle-bracket-inner 1))
+
+(defun typescript--re-search-backward-ignoring-angle-brackets ()
+  "Search backwards, jumping over text within angle brackets.
+Searches specifically for any of \"=\", \"}\", and \"type\"."
+  (and
+   (typescript--re-search-backward "[>=}]\\|\\_<type\\_>" nil t)
+   (or (not (looking-at ">"))
+       (and
+        (typescript--search-backward-matching-angle-bracket)
+        (typescript--re-search-backward-ignoring-angle-brackets)))))
+
 (defun typescript--looking-at-operator-p ()
   "Return non-nil if point is on a typescript operator, other than a comma."
   (save-match-data
@@ -2057,6 +2142,42 @@ This performs fontification according to `typescript--class-styles'."
                (save-excursion
                  (typescript--backward-syntactic-ws)
                  (memq (char-before) '(?, ?{ ?} ?\;)))))
+         ;; Do not identify the symbol > if it is likely part of a type argument
+         ;; T<A>, but identify it if it is likely a greater-than symbol. This is
+         ;; a hard problem in the absence of semicolons, see:
+         ;; https://github.com/ananthakumaran/typescript.el/issues/81
+         (not (and
+               (looking-at ">")
+               (save-excursion
+                 (and
+                  (typescript--search-backward-matching-angle-bracket)
+                  ;; If we made it here, we found a candidate matching opening
+                  ;; angle bracket. We still need to guess whether it actually
+                  ;; is one, and not a spurious less-than operator!
+
+                  ;; Look backwards for the first of:
+                  ;; - one of the symbols: = :
+                  ;; - or a TypeScript keyword
+                  ;; Depending on what comes first, we can make an educated
+                  ;; guess on the nature of our ">" of interest.
+                  (typescript--re-search-backward (concat "[=:]\\|" typescript--keyword-re) nil t)
+                  (or
+                   ;; If the previous keyword is "as", definitely a type.
+                   (looking-at "\\_<as\\_>")
+                   ;; Same goes for type imports.
+                   (looking-at "\\_<import\\_>")
+                   ;; A colon could be either a type symbol, or a ternary
+                   ;; operator, try to guess which.
+                   (and (looking-at ":")
+                        (typescript--re-search-backward typescript--type-vs-ternary-re nil t)
+                        (not (looking-at "?")))
+                   ;; This final check lets us distinguish between a
+                   ;; 2-argument type "t < a , b > ..." and a use of the ","
+                   ;; operator between two comparisons "t < a , b > ...".
+                   ;; Looking back a little more lets us guess.
+                   (and (looking-at "=")
+                        (typescript--re-search-backward-ignoring-angle-brackets)
+                        (looking-at "\\_<type\\_>")))))))
          (not (and
                (looking-at "*")
                ;; Generator method (possibly using computed property).
@@ -2130,7 +2251,10 @@ nil."
                    (when (= (char-before) ?\)) (backward-list))
                    (skip-syntax-backward " ")
                    (skip-syntax-backward "w_")
-                   (looking-at typescript--possibly-braceless-keyword-re))
+                   (and
+                    (looking-at typescript--possibly-braceless-keyword-re)
+                    ;; If preceded by period, it's a method call.
+                    (not (= (char-before) ?.))))
                  (not (typescript--end-of-do-while-loop-p))))
       (save-excursion
         (goto-char (match-beginning 0))

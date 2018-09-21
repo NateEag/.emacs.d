@@ -6,7 +6,7 @@
 ;;          Noam Postavsky <npostavs@gmail.com>
 ;; Maintainer: Noam Postavsky <npostavs@gmail.com>
 ;; Version: 0.13.0
-;; Package-Version: 20180621.50
+;; Package-Version: 20180916.2115
 ;; X-URL: http://github.com/joaotavora/yasnippet
 ;; Keywords: convenience, emulation
 ;; URL: http://github.com/joaotavora/yasnippet
@@ -4506,8 +4506,7 @@ Lisp expression."
                                                     current-string '(?`))))))
         (goto-char (match-beginning 0))
         (when transformed
-          (let ((marker (make-marker))
-                (before-change-functions (cdr before-change-functions)))
+          (let ((marker (make-marker)))
             (yas--save-restriction-and-widen
               (insert "Y") ;; quite horrendous, I love it :)
               (set-marker marker (point))

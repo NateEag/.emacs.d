@@ -92,6 +92,9 @@ alphabetical order, depending on your version of Ivy."
     (forge-browse-remote      nil t)
     (forge-browse-issue       nil t)
     (forge-browse-pullreq     nil t)
+    (forge-edit-topic-title   nil t)
+    (forge-edit-topic-labels  nil t)
+    (forge-edit-topic-assignees nil t)
     (forge-visit-issue        nil t)
     (forge-visit-pullreq      nil t))
   "When not to offer alternatives and ask for confirmation.
@@ -139,7 +142,7 @@ The value has the form ((COMMAND nil|PROMPT DEFAULT)...).
     (const abort-merge)       (const merge-dirty)
     (const drop-stashes)      (const reset-bisect)
     (const kill-process)      (const delete-unmerged-branch)
-    (const delete-pr-branch)
+    (const delete-pr-branch)  (const remove-modules)
     (const stage-all-changes) (const unstage-all-changes)
     (const safe-with-wip)))
 
@@ -248,6 +251,29 @@ Edit published history:
   To disable confirmation completely, add all three symbols here
   or set `magit-published-branches' to nil.
 
+Removing modules:
+
+  `remove-modules' When you remove the working directory of a
+  module that does not contain uncommitted changes, then that is
+  safer than doing so when there are uncommitted changes and/or
+  when you also remove the gitdir.  Still, you don't want to do
+  that by accident.
+
+  `remove-dirty-modules' When you remove the working directory of
+  a module that contains uncommitted changes, then those changes
+  are gone for good.  It is better to go to the module, inspect
+  these changes and only if appropriate discard them manually.
+
+  `trash-module-gitdirs' When you remove the gitdir of a module,
+  then all unpushed changes are gone for good.  It is very easy
+  to forget that you have some unfinished work on an unpublished
+  feature branch or even in a stash.
+
+  Actually there are some safety precautions in place, that might
+  help you out if you make an unwise choice here, but don't count
+  on it.  In case of emergency, stay calm and check the stash and
+  the `trash-directory' for traces of lost work.
+
 Various:
 
   `kill-process' There seldom is a reason to kill a process.
@@ -273,6 +299,9 @@ Global settings:
   :type `(choice (const :tag "Always require confirmation" nil)
                  (const :tag "Never require confirmation" t)
                  (set   :tag "Require confirmation except for"
+                        ;; `remove-dirty-modules' and
+                        ;; `trash-module-gitdirs' intentionally
+                        ;; omitted.
                         ,@magit--confirm-actions)))
 
 (defcustom magit-slow-confirm '(drop-stashes)
@@ -490,6 +519,39 @@ into a list."
       (or (setq input default)
           (user-error "Nothing selected")))
     input))
+
+(defun magit-completing-read-multiple*
+    (prompt table &optional predicate require-match initial-input
+	    hist def inherit-input-method)
+  "Read multiple strings in the minibuffer, with completion.
+Like `completing-read-multiple' but don't mess with order of
+TABLE.  Also bind `helm-completion-in-region-default-sort-fn'
+to nil."
+  (unwind-protect
+      (cl-letf (((symbol-function 'completion-pcm--all-completions)
+                 #'magit-completion-pcm--all-completions))
+        (add-hook 'choose-completion-string-functions
+                  'crm--choose-completion-string)
+        (let* ((minibuffer-completion-table #'crm--collection-fn)
+               (minibuffer-completion-predicate predicate)
+               ;; see completing_read in src/minibuf.c
+               (minibuffer-completion-confirm
+                (unless (eq require-match t) require-match))
+               (crm-completion-table (magit--completion-table table))
+               (map (if require-match
+                        crm-local-must-match-map
+                      crm-local-completion-map))
+               (helm-completion-in-region-default-sort-fn nil)
+               ;; If the user enters empty input, `read-from-minibuffer'
+               ;; returns the empty string, not DEF.
+               (input (read-from-minibuffer
+                       prompt initial-input map
+                       nil hist def inherit-input-method)))
+          (and def (string-equal input "") (setq input def))
+          ;; Remove empty strings in the list of read strings.
+          (split-string input crm-separator t)))
+    (remove-hook 'choose-completion-string-functions
+                 'crm--choose-completion-string)))
 
 (defun magit-ido-completing-read
   (prompt choices &optional predicate require-match initial-input hist def)

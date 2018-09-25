@@ -482,7 +482,7 @@ which lets you edit the thing at point, likely in another buffer."
   (if (eq magit-current-popup 'magit-dispatch-popup)
       (progn (setq magit-current-popup nil)
              (call-interactively (key-binding (this-command-keys))))
-    (user-error "There is no thing at point that could be visited")))
+    (user-error "There is no thing at point that could be edited")))
 
 (defun magit-browse-thing ()
   "This is a placeholder command.
@@ -650,9 +650,11 @@ and `magit-post-display-buffer-hook'."
     (run-hooks 'magit-pre-display-buffer-hook))
   (let ((window (funcall magit-display-buffer-function buffer)))
     (unless magit-display-buffer-noselect
-      (select-frame-set-input-focus
-       (window-frame
-        (select-window window)))))
+      (let* ((old-frame (selected-frame))
+             (new-frame (window-frame window)))
+        (select-window window)
+        (unless (eq old-frame new-frame)
+          (select-frame-set-input-focus new-frame)))))
   (with-current-buffer buffer
     (run-hooks 'magit-post-display-buffer-hook)))
 

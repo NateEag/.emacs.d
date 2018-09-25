@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "projectile" "projectile.el" (23460 60054 0
+;;;### (autoloads nil "projectile" "projectile.el" (23466 11295 0
 ;;;;;;  0))
 ;;; Generated autoloads from projectile.el
 
@@ -204,6 +204,11 @@ Jump to a project's file using completion and show it in another frame.
 With a prefix arg INVALIDATE-CACHE invalidates the cache first.
 
 \(fn &optional INVALIDATE-CACHE)" t nil)
+
+(autoload 'projectile-toggle-project-read-only "projectile" "\
+Toggle project read only
+
+\(fn)" t nil)
 
 (autoload 'projectile-find-dir "projectile" "\
 Jump to a project's directory using completion.

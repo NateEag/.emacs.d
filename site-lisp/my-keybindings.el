@@ -79,6 +79,7 @@
     ("p s" . helm-projectile-ag)
     ("p b" . helm-projectile-switch-to-buffer)
     ("p p" . helm-projectile-switch-project)
+    ("p y" . ne/yank-buffer-project-relative-path)
 
     ;; Look up URLs quickly.
     ("u" . browse-url)
@@ -89,6 +90,7 @@
     ("g p" . git-gutter:previous-hunk)
     ("g d" . git-gutter:popup-diff)
     ("g r" . git-gutter:revert-hunk)
+    ("g b" . magit-blame)
 
     ;; Dates and times are handy to be able to insert.
     ("d" . insert-date)

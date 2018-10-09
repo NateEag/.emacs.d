@@ -91,6 +91,7 @@
     ("g d" . git-gutter:popup-diff)
     ("g r" . git-gutter:revert-hunk)
     ("g b" . magit-blame)
+    ("g l" . magit-log-buffer-file)
 
     ;; Dates and times are handy to be able to insert.
     ("d" . insert-date)

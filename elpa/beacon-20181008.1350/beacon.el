@@ -4,7 +4,7 @@
 
 ;; Author: Artur Malabarba <emacs@endlessparentheses.com>
 ;; URL: https://github.com/Malabarba/beacon
-;; Package-Version: 20180706.1725
+;; Package-Version: 20181008.1350
 ;; Keywords: convenience
 ;; Version: 1.3.3
 ;; Package-Requires: ((seq "2.14"))
@@ -337,6 +337,8 @@ be invoked as a user command or called from lisp code."
   (beacon--vanish)
   (run-hooks 'beacon-before-blink-hook)
   (beacon--shine)
+  (when (timerp beacon--timer)
+    (cancel-timer beacon--timer))
   (setq beacon--timer
         (run-at-time beacon-blink-delay
                      (/ beacon-blink-duration 1.0 beacon-size)

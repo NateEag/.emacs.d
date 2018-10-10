@@ -1,0 +1,2 @@
+;;; -*- no-byte-compile: t -*-
+(define-package "format-all" "20180928.1403" "Auto-format C, C++, JS, Python, Ruby and 25 other languages" '((emacs "24") (cl-lib "0.5")) :commit "3435878ff17d7da1291d3bb2f6512490dbe3d8bf" :keywords '("languages" "util") :authors '(("Lassi Kortela" . "lassi@lassi.io")) :maintainer '("Lassi Kortela" . "lassi@lassi.io") :url "https://github.com/lassik/emacs-format-all-the-code")

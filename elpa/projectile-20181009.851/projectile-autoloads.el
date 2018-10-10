@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "projectile" "projectile.el" (23466 11295 0
+;;;### (autoloads nil "projectile" "projectile.el" (23486 20136 0
 ;;;;;;  0))
 ;;; Generated autoloads from projectile.el
 
@@ -51,6 +51,12 @@ This function is not recursive and only adds projects with roots
 at the top level of DIRECTORY.
 
 \(fn DIRECTORY)" t nil)
+
+(autoload 'projectile-discover-projects-in-search-path "projectile" "\
+Discover projects in `projectile-project-search-path'.
+Invoked automatically when `projectile-mode' is enabled.
+
+\(fn)" t nil)
 
 (autoload 'projectile-switch-to-buffer "projectile" "\
 Switch to a project buffer.
@@ -206,7 +212,7 @@ With a prefix arg INVALIDATE-CACHE invalidates the cache first.
 \(fn &optional INVALIDATE-CACHE)" t nil)
 
 (autoload 'projectile-toggle-project-read-only "projectile" "\
-Toggle project read only
+Toggle project read only.
 
 \(fn)" t nil)
 
@@ -496,6 +502,14 @@ available actions.
 See `def-projectile-commander-method' for defining new methods.
 
 \(fn)" t nil)
+
+(autoload 'projectile-browse-dirty-projects "projectile" "\
+Browse dirty version controlled projects.
+
+With a prefix argument, or if CACHED is non-nil, try to use the cached
+dirty project list.
+
+\(fn &optional CACHED)" t nil)
 
 (autoload 'projectile-edit-dir-locals "projectile" "\
 Edit or create a .dir-locals.el file of the project.

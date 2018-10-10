@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/avy
-;; Package-Version: 20180913.1819
+;; Package-Version: 20181009.1648
 ;; Version: 0.4.0
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: point, location
@@ -243,6 +243,16 @@ When nil, punctuation chars will not be matched.
 (defcustom avy-ignored-modes '(image-mode doc-view-mode pdf-view-mode)
   "List of modes to ignore when searching for candidates.
 Typically, these modes don't use the text representation."
+  :type 'list)
+
+(defcustom avy-single-candidate-jump t
+  "In case there is only one candidate jumps directly to it."
+  :type 'boolean)
+
+(defcustom avy-del-last-char-by '(8 127)
+  "List of event types, i.e. key presses, that delete the last
+character read.  The default represents `C-h' and `DEL'.  See
+`event-convert-list'."
   :type 'list)
 
 (defvar avy-ring (make-ring 20)
@@ -747,7 +757,7 @@ Set `avy-style' according to COMMMAND as well."
   (let ((len (length candidates)))
     (cond ((= len 0)
            nil)
-          ((= len 1)
+          ((and (= len 1) avy-single-candidate-jump)
            (car candidates))
           (t
            (unwind-protect
@@ -1879,8 +1889,9 @@ newline."
 (defun avy--read-candidates (&optional re-builder)
   "Read as many chars as possible and return their occurrences.
 At least one char must be read, and then repeatedly one next char
-may be read if it is entered before `avy-timeout-seconds'.  `C-h'
-or `DEL' deletes the last char entered, and `RET' exits with the
+may be read if it is entered before `avy-timeout-seconds'.  Any
+key defined in `avy-del-last-char-by' (by default `C-h' and `DEL')
+deletes the last char entered, and `RET' exits with the
 currently read string immediately instead of waiting for another
 char for `avy-timeout-seconds'.
 The format of the result is the same as that of `avy--regex-candidates'.
@@ -1896,7 +1907,8 @@ Otherwise, the whole regex is highlighted."
          (progn
            (while (and (not break)
                        (setq char
-                             (read-char (format "char%s: "
+                             (read-char (format "%d  char%s: "
+                                                (length overlays)
                                                 (if (string= str "")
                                                     str
                                                   (format " (%s)" str)))
@@ -1914,7 +1926,7 @@ Otherwise, the whole regex is highlighted."
                     (setq break t)
                   (setq str (concat str (list ?\n)))))
                ;; Handle C-h, DEL
-               ((memq char '(8 127))
+               ((memq char avy-del-last-char-by)
                 (let ((l (length str)))
                   (when (>= l 1)
                     (setq str (substring str 0 (1- l))))))

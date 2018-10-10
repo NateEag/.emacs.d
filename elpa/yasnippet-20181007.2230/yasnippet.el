@@ -6,7 +6,7 @@
 ;;          Noam Postavsky <npostavs@gmail.com>
 ;; Maintainer: Noam Postavsky <npostavs@gmail.com>
 ;; Version: 0.13.0
-;; Package-Version: 20180916.2115
+;; Package-Version: 20181007.2230
 ;; X-URL: http://github.com/joaotavora/yasnippet
 ;; Keywords: convenience, emulation
 ;; URL: http://github.com/joaotavora/yasnippet
@@ -443,7 +443,7 @@ are looked for first. Failing that, longer keys composed of
 \"word\" or \"symbol\" syntax are looked for. Therefore,
 triggering after
 
-foo-bar
+foo-barbaz
 
 will, according to the \"w\" element first try \"barbaz\". If
 that isn't a trigger key, \"foo-barbaz\" is tried, respecting the
@@ -3327,8 +3327,9 @@ Otherwise delegate to `yas-next-field'."
 If there's none, exit the snippet."
   (interactive)
   (unless arg (setq arg 1))
-  (let* ((snippet (car (yas-active-snippets)))
-         (active-field (overlay-get yas--active-field-overlay 'yas--field))
+  (let* ((active-field (overlay-get yas--active-field-overlay 'yas--field))
+         (snippet (car (yas-active-snippets (yas--field-start active-field)
+                                            (yas--field-end active-field))))
          (target-field (yas--find-next-field arg snippet active-field)))
     (yas--letenv (yas--snippet-expand-env snippet)
       ;; Apply transform to active field.
@@ -3746,7 +3747,15 @@ field start.  This hook does nothing if an undo is in progress."
                 ;; We delete text starting from the END of insertion.
                 (yas--skip-and-clear field end))
               (setf (yas--field-modified-p field) t)
-              (yas--advance-end-maybe field (overlay-end overlay))
+              ;; Adjust any pending active fields in case of stacked
+              ;; expansion.
+              (let ((pfield field)
+                    (psnippets (yas-active-snippets beg end)))
+                (while (and pfield psnippets)
+                  (let ((psnippet (pop psnippets)))
+                    (cl-assert (memq pfield (yas--snippet-fields psnippet)))
+                    (yas--advance-end-maybe pfield (overlay-end overlay))
+                    (setq pfield (yas--snippet-previous-active-field psnippet)))))
               (save-excursion
                 (yas--field-update-display field))
               (yas--update-mirrors snippet)))
@@ -4036,13 +4045,18 @@ Returns the newly created snippet."
         ;; content.
         (let ((buffer-undo-list t))
           ;; Some versions of cc-mode fail when inserting snippet
-          ;; content in a narrowed buffer.
+          ;; content in a narrowed buffer, so make sure to insert
+          ;; before narrowing.  Furthermore, call before and after
+          ;; change functions, otherwise cc-mode's cache can get
+          ;; messed up.
           (goto-char begin)
+          (run-hook-with-args 'before-change-functions begin begin)
           (insert content)
           (setq end (+ end (length content)))
           (narrow-to-region begin end)
           (goto-char (point-min))
-          (yas--snippet-parse-create snippet))
+          (yas--snippet-parse-create snippet)
+          (run-hook-with-args 'after-change-functions (point-min) (point-max) 0))
         (when (listp buffer-undo-list)
           (push (cons (point-min) (point-max))
                 buffer-undo-list))

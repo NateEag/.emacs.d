@@ -32,6 +32,7 @@
 (require 'lsp-mode)
 (require 'dash)
 (require 'dash-functional)
+(require 'goto-addr)
 (require 'markdown-mode)
 
 (defgroup lsp-ui-doc nil
@@ -218,6 +219,21 @@ MODE is the mode used in the parent frame."
   (setq-local markdown-fontify-code-block-default-mode mode)
   (setq-local markdown-hide-markup t))
 
+(defun lsp-ui-doc--inline-wrapped-line (string)
+  "Wraps a line of text for inline display."
+  (cond ((string-empty-p string) "")
+        ((< (length string) lsp-ui-doc-max-width) string)
+        (t (concat (substring string 0 (- lsp-ui-doc-max-width 1))
+                   "\\\n"
+                   (lsp-ui-doc--inline-wrapped-line (substring string (- lsp-ui-doc-max-width 1)))))))
+
+(defun lsp-ui-doc--inline-formatted-string (string)
+  "Formats STRING for inline rendering."
+  (mapconcat (lambda (line)
+               (lsp-ui-doc--inline-wrapped-line (string-trim-right line)))
+             (split-string string "\n")
+             "\n"))
+
 (defun lsp-ui-doc--extract-marked-string (marked-string)
   "Render the MARKED-STRING."
   (string-trim-right
@@ -233,7 +249,10 @@ MODE is the mode used in the parent frame."
      (if render-fn
          (funcall render-fn string)
        (with-temp-buffer
-         (insert string)
+         (if (lsp-ui-doc--inline-p)
+             (insert (lsp-ui-doc--inline-formatted-string string))
+           (insert string))
+
          (delay-mode-hooks
            (let ((inhibit-message t))
              (funcall (cond ((and with-lang (string= "text" language)) 'text-mode)
@@ -277,16 +296,22 @@ We don't extract the string that `lps-line' is already displaying."
   (when (and (bound-and-true-p lsp--cur-workspace)
              (not (bound-and-true-p lsp-ui-peek-mode))
              (lsp--capability "hoverProvider"))
-    (if (symbol-at-point)
-        (let ((bounds (bounds-of-thing-at-point 'symbol)))
-          (unless (equal lsp-ui-doc--bounds bounds)
-            (lsp--send-request-async (lsp--make-request "textDocument/hover"
-                                                        (lsp--text-document-position-params))
-                                     (lambda (hover)
-                                       (lsp-ui-doc--callback hover bounds (current-buffer))
-                                       ))))
+    (cond
+     ((symbol-at-point)
+      (let ((bounds (bounds-of-thing-at-point 'symbol)))
+        (unless (equal lsp-ui-doc--bounds bounds)
+          (lsp--send-request-async (lsp--make-request "textDocument/hover"
+                                                      (lsp--text-document-position-params))
+                                   (lambda (hover)
+                                     (lsp-ui-doc--callback hover bounds (current-buffer)))))))
+     ((looking-at "[[:graph:]]")
+      (lsp--send-request-async (lsp--make-request "textDocument/hover"
+                                                  (lsp--text-document-position-params))
+                               (lambda (hover)
+                                 (lsp-ui-doc--callback hover (cons (point) (1+ (point))) (current-buffer)))))
+     (t
       (setq lsp-ui-doc--string-eldoc nil)
-      (lsp-ui-doc--hide-frame))))
+      (lsp-ui-doc--hide-frame)))))
 
 (defun lsp-ui-doc--callback (hover bounds buffer)
   "Process the received documentation.
@@ -398,45 +423,29 @@ START-Y is the position y of the current window."
   (-some->> (find-file-noselect filename)
             (set-window-buffer (lsp-ui-doc--get-parent :window))))
 
-(defun lsp-ui-doc--put-click (bounds fn)
+(defun lsp-ui-doc--put-click (start end fn)
   "Add text properties on text to make it clickable.
 The text delimiters are BOUNDS.
 FN is the function to call on click."
   (let ((map (make-sparse-keymap)))
     (define-key map [down-mouse-1] fn)
-    (put-text-property (car bounds) (cdr bounds) 'keymap map)
-    (put-text-property (car bounds) (cdr bounds) 'mouse-face
+    (put-text-property start end 'keymap map)
+    (put-text-property start end 'mouse-face
                        (list :inherit 'lsp-ui-doc-url
                              :box (list :line-width -1
                                         :color (face-foreground 'lsp-ui-doc-url))))
-    (add-face-text-property (car bounds) (cdr bounds) 'lsp-ui-doc-url)))
+    (add-face-text-property start end 'lsp-ui-doc-url)))
 
 (defun lsp-ui-doc--make-clickable-link ()
   "Find paths and urls in the buffer and make them clickable."
   (goto-char (point-min))
   (save-excursion
-    (while (not (eobp))
-      ;;; TODO:
-      ;;;  Search path in the whole buffer.
-      ;;;  For now, it searches only on beginning of lines.
-      (-when-let* ((filename (thing-at-point 'filename))
-                   (path (if (file-readable-p filename) filename
-                           (let ((full (concat (lsp-ui-doc--get-parent :workspace-root)
-                                               filename)))
-                             (and (file-readable-p full)
-                                  full)))))
-        (lsp-ui-doc--put-click (or (bounds-of-thing-at-point 'filename)
-                                   (bounds-of-thing-at-point 'url))
-                               (lambda () (interactive)
-                                 (lsp-ui-doc--visit-file path))))
-      (forward-line 1))
     (goto-char (point-min))
-    (condition-case nil
-        (while (search-forward-regexp "http[s]?://")
-          (lsp-ui-doc--put-click (or (thing-at-point-bounds-of-url-at-point)
-                                     (bounds-of-thing-at-point 'filename))
-                                 'browse-url-at-mouse))
-      (search-failed nil))))
+    (let (case-fold-search)
+      (while (re-search-forward goto-address-url-regexp nil t)
+        (goto-char (1+ (match-end 0)))
+        (lsp-ui-doc--put-click (match-beginning 0) (match-end 0)
+                               'browse-url-at-mouse)))))
 
 (defun lsp-ui-doc--render-buffer (string symbol)
   "Set the buffer with STRING."

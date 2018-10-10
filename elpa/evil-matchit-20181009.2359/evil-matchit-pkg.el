@@ -1,4 +1,4 @@
-(define-package "evil-matchit" "20180919.957" "Vim matchit ported to Evil"
+(define-package "evil-matchit" "20181009.2359" "Vim matchit ported to Evil"
   '((evil "1.0.7"))
   :keywords
   '("matchit" "vim" "evil")

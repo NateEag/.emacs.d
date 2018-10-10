@@ -307,7 +307,7 @@
 	    ((:url . "https://github.com/mgalgs/diffview-mode")
 	     (:keywords "convenience" "diff"))])
  (dired-du .
-	   [(0 5)
+	   [(0 5 1)
 	    ((emacs
 	      (24 4))
 	     (cl-lib
@@ -384,7 +384,7 @@
 	 ((emacs
 	   (26 1))
 	  (jsonrpc
-	   (1 0 0)))
+	   (1 0 6)))
 	 "Client for Language Server Protocol (LSP) servers" tar
 	 ((:keywords "convenience" "languages")
 	  (:url . "https://github.com/joaotavora/eglot"))])
@@ -475,6 +475,13 @@
 	   "Color unbalanced parentheses and parentheses inconsistent with indentation" single
 	   ((:url . "http://elpa.gnu.org/packages/flylisp.html")
 	    (:keywords))])
+ (fountain-mode .
+		[(2 6 0)
+		 ((emacs
+		   (24 5)))
+		 "Major mode for screenwriting in Fountain markup" single
+		 ((:url . "http://elpa.gnu.org/packages/fountain-mode.html")
+		  (:keywords "wp" "text"))])
  (frame-tabs .
 	     [(1 1)
 	      nil "show buffer tabs in side window" single
@@ -520,7 +527,7 @@
 		 ((:keywords "gnome" "c" "coding style")
 		  (:url . "http://elpa.gnu.org/packages/gnome-c-style.html"))])
  (gnorb .
-	[(1 5 5)
+	[(1 5 7)
 	 ((cl-lib
 	   (0 5)))
 	 "Glue code between Gnus, Org, and BBDB" tar
@@ -1038,7 +1045,7 @@
 	      ((:url . "http://elpa.gnu.org/packages/smart-yank.html")
 	       (:keywords "convenience"))])
  (sml-mode .
-	   [(6 8)
+	   [(6 9)
 	    ((emacs
 	      (24))
 	     (cl-lib

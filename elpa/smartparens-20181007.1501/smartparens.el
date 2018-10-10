@@ -195,21 +195,31 @@ The output of this function can be used in bug reports."
                            "Evil"
                            "Vanilla"
                            ))))
-  (kill-new
-   (format "- `smartparens` version: %s
+  (let ((text (format "- `smartparens` version: %s
 - Active `major-mode`: `%s`
 - Smartparens strict mode: %s
 - Emacs version (`M-x emacs-version`): %s
 - Starterkit/Distribution: %s
 - OS: %s"
-           (--if-let (cadr (assoc 'smartparens package-alist))
-               (package-version-join (package-desc-version it))
-             "<Please specify manually>")
-           (symbol-name major-mode)
-           (bound-and-true-p smartparens-strict-mode)
-           (replace-regexp-in-string "\n" "" (emacs-version))
-           starterkit
-           (symbol-name system-type))))
+                      (--if-let (cadr (assoc 'smartparens package-alist))
+                          (package-version-join (package-desc-version it))
+                        "<Please specify manually>")
+                      (symbol-name major-mode)
+                      (bound-and-true-p smartparens-strict-mode)
+                      (replace-regexp-in-string "\n" "" (emacs-version))
+                      starterkit
+                      (symbol-name system-type))))
+    (pop-to-buffer
+     (with-current-buffer (get-buffer-create "*sp-describe-system*")
+       (erase-buffer)
+       (insert "The content of the buffer underneath the line was
+copied to your clipboard.  You can also edit it in this buffer
+and then copy the results manually.
+------------------------------------------------
+")
+       (insert text)
+       (current-buffer)))
+    (kill-new text)))
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -608,6 +618,14 @@ Symbol is defined as a chunk of text recognized by
                                              haml-mode
                                              )
   "List of modes that should not reindent after kill."
+  :type '(repeat symbol)
+  :group 'smartparens)
+
+(defcustom sp-no-reindent-after-kill-indent-line-functions
+  '(
+    insert-tab
+    )
+  "List of `indent-line-function's that should not reindent after kill."
   :type '(repeat symbol)
   :group 'smartparens)
 
@@ -6564,7 +6582,9 @@ Note: prefix argument is shown after the example in
       ;; less whitespace than there actually is because the indent
       ;; might further eat some up
       (indent-according-to-mode)
-    (unless (memq major-mode sp-no-reindent-after-kill-modes)
+    (unless (or (memq major-mode sp-no-reindent-after-kill-modes)
+                (memq indent-line-function
+                      sp-no-reindent-after-kill-indent-line-functions))
       (save-excursion
         (sp--indent-region (line-beginning-position) (line-end-position)))
       (when (> (save-excursion
@@ -7734,7 +7754,9 @@ represent a valid object in a buffer!"
           (let ((b (bounds-of-thing-at-point 'line)))
             (delete-region (car b) (cdr b))))
         (setq indent-from (point)))
-      (unless (memq major-mode sp-no-reindent-after-kill-modes)
+      (unless (or (memq major-mode sp-no-reindent-after-kill-modes)
+                  (memq indent-line-function
+                        sp-no-reindent-after-kill-indent-line-functions))
         (sp--keep-indentation
           (sp--indent-region indent-from indent-to))))))
 

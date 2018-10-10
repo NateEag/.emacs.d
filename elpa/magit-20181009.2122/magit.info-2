@@ -2633,8 +2633,8 @@ Appendix F Variable Index
 * magit-repository-directories:          Status Buffer.       (line  30)
 * magit-repository-directories-depth:    Status Buffer.       (line  40)
 * magit-revision-insert-related-refs:    Revision Buffer.     (line   6)
-* magit-revision-show-gravatar:          Revision Buffer.     (line  10)
-* magit-revision-use-hash-sections:      Revision Buffer.     (line  26)
+* magit-revision-show-gravatar:          Revision Buffer.     (line  19)
+* magit-revision-use-hash-sections:      Revision Buffer.     (line  35)
 * magit-root-section:                    Matching Sections.   (line  87)
 * magit-save-repository-buffers:         Automatic Saving of File-Visiting Buffers.
                                                               (line  13)

@@ -311,10 +311,18 @@ subject to option `magit-revision-insert-related-refs'."
   :type 'string)
 
 (defcustom magit-revision-insert-related-refs t
-  "Whether to show related refs in revision buffers."
+  "Whether to show related branches in revision buffers
+
+`nil'   Don't show any related branches.
+`t'     Show related local branches.
+`all'   Show related local and remote branches.
+`mixed' Show all containing branches and local merged branches."
   :package-version '(magit . "2.1.0")
   :group 'magit-revision
-  :type 'boolean)
+  :type '(choice (const :tag "don't" nil)
+                 (const :tag "local only" t)
+                 (const :tag "all related" all)
+                 (const :tag "all containing, local merged" mixed)))
 
 (defcustom magit-revision-use-hash-sections 'quicker
   "Whether to turn hashes inside the commit message into sections.
@@ -1163,6 +1171,15 @@ instead."
                      (car (magit-diff-arguments t)))
       (not (equal "-U0" it))
     t))
+
+(defun magit-diff-ignore-any-space-p ()
+  (let ((args (car (magit-diff-arguments t))))
+    (--any-p (member it args)
+             '("--ignore-cr-at-eol"
+               "--ignore-space-at-eol"
+               "--ignore-space-change" "-b"
+               "--ignore-all-space" "-w"
+               "--ignore-blank-space"))))
 
 (defun magit-diff-toggle-refine-hunk (&optional style)
   "Turn diff-hunk refining on or off.
@@ -2130,32 +2147,12 @@ or a ref which is not a branch, then it inserts nothing."
               (insert "Parent:     ")
               (insert (propertize hash 'face 'magit-hash))
               (insert " " msg "\n")))))
-      (when-let ((merged (magit-list-merged-branches rev)))
-        (insert "Merged:    ")
-        (let (branch)
-          (while (and (< (+ (- (point) (line-beginning-position))
-                            (length (car merged)) 9)
-                         (window-width))
-                      (setq branch (pop merged)))
-            (insert ?\s)
-            (magit-insert-section (branch branch)
-              (insert (propertize branch 'face 'magit-branch-local)))))
-        (when merged
-          (insert (format " (%s more)" (length merged))))
-        (insert ?\n))
-      (when-let ((containing (magit-list-containing-branches rev)))
-        (insert "Containing:")
-        (let (branch)
-          (while (and (< (+ (- (point) (line-beginning-position))
-                            (length (car containing)) 9)
-                         (window-width))
-                      (setq branch (pop containing)))
-            (insert ?\s)
-            (magit-insert-section (branch branch)
-              (insert (propertize branch 'face 'magit-branch-local)))))
-        (when containing
-          (insert (format " (%s more)" (length containing))))
-        (insert ?\n))
+      (magit--insert-related-refs
+       rev "--merged" "Merged"
+       (eq magit-revision-insert-related-refs 'all))
+      (magit--insert-related-refs
+       rev "--contains" "Contained"
+       (eq magit-revision-insert-related-refs '(all mixed)))
       (when-let ((follows (magit-get-current-tag rev t)))
         (let ((tag (car  follows))
               (cnt (cadr follows)))
@@ -2173,6 +2170,21 @@ or a ref which is not a branch, then it inserts nothing."
                             (propertize (number-to-string cnt)
                                         'face 'magit-tag))))))
       (insert ?\n))))
+
+(defun magit--insert-related-refs (rev arg title remote)
+  (when-let ((refs (magit-list-related-branches arg rev (and remote "-a"))))
+    (insert title ":" (make-string (- 10 (length title)) ?\s))
+    (dolist (branch refs)
+      (if (<= (+ (current-column) 1 (length branch))
+              (window-width))
+          (insert ?\s)
+        (insert ?\n (make-string 12 ?\s)))
+      (magit-insert-section (branch branch)
+        (insert (propertize branch 'face
+                            (if (string-prefix-p "remotes/" branch)
+                                'magit-branch-remote
+                              'magit-branch-local)))))
+    (insert ?\n)))
 
 (defun magit-insert-revision-gravatars (rev beg)
   (when (and magit-revision-show-gravatars

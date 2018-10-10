@@ -716,10 +716,31 @@ See info node `(magit)Debugging Tools' for more information."
                 ,@(cl-mapcan
                    (lambda (dir) (list "-L" dir))
                    (delete-dups
-                    (mapcar (lambda (lib)
-                              (file-name-directory (locate-library lib)))
-                            '("magit" "magit-popup" "with-editor"
-                              "git-commit" "dash" "ghub"))))
+                    (cl-mapcan
+                     (lambda (lib)
+                       (let ((path (locate-library lib)))
+                         (cond
+                          (path
+                           (list (file-name-directory path)))
+                          ((not (member lib '("lv" "transient")))
+                           (error "Cannot find mandatory dependency %s" lib)))))
+                     '(;; Like `LOAD_PATH' in `default.mk'.
+                       "dash"
+                       "ghub"
+                       "graphql"
+                       "lv"
+                       "magit-popup"
+                       "transient"
+                       "treepy"
+                       "with-editor"
+                       ;; Obviously `magit' itself is needed too.
+                       "magit"
+                       ;; While this is part of the Magit repository,
+                       ;; it is distributed as a separate package.
+                       "git-commit"
+                       ;; Even though `async' is a dependency of the
+                       ;; `magit' package, it is not required here.
+                       ))))
                 ;; Avoid Emacs bug#16406 by using full path.
                 "-l" ,(file-name-sans-extension (locate-library "magit")))
               " ")))
@@ -878,6 +899,31 @@ and https://github.com/magit/magit/issues/2295."
                   (file (match-string 2 line)))
               (when (equal state "U")
                 (push (expand-file-name file directory) files)))))))))
+
+(when (< emacs-major-version 27)
+  (defun vc-git--call@bug21559 (fn buffer command &rest args)
+    "Backport https://debbugs.gnu.org/cgi/bugreport.cgi?bug=21559."
+    (let ((process-environment process-environment))
+      (when revert-buffer-in-progress-p
+        (push "GIT_OPTIONAL_LOCKS=0" process-environment))
+      (apply fn buffer command args)))
+  (advice-add 'vc-git--call :around 'vc-git--call@bug21559)
+
+  (defun vc-git-command@bug21559
+      (fn buffer okstatus file-or-list &rest flags)
+    "Backport https://debbugs.gnu.org/cgi/bugreport.cgi?bug=21559."
+    (let ((process-environment process-environment))
+      (when revert-buffer-in-progress-p
+        (push "GIT_OPTIONAL_LOCKS=0" process-environment))
+      (apply fn buffer okstatus file-or-list flags)))
+  (advice-add 'vc-git-command :around 'vc-git-command@bug21559)
+
+  (defun auto-revert-handler@bug21559 (fn)
+    "Backport https://debbugs.gnu.org/cgi/bugreport.cgi?bug=21559."
+    (let ((revert-buffer-in-progress-p t))
+      (funcall fn)))
+  (advice-add 'auto-revert-handler :around 'auto-revert-handler@bug21559)
+  )
 
 ;; `completion-pcm--all-completions' reverses the completion list.  To
 ;; preserve the order of our pre-sorted completions, we'll temporarily

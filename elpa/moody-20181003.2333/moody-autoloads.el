@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "moody" "moody.el" (23400 19255 0 0))
+;;;### (autoloads nil "moody" "moody.el" (23486 20111 0 0))
 ;;; Generated autoloads from moody.el
 
 (autoload 'moody-replace-mode-line-buffer-identification "moody" "\

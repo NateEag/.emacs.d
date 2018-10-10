@@ -6,7 +6,7 @@
 ;; Homepage: https://github.com/tarsius/moody
 
 ;; Package-Requires: ((emacs "25.3"))
-;; Package-Version: 20180403.1249
+;; Package-Version: 20181003.2333
 
 ;; This file is not part of GNU Emacs.
 
@@ -45,9 +45,9 @@
 ;;   that `:underline' and `:overline' are the same color or are
 ;;   both `undefined'.  If defined, then the line color should be
 ;;   different from the `:background' colors of both `mode-line'
-;;   and `default'.  Do the same for `mode-line-inactive'.  The
-;;   line colors of `mode-line' and `mode-line-inactive' do not
-;;   have to be identical.  For example:
+;;   and `default'.  The same rules apply to `mode-line-inactive'.
+;;   The line colors of `mode-line' and `mode-line-inactive' do
+;;   not necessarily have to be identical.  For example:
 ;;
 ;;     (use-package solarized-theme
 ;;       :config
@@ -69,11 +69,13 @@
 ;;       (moody-replace-vc-mode))
 
 ;; * Such replacement functions are defines as commands, making it
-;;   quicker to try them out.
+;;   quicker to try them out without having to add anything to your
+;;   init file.
 
-;; * To undo a replacement use the optional REVERSE argument of the
-;;   replacement function.  When calling it interactively, then use
-;;   a prefix argument to do so.
+;; * To undo the call to a `moody-replace-*' function, call the same
+;;   function with t as the value of the optional REVERSE argument.
+;;   You can accomplish the same by interactively calling such a
+;;   function with a prefix argument to do so.
 
 ;;; Code:
 
@@ -231,7 +233,7 @@ not specified, then faces based on `default', `mode-line' and
 
 ;;;; sml/mode-line-buffer-identification
 
-(defvar sml/mode-line-buffer-identification) ; define in `smart-mode-line.el'
+(defvar sml/mode-line-buffer-identification) ; defined in `smart-mode-line.el'
 
 (defvar moody-sml/mode-line-buffer-identification
   '(:eval (moody-tab
@@ -276,8 +278,6 @@ not specified, then faces based on `default', `mode-line' and
 ;;; Active Window
 ;;
 ;; Inspired by, but not identical to, code in `powerline'.
-;; In particular we don't add anything to `focus-out-hook'
-;; because that turned out to be counterproductive.
 
 (defvar moody--active-window (frame-selected-window))
 
@@ -291,7 +291,8 @@ to the command loop."
 (defun moody--set-active-window (&rest _)
   (let ((win (frame-selected-window)))
     (unless (minibuffer-window-active-p win)
-      (setq moody--active-window win))))
+      (setq moody--active-window win)
+      (force-mode-line-update))))
 
 (add-hook 'after-make-frame-functions       'moody--set-active-window)
 (add-hook 'window-configuration-change-hook 'moody--set-active-window)
@@ -299,6 +300,12 @@ to the command loop."
 (advice-add 'select-window :after           'moody--set-active-window)
 (advice-add 'select-frame :after            'moody--set-active-window)
 (advice-add 'delete-frame :after            'moody--set-active-window)
+
+(defun moody--unset-active-window (&rest _)
+  (setq moody--active-window nil)
+  (force-mode-line-update))
+
+(add-hook 'focus-out-hook 'moody--unset-active-window)
 
 ;;; Kludges
 

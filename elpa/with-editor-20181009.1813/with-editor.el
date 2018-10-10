@@ -173,7 +173,7 @@ please see https://github.com/magit/magit/wiki/Emacsclient."))))
 
 (defcustom with-editor-sleeping-editor "\
 sh -c '\
-echo \"WITH-EDITOR: $$ OPEN $0\"; \
+echo \"WITH-EDITOR: $$ OPEN $0 IN $(pwd)\"; \
 sleep 604800 & sleep=$!; \
 trap \"kill $sleep; exit 0\" USR1; \
 trap \"kill $sleep; exit 1\" USR2; \
@@ -202,15 +202,19 @@ with \"bash\" (and install that), or you can use the older, less
 performant implementation:
 
   \"sh -c '\\
-  echo \\\"WITH-EDITOR: $$ OPEN $0\\\"; \\
+  echo \\\"WITH-EDITOR: $$ OPEN $0 IN $(pwd)\\\"; \\
   trap \\\"exit 0\\\" USR1; \\
   trap \\\"exit 1\" USR2; \\
   while true; do sleep 1; done'\"
 
-Note that this leads to a delay of up to a second.  The delay can
-be shortened by replacing \"sleep 1\" with \"sleep 0.01\", or if your
-implementation does not support floats, then by using `nanosleep'
-instead."
+Note that the unit seperator character () right after the file
+name ($0) is required.
+
+Also note that using this alternative implementation leads to a
+delay of up to a second.  The delay can be shortened by replacing
+\"sleep 1\" with \"sleep 0.01\", or if your implementation does
+not support floats, then by using \"nanosleep\" instead."
+  :package-version '(with-editor . "2.8.0")
   :group 'with-editor
   :type 'string)
 
@@ -292,7 +296,7 @@ like so:
   eval \"$EDITOR\" file
 
 And some tools that do not handle $EDITOR properly also break."
-  :package-version '(with-editor . "2.8.0")
+  :package-version '(with-editor . "2.7.1")
   :group 'with-editor
   :type 'boolean)
 
@@ -328,11 +332,13 @@ And some tools that do not handle $EDITOR properly also break."
   (when (run-hook-with-args-until-failure
          'with-editor-finish-query-functions force)
     (let ((with-editor-post-finish-hook-1
-           (ignore-errors (delq t with-editor-post-finish-hook))))
+           (ignore-errors (delq t with-editor-post-finish-hook)))
+          (dir default-directory))
       (run-hooks 'with-editor-pre-finish-hook)
       (with-editor-return nil)
       (accept-process-output nil 0.1)
-      (run-hooks 'with-editor-post-finish-hook-1))))
+      (let ((default-directory dir))
+        (run-hooks 'with-editor-post-finish-hook-1)))))
 
 (defun with-editor-cancel (force)
   "Cancel the current edit session."
@@ -344,11 +350,13 @@ And some tools that do not handle $EDITOR properly also break."
         (setq message (funcall message)))
       (let ((with-editor-post-cancel-hook-1
              (ignore-errors (delq t with-editor-post-cancel-hook)))
-            (with-editor-cancel-alist nil))
+            (with-editor-cancel-alist nil)
+            (dir default-directory))
         (run-hooks 'with-editor-pre-cancel-hook)
         (with-editor-return t)
         (accept-process-output nil 0.1)
-        (run-hooks 'with-editor-post-cancel-hook-1))
+        (let ((default-directory dir))
+          (run-hooks 'with-editor-post-cancel-hook-1)))
       (message (or message "Canceled by user")))))
 
 (defun with-editor-return (cancel)
@@ -552,14 +560,17 @@ which may or may not insert the text into the PROCESS' buffer."
 
 (defun with-editor-output-filter (string)
   (save-match-data
-    (if (string-match "^WITH-EDITOR: \\([0-9]+\\) OPEN \\(.+?\\)\r?$" string)
+    (if (string-match "^WITH-EDITOR: \
+\\([0-9]+\\) OPEN \\([^]+?\\)\
+\\(?: IN \\([^\r]+?\\)\\)?\r?$" string)
         (let ((pid  (match-string 1 string))
-              (file (match-string 2 string)))
-          (with-current-buffer
-              (find-file-noselect
-               (if (and (file-name-absolute-p file) default-directory)
-                   (concat (file-remote-p default-directory) file)
-                 (expand-file-name file)))
+              (file (match-string 2 string))
+              (dir  (match-string 3 string)))
+          (unless (file-name-absolute-p file)
+            (setq file (expand-file-name file dir)))
+          (when default-directory
+            (setq file (concat (file-remote-p default-directory) file)))
+          (with-current-buffer (find-file-noselect file)
             (with-editor-mode 1)
             (setq with-editor--pid pid)
             (run-hooks 'with-editor-filter-visit-hook)

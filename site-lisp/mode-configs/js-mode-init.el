@@ -25,6 +25,8 @@
     ;; line-broken, because ES 5 string syntax).
     (aggressive-fill-paragraph-mode -1))
 
+  (setq-local js-indent-first-init 'dynamic)
+
   (setq ac-sources '(ac-source-yasnippet))
 
   (tern-mode t))

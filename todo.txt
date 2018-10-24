@@ -168,15 +168,6 @@
   substitute-command-keys. Sample usage:
   (substitute-command-keys "\\{evil-inner-text-objects-map}")
 
-- js2-mode indents constructs like this:
-
-  var foo = {
-          bar: 'baz'
-      },
-      biz = 12;
-
-  incorrectly (or at least not how I like it to). Figure out why, fix it.
-
 - Make aggressive-fill-paragraph-mode work better in js2-mode. Right now, if you
   fill a comment of the form
 

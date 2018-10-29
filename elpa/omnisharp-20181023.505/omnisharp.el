@@ -59,6 +59,7 @@
 (require 'omnisharp-solution-actions)
 (require 'omnisharp-format-actions)
 (require 'omnisharp-server-installation)
+(require 'omnisharp-unit-test-actions)
 
 ;;; Code:
 ;;;###autoload
@@ -230,8 +231,7 @@ finished loading the solution."
      ["Find usages with ido" omnisharp-find-usages-with-ido]
      ["Find implementations" omnisharp-find-implementations]
      ["Find implementations with ido" omnisharp-find-implementations-with-ido]
-     ["Rename" omnisharp-rename]
-     ["Rename interactively" omnisharp-rename-interactively])
+     ["Rename" omnisharp-rename])
 
     ("Solution actions"
      ["Start syntax check" flycheck-mode]
@@ -615,6 +615,10 @@ cursor at that location"
 ;; nunit-console.exe on windows uses this format
 (add-to-list 'compilation-error-regexp-alist
              '(" in \\(.+\\):line \\([0-9]+\\)" 1 2))
+
+;; dotnet test with xunit project
+;; [xUnit.net 00:00:00.6080370]         /TestProject/UnitTest1.cs(15,0): at TestProject.UnitTest1.Test1()
+(add-to-list 'compilation-error-regexp-alist '("\\[xUnit.net .*\\] +\\(.*\\)(\\([[:digit:]]+\\),\\([[:digit:]]+\\))" 1 2 3))
 
 (provide 'omnisharp)
 

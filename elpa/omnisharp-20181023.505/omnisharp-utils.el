@@ -295,12 +295,20 @@ changes to be applied to that buffer instead."
       (accept-process-output process 0.1)))
   request-id)
 
+(defun omnisharp-builtin-completing-read (&rest args)
+  "Default completing read. See `omnisharp-completing-read-function'"
+  ;; e.g. ivy and helm don't need a case here, because they set
+  ;; `completing-read-function' in their mode
+  (let ((completing-read-variant (cond ((bound-and-true-p ido-mode) 'ido-completing-read)
+                                       (t 'completing-read))))
+    (apply completing-read-variant args)))
+
 (defun omnisharp--completing-read (&rest args)
   "Mockable wrapper for completing-read.
 The problem with mocking completing-read directly is that
 sometimes the mocks are not removed when an error occurs. This renders
 the developer's emacs unusable."
-  (apply 'completing-read args))
+    (apply omnisharp-completing-read-function args))
 
 (defun omnisharp--read-string (&rest args)
   "Mockable wrapper for read-string, see
@@ -367,5 +375,23 @@ for starting a server based on the current buffer."
 (defun omnisharp--message-at-point (format-string &rest args)
   "Displays passed text at point using popup-tip function."
   (popup-tip (apply 'format (cons format-string args))))
+
+(defun omnisharp--truncate-symbol-name (name trunc-length)
+  "This attempts to truncate a fully-qualified dotnet symbol name to given length.
+Basically, in case NAME is longer than TRUNC-LENGTH it will replace text in the middle
+with ellipsis (...) so the result would fit into TRUNC-LENGTH.
+
+It assumes the tail of NAME is more important than the beginning as that usually
+has namespaces and parent class name."
+
+  (if (< (length name) trunc-length)
+      name
+    (let* ((trunc-length (- trunc-length 3)) ; take ellipsis into account
+           (trunc-1/4th (/ trunc-length 4))
+           (head-len (max 0 (- trunc-length (* trunc-1/4th 3))))
+           (tail-len (max 0 (- trunc-length head-len)))
+           (head (substring name 0 head-len))
+           (tail (substring name (- (length name) tail-len))))
+      (concat head "..." tail))))
 
 (provide 'omnisharp-utils)

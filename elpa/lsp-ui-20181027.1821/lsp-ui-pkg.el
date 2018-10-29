@@ -1,4 +1,4 @@
-(define-package "lsp-ui" "20181007.2219" "UI modules for lsp-mode"
+(define-package "lsp-ui" "20181027.1821" "UI modules for lsp-mode"
   '((emacs "25.1")
     (dash "2.14")
     (dash-functional "1.2.0")
@@ -8,9 +8,9 @@
   :keywords
   '("lsp")
   :authors
-  '(("Tobias Pisani" . "topisani@hamsterpoison.com"))
+  '(("Sebastien Chapuis <sebastien@chapu.is>, Fangrui Song" . "i@maskray.me"))
   :maintainer
-  '("Tobias Pisani" . "topisani@hamsterpoison.com")
+  '("Sebastien Chapuis <sebastien@chapu.is>, Fangrui Song" . "i@maskray.me")
   :url "https://github.com/emacs-lsp/lsp-ui")
 ;; Local Variables:
 ;; no-byte-compile: t

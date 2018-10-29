@@ -1,30 +1,30 @@
 ;;; lsp-ui.el --- UI modules for lsp-mode            -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2017 Tobias Pisani
+;; Copyright (C) 2018 Sebastien Chapuis, Fangrui Song
 
-;; Author:  Tobias Pisani <topisani@hamsterpoison.com>
+;; Author: Sebastien Chapuis <sebastien@chapu.is>, Fangrui Song <i@maskray.me>
 ;; Keywords: lsp
 ;; URL: https://github.com/emacs-lsp/lsp-ui
 ;; Package-Requires: ((emacs "25.1") (dash "2.14") (dash-functional "1.2.0") (flycheck "31") (lsp-mode "4.2") (markdown-mode "2.3"))
 ;; Version: 0.0.1
 
-;; Permission is hereby granted, free of charge, to any person obtaining a copy
-;; of this software and associated documentation files (the "Software"), to deal
-;; in the Software without restriction, including without limitation the rights
-;; to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-;; copies of the Software, and to permit persons to whom the Software is
-;; furnished to do so, subject to the following conditions:
+;;; License
+;;
+;; This program is free software; you can redistribute it and/or modify
+;; it under the terms of the GNU General Public License as published by
+;; the Free Software Foundation; either version 3, or (at your option)
+;; any later version.
 
-;; The above copyright notice and this permission notice shall be included in
-;; all copies or substantial portions of the Software.
+;; This program is distributed in the hope that it will be useful,
+;; but WITHOUT ANY WARRANTY; without even the implied warranty of
+;; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+;; GNU General Public License for more details.
 
-;; THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-;; IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-;; FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-;; AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-;; LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-;; OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-;; SOFTWARE.
+;; You should have received a copy of the GNU General Public License
+;; along with this program; see the file COPYING.  If not, write to
+;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+;; Floor, Boston, MA 02110-1301, USA.
 
 ;;; Commentary:
 
@@ -112,26 +112,26 @@ Both should have the form (FILENAME LINE COLUMN)."
         (< (cadr x) (cadr y))
       (< (caddr x) (caddr y)))))
 
-(defun lsp-ui--reference-triples (filter-fn)
+(defun lsp-ui--reference-triples (extra)
   "Return references as a list of (FILENAME LINE COLUMN) triples."
   (let ((refs (lsp--send-request (lsp--make-request
                                   "textDocument/references"
-                                  (lsp--make-reference-params)))))
+                                  (append (lsp--text-document-position-params) extra)))))
     (sort
      (mapcar
       (lambda (ref)
         (-let* (((&hash "uri" uri "range" range) ref)
                 ((&hash "line" line "character" col) (gethash "start" range)))
           (list (lsp--uri-to-path uri) line col)))
-      (if filter-fn (--filter (funcall filter-fn it) refs) refs))
+      refs)
      #'lsp-ui--location<)))
 
 ;; TODO Make it efficient
-(defun lsp-ui-find-next-reference (&optional filter-fn)
+(defun lsp-ui-find-next-reference (&optional extra)
   "Find next reference of the symbol at point."
   (interactive)
   (let* ((cur (list buffer-file-name (lsp--cur-line) (lsp--cur-column)))
-         (refs (lsp-ui--reference-triples filter-fn))
+         (refs (lsp-ui--reference-triples extra))
          (idx -1)
          (res (-first (lambda (ref) (cl-incf idx) (lsp-ui--location< cur ref)) refs)))
     (if res
@@ -144,11 +144,11 @@ Both should have the form (FILENAME LINE COLUMN)."
       (cons 0 0))))
 
 ;; TODO Make it efficient
-(defun lsp-ui-find-prev-reference (&optional filter-fn)
+(defun lsp-ui-find-prev-reference (&optional extra)
   "Find previous reference of the symbol at point."
   (interactive)
   (let* ((cur (list buffer-file-name (lsp--cur-line) (lsp--cur-column)))
-         (refs (lsp-ui--reference-triples filter-fn))
+         (refs (lsp-ui--reference-triples extra))
          (idx -1)
          (res (-last (lambda (ref) (and (lsp-ui--location< ref cur) (cl-incf idx))) refs)))
     (if res

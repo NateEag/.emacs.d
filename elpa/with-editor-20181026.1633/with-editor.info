@@ -12,6 +12,7 @@ with-editor.texi.
      but WITHOUT ANY WARRANTY; without even the implied warranty of
      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
      General Public License for more details.
+
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * With-Editor: (with-editor). Using the Emacsclient as $EDITOR.
@@ -38,7 +39,7 @@ library is made available as a separate package.  It also defines some
 additional functionality which makes it useful even for end-users, who
 don’t use Magit or another package which uses it internally.
 
-This manual is for With-Editor version 2.7.4 (v2.7.4-2-g48e1b2d+1).
+This manual is for With-Editor version 2.7.4 (v2.7.4-5-gac6b2e3+1).
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -57,6 +58,7 @@ This manual is for With-Editor version 2.7.4 (v2.7.4-2-g48e1b2d+1).
 * Using the With-Editor package::
 * Using With-Editor as a library::
 * Debugging::
+* _::
 
 — The Detailed Node Listing —
 
@@ -283,10 +285,19 @@ package::.
      to call home to the current Emacs instance when they require that
      the user edits a file.
 
-     This is essentially done by establishing a local binding for
-     ‘process-environment’ and changing the value of the ‘$EDITOR’
-     environment variable in that scope.  This affects all asynchronous
-     processes started by forms (dynamically) inside BODY.
+     This is done by establishing a local binding for
+     ‘process-environment’ and changing the value of the ‘EDITOR’
+     environment variable in that scope.  This affects all
+     (asynchronous) processes started by forms (dynamically) inside
+     BODY.
+
+     If BODY begins with a literal string, then that variable is set
+     instead of ‘EDITOR’.
+
+ -- Macro: with-editor envvar &rest body
+
+     This macro is like ‘with-editor’ instead that the ENVVAR argument
+     is required and that it is evaluated at run-time.
 
  -- Function: with-editor-set-process-filter process filter
 
@@ -298,7 +309,7 @@ package::.
      NO-STANDARD-FILTER.  Then it calls FILTER.
 
 
-File: with-editor.info,  Node: Debugging,  Prev: Using With-Editor as a library,  Up: Top
+File: with-editor.info,  Node: Debugging,  Next: _,  Prev: Using With-Editor as a library,  Up: Top
 
 3 Debugging
 ***********
@@ -316,15 +327,22 @@ commit in Magit, then please open a new issue at
 about your Emacs installation.  Most importantly how did you install
 Emacs and what is the output of ‘M-x with-editor-debug RET’.
 
+
+File: with-editor.info,  Node: _,  Prev: Debugging,  Up: Top
+
+4 _ :ignore:
+************
+
 
 
 Tag Table:
-Node: Top772
-Node: Using the With-Editor package2534
-Node: Configuring With-Editor3120
-Node: Using With-Editor commands7669
-Node: Using With-Editor as a library10932
-Node: Debugging12628
+Node: Top773
+Node: Using the With-Editor package2541
+Node: Configuring With-Editor3127
+Node: Using With-Editor commands7676
+Node: Using With-Editor as a library10939
+Node: Debugging12902
+Node: _13769
 
 End Tag Table
 

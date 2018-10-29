@@ -1187,7 +1187,7 @@ See also `pdf-annot-add-markup-annotation'."
   (pdf-annot-add-markup-annotation list-of-edges 'underline color property-alist))
 
 (defun pdf-annot-add-strikeout-markup-annotation (list-of-edges
-                                                 &optional color property-alist)
+                                                  &optional color property-alist)
   "Add a new strike-out annotation in the selected window.
 
 See also `pdf-annot-add-markup-annotation'."
@@ -1195,7 +1195,7 @@ See also `pdf-annot-add-markup-annotation'."
   (pdf-annot-add-markup-annotation list-of-edges 'strike-out color property-alist))
 
 (defun pdf-annot-add-highlight-markup-annotation (list-of-edges
-                                                 &optional color property-alist)
+                                                  &optional color property-alist)
   "Add a new highlight annotation in the selected window.
 
 See also `pdf-annot-add-markup-annotation'."
@@ -1473,13 +1473,13 @@ annotation's contents and otherwise `text-mode'. "
               (pdf-annot-edit-contents-minor-mode 1)
               (current-buffer))))
     (with-current-buffer pdf-annot-edit-contents--buffer
-      (setq pdf-annot-edit-contents--annotation a)
-      (funcall pdf-annot-edit-contents-setup-function a)
       (let ((inhibit-read-only t))
         (erase-buffer)
         (save-excursion (insert (pdf-annot-get a 'contents)))
-        (set-buffer-modified-p nil)
-        (current-buffer)))))
+        (set-buffer-modified-p nil))
+      (setq pdf-annot-edit-contents--annotation a)
+      (funcall pdf-annot-edit-contents-setup-function a)
+      (current-buffer))))
 
 (defun pdf-annot-edit-contents (a)
   (select-window
@@ -1508,6 +1508,31 @@ annotation's contents and otherwise `text-mode'. "
   "Display action used when displaying the list buffer."
   :group 'pdf-annot
   :type display-buffer--action-custom-type)
+
+(defcustom pdf-annot-list-format
+  '((page . 3)
+    (type . 10)
+    (label . 24)
+    (date . 24))
+  "Annotation properties visible in the annotation list.
+
+It should be a list of \(PROPERTIZE. WIDTH\), where PROPERTY is a
+symbol naming one of supported properties to list and WIDTH its
+desired column-width.
+
+Currently supported properties are page, type, label, date and contents."
+  :type '(alist :key-type (symbol))
+  :options '((page (integer :value 3 :tag "Column Width"))
+             (type (integer :value 10 :tag "Column Width" ))
+             (label (integer :value 24 :tag "Column Width"))
+             (date (integer :value 24 :tag "Column Width"))
+             (contents (integer :value 56 :tag "Column Width")))
+  :group 'pdf-annot)
+
+(defcustom pdf-annot-list-highlight-type nil
+  "Whether to highlight \"Type\" column annotation list with annotation color."
+  :group 'pdf-annot
+  :type 'boolean)
 
 (defvar-local pdf-annot-list-buffer nil)
 
@@ -1555,37 +1580,70 @@ belong to the same page and A1 is displayed above/left of A2."
                                      pdf-annot-list-document-buffer)
                 'pdf-annot-compare-annotations)))
 
+(defun pdf-annot--make-entry-formatter (a)
+  (lambda (fmt)
+    (let ((entry-type (car fmt))
+          (entry-width (cdr fmt))
+          ;; Taken from css-mode.el
+          (contrasty-color
+           (lambda (name)
+             (if (> (color-distance name "black") 292485)
+                 "black" "white")))
+          (prune-newlines
+           (lambda (str)
+             (replace-regexp-in-string "\n" " " str t t))))
+      (cl-ecase entry-type
+        (date (pdf-annot-print-property a 'modified))
+        (page (pdf-annot-print-property a 'page))
+        (label (funcall prune-newlines
+                        (pdf-annot-print-property a 'label)))
+        (contents
+         (truncate-string-to-width
+          (funcall prune-newlines
+                   (pdf-annot-print-property a 'contents))
+          entry-width))
+        (type
+         (let ((color (pdf-annot-get a 'color))
+               (type (pdf-annot-print-property a 'type)))
+           (if pdf-annot-list-highlight-type
+               (propertize
+                type 'face
+                `(:background ,color
+                  :foreground ,(funcall contrasty-color color)))
+             type)))))))
+
 (defun pdf-annot-list-create-entry (a)
   "Create a `tabulated-list-entries' entry for annotation A."
   (list (pdf-annot-get-id a)
-        (vector
-         (pdf-annot-print-property a 'page)
-         (pdf-annot-print-property a 'type)
-         (replace-regexp-in-string
-          "\n" " "
-          (pdf-annot-print-property a 'label) t t)
-         (if (pdf-annot-get a 'modified)
-             (pdf-annot-print-property a 'modified)
-           (if (pdf-annot-get a 'created)
-               (pdf-annot-print-property a 'created)
-             "Unknown date")))))
+        (vconcat
+         (mapcar (pdf-annot--make-entry-formatter a)
+                 pdf-annot-list-format))))
 
 (define-derived-mode pdf-annot-list-mode tablist-mode "Annots"
-  (let ((page-sorter
-         (lambda (a b)
-           (< (string-to-number (aref (cadr a) 0))
-              (string-to-number (aref (cadr b) 0))))))
+  (let* ((page-sorter
+          (lambda (a b)
+            (< (string-to-number (aref (cadr a) 0))
+               (string-to-number (aref (cadr b) 0)))))
+         (format-generator
+          (lambda (format)
+            (let ((field (car format))
+                  (width (cdr format)))
+              (cl-case field
+                (page `("Pg." 3 ,page-sorter :read-only t :right-alight t))
+                (t (list
+                    (capitalize (symbol-name field))
+                    width t :read-only t)))))))
     (setq tabulated-list-entries 'pdf-annot-list-entries
-          tabulated-list-format (vector
-                                 `("Pg." 3 ,page-sorter :read-only t :right-align t)
-                                 `("Type" 10 t :read-only t)
-                                 `("Label" 24 t :read-only t)
-                                 '("Date" 24 t :read-only t))
+          tabulated-list-format (vconcat
+                                 (mapcar
+                                  format-generator
+                                  pdf-annot-list-format))
           tabulated-list-padding 2))
   (set-keymap-parent pdf-annot-list-mode-map tablist-mode-map)
   (use-local-map pdf-annot-list-mode-map)
-  (setq tablist-current-filter
-        `(not (== "Type" "link")))
+  (when (assq 'type pdf-annot-list-format)
+    (setq tablist-current-filter
+          `(not (== "Type" "link"))))
   (tabulated-list-init-header))
 
 (defun pdf-annot-list-annotations ()

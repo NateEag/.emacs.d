@@ -102,7 +102,7 @@ File: editorconfig.info,  Node: File Type,  Up: Supported properties
 1.2.1 File Type
 ---------------
 
-This plugin also has experimental supports for 'file_type_ext' and
+This plugin has experimental supports for 'file_type_ext' and
 'file_type_emacs', which specify "file types" for files.  As for Emacs,
 it means 'major-mode' can be set.
 
@@ -125,18 +125,21 @@ File: editorconfig.info,  Node: Customize,  Next: Testing,  Prev: Supported prop
 
 * Menu:
 
-* editorconfig-custom-hooks::
+* editorconfig-after-apply-functions::
+* editorconfig-hack-properties-functions::
 * editorconfig-indentation-alist::
 * editorconfig-exec-path::
 * editorconfig-get-properties-function::
 
 
-File: editorconfig.info,  Node: editorconfig-custom-hooks,  Next: editorconfig-indentation-alist,  Up: Customize
+File: editorconfig.info,  Node: editorconfig-after-apply-functions,  Next: editorconfig-hack-properties-functions,  Up: Customize
 
-1.3.1 'editorconfig-custom-hooks'
----------------------------------
+1.3.1 'editorconfig-after-apply-functions'
+------------------------------------------
 
-A list of custom hooks after loading common EditorConfig settings, where
+(Formerly 'editorconfig-custom-hooks')
+
+   A list of functions after loading common EditorConfig settings, where
 you can set some custom variables or overwrite existing properties.
 
    For example, 'web-mode' has several variables for indentation offset
@@ -144,15 +147,36 @@ size and EditorConfig sets them at once by 'indent_size'.  You may want
 to stop indenting only blocks of 'web-mode': it can be achieved by
 adding following to your init.el:
 
-(add-hook 'editorconfig-custom-hooks
+(add-hook 'editorconfig-after-apply-functions
   (lambda (hash) (setq web-mode-block-padding 0)))
 
    You can also define your own custom properties and enable them here.
 
 
-File: editorconfig.info,  Node: editorconfig-indentation-alist,  Next: editorconfig-exec-path,  Prev: editorconfig-custom-hooks,  Up: Customize
+File: editorconfig.info,  Node: editorconfig-hack-properties-functions,  Next: editorconfig-indentation-alist,  Prev: editorconfig-after-apply-functions,  Up: Customize
 
-1.3.2 'editorconfig-indentation-alist'
+1.3.2 'editorconfig-hack-properties-functions'
+----------------------------------------------
+
+A list of function to alter property values before applying them.
+
+   These functions will be run after loading ".editorconfig" files and
+before applying them to current buffer, so that you can alter some
+properties from ".editorconfig" before they take effect.
+
+   For example, Makefiles always use tab characters for indentation: you
+can overwrite "indent_style" property when current 'major-mode' is a
+'makefile-mode' with following code:
+
+(add-hook 'editorconfig-hack-properties-functions
+          '(lambda (props)
+             (when (derived-mode-p makefile-mode)
+               (puthash 'indent_style "tab" props))))
+
+
+File: editorconfig.info,  Node: editorconfig-indentation-alist,  Next: editorconfig-exec-path,  Prev: editorconfig-hack-properties-functions,  Up: Customize
+
+1.3.3 'editorconfig-indentation-alist'
 --------------------------------------
 
 Alist of indentation setting methods by modes.
@@ -172,7 +196,7 @@ variable.
 
 File: editorconfig.info,  Node: editorconfig-exec-path,  Next: editorconfig-get-properties-function,  Prev: editorconfig-indentation-alist,  Up: Customize
 
-1.3.3 'editorconfig-exec-path'
+1.3.4 'editorconfig-exec-path'
 ------------------------------
 
 String of 'editorconfig' executable name (command name or full path to
@@ -181,7 +205,7 @@ the executable).
 
 File: editorconfig.info,  Node: editorconfig-get-properties-function,  Prev: editorconfig-exec-path,  Up: Customize
 
-1.3.4 'editorconfig-get-properties-function'
+1.3.5 'editorconfig-get-properties-function'
 --------------------------------------------
 
 Function to use to get EditorConfig properties.
@@ -259,21 +283,23 @@ Node: Supported properties1613
 Ref: #supported-properties1769
 Node: File Type3113
 Ref: #file-type3218
-Node: Customize3848
-Ref: #customize3977
-Node: editorconfig-custom-hooks4120
-Ref: #editorconfig-custom-hooks4305
-Node: editorconfig-indentation-alist4855
-Ref: #editorconfig-indentation-alist5081
-Node: editorconfig-exec-path5636
-Ref: #editorconfig-exec-path5857
-Node: editorconfig-get-properties-function5946
-Ref: #editorconfig-get-properties-function6156
-Node: Testing7009
-Ref: #testing7150
-Node: Submitting Bugs and Feature Requests7257
-Ref: #submitting-bugs-and-feature-requests7454
-Node: License7596
-Ref: #license7719
+Node: Customize3843
+Ref: #customize3972
+Node: editorconfig-after-apply-functions4167
+Ref: #editorconfig-after-apply-functions4387
+Node: editorconfig-hack-properties-functions4986
+Ref: #editorconfig-hack-properties-functions5253
+Node: editorconfig-indentation-alist5878
+Ref: #editorconfig-indentation-alist6117
+Node: editorconfig-exec-path6672
+Ref: #editorconfig-exec-path6893
+Node: editorconfig-get-properties-function6982
+Ref: #editorconfig-get-properties-function7192
+Node: Testing8045
+Ref: #testing8186
+Node: Submitting Bugs and Feature Requests8293
+Ref: #submitting-bugs-and-feature-requests8490
+Node: License8632
+Ref: #license8755
 
 End Tag Table

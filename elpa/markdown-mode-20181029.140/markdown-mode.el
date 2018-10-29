@@ -7,7 +7,7 @@
 ;; Maintainer: Jason R. Blevins <jblevins@xbeta.org>
 ;; Created: May 24, 2007
 ;; Version: 2.4-dev
-;; Package-Version: 20180904.1601
+;; Package-Version: 20181029.140
 ;; Package-Requires: ((emacs "24.4") (cl-lib "0.5"))
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: https://jblevins.org/projects/markdown-mode/
@@ -4818,6 +4818,20 @@ text to kill ring), and list items."
      (t
       (user-error "Nothing found at point to kill")))))
 
+(defun markdown-kill-outline ()
+  "Kill visible heading and add it to `kill-ring'."
+  (interactive)
+  (save-excursion
+    (markdown-outline-previous)
+    (kill-region (point) (progn (markdown-outline-next) (point)))))
+
+(defun markdown-kill-block ()
+  "Kill visible code block, list item, or blockquote and add it to `kill-ring'."
+  (interactive)
+  (save-excursion
+    (markdown-backward-block)
+    (kill-region (point) (progn (markdown-forward-block) (point)))))
+
 
 ;;; Indentation ====================================================================
 
@@ -5284,6 +5298,7 @@ Assumes match data is available for `markdown-regex-italic'."
     (define-key map (kbd "P") 'markdown-pre-region)
     (define-key map (kbd "q") 'markdown-insert-blockquote)
     (define-key map (kbd "s") 'markdown-insert-strike-through)
+    (define-key map (kbd "t") 'markdown-insert-table)
     (define-key map (kbd "Q") 'markdown-blockquote-region)
     (define-key map (kbd "w") 'markdown-insert-wiki-link)
     (define-key map (kbd "-") 'markdown-insert-hr)
@@ -5529,6 +5544,7 @@ See also `markdown-mode-map'.")
       :enable (markdown-table-at-point-p)]
      ["Insert Column" markdown-table-insert-column
       :enable (markdown-table-at-point-p)]
+     ["Insert Table" markdown-insert-table]
      "--"
      ["Convert Region to Table" markdown-table-convert-region]
      ["Sort Table Lines" markdown-table-sort-lines
@@ -9335,6 +9351,49 @@ spaces, or alternatively a TAB should be used as the separator."
       (while (re-search-forward re end t) (replace-match "| " t t)))
     (goto-char begin)
     (markdown-table-align)))
+
+(defun markdown-insert-table ()
+  "Insert a new table."
+  (interactive)
+  (let ((table-column (string-to-number (read-string "column size: ")))
+        (table-row (string-to-number (read-string "row size: ")))
+        (align-type (read-string "align type (left, right, center (default)): "))
+        (content "")
+        (align-counter 1)
+        (align "|")
+        (header-counter 1)
+        (header "|")
+        (row-counter 1)
+        (column-counter 1))
+
+    (cond ((equal align-type "left") (setq content ":---"))
+          ((equal align-type "right") (setq content "---:"))
+          ((equal align-type "center") (setq content "---"))
+          (t (setq content "---")))
+
+    (while (<= align-counter table-column)
+      (setq align (concat align content "|"))
+      (setq align-counter (1+ align-counter)))
+    (setq align (concat align "\n"))
+
+    (while (<= header-counter table-column)
+      (setq header (concat header (read-string (concat "header " (number-to-string header-counter) ": ")) "|"))
+      (setq header-counter (1+ header-counter)))
+    (setq header (concat header "\n"))
+
+    (insert header)
+    (insert align)
+
+    (while (<= row-counter table-row)
+      (setq column-counter 1)
+      (while (<= column-counter (1+ table-column))
+        (insert "|")
+        (setq column-counter (1+ column-counter)))
+      (if (< row-counter table-row)
+          (insert "\n"))
+      (setq row-counter (1+ row-counter)))
+  (markdown-table-align)
+  ))
 
 
 ;;; ElDoc Support

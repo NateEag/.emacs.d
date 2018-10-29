@@ -79,9 +79,18 @@
   (with-no-warnings
     (eieio-object-name-string obj)))
 
-;; shields
+;; SHIELDS
+
 (defvar pm-allow-after-change-hook t)
+
 (defvar pm-allow-post-command-hook t)
+(defun polymode-disable-post-command ()
+  (when polymode-mode
+    (setq pm-allow-post-command-hook nil)))
+(defun polymode-enable-post-command ()
+  (when polymode-mode
+    (setq pm-allow-post-command-hook t)))
+
 ;; We need this during cascaded call-next-method in pm-initialize. -innermodes
 ;; are initialized after the hostmode setup has taken place. This means that
 ;; pm-get-span and all the functionality that relies on it will fail to work
@@ -341,22 +350,21 @@ case TYPE is ignored."
         ;; `syntax-propertize' like `markdown-mode'.
         (parse-sexp-lookup-properties nil)
         (case-fold-search t))
-    (save-match-data
-      (save-excursion
-        (save-restriction
-          (widen)
-          (let ((span (pm--intersect-spans config pos)))
-            (if (= omax pos)
-                (when (and (= omax (nth 1 span))
-                           (> omax omin))
-                  ;; When pos == point-max and it's beg of span, return the
-                  ;; previous span. This occurs because the computation of
-                  ;; pm--intersect-spans is done on a widened buffer.
-                  (setq span (pm--intersect-spans config (1- pos))))
-              (when (= pos (nth 2 span))
-                (error "Span ends at %d in (pm-inermost-span %d) %s"
-                       pos pos (pm-format-span span))))
-            (pm--chop-span span omin omax)))))))
+    (save-excursion
+      (save-restriction
+        (widen)
+        (let ((span (pm--intersect-spans config pos)))
+          (if (= omax pos)
+              (when (and (= omax (nth 1 span))
+                         (> omax omin))
+                ;; When pos == point-max and it's beg of span, return the
+                ;; previous span. This occurs because the computation of
+                ;; pm--intersect-spans is done on a widened buffer.
+                (setq span (pm--intersect-spans config (1- pos))))
+            (when (= pos (nth 2 span))
+              (error "Span ends at %d in (pm-inermost-span %d) %s"
+                     pos pos (pm-format-span span))))
+          (pm--chop-span span omin omax))))))
 
 (defun pm--cached-span (&optional pos)
   ;; fixme: add basic miss statistics
@@ -392,9 +400,10 @@ defaults to point. Guarantied to return a non-empty span."
             (list :pos pos
                   :point-min (point-min)
                   :point-max (point-max))))
-  (or (unless no-cache
-        (pm--cached-span pos))
-      (pm--innermost-span pm/polymode pos)))
+  (save-match-data
+    (or (unless no-cache
+          (pm--cached-span pos))
+        (pm--innermost-span pm/polymode pos))))
 
 (defun pm-span-to-range (span)
   (and span (cons (nth 1 span) (nth 2 span))))
@@ -615,16 +624,28 @@ is one of the following symbols:
     (when emacs-hook
       (run-hooks emacs-hook))))
 
-(defun pm--collect-parent-slots (object slot)
+(defun pm--collect-parent-slots (object slot &optional do-when inclusive)
   "Descend into parents of OBJECT and return a list of SLOT values.
-Returned list is in parent first order."
+Returned list is in parent first order. If non-nil DO-WHEN must
+be a function which would take an object and return non-nil if
+the recursion should descend into the parent. When nil, all
+parents are descended. If INCLUSIVE is non-nil, include the slot
+of the first object for which DO-WHEN failed."
   (let ((inst object)
-        (vals nil))
+        (vals nil)
+        (failed nil))
     (while inst
       (when (slot-boundp inst slot)
         (push (eieio-oref inst slot) vals))
-      (setq inst (and (slot-boundp inst :parent-instance)
-                      (eieio-oref inst 'parent-instance))))
+      (setq inst (and
+                  (or (null do-when)
+                      (if failed
+                          (progn (setq failed nil) t)
+                        (or (funcall do-when inst)
+                            (and inclusive
+                                 (setq failed t)))))
+                  (slot-boundp inst :parent-instance)
+                  (eieio-oref inst 'parent-instance))))
     vals))
 
 (defun pm--run-hooks (object slot &rest args)
@@ -644,19 +665,36 @@ Parents' hooks are run first."
 ;;; BUFFER SELECTION
 
 ;; Transfer of the buffer-undo-list is managed internally by emacs
-(defvar pm-move-vars-from-base '(buffer-file-name)
+(define-obsolete-variable-alias 'pm-move-vars-from-base 'polymode-move-these-vars-from-base-buffer "v0.1.6")
+(defvar polymode-move-these-vars-from-base-buffer '(buffer-file-name outline-regexp outline-level)
   "Variables transferred from base buffer on buffer switch.")
 
-(defvar pm-move-vars-from-old-buffer
-  '(buffer-undo-list
+(define-obsolete-variable-alias 'pm-move-vars-from-old-buffer 'polymode-move-these-vars-from-old-buffer "v0.1.6")
+(defvar polymode-move-these-vars-from-old-buffer
+  '(buffer-face-mode
+    buffer-face-mode-face
+    buffer-face-mode-remapping
     buffer-invisibility-spec
-    selective-display
-    overwrite-mode
-    truncate-lines
-    word-wrap
+    face-remapping-alist
     line-move-visual
-    truncate-partial-width-windows)
+    overwrite-mode
+    selective-display
+    text-scale-mode
+    text-scale-mode-amount
+    truncate-lines
+    truncate-partial-width-windows
+    buffer-undo-list
+    word-wrap)
   "Variables transferred from old buffer on buffer switch.")
+
+(defvar polymode-move-these-minor-modes-from-base-buffer nil
+  "List of minor modes to move from base buffer.")
+(defvar polymode-move-these-minor-modes-from-old-buffer
+  '(linum-mode
+    visual-line-mode
+    visual-fill-column-mode
+    writeroom-mode)
+  "List of minor modes to move from the old buffer.")
 
 (defun pm-select-buffer (span &optional visibly)
   "Select the buffer associated with SPAN.
@@ -667,22 +705,20 @@ switch."
   (let ((buffer (pm-span-buffer span)))
     (with-current-buffer buffer
       ;; (message (pm--debug-info span))
-      (pm--reset-ppss-last span))
+      (pm--reset-ppss-cache span))
     (when visibly
-      ;; always synchronize points to avoid interference from tooling working in
-      ;; different buffers
+      ;; always sync to avoid issues with tooling working in different buffers
       (pm--synchronize-points (current-buffer)))
     ;; (message "setting buffer %d-%d [%s]" (nth 1 span) (nth 2 span) (current-buffer))
     ;; no further action if BUFFER is already the current buffer
-    (when (and (not (eq buffer (current-buffer)))
-               (buffer-live-p buffer))
-      (let ((base (pm-base-buffer)))
-        (pm--move-vars pm-move-vars-from-old-buffer (current-buffer) buffer)
-        (pm--move-vars pm-move-vars-from-base base buffer))
+    (unless (eq buffer (current-buffer))
+      (pm--move-vars polymode-move-these-vars-from-base-buffer
+                     (pm-base-buffer) buffer)
+      (pm--move-vars polymode-move-these-vars-from-old-buffer
+                     (current-buffer) buffer)
       (if visibly
           ;; slow, visual selection
           (pm--select-existing-buffer-visibly buffer)
-        ;; fast set-buffer
         (set-buffer buffer)))))
 
 (defvar text-scale-mode)
@@ -692,11 +728,7 @@ switch."
         (point (point))
         (window-start (window-start))
         (visible (pos-visible-in-window-p))
-        (vlm visual-line-mode)
         (ractive (region-active-p))
-        ;; text-scale-mode
-        (scale (and (boundp 'text-scale-mode) text-scale-mode))
-        (scale-amount (and (boundp 'text-scale-mode-amount) text-scale-mode-amount))
         (hl-line (and (boundp 'hl-line-mode) hl-line-mode))
         (mkt (mark t))
         (bro buffer-read-only))
@@ -704,6 +736,11 @@ switch."
     (setq pm/current nil)
     (when hl-line
       (hl-line-mode -1))
+
+    (pm--move-minor-modes polymode-move-these-minor-modes-from-base-buffer
+                          (pm-base-buffer) new-buffer)
+    (pm--move-minor-modes polymode-move-these-minor-modes-from-old-buffer
+                          old-buffer new-buffer)
 
     (pm--move-overlays old-buffer new-buffer)
 
@@ -714,14 +751,6 @@ switch."
 
     (unless (eq bro buffer-read-only)
       (read-only-mode (if bro 1 -1)))
-    (pm--adjust-visual-line-mode vlm)
-
-    (when (and (boundp 'text-scale-mode-amount)
-               (not (and (eq scale text-scale-mode)
-                         (= scale-amount text-scale-mode-amount))))
-      (if scale
-          (text-scale-set scale-amount)
-        (text-scale-set 0)))
 
     ;; fixme: what is the right way to do this ... activate-mark-hook?
     (if (not ractive)
@@ -744,7 +773,8 @@ switch."
 (defun pm--move-overlays (from-buffer to-buffer)
   (with-current-buffer from-buffer
     (mapc (lambda (o)
-            (unless (eq 'linum-str (car (overlay-properties o)))
+            (unless (or (overlay-get o 'linum-str)
+                        (overlay-get o 'yas--snippet))
               (move-overlay o (overlay-start o) (overlay-end o) to-buffer)))
           (overlays-in 1 (1+ (buffer-size))))))
 
@@ -753,14 +783,19 @@ switch."
     (unless (eq to-buffer from-buffer)
       (with-current-buffer to-buffer
         (dolist (var vars)
-          (and (boundp var)
-               (set var (buffer-local-value var from-buffer))))))))
+          (when (default-boundp var)
+            (make-variable-buffer-local var)
+            (set var (buffer-local-value var from-buffer))))))))
 
-(defun pm--adjust-visual-line-mode (vlm)
-  (unless (eq visual-line-mode vlm)
-    (if (null vlm)
-        (visual-line-mode -1)
-      (visual-line-mode 1))))
+(defun pm--move-minor-modes (modes from-buffer &optional to-buffer)
+  (let ((to-buffer (or to-buffer (current-buffer))))
+    (unless (eq to-buffer from-buffer)
+      (with-current-buffer to-buffer
+        (dolist (m modes)
+          (when (default-boundp m)
+            (let ((from-state (buffer-local-value m from-buffer)))
+              (unless (equal from-state (symbol-value m))
+                (funcall (symbol-function m) (if from-state 1 -1))))))))))
 
 (defun pm-set-buffer (&optional pos-or-span)
   "Set buffer to polymode buffer appropriate for POS-OR-SPAN.
@@ -856,7 +891,7 @@ region. Buffer is *not* narrowed to the region."
       (let ((sbeg (nth 1 span))
             (send (nth 2 span)))
         (unless pm--emacs>26
-          (pm--reset-ppss-last span))
+          (pm--reset-ppss-cache span))
         (narrow-to-region sbeg send)))))
 
 (defmacro pm-with-narrowed-to-span (span &rest body)
@@ -868,11 +903,11 @@ region. Buffer is *not* narrowed to the region."
 
 
 ;;; HOOKS
-;; In addition to these hooks there is `poly-lock-after-change' in poly-lock.el
+;; There is also `poly-lock-after-change' in poly-lock.el
 
 (defun polymode-pre-command-synchronize-state ()
   "Synchronize state between buffers.
-Currently point only."
+Currently synchronize points only. Runs in local `pre-command-hook'."
   (pm--synchronize-points (current-buffer)))
 
 (defun polymode-post-command-select-buffer ()
@@ -895,7 +930,7 @@ This function is placed in `before-change-functions' hook."
   (dolist (buff (oref pm/polymode -buffers))
     (when (buffer-live-p buff)
       (with-current-buffer buff
-        ;; now `syntax-ppss-flush-cache is harmless, but who knows in the future.
+        ;; micro-optimization to avoid calling the flush twice
         (when (memq 'syntax-ppss-flush-cache before-change-functions)
           (remove-hook 'before-change-functions 'syntax-ppss-flush-cache t))
         (syntax-ppss-flush-cache beg end)
@@ -958,8 +993,9 @@ Used in advises."
 
 (pm-around-advice #'kill-buffer #'polymode-with-current-base-buffer)
 (pm-around-advice #'find-alternate-file #'polymode-with-current-base-buffer)
-;; (advice-remove #'kill-buffer #'pm-with-current-base-buffer)
-;; (advice-remove #'find-alternate-file #'pm-with-current-base-buffer)
+(pm-around-advice #'write-file #'polymode-with-current-base-buffer)
+;; (advice-remove #'kill-buffer #'polymode-with-current-base-buffer)
+;; (advice-remove #'find-alternate-file #'polymode-with-current-base-buffer)
 
 
 ;;; SYNTAX
@@ -989,50 +1025,38 @@ Used in advises."
     (save-restriction
       (widen)
       (save-excursion
-        (let ((protect-host (with-current-buffer (pm-base-buffer)
-                              (eieio-oref pm/chunkmode 'protect-syntax))))
-          ;; 1. host if no protection
-          (unless protect-host
-            (with-current-buffer (pm-base-buffer)
-              (when pm--syntax-propertize-function-original
-                (pm--call-syntax-propertize-original start end))))
-          ;; 2. all others
-          (pm-map-over-spans
-           (lambda (span)
-             (when (and pm--syntax-propertize-function-original
-                        (or (pm-true-span-type span)
-                            protect-host))
-               (let ((pos0 (max (nth 1 span) start))
-                     (pos1 (min (nth 2 span) end)))
-                 (if (eieio-oref (nth 3 span) 'protect-syntax)
-                     (pm--call-syntax-propertize-original pos0 pos1)))))
-           start end))))))
-
-(defun polymode-restrict-syntax-propertize-extension (orig-fun beg end)
-  (if (and polymode-mode pm/polymode)
-      (let ((span (pm-innermost-span beg)))
-        (if (eieio-oref (nth 3 span) 'protect-syntax)
-            (let ((range (pm-span-to-range span)))
-              (if (and (eq beg (car range))
-                       (eq end (cdr range)))
-                  ;; in the most common case when span == beg-end, simply return
-                  range
-                (let ((be (funcall orig-fun beg end)))
-                  (and be
-                       (cons (max (car be) (car range))
-                             (min (cdr be) (cdr range)))))))
-          (funcall orig-fun beg end)))
-    (funcall orig-fun beg end)))
+        ;; some modes don't save data in their syntax propertize functions
+        (save-match-data
+          (let ((protect-host (with-current-buffer (pm-base-buffer)
+                                (eieio-oref pm/chunkmode 'protect-syntax))))
+            ;; 1. host if no protection
+            (unless protect-host
+              (with-current-buffer (pm-base-buffer)
+                (when pm--syntax-propertize-function-original
+                  (pm--call-syntax-propertize-original start end))))
+            ;; 2. all others
+            (pm-map-over-spans
+             (lambda (span)
+               (when (and pm--syntax-propertize-function-original
+                          (or (pm-true-span-type span)
+                              protect-host))
+                 (let ((pos0 (max (nth 1 span) start))
+                       (pos1 (min (nth 2 span) end)))
+                   (if (eieio-oref (nth 3 span) 'protect-syntax)
+                       (pm--call-syntax-propertize-original pos0 pos1)))))
+             start end)))))))
 
 (defvar syntax-ppss-wide)
 (defvar syntax-ppss-last)
-(defun pm--reset-ppss-last (span)
+(defvar syntax-ppss-cache)
+(defun pm--reset-ppss-cache (span)
   "Reset `syntax-ppss-last' cache if it was recorded before SPAN's start."
-  ;; host chunk is special; body chunks with nested inner chunks should be
-  ;; treated the same but no practical example showed so far
   (let ((sbeg (nth 1 span))
         new-ppss)
     (unless (car span)
+      ;; Host chunk is special. Pick ppss from end of last span. Body chunks
+      ;; with nested inner chunks should be treated the same but no practical
+      ;; example showed so far.
       (save-restriction
         (widen)
         (save-excursion
@@ -1045,19 +1069,65 @@ Used in advises."
                   (setq pos (nth 1 prev-span)))))))))
     (unless new-ppss
       (setq new-ppss (list sbeg 0 nil sbeg nil nil nil 0 nil nil nil nil)))
-    (if pm--emacs>26
-        ;; in emacs 26 there are two caches syntax-ppss-wide and
-        ;; syntax-ppss-narrow. The latter is reset automatically each time a
-        ;; different narrowing is in place so we don't deal with it for now.
-        (let ((cache (cdr syntax-ppss-wide)))
-          (while (and cache (>= (caar cache) sbeg))
-            (setq cache (cdr cache)))
-          (setq cache (cons new-ppss cache))
-          (setq syntax-ppss-wide (cons new-ppss cache)))
-      (setq syntax-ppss-last new-ppss))))
+    ;; in emacs 26 there are two caches syntax-ppss-wide and
+    ;; syntax-ppss-narrow. The latter is reset automatically each time a
+    ;; different narrowing is in place so we don't deal with it for now.
+    (let ((cache (if pm--emacs>26
+                     (cdr syntax-ppss-wide)
+                   syntax-ppss-cache)))
+      (while (and cache (>= (caar cache) sbeg))
+        (setq cache (cdr cache)))
+      (setq cache (cons new-ppss cache))
+      (if pm--emacs>26
+          (setq syntax-ppss-wide (cons new-ppss cache))
+        (setq syntax-ppss-cache cache)
+        (setq syntax-ppss-last new-ppss)))
+    new-ppss))
+
+
+(defun polymode-reset-ppss-cache (&optional pos)
+  "Reset syntax-ppss cache in polymode buffers.
+Used in :before advice of `syntax-ppss'."
+  (when (and polymode-mode pm/polymode)
+    (pm--reset-ppss-cache (pm-innermost-span pos))))
+
+;; (advice-add #'syntax-ppss :before #'polymode-reset-ppss-cache)
+;; (unless pm--emacs>26
+;;   (advice-add #'syntax-ppss :before #'polymode-reset-ppss-cache))
+
+;; (defun polymode-restrict-syntax-propertize-extension (orig-fun beg end)
+;;   (if (and polymode-mode pm/polymode)
+;;       (let ((span (pm-innermost-span beg)))
+;;         (if (eieio-oref (nth 3 span) 'protect-syntax)
+;;             (let ((range (pm-span-to-range span)))
+;;               (if (and (eq beg (car range))
+;;                        (eq end (cdr range)))
+;;                   ;; in the most common case when span == beg-end, simply return
+;;                   range
+;;                 (let ((be (funcall orig-fun beg end)))
+;;                   (and be
+;;                        (cons (max (car be) (car range))
+;;                              (min (cdr be) (cdr range)))))))
+;;           (funcall orig-fun beg end)))
+;;     (funcall orig-fun beg end)))
 
 
 ;;; INTERNAL UTILITIES
+
+(defun pm--set-transient-map (commands)
+  "Set transient map with COMMANDS.
+COMMANDS is a list of commands which are bound to their
+accessible keys as well as the basic event of those keys. Used
+for \"cycling\" commands."
+  (let ((map (make-sparse-keymap)))
+    (mapc (lambda (cmd)
+            (mapc (lambda (vec)
+                    (define-key map vec cmd)
+                    (let ((basic-ev (elt vec (1- (length vec)))))
+                      (define-key map (vector basic-ev) cmd)))
+                  (where-is-internal cmd)))
+          commands)
+    (set-transient-map map)))
 
 (defvar polymode-display-output-file t
   "When non-nil automatically display output file in Emacs.
@@ -1070,10 +1140,10 @@ near future.")
     ;; We need to catch those if we want to display multiple files like with Rmarkdown
     (condition-case-unless-debug err
         (let ((buff (get-file-buffer ofile)))
-          ;; silently kill and re-open
           (when buff
             (with-current-buffer buff
-              (revert-buffer t t)))
+              (with-demoted-errors "Error while reverting: %s"
+                (revert-buffer t t))))
           (when polymode-display-output-file
             (if (string-match-p "html\\|htm$" ofile)
                 (browse-url ofile)
@@ -1170,6 +1240,15 @@ Elements of LIST can be either strings or symbols."
                     str-nm)))
           list))
 
+(defun pm--oref-value (object slot)
+  (let ((val (eieio-oref object slot)))
+    (cond
+     ((functionp val)
+      (funcall val))
+     ((symbolp val)
+      (symbol-value val))
+     (t val))))
+
 (defun pm--prop-put (key val &optional object)
   (oset (or object pm/polymode) -props
         (plist-put (oref (or object pm/polymode) -props) key val)))
@@ -1232,10 +1311,10 @@ By default BUFFER is the buffer where `pm/current' is t."
   (if (and (listp collection)
            (listp (car collection)))
       (let* ((candidates (mapcar #'car collection))
-             (thist (and hist
-                         (delq nil (mapcar (lambda (x) (car (member x candidates)))
-                                           (symbol-value hist)))))
-             (def (or def (car thist))))
+             (thirst (and hist
+                          (delq nil (mapcar (lambda (x) (car (member x candidates)))
+                                            (symbol-value hist)))))
+             (def (or def (car thirst) (car candidates))))
         (assoc (completing-read prompt candidates predicate t initial-input hist def inherit-input-method)
                collection))
     (completing-read prompt collection predicate require-match initial-input hist def inherit-input-method)))
@@ -1305,6 +1384,7 @@ By default BUFFER is the buffer where `pm/current' is t."
                    (list shell-command-switch command))
       (setq process (get-buffer-process buffer))
       (comint-mode)
+      (goto-address-mode 1)
       (set-process-sentinel process sentinel)
       (setq pm--process-buffer t)
       (set-marker (process-mark process) (point-max))
@@ -1352,15 +1432,15 @@ By default BUFFER is the buffer where `pm/current' is t."
              ;; 3. output file is not known; display process buffer
              (t (display-buffer (current-buffer)) nil))))))))
 
-(fset 'pm-default-export-sentinel (pm--make-shell-command-sentinel "export"))
+(fset 'pm-default-shell-export-sentinel (pm--make-shell-command-sentinel "export"))
 (fset 'pm-default-shell-weave-sentinel (pm--make-shell-command-sentinel "weaving"))
 
 (defun pm--make-selector (specs elements)
-  (cond ((listp elements)
+  (cond ((functionp elements) elements)
+        ((listp elements)
          (let ((spec-alist (cl-mapcar #'cons specs elements)))
            (lambda (selsym &rest _ignore)
              (cdr (assoc selsym spec-alist)))))
-        ((functionp elements) elements)
         (t (error "Elements argument must be either a list or a function"))))
 
 (defun pm--selector (processor type id)
@@ -1374,24 +1454,35 @@ By default BUFFER is the buffer where `pm/current' is t."
                 ;; weaver slot
                 ((eq type :from-to) '(regexp ext doc command))
                 (t (error "Invalid type '%s'" type)))))
-    (pm--make-selector names (cdr spec))))
+    (cons id (pm--make-selector names (cdr spec)))))
 
-(defun pm--selector-match (selector &optional file)
-  (or (funcall selector 'match file)
-      (string-match-p (funcall selector 'regexp)
-                      (or file buffer-file-name))))
+(defun pm--selector-match (el &optional file)
+  (let* ((id (car el))
+         (regexp (funcall (cdr el) 'regexp id)))
+    (or (funcall (cdr el) 'match id file)
+        (and regexp
+             (string-match-p regexp (or file buffer-file-name))))))
+
+(defun pm--matched-selectors (translator slot)
+  (let ((translator (if (symbolp translator)
+                        (symbol-value translator)
+                      translator)))
+    (cl-loop for el in (pm--selectors translator slot)
+             when (pm--selector-match el)
+             collect el)))
 
 (defun pm--selectors (processor type)
   (let ((ids (mapcar #'car (eieio-oref processor type))))
-    (mapcar (lambda (id) (cons id (pm--selector processor type id))) ids)))
+    (mapcar (lambda (id) (pm--selector processor type id)) ids)))
 
 (defun pm--output-command.file (output-file-format sfrom &optional sto quote)
   ;; !!Must be run in input buffer!!
   (cl-flet ((squote (arg) (or (and (stringp arg)
                                    (if quote (shell-quote-argument arg) arg))
                               "")))
-    (let* ((base-ofile (or (funcall (or sto sfrom) 'output-file)
-                           (let ((ext (funcall (or sto sfrom) 'ext)))
+    (let* ((el (or sto sfrom))
+           (base-ofile (or (funcall (cdr el) 'output-file (car el))
+                           (let ((ext (funcall (cdr el) 'ext (car el))))
                              (when ext
                                (concat (format output-file-format
                                                (file-name-base buffer-file-name))
@@ -1400,10 +1491,10 @@ By default BUFFER is the buffer where `pm/current' is t."
                        (expand-file-name base-ofile)))
            (oname (and (stringp base-ofile)
                        (file-name-base base-ofile)))
-           (t-spec (and sto (funcall sto 't-spec)))
-           (command-w-formats (or (and sto (funcall sto 'command))
+           (t-spec (and sto (funcall (cdr sto) 't-spec (car sto))))
+           (command-w-formats (or (and sto (funcall (cdr sto) 'command (car sto)))
                                   (and (listp t-spec) (car t-spec))
-                                  (funcall sfrom 'command)))
+                                  (funcall (cdr sfrom) 'command (car sfrom))))
            (command (format-spec command-w-formats
                                  (list (cons ?i (squote (file-name-nondirectory buffer-file-name)))
                                        (cons ?I (squote buffer-file-name))
@@ -1438,40 +1529,42 @@ By default BUFFER is the buffer where `pm/current' is t."
            (output-format (if is-exporter
                               polymode-exporter-output-file-format
                             polymode-weaver-output-file-format)))
-      (with-current-buffer ibuffer
-        (save-buffer)
-        (let ((comm.ofile (pm--output-command.file output-format sfrom sto quote)))
-          (message "%s '%s' with '%s' ..." (if is-exporter "Exporting" "Weaving")
-                   (file-name-nondirectory ifile) (eieio-object-name processor))
-          (let* ((pm--output-file (cdr comm.ofile))
-                 (pm--input-file ifile)
-                 ;; skip weaving step if possible
-                 ;; :fixme this should not happen after weaver/exporter change
-                 ;; or after errors in previous exporter
-                 (omt (and polymode-skip-processing-when-unmodified
-                           (stringp pm--output-file)
-                           (pm--file-mod-time pm--output-file)))
-                 (imt (and omt (pm--file-mod-time pm--input-file)))
-                 (ofile (or (and imt (time-less-p imt omt) pm--output-file)
-                            (let ((fun (with-no-warnings
-                                         (eieio-oref processor 'function)))
-                                  (args (delq nil (list callback from to))))
-                              (apply fun (car comm.ofile) args)))))
-            ;; ofile is non-nil in two cases:
-            ;;  -- synchronous back-ends (very uncommon)
-            ;;  -- when output is transitional (not real) and mod time of input < output
-            (when ofile
-              (if pm--export-spec
-                  ;; same logic as in pm--wrap-callback
-                  (let ((pm--input-not-real t)
-                        (espec pm--export-spec)
-                        (pm--export-spec nil))
-                    (when (listp ofile)
-                      (setq ofile (car ofile)))
-                    (pm-export (symbol-value (eieio-oref pm/polymode 'exporter))
-                               (car espec) (cdr espec)
-                               ofile))
-                (pm--display-file ofile)))))))))
+      (when (buffer-live-p ibuffer)
+        (with-current-buffer ibuffer
+          ;; FIXME: could be deleted buffer in weaver->exporter pipeline?
+          (save-buffer)
+          (let ((comm.ofile (pm--output-command.file output-format sfrom sto quote)))
+            (message "%s '%s' with '%s' ..." (if is-exporter "Exporting" "Weaving")
+                     (file-name-nondirectory ifile) (eieio-object-name processor))
+            (let* ((pm--output-file (cdr comm.ofile))
+                   (pm--input-file ifile)
+                   ;; skip weaving step if possible
+                   ;; :fixme this should not happen after weaver/exporter change
+                   ;; or after errors in previous exporter
+                   (omt (and polymode-skip-processing-when-unmodified
+                             (stringp pm--output-file)
+                             (pm--file-mod-time pm--output-file)))
+                   (imt (and omt (pm--file-mod-time pm--input-file)))
+                   (ofile (or (and imt (time-less-p imt omt) pm--output-file)
+                              (let ((fun (with-no-warnings
+                                           (eieio-oref processor 'function)))
+                                    (args (delq nil (list callback from to))))
+                                (apply fun (car comm.ofile) args)))))
+              ;; ofile is non-nil in two cases:
+              ;;  -- synchronous back-ends (very uncommon)
+              ;;  -- when output is transitional (not real) and mod time of input < output
+              (when ofile
+                (if pm--export-spec
+                    ;; same logic as in pm--wrap-callback
+                    (let ((pm--input-not-real t)
+                          (espec pm--export-spec)
+                          (pm--export-spec nil))
+                      (when (listp ofile)
+                        (setq ofile (car ofile)))
+                      (pm-export (symbol-value (eieio-oref pm/polymode 'exporter))
+                                 (car espec) (cdr espec)
+                                 ofile))
+                  (pm--display-file ofile))))))))))
 
 (provide 'polymode-core)
 ;;; polymode-core.el ends here

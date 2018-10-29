@@ -98,21 +98,22 @@
     :type list
     :custom list
     :documentation
-    "Output specifications alist. Each element is either a list
+    "
+     Output specifications alist. Each element is either a list
      of the form (id ext doc t-spec) or a cons (id . selector).
 
-     In the former case EXT is an extension of the output
-     file. DOC is a short documentation string. t-spec is a
-     string what is substituted instead of %t in :from spec
-     commmand. `t-spec' can be a list of one element '(command),
-     in which case the whole :from spec command is substituted
-     with command from %t-spec.
+     In the former case EXT is an extension of the output file.
+     DOC is a short documentation string. t-spec is a string what
+     is substituted instead of %t in :from spec commmand.
+     `t-spec' can be a list of one element '(command), in which
+     case the whole :from spec command is substituted with
+     command from %t-spec.
 
      When specification is of the form (id . selector), SELECTOR
-     is a function of variable arguments that accepts at least
-     one argument ACTION. This function is called in a buffer
-     visiting input file. ACTION is a symbol and can one of the
-     following:
+     is a function of variable arguments with first two arguments
+     being ACTION and ID of the specification. This function is
+     called in a buffer visiting input file. ACTION is a symbol
+     and can one of the following:
 
          output-file - return an output file name or a list of file
            names. Receives input-file as argument. If this
@@ -128,10 +129,10 @@
            file name, a list of file names or nil if no such
            files have been detected.
 
-         ext - extension of output file. If nil and
-           `output' also returned nil, the exporter won't be able
-           to identify the output file and no automatic display
-           or preview will be available.
+         ext - extension of output file. If nil and `output-file'
+           also returned nil, the exporter won't be able to
+           identify the output file and no automatic display or
+           preview will be available.
 
          doc - return documentation string
 
@@ -157,8 +158,7 @@
 (defclass pm-callback-exporter (pm-exporter)
   ((callback
     :initarg :callback
-    :initform (lambda (&optional rest)
-                (error "No callback defined for this exporter"))
+    :initform nil
     :type (or symbol function)
     :documentation
     "Callback function to be called by :function. There is no
@@ -171,7 +171,7 @@
     :initform 'pm-default-shell-export-function)
    (sentinel
     :initarg :sentinel
-    :initform 'pm-default-export-sentinel
+    :initform 'pm-default-shell-export-sentinel
     :type (or symbol function)
     :documentation
     "Sentinel function to be called by :function when a shell
@@ -242,14 +242,14 @@ When called with prefix argument, ask for FROM and TO
 interactively. See constructor function ‘pm-exporter’ for the
 complete specification."
   (interactive "P")
-  (cl-flet ((to-name.id (el) (let* ((ext (funcall (cdr el) 'ext))
+  (cl-flet ((to-name.id (el) (let* ((ext (funcall (cdr el) 'ext (car el)))
                                     (name (if ext
-                                              (format "%s (%s)" (funcall (cdr el) 'doc) ext)
-                                            (funcall (cdr el) 'doc))))
+                                              (format "%s (%s)" (funcall (cdr el) 'doc (car el)) ext)
+                                            (funcall (cdr el) 'doc (car el)))))
                                (cons name (car el))))
-            (from-name.id (el) (cons (funcall (cdr el) 'doc) (car el))))
+            (from-name.id (el) (cons (funcall (cdr el) 'doc (car el)) (car el))))
     (let* ((exporter (symbol-value (or (eieio-oref pm/polymode 'exporter)
-                                       (polymode-set-exporter))))
+                                       (polymode-set-exporter t))))
            (fname (file-name-nondirectory buffer-file-name))
            (gprompt nil)
            (case-fold-search t)
@@ -263,14 +263,13 @@ complete specification."
                ;; 1. repeated export; don't ask
                pm--export:from-last
 
-               ;; 2. select :from entries which match to current file
-               (let ((matched (cl-loop for el in (pm--selectors exporter :from)
-                                       when (pm--selector-match (cdr el))
-                                       collect (from-name.id el))))
+               ;; 2. select :from entries which match to current context
+               (let ((matched (pm--matched-selectors exporter :from)))
                  (when matched
                    (if (> (length matched) 1)
-                       (cdr (pm--completing-read "Multiple `from' specs matched. Choose one: " matched))
-                     (cdar matched))))
+                       (cdr (pm--completing-read "Multiple `from' specs matched. Choose one: "
+                                                 (mapcar #'from-name.id matched)))
+                     (caar matched))))
 
                ;; 3. guess from weaver and return a cons (weaver-id . exporter-id)
                (let ((weaver (symbol-value (or (eieio-oref pm/polymode 'weaver)
@@ -285,7 +284,7 @@ complete specification."
                                         if (string-match-p (nth 1 w) fname)
                                         return (cl-loop for el in (pm--selectors exporter :from)
                                                         ;; input exporter extensnion matches weaver output extension
-                                                        when (pm--selector-match (cdr el) (concat "dummy." (nth 2 w)))
+                                                        when (pm--selector-match el (concat "dummy." (nth 2 w)))
                                                         return (cons (car w) (car el))))))
                      (when pair
                        (message "Matching weaver found. Weaving to '%s' first." (car pair))
@@ -322,7 +321,9 @@ complete specification."
                  pm--export:to-last)
 
                ;; 2. First export or C-u
-               (cdr (pm--completing-read "Export to: " to-opts nil t nil 'pm--export:to-hist))))
+               (if (= (length to-opts) 1)
+                   (cdar to-opts)
+                 (cdr (pm--completing-read "Export to: " to-opts nil t nil 'pm--export:to-hist)))))
 
              ;; B. string
              ((stringp to)
@@ -343,16 +344,37 @@ complete specification."
             (pm-weave (symbol-value (eieio-oref pm/polymode 'weaver)) (car from-id)))
         (pm-export exporter from-id to-id)))))
 
-(defun polymode-set-exporter ()
-  "Interactively set exporter for the current file."
+(defun polymode-set-exporter (&optional no-ask-if-1)
+  "Interactively set exporter for the current file.
+If NO-ASK-IF-1 is non-nil, don't ask if there is only one exporter."
   (interactive)
   (unless pm/polymode
     (error "No pm/polymode object found. Not in polymode buffer?"))
-  (let* ((exporters (pm--abrev-names
-                     (delete-dups (pm--oref-with-parents pm/polymode :exporters))
+  (let* ((weavers (delete-dups (pm--oref-with-parents pm/polymode :weavers)))
+         (exporters (pm--abrev-names
+                     (cl-delete-if-not
+                      (lambda (el)
+                        (or (pm--matched-selectors el :from)
+                            ;; FIXME: this abomination
+                            ;; match weaver to exporter
+                            (cl-loop for weaver in weavers
+                                     if (cl-loop for w in (eieio-oref (symbol-value weaver) 'from-to)
+                                                 ;; weaver input extension matches the filename
+                                                 if (string-match-p (nth 1 w) buffer-file-name)
+                                                 return (cl-loop for el in (pm--selectors (symbol-value el) :from)
+                                                                 ;; input exporter extensnion matches weaver output extension
+                                                                 when (pm--selector-match el (concat "dummy." (nth 2 w)))
+                                                                 return t))
+                                     return t)))
+                      (delete-dups (pm--oref-with-parents pm/polymode :exporters)))
                      "pm-exporter/"))
-         (sel (pm--completing-read "Choose exporter: " exporters nil t nil 'pm--exporter-hist))
+         (sel (if exporters
+                  (if (and no-ask-if-1 (= (length exporters) 1))
+                      (car exporters)
+                    (pm--completing-read "Choose exporter: " exporters nil t nil 'pm--exporter-hist))
+                (user-error "No valid exporters in current context")))
          (out (intern (cdr sel))))
+    (setq pm--exporter-hist (delete-dups pm--exporter-hist))
     (setq-local pm--export:from-last nil)
     (setq-local pm--export:to-last nil)
     (oset pm/polymode :exporter out)
@@ -382,8 +404,7 @@ for each polymode in CONFIGS."
      ("html"    "\\.x?html?\\'" "HTML"  "pandoc %i -f html -t %t -o %o")
      ("doocbook"    "\\.xml\\'" "DocBook"       "pandoc %i -f doocbook -t %t -o %o")
      ("mediawiki"   "\\.wiki\\'" "MediaWiki"        "pandoc %i -f mediawiki -t %t -o %o")
-     ("latex"   "\\.tex\\'" "LaTeX"         "pandoc %i -f latex -t %t -o %o")
-     )
+     ("latex"   "\\.tex\\'" "LaTeX"         "pandoc %i -f latex -t %t -o %o"))
    :to
    '(;; ("json"     "json"  "JSON version of native AST" "json")
      ("plain"   "txt"  "plain text" "plain")
@@ -395,15 +416,15 @@ for each polymode in CONFIGS."
      ("html"    "html"  "XHTML 1" "html")
      ("html5"   "html"  "HTML 5" "html5")
      ("latex"   "tex"  "LaTeX" "latex")
-     ("beamer"      "tex"  "LaTeX beamer" "beamer")
-     ("context"     "tex"  "ConTeXt" "context")
+     ("beamer"	"tex"  "LaTeX beamer" "beamer")
+     ("context"	"tex"  "ConTeXt" "context")
      ("man"     "man"  "groff man" "man")
-     ("mediawiki"   "wiki"  "MediaWiki markup" "mediawiki")
-     ("textile"     "textile"  "Textile" "textile")
+     ("mediawiki"   "wiki"		"MediaWiki markup" "mediawiki")
+     ("textile"     "textile"	"Textile" "textile")
      ("org"     "org"  "Emacs Org-Mode" "org")
-     ("texinfo"     "info"  "GNU Texinfo" "texinfo")
-     ("docbook"     "xml"  "DocBook XML" "docbook")
-     ("opendocument"    "xml"  "OpenDocument XML" "opendocument")
+     ("texinfo"	"info"  "GNU Texinfo" "texinfo")
+     ("docbook"	"xml"  "DocBook XML" "docbook")
+     ("opendocument"    "xml"	"OpenDocument XML" "opendocument")
      ("odt"     "odt"  "OpenOffice text document" "odt")
      ("docx"    "docx"  "Word docx" "docx")
      ("epub"    "epub"  "EPUB book" "epub")
@@ -416,7 +437,7 @@ for each polymode in CONFIGS."
      ("s5"      "html"  "S5 HTML slide show" "s5")
      ("rtf"     "rtf"  "rich text format" "rtf"))
    :function 'pm-default-shell-export-function
-   :sentinel 'pm-default-export-sentinel)
+   :sentinel 'pm-default-shell-export-sentinel)
   "Pandoc exporter."
   :group 'polymode-export
   :type 'object)

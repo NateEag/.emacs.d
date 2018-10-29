@@ -3,7 +3,7 @@
 ;; Author: Vitalie Spinu
 ;; Maintainer: Vitalie Spinu
 ;; Copyright (C) 2013-2018, Vitalie Spinu
-;; Version: 0.1.2
+;; Version: 0.1.5
 ;; Package-Requires: ((emacs "25"))
 ;; URL: https://github.com/vitoshka/polymode
 ;; Keywords: languages, multi-modes, processes
@@ -45,61 +45,64 @@
 (require 'polymode-weave)
 (require 'polymode-base)
 (require 'poly-lock)
-(eval-when-compile
-  (require 'derived))
+(require 'easymenu)
+(require 'derived)
 
-(defcustom polymode-prefix-key "\M-n"
-  "Prefix key for the polymode mode keymap.
-Not effective after loading the polymode library."
-  :group 'polymode
-  :type '(choice string vector))
+(defvar polymode-prefix-key nil
+  "[Obsoleted] Prefix key for the polymode mode keymap.
+Not effective after loading the polymode library.")
+(make-obsolete-variable 'polymode-prefix-key "Unbind in `polymode-mode-map'" "v0.1.6")
+
+(defvar polymode-map
+  (let ((map (define-prefix-command 'polymode-map)))
+    ;; eval
+    (define-key map "v" 'polymode-eval-map)
+    ;; navigation
+    (define-key map "\C-n" 'polymode-next-chunk)
+    (define-key map "\C-p" 'polymode-previous-chunk)
+    (define-key map "\C-\M-n" 'polymode-next-chunk-same-type)
+    (define-key map "\C-\M-p" 'polymode-previous-chunk-same-type)
+    ;; chunk manipulation
+    (define-key map "\M-k" 'polymode-kill-chunk)
+    (define-key map "\M-m" 'polymode-mark-or-extend-chunk)
+    (define-key map "\C-t" 'polymode-toggle-chunk-narrowing)
+    ;; backends
+    (define-key map "e" 'polymode-export)
+    (define-key map "E" 'polymode-set-exporter)
+    (define-key map "w" 'polymode-weave)
+    (define-key map "W" 'polymode-set-weaver)
+    (define-key map "t" 'polymode-tangle)
+    (define-key map "T" 'polymode-set-tangler)
+    (define-key map "$" 'polymode-show-process-buffer)
+    map)
+  "Polymode prefix map.
+Lives on `polymode-prefix-key' in polymode buffers.")
 
 (defvar polymode-minor-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map polymode-prefix-key
-      (let ((map (make-sparse-keymap)))
-        ;; navigation
-        (define-key map "\C-n" 'polymode-next-chunk)
-        (define-key map "\C-p" 'polymode-previous-chunk)
-        (define-key map "\C-\M-n" 'polymode-next-chunk-same-type)
-        (define-key map "\C-\M-p" 'polymode-previous-chunk-same-type)
-        ;; chunk manipulation
-        (define-key map "\M-k" 'polymode-kill-chunk)
-        (define-key map "\M-m" 'polymode-mark-or-extend-chunk)
-        (define-key map "\C-t" 'polymode-toggle-chunk-narrowing)
-        ;; backends
-        (define-key map "e" 'polymode-export)
-        (define-key map "E" 'polymode-set-exporter)
-        (define-key map "w" 'polymode-weave)
-        (define-key map "W" 'polymode-set-weaver)
-        (define-key map "t" 'polymode-tangle)
-        (define-key map "T" 'polymode-set-tangler)
-        (define-key map "$" 'polymode-show-process-buffer)
-        ;; todo: add polymode-goto-process-buffer
-        map))
-    (define-key map [menu-bar Polymode]
-      (cons "Polymode"
-            (let ((map (make-sparse-keymap "Polymode")))
-              (define-key-after map [next]
-                '(menu-item "Next chunk" polymode-next-chunk))
-              (define-key-after map [previous]
-                '(menu-item "Previous chunk" polymode-previous-chunk))
-              (define-key-after map [next-same]
-                '(menu-item "Next chunk same type" polymode-next-chunk-same-type))
-              (define-key-after map [previous-same]
-                '(menu-item "Previous chunk same type" polymode-previous-chunk-same-type))
-              (define-key-after map [mark]
-                '(menu-item "Mark or extend chunk" polymode-mark-or-extend-chunk))
-              (define-key-after map [kill]
-                '(menu-item "Kill chunk" polymode-kill-chunk))
-              map)))
+    (define-key map (or polymode-prefix-key "\M-n") 'polymode-map)
     map)
   "The minor mode keymap which is inherited by all polymodes.")
-
 (defvaralias 'polymode-mode-map 'polymode-minor-mode-map)
 
+(easy-menu-define polymode-menu polymode-minor-mode-map
+  "Menu for polymode."
+  '("Polymode"
+    ["Next chunk" polymode-next-chunk]
+    ["Previous chunk" polymode-previous-chunk]
+    ["Next chunk same type" polymode-next-chunk-same-type]
+    ["Previous chunk same type" polymode-previous-chunk-same-type]
+    ["Mark or extend chunk" polymode-mark-or-extend-chunk]
+    ["Kill chunk" polymode-kill-chunk]
+    "--"
+    ["Weave" polymode-weave]
+    ["Set Weaver" polymode-set-weaver]
+    "--"
+    ["Export" polymode-export]
+    ["Set Exporter" polymode-set-exporter]))
+
 
-;;; COMMANDS
+;;; NAVIGATION
 
 (defun pm-goto-span-of-type (type N)
   "Skip to N - 1 spans of TYPE and stop at the start of a span of TYPE.
@@ -112,6 +115,8 @@ TYPE is either a symbol or a list of symbols of span types."
          (N (if back (- N) N))
          (beg (if back (point-min) (point)))
          (end (if back (point) (point-max))))
+    (unless (memq (car (pm-innermost-span)) types)
+      (setq sofar 1))
     (condition-case nil
         (pm-map-over-spans
          (lambda (span)
@@ -126,49 +131,65 @@ TYPE is either a symbol or a list of symbols of span types."
 
 (defun polymode-next-chunk (&optional N)
   "Go N chunks forwards.
-Return the number of actually moved over chunks."
+Return the number of actually moved over chunks. This command is
+a \"cycling\" command (see `polymode-next-chunk-same-type' for an
+example)."
   (interactive "p")
   (pm-goto-span-of-type '(nil body) N)
   ;; If head/tail end before eol we move to the next line
   (when (looking-at "\\s *$")
     (forward-line 1))
-  (pm-switch-to-buffer))
+  (pm--set-transient-map (list #'polymode-previous-chunk
+                               #'polymode-next-chunk)))
 
 ;;fixme: problme with long chunks .. point is recentered
 ;;todo: merge into next-chunk
 (defun polymode-previous-chunk (&optional N)
-  "Go N chunks backwards .
-Return the number of chunks jumped over."
+  "Go N chunks backwards.
+This command is a \"cycling\" command (see
+`polymode-next-chunk-same-type' for an example). Return the
+number of chunks jumped over."
   (interactive "p")
   (polymode-next-chunk (- N)))
 
 (defun polymode-next-chunk-same-type (&optional N)
   "Go to next N chunk.
-Return the number of chunks of the same type moved over."
+Return the number of chunks of the same type moved over. This
+command is a \"cycling\" command in the sense that you can repeat
+the basic key of the command to invoke it multiple times. For
+example, with the default polymode bindings, M-n C-M-n C-M-n
+C-M-p will move forward twice and backwards once."
   (interactive "p")
   (let* ((sofar 0)
          (back (< N 0))
          (beg (if back (point-min) (point)))
          (end (if back (point) (point-max)))
          (N (if back (- N) N))
+         (pos (point))
          this-type this-name)
     (condition-case-unless-debug nil
         (pm-map-over-spans
          (lambda (span)
            (unless (memq (car span) '(head tail))
              (when (and (equal this-name
-                               (eieio-object-name (car (last span))))
+                               (eieio-object-name-string (car (last span))))
                         (eq this-type (car span)))
+               (setq pos (point))
                (setq sofar (1+ sofar)))
              (unless this-name
-               (setq this-name (eieio-object-name (car (last span)))
+               (setq this-name (eieio-object-name-string (car (last span)))
                      this-type (car span)))
              (when (>= sofar N)
                (signal 'quit nil))))
          beg end nil back)
       (quit (when (looking-at "\\s *$")
-              (forward-line)))
-      (pm-switch-to-buffer))
+              (forward-line))))
+    (when (or (eobp) (bobp))
+      (message "No more chunks of type %s" this-name)
+      (ding)
+      (goto-char pos))
+    (pm--set-transient-map (list #'polymode-previous-chunk-same-type
+                                 #'polymode-next-chunk-same-type))
     sofar))
 
 (defun polymode-previous-chunk-same-type (&optional N)
@@ -176,6 +197,9 @@ Return the number of chunks of the same type moved over."
 Return the number of chunks of the same type moved over."
   (interactive "p")
   (polymode-next-chunk-same-type (- N)))
+
+
+;;; KILL and NARROWING
 
 (defun pm--kill-span (types)
   (let ((span (pm-innermost-span)))
@@ -219,6 +243,7 @@ Return the number of chunks of the same type moved over."
       (_ (pm-narrow-to-span)))))
 
 (defun pm-chunk-range (&optional pos)
+  "Return a range (BEG . END) for a chunk at POS."
   (setq pos (or pos (point)))
   (let ((span (pm-innermost-span pos))
         (pmin (point-min))
@@ -307,6 +332,109 @@ is bound on \"M-n M-m\" (the default)
         (pop-to-buffer buf `(nil . ((inhibit-same-window . ,pop-up-windows))))
       (message "No polymode process buffers found."))))
 
+
+;;; EVALUATION
+
+(defvar polymode-eval-map
+  (let (polymode-eval-map)
+    (define-prefix-command 'polymode-eval-map)
+    (define-key polymode-eval-map "v" #'polymode-eval-region-or-chunk)
+    (define-key polymode-eval-map "b" #'polymode-eval-buffer)
+    (define-key polymode-eval-map "u" #'polymode-eval-buffer-from-beg-to-point)
+    (define-key polymode-eval-map "d" #'polymode-eval-buffer-from-point-to-end)
+    (define-key polymode-eval-map (kbd "<up>") #'polymode-eval-buffer-from-beg-to-point)
+    (define-key polymode-eval-map (kbd "<down>") #'polymode-eval-buffer-from-point-to-end)
+    polymode-eval-map)
+  "Keymap for polymode evaluation commands.")
+
+(defvar-local polymode-eval-region-function nil
+  "Function taking three arguments which does mode specific evaluation.
+First two arguments are BEG and END of the region. The third
+argument is the message describing the evaluation type. If the
+value of this variable is non-nil in the host mode then all inner
+spans are evaluated within the host buffer and values of this
+variable for the inner modes are ignored.")
+
+(defun polymode-eval-region (beg end &optional msg)
+  "Eval all spans within region defined by BEG and END.
+MSG is a message to be passed to `polymode-eval-region-function';
+defaults to \"Eval region\"."
+  (interactive "r")
+  (save-excursion
+    (let* ((base (pm-base-buffer))
+           (host-fun (buffer-local-value 'polymode-eval-region-function base))
+           (msg (or msg "Eval region"))
+           evalled mapped)
+      (if host-fun
+          (pm-map-over-spans
+           (lambda (span)
+             (when (eq (car span) 'body)
+               (with-current-buffer base
+                 (funcall host-fun (max beg (nth 1 span)) (min end (nth 2 span)) msg))))
+           beg end)
+        (pm-map-over-spans
+         (lambda (span)
+           (when (eq (car span) 'body)
+             (setq mapped t)
+             (when polymode-eval-region-function
+               (setq evalled t)
+               (funcall polymode-eval-region-function
+                        (max beg (nth 1 span))
+                        (min end (nth 2 span))
+                        msg))))
+         beg end)
+        (unless mapped
+          (user-error "No inner spans in the region"))
+        (unless evalled
+          (user-error "None of the inner spans have `polymode-eval-region-function' defined"))))))
+
+(defun polymode-eval-chunk (span-or-pos &optional no-error)
+  "Eval the body span of the inner chunk at point.
+SPAN-OR-POS is either a span or a point. When NO-ERROR is
+non-nil, don't throw if `polymode-eval-region-function' is nil."
+  (interactive "d")
+  (let* ((span (if (number-or-marker-p span-or-pos)
+                   (pm-innermost-span span-or-pos)
+                 span-or-pos))
+         (body-span (pcase (car span)
+                      ('head (pm-innermost-span (nth 2 span)))
+                      ('tail (pm-innermost-span (1- (nth 1 span))))
+                      ('body span)
+                      (_ (user-error "Not in an inner chunk"))))
+         (base (pm-base-buffer))
+         (host-fun (buffer-local-value 'polymode-eval-region-function base))
+         (msg "Eval chunk"))
+    (save-excursion
+      (pm-set-buffer body-span)
+      (if host-fun
+          (with-current-buffer base
+            (funcall host-fun (nth 1 body-span) (nth 2 body-span) msg))
+        (if polymode-eval-region-function
+            (funcall polymode-eval-region-function (nth 1 body-span) (nth 2 body-span) msg)
+          (unless no-error
+            (error "Undefined `polymode-eval-region-function' in buffer %s" (current-buffer))))))))
+
+(defun polymode-eval-region-or-chunk ()
+  "Eval all inner chunks in region if active, or current chunk otherwise."
+  (interactive)
+  (if (use-region-p)
+      (polymode-eval-region (region-beginning) (region-end))
+    (polymode-eval-chunk (point))))
+
+(defun polymode-eval-buffer ()
+  "Eval all inner chunks in the buffer."
+  (interactive)
+  (polymode-eval-region (point-min) (point-max) "Eval buffer"))
+
+(defun polymode-eval-buffer-from-beg-to-point ()
+  "Eval all inner chunks from beginning of buffer till point."
+  (interactive)
+  (polymode-eval-region (point-min) (point) "Eval buffer till point"))
+
+(defun polymode-eval-buffer-from-point-to-end ()
+  "Eval all inner chunks from point to the end of buffer."
+  (interactive)
+  (polymode-eval-region (point) (point-max) "Eval buffer till end"))
 
 
 ;;; DEFINE
@@ -467,28 +595,29 @@ most frequently used slots are:
               (parent-conf (and parent-conf-name (symbol-value parent-conf-name))))
 
          ;; define the minor-mode's keymap
-         (defvar ,keymap-name
-           (if (keymapp keymap)
-               keymap
-             (let ((parent-map (unless (keymapp keymap)
-                                 ;; keymap is either nil or a list
-                                 (cond
-                                  ;; 1. if parent is config object, merge all list
-                                  ;; keymaps from parents
-                                  ((eieio-object-p parent-conf)
-                                   (let ((klist.kmap (pm--get-keylist.keymap-from-parent
-                                                      keymap (symbol-value parent))))
-                                     (setq keymap (car klist.kmap))
-                                     (cdr klist.kmap)))
-                                  ;; 2. If parent is polymode function, take the
-                                  ;; minor-mode from the parent config
-                                  (parent-conf
-                                   (derived-mode-map-name
-                                    (eieio-oref parent-conf '-minor-mode)))
-                                  ;; 3. nil
-                                  (t 'polymode-minor-mode-map)))))
-               (easy-mmode-define-keymap keymap nil nil (list :inherit parent-map))))
-           ,(format "Keymap for %s." mode-name))
+         (defvar ,keymap-name ,(format "Keymap for %s." mode-name))
+         (setq ,keymap-name
+               (if (keymapp keymap)
+                   keymap
+                 (let ((parent-map (unless (keymapp keymap)
+                                     ;; keymap is either nil or a list
+                                     (cond
+                                      ;; 1. if parent is config object, merge all list
+                                      ;; keymaps from parents
+                                      ((eieio-object-p parent-conf)
+                                       (let ((klist.kmap (pm--get-keylist.keymap-from-parent
+                                                          keymap (symbol-value parent))))
+                                         (setq keymap (car klist.kmap))
+                                         (cdr klist.kmap)))
+                                      ;; 2. If parent is polymode function, take the
+                                      ;; minor-mode from the parent config
+                                      (parent-conf
+                                       (symbol-value
+                                        (derived-mode-map-name
+                                         (eieio-oref parent-conf '-minor-mode))))
+                                      ;; 3. nil
+                                      (t polymode-minor-mode-map)))))
+                   (easy-mmode-define-keymap keymap nil nil (list :inherit parent-map)))))
 
          ,@(unless (eq parent config-name)
              `((defcustom ,config-name nil

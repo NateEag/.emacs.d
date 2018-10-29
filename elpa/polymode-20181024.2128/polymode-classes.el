@@ -97,7 +97,11 @@ poly-minor-modes. ")
     :initform nil
     :custom (repeat symbol)
     :documentation
-    "List of inner-mode names (symbols) associated with this polymode.")
+    "List of inner-mode names (symbols) associated with this polymode.
+A special marker :inherit in this list is replaced with the
+innermodes of the parent. This allows for a simple way to add
+innermodes to the child without explicitly listing all the
+innermodes of the parent.")
    (exporters
     :initarg :exporters
     :initform '(pm-exporter/pandoc)
@@ -196,12 +200,36 @@ means to use the host mode as a fallback in the body of this
 chunk.")
    (indent-offset
     :initarg :indent-offset
-    :initform 0
-    :type integer
-    :custom integer
+    :initform 2
+    :type (or integer symbol)
+    :custom (or integer symbol)
     :documentation
-    "Offset to add when indenting chunk's line.
-Takes effect only when :protect-indent is non-nil.")
+    "Indentation offset for this mode.
+Currently this is only used in +indent and -indent cookies which
+when placed on a line cause manual shift in indentation with
+respect to how polymode would normally indent a line. Should be
+used in cases when indentation of the line is incorrect. Can be a
+number, a variable name or a function name to be called with no
+arguments.")
+   (pre-indent-offset
+    :initarg :pre-indent-offset
+    :initform 0
+    :type (or number function)
+    :custom (choice number function)
+    :documentation
+    "Function to compute the offset first line of this chunk.
+Offset is relative to how the host mode would indent it. Called
+with no-arguments with the point at the begging of the chunk.")
+   (post-indent-offset
+    :initarg :post-indent-offset
+    :initform 0
+    :type (or number function)
+    :custom (choice number function)
+    :documentation
+    "Function to compute the offset of the following line after this chunk.
+Offset is relative to how the host mode would indent it. Called
+without arguments with point at the end of the chunk but before
+the trailing white spaces if any.")
    (protect-indent
     :initarg :protect-indent
     :initform nil

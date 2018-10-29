@@ -50,7 +50,8 @@
     :type list
     :custom list
     :documentation
-    "Input-output specifications. An alist with elements of the
+    "
+    Input-output specifications. An alist with elements of the
     form (id reg-from ext-to doc command) or (id . selector).
 
      In both cases ID is the unique identifier of the spec. In
@@ -69,10 +70,10 @@
          %t - 4th element of the :to spec
 
      When specification is of the form (id . selector), SELECTOR
-     is a function of variable arguments that accepts at least
-     one argument ACTION. This function is called in a buffer
-     visiting input file. ACTION is a symbol and can one of the
-     following:
+     is a function of variable arguments with first two arguments
+     being ACTION and ID of the specification. This function is
+     called in a buffer visiting input file. ACTION is a symbol
+     and can one of the following:
 
          match - must return non-nil if this specification
              applies to the file that current buffer is visiting,
@@ -123,8 +124,7 @@
 (defclass pm-callback-weaver (pm-weaver)
   ((callback
     :initarg :callback
-    :initform (lambda (&optional rest)
-                (error "No callback defined for this weaver"))
+    :initform nil
     :type (or symbol function)
     :documentation
     "Callback function to be called by :function. There is no
@@ -213,7 +213,7 @@ When `from-to' is universal argument ask user for specification
 for the specification. See also `pm-weaveer' for the complete
 specification."
   (interactive "P")
-  (cl-flet ((name.id (el) (cons (funcall (cdr el) 'doc) (car el))))
+  (cl-flet ((name.id (el) (cons (funcall (cdr el) 'doc (car el)) (car el))))
     (let* ((weaver (symbol-value (or (eieio-oref pm/polymode 'weaver)
                                      (polymode-set-weaver))))
            (case-fold-search t)
@@ -228,13 +228,12 @@ specification."
                pm--weave:fromto-last
 
                ;; 2. select :from entries which match to current file
-               (let ((matched (cl-loop for el in (pm--selectors weaver :from-to)
-                                       when (pm--selector-match (cdr el))
-                                       collect (name.id el))))
+               (let ((matched (pm--matched-selectors weaver :from-to)))
                  (when matched
                    (if (> (length matched) 1)
-                       (cdr (pm--completing-read "Multiple `from-to' specs matched. Choose one: " matched))
-                     (cdar matched))))
+                       (cdr (pm--completing-read "Multiple `from-to' specs matched. Choose one: "
+                                                 (mapcar #'name.id matched)))
+                     (caar matched))))
 
                ;; 3. nothing matched, ask
                (let* ((prompt "No `from-to' specs matched. Choose one: ")
@@ -275,6 +274,7 @@ each polymode in CONFIGS."
                    "pm-weaver/"))
          (sel (pm--completing-read "Choose weaver: " weavers nil t nil 'pm--weaver-hist))
          (out (intern (cdr sel))))
+    (setq pm--weaver-hist (delete-dups pm--weaver-hist))
     (setq-local pm--weave:fromto-last nil)
     (oset pm/polymode :weaver out)
     out))

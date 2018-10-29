@@ -127,6 +127,7 @@ MODE is a quoted symbol."
          ;; (flyspell-mode -1) ;; triggers "too much reentrancy" error
          (goto-char (point-min))
          ,pre-form
+         ;; need this to activate all chunks
          (font-lock-ensure)
          (goto-char (point-min))
          (save-excursion
@@ -346,6 +347,32 @@ points."
        (unwind-protect
            (pm-test--run-indentation-tests)
          (undo-boundary)))))
+
+(defmacro pm-test-file-indent (mode file-with-indent &optional file-no-indent)
+  `(pm-test-run-on-file ,mode ,(or file-no-indent file-with-indent)
+     (let ((indent-tabs-mode nil)
+           (right (with-current-buffer (find-file-noselect
+                                        ,(pm-test-get-file file-with-indent))
+                    (substring-no-properties (buffer-string))))
+           (inhibit-message t))
+       (unless ,file-no-indent
+         (goto-char 1)
+         (while (re-search-forward "^[ \t]+"  nil t)
+           (replace-match ""))
+         (goto-char 1))
+       (indent-region (point-min) (point-max))
+       (let ((new (substring-no-properties (buffer-string))))
+         (unless (string= right new)
+           (require 'pascal)
+           (let ((pos (1+ (pascal-string-diff right new))))
+             (ert-fail (list "Wrong indent" :pos pos
+                             :ref (with-temp-buffer
+                                    (insert right)
+                                    (goto-char pos)
+                                    (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
+                             :new (progn
+                                    (goto-char pos)
+                                    (buffer-substring-no-properties (point-at-bol) (point-at-eol)))))))))))
 
 (provide 'polymode-test-utils)
 ;;; polymode-test.el ends here

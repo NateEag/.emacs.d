@@ -1224,7 +1224,7 @@ customize the resulting theme."
        ((,class (:foreground ,orange :background ,base02))))
 ;;;;; ivy
      `(ivy-confirm-face ((,class (:foreground ,green))))
-     `(ivy-current-match ((,class (:weight bold :background ,base02))))
+     `(ivy-current-match ((,class (:weight bold :background ,base02 :underline t))))
      `(ivy-match-required-face ((,class (:foreground ,red))))
      `(ivy-minibuffer-match-face-1 ((,class (:foreground ,base1))))
      `(ivy-minibuffer-match-face-2 ((,class (:foreground ,yellow))))
@@ -1419,12 +1419,6 @@ customize the resulting theme."
      `(magit-diff-context-highlight      ((t (:background ,base02))))
      `(magit-diffstat-added              ((t (:foreground ,green))))
      `(magit-diffstat-removed            ((t (:foreground ,red))))
-;;;;;; popup
-     `(magit-popup-heading             ((t (:foreground ,yellow  :weight bold))))
-     `(magit-popup-key                 ((t (:foreground ,base1   :weight bold))))
-     `(magit-popup-argument            ((t (:foreground ,cyan    :weight bold))))
-     `(magit-popup-disabled-argument   ((t (:foreground ,base01  :weight normal))))
-     `(magit-popup-option-value        ((t (:foreground ,cyan    :weight bold))))
 ;;;;;; process
      `(magit-process-ok    ((t (:foreground ,green :weight bold))))
      `(magit-process-ng    ((t (:foreground ,red   :weight bold))))
@@ -1477,6 +1471,12 @@ customize the resulting theme."
      `(magit-reflog-cherry-pick  ((t (:foreground ,green))))
      `(magit-reflog-remote       ((t (:foreground ,cyan))))
      `(magit-reflog-other        ((t (:foreground ,cyan))))
+;;;;; magit-popup
+     `(magit-popup-heading             ((t (:foreground ,yellow  :weight bold))))
+     `(magit-popup-key                 ((t (:foreground ,base1   :weight bold))))
+     `(magit-popup-argument            ((t (:foreground ,cyan    :weight bold))))
+     `(magit-popup-disabled-argument   ((t (:foreground ,base01  :weight normal))))
+     `(magit-popup-option-value        ((t (:foreground ,cyan    :weight bold))))
 ;;;;; markdown-mode
      `(markdown-blockquote-face ((,class (:inherit font-lock-doc-face))))
      `(markdown-bold-face ((,class (:inherit bold))))
@@ -2049,6 +2049,15 @@ customize the resulting theme."
      ;; zencoding uses this.
      `(tooltip ((,class (:background ,yellow-lc :foreground ,yellow-hc
                                      :inherit ,s-variable-pitch))))
+;;;;; transient
+     `(transient-heading             ((t (:foreground ,yellow  :weight bold))))
+     `(transient-key                 ((t (:foreground ,base1   :weight bold))))
+     `(transient-argument            ((t (:foreground ,cyan    :weight bold))))
+     `(transient-value               ((t (:foreground ,cyan    :weight bold))))
+     `(transient-inactive-argument   ((t (:foreground ,base01  :weight normal))))
+     `(transient-inactive-value      ((t (:foreground ,base01  :weight normal))))
+     `(transient-unreachable         ((t (:foreground ,base01  :weight normal))))
+     `(transient-unreachable-key     ((t (:foreground ,base01  :weight normal))))
 ;;;;; tuareg
      `(tuareg-font-lock-governing-face ((,class (:foreground ,magenta :weight bold))))
      `(tuareg-font-lock-multistage-face ((,class (:foreground ,blue :background ,base02

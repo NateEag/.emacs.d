@@ -27,12 +27,15 @@
 
 (require 'ledger-xact)
 (require 'ledger-navigate)
+(require 'ledger-commodities)
 (declare-function ledger-read-string-with-default "ledger-mode" (prompt default))
 (declare-function ledger-read-account-with-prompt "ledger-mode" (prompt))
 
 (require 'easymenu)
 (require 'ansi-color)
 (require 'font-lock)
+(eval-when-compile
+  (require 'rx))
 
 (defvar ledger-buf)
 
@@ -128,6 +131,11 @@ when running reports?"
   :type 'boolean
   :group 'ledger-report)
 
+(defcustom ledger-report-after-report-hook nil
+  "Hook run after `ledger-report' has created the buffer and report."
+  :type 'boolean
+  :group 'ledger-report)
+
 (defvar ledger-report-buffer-name "*Ledger Report*")
 
 (defvar ledger-report-name nil)
@@ -184,6 +192,7 @@ when running reports?"
       #'ledger-report-edit-report)
     (define-key map (kbd "M-p") #'ledger-report-previous-month)
     (define-key map (kbd "M-n") #'ledger-report-next-month)
+    (define-key map (kbd "$") #'ledger-report-toggle-default-commodity)
     map)
   "Keymap for `ledger-report-mode'.")
 
@@ -275,7 +284,7 @@ used to generate the buffer, navigating the buffer, etc."
       (ledger-do-report (ledger-report-cmd report-name edit))
       (ledger-report-maybe-shrink-window)
       (set-buffer-modified-p nil)
-      (setq buffer-read-only t)
+      (run-hooks 'ledger-report-after-report-hook)
       (message "q to quit; r to redo; e to edit; k to kill; s to save; SPC and DEL to scroll"))))
 
 (defun ledger-report--header-function ()
@@ -487,7 +496,7 @@ Optionally EDIT the command."
          'help-echo (format "mouse-2, RET: Visit %s:%d" file line))
         ;; Appending the face preserves Ledger's native highlighting
         (font-lock-append-text-property (line-beginning-position) (line-end-position)
-                                'face 'ledger-font-report-clickable-face)
+                                        'face 'ledger-font-report-clickable-face)
         (end-of-line)))))
 
 (defun ledger-report--compute-header-line (cmd)
@@ -570,6 +579,7 @@ arguments returned by `ledger-report--compute-extra-args'."
           (ledger-do-report ledger-report-cmd)
           (if ledger-report-is-reversed (ledger-report-reverse-lines))
           (if ledger-report-auto-refresh-sticky-cursor (forward-line (- ledger-report-cursor-line-number 5)))
+          (run-hooks 'ledger-report-after-report-hook)
           (pop-to-buffer cur-buf)))))
 
 (defun ledger-report-quit ()
@@ -642,6 +652,21 @@ arguments returned by `ledger-report--compute-extra-args'."
   "Rebuild report with transactions from the next month."
   (interactive)
   (ledger-report--change-month 1))
+
+(defun ledger-report-toggle-default-commodity ()
+  "Add or remove \"--exchange `ledger-reconcile-default-commodity' to the current report."
+  (interactive)
+  (unless (derived-mode-p 'ledger-report-mode)
+    (user-error "Not a ledger report buffer"))
+  (save-match-data
+    (if (string-match
+         (concat (rx (or "--exchange" "-X") (1+ space))
+                 (regexp-quote ledger-reconcile-default-commodity))
+         ledger-report-cmd)
+        (setq ledger-report-cmd (replace-match "" nil nil ledger-report-cmd))
+      (setq ledger-report-cmd (concat ledger-report-cmd
+                                      " --exchange " ledger-reconcile-default-commodity))))
+  (ledger-report-redo))
 
 (provide 'ledger-report)
 

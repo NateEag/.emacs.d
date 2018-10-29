@@ -5,7 +5,7 @@
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Created: 11 September 2014
 ;; Version: 0.6
-;; Package-Version: 20180602.1734
+;; Package-Version: 20181027.1629
 ;; Package-Requires: ((dash "2.8.0"))
 
 ;;; License:
@@ -55,6 +55,12 @@
   :group 'pip-requirements
   :type 'hook
   :risky t)
+
+(defcustom pip-requirements-index-url
+  "https://pypi.org/simple/"
+  "The URL used to fetch the list of packages used for completion."
+  :group 'pip-requirements
+  :type 'string)
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist
@@ -123,7 +129,7 @@
   "Get a list of all packages available on PyPI and store them in `pip-packages'.
 Assumes Emacs is compiled with libxml."
   (setq pip-http-buffer
-        (url-retrieve "https://pypi.org/simple/"
+        (url-retrieve pip-requirements-index-url
                       #'pip-requirements-callback nil t)))
 
 (defun pip-requirements-complete-at-point ()

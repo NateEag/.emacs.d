@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20181009.851
+;; Package-Version: 20181028.838
 ;; Keywords: project, convenience
 ;; Version: 1.1.0-snapshot
 ;; Package-Requires: ((emacs "25.1") (pkg-info "0.4"))
@@ -79,10 +79,10 @@
   :link '(url-link :tag "Online Manual" "https://docs.projectile.mx/")
   :link '(emacs-commentary-link :tag "Commentary" "projectile"))
 
-(defcustom projectile-indexing-method (if (eq system-type 'windows-nt) 'native 'turbo-alien)
+(defcustom projectile-indexing-method (if (eq system-type 'windows-nt) 'native 'alien)
   "Specifies the indexing method used by Projectile.
 
-There are three indexing methods - native, alien and turbo-alien.
+There are three indexing methods - native, hybrid and alien.
 
 The native method is implemented in Emacs Lisp (therefore it is
 native to Emacs).  Its advantage is that it is portable and will
@@ -90,12 +90,14 @@ work everywhere that Emacs does.  Its disadvantage is that it is a
 bit slow (especially for large projects).  Generally it's a good
 idea to pair the native indexing method with caching.
 
-The alien indexing method uses external tools (e.g. git, find,
-etc) to speed up the indexing process.  The disadvantage of this
-method is that it's not well supported on Windows systems.
+The hybrid indexing method uses external tools (e.g. git, find,
+etc) to speed up the indexing process.  Still, the files will be
+post-processed by Projectile for sorting/filtering purposes.
+In this sense that approach is a hybrid between native and indexing
+and alien indexing.
 
-The turbo-alien indexing method optimizes to the limit the speed
-of the alien indexing method.  This means that Projectile will
+The alien indexing method optimizes to the limit the speed
+of the hybrid indexing method.  This means that Projectile will
 not do any processing of the files returned by the external
 commands and you're going to get the maximum performance
 possible.  This behaviour makes a lot of sense for most people,
@@ -103,13 +105,14 @@ as they'd typically be putting ignores in their VCS config and
 won't care about any additional ignores/unignores/sorting that
 Projectile might also provide.
 
-By default turbo-alien indexing is the default on all operating
-systems, except Windows."
+The disadvantage of the hybrid and alien methods is that they are not well
+supported on Windows systems.  That's why by default alien indexing is the
+default on all operating systems, except Windows."
   :group 'projectile
   :type '(radio
           (const :tag "Native" native)
-          (const :tag "Alien" alien)
-          (const :tag "Turbo Alien" turbo-alien)))
+          (const :tag "Hybrid" hybrid)
+          (const :tag "Alien" alien)))
 
 (defcustom projectile-enable-caching (eq projectile-indexing-method 'native)
   "When t enables project files caching.
@@ -118,6 +121,22 @@ Project caching is automatically enabled by default if you're
 using the native indexing method."
   :group 'projectile
   :type 'boolean)
+
+(defcustom projectile-kill-buffers-filter 'kill-all
+  "Determine which buffers are killed by `projectile-kill-buffers'.
+
+When the kill-all option is selected, kills each buffer.
+
+When the kill-only-files option is selected, kill only the buffer
+associated to a file.
+
+Otherwise, it should be a predicate that takes one argument: the buffer to
+be killed."
+  :group 'projectile
+  :type '(radio
+          (const :tag "All project buffers" kill-all)
+          (const :tag "Project file buffers" kill-only-files)
+          (function :tag "Predicate")))
 
 (defcustom projectile-file-exists-local-cache-expire nil
   "Number of seconds before the local file existence cache expires.
@@ -1100,8 +1119,8 @@ Files are returned as relative paths to DIRECTORY."
           (pcase projectile-indexing-method
            ('native (projectile-dir-files-native directory))
            ;; use external tools to get the project files
-           ('alien (projectile-adjust-files directory vcs (projectile-dir-files-external directory)))
-           ('turbo-alien (projectile-dir-files-external directory))
+           ('hybrid (projectile-adjust-files directory vcs (projectile-dir-files-alien directory)))
+           ('alien (projectile-dir-files-alien directory))
            (_ (user-error "Unsupported indexing method `%S'" projectile-indexing-method)))))))
 
 ;;; Native Project Indexing
@@ -1140,10 +1159,10 @@ function is executing."
 
 ;;; Alien Project Indexing
 ;;
-;; This corresponds to `projectile-indexing-method' being set to alien or turbo-alien.
-;; The only difference between the two methods is that turbo-alien doesn't do
+;; This corresponds to `projectile-indexing-method' being set to hybrid or alien.
+;; The only difference between the two methods is that alien doesn't do
 ;; any post-processing of the files obtained via the external command.
-(defun projectile-dir-files-external (directory)
+(defun projectile-dir-files-alien (directory)
   "Get the files for DIRECTORY using external tools."
   (let ((vcs (projectile-project-vcs directory)))
     (cond
@@ -1152,7 +1171,8 @@ function is executing."
             (projectile-get-sub-projects-files directory vcs)))
     (t (projectile-files-via-ext-command directory (projectile-get-ext-command vcs))))))
 
-(define-obsolete-variable-alias 'projectile-get-repo-files 'projectile-dir-files-external "1.1")
+(define-obsolete-function-alias 'projectile-dir-files-external 'projectile-dir-files-alien "1.1")
+(define-obsolete-function-alias 'projectile-get-repo-files 'projectile-dir-files-alien "1.1")
 
 (defun projectile-get-ext-command (vcs)
   "Determine which external command to invoke based on the project's VCS.
@@ -1756,9 +1776,26 @@ https://github.com/abo-abo/swiper")))
     (when (null files)
       (when projectile-enable-caching
         (message "Projectile is initializing cache..."))
-      (setq files (cl-mapcan
-                   (lambda (dir) (projectile-dir-files dir))
-                   (projectile-get-project-directories project-root)))
+      (setq files
+            (if (eq projectile-indexing-method 'alien)
+                ;; In alien mode we can just skip reading
+                ;; .projectile and find all files in the root dir.
+                (projectile-dir-files-alien project-root)
+              ;; If a project is defined as a list of subfolders
+              ;; then we'll have the files returned for each subfolder,
+              ;; so they are relative to the project root.
+              ;;
+              ;; TODO: That's pretty slow and we need to improve it.
+              ;; One options would be to pass explicitly the subdirs
+              ;; to commands like `git ls-files` which would return
+              ;; files paths relative to the project root.
+              (cl-mapcan
+               (lambda (dir)
+                 (mapcar (lambda (f)
+                           (file-relative-name (concat dir f)
+                                               project-root))
+                         (projectile-dir-files dir)))
+               (projectile-get-project-directories project-root))))
 
       ;; Save the cached list.
       (when projectile-enable-caching
@@ -1768,8 +1805,8 @@ https://github.com/abo-abo/swiper")))
     ;;
     ;; Files can't be cached in sorted order as some sorting schemes
     ;; require dynamic data.  Sorting is ignored completely when in
-    ;; turbo-alien mode.
-    (if (eq projectile-indexing-method 'turbo-alien)
+    ;; alien mode.
+    (if (eq projectile-indexing-method 'alien)
         files
       (projectile-sort-files files))))
 
@@ -3113,17 +3150,29 @@ to run the replacement."
 
 ;;;###autoload
 (defun projectile-kill-buffers ()
-  "Kill all project buffers."
+  "Kill project buffers.
+
+The buffer are killed according to the value of
+`projectile-kill-buffers-filter'."
   (interactive)
   (let* ((project (projectile-ensure-project (projectile-project-root)))
          (project-name (projectile-project-name project))
          (buffers (projectile-project-buffers project)))
-    (if (yes-or-no-p
-         (format "Are you sure you want to kill %d buffer(s) for '%s'? "
-                 (length buffers) project-name))
-        ;; we take care not to kill indirect buffers directly
-        ;; as we might encounter them after their base buffers are killed
-        (mapc #'kill-buffer (cl-remove-if 'buffer-base-buffer buffers)))))
+    (when (yes-or-no-p
+           (format "Are you sure you want to kill buffers for '%s'? "
+                   project-name))
+      (dolist (buffer buffers)
+        (when (and
+               ;; we take care not to kill indirect buffers directly
+               ;; as we might encounter them after their base buffers are killed
+               (not (buffer-base-buffer buffer))
+               (if (functionp projectile-kill-buffers-filter)
+                   (funcall projectile-kill-buffers-filter buffer)
+                 (pcase projectile-kill-buffers-filter
+                   ('kill-all t)
+                   ('kill-only-files (buffer-file-name buffer))
+                   (_ (user-error "Invalid projectile-kill-buffers-filter value: %S" projectile-kill-buffers-filter)))))
+          (kill-buffer buffer))))))
 
 ;;;###autoload
 (defun projectile-save-project-buffers ()
@@ -3397,6 +3446,17 @@ project of that type"
       (funcall cmd)
     (compile cmd)))
 
+(defvar projectile-project-command-history (make-hash-table :test 'equal)
+  "The history of last executed project commands, per project.
+
+Projects are indexed by their project-root value.")
+
+(defun projectile--get-command-history (project-root)
+  (or (gethash project-root projectile-project-command-history)
+      (puthash project-root
+               (make-ring 16)
+               projectile-project-command-history)))
+
 (cl-defun projectile--run-project-cmd
     (command command-map &key show-prompt prompt-prefix save-buffers)
   "Run a project COMMAND, typically a test- or compile command.
@@ -3408,13 +3468,17 @@ variable `compilation-read-command'.  You can force the prompt
 by setting SHOW-PROMPT.  The prompt will be prefixed with PROMPT-PREFIX.
 
 If SAVE-BUFFERS is non-nil save all projectile buffers before
-running the command."
+running the command.
+
+The command actually run is returned."
   (let* ((project-root (projectile-project-root))
          (default-directory (projectile-compilation-dir))
          (command (projectile-maybe-read-command show-prompt
                                                  command
                                                  prompt-prefix)))
-    (puthash default-directory command command-map)
+    (when command-map
+      (puthash default-directory command command-map)
+      (ring-insert (projectile--get-command-history project-root) command))
     (when save-buffers
       (save-some-buffers (not compilation-ask-about-save)
                          (lambda ()
@@ -3422,7 +3486,8 @@ running the command."
                                                         project-root))))
     (unless (file-directory-p default-directory)
       (mkdir default-directory))
-    (projectile-run-compilation command)))
+    (projectile-run-compilation command)
+    command))
 
 ;;;###autoload
 (defun projectile-configure-project (arg)
@@ -3478,6 +3543,32 @@ with a prefix ARG."
     (projectile--run-project-cmd command projectile-run-cmd-map
                                  :show-prompt arg
                                  :prompt-prefix "Run command: ")))
+
+;;;###autoload
+(defun projectile-repeat-last-command (show-prompt)
+  "Run last projectile external command.
+
+External commands are: `projectile-configure-project',
+`projectile-compile-project', `projectile-test-project' and
+`projectile-run-project'.
+
+If the prefix argument SHOW_PROMPT is non nil, the command can be edited."
+  (interactive "P")
+  (let* ((project-root
+          (projectile-ensure-project (projectile-project-root)))
+         (command-history (projectile--get-command-history project-root))
+         (command (car-safe (ring-elements command-history)))
+         (compilation-read-command show-prompt)
+         executed-command)
+    (unless command
+      (user-error "No command has been run yet for this project"))
+    (setq executed-command
+          (projectile--run-project-cmd command
+                                       nil
+                                       :save-buffers t
+                                       :prompt-prefix "Execute command: "))
+    (unless (string= command executed-command)
+      (ring-insert command-history executed-command))))
 
 (defadvice compilation-find-file (around projectile-compilation-find-file)
   "Try to find a buffer for FILENAME, if we cannot find it,
@@ -3957,6 +4048,38 @@ dirty project list."
     (projectile-completing-read "Select project: " mod-proj
                                 :action 'projectile-vc)))
 
+
+;;; Find next/previous project buffer
+(defun projectile--repeat-until-project-buffer (orig-fun &rest args)
+  "Repeat ORIG-FUN with ARGS until the current buffer is a project buffer."
+  (if (projectile-project-root)
+      (let* ((other-project-buffers (make-hash-table :test 'eq))
+             (projectile-project-buffers (projectile-project-buffers))
+             (max-iterations (length (buffer-list)))
+             (counter 0))
+        (dolist (buffer projectile-project-buffers)
+          (unless (eq buffer (current-buffer))
+            (puthash buffer t other-project-buffers)))
+        (when (cdr-safe projectile-project-buffers)
+          (while (and (< counter max-iterations)
+                      (not (gethash (current-buffer) other-project-buffers)))
+            (apply orig-fun args)
+            (incf counter))))
+    (apply orig-fun args)))
+
+(defun projectile-next-project-buffer ()
+  "In selected window switch to the next project buffer.
+
+If the current buffer does not belong to a project, call `next-buffer'."
+  (interactive)
+  (projectile--repeat-until-project-buffer #'next-buffer))
+
+(defun projectile-previous-project-buffer ()
+  "In selected window switch to the previous project buffer.
+
+If the current buffer does not belong to a project, call `previous-buffer'."
+  (interactive)
+  (projectile--repeat-until-project-buffer #'previous-buffer))
 
 
 ;;; Editing a project's .dir-locals
@@ -4140,6 +4263,7 @@ thing shown in the mode line otherwise."
         ["Compile project" projectile-compile-project]
         ["Test project" projectile-test-project]
         ["Run project" projectile-run-project]
+        ["Repeat last external command" projectile-repeat-last-command]
         "--"
         ["Project info" projectile-project-info]
         ["About" projectile-version]))
@@ -4207,38 +4331,6 @@ Otherwise behave as if called interactively.
 
 ;;;###autoload
 (define-obsolete-function-alias 'projectile-global-mode 'projectile-mode "1.0")
-
-(defun projectile--repeat-until-project-buffer (orig-fun &rest args)
-  "Repeat ORIG-FUN with ARGS until the current buffer is a project buffer."
-  (if (projectile-project-root)
-      (let* ((other-project-buffers (make-hash-table :test 'eq))
-             (projectile-project-buffers (projectile-project-buffers))
-             (max-iterations (length (buffer-list)))
-             (counter 0))
-        (dolist (buffer projectile-project-buffers)
-          (unless (eq buffer (current-buffer))
-            (puthash buffer t other-project-buffers)))
-        (when (cdr-safe projectile-project-buffers)
-          (while (and (< counter max-iterations)
-                      (not (gethash (current-buffer) other-project-buffers)))
-            (apply orig-fun args)
-            (incf counter))))
-    (apply orig-fun args)))
-
-(defun projectile-next-project-buffer ()
-  "In selected window switch to the next project buffer.
-
-If the current buffer does not belong to a project, call `next-buffer'."
-  (interactive)
-  (projectile--repeat-until-project-buffer #'next-buffer))
-
-(defun projectile-previous-project-buffer ()
-  "In selected window switch to the previous project buffer.
-
-If the current buffer does not belong to a project, call `previous-buffer'."
-  (interactive)
-  (projectile--repeat-until-project-buffer #'previous-buffer))
-
 
 (provide 'projectile)
 

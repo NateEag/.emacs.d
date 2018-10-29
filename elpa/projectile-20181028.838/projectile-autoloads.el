@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "projectile" "projectile.el" (23486 20136 0
+;;;### (autoloads nil "projectile" "projectile.el" (23511 3139 0
 ;;;;;;  0))
 ;;; Generated autoloads from projectile.el
 
@@ -360,7 +360,10 @@ to run the replacement.
 \(fn &optional ARG)" t nil)
 
 (autoload 'projectile-kill-buffers "projectile" "\
-Kill all project buffers.
+Kill project buffers.
+
+The buffer are killed according to the value of
+`projectile-kill-buffers-filter'.
 
 \(fn)" t nil)
 
@@ -437,6 +440,17 @@ variable `compilation-read-command'.  You can force the prompt
 with a prefix ARG.
 
 \(fn ARG)" t nil)
+
+(autoload 'projectile-repeat-last-command "projectile" "\
+Run last projectile external command.
+
+External commands are: `projectile-configure-project',
+`projectile-compile-project', `projectile-test-project' and
+`projectile-run-project'.
+
+If the prefix argument SHOW_PROMPT is non nil, the command can be edited.
+
+\(fn SHOW-PROMPT)" t nil)
 
 (autoload 'projectile-switch-project "projectile" "\
 Switch to a project we have visited before.

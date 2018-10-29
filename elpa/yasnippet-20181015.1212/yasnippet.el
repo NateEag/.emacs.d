@@ -6,7 +6,7 @@
 ;;          Noam Postavsky <npostavs@gmail.com>
 ;; Maintainer: Noam Postavsky <npostavs@gmail.com>
 ;; Version: 0.13.0
-;; Package-Version: 20181007.2230
+;; Package-Version: 20181015.1212
 ;; X-URL: http://github.com/joaotavora/yasnippet
 ;; Keywords: convenience, emulation
 ;; URL: http://github.com/joaotavora/yasnippet
@@ -133,6 +133,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'eldoc) ; Needed for 24.
 (declare-function cl-progv-after "cl-extra") ; Needed for 23.4.
 (require 'easymenu)
 (require 'help-mode)
@@ -403,7 +404,15 @@ It must be set to nil before loading yasnippet to take effect."
   "A conditional key definition.
 This can be used as a key definition in keymaps to bind a key to
 `yas-skip-and-clear-field' only when at the beginning of an
-unmodified snippey field.")
+unmodified snippet field.")
+
+(defconst yas-maybe-clear-field
+    '(menu-item "" yas-clear-field
+                :filter yas--maybe-clear-field-filter)
+    "A conditional key definition.
+This can be used as a key definition in keymaps to bind a key to
+`yas-clear-field' only when at the beginning of an
+unmodified snippet field.")
 
 (defvar yas-keymap  (let ((map (make-sparse-keymap)))
                       (define-key map [(tab)]       'yas-next-field-or-maybe-expand)
@@ -412,6 +421,7 @@ unmodified snippey field.")
                       (define-key map [backtab]     'yas-prev-field)
                       (define-key map (kbd "C-g")   'yas-abort-snippet)
                       (define-key map (kbd "C-d")   yas-maybe-skip-and-clear-field)
+                      (define-key map (kbd "DEL")   yas-maybe-clear-field)
                       map)
   "The active keymap while a snippet expansion is in progress.")
 
@@ -624,13 +634,19 @@ override bindings from other packages (e.g., `company-mode')."
 
 (defvar yas--condition-cache-timestamp nil)
 
-(defun yas--maybe-expand-key-filter (cmd)
+(defun yas-maybe-expand-abbrev-key-filter (cmd)
+  "Return CMD if there is an expandable snippet at point.
+This function is useful as a `:filter' to a conditional key
+definition."
   (when (let ((yas--condition-cache-timestamp (current-time)))
           (yas--templates-for-key-at-point))
     cmd))
 
+(define-obsolete-function-alias 'yas--maybe-expand-key-filter
+  #'yas-maybe-expand-abbrev-key-filter "0.14")
+
 (defconst yas-maybe-expand
-  '(menu-item "" yas-expand :filter yas--maybe-expand-key-filter)
+  '(menu-item "" yas-expand :filter yas-maybe-expand-abbrev-key-filter)
   "A conditional key definition.
 This can be used as a key definition in keymaps to bind a key to
 `yas-expand' only when there is a snippet available to be
@@ -802,7 +818,10 @@ which decides on the snippet to expand.")
          (yas--dfs
           (lambda (mode)
             (cl-loop for neighbour
-                     in (cl-list* (get mode 'derived-mode-parent)
+                     in (cl-list* (or (get mode 'derived-mode-parent)
+                                      ;; Consider `fundamental-mode'
+                                      ;; as ultimate ancestor.
+                                      'fundamental-mode)
                                   ;; NOTE: `fboundp' check is redundant
                                   ;; since Emacs 24.4.
                                   (and (fboundp mode) (symbol-function mode))
@@ -2985,6 +3004,16 @@ The last element of POSSIBILITIES may be a list of strings."
                (funcall fn "Choose: " possibilities))
              yas-prompt-functions)))
 
+(defun yas-completing-read (&rest args)
+  "A snippet-aware version of `completing-read'.
+This can be used to query the user for the initial value of a
+snippet field.  The arguments are the same as `completing-read'.
+
+\(fn PROMPT COLLECTION &optional PREDICATE REQUIRE-MATCH INITIAL-INPUT HIST DEF INHERIT-INPUT-METHOD)"
+  (unless (or yas-moving-away-p
+              yas-modified-p)
+    (apply #'completing-read args)))
+
 (defun yas--auto-next ()
   "Helper for `yas-auto-next'."
   (remove-hook 'post-command-hook #'yas--auto-next t)
@@ -3014,7 +3043,7 @@ The last element of POSSIBILITIES may be a list of strings."
 (defun yas-verify-value (possibilities)
   "Verify that the current field value is in POSSIBILITIES.
 Otherwise signal `yas-exception'."
-  (when (and yas-moving-away-p (cl-notany (lambda (pos) (string= pos yas-text)) possibilities))
+  (when (and yas-moving-away-p (not (member yas-text possibilities)))
     (yas-throw (format "Field only allows %s" possibilities))))
 
 (defun yas-field-value (number)
@@ -3660,6 +3689,11 @@ Use as a `:filter' argument for a conditional keybinding."
   (yas--skip-and-clear (or field (yas-current-field)))
   (yas-next-field 1))
 
+(defun yas-clear-field (&optional field)
+  "Clears unmodified FIELD if at field start."
+  (interactive)
+  (yas--skip-and-clear (or field (yas-current-field))))
+
 (defun yas-skip-and-clear-or-delete-char (&optional field)
   "Clears unmodified field if at field start, skips to next tab.
 
@@ -4043,12 +4077,13 @@ Returns the newly created snippet."
       (yas--letenv expand-env
         ;; Put a single undo action for the expanded snippet's
         ;; content.
-        (let ((buffer-undo-list t))
+        (let ((buffer-undo-list t)
+              (inhibit-modification-hooks t))
           ;; Some versions of cc-mode fail when inserting snippet
           ;; content in a narrowed buffer, so make sure to insert
           ;; before narrowing.  Furthermore, call before and after
-          ;; change functions, otherwise cc-mode's cache can get
-          ;; messed up.
+          ;; change functions manually, otherwise cc-mode's cache can
+          ;; get messed up.
           (goto-char begin)
           (run-hook-with-args 'before-change-functions begin begin)
           (insert content)
@@ -4919,6 +4954,12 @@ object satisfying `yas--field-p' to restrict the expansion to.")))
           (help-xref-button 1 'help-snippet-def template)
           (delete-region (match-end 1) (match-end 0))
           (delete-region (match-beginning 0) (match-beginning 1)))))))
+
+;;; Eldoc configuration.
+(eldoc-add-command 'yas-next-field-or-maybe-expand
+                   'yas-next-field 'yas-prev-field
+                   'yas-expand 'yas-expand-from-keymap
+                   'yas-expand-from-trigger-key)
 
 ;;; Utils
 

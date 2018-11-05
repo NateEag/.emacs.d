@@ -102,9 +102,8 @@ proposed that setting `undo-tree-enable-undo-in-region` to `nil` might solve
 the issue, which at least one person in that thread says did not work. Others
 have suggested it seems to relate to persistent undo history or perhaps to
 working in version control repos, and certainly it seems to be more common for
-evil-mode users than others. I turned off undo in region and undo history
-persistence to see if that makes the issue stop, and I don't think I've seen it
-happen since I did that (mid-October 2017).
+evil-mode users than others. I have turned off undo in region and undo tree's
+support for saving undo history to see if that helps.
 
 I use `helm <http://emacs-helm.github.io/helm/>`__ to find files and commands
 quickly and easily. `helm-swoop

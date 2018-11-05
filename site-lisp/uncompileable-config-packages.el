@@ -49,5 +49,11 @@
                    (define-key java-mode-map (kbd "M-.") 'eclim-java-find-declaration)
                    )))))
 
+(use-package csharp-mode
+  :config
+  (add-hook 'csharp-mode-hook 'omnisharp-mode))
+
+(use-package cquery)
+
 (provide 'uncompileable-config-packages)
 ;;; uncompileable-config-packages.el ends here

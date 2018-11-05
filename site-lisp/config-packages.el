@@ -544,12 +544,6 @@ The shell command lives in my dotfiles repo."
                                  (setq jedi:use-shortcuts t)
                                  (setq jedi:complete-on-dot t))))
 
-(use-package csharp-mode
-  :config
-  (add-hook 'csharp-mode-hook 'omnisharp-mode))
-
-(use-package cquery)
-
 (use-package yaml-mode
   :mode "\\.yaml\\'"
   :defer t

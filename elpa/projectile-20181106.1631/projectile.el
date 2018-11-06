@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20181028.838
+;; Package-Version: 20181106.1631
 ;; Keywords: project, convenience
 ;; Version: 1.1.0-snapshot
 ;; Package-Requires: ((emacs "25.1") (pkg-info "0.4"))
@@ -43,7 +43,8 @@
 (require 'ibuf-ext)
 (require 'compile)
 (require 'grep)
-(require 'subr-x)
+(eval-when-compile
+  (require 'subr-x))
 
 (eval-when-compile
   (defvar ag-ignore-list)
@@ -64,6 +65,8 @@
 (declare-function eshell-search-path "esh-ext")
 (declare-function vc-dir "vc-dir")
 (declare-function vc-dir-busy "vc-dir")
+(declare-function ripgrep-regexp "ripgrep")
+(declare-function string-trim "subr-x")
 
 (defvar grep-files-aliases)
 (defvar grep-find-ignored-directories)
@@ -1107,9 +1110,15 @@ If PROJECT is not specified acts on the current project."
   (mapcar (lambda (subdir) (concat project-dir subdir))
           (or (nth 0 (projectile-parse-dirconfig-file)) '(""))))
 
+(defun projectile--directory-p (directory)
+  "Checks if DIRECTORY is a string designating a valid directory."
+  (and (stringp directory) (file-directory-p directory)))
+
 (defun projectile-dir-files (directory)
   "List the files in DIRECTORY and in its sub-directories.
 Files are returned as relative paths to DIRECTORY."
+  (unless (projectile--directory-p directory)
+    (error "Directory %S does not exist" directory))
   ;; check for a cache hit first if caching is enabled
   (let ((files-list (and projectile-enable-caching
                          (gethash directory projectile-projects-cache))))
@@ -2299,12 +2308,11 @@ TEST-DIR which specifies the path to the tests relative to the project root."
   "Check if a project contains Go source files."
   (projectile-verify-file-wildcard "*.go"))
 
+(define-obsolete-variable-alias 'projectile-go-function 'projectile-go-project-test-function "1.0.0")
 (defcustom projectile-go-project-test-function #'projectile-go-project-p
   "Function to determine if project's type is go."
   :group 'projectile
   :type 'function)
-
-(define-obsolete-variable-alias 'projectile-go-function 'projectile-go-project-test-function "1.0.0")
 
 ;;; Project type registration
 ;;
@@ -3159,8 +3167,8 @@ The buffer are killed according to the value of
          (project-name (projectile-project-name project))
          (buffers (projectile-project-buffers project)))
     (when (yes-or-no-p
-           (format "Are you sure you want to kill buffers for '%s'? "
-                   project-name))
+           (format "Are you sure you want to kill %s buffers for '%s'? "
+                   (length buffers) project-name))
       (dolist (buffer buffers)
         (when (and
                ;; we take care not to kill indirect buffers directly
@@ -3702,6 +3710,8 @@ With a prefix ARG invokes `projectile-commander' instead of
 
 This command will first prompt for the directory the file is in."
   (interactive "DFind file in directory: ")
+  (unless (projectile--directory-p directory)
+    (user-error "Directory %S does not exist" directory))
   (let ((default-directory directory))
     (if (projectile-project-p)
         ;; target directory is in a project
@@ -4064,7 +4074,7 @@ dirty project list."
           (while (and (< counter max-iterations)
                       (not (gethash (current-buffer) other-project-buffers)))
             (apply orig-fun args)
-            (incf counter))))
+            (cl-incf counter))))
     (apply orig-fun args)))
 
 (defun projectile-next-project-buffer ()
@@ -4121,6 +4131,7 @@ If the current buffer does not belong to a project, call `previous-buffer'."
 
 
 ;;; Projectile Minor mode
+(define-obsolete-variable-alias 'projectile-mode-line-lighter 'projectile-mode-line-prefix)
 (defcustom projectile-mode-line-prefix
   " Projectile"
   "Mode line lighter prefix for Projectile.
@@ -4130,8 +4141,6 @@ thing shown in the mode line otherwise."
   :group 'projectile
   :type 'string
   :package-version '(projectile . "0.12.0"))
-
-(define-obsolete-variable-alias 'projectile-mode-line-lighter 'projectile-mode-line-prefix)
 
 (defvar-local projectile--mode-line projectile-mode-line-prefix)
 

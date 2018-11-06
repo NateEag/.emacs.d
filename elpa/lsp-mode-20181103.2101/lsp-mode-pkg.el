@@ -1,4 +1,4 @@
-(define-package "lsp-mode" "20181027.2053" "Minor mode for interacting with Language Servers"
+(define-package "lsp-mode" "20181103.2101" "Minor mode for interacting with Language Servers"
   '((emacs "25.1"))
   :authors
   '(("Vibhav Pant" . "vibhavp@gmail.com"))

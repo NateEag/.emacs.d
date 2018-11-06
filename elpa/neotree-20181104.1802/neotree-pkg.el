@@ -1,4 +1,4 @@
-(define-package "neotree" "20180616.1603" "A tree plugin like NerdTree for Vim"
+(define-package "neotree" "20181104.1802" "A tree plugin like NerdTree for Vim"
   '((cl-lib "0.5"))
   :authors
   '(("jaypei" . "jaypei97159@gmail.com"))

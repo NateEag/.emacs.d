@@ -103,7 +103,7 @@ the issue, which at least one person in that thread says did not work. Others
 have suggested it seems to relate to persistent undo history or perhaps to
 working in version control repos, and certainly it seems to be more common for
 evil-mode users than others. I have turned off undo in region and undo tree's
-support for saving undo history to see if that helps.
+support for saving undo history to see if that helps (as of 2018-11-05).
 
 I use `helm <http://emacs-helm.github.io/helm/>`__ to find files and commands
 quickly and easily. `helm-swoop

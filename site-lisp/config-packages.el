@@ -641,9 +641,9 @@ The shell command lives in my dotfiles repo."
 
 ;; auto-compile dies on files that eventually lead it to compile compressed
 ;; elisp files. The way I caused this was a use-package invocation that touches
-;; on files in core Emacs, and therefore is loaded from byte-compiled versions
-;; of files that are themselves compressed and stored with the extension
-;; '.el.gz'.
+;; on files in core Emacs (specifically cc-mode, seen below), and therefore is
+;; loaded from byte-compiled versions of files that are themselves compressed
+;; and stored with the extension '.el.gz'.
 ;;
 ;; I tried adding a function to auto-compile-inhibit-compile-hook that would
 ;; abort on attempts to compile compressed files, but that had no effect on

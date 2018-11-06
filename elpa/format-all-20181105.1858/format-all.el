@@ -1,8 +1,8 @@
-;;; format-all.el --- Auto-format C, C++, JS, Python, Ruby and 25 other languages -*- lexical-binding: t -*-
+;;; format-all.el --- Auto-format C, C++, JS, Python, Ruby and 30 other languages -*- lexical-binding: t -*-
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20180928.1403
+;; Package-Version: 20181105.1858
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
@@ -13,20 +13,25 @@
 ;;; Commentary:
 ;;
 ;; Lets you auto-format source code in many languages using the same
-;; command for all languages, instead of learning a different elisp
-;; package and formatting command for each language.  Just do M-x
-;; `format-all-buffer' and it will try its best to do the right thing.
+;; command for all languages, instead of learning a different Emacs
+;; package and formatting command for each language.
+;;
+;; Just do M-x format-all-buffer and it will try its best to do the
+;; right thing.  To auto-format code on save, use the minor mode
+;; format-all-mode.  Please see the documentation for that function
+;; for instructions.
 ;;
 ;; Supported languages:
 ;;
 ;; - Assembly (asmfmt)
 ;; - C/C++/Objective-C (clang-format)
+;; - Clojure/ClojureScript (node-cljfmt)
 ;; - Crystal (crystal tool format)
 ;; - CSS/Less/SCSS (prettier)
 ;; - D (dfmt)
 ;; - Elixir (mix format)
 ;; - Elm (elm-format)
-;; - Emacs Lisp (native)
+;; - Emacs Lisp (emacs)
 ;; - Go (gofmt)
 ;; - GraphQL (prettier)
 ;; - Haskell (brittany)
@@ -49,10 +54,6 @@
 ;; You will need to install external programs to do the formatting.
 ;; If `format-all-buffer` can't find the right program, it will try to
 ;; tell you how to install it.
-;;
-;; A local minor mode called `format-all-mode` is available to format
-;; code on save.  Please see the documentation for that function for
-;; instructions.
 ;;
 ;; There are currently no customize variables, since it's not clear
 ;; what approach should be taken.  Please see
@@ -288,7 +289,7 @@ Consult the existing formatters for examples of BODY."
 (define-format-all-formatter brittany
   (:executable "brittany")
   (:install "stack install brittany")
-  (:modes haskell-mode)
+  (:modes haskell-mode literate-haskell-mode)
   (:format (format-all-buffer-easy executable)))
 
 (define-format-all-formatter clang-format
@@ -303,8 +304,14 @@ Consult the existing formatters for examples of BODY."
   (:format
    (format-all-buffer-easy
     executable
-    (let ((assume-filename (or (buffer-file-name) mode-result "")))
+    (let ((assume-filename (or (buffer-file-name) mode-result)))
       (when assume-filename (concat "-assume-filename=" assume-filename))))))
+
+(define-format-all-formatter cljfmt
+  (:executable "cljfmt")
+  (:install "npm install --global node-cljfmt")
+  (:modes clojure-mode clojurec-mode clojurescript-mode)
+  (:format (format-all-buffer-easy executable)))
 
 (define-format-all-formatter crystal
   (:executable "crystal")
@@ -393,7 +400,7 @@ Consult the existing formatters for examples of BODY."
 
 (define-format-all-formatter prettier
   (:executable "prettier")
-  (:install "npm install prettier")
+  (:install "npm install --global prettier")
   (:modes
    ((js-mode js2-mode js3-mode)
     ;; The prettier folks seem to be currently pondering whether to
@@ -521,14 +528,12 @@ to tell you how you might be able to install it on your operating
 system.  Only Emacs Lisp is formatted without an external program.
 
 A suitable formatter is selected according to the `major-mode' of
-the buffer.  Many popular programming languages are supported,
-but not all of them by any means, so unfortunately it's still
-likely that your favorite language is missing.  It is fairly easy
-to add new languages that have an external formatter.
+the buffer.  Many popular programming languages are supported.
+It is fairly easy to add new languages that have an external
+formatter.
 
 Any errors/warnings encountered during formatting are shown in a
-buffer called *format-all-errors*.  If the formatter made any
-changes to the code, point is placed at the first change."
+buffer called *format-all-errors*."
   (interactive)
   (cl-destructuring-bind (formatter mode-result) (format-all-probe)
     (unless formatter (error "Don't know how to format %S code" major-mode))
@@ -564,33 +569,36 @@ changes to the code, point is placed at the first change."
 (define-minor-mode format-all-mode
   "Toggle automatic source code formatting before save.
 
-When the Format-All minor mode is enabled, `format-all-buffer' is
-automatically called each time before you save the buffer.
-
-When called from Lisp, the mode is toggled if ARG is ‘toggle’,
-disabled if ARG is a negative integer or zero, and enabled
-otherwise.
+When this minor mode (FmtAll) is enabled, `format-all-buffer' is
+automatically called to format your code each time before you
+save the buffer.
 
 The mode is buffer-local and needs to be enabled separately each
-time a file is visited or a temporary buffer is created.
+time a file is visited.  You may want to use `add-hook' to add a
+function to your personal `after-change-major-mode-hook' in your
+`user-init-file' to enable the mode based on the buffer's
+`major-mode' and some `buffer-file-name' patterns. For example:
 
-You may want to use `add-hook' to add a function to your personal
-`after-change-major-mode-hook' in your `user-init-file' to enable
-the mode based on the buffer's `major-mode' and some
-`buffer-file-name' patterns. For example:
+    (defvar my-auto-format-modes '(js-mode python-mode))
+    (defvar my-auto-format-dirs '(\"foo\" \"bar\"))
+
+    (defun my-auto-format-buffer-p ()
+      (and (member major-mode my-auto-format-modes)
+           (buffer-file-name)
+           (save-match-data
+             (let ((dir (file-name-directory (buffer-file-name))))
+               (cl-some (lambda (regexp) (string-match regexp dir))
+                        my-auto-format-dirs)))))
 
     (defun my-after-change-major-mode ()
-      (format-all-mode
-       (if (and (buffer-file-name)
-                (save-match-data
-                  (let ((dir (file-name-directory (buffer-file-name))))
-                    (or (string-match \"foo\" dir)
-                        (string-match \"bar\" dir))))
-                (member major-mode '(js-mode python-mode)))
-           1 0)))
+      (format-all-mode (if (my-auto-format-buffer-p) 1 0)))
 
-    (add-hook 'after-change-major-mode-hook 'my-after-change-major-mode)"
-  :lighter " Format-All"
+    (add-hook 'after-change-major-mode-hook 'my-after-change-major-mode)
+
+When `format-all-mode' is called as a Lisp function, the mode is
+toggled if ARG is ‘toggle’, disabled if ARG is a negative integer
+or zero, and enabled otherwise."
+  :lighter " FmtAll"
   :global nil
   (if format-all-mode
       (add-hook 'before-save-hook 'format-all-buffer nil 'local)

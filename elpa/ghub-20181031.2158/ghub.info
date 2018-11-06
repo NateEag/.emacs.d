@@ -11,6 +11,7 @@ This is ghub.info, produced by makeinfo version 6.5 from ghub.texi.
      but WITHOUT ANY WARRANTY; without even the implied warranty of
      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
      General Public License for more details.
+
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Ghub: (ghub).         Minuscule client library for the Github API.
@@ -45,7 +46,7 @@ adoption would make life easier for users and maintainers alike, because
 then all packages that talk to forge APIs could be configured the same
 way.
 
-This manual is for Ghub version 2.0.1 (v2.0.1-48-g87701ea+1).
+This manual is for Ghub version 3.0.0.
 
      Copyright (C) 2017-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -1275,23 +1276,23 @@ File: ghub.info,  Node: Forge Limitations and Notes,  Prev: Forge Functions and 
 
 
 Tag Table:
-Node: Top763
-Node: Introduction3279
-Node: Getting Started6321
-Node: Setting the Username9481
-Node: Interactively Creating and Storing a Token10906
-Node: Manually Creating and Storing a Token16546
-Node: How Ghub uses Auth-Source17769
-Node: Using Ghub in Personal Scripts19702
-Node: Using Ghub in a Package21158
-Node: API23776
-Node: Making Requests24573
-Node: Authentication38612
-Node: Configuration Variables40457
-Node: GraphQL Support44177
-Node: Support for Other Forges50842
-Node: Forge Functions and Variables51059
-Node: Forge Limitations and Notes55578
+Node: Top764
+Node: Introduction3257
+Node: Getting Started6299
+Node: Setting the Username9459
+Node: Interactively Creating and Storing a Token10884
+Node: Manually Creating and Storing a Token16524
+Node: How Ghub uses Auth-Source17747
+Node: Using Ghub in Personal Scripts19680
+Node: Using Ghub in a Package21136
+Node: API23754
+Node: Making Requests24551
+Node: Authentication38590
+Node: Configuration Variables40435
+Node: GraphQL Support44155
+Node: Support for Other Forges50820
+Node: Forge Functions and Variables51037
+Node: Forge Limitations and Notes55556
 
 End Tag Table
 

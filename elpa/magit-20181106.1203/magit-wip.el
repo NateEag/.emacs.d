@@ -76,7 +76,7 @@
   :group 'magit-wip-legacy
   :type 'string)
 
-(defcustom magit-wip-merge-branch t
+(defcustom magit-wip-merge-branch nil
   "Whether to merge the current branch into its wip ref.
 
 If non-nil and the current branch has new commits, then it is
@@ -87,7 +87,7 @@ never garbage collected.
 If nil and the current branch has new commits, then the wip ref
 is reset to the tip of the branch before creating a new wip
 commit.  With this setting wip commits are eventually garbage
-collected."
+collected.  This is currently the default."
   :package-version '(magit . "2.90.0")
   :group 'magit-wip
   :type 'boolean)
@@ -349,6 +349,11 @@ commit message."
               (when-let ((branch (or ref (magit-get-current-branch))))
                 (concat "refs/heads/" branch))
               "HEAD")))
+
+(defun magit-wip-maybe-add-commit-hook ()
+  (when (and magit-wip-merge-branch
+             (magit-wip-any-enabled-p))
+    (add-hook 'git-commit-post-finish-hook 'magit-wip-commit nil t)))
 
 (defun magit-wip-any-enabled-p ()
   (or magit-wip-mode

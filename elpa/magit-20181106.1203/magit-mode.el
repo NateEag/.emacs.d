@@ -1019,12 +1019,13 @@ Run hooks `magit-pre-refresh-hook' and `magit-post-refresh-hook'."
               (magit-refresh-buffer)))
           (magit-auto-revert-buffers)
           (cond
-            ((memq this-command magit-post-commit-hook-commands)
-             (magit-run-hook-with-benchmark 'magit-post-commit-hook))
-            ((memq this-command magit-post-stage-hook-commands)
-             (magit-run-hook-with-benchmark 'magit-post-stage-hook))
-            ((memq this-command magit-post-unstage-hook-commands)
-             (magit-run-hook-with-benchmark 'magit-post-unstage-hook)))
+           ((and (not this-command)
+                 (memq last-command magit-post-commit-hook-commands))
+            (magit-run-hook-with-benchmark 'magit-post-commit-hook))
+           ((memq this-command magit-post-stage-hook-commands)
+            (magit-run-hook-with-benchmark 'magit-post-stage-hook))
+           ((memq this-command magit-post-unstage-hook-commands)
+            (magit-run-hook-with-benchmark 'magit-post-unstage-hook)))
           (magit-run-hook-with-benchmark 'magit-post-refresh-hook)
           (when magit-refresh-verbose
             (message "Refreshing magit...done (%.3fs, cached %s/%s)"

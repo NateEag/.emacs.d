@@ -260,9 +260,7 @@ at the top."
   :group 'jedi)
 
 (defcustom jedi:install-imenu nil
-  "[EXPERIMENTAL] If `t', use Jedi to create `imenu' index.
-To use this feature, you need to install the developmental
-version (\"dev\" branch) of Jedi."
+  "If `t', use Jedi to create `imenu' index."
   :group 'jedi)
 
 (defcustom jedi:imenu-create-index-function 'jedi:create-nested-imenu-index
@@ -480,15 +478,23 @@ Python module imports." :error))))
 (defvar jedi:server-pool--table (make-hash-table :test 'equal)
   "A hash table that holds a pool of EPC server instances.")
 
+(defun jedi:server-pool--resolve-command (command)
+  "Resolve COMMAND using current environment.
+Tries to find (car command) in \"exec-path\"."
+  (let (command-path (executable-find (car command)))
+    (if command-path
+        (cons command-path (cdr command))
+      command)))
+
 (defun jedi:server-pool--start (command)
-  "Get an EPC server instance from server pool by COMMAND as a
-key, or start new one if there is none."
-  (let ((cached (gethash command jedi:server-pool--table)))
+  "Get an EPC server for COMMAND from server pool or start a new one."
+  (let* ((resolved-command (jedi:server-pool--resolve-command command))
+         (cached (gethash resolved-command jedi:server-pool--table)))
     (if (and cached (jedi:epc--live-p cached))
         cached
       (let* ((default-directory "/")
-             (mngr (jedi:epc--start-epc (car command) (cdr command))))
-        (puthash command mngr jedi:server-pool--table)
+             (mngr (jedi:epc--start-epc (car resolved-command) (cdr command))))
+        (puthash resolved-command mngr jedi:server-pool--table)
         (jedi:server-pool--gc-when-idle)
         mngr))))
 
@@ -589,7 +595,8 @@ See: https://github.com/tkf/emacs-jedi/issues/54"
 (defun jedi:call-deferred (method-name)
   "Call ``Script(...).METHOD-NAME`` and return a deferred object."
   (let ((source      (buffer-substring-no-properties (point-min) (point-max)))
-        (line        (count-lines (point-min) (min (1+ (point)) (point-max))))
+        ;; line=0 is an error for jedi, but is possible for empty buffers.
+        (line        (max 1 (count-lines (point-min) (min (1+ (point)) (point-max)))))
         (column      (- (point) (line-beginning-position)))
         (source-path (jedi:-buffer-file-name)))
     (epc:call-deferred (jedi:get-epc)
@@ -1193,7 +1200,7 @@ See also:
 
 (defcustom jedi:install-python-jedi-dev-command
   '("pip" "install" "--upgrade"
-    "git+https://github.com/davidhalter/jedi.git@dev#egg=jedi")
+    "git+https://github.com/davidhalter/jedi.git@master#egg=jedi")
   "Pip command to be used for `jedi:install-python-jedi-dev'."
   :group 'jedi)
 

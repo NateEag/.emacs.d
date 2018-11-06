@@ -39,11 +39,6 @@
 ;; Set up package-specific autoloads and settings.
 (load-file (make-emacs-dir-path "site-lisp/config-packages.el"))
 
-;; Work around the fact that I have constructed a use-package invocation that
-;; cannot be byte-compiled, due to byte-compiling not working on .el.gz files.
-;;
-;; TODO Teach auto-compile to avoid compiling compressed .el files.
-(load-file (make-emacs-dir-path "site-lisp/uncompileable-config-packages.el"))
 
 ;;; General preferences.
 

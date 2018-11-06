@@ -2418,6 +2418,9 @@ ANY-KEYMAP ANY-DEFAULT ANY-HISTORY See `helm'."
       (helm-log "helm-alive-p = %S" (setq helm-alive-p nil))
       (helm--remap-mouse-mode -1)       ; Reenable mouse bindings.
       (setq helm-alive-p nil)
+      ;; Prevent error "No buffer named *helm*" triggered by
+      ;; `helm-set-local-variable'.
+      (setq helm--force-updating-p nil)
       (setq helm--buffer-in-new-frame-p nil)
       ;; Reset helm-pattern so that lambda's using it
       ;; before running helm will not start with its old value.
@@ -3384,6 +3387,9 @@ WARNING: Do not use this mode yourself, it is internal to helm."
   ;; be a helm buffer.
   (replace-buffer-in-windows helm-buffer)
   (setq helm-alive-p nil)
+  ;; Prevent error "No buffer named *helm*" triggered by
+  ;; `helm-set-local-variable'.
+  (setq helm--force-updating-p nil)
   (setq helm--buffer-in-new-frame-p nil)
   ;; This is needed in some cases where last input
   ;; is yielded infinitely in minibuffer after helm session.
@@ -4766,6 +4772,10 @@ mode and header lines."
 
 (defun helm--set-header-line (&optional update)
   (with-selected-window (minibuffer-window)
+    (when helm-display-header-line
+      ;; Prevent cursor movement over the overlay displaying
+      ;; persistent-help in minibuffer (issue #2108).
+      (setq-local disable-point-adjustment t))
     (let* ((beg  (save-excursion (vertical-motion 0 (helm-window)) (point)))
            (end  (save-excursion (end-of-visual-line) (point)))
            ;; The visual line where the cursor is.
@@ -4844,7 +4854,8 @@ It has no effect if `helm-echo-input-in-header-line' is nil."
                           (- (window-width) 1)))
             (overlay-put ov 'face 'helm-header))
         (overlay-put ov 'face (let ((bg-color (face-background 'default nil)))
-                                  `(:background ,bg-color :foreground ,bg-color))))
+                                `(:background ,bg-color :foreground ,bg-color))))
+
       (setq cursor-type nil))))
 
 (defun helm-show-candidate-number (&optional name)

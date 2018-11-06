@@ -39,7 +39,7 @@ library is made available as a separate package.  It also defines some
 additional functionality which makes it useful even for end-users, who
 don’t use Magit or another package which uses it internally.
 
-This manual is for With-Editor version 2.7.4 (v2.7.4-5-gac6b2e3+1).
+This manual is for With-Editor version 2.8.0.
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -58,7 +58,6 @@ This manual is for With-Editor version 2.7.4 (v2.7.4-5-gac6b2e3+1).
 * Using the With-Editor package::
 * Using With-Editor as a library::
 * Debugging::
-* _::
 
 — The Detailed Node Listing —
 
@@ -309,7 +308,7 @@ package::.
      NO-STANDARD-FILTER.  Then it calls FILTER.
 
 
-File: with-editor.info,  Node: Debugging,  Next: _,  Prev: Using With-Editor as a library,  Up: Top
+File: with-editor.info,  Node: Debugging,  Prev: Using With-Editor as a library,  Up: Top
 
 3 Debugging
 ***********
@@ -327,22 +326,15 @@ commit in Magit, then please open a new issue at
 about your Emacs installation.  Most importantly how did you install
 Emacs and what is the output of ‘M-x with-editor-debug RET’.
 
-
-File: with-editor.info,  Node: _,  Prev: Debugging,  Up: Top
-
-4 _ :ignore:
-************
-
 
 
 Tag Table:
 Node: Top773
-Node: Using the With-Editor package2541
-Node: Configuring With-Editor3127
-Node: Using With-Editor commands7676
-Node: Using With-Editor as a library10939
-Node: Debugging12902
-Node: _13769
+Node: Using the With-Editor package2513
+Node: Configuring With-Editor3099
+Node: Using With-Editor commands7648
+Node: Using With-Editor as a library10911
+Node: Debugging12874
 
 End Tag Table
 

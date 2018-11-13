@@ -647,8 +647,8 @@ The shell command lives in my dotfiles repo."
 ;; and stored with the extension '.el.gz'.
 ;;
 ;; I tried adding a function to auto-compile-inhibit-compile-hook that would
-;; abort on attempts to compile compressed files, but that had no effect on
-;; this auto-compile failure.
+;; abort on attempts to compile compressed files, but I was not able to
+;; construct a function that did the job.
 ;;
 ;; I imagine it is unlikely I'll encounter this again outside the context of
 ;; the compressed files bundled with Emacs.app, where I know that the .elc

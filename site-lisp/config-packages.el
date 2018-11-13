@@ -281,8 +281,9 @@ The shell command lives in my dotfiles repo."
   (global-undo-tree-mode)
 
   ;; Store undo history in my autosaves directory (which is configured
-  ;; elsewhere).
-  (setq undo-tree-auto-save-history t)
+  ;; elsewhere). That said, I have turned off undo-tree-auto-save-history to
+  ;; try to work around the infamous bug of undo history lossage, so this
+  ;; setting is largely irrelevant.
   (setq undo-tree-history-directory-alist `(("." . ,my-autosaves-dir)))
 
   ;; Evil has built-in logic to set up bindings in undo-tree mode.

@@ -2,7 +2,7 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20181105.1858
+;; Package-Version: 20181108.921
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
@@ -23,6 +23,7 @@
 ;;
 ;; Supported languages:
 ;;
+;; - Angular/Vue (prettier)
 ;; - Assembly (asmfmt)
 ;; - C/C++/Objective-C (clang-format)
 ;; - Clojure/ClojureScript (node-cljfmt)
@@ -37,7 +38,7 @@
 ;; - Haskell (brittany)
 ;; - HTML/XHTML/XML (tidy)
 ;; - Java (clang-format)
-;; - JavaScript/JSON/JSX/TypeScript/Vue (prettier)
+;; - JavaScript/JSON/JSX (prettier)
 ;; - Kotlin (ktlint)
 ;; - Markdown (prettier)
 ;; - OCaml (ocp-indent)
@@ -49,6 +50,7 @@
 ;; - Shell script (shfmt)
 ;; - SQL (sqlformat)
 ;; - Swift (swiftformat)
+;; - TypeScript/TSX (prettier)
 ;; - YAML (yq)
 ;;
 ;; You will need to install external programs to do the formatting.
@@ -69,6 +71,9 @@
 ;; submit a pull request or ask for help in GitHub issues.
 ;;
 ;;; Code:
+
+(defvar format-all-debug nil
+  "When non-nil, format-all writes debug info using `message'.")
 
 (defvar format-all-after-format-functions nil
   "Hook run after each time ‘format-all-buffer’ has formatted a buffer.
@@ -185,6 +190,9 @@ need to be shell-quoted."
   (let ((ok-statuses (or ok-statuses '(0)))
         (args (cl-mapcan (lambda (arg) (if (listp arg) arg (list arg)))
                          args)))
+    (when format-all-debug
+      (message "Format-All: Running: %s"
+               (mapconcat #'shell-quote-argument (cons executable args) " ")))
     (format-all-buffer-thunk
      (lambda (input)
        (let* ((errfile (make-temp-file "format-all-"))
@@ -402,11 +410,8 @@ Consult the existing formatters for examples of BODY."
   (:executable "prettier")
   (:install "npm install --global prettier")
   (:modes
+   (angular-html-mode "angular")
    ((js-mode js2-mode js3-mode)
-    ;; The prettier folks seem to be currently pondering whether to
-    ;; use flow, babylon or some other parser for all JS-like
-    ;; code. Hopefully they will settle on one parser so this can
-    ;; become less convoluted.
     (if (and (boundp 'flow-minor-mode)
              (not (null (symbol-value 'flow-minor-mode))))
         "flow"
@@ -421,12 +426,23 @@ Consult the existing formatters for examples of BODY."
    (graphql-mode "graphql")
    ((gfm-mode markdown-mode) "markdown")
    (web-mode
-    (and (equal "none" (symbol-value 'web-mode-engine))
-         (let ((ct (symbol-value 'web-mode-content-type)))
-           (cond ((equal ct "css") "css")
-                 ((equal ct "javascript") "babylon")
-                 ((equal ct "json") "json")
-                 ((equal ct "jsx") "babylon"))))))
+    (let ((ct (symbol-value 'web-mode-content-type))
+          (en (symbol-value 'web-mode-engine)))
+      (cond ((equal ct "css") "css")
+            ((or (equal ct "javascript") (equal ct "jsx"))
+             (if (and (buffer-file-name)
+                      (save-match-data
+                        (let ((case-fold-search t))
+                          (string-match "\\.tsx?\\'" (buffer-file-name)))))
+                 "typescript"
+               "babylon"))
+            ((equal ct "json") "json")
+            ((equal ct "html")
+             (cond ((equal en "angular") "angular")
+                   ((equal en "vue") "vue")
+                   ((equal en "none") "html")
+                   (t nil)))
+            (t nil)))))
   (:format
    (let ((parser mode-result))
      (format-all-buffer-easy
@@ -514,6 +530,17 @@ Consult the existing formatters for examples of BODY."
           (error (format-all-please-install
                   executable (gethash formatter format-all-install-table)))))))
 
+(defun format-all-show-or-hide-errors (error-output)
+  (save-selected-window
+    (with-current-buffer (get-buffer-create "*format-all-errors*")
+      (erase-buffer)
+      (cond ((not (= 0 (length error-output)))
+             (insert error-output)
+             (display-buffer (current-buffer)))
+            (t
+             (let ((error-window (get-buffer-window (current-buffer))))
+               (when error-window (quit-window nil error-window))))))))
+
 ;;;###autoload
 (defun format-all-buffer ()
   "Auto-format the source code in the current buffer.
@@ -532,11 +559,14 @@ the buffer.  Many popular programming languages are supported.
 It is fairly easy to add new languages that have an external
 formatter.
 
-Any errors/warnings encountered during formatting are shown in a
-buffer called *format-all-errors*."
+If any errors or warnings were encountered during formatting,
+they are shown in a buffer called *format-all-errors*."
   (interactive)
   (cl-destructuring-bind (formatter mode-result) (format-all-probe)
     (unless formatter (error "Don't know how to format %S code" major-mode))
+    (when format-all-debug
+      (message "Format-All: Formatting %s as %S"
+               (buffer-name) (list formatter mode-result)))
     (let ((f-function (gethash formatter format-all-format-table))
           (executable (format-all-formatter-executable formatter)))
       (cl-destructuring-bind (output errput)
@@ -553,11 +583,7 @@ buffer called *format-all-errors*."
               (forward-line (1- old-line-number))
               (let ((line-length (- (point-at-eol) (point-at-bol))))
                 (goto-char (+ (point) (min old-column line-length))))))
-          (with-current-buffer (get-buffer-create "*format-all-errors*")
-            (erase-buffer)
-            (unless (= 0 (length errput))
-              (insert errput)
-              (display-buffer (current-buffer))))
+          (format-all-show-or-hide-errors errput)
           (run-hook-with-args 'format-all-after-format-functions
                               formatter status)
           (message (cl-ecase status

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "format-all" "format-all.el" (23521 59388 0
+;;;### (autoloads nil "format-all" "format-all.el" (23540 10569 0
 ;;;;;;  0))
 ;;; Generated autoloads from format-all.el
 
@@ -24,8 +24,8 @@ the buffer.  Many popular programming languages are supported.
 It is fairly easy to add new languages that have an external
 formatter.
 
-Any errors/warnings encountered during formatting are shown in a
-buffer called *format-all-errors*.
+If any errors or warnings were encountered during formatting,
+they are shown in a buffer called *format-all-errors*.
 
 \(fn)" t nil)
 

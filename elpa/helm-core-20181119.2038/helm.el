@@ -763,7 +763,7 @@ you don't want to use this anymore."
   :group 'helm
   :type 'boolean)
 
-(defcustom helm-use-undecorated-frame-option nil
+(defcustom helm-use-undecorated-frame-option t
   "Display helm frame undecorated when non nil.
 
 This option have no effect with emacs versions lower than 26."
@@ -1335,7 +1335,9 @@ to modify it.")
 (defvar helm-saved-selection nil
   "Value of the currently selected object when the action list is shown.")
 (defvar helm-sources nil
-  "[INTERNAL] Value of current sources in use, a list.")
+  "[INTERNAL] Value of current sources in use, a list of alists.
+The list of sources (symbols or alists) is normalized to alists in
+`helm-initialize'.")
 (defvar helm-buffer-file-name nil
   "Variable `buffer-file-name' when `helm' is invoked.")
 (defvar helm-candidate-cache (make-hash-table :test 'equal)
@@ -1446,6 +1448,7 @@ This may be let bounded in other places to notify the display function
 to reuse the same frame parameters as the previous helm session just
 like resume would do.")
 (defvar helm--current-buffer-narrowed nil)
+(defvar helm--suspend-update-interactive-flag nil)
 
 ;; Utility: logging
 (defun helm-log (format-string &rest args)
@@ -1899,6 +1902,20 @@ and part of the actions of current source.
 Use this on commands invoked from key-bindings, but not
 on action functions invoked as action from the action menu,
 i.e functions called with RET."
+  ;; If ACTION is not an action available in source 'action attribute,
+  ;; return an error.  This allow to remove unneeded actions from
+  ;; source that inherit actions from type, note that ACTION have to
+  ;; be bound to a symbol and not to be an anonymous action
+  ;; i.e. lambda or byte-code.
+  (let ((actions (helm-attr 'action nil t)))
+    (when actions
+      (cl-assert (or (eq action actions)
+                     (rassq action actions)
+                     ;; Compiled lambda
+                     (byte-code-function-p action)
+                     ;; Lambdas
+                     (and (listp action) (functionp action)))
+                 nil "No such action `%s' for this source" action)))
   (setq helm-saved-action action)
   (setq helm-saved-selection (or (helm-get-selection) ""))
   (setq helm--executing-helm-action t)
@@ -3071,7 +3088,8 @@ See :after-init-hook and :before-init-hook in `helm-source'."
         helm-current-buffer (helm--current-buffer)
         helm-buffer-file-name buffer-file-name
         helm-issued-errors nil
-        helm-saved-current-source nil)
+        helm-saved-current-source nil
+        helm--suspend-update-interactive-flag nil)
   (when (and (with-helm-current-buffer
                (and (buffer-narrowed-p)
                     (use-region-p)))
@@ -3271,20 +3289,50 @@ For ANY-PRESELECT ANY-RESUME ANY-KEYMAP ANY-DEFAULT ANY-HISTORY, See `helm'."
                  (when timer (cancel-timer timer) (setq timer nil)))))))))
 
 (defun helm-toggle-suspend-update ()
-  "Enable or disable update of display in helm.
+  "Enable or disable display update in helm.
 This can be useful for example for quietly writing a complex regexp
 without helm constantly updating."
   (interactive)
-  (with-helm-alive-p
-    (when (setq helm-suspend-update-flag (not helm-suspend-update-flag))
+  (helm-suspend-update (not helm-suspend-update-flag) t)
+  (setq helm--suspend-update-interactive-flag
+        (not helm--suspend-update-interactive-flag)))
+(put 'helm-toggle-suspend-update 'helm-only t)
+
+(defun helm-suspend-update (arg &optional verbose)
+  "Enable or disable display update in helm.
+If ARG is 1 or non nil suspend update, if it is -1 or nil reenable
+updating.  When VERBOSE is specified display a message."
+  (with-helm-buffer
+    (when (setq helm-suspend-update-flag
+                (helm-acase arg
+                  (1 t)
+                  (-1 nil)
+                  (t it)))
       (helm-kill-async-processes)
       (setq helm-pattern ""))
-    (message (if helm-suspend-update-flag
-                 "Helm update suspended!"
-               "Helm update re-enabled!"))
+    (when verbose
+      (message (if helm-suspend-update-flag
+                   "Helm update suspended!"
+                 "Helm update re-enabled!")))
     (helm-aif (helm-get-current-source)
-        (with-helm-buffer (helm-display-mode-line it t)))))
-(put 'helm-toggle-suspend-update 'helm-only t)
+        (helm-display-mode-line it t))))
+
+(defun helm-delete-backward-no-update (arg)
+  "Disable update and delete ARG chars backward.
+Update is reenabled when idle 1s."
+  (interactive "p")
+  (with-helm-alive-p
+    (unless helm--suspend-update-interactive-flag
+      (helm-suspend-update 1))
+    (backward-delete-char arg)
+    (run-with-idle-timer
+     1 nil
+     (lambda ()
+       (unless helm--suspend-update-interactive-flag
+         (helm-suspend-update -1)
+         (helm-check-minibuffer-input)
+         (helm-force-update))))))
+(put 'helm-delete-backward-no-update 'helm-only t)
 
 (defun helm--suspend-read-passwd (old--fn &rest args)
   "Suspend helm while reading password.
@@ -3438,9 +3486,9 @@ WARNING: Do not use this mode yourself, it is internal to helm."
 
 (defun helm-get-candidates (source)
   "Retrieve and return the list of candidates from SOURCE."
-  (let* (inhibit-quit
-         (candidate-fn (assoc-default 'candidates source))
+  (let* ((candidate-fn (assoc-default 'candidates source))
          (candidate-proc (assoc-default 'candidates-process source))
+         (inhibit-quit candidate-proc)
          cfn-error
          (notify-error
           (lambda (&optional e)
@@ -3501,7 +3549,8 @@ WARNING: Do not use this mode yourself, it is internal to helm."
   "Return the cached value of candidates for SOURCE.
 Cache the candidates if there is no cached value yet."
   (let* ((name (assoc-default 'name source))
-         (candidate-cache (gethash name helm-candidate-cache)))
+         (candidate-cache (gethash name helm-candidate-cache))
+         (inhibit-quit (assoc-default 'candidates-process source)))
     (helm-aif candidate-cache
         (prog1 it (helm-log "Use cached candidates"))
       (helm-log "No cached candidates, calculate candidates")
@@ -6688,23 +6737,32 @@ See `fit-window-to-buffer' for more infos."
 (defun helm-help ()
   "Generate helm's help according to `help-message' attribute.
 
-If source is not available yet or doesn't have any `help-message'
-attribute, a generic message explaining this is added instead.  The
-global `helm-help-message' is always added after this local help."
+If `helm-buffer' is empty, provide completions on `helm-sources' to
+choose its local documentation.
+If source doesn't have any `help-message' attribute, a generic message
+explaining this is added instead.
+The global `helm-help-message' is always added after this local help."
   (interactive)
   (with-helm-alive-p
-    (save-selected-window
-      (helm-help-internal
-       "*Helm Help*"
-       (lambda ()
-         (helm-aif (assoc-default 'help-message (helm-get-current-source))
-             (insert (substitute-command-keys
-                      (helm-interpret-value it)))
-           (insert "* No specific help for this source at this time.\n
-It may appear after first results popup in helm buffer."))
-         (insert "\n\n"
-                 (substitute-command-keys
-                  (helm-interpret-value helm-help-message))))))))
+    (let ((source (or (helm-get-current-source)
+                      (helm-comp-read
+                       "Help for: "
+                       (cl-loop for src in (with-helm-buffer helm-sources)
+                                collect `(,(assoc-default 'name src) .
+                                           ,src))
+                       :allow-nest t
+                       :exec-when-only-one t))))
+      (save-selected-window
+        (helm-help-internal
+         "*Helm Help*"
+         (lambda ()
+           (helm-aif (assoc-default 'help-message source)
+               (insert (substitute-command-keys
+                        (helm-interpret-value it)))
+             (insert "* No specific help for this source available."))
+           (insert "\n\n"
+                   (substitute-command-keys
+                    (helm-interpret-value helm-help-message)))))))))
 (put 'helm-help 'helm-only t)
 
 (defun helm-toggle-truncate-line ()

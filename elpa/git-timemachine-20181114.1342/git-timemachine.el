@@ -3,8 +3,8 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 4.6
-;; Package-Version: 20180607.820
+;; Version: 4.8
+;; Package-Version: 20181114.1342
 ;; URL: https://github.com/pidu/git-timemachine
 ;; Keywords: git
 ;; Package-Requires: ((emacs "24.3"))
@@ -85,6 +85,12 @@ Available values are:
  '("-c" "log.showSignature=false" "--no-pager")
  "Common arguments for all git commands."
  :type 'list
+ :group 'git-timemachine)
+
+(defcustom git-timemachine-quit-to-invoking-buffer
+ t
+ "Switch to invoking buffer on ‘git-timemachine-quit’."
+ :type 'boolean
  :group 'git-timemachine)
 
 (defvar-local git-timemachine-directory nil)
@@ -296,7 +302,11 @@ respect to the window first line"
 (defun git-timemachine-quit ()
  "Exit the timemachine."
  (interactive)
- (kill-buffer))
+ (let ((parent-buffer-name buffer-file-name))
+  (kill-buffer)
+  (let ((parent-buffer (find-buffer-visiting parent-buffer-name)))
+   (when (and parent-buffer git-timemachine-quit-to-invoking-buffer)
+    (switch-to-buffer parent-buffer nil t)))))
 
 (defun git-timemachine-blame ()
  "Call magit-blame on current revision."
@@ -320,6 +330,16 @@ respect to the window first line"
   (message revision)
   (kill-new revision)))
 
+(defun git-timemachine-show-commit ()
+ "Show commit for current revision."
+ (interactive)
+ (let ((rev (car git-timemachine-revision)))
+  (if (fboundp 'magit-revision-mode)
+   (progn
+    (with-temp-buffer
+     (save-excursion (magit-mode-setup #'magit-revision-mode rev nil nil nil))))
+   (message "You need to install magit to show commit"))))
+
 (define-minor-mode git-timemachine-mode
  "Git Timemachine, feel the wings of history."
  :init-value nil
@@ -332,7 +352,8 @@ respect to the window first line"
    ("q" . git-timemachine-quit)
    ("w" . git-timemachine-kill-abbreviated-revision)
    ("W" . git-timemachine-kill-revision)
-   ("b" . git-timemachine-blame))
+   ("b" . git-timemachine-blame)
+   ("c" . git-timemachine-show-commit))
  :group 'git-timemachine)
 
 (defun git-timemachine-validate (file)

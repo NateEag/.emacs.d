@@ -631,7 +631,7 @@ Don't set it directly, use instead `helm-ff-auto-update-initial-value'.")
                       (if (eq helm-ff-delete-files-function
                               'helm-delete-marked-files-async)
                           " async" "")))
-   'helm-delete-marked-files
+   'helm-ff-delete-files
    "Touch File(s) `M-T'" 'helm-ff-touch-files
    "Copy file(s) `M-C, C-u to follow'" 'helm-find-files-copy
    "Rename file(s) `M-R, C-u to follow'" 'helm-find-files-rename
@@ -1468,11 +1468,9 @@ This doesn't replace inside the files, only modify filenames."
 See `helm-ff-RET' for details.
 If MUST-MATCH is specified exit with
 `helm-confirm-and-exit-minibuffer' which handle must-match mechanism."
-  (let* ((cands (helm-marked-candidates))
-         (sel   (car cands)))
+  (let ((sel   (helm-get-selection)))
     (cl-assert sel nil "Trying to exit with no candidates")
-    (if (and (not (cdr cands))
-             (file-directory-p sel)
+    (if (and (file-directory-p sel)
              (not (string= "." (helm-basename sel))))
         (helm-execute-persistent-action)
       (if must-match
@@ -1486,8 +1484,7 @@ Behave differently depending of `helm-selection':
 
 - candidate basename is \".\" => open it in dired.
 - candidate is a directory    => expand it.
-- candidate is a file         => open it.
-- marked candidates (1+)      => open them with default action."
+- candidate is a file         => open it."
   (interactive)
   (helm-ff-RET-1))
 

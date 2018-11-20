@@ -2,7 +2,7 @@
 
 ;; Author: Marijn Haverbeke
 ;; URL: http://ternjs.net/
-;; Package-Version: 20170925.2033
+;; Package-Version: 20181108.722
 ;; Version: 0.0.1
 ;; Package-Requires: ((json "1.2") (cl-lib "0.5") (emacs "24"))
 
@@ -103,8 +103,14 @@
     (if (file-exists-p bin-file)
         (if (eq system-type 'windows-nt) (list "node" bin-file) (list bin-file))
       (list "tern")))
-  "The command to be run to start the Tern server. Should be a
-list of strings, giving the binary name and arguments.")
+  "Location of the tern server binary command and options.
+
+This is a quoted list of strings representing the command and
+optional arguments to run the Tern server.
+
+Examples:
+(setq tern-command '(\"/home/jane/.nvm/versions/node/v10.13.0/bin/tern\"))
+(setq tern-command '(\"/home/jane/.nvm/versions/node/v10.13.0/bin/tern\" \"--strip-crs\"))")
 
 (defun tern-start-server (c)
   (let* ((default-directory (tern-project-dir))

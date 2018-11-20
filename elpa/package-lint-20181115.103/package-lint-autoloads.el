@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "package-lint" "package-lint.el" (23511 3110
+;;;### (autoloads nil "package-lint" "package-lint.el" (23540 10592
 ;;;;;;  0 0))
 ;;; Generated autoloads from package-lint.el
 
@@ -42,7 +42,7 @@ Return non-nil if the current buffer appears to be intended as a package.
 ;;;***
 
 ;;;### (autoloads nil "package-lint-flymake" "package-lint-flymake.el"
-;;;;;;  (23511 3110 0 0))
+;;;;;;  (23540 10592 0 0))
 ;;; Generated autoloads from package-lint-flymake.el
 
 (autoload 'package-lint-setup-flymake "package-lint-flymake" "\
@@ -52,7 +52,8 @@ Setup package-lint integration with Flymake.
 
 ;;;***
 
-;;;### (autoloads nil nil ("package-lint-pkg.el") (23511 3110 0 0))
+;;;### (autoloads nil nil ("package-lint-pkg.el") (23540 10592 0
+;;;;;;  0))
 
 ;;;***
 

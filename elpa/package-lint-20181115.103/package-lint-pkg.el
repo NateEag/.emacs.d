@@ -1,4 +1,4 @@
-(define-package "package-lint" "20181017.623" "A linting library for elisp package authors"
+(define-package "package-lint" "20181115.103" "A linting library for elisp package authors"
   '((cl-lib "0.5")
     (emacs "24"))
   :keywords

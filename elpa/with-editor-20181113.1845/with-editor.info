@@ -39,7 +39,7 @@ library is made available as a separate package.  It also defines some
 additional functionality which makes it useful even for end-users, who
 don’t use Magit or another package which uses it internally.
 
-This manual is for With-Editor version 2.8.0.
+This manual is for With-Editor version 2.8.0 (v2.8.0-2-g87c96b3+1).
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -208,10 +208,9 @@ for an alternative environment variable such as ‘$GIT_EDITOR’.
 
  -- Command: with-editor-shell-command
 
-     This command is like ‘async-shell-command’, but it runs the shell
-     command with the current Emacs instance exported as ‘$EDITOR’.
-     This only has an effect if the shell command is run asynchronously,
-     i.e.  when the command ends with ‘&’.
+     This command is like ‘shell-command’, but if the shell command ends
+     with ‘&’ and is therefore run asynchronously, then the current
+     Emacs instance is exported as ‘$EDITOR’.
 
    To always use these variants add this to you init file:
 
@@ -330,11 +329,11 @@ Emacs and what is the output of ‘M-x with-editor-debug RET’.
 
 Tag Table:
 Node: Top773
-Node: Using the With-Editor package2513
-Node: Configuring With-Editor3099
-Node: Using With-Editor commands7648
-Node: Using With-Editor as a library10911
-Node: Debugging12874
+Node: Using the With-Editor package2535
+Node: Configuring With-Editor3121
+Node: Using With-Editor commands7670
+Node: Using With-Editor as a library10865
+Node: Debugging12828
 
 End Tag Table
 

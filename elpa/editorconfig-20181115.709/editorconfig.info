@@ -170,7 +170,7 @@ can overwrite "indent_style" property when current 'major-mode' is a
 
 (add-hook 'editorconfig-hack-properties-functions
           '(lambda (props)
-             (when (derived-mode-p makefile-mode)
+             (when (derived-mode-p 'makefile-mode)
                (puthash 'indent_style "tab" props))))
 
 
@@ -289,17 +289,17 @@ Node: editorconfig-after-apply-functions4167
 Ref: #editorconfig-after-apply-functions4387
 Node: editorconfig-hack-properties-functions4986
 Ref: #editorconfig-hack-properties-functions5253
-Node: editorconfig-indentation-alist5878
-Ref: #editorconfig-indentation-alist6117
-Node: editorconfig-exec-path6672
-Ref: #editorconfig-exec-path6893
-Node: editorconfig-get-properties-function6982
-Ref: #editorconfig-get-properties-function7192
-Node: Testing8045
-Ref: #testing8186
-Node: Submitting Bugs and Feature Requests8293
-Ref: #submitting-bugs-and-feature-requests8490
-Node: License8632
-Ref: #license8755
+Node: editorconfig-indentation-alist5879
+Ref: #editorconfig-indentation-alist6118
+Node: editorconfig-exec-path6673
+Ref: #editorconfig-exec-path6894
+Node: editorconfig-get-properties-function6983
+Ref: #editorconfig-get-properties-function7193
+Node: Testing8046
+Ref: #testing8187
+Node: Submitting Bugs and Feature Requests8294
+Ref: #submitting-bugs-and-feature-requests8491
+Node: License8633
+Ref: #license8756
 
 End Tag Table

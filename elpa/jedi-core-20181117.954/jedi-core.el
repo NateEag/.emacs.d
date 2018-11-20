@@ -455,17 +455,64 @@ connection."
        (when something-happened
          ,@run-on-error))))
 
+(defun jedi:epc--make-server-output-msg (line-count)
+  "Extract up to LINE-COUNT last lines from last failed EPC buffer."
+  (let ((epc-buffer (get-buffer (epc:server-buffer-name epc:uid)))
+        is-part lines)
+    (if (not (buffer-live-p epc-buffer))
+        ""
+      (save-excursion
+        (set-buffer epc-buffer)
+        (goto-char (point-max))
+        (forward-line -10)
+        (setq is-part (not (eq (point) (point-min))))
+        (setq lines (buffer-substring-no-properties (point) (point-max))))
+      (format "*** EPC Server Output (last %s lines) ***\n%s%s\n"
+              line-count
+              (if is-part "<...snipped, see all with `epc:pop-to-last-server-process-buffer'...>\n" "")
+              lines))))
+
+
 (defun jedi:epc--start-epc (server-prog server-args)
   "Same as `epc:start-epc', but set query-on-exit flag for
 associated processes to nil."
-  (let ((mngr (jedi:-with-run-on-error
-                  (epc:start-epc server-prog server-args)
-                (display-warning 'jedi "\
+  (let ((mngr
+         (condition-case epc-error
+             (epc:start-epc server-prog server-args)
+           (error
+            (let* ((cmdline-args (append (list server-prog) server-args))
+                   (cmd (executable-find server-prog))
+                   (cmd-str (or cmd
+                                (format "nil (%S not found in exec-path)"
+                                        server-prog)))
+                   (virtual-env (getenv "VIRTUAL_ENV"))
+                   (warning-msg (format "
+================================
 Failed to start Jedi EPC server.
+================================
+
+*** EPC Error ***
+%s
+
+%s
+*** EPC Server Config ***
+Server arguments: %S
+Actual command: %s
+VIRTUAL_ENV envvar: %S
+
+*** jedi-mode is disabled in %S ***
+Fix the problem and re-enable it.
+
 *** You may need to run \"M-x jedi:install-server\". ***
 This could solve the problem especially if you haven't run the command yet
 since Jedi.el installation or update and if the server complains about
-Python module imports." :error))))
+Python module imports."
+                                        (cadr epc-error)
+                                        (jedi:epc--make-server-output-msg 10)
+                                        cmdline-args cmd-str virtual-env
+                                        (current-buffer))))
+              (display-warning 'jedi warning-msg :error)
+              (jedi-mode 0))))))
     (set-process-query-on-exit-flag (epc:connection-process
                                      (epc:manager-connection mngr))
                                     nil)
@@ -552,7 +599,19 @@ later when it is needed."
   (setq jedi:get-in-function-call--d nil)
   (setq jedi:defined-names--singleton-d nil))
 
+(defun jedi:stop-all-servers ()
+  "Stop all live Jedi servers.
+This is useful to apply new settings or VIRTUAL_ENV variable
+value to all buffers."
+  (interactive)
+  (cl-dolist (buf (buffer-list))
+    (when (buffer-live-p buf)
+      (with-current-buffer buf
+        (when (jedi:epc--live-p jedi:epc)
+          (jedi:stop-server))))))
+
 (defun jedi:get-epc ()
+  "Get an EPC instance of a running server or start a new one."
   (if (jedi:epc--live-p jedi:epc)
       jedi:epc
     (jedi:start-server)))

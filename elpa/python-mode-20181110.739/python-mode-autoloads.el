@@ -3,93 +3,87 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "python-mode" "python-mode.el" (23486 20129
+;;;### (autoloads nil "python-mode" "python-mode.el" (23540 10607
 ;;;;;;  0 0))
 ;;; Generated autoloads from python-mode.el
 
 (autoload 'py-backward-class "python-mode" "\
-Go to beginning of ‘class’ according to INDENT.
+Go to beginning of ‘class’.
 
 If already at beginning, go one ‘class’ backward.
-Optional DECORATOR BOL
+Optional DECORATOR
 
 Return beginning of ‘class’ if successful, nil otherwise
 
-\(fn &optional INDENT DECORATOR BOL)" t nil)
+\(fn &optional DECORATOR)" t nil)
 
 (autoload 'py-backward-def "python-mode" "\
-Go to beginning of ‘def’ according to INDENT.
+Go to beginning of ‘def’.
 
 If already at beginning, go one ‘def’ backward.
-Optional DECORATOR BOL
+Optional DECORATOR
 
 Return beginning of ‘def’ if successful, nil otherwise
 
-\(fn &optional INDENT DECORATOR BOL)" t nil)
+\(fn &optional DECORATOR)" t nil)
 
 (autoload 'py-backward-def-or-class "python-mode" "\
-Go to beginning of ‘def-or-class’ according to INDENT.
+Go to beginning of ‘def-or-class’.
 
 If already at beginning, go one ‘def-or-class’ backward.
-Optional DECORATOR BOL
+Optional DECORATOR
 
 Return beginning of ‘def-or-class’ if successful, nil otherwise
 
-\(fn &optional INDENT DECORATOR BOL)" t nil)
+\(fn &optional DECORATOR)" t nil)
 
 (autoload 'py-backward-class-bol "python-mode" "\
-Go to beginning of ‘class’ according to INDENT, go to BOL.
-Optional DECORATOR BOL
+Go to beginning of ‘class’, go to BOL.
+Optional DECORATOR
 
 If already at beginning, go one ‘class’ backward.
 Return beginning of ‘class’ if successful, nil otherwise
 
-\(fn &optional INDENT DECORATOR)" t nil)
+\(fn &optional DECORATOR)" t nil)
 
 (autoload 'py-backward-def-bol "python-mode" "\
-Go to beginning of ‘def’ according to INDENT, go to BOL.
-Optional DECORATOR BOL
+Go to beginning of ‘def’, go to BOL.
+Optional DECORATOR
 
 If already at beginning, go one ‘def’ backward.
 Return beginning of ‘def’ if successful, nil otherwise
 
-\(fn &optional INDENT DECORATOR)" t nil)
+\(fn &optional DECORATOR)" t nil)
 
 (autoload 'py-backward-def-or-class-bol "python-mode" "\
-Go to beginning of ‘def-or-class’ according to INDENT, go to BOL.
-Optional DECORATOR BOL
+Go to beginning of ‘def-or-class’, go to BOL.
+Optional DECORATOR
 
 If already at beginning, go one ‘def-or-class’ backward.
 Return beginning of ‘def-or-class’ if successful, nil otherwise
 
-\(fn &optional INDENT DECORATOR)" t nil)
+\(fn &optional DECORATOR)" t nil)
 
 (autoload 'py-forward-class "python-mode" "\
 Go to end of class.
 
-Return end of class if successful, nil otherwise
-Optional arg DECORATOR is used if form supports one
-With optional BOL, go to beginning of line following match.
+Return end of ‘class’ if successful, nil otherwise
 
-\(fn &optional ARG DECORATOR BOL)" t nil)
-
-(autoload 'py-forward-def-or-class "python-mode" "\
-Go to end of def-or-class.
-
-Return end of def-or-class if successful, nil otherwise
-Optional arg DECORATOR is used if form supports one
-With optional BOL, go to beginning of line following match.
-
-\(fn &optional ARG DECORATOR BOL)" t nil)
+\(fn)" t nil)
 
 (autoload 'py-forward-def "python-mode" "\
 Go to end of def.
 
-Return end of def if successful, nil otherwise
-Optional arg DECORATOR is used if form supports one
-With optional BOL, go to beginning of line following match.
+Return end of ‘def’ if successful, nil otherwise
 
-\(fn &optional ARG DECORATOR BOL)" t nil)
+\(fn)" t nil)
+
+(autoload 'py-forward-def-or-class "python-mode" "\
+Go to end of def-or-class.
+
+Return end of ‘def-or-class’ if successful, nil otherwise
+
+\(fn)" t nil)
 
 (autoload 'py-shell "python-mode" "\
 Start a Python interpreter.
@@ -229,7 +223,7 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
 
 ;;;***
 
-;;;### (autoloads nil nil ("python-mode-pkg.el") (23486 20129 0 0))
+;;;### (autoloads nil nil ("python-mode-pkg.el") (23540 10607 0 0))
 
 ;;;***
 

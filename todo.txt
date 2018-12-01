@@ -597,6 +597,9 @@
   command-line options on the system and using that dictionary for sh-derived
   modes?
 
+- Replace my hand-hacked flyspell word correction popup with this package:
+  https://github.com/d12frosted/flyspell-correct
+
 - Delete trailing whitespace *only* from comments in diff-mode.
 
 - When I'm yanking something into an indented block, python-mode ought to assume

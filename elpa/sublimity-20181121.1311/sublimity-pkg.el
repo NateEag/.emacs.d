@@ -1,4 +1,4 @@
-(define-package "sublimity" "20170820.1527" "smooth-scrolling, minimap and distraction-free mode"
+(define-package "sublimity" "20181121.1311" "smooth-scrolling, minimap and distraction-free mode"
   '((cl-lib "0.3"))
   :authors
   '(("zk_phi"))

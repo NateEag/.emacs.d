@@ -35,6 +35,8 @@
 (require 'helm-multi-match)
 (require 'helm-source)
 
+(declare-function 'helm-comp-read "helm-mode.el")
+
 
 ;;; Multi keys
 ;;
@@ -770,6 +772,24 @@ This option have no effect with emacs versions lower than 26."
   :group 'helm
   :type 'boolean)
 
+(defcustom helm-frame-background-color nil
+  "Background color for helm frames, a string.
+Fallback to default face background when nil."
+  :group 'helm
+  :type 'string)
+
+(defcustom helm-frame-foreground-color nil
+  "Foreground color for helm frames, a string.
+Fallback to default face foreground when nil"
+  :group 'helm
+  :type 'string)
+
+(defcustom helm-frame-alpha nil
+  "Alpha parameter for helm frames, an integer.
+Fallback to 100 when nil."
+  :group 'helm
+  :type 'integer)
+
 (defcustom helm-use-frame-when-more-than-two-windows nil
   "Display helm buffer in frame when more than two windows."
   :group 'helm
@@ -1437,7 +1457,8 @@ This is only used when helm is using
 (defconst helm--frame-default-attributes
   '(width height tool-bar-lines left top
     title undecorated vertical-scroll-bars
-    visibility fullscreen menu-bar-lines undecorated)
+    visibility fullscreen menu-bar-lines undecorated
+    alpha foreground-color background-color)
   "Frame parameters to save in `helm--last-frame-parameters'.")
 (defvar helm--last-frame-parameters nil
   "Frame parameters to save for later resuming.
@@ -1907,14 +1928,15 @@ i.e functions called with RET."
   ;; source that inherit actions from type, note that ACTION have to
   ;; be bound to a symbol and not to be an anonymous action
   ;; i.e. lambda or byte-code.
-  (let ((actions (helm-attr 'action nil t)))
+  (let ((actions (helm-get-actions-from-current-source)))
     (when actions
       (cl-assert (or (eq action actions)
-                     (rassq action actions)
                      ;; Compiled lambda
                      (byte-code-function-p action)
                      ;; Lambdas
-                     (and (listp action) (functionp action)))
+                     (and (listp action) (functionp action))
+                     ;; One of current actions.
+                     (rassq action actions))
                  nil "No such action `%s' for this source" action)))
   (setq helm-saved-action action)
   (setq helm-saved-selection (or (helm-get-selection) ""))
@@ -2911,6 +2933,11 @@ Note that this feature is available only with emacs-25+."
                           (+ (cdr pos) line-height)))
                 (title . "Helm")
                 (undecorated . ,helm-use-undecorated-frame-option)
+                (background-color . ,(or helm-frame-background-color
+                                         (face-attribute 'default :background)))
+                (foreground-color . ,(or helm-frame-foreground-color
+                                         (face-attribute 'default :foreground)))
+                (alpha . ,(or helm-frame-alpha 100))
                 (vertical-scroll-bars . nil)
                 (menu-bar-lines . 0)
                 (fullscreen . nil)
@@ -3488,6 +3515,7 @@ WARNING: Do not use this mode yourself, it is internal to helm."
   "Retrieve and return the list of candidates from SOURCE."
   (let* ((candidate-fn (assoc-default 'candidates source))
          (candidate-proc (assoc-default 'candidates-process source))
+         ;; See comment in helm-get-cached-candidates (Issue 2113).
          (inhibit-quit candidate-proc)
          cfn-error
          (notify-error
@@ -3550,6 +3578,9 @@ WARNING: Do not use this mode yourself, it is internal to helm."
 Cache the candidates if there is no cached value yet."
   (let* ((name (assoc-default 'name source))
          (candidate-cache (gethash name helm-candidate-cache))
+         ;; Bind inhibit-quit to ensure function terminate in case of
+         ;; quit from helm-while-no-input and processes are added to
+         ;; helm-async-processes for further deletion (Issue 2113).
          (inhibit-quit (assoc-default 'candidates-process source)))
     (helm-aif candidate-cache
         (prog1 it (helm-log "Use cached candidates"))

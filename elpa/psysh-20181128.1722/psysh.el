@@ -1,11 +1,11 @@
 ;;; psysh.el --- PsySH, PHP interactive shell (REPL) -*- lexical-binding: t -*-
 
-;; Copyright (C) 2016 USAMI Kenta
+;; Copyright (C) 2018  Friends of Emacs-PHP development
 
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 22 Jan 2016
-;; Version: 0.0.3
-;; Package-Version: 20171023.529
+;; Version: 0.0.5
+;; Package-Version: 20181128.1722
 ;; Package-Requires: ((emacs "24.3") (s "1.9.0") (f "0.17"))
 ;; Keywords: processes php
 ;; URL: https://github.com/zonuexe/psysh.el
@@ -23,7 +23,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -76,7 +76,7 @@
 ;;     // Termination message
 ;;     echo "Bye.\n";
 ;;
-;; See also http://cho-phper.hateblo.jp/entry/2015/11/10/031000 *(Japanese)*
+;; See also https://cho-phper.hateblo.jp/entry/2015/11/10/031000 *(Japanese)*
 ;;
 
 ;;; Code:
@@ -273,10 +273,10 @@ See `psysh-mode-output-syntax-table'."
     (unless (memq psysh-doc-buffer-color '(none only-emacs))
       (ansi-color-apply-on-region (point-min) (point-max)))
     (goto-char (point-min))
-    (when (search-forward-regexp psysh--re-prompt)
+    (when (search-forward-regexp psysh--re-prompt nil t)
       (delete-region (point-min) (match-beginning 0)))
     (goto-char (point-max))
-    (when (search-backward-regexp (concat psysh--re-prompt "$"))
+    (when (search-backward-regexp (concat psysh--re-prompt "$") nil t)
       (delete-region (match-beginning 0) (point-max)))
     (goto-char (point-min))
     (unless (eq major-mode 'psysh-doc-mode)

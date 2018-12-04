@@ -16,6 +16,7 @@
 ;;; Code:
 
 (require 'cl-lib)
+(require 'dash)
 (require 'json)
 (require 'xref)
 (require 'subr-x)
@@ -433,11 +434,10 @@ If WORKSPACE is not provided current workspace will be used."
 If WORKSPACE is not provided current workspace will be used."
   (gethash key (lsp--workspace-metadata (or workspace lsp--cur-workspace))))
 
-(define-inline lsp--make-request (method &optional params)
+(defun lsp--make-request (method &optional params)
   "Create request body for method METHOD and parameters PARAMS."
-  (inline-quote
-    (plist-put (lsp--make-notification ,method ,params)
-      :id (cl-incf (lsp--client-last-id (lsp--workspace-client lsp--cur-workspace))))))
+  (plist-put (lsp--make-notification method params)
+             :id (cl-incf (lsp--client-last-id (lsp--workspace-client lsp--cur-workspace)))))
 
 (defun lsp-make-request (method &optional params)
   "Create request body for method METHOD and parameters PARAMS."
@@ -452,11 +452,10 @@ If WORKSPACE is not provided current workspace will be used."
   (cl-check-type error list)
   `(:jsonrpc "2.0" :id ,id :result ,result :error ,error))
 
-(define-inline lsp--make-notification (method &optional params)
+(defun lsp--make-notification (method &optional params)
   "Create notification body for method METHOD and parameters PARAMS."
-  (inline-quote
-    (progn (cl-check-type ,method string)
-      (list :jsonrpc "2.0" :method ,method :params ,params))))
+  (progn (cl-check-type method string)
+         (list :jsonrpc "2.0" :method method :params params)))
 
 ;; Define non-inline public aliases to avoid breaking binary compatibility.
 (defun lsp-make-notification (method &optional params)
@@ -476,26 +475,24 @@ If WORKSPACE is not provided current workspace will be used."
                  (json-encode params))))
     (format "Content-Length: %d\r\n\r\n%s" (string-bytes body) body)))
 
-(define-inline lsp--send-notification (body)
+(defun lsp--send-notification (body)
   "Send BODY as a notification to the language server."
-  (inline-quote
-    (lsp--send-no-wait
-      (lsp--make-message ,body)
-      (lsp--workspace-proc lsp--cur-workspace))))
+  (lsp--send-no-wait
+   (lsp--make-message body)
+   (lsp--workspace-proc lsp--cur-workspace)))
 
 (defun lsp-send-notification (body)
   "Send BODY as a notification to the language server."
   (lsp--send-notification body))
 
-(define-inline lsp--cur-workspace-check ()
-  (inline-quote
-    (progn
-      (cl-assert lsp--cur-workspace nil
-        "No language server is associated with this buffer.")
-      (cl-assert (lsp--workspace-p lsp--cur-workspace)))))
+(defun lsp--cur-workspace-check ()
+  (progn
+    (cl-assert lsp--cur-workspace nil
+               "No language server is associated with this buffer.")
+      (cl-assert (lsp--workspace-p lsp--cur-workspace))))
 
-(define-inline lsp--cur-parser ()
-  (inline-quote (lsp--workspace-parser lsp--cur-workspace)))
+(defun lsp--cur-parser ()
+  (lsp--workspace-parser lsp--cur-workspace))
 
 (defun lsp--send-request (body &optional no-wait)
   "Send BODY as a request to the language server, get the response.
@@ -539,16 +536,15 @@ the response recevied from the server asynchronously."
 
 (defalias 'lsp-send-request-async 'lsp--send-request-async)
 
-(define-inline lsp--inc-cur-file-version ()
-  (inline-quote (cl-incf (gethash (current-buffer)
-                           (lsp--workspace-file-versions lsp--cur-workspace)))))
+(defun lsp--inc-cur-file-version ()
+  (cl-incf (gethash (current-buffer)
+                    (lsp--workspace-file-versions lsp--cur-workspace))))
 
-(define-inline lsp--cur-file-version ()
+(defun lsp--cur-file-version ()
   "Return the file version number.  If INC, increment it before."
-  (inline-quote
-    (gethash (current-buffer) (lsp--workspace-file-versions lsp--cur-workspace))))
+  (gethash (current-buffer) (lsp--workspace-file-versions lsp--cur-workspace)))
 
-(define-inline lsp--make-text-document-item ()
+(defun lsp--make-text-document-item ()
   "Make TextDocumentItem for the currently opened file.
 
 interface TextDocumentItem {
@@ -557,12 +553,11 @@ interface TextDocumentItem {
     version: number;
     text: string;
 }"
-  (inline-quote
-    (let ((language-id-fn (lsp--client-language-id (lsp--workspace-client lsp--cur-workspace))))
-      (list :uri (lsp--buffer-uri)
-	      :languageId (funcall language-id-fn (current-buffer))
-	      :version (lsp--cur-file-version)
-	      :text (buffer-substring-no-properties (point-min) (point-max))))))
+  (let ((language-id-fn (lsp--client-language-id (lsp--workspace-client lsp--cur-workspace))))
+    (list :uri (lsp--buffer-uri)
+          :languageId (funcall language-id-fn (current-buffer))
+          :version (lsp--cur-file-version)
+          :text (buffer-substring-no-properties (point-min) (point-max)))))
 
 ;; Clean up the entire state of lsp mode when Emacs is killed, to get rid of any
 ;; pending language servers.
@@ -763,9 +758,9 @@ registered client capabilities by calling
     (setf (lsp--workspace-extra-client-capabilities lsp--cur-workspace)
       (assq-delete-all package-name extra-client-capabilities))))
 
-(define-inline lsp--server-capabilities ()
+(defun lsp--server-capabilities ()
   "Return the capabilities of the language server associated with the buffer."
-  (inline-quote (lsp--workspace-server-capabilities lsp--cur-workspace)))
+  (lsp--workspace-server-capabilities lsp--cur-workspace))
 
 (defun lsp--server-has-sync-options-p ()
   "Return whether the server has a TextDocumentSyncOptions object in
@@ -855,8 +850,7 @@ directory."
    (when (featurep 'projectile) (projectile-project-root))
    (when (featurep 'project)
      (when-let ((project (project-current)))
-       (car (project-roots project))))
-   default-directory))
+       (car (project-roots project))))))
 
 (defun lsp--read-from-file (file)
   "Read FILE content."
@@ -1092,22 +1086,22 @@ remove."
   (lsp--set-sync-method)
   (run-hooks 'lsp-after-open-hook))
 
-(define-inline lsp--text-document-identifier ()
+(defun lsp--text-document-identifier ()
   "Make TextDocumentIdentifier.
 
 interface TextDocumentIdentifier {
     uri: string;
 }"
-  (inline-quote (list :uri (lsp--buffer-uri))))
+  (list :uri (lsp--buffer-uri)))
 
-(define-inline lsp--versioned-text-document-identifier ()
+(defun lsp--versioned-text-document-identifier ()
   "Make VersionedTextDocumentIdentifier.
 
 interface VersionedTextDocumentIdentifier extends TextDocumentIdentifier {
     version: number;
 }"
-  (inline-quote (plist-put (lsp--text-document-identifier)
-                  :version (lsp--cur-file-version))))
+  (plist-put (lsp--text-document-identifier)
+             :version (lsp--cur-file-version)))
 
 (define-inline lsp--position (line char)
   "Make a Position object for the given LINE and CHAR.
@@ -1259,15 +1253,14 @@ interface TextDocumentEdit {
       (delete-region start-point end-point)
       (insert (gethash "newText" text-edit)))))
 
-(define-inline lsp--capability (cap &optional capabilities)
+(defun lsp--capability (cap &optional capabilities)
   "Get the value of capability CAP.  If CAPABILITIES is non-nil, use them instead."
-  (inline-quote (gethash ,cap (or ,capabilities (lsp--server-capabilities) (make-hash-table)))))
+  (gethash cap (or capabilities (lsp--server-capabilities) (make-hash-table))))
 
-(define-inline lsp--registered-capability (method)
-  (inline-quote
-   (seq-find (lambda (reg) (equal (lsp--registered-capability-method reg) ,method))
-             (lsp--workspace-registered-server-capabilities lsp--cur-workspace)
-             nil)))
+(defun lsp--registered-capability (method)
+  (seq-find (lambda (reg) (equal (lsp--registered-capability-method reg) method))
+            (lsp--workspace-registered-server-capabilities lsp--cur-workspace)
+            nil))
 
 (define-inline lsp--registered-capability-by-id (id)
   (inline-quote
@@ -1784,28 +1777,6 @@ Returns xref-item(s)."
          (view-mode t)
          (current-buffer))))))
 
-(defvar-local lsp--cur-hover-request-id nil)
-
-(defun lsp--text-document-hover-string ()
-  "interface Hover {
-    contents: MarkedString | MarkedString[];
-    range?: Range;
-}
-
-type MarkedString = string | { language: string; value: string };"
-  (lsp--cur-workspace-check)
-  (when lsp--cur-hover-request-id
-    (lsp--cancel-request lsp--cur-hover-request-id))
-  (let* ((client (lsp--workspace-client lsp--cur-workspace))
-          bounds body)
-    (when (symbol-at-point)
-      (setq bounds (bounds-of-thing-at-point 'symbol)
-        body (lsp--send-request-async (lsp--make-request "textDocument/hover"
-                                        (lsp--text-document-position-params))
-               (lsp--make-hover-callback client (car bounds) (cdr bounds)))
-        lsp--cur-hover-request-id (plist-get body :id))
-      (cl-assert (integerp lsp--cur-hover-request-id)))))
-
 (defun lsp--render-markup-content-1 (kind content)
   (if (functionp lsp-render-markdown-markup-content)
     (let ((out (funcall lsp-render-markdown-markup-content kind content)))
@@ -1825,11 +1796,9 @@ export interface MarkupContent {
         (content (gethash "value" content)))
     (lsp--render-markup-content-1 kind content)))
 
-(define-inline lsp--point-is-within-bounds-p (start end)
-  "Return whether the current point is within START and END."
-  (inline-quote
-    (let ((p (point)))
-      (and (>= p ,start) (<= p ,end)))))
+(defun lsp--point-in-bounds-p (bounds)
+  "Return whether the current point is within BOUNDS."
+  (and (<= (car bounds) (point)) (< (point) (cdr bounds))))
 
 (define-inline lsp--markup-content-p (obj)
   (inline-letevals (obj)
@@ -1877,18 +1846,6 @@ RENDER-ALL if set to nil render only the first element from CONTENTS."
         (list contents)))
      "\n")))
 
-;; start and end are the bounds of the symbol at point
-(defun lsp--make-hover-callback (client start end)
-  (lambda (hover)
-    (setq lsp--cur-hover-request-id nil)
-    (when (and hover
-               (lsp--point-is-within-bounds-p start end)
-               (eldoc-display-message-p))
-      (when-let ((contents (gethash "contents" hover)))
-        (eldoc-message (lsp--render-on-hover-content contents
-                                                     client
-                                                     lsp-eldoc-render-all))))))
-
 (defun lsp-provide-marked-string-renderer (client language renderer)
   (cl-check-type language string)
   (cl-check-type renderer function)
@@ -1901,14 +1858,39 @@ It will be used when no language has been specified in document/onHover result."
   (cl-check-type renderer function)
   (setf (lsp--client-default-renderer client) renderer))
 
+(defvar-local lsp--hover-saved-bounds nil)
+(defvar-local lsp--hover-saved-contents nil)
+
+(defun lsp--hover-callback (from-cache)
+  ;; Without run-with-idle-timer, echo area will be cleared after displaying the message instantly.
+  (run-with-idle-timer 0 nil (lambda () (eldoc-message lsp--hover-saved-contents))))
+
 (defun lsp-hover ()
   "Show relevant documentation for the thing under point."
   (interactive)
-  (lsp--text-document-hover-string))
+  (let ((workspace lsp--cur-workspace))
+    (if (and lsp--hover-saved-bounds
+             (lsp--point-in-bounds-p lsp--hover-saved-bounds))
+        (lsp--hover-callback t)
+      (lsp--send-request-async
+       (lsp--make-request "textDocument/hover"
+                          (lsp--text-document-position-params))
+       (lambda (hover)
+         (-let (((&hash "contents" "range") (or hover (make-hash-table))))
+           (setq lsp--hover-saved-bounds
+                 (and range
+                      (cons (lsp--position-to-point (gethash "start" range))
+                            (lsp--position-to-point (gethash "end" range)))))
+           (setq lsp--hover-saved-contents
+                 (and contents (lsp--render-on-hover-content contents
+                                                             (lsp--workspace-client workspace)
+                                                             lsp-eldoc-render-all)))
+           (lsp--hover-callback nil)))))))
 
 (defvar-local lsp--current-signature-help-request-id nil)
 
 (defun lsp-signature-help ()
+  "Display signature help."
   (interactive)
   (unless (lsp--capability "signatureHelpProvider")
     (signal 'lsp-capability-not-supported (list "signatureHelpProvider")))
@@ -1920,29 +1902,26 @@ It will be used when no language has been specified in document/onHover result."
             body (lsp--send-request-async
                   (lsp--make-request "textDocument/signatureHelp"
                                      (lsp--text-document-position-params))
-                  (lsp--make-text-document-signature-help-callback
-                   (car bounds) (cdr bounds)))
+                  (lambda (signature-help)
+                    (setq lsp--current-signature-help-request-id nil)
+                    (when (and signature-help
+                               (lsp--point-in-bounds-p bounds)
+                               (eldoc-display-message-p))
+                      (when-let* ((sig-i (gethash "activeSignature" signature-help))
+                                  (sigs (gethash "signatures" signature-help))
+                                  (sig (when (< sig-i (length sigs)) (elt sigs sig-i))))
+                        (if-let* ((parameter-i (gethash "activeParameter" signature-help))
+                                  ;; Bail out if activeParameter lies outside parameters.
+                                  (parameter (elt (gethash "parameters" sig) parameter-i))
+                                  (param (gethash "label" parameter))
+                                  (parts (split-string (gethash "label" sig) param)))
+                            (eldoc-message (concat (car parts)
+                                                   (propertize param 'face 'eldoc-highlight-function-argument)
+                                                   (string-join (cdr parts) param)))
+                          (eldoc-message (gethash "label" sig))))))
+                  )
             lsp--current-signature-help-request-id (plist-get body :id))
       (cl-assert (integerp lsp--current-signature-help-request-id)))))
-
-(defun lsp--make-text-document-signature-help-callback (start end)
-  (lambda (signature-help)
-    (setq lsp--current-signature-help-request-id nil)
-    (when (and signature-help
-               (lsp--point-is-within-bounds-p start end)
-               (eldoc-display-message-p))
-      (when-let* ((sig-i (gethash "activeSignature" signature-help))
-                  (sigs (gethash "signatures" signature-help))
-                  (sig (when (< sig-i (length sigs)) (elt sigs sig-i))))
-        (if-let* ((parameter-i (gethash "activeParameter" signature-help))
-                  ;; Bail out if activeParameter lies outside parameters.
-                  (parameter (elt (gethash "parameters" sig) parameter-i))
-                  (param (gethash "label" parameter))
-                  (parts (split-string (gethash "label" sig) param)))
-            (eldoc-message (concat (car parts)
-                            (propertize param 'face 'eldoc-highlight-function-argument)
-                            (string-join (cdr parts) param)))
-         (eldoc-message (gethash "label" sig)))))))
 
 ;; NOTE: the code actions cannot currently be applied. There is some non-GNU
 ;; code to do this in the lsp-haskell module. We still need a GNU version, here.

@@ -3,7 +3,22 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (23540 10581
+;;;### (autoloads nil "lsp" "lsp.el" (23558 35254 0 0))
+;;; Generated autoloads from lsp.el
+
+(autoload 'lsp "lsp" "\
+Entry point for the server startup.
+When IGNORE-MULTI-FOLDER is t the lsp mode will start new
+language server even if there is language server which can handle
+current language. When IGNORE-MULTI-FOLDER is nil current file
+will be openned in multi folder language server if there is
+such.
+
+\(fn &optional IGNORE-MULTI-FOLDER)" t nil)
+
+;;;***
+
+;;;### (autoloads nil "lsp-methods" "lsp-methods.el" (23558 35254
 ;;;;;;  0 0))
 ;;; Generated autoloads from lsp-methods.el
 
@@ -63,7 +78,7 @@ Face used for highlighting symbols being written to." :group (quote lsp-faces))
 
 ;;;***
 
-;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23540 10581 0 0))
+;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23558 35254 0 0))
 ;;; Generated autoloads from lsp-mode.el
 
 (autoload 'lsp-mode "lsp-mode" "\
@@ -73,9 +88,9 @@ Face used for highlighting symbols being written to." :group (quote lsp-faces))
 
 ;;;***
 
-;;;### (autoloads nil nil ("lsp-common.el" "lsp-flycheck.el" "lsp-imenu.el"
-;;;;;;  "lsp-io.el" "lsp-mode-pkg.el" "lsp-notifications.el") (23540
-;;;;;;  10581 0 0))
+;;;### (autoloads nil nil ("lsp-clients.el" "lsp-common.el" "lsp-flycheck.el"
+;;;;;;  "lsp-imenu.el" "lsp-io.el" "lsp-mode-pkg.el" "lsp-notifications.el")
+;;;;;;  (23558 35254 0 0))
 
 ;;;***
 

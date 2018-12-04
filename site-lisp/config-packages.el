@@ -686,7 +686,11 @@ The shell command lives in my dotfiles repo."
   :config
   (add-hook 'csharp-mode-hook 'omnisharp-mode))
 
-(use-package cquery)
+;; For some reason cquery has caused my config to be broken after updating from
+;; MELPA (on 2018-12-04). I've taken the expedient course of commenting it out
+;; for now, since I have lots of time-bound work at the moment.
+;;
+;;(use-package cquery)
 
 (use-package hideshow
   :defer t

@@ -5,7 +5,7 @@
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 15 Mar 2018
 ;; Version: 0.2.1
-;; Package-Version: 20180721.1935
+;; Package-Version: 20181203.1008
 ;; Keywords: tools, php
 ;; Homepage: https://github.com/emacs-php/phpstan.el
 ;; Package-Requires: ((emacs "24.3"))
@@ -245,7 +245,7 @@ it returns the value of `SOURCE' as it is."
 (defun phpstan-get-command-args ()
   "Return command line argument for PHPStan."
   (let ((executable (phpstan-get-executable))
-        (args (list "analyze" "--errorFormat=raw" "--no-progress" "--no-interaction"))
+        (args (list "analyze" "--error-format=raw" "--no-progress" "--no-interaction"))
         (path (phpstan-normalize-path (phpstan-get-config-file)))
         (level (phpstan-get-level)))
     (when path

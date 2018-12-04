@@ -158,14 +158,22 @@ keep their distinct foreground colors."
 (defcustom magit-diff-refine-hunk nil
   "Whether to show word-granularity differences within diff hunks.
 
-nil    never show fine differences.
-t      show fine differences for the current diff hunk only.
-`all'  show fine differences for all displayed diff hunks."
+nil    Never show fine differences.
+t      Show fine differences for the current diff hunk only.
+`all'  Show fine differences for all displayed diff hunks."
   :group 'magit-diff
   :safe (lambda (val) (memq val '(nil t all)))
   :type '(choice (const :tag "Never" nil)
                  (const :tag "Current" t)
                  (const :tag "All" all)))
+
+(defcustom magit-diff-refine-ignore-whitespace smerge-refine-ignore-whitespace
+  "Whether to ignore whitespace changes in word-granularity differences."
+  :package-version '(magit . "2.91.0")
+  :set-after '(smerge-refine-ignore-whitespace)
+  :group 'magit-diff
+  :safe 'booleanp
+  :type 'boolean)
 
 (put 'magit-diff-refine-hunk 'permanent-local t)
 
@@ -177,7 +185,7 @@ opening large and/or many files, so the widths are cached in
 the variable `magit-diff--tab-width-cache'.  Set that to nil
 to invalidate the cache.
 
-nil       Never ajust tab width.  Use `tab-width's value from
+nil       Never adjust tab width.  Use `tab-width's value from
           the Magit buffer itself instead.
 
 t         If the corresponding file-visiting buffer exits, then
@@ -192,22 +200,46 @@ NUMBER    Like `always', but don't visit files larger than NUMBER
           bytes."
   :package-version '(magit . "2.12.0")
   :group 'magit-diff
-  :type '(choice (const :tag "Never" nil)
-                 (const :tag "If file-visiting buffer exists" t)
-                 (const :tag "... or file isn't larger than bytes" all)
-                 (const :tag "Always" always)))
+  :type '(choice (const   :tag "Never" nil)
+                 (const   :tag "If file-visiting buffer exists" t)
+                 (integer :tag "If file isn't larger than N bytes")
+                 (const   :tag "Always" always)))
 
 (defcustom magit-diff-paint-whitespace t
   "Specify where to highlight whitespace errors.
-See `magit-diff-highlight-trailing',
-`magit-diff-highlight-indentation'.  The symbol t means in all
-diffs, `status' means only in the status buffer, and nil means
-nowhere."
+
+nil            Never highlight whitespace errors.
+t              Highlight whitespace errors everywhere.
+`uncommitted'  Only highlight whitespace errors in diffs
+               showing uncommitted changes.
+
+For backward compatibility `status' is treated as a synonym
+for `uncommitted'.
+
+The option `magit-diff-paint-whitespace-lines' controls for
+what lines (added/remove/context) errors are highlighted.
+
+The options `magit-diff-highlight-trailing' and
+`magit-diff-highlight-indentation' control what kind of
+whitespace errors are highlighted."
   :group 'magit-diff
-  :safe (lambda (val) (memq val '(t nil status)))
-  :type '(choice (const :tag "Always" t)
-                 (const :tag "Never" nil)
-                 (const :tag "In status buffer" status)))
+  :safe (lambda (val) (memq val '(t nil uncommitted status)))
+  :type '(choice (const :tag "In all diffs" t)
+                 (const :tag "Only in uncommitted changes" uncommitted)
+                 (const :tag "Never" nil)))
+
+(defcustom magit-diff-paint-whitespace-lines t
+  "Specify in what kind of lines to highlight whitespace errors.
+
+t         Highlight only in added lines.
+`both'    Highlight in added and removed lines.
+`all'     Highlight in added, removed and context lines."
+  :package-version '(magit . "2.91.0")
+  :group 'magit-diff
+  :safe (lambda (val) (memq val '(t both all)))
+  :type '(choice (const :tag "in added lines" t)
+                 (const :tag "in added and removed lines" both)
+                 (const :tag "in added, removed and context lines" all)))
 
 (defcustom magit-diff-highlight-trailing t
   "Whether to highlight whitespace at the end of a line in diffs.
@@ -1058,7 +1090,7 @@ for a revision."
     (when module
       (setq default-directory
             (expand-file-name (file-name-as-directory module))))
-    (unless (magit-rev-verify-commit rev)
+    (unless (magit-commit-p rev)
       (user-error "%s is not a commit" rev))
     (magit-mode-setup #'magit-revision-mode rev nil args files)))
 
@@ -2090,12 +2122,12 @@ or a ref which is not a branch, then it inserts nothing."
                             (`quicker  ; false negatives (number-less hashes)
                              (and (>= (length text) 7)
                                   (string-match-p "[0-9]" text)
-                                  (magit-rev-verify-commit text)))
+                                  (magit-commit-p text)))
                             (`quick    ; false negatives (short hashes)
                              (and (>= (length text) 7)
-                                  (magit-rev-verify-commit text)))
+                                  (magit-commit-p text)))
                             (`slow
-                             (magit-rev-verify-commit text)))
+                             (magit-commit-p text)))
                       (put-text-property beg (point) 'face 'magit-hash)
                       (let ((end (point)))
                         (goto-char beg)
@@ -2546,6 +2578,7 @@ are highlighted."
         (goto-char (oref section start))
         (let ((end (oref section end))
               (merging (looking-at "@@@"))
+              (diff-type (magit-diff-type))
               (stage nil)
               (tab-width (magit-diff-tab-width
                           (magit-section-parent-value section))))
@@ -2570,14 +2603,16 @@ are highlighted."
                'magit-diff-conflict-heading)
               ((looking-at (if merging "^\\(\\+\\| \\+\\)" "^\\+"))
                (magit-diff-paint-tab merging tab-width)
-               (magit-diff-paint-whitespace merging)
+               (magit-diff-paint-whitespace merging 'added diff-type)
                (or stage
                    (if highlight 'magit-diff-added-highlight 'magit-diff-added)))
               ((looking-at (if merging "^\\(-\\| -\\)" "^-"))
                (magit-diff-paint-tab merging tab-width)
+               (magit-diff-paint-whitespace merging 'removed diff-type)
                (if highlight 'magit-diff-removed-highlight 'magit-diff-removed))
               (t
                (magit-diff-paint-tab merging tab-width)
+               (magit-diff-paint-whitespace merging 'context diff-type)
                (if highlight 'magit-diff-context-highlight 'magit-diff-context))))
             (forward-line))))))
   (magit-diff-update-hunk-refinement section))
@@ -2619,11 +2654,15 @@ are highlighted."
                          'display (list (list 'space :width width)))
       (forward-char))))
 
-(defun magit-diff-paint-whitespace (merging)
+(defun magit-diff-paint-whitespace (merging line-type diff-type)
   (when (and magit-diff-paint-whitespace
-             (or (derived-mode-p 'magit-status-mode)
-                 (not (eq magit-diff-paint-whitespace 'status))))
-    (let ((prefix (if merging "^[-\\+\s]\\{2\\}" "^[-\\+]"))
+             (or (not (memq magit-diff-paint-whitespace '(uncommitted status)))
+                 (memq diff-type '(staged unstaged)))
+             (cl-case line-type
+               (added   t)
+               (removed (memq magit-diff-paint-whitespace-lines '(all both)))
+               (context (memq magit-diff-paint-whitespace-lines '(all)))))
+    (let ((prefix (if merging "^[-\\+\s]\\{2\\}" "^[-\\+\s]"))
           (indent
            (if (local-variable-p 'magit-diff-highlight-indentation)
                magit-diff-highlight-indentation
@@ -2637,6 +2676,7 @@ are highlighted."
                  (looking-at (concat prefix ".*?\\([ \t]+\\)$")))
         (let ((ov (make-overlay (match-beginning 1) (match-end 1) nil t)))
           (overlay-put ov 'face 'magit-diff-whitespace-warning)
+          (overlay-put ov 'priority 2)
           (overlay-put ov 'evaporate t)))
       (when (or (and (eq indent 'tabs)
                      (looking-at (concat prefix "\\( *\t[ \t]*\\)")))
@@ -2645,6 +2685,7 @@ are highlighted."
                                          prefix indent))))
         (let ((ov (make-overlay (match-beginning 1) (match-end 1) nil t)))
           (overlay-put ov 'face 'magit-diff-whitespace-warning)
+          (overlay-put ov 'priority 2)
           (overlay-put ov 'evaporate t))))))
 
 (defun magit-diff-update-hunk-refinement (&optional section)
@@ -2659,8 +2700,10 @@ are highlighted."
              (goto-char (oref section start))
              ;; `diff-refine-hunk' does not handle combined diffs.
              (unless (looking-at "@@@")
-               ;; Avoid fsyncing many small temp files
-               (let ((write-region-inhibit-fsync t))
+               (let ((smerge-refine-ignore-whitespace
+                      magit-diff-refine-ignore-whitespace)
+                     ;; Avoid fsyncing many small temp files
+                     (write-region-inhibit-fsync t))
                  (diff-refine-hunk)))))
           ((or `(nil t ,_) `(t t nil))
            (oset section refined nil)

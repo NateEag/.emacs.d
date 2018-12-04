@@ -887,6 +887,16 @@ that it will align with the text area."
   (interactive)
   (kill-buffer (current-buffer)))
 
+(cl-defun magit--overlay-at (pos prop &optional (val nil sval) testfn)
+  (cl-find-if (lambda (o)
+                (let ((p (overlay-properties o)))
+                  (and (plist-member p prop)
+                       (or (not sval)
+                           (funcall (or testfn #'eql)
+                                    (plist-get p prop)
+                                    val)))))
+              (overlays-at pos t)))
+
 ;;; Kludges for Emacs Bugs
 
 (defun magit-file-accessible-directory-p (filename)
@@ -958,6 +968,39 @@ and https://github.com/magit/magit/issues/2295."
           ;; This `nreverse' call is the only code change made to the
           ;; `completion-pcm--all-completions' that shipped with Emacs 25.1.
           (nreverse poss))))))
+
+(defun magit-which-function ()
+  "Return current function name based on point.
+
+Try to determine the name using `which-func-functions', functions
+provided by Imenu or `add-log-current-defun', in that order until
+one approach succeeds.  If nothing succeeds, then return nil.
+
+This is like `which-function' except that it doesn't use Imenu's
+cache (`imenu--index-alist') because by default that is never
+invalidated and is therefore unreliable.  Invalidating the cache
+before use could be another viable approach, except that indexing
+the complete buffer just to get the function at point would be
+very inefficient.  (But if you use Imenu for other purposes you
+should set `imenu-auto-rescan' to t.)
+
+The Imenu approach is only used if `imenu-create-index-function'
+is `imenu-default-create-index-function', in which case the work
+is done by `imenu-prev-index-position-function'
+and `imenu-extract-index-name-function'."
+  (when-let
+      ((name (or (run-hook-with-args-until-success 'which-func-functions)
+                 (and (eq imenu-create-index-function
+                          'imenu-default-create-index-function)
+                      (ignore-errors
+                        (save-excursion
+                          (end-of-line)
+                          (and (funcall imenu-prev-index-position-function)
+                               (funcall imenu-extract-index-name-function)))))
+                 (add-log-current-defun))))
+    (if which-func-cleanup-function
+	(funcall which-func-cleanup-function name)
+      name)))
 
 ;;; Kludges for Incompatible Modes
 
@@ -1077,6 +1120,67 @@ the %s(1) manpage.
 ;;;###autoload
 (advice-add 'org-man-export :around
             'org-man-export--magit-gitman)
+
+;;; Bitmaps
+
+(when (window-system)
+  (define-fringe-bitmap 'magit-fringe-bitmap+
+    [#b00000000
+     #b00011000
+     #b00011000
+     #b01111110
+     #b01111110
+     #b00011000
+     #b00011000
+     #b00000000])
+  (define-fringe-bitmap 'magit-fringe-bitmap-
+    [#b00000000
+     #b00000000
+     #b00000000
+     #b01111110
+     #b01111110
+     #b00000000
+     #b00000000
+     #b00000000])
+
+  (define-fringe-bitmap 'magit-fringe-bitmap>
+    [#b01100000
+     #b00110000
+     #b00011000
+     #b00001100
+     #b00011000
+     #b00110000
+     #b01100000
+     #b00000000])
+  (define-fringe-bitmap 'magit-fringe-bitmapv
+    [#b00000000
+     #b10000010
+     #b11000110
+     #b01101100
+     #b00111000
+     #b00010000
+     #b00000000
+     #b00000000])
+
+  (define-fringe-bitmap 'magit-fringe-bitmap-bold>
+    [#b11100000
+     #b01110000
+     #b00111000
+     #b00011100
+     #b00011100
+     #b00111000
+     #b01110000
+     #b11100000])
+  (define-fringe-bitmap 'magit-fringe-bitmap-boldv
+    [#b10000001
+     #b11000011
+     #b11100111
+     #b01111110
+     #b00111100
+     #b00011000
+     #b00000000
+     #b00000000])
+  )
 
 ;;; Miscellaneous
 

@@ -314,10 +314,11 @@ depending on the value of option `magit-commit-squash-confirm'."
                      rebase)
             (magit-commit-amend-assert commit)
             (magit-rebase-interactive-1 commit
-                (list "--autosquash" "--autostash")
+                (list "--autosquash" "--autostash" "--keep-empty")
               "" "true" nil t)))
         (format "Type %%p on a commit to %s into it,"
-                (substring option 2)))
+                (substring option 2))
+        nil nil nil commit)
       (when magit-commit-show-diff
         (let ((magit-display-buffer-noselect t))
           (apply #'magit-diff-staged nil (magit-diff-arguments)))))))

@@ -144,12 +144,17 @@ This is useful if you use really long branch names."
                  (function-item magit-log-header-line-sentence)
                  function))
 
-(defcustom magit-log-trace-definition-function 'which-function
+(defcustom magit-log-trace-definition-function 'magit-which-function
   "Function used to determine the function at point.
-This is used by the command `magit-log-trace-definition'."
-  :package-version '(magit . "2.90.0")
+This is used by the command `magit-log-trace-definition'.
+You should prefer `magit-which-function' over `which-function'
+because the latter may make use of Imenu's outdated cache."
+  :package-version '(magit . "2.91.0")
   :group 'magit-log
-  :type '(choice (function-item which-function) function))
+  :type '(choice (function-item magit-which-function)
+                 (function-item which-function)
+                 (function-item add-log-current-defun)
+                 function))
 
 (defface magit-log-graph
   '((((class color) (background light)) :foreground "grey30")
@@ -733,7 +738,19 @@ active, restrict the log to the lines that the region touches."
   (magit-mode-setup-internal
    #'magit-log-mode
    (list (list rev)
-         (cons (format "-L:%s:%s" (regexp-quote fn) file)
+         (cons (format "-L:%s%s:%s"
+                       (regexp-quote fn)
+                       (if (derived-mode-p 'lisp-mode 'emacs-lisp-mode)
+                           ;; Git doesn't treat "-" the same way as
+                           ;; "_", leading to false-positives such as
+                           ;; "foo-suffix" being considered a match
+                           ;; for "foo".  Wing it.
+                           "\\( \\|$\\)"
+                         ;; We could use "\\b" here, but since Git
+                         ;; already does something equivalent, that
+                         ;; isn't necessary.
+                         "")
+                       file)
                (cl-delete "-L" (car (magit-log-arguments))
                           :test 'string-prefix-p))
          nil)
@@ -860,7 +877,7 @@ is displayed in the current frame."
       (let* ((section (magit-current-section))
              (parent-rev (format "%s^%s" (oref section value) (or n 1))))
         (if-let ((parent-hash (magit-rev-parse "--short" parent-rev)))
-            (if-let ((parent (--first (equal (oref section value)
+            (if-let ((parent (--first (equal (oref it value)
                                              parent-hash)
                                       (magit-section-siblings section 'next))))
                 (magit-section-goto parent)
@@ -1446,6 +1463,8 @@ Type \\[magit-log-select-quit] to abort without selecting a commit."
 
 (defun magit-log-select (pick &optional msg quit branch args initial)
   (declare (indent defun))
+  (unless initial
+    (setq initial (magit-commit-at-point)))
   (magit-mode-setup #'magit-log-select-mode
                     (or branch (magit-get-current-branch) "HEAD")
                     (append args magit-log-select-arguments))

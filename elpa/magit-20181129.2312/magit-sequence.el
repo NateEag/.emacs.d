@@ -625,7 +625,8 @@ START has to be selected from a list of recent commits."
 (defun magit-rebase-autosquash (args)
   "Combine squash and fixup commits with their intended targets."
   (interactive (list (magit-rebase-arguments)))
-  (magit-rebase-interactive-1 :merge-base (cons "--autosquash" args)
+  (magit-rebase-interactive-1 :merge-base
+      (nconc (list "--autosquash" "--keep-empty") args)
     "Type %p on a commit to squash into it and then rebase as necessary,"
     "true" nil t))
 
@@ -754,7 +755,7 @@ If no such sequence is in progress, do nothing."
             patch commit)
         (while patches
           (setq patch (pop patches))
-          (setq commit (magit-rev-verify-commit
+          (setq commit (magit-commit-p
                         (cadr (split-string (magit-file-line patch)))))
           (cond ((and commit patches)
                  (magit-sequence-insert-commit

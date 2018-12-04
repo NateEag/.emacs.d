@@ -50,6 +50,11 @@
 
   (setq-local ne-yas-auto-insert-snippet-name "php-file")
 
+  ;; Turn off aggressive-fill-paragraph-mode if it's on, because my hacked
+  ;; version gets deathly slow in php-mode. Not sure why.
+  (if (equal aggressive-fill-paragraph-mode t)
+      (aggressive-fill-paragraph-mode nil))
+
   ;; Initialize my php-sql submode.
   ;; Commented, because it breaks even worse than it used to under Emacs 24.
   ;; :(

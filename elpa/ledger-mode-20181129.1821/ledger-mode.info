@@ -175,7 +175,7 @@ prompt for a target value.  The target value is the amount you want the
 cleared transactions in the buffer to total.  Normally this would be the
 ending value from your bank statement, or the latest value in your
 on-line transaction summary.  Enter ‘1710’.  Note that Ledger-mode
-assumes your are using ‘$’ (USD) as your default commodity, this can be
+assumes you are using ‘$’ (USD) as your default commodity, this can be
 easily changed in the customization variables.  *Note Ledger-mode
 Customization::.
 
@@ -289,7 +289,7 @@ File: ledger-mode.info,  Node: Quick Balance Display,  Prev: Setting a Transacti
 ---------------------------
 
 You will often want to quickly check the balance of an account.  The
-easiest way it to position point on the account you are interested in,
+easiest way is to position point on the account you are interested in,
 and type ‘C-c C-p’.  The Minibuffer will ask you to verify the name of
 the account you want, if it is already correct hit ‘RET’, then the
 balance of the account will be displayed in the Minibuffer.
@@ -321,7 +321,7 @@ need to arrive at the final value, then type ‘y’ to yank the value at
 the top of stack back into the ledger buffer.  Note: ‘Calc’ does not
 directly support commas as decimal separators.  Ledger-mode will
 translate values from decimal-comma format to decimal-period format for
-use in ‘Calc’, but it cannot intercept the value being yanked form the
+use in ‘Calc’, but it cannot intercept the value being yanked from the
 ‘Calc’ stack, so decimal-comma users will have to manually replace the
 period with a comma.
 
@@ -886,8 +886,8 @@ Ledger-mode has several options available for configuration.  All
 options can be configured through the Emacs customization menus, or
 specified in your Emacs initialization file.  The complete list of
 options is shown below.  To change the option using the Emacs
-customization menu, simply chose customize in the Options menu and look
-for Ledger under the data options.  Alternately you can choose
+customization menu, simply choose customize in the Options menu and look
+for Ledger under the data options.  Alternatively you can choose
 ‘Customize Specific Group’ and enter ‘Ledger’ as the group.
 
 
@@ -1421,55 +1421,55 @@ Node: Menus3723
 Node: Quick Demo4038
 Node: Quick Add4468
 Node: Reconciliation5872
-Node: Reports7557
-Node: Narrowing8587
-Node: The Ledger Buffer9171
-Node: Adding Transactions9549
-Node: Setting a Transactions Effective Date10528
-Node: Quick Balance Display11428
-Node: Copying Transactions11960
-Node: Editing Amounts12412
-Node: Marking Transactions13483
-Node: Formatting Transactions15178
-Node: Deleting Transactions15776
-Node: Sorting Transactions16216
-Node: Narrowing Transactions17772
-Node: The Reconcile Buffer19622
-Node: Basics of Reconciliation20087
-Node: Starting a Reconciliation21036
-Node: Mark Transactions Pending22885
-Node: Edit Transactions During Reconciliation23554
-Node: Finalize Reconciliation24197
-Node: Adding and Deleting Transactions during Reconciliation24854
-Node: Changing Reconciliation Account25438
-Node: Changing Reconciliation Target25988
-Node: The Report Buffer26306
-Node: Running Basic Reports26564
-Node: Adding and Editing Reports27997
-Node: Expansion Formats29384
-Node: Make Report Transactions Active31025
-Node: Reversing Report Order31732
-Node: Scheduling Transactions32425
-Node: Specifying Upcoming Transactions33281
-Node: Transactions that occur on specific dates33855
-Node: Transactions that occur on specific days34896
-Node: Customizing Ledger-mode36025
-Node: Ledger-mode Customization36289
-Node: Customization Variables36971
-Node: Ledger Customization Group37451
-Node: Ledger Reconcile Customization Group38091
-Node: Ledger Report Customization Group41034
-Node: Ledger Faces Customization Group41753
-Node: Ledger Post Customization Group43500
-Node: Ledger Exec Customization Group44131
-Node: Ledger Test Customization Group44630
-Node: Ledger Texi Customization Group45032
-Node: Generating Ledger Regression Tests45524
-Node: Embedding Example results in Ledger Documentation45787
-Node: Hacking Ledger-mode46076
-Node: Concept Index46284
-Node: Command & Variable Index51058
-Node: Keystroke Index58537
+Node: Reports7556
+Node: Narrowing8586
+Node: The Ledger Buffer9170
+Node: Adding Transactions9548
+Node: Setting a Transactions Effective Date10527
+Node: Quick Balance Display11427
+Node: Copying Transactions11959
+Node: Editing Amounts12411
+Node: Marking Transactions13482
+Node: Formatting Transactions15177
+Node: Deleting Transactions15775
+Node: Sorting Transactions16215
+Node: Narrowing Transactions17771
+Node: The Reconcile Buffer19621
+Node: Basics of Reconciliation20086
+Node: Starting a Reconciliation21035
+Node: Mark Transactions Pending22884
+Node: Edit Transactions During Reconciliation23553
+Node: Finalize Reconciliation24196
+Node: Adding and Deleting Transactions during Reconciliation24853
+Node: Changing Reconciliation Account25437
+Node: Changing Reconciliation Target25987
+Node: The Report Buffer26305
+Node: Running Basic Reports26563
+Node: Adding and Editing Reports27996
+Node: Expansion Formats29383
+Node: Make Report Transactions Active31024
+Node: Reversing Report Order31731
+Node: Scheduling Transactions32424
+Node: Specifying Upcoming Transactions33280
+Node: Transactions that occur on specific dates33854
+Node: Transactions that occur on specific days34895
+Node: Customizing Ledger-mode36024
+Node: Ledger-mode Customization36288
+Node: Customization Variables36973
+Node: Ledger Customization Group37453
+Node: Ledger Reconcile Customization Group38093
+Node: Ledger Report Customization Group41036
+Node: Ledger Faces Customization Group41755
+Node: Ledger Post Customization Group43502
+Node: Ledger Exec Customization Group44133
+Node: Ledger Test Customization Group44632
+Node: Ledger Texi Customization Group45034
+Node: Generating Ledger Regression Tests45526
+Node: Embedding Example results in Ledger Documentation45789
+Node: Hacking Ledger-mode46078
+Node: Concept Index46286
+Node: Command & Variable Index51060
+Node: Keystroke Index58539
 
 End Tag Table
 

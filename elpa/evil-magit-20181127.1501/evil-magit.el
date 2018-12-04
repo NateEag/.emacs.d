@@ -4,7 +4,7 @@
 
 ;; Author: Justin Burkett <justin@burkett.cc>
 ;; Package-Requires: ((evil "1.2.3") (magit "2.6.0"))
-;; Package-Version: 20180702.1553
+;; Package-Version: 20181127.1501
 ;; Homepage: https://github.com/justbur/evil-magit
 ;; Version: 0.4.1
 
@@ -168,6 +168,8 @@ should be a string suitable for `kbd'."
     magit-wip-after-save-local-mode
     magit-wip-after-apply-mode
     magit-wip-before-change-mode
+    magit-wip-initial-backup-mode
+    magit-wip-mode
     ;; gh
     magit-gh-pulls-mode
     ;; git-gutter
@@ -222,6 +224,9 @@ evil-magit was loaded."
     magit-diffstat-section-map
     magit-headers-section-map
     magit-message-section-map
+    ;; FIXME: deal with new bindings in this one
+    magit-module-section-map
+    magit-modules-section-map
     magit-processbuf-section-map
     magit-process-section-map
     magit-pulls-section-map
@@ -283,7 +288,7 @@ moment.")
        (,states magit-mode-map "-"     magit-revert-no-commit         "v")
        (,states magit-mode-map "_"     magit-revert-popup             "V")
        (,states magit-mode-map "p"     magit-push-popup               "P")
-       (,states magit-mode-map "o"     magit-reset                    "x")
+       (,states magit-mode-map "o"     magit-reset-quickly            "x")
        (,states magit-mode-map "O"     magit-reset-popup              "X")
        (,states magit-mode-map "|"     magit-git-command              ":")
        (,states magit-mode-map "'"     magit-submodule-popup          "o")
@@ -539,7 +544,7 @@ evil-magit affects.")
      (magit-dispatch-popup :actions "k" "x" magit-discard)
      (magit-remote-popup :actions "k" "x" magit-remote-remove)
      (magit-revert-popup :actions "v" "o" magit-revert-no-commit)
-     (magit-revert-popup :actions "V" "O" magit-revert)
+     (magit-revert-popup :actions "V" "O" magit-revert-and-commit)
      (magit-revert-popup :sequence-actions "V" "O" magit-sequencer-continue)
      (magit-tag-popup    :actions "k" "x" magit-tag-delete)))
   "Changes to popup keys")

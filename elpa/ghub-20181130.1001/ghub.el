@@ -57,7 +57,8 @@
 (require 'url-auth)
 (require 'url-http)
 
-(eval-when-compile (require 'subr-x))
+(eval-when-compile
+  (require 'subr-x))
 
 (defvar url-callback-arguments)
 (defvar url-http-end-of-headers)
@@ -837,8 +838,9 @@ See https://magit.vc/manual/ghub/Support-for-Other-Forges.html for instructions.
   Store on Github as:\n    %S
   Store locally according to option `auth-sources':\n    %S
 %s
-If in doubt, then abort and first view the section of the Ghub
-documentation called \"Manually Creating and Storing a Token\".
+If in doubt, then abort and first view the section of
+the Ghub documentation called \"Interactively Creating
+and Storing a Token\".
 
 Otherwise confirm and then provide your Github username and
 password at the next two prompts.  Depending on the backend
@@ -884,7 +886,7 @@ WARNING: The token will be stored unencrypted in %S.
                                (car .errors.code))
                              "already_exists")
                (error "\
-A token named %S ready exists on Github. \
+A token named %S already exists on Github. \
 Please visit https://github.com/settings/tokens and delete it." ident))))
       (user-error "Abort"))))
 

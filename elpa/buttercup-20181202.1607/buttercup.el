@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2015-2017  Jorgen Schaefer <contact@jorgenschaefer.de>
 
-;; Version: 1.15
+;; Version: 1.16
 ;; Author: Jorgen Schaefer <contact@jorgenschaefer.de>
 ;; Package-Requires: ((emacs "24.3"))
 ;; URL: https://github.com/jorgenschaefer/emacs-buttercup
@@ -1247,9 +1247,6 @@ spec, and should be killed after running the spec.")
       (eval-defun nil)
       (buttercup-run))
     (message "Suite executed successfully")))
-
-(defvar buttercup-color t
-  "Whether to use colors in output.")
 
 ;;;###autoload
 (defun buttercup-run-discover ()

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "buttercup" "buttercup.el" (23521 59387 0 0))
+;;;### (autoloads nil "buttercup" "buttercup.el" (23558 35237 0 0))
 ;;; Generated autoloads from buttercup.el
 
 (autoload 'buttercup-run-at-point "buttercup" "\
@@ -53,7 +53,7 @@ With buttercup minor mode active the following is activated:
 ;;;***
 
 ;;;### (autoloads nil nil ("buttercup-compat.el" "buttercup-pkg.el")
-;;;;;;  (23521 59387 0 0))
+;;;;;;  (23558 35237 0 0))
 
 ;;;***
 

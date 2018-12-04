@@ -337,7 +337,7 @@ XREFS is a list of references/definitions."
   (-let* ((xref (lsp-ui-peek--get-selection))
           ((&plist :file file :chunk chunk) (or xref lsp-ui-peek--last-xref))
           (header (concat " " (lsp-ui--workspace-path file) "\n"))
-          (header2 (format " %s %s" lsp-ui-peek--size-list 
+          (header2 (format " %s %s" lsp-ui-peek--size-list
                            (string-remove-prefix "workspace/" (string-remove-prefix "textDocument/" lsp-ui-peek--method))))
           (ref-view (--> chunk
                          (if (eq lsp-ui-peek-fontify 'on-demand)
@@ -494,17 +494,17 @@ XREFS is a list of references/definitions."
                                 (forward-line line)
                                 (forward-char column))
                               (point-marker)))))
-                (current-workspace lsp--cur-workspace))
+                (cur-buffer-workspaces (and (boundp 'lsp--buffer-workspaces) lsp--buffer-workspaces)))
             (if other-window
                 (pop-to-buffer (marker-buffer marker) t)
               (switch-to-buffer (marker-buffer marker)))
             (with-current-buffer buffer
               (lsp-ui-peek-mode -1))
-            (unless lsp--cur-workspace
-              (setq lsp--cur-workspace current-workspace))
-            (unless lsp-mode
+            (unless lsp--buffer-workspaces
+              (setq lsp--buffer-workspaces cur-buffer-workspaces)
               (lsp-mode 1)
-              (lsp-on-open))
+              (dolist (workspace cur-buffer-workspaces)
+                (lsp--open-in-workspace workspace)))
             (goto-char marker)
             (run-hooks 'xref-after-jump-hook))))
     (lsp-ui-peek--toggle-file)))

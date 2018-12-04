@@ -9095,7 +9095,7 @@ See URL `https://github.com/jimhester/lintr'."
             line-end)
    (error line-start (file-name) ":" line ":" column ": error: " (message)
           line-end))
-  :modes ess-mode
+  :modes (ess-mode ess-r-mode)
   :predicate
   ;; Don't check ESS files which do not contain R, and make sure that lintr is
   ;; actually available
@@ -9747,7 +9747,7 @@ This syntax checker needs Rust 1.18 or newer.  See URL
   "A Rust syntax checker using clippy.
 
 See URL `https://github.com/rust-lang-nursery/rust-clippy'."
-  :command ("cargo" "+nightly" "clippy" "--message-format=json")
+  :command ("cargo" "clippy" "--message-format=json")
   :error-parser flycheck-parse-cargo-rustc
   :error-filter flycheck-rust-error-filter
   :error-explainer flycheck-rust-error-explainer

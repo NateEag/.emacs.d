@@ -5,6 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; URL: https://github.com/purcell/package-lint
+;; Package-Version: 20181130.154
 ;; Keywords: lisp
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24"))
@@ -263,6 +264,9 @@ This is bound dynamically while the checks run.")
             (when desc
               (package-lint--check-package-summary desc)
               (package-lint--check-provide-form desc)))
+          (package-lint--check-no-use-of-cl)
+          (package-lint--check-no-use-of-cl-lib-sublibraries)
+          (package-lint--check-eval-after-load)
           (let ((deps (package-lint--check-dependency-list)))
             (package-lint--check-lexical-binding-requires-emacs-24 deps)
             (package-lint--check-libraries-available-in-emacs deps)
@@ -532,6 +536,36 @@ REGEXP is (concat RX-START REGEXP* RX-END) for each REGEXP*."
                    (format "You should depend on (emacs \"%s\") if you need `%s'."
                            (mapconcat #'number-to-string added-in-version ".")
                            sym)))))))))))
+
+(defun package-lint--check-eval-after-load ()
+  "Warn about use of `eval-after-load' and co."
+  (save-excursion
+    (save-match-data
+      (goto-char (point-min))
+      (when (re-search-forward "(\\s-*?\\(\\(?:with-\\)?eval-after-load\\)\\_>" nil t)
+        (package-lint--error-at-point
+         'warning
+         (format "`%s' is for use in configurations, and should rarely be used in packages." (match-string 1)))))))
+
+(defun package-lint--check-no-use-of-cl ()
+  "Warn about use of deprecated `cl' library."
+  (save-excursion
+    (save-match-data
+      (goto-char (point-min))
+      (when (re-search-forward "(\\s-*?require\\s-*?'cl\\_>" nil t)
+        (package-lint--error-at-point
+         'warning
+         "Replace deprecated `cl' with `cl-lib'.  The `cl-libify' package can help with this.")))))
+
+(defun package-lint--check-no-use-of-cl-lib-sublibraries ()
+  "Warn about use of `cl-macs', `cl-seq' etc."
+  (save-excursion
+    (save-match-data
+      (goto-char (point-min))
+      (when (re-search-forward "(\\s-*?require\\s-*?'cl-\\(?:macs\\|seq\\)\\_>" nil t)
+        (package-lint--error-at-point
+         'warning
+         "This file is not in the `cl-lib' ELPA compatibility package: require `cl-lib' instead.")))))
 
 (defun package-lint--check-libraries-available-in-emacs (valid-deps)
   "Warn about use of libraries that are not available in the Emacs version in VALID-DEPS."

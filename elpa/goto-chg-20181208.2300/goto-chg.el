@@ -24,7 +24,7 @@
 ;; Maintainer: Vasilij Schneidermann <v.schneidermann@github.com>
 ;; Created: 16 May 2002
 ;; Version: 1.7.2
-;; Package-Version: 20180105.1833
+;; Package-Version: 20181208.2300
 ;; Keywords: convenience, matching
 ;; URL: https://github.com/emacs-evil/goto-chg
 ;;
@@ -213,7 +213,9 @@ that is, it was previously saved or unchanged. Nil otherwise."
   (and (listp e) (eq (car e) t)))
 
 (defvar buffer-undo-tree)
+(declare-function undo-list-transfer-to-tree "undo-tree.el")
 (declare-function undo-tree-current "undo-tree.el")
+(declare-function undo-tree-node-p"undo-tree.el")
 (declare-function undo-tree-node-undo "undo-tree.el")
 (declare-function undo-tree-node-previous "undo-tree.el")
 
@@ -249,7 +251,7 @@ discarded. See variable `undo-limit'."
                glc-current-span glc-default-span)
          (if (< (prefix-numeric-value arg) 0)
              (error "Negative arg: Cannot reverse as the first operation"))))
-  (cond ((null buffer-undo-list)
+  (cond ((and (null buffer-undo-list) (null buffer-undo-tree))
          (error "Buffer has not been changed"))
         ((eq buffer-undo-list t)
          (error "No change info (undo is disabled)")))
@@ -297,6 +299,7 @@ discarded. See variable `undo-limit'."
                   ((or passed-save-entry (glc-is-filetime (car l)))
                    (setq passed-save-entry t)))
             (setq l (cdr l)))
+        (undo-list-transfer-to-tree)
         (when (not glc-seen-canary)
           (while (and (not (null l)) (not glc-seen-canary) (< n new-probe-depth))
             (cond ((eq 'undo-tree-canary (car l))  ; used by buffer-undo-tree
@@ -311,7 +314,7 @@ discarded. See variable `undo-limit'."
             (when (not glc-seen-canary)
               (setq l (cdr l)))))
         (when glc-seen-canary
-          (while (< n new-probe-depth)
+          (while (and (< n new-probe-depth) (undo-tree-node-p l))
             (cond ((null l)
                    ;(setq this-command t)	; Disrupt repeat sequence
                    (error "No further change info"))

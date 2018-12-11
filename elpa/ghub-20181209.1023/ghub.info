@@ -46,7 +46,7 @@ adoption would make life easier for users and maintainers alike, because
 then all packages that talk to forge APIs could be configured the same
 way.
 
-This manual is for Ghub version 3.0.0 (v3.0.0-5-g86a17df+1).
+This manual is for Ghub version 3.0.0 (v3.0.0-11-gca1982d+1).
 
      Copyright (C) 2017-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -588,7 +588,8 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
      This function makes a request for ‘RESOURCE’ using ‘METHOD’.
      ‘PARAMS’, ‘QUERY’, ‘PAYLOAD’ and/or ‘HEADERS’ are alists holding
      additional request data.  The response body is returned and the
-     response header is stored in the variable ‘ghub-response-headers’.
+     response headers are stored in the variable
+     ‘ghub-response-headers’.
 
         • ‘METHOD’ is the HTTP method, given as a string.
 
@@ -683,11 +684,13 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
 
         • If ‘CALLBACK’ and/or ‘ERRORBACK’ is non-nil, then this
           function makes one or more asynchronous requests and calls
-          ‘CALLBACK’ or ‘ERRORBACK’ when finished.  If an error
-          occurred, then it calls ‘ERRORBACK’, or if that is ‘nil’, then
-          ‘CALLBACK’.  When no error occurred then it calls ‘CALLBACK’.
-          When making asynchronous requests, then no errors are
-          signaled, regardless of the value of ‘NOERROR’.
+          ‘CALLBACK’ or ‘ERRORBACK’ when finished.  If no error
+          occurred, then it calls ‘CALLBACK’, unless that is ‘nil’.
+
+          If an error occurred, then it calls ‘ERRORBACK’, or if that is
+          nil, then ‘CALLBACK’.  ‘ERRORBACK’ can also be ‘t’, in which
+          case it signals instead.  ‘NOERROR’ is ignored for all
+          asynchronous requests.
 
           Both callbacks are called with four arguments.
 
@@ -710,8 +713,8 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
      If there is a next page, then this function retrieves that.
 
      This function is only intended to be called from callbacks.  If
-     there is a next page, then that is retrieve and the buffer that the
-     result will be loaded into is returned, or t if the process has
+     there is a next page, then that is retrieved and the buffer that
+     the result will be loaded into is returned, or t if the process has
      already completed.  If there is no next page, then return nil.
 
      Callbacks are called with four arguments (see ‘ghub-request’).  The
@@ -1287,22 +1290,22 @@ File: ghub.info,  Node: Forge Limitations and Notes,  Prev: Forge Functions and 
 
 Tag Table:
 Node: Top764
-Node: Introduction3279
-Node: Getting Started6321
-Node: Setting the Username10055
-Node: Interactively Creating and Storing a Token11480
-Node: Manually Creating and Storing a Token17131
-Node: How Ghub uses Auth-Source18354
-Node: Using Ghub in Personal Scripts20287
-Node: Using Ghub in a Package21743
-Node: API24361
-Node: Making Requests25158
-Node: Authentication39197
-Node: Configuration Variables41042
-Node: GraphQL Support44762
-Node: Support for Other Forges51427
-Node: Forge Functions and Variables51644
-Node: Forge Limitations and Notes56163
+Node: Introduction3280
+Node: Getting Started6322
+Node: Setting the Username10056
+Node: Interactively Creating and Storing a Token11481
+Node: Manually Creating and Storing a Token17132
+Node: How Ghub uses Auth-Source18355
+Node: Using Ghub in Personal Scripts20288
+Node: Using Ghub in a Package21744
+Node: API24362
+Node: Making Requests25159
+Node: Authentication39258
+Node: Configuration Variables41103
+Node: GraphQL Support44823
+Node: Support for Other Forges51488
+Node: Forge Functions and Variables51705
+Node: Forge Limitations and Notes56224
 
 End Tag Table
 

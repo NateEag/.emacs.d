@@ -218,7 +218,7 @@ Like calling `ghub-request' (which see) with \"DELETE\" as METHOD."
                                callback errorback value extra)
   "Make a request for RESOURCE and return the response body.
 
-Also place the response header in `ghub-response-headers'.
+Also place the response headers in `ghub-response-headers'.
 
 METHOD is the HTTP method, given as a string.
 RESOURCE is the resource to access, given as a string beginning
@@ -295,10 +295,13 @@ If FORGE is `gitlab', then connect to Gitlab.com or, depending
 
 If CALLBACK and/or ERRORBACK is non-nil, then make one or more
   asynchronous requests and call CALLBACK or ERRORBACK when
-  finished.  If an error occurred, then call ERRORBACK, or if
-  that is nil, then CALLBACK.  When no error occurred then call
-  CALLBACK.  When making asynchronous requests, then no errors
-  are signaled, regardless of the value of NOERROR.
+  finished.  If no error occurred, then call CALLBACK, unless
+  that is nil.
+
+  If an error occurred, then call ERRORBACK, or if that is nil,
+  then CALLBACK.  ERRORBACK can also be t, in which case an error
+  is signaled instead.  NOERROR is ignored for all asynchronous
+  requests.
 
 Both callbacks are called with four arguments.
   1. For CALLBACK, the combined value of the retrieved pages.
@@ -425,11 +428,18 @@ this function is called with nil for PAYLOAD."
                       (substring url 1 -1))))
             (split-string rels ", ")))))
 
-(cl-defun ghub-repository-id (owner name &key username auth host forge)
-  "Return the id of the specified repository."
+(cl-defun ghub-repository-id (owner name &key username auth host forge noerror)
+  "Return the id of the specified repository.
+Signal an error if the id cannot be determined."
   (let ((fn (intern (format "%s-repository-id" (or forge 'ghub)))))
-    (funcall (if (eq fn 'ghub-repository-id) 'ghub--repository-id fn)
-             owner name :username username :auth auth :host host)))
+    (or (funcall (if (eq fn 'ghub-repository-id) 'ghub--repository-id fn)
+                 owner name :username username :auth auth :host host)
+        (and (not noerror)
+             (error "Repository %S does not exist on %S.\n%s%S?"
+                    (concat owner "/" name)
+                    (or host (ghub--host host))
+                    "Maybe it was renamed and you have to update "
+                    "remote.<remote>.url")))))
 
 ;;;; Internal
 
@@ -469,6 +479,7 @@ this function is called with nil for PAYLOAD."
                  (payload    (ghub--handle-response-payload req))
                  (payload    (ghub--handle-response-error status payload req))
                  (value      (ghub--handle-response-value payload req))
+                 (prev       (ghub--req-url req))
                  (next       (cdr (assq 'next (ghub-response-link-relations
                                                req headers payload)))))
             (when (numberp unpaginate)
@@ -485,7 +496,11 @@ this function is called with nil for PAYLOAD."
                       (errorback (ghub--req-errorback req))
                       (err       (plist-get status :error)))
                   (cond ((and err errorback)
-                         (funcall errorback err headers status req))
+                         (setf (ghub--req-url req) prev)
+                         (funcall (if (eq errorback t)
+                                      'ghub--errorback
+                                    errorback)
+                                  err headers status req))
                         (callback
                          (funcall callback value headers status req))
                         (t value))))))
@@ -520,10 +535,10 @@ this function is called with nil for PAYLOAD."
                 payload
               (setcdr (last err) (list payload))
               nil)
-          (ghub--signal-error err payload))
+          (ghub--signal-error err payload req))
       payload)))
 
-(defun ghub--signal-error (err &optional payload)
+(defun ghub--signal-error (err &optional payload req)
   (pcase-let ((`(,symb . ,data) err))
     (if (eq symb 'error)
         (if (eq (car-safe data) 'http)
@@ -531,9 +546,13 @@ this function is called with nil for PAYLOAD."
                     (let ((code (car (cdr-safe data))))
                       (list code
                             (nth 2 (assq code url-http-codes))
+                            (and req (url-filename (ghub--req-url req)))
                             payload)))
           (signal 'ghub-error data))
       (signal symb data))))
+
+(defun ghub--errorback (err _headers _status req)
+  (ghub--signal-error err (nth 3 err) req))
 
 (defun ghub--handle-response-value (payload req)
   (setf (ghub--req-value req)

@@ -2,7 +2,7 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20181108.921
+;; Package-Version: 20181207.2019
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
@@ -40,6 +40,7 @@
 ;; - Java (clang-format)
 ;; - JavaScript/JSON/JSX (prettier)
 ;; - Kotlin (ktlint)
+;; - Lua (lua-fmt)
 ;; - Markdown (prettier)
 ;; - OCaml (ocp-indent)
 ;; - Perl (perltidy)
@@ -76,7 +77,7 @@
   "When non-nil, format-all writes debug info using `message'.")
 
 (defvar format-all-after-format-functions nil
-  "Hook run after each time ‘format-all-buffer’ has formatted a buffer.
+  "Hook run after each time `format-all-buffer' has formatted a buffer.
 
 The value is a list of hook functions.  Use `add-hook' to add a
 function.  The function is called with two arguments: (FORMATTER
@@ -139,6 +140,11 @@ STATUS is :reformatted.")
   "Internal helper function to remove terminal color codes from STRING."
   (save-match-data (replace-regexp-in-string "\x1b\\[[0-9]+m" "" string t)))
 
+(defun format-all-flatten-list (list)
+  "Internal helper function to remove nested lists in LIST."
+  (cl-mapcan (lambda (x) (if (listp x) x (list x)))
+             list))
+
 (defun format-all-buffer-thunk (thunk)
   "Internal helper function to implement formatters.
 
@@ -188,8 +194,7 @@ exit status.
 If ARGS are given, those are arguments to EXECUTABLE.  They don't
 need to be shell-quoted."
   (let ((ok-statuses (or ok-statuses '(0)))
-        (args (cl-mapcan (lambda (arg) (if (listp arg) arg (list arg)))
-                         args)))
+        (args (format-all-flatten-list args)))
     (when format-all-debug
       (message "Format-All: Running: %s"
                (mapconcat #'shell-quote-argument (cons executable args) " ")))
@@ -388,6 +393,12 @@ Consult the existing formatters for examples of BODY."
   (:modes kotlin-mode)
   (:format (format-all-buffer-easy executable "--format" "--stdin")))
 
+(define-format-all-formatter lua-fmt
+  (:executable "luafmt")
+  (:install "npm install --global lua-fmt")
+  (:modes lua-mode)
+  (:format (format-all-buffer-easy executable "--stdin")))
+
 (define-format-all-formatter mix-format
   (:executable "mix")
   (:install (macos "brew install elixir"))
@@ -531,6 +542,7 @@ Consult the existing formatters for examples of BODY."
                   executable (gethash formatter format-all-install-table)))))))
 
 (defun format-all-show-or-hide-errors (error-output)
+  "Internal helper function to update *format-all-errors* with ERROR-OUTPUT."
   (save-selected-window
     (with-current-buffer (get-buffer-create "*format-all-errors*")
       (erase-buffer)
@@ -540,6 +552,16 @@ Consult the existing formatters for examples of BODY."
             (t
              (let ((error-window (get-buffer-window (current-buffer))))
                (when error-window (quit-window nil error-window))))))))
+
+(defun format-all-save-line-number (thunk)
+  "Internal helper function to run THUNK and go back to the same line."
+  (let ((old-line-number (line-number-at-pos nil t))
+        (old-column (current-column)))
+    (funcall thunk)
+    (goto-char (point-min))
+    (forward-line (1- old-line-number))
+    (let ((line-length (- (point-at-eol) (point-at-bol))))
+      (goto-char (+ (point) (min old-column line-length))))))
 
 ;;;###autoload
 (defun format-all-buffer ()
@@ -575,14 +597,10 @@ they are shown in a buffer called *format-all-errors*."
                             ((equal t output) :already-formatted)
                             (t :reformatted))))
           (when (equal :reformatted status)
-            (let ((old-line-number (line-number-at-pos nil t))
-                  (old-column (current-column)))
-              (erase-buffer)
-              (insert output)
-              (goto-char (point-min))
-              (forward-line (1- old-line-number))
-              (let ((line-length (- (point-at-eol) (point-at-bol))))
-                (goto-char (+ (point) (min old-column line-length))))))
+            (format-all-save-line-number
+             (lambda ()
+               (erase-buffer)
+               (insert output))))
           (format-all-show-or-hide-errors errput)
           (run-hook-with-args 'format-all-after-format-functions
                               formatter status)

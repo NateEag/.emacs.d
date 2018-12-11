@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "omnisharp" "omnisharp.el" (23511 3106 0 0))
+;;;### (autoloads nil "omnisharp" "omnisharp.el" (23567 55827 0 0))
 ;;; Generated autoloads from omnisharp.el
 
 (autoload 'omnisharp-mode "omnisharp" "\
@@ -56,13 +56,13 @@ Installs OmniSharp server locally into ~/.emacs/cache/omnisharp/server/$(version
 
 ;;;***
 
-;;;### (autoloads nil nil ("omnisharp-auto-complete-actions.el" "omnisharp-current-symbol-actions.el"
-;;;;;;  "omnisharp-format-actions.el" "omnisharp-helm-integration.el"
-;;;;;;  "omnisharp-http-utils.el" "omnisharp-navigation-actions.el"
-;;;;;;  "omnisharp-pkg.el" "omnisharp-server-actions.el" "omnisharp-server-installation.el"
-;;;;;;  "omnisharp-server-management.el" "omnisharp-settings.el"
-;;;;;;  "omnisharp-solution-actions.el" "omnisharp-unit-test-actions.el"
-;;;;;;  "omnisharp-utils.el") (23511 3106 0 0))
+;;;### (autoloads nil nil ("omnisharp-auto-complete-actions.el" "omnisharp-code-structure.el"
+;;;;;;  "omnisharp-current-symbol-actions.el" "omnisharp-format-actions.el"
+;;;;;;  "omnisharp-helm-integration.el" "omnisharp-http-utils.el"
+;;;;;;  "omnisharp-navigation-actions.el" "omnisharp-pkg.el" "omnisharp-server-actions.el"
+;;;;;;  "omnisharp-server-installation.el" "omnisharp-server-management.el"
+;;;;;;  "omnisharp-settings.el" "omnisharp-solution-actions.el" "omnisharp-unit-test-actions.el"
+;;;;;;  "omnisharp-utils.el") (23567 55827 0 0))
 
 ;;;***
 

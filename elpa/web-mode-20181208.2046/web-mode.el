@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2018 François-Xavier Bois
 
-;; Version: 16.0.16
-;; Package-Version: 20181104.2004
+;; Version: 16.0.17
+;; Package-Version: 20181208.2046
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Package-Requires: ((emacs "23.1"))
@@ -25,7 +25,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "16.0.16"
+(defconst web-mode-version "16.0.17"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -7416,7 +7416,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
 
   (let ((offset nil)
         (char nil)
-        (debug nil)
+        (debug t)
         (inhibit-modification-hooks t)
         (adjust t))
 
@@ -11917,9 +11917,13 @@ Prompt user if TAG-NAME isn't provided."
         (setq pos (1- pos))
         )
        ((and (> ori pos) (member char '(?\( ?\= ?\[ ?\? ?\: ?\; ?\, ?\`)))
-        (setq continue nil)
-        (web-mode-looking-at ".[ \t\n]*" pos)
-        (setq pos (+ pos (length (match-string-no-properties 0))))
+        (if (and (eq char ?\:) ; #1024
+                 (web-mode-looking-at ":" pos))
+            (setq pos (1- pos))
+          (web-mode-looking-at ".[ \t\n]*" pos)
+          (setq pos (+ pos (length (match-string-no-properties 0)))
+                continue nil)
+          )
         )
        ((web-mode-looking-at "\\(return\\|echo\\|include\\|print\\)[ \n]" pos)
         (setq pos (+ pos (length (match-string-no-properties 0)))

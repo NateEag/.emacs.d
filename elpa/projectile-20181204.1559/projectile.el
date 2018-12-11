@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20181106.1631
+;; Package-Version: 20181204.1559
 ;; Keywords: project, convenience
 ;; Version: 1.1.0-snapshot
 ;; Package-Requires: ((emacs "25.1") (pkg-info "0.4"))
@@ -1262,10 +1262,13 @@ they are excluded from the results of this function."
   "Get files from sub-projects for PROJECT-ROOT recursively."
   (projectile-flatten
    (mapcar (lambda (sub-project)
-             (mapcar (lambda (file)
-                       (concat sub-project file))
+             (let ((project-relative-path
+                    (file-name-as-directory (file-relative-name
+                                             sub-project project-root))))
+               (mapcar (lambda (file)
+                       (concat project-relative-path file))
                      ;; TODO: Seems we forgot git hardcoded here
-                     (projectile-files-via-ext-command sub-project projectile-git-command)))
+                     (projectile-files-via-ext-command sub-project projectile-git-command))))
            (projectile-get-all-sub-projects project-root))))
 
 (defun projectile-get-repo-ignored-files (project vcs)

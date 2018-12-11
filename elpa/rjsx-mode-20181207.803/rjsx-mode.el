@@ -4,7 +4,7 @@
 
 ;; Author: Felipe Ochoa <felipe@fov.space>
 ;; URL: https://github.com/felipeochoa/rjsx-mode/
-;; Package-Version: 20180913.2224
+;; Package-Version: 20181207.803
 ;; Package-Requires: ((emacs "24.4") (js2-mode "20170504"))
 ;; Version: 1.1
 ;; Keywords: languages
@@ -973,6 +973,46 @@ NEW-NAME is the name to give the tag."
         (js2-reparse))))))
 
 (define-key rjsx-mode-map (kbd "C-c C-r") 'rjsx-rename-tag-at-point)
+
+
+(defun rjsx-jump-closing-tag ()
+  "Go to closing tag of tag at point."
+  (interactive)
+  (let* ((tag (rjsx--tag-at-point))
+         (closer (and tag (rjsx-node-closing-tag tag))))
+    (cond
+     ((null tag) (message "No JSX tag found at point"))
+     ((null closer) (message "JSX tag is self closing"))
+     (t
+      (goto-char (+ 1 (js2-node-abs-pos closer)))))))
+
+
+(defun rjsx-jump-opening-tag ()
+  "Goto opening tag of focused tab body"
+  (interactive)
+  (let* ((tag (rjsx--tag-at-point))
+         (closer (and tag (rjsx-node-closing-tag tag))))
+    (cond
+     ((null tag) (message "No JSX tag found at point"))
+     (t
+      (goto-char (+ 1 (js2-node-abs-pos tag)))))))
+
+(defun rjsx-jump-tag ()
+  "Switch between opening and closing tag of focused tab body"
+  (interactive)
+  (let* ((tag (rjsx--tag-at-point))
+         (closer (and tag (rjsx-node-closing-tag tag))))
+    (cond
+     ((null tag) (message "No JSX tag found at point"))
+     ((null closer) (message "No closing JSX tag found at point"))
+     ((eq (line-number-at-pos (js2-node-abs-pos tag)) (line-number-at-pos)) (rjsx-jump-closing-tag))
+     ((eq (line-number-at-pos (js2-node-abs-pos closer)) (line-number-at-pos)) (rjsx-jump-opening-tag))
+     (t
+      (rjsx-jump-opening-tag)))))
+
+
+
+(define-key rjsx-mode-map (kbd "C-c C-j") 'rjsx-jump-tag)
 
 
 

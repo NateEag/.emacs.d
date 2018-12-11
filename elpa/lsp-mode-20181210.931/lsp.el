@@ -26,7 +26,8 @@
 ;;; Code:
 
 (unless (version< emacs-version "26")
-  (require 'project))
+  (require 'project)
+  (require 'flymake))
 
 (eval-when-compile
   (require 'cl))
@@ -157,7 +158,7 @@
                  (const auto-restart)
                  (const ignore)))
 
-(defcustom lsp-session-file (expand-file-name (locate-user-emacs-file ".lsp-session"))
+(defcustom lsp-session-file (expand-file-name (locate-user-emacs-file ".lsp-session-v1"))
   "Automatically guess the project root using projectile/project."
   :group 'lsp
   :type 'file)
@@ -311,7 +312,6 @@ are determined by the index of the element."
         (cons 'kind #'lsp--imenu-compare-kind)
         (cons 'position #'lsp--imenu-compare-position))
   "An alist of (METHOD . FUNCTION).
-
 METHOD is one of the symbols accepted by
 `lsp-imenu-sort-methods'.
 
@@ -319,6 +319,14 @@ FUNCTION takes two hash tables representing DocumentSymbol. It
 returns a negative number, 0, or a positive number indicating
 whether the first parameter is less than, equal to, or greater
 than the second parameter.")
+
+(defcustom lsp-prefer-flymake t
+  "Auto-configure  to prefer `flymake' over `lsp-ui' if both are present."
+  :type 'boolean
+  :group 'lsp-mode)
+
+(defvar-local lsp--flymake-report-fn nil)
+(defvar-local lsp--flymake-report-pending nil)
 
 (defvar lsp-language-id-configuration '((java-mode . "java")
                                         (python-mode . "python")
@@ -336,7 +344,13 @@ than the second parameter.")
                                         (go-mode . "go")
                                         (haskell-mode . "haskell")
                                         (php-mode . "php")
-                                        (json-mode . "json"))
+                                        (json-mode . "json")
+                                        (rjsx-mode . "javascript")
+                                        (js2-mode . "javascript")
+                                        (typescript-mode . "typescript")
+                                        (reason-mode . "reason")
+                                        (caml-mode . "ocaml")
+                                        (tuareg-mode . "ocaml"))
   "Language id configuration.")
 
 (defvar lsp-method-requirements
@@ -417,8 +431,7 @@ depending on it."
                                  results)))))))
 (defun lsp--spinner-start ()
   "Start spinner indication."
-  (with-demoted-errors "Unable to start spinner. Error: %s"
-    (spinner-start 'progress-bar-filled)))
+  (condition-case _err (spinner-start 'progress-bar-filled) (error)))
 
 (defun lsp--propertize (str type)
   "Propertize STR as per TYPE."
@@ -584,6 +597,10 @@ INHERIT-INPUT-METHOD will be proxied to `completing-read' without changes."
               (forward-char character)
               (point))
           (error (point)))))))
+
+(defun lsp--range-to-region (range)
+  (cons (lsp--position-to-point (gethash "start" range))
+        (lsp--position-to-point (gethash "end" range))))
 
 (defmacro lsp-define-stdio-client (&rest _rest)
   "No op - only for backward compatibility.")
@@ -793,6 +810,43 @@ WORKSPACE is the workspace that contains the diagnostics."
       (with-current-buffer buffer
         (run-hooks 'lsp-after-diagnostics-hook)))))
 
+(with-eval-after-load 'flymake
+  (put 'lsp-note 'flymake-category 'flymake-note)
+  (put 'lsp-warning 'flymake-category 'flymake-warning)
+  (put 'lsp-error 'flymake-category 'flymake-error)
+
+  (defun lsp--flymake-setup()
+    "Setup flymake."
+    (flymake-mode-on)
+    (add-hook 'flymake-diagnostic-functions 'lsp--flymake-backend nil t)
+    (add-hook 'lsp-after-diagnostics-hook 'lsp--flymake-after-diagnostics nil t))
+
+  (defun lsp--flymake-after-diagnostics ()
+    "Handler for `lsp-after-diagnostics-hook'"
+    (when lsp--flymake-report-fn
+      (lsp--flymake-backend lsp--flymake-report-fn)
+      (remove-hook 'lsp-after-diagnostics-hook 'lsp--flymake-after-diagnostics t)))
+
+  (defun lsp--flymake-backend (report-fn &rest _args)
+    "Flymake backend."
+    (funcall report-fn
+             (-some->> (lsp-diagnostics)
+                       (gethash buffer-file-name)
+                       (--map (-let* (((&hash "message" "severity" "range") (lsp-diagnostic-original it))
+                                      ((start . end) (lsp--range-to-region range)))
+                                (when (= start end)
+                                  (-let* (((&hash "line" "character") (gethash "start" range))
+                                          (region (flymake-diag-region (current-buffer) (1+ line) character)))
+                                    (setq start (car region) end (cdr region))))
+                                (flymake-make-diagnostic (current-buffer)
+                                                         start
+                                                         end
+                                                         (case severity
+                                                           (1 'lsp-error)
+                                                           (2 'lsp-warning)
+                                                           (_ 'lsp-note))
+                                                         message)))))))
+
 (define-minor-mode lsp-mode ""
   nil nil nil
   :lighter (:eval (lsp-mode-line))
@@ -909,22 +963,30 @@ WORKSPACE is the workspace that contains the diagnostics."
   ;; multi root LSP server.
   (server-id->folders (make-hash-table :test 'equal) :read-only t)
   ;; folder to list of the servers that are associated with the folder.
-  (folder->servers (make-hash-table :test 'equal) :read-only t))
+  (folder->servers (make-hash-table :test 'equal) :read-only t)
+
+  ;; ‘metadata’ is a generic storage for workspace specific data. It is
+  ;; accessed via `lsp-workspace-set-metadata' and `lsp-workspace-set-metadata'
+  (metadata (make-hash-table :test 'equal)))
 
 (defun lsp-workspace-status (status-string &optional workspace)
   "Set current workspace status to STATUS-STRING.
 If WORKSPACE is not specified defaults to lsp--cur-workspace."
   (setf (lsp--workspace-status-string (or workspace lsp--cur-workspace)) status-string))
 
-(defun lsp-workspace-set-metadata (key value &optional workspace)
+(defun lsp-session-set-metadata (key value &optional _workspace)
   "Associate KEY with VALUE in the WORKSPACE metadata.
 If WORKSPACE is not provided current workspace will be used."
-  (puthash key value (lsp--workspace-metadata (or workspace lsp--cur-workspace))))
+  (puthash key value (lsp-session-metadata (lsp-session))))
 
-(defun lsp-workspace-get-metadata (key &optional workspace)
+(defalias 'lsp-workspace-set-metadata 'lsp-session-set-metadata)
+
+(defun lsp-session-get-metadata (key &optional _workspace)
   "Lookup KEY in WORKSPACE metadata.
 If WORKSPACE is not provided current workspace will be used."
-  (gethash key (lsp--workspace-metadata (or workspace lsp--cur-workspace))))
+  (gethash key (lsp-session-metadata (lsp-session))))
+
+(defalias 'lsp-workspace-get-metadata 'lsp-session-get-metadata)
 
 (define-inline lsp--make-notification (method &optional params)
   "Create notification body for method METHOD and parameters PARAMS."
@@ -1353,11 +1415,7 @@ interface Position {
     (goto-char point)
     (lsp--cur-position)))
 
-(define-inline lsp--position-p (p)
-  (inline-quote
-   (and (numberp (plist-get ,p :line)) (numberp (plist-get ,p :character)))))
-
-(define-inline lsp--range (start end)
+(defun lsp--range (start end)
   "Make Range body from START and END.
 
 interface Range {
@@ -1365,11 +1423,7 @@ interface Range {
      end: Position;
  }"
   ;; make sure start and end are Position objects
-  (inline-quote
-   (progn
-     (cl-check-type ,start (satisfies lsp--position-p))
-     (cl-check-type ,end (satisfies lsp--position-p))
-     (list :start ,start :end ,end))))
+  (list :start start :end end))
 
 (define-inline lsp--region-to-range (start end)
   "Make Range object for the current region."
@@ -1444,13 +1498,12 @@ interface TextDocumentEdit {
 
 (defun lsp--apply-text-edit (text-edit)
   "Apply the edits described in the TextEdit object in TEXT-EDIT."
-  (let* ((range (gethash "range" text-edit))
-         (start-point (lsp--position-to-point (gethash "start" range)))
-         (end-point (lsp--position-to-point (gethash "end" range))))
+  (-let* (((&hash "newText" "range") text-edit)
+          ((start . end) (lsp--range-to-region range)))
     (save-excursion
-      (goto-char start-point)
-      (delete-region start-point end-point)
-      (insert (gethash "newText" text-edit)))))
+      (goto-char start)
+      (delete-region start end)
+      (insert newText))))
 
 (defun lsp--capability (cap &optional capabilities)
   "Get the value of capability CAP.  If CAPABILITIES is non-nil, use them instead."
@@ -1938,16 +1991,17 @@ Returns xref-item(s)."
 (defun lsp--render-string (str language)
   "Render STR using `major-mode' corresponding to LANGUAGE.
 When language is nil render as markup if `markdown-mode' is loaded."
-  (if-let (mode (first (rassoc language lsp-language-id-configuration)))
-      (if (functionp mode)
-          (condition-case nil
-              (with-temp-buffer
-                (delay-mode-hooks (funcall mode))
-                (insert str)
-                (font-lock-ensure)
-                (buffer-string))
-            (error str))
-        str)
+  (if-let (mode (-some (-lambda ((mode . lang))
+                         (when (and (equal lang language) (functionp mode))
+                           mode))
+                       lsp-language-id-configuration))
+      (condition-case nil
+          (with-temp-buffer
+            (delay-mode-hooks (funcall mode))
+            (insert str)
+            (font-lock-ensure)
+            (buffer-string))
+        (error str))
     str))
 
 (defun lsp--render-element (content)
@@ -1996,21 +2050,23 @@ RENDER-ALL - nil if only the first element should be rendered."
 (defun lsp-hover ()
   "Show relevant documentation for the thing under point."
   (interactive)
-  (if (and lsp--hover-saved-bounds
-           (lsp--point-in-bounds-p lsp--hover-saved-bounds))
-      (lsp--hover-callback t)
-    (lsp--send-request-async
-     (lsp--make-request "textDocument/hover"
-                        (lsp--text-document-position-params))
-     (-lambda (hover)
-       (-let (((&hash "contents" "range") (or hover (make-hash-table))))
-         (setq lsp--hover-saved-bounds
-               (and range
-                    (cons (lsp--position-to-point (gethash "start" range))
-                          (lsp--position-to-point (gethash "end" range)))))
-         (setq lsp--hover-saved-contents
-               (and contents (lsp--render-on-hover-content contents lsp-eldoc-render-all)))
-         (lsp--hover-callback nil))))))
+  (let ((method (lsp--make-request "textDocument/hover"
+                                   (lsp--text-document-position-params))))
+    (when (lsp--find-workspaces-for method)
+      (if (and lsp--hover-saved-bounds
+               (lsp--point-in-bounds-p lsp--hover-saved-bounds))
+          (lsp--hover-callback t)
+        (lsp--send-request-async
+         method
+         (-lambda (hover)
+           (-let (((&hash "contents" "range") (or hover (make-hash-table))))
+             (setq lsp--hover-saved-bounds
+                   (and range
+                        (cons (lsp--position-to-point (gethash "start" range))
+                              (lsp--position-to-point (gethash "end" range)))))
+             (setq lsp--hover-saved-contents
+                   (and contents (lsp--render-on-hover-content contents lsp-eldoc-render-all)))
+             (lsp--hover-callback nil))))))))
 
 (defvar-local lsp--current-signature-help-request-id nil)
 
@@ -2864,9 +2920,17 @@ HOST and PORT will be used for opening the connection."
 
 (defun lsp--auto-configure ()
   "Autoconfigure `lsp-ui', `company-lsp' if they are installed."
+
   (when (functionp 'lsp-ui-mode)
-    (flycheck-mode)
     (lsp-ui-mode))
+
+  (cond
+   ((and (not (version< emacs-version "26.1")) lsp-prefer-flymake)
+    (lsp--flymake-setup))
+   ((and (functionp 'lsp-ui-mode) (featurep 'flycheck))
+    (require 'lsp-ui-flycheck)
+    (lsp-ui-flycheck-enable t)
+    (flycheck-mode 1)))
 
   (lsp-enable-imenu)
 
@@ -2981,7 +3045,7 @@ SESSION is the active session."
       (lsp--send-request-async
        (lsp--make-request "initialize"
                           (list :processId (emacs-pid)
-                                :rootPath root
+                                :rootPath (expand-file-name root)
                                 :rootUri (lsp--path-to-uri root)
                                 :capabilities (lsp--client-capabilities)
                                 :initializationOptions initialization-options))
@@ -3195,7 +3259,7 @@ Returns nil if the project should not be added to the current SESSION."
                        (format "Do not ask more for the current project(add \"%s\" to lsp-session-folder-blacklist)"
                                project-root-suggestion)
                        "Do not ask more for the current project(select ignore path interactively)."
-                       "Do nothing and as be again when opening a other files from the folder."))
+                       "Do nothing and ask me again when opening other files from the folder."))
              (action-index (cl-position
                             (completing-read (format "%s is not part of any project. Select action: "
                                                      (buffer-name))
@@ -3210,13 +3274,13 @@ Returns nil if the project should not be added to the current SESSION."
                                   (or project-root-suggestion default-directory)
                                   nil
                                   t))
-          (2 (push (lsp-session-folders-blacklist session) project-root-suggestion)
+          (2 (push project-root-suggestion (lsp-session-folders-blacklist session))
              nil)
-          (3 (push (lsp-session-folders-blacklist session)
-                   (read-directory-name "Select folder to blacklist: "
+          (3 (push (read-directory-name "Select folder to blacklist: "
                                         (or project-root-suggestion default-directory)
                                         nil
-                                        t))
+                                        t)
+                   (lsp-session-folders-blacklist session))
              nil)
           (t nil)))
     ('quit)))
@@ -3280,18 +3344,20 @@ language server even if there is language server which can handle
 current language. When IGNORE-MULTI-FOLDER is nil current file
 will be openned in multi folder language server if there is
 such."
-  (-if-let* ((session (lsp-session))
-             (project-root (lsp--calculate-root session (buffer-file-name)))
-             (clients (or (lsp--find-clients major-mode)
-                          (user-error "Unable to find client(s) handling %s" major-mode))))
-      (progn
-        ;; update project roots if needed and persit the lsp session
-        (unless (-contains? (lsp-session-folders session) project-root)
-          (push project-root (lsp-session-folders session))
-          (lsp--persist-session session))
-
-        (lsp--ensure-lsp-servers session clients project-root ignore-multi-folder))
-    (user-error "Unable to find project root for %s" (buffer-name))))
+  (-let ((session (lsp-session)))
+    (-if-let (clients (lsp--find-clients major-mode))
+        (-if-let (project-root (lsp--calculate-root session (buffer-file-name)))
+            (progn
+              ;; update project roots if needed and persit the lsp session
+              (unless (-contains? (lsp-session-folders session) project-root)
+                (push project-root (lsp-session-folders session))
+                (lsp--persist-session session))
+              (lsp--ensure-lsp-servers session clients project-root ignore-multi-folder))
+          (message "%s not in project." (buffer-name))
+          nil)
+      (message (format "Unable to find client(s) handling %s. Make sure you have required lsp-clients.el or proper extension."
+                       major-mode))
+      nil)))
 
 (defun lsp-shutdown-workspace ()
   "Shutdown language server."
@@ -3330,17 +3396,12 @@ current language. When IGNORE-MULTI-FOLDER is nil current file
 will be openned in multi folder language server if there is
 such."
   (interactive)
-  (setq-local lsp--buffer-workspaces (or (lsp--try-open-in-library-workspace)
-                                         (lsp--try-project-root-workspaces ignore-multi-folder)))
-  (lsp-mode 1)
-  (when lsp-auto-configure (lsp--auto-configure)))
+  (when (and (buffer-file-name)
+             (setq-local lsp--buffer-workspaces (or (lsp--try-open-in-library-workspace)
+                                                    (lsp--try-project-root-workspaces ignore-multi-folder))))
+    (lsp-mode 1)
+    (when lsp-auto-configure (lsp--auto-configure))))
 
 (provide 'lsp-mode)
-(provide 'lsp-notifications)
-(provide 'lsp-imenu)
-(provide 'lsp-io)
-(provide 'lsp-methods)
-(provide 'lsp-common)
-
 (provide 'lsp)
 ;;; lsp.el ends here

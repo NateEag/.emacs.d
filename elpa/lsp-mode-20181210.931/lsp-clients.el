@@ -89,7 +89,7 @@ This directory shoud contain a file matching groovy-language-server-*.jar"
                   :server-id 'html-ls))
 
 ;;; Typescript
-(defcustom lsp-clients-typescript-server "typescript-language-server"
+(defcustom lsp-clients-typescript-server "javascript-typescript-stdio"
   "The typescript-language-server executable to use.
 Leave as just the executable name to use the default behavior of
 finding the executable with `exec-path'."
@@ -106,18 +106,18 @@ finding the executable with `exec-path'."
 (defun lsp-typescript--ls-command ()
   "Generate the language server startup command."
   `(,lsp-clients-typescript-server
-    "--stdio"
     ,@lsp-clients-typescript-server-args))
 
 (lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection '("typescript-language-server" "--stdio"))
-                  :major-modes '(typescript-mode js-mode js2-mode)
+ (make-lsp-client :new-connection (lsp-stdio-connection 'lsp-typescript--ls-command)
+                  :major-modes '(typescript-mode js-mode js2-mode rjsx-mode)
+                  :ignore-messages '("readFile .*? requested by TypeScript but content not available")
                   :server-id 'ts-ls))
 
 
 ;;; GO language
 
-(defcustom lsp-clients-go-server "go-langageserver"
+(defcustom lsp-clients-go-server "go-langserver"
   "The go-langageserver executable to use."
   :group 'lsp-go
   :risky t
@@ -233,6 +233,60 @@ PARAMS progress report notification data."
                                    (-const lsp-clients-php-server-command))
                   :major-modes '(php-mode)
                   :server-id 'php-ls))
+
+
+
+(defcustom lsp-ocaml-ocaml-lang-server-command
+  '("ocaml-language-server" "--stdio")
+  "The command that starts the language server."
+  :group 'lsp-ocaml
+  :type '(choice
+          (string :tag "Single string value")
+          (repeat :tag "List of string values"
+                  string)))
+
+(defcustom lsp-ocaml-reason-lang-server-command
+  '("ocaml-language-server" "--stdio")
+  "The command that starts the language server."
+  :group 'lsp-ocaml
+  :type '(choice
+          (string :tag "Single string value")
+          (repeat :tag "List of string values"
+                  string)))
+
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-stdio-connection
+                                   (-const lsp-ocaml-ocaml-lang-server-command))
+                  :major-modes '(reason-mode caml-mode tuareg-mode)
+                  :server-id 'ocaml-ls))
+
+
+;; C-family (C, C++, Objective-C, Objective-C++)
+
+(defcustom lsp-clients-clangd-executable "clangd"
+  "The clangd executable to use.
+Leave as just the executable name to use the default behavior of
+finding the executable with `exec-path'."
+  :group 'lsp-clangd
+  :risky t
+  :type 'file)
+
+(defcustom lsp-clients-clangd-args '()
+  "Extra arguments for the clangd executable."
+  :group 'lsp-clangd
+  :risky t
+  :type '(repeat string))
+
+(defun lsp-clients--clangd-command ()
+  "Generate the language server startup command."
+  `(,lsp-clients-clangd-executable ,@lsp-clients-clangd-args))
+
+(defun lsp-clients-register-clangd ()
+  (lsp-register-client
+   (make-lsp-client :new-connection (lsp-stdio-connection
+                                     'lsp-clients--clangd-command)
+                    :major-modes '(c-mode c++-mode objc-mode)
+                    :server-id 'clangd)))
 
 
 (provide 'lsp-clients)

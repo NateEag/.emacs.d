@@ -31,7 +31,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-This manual is for Magit version 2.90.1 (v2.90.1-25-gcc998e85+1).
+This manual is for Magit version 2.90.1 (v2.90.1-53-g279ae8b47+1).
 
      Copyright (C) 2015-2018 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -720,13 +720,17 @@ File: magit.info,  Node: Switching Buffers,  Next: Naming Buffers,  Up: Modes an
 4.1.1 Switching Buffers
 -----------------------
 
- -- Function: magit-display-buffer buffer
+ -- Function: magit-display-buffer buffer &optional display-function
 
      This function is a wrapper around ‘display-buffer’ and is used to
      display any Magit buffer.  It displays BUFFER in some window and,
      unlike ‘display-buffer’, also selects that window, provided
      ‘magit-display-buffer-noselect’ is ‘nil’.  It also runs the hooks
      mentioned below.
+
+     If optional DISPLAY-FUNCTION is non-nil, then that is used to
+     display the buffer.  Usually that is ‘nil’ and the function
+     specified by ‘magit-display-buffer-function’ is used.
 
  -- Variable: magit-display-buffer-noselect
 
@@ -1453,6 +1457,29 @@ certain sections can also be overwritten using the hook
      not during refreshes.  If ‘magit-insert-section--oldroot’ is
      non-nil, then the buffer is being refreshed and these functions
      should immediately return ‘nil’.
+
+ -- User Option: magit-section-visibility-indicator
+
+     This option controls whether and how to indicate that a section can
+     be expanded/collapsed.
+
+     If nil, then no visibility indicators are shown.  Otherwise the
+     value has to have one of these two forms:
+
+        • ‘(EXPANDABLE-BITMAP . COLLAPSIBLE-BITMAP)’
+
+          Both values have to by variables whose values are fringe
+          bitmaps.  In this case every section that can be expanded or
+          collapsed gets an indicator in the left fringe.
+
+        • ‘(STRING . BOOLEAN)’
+
+          In this case STRING (usually an ellipsis) is shown at the end
+          of the heading of every collapsed section.  Expanded sections
+          get no indicator.  The cdr controls whether the appearance of
+          these ellipsis take section highlighting into account.  Doing
+          so might potentially have an impact on performance, while not
+          doing so is kinda ugly.
 
 
 File: magit.info,  Node: Section Hooks,  Next: Section Types and Values,  Prev: Section Visibility,  Up: Sections
@@ -7797,55 +7824,4 @@ example:
 
           (dir-locals-set-directory-class
              "/path/to/huge/repo/" 'huge-git-repository)
-
-
-File: magit.info,  Node: Essential Settings,  Prev: Per-Repository Configuration,  Up: Customizing
-
-9.2 Essential Settings
-======================
-
-The next two sections list and discuss several variables that many users
-might want to customize, for safety and/or performance reasons.
-
-* Menu:
-
-* Safety::
-* Performance::
-
-
-File: magit.info,  Node: Safety,  Next: Performance,  Up: Essential Settings
-
-9.2.1 Safety
-------------
-
-This section discusses various variables that you might want to change
-(or *not* change) for safety reasons.
-
-   Git keeps *committed* changes around long enough for users to recover
-changes they have accidentally been deleted.  It does not do the same
-for *uncommitted* changes in the working tree and not even the index
-(the staging area).  Because Magit makes it so easy to modify
-uncommitted changes, it also makes it easy to shoot yourself in the foot
-in the process.  For that reason Magit provides three global modes that
-save *tracked* files to work-in-progress references after or before
-certain actions.  See *note Wip Modes::.
-
-   These modes are not enabled by default because of performance
-concerns.  Instead a lot of potentially destructive commands require
-confirmation every time they are used.  In many cases this can be
-disabled by adding a symbol to ‘magit-no-confirm’ (see *note Completion
-and Confirmation::).  If you enable the various wip modes then you
-should add ‘safe-with-wip’ to this list.
-
-   Similarly it isn’t necessary to require confirmation before moving a
-file to the system trash - if you trashed a file by mistake then you can
-recover it from the there.  Option ‘magit-delete-by-moving-to-trash’
-controls whether the system trash is used, which is the case by default.
-Nevertheless, ‘trash’ isn’t a member of ‘magit-no-confirm’ - you might
-want to change that.
-
-   By default buffers visiting files are automatically reverted when the
-visited file changes on disk.  This isn’t as risky as it might seem, but
-to make an informed decision you should see *note Risk of Reverting
-Automatically::.
 

@@ -18,6 +18,57 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: magit.info,  Node: Essential Settings,  Prev: Per-Repository Configuration,  Up: Customizing
+
+9.2 Essential Settings
+======================
+
+The next two sections list and discuss several variables that many users
+might want to customize, for safety and/or performance reasons.
+
+* Menu:
+
+* Safety::
+* Performance::
+
+
+File: magit.info,  Node: Safety,  Next: Performance,  Up: Essential Settings
+
+9.2.1 Safety
+------------
+
+This section discusses various variables that you might want to change
+(or *not* change) for safety reasons.
+
+   Git keeps *committed* changes around long enough for users to recover
+changes they have accidentally been deleted.  It does not do the same
+for *uncommitted* changes in the working tree and not even the index
+(the staging area).  Because Magit makes it so easy to modify
+uncommitted changes, it also makes it easy to shoot yourself in the foot
+in the process.  For that reason Magit provides three global modes that
+save *tracked* files to work-in-progress references after or before
+certain actions.  See *note Wip Modes::.
+
+   These modes are not enabled by default because of performance
+concerns.  Instead a lot of potentially destructive commands require
+confirmation every time they are used.  In many cases this can be
+disabled by adding a symbol to ‘magit-no-confirm’ (see *note Completion
+and Confirmation::).  If you enable the various wip modes then you
+should add ‘safe-with-wip’ to this list.
+
+   Similarly it isn’t necessary to require confirmation before moving a
+file to the system trash - if you trashed a file by mistake then you can
+recover it from the there.  Option ‘magit-delete-by-moving-to-trash’
+controls whether the system trash is used, which is the case by default.
+Nevertheless, ‘trash’ isn’t a member of ‘magit-no-confirm’ - you might
+want to change that.
+
+   By default buffers visiting files are automatically reverted when the
+visited file changes on disk.  This isn’t as risky as it might seem, but
+to make an informed decision you should see *note Risk of Reverting
+Automatically::.
+
+
 File: magit.info,  Node: Performance,  Prev: Safety,  Up: Essential Settings
 
 9.2.2 Performance
@@ -2467,14 +2518,14 @@ Appendix E Function Index
 * magit-diff-type:                       Matching Sections.   (line  95)
 * magit-diff-visit-file-other-window:    Diff Buffer.         (line  65)
 * magit-display-buffer:                  Switching Buffers.   (line   6)
-* magit-display-buffer-fullcolumn-most-v1: Switching Buffers. (line  72)
+* magit-display-buffer-fullcolumn-most-v1: Switching Buffers. (line  76)
 * magit-display-buffer-fullframe-status-topleft-v1: Switching Buffers.
-                                                              (line  62)
+                                                              (line  66)
 * magit-display-buffer-fullframe-status-v1: Switching Buffers.
-                                                              (line  56)
+                                                              (line  60)
 * magit-display-buffer-same-window-except-diff-v1: Switching Buffers.
-                                                              (line  50)
-* magit-display-buffer-traditional:      Switching Buffers.   (line  42)
+                                                              (line  54)
+* magit-display-buffer-traditional:      Switching Buffers.   (line  46)
 * magit-file-checkout:                   Minor Mode for Buffers Visiting Files.
                                                               (line 131)
 * magit-file-delete:                     Minor Mode for Buffers Visiting Files.
@@ -2577,7 +2628,7 @@ Appendix E Function Index
 * magit-log-maybe-show-more-commits:     Section Movement.    (line  57)
 * magit-log-maybe-update-blob-buffer:    Section Movement.    (line  71)
 * magit-log-maybe-update-revision-buffer: Section Movement.   (line  64)
-* magit-maybe-set-dedicated:             Switching Buffers.   (line  97)
+* magit-maybe-set-dedicated:             Switching Buffers.   (line 101)
 * magit-mode-display-buffer:             Refreshing Buffers.  (line  33)
 * magit-mode-quit-window:                Quitting Windows.    (line  31)
 * magit-mode-setup:                      Refreshing Buffers.  (line  17)
@@ -2611,7 +2662,7 @@ Appendix E Function Index
                                                               (line  40)
 * magit-run-git-with-logfile:            Calling Git for Effect.
                                                               (line  56)
-* magit-save-window-configuration:       Switching Buffers.   (line  86)
+* magit-save-window-configuration:       Switching Buffers.   (line  90)
 * magit-section-case:                    Matching Sections.   (line  71)
 * magit-section-hide:                    Section Visibility.  (line  49)
 * magit-section-hide-children:           Section Visibility.  (line  64)
@@ -2731,8 +2782,8 @@ Appendix F Variable Index
 * magit-diff-refine-ignore-whitespace:   Diff Options.        (line  16)
 * magit-diff-unmarked-lines-keep-foreground: Diff Options.    (line 120)
 * magit-diff-visit-previous-blob:        Diff Buffer.         (line  37)
-* magit-display-buffer-function:         Switching Buffers.   (line  23)
-* magit-display-buffer-noselect:         Switching Buffers.   (line  14)
+* magit-display-buffer-function:         Switching Buffers.   (line  27)
+* magit-display-buffer-noselect:         Switching Buffers.   (line  18)
 * magit-dwim-selection:                  Completion and Confirmation.
                                                               (line  42)
 * magit-ediff-dwim-show-on-hunks:        Ediffing.            (line  73)
@@ -2766,8 +2817,8 @@ Appendix F Variable Index
 * magit-no-confirm:                      Action Confirmation. (line  18)
 * magit-pop-revision-stack-format:       Editing Commit Messages.
                                                               (line  92)
-* magit-post-display-buffer-hook:        Switching Buffers.   (line  92)
-* magit-pre-display-buffer-hook:         Switching Buffers.   (line  81)
+* magit-post-display-buffer-hook:        Switching Buffers.   (line  96)
+* magit-pre-display-buffer-hook:         Switching Buffers.   (line  85)
 * magit-prefer-remote-upstream:          The Branch Config Popup.
                                                               (line 139)
 * magit-process-raise-error:             Calling Git for Effect.
@@ -2804,6 +2855,7 @@ Appendix F Variable Index
 * magit-section-movement-hook:           Section Movement.    (line  38)
 * magit-section-set-visibility-hook:     Section Visibility.  (line 106)
 * magit-section-show-child-count:        Section Options.     (line   9)
+* magit-section-visibility-indicator:    Section Visibility.  (line 124)
 * magit-shell-command-verbose-prompt:    Running Git Manually.
                                                               (line  46)
 * magit-stashes-margin:                  Stashing.            (line 103)

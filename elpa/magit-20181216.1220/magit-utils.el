@@ -98,6 +98,7 @@ alphabetical order, depending on your version of Ivy."
     (forge-browse-issue       nil t)
     (forge-browse-pullreq     nil t)
     (forge-edit-topic-title   nil t)
+    (forge-edit-topic-state   nil t)
     (forge-edit-topic-labels  nil t)
     (forge-edit-topic-assignees nil t)
     (forge-visit-issue        nil t)
@@ -888,6 +889,31 @@ that it will align with the text area."
   (interactive)
   (kill-buffer (current-buffer)))
 
+(defun magit--buffer-string (&optional min max trim)
+  "Like `buffer-substring-no-properties' but the arguments are optional.
+
+This combines the benefits of `buffer-string', `buffer-substring'
+and `buffer-substring-no-properties' into one function that is
+not as painful to use as the latter.  I.e. you can write
+  (magit--buffer-string)
+instead of
+  (buffer-substring-no-properties (point-min)
+                                  (point-max))
+
+Optional MIN defaults to the value of `point-min'.
+Optional MAX defaults to the value of `point-max'.
+
+If optional TRIM is non-nil, then all leading and trailing
+whitespace is remove.  If it is the newline character, then
+one trailing newline is added."
+  ;; Lets write that one last time and be done with it:
+  (let ((str (buffer-substring-no-properties (or min (point-min))
+                                             (or max (point-max)))))
+    (if trim
+        (concat (string-trim str)
+                (and (eq trim ?\n) "\n"))
+      str)))
+
 (cl-defun magit--overlay-at (pos prop &optional (val nil sval) testfn)
   (cl-find-if (lambda (o)
                 (let ((p (overlay-properties o)))
@@ -999,7 +1025,7 @@ and `imenu-extract-index-name-function'."
                           (and (funcall imenu-prev-index-position-function)
                                (funcall imenu-extract-index-name-function)))))
                  (add-log-current-defun))))
-    (if which-func-cleanup-function
+    (if (bound-and-true-p which-func-cleanup-function)
 	(funcall which-func-cleanup-function name)
       name)))
 

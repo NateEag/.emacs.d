@@ -88,6 +88,12 @@
 
     (not (= parent-position tag-next-position))))
 
+(defun web-mode-edit-element-elements-sibling-next-or-parent ()
+  (interactive)
+  (if (web-mode-edit-element-elements-sibling-next-p)
+      (web-mode-element-sibling-next)
+    (web-mode-element-parent)))
+
 ;; Parent
 (defun web-mode-edit-element-elements-parent-p ()
   (save-excursion

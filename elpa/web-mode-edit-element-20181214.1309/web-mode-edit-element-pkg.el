@@ -1,4 +1,4 @@
-(define-package "web-mode-edit-element" "20161114.1754" "Helper-functions for attribute- and element-handling"
+(define-package "web-mode-edit-element" "20181214.1309" "Helper-functions for attribute- and element-handling"
   '((emacs "24.4")
     (web-mode "14"))
   :keywords

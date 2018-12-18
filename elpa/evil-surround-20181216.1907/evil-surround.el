@@ -1,16 +1,17 @@
 ;;; evil-surround.el --- emulate surround.vim from Vim
 
 ;; Copyright (C) 2010 - 2017 Tim Harper
+;; Copyright (C) 2018 - 2019 The evil-surround.el Contributors
 
 ;; Licensed under the same terms as Emacs (GPLv3)
 
 ;;
 ;; Author: Tim Harper <timcharper at gmail dot com>
-;;      Vegard Øye <vegard_oye at hotmail dot com>
+;;         Vegard Øye <vegard_oye at hotmail dot com>           
 ;; Current Maintainer: ninrod (github.com/ninrod)
 ;; Created: July 23 2011
-;; Version: 0.1
-;; Package-Version: 20181020.1248
+;; Version: 1.0.2
+;; Package-Version: 20181216.1907
 ;; Package-Requires: ((evil "1.2.12"))
 ;; Mailing list: <implementations-list at lists.ourproject.org>
 ;;      Subscribe: http://tinyurl.com/implementations-list
@@ -137,6 +138,13 @@ Each item is of the form (OPERATOR . OPERATION)."
   "Returns whether CHAR is a valid surround char or not."
   (not (memq char '(?\C-\[ ?\C-?))))
 
+(defun evil-surround-delete-char-noop-p (char)
+  "Returns whether CHAR is a noop when used with surround delete."
+  (memq char (list (string-to-char "w")
+                   (string-to-char "W")
+                   (string-to-char "s")
+                   (string-to-char "p"))))
+
 (defun evil-surround-pair (char)
   "Return the evil-surround pair of char.
 This is a cons cell (LEFT . RIGHT), both strings."
@@ -232,7 +240,8 @@ overlays OUTER and INNER, which are passed to `evil-surround-delete'."
   (interactive (evil-surround-input-char))
   (cond
    ((and outer inner)
-    (evil-surround-delete char outer inner)
+    (unless (evil-surround-delete-char-noop-p char)
+      (evil-surround-delete char outer inner))
     (let ((key (evil-surround-read-char)))
       (evil-surround-region (overlay-start outer)
                             (overlay-end outer)

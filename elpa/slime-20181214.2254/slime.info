@@ -15,7 +15,7 @@ SLIME
 *****
 
 SLIME is the “Superior Lisp Interaction Mode for Emacs”.  This is the
-manual for version 2.22.  (Last updated December 11, 2018)
+manual for version 2.23.  (Last updated December 18, 2018)
 
    Written by Luke Gorrie and others.
 
@@ -1747,10 +1747,15 @@ These Lisp variables can be configured via your ‘~/.swank.lisp’ file:
      is enabled by default.
 
 ‘SWANK:*GLOBALLY-REDIRECT-IO*’
-     When true this causes the standard streams (‘*standard-output*’,
-     etc) to be globally redirected to the REPL in Emacs.  When ‘NIL’
-     (the default) these streams are only temporarily redirected to
-     Emacs using dynamic bindings while handling requests.  Note that
+     When T this causes the standard streams (‘*standard-output*’, etc)
+     to be globally redirected to the REPL in Emacs.
+
+     When ‘:STARTED-FROM-EMACS’ (default) redirects the output when the
+     lisp is launched from emacs (i.e.  ‘M-x slime’), but not from ‘M-x
+     slime-connect’.
+
+     When ‘NIL’ these streams are only temporarily redirected to Emacs
+     using dynamic bindings while handling requests.  Note that
      ‘*standard-input*’ is currently never globally redirected into
      Emacs, because it can interact badly with the Lisp’s native REPL by
      having it try to read from the Emacs one.
@@ -1966,24 +1971,23 @@ File: slime.info,  Node: Global IO Redirection,  Next: Auto-SLIME,  Prev: Connec
 7.2 Globally redirecting all IO to the REPL
 ===========================================
 
-By default SLIME does not change ‘*standard-output*’ and friends outside
-of the REPL.  If you have any other threads which call ‘format’,
-‘write-string’, etc.  that output will be seen only in the
-‘*inferior-lisp*’ buffer or on the terminal, more often than not this is
-inconvenient.  So, if you want code such as this:
+When connecting via ‘M-x slime-connect’ SLIME does not change
+‘*standard-output*’ and friends outside of the REPL.  If you have any
+other threads which call ‘format’, ‘write-string’, etc.  that output
+will be seen only in the ‘*inferior-lisp*’ buffer or on the terminal,
+more often than not this is inconvenient.  So, if you want code such as
+this:
 
      (run-in-new-thread
        (lambda ()
          (write-line "In some random thread.~%" *standard-output*)))
 
    to send its output to SLIME’s repl buffer, as opposed to
-‘*inferior-lisp*’, set ‘swank:*globally-redirect-io*’ to T.
+‘*inferior-lisp*’, set ‘swank:*globally-redirect-io*’ to T in
+‘~/.swank.lisp’
 
-   Note that the value of this variable is only checked when swank
-accepts the connection so you should set it via ‘~/.swank.lisp’.
-Otherwise you will need to call
-‘swank::globally-redirect-io-to-connection’ yourself, but you shouldn’t
-do that unless you know what you’re doing.
+   But when started using ‘M-x slime’ the streams are redirected by
+default.
 
 
 File: slime.info,  Node: Auto-SLIME,  Prev: Global IO Redirection,  Up: Tips and Tricks
@@ -3061,57 +3065,72 @@ SLIME is an Extension of SLIM by Eric Marsden.  At the time of writing,
 the authors and code-contributors of SLIME are:
 
 Helmut Eller             Tobias C. Rittweiler     Stas Boukarev
-Luke Gorrie              Matthias Koeppe          Nikodemus Siivola
-Marco Baringer           João Távora              Alan Ruttenberg
-Luís Oliveira            Mark Evenson             Christophe Rhodes
-Edi Weitz                Martin Simmons           Juho Snellman
-Attila Lendvai           Peter Seibel             Geo Carncross
-Douglas Crosher          Daniel Barlow            Wolfgang Jenkner
-Gábor Melis              Michael Weber            Didier Verna
-Stelian Ionescu          Lawrence Mitchell        Anton Kovalenko
-Terje Norderhaug         Brian Downing            Bill Clementson
-Andras Simon             Zach Beane               Ivan Shvedunov
-Francois-Rene Rideau     Espen Wiborg             António Menezes Leitão
-Adlai Chandrasekhar      Utz-Uwe Haus             Thomas Schilling
-Thomas F. Burdick        Takehiko Abe             Richard M Kreuter
-Raymond Toy              Matthew Danish           Mark Harig
-James Bielman            Harald Hanche-Olsen      Ariel Badichi
-Andreas Fuchs            Willem Broekema          Taylor R. Campbell
-Phil Hargett             Paulo Madeira            Lars Magne
-                                                  Ingebrigtsen
-John Paul Wallington     Joerg Hoehle             David Reitter
-Bryan O’Connor           Alan Shutko              Travis Cross
+Luke Gorrie              Matthias Koeppe          Luís Oliveira
+Nikodemus Siivola        Marco Baringer           João Távora
+Alan Ruttenberg          Henry Harrington         Mark Evenson
+Christophe Rhodes        Edi Weitz                Martin Simmons
+Juho Snellman            Attila Lendvai           Peter Seibel
+Geo Carncross            Douglas Crosher          Daniel Kochmanski
+Gábor Melis              Daniel Barlow            Wolfgang Jenkner
+Stelian Ionescu          Michael Weber            Didier Verna
+Lawrence Mitchell        Anton Kovalenko          Terje Norderhaug
+Jan Moringen             Brian Downing            Bill Clementson
+Andras Simon             Adlai Chandrasekhar      Zach Beane
+Ivan Shvedunov           Francois-Rene Rideau     Espen Wiborg
+António Menezes Leitão   Utz-Uwe Haus             Thomas Schilling
+Thomas F. Burdick        Takehiko Abe             Sébastien Villemot
+Richard M Kreuter        Raymond Toy              Matthew Danish
+Mark Harig               James Bielman            Harald Hanche-Olsen
+Ariel Badichi            Andreas Fuchs            Willem Broekema
+Taylor R. Campbell       Phil Hargett             Paulo Madeira
+Lars Magne               John Paul Wallington     Joerg Hoehle
+Ingebrigtsen
+David Reitter            Bryan O’Connor           Alexander Artemenko
+Alan Shutko              Ursa americanus          Travis Cross
+                         kermodei
 Tobias Rittweiler        Tiago Maduro-Dias        Stefan Kamphausen
 Sean O’Rourke            Robert Lehr              Robert E. Brown
-Nathan Trapuzzano        Nathan Bird              Jouni K Seppanen
-Jan Moringen             Ivan Toshkov             Ian Eslick
-Geoff Wozniak            Gary King                Eric Blood
-Eduardo Muñoz            Christian Lynbech        Chris Capel
-Bjørn Nordbø             Bart Botta               Anton Vodonosov
-Alexey Dejneka           Alan Caulkins            Yaroslav Kavenchuk
-Wolfgang Mederle         Wojciech Kaczmarek       William Bland
-Vitaly Mayatskikh        Tom Pierce               Tim Daly Jr.
-Syohei YOSHIDA           Sven Van Caekenberghe    Svein Ove Aas
-Steve Smith              StanisBaw Halik          Samuel Freilich
-Russell McManus          Rui Patrocínio           Robert P. Goldman
-Robert Macomber          Robert Brown             Reini Urban
-R. Matthew Emerson       Pawel Ostrowski          Paul Collins
-Olof-Joachim Frahm       Neil Van Dyke            NIIMI Satoshi
-Mészáros Levente         Mikel Bancroft           Matthew D. Swank
-Matt Pillsbury           Masayuki Onjo            Mark Wooding
-Mark H. David            Marco Monteiro           Lynn Quam
-Levente Mészáros         Leo Liu                  Lasse Rasinen
-Knut Olav Bøhmer         Kai Kaminski             Julian Stecklina
-Juergen Gmeiner          Jon Allen Boone          John Smith
-Johan Bockgård           Jan Rychter              James McIlree
-Ivan Boldyrev            Ignas Mikalajunas        Hannu Koivisto
+Philipp Marek            Peter S. Housel          Nathan Trapuzzano
+Nathan Bird              Luís Borges de           Jouni K Seppanen
+                         Oliveira
+Jon Oddie                Ivan Toshkov             Ian Eslick
+Geoff Wozniak            Gary King                Fice T
+Eric Blood               Eduardo Muñoz            Douglas Katzman
+Christophe Junke         Christian Schafmeister   Christian Lynbech
+Chris Capel              Charles Zhang            Bjørn Nordbø
+Bart Botta               Anton Vodonosov          Alexey Dejneka
+Alan Caulkins            Yu-Chiang Hsu            Yaroslav Kavenchuk
+YOKOTA Yuki              Wolfgang Mederle         Wojciech Kaczmarek
+William Bland            Vitaly Mayatskikh        Tomas Zellerin
+Tom Pierce               Tim Daly Jr.             Syohei YOSHIDA
+Sven Van Caekenberghe    Svein Ove Aas            Steve Smith
+StanisBaw Halik          Sergey Kostyaev          Samuel Freilich
+Russell McManus          Russ Tyndall             Rui Patrocínio
+Robert P. Goldman        Robert Macomber          Robert Brown
+Reini Urban              R. Matthew Emerson       Peter Feigl
+Peter                    Pawel Ostrowski          Paul Donnelly
+Paul Collins             Olof-Joachim Frahm       Neil Van Dyke
+NIIMI Satoshi            Mészáros Levente         Mikel Bancroft
+Michał Herda             Michael White            Matthew Kennedy
+Matthew D. Swank         Matt Pillsbury           Masayuki Onjo
+Mark Wooding             Mark Karpov              Mark H. David
+Marco Monteiro           Lynn Quam                Levente Mészáros
+Leo Liu                  Lasse Rasinen            Knut Olav Bøhmer
+Kai Kaminski             Julian Stecklina         Juergen Gmeiner
+Jon Allen Boone          John Stracke             John Smith
+Johan Bockgård           Joe Robertson            Jim Newton
+Javier Olaechea          Jan Rychter              James McIlree
+Jack Pugmire             Ivan Sokolov             Ivan Boldyrev
+Ignas Mikalajunas        Hannu Koivisto           Graham Dobbins
 Gerd Flaig               Gail Zacharias           Frederic Brunel
-Dustin Long              Douglas Katzman          Daniel Koning
+Eric Timmons             Dustin Long              Dmitry Igrishin
+Deokhwan Kim             Denis Budyak             Daniel Koning
 Daniel Kochmański        Dan Weinreb              Dan Pierson
-Cyrus Harmon             Cecil Westerhof          Brian Mastenbrook
-Brandon Bergren          Bozhidar Batsov          Bob Halley
-Barry Fishman            B.Scott Michel           Andrew Myers
-Aleksandar Bakic         Alain Picard             Adam Bozanich
+Cyrus Harmon             Chris Schafmeister       Cecil Westerhof
+Brian Mastenbrook        Brandon Bergren          Bozhidar Batsov
+Bob Halley               Barry Fishman            B.Scott Michel
+Angelo Rossi             Andrew Myers             Aleksandar Bakic
+Alain Picard             Adam Bozanich
 
    ...  not counting the bundled code from ‘hyperspec.el’, ‘CLOCC’, and
 the ‘CMU AI Repository’.
@@ -3580,18 +3599,18 @@ Variable and Concept Index
 * slime-startup-animation:               Banner.               (line 10)
 * slime-use-autodoc-mode:                slime-autodoc-mode.   (line 25)
 * Stepping:                              Stepping.             (line  6)
-* SWANK:*BACKTRACE-PRINTER-BINDINGS*:    Other configurables.  (line 37)
+* SWANK:*BACKTRACE-PRINTER-BINDINGS*:    Other configurables.  (line 42)
 * SWANK:*COMMUNICATION-STYLE*:           Communication style.  (line  6)
 * SWANK:*CONFIGURE-EMACS-INDENTATION*:   Other configurables.  (line  8)
-* SWANK:*DEDICATED-OUTPUT-STREAM-PORT*:  Other configurables.  (line 64)
-* SWANK:*GLOBAL-DEBUGGER*:               Other configurables.  (line 22)
+* SWANK:*DEDICATED-OUTPUT-STREAM-PORT*:  Other configurables.  (line 69)
+* SWANK:*GLOBAL-DEBUGGER*:               Other configurables.  (line 27)
 * SWANK:*GLOBALLY-REDIRECT-IO*:          Other configurables.  (line 13)
-* SWANK:*LOG-EVENTS*:                    Other configurables.  (line 69)
-* SWANK:*MACROEXPAND-PRINTER-BINDINGS*:  Other configurables.  (line 37)
-* SWANK:*SLDB-PRINTER-BINDINGS*:         Other configurables.  (line 37)
-* SWANK:*SLDB-QUIT-RESTART*:             Other configurables.  (line 28)
-* SWANK:*SWANK-PPRINT-BINDINGS*:         Other configurables.  (line 37)
-* SWANK:*USE-DEDICATED-OUTPUT-STREAM*:   Other configurables.  (line 48)
+* SWANK:*LOG-EVENTS*:                    Other configurables.  (line 74)
+* SWANK:*MACROEXPAND-PRINTER-BINDINGS*:  Other configurables.  (line 42)
+* SWANK:*SLDB-PRINTER-BINDINGS*:         Other configurables.  (line 42)
+* SWANK:*SLDB-QUIT-RESTART*:             Other configurables.  (line 33)
+* SWANK:*SWANK-PPRINT-BINDINGS*:         Other configurables.  (line 42)
+* SWANK:*USE-DEDICATED-OUTPUT-STREAM*:   Other configurables.  (line 53)
 * Symbol Completion:                     Completion.           (line  6)
 * TAGS:                                  Finding definitions.  (line  6)
 * TRAMP:                                 TRAMP.                (line  6)
@@ -3665,53 +3684,53 @@ Ref: slime-connected-hook54375
 Node: Lisp-side54859
 Node: Communication style55269
 Node: Other configurables57831
-Ref: *SLDB-QUIT-RESTART*59068
-Node: Tips and Tricks61659
-Node: Connecting to a remote lisp61884
-Node: Setting up the lisp image62589
-Ref: Setting up the lisp image-Footnote-164477
-Ref: Setting up the lisp image-Footnote-264557
-Node: Setting up Emacs64733
-Ref: Setting up Emacs-Footnote-165569
-Node: Setting up pathname translations65749
-Node: Global IO Redirection67390
-Node: Auto-SLIME68478
-Node: Contributed Packages68899
-Node: Loading Contribs69648
-Node: REPL71970
-Node: REPL commands73384
-Node: Input Navigation74545
-Node: Shortcuts76069
-Node: slime-mrepl77565
-Node: inferior-slime-mode78073
-Node: Compound Completion78778
-Ref: slime-complete-symbol*78955
-Ref: Compound Completion-Footnote-182207
-Node: Fuzzy Completion82331
-Ref: slime-fuzzy-complete-symbol82584
-Node: slime-autodoc-mode85876
-Node: ASDF87294
-Node: Banner89252
-Node: Editing Commands89698
-Node: Fancy Inspector91325
-Node: Presentations92056
-Ref: Presentations-Footnote-198612
-Node: Typeout frames98853
-Node: TRAMP99977
-Node: Documentation Links100253
-Node: Xref and Class Browser100678
-Node: Highlight Edits101270
-Node: Scratch Buffer101742
-Ref: slime-scratch101904
-Node: SLIME Trace Dialog102559
-Node: slime-sprof106809
-Node: SLIME Enhanced M-.107797
-Node: slime-fancy108179
-Node: Quicklisp108455
-Node: Credits108983
-Node: Key Index113739
-Node: Command Index125529
-Node: Variable Index140771
+Ref: *SLDB-QUIT-RESTART*59229
+Node: Tips and Tricks61820
+Node: Connecting to a remote lisp62045
+Node: Setting up the lisp image62750
+Ref: Setting up the lisp image-Footnote-164638
+Ref: Setting up the lisp image-Footnote-264718
+Node: Setting up Emacs64894
+Ref: Setting up Emacs-Footnote-165730
+Node: Setting up pathname translations65910
+Node: Global IO Redirection67551
+Node: Auto-SLIME68484
+Node: Contributed Packages68905
+Node: Loading Contribs69654
+Node: REPL71976
+Node: REPL commands73390
+Node: Input Navigation74551
+Node: Shortcuts76075
+Node: slime-mrepl77571
+Node: inferior-slime-mode78079
+Node: Compound Completion78784
+Ref: slime-complete-symbol*78961
+Ref: Compound Completion-Footnote-182213
+Node: Fuzzy Completion82337
+Ref: slime-fuzzy-complete-symbol82590
+Node: slime-autodoc-mode85882
+Node: ASDF87300
+Node: Banner89258
+Node: Editing Commands89704
+Node: Fancy Inspector91331
+Node: Presentations92062
+Ref: Presentations-Footnote-198618
+Node: Typeout frames98859
+Node: TRAMP99983
+Node: Documentation Links100259
+Node: Xref and Class Browser100684
+Node: Highlight Edits101276
+Node: Scratch Buffer101748
+Ref: slime-scratch101910
+Node: SLIME Trace Dialog102565
+Node: slime-sprof106815
+Node: SLIME Enhanced M-.107803
+Node: slime-fancy108185
+Node: Quicklisp108461
+Node: Credits108989
+Node: Key Index114593
+Node: Command Index126383
+Node: Variable Index141625
 
 End Tag Table
 

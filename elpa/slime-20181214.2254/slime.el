@@ -3,7 +3,7 @@
 ;; URL: https://github.com/slime/slime
 ;; Package-Requires: ((cl-lib "0.5") (macrostep "0.9"))
 ;; Keywords: languages, lisp, slime
-;; Version: 2.22
+;; Version: 2.23
 
 ;;;; License and Commentary
 
@@ -1256,7 +1256,8 @@ See `slime-start'."
             `(progn
                (load ,(slime-to-lisp-filename (expand-file-name loader))
                      :verbose t)
-               (funcall (read-from-string "swank-loader:init"))
+               (funcall (read-from-string "swank-loader:init")
+                        :from-emacs t)
                (funcall (read-from-string "swank:start-server")
                         ,(slime-to-lisp-filename port-filename))))))
 

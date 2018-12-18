@@ -78,6 +78,8 @@
   ;; jumping between () and [].
   (evil-matchit-mode t)
 
+  (auto-rename-tag-mode t)
+
   ;; Trying this out instead of tagedit (which I only had half-working anyway).
   ;;
   ;; TODO If it works well, update tagedit issue to reflect the fact that I'm

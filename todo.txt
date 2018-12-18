@@ -168,6 +168,15 @@
   substitute-command-keys. Sample usage:
   (substitute-command-keys "\\{evil-inner-text-objects-map}")
 
+- Teach js2-mode not to concatenate ES 6 backtick strings. When
+  js2-concat-multiline-strings is t, newlines invoke concatenation which I
+  guess could make sense if you're trying to use template strings and don't
+  want any newlines in it, but what I want is for ES 5 strings to Just Work and
+  for ES 6 strings to Just Work. Not sure if this should be an extension of my
+  own or something that goes in the core. Until I use ES 6 more often, the
+  workaround is to set that var to false when I'm actually using backtick
+  strings.
+
 - Make aggressive-fill-paragraph-mode work better in js2-mode. Right now, if you
   fill a comment of the form
 

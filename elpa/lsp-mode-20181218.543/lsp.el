@@ -52,6 +52,7 @@
 (require 'url-util)
 (require 'widget)
 (require 'xref)
+(require 'tree-widget)
 
 (defconst lsp--message-type-face
   `((1 . ,compilation-error-face)
@@ -333,6 +334,9 @@ than the second parameter.")
                                         (gfm-view-mode . "markdown")
                                         (rust-mode . "rust")
                                         (css-mode . "css")
+                                        (less-mode . "less")
+                                        (sass-mode . "sass")
+                                        (scss-mode . "scss")
                                         (xml-mode . "xml")
                                         (c-mode . "c")
                                         (c++-mode . "cpp")
@@ -350,7 +354,8 @@ than the second parameter.")
                                         (typescript-mode . "typescript")
                                         (reason-mode . "reason")
                                         (caml-mode . "ocaml")
-                                        (tuareg-mode . "ocaml"))
+                                        (tuareg-mode . "ocaml")
+                                        (swift-mode . "swift"))
   "Language id configuration.")
 
 (defvar lsp-method-requirements
@@ -360,6 +365,7 @@ than the second parameter.")
      :registered-capability "workspace/executeCommand")
     ("textDocument/hover" :capability "hoverProvider")
     ("textDocument/documentSymbol" :capability "documentSymbolProvider")
+    ("textDocument/documentHighlight" :capability "documentHighlightProvider")
     ("textDocument/definition" :capability "definitionProvider"))
 
   "Contain method to requirements mapping.
@@ -1153,6 +1159,10 @@ disappearing, unset all the variables related to it."
                 :executeCommand (:dynamicRegistration :json-false)
                 :workspaceFolders t)
                :textDocument (
+                              :declaration (:linkSupport t)
+                              :definition (:linkSupport t)
+                              :implementation (:linkSupport t)
+                              :typeDefinition (:linkSupport t)
                               :synchronization (:willSave t :didSave t :willSaveWaitUntil t)
                               :documentSymbol (:symbolKind (:valueSet ,(cl-coerce
                                                                         (cl-loop for kind from 1 to 25 collect kind)
@@ -1864,10 +1874,9 @@ https://microsoft.github.io/language-server-protocol/specification#textDocument_
       (buffer-substring-no-properties (line-beginning-position)
                                       (line-end-position)))))
 
-(defun lsp--xref-make-item (filename location)
-  "Return a xref-item from a LOCATION in FILENAME."
-  (let* ((range (gethash "range" location))
-         (pos-start (gethash "start" range))
+(defun lsp--xref-make-item (filename range)
+  "Return a xref-item from a RANGE in FILENAME."
+  (let* ((pos-start (gethash "start" range))
          (pos-end (gethash "end" range))
          (line (lsp--extract-line-from-buffer pos-start))
          (start (gethash "character" pos-start))
@@ -1882,49 +1891,30 @@ https://microsoft.github.io/language-server-protocol/specification#textDocument_
                                         (1+ (gethash "line" pos-start))
                                         (gethash "character" pos-start)))))
 
-(defun lsp--get-xrefs-in-file (file)
-  "Return all references that contain a file.
-FILE is a cons where its car is the filename and the cdr is a list of Locations
-within the file.  We open and/or create the file/buffer only once for all
-references.  The function returns a list of `xref-item'."
-  (let* ((filename (car file))
-         (visiting (find-buffer-visiting filename))
-         (fn (lambda (loc) (lsp--xref-make-item filename loc))))
-    (if visiting
-        (with-current-buffer visiting
-          (mapcar fn (cdr file)))
-      (when (file-readable-p filename)
-        (with-temp-buffer
-          (insert-file-contents-literally filename)
-          (mapcar fn (cdr file)))))))
-
 (defun lsp--locations-to-xref-items (locations)
-  "Return a list of `xref-item' from LOCATIONS.
-LOCATIONS is an array of Location objects:
-
-interface Location {
-  uri: DocumentUri;
-  range: Range;
-}"
+  "Return a list of `xref-item' from Location[] or LocationLink[]."
   (when locations
-    (let* ((fn (lambda (loc) (lsp--uri-to-path (gethash "uri" loc))))
-           ;; locations-by-file is an alist of the form
-           ;; ((FILENAME . LOCATIONS)...), where FILENAME is a string of the
-           ;; actual file name, and LOCATIONS is a list of Location objects
-           ;; pointing to Ranges inside that file.
-           (locations-by-file (seq-group-by fn locations))
-           ;; items-by-file is a list of list of xref-item
-           (items-by-file (mapcar #'lsp--get-xrefs-in-file locations-by-file)))
-      ;; flatten the list
-      (apply #'append items-by-file))))
-
-(defun lsp--get-definitions ()
-  "Get definition of the current symbol under point.
-Returns xref-item(s)."
-  (let ((defs (lsp-request "textDocument/definition"
-                           (lsp--text-document-position-params))))
-    ;; textDocument/definition returns Location | Location[]
-    (lsp--locations-to-xref-items (if (sequencep defs) defs (vector defs)))))
+    (cl-labels ((get-xrefs-in-file
+                 (file-locs location-link)
+                 (let* ((filename (car file-locs))
+                        (visiting (find-buffer-visiting filename))
+                        (fn (lambda (loc)
+                              (lsp--xref-make-item filename
+                                                   (if location-link (or (gethash "targetSelectionRange" loc) (gethash "targetRange" loc))
+                                                     (gethash "range" loc))))))
+                   (if visiting
+                       (with-current-buffer visiting
+                         (mapcar fn (cdr file-locs)))
+                     (when (file-readable-p filename)
+                       (with-temp-buffer
+                         (insert-file-contents-literally filename)
+                         (mapcar fn (cdr file-locs))))))))
+      (apply #'append
+             (if (gethash "uri" (car locations))
+                 (--map (get-xrefs-in-file it nil)
+                        (--group-by (lsp--uri-to-path (gethash "uri" it)) locations))
+               (--map (get-xrefs-in-file it t)
+                      (--group-by (lsp--uri-to-path (gethash "targetUri" it)) locations)))))))
 
 (defun lsp--make-reference-params (&optional td-position include-declaration)
   "Make a ReferenceParam object.
@@ -1933,13 +1923,6 @@ If INCLUDE-DECLARATION is non-nil, request the server to include declarations."
   (let ((json-false :json-false))
     (plist-put (or td-position (lsp--text-document-position-params))
                :context `(:includeDeclaration ,(or include-declaration json-false)))))
-
-(defun lsp--get-references ()
-  "Get all references for the symbol under point.
-Returns xref-item(s)."
-  (let ((refs (lsp-request "textDocument/references"
-                           (lsp--make-reference-params))))
-    (lsp--locations-to-xref-items refs)))
 
 (defun lsp--cancel-request (id)
   "Cancel requiest with ID in all workspaces."
@@ -2017,7 +2000,7 @@ When language is nil render as markup if `markdown-mode' is loaded."
    ((and (hash-table-p content)
          (gethash "kind" content))
     (-let [(&hash "value" "kind") content]
-      (lsp--render-string kind value)))
+      (lsp--render-string value kind)))
    ;; plain string
    ((stringp content) (lsp--render-string content "markdown"))
    (t (error "Failed to handle %s" content))))
@@ -2123,7 +2106,9 @@ RENDER-ALL - nil if only the first element should be rendered."
 (defun lsp--text-document-code-action-params ()
   "Code action params."
   (list :textDocument (lsp--text-document-identifier)
-        :range (lsp--region-or-line)
+        :range (if (use-region-p)
+                   (lsp--region-to-range (region-beginning) (region-end))
+                 (lsp--region-to-range (point) (point)))
         :context (list :diagnostics (lsp--cur-line-diagnotics))))
 
 (defun lsp-code-actions-at-point ()
@@ -2317,7 +2302,7 @@ A reference is highlighted only if it is visible in a window."
 (cl-defmethod xref-backend-identifier-completion-table ((_backend (eql xref-lsp)))
   (let ((json-false :json-false)
         (symbols (lsp--get-document-symbols)))
-    (seq-map #'lsp--symbol-info-to-identifier symbols)))
+    (seq-map #'lsp--symbol-info-to-identifier (-filter 'identity symbols))))
 
 (cl-defmethod xref-backend-definitions ((_backend (eql xref-lsp)) identifier)
   (let* ((maybeparams (get-text-property 0 'def-params identifier))
@@ -2357,43 +2342,74 @@ A reference is highlighted only if it is visible in a window."
     (when edits
       (lsp--apply-workspace-edit edits))))
 
-(defun lsp-find-custom (method &optional extra)
+(cl-defun lsp-find-locations (method &optional extra &key display-action)
   "Send request named METHOD and get cross references of the symbol under point.
 EXTRA is a plist of extra parameters."
   (let ((loc (lsp-request method
                           (append (lsp--text-document-position-params) extra))))
     (if loc
         (xref--show-xrefs
-         (lsp--locations-to-xref-items (if (sequencep loc) loc (vector loc))) nil)
+         (lsp--locations-to-xref-items (if (sequencep loc) loc (vector loc)))
+         display-action)
       (message "Not found for: %s" (thing-at-point 'symbol t)))))
 
-(defun lsp-goto-implementation ()
-  "Resolve, and go to the implementation(s) of the symbol under point."
+(cl-defun lsp-find-declaration (&key display-action)
+  "Find declarations of the symbol under point."
   (interactive)
+  (lsp-find-locations "textDocument/declaration" nil :display-action display-action))
 
+(cl-defun lsp-find-definition (&key display-action)
+  "Find definitions of the symbol under point."
+  (interactive)
+  (unless (lsp--capability "definitionProvider")
+    (signal 'lsp-capability-not-supported (list "definitionProvider")))
+  (lsp-find-locations "textDocument/definition" nil :display-action display-action))
+
+(cl-defun lsp-find-implementation (&key display-action)
+  "Find implementations of the symbol under point."
+  (interactive)
   (unless (lsp--capability "implementationProvider")
     (signal 'lsp-capability-not-supported (list "implementationProvider")))
-  (lsp-find-custom "textDocument/implementation"))
+  (lsp-find-locations "textDocument/implementation" nil :display-action display-action))
 
-(defun lsp-goto-type-definition ()
-  "Resolve, and go to the type definition(s) of the symbol under point."
+(cl-defun lsp-find-references (&optional include-declaration &key display-action)
+  "Find references of the symbol under point."
+  (interactive)
+  (unless (lsp--capability "referencesProvider")
+    (signal 'lsp-capability-not-supported (list "referencesProvider")))
+  (lsp-find-locations "textDocument/references"
+                      (list :context `(:includeDeclaration ,(or include-declaration json-false)))
+                      :display-action display-action))
+
+(cl-defun lsp-find-type-definition (&key display-action)
+  "Find type definitions of the symbol under point."
   (interactive)
   (unless (lsp--capability "typeDefinitionProvider")
     (signal 'lsp-capability-not-supported (list "typeDefinitionProvider")))
-  (lsp-find-custom "textDocument/typeDefinition"))
+  (lsp-find-locations "textDocument/typeDefinition" nil :display-action display-action))
+
+(defalias 'lsp-find-custom #'lsp-find-locations)
+(defalias 'lsp-goto-implementation #'lsp-find-implementation)
+(defalias 'lsp-goto-type-definition #'lsp-find-type-definition)
+
+(with-eval-after-load 'evil
+  (evil-set-command-property 'lsp-find-definition :jump t)
+  (evil-set-command-property 'lsp-find-implementation :jump t)
+  (evil-set-command-property 'lsp-find-references :jump t)
+  (evil-set-command-property 'lsp-find-type-definition :jump t))
 
 (defun lsp--find-workspaces-for (msg)
   "Find all workspaces in the current that can handle MSG."
   ;; (setq my/msg msg)
-  (-if-let ((&plist :capability :registered-capability)
-            (cdr (assoc (plist-get msg :method) lsp-method-requirements)))
-      (--filter
-       (with-lsp-workspace it
-         (or (when capability (lsp--capability capability))
-             (when registered-capability
-               (lsp--registered-capability registered-capability))
-             (and (not capability) (not registered-capability))))
-       (lsp-workspaces))
+  (-if-let (reqs (cdr (assoc (plist-get msg :method) lsp-method-requirements)))
+      (-let (((&plist :capability :registered-capability) reqs))
+        (--filter
+         (with-lsp-workspace it
+           (or (when capability (lsp--capability capability))
+               (when registered-capability
+                 (lsp--registered-capability registered-capability))
+               (and (not capability) (not registered-capability))))
+         (lsp-workspaces)))
     (lsp-workspaces)))
 
 (defun lsp--send-execute-command (command &optional args)
@@ -3310,10 +3326,12 @@ Returns nil if the project should not be added to the current SESSION."
         (--first (f-ancestor-of? it file-name))
         not)
    (or
+    (when lsp-auto-guess-root
+      (lsp--suggest-project-root))
     (lsp-find-session-folder session file-name)
-    (if lsp-auto-guess-root
-        (lsp--suggest-project-root)
-      (lsp--find-root-interactively session)))))
+    (unless lsp-auto-guess-root
+      (lsp--find-root-interactively session))
+    )))
 
 (defun lsp--try-open-in-library-workspace ()
   "Try opening current file as library file in any of the active workspace.
@@ -3402,6 +3420,5 @@ such."
     (lsp-mode 1)
     (when lsp-auto-configure (lsp--auto-configure))))
 
-(provide 'lsp-mode)
 (provide 'lsp)
 ;;; lsp.el ends here

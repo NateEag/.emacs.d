@@ -7,7 +7,7 @@
 ;; Maintainer: Jason R. Blevins <jblevins@xbeta.org>
 ;; Created: May 24, 2007
 ;; Version: 2.4-dev
-;; Package-Version: 20181112.1529
+;; Package-Version: 20181214.1928
 ;; Package-Requires: ((emacs "24.4") (cl-lib "0.5"))
 ;; Keywords: Markdown, GitHub Flavored Markdown, itex
 ;; URL: https://jblevins.org/projects/markdown-mode/
@@ -8820,7 +8820,8 @@ This function assumes point is on a table."
     (while (and (not (bobp))
                 (markdown-table-at-point-p))
       (forward-line -1))
-    (unless (eobp)
+    (unless (or (eobp)
+                (markdown-table-at-point-p))
       (forward-line 1))
     (point)))
 

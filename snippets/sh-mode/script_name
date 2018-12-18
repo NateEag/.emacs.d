@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: script_name
+# key: script_name
+# --
+script_name="$(basename "\$0")"

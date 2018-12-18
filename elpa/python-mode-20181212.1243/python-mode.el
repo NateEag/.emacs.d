@@ -1,4 +1,4 @@
-;;; python-mode.el --- Edit, debug, develop, run Python programs. -*- lexical-binding: t; -*- 
+;;; python-mode.el --- Edit, debug, develop, run Python programs. -*- lexical-binding: t; -*-
 
 ;; Version: 6.2.3
 
@@ -2520,7 +2520,7 @@ See ‘py-no-outdent-re-raw’ for better readable content")
 ;; 'name':
 (defconst py-dict-re "'\\_<\\w+\\_>':")
 
-(setq py-block-re-raw (list 
+(setq py-block-re-raw (list
 		       "async def"
 		       "async for"
 		       "async with"
@@ -2540,7 +2540,7 @@ See ‘py-no-outdent-re-raw’ for better readable content")
 		       )
   "Matches the beginning of a compound statement.")
 
-(defconst py-minor-block-re-raw (list 
+(defconst py-minor-block-re-raw (list
 				      "async for"
 				      "async with"
 				      "except"
@@ -8373,7 +8373,7 @@ Honor MAXINDENT if provided"
 		(current-indentation)))
 	   (condition
 	    (or condition
-	     (cond 
+	     (cond
 	      ((and
 		(member
 		 regexp
@@ -8393,9 +8393,9 @@ Honor MAXINDENT if provided"
 		 'py-class-re
 		 ))
 	       '<=)
-	      ((member 
+	      ((member
 		regexp
-		(list 
+		(list
 		 'py-block-re
 		 'py-clause-re
 		 ))
@@ -8990,7 +8990,7 @@ Return beginning and end positions of marked area, a cons."
     erg))
 
 (defun py-mark-block ()
-  "Mark block, take beginning of line positions. 
+  "Mark block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -9001,7 +9001,7 @@ Return beginning and end positions of region, a cons."
     erg))
 
 (defun py-mark-block-or-clause ()
-  "Mark block-or-clause, take beginning of line positions. 
+  "Mark block-or-clause, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -9012,7 +9012,7 @@ Return beginning and end positions of region, a cons."
     erg))
 
 (defun py-mark-class (&optional arg)
-  "Mark class, take beginning of line positions. 
+  "Mark class, take beginning of line positions.
 
 With ARG \\[universal-argument] or ‘py-mark-decorators’ set to t, decorators are marked too.
 Return beginning and end positions of region, a cons."
@@ -9025,7 +9025,7 @@ Return beginning and end positions of region, a cons."
     erg))
 
 (defun py-mark-clause ()
-  "Mark clause, take beginning of line positions. 
+  "Mark clause, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -9036,7 +9036,7 @@ Return beginning and end positions of region, a cons."
     erg))
 
 (defun py-mark-def (&optional arg)
-  "Mark def, take beginning of line positions. 
+  "Mark def, take beginning of line positions.
 
 With ARG \\[universal-argument] or ‘py-mark-decorators’ set to t, decorators are marked too.
 Return beginning and end positions of region, a cons."
@@ -9049,7 +9049,7 @@ Return beginning and end positions of region, a cons."
     erg))
 
 (defun py-mark-def-or-class (&optional arg)
-  "Mark def-or-class, take beginning of line positions. 
+  "Mark def-or-class, take beginning of line positions.
 
 With ARG \\[universal-argument] or ‘py-mark-decorators’ set to t, decorators are marked too.
 Return beginning and end positions of region, a cons."
@@ -9062,7 +9062,7 @@ Return beginning and end positions of region, a cons."
     erg))
 
 (defun py-mark-elif-block ()
-  "Mark elif-block, take beginning of line positions. 
+  "Mark elif-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -9073,7 +9073,7 @@ Return beginning and end positions of region, a cons."
     erg))
 
 (defun py-mark-else-block ()
-  "Mark else-block, take beginning of line positions. 
+  "Mark else-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -9084,7 +9084,7 @@ Return beginning and end positions of region, a cons."
     erg))
 
 (defun py-mark-except-block ()
-  "Mark except-block, take beginning of line positions. 
+  "Mark except-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -9095,7 +9095,7 @@ Return beginning and end positions of region, a cons."
     erg))
 
 (defun py-mark-for-block ()
-  "Mark for-block, take beginning of line positions. 
+  "Mark for-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -9106,7 +9106,7 @@ Return beginning and end positions of region, a cons."
     erg))
 
 (defun py-mark-if-block ()
-  "Mark if-block, take beginning of line positions. 
+  "Mark if-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -9117,7 +9117,7 @@ Return beginning and end positions of region, a cons."
     erg))
 
 (defun py-mark-indent ()
-  "Mark indent, take beginning of line positions. 
+  "Mark indent, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -9128,7 +9128,7 @@ Return beginning and end positions of region, a cons."
     erg))
 
 (defun py-mark-minor-block ()
-  "Mark minor-block, take beginning of line positions. 
+  "Mark minor-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -9139,7 +9139,7 @@ Return beginning and end positions of region, a cons."
     erg))
 
 (defun py-mark-statement ()
-  "Mark statement, take beginning of line positions. 
+  "Mark statement, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -9150,7 +9150,7 @@ Return beginning and end positions of region, a cons."
     erg))
 
 (defun py-mark-try-block ()
-  "Mark try-block, take beginning of line positions. 
+  "Mark try-block, take beginning of line positions.
 
 Return beginning and end positions of region, a cons."
   (interactive)
@@ -10336,7 +10336,7 @@ Interactively, \\[universal-argument] prompts for a new ‘buffer-name’.
       (if (comint-check-proc buffer)
       	  (py--reuse-existing-shell exception-buffer)
       	;; buffer might exist but not being empty
-      	(when (or (buffer-live-p buffer)(bufferp (get-buffer buffer))) 
+      	(when (or (buffer-live-p buffer)(bufferp (get-buffer buffer)))
 	  ;; kill-buffer-unconditional buffer
 	  (with-current-buffer buffer
           (set-buffer-modified-p 'nil)
@@ -15333,7 +15333,7 @@ Return position if minor-block found, nil otherwise."
   "Go to the beginning of next block upwards in buffer according to INDENT.
 
 Go to beginning of line.
-Optional DECORATOR: stop at decorator - not implemented 
+Optional DECORATOR: stop at decorator - not implemented
 Return position if block found, nil otherwise."
   (interactive)
   (py-up-base 'py-block-re indent decorator)
@@ -15343,7 +15343,7 @@ Return position if block found, nil otherwise."
   "Go to the beginning of next class upwards in buffer according to INDENT.
 
 Go to beginning of line.
-Optional DECORATOR: stop at decorator - not implemented 
+Optional DECORATOR: stop at decorator - not implemented
 Return position if class found, nil otherwise."
   (interactive)
   (py-up-base 'py-class-re indent decorator)
@@ -15353,7 +15353,7 @@ Return position if class found, nil otherwise."
   "Go to the beginning of next def upwards in buffer according to INDENT.
 
 Go to beginning of line.
-Optional DECORATOR: stop at decorator - not implemented 
+Optional DECORATOR: stop at decorator - not implemented
 Return position if def found, nil otherwise."
   (interactive)
   (py-up-base 'py-def-re indent decorator)
@@ -15363,7 +15363,7 @@ Return position if def found, nil otherwise."
   "Go to the beginning of next def-or-class upwards in buffer according to INDENT.
 
 Go to beginning of line.
-Optional DECORATOR: stop at decorator - not implemented 
+Optional DECORATOR: stop at decorator - not implemented
 Return position if def-or-class found, nil otherwise."
   (interactive)
   (py-up-base 'py-def-or-class-re indent decorator)
@@ -15373,7 +15373,7 @@ Return position if def-or-class found, nil otherwise."
   "Go to the beginning of next minor-block upwards in buffer according to INDENT.
 
 Go to beginning of line.
-Optional DECORATOR: stop at decorator - not implemented 
+Optional DECORATOR: stop at decorator - not implemented
 Return position if minor-block found, nil otherwise."
   (interactive)
   (py-up-base 'py-minor-block-re indent decorator)
@@ -15661,7 +15661,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-block-python-no-switch (&optional dedicated fast split  proc)
   "Send block at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -15943,7 +15943,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-block-or-clause-python-no-switch (&optional dedicated fast split  proc)
   "Send block-or-clause at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -16414,7 +16414,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-buffer-python-no-switch (&optional dedicated fast split  proc)
   "Send buffer at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -16787,7 +16787,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-class-python-no-switch (&optional dedicated fast split  proc)
   "Send class at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -17069,7 +17069,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-clause-python-no-switch (&optional dedicated fast split  proc)
   "Send clause at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -17351,7 +17351,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-def-python-no-switch (&optional dedicated fast split  proc)
   "Send def at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -17633,7 +17633,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-def-or-class-python-no-switch (&optional dedicated fast split  proc)
   "Send def-or-class at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -17915,7 +17915,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-expression-python-no-switch (&optional dedicated fast split  proc)
   "Send expression at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -18197,7 +18197,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-indent-python-no-switch (&optional dedicated fast split  proc)
   "Send indent at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -18479,7 +18479,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-line-python-no-switch (&optional dedicated fast split  proc)
   "Send line at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -18761,7 +18761,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-minor-block-python-no-switch (&optional dedicated fast split  proc)
   "Send minor-block at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -19043,7 +19043,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-paragraph-python-no-switch (&optional dedicated fast split  proc)
   "Send paragraph at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -19325,7 +19325,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-partial-expression-python-no-switch (&optional dedicated fast split  proc)
   "Send partial-expression at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -19607,7 +19607,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-region-python-no-switch (beg end &optional dedicated fast split  proc)
   "Send region at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive "r")
@@ -19889,7 +19889,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-statement-python-no-switch (&optional dedicated fast split  proc)
   "Send statement at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -20171,7 +20171,7 @@ For ‘default’ see value of ‘py-shell-name’"
 (defun py-execute-top-level-python-no-switch (&optional dedicated fast split  proc)
   "Send top-level at point to default interpreter.
 
-Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ 
+Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’
 
 For ‘default’ see value of ‘py-shell-name’"
   (interactive)
@@ -21996,7 +21996,7 @@ Output buffer not in comint-mode, displays \"Fast\"  by default"
 
 ;; py-fill-column-orig  already defined
 
-(defun py-comment-auto-fill (&optional arg) 
+(defun py-comment-auto-fill (&optional arg)
   "Toggles comment-auto-fill mode"
   (interactive "P")
   (if (or (and arg (< 0 (prefix-numeric-value arg))) (and (boundp 'py-comment-auto-fill)(not py-comment-auto-fill)))
@@ -22977,10 +22977,11 @@ LIEP stores line-end-position at point-of-interest
              ;; line: moved already a line backward
              (liep (or liep (line-end-position)))
              (line line)
-             (pps (progn (skip-chars-backward " " (line-beginning-position))
-                         ;; (when (eq 5 (car (syntax-after (1- (point)))))
-                         ;;   (forward-char -1))
-                         (parse-partial-sexp (point-min) (point))))
+             (pps (progn
+		    (unless (eq (current-indentation) (current-column))(skip-chars-backward " " (line-beginning-position)))
+		    ;; (when (eq 5 (car (syntax-after (1- (point)))))
+		    ;;   (forward-char -1))
+		    (parse-partial-sexp (point-min) (point))))
              (closing
               (or closing
                   ;; returns update pps
@@ -23015,7 +23016,7 @@ LIEP stores line-end-position at point-of-interest
                                (t
                                 (current-indentation))))
                         ;; in string
-                        ((and (nth 3 pps)(nth 8 pps))
+                        ((and (nth 3 pps) (nth 8 pps))
                          (cond
                           ((py--docstring-p (nth 8 pps))
                            (save-excursion
@@ -23024,7 +23025,7 @@ LIEP stores line-end-position at point-of-interest
                              (back-to-indentation)
                              (current-indentation)))
                           (t 0)))
-                        ((and (looking-at "\"\"\"\\|'''")(not (bobp)))
+                        ((and (looking-at "\"\"\"\\|'''") (not (bobp)))
                          (py-backward-statement)
                          (py-compute-indentation iact orig origline closing line nesting repeat indent-offset liep))
                         ;; comments
@@ -23069,7 +23070,7 @@ LIEP stores line-end-position at point-of-interest
                         ((and (looking-at py-elif-re) (eq (py-count-lines) origline))
                          (when (py--line-backward-maybe) (setq line t))
                          (car (py--clause-lookup-keyword py-elif-re -1 nil origline)))
-                        ((and (looking-at py-clause-re)(not line)
+                        ((and (looking-at py-clause-re) (not line)
                               (eq liep (line-end-position)))
                          (cond ((looking-at py-finally-re)
                                 (car (py--clause-lookup-keyword py-finally-re -1 nil origline)))
@@ -23099,7 +23100,7 @@ LIEP stores line-end-position at point-of-interest
                           (looking-at py-assignment-re)
                           (goto-char (match-end 0)))
                          ;; multiline-assignment
-                         (if (and nesting (looking-at " *[[{(]")(not (looking-at ".+[]})][ \t]*$")))
+                         (if (and nesting (looking-at " *[[{(]") (not (looking-at ".+[]})][ \t]*$")))
                              (+ (current-indentation) (or indent-offset py-indent-offset))
                            (current-indentation)))
                         ((looking-at py-assignment-re)
@@ -23119,7 +23120,7 @@ LIEP stores line-end-position at point-of-interest
                                  (py-compute-indentation iact orig origline closing line nesting repeat indent-offset liep))
                              (py-backward-statement)
                              (py-compute-indentation iact orig origline closing line nesting repeat indent-offset liep))))
-                        ((or (py--statement-opens-block-p py-extended-block-or-clause-re)(looking-at "@"))
+                        ((or (py--statement-opens-block-p py-extended-block-or-clause-re) (looking-at "@"))
                          (if (< (py-count-lines) origline)
                              (+ (or indent-offset (and py-smart-indentation (py-guess-indent-offset)) py-indent-offset) (current-indentation))
                            (skip-chars-backward " \t\r\n\f")
@@ -23134,7 +23135,7 @@ LIEP stores line-end-position at point-of-interest
                               (save-excursion
                                 (and (setq erg (py--go-to-keyword 'py-extended-block-or-clause-re))
                                      (if (and (not indent-offset) py-smart-indentation) (setq indent-offset (py-guess-indent-offset)) t)
-                                     (ignore-errors (< orig (or (py-forward-block-or-clause)(point)))))))
+                                     (ignore-errors (< orig (or (py-forward-block-or-clause) (point)))))))
                          (+ (car erg) (if py-smart-indentation
                                           (or indent-offset (py-guess-indent-offset))
                                         (or indent-offset py-indent-offset))))
@@ -26666,7 +26667,7 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
 
 (defun py--all-shell-mode-setting (buffer)
   (py--shell-setup-fontification)
-  (setenv "PAGER" "cat")   
+  (setenv "PAGER" "cat")
   (setenv "TERM" "dumb")
   ;; provide next-error etc.
   (compilation-shell-minor-mode 1)

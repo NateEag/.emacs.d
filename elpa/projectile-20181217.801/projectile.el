@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20181204.1559
+;; Package-Version: 20181217.801
 ;; Keywords: project, convenience
 ;; Version: 1.1.0-snapshot
 ;; Package-Requires: ((emacs "25.1") (pkg-info "0.4"))
@@ -168,6 +168,11 @@ A value of nil means the cache never expires."
   :group 'projectile
   :type '(choice (const :tag "Disabled" nil)
                  (integer :tag "Seconds")))
+
+(defcustom projectile-auto-update-cache t
+  "Wether the cache should automatically be updated when files are opened or deleted."
+  :group 'projectile
+  :type 'boolean)
 
 (defcustom projectile-require-project-root 'prompt
   "Require the presence of a project root to operate when true.
@@ -961,8 +966,8 @@ Invoked automatically when `projectile-mode' is enabled."
   (mapcar #'projectile-discover-projects-in-directory projectile-project-search-path))
 
 
-(defadvice delete-file (before purge-from-projectile-cache (filename &optional trash))
-  (if (and projectile-enable-caching (projectile-project-p))
+(defun delete-file-projectile-remove-from-cache (filename &optional trash)
+  (if (and projectile-enable-caching projectile-auto-update-cache (projectile-project-p))
       (let* ((project-root (projectile-project-root))
              (true-filename (file-truename filename))
              (relative-filename (file-relative-name true-filename project-root)))
@@ -3270,7 +3275,7 @@ directory to open."
          (mapcar
           (lambda (f) (file-relative-name f project-root))
           (cl-remove-if-not
-           (lambda (f) (string-prefix-p project-root f))
+           (lambda (f) (string-prefix-p project-root (expand-file-name f)))
            recentf-list)))))
 
 (defun projectile-serialize-cache ()
@@ -3581,32 +3586,25 @@ If the prefix argument SHOW_PROMPT is non nil, the command can be edited."
     (unless (string= command executed-command)
       (ring-insert command-history executed-command))))
 
-(defadvice compilation-find-file (around projectile-compilation-find-file)
+(defun compilation-find-file-projectile-find-compilation-buffer (orig-fun marker filename directory &rest formats)
   "Try to find a buffer for FILENAME, if we cannot find it,
 fallback to the original function."
-  (let ((filename (ad-get-arg 1))
-        full-filename)
-    (ad-set-arg 1
-                (or
-                 (if (file-exists-p (expand-file-name filename))
-                     filename)
-                 ;; Try to find the filename using projectile
-                 (and (projectile-project-p)
-                      (let ((root (projectile-project-root))
-                            (dirs (cons "" (projectile-current-project-dirs))))
-                        (when (setq full-filename
-                                    (car (cl-remove-if-not
-                                          #'file-exists-p
-                                          (mapcar
-                                           (lambda (f)
-                                             (expand-file-name
-                                              filename
-                                              (expand-file-name f root)))
-                                           dirs))))
-                          full-filename)))
-                 ;; Fall back to the old argument
-                 filename))
-    ad-do-it))
+  (when (and (not (file-exists-p (expand-file-name filename)))
+             (projectile-project-p))
+    (let* ((root (projectile-project-root))
+           (dirs (cons "" (projectile-current-project-dirs)))
+           (new-filename (car (cl-remove-if-not
+                               #'file-exists-p
+                               (mapcar
+                                (lambda (f)
+                                  (expand-file-name
+                                   filename
+                                   (expand-file-name f root)))
+                                dirs)))))
+      (when new-filename
+        (setq filename new-filename))))
+
+  (funcall #'orig-fun marker filename directory formats))
 
 (defun projectile-open-projects ()
   "Return a list of all open projects.
@@ -4291,7 +4289,8 @@ tramp."
   (unless (file-remote-p default-directory)
     (when projectile-dynamic-mode-line
       (projectile-update-mode-line))
-    (projectile-cache-files-find-file-hook)
+    (when projectile-auto-update-cache
+      (projectile-cache-files-find-file-hook))
     (projectile-track-known-projects-find-file-hook)
     (projectile-visit-project-tags-table)))
 
@@ -4333,13 +4332,13 @@ Otherwise behave as if called interactively.
     (add-hook 'find-file-hook 'projectile-find-file-hook-function)
     (add-hook 'projectile-find-dir-hook #'projectile-track-known-projects-find-file-hook t)
     (add-hook 'dired-before-readin-hook #'projectile-track-known-projects-find-file-hook t t)
-    (ad-activate 'compilation-find-file)
-    (ad-activate 'delete-file))
+    (advice-add 'compilation-find-file :around #'compilation-find-file-projectile-find-compilation-buffer)
+    (advice-add 'delete-file :before #'delete-file-projectile-remove-from-cache))
    (t
     (remove-hook 'find-file-hook #'projectile-find-file-hook-function)
     (remove-hook 'dired-before-readin-hook #'projectile-track-known-projects-find-file-hook t)
-    (ad-deactivate 'compilation-find-file)
-    (ad-deactivate 'delete-file))))
+    (advice-remove 'compilation-find-file #'compilation-find-file-projectile-find-compilation-buffer)
+    (advice-remove 'delete-file #'delete-file-projectile-remove-from-cache))))
 
 ;;;###autoload
 (define-obsolete-function-alias 'projectile-global-mode 'projectile-mode "1.0")

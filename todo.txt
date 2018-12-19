@@ -550,6 +550,8 @@
 - Debug mmm-mode, php-mode, and sql-mode enough to uncomment my sql-mode
   embedding in php-mode.
 
+- Consider this alternative to mmm-mode and friends: https://github.com/Fanael/edit-indirect/blob/master/edit-indirect.el
+
 - If particularly bored, try getting GEBEN set up for debugging PHP. I'm
   uncertain whether this would actually be worth the effort.
 

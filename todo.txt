@@ -365,6 +365,8 @@
   with something other than self-insert-function to actually make your new
   paragraph.
 
+- Set up Elsa as an Elisp static analyzer: https://github.com/emacs-elsa/Elsa
+
 - Try using elisp-def as an enhancement to slime-nav-mode? It's installed, just
   have to try configuring it and seeing if it makes life any better.
 

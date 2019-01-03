@@ -35,6 +35,13 @@
   can uninstall it once I upgrade.
   https://github.com/DamienCassou/auth-password-store
 
+- Try out literate-elisp for one of my packages, largely as an experiment in
+  literate programming: https://github.com/jingtaozf/literate-elisp
+
+- Play with ob-html-chrome. It sounds like it could be a useful tool for
+  writing docs that embed HTML, as many people like to see what things look
+  like. https://github.com/nikclayton/ob-html-chrome
+
 - Start using package-quickstart to speed up start times once Emacs 27.1 is
   released.
 
@@ -592,6 +599,10 @@
 
 - Look into anaconda-mode. It appears to be a wrapper around Jedi that might add
   a bit more intelligence, or something? Popped up in list-packages today.
+
+- Try out with-venv in my Python config. Theoretically it should be what I need
+  to run things with the correct venv from within Emacs.
+  https://github.com/10sr/with-venv-el
 
 - Think about whether I should pull ropemode back into python-mode; I never
   really used the refactoring tools, but maybe I should.

@@ -41,7 +41,6 @@
 (require 'cquery-tree)
 (require 'cquery-call-hierarchy)
 (require 'cquery-inheritance-hierarchy)
-(require 'cquery-member-hierarchy)
 
 (require 'seq)
 
@@ -218,7 +217,7 @@ The place is given by cquery-cache-dir-consolidated-path."
 (defun cquery--get-init-params ()
   `(,@cquery-extra-init-params
     :cacheDirectory ,(file-name-as-directory
-                      (funcall cquery-cache-dir-function default-directory))
+                      (funcall cquery-cache-dir-function (lsp--suggest-project-root)))
     :highlight (:enabled ,(or (and cquery-sem-highlight-method t) :json-false))
     :emitInactiveRegions ,(or cquery-enable-inactive-region :json-false)))
 

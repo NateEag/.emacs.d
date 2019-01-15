@@ -74,22 +74,17 @@
   (inline-quote (cl-assert (cquery--is-cquery-buffer) nil
                            "Cquery is not enabled in this buffer.")))
 
-(defun cquery--get-renderer ()
-  (thread-last lsp--cur-workspace
-    lsp--workspace-client
-    lsp--client-string-renderers
-    (assoc-string (thread-first lsp--cur-workspace
-                    lsp--workspace-client
-                    lsp--client-language-id
-                    (funcall (current-buffer))))
-    cdr))
-
 (defun cquery--render-string (str)
-  (funcall (cquery--get-renderer) str))
+  (funcall (lsp-get-renderer "cpp") str))
 
 (defun cquery--render-type (str)
   "Render a string as a type"
   (string-remove-suffix " a;" (cquery--render-string (format "%s a;" str))))
+
+(defun cquery--get-lsp-workspace ()
+  "Return cquery workspace for current buffer or nil"
+  (find-if '(lambda (ws) (equal 'cquery (lsp--client-server-id (lsp--workspace-client ws))))
+           lsp--buffer-workspaces))
 
 ;; ---------------------------------------------------------------------
 ;;   Commands

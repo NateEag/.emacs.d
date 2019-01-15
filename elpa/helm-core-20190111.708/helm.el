@@ -5290,7 +5290,8 @@ don't exit and send message 'no match'."
     (if (and (helm--updating-p)
              (null helm--reading-passwd-or-string))
         (progn (message "[Display not ready]")
-               (sit-for 0.5) (message nil))
+               (sit-for 0.5) (message nil)
+               (helm-update))
       (let* ((src (helm-get-current-source))
              (empty-buffer-p (with-current-buffer helm-buffer
                                (eq (point-min) (point-max))))
@@ -6208,7 +6209,7 @@ window to maintain visibility."
   "Return the window that will be used for persistent action.
 If SPLIT-ONEWINDOW is non-`nil' window is split in persistent action."
   (with-helm-window
-    (let (next-win cur-win)
+    (let (prev-win cur-win)
       (setq helm-persistent-action-display-window
             (cond ((and (window-live-p helm-persistent-action-display-window)
                         (not (member helm-persistent-action-display-window
@@ -6219,7 +6220,7 @@ If SPLIT-ONEWINDOW is non-`nil' window is split in persistent action."
                   (split-onewindow (split-window))
                   ;; Fix Issue #2050 with dedicated window.
                   ((window-dedicated-p
-                    (setq next-win (next-window (selected-window) 1)))
+                    (setq prev-win (previous-window (selected-window) 1)))
                    (with-helm-after-update-hook
                      (and (window-live-p helm-persistent-action-display-window)
                           (delete-window helm-persistent-action-display-window)))
@@ -6228,7 +6229,7 @@ If SPLIT-ONEWINDOW is non-`nil' window is split in persistent action."
                     (setq cur-win (get-buffer-window helm-current-buffer)))
                    (split-window))
                   (cur-win)
-                  (t next-win))))))
+                  (t prev-win))))))
 
 (defun helm-select-persistent-action-window (&optional split-onewindow)
   "Select the window that will be used for persistent action.
@@ -6419,7 +6420,9 @@ is not needed."
                    (while (< (point) maxpoint)
                      (helm-mark-current-line)
                      (let* ((prefix (get-text-property (point-at-bol) 'display))
-                            (cand   (helm-get-selection nil nil src))
+                            (cand   (helm-get-selection
+                                     nil (helm-attr 'marked-with-props src)
+                                     src))
                             (bn     (and filecomp-p (helm-basename cand))))
                        ;; Don't mark possibles directories ending with . or ..
                        ;; autosave files/links and non--existent files.

@@ -4,7 +4,7 @@
 
 ;; Author: Artur Malabarba <emacs@endlessparentheses.com>
 ;; URL: https://github.com/Malabarba/beacon
-;; Package-Version: 20181008.1350
+;; Package-Version: 20190104.1931
 ;; Keywords: convenience
 ;; Version: 1.3.3
 ;; Package-Requires: ((seq "2.14"))
@@ -233,13 +233,20 @@ If COLORS is nil, OVERLAY is deleted!"
                              "")
                   'cursor 1000))))
 
+(defun beacon--visual-current-column ()
+  "Get the visual column we are at, takes long lines and visual line mode into account."
+  (save-excursion
+    (let ((current (point)))
+      (beginning-of-visual-line)
+      (- current (point)))))
+
 (defun beacon--after-string-overlay (colors)
   "Put an overlay at point with an after-string property.
 The property's value is a string of spaces with background
 COLORS applied to each one."
   ;; The after-string must not be longer than the remaining columns
   ;; from point to right window-end else it will be wrapped around.
-  (let ((colors (seq-take colors (- (window-width) (current-column) 1))))
+  (let ((colors (seq-take colors (- (window-width) (beacon--visual-current-column) 1))))
     (beacon--ov-put-after-string (beacon--make-overlay 0) colors)))
 
 (defun beacon--ov-at-point ()

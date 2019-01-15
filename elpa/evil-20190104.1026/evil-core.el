@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.13
+;; Version: 1.2.14
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -322,7 +322,7 @@ initially."
                              nil t (cons mode-alias checked-modes))))))))
 
 (defun evil-set-initial-state (mode state)
-  "Set the initial state for MODE to STATE.
+  "Set the initial state for major mode MODE to STATE.
 This is the state the buffer comes up in."
   (dolist (modes (evil-state-property t :modes))
     (setq modes (cdr-safe modes))

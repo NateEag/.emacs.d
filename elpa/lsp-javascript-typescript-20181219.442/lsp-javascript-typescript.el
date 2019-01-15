@@ -4,7 +4,7 @@
 
 ;; Author: George Pittarelli <g@gjp.cc>
 ;; Version: 1.0
-;; Package-Version: 20180614.2011
+;; Package-Version: 20181219.442
 ;; Package-Requires: ((lsp-mode "3.0") (typescript-mode "0.1") (emacs "25.1"))
 ;; Keywords: languages tools
 ;; URL: https://github.com/emacs-lsp/lsp-javascript
@@ -50,9 +50,6 @@ finding the executable with `exec-path'."
   :risky t
   :type '(repeat string))
 
-(defconst lsp-javascript-typescript--get-root
-  (lsp-make-traverser #'(lambda (dir)
-						  (directory-files dir nil "package.json"))))
 
 (defun lsp-javascript-typescript--ls-command ()
   "Generate the language server startup command."
@@ -76,7 +73,7 @@ finding the executable with `exec-path'."
 
 (lsp-define-stdio-client
  lsp-javascript-typescript "javascript"
- lsp-javascript-typescript--get-root
+ nil
  nil
  :ignore-messages '("readFile .*? requested by TypeScript but content not available")
  :initialize 'lsp-javascript-typescript--initialize-client

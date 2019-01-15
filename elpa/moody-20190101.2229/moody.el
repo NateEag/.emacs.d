@@ -1,12 +1,12 @@
 ;;; moody.el --- Tabs and ribbons for the mode line  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018  Jonas Bernoulli
+;; Copyright (C) 2018-2019  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/tarsius/moody
 
 ;; Package-Requires: ((emacs "25.3"))
-;; Package-Version: 20181014.1447
+;; Package-Version: 20190101.2229
 
 ;; This file is not part of GNU Emacs.
 

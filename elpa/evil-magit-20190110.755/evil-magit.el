@@ -4,7 +4,7 @@
 
 ;; Author: Justin Burkett <justin@burkett.cc>
 ;; Package-Requires: ((evil "1.2.3") (magit "2.6.0"))
-;; Package-Version: 20181127.1501
+;; Package-Version: 20190110.755
 ;; Homepage: https://github.com/justbur/evil-magit
 ;; Version: 0.4.1
 
@@ -331,6 +331,7 @@ moment.")
        (,states magit-status-mode-map "gfp" magit-jump-to-unpulled-from-pushremote "jfp")
        (,states magit-status-mode-map "gpu" magit-jump-to-unpushed-to-upstream     "jpu")
        (,states magit-status-mode-map "gpp" magit-jump-to-unpushed-to-pushremote   "jpp")
+       (,states magit-status-mode-map "gh"  magit-section-up                       "^")
        (,states magit-diff-mode-map "gj" magit-section-forward)
        (,states magit-diff-mode-map "gd" magit-jump-to-diffstat-or-diff "j")
        ((emacs) magit-popup-mode-map "<escape>" "q"))

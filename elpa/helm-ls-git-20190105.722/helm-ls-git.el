@@ -3,7 +3,7 @@
 ;; Copyright (C) 2012 ~ 2015 Thierry Volpiatto <thierry.volpiatto@gmail.com>
 
 ;; Package-Requires: ((helm "1.7.8"))
-;; Package-Version: 20180711.923
+;; Package-Version: 20190105.722
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -719,6 +719,7 @@ Do nothing when `helm-source-ls-git-buffers' is not member of
     (helm-set-local-variable 'helm-ls-git--current-branch (helm-ls-git--branch))
     (helm :sources helm-ls-git-default-sources
           :ff-transformer-show-only-basename nil
+          :truncate-lines helm-buffers-truncate-lines
           :buffer "*helm lsgit*")))
 
 

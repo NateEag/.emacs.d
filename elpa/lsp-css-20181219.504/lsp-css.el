@@ -4,7 +4,7 @@
 
 ;; Author: George Pittarelli <g@gjp.cc>
 ;; Version: 1.0
-;; Package-Version: 20180627.1951
+;; Package-Version: 20181219.504
 ;; Package-Requires: ((lsp-mode "3.0") (emacs "25.1"))
 ;; Keywords: languages tools
 ;; URL: https://github.com/emacs-lsp/lsp-css
@@ -31,26 +31,22 @@
 
 (require 'lsp-mode)
 
-(defconst lsp-css--get-root
-  (lsp-make-traverser #'(lambda (dir)
-                          (directory-files dir nil "package.json"))))
-
 (lsp-define-stdio-client
  lsp-css
  "css"
- lsp-css--get-root
+ nil
  '("css-languageserver" "--stdio"))
 
 (lsp-define-stdio-client
  lsp-scss
  "scss"
- lsp-css--get-root
+ nil
  '("css-languageserver" "--stdio"))
 
 (lsp-define-stdio-client
  lsp-less
  "less"
- lsp-css--get-root
+ nil
  '("css-languageserver" "--stdio"))
 
 (provide 'lsp-css)

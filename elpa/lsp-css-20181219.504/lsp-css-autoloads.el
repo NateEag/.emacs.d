@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil nil ("lsp-css.el") (23400 19234 0 0))
+;;;### (autoloads nil nil ("lsp-css.el") (23613 59688 0 0))
 
 ;;;***
 

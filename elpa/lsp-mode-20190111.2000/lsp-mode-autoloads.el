@@ -3,10 +3,10 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "lsp" "lsp.el" (23577 6609 0 0))
-;;; Generated autoloads from lsp.el
+;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23613 59693 0 0))
+;;; Generated autoloads from lsp-mode.el
 
-(autoload 'lsp "lsp" "\
+(autoload 'lsp "lsp-mode" "\
 Entry point for the server startup.
 When IGNORE-MULTI-FOLDER is t the lsp mode will start new
 language server even if there is language server which can handle
@@ -18,8 +18,8 @@ such.
 
 ;;;***
 
-;;;### (autoloads nil nil ("lsp-clients.el" "lsp-mode-pkg.el" "lsp-mode.el")
-;;;;;;  (23577 6609 0 0))
+;;;### (autoloads nil nil ("lsp-clients.el" "lsp-mode-pkg.el" "lsp.el")
+;;;;;;  (23613 59693 0 0))
 
 ;;;***
 

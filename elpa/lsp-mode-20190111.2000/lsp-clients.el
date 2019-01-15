@@ -40,6 +40,7 @@
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection "pyls")
                   :major-modes '(python-mode)
+                  :priority -1
                   :server-id 'pyls
                   :library-folders-fn (lambda (_workspace)
                                         lsp-clients-python-library-directories)))
@@ -52,6 +53,7 @@
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection '("css-languageserver" "--stdio"))
                   :major-modes '(css-mode less-mode sass-mode scss-mode)
+                  :priority -1
                   :action-handlers (lsp-ht ("_css.applyCodeAction" 'lsp-clients-css--apply-code-action))
                   :server-id 'css-ls))
 
@@ -59,6 +61,7 @@
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection '("bash-language-server" "start"))
                   :major-modes '(sh-mode)
+                  :priority -1
                   :server-id 'bash-ls))
 
 ;;; Groovy
@@ -80,12 +83,14 @@ This directory shoud contain a file matching groovy-language-server-*.jar"
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection 'lsp-groovy--lsp-command)
                   :major-modes '(groovy-mode)
+                  :priority -1
                   :server-id 'groovy-ls))
 
 ;;; HTML
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection '("html-languageserver" "--stdio"))
                   :major-modes '(html-mode sgml-mode mhtml-mode web-mode)
+                  :priority -1
                   :server-id 'html-ls))
 
 ;;; Typescript
@@ -110,23 +115,47 @@ finding the executable with `exec-path'."
 
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection 'lsp-typescript--ls-command)
-                  :major-modes '(typescript-mode js-mode js2-mode rjsx-mode)
+                  :major-modes '(typescript-mode typescript-tsx-mode js-mode js2-mode rjsx-mode)
+                  :priority -1
                   :ignore-messages '("readFile .*? requested by TypeScript but content not available")
                   :server-id 'ts-ls))
 
 
+;;; Vue
+(defcustom lsp-clients-vue-server "vls"
+  "The vue-language-server executable to use.
+Leave as just the executable name to use the default behavior of
+finding the executable with `exec-path'."
+  :group 'lsp-vue
+  :risky t
+  :type 'file)
+
+(defcustom lsp-clients-vue-server-args '()
+  "Extra arguments for the vue-language-server language server."
+  :group 'lsp-vue
+  :risky t
+  :type '(repeat string))
+
+(defun lsp-vue--ls-command ()
+  "Generate the language server startup command."
+  `(,lsp-clients-vue-server
+    ,@lsp-clients-vue-server-args))
+
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-stdio-connection 'lsp-vue--ls-command)
+                  :major-modes '(vue-mode)
+                  :priority -1
+                  :ignore-messages '("readFile .*? requested by Vue but content not available")
+                  :server-id 'vls))
+
+
 ;;; GO language
 
-(defcustom lsp-clients-go-server "go-langserver"
+(defcustom lsp-clients-go-server "bingo"
   "The go-langageserver executable to use."
   :group 'lsp-go
   :risky t
   :type 'file)
-
-(defcustom lsp-clients-go-executable-path (executable-find "go-langserver")
-  "Path to the go-langserver executable."
-  :type 'string
-  :group 'lsp-clients-go)
 
 (defcustom lsp-clients-go-language-server-flags '("-gocodecompletion")
   "Extra arguments for the go-langserver."
@@ -195,6 +224,16 @@ defaults to half of your CPU cores."
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection (lambda () lsp-clients-go-server))
                   :major-modes '(go-mode)
+                  :priority -1
+                  :initialization-options 'lsp-clients-go--make-init-options
+                  :server-id 'go-bingo
+                  :library-folders-fn (lambda (_workspace)
+                                        lsp-clients-go-library-directories)))
+
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-stdio-connection "go-langserver")
+                  :major-modes '(go-mode)
+                  :priority -2
                   :initialization-options 'lsp-clients-go--make-init-options
                   :server-id 'go-ls
                   :library-folders-fn (lambda (_workspace)
@@ -211,6 +250,7 @@ PARAMS progress report notification data."
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection '("rls"))
                   :major-modes '(rust-mode rustic-mode)
+                  :priority -1
                   :server-id 'rls
                   :notification-handlers (lsp-ht ("window/progress" 'lsp-clients--rust-window-progress))))
 
@@ -218,6 +258,7 @@ PARAMS progress report notification data."
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection '("solargraph" "stdio"))
                   :major-modes '(ruby-mode)
+                  :priority -1
                   :multi-root t
                   :server-id 'ruby-ls))
 
@@ -232,6 +273,7 @@ PARAMS progress report notification data."
  (make-lsp-client :new-connection (lsp-stdio-connection
                                    (-const lsp-clients-php-server-command))
                   :major-modes '(php-mode)
+                  :priority -1
                   :server-id 'php-ls))
 
 
@@ -258,6 +300,7 @@ PARAMS progress report notification data."
  (make-lsp-client :new-connection (lsp-stdio-connection
                                    (-const lsp-ocaml-ocaml-lang-server-command))
                   :major-modes '(reason-mode caml-mode tuareg-mode)
+                  :priority -1
                   :server-id 'ocaml-ls))
 
 
@@ -281,12 +324,15 @@ finding the executable with `exec-path'."
   "Generate the language server startup command."
   `(,lsp-clients-clangd-executable ,@lsp-clients-clangd-args))
 
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-stdio-connection
+                                   'lsp-clients--clangd-command)
+                  :major-modes '(c-mode c++-mode objc-mode)
+                  :priority -1
+                  :server-id 'clangd))
+
 (defun lsp-clients-register-clangd ()
-  (lsp-register-client
-   (make-lsp-client :new-connection (lsp-stdio-connection
-                                     'lsp-clients--clangd-command)
-                    :major-modes '(c-mode c++-mode objc-mode)
-                    :server-id 'clangd)))
+  (warn "This call is no longer needed. clangd is now automatically registered. Delete lsp-clients-register-clangd call from your config."))
 
 
 ;; Dart
@@ -315,7 +361,55 @@ finding the executable with `exec-path'."
  (make-lsp-client :new-connection (lsp-stdio-connection
                                    'lsp-dart--lsp-command)
                   :major-modes '(dart-mode)
+                  :priority -1
                   :server-id 'dart_language_server))
+
+
+;; Elixir
+(defcustom lsp-clients-elixir-server-executable "language_server.sh"
+    "The elixir-language-server executable to use.
+Leave as just the executable name to use the default behavior of
+finding the executable with `exec-path'."
+  :group 'lsp-elixir
+  :type 'file)
+
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-stdio-connection
+                                   (-const lsp-clients-elixir-server-executable))
+                  :major-modes '(elixir-mode)
+                  :priority -1
+                  :server-id 'elixir-ls))
+
+;; Fortran
+(defcustom lsp-clients-fortls-executable "fortls"
+  "The fortls executable to use.
+Leave as just the executable name to use the default behavior of
+finding the executable with `exec-path'."
+  :group 'lsp-fortran
+  :risky t
+  :type 'file)
+
+(defcustom lsp-clients-fortls-args '()
+  "Extra arguments for the fortls executable"
+  :group 'lsp-fortran
+  :risky t
+  :type '(repeat string))
+
+(defun lsp-clients--fortls-command ()
+  "Generate the language server startup command."
+  `(,lsp-clients-fortls-executable,@lsp-clients-fortls-args))
+
+(defun fortls--suggest-project-root ()
+  (and (memq major-mode '(f90-mode))
+       (when-let (dir (locate-dominating-file default-directory ".fortls"))
+         (expand-file-name dir))))
+
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-stdio-connection
+                                   'lsp-clients--fortls-command)
+                  :major-modes '(f90-mode)
+                  :priority -1
+                  :server-id 'fortls))
 
 
 (provide 'lsp-clients)

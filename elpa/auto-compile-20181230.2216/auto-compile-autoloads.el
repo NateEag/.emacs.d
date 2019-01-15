@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "auto-compile" "auto-compile.el" (23400 19096
+;;;### (autoloads nil "auto-compile" "auto-compile.el" (23613 59661
 ;;;;;;  0 0))
 ;;; Generated autoloads from auto-compile.el
 
@@ -97,10 +97,7 @@ multiple files is toggled as follows:
 (defvar auto-compile-on-load-mode nil "\
 Non-nil if Auto-Compile-On-Load mode is enabled.
 See the `auto-compile-on-load-mode' command
-for a description of this minor mode.
-Setting this variable directly does not take effect;
-either customize it (see the info node `Easy Customization')
-or call the function `auto-compile-on-load-mode'.")
+for a description of this minor mode.")
 
 (custom-autoload 'auto-compile-on-load-mode "auto-compile" nil)
 

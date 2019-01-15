@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "auth-source-pass" "auth-source-pass.el" (23521
-;;;;;;  59386 0 0))
+;;;### (autoloads nil "auth-source-pass" "auth-source-pass.el" (23613
+;;;;;;  59660 0 0))
 ;;; Generated autoloads from auth-source-pass.el
 
 (autoload 'auth-source-pass-enable "auth-source-pass" "\

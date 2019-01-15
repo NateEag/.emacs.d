@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; URL: https://github.com/purcell/package-lint
-;; Package-Version: 20181214.207
+;; Package-Version: 20190112.510
 ;; Keywords: lisp
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24"))
@@ -682,11 +682,11 @@ DESC is a struct as returned by `package-buffer-info'."
        1 1
        'warning
        "Package should have a non-empty summary."))
-     ((> (length summary) 50)
+     ((> (length summary) 60)
       (package-lint--error
        1 1
        'warning
-       "The package summary is too long. It should be at most 50 characters.")))
+       "The package summary is too long. It should be at most 60 characters.")))
     (when (save-match-data
             (let ((case-fold-search t))
               (and (string-match "[^.]\\<emacs\\>" summary)
@@ -769,12 +769,17 @@ Valid definition names are:
 
 (defun package-lint--check-globalized-minor-mode (def)
   "Offer up concerns about the global minor mode definition DEF."
-  (let ((feature (intern (package-lint--provided-feature))))
-    (unless (cl-search `(:require ',feature) def :test #'equal)
+  (let ((feature (intern (package-lint--provided-feature)))
+        (autoloaded (save-excursion
+                      (forward-line -1)
+                      (beginning-of-line)
+                      (looking-at ";;;###autoload"))))
+    (unless (or autoloaded
+                (cl-search `(:require ',feature) def :test #'equal))
       (package-lint--error-at-point
        'error
        (format
-        "Global minor modes must `:require' their defining file (i.e. \":require '%s\"), to support the customization variable of the same name." feature)))))
+        "Global minor modes should be autoloaded or, rarely, `:require' their defining file (i.e. \":require '%s\"), to support the customization variable of the same name." feature)))))
 
 (defun package-lint--check-defgroup (def)
   "Offer up concerns about the customization group definition DEF."

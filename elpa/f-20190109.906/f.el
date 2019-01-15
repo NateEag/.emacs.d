@@ -5,7 +5,7 @@
 ;; Author: Johan Andersson <johan.rejeep@gmail.com>
 ;; Maintainer: Johan Andersson <johan.rejeep@gmail.com>
 ;; Version: 0.20.0
-;; Package-Version: 20180106.922
+;; Package-Version: 20190109.906
 ;; Keywords: files, directories
 ;; URL: http://github.com/rejeep/f.el
 ;; Package-Requires: ((s "1.7.0") (dash "2.2.0"))
@@ -236,15 +236,7 @@ TEXT with.  PATH is a file name to write to."
   "Write binary DATA to PATH.
 
 DATA is a unibyte string.  PATH is a file name to write to."
-  (f--destructive path
-    (unless (f-unibyte-string-p data)
-      (signal 'wrong-type-argument (list 'f-unibyte-string-p data)))
-    (let ((file-coding-system-alist nil)
-          (coding-system-for-write 'binary))
-      (with-temp-file path
-        (setq buffer-file-coding-system 'binary)
-        (set-buffer-multibyte nil)
-        (insert data)))))
+  (f--write-bytes data path nil))
 
 (defalias 'f-append 'f-append-text)
 (defun f-append-text (text coding path)
@@ -257,11 +249,19 @@ If PATH does not exist, it is created."
   "Append binary DATA to PATH.
 
 If PATH does not exist, it is created."
-  (let ((content
-         (if (f-file? path)
-             (f-read-bytes path)
-           "")))
-    (f-write-bytes (concat content data) path)))
+  (f--write-bytes data path :append))
+
+(defun f--write-bytes (data filename append)
+  "Write binary DATA to FILENAME.
+If APPEND is non-nil, append the DATA to the existing contents."
+  (f--destructive filename
+    (unless (f-unibyte-string-p data)
+      (signal 'wrong-type-argument (list 'f-unibyte-string-p data)))
+    (let ((coding-system-for-write 'binary)
+          (write-region-annotate-functions nil)
+          (write-region-post-annotation-function nil))
+      (write-region data nil filename append :silent)
+      nil)))
 
 
 ;;;; Destructive

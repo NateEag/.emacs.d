@@ -23,13 +23,13 @@
 ;; URL: http://github.com/ananthakumaran/typescript.el
 ;; Version: 0.1
 ;; Keywords: typescript languages
-;; Package-Requires: ()
+;; Package-Requires: ((emacs "24.3"))
 
 ;; This file is not part of GNU Emacs.
 
 ;;; Commentary:
 
-;; This is based on Karl Landstrom's barebones typescript-mode. This
+;; This is based on Karl Landstrom's barebones typescript-mode.  This
 ;; is much more robust and works with cc-mode's comment filling
 ;; (mostly).
 ;; The modifications to the original javascript.el mode mainly consisted in
@@ -92,7 +92,7 @@ An example of this is \"Class.prototype = { method1: ...}\".")
 
 (defconst typescript--module-declaration-re
   "^\\s-*\\(?:declare\\|\\(?:export\\(?:\\s-+default\\)?\\)\\)?"
-  "Regexp matching ambient declaration modifier or export declaration")
+  "Regexp matching ambient declaration modifier or export declaration.")
 
 ;; var NewClass = BaseClass.extend(
 (defconst typescript--mp-class-decl-re
@@ -225,8 +225,7 @@ will create multiple top-level entries.  Don't use :prototype
 unnecessarily: it has an associated cost in performance.
 
 If :strip-prototype is present and non-nil, then if the class
-name as matched contains
-")
+name as matched contains")
 
 (defconst typescript--available-frameworks
   (loop with available-frameworks
@@ -1749,8 +1748,8 @@ and searches for the next token to be highlighted."
     (,(rx symbol-start "extends" (+ space) (group (+ (or (syntax word) (syntax symbol)))))
      (1 font-lock-type-face))
 
-    (,(rx symbol-start "implements" (+ space) (group (+ (or (syntax word) (syntax symbol)))))
-     (1 font-lock-type-face))
+    (,(rx symbol-start "implements" (+ space))
+     (,(rx symbol-start (+ (syntax word))) nil nil (0 font-lock-type-face)))
 
     (,(rx symbol-start "interface" (+ space) (group (+ (or (syntax word) (syntax symbol)))))
      (1 font-lock-type-face))

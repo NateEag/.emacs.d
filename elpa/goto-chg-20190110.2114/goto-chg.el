@@ -15,16 +15,17 @@
 ;;
 ;; You should have received a copy of the GNU General Public
 ;; License along with this program; if not, write to the Free
-;; Software Foundation, Inc., 59 Temple Place, Suite 330, Boston,
-;; MA 02111-1307 USA
+;; Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+;; Boston, MA 02110-1301 USA
 ;;
 ;;-------------------------------------------------------------------
 ;;
 ;; Author: David Andersson <l.david.andersson(at)sverige.nu>
-;; Maintainer: Vasilij Schneidermann <v.schneidermann@github.com>
+;; Maintainer: Vasilij Schneidermann <v.schneidermann@gmail.com>
 ;; Created: 16 May 2002
-;; Version: 1.7.2
-;; Package-Version: 20181208.2300
+;; Version: 1.7.3
+;; Package-Version: 20190110.2114
+;; Package-Requires: ((undo-tree "0.1.3"))
 ;; Keywords: convenience, matching
 ;; URL: https://github.com/emacs-evil/goto-chg
 ;;
@@ -51,6 +52,8 @@
 ;;--------------------------------------------------------------------
 ;; History
 ;;
+;; Ver 1.7.3 2019-01-07 Vasilij Schneidermann
+;;    Fix errors when used with persistent undo
 ;; Ver 1.7.2 2018-01-05 Vasilij Schneidermann
 ;;    Fix byte-compiler warnings again
 ;; Ver 1.7.1 2017-12-31 Vasilij Schneidermann
@@ -95,6 +98,8 @@
 ;;--------------------------------------------------------------------
 
 ;;; Code:
+
+(require 'undo-tree)
 
 (defvar glc-default-span 8 "*goto-last-change don't visit the same point twice. glc-default-span tells how far around a visited point not to visit again.")
 (defvar glc-current-span 8 "Internal for goto-last-change.\nA copy of glc-default-span or the ARG passed to goto-last-change.")
@@ -211,13 +216,6 @@ Return nil if E represents no real change.
   "Return t if E indicates a buffer became \"modified\",
 that is, it was previously saved or unchanged. Nil otherwise."
   (and (listp e) (eq (car e) t)))
-
-(defvar buffer-undo-tree)
-(declare-function undo-list-transfer-to-tree "undo-tree.el")
-(declare-function undo-tree-current "undo-tree.el")
-(declare-function undo-tree-node-p"undo-tree.el")
-(declare-function undo-tree-node-undo "undo-tree.el")
-(declare-function undo-tree-node-previous "undo-tree.el")
 
 ;;;###autoload
 (defun goto-last-change (arg)

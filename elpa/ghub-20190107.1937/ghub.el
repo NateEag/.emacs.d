@@ -1,6 +1,6 @@
 ;;; ghub.el --- minuscule client libraries for Git forge APIs  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2016-2018  Jonas Bernoulli
+;; Copyright (C) 2016-2019  Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/magit/ghub
@@ -511,14 +511,14 @@ Signal an error if the id cannot be determined."
   (goto-char (point-min))
   (forward-line 1)
   (let (headers)
+    (when (memq url-http-end-of-headers '(nil 0))
+      (error "BUG: missing headers %s" (plist-get status :error)))
     (while (re-search-forward "^\\([^:]*\\): \\(.+\\)"
                               url-http-end-of-headers t)
       (push (cons (match-string 1)
                   (match-string 2))
             headers))
     (setq headers (nreverse headers))
-    (unless url-http-end-of-headers
-      (error "BUG: missing headers %s" (plist-get status :error)))
     (goto-char (1+ url-http-end-of-headers))
     (if (and req (or (ghub--req-callback req)
                      (ghub--req-errorback req)))
@@ -652,7 +652,9 @@ SCOPES are the scopes the token is given access to."
       ;; If the Auth-Source cache contains the information that there
       ;; is no value, then setting the value does not invalidate that
       ;; now incorrect information.
-      (auth-source-forget (list :host host :user user))
+      ;; The (:max 1) is needed and has to be placed at the
+      ;; end for Emacs releases before 26.1.  #24 #64 #72
+      (auth-source-forget (list :host host :user user :max 1))
       token)))
 
 ;;;###autoload
@@ -762,7 +764,7 @@ and call `auth-source-forget+'."
                 ;; fixing so we want to keep trying by invalidating that
                 ;; information.
                 ;; The (:max 1) is needed and has to be placed at the
-                ;; end for Emacs releases before 26.1.  See #24, #64.
+                ;; end for Emacs releases before 26.1.  #24 #64 #72
                 (auth-source-forget (list :host host :user user :max 1))
                 (and (not nocreate)
                      (cl-ecase forge
@@ -877,7 +879,7 @@ WARNING: The token will be stored unencrypted in %S.
          If you don't want that, you have to abort and customize
          the `auth-sources' option.\n" (car auth-sources))
               ""))))
-        (condition-case ghub--create-token-error
+        (condition-case err
             ;; Naively attempt to create the token since the user told us to
             (ghub-create-token host username package scopes)
           ;; The API _may_ respond with the fact that a token of the name
@@ -901,12 +903,11 @@ WARNING: The token will be stored unencrypted in %S.
           ;; simplicity it's better to error out here and ask the user to
           ;; take action. This situation should almost never arise anyway.
           (ghub-http-error
-           (if (string-equal (let-alist (nth 3 ghub--create-token-error)
-                               (car .errors.code))
-                             "already_exists")
-               (error "\
-A token named %S already exists on Github. \
-Please visit https://github.com/settings/tokens and delete it." ident))))
+           (if (equal (alist-get 'code (car (alist-get 'errors (nth 4 err))))
+                      "already_exists")
+               (error "A token named %S already exists on Github.
+Please visit https://github.com/settings/tokens and delete it." ident)
+             (signal (car err) (cdr err)))))
       (user-error "Abort"))))
 
 (defun ghub--get-token-id (host username package)

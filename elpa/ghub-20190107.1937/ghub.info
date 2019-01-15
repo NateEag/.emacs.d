@@ -1,6 +1,6 @@
 This is ghub.info, produced by makeinfo version 6.5 from ghub.texi.
 
-     Copyright (C) 2017-2018 Jonas Bernoulli <jonas@bernoul.li>
+     Copyright (C) 2017-2019 Jonas Bernoulli <jonas@bernoul.li>
 
      You can redistribute this document and/or modify it under the terms
      of the GNU General Public License as published by the Free Software
@@ -46,9 +46,9 @@ adoption would make life easier for users and maintainers alike, because
 then all packages that talk to forge APIs could be configured the same
 way.
 
-This manual is for Ghub version 3.0.0 (v3.0.0-11-gca1982d+1).
+This manual is for Ghub version 3.2.0 (v3.2.0-1-gae7acf4+1).
 
-     Copyright (C) 2017-2018 Jonas Bernoulli <jonas@bernoul.li>
+     Copyright (C) 2017-2019 Jonas Bernoulli <jonas@bernoul.li>
 
      You can redistribute this document and/or modify it under the terms
      of the GNU General Public License as published by the Free Software
@@ -398,8 +398,8 @@ figure out what scopes a package wants, (2) create such a token using
 the web interface and (3) store the token where Ghub expects to find it.
 
    A package named ‘PACKAGE’ has to specify the scopes that it wants in
-the variable named ‘PACKAGE-ghub-token-scopes’.  The doc-string of such
-variables should document what the various scopes are needed for.
+the variable named ‘PACKAGE-github-token-scopes’.  The doc-string of
+such variables should document what the various scopes are needed for.
 
    To create or edit a token go to <https://github.com/settings/tokens>.
 For Gitlab.com use <https://gitlab.com/profile/personal_access_tokens>.
@@ -1290,22 +1290,22 @@ File: ghub.info,  Node: Forge Limitations and Notes,  Prev: Forge Functions and 
 
 Tag Table:
 Node: Top764
-Node: Introduction3280
-Node: Getting Started6322
-Node: Setting the Username10056
-Node: Interactively Creating and Storing a Token11481
-Node: Manually Creating and Storing a Token17132
-Node: How Ghub uses Auth-Source18355
-Node: Using Ghub in Personal Scripts20288
-Node: Using Ghub in a Package21744
-Node: API24362
-Node: Making Requests25159
-Node: Authentication39258
-Node: Configuration Variables41103
-Node: GraphQL Support44823
-Node: Support for Other Forges51488
-Node: Forge Functions and Variables51705
-Node: Forge Limitations and Notes56224
+Node: Introduction3279
+Node: Getting Started6321
+Node: Setting the Username10055
+Node: Interactively Creating and Storing a Token11480
+Node: Manually Creating and Storing a Token17131
+Node: How Ghub uses Auth-Source18356
+Node: Using Ghub in Personal Scripts20289
+Node: Using Ghub in a Package21745
+Node: API24363
+Node: Making Requests25160
+Node: Authentication39259
+Node: Configuration Variables41104
+Node: GraphQL Support44824
+Node: Support for Other Forges51489
+Node: Forge Functions and Variables51706
+Node: Forge Limitations and Notes56225
 
 End Tag Table
 

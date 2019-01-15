@@ -5,7 +5,7 @@
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; Maintainer: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Package-Version: 20181217.220
+;; Package-Version: 20181220.1446
 ;; Version: 0.9.0
 ;; Package-Requires: ((avy "0.2.0"))
 ;; Keywords: window, location
@@ -97,10 +97,9 @@ For example, to make SPC do the same as ?a, use
   "When non-nil, also display `ace-window-mode' string in the minibuffer when ace-window is active."
   :type 'boolean)
 
-(defcustom aw-ignored-buffers '("*Calc Trail*" "*LV*")
+(defcustom aw-ignored-buffers '("*Calc Trail*" " *LV*")
   "List of buffers and major-modes to ignore when choosing a window from the window list.
-Active only when `aw-ignore-on' is non-nil.  Windows displaying these
-buffers can still be chosen by typing their specific labels."
+Active only when `aw-ignore-on' is non-nil."
   :type '(repeat string))
 
 (defcustom aw-ignore-on t
@@ -218,6 +217,8 @@ or
            (or (memq (buffer-local-value 'major-mode (window-buffer window))
                      aw-ignored-buffers)
                (member (buffer-name (window-buffer window)) aw-ignored-buffers)))
+      ;; ignore child frames
+      (frame-parent (window-frame window))
       ;; Ignore selected window if `aw-ignore-current' is non-nil.
       (and aw-ignore-current
            (equal window (selected-window)))

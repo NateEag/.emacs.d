@@ -211,6 +211,8 @@ attention to case differences."
     markdown-markdownlint-cli
     markdown-mdl
     nix
+    nix-linter
+    opam
     perl
     perl-perlcritic
     php
@@ -8599,6 +8601,38 @@ See URL `http://www.lua.org/'."
           ": stdin:" line ": " (message) line-end))
   :modes lua-mode)
 
+(flycheck-define-checker opam
+  "A Opam syntax and style checker using opam lint.
+
+See URL `https://opam.ocaml.org/doc/man/opam-lint.html'."
+  :command ("opam" "lint" "-")
+  :standard-input t
+  :error-patterns
+  ((error line-start                    ; syntax error
+          (one-or-more space) "error  " (id ?2)
+          ": File format error"
+          (or (and " at line " line ", column " column ": " (message))
+              (and ": " (message)))
+          line-end)
+   (error line-start
+          (one-or-more space) "error  " (id ?3)
+          (minimal-match (zero-or-more not-newline))
+          "at line " line ", column " column ": " (message)
+          line-end)
+   (error line-start
+          (one-or-more space) "error " (id (one-or-more num))
+          ": " (message (one-or-more not-newline))
+          line-end)
+   (warning line-start
+            (one-or-more space) "warning " (id (one-or-more num))
+            ": " (message)
+            line-end))
+  :error-filter
+  (lambda (errors)
+    (flycheck-increment-error-columns
+     (flycheck-fill-empty-line-numbers errors)))
+  :modes tuareg-opam-mode)
+
 (flycheck-def-option-var flycheck-perl-include-path nil perl
   "A list of include directories for Perl.
 
@@ -9421,6 +9455,36 @@ See URL `https://nixos.org/nix/manual/#sec-nix-instantiate'."
   (lambda (errors)
     (flycheck-sanitize-errors
      (flycheck-remove-error-file-names "(string)" errors)))
+  :next-checkers ((warning . nix-linter))
+  :modes nix-mode)
+
+(defun flycheck-parse-nix-linter (output checker buffer)
+  "Parse nix-linter warnings from JSON OUTPUT.
+
+CHECKER and BUFFER denote the CHECKER that returned OUTPUT and
+the BUFFER that was checked respectively.
+
+See URL `https://github.com/Synthetica9/nix-linter' for more
+information about nix-linter."
+  (mapcar (lambda (err)
+            (let-alist err
+              (flycheck-error-new-at
+               .pos.spanBegin.sourceLine
+               .pos.spanBegin.sourceColumn
+               'warning
+               .description
+               :id .offense
+               :checker checker
+               :buffer buffer
+               :filename (buffer-file-name buffer))))
+          (flycheck-parse-json output)))
+
+(flycheck-define-checker nix-linter
+  "Nix checker using nix-linter.
+
+See URL `https://github.com/Synthetica9/nix-linter'."
+  :command ("nix-linter" "--json-stream" source)
+  :error-parser flycheck-parse-nix-linter
   :modes nix-mode)
 
 (defun flycheck-locate-sphinx-source-directory ()

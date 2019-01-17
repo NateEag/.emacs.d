@@ -4,7 +4,7 @@
 
 ;; Author: Artur Malabarba <emacs@endlessparentheses.com>
 ;; URL: https://github.com/Malabarba/aggressive-indent-mode
-;; Package-Version: 20190109.328
+;; Package-Version: 20190116.2253
 ;; Version: 1.8.4
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: indent lisp maint tools
@@ -105,7 +105,7 @@ Please include this in your report!"
 
 (defvar aggressive-indent-mode)
 
-;;; Configuring indentarion
+;;; Configuring indentation
 (defcustom aggressive-indent-dont-electric-modes nil
   "List of major-modes where `electric-indent' should be disabled."
   :type '(choice
@@ -114,10 +114,13 @@ Please include this in your report!"
   :package-version '(aggressive-indent . "0.3.1"))
 
 (defcustom aggressive-indent-excluded-modes
-  '(inf-ruby-mode
+  '(elm-mode
+    haskell-mode
+    inf-ruby-mode
     makefile-mode
     makefile-gmake-mode
     python-mode
+    sql-interactive-mode
     text-mode
     yaml-mode)
   "Modes in which `aggressive-indent-mode' should not be activated.

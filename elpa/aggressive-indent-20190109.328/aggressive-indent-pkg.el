@@ -1,2 +1,0 @@
-;;; -*- no-byte-compile: t -*-
-(define-package "aggressive-indent" "20190109.328" "Minor mode to aggressively keep your code always indented" '((emacs "24.1") (cl-lib "0.5")) :commit "c39dbff19743692907b4ac43d78fc528a023d855" :keywords '("indent" "lisp" "maint" "tools") :authors '(("Artur Malabarba" . "emacs@endlessparentheses.com")) :maintainer '("Artur Malabarba" . "emacs@endlessparentheses.com") :url "https://github.com/Malabarba/aggressive-indent-mode")

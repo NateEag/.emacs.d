@@ -1,5 +1,6 @@
-(define-package "editorconfig" "20190116.400" "EditorConfig Emacs Plugin"
-  '((cl-lib "0.5"))
+(define-package "editorconfig" "20190118.401" "EditorConfig Emacs Plugin"
+  '((cl-lib "0.5")
+    (emacs "24"))
   :authors
   '(("EditorConfig Team" . "editorconfig@googlegroups.com"))
   :maintainer

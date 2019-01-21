@@ -6,7 +6,7 @@
 ;;;### (autoloads nil nil ("cquery-call-hierarchy.el" "cquery-code-lens.el"
 ;;;;;;  "cquery-common.el" "cquery-inheritance-hierarchy.el" "cquery-pkg.el"
 ;;;;;;  "cquery-semantic-highlighting.el" "cquery-tree.el" "cquery.el")
-;;;;;;  (23613 59664 0 0))
+;;;;;;  (23622 10771 0 0))
 
 ;;;***
 

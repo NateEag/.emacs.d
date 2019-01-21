@@ -93,34 +93,118 @@ This directory shoud contain a file matching groovy-language-server-*.jar"
                   :priority -1
                   :server-id 'html-ls))
 
-;;; Typescript
-(defcustom lsp-clients-typescript-server "javascript-typescript-stdio"
+;;; Typescript/Javascript
+(defcustom lsp-clients-javascript-typescript-server "javascript-typescript-stdio"
+  "The javascript-typescript-stdio executable to use.
+Leave as just the executable name to use the default behavior of
+finding the executable with variable `exec-path'."
+  :group 'lsp-typescript-javascript
+  :risky t
+  :type 'file)
+
+(defcustom lsp-clients-typescript-javascript-server-args '()
+  "Extra arguments for the typescript-language-server language server."
+  :group 'lsp-typescript-javascript
+  :risky t
+  :type '(repeat string))
+
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-stdio-connection
+                                   (-const `(,lsp-clients-javascript-typescript-server
+                                             ,@lsp-clients-typescript-javascript-server-args)))
+                  :major-modes '(typescript-mode typescript-tsx-mode js-mode js2-mode rjsx-mode)
+                  :priority -2
+                  :ignore-messages '("readFile .*? requested by TypeScript but content not available")
+                  :server-id 'jsts-ls))
+
+
+;;; Typescript/Javascript
+(defcustom lsp-clients-typescript-server "typescript-language-server"
   "The typescript-language-server executable to use.
 Leave as just the executable name to use the default behavior of
-finding the executable with `exec-path'."
+finding the executable with variable `exec-path'."
   :group 'lsp-typescript
   :risky t
   :type 'file)
 
-(defcustom lsp-clients-typescript-server-args '()
+(defcustom lsp-clients-typescript-server-args '("--stdio")
   "Extra arguments for the typescript-language-server language server."
   :group 'lsp-typescript
   :risky t
   :type '(repeat string))
 
-(defun lsp-typescript--ls-command ()
-  "Generate the language server startup command."
-  `(,lsp-clients-typescript-server
-    ,@lsp-clients-typescript-server-args))
-
 (lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection 'lsp-typescript--ls-command)
+ (make-lsp-client :new-connection (lsp-stdio-connection
+                                   (-const `(,lsp-clients-typescript-server
+                                             ,@lsp-clients-typescript-server-args)))
                   :major-modes '(typescript-mode typescript-tsx-mode js-mode js2-mode rjsx-mode)
                   :priority -1
                   :ignore-messages '("readFile .*? requested by TypeScript but content not available")
                   :server-id 'ts-ls))
 
 
+
+;;; JavaScript Flow
+(defcustom lsp-clients-flow-server "flow"
+  "The Flow executable to use.
+Leave as just the executable name to use the default behavior of
+finding the executable with variable `exec-path'."
+  :group 'lsp-flow
+  :risky t
+  :type 'file)
+
+(defcustom lsp-clients-flow-server-args '("lsp")
+  "Extra arguments for starting the Flow language server."
+  :group 'lsp-flow
+  :risky t
+  :type '(repeat string))
+
+(defun lsp-clients-flow-tag-present-p (file-name)
+  "Checks if the '// @flow' or `/* @flow */' tag is present in
+the contents of FILE-NAME."
+  (with-temp-buffer
+    (insert-file-contents file-name)
+    (save-excursion
+      (goto-char (point-min))
+      (let (stop found)
+        (while (not stop)
+          (when (not (re-search-forward "[^\n[:space:]]" nil t))
+            (setq stop t))
+          (if (equal (point) (point-min))
+              (setq stop t)
+            (backward-char))
+          (cond ((or (looking-at "//+[ ]*@flow")
+                     (looking-at "/\\**[ ]*@flow"))
+                 (setq found t)
+                 (setq stop t))
+                ((looking-at "//")
+                 (forward-line))
+                ((looking-at "/\\*")
+                 (when (not (re-search-forward "*/" nil t))
+                   (setq stop t)))
+                (t (setq stop t))))
+        found))))
+
+(defun lsp-clients-flow-project-p (file-name)
+  "Checks if FILE-NAME is part of a Flow project, that is, if
+there is a .flowconfig file in the folder hierarchy."
+  (locate-dominating-file file-name ".flowconfig"))
+
+(defun lsp-clients-flow-activate-p (file-name major-mode)
+  "Checks if the Flow language server should be enabled for a
+particular FILE-NAME and MAJOR-MODE."
+  (and (member major-mode '(js-mode js2-mode flow-js2-mode))
+       (lsp-clients-flow-project-p file-name)
+       (lsp-clients-flow-tag-present-p file-name)))
+
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-stdio-connection
+                                   (-const `(,lsp-clients-flow-server
+                                             ,@lsp-clients-flow-server-args)))
+                  :activation-fn 'lsp-clients-flow-activate-p
+                  :add-on? t
+                  :server-id 'flow-ls))
+
 ;;; Vue
 (defcustom lsp-clients-vue-server "vls"
   "The vue-language-server executable to use.
@@ -367,7 +451,7 @@ finding the executable with `exec-path'."
 
 ;; Elixir
 (defcustom lsp-clients-elixir-server-executable "language_server.sh"
-    "The elixir-language-server executable to use.
+  "The elixir-language-server executable to use.
 Leave as just the executable name to use the default behavior of
 finding the executable with `exec-path'."
   :group 'lsp-elixir

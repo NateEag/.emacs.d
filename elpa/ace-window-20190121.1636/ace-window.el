@@ -5,7 +5,7 @@
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; Maintainer: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Package-Version: 20181220.1446
+;; Package-Version: 20190121.1636
 ;; Version: 0.9.0
 ;; Package-Requires: ((avy "0.2.0"))
 ;; Keywords: window, location
@@ -218,7 +218,7 @@ or
                      aw-ignored-buffers)
                (member (buffer-name (window-buffer window)) aw-ignored-buffers)))
       ;; ignore child frames
-      (frame-parent (window-frame window))
+      (and (fboundp 'frame-parent) (frame-parent (window-frame window)))
       ;; Ignore selected window if `aw-ignore-current' is non-nil.
       (and aw-ignore-current
            (equal window (selected-window)))

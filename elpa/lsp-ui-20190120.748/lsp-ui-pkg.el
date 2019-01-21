@@ -1,8 +1,8 @@
-(define-package "lsp-ui" "20190115.1238" "UI modules for lsp-mode"
+(define-package "lsp-ui" "20190120.748" "UI modules for lsp-mode"
   '((emacs "25.1")
     (dash "2.14")
     (dash-functional "1.2.0")
-    (lsp-mode "5.0")
+    (lsp-mode "6.0")
     (markdown-mode "2.3"))
   :keywords
   '("lsp")

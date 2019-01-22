@@ -4,6 +4,10 @@
   in favor of it, per this comment of mine:
   https://github.com/magnars/tagedit/pull/15#issuecomment-260336539
 
+- Make my '<leader> g d' binding put evil-mode into insert-state, as in many
+  cases I'll just want to quit after seeing what I wanted to, and being in
+  normal-state makes that two keystrokes instead of one.
+
 - Look at using lsp-html with web-mode. See what it might buy me.
 
 - Figure out how to make smartparens interact nicely with web-mode. '{{' and

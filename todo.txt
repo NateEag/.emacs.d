@@ -167,10 +167,6 @@
 - Consider using project-shells for managing shells? I've installed it just so I
   have it around should I decide to try it.
 
-- Add keybindings for git-gutter:next-hunk and git-gutter:previous-hunk. Maybe
-  move magit status to <leader> g g, then put next hunk/prev hunk/diff on
-  <leader> g j/k/d?
-
 - Add mechanism for viewing keymaps in readable form via
   substitute-command-keys. Sample usage:
   (substitute-command-keys "\\{evil-inner-text-objects-map}")

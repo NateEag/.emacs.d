@@ -5,7 +5,7 @@
 ;; Author: Andreas Politz <politza@fh-trier.de>
 ;; Keywords: extensions, lisp
 ;; Package: tablist
-;; Version: 0.70
+;; Version: 0.80
 ;; Package-Requires: ((emacs "24.3"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -1916,7 +1916,7 @@ AWINDOW is deleted."
     (setq newwin (window--display-buffer
                   buf
                   (split-window-below height)
-                  'window alist display-buffer-mark-dedicated))
+                  'window alist))
     (tablist-window-attach newwin window)
     newwin))
 

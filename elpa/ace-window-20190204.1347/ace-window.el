@@ -5,7 +5,7 @@
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; Maintainer: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Package-Version: 20190121.1636
+;; Package-Version: 20190204.1347
 ;; Version: 0.9.0
 ;; Package-Requires: ((avy "0.2.0"))
 ;; Keywords: window, location
@@ -159,10 +159,11 @@ Consider changing this if the overlay tends to overlap with other things."
   '((?x aw-delete-window "Delete Window")
     (?m aw-swap-window "Swap Windows")
     (?M aw-move-window "Move Window")
+    (?c aw-copy-window "Copy Window")
     (?j aw-switch-buffer-in-window "Select Buffer")
     (?n aw-flip-window)
     (?u aw-switch-buffer-other-window "Switch Buffer Other Window")
-    (?c aw-split-window-fair "Split Fair Window")
+    (?F aw-split-window-fair "Split Fair Window")
     (?v aw-split-window-vert "Split Vert Window")
     (?b aw-split-window-horz "Split Horz Window")
     (?o delete-other-windows "Delete Other Windows")
@@ -216,7 +217,9 @@ or
            ;; Ignore major-modes and buffer-names in `aw-ignored-buffers'.
            (or (memq (buffer-local-value 'major-mode (window-buffer window))
                      aw-ignored-buffers)
-               (member (buffer-name (window-buffer window)) aw-ignored-buffers)))
+               (member (buffer-name (window-buffer window)) aw-ignored-buffers))
+           (or aw-ignore-current
+               (not (equal window (selected-window)))))
       ;; ignore child frames
       (and (fboundp 'frame-parent) (frame-parent (window-frame window)))
       ;; Ignore selected window if `aw-ignore-current' is non-nil.
@@ -661,8 +664,9 @@ Windows are numbered top down, left to right."
     (mapc #'delete-overlay aw-overlays-back)
     (call-interactively 'ace-window)))
 
-(defun aw-delete-window (window)
-  "Delete window WINDOW."
+(defun aw-delete-window (window &optional kill-buffer)
+  "Delete window WINDOW.
+When KILL-BUFFER is non-nil, also kill the buffer."
   (let ((frame (window-frame window)))
     (when (and (frame-live-p frame)
                (not (eq frame (selected-frame))))
@@ -670,7 +674,10 @@ Windows are numbered top down, left to right."
     (if (= 1 (length (window-list)))
         (delete-frame frame)
       (if (window-live-p window)
-          (delete-window window)
+          (let ((buffer (window-buffer window)))
+            (delete-window window)
+            (when kill-buffer
+              (kill-buffer buffer)))
         (error "Got a dead window %S" window)))))
 
 (defun aw-switch-buffer-in-window (window)
@@ -721,6 +728,12 @@ Switch the current window to the previous buffer."
     (aw-switch-to-window window)
     (switch-to-buffer buffer)))
 
+(defun aw-copy-window (window)
+  "Copy the current buffer to WINDOW."
+  (let ((buffer (current-buffer)))
+    (aw-switch-to-window window)
+    (switch-to-buffer buffer)))
+
 (defun aw-split-window-vert (window)
   "Split WINDOW vertically."
   (select-window window)
@@ -747,10 +760,23 @@ Modify `aw-fair-aspect-ratio' to tweak behavior."
       (aw-split-window-vert window))))
 
 (defun aw-switch-buffer-other-window (window)
-  "Switch buffer in WINDOW without selecting WINDOW."
+  "Switch buffer in WINDOW."
   (aw-switch-to-window window)
-  (aw--switch-buffer)
-  (aw-flip-window))
+  (unwind-protect
+      (aw--switch-buffer)
+    (aw-flip-window)))
+
+(defun aw--face-rel-height ()
+  (let ((h (face-attribute 'aw-leading-char-face :height)))
+    (cond
+      ((eq h 'unspecified)
+       1)
+      ((floatp h)
+       (1+ (floor h)))
+      ((integerp h)
+       1)
+      (t
+       (error "unexpected: %s" h)))))
 
 (defun aw-offset (window)
   "Return point in WINDOW that's closest to top left corner.
@@ -759,16 +785,25 @@ The point is writable, i.e. it's not part of space after newline."
         (beg (window-start window))
         (end (window-end window))
         (inhibit-field-text-motion t))
-    (with-current-buffer
-        (window-buffer window)
+    (with-current-buffer (window-buffer window)
       (save-excursion
         (goto-char beg)
+        (forward-line (1-
+                       (min
+                        (count-lines
+                         (point)
+                         (point-max))
+                        (aw--face-rel-height))))
         (while (and (< (point) end)
                     (< (- (line-end-position)
                           (line-beginning-position))
                        h))
           (forward-line))
         (+ (point) h)))))
+
+(defun aw--after-make-frame (f)
+  (aw-update)
+  (make-frame-visible f))
 
 ;;* Mode line
 ;;;###autoload
@@ -788,14 +823,14 @@ The point is writable, i.e. it's not part of space after newline."
         (force-mode-line-update t)
         (add-hook 'window-configuration-change-hook 'aw-update)
         ;; Add at the end so does not precede select-frame call.
-        (add-hook 'after-make-frame-functions (lambda (_) (aw-update)) t))
+        (add-hook 'after-make-frame-functions #'aw--after-make-frame t))
     (set-default
      'mode-line-format
      (assq-delete-all
       'ace-window-display-mode
       (default-value 'mode-line-format)))
     (remove-hook 'window-configuration-change-hook 'aw-update)
-    (remove-hook 'after-make-frame-functions 'aw-update)))
+    (remove-hook 'after-make-frame-functions 'aw--after-make-frame)))
 
 (defun aw-update ()
   "Update ace-window-path window parameter for all windows.

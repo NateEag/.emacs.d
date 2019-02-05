@@ -470,23 +470,46 @@ Customize `magit-log-revision-headers-format' to change this
 header."
   nil)
 
+(defun magit-log--initial-value ()
+  (if-let ((file (magit-file-relative-name)))
+      (magit-log--merge-args
+       (if-let ((buffer (magit-mode-get-buffer 'magit-log-mode)))
+           (nth 2 (buffer-local-value 'magit-refresh-args buffer))
+         (default-value 'magit-log-arguments))
+       (list file))
+    (apply #'magit-log--merge-args (magit-log-get-buffer-args))))
+
+(defun magit-log-refresh--initial-value ()
+  (cond ((derived-mode-p 'magit-log-select-mode)
+         (cadr magit-refresh-args))
+        ((derived-mode-p 'magit-log-mode)
+         (magit-log--merge-args (nth 1 magit-refresh-args)
+                                (nth 2 magit-refresh-args)))
+        (t
+         magit-log-section-arguments)))
+
+(defun magit-log--merge-args (args files)
+  (if files
+      (cons (concat "-- " (mapconcat #'identity files ",")) args)
+    args))
+
 (defun magit-log-get-buffer-args ()
   (cond ((and magit-use-sticky-arguments
               (derived-mode-p 'magit-log-mode))
          (list (nth 1 magit-refresh-args)
                (nth 2 magit-refresh-args)))
         ((and (eq magit-use-sticky-arguments t)
-              (--when-let (magit-mode-get-buffer 'magit-log-mode)
-                (with-current-buffer it
-                  (list (nth 1 magit-refresh-args)
-                        (nth 2 magit-refresh-args))))))
+              (when-let ((buffer (magit-mode-get-buffer 'magit-log-mode)))
+                (let ((args (buffer-local-value 'magit-refresh-args buffer)))
+                  (list (nth 1 args)
+                        (nth 2 args))))))
         (t
          (list (default-value 'magit-log-arguments) nil))))
 
 (defun magit-log-arguments (&optional refresh)
   (cond ((memq magit-current-popup
                '(magit-log-popup magit-log-refresh-popup))
-         (magit-popup-export-file-args magit-current-popup-args))
+         (magit--export-file-args magit-current-popup-args))
         ((and refresh (not (derived-mode-p 'magit-log-mode)))
          (list magit-log-section-arguments nil))
         (t
@@ -500,8 +523,7 @@ header."
          (pcase major-mode
            (`magit-log-mode magit-log-mode-refresh-popup)
            (_               magit-log-refresh-popup)))
-        (magit-log-arguments
-         (apply #'magit-popup-import-file-args (magit-log-get-buffer-args))))
+        (magit-log-arguments (magit-log--initial-value)))
     (magit-invoke-popup 'magit-log-popup nil arg)))
 
 ;;;###autoload
@@ -512,16 +534,10 @@ This is a variant of `magit-log-popup' which shows the same popup
 but which limits the log to the file being visited in the current
 buffer."
   (interactive)
-  (if-let ((file (magit-file-relative-name)))
-      (let ((magit-log-arguments
-             (magit-popup-import-file-args
-              (if-let ((buffer (magit-mode-get-buffer 'magit-log-mode)))
-                  (with-current-buffer buffer
-                    (nth 2 magit-refresh-args))
-                (default-value 'magit-log-arguments))
-              (list file))))
-        (magit-invoke-popup 'magit-log-popup nil nil))
-    (user-error "Buffer isn't visiting a file")))
+  (unless (magit-file-relative-name)
+    (user-error "Buffer isn't visiting a file"))
+  (let ((magit-log-arguments (magit-log--initial-value)))
+    (magit-invoke-popup 'magit-log-popup nil nil)))
 
 (defun magit-log-refresh-popup (arg)
   "Popup console for changing log arguments in the current buffer."
@@ -538,13 +554,7 @@ buffer."
                (t
                 magit-log-refresh-popup)))
         (magit-log-arguments
-         (cond ((derived-mode-p 'magit-log-select-mode)
-                (cadr magit-refresh-args))
-               ((derived-mode-p 'magit-log-mode)
-                (magit-popup-import-file-args (nth 1 magit-refresh-args)
-                                              (nth 2 magit-refresh-args)))
-               (t
-                magit-log-section-arguments))))
+         (magit-log-refresh--initial-value)))
     (magit-invoke-popup 'magit-log-refresh-popup nil arg)))
 
 (defun magit-read-file-trace (&rest _ignored)

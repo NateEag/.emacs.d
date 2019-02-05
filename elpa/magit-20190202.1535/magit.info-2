@@ -1475,7 +1475,7 @@ Appendix C Keystroke Index
                                                               (line  28)
 * C-c M-s:                               Editing Commit Messages.
                                                               (line  35)
-* C-w:                                   Common Commands.     (line  21)
+* C-w:                                   Common Commands.     (line  27)
 * C-x g:                                 Status Buffer.       (line  22)
 * C-x u:                                 Editing Rebase Sequences.
                                                               (line  89)
@@ -1907,7 +1907,7 @@ Appendix D Command Index
                                                               (line  33)
 * magit-commit-reword:                   Initiating a Commit. (line  32)
 * magit-commit-squash:                   Initiating a Commit. (line  54)
-* magit-copy-buffer-revision:            Common Commands.     (line  21)
+* magit-copy-buffer-revision:            Common Commands.     (line  27)
 * magit-copy-section-value:              Common Commands.     (line  10)
 * magit-cycle-margin-style:              Log Margin.          (line  60)
 * magit-debug-git-executable:            Git Executable.      (line  45)

@@ -31,7 +31,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-This manual is for Magit version 2.90.1 (v2.90.1-92-g21a6b757+1).
+This manual is for Magit version 2.90.1 (v2.90.1-96-g8a87e935+1).
 
      Copyright (C) 2015-2019 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -7188,6 +7188,12 @@ beside the ones below, but these didn’t fit well anywhere else.
      When the current section is a branch or a tag, and a prefix
      argument is used, then it saves the revision at its tip to the
      ‘kill-ring’ instead of the reference name.
+
+     When the region is active, this command saves that to the
+     ‘kill-ring’, like ‘kill-ring-save’ would, instead of behaving as
+     described above.  If a prefix argument is used and the region is
+     within a hunk, it strips the outer diff marker column before saving
+     the text.
 
 ‘C-w’     (‘magit-copy-buffer-revision’)
 

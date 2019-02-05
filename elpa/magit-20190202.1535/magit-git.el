@@ -1042,25 +1042,43 @@ of REV."
   (or (equal (magit-get "user.name")  (magit-rev-format "%an" rev))
       (equal (magit-get "user.email") (magit-rev-format "%ae" rev))))
 
-(defun magit-rev-name (rev &optional pattern)
-  "Return a symbolic name for REV.
-PATTERN is passed to the `--refs' flag of `git-name-rev' and can
-be used to limit the result to a matching ref.  When structured
-as \"refs/<subdir>/*\", PATTERN is taken as a namespace.  In this
-case, the name returned by `git-name-rev' is discarded if it
-corresponds to a ref outside of the namespace."
-  (--when-let (magit-git-string "name-rev" "--name-only" "--no-undefined"
-                                (and pattern (concat "--refs=" pattern))
-                                rev)
-    ;; We can't use name-rev's --exclude to filter out "*/PATTERN"
-    ;; because --exclude wasn't added until Git v2.13.0.
-    (if (and pattern
-             (string-match-p "\\`refs/[^/]+/\\*\\'" pattern))
-        (let ((namespace (substring pattern 0 -1)))
-          (unless (and (string-match-p namespace it)
-                       (not (magit-rev-verify (concat namespace it))))
-            it))
-      it)))
+(defun magit-rev-name (rev &optional pattern not-anchored)
+  "Return a symbolic name for REV using `git-name-rev'.
+
+PATTERN can be used to limit the result to a matching ref.
+Unless NOT-ANCHORED is non-nil, the beginning of the ref must
+match PATTERN.
+
+An anchored lookup is done using the arguments
+\"--exclude=*/<PATTERN> --exclude=*/HEAD\" in addition to
+\"--refs=<PATTERN>\", provided at least version v2.13 of Git is
+used.  Older versions did not support the \"--exclude\" argument.
+When \"--exclude\" cannot be used and `git-name-rev' returns a
+ref that should have been excluded, then that is discarded and
+this function returns nil instead.  This is unfortunate because
+there might be other refs that do match.  To fix that, update
+Git."
+  (if (version< (magit-git-version) "2.13")
+      (when-let
+          ((ref (magit-git-string "name-rev" "--name-only" "--no-undefined"
+                                  (and pattern (concat "--refs=" pattern))
+                                  rev)))
+        (if (and pattern
+                 (string-match-p "\\`refs/[^/]+/\\*\\'" pattern))
+            (let ((namespace (substring pattern 0 -1)))
+              (and (not (or (string-suffix-p "HEAD" ref)
+                            (and (string-match-p namespace ref)
+                                 (not (magit-rev-verify
+                                       (concat namespace ref))))))
+                   ref))
+          ref))
+    (magit-git-string "name-rev" "--name-only" "--no-undefined"
+                      (and pattern (concat "--refs=" pattern))
+                      (and pattern
+                           (not not-anchored)
+                           (list "--exclude=*/HEAD"
+                                 (concat "--exclude=*/" pattern)))
+                      rev)))
 
 (defun magit-rev-branch (rev)
   (--when-let (magit-rev-name rev "refs/heads/*")
@@ -1308,14 +1326,16 @@ The amount of time spent searching is limited by
   (unless branch
     (setq branch (magit-get-current-branch)))
   (and branch
-       (let ((remote (magit-get "branch" branch "remote")))
+       (when-let ((remote (magit-get "branch" branch "remote")))
          (and (not (and non-local (equal remote ".")))
-              remote))))
+              (propertize remote 'face 'magit-branch-remote)))))
 
 (defun magit-get-push-remote (&optional branch)
-  (or (and (or branch (setq branch (magit-get-current-branch)))
-           (magit-get "branch" branch "pushRemote"))
-      (magit-get "remote.pushDefault")))
+  (when-let ((remote
+              (or (and (or branch (setq branch (magit-get-current-branch)))
+                       (magit-get "branch" branch "pushRemote"))
+                  (magit-get "remote.pushDefault"))))
+    (propertize remote 'face 'magit-branch-remote)))
 
 (defun magit-get-push-branch (&optional branch verify)
   (and (or branch (setq branch (magit-get-current-branch)))
@@ -2050,8 +2070,10 @@ and this option only controls what face is used.")
                                (magit-get-previous-branch)
                                (car atrev)))))
 
-(cl-defun magit-read-upstream-branch
-    (&optional (branch (magit-get-current-branch)) prompt)
+(defun magit-read-upstream-branch (&optional branch prompt)
+  (unless branch
+    (setq branch (or (magit-get-current-branch)
+                     (error "Need a branch to set its upstream"))))
   (magit-completing-read
    (or prompt (format "Change upstream of %s to" branch))
    (-union (--map (concat it "/" branch)

@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "helm-rg" "helm-rg.el" (23400 19195 0 0))
+;;;### (autoloads nil "helm-rg" "helm-rg.el" (23641 39409 0 0))
 ;;; Generated autoloads from helm-rg.el
 
 (autoload 'helm-rg "helm-rg" "\
@@ -22,6 +22,10 @@ defined by `helm-rg-default-glob-string', which only finds files matching the
 glob, and can be overridden with `helm-rg--set-glob', which is defined in
 `helm-rg-map'.
 
+There are many more `defcustom' forms, which are visible by searching for \"defcustom\" in the
+`helm-rg' source (which can be located using `find-function'). These `defcustom' forms set defaults
+for options which can be modified while invoking `helm-rg' using the keybindings listed below.
+
 The ripgrep command's help output can be printed into its own buffer for
 reference with the interactive command `helm-rg-display-help'.
 
@@ -39,6 +43,11 @@ in some window, select that window, or else display the help buffer with
 `pop-to-buffer'.
 
 \(fn &optional PFX)" t nil)
+
+(autoload 'helm-rg-from-isearch "helm-rg" "\
+Invoke `helm-rg' from isearch.
+
+\(fn)" t nil)
 
 ;;;***
 

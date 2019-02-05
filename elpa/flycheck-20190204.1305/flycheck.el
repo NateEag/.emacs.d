@@ -262,6 +262,7 @@ attention to case differences."
     tex-chktex
     tex-lacheck
     texinfo
+    textlint
     typescript-tslint
     verilog-verilator
     vhdl-ghdl
@@ -4024,7 +4025,8 @@ instead.  With non-nil RESET, search from `point-min', otherwise
 search from the current point.
 
 Return the position of the next or previous error, or nil if
-there is none."
+there is none.  If N is zero, return `point', or `point-min' if
+RESET is non-nil."
   (let ((n (or n 1))
         (pos (if reset (point-min) (point))))
     (if (>= n 0)
@@ -9197,10 +9199,10 @@ See URL `http://mypy-lang.org/'."
             (option "--cache-dir" flycheck-python-mypy-cache-dir)
             source-original)
   :error-patterns
-  ((error line-start (file-name) ":" line ":" column ": error:" (message)
-          line-end)
-   (warning line-start (file-name) ":" line ":" column  ": warning:" (message)
-            line-end))
+  ((error line-start (file-name) ":" line (optional ":" column)
+          ": error:" (message) line-end)
+   (warning line-start (file-name) ":" line (optional ":" column)
+            ": warning:" (message) line-end))
   :modes python-mode
   ;; Ensure the file is saved, to work around
   ;; https://github.com/python/mypy/issues/4746.
@@ -9483,7 +9485,8 @@ information about nix-linter."
   "Nix checker using nix-linter.
 
 See URL `https://github.com/Synthetica9/nix-linter'."
-  :command ("nix-linter" "--json-stream" source)
+  :command ("nix-linter" "--json-stream" "-")
+  :standard-input t
   :error-parser flycheck-parse-nix-linter
   :modes nix-mode)
 
@@ -10515,6 +10518,64 @@ See URL `http://www.gnu.org/software/texinfo/'."
           "-:" line (optional ":" column) ": " (message)
           line-end))
   :modes texinfo-mode)
+
+(flycheck-def-config-file-var flycheck-textlint-config
+    textlint "textlintrc.json"
+  :safe #'stringp)
+
+;; This needs to be set because textlint plugins are installed seperately,
+;; and there is no way to check their installation status -- textlint simply
+;; prints a backtrace.
+(flycheck-def-option-var flycheck-textlint-plugin-alist
+    '((markdown-mode . "@textlint/markdown")
+      (gfm-mode . "@textlint/markdown")
+      (t . "@textlint/text"))
+    textlint
+  "An alist mapping major modes to textlint plugins.
+
+Each item is a cons cell `(MAJOR-MODE . PLUGIN)', where MAJOR-MODE is a mode
+`flycheck-textlint' supports and PLUGIN is a textlint plugin. As a catch-all,
+when MAJOR-MODE is t, that PLUGIN will be used for any supported mode that
+isn't specified.
+
+See URL `https://npms.io/search?q=textlint-plugin' for all textlint plugins
+published on NPM."
+  :type '(repeat (choice (cons symbol string)
+                         (cons (const t) string))))
+
+(flycheck-define-checker textlint
+  "A text prose linter using textlint.
+
+See URL `https://textlint.github.io/'."
+  :command ("textlint"
+            (config-file "--config" flycheck-textlint-config)
+            "--format" "json"
+            ;; get the first matching plugin from plugin-alist
+            "--plugin"
+            (eval (cdr
+                   (-first
+                    (lambda (pair)
+                      (let ((mode (car pair)))
+                        (or (and (booleanp mode) mode) ; mode is t
+                            (derived-mode-p mode))))
+                    flycheck-textlint-plugin-alist)))
+            source)
+  ;; textlint seems to say that its json output is compatible with ESLint.
+  ;; https://textlint.github.io/docs/formatter.html
+  :error-parser flycheck-parse-eslint
+  ;; textlint can support different formats with textlint plugins, but
+  ;; only text and markdown formats are installed by default. Ask the
+  ;; user to add mode->plugin mappings manually in
+  ;; `flycheck-textlint-plugin-alist'.
+  :modes
+  (text-mode markdown-mode gfm-mode message-mode adoc-mode
+             mhtml-mode latex-mode org-mode rst-mode)
+  :enabled
+  (lambda () (or (eq major-mode 'markdown-mode)
+                 (eq major-mode 'gfm-mode)
+                 (eq major-mode 'text-mode)
+                 (memq major-mode
+                       (mapcar #'car flycheck-textlint-plugin-alist)))))
 
 (flycheck-def-config-file-var flycheck-typescript-tslint-config
     typescript-tslint "tslint.json"

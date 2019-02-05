@@ -4,7 +4,7 @@
 
 ;; Author: James J Porter <porterjamesj@gmail.com>
 ;; URL: http://github.com/porterjamesj/virtualenvwrapper.el
-;; Package-Version: 20180212.144
+;; Package-Version: 20190123.1645
 ;; Version: 20151123
 ;; Keywords: python, virtualenv, virtualenvwrapper
 ;; Package-Requires: ((dash "1.5.0") (s "1.6.1"))
@@ -47,6 +47,16 @@ are stored if you use virtualenvwrapper in the shell."
 to activate when one of them is found."
   :type '(repeat file)
   :group 'virtualenvwrapper)
+
+
+(defcustom venv-workon-cd
+  t
+  "If set to t, cd to the virtualenv's project root when
+activating it. Analgous to the VIRTUALENVWRAPPER_WORKON_CD
+enviornment variable in the original virtualenvwrapper"
+  :type '(boolean)
+  :group 'virtualenvwrapper)
+
 
 ;; hooks
 
@@ -229,7 +239,8 @@ prompting the user with the string PROMPT"
     ;; keep eshell path in sync
     (setq eshell-path-env path))
   (setenv "VIRTUAL_ENV" venv-current-dir)
-  (venv--switch-to-project-dir)
+  (if venv-workon-cd
+    (venv--switch-to-project-dir))
   (venv--set-venv-gud-pdb-command-name)
   (run-hooks 'venv-postactivate-hook))
 

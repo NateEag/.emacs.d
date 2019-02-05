@@ -346,7 +346,7 @@
 	     ((:keywords "killing" "convenience")
 	      (:url . "https://github.com/leoliu/easy-kill"))])
  (ebdb .
-       [(0 6 4)
+       [(0 6 5)
 	((emacs
 	  (25 1))
 	 (cl-lib
@@ -485,7 +485,7 @@
 	   ((:url . "http://elpa.gnu.org/packages/flymake.html")
 	    (:keywords "c" "languages" "tools"))])
  (fountain-mode .
-		[(2 6 1)
+		[(2 6 2)
 		 ((emacs
 		   (24 5)))
 		 "Major mode for screenwriting in Fountain markup" single
@@ -629,7 +629,7 @@
 		((:url . "https://github.com/clemera/ivy-explorer")
 		 (:keywords "convenience" "files" "matching"))])
  (javaimp .
-	  [(0 6)
+	  [(0 6 1)
 	   nil "Add and reorder Java import statements in Maven projects" tar
 	   ((:keywords "java" "maven" "programming")
 	    (:url . "http://elpa.gnu.org/packages/javaimp.html"))])
@@ -862,7 +862,7 @@
 	  ((:url . "http://elpa.gnu.org/packages/oauth2.html")
 	   (:keywords "comm"))])
  (objed .
-	[(0 2 0)
+	[(0 5 0)
 	 ((emacs
 	   (25))
 	  (cl-lib
@@ -883,12 +883,12 @@
 	     ((:url . "https://github.com/michael-heerdegen/on-screen.el")
 	      (:keywords "convenience"))])
  (org .
-      [(9 2)
+      [(9 2 1)
        nil "Outline-based notes management and organizer" tar
        ((:keywords "outlines" "hypermedia" "calendar" "wp")
 	(:url . "http://elpa.gnu.org/packages/org.html"))])
  (org-edna .
-	   [(1 0 1)
+	   [(1 0 2)
 	    ((emacs
 	      (25 1))
 	     (seq
@@ -1336,7 +1336,7 @@
 	 ((:url . "http://elpa.gnu.org/packages/xclip.html")
 	  (:keywords "convenience" "tools"))])
  (xelb .
-       [(0 16)
+       [(0 17)
 	((emacs
 	  (24 4))
 	 (cl-generic

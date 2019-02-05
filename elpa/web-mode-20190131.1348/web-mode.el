@@ -1,10 +1,10 @@
 ;;; web-mode.el --- major mode for editing web templates
 ;;; -*- coding: utf-8; lexical-binding: t; -*-
 
-;; Copyright 2011-2018 François-Xavier Bois
+;; Copyright 2011-2019 François-Xavier Bois
 
-;; Version: 16.0.17
-;; Package-Version: 20181214.658
+;; Version: 16.0.21
+;; Package-Version: 20190131.1348
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Package-Requires: ((emacs "23.1"))
@@ -25,7 +25,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "16.0.17"
+(defconst web-mode-version "16.0.21"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -1095,6 +1095,7 @@ Must be used in conjunction with web-mode-enable-block-face."
                            ("{~{" . " | }}")
                            ("{{~" . "{ | }}}")
                            ("{{!" . "-- | --}}")
+                           ("{{^" . "}}")
                            ("{{/" . "}}")
                            ("{{#" . "}}")))
     ("django"           . (("{{ " . " }}")
@@ -1681,6 +1682,15 @@ shouldn't be moved back.)")
 (defvar web-mode-django-types
   (eval-when-compile
     (regexp-opt '("null" "false" "true"))))
+
+(defvar web-mode-blade-control-blocks
+  (append
+   (cdr (assoc "blade" web-mode-extra-control-blocks))
+   '("component" "foreach" "forelse" "for" "if" "section" "slot" "switch" "unless" "while")
+   ))
+
+(defvar web-mode-blade-control-blocks-regexp
+  (regexp-opt web-mode-blade-control-blocks t))
 
 (defvar web-mode-directives
   (eval-when-compile
@@ -4233,8 +4243,12 @@ another auto-completion with different ac-sources (e.g. ac-php)")
          ((web-mode-block-starts-with
            "section\(\s*\\(['\"]\\).*\\1\s*,\s*\\(['\"]\\).*\\2\s*\)" reg-beg)
           )
+         ((web-mode-block-starts-with "case\\|break" reg-beg)
+          (setq type (if (eq (aref (match-string-no-properties 0) 0) ?b) 'close 'open))
+          (setq controls (append controls (list (cons type "case"))))
+          )
          ((web-mode-block-starts-with
-           "\\(?:end\\)?\\(component\\|foreach\\|forelse\\|for\\|if\\|section\\|slot\\|unless\\|while\\)"
+           (concat "\\(?:end\\)?\\(" web-mode-blade-control-blocks-regexp "\\)")
            reg-beg)
           (setq control (match-string-no-properties 1)
                 type (if (eq (aref (match-string-no-properties 0) 0) ?e) 'close 'open))
@@ -4549,7 +4563,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
              ) ;cond
             ) ;let
           ) ;script
-         ((string= tname "template")
+         ((and (string= tname "template") (string-match-p " lang" (buffer-substring-no-properties tbeg tend)))
           (let (template)
             (setq template (buffer-substring-no-properties tbeg tend)
                   part-close-tag "</template>")
@@ -7180,9 +7194,9 @@ another auto-completion with different ac-sources (e.g. ac-php)")
             (cond
              ((and (not (looking-at-p "[ ]*$"))
                    (looking-back "^[[:space:]]*{" (point-min)))
-              (setq reg-col (+ (current-indentation) 1
+              (setq reg-col (+ (current-indentation) ;; #1027
                                (cond
-                                ((looking-at "[ ]+") (length (match-string-no-properties 0)))
+                                ((looking-at "[ ]+") (1+ (length (match-string-no-properties 0))))
                                 (t 0))
                                ))
               )
@@ -7561,6 +7575,9 @@ another auto-completion with different ac-sources (e.g. ac-php)")
             (setq offset (+ (current-indentation) web-mode-markup-indent-offset)))
            (t
             (setq offset (current-indentation))
+            (if (and (string= web-mode-engine "blade")
+                     (string-match-p "@break" curr-line))
+                (setq offset (+ (current-indentation) offset)))
             )
            ) ;cond
           )
@@ -7922,6 +7939,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
                (not (and (eq prev-char ?\:)
                          (string-match-p "^\\(case\\|default\\)" prev-line)))
                )
+          ;;(message "prev=%S" prev-line)
           (when debug (message "I350(%S) multiline statement" pos))
           (let (is-ternary)
             (setq is-ternary (or (string-match-p "[?:]$" prev-line)
@@ -8594,7 +8612,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
         ;;(message "%S %S : %S" bol-pos eol-pos pos)
         (setq line (web-mode-clean-part-line line))
         (list line (current-indentation) pos))
-       )
+       ) ;cond
       )))
 
 (defun web-mode-in-code-block (open close &optional prop)
@@ -8765,7 +8783,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
                           (and (get-text-property pos 'block-beg)
                                (not type)
                                (web-mode-block-is-control pos)
-                               (not (looking-at-p "{% comment")))))
+                               (not (looking-at-p "{% commen\\|@break")))))
           ) ;if
         ) ;while
       ;;(message "indent-origin=%S" pos)
@@ -9628,7 +9646,7 @@ Prompt user if TAG-NAME isn't provided."
         (cond
          ((get-text-property (point) 'block-token)
           (setq counter (1+ counter)))
-         ((not (eq ?\s (following-char)))
+         ((not (member (following-char) '(?\s ?\t)))
           (setq continue nil
                 counter 0))
          ) ;cond
@@ -9651,9 +9669,7 @@ Prompt user if TAG-NAME isn't provided."
          ((or (get-text-property (point) 'block-side)
               (member (get-text-property (point) 'part-token) '(comment string)))
           (setq counter (1+ counter)))
-         ((eq ?\s (following-char))
-          )
-         (t
+         ((not (member (following-char) '(?\s ?\t)))
           (setq continue nil
                 counter 0))
          )

@@ -6,7 +6,7 @@
 ;; Homepage: https://github.com/tarsius/moody
 
 ;; Package-Requires: ((emacs "25.3"))
-;; Package-Version: 20190101.2229
+;; Package-Version: 20190203.1747
 
 ;; This file is not part of GNU Emacs.
 
@@ -149,6 +149,7 @@ not specified, then faces based on `default', `mode-line' and
                   (or face-inactive 'mode-line-inactive)))
          (outer (face-attribute base :background))
          (line  (face-attribute base :underline))
+         (line  (if (listp line) (plist-get line :color) line))
          (line  (if (eq line 'unspecified) outer line))
          (inner (if (eq type 'ribbon)
                     (face-attribute base :underline)

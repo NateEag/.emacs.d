@@ -4,7 +4,7 @@
 
 ;; Author: Justin Burkett <justin@burkett.cc>
 ;; Package-Requires: ((evil "1.2.3") (magit "2.6.0"))
-;; Package-Version: 20190117.1158
+;; Package-Version: 20190203.443
 ;; Homepage: https://github.com/justbur/evil-magit
 ;; Version: 0.4.1
 
@@ -631,17 +631,6 @@ using `evil-magit-toggle-text-mode'"
          (evil-change-state evil-magit-state))
         (t
          (user-error "evil-magit-toggle-text-mode unexpected state"))))
-
-;; Make room for forge popup when loaded
-(eval-after-load 'forge
-  '(progn
-     (evil-magit-define-key evil-magit-state 'magit-mode-map "p" 'magit-pull-popup)
-     (evil-magit-define-key evil-magit-state 'magit-mode-map "P" 'magit-push-popup)
-     (evil-magit-define-key evil-magit-state 'magit-mode-map "F" 'forge-dispatch)
-     (magit-change-popup-key 'magit-dispatch-popup :actions ?p ?P)
-     (magit-remove-popup-key 'magit-dispatch-popup :actions ?F)
-     (magit-define-popup-action 'magit-dispatch-popup ?p "Pulling" 'magit-pull-popup ?P t)
-     (magit-define-popup-action 'magit-dispatch-popup ?F "Forge" 'forge-dispatch ?f)))
 
 ;;; evil-magit.el ends soon
 (provide 'evil-magit)

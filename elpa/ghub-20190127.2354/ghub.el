@@ -512,7 +512,21 @@ Signal an error if the id cannot be determined."
   (forward-line 1)
   (let (headers)
     (when (memq url-http-end-of-headers '(nil 0))
-      (error "BUG: missing headers %s" (plist-get status :error)))
+      (setq url-debug t)
+      (let ((print-escape-newlines nil))
+        (error "BUG: missing headers
+  See https://github.com/magit/ghub/issues/81.
+  headers: %S
+  status: %S
+  buffer: %S
+  buffer-string:
+  %S
+  --- end of buffer-string ---"
+               url-http-end-of-headers
+               status
+               (current-buffer)
+               (buffer-substring-no-properties
+                (point-min) (point-max)))))
     (while (re-search-forward "^\\([^:]*\\): \\(.+\\)"
                               url-http-end-of-headers t)
       (push (cons (match-string 1)
@@ -738,7 +752,8 @@ and call `auth-source-forget+'."
     (if (assoc "X-GitHub-OTP" (ghub--handle-response-headers nil nil))
         (progn
           (setq url-http-extra-headers
-                `(("Content-Type" . "application/json")
+                `(("Pragma" . "no-cache")
+                  ("Content-Type" . "application/json")
                   ("X-GitHub-OTP" . ,(ghub--read-2fa-code))
                   ;; Without "Content-Type" and "Authorization".
                   ;; The latter gets re-added from the return value.
@@ -939,7 +954,7 @@ Please visit https://github.com/settings/tokens and delete it." ident)
 (defvar ghub--2fa-cache nil)
 
 (defun ghub--read-2fa-code ()
-  (let ((code (read-number "Two-factor authentication code: "
+  (let ((code (read-string "Two-factor authentication code: "
                            (and ghub--2fa-cache
                                 (< (float-time (time-subtract
                                                 (current-time)
@@ -947,7 +962,7 @@ Please visit https://github.com/settings/tokens and delete it." ident)
                                    25)
                                 (car ghub--2fa-cache)))))
     (setq ghub--2fa-cache (cons code (current-time)))
-    (number-to-string code)))
+    code))
 
 (defun ghub--auth-source-get (keys &rest spec)
   (declare (indent 1))

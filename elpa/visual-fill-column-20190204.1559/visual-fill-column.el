@@ -8,7 +8,7 @@
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 2015
 ;; Version: 1.9
-;; Package-Version: 20190115.1627
+;; Package-Version: 20190204.1559
 ;; Package-Requires: ((emacs "24.3"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -99,7 +99,7 @@ that actually visit a file."
   "Set up `visual-fill-column-mode' for the current buffer."
   (add-hook 'window-configuration-change-hook #'visual-fill-column--adjust-window 'append 'local)
   (if (>= emacs-major-version 26)
-      (add-hook 'window-size-change-functions #' visual-fill-column--adjust-frame 'append 'local))
+      (add-hook 'window-size-change-functions #'visual-fill-column--adjust-frame 'append))
   (visual-fill-column--adjust-window))
 
 (defun visual-fill-column-mode--disable ()

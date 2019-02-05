@@ -1,10 +1,11 @@
 ;;; dtrt-indent.el --- Adapt to foreign indentation offsets
 
 ;; Copyright (C) 2003, 2007, 2008 Julian Scheid
-;; Copyright (C) 2014-2018 Reuben Thomas
+;; Copyright (C) 2014-2019 Reuben Thomas
 
 ;; Author: Julian Scheid <julians37@googlemail.com>
-;; Version: 0.7
+;; Maintainer: Reuben Thomas <rrt@sc3d.org>
+;; Version: 0.8
 ;; Keywords: convenience files languages c
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -1032,7 +1033,7 @@ Disable dtrt-indent if offset explicitly set."
    ((eql (nth 2 (dtrt-indent--search-hook-mapping major-mode))
          (ad-get-arg 0))
     (setq dtrt-indent-explicit-offset t))
-   ((eql 'indent-tab-mode
+   ((eql 'indent-tabs-mode
          (ad-get-arg 0))
     (setq dtrt-indent-explicit-tab-mode t))))
 

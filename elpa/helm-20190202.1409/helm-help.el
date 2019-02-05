@@ -760,7 +760,7 @@ For this you can use `helm-list-dir-external' as value
 for `helm-list-directory-function'.
 
 See `helm-list-directory-function' documentation for more infos.
- 
+
 **** Completing host
 
 As soon as you enter the first \":\" after method e.g =/scp:= you will
@@ -939,7 +939,7 @@ with trash-list until you log in as root.
 \\[helm-mark-all]\t\tMark all visible candidates.
 \\[helm-ff-run-toggle-auto-update]\t\tToggle auto-expansion of directories.
 \\[helm-unmark-all]\t\tUnmark all candidates, visible and invisible ones.
-\\[helm-ff-run-gnus-attach-files]\t\tGnus' attach files to message buffer.
+\\[helm-ff-run-mail-attach-files]\t\tAttach files to message buffer.
 \\[helm-ff-run-print-file]\t\tPrint file, (`\\[universal-argument]' to refresh printer list).
 \\[helm-enlarge-window]\t\tEnlarge Helm window.
 \\[helm-narrow-window]\t\tNarrow Helm window.
@@ -948,7 +948,10 @@ with trash-list until you log in as root.
 \\[helm-ff-run-find-alternate-file]\t\tFind alternate file.
 \\[helm-ff-run-insert-org-link]\t\tInsert org link.
 \\[helm-ff-bookmark-set]\t\tSet bookmark to current directory.
-\\[helm-find-files-toggle-to-bookmark]\t\tJump to bookmark list.")
+\\[helm-find-files-toggle-to-bookmark]\t\tJump to bookmark list.
+\\[helm-ff-sort-alpha]\t\tSort alphabetically
+\\[helm-ff-sort-by-newest]\t\tSort by newest
+\\[helm-ff-sort-by-size]\t\tSort by size")
 
 ;;; Help for `helm-read-file-name'
 ;;
@@ -957,7 +960,7 @@ with trash-list until you log in as root.
   (let ((name (if helm-alive-p
                   (assoc-default 'name (helm-get-current-source))
                 "generic")))
-    (format 
+    (format
      "* Helm `%s' read file name completion
 
 This is `%s' read file name completion that have been \"helmized\"
@@ -1153,7 +1156,7 @@ M-x helm-popup-tip-mode.
 
 The command \\<helm-grep-map>\\[helm-grep-run-other-window-action] allow you to open file
 in other window horizontally or vertically if a prefix arg is supplied.
- 
+
 *** Performance over TRAMP
 
 Grepping works but it is badly supported as TRAMP doesn't support multiple

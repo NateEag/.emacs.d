@@ -108,12 +108,20 @@ finding the executable with variable `exec-path'."
   :risky t
   :type '(repeat string))
 
+(defun lsp-typescript-javascript-tsx-jsx-activate-p (filename major-mode)
+  "Checks if the javascript-typescript language server should be enabled
+based on FILE-NAME and MAJOR-MODE"
+  (or (member major-mode '(typescript-mode typescript-tsx-mode js-mode js2-mode rjsx-mode))
+      (and (eq major-mode 'web-mode)
+           (or (string-suffix-p ".tsx" filename t)
+               (string-suffix-p ".jsx" filename t)))))
+
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection
                                    (-const `(,lsp-clients-javascript-typescript-server
                                              ,@lsp-clients-typescript-javascript-server-args)))
-                  :major-modes '(typescript-mode typescript-tsx-mode js-mode js2-mode rjsx-mode)
-                  :priority -2
+                  :activation-fn 'lsp-typescript-javascript-tsx-jsx-activate-p
+                  :priority -3
                   :ignore-messages '("readFile .*? requested by TypeScript but content not available")
                   :server-id 'jsts-ls))
 
@@ -137,8 +145,8 @@ finding the executable with variable `exec-path'."
  (make-lsp-client :new-connection (lsp-stdio-connection
                                    (-const `(,lsp-clients-typescript-server
                                              ,@lsp-clients-typescript-server-args)))
-                  :major-modes '(typescript-mode typescript-tsx-mode js-mode js2-mode rjsx-mode)
-                  :priority -1
+                  :activation-fn 'lsp-typescript-javascript-tsx-jsx-activate-p
+                  :priority -2
                   :ignore-messages '("readFile .*? requested by TypeScript but content not available")
                   :server-id 'ts-ls))
 
@@ -193,7 +201,7 @@ there is a .flowconfig file in the folder hierarchy."
 (defun lsp-clients-flow-activate-p (file-name major-mode)
   "Checks if the Flow language server should be enabled for a
 particular FILE-NAME and MAJOR-MODE."
-  (and (member major-mode '(js-mode js2-mode flow-js2-mode))
+  (and (member major-mode '(js-mode js2-mode flow-js2-mode rjsx-mode))
        (lsp-clients-flow-project-p file-name)
        (lsp-clients-flow-tag-present-p file-name)))
 
@@ -201,8 +209,8 @@ particular FILE-NAME and MAJOR-MODE."
  (make-lsp-client :new-connection (lsp-stdio-connection
                                    (-const `(,lsp-clients-flow-server
                                              ,@lsp-clients-flow-server-args)))
+                  :priority -1
                   :activation-fn 'lsp-clients-flow-activate-p
-                  :add-on? t
                   :server-id 'flow-ls))
 
 ;;; Vue

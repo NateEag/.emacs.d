@@ -2,7 +2,7 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20190118.2219
+;; Package-Version: 20190125.850
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
@@ -30,6 +30,8 @@
 ;; - Crystal (crystal tool format)
 ;; - CSS/Less/SCSS (prettier)
 ;; - D (dfmt)
+;; - Dart (dartfmt)
+;; - Dhall (dhall format)
 ;; - Elixir (mix format)
 ;; - Elm (elm-format)
 ;; - Emacs Lisp (emacs)
@@ -332,11 +334,27 @@ Consult the existing formatters for examples of BODY."
   (:modes crystal-mode)
   (:format (format-all-buffer-easy executable "tool" "format" "-")))
 
+(define-format-all-formatter dartfmt
+  (:executable "dartfmt")
+  (:install (macos "brew tap dart-lang/dart && brew install dart"))
+  (:modes dart-mode)
+  (:format
+   (format-all-buffer-easy
+    executable
+    (when (buffer-file-name)
+      (list "--stdin-name" (buffer-file-name))))))
+
 (define-format-all-formatter dfmt
   (:executable "dfmt")
   (:install (macos "brew install dfmt"))
   (:modes d-mode)
   (:format (format-all-buffer-hard nil (regexp-quote "[error]") executable)))
+
+(define-format-all-formatter dhall
+  (:executable "dhall")
+  (:install (macos "brew install dhall"))
+  (:modes dhall-mode)
+  (:format (format-all-buffer-easy executable "format")))
 
 (define-format-all-formatter elm-format
   (:executable "elm-format")

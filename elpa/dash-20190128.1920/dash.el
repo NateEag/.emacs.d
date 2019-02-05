@@ -3,8 +3,8 @@
 ;; Copyright (C) 2012-2016 Free Software Foundation, Inc.
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
-;; Version: 2.14.1
-;; Package-Version: 20180910.1856
+;; Version: 2.15.0
+;; Package-Version: 20190128.1920
 ;; Keywords: lists
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -86,6 +86,14 @@ the target form."
                      `(funcall form ,retval)))
                  forms)
        ,retval)))
+
+(defmacro --doto (eval-initial-value &rest forms)
+  "Anaphoric form of `-doto'.
+Note: `it' is not required in each form."
+  (declare (indent 1))
+  `(let ((it ,eval-initial-value))
+     ,@forms
+     it))
 
 (defun -each (list fn)
   "Call FN with every item in LIST. Return nil, used for side-effects only."

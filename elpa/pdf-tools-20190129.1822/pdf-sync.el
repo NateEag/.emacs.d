@@ -50,6 +50,10 @@ command `pdf-sync-minor-mode' is activated and this map is defined."
   :group 'pdf-sync
   :type 'key-sequence)
 
+(make-obsolete-variable
+ 'pdf-sync-forward-display-pdf-key
+ "Bound in Auctex's to C-c C-v, if TeX-source-correlate-mode is activate." "1.0")
+
 (defcustom pdf-sync-backward-hook nil
   "Hook ran after going to a source location.
 
@@ -131,19 +135,6 @@ with AUCTeX."
 
   nil nil nil
   (pdf-util-assert-pdf-buffer))
-
-(eval-after-load "tex"
-  '(when (and pdf-sync-forward-display-pdf-key
-              (boundp 'TeX-source-correlate-map)
-              (let ((key (lookup-key
-                          TeX-source-correlate-map
-                          (kbd pdf-sync-forward-display-pdf-key))))
-                (or (null key)
-                    (numberp key))))
-     (define-key TeX-source-correlate-map
-       (kbd pdf-sync-forward-display-pdf-key)
-       'pdf-sync-forward-search)))
-
 
 
 ;; * ================================================================== *
@@ -785,51 +776,6 @@ The first such filename is returned, or nil if none was found."
                 (setq end beg
                       beg (point-min))
                 (goto-char beg)))))))))
-
-
-;; * ================================================================== *
-;; * Compatibility
-;; * ================================================================== *
-
-;;;###autoload
-(define-obsolete-variable-alias
-  'pdf-sync-tex-display-pdf-key
-  'pdf-sync-forward-display-pdf-key nil)
-
-;;;###autoload
-(define-obsolete-variable-alias
-  'pdf-sync-goto-tex-hook
-  'pdf-sync-backward-hook nil)
-
-;;;###autoload
-(define-obsolete-variable-alias
-  'pdf-sync-display-pdf-hook
-  'pdf-sync-forward-hook nil)
-
-;;;###autoload
-(define-obsolete-variable-alias
-  'pdf-sync-display-pdf-action
-  'pdf-sync-forward-display-action nil)
-
-(define-obsolete-function-alias
-  'pdf-sync-mouse-goto-tex
-  'pdf-sync-backward-search-mouse)
-
-(define-obsolete-function-alias
-  'pdf-sync-goto-tex
-  'pdf-sync-backward-search)
-
-(define-obsolete-function-alias
-  'pdf-sync-correlate-tex
-  'pdf-sync-backward-correlate)
-
-(define-obsolete-function-alias
-  'pdf-sync-display-pdf
-  'pdf-sync-forward-search)
-
-(define-obsolete-function-alias
-  'pdf-sync-correlate-pdf
-  'pdf-sync-forward-correlate)
 
 (provide 'pdf-sync)
 ;;; pdf-sync.el ends here

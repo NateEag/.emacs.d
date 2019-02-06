@@ -1,0 +1,13 @@
+# -*- mode: snippet -*-
+# name: for-line-in-var
+# key: for-line-in-var
+# --
+
+prev_ifs="$IFS"
+IFS=$(echo -en "\n\b")
+
+for ${1:line} in ${2:var}; do
+    $0
+done
+
+IFS="$prev_ifs"

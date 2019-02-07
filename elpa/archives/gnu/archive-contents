@@ -1349,6 +1349,11 @@
        nil "edit XPM images" tar
        ((:keywords "multimedia" "xpm")
 	(:url . "http://www.gnuvola.org/software/xpm/"))])
+ (xr .
+     [(1 0)
+      nil "Convert string regexp to rx notation" single
+      ((:url . "http://elpa.gnu.org/packages/xr.html")
+       (:keywords "lisp" "maint" "regexps"))])
  (yasnippet .
 	    [(0 13 0)
 	     ((cl-lib

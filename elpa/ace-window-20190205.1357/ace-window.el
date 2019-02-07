@@ -5,7 +5,7 @@
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; Maintainer: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Package-Version: 20190204.1347
+;; Package-Version: 20190205.1357
 ;; Version: 0.9.0
 ;; Package-Requires: ((avy "0.2.0"))
 ;; Keywords: window, location
@@ -217,9 +217,7 @@ or
            ;; Ignore major-modes and buffer-names in `aw-ignored-buffers'.
            (or (memq (buffer-local-value 'major-mode (window-buffer window))
                      aw-ignored-buffers)
-               (member (buffer-name (window-buffer window)) aw-ignored-buffers))
-           (or aw-ignore-current
-               (not (equal window (selected-window)))))
+               (member (buffer-name (window-buffer window)) aw-ignored-buffers)))
       ;; ignore child frames
       (and (fboundp 'frame-parent) (frame-parent (window-frame window)))
       ;; Ignore selected window if `aw-ignore-current' is non-nil.
@@ -481,7 +479,8 @@ Amend MODE-LINE to the mode line for the duration of the selection."
                    (when (eq aw-action 'exit)
                      (setq aw-action nil)))
                  (or (car wnd-list) start-window))
-                ((and (<= (length wnd-list) aw-dispatch-when-more-than)
+                ((and (<= (+ (length wnd-list) (if (aw-ignored-p start-window) 1 0))
+                          aw-dispatch-when-more-than)
                       (not aw-dispatch-always)
                       (not aw-ignore-current))
                  (let ((wnd (next-window nil nil next-window-scope)))
@@ -563,9 +562,8 @@ window."
   (interactive "p")
   (cl-case arg
     (0
-     (setq aw-ignore-on
-           (not aw-ignore-on))
-     (ace-select-window))
+     (let ((aw-ignore-on (not aw-ignore-on)))
+       (ace-select-window)))
     (4 (ace-swap-window))
     (16 (ace-delete-window))
     (t (ace-select-window))))

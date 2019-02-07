@@ -2,7 +2,7 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20190125.850
+;; Package-Version: 20190206.1133
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
@@ -444,8 +444,8 @@ Consult the existing formatters for examples of BODY."
     (if (and (boundp 'flow-minor-mode)
              (not (null (symbol-value 'flow-minor-mode))))
         "flow"
-      "babylon"))
-   ((js2-jsx-mode jsx-mode rjsx-mode) "babylon")
+      "babel"))
+   ((js2-jsx-mode jsx-mode rjsx-mode) "babel")
    ((typescript-mode typescript-tsx-mode) "typescript")
    (json-mode "json")
    (vue-mode "vue")
@@ -464,7 +464,7 @@ Consult the existing formatters for examples of BODY."
                         (let ((case-fold-search t))
                           (string-match "\\.tsx?\\'" (buffer-file-name)))))
                  "typescript"
-               "babylon"))
+               "babel"))
             ((equal ct "json") "json")
             ((equal ct "html")
              (cond ((equal en "angular") "angular")

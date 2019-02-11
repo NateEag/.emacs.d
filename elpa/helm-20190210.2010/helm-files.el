@@ -336,16 +336,17 @@ from `helm-find-files'."
 (defcustom helm-trash-remote-files nil
   "Allow trashing remote files when non-nil.
 
-Deleting remote files with tramp doesn't work out of the box, it is
-why it is disabled by default.
+Trashing remote files with tramp doesn't work out of the box unless
+'trash-cli' package is installed, it is why trashing remote files from
+helm is disabled by default.
 
-Following is NOT documented in tramp AFAIK but tramp is using
-external trash command in its `delete-file' and `delete-directory'
-handlers.
+Tramp is using external 'trash' command in its `delete-file' and
+`delete-directory' handlers when using `delete-by-moving-to-trash',
+which is documented nowhere in Emacs.
 
 If you want to enable this you will have to install the 'trash' command
-on remote (or locally if you want to trash as root), the package on
-Ubuntu based distribution is 'trash-cli'."
+on remote (and/or locally if you want to trash as root), on Ubuntu
+based distribution it is 'trash-cli'."
   :group 'helm-files
   :type 'boolean)
 
@@ -2717,19 +2718,22 @@ Note that only existing directories are saved here."
   "Show file properties of CANDIDATE in a tooltip or message."
   (require 'helm-external) ; For `helm-get-default-program-for-file'.
   (helm-aif (helm-file-attributes candidate)
-      (let* ((all                it)
-             (dired-line         (helm-file-attributes
+      (let* ((dired-line         (helm-file-attributes
                                   candidate :dired t :human-size t))
-             (type               (cl-getf all :type))
-             (mode-type          (cl-getf all :mode-type))
-             (owner              (cl-getf all :uid))
-             (owner-right        (cl-getf all :user t))
-             (group              (cl-getf all :gid))
-             (group-right        (cl-getf all :group))
-             (other-right        (cl-getf all :other))
-             (size               (helm-file-human-size (cl-getf all :size)))
-             (modif              (cl-getf all :modif-time))
-             (access             (cl-getf all :access-time))
+             (type               (cl-getf it :type))
+             (mode-type          (cl-getf it :mode-type))
+             (owner              (cl-getf it :uid))
+             (owner-right        (cl-getf it :user t))
+             (group              (cl-getf it :gid))
+             (group-right        (cl-getf it :group))
+             (other-right        (cl-getf it :other))
+             (trash              (and (helm-ff-trash-file-p candidate)
+                                      (helm-ff--get-dest-file-from-trash
+                                       (helm-ff-trash-list)
+                                       candidate)))
+             (size               (helm-file-human-size (cl-getf it :size)))
+             (modif              (cl-getf it :modif-time))
+             (access             (cl-getf it :access-time))
              (ext                (helm-get-default-program-for-file candidate))
              (tooltip-hide-delay (or helm-tooltip-hide-delay tooltip-hide-delay)))
         (if (and (display-graphic-p) tooltip-mode)
@@ -2754,7 +2758,10 @@ Note that only existing directories are saved here."
               (format "Others: %s\n" other-right)
               (format "Size: %s\n" size)
               (format "Modified: %s\n" modif)
-              (format "Accessed: %s\n" access)))
+              (format "Accessed: %s\n" access)
+              (and (stringp trash)
+                   (format "Trash: %s\n" 
+                           (abbreviate-file-name trash)))))
           (message dired-line) (sit-for 5)))
     (message "Permission denied, file not readable")))
 
@@ -3067,29 +3074,31 @@ e.g. '(\"delete\" \"deleting\"), ARGS are other args to be passed to FN."
     (with-helm-display-marked-candidates
         helm-marked-buffer-name
         (helm-ff--count-and-collect-dups (mapcar 'helm-basename mkd))
-        (when (y-or-n-p (format "%s %s files from trash? "
-                                (capitalize (car names))
-                                (length mkd)))
-          (message "%s files from trash..." (capitalize (cadr names)))
-          (cl-loop for f in mkd do
-                   (condition-case err
-                       (apply fn f args)
-                     (error (push (format "%s" (cadr err)) errors)
-                            nil)))))
-    (if errors
-        (display-warning 'helm
-                         (with-temp-buffer
-                           (insert (format-time-string "%Y-%m-%d %H:%M:%S\n"
-                                                       (current-time)))
-                           (insert (format
-                                    "Failed to %s %s/%s files from trash\n"
-                                    (car names) (length errors) (length mkd)))
-                           (insert (mapconcat 'identity errors "\n") "\n")
-                           (buffer-string))
-                         :error
-                         "*helm restore warnings*")
-      (message "%s %s files from trash done"
-               (capitalize (cadr names)) (length mkd)))))
+        (if (y-or-n-p (format "%s %s files from trash? "
+                              (capitalize (car names))
+                              (length mkd)))
+            (progn
+              (message "%s files from trash..." (capitalize (cadr names)))
+              (cl-loop for f in mkd do
+                       (condition-case err
+                           (apply fn f args)
+                         (error (push (format "%s" (cadr err)) errors)
+                                nil)))
+              (if errors
+                  (display-warning 'helm
+                                   (with-temp-buffer
+                                     (insert (format-time-string "%Y-%m-%d %H:%M:%S\n"
+                                                                 (current-time)))
+                                     (insert (format
+                                              "Failed to %s %s/%s files from trash\n"
+                                              (car names) (length errors) (length mkd)))
+                                     (insert (mapconcat 'identity errors "\n") "\n")
+                                     (buffer-string))
+                                   :error
+                                   "*helm restore warnings*")
+                (message "%s %s files from trash done"
+                         (capitalize (cadr names)) (length mkd))))
+          (message "Restoring files from trash aborted")))))
 
 (defun helm-ff-trash-rm (_candidate)
   "Delete marked-files from a Trash directory.
@@ -3109,9 +3118,7 @@ should have its '*.trashinfo' correspondent file in Trash/info
 directory."
   (let* ((default-directory (file-name-as-directory
                              helm-ff-default-directory))
-         (trashed-files (with-temp-buffer
-                          (process-file "trash-list" nil t nil)
-                          (split-string (buffer-string) "\n"))))
+         (trashed-files     (helm-ff-trash-list)))
     (helm-ff-trash-action 'helm-restore-file-from-trash-1
                           '("restore" "restoring")
                           trashed-files)))
@@ -3155,6 +3162,21 @@ with 'trash-list' command."
            (replace-regexp-in-string
             "\\`\\([0-9]\\{2,4\\}[-:][0-9]\\{2\\}[:-][0-9]\\{2\\} \\)\\{2\\}"
             "" f)))
+
+(defun helm-ff-trash-file-p (file)
+  "Return `t' when file is a trashed file.
+If trash command line is not installed, return nil."
+  (and (string-match "Trash/files/?\\'" (helm-basedir file))
+       (not (member (helm-basename file) '("." "..")))
+       (file-exists-p file)
+       (executable-find "trash")))
+
+(defun helm-ff-trash-list ()
+  "Return list of trashed files.
+Need the trash command line installed."
+  (with-temp-buffer
+    (process-file "trash-list" nil t nil)
+    (split-string (buffer-string) "\n")))
 
 (defun helm-ff-goto-linum (candidate)
   "Find file CANDIDATE and maybe jump to line number found in fname at point.
@@ -4261,15 +4283,34 @@ This function is checking `helm-mounted-network-directories' list."
   "[Internal] This source is build to be used with `helm-find-files'.
 Don't use it in your own code unless you know what you are doing.")
 
+(defvar helm--file-name-history-hide-deleted nil)
+
+(defun helm-file-name-history-show-or-hide-deleted ()
+  (interactive)
+  (setq helm--file-name-history-hide-deleted
+        (not helm--file-name-history-hide-deleted))
+  (helm-update))
+(put 'helm-file-name-history-show-or-hide-deleted 'helm-only t)
+
+(defvar helm-file-name-history-map
+  (let ((map (make-sparse-keymap)))
+    (set-keymap-parent map helm-map)
+    (define-key map (kbd "C-c d") 'helm-file-name-history-show-or-hide-deleted)
+    map))
+
 (defun helm-file-name-history-transformer (candidates _source)
-  (cl-loop for c in candidates collect
-        (cond ((or (file-remote-p c)
-                   (and (fboundp 'tramp-archive-file-name-p)
-                        (tramp-archive-file-name-p c)))
-               (cons (propertize c 'face 'helm-history-remote) c))
-              ((file-exists-p c)
-               (cons (propertize c 'face 'helm-ff-file) c))
-              (t (cons (propertize c 'face 'helm-history-deleted) c)))))
+  (cl-loop for c in candidates
+           if (or (file-remote-p c)
+                  (and (fboundp 'tramp-archive-file-name-p)
+                       (tramp-archive-file-name-p c)))
+           collect
+           (cons (propertize c 'face 'helm-history-remote) c)
+           if (file-exists-p c)
+           collect
+           (cons (propertize c 'face 'helm-ff-file) c)
+           unless helm--file-name-history-hide-deleted
+           collect
+           (cons (propertize c 'face 'helm-history-deleted) c)))
 
 (defun helm-ff-file-name-history ()
   "Switch to `file-name-history' without quitting `helm-find-files'."
@@ -4287,6 +4328,7 @@ Don't use it in your own code unless you know what you are doing.")
                           (if helm-ff-file-name-history-use-recentf
                               recentf-list
                               file-name-history))
+            :help-message 'helm-file-name-history-help-message
             :fuzzy-match t
             :persistent-action 'ignore
             :migemo t
@@ -4298,7 +4340,8 @@ Don't use it in your own code unless you know what you are doing.")
                                    (with-helm-after-update-hook (helm-exit-minibuffer)))
                      "Find file in helm" (lambda (candidate)
                                            (helm-set-pattern
-                                            (expand-file-name candidate)))))))
+                                            (expand-file-name candidate))))
+            :keymap helm-file-name-history-map)))
   (with-helm-alive-p
     (helm :sources 'helm-source--ff-file-name-history
           :buffer "*helm-file-name-history*"

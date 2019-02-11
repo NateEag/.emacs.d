@@ -80,9 +80,14 @@
 	 ((:keywords "async")
 	  (:url . "http://elpa.gnu.org/packages/async.html"))])
  (auctex .
-	 [(12 1 1)
-	  nil "Integrated environment for *TeX*" tar
-	  ((:url . "http://www.gnu.org/software/auctex/"))])
+	 [(12 1 2)
+	  ((emacs
+	    (24 1))
+	   (cl-lib
+	    (0 5)))
+	  "Integrated environment for *TeX*" tar
+	  ((:keywords "tex" "latex" "texinfo" "context" "doctex" "preview-latex")
+	   (:url . "http://www.gnu.org/software/auctex/"))])
  (aumix-mode .
 	     [(7)
 	      nil "run the aumix program in a buffer" single
@@ -391,7 +396,7 @@
 	 ((:keywords "convenience" "languages")
 	  (:url . "https://github.com/joaotavora/eglot"))])
  (el-search .
-	    [(1 9 4)
+	    [(1 9 6)
 	     ((emacs
 	       (25))
 	      (stream
@@ -450,7 +455,7 @@
 	       ((:keywords "calendar")
 		(:url . "http://elpa.gnu.org/packages/excorporate.html"))])
  (exwm .
-       [(0 21)
+       [(0 22)
 	((xelb
 	  (0 16)))
 	"Emacs X Window Manager" tar
@@ -478,7 +483,7 @@
 	   ((:url . "http://elpa.gnu.org/packages/flylisp.html")
 	    (:keywords))])
  (flymake .
-	  [(1 0 3)
+	  [(1 0 5)
 	   ((emacs
 	     (26 1)))
 	   "A universal on-the-fly syntax checker" single
@@ -564,6 +569,13 @@
 	   "Integrates GPaste with the kill-ring" single
 	   ((:url . "https://gitlab.petton.fr/DamienCassou/desktop-environment")
 	    (:keywords "tools"))])
+ (greader .
+	  [(0 1)
+	   ((emacs
+	     (25)))
+	   "gnamù reader, a reader with espeak tts" tar
+	   ((:keywords "tools" "accessibility")
+	    (:url . "http://elpa.gnu.org/packages/greader.html"))])
  (heap .
        [(0 5)
 	nil "Heap (a.k.a. priority queue) data structure" single
@@ -862,7 +874,7 @@
 	  ((:url . "http://elpa.gnu.org/packages/oauth2.html")
 	   (:keywords "comm"))])
  (objed .
-	[(0 5 0)
+	[(0 5 1)
 	 ((emacs
 	   (25))
 	  (cl-lib
@@ -1097,7 +1109,7 @@
 	       ((:keywords "soap" "web-services" "comm" "hypermedia")
 		(:url . "http://elpa.gnu.org/packages/soap-client.html"))])
  (sokoban .
-	  [(1 4 6)
+	  [(1 4 7)
 	   ((emacs
 	     (23 1)))
 	   "Implementation of Sokoban for Emacs." tar

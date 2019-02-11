@@ -5,7 +5,7 @@
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; Maintainer: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Package-Version: 20190205.1357
+;; Package-Version: 20190210.1648
 ;; Version: 0.9.0
 ;; Package-Requires: ((avy "0.2.0"))
 ;; Keywords: window, location
@@ -163,6 +163,7 @@ Consider changing this if the overlay tends to overlap with other things."
     (?j aw-switch-buffer-in-window "Select Buffer")
     (?n aw-flip-window)
     (?u aw-switch-buffer-other-window "Switch Buffer Other Window")
+    (?e aw-execute-command-other-window "Execute Command Other Window")
     (?F aw-split-window-fair "Split Fair Window")
     (?v aw-split-window-vert "Split Vert Window")
     (?b aw-split-window-horz "Split Horz Window")
@@ -431,7 +432,7 @@ The new frame is set to the same size as the previous frame, offset by
               (avy-mouse-event-window char)))
         ((= char (aref (kbd "C-g") 0))
          (throw 'done 'exit))
-        ((= char aw-make-frame-char)
+        ((and aw-make-frame-char (= char aw-make-frame-char))
          ;; Make a new frame and perform any action on its window.
          (let ((start-win (selected-window))
                (end-win (frame-selected-window (aw-make-frame))))
@@ -762,6 +763,16 @@ Modify `aw-fair-aspect-ratio' to tweak behavior."
   (aw-switch-to-window window)
   (unwind-protect
       (aw--switch-buffer)
+    (aw-flip-window)))
+
+(defun aw-execute-command-other-window (window)
+  "Execute a command in WINDOW."
+  (aw-switch-to-window window)
+  (unwind-protect
+      (funcall
+       (key-binding
+        (read-key-sequence
+         "Enter key sequence: ")))
     (aw-flip-window)))
 
 (defun aw--face-rel-height ()

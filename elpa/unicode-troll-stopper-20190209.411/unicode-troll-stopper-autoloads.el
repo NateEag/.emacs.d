@@ -4,7 +4,7 @@
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
 ;;;### (autoloads nil "unicode-troll-stopper" "unicode-troll-stopper.el"
-;;;;;;  (23400 19412 0 0))
+;;;;;;  (23649 39730 284242 701000))
 ;;; Generated autoloads from unicode-troll-stopper.el
 
 (autoload 'unicode-troll-stopper-mode "unicode-troll-stopper" "\

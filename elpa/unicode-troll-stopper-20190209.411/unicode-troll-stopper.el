@@ -4,7 +4,7 @@
 ;; Author: Cam Saül <cammsaul@gmail.com>
 ;; Maintainer: Cam Saül <cammsaul@gmail.com>
 ;; URL: https://github.com/camsaul/emacs-unicode-troll-stopper
-;; Package-Version: 20151024.131
+;; Package-Version: 20190209.411
 ;; Created: 23rd October 2015
 ;; Version: 1.0
 ;; Keywords: unicode
@@ -60,7 +60,9 @@
   (if unicode-troll-stopper-mode
       (font-lock-add-keywords nil unicode-troll-stopper--keywords)
     (font-lock-remove-keywords nil unicode-troll-stopper--keywords))
-  (font-lock-fontify-region (point-min) (point-max)))
+  (if (fboundp 'font-lock-flush)
+      (font-lock-flush)
+    (font-lock-fontify-region (point-min) (point-max))))
 
 (provide 'unicode-troll-stopper)
 ;;; unicode-troll-stopper.el ends here

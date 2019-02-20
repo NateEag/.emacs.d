@@ -320,6 +320,13 @@
 	    "Dired with recursive directory sizes" tar
 	    ((:keywords "files" "unix" "convenience")
 	     (:url . "http://elpa.gnu.org/packages/dired-du.html"))])
+ (disk-usage .
+	     [(1 1 0)
+	      ((emacs
+		(25 1)))
+	      "Sort and browse disk usage listings" single
+	      ((:url . "https://gitlab.com/Ambrevar/emacs-disk-usage")
+	       (:keywords "files" "convenience" "tools"))])
  (dismal .
 	 [(1 5)
 	  ((cl-lib
@@ -396,7 +403,7 @@
 	 ((:keywords "convenience" "languages")
 	  (:url . "https://github.com/joaotavora/eglot"))])
  (el-search .
-	    [(1 9 7)
+	    [(1 11 2)
 	     ((emacs
 	       (25))
 	      (stream
@@ -455,7 +462,7 @@
 	       ((:keywords "calendar")
 		(:url . "http://elpa.gnu.org/packages/excorporate.html"))])
  (exwm .
-       [(0 22)
+       [(0 22 1)
 	((xelb
 	  (0 16)))
 	"Emacs X Window Manager" tar
@@ -653,7 +660,7 @@
 	       ((:url . "http://elpa.gnu.org/packages/jgraph-mode.html")
 		(:keywords "tex" "wp"))])
  (js2-mode .
-	   [(20180301)
+	   [(20190219)
 	    ((emacs
 	      (24 1))
 	     (cl-lib
@@ -895,7 +902,7 @@
 	     ((:url . "https://github.com/michael-heerdegen/on-screen.el")
 	      (:keywords "convenience"))])
  (org .
-      [(9 2 1)
+      [(9 2 2)
        nil "Outline-based notes management and organizer" tar
        ((:keywords "outlines" "hypermedia" "calendar" "wp")
 	(:url . "http://elpa.gnu.org/packages/org.html"))])
@@ -1109,7 +1116,7 @@
 	       ((:keywords "soap" "web-services" "comm" "hypermedia")
 		(:url . "http://elpa.gnu.org/packages/soap-client.html"))])
  (sokoban .
-	  [(1 4 7)
+	  [(1 4 8)
 	   ((emacs
 	     (23 1))
 	    (cl-lib
@@ -1364,10 +1371,10 @@
        ((:keywords "multimedia" "xpm")
 	(:url . "http://www.gnuvola.org/software/xpm/"))])
  (xr .
-     [(1 0)
-      nil "Convert string regexp to rx notation" single
-      ((:url . "http://elpa.gnu.org/packages/xr.html")
-       (:keywords "lisp" "maint" "regexps"))])
+     [(1 1)
+      nil "Convert string regexp to rx notation" tar
+      ((:keywords "lisp" "maint" "regexps")
+       (:url . "http://elpa.gnu.org/packages/xr.html"))])
  (yasnippet .
 	    [(0 13 0)
 	     ((cl-lib

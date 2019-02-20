@@ -1,10 +1,10 @@
 ;;; pythonic.el --- Utility functions for writing pythonic emacs package.  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2015-2018 by Artem Malyshev
+;; Copyright (C) 2015-2019 by Artem Malyshev
 
 ;; Author: Artem Malyshev <proofit404@gmail.com>
 ;; URL: https://github.com/proofit404/pythonic
-;; Package-Version: 20180920.2315
+;; Package-Version: 20190214.1816
 ;; Version: 0.1.1
 ;; Package-Requires: ((emacs "25") (s "1.9") (f "0.17.2"))
 
@@ -32,6 +32,10 @@
 (require 'tramp)
 (require 's)
 (require 'f)
+
+(defgroup pythonic nil
+  "Utility functions for writing pythonic emacs package."
+  :group 'python)
 
 
 ;;; Connection predicates.
@@ -154,7 +158,15 @@ format."
 
 ;;; Docker Compose.
 
-(defvar pythonic-docker-compose-filename "docker-compose.yml")
+(defcustom pythonic-docker-compose-filename "docker-compose.yml"
+  "File name of the docker-compose project file."
+  :type 'string
+  :safe 'stringp)
+
+(defcustom pythonic-docker-compose-service-name nil
+  "Name of the default service to execute commands."
+  :type 'string
+  :safe 'stringp)
 
 (defvar pythonic-read-docker-compose-file-code "
 from __future__ import print_function
@@ -209,6 +221,7 @@ print(json.dumps(yaml.safe_load(open(sys.argv[-1], 'r'))))
 
 (defun pythonic-set-docker-compose-alias ()
   "Build alias string for current docker-compose project."
+  (hack-dir-local-variables-non-file-buffer)
   (unless
       (or (tramp-tramp-file-p default-directory)
           (pythonic-has-alias-p default-directory))
@@ -221,7 +234,9 @@ print(json.dumps(yaml.safe_load(open(sys.argv[-1], 'r'))))
                ;; should appears once in the selection and all volumes
                ;; should be added to the alias list.
                (volume (if (< 1 (length volumes))
-                           (assoc (completing-read "Service: " (mapcar 'car volumes) nil t) volumes)
+                           (if pythonic-docker-compose-service-name
+                               pythonic-docker-compose-service-name
+                             (assoc (completing-read "Service: " (mapcar 'car volumes) nil t) volumes))
                          (car volumes)))
                (service (car volume))
                (sub-project (f-join project (cadr volume)))

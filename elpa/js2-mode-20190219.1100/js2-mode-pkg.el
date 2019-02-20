@@ -1,4 +1,4 @@
-(define-package "js2-mode" "20180724.801" "Improved JavaScript editing mode"
+(define-package "js2-mode" "20190219.1100" "Improved JavaScript editing mode"
   '((emacs "24.1")
     (cl-lib "0.5"))
   :keywords

@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23649 39718 223958
-;;;;;;  335000))
+;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (23661 21737 68114
+;;;;;;  361000))
 ;;; Generated autoloads from lsp-mode.el
 
 (autoload 'lsp "lsp-mode" "\
@@ -20,7 +20,7 @@ such.
 ;;;***
 
 ;;;### (autoloads nil nil ("lsp-clients.el" "lsp-mode-pkg.el" "lsp.el")
-;;;;;;  (23649 39718 222984 802000))
+;;;;;;  (23661 21737 66841 656000))
 
 ;;;***
 

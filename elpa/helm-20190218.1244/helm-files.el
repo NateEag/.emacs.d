@@ -3110,6 +3110,19 @@ should have its '*.trashinfo' correspondent file in Trash/info
 directory."
   (helm-ff-trash-action 'helm-ff-trash-rm-1 '("delete" "deleting")))
 
+(defun helm-ff-trash-rm-1 (file)
+  (let ((info-file (concat (helm-reduce-file-name file 2)
+                           "info/" (helm-basename file "trashinfo")
+                           ".trashinfo")))
+    (cl-assert (file-exists-p file)
+               nil (format "No such file or directory `%s'"
+                           file))
+    (cl-assert (file-exists-p info-file)
+               nil (format "No such file or directory `%s'"
+                           info-file))
+    (delete-file file)
+    (delete-file info-file)))
+
 (defun helm-restore-file-from-trash (_candidate)
   "Restore marked-files from a Trash directory.
 
@@ -3124,23 +3137,10 @@ directory."
                           '("restore" "restoring")
                           trashed-files)))
 
-(defun helm-ff-trash-rm-1 (file)
-  (let ((info-file (concat (helm-reduce-file-name file 2)
-                           "info/" (helm-basename file)
-                           ".trashinfo")))
-    (cl-assert (file-exists-p file)
-               nil (format "No such file or directory `%s'"
-                           file))
-    (cl-assert (file-exists-p info-file)
-               nil (format "No such file or directory `%s'"
-                           info-file))
-    (delete-file file)
-    (delete-file info-file)))
-
 (defun helm-restore-file-from-trash-1 (file trashed-files)
   "Restore FILE from a trash directory.
-Arg TRASHED-FILES is the list of files in the trash directory obtained
-with 'trash-list' command."
+Arg TRASHED-FILES is an alist of (fname_in_trash . dest) obtained with
+`helm-ff-trash-list'."
   ;; Emacs trash duplicate files with a unique name + .trashinfo in
   ;; the filename which is wrong, only files in info directory should
   ;; end with .trashinfo, so fix the filename before looking for dest name.
@@ -3178,7 +3178,7 @@ with 'trash-list' command."
                          (with-temp-buffer
                            (save-excursion
                              (insert-file-contents f))
-                           (when (re-search-forward "path=" nil t)
+                           (when (re-search-forward "^path=" nil t)
                              (helm-url-unhex-string
                               (buffer-substring-no-properties
                                (point) (point-at-eol))))))))
@@ -4305,17 +4305,15 @@ Don't use it in your own code unless you know what you are doing.")
 
 (defun helm-file-name-history-transformer (candidates _source)
   (cl-loop for c in candidates
-           if (or (file-remote-p c)
-                  (and (fboundp 'tramp-archive-file-name-p)
-                       (tramp-archive-file-name-p c)))
-           collect
-           (cons (propertize c 'face 'helm-history-remote) c)
-           if (file-exists-p c)
-           collect
-           (cons (propertize c 'face 'helm-ff-file) c)
-           unless helm--file-name-history-hide-deleted
-           collect
-           (cons (propertize c 'face 'helm-history-deleted) c)))
+           when (cond ((or (file-remote-p c)
+                           (and (fboundp 'tramp-archive-file-name-p)
+                                (tramp-archive-file-name-p c)))
+                       (cons (propertize c 'face 'helm-history-remote) c))
+                      ((file-exists-p c)
+                       (cons (propertize c 'face 'helm-ff-file) c))
+                      (t (unless helm--file-name-history-hide-deleted
+                           (cons (propertize c 'face 'helm-history-deleted) c))))
+           collect it))
 
 (defun helm-ff-file-name-history ()
   "Switch to `file-name-history' without quitting `helm-find-files'."

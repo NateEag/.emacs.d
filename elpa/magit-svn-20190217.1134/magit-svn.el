@@ -1,10 +1,10 @@
 ;;; magit-svn.el --- Git-Svn extension for Magit
 
-;; Copyright (C) 2010-2017  The Magit Project Contributors
+;; Copyright (C) 2010-2019  The Magit Project Contributors
 
 ;; Author: Phil Jackson <phil@shellarchive.co.uk>
 ;; Keywords: vc tools
-;; Package-Version: 20170213.1233
+;; Package-Version: 20190217.1134
 ;; Package: magit-svn
 ;; Package-Requires: ((emacs "24.4") (magit "2.1.0"))
 
@@ -35,9 +35,9 @@
 
 ;; When `magit-svn-mode' is turned on then the unpushed and unpulled
 ;; commit relative to the Subversion repository are displayed in the
-;; status buffer, and `N' is bound to a popup with commands that wrap
-;; the `git svn' subcommands fetch, rebase, dcommit, branch and tag,
-;; as well as a few extras.
+;; status buffer, and "N" is bound to a transient command with
+;; suffixes that wrap the `git-svn' subcommands fetch, rebase,
+;; dcommit, branch and tag, as well as a few extras.
 
 ;; To enable the mode in a particular repository use:
 ;;
@@ -56,6 +56,9 @@
 
 (require 'cl-lib)
 (require 'dash)
+
+(eval-when-compile
+  (require 'subr-x))
 
 (require 'magit)
 
@@ -173,18 +176,19 @@ If USE-CACHE is non-nil, use the cached information."
 
 ;;; Commands
 
-(magit-define-popup magit-svn-popup
-  "Popup console for svn commands."
-  'magit
+(define-transient-command magit-svn ()
+  "Invoke `git-svn' commands."
   :man-page "git-svn"
-  :switches '((?n "Dry run"         "--dry-run"))
-  :actions  '((?c "DCommit"         magit-svn-dcommit)
-              (?r "Rebase"          magit-svn-rebase)
-              (?f "Fetch"           magit-svn-fetch)
-              (?x "Fetch Externals" magit-svn-fetch-externals)
-              (?s "Show commit"     magit-svn-show-commit)
-              (?b "Create branch"   magit-svn-create-branch)
-              (?t "Create tag"      magit-svn-create-tag)))
+  ["Arguments"
+   ("-n" "Dry run" "--dry-run")]
+  ["Actions"
+   ("c" "DCommit"         magit-svn-dcommit)
+   ("r" "Rebase"          magit-svn-rebase)
+   ("f" "Fetch"           magit-svn-fetch)
+   ("x" "Fetch Externals" magit-svn-fetch-externals)
+   ("s" "Show commit"     magit-svn-show-commit)
+   ("b" "Create branch"   magit-svn-create-branch)
+   ("t" "Create tag"      magit-svn-create-tag)])
 
 ;;;###autoload
 (defun magit-svn-show-commit (rev &optional branch)
@@ -201,28 +205,30 @@ With a prefix argument also read a branch to search in."
 (defun magit-svn-create-branch (name &optional args)
   "Create svn branch NAME.
 \n(git svn branch [--dry-run] NAME)"
-  (interactive (list (read-string "Branch name: ") magit-current-popup-args))
+  (interactive (list (read-string "Branch name: ")
+                     (transient-args)))
   (magit-run-git "svn" "branch" args name))
 
 ;;;###autoload
 (defun magit-svn-create-tag (name &optional args)
   "Create svn tag NAME.
 \n(git svn tag [--dry-run] NAME)"
-  (interactive (list (read-string "Tag name: ") magit-current-popup-args))
+  (interactive (list (read-string "Tag name: ")
+                     (transient-args)))
   (magit-run-git "svn" "tag" args name))
 
 ;;;###autoload
 (defun magit-svn-rebase (&optional args)
   "Fetch revisions from Svn and rebase the current Git commits.
 \n(git svn rebase [--dry-run])"
-  (interactive (list magit-current-popup-args))
+  (interactive (list (transient-args)))
   (magit-run-git-async "svn" "rebase" args))
 
 ;;;###autoload
 (defun magit-svn-dcommit (&optional args)
   "Run git-svn dcommit.
 \n(git svn dcommit [--dry-run])"
-  (interactive (list magit-current-popup-args))
+  (interactive (list (transient-args)))
   (magit-run-git-async "svn" "dcommit" args))
 
 ;;;###autoload
@@ -255,7 +261,7 @@ in `magit-svn-external-directories' and runs
 
 (defvar magit-svn-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "N") 'magit-svn-popup)
+    (define-key map (kbd "N") 'magit-svn)
     map))
 
 ;;;###autoload

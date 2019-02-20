@@ -86,11 +86,15 @@ FIXME: Explain dis-/advantages of imagemagick and png."
   :type 'boolean)
 
 (defcustom pdf-view-use-scaling nil
-  "Whether images should be allowed to be scaled down for rendering.
+  "Whether images should be allowed to be scaled for rendering.
 
-This variable has no effect, if imagemagick was not compiled into
-Emacs or `pdf-view-use-imagemagick' is nil.  FIXME: Explain
-dis-/advantages of imagemagick and png."
+This variable affects both the reuse of higher-resolution images
+as lower-resolution ones by down-scaling the image.  As well as
+the rendering of higher-resolution for high-resolution displays,
+if available.
+
+It has no effect, unless either the imagemagick or image-io
+image-format is available."
   :group 'pdf-view
   :type 'boolean)
 
@@ -903,6 +907,8 @@ See also `pdf-view-use-imagemagick'."
   (cond ((and pdf-view-use-imagemagick
               (fboundp 'imagemagick-types))
          'imagemagick)
+        ((image-type-available-p 'image-io)
+         'image-io)
         ((image-type-available-p 'png)
          'png)
         ((fboundp 'imagemagick-types)
@@ -912,16 +918,22 @@ See also `pdf-view-use-imagemagick'."
 
 (defun pdf-view-use-scaling-p ()
   "Return t if scaling should be used."
-  (and (eq 'imagemagick
-           (pdf-view-image-type))
+  (and (memq (pdf-view-image-type)
+             '(imagemagick image-io))
        pdf-view-use-scaling))
 
 (defmacro pdf-view-create-image (data &rest props)
   ;; TODO: add DATA and PROPS to docstring.
   "Like `create-image', but with set DATA-P and TYPE arguments."
   (declare (indent 1) (debug t))
-  `(create-image ,data (pdf-view-image-type) t ,@props
-                 :relief (or pdf-view-image-relief 0)))
+  (let ((image-data (make-symbol "data")))
+    `(let ((,image-data ,data))
+       (apply #'create-image ,image-data (pdf-view-image-type) t ,@props
+              (cl-list*
+               :relief (or pdf-view-image-relief 0)
+               (when (and (eq (framep-on-display) 'mac)
+                          (= (pdf-util-frame-scale-factor) 2))
+                 (list :data-2x ,image-data)))))))
 
 (defun pdf-view-create-page (page &optional window)
   "Create an image of PAGE for display on WINDOW."

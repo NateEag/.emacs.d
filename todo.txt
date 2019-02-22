@@ -42,6 +42,10 @@
 - Try out literate-elisp for one of my packages, largely as an experiment in
   literate programming: https://github.com/jingtaozf/literate-elisp
 
+- Try porting the Readable library to Emacs Lisp. I have yet to really
+  internalize reading Emacs Lisp, and it looks promising to me:
+  https://readable.sourceforge.io/
+
 - Play with ob-html-chrome. It sounds like it could be a useful tool for
   writing docs that embed HTML, as many people like to see what things look
   like. https://github.com/nikclayton/ob-html-chrome

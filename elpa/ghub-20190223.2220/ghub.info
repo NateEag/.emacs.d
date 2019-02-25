@@ -46,7 +46,7 @@ adoption would make life easier for users and maintainers alike, because
 then all packages that talk to forge APIs could be configured the same
 way.
 
-This manual is for Ghub version 3.2.0 (v3.2.0-1-gae7acf4+1).
+This manual is for Ghub version 3.2.0 (v3.2.0-7-g67eb648+1).
 
      Copyright (C) 2017-2019 Jonas Bernoulli <jonas@bernoul.li>
 

@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "eldoc-overlay" "eldoc-overlay.el" (23400 19119
-;;;;;;  0 0))
+;;;### (autoloads nil "eldoc-overlay" "eldoc-overlay.el" (23667 61959
+;;;;;;  583574 646000))
 ;;; Generated autoloads from eldoc-overlay.el
 
 (autoload 'global-eldoc-overlay-toggle "eldoc-overlay" "\

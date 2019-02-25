@@ -3,8 +3,8 @@
 ;; Copyright (C) 2015-2016 Justin Burkett
 
 ;; Author: Justin Burkett <justin@burkett.cc>
-;; Package-Requires: ((evil "1.2.3") (magit "2.6.0") (magit-popup "2.12.5"))
-;; Package-Version: 20190216.1721
+;; Package-Requires: ((evil "1.2.3") (magit "2.6.0"))
+;; Package-Version: 20190224.2028
 ;; Homepage: https://github.com/justbur/evil-magit
 ;; Version: 0.4.1
 

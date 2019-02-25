@@ -4,7 +4,7 @@
 ;; Copyright 2011-2019 François-Xavier Bois
 
 ;; Version: 16.0.21
-;; Package-Version: 20190131.1348
+;; Package-Version: 20190222.1657
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Package-Requires: ((emacs "23.1"))
@@ -2317,6 +2317,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
     (define-key map [menu-bar wm elt elt-inn] '(menu-item "Content (select)" web-mode-element-content-select))
     (define-key map [menu-bar wm elt elt-clo] '(menu-item "Close" web-mode-element-close))
     (define-key map [menu-bar wm elt elt-ins] '(menu-item "Insert" web-mode-element-insert))
+    (define-key map [menu-bar wm elt elt-ins] '(menu-item "Word to tag" web-mode-element-insert-at-point))
     (define-key map [menu-bar wm elt elt-dup] '(menu-item "Clone" web-mode-element-clone))
     (define-key map [menu-bar wm elt elt-cfo] '(menu-item "Children fold" web-mode-element-children-fold-or-unfold))
     (define-key map [menu-bar wm elt elt-chi] '(menu-item "Child" web-mode-element-child))
@@ -2366,6 +2367,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
     (define-key map (kbd "C-c C-e e") 'web-mode-element-end)
     (define-key map (kbd "C-c C-e f") 'web-mode-element-children-fold-or-unfold)
     (define-key map (kbd "C-c C-e i") 'web-mode-element-insert)
+    (define-key map (kbd "C-c C-e I") 'web-mode-element-insert-at-point)
     (define-key map (kbd "C-c C-e k") 'web-mode-element-kill)
     (define-key map (kbd "C-c C-e m") 'web-mode-element-mute-blanks)
     (define-key map (kbd "C-c C-e n") 'web-mode-element-next)
@@ -9583,6 +9585,29 @@ Prompt user if TAG-NAME isn't provided."
         )
       )
      (t
+      (insert (concat "<" tag-name ">" "</" tag-name ">"))
+      (web-mode-sb "</")
+      )
+     ) ;cond
+    ))
+
+(defun web-mode-element-insert-at-point ()
+  "Replace the word at point with a html tag of it."
+  (interactive)
+  (let ((tag-name (thing-at-point 'word)))
+    (cond
+     ((web-mode-element-is-void tag-name)
+      (backward-kill-word 1)
+      (insert (concat "<" (replace-regexp-in-string "/" "" tag-name) "/>"))
+      )
+     (mark-active
+      (setq tag-name (buffer-substring (region-beginning) (region-end)))
+      (delete-region (region-beginning) (region-end))
+      (insert (concat "<" tag-name ">" "</" tag-name ">"))
+      (web-mode-sb "</")
+      )
+     (tag-name ; do nothing is there isn's word at point
+      (backward-kill-word 1)
       (insert (concat "<" tag-name ">" "</" tag-name ">"))
       (web-mode-sb "</")
       )

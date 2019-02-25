@@ -3,9 +3,24 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "speed-type" "speed-type.el" (23400 19370 0
-;;;;;;  0))
+;;;### (autoloads nil "speed-type" "speed-type.el" (23667 61996 165531
+;;;;;;  17000))
 ;;; Generated autoloads from speed-type.el
+
+(autoload 'speed-type-top-x "speed-type" "\
+Speed type the N most common words.
+
+\(fn N)" t nil)
+
+(autoload 'speed-type-top-100 "speed-type" "\
+Speed type the top 100 most common words.
+
+\(fn)" t nil)
+
+(autoload 'speed-type-top-1000 "speed-type" "\
+Speed type the top 1000 most common words.
+
+\(fn)" t nil)
 
 (autoload 'speed-type-region "speed-type" "\
 Open copy of [START,END] in a new buffer to speed type the text.

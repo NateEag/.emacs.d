@@ -351,7 +351,7 @@ current line."
     (user-error "Unknown revision")))
 
 (defun git-rebase-exec (arg)
-  "Insert a shell command to be run after the proceeding commit.
+  "Insert a shell command to be run after the current commit.
 
 If there already is such a command on the current line, then edit
 that instead.  With a prefix argument insert a new command even
@@ -386,7 +386,7 @@ remove the command on the current line, if any."
 If the current line already contains a noop action, leave it
 unchanged.  If there is a commented noop action present, remove
 the comment.  Otherwise add a new noop action.  With a prefix
-argument insert a new noop action regardless what is already
+argument insert a new noop action regardless of what is already
 present on the current line.
 
 A noop action can be used to make git perform a rebase even if

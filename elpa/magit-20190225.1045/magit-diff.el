@@ -46,8 +46,6 @@
 (defvar gravatar-size)
 ;; For `magit-show-commit' and `magit-diff-show-or-scroll'
 (declare-function magit-current-blame-chunk "magit-blame" ())
-(eval-when-compile
-  (cl-pushnew 'orig-rev eieio--known-slot-names))
 (declare-function magit-blame-mode "magit-blame" (&optional arg))
 (defvar magit-blame-mode)
 (defvar git-rebase-line)
@@ -56,6 +54,10 @@
 (declare-function magit--merge-range "magit-merge" (&optional head))
 ;; For `magit-diff--dwim'
 (declare-function forge--pullreq-ref "forge-pullreq" (pullreq))
+
+(eval-when-compile
+  (cl-pushnew 'base-ref eieio--known-slot-names)
+  (cl-pushnew 'orig-rev eieio--known-slot-names))
 
 (require 'diff-mode)
 (require 'smerge-mode)
@@ -2876,10 +2878,11 @@ last (visual) lines of the region."
               ((equal op (match-string-no-properties 1))
                (push (concat " " (match-string-no-properties 2)) patch)))
         (forward-line)))
-    (with-temp-buffer
-      (insert (mapconcat 'identity (reverse patch) ""))
-      (diff-fixup-modifs (point-min) (point-max))
-      (setq patch (buffer-string)))
+    (let ((buffer-list-update-hook nil)) ; #3759
+      (with-temp-buffer
+        (insert (mapconcat #'identity (reverse patch) ""))
+        (diff-fixup-modifs (point-min) (point-max))
+        (setq patch (buffer-string))))
     patch))
 
 ;;; _

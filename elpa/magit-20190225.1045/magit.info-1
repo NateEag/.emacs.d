@@ -31,7 +31,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-This manual is for Magit version 2.90.1 (v2.90.1-245-g732de659a+1).
+This manual is for Magit version 2.90.1 (v2.90.1-259-g0d59db318+1).
 
      Copyright (C) 2015-2019 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -189,8 +189,8 @@ Committing
 Branching
 
 * The Two Remotes::
-* The Branch Popup::
-* The Branch Config Popup::
+* Branch Commands::
+* Branch Git Variables::
 * Auxiliary Branch Commands::
 
 
@@ -211,13 +211,13 @@ Transferring
 * Fetching::
 * Pulling::
 * Pushing::
-* Creating and Sending Patches::
-* Applying Patches::
+* Plain Patches::
+* Maildir Patches::
 
 Remotes
 
-* The Remote Popup::
-* The Remote Config Popup::
+* Remote Commands::
+* Remote Git Variables::
 
 
 Miscellaneous
@@ -235,7 +235,7 @@ Miscellaneous
 Submodules
 
 * Listing Submodules::
-* Submodule Popup::
+* Submodule Transient::
 
 
 Wip Modes
@@ -614,10 +614,10 @@ looks like it does in other buffers, then it doesn’t select Magit
 sections that can be acted on as a unit.
 
    And then of course you want to commit your changes.  Type ‘c’.  This
-shows the committing popup buffer featuring various commit variants and
-arguments that can be passed to ‘git commit’.  Do not worry about those
-for now.  We want to create a "normal" commit, which is done by typing
-‘c’ again.
+shows the available commit commands and arguments in a buffer at the
+bottom of the frame.  Each command and argument is prefixed with the key
+that invokes/sets it.  Do not worry about this for now.  We want to
+create a "normal" commit, which is done by typing ‘c’ again.
 
    Now two new buffers appear.  One is for writing the commit message,
 the other shows a diff with the changes that you are about to committed.
@@ -625,26 +625,28 @@ Write a message and then type ‘C-c C-c’ to actually create the commit.
 
    You probably don’t want to push the commit you just created because
 you just committed some random changes, but if that is not the case you
-could push it by typing ‘P’ to bring up the push popup and then ‘p’ to
-push to a branch with the same name as the local branch onto the remote
-configured as the push-remote.  (If the push-remote is not configured
-yet, then you would first be prompted for the remote to push to.)
+could push it by typing ‘P’ to show all the available push commands and
+arguments and then ‘p’ to push to a branch with the same name as the
+local branch onto the remote configured as the push-remote.  (If the
+push-remote is not configured yet, then you would first be prompted for
+the remote to push to.)
 
-   So far we have mentioned the commit, push, and log popups.  These are
-probably among the popups you will be using the most, but many others
-exist.  To show a popup that lists all other popups (as well as the
-various apply commands and some other fundamental commands), type ‘h’.
-Try a few.
+   So far we have mentioned the commit, push, and log transient prefix
+commands.  These are probably among the transients you will be using the
+most, but many others exist.  To show a transient that lists all other
+transients (as well as the various apply commands and some other
+essential commands), type ‘h’.  Try a few.
 
-   The key bindings in that popup correspond to the bindings in Magit
-buffers, including but not limited to the status buffer.  So you could
-type ‘h d’ to bring up the diff popup, but once you remember that "d"
-stands for "diff", you would usually do so by just typing ‘d’.  But the
-"popup of popups" is useful even once you have memorized all the
-bindings, as it can provide easy access to Magit commands from non-Magit
-buffers.  You should create a global key binding for this command too:
+   The key bindings in that transient correspond to the bindings in
+Magit buffers, including but not limited to the status buffer.  So you
+could type ‘h d’ to bring up the diff transient, but once you remember
+that "d" stands for "diff", you would usually do so by just typing ‘d’.
+But this "prefix of prefixes" is useful even once you have memorized all
+the bindings, as it can provide easy access to Magit commands from
+non-Magit buffers.  You should create a global key binding for this
+command too:
 
-     (global-set-key (kbd "C-x M-g") 'magit-dispatch-popup)
+     (global-set-key (kbd "C-x M-g") 'magit-dispatch)
 
    In the same vein, you might also want to enable
 ‘global-magit-file-mode’ to get some more Magit key bindings in regular
@@ -1467,9 +1469,15 @@ certain sections can also be overwritten using the hook
 
         • ‘(EXPANDABLE-BITMAP . COLLAPSIBLE-BITMAP)’
 
-          Both values have to by variables whose values are fringe
+          Both values have to be variables whose values are fringe
           bitmaps.  In this case every section that can be expanded or
           collapsed gets an indicator in the left fringe.
+
+          To provide extra padding around the indicator, set
+          ‘left-fringe-width’ in ‘magit-mode-hook’, e.g.:
+
+               (add-hook 'magit-mode-hook (lambda ()
+                                            (setq left-fringe-width 20)))
 
         • ‘(STRING . BOOLEAN)’
 
@@ -1585,39 +1593,43 @@ user invokes a *prefix* command, which causes its *infix* arguments and
 optionally sets some infix arguments and finally invokes one of the
 suffix commands.
 
-   This is implemented in the library ‘~transient’.  Earlier Magit
+   This is implemented in the library ‘transient’.  Earlier Magit
 releases used the package ‘magit-popup’ and even earlier versions
 library ‘magit-key-mode’.
 
-‘C-c C-c’     (‘magit-dispatch-popup’)
+   Transient is documented in *note (transient)Top::.
 
-     This popup command shows a buffer featuring all other Magit popup
-     commands as well as some other commands that are not popup commands
-     themselves.
+‘C-c C-c’     (‘magit-dispatch’)
+
+     This transient prefix command binds most of Magit’s other prefix
+     commands as suffix commands and displays them in a temporary buffer
+     until one of them is invoked.  Invoking such a sub-prefix causes
+     the suffixes of that command to be bound and displayed instead of
+     those of ‘magit-dispatch’.
 
    This command is also, or especially, useful outside Magit buffers, so
 you should setup a global binding:
 
-     (global-set-key (kbd "C-x M-g") 'magit-dispatch-popup)
+     (global-set-key (kbd "C-x M-g") 'magit-dispatch)
 
-   Most popups set their initial arguments according to the
-corresponding ‘magit-*-arguments’ variable.  Two popups, the log and
-diff popups (see *note Logging:: and *note Diffing::), may behave a bit
-differently, depending on the value of ‘magit-use-sticky-arguments’.
+   Transient commands remember the used arguments for subsequent
+invocations.  Two transients, the log and diff transients (see *note
+Logging:: and *note Diffing::), may behave a bit differently, depending
+on the value of ‘magit-use-sticky-arguments’.
 
  -- User Option: magit-use-sticky-arguments
 
-     This option controls how diff and log commands reuse arguments from
-     existing buffers.
+     This option controls how the diff and log transients reuse
+     arguments from existing buffers.
 
-     When ‘t’ (the default value), the log or diff popup reuses the
-     arguments from the current repository’s log or diff buffer,
-     respectively.  When no log or diff buffer exists for the current
-     repository, these popups use the default value of
+     When ‘t’ (the default value), then the log or diff transients
+     reuses the arguments from the current repository’s log or diff
+     buffer, respectively.  When no log or diff buffer exists for the
+     current repository, these transients use the default value of
      ‘magit-log-arguments’ or ‘magit-diff-arguments’.
 
-     When ‘current’, log and diff popups will only reuse the arguments
-     if the current buffer is derived from ‘magit-log-mode’ or
+     When ‘current’, log and diff transients will only reuse the
+     arguments if the current buffer is derived from ‘magit-log-mode’ or
      ‘magit-diff-mode’, respectively.
 
      When ‘nil’, the default value of ‘magit-log-arguments’ or
@@ -1761,7 +1773,7 @@ telling Magit to ask fewer questions.
 
              • ‘rebase-published’ Affects commands that perform
                interactive rebases.  This includes commands from the
-               commit popup that modify a commit other than "HEAD",
+               commit transient that modify a commit other than "HEAD",
                namely the various fixup and squash variants.
 
              • ‘edit-published’ Affects the commands
@@ -2140,9 +2152,10 @@ come in handy.  Magit provides some commands for running arbitrary Git
 commands by typing them into the minibuffer, instead of having to switch
 to a shell.
 
-‘!’     (‘magit-run-popup’)
+‘!’     (‘magit-run’)
 
-     Shows the popup buffer featuring the below suffix commands.
+     This transient prefix command binds the following suffix commands
+     and displays them in a temporary buffer until a suffix is invoked.
 
 ‘! !’     (‘magit-git-command-topdir’)
 
@@ -2808,16 +2821,16 @@ File: magit.info,  Node: Logging,  Next: Diffing,  Prev: Repository List,  Up: I
 ===========
 
 The status buffer contains logs for the unpushed and unpulled commits,
-but that obviously isn’t enough.  The prefix command ‘magit-log-popup’,
-on ‘l’, features several suffix commands, which show a specific log in a
-separate log buffer.
+but that obviously isn’t enough.  The transient prefix command
+‘magit-log’, on ‘l’, features several suffix commands, which show a
+specific log in a separate log buffer.
 
-   Like other popups, the log popup also features several arguments that
-can be changed before invoking one of the suffix commands.  However, in
-the case of the log popup, these arguments may be taken from those
-currently in use in the current repository’s log buffer, depending on
-the value of ‘magit-use-sticky-arguments’ (see [BROKEN LINK: *Popup
-Buffers and Prefix Commands]).
+   Like other transient prefix commands, ‘magit-log’ also features
+several infix arguments that can be changed before invoking one of the
+suffix commands.  However, in the case of the log transient, these
+arguments may be taken from those currently in use in the current
+repository’s log buffer, depending on the value of
+‘magit-use-sticky-arguments’ (see *note Transient Commands::).
 
    For information about the various arguments, see *note
 (gitman)git-log::.
@@ -2826,13 +2839,14 @@ Buffers and Prefix Commands]).
 ‘--author-date-order’, ‘--date-order’, or ‘--topo-order’ before being
 passed to ‘git log’.
 
-   The log popup also features several reflog commands.  See *note
+   The log transient also features several reflog commands.  See *note
 Reflog::.
 
-‘l’     (‘magit-log-popup’)
+‘l’     (‘magit-log’)
 
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
 ‘l l’     (‘magit-log-current’)
 
@@ -2883,15 +2897,16 @@ File: magit.info,  Node: Refreshing Logs,  Next: Log Buffer,  Up: Logging
 5.3.1 Refreshing Logs
 ---------------------
 
-The prefix command ‘magit-log-refresh-popup’, on ‘L’, can be used to
+The transient prefix command ‘magit-log-refresh’, on ‘L’, can be used to
 change the log arguments used in the current buffer, without changing
 which log is shown.  This works in dedicated log buffers, but also in
 the status buffer.
 
-‘L’     (‘magit-log-refresh-popup’)
+‘L’     (‘magit-log-refresh’)
 
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
 ‘L g’     (‘magit-log-refresh’)
 
@@ -2923,11 +2938,13 @@ File: magit.info,  Node: Log Buffer,  Next: Log Margin,  Prev: Refreshing Logs, 
 5.3.2 Log Buffer
 ----------------
 
-‘L’     (‘magit-log-refresh-popup’)
+‘L’     (‘magit-log-refresh’)
 
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.  See *note
-     Refreshing Logs::.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
+
+     See *note Refreshing Logs::.
 
 ‘q’     (‘magit-log-bury-buffer’)
 
@@ -3015,7 +3032,7 @@ visible.  For example:
      feature origin/feature
      [blue-] [green-------]
 
-   Also note that while the popup features the ‘--show-signature’
+   Also note that while the transient features the ‘--show-signature’
 argument, that won’t actually be used when enabled, because Magit
 defaults to use just one line per commit.  Instead the commit colorized
 to indicate the validity of the signed commit object, using the faces
@@ -3070,14 +3087,14 @@ used in the default of all other options.  But setting it to ‘t’, i.e.
 re-enforcing the default for that option, does not carry to other
 options.
 
-‘L’     (‘magit-margin-popup’)
+‘L’     (‘magit-margin-settings’)
 
-     This prefix command features the following commands for changing
-     the appearance of the margin.
+     This transient prefix command binds the following suffix commands,
+     each of which changes the appearance of the margin in some way.
 
-   In some buffers that support the margin, "L" is bound to
-‘magit-log-refresh-popup’, but that popup features the same commands,
-and then some other unrelated commands.
+   In some buffers that support the margin, ‘L’ is instead bound to
+‘magit-log-refresh’, but that transient features the same commands, and
+then some other unrelated commands.
 
 ‘L L’     (‘magit-toggle-margin’)
 
@@ -3155,8 +3172,8 @@ File: magit.info,  Node: Reflog,  Next: Cherries,  Prev: Select from Log,  Up: L
 
 Also see *note (gitman)git-reflog::.
 
-   These reflog commands are available from the log popup.  See *note
-Logging::.
+   These reflog commands are available from the log transient.  See
+*note Logging::.
 
 ‘l r’     (‘magit-reflog-current’)
 
@@ -3251,23 +3268,24 @@ File: magit.info,  Node: Diffing,  Next: Ediffing,  Prev: Logging,  Up: Inspecti
 ===========
 
 The status buffer contains diffs for the staged and unstaged commits,
-but that obviously isn’t enough.  The prefix command ‘magit-diff-popup’,
-on ‘d’, features several suffix commands, which show a specific diff in
-a separate diff buffer.
+but that obviously isn’t enough.  The transient prefix command
+‘magit-diff’, on ‘d’, features several suffix commands, which show a
+specific diff in a separate diff buffer.
 
-   Like other popups, the diff popup also features several arguments
-that can be changed before invoking one of the suffix commands.
-However, in the case of the diff popup, these arguments may be taken
-from those currently in use in the current repository’s log buffer,
-depending on the value of ‘magit-use-sticky-arguments’ (see [BROKEN
-LINK: *Popup Buffers and Prefix Commands]).
+   Like other transient prefix commands, ‘magit-diff’ also features
+several infix arguments that can be changed before invoking one of the
+suffix commands.  However, in the case of the diff transient, these
+arguments may be taken from those currently in use in the current
+repository’s diff buffer, depending on the value of
+‘magit-use-sticky-arguments’ (see *note Transient Commands::).
 
    Also see *note (gitman)git-diff::.
 
-‘d’     (‘magit-diff-popup’)
+‘d’     (‘magit-diff’)
 
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
 ‘d d’     (‘magit-diff-dwim’)
 
@@ -3308,7 +3326,7 @@ LINK: *Popup Buffers and Prefix Commands]).
      Show changes between any two files on disk.
 
    All of the above suffix commands update the repository’s diff buffer.
-The diff popup also features two commands which show differences in
+The diff transient also features two commands which show differences in
 another buffer:
 
 ‘d c’     (‘magit-show-commit’)
@@ -3337,15 +3355,16 @@ File: magit.info,  Node: Refreshing Diffs,  Next: Diff Buffer,  Up: Diffing
 5.4.1 Refreshing Diffs
 ----------------------
 
-The prefix command ‘magit-diff-refresh-popup’, on ‘D’, can be used to
-change the diff arguments used in the current buffer, without changing
-which diff is shown.  This works in dedicated diff buffers, but also in
-the status buffer.
+The transient prefix command ‘magit-diff-refresh’, on ‘D’, can be used
+to change the diff arguments used in the current buffer, without
+changing which diff is shown.  This works in dedicated diff buffers, but
+also in the status buffer.
 
-‘D’     (‘magit-diff-refresh-popup’)
+‘D’     (‘magit-diff-refresh’)
 
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
 ‘D g’     (‘magit-diff-refresh’)
 
@@ -3391,8 +3410,8 @@ the status buffer.
      useful when you display a revision from a log buffer that is
      restricted to a file or files.
 
-   In addition to the above popup, which allows changing any of the
-supported arguments, there also exist some commands which change a
+   In addition to the above transient, which allows changing any of the
+supported arguments, there also exist some commands that change only a
 particular argument.
 
 ‘-’     (‘magit-diff-less-context’)
@@ -3409,7 +3428,7 @@ particular argument.
      height.
 
    The following commands quickly change what diff is being displayed
-without having to using one of the diff popups.
+without having to using one of the diff transient.
 
 ‘C-c C-d’     (‘magit-diff-while-committing’)
 
@@ -3734,7 +3753,7 @@ displayed from a log buffer, the revision buffer will share the same
 file restriction as that log buffer (also see the command
 ‘magit-diff-toggle-file-filter’).  Note, however, that the log’s file
 restriction will be ignored when ‘magit-log-arguments’ includes
-‘--follow’.  In this case, the ‘-u’ argument of the log popup can be
+‘--follow’.  In this case, the ‘-u’ argument of the log transient can be
 used to show the file-restricted diffs inline.
 
    If the revision buffer is not displayed from a log buffer, the file
@@ -3763,10 +3782,10 @@ information on how to use Ediff itself, see *note (ediff)Top::.
      be used explicitly.  If it cannot read the user’s mind at all, then
      it asks the user for a command to run.
 
-‘E’     (‘magit-ediff-popup’)
+‘E’     (‘magit-ediff’)
 
-     This prefix command shows the following suffix commands in a popup
-     buffer.
+     This transient prefix command binds the following suffix commands
+     and displays them in a temporary buffer until a suffix is invoked.
 
 ‘E r’     (‘magit-ediff-compare’)
 
@@ -3846,28 +3865,36 @@ File: magit.info,  Node: References Buffer,  Next: Bisecting,  Prev: Ediffing,  
 5.6 References Buffer
 =====================
 
-‘y’     (‘magit-show-refs-popup’)
+‘y’     (‘magit-show-refs’)
 
-     List and compare references in a dedicated buffer.  By default all
-     refs are compared with ‘HEAD’, but with a prefix argument this
-     command instead acts as a prefix command and shows the following
-     suffix commands along with the appropriate infix arguments in a
-     popup buffer.
+     This command lists branches and tags in a dedicated buffer.
+
+     However if this command is invoked again from this buffer or if it
+     is invoked with a prefix argument, then it acts as a transient
+     prefix command, which binds the following suffix commands and some
+     infix arguments.
+
+   All of the following suffix commands list exactly the same branches
+and tags.  The only difference the optional feature that can be enabled
+by changing the value of ‘magit-refs-show-commit-count’ (see below).
+These commands specify a different branch or commit against which all
+the other references are compared.
 
 ‘y y’     (‘magit-show-refs-head’)
 
-     List and compare references in a dedicated buffer.  Refs are
-     compared with ‘HEAD’.
+     This command lists branches and tags in a dedicated buffer.  Each
+     reference is being compared with ‘HEAD’.
 
 ‘y c’     (‘magit-show-refs-current’)
 
-     List and compare references in a dedicated buffer.  Refs are
-     compared with the current branch or ‘HEAD’ if it is detached.
+     This command lists branches and tags in a dedicated buffer.  Each
+     reference is being compared with the current branch or ‘HEAD’ if it
+     is detached.
 
-‘y o’     (‘magit-show-refs’)
+‘y o’     (‘magit-show-refs-other’)
 
-     List and compare references in a dedicated buffer.  Refs are
-     compared with a branch read from the user.
+     This command lists branches and tags in a dedicated buffer.  Each
+     reference is being compared with a branch read from the user.
 
  -- User Option: magit-refs-show-commit-count
 
@@ -4122,13 +4149,13 @@ File: magit.info,  Node: Bisecting,  Next: Visiting Blobs,  Prev: References Buf
 
 Also see *note (gitman)git-bisect::.
 
-‘B’     (‘magit-bisect-popup’)
+‘B’     (‘magit-bisect’)
 
-     This prefix command shows the following suffix commands in a popup
-     buffer.
+     This transient prefix command binds the following suffix commands
+     and displays them in a temporary buffer until a suffix is invoked.
 
-   When bisecting is not in progress, then the popup buffer features the
-following commands.
+   When bisecting is not in progress, then the transient features the
+following suffix commands.
 
 ‘B B’     (‘magit-bisect-start’)
 
@@ -4142,8 +4169,8 @@ following commands.
 
      Bisect automatically by running commands after each step.
 
-   When bisecting is in progress, then the popup buffer features these
-commands instead.
+   When bisecting in progress, then the transient instead features the
+following suffix commands.
 
 ‘B b’     (‘magit-bisect-bad’)
 
@@ -4198,20 +4225,36 @@ File: magit.info,  Node: Blaming,  Prev: Visiting Blobs,  Up: Inspecting
 
 Also see *note (gitman)git-blame::.
 
-   To start blaming you can use ‘M-x’ in a file-visiting buffer to
-invoke one of the following commands.  You can also invoke these
-commands using the blame popup, which is available on ‘b’ in
-file-visiting buffers that already contain blame information and, also
-on ‘b’, in all blob-visiting buffers.  You can also enter the blame
-popup from the file popup, which is available on ‘C-c M-g’, provided
-‘magit-file-mode’ is enabled, see *note Minor Mode for Buffers Visiting
-Files::.
+   To start blaming invoke the ‘magit-file-dispatch’ transient prefix
+command by pressing ‘C-c M-g’.  (This is only the default binding and
+the recommended binding is ‘C-c g’.  Also neither binding may be
+available if you disabled ‘global-magit-file-mode’.  Also see *note
+Minor Mode for Buffers Visiting Files::.)
 
- -- Command: magit-blame-addition
+   The blaming suffix commands can be invoked from the dispatch
+transient.  However if you want to set an infix argument, then you have
+to enter the blaming sub-transient first.
+
+   The key bindings shown below assume that you enter the dispatch
+transient using the default binding.
+
+‘C-c M-g B’     (‘magit-blame’)
+
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
+
+   Note that not all of the following suffixes are available at all
+times.  For example if ‘magit-blame-mode’ is not enabled, then the
+command whose purpose is to turn of that mode would not be of any use
+and therefore isn’t available.
+
+‘C-c M-g b’     (‘magit-blame-addition’)
+‘C-c M-g B b’     (‘magit-blame-addition’)
 
      This command augments each line or chunk of lines in the current
-     file- or blob-visiting buffer with information about what commits
-     last touched these lines.
+     file-visiting or blob-visiting buffer with information about what
+     commits last touched these lines.
 
      If the buffer visits a revision of that file, then history up to
      that revision is considered.  Otherwise, the file’s full history is
@@ -4222,13 +4265,8 @@ Files::.
      ‘magit-find-file’), where REVISION is a parent of the revision that
      added the current line or chunk of lines.
 
- -- Command: magit-blame-echo
-
-     This command is like ‘magit-blame-addition’ except that it doesn’t
-     turn on ‘read-only-mode’ and that it initially uses the
-     visualization style specified by option ‘magit-blame-echo-style’.
-
- -- Command: magit-blame-removal
+‘C-c M-g r’     (‘magit-blame-removal’)
+‘C-c M-g B r’     (‘magit-blame-removal’)
 
      This command augments each line or chunk of lines in the current
      blob-visiting buffer with information about the revision that
@@ -4236,13 +4274,21 @@ Files::.
 
      Like ‘magit-blame-addition’, this command can be used recursively.
 
- -- Command: magit-blame-reverse
+‘C-c M-g f’     (‘magit-blame-reverse’)
+‘C-c M-g B f’     (‘magit-blame-reverse’)
 
      This command augments each line or chunk of lines in the current
-     file- or blob-visiting buffer with information about the last
-     revision in which a line still existed.
+     file-visiting or blob-visiting buffer with information about the
+     last revision in which a line still existed.
 
      Like ‘magit-blame-addition’, this command can be used recursively.
+
+‘C-c M-g e’     (‘magit-blame-echo’)
+‘C-c M-g B e’     (‘magit-blame-echo’)
+
+     This command is like ‘magit-blame-addition’ except that it doesn’t
+     turn on ‘read-only-mode’ and that it initially uses the
+     visualization style specified by option ‘magit-blame-echo-style’.
 
    The following key bindings are available when Magit-Blame mode is
 enabled and Read-Only mode is not enabled.  These commands are also
@@ -4273,13 +4319,12 @@ relevant in file-visiting buffers that are being blamed.
      information about that commit, then the buffer is scrolled down
      instead.
 
-   The following key bindings are available when Magit-Blame mode is
-enabled and Read-Only mode is not enabled.
+   The following key bindings are available when both Magit-Blame mode
+and Read-Only mode are enabled.
 
-‘b’     (‘magit-blame-popup’)
+‘b’     (‘magit-blame’)
 
-     This prefix command shows the above suffix command along with the
-     appropriate infix arguments in a popup buffer.
+     See above.
 
 ‘n’     (‘magit-blame-next-chunk’)
 
@@ -4603,10 +4648,11 @@ File: magit.info,  Node: Initiating a Commit,  Next: Editing Commit Messages,  U
 
 Also see *note (gitman)git-commit::.
 
-‘c’     (‘magit-commit-popup’)
+‘c’     (‘magit-commit’)
 
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
 ‘c c’     (‘magit-commit-create’)
 
@@ -4901,10 +4947,10 @@ suitable for that hook.
 
      Propertize the diff shown inside the commit message buffer.  Git
      inserts such diffs into the commit message template when the
-     ‘--verbose’ argument is used.  Magit’s commit popup by default does
-     not offer that argument because the diff that is shown in a
-     separate buffer is more useful.  But some users disagree, which is
-     why this function exists.
+     ‘--verbose’ argument is used.  ‘magit-commit’ by default does not
+     offer that argument because the diff that is shown in a separate
+     buffer is more useful.  But some users disagree, which is why this
+     function exists.
 
  -- Function: with-editor-usage-message
 
@@ -4957,12 +5003,12 @@ File: magit.info,  Node: Branching,  Next: Merging,  Prev: Committing,  Up: Mani
 * Menu:
 
 * The Two Remotes::
-* The Branch Popup::
-* The Branch Config Popup::
+* Branch Commands::
+* Branch Git Variables::
 * Auxiliary Branch Commands::
 
 
-File: magit.info,  Node: The Two Remotes,  Next: The Branch Popup,  Up: Branching
+File: magit.info,  Node: The Two Remotes,  Next: Branch Commands,  Up: Branching
 
 6.5.1 The Two Remotes
 ---------------------
@@ -4995,56 +5041,70 @@ variables ‘branch.<name>.pushRemote’ and ‘remote.pushDefault’.  So we no
 longer have to choose which of the two remotes should be used as "the
 remote".
 
-   Each of the fetching, pulling, and pushing popups features three
-commands that act on the current branch and some other branch.  Of
-these, ‘p’ is bound to a command which acts on the push-remote, ‘u’ is
-bound to a command which acts on the upstream, and ‘e’ is bound to a
-command which acts on any other branch.  The status buffer shows
-unpushed and unpulled commits for both the push-remote and the upstream.
+   Each of the fetching, pulling, and pushing transient commands
+features three suffix commands that act on the current branch and some
+other branch.  Of these, ‘p’ is bound to a command which acts on the
+push-remote, ‘u’ is bound to a command which acts on the upstream, and
+‘e’ is bound to a command which acts on any other branch.  The status
+buffer shows unpushed and unpulled commits for both the push-remote and
+the upstream.
 
    It’s fairly simple to configure these two remotes.  The values of all
 the variables that are related to fetching, pulling, and pushing (as
 well as some other branch-related variables) can be inspected and
-changed using the popup ‘magit-branch-config-popup’, which is a
-sub-popup of many popups that deal with branches.  It is also possible
-to set the push-remote or upstream while pushing (see *note Pushing::).
+changed using the command ‘magit-branch-configure’, which is available
+from many transient prefix commands that deal with branches.  It is also
+possible to set the push-remote or upstream while pushing (see *note
+Pushing::).
 
 
-File: magit.info,  Node: The Branch Popup,  Next: The Branch Config Popup,  Prev: The Two Remotes,  Up: Branching
+File: magit.info,  Node: Branch Commands,  Next: Branch Git Variables,  Prev: The Two Remotes,  Up: Branching
 
-6.5.2 The Branch Popup
-----------------------
+6.5.2 Branch Commands
+---------------------
 
-The popup ‘magit-branch-popup’ is used to create and checkout branches,
-and to make changes to existing branches.  It is not used to fetch,
-pull, merge, rebase, or push branches, i.e.  this popup deals with
-branches themselves, not with the commits reachable from them.  Those
-features are available from separate popups.
+The transient prefix command ‘magit-branch’ is used to create and
+checkout branches, and to make changes to existing branches.  It is not
+used to fetch, pull, merge, rebase, or push branches, i.e.  this command
+deals with branches themselves, not with the commits reachable from
+them.  Those features are available from separate transient command.
 
-‘b’     (‘magit-branch-popup’)
+‘b’     (‘magit-branch’)
 
-     This prefix command shows the following suffix commands in a popup
-     buffer.
+     This transient prefix command binds the following suffix commands
+     and displays them in a temporary buffer until a suffix is invoked.
 
-     By default it also displays the values of some branch-related Git
-     variables and allows changing their values, just like the
-     specialized ‘magit-branch-config-popup’ does.
+     By default it also binds and displays the values of some
+     branch-related Git variables and allows changing their values.
 
- -- User Option: magit-branch-popup-show-variables
+ -- User Option: magit-branch-direct-configure
 
-     Whether the ‘magit-branch-popup’ shows Git variables.  This
-     defaults to t to avoid changing key bindings.  When set to nil, no
-     variables are displayed directly in this popup, and the sub-popup
-     ‘magit-branch-config-popup’ has to be used instead to view and
-     change branch related variables.
+     This option controls whether the transient command ‘magit-branch’
+     can be used directly change the values Git variables.  This
+     defaults to ‘t’ (to avoid changing key bindings).  When set to
+     ‘nil’, then no variables are displayed by that transient command,
+     and its suffix command ‘magit-branch-configure’ has to be used
+     instead to view and change branch related variables.
 
-‘b C’     (‘magit-branch-config-popup’)
+‘b C’     (‘magit-branch-configure’)
+‘f C’     (‘magit-branch-configure’)
+‘F C’     (‘magit-branch-configure’)
+‘P C’     (‘magit-branch-configure’)
 
-     This command shows branch related variables in a separate popup.
-     By default this asks the user for which branch the variables should
-     be shown.  When ‘magit-branch-popup-show-variables’ is ‘nil’, then
-     it shows the variables for the current branch, unless a prefix
-     argument is used.
+     This transient prefix command binds commands that set the value of
+     branch-related variables and displays them in a temporary buffer
+     until the transient is exited.
+
+     With a prefix argument, this command always prompts for a branch.
+
+     Without a prefix argument this depends on whether it was invoked as
+     a suffix of ‘magit-branch’ and on the
+     ‘magit-branch-direct-configure’ option.  If ‘magit-branch’ already
+     displays the variables for the current branch, then it isn’t useful
+     to invoke another transient that displays them for the same branch.
+     In that case this command prompts for a branch.
+
+   The variables are described in *note Branch Git Variables::.
 
 ‘b b’     (‘magit-checkout’)
 
@@ -5252,7 +5312,7 @@ features are available from separate popups.
 
      This command is a hybrid between ‘magit-checkout’ and
      ‘magit-branch-and-checkout’ and is intended as a replacement for
-     the former in ‘magit-branch-popup’.
+     the former in ‘magit-branch’.
 
      It first asks the user for an existing branch or revision.  If the
      user input actually can be resolved as a branch or revision, then
@@ -5265,33 +5325,18 @@ features are available from separate popups.
      To use this command instead of ‘magit-checkout’ add this to your
      init file:
 
-          (magit-remove-popup-key 'magit-branch-popup :action ?b)
-          (magit-define-popup-action 'magit-branch-popup
-            ?b "Checkout" 'magit-branch-or-checkout
-            'magit-branch t)
+          (transient-replace-suffix 'magit-branch 'magit-checkout
+            '("b" "dwim" magit-branch-or-checkout))
 
 
-File: magit.info,  Node: The Branch Config Popup,  Next: Auxiliary Branch Commands,  Prev: The Branch Popup,  Up: Branching
+File: magit.info,  Node: Branch Git Variables,  Next: Auxiliary Branch Commands,  Prev: Branch Commands,  Up: Branching
 
-6.5.3 The Branch Config Popup
------------------------------
+6.5.3 Branch Git Variables
+--------------------------
 
- -- Command: magit-branch-config-popup
-
-     This prefix command shows the following branch-related Git
-     variables in a popup buffer.  The values can be changed from that
-     buffer.
-
-     This popup is a sub-popup of several popups that deal with
-     branches, including ‘magit-branch-popup’, ‘magit-pull-popup’,
-     ‘magit-fetch-popup’, ‘magit-pull-and-fetch-popup’, and
-     ‘magit-push-popup’.  In all of these popups "C" is bound to this
-     popup.
-
-   The following variables are used to configure a specific branch.  The
-values are being displayed for the current branch (if any).  To change
-the value for another branch invoke ‘magit-branch-config-popup’ with a
-prefix argument.
+These variables can be set from the transient prefix command
+‘magit-branch-configure’.  By default they can also be set from
+‘magit-branch’.  See *note Branch Commands::.
 
  -- Variable: branch.NAME.merge
 
@@ -5421,12 +5466,13 @@ e.g.:
      change the upstream and many which create new branches.
 
 
-File: magit.info,  Node: Auxiliary Branch Commands,  Prev: The Branch Config Popup,  Up: Branching
+File: magit.info,  Node: Auxiliary Branch Commands,  Prev: Branch Git Variables,  Up: Branching
 
 6.5.4 Auxiliary Branch Commands
 -------------------------------
 
-These commands are not available from the branch popup by default.
+These commands are not available from the transient ‘magit-branch’ by
+default.
 
  -- Command: magit-branch-shelve
 
@@ -5457,13 +5503,14 @@ File: magit.info,  Node: Merging,  Next: Resolving Conflicts,  Prev: Branching, 
 Also see *note (gitman)git-merge::.  For information on how to resolve
 merge conflicts see the next section.
 
-‘m’     (‘magit-merge-popup’)
+‘m’     (‘magit-merge’)
 
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
-   When no merge is in progress, then the popup buffer features the
-following commands.
+   When no merge is in progress, then the transient features the
+following suffix commands.
 
 ‘m m’     (‘magit-merge-plain’)
 
@@ -5526,15 +5573,15 @@ following commands.
      the changes made by the squashed commits.  No information is
      preserved that would allow creating an actual merge commit.
      Instead of this command you should probably use a command from the
-     apply popup.
+     apply transient.
 
 ‘m p’     (‘magit-merge-preview’)
 
      This command shows a preview of merging another branch or an
      arbitrary revision into the current branch.
 
-   When a merge is in progress, then the popup buffer features these
-commands instead.
+   When a merge is in progress, then the transient instead features the
+following suffix commands.
 
 ‘m m’     (‘magit-merge’)
 
@@ -5664,13 +5711,14 @@ File: magit.info,  Node: Rebasing,  Next: Cherry Picking,  Prev: Resolving Confl
 Also see *note (gitman)git-rebase::.  For information on how to resolve
 conflicts that occur during rebases see the preceding section.
 
-‘r’     (‘magit-rebase-popup’)
+‘r’     (‘magit-rebase’)
 
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
-   When no rebase is in progress, then the popup buffer features the
-following commands.
+   When no rebase is in progress, then the transient features the
+following suffix commands.
 
    Using one of these commands _starts_ a rebase sequence.  Git might
 then stop somewhere along the way, either because you told it to do so,
@@ -5679,26 +5727,37 @@ happens, then the status buffer shows information about the rebase
 sequence which is in progress in a section similar to a log section.
 See *note Information About In-Progress Rebase::.
 
+   For information about the upstream and the push-remote, see *note The
+Two Remotes::.
+
 ‘r p’     (‘magit-rebase-onto-pushremote’)
 
-     Rebase the current branch onto ‘branch.<name>.pushRemote’.  If that
-     variable is unset, then rebase onto ‘remote.pushDefault’.
+     This command rebases the current branch onto its push-remote.
+
+     When ‘magit-remote-set-if-missing’ is non-nil and the push-remote
+     is not configured, then configure it before rebasing.  With a
+     prefix argument let the user change the push-remote before rebasing
+     onto it.
 
 ‘r u’     (‘magit-rebase-onto-upstream’)
 
-     Rebase the current branch onto its upstream branch.
+     This command rebases the current branch onto its upstream branch.
+
+     When ‘magit-remote-set-if-missing’ is non-nil and the upstream is
+     not configured, then configure it before rebasing.  With a prefix
+     argument let the user change the upstream before rebasing onto it.
 
 ‘r e’     (‘magit-rebase-branch’)
 
-     Rebase the current branch onto a branch read in the minibuffer.
-     All commits that are reachable from head but not from the selected
-     branch TARGET are being rebased."
+     This command rebases the current branch onto a branch read in the
+     minibuffer.  All commits that are reachable from head but not from
+     the selected branch TARGET are being rebased.
 
 ‘r s’     (‘magit-rebase-subset’)
 
-     Start a non-interactive rebase sequence with commits from START to
-     ‘HEAD’ onto NEWBASE.  START has to be selected from a list of
-     recent commits.
+     This command starts a non-interactive rebase sequence to transfer
+     commits from START to ‘HEAD’ onto NEWBASE.  START has to be
+     selected from a list of recent commits.
 
    By default Magit uses the ‘--autostash’ argument, which causes
 uncommitted changes to be stored in a stash before the rebase begins.
@@ -5708,9 +5767,9 @@ stash is not removed.  In case something goes wrong when resolving the
 conflicts, this allows you to start over.
 
    Even though one of the actions is dedicated to interactive rebases,
-the popup also features the infix argument ‘--interactive’.  This can be
-used to turn one of the other, non-interactive rebase variants into an
-interactive rebase.
+the transient also features the infix argument ‘--interactive’.  This
+can be used to turn one of the other, non-interactive rebase variants
+into an interactive rebase.
 
    For example if you want to clean up a feature branch and at the same
 time rebase it onto ‘master’, then you could use ‘r-iu’.  But we
@@ -5722,49 +5781,55 @@ only have to redo half the work.
 
    Explicitly enabling ‘--interactive’ won’t have an effect on the
 following commands as they always use that argument anyway, even if it
-is not enabled in the popup.
+is not enabled in the transient.
 
 ‘r i’     (‘magit-rebase-interactive’)
 
-     Start an interactive rebase sequence.
+     This command starts an interactive rebase sequence.
 
 ‘r f’     (‘magit-rebase-autosquash’)
 
-     Combine squash and fixup commits with their intended targets.
+     This command combines squash and fixup commits with their intended
+     targets.
 
 ‘r m’     (‘magit-rebase-edit-commit’)
 
-     Edit a single older commit using rebase.
+     This command starts an interactive rebase sequence that lets the
+     user edit a single older commit.
 
 ‘r w’     (‘magit-rebase-reword-commit’)
 
-     Reword a single older commit using rebase.
+     This command starts an interactive rebase sequence that lets the
+     user reword a single older commit.
 
 ‘r k’     (‘magit-rebase-remove-commit’)
 
-     Remove a single older commit using rebase.
+     This command removes a single older commit using rebase.
 
-   When a rebase is in progress, then the popup buffer features these
-commands instead.
+   When a rebase is in progress, then the transient instead features the
+following suffix commands.
 
 ‘r r’     (‘magit-rebase-continue’)
 
-     Restart the current rebasing operation.
+     This command restart the current rebasing operation.
 
      In some cases this pops up a commit message buffer for you do edit.
      With a prefix argument the old message is reused as-is.
 
 ‘r s’     (‘magit-rebase-skip’)
 
-     Skip the current commit and restart the current rebase operation.
+     This command skips the current commit and restarts the current
+     rebase operation.
 
 ‘r e’     (‘magit-rebase-edit’)
 
-     Edit the todo list of the current rebase operation.
+     This command lets the user edit the todo list of the current rebase
+     operation.
 
 ‘r a’     (‘magit-rebase-abort’)
 
-     Abort the current rebase operation, restoring the original branch.
+     This command aborts the current rebase operation, restoring the
+     original branch.
 
 * Menu:
 
@@ -6064,13 +6129,14 @@ File: magit.info,  Node: Cherry Picking,  Next: Resetting,  Prev: Rebasing,  Up:
 
 Also see *note (gitman)git-cherry-pick::.
 
-‘A’     (‘magit-cherry-pick-popup’)
+‘A’     (‘magit-cherry-pick’)
 
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
-   When no cherry-pick or revert is in progress, then the popup buffer
-features the following commands.
+   When no cherry-pick or revert is in progress, then the transient
+features the following suffix commands.
 
 ‘A A’     (‘magit-cherry-copy’)
 
@@ -6087,7 +6153,7 @@ features the following commands.
      prompted for a commit or range, defaulting to the commit at point.
 
      This command also has a top-level binding, which can be invoked
-     without using the popup by typing ‘a’ at the top-level.
+     without using the transient by typing ‘a’ at the top-level.
 
    The following commands not only apply some commits to some branch,
 but also remove them from some other branch.  The removal is performed
@@ -6142,8 +6208,8 @@ you would have to if these commands didn’t exist at all.
      command stops and you have to resolve the conflicts and then finish
      the process manually.
 
-   When a cherry-pick or revert is in progress, then the popup buffer
-features these commands instead.
+   When a cherry-pick or revert is in progress, then the transient
+instead features the following suffix commands.
 
 ‘A A’     (‘magit-sequence-continue’)
 
@@ -6168,13 +6234,14 @@ File: magit.info,  Node: Reverting,  Up: Cherry Picking
 6.9.1 Reverting
 ---------------
 
-‘V’     (‘magit-revert-popup’)
+‘V’     (‘magit-revert’)
 
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
-   When no cherry-pick or revert is in progress, then the popup buffer
-features the following commands.
+   When no cherry-pick or revert is in progress, then the transient
+features the following suffix commands.
 
 ‘V V’     (‘magit-revert-and-commit’)
 
@@ -6189,8 +6256,8 @@ features the following commands.
      region selects multiple commits, then revert all of them, without
      prompting.
 
-   When a cherry-pick or revert is in progress, then the popup buffer
-features these commands instead.
+   When a cherry-pick or revert is in progress, then the transient
+instead features the following suffix commands.
 
 ‘V A’     (‘magit-sequence-continue’)
 
@@ -6262,15 +6329,16 @@ File: magit.info,  Node: Stashing,  Prev: Resetting,  Up: Manipulating
 
 Also see *note (gitman)git-stash::.
 
-‘z’     (‘magit-stash-popup’)
+‘z’     (‘magit-stash’)
 
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
 ‘z z’     (‘magit-stash-both’)
 
      Create a stash of the index and working tree.  Untracked files are
-     included according to popup arguments.  One prefix argument is
+     included according to infix arguments.  One prefix argument is
      equivalent to ‘--include-untracked’ while two prefix arguments are
      equivalent to ‘--all’.
 
@@ -6282,21 +6350,21 @@ Also see *note (gitman)git-stash::.
 ‘z w’     (‘magit-stash-worktree’)
 
      Create a stash of unstaged changes in the working tree.  Untracked
-     files are included according to popup arguments.  One prefix
+     files are included according to infix arguments.  One prefix
      argument is equivalent to ‘--include-untracked’ while two prefix
      arguments are equivalent to ‘--all’.
 
 ‘z x’     (‘magit-stash-keep-index’)
 
      Create a stash of the index and working tree, keeping index intact.
-     Untracked files are included according to popup arguments.  One
+     Untracked files are included according to infix arguments.  One
      prefix argument is equivalent to ‘--include-untracked’ while two
      prefix arguments are equivalent to ‘--all’.
 
 ‘z Z’     (‘magit-snapshot-both’)
 
      Create a snapshot of the index and working tree.  Untracked files
-     are included according to popup arguments.  One prefix argument is
+     are included according to infix arguments.  One prefix argument is
      equivalent to ‘--include-untracked’ while two prefix arguments are
      equivalent to ‘--all’.
 
@@ -6308,7 +6376,7 @@ Also see *note (gitman)git-stash::.
 ‘z W’     (‘magit-snapshot-worktree’)
 
      Create a snapshot of unstaged changes in the working tree.
-     Untracked files are included according to popup arguments.  One
+     Untracked files are included according to infix arguments.  One
      prefix argument is equivalent to ‘--include-untracked’ while two
      prefix arguments are equivalent to ‘--all’-.
 
@@ -6395,8 +6463,8 @@ File: magit.info,  Node: Transferring,  Next: Miscellaneous,  Prev: Manipulating
 * Fetching::
 * Pulling::
 * Pushing::
-* Creating and Sending Patches::
-* Applying Patches::
+* Plain Patches::
+* Maildir Patches::
 
 
 File: magit.info,  Node: Remotes,  Next: Fetching,  Up: Transferring
@@ -6406,43 +6474,58 @@ File: magit.info,  Node: Remotes,  Next: Fetching,  Up: Transferring
 
 * Menu:
 
-* The Remote Popup::
-* The Remote Config Popup::
+* Remote Commands::
+* Remote Git Variables::
 
 
-File: magit.info,  Node: The Remote Popup,  Next: The Remote Config Popup,  Up: Remotes
+File: magit.info,  Node: Remote Commands,  Next: Remote Git Variables,  Up: Remotes
 
-7.1.1 The Remote Popup
-----------------------
+7.1.1 Remote Commands
+---------------------
 
-The popup ‘magit-remote-popup’ is used to add remotes and to make
-changes to existing remotes.  This popup only deals with remotes
-themselves, not with branches or the transfer of commits.  Those
-features are available from separate popups.
+The transient prefix command ‘magit-remote’ is used to add remotes and
+to make changes to existing remotes.  This command only deals with
+remotes themselves, not with branches or the transfer of commits.  Those
+features are available from separate transient commands.
 
    Also see *note (gitman)git-remote::.
 
-‘M’     (‘magit-remote-popup’)
+‘M’     (‘magit-remote’)
 
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the following suffix commands
+     and displays them in a temporary buffer until a suffix is invoked.
 
- -- User Option: magit-remote-popup-show-variables
+     By default it also binds and displays the values of some
+     remote-related Git variables and allows changing their values.
 
-     This option controls whether the ‘magit-remote-popup’ shows remote
-     related Git variables.  When set to nil, no variables are displayed
-     directly in this popup, and the sub-popup
-     ‘magit-remote-config-popup’ has to be used instead to view and
-     change remote related variables.
+ -- User Option: magit-remote-direct-configure
 
-‘M C’     (‘magit-remote-config-popup’)
+     This option controls whether remote-related Git variables are
+     accessible directly from the transient ‘magit-remote’.
 
-     This command shows remote related variables in a separate popup.
-     By default this asks the user for which remote the variables should
-     be shown.  When ‘magit-remote-popup-show-variables’ is ‘nil’, then
-     it shows the variables for the upstream of the current branch or
-     "origin" it that branch has no remote upstream.  To select another
-     remote use a prefix argument.
+     If ‘t’ (the default) and a local branch is checked out, then
+     ‘magit-remote’ features the variables for the upstream remote of
+     that branch, or if ‘HEAD’ is detached, for ‘origin’, provided that
+     exists.
+
+     If ‘nil’, then ‘magit-remote-configure’ has to be used to do so.
+
+‘M C’     (‘magit-remote-configure’)
+
+     This transient prefix command binds commands that set the value of
+     remote-related variables and displays them in a temporary buffer
+     until the transient is exited.
+
+     With a prefix argument, this command always prompts for a remote.
+
+     Without a prefix argument this depends on whether it was invoked as
+     a suffix of ‘magit-remote’ and on the
+     ‘magit-remote-direct-configure’ option.  If ‘magit-remote’ already
+     displays the variables for the upstream, then it does not make
+     sense to invoke another transient that displays them for the same
+     remote.  In that case this command prompts for a remote.
+
+   The variables are described in *note Remote Git Variables::.
 
 ‘M a’     (‘magit-remote-add’)
 
@@ -6499,24 +6582,14 @@ features are available from separate popups.
      and the variable isn’t already set.
 
 
-File: magit.info,  Node: The Remote Config Popup,  Prev: The Remote Popup,  Up: Remotes
+File: magit.info,  Node: Remote Git Variables,  Prev: Remote Commands,  Up: Remotes
 
-7.1.2 The Remote Config Popup
------------------------------
+7.1.2 Remote Git Variables
+--------------------------
 
- -- Command: magit-remote-config-popup
-
-     This prefix command shows the following remote-related Git
-     variables in a popup buffer.  The values can be changed from that
-     buffer.
-
-     This popup is a sub-popup of the ‘magit-remote-popup’ in which "C"
-     is bound to this popup.
-
-   The following variables are used to configure a specific remote.  The
-values are being displayed for the upstream remote of the current
-branch.  To change the value for another remote invoke
-‘magit-remote-config-popup’ with a prefix argument.
+These variables can be set from the transient prefix command
+‘magit-remote-configure’.  By default they can also be set from
+‘magit-remote’.  See *note Remote Commands::.
 
  -- Variable: remote.NAME.url
 
@@ -6543,9 +6616,31 @@ branch.  To change the value for another remote invoke
 
      This variable specifies what tags are fetched by default.  If the
      value is ‘--no-tags’ then no tags are fetched.  If the value is
-     ‘--tags’, then all tags are fetched.  If this variable has not
+     ‘--tags’, then all tags are fetched.  If this variable has no
      value, then only tags are fetched that are reachable from fetched
      branches.
+
+ -- User Option: magit-remote-set-if-missing
+
+     This option controls whether missing remotes are configured before
+     fetching, pulling, pushing and rebasing.
+
+     When ‘nil’, then commands such as ‘magit-pull-from-upstream’ and
+     ‘magit-rebase-onto-uptream’ are not available as suffix commands if
+     the push-remote or upstream is not configured.
+
+     When ‘non-nil’, then these commands are always available in their
+     respective transient, but if the required configuration is missing,
+     then they do appear in a way that indicates that this is the case.
+     If the user invokes such a command, then it asks for the necessary
+     configuration, stores the configuration, and only then performs the
+     action.
+
+     This option also affects whether the argument ‘--set-upstream’ is
+     available in ‘magit-push’.  If the value is ‘non-nil’, then that
+     argument would be redundant.  But note that changing the value of
+     this option does not take affect immediately, the argument will
+     only be added or removed after restarting Emacs.
 
 
 File: magit.info,  Node: Fetching,  Next: Pulling,  Prev: Remotes,  Up: Transferring
@@ -6553,50 +6648,67 @@ File: magit.info,  Node: Fetching,  Next: Pulling,  Prev: Remotes,  Up: Transfer
 7.2 Fetching
 ============
 
-For information about the differences between the _upstream_ and the
-_push-remote_, see *note Branching::.
+Also see *note (gitman)git-fetch::.  For information about the upstream
+and the push-remote, see *note The Two Remotes::.
 
-   Also see *note (gitman)git-fetch::.
+‘f’     (‘magit-fetch’)
 
-‘f’     (‘magit-fetch-popup’)
-
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
 ‘f p’     (‘magit-fetch-from-pushremote’)
 
-     Fetch from the push-remote of the current branch.
+     This command fetches from the push-remote of the current branch.
+
+     When ‘magit-remote-set-if-missing’ is non-nil and the push-remote
+     is not configured, then configure it before fetching.  With a
+     prefix argument let the user change the push-remote before fetching
+     from it.
 
 ‘f u’     (‘magit-fetch-from-upstream’)
 
-     Fetch from the upstream of the current branch.
+     This command fetch from the upstream of the current branch.
+
+     When ‘magit-remote-set-if-missing’ is non-nil and the upstream is
+     not configured, then configure it before fetching.  With a prefix
+     argument let the user change the upstream before fetching from it.
 
 ‘f e’     (‘magit-fetch-other’)
 
-     Fetch from another repository.
+     This command fetch from a repository read from the minibuffer.
 
 ‘f o’     (‘magit-fetch-branch’)
 
-     Fetch a branch from a remote, both of which are read from the
-     minibuffer.
+     This command fetches a branch from a remote, both of which are read
+     from the minibuffer.
 
 ‘f r’     (‘magit-fetch-refspec’)
 
-     Fetch from a remote using an explicit refspec, both of which are
-     read from the minibuffer.
+     This command fetches from a remote using an explicit refspec, both
+     of which are read from the minibuffer.
 
 ‘f a’     (‘magit-fetch-all’)
 
-     Fetch from all remotes.
+     This command fetches from all remotes.
 
 ‘f m’     (‘magit-submodule-fetch’)
 
-     Fetch all submodules.  With a prefix argument fetch all remotes of
-     all submodules.
+     This command fetches all submodules.  With a prefix argument it
+     fetches all remotes of all submodules.
 
-   Instead of using one popup for fetching and another for pulling, you
-could also use ‘magit-pull-and-fetch-popup’.  See its doc-string for
-more information.
+ -- User Option: magit-pull-or-fetch
+
+     By default fetch and pull commands are available from separate
+     transient prefix command.  Setting this to ‘t’ adds some (but not
+     all) of the above suffix commands to the ‘magit-pull’ transient.
+
+     If you do that, then you might also want to change the key binding
+     for these prefix commands, e.g.:
+
+          (setq magit-pull-or-fetch t)
+          (define-key magit-mode-map "f" 'magit-pull) ; was magit-fetch
+          (define-key magit-mode-map "F" nil)         ; was magit-pull
 
 
 File: magit.info,  Node: Pulling,  Next: Pushing,  Prev: Fetching,  Up: Transferring
@@ -6604,80 +6716,80 @@ File: magit.info,  Node: Pulling,  Next: Pushing,  Prev: Fetching,  Up: Transfer
 7.3 Pulling
 ===========
 
-For information about the differences between the _upstream_ and the
-_push-remote_, see *note Branching::.
+Also see *note (gitman)git-pull::.  For information about the upstream
+and the push-remote, see *note The Two Remotes::.
 
-   Also see *note (gitman)git-pull::.
+‘F’     (‘magit-pull’)
 
-‘F’     (‘magit-pull-popup’)
-
-     This prefix command shows the following suffix commands in a popup
-     buffer.
+     This transient prefix command binds the following suffix commands
+     and displays them in a temporary buffer until a suffix is invoked.
 
 ‘F p’     (‘magit-pull-from-pushremote’)
 
-     Pull from the push-remote of the current branch.
+     This command pulls from the push-remote of the current branch.
+
+     When ‘magit-remote-set-if-missing’ is non-nil and the push-remote
+     is not configured, then configure it before pulling.  With a prefix
+     argument let the user change the push-remote before pulling from
+     it.
 
 ‘F u’     (‘magit-pull-from-upstream’)
 
-     Pull from the upstream of the current branch.
+     This command pulls from the upstream of the current branch.
+
+     When ‘magit-remote-set-if-missing’ is non-nil and the upstream is
+     not configured, then configure it before pulling.  With a prefix
+     argument let the user change the upstream before pulling from it.
 
 ‘F e’     (‘magit-pull-branch’)
 
-     Pull from a branch read in the minibuffer.
-
-   Instead of using one popup for fetching and another for pulling, you
-could also use ‘magit-pull-and-fetch-popup’.  See its doc-string for
-more information.
+     This command pulls from a branch read in the minibuffer.
 
 
-File: magit.info,  Node: Pushing,  Next: Creating and Sending Patches,  Prev: Pulling,  Up: Transferring
+File: magit.info,  Node: Pushing,  Next: Plain Patches,  Prev: Pulling,  Up: Transferring
 
 7.4 Pushing
 ===========
 
-For information about the differences between the _upstream_ and the
-_push-remote_, see *note Branching::.
+Also see *note (gitman)git-push::.  For information about the upstream
+and the push-remote, see *note The Two Remotes::.
 
-   Also see *note (gitman)git-push::.
+‘P’     (‘magit-push’)
 
-‘P’     (‘magit-push-popup’)
-
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
 ‘P p’     (‘magit-push-current-to-pushremote’)
 
-     Push the current branch to ‘branch.<name>.pushRemote’ or if that is
-     unset to ‘remote.pushDefault’.
+     This command pushes the current branch to its push-remote.
 
-     When ‘magit-push-current-set-remote-if-missing’ is non-nil and the
-     push-remote is not configured, then read the push-remote from the
-     user, set it, and then push to it.  With a prefix argument the
-     push-remote can be changed before pushed to it.
+     When ‘magit-remote-set-if-missing’ is non-nil and the push-remote
+     is not configured, then configure it before pushing.  With a prefix
+     argument let the user change the push-remote before pushing to it.
 
 ‘P u’     (‘magit-push-current-to-upstream’)
 
-     Push the current branch to its upstream branch.
+     This command pushes the current branch to its upstream branch.
 
-     When ‘magit-push-current-set-remote-if-missing’ is non-nil and the
-     push-remote is not configured, then read the upstream from the
-     user, set it, and then push to it.  With a prefix argument the
-     push-remote can be changed before pushed to it.
+     When ‘magit-remote-set-if-missing’ is non-nil and the upstream is
+     not configured, then configure it before pushing.  With a prefix
+     argument let the user change the upstream before pushing to it.
 
 ‘P e’     (‘magit-push-current’)
 
-     Push the current branch to a branch read in the minibuffer.
+     This command pushes the current branch to a branch read in the
+     minibuffer.
 
 ‘P o’     (‘magit-push-other’)
 
-     Push an arbitrary branch or commit somewhere.  Both the source and
-     the target are read in the minibuffer.
+     This command pushes an arbitrary branch or commit somewhere.  Both
+     the source and the target are read in the minibuffer.
 
 ‘P r’     (‘magit-push-refspecs’)
 
-     Push one or multiple refspecs to a remote, both of which are read
-     in the minibuffer.
+     This command pushes one or multiple refspecs to a remote, both of
+     which are read in the minibuffer.
 
      To use multiple refspecs, separate them with commas.  Completion is
      only available for the part before the colon, or when no colon is
@@ -6685,144 +6797,136 @@ _push-remote_, see *note Branching::.
 
 ‘P m’     (‘magit-push-matching’)
 
-     Push all matching branches to another repository.  If multiple
-     remotes exit, then read one from the user.  If just one exists, use
-     that without requiring confirmation.
+     This command pushes all matching branches to another repository.
+
+     If only one remote exists, then push to that.  Otherwise prompt for
+     a remote, offering the remote configured for the current branch as
+     default.
 
 ‘P t’     (‘magit-push-tags’)
 
-     Push all tags to another repository.  If only one remote exists,
-     then push to that.  Otherwise prompt for a remote, offering the
-     remote configured for the current branch as default.
+     This command pushes all tags to another repository.
+
+     If only one remote exists, then push to that.  Otherwise prompt for
+     a remote, offering the remote configured for the current branch as
+     default.
 
 ‘P T’     (‘magit-push-tag’)
 
-     Push a tag to another repository.
+     This command pushes a tag to another repository.
 
    Two more push commands exist, which by default are not available from
-the push popup.  See their doc-strings for instructions on how to add
-them to the popup.
+the push transient.  See their doc-strings for instructions on how to
+add them to the transient.
 
  -- Command: magit-push-implicitly args
 
-     Push somewhere without using an explicit refspec.
+     This command pushes somewhere without using an explicit refspec.
 
-     This command simply runs ‘git push -v [ARGS]’.  ARGS are the
-     arguments specified in the popup buffer.  No explicit refspec
-     arguments are used.  Instead the behavior depends on at least these
-     Git variables: ‘push.default’, ‘remote.pushDefault’,
-     ‘branch.<branch>.pushRemote’, ‘branch.<branch>.remote’,
-     ‘branch.<branch>.merge’, and ‘remote.<remote>.push’.
+     This command simply runs ‘git push -v [ARGS]’.  ARGS are the infix
+     arguments.  No explicit refspec arguments are used.  Instead the
+     behavior depends on at least these Git variables: ‘push.default’,
+     ‘remote.pushDefault’, ‘branch.<branch>.pushRemote’,
+     ‘branch.<branch>.remote’, ‘branch.<branch>.merge’, and
+     ‘remote.<remote>.push’.
 
  -- Command: magit-push-to-remote remote args
 
-     Push to the remote REMOTE without using an explicit refspec.  The
-     remote is read in the minibuffer.
+     This command pushes to the remote REMOTE without using an explicit
+     refspec.  The remote is read in the minibuffer.
 
      This command simply runs ‘git push -v [ARGS] REMOTE’.  ARGS are the
-     arguments specified in the popup buffer.  No refspec arguments are
-     used.  Instead the behavior depends on at least these Git
-     variables: ‘push.default’, ‘remote.pushDefault’,
-     ‘branch.<branch>.pushRemote’, ‘branch.<branch>.remote’,
-     ‘branch.<branch>.merge’, and ‘remote.<remote>.push’.
-
- -- User Option: magit-push-current-set-remote-if-missing
-
-     This option controls whether missing remotes are configured before
-     pushing.
-
-     When ‘nil’, then the command ‘magit-push-current-to-pushremote’ and
-     ‘magit-push-current-to-upstream’ do not appear in the push popup if
-     the push-remote resp.  upstream is not configured.  If the user
-     invokes one of these commands anyway, then it raises an error.
-
-     When ‘non-nil’, then these commands always appear in the push
-     popup.  But if the required configuration is missing, then they do
-     appear in a way that indicates that this is the case.  If the user
-     invokes one of them, then it asks for the necessary configuration,
-     stores the configuration, and then uses it to push a first time.
-
-     This option also affects whether the argument ‘--set-upstream’ is
-     available in the popup.  If the value is ‘non-nil’, then that
-     argument is redundant.  But note that changing the value of this
-     option does not take affect immediately, the argument will only be
-     added or removed after restarting Emacs.
+     infix arguments.  No refspec arguments are used.  Instead the
+     behavior depends on at least these Git variables: ‘push.default’,
+     ‘remote.pushDefault’, ‘branch.<branch>.pushRemote’,
+     ‘branch.<branch>.remote’, ‘branch.<branch>.merge’, and
+     ‘remote.<remote>.push’.
 
 
-File: magit.info,  Node: Creating and Sending Patches,  Next: Applying Patches,  Prev: Pushing,  Up: Transferring
+File: magit.info,  Node: Plain Patches,  Next: Maildir Patches,  Prev: Pushing,  Up: Transferring
 
-7.5 Creating and Sending Patches
-================================
+7.5 Plain Patches
+=================
 
-‘W’     (‘magit-patch-popup’)
+‘W’     (‘magit-patch’)
 
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
-‘W p’     (‘magit-format-patch’)
+‘W c’     (‘magit-patch-create’)
 
-     Create patches for a set commits.  If the region marks commits,
-     then create patches for those.  Otherwise prompt for a range or a
-     single commit, defaulting to the commit at point.
+     This command creates patches for a set commits.  If the region
+     marks several commits, then it creates patches for all of them.
+     Otherwise it functions as a transient prefix command, which
+     features several infix arguments and binds itself as a suffix
+     command.  When this command is invoked as a suffix of itself, then
+     it creates a patch using the specified infix arguments.
 
-‘W r’     (‘magit-request-pull’)
+‘w a’     (‘magit-patch-apply’)
 
-     Request that upstream pulls from your public repository.
+     This command applies a patch.  This is a transient prefix command,
+     which features several infix arguments and binds itself as a suffix
+     command.  When this command is invoked as a suffix of itself, then
+     it applies a patch using the specified infix arguments.
 
-   It is also possible to save a plain patch file by using ‘C-x C-w’
-inside a ‘magit-diff-mode’ or ‘magit-revision-mode’ buffer.
+‘W s’     (‘magit-patch-save’)
+
+     This command creates a patch from the current diff.
+
+     Inside ‘magit-diff-mode’ or ‘magit-revision-mode’ buffers, ‘C-x
+     C-w’ is also bound to this command.
+
+   FIXME It is also possible to save a plain patch file by using ‘C-x
+C-w’ inside a ‘magit-diff-mode’ or ‘magit-revision-mode’ buffer.
 
 
-File: magit.info,  Node: Applying Patches,  Prev: Creating and Sending Patches,  Up: Transferring
+File: magit.info,  Node: Maildir Patches,  Prev: Plain Patches,  Up: Transferring
 
-7.6 Applying Patches
-====================
+7.6 Maildir Patches
+===================
 
 Also see *note (gitman)git-am::.  and *note (gitman)git-apply::.
 
-‘w’     (‘magit-am-popup’)
+‘w’     (‘magit-am’)
 
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
 ‘w w’     (‘magit-am-apply-patches’)
 
-     Apply one or more patches.  If the region marks files, then apply
-     those patches.  Otherwise read a file name in the minibuffer
-     defaulting to the file at point.
+     This command applies one or more patches.  If the region marks
+     files, then those are applied as patches.  Otherwise this command
+     reads a file-name in the minibuffer, defaulting to the file at
+     point.
 
 ‘w m’     (‘magit-am-apply-maildir’)
 
-     Apply the patches from a maildir.
+     This command applies patches from a maildir.
 
-   When an "am" operation is in progress, then the popup buffer features
-these commands instead.
+‘w a’     (‘magit-patch-apply’)
+
+     This command applies a plain patch.  For a longer description see
+     *note Plain Patches::.  This command is only available from the
+     ‘magit-am’ transient for historic reasons.
+
+   When an "am" operation is in progress, then the transient instead
+features the following suffix commands.
 
 ‘w w’     (‘magit-am-continue’)
 
-     Resume the current patch applying sequence.
+     This command resumes the current patch applying sequence.
 
 ‘w s’     (‘magit-am-skip’)
 
-     Skip the stopped at patch during a patch applying sequence.
+     This command skips the stopped at patch during a patch applying
+     sequence.
 
 ‘w a’     (‘magit-am-abort’)
 
-     Abort the current patch applying sequence.  This discards all
-     changes made since the sequence started.
-
-   In addition to the commands listed at the top, the "am" popup also
-has a binding for the related "patch" popup.
-
-‘w a’     (‘magit-patch-apply-popup’)
-
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
-
-‘w a a’     (‘magit-patch-apply’)
-
-     This command applies a simple patch file, which may not contain any
-     Git metadata in addition to the actual diff.
+     This command aborts the current patch applying sequence.  This
+     discards all changes made since the sequence started.
 
 
 File: magit.info,  Node: Miscellaneous,  Next: Customizing,  Prev: Transferring,  Up: Top
@@ -6850,10 +6954,11 @@ File: magit.info,  Node: Tagging,  Next: Notes,  Up: Miscellaneous
 
 Also see *note (gitman)git-tag::.
 
-‘t’     (‘magit-tag-popup’)
+‘t’     (‘magit-tag’)
 
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
 ‘t t’     (‘magit-tag-create’)
 
@@ -6878,8 +6983,8 @@ Also see *note (gitman)git-tag::.
 
      Then it calls "git tag –annotate –sign -m MSG TAG" to create the
      tag, regardless of whether these arguments are enabled in the
-     popup.  Finally it shows the refs buffer to let the user quickly
-     review the result.
+     transient.  Finally it shows the refs buffer to let the user
+     quickly review the result.
 
 ‘t k’     (‘magit-tag-delete’)
 
@@ -6901,10 +7006,11 @@ File: magit.info,  Node: Notes,  Next: Submodules,  Prev: Tagging,  Up: Miscella
 
 Also see *note (gitman)git-notes::.
 
-‘T’     (‘magit-notes-popup’)
+‘T’     (‘magit-notes’)
 
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
 ‘T T’     (‘magit-notes-edit’)
 
@@ -6936,7 +7042,7 @@ in conflicts which have to resolved in the temporary worktree
      ref.  The current notes ref is the value of Git variable
      ‘core.notesRef’ or "refs/notes/commits" if that is undefined.
 
-   When a notes merge is in progress then the popup features the
+   When a notes merge is in progress then the transient features the
 following suffix commands, instead of those listed above.
 
 ‘T c’     (‘magit-notes-merge-commit’)
@@ -6975,10 +7081,10 @@ Also see *note (gitman)git-submodule::.
 * Menu:
 
 * Listing Submodules::
-* Submodule Popup::
+* Submodule Transient::
 
 
-File: magit.info,  Node: Listing Submodules,  Next: Submodule Popup,  Up: Submodules
+File: magit.info,  Node: Listing Submodules,  Next: Submodule Transient,  Up: Submodules
 
 8.3.1 Listing Submodules
 ------------------------
@@ -7024,15 +7130,16 @@ Sections::.
      not displayed in the super-repository’s status buffer.
 
 
-File: magit.info,  Node: Submodule Popup,  Prev: Listing Submodules,  Up: Submodules
+File: magit.info,  Node: Submodule Transient,  Prev: Listing Submodules,  Up: Submodules
 
-8.3.2 Submodule Popup
----------------------
+8.3.2 Submodule Transient
+-------------------------
 
-‘o’     (‘magit-submodule-popup’)
+‘o’     (‘magit-submodule’)
 
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
    Some of the below commands default to act on the modules that are
 selected using the region.  For brevity their description talk about
@@ -7097,42 +7204,60 @@ File: magit.info,  Node: Subtree,  Next: Worktree,  Prev: Submodules,  Up: Misce
 
 Also see *note (gitman)git-subtree::.
 
-‘O’     (‘magit-tree-popup’)
+‘O’     (‘magit-subtree’)
 
-     This prefix command shows the following suffix commands along with
-     the appropriate infix arguments in a popup buffer.
+     This transient prefix command binds the two sub-transients; one for
+     importing a subtree and one for exporting a subtree.
 
-   Most infix arguments only apply to some of the ‘git subtree’
-subcommands.  When an argument that does not apply to the invoked
-command is set, then it is silently ignored.
+‘O i’     (‘magit-subtree-import’)
 
-   When the ‘--prefix’ argument is set in the popup buffer, then that is
-used.  Otherwise the prefix is read in the minibuffer.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
-‘O a’     (‘magit-subtree-add’)
+     The suffixes of this command import subtrees.
 
-     Add COMMIT from REPOSITORY as a new subtree at PREFIX.
+     If the ‘--prefix’ argument is set, then the suffix commands use
+     that prefix without prompting the user.  If it is unset, then they
+     read the prefix in the minibuffer.
 
-‘O c’     (‘magit-subtree-add-commit’)
+‘O i a’     (‘magit-subtree-add’)
 
-     Add COMMIT as a new subtree at PREFIX.
+     This command adds COMMIT from REPOSITORY as a new subtree at
+     PREFIX.
 
-‘O m’     (‘magit-subtree-merge’)
+‘O i c’     (‘magit-subtree-add-commit’)
 
-     Merge COMMIT into the PREFIX subtree.
+     This command add COMMIT as a new subtree at PREFIX.
 
-‘O f’     (‘magit-subtree-pull’)
+‘O i m’     (‘magit-subtree-merge’)
 
-     Pull COMMIT from REPOSITORY into the PREFIX subtree.
+     This command merges COMMIT into the PREFIX subtree.
 
-‘O p’     (‘magit-subtree-push’)
+‘O i f’     (‘magit-subtree-pull’)
 
-     Extract the history of the subtree PREFIX and push it to REF on
-     REPOSITORY.
+     This command pulls COMMIT from REPOSITORY into the PREFIX subtree.
 
-‘O s’     (‘magit-subtree-split’)
+‘O e’     (‘magit-subtree-export’)
 
-     Extract the history of the subtree PREFIX.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
+
+     The suffixes of this command export subtrees.
+
+     If the ‘--prefix’ argument is set, then the suffix commands use
+     that prefix without prompting the user.  If it is unset, then they
+     read the prefix in the minibuffer.
+
+‘O e p’     (‘magit-subtree-push’)
+
+     This command extract the history of the subtree PREFIX and pushes
+     it to REF on REPOSITORY.
+
+‘O e s’     (‘magit-subtree-split’)
+
+     This command extracts the history of the subtree PREFIX.
 
 
 File: magit.info,  Node: Worktree,  Next: Common Commands,  Prev: Subtree,  Up: Miscellaneous
@@ -7142,10 +7267,10 @@ File: magit.info,  Node: Worktree,  Next: Common Commands,  Prev: Subtree,  Up: 
 
 Also see *note (gitman)git-worktree::.
 
-‘%’     (‘magit-worktree-popup’)
+‘%’     (‘magit-worktree’)
 
-     This prefix command shows the following suffix commands in a popup
-     buffer.
+     This transient prefix command binds the following suffix commands
+     and displays them in a temporary buffer until a suffix is invoked.
 
 ‘% b’     (‘magit-worktree-checkout’)
 
@@ -7464,23 +7589,58 @@ File: magit.info,  Node: Minor Mode for Buffers Visiting Files,  Next: Minor Mod
 8.8 Minor Mode for Buffers Visiting Files
 =========================================
 
-The ‘magit-file-mode’ enables certain Magit features in file-visiting
-buffers belonging to a Git repository.  It should be enabled globally
-using ‘global-magit-file-mode’.  Currently this mode only establishes a
-few key bindings, but this might be extended in the future.
+The minor-mode ‘magit-file-mode’ enables certain Magit features in
+file-visiting buffers belonging to a Git repository.  The globalized
+variant ‘global-magit-file-mode’ enables the local mode in all such
+buffers.  It is enabled by default.  Currently the local mode only
+establishes a few key bindings, but this might be extended in the
+future.
 
- -- User Option: magit-file-mode
+ -- User Option: global-magit-file-mode
 
      Whether to establish certain Magit key bindings in all
-     file-visiting buffers belonging to a Git repository.  This
-     establishes the bindings suggested in *note Getting Started:: (but
-     only for file-visiting buffers), and additionally binds ‘C-c M-g’
-     to ‘magit-file-popup’.
+     file-visiting buffers belonging to any Git repository.  This is
+     enabled by default.  This globalized mode turns on the local
+     minor-mode ‘magit-file-mode’ in all suitable buffers.
 
-‘C-c M-g’     (‘magit-file-popup’)
+ -- Variable: magit-file-mode-map
 
-     This prefix command shows a popup buffer featuring suffix commands
-     that operate on the file being visited in the current buffer.
+     This keymap is used by the local minor-mode ‘magit-file-mode’ and
+     establishes the key bindings described below.
+
+     Note that the default binding for ‘magit-file-dispatch’ is very
+     cumbersome to use and that we recommend that you add a better
+     binding.
+
+     Instead of ‘C-c M-g’ I would have preferred to use ‘C-c g’ because
+     (1) it is similar to ‘C-x g’ (the recommended global binding for
+     ‘~magit-status’), (2) we cannot use ‘C-c C-g’ because we have been
+     recommending that that be bound to ‘magit-dispatch’ for a long
+     time, (3) we cannot use ‘C-x C-g’ because that is a convenient way
+     of aborting the incomplete key sequence ‘C-x’, and most importantly
+     (4) it would make it much easier to type the next key (a suffix
+     binding) because most of those are letters.
+
+     For example ‘C-c g b’ is much easier to type than ‘C-c M-g b’.  For
+     suffix bindings that use uppercase letters, the default is just
+     horrible—having to use e.g.  ‘C-c M-g B’ (‘Control+c Meta+g
+     Shift+b’) would drive anyone up the walls (or to Vim).
+
+     However ‘C-c LETTER’ bindings are reserved for users (see *note
+     (elisp)Key Binding Conventions::).  Packages are forbidden from
+     using those.  Doing so anyway is considered heresy.  Therefore if
+     you want a better binding, you have to add it yourself:
+
+          (define-key magit-file-mode-map
+            (kbd "C-c g") 'magit-file-dispatch)
+
+   The key bindings shown below assume that you have not improved the
+binding for ‘magit-file-dispatch’.
+
+‘C-c M-g’     (‘magit-file-dispatch’)
+
+     This transient prefix command binds the following suffix commands
+     and displays them in a temporary buffer until a suffix is invoked.
 
 ‘C-c M-g s’     (‘magit-stage-file’)
 
@@ -7491,19 +7651,23 @@ few key bindings, but this might be extended in the future.
      Unstage all changes to the file being visited in the current
      buffer.
 
-‘C-c M-g c’     (‘magit-commit-popup’)
+‘C-c M-g c’     (‘magit-commit’)
 
-     This prefix command shows suffix commands along with the
-     appropriate infix arguments in a popup buffer.  See *note
-     Initiating a Commit::.
+     This transient prefix command binds the following suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.  See *note Initiating a
+     Commit::.
 
-‘C-c M-g D’     (‘magit-diff-buffer-file-popup’)
+‘C-c M-g D’     (‘magit-diff’)
 
-     This prefix command shows the same suffix commands and infix
-     arguments in a popup buffer as ‘magit-diff-popup’.  But this
-     variant has to be called from a file-visiting buffer and the
-     visited file is automatically used in the popup to limit the diff
-     to that file.
+     This transient prefix command binds several diff suffix commands
+     and infix arguments and displays them in a temporary buffer until a
+     suffix is invoked.  See *note Diffing::.
+
+     This is the same command that ‘d’ is bound to in Magit buffers.  If
+     this command is invoked from a file-visiting buffer, then the
+     initial value of the option (‘--’) that limits the diff to certain
+     file(s) is set to the visited file.
 
 ‘C-c M-g d’     (‘magit-diff-buffer-file’)
 
@@ -7515,12 +7679,16 @@ few key bindings, but this might be extended in the future.
      This option controls whether ‘magit-diff-buffer-file’ uses a
      dedicated buffer.  See *note Modes and Buffers::.
 
-‘C-c M-g L’     (‘magit-log-buffer-file-popup’)
+‘C-c M-g L’     (‘magit-log’)
 
-     This prefix command shows the same suffix commands and infix
-     arguments in a popup buffer as ‘magit-log-popup’.  But this variant
-     has to be called from a file-visiting buffer and the visited file
-     is automatically used in the popup to limit the log to that file.
+     This transient prefix command binds several log suffix commands and
+     infix arguments and displays them in a temporary buffer until a
+     suffix is invoked.  See *note Logging::.
+
+     This is the same command that ‘l’ is bound to in Magit buffers.  If
+     this command is invoked from a file-visiting buffer, then the
+     initial value of the option (‘--’) that limits the log to certain
+     file(s) is set to the visited file.
 
 ‘C-c M-g l’     (‘magit-log-buffer-file’)
 
@@ -7538,27 +7706,18 @@ few key bindings, but this might be extended in the future.
      This option controls whether ‘magit-log-buffer-file’ uses a
      dedicated buffer.  See *note Modes and Buffers::.
 
-‘C-c M-g B’     (‘magit-blame-popup’)
+‘C-c M-g B’     (‘magit-blame’)
 
-     This prefix command shows all blaming suffix command along with the
-     appropriate infix arguments in a popup buffer.  See *note
-     Blaming::.
+     This transient prefix command binds all blaming suffix commands
+     along with the appropriate infix arguments and displays them in a
+     temporary buffer until a suffix is invoked.
 
-‘C-c M-g b’     (‘magit-blame-addition’)
+     For more information about this and the following commands also see
+     *note Blaming::.
 
-     This command shows for each line the revision in which it was
-     added.
-
-‘C-c M-g r’     (‘magit-blame-removal’)
-
-     This command shows for each line the revision in which it was
-     removed.  This command is only available in blob-visiting buffers.
-
-‘C-c M-g f’     (‘magit-blame-reverse’)
-
-     This command shows for each line the last revision in which it
-     still exists.  This command is only available in blob-visiting
-     buffers.
+   In addition to the ‘magit-blame’ sub-transient, the dispatch
+transient also binds several blaming suffix commands directly.  See
+*note Blaming:: for information about those commands and bindings.
 
 ‘C-c M-g e’     (‘magit-edit-line-commit’)
 
@@ -7623,301 +7782,4 @@ but this might be extended.
 ‘q’     (‘magit-kill-this-buffer’)
 
      Kill the current buffer.
-
-
-File: magit.info,  Node: Customizing,  Next: Plumbing,  Prev: Miscellaneous,  Up: Top
-
-9 Customizing
-*************
-
-Both Git and Emacs are highly customizable.  Magit is both a Git
-porcelain as well as an Emacs package, so it makes sense to customize it
-using both Git variables as well as Emacs options.  However this
-flexibility doesn’t come without problems, including but not limited to
-the following.
-
-   • Some Git variables automatically have an effect in Magit without
-     requiring any explicit support.  Sometimes that is desirable - in
-     other cases, it breaks Magit.
-
-     When a certain Git setting breaks Magit but you want to keep using
-     that setting on the command line, then that can be accomplished by
-     overriding the value for Magit only by appending something like
-     ‘("-c" "some.variable=compatible-value")’ to
-     ‘magit-git-global-arguments’.
-
-   • Certain settings like ‘fetch.prune=true’ are respected by Magit
-     commands (because they simply call the respective Git command) but
-     their value is not reflected in the respective popup buffers.  In
-     this case the ‘--prune’ argument in ‘magit-fetch-popup’ might be
-     active or inactive depending on the value of
-     ‘magit-fetch-arguments’ only, but that doesn’t keep the Git
-     variable from being honored by the suffix commands anyway.  So
-     pruning might happen despite the ‘--prune’ arguments being
-     displayed in a way that seems to indicate that no pruning will
-     happen.
-
-   I intend to address these and similar issues in a future release.
-
-* Menu:
-
-* Per-Repository Configuration::
-* Essential Settings::
-
-
-File: magit.info,  Node: Per-Repository Configuration,  Next: Essential Settings,  Up: Customizing
-
-9.1 Per-Repository Configuration
-================================
-
-Magit can be configured on a per-repository level using both Git
-variables as well as Emacs options.
-
-   To set a Git variable for one repository only, simply set it in
-‘/path/to/repo/.git/config’ instead of ‘$HOME/.gitconfig’ or
-‘/etc/gitconfig’.  See *note (gitman)git-config::.
-
-   Similarly, Emacs options can be set for one repository only by
-editing ‘/path/to/repo/.dir-locals.el’.  See *note (emacs)Directory
-Variables::.  For example to disable automatic refreshes of
-file-visiting buffers in just one huge repository use this:
-
-   • ‘/path/to/huge/repo/.dir-locals.el’
-
-          ((nil . ((magit-refresh-buffers . nil))))
-
-   If you want to apply the same settings to several, but not all,
-repositories then keeping the repository-local config files in sync
-would quickly become annoying.  To avoid that you can create config
-files for certain classes of repositories (e.g.  "huge repositories")
-and then include those files in the per-repository config files.  For
-example:
-
-   • ‘/path/to/huge/repo/.git/config’
-
-          [include]
-                  path = /path/to/huge-gitconfig
-
-   • ‘/path/to/huge-gitconfig’
-
-          [status]
-                  showUntrackedFiles = no
-
-   • ‘$HOME/.emacs.d/init.el’
-
-          (dir-locals-set-class-variables 'huge-git-repository
-             '((nil . ((magit-refresh-buffers . nil)))))
-
-          (dir-locals-set-directory-class
-             "/path/to/huge/repo/" 'huge-git-repository)
-
-
-File: magit.info,  Node: Essential Settings,  Prev: Per-Repository Configuration,  Up: Customizing
-
-9.2 Essential Settings
-======================
-
-The next two sections list and discuss several variables that many users
-might want to customize, for safety and/or performance reasons.
-
-* Menu:
-
-* Safety::
-* Performance::
-
-
-File: magit.info,  Node: Safety,  Next: Performance,  Up: Essential Settings
-
-9.2.1 Safety
-------------
-
-This section discusses various variables that you might want to change
-(or *not* change) for safety reasons.
-
-   Git keeps *committed* changes around long enough for users to recover
-changes they have accidentally been deleted.  It does not do the same
-for *uncommitted* changes in the working tree and not even the index
-(the staging area).  Because Magit makes it so easy to modify
-uncommitted changes, it also makes it easy to shoot yourself in the foot
-in the process.  For that reason Magit provides three global modes that
-save *tracked* files to work-in-progress references after or before
-certain actions.  See *note Wip Modes::.
-
-   These modes are not enabled by default because of performance
-concerns.  Instead a lot of potentially destructive commands require
-confirmation every time they are used.  In many cases this can be
-disabled by adding a symbol to ‘magit-no-confirm’ (see *note Completion
-and Confirmation::).  If you enable the various wip modes then you
-should add ‘safe-with-wip’ to this list.
-
-   Similarly it isn’t necessary to require confirmation before moving a
-file to the system trash - if you trashed a file by mistake then you can
-recover it from the there.  Option ‘magit-delete-by-moving-to-trash’
-controls whether the system trash is used, which is the case by default.
-Nevertheless, ‘trash’ isn’t a member of ‘magit-no-confirm’ - you might
-want to change that.
-
-   By default buffers visiting files are automatically reverted when the
-visited file changes on disk.  This isn’t as risky as it might seem, but
-to make an informed decision you should see *note Risk of Reverting
-Automatically::.
-
-
-File: magit.info,  Node: Performance,  Prev: Safety,  Up: Essential Settings
-
-9.2.2 Performance
------------------
-
-After Magit has run ‘git’ for side-effects, it also refreshes the
-current Magit buffer and the respective status buffer.  This is
-necessary because otherwise outdated information might be displayed
-without the user noticing.  Magit buffers are updated by recreating
-their content from scratch, which makes updating simpler and less
-error-prone, but also more costly.  Keeping it simple and just
-re-creating everything from scratch is an old design decision and
-departing from that will require major refactoring.
-
-   I plan to do that in time for the next major release.  I also intend
-to create logs and diffs asynchronously, which should also help a lot
-but also requires major refactoring.
-
-   Meanwhile you can tell Magit to only automatically refresh the
-current Magit buffer, but not the status buffer.  If you do that, then
-the status buffer is only refreshed automatically if it is the current
-buffer.
-
-     (setq magit-refresh-status-buffer nil)
-
-   You should also check whether any third-party packages have added
-anything to ‘magit-refresh-buffer-hook’, ‘magit-status-refresh-hook’,
-‘magit-pre-refresh-hook’, and ‘magit-post-refresh-hook’.  If so, then
-check whether those additions impact performance significantly.  Setting
-‘magit-refresh-verbose’ and then inspecting the output in the
-‘*Messages*’ buffer, should help doing so.
-
-   Magit also reverts buffers for visited files located inside the
-current repository when the visited file changes on disk.  That is
-implemented on top of ‘auto-revert-mode’ from the built-in library
-‘autorevert’.  To figure out whether that impacts performance, check
-whether performance is significantly worse, when many buffers exist
-and/or when some buffers visit files using TRAMP.  If so, then this
-should help.
-
-     (setq auto-revert-buffer-list-filter
-           'magit-auto-revert-repository-buffers-p)
-
-   For alternative approaches see *note Automatic Reverting of
-File-Visiting Buffers::.
-
-   If you have enabled any features that are disabled by default, then
-you should check whether they impact performance significantly.  It’s
-likely that they were not enabled by default because it is known that
-they reduce performance at least in large repositories.
-
-   If performance is only slow inside certain unusually large
-repositories, then you might want to disable certain features on a
-per-repository or per-repository-class basis only.  See *note
-Per-Repository Configuration::.
-
-* Menu:
-
-* Microsoft Windows Performance::
-* MacOS Performance::
-
-Log Performance
-...............
-
-When showing logs, Magit limits the number of commits initially shown in
-the hope that this avoids unnecessary work.  When using ‘--graph’ is
-used, then this unfortunately does not have the desired effect for large
-histories.  Junio, Git’s maintainer, said on the git mailing list
-(<http://www.spinics.net/lists/git/msg232230.html>): "‘--graph’ wants to
-compute the whole history and the max-count only affects the output
-phase after ‘--graph’ does its computation".
-
-   In other words, it’s not that Git is slow at outputting the
-differences, or that Magit is slow at parsing the output - the problem
-is that Git first goes outside and has a smoke.
-
-   We actually work around this issue by limiting the number of commits
-not only by using ‘-<N>’ but by also using a range.  But unfortunately
-that’s not always possible.
-
-   In repositories with more than a few thousand commits ‘--graph’
-should never be a member of ‘magit-log-section-arguments’.  That
-variable is used in the status buffer which is refreshed every time you
-run any Magit command.
-
-   Using ‘--color --graph’ is even slower.  Magit uses code that is part
-of Emacs to turn control characters into faces.  That code is pretty
-slow and this is quite noticeable when showing a log with many branches
-and merges.  For that reason ‘--color’ is not enabled by default
-anymore.  Consider leaving it at that.
-
-Diff Performance
-................
-
-If diffs are slow, then consider turning off some optional diff features
-by setting all or some of the following variables to ‘nil’:
-‘magit-diff-highlight-indentation’, ‘magit-diff-highlight-trailing’,
-‘magit-diff-paint-whitespace’, ‘magit-diff-highlight-hunk-body’, and
-‘magit-diff-refine-hunk’.
-
-   When showing a commit instead of some arbitrary diff, then some
-additional information is displayed.  Calculating this information can
-be quite expensive given certain circumstances.  If looking at a commit
-using ‘magit-revision-mode’ takes considerably more time than looking at
-the same commit in ‘magit-diff-mode’, then consider setting
-‘magit-revision-insert-related-refs’ to ‘nil’.
-
-Refs Buffer Performance
-.......................
-
-When refreshing the "references buffer" is slow, then that’s usually
-because several hundred refs are being displayed.  The best way to
-address that is to display fewer refs, obviously.
-
-   If you are not, or only mildly, interested in seeing the list of
-tags, then start by not displaying them:
-
-     (remove-hook 'magit-refs-sections-hook 'magit-insert-tags)
-
-   Then you should also make sure that the listed remote branches
-actually all exist.  You can do so by pruning branches which no longer
-exist using ‘f-pa’.
-
-Committing Performance
-......................
-
-When you initiate a commit, then Magit by default automatically shows a
-diff of the changes you are about to commit.  For large commits this can
-take a long time, which is especially distracting when you are
-committing large amounts of generated data which you don’t actually
-intend to inspect before committing.  This behavior can be turned off
-using:
-
-     (remove-hook 'server-switch-hook 'magit-commit-diff)
-
-   Then you can type ‘C-c C-d’ to show the diff when you actually want
-to see it, but only then.  Alternatively you can leave the hook alone
-and just type ‘C-g’ in those cases when it takes too long to generate
-the diff.  If you do that, then you will end up with a broken diff
-buffer, but doing it this way has the advantage that you usually get to
-see the diff, which is useful because it increases the odds that you
-spot potential issues.
-
-The Built-In VC Package
-.......................
-
-Emacs comes with a version control interface called "VC", see *note
-(emacs)Version Control::.  It is enabled be default, and if you don’t
-use it in addition to Magit, then you should disable it to keep it from
-performing unnecessary work:
-
-     (setq vc-handled-backends nil)
-
-   You can also disable its use for Git but keep using it when using
-another version control system:
-
-     (setq vc-handled-backends (delq 'Git vc-handled-backends))
 

@@ -31,12 +31,17 @@
 
 ;;; Obsolete since v2.91.0
 
+(define-obsolete-variable-alias 'magit-branch-popup-show-variables
+  'magit-branch-direct-configure "Magit 2.91.0")
+
+(define-obsolete-function-alias 'magit-dispatch-popup
+  'magit-dispatch "Magit 2.91.0")
+
 (define-obsolete-variable-alias 'magit-push-current-set-remote-if-missing
   'magit-remote-set-if-missing "Magit 2.91.0")
 
-(unless (require 'magit-popup nil t)
-  (defun magit--magit-popup-warning ()
-    (display-warning 'magit "\
+(defun magit--magit-popup-warning ()
+  (display-warning 'magit "\
 Magit no longer uses Magit-Popup.
 It now uses Transient.
 See https://emacsair.me/2019/02/14/transient-0.1.
@@ -63,25 +68,26 @@ that for.
   then you have to port that to modify the new \"transients\" instead.
   See https://github.com/magit/magit/wiki/\
 Converting-popup-modifications-to-transient-modifications"))
-  (defun magit-define-popup-switch (&rest _)
-    (magit--magit-popup-warning))
-  (defun magit-define-popup-option (&rest _)
-    (magit--magit-popup-warning))
-  (defun magit-define-popup-variable (&rest _)
-    (magit--magit-popup-warning))
-  (defun magit-define-popup-action (&rest _)
-    (magit--magit-popup-warning))
-  (defun magit-define-popup-sequence-action (&rest _)
-    (magit--magit-popup-warning))
-  (defun magit-define-popup-key (&rest _)
-    (magit--magit-popup-warning))
-  (defun magit-define-popup-keys-deferred (&rest _)
-    (magit--magit-popup-warning))
-  (defun magit-change-popup-key (&rest _)
-    (magit--magit-popup-warning))
-  (defun magit-remove-popup-key (&rest _)
-    (magit--magit-popup-warning))
-  )
+(cl-eval-when (eval load)
+  (unless (require 'magit-popup nil t)
+    (defun magit-define-popup-switch (&rest _)
+      (magit--magit-popup-warning))
+    (defun magit-define-popup-option (&rest _)
+      (magit--magit-popup-warning))
+    (defun magit-define-popup-variable (&rest _)
+      (magit--magit-popup-warning))
+    (defun magit-define-popup-action (&rest _)
+      (magit--magit-popup-warning))
+    (defun magit-define-popup-sequence-action (&rest _)
+      (magit--magit-popup-warning))
+    (defun magit-define-popup-key (&rest _)
+      (magit--magit-popup-warning))
+    (defun magit-define-popup-keys-deferred (&rest _)
+      (magit--magit-popup-warning))
+    (defun magit-change-popup-key (&rest _)
+      (magit--magit-popup-warning))
+    (defun magit-remove-popup-key (&rest _)
+      (magit--magit-popup-warning))))
 
 ;;; _
 (provide 'magit-obsolete)

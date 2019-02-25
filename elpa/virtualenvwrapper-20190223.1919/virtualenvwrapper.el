@@ -4,7 +4,7 @@
 
 ;; Author: James J Porter <porterjamesj@gmail.com>
 ;; URL: http://github.com/porterjamesj/virtualenvwrapper.el
-;; Package-Version: 20190123.1645
+;; Package-Version: 20190223.1919
 ;; Version: 20151123
 ;; Keywords: python, virtualenv, virtualenvwrapper
 ;; Package-Requires: ((dash "1.5.0") (s "1.6.1"))
@@ -30,6 +30,11 @@
 (defgroup virtualenvwrapper nil
   "Virtualenvwrapper for Emacs."
   :group 'python)
+
+(defcustom venv-virtualenv-command "virtualenv"
+  "The command to use to run virtualenv."
+  :type '(string)
+  :group 'virtualenvwrapper)
 
 (defcustom venv-location
   (expand-file-name (or (getenv "WORKON_HOME") "~/.virtualenvs/"))
@@ -331,7 +336,7 @@ identifying a virtualenv."
 (defun venv--check-executable ()
   "Verify that there is a virtualenv executable available,
 throwing an error if not"
-  (unless (executable-find "virtualenv")
+  (unless (executable-find venv-virtualenv-command)
     (error "There doesn't appear to be a virtualenv executable on
     your exec path. Ensure that you have virtualenv installed and
     that the exec-path variable is set such that virtualenv can
@@ -369,7 +374,7 @@ current `default-directory'."
       (when (-contains? (venv-get-candidates) it)
         (error "A virtualenv with this name already exists!"))
       (run-hooks 'venv-premkvirtualenv-hook)
-      (shell-command (concat "virtualenv " python-exe-arg " " parent-dir it))
+      (shell-command (concat venv-virtualenv-command " " python-exe-arg " " parent-dir it))
       (when (listp venv-location)
         (add-to-list 'venv-location (concat parent-dir it)))
       (venv-with-virtualenv it

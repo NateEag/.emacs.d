@@ -372,13 +372,13 @@ finding the executable with `exec-path'."
   :tag "Go language")
 
 (defcustom lsp-clients-go-server "bingo"
-  "The go-langageserver executable to use."
+  "The go language server executable to use."
   :group 'lsp-clients-go
   :risky t
   :type 'file)
 
-(defcustom lsp-clients-go-language-server-flags '("-gocodecompletion")
-  "Extra arguments for the go-langserver."
+(defcustom lsp-clients-go-server-args nil
+  "Extra arguments for the go language server."
   :type '(repeat string)
   :group 'lsp-clients-go)
 
@@ -434,15 +434,18 @@ defaults to half of your CPU cores."
 (defun lsp-clients-go--make-init-options ()
   "Init options for golang."
   `(:funcSnippetEnabled ,(lsp-clients-go--bool-to-json lsp-clients-go-func-snippet-enabled)
-                        :gocodeCompletionEnabled ,(lsp-clients-go--bool-to-json lsp-clients-go-gocode-completion-enabled)
-                        :formatTool ,lsp-clients-go-format-tool
-                        :goimportsLocalPrefix ,lsp-clients-go-imports-local-prefix
-                        :maxParallelism ,lsp-clients-go-max-parallelism
-                        :useBinaryPkgCache ,lsp-clients-go-use-binary-pkg-cache
-                        :diagnosticsEnabled ,lsp-clients-go-diagnostics-enabled))
+    :disableFuncSnippet ,(lsp-clients-go--bool-to-json (not lsp-clients-go-func-snippet-enabled))
+    :gocodeCompletionEnabled ,(lsp-clients-go--bool-to-json lsp-clients-go-gocode-completion-enabled)
+    :formatTool ,lsp-clients-go-format-tool
+    :goimportsLocalPrefix ,lsp-clients-go-imports-local-prefix
+    :maxParallelism ,lsp-clients-go-max-parallelism
+    :useBinaryPkgCache ,lsp-clients-go-use-binary-pkg-cache
+    :diagnosticsEnabled ,lsp-clients-go-diagnostics-enabled))
 
 (lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection (lambda () lsp-clients-go-server))
+ (make-lsp-client :new-connection (lsp-stdio-connection
+                                   (lambda () (cons lsp-clients-go-server
+                                                    lsp-clients-go-server-args)))
                   :major-modes '(go-mode)
                   :priority -1
                   :initialization-options 'lsp-clients-go--make-init-options
@@ -649,14 +652,8 @@ finding the executable with `exec-path'."
   "Generate the language server startup command."
   `(,lsp-clients-fortls-executable,@lsp-clients-fortls-args))
 
-(defun fortls--suggest-project-root ()
-  (and (memq major-mode '(f90-mode))
-       (when-let (dir (locate-dominating-file default-directory ".fortls"))
-         (expand-file-name dir))))
-
 (lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection
-                                   'lsp-clients--fortls-command)
+ (make-lsp-client :new-connection (lsp-stdio-connection 'lsp-clients--fortls-command)
                   :major-modes '(f90-mode)
                   :priority -1
                   :server-id 'fortls))

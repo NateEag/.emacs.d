@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "ledger-flymake" "ledger-flymake.el" (23650
-;;;;;;  51764 368757 585000))
+;;;### (autoloads nil "ledger-flymake" "ledger-flymake.el" (23667
+;;;;;;  61972 12571 778000))
 ;;; Generated autoloads from ledger-flymake.el
 
 (autoload 'ledger-flymake-enable "ledger-flymake" "\
@@ -17,8 +17,8 @@ available.
 
 ;;;***
 
-;;;### (autoloads nil "ledger-mode" "ledger-mode.el" (23650 51764
-;;;;;;  378700 577000))
+;;;### (autoloads nil "ledger-mode" "ledger-mode.el" (23667 61972
+;;;;;;  22664 962000))
 ;;; Generated autoloads from ledger-mode.el
 
 (autoload 'ledger-mode "ledger-mode" "\
@@ -36,7 +36,7 @@ A mode for editing ledger data files.
 ;;;;;;  "ledger-navigate.el" "ledger-occur.el" "ledger-post.el" "ledger-reconcile.el"
 ;;;;;;  "ledger-regex.el" "ledger-report.el" "ledger-schedule.el"
 ;;;;;;  "ledger-sort.el" "ledger-state.el" "ledger-test.el" "ledger-texi.el"
-;;;;;;  "ledger-xact.el") (23650 51764 390810 530000))
+;;;;;;  "ledger-xact.el") (23667 61972 36221 110000))
 
 ;;;***
 

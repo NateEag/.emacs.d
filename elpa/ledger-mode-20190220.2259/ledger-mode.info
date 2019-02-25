@@ -31,7 +31,7 @@ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
 NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-INFO-DIR-SECTION Major Modes
+INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Ledger Mode: (ledger-mode).           Command-Line Accounting
 END-INFO-DIR-ENTRY
@@ -1414,62 +1414,62 @@ Keystroke Index
 
 
 Tag Table:
-Node: Top1748
-Node: Introduction to Ledger-mode2562
-Node: Quick Installation2791
-Node: Menus3723
-Node: Quick Demo4038
-Node: Quick Add4468
-Node: Reconciliation5873
-Node: Reports7557
-Node: Narrowing8587
-Node: The Ledger Buffer9171
-Node: Adding Transactions9549
-Node: Setting a Transactions Effective Date10528
-Node: Quick Balance Display11428
-Node: Copying Transactions11960
-Node: Editing Amounts12412
-Node: Marking Transactions13483
-Node: Formatting Transactions15178
-Node: Deleting Transactions15776
-Node: Sorting Transactions16216
-Node: Narrowing Transactions17768
-Node: The Reconcile Buffer19618
-Node: Basics of Reconciliation20083
-Node: Starting a Reconciliation21032
-Node: Mark Transactions Pending22881
-Node: Edit Transactions During Reconciliation23550
-Node: Finalize Reconciliation24193
-Node: Adding and Deleting Transactions during Reconciliation24850
-Node: Changing Reconciliation Account25434
-Node: Changing Reconciliation Target25984
-Node: The Report Buffer26302
-Node: Running Basic Reports26560
-Node: Adding and Editing Reports27993
-Node: Expansion Formats29380
-Node: Make Report Transactions Active31021
-Node: Reversing Report Order31728
-Node: Scheduling Transactions32421
-Node: Specifying Upcoming Transactions33277
-Node: Transactions that occur on specific dates33851
-Node: Transactions that occur on specific days34892
-Node: Customizing Ledger-mode36021
-Node: Ledger-mode Customization36285
-Node: Customization Variables36970
-Node: Ledger Customization Group37450
-Node: Ledger Reconcile Customization Group38090
-Node: Ledger Report Customization Group41033
-Node: Ledger Faces Customization Group41752
-Node: Ledger Post Customization Group43499
-Node: Ledger Exec Customization Group44130
-Node: Ledger Test Customization Group44629
-Node: Ledger Texi Customization Group45031
-Node: Generating Ledger Regression Tests45523
-Node: Embedding Example results in Ledger Documentation45786
-Node: Hacking Ledger-mode46075
-Node: Concept Index46283
-Node: Command & Variable Index51057
-Node: Keystroke Index58536
+Node: Top1742
+Node: Introduction to Ledger-mode2556
+Node: Quick Installation2785
+Node: Menus3717
+Node: Quick Demo4032
+Node: Quick Add4462
+Node: Reconciliation5867
+Node: Reports7551
+Node: Narrowing8581
+Node: The Ledger Buffer9165
+Node: Adding Transactions9543
+Node: Setting a Transactions Effective Date10522
+Node: Quick Balance Display11422
+Node: Copying Transactions11954
+Node: Editing Amounts12406
+Node: Marking Transactions13477
+Node: Formatting Transactions15172
+Node: Deleting Transactions15770
+Node: Sorting Transactions16210
+Node: Narrowing Transactions17762
+Node: The Reconcile Buffer19612
+Node: Basics of Reconciliation20077
+Node: Starting a Reconciliation21026
+Node: Mark Transactions Pending22875
+Node: Edit Transactions During Reconciliation23544
+Node: Finalize Reconciliation24187
+Node: Adding and Deleting Transactions during Reconciliation24844
+Node: Changing Reconciliation Account25428
+Node: Changing Reconciliation Target25978
+Node: The Report Buffer26296
+Node: Running Basic Reports26554
+Node: Adding and Editing Reports27987
+Node: Expansion Formats29374
+Node: Make Report Transactions Active31015
+Node: Reversing Report Order31722
+Node: Scheduling Transactions32415
+Node: Specifying Upcoming Transactions33271
+Node: Transactions that occur on specific dates33845
+Node: Transactions that occur on specific days34886
+Node: Customizing Ledger-mode36015
+Node: Ledger-mode Customization36279
+Node: Customization Variables36964
+Node: Ledger Customization Group37444
+Node: Ledger Reconcile Customization Group38084
+Node: Ledger Report Customization Group41027
+Node: Ledger Faces Customization Group41746
+Node: Ledger Post Customization Group43493
+Node: Ledger Exec Customization Group44124
+Node: Ledger Test Customization Group44623
+Node: Ledger Texi Customization Group45025
+Node: Generating Ledger Regression Tests45517
+Node: Embedding Example results in Ledger Documentation45780
+Node: Hacking Ledger-mode46069
+Node: Concept Index46277
+Node: Command & Variable Index51051
+Node: Keystroke Index58530
 
 End Tag Table
 

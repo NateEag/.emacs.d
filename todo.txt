@@ -453,11 +453,14 @@
   handy in languages with obscure syntax (e.g. bash) or for snippets whose
   purpose is not immediately obvious to the novice.
 
-- Find a workaround that will let me use auto-complete in a yasnippet tab field.
-  A keybinding other than Tab for auto-complete would work, but it might be
-  possible to bind something clever to Tab that picks which maneuver to do based
-  on whether there are any characters before point *and* whether autocompletion
-  has been invoked before while in this field. or something like that.
+- Find a workaround that will let me use auto-complete in a yasnippet tab
+  field. A keybinding other than Tab for auto-complete would work, but it might
+  be possible to bind something clever to Tab that picks which maneuver to do
+  based on whether there are any characters before point *and* whether
+  autocompletion has been invoked before while in this field. or something like
+  that. This guy came up with a way to do it for company-mode - maybe I should
+  bite the bullet and switch over...
+  https://www.reddit.com/r/emacs/comments/auwzjr/comment/ehb5zxm/
 
 - Think about how backup-walker, undo-tree, and magit ought to intersect,
   ideally. Really this is less about any of those packages and more about the

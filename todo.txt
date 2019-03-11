@@ -22,6 +22,10 @@
   markup. Note that it's only really braces I'd want to turn off pairing for -
   most other pairs don't have this issue.
 
+- Try setting up dap-mode for debugging PHP, as doing so should get me close to
+  debugging support for a lot of languages out of the gate and an
+  ever-increasing number as time goes by: https://github.com/emacs-lsp/dap-mode
+
 - Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
 
 - Add function to spawn an emacs instance with my installed packages but none
@@ -565,9 +569,6 @@
   embedding in php-mode.
 
 - Consider this alternative to mmm-mode and friends: https://github.com/Fanael/edit-indirect/blob/master/edit-indirect.el
-
-- If particularly bored, try getting GEBEN set up for debugging PHP. I'm
-  uncertain whether this would actually be worth the effort.
 
 - Try integrating the fancy new SQL indentation minor-mode:
   https://github.com/alex-hhh/emacs-sql-indent

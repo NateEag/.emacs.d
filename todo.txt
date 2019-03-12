@@ -33,6 +33,10 @@
   in. The idea is to make it easy to answer the question "Is a behavior my
   fault or is it a lower-level bug in my dependencies?"
 
+- Go through the tools and techniques described in
+  https://alphapapa.github.io/emacs-package-dev-handbook/ and adopt any that
+  seem useful.
+
 - Try out evil-smartparens, once I'm a little more used to smartparens itself.
   Looks like it might do some neat stuff.
   https://github.com/jschaf/evil-smartparens/

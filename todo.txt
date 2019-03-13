@@ -72,6 +72,10 @@
 - Get smart-dash-mode usable in CSS. Some styles of class naming involve
   underscores, so it would be nice to have it do the right thing automatically.
 
+- Report and/or fix bug in rainbow-mode.el - URLs with hashes and hex-like
+  characters are vulnerable to false positives. https://localhost/test#debug is
+  an example that gets highlighted for me as of time of writing.
+
 - Add a customizable variable to smart-dash-mode that lists modes where
   variables start with a sigil (e.g. '$'), and in those modes no heuristic is
   necessary - if point is in a string matching \$[a-zA-Z0-9_]+, you *know* you

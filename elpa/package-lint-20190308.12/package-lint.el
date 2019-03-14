@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; URL: https://github.com/purcell/package-lint
-;; Package-Version: 20190112.510
+;; Package-Version: 20190308.12
 ;; Keywords: lisp
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24"))
@@ -150,6 +150,7 @@ This is bound dynamically while the checks run.")
           hash-table-values
           line-pixel-height
           macrop
+          process-lines
           remove-function
           set-file-acl
           special-form-p

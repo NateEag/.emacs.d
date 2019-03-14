@@ -3,87 +3,81 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "python-mode" "python-mode.el" (23613 59724
-;;;;;;  0 0))
+;;;### (autoloads nil "python-mode" "python-mode.el" (23690 18080
+;;;;;;  933962 720000))
 ;;; Generated autoloads from python-mode.el
 
 (autoload 'py-backward-class "python-mode" "\
 Go to beginning of ‘class’.
 
 If already at beginning, go one ‘class’ backward.
-Optional DECORATOR
+Return beginning of form if successful, nil otherwise
 
-Return beginning of ‘class’ if successful, nil otherwise
-
-\(fn &optional DECORATOR)" t nil)
+\(fn)" t nil)
 
 (autoload 'py-backward-def "python-mode" "\
 Go to beginning of ‘def’.
 
 If already at beginning, go one ‘def’ backward.
-Optional DECORATOR
+Return beginning of form if successful, nil otherwise
 
-Return beginning of ‘def’ if successful, nil otherwise
-
-\(fn &optional DECORATOR)" t nil)
+\(fn)" t nil)
 
 (autoload 'py-backward-def-or-class "python-mode" "\
 Go to beginning of ‘def-or-class’.
 
 If already at beginning, go one ‘def-or-class’ backward.
-Optional DECORATOR
+Return beginning of form if successful, nil otherwise
 
-Return beginning of ‘def-or-class’ if successful, nil otherwise
-
-\(fn &optional DECORATOR)" t nil)
+\(fn)" t nil)
 
 (autoload 'py-backward-class-bol "python-mode" "\
 Go to beginning of ‘class’, go to BOL.
-Optional DECORATOR
-
 If already at beginning, go one ‘class’ backward.
 Return beginning of ‘class’ if successful, nil otherwise
 
-\(fn &optional DECORATOR)" t nil)
+\(fn)" t nil)
 
 (autoload 'py-backward-def-bol "python-mode" "\
 Go to beginning of ‘def’, go to BOL.
-Optional DECORATOR
-
 If already at beginning, go one ‘def’ backward.
 Return beginning of ‘def’ if successful, nil otherwise
 
-\(fn &optional DECORATOR)" t nil)
+\(fn)" t nil)
 
 (autoload 'py-backward-def-or-class-bol "python-mode" "\
 Go to beginning of ‘def-or-class’, go to BOL.
-Optional DECORATOR
-
 If already at beginning, go one ‘def-or-class’ backward.
 Return beginning of ‘def-or-class’ if successful, nil otherwise
 
-\(fn &optional DECORATOR)" t nil)
+\(fn)" t nil)
 
 (autoload 'py-forward-class "python-mode" "\
 Go to end of class.
 
 Return end of ‘class’ if successful, nil otherwise
+Optional ORIG: start position
+Optional BOL: go to beginning of line following end-position
 
-\(fn)" t nil)
+\(fn &optional ORIG BOL)" t nil)
 
 (autoload 'py-forward-def "python-mode" "\
 Go to end of def.
 
 Return end of ‘def’ if successful, nil otherwise
+Optional ORIG: start position
+Optional BOL: go to beginning of line following end-position
 
-\(fn)" t nil)
+\(fn &optional ORIG BOL)" t nil)
 
 (autoload 'py-forward-def-or-class "python-mode" "\
 Go to end of def-or-class.
 
 Return end of ‘def-or-class’ if successful, nil otherwise
+Optional ORIG: start position
+Optional BOL: go to beginning of line following end-position
 
-\(fn)" t nil)
+\(fn &optional ORIG BOL)" t nil)
 
 (autoload 'py-shell "python-mode" "\
 Start a Python interpreter.
@@ -114,8 +108,8 @@ Optional ARG \\[universal-argument] prompts for path to the interpreter.
 
 \(fn &optional ARGPROMPT BUFFER FAST EXCEPTION-BUFFER SPLIT SWITCH)" t nil)
 
-(autoload 'ipython2\.7 "python-mode" "\
-Start an IPython2.7 interpreter.
+(autoload 'ipython2 "python-mode" "\
+Start an IPython2 interpreter.
 
 Optional ARG \\[universal-argument] prompts for path to the interpreter.
 
@@ -223,7 +217,8 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
 
 ;;;***
 
-;;;### (autoloads nil nil ("python-mode-pkg.el") (23613 59724 0 0))
+;;;### (autoloads nil nil ("python-mode-pkg.el") (23690 18080 929324
+;;;;;;  489000))
 
 ;;;***
 

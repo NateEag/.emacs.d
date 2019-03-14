@@ -38,13 +38,16 @@
   (set-mark (point))
   (subword-left 1))
 
+(defvar er/enable-subword-mode? t)
+
 (defun er/add-subword-mode-expansions ()
   "Add expansions for buffers in `subword-mode'."
-  (set (make-local-variable 'er/try-expand-list)
-       (append er/try-expand-list
-	       '(er/mark-subword))))
+  (when er/enable-subword-mode?
+    (set (make-local-variable 'er/try-expand-list)
+         (append er/try-expand-list
+                 '(er/mark-subword)))))
 
-(er/enable-mode-expansions 'subword-mode 'er/add-subword-mode-expansions)
+(er/enable-minor-mode-expansions 'subword-mode 'er/add-subword-mode-expansions)
 
 (provide 'subword-mode-expansions)
 ;;; subword-mode-expansions.el ends here

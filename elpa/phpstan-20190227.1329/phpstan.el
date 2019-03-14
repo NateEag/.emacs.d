@@ -4,8 +4,8 @@
 
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 15 Mar 2018
-;; Version: 0.2.1
-;; Package-Version: 20181203.1008
+;; Version: 0.3.0
+;; Package-Version: 20190227.1329
 ;; Keywords: tools, php
 ;; Homepage: https://github.com/emacs-php/phpstan.el
 ;; Package-Requires: ((emacs "24.3"))

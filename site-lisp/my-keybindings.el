@@ -21,7 +21,7 @@
 
 ;; I'd much rather have a sane way to goto-line than be able to easily change
 ;; my font settings.
-(global-set-key "\M-g" 'goto-line)
+(global-set-key "\M-g" 'goto-line-preview)
 
 ;; Sometimes you want to toggle the current line's comment state.
 (global-set-key (kbd "M-;") 'comment-or-uncomment-region-or-line)

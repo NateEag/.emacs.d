@@ -1,6 +1,6 @@
 ;;; magit-popup.el --- Define prefix-infix-suffix command combos  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2010-2018  The Magit Project Contributors
+;; Copyright (C) 2010-2019  The Magit Project Contributors
 ;;
 ;; You should have received a copy of the AUTHORS.md file which
 ;; lists all contributors.  If not, see http://magit.vc/authors.
@@ -32,19 +32,12 @@
 ;;; Commentary:
 
 ;; This package implements a generic interface for toggling switches
-;; and setting options and then invoking an Emacs command which does
-;; something with these arguments.  The prototypical use is for the
-;; command to call an external process, passing on the arguments as
-;; command line arguments.  But this is only one of many possible
-;; uses (though the one this library is optimized for).
+;; and setting options and then invoking an Emacs command that does
+;; something with these arguments.  Usually the command calls an
+;; external process with the specified arguments.
 
-;; With the Emacs concept of "prefix arguments" in mind this could be
-;; described as "infix arguments with feedback in a buffer".
-
-;; Commands that set the prefix argument for the subsequent command do
-;; not limit what that next command could be.  But entering a command
-;; console popup does limit the selection to the commands defined for
-;; that popup, and so we use the term "infix" instead of "prefix".
+;; This package has been superseded by Transient.  No new features
+;; will be added but bugs will be fixes.
 
 ;;; Code:
 
@@ -63,12 +56,6 @@
 (declare-function info 'info)
 (declare-function Man-find-section 'man)
 (declare-function Man-next-section 'man)
-
-;; For the `:variable' event type.
-(declare-function magit-git-string 'magit-git)
-(declare-function magit-refresh 'magit-mode)
-(declare-function magit-get 'magit-git)
-(declare-function magit-set 'magit-git)
 
 ;; For branch actions.
 (declare-function magit-branch-set-face 'magit-git)
@@ -560,7 +547,7 @@ usually specified in that order):
 
 `:variables'
 
-  Git variables which can be set from the popup.  VALUE is a list
+  Variables which can be set from the popup.  VALUE is a list
   whose members have the form (KEY DESC COMMAND FORMATTER), see
   `magit-define-popup-variable' for details.
 
@@ -675,8 +662,14 @@ If optional VALUE is non-nil then the option is on by default,
 and VALUE is its default value.
 
 READER is used to read a value from the user when the option is
-invoked and does not currently have a value.  It should take one
-argument and use it as the prompt.  If this is nil, then
+invoked and does not currently have a value.  (When the option
+has a value, then invoking the option causes it to be unset.)
+This function must take two arguments but may choose to ignore
+them.  The first argument is the name of the option (with \": \"
+appended, unless it ends with \"=\") and can be used as the
+prompt.  The second argument is nil or the value that was in
+effect before the option was unset, which may be suitable as
+initial completion input.  If no reader is specified, then
 `read-from-minibuffer' is used.
 
 OPTION is inserted after all other options already defined for
@@ -848,12 +841,13 @@ TYPE is one of `:action', `:sequence-action', `:switch', or
      ((memq use-prefix '(default popup nil))
       (magit-popup-mode-setup popup mode)
       (when magit-popup-show-help-echo
-        (message
-         (format
-          "[%s] show common commands, [%s] describe events, [%s] show manual"
-          (propertize "C-t"   'face 'magit-popup-key)
-          (propertize "?"     'face 'magit-popup-key)
-          (propertize "C-h i" 'face 'magit-popup-key)))))
+        (let ((message-log-max nil))
+          (message
+           (format
+            "[%s] show common commands, [%s] describe events, [%s] show manual"
+            (propertize "C-t"   'face 'magit-popup-key)
+            (propertize "?"     'face 'magit-popup-key)
+            (propertize "C-h i" 'face 'magit-popup-key))))))
      (local
       (error "Invalid :use-prefix popup property value: %s" use-prefix))
      (t
@@ -909,21 +903,6 @@ TYPE is one of `:action', `:sequence-action', `:switch', or
              (magit-popup-mode-setup magit-previous-popup nil)))
           (t
            (user-error "%c isn't bound to any action" event)))))
-
-(defun magit-popup-set-variable
-    (variable choices &optional default other)
-  (let* ((curval (lambda ()
-                   (or (magit-git-string "config" variable)
-                       default)))
-         (old (funcall curval)))
-    (magit-set (--if-let (magit-git-string "config" "--local" variable)
-                   (cadr (member it choices))
-                 (car choices))
-               variable)
-    (unless (equal old (funcall curval))
-      (magit-refresh)))
-  (message "%s %s" variable
-           (magit-popup-format-variable-1 variable choices default other)))
 
 (defun magit-popup-quit ()
   "Quit the current popup command without invoking an action."
@@ -1316,75 +1295,30 @@ of events shared by all popups and before point is adjusted.")
              (?d . ,(funcall (magit-popup-event-arg ev)))))
           'type type 'event (magit-popup-event-key ev))))
 
-(defun magit-popup-format-variable
-    (variable choices &optional default other width)
-  (concat variable
-          (if width (make-string (- width (length variable)) ?\s) " ")
-          (magit-popup-format-variable-1 variable choices default other)))
-
-(defun magit-popup-format-variable-1
-    (variable choices &optional default other)
-  "Print popup entry for git VARIABLE with possible CHOICES.
-DEFAULT is git's default choice for VARIABLE.  OTHER is a git
-variable whose value may be used as a default."
-  (let ((local  (magit-git-string "config" "--local"  variable))
-        (global (magit-git-string "config" "--global" variable)))
-    (when other
-      (setq other (--when-let (magit-get other)
-                    (concat other ":" it))))
-    (concat
-     (propertize "[" 'face 'magit-popup-disabled-argument)
-     (mapconcat
-      (lambda (choice)
-        (propertize choice 'face (if (equal choice local)
-                                     'magit-popup-option-value
-                                   'magit-popup-disabled-argument)))
-      choices
-      (propertize "|" 'face 'magit-popup-disabled-argument))
-     (when (or global other default)
-       (concat
-        (propertize "|" 'face 'magit-popup-disabled-argument)
-        (cond (global
-               (propertize (concat "global:" global)
-                           'face (cond (local
-                                        'magit-popup-disabled-argument)
-                                       ((member global choices)
-                                        'magit-popup-option-value)
-                                       (t
-                                        'font-lock-warning-face))))
-              (other
-               (propertize other
-                           'face (if local
-                                     'magit-popup-disabled-argument
-                                   'magit-popup-option-value)))
-              (default
-               (propertize (concat "default:" default)
-                           'face (if local
-                                     'magit-popup-disabled-argument
-                                   'magit-popup-option-value))))))
-     (propertize "]" 'face 'magit-popup-disabled-argument))))
-
 (defun magit-popup-format-action-button (type ev)
-  (let* ((dsc (magit-popup-event-dsc ev))
+  (let* ((cmd (magit-popup-event-fun ev))
+         (dsc (magit-popup-event-dsc ev))
          (fun (and (functionp dsc) dsc)))
-    (when fun
-      (setq dsc
-            (-when-let (branch (funcall fun))
-              (if (text-property-not-all 0 (length branch) 'face nil branch)
-                  branch
-                (magit-branch-set-face branch)))))
-    (when dsc
-      (list (format-spec
-             (button-type-get type 'format)
-             `((?k . ,(propertize (magit-popup-event-keydsc ev)
-                                  'face 'magit-popup-key))
-               (?d . ,dsc)
-               (?D . ,(if (and (not fun)
-                               (eq (magit-popup-event-fun ev)
-                                   (magit-popup-get :default-action)))
-                          (propertize dsc 'face 'bold)
-                        dsc))))
-            'type type 'event (magit-popup-event-key ev)))))
+    (unless (and disabled-command-function
+                 (symbolp cmd)
+                 (get cmd 'disabled))
+      (when fun
+        (setq dsc
+              (-when-let (branch (funcall fun))
+                (if (text-property-not-all 0 (length branch) 'face nil branch)
+                    branch
+                  (magit-branch-set-face branch)))))
+      (when dsc
+        (list (format-spec
+               (button-type-get type 'format)
+               `((?k . ,(propertize (magit-popup-event-keydsc ev)
+                                    'face 'magit-popup-key))
+                 (?d . ,dsc)
+                 (?D . ,(if (and (not fun)
+                                 (eq cmd (magit-popup-get :default-action)))
+                            (propertize dsc 'face 'bold)
+                          dsc))))
+              'type type 'event (magit-popup-event-key ev))))))
 
 (defun magit-popup-insert-command-section (type spec)
   (magit-popup-insert-section

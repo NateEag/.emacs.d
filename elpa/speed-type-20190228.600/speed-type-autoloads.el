@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "speed-type" "speed-type.el" (23667 61996 165531
-;;;;;;  17000))
+;;;### (autoloads nil "speed-type" "speed-type.el" (23690 18096 406030
+;;;;;;  409000))
 ;;; Generated autoloads from speed-type.el
 
 (autoload 'speed-type-top-x "speed-type" "\

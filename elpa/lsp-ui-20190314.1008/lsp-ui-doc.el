@@ -385,7 +385,9 @@ We don't extract the string that `lps-line' is already displaying."
       (lsp-ui-doc--line-height)))
 
 (defun lsp-ui-doc--webkit-resize-callback (size)
-  (xwidget-resize (lsp-ui-doc--webkit-get-xwidget) (aref size 0) (aref size 1))
+  (let ((offset-width (round (aref size 0)))
+        (offset-height (round (aref size 1))))
+    (xwidget-resize (lsp-ui-doc--webkit-get-xwidget) offset-width offset-height))
   (lsp-ui-doc--move-frame (lsp-ui-doc--get-frame)))
 
 (defun lsp-ui-doc--resize-buffer ()
@@ -630,7 +632,8 @@ HEIGHT is the documentation number of lines."
          (name-buffer (lsp-ui-doc--make-buffer-name))
          (buffer (get-buffer name-buffer))
          (params (append lsp-ui-doc-frame-parameters
-                         `((default-minibuffer-frame . ,(selected-frame))
+                         `((name . "")
+                           (default-minibuffer-frame . ,(selected-frame))
                            (minibuffer . ,(minibuffer-window))
                            (left-fringe . ,(frame-char-width))
                            (background-color . ,(face-background 'lsp-ui-doc-background nil t)))))
@@ -665,10 +668,26 @@ HEIGHT is the documentation number of lines."
     (delete-frame frame)
     (lsp-ui-doc--set-frame nil)))
 
-(defadvice select-window (after lsp-ui-doc--select-window activate)
-  "Delete the child frame if window changes."
-  (unless (equal (ad-get-arg 0) (selected-window))
-    (lsp-ui-doc--hide-frame)))
+(defun lsp-ui-doc--visible-p ()
+  "Return whether the LSP UI doc is visible"
+  (or (overlayp lsp-ui-doc--inline-ov)
+      (and (lsp-ui-doc--get-frame)
+           (frame-visible-p (lsp-ui-doc--get-frame)))))
+
+(defadvice select-window (around lsp-ui-doc--select-window activate)
+  "Delete the child frame if currently selected window changes.
+Does nothing if the newly-selected window is the same window as
+before, or if the new window is the minibuffer."
+  (let ((initial-window (selected-window)))
+    (prog1 ad-do-it
+      (when (lsp-ui-doc--visible-p)
+        (let* ((current-window (selected-window))
+               (doc-buffer (get-buffer (lsp-ui-doc--make-buffer-name))))
+          (unless (or (window-minibuffer-p current-window)
+                      (equal current-window initial-window)
+                      (and doc-buffer
+                           (equal (window-buffer initial-window) doc-buffer)))
+            (lsp-ui-doc--hide-frame)))))))
 
 (advice-add 'load-theme :before (lambda (&rest _) (lsp-ui-doc--delete-frame)))
 (add-hook 'window-configuration-change-hook #'lsp-ui-doc--hide-frame)

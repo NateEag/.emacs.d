@@ -153,6 +153,15 @@ With NO-CACHE prefix, don't use cached values of the span."
       ;; (move-overlay pm--highlight-overlay (nth 1 span) (nth 2 span) (current-buffer))
       (pm-debug-flick-region (nth 1 span) (nth 2 span)))))
 
+(defun pm-debug-report-points (&optional where)
+  (when polymode-mode
+    (let* ((bufs (eieio-oref pm/polymode '-buffers))
+           (poses (mapcar (lambda (b)
+                            (format "%s:%d" b (with-current-buffer b (point))))
+                          bufs)))
+      (message "<%s> cb:%s %s" (or where "") (current-buffer) poses)))
+  nil)
+
 
 ;;; TOGGLING
 
@@ -224,6 +233,7 @@ With NO-CACHE prefix, don't use cached values of the span."
   "Fontify current buffer."
   (interactive)
   (let ((poly-lock-allow-fontification t))
+    (font-lock-unfontify-buffer)
     (poly-lock-flush (point-min) (point-max))
     (poly-lock-fontify-now (point-min) (point-max))))
 
@@ -378,7 +388,10 @@ currently traced functions."
              before-revert-hook
              after-revert-hook)
     :save (after-save-hook
-           before-save-hook)
+           before-save-hook
+           write-contents-functions
+           local-write-file-hooks
+           write-file-functions)
     :syntax (syntax-propertize-function
              syntax-propertize-extend-region-functions
              pm--syntax-propertize-function-original)))
@@ -407,8 +420,8 @@ currently traced functions."
 
 (defun pm-debug-diff-local-vars (&optional buffer1 buffer2)
   (interactive)
-  (let* ((buffer1 (read-buffer "Buffer1: " (buffer-name (current-buffer))))
-         (buffer2 (read-buffer "Buffer2: " (buffer-name (nth 2 (buffer-list)))))
+  (let* ((buffer1 (or buffer1 (read-buffer "Buffer1: " (buffer-name (current-buffer)))))
+         (buffer2 (or buffer2 (read-buffer "Buffer2: " (buffer-name (nth 2 (buffer-list))))))
          (vars1 (buffer-local-variables (get-buffer buffer1)))
          (vars2 (buffer-local-variables (get-buffer buffer2)))
          (all-keys (delete-dups (append (mapcar #'car vars1)

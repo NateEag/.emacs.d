@@ -56,11 +56,6 @@
     :custom string
     :documentation
     "Name of the object used to for display and info.")
-   (-id
-    :initform 0
-    :type number
-    :documentation
-    "[Internal] Numeric id to track objects. Every object has an id.")
    (-props
     :initform '()
     :type list
@@ -75,10 +70,19 @@ into this list."))
 
 (cl-defmethod clone ((obj pm-root) &rest params)
   (let ((old-name (eieio-oref obj 'name))
-        (new-obj (apply #'cl-call-next-method obj params)))
+        (new-obj (cl-call-next-method obj)))
     (when (equal old-name (eieio-oref new-obj 'name))
       (let ((new-name (concat old-name ":")))
         (eieio-oset new-obj 'name new-name)))
+    ;; Emacs clone method for eieio-instance-inheritor instantiates all slots
+    ;; for cloned objects. We want them unbound to allow for the healthy
+    ;; inheritance.
+    (dolist (descriptor (eieio-class-slots (class-of new-obj)))
+      (let ((slot (eieio-slot-descriptor-name descriptor)))
+        (unless (memq slot '(parent-instance name))
+          (slot-makeunbound new-obj slot))))
+    (when params
+      (shared-initialize new-obj params))
     new-obj))
 
 (defclass pm-polymode (pm-root)
@@ -182,10 +186,6 @@ and should not be used in `define-polymode'.")
 Each polymode buffer holds a local variable `pm/polymode'
 instantiated from this class or a subclass of this class.")
 
-(defvar pm--polymode-slots
-  (mapcar #'cl--slot-descriptor-name
-          (eieio-class-slots 'pm-polymode)))
-
 (defclass pm-chunkmode (pm-root)
   ((mode
     :initarg :mode
@@ -201,8 +201,8 @@ chunk.")
    (indent-offset
     :initarg :indent-offset
     :initform 2
-    :type (or integer symbol)
-    :custom (or integer symbol)
+    :type (or number symbol)
+    :custom (choice number symbol)
     :documentation
     "Indentation offset for this mode.
 Currently this is only used in +indent and -indent cookies which
@@ -315,7 +315,7 @@ buffer.")
     :type boolean
     :custom boolean
     :documentation
-    "Non-nil if this chunk can nest within other inner modes.
+    "Non-nil if this inner-mode can nest within other inner-modes.
 All chunks can nest within the host-mode.")
    (can-overlap
     :initarg :can-overlap

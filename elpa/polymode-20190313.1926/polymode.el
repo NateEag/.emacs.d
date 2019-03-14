@@ -78,12 +78,12 @@ Not effective after loading the polymode library.")
   "Polymode prefix map.
 Lives on `polymode-prefix-key' in polymode buffers.")
 
+(defvaralias 'polymode-mode-map 'polymode-minor-mode-map)
 (defvar polymode-minor-mode-map
   (let ((map (make-sparse-keymap)))
     (define-key map (or polymode-prefix-key "\M-n") 'polymode-map)
     map)
   "The minor mode keymap which is inherited by all polymodes.")
-(defvaralias 'polymode-mode-map 'polymode-minor-mode-map)
 
 (easy-menu-define polymode-menu polymode-minor-mode-map
   "Menu for polymode."
@@ -103,31 +103,6 @@ Lives on `polymode-prefix-key' in polymode buffers.")
 
 
 ;;; NAVIGATION
-
-(defun pm-goto-span-of-type (type N)
-  "Skip to N - 1 spans of TYPE and stop at the start of a span of TYPE.
-TYPE is either a symbol or a list of symbols of span types."
-  (let* ((sofar 0)
-         (types (if (symbolp type)
-                    (list type)
-                  type))
-         (back (< N 0))
-         (N (if back (- N) N))
-         (beg (if back (point-min) (point)))
-         (end (if back (point) (point-max))))
-    (unless (memq (car (pm-innermost-span)) types)
-      (setq sofar 1))
-    (condition-case nil
-        (pm-map-over-spans
-         (lambda (span)
-           (when (memq (car span) types)
-             (goto-char (nth 1 span))
-             (when (>= sofar N)
-               (signal 'quit nil))
-             (setq sofar (1+ sofar))))
-         beg end nil back)
-      (quit nil))
-    sofar))
 
 (defun polymode-next-chunk (&optional N)
   "Go N chunks forwards.
@@ -165,6 +140,7 @@ C-M-p will move forward twice and backwards once."
          (beg (if back (point-min) (point)))
          (end (if back (point) (point-max)))
          (N (if back (- N) N))
+         (orig-pos (point))
          (pos (point))
          this-type this-name)
     (condition-case-unless-debug nil
@@ -172,22 +148,22 @@ C-M-p will move forward twice and backwards once."
          (lambda (span)
            (unless (memq (car span) '(head tail))
              (when (and (equal this-name
-                               (eieio-object-name-string (car (last span))))
+                               (eieio-object-name-string (nth 3 span)))
                         (eq this-type (car span)))
-               (setq pos (point))
+               (setq pos (nth 1 span))
                (setq sofar (1+ sofar)))
              (unless this-name
-               (setq this-name (eieio-object-name-string (car (last span)))
+               (setq this-name (eieio-object-name-string (nth 3 span))
                      this-type (car span)))
              (when (>= sofar N)
                (signal 'quit nil))))
          beg end nil back)
       (quit (when (looking-at "\\s *$")
               (forward-line))))
-    (when (or (eobp) (bobp))
+    (goto-char pos)
+    (when (or (eobp) (bobp) (eq pos orig-pos))
       (message "No more chunks of type %s" this-name)
-      (ding)
-      (goto-char pos))
+      (ding))
     (pm--set-transient-map (list #'polymode-previous-chunk-same-type
                                  #'polymode-next-chunk-same-type))
     sofar))
@@ -247,8 +223,7 @@ Return the number of chunks of the same type moved over."
   (setq pos (or pos (point)))
   (let ((span (pm-innermost-span pos))
         (pmin (point-min))
-        (pmax (point-max))
-        beg end)
+        (pmax (point-max)))
     (cl-case (car span)
       ((nil) (pm-span-to-range span))
       (body (cons (if (= pmin (nth 1 span))
@@ -552,26 +527,25 @@ most frequently used slots are:
                    [&rest [keywordp sexp]]
                    def-body)))
 
-  (if (keywordp parent)
-      (progn
-        (push doc body)
-        (push parent body)
-        (setq doc nil
-              parent nil))
-    (when (keywordp doc)
-      (progn
-        (push doc body)
-        (setq doc nil))))
-
-  (unless (symbolp parent)
-    (error "PARENT must be a name of a `pm-polymode' config or a polymode mode function"))
-
   (let* ((last-message (make-symbol "last-message"))
          (mode-name (symbol-name mode))
          (config-name (pm--config-name mode))
          (root-name (replace-regexp-in-string "poly-\\|-mode" "" mode-name))
          (keymap-name (intern (concat mode-name "-map")))
          keymap slots after-hook keyw lighter)
+
+    (if (keywordp parent)
+        (progn
+          (push doc body)
+          (push parent body)
+          (setq doc nil
+                parent nil))
+      (unless (stringp doc)
+        (push doc body)
+        (setq doc (format "Polymode for %s." root-name))))
+
+    (unless (symbolp parent)
+      (error "PARENT must be a name of a `pm-polymode' config or a polymode mode function"))
 
     ;; Check keys
     (while (keywordp (setq keyw (car body)))
@@ -620,11 +594,12 @@ most frequently used slots are:
                    (easy-mmode-define-keymap keymap nil nil (list :inherit parent-map)))))
 
          ,@(unless (eq parent config-name)
-             `((defcustom ,config-name nil
+             ;; NB: setting in two steps as defcustom is not re-evaluated on repeated evals
+             `((defvar ,config-name) ; silence byte-compiler
+               (defcustom ,config-name nil
                  ,(format "Configuration object for `%s' polymode." mode)
                  :group 'polymodes
                  :type 'object)
-               ;; setting in two steps as defcustom is not re-evaluated on repeated evals
                (setq ,config-name
                      (if parent-conf-name
                          (clone parent-conf
@@ -638,8 +613,7 @@ most frequently used slots are:
            ,(format "%s\n\n\\{%s}"
                     ;; fixme: add inheretance info here and warning if body is
                     ;; non-nil (like in define-mirror-mode)
-                    (or doc (format "Polymode %s." root-name))
-                    keymap-name)
+                    doc keymap-name)
            (interactive)
            (let ((,last-message (current-message))
                  (state (cond

@@ -25,9 +25,10 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
-;; Commentary
+;;; Commentary:
 ;;
-;;
+;;; Code:
+
 ;; FONT-LOCK COMPONENTS:
 ;;
 ;; All * functions are lazy in poly-lock and jit-lock because they just mark
@@ -68,10 +69,6 @@
 ;;             -> (jit-lock-register #'font-lock-fontify-region)
 ;;               -> (add-hook 'jit-lock-functions #'font-lock-fontify-region nil t)
 ;;               -> jit-lock-mode
-;;
-;;; Commentary:
-;;
-;;; Code:
 
 (require 'jit-lock)
 (require 'polymode-core)
@@ -79,6 +76,7 @@
 (defvar poly-lock-allow-fontification t)
 (defvar poly-lock-allow-background-adjustment t)
 (defvar poly-lock-fontification-in-progress nil)
+(defvar poly-lock-defer-after-change t)
 (defvar-local poly-lock-mode nil)
 
 (eval-when-compile
@@ -156,17 +154,20 @@ switched on."
     (remove-hook 'fontification-functions 'poly-lock-function t))
   (current-buffer))
 
+(defvar poly-lock-chunk-size 2500
+  "Poly-lock fontifies chunks of at most this many characters at a time.")
+
 (defun poly-lock-function (start)
   "The only function in `fontification-functions' in polymode buffers.
 This is the entry point called by the display engine. START is
 defined in `fontification-functions'. This function has the same
 scope as `jit-lock-function'."
   (unless pm-initialization-in-progress
-    (if (and poly-lock-mode
-             (not memory-full))
+    (if (and poly-lock-mode (not memory-full))
         (unless (input-pending-p)
-          (let ((end (or (text-property-any start (point-max) 'fontified t)
-                         (point-max))))
+          (let ((end (min (or (text-property-any start (point-max) 'fontified t)
+                              (point-max))
+                          (+ start poly-lock-chunk-size))))
             (when (< start end)
               (poly-lock-fontify-now start end))))
       (with-buffer-prepared-for-poly-lock
@@ -178,6 +179,8 @@ Fontifies chunk-by chunk within the region BEG END."
   (unless (or poly-lock-fontification-in-progress
               pm-initialization-in-progress)
     (let* ((font-lock-dont-widen t)
+           ;; For now we fontify entire chunks at ones. This simplicity is
+           ;; warranted in multi-mode use cases.
            (font-lock-extend-region-functions nil)
            ;; Fontification in one buffer can trigger fontification in another
            ;; buffer. Particularly, this happens when new indirect buffers are
@@ -190,7 +193,12 @@ Fontifies chunk-by chunk within the region BEG END."
            (poly-lock-fontification-in-progress t)
            (fontification-functions nil)
            (protect-host (with-current-buffer (pm-base-buffer)
-                           (eieio-oref pm/chunkmode 'protect-font-lock))))
+                           (eieio-oref pm/chunkmode 'protect-font-lock)))
+           ;; extend to the next span boundary
+           (end (let ((end-range (pm-innermost-range end)))
+                  (if (< (car end-range) end)
+                      (cdr end-range)
+                    end))))
       (save-restriction
         (widen)
         (save-excursion
@@ -331,6 +339,27 @@ OLD-LEN is passed to the extension function."
                 jit-lock-end (max end (min jit-lock-end send))))
         (cons jit-lock-start jit-lock-end)))))
 
+(defvar-local poly-lock--timer nil)
+(defun poly-lock--after-change-deferred (buffer beg end old-len)
+  (when (buffer-live-p buffer)
+    (with-current-buffer buffer
+      (setq poly-lock--timer nil)
+      (save-match-data
+        (with-buffer-prepared-for-poly-lock
+         (save-excursion
+           (save-restriction
+             (widen)
+             (poly-lock--extend-region beg end)
+             ;; no need for 'no-cache; poly-lock--extend-region re-computed the spans
+             (let ((bspan (pm-innermost-span jit-lock-start)))
+               (poly-lock--extend-region-span bspan old-len)
+               (when (< (nth 2 bspan) jit-lock-end)
+                 (let ((espan (pm-innermost-span jit-lock-end)))
+                   (poly-lock--extend-region-span espan old-len))))
+             (pm-flush-span-cache jit-lock-start jit-lock-end)
+             (put-text-property jit-lock-start jit-lock-end 'fontified nil)
+             (cons jit-lock-start jit-lock-end))))))))
+
 (defun poly-lock-after-change (beg end old-len)
   "Mark changed region with 'fontified nil.
 Installed in `after-change-functions' and behaves similarly to
@@ -338,22 +367,18 @@ Installed in `after-change-functions' and behaves similarly to
 `jit-lock-after-change-extend-region-functions' in turn but with
 the buffer narrowed to the relevant spans. BEG, END and OLD-LEN
 are as in `after-change-functions'."
+  ;; Extension is slow but after-change functions can be called in rapid
+  ;; succession (#200). Thus we do that in a timer.
   (when (and poly-lock-mode
              pm-allow-after-change-hook
              (not memory-full))
-    (save-match-data
-      (with-buffer-prepared-for-poly-lock
-       (save-excursion
-         (save-restriction
-           (widen)
-           (poly-lock--extend-region beg end)
-           (pm-flush-span-cache beg end)
-           (pm-map-over-spans
-            (lambda (span) (poly-lock--extend-region-span span old-len))
-            ;; fixme: no-cache is no longer necessary, we flush the region
-            beg end nil nil nil 'no-cache)
-           (put-text-property jit-lock-start jit-lock-end 'fontified nil)
-           (cons jit-lock-start jit-lock-end)))))))
+    (when (timerp poly-lock--timer)
+      (cancel-timer poly-lock--timer))
+    (if poly-lock-defer-after-change
+        (setq-local poly-lock--timer
+                    (run-at-time 0.05 nil #'poly-lock--after-change-deferred
+                                 (current-buffer) beg end old-len))
+      (poly-lock--after-change-deferred (current-buffer) beg end old-len))))
 
 (defun poly-lock--adjusted-background (prop)
   ;; if > lighten on dark backgroun. Oposite on light.
@@ -372,10 +397,10 @@ SPAN's chunkmode."
     (when face
       (with-current-buffer (current-buffer)
         (let ((face (or (and (numberp face)
-                             (list (cons 'background-color
+                             (list (list :background
                                          (poly-lock--adjusted-background face))))
                         face)))
-          (font-lock-prepend-text-property
+          (font-lock-append-text-property
            (nth 1 span) (nth 2 span) 'face face))))))
 
 (provide 'poly-lock)

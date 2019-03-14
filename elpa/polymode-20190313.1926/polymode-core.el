@@ -100,7 +100,7 @@
 (defvar pm-initialization-in-progress nil)
 
 
-;; CUSTOM
+;;; CUSTOM
 
 ;;;###autoload
 (defvar-local polymode-default-inner-mode nil
@@ -283,54 +283,55 @@ case TYPE is ignored."
   (let* ((start (point-min))
          (end (point-max))
          (pos (or pos (point)))
-         (span (list nil start end nil))
-         (chunk-modes (cons (oref config -hostmode)
-                            (oref config -innermodes)))
-         val)
-    (dolist (im chunk-modes)
+         (hostmode (oref config -hostmode))
+         (chunkmodes (cons hostmode (oref config -innermodes)))
+         (thespan (list nil start end hostmode))
+         span)
+    (dolist (cm chunkmodes)
       ;; Optimization opportunity: this searches till the end of buffer but the
       ;; outermost pm-get-span caller has computed a few span already so we can
       ;; pass limits or narrow to pre-computed span.
-      (setq val (pm-get-span im pos))
-      ;; (message "[%d] span: %S imode: %s" (point) (pm-span-to-range span) (pm-debug-info im))
-      (when val
+      (setq span (pm-get-span cm pos))
+      ;; (message "[%d] span: %S imode: %s" (point) (pm-span-to-range span) (pm-debug-info cm))
+      (when span
         (cond
-         ;; 1. ;; nil car means host and it can be an intersection of spans returned
-         ;; by 2 different neighbour inner chunkmodes
-         ((null (car val))
-          (setq start (max (nth 1 val)
-                           (nth 1 span))
-                end (min (nth 2 val)
-                         (nth 2 span)))
-          (setcar (cdr span) start)
-          (setcar (cddr span) end))
+         ;; 1. nil means host and it can be an intersection of spans returned by
+         ;; two neighboring inner chunkmodes
+         ((null (car span))
+          ;; when span is already an inner span, new host spans are irrelevant
+          (unless (car thespan)
+            (setq start (max (nth 1 span)
+                             (nth 1 thespan))
+                  end (min (nth 2 span)
+                           (nth 2 thespan)))
+            (setcar (cdr thespan) start)
+            (setcar (cddr thespan) end)))
          ;; 2. Inner span
-         ((or (> (nth 1 val) start)
-              (< (nth 2 val) end))
-          (when (or (null (car span))
-                    (eieio-oref (nth 3 val) 'can-nest))
-            (setq span val
-                  start (nth 1 val)
-                  end (nth 2 val))))
+         ((or (> (nth 1 span) start)
+              (< (nth 2 span) end))
+          ;; NB: no check if boundaries of two inner spans crossing; assume
+          ;; correct matchers
+          (when (or (null (car thespan))
+                    (eieio-oref (nth 3 span) 'can-nest))
+            (setq thespan span
+                  start (nth 1 span)
+                  end (nth 2 span))))
          ;; 3. Outer span; overwrite previous span if nesting is not allowed.
          ;; This case can probably result in unexpected outcome when there are 3
          ;; levels of nesting with inter-changeable :can-nest property.
-         ((and (car span)
-               (not (eieio-oref (nth 3 span) 'can-nest)))
-          (setq span val
-                start (nth 1 val)
-                end (nth 2 val))))))
+         ((and (car thespan)
+               (not (eieio-oref (nth 3 thespan) 'can-nest)))
+          (setq thespan span
+                start (nth 1 span)
+                end (nth 2 span))))))
 
     (unless (and (<= start end) (<= pos end) (>= pos start))
       (error "Bad polymode selection: span:%s pos:%s"
              (list start end) pos))
 
-    (when (null (car span)) ; chunkmodes can compute the host span by returning nil span type
-      (setcar (last span) (oref config -hostmode)))
+    (pm-cache-span thespan)
 
-    (pm-cache-span span)
-
-    span))
+    thespan))
 
 (defun pm--chop-span (span beg end)
   ;; destructive!
@@ -492,7 +493,6 @@ region."
   (lambda (ahead)
     (pm--get-property-nearby property accessor ahead)))
 
-
 (defun pm--span-at-point (head-matcher tail-matcher &optional pos can-overlap)
   "Span detector with head and tail matchers.
 HEAD-MATCHER and TAIL-MATCHER is as in :head-matcher slot of
@@ -602,13 +602,38 @@ is one of the following symbols:
       ;; host)[head)[body)
       (list 'body (cdr head) (point-max)))))
 
+(defun pm-goto-span-of-type (type N)
+  "Skip to N - 1 spans of TYPE and stop at the start of a span of TYPE.
+TYPE is either a symbol or a list of symbols of span types."
+  (let* ((sofar 0)
+         (types (if (symbolp type)
+                    (list type)
+                  type))
+         (back (< N 0))
+         (N (if back (- N) N))
+         (beg (if back (point-min) (point)))
+         (end (if back (point) (point-max))))
+    (unless (memq (car (pm-innermost-span)) types)
+      (setq sofar 1))
+    (condition-case nil
+        (pm-map-over-spans
+         (lambda (span)
+           (when (memq (car span) types)
+             (goto-char (nth 1 span))
+             (when (>= sofar N)
+               (signal 'quit nil))
+             (setq sofar (1+ sofar))))
+         beg end nil back)
+      (quit nil))
+    sofar))
+
 
 ;;; OBJECT HOOKS
 
 (defun pm--run-derived-mode-hooks (config)
-  ;; Minor modes run-hooks, major-modes run-mode-hooks.
-  ;; Polymodes is a minor mode but with major-mode flavor. We
-  ;; run all parent hooks in reversed order here.
+  ;; Minor modes run-hooks, major-modes run-mode-hooks. Polymodes is a minor
+  ;; mode but with major-mode flavor. We run hooks of all modes stored in
+  ;; '-minor-mode slot of all parent objects in parent-first order.
   (let ((this-mode (eieio-oref config '-minor-mode)))
     (mapc (lambda (mm)
             (let ((old-mm (symbol-value mm)))
@@ -636,17 +661,19 @@ of the first object for which DO-WHEN failed."
         (vals nil)
         (failed nil))
     (while inst
-      (when (slot-boundp inst slot)
-        (push (eieio-oref inst slot) vals))
-      (setq inst (and
-                  (or (null do-when)
-                      (if failed
-                          (progn (setq failed nil) t)
-                        (or (funcall do-when inst)
-                            (and inclusive
-                                 (setq failed t)))))
-                  (slot-boundp inst :parent-instance)
-                  (eieio-oref inst 'parent-instance))))
+      (if (not (slot-boundp inst slot))
+          (setq inst (and (slot-boundp inst :parent-instance)
+                          (eieio-oref inst 'parent-instance)))
+        (push (eieio-oref inst slot) vals)
+        (setq inst (and
+                    (or (null do-when)
+                        (if failed
+                            (progn (setq failed nil) t)
+                          (or (funcall do-when inst)
+                              (and inclusive
+                                   (setq failed t)))))
+                    (slot-boundp inst :parent-instance)
+                    (eieio-oref inst 'parent-instance)))))
     vals))
 
 (defun pm--run-hooks (object slot &rest args)
@@ -667,7 +694,11 @@ Parents' hooks are run first."
 
 ;; Transfer of the buffer-undo-list is managed internally by emacs
 (define-obsolete-variable-alias 'pm-move-vars-from-base 'polymode-move-these-vars-from-base-buffer "v0.1.6")
-(defvar polymode-move-these-vars-from-base-buffer '(buffer-file-name outline-regexp outline-level)
+(defvar polymode-move-these-vars-from-base-buffer
+  '(buffer-file-name
+    outline-regexp
+    outline-level
+    tab-width)
   "Variables transferred from base buffer on buffer switch.")
 
 (define-obsolete-variable-alias 'pm-move-vars-from-old-buffer 'polymode-move-these-vars-from-old-buffer "v0.1.6")
@@ -824,12 +855,15 @@ transport) are performed."
 (defun pm-map-over-spans (fun &optional beg end count backwardp visibly no-cache)
   "For all spans between BEG and END, execute FUN.
 FUN is a function of one argument a span object (also available
-in a dynamic variable *span*). It is executed with point at the
-beginning of the span. Buffer is *not* narrowed to the span. If
-COUNT is non-nil, jump at most that many times. If BACKWARDP is
-non-nil, map backwards."
-  ;; Important! Don't forget to save-excursion when calling map-overs-spans.
-  ;; Mapping can end in different buffer and invalidate the caller assumptions.
+in a dynamic variable *span*). Buffer is *not* narrowed to the
+span, nor point is moved. If COUNT is non-nil, jump at most that
+many times. If BACKWARDP is non-nil, map backwards. Point
+synchronization across indirect buffers is not taken care of.
+Modification of the buffer during mapping is an undefined
+behavior."
+  ;; Important! Don't forget to save-excursion when calling map-overs-spans and
+  ;; synchronize points if needed. Mapping can end in different buffer and
+  ;; invalidate the caller assumptions.
   (save-restriction
     (widen)
     (setq beg (or beg (point-min))
@@ -847,19 +881,18 @@ non-nil, map backwards."
         ;; FUN might change buffer and invalidate our *span*. Should we care or
         ;; reserve pm-map-over-spans for "read-only" actions only? Does
         ;; after-change run immediately or after this function ends?
-        (goto-char (nth 1 *span*))
-        (save-excursion
-          (funcall fun *span*))
+        (funcall fun *span*)
         ;; enter previous/next chunk
-        (if backwardp
-            (goto-char (max 1 (1- (nth 1 *span*))))
-          (goto-char (min (point-max) (nth 2 *span*))))
+        (setq pos
+              (if backwardp
+                  (max 1 (1- (nth 1 *span*)))
+                (min (point-max) (nth 2 *span*))))
         (setq *span*
               (and (if backwardp
-                       (> (point) beg)
-                     (< (point) end))
+                       (> pos beg)
+                     (< pos end))
                    (< nr count)
-                   (pm-innermost-span (point) no-cache)))))))
+                   (pm-innermost-span pos no-cache)))))))
 
 (defun pm-map-over-modes (fun &optional beg end)
   "Execute FUN on regions of the same `major-mode' between BEG and END.
@@ -982,25 +1015,36 @@ Used in advises."
   (if (and polymode-mode pm/polymode
            (not pm--killed)
            (buffer-live-p (buffer-base-buffer)))
-      (let ((pm-initialization-in-progress t) ; just in case
+      (let (;; (pm-initialization-in-progress t) ; just in case
             (cur-buf (current-buffer))
             (base (buffer-base-buffer))
             (first-arg (car-safe args)))
-        (with-current-buffer base
-          (if (or (eq first-arg cur-buf)
-                  (equal first-arg (buffer-name cur-buf)))
-              (apply orig-fun base (cdr args))
-            (apply orig-fun args))))
+        (prog1 (with-current-buffer base
+                 (if (or (eq first-arg cur-buf)
+                         (equal first-arg (buffer-name cur-buf)))
+                     (apply orig-fun base (cdr args))
+                   (apply orig-fun args)))
+          ;; The sync of points doesn't work as expected in the following corner
+          ;; case: if current buffer is an indirect one and a function operates
+          ;; on the base buffer (like save-buffer) and somehow inadvertently
+          ;; moves points in the indirect buffer then we synchronize wrong point
+          ;; (from the current indirect buffer). For unclear reasons the very
+          ;; low level scan-lists moves points in indirect buffers (FIXME: EMACS
+          ;; bug, report ASAP). Unfortunately save-excursion protects only from
+          ;; point moves in the current buffer.
+          (pm--synchronize-points base)))
     (apply orig-fun args)))
 
 (pm-around-advice #'kill-buffer #'polymode-with-current-base-buffer)
 (pm-around-advice #'find-alternate-file #'polymode-with-current-base-buffer)
 (pm-around-advice #'write-file #'polymode-with-current-base-buffer)
+(pm-around-advice #'basic-save-buffer #'polymode-with-current-base-buffer)
 ;; (advice-remove #'kill-buffer #'polymode-with-current-base-buffer)
 ;; (advice-remove #'find-alternate-file #'polymode-with-current-base-buffer)
 
 
 ;;; FILL
+
 ;; FIXME: this is an incomplete heuristic and breaks on adjacent multi-span
 ;; fill-region depending on the mode's fill-forward-paragraph-function. For a
 ;; complete solution one might likely need to define fill-paragraph-function as
@@ -1310,16 +1354,17 @@ Elements of LIST can be either strings or symbols."
         ))))
 
 (defun pm--synchronize-points (&optional buffer)
-  "Synchronize the point in polymode buffers with the point in BUFFER.
-By default BUFFER is the buffer where `pm/current' is t."
-  (when polymode-mode
+  "Synchronize the point in polymode buffers with the point in BUFFER."
+  (setq buffer (current-buffer))
+  (when (and polymode-mode
+             (buffer-live-p buffer))
     (let* ((bufs (eieio-oref pm/polymode '-buffers))
-           (buffer (or buffer
-                       (cl-loop for b in bufs
-                                if (and (buffer-live-p b)
-                                        (buffer-local-value 'pm/current b))
-                                return b)
-                       (current-buffer)))
+           ;; (buffer (or buffer
+           ;;             (cl-loop for b in bufs
+           ;;                      if (and (buffer-live-p b)
+           ;;                              (buffer-local-value 'pm/current b))
+           ;;                      return b)
+           ;;             (current-buffer)))
            (pos (with-current-buffer buffer (point))))
       (dolist (b bufs)
         (when (buffer-live-p b)
@@ -1362,6 +1407,7 @@ By default BUFFER is the buffer where `pm/current' is t."
         (exporter (symbol-value (eieio-oref pm/polymode 'exporter)))
         (obuffer (current-buffer)))
     (if pm--export-spec
+        ;; 2-stage weaver->exporter
         (let ((espec pm--export-spec))
           (lambda (&rest args)
             (with-current-buffer obuffer
@@ -1571,13 +1617,18 @@ By default BUFFER is the buffer where `pm/current' is t."
                              (pm--file-mod-time pm--output-file)))
                    (imt (and omt (pm--file-mod-time pm--input-file)))
                    (ofile (or (and imt (time-less-p imt omt) pm--output-file)
-                              (let ((fun (with-no-warnings
-                                           (eieio-oref processor 'function)))
-                                    (args (delq nil (list callback from to))))
-                                (apply fun (car comm.ofile) args)))))
-              ;; ofile is non-nil in two cases:
-              ;;  -- synchronous back-ends (very uncommon)
-              ;;  -- when output is transitional (not real) and mod time of input < output
+                              (let ((fn (with-no-warnings
+                                          (eieio-oref processor 'function)))
+                                    ;; `to` is nil for weavers
+                                    (args (delq nil (list from to)))
+                                    (comm (car comm.ofile)))
+                                (if callback
+                                    ;; the display is handled within the
+                                    ;; callback and return value of :function
+                                    ;; slot is ignored
+                                    (progn (apply fn comm callback args)
+                                           nil)
+                                  (apply fn comm args))))))
               (when ofile
                 (if pm--export-spec
                     ;; same logic as in pm--wrap-callback

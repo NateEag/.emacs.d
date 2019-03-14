@@ -123,7 +123,8 @@ Ran by the polymode mode function."
           (pm--move-vars pm-move-vars-from-base base (current-buffer)))
         (condition-case-unless-debug err
             (funcall mode)
-          (error (message "Polymode error (pm--mode-setup '%s): %s" mode (error-message-string err))))))
+          (error (message "Polymode error (pm--mode-setup '%s): %s"
+                          mode (error-message-string err))))))
     (setq polymode-mode t)
     (current-buffer)))
 
@@ -174,13 +175,17 @@ initialized. Return the buffer."
 
     ;; FONT LOCK (see poly-lock.el)
     (setq-local font-lock-function 'poly-lock-mode)
-    ;; Font lock is initialized in `after-change-major-mode-hook' by means of
-    ;; `run-mode-hooks' and poly-lock won't get installed if polymode is
-    ;; installed as minor mode or interactively. We add font/poly-lock in all
-    ;; buffers because this is how inner buffers are installed, but
-    ;; `poly-lock-allow-fontification' is intended for buffers which don't want
-    ;; font-lock.
+    ;; Font lock is a globalized minor mode and is thus initialized in
+    ;; `after-change-major-mode-hook' within `run-mode-hooks'. As a result
+    ;; poly-lock won't get installed if polymode is installed as a minor mode or
+    ;; interactively. We add font/poly-lock in all buffers (because this is how
+    ;; inner buffers are installed) but use `poly-lock-allow-fontification' to
+    ;; disallow fontification in buffers which don't want font-lock (aka those
+    ;; buffers where `turn-on-font-lock-if-desired' doesn't activate font-lock).
+    (turn-on-font-lock-if-desired) ; <- need this for the sake of poly-minor-modes
     (setq-local poly-lock-allow-fontification font-lock-mode)
+    ;; Make sure to re-install with our font-lock-function as
+    ;; `turn-on-font-lock-if-desired' from above might actually not call it.
     (font-lock-mode t)
     (font-lock-flush)
 
@@ -376,11 +381,11 @@ in this case."
     (goto-char point)))
 
 (defun pm--indent-line-raw (span)
-  (pm--indent-raw span #'pm--indent-line-function-original)
+  (pm--indent-raw span 'pm--indent-line-function-original)
   (pm--reindent-with+-indent span (point-at-bol) (point-at-eol)))
 
 (defun pm--indent-region-raw (span beg end)
-  (pm--indent-raw span #'pm--indent-region-function-original beg end)
+  (pm--indent-raw span 'pm--indent-region-function-original beg end)
   (pm--reindent-with+-indent span beg end))
 
 (defun pm-indent-region (beg end)
@@ -426,7 +431,7 @@ Value of `indent-line-function' in polymode buffers."
 Protect and call original indentation function associated with
 the chunkmode.")
 
-(cl-defmethod pm-indent-line ((chunkmode pm-chunkmode) span)
+(cl-defmethod pm-indent-line ((_chunkmode pm-chunkmode) span)
   (let ((pos (point))
         (delta))
     (back-to-indentation)
@@ -447,7 +452,7 @@ the chunkmode.")
     (when (and delta (> delta 0))
       (goto-char (+ (point) delta)))))
 
-(cl-defmethod pm-indent-line ((chunkmode pm-inner-chunkmode) span)
+(cl-defmethod pm-indent-line ((_chunkmode pm-inner-chunkmode) span)
   "Indent line in inner chunkmodes.
 When point is at the beginning of head or tail, use parent chunk
 to indent."
@@ -591,8 +596,6 @@ to indent."
          (or (eieio-oref chunkmode 'tail-adjust-face)
              (eieio-oref chunkmode 'head-adjust-face)))
         (t (eieio-oref chunkmode 'adjust-face))))
-
-(provide 'polymode-methods)
 
 (provide 'polymode-methods)
 

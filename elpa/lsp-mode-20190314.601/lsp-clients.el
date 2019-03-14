@@ -143,7 +143,7 @@
 ;;; CSS
 (defun lsp-clients-css--apply-code-action (action)
   "Apply ACTION as workspace edit command."
-  (lsp--apply-text-edits (caddr (gethash "arguments" action))))
+  (lsp--apply-text-edits (cl-caddr (gethash "arguments" action))))
 
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection '("css-languageserver" "--stdio"))
@@ -213,10 +213,10 @@ finding the executable with variable `exec-path'."
   :risky t
   :type '(repeat string))
 
-(defun lsp-typescript-javascript-tsx-jsx-activate-p (filename major-mode)
+(defun lsp-typescript-javascript-tsx-jsx-activate-p (filename mode)
   "Checks if the javascript-typescript language server should be enabled
 based on FILE-NAME and MAJOR-MODE"
-  (or (member major-mode '(typescript-mode typescript-tsx-mode js-mode js2-mode rjsx-mode))
+  (or (member mode '(typescript-mode typescript-tsx-mode js-mode js2-mode rjsx-mode))
       (and (eq major-mode 'web-mode)
            (or (string-suffix-p ".tsx" filename t)
                (string-suffix-p ".jsx" filename t)))))
@@ -316,9 +316,9 @@ the contents of FILE-NAME."
 there is a .flowconfig file in the folder hierarchy."
   (locate-dominating-file file-name ".flowconfig"))
 
-(defun lsp-clients-flow-activate-p (file-name major-mode)
+(defun lsp-clients-flow-activate-p (file-name _mode)
   "Checks if the Flow language server should be enabled for a
-particular FILE-NAME and MAJOR-MODE."
+particular FILE-NAME and MODE."
   (and (derived-mode-p 'js-mode 'web-mode 'js2-mode 'flow-js2-mode 'rjsx-mode)
        (lsp-clients-flow-project-p file-name)
        (lsp-clients-flow-tag-present-p file-name)))
@@ -614,7 +614,10 @@ finding the executable with `exec-path'."
   :group 'lsp-mode
   :tag "Elixir")
 
-(defcustom lsp-clients-elixir-server-executable "language_server.sh"
+(defcustom lsp-clients-elixir-server-executable
+  (if (equal system-type 'windows-nt)
+      "language_server.bat"
+    "language_server.sh")
   "The elixir-language-server executable to use.
 Leave as just the executable name to use the default behavior of
 finding the executable with `exec-path'."
@@ -659,5 +662,20 @@ finding the executable with `exec-path'."
                   :server-id 'fortls))
 
 
+
+;; Kotlin
+(defgroup lsp-kotlin nil
+  "Kotlin."
+  :group 'lsp-mode
+  :tag "Kotlin")
+
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-stdio-connection '("kotlin-language-server"))
+		  :major-modes '(kotlin-mode)
+		  :priority -1
+		  :server-id 'kotlin-ls))
+
+
+
 (provide 'lsp-clients)
 ;;; lsp-clients.el ends here

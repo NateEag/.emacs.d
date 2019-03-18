@@ -105,7 +105,8 @@
 ;;;###autoload
 (defvar-local polymode-default-inner-mode nil
   "Inner mode for chunks with unspecified modes.
-Intended to be used as local variable in polymode buffers.")
+Intended to be used as local variable in polymode buffers. A
+special value 'host means use the host mode.")
 ;;;###autoload
 (put 'polymode-default-inner-mode 'safe-local-variable 'symbolp)
 
@@ -217,6 +218,7 @@ objects provides same functionality for narrower scope. See also
          (type (pm-true-span-type span)))
     (if type
         (pm-get-buffer-create chunkmode type)
+      ;; ignore span's chunkmode as inner spans can request host span
       (pm-get-buffer-create (oref pm/polymode -hostmode)))))
 
 (defun pm-span-mode (&optional span)
@@ -227,7 +229,7 @@ objects provides same functionality for narrower scope. See also
 (defun pm-true-span-type (chunkmode &optional type)
   "Retrieve the TYPE of buffer to be installed for CHUNKMODE.
 `pm-innermost-span' returns a raw type (head, body or tail) but
-the actual type installed depends on the values of :host-mode ant
+the actual type installed depends on the values of :host-mode and
 :tail-mode of the CHUNKMODE object. Always return nil if TYPE is
 nil (aka a host span). CHUNKMODE could also be a span, in which
 case TYPE is ignored."
@@ -236,33 +238,34 @@ case TYPE is ignored."
     ;; a span
     (setq type (car chunkmode)
           chunkmode (nth 3 chunkmode)))
-  (unless (or (null type) (eq type 'host))
-    (with-slots (mode head-mode tail-mode) chunkmode
-      (cond ((and (eq type 'body)
-                  (eq mode 'host))
-             nil)
-            ((or (eq type 'body)
-                 (and (eq type 'head)
-                      (eq head-mode 'body))
-                 (and (eq type 'tail)
-                      (or (eq tail-mode 'body)
-                          (and (null tail-mode)
-                               (eq head-mode 'body)))))
-             'body)
-            ((or (and (eq type 'head)
-                      (eq head-mode 'host))
-                 (and (eq type 'tail)
-                      (or (eq tail-mode 'host)
-                          (and (null tail-mode)
-                               (eq head-mode 'host)))))
-             nil)
-            ((eq type 'head)
-             'head)
-            ((eq type 'tail)
-             (if tail-mode
-                 'tail
-               'head))
-            (t (error "Type must be one of nil, 'host, 'head, 'tail or 'body"))))))
+  (when (object-of-class-p chunkmode 'pm-inner-chunkmode)
+    (unless (or (null type) (eq type 'host))
+      (with-slots (mode head-mode tail-mode) chunkmode
+        (cond ((and (eq type 'body)
+                    (eq mode 'host))
+               nil)
+              ((or (eq type 'body)
+                   (and (eq type 'head)
+                        (eq head-mode 'body))
+                   (and (eq type 'tail)
+                        (or (eq tail-mode 'body)
+                            (and (null tail-mode)
+                                 (eq head-mode 'body)))))
+               'body)
+              ((or (and (eq type 'head)
+                        (eq head-mode 'host))
+                   (and (eq type 'tail)
+                        (or (eq tail-mode 'host)
+                            (and (null tail-mode)
+                                 (eq head-mode 'host)))))
+               nil)
+              ((eq type 'head)
+               'head)
+              ((eq type 'tail)
+               (if tail-mode
+                   'tail
+                 'head))
+              (t (error "Type must be one of nil, 'host, 'head, 'tail or 'body")))))))
 
 (defun pm-cache-span (span)
   ;; cache span
@@ -382,8 +385,10 @@ case TYPE is ignored."
         (save-restriction
           (widen)
           (let* ((beg (nth 1 span))
-                 (end (max beg (1- (nth 2 span)))))
+                 (end (1- (nth 2 span))))
             (when (and (< end (point-max)) ; buffer size might have changed
+                       (<= pos end)
+                       (<= beg pos)
                        (eq span (get-text-property beg :pm-span))
                        (eq span (get-text-property end :pm-span))
                        (not (eq span (get-text-property (1+ end) :pm-span)))
@@ -698,6 +703,7 @@ Parents' hooks are run first."
   '(buffer-file-name
     outline-regexp
     outline-level
+    polymode-default-inner-mode
     tab-width)
   "Variables transferred from base buffer on buffer switch.")
 
@@ -736,7 +742,6 @@ VISIBLY is non-nil perform extra adjustment for \"visual\" buffer
 switch."
   (let ((buffer (pm-span-buffer span)))
     (with-current-buffer buffer
-      ;; (message (pm--debug-info span))
       (pm--reset-ppss-cache span))
     (when visibly
       ;; always sync to avoid issues with tooling working in different buffers
@@ -940,6 +945,32 @@ region. Buffer is *not* narrowed to the region."
 ;;; HOOKS
 ;; There is also `poly-lock-after-change' in poly-lock.el
 
+(defun polymode-flush-syntax-ppss-cache (beg end _)
+  "Run `syntax-ppss-flush-cache' from BEG to END in all polymode buffers."
+  ;; Modification hooks are run only in current buffer and not in other (base or
+  ;; indirect) buffers. Thus some actions like flush of ppss cache must be taken
+  ;; care explicitly. We run some safety hooks checks here as well.
+  (dolist (buff (oref pm/polymode -buffers))
+    (when (buffer-live-p buff)
+      (with-current-buffer buff
+        ;; micro-optimization to avoid calling the flush twice
+        (when (memq 'syntax-ppss-flush-cache before-change-functions)
+          (remove-hook 'before-change-functions 'syntax-ppss-flush-cache t))
+        ;; need to be the first to avoid breaking preceding hooks
+        (unless (eq (car after-change-functions)
+                    'polymode-flush-syntax-ppss-cache)
+          (delq 'polymode-flush-syntax-ppss-cache after-change-functions)
+          (add-hook 'after-change-functions 'polymode-flush-syntax-ppss-cache nil t))
+        (syntax-ppss-flush-cache beg end)
+        ;; Check if something has changed our hooks. (Am I theoretically paranoid or
+        ;; this is indeed needed?) `fontification-functions' (and others?) should be
+        ;; checked as well I guess.
+        ;; (when (memq 'font-lock-after-change-function after-change-functions)
+        ;;   (remove-hook 'after-change-functions 'font-lock-after-change-function t))
+        ;; (when (memq 'jit-lock-after-change after-change-functions)
+        ;;   (remove-hook 'after-change-functions 'jit-lock-after-change t))
+        ))))
+
 (defun polymode-pre-command-synchronize-state ()
   "Synchronize state between buffers.
 Currently synchronize points only. Runs in local `pre-command-hook'."
@@ -955,28 +986,6 @@ This funciton is placed in local `post-command-hook'."
         (pm-switch-to-buffer)
       (error (message "(pm-switch-to-buffer %s): %s"
                       (point) (error-message-string err))))))
-
-(defun polymode-before-change-setup (beg end)
-  "Run `syntax-ppss-flush-cache' from BEG to END in all polymode buffers.
-This function is placed in `before-change-functions' hook."
-  ;; Modification hooks are run only in current buffer and not in other (base or
-  ;; indirect) buffers. Thus some actions like flush of ppss cache must be taken
-  ;; care explicitly. We run some safety hooks checks here as well.
-  (dolist (buff (oref pm/polymode -buffers))
-    (when (buffer-live-p buff)
-      (with-current-buffer buff
-        ;; micro-optimization to avoid calling the flush twice
-        (when (memq 'syntax-ppss-flush-cache before-change-functions)
-          (remove-hook 'before-change-functions 'syntax-ppss-flush-cache t))
-        (syntax-ppss-flush-cache beg end)
-        ;; Check if something has changed our hooks. (Am I theoretically paranoid or
-        ;; this is indeed needed?) `fontification-functions' (and others?) should be
-        ;; checked as well I guess.
-        ;; (when (memq 'font-lock-after-change-function after-change-functions)
-        ;;   (remove-hook 'after-change-functions 'font-lock-after-change-function t))
-        ;; (when (memq 'jit-lock-after-change after-change-functions)
-        ;;   (remove-hook 'after-change-functions 'jit-lock-after-change t))
-        ))))
 
 (defvar-local pm--killed nil)
 (defun polymode-after-kill-fixes ()
@@ -1155,7 +1164,7 @@ ARG is the same as in `forward-paragraph'"
 (defun polymode-reset-ppss-cache (&optional pos)
   "Reset syntax-ppss cache in polymode buffers.
 Used in :before advice of `syntax-ppss'."
-  (when (and polymode-mode pm/polymode)
+  (when polymode-mode
     (pm--reset-ppss-cache (pm-innermost-span pos))))
 
 ;; (advice-add #'syntax-ppss :before #'polymode-reset-ppss-cache)
@@ -1281,9 +1290,9 @@ Return FALLBACK if non-nil, otherwise the value of
                   if (and (string-match-p k dummy-file)
                           (not (string-match-p "^poly-" (symbol-name v))))
                   return v))
-       ;; default-inner-mode is for anonymous chunks only
-       ;; (when (fboundp polymode-default-inner-mode)
-       ;;   polymode-default-inner-mode)
+       (when (or (eq polymode-default-inner-mode 'host)
+                 (fboundp polymode-default-inner-mode))
+         polymode-default-inner-mode)
        fallback
        'poly-fallback-mode)))))
 

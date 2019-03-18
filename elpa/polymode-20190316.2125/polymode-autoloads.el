@@ -3,9 +3,24 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "polymode" "polymode.el" (23690 18077 981511
-;;;;;;  391000))
+;;;### (autoloads nil "polymode" "polymode.el" (23695 45547 66190
+;;;;;;  311000))
 ;;; Generated autoloads from polymode.el
+
+(autoload 'define-hostmode "polymode" "\
+
+
+\(fn NAME &optional PARENT DOC &rest KEY-ARGS)" nil t)
+
+(autoload 'define-innermode "polymode" "\
+
+
+\(fn NAME &optional PARENT DOC &rest KEY-ARGS)" nil t)
+
+(autoload 'define-auto-innermode "polymode" "\
+
+
+\(fn NAME &optional PARENT DOC &rest KEY-ARGS)" nil t)
 
 (autoload 'define-polymode "polymode" "\
 Define a new polymode MODE.
@@ -79,20 +94,21 @@ most frequently used slots are:
 
 ;;;***
 
-;;;### (autoloads nil "polymode-core" "polymode-core.el" (23690 18077
-;;;;;;  986088 940000))
+;;;### (autoloads nil "polymode-core" "polymode-core.el" (23695 45547
+;;;;;;  70273 121000))
 ;;; Generated autoloads from polymode-core.el
 
 (defvar-local polymode-default-inner-mode nil "\
 Inner mode for chunks with unspecified modes.
-Intended to be used as local variable in polymode buffers.")
+Intended to be used as local variable in polymode buffers. A
+special value 'host means use the host mode.")
 
 (put 'polymode-default-inner-mode 'safe-local-variable 'symbolp)
 
 ;;;***
 
-;;;### (autoloads nil "polymode-debug" "polymode-debug.el" (23690
-;;;;;;  18077 976243 475000))
+;;;### (autoloads nil "polymode-debug" "polymode-debug.el" (23695
+;;;;;;  45547 61255 49000))
 ;;; Generated autoloads from polymode-debug.el
 
 (autoload 'pm-debug-minor-mode "polymode-debug" "\
@@ -155,7 +171,7 @@ Print values of relevant hooks and other variables.
 ;;;### (autoloads nil nil ("poly-lock.el" "polymode-base.el" "polymode-classes.el"
 ;;;;;;  "polymode-compat.el" "polymode-export.el" "polymode-methods.el"
 ;;;;;;  "polymode-pkg.el" "polymode-tangle.el" "polymode-test-utils.el"
-;;;;;;  "polymode-weave.el") (23690 18077 987223 862000))
+;;;;;;  "polymode-weave.el") (23695 45547 71295 441000))
 
 ;;;***
 

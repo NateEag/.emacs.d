@@ -52,8 +52,8 @@
   '(
     :plugins.jedi_completion.enabled t
     :plugins.jedi_definition.follow_imports t
-    ;; List of configuration sources to use. (enum: ["pycodestyle", "pyflakes"])
-    :configurationSources  ("pycodestyle")
+    ;; List of configuration sources to use. (enum: ["pycodestyle" "pyflakes"])
+    :configurationSources ["pycodestyle"]
     ;; Enable or disable the plugin.
     :plugins.jedi_completion.enabled t
     ;; Enable or disable the plugin.
@@ -77,7 +77,7 @@
     ;; The minimum threshold that triggers warnings about cyclomatic complexity.
     :plugins.mccabe.threshold 15
     ;; Enable or disable the plugin.
-    :plugins.preload.enabled true
+    :plugins.preload.enabled t
     ;; List of modules to import on startup
     :plugins.preload.modules nil
     ;; Enable or disable the plugin.
@@ -282,11 +282,18 @@ finding the executable with variable `exec-path'."
   :risky t
   :type '(repeat string))
 
-(defun lsp-clients-flow-tag-present-p (file-name)
+(defun lsp-clients-flow-tag-file-present-p (file-name)
   "Checks if the '// @flow' or `/* @flow */' tag is present in
 the contents of FILE-NAME."
   (with-temp-buffer
     (insert-file-contents file-name)
+    (lsp-clients-flow-tag-string-present-p (buffer-string))))
+
+(defun lsp-clients-flow-tag-string-present-p (file-contents)
+  "Helper for `lsp-clients-flow-tag-file-present-p' that works
+with the file contents."
+  (with-temp-buffer
+    (insert file-contents)
     (save-excursion
       (goto-char (point-min))
       (let (stop found)
@@ -302,6 +309,8 @@ the contents of FILE-NAME."
                  (setq found t)
                  (setq stop t))
                 ((looking-at "//")
+                 (forward-line))
+                ((looking-at "*")
                  (forward-line))
                 ((looking-at "/\\*")
                  (save-excursion
@@ -321,7 +330,7 @@ there is a .flowconfig file in the folder hierarchy."
 particular FILE-NAME and MODE."
   (and (derived-mode-p 'js-mode 'web-mode 'js2-mode 'flow-js2-mode 'rjsx-mode)
        (lsp-clients-flow-project-p file-name)
-       (lsp-clients-flow-tag-present-p file-name)))
+       (lsp-clients-flow-tag-file-present-p file-name)))
 
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection

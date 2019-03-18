@@ -461,23 +461,32 @@ the upstream isn't ahead of the current branch) show."
    ("-c" "Show graph in color"      "--color")
    ("-d" "Show refnames"            "--decorate")]
   [["Refresh"
-    ("g" "buffer"                   magit-log-do-refresh)
+    ("g" "buffer"                   magit-log-refresh)
     ("s" "buffer and set defaults"  magit-log-set-default-arguments)
     ("w" "buffer and save defaults" magit-log-save-default-arguments)]
    ["Margin"
     ("L" "toggle visibility"        magit-toggle-margin)
     ("l" "cycle style"              magit-cycle-margin-style)
     ("d" "toggle details"           magit-toggle-margin-details)
-    ("x" "toggle shortstat"         magit-toggle-log-margin-style)]])
+    ("x" "toggle shortstat"         magit-toggle-log-margin-style)]]
+  (interactive)
+  (if (not (eq current-transient-command 'magit-log-refresh))
+      (transient-setup 'magit-log-refresh)
+    (magit-log-refresh-assert)
+    (pcase-let ((`(,args ,files) (magit-log-arguments t)))
+      (cond ((derived-mode-p 'magit-log-select-mode)
+             (setcar (cdr magit-refresh-args) args))
+            ((derived-mode-p 'magit-log-mode)
+             (setcdr magit-refresh-args (list args files)))
+            (t
+             (setq-local magit-log-section-arguments args))))
+    (magit-refresh)))
 
 (defun magit-log--initial-value ()
-  (if-let ((file (magit-file-relative-name)))
-      (magit-log--merge-args
-       (if-let ((buffer (magit-mode-get-buffer 'magit-log-mode)))
-           (nth 2 (buffer-local-value 'magit-refresh-args buffer))
-         (default-value 'magit-log-arguments))
-       (list file))
-    (apply #'magit-log--merge-args (magit-log-get-buffer-args))))
+  (pcase-let ((`(,args ,files) (magit-log-get-buffer-args)))
+    (when-let ((file (magit-file-relative-name)))
+      (setq files (list file)))
+    (magit-log--merge-args args files)))
 
 (defun magit-log-refresh--initial-value ()
   (cond ((derived-mode-p 'magit-log-select-mode)
@@ -572,18 +581,6 @@ the upstream isn't ahead of the current branch) show."
     (concat trace (or (match-string 2 trace) ":") file)))
 
 ;;;; Refresh Commands
-
-(defun magit-log-do-refresh (args files)
-  "Set the local log arguments for the current buffer."
-  (interactive (magit-log-arguments t))
-  (magit-log-refresh-assert)
-  (cond ((derived-mode-p 'magit-log-select-mode)
-         (setcar (cdr magit-refresh-args) args))
-        ((derived-mode-p 'magit-log-mode)
-         (setcdr magit-refresh-args (list args files)))
-        (t
-         (setq-local magit-log-section-arguments args)))
-  (magit-refresh))
 
 (defun magit-log-set-default-arguments (args files)
   "Set the global log arguments for the current buffer."

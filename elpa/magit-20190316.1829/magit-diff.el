@@ -685,6 +685,13 @@ and `:slant'."
 ;;; Commands
 ;;;; Diff popups
 
+(defvar magit-diff-section-file-args nil)
+(put 'magit-diff-section-file-args 'permanent-local t)
+(put 'magit-diff-section-file-args 'safe-local-variable
+     (lambda (val)
+       (and (listp val)
+            (-all-p #'stringp val))))
+
 ;;;###autoload (autoload 'magit-diff "magit-diff" nil t)
 (define-transient-command magit-diff ()
   "Show changes between different versions."
@@ -739,35 +746,34 @@ and `:slant'."
    (5 magit-diff:--color-moved)
    (5 magit-diff:--color-moved-ws)]
   ["Actions"
-   [("g" "Refresh"                magit-diff-do-refresh)
+   [("g" "Refresh"                magit-diff-refresh)
     ("s" "Set defaults"           magit-diff-set-default-arguments)
     ("w" "Save defaults"          magit-diff-save-default-arguments)]
    [("t" "Toggle hunk refinement" magit-diff-toggle-refine-hunk)
     ("F" "Toggle file filter"     magit-diff-toggle-file-filter)]
    [:if-mode magit-diff-mode
     ("r" "Switch range type"      magit-diff-switch-range-type)
-    ("f" "Flip revisions"         magit-diff-flip-revs)]])
-
-(defvar magit-diff-section-file-args nil)
-(put 'magit-diff-section-file-args 'permanent-local t)
-(put 'magit-diff-section-file-args 'safe-local-variable
-     (lambda (val)
-       (and (listp val)
-            (-all-p #'stringp val))))
+    ("f" "Flip revisions"         magit-diff-flip-revs)]]
+  (interactive)
+  (if (not (eq current-transient-command 'magit-diff-refresh))
+      (transient-setup 'magit-diff-refresh)
+    (pcase-let ((`(,args ,files) (magit-diff-arguments t)))
+      (if (derived-mode-p 'magit-diff-mode)
+          (setcdr (cdr magit-refresh-args) (list args files))
+        (setq-local magit-diff-section-arguments args)
+        (setq-local magit-diff-section-file-args files)))
+    (magit-refresh)))
 
 (defun magit-diff--initial-value ()
-  (if-let ((file (magit-file-relative-name)))
-      (magit-diff--merge-args
-       (if-let ((buffer (magit-mode-get-buffer 'magit-diff-mode)))
-           (nth 3 (buffer-local-value 'magit-refresh-args buffer))
-         (default-value 'magit-diff-arguments))
-       (list file))
-    ;; We cannot possibly know what suffix command the user is
-    ;; about to invoke, so we also don't know from which buffer
-    ;; we should get the current values.  However it is much
-    ;; more likely that we will end up updating the diff buffer,
-    ;; and we therefore use the value from that buffer.
-    (apply #'magit-diff--merge-args (magit-diff-get-buffer-args))))
+  ;; We cannot possibly know what suffix command the user is
+  ;; about to invoke, so we also don't know from which buffer
+  ;; we should get the current values.  However it is much
+  ;; more likely that we will end up updating the diff buffer,
+  ;; and we therefore use the value from that buffer.
+  (pcase-let ((`(,args ,files) (magit-diff-get-buffer-args)))
+    (when-let ((file (magit-file-relative-name)))
+      (setq files (list file)))
+    (magit-diff--merge-args args files)))
 
 (defun magit-diff-refresh--initial-value ()
   (if (derived-mode-p 'magit-diff-mode)
@@ -1172,16 +1178,6 @@ for a revision."
     (magit-mode-setup #'magit-revision-mode rev nil args files)))
 
 ;;;; Setting commands
-
-(defun magit-diff-do-refresh (args files)
-  "Set the local diff arguments for the current buffer."
-  (interactive (magit-diff-arguments t))
-  (cond ((derived-mode-p 'magit-diff-mode)
-         (setcdr (cdr magit-refresh-args) (list args files)))
-        (t
-         (setq-local magit-diff-section-arguments args)
-         (setq-local magit-diff-section-file-args files)))
-  (magit-refresh))
 
 (defun magit-diff-set-default-arguments (args files)
   "Set the global diff arguments for the current buffer."

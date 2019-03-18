@@ -1,0 +1,6 @@
+# -*- mode: snippet -*-
+# name: angular_injector
+# key: angular_injector
+# --
+var injector = angular.element(document.getElementsByTagName('body')).injector(),
+    module = injector.get('${0:moduleName}');

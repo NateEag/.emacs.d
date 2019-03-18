@@ -4,7 +4,7 @@
 ;; Keywords: git, tools, vc, github
 ;; Homepage: https://github.com/charignon/github-review
 ;; Package-Requires: ((emacs "25") (s "1.12.0") (ghub "2.0") (dash "2.11.0"))
-;; Package-Version: 20190310.14
+;; Package-Version: 20190316.2025
 ;; Package-X-Original-Version: 0.1
 
 ;; This file is not part of GNU Emacs
@@ -497,11 +497,9 @@ Gets the PR diff, object, top level comments, and code reviews."
                          (github-review-a-assoc 'object v)
                          (github-review-a-assoc 'chain chain))))))))
 
-;;;###autoload
-(defun github-review-start (url)
+
+(defun github-review-start-internal (pr-alist)
   "Start review given PR URL."
-  (interactive "sPR URL: ")
-  (let* ((pr-alist (github-review-pr-from-url url)))
     (github-review-chain-calls
      pr-alist
      ;; Callback when done
@@ -511,7 +509,30 @@ Gets the PR diff, object, top level comments, and code reviews."
         (github-review-format-diff ctx)))
 
      (github-review-chain)
-     )))
+     ))
+
+;;;###autoload
+(defun github-review-forge-pr-at-point ()
+  "Review the forge pull request at point."
+  (interactive)
+  (let* ((pullreq (forge-pullreq-at-point))
+         (repo (forge-get-repository pullreq))
+         (owner (oref repo owner))
+         (name (oref repo name))
+         (number (oref pullreq number))
+         (pr-alist (-> (github-review-a-empty)
+                       (github-review-a-assoc 'owner owner)
+                       (github-review-a-assoc 'repo  name)
+                       (github-review-a-assoc 'num   number))))
+         (github-review-start-internal pr-alist)))
+
+;;;###autoload
+(defun github-review-start (url)
+  "Start review given PR URL."
+  (interactive "sPR URL: ")
+  (let* ((pr-alist (github-review-pr-from-url url)))
+    (github-review-start-internal pr-alist)))
+
 
 ;;;###autoload
 (defun github-review-approve ()

@@ -305,6 +305,9 @@ An easy way to copy a transaction is to type ‘C-c C-k’ or menu entry
 transaction, and after having confirmed with ‘RET’, new transaction will
 be inserted at _date_ position in buffer.
 
+   If you prefer to keep blank lines between your transactions, you can
+change the default in ‘ledger-copy-transaction-insert-blank-line-after’.
+
 
 File: ledger-mode.info,  Node: Editing Amounts,  Next: Marking Transactions,  Prev: Copying Transactions,  Up: The Ledger Buffer
 
@@ -1428,48 +1431,48 @@ Node: Adding Transactions9543
 Node: Setting a Transactions Effective Date10522
 Node: Quick Balance Display11422
 Node: Copying Transactions11954
-Node: Editing Amounts12406
-Node: Marking Transactions13477
-Node: Formatting Transactions15172
-Node: Deleting Transactions15770
-Node: Sorting Transactions16210
-Node: Narrowing Transactions17762
-Node: The Reconcile Buffer19612
-Node: Basics of Reconciliation20077
-Node: Starting a Reconciliation21026
-Node: Mark Transactions Pending22875
-Node: Edit Transactions During Reconciliation23544
-Node: Finalize Reconciliation24187
-Node: Adding and Deleting Transactions during Reconciliation24844
-Node: Changing Reconciliation Account25428
-Node: Changing Reconciliation Target25978
-Node: The Report Buffer26296
-Node: Running Basic Reports26554
-Node: Adding and Editing Reports27987
-Node: Expansion Formats29374
-Node: Make Report Transactions Active31015
-Node: Reversing Report Order31722
-Node: Scheduling Transactions32415
-Node: Specifying Upcoming Transactions33271
-Node: Transactions that occur on specific dates33845
-Node: Transactions that occur on specific days34886
-Node: Customizing Ledger-mode36015
-Node: Ledger-mode Customization36279
-Node: Customization Variables36964
-Node: Ledger Customization Group37444
-Node: Ledger Reconcile Customization Group38084
-Node: Ledger Report Customization Group41027
-Node: Ledger Faces Customization Group41746
-Node: Ledger Post Customization Group43493
-Node: Ledger Exec Customization Group44124
-Node: Ledger Test Customization Group44623
-Node: Ledger Texi Customization Group45025
-Node: Generating Ledger Regression Tests45517
-Node: Embedding Example results in Ledger Documentation45780
-Node: Hacking Ledger-mode46069
-Node: Concept Index46277
-Node: Command & Variable Index51051
-Node: Keystroke Index58530
+Node: Editing Amounts12556
+Node: Marking Transactions13627
+Node: Formatting Transactions15322
+Node: Deleting Transactions15920
+Node: Sorting Transactions16360
+Node: Narrowing Transactions17912
+Node: The Reconcile Buffer19762
+Node: Basics of Reconciliation20227
+Node: Starting a Reconciliation21176
+Node: Mark Transactions Pending23025
+Node: Edit Transactions During Reconciliation23694
+Node: Finalize Reconciliation24337
+Node: Adding and Deleting Transactions during Reconciliation24994
+Node: Changing Reconciliation Account25578
+Node: Changing Reconciliation Target26128
+Node: The Report Buffer26446
+Node: Running Basic Reports26704
+Node: Adding and Editing Reports28137
+Node: Expansion Formats29524
+Node: Make Report Transactions Active31165
+Node: Reversing Report Order31872
+Node: Scheduling Transactions32565
+Node: Specifying Upcoming Transactions33421
+Node: Transactions that occur on specific dates33995
+Node: Transactions that occur on specific days35036
+Node: Customizing Ledger-mode36165
+Node: Ledger-mode Customization36429
+Node: Customization Variables37114
+Node: Ledger Customization Group37594
+Node: Ledger Reconcile Customization Group38234
+Node: Ledger Report Customization Group41177
+Node: Ledger Faces Customization Group41896
+Node: Ledger Post Customization Group43643
+Node: Ledger Exec Customization Group44274
+Node: Ledger Test Customization Group44773
+Node: Ledger Texi Customization Group45175
+Node: Generating Ledger Regression Tests45667
+Node: Embedding Example results in Ledger Documentation45930
+Node: Hacking Ledger-mode46219
+Node: Concept Index46427
+Node: Command & Variable Index51201
+Node: Keystroke Index58680
 
 End Tag Table
 

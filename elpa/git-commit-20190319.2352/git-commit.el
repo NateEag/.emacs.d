@@ -12,7 +12,7 @@
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 
 ;; Package-Requires: ((emacs "25.1") (dash "20180910") (with-editor "20181103"))
-;; Package-Version: 20190102.107
+;; Package-Version: 20190319.2352
 ;; Keywords: git tools vc
 ;; Homepage: https://github.com/magit/magit
 
@@ -421,7 +421,7 @@ This is only used if Magit is available."
 
 ;;;###autoload
 (defconst git-commit-filename-regexp "/\\(\
-\\(\\(COMMIT\\|NOTES\\|PULLREQ\\|TAG\\)_EDIT\\|MERGE_\\|\\)MSG\
+\\(\\(COMMIT\\|NOTES\\|PULLREQ\\|MERGEREQ\\|TAG\\)_EDIT\\|MERGE_\\|\\)MSG\
 \\|\\(BRANCH\\|EDIT\\)_DESCRIPTION\\)\\'")
 
 (eval-after-load 'recentf

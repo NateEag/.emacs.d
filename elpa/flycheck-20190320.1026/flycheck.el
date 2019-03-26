@@ -173,6 +173,7 @@ attention to case differences."
     coq
     css-csslint
     css-stylelint
+    cuda-nvcc
     cwl
     d-dmd
     dockerfile-hadolint
@@ -190,6 +191,7 @@ attention to case differences."
     go-errcheck
     go-unconvert
     go-megacheck
+    go-staticcheck
     groovy
     haml
     handlebars
@@ -5971,6 +5973,35 @@ about Reek."
            errors))))
     (nreverse errors)))
 
+(defun flycheck-parse-go-staticcheck (output checker buffer)
+  "Parse staticheck warnings from JSON OUTPUT.
+
+CHECKER and BUFFER denote the CHECKER that returned OUTPUT and
+the BUFFER that was checked respectively.
+
+See URL `https://staticcheck.io/docs/formatters' for more
+information about staticheck."
+  (let ((errors nil))
+    (dolist (msg (flycheck-parse-json output))
+      (let-alist msg
+        (push
+         (flycheck-error-new-at
+          .location.line
+          .location.column
+          (pcase .severity
+            (`"error"   'error)
+            (`"warning" 'warning)
+            (`"ignored" 'info)
+            ;; Default to warning for unknown .severity
+            (_          'warning))
+          .message
+          :id .code
+          :checker checker
+          :buffer buffer
+          :filename .location.file)
+         errors)))
+    (nreverse errors)))
+
 (defun flycheck-parse-tslint (output checker buffer)
   "Parse TSLint errors from JSON OUTPUT.
 
@@ -7108,6 +7139,59 @@ See URL `http://stylelint.io/'."
   :error-parser flycheck-parse-stylelint
   :modes (css-mode))
 
+(flycheck-def-option-var flycheck-cuda-language-standard nil cuda-nvcc
+  "Our CUDA Language Standard."
+  :type '(choice (const :tag "Default standard" nil)
+                 (string :tag "Language standard"))
+  :safe #'stringp
+  :package-version '(flycheck . "32"))
+(make-variable-buffer-local 'flycheck-cuda-language-standard)
+
+(flycheck-def-option-var flycheck-cuda-includes nil cuda-nvcc
+  "Our include directories to pass to nvcc."
+  :type '(repeat (file :tag "Include file"))
+  :safe #'flycheck-string-list-p
+  :package-version '(flycheck . "32"))
+
+(flycheck-def-option-var flycheck-cuda-definitions nil cuda-nvcc
+  "Additional preprocessor definitions for nvcc.
+A list of strings to pass to cuda, a la flycheck-clang"
+  :type '(repeat (string :tag "Definitions"))
+  :safe #'flycheck-string-list-p
+  :package-version '(flycheck . "32"))
+
+(flycheck-def-option-var flycheck-cuda-include-path nil cuda-nvcc
+  "A list of include directories for nvcc."
+  :type '(repeat (directory :tag "Include directory"))
+  :safe #'flycheck-string-list-p
+  :package-version '(flycheck . "32"))
+
+(flycheck-define-checker cuda-nvcc
+  "A CUDA C/C++ syntax checker using nvcc.
+
+See URL `https://developer.nvidia.com/cuda-llvm-compiler'."
+  :command ("nvcc"
+            "-c" ;; Compile Only
+            (option "-std=" flycheck-cuda-language-standard concat)
+            (option-list "-include" flycheck-cuda-includes)
+            (option-list "-D" flycheck-cuda-definitions concat)
+            (option-list "-I" flycheck-cuda-include-path)
+            source)
+  :error-patterns
+  ((error line-start
+          (message "In file included from")
+          " " (or "<stdin>" (file-name))
+          ":" line ":" line-end)
+   (error line-start (or "<stdin>" (file-name))
+          "(" line "): error: " (message) line-end)
+   (error line-start (or "<stdin>" (file-name))
+          ":" line ":" column
+          ": fatal error: " (optional (message)) line-end)
+   (warning line-start (or "<stdin>" (file-name))
+            "(" line "): warning: " (message) line-end))
+  :modes cuda-mode)
+
+
 (flycheck-def-option-var flycheck-cwl-schema-path nil cwl
   "A path for the schema file for Common Workflow Language.
 
@@ -7717,6 +7801,7 @@ See URL `https://golang.org/cmd/gofmt/'."
                   (warning . go-build) (warning . go-test)
                   (warning . go-errcheck)
                   (warning . go-unconvert)
+                  (warning . go-staticcheck)
                   (warning . go-megacheck)))
 
 (flycheck-define-checker go-golint
@@ -7778,7 +7863,17 @@ See URL `https://golang.org/cmd/go/' and URL
                   ;; Fall back if `go build' or `go test' can be used
                   go-errcheck
                   go-unconvert
-                  go-megacheck))
+                  go-staticcheck
+                  go-megacheck)
+  :verify (lambda (_)
+            (let* ((go (flycheck-checker-executable 'go-vet))
+                   (have-vet (member "vet" (ignore-errors
+                                             (process-lines go "tool")))))
+              (list
+               (flycheck-verification-result-new
+                :label "go tool vet"
+                :message (if have-vet "present" "missing")
+                :face (if have-vet 'success '(bold error)))))))
 
 (flycheck-def-option-var flycheck-go-build-install-deps nil (go-build go-test)
   "Whether to install dependencies in `go build' and `go test'.
@@ -7789,13 +7884,26 @@ while syntax checking."
   :safe #'booleanp
   :package-version '(flycheck . "0.25"))
 
-(flycheck-def-option-var flycheck-go-build-tags nil go-build
+(flycheck-def-option-var flycheck-go-build-tags nil
+                         (go-build go-test go-errcheck
+                                   go-megacheck go-staticcheck)
   "A list of tags for `go build'.
 
 Each item is a string with a tag to be given to `go build'."
   :type '(repeat (string :tag "Tag"))
   :safe #'flycheck-string-list-p
   :package-version '(flycheck . "0.25"))
+
+
+(flycheck-def-option-var flycheck-go-version nil go-staticcheck
+  "The version of go that should be targeted by `staticcheck'.
+
+Should be a string representing a version, like 1.6 or 1.11.4.
+See `https://staticcheck.io/docs/#targeting-go-versions' for
+details."
+  :type 'string
+  :safe #'stringp
+  :package-version '(flycheck . "0.32"))
 
 (flycheck-define-checker go-build
   "A Go syntax and type checker using the `go build' command.
@@ -7835,6 +7943,7 @@ Requires Go 1.6 or newer.  See URL `https://golang.org/cmd/go'."
                     (not (string-suffix-p "_test.go" (buffer-file-name)))))
   :next-checkers ((warning . go-errcheck)
                   (warning . go-unconvert)
+                  (warning . go-staticcheck)
                   (warning . go-megacheck)))
 
 (flycheck-define-checker go-test
@@ -7857,6 +7966,7 @@ Requires Go 1.6 or newer.  See URL `https://golang.org/cmd/go'."
                   (string-suffix-p "_test.go" (buffer-file-name))))
   :next-checkers ((warning . go-errcheck)
                   (warning . go-unconvert)
+                  (warning . go-staticcheck)
                   (warning . go-megacheck)))
 
 (flycheck-define-checker go-errcheck
@@ -7886,6 +7996,7 @@ See URL `https://github.com/kisielk/errcheck'."
   :modes go-mode
   :predicate (lambda () (flycheck-buffer-saved-p))
   :next-checkers ((warning . go-unconvert)
+                  (warning . go-staticcheck)
                   (warning . go-megacheck)))
 
 (flycheck-define-checker go-unconvert
@@ -7915,6 +8026,23 @@ Requires Go 1.6 or newer. See URL
             ".")
   :error-patterns
   ((warning line-start (file-name) ":" line ":" column ": " (message) line-end))
+  :modes go-mode)
+
+(flycheck-define-checker go-staticcheck
+  "A Go checker that performs static analysis and linting using
+the `staticcheck' command. `staticcheck' is the successor to
+`megacheck'; while the latter isn't fully deprecated yet, it's
+recommended to migrate to `staticcheck'.
+
+`staticcheck' is explicitly fully compatible with \"the last two
+versions of go\". `staticheck' can target earlier versions (with
+limited features) if `flycheck-go-version' is set. See URL
+`https://staticcheck.io/'."
+  :command ("staticcheck" "-f" "json"
+            (option-list "-tags" flycheck-go-build-tags concat)
+            (option "-go" flycheck-go-version))
+
+  :error-parser flycheck-parse-go-staticcheck
   :modes go-mode)
 
 (flycheck-define-checker groovy
@@ -10640,7 +10768,7 @@ pass the language standard via the `--std' option."
 (make-variable-buffer-local 'flycheck-ghdl-language-standard)
 
 (flycheck-def-option-var flycheck-ghdl-workdir nil vhdl-ghdl
-  "The directory to use for the file library
+  "The directory to use for the file library.
 
 The value of this variable is either a string with the directory
 to use for the file library, or nil, to use the default value.
@@ -10651,6 +10779,21 @@ When non-nil, pass the directory via the `--workdir' option."
   :package-version '(flycheck . "32"))
 (make-variable-buffer-local 'flycheck-ghdl-workdir)
 
+(flycheck-def-option-var flycheck-ghdl-ieee-library nil vhdl-ghdl
+  "The standard to use for the IEEE library.
+
+The value of this variable is either a string denoting an ieee library
+standard, or nil, to use the default standard.  When non-nil,
+pass the ieee library standard via the `--ieee' option."
+  :type '(choice (const :tag "Default standard" nil)
+                 (const :tag "No IEEE Library" "none")
+                 (const :tag "IEEE standard" "standard")
+                 (const :tag "Synopsys standard" "synopsys")
+                 (const :tag "Mentor standard" "mentor"))
+  :safe #'stringp
+  :package-version '(flycheck . "32"))
+(make-variable-buffer-local 'flycheck-ghdl-ieee-library)
+
 (flycheck-define-checker vhdl-ghdl
   "A VHDL syntax checker using GHDL.
 
@@ -10659,6 +10802,7 @@ See URL `https://github.com/ghdl/ghdl'."
             "-s" ; only do the syntax checking
             (option "--std=" flycheck-ghdl-language-standard concat)
             (option "--workdir=" flycheck-ghdl-workdir concat)
+            (option "--ieee=" flycheck-ghdl-ieee-library concat)
             source)
   :error-patterns
   ((error line-start (file-name) ":" line ":" column ": " (message) line-end))

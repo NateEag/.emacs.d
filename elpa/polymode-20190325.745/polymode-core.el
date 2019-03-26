@@ -127,6 +127,17 @@ special value 'host means use the host mode.")
   "Polymode Chunkmode Objects"
   :group 'polymode)
 
+(defcustom polymode-display-output-file t
+  "Whether to display woven and exported output buffers.
+When non-nil automatically visit and call `display-buffer' on
+output files from processor engines (e.g. weavers and exporters).
+Can also be a function, in which case it is called with the
+output file name as the only argument. If this function returns
+non-nil, the file is visited and displayed with `display-buffer'.
+See `display-buffer-alist' for how to customize the display."
+  :group 'polymode
+  :type '(choice (const t) (const nil) function))
+
 (defcustom polymode-display-process-buffers t
   "When non-nil, display weaving and exporting process buffers."
   :group 'polymode
@@ -155,12 +166,19 @@ will cause installation of `ess-julia-mode' in markdown ```julia chunks."
   :group 'polymode
   :type 'alist)
 
-(defvar polymode-switch-buffer-hook nil
-  "Hook run on switching to a different buffer.
+(defvar polymode-before-switch-buffer-hook nil
+  "Hook run just before switching to a different polymode buffer.
 Each function is run with two arguments `old-buffer' and
 `new-buffer'. This hook is commonly used to transfer state
-between buffers. The hook is run in a new buffer, but you should
-not rely on that. Slot :switch-buffer-functions in `pm-polymode'
+between buffers. Hook is run before transfer of variables, modes
+and overlays.")
+
+(define-obsolete-variable-alias 'polymode-switch-buffer-hook 'polymode-after-switch-buffer-hook "v0.2")
+(defvar polymode-after-switch-buffer-hook nil
+  "Hook run after switching to a different polymode buffer.
+Each function is run with two arguments `old-buffer' and
+`new-buffer'. This hook is commonly used to transfer state
+between buffers. Slot :switch-buffer-functions in `pm-polymode'
 and `pm-chunkmode' objects provides same functionality for
 narrower scope.")
 
@@ -178,6 +196,85 @@ The hook is run in chunkmode's body buffer from `pm-initialze'
 `pm-chunkmode' methods. Slot :init-functions `pm-chunkmode'
 objects provides same functionality for narrower scope. See also
 `polymode-init-host-hook'.")
+
+
+;;; Mode Macros
+
+(defun polymode--define-chunkmode (constructor name parent doc key-args)
+  (let* ((type (format "%smode"
+                       (replace-regexp-in-string
+                        "-.*$" "" (replace-regexp-in-string "^pm-" "" (symbol-name constructor)))))
+         (sname (symbol-name name))
+         (root-name (replace-regexp-in-string (format "poly-\\|-%s" type) "" sname)))
+    (when (keywordp parent)
+      (progn
+        (push doc key-args)
+        (push parent key-args)
+        (setq doc nil parent nil)))
+
+    (unless (stringp doc)
+      (when (keywordp doc)
+        (push doc key-args))
+      (setq doc (format "%s for %s chunks." (capitalize type) root-name)))
+
+    (unless (string-match-p (format "-%s$" type) sname)
+      (error "%s must end in '-%s'" (capitalize type) type))
+    (unless (symbolp parent)
+      ;; fixme: check inheritance
+      (error "PARENT must be a name of an `%s'" type))
+
+    `(progn
+       (makunbound ',name)
+       (defvar ,name
+         ,(if parent
+              `(clone ,parent :name ,root-name ,@key-args)
+            `(,constructor :name ,root-name ,@key-args))
+         ,doc))
+    ;; `(progn
+    ;;    (defvar ,name)
+    ;;    (defcustom ,name nil
+    ;;      ,doc
+    ;;      :group ',(intern (format "poly-%ss" type))
+    ;;      :type 'object)
+    ;;    (setq ,name
+    ;;          ,(if parent
+    ;;               `(clone ,parent :name ,root-name ,@key-args)
+    ;;             `(,constructor :name ,root-name ,@key-args))))
+    ))
+
+;;;###autoload
+(defmacro define-hostmode (name &optional parent doc &rest key-args)
+  "Define a hostmode with name NAME.
+Optional PARENT is a name of a hostmode to be derived (cloned)
+from. If missing, the optional documentation string DOC is
+generated automatically. KEY-ARGS is a list of key-value pairs.
+See the documentation of the class `pm-host-chunkmode' for
+possible values."
+  (declare (doc-string 3))
+  (polymode--define-chunkmode 'pm-host-chunkmode name parent doc key-args))
+
+;;;###autoload
+(defmacro define-innermode (name &optional parent doc &rest key-args)
+  "Ddefine an innermode with name NAME.
+Optional PARENT is a name of a innermode to be derived (cloned)
+from. If missing the optional documentation string DOC is
+generated automatically. KEY-ARGS is a list of key-value pairs.
+See the documentation of the class `pm-inner-chunkmode' for
+possible values."
+  (declare (doc-string 3))
+  (polymode--define-chunkmode 'pm-inner-chunkmode name parent doc key-args))
+
+;;;###autoload
+(defmacro define-auto-innermode (name &optional parent doc &rest key-args)
+  "Ddefine an auto innermode with name NAME.
+Optional PARENT is a name of an auto innermode to be
+derived (cloned) from. If missing the optional documentation
+string DOC is generated automatically. KEY-ARGS is a list of
+key-value pairs. See the documentation of the class
+`pm-inner-auto-chunkmode' for possible values."
+  (declare (doc-string 3))
+  (polymode--define-chunkmode 'pm-inner-auto-chunkmode name parent doc key-args))
+
 
 
 ;;; MESSAGES
@@ -200,8 +297,8 @@ objects provides same functionality for narrower scope. See also
                     (format (if prefixp "%s " " (%s)") pm-extra-span-info)
                   "")))
     (if prefixp
-        (format "%s[%s %d-%d %s]" extra type beg end oname)
-      (format "[%s %d-%d %s]%s" type beg end oname extra))))
+        (format "%s[%s %s-%s %s]" extra type beg end oname)
+      (format "[%s %s-%s %s]%s" type beg end oname extra))))
 
 
 ;;; SPANS
@@ -367,7 +464,7 @@ case TYPE is ignored."
                 ;; pm--intersect-spans is done on a widened buffer.
                 (setq span (pm--intersect-spans config (1- pos))))
             (when (= pos (nth 2 span))
-              (error "Span ends at %d in (pm-inermost-span %d) %s"
+              (error "Span ends at %d in (pm--inermost-span %d) %s"
                      pos pos (pm-format-span span))))
           (pm--chop-span span omin omax))))))
 
@@ -635,25 +732,26 @@ TYPE is either a symbol or a list of symbols of span types."
 
 ;;; OBJECT HOOKS
 
-(defun pm--run-derived-mode-hooks (config)
+(defun pm--run-derived-mode-hooks ()
   ;; Minor modes run-hooks, major-modes run-mode-hooks. Polymodes is a minor
   ;; mode but with major-mode flavor. We run hooks of all modes stored in
   ;; '-minor-mode slot of all parent objects in parent-first order.
-  (let ((this-mode (eieio-oref config '-minor-mode)))
+  (let* ((this-mode (eieio-oref pm/polymode '-minor-mode))
+         (this-state (symbol-value this-mode)))
     (mapc (lambda (mm)
-            (let ((old-mm (symbol-value mm)))
+            (let ((old-state (symbol-value mm)))
               (unwind-protect
                   (progn
-                    (set mm (symbol-value this-mode))
+                    (set mm this-state)
                     (run-hooks (derived-mode-hook-name mm)))
-                (set mm old-mm))))
-          (pm--collect-parent-slots config '-minor-mode))))
+                (set mm old-state))))
+          (pm--collect-parent-slots pm/polymode '-minor-mode))))
 
 (defun pm--run-init-hooks (object type &optional emacs-hook)
   (unless pm-initialization-in-progress
-    (pm--run-hooks object :init-functions (or type 'host))
     (when emacs-hook
-      (run-hooks emacs-hook))))
+      (run-hooks emacs-hook))
+    (pm--run-hooks object :init-functions (or type 'host))))
 
 (defun pm--collect-parent-slots (object slot &optional do-when inclusive)
   "Descend into parents of OBJECT and return a list of SLOT values.
@@ -722,6 +820,7 @@ Parents' hooks are run first."
     truncate-lines
     truncate-partial-width-windows
     buffer-undo-list
+    buffer-undo-tree
     word-wrap)
   "Variables transferred from old buffer on buffer switch.")
 
@@ -749,6 +848,8 @@ switch."
     ;; (message "setting buffer %d-%d [%s]" (nth 1 span) (nth 2 span) (current-buffer))
     ;; no further action if BUFFER is already the current buffer
     (unless (eq buffer (current-buffer))
+      (when visibly
+        (run-hook-with-args 'polymode-before-switch-buffer-hook (current-buffer) buffer))
       (pm--move-vars polymode-move-these-vars-from-base-buffer
                      (pm-base-buffer) buffer)
       (pm--move-vars polymode-move-these-vars-from-old-buffer
@@ -766,13 +867,10 @@ switch."
         (window-start (window-start))
         (visible (pos-visible-in-window-p))
         (ractive (region-active-p))
-        (hl-line (and (boundp 'hl-line-mode) hl-line-mode))
         (mkt (mark t))
         (bro buffer-read-only))
 
     (setq pm/current nil)
-    (when hl-line
-      (hl-line-mode -1))
 
     (pm--move-minor-modes polymode-move-these-minor-modes-from-base-buffer
                           (pm-base-buffer) new-buffer)
@@ -801,10 +899,7 @@ switch."
     (when visible
       (set-window-start (get-buffer-window new-buffer t) window-start))
 
-    (when hl-line
-      (hl-line-mode 1))
-
-    (run-hook-with-args 'polymode-switch-buffer-hook old-buffer new-buffer)
+    (run-hook-with-args 'polymode-after-switch-buffer-hook old-buffer new-buffer)
     (pm--run-hooks pm/polymode :switch-buffer-functions old-buffer new-buffer)
     (pm--run-hooks pm/chunkmode :switch-buffer-functions old-buffer new-buffer)))
 
@@ -1162,7 +1257,7 @@ ARG is the same as in `forward-paragraph'"
 
 
 (defun polymode-reset-ppss-cache (&optional pos)
-  "Reset syntax-ppss cache in polymode buffers.
+  "Reset `syntax-ppss' cache to POS in polymode buffers.
 Used in :before advice of `syntax-ppss'."
   (when polymode-mode
     (pm--reset-ppss-cache (pm-innermost-span pos))))
@@ -1205,11 +1300,6 @@ for \"cycling\" commands."
           commands)
     (set-transient-map map)))
 
-(defvar polymode-display-output-file t
-  "When non-nil automatically display output file in Emacs.
-This is temporary variable, it might be changed or removed in the
-near future.")
-
 (defun pm--display-file (ofile)
   (when ofile
     ;; errors might occur (most notably with open-with package errors are intentional)
@@ -1222,7 +1312,9 @@ near future.")
                 ;; FIXME: something is not right with pdflatex export with
                 ;; pdf-tools viewer within emacs
                 (revert-buffer t t))))
-          (when polymode-display-output-file
+          (when (if (functionp polymode-display-output-file)
+                    (funcall polymode-display-output-file ofile)
+                  polymode-display-output-file)
             (if (string-match-p "html\\|htm$" ofile)
                 (browse-url ofile)
               (display-buffer (find-file-noselect ofile 'nowarn)))))
@@ -1307,14 +1399,20 @@ Return FALLBACK if non-nil, otherwise the value of
                         (eieio-oref object 'parent-instance))))
     VALS))
 
-(defun pm--abrev-names (list abrev-regexp)
+(defun pm--abrev-names (abrev-regexp list)
   "Abbreviate names in LIST by erasing ABREV-REGEXP matches.
 Elements of LIST can be either strings or symbols."
   (mapcar (lambda (nm)
-            (let ((str-nm (if (symbolp nm)
-                              (symbol-name nm)
-                            nm)))
-              (cons (replace-regexp-in-string abrev-regexp "" str-nm)
+            (let* ((str-nm (if (symbolp nm)
+                               (symbol-name nm)
+                             nm))
+                   (prefix (replace-regexp-in-string "^poly-[^-]+\\(.+\\)" "" str-nm nil nil 1))
+                   (is-lib (or (string= prefix "poly-r") ; ugly special case as the library is called poly-R
+                               (featurep (intern prefix)))))
+              (cons (replace-regexp-in-string abrev-regexp ""
+                                              (if is-lib
+                                                  (replace-regexp-in-string "^poly-[^-]+-" "" str-nm)
+                                                str-nm))
                     str-nm)))
           list))
 
@@ -1614,8 +1712,6 @@ Elements of LIST can be either strings or symbols."
           ;; FIXME: could be deleted buffer in weaver->exporter pipeline?
           (save-buffer)
           (let ((comm.ofile (pm--output-command.file output-format sfrom sto quote)))
-            (message "%s '%s' with '%s' ..." (if is-exporter "Exporting" "Weaving")
-                     (file-name-nondirectory ifile) (eieio-object-name processor))
             (let* ((pm--output-file (cdr comm.ofile))
                    (pm--input-file ifile)
                    ;; skip weaving step if possible
@@ -1625,19 +1721,28 @@ Elements of LIST can be either strings or symbols."
                              (stringp pm--output-file)
                              (pm--file-mod-time pm--output-file)))
                    (imt (and omt (pm--file-mod-time pm--input-file)))
-                   (ofile (or (and imt (time-less-p imt omt) pm--output-file)
-                              (let ((fn (with-no-warnings
-                                          (eieio-oref processor 'function)))
-                                    ;; `to` is nil for weavers
-                                    (args (delq nil (list from to)))
-                                    (comm (car comm.ofile)))
-                                (if callback
-                                    ;; the display is handled within the
-                                    ;; callback and return value of :function
-                                    ;; slot is ignored
-                                    (progn (apply fn comm callback args)
-                                           nil)
-                                  (apply fn comm args))))))
+                   (action (if is-exporter "exporting" "weaving"))
+                   (ofile (if (and imt (time-less-p imt omt))
+                              (progn
+                                (message "Not re-%s as input file '%s' hasn't changed"
+                                         (file-name-nondirectory ifile) action)
+                                pm--output-file)
+                            (message "%s '%s' with '%s' ..."
+                                     (capitalize action)
+                                     (file-name-nondirectory ifile)
+                                     (eieio-object-name processor))
+                            (let ((fn (with-no-warnings
+                                        (eieio-oref processor 'function)))
+                                  ;; `to` is nil for weavers
+                                  (args (delq nil (list from to)))
+                                  (comm (car comm.ofile)))
+                              (if callback
+                                  ;; the display is handled within the
+                                  ;; callback and return value of :function
+                                  ;; slot is ignored
+                                  (progn (apply fn comm callback args)
+                                         nil)
+                                (apply fn comm args))))))
               (when ofile
                 (if pm--export-spec
                     ;; same logic as in pm--wrap-callback
@@ -1650,6 +1755,16 @@ Elements of LIST can be either strings or symbols."
                                  (car espec) (cdr espec)
                                  ofile))
                   (pm--display-file ofile))))))))))
+
+;; (defun replace-poly-spec ()
+;;   (interactive)
+;;   (when (re-search-forward "defcustom +pm-\\(inner\\|host\\|poly\\)/\\([^ \n]+\\)" nil t)
+;;     (let* ((mode (match-string 2))
+;;            (type (match-string 1))
+;;            (new-name (format "poly-%s-%smode" mode type)))
+;;       (previous-line 1)
+;;       (insert (format "(define-obsolete-variable-alias 'pm-%s/%s '%s \"v0.2\")\n" type mode new-name))
+;;       (insert (format "(define-%smode %s\n)" type new-name)))))
 
 (provide 'polymode-core)
 ;;; polymode-core.el ends here

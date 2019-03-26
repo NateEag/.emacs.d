@@ -120,7 +120,7 @@ Ran by the polymode mode function."
             (poly-lock-allow-fontification nil))
         ;; run-mode-hooks needs buffer-file-name
         (when base
-          (pm--move-vars pm-move-vars-from-base base (current-buffer)))
+          (pm--move-vars polymode-move-these-vars-from-base-buffer base (current-buffer)))
         (condition-case-unless-debug err
             (funcall mode)
           (error (message "Polymode error (pm--mode-setup '%s): %s"
@@ -301,13 +301,15 @@ in this case."
 ;; fixme: cache somehow?
 (defun pm--get-auto-span (span)
   (let* ((proto (nth 3 span))
-         (type (car span)))
+         (type (car span))
+         (sbeg (nth 1 span)))
     (save-excursion
-      (goto-char (nth 1 span))
+      (goto-char sbeg)
       (unless (eq type 'head)
         (goto-char (nth 2 span)) ; fixme: add multiline matchers to micro-optimize this
         (let ((matcher (pm-fun-matcher (eieio-oref proto 'head-matcher))))
-          (goto-char (car (funcall matcher -1)))))
+          ;; can be multiple incomplete spans within a span
+          (while (< sbeg (goto-char (car (funcall matcher -1)))))))
       (let* ((str (let ((matcher (eieio-oref proto 'mode-matcher)))
                     (when (stringp matcher)
                       (setq matcher (cons matcher 0)))
@@ -318,7 +320,7 @@ in this case."
                             (funcall matcher)))))
              (mode (pm-get-mode-symbol-from-name str (eieio-oref proto 'mode))))
         (if (eq mode 'host)
-            (progn (setcar (last span) (oref pm/polymode -hostmode))
+            (progn (setf (nth 3 span) (oref pm/polymode -hostmode))
                    span)
           ;; chunkname:MODE serves as ID (e.g. `markdown-fenced-code:emacs-lisp-mode`).
           ;; Head/tail/body indirect buffers are shared across chunkmodes and span
@@ -359,13 +361,13 @@ in this case."
   "Used as `indent-line-function' for modes with tab indent."
   ;; adapted from indent-according-to-mode
   (let ((column (save-excursion
-		          (beginning-of-line)
-		          (if (bobp) 0
+                  (beginning-of-line)
+                  (if (bobp) 0
                     (beginning-of-line 0)
                     (if (looking-at "[ \t]*$") 0 (current-indentation))))))
-	(if (<= (current-column) (current-indentation))
-	    (indent-line-to column)
-	  (save-excursion (indent-line-to column)))))
+    (if (<= (current-column) (current-indentation))
+        (indent-line-to column)
+      (save-excursion (indent-line-to column)))))
 
 (defun pm--indent-raw (span fn-sym &rest args)
   ;; fixme: do save-excursion instead of this?

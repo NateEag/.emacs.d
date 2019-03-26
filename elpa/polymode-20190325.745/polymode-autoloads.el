@@ -3,24 +3,9 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "polymode" "polymode.el" (23695 45547 66190
-;;;;;;  311000))
+;;;### (autoloads nil "polymode" "polymode.el" (23706 7749 392101
+;;;;;;  871000))
 ;;; Generated autoloads from polymode.el
-
-(autoload 'define-hostmode "polymode" "\
-
-
-\(fn NAME &optional PARENT DOC &rest KEY-ARGS)" nil t)
-
-(autoload 'define-innermode "polymode" "\
-
-
-\(fn NAME &optional PARENT DOC &rest KEY-ARGS)" nil t)
-
-(autoload 'define-auto-innermode "polymode" "\
-
-
-\(fn NAME &optional PARENT DOC &rest KEY-ARGS)" nil t)
 
 (autoload 'define-polymode "polymode" "\
 Define a new polymode MODE.
@@ -36,9 +21,9 @@ Standard hook MODE-hook is run at the end of the initialization
 of each polymode buffer (both indirect and base buffers).
 
 This macro also defines the MODE-map keymap from the :keymap
-argument and PARENT-map (see below) and pm-poly/[MODE-NAME]
-custom variable which holds a `pm-polymode' configuration object
-for this polymode.
+argument and PARENT-map (see below) and poly-[MODE-NAME]-polymode
+variable which holds an object of class `pm-polymode' which holds
+the entire configuration for this polymode.
 
 PARENT is either the polymode configuration object or a polymode
 mode (there is 1-to-1 correspondence between config
@@ -94,8 +79,8 @@ most frequently used slots are:
 
 ;;;***
 
-;;;### (autoloads nil "polymode-core" "polymode-core.el" (23695 45547
-;;;;;;  70273 121000))
+;;;### (autoloads nil "polymode-core" "polymode-core.el" (23706 7749
+;;;;;;  396331 507000))
 ;;; Generated autoloads from polymode-core.el
 
 (defvar-local polymode-default-inner-mode nil "\
@@ -105,10 +90,46 @@ special value 'host means use the host mode.")
 
 (put 'polymode-default-inner-mode 'safe-local-variable 'symbolp)
 
+(autoload 'define-hostmode "polymode-core" "\
+Define a hostmode with name NAME.
+Optional PARENT is a name of a hostmode to be derived (cloned)
+from. If missing, the optional documentation string DOC is
+generated automatically. KEY-ARGS is a list of key-value pairs.
+See the documentation of the class `pm-host-chunkmode' for
+possible values.
+
+\(fn NAME &optional PARENT DOC &rest KEY-ARGS)" nil t)
+
+(function-put 'define-hostmode 'doc-string-elt '3)
+
+(autoload 'define-innermode "polymode-core" "\
+Ddefine an innermode with name NAME.
+Optional PARENT is a name of a innermode to be derived (cloned)
+from. If missing the optional documentation string DOC is
+generated automatically. KEY-ARGS is a list of key-value pairs.
+See the documentation of the class `pm-inner-chunkmode' for
+possible values.
+
+\(fn NAME &optional PARENT DOC &rest KEY-ARGS)" nil t)
+
+(function-put 'define-innermode 'doc-string-elt '3)
+
+(autoload 'define-auto-innermode "polymode-core" "\
+Ddefine an auto innermode with name NAME.
+Optional PARENT is a name of an auto innermode to be
+derived (cloned) from. If missing the optional documentation
+string DOC is generated automatically. KEY-ARGS is a list of
+key-value pairs. See the documentation of the class
+`pm-inner-auto-chunkmode' for possible values.
+
+\(fn NAME &optional PARENT DOC &rest KEY-ARGS)" nil t)
+
+(function-put 'define-auto-innermode 'doc-string-elt '3)
+
 ;;;***
 
-;;;### (autoloads nil "polymode-debug" "polymode-debug.el" (23695
-;;;;;;  45547 61255 49000))
+;;;### (autoloads nil "polymode-debug" "polymode-debug.el" (23706
+;;;;;;  7749 386882 489000))
 ;;; Generated autoloads from polymode-debug.el
 
 (autoload 'pm-debug-minor-mode "polymode-debug" "\
@@ -171,7 +192,7 @@ Print values of relevant hooks and other variables.
 ;;;### (autoloads nil nil ("poly-lock.el" "polymode-base.el" "polymode-classes.el"
 ;;;;;;  "polymode-compat.el" "polymode-export.el" "polymode-methods.el"
 ;;;;;;  "polymode-pkg.el" "polymode-tangle.el" "polymode-test-utils.el"
-;;;;;;  "polymode-weave.el") (23695 45547 71295 441000))
+;;;;;;  "polymode-weave.el") (23706 7749 397512 711000))
 
 ;;;***
 

@@ -222,9 +222,9 @@ based on FILE-NAME and MAJOR-MODE"
                (string-suffix-p ".jsx" filename t)))))
 
 (lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection
-                                   (-const `(,lsp-clients-javascript-typescript-server
-                                             ,@lsp-clients-typescript-javascript-server-args)))
+ (make-lsp-client :new-connection (lsp-stdio-connection (lambda ()
+                                                          (cons lsp-clients-javascript-typescript-server
+                                                                lsp-clients-typescript-javascript-server-args)))
                   :activation-fn 'lsp-typescript-javascript-tsx-jsx-activate-p
                   :priority -3
                   :ignore-messages '("readFile .*? requested by TypeScript but content not available")
@@ -252,9 +252,9 @@ finding the executable with variable `exec-path'."
   :type '(repeat string))
 
 (lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection
-                                   (-const `(,lsp-clients-typescript-server
-                                             ,@lsp-clients-typescript-server-args)))
+ (make-lsp-client :new-connection (lsp-stdio-connection (lambda ()
+                                                          (cons lsp-clients-typescript-server
+                                                                lsp-clients-typescript-server-args)))
                   :activation-fn 'lsp-typescript-javascript-tsx-jsx-activate-p
                   :priority -2
                   :ignore-messages '("readFile .*? requested by TypeScript but content not available")
@@ -333,9 +333,9 @@ particular FILE-NAME and MODE."
        (lsp-clients-flow-tag-file-present-p file-name)))
 
 (lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection
-                                   (-const `(,lsp-clients-flow-server
-                                             ,@lsp-clients-flow-server-args)))
+ (make-lsp-client :new-connection (lsp-stdio-connection (lambda ()
+                                                          (cons lsp-clients-flow-server
+                                                                lsp-clients-flow-server-args)))
                   :priority -1
                   :activation-fn 'lsp-clients-flow-activate-p
                   :server-id 'flow-ls))
@@ -507,10 +507,9 @@ PARAMS progress report notification data."
   :type 'file)
 
 (lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection
-                                   (-const lsp-clients-php-server-command))
+ (make-lsp-client :new-connection (lsp-stdio-connection (lambda () lsp-clients-php-server-command))
                   :major-modes '(php-mode)
-                  :priority -1
+                  :priority -2
                   :server-id 'php-ls))
 
 
@@ -529,18 +528,8 @@ PARAMS progress report notification data."
           (repeat :tag "List of string values"
                   string)))
 
-(defcustom lsp-ocaml-reason-lang-server-command
-  '("ocaml-language-server" "--stdio")
-  "The command that starts the language server."
-  :group 'lsp-ocaml
-  :type '(choice
-          (string :tag "Single string value")
-          (repeat :tag "List of string values"
-                  string)))
-
 (lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection
-                                   (-const lsp-ocaml-ocaml-lang-server-command))
+ (make-lsp-client :new-connection (lsp-stdio-connection (lambda () lsp-ocaml-ocaml-lang-server-command))
                   :major-modes '(reason-mode caml-mode tuareg-mode)
                   :priority -1
                   :server-id 'ocaml-ls))
@@ -634,8 +623,8 @@ finding the executable with `exec-path'."
   :type 'file)
 
 (lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection
-                                   (-const lsp-clients-elixir-server-executable))
+ (make-lsp-client :new-connection (lsp-stdio-connection (lambda ()
+                                                          `(,lsp-clients-elixir-server-executable)))
                   :major-modes '(elixir-mode)
                   :priority -1
                   :server-id 'elixir-ls))
@@ -666,7 +655,7 @@ finding the executable with `exec-path'."
 
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection 'lsp-clients--fortls-command)
-                  :major-modes '(f90-mode)
+                  :major-modes '(f90-mode fortran-mode)
                   :priority -1
                   :server-id 'fortls))
 
@@ -680,10 +669,28 @@ finding the executable with `exec-path'."
 
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection '("kotlin-language-server"))
-		  :major-modes '(kotlin-mode)
-		  :priority -1
-		  :server-id 'kotlin-ls))
+		              :major-modes '(kotlin-mode)
+		              :priority -1
+		              :server-id 'kotlin-ls))
 
+
+;; PHP intelephense
+(defgroup lsp-php-iph nil
+  "PHP."
+  :group 'lsp-mode
+  :tag "PHP")
+
+(defcustom lsp-clients-php-iph-server-command
+  `("intelephense" "--stdio")
+  "Install directory for php-language-server."
+  :group 'lsp-php-ip
+  :type '(repeat string))
+
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-stdio-connection (lambda () lsp-clients-php-iph-server-command))
+                  :major-modes '(php-mode)
+                  :priority -1
+                  :server-id 'iph))
 
 
 (provide 'lsp-clients)

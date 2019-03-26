@@ -266,8 +266,8 @@ the server has requested that."
   :group 'lsp-mode
   :type '(repeat string))
 
-(defcustom lsp-before-uninitialized-hook nil
-  "List of functions to be called before a Language Server has been uninitialized."
+(defcustom lsp-after-uninitialized-hook nil
+  "List of functions to be called after a Language Server has been uninitialized."
   :type 'hook
   :group 'lsp-mode)
 
@@ -353,6 +353,11 @@ the symbol information."
   :type 'boolean
   :group 'lsp-mode)
 
+(defcustom lsp-enable-symbol-highlighting t
+  "Highlight references of the symbol at point."
+  :type 'boolean
+  :group 'lsp-mode)
+
 (defcustom lsp-enable-xref t
   "Enable xref integration."
   :type 'boolean
@@ -395,7 +400,7 @@ The hook is called with two params: the signature information and hover data."
   :type 'hook
   :group 'lsp-mode)
 
-(defcustom lsp-eldoc-hook '(lsp-document-highlight lsp-hover)
+(defcustom lsp-eldoc-hook '(lsp-hover)
   "Hooks to run for eldoc."
   :type 'hook
   :group 'lsp-mode)
@@ -541,6 +546,11 @@ must be used for handling a particular message.")
   :group 'lsp-mode
   :type 'boolean)
 
+(defcustom lsp-document-highlight-delay 0.2
+  "Seconds of idle time to wait before showing symbol highlight."
+  :type 'number
+  :group 'lsp-mode)
+
 (defface lsp-lens-mouse-face
   '((t :height 0.8 :inherit link))
   "The face used for code lens overlays."
@@ -598,10 +608,14 @@ must be used for handling a particular message.")
   (if (listp sequence) (elt sequence n)
     (and (> (length sequence) n) (elt sequence n))))
 
-;; define seq-first for older emacs
+;; define seq-first and seq-rest for older emacs
 (defun seq-first (sequence)
   "Return the first element of SEQUENCE."
   (lsp-elt sequence 0))
+
+(defun seq-rest (sequence)
+  "Return a sequence of the elements of SEQUENCE except the first one."
+  (seq-drop sequence 1))
 
 (defun lsp--info (format &rest args)
   "Display lsp info message with FORMAT with ARGS."
@@ -632,27 +646,34 @@ FORMAT and ARGS i the same as for `message'."
           (view-mode 1)
           (set (make-local-variable 'lsp--log-lines) 0)))
       (with-current-buffer log-buffer
-        (let* ((current-point (point))
-               (message (concat (apply 'format format args) "\n"))
-               ;; Count newlines in message.
-               (newlines (cl-loop with start = 0
-                                  for count from 0
-                                  while (string-match "\n" message start)
-                                  do (setq start (match-end 0))
-                                  finally return count))
-               (at-bottom (eq current-point (point-max))))
-          (goto-char (point-max))
-          (insert message)
-          (setq lsp--log-lines (+ lsp--log-lines newlines))
-          (when (and (integerp lsp-log-max) (> lsp--log-lines lsp-log-max))
-            (let ((to-delete (- lsp--log-lines lsp-log-max)))
-              (save-excursion
+        (save-excursion
+          (let* ((message (apply 'format format args))
+                 ;; Count newlines in message.
+                 (newlines (1+ (cl-loop with start = 0
+                                        for count from 0
+                                        while (string-match "\n" message start)
+                                        do (setq start (match-end 0))
+                                        finally return count))))
+            (goto-char (point-max))
+
+            ;; in case the buffer is not empty insert before last \n to preserve
+            ;; the point position(in case it is in the end)
+            (if (eq (point) (point-min))
+                (progn
+                  (insert "\n")
+                  (backward-char))
+              (backward-char)
+              (insert "\n"))
+            (insert message)
+
+            (setq lsp--log-lines (+ lsp--log-lines newlines))
+
+            (when (and (integerp lsp-log-max) (> lsp--log-lines lsp-log-max))
+              (let ((to-delete (- lsp--log-lines lsp-log-max)))
                 (goto-char (point-min))
                 (forward-line to-delete)
                 (delete-region (point-min) (point))
-                (setq lsp--log-lines lsp-log-max))))
-          (unless at-bottom
-            (goto-char current-point)))))))
+                (setq lsp--log-lines lsp-log-max)))))))))
 
 (defalias 'lsp-message 'lsp-log)
 
@@ -860,19 +881,25 @@ INHERIT-INPUT-METHOD will be proxied to `completing-read' without changes."
   (message-trace nil))
 
 ;; from http://emacs.stackexchange.com/questions/8082/how-to-get-buffer-position-given-line-number-and-column-number
-(defun lsp--position-to-point (params)
+(defun lsp--line-character-to-point (line character)
+  "Return the point for character CHARACTER on line LINE."
+  (save-excursion
+    (save-restriction
+      (condition-case _err
+          (progn
+            (widen)
+            (goto-char (point-min))
+            (forward-line line)
+            (forward-char character)
+            (point))
+        (error (point))))))
+
+(define-inline lsp--position-to-point (params)
   "Convert Position object in PARAMS to a point."
-  (-let [(&hash "line" "character") params]
-    (save-excursion
-      (save-restriction
-        (condition-case _err
-            (progn
-              (widen)
-              (goto-char (point-min))
-              (forward-line line)
-              (forward-char character)
-              (point))
-          (error (point)))))))
+  (inline-letevals (params)
+    (inline-quote
+     (lsp--line-character-to-point (gethash "line" ,params)
+                                   (gethash "character" ,params)))))
 
 (defun lsp--range-to-region (range)
   (cons (lsp--position-to-point (gethash "start" range))
@@ -1172,9 +1199,12 @@ WORKSPACE is the workspace that contains the diagnostics."
 (cl-defstruct lsp--folding-range
   (beg)
   (end)
-  (kind))
+  (kind)
+  (children)
+  (orig-folding-range))
 
 (defvar-local lsp--cached-folding-ranges nil)
+(defvar-local lsp--cached-nested-folding-ranges nil)
 
 (define-inline lsp--folding-range-width (range)
   (inline-letevals (range)
@@ -1192,37 +1222,80 @@ WORKSPACE is the workspace that contains the diagnostics."
                                 `(:textDocument ,(lsp--text-document-identifier))))
       (setq lsp--cached-folding-ranges
             (cons (buffer-chars-modified-tick)
-                  (seq-map
-                   (-lambda ((&hash "startLine" start-line
-		                                "startCharacter" start-character
-		                                "endLine" end-line
-		                                "endCharacter" end-character
-                                    "kind" kind))
-                     (make-lsp--folding-range
-                      :beg (lsp--position-to-point
-                            (ht ("line" start-line)
-				                        ("character" start-character)))
- 	                    :end (lsp--position-to-point
-                            (ht ("line" end-line)
-				                        ("character" end-character)))
-                      :kind kind))
-                   ranges)))
+                  (-> (lambda (range)
+                        (-let [(&hash "startLine" start-line
+		                      "startCharacter" start-character
+		                      "endLine" end-line
+		                      "endCharacter" end-character
+                                      "kind" kind)
+                               range]
+                          (make-lsp--folding-range
+                           :beg (lsp--line-character-to-point
+                                 start-line start-character)
+ 	                   :end (lsp--line-character-to-point
+                                 end-line end-character)
+                           :kind kind
+                           :orig-folding-range range)))
+                      (seq-map ranges)
+                      (seq-into 'list)
+                      (delete-dups))))
       (cdr lsp--cached-folding-ranges))))
 
+(defun lsp--get-nested-folding-ranges ()
+  "Get a list of nested folding ranges for the current buffer."
+  (-let [(tick . _) lsp--cached-folding-ranges]
+    (if (and (eq tick (buffer-chars-modified-tick))
+             lsp--cached-nested-folding-ranges)
+        lsp--cached-nested-folding-ranges
+      (setq lsp--cached-nested-folding-ranges
+            (lsp--folding-range-build-trees (lsp--get-folding-ranges))))))
+
+(defun lsp--folding-range-insert-into-trees (trees range)
+  (unless
+      (cl-block top
+        (dolist (tree-node (reverse trees))
+          (when (lsp--range-inside-p range tree-node)
+            (setf (lsp--folding-range-children tree-node)
+                  (nconc (lsp--folding-range-children tree-node)
+                         (list range)))
+            (cl-return-from top t))))
+    (nconc trees (list range))))
+
+(defun lsp--folding-range-build-trees (ranges)
+  (setq ranges (seq-sort #'lsp--range-before-p ranges))
+  (let ((trees (list (seq-first ranges))))
+    (dolist (range (seq-rest ranges))
+      (lsp--folding-range-insert-into-trees trees range))
+    trees))
+
 (define-inline lsp--range-inside-p (r1 r2)
-  "Return non-nil if range R1 lies inside range R2"
+  "Return non-nil if folding range R1 lies inside R2"
   (inline-letevals (r1 r2)
     (inline-quote
      (and (>= (lsp--folding-range-beg ,r1) (lsp--folding-range-beg ,r2))
           (<= (lsp--folding-range-end ,r1) (lsp--folding-range-end ,r2))))))
 
+(define-inline lsp--range-before-p (r1 r2)
+  "Return non-nil if folding range R1 ends before R2"
+  (inline-letevals (r1 r2)
+    (inline-quote
+     ;; Ensure r1 comes before r2
+     (or (< (lsp--folding-range-beg ,r1)
+            (lsp--folding-range-beg ,r2))
+         ;; If beg(r1) == beg(r2), make sure r2 ends first
+         (and (= (lsp--folding-range-beg ,r1)
+                 (lsp--folding-range-beg ,r2))
+              (< (lsp--folding-range-end ,r2)
+                 (lsp--folding-range-end ,r1)))))))
+
 (define-inline lsp--point-inside-range-p (point range)
+  "Return non-nil if POINT lies inside folding range RANGE."
   (inline-letevals (point range)
     (inline-quote
      (and (>= ,point (lsp--folding-range-beg ,range))
           (<= ,point (lsp--folding-range-end ,range))))))
 
-(cl-defun lsp--get-current-innermost-range (&optional (point (point)))
+(cl-defun lsp--get-current-innermost-folding-range (&optional (point (point)))
   "Return the innermost folding range POINT lies in."
   (let (inner)
     (seq-doseq (range (lsp--get-folding-ranges))
@@ -1233,7 +1306,7 @@ WORKSPACE is the workspace that contains the diagnostics."
           (setq inner range))))
     inner))
 
-(cl-defun lsp--get-current-outermost-range (&optional (point (point)))
+(cl-defun lsp--get-current-outermost-folding-range (&optional (point (point)))
   "Return the outermost folding range POINT lies in."
   (let (outer width)
     (seq-doseq (range (lsp--get-folding-ranges))
@@ -1245,13 +1318,64 @@ WORKSPACE is the workspace that contains the diagnostics."
           (setq outer (cons width range)))))
     (cdr outer)))
 
+(defun lsp--folding-range-at-point-bounds ()
+  (if (and (lsp--capability "foldingRangeProvider") lsp-enable-folding)
+      (if-let ((range (lsp--get-current-innermost-folding-range)))
+          (cons (lsp--folding-range-beg range)
+                (lsp--folding-range-end range)))
+    nil))
 (put 'lsp-folding-range 'bounds-of-thing-at-point
-     (lambda ()
-       (if (and (lsp--capability "foldingRangeProvider") lsp-enable-folding)
-           (if-let ((range (lsp--get-current-innermost-range)))
-               (cons (lsp--folding-range-beg range)
-                     (lsp--folding-range-end range)))
-         nil)))
+     #'lsp--folding-range-at-point-bounds)
+
+(defun lsp--get-nearest-folding-range (&optional backward)
+  (let ((point (point))
+        (found nil))
+    (while (not
+            (or found
+                (if backward
+                    (<= point (point-min))
+                  (>= point (point-max)))))
+      (if backward (cl-decf point) (cl-incf point))
+      (setq found (lsp--get-current-innermost-folding-range point)))
+    found))
+
+(defun lsp--folding-range-at-point-forward-op (n)
+  (when (and (lsp--capability "foldingRangeProvider") lsp-enable-folding
+             (not (zerop n)))
+    (cl-block break
+      (dotimes (_ (abs n))
+        (if-let (range (lsp--get-nearest-folding-range (< n 0)))
+            (goto-char (if (< n 0)
+                           (lsp--folding-range-beg range)
+                         (lsp--folding-range-end range)))
+          (cl-return-from break))))))
+(put 'lsp--folding-range 'forward-op
+     #'lsp--folding-range-at-point-forward-op)
+
+(defun lsp--folding-range-at-point-beginning-op ()
+  (goto-char (car (lsp--folding-range-at-point-bounds))))
+(put 'lsp--folding-range 'beginning-op
+     #'lsp--folding-range-at-point-beginning-op)
+
+(defun lsp--folding-range-at-point-end-op ()
+  (goto-char (cdr (lsp--folding-range-at-point-bounds))))
+(put 'lsp--folding-range 'end-op
+     #'lsp--folding-range-at-point-end-op)
+
+(defun lsp--range-at-point-bounds ()
+  (or (lsp--folding-range-at-point-bounds)
+      (if-let ((range (and
+                       (lsp--capability "hoverProvider")
+                       (->> (lsp--text-document-position-params)
+                            (lsp-request "textDocument/hover")
+                            (gethash "range")))))
+          (cons (lsp--position-to-point (gethash "start" range))
+                (lsp--position-to-point (gethash "end" range)))
+        nil)))
+
+;; A more general purpose "thing", useful for applications like focus.el
+(put 'lsp--range 'bounds-of-thing-at-point
+     #'lsp--range-at-point-bounds)
 
 
 ;; lenses support
@@ -1928,7 +2052,6 @@ If NO-MERGE is non-nil, don't merge the results but return alist workspace->resu
   "Cleanup buffer state.
 When a workspace is shut down, by request or from just
 disappearing, unset all the variables related to it."
-  (run-hooks 'lsp-workspace-uninitialized-hook)
 
   (let ((proc (lsp--workspace-cmd-proc lsp--cur-workspace)))
     (when (process-live-p proc)
@@ -2157,12 +2280,14 @@ in that particular folder."
       (add-hook 'completion-at-point-functions #'lsp-completion-at-point nil t))
     (add-hook 'kill-buffer-hook #'lsp--text-document-did-close nil t)
     (add-hook 'post-self-insert-hook #'lsp--on-self-insert nil t)
+    (add-hook 'post-command-hook #'lsp--highlight nil t)
     (when lsp-enable-xref
       (add-hook 'xref-backend-functions #'lsp--xref-backend nil t)))
    (t
     (setq-local indent-region-function nil)
     (remove-function (local 'eldoc-documentation-function) #'lsp-eldoc-function)
 
+    (remove-hook 'post-command-hook #'lsp--highlight t)
     (remove-hook 'after-change-functions #'lsp-on-change t)
     (remove-hook 'after-revert-hook #'lsp-on-revert t)
     (remove-hook 'after-save-hook #'lsp-on-save t)
@@ -2793,13 +2918,14 @@ https://microsoft.github.io/language-server-protocol/specification#textDocument_
               (seq-into (seq-map #'lsp--make-completion-item items) 'list))))
        :annotation-function #'lsp--annotate))))
 
-(define-inline lsp--sort-string (c)
-  (inline-quote (or (gethash "sortText" ,c)
-                    (gethash "label" ,c ""))))
-
 (defun lsp--sort-completions (completions)
   "Sort COMPLETIONS."
-  (--sort (string-lessp (lsp--sort-string it) (lsp--sort-string other)) completions))
+  (--sort (let ((left (gethash "sortText" it))
+                (right (gethash "sortText" other)))
+            (if (string= left right)
+                (string-lessp (gethash "label" it) (gethash "label" other))
+              (string-lessp left right)))
+          completions))
 
 (defun lsp--resolve-completion (item)
   "Resolve completion ITEM."
@@ -2893,6 +3019,31 @@ If INCLUDE-DECLARATION is non-nil, request the server to include declarations."
        (lsp-capability-not-supported nil))
      nil)) nil)
 
+(defvar-local lsp--highlight-bounds nil)
+(defvar-local lsp--highlight-timer nil)
+
+(defun lsp--highlight ()
+  (with-demoted-errors "Error in ‘lsp--highlight’: %S"
+    (when (and lsp-enable-symbol-highlighting
+               (lsp--capability "documentHighlightProvider"))
+      (let ((bounds (bounds-of-thing-at-point 'symbol))
+            (last lsp--highlight-bounds)
+            (point (point)))
+        (when (and last (or (< point (car last)) (> point (cdr last))))
+          (setq lsp--highlight-bounds nil)
+          (--each (lsp-workspaces)
+            (with-lsp-workspace it
+              (lsp--remove-cur-overlays))))
+        (when (and bounds (not (equal last bounds)))
+          (and lsp--highlight-timer (cancel-timer lsp--highlight-timer))
+          (setq lsp--highlight-timer
+                (run-with-idle-timer
+                 lsp-document-highlight-delay nil
+                 (lambda nil
+                   (setq lsp--highlight-bounds
+                         (bounds-of-thing-at-point 'symbol))
+                   (lsp--document-highlight)))))))))
+
 (defun lsp-describe-thing-at-point ()
   "Display the full documentation of the thing at point."
   (interactive)
@@ -2924,8 +3075,8 @@ If INCLUDE-DECLARATION is non-nil, request the server to include declarations."
   "Fontlock STR with MODE."
   (condition-case nil
       (with-temp-buffer
-        (delay-mode-hooks (funcall mode))
         (insert str)
+        (delay-mode-hooks (funcall mode))
         (font-lock-ensure)
         (buffer-string))
     (error str)))
@@ -3157,14 +3308,17 @@ interface DocumentRangeFormattingParams {
       (delete-overlay overlay))
     (remhash buf overlays)))
 
+(defun lsp--document-highlight ()
+  (lsp-request-async "textDocument/documentHighlight"
+                     (lsp--text-document-position-params)
+                     (lsp--make-document-highlight-callback (current-buffer))))
+
 (defun lsp-document-highlight ()
   "Highlight all relevant references to the symbol under point."
   (interactive)
   (unless (lsp--capability "documentHighlightProvider")
     (signal 'lsp-capability-not-supported (list "documentHighlightProvider")))
-  (lsp-request-async "textDocument/documentHighlight"
-                     (lsp--text-document-position-params)
-                     (lsp--make-document-highlight-callback (current-buffer))))
+  (lsp--document-highlight))
 
 (defun lsp--make-document-highlight-callback (buf)
   "Create a callback to process the reply of a
@@ -4121,6 +4275,8 @@ returns the command to execute."
         ;; Leave it intact otherwise for debugging purposes.
         (when (and (eq status 'exit) (zerop (process-exit-status process)) (buffer-live-p stderr))
           (kill-buffer stderr)))
+
+      (run-hook-with-args 'lsp-after-uninitialized-hook workspace)
 
       (if (eq (lsp--workspace-shutdown-action workspace) 'shutdown)
           (lsp--info "Workspace %s shutdown." (lsp--workspace-print workspace))

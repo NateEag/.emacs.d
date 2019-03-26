@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil nil ("transient-pkg.el" "transient.el") (23690
-;;;;;;  18100 130080 952000))
+;;;### (autoloads nil nil ("transient-pkg.el" "transient.el") (23706
+;;;;;;  7773 35912 175000))
 
 ;;;***
 

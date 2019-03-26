@@ -1,2 +1,0 @@
-;;; -*- no-byte-compile: t -*-
-(define-package "direnv" "20190313.2103" "direnv support" '((emacs "24.4") (dash "2.12.0") (with-editor "2.5.10")) :commit "4d8e7fecc9b6c841da677a13b4246842303fc627" :keywords '("direnv" "environment" "processes" "unix" "tools") :authors '(("Wouter Bolsterlee" . "wouter@bolsterl.ee")) :maintainer '("Wouter Bolsterlee" . "wouter@bolsterl.ee") :url "https://github.com/wbolster/emacs-direnv")

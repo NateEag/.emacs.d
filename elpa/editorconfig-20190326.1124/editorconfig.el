@@ -3,7 +3,7 @@
 ;; Copyright (C) 2011-2019 EditorConfig Team
 
 ;; Author: EditorConfig Team <editorconfig@googlegroups.com>
-;; Version: 0.7.14
+;; Version: 0.8.0
 ;; URL: https://github.com/editorconfig/editorconfig-emacs#readme
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24"))
 
@@ -714,6 +714,34 @@ To disable EditorConfig in some buffers, modify
       (untabify (point-min) (point-max)))
   (indent-region (point-min) (point-max)))
 
+
+
+;; (defconst editorconfig--version
+;;   (eval-when-compile
+;;     (require 'lisp-mnt)
+;;     (declare-function lm-version "lisp-mnt" nil)
+;;     (lm-version))
+;;   "EditorConfig version.")
+
+(declare-function find-library-name "find-func" (library))
+(declare-function lm-version "lisp-mnt" nil)
+
+;;;###autoload
+(defun  editorconfig-version (&optional show-version)
+  "Get EditorConfig version as string.
+
+If called interactively or if SHOW-VERSION is non-nil, show the
+version in the echo area and the messages buffer."
+  (interactive (list t))
+  (with-temp-buffer
+    (require 'find-func)
+    (insert-file-contents (find-library-name "editorconfig"))
+    (require 'lisp-mnt)
+    (let ((version (lm-version)))
+      (when show-version
+        (message "EditorConfig Emacs v%s"
+                 version))
+      version)))
 
 (provide 'editorconfig)
 

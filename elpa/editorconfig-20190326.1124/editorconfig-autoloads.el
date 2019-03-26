@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "editorconfig" "editorconfig.el" (23622 10773
-;;;;;;  0 0))
+;;;### (autoloads nil "editorconfig" "editorconfig.el" (23706 7727
+;;;;;;  881882 701000))
 ;;; Generated autoloads from editorconfig.el
 
 (autoload 'editorconfig-apply "editorconfig" "\
@@ -49,10 +49,18 @@ Format buffer according to .editorconfig indent_style and indent_width.
 
 \(fn)" t nil)
 
+(autoload 'editorconfig-version "editorconfig" "\
+Get EditorConfig version as string.
+
+If called interactively or if SHOW-VERSION is non-nil, show the
+version in the echo area and the messages buffer.
+
+\(fn &optional SHOW-VERSION)" t nil)
+
 ;;;***
 
 ;;;### (autoloads nil "editorconfig-conf-mode" "editorconfig-conf-mode.el"
-;;;;;;  (23622 10773 0 0))
+;;;;;;  (23706 7727 882878 361000))
 ;;; Generated autoloads from editorconfig-conf-mode.el
 
 (autoload 'editorconfig-conf-mode "editorconfig-conf-mode" "\
@@ -65,7 +73,7 @@ Major mode for editing .editorconfig files.
 ;;;***
 
 ;;;### (autoloads nil "editorconfig-core" "editorconfig-core.el"
-;;;;;;  (23622 10773 0 0))
+;;;;;;  (23706 7727 884572 137000))
 ;;; Generated autoloads from editorconfig-core.el
 
 (autoload 'editorconfig-core-get-nearest-editorconfig "editorconfig-core" "\
@@ -98,7 +106,7 @@ hash object instead.
 ;;;***
 
 ;;;### (autoloads nil "editorconfig-fnmatch" "editorconfig-fnmatch.el"
-;;;;;;  (23622 10773 0 0))
+;;;;;;  (23706 7727 879951 82000))
 ;;; Generated autoloads from editorconfig-fnmatch.el
 
 (autoload 'editorconfig-fnmatch-p "editorconfig-fnmatch" "\
@@ -122,7 +130,7 @@ be used:
 ;;;***
 
 ;;;### (autoloads nil nil ("editorconfig-core-handle.el" "editorconfig-pkg.el")
-;;;;;;  (23622 10773 0 0))
+;;;;;;  (23706 7727 886455 769000))
 
 ;;;***
 

@@ -1,6 +1,6 @@
 ;;; helm-source.el --- Helm source creation. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015 ~ 2018  Thierry Volpiatto <thierry.volpiatto@gmail.com>
+;; Copyright (C) 2015 ~ 2019  Thierry Volpiatto <thierry.volpiatto@gmail.com>
 
 ;; Author: Thierry Volpiatto <thierry.volpiatto@gmail.com>
 ;; URL: http://github.com/emacs-helm/helm
@@ -104,7 +104,11 @@
 
   Note that if the (DISPLAY . REAL) form is used then pattern
   matching is done on the displayed string, not on the real
-  value.")
+  value.
+
+  This function, generally should not compute candidates according to
+  `helm-pattern' which defeat all the Helm's matching mechanism
+  i.e. multiple pattern matching and/or fuzzy matching.")
 
    (update
     :initarg :update

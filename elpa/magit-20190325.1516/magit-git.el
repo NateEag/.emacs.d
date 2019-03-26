@@ -1122,19 +1122,20 @@ Git."
     (and (or lax (not (string-match-p "[~^]" it)))
          (substring it 5))))
 
-(defun magit-ref-fullname (name)
-  "Return fully qualified refname for NAME.
-If NAME is ambiguous, return nil.  NAME may include suffixes such
-as \"^1\" and \"~3\".  "
-  (save-match-data
-    (if (string-match "\\`\\([^^~]+\\)\\(.*\\)" name)
-        (--when-let (magit-rev-parse "--symbolic-full-name"
-                                     (match-string 1 name))
-          (concat it (match-string 2 name)))
-      (error "`name' has an unrecognized format"))))
+(defun magit-ref-abbrev (refname)
+  "Return an unambigious abbreviation of REFNAME."
+  (magit-rev-parse "--verify" "--abbrev-ref" refname))
 
-(defun magit-ref-ambiguous-p (name)
-  (not (magit-ref-fullname name)))
+(defun magit-ref-fullname (refname)
+  "Return fully qualified refname for REFNAME.
+If REFNAME is ambiguous, return nil."
+  (magit-rev-parse "--verify" "--symbolic-full-name" refname))
+
+(defun magit-ref-ambiguous-p (refname)
+  (save-match-data
+    (if (string-match "\\`\\([^^~]+\\)\\(.*\\)" refname)
+        (magit-ref-fullname (match-string 1 refname))
+      (error "%S has an unrecognized format" refname))))
 
 (cl-defun magit-ref-maybe-qualify (name &optional (prefix "heads/"))
   "If NAME is ambiguous, prepend PREFIX to it."
@@ -1146,14 +1147,16 @@ as \"^1\" and \"~3\".  "
   (magit-git-success "show-ref" "--verify" ref))
 
 (defun magit-ref-equal (a b)
-  "Return t if the refs A and B are `equal'.
+  "Return t if the refnames A and B are `equal'.
 A symbolic-ref pointing to some ref, is `equal' to that ref,
-as are two symbolic-refs pointing to the same ref."
-  (equal (magit-ref-fullname a)
-         (magit-ref-fullname b)))
+as are two symbolic-refs pointing to the same ref.  Refnames
+may be abbreviated."
+  (let ((a (magit-ref-fullname a))
+        (b (magit-ref-fullname b)))
+    (and a b (equal a b))))
 
 (defun magit-ref-eq (a b)
-  "Return t if the refs A and B are `eq'.
+  "Return t if the refnames A and B are `eq'.
 A symbolic-ref is `eq' to itself, but not to the ref it points
 to, or to some other symbolic-ref that points to the same ref."
   (let ((symbolic-a (magit-symbolic-ref-p a))
@@ -1317,7 +1320,7 @@ The amount of time spent searching is limited by
          (let ((upstream (magit-get-upstream-branch branch)))
            ;; whose upstream...
            (and upstream
-                ;; has the same name as BRANCH and...
+                ;; has the same name as BRANCH...
                 (equal (substring upstream (1+ (length remote))) branch)
                 ;; and can be fast-forwarded to BRANCH.
                 (magit-rev-ancestor-p upstream branch)
@@ -1344,12 +1347,12 @@ The amount of time spent searching is limited by
     (propertize remote 'face 'magit-branch-remote)))
 
 (defun magit-get-push-branch (&optional branch verify)
-  (and (or branch (setq branch (magit-get-current-branch)))
-       (when-let ((remote (magit-get-push-remote branch))
-                  (push-branch (concat remote "/" branch)))
-         (and (or (not verify)
-                  (magit-rev-verify push-branch))
-              (propertize push-branch 'face 'magit-branch-remote)))))
+  (when-let ((branch (or branch (setq branch (magit-get-current-branch))))
+             (remote (magit-get-push-remote branch))
+             (target (concat remote "/" branch)))
+    (and (or (not verify)
+             (magit-rev-verify target))
+         (propertize target 'face 'magit-branch-remote))))
 
 (defun magit-get-@{push}-branch (&optional branch)
   (let ((ref (magit-rev-parse "--symbolic-full-name"
@@ -1925,26 +1928,18 @@ and this option only controls what face is used.")
                  beg)
                end))))
 
-(defvar magit-thingatpt--git-revision-chars "-_./[:alnum:]@{}^~!"
-  "Characters allowable in filenames, excluding space and colon.")
-
-(put 'git-revision 'end-op
-     (lambda ()
-       (re-search-forward
-        (concat "\\=[" magit-thingatpt--git-revision-chars "]*")
-        nil t)))
-
-(put 'git-revision 'beginning-op
-     (lambda ()
-       (if (re-search-backward
-            (concat "[^" magit-thingatpt--git-revision-chars "]") nil t)
-           (forward-char)
-         (goto-char (point-min)))))
-
 (put 'git-revision 'thing-at-point 'magit-thingatpt--git-revision)
-
 (defun magit-thingatpt--git-revision ()
-  (--when-let (bounds-of-thing-at-point 'git-revision)
+  (--when-let
+      (let ((c "\s\n\t~^:?*[\\"))
+        (cl-letf (((get 'git-revision 'beginning-op)
+                   (if (re-search-backward (format "[%s]" c) nil t)
+                       (forward-char)
+                     (goto-char (point-min))))
+                  ((get 'git-revision 'end-op)
+                   (lambda ()
+                     (re-search-forward (format "\\=[^%s]*" c) nil t))))
+          (bounds-of-thing-at-point 'git-revision)))
     (let ((text (buffer-substring-no-properties (car it) (cdr it))))
       (and (magit-commit-p text) text))))
 

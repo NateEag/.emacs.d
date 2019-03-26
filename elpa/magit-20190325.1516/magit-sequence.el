@@ -164,7 +164,7 @@ This discards all changes made since the sequence started."
   :class 'transient-option
   :shortarg "-m"
   :argument "--mainline="
-  :reader 'transient-read-natural-number-N+)
+  :reader 'transient-read-number-N+)
 
 (defun magit-cherry-pick-read-args (prompt)
   (list (or (nreverse (magit-region-values 'commit))
@@ -541,7 +541,7 @@ This discards all changes made since the sequence started."
   (transient-args 'magit-rebase))
 
 (defun magit-git-rebase (target args)
-  (magit-run-git-sequencer "rebase" target args))
+  (magit-run-git-sequencer "rebase" args target))
 
 ;;;###autoload (autoload 'magit-rebase-onto-pushremote "magit-sequence" nil t)
 (define-suffix-command magit-rebase-onto-pushremote (args &optional set)
@@ -626,7 +626,11 @@ START has to be selected from a list of recent commits."
   (if (and commit (not confirm))
       (let ((process-environment process-environment))
         (when editor
-          (push (concat "GIT_SEQUENCE_EDITOR=" editor) process-environment))
+          (push (concat "GIT_SEQUENCE_EDITOR="
+                        (if (functionp editor)
+                            (funcall editor commit)
+                          editor))
+                process-environment))
         (magit-run-git-sequencer "rebase" "-i" args
                                  (unless (member "--root" args) commit)))
     (magit-log-select
@@ -640,13 +644,7 @@ START has to be selected from a list of recent commits."
 
 (defun magit-rebase-interactive-assert
     (since &optional delay-edit-confirm rebase-merges)
-  (let* ((commit (if (string-suffix-p "^" since)
-                     ;; If SINCE is "REV^", then the user selected
-                     ;; "REV", which is the first commit that will
-                     ;; be replaced. (from^..to] <=> [from..to].
-                     (substring since 0 -1)
-                   ;; The "--root" argument is being used.
-                   since))
+  (let* ((commit (magit-rebase--target-commit since))
          (branches (magit-list-publishing-branches commit)))
     (setq magit--rebase-public-edit-confirmed
           (delete (magit-toplevel) magit--rebase-public-edit-confirmed))
@@ -670,6 +668,15 @@ START has to be selected from a list of recent commits."
         (?c "[c]ontinue" since)
         (?s "[s]elect other" nil)
         (?a "[a]bort" (user-error "Quit")))
+    since))
+
+(defun magit-rebase--target-commit (since)
+  (if (string-suffix-p "^" since)
+      ;; If SINCE is "REV^", then the user selected
+      ;; "REV", which is the first commit that will
+      ;; be replaced.  (from^..to] <=> [from..to]
+      (substring since 0 -1)
+    ;; The "--root" argument is being used.
     since))
 
 ;;;###autoload
@@ -697,8 +704,7 @@ START has to be selected from a list of recent commits."
                      (magit-rebase-arguments)))
   (magit-rebase-interactive-1 commit args
     "Type %p on a commit to edit it,"
-    (concat magit-perl-executable
-            " -i -p -e '++$x if not $x and s/^pick/edit/'")
+    (apply-partially #'magit-rebase--perl-editor 'edit)
     t))
 
 ;;;###autoload
@@ -708,8 +714,7 @@ START has to be selected from a list of recent commits."
                      (magit-rebase-arguments)))
   (magit-rebase-interactive-1 commit args
     "Type %p on a commit to reword its message,"
-    (concat magit-perl-executable
-            " -i -p -e '++$x if not $x and s/^pick/reword/'")))
+    (apply-partially #'magit-rebase--perl-editor 'reword)))
 
 ;;;###autoload
 (defun magit-rebase-remove-commit (commit args)
@@ -718,9 +723,20 @@ START has to be selected from a list of recent commits."
                      (magit-rebase-arguments)))
   (magit-rebase-interactive-1 commit args
     "Type %p on a commit to remove it,"
-    (concat magit-perl-executable
-            " -i -p -e '++$x if not $x and s/^pick/# pick/'")
+    (apply-partially #'magit-rebase--perl-editor 'remove)
     nil nil t))
+
+(defun magit-rebase--perl-editor (action since)
+  (let ((commit (magit-rev-abbrev (magit-rebase--target-commit since))))
+    (format "%s -i -p -e '++$x if not $x and s/^pick %s/%s %s/'"
+            magit-perl-executable
+            commit
+            (cl-case action
+              (edit   "edit")
+              (remove "# pick")
+              (reword "reword")
+              (t      (error "unknown action: %s" action)))
+            commit)))
 
 ;;;###autoload
 (defun magit-rebase-continue (&optional noedit)

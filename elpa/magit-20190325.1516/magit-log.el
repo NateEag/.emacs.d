@@ -1665,11 +1665,11 @@ Type \\[magit-reset] to reset `HEAD' to the commit at point.
 
 (defun magit-insert-unpulled-from-upstream ()
   "Insert commits that haven't been pulled from the upstream yet."
-  (when (magit-git-success "rev-parse" "@{upstream}")
+  (when-let ((upstream (magit-get-upstream-branch nil t)))
     (magit-insert-section (unpulled "..@{upstream}" t)
       (magit-insert-heading
         (format (propertize "Unpulled from %s:" 'face 'magit-section-heading)
-                (magit-get-upstream-branch)))
+                upstream))
       (magit-insert-log "..@{upstream}" magit-log-section-arguments))))
 
 (magit-define-section-jumper magit-jump-to-unpulled-from-pushremote
@@ -1707,8 +1707,9 @@ behind of the current branch, then show the commits that have
 not yet been pushed into the upstream branch.  If no upstream is
 configured or if the upstream is not behind of the current branch,
 then show the last `magit-log-section-commit-count' commits."
-  (let ((upstream (magit-rev-parse "@{upstream}")))
+  (let ((upstream (magit-get-upstream-branch)))
     (if (or (not upstream)
+            (string-match-p " " upstream)
             (magit-rev-ancestor-p "HEAD" upstream))
         (magit-insert-recent-commits 'unpushed "@{upstream}..")
       (magit-insert-unpushed-to-upstream))))

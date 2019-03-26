@@ -31,7 +31,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-This manual is for Magit version 2.90.1 (v2.90.1-324-g3200eecc+1).
+This manual is for Magit version 2.90.1 (v2.90.1-380-g0d0d97638+1).
 
      Copyright (C) 2015-2019 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -1742,8 +1742,8 @@ telling Magit to ask fewer questions.
                branch), but when a branch has not been merged yet, also
                make sure the user is aware of that.
 
-             • ‘delete-pr-branch’ When deleting a branch that was
-               created from a pull request and if no other branches
+             • ‘delete-pr-remote’ When deleting a branch that was
+               created from a pull-request and if no other branches
                still exist on that remote, then ‘magit-branch-delete’
                offers to delete the remote as well.  This should be safe
                because it only happens if no other refs exist in the
@@ -5189,6 +5189,12 @@ them.  Those features are available from separate transient command.
      matter, all commits between FROM and ‘HEAD’ are moved to the new
      branch.  If FROM is not reachable from ‘HEAD’ or is reachable from
      the source branch’s upstream, then an error is raised.
+
+‘b S’     (‘magit-branch-spinout’)
+
+     This command behaves like ‘magit-branch-spinoff’, except that it
+     does not change the current branch.  If there are any uncommitted
+     changes, then it behaves exactly like ‘magit-branch-spinoff’.
 
 ‘b x’     (‘magit-branch-reset’)
 

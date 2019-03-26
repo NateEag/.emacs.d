@@ -221,8 +221,8 @@ References:
   choice (or selecting another branch), but when a branch has
   not been merged yet, also make sure the user is aware of that.
 
-  `delete-pr-branch' When deleting a branch that was created from
-  a pull request and if no other branches still exist on that
+  `delete-pr-remote' When deleting a branch that was created from
+  a pull-request and if no other branches still exist on that
   remote, then `magit-branch-delete' offers to delete the remote
   as well.  This should be safe because it only happens if no
   other refs exist in the remotes namespace, and you can recreate
@@ -646,12 +646,13 @@ This is similar to `read-string', but
 (defmacro magit-read-char-case (prompt verbose &rest clauses)
   (declare (indent 2)
            (debug (form form &rest (characterp form body))))
-  `(pcase (read-char-choice
-           (concat ,prompt
-                   ,(concat (mapconcat 'cadr clauses ", ")
-                            (and verbose ", or [C-g] to abort") " "))
-           ',(mapcar 'car clauses))
-     ,@(--map `(,(car it) ,@(cddr it)) clauses)))
+  `(prog1 (pcase (read-char-choice
+                  (concat ,prompt
+                          ,(concat (mapconcat 'cadr clauses ", ")
+                                   (and verbose ", or [C-g] to abort") " "))
+                  ',(mapcar 'car clauses))
+            ,@(--map `(,(car it) ,@(cddr it)) clauses))
+     (message "")))
 
 (defun magit-y-or-n-p (prompt &optional action)
   "Ask user a \"y or n\" or a \"yes or no\" question using PROMPT.
@@ -737,7 +738,7 @@ See info node `(magit)Debugging Tools' for more information."
                          (cond
                           (path
                            (list (file-name-directory path)))
-                          ((not (member lib '("transient")))
+                          (t
                            (error "Cannot find mandatory dependency %s" lib)))))
                      '(;; Like `LOAD_PATH' in `default.mk'.
                        "dash"

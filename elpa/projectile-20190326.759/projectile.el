@@ -4,9 +4,9 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20190126.1117
+;; Package-Version: 20190326.759
 ;; Keywords: project, convenience
-;; Version: 2.0.0
+;; Version: 2.1.0-snapshot
 ;; Package-Requires: ((emacs "25.1") (pkg-info "0.4"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -2313,7 +2313,7 @@ TEST-DIR which specifies the path to the tests relative to the project root."
 
 (defun projectile-cabal-project-p ()
   "Check if a project contains *.cabal files but no stack.yaml file."
-  (and (projectile-verify-file-wildcard "*.cabal")
+  (and (projectile-verify-file-wildcard "?*.cabal")
        (not (projectile-verify-file "stack.yaml"))))
 
 (defun projectile-go-project-p ()
@@ -3259,17 +3259,22 @@ to run the replacement."
                     (projectile-prepend-project-name
                      (format "Replace %s with: " old-text))))
          (files (projectile-files-with-string old-text directory)))
-    ;; Adapted from `tags-query-replace' for literal strings (not regexp)
-    (setq tags-loop-scan `(let ,(unless (equal old-text (downcase old-text))
-                                  '((case-fold-search nil)))
-                            (if (search-forward ',old-text nil t)
-                                ;; When we find a match, move back to
-                                ;; the beginning of it so
-                                ;; perform-replace will see it.
-                                (goto-char (match-beginning 0))))
-          tags-loop-operate `(perform-replace ',old-text ',new-text t nil nil
-                                              nil multi-query-replace-map))
-    (tags-loop-continue (or (cons 'list files) t))))
+    (if (version< emacs-version "27")
+        ;; Adapted from `tags-query-replace' for literal strings (not regexp)
+        (progn
+          (setq tags-loop-scan `(let ,(unless (equal old-text (downcase old-text))
+                                        '((case-fold-search nil)))
+                                  (if (search-forward ',old-text nil t)
+                                      ;; When we find a match, move back to
+                                      ;; the beginning of it so
+                                      ;; perform-replace will see it.
+                                      (goto-char (match-beginning 0))))
+                tags-loop-operate `(perform-replace ',old-text ',new-text t nil nil
+                                                    nil multi-query-replace-map))
+          (tags-loop-continue (or (cons 'list files) t)))
+      (progn
+        (fileloop-initialize-replace old-text new-text files 'default)
+        (fileloop-continue)))))
 
 ;;;###autoload
 (defun projectile-replace-regexp (&optional arg)

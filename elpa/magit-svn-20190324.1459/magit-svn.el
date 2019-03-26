@@ -4,7 +4,7 @@
 
 ;; Author: Phil Jackson <phil@shellarchive.co.uk>
 ;; Keywords: vc tools
-;; Package-Version: 20190217.1134
+;; Package-Version: 20190324.1459
 ;; Package: magit-svn
 ;; Package-Requires: ((emacs "24.4") (magit "2.1.0"))
 
@@ -51,6 +51,8 @@
 ;; To enable the mode globally without dropping to a shell:
 ;;
 ;;   (add-hook 'magit-mode-hook 'magit-svn-mode)
+
+;; This package is unmaintained see the README for more information.
 
 ;;; Code:
 

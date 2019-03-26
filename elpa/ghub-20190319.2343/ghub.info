@@ -46,7 +46,7 @@ adoption would make life easier for users and maintainers alike, because
 then all packages that talk to forge APIs could be configured the same
 way.
 
-This manual is for Ghub version 3.2.0 (v3.2.0-7-g67eb648+1).
+This manual is for Ghub version 3.2.0 (v3.2.0-10-g9017033+1).
 
      Copyright (C) 2017-2019 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -192,6 +192,10 @@ this should be true even when configuring the very first token.
      instance (i.e.  _do not_ set it globally) and _globally_ set
      ‘github.git.example.com/api/v3.user’ to ‘jtribbiani’.  The latter
      is necessary even if your username on Github.com is the same.
+
+     For some Github Enterprice instances ‘/api’ has to be used instead
+     of ‘/api/v3’ as shown above.  If the wizard fails in both cases,
+     then try creating the token manually.
 
    • If the variable ‘github.user’ (or ‘github.HOST.user’ for an
      Enterprise instance) is unset when the wizard is first summoned,
@@ -1290,22 +1294,22 @@ File: ghub.info,  Node: Forge Limitations and Notes,  Prev: Forge Functions and 
 
 Tag Table:
 Node: Top764
-Node: Introduction3279
-Node: Getting Started6321
-Node: Setting the Username10055
-Node: Interactively Creating and Storing a Token11480
-Node: Manually Creating and Storing a Token17131
-Node: How Ghub uses Auth-Source18356
-Node: Using Ghub in Personal Scripts20289
-Node: Using Ghub in a Package21745
-Node: API24363
-Node: Making Requests25160
-Node: Authentication39259
-Node: Configuration Variables41104
-Node: GraphQL Support44824
-Node: Support for Other Forges51489
-Node: Forge Functions and Variables51706
-Node: Forge Limitations and Notes56225
+Node: Introduction3280
+Node: Getting Started6322
+Node: Setting the Username10250
+Node: Interactively Creating and Storing a Token11675
+Node: Manually Creating and Storing a Token17326
+Node: How Ghub uses Auth-Source18551
+Node: Using Ghub in Personal Scripts20484
+Node: Using Ghub in a Package21940
+Node: API24558
+Node: Making Requests25355
+Node: Authentication39454
+Node: Configuration Variables41299
+Node: GraphQL Support45019
+Node: Support for Other Forges51684
+Node: Forge Functions and Variables51901
+Node: Forge Limitations and Notes56420
 
 End Tag Table
 

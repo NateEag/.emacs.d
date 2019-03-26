@@ -12,9 +12,9 @@
        ((:keywords "tools" "processes" "convenience")
 	(:url . "https://github.com/leoliu/ack-el"))])
  (ada-mode .
-	   [(6 0 1)
+	   [(6 1 0)
 	    ((wisi
-	      (2 0 1))
+	      (2 1 0))
 	     (cl-lib
 	      (1 0))
 	     (emacs
@@ -131,7 +131,7 @@
 	 ((:keywords "brief" "emulations" "crisp")
 	  (:url . "http://elpa.gnu.org/packages/brief.html"))])
  (buffer-expose .
-		[(0 4)
+		[(0 4 1)
 		 ((emacs
 		   (25))
 		  (cl-lib
@@ -524,6 +524,17 @@
 	      nil "show buffer tabs in side window" single
 	      ((:url . "http://elpa.gnu.org/packages/frame-tabs.html")
 	       (:keywords "frames" "tabs"))])
+ (frog-menu .
+	    [(0 2 1)
+	     ((emacs
+	       (26))
+	      (avy
+	       (0 4))
+	      (posframe
+	       (0 4)))
+	     "Quickly pick items from ad hoc menus" single
+	     ((:url . "https://github.com/clemera/frog-menu")
+	      (:keywords "convenience"))])
  (fsm .
       [(0 2 1)
        ((emacs
@@ -908,7 +919,7 @@
 	  ((:url . "http://elpa.gnu.org/packages/oauth2.html")
 	   (:keywords "comm"))])
  (objed .
-	[(0 7 3)
+	[(0 8 1)
 	 ((emacs
 	   (25))
 	  (cl-lib
@@ -987,7 +998,7 @@
 	  ((:keywords "extensions")
 	   (:url . "https://github.com/cute-jumper/parsec.el"))])
  (peg .
-      [(0 9 1)
+      [(1 0)
        ((emacs
 	 (25)))
        "Parsing Expression Grammars in Emacs Lisp" tar
@@ -1376,7 +1387,7 @@
 	      ((:url . "http://elpa.gnu.org/packages/windresize.html")
 	       (:keywords "window"))])
  (wisi .
-       [(2 0 1)
+       [(2 1 0)
 	((cl-lib
 	  (1 0))
 	 (emacs
@@ -1385,7 +1396,7 @@
 	  (2 20)))
 	"Utilities for implementing an indentation/navigation engine using a generalized LALR parser" tar
 	((:keywords "parser" "indentation" "navigation")
-	 (:url . "http://www.nongnu.org/ada-mode/wisi/wisi.html"))])
+	 (:url . "http://stephe-leake.org/ada/wisitoken.html"))])
  (wpuzzle .
 	  [(1 1)
 	   nil "find as many word in a given time" single
@@ -1411,7 +1422,7 @@
        ((:keywords "multimedia" "xpm")
 	(:url . "http://www.gnuvola.org/software/xpm/"))])
  (xr .
-     [(1 7)
+     [(1 9)
       nil "Convert string regexp to rx notation" tar
       ((:keywords "lisp" "maint" "regexps")
        (:url . "http://elpa.gnu.org/packages/xr.html"))])

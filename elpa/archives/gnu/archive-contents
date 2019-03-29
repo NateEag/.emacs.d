@@ -282,7 +282,7 @@
 		((:url . "http://elpa.gnu.org/packages/dbus-codegen.html")
 		 (:keywords "comm" "dbus" "convenience"))])
  (debbugs .
-	  [(0 16)
+	  [(0 17)
 	   ((soap-client
 	     (3 1 5))
 	    (cl-lib
@@ -337,7 +337,7 @@
 		  ((:url . "https://github.com/clemera/dired-git-info")
 		   (:keywords "dired" "files"))])
  (disk-usage .
-	     [(1 3 0)
+	     [(1 3 1)
 	      ((emacs
 		(26 1)))
 	      "Sort and browse disk usage listings" single
@@ -895,7 +895,7 @@
 	      ((:url . "http://elpa.gnu.org/packages/nhexl-mode.html")
 	       (:keywords "data"))])
  (nlinum .
-	 [(1 8 1)
+	 [(1 9)
 	  nil "Show line numbers in the margin" single
 	  ((:url . "http://elpa.gnu.org/packages/nlinum.html")
 	   (:keywords "convenience"))])
@@ -1086,6 +1086,13 @@
 		 nil "Interactively list/edit registers" single
 		 ((:url . "http://elpa.gnu.org/packages/register-list.html")
 		  (:keywords "register"))])
+ (relint .
+	 [(1 5)
+	  ((xr
+	    (1 7)))
+	  "Elisp regexp mistake finder" single
+	  ((:url . "https://github.com/mattiase/relint")
+	   (:keywords "lisp" "maint" "regexps"))])
  (rich-minority .
 		[(1 0 1)
 		 ((cl-lib
@@ -1368,6 +1375,13 @@
 	      "Emacs Web Server" tar
 	      ((:keywords "http" "server" "network")
 	       (:url . "https://github.com/eschulte/emacs-web-server"))])
+ (webfeeder .
+	    [(1 0 0)
+	     ((emacs
+	       (25 1)))
+	     "Build RSS and Atom webfeeds from HTML files" tar
+	     ((:keywords "news" "hypermedia" "blog" "feed" "rss" "atom")
+	      (:url . "https://gitlab.com/Ambrevar/emacs-webfeeder"))])
  (websocket .
 	    [(1 8)
 	     ((cl-lib

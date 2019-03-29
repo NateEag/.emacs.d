@@ -4,7 +4,7 @@
 ;; Keywords: git, tools, vc, github
 ;; Homepage: https://github.com/charignon/github-review
 ;; Package-Requires: ((emacs "25") (s "1.12.0") (ghub "2.0") (dash "2.11.0"))
-;; Package-Version: 20190316.2025
+;; Package-Version: 20190327.732
 ;; Package-X-Original-Version: 0.1
 
 ;; This file is not part of GNU Emacs
@@ -440,13 +440,17 @@ See ‘github-review-start’ for more information"
          (title (github-review-a-get ob 'title))
          (body (github-review-a-get ob 'body))
          (top-level-comments (github-review-a-get ctx 'top-level-comments))
-         (reviews (github-review-a-get ctx 'reviews))
+         (reviews (-reject
+                   (lambda (x)
+                     (string= (github-review-a-get x 'body) ""))
+                   (github-review-a-get ctx 'reviews)))
          (diff (-> ctx (github-review-a-get 'diff) (github-review-a-get 'message))))
   (concat
    (github-review-to-comments title)
    "\n~"
    "\n"
-   (github-review-to-comments body)
+   ;; Github PR body contains \n\r for new lines
+   (github-review-to-comments (s-replace "\r" "" body))
    "\n"
    (when top-level-comments
      (concat (s-join
@@ -499,7 +503,7 @@ Gets the PR diff, object, top level comments, and code reviews."
 
 
 (defun github-review-start-internal (pr-alist)
-  "Start review given PR URL."
+  "Start review given PR URL given PR-ALIST."
     (github-review-chain-calls
      pr-alist
      ;; Callback when done

@@ -1,2 +1,0 @@
-;;; -*- no-byte-compile: t -*-
-(define-package "github-review" "20190316.2025" "GitHub based code review" '((emacs "25") (s "1.12.0") (ghub "2.0") (dash "2.11.0")) :commit "6d58b25f330aeb47eb5242954e0c235d0cfee96d" :keywords '("git" "tools" "vc" "github") :authors '(("Laurent Charignon" . "l.charignon@gmail.com")) :maintainer '("Laurent Charignon" . "l.charignon@gmail.com") :url "https://github.com/charignon/github-review")

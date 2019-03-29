@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "github-review" "github-review.el" (23695 45516
-;;;;;;  266863 1000))
+;;;### (autoloads nil "github-review" "github-review.el" (23710 16062
+;;;;;;  663948 896000))
 ;;; Generated autoloads from github-review.el
 
 (autoload 'github-review-forge-pr-at-point "github-review" "\

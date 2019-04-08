@@ -3,7 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "notmuch" "notmuch.el" (23567 55823 0 0))
+;;;### (autoloads nil "notmuch" "notmuch.el" (23723 15716 392518
+;;;;;;  259000))
 ;;; Generated autoloads from notmuch.el
 
 (autoload 'notmuch-search "notmuch" "\
@@ -41,8 +42,8 @@ notmuch buffers exist, run `notmuch'.
 
 ;;;***
 
-;;;### (autoloads nil "notmuch-company" "notmuch-company.el" (23567
-;;;;;;  55823 0 0))
+;;;### (autoloads nil "notmuch-company" "notmuch-company.el" (23723
+;;;;;;  15716 443574 578000))
 ;;; Generated autoloads from notmuch-company.el
 
 (autoload 'notmuch-company-setup "notmuch-company" "\
@@ -57,8 +58,8 @@ notmuch buffers exist, run `notmuch'.
 
 ;;;***
 
-;;;### (autoloads nil "notmuch-hello" "notmuch-hello.el" (23567 55823
-;;;;;;  0 0))
+;;;### (autoloads nil "notmuch-hello" "notmuch-hello.el" (23723 15716
+;;;;;;  382596 465000))
 ;;; Generated autoloads from notmuch-hello.el
 
 (autoload 'notmuch-hello "notmuch-hello" "\
@@ -68,8 +69,8 @@ Run notmuch and display saved searches, known tags, etc.
 
 ;;;***
 
-;;;### (autoloads nil "notmuch-jump" "notmuch-jump.el" (23567 55823
-;;;;;;  0 0))
+;;;### (autoloads nil "notmuch-jump" "notmuch-jump.el" (23723 15716
+;;;;;;  400967 681000))
 ;;; Generated autoloads from notmuch-jump.el
 
 (autoload 'notmuch-jump-search "notmuch-jump" "\
@@ -84,8 +85,8 @@ fast way to jump to a saved search from anywhere in Notmuch.
 
 ;;;***
 
-;;;### (autoloads nil "notmuch-show" "notmuch-show.el" (23567 55823
-;;;;;;  0 0))
+;;;### (autoloads nil "notmuch-show" "notmuch-show.el" (23723 15716
+;;;;;;  413427 389000))
 ;;; Generated autoloads from notmuch-show.el
 
 (autoload 'notmuch-show "notmuch-show" "\
@@ -119,7 +120,7 @@ matched.
 ;;;;;;  "notmuch-lib.el" "notmuch-maildir-fcc.el" "notmuch-message.el"
 ;;;;;;  "notmuch-mua.el" "notmuch-parser.el" "notmuch-pkg.el" "notmuch-print.el"
 ;;;;;;  "notmuch-query.el" "notmuch-tag.el" "notmuch-tree.el" "notmuch-wash.el"
-;;;;;;  "rstdoc.el") (23567 55823 0 0))
+;;;;;;  "rstdoc.el") (23723 15716 442652 502000))
 
 ;;;***
 

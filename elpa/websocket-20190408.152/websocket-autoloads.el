@@ -3,7 +3,7 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil nil ("websocket.el") (23400 19431 0 0))
+;;;### (autoloads nil nil ("websocket.el") (23723 15730 846597 989000))
 
 ;;;***
 

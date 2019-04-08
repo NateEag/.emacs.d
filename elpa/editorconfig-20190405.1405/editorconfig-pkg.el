@@ -1,4 +1,4 @@
-(define-package "editorconfig" "20190326.1420" "EditorConfig Emacs Plugin"
+(define-package "editorconfig" "20190405.1405" "EditorConfig Emacs Plugin"
   '((cl-lib "0.5")
     (emacs "24"))
   :authors

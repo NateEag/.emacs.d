@@ -5,7 +5,7 @@
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 15 Mar 2018
 ;; Version: 0.3.0
-;; Package-Version: 20190227.1329
+;; Package-Version: 20190227.1642
 ;; Keywords: convenience, php
 ;; Homepage: https://github.com/emacs-php/phpstan.el
 ;; Package-Requires: ((emacs "24.3") (flycheck "26") (phpstan "0.2.1"))
@@ -29,13 +29,12 @@
 ;;
 ;; Put the following into your .emacs file (~/.emacs.d/init.el)
 ;;
-;;     (defun my-php-mode-hook ()
+;;     (defun my-php-mode-setup ()
 ;;       "My PHP-mode hook."
 ;;       (require 'flycheck-phpstan)
-;;       (flycheck-mode t)
-;;       (flycheck-select-checker 'phpstan))
+;;       (flycheck-mode t))
 ;;
-;;     (add-hook 'php-mode-hook 'my-php-mode-hook)
+;;     (add-hook 'php-mode-hook 'my-php-mode-setup)
 ;;
 
 

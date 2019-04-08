@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil nil ("flycheck-phpstan.el") (23690 18043 794984
-;;;;;;  388000))
+;;;### (autoloads nil nil ("flycheck-phpstan.el") (23723 15697 727118
+;;;;;;  952000))
 
 ;;;***
 

@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "format-all" "format-all.el" (23644 11303 0
-;;;;;;  0))
+;;;### (autoloads nil "format-all" "format-all.el" (23723 15698 692643
+;;;;;;  106000))
 ;;; Generated autoloads from format-all.el
 
 (autoload 'format-all-buffer "format-all" "\

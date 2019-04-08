@@ -9,14 +9,14 @@
 ;; Maintainer: USAMI Kenta <tadsan@zonu.me>
 ;; URL: https://github.com/emacs-php/php-mode
 ;; Keywords: languages php
-;; Version: 1.21.0
+;; Version: 1.21.1
 ;; Package-Requires: ((emacs "24.3") (cl-lib "0.5"))
 ;; License: GPL-3.0-or-later
 
-(defconst php-mode-version-number "1.21.0"
+(defconst php-mode-version-number "1.21.1"
   "PHP Mode version number.")
 
-(defconst php-mode-modified "2019-02-28"
+(defconst php-mode-modified "2019-04-01"
   "PHP Mode build date.")
 
 ;; This file is free software; you can redistribute it and/or
@@ -299,13 +299,11 @@ parent.  Set this variable to t if you want to use
 enabled."
   :type 'boolean)
 
-(defcustom php-site-url "https://secure.php.net/"
+(defcustom php-site-url "https://php.net/"
   "Default PHP.net site URL.
 
-The URL to use open PHP manual and search word.
-You can find a mirror site closer to you."
-  :type 'string
-  :link '(url-link :tag "List of Mirror Sites" "https://secure.php.net/mirrors.php"))
+The URL to use open PHP manual and search word."
+  :type 'string)
 
 (defcustom php-manual-url 'en
   "URL at which to find PHP manual.
@@ -1687,6 +1685,10 @@ a completion list."
 
      ;; Support the ::class constant in PHP5.6
      ("\\sw+\\(::\\)\\(class\\)\\b" (1 'php-paamayim-nekudotayim) (2 'php-constant))
+
+     ;; Highlight static method calls as such. This is necessary for method
+     ;; names which are identical to keywords to be highlighted correctly.
+     ("\\sw+::\\(\\sw+\\)(" 1 'php-static-method-call)
 
      ;; While c-opt-cpp-* highlights the <?php opening tags, it is not
      ;; possible to make it highlight short open tags and closing tags

@@ -1,12 +1,12 @@
 ;;; writeroom-mode.el --- Minor mode for distraction-free writing  -*- lexical-binding: t -*-
 
-;; Copyright (c) 2012-2017 Joost Kremers
+;; Copyright (c) 2012-2019 Joost Kremers
 
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 11 July 2012
 ;; Package-Requires: ((emacs "24.1") (visual-fill-column "1.9"))
-;; Version: 3.7
+;; Version: 3.8
 ;; Keywords: text
 
 ;; Redistribution and use in source and binary forms, with or without

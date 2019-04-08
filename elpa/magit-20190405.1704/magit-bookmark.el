@@ -46,8 +46,8 @@ This function will:
    restore the buffer.
 3. Restore the expanded/collapsed status of top level sections
    and the point position."
-  (declare (indent 2))
-  (let* ((default-directory (bookmark-get-filename bookmark)))
+  (declare (indent defun))
+  (let ((default-directory (bookmark-get-filename bookmark)))
     (if default-directory
         (apply fn args)
       (signal 'bookmark-error-no-filename (list 'stringp default-directory)))
@@ -106,7 +106,7 @@ specifies additional properties to store in the bookmark."
 (defun magit-bookmark--status-jump (bookmark)
   "Handle a Magit status BOOKMARK."
   (magit-bookmark--jump bookmark
-      (lambda () (magit-status-internal default-directory))))
+    (lambda () (magit-status-internal default-directory))))
 
 ;;;###autoload
 (defun magit-bookmark--status-make-record ()
@@ -167,10 +167,10 @@ specifies additional properties to store in the bookmark."
 (defun magit-bookmark--reflog-jump (bookmark)
   "Handle a Magit reflog BOOKMARK."
   (magit-bookmark--jump bookmark
-      (lambda ()
-        (let ((magit-reflog-arguments (bookmark-prop-get bookmark 'magit-args)))
-          (magit-git-reflog (bookmark-prop-get bookmark 'magit-ref)
-                            magit-reflog-arguments)))))
+    (lambda ()
+      (let ((magit-reflog-arguments (bookmark-prop-get bookmark 'magit-args)))
+        (magit-git-reflog (bookmark-prop-get bookmark 'magit-ref)
+                          magit-reflog-arguments)))))
 
 (defun magit-bookmark--reflog-make-name (buffer-name ref)
   "Generate the default name for a reflog bookmark."
@@ -289,8 +289,8 @@ specifies additional properties to store in the bookmark."
   "Handle a Magit revision BOOKMARK."
   (magit-bookmark--jump bookmark #'magit-show-commit
     (bookmark-prop-get bookmark 'magit-rev)
-    (bookmark-prop-get bookmark 'args)
-    (bookmark-prop-get bookmark 'files)))
+    (bookmark-prop-get bookmark 'magit-args)
+    (bookmark-prop-get bookmark 'magit-files)))
 
 (defun magit-bookmark--revision-make-name (buffer-name rev _args files)
   "Generate a default name for a revision bookmark."

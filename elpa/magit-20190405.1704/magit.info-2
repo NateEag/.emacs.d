@@ -219,7 +219,7 @@ and/or when some buffers visit files using TRAMP.  If so, then this
 should help.
 
      (setq auto-revert-buffer-list-filter
-           'magit-auto-revert-repository-buffers-p)
+           'magit-auto-revert-repository-buffer-p)
 
    For alternative approaches see *note Automatic Reverting of
 File-Visiting Buffers::.
@@ -2107,8 +2107,6 @@ Appendix D Command Index
  [index ]
 * Menu:
 
-* auto-revert-mode:                      Automatic Reverting of File-Visiting Buffers.
-                                                              (line  62)
 * forward-line:                          Editing Rebase Sequences.
                                                               (line  39)
 * git-commit-ack:                        Editing Commit Messages.
@@ -2599,8 +2597,6 @@ Appendix E Function Index
  [index ]
 * Menu:
 
-* auto-revert-mode:                      Automatic Reverting of File-Visiting Buffers.
-                                                              (line  62)
 * git-commit-check-style-conventions:    Editing Commit Messages.
                                                               (line 247)
 * git-commit-propertize-diff:            Editing Commit Messages.
@@ -2817,6 +2813,8 @@ Appendix F Variable Index
                                                               (line  81)
 * auto-revert-interval:                  Automatic Reverting of File-Visiting Buffers.
                                                               (line  76)
+* auto-revert-mode:                      Automatic Reverting of File-Visiting Buffers.
+                                                              (line  62)
 * auto-revert-stop-on-user-input:        Automatic Reverting of File-Visiting Buffers.
                                                               (line  71)
 * auto-revert-use-notify:                Automatic Reverting of File-Visiting Buffers.

@@ -4,7 +4,7 @@
 
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Version: 2.3
-;; Package-Version: 20181216.1137
+;; Package-Version: 20190404.1202
 ;; Keywords: hash table, hash map, hash
 ;; Package-Requires: ((dash "2.12.0"))
 
@@ -229,7 +229,8 @@ inverse of `ht<-alist'.  The following is not guaranteed:
 
 (defun ht-contains? (table key)
   "Return 't if TABLE contains KEY."
-  (not (eq (ht-get table key 'ht--not-found) 'ht--not-found)))
+  (let ((not-found-symbol (make-symbol "ht--not-found")))
+    (not (eq (ht-get table key not-found-symbol) not-found-symbol))))
 
 (defalias 'ht-contains-p 'ht-contains?)
 

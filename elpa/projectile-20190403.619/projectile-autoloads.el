@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "projectile" "projectile.el" (23706 7759 377373
-;;;;;;  500000))
+;;;### (autoloads nil "projectile" "projectile.el" (23723 15727 8708
+;;;;;;  935000))
 ;;; Generated autoloads from projectile.el
 
 (autoload 'projectile-version "projectile" "\
@@ -243,6 +243,21 @@ Jump to a project's test file using completion.
 With a prefix arg INVALIDATE-CACHE invalidates the cache first.
 
 \(fn &optional INVALIDATE-CACHE)" t nil)
+
+(autoload 'projectile-find-related-file-other-window "projectile" "\
+Open related file in other window.
+
+\(fn)" t nil)
+
+(autoload 'projectile-find-related-file-other-frame "projectile" "\
+Open related file in other frame.
+
+\(fn)" t nil)
+
+(autoload 'projectile-find-related-file "projectile" "\
+Open related file.
+
+\(fn)" t nil)
 
 (autoload 'projectile-project-info "projectile" "\
 Display info for current project.

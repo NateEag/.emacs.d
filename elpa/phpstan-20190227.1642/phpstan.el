@@ -5,7 +5,7 @@
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 15 Mar 2018
 ;; Version: 0.3.0
-;; Package-Version: 20190227.1329
+;; Package-Version: 20190227.1642
 ;; Keywords: tools, php
 ;; Homepage: https://github.com/emacs-php/phpstan.el
 ;; Package-Requires: ((emacs "24.3"))
@@ -34,8 +34,7 @@
 ;; Please read the README for these details.
 ;; https://github.com/emacs-php/phpstan.el/blob/master/README.org
 ;;
-;; If you are a Flycheck user, activate it by selecting `phpstan`
-;; with `M-x flycheck-select-checker'.
+;; If you are a Flycheck user, install `flycheck-phpstan' package.
 ;;
 ;; ## Directory local variables
 ;;

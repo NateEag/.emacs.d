@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "phpstan" "phpstan.el" (23690 18076 589848
-;;;;;;  305000))
+;;;### (autoloads nil "phpstan" "phpstan.el" (23723 15722 852310
+;;;;;;  20000))
 ;;; Generated autoloads from phpstan.el
 
 (defvar phpstan-working-dir nil "\

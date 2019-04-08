@@ -11,7 +11,7 @@
 ;; Current Maintainer: ninrod (github.com/ninrod)
 ;; Created: July 23 2011
 ;; Version: 1.0.3
-;; Package-Version: 20181218.1957
+;; Package-Version: 20190403.418
 ;; Package-Requires: ((evil "1.2.12"))
 ;; Mailing list: <implementations-list at lists.ourproject.org>
 ;;      Subscribe: http://tinyurl.com/implementations-list
@@ -89,12 +89,22 @@ Each item is of the form (OPERATOR . OPERATION)."
 
 (defvar evil-surround-read-tag-map
   (let ((map (copy-keymap minibuffer-local-map)))
-    (define-key map ">" 'exit-minibuffer)
+    (define-key map ">" (lambda ()
+                          (interactive)
+                          (call-interactively 'self-insert-command)
+                          (run-at-time nil nil
+                                       (lambda ()
+                                         (when (active-minibuffer-window)
+                                           (select-window (active-minibuffer-window))
+                                           (exit-minibuffer))))))
     map)
   "Keymap used by `evil-surround-read-tag'.")
 
 (defvar evil-surround-record-repeat nil
   "Flag to indicate we're manually recording repeat info.")
+
+(defvar evil-surround-last-deleted-left ""
+  "The previously deleted LEFT region.")
 
 (defun evil-surround-read-from-minibuffer (&rest args)
   (when evil-surround-record-repeat
@@ -125,13 +135,27 @@ Each item is of the form (OPERATOR . OPERATION)."
     (cons (format "%s(" (or fname ""))
           ")")))
 
+(defconst evil-surround-tag-name-re "\\([0-9a-z-]+\\)"
+  "Regexp matching an XML tag name.")
+
+(defun evil-surround-tag-p (string)
+  "Return t if `STRING' looks like a tag."
+  (string-match-p evil-surround-tag-name-re string))
+
 (defun evil-surround-read-tag ()
   "Read a XML tag from the minibuffer."
   (let* ((input (evil-surround-read-from-minibuffer "<" "" evil-surround-read-tag-map))
-         (match (string-match "\\([0-9a-z-]+\\)\\(.*?\\)[>]*$" input))
+         (match (string-match (concat evil-surround-tag-name-re "\\(.*?\\)\\([>]*\\)$") input))
          (tag  (match-string 1 input))
-         (rest (match-string 2 input)))
-    (cons (format "<%s%s>" (or tag "") (or rest ""))
+         (rest (match-string 2 input))
+         (keep-attributes (not (string-match-p ">" input)))
+         (original-tag (when (evil-surround-tag-p evil-surround-last-deleted-left)
+                         (substring evil-surround-last-deleted-left
+                                    (string-match (concat "<" evil-surround-tag-name-re) evil-surround-last-deleted-left)
+                                    (match-end 0))))
+         (original-attributes (when (and keep-attributes original-tag)
+                                (substring evil-surround-last-deleted-left (length original-tag)))))
+    (cons (format "<%s%s%s" (or tag "") (or rest "") (or original-attributes ">"))
           (format "</%s>" (or tag "")))))
 
 (defun evil-surround-valid-char-p (char)
@@ -218,7 +242,8 @@ between these overlays is what is deleted."
   (interactive (evil-surround-input-char))
   (cond
    ((and outer inner)
-    (delete-region (overlay-start outer) (overlay-start inner))
+    (setq evil-surround-last-deleted-left
+          (delete-and-extract-region (overlay-start outer) (overlay-start inner)))
     (delete-region (overlay-end inner) (overlay-end outer))
     (goto-char (overlay-start outer)))
    (t

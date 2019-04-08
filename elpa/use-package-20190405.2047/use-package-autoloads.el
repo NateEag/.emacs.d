@@ -4,7 +4,7 @@
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
 ;;;### (autoloads nil "use-package-bind-key" "use-package-bind-key.el"
-;;;;;;  (23558 35287 0 0))
+;;;;;;  (23723 15729 10789 149000))
 ;;; Generated autoloads from use-package-bind-key.el
 
 (autoload 'use-package-autoload-keymap "use-package-bind-key" "\
@@ -55,8 +55,8 @@ deferred until the prefix key sequence is pressed.
 
 ;;;***
 
-;;;### (autoloads nil "use-package-core" "use-package-core.el" (23558
-;;;;;;  35287 0 0))
+;;;### (autoloads nil "use-package-core" "use-package-core.el" (23723
+;;;;;;  15729 17415 677000))
 ;;; Generated autoloads from use-package-core.el
 
 (autoload 'use-package "use-package-core" "\
@@ -85,6 +85,7 @@ this file.  Usage:
                  package.  This is useful if the package is being lazily
                  loaded, and you wish to conditionally call functions in your
                  `:init' block that are defined in the package.
+:hook            Specify hook(s) to attach this package to.
 
 :bind            Bind keys, and define autoloads for the bound commands.
 :bind*           Bind keys, and define autoloads for the bound commands,
@@ -94,7 +95,7 @@ this file.  Usage:
 :bind-keymap*    Like `:bind-keymap', but overrides all minor mode bindings
 
 :defer           Defer loading of a package -- this is implied when using
-                 `:commands', `:bind', `:bind*', `:mode', `:magic',
+                 `:commands', `:bind', `:bind*', `:mode', `:magic', `:hook',
                  `:magic-fallback', or `:interpreter'.  This can be an integer,
                  to force loading after N seconds of idle time, if the package
                  has not already been loaded.
@@ -121,7 +122,7 @@ this file.  Usage:
 ;;;***
 
 ;;;### (autoloads nil "use-package-delight" "use-package-delight.el"
-;;;;;;  (23558 35287 0 0))
+;;;;;;  (23723 15729 6631 289000))
 ;;; Generated autoloads from use-package-delight.el
 
 (autoload 'use-package-normalize/:delight "use-package-delight" "\
@@ -137,7 +138,7 @@ Normalize arguments to delight.
 ;;;***
 
 ;;;### (autoloads nil "use-package-diminish" "use-package-diminish.el"
-;;;;;;  (23558 35287 0 0))
+;;;;;;  (23723 15729 14564 810000))
 ;;; Generated autoloads from use-package-diminish.el
 
 (autoload 'use-package-normalize/:diminish "use-package-diminish" "\
@@ -153,7 +154,7 @@ Normalize arguments to delight.
 ;;;***
 
 ;;;### (autoloads nil "use-package-ensure" "use-package-ensure.el"
-;;;;;;  (23558 35287 0 0))
+;;;;;;  (23723 15729 8256 321000))
 ;;; Generated autoloads from use-package-ensure.el
 
 (autoload 'use-package-normalize/:ensure "use-package-ensure" "\
@@ -168,8 +169,8 @@ Normalize arguments to delight.
 
 ;;;***
 
-;;;### (autoloads nil "use-package-jump" "use-package-jump.el" (23558
-;;;;;;  35287 0 0))
+;;;### (autoloads nil "use-package-jump" "use-package-jump.el" (23723
+;;;;;;  15729 13449 108000))
 ;;; Generated autoloads from use-package-jump.el
 
 (autoload 'use-package-jump-to-package-form "use-package-jump" "\
@@ -183,8 +184,8 @@ instead.
 
 ;;;***
 
-;;;### (autoloads nil "use-package-lint" "use-package-lint.el" (23558
-;;;;;;  35287 0 0))
+;;;### (autoloads nil "use-package-lint" "use-package-lint.el" (23723
+;;;;;;  15729 5583 735000))
 ;;; Generated autoloads from use-package-lint.el
 
 (autoload 'use-package-lint "use-package-lint" "\
@@ -197,7 +198,7 @@ with the specified `:load-path' the module cannot be found.
 ;;;***
 
 ;;;### (autoloads nil nil ("use-package-pkg.el" "use-package.el")
-;;;;;;  (23558 35287 0 0))
+;;;;;;  (23723 15729 18975 244000))
 
 ;;;***
 

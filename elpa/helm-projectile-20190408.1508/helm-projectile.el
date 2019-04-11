@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov
 ;; URL: https://github.com/bbatsov/helm-projectile
-;; Package-Version: 20180815.1514
+;; Package-Version: 20190408.1508
 ;; Created: 2011-31-07
 ;; Keywords: project, convenience
 ;; Version: 0.14.0
@@ -792,7 +792,6 @@ Other file extensions can be customized with the variable `projectile-other-file
   (interactive "P")
   (let* ((project-root (projectile-project-root))
          (other-files (projectile-get-other-files (buffer-file-name)
-                                                  (projectile-current-project-files)
                                                   flex-matching)))
     (if other-files
         (if (= (length other-files) 1)

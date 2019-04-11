@@ -173,6 +173,7 @@ engine beeing completely different and also much faster."
                    :initform nil)))
 
 (defun helm-occur-build-sources (buffers &optional source-name)
+  "Build sources for helm-occur for each buffer in BUFFERS list."
   (cl-loop for buf in buffers
            collect
            (helm-make-source (or source-name
@@ -201,6 +202,7 @@ engine beeing completely different and also much faster."
                                 (cl-incf linum)
                                 (insert (format "%s " linum))))))))
              :filtered-candidate-transformer 'helm-occur-transformer
+             :help-message 'helm-moccur-help-message
              :nomark t
              :migemo t
              :history 'helm-occur-history
@@ -214,6 +216,8 @@ engine beeing completely different and also much faster."
              :moccur-buffers buffers)))
 
 (defun helm-multi-occur-1 (buffers &optional input)
+  "Runs helm-occur on a list of buffers.
+Each buffer's result is displayed in a separated source."
   (let* ((curbuf (current-buffer))
          (bufs (if helm-occur-always-search-in-current
                    (cons curbuf (remove curbuf buffers))
@@ -366,43 +370,50 @@ Same as `helm-occur-goto-line' but go in new frame."
       (setq buf new-buf))
     (with-current-buffer (get-buffer-create buf)
       (setq buffer-read-only t)
+      (buffer-disable-undo)
       (let ((inhibit-read-only t)
-            (map (make-sparse-keymap)))
+            (map (make-sparse-keymap))
+            buf-name)
         (erase-buffer)
         (insert "-*- mode: helm-occur -*-\n\n"
                 (format "Occur Results for `%s':\n\n" helm-input))
         (save-excursion
           (insert (with-current-buffer helm-buffer
                     (goto-char (point-min))
-                    (cl-loop with buf
-                             while (re-search-forward "^[0-9]*:" nil t)
-                             for line = (buffer-substring
-                                         (point-at-bol) (point-at-eol))
-                             for lineno = (get-text-property (point)
-                                                             'helm-realvalue)
-                             do (setq buf (helm-attr 'buffer-name))
-                             concat (propertize
-                                     (concat (propertize
-                                              buf 'face 'helm-moccur-buffer)
-                                             ":" line "\n")
-                                     'buffer-name buf
-                                     'helm-realvalue lineno)))))
+                    (forward-line 1)
+                    (buffer-substring (point) (point-max)))))
         (save-excursion
+          (forward-line -2)
           (while (not (eobp))
-            (add-text-properties
-             (point-at-bol) (point-at-eol)
-             `(keymap ,map
-               help-echo ,(concat
-                           (buffer-file-name
-                            (get-buffer (get-text-property
-                                         (point) 'buffer-name)))
-                           "\nmouse-1: set point\nmouse-2: jump to selection")
-               mouse-face highlight
-               invisible nil))
-            (define-key map [mouse-1] 'mouse-set-point)
-            (define-key map [mouse-2] 'helm-occur-mode-mouse-goto-line)
-            (define-key map [mouse-3] 'ignore)
+            (if (helm-pos-header-line-p)
+                (let ((beg (point-at-bol))
+                      (end (point-at-eol)))
+                  (set-text-properties beg (1+ end) nil)
+                  (delete-region (1- beg) end))
+              (helm-aif (setq buf-name (assoc-default
+                                        'buffer-name
+                                        (get-text-property (point) 'helm-cur-source)))
+                  (progn
+                    (insert (propertize (concat it ":")
+                                        'face 'helm-moccur-buffer
+                                        'helm-realvalue (get-text-property (point) 'helm-realvalue)))
+                    (add-text-properties
+                     (point-at-bol) (point-at-eol)
+                     `(buffer-name ,buf-name))
+                    (add-text-properties
+                     (point-at-bol) (point-at-eol)
+                     `(keymap ,map
+                              help-echo ,(concat
+                                          (buffer-file-name
+                                           (get-buffer buf-name))
+                                          "\nmouse-1: set point\nmouse-2: jump to selection")
+                              mouse-face highlight
+                              invisible nil))
+                    (define-key map [mouse-1] 'mouse-set-point)
+                    (define-key map [mouse-2] 'helm-occur-mode-mouse-goto-line)
+                    (define-key map [mouse-3] 'ignore))))
             (forward-line 1))))
+      (buffer-enable-undo)
       (helm-occur-mode))
     (pop-to-buffer buf)
     (message "Helm occur Results saved in `%s' buffer" buf)))
@@ -417,7 +428,24 @@ Same as `helm-occur-goto-line' but go in new frame."
         (helm-occur-mode-goto-line)))))
 (put 'helm-moccur-mode-mouse-goto-line 'helm-only t)
 
+(defun helm-occur-buffer-substring-with-linums ()
+  "Returns current-buffer contents as a string with all lines
+numbered.  The property 'buffer-name is added to the whole string."
+  (let ((bufstr (buffer-substring-no-properties (point-min) (point-max)))
+        (bufname (buffer-name)))
+    (with-temp-buffer
+      (save-excursion
+        (insert bufstr))
+      (let ((linum 1))
+        (insert (format "%s " linum))
+        (while (re-search-forward "\n" nil t)
+          (cl-incf linum)
+          (insert (format "%s " linum)))
+        (add-text-properties (point-min) (point-max) `(buffer-name ,bufname)))
+      (buffer-string))))
+
 (defun helm-occur-mode--revert-buffer-function (&optional _ignore-auto _noconfirm)
+  "The `revert-buffer-function' for `helm-occur-mode'."
   (goto-char (point-min))
   (let (pattern)
     (when (re-search-forward "^Occur Results for `\\(.*\\)'" nil t)
@@ -427,8 +455,7 @@ Same as `helm-occur-goto-line' but go in new frame."
         (forward-line 1))
       (let ((inhibit-read-only t)
             (buffer (current-buffer))
-            (buflst helm-occur--buffer-list)
-            (bsubstring #'buffer-substring-no-properties))
+            (buflst helm-occur--buffer-list))
         (delete-region (point) (point-max))
         (message "Reverting buffer...")
         (save-excursion
@@ -438,25 +465,31 @@ Same as `helm-occur-goto-line' but go in new frame."
              (cl-loop for buf in buflst
                       for bufstr = (or (and (buffer-live-p (get-buffer buf))
                                             (with-current-buffer buf
-                                              (funcall bsubstring
-                                                       (point-min) (point-max))))
+                                              (helm-occur-buffer-substring-with-linums)))
                                        "")
-                      unless (string= bufstr "")
-                      do (add-text-properties
-                          0 (length bufstr)
-                          `(buffer-name ,(buffer-name (get-buffer buf)))
-                          bufstr)
                       concat bufstr)
              "\n")
             (goto-char (point-min))
-            (cl-loop with helm-pattern = pattern
-                     while (helm-mm-search pattern)
-                     for linum = (line-number-at-pos)
+            (cl-loop with linum
+                     with mpart
+                     ;; Bind helm-pattern used by `helm-grep-split-line'.
+                     with helm-pattern = pattern
+                     while (helm-mm-search pattern) ; point is at eol.
+                     ;; Calculate line number (linum) and extract real
+                     ;; part of line (mpart).
+                     do (when (save-excursion
+                                ;; `helm-mm-search' puts point at eol.
+                                (forward-line 0)
+                                (re-search-forward "^\\([0-9]*\\)\\s-\\{1\\}\\(.*\\)$"
+                                                   (point-at-eol) t))
+                          (setq linum (string-to-number (match-string 1))
+                                mpart (match-string 2)))
+                     ;; Match part after line number.
+                     when (and mpart (string-match pattern mpart))
                      for line = (format "%s:%d:%s"
                                         (get-text-property (point) 'buffer-name)
                                         linum
-                                        (buffer-substring-no-properties
-                                         (point-at-bol) (point-at-eol)))
+                                        mpart)
                      when line
                      do (with-current-buffer buffer
                           (insert

@@ -5,7 +5,7 @@
 ;; Author: Damien Cassou <damien@cassou.me>,
 ;;         Nicolas Petton <nicolas@petton.fr>
 ;; Version: 4.0.2
-;; Package-Version: 20190114.449
+;; Package-Version: 20190408.1255
 ;; Package-Requires: ((emacs "25"))
 ;; Url: https://github.com/DamienCassou/auth-password-store
 ;; Created: 07 Jun 2015
@@ -47,6 +47,10 @@
 (defcustom auth-source-pass-path "~/.password-store"
   "Path to the password-store folder."
   :type 'directory)
+
+(defcustom auth-source-pass-port-separator ":"
+  "Separator string between host and port in entry filename."
+  :type 'string)
 
 (cl-defun auth-source-pass-search (&rest spec
                                          &key backend type host user port
@@ -253,9 +257,15 @@ return nil.
 
 HOSTNAME should not contain any username or port number."
   (or
-   (and user port (auth-source-pass--find-one-by-entry-name (format "%s@%s:%s" user hostname port) user))
-   (and user (auth-source-pass--find-one-by-entry-name (format "%s@%s" user hostname) user))
-   (and port (auth-source-pass--find-one-by-entry-name (format "%s:%s" hostname port) nil))
+   (and user port (auth-source-pass--find-one-by-entry-name
+                   (format "%s@%s%s%s" user hostname auth-source-pass-port-separator port)
+                   user))
+   (and user (auth-source-pass--find-one-by-entry-name
+              (format "%s@%s" user hostname)
+              user))
+   (and port (auth-source-pass--find-one-by-entry-name
+              (format "%s%s%s" hostname auth-source-pass-port-separator port)
+              nil))
    (auth-source-pass--find-one-by-entry-name hostname user)
    ;; if that didn't work, remove subdomain: foo.bar.com -> bar.com
    (let ((components (split-string hostname "\\.")))

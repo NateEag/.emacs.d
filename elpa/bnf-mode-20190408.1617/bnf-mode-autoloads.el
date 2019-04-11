@@ -3,8 +3,8 @@
 ;;; Code:
 (add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
 
-;;;### (autoloads nil "bnf-mode" "bnf-mode.el" (23723 15693 950596
-;;;;;;  57000))
+;;;### (autoloads nil "bnf-mode" "bnf-mode.el" (23727 12864 120589
+;;;;;;  25000))
 ;;; Generated autoloads from bnf-mode.el
 
 (let ((loads (get 'bnf 'custom-loads))) (if (member '"bnf-mode" loads) nil (put 'bnf 'custom-loads (cons '"bnf-mode" loads))))

@@ -2,10 +2,10 @@
 
 ;; Copyright (C) 2019 Serghei Iakovlev
 
-;; Author: Serghei Iakovlev (concat "sadhooklay" "@" "gmail" ".com")
+;; Author: Serghei Iakovlev <sadhooklay@gmail.com>
 ;; Maintainer: Serghei Iakovlev
 ;; Version: 0.3.2
-;; Package-Version: 20190406.2026
+;; Package-Version: 20190408.1617
 ;; URL: https://github.com/sergeyklay/bnf-mode
 ;; Keywords: languages
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24.3"))

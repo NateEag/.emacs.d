@@ -2,7 +2,7 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20190408.839
+;; Package-Version: 20190408.1319
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
@@ -53,6 +53,7 @@
 ;; - Shell script (shfmt)
 ;; - SQL (sqlformat)
 ;; - Swift (swiftformat)
+;; - Terraform (terraform fmt)
 ;; - TypeScript/TSX (prettier)
 ;; - YAML (yq)
 ;;
@@ -531,6 +532,12 @@ Consult the existing formatters for examples of BODY."
   (:install (macos "brew install swiftformat"))
   (:modes swift-mode swift3-mode)
   (:format (format-all-buffer-easy executable)))
+
+(define-format-all-formatter terraform-fmt
+  (:executable "terraform")
+  (:install (macos "brew install terraform"))
+  (:modes terraform-mode)
+  (:format (format-all-buffer-easy executable "fmt" "-no-color" "-")))
 
 (define-format-all-formatter yq
   (:executable "yq")

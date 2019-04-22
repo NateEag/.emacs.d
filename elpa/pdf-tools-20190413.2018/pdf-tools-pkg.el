@@ -1,6 +1,6 @@
-(define-package "pdf-tools" "20190309.744" "Support library for PDF documents."
+(define-package "pdf-tools" "20190413.2018" "Support library for PDF documents."
   '((emacs "24.3")
-    (tablist "0.70")
+    (tablist "1.0")
     (let-alist "1.0.4"))
   :keywords
   '("files" "multimedia")

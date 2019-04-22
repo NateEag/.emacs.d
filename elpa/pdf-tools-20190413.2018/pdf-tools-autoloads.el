@@ -1,10 +1,12 @@
 ;;; pdf-tools-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "pdf-annot" "pdf-annot.el" (23690 18064 941199
-;;;;;;  833000))
+;;;### (autoloads nil "pdf-annot" "pdf-annot.el" (0 0 0 0))
 ;;; Generated autoloads from pdf-annot.el
 
 (autoload 'pdf-annot-minor-mode "pdf-annot" "\
@@ -14,10 +16,25 @@ Support for PDF Annotations.
 
 \(fn &optional ARG)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-annot" '("pdf-annot-")))
+
 ;;;***
 
-;;;### (autoloads nil "pdf-history" "pdf-history.el" (23690 18064
-;;;;;;  939477 34000))
+;;;### (autoloads nil "pdf-cache" "pdf-cache.el" (0 0 0 0))
+;;; Generated autoloads from pdf-cache.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-cache" '("page" "pdf-cache-" "textregions" "boundingbox" "define-pdf-cache-function")))
+
+;;;***
+
+;;;### (autoloads nil "pdf-dev" "pdf-dev.el" (0 0 0 0))
+;;; Generated autoloads from pdf-dev.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-dev" '("pdf-dev-")))
+
+;;;***
+
+;;;### (autoloads nil "pdf-history" "pdf-history.el" (0 0 0 0))
 ;;; Generated autoloads from pdf-history.el
 
 (autoload 'pdf-history-minor-mode "pdf-history" "\
@@ -31,10 +48,18 @@ may be navigated with the following keys.
 
 \(fn &optional ARG)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-history" '("pdf-history-")))
+
 ;;;***
 
-;;;### (autoloads nil "pdf-isearch" "pdf-isearch.el" (23690 18064
-;;;;;;  919821 803000))
+;;;### (autoloads nil "pdf-info" "pdf-info.el" (0 0 0 0))
+;;; Generated autoloads from pdf-info.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-info" '("pdf-info-")))
+
+;;;***
+
+;;;### (autoloads nil "pdf-isearch" "pdf-isearch.el" (0 0 0 0))
 ;;; Generated autoloads from pdf-isearch.el
 
 (autoload 'pdf-isearch-minor-mode "pdf-isearch" "\
@@ -70,10 +95,11 @@ that not every isearch command work as expected.
 
 \(fn &optional ARG)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-isearch" '("pdf-isearch-")))
+
 ;;;***
 
-;;;### (autoloads nil "pdf-links" "pdf-links.el" (23690 18064 923371
-;;;;;;  996000))
+;;;### (autoloads nil "pdf-links" "pdf-links.el" (0 0 0 0))
 ;;; Generated autoloads from pdf-links.el
 
 (autoload 'pdf-links-minor-mode "pdf-links" "\
@@ -103,10 +129,11 @@ scroll the current page.
 
 \(fn LINK)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-links" '("pdf-links-")))
+
 ;;;***
 
-;;;### (autoloads nil "pdf-loader" "pdf-loader.el" (23690 18064 937728
-;;;;;;  442000))
+;;;### (autoloads nil "pdf-loader" "pdf-loader.el" (0 0 0 0))
 ;;; Generated autoloads from pdf-loader.el
 
 (autoload 'pdf-loader-install "pdf-loader" "\
@@ -121,10 +148,11 @@ see.
 
 \(fn &optional NO-QUERY-P SKIP-DEPENDENCIES-P NO-ERROR-P FORCE-DEPENDENCIES-P)" nil nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-loader" '("pdf-loader--")))
+
 ;;;***
 
-;;;### (autoloads nil "pdf-misc" "pdf-misc.el" (23690 18064 927516
-;;;;;;  648000))
+;;;### (autoloads nil "pdf-misc" "pdf-misc.el" (0 0 0 0))
 ;;; Generated autoloads from pdf-misc.el
 
 (autoload 'pdf-misc-minor-mode "pdf-misc" "\
@@ -149,10 +177,11 @@ Provide a right-click context menu in PDF buffers.
 
 \(fn &optional ARG)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-misc" '("pdf-misc-")))
+
 ;;;***
 
-;;;### (autoloads nil "pdf-occur" "pdf-occur.el" (23690 18064 917457
-;;;;;;  808000))
+;;;### (autoloads nil "pdf-occur" "pdf-occur.el" (0 0 0 0))
 ;;; Generated autoloads from pdf-occur.el
 
 (autoload 'pdf-occur "pdf-occur" "\
@@ -213,10 +242,11 @@ and otherwise fallback to `dired-do-search'.
 
 \(fn &optional ARG)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-occur" '("pdf-occur-")))
+
 ;;;***
 
-;;;### (autoloads nil "pdf-outline" "pdf-outline.el" (23690 18064
-;;;;;;  943586 145000))
+;;;### (autoloads nil "pdf-outline" "pdf-outline.el" (0 0 0 0))
 ;;; Generated autoloads from pdf-outline.el
 
 (autoload 'pdf-outline-minor-mode "pdf-outline" "\
@@ -243,10 +273,11 @@ Enable imenu in the current PDF buffer.
 
 \(fn)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-outline" '("pdf-outline")))
+
 ;;;***
 
-;;;### (autoloads nil "pdf-sync" "pdf-sync.el" (23690 18064 945308
-;;;;;;  519000))
+;;;### (autoloads nil "pdf-sync" "pdf-sync.el" (0 0 0 0))
 ;;; Generated autoloads from pdf-sync.el
 
 (autoload 'pdf-sync-minor-mode "pdf-sync" "\
@@ -269,10 +300,11 @@ with AUCTeX.
 
 \(fn &optional ARG)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-sync" '("pdf-sync-")))
+
 ;;;***
 
-;;;### (autoloads nil "pdf-tools" "pdf-tools.el" (23690 18064 915526
-;;;;;;  407000))
+;;;### (autoloads nil "pdf-tools" "pdf-tools.el" (0 0 0 0))
 ;;; Generated autoloads from pdf-tools.el
 
 (defvar pdf-tools-handle-upgrades t "\
@@ -323,10 +355,18 @@ MODES defaults to `pdf-tools-enabled-modes'.
 
 \(fn)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-tools" '("pdf-tools-")))
+
 ;;;***
 
-;;;### (autoloads nil "pdf-view" "pdf-view.el" (23690 18064 921519
-;;;;;;  821000))
+;;;### (autoloads nil "pdf-util" "pdf-util.el" (0 0 0 0))
+;;; Generated autoloads from pdf-util.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-util" '("pdf-util-" "display-buffer-split-below-and-attach")))
+
+;;;***
+
+;;;### (autoloads nil "pdf-view" "pdf-view.el" (0 0 0 0))
 ;;; Generated autoloads from pdf-view.el
 
 (autoload 'pdf-view-bookmark-jump-handler "pdf-view" "\
@@ -336,10 +376,11 @@ See also `pdf-view-bookmark-make-record'.
 
 \(fn BMK)" nil nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-view" '("pdf-view-")))
+
 ;;;***
 
-;;;### (autoloads nil "pdf-virtual" "pdf-virtual.el" (23690 18064
-;;;;;;  933045 684000))
+;;;### (autoloads nil "pdf-virtual" "pdf-virtual.el" (0 0 0 0))
 ;;; Generated autoloads from pdf-virtual.el
 
 (autoload 'pdf-virtual-edit-mode "pdf-virtual" "\
@@ -372,10 +413,11 @@ Enable recognition and handling of VPDF files.
 
 \(fn &optional FILENAMES BUFFER-NAME DISPLAY-P)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pdf-virtual" '("pdf-virtual-")))
+
 ;;;***
 
-;;;### (autoloads nil nil ("pdf-cache.el" "pdf-dev.el" "pdf-info.el"
-;;;;;;  "pdf-tools-pkg.el" "pdf-util.el") (23690 18064 935568 835000))
+;;;### (autoloads nil nil ("pdf-tools-pkg.el") (0 0 0 0))
 
 ;;;***
 
@@ -383,5 +425,6 @@ Enable recognition and handling of VPDF files.
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; pdf-tools-autoloads.el ends here

@@ -687,7 +687,9 @@ On remote files grep is not well supported by TRAMP unless you suspend updates b
 entering the pattern and re-enable it once your pattern is ready.
 To toggle suspend-update, use `\\<helm-map>\\[helm-toggle-suspend-update]'.
 
-*** Setting up aliases in Eshell allows you to set up powerful customized commands
+*** Execute Eshell commands on files
+
+Setting up aliases in Eshell allows you to set up powerful customized commands.
 
 Adding Eshell aliases to your `eshell-aliases-file' or using the
 `alias' command from Eshell allows you to create personalized
@@ -716,6 +718,10 @@ With a prefix argument however it will apply `example' on all files at once:
 $ example foo bar baz
 
 Of course the alias command should support this.
+
+If you add %s to the command line %s will be replaced with the candidate, this mean you can
+add extra argument to your command e.g. command -extra-arg %s or command %s -extra-arg.
+If you want to pass many files inside %s, don't forget to use a prefix arg.
 
 *** Using TRAMP with `helm-find-files' to read remote directories
 
@@ -952,7 +958,7 @@ with trash-list until you log in as root.
 \\[helm-ff-run-find-alternate-file]\t\tFind alternate file.
 \\[helm-ff-run-insert-org-link]\t\tInsert org link.
 \\[helm-ff-bookmark-set]\t\tSet bookmark to current directory.
-\\[helm-find-files-toggle-to-bookmark]\t\tJump to bookmark list.
+\\[helm-find-files-switch-to-bookmark]\t\tJump to bookmark list.
 \\[helm-ff-sort-alpha]\t\tSort alphabetically
 \\[helm-ff-sort-by-newest]\t\tSort by newest
 \\[helm-ff-sort-by-size]\t\tSort by size")
@@ -1437,10 +1443,10 @@ marking defun will be used when `helm-source-occur' is member of
 See [[Moving in `helm-buffer'][Moving in `helm-buffer']].
 
 ** Commands
-\\<helm-moccur-map>
+\\<helm-occur-map>
 \\[helm-occur-run-goto-line-ow]\t\tGo to line in other window.
-\\[helm-occur-run-goto-line-of]\t\tGo to line in new frame.")
-
+\\[helm-occur-run-goto-line-of]\t\tGo to line in new frame.
+\\[helm-occur-run-save-buffer]\t\tSave results in new buffer.")
 ;;; Helm Top
 ;;
 ;;

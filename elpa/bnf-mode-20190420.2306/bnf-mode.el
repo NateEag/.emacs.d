@@ -4,13 +4,12 @@
 
 ;; Author: Serghei Iakovlev <sadhooklay@gmail.com>
 ;; Maintainer: Serghei Iakovlev
-;; Version: 0.3.2
-;; Package-Version: 20190408.1617
+;; Version: 0.4.1
 ;; URL: https://github.com/sergeyklay/bnf-mode
 ;; Keywords: languages
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24.3"))
 
-;; This file is not part of GNU Emacs.
+;; This file is NOT part of GNU Emacs.
 
 ;;; License
 
@@ -90,16 +89,14 @@
 
 (eval-when-compile
   (defconst bnf-rx-constituents
-    `(
-      (bnf-rule-name . ,(rx
-                         (and
-                          (1+ (or alnum digit))
-                          (0+ (or alnum digit
-                                  (in "!\"\#$%&'()*+,\-./:;=?@\[\\\]^_`{|}~")
-                                  (in " \t"))))))
+    `((bnf-rule-name . ,(rx (and
+                             (1+ (or alnum digit))
+                             (0+ (or alnum digit
+                                     (in "!\"\#$%&'()*+,\-./:;=?@\[\\\]^_`{|}~")
+                                     (in " \t"))))))
     "Additional special sexps for `bnf-rx'."))
 
-  (defmacro bnf-rx (&rest sexps)
+  (cl-defmacro bnf-rx (&rest sexps)
      "BNF-specific replacement for `rx'.
 
 In addition to the standard forms of `rx', the following forms
@@ -157,7 +154,7 @@ See `rx' documentation for more information about REGEXPS param."
   "Font lock BNF keywords for BNF Mode.")
 
 
-;;; Initialization
+;;; Syntax
 
 (defvar bnf-mode-syntax-table
   (let ((table (make-syntax-table)))
@@ -171,11 +168,11 @@ See `rx' documentation for more information about REGEXPS param."
     (modify-syntax-entry ?\=  "_"   table)
     ;; Treat | as a symbol
     (modify-syntax-entry ?\|  "_"   table)
-    ;; In the BNF there are no strings
+    ;; In BNF there are no strings
     ;; so treat ' and " as a symbols
     (modify-syntax-entry ?\"  "_"  table)
     (modify-syntax-entry ?\'  "_"  table)
-    ;; In the BNF there are no grouping
+    ;; In BNF there are no grouping
     ;; brackets except angle ones
     (modify-syntax-entry ?\(  "_"  table)
     (modify-syntax-entry ?\)  "_"  table)
@@ -189,11 +186,37 @@ See `rx' documentation for more information about REGEXPS param."
     table)
   "Syntax table in use in `bnf-mode' buffers.")
 
+(defun bnf--syntax-propertize (start end)
+  "Apply syntax table properties to special constructs in region START to END.
+Currently handled:
+
+ - Fontify terminals with ';' character correctly"
+  (save-excursion
+    (goto-char start)
+    ;; Search for terminals like "<abc;>" or "<a;bc>".
+    ;; Does not work for terminals like "<a;bc;>".
+    (while (re-search-forward "\\(?:<[^>]*\\);" end t)
+      (when (looking-at "\\(?:[^>]\\)*>")
+        ;; Mark the ";" character as an extra character used in terminals
+        ;; along with word constituents.
+        (put-text-property (1- (point)) (point)
+                           'syntax-table (string-to-syntax "_"))))))
+
+
+;;; Initialization
+
 ;;;###autoload
 (define-derived-mode bnf-mode prog-mode "BNF"
   "A major mode for editing BNF grammars."
   :syntax-table bnf-mode-syntax-table
   :group 'bnf-mode
+  ;; Comments setup.
+  (setq-local comment-use-syntax nil)
+  (setq-local comment-start "; ")
+  (setq-local comment-end "")
+  (setq-local comment-start-skip "\\(?:\\(\\W\\|^\\);+\\)\\s-*")
+  ;; Tune up syntax `syntax-table'
+  (setq-local syntax-propertize-function #'bnf--syntax-propertize)
   ;; Font locking
   (setq font-lock-defaults
         '(
@@ -206,8 +229,7 @@ See `rx' documentation for more information about REGEXPS param."
           ;; all refer to the same rule.  As far as is known, this doesn't
           ;; conflict with original BNF version
           ;; (see URL `https://tools.ietf.org/html/rfc5234')
-          t
-          )))
+          t)))
 
 ;; Invoke bnf-mode when appropriate
 

@@ -407,10 +407,12 @@ If `transient-save-history' is nil, then do nothing."
    (scope       :initarg :scope       :initform nil)
    (history     :initarg :history     :initform nil)
    (history-pos :initarg :history-pos :initform 0)
+   (history-key :initarg :history-key :initform nil)
    (man-page    :initarg :man-page    :initform nil)
    (info-manual :initarg :info-manual :initform nil)
    (transient-suffix     :initarg :transient-suffix     :initform nil)
-   (transient-non-suffix :initarg :transient-non-suffix :initform nil))
+   (transient-non-suffix :initarg :transient-non-suffix :initform nil)
+   (incompatible         :initarg :incompatible         :initform nil))
   "Transient prefix command.
 
 Each transient prefix command consists of a command, which is
@@ -1549,7 +1551,7 @@ EDIT may be non-nil."
   (setq current-transient-prefix transient--prefix)
   (setq current-transient-command (oref transient--prefix command))
   (setq current-transient-suffixes transient--suffixes)
-  (transient--history-push))
+  (transient--history-push transient--prefix))
 
 (defun transient--minibuffer-setup ()
   (transient--debug 'minibuffer-setup)
@@ -1928,7 +1930,7 @@ For transients that are used to pass arguments to a subprosess
 separates non-positional arguments from positional arguments.
 The value of Magit's file argument for example looks like this:
 \(\"--\" file...)."
-  (let ((val (if (and (transient-prefix--eieio-childp prefix))
+  (let ((val (if (transient-prefix--eieio-childp prefix)
                  (delq nil (mapcar 'transient-infix-value
                                    transient--suffixes))
                (and (or (not prefix)
@@ -2171,6 +2173,8 @@ prompt."
 
 ;;;; Set
 
+(defvar transient--unset-incompatible t)
+
 (cl-defgeneric transient-infix-set (obj value)
   "Set the value of infix object OBJ to value.")
 
@@ -2178,12 +2182,31 @@ prompt."
   "Set the value of infix object OBJ to value.
 
 This implementation should be suitable for almost all infix
-commands.  It simply calls `oset'."
+commands."
   (oset obj value value))
+
+(cl-defmethod transient-infix-set :around ((obj transient-argument) value)
+  "Unset incompatible infix arguments."
+  (let ((arg (if (slot-boundp obj 'argument)
+                 (oref obj argument)
+               (oref obj argument-regexp))))
+    (if-let ((sic (and value arg transient--unset-incompatible))
+             (spec (oref transient--prefix incompatible))
+             (incomp (remove arg (cl-find-if (lambda (elt) (member arg elt)) spec))))
+        (progn
+          (cl-call-next-method obj value)
+          (dolist (arg incomp)
+            (when-let ((obj (cl-find-if (lambda (obj)
+                                          (and (slot-boundp obj 'argument)
+                                               (equal (oref obj argument) arg)))
+                                        transient--suffixes)))
+              (let ((transient--unset-incompatible nil))
+                (transient-infix-set obj nil)))))
+      (cl-call-next-method obj value))))
 
 (cl-defmethod transient-set-value ((obj transient-prefix))
   (oset (oref obj prototype) value (transient-args))
-  (transient--history-push))
+  (transient--history-push obj))
 
 ;;;; Save
 
@@ -2192,7 +2215,7 @@ commands.  It simply calls `oset'."
     (oset (oref obj prototype) value value)
     (setf (alist-get (oref obj command) transient-values) value)
     (transient-save-values))
-  (transient--history-push))
+  (transient--history-push obj))
 
 ;;;; Use
 
@@ -2253,24 +2276,31 @@ which is not the same as nil."
 
 ;;; History
 
-(defun transient--history-push (&optional slot)
-  (unless slot
-    (setq slot (oref transient--prefix command)))
-  (setf (alist-get slot transient-history)
-        (let ((args (transient-args)))
-          (cons args (delete args (alist-get slot transient-history))))))
+(cl-defgeneric transient--history-key (obj)
+  "Return OBJ's history key.
+If the value of the `history-key' slot is non-nil, then return
+that.  Otherwise return the value of the `command' slot."
+  (or (oref obj history-key)
+      (oref obj command)))
+
+(cl-defgeneric transient--history-push (obj)
+  "Push the current value of OBJ to its entry in `transient-history'."
+  (let ((key (transient--history-key obj)))
+    (setf (alist-get key transient-history)
+          (let ((args (transient-args)))
+            (cons args (delete args (alist-get key transient-history)))))))
 
 (cl-defgeneric transient--history-init (obj)
-  "Initialize OBJ's `value' slot.
+  "Initialize OBJ's `history' slot.
 This is the transient-wide history; many individual infixes also
 have a history of their own.")
 
 (cl-defmethod transient--history-init ((obj transient-prefix))
-  "Initialize OBJ's `value' slot from the variable `transient-history'."
-  (let ((val (oref obj value))
-        (cmd (oref obj command)))
+  "Initialize OBJ's `history' slot from the variable `transient-history'."
+  (let ((val (oref obj value)))
     (oset obj history
-          (cons val (delete val (alist-get cmd transient-history))))))
+          (cons val (delete val (alist-get (transient--history-key obj)
+                                           transient-history))))))
 
 ;;; Draw
 

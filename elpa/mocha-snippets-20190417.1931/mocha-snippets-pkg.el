@@ -1,4 +1,4 @@
-(define-package "mocha-snippets" "20170104.527" "Yasnippets for the Mocha JS Testing Framework"
+(define-package "mocha-snippets" "20190417.1931" "Yasnippets for the Mocha JS Testing Framework"
   '((yasnippet "0.8.0"))
   :keywords
   '("test" "javascript")

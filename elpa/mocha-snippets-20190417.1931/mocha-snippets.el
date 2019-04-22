@@ -71,7 +71,7 @@ choose."
   :type 'string
   :group 'mocha-snippets)
 
-(defcustom mocha-snippets-use-fat-arrows nil
+(defcustom mocha-snippets-use-fat-arrows t
   "Use ES6 ()=> syntax for function declarations if non-nil."
   :type 'boolean
   :group 'mocha-snippets
@@ -97,7 +97,7 @@ E.g.
   (let ((params (if (not params) "" params))
         (space (if mocha-snippets-add-space-after-function-keyword " " "")))
       (if mocha-snippets-use-fat-arrows
-          (format  "(%s)%s=>" params space)
+          (format  "(%s) =>" params)
         (format "function%s(%s)" space params))))
 
 (provide 'mocha-snippets)

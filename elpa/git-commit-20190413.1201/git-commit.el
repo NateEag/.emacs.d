@@ -12,7 +12,7 @@
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 
 ;; Package-Requires: ((emacs "25.1") (dash "20180910") (with-editor "20181103"))
-;; Package-Version: 20190319.2352
+;; Package-Version: 20190413.1201
 ;; Keywords: git tools vc
 ;; Homepage: https://github.com/magit/magit
 
@@ -540,7 +540,8 @@ This is only used if Magit is available."
     (goto-char (point-min))
     (when (looking-at "\\`\\(\\'\\|\n[^\n]\\)")
       (open-line 1)))
-  (run-hooks 'git-commit-setup-hook)
+  (with-demoted-errors "Error running git-commit-setup-hook: %S"
+    (run-hooks 'git-commit-setup-hook))
   (set-buffer-modified-p nil))
 
 (defun git-commit-run-post-finish-hook (previous)

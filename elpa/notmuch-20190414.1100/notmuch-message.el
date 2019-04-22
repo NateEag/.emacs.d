@@ -23,7 +23,6 @@
 
 (require 'message)
 (require 'notmuch-tag)
-(require 'notmuch-mua)
 
 (defcustom notmuch-message-replied-tags '("+replied")
   "List of tag changes to apply to a message when it has been replied to.
@@ -34,18 +33,39 @@ will be removed from the message being replied to.
 
 For example, if you wanted to add a \"replied\" tag and remove
 the \"inbox\" and \"todo\" tags, you would set:
-    (\"+replied\" \"-inbox\" \"-todo\"\)"
+    (\"+replied\" \"-inbox\" \"-todo\")"
   :type '(repeat string)
   :group 'notmuch-send)
 
-(defun notmuch-message-mark-replied ()
-  ;; get the in-reply-to header and parse it for the message id.
-  (let ((rep (mail-header-parse-addresses (message-field-value "In-Reply-To"))))
-    (when (and notmuch-message-replied-tags rep)
-      (notmuch-tag (notmuch-id-to-query (car (car rep)))
-	       (notmuch-tag-change-list notmuch-message-replied-tags)))))
+(defcustom notmuch-message-forwarded-tags '("+forwarded")
+  "List of tag changes to apply to a message when it has been forwarded.
 
-(add-hook 'message-send-hook 'notmuch-message-mark-replied)
+Tags starting with \"+\" (or not starting with either \"+\" or
+\"-\") in the list will be added, and tags starting with \"-\"
+will be removed from the message being forwarded.
+
+For example, if you wanted to add a \"forwarded\" tag and remove
+the \"inbox\" tag, you would set:
+    (\"+forwarded\" \"-inbox\")"
+  :type '(repeat string)
+  :group 'notmuch-send)
+
+(defconst notmuch-message-queued-tag-changes nil
+  "List of messages and corresponding tag-changes to be applied when sending a message.
+
+This variable is overridden by buffer-local versions in message
+buffers where tag changes should be triggered when sending off
+the message.  Each item in this list is a list of strings, where
+the first is a notmuch query and the rest are the tag changes to
+be applied to the matching messages.")
+
+(defun notmuch-message-apply-queued-tag-changes ()
+  ;; Apply the tag changes queued in the buffer-local variable notmuch-message-queued-tag-changes.
+  (dolist (query-and-tags notmuch-message-queued-tag-changes)
+    (notmuch-tag (car query-and-tags)
+		 (cdr query-and-tags))))
+
+(add-hook 'message-send-hook 'notmuch-message-apply-queued-tag-changes)
 
 (provide 'notmuch-message)
 

@@ -28,6 +28,7 @@
 (require 'notmuch-lib)
 (require 'notmuch-address)
 (require 'notmuch-draft)
+(require 'notmuch-message)
 
 (eval-when-compile (require 'cl))
 
@@ -259,6 +260,11 @@ Typically this is added to `notmuch-mua-send-hook'."
 			    (notmuch-headers-plist-to-alist reply-headers)
 			    nil (notmuch-mua-get-switch-function))))
 
+      ;; Create a buffer-local queue for tag changes triggered when sending the reply
+      (when notmuch-message-replied-tags
+	(setq-local notmuch-message-queued-tag-changes
+		    (list (cons query-string notmuch-message-replied-tags))))
+
       ;; Insert the message body - but put it in front of the signature
       ;; if one is present, and after any other content
       ;; message*setup-hooks may have added to the message body already.
@@ -470,8 +476,10 @@ the From: address."
   (let* ((other-headers
 	  (when (or prompt-for-sender notmuch-always-prompt-for-sender)
 	    (list (cons 'From (notmuch-mua-prompt-for-sender)))))
-	 forward-subject) ;; Comes from the first message and is
+	 forward-subject  ;; Comes from the first message and is
 			  ;; applied later.
+	 forward-references ;; List of accumulated message-references of forwarded messages
+	 forward-queries) ;; List of corresponding message-query
 
     ;; Generate the template for the outgoing message.
     (notmuch-mua-mail nil "" other-headers nil (notmuch-mua-get-switch-function))
@@ -489,7 +497,9 @@ the From: address."
 		  ;; Because we process the messages in reverse order,
 		  ;; always generate a forwarded subject, then use the
 		  ;; last (i.e. first) one.
-		  (setq forward-subject (message-make-forward-subject)))
+		  (setq forward-subject (message-make-forward-subject))
+		  (push (message-fetch-field "Message-ID") forward-references)
+		  (push id forward-queries))
 		;; Make a copy ready to be forwarded in the
 		;; composition buffer.
 		(message-forward-make-body temp-buffer)
@@ -503,7 +513,18 @@ the From: address."
       (save-restriction
 	(message-narrow-to-headers)
 	(message-remove-header "Subject")
-	(message-add-header (concat "Subject: " forward-subject)))
+	(message-add-header (concat "Subject: " forward-subject))
+	(message-remove-header "References")
+	(message-add-header (concat "References: "
+				    (mapconcat 'identity forward-references " "))))
+
+      ;; Create a buffer-local queue for tag changes triggered when sending the message
+      (when notmuch-message-forwarded-tags
+	(setq-local notmuch-message-queued-tag-changes
+		    (loop for id in forward-queries
+			  collect
+			  (cons id
+				notmuch-message-forwarded-tags))))
 
       ;; `message-forward-make-body' shows the User-agent header.  Hide
       ;; it again.

@@ -1,10 +1,19 @@
 ;;; polymode-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "polymode" "polymode.el" (23723 15723 806353
-;;;;;;  7000))
+;;;### (autoloads nil "poly-lock" "poly-lock.el" (0 0 0 0))
+;;; Generated autoloads from poly-lock.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "poly-lock" '("poly-lock-")))
+
+;;;***
+
+;;;### (autoloads nil "polymode" "polymode.el" (0 0 0 0))
 ;;; Generated autoloads from polymode.el
 
 (autoload 'define-polymode "polymode" "\
@@ -77,10 +86,34 @@ most frequently used slots are:
 
 (function-put 'define-polymode 'doc-string-elt '3)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "polymode" '("pm-" "poly")))
+
 ;;;***
 
-;;;### (autoloads nil "polymode-core" "polymode-core.el" (23723 15723
-;;;;;;  810966 703000))
+;;;### (autoloads nil "polymode-base" "polymode-base.el" (0 0 0 0))
+;;; Generated autoloads from polymode-base.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "polymode-base" '("poly-")))
+
+;;;***
+
+;;;### (autoloads nil "polymode-classes" "polymode-classes.el" (0
+;;;;;;  0 0 0))
+;;; Generated autoloads from polymode-classes.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "polymode-classes" '("pm-")))
+
+;;;***
+
+;;;### (autoloads nil "polymode-compat" "polymode-compat.el" (0 0
+;;;;;;  0 0))
+;;; Generated autoloads from polymode-compat.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "polymode-compat" '("pm-" "polymode-" "*span*")))
+
+;;;***
+
+;;;### (autoloads nil "polymode-core" "polymode-core.el" (0 0 0 0))
 ;;; Generated autoloads from polymode-core.el
 
 (defvar-local polymode-default-inner-mode nil "\
@@ -126,10 +159,12 @@ key-value pairs. See the documentation of the class
 
 (function-put 'define-auto-innermode 'doc-string-elt '3)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "polymode-core" '("polymode-" "*span*")))
+
 ;;;***
 
-;;;### (autoloads nil "polymode-debug" "polymode-debug.el" (23723
-;;;;;;  15723 800770 763000))
+;;;### (autoloads nil "polymode-debug" "polymode-debug.el" (0 0 0
+;;;;;;  0))
 ;;; Generated autoloads from polymode-debug.el
 
 (autoload 'pm-debug-minor-mode "polymode-debug" "\
@@ -187,12 +222,44 @@ Print values of relevant hooks and other variables.
 
 \(fn)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "polymode-debug" '("pm-")))
+
 ;;;***
 
-;;;### (autoloads nil nil ("poly-lock.el" "polymode-base.el" "polymode-classes.el"
-;;;;;;  "polymode-compat.el" "polymode-export.el" "polymode-methods.el"
-;;;;;;  "polymode-pkg.el" "polymode-tangle.el" "polymode-test-utils.el"
-;;;;;;  "polymode-weave.el") (23723 15723 812549 458000))
+;;;### (autoloads nil "polymode-export" "polymode-export.el" (0 0
+;;;;;;  0 0))
+;;; Generated autoloads from polymode-export.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "polymode-export" '("pm-" "poly")))
+
+;;;***
+
+;;;### (autoloads nil "polymode-methods" "polymode-methods.el" (0
+;;;;;;  0 0 0))
+;;; Generated autoloads from polymode-methods.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "polymode-methods" '("pm-")))
+
+;;;***
+
+;;;### (autoloads nil "polymode-test-utils" "polymode-test-utils.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from polymode-test-utils.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "polymode-test-utils" '("pm-")))
+
+;;;***
+
+;;;### (autoloads nil "polymode-weave" "polymode-weave.el" (0 0 0
+;;;;;;  0))
+;;; Generated autoloads from polymode-weave.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "polymode-weave" '("pm-" "polymode-")))
+
+;;;***
+
+;;;### (autoloads nil nil ("polymode-pkg.el" "polymode-tangle.el")
+;;;;;;  (0 0 0 0))
 
 ;;;***
 
@@ -200,5 +267,6 @@ Print values of relevant hooks and other variables.
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; polymode-autoloads.el ends here

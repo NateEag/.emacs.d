@@ -61,30 +61,36 @@ Ran by the polymode mode function."
             pm/type nil)
       (pm--common-setup)
       ;; Initialize innermodes
-      (let* ((inner-syms (delete-dups
-                          (delq :inherit
-                                (apply #'append
-                                       (pm--collect-parent-slots
-                                        config 'innermodes
-                                        (lambda (obj) (memq :inherit (eieio-oref obj 'innermodes)))))))))
-        (oset config -innermodes
-              (mapcar (lambda (sub-name)
-                        (clone (symbol-value sub-name)))
-                      inner-syms)))
+      (pm--initialize-innermodes config)
       ;; FIXME: must go into polymode-compat.el
       (add-hook 'flyspell-incorrect-hook
                 'pm--flyspel-dont-highlight-in-chunkmodes nil t))
     (pm--run-init-hooks hostmode 'host 'polymode-init-host-hook)))
 
+(defun pm--initialize-innermodes (config)
+  (let ((inner-syms (delete-dups
+                     (delq :inherit
+                           (apply #'append
+                                  (pm--collect-parent-slots
+                                   config 'innermodes
+                                   (lambda (obj)
+                                     (memq :inherit
+                                           (eieio-oref obj 'innermodes)))))))))
+    (oset config -innermodes
+          (mapcar (lambda (sub-name)
+                    (clone (symbol-value sub-name)))
+                  inner-syms))))
+
 (cl-defmethod pm-initialize ((chunkmode pm-inner-chunkmode) &optional type mode)
   "Initialization of chunkmode (indirect) buffers."
   ;; run in chunkmode indirect buffer
   (setq mode (or mode (pm--get-innermode-mode chunkmode type)))
-  (let ((pm-initialization-in-progress t)
-        (new-name  (generate-new-buffer-name
-                    (format "%s[%s]" (buffer-name (pm-base-buffer))
-                            (replace-regexp-in-string "poly-\\|-mode" ""
-                                                      (symbol-name mode))))))
+  (let* ((pm-initialization-in-progress t)
+         (post-fix (replace-regexp-in-string "poly-\\|-mode" "" (symbol-name mode)))
+         (new-name  (generate-new-buffer-name
+                     (format "%s[%s]" (buffer-name (pm-base-buffer))
+                             (or (cdr (assoc post-fix polymode-mode-abbrev-aliases))
+                                 post-fix)))))
     (rename-buffer new-name)
     (pm--mode-setup mode)
     (pm--move-vars '(pm/polymode buffer-file-coding-system) (pm-base-buffer))
@@ -220,14 +226,16 @@ Create and initialize the buffer if does not exist yet.")
       (let ((new-buff (pm--get-innermode-buffer-create chunkmode type)))
         (pm--set-innermode-buffer chunkmode type new-buff)))))
 
-(defun pm--get-innermode-buffer-create (chunkmode type)
+(defun pm--get-innermode-buffer-create (chunkmode type &optional force-new)
   (let ((mode (pm--get-innermode-mode chunkmode type)))
     (or
-     ;; 1. look through existent buffer list
-     (cl-loop for bf in (eieio-oref pm/polymode '-buffers)
-              when (and (buffer-live-p bf)
-                        (eq mode (buffer-local-value 'major-mode bf)))
-              return bf)
+     ;; 1. search through the existing buffer list
+     (unless force-new
+       (cl-loop for bf in (eieio-oref pm/polymode '-buffers)
+                when (let ((out (and (buffer-live-p bf)
+                                     (eq mode (buffer-local-value 'major-mode bf)))))
+                       out)
+                return bf))
      ;; 2. create new
      (with-current-buffer (pm-base-buffer)
        (let* ((new-name (generate-new-buffer-name (buffer-name)))
@@ -235,6 +243,19 @@ Create and initialize the buffer if does not exist yet.")
          (with-current-buffer new-buffer
            (pm-initialize chunkmode type mode))
          new-buffer)))))
+
+(defun pm-get-buffer-of-mode (mode)
+  (let ((mode (pm--true-mode-symbol mode)))
+    (or
+     ;; 1. search through the existing buffer list
+     (cl-loop for bf in (eieio-oref pm/polymode '-buffers)
+              when (and (buffer-live-p bf)
+                        (eq mode (buffer-local-value 'major-mode bf)))
+              return bf)
+     ;; 2. create new if body mode matched
+     (cl-loop for imode in (eieio-oref pm/polymode '-innermodes)
+              when (eq mode (eieio-oref imode 'mode))
+              return (pm--get-innermode-buffer-create imode 'body 'force)))))
 
 (defun pm--set-innermode-buffer (obj type buff)
   "Assign BUFF to OBJ's slot(s) corresponding to TYPE."
@@ -318,7 +339,7 @@ in this case."
                             (match-string-no-properties (cdr matcher)))
                            ((functionp matcher)
                             (funcall matcher)))))
-             (mode (pm-get-mode-symbol-from-name str (eieio-oref proto 'mode))))
+             (mode (pm-get-mode-symbol-from-name str (eieio-oref proto 'fallback-mode))))
         (if (eq mode 'host)
             (progn (setf (nth 3 span) (oref pm/polymode -hostmode))
                    span)

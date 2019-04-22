@@ -62,15 +62,29 @@
             (move-overlay ledger-xact-highlight-overlay b (+ 1 e))
           (move-overlay ledger-xact-highlight-overlay 1 1))))))
 
-(defun ledger-xact-payee ()
-  "Return the payee of the transaction containing point or nil."
+(defun ledger-xact-context ()
+  "Return the context of the transaction containing point or nil."
   (let ((i 0))
     (while (eq (ledger-context-line-type (ledger-context-other-line i)) 'acct-transaction)
       (setq i (- i 1)))
     (let ((context-info (ledger-context-other-line i)))
       (if (eq (ledger-context-line-type context-info) 'xact)
-          (ledger-context-field-value context-info 'payee)
+          context-info
         nil))))
+
+(defun ledger-xact-payee ()
+  "Return the payee of the transaction containing point or nil."
+  (let ((xact-context (ledger-xact-context)))
+    (if xact-context
+        (ledger-context-field-value xact-context 'payee)
+      nil)))
+
+(defun ledger-xact-date ()
+  "Return the date of the transaction containing point or nil."
+  (let ((xact-context (ledger-xact-context)))
+    (if xact-context
+        (ledger-context-field-value xact-context 'date)
+      nil)))
 
 (defun ledger-time-less-p (t1 t2)
   "Say whether time value T1 is less than time value T2."
@@ -154,12 +168,15 @@ MOMENT is an encoded date"
 
 (defun ledger-read-transaction ()
   "Read the text of a transaction, which is at least the current date."
-  (let ((reference-date (or ledger-add-transaction-last-date (current-time))))
-    (read-string
-     "Transaction: "
-     ;; Pre-fill year and month, but not day: this assumes DD is the last format arg.
-     (ledger-format-date reference-date)
-     'ledger-minibuffer-history)))
+  (let* ((reference-date (or ledger-add-transaction-last-date (current-time)))
+         (full-date-string (ledger-format-date reference-date))
+         ;; Pre-fill year and month, but not day: this assumes DD is the last format arg.
+         (initial-string (replace-regexp-in-string "[0-9]+$" "" full-date-string))
+         (entered-string (read-string "Transaction: "
+                                      initial-string 'ledger-minibuffer-history)))
+    (if (string= initial-string entered-string)
+        full-date-string
+      entered-string)))
 
 (defun ledger-parse-iso-date (date)
   "Try to parse DATE using `ledger-iso-date-regexp' and return a time value or nil."
@@ -200,8 +217,8 @@ correct chronological place in the buffer."
              (buffer-string))
            separator))
       (progn
-        (insert (car args) " \n" separator)
-        (end-of-line -1)))))
+        (insert (car args) " ")
+        (save-excursion (insert "\n" separator))))))
 
 (provide 'ledger-xact)
 

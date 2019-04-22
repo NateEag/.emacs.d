@@ -207,7 +207,7 @@
 		      ((:url . "https://github.com/cpitclaudel/compact-docstrings")
 		       (:keywords "convenience" "faces" "lisp" "maint" "c"))])
  (company .
-	  [(0 9 9)
+	  [(0 9 10)
 	   ((emacs
 	     (24 3)))
 	   "Modular text completion framework" tar
@@ -376,7 +376,7 @@
 	     ((:keywords "killing" "convenience")
 	      (:url . "https://github.com/leoliu/easy-kill"))])
  (ebdb .
-       [(0 6 6)
+       [(0 6 7)
 	((emacs
 	  (25 1))
 	 (cl-lib
@@ -1096,9 +1096,9 @@
 		 ((:url . "http://elpa.gnu.org/packages/register-list.html")
 		  (:keywords "register"))])
  (relint .
-	 [(1 6)
+	 [(1 7)
 	  ((xr
-	    (1 10)))
+	    (1 11)))
 	  "Elisp regexp mistake finder" single
 	  ((:url . "https://github.com/mattiase/relint")
 	   (:keywords "lisp" "maint" "regexps"))])
@@ -1157,6 +1157,10 @@
 	     nil "Major mode for SiSU markup text" single
 	     ((:url . "http://www.sisudoc.org/")
 	      (:keywords "text" "syntax" "processes" "tools"))])
+ (smalltalk-mode .
+		 [(3 2 92)
+		  nil "Major mode for the GNU Smalltalk programming language" tar
+		  ((:url . "http://elpa.gnu.org/packages/smalltalk-mode.html"))])
  (smart-yank .
 	     [(0 1 1)
 	      ((emacs
@@ -1209,10 +1213,10 @@
 	      ((:keywords "languages" "sql")
 	       (:url . "http://elpa.gnu.org/packages/sql-indent.html"))])
  (ssh-deploy .
-	     [(3 0)
+	     [(3 1)
 	      ((emacs
-		(24)))
-	      "Deployment via TRAMP, global or per directory." tar
+		(25)))
+	      "Deployment via Tramp, global or per directory." tar
 	      ((:keywords "tools" "convenience")
 	       (:url . "https://github.com/cjohansson/emacs-ssh-deploy"))])
  (stream .
@@ -1450,7 +1454,7 @@
        ((:keywords "multimedia" "xpm")
 	(:url . "http://www.gnuvola.org/software/xpm/"))])
  (xr .
-     [(1 10)
+     [(1 11)
       nil "Convert string regexp to rx notation" tar
       ((:keywords "lisp" "maint" "regexps")
        (:url . "https://github.com/mattiase/xr"))])

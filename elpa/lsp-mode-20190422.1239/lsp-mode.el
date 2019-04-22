@@ -4,9 +4,10 @@
 
 ;; Author: Vibhav Pant, Fangrui Song, Ivan Yonchovski
 ;; Keywords: languages
-;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (dash-functional "2.14.1") (f "0.20.0") (ht "2.0") (spinner "1.7.3"))
+;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (dash-functional "2.14.1") (f "0.20.0") (ht "2.0") (spinner "1.7.3") (markdown-mode "2.3"))
 ;; Version: 6.0
 
+;; URL: https://github.com/emacs-lsp/lsp-mode
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
 ;; the Free Software Foundation, either version 3 of the License, or
@@ -52,6 +53,7 @@
 (require 'widget)
 (require 'xref)
 (require 'tree-widget)
+(require 'markdown-mode)
 
 (declare-function company-mode "company")
 (declare-function flycheck-mode "flycheck")
@@ -462,10 +464,12 @@ If set to `:none' neither of two will be enabled."
 (defvar-local lsp--flymake-report-fn nil)
 
 (defvar lsp-language-id-configuration '((".*.vue" . "vue")
+                                        (".*.tsx" . "typescriptreact")
                                         (java-mode . "java")
                                         (python-mode . "python")
-                                        (gfm-view-mode . "markdown")
+                                        (lsp--render-markdown . "markdown")
                                         (rust-mode . "rust")
+                                        (rustic-mode . "rust")
                                         (kotlin-mode . "kotlin")
                                         (css-mode . "css")
                                         (less-mode . "less")
@@ -560,6 +564,11 @@ must be used for handling a particular message.")
   :type 'number
   :group 'lsp-mode)
 
+(defvar lsp-custom-markup-modes
+  '((rust-mode "no_run" "rust,no_run" "rust,ignore" "rust,should_panic"))
+  "Mode to uses with markdown code blocks.
+They are added to `markdown-code-lang-modes'")
+
 (defface lsp-lens-mouse-face
   '((t :height 0.8 :inherit link))
   "The face used for code lens overlays."
@@ -605,6 +614,16 @@ must be used for handling a particular message.")
   "Contain the `lsp-session' for the current Emacs instance.")
 
 (defvar lsp--tcp-port 10000)
+
+(defvar-local lsp--document-symbols nil
+  "The latest document symbols.")
+
+(defvar-local lsp--document-symbols-request-async nil
+  "If non-nil, request document symbols asynchronously.")
+
+(defvar-local lsp--document-symbols-tick -1
+  "The value of `buffer-chars-modified-tick' when document
+  symbols were last retrieved.")
 
 ;; Buffer local variable for storing number of lines.
 (defvar lsp--log-lines)
@@ -1661,6 +1680,33 @@ CALLBACK - callback for the lenses."
   :lighter (:eval (lsp-mode-line))
   :group 'lsp-mode)
 
+(easy-menu-define lsp-mode-menu lsp-mode-map
+  "Menu for lsp-mode."
+  '("LSP"
+    ["Describe current LSP session" lsp-describe-session]
+    ["Add folder to workspace" lsp-workspace-folders-add]
+    ["Remove folder from workspace" lsp-workspace-folders-remove]
+    ["Switch to another workspace folder" lsp-workspace-folders-switch]
+    "--"
+    ["Toggle Code Lenses" lsp-lens-mode]
+    "--"
+    ["Describe thing at point" lsp-describe-thing-at-point]
+    ["Execute code action" lsp-execute-code-action]
+    ["Format buffer" lsp-format-buffer]
+    ["Format current region or line" lsp-format-region]
+    ["Highlight references to symbol under point" lsp-document-highlight]
+    ["Rename symbol under point" lsp-rename]
+    "--"
+    ["Find declarations of symbol under point" lsp-find-declaration]
+    ["Find definitions of symbol" lsp-find-definition]
+    ["Find implementations of symbol under point" lsp-find-implementation]
+    ["Find references to symbol under point" lsp-find-references]
+    ["Find type definitions of symbol under point" lsp-find-type-definition]
+    "--"
+    ["Save logs for workspace" lsp-save-logs]
+    ["Shutdown language server" lsp-shutdown-workspace]
+    ["Restart language server" lsp-restart-workspace]))
+
 (defun lsp-mode-line ()
   "Construct the mode line text."
   (if-let (workspaces (lsp-workspaces))
@@ -1815,7 +1861,6 @@ If WORKSPACE is not provided current workspace will be used."
 
 (defun lsp--make-message (params)
   "Create a LSP message from PARAMS, after encoding it to a JSON string."
-  (lsp--cur-workspace-check)
   (let* ((json-encoding-pretty-print lsp-print-io)
          (json-false :json-false)
          (body (if (and lsp-use-native-json
@@ -2085,35 +2130,40 @@ disappearing, unset all the variables related to it."
 
 (defun lsp--client-capabilities ()
   "Return the client capabilites."
-  `(
-    :workspace (:workspaceEdit (
-                                :documentChanges t
-                                :resourceOperations ["create" "rename" "delete"])
-                               :applyEdit t
-                               :symbol (:symbolKind (:valueSet ,(apply 'vector (number-sequence 1 26))))
-                               :executeCommand (:dynamicRegistration :json-false)
-                               :didChangeWatchedFiles (:dynamicRegistration t)
-                               :workspaceFolders t
-                               :configuration t)
-    :textDocument (
-                   :declaration (:linkSupport t)
-                   :definition (:linkSupport t)
-                   :implementation (:linkSupport t)
-                   :typeDefinition (:linkSupport t)
-                   :synchronization (:willSave t :didSave t :willSaveWaitUntil t)
-                   :documentSymbol (:symbolKind (:valueSet ,(apply 'vector (number-sequence 1 26)))
-                                                :hierarchicalDocumentSymbolSupport t)
-                   :formatting (:dynamicRegistration t)
-                   :codeAction (:dynamicRegistration t)
-                   :completion (:completionItem (:snippetSupport ,(if lsp-enable-snippet t :json-false)))
-                   :signatureHelp (:signatureInformation (:parameterInformation (:labelOffsetSupport t)))
-                   :documentLink (:dynamicRegistration t)
-                   :hover (:contentFormat ["plaintext" "markdown"])
-                   :foldingRange ,(if lsp-enable-folding
-                                      (list :dynamicRegistration t
-                                            :rangeLimit lsp-folding-range-limit
-                                            :lineFoldingOnly lsp-folding-line-folding-only)
-                                    nil))))
+  `((workspace . ((workspaceEdit . ((documentChanges . t)
+                                    (resourceOperations . ["create" "rename" "delete"])))
+                  (applyEdit . t)
+                  (symbol . ((symbolKind . ((valueSet . ,(apply 'vector (number-sequence 1 26)))))))
+                  (executeCommand . ((dynamicRegistration . :json-false)))
+                  (didChangeWatchedFiles . ((dynamicRegistration . t)))
+                  (workspaceFolders . t)
+                  (configuration . t)))
+    (textDocument . ((declaration . ((linkSupport . t)))
+                     (definition . ((linkSupport . t)))
+                     (implementation . ((linkSupport . t)))
+                     (typeDefinition . ((linkSupport . t)))
+                     (synchronization . ((willSave . t) (didSave . t) (willSaveWaitUntil . t)))
+                     (documentSymbol . ((symbolKind . ((valueSet . ,(apply 'vector (number-sequence 1 26)))))
+                                        (hierarchicalDocumentSymbolSupport . t)))
+                     (formatting . ((dynamicRegistration . t)))
+                     (codeAction . ((dynamicRegistration . t)
+                                    (codeActionLiteralSupport . ((codeActionKind .
+                                                                                 ((valueSet . [""
+                                                                                               "quickfix"
+                                                                                               "refactor"
+                                                                                               "refactor.extract"
+                                                                                               "refactor.inline"
+                                                                                               "refactor.rewrite"
+                                                                                               "source"
+                                                                                               "source.organizeImports"])))))))
+                     (completion . ((completionItem . ((snippetSupport . ,(if lsp-enable-snippet t :json-false))))))
+                     (signatureHelp . ((signatureInformation . ((parameterInformation . ((labelOffsetSupport . t)))))))
+                     (documentLink . ((dynamicRegistration . t)))
+                     (hover . ((contentFormat . ["plaintext" "markdown"])))
+                     (foldingRange . ,(when lsp-enable-folding
+                                        `((dynamicRegistration . t)
+                                          (rangeLimit . ,lsp-folding-range-limit)
+                                          (lineFoldingOnly . ,lsp-folding-line-folding-only))))))))
 
 (defun lsp-find-roots-for-workspace (workspace session)
   "Get all roots for the WORKSPACE."
@@ -3130,6 +3180,46 @@ If INCLUDE-DECLARATION is non-nil, request the server to include declarations."
   (lambda (str)
     (lsp--render-string str language)))
 
+(defun lsp--setup-markdown (mode)
+  "Setup the ‘markdown-mode’ in the frame.
+MODE is the mode used in the parent frame."
+  (make-local-variable 'markdown-code-lang-modes)
+  (dolist (mark (alist-get mode lsp-custom-markup-modes))
+    (add-to-list 'markdown-code-lang-modes (cons mark mode)))
+  (setq-local markdown-fontify-code-blocks-natively t)
+  (setq-local markdown-fontify-code-block-default-mode mode)
+  (setq-local markdown-hide-markup t))
+
+(defun lsp--buffer-string-visible ()
+  "Return visible buffer string.
+Stolen from `org-copy-visible'."
+  (let ((result "")
+        (beg (point-min))
+        (end (point-max)))
+    (while (/= beg end)
+      (when (get-char-property beg 'invisible)
+        (setq beg (next-single-char-property-change beg 'invisible nil end)))
+      (let ((next (next-single-char-property-change beg 'invisible nil end)))
+        (setq result (concat result (buffer-substring beg next)))
+        (setq beg next)))
+    (setq deactivate-mark t)
+    (s-chop-suffix "\n" result)))
+
+(defun lsp--render-markdown ()
+  "Render markdown."
+
+  (goto-char (point-min))
+  (while (re-search-forward "&gt;" nil t)
+    (replace-match ">"))
+
+  (goto-char (point-min))
+
+  (while (re-search-forward "&lt;" nil t)
+    (replace-match "<"))
+
+  (gfm-view-mode)
+  (lsp--setup-markdown major-mode))
+
 (defun lsp--fontlock-with-mode (str mode)
   "Fontlock STR with MODE."
   (condition-case nil
@@ -3137,7 +3227,7 @@ If INCLUDE-DECLARATION is non-nil, request the server to include declarations."
         (insert str)
         (delay-mode-hooks (funcall mode))
         (font-lock-ensure)
-        (buffer-string))
+        (lsp--buffer-string-visible))
     (error str)))
 
 (defun lsp--render-string (str language)
@@ -3247,7 +3337,8 @@ RENDER-ALL - nil if only the signature should be rendered."
                      (setq lsp--eldoc-saved-message message)))))
              (when (zerop (cl-decf pending))
                (lsp--eldoc-message lsp--eldoc-saved-message))
-             (run-hook-with-args 'lsp-on-hover-hook hover)))))
+             (run-hook-with-args 'lsp-on-hover-hook hover)))
+         :error-handler #'ignore))
       (when (and lsp-eldoc-enable-signature-help (lsp--capability "signatureHelpProvider"))
         (cl-incf pending)
         (lsp-request-async
@@ -3260,7 +3351,8 @@ RENDER-ALL - nil if only the signature should be rendered."
                          (not lsp--eldoc-saved-message))
                  (setq lsp--eldoc-saved-message message)))
              (when (zerop (cl-decf pending))
-               (lsp--eldoc-message lsp--eldoc-saved-message)))))))))
+               (lsp--eldoc-message lsp--eldoc-saved-message))))
+         :error-handler #'ignore)))))
 
 (defun lsp--select-action (actions)
   "Select an action to execute from ACTIONS."
@@ -3293,6 +3385,15 @@ RENDER-ALL - nil if only the signature should be rendered."
 (defun lsp-code-actions-at-point ()
   "Retrieve the code actions for the active region or the current line."
   (lsp-request "textDocument/codeAction" (lsp--text-document-code-action-params)))
+
+(defun lsp-execute-code-action-by-kind (command-kind)
+  "Execute code action by name."
+  (if-let (action (-first
+                   (-lambda ((&hash "kind"))
+                     (equal command-kind kind))
+                   (lsp-get-or-calculate-code-actions)))
+      (lsp-execute-code-action action)
+    (user-error "No to action")))
 
 (defalias 'lsp-get-or-calculate-code-actions 'lsp-code-actions-at-point)
 
@@ -3491,8 +3592,38 @@ A reference is highlighted only if it is visible in a window."
                 'def-params td-params)))
 
 (defun lsp--get-document-symbols ()
-  (lsp-request "textDocument/documentSymbol"
-               `(:textDocument ,(lsp--text-document-identifier))))
+  "Get document symbols.
+
+If the buffer has not been modified since symbols were last
+retrieved, simply return the latest result.
+
+Else, if the request was initiated by Imenu updating its menu-bar
+entry, perform it asynchronously; i.e., give Imenu the latest
+result and then force a refresh when a new one is available.
+
+Else (e.g., due to intereactive use of `imenu' or `xref'),
+perform the request synchronously."
+  (if (= (buffer-chars-modified-tick) lsp--document-symbols-tick)
+      lsp--document-symbols
+    (let ((method "textDocument/documentSymbol")
+	  (params `(:textDocument ,(lsp--text-document-identifier)))
+	  (tick (buffer-chars-modified-tick)))
+      (if (not lsp--document-symbols-request-async)
+	  (prog1
+	      (setq lsp--document-symbols (lsp-request method params))
+	    (setq lsp--document-symbols-tick tick))
+	(lsp-request-async method params
+			   (lambda (document-symbols)
+			     (setq lsp--document-symbols document-symbols
+				   lsp--document-symbols-tick tick)
+			     (lsp--imenu-refresh))
+			   :mode 'alive)
+	lsp--document-symbols))))
+
+(advice-add 'imenu-update-menubar :around
+	    (lambda (oldfun &rest r)
+	      (let ((lsp--document-symbols-request-async t))
+		(apply oldfun r))))
 
 (defun lsp--xref-backend () 'xref-lsp)
 
@@ -3794,7 +3925,7 @@ WORKSPACE is the active workspace."
     (setq key (substring s 0 pos)
           val (substring s (+ 2 pos)))
     (when (string-equal key "Content-Length")
-      (cl-assert (cl-loop for c being the elements of val
+      (cl-assert (cl-loop for c across val
                           when (or (> c ?9) (< c ?0)) return nil
                           finally return t)
                  nil (format "Invalid Content-Length value: %s" val)))
@@ -4004,11 +4135,11 @@ an alist
                     cons-cells-from-children))"
   (let* ((start-point (lsp--symbol-get-start-point sym))
          (name (gethash "name" sym)))
-    (if (gethash "children" sym)
-        (cons name
-              (cons (cons (format "(%s)" (lsp--get-symbol-type sym)) start-point)
-                    (lsp--imenu-create-hierarchical-index (gethash "children" sym))))
-      (cons (format "%s (%s)" name (lsp--get-symbol-type sym)) start-point))))
+    (if (seq-empty-p (gethash "children" sym))
+        (cons (format "%s (%s)" name (lsp--get-symbol-type sym)) start-point)
+      (cons name
+            (cons (cons (format "(%s)" (lsp--get-symbol-type sym)) start-point)
+                  (lsp--imenu-create-hierarchical-index (gethash "children" sym)))))))
 
 (defun lsp--symbol-get-start-point (sym)
   "Get the start point of the name of SYM.
@@ -4108,9 +4239,14 @@ Return a nested alist keyed by symbol names. e.g.
          (result (compare-strings name1 0 (length name1) name2 0 (length name2))))
     (if (numberp result) result 0)))
 
+(defun lsp--imenu-refresh ()
+  "Force Imenu to refresh itself."
+  (imenu--menubar-select imenu--rescan-item))
+
 (defun lsp-enable-imenu ()
   "Use lsp-imenu for the current buffer."
-  (setq-local imenu-create-index-function #'lsp--imenu-create-index))
+  (setq-local imenu-create-index-function #'lsp--imenu-create-index)
+  (lsp--imenu-refresh))
 
 (defun lsp-resolve-final-function (command)
   "Resolve final function COMMAND."
@@ -4123,7 +4259,7 @@ Return a nested alist keyed by symbol names. e.g.
   (or (and (cond
             ((not (file-remote-p default-directory))
              (executable-find (cl-first final-command)))
-            ((not (version<= emacs-version "26.1"))
+            ((not (version<= emacs-version "26.2"))
              (with-no-warnings (executable-find (cl-first final-command) (file-remote-p default-directory))))
             (t))
            (prog1 t
@@ -4521,6 +4657,11 @@ the path to the property, symbol is the defcustom symbol which
 will be used to retrieve the value and boolean determines whether
 the type of the property is boolean?"
   (setq lsp-client-settings (-uniq (append lsp-client-settings props))))
+
+(defun lsp-region-text (region)
+  "Get the text for REGION in current buffer."
+  (-let (((start . end) (lsp--range-to-region region)))
+    (buffer-substring-no-properties start end)))
 
 (defun lsp-ht-set (tbl paths value)
   "Set nested hashtable value.

@@ -5,7 +5,7 @@
 ;; Author: Andreas Politz <politza@fh-trier.de>
 ;; Keywords: extensions, lisp
 ;; Package: tablist
-;; Version: 0.80
+;; Version: 1.0
 ;; Package-Requires: ((emacs "24.3"))
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -1934,7 +1934,7 @@ the 0-th column as numbers by the less-than relation."
     (funcall compare-fn
              (funcall (or read-fn 'identity)
                       (aref (cadr e1) column))
-             (funcall read-fn
+             (funcall (or read-fn 'identity)
                       (aref (cadr e2) column)))))
 
 (provide 'tablist)

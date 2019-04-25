@@ -155,6 +155,12 @@
   logic that tries (and fails) to pick the right state based on whether a
   buffer has contents or not.
 
+
+- Auto-insert basic email template after exiting "To:" field. If it contains
+  one email address with the name, use first name. If it contains multiples,
+  say "Hi everyone".
+
+
 - Come up with a way to send emails and flag the newly-made thread as
   'watched'. Incident count: 4
 

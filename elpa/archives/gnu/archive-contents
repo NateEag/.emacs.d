@@ -339,7 +339,7 @@
 		  ((:url . "https://github.com/clemera/dired-git-info")
 		   (:keywords "dired" "files"))])
  (disk-usage .
-	     [(1 3 1)
+	     [(1 3 3)
 	      ((emacs
 		(26 1)))
 	      "Sort and browse disk usage listings" single

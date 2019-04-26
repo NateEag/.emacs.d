@@ -131,7 +131,7 @@
 	 ((:keywords "brief" "emulations" "crisp")
 	  (:url . "http://elpa.gnu.org/packages/brief.html"))])
  (buffer-expose .
-		[(0 4 1)
+		[(0 4 2)
 		 ((emacs
 		   (25))
 		  (cl-lib
@@ -410,7 +410,7 @@
 	     ((:url . "http://elpa.gnu.org/packages/ediprolog.html")
 	      (:keywords "languages" "processes"))])
  (eev .
-      [(20190401)
+      [(20190410)
        ((emacs
 	 (24 3)))
        "Support for e-scripts (eepitch blocks, elisp hyperlinks, etc)" tar
@@ -428,7 +428,7 @@
 	 ((:keywords "convenience" "languages")
 	  (:url . "https://github.com/joaotavora/eglot"))])
  (el-search .
-	    [(1 11 4)
+	    [(1 12 4)
 	     ((emacs
 	       (25))
 	      (stream
@@ -534,7 +534,7 @@
 	      ((:url . "http://elpa.gnu.org/packages/frame-tabs.html")
 	       (:keywords "frames" "tabs"))])
  (frog-menu .
-	    [(0 2 2)
+	    [(0 2 3)
 	     ((emacs
 	       (26))
 	      (avy
@@ -590,6 +590,11 @@
 	 "Glue code between Gnus, Org, and BBDB" tar
 	 ((:keywords "mail" "org" "gnus" "bbdb" "todo" "task")
 	  (:url . "http://elpa.gnu.org/packages/gnorb.html"))])
+ (gnu-elpa-keyring-update .
+			  [(2019 1)
+			   nil "Update Emacs's GPG keyring for GNU ELPA" tar
+			   ((:keywords "maint" "tools")
+			    (:url . "http://elpa.gnu.org/packages/gnu-elpa-keyring-update.html"))])
  (gnugo .
 	[(3 1 0)
 	 ((ascii-art-to-unicode
@@ -936,6 +941,13 @@
 	 "Navigate and edit text objects." tar
 	 ((:keywords "convenience")
 	  (:url . "https://github.com/clemera/objed"))])
+ (olivetti .
+	   [(1 7 0)
+	    ((emacs
+	      (24 5)))
+	    "Minor mode for a nice writing environment" single
+	    ((:url . "http://elpa.gnu.org/packages/olivetti.html")
+	     (:keywords "wp" "text"))])
  (omn-mode .
 	   [(1 2)
 	    nil "Support for OWL Manchester Notation" single

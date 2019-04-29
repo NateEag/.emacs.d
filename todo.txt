@@ -155,11 +155,14 @@
   logic that tries (and fails) to pick the right state based on whether a
   buffer has contents or not.
 
+- Set up a 'Stale questions' saved search in notmuch that shows me all
+  non-response emails I sent including a question mark in the body or subject
+  line that have received no replies and are more than a week old. The goal is
+  to have my email system let me know about threads I need to bump.
 
 - Auto-insert basic email template after exiting "To:" field. If it contains
   one email address with the name, use first name. If it contains multiples,
   say "Hi everyone".
-
 
 - Come up with a way to send emails and flag the newly-made thread as
   'watched'. Incident count: 4
@@ -169,12 +172,6 @@
 
   Update: I have just installed the 'network-watch' package from MELPA, so this
   should be just about trivial to do now.
-
-- Auto-resize embedded images in emails to fit in the current window. I've set
-  `mm-inline-large-images` to 'resize', which ought to do this job, but it
-  doesn't work for me because Emacs for OS X does not include ImageMagick
-  support, AFAICT (https://github.com/caldwell/build-emacs/issues/1). Try this
-  build, perhaps: https://github.com/renard/emacs-build-macosx
 
 - Figure out what mime-type should be used for emailing bash scripts as an
   attachment.

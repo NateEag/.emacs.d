@@ -29,7 +29,7 @@
 
 (require 'simple-httpd)
 
-(defvar html-scratchpad-index-page "<!doctype html>
+(defcustom html-scratchpad-index-page "<!doctype html>
 <html lang=\"en\">
 
 <head>
@@ -51,6 +51,11 @@
 
   "HTML for a new index.html file.")
 
+(defcustom html-scratchpad-basedir
+  (expand-file-name "html-scratchpads" httpd-root)
+
+  "Directory scratchpads live in.")
+
 (defun html-scratchpad-make-new (subdir)
   "Create a new HTML scratchpad and make sure the webserver is live."
   (interactive "MName scratchpad: ")
@@ -58,7 +63,7 @@
   (when (not (httpd-running-p))
     (httpd-start))
 
-  (let* ((scratchpad-path (expand-file-name subdir httpd-root))
+  (let* ((scratchpad-path (expand-file-name subdir html-scratchpad-basedir))
         (scratchpad-html-path (expand-file-name "index.html" scratchpad-path))
         (scratchpad-css-path (expand-file-name "styles.css" scratchpad-path))
         (scratchpad-js-path (expand-file-name "main.js" scratchpad-path)))
@@ -79,6 +84,20 @@
     (save-buffer)
 
     (browse-url (concat (format "http://localhost:%d/" httpd-port) subdir "/"))))
+
+(defun html-scratchpad-delete (subdir)
+  "Delete the scratchpad specified by `SUBDIR' and close its buffers."
+
+  ;; FIXME Make directory selection work like you'd actually want.
+  (interactive "DScratchpad name: ")
+
+  (let* ((scratchpad-path (expand-file-name subdir html-scratchpad-basedir)))
+    (mapc (lambda (buffer)
+            (when (string-match scratchpad-path (or (buffer-file-name buffer) ""))
+              (kill-buffer buffer)))
+          (buffer-list))
+    (delete-directory scratchpad-path t)
+    ))
 
 (provide 'html-scratchpad)
 ;;; html-scratchpad.el ends here

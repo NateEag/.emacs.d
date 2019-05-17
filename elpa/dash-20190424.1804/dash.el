@@ -3,8 +3,8 @@
 ;; Copyright (C) 2012-2016 Free Software Foundation, Inc.
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
-;; Version: 2.15.0
-;; Package-Version: 20190413.1058
+;; Version: 2.16.0
+;; Package-Version: 20190424.1804
 ;; Keywords: lists
 
 ;; This program is free software; you can redistribute it and/or modify

@@ -1,10 +1,12 @@
 ;;; format-all-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "format-all" "format-all.el" (23727 12864 663361
-;;;;;;  283000))
+;;;### (autoloads nil "format-all" "format-all.el" (0 0 0 0))
 ;;; Generated autoloads from format-all.el
 
 (autoload 'format-all-buffer "format-all" "\
@@ -17,7 +19,8 @@ use ordinary undo to get your code back to its previous state.
 You will need to install external programs to do the formatting.
 If the command can't find the program that it needs, it will try
 to tell you how you might be able to install it on your operating
-system.  Only Emacs Lisp is formatted without an external program.
+system. Only BibTeX, Emacs Lisp and Ledger are formatted without an
+external program.
 
 A suitable formatter is selected according to the `major-mode' of
 the buffer.  Many popular programming languages are supported.
@@ -64,11 +67,14 @@ or zero, and enabled otherwise.
 
 \(fn &optional ARG)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "format-all" '("format-all-" "terraform-fmt" "shfmt" "sqlformat" "swiftformat" "rufo" "rustfmt" "perltidy" "prettier" "ocp-indent" "mix-format" "latexindent" "ledger-mode" "lua-fmt" "ktlint" "html-tidy" "gofmt" "elm-format" "emacs-lisp" "define-format-all-formatter" "dartfmt" "dfmt" "dhall" "crystal" "bibtex-mode" "black" "brittany" "asmfmt")))
+
 ;;;***
 
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; format-all-autoloads.el ends here

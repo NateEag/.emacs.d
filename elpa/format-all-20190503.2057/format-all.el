@@ -2,7 +2,7 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20190408.1319
+;; Package-Version: 20190503.2057
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
@@ -25,6 +25,7 @@
 ;;
 ;; - Angular/Vue (prettier)
 ;; - Assembly (asmfmt)
+;; - BibTeX (emacs)
 ;; - C/C++/Objective-C (clang-format)
 ;; - Clojure/ClojureScript (node-cljfmt)
 ;; - Crystal (crystal tool format)
@@ -42,6 +43,8 @@
 ;; - Java (clang-format)
 ;; - JavaScript/JSON/JSX (prettier)
 ;; - Kotlin (ktlint)
+;; - LaTeX (latexindent)
+;; - Ledger (ledger-mode)
 ;; - Lua (lua-fmt)
 ;; - Markdown (prettier)
 ;; - OCaml (ocp-indent)
@@ -178,6 +181,20 @@ even if it produced warnings.  Not all warnings are errors."
                                  (t (buffer-string)))))
               (list output errput))))))))
 
+(defun format-all-buffer-native (mode &rest funcs)
+  "Internal helper function to implement formatters.
+
+In a new temp buffer, switches to MODE then calls FUNCS in order
+to format the code. MODE and FUNCS should be symbols instead of
+functions to avoid warnings from the Emacs byte compiler."
+  (format-all-buffer-thunk
+   (lambda (input)
+     (funcall mode)
+     (insert input)
+     (mapc #'funcall funcs)
+     (format-all-fix-trailing-whitespace)
+     (list nil ""))))
+
 (defun format-all-buffer-hard (ok-statuses error-regexp executable &rest args)
   "Internal helper function to implement formatters.
 
@@ -253,7 +270,8 @@ command used to run the formatter is usually a good choice.
 
 Consult the existing formatters for examples of BODY."
   (let (executable install modes format)
-    (cl-assert (equal (mapcar 'car body) '(:executable :install :modes :format)))
+    (cl-assert
+     (equal (mapcar 'car body) '(:executable :install :modes :format)))
     (cl-dolist (part body)
       (cl-ecase (car part)
         (:executable
@@ -295,6 +313,13 @@ Consult the existing formatters for examples of BODY."
   (:install)
   (:modes asm-mode nasm-mode)
   (:format (format-all-buffer-easy executable)))
+
+(define-format-all-formatter bibtex-mode
+  (:executable)
+  (:install)
+  (:modes bibtex-mode)
+  (:format (format-all-buffer-native
+            'bibtex-mode 'bibtex-reformat 'bibtex-sort-buffer)))
 
 (define-format-all-formatter black
   (:executable "black")
@@ -372,13 +397,9 @@ Consult the existing formatters for examples of BODY."
   (:install)
   (:modes emacs-lisp-mode lisp-interaction-mode)
   (:format
-   (format-all-buffer-thunk
-    (lambda (input)
-      (emacs-lisp-mode)
-      (insert input)
-      (indent-region (point-min) (point-max))
-      (format-all-fix-trailing-whitespace)
-      (list nil "")))))
+   (format-all-buffer-native
+    'emacs-lisp-mode
+    (lambda () (indent-region (point-min) (point-max))))))
 
 (define-format-all-formatter gofmt
   (:executable "gofmt")
@@ -411,6 +432,19 @@ Consult the existing formatters for examples of BODY."
   (:install (macos "brew install ktlint"))
   (:modes kotlin-mode)
   (:format (format-all-buffer-easy executable "--format" "--stdin")))
+
+(define-format-all-formatter latexindent
+  (:executable "latexindent")
+  (:install)
+  (:modes latex-mode)
+  (:format (format-all-buffer-easy executable)))
+
+(define-format-all-formatter ledger-mode
+  (:executable)
+  (:install)
+  (:modes ledger-mode)
+  (:format
+   (format-all-buffer-native 'ledger-mode 'ledger-mode-clean-buffer)))
 
 (define-format-all-formatter lua-fmt
   (:executable "luafmt")
@@ -516,8 +550,10 @@ Consult the existing formatters for examples of BODY."
   (:format
    (let* ((ic (car default-process-coding-system))
           (oc (cdr default-process-coding-system))
-          (ienc (symbol-name (or (coding-system-get ic :mime-charset) 'utf-8)))
-          (oenc (symbol-name (or (coding-system-get oc :mime-charset) 'utf-8)))
+          (ienc (symbol-name (or (coding-system-get ic :mime-charset)
+                                 'utf-8)))
+          (oenc (symbol-name (or (coding-system-get oc :mime-charset)
+                                 'utf-8)))
           (process-environment (cons (concat "PYTHONIOENCODING=" oenc)
                                      process-environment)))
      (format-all-buffer-easy
@@ -564,7 +600,8 @@ Consult the existing formatters for examples of BODY."
     (when executable
       (or (executable-find executable)
           (error (format-all-please-install
-                  executable (gethash formatter format-all-install-table)))))))
+                  executable
+                  (gethash formatter format-all-install-table)))))))
 
 (defun format-all-show-or-hide-errors (error-output)
   "Internal helper function to update *format-all-errors* with ERROR-OUTPUT."
@@ -599,7 +636,8 @@ use ordinary undo to get your code back to its previous state.
 You will need to install external programs to do the formatting.
 If the command can't find the program that it needs, it will try
 to tell you how you might be able to install it on your operating
-system.  Only Emacs Lisp is formatted without an external program.
+system. Only BibTeX, Emacs Lisp and Ledger are formatted without an
+external program.
 
 A suitable formatter is selected according to the `major-mode' of
 the buffer.  Many popular programming languages are supported.

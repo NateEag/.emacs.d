@@ -35,6 +35,7 @@
 (require 'lsp-css)
 (require 'lsp-xml)
 (require 'lsp-go)
+(require 'lsp-clojure)
 
 ;;; Bash
 (lsp-register-client
@@ -45,9 +46,9 @@
 
 ;;; Groovy
 (defgroup lsp-groovy nil
-  "Groovy."
+  "LSP support for Groovy, using groovy-language-server"
   :group 'lsp-mode
-  :tag "Groovy")
+  :link '(url-link "https://github.com/palantir/language-servers"))
 
 (defcustom lsp-groovy-server-install-dir
   (locate-user-emacs-file "groovy-language-server/")
@@ -70,18 +71,11 @@ This directory shoud contain a file matching groovy-language-server-*.jar"
                   :priority -1
                   :server-id 'groovy-ls))
 
-;;; HTML
-(lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection '("html-languageserver" "--stdio"))
-                  :major-modes '(html-mode sgml-mode mhtml-mode web-mode)
-                  :priority -1
-                  :server-id 'html-ls))
-
 ;;; TypeScript/JavaScript
 (defgroup lsp-typescript-javascript nil
-  "TypeScript/JavaScript."
+  "Support for TypeScript/JavaScript, using Sourcegraph's JavaScript/TypeScript language server."
   :group 'lsp-mode
-  :tag "TypeScript/JavaScript")
+  :link "https://github.com/sourcegraph/javascript-typescript-langserver")
 
 (defcustom lsp-clients-javascript-typescript-server "javascript-typescript-stdio"
   "The javascript-typescript-stdio executable to use.
@@ -97,13 +91,9 @@ finding the executable with variable `exec-path'."
   :risky t
   :type '(repeat string))
 
-(defun lsp-typescript-javascript-tsx-jsx-activate-p (filename mode)
-  "Check if the javascript-typescript language server should be enabled
-based on FILE-NAME and MAJOR-MODE"
-  (or (member mode '(typescript-mode typescript-tsx-mode js-mode js-jsx-mode js2-mode js2-jsx-mode rjsx-mode))
-      (and (eq major-mode 'web-mode)
-           (or (string-suffix-p ".tsx" filename t)
-               (string-suffix-p ".jsx" filename t)))))
+(defun lsp-typescript-javascript-tsx-jsx-activate-p (filename &optional _)
+  "Check if the javascript-typescript language server should be enabled based on FILENAME."
+  (string-match-p (rx (one-or-more char) "." (or "ts" "js") (opt "x") string-end) filename))
 
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection (lambda ()
@@ -117,9 +107,9 @@ based on FILE-NAME and MAJOR-MODE"
 
 ;;; TypeScript
 (defgroup lsp-typescript nil
-  "TypeScript."
+  "LSP support for TypeScript, using Theia/Typefox's TypeScript Language Server."
   :group 'lsp-mode
-  :tag "TypeScript")
+  :link "https://github.com/theia-ide/typescript-language-server")
 
 (defcustom lsp-clients-typescript-server "typescript-language-server"
   "The typescript-language-server executable to use.
@@ -148,9 +138,9 @@ finding the executable with variable `exec-path'."
 
 ;;; JavaScript Flow
 (defgroup lsp-flow nil
-  "JavaScript Flow."
+  "LSP support for the Flow Javascript type checker."
   :group 'lsp-mode
-  :tag "Flow")
+  :link '(url-link "https://flow.org/"))
 
 (defcustom lsp-clients-flow-server "flow"
   "The Flow executable to use.
@@ -227,9 +217,9 @@ particular FILE-NAME and MODE."
 
 ;; PHP
 (defgroup lsp-php nil
-  "PHP."
-  :group 'lsp-mode
-  :tag "PHP")
+  "LSP support for PHP, using php-language-server."
+  :link '(url-link "https://github.com/felixfbecker/php-language-server")
+  :group 'lsp-mode)
 
 (defcustom lsp-clients-php-server-command
   `("php" ,(expand-file-name "~/.composer/vendor/felixfbecker/language-server/bin/php-language-server.php"))
@@ -238,7 +228,8 @@ particular FILE-NAME and MODE."
   :type 'file)
 
 (lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection (lambda () lsp-clients-php-server-command))
+ (make-lsp-client :new-connection (lsp-stdio-connection
+                                   (lambda () lsp-clients-php-server-command))
                   :major-modes '(php-mode)
                   :priority -2
                   :server-id 'php-ls))
@@ -246,13 +237,18 @@ particular FILE-NAME and MODE."
 
 
 (defgroup lsp-ocaml nil
-  "OCaml."
+  "LSP support for OCaml, using ocaml-language-server."
   :group 'lsp-mode
-  :tag "OCaml")
+  :link '(url-link "https://github.com/freebroccolo/ocaml-language-server"))
 
-(defcustom lsp-ocaml-ocaml-lang-server-command
+(define-obsolete-variable-alias
+  'lsp-ocaml-ocaml-lang-server-command
+  'lsp-ocaml-lang-server-command
+  "lsp-mode 6.1")
+
+(defcustom lsp-ocaml-lang-server-command
   '("ocaml-language-server" "--stdio")
-  "The command that starts the language server."
+  "Command to start ocaml-language-server."
   :group 'lsp-ocaml
   :type '(choice
           (string :tag "Single string value")
@@ -260,7 +256,8 @@ particular FILE-NAME and MODE."
                   string)))
 
 (lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection (lambda () lsp-ocaml-ocaml-lang-server-command))
+ (make-lsp-client :new-connection (lsp-stdio-connection
+                                   (lambda () lsp-ocaml-lang-server-command))
                   :major-modes '(reason-mode caml-mode tuareg-mode)
                   :priority -1
                   :server-id 'ocaml-ls))
@@ -269,9 +266,9 @@ particular FILE-NAME and MODE."
 ;; C-family (C, C++, Objective-C, Objective-C++)
 
 (defgroup lsp-clangd nil
-  "C-family (C, C++, Objective-C, Objective-C++)"
+  "LSP support for C-family languages (C, C++, Objective-C, Objective-C++), using clangd."
   :group 'lsp-mode
-  :tag "C-family")
+  :link '(url-link "https://clang.llvm.org/extra/clangd/"))
 
 (defcustom lsp-clients-clangd-executable "clangd"
   "The clangd executable to use.
@@ -301,12 +298,16 @@ finding the executable with `exec-path'."
 (defun lsp-clients-register-clangd ()
   (warn "This call is no longer needed. clangd is now automatically registered. Delete lsp-clients-register-clangd call from your config."))
 
+(make-obsolete 'lsp-clients-register-clangd
+               "This function is no longer needed, as clangd is now automatically registered."
+               "lsp-mode 6.1")
+
 
 ;; Dart
 (defgroup lsp-dart nil
-  "Dart."
+  "LSP support for Dart, using dart_language_server."
   :group 'lsp-mode
-  :tag "Dart")
+  :link '(url-link "https://github.com/natebosch/dart_language_server"))
 
 (defcustom lsp-clients-dart-server-command
   (expand-file-name (if (equal system-type 'windows-nt)
@@ -339,9 +340,9 @@ finding the executable with `exec-path'."
 
 ;; Elixir
 (defgroup lsp-elixir nil
-  "Elixir."
+  "LSP support for Elixir, using elixir-ls."
   :group 'lsp-mode
-  :tag "Elixir")
+  :link '(url-link "https://github.com/JakeBecker/elixir-ls"))
 
 (defcustom lsp-clients-elixir-server-executable
   (if (equal system-type 'windows-nt)
@@ -362,9 +363,9 @@ finding the executable with `exec-path'."
 
 ;; Fortran
 (defgroup lsp-fortran nil
-  "Fortran."
+  "LSP support for Fortran, using the Fortran Language Server."
   :group 'lsp-mode
-  :tag "Fortran")
+  :link '(url-link "https://github.com/hansec/fortran-language-server"))
 
 (defcustom lsp-clients-fortls-executable "fortls"
   "The fortls executable to use.
@@ -394,9 +395,9 @@ finding the executable with `exec-path'."
 
 ;; Kotlin
 (defgroup lsp-kotlin nil
-  "Kotlin."
+  "LSP support for Kotlin, using KotlinLanguageServer."
   :group 'lsp-mode
-  :tag "Kotlin")
+  :link '(url-link "https://github.com/fwcd/KotlinLanguageServer"))
 
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection '("kotlin-language-server"))
@@ -407,15 +408,15 @@ finding the executable with `exec-path'."
 
 ;; Hack
 (defgroup lsp-hack nil
-  "Hack."
+  "LSP support for Hack, using HHVM."
   :group 'lsp-mode
-  :tag "Hack")
+  :link '(url-link "https://docs.hhvm.com/hhvm/"))
 
 (defcustom lsp-clients-hack-command '("hh_client" "lsp" "--from" "emacs")
-  "hh_client command."
+  "Command to start hh_client."
   :group 'lsp-hack
   :risky t
-  :type 'list)
+  :type '(repeat string))
 
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection (lambda () lsp-clients-hack-command))

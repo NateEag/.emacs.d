@@ -1,11 +1,11 @@
 ;;; avy.el --- Jump to arbitrary positions in visible text and select text quickly. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2015  Free Software Foundation, Inc.
+;; Copyright (C) 2015-2019  Free Software Foundation, Inc.
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/avy
-;; Package-Version: 20190404.855
-;; Version: 0.4.0
+;; Package-Version: 20190514.1551
+;; Version: 0.5.0
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: point, location
 
@@ -749,6 +749,11 @@ Set `avy-style' according to COMMMAND as well."
 
 (declare-function flyspell-correct-word-before-point "flyspell")
 
+(defcustom avy-flyspell-correct-function #'flyspell-correct-word-before-point
+  "Function called to correct word by `avy-action-ispell' when
+`flyspell-mode' is enabled."
+  :type 'function)
+
 (defun avy-action-ispell (pt)
   "Auto correct word at PT."
   (save-excursion
@@ -759,7 +764,7 @@ Set `avy-style' according to COMMMAND as well."
         (line-beginning-position)
         (line-end-position)))
       ((bound-and-true-p flyspell-mode)
-       (flyspell-correct-word-before-point))
+       (funcall avy-flyspell-correct-function))
       ((looking-at-p "\\b")
        (ispell-word))
       (t
@@ -1095,7 +1100,7 @@ LEAF is normally ((BEG . END) . WND)."
          (wnd (cdr leaf))
          end)
     (dotimes (i len)
-      (set-text-properties (- len i 1) (- len i)
+      (set-text-properties i (1+ i)
                            `(face ,(nth i avy-lead-faces))
                            str))
     (when (eq avy-style 'de-bruijn)
@@ -1976,11 +1981,10 @@ newline."
 (defun avy--read-candidates (&optional re-builder)
   "Read as many chars as possible and return their occurrences.
 At least one char must be read, and then repeatedly one next char
-may be read if it is entered before `avy-timeout-seconds'.  Any
-key defined in `avy-del-last-char-by' (by default `C-h' and `DEL')
-deletes the last char entered, and `RET' exits with the
-currently read string immediately instead of waiting for another
-char for `avy-timeout-seconds'.
+may be read if it is entered before `avy-timeout-seconds'.  DEL
+deletes the last char entered, and RET exits with the currently
+read string immediately instead of waiting for another char for
+`avy-timeout-seconds'.
 The format of the result is the same as that of `avy--regex-candidates'.
 This function obeys `avy-all-windows' setting.
 RE-BUILDER is a function that takes a string and returns a regex.

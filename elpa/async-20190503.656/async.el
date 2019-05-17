@@ -37,7 +37,7 @@
   "Simple asynchronous processing in Emacs"
   :group 'emacs)
 
-(defcustom async-variables-noprops-function #'async-variables-noprops
+(defcustom async-variables-noprops-function #'async--purecopy
   "Default function to remove text properties in variables."
   :group 'async
   :type 'function)
@@ -52,23 +52,39 @@
 (defvar async-current-process nil)
 (defvar async--procvar nil)
 
-(defun async-variables-noprops (sequence)
-  "Remove text properties in SEQUENCE.
+(defun async--purecopy (object)
+  "Remove text properties in OBJECT.
 
-Argument SEQUENCE may be a list or a string, if anything else it
-is returned unmodified.
-
-Note that this is a naive function that doesn't remove text properties
-in SEQUENCE recursively, only at the first level which suffice in most
-cases."
-  (cond ((stringp sequence)
-         (substring-no-properties sequence))
-        ((listp sequence)
-         (cl-loop for elm in sequence
+Argument OBJECT may be a list or a string, if anything else it
+is returned unmodified."
+  (cond ((stringp object)
+         (substring-no-properties object))
+        ((consp object)
+         (cl-loop for elm in object
+                  ;; A string.
                   if (stringp elm)
                   collect (substring-no-properties elm)
-                  else collect elm))
-        (t sequence)))
+                  else
+                  ;; Proper lists.
+                  if (and (consp elm) (null (cdr (last elm))))
+                  collect (async--purecopy elm)
+                  else
+                  ;; Dotted lists.
+                  ;; We handle here only dotted list where car and cdr
+                  ;; are atoms i.e. (x . y) and not (x . (x . y)) or
+                  ;; (x . (x y)) which should fit most cases.
+                  if (and (consp elm) (cdr (last elm)))
+                  collect (let ((key (car elm))
+                                (val (cdr elm)))
+                            (cons (if (stringp key)
+                                      (substring-no-properties key)
+                                    key)
+                                  (if (stringp val)
+                                      (substring-no-properties val)
+                                    val)))
+                  else
+                  collect elm))
+        (t object)))
 
 (defun async-inject-variables
   (include-regexp &optional predicate exclude-regexp noprops)

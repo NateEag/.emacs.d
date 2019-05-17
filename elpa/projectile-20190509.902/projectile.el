@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20190416.1458
+;; Package-Version: 20190509.902
 ;; Keywords: project, convenience
 ;; Version: 2.1.0-snapshot
 ;; Package-Requires: ((emacs "25.1") (pkg-info "0.4"))
@@ -1801,7 +1801,7 @@ https://github.com/abo-abo/swiper")))
     ;; Calculate the list of files.
     (when (null files)
       (when projectile-enable-caching
-        (message "Projectile is initializing cache..."))
+        (message "Projectile is initializing cache for %s ..." project-root))
       (setq files
             (if (eq projectile-indexing-method 'alien)
                 ;; In alien mode we can just skip reading

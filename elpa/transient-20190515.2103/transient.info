@@ -44,7 +44,7 @@ reading a new value in the minibuffer.
    Calling a suffix command usually causes the transient to be exited
 but suffix commands can also be configured to not exit the transient.
 
-This manual is for Transient version 0.1.0 (v0.1.0-39-gb1da0ca+1).
+This manual is for Transient version 0.1.0 (v0.1.0-75-ge7a16d2+1).
 
      Copyright (C) 2018-2019 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -601,11 +601,40 @@ File: transient.info,  Node: Other Options,  Next: Modifying Existing Transients
      This option controls whether the current transient’s infix and
      suffix commands are shown in the popup buffer.
 
-     If ‘t’ (the default), then the infix and suffix commands are shown
-     as soon as the transient is invoked.  If ‘nil’, only a one line
-     summary is shown until the user presses a key that forms an
-     incomplete key sequence.  If a number, behave as for ‘nil’ but also
-     show the commands after that many seconds of inactivity.
+        • If ‘t’ (the default) then the popup buffer is shown as soon as
+          a transient prefix command is invoked.
+
+        • If ‘nil’, then the popup buffer is not shown unless the user
+          explicitly requests it, by pressing an incomplete prefix key
+          sequence.
+
+        • If a number, then the a brief one-line summary is shown
+          instead of the popup buffer.  If zero or negative, then not
+          even that summary is shown; only the pressed key itself is
+          shown.
+
+          The popup is shown when the user explicitly requests it by
+          pressing an incomplete prefix key sequence.  Unless this is
+          zero, then the popup is shown after that many seconds of
+          inactivity (using the absolute value).
+
+ -- User Option: transient-enable-popup-navigation
+
+     This option controls whether navigation commands are enabled in the
+     transient popup.
+
+     While a transient is active the transient popup buffer is not the
+     current buffer, making it necesary to use dedicated commands to act
+     on that buffer itself.  This is disabled by default.  If this
+     option is non-nil, then the following features are available:
+
+        • ‘<up>’ moves the cursor to the previous suffix.  ‘<down>’
+          moves the cursor to the next suffix.  ‘RET’ invokes the suffix
+          the cursor is on.
+
+        • ‘<mouse-1>’ invokes the clicked on suffix.
+
+        • ‘C-s’ and ‘C-r’ start isearch in the popup buffer.
 
  -- User Option: transient-display-buffer-action
 
@@ -2272,26 +2301,27 @@ Appendix E Variable Index
 * Menu:
 
 * current-transient-command:             Using Infix Arguments.
-                                                               (line 66)
+                                                              (line  66)
 * current-transient-prefix:              Using Infix Arguments.
-                                                               (line 60)
+                                                              (line  60)
 * current-transient-suffixes:            Using Infix Arguments.
-                                                               (line 51)
+                                                              (line  51)
 * transient-default-level:               Enabling and Disabling Suffixes.
-                                                               (line 38)
-* transient-detect-key-conflicts:        Other Options.        (line 99)
-* transient-display-buffer-action:       Other Options.        (line 17)
-* transient-highlight-mismatched-keys:   Other Options.        (line 58)
-* transient-history-file:                Using History.        (line 33)
-* transient-history-limit:               Using History.        (line 38)
+                                                              (line  38)
+* transient-detect-key-conflicts:        Other Options.       (line 128)
+* transient-display-buffer-action:       Other Options.       (line  46)
+* transient-enable-popup-navigation:     Other Options.       (line  28)
+* transient-highlight-mismatched-keys:   Other Options.       (line  87)
+* transient-history-file:                Using History.       (line  33)
+* transient-history-limit:               Using History.       (line  38)
 * transient-levels-file:                 Enabling and Disabling Suffixes.
-                                                               (line 44)
-* transient-mode-line-format:            Other Options.        (line 42)
+                                                              (line  44)
+* transient-mode-line-format:            Other Options.       (line  71)
 * transient-show-common-commands:        Common Suffix Commands.
-                                                               (line 23)
-* transient-show-popup:                  Other Options.        (line  6)
-* transient-substitute-key-function:     Other Options.        (line 77)
-* transient-values-file:                 Saving Values.        (line 30)
+                                                              (line  23)
+* transient-show-popup:                  Other Options.       (line   6)
+* transient-substitute-key-function:     Other Options.       (line 106)
+* transient-values-file:                 Saving Values.       (line  30)
 
 
 
@@ -2309,34 +2339,34 @@ Node: Getting Help for Suffix Commands18308
 Node: Enabling and Disabling Suffixes19698
 Node: Other Commands22997
 Node: Other Options23953
-Node: Modifying Existing Transients29045
-Node: Defining New Commands31588
-Node: Defining Transients31924
-Node: Binding Suffix and Infix Commands34359
-Node: Group Specifications35214
-Node: Suffix Specifications38547
-Node: Defining Suffix and Infix Commands42105
-Node: Using Infix Arguments45514
-Node: Transient State48798
-Node: Classes and Methods54670
-Node: Group Classes56884
-Node: Group Methods58801
-Node: Prefix Classes59446
-Node: Suffix Classes60538
-Node: Suffix Methods62782
-Node: Suffix Value Methods63103
-Node: Suffix Format Methods65863
-Node: Prefix Slots67312
-Node: Suffix Slots67476
-Node: Predicate Slots70327
-Node: Related Abstractions and Packages71576
-Node: Comparison With Prefix Keys and Prefix Arguments71863
-Node: Comparison With Other Packages82175
-Node: FAQ86362
-Node: Keystroke Index90093
-Node: Command Index91727
-Node: Function Index93514
-Node: Variable Index97671
+Node: Modifying Existing Transients30213
+Node: Defining New Commands32756
+Node: Defining Transients33092
+Node: Binding Suffix and Infix Commands35527
+Node: Group Specifications36382
+Node: Suffix Specifications39715
+Node: Defining Suffix and Infix Commands43273
+Node: Using Infix Arguments46682
+Node: Transient State49966
+Node: Classes and Methods55838
+Node: Group Classes58052
+Node: Group Methods59969
+Node: Prefix Classes60614
+Node: Suffix Classes61706
+Node: Suffix Methods63950
+Node: Suffix Value Methods64271
+Node: Suffix Format Methods67031
+Node: Prefix Slots68480
+Node: Suffix Slots68644
+Node: Predicate Slots71495
+Node: Related Abstractions and Packages72744
+Node: Comparison With Prefix Keys and Prefix Arguments73031
+Node: Comparison With Other Packages83343
+Node: FAQ87530
+Node: Keystroke Index91261
+Node: Command Index92895
+Node: Function Index94682
+Node: Variable Index98839
 
 End Tag Table
 

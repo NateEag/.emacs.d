@@ -1,10 +1,13 @@
 ;;; auto-rename-tag-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "auto-rename-tag" "auto-rename-tag.el" (23577
-;;;;;;  6426 0 0))
+;;;### (autoloads nil "auto-rename-tag" "auto-rename-tag.el" (0 0
+;;;;;;  0 0))
 ;;; Generated autoloads from auto-rename-tag.el
 
 (autoload 'auto-rename-tag-mode "auto-rename-tag" "\
@@ -34,11 +37,14 @@ See `auto-rename-tag-mode' for more information on Auto-Rename-Tag mode.
 
 \(fn &optional ARG)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "auto-rename-tag" '("auto-rename-tag-")))
+
 ;;;***
 
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; auto-rename-tag-autoloads.el ends here

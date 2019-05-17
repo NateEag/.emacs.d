@@ -74,6 +74,7 @@ will not have anymore separators between candidates."
     (define-key map (kbd "M-D")     'helm-kill-ring-delete)
     (define-key map (kbd "C-]")     'helm-kill-ring-toggle-truncated)
     (define-key map (kbd "C-c C-k") 'helm-kill-ring-kill-selection)
+    (define-key map (kbd "C-c d")   'helm-kill-ring-run-persistent-delete)
     map)
   "Keymap for `helm-show-kill-ring'.")
 
@@ -218,6 +219,26 @@ replace with STR as yanked string."
   (cl-loop for c in (helm-marked-candidates)
            do (setq kill-ring
                     (delete c kill-ring))))
+
+(defun helm-kill-ring-persistent-delete (_candidate)
+  (unwind-protect
+       (cl-loop for c in (helm-marked-candidates)
+                do (progn
+                     (helm-preselect (format "^%s" (regexp-quote c)))
+                     (setq kill-ring (delete c kill-ring))
+                     (helm-delete-current-selection)
+                     (helm--remove-marked-and-update-mode-line c)))
+    (with-helm-buffer
+      (setq helm-marked-candidates nil
+            helm-visible-mark-overlays nil))
+    (helm-force-update (helm-aif (helm-get-selection) (regexp-quote it)))))
+
+(defun helm-kill-ring-run-persistent-delete ()
+  "Delete current candidate without quitting."
+  (interactive)
+  (with-helm-alive-p
+    (helm-attrset 'quick-delete '(helm-kill-ring-persistent-delete . never-split))
+    (helm-execute-persistent-action 'quick-delete)))
 
 (defun helm-kill-ring-delete ()
   "Delete marked candidates from `kill-ring'.
@@ -384,16 +405,17 @@ This is a command for `helm-kill-ring-map'."
              (list (format "%s: %s\n" lines
                            (truncate-string-to-width
                             (mapconcat 'identity (list (car val))
-                                       "^J") (- (window-width) 15)))
+                                       "^J")
+                            (- (window-width) 15)))
                    'insert-register)))
           ((stringp val)
            (list
-            ;; without properties
             (concat (substring-no-properties
                      val 0 (min (length val) helm-register-max-offset))
                     (if (> (length val) helm-register-max-offset)
                         "[...]" ""))
             'insert-register
+            'kill-new
             'append-to-register
             'prepend-to-register)))
         unless (null string-actions) ; Fix Issue #1107.
@@ -406,6 +428,11 @@ This is a command for `helm-kill-ring-map'."
            '((insert-register
               "Insert Register" .
               (lambda (c) (insert-register (car c))))
+             (kill-new
+              "Kill Register" .
+              (lambda (c) (with-temp-buffer
+                            (insert-register (car c))
+                            (kill-new (buffer-string)))))
              (jump-to-register
               "Jump to Register" .
               (lambda (c) (jump-to-register (car c))))

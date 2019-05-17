@@ -723,6 +723,9 @@ Keys description:
 
 - TEST: A predicate called with one arg 'candidate'.
 
+- NORET: Allow disabling helm-ff-RET (have no effect if helm-ff-RET
+                                      isn't bound to RET).
+
 - CASE-FOLD: Same as `helm-case-fold-search'.
 
 - PRESELECT: helm preselection.
@@ -745,7 +748,7 @@ Keys description:
 
 - MODE-LINE: A mode line message, default is `helm-read-file-name-mode-line-string'.
 
-\(fn PROMPT &key (NAME \"Read File Name\") (INITIAL-INPUT default-directory) (BUFFER \"*Helm file completions*\") TEST (CASE-FOLD helm-file-name-case-fold-search) PRESELECT HISTORY MUST-MATCH (FUZZY t) DEFAULT MARKED-CANDIDATES (CANDIDATE-NUMBER-LIMIT helm-ff-candidate-number-limit) NOMARK (ALISTP t) (PERSISTENT-ACTION-IF \\='helm-find-files-persistent-action-if) (PERSISTENT-HELP \"Hit1 Expand Candidate, Hit2 or (C-u) Find file\") (MODE-LINE helm-read-file-name-mode-line-string))" nil nil)
+\(fn PROMPT &key (NAME \"Read File Name\") (INITIAL-INPUT default-directory) (BUFFER \"*Helm file completions*\") TEST NORET (CASE-FOLD helm-file-name-case-fold-search) PRESELECT HISTORY MUST-MATCH (FUZZY t) DEFAULT MARKED-CANDIDATES (CANDIDATE-NUMBER-LIMIT helm-ff-candidate-number-limit) NOMARK (ALISTP t) (PERSISTENT-ACTION-IF \\='helm-find-files-persistent-action-if) (PERSISTENT-HELP \"Hit1 Expand Candidate, Hit2 or (C-u) Find file\") (MODE-LINE helm-read-file-name-mode-line-string))" nil nil)
 
 (defvar helm-mode nil "\
 Non-nil if Helm mode is enabled.

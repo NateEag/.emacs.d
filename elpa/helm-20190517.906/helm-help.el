@@ -271,6 +271,12 @@ Helm uses `ffap' partially or completely to find file at point depending on the
 value of `helm-ff-guess-ffap-filenames': if non-nil, support is complete
 \(annoying), if nil, support is partial.
 
+Note that when the variable
+`helm-ff-allow-non-existing-file-at-point' is non nil Helm will
+insert the filename at point even if file with this name doesn't
+exists.  If non existing file at point ends with numbers prefixed
+with \":\" the \":\" and numbers are stripped.
+
 **** Find file at line number
 
 When text at point is in the form of
@@ -905,6 +911,15 @@ The package on most GNU/Linux based distributions is trash-cli, it is available 
 NOTE:
 When deleting your files with sudo method, your trashed files will not be listed
 with trash-list until you log in as root.
+
+*** Checksum file
+
+Checksum is calculated with the md5sum, sha1sum, sha224sum,
+sha256sum, sha384sum and sha512sum when available, otherwise the
+Emacs function `secure-hash' is used but it is slow and may crash
+Emacs and even the whole system as it eats all memory.  So if
+your system doesn't have the md5 and sha command line tools be
+careful when checking sum of larges files e.g. isos.
 
 ** Commands
 \\<helm-find-files-map>

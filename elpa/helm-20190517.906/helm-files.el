@@ -240,6 +240,11 @@ See also `ffap-url-unwrap-remote' that may override this variable."
   :group 'helm-files
   :type 'boolean)
 
+(defcustom helm-ff-allow-non-existing-file-at-point nil
+  "Use file-at-point as initial input in `helm-find-files' even if it doesn't exists."
+  :group 'helm-files
+  :type 'boolean)
+
 (defcustom helm-find-files-ignore-thing-at-point nil
   "Use only `default-directory' as default input in `helm-find-files'.
 I.e text under cursor in `current-buffer' is ignored.
@@ -1508,6 +1513,7 @@ This doesn't replace inside the files, only modify filenames."
   (setq helm-ff-auto-update-flag helm-ff--auto-update-state)
   (setq helm-ff--deleting-char-backward nil))
 
+(defvar helm-ff--RET-disabled nil)
 (defun helm-ff-RET-1 (&optional must-match)
   "Used for RET action in `helm-find-files'.
 See `helm-ff-RET' for details.
@@ -1516,6 +1522,7 @@ If MUST-MATCH is specified exit with
   (let ((sel   (helm-get-selection)))
     (cl-assert sel nil "Trying to exit with no candidates")
     (if (and (file-directory-p sel)
+             (null helm-ff--RET-disabled)
              (not (string= "." (helm-basename sel))))
         (helm-execute-persistent-action)
       (if must-match
@@ -1820,19 +1827,38 @@ Same as `dired-do-print' but for helm."
 
 (defun helm-ff-checksum (file)
   "Calculate the checksum of FILE.
-The checksum is copied to kill-ring."
+The checksum is copied to kill-ring.
+Checksum is calculated with the md5sum, sha1sum, sha224sum, sha256sum,
+sha384sum and sha512sum when available, otherwise the emacs function
+`secure-hash' is used but it is slow and may crash Emacs and even the
+whole system as it eats all memory."
   (cl-assert (file-regular-p file)
              nil "`%s' is not a regular file" file)
-  (let ((algo (intern (helm-comp-read
-                       "Algorithm: "
-                       '(md5 sha1 sha224 sha256 sha384 sha512))))
-        (bn (helm-basename file)))
+  (let* ((algo (intern (helm-comp-read
+                        "Algorithm: "
+                        '(md5 sha1 sha224 sha256 sha384 sha512))))
+         (cmd  (concat (symbol-name algo) "sum"))
+         (bn (helm-basename file))
+         proc)
     (message "Calculating %s checksum for %s..." algo bn)
-    (async-let ((sum (with-temp-buffer
-                       (insert-file-contents-literally file)
-                       (secure-hash algo (current-buffer)))))
-      (kill-new sum)
-      (message "Calculating %s checksum for `%s' done and copied to kill-ring" algo bn))))
+    (if (executable-find cmd)
+        (progn
+          (set-process-filter
+           (setq proc (start-file-process cmd nil cmd "-b" file))
+           (lambda (_process output)
+             (when output (kill-new output))))
+          (set-process-sentinel
+           proc
+           `(lambda (_process event)
+              (when (string= event "finished\n")
+                (message "Calculating %s checksum for `%s' done and copied to kill-ring"
+                         ,(symbol-name algo) ,bn)))))
+      (async-let ((sum (with-temp-buffer
+                         (insert-file-contents-literally file)
+                         (secure-hash algo (current-buffer)))))
+        (kill-new sum)
+        (message "Calculating %s checksum for `%s' done and copied to kill-ring"
+                 algo bn)))))
 
 (defun helm-ff-toggle-basename (_candidate)
   (with-helm-buffer
@@ -3054,13 +3080,19 @@ Return candidates prefixed with basename of `helm-input' first."
             '(("Rotate image right `M-r'" . helm-ff-rotate-image-right)
               ("Rotate image left `M-l'" . helm-ff-rotate-image-left))
             3))
-          ((string-match "\\.el$" (helm-aif (helm-marked-candidates)
-                                     (car it) candidate))
+          ((string-match "\\.el\\'" (helm-aif (helm-marked-candidates)
+                                        (car it) candidate))
            (helm-append-at-nth
             actions
             '(("Byte compile lisp file(s) `M-B, C-u to load'"
                . helm-find-files-byte-compile)
               ("Load File(s) `M-L'" . helm-find-files-load-files))
+            2))
+          ((string-match "\\.elc?\\'" (helm-aif (helm-marked-candidates)
+                                          (car it) candidate))
+           (helm-append-at-nth
+            actions
+            '(("Load File(s) `M-L'" . helm-find-files-load-files))
             2))
           ((and (string-match "\\.html?$" candidate)
                 (file-exists-p candidate))
@@ -3674,12 +3706,22 @@ is helm-source-find-files."
 
 (defun helm-find-files-initial-input (&optional input)
   "Return INPUT if present, otherwise try to guess it."
-  (unless (eq major-mode 'image-mode)
-    (or (and input (or (and (file-remote-p input) input)
-                       (expand-file-name input)))
-        (helm-find-files-input
-         (helm-ffap-guesser)
-         (thing-at-point 'filename)))))
+  (let ((guesser (helm-ffap-guesser)))
+    (unless (eq major-mode 'image-mode)
+      (or (and input (or (and (file-remote-p input) input)
+                         (expand-file-name input)))
+          (helm-find-files-input
+           (if (and helm-ff-allow-non-existing-file-at-point
+                    guesser
+                    (not (string-match ffap-url-regexp guesser)))
+               ;; Keep the ability of jumping to numbered lines even
+               ;; when allowing non existing filenames at point.
+               (helm-aand guesser
+                          (thing-at-point 'filename)
+                          (replace-regexp-in-string
+                           ":[0-9]+\\'" "" it))
+             guesser)
+           (thing-at-point 'filename))))))
 
 (defun helm-ffap-guesser ()
   "Same as `ffap-guesser' but without gopher and machine support."
@@ -3734,7 +3776,9 @@ is helm-source-find-files."
          (file-p  (and file-at-pt
                        (not (string= file-at-pt ""))
                        (not remp)
-                       (file-exists-p file-at-pt)
+                       (or (file-exists-p file-at-pt)
+                           helm-ff-allow-non-existing-file-at-point)
+                       (not urlp)
                        thing-at-pt
                        (not (string= thing-at-pt ""))
                        (file-exists-p
@@ -3750,7 +3794,8 @@ is helm-source-find-files."
           (urlp (helm-html-decode-entities-string file-at-pt)) ; possibly an url or email.
           ((and file-at-pt
                 (not remp)
-                (file-exists-p file-at-pt))
+                (or helm-ff-allow-non-existing-file-at-point
+                    (file-exists-p file-at-pt)))
            (expand-file-name file-at-pt)))))
 
 (defun helm-ff-find-url-at-point ()
@@ -3777,10 +3822,10 @@ Find inside `require' and `declare-function' sexp."
                         (buffer-substring-no-properties
                          (1+ beg-sexp) (1- end-sexp)))))
     (ignore-errors
-      (cond ((and sexp (string-match "require \'.+[^)]" sexp))
+      (cond ((and sexp (string-match "require ['].+[^)]" sexp))
              (find-library-name
               (replace-regexp-in-string
-               "'\\|\)\\|\(" ""
+               "'\\|)\\|(" ""
                ;; If require use third arg, ignore it,
                ;; always use library path found in `load-path'.
                (cl-second (split-string (match-string 0 sexp))))))
@@ -3966,9 +4011,10 @@ inversed."
               helm-visible-mark-overlays nil)
         (helm-force-update
          (let ((presel (helm-get-selection)))
-           (concat "^" (regexp-quote (if (and helm-ff-transformer-show-only-basename
-                                              (not (helm-ff-dot-file-p presel)))
-                                         (helm-basename presel) presel)))))))))
+           (when presel
+             (concat "^" (regexp-quote (if (and helm-ff-transformer-show-only-basename
+                                                (not (helm-ff-dot-file-p presel)))
+                                           (helm-basename presel) presel))))))))))
 
 (defun helm-delete-file (file &optional error-if-dot-file-p synchro trash)
   "Delete FILE after querying the user.

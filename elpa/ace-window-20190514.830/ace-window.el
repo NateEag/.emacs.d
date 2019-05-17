@@ -5,7 +5,7 @@
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; Maintainer: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Package-Version: 20190326.942
+;; Package-Version: 20190514.830
 ;; Version: 0.9.0
 ;; Package-Requires: ((avy "0.2.0"))
 ;; Keywords: window, location
@@ -490,12 +490,20 @@ The new frame is set to the same size as the previous frame, offset by
                  (if (and fn description)
                      (prog1 (setq aw-action fn)
                        (aw-set-mode-line (format " Ace - %s" description)))
-                   (funcall fn)
+                   (if (commandp fn)
+                       (call-interactively fn)
+                     (funcall fn))
                    (throw 'done 'exit)))
              (aw-clean-up-avy-current-path)
              ;; Prevent any char from triggering an avy dispatch command.
              (let ((avy-dispatch-alist))
                (avy-handler-default char)))))))
+
+(defcustom aw-display-mode-overlay t
+  "When nil, don't display overlays. Rely on the mode line instead."
+  :type 'boolean)
+
+(defvar ace-window-display-mode)
 
 (defun aw-select (mode-line &optional action)
   "Return a selected other window.
@@ -542,7 +550,10 @@ Amend MODE-LINE to the mode line for the duration of the selection."
                         (let* ((avy-handler-function aw-dispatch-function)
                                (avy-translate-char-function aw-translate-char-function)
                                (res (avy-read (avy-tree candidate-list aw-keys)
-                                              #'aw--lead-overlay
+                                              (if (and ace-window-display-mode
+                                                       (null aw-display-mode-overlay))
+                                                  (lambda (_path _leaf))
+                                                #'aw--lead-overlay)
                                               #'avy--remove-leading-chars)))
                           (if (eq res 'exit)
                               (setq aw-action nil)
@@ -582,6 +593,7 @@ Amend MODE-LINE to the mode line for the duration of the selection."
   (aw-select " Ace - Delete Other Windows"
              #'delete-other-windows))
 
+(declare-function transpose-frame "ext:transpose-frame")
 (defun aw-transpose-frame (w)
   "Select any window on frame and `tranpose-frame'."
   (transpose-frame (window-frame w)))

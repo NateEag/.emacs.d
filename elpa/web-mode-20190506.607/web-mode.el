@@ -3,8 +3,8 @@
 
 ;; Copyright 2011-2019 François-Xavier Bois
 
-;; Version: 16.0.23
-;; Package-Version: 20190415.1950
+;; Version: 16.0.24
+;; Package-Version: 20190506.607
 ;; Author: François-Xavier Bois <fxbois AT Google Mail Service>
 ;; Maintainer: François-Xavier Bois
 ;; Package-Requires: ((emacs "23.1"))
@@ -25,7 +25,7 @@
 
 ;;---- CONSTS ------------------------------------------------------------------
 
-(defconst web-mode-version "16.0.23"
+(defconst web-mode-version "16.0.24"
   "Web Mode version.")
 
 ;;---- GROUPS ------------------------------------------------------------------
@@ -3474,7 +3474,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
       (forward-char))
     (cond
      ((member (char-after) '(?\{))
-      (search-forward "}"))
+      (search-forward "}" nil t))
      ((looking-at-p "def \\|define ")
       (search-forward ")" (line-end-position) t))
      (t
@@ -7600,7 +7600,8 @@ another auto-completion with different ac-sources (e.g. ac-php)")
             )
            ((and is-js
                  (web-mode-is-html-string pos))
-            (setq offset (web-mode-html-indentation pos))
+            (when debug (message "I128(%S) html string" pos))
+            (setq offset (web-mode-token-html-indentation pos))
             )
            (t
             (setq offset nil))
@@ -8243,24 +8244,30 @@ another auto-completion with different ac-sources (e.g. ac-php)")
       (if (>= value 1) (current-indentation) nil)
       )))
 
-(defun web-mode-html-indentation (pos)
+(defun web-mode-token-html-indentation (pos)
   (save-excursion
-    (let (beg (continue t) end level map offset regexp tag val void)
+    (let (beg (continue t) end level map offset regexp tag val void (css-beg 0))
       (goto-char pos)
-      ;;(message "%S" pos)
+      ;;(message "pos=%S" pos)
       (setq beg (web-mode-part-token-beginning-position pos))
+      (save-excursion
+        (when (and (> (- pos beg) 5)
+                   (re-search-backward "</?[a-zA-Z0-9]+" beg t)
+                   (string= "<style" (downcase (match-string-no-properties 0))))
+          (setq css-beg (point))
+          )
+        )
+      ;;(message "beg=%S" beg)
       (cond
        ((eq (char-after pos) ?\`)
         (setq offset (web-mode-indentation-at-pos beg)))
        ((web-mode-looking-back "`[ \n\t]*" pos)
         (setq offset (+ (web-mode-indentation-at-pos beg) web-mode-markup-indent-offset)))
-       ((looking-at "</?\\([a-zA-Z]+\\)")
+       ((looking-at "</\\([a-zA-Z0-9]+\\)")
         (setq tag (match-string-no-properties 1)
               regexp (concat "</?" tag)
               level -1)
         (while (and continue (re-search-backward regexp beg t))
-          (save-excursion
-            )
           (cond
            ((eq (aref (match-string-no-properties 0) 1) ?\/)
             (setq level (1- level)))
@@ -8272,6 +8279,21 @@ another auto-completion with different ac-sources (e.g. ac-php)")
                   offset (current-indentation)))
           ) ;while
         )
+       ((> css-beg 0)
+        ;;(message "CSS")
+        (cond
+         ((member (char-after) '(?\) ?\} ?\]))
+          (web-mode-go (web-mode-token-opening-paren-position pos (+ css-beg 8) ""))
+          (setq offset (current-indentation))
+          )
+         ((setq level (web-mode-bracket-level pos (+ css-beg 8)))
+          (setq offset (+ level web-mode-css-indent-offset))
+          )
+         (t
+          (setq offset (+ (web-mode-indentation-at-pos css-beg) web-mode-style-padding))
+          ) ;t
+         )
+        )
        ((looking-at "[a-zA-Z-]+[ ]?=")
         (re-search-backward "<[a-zA-Z]+[ ]*" beg t)
         (setq offset (+ (current-column) (length (match-string-no-properties 0))))
@@ -8281,7 +8303,7 @@ another auto-completion with different ac-sources (e.g. ac-php)")
         (setq offset (current-column))
         )
        (t
-        (setq regexp "</?\\([a-zA-Z]+\\)")
+        (setq regexp "</?\\([a-zA-Z0-9]+\\)")
         ;;(message "point=%S" (point))
         (while (and continue (re-search-backward regexp beg t))
           (setq tag (downcase (match-string-no-properties 1))

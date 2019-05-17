@@ -6,6 +6,25 @@
                          (or (file-name-directory #$) (car load-path))))
 
 
+;;;### (autoloads nil "php" "php.el" (0 0 0 0))
+;;; Generated autoloads from php.el
+
+(let ((loads (get 'php 'custom-loads))) (if (member '"php" loads) nil (put 'php 'custom-loads (cons '"php" loads))))
+
+(autoload 'php-current-class "php" "\
+Insert current class name if cursor in class context.
+
+\(fn)" t nil)
+
+(autoload 'php-current-namespace "php" "\
+Insert current namespace if cursor in namespace context.
+
+\(fn)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php" '("php-")))
+
+;;;***
+
 ;;;### (autoloads nil "php-array" "php-array.el" (0 0 0 0))
 ;;; Generated autoloads from php-array.el
 
@@ -71,6 +90,15 @@
 
 ;;;***
 
+;;;### (autoloads nil "php-face" "php-face.el" (0 0 0 0))
+;;; Generated autoloads from php-face.el
+
+(let ((loads (get 'php-faces 'custom-loads))) (if (member '"php-face" loads) nil (put 'php-faces 'custom-loads (cons '"php-face" loads))))
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-face" '("php-annotations-annotation-face")))
+
+;;;***
+
 ;;;### (autoloads nil "php-filesystem" "php-filesystem.el" (0 0 0
 ;;;;;;  0))
 ;;; Generated autoloads from php-filesystem.el
@@ -96,15 +124,11 @@
 ;;;### (autoloads nil "php-mode" "php-mode.el" (0 0 0 0))
 ;;; Generated autoloads from php-mode.el
 
-(let ((loads (get 'php 'custom-loads))) (if (member '"php-mode" loads) nil (put 'php 'custom-loads (cons '"php-mode" loads))))
-
 (let ((loads (get 'php-mode 'custom-loads))) (if (member '"php-mode" loads) nil (put 'php-mode 'custom-loads (cons '"php-mode" loads))))
 
 (if (version< emacs-version "24.4") (dolist (i '("php" "php5" "php7")) (add-to-list 'interpreter-mode-alist (cons i 'php-mode))) (add-to-list 'interpreter-mode-alist (cons "php\\(?:-?[3457]\\(?:\\.[0-9]+\\)*\\)?" 'php-mode)))
 
 (define-obsolete-variable-alias 'php-available-project-root-files 'php-project-available-root-files "1.19.0")
-
-(let ((loads (get 'php-faces 'custom-loads))) (if (member '"php-mode" loads) nil (put 'php-faces 'custom-loads (cons '"php-mode" loads))))
 
 (autoload 'php-mode "php-mode" "\
 Major mode for editing PHP code.
@@ -113,19 +137,17 @@ Major mode for editing PHP code.
 
 \(fn)" t nil)
 
-(autoload 'php-current-class "php-mode" "\
-Insert current class name if cursor in class context.
-
-\(fn)" t nil)
-
-(autoload 'php-current-namespace "php-mode" "\
-Insert current namespace if cursor in namespace context.
-
-\(fn)" t nil)
-
 (add-to-list 'auto-mode-alist (cons (eval-when-compile (rx (or (: "." (or (: "php" (32 (in "s345t"))) "amk" "phtml")) (: "/" (or "Amkfile" ".php_cs" ".php_cs.dist"))) string-end)) 'php-mode) t)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-mode" '("php-")))
+
+;;;***
+
+;;;### (autoloads nil "php-mode-debug" "php-mode-debug.el" (0 0 0
+;;;;;;  0))
+;;; Generated autoloads from php-mode-debug.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-mode-debug" '("php-mode-debug")))
 
 ;;;***
 

@@ -1,10 +1,12 @@
 ;;; python-mode-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "python-mode" "python-mode.el" (23690 18080
-;;;;;;  933962 720000))
+;;;### (autoloads nil "python-mode" "python-mode.el" (0 0 0 0))
 ;;; Generated autoloads from python-mode.el
 
 (autoload 'py-backward-class "python-mode" "\
@@ -215,10 +217,11 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
 
 \(fn)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "python-mode" '("pdb-track-stack-from-shell-p" "pep8" "pst-here" "pps-emacs-version" "pios" "info-lookup-mode" "ios" "ipy" "iyp" "Python" "IPython" "Ipython" "virtualenv-" "jython-" "durck" "druck" "empty-line-p" "eva" "force-py-shell-name-p-o" "flake8" "toggle-" "turn-o" "highlight-indent-active" "hs-hide-comments-when-hiding-all" "strip-chars-" "autopair-mode")))
+
 ;;;***
 
-;;;### (autoloads nil nil ("python-mode-pkg.el") (23690 18080 929324
-;;;;;;  489000))
+;;;### (autoloads nil nil ("python-mode-pkg.el") (0 0 0 0))
 
 ;;;***
 
@@ -226,5 +229,6 @@ Sets basic comint variables, see also versions-related stuff in `py-shell'.
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; python-mode-autoloads.el ends here

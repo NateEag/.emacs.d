@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; URL: https://github.com/purcell/package-lint
-;; Package-Version: 20190308.12
+;; Package-Version: 20190512.2206
 ;; Keywords: lisp
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24"))
@@ -225,7 +225,21 @@ This is bound dynamically while the checks run.")
           window-preserve-size
           window-scroll-bar-height
           with-displayed-buffer-window
-          with-file-modes)))
+          with-file-modes))
+   (cons '(26)
+         (package-lint--match-symbols
+          read-answer
+          list-at-point
+          list-timers
+          replace-buffer-contents
+          apropos-local-variable
+          apropos-local-value
+          dired-mouse-find-file
+          dired-mouse-find-file-other-frame))
+   (cons '(26 2)
+         (package-lint--match-symbols
+          read-answer
+          assoc-delete-all)))
   "An alist of function/macro names and when they were added to Emacs.")
 
 (defconst package-lint--sane-prefixes
@@ -933,8 +947,10 @@ The returned list is of the form (SYMBOL-NAME . POSITION)."
   "Return the first-provided feature name, as a string, or nil if none."
   (save-excursion
     (goto-char (point-max))
-    (when (re-search-backward (rx "(provide '" (group (1+ (or (syntax word) (syntax symbol))))) nil t)
-      (match-string-no-properties 1))))
+    (cond ((re-search-backward (rx "(provide '" (group (1+ (or (syntax word) (syntax symbol))))) nil t)
+           (match-string-no-properties 1))
+          ((re-search-backward "(provide-me)" nil t)
+           (file-name-sans-extension (file-name-nondirectory buffer-file-name))))))
 
 (defun package-lint--get-package-prefix ()
   "Return package prefix string (i.e. the symbol the package `provide's).
@@ -983,20 +999,18 @@ Current buffer is used if none is specified."
   (interactive)
   (let ((errs (package-lint-buffer))
         (buf "*Package-Lint*"))
-    (if (null errs)
-        (message "No issues found")
-      (with-current-buffer (get-buffer-create buf)
-        (let ((buffer-read-only nil))
-          (erase-buffer)
-          (cond
-           ((null errs) (insert "No issues found."))
-           ((null (cdr errs)) (insert "1 issue found:\n\n"))
-           (t (insert (format "%d issues found:\n\n" (length errs)))))
-          (pcase-dolist (`(,line ,col ,type ,message) errs)
-            (insert (format "%d:%d: %s: %s\n" line col type message))))
-        (special-mode)
-        (view-mode 1))
-      (display-buffer buf))))
+    (with-current-buffer (get-buffer-create buf)
+      (let ((buffer-read-only nil))
+        (erase-buffer)
+        (cond
+         ((null errs) (insert "No issues found."))
+         ((null (cdr errs)) (insert "1 issue found:\n\n"))
+         (t (insert (format "%d issues found:\n\n" (length errs)))))
+        (pcase-dolist (`(,line ,col ,type ,message) errs)
+          (insert (format "%d:%d: %s: %s\n" line col type message))))
+      (special-mode)
+      (view-mode 1))
+    (display-buffer buf)))
 
 ;;;###autoload
 (defun package-lint-batch-and-exit ()

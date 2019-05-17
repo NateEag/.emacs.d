@@ -1,9 +1,9 @@
 ;;; direnv.el --- direnv support -*- lexical-binding: t; -*-
 
-;; Author: Wouter Bolsterlee <wouter@bolsterl.ee>
-;; Version: 1.5.0
-;; Package-Version: 20190319.1418
-;; Package-Requires: ((emacs "24.4") (dash "2.12.0") (with-editor "2.5.10"))
+;; Author: wouter bolsterlee <wouter@bolsterl.ee>
+;; Version: 2.0.0
+;; Package-Version: 20190511.2021
+;; Package-Requires: ((emacs "24.4") (dash "2.12.0"))
 ;; Keywords: direnv, environment, processes, unix, tools
 ;; URL: https://github.com/wbolster/emacs-direnv
 ;;
@@ -23,11 +23,6 @@
 (require 'dash)
 (require 'json)
 (require 'subr-x)
-
-(eval-when-compile
-  (require 'server)
-  (declare-function with-editor-mode "with-editor.el")
-  (declare-function with-editor-async-shell-command "with-editor.el"))
 
 (defgroup direnv nil
   "direnv integration for emacs"
@@ -91,29 +86,29 @@ In these modes, direnv will use `default-directory' instead of
   (unless direnv--installed
     (user-error "Could not find the direnv executable. Is exec-path correct?"))
   (let ((environment process-environment)
-        ;; call-process can only output stderr to file
-        (stderr-tempfile (make-temp-file "direnv-stderr")))
-
+        (stderr-tempfile (make-temp-file "direnv-stderr"))) ;; call-process needs a file for stderr output
     (unwind-protect
         (with-current-buffer (get-buffer-create direnv--output-buffer-name)
           (erase-buffer)
           (let* ((default-directory directory)
                  (process-environment environment)
-                 (exit-code (call-process "direnv" nil `(t ,stderr-tempfile) nil "export" "json")))
-            (unless (zerop exit-code)
-                                        ; write the stderr messages to the end of our output buffer
-              (insert-file-contents stderr-tempfile)
-                                        ; then fill a temp buffer with the message and display in status bar
+                 (exit-code (call-process "direnv" nil `(t ,stderr-tempfile) nil "export" "json"))
+                 (json-key-type 'string))
+            (prog1
+                (unless (zerop (buffer-size))
+                  (goto-char (point-max))
+                  (re-search-backward "^{")
+                  (json-read-object))
+              (unless (zerop (file-attribute-size (file-attributes stderr-tempfile)))
+                (goto-char (point-max))
+                (unless (zerop (buffer-size))
+                  (insert "\n\n"))
+                (insert-file-contents stderr-tempfile))
               (with-temp-buffer
-                (insert-file-contents stderr-tempfile)
-                (message "direnv exited %s:\n%s\nOpen hidden buffer \"%s\" for full output"
-                         exit-code (buffer-string) direnv--output-buffer-name)))
-            (unless (zerop (buffer-size))
-              (goto-char (point-max))
-              (re-search-backward "^{")
-              (let ((json-key-type 'string))
-                (json-read-object)))))
-
+                (unless (zerop exit-code)
+                  (insert-file-contents stderr-tempfile)
+                  (warn "Error running direnv (exit code %d):\n%s\nOpen buffer ‘%s’ for full output."
+                        exit-code (buffer-string) direnv--output-buffer-name))))))
       (delete-file stderr-tempfile))))
 
 (defun direnv--enable ()
@@ -134,16 +129,6 @@ In these modes, direnv will use `default-directory' instead of
                  (not (string-equal direnv--active-directory directory-name))
                  (not (file-remote-p directory-name)))
         (direnv-update-directory-environment directory-name)))))
-
-(defun direnv--maybe-enable-with-editor-mode ()
-  "Enable with-editor-mode when run via direnv-edit."
-  ;; This is a dirty hack. See https://github.com/magit/with-editor/issues/23
-  (run-at-time
-   1 nil
-   (lambda ()
-     (with-current-buffer (window-buffer)
-       (when server-buffer-clients
-         (with-editor-mode))))))
 
 (defun direnv--summarise-changes (items)
   "Create a summary string for ITEMS."
@@ -168,23 +153,35 @@ In these modes, direnv will use `default-directory' instead of
        (--remove (string-prefix-p "DIRENV_" (car it)) items)))))
    " "))
 
+(defun direnv--format-paths (old-directory new-directory)
+  "Format the path component of the summary message.
+
+The string will describe a transition from OLD-DIRECTORY and
+NEW-DIRECTORY, but OLD-DIRECTORY can be nil."
+  (cond
+   ((or (null old-directory)
+        (string-equal old-directory new-directory))
+    (abbreviate-file-name (directory-file-name new-directory)))
+   (t
+    (format "%s → %s"
+            (abbreviate-file-name (directory-file-name old-directory))
+            (abbreviate-file-name (directory-file-name new-directory))))))
+
 (defun direnv--show-summary (summary old-directory new-directory)
   "Show a SUMMARY message.
 
 OLD-DIRECTORY and NEW-DIRECTORY are the directories before and afther
 the environment changes."
-  (let ((paths (format
-                " (%s)"
-                (if (and old-directory (string-equal old-directory new-directory))
-                    new-directory
-                  (format "from %s to %s" (or old-directory "(none)") new-directory)))))
-    (when (string-empty-p summary)
-      (setq summary "no changes"))
-    (unless direnv-show-paths-in-summary
-      (setq paths ""))
+  (let ((summary
+         (if (string-empty-p summary) "no changes" summary))
+        (paths
+         (when direnv-show-paths-in-summary
+           (direnv--format-paths old-directory new-directory))))
     (unless direnv-use-faces-in-summary
       (setq summary (substring-no-properties summary)))
-    (message "direnv: %s%s" summary paths)))
+    (if paths
+        (message "direnv: %s (%s)" summary paths)
+      (message "direnv: %s" summary))))
 
 ;;;###autoload
 (defun direnv-update-environment (&optional file-name force-summary)
@@ -226,14 +223,10 @@ When FORCE-SUMMARY is non-nil or when called interactively, show a summary messa
           (setq exec-path (append (parse-colon-path value) (list exec-directory))))))))
 
 ;;;###autoload
-(defun direnv-edit ()
-  "Edit the .envrc associated with the current directory."
+(defun direnv-allow ()
+  "Run ‘direnv allow’ and update the environment afterwards."
   (interactive)
-  (require 'with-editor)
-  (let ((display-buffer-alist
-         (cons (cons "\\*Async Shell Command\\*.*" (cons #'display-buffer-no-window nil))
-               display-buffer-alist)))
-    (with-editor-async-shell-command "direnv edit" nil nil))
+  (call-process (direnv--detect) nil 0 nil "allow")
   (direnv-update-environment))
 
 ;;;###autoload
@@ -256,8 +249,6 @@ visited (local) file."
 
 Since .envrc files are shell scripts, this mode inherits from sh-mode.
 \\{direnv-envrc-mode-map}")
-
-(add-hook 'direnv-envrc-mode-hook #'direnv--maybe-enable-with-editor-mode)
 
 ;;;###autoload
 (add-to-list 'auto-mode-alist '("\\.envrc\\'" . direnv-envrc-mode))

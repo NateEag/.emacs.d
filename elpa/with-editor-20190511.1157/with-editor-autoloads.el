@@ -1,10 +1,12 @@
 ;;; with-editor-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "with-editor" "with-editor.el" (23667 62001
-;;;;;;  983952 14000))
+;;;### (autoloads nil "with-editor" "with-editor.el" (0 0 0 0))
 ;;; Generated autoloads from with-editor.el
 
 (autoload 'with-editor-export-editor "with-editor" "\
@@ -80,10 +82,11 @@ else like the former.
 
 \(fn COMMAND &optional OUTPUT-BUFFER ERROR-BUFFER ENVVAR)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "with-editor" '("with-editor" "start-file-process--with-editor-process-filter" "server-" "shell-command--shell-command-with-editor-mode")))
+
 ;;;***
 
-;;;### (autoloads nil nil ("with-editor-pkg.el") (23667 62001 985135
-;;;;;;  210000))
+;;;### (autoloads nil nil ("with-editor-pkg.el") (0 0 0 0))
 
 ;;;***
 
@@ -91,5 +94,6 @@ else like the former.
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; with-editor-autoloads.el ends here

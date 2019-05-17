@@ -1,17 +1,17 @@
 ;;; bnf-mode.el --- Major mode for editing BNF grammars. -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019 Serghei Iakovlev
+;; Copyright (C) 2019 Free Software Foundation, Inc
 
 ;; Author: Serghei Iakovlev <sadhooklay@gmail.com>
-;; Maintainer: Serghei Iakovlev
-;; Version: 0.4.1
+;; Maintainer: Serghei Iakovlev <sadhooklay@gmail.com>
+;; Version: 0.4.2
 ;; URL: https://github.com/sergeyklay/bnf-mode
 ;; Keywords: languages
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24.3"))
 
 ;; This file is NOT part of GNU Emacs.
 
-;;; License
+;;;; License
 
 ;; This file is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License
@@ -24,9 +24,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this file; if not, write to the Free Software
-;; Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
-;; 02110-1301, USA.
+;; along with this file.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 
@@ -64,8 +62,6 @@
 (eval-when-compile
   (require 'rx))    ; `rx'
 
-(require 'cl-lib)   ; `cl-defmacro'
-
 
 ;;; Customization
 
@@ -78,11 +74,22 @@
   :link '(url-link :tag "GitHub Page" "https://github.com/sergeyklay/bnf-mode")
   :link '(emacs-commentary-link :tag "Commentary" "bnf-mode"))
 
-(defcustom bnf-mode-hook nil
-  "List of functions to call when entering BNF Mode."
-  :tag "Hook"
-  :type 'hook
-  :group 'bnf)
+(defcustom bnf-mode-algol-comments-style nil
+  "Non-nil means use for BNF comments style introduced in ALGOL 60.
+
+For the purpose of including text among the symbols of a program the
+following \"comment\" conventions will hold:
+
+  :------------------------------------------------:------------------:
+  | The sequence of basic symbols:                 | is equivalent to |
+  :------------------------------------------------:------------------:
+  | ; comment <any sequence not containing ;>;     | ;                |
+  | begin comment <any sequence not containing ;>; | begin            |
+  :------------------------------------------------:------------------:
+
+Note: Enabling this feature will disable comments recognition which use
+semicolon only (\";\")."
+  :type 'boolean)
 
 
 ;;; Specialized rx
@@ -92,11 +99,11 @@
     `((bnf-rule-name . ,(rx (and
                              (1+ (or alnum digit))
                              (0+ (or alnum digit
-                                     (in "!\"\#$%&'()*+,\-./:;=?@\[\\\]^_`{|}~")
+                                     (in "!\"#$%&'()*+,-./:;=?@[\]^_`{|}~")
                                      (in " \t"))))))
     "Additional special sexps for `bnf-rx'."))
 
-  (cl-defmacro bnf-rx (&rest sexps)
+  (defmacro bnf-rx (&rest sexps)
      "BNF-specific replacement for `rx'.
 
 In addition to the standard forms of `rx', the following forms
@@ -110,12 +117,10 @@ are available:
 
 See `rx' documentation for more information about REGEXPS param."
      (let ((rx-constituents (append bnf-rx-constituents rx-constituents)))
-       (cond ((null sexps)
-              (error "No regexp"))
-             ((cdr sexps)
-              (rx-to-string `(and ,@sexps) t))
-             (t
-              (rx-to-string (car sexps) t))))))
+       (rx-to-string (cond ((null sexps) (error "No regexp"))
+                           ((cdr sexps)  `(and ,@sexps))
+                           (t            (car sexps)))
+                     t))))
 
 
 ;;; Font Locking
@@ -159,48 +164,56 @@ See `rx' documentation for more information about REGEXPS param."
 (defvar bnf-mode-syntax-table
   (let ((table (make-syntax-table)))
     ;; Give CR the same syntax as newline
+    ;; FIXME: Why?
     (modify-syntax-entry ?\^m "> b" table)
-    ;; Comments setup
-    (modify-syntax-entry ?\;  "<"   table)
-    (modify-syntax-entry ?\n  ">"   table)
+
+    ;; FIXME: "_" doesn't mean "symbol" but "symbol constituent".
+    ;; I.e. the settings below mean that Emacs will consider "a:b=(c" as one
+    ;; symbol (aka "identifier") which can be seen if you try to C-M-f and
+    ;; C-M-b to move by sexps.
+
     ;; Treat ::= as sequence of symbols
-    (modify-syntax-entry ?\:  "_"   table)
-    (modify-syntax-entry ?\=  "_"   table)
+    (modify-syntax-entry ?\: "_" table)
+    (modify-syntax-entry ?\= "_" table)
+
     ;; Treat | as a symbol
-    (modify-syntax-entry ?\|  "_"   table)
+    (modify-syntax-entry ?\| "_" table)
+
     ;; In BNF there are no strings
     ;; so treat ' and " as a symbols
-    (modify-syntax-entry ?\"  "_"  table)
-    (modify-syntax-entry ?\'  "_"  table)
+    (modify-syntax-entry ?\" "_" table)
+    (modify-syntax-entry ?\' "_" table)
+
     ;; In BNF there are no grouping
     ;; brackets except angle ones
-    (modify-syntax-entry ?\(  "_"  table)
-    (modify-syntax-entry ?\)  "_"  table)
-    (modify-syntax-entry ?\{  "_"  table)
-    (modify-syntax-entry ?\}  "_"  table)
-    (modify-syntax-entry ?\[  "_"  table)
-    (modify-syntax-entry ?\]  "_"  table)
+    (modify-syntax-entry ?\( "_" table)
+    (modify-syntax-entry ?\) "_" table)
+    (modify-syntax-entry ?\{ "_" table)
+    (modify-syntax-entry ?\} "_" table)
+    (modify-syntax-entry ?\[ "_" table)
+    (modify-syntax-entry ?\] "_" table)
+
     ;; Group angle brackets
-    (modify-syntax-entry ?\<  "(>"  table)
-    (modify-syntax-entry ?\>  ")<"  table)
+    (modify-syntax-entry ?\< "(>" table)
+    (modify-syntax-entry ?\> ")<" table)
+
+    ;; Comments setup
+    (if bnf-mode-algol-comments-style
+        (modify-syntax-entry ?\; ">" table)
+      (progn
+        (modify-syntax-entry ?\; "<" table)
+        (modify-syntax-entry ?\n ">" table)))
+
     table)
   "Syntax table in use in `bnf-mode' buffers.")
 
-(defun bnf--syntax-propertize (start end)
-  "Apply syntax table properties to special constructs in region START to END.
-Currently handled:
-
- - Fontify terminals with ';' character correctly"
-  (save-excursion
-    (goto-char start)
-    ;; Search for terminals like "<abc;>" or "<a;bc>".
-    ;; Does not work for terminals like "<a;bc;>".
-    (while (re-search-forward "\\(?:<[^>]*\\);" end t)
-      (when (looking-at "\\(?:[^>]\\)*>")
-        ;; Mark the ";" character as an extra character used in terminals
-        ;; along with word constituents.
-        (put-text-property (1- (point)) (point)
-                           'syntax-table (string-to-syntax "_"))))))
+(defconst bnf--syntax-propertize
+  (syntax-propertize-rules
+   ;; Fontify comments in ALGOL 60 style.
+   ("\\(?:begin\\s-+\\|;\\s-*\\)\\(comment\\)\\(;\\|\\s-+[^;]*;\\)" (1 "<")))
+  "Apply syntax table properties to special constructs.
+Provide a macro to apply syntax table properties to comments in ALGOL 60 style.
+Will be used only if `bnf-mode-algol-comments-style' is set to t")
 
 
 ;;; Initialization
@@ -209,14 +222,20 @@ Currently handled:
 (define-derived-mode bnf-mode prog-mode "BNF"
   "A major mode for editing BNF grammars."
   :syntax-table bnf-mode-syntax-table
-  :group 'bnf-mode
-  ;; Comments setup.
+
+  ;; Comments setup
   (setq-local comment-use-syntax nil)
-  (setq-local comment-start "; ")
-  (setq-local comment-end "")
-  (setq-local comment-start-skip "\\(?:\\(\\W\\|^\\);+\\)\\s-*")
-  ;; Tune up syntax `syntax-table'
-  (setq-local syntax-propertize-function #'bnf--syntax-propertize)
+  (if bnf-mode-algol-comments-style
+      (progn
+        (setq-local comment-start "; comment ")
+        (setq-local comment-end ";")
+        (setq-local comment-start-skip "\\(?:\\(\\W\\|^\\)comment\\)\\s-+")
+        (setq-local syntax-propertize-function bnf--syntax-propertize))
+    (progn
+      (setq-local comment-start "; ")
+      (setq-local comment-end "")
+      (setq-local comment-start-skip "\\(?:\\(\\W\\|^\\);+\\)\\s-+")))
+
   ;; Font locking
   (setq font-lock-defaults
         '(
@@ -224,7 +243,7 @@ Currently handled:
           bnf-font-lock-keywords
           ;; keywords-only
           nil
-          ;; Regarding to RFC5234 rule names are case insensitive.
+          ;; According to RFC5234 rule names are case insensitive.
           ;; The names <rulename>, <Rulename>, <RULENAME>, and <rUlENamE>
           ;; all refer to the same rule.  As far as is known, this doesn't
           ;; conflict with original BNF version
@@ -237,9 +256,4 @@ Currently handled:
 (add-to-list 'auto-mode-alist '("\\.bnf\\'" . bnf-mode))
 
 (provide 'bnf-mode)
-
-;; Local Variables:
-;; firestarter: ert-run-tests-interactively
-;; End:
-
 ;;; bnf-mode.el ends here

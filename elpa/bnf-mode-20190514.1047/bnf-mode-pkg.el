@@ -1,4 +1,4 @@
-(define-package "bnf-mode" "20190420.2306" "Major mode for editing BNF grammars."
+(define-package "bnf-mode" "20190514.1047" "Major mode for editing BNF grammars."
   '((cl-lib "0.5")
     (emacs "24.3"))
   :keywords
@@ -6,7 +6,7 @@
   :authors
   '(("Serghei Iakovlev" . "sadhooklay@gmail.com"))
   :maintainer
-  '("Serghei Iakovlev")
+  '("Serghei Iakovlev" . "sadhooklay@gmail.com")
   :url "https://github.com/sergeyklay/bnf-mode")
 ;; Local Variables:
 ;; no-byte-compile: t

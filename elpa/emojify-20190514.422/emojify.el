@@ -613,7 +613,9 @@ Does nothing if the value is anything else."
   :group 'emojify)
 
 (defcustom emojify-reveal-on-isearch t
-  "Should underlying emoji be displayed when point enters emoji while in isearch mode.")
+  "Should underlying emoji be displayed when point enters emoji while in isearch mode."
+  :type 'bool
+  :group 'emojify)
 
 (defcustom emojify-show-help t
   "If non-nil the underlying text is displayed in a popup when mouse moves over it."
@@ -703,12 +705,16 @@ Example -
 The following assumes that custom images are at ~/.emacs.d/emojis/trollface.png and
 ~/.emacs.d/emojis/neckbeard.png
 
-'((\":troll:\"     . ((\"name\" . \"Troll\")
+'((\":troll:\"    . ((\"name\" . \"Troll\")
                     (\"image\" . \"~/.emacs.d/emojis/trollface.png\")
                     (\"style\" . \"github\")))
   (\":neckbeard:\" . ((\"name\" . \"Neckbeard\")
                     (\"image\" . \"~/.emacs.d/emojis/neckbeard.png\")
-                    (\"style\" . \"github\"))))")
+                    (\"style\" . \"github\"))))"
+  :type '(alist :key-type string
+                :value-type (alist :key-type string
+                                   :value-type string))
+  :group 'emojify)
 
 (defvar emojify--user-emojis nil
   "User specified custom emojis.")
@@ -930,9 +936,9 @@ This function caches the result of the check since the naive check
 
     (memq format (imagemagick-types))
 
-can be expensive if imagemagick-types returns a large list, this is
+can be expensive if `imagemagick-types' returns a large list, this is
 especially problematic since this check is potentially called during
-very redisplay. See https://github.com/iqbalansari/emacs-emojify/issues/41"
+very redisplay.  See https://github.com/iqbalansari/emacs-emojify/issues/41"
   (when (fboundp 'imagemagick-types)
     (when (equal (ht-get emojify--imagemagick-support-cache format 'unset) 'unset)
       (ht-set emojify--imagemagick-support-cache format (memq format (imagemagick-types))))
@@ -1029,10 +1035,13 @@ For explanation of TARGET see the documentation of
                                          'emojify-text text)
                                    buffer-props)))))
 
-(defun emojify-display-emojis-in-region (beg end)
+(defun emojify-display-emojis-in-region (beg end &optional target)
   "Display emojis in region.
 
-BEG and END are the beginning and end of the region respectively.
+BEG and END are the beginning and end of the region respectively.  TARGET
+is used to determine the background color and size of emojis, by default
+the current buffer is used to determine these, see
+`emojify--get-text-display-props' for more details.
 
 Displaying happens in two phases, first search based phase displays actual text
 appearing in buffer as emojis.  In the next phase composed text is searched for
@@ -1097,7 +1106,7 @@ should not be a problem 🤞."
                                        (emojify-looking-at-end-of-list-maybe match-end))))
 
                          (not (run-hook-with-args-until-success 'emojify-inhibit-functions match match-beginning match-end)))
-                (emojify--propertize-text-for-emoji emoji match buffer match-beginning match-end)))
+                (emojify--propertize-text-for-emoji emoji match buffer match-beginning match-end target)))
             ;; Stop a bit to let `with-timeout' kick in
             (sit-for 0 t))))
 
@@ -1131,7 +1140,7 @@ should not be a problem 🤞."
               ;; Display only composed text that is unicode char
               (when (and emoji
                          (string= (ht-get emoji "style") "unicode"))
-                (emojify--propertize-text-for-emoji emoji match (current-buffer) compose-start compose-end))
+                (emojify--propertize-text-for-emoji emoji match (current-buffer) compose-start compose-end target))
               ;; Setup the next loop
               (setq compose-start (and compose-end (next-single-property-change compose-end
                                                                                 'composition
@@ -1227,37 +1236,10 @@ TARGET can either be a buffer object or a special value mode-line.  It is used
 to indicate where EMOJI would be displayed, properties like font-height are
 inherited from TARGET if provided.  See also `emojify--get-text-display-props'."
   (emojify-create-emojify-emojis)
-  (let ((target (or target (current-buffer))))
+  (let ((emojify-emoji-styles (or styles emojify-emoji-styles)))
     (with-temp-buffer
       (insert string)
-      (let ((beg (point-min))
-            (end (point-max))
-            (styles (or styles emojify-emoji-styles)))
-        (seq-doseq (regexp (apply #'append
-                                  (when emojify--user-emojis-regexp
-                                    (list emojify--user-emojis-regexp))
-                                  (list emojify-regexps)))
-          (goto-char beg)
-          (while (and (> end (point))
-                      (search-forward-regexp regexp end t))
-            (let* ((match-beginning (match-beginning 0))
-                   (match-end (match-end 0))
-                   (match (match-string-no-properties 0))
-                   (buffer (current-buffer))
-                   (emoji (emojify-get-emoji match)))
-              (when (and emoji
-                         (not (or (get-text-property match-beginning 'emojify-inhibit)
-                                  (get-text-property match-end 'emojify-inhibit)))
-                         (memql (intern (ht-get emoji "style")) styles)
-                         ;; Skip displaying this emoji if the its bounds are
-                         ;; already part of an existing emoji. Since the emojis
-                         ;; are searched in descending order of length (see
-                         ;; construction of emojify-regexp in `emojify-set-emoji-data'),
-                         ;; this means larger emojis get precedence over smaller
-                         ;; ones
-                         (not (or (get-text-property match-beginning 'emojified)
-                                  (get-text-property (1- match-end) 'emojified))))
-                (emojify--propertize-text-for-emoji emoji match buffer match-beginning match-end target))))))
+      (emojify-display-emojis-in-region (point-min) (point-max) target)
       (buffer-string))))
 
 
@@ -2078,7 +2060,7 @@ displayed."
            (disp (or (overlay-get ov 'display)
                      (overlay-get ov 'after-string)))
            (emojified-display (when disp
-                                (emojify-string disp)))
+                                (emojify-string disp '(unicode))))
            (emojified-p (when emojified-display
                           (text-property-any 0 (1- (length emojified-display))
                                              'emojified t

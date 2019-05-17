@@ -31,7 +31,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-This manual is for Magit version 2.90.1 (v2.90.1-554-gaf28fc1e6+1).
+This manual is for Magit version 2.90.1 (v2.90.1-662-gb9c5ed10e+1).
 
      Copyright (C) 2015-2019 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -128,7 +128,7 @@ Inspecting
 * Ediffing::
 * References Buffer::
 * Bisecting::
-* Visiting Blobs::
+* Visiting Files and Blobs::
 * Blaming::
 
 Status Buffer
@@ -152,7 +152,7 @@ Logging
 Diffing
 
 * Refreshing Diffs::
-* Diff Buffer::
+* Commands Available in Diffs::
 * Diff Options::
 * Revision Buffer::
 
@@ -162,9 +162,16 @@ References Buffer
 * References Sections::
 
 
+Visiting Files and Blobs
+
+* General-Purpose Visit Commands::
+* Visiting Files and Blobs from a Diff::
+
+
 Manipulating
 
-* Repository Setup::
+* Creating Repository::
+* Cloning Repository::
 * Staging and Unstaging::
 * Applying::
 * Committing::
@@ -917,8 +924,11 @@ File: magit.info,  Node: Quitting Windows,  Next: Automatic Refreshing of Magit 
 
 ‘q’     (‘magit-mode-bury-buffer’)
 
-     This command buries the current Magit buffer.  With a prefix
-     argument, it instead kills the buffer.
+     This command buries the current Magit buffer.
+
+     With a prefix argument, it instead kills the buffer.  With a double
+     prefix argument, also kills all other Magit buffers associated with
+     the current project.
 
  -- User Option: magit-bury-buffer-function
 
@@ -2420,7 +2430,7 @@ described later.
 * Ediffing::
 * References Buffer::
 * Bisecting::
-* Visiting Blobs::
+* Visiting Files and Blobs::
 * Blaming::
 
 
@@ -2626,9 +2636,13 @@ default the following functions are also members of that hook:
 
      Insert a tree of ignored files.
 
-     If the first element of ‘magit-diff-section-arguments’ is a
-     directory, then limit the list to files below that.  The value of
-     that variable can be set using ‘D = f <DIRECTORY> RET g’.
+     Its possible to limit the logs in the current buffer to a certain
+     directory using ‘D = f <DIRECTORY> RET g’.  If you do that, then
+     that that also affects this command.
+
+     The log filter can be used to limit to multiple files.  In that
+     case this function only respects the first of the files and only if
+     it is a directory.
 
  -- Function: magit-insert-unpulled-or-recent-commits
 
@@ -2941,7 +2955,8 @@ several infix arguments that can be changed before invoking one of the
 suffix commands.  However, in the case of the log transient, these
 arguments may be taken from those currently in use in the current
 repository’s log buffer, depending on the value of
-‘magit-use-sticky-arguments’ (see *note Transient Commands::).
+‘magit-prefix-use-buffer-arguments’ (see *note Transient Arguments and
+Buffer Variables::).
 
    For information about the various arguments, see *note
 (gitman)git-log::.
@@ -3388,7 +3403,8 @@ several infix arguments that can be changed before invoking one of the
 suffix commands.  However, in the case of the diff transient, these
 arguments may be taken from those currently in use in the current
 repository’s diff buffer, depending on the value of
-‘magit-use-sticky-arguments’ (see *note Transient Commands::).
+‘magit-prefix-use-buffer-arguments’ (see *note Transient Arguments and
+Buffer Variables::).
 
    Also see *note (gitman)git-diff::.
 
@@ -3456,12 +3472,12 @@ Buffers Visiting Files::.
 * Menu:
 
 * Refreshing Diffs::
-* Diff Buffer::
+* Commands Available in Diffs::
 * Diff Options::
 * Revision Buffer::
 
 
-File: magit.info,  Node: Refreshing Diffs,  Next: Diff Buffer,  Up: Diffing
+File: magit.info,  Node: Refreshing Diffs,  Next: Commands Available in Diffs,  Up: Diffing
 
 5.4.1 Refreshing Diffs
 ----------------------
@@ -3560,95 +3576,41 @@ without having to using one of the diff transient.
      This command moves forward in current buffer’s history.
 
 
-File: magit.info,  Node: Diff Buffer,  Next: Diff Options,  Prev: Refreshing Diffs,  Up: Diffing
+File: magit.info,  Node: Commands Available in Diffs,  Next: Diff Options,  Prev: Refreshing Diffs,  Up: Diffing
 
-5.4.2 Diff Buffer
------------------
+5.4.2 Commands Available in Diffs
+---------------------------------
 
-These commands are available in diff buffers.
+Some commands are only available if point is inside a diff.
 
-‘RET’     (‘magit-diff-visit-file’)
-
-     From a diff, visit the corresponding file at the appropriate
-     position.
-
-     If the diff shows changes in the worktree, the index, or ‘HEAD’,
-     then visit the actual file.  Otherwise, when the diff is about an
-     older commit or a range, then visit the appropriate blob.
-
-     If point is on a removed line, then visit the blob for the first
-     parent of the commit which removed that line, i.e.  the last commit
-     where that line still existed.  Otherwise visit the blob for the
-     commit whose changes are being shown.
-
-     Interactively, when the file or blob to be displayed is already
-     being displayed in another window of the same frame, then just
-     select that window and adjust point.  Otherwise, or with a prefix
-     argument, display the buffer in another window.  The meaning of the
-     prefix argument can be inverted or further modified using the
-     option ‘magit-display-file-buffer-function’.
-
-     Non-interactively the optional OTHER-WINDOW argument is taken
-     literally.  DISPLAY-FN can be used to specify the display function
-     explicitly, in which case OTHER-WINDOW is ignored.
-
-     The optional FORCE-WORKTREE means to force visiting the worktree
-     version of the file.  To do this interactively use the command
-     ‘magit-diff-visit-file-worktree’ instead.
-
- -- User Option: magit-diff-visit-previous-blob
-
-     This option controls whether ‘magit-diff-visit-file’ may visit the
-     previous blob.  When this is ‘t’ and point is on a removed line in
-     a diff for a committed change, then ‘magit-diff-visit-file’ visits
-     the blob from the last revision which still had that line.
-
-     Currently this is only supported for committed changes, for staged
-     and unstaged changes ‘magit-diff-visit-file’ always visits the file
-     in the working tree.
-
-‘C-<return>’     (‘magit-diff-visit-file-worktree’)
-
-     From a diff, visit the corresponding file at the appropriate
-     position.
-
-     When the file is already being displayed in another window of the
-     same frame, then just select that window and adjust point.  With a
-     prefix argument also display in another window.
-
-     The actual file in the worktree is visited.  The positions in the
-     hunk headers get less useful the "older" the changes are, and as a
-     result, jumping to the appropriate position gets less reliable.
-
-     Also see ‘magit-diff-visit-file’, which visits the respective blob,
-     unless the diff shows changes in the worktree, the index, or
-     ‘HEAD’.
-
- -- Command: magit-diff-visit-file-other-window
-
-     From a diff, visit the corresponding file at the appropriate
-     position in another window.
+   ‘magit-diff-visit-file’ and related commands visit the appropriate
+version of the file that the diff at point is about.  Likewise
+‘magit-diff-visit-worktree-file’ and related commands visit the worktree
+version of the file that the diff at point is about.  See *note Visiting
+Files and Blobs from a Diff:: for more information and the key bindings.
 
 ‘C-c C-t’     (‘magit-diff-trace-definition’)
 
-     From a diff, show log for the definition at point.
+     This command shows a log for the definition at point.
 
  -- User Option: magit-log-trace-definition-function
 
-     The function used by ‘magit-log-trace-definition’ to determine the
-     function at point.  For major-modes that have special needs, you
-     could set that using the mode’s hook.
+     The function specfied by this option is used by
+     ‘magit-log-trace-definition’ to determine the function at point.
+     For major-modes that have special needs, you could set the local
+     value using the mode’s hook.
 
 ‘C-c C-e’     (‘magit-diff-edit-hunk-commit’)
 
-     From a hunk, edit the respective commit and visit the file.
+     From a hunk, this command edits the respective commit and visits
+     the file.
 
-     First visit the file being modified by the hunk at the correct
+     First it visits the file being modified by the hunk at the correct
      location using ‘magit-diff-visit-file’.  This actually visits a
      blob.  When point is on a diff header, not within an individual
      hunk, then this visits the blob the first hunk is about.
 
-     Then invoke ‘magit-edit-line-commit’, which uses an interactive
+     Then it invokes ‘magit-edit-line-commit’, which uses an interactive
      rebase to make the commit editable, or if that is not possible
      because the commit is not reachable from ‘HEAD’ by checking out
      that commit directly.  This also causes the actual worktree file to
@@ -3660,20 +3622,25 @@ These commands are available in diff buffers.
 
 ‘j’     (‘magit-jump-to-diffstat-or-diff’)
 
-     Jump to the diffstat or diff.  When point is on a file inside the
-     diffstat section, then jump to the respective diff section.
-     Otherwise, jump to the diffstat section or a child thereof.
+     This command jumps to the diffstat or diff.  When point is on a
+     file inside the diffstat section, then jump to the respective diff
+     section.  Otherwise, jump to the diffstat section or a child
+     thereof.
+
+   The next two commands are not specific to Magit-Diff mdoe (or and
+Magit buffer for that matter), but it might be worth pointing out that
+they are available here too.
 
 ‘SPC’     (‘scroll-up’)
 
-     Scroll text upward.
+     This command scrolls text upward.
 
 ‘DEL’     (‘scroll-down’)
 
-     Scroll text downward.
+     This command scrolls text downward.
 
 
-File: magit.info,  Node: Diff Options,  Next: Revision Buffer,  Prev: Diff Buffer,  Up: Diffing
+File: magit.info,  Node: Diff Options,  Next: Revision Buffer,  Prev: Commands Available in Diffs,  Up: Diffing
 
 5.4.3 Diff Options
 ------------------
@@ -3880,9 +3847,8 @@ file restriction as that log buffer (also see the command
      if ‘--follow’ is present in the log arguments.
 
    If the revision buffer is not displayed from a log buffer, the file
-restriction is determined by the file restriction in the repository’s
-diff buffer, if it exists, and the value of the option
-‘magit-use-sticky-arguments’.
+restriction is determined as usual (see *note Transient Arguments and
+Buffer Variables::).
 
 
 File: magit.info,  Node: Ediffing,  Next: References Buffer,  Prev: Diffing,  Up: Inspecting
@@ -4265,7 +4231,7 @@ status buffer.
      Insert sections showing all tags.
 
 
-File: magit.info,  Node: Bisecting,  Next: Visiting Blobs,  Prev: References Buffer,  Up: Inspecting
+File: magit.info,  Node: Bisecting,  Next: Visiting Files and Blobs,  Prev: References Buffer,  Up: Inspecting
 
 5.7 Bisecting
 =============
@@ -4325,23 +4291,128 @@ bisect session.
      commits that still have to be bisected.
 
 
-File: magit.info,  Node: Visiting Blobs,  Next: Blaming,  Prev: Bisecting,  Up: Inspecting
+File: magit.info,  Node: Visiting Files and Blobs,  Next: Blaming,  Prev: Bisecting,  Up: Inspecting
 
-5.8 Visiting Blobs
-==================
+5.8 Visiting Files and Blobs
+============================
 
-‘M-x magit-find-file’     (‘magit-find-file’)
+Magit provides several commands that visit a file or blob (the version
+of a file that is stored in a certain commit).  Actually it provides
+several *groups* of such commands and the several *variants* within each
+group.
 
-     View FILE from REV.  Switch to a buffer visiting blob REV:FILE,
-     creating one if none already exists.
+* Menu:
 
-‘M-x magit-find-file-other-window’     (‘magit-find-file-other-window’)
-
-     View FILE from REV, in another window.  Like ‘magit-find-file’, but
-     create a new window or reuse an existing one.
+* General-Purpose Visit Commands::
+* Visiting Files and Blobs from a Diff::
 
 
-File: magit.info,  Node: Blaming,  Prev: Visiting Blobs,  Up: Inspecting
+File: magit.info,  Node: General-Purpose Visit Commands,  Next: Visiting Files and Blobs from a Diff,  Up: Visiting Files and Blobs
+
+5.8.1 General-Purpose Visit Commands
+------------------------------------
+
+These commands can be used anywhere to open any blob.  Currently no keys
+are bound to these commands by default, but that is likely to change.
+
+ -- Command: magit-find-file
+
+     This command reads a filename and revision from the user and visits
+     the respective blob in a buffer.  The buffer is displayed in the
+     selected window.
+
+ -- Command: magit-find-file-other-window
+
+     This command reads a filename and revision from the user and visits
+     the respective blob in a buffer.  The buffer is displayed in
+     another window.
+
+ -- Command: magit-find-file-other-frame
+
+     This command reads a filename and revision from the user and visits
+     the respective blob in a buffer.  The buffer is displayed in
+     another frame.
+
+
+File: magit.info,  Node: Visiting Files and Blobs from a Diff,  Prev: General-Purpose Visit Commands,  Up: Visiting Files and Blobs
+
+5.8.2 Visiting Files and Blobs from a Diff
+------------------------------------------
+
+These commands can only be used when point is inside a diff.
+
+‘RET’     (‘magit-diff-visit-file’)
+
+     This command visits the appropriate version of the file that the
+     diff at point is about.
+
+     This commands visits the worktree version of the appropriate file.
+     The location of point inside the diff determines which file is
+     being visited.  The visited version depends on what changes the
+     diff is about.
+
+        • If the diff shows uncommitted changes (i.e.  staged or
+          unstaged changes), then visit the file in the working tree
+          (i.e.  the same "real" file that ‘find-file’ would visit.  In
+          all other cases visit a "blob" (i.e.  the version of a file as
+          stored in some commit).
+
+        • If point is on a removed line, then visit the blob for the
+          first parent of the commit that removed that line, i.e.  the
+          last commit where that line still exists.
+
+        • If point is on an added or context line, then visit the blob
+          that adds that line, or if the diff shows from more than a
+          single commit, then visit the blob from the last of these
+          commits.
+
+     In the file-visiting buffer this command goes to the line that
+     corresponds to the line that point is on in the diff.
+
+     The buffer is displayed in the selected window.  With a prefix
+     argument the buffer is displayed in another window instead.
+
+ -- User Option: magit-diff-visit-previous-blob
+
+     This option controls whether ‘magit-diff-visit-file’ may visit the
+     previous blob.  When this is ‘t’ (the default) and point is on a
+     removed line in a diff for a committed change, then
+     ‘magit-diff-visit-file’ visits the blob from the last revision
+     which still had that line.
+
+     Currently this is only supported for committed changes, for staged
+     and unstaged changes ‘magit-diff-visit-file’ always visits the file
+     in the working tree.
+
+‘C-<return>’     (‘magit-diff-visit-file-worktree’)
+
+     This command visits the worktree version of the appropriate file.
+     The location of point inside the diff determines which file is
+     being visited.  Unlike ‘magit-diff-visit-file’ it always visits the
+     "real" file in the working tree, i.e the "current version" of the
+     file.
+
+     In the file-visiting buffer this command goes to the line that
+     corresponds to the line that point is on in the diff.  Lines that
+     were added or removed in the working tree, the index and other
+     commits in between are automatically accounted for.
+
+     The buffer is displayed in the selected window.  With a prefix
+     argument the buffer is displayed in another window instead.
+
+   Variants of the above two commands exist that instead visit the file
+in another window or in another frame.  If you prefer such behavior,
+then you may want to change the above key bindings, but note that the
+above commands also use another window when invoked with a prefix
+argument.
+
+ -- Command: magit-diff-visit-file-other-window
+ -- Command: magit-diff-visit-file-other-frame
+ -- Command: magit-diff-visit-worktree-file-other-window
+ -- Command: magit-diff-visit-worktree-file-other-frame
+
+
+File: magit.info,  Node: Blaming,  Prev: Visiting Files and Blobs,  Up: Inspecting
 
 5.9 Blaming
 ===========
@@ -4526,7 +4597,8 @@ File: magit.info,  Node: Manipulating,  Next: Transferring,  Prev: Inspecting,  
 
 * Menu:
 
-* Repository Setup::
+* Creating Repository::
+* Cloning Repository::
 * Staging and Unstaging::
 * Applying::
 * Committing::
@@ -4539,10 +4611,10 @@ File: magit.info,  Node: Manipulating,  Next: Transferring,  Prev: Inspecting,  
 * Stashing::
 
 
-File: magit.info,  Node: Repository Setup,  Next: Staging and Unstaging,  Up: Manipulating
+File: magit.info,  Node: Creating Repository,  Next: Cloning Repository,  Up: Manipulating
 
-6.1 Repository Setup
-====================
+6.1 Creating Repository
+=======================
 
 ‘M-x magit-init’     (‘magit-init’)
 
@@ -4554,24 +4626,140 @@ File: magit.info,  Node: Repository Setup,  Next: Staging and Unstaging,  Up: Ma
      directory is the root of the existing repository, then the user has
      to confirm that it should be reinitialized.
 
-‘M-x magit-clone’     (‘magit-clone’)
+
+File: magit.info,  Node: Cloning Repository,  Next: Staging and Unstaging,  Prev: Creating Repository,  Up: Manipulating
 
-     This command clones a repository and then shows the status buffer
-     for the new repository.
+6.2 Cloning Repository
+======================
 
-     The user is queried for a remote url and a local directory.
+To clone a remote or local repository use ‘C’, which is bound to the
+command ‘magit-clone’.  This command either act as a transient prefix
+command, which binds several infix arguments and suffix commands, or it
+can invoke ‘git clone’ directly, depending on whether a prefix argument
+is used and on the value of ‘magit-clone-always-transient’.
+
+ -- User Option: magit-clone-always-transient
+
+     This option controls whether the command ‘magit-clone’ always acts
+     as a transient prefix command, regardless of whether a prefix
+     argument is used or not.  If ‘t’, then that command always acts as
+     a transient prefix.  If ‘nil’, then a prefix argument has to be
+     used for it to act as a transient.
+
+‘C’     (‘magit-clone’)
+
+     This command either acts as a transient prefix command as described
+     above or does the same thing as ‘transient-clone-regular’ as
+     described below.
+
+     If it acts as a transient prefix, then it binds the following
+     suffix commands and several infix arguments.
+
+‘C C’     (‘magit-clone-regular’)
+
+     This command creates a regular clone of an existing repository.
+     The repository and the target directory are read from the user.
+
+‘C s’     (‘magit-clone-shallow’)
+
+     This command creates a shallow clone of an existing repository.
+     The repository and the target directory are read from the user.  By
+     default the depth of the cloned history is a single commit, but
+     with a prefix argument the depth is read from the user.
+
+‘C b’     (‘magit-clone-bare’)
+
+     This command creates a bare clone of an existing repository.  The
+     repository and the target directory are read from the user.
+
+‘C m’     (‘magit-clone-mirror’)
+
+     This command creates a mirror of an existing repository.  The
+     repository and the target directory are read from the user.
+
+   The following suffixes are disabled by default.  See *note
+(transient)Enabling and Disabling Suffixes:: for how to enable them.
+
+‘C d’     (‘magit-clone-shallow-since’)
+
+     This command creates a shallow clone of an existing repository.
+     Only commits that were committed after a date are cloned, which is
+     read from the user.  The repository and the target directory are
+     also read from the user.
+
+‘C e’     (‘magit-clone-shallow-exclude’)
+
+     This command creates a shallow clone of an existing repository.
+     This reads a branch or tag from the user.  Commits that are
+     reachable from that are not cloned.  The repository and the target
+     directory are also read from the user.
+
+ -- User Option: magit-clone-set-remote-head
+
+     This option controls whether cloning causes the reference
+     ‘refs/remotes/<remote>/HEAD’ to be created in the clone.  The
+     default is to do so.
+
+     Actually ‘git clone’ itself does that and cannot be told to not do
+     it.  Therefore setting this to ‘nil’ causes Magit to remove that
+     reference after cloning.
 
  -- User Option: magit-clone-set-remote.pushDefault
 
-     Whether to set the value of ‘remote.pushDefault’ after cloning.
+     This option controls whether the value of the Git variable
+     ‘remote.pushDefault’ is set after cloning.
 
-     If ‘t’, then set without asking.  If ‘nil’, then don’t set.  If
-     ‘ask’, then ask the user every time she clones a repository.
+        • If ‘t’, then it is always set without asking.
+
+        • If ‘ask’, then the users are asked every time they clone a
+          repository.
+
+        • If ‘nil’, then it is never set.
+
+ -- User Option: magit-clone-default-directory
+
+     This option control the default directory name used when reading
+     the destination for a cloning operation.
+
+        • If ‘nil’ (the default), then the value of ‘default-directory’
+          is used.
+
+        • If a directory, then that is used.
+
+        • If a function, then that is called with the remote url as the
+          only argument and the returned value is used.
+
+ -- User Option: magit-clone-name-alist
+
+     This option maps regular expressions, which match repository names,
+     to repository urls, making it possible for users to enter short
+     names instead of urls when cloning repositories.
+
+     Each element has the form ‘(REGEXP HOSTNAME USER)’.  When the user
+     enters a name when a cloning command asks for a name or url, then
+     that is looked up in this list.  The first element whose REGEXP
+     matches is used.
+
+     The format specified by option ‘magit-clone-url-format’ is used to
+     turn the name into an url, using HOSTNAME and the repository name.
+     If the provided name contains a slash, then that is used.
+     Otherwise if the name omits the owner of the repository, then the
+     default user specified in the matched entry is used.
+
+     If USER contains a dot, then it is treated as a Git variable and
+     the value of that is used as the username.  Otherwise it is used as
+     the username itself.
+
+ -- User Option: magit-clone-url-format
+
+     The format specified by this option is used when turning repository
+     names into urls.  ‘%h’ is the hostname and ‘%n’ is the repository
+     name, including the name of the owner.
 
 
-File: magit.info,  Node: Staging and Unstaging,  Next: Applying,  Prev: Repository Setup,  Up: Manipulating
+File: magit.info,  Node: Staging and Unstaging,  Next: Applying,  Prev: Cloning Repository,  Up: Manipulating
 
-6.2 Staging and Unstaging
+6.3 Staging and Unstaging
 =========================
 
 Like Git, Magit can of course stage and unstage complete files.  Unlike
@@ -4668,7 +4856,7 @@ apply variants are described in the next section.
 
 File: magit.info,  Node: Staging from File-Visiting Buffers,  Up: Staging and Unstaging
 
-6.2.1 Staging from File-Visiting Buffers
+6.3.1 Staging from File-Visiting Buffers
 ----------------------------------------
 
 Fine-grained un-/staging has to be done from the status or a diff
@@ -4694,7 +4882,7 @@ visited in the current buffer right from inside that buffer.
 
 File: magit.info,  Node: Applying,  Next: Committing,  Prev: Staging and Unstaging,  Up: Manipulating
 
-6.3 Applying
+6.4 Applying
 ============
 
 Magit provides several "apply variants": stage, unstage, discard,
@@ -4748,7 +4936,7 @@ appropriate (i.e.  when ‘git apply’ is used internally).
 
 File: magit.info,  Node: Committing,  Next: Branching,  Prev: Applying,  Up: Manipulating
 
-6.4 Committing
+6.5 Committing
 ==============
 
 When the user initiates a commit, Magit calls ‘git commit’ without any
@@ -4766,7 +4954,7 @@ using the file’s content as message.
 
 File: magit.info,  Node: Initiating a Commit,  Next: Editing Commit Messages,  Up: Committing
 
-6.4.1 Initiating a Commit
+6.5.1 Initiating a Commit
 -------------------------
 
 Also see *note (gitman)git-commit::.
@@ -4863,7 +5051,7 @@ Also see *note (gitman)git-commit::.
 
 File: magit.info,  Node: Editing Commit Messages,  Prev: Initiating a Commit,  Up: Committing
 
-6.4.2 Editing Commit Messages
+6.5.2 Editing Commit Messages
 -----------------------------
 
 After initiating a commit as described in the previous section, two new
@@ -5120,7 +5308,7 @@ when certain rules are violated.
 
 File: magit.info,  Node: Branching,  Next: Merging,  Prev: Committing,  Up: Manipulating
 
-6.5 Branching
+6.6 Branching
 =============
 
 * Menu:
@@ -5133,7 +5321,7 @@ File: magit.info,  Node: Branching,  Next: Merging,  Prev: Committing,  Up: Mani
 
 File: magit.info,  Node: The Two Remotes,  Next: Branch Commands,  Up: Branching
 
-6.5.1 The Two Remotes
+6.6.1 The Two Remotes
 ---------------------
 
 The upstream branch of some local branch is the branch into which the
@@ -5183,7 +5371,7 @@ Pushing::).
 
 File: magit.info,  Node: Branch Commands,  Next: Branch Git Variables,  Prev: The Two Remotes,  Up: Branching
 
-6.5.2 Branch Commands
+6.6.2 Branch Commands
 ---------------------
 
 The transient prefix command ‘magit-branch’ is used to create and
@@ -5460,7 +5648,7 @@ them.  Those features are available from separate transient command.
 
 File: magit.info,  Node: Branch Git Variables,  Next: Auxiliary Branch Commands,  Prev: Branch Commands,  Up: Branching
 
-6.5.3 Branch Git Variables
+6.6.3 Branch Git Variables
 --------------------------
 
 These variables can be set from the transient prefix command
@@ -5597,7 +5785,7 @@ e.g.:
 
 File: magit.info,  Node: Auxiliary Branch Commands,  Prev: Branch Git Variables,  Up: Branching
 
-6.5.4 Auxiliary Branch Commands
+6.6.4 Auxiliary Branch Commands
 -------------------------------
 
 These commands are not available from the transient ‘magit-branch’ by
@@ -5626,7 +5814,7 @@ default.
 
 File: magit.info,  Node: Merging,  Next: Resolving Conflicts,  Prev: Branching,  Up: Manipulating
 
-6.6 Merging
+6.7 Merging
 ===========
 
 Also see *note (gitman)git-merge::.  For information on how to resolve
@@ -5725,7 +5913,7 @@ following suffix commands.
 
 File: magit.info,  Node: Resolving Conflicts,  Next: Rebasing,  Prev: Merging,  Up: Manipulating
 
-6.7 Resolving Conflicts
+6.8 Resolving Conflicts
 =======================
 
 When merging branches (or otherwise combining or changing history)
@@ -5834,7 +6022,7 @@ complex conflicts, the latter is usually overkill.
 
 File: magit.info,  Node: Rebasing,  Next: Cherry Picking,  Prev: Resolving Conflicts,  Up: Manipulating
 
-6.8 Rebasing
+6.9 Rebasing
 ============
 
 Also see *note (gitman)git-rebase::.  For information on how to resolve
@@ -5968,7 +6156,7 @@ following suffix commands.
 
 File: magit.info,  Node: Editing Rebase Sequences,  Next: Information About In-Progress Rebase,  Up: Rebasing
 
-6.8.1 Editing Rebase Sequences
+6.9.1 Editing Rebase Sequences
 ------------------------------
 
 ‘C-c C-c’     (‘with-editor-finish’)
@@ -6108,7 +6296,7 @@ commands become relevant.
 
 File: magit.info,  Node: Information About In-Progress Rebase,  Prev: Editing Rebase Sequences,  Up: Rebasing
 
-6.8.2 Information About In-Progress Rebase
+6.9.2 Information About In-Progress Rebase
 ------------------------------------------
 
 While a rebase sequence is in progress, the status buffer features a
@@ -6289,8 +6477,8 @@ commits make the same change?".
 
 File: magit.info,  Node: Cherry Picking,  Next: Resetting,  Prev: Rebasing,  Up: Manipulating
 
-6.9 Cherry Picking
-==================
+6.10 Cherry Picking
+===================
 
 Also see *note (gitman)git-cherry-pick::.
 
@@ -6396,8 +6584,8 @@ instead features the following suffix commands.
 
 File: magit.info,  Node: Reverting,  Up: Cherry Picking
 
-6.9.1 Reverting
----------------
+6.10.1 Reverting
+----------------
 
 ‘V’     (‘magit-revert’)
 
@@ -6440,7 +6628,7 @@ instead features the following suffix commands.
 
 File: magit.info,  Node: Resetting,  Next: Stashing,  Prev: Cherry Picking,  Up: Manipulating
 
-6.10 Resetting
+6.11 Resetting
 ==============
 
 Also see *note (gitman)git-reset::.
@@ -6489,7 +6677,7 @@ Also see *note (gitman)git-reset::.
 
 File: magit.info,  Node: Stashing,  Prev: Resetting,  Up: Manipulating
 
-6.11 Stashing
+6.12 Stashing
 =============
 
 Also see *note (gitman)git-stash::.
@@ -7616,135 +7804,4 @@ files are being committed.
 
 * Wip Graph::
 * Legacy Wip Modes::
-
-
-File: magit.info,  Node: Wip Graph,  Next: Legacy Wip Modes,  Up: Wip Modes
-
-8.7.1 Wip Graph
----------------
-
- -- User Option: magit-wip-merge-branch
-
-     This option controls whether the current branch is merged into the
-     wip refs after a new commit was created on the branch.
-
-     If non-nil and the current branch has new commits, then it is
-     merged into the wip ref before creating a new wip commit.  This
-     makes it easier to inspect wip history and the wip commits are
-     never garbage collected.
-
-     If nil and the current branch has new commits, then the wip ref is
-     reset to the tip of the branch before creating a new wip commit.
-     With this setting wip commits are eventually garbage collected.
-
-   When ‘magit-wip-merge-branch’ is ‘t’, then the history looks like
-this:
-
-       *--*--*--*--*--*       refs/wip/index/refs/heads/master
-      /     /     /
-     A-----B-----C            refs/heads/master
-
-   When ‘magit-wip-merge-branch’ is ‘nil’, then creating a commit on the
-real branch and then making a change causes the wip refs to be recreated
-to fork from the new commit.  But the old commits on the wip refs are
-not lost.  They are still available from the reflog.  To make it easier
-to see when the fork point of a wip ref was changed, an additional
-commit with the message "restart autosaving" is created on it (‘xxO’
-commits below are such boundary commits).
-
-   Starting with
-
-           BI0---BI1    refs/wip/index/refs/heads/master
-          /
-     A---B              refs/heads/master
-          \
-           BW0---BW1    refs/wip/wtree/refs/heads/master
-
-   and committing the staged changes and editing and saving a file would
-result in
-
-           BI0---BI1        refs/wip/index/refs/heads/master
-          /
-     A---B---C              refs/heads/master
-          \   \
-           \   CW0---CW1    refs/wip/wtree/refs/heads/master
-            \
-             BW0---BW1      refs/wip/wtree/refs/heads/master@{2}
-
-   The fork-point of the index wip ref is not changed until some change
-is being staged.  Likewise just checking out a branch or creating a
-commit does not change the fork-point of the working tree wip ref.  The
-fork-points are not adjusted until there actually is a change that
-should be committed to the respective wip ref.
-
-
-File: magit.info,  Node: Legacy Wip Modes,  Prev: Wip Graph,  Up: Wip Modes
-
-8.7.2 Legacy Wip Modes
-----------------------
-
-It is recommended that you use the mode ‘magit-wip-mode’ (which see) and
-ignore the existence of the following modes, which are preserved for
-historic reasons.
-
-   Setting the following variables directly does not take effect; either
-use the Custom interface to do so or call the respective mode functions.
-
- -- User Option: magit-wip-after-save-mode
-
-     When this mode is enabled, then saving a buffer that visits a file
-     tracked in a Git repository causes its current state to be
-     committed to the working tree wip ref for the current branch.
-
- -- User Option: magit-wip-after-apply-mode
-
-     When this mode is enabled, then applying (i.e.  staging, unstaging,
-     discarding, reversing, and regularly applying) a change to a file
-     tracked in a Git repository causes its current state to be
-     committed to the index and/or working tree wip refs for the current
-     branch.
-
-   If you only ever edit files using Emacs and only ever interact with
-Git using Magit, then the above two modes should be enough to protect
-each and every change from accidental loss.  In practice nobody does
-that.  Two additional modes exists that do commit to the wip refs before
-making changes that could cause the loss of earlier changes.
-
- -- User Option: magit-wip-before-change-mode
-
-     When this mode is enabled, then certain commands commit the
-     existing changes to the files they are about to make changes to.
-
- -- User Option: magit-wip-initial-backup-mode
-
-     When this mode is enabled, then the current version of a file is
-     committed to the worktree wip ref before the buffer visiting that
-     file is saved for the first time since the buffer was created.
-
-     This backs up the same version of the file that ‘backup-buffer’
-     would save.  While ‘backup-buffer’ uses a backup file, this mode
-     uses the same worktree wip ref as used by the other Magit Wip
-     modes.  Like ‘backup-buffer’, it only does this once; unless you
-     kill the buffer and visit the file again only one backup will be
-     created per Emacs session.
-
-     This mode ignores the variables that affect ‘backup-buffer’ and can
-     be used along-side that function, which is recommended because it
-     only backs up files that are tracked in a Git repository.
-
- -- User Option: magit-wip-after-save-local-mode-lighter
-
-     Mode-line lighter for ‘magit-wip-after-save-local-mode’.
-
- -- User Option: magit-wip-after-apply-mode-lighter
-
-     Mode-line lighter for ‘magit-wip-after-apply-mode’.
-
- -- User Option: magit-wip-before-change-mode-lighter
-
-     Mode-line lighter for ‘magit-wip-before-change-mode’.
-
- -- User Option: magit-wip-initial-backup-mode-lighter
-
-     Mode-line lighter for ‘magit-wip-initial-backup-mode’.
 

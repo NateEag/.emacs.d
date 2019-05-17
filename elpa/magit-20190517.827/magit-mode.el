@@ -434,6 +434,7 @@ starts complicating other things, then it will be removed."
     (define-key map "b" 'magit-branch)
     (define-key map "B" 'magit-bisect)
     (define-key map "c" 'magit-commit)
+    (define-key map "C" 'magit-clone)
     (define-key map "d" 'magit-diff)
     (define-key map "D" 'magit-diff-refresh)
     (define-key map "e" 'magit-ediff-dwim)
@@ -1070,8 +1071,16 @@ latter is displayed in its place."
 (defun magit-mode-bury-buffer (&optional kill-buffer)
   "Bury the current buffer.
 With a prefix argument, kill the buffer instead.
+With two prefix arguments, also kill all Magit buffers associated
+with this repository.
 This is done using `magit-bury-buffer-function'."
   (interactive "P")
+  ;; Kill all associated Magit buffers when a double prefix arg is given.
+  (when (>= (prefix-numeric-value kill-buffer) 16)
+    (let ((current (current-buffer)))
+      (dolist (buf (magit-mode-get-buffers))
+        (unless (eq buf current)
+          (kill-buffer buf)))))
   (funcall magit-bury-buffer-function kill-buffer))
 
 (defun magit-mode-quit-window (kill-buffer)

@@ -18,6 +18,137 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: magit.info,  Node: Wip Graph,  Next: Legacy Wip Modes,  Up: Wip Modes
+
+8.7.1 Wip Graph
+---------------
+
+ -- User Option: magit-wip-merge-branch
+
+     This option controls whether the current branch is merged into the
+     wip refs after a new commit was created on the branch.
+
+     If non-nil and the current branch has new commits, then it is
+     merged into the wip ref before creating a new wip commit.  This
+     makes it easier to inspect wip history and the wip commits are
+     never garbage collected.
+
+     If nil and the current branch has new commits, then the wip ref is
+     reset to the tip of the branch before creating a new wip commit.
+     With this setting wip commits are eventually garbage collected.
+
+   When ‘magit-wip-merge-branch’ is ‘t’, then the history looks like
+this:
+
+       *--*--*--*--*--*       refs/wip/index/refs/heads/master
+      /     /     /
+     A-----B-----C            refs/heads/master
+
+   When ‘magit-wip-merge-branch’ is ‘nil’, then creating a commit on the
+real branch and then making a change causes the wip refs to be recreated
+to fork from the new commit.  But the old commits on the wip refs are
+not lost.  They are still available from the reflog.  To make it easier
+to see when the fork point of a wip ref was changed, an additional
+commit with the message "restart autosaving" is created on it (‘xxO’
+commits below are such boundary commits).
+
+   Starting with
+
+           BI0---BI1    refs/wip/index/refs/heads/master
+          /
+     A---B              refs/heads/master
+          \
+           BW0---BW1    refs/wip/wtree/refs/heads/master
+
+   and committing the staged changes and editing and saving a file would
+result in
+
+           BI0---BI1        refs/wip/index/refs/heads/master
+          /
+     A---B---C              refs/heads/master
+          \   \
+           \   CW0---CW1    refs/wip/wtree/refs/heads/master
+            \
+             BW0---BW1      refs/wip/wtree/refs/heads/master@{2}
+
+   The fork-point of the index wip ref is not changed until some change
+is being staged.  Likewise just checking out a branch or creating a
+commit does not change the fork-point of the working tree wip ref.  The
+fork-points are not adjusted until there actually is a change that
+should be committed to the respective wip ref.
+
+
+File: magit.info,  Node: Legacy Wip Modes,  Prev: Wip Graph,  Up: Wip Modes
+
+8.7.2 Legacy Wip Modes
+----------------------
+
+It is recommended that you use the mode ‘magit-wip-mode’ (which see) and
+ignore the existence of the following modes, which are preserved for
+historic reasons.
+
+   Setting the following variables directly does not take effect; either
+use the Custom interface to do so or call the respective mode functions.
+
+ -- User Option: magit-wip-after-save-mode
+
+     When this mode is enabled, then saving a buffer that visits a file
+     tracked in a Git repository causes its current state to be
+     committed to the working tree wip ref for the current branch.
+
+ -- User Option: magit-wip-after-apply-mode
+
+     When this mode is enabled, then applying (i.e.  staging, unstaging,
+     discarding, reversing, and regularly applying) a change to a file
+     tracked in a Git repository causes its current state to be
+     committed to the index and/or working tree wip refs for the current
+     branch.
+
+   If you only ever edit files using Emacs and only ever interact with
+Git using Magit, then the above two modes should be enough to protect
+each and every change from accidental loss.  In practice nobody does
+that.  Two additional modes exists that do commit to the wip refs before
+making changes that could cause the loss of earlier changes.
+
+ -- User Option: magit-wip-before-change-mode
+
+     When this mode is enabled, then certain commands commit the
+     existing changes to the files they are about to make changes to.
+
+ -- User Option: magit-wip-initial-backup-mode
+
+     When this mode is enabled, then the current version of a file is
+     committed to the worktree wip ref before the buffer visiting that
+     file is saved for the first time since the buffer was created.
+
+     This backs up the same version of the file that ‘backup-buffer’
+     would save.  While ‘backup-buffer’ uses a backup file, this mode
+     uses the same worktree wip ref as used by the other Magit Wip
+     modes.  Like ‘backup-buffer’, it only does this once; unless you
+     kill the buffer and visit the file again only one backup will be
+     created per Emacs session.
+
+     This mode ignores the variables that affect ‘backup-buffer’ and can
+     be used along-side that function, which is recommended because it
+     only backs up files that are tracked in a Git repository.
+
+ -- User Option: magit-wip-after-save-local-mode-lighter
+
+     Mode-line lighter for ‘magit-wip-after-save-local-mode’.
+
+ -- User Option: magit-wip-after-apply-mode-lighter
+
+     Mode-line lighter for ‘magit-wip-after-apply-mode’.
+
+ -- User Option: magit-wip-before-change-mode-lighter
+
+     Mode-line lighter for ‘magit-wip-before-change-mode’.
+
+ -- User Option: magit-wip-initial-backup-mode-lighter
+
+     Mode-line lighter for ‘magit-wip-initial-backup-mode’.
+
+
 File: magit.info,  Node: Minor Mode for Buffers Visiting Files,  Next: Minor Mode for Buffers Visiting Blobs,  Prev: Wip Modes,  Up: Miscellaneous
 
 8.8 Minor Mode for Buffers Visiting Files
@@ -434,10 +565,8 @@ is that Git first goes outside and has a smoke.
 not only by using ‘-<N>’ but by also using a range.  But unfortunately
 that’s not always possible.
 
-   In repositories with more than a few thousand commits ‘--graph’
-should never be a member of ‘magit-log-section-arguments’.  That
-variable is used in the status buffer which is refreshed every time you
-run any Magit command.
+   When more than a few thousand commits are shown, then the use of
+‘--graph’ can slow things down.
 
    Using ‘--color --graph’ is even slower.  Magit uses code that is part
 of Emacs to turn control characters into faces.  That code is pretty
@@ -1889,19 +2018,27 @@ Appendix C Keystroke Index
 * b S:                                   Branch Commands.     (line 125)
 * b x:                                   Branch Commands.     (line 131)
 * c:                                     Blaming.             (line 138)
+* C:                                     Cloning Repository.  (line  20)
 * c <1>:                                 Initiating a Commit. (line   8)
 * c <2>:                                 Editing Rebase Sequences.
                                                               (line  72)
 * c a:                                   Initiating a Commit. (line  19)
 * c A:                                   Initiating a Commit. (line  67)
+* C b:                                   Cloning Repository.  (line  41)
+* C C:                                   Cloning Repository.  (line  29)
 * c c:                                   Initiating a Commit. (line  14)
+* C d:                                   Cloning Repository.  (line  54)
+* C e:                                   Cloning Repository.  (line  61)
 * c e:                                   Initiating a Commit. (line  23)
 * c f:                                   Initiating a Commit. (line  43)
 * c F:                                   Initiating a Commit. (line  51)
+* C m:                                   Cloning Repository.  (line  46)
+* C s:                                   Cloning Repository.  (line  34)
 * c s:                                   Initiating a Commit. (line  55)
 * c S:                                   Initiating a Commit. (line  63)
 * c w:                                   Initiating a Commit. (line  33)
-* C-<return>:                            Diff Buffer.         (line  48)
+* C-<return>:                            Visiting Files and Blobs from a Diff.
+                                                              (line  51)
 * C-<tab>:                               Section Visibility.  (line  13)
 * C-c C-a:                               Editing Commit Messages.
                                                               (line 128)
@@ -1916,7 +2053,8 @@ Appendix C Keystroke Index
 * C-c C-d:                               Refreshing Diffs.    (line  81)
 * C-c C-d <1>:                           Editing Commit Messages.
                                                               (line  57)
-* C-c C-e:                               Diff Buffer.         (line  80)
+* C-c C-e:                               Commands Available in Diffs.
+                                                              (line  25)
 * C-c C-f:                               Log Buffer.          (line  25)
 * C-c C-f <1>:                           Refreshing Diffs.    (line  95)
 * C-c C-i:                               Editing Commit Messages.
@@ -1935,7 +2073,8 @@ Appendix C Keystroke Index
                                                               (line 132)
 * C-c C-s:                               Editing Commit Messages.
                                                               (line 136)
-* C-c C-t:                               Diff Buffer.         (line  70)
+* C-c C-t:                               Commands Available in Diffs.
+                                                              (line  14)
 * C-c C-t <1>:                           Editing Commit Messages.
                                                               (line 140)
 * C-c C-w:                               Editing Commit Messages.
@@ -1979,25 +2118,26 @@ Appendix C Keystroke Index
 * C-x g:                                 Status Buffer.       (line  22)
 * C-x u:                                 Editing Rebase Sequences.
                                                               (line  94)
-* d:                                     Diffing.             (line  20)
+* d:                                     Diffing.             (line  21)
 * D:                                     Refreshing Diffs.    (line  11)
-* d c:                                   Diffing.             (line  68)
-* d d:                                   Diffing.             (line  26)
+* d c:                                   Diffing.             (line  69)
+* d d:                                   Diffing.             (line  27)
 * D f:                                   Refreshing Diffs.    (line  46)
 * D F:                                   Refreshing Diffs.    (line  51)
 * D g:                                   Refreshing Diffs.    (line  17)
-* d p:                                   Diffing.             (line  60)
-* d r:                                   Diffing.             (line  30)
+* d p:                                   Diffing.             (line  61)
+* d r:                                   Diffing.             (line  31)
 * D r:                                   Refreshing Diffs.    (line  41)
-* d s:                                   Diffing.             (line  50)
+* d s:                                   Diffing.             (line  51)
 * D s:                                   Refreshing Diffs.    (line  22)
-* d t:                                   Diffing.             (line  73)
+* d t:                                   Diffing.             (line  74)
 * D t:                                   Refreshing Diffs.    (line  37)
-* d u:                                   Diffing.             (line  56)
-* d w:                                   Diffing.             (line  44)
+* d u:                                   Diffing.             (line  57)
+* d w:                                   Diffing.             (line  45)
 * D w:                                   Refreshing Diffs.    (line  29)
 * DEL:                                   Log Buffer.          (line  45)
-* DEL <1>:                               Diff Buffer.         (line 109)
+* DEL <1>:                               Commands Available in Diffs.
+                                                              (line  60)
 * DEL <2>:                               Blaming.             (line  92)
 * DEL <3>:                               Editing Rebase Sequences.
                                                               (line  28)
@@ -2033,29 +2173,30 @@ Appendix C Keystroke Index
                                                               (line  24)
 * G:                                     Automatic Refreshing of Magit Buffers.
                                                               (line  33)
-* j:                                     Diff Buffer.         (line  99)
+* j:                                     Commands Available in Diffs.
+                                                              (line  45)
 * k:                                     Viewing Git Output.  (line  24)
 * k <1>:                                 Applying.            (line  40)
 * k <2>:                                 Editing Rebase Sequences.
                                                               (line  68)
 * k <3>:                                 Stashing.            (line  96)
-* l:                                     Logging.             (line  28)
+* l:                                     Logging.             (line  29)
 * L:                                     Refreshing Logs.     (line  11)
 * L <1>:                                 Log Buffer.          (line   6)
 * L <2>:                                 Log Margin.          (line  47)
 * l <1>:                                 Editing Rebase Sequences.
                                                               (line 115)
-* l a:                                   Logging.             (line  59)
-* l b:                                   Logging.             (line  55)
+* l a:                                   Logging.             (line  60)
+* l b:                                   Logging.             (line  56)
 * L d:                                   Log Margin.          (line  64)
 * L g:                                   Refreshing Logs.     (line  17)
-* l h:                                   Logging.             (line  47)
+* l h:                                   Logging.             (line  48)
 * l H:                                   Reflog.              (line  19)
-* l l:                                   Logging.             (line  34)
-* l L:                                   Logging.             (line  51)
+* l l:                                   Logging.             (line  35)
+* l L:                                   Logging.             (line  52)
 * L L:                                   Log Margin.          (line  56)
 * L l:                                   Log Margin.          (line  60)
-* l o:                                   Logging.             (line  40)
+* l o:                                   Logging.             (line  41)
 * l O:                                   Reflog.              (line  15)
 * l r:                                   Reflog.              (line  11)
 * L s:                                   Refreshing Logs.     (line  22)
@@ -2096,16 +2237,13 @@ Appendix C Keystroke Index
                                                               (line  43)
 * M-w:                                   Blaming.             (line 130)
 * M-w <1>:                               Common Commands.     (line  10)
-* M-x magit-clone:                       Repository Setup.    (line  16)
 * M-x magit-debug-git-executable:        Git Executable.      (line  45)
 * M-x magit-debug-git-executable <1>:    Debugging Tools.     (line  30)
 * M-x magit-describe-section-briefly:    Section Types and Values.
                                                               (line  13)
 * M-x magit-describe-section-briefly <1>: Matching Sections.  (line   6)
 * M-x magit-emacs-Q-command:             Debugging Tools.     (line  16)
-* M-x magit-find-file:                   Visiting Blobs.      (line   6)
-* M-x magit-find-file-other-window:      Visiting Blobs.      (line  11)
-* M-x magit-init:                        Repository Setup.    (line   6)
+* M-x magit-init:                        Creating Repository. (line   6)
 * M-x magit-reset-index:                 Staging and Unstaging.
                                                               (line  87)
 * M-x magit-reverse-in-index:            Staging and Unstaging.
@@ -2186,8 +2324,9 @@ Appendix C Keystroke Index
 * r s <1>:                               Rebasing.            (line 114)
 * r u:                                   Rebasing.            (line  37)
 * r w:                                   Rebasing.            (line  95)
-* RET:                                   Diff Buffer.         (line   8)
-* RET <1>:                               References Buffer.   (line 174)
+* RET:                                   References Buffer.   (line 174)
+* RET <1>:                               Visiting Files and Blobs from a Diff.
+                                                              (line   8)
 * RET <2>:                               Blaming.             (line  78)
 * RET <3>:                               Editing Rebase Sequences.
                                                               (line  16)
@@ -2199,7 +2338,8 @@ Appendix C Keystroke Index
                                                               (line  59)
 * S-<tab>:                               Section Visibility.  (line  22)
 * SPC:                                   Log Buffer.          (line  35)
-* SPC <1>:                               Diff Buffer.         (line 105)
+* SPC <1>:                               Commands Available in Diffs.
+                                                              (line  56)
 * SPC <2>:                               Blaming.             (line  82)
 * SPC <3>:                               Editing Rebase Sequences.
                                                               (line  21)
@@ -2413,7 +2553,13 @@ Appendix D Command Index
 * magit-cherry-pick:                     Cherry Picking.      (line   8)
 * magit-cherry-spinoff:                  Cherry Picking.      (line  76)
 * magit-cherry-spinout:                  Cherry Picking.      (line  65)
-* magit-clone:                           Repository Setup.    (line  16)
+* magit-clone:                           Cloning Repository.  (line  20)
+* magit-clone-bare:                      Cloning Repository.  (line  41)
+* magit-clone-mirror:                    Cloning Repository.  (line  46)
+* magit-clone-regular:                   Cloning Repository.  (line  29)
+* magit-clone-shallow:                   Cloning Repository.  (line  34)
+* magit-clone-shallow-exclude:           Cloning Repository.  (line  61)
+* magit-clone-shallow-since:             Cloning Repository.  (line  54)
 * magit-commit:                          Initiating a Commit. (line   8)
 * magit-commit <1>:                      Minor Mode for Buffers Visiting Files.
                                                               (line  68)
@@ -2434,19 +2580,20 @@ Appendix D Command Index
 * magit-describe-section-briefly:        Section Types and Values.
                                                               (line  13)
 * magit-describe-section-briefly <1>:    Matching Sections.   (line   6)
-* magit-diff:                            Diffing.             (line  20)
+* magit-diff:                            Diffing.             (line  21)
 * magit-diff <1>:                        Minor Mode for Buffers Visiting Files.
                                                               (line  75)
 * magit-diff-buffer-file:                Minor Mode for Buffers Visiting Files.
                                                               (line  86)
 * magit-diff-default-context:            Refreshing Diffs.    (line  73)
-* magit-diff-dwim:                       Diffing.             (line  26)
-* magit-diff-edit-hunk-commit:           Diff Buffer.         (line  80)
+* magit-diff-dwim:                       Diffing.             (line  27)
+* magit-diff-edit-hunk-commit:           Commands Available in Diffs.
+                                                              (line  25)
 * magit-diff-flip-revs:                  Refreshing Diffs.    (line  46)
 * magit-diff-less-context:               Refreshing Diffs.    (line  65)
 * magit-diff-more-context:               Refreshing Diffs.    (line  69)
-* magit-diff-paths:                      Diffing.             (line  60)
-* magit-diff-range:                      Diffing.             (line  30)
+* magit-diff-paths:                      Diffing.             (line  61)
+* magit-diff-range:                      Diffing.             (line  31)
 * magit-diff-refresh:                    Refreshing Diffs.    (line  11)
 * magit-diff-refresh <1>:                Refreshing Diffs.    (line  17)
 * magit-diff-save-default-arguments:     Refreshing Diffs.    (line  29)
@@ -2455,19 +2602,29 @@ Appendix D Command Index
 * magit-diff-show-or-scroll-down <1>:    Blaming.             (line  92)
 * magit-diff-show-or-scroll-up:          Log Buffer.          (line  35)
 * magit-diff-show-or-scroll-up <1>:      Blaming.             (line  82)
-* magit-diff-staged:                     Diffing.             (line  50)
+* magit-diff-staged:                     Diffing.             (line  51)
 * magit-diff-switch-range-type:          Refreshing Diffs.    (line  41)
 * magit-diff-toggle-file-filter:         Refreshing Diffs.    (line  51)
 * magit-diff-toggle-refine-hunk:         Refreshing Diffs.    (line  37)
-* magit-diff-trace-definition:           Diff Buffer.         (line  70)
-* magit-diff-unstaged:                   Diffing.             (line  56)
-* magit-diff-visit-file:                 Diff Buffer.         (line   8)
-* magit-diff-visit-file-other-window:    Diff Buffer.         (line  65)
-* magit-diff-visit-file-worktree:        Diff Buffer.         (line  48)
+* magit-diff-trace-definition:           Commands Available in Diffs.
+                                                              (line  14)
+* magit-diff-unstaged:                   Diffing.             (line  57)
+* magit-diff-visit-file:                 Visiting Files and Blobs from a Diff.
+                                                              (line   8)
+* magit-diff-visit-file-other-frame:     Visiting Files and Blobs from a Diff.
+                                                              (line  74)
+* magit-diff-visit-file-other-window:    Visiting Files and Blobs from a Diff.
+                                                              (line  73)
+* magit-diff-visit-file-worktree:        Visiting Files and Blobs from a Diff.
+                                                              (line  51)
+* magit-diff-visit-worktree-file-other-frame: Visiting Files and Blobs from a Diff.
+                                                              (line  76)
+* magit-diff-visit-worktree-file-other-window: Visiting Files and Blobs from a Diff.
+                                                              (line  75)
 * magit-diff-while-committing:           Refreshing Diffs.    (line  81)
 * magit-diff-while-committing <1>:       Editing Commit Messages.
                                                               (line  57)
-* magit-diff-working-tree:               Diffing.             (line  44)
+* magit-diff-working-tree:               Diffing.             (line  45)
 * magit-discard:                         Applying.            (line  40)
 * magit-dispatch:                        Transient Commands.  (line  18)
 * magit-ediff:                           Ediffing.            (line  21)
@@ -2502,8 +2659,12 @@ Appendix D Command Index
                                                               (line 153)
 * magit-file-untrack:                    Minor Mode for Buffers Visiting Files.
                                                               (line 161)
-* magit-find-file:                       Visiting Blobs.      (line   6)
-* magit-find-file-other-window:          Visiting Blobs.      (line  11)
+* magit-find-file:                       General-Purpose Visit Commands.
+                                                              (line   9)
+* magit-find-file-other-frame:           General-Purpose Visit Commands.
+                                                              (line  21)
+* magit-find-file-other-window:          General-Purpose Visit Commands.
+                                                              (line  15)
 * magit-git-command:                     Running Git Manually.
                                                               (line  25)
 * magit-git-command-topdir:              Running Git Manually.
@@ -2512,28 +2673,29 @@ Appendix D Command Index
 * magit-go-backward <1>:                 Refreshing Diffs.    (line  91)
 * magit-go-forward:                      Log Buffer.          (line  25)
 * magit-go-forward <1>:                  Refreshing Diffs.    (line  95)
-* magit-init:                            Repository Setup.    (line   6)
-* magit-jump-to-diffstat-or-diff:        Diff Buffer.         (line  99)
+* magit-init:                            Creating Repository. (line   6)
+* magit-jump-to-diffstat-or-diff:        Commands Available in Diffs.
+                                                              (line  45)
 * magit-kill-this-buffer:                Minor Mode for Buffers Visiting Blobs.
                                                               (line  20)
 * magit-list-repositories:               Repository List.     (line   6)
 * magit-list-submodules:                 Listing Submodules.  (line  13)
 * magit-list-submodules <1>:             Submodule Transient. (line  54)
-* magit-log:                             Logging.             (line  28)
+* magit-log:                             Logging.             (line  29)
 * magit-log <1>:                         Minor Mode for Buffers Visiting Files.
                                                               (line  96)
-* magit-log-all:                         Logging.             (line  59)
-* magit-log-all-branches:                Logging.             (line  55)
-* magit-log-branches:                    Logging.             (line  51)
+* magit-log-all:                         Logging.             (line  60)
+* magit-log-all-branches:                Logging.             (line  56)
+* magit-log-branches:                    Logging.             (line  52)
 * magit-log-buffer-file:                 Minor Mode for Buffers Visiting Files.
                                                               (line 107)
 * magit-log-bury-buffer:                 Log Buffer.          (line  14)
-* magit-log-current:                     Logging.             (line  34)
+* magit-log-current:                     Logging.             (line  35)
 * magit-log-double-commit-limit:         Log Buffer.          (line  61)
 * magit-log-half-commit-limit:           Log Buffer.          (line  65)
-* magit-log-head:                        Logging.             (line  47)
+* magit-log-head:                        Logging.             (line  48)
 * magit-log-move-to-parent:              Log Buffer.          (line  29)
-* magit-log-other:                       Logging.             (line  40)
+* magit-log-other:                       Logging.             (line  41)
 * magit-log-refresh:                     Refreshing Logs.     (line  11)
 * magit-log-refresh <1>:                 Refreshing Logs.     (line  17)
 * magit-log-refresh <2>:                 Log Buffer.          (line   6)
@@ -2674,7 +2836,7 @@ Appendix D Command Index
                                                               (line  40)
 * magit-shell-command-topdir:            Running Git Manually.
                                                               (line  35)
-* magit-show-commit:                     Diffing.             (line  68)
+* magit-show-commit:                     Diffing.             (line  69)
 * magit-show-commit <1>:                 Blaming.             (line  78)
 * magit-show-refs:                       References Buffer.   (line   6)
 * magit-show-refs-current:               References Buffer.   (line  26)
@@ -2703,7 +2865,7 @@ Appendix D Command Index
 * magit-stash-keep-index:                Stashing.            (line  33)
 * magit-stash-list:                      Stashing.            (line 100)
 * magit-stash-pop:                       Stashing.            (line  65)
-* magit-stash-show:                      Diffing.             (line  73)
+* magit-stash-show:                      Diffing.             (line  74)
 * magit-stash-show <1>:                  Stashing.            (line  77)
 * magit-stash-worktree:                  Stashing.            (line  26)
 * magit-status:                          Status Buffer.       (line  22)
@@ -2752,8 +2914,10 @@ Appendix D Command Index
 * magit-worktree-checkout:               Worktree.            (line  13)
 * magit-worktree-delete:                 Worktree.            (line  21)
 * magit-worktree-status:                 Worktree.            (line  26)
-* scroll-down:                           Diff Buffer.         (line 109)
-* scroll-up:                             Diff Buffer.         (line 105)
+* scroll-down:                           Commands Available in Diffs.
+                                                              (line  60)
+* scroll-up:                             Commands Available in Diffs.
+                                                              (line  56)
 * with-editor-cancel:                    Editing Commit Messages.
                                                               (line  24)
 * with-editor-cancel <1>:                Editing Rebase Sequences.
@@ -2808,7 +2972,14 @@ Appendix E Function Index
 * magit-define-section-jumper:           Creating Sections.   (line  77)
 * magit-diff-scope:                      Matching Sections.   (line 118)
 * magit-diff-type:                       Matching Sections.   (line  95)
-* magit-diff-visit-file-other-window:    Diff Buffer.         (line  65)
+* magit-diff-visit-file-other-frame:     Visiting Files and Blobs from a Diff.
+                                                              (line  74)
+* magit-diff-visit-file-other-window:    Visiting Files and Blobs from a Diff.
+                                                              (line  73)
+* magit-diff-visit-worktree-file-other-frame: Visiting Files and Blobs from a Diff.
+                                                              (line  76)
+* magit-diff-visit-worktree-file-other-window: Visiting Files and Blobs from a Diff.
+                                                              (line  75)
 * magit-display-buffer:                  Switching Buffers.   (line   6)
 * magit-display-buffer-fullcolumn-most-v1: Switching Buffers. (line  76)
 * magit-display-buffer-fullframe-status-topleft-v1: Switching Buffers.
@@ -2826,6 +2997,12 @@ Appendix E Function Index
                                                               (line 153)
 * magit-file-untrack:                    Minor Mode for Buffers Visiting Files.
                                                               (line 161)
+* magit-find-file:                       General-Purpose Visit Commands.
+                                                              (line   9)
+* magit-find-file-other-frame:           General-Purpose Visit Commands.
+                                                              (line  21)
+* magit-find-file-other-window:          General-Purpose Visit Commands.
+                                                              (line  15)
 * magit-generate-buffer-name-default-function: Naming Buffers.
                                                               (line  17)
 * magit-get-section:                     Matching Sections.   (line  16)
@@ -2885,7 +3062,7 @@ Appendix E Function Index
 * magit-insert-push-branch-header:       Status Header Sections.
                                                               (line  51)
 * magit-insert-rebase-sequence:          Status Sections.     (line  23)
-* magit-insert-recent-commits:           Status Sections.     (line 115)
+* magit-insert-recent-commits:           Status Sections.     (line 119)
 * magit-insert-remote-branches:          References Sections. (line  21)
 * magit-insert-remote-header:            Status Header Sections.
                                                               (line  67)
@@ -2902,11 +3079,11 @@ Appendix E Function Index
 * magit-insert-tags-header:              Status Header Sections.
                                                               (line  56)
 * magit-insert-tracked-files:            Status Sections.     (line  96)
-* magit-insert-unpulled-cherries:        Status Sections.     (line 126)
+* magit-insert-unpulled-cherries:        Status Sections.     (line 130)
 * magit-insert-unpulled-from-pushremote: Status Sections.     (line  79)
 * magit-insert-unpulled-from-upstream:   Status Sections.     (line  74)
-* magit-insert-unpulled-or-recent-commits: Status Sections.   (line 108)
-* magit-insert-unpushed-cherries:        Status Sections.     (line 133)
+* magit-insert-unpulled-or-recent-commits: Status Sections.   (line 112)
+* magit-insert-unpushed-cherries:        Status Sections.     (line 137)
 * magit-insert-unpushed-to-pushremote:   Status Sections.     (line  89)
 * magit-insert-unpushed-to-upstream:     Status Sections.     (line  84)
 * magit-insert-unstaged-changes:         Status Sections.     (line  59)
@@ -2922,7 +3099,7 @@ Appendix E Function Index
 * magit-log-maybe-update-revision-buffer: Section Movement.   (line  64)
 * magit-maybe-set-dedicated:             Switching Buffers.   (line 101)
 * magit-mode-display-buffer:             Refreshing Buffers.  (line  33)
-* magit-mode-quit-window:                Quitting Windows.    (line  31)
+* magit-mode-quit-window:                Quitting Windows.    (line  34)
 * magit-mode-setup:                      Refreshing Buffers.  (line  17)
 * magit-push-implicitly:                 Pushing.             (line  74)
 * magit-push-to-remote:                  Pushing.             (line  85)
@@ -2939,7 +3116,7 @@ Appendix E Function Index
 * magit-repolist-column-unpushed-to-upstream: Repository List.
                                                               (line  54)
 * magit-repolist-column-version:         Repository List.     (line  39)
-* magit-restore-window-configuration:    Quitting Windows.    (line  20)
+* magit-restore-window-configuration:    Quitting Windows.    (line  23)
 * magit-revert-buffers:                  Editing Commit Messages.
                                                               (line 178)
 * magit-run-git:                         Calling Git for Effect.
@@ -3052,9 +3229,14 @@ Appendix F Variable Index
 * magit-branch-prefer-remote-upstream:   Branch Commands.     (line 165)
 * magit-branch-read-upstream-first:      Branch Commands.     (line 159)
 * magit-buffer-name-format:              Naming Buffers.      (line  27)
-* magit-bury-buffer-function:            Quitting Windows.    (line  11)
+* magit-bury-buffer-function:            Quitting Windows.    (line  14)
 * magit-cherry-margin:                   Cherries.            (line  22)
-* magit-clone-set-remote.pushDefault:    Repository Setup.    (line  23)
+* magit-clone-always-transient:          Cloning Repository.  (line  12)
+* magit-clone-default-directory:         Cloning Repository.  (line  90)
+* magit-clone-name-alist:                Cloning Repository.  (line 103)
+* magit-clone-set-remote-head:           Cloning Repository.  (line  68)
+* magit-clone-set-remote.pushDefault:    Cloning Repository.  (line  78)
+* magit-clone-url-format:                Cloning Repository.  (line 124)
 * magit-commit-ask-to-stage:             Initiating a Commit. (line  75)
 * magit-commit-extend-override-date:     Initiating a Commit. (line  80)
 * magit-commit-reword-override-date:     Initiating a Commit. (line  84)
@@ -3073,7 +3255,8 @@ Appendix F Variable Index
 * magit-diff-refine-hunk:                Diff Options.        (line   6)
 * magit-diff-refine-ignore-whitespace:   Diff Options.        (line  16)
 * magit-diff-unmarked-lines-keep-foreground: Diff Options.    (line 120)
-* magit-diff-visit-previous-blob:        Diff Buffer.         (line  37)
+* magit-diff-visit-previous-blob:        Visiting Files and Blobs from a Diff.
+                                                              (line  39)
 * magit-direct-use-buffer-arguments:     Transient Arguments and Buffer Variables.
                                                               (line  73)
 * magit-display-buffer-function:         Switching Buffers.   (line  27)
@@ -3100,10 +3283,11 @@ Appendix F Variable Index
                                                               (line 118)
 * magit-log-margin:                      Log Margin.          (line  12)
 * magit-log-section-args:                Status Options.      (line  36)
-* magit-log-section-commit-count:        Status Sections.     (line 120)
+* magit-log-section-commit-count:        Status Sections.     (line 124)
 * magit-log-select-margin:               Select from Log.     (line  30)
 * magit-log-show-refname-after-summary:  Log Buffer.          (line  75)
-* magit-log-trace-definition-function:   Diff Buffer.         (line  74)
+* magit-log-trace-definition-function:   Commands Available in Diffs.
+                                                              (line  18)
 * magit-module-sections-hook:            Status Module Sections.
                                                               (line  20)
 * magit-module-sections-nested:          Status Module Sections.

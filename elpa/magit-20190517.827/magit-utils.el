@@ -804,34 +804,23 @@ Unless optional argument KEEP-EMPTY-LINES is t, trim all empty lines."
 
 (defun magit-set-header-line-format (string)
   "Set the header-line using STRING.
-Propertize STRING with the `magit-header-line' face if no face is
-present, and pad the left and right sides of STRING equally such
-that it will align with the text area."
-  (let* ((header-line
-          (concat (propertize " "
-                              'display
-                              '(space :align-to 0))
-                  string
-                  (propertize
-                   " "
-                   'display
-                   `(space :width (+ left-fringe
-                                     left-margin
-                                     ,@(and (eq (car (window-current-scroll-bars))
-                                                'left)
-                                            '(scroll-bar)))))))
-         (len (length header-line)))
-    (setq header-line-format
-          (if (text-property-not-all 0 len 'face nil header-line)
-              (let ((face (get-text-property 0 'face string)))
-                (when (and (atom face)
-                           (magit-face-property-all face string))
-                  (add-face-text-property 0 1 face nil header-line)
-                  (add-face-text-property (1- len) len face nil header-line))
-                header-line)
-            (propertize header-line
-                        'face
-                        'magit-header-line)))))
+Propertize STRING with the `magit-header-line'.  If the `face'
+property of any part of STRING is already set, then that takes
+precedence.  Also pad the left and right sides of STRING so that
+it aligns with the text area."
+  (setq header-line-format
+        (concat
+         (propertize " " 'display '(space :align-to 0))
+         string
+         (propertize " " 'display
+                     `(space :width
+                             (+ left-fringe
+                                left-margin
+                                ,@(and (eq (car (window-current-scroll-bars))
+                                           'left)
+                                       '(scroll-bar)))))))
+  (add-face-text-property 0 (1- (length header-line-format))
+                          'magit-header-line t header-line-format))
 
 (defun magit-face-property-all (face string)
   "Return non-nil if FACE is present in all of STRING."
@@ -1080,20 +1069,19 @@ or (last of all) the value of EXP."
 
 ;;;###autoload
 (defun Info-follow-nearest-node--magit-gitman (fn &optional fork)
-  (if magit-view-git-manual-method
-      (let ((node (Info-get-token
-                   (point) "\\*note[ \n\t]+"
-                   "\\*note[ \n\t]+\\([^:]*\\):\\(:\\|[ \n\t]*(\\)?")))
-        (if (and node (string-match "^(gitman)\\(.+\\)" node))
-            (pcase magit-view-git-manual-method
-              (`man   (require 'man)
-                      (man (match-string 1 node)))
-              (`woman (require 'woman)
-                      (woman (match-string 1 node)))
-              (_
-               (user-error "Invalid value for `magit-view-git-manual-method'")))
-          (funcall fn fork)))
-    (funcall fn fork)))
+  (let ((node (Info-get-token
+               (point) "\\*note[ \n\t]+"
+               "\\*note[ \n\t]+\\([^:]*\\):\\(:\\|[ \n\t]*(\\)?")))
+    (if (and node (string-match "^(gitman)\\(.+\\)" node))
+        (pcase magit-view-git-manual-method
+          (`info  (funcall fn fork))
+          (`man   (require 'man)
+                  (man (match-string 1 node)))
+          (`woman (require 'woman)
+                  (woman (match-string 1 node)))
+          (_
+           (user-error "Invalid value for `magit-view-git-manual-method'")))
+      (funcall fn fork))))
 
 ;;;###autoload
 (advice-add 'Info-follow-nearest-node :around
@@ -1198,6 +1186,15 @@ FORMAT-STRING to be displayed, then don't."
 Like `message', except that `message-log-max' is bound to nil."
   (let ((message-log-max nil))
     (apply #'message format-string args)))
+
+(defmacro magit--with-temp-position (buf pos &rest body)
+  (declare (indent 2))
+  `(with-current-buffer ,buf
+     (save-excursion
+       (save-restriction
+         (widen)
+         (goto-char ,pos)
+         ,@body))))
 
 ;;; _
 (provide 'magit-utils)

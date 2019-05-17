@@ -256,15 +256,9 @@ it acts on the current hunk in a Magit buffer instead of on
 a position in a file-visiting buffer."
   (interactive (list current-prefix-arg
                      (prompt-for-change-log-name)))
-  (let (buf pos)
-    (save-window-excursion
-      (call-interactively #'magit-diff-visit-file)
-      (setq buf (current-buffer))
-      (setq pos (point)))
-    (save-excursion
-      (with-current-buffer buf
-        (goto-char pos)
-        (add-change-log-entry whoami file-name other-window)))))
+  (pcase-let ((`(,buf ,pos) (magit-diff-visit-file--noselect)))
+    (magit--with-temp-position buf pos
+      (add-change-log-entry whoami file-name other-window))))
 
 ;;;###autoload
 (defun magit-add-change-log-entry-other-window (&optional whoami file-name)
@@ -321,7 +315,7 @@ points at it) otherwise."
 (put 'magit-edit-line-commit 'disabled t)
 
 ;;;###autoload
-(defun magit-diff-edit-hunk-commit ()
+(defun magit-diff-edit-hunk-commit (file)
   "From a hunk, edit the respective commit and visit the file.
 
 First visit the file being modified by the hunk at the correct
@@ -338,13 +332,11 @@ to be visited.
 Neither the blob nor the file buffer are killed when finishing
 the rebase.  If that is undesirable, then it might be better to
 use `magit-rebase-edit-command' instead of this command."
-  (interactive)
+  (interactive (list (magit-file-at-point t t)))
   (let ((magit-diff-visit-previous-blob nil))
-    (magit-diff-visit-file (--if-let (magit-file-at-point)
-                               (expand-file-name it)
-                             (user-error "No file at point"))
-                           nil 'switch-to-buffer))
-  (magit-edit-line-commit))
+    (with-current-buffer
+        (magit-diff-visit-file--internal file nil #'pop-to-buffer-same-window)
+      (magit-edit-line-commit))))
 
 (put 'magit-diff-edit-hunk-commit 'disabled t)
 

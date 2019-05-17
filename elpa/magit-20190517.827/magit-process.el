@@ -195,6 +195,35 @@ non-nil, then the password is read from the user instead."
   :group 'magit-process
   :type '(repeat (regexp)))
 
+(defcustom magit-process-prompt-functions nil
+  "List of functions used to forward arbitrary questions to the user.
+
+Magit has dedicated support for forwarding username and password
+prompts and Yes-or-No questions asked by Git and its subprocesses
+to the user.  This can be customized using other options in the
+`magit-process' customization group.
+
+If you encounter a new question that isn't handled by default,
+then those options should be used instead of this hook.
+
+However subprocesses may also ask questions that differ too much
+from what the code related to the above options assume, and this
+hook allows users to deal with such questions explicitly.
+
+Each function is called with the process and the output string
+as arguments until one of the functions returns non-nil.  The
+function is responsible for asking the user the appropriate
+question using e.g. `read-char-choice' and then forwarding the
+answer to the process using `process-send-string'.
+
+While functions such as `magit-process-yes-or-no-prompt' may not
+be sufficient to handle some prompt, it may still be of benefit
+to look at the implementations to gain some insights on how to
+implement such functions."
+  :package-version '(magit . "2.91.0")
+  :group 'magit-process
+  :type 'hook)
+
 (defcustom magit-process-ensure-unix-line-ending t
   "Whether Magit should ensure a unix coding system when talking to Git."
   :package-version '(magit . "2.6.0")
@@ -684,22 +713,21 @@ Magit status buffer."
   "Default filter used by `magit-start-process'."
   (with-current-buffer (process-buffer proc)
     (let ((inhibit-read-only t))
+      (goto-char (process-mark proc))
+      ;; Find last ^M in string.  If one was found, ignore
+      ;; everything before it and delete the current line.
+      (when-let ((ret-pos (cl-position ?\r string :from-end t)))
+        (cl-callf substring string (1+ ret-pos))
+        (delete-region (line-beginning-position) (point)))
+      (insert (propertize string 'magit-section
+                          (process-get proc 'section)))
+      (set-marker (process-mark proc) (point))
+      ;; Make sure prompts are matched after removing ^M.
       (magit-process-yes-or-no-prompt proc string)
       (magit-process-username-prompt  proc string)
       (magit-process-password-prompt  proc string)
-      (goto-char (process-mark proc))
-      (setq string (propertize string 'magit-section
-                               (process-get proc 'section)))
-      ;; Find last ^M in string.  If one was found, ignore
-      ;; everything before it and delete the current line.
-      (let ((ret-pos (length string)))
-        (while (and (>= (cl-decf ret-pos) 0)
-                    (/= ?\r (aref string ret-pos))))
-        (if (< ret-pos 0)
-            (insert string)
-          (delete-region (line-beginning-position) (point))
-          (insert (substring string (1+ ret-pos)))))
-      (set-marker (process-mark proc) (point)))))
+      (run-hook-with-args-until-success 'magit-process-prompt-functions
+                                        proc string))))
 
 (defmacro magit-process-kill-on-abort (proc &rest body)
   (declare (indent 1) (debug (form body)))
@@ -942,13 +970,14 @@ If STR is supplied, it replaces the `mode-line-process' text."
                    'magit-mode-line-process-error))
       (magit-process-unset-mode-line))))
 
-(defun magit-process-unset-mode-line ()
+(defun magit-process-unset-mode-line (&optional directory)
   "Remove the git command from the mode line."
-  (unless (magit-repository-local-get 'inhibit-magit-process-unset-mode-line)
-    (magit-repository-local-set 'mode-line-process nil)
-    (dolist (buf (magit-mode-get-buffers))
-      (with-current-buffer buf (setq mode-line-process nil)))
-    (force-mode-line-update t)))
+  (let ((default-directory (or directory default-directory)))
+    (unless (magit-repository-local-get 'inhibit-magit-process-unset-mode-line)
+      (magit-repository-local-set 'mode-line-process nil)
+      (dolist (buf (magit-mode-get-buffers))
+        (with-current-buffer buf (setq mode-line-process nil)))
+      (force-mode-line-update t))))
 
 (defvar magit-process-error-message-regexps
   (list "^\\*ERROR\\*: Canceled by user$"
@@ -1044,7 +1073,7 @@ Limited by `magit-process-error-tooltip-max-lines'."
               (magit-section-hide section)))))))
   (if (= arg 0)
       ;; Unset the `mode-line-process' value upon success.
-      (magit-process-unset-mode-line)
+      (magit-process-unset-mode-line default-dir)
     ;; Otherwise process the error.
     (let ((msg (magit-process-error-summary process-buf section)))
       ;; Change `mode-line-process' to an error face upon failure.
@@ -1052,7 +1081,7 @@ Limited by `magit-process-error-tooltip-max-lines'."
           (magit-process-set-mode-line-error-status
            (or (magit-process-error-tooltip process-buf section)
                msg))
-        (magit-process-unset-mode-line))
+        (magit-process-unset-mode-line default-dir))
       ;; Either signal the error, or else display the error summary in
       ;; the status buffer and with a message in the echo area.
       (cond

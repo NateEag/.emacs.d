@@ -288,8 +288,9 @@ the upstream isn't ahead of the current branch) show."
   (pcase-let ((`(,args ,files)
                (magit-log--get-value 'magit-log-mode
                                      magit-prefix-use-buffer-arguments)))
-    (when-let ((file (magit-file-relative-name)))
-      (setq files (list file)))
+    (unless (eq current-transient-command 'magit-dispatch)
+      (when-let ((file (magit-file-relative-name)))
+        (setq files (list file))))
     (oset obj value (if files `(("--" ,@files) ,args) args))))
 
 (cl-defmethod transient-init-value ((obj magit-log-refresh-prefix))
@@ -460,7 +461,10 @@ the upstream isn't ahead of the current branch) show."
     ("L" "toggle visibility"        magit-toggle-margin)
     ("l" "cycle style"              magit-cycle-margin-style)
     ("d" "toggle details"           magit-toggle-margin-details)
-    ("x" "toggle shortstat"         magit-toggle-log-margin-style)]]
+    ("x" "toggle shortstat"         magit-toggle-log-margin-style)]
+   [:if-mode magit-log-mode
+    :description "Toggle"
+    ("b" "buffer lock"              magit-toggle-buffer-lock)]]
   (interactive)
   (cond
    ((not (eq current-transient-command 'magit-log-refresh))
@@ -680,26 +684,18 @@ active, restrict the log to the lines that the region touches."
 (defun magit-diff-trace-definition ()
   "Show log for the definition at point in a diff."
   (interactive)
-  (let (buf pos)
-    (save-window-excursion
-      (call-interactively #'magit-diff-visit-file)
-      (setq buf (current-buffer))
-      (setq pos (point)))
-    (save-excursion
-      (with-current-buffer buf
-        (goto-char pos)
-        (call-interactively #'magit-log-trace-definition)))))
+  (pcase-let ((`(,buf ,pos) (magit-diff-visit-file--noselect)))
+    (magit--with-temp-position buf pos
+      (call-interactively #'magit-log-trace-definition))))
 
 ;;;###autoload
 (defun magit-log-merged (commit branch &optional args files)
   "Show log for the merge of COMMIT into BRANCH.
 
 More precisely, find merge commit M that brought COMMIT into
-BRANCH, and show the log of the range \"M^1..M\" or if \"--graph\"
-is a member of ARGS, then \"M^1^..M\" to include the merge-base.
-
-If COMMIT is directly on BRANCH, then show approximately twenty
-surrounding commits instead.
+BRANCH, and show the log of the range \"M^1..M\".  If COMMIT is
+directly on BRANCH, then show approximately twenty surrounding
+commits instead.
 
 This command requires git-when-merged, which is available from
 https://github.com/mhagger/git-when-merged."
@@ -721,9 +717,7 @@ https://github.com/mhagger/git-when-merged."
                     commit branch)))
       (setq m (buffer-substring-no-properties (point) (line-end-position))))
     (if (zerop exit)
-        (magit-log-setup-buffer (list (if (member "--graph" args)
-                                          (format "%s^1^..%s" m m)
-                                        (format "%s^1..%s" m m)))
+        (magit-log-setup-buffer (list (format "%s^1..%s" m m))
                                 args files nil commit)
       (setq m (string-trim-left (substring m (string-match " " m))))
       (if (equal m "Commit is directly on this branch.")
@@ -731,7 +725,7 @@ https://github.com/mhagger/git-when-merged."
                  (to (- (car (magit-rev-diff-count branch commit)) 10))
                  (to (if (<= to 0)
                          branch
-                       (format branch "%s~%s" branch to))))
+                       (format "%s~%s" branch to))))
             (unless (magit-rev-verify-commit from)
               (setq from (magit-git-string "rev-list" "--max-parents=0"
                                            commit)))
@@ -1280,9 +1274,9 @@ If there is no blob buffer in the same frame, then do nothing."
            (pcase-let ((`(,rev ,buf) magit--update-blob-buffer))
              (setq magit--update-blob-buffer nil)
              (when (buffer-live-p buf)
-               (save-excursion
-                 (with-selected-window (get-buffer-window buf)
-                   (with-current-buffer buf
+               (with-selected-window (get-buffer-window buf)
+                 (with-current-buffer buf
+                   (save-excursion
                      (magit-blob-visit (list (magit-rev-parse rev)
                                              (magit-file-relative-name
                                               magit-buffer-file-name))

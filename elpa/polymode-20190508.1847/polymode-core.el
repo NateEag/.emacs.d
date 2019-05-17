@@ -42,6 +42,7 @@
 ;;; ESSENTIAL DECLARATIONS
 (defvar *span* nil)
 (defvar-local pm/polymode nil)
+(put 'pm/polymode 'permanent-local t)
 (defvar-local pm/chunkmode nil)
 (defvar-local pm/current nil) ;; fixme: unused
 (defvar-local pm/type nil) ;; fixme: remove this
@@ -858,6 +859,8 @@ Parents' hooks are run first."
 (define-obsolete-variable-alias 'pm-move-vars-from-base 'polymode-move-these-vars-from-base-buffer "v0.1.6")
 (defvar polymode-move-these-vars-from-base-buffer
   '(buffer-file-name
+    ;; ideally this one should be merged across all buffers
+    buffer-display-table
     outline-regexp
     outline-level
     polymode-default-inner-mode
@@ -875,6 +878,7 @@ Parents' hooks are run first."
     buffer-undo-tree
     display-line-numbers
     face-remapping-alist
+    isearch-mode ; this seems to be enough to avoid isearch glitching
     line-move-visual
     overwrite-mode
     selective-display
@@ -894,18 +898,29 @@ Parents' hooks are run first."
     writeroom-mode)
   "List of minor modes to move from the old buffer.")
 
+(defun pm-own-buffer-p (&optional buffer)
+  "Return t if BUFFER is owned by polymode.
+Owning a buffer means that the BUFFER is either the base buffer
+or an indirect implementation buffer. If nil, the buffer was
+created outside of polymode with `clone-indirect-buffer'."
+  (when pm/polymode
+    (memq (or buffer (current-buffer))
+          (eieio-oref pm/polymode '-buffers))))
+
 (defun pm-select-buffer (span &optional visibly)
   "Select the buffer associated with SPAN.
 Install a new indirect buffer if it is not already installed.
 Chunkmode's class should define `pm-get-buffer-create' method. If
 VISIBLY is non-nil perform extra adjustment for \"visual\" buffer
 switch."
-  (let ((buffer (pm-span-buffer span)))
+  (let ((buffer (pm-span-buffer span))
+        (own (pm-own-buffer-p))
+        (cbuf (current-buffer)))
     (with-current-buffer buffer
       (pm--reset-ppss-cache span))
-    (when visibly
+    (when (and own visibly)
       ;; always sync to avoid issues with tooling working in different buffers
-      (pm--synchronize-points (current-buffer))
+      (pm--synchronize-points cbuf)
       (let ((mode (or (eieio-oref (nth 3 span) 'keep-in-mode)
                       (eieio-oref pm/polymode 'keep-in-mode))))
         (setq buffer (cond
@@ -916,18 +931,20 @@ switch."
                                 ;; be installed yet and there is no way install it
                                 ;; from here
                                 buffer))))))
-    ;; (message "setting buffer %d-%d [%s]" (nth 1 span) (nth 2 span) (current-buffer))
+    ;; (message "setting buffer %d-%d [%s]" (nth 1 span) (nth 2 span) cbuf)
     ;; no further action if BUFFER is already the current buffer
-    (unless (eq buffer (current-buffer))
-      (when visibly
-        (run-hook-with-args 'polymode-before-switch-buffer-hook (current-buffer) buffer))
+    (unless (eq buffer cbuf)
+      (when (and own visibly)
+        (run-hook-with-args 'polymode-before-switch-buffer-hook
+                            cbuf buffer))
       (pm--move-vars polymode-move-these-vars-from-base-buffer
                      (pm-base-buffer) buffer)
       (pm--move-vars polymode-move-these-vars-from-old-buffer
-                     (current-buffer) buffer)
+                     cbuf buffer)
       (if visibly
-          ;; slow, visual selection
-          (pm--select-existing-buffer-visibly buffer)
+          ;; Slow, visual selection. Don't perform in foreign indirect buffers.
+          (when own
+            (pm--select-existing-buffer-visibly buffer))
         (set-buffer buffer)))))
 
 (defvar text-scale-mode)
@@ -1008,6 +1025,15 @@ comprehensive alternative."
                 pos-or-span)))
     (pm-select-buffer span)))
 
+;; NB: Polymode functions used in emacs utilities should not switch buffers
+;; under any circumstances. Switching should happen only in post-command. For
+;; example `pm-indent-line-dispatcher' used to switch buffers, but it was called
+;; from electric-indent-post-self-insert-function in post-self-insert-hook which
+;; was triggered by self-insert-command called from `newline'. `newline' sets a
+;; temporary local post-self-insert-hook and makes the assumption that buffer
+;; stays the same. It was moved away from original buffer by polymode's
+;; indentation dispatcher its post-self-insert-hook hanged permanently in the
+;; old buffer (#226).
 (defun pm-switch-to-buffer (&optional pos-or-span)
   "Bring the appropriate polymode buffer to front.
 POS-OR-SPAN can be either a position in a buffer or a span. All
@@ -1152,13 +1178,15 @@ This funciton is placed in local `post-command-hook'."
 (defvar-local pm--killed nil)
 (defun polymode-after-kill-fixes ()
   "Various fixes for polymode indirect buffers."
-  (when pm/polymode
+  (when (pm-own-buffer-p)
     (let ((base (pm-base-buffer)))
       (set-buffer-modified-p nil)
-      ;; Prevent various tools like `find-file' to re-find this file. We use
-      ;; buffer-list instead of `-buffers' slot here because on some occasions
-      ;; there are other indirect buffers (e.g. switch from polymode to other
-      ;; mode and then back , or when user creates an indirect buffer manually).
+      ;; Prevent various tools like `find-file' to re-find this file.
+      ;;
+      ;; We use buffer-list instead of `-buffers' slot here because on some
+      ;; occasions there are other indirect buffers (e.g. switch from polymode
+      ;; to other mode and then back, or when user or a tool (e.g. org-capture)
+      ;; creates an indirect buffer manually).
       (dolist (b (buffer-list))
         (when (and (buffer-live-p b)
                    (eq (buffer-base-buffer b) base))
@@ -1167,6 +1195,41 @@ This funciton is placed in local `post-command-hook'."
             (setq buffer-file-name nil)
             (setq buffer-file-number nil)
             (setq buffer-file-truename nil)))))))
+
+(defun pm-turn-polymode-off (&optional new-mode)
+  "Remove all polymode indirect buffers and install NEW-MODE if any.
+NEW-MODE can be t in which case mode is picked from the
+`pm/polymode' object."
+  (when pm/polymode
+    (let* ((base (pm-base-buffer))
+           (mmode (buffer-local-value 'major-mode base))
+           (kill-buffer-hook (delete 'polymode-after-kill-fixes (copy-sequence kill-buffer-hook))))
+      ;; remove only our own indirect buffers
+      (dolist (b (eieio-oref pm/polymode '-buffers))
+        (unless (eq b base)
+          (kill-buffer b)))
+      (with-current-buffer base
+        (setq pm/polymode nil)
+        (when new-mode
+          (if (eq new-mode t)
+              (funcall mmode)
+            (funcall new-mode)))))))
+
+(defun polymode-after-change-major-mode-cleanup ()
+  "Remove all polymode implementation buffers on mode change."
+  ;; pm/polymode is permanent local. Nil polymode-mode means that the user
+  ;; called another mode on top of polymode.
+  (when (and pm/polymode (not polymode-mode))
+    ;; if another mode was called from an innermode, it was installed in a wrong place
+    (let* ((base (pm-base-buffer))
+           (mmode (unless (eq base (current-buffer))
+                    major-mode)))
+      (unless (eq base (current-buffer))
+        (when (eq (window-buffer) (current-buffer))
+          (switch-to-buffer base)))
+      (pm-turn-polymode-off mmode))))
+
+(add-hook 'after-change-major-mode-hook #'polymode-after-change-major-mode-cleanup)
 
 
 ;;; CORE ADVICE
@@ -1179,6 +1242,11 @@ If FUN is a list, apply ADVICE to each element of it."
         ((and (symbolp fun)
               (not (advice-member-p advice fun)))
          (advice-add fun :around advice))))
+
+(defun polymode-inhibit-during-initialization (orig-fun &rest args)
+  "Don't run ORIG-FUN (with ARGS) during polymode setup."
+  (unless pm-initialization-in-progress
+    (apply orig-fun args)))
 
 (defun polymode-with-current-base-buffer (orig-fun &rest args)
   "Switch to base buffer and apply ORIG-FUN to ARGS.
@@ -1207,7 +1275,7 @@ Used in advises."
             (pm--synchronize-points base))))
     (apply orig-fun args)))
 
-(pm-around-advice #'kill-buffer #'polymode-with-current-base-buffer)
+;; (pm-around-advice #'kill-buffer #'polymode-with-current-base-buffer)
 (pm-around-advice #'find-alternate-file #'polymode-with-current-base-buffer)
 (pm-around-advice #'write-file #'polymode-with-current-base-buffer)
 (pm-around-advice #'basic-save-buffer #'polymode-with-current-base-buffer)
@@ -1253,17 +1321,19 @@ ARG is the same as in `forward-paragraph'"
 
 ;; called from syntax-propertize and thus at the beginning of syntax-ppss
 (defun polymode-syntax-propertize (start end)
-  ;; fixme: not entirely sure if this is really needed
-  (dolist (b (oref pm/polymode -buffers))
-    (when (buffer-live-p b)
-      (with-current-buffer b
-        ;; `setq' doesn't have an effect because the var is let bound; `set' works
-        (set 'syntax-propertize--done end))))
 
   (unless pm-initialization-in-progress
     (save-restriction
       (widen)
       (save-excursion
+
+        ;; fixme: not entirely sure if this is really needed
+        (dolist (b (oref pm/polymode -buffers))
+          (when (buffer-live-p b)
+            (with-current-buffer b
+              ;; `setq' doesn't have an effect because the var is let bound; `set' works
+              (set 'syntax-propertize--done end))))
+
         ;; some modes don't save data in their syntax propertize functions
         (save-match-data
           (let ((protect-host (with-current-buffer (pm-base-buffer)
@@ -1406,7 +1476,7 @@ for \"cycling\" commands."
 (defun pm--get-existing-mode (mode fallback)
   "Return MODE symbol if it's defined and is a valid function.
 If so, return it, otherwise check in turn
-`polymode-default-inner-mode', FALBACK and ultimately
+`polymode-default-inner-mode', the FALLBACK and ultimately
 `poly-fallback-mode'."
   (pm--true-mode-symbol
    (cond ((fboundp mode) mode)
@@ -1505,14 +1575,16 @@ Elements of LIST can be either strings or symbols."
                     str-nm)))
           list))
 
+(defun pm--object-value (obj)
+  (cond
+   ((functionp obj)
+    (funcall obj))
+   ((symbolp obj)
+    (symbol-value obj))
+   (t obj)))
+
 (defun pm--oref-value (object slot)
-  (let ((val (eieio-oref object slot)))
-    (cond
-     ((functionp val)
-      (funcall val))
-     ((symbolp val)
-      (symbol-value val))
-     (t val))))
+  (pm--object-value (eieio-oref object slot)))
 
 (defun pm--prop-put (key val &optional object)
   (oset (or object pm/polymode) -props

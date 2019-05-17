@@ -115,11 +115,19 @@ Ran by the polymode mode function."
     (unless (eq major-mode mode)
       (let ((polymode-mode t)           ;major-modes might check this
             (base (buffer-base-buffer))
-            ;; (font-lock-fontified t)
-            ;; Modes often call font-lock functions directly. We prevent that.
+            ;; Some modes (or minor-modes which are run in their hooks) call
+            ;; font-lock functions directly on the entire buffer (#212 for an
+            ;; example). They were inhibited here before, but these variables
+            ;; are designed to be set by modes, so our setup doesn't have an
+            ;; effect in those cases and we get "Making xyz buffer-local while
+            ;; locally let-bound!" warning which seems to be harmless but
+            ;; annoying. The only solution seems to be to advice those
+            ;; functions, particularly `font-lock-fontify-region`.
+            ;; (font-lock-flush-function 'ignore)
+            ;; (font-lock-ensure-function 'ignore)
+            ;; (font-lock-fontify-buffer-function 'ignore)
+            ;; (font-lock-fontify-region-function 'ignore)
             (font-lock-function 'ignore)
-            (font-lock-flush-function 'ignore)
-            (font-lock-fontify-buffer-function 'ignore)
             ;; Mode functions can do arbitrary things. We inhibt all PM hooks
             ;; because PM objects have not been setup yet.
             (pm-allow-after-change-hook nil)
@@ -128,6 +136,7 @@ Ran by the polymode mode function."
         (when base
           (pm--move-vars polymode-move-these-vars-from-base-buffer base (current-buffer)))
         (condition-case-unless-debug err
+            ;; !! run-mode-hooks and hack-local-variables run here
             (funcall mode)
           (error (message "Polymode error (pm--mode-setup '%s): %s"
                           mode (error-message-string err))))))
@@ -363,7 +372,7 @@ in this case."
 ;;; INDENT
 
 ;; indent-region-line-by-line for polymode buffers (more efficient, works on
-;; emacs 25, no progress reporter)
+;; emacs 25, but no progress reporter)
 (defun pm--indent-region-line-by-line (start end)
   (save-excursion
     ;; called from pm--indent-raw; so we know we are in the same span with
@@ -444,13 +453,12 @@ Function used for `indent-region-function'."
 (defun pm-indent-line-dispatcher (&optional span)
   "Dispatch `pm-indent-line' methods on current SPAN.
 Value of `indent-line-function' in polymode buffers."
+  ;; NB: No buffer switching in indentation functions. See comment at
+  ;; pm-switch-to-buffer.
   (let ((span (or span (pm-innermost-span
                         (save-excursion (back-to-indentation) (point)))))
         (inhibit-read-only t))
-    (pm-indent-line (nth 3 span) span)
-    ;; fixme: remove this
-    ;; pm-indent-line-dispatcher is intended for interactive use
-    (pm-switch-to-buffer)))
+    (pm-indent-line (nth 3 span) span)))
 
 (cl-defgeneric pm-indent-line (chunkmode &optional span)
   "Indent current line.
@@ -529,18 +537,20 @@ to indent."
                 ;; On the first line. Indent with respect to header line.
                 (let ((delta (save-excursion
                                (goto-char (nth 1 span))
-                               (cond
-                                ;; empty line
-                                ((looking-at-p "[ \t]*$") 0)
-                                ;; inner span starts at bol; honor +-indent cookie
-                                ((= (point) (point-at-bol))
-                                 (pm--+-indent-offset-on-this-line span))
-                                ;; code after header
-                                (t
-                                 (end-of-line)
-                                 (skip-chars-forward "\t\n")
-                                 (pm--indent-line-raw span)
-                                 (- (point) (point-at-bol)))))))
+                               (+
+                                (pm--oref-value (nth 3 span) 'body-indent-offset)
+                                (cond
+                                 ;; empty line
+                                 ((looking-at-p "[ \t]*$") 0)
+                                 ;; inner span starts at bol; honor +-indent cookie
+                                 ((= (point) (point-at-bol))
+                                  (pm--+-indent-offset-on-this-line span))
+                                 ;; code after header
+                                 (t
+                                  (end-of-line)
+                                  (skip-chars-forward "\t\n")
+                                  (pm--indent-line-raw span)
+                                  (- (point) (point-at-bol))))))))
                   (indent-line-to
                    ;; indent with respect to header line
                    (+ delta (pm--head-indent span)))))))))
@@ -605,7 +615,7 @@ to indent."
       (let ((pos (nth (if (eq offset-type 'post-indent-offset) 2 1) span)))
         (save-excursion
           (goto-char pos)
-          (setq offset (if (numberp offset) offset (funcall offset))))
+          (setq offset (pm--object-value offset)))
         (indent-line-to (max 0 (+ (current-indentation) offset (or offset2 0))))))))
 
 

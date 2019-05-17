@@ -88,12 +88,18 @@ Preserves the `buffer-modified-p' state of the current buffer."
        (with-silent-modifications
          ,@body))))
 
+;; FIXME: Can this hack be avoided if poly-lock is registered in
+;; `font-lock-support-mode'?
 (defun poly-lock-no-jit-lock-in-polymode-buffers (fun arg)
   "Don't activate FUN in `polymode' buffers.
 When not in polymode buffers apply FUN to ARG."
-  (unless (or polymode-mode pm/polymode)
+  (unless polymode-mode
     (funcall fun arg)))
 (pm-around-advice 'jit-lock-mode #'poly-lock-no-jit-lock-in-polymode-buffers)
+;; see the comment in pm--mode-setup for these
+(pm-around-advice 'font-lock-fontify-region #'polymode-inhibit-during-initialization)
+(pm-around-advice 'font-lock-fontify-buffer #'polymode-inhibit-during-initialization)
+(pm-around-advice 'font-lock-ensure #'polymode-inhibit-during-initialization)
 
 (defun poly-lock-mode (arg)
   "This is the value of `font-lock-function' in all polymode buffers.
@@ -274,8 +280,7 @@ Fontifies chunk-by chunk within the region BEG END."
 
 (defun poly-lock-flush (&optional beg end)
   "Force refontification of the region BEG..END.
-END is extended to the next chunk separator. This function is
-placed in `font-lock-flush-function''"
+This function is placed in `font-lock-flush-function''"
   (unless poly-lock-fontification-in-progress
     (let ((beg (or beg (point-min)))
           (end (or end (point-max))))

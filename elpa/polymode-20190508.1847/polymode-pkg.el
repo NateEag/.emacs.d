@@ -1,4 +1,4 @@
-(define-package "polymode" "20190416.1316" "Extensible framework for multiple major modes"
+(define-package "polymode" "20190508.1847" "Extensible framework for multiple major modes"
   '((emacs "25"))
   :keywords
   '("languages" "multi-modes" "processes")

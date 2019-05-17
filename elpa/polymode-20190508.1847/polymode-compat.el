@@ -231,7 +231,6 @@ changes."
 ;; (pm-around-advice 'fill-paragraph #'pm-execute-narrowed-to-span)
 ;; (advice-remove 'fill-paragraph #'pm-execute-narrowed-to-span)
 
-
 ;; Synchronization of points does not work always as expected because some low
 ;; level functions move indirect buffers' points when operate in the base
 ;; buffer. See comment in `polymode-with-current-base-buffer'.
@@ -261,6 +260,24 @@ changes."
 ;; Query replace were probably misbehaving due to unsaved match data (#92). The
 ;; following is probably not necessary. (pm-around-advice 'perform-replace
 ;; 'pm-execute-inhibit-modification-hooks)
+
+;; No longer needed. See comment at pm-switch-to-buffer.
+;; (defun polymode-newline-remove-hook-in-orig-buffer (fn &rest args)
+;;   "`newline' temporary sets `post-self-insert-hook' and removes it in wrong buffer.
+;; This ARGS are passed to `newline'."
+;;   (if polymode-mode
+;;       (let* ((cbuf (current-buffer))
+;;              (old-hook (buffer-local-value 'post-self-insert-hook cbuf)))
+;;         (prog1 (apply fn args)
+;;           (unless (eq cbuf (current-buffer))
+;;             (unless (eq old-hook (buffer-local-value 'post-self-insert-hook cbuf))
+;;               (with-current-buffer cbuf
+;;                 (if old-hook
+;;                     (setq post-self-insert-hook old-hook)
+;;                   (kill-local-variable 'post-self-insert-hook)))))))
+;;     (apply fn args)))
+
+;; (pm-around-advice 'newline #'polymode-newline-remove-hook-in-orig-buffer)
 
 
 ;;; DESKTOP SAVE #194

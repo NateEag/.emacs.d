@@ -26,6 +26,10 @@
   debugging support for a lot of languages out of the gate and an
   ever-increasing number as time goes by: https://github.com/emacs-lsp/dap-mode
 
+- Replace my setup for echoing offscreen matching line for parens with this
+  one:
+    https://with-emacs.com/posts/editing/show-matching-lines-when-parentheses-go-off-screen/
+
 - Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
 
 - Add function to spawn an emacs instance with my installed packages but none
@@ -53,6 +57,9 @@
 - Try porting the Readable library to Emacs Lisp. I have yet to really
   internalize reading Emacs Lisp, and it looks promising to me:
   https://readable.sourceforge.io/
+
+- Write a macro to eval a block of elisp and query for value of any undefined
+  variables, then bind it to a key. It would be useful when debugging defuns.
 
 - Play with ob-html-chrome. It sounds like it could be a useful tool for
   writing docs that embed HTML, as many people like to see what things look
@@ -175,9 +182,6 @@
 
 - Figure out what mime-type should be used for emailing bash scripts as an
   attachment.
-
-- Set up a keybinding to send a new email and start watching the thread it
-  spawns. Incident count: 2
 
 - Understand how text/plain email attachments get converted from just LF to
   CRLF. I suspect it's notmuch's compose mode making sure my attachment conforms

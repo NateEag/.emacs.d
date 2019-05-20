@@ -56,22 +56,27 @@
 
   "Directory scratchpads live in.")
 
-(defun html-scratchpad-make-new (subdir)
-  "Create a new HTML scratchpad and make sure the webserver is live."
+(defun html-scratchpad-get-path (name)
+  "Return the full filesystem path to the scratchpad named `scratchpad-name'."
+
+  (expand-file-name name html-scratchpad-basedir))
+
+(defun html-scratchpad-open (name)
+  "Open an HTML scratchpad's buffers and ensure webserver is up.
+
+Will create the scratchpad `NAME' if it does not already exist."
   (interactive "MName scratchpad: ")
 
   (when (not (httpd-running-p))
     (httpd-start))
 
-  (let* ((scratchpad-path (expand-file-name subdir html-scratchpad-basedir))
+  (let* ((scratchpad-path (html-scratchpad-get-path name))
         (scratchpad-html-path (expand-file-name "index.html" scratchpad-path))
         (scratchpad-css-path (expand-file-name "styles.css" scratchpad-path))
         (scratchpad-js-path (expand-file-name "main.js" scratchpad-path)))
 
-    (when (file-directory-p scratchpad-path)
-      (error "%s already exists!" scratchpad-path))
-
-    (make-directory scratchpad-path)
+    (when (not (file-directory-p scratchpad-path))
+      (make-directory scratchpad-path t))
 
     (find-file scratchpad-css-path)
     (save-buffer)
@@ -83,15 +88,22 @@
     (insert html-scratchpad-index-page)
     (save-buffer)
 
-    (browse-url (concat (format "http://localhost:%d/" httpd-port) subdir "/"))))
+    (browse-url (html-scratchpad-get-url name))))
 
-(defun html-scratchpad-delete (subdir)
-  "Delete the scratchpad specified by `SUBDIR' and close its buffers."
+(defun html-scratchpad-get-url (name)
+  "Return a URL to the scratchpad stored as `NAME'."
+
+  (concat (format "http://localhost:%d" httpd-port)
+          (s-chop-prefix (expand-file-name httpd-root)
+                         (html-scratchpad-get-path name)) "/"))
+
+(defun html-scratchpad-delete (name)
+  "Delete the scratchpad specified by `NAME' and close its buffers."
 
   ;; FIXME Make directory selection work like you'd actually want.
   (interactive "DScratchpad name: ")
 
-  (let* ((scratchpad-path (expand-file-name subdir html-scratchpad-basedir)))
+  (let* ((scratchpad-path (html-scratchpad-get-path name)))
     (mapc (lambda (buffer)
             (when (string-match scratchpad-path (or (buffer-file-name buffer) ""))
               (kill-buffer buffer)))

@@ -426,9 +426,9 @@
 	     ((:url . "http://elpa.gnu.org/packages/ediprolog.html")
 	      (:keywords "languages" "processes"))])
  (eev .
-      [(20190410)
+      [(20190425)
        ((emacs
-	 (24 3)))
+	 (24 1)))
        "Support for e-scripts (eepitch blocks, elisp hyperlinks, etc)" tar
        ((:keywords "lisp" "e-scripts")
 	(:url . "http://angg.twu.net/#eev"))])
@@ -538,7 +538,7 @@
 	   ((:url . "http://elpa.gnu.org/packages/flymake.html")
 	    (:keywords "c" "languages" "tools"))])
  (fountain-mode .
-		[(2 6 2)
+		[(2 7 0)
 		 ((emacs
 		   (24 5)))
 		 "Major mode for screenwriting in Fountain markup" single
@@ -958,7 +958,7 @@
 	 ((:keywords "convenience")
 	  (:url . "https://github.com/clemera/objed"))])
  (olivetti .
-	   [(1 7 0)
+	   [(1 7 1)
 	    ((emacs
 	      (24 5)))
 	    "Minor mode for a nice writing environment" single
@@ -1118,6 +1118,19 @@
 	   "A modular front-end for interacting with external debuggers" tar
 	   ((:keywords "gdb" "python" "perl" "go" "bash" "nodejs" "zsh" "bashdb" "zshdb" "remake" "make" "trepan" "perldb" "pdb")
 	    (:url . "http://github.com/realgud/realgud/"))])
+ (realgud-ipdb .
+	       [(1 0 0)
+		((realgud
+		  (1 4 5))
+		 (load-relative
+		  (1 2))
+		 (cl-lib
+		  (0 5))
+		 (emacs
+		  (24)))
+		"Realgud front-end to ipdb" single
+		((:url . "http://github.com/rocky/realgud-ipdb")
+		 (:keywords))])
  (register-list .
 		[(0 1)
 		 nil "Interactively list/edit registers" single

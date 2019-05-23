@@ -467,10 +467,12 @@
 - Make a PR to yasnippet for my solution to the 'once' snippet overriding the
   'require_once' snippet.
 
-- Add support for a 'description' field in yasnippets? You could use that to
+- Add support for a 'description' field in yasnippets. You could use that to
   drive a help popup in {auto-complete,company}-mode, which can in turn be very
   handy in languages with obscure syntax (e.g. bash) or for snippets whose
-  purpose is not immediately obvious to the novice.
+  purpose is not immediately obvious to the novice. Even cooler would be to let
+  you insert snippets by searching their descriptions, a la
+  https://metacode.app/.
 
 - Find a workaround that will let me use auto-complete in a yasnippet tab
   field. A keybinding other than Tab for auto-complete would work, but it might

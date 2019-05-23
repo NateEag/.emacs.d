@@ -27,6 +27,20 @@
 
 ;;;***
 
+;;;### (autoloads nil "lsp-dart" "lsp-dart.el" (0 0 0 0))
+;;; Generated autoloads from lsp-dart.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-dart" '("lsp-")))
+
+;;;***
+
+;;;### (autoloads nil "lsp-elm" "lsp-elm.el" (0 0 0 0))
+;;; Generated autoloads from lsp-elm.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-elm" '("lsp-")))
+
+;;;***
+
 ;;;### (autoloads nil "lsp-go" "lsp-go.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-go.el
 

@@ -44,7 +44,7 @@ reading a new value in the minibuffer.
    Calling a suffix command usually causes the transient to be exited
 but suffix commands can also be configured to not exit the transient.
 
-This manual is for Transient version 0.1.0 (v0.1.0-75-ge7a16d2+1).
+This manual is for Transient version 0.1.0 (v0.1.0-82-gf0a7a97+1).
 
      Copyright (C) 2018-2019 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -676,6 +676,14 @@ File: transient.info,  Node: Other Options,  Next: Modifying Existing Transients
 
      Otherwise this can be any mode-line format.  See ~*note (elisp)Mode
      Line Format:: for details.
+
+ -- User Option: transient-read-with~initial-input
+
+     This option controls whether the last history element is used as
+     the initial minibuffer input when reading the value of an infix
+     argument from the user.  If ‘nil’, then there is no initial input
+     and the first element has to be accessed the same way as the older
+     elements.
 
  -- User Option: transient-highlight-mismatched-keys
 
@@ -2308,19 +2316,20 @@ Appendix E Variable Index
                                                               (line  51)
 * transient-default-level:               Enabling and Disabling Suffixes.
                                                               (line  38)
-* transient-detect-key-conflicts:        Other Options.       (line 128)
+* transient-detect-key-conflicts:        Other Options.       (line 136)
 * transient-display-buffer-action:       Other Options.       (line  46)
 * transient-enable-popup-navigation:     Other Options.       (line  28)
-* transient-highlight-mismatched-keys:   Other Options.       (line  87)
+* transient-highlight-mismatched-keys:   Other Options.       (line  95)
 * transient-history-file:                Using History.       (line  33)
 * transient-history-limit:               Using History.       (line  38)
 * transient-levels-file:                 Enabling and Disabling Suffixes.
                                                               (line  44)
 * transient-mode-line-format:            Other Options.       (line  71)
+* transient-read-with~initial-input:     Other Options.       (line  87)
 * transient-show-common-commands:        Common Suffix Commands.
                                                               (line  23)
 * transient-show-popup:                  Other Options.       (line   6)
-* transient-substitute-key-function:     Other Options.       (line 106)
+* transient-substitute-key-function:     Other Options.       (line 114)
 * transient-values-file:                 Saving Values.       (line  30)
 
 
@@ -2339,34 +2348,34 @@ Node: Getting Help for Suffix Commands18308
 Node: Enabling and Disabling Suffixes19698
 Node: Other Commands22997
 Node: Other Options23953
-Node: Modifying Existing Transients30213
-Node: Defining New Commands32756
-Node: Defining Transients33092
-Node: Binding Suffix and Infix Commands35527
-Node: Group Specifications36382
-Node: Suffix Specifications39715
-Node: Defining Suffix and Infix Commands43273
-Node: Using Infix Arguments46682
-Node: Transient State49966
-Node: Classes and Methods55838
-Node: Group Classes58052
-Node: Group Methods59969
-Node: Prefix Classes60614
-Node: Suffix Classes61706
-Node: Suffix Methods63950
-Node: Suffix Value Methods64271
-Node: Suffix Format Methods67031
-Node: Prefix Slots68480
-Node: Suffix Slots68644
-Node: Predicate Slots71495
-Node: Related Abstractions and Packages72744
-Node: Comparison With Prefix Keys and Prefix Arguments73031
-Node: Comparison With Other Packages83343
-Node: FAQ87530
-Node: Keystroke Index91261
-Node: Command Index92895
-Node: Function Index94682
-Node: Variable Index98839
+Node: Modifying Existing Transients30567
+Node: Defining New Commands33110
+Node: Defining Transients33446
+Node: Binding Suffix and Infix Commands35881
+Node: Group Specifications36736
+Node: Suffix Specifications40069
+Node: Defining Suffix and Infix Commands43627
+Node: Using Infix Arguments47036
+Node: Transient State50320
+Node: Classes and Methods56192
+Node: Group Classes58406
+Node: Group Methods60323
+Node: Prefix Classes60968
+Node: Suffix Classes62060
+Node: Suffix Methods64304
+Node: Suffix Value Methods64625
+Node: Suffix Format Methods67385
+Node: Prefix Slots68834
+Node: Suffix Slots68998
+Node: Predicate Slots71849
+Node: Related Abstractions and Packages73098
+Node: Comparison With Prefix Keys and Prefix Arguments73385
+Node: Comparison With Other Packages83697
+Node: FAQ87884
+Node: Keystroke Index91615
+Node: Command Index93249
+Node: Function Index95036
+Node: Variable Index99193
 
 End Tag Table
 

@@ -71,6 +71,10 @@ or zero, and enabled otherwise.
 
 ;;;***
 
+;;;### (autoloads nil nil ("format-all-pkg.el") (0 0 0 0))
+
+;;;***
+
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

@@ -56,6 +56,9 @@
   ;; On smaller displays, I usually only want one window so I have space left
   ;; to look at a browser window while coding. On larger, seeing two code pages
   ;; at once is handy.
+  ;;
+  ;; FIXME Take current window width into account. What I really care about is
+  ;; how many characters I can reasonably display on a given monitor.
   (let* ((frame-screen-ratio
           (/ (float (frame-pixel-width (selected-frame))) (display-pixel-width)))
          (num-windows (if (> frame-screen-ratio 0.34)

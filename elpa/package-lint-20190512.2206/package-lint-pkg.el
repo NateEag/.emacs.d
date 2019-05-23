@@ -1,2 +1,0 @@
-;;; -*- no-byte-compile: t -*-
-(define-package "package-lint" "20190512.2206" "A linting library for elisp package authors" '((cl-lib "0.5") (emacs "24")) :commit "a03fa4e6fe72ffa38ac3d67819e28de6d6bfa33f" :keywords '("lisp") :authors '(("Steve Purcell" . "steve@sanityinc.com") ("Fanael Linithien" . "fanael4@gmail.com")) :maintainer '("Steve Purcell" . "steve@sanityinc.com") :url "https://github.com/purcell/package-lint")

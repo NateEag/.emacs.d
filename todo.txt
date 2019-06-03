@@ -180,6 +180,8 @@
   Update: I have just installed the 'network-watch' package from MELPA, so this
   should be just about trivial to do now.
 
+  Incident count: 1
+
 - Figure out what mime-type should be used for emailing bash scripts as an
   attachment.
 

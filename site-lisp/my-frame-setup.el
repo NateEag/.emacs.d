@@ -52,32 +52,6 @@ in the gutter.")
   (if (member (my-get-default-font-name) (font-family-list))
       (set-frame-font (my-get-default-font size) nil t)))
 
-(defun my-set-up-frame ()
-  "Configure current frame's layout and font size based on display size."
-
-  (interactive)
-
-  (my-set-default-font)
-
-  ;; N.B.: This depends on frame-cmds.el, which I installed via MELPA.
-  (maximize-frame-vertically)
-
-  (delete-other-windows)
-
-  ;; On smaller displays, I usually only want one window so I have space left
-  ;; to look at a browser window while coding. On larger, seeing two code pages
-  ;; at once is handy.
-  ;;
-  ;; FIXME Take current window width into account. What I really care about is
-  ;; how many characters of width I can reasonably fit on a given monitor.
-  (let* ((frame-screen-ratio
-          (/ (float (frame-pixel-width (selected-frame))) (display-pixel-width)))
-         (num-windows (if (> frame-screen-ratio 0.34)
-                          1
-                        2)))
-    (my-set-frame-width-by-window-count num-windows)
-    ))
-
 (defun default-font-width ()
   "Return the width in pixels of a character in the current
 window's default font.
@@ -96,6 +70,38 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
       (set-window-buffer window (current-buffer))
       (insert "m")
       (aref (aref (font-get-glyphs (font-at 1) 1 2) 0) 4))))
+
+(defun my-set-up-frame ()
+  "Configure current frame's layout and font size based on display size."
+
+  (interactive)
+
+  (my-set-default-font)
+
+  ;; N.B.: This depends on frame-cmds.el, which I installed via MELPA.
+  (maximize-frame-vertically)
+
+  (delete-other-windows)
+
+  ;; When I just have one smaller display, I want my emacs frame to take up at
+  ;; most half the screen so I have space left to look at another program while
+  ;; coding.
+  ;;
+  ;; If I have two displays, I like Emacs to set up for showing two documents
+  ;; side-by-side, since my other stuff can go on the other monitor.
+  ;;
+  ;; On a large display this would make a mess.
+  (let* ((current-monitor-width
+          ;; I hate alists. They're hard to read, both when inspecting
+          ;; variables and when writing code... :P
+          (nth 3
+               (assq 'workarea
+                     (car (display-monitor-attributes-list (selected-frame))))))
+         (screen-width-in-chars
+          (/ (float current-monitor-width) (default-font-width)))
+         (num-windows (floor (/ screen-width-in-chars my-window-width))))
+    (my-set-frame-width-by-window-count num-windows)
+    ))
 
 (defun my-set-frame-width-by-window-count (num-windows)
   "Set frame width by number of desired 80-char windows."

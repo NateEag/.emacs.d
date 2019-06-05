@@ -613,6 +613,9 @@
 
 - I should enable the rst-mode yasnippets when in rst-mode.
 
+- Fix the issue with rst-mode not highlighting hyperlink references correctly.
+  This is marked as a FIXME in rst-mode.el - search for 'Hyperlink References'.
+
 - I'd also like context-sensitive paragraph filling. That is, in comments, my
   fill-column value is 79, but if I'm in a Python docstring, fill-column should
   be 72. Apparently this is fixed in a Jan. 2013 commit to python-mode.el.

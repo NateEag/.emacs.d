@@ -693,6 +693,7 @@ The shell command lives in my dotfiles repo."
   (add-hook 'csharp-mode-hook 'omnisharp-mode))
 
 (use-package apples-mode
+  :mode "\\.scpt\\'"
   :hook (apples-mode . my-prog-mode-init)
   :interpreter "osascript")
 

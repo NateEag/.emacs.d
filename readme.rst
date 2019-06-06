@@ -59,14 +59,14 @@ My Setup
 ========
 
 Emacs' default keybindings are powerful but verbose. They're hard to type and
-are likely why
-`RMS has had wrist problems <https://stallman.org/stallman-computing.html>`__.
-I use `evil-mode <https://gitorious.org/evil/pages/Home>`__ for vim-style modal
-editing, which is more powerful and easier on my hands.
-`evil-leader <https://github.com/cofi/evil-leader>`__,
-`evil-commentary <https://github.com/linktohack/evil-commentary>`__,
-`evil-surround <https://github.com/timcharper/evil-surround>`__, and
-`ace-jump-mode <https://github.com/winterTTr/ace-jump-mode>`__ make it even better.
+may be why `RMS has had wrist problems
+<https://stallman.org/stallman-computing.html>`__. I use `evil-mode
+<https://gitorious.org/evil/pages/Home>`__ for vim-style modal editing, which
+is more powerful and easier on my hands. `evil-leader
+<https://github.com/cofi/evil-leader>`__, `evil-commentary
+<https://github.com/linktohack/evil-commentary>`__, `evil-surround
+<https://github.com/timcharper/evil-surround>`__, and `evil-avy
+<https://github.com/louy2/evil-avy>`__ make it even better.
 
 I'm slowly moving to `use-package <https://github.com/jwiegley/use-package>`__
 for configuring and loading packages on-demand. It's a huge improvement over my

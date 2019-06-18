@@ -99,7 +99,9 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
                      (car (display-monitor-attributes-list (selected-frame))))))
          (screen-width-in-chars
           (/ (float current-monitor-width) (default-font-width)))
-         (num-windows (floor (/ screen-width-in-chars my-window-width))))
+         (num-windows (floor (- (/ screen-width-in-chars my-window-width)
+                                0.5))))
+    (message "Screen width: %i, num windows: %i" screen-width-in-chars num-windows)
     (my-set-frame-width-by-window-count num-windows)
     ))
 

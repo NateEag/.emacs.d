@@ -137,13 +137,17 @@ By default it handles C-like function parameters, hence the name."
   (let ((fill-column (point-max)))
     (fill-paragraph nil)))
 
+(defun ne/get-buffer-project-relative-path ()
+  "Get the project-relative path to the current buffer."
+
+  (s-replace (projectile-project-root) "" (buffer-file-name)))
 
 (defun ne/yank-buffer-project-relative-path ()
   "Copy the project-relative path to current buffer to clipboard.
 
 Handy when writing issue comments in shared task trackers and referencing code."
   (interactive)
-  (kill-new (s-replace (projectile-project-root) "" (buffer-file-name))))
+  (kill-new (ne/get-buffer-project-relative-path)))
 
 (defun ne/get-dir-locals-file ()
   "Return the path to the .dir-locals.el file for the current buffer.

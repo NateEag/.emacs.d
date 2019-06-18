@@ -485,10 +485,19 @@
   bite the bullet and switch over...
   https://www.reddit.com/r/emacs/comments/auwzjr/comment/ehb5zxm/
 
-- Add a keybinding for 'rename this git-managed buffer'. Incident count: 2.
-  This shouldn't be too bad - ne/yank-buffer-project-relative-path should get
-  exactly the argument I want for the first param and the second one should
-  just be the same interactive prompt it currently is.
+- Add a keybinding for 'rename this git-managed buffer'. Incident count: 3.
+  This shouldn't be too bad - ne/yank-buffer-project-relative-path gets exactly
+  the argument I want for the first param and the second one should just be the
+  same interactive prompt it currently is. Alas, I don't see a way to call an
+  interactive function and supply a value for one argument while having the
+  interactive interface itself run for the second. It's probably possible to
+  use the `interactive-form" function to do that, but it would be tricky.
+  Arguably this is a feature request to magit, since I don't care for the way
+  magit-file-rename works at present - I want a way to say explicitly say
+  "rename the current file", so I don't have to do a redundant Enter keystroke
+  after invoking the command (it shows the current buffer as the first item in
+  the list [but oddly only allows you to select things nested in that buffer's
+  directory, not the whole repo]).
 
 - Think about how backup-walker, undo-tree, and magit ought to intersect,
   ideally. Really this is less about any of those packages and more about the

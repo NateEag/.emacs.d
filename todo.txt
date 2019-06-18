@@ -485,6 +485,11 @@
   bite the bullet and switch over...
   https://www.reddit.com/r/emacs/comments/auwzjr/comment/ehb5zxm/
 
+- Add a keybinding for 'rename this git-managed buffer'. Incident count: 2.
+  This shouldn't be too bad - ne/yank-buffer-project-relative-path should get
+  exactly the argument I want for the first param and the second one should
+  just be the same interactive prompt it currently is.
+
 - Think about how backup-walker, undo-tree, and magit ought to intersect,
   ideally. Really this is less about any of those packages and more about the
   theoretical interplay between version control, explicit commits, implicit

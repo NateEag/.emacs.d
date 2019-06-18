@@ -554,8 +554,8 @@ The shell command lives in my dotfiles repo."
 
 (use-package groovy-mode
   :defer t
-  :mode "\\.groovy$"
-  :mode "\\.gradle$"
+  :mode "\\.groovy\\'"
+  :mode "\\.gradle\\'"
   :config
   (add-hook 'groovy-mode-hook 'my-prog-mode-init))
 

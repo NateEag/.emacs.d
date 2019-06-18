@@ -368,7 +368,7 @@
 	  "Dis Mode Ain't Lotus: Spreadsheet program Emacs" tar
 	  ((:url . "http://elpa.gnu.org/packages/dismal.html"))])
  (djvu .
-       [(1 0 1)
+       [(1 1)
 	nil "Edit and view Djvu files via djvused" single
 	((:url . "http://elpa.gnu.org/packages/djvu.html")
 	 (:keywords "files" "wp"))])
@@ -392,7 +392,7 @@
 	     ((:keywords "killing" "convenience")
 	      (:url . "https://github.com/leoliu/easy-kill"))])
  (ebdb .
-       [(0 6 8)
+       [(0 6 9)
 	((emacs
 	  (25 1))
 	 (cl-lib
@@ -426,7 +426,7 @@
 	     ((:url . "http://elpa.gnu.org/packages/ediprolog.html")
 	      (:keywords "languages" "processes"))])
  (eev .
-      [(20190425)
+      [(20190517)
        ((emacs
 	 (24 1)))
        "Support for e-scripts (eepitch blocks, elisp hyperlinks, etc)" tar
@@ -488,7 +488,7 @@
 		  ((:keywords "convenience")
 		   (:url . "https://github.com/ergoemacs/ergoemacs-mode"))])
  (excorporate .
-	      [(0 8 1)
+	      [(0 8 2)
 	       ((emacs
 		 (24 1))
 		(fsm
@@ -499,7 +499,7 @@
 		 (2 0 3))
 		(nadvice
 		 (0 3)))
-	       "Exchange integration" tar
+	       "Exchange Web Services (EWS) integration" tar
 	       ((:keywords "calendar")
 		(:url . "http://elpa.gnu.org/packages/excorporate.html"))])
  (exwm .
@@ -538,7 +538,7 @@
 	   ((:url . "http://elpa.gnu.org/packages/flymake.html")
 	    (:keywords "c" "languages" "tools"))])
  (fountain-mode .
-		[(2 7 0)
+		[(2 7 1)
 		 ((emacs
 		   (24 5)))
 		 "Major mode for screenwriting in Fountain markup" single
@@ -795,8 +795,8 @@
 	    ((:url . "http://elpa.gnu.org/packages/load-dir.html")
 	     (:keywords "lisp" "files" "convenience"))])
  (load-relative .
-		[(1 3)
-		 nil "relative file load (within a multi-file Emacs package)" single
+		[(1 3 1)
+		 nil "Relative file load (within a multi-file Emacs package)" single
 		 ((:url . "http://github.com/rocky/emacs-load-relative")
 		  (:keywords "internal"))])
  (loc-changes .
@@ -1051,7 +1051,7 @@
 	 ((:url . "http://elpa.gnu.org/packages/poker.html")
 	  (:keywords "games"))])
  (posframe .
-	   [(0 4 3)
+	   [(0 5 0)
 	    ((emacs
 	      (26)))
 	    "Pop a posframe (just a frame) at point" single
@@ -1104,29 +1104,95 @@
 	      ((:url . "http://elpa.gnu.org/packages/rcirc-menu.html")
 	       (:keywords "comm"))])
  (realgud .
-	  [(1 4 5)
+	  [(1 5 0)
 	   ((load-relative
-	     (1 2))
+	     (1 3 1))
 	    (loc-changes
 	     (1 2))
 	    (test-simple
-	     (1 2 0))
-	    (cl-lib
-	     (0 5))
+	     (1 3 0))
 	    (emacs
-	     (24)))
+	     (25)))
 	   "A modular front-end for interacting with external debuggers" tar
-	   ((:keywords "gdb" "python" "perl" "go" "bash" "nodejs" "zsh" "bashdb" "zshdb" "remake" "make" "trepan" "perldb" "pdb")
+	   ((:keywords "debugger" "gdb" "python" "perl" "go" "bash" "zsh" "bashdb" "zshdb" "remake" "trepan" "perldb" "pdb")
 	    (:url . "http://github.com/realgud/realgud/"))])
+ (realgud-ipdb .
+	       [(1 0 0)
+		((realgud
+		  (1 5 0))
+		 (load-relative
+		  (1 3 1))
+		 (emacs
+		  (25)))
+		"Realgud front-end to ipdb" tar
+		((:url . "http://github.com/rocky/realgud-ipdb"))])
+ (realgud-jdb .
+	      [(1 0 0)
+	       ((realgud
+		 (1 4 5))
+		(load-relative
+		 (1 2))
+		(cl-lib
+		 (0 5))
+		(emacs
+		 (25)))
+	       "Realgud front-end to Java's jdb debugger\"" tar
+	       ((:url . "http://github.com/realgud/realgud-jdb"))])
+ (realgud-lldb .
+	       [(1 0 2)
+		((load-relative
+		  (1 3 1))
+		 (realgud
+		  (1 5 0))
+		 (emacs
+		  (25)))
+		"Realgud front-end to lldb" tar
+		((:url . "http://github.com/realgud/realgud-lldb"))])
+ (realgud-node-debug .
+		     [(1 0 0)
+		      ((realgud
+			(1 4 5))
+		       (load-relative
+			(1 2))
+		       (cl-lib
+			(0 5))
+		       (emacs
+			(25)))
+		      "Realgud front-end to older \"node debug\"" tar
+		      ((:url . "http://github.com/realgud/realgud-node-debug"))])
+ (realgud-node-inspect .
+		       [(1 0 0)
+			((realgud
+			  (1 4 5))
+			 (load-relative
+			  (1 2))
+			 (cl-lib
+			  (0 5))
+			 (emacs
+			  (24)))
+			"Realgud front-end to newer \"node inspect\"" tar
+			((:url . "http://github.com/realgud/realgud-node-inspect"))])
+ (realgud-trepan-ni .
+		    [(1 0 1)
+		     ((load-relative
+		       (1 2))
+		      (realgud
+		       (1 5 0))
+		      (cl-lib
+		       (0 5))
+		      (emacs
+		       (25)))
+		     "Realgud front-end to trepan-ni" tar
+		     ((:url . "http://github.com/realgud/realgud-trepan-ni"))])
  (register-list .
 		[(0 1)
 		 nil "Interactively list/edit registers" single
 		 ((:url . "http://elpa.gnu.org/packages/register-list.html")
 		  (:keywords "register"))])
  (relint .
-	 [(1 7)
+	 [(1 8)
 	  ((xr
-	    (1 11)))
+	    (1 12)))
 	  "Elisp regexp mistake finder" single
 	  ((:url . "https://github.com/mattiase/relint")
 	   (:keywords "lisp" "maint" "regexps"))])
@@ -1271,7 +1337,7 @@
 	     ((:url . "http://elpa.gnu.org/packages/svg-clock.html")
 	      (:keywords "demo" "svg" "clock"))])
  (system-packages .
-		  [(1 0 10)
+		  [(1 0 11)
 		   ((emacs
 		     (24 3)))
 		   "functions to manage system packages" tar
@@ -1402,11 +1468,6 @@
       nil "Fully customizable, largely undocumented web browser for Emacs" tar
       ((:keywords "faces" "help" "comm" "news" "mail" "processes" "mouse" "hypermedia")
        (:url . "http://elpa.gnu.org/packages/w3.html"))])
- (wcheck-mode .
-	      [(2016 1 30)
-	       nil "General interface for text checkers" single
-	       ((:url . "https://github.com/tlikonen/wcheck-mode")
-		(:keywords "text" "spell" "check" "languages" "ispell"))])
  (wconf .
 	[(0 2 1)
 	 ((emacs
@@ -1429,7 +1490,7 @@
 	     ((:keywords "news" "hypermedia" "blog" "feed" "rss" "atom")
 	      (:url . "https://gitlab.com/Ambrevar/emacs-webfeeder"))])
  (websocket .
-	    [(1 8)
+	    [(1 9)
 	     ((cl-lib
 	       (0 5)))
 	     "Emacs WebSocket client and server" tar
@@ -1482,7 +1543,7 @@
        ((:keywords "multimedia" "xpm")
 	(:url . "http://www.gnuvola.org/software/xpm/"))])
  (xr .
-     [(1 11)
+     [(1 12)
       nil "Convert string regexp to rx notation" tar
       ((:keywords "lisp" "maint" "regexps")
        (:url . "https://github.com/mattiase/xr"))])

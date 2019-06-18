@@ -559,6 +559,9 @@ The shell command lives in my dotfiles repo."
   :config
   (add-hook 'groovy-mode-hook 'my-prog-mode-init))
 
+(use-package lua-mode
+  :mode "\\.lua\\'")
+
 (use-package nxml-mode
   :mode ("web.config$" . xml-mode)
   :defer t
@@ -871,7 +874,11 @@ The shell command lives in my dotfiles repo."
 (use-package conf-mode
   ;; As a rule of thumb, if it's in dotfiles/src and it doesn't match a
   ;; more-specific regex, it should probably open in conf-mode.
-  :mode "dotfiles/src/.+")
+  ;;
+  ;; Because we don't want this to override any other rules, we manually put it
+  ;; on the end of the list.
+  :config
+  (add-to-list 'auto-mode-alist '("dotfiles/src/.+" . conf-mode) t))
 
 ;; EmacsWiki-based packages that used to be on MELPA but are no more:
 ;;

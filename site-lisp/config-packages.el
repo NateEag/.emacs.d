@@ -231,7 +231,10 @@ The shell command lives in my dotfiles repo."
                         (message) line-end))
               :modes (text-mode markdown-mode gfm-mode rst-mode))
 
-            (add-to-list 'flycheck-checkers 'proselint)
+            ;; I've stopped using this because it provides little useful
+            ;; feedback and, when run long enough, consumes many gigabytes of
+            ;; RAM.
+            ;(add-to-list 'flycheck-checkers 'proselint)
 
             (flycheck-objc-clang-setup)
 

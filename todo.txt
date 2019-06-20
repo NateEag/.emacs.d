@@ -155,6 +155,15 @@
   properly. N.B.: shackle may be a significantly better alternative to popwin:
   https://github.com/wasamasa/shackle
 
+- Give kakoune.el a whirl, just to see what it's like:
+  https://github.com/jmorag/kakoune.el . After reading through Kakoune's
+  philosophy document, it does sound like it could be an improvement on the Vim
+  experience. https://kakoune.org/why-kakoune/why-kakoune.html
+
+- Remember that HTMLize exists and I installed it. I could see it being useful
+  for getting syntax coloration on static sites for obscure programming
+  languages, for instance.
+
 - Figure out why git-rebase-mode doesn't always have the keybindings it claims
   to. I think it happens the first time I rebase after starting Emacs, so it's
   likely an initialization problem, but I'm not really sure. I believe it's a

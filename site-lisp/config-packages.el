@@ -74,6 +74,10 @@
                                        (lambda nil
                                          (ansi-term shell-pop-term-shell)))))
 
+;; I don't know that I'll ever use this, but why not?
+(use-package rfc-mode
+  :commands rfc-mode-browse)
+
 (use-package notmuch
   :config
   (progn

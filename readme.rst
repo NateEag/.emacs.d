@@ -39,9 +39,9 @@ Thus, a programmer should manipulate text fluidly and effortlessly, the way a
 pianist plays arpeggios or a painter wields a brush.
 
 Changing editors for each language complicates technique. Eclipse for Java,
-PyCharm for Python, Sublime for JavaScript... The keystrokes for editing a
-program are different in each of these, and over a lifetime adds cognitive
-burden.
+PyCharm for Python, Sublime for JavaScript... The user interface, keyboard
+shortcuts, and mental model for editing a program are different in each of
+these, and over a lifetime adds cognitive burden.
 
 Instead of changing editors for each language, a programmer's editor should
 adapt itself to each language, so that the technique of programming remains
@@ -62,7 +62,7 @@ Emacs' default keybindings are powerful but verbose. They're hard to type and
 may be why `RMS has had wrist problems
 <https://stallman.org/stallman-computing.html>`__. I use `evil-mode
 <https://gitorious.org/evil/pages/Home>`__ for vim-style modal editing, which
-is more powerful and easier on my hands. `evil-leader
+fits my brain and makes my hands hurt less. `evil-leader
 <https://github.com/cofi/evil-leader>`__, `evil-commentary
 <https://github.com/linktohack/evil-commentary>`__, `evil-surround
 <https://github.com/timcharper/evil-surround>`__, and `evil-avy

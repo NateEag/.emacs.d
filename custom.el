@@ -113,6 +113,7 @@
    (quote
     (helm-lsp dtrt-indent elisp-def git-gutter origami free-keys helm-rg elpygen lsp-ui magit-svn pdf-tools dynamic-spaces sicp neotree polymode eldoc-overlay-mode flycheck-objc-clang web-mode-edit-element jq-mode csv string-edit aggressive-fill-paragraph evil-magit evil-matchit evil-surround flycheck-css-colorguard ag nginx-mode lorem-ipsum git-blamed regex-tool s virtualenvwrapper use-package undo-tree solarized-theme macrostep puppet-mode pip-requirements omnisharp multiple-cursors markdown-mode helm-projectile groovy-mode expand-region evil-commentary beacon aggressive-indent ace-window evil-escape writeroom-mode unicode-troll-stopper toggle-quotes tern-auto-complete tea-time tagedit sublimity string-inflection speed-type smart-tabs-mode skewer-reload-stylesheets scss-mode sane-term rainbow-mode pyimpsort pyenv-mode popwin php-auto-yasnippets names multi-term mocha-snippets mo-git-blame minimap md-readme literate-coffee-mode know-your-http-well key-chord json-mode jscs js-doc jedi iss-mode hideshowvis helm-swoop helm-ls-git helm-git-files gitignore-mode gitconfig-mode gitattributes-mode git-timemachine frame-cmds focus-autosave-mode exec-path-from-shell evil-tutor evil-leader evil-indent-textobject evil-exchange esup elisp-slime-nav el2markdown diffview cygwin-mount cycle-quotes compact-docstrings cask-mode browse-url-dwim browse-kill-ring bats-mode backup-walker auto-compile ascii apache-mode ace-jump-mode ac-slime ac-ispell ac-html-csswatcher ac-html ac-helm ac-emmet shell-pop git-gutter-fringe+ gnuplot gnuplot-mode slack yasnippet-classic-snippets)))
  '(php-mode-coding-style (quote psr2) nil nil "PSR-2 is not ideal, but it's a standard.")
+ '(php-mode-template-compatibility nil nil nil "I use web-mode for PHP templates, and therefore I really don't want php-mode trying to deal with them.")
  '(php-template-compatibility nil nil nil "I use web-mode for PHP templates, and therefore I really don't want php-mode trying to deal with them.")
  '(projectile-indexing-method (quote alien))
  '(projectile-use-git-grep t)
@@ -161,6 +162,7 @@
      (eval guess-style-guess-all)
      (eval highlight-regexp "^ *"))))
  '(scroll-bar-mode nil)
+ '(scroll-conservatively 20)
  '(send-mail-function (quote smtpmail-send-it))
  '(sentence-end-double-space nil nil nil "I do not use double-spaces after sentences. Neither should you.")
  '(shell-pop-full-span t)

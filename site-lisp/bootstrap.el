@@ -109,6 +109,10 @@ are for modes that didn't come with autoloading."
   (autoload 'sdcv-search "sdcv-mode.el" "Look up words in dictionary." t)
   (defalias 'ne-dictionary-lookup 'sdcv-search)
 
+  ;; I can never remember synosaurus' name.
+  (defalias 'ne/synonym-lookup 'synosaurus-lookup)
+  (defalias 'ne/thesaurus-lookup 'synosaurus-lookup)
+
   (autoload 'update-packages-update-installed-packages "update-packages" nil t))
 
 (nateeag-autoloads-init)

@@ -93,19 +93,19 @@
     (define-key notmuch-search-mode-map "d"
       (lambda (&optional beg end)
         "mark message as deleted"
-        (interactive (notmuch-search-interactive-region))
+        (interactive)
         (notmuch-search-tag (list "+deleted" "-unread") beg end)))
 
     (define-key notmuch-search-mode-map "r"
       (lambda (&optional beg end)
         "mark message as an archived receipt"
-        (interactive (notmuch-search-interactive-region))
+        (interactive)
         (notmuch-search-tag (list "+receipts" "-unread" "-inbox") beg end)))
 
     (define-key notmuch-search-mode-map "s"
       (lambda (&optional beg end)
         "mark message as spam"
-        (interactive (notmuch-search-interactive-region))
+        (interactive)
         (notmuch-search-tag (list "+spam" "-inbox" "-unread") beg end)))
 
     ;; Be evil-ish, because I want that.

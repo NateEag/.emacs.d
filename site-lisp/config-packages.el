@@ -222,20 +222,6 @@ The shell command lives in my dotfiles repo."
   :diminish
   :defer t
   :config (progn
-            (flycheck-define-checker proselint
-              "A linter for prose."
-              :command ("proselint" source)
-              :error-patterns
-              ((warning line-start (file-name) ":" line ":" column ": "
-                        (id (one-or-more (not (any " "))))
-                        (message) line-end))
-              :modes (text-mode markdown-mode gfm-mode rst-mode))
-
-            ;; I've stopped using this because it provides little useful
-            ;; feedback and, when run long enough, consumes many gigabytes of
-            ;; RAM.
-            ;(add-to-list 'flycheck-checkers 'proselint)
-
             (flycheck-objc-clang-setup)
 
             ;; Prefer locally-installed eslint, if available.

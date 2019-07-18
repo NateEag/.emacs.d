@@ -132,6 +132,10 @@
 
 - Submit PR to make flycheck-eslint-rulesdir a list.
 
+- Add (or find) a flycheck checker for nginx config files using -t.
+  https://www.flycheck.org/en/latest/developer/developing.html#writing-the-checker
+  explains how to do the job.
+
 - Make js-doc use Tern (when available) to guess types for function params.
 
 - Try dtrt-indent as an alternative to guess-style, since guess-style does fail

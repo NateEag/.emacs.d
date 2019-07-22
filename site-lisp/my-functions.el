@@ -164,6 +164,22 @@ find the path to the project directory."
 
   (file-name-directory (ne/get-dir-locals-file)))
 
+(defun ne/extract-to-file (name start end)
+  "Delete text from `START' to `END' and put it in the new file `NAME'.
+
+Interactively, queries for the new filename and uses the selected region for
+its range.
+
+Primarily useful when refactoring code. Adapted from the Emacs Lisp-specific
+version at https://stackoverflow.com/a/8603158/1128957."
+  (interactive (list (read-string "File name to create: ")
+                     (region-beginning) (region-end)))
+  (let ((snip (buffer-substring start end)))
+    (with-current-buffer (find-file-noselect name)
+      (insert snip)
+      (save-buffer))
+    (delete-region start end)))
+
 (defun shell-command-on-buffer ()
   "Update buffer contents with results of running shell command on it.
 

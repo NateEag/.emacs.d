@@ -1,10 +1,12 @@
 ;;; phpstan-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "phpstan" "phpstan.el" (23723 15722 852310
-;;;;;;  20000))
+;;;### (autoloads nil "phpstan" "phpstan.el" (0 0 0 0))
 ;;; Generated autoloads from phpstan.el
 
 (defvar phpstan-working-dir nil "\
@@ -82,11 +84,14 @@ NIL
 
 (put 'phpstan-executable 'safe-local-variable #'(lambda (v) (if (consp v) (or (and (eq 'root (car v)) (stringp (cdr v))) (and (stringp (car v)) (listp (cdr v)))) (or (eq 'docker v) (null v) (stringp v)))))
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "phpstan" '("phpstan-")))
+
 ;;;***
 
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; phpstan-autoloads.el ends here

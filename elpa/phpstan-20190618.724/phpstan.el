@@ -1,11 +1,11 @@
 ;;; phpstan.el --- Interface to PHPStan.             -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2018  Friends of Emacs-PHP development
+;; Copyright (C) 2019  Friends of Emacs-PHP development
 
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 15 Mar 2018
-;; Version: 0.3.0
-;; Package-Version: 20190227.1642
+;; Version: 0.3.1
+;; Package-Version: 20190618.724
 ;; Keywords: tools, php
 ;; Homepage: https://github.com/emacs-php/phpstan.el
 ;; Package-Requires: ((emacs "24.3"))
@@ -182,10 +182,11 @@ NIL
           (expand-file-name (cdr phpstan-config-file) (php-project-get-root-dir))
         phpstan-config-file)
     (let ((working-directory (phpstan-get-working-dir)))
-      (cl-loop for name in '("phpstan.neon" "phpstan.neon.dist")
-               for dir  = (locate-dominating-file working-directory name)
-               if dir
-               return (expand-file-name name dir)))))
+      (when working-directory
+        (cl-loop for name in '("phpstan.neon" "phpstan.neon.dist")
+                 for dir  = (locate-dominating-file working-directory name)
+                 if dir
+                 return (expand-file-name name dir))))))
 
 (defun phpstan-normalize-path (source-original &optional source)
   "Return normalized source file path to pass by `SOURCE-ORIGINAL' OR `SOURCE'.

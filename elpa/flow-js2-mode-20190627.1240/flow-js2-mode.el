@@ -6,7 +6,7 @@
 ;; Author: Matúš Goljer <matus.goljer@gmail.com>
 ;; Maintainer: Matúš Goljer <matus.goljer@gmail.com>
 ;; Version: 0.1.0
-;; Package-Version: 20190214.1030
+;; Package-Version: 20190627.1240
 ;; Created: 28th May 2017
 ;; Package-requires: ((flow-minor-mode "0") (js2-mode "0") (emacs "25.1"))
 ;; Keywords: languages, extensions
@@ -331,6 +331,7 @@ variables and function arguments alike." (n i)
 (defun flow-js2-parse-named-prop (orig-fun tt previous-token &optional class-p)
   (let ((key (js2-parse-prop-name tt))
         (pos (js2-current-token-beg)))
+    (when (js2-match-token js2-HOOK))
     (cond ((not (null previous-token))
            (funcall orig-fun tt previous-token class-p))
           ((js2-match-token js2-ASSIGN)

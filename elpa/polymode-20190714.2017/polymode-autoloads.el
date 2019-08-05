@@ -217,10 +217,12 @@ currently traced functions.
 
 \(fn FN)" t nil)
 
-(autoload 'pm-debug-print-relevant-variables "polymode-debug" "\
-Print values of relevant hooks and other variables.
+(autoload 'pm-debug-relevant-variables "polymode-debug" "\
+Get the relevant polymode variables.
+If OUT-TYPE is 'buffer, print the variables in the dedicated
+buffer, if 'message issue a message, if nil just return a list of values.
 
-\(fn)" t nil)
+\(fn &optional OUT-TYPE)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "polymode-debug" '("pm-")))
 

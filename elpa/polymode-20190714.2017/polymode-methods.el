@@ -1,6 +1,6 @@
 ;;; polymode-methods.el --- Methods for polymode classes -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2013-2018, Vitalie Spinu
+;; Copyright (C) 2013-2019, Vitalie Spinu
 ;; Author: Vitalie Spinu
 ;; URL: https://github.com/vspinu/polymode
 ;;
@@ -19,9 +19,7 @@
 ;; General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
-;; Floor, Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -55,7 +53,8 @@ Ran by the polymode mode function."
       (pm--mode-setup host-mode)
       (oset hostmode -buffer (current-buffer))
       (oset config -hostmode hostmode)
-      (setq pm/polymode config
+      (setq pm--core-buffer-name (buffer-name)
+            pm/polymode config
             pm/chunkmode hostmode
             pm/current t
             pm/type nil)
@@ -82,28 +81,37 @@ Ran by the polymode mode function."
                   inner-syms))))
 
 (cl-defmethod pm-initialize ((chunkmode pm-inner-chunkmode) &optional type mode)
-  "Initialization of chunkmode (indirect) buffers."
+  "Initialization of the innermodes' (indirect) buffers."
   ;; run in chunkmode indirect buffer
   (setq mode (or mode (pm--get-innermode-mode chunkmode type)))
   (let* ((pm-initialization-in-progress t)
          (post-fix (replace-regexp-in-string "poly-\\|-mode" "" (symbol-name mode)))
-         (new-name  (generate-new-buffer-name
-                     (format "%s[%s]" (buffer-name (pm-base-buffer))
-                             (or (cdr (assoc post-fix polymode-mode-abbrev-aliases))
-                                 post-fix)))))
+         (core-name (format "%s[%s]" (buffer-name (pm-base-buffer))
+                            (or (cdr (assoc post-fix polymode-mode-abbrev-aliases))
+                                post-fix)))
+         (new-name (generate-new-buffer-name core-name)))
     (rename-buffer new-name)
     (pm--mode-setup mode)
     (pm--move-vars '(pm/polymode buffer-file-coding-system) (pm-base-buffer))
     ;; fixme: This breaks if different chunkmodes use same-mode buffer. Even for
     ;; head/tail the value of pm/type will be wrong for tail
-    (setq pm/chunkmode chunkmode
+    (setq pm--core-buffer-name core-name
+          pm/chunkmode chunkmode
           pm/type (pm-true-span-type chunkmode type))
     ;; Call polymode mode for the sake of the keymap. Same minor mode which runs
     ;; in the host buffer but without all the heavy initialization.
     (funcall (eieio-oref pm/polymode '-minor-mode))
     ;; FIXME: should not be here?
     (vc-refresh-state)
-    (pm--common-setup))
+    (pm--common-setup)
+    (add-hook 'syntax-propertize-extend-region-functions
+              #'polymode-syntax-propertize-extend-region-in-host
+              -90 t)
+    (pm--move-vars polymode-move-these-vars-from-base-buffer (pm-base-buffer))
+    ;; If this rename happens before the mode setup font-lock doesn't work in
+    ;; inner buffers.
+    (when pm-hide-implementation-buffers
+      (rename-buffer (generate-new-buffer-name (concat " " pm--core-buffer-name)))))
   (pm--run-init-hooks chunkmode type 'polymode-init-inner-hook))
 
 (defvar poly-lock-allow-fontification)
@@ -132,14 +140,18 @@ Ran by the polymode mode function."
             ;; because PM objects have not been setup yet.
             (pm-allow-after-change-hook nil)
             (poly-lock-allow-fontification nil))
-        ;; run-mode-hooks needs buffer-file-name
+        ;; run-mode-hooks needs buffer-file-name, so we transfer base vars twice
         (when base
-          (pm--move-vars polymode-move-these-vars-from-base-buffer base (current-buffer)))
+          (pm--move-vars polymode-move-these-vars-from-base-buffer base))
         (condition-case-unless-debug err
             ;; !! run-mode-hooks and hack-local-variables run here
             (funcall mode)
           (error (message "Polymode error (pm--mode-setup '%s): %s"
-                          mode (error-message-string err))))))
+                          mode (error-message-string err))))
+        ;; In emacs 27 this is called from run-mode-hooks
+        (and (bound-and-true-p syntax-propertize-function)
+             (not (local-variable-p 'parse-sexp-lookup-properties))
+             (setq-local parse-sexp-lookup-properties t))))
     (setq polymode-mode t)
     (current-buffer)))
 
@@ -190,12 +202,15 @@ initialized. Return the buffer."
     (font-lock-flush)
 
     ;; SYNTAX (must be done after font-lock for after-change order)
-    ;; Ideally this should be called in some hook to avoid minor-modes messing
-    ;; it up. Setting it up even if syntax-propertize-function is nil to have
-    ;; more control over syntax-propertize--done.
+
     (with-no-warnings
       ;; [OBSOLETE as of 25.1 but we still protect it]
       (pm-around-advice syntax-begin-function 'pm-override-output-position))
+    ;; (advice-remove 'c-beginning-of-syntax #'pm-override-output-position)
+
+    ;; Ideally this should be called in some hook to avoid minor-modes messing
+    ;; it up. Setting even if syntax-propertize-function is nil to have more
+    ;; control over syntax-propertize--done.
     (unless (eq syntax-propertize-function #'polymode-syntax-propertize)
       (setq-local pm--syntax-propertize-function-original syntax-propertize-function)
       (setq-local syntax-propertize-function #'polymode-syntax-propertize))
@@ -307,15 +322,14 @@ use `pm-innermost-span'.")
 
 (cl-defmethod pm-get-span (chunkmode &optional _pos)
   "Return nil.
-Base modes usually do not compute spans."
+Host modes usually do not compute spans."
   (unless chunkmode
     (error "Dispatching `pm-get-span' on a nil object"))
   nil)
 
 (cl-defmethod pm-get-span ((chunkmode pm-inner-chunkmode) &optional pos)
   "Return a list of the form (TYPE POS-START POS-END SELF).
-TYPE can be 'body, 'head or 'tail. SELF is just a chunkmode object
-in this case."
+TYPE can be 'body, 'head or 'tail. SELF is the CHUNKMODE."
   (with-slots (head-matcher tail-matcher head-mode tail-mode) chunkmode
     (let ((span (pm--span-at-point head-matcher tail-matcher pos
                                    (eieio-oref chunkmode 'can-overlap))))
@@ -326,47 +340,79 @@ in this case."
   (let ((span (cl-call-next-method)))
     (if (null (car span))
         span
-      (pm--get-auto-span span))))
+      (setf (nth 3 span) (apply #'pm--get-auto-chunkmode span))
+      span)))
 
-;; fixme: cache somehow?
-(defun pm--get-auto-span (span)
-  (let* ((proto (nth 3 span))
-         (type (car span))
-         (sbeg (nth 1 span)))
-    (save-excursion
-      (goto-char sbeg)
-      (unless (eq type 'head)
-        (goto-char (nth 2 span)) ; fixme: add multiline matchers to micro-optimize this
-        (let ((matcher (pm-fun-matcher (eieio-oref proto 'head-matcher))))
-          ;; can be multiple incomplete spans within a span
-          (while (< sbeg (goto-char (car (funcall matcher -1)))))))
-      (let* ((str (let ((matcher (eieio-oref proto 'mode-matcher)))
-                    (when (stringp matcher)
-                      (setq matcher (cons matcher 0)))
-                    (cond  ((consp matcher)
-                            (re-search-forward (car matcher) (point-at-eol) t)
-                            (match-string-no-properties (cdr matcher)))
-                           ((functionp matcher)
-                            (funcall matcher)))))
-             (mode (pm-get-mode-symbol-from-name str (eieio-oref proto 'fallback-mode))))
-        (if (eq mode 'host)
-            (progn (setf (nth 3 span) (oref pm/polymode -hostmode))
-                   span)
-          ;; chunkname:MODE serves as ID (e.g. `markdown-fenced-code:emacs-lisp-mode`).
-          ;; Head/tail/body indirect buffers are shared across chunkmodes and span
-          ;; types.
-          (let* ((name (concat (pm-object-name proto) ":" (symbol-name mode)))
-                 (outchunk (or
-                            ;; a. loop through installed inner modes
-                            (cl-loop for obj in (eieio-oref pm/polymode '-auto-innermodes)
-                                     when (equal name (pm-object-name obj))
-                                     return obj)
-                            ;; b. create new
-                            (let ((innermode (clone proto :name name :mode mode)))
-                              (object-add-to-list pm/polymode '-auto-innermodes innermode)
-                              innermode))))
-            (setf (nth 3 span) outchunk)
-            span))))))
+;; (defun pm-get-chunk (ichunkmode &optional pos)
+;;   (with-slots (head-matcher tail-matcher head-mode tail-mode) ichunkmode
+;;     (pm--span-at-point
+;;      head-matcher tail-matcher (or pos (point))
+;;      (eieio-oref ichunkmode 'can-overlap)
+;;      t)))
+
+
+(cl-defgeneric pm-next-chunk (chunkmode &optional pos)
+  "Ask the CHUNKMODE for the chunk after POS.
+Return a list of three elements (CHUNKMODE HEAD-BEG HEAD-END
+TAIL-BEG TAIL-END).")
+
+(cl-defmethod pm-next-chunk (chunkmode &optional _pos)
+  nil)
+
+(cl-defmethod pm-next-chunk ((chunkmode pm-inner-chunkmode) &optional pos)
+  (with-slots (head-matcher tail-matcher head-mode tail-mode) chunkmode
+    (let ((raw-chunk (pm--next-chunk
+                      head-matcher tail-matcher (or pos (point))
+                      (eieio-oref chunkmode 'can-overlap))))
+      (when raw-chunk
+        (cons chunkmode raw-chunk)))))
+
+(cl-defmethod pm-next-chunk ((chunkmode pm-inner-auto-chunkmode) &optional pos)
+  (with-slots (head-matcher tail-matcher head-mode tail-mode) chunkmode
+    (let ((raw-chunk (pm--next-chunk
+                      head-matcher tail-matcher (or pos (point))
+                      (eieio-oref chunkmode 'can-overlap))))
+      (when raw-chunk
+        (cons (pm--get-auto-chunkmode 'head (car raw-chunk) (cadr raw-chunk) chunkmode)
+              raw-chunk)))))
+
+;; FIXME: cache somehow?
+(defun pm--get-auto-chunkmode (type beg end proto)
+  (save-excursion
+    (goto-char beg)
+    (unless (eq type 'head)
+      (goto-char end)     ; fixme: add multiline matchers to micro-optimize this
+      (let ((matcher (pm-fun-matcher (eieio-oref proto 'head-matcher))))
+        ;; can be multiple incomplete spans within a span
+        (while (< beg (goto-char (car (funcall matcher -1)))))))
+    (let* ((str (let ((matcher (eieio-oref proto 'mode-matcher)))
+                  (when (stringp matcher)
+                    (setq matcher (cons matcher 0)))
+                  (cond  ((consp matcher)
+                          (re-search-forward (car matcher) (point-at-eol) t)
+                          (match-string-no-properties (cdr matcher)))
+                         ((functionp matcher)
+                          (funcall matcher)))))
+           (mode (pm-get-mode-symbol-from-name str (eieio-oref proto 'fallback-mode))))
+      (if (eq mode 'host)
+          (oref pm/polymode -hostmode)
+        ;; chunkname:MODE serves as ID (e.g. `markdown-fenced-code:emacs-lisp-mode`).
+        ;; Head/tail/body indirect buffers are shared across chunkmodes and span
+        ;; types.
+        (let ((automodes (eieio-oref pm/polymode '-auto-innermodes)))
+          (if (memq proto automodes)
+              ;; a. if proto already part of the list return
+              proto
+            (let ((name (concat (pm-object-name proto) ":" (symbol-name mode))))
+              (or
+               ;; b. loop through installed inner modes
+               (cl-loop for obj in automodes
+                        when (equal name (pm-object-name obj))
+                        return obj)
+               ;; c. create new
+               (let ((innermode (clone proto :name name :mode mode)))
+                 (object-add-to-list pm/polymode '-auto-innermodes innermode)
+                 innermode)))))))))
 
 
 ;;; INDENT

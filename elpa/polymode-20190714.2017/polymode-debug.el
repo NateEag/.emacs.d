@@ -19,9 +19,7 @@
 ;; General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
-;; Floor, Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -279,7 +277,8 @@ With NO-CACHE prefix, don't use cached values of the span."
         poly-lock-fontify-now
         poly-lock-function))
     ;; syntax
-    (4 (pm--call-syntax-propertize-original
+    (4 (syntax-ppss
+        pm--call-syntax-propertize-original
         polymode-syntax-propertize
         polymode-restrict-syntax-propertize-extension
         pm-flush-syntax-ppss-cache
@@ -287,9 +286,11 @@ With NO-CACHE prefix, don't use cached values of the span."
     ;; core functions
     (5 (pm-select-buffer
         pm-map-over-spans
-        pm--intersect-spans
+        pm--get-intersected-span
         pm--cached-span))
-    ))
+    ;; (13 . "^syntax-")
+    (14 . "^polymode-")
+    (15 . "^pm-")))
 
 (defvar pm--do-trace nil)
 ;;;###autoload
@@ -300,15 +301,20 @@ universal argument toggles maximum level of tracing (4). Default
 level is 3."
   (interactive "P")
   (setq level (prefix-numeric-value (or level 3)))
+  (with-current-buffer (get-buffer-create "*Messages*")
+    (read-only-mode -1))
   (setq pm--do-trace (not pm--do-trace))
   (if pm--do-trace
       (progn (dolist (kv pm-traced-functions)
                (when (<= (car kv) level)
-                 (dolist (fn (cadr kv))
-                   (pm-trace fn))))
+                 (if (stringp (cdr kv))
+                     (pm-trace-functions-by-regexp (cdr kv))
+                   (dolist (fn (cadr kv))
+                     (pm-trace fn)))))
              (message "Polymode tracing activated"))
     (untrace-all)
     (message "Polymode tracing deactivated")))
+
 
 ;;;###autoload
 (defun pm-trace (fn)
@@ -317,28 +323,36 @@ Use `untrace-function' to untrace or `untrace-all' to untrace all
 currently traced functions."
   (interactive (trace--read-args "Trace: "))
   (let ((buff (get-buffer "*Messages*")))
-    (advice-add
-     fn :around
-     (let ((advice (trace-make-advice
-                    fn buff 'background #'pm-trace--tracing-context)))
-       (lambda (body &rest args)
-         (when (eq fn 'polymode-flush-syntax-ppss-cache)
-           (with-current-buffer buff
-             (save-excursion
-               (goto-char (point-max))
-               (insert "\n"))))
-         (if polymode-mode
-             (apply advice body args)
-           (apply body args))))
-     `((name . ,trace-advice-name) (depth . -100)))))
+    (unless (advice-member-p trace-advice-name fn)
+      (advice-add
+       fn :around
+       (let ((advice (trace-make-advice
+                      fn buff 'background
+                      #'pm-trace--tracing-context)))
+         (lambda (body &rest args)
+           (when (eq fn 'polymode-flush-syntax-ppss-cache)
+             (with-current-buffer buff
+               (save-excursion
+                 (goto-char (point-max))
+                 (insert "\n"))))
+           (if polymode-mode
+               (apply advice body args)
+             (apply body args))))
+       `((name . ,trace-advice-name)
+         (depth . -100))))))
 
 (defun pm-trace-functions-by-regexp (regexp)
   "Trace all functions whose name matched REGEXP."
   (interactive "sRegex: ")
   (cl-loop for sym being the symbols
            when (and (fboundp sym)
-                     (not (eq sym 'pm-trace)))
-           when (string-match regexp (symbol-name sym))
+                     (not (memq sym '(pm-toggle-tracing
+                                      pm-trace--tracing-context
+                                      pm-format-span
+                                      pm-fun-matcher
+                                      pm--find-tail-from-head)))
+                     (not (string-match "^pm-\\(trace\\|debug\\)" (symbol-name sym)))
+                     (string-match regexp (symbol-name sym)))
            do (pm-trace sym)))
 
 (defun pm-trace--tracing-context ()
@@ -397,6 +411,7 @@ currently traced functions."
     ;; If any of these are reset by host mode it can create issues with
     ;; font-lock and syntax (e.g. scala-mode in #195)
     :search (parse-sexp-lookup-properties
+             parse-sexp-ignore-comments
              ;; (syntax-table)
              ;; font-lock-syntax-table
              case-fold-search)
@@ -416,26 +431,32 @@ currently traced functions."
              pm--syntax-propertize-function-original)))
 
 ;;;###autoload
-(defun pm-debug-print-relevant-variables ()
-  "Print values of relevant hooks and other variables."
-  (interactive)
-  (let* ((buff (get-buffer-create "*polymode-vars*"))
-         (cbuff (current-buffer))
+(defun pm-debug-relevant-variables (&optional out-type)
+  "Get the relevant polymode variables.
+If OUT-TYPE is 'buffer, print the variables in the dedicated
+buffer, if 'message issue a message, if nil just return a list of values."
+  (interactive (list 'buffer))
+  (let* ((cbuff (current-buffer))
          (vars (cl-loop for v on pm-debug-relevant-variables by #'cddr
                         collect (cons (car v)
                                       (mapcar (lambda (v)
                                                 (cons v (buffer-local-value v cbuff)))
-                                              (cadr v)))))
-         (cbuff (current-buffer)))
+                                              (cadr v))))))
     (require 'pp)
-    (with-current-buffer buff
-      (erase-buffer)
-      (goto-char (point-max))
-      (insert (format "\n================== %s ===================\n" cbuff))
-      (insert (pp-to-string vars))
-      (toggle-truncate-lines -1)
-      (goto-char (point-max)))
-    (display-buffer buff)))
+    (cond
+     ((eq out-type 'buffer)
+      (with-current-buffer (get-buffer-create "*polymode-vars*")
+        (erase-buffer)
+        (goto-char (point-max))
+        (insert (format "\n================== %s ===================\n" cbuff))
+        (insert (pp-to-string vars))
+        (toggle-truncate-lines -1)
+        (goto-char (point-max))
+        (view-mode)
+        (display-buffer (current-buffer))))
+     ((eq out-type 'message)
+      (message "%s" (pp-to-string vars)))
+     (t vars))))
 
 (defun pm-debug-diff-local-vars (&optional buffer1 buffer2)
   "Print differences between local variables in BUFFER1 and BUFFER2."
@@ -488,6 +509,22 @@ currently traced functions."
                          (pm-debug-flick-region start end)
                          (sit-for 1)))
                      (point-min) (point-max) nil nil t))
+
+(defun pm-debug-map-over-modes-and-highlight (&optional beg end)
+  "Map over all spans between BEG and END and highlight modes."
+  (interactive)
+  (let ((cbuf (current-buffer)))
+    (pm-fast-map-over-modes
+     (lambda (beg end)
+       (goto-char beg)
+       ;; (dbg beg end (pm-format-span))
+       (with-current-buffer cbuf
+         (recenter-top-bottom)
+         (pm-debug-flick-region (max beg (point-min))
+                                (min end (point-max))))
+       (sit-for 1))
+     (or beg (point-min))
+     (or end (point-max)))))
 
 (defun pm-debug-run-over-check (no-cache)
   "Map over all spans and report the time taken.

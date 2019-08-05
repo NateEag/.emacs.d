@@ -2,7 +2,7 @@
 ;;
 ;; Author: Vitalie Spinu
 ;; Maintainer: Vitalie Spinu
-;; Copyright (C) 2013-2018, Vitalie Spinu
+;; Copyright (C) 2013-2019, Vitalie Spinu
 ;; Version: 0.1
 ;; URL: https://github.com/vitoshka/polymode
 ;; Keywords: emacs
@@ -22,9 +22,7 @@
 ;; General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
-;; Floor, Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -280,31 +278,39 @@ changes."
 ;; (pm-around-advice 'newline #'polymode-newline-remove-hook-in-orig-buffer)
 
 
-;;; DESKTOP SAVE #194
+;;; DESKTOP SAVE #194 #240
 
-;; NB: desktop-save saves indirect buffers as base buffers but assumes that
-;; buffer names are the same. This would be ok if we hide implementation buffers
-;; as per #34.
+;; NB: desktop-save will not save indirect buffer.
+;; For base buffer, if it's hidden as per #34, we will save it unhide by removing left whitespaces.
 
 (defun polymode-fix-desktop-buffer-info (fn buffer)
-  "Save polymode buffers without mode prefix."
-  (let ((out (funcall fn buffer))
-        (base (buffer-base-buffer)))
-    (with-current-buffer buffer
-      (if (not (and polymode-mode base))
-          out
-        (when (car out)
-          (setf (car out) (buffer-name base)))
-        (setf (nth 2 out) (buffer-name base))
-        out))))
+  "Unhide poly-mode base buffer which is hidden as per #34.
+This is done by modifying `uniquify-buffer-base-name' to `pm--core-buffer-name'."
+  (with-current-buffer buffer
+    (let ((out (funcall fn buffer))
+          (name (buffer-name)))
+      (when (and polymode-mode
+                 (not (buffer-base-buffer))
+                 (not (car out)))
+        (setf (car out) pm--core-buffer-name))
+      out)))
 
 (declare-function desktop-buffer-info "desktop")
 (with-eval-after-load "desktop"
   (advice-add #'desktop-buffer-info :around #'polymode-fix-desktop-buffer-info))
 
+(defun polymode-fix-desktop-save-buffer-p (_ bufname &rest _args)
+  "Dont save polymode buffers which are indirect buffers."
+  (with-current-buffer bufname
+    (not (and polymode-mode
+              (buffer-base-buffer)))))
+
+(declare-function desktop-save-buffer-p "desktop")
+(with-eval-after-load "desktop"
+  (advice-add #'desktop-save-buffer-p :before-while #'polymode-fix-desktop-save-buffer-p))
+
 
 ;;; MATLAB #199
-
 ;; matlab-mode is an old non-standard mode which doesn't trigger
 ;; `after-change-major-mode-hook`. As a result polymode cannot detect that
 ;; font-lock-mode is on and sets the `poly-lock-allow-fontification` to nil.
@@ -312,8 +318,20 @@ changes."
 (add-hook 'matlab-mode-hook (lambda () (font-lock-mode t)))
 
 
-;;; EVIL
+;;; Undo Tree (#230)
+;; Not clear why this fix works, or even why the problem occurs.
+(declare-function make-undo-tree "undo-tree")
+(defun polymode-init-undo-tree-maybe ()
+  (when (and (boundp 'undo-tree-mode)
+             undo-tree-mode
+             (null buffer-undo-tree))
+    (setq buffer-undo-tree (make-undo-tree))))
 
+(eval-after-load 'undo-tree
+  '(add-hook 'polymode-init-inner-hook 'polymode-init-undo-tree-maybe))
+
+
+;;; EVIL
 (declare-function evil-change-state "evil-core")
 (defun polymode-switch-buffer-keep-evil-state-maybe (old-buffer new-buffer)
   (when (and (boundp 'evil-state)
@@ -329,7 +347,6 @@ changes."
 
 
 ;;; HL line
-
 (defvar hl-line-mode)
 (defvar global-hl-line-mode)
 (declare-function hl-line-unhighlight "hl-line")

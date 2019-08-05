@@ -2,8 +2,8 @@
 ;;
 ;; Author: Vitalie Spinu
 ;; Maintainer: Vitalie Spinu
-;; Copyright (C) 2013-2018, Vitalie Spinu
-;; Version: 0.1.5
+;; Copyright (C) 2013-2019, Vitalie Spinu
+;; Version: 0.2
 ;; Package-Requires: ((emacs "25"))
 ;; URL: https://github.com/vitoshka/polymode
 ;; Keywords: languages, multi-modes, processes
@@ -23,9 +23,7 @@
 ;; General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
-;; Floor, Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;; ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -651,7 +649,8 @@ most frequently used slots are:
                           (or (null (current-message))
                               (not (equal ,last-message
                                           (current-message)))))
-                 (message ,(format "%s enabled" (concat root-name " polymode")))))
+                 (message ,(concat root-name " polymode %s")
+                          (if state "enabled" "disabled"))))
              (force-mode-line-update))
            ;; Return the new state
            ,mode)

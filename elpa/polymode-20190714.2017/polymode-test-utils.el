@@ -1,6 +1,6 @@
 ;;; polymode-test-utils.el --- Testing utilities for polymode -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2018, Vitalie Spinu
+;; Copyright (C) 2018-2019, Vitalie Spinu
 ;; Author: Vitalie Spinu
 ;; URL: https://github.com/vspinu/polymode
 ;;
@@ -19,9 +19,7 @@
 ;; General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
-;; Floor, Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -98,9 +96,18 @@ MODE is a quoted symbol."
        (insert (substring-no-properties ,string))
        (funcall ,mode)
        (setq-default indent-tabs-mode nil)
+       ;; In emacs 27 this is called from run-mode-hooks
+       (and (bound-and-true-p syntax-propertize-function)
+            (not (local-variable-p 'parse-sexp-lookup-properties))
+            (setq-local parse-sexp-lookup-properties t))
        (goto-char (point-min))
-       (font-lock-ensure)
-       ,@body
+       (let ((poly-lock-allow-background-adjustment nil))
+         (when polymode-mode
+           ;; font-lock not activated in batch mode
+           (setq-local poly-lock-allow-fontification t)
+           (poly-lock-mode t))
+         (font-lock-ensure)
+         ,@body)
        (current-buffer))))
 
 (defun pm-test-spans (mode string)
@@ -145,9 +152,10 @@ MODE is a quoted symbol."
          (switch-to-buffer buf)
          (insert-file-contents file)
          (remove-hook 'text-mode-hook 'flyspell-mode) ;; triggers "too much reentrancy" error
-         (let ((inhibit-message t))
+         (let ((inhibit-message (not pm-verbose)))
            (funcall-interactively ',mode))
          ;; (flyspell-mode -1) ;; triggers "too much reentrancy" error
+         (hack-local-variables 'ignore-mode)
          (goto-char (point-min))
          ,pre-form
          ;; need this to activate all chunks
@@ -162,8 +170,8 @@ MODE is a quoted symbol."
                 ;; initialization. Don't know how to fix this more elegantly.
                 ;; For now our tests are all with font-lock, so we are fine for
                 ;; now.
+                ;; !! Font-lock is not activated in batch mode !!
                 (setq-local poly-lock-allow-fontification t)
-                ;; font-lock is not activated in batch mode
                 (poly-lock-mode t)
                 ;; redisplay is not triggered in batch and often it doesn't trigger
                 ;; fontification in X either (waf?)
@@ -184,23 +192,47 @@ MODE is a quoted symbol."
            (smode major-mode)
            (stext (buffer-substring-no-properties sbeg send))
            ;; other buffer
-           (obuf (pm-test-run-on-string smode stext))
-           (opos 1))
+           (ref-buf (pm-test-run-on-string smode stext))
+           (ref-pos 1))
       (when pm-verbose
         (message "---- testing %s ----" (pm-format-span span t)))
-      (while opos
-        (let* ((pos (1- (+ opos sbeg)))
+      ;; NB: String delimiters '' in pascal mode don't work in batch
+      ;; (require 'polymode-debug)
+      ;; (when (and (eq smode 'pascal-mode)
+      ;;            (> (buffer-size ref-buf) 29)
+      ;;            (> (buffer-size) 700))
+      ;;   (message "%s"
+      ;;            (list
+      ;;             :parse-sexp-lookup-properties  parse-sexp-lookup-properties
+      ;;             :font-lock-keywords-only font-lock-keywords-only
+      ;;             :font-lock-syntactic-face-function font-lock-syntactic-face-function
+      ;;             :font-lock-sk font-lock-syntactic-keywords
+      ;;             :syntax-prop-fun syntax-propertize-function
+      ;;             :ppss (syntax-ppss 675)
+      ;;             :char (pm--syntax-after 675)))
+      ;;   (with-current-buffer ref-buf
+      ;;     (message "%s"
+      ;;              (list
+      ;;               :parse-sexp-lookup-properties  parse-sexp-lookup-properties
+      ;;               :font-lock-keywords-only font-lock-keywords-only
+      ;;               :font-lock-syntactic-face-function font-lock-syntactic-face-function
+      ;;               :font-lock-sk font-lock-syntactic-keywords
+      ;;               :syntax-prop-fun syntax-propertize-function
+      ;;               :ppss-29 (syntax-ppss 29)
+      ;;               :char-29 (pm--syntax-after 29)))))
+      (while ref-pos
+        (let* ((pos (1- (+ ref-pos sbeg)))
                (face (get-text-property pos 'face))
-               (oface (get-text-property opos 'face obuf)))
+               (ref-face (get-text-property ref-pos 'face ref-buf)))
           (unless (or
                    ;; in markdown fence regexp matches end of line; it's likely
                    ;; to be a common mismatch between host mode and polymode,
                    ;; thus don't check first pos if it's a new line
-                   (and (= opos 1)
-                        (with-current-buffer obuf
+                   (and (= ref-pos 1)
+                        (with-current-buffer ref-buf
                           (eq (char-after 1) ?\n)))
                    (member face allow-failed-faces)
-                   (equal face oface))
+                   (equal face ref-face))
             (let ((data
                    (append
                     (when pm-test-current-change-set
@@ -209,19 +241,19 @@ MODE is a quoted symbol."
                      ;; :af poly-lock-allow-fontification
                      ;; :fl font-lock-mode
                      :face face
-                     :oface oface
+                     :ref-face ref-face
                      :pos pos
-                     :opos opos
+                     :ref-pos ref-pos
                      :line (progn (goto-char pos)
                                   (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
-                     :oline (with-current-buffer obuf
-                              (goto-char opos)
-                              (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
+                     :ref-line (with-current-buffer ref-buf
+                                 (goto-char ref-pos)
+                                 (buffer-substring-no-properties (point-at-bol) (point-at-eol)))
                      :mode smode))))
               ;; for the interactive convenience
               (switch-to-buffer (current-buffer))
               (ert-fail data)))
-          (setq opos (next-single-property-change opos 'face obuf)))))))
+          (setq ref-pos (next-single-property-change ref-pos 'face ref-buf)))))))
 
 (defun pm-test-faces (&optional allow-failed-faces)
   "Execute `pm-test-span-faces' for every span in the buffer.
@@ -315,6 +347,7 @@ execution undo is called once. After each change-set
            (debug (sexp sexp &rest ((name sexp) &rest form))))
   `(kill-buffer
     (pm-test-run-on-file ,mode ,file
+      (pm-test-faces)
       (dolist (cset ',change-sets)
         (let ((poly-lock-defer-after-change nil)
               (pm-test-current-change-set (caar cset)))
@@ -339,11 +372,16 @@ points."
     (let ((orig-line (buffer-substring-no-properties (point-at-eol) (point-at-bol))))
       (unless (string-match-p "no-indent-test" orig-line)
         (undo-boundary)
+        ;; (pm-switch-to-buffer)
+        ;; (message "line:%d pos:%s buf:%s ppss:%s spd:%s"
+        ;;          (line-number-at-pos) (point) (current-buffer)
+        ;;          (syntax-ppss) syntax-propertize--done)
         (pm-indent-line-dispatcher)
         (unless (equal orig-line (buffer-substring-no-properties (point-at-eol) (point-at-bol)))
           (undo-boundary)
           (pm-switch-to-buffer (point))
           (ert-fail (list :pos (point) :line (line-number-at-pos)
+                          :mode major-mode
                           :indent-line (buffer-substring-no-properties (point-at-bol) (point-at-eol)))))))
     (forward-line 1))
   (let (points1 points2)
@@ -370,7 +408,7 @@ points."
   "Test indentation for MODE and FILE."
   `(pm-test-run-on-file ,mode ,file
      (undo-boundary)
-     (let ((inhibit-message t))
+     (let ((inhibit-message (not pm-verbose)))
        (unwind-protect
            (pm-test--run-indentation-tests)
          (undo-boundary)))))
@@ -400,6 +438,29 @@ points."
                              :new (progn
                                     (goto-char pos)
                                     (buffer-substring-no-properties (point-at-bol) (point-at-eol)))))))))))
+
+(defmacro pm-test-map-over-modes (mode file)
+  `(pm-test-run-on-file ,mode ,file
+     (let ((beg (point-min))
+           (end (point-max)))
+       (with-buffer-prepared-for-poly-lock
+        (remove-text-properties beg end '(:pm-span :pm-face)))
+       (pm-map-over-modes (lambda (b e)) beg end)
+       (while (< beg end)
+         (let ((span (get-text-property beg :pm-span))
+               (mid (next-single-property-change beg :pm-span nil end)))
+           (dolist (pos (list beg
+                              (/ (+ beg mid) 2)
+                              (1- mid)))
+             (let ((ispan (pm-innermost-span pos t)))
+               (unless (equal span ispan)
+                 (let ((span (copy-sequence span))
+                       (ispan (copy-sequence ispan)))
+                   (setf (nth 3 span) (eieio-object-name (nth 3 span)))
+                   (setf (nth 3 ispan) (eieio-object-name (nth 3 ispan)))
+                   (pm-switch-to-buffer pos)
+                   (ert-fail (list :pos pos :mode-span span :innermost-span ispan))))))
+           (setq beg (nth 2 span)))))))
 
 (provide 'polymode-test-utils)
 ;;; polymode-test-utils.el ends here

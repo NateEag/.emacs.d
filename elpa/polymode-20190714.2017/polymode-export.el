@@ -1,6 +1,6 @@
 ;;; polymode-export.el --- Exporting facilities for polymodes -*- lexical-binding: t -*-
 ;;
-;; Copyright (C) 2013-2018, Vitalie Spinu
+;; Copyright (C) 2013-2019, Vitalie Spinu
 ;; Author: Vitalie Spinu
 ;; URL: https://github.com/vspinu/polymode
 ;;
@@ -19,9 +19,7 @@
 ;; General Public License for more details.
 ;;
 ;; You should have received a copy of the GNU General Public License
-;; along with this program; see the file COPYING.  If not, write to
-;; the Free Software Foundation, Inc., 51 Franklin Street, Fifth
-;; Floor, Boston, MA 02110-1301, USA.
+;; along with GNU Emacs.  If not, see <https://www.gnu.org/licenses/>.
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;
@@ -406,7 +404,7 @@ for each polymode in CONFIGS."
      ("textile" "\\.textile\\'" "Textile"       "pandoc %i -f textile -t %t -o %o")
      ("rst"     "\\.rst\\'" "reStructuredText"  "pandoc %i -f rst -t %t -o %o")
      ("html"    "\\.x?html?\\'" "HTML"  "pandoc %i -f html -t %t -o %o")
-     ("doocbook"    "\\.xml\\'" "DocBook"       "pandoc %i -f doocbook -t %t -o %o")
+     ("docbook"    "\\.xml\\'" "DocBook"       "pandoc %i -f docbook -t %t -o %o")
      ("mediawiki"   "\\.wiki\\'" "MediaWiki"        "pandoc %i -f mediawiki -t %t -o %o")
      ("latex"   "\\.tex\\'" "LaTeX"         "pandoc %i -f latex -t %t -o %o"))
    :to
@@ -430,6 +428,7 @@ for each polymode in CONFIGS."
      ("docbook"	"xml"  "DocBook XML" "docbook")
      ("opendocument"    "xml"	"OpenDocument XML" "opendocument")
      ("odt"     "odt"  "OpenOffice text document" "odt")
+     ("pdf"     "pdf"  "Portable Document Format" "latex")
      ("docx"    "docx"  "Word docx" "docx")
      ("epub"    "epub"  "EPUB book" "epub")
      ("epub3"   "epub"  "EPUB v3" "epub3")

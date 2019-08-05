@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20190509.902
+;; Package-Version: 20190626.1315
 ;; Keywords: project, convenience
 ;; Version: 2.1.0-snapshot
 ;; Package-Requires: ((emacs "25.1") (pkg-info "0.4"))
@@ -644,7 +644,10 @@ Set to nil to disable listing submodules contents."
   :group 'projectile
   :type 'string)
 
-(defcustom projectile-generic-command "find . -type f -print0"
+(defcustom projectile-generic-command
+  (if (executable-find "fd")
+      "fd . -0 --type f --color=never"
+    "find . -type f -print0")
   "Command used by projectile to get the files in a generic project."
   :group 'projectile
   :type 'string)
@@ -2504,9 +2507,14 @@ test/impl/other files as below:
   (and (projectile-verify-file-wildcard "?*.cabal")
        (not (projectile-verify-file "stack.yaml"))))
 
+(defun projectile-dotnet-project-p ()
+  (or (projectile-verify-file-wildcard "?*.csproj")
+      (projectile-verify-file-wildcard "?*.fsproj")))
+
 (defun projectile-go-project-p ()
   "Check if a project contains Go source files."
-  (projectile-verify-file-wildcard "*.go"))
+  (or (projectile-verify-file "go.mod")
+      (projectile-verify-file-wildcard "*.go")))
 
 (define-obsolete-variable-alias 'projectile-go-function 'projectile-go-project-test-function "1.0.0")
 (defcustom projectile-go-project-test-function #'projectile-go-project-p
@@ -2530,8 +2538,12 @@ test/impl/other files as below:
                                   :compile "cabal build"
                                   :test "cabal test"
                                   :test-suffix "Spec")
+(projectile-register-project-type 'dotnet #'projectile-dotnet-project-p
+                                  :compile "dotnet build"
+                                  :run "dotnet run"
+                                  :test "dotnet test")
 (projectile-register-project-type 'go projectile-go-project-test-function
-                                  :compile "go build ./..."
+                                  :compile "go build"
                                   :test "go test ./..."
                                   :test-suffix "_test")
 ;; File-based detection project types
@@ -2595,7 +2607,7 @@ test/impl/other files as below:
                                   :test-prefix "test_"
                                   :test-suffix"_test")
 (projectile-register-project-type 'python-pip '("requirements.txt")
-                                  :compile "python setup.by build"
+                                  :compile "python setup.py build"
                                   :test "python -m unittest discover"
                                   :test-prefix "test_"
                                   :test-suffix"_test")

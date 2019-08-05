@@ -67,11 +67,7 @@ or zero, and enabled otherwise.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "format-all" '("format-all-" "terraform-fmt" "shfmt" "sqlformat" "swiftformat" "rufo" "rustfmt" "perltidy" "prettier" "ocp-indent" "mix-format" "latexindent" "ledger-mode" "lua-fmt" "ktlint" "html-tidy" "gofmt" "elm-format" "emacs-lisp" "define-format-all-formatter" "dartfmt" "dfmt" "dhall" "crystal" "bibtex-mode" "black" "brittany" "asmfmt")))
-
-;;;***
-
-;;;### (autoloads nil nil ("format-all-pkg.el") (0 0 0 0))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "format-all" '("format-all-" "terraform-fmt" "shfmt" "sqlformat" "swiftformat" "rufo" "rustfmt" "perltidy" "prettier" "ocp-indent" "mix-format" "latexindent" "ledger-mode" "lua-fmt" "ktlint" "html-tidy" "gofmt" "elm-format" "emacs-lisp" "define-format-all-formatter" "dartfmt" "dfmt" "dhall" "crystal" "bibtex-mode" "black" "buildifier" "brittany" "asmfmt")))
 
 ;;;***
 

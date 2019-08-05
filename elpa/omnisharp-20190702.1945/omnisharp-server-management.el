@@ -72,7 +72,7 @@ to use server installed via `omnisharp-install-server`.
     (omnisharp--log (format "Using server binary on %s" server-executable-path))
 
     ;; Save all csharp buffers to ensure the server is in sync"
-    (save-some-buffers t (lambda () (string-equal (file-name-extension (buffer-file-name)) "cs")))
+    (save-some-buffers t (lambda () (and (buffer-file-name) (string-equal (file-name-extension (buffer-file-name)) "cs"))))
 
     (setq omnisharp--last-project-path project-root)
 
@@ -83,7 +83,7 @@ to use server installed via `omnisharp-install-server`.
           (make-omnisharp--server-info
            ;; use a pipe for the connection instead of a pty
            (let* ((process-connection-type nil)
-                  (default-directory (omnisharp--path-to-server (expand-file-name project-root)))
+                  (default-directory (expand-file-name project-root))
                   (omnisharp-process (start-process
                                       "OmniServer" ; process name
                                       "OmniServer" ; buffer name
@@ -91,6 +91,7 @@ to use server installed via `omnisharp-install-server`.
                                       "--encoding" "utf-8"
                                       "--stdio")))
              (buffer-disable-undo (process-buffer omnisharp-process))
+             (set-process-query-on-exit-flag omnisharp-process nil)
              (set-process-filter omnisharp-process 'omnisharp--handle-server-message)
              (set-process-sentinel omnisharp-process
                                    (lambda (process event)

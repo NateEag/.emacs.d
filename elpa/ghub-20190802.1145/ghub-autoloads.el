@@ -70,6 +70,13 @@ and call `auth-source-forget+'.
 
 ;;;***
 
+;;;### (autoloads nil "gsexp" "gsexp.el" (0 0 0 0))
+;;; Generated autoloads from gsexp.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "gsexp" '("gsexp-")))
+
+;;;***
+
 ;;;### (autoloads nil "gtea" "gtea.el" (0 0 0 0))
 ;;; Generated autoloads from gtea.el
 

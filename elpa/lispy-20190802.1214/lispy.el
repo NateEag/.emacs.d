@@ -376,6 +376,13 @@ This applies to the commands that use `lispy-pair'."
   :group 'lispy
   :type 'boolean)
 
+(defcustom lispy-thread-last-macro "thread-last"
+  "Threading macro to use by default in command `lispy-thread-last'."
+  :type '(radio
+          (const :tag "Elisp" "thread-last")
+          (const :tag "Clojure" "->>")
+          (string :tag "Custom")))
+
 (defun lispy-dir-string< (a b)
   (if (string-match "/$" a)
       (if (string-match "/$" b)
@@ -533,6 +540,7 @@ Otherwise return the amount of times executed."
 
 (defmacro lispy-from-left (&rest body)
   "Ensure that BODY is executed from start of list."
+  (declare (debug (body)))
   (let ((at-start (cl-gensym "at-start")))
     `(let ((,at-start (lispy--leftp)))
        (unless ,at-start
@@ -2760,13 +2768,13 @@ When lispy-left, will slurp ARG sexps forwards.
     (if (memq major-mode lispy-clojure-modes)
         (lispy-splice-let-clojure)
       (let ((child-binds (save-excursion
-                           (lispy-flow 2)
-                           (lispy--read (lispy--string-dwim))))
+                           (lispy-flow 1)
+                           (read (lispy--string-dwim))))
             (parent-binds
              (mapcar (lambda (x) (if (consp x) (car x) x))
                      (save-excursion
                        (lispy-up 1)
-                       (lispy--read (lispy--string-dwim)))))
+                       (read (lispy--string-dwim)))))
             (end (save-excursion
                    (lispy-flow 2)
                    (point)))
@@ -2778,7 +2786,8 @@ When lispy-left, will slurp ARG sexps forwards.
           (forward-list)
           (delete-char -1))
         (delete-region beg end)
-        (newline-and-indent)
+        (when parent-binds
+          (newline-and-indent))
         (lispy-left 2)
         (when (cl-find-if (lambda (v) (lispy-find v child-binds))
                           parent-binds)
@@ -2790,7 +2799,10 @@ When lispy-left, will slurp ARG sexps forwards.
              (indent-sexp))
             (t
              (error "unexpected"))))
-        (lispy--normalize-1))
+        (lispy--normalize-1)
+        (lispy-flow 2)
+        (when parent-binds
+          (lispy-down (length parent-binds))))
       t)))
 
 (defun lispy-splice-let-clojure ()
@@ -3033,6 +3045,7 @@ Useful for propagating `let' bindings."
              (delete-char 1))
            (backward-char)
            (newline-and-indent))
+          ((lispy-split-let-binding))
           (t
            (when (save-excursion
                    (prog1 (lispy--out-forward 1)
@@ -3045,6 +3058,21 @@ Useful for propagating `let' bindings."
            (newline-and-indent)
            (when (lispy-left-p)
              (indent-sexp))))))
+
+(defun lispy-split-let-binding ()
+  (when (save-excursion
+          (lispy--out-backward 2)
+          (looking-at "(let"))
+    (save-excursion
+      (lispy--out-forward 2)
+      (insert ")"))
+    (save-excursion
+      (insert ")\n(let (")
+      (lispy--out-backward 3)
+      (lispy--normalize-1))
+    (lispy-flow 1)
+    (lispy-down 1)
+    t))
 
 ;;* Locals: more transformations
 (defun lispy-move-up (arg)
@@ -4417,6 +4445,7 @@ If STR is too large, pop it to a buffer instead."
         (let ((inhibit-read-only t))
           (delete-region (point-min) (point-max))
           (insert str)
+          (pp-buffer)
           (goto-char (point-min)))
         str)
     (condition-case nil
@@ -5329,6 +5358,40 @@ With ARG, use the contents of `lispy-store-region-and-buffer' instead."
   (lispy-from-left
    (indent-sexp)))
 
+(defun lispy-toggle-thread-last ()
+  "Toggle current expression between last-threaded/unthreaded forms.
+Macro used may be customized in `lispy-thread-last-macro', which see."
+  (interactive)
+  (lispy-from-left
+   (if (looking-at (concat "(" lispy-thread-last-macro))
+       (lispy-unthread-last)
+     (lispy-thread-last))))
+
+(defun lispy-thread-last ()
+  "Transform current expression to equivalent threaded-last expression."
+  (lispy-from-left
+   (insert "(" lispy-thread-last-macro ")")
+   (lispy-slurp 1)
+   (lispy-flow 1)
+   (while (and (lispy-right-p)
+               (save-excursion (backward-char) (lispy-right-p)))
+     (lispy-barf 1)
+     (lispy-move-down 1)
+     (lispy-up 1))
+   (lispy-left 1)))
+
+(defun lispy-unthread-last ()
+  "Transform current last-threaded expression to equivalent unthreaded expression."
+  (lispy-from-left
+   (lispy-flow 1)
+   (lispy-different)
+   (while (lispy-forward 1)
+     (lispy-move-up 1)
+     (lispy-slurp 1))
+   (lispy-different)
+   (lispy-flow 1)
+   (lispy-raise 1)))
+
 (defun lispy-unbind-variable ()
   "Substitute let-bound variable."
   (interactive)
@@ -5383,6 +5446,17 @@ With ARG, use the contents of `lispy-store-region-and-buffer' instead."
   (lispy--normalize-1)
   (lispy-flow 1))
 
+(defun lispy--bind-variable-kind ()
+  (save-excursion
+    (catch 'break
+      (while (not (bolp))
+        (lispy-left 1)
+        (cond ((lispy-looking-back "(let\\*? ")
+               (throw 'break 'let-binding))
+              ((looking-at "(let\\([*]?\\)")
+               (throw 'break 'let-body))))
+      'no-let)))
+
 (defun lispy-bind-variable ()
   "Bind current expression as variable.
 
@@ -5391,6 +5465,7 @@ The bindings of `lispy-backward' or `lispy-mark-symbol' can also be used."
   (interactive)
   (let* ((bnd (lispy--bounds-dwim))
          (str (lispy--string-dwim bnd))
+         (kind (lispy--bind-variable-kind))
          (fmt (if (eq major-mode 'clojure-mode)
                   '("(let [ %s]\n)" . 6)
                 '("(let (( %s))\n)" . 7))))
@@ -5398,13 +5473,28 @@ The bindings of `lispy-backward' or `lispy-mark-symbol' can also be used."
     (deactivate-mark)
     (lispy-map-delete-overlay)
     (delete-region (car bnd) (cdr bnd))
-    (insert (format (car fmt) str))
-    (goto-char (car bnd))
-    (indent-sexp)
-    (forward-sexp)
-    (setq lispy-map-target-beg (+ (car bnd) (cdr fmt)))
+    (cond ((eq kind 'let-binding)
+           (let ((lispy-ignore-whitespace t))
+             (while (not (lispy-bolp))
+               (lispy-left 1)))
+           (when (looking-at "(let")
+             (lispy-flow 2))
+           (let ((new-binding
+                  (concat
+                   "( " str ")\n"
+                   (make-string (current-column) ?\ ))))
+             (save-excursion
+               (insert new-binding))
+             (setq lispy-map-target-beg (1+ (point)))
+             (goto-char (+ (car bnd) (length new-binding)))))
+          (t
+           (insert (format (car fmt) str))
+           (goto-char (car bnd))
+           (indent-sexp)
+           (forward-sexp)
+           (setq lispy-map-target-beg (+ (car bnd) (cdr fmt)))
+           (backward-char 1)))
     (setq lispy-map-target-len 0)
-    (backward-char 1)
     (setq lispy-map-format-function 'identity)
     (lispy-map-make-input-overlay (point) (point))))
 
@@ -5815,6 +5905,7 @@ An equivalent of `cl-destructuring-bind'."
   ("B" lispy-store-region-and-buffer "store list bounds")
   ("R" lispy-reverse "reverse")
   ("T" lispy-ert "ert")
+  (">" lispy-toggle-thread-last "toggle last-threaded form")
   ("" lispy-x-more-verbosity :exit nil)
   ("?" lispy-x-more-verbosity "help" :exit nil))
 
@@ -6729,7 +6820,9 @@ The result is a string."
   "Like `eval-expression', but for current language."
   (interactive)
   (let ((form (minibuffer-with-setup-hook
-                  'lispy-mode
+                  (if (member major-mode lispy-elisp-modes)
+                      #'lispy-mode
+                    #'ignore)
                 (read-from-minibuffer "Eval: "))))
     (lispy-message (lispy--eval form))))
 
@@ -7176,7 +7269,8 @@ Ignore the matches in strings and comments."
   "Regex for Clojure character literals.
 See https://clojure.org/guides/weird_characters#_character_literal.")
 
-(defun lispy--read-replace (regex class)
+(defun lispy--read-replace (regex class &optional subexp)
+  (setq subexp (or subexp 0))
   (goto-char (point-min))
   (while (re-search-forward regex nil t)
     (unless (lispy--in-string-or-comment-p)
@@ -7184,8 +7278,8 @@ See https://clojure.org/guides/weird_characters#_character_literal.")
        (format "(ly-raw %s %S)"
                class
                (substring-no-properties
-                (match-string 0)))
-       nil t))))
+                (match-string subexp)))
+       nil t nil subexp))))
 
 (defun lispy--read (str)
   "Read STR including comments and newlines."
@@ -7257,6 +7351,8 @@ See https://clojure.org/guides/weird_characters#_character_literal.")
                       (insert (format "(ly-raw char %S)" sexp)))))
                 ;; ——— \ char syntax (Clojure)—
                 (lispy--read-replace lispy--clojure-char-literal-regex "clojure-char")
+                ;; ——— (.method ) calls (Clojure)
+                (lispy--read-replace "(\\(\\.\\(?:\\sw\\|\\s_\\)+\\)" "clojure-symbol" 1)
                 ;; ——— \ char syntax (LISP)————
                 (goto-char (point-min))
                 (while (re-search-forward "#\\\\\\(.\\)" nil t)
@@ -8014,6 +8110,9 @@ The outer delimiters are stripped."
            (delete-region beg (point))
            (insert "?" (cl-caddr sxp)))
           (clojure-char
+           (delete-region beg (point))
+           (insert (cl-caddr sxp)))
+          (clojure-symbol
            (delete-region beg (point))
            (insert (cl-caddr sxp)))
           (lisp-char

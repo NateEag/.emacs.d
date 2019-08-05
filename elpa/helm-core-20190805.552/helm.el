@@ -35,8 +35,8 @@
 (require 'helm-multi-match)
 (require 'helm-source)
 
-(declare-function 'helm-comp-read "helm-mode.el")
-
+(declare-function helm-comp-read "helm-mode.el")
+(declare-function custom-unlispify-tag-name "cus-edit.el")
 
 ;;; Multi keys
 ;;
@@ -191,11 +191,8 @@ vectors, so don't use strings to define them."
     (define-key map (kbd "M-<")        'helm-beginning-of-buffer)
     (define-key map (kbd "M->")        'helm-end-of-buffer)
     (define-key map (kbd "C-g")        'helm-keyboard-quit)
-    (define-key map (kbd "<right>")    'helm-next-source)
-    (define-key map (kbd "<left>")     'helm-previous-source)
     (define-key map (kbd "<RET>")      'helm-maybe-exit-minibuffer)
     (define-key map (kbd "C-i")        'helm-select-action)
-    (define-key map (kbd "C-z")        'helm-execute-persistent-action)
     (define-key map (kbd "C-j")        'helm-execute-persistent-action)
     (define-key map (kbd "C-o")        'helm-next-source)
     (define-key map (kbd "M-o")        'helm-previous-source)
@@ -234,6 +231,7 @@ vectors, so don't use strings to define them."
     (define-key map (kbd "C-c C-f")    'helm-follow-mode)
     (define-key map (kbd "C-c C-u")    'helm-refresh)
     (define-key map (kbd "C-c >")      'helm-toggle-truncate-line)
+    (define-key map (kbd "C-c l")      'helm-display-line-numbers-mode)
     (define-key map (kbd "M-p")        'previous-history-element)
     (define-key map (kbd "M-n")        'next-history-element)
     (define-key map (kbd "C-!")        'helm-toggle-suspend-update)
@@ -268,12 +266,24 @@ vectors, so don't use strings to define them."
     map)
   "Keymap for helm.")
 
+(defun helm-customize-group-1 (group)
+  (require 'cus-edit)
+  (let ((name (format "*Customize Group: %s*"
+                      (custom-unlispify-tag-name group))))
+    (if (buffer-live-p (get-buffer name))
+        (switch-to-buffer name)
+      (custom-buffer-create
+       (list (list group 'custom-group))
+       name
+       (concat " for group "
+               (custom-unlispify-tag-name group))))))
+
 (defun helm-customize-group ()
   "Jump to customization group of current source.
 
 Default to `helm' when group is not defined in source."
   (interactive)
-  (helm-run-after-exit 'customize-group (helm-attr 'group)))
+  (helm-run-after-exit 'helm-customize-group-1 (helm-attr 'group)))
 (put 'helm-customize-group 'helm-only t)
 
 (defun helm--action-at-nth-set-fn-1 (value &optional negative)
@@ -331,6 +341,11 @@ NOTE: This has no effect when `helm-display-source-at-screen-top'
 id is non-`nil'."
   :group 'helm
   :type  'integer)
+
+(defcustom helm-left-margin-width 0
+  "`left-margin-width' value for the `helm-buffer'."
+  :group 'helm
+  :type 'integer)
 
 (defcustom helm-display-source-at-screen-top t
   "Display candidates at the top of screen.
@@ -897,6 +912,11 @@ You can toggle later `truncate-lines' with \\<helm-map>\\[helm-toggle-truncate-l
   "Face used for the minibuffer/headline prompt (such as Pattern:) in helm."
   :group 'helm-faces)
 
+(defface helm-eob-line
+  '((t (:inherit default)))
+  "Face for empty line at end of sources in the helm buffer.
+Allow specifying the height of this line."
+  :group 'helm-faces)
 
 ;;; Variables.
 ;;
@@ -924,6 +944,9 @@ This hook runs after `helm-buffer' is created but not from
 
 (defvar helm-after-update-hook nil
   "Runs after updating the helm buffer with the new input pattern.")
+
+(defvar helm-before-update-hook nil
+  "Runs before updating the helm buffer with the new input pattern.")
 
 (defvar helm-cleanup-hook nil
   "Runs after exiting the minibuffer and before performing an
@@ -994,7 +1017,8 @@ size of `helm-debug-buffer' grows quickly.")
 \\[helm-select-action]:Act \
 \\[helm-maybe-exit-minibuffer]/\
 f1/f2/f-n:NthAct \
-\\[helm-toggle-suspend-update]:Tog.suspend"
+\\[helm-toggle-suspend-update]:Tog.suspend \
+\\[helm-customize-group]:Conf"
   "Help string displayed by helm in the mode-line.
 It is either a string or a list of two string arguments where the
 first string is the name and the second string is displayed in
@@ -1030,13 +1054,13 @@ see [[https://github.com/emacs-helm/helm/wiki/Fuzzy-matching][fuzzy-matching]] i
 Helm generally uses familiar Emacs keys to navigate the list.
 Here follow some of the less obvious bindings:
 
-- `\\[helm-maybe-exit-minibuffer]' selects the candidate from the list, executes the default action
+- `\\<helm-map>\\[helm-maybe-exit-minibuffer]' selects the candidate from the list, executes the default action
 upon exiting the Helm session.
 
-- `\\[helm-execute-persistent-action]' executes the default action but without exiting the Helm session.
+- `\\<helm-map>\\[helm-execute-persistent-action]' executes the default action but without exiting the Helm session.
 Not all sources support this.
 
-- `\\[helm-select-action]' displays a list of actions available on current candidate or all marked candidates.
+- `\\<helm-map>\\[helm-select-action]' displays a list of actions available on current candidate or all marked candidates.
 The default binding <tab> is ordinarily used for completion, but that would be
 redundant since Helm completes upon every character entered in the prompt.
 See [[https://github.com/emacs-helm/helm/wiki#helm-completion-vs-emacs-completion][Helm wiki]].
@@ -1119,6 +1143,27 @@ provide for this function.  This is the intended behavior.
 Generally you are better off using the native Helm command
 than the helmized Emacs equivalent.
 
+*** Completion behavior with Helm and completion-at-point
+
+Helm is NOT completing dynamically, that's mean that when you are
+completing some text at point, completion is done against this
+text and subsequent characters you add AFTER this text, this
+allow you to use matching methods provided by Helm, that is multi
+matching or fuzzy matching (see [[Matching in Helm][Matching in Helm]]).
+
+Completion is not done dynamically (against `helm-pattern')
+because backend functions (i.e. `competion-at-point-functions')
+are not aware of the Helm matching methods.
+
+By behaving like this, the benefit is that you can fully use Helm
+matching methods but you can't start a full completion against a
+prefix different than the initial text you have at point, Helm
+warn you against this by colorizing the initial input and send an
+user-error message when trying to delete backward text beyond
+this limit at first hit on DEL and on second hit on DEL within a
+short delay (1s) quit Helm and delete-backward char in
+current-buffer.
+
 ** Helm help
 
 \\[helm-documentation]: Show all helm documentations concatenated in one org file.
@@ -1169,6 +1214,16 @@ Helm also has a special group for faces you can access via `M-x customize-group 
 
 Note: Some sources may not have their group set and default to the `helm' group.
 
+** Display Helm in windows and frames
+
+You can display the helm completion buffer in many differents
+window configurations, see the custom interface to discover the
+different windows configurations available (See [[Customize Helm][Customize Helm]] to jump to custom interface).
+When using Emacs in a graphic display (i.e. not in a terminal) you can as
+well display your helm buffers in separated frames globally for
+all helm commands or separately for specific helm commands.
+See [[https://github.com/emacs-helm/helm/wiki/frame][helm wiki]] for more infos.
+
 ** Helm's basic operations and default key bindings
 
 | Key     | Alternative Keys | Command                                                              |
@@ -1177,36 +1232,58 @@ Note: Some sources may not have their group set and default to the `helm' group.
 | C-n     | Down             | Next line                                                            |
 | M-v     | prior            | Previous page                                                        |
 | C-v     | next             | Next page                                                            |
-| Enter   |                  | Execute first (default) action / Select                              |
+| Enter   |                  | Execute first (default) action / Select [1]                          |
 | M-<     |                  | First line                                                           |
 | M->     |                  | Last line                                                            |
 | C-M-S-v | M-prior, C-M-y   | Previous page (other-window)                                         |
 | C-M-v   | M-next           | Next page (other-window)                                             |
 | Tab     | C-i              | Show action list                                                     |
-| Left    | M-o              | Previous source                                                      |
-| Right   | C-o              | Next source                                                          |
-| C-k     |                  | Delete pattern (with prefix arg delete from point to end or all [1]) |
-| C-j     | C-z              | Persistent action (Execute and keep Helm session)                    |
+| M-o     |                  | Previous source                                                      |
+| C-o     |                  | Next source                                                          |
+| C-k     |                  | Delete pattern (with prefix arg delete from point to end or all [2]) |
+| C-j     |                  | Persistent action (Execute and keep Helm session)                    |
 
-\[1] Delete from point to end or all depending on the value of
+\[1] Behavior may change depending context in some source e.g. `helm-find-files'.
+
+\[2] Delete from point to end or all depending on the value of
 `helm-delete-minibuffer-contents-from-point'.
 
-** Shortcuts for n-th action
+** Action transformers
+
+You may be surprized to see you actions list changing depending of context, this
+happen when a source have an action transformer function which check the current
+candidate selectioned and add specific actions for this candidate.
+
+** Shortcuts for n-th first actions
 
 f1-f12: Execute n-th action where n is 1 to 12.
 
 ** Shortcuts for executing the default action on the n-th candidate
 
+Helm does not display line numbers by default, with Emacs-26+
+you can enable it permanently in all helm buffers with:
+
+    (add-hook 'helm-after-initialize-hook 'helm-init-relative-display-line-numbers)
+
+You can also toggle line numbers with \\<helm-map>\\[helm-display-line-numbers-mode] in current helm buffer.
+
+Of course when enabling `global-display-line-numbers-mode' helm buffers will have line numbers as well.
+\(don't forget to customize `display-line-numbers-type' to relative).
+
+In Emacs versions < to 26 you will have to use [[https://github.com/coldnew/linum-relative][linum-relative]] package
+and `helm-linum-relative-mode'.
+
+Then when line numbers are enabled with one of the methods above
+the following keys are available([1]):
+
 C-x <n>: Execute default action on the n-th candidate before currently selected candidate.
 
 C-c <n>: Execute default action on the n-th candidate after current selected candidate.
 
-\"n\" is limited to 1-9.  For larger jumps use other navigation keys.  Helm does
-not display line numbers by default: enable them with the
-\[[https://github.com/coldnew/linum-relative][linum-relative]] package and
-`helm-linum-relative-mode'.
-If you are using Emacs-26+ version you can use `global-display-line-numbers-mode'
-which seems even better (don't forget to customize `display-line-numbers-type' to relative).
+\"n\" is limited to 1-9.  For larger jumps use other navigation keys.
+
+\[1] Note that the keybindings are always available even if line numbers are not displayed,
+they are just useless in this case.
 
 ** Mouse control in Helm
 
@@ -1434,7 +1511,8 @@ The list of sources (symbols or alists) is normalized to alists in
 (defvar helm--local-variables nil)
 (defvar helm-split-window-state nil)
 (defvar helm--window-side-state nil)
-(defvar helm-selection-point nil)
+(defvar helm-selection-point nil
+  "The value of point at selection.")
 (defvar helm-alive-p nil)
 (defvar helm-visible-mark-overlays nil)
 (defvar helm-update-blacklist-regexps '("^" "^ *" "$" "!" " " "\\b"
@@ -3246,6 +3324,7 @@ Unuseful when used outside helm, don't use it.")
       (helm-log "helm--local-variables = %S" helm--local-variables)
       (helm--set-local-variables-internal)
       (setq truncate-lines helm-truncate-lines) ; already local.
+      (setq left-margin-width helm-left-margin-width)
       (setq cursor-type nil))
     (helm-initialize-overlays helm-buffer)
     (get-buffer helm-buffer)))
@@ -3558,6 +3637,7 @@ WARNING: Do not use this mode yourself, it is internal to helm."
       (setq helm-input helm-pattern))
     (helm-log "helm-pattern = %S" helm-pattern)
     (helm-log "helm-input = %S" helm-input)
+    (helm-log-run-hook 'helm-before-update-hook)
     (setq helm--in-update t)
     (helm-update)))
 
@@ -3778,7 +3858,6 @@ Default function to match candidates according to `helm-pattern'."
 ;;; Fuzzy matching
 ;;
 ;;
-(defconst helm--fuzzy-word-separators '("-" "_" ":" "/"))
 (defvar helm--fuzzy-regexp-cache (make-hash-table :test 'eq))
 (defun helm--fuzzy-match-maybe-set-pattern ()
   ;; Computing helm-pattern with helm--mapconcat-pattern
@@ -3869,29 +3948,18 @@ CANDIDATE. Contiguous matches get a coefficient of 2."
                             (string= pattern (substring cand 0 1)))
                        150)
                       (t 0)))
-         ;; Exact match e.g. foo > foo == 200
+         ;; Exact match e.g. foo -> foo == 200
          (bonus1 (and (string= cand pattern) 200))
-         ;; Partial match e.g. foo > aafooaa == 100
-         (bonus2 (and (string-match
-                       (concat "\\<" (regexp-quote pattern) "\\>")
-                       cand)
-                      100))
-         ;; Prefix at word boundary e.g fb > foo-bar coeff 2
-         (bonus3 (if (or bonus1 bonus2 (null pat-lookup))
-                     0
-                   (cl-loop with seq = (copy-sequence str-lookup)
-                            with count = 0
-                            for c across (substring pattern 1)
-                            for assoc = (rassoc (list (string c)) (cdr seq))
-                            when (helm-aand
-                                  assoc
-                                  (car it)
-                                  (member it helm--fuzzy-word-separators))
-                            do (cl-incf count 2)
-                            and do (setq seq (cdr (member assoc seq)))
-                            finally return count))))
+         ;; Partial match e.g. foo -> aafooaa == 100
+         ;;               or   foo -> fooaaa
+         (bonus2 (and (or (string-match
+                           (concat "\\`" (regexp-quote pattern))
+                           cand)
+                          (string-match
+                           (concat "\\<" (regexp-quote pattern) "\\>")
+                           cand))
+                      100)))
     (+ bonus
-       bonus3
        (or bonus1 bonus2
            ;; Give a coefficient of 2 for contiguous matches.
            ;; That's mean that "wiaaaki" will not take precedence
@@ -4146,7 +4214,7 @@ It is used for narrowing list of candidates to the
 
 (defun helm-render-source (source matches)
   "Display MATCHES from SOURCE according to its settings."
-  (helm-log "Source name = %S" (assoc-default 'name source))
+  (helm-log "Source = %S" (remove (assq 'keymap source) source))
   (when matches
     (helm-insert-header-from-source source)
     (cl-loop with separate = nil
@@ -4270,8 +4338,7 @@ without recomputing them, it should be a list of lists."
                       do (helm-render-source src mtc))
              ;; Move to first line only when there is matches
              ;; to avoid cursor moving upside down (issue #1703).
-             (helm--update-move-first-line)
-             (helm--reset-update-flag)))
+             (helm--update-move-first-line)))
       ;; When there is only one async source, update mode-line and run
       ;; `helm-after-update-hook' in `helm-output-filter--post-process',
       ;; when there is more than one source, update mode-line and run
@@ -4279,14 +4346,15 @@ without recomputing them, it should be a list of lists."
       ;; present and running in BG.
       (let ((src (or source (helm-get-current-source))))
         (unless (assq 'candidates-process src)
-          (and src (helm-display-mode-line src 'force))
+          (helm-display-mode-line src 'force)
           (helm-log-run-hook 'helm-after-update-hook)))
       (when preselect
         (helm-log "Update preselect candidate %s" preselect)
         (if (helm-window)
             (with-helm-window (helm-preselect preselect source))
           (helm-preselect preselect source)))
-      (setq helm--force-updating-p nil))
+      (setq helm--force-updating-p nil)
+      (helm--reset-update-flag))
     (helm-log "end update")))
 
 (defun helm-update-source-p (source)
@@ -4534,7 +4602,7 @@ If DISPLAY-STRING is non-`nil' and a string value then display
 this additional info after the source name by overlay."
   (unless (bobp)
     (let ((start (point)))
-      (insert "\n")
+      (insert (propertize "\n" 'face 'helm-eob-line))
       (put-text-property start (point) 'helm-header-separator t)))
   (let ((start (point)))
     (insert name)
@@ -4544,7 +4612,10 @@ this additional info after the source name by overlay."
       (overlay-put (make-overlay (point-at-bol) (point-at-eol))
                    'display display-string))
     (insert "\n")
-    (put-text-property start (point) 'face 'helm-source-header)))
+    (add-text-properties start (point) '(face helm-source-header
+                                         ;; Disable line numbers on
+                                         ;; source headers.
+                                         display-line-numbers-disable t))))
 
 (defun helm-insert-candidate-separator ()
   "Insert separator of candidates into the helm buffer."
@@ -4552,6 +4623,29 @@ this additional info after the source name by overlay."
   (put-text-property (point-at-bol)
                      (point-at-eol) 'helm-candidate-separator t)
   (insert "\n"))
+
+(defun helm-init-relative-display-line-numbers ()
+  "Enable `display-line-numbers' for helm buffers.
+This is intended to be added to `helm-after-initialize-hook'.
+This will work only in Emacs-26+, i.e. Emacs
+versions that have `display-line-numbers-mode'."
+  (when (boundp 'display-line-numbers)
+    (with-helm-buffer
+      (setq display-line-numbers 'relative))))
+
+(define-minor-mode helm-display-line-numbers-mode
+    "Toggle display of line numbers in current helm buffer."
+  :group 'helm
+  (with-helm-alive-p
+    (cl-assert (boundp 'display-line-numbers) nil
+               "`display-line-numbers' not available")
+    (if helm-display-line-numbers-mode
+        (with-helm-buffer
+          (setq display-line-numbers 'relative))
+      (with-helm-buffer
+        (setq display-line-numbers nil)))))
+(put 'helm-display-line-numbers-mode 'helm-only t)
+
 
 
 ;;; Async process
@@ -6868,6 +6962,7 @@ If source doesn't have any `help-message' attribute, a generic message
 explaining this is added instead.
 The global `helm-help-message' is always added after this local help."
   (interactive)
+  (require 'helm-mode) ; for helm-comp-read.
   (with-helm-alive-p
     (let ((source (or (helm-get-current-source)
                       (helm-comp-read

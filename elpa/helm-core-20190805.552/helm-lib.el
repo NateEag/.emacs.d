@@ -24,8 +24,19 @@
 ;;; Code:
 
 (require 'cl-lib)
-(eval-when-compile (require 'wdired))
 
+(declare-function wdired-change-to-dired-mode "wdired.el")
+(declare-function wdired-do-symlink-changes "wdired.el")
+(declare-function wdired-do-perm-changes "wdired.el")
+(declare-function wdired-get-filename "wdired.el")
+(declare-function wdired-do-renames "wdired.el")
+(declare-function wdired-flag-for-deletion "wdired.el")
+(declare-function wdired-normalize-filename "wdired.el")
+(declare-function dired-mark-remembered "dired.el")
+(declare-function dired-log-summary "dired.el")
+(declare-function dired-current-directory "dired.el")
+(declare-function ansi-color--find-face "ansi-color.el")
+(declare-function ansi-color-apply-sequence "ansi-color.el")
 (declare-function helm-get-sources "helm.el")
 (declare-function helm-marked-candidates "helm.el")
 (declare-function helm-follow-mode-p "helm.el")
@@ -41,6 +52,9 @@
 (defvar helm-initial-frame)
 (defvar helm-current-position)
 (defvar wdired-old-marks)
+(defvar wdired-keep-marker-rename)
+(defvar wdired-allow-to-change-permissions)
+(defvar wdired-allow-to-redirect-links)
 (defvar helm-persistent-action-display-window)
 
 ;;; User vars.
@@ -116,6 +130,16 @@ customize functions e.g. `customize-set-variable' and NOT `setq'."
   :group 'helm-files
   :type  '(repeat (choice regexp))
   :set 'helm-ff--setup-boring-regex)
+
+(defcustom helm-describe-function-function 'describe-function
+  "Function used to describe functions in Helm."
+  :group 'helm-elisp
+  :type 'function)
+
+(defcustom helm-describe-variable-function 'describe-variable
+  "Function used to describe variables in Helm."
+  :group 'helm-elisp
+  :type 'function)
 
 
 ;;; Internal vars
@@ -960,18 +984,25 @@ Example:
       "Anonymous"
       (symbol-name obj)))
 
+(defun helm-describe-class (class)
+  "Display documentation of Eieio CLASS, a symbol or a string."
+  (advice-add 'cl--print-table :override #'helm-source--cl--print-table)
+  (unwind-protect
+       (helm-describe-function class)
+    (advice-remove 'cl--print-table #'helm-source--cl--print-table)))
+
 (defun helm-describe-function (func)
-  "FUNC is symbol or string."
+  "Display documentation of FUNC, a symbol or string."
   (cl-letf (((symbol-function 'message) #'ignore))
-    (describe-function (helm-symbolify func))))
+    (funcall helm-describe-function-function (helm-symbolify func))))
 
 (defun helm-describe-variable (var)
-  "VAR is symbol or string."
+  "Display documentation of VAR, a symbol or a string."
   (cl-letf (((symbol-function 'message) #'ignore))
-    (describe-variable (helm-symbolify var))))
+    (funcall helm-describe-variable-function (helm-symbolify var))))
 
 (defun helm-describe-face (face)
-  "FACE is symbol or string."
+  "Display documentation of FACE, a symbol or a string."
   (let ((faces (helm-marked-candidates)))
     (cl-letf (((symbol-function 'message) #'ignore))
       (describe-face (if (cdr faces)
@@ -1279,6 +1310,14 @@ That is what completion commands operate on."
   `(with-selected-window (helm-window)
      ,@body))
 
+(defmacro helm-without-follow (&rest body)
+  "Ensure BODY runs without following.
+I.e. when using `helm-next-line' and friends in BODY."
+  (declare (indent 0) (debug t))
+  `(cl-letf (((symbol-function 'helm-follow-mode-p)
+             (lambda (&optional _) nil)))
+    (let (helm-follow-mode-persistent)
+      (progn ,@body))))
 
 ;; Yank text at point.
 ;;

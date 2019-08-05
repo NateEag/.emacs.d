@@ -39,6 +39,18 @@
 (declare-function helm-init-candidates-in-buffer "helm.el")
 (declare-function helm-interpret-value "helm.el")
 (declare-function helm-fuzzy-highlight-matches "helm.el")
+
+;;; Advice Emacs fn
+;;  Make Classes's docstrings more readable by removing al the
+;;  unnecessary crap.
+
+(defun helm-source--cl--print-table (_header rows)
+  "Advice for `cl--print-table' to make readable class slots docstrings."
+  (let ((format "%s\n\n  Initform=%s\n\n%s"))
+    (dolist (row rows)
+      (setcar row (propertize (car row) 'face 'italic))
+      (setcdr row (nthcdr 1 (cdr row)))
+      (insert "\n* " (apply #'format format row) "\n"))))
 
 
 (defgeneric helm--setup-source (source)
@@ -108,7 +120,10 @@
 
   This function, generally should not compute candidates according to
   `helm-pattern' which defeat all the Helm's matching mechanism
-  i.e. multiple pattern matching and/or fuzzy matching.")
+  i.e. multiple pattern matching and/or fuzzy matching.
+  If you want to do so, use :match-dynamic slot to be sure matching
+  occur only in :candidates function and there is no conflict with
+  other match functions.")
 
    (update
     :initarg :update
@@ -559,7 +574,7 @@
     :custom integer
     :documentation
     "  Enable `helm-follow-mode' for this source only.
-With a value of 1 enable, a value of -1 or nil disable the mode.
+  With a value of 1 enable, a value of -1 or nil disable the mode.
   See `helm-follow-mode' for more infos.")
 
    (follow-delay
@@ -668,7 +683,18 @@ With a value of 1 enable, a value of -1 or nil disable the mode.
   functions will be used. You can specify those functions as a
   list of functions or a single symbol function.
 
-  NOTE: This have the same effect as using :MULTIMATCH nil."))
+  NOTE: This have the same effect as using :MULTIMATCH nil.")
+
+   (match-dynamic
+    :initarg :match-dynamic
+    :initform nil
+    :custom boolean
+    :documentation
+    "  Disable all helm matching functions when non nil.
+  The :candidates function in this case is in charge of fetching
+  candidates dynamically according to `helm-pattern'.
+  Note that :volatile is automatically enabled when using this, so no
+  need to specify it."))
 
   "Use this class to make helm sources using a list of candidates.
 This list should be given as a normal list, a variable handling a list
@@ -693,6 +719,12 @@ Matching is done basically with `string-match' against each candidate.")
    (multimatch :initform nil))
 
   "Use this class to define a helm source calling an external process.
+The external process is called typically in a `start-process' call to be
+asynchronous.
+
+Note that using multiples asynchronous sources is not fully working,
+expect weird behavior if you try this.
+
 The :candidates slot is not allowed even if described because this class
 inherit from `helm-source'.")
 
@@ -978,6 +1010,8 @@ an eieio class."
 (defmethod helm--setup-source :primary ((_source helm-source)))
 
 (defmethod helm--setup-source :before ((source helm-source))
+  (unless (slot-value source 'group)
+    (setf (slot-value source 'group) 'helm))
   (when (slot-value source 'delayed)
     (warn "Deprecated usage of helm `delayed' slot in `%s'"
           (slot-value source 'name)))
@@ -1023,7 +1057,12 @@ an eieio class."
       (unless (eq it 'nomultimatch) ; Use own migemo fn.
         (setf (slot-value source 'match)
               (append (helm-mklist (slot-value source 'match))
-                      '(helm-mm-3-migemo-match))))))
+                      '(helm-mm-3-migemo-match)))))
+  (when (slot-value source 'match-dynamic)
+    (setf (slot-value source 'match) 'identity)
+    (setf (slot-value source 'multimatch) nil)
+    (setf (slot-value source 'fuzzy-match) nil)
+    (setf (slot-value source 'volatile) t)))
 
 (defmethod helm--setup-source ((source helm-source-in-buffer))
   (cl-assert (eq (slot-value source 'candidates) 'helm-candidates-in-buffer)

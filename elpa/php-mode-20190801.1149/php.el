@@ -4,7 +4,7 @@
 
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 5 Dec 2018
-;; Version: 1.21.2
+;; Version: 1.21.4
 ;; Keywords: languages, php
 ;; Homepage: https://github.com/emacs-php/php-mode
 ;; Package-Requires: ((emacs "24.3") (cl-lib "0.5"))
@@ -28,7 +28,10 @@
 ;; This file provides common variable and functions for PHP packages.
 
 ;;; Code:
+(require 'cl-lib)
 (require 'flymake)
+(require 'php-project)
+(require 'rx)
 
 ;;;###autoload
 (defgroup php nil
@@ -40,17 +43,23 @@
 
 (defcustom php-executable (or (executable-find "php") "/usr/bin/php")
   "The location of the PHP executable."
+  :group 'php
+  :tag "PHP Executable"
   :type 'string)
 
 (defcustom php-site-url "https://php.net/"
   "Default PHP.net site URL.
 
 The URL to use open PHP manual and search word."
+  :group 'php
+  :tag "PHP Site URL"
   :type 'string)
 
 (defcustom php-manual-url 'en
   "URL at which to find PHP manual.
 You can replace \"en\" with your ISO language code."
+  :group 'php
+  :tag "PHP Manual URL"
   :type '(choice (const  :tag "English" 'en)
                  (const  :tag "Brazilian Portuguese" 'pt_BR)
                  (const  :tag "Chinese (Simplified)" 'zh)
@@ -66,6 +75,7 @@ You can replace \"en\" with your ISO language code."
 (defcustom php-search-url nil
   "URL at which to search for documentation on a word."
   :group 'php
+  :tag "PHP Search URL"
   :type '(choice (string :tag "URL to search PHP documentation")
                  (const  :tag "Use `php-site-url' variable" nil)))
 
@@ -78,6 +88,49 @@ You can replace \"en\" with your ISO language code."
   "Suffix for inserted namespace."
   :group 'php
   :type 'string)
+
+(defcustom php-default-major-mode 'php-mode
+  "Major mode for editing PHP script."
+  :group 'php
+  :tag "PHP Default Major Mode"
+  :type 'function)
+
+(defcustom php-html-template-major-mode 'web-mode
+  "Major mode for editing PHP-HTML template."
+  :group 'php
+  :tag "PHP-HTML Template Major Mode"
+  :type 'function)
+
+(defcustom php-blade-template-major-mode 'web-mode
+  "Major mode for editing Blade template."
+  :group 'php
+  :tag "PHP Blade Template Major Mode"
+  :type 'function)
+
+(defcustom php-template-mode-alist
+  `(("\\.blade" . ,php-blade-template-major-mode)
+    ("\\.phpt\\'" . ,(if (fboundp 'phpt-mode) 'phpt-mode php-default-major-mode))
+    ("\\.phtml\\'" . ,php-html-template-major-mode))
+  "Automatically use another MAJOR-MODE when open template file."
+  :group 'php
+  :tag "PHP Template Mode Alist"
+  :type '(alist :key-type regexp :value-type function)
+  :link '(url-link :tag "web-mode" "http://web-mode.org/")
+  :link '(url-link :tag "phpt-mode" "https://github.com/emacs-php/phpt-mode"))
+
+(defcustom php-mode-maybe-hook nil
+  "List of functions to be executed on entry to `php-mode-maybe'."
+  :group 'php
+  :tag "PHP Mode Maybe Hook"
+  :type 'hook)
+
+(defcustom php-default-builtin-web-server-port 3939
+  "Port number of PHP Built-in HTTP server (php -S)."
+  :group 'php
+  :tag "PHP Default Built-in Web Server Port"
+  :type 'integer
+  :link '(url-link :tag "Built-in web server"
+                   "https://www.php.net/manual/features.commandline.webserver.php"))
 
 ;;; PHP Keywords
 (defconst php-magical-constants
@@ -100,6 +153,11 @@ it is the character that will terminate the string, or t if the string should be
 (defsubst php-in-string-or-comment-p ()
   "Return character address of start of comment or string; nil if not in one."
   (nth 8 (syntax-ppss)))
+
+(defsubst php-in-poly-php-html-mode ()
+  "Return T if current buffer is in `poly-html-mode'."
+  (and (boundp 'poly-php-html-mode)
+       (symbol-value 'poly-php-html-mode)))
 
 (defun php-create-regexp-for-method (visibility)
   "Make a regular expression for methods with the given VISIBILITY.
@@ -187,6 +245,54 @@ Look at the `php-executable' variable instead of the constant \"php\" command."
                             'flymake-php-init)))))
     (list php-executable (cdr init))))
 
+(defconst php-re-detect-html-tag
+  (eval-when-compile
+    (rx (or (: string-start (* (in space))
+               "<!"
+               (or "DOCTYPE" "doctype")
+               (+ (in space))
+               (or "HTML" "html"))
+            (: (or line-start
+                   (: "<" (? "/")
+                      (* (in space)) (+ (in alpha "-")) (* (in space)) ">"))
+               (: "<" (* (in space)) (+ (in alpha "-")) (* (in space)) ">"))))))
+
+(defun php-buffer-has-html-tag ()
+  "Return position of HTML tag or NIL in current buffer."
+  (save-excursion
+    (save-restriction
+      (widen)
+      (goto-char (point-min))
+      (re-search-forward php-re-detect-html-tag nil t))))
+
+(defun php-derivation-major-mode ()
+  "Return major mode for PHP file by file-name and its content."
+  (let ((mode (assoc-default buffer-file-name
+                             php-template-mode-alist
+                             #'string-match-p))
+        type)
+    (when (and (null mode) buffer-file-name
+               php-project-php-file-as-template)
+      (setq type (php-project-get-file-html-template-type buffer-file-name))
+      (cond
+       ((eq t type) (setq mode php-html-template-major-mode))
+       ((eq 'auto type)
+        (when (php-buffer-has-html-tag)
+          (setq mode php-html-template-major-mode)))))
+    (when (and mode (not (fboundp mode)))
+      (if (string-match-p "\\.blade\\." buffer-file-name)
+          (warn "php-mode is NOT support blade template. %s"
+                "Please install `web-mode' package")
+        (setq mode nil)))
+    (or mode php-default-major-mode)))
+
+;;;###autoload
+(defun php-mode-maybe ()
+  "Select PHP mode or other major mode."
+  (interactive)
+  (run-hooks php-mode-maybe-hook)
+  (funcall (php-derivation-major-mode)))
+
 ;;;###autoload
 (defun php-current-class ()
   "Insert current class name if cursor in class context."
@@ -202,6 +308,56 @@ Look at the `php-executable' variable instead of the constant \"php\" command."
   (let ((matched (php-get-current-element php--re-namespace-pattern)))
     (when matched
       (insert (concat matched php-namespace-suffix-when-insert)))))
+
+;;;###autoload
+(defun php-run-builtin-web-server (router-or-dir hostname port &optional document-root)
+  "Run PHP Built-in web server.
+
+`ROUTER-OR-DIR': Path to router PHP script or Document root.
+`HOSTNAME': Hostname or IP address of Built-in web server.
+`PORT': Port number of Built-in web server.
+`DOCUMENT-ROOT': Path to Document root.
+
+When `DOCUMENT-ROOT' is NIL, the document root is obtained from `ROUTER-OR-DIR'."
+  (interactive
+   (let ((insert-default-directory t)
+         (d-o-r (read-file-name "Document root or Script: " default-directory)))
+     (list
+      (expand-file-name d-o-r)
+      (read-string "Hostname: " "0.0.0.0")
+      (read-number "Port: " php-default-builtin-web-server-port)
+      (if (file-directory-p d-o-r)
+          nil
+        (let ((root-input (read-file-name "Document root: " (directory-file-name d-o-r))))
+          (file-name-directory
+           (if (file-directory-p root-input)
+               root-input
+             (directory-file-name root-input))))))))
+  (let* ((default-directory
+           (or document-root
+               (if (file-directory-p router-or-dir)
+                   router-or-dir
+                 (directory-file-name router-or-dir))))
+         (pattern (rx-form `(: bos ,(getenv "HOME"))))
+         (short-dirname (replace-regexp-in-string pattern "~" default-directory))
+         (short-filename (replace-regexp-in-string pattern "~" router-or-dir))
+         (buf-name (format "php -S %s:%s -t %s %s"
+                           hostname
+                           port
+                           short-dirname
+                           (if document-root short-filename "")))
+         (args (cl-remove-if
+                #'null
+                (list "-S"
+                      (format "%s:%d" hostname port)
+                      "-t"
+                      default-directory
+                      (when document-root router-or-dir)))))
+    (message "Run PHP built-in server: %s" buf-name)
+    (apply #'make-comint buf-name php-executable nil args)
+    (funcall
+     (if (called-interactively-p 'interactive) #'display-buffer #'get-buffer)
+     (format "*%s*" buf-name))))
 
 (provide 'php)
 ;;; php.el ends here

@@ -1,4 +1,4 @@
-(define-package "term-manager" "20171020.841" "Contextual terminal management"
+(define-package "term-manager" "20190610.2032" "Contextual terminal management"
   '((dash "2.12.0")
     (emacs "24.4"))
   :keywords

@@ -1299,6 +1299,11 @@ File: ivy.info,  Node: Using TRAMP,  Up: File Name Completion
 
      Move the the local root directory.
 
+‘~~’
+....
+
+     Move to the local home directory.
+
    From any directory, with the empty input, inputting ‘/ssh:’ and
 pressing ‘C-j’ (or ‘RET’, which is the same thing) completes for host
 and user names.
@@ -1800,6 +1805,7 @@ Keystroke Index
                                                                (line 45)
 * ~:                                     File Name Completion. (line 30)
 * ~ <1>:                                 Using TRAMP.          (line  9)
+* ~~:                                    Using TRAMP.          (line 29)
 * a:                                     Hydra in the minibuffer.
                                                                (line 65)
 * a <1>:                                 Saving the current completion session to a buffer.
@@ -1911,16 +1917,16 @@ Node: Packages37972
 Node: Commands38937
 Node: File Name Completion39122
 Node: Using TRAMP40918
-Node: Buffer Name Completion42365
-Node: Counsel commands42980
-Node: API43627
-Node: Required arguments for ivy-read44225
-Node: Optional arguments for ivy-read44744
-Node: Example - counsel-describe-function48170
-Node: Example - counsel-locate51413
-Node: Example - ivy-read-with-extra-properties55163
-Node: Variable Index56371
-Node: Keystroke Index63418
+Node: Buffer Name Completion42420
+Node: Counsel commands43035
+Node: API43682
+Node: Required arguments for ivy-read44280
+Node: Optional arguments for ivy-read44799
+Node: Example - counsel-describe-function48225
+Node: Example - counsel-locate51468
+Node: Example - ivy-read-with-extra-properties55218
+Node: Variable Index56426
+Node: Keystroke Index63473
 
 End Tag Table
 

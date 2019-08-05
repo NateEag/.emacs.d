@@ -54,7 +54,7 @@ a regular expression.
 
 DEF is for compatibility with `completing-read'.
 
-UPDATE-FN is called each time the candidate list is redisplayed.
+UPDATE-FN is called each time the candidate list is re-displayed.
 
 When SORT is non-nil, `ivy-sort-functions-alist' determines how
 to sort candidates before displaying them.

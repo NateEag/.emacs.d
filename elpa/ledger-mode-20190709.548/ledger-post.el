@@ -52,6 +52,12 @@ decimal separator."
                 (const :tag "align at the decimal separator" :decimal))
   :group 'ledger-post)
 
+(defcustom ledger-post-auto-align t
+  "When non-nil, realign post amounts when indenting or completing."
+  :type 'boolean
+  :group 'ledger-post
+  :safe 'booleanp)
+
 (defun ledger-next-amount (&optional end)
   "Move point to the next amount, as long as it is not past END.
 Return the width of the amount field as an integer and leave
@@ -119,6 +125,20 @@ Looks only as far as END, if supplied, otherwise `point-max'."
                           (insert (make-string amt-adjust ? ))
                         (delete-char amt-adjust)))))))
           (forward-line 1))))))
+
+(defun ledger-indent-line ()
+  "Indent the current line."
+  ;; Ensure indent if the previous line was indented
+  (let ((indent-level (save-excursion (if (progn (when (zerop (forward-line -1))
+                                                   (memq (ledger-thing-at-point) '(transaction posting))))
+                                          ledger-post-account-alignment-column
+                                        0))))
+    (unless (= (current-indentation) indent-level)
+      (back-to-indentation)
+      (delete-horizontal-space t)
+      (indent-to indent-level)))
+  (when ledger-post-auto-align
+    (ledger-post-align-postings (line-beginning-position) (line-end-position))))
 
 (defun ledger-post-align-dwim ()
   "Align all the posting of the current xact or the current region.

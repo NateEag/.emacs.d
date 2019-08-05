@@ -147,14 +147,9 @@ entry.
 ‘C-c C-a’ or using ‘Add Transaction’ menu entry.  Then typing a close
 match to the payee.  Ledger-mode will call ‘ledger xact’ with the data
 you enter and place the transaction in the proper chronological place in
-the ledger.
-
-   If you need to add a lot of transactions that are not near your
-current date you can set the current year and month so that using ‘Add
-Transaction’ will prompt you with a more convenient month and year.  To
-set the month type ‘C-c RET’ and enter the month you want.  ‘C-c C-y’
-will prompt you for the year.  These settings only effect the ‘Add
-Transaction’ command.
+the ledger.  Subsequent calls to ‘C-c C-a’ remember the last date so
+entering many dates in the past is easy.  The date format can be changed
+by modifying ‘ledger-default-date-format’.
 
 
 File: ledger-mode.info,  Node: Reconciliation,  Next: Reports,  Prev: Quick Add,  Up: Quick Demo
@@ -251,14 +246,26 @@ Beyond the two ways of quickly adding transactions (*note Quick Add::)
 Ledger-mode assists you by providing robust ‘TAB’ completion for payees
 and accounts.  Ledger-mode will scan the existing buffer for payees and
 accounts.  Included files are not currently included in the completion
-scan.  Repeatedly hitting ‘TAB’ will cycle through the possible
-completions.
+scan.  Ledger-mode respects Emacs’s variables that govern ‘TAB’
+completion, see especially ‘tab-always-indent’.
 
-   Ledger-mode can also help you keep your amounts aligned.  Setting
-‘ledger-post-auto-adjust-amounts’ to true tells Ledger-mode to
-automatically place any amounts such that their last digit is aligned to
-the column specified by ‘ledger-post-amount-alignment-column’, which
-defaults to ‘52’.  *Note Ledger Post Customization Group::.
+   To cycle between completions when hitting ‘TAB’ multiple times, you
+can adjust the standard completion configuration like this:
+
+     (add-hook 'ledger-mode-hook
+               (lambda ()
+                 (setq-local tab-always-indent 'complete)
+                 (setq-local completion-cycle-threshold t)
+                 (setq-local ledger-complete-in-steps t)))
+
+   Ledger-mode will help you keep your amounts aligned.  When indenting
+or completing, Ledger-mode will automatically place any amounts such
+that their last digit is aligned to the column specified by
+‘ledger-post-amount-alignment-column’, which defaults to ‘52’.  *Note
+Ledger Post Customization Group::.
+
+   To prevent the automatic realignment of amounts, disable
+‘ledger-post-auto-align’.  *Note Ledger Post Customization Group::.
 
 * Menu:
 
@@ -1085,10 +1092,6 @@ File: ledger-mode.info,  Node: Ledger Post Customization Group,  Next: Ledger Ex
 
 Ledger Post:
 
-‘ledger-post-auto-adjust-amounts’
-     If non-nil, then automatically align amounts to column specified in
-     ‘ledger-post-amount-alignment-column’.
-
 ‘ledger-post-amount-alignment-column’
      The column Ledger-mode uses to align amounts.
 
@@ -1249,7 +1252,7 @@ Command & Variable Index
 * ledger-clear-whole-transactions:       Ledger Customization Group.
                                                                (line 10)
 * ledger-default-acct-transaction-indent: Ledger Post Customization Group.
-                                                               (line 15)
+                                                               (line 11)
 * ledger-font-cleared-face:              Ledger Faces Customization Group.
                                                                (line 11)
 * ledger-font-comment-face:              Ledger Faces Customization Group.
@@ -1292,9 +1295,6 @@ Command & Variable Index
                                                                (line 38)
 * ledger-post-amount-alignment-column:   Adding Transactions.  (line  6)
 * ledger-post-amount-alignment-column <1>: Ledger Post Customization Group.
-                                                               (line 12)
-* ledger-post-auto-adjust-amounts:       Adding Transactions.  (line  6)
-* ledger-post-auto-adjust-amounts <1>:   Ledger Post Customization Group.
                                                                (line  8)
 * ledger-recon-buffer-name:              Ledger Reconcile Customization Group.
                                                                (line  6)
@@ -1423,56 +1423,56 @@ Node: Quick Installation2785
 Node: Menus3717
 Node: Quick Demo4032
 Node: Quick Add4462
-Node: Reconciliation5867
-Node: Reports7551
-Node: Narrowing8581
-Node: The Ledger Buffer9165
-Node: Adding Transactions9543
-Node: Setting a Transactions Effective Date10522
-Node: Quick Balance Display11422
-Node: Copying Transactions11954
-Node: Editing Amounts12556
-Node: Marking Transactions13627
-Node: Formatting Transactions15322
-Node: Deleting Transactions15920
-Node: Sorting Transactions16360
-Node: Narrowing Transactions17912
-Node: The Reconcile Buffer19762
-Node: Basics of Reconciliation20227
-Node: Starting a Reconciliation21176
-Node: Mark Transactions Pending23025
-Node: Edit Transactions During Reconciliation23694
-Node: Finalize Reconciliation24337
-Node: Adding and Deleting Transactions during Reconciliation24994
-Node: Changing Reconciliation Account25578
-Node: Changing Reconciliation Target26128
-Node: The Report Buffer26446
-Node: Running Basic Reports26704
-Node: Adding and Editing Reports28137
-Node: Expansion Formats29524
-Node: Make Report Transactions Active31165
-Node: Reversing Report Order31872
-Node: Scheduling Transactions32565
-Node: Specifying Upcoming Transactions33421
-Node: Transactions that occur on specific dates33995
-Node: Transactions that occur on specific days35036
-Node: Customizing Ledger-mode36165
-Node: Ledger-mode Customization36429
-Node: Customization Variables37114
-Node: Ledger Customization Group37594
-Node: Ledger Reconcile Customization Group38234
-Node: Ledger Report Customization Group41177
-Node: Ledger Faces Customization Group41896
-Node: Ledger Post Customization Group43643
-Node: Ledger Exec Customization Group44274
-Node: Ledger Test Customization Group44773
-Node: Ledger Texi Customization Group45175
-Node: Generating Ledger Regression Tests45667
-Node: Embedding Example results in Ledger Documentation45930
-Node: Hacking Ledger-mode46219
-Node: Concept Index46427
-Node: Command & Variable Index51201
-Node: Keystroke Index58680
+Node: Reconciliation5662
+Node: Reports7346
+Node: Narrowing8376
+Node: The Ledger Buffer8960
+Node: Adding Transactions9338
+Node: Setting a Transactions Effective Date10831
+Node: Quick Balance Display11731
+Node: Copying Transactions12263
+Node: Editing Amounts12865
+Node: Marking Transactions13936
+Node: Formatting Transactions15631
+Node: Deleting Transactions16229
+Node: Sorting Transactions16669
+Node: Narrowing Transactions18221
+Node: The Reconcile Buffer20071
+Node: Basics of Reconciliation20536
+Node: Starting a Reconciliation21485
+Node: Mark Transactions Pending23334
+Node: Edit Transactions During Reconciliation24003
+Node: Finalize Reconciliation24646
+Node: Adding and Deleting Transactions during Reconciliation25303
+Node: Changing Reconciliation Account25887
+Node: Changing Reconciliation Target26437
+Node: The Report Buffer26755
+Node: Running Basic Reports27013
+Node: Adding and Editing Reports28446
+Node: Expansion Formats29833
+Node: Make Report Transactions Active31474
+Node: Reversing Report Order32181
+Node: Scheduling Transactions32874
+Node: Specifying Upcoming Transactions33730
+Node: Transactions that occur on specific dates34304
+Node: Transactions that occur on specific days35345
+Node: Customizing Ledger-mode36474
+Node: Ledger-mode Customization36738
+Node: Customization Variables37423
+Node: Ledger Customization Group37903
+Node: Ledger Reconcile Customization Group38543
+Node: Ledger Report Customization Group41486
+Node: Ledger Faces Customization Group42205
+Node: Ledger Post Customization Group43952
+Node: Ledger Exec Customization Group44423
+Node: Ledger Test Customization Group44922
+Node: Ledger Texi Customization Group45324
+Node: Generating Ledger Regression Tests45816
+Node: Embedding Example results in Ledger Documentation46079
+Node: Hacking Ledger-mode46368
+Node: Concept Index46576
+Node: Command & Variable Index51350
+Node: Keystroke Index58609
 
 End Tag Table
 

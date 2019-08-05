@@ -381,6 +381,8 @@ customize the resulting theme."
                                       :foreground ,base1
                                       :underline ,s-line
                                       :weight bold))))
+;;;;; display-fill-column-indicator
+     `(fill-column-indicator ((,class :foreground ,base02 :weight semilight)))
 ;;;;; dropdown
      `(dropdown-list-face ((,class (:background ,base02 :foreground ,cyan))))
      `(dropdown-list-selection-face ((,class (:background ,cyan-lc :foreground ,cyan-hc))))
@@ -612,6 +614,8 @@ customize the resulting theme."
 ;;;;; column-enforce-mode
      `(column-enforce-face ((,class (:background unspecified :foreground ,magenta
                                                  :inverse-video unspecified))))
+;;;;; col-highlight
+     `(col-highlight ((,class (:background ,base02))))
 ;;;;; company-mode
      `(company-echo ((,class nil)))
      `(company-echo-common ((,class (:background ,red))))
@@ -664,6 +668,12 @@ customize the resulting theme."
                                                    :box (:line-width 2 :style pressed-button)))))
      `(custom-button-unraised ((,class (:inherit underline))))
      `(custom-button-pressed-unraised ((,class (:inherit custom-button-unraised :foreground ,magenta))))
+;;;;; deadgrep
+     `(deadgrep-filename-face ((,class (:foreground ,base01 :underline t))))
+     `(deadgrep-match-face ((,class (:background ,base02 :foreground ,base1))))
+     `(deadgrep-meta-face ((,class (:inherit font-lock-comment-face))))
+     `(deadgrep-regexp-metachar-face ((,class (:inherit font-lock-constant-face))))
+     `(deadgrep-search-term-face ((,class (:inherit font-lock-variable-name-face))))
 ;;;;; diff
      `(diff-added   ((,class (:foreground ,green))))
      `(diff-changed ((,class (:foreground ,blue))))
@@ -2190,12 +2200,12 @@ customize the resulting theme."
      `(web-mode-preprocessor-face ((,class (:foreground ,yellow :slant normal :weight unspecified))))
      `(web-mode-string-face ((,class (:foreground ,cyan))))
      `(web-mode-type-face ((,class (:foreground ,yellow))))
-     `(web-mode-variable-name-face ((,class (:foreground ,blue))))
+     `(web-mode-variable-name-face ((,class (:foreground ,base0))))
      `(web-mode-warning-face ((,class (:inherit font-lock-warning-face))))
      `(web-mode-block-attr-name-face ((,class (:inherit web-mode-html-attr-name-face))))
      `(web-mode-block-attr-value-face ((,class (:inherit web-mode-html-attr-value-face))))
      `(web-mode-block-comment-face ((,class (:inherit web-mode-comment-face))))
-     `(web-mode-block-control-face ((,class (:inherit font-lock-preprocessor-face))))
+     `(web-mode-block-control-face ((,class (:foreground ,base0))))
      `(web-mode-block-face ((,class (:background unspecified))))
      `(web-mode-block-string-face ((,class (:inherit web-mode-string-face))))
      `(web-mode-comment-keyword-face ((,class (:box 1 :weight bold))))
@@ -2216,7 +2226,7 @@ customize the resulting theme."
      `(web-mode-symbol-face ((,class (:foreground ,yellow))))
      `(web-mode-whitespace-face ((,class (:background ,red))))
      `(web-mode-html-tag-bracket-face ((,class (:foreground ,base01))))
-     `(web-mode-block-delimiter-face ((,class (:inherit font-lock-preprocessor-face))))
+     `(web-mode-block-delimiter-face ((,class (:foreground ,base01 :bold t))))
      `(web-mode-css-comment-face ((,class (:inherit web-mode-comment-face))))
      `(web-mode-css-variable-face ((,class (:inherit web-mode-variable-name-face :slant italic))))
      `(web-mode-error-face ((,class (:background ,red))))

@@ -5,7 +5,7 @@
 ;; Created    : Feburary 2005
 ;; Modified   : 2018
 ;; Version    : 0.9.2
-;; Package-Version: 20181011.718
+;; Package-Version: 20190717.1024
 ;; Keywords   : c# languages oop mode
 ;; X-URL      : https://github.com/josteink/csharp-mode
 ;; Last-saved : 2018-Jul-08
@@ -1270,7 +1270,7 @@ Currently handled:
 ;; instead of create one.
 (c-lang-defconst c-type-modifier-kwds
   ;; EMCA-344, S?
-  csharp '("readonly" "const" "volatile" "new" "unsafe"))
+  csharp '("readonly" "const" "volatile" "new"))
 
 
 ;; Tue, 20 Apr 2010  16:02
@@ -1325,7 +1325,7 @@ Currently handled:
   csharp '("public" "partial" "private" "const" "abstract" "sealed"
            "protected" "ref" "out" "static" "virtual"
            "implicit" "explicit" "fixed"
-           "override" "params" "internal" "async" "extern"))
+           "override" "params" "internal" "async" "extern" "unsafe"))
 
 
 ;; Thu, 22 Apr 2010  23:02
@@ -1364,7 +1364,7 @@ This regexp is assumed to not match any non-operator identifier."
 ;; Statement keywords followed directly by a substatement.
 ;; catch is not one of them, because catch has a paren (typically).
 (c-lang-defconst c-block-stmt-1-kwds
-  csharp '("do" "else" "try" "finally" "unsafe"))
+  csharp '("do" "else" "try" "finally"))
 
 
 ;; Statement keywords followed by a paren sexp and then by a substatement.
@@ -1385,7 +1385,7 @@ This regexp is assumed to not match any non-operator identifier."
 
 ;; Constant keywords
 (c-lang-defconst c-constant-kwds
-  csharp '("true" "false" "null"))
+  csharp '("true" "false" "null" "value"))
 
 ;; Keywords that start "primary expressions."
 (c-lang-defconst c-primary-expr-kwds
@@ -2928,14 +2928,14 @@ Otherwise run `c-inside-bracelist-p'."
                                    (brace-list-close      . 0)
                                    (brace-list-entry      . 0)
                                    (brace-list-intro      . +)
-                                   (brace-list-open       . +)
+                                   (brace-list-open       . 0)
                                    (c                     . c-lineup-C-comments)
                                    (case-label            . +)
                                    (catch-clause          . 0)
                                    (class-close           . 0)
                                    (class-open            . 0)
                                    (comment-intro         . c-lineup-comment)
-                                   (cpp-macro             . 0)
+                                   (cpp-macro             . [0])
                                    (cpp-macro-cont        . c-lineup-dont-change)
                                    (defun-block-intro     . +)
                                    (defun-close           . 0)
@@ -2947,7 +2947,7 @@ Otherwise run `c-inside-bracelist-p'."
                                    (friend                . 0)
                                    (func-decl-cont        . +)
                                    (inclass               . +)
-                                   (inexpr-class          . +)
+                                   (inexpr-class          . 0)
                                    (inexpr-statement      . 0)
                                    (inextern-lang         . +)
                                    (inher-cont            . c-lineup-multi-inher)

@@ -4,7 +4,7 @@
 
 ;; Author: Wilfred Hughes <me@wilfred.me.uk>
 ;; Version: 2.3
-;; Package-Version: 20190404.1202
+;; Package-Version: 20190611.2131
 ;; Keywords: hash table, hash map, hash
 ;; Package-Requires: ((dash "2.12.0"))
 
@@ -241,6 +241,8 @@ inverse of `ht<-alist'.  The following is not guaranteed:
 (defsubst ht-empty? (table)
   "Return true if the actual number of entries in TABLE is zero."
   (zerop (ht-size table)))
+
+(defalias 'ht-empty-p 'ht-empty?)
 
 (defun ht-select (function table)
   "Return a hash table containing all entries in TABLE for which

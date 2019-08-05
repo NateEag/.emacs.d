@@ -160,6 +160,7 @@ overwrite \"indent_style\" property when current `major-mode' is a
   ;; For contributors: Sort modes in alphabetical order
   '((apache-mode apache-indent-level)
     (awk-mode c-basic-offset)
+    (bpftrace-mode c-basic-offset)
     (c++-mode c-basic-offset)
     (c-mode c-basic-offset)
     (cmake-mode cmake-tab-width)
@@ -172,6 +173,13 @@ overwrite \"indent_style\" property when current `major-mode' is a
     (enh-ruby-mode enh-ruby-indent-level)
     (erlang-mode erlang-indent-level)
     (ess-mode ess-indent-offset)
+    (f90-mode f90-associate-indent
+              f90-continuation-indent
+              f90-critical-indent
+              f90-do-indent
+              f90-if-indent
+              f90-program-indent
+              f90-type-indent)
     (feature-mode feature-indent-offset
                   feature-indent-level)
     (fsharp-mode fsharp-continuation-offset
@@ -311,6 +319,9 @@ Otherwise, use `delete-trailing-whitespace'."
 Set by `editorconfig-apply' and nil if that is not invoked in
 current buffer yet.")
 (make-variable-buffer-local 'editorconfig-properties-hash)
+(put 'editorconfig-properties-hash
+     'permanent-local
+     t)
 
 (defvar editorconfig-lisp-use-default-indent nil
   "Selectively ignore the value of indent_sizefor Lisp files.
@@ -669,7 +680,13 @@ To disable EditorConfig in some buffers, modify
   ;; See https://github.com/editorconfig/editorconfig-emacs/issues/141 for why
   ;; not `after-change-major-mode-hook'
   (dolist (hook '(change-major-mode-after-body-hook
-                  read-only-mode-hook))
+                  read-only-mode-hook
+                  ;; Some modes call `kill-all-local-variables' in their init
+                  ;; code, which clears some values set by editorconfig.
+                  ;; For those modes, editorconfig-apply need to be called
+                  ;; explicitly through their hooks.
+                  rpm-spec-mode-hook
+                  ))
     (if editorconfig-mode
         (add-hook hook 'editorconfig-mode-apply)
       (remove-hook hook 'editorconfig-mode-apply))))

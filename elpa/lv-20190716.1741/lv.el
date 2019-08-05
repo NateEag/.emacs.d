@@ -1,5 +1,5 @@
 ;;; lv.el --- Other echo area
-;; Package-Version: 20181110.1740
+;; Package-Version: 20190716.1741
 
 ;; Copyright (C) 2015  Free Software Foundation, Inc.
 
@@ -74,6 +74,7 @@ Only the background color is significant."
           (set-window-hscroll lv-wnd 0)
           (setq window-size-fixed t)
           (setq mode-line-format nil)
+          (setq header-line-format nil)
           (setq cursor-type nil)
           (setq display-line-numbers nil)
           (set-window-dedicated-p lv-wnd t)

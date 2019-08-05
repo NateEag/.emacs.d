@@ -1,4 +1,4 @@
-(define-package "bnf-mode" "20190514.1047" "Major mode for editing BNF grammars."
+(define-package "bnf-mode" "20190611.519" "Major mode for editing BNF grammars."
   '((cl-lib "0.5")
     (emacs "24.3"))
   :keywords

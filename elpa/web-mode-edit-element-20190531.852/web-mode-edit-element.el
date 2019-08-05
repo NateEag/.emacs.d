@@ -2,7 +2,7 @@
 
 ;; Copyright 2016 Julian T. Knabenschuh
 
-;; Version: 2.2
+;; Version: 2.3
 ;; Author: Julian T. Knabenschuh <jtkdevelopments@gmail.com>
 ;; Homepage: https://github.com/jtkDvlp/web-mode-edit-element
 ;; License: GNU General Public License >= 2
@@ -67,7 +67,7 @@
          ("C-M-<down>" web-mode-edit-element-elements-sibling-next-or-parent)
 
          ("C-k" web-mode-element-kill)
-         ("C-K" web-mode-edit-element-elements-kill-siblings)
+         ("C-S-k" web-mode-edit-element-elements-kill-siblings)
          ("M-k" web-mode-edit-element-elements-kill-siblings-previous)
          ("M-K" web-mode-edit-element-elements-kill-siblings-next)
 

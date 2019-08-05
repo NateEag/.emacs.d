@@ -61,10 +61,6 @@ Since .envrc files are shell scripts, this mode inherits from sh-mode.
 
 ;;;***
 
-;;;### (autoloads nil nil ("direnv-pkg.el") (0 0 0 0))
-
-;;;***
-
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

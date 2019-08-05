@@ -2,7 +2,7 @@
 
 ;; Author: wouter bolsterlee <wouter@bolsterl.ee>
 ;; Version: 2.0.0
-;; Package-Version: 20190511.2021
+;; Package-Version: 20190622.1853
 ;; Package-Requires: ((emacs "24.4") (dash "2.12.0"))
 ;; Keywords: direnv, environment, processes, unix, tools
 ;; URL: https://github.com/wbolster/emacs-direnv
@@ -64,11 +64,13 @@ usually results in coloured output."
   :group 'direnv
   :type 'boolean)
 
-(defcustom direnv-non-file-modes '(eshell-mode dired-mode)
+(defcustom direnv-non-file-modes '(eshell-mode dired-mode magit-mode)
   "List of modes where direnv will update even if the buffer has no file.
 
-In these modes, direnv will use `default-directory' instead of
-`(file-name-directory (buffer-file-name (current-buffer)))'."
+In these modes, or modes derived from them, direnv will use
+  `default-directory'
+instead of
+  `(file-name-directory (buffer-file-name (current-buffer)))'."
   :group 'direnv
   :type '(repeat (symbol :tag "Major mode")))
 
@@ -77,7 +79,7 @@ In these modes, direnv will use `default-directory' instead of
   (let* ((buffer (or (buffer-base-buffer) (current-buffer)))
          (file-name (buffer-file-name buffer)))
     (cond (file-name (file-name-directory file-name))
-          ((member major-mode direnv-non-file-modes) default-directory))))
+          ((apply #'derived-mode-p direnv-non-file-modes) default-directory))))
 
 (defun direnv--export (directory)
   "Call direnv for DIRECTORY and return the parsed result."
@@ -125,9 +127,9 @@ In these modes, direnv will use `default-directory' instead of
   (with-current-buffer (window-buffer)
     (let ((directory-name (direnv--directory)))
       (when (and directory-name
-                 (file-directory-p directory-name)
+                 (not (file-remote-p directory-name))
                  (not (string-equal direnv--active-directory directory-name))
-                 (not (file-remote-p directory-name)))
+                 (file-directory-p directory-name))
         (direnv-update-directory-environment directory-name)))))
 
 (defun direnv--summarise-changes (items)

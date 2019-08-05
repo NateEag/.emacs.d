@@ -6,9 +6,9 @@
 ;;         Marshall T. Vandegrift <llasram@gmail.com>
 ;; Maintainer: Vasilij Schneidermann <v.schneidermann@gmail.com>
 ;; Package-Requires: ((emacs "24.1"))
-;; Package-Version: 20180409.607
+;; Package-Version: 20190625.1740
 ;; Keywords: data yaml
-;; Version: 0.0.13
+;; Version: 0.0.14
 
 ;; This file is not part of Emacs
 
@@ -118,7 +118,7 @@ that key is pressed to begin a block literal."
 
 ;; Constants
 
-(defconst yaml-mode-version "0.0.13" "Version of `yaml-mode'.")
+(defconst yaml-mode-version "0.0.14" "Version of `yaml-mode'.")
 
 (defconst yaml-blank-line-re "^ *$"
   "Regexp matching a line containing only (valid) whitespace.")

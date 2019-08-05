@@ -3,8 +3,8 @@
 ;; Copyright (C) 2014 Peter Stiernström
 
 ;; Author: Peter Stiernström <peter@stiernstrom.se>
-;; Version: 4.10
-;; Package-Version: 20190317.1547
+;; Version: 4.11
+;; Package-Version: 20190730.849
 ;; URL: https://gitlab.com/pidu/git-timemachine
 ;; Keywords: vc
 ;; Package-Requires: ((emacs "24.3") (transient "0.1.0"))
@@ -341,10 +341,8 @@ Given CURR-REVISION and NEW-REVISION determine if we need to updated CURRENT-LIN
  "Show commit for current revision."
  (interactive)
  (let ((rev (car git-timemachine-revision)))
-  (if (fboundp 'magit-revision-mode)
-   (progn
-    (with-temp-buffer
-     (save-excursion (magit-mode-setup #'magit-revision-mode rev nil nil nil))))
+  (if (fboundp 'magit-show-commit)
+   (magit-show-commit rev)
    (message "You need to install magit to show commit"))))
 
 (define-transient-command git-timemachine-help ()

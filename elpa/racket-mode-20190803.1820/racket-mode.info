@@ -927,7 +927,11 @@ File: racket-mode.info,  Node: racket-visit-definition,  Next: racket-visit-modu
 
 ‘M-.’
 
-   Visit definition of symbol at point.
+   Visit definition of identifier at point.
+
+   If there is no identifier at point, prompt for it.
+
+   With a prefix, always prompt for the identifier.
 
    Use *note racket-unvisit:: to return.
 
@@ -955,6 +959,10 @@ File: racket-mode.info,  Node: racket-visit-module,  Next: racket-unvisit,  Prev
 ‘C-M-.’
 
    Visit definition of module at point, e.g.  net/url or “file.rkt”.
+
+   If there is no module at point, prompt for it.
+
+   With a prefix, always prompt for the module.
 
    Use *note racket-unvisit:: to return.
 
@@ -2189,77 +2197,77 @@ Node: racket-send-definition27120
 Node: racket-send-last-sexp27369
 Node: Visit27679
 Node: racket-visit-definition27919
-Node: racket-visit-module28894
-Node: racket-unvisit29243
-Node: racket-open-require-path29508
-Node: racket-find-collection30284
-Node: Learn31235
-Node: racket-describe31383
-Node: racket-doc32551
-Node: Edit33221
-Node: racket-insert-lambda33737
-Node: racket-fold-all-tests34005
-Node: racket-unfold-all-tests34242
-Node: racket-tidy-requires34485
-Node: racket-trim-requires35542
-Node: racket-base-requires36257
-Node: racket-indent-line37512
-Node: racket-smart-open-bracket39314
-Node: racket-cycle-paren-shapes40805
-Node: racket-backward-up-list41058
-Node: racket-check-syntax-mode41608
-Node: racket-unicode-input-method-enable43129
-Node: racket-align45140
-Node: racket-unalign47118
-Node: racket-complete-at-point47461
-Node: Macro expand48264
-Node: racket-stepper-mode48527
-Node: racket-expand-file49575
-Node: racket-expand-region50299
-Node: racket-expand-definition50665
-Node: racket-expand-last-sexp51054
-Node: Other51406
-Node: racket-mode-start-faster51542
-Node: Variables52710
-Node: General variables52927
-Node: racket-program53379
-Node: racket-command-port53559
-Node: racket-command-startup53789
-Node: racket-command-timeout54317
-Node: racket-memory-limit54584
-Node: racket-error-context55187
-Node: racket-retry-as-skeleton56208
-Node: racket-user-command-line-arguments57076
-Node: racket-path-from-emacs-to-racket-function57939
-Node: racket-path-from-racket-to-emacs-function58626
-Node: REPL variables59385
-Node: racket-history-filter-regexp59691
-Node: racket-images-inline60003
-Node: racket-images-keep-last60250
-Node: racket-images-system-viewer60500
-Node: racket-pretty-print60796
-Node: Other variables61004
-Node: racket-indent-curly-as-sequence61340
-Node: racket-indent-sequence-depth61720
-Node: racket-pretty-lambda62407
-Node: racket-smart-open-bracket-enable62810
-Node: racket-logger-config63268
-Node: Experimental debugger variables64063
-Node: racket-debuggable-files64280
-Node: Faces64974
-Node: All65077
-Node: racket-keyword-argument-face65511
-Node: racket-selfeval-face65721
-Node: racket-here-string-face65980
-Node: racket-check-syntax-def-face66199
-Node: racket-check-syntax-use-face66482
-Node: racket-logger-config-face66760
-Node: racket-logger-topic-face67017
-Node: racket-logger-fatal-face67261
-Node: racket-logger-error-face67509
-Node: racket-logger-warning-face67759
-Node: racket-logger-info-face68016
-Node: racket-logger-debug-face68264
+Node: racket-visit-module29006
+Node: racket-unvisit29455
+Node: racket-open-require-path29720
+Node: racket-find-collection30496
+Node: Learn31447
+Node: racket-describe31595
+Node: racket-doc32763
+Node: Edit33433
+Node: racket-insert-lambda33949
+Node: racket-fold-all-tests34217
+Node: racket-unfold-all-tests34454
+Node: racket-tidy-requires34697
+Node: racket-trim-requires35754
+Node: racket-base-requires36469
+Node: racket-indent-line37724
+Node: racket-smart-open-bracket39526
+Node: racket-cycle-paren-shapes41017
+Node: racket-backward-up-list41270
+Node: racket-check-syntax-mode41820
+Node: racket-unicode-input-method-enable43341
+Node: racket-align45352
+Node: racket-unalign47330
+Node: racket-complete-at-point47673
+Node: Macro expand48476
+Node: racket-stepper-mode48739
+Node: racket-expand-file49787
+Node: racket-expand-region50511
+Node: racket-expand-definition50877
+Node: racket-expand-last-sexp51266
+Node: Other51618
+Node: racket-mode-start-faster51754
+Node: Variables52922
+Node: General variables53139
+Node: racket-program53591
+Node: racket-command-port53771
+Node: racket-command-startup54001
+Node: racket-command-timeout54529
+Node: racket-memory-limit54796
+Node: racket-error-context55399
+Node: racket-retry-as-skeleton56420
+Node: racket-user-command-line-arguments57288
+Node: racket-path-from-emacs-to-racket-function58151
+Node: racket-path-from-racket-to-emacs-function58838
+Node: REPL variables59597
+Node: racket-history-filter-regexp59903
+Node: racket-images-inline60215
+Node: racket-images-keep-last60462
+Node: racket-images-system-viewer60712
+Node: racket-pretty-print61008
+Node: Other variables61216
+Node: racket-indent-curly-as-sequence61552
+Node: racket-indent-sequence-depth61932
+Node: racket-pretty-lambda62619
+Node: racket-smart-open-bracket-enable63022
+Node: racket-logger-config63480
+Node: Experimental debugger variables64275
+Node: racket-debuggable-files64492
+Node: Faces65186
+Node: All65289
+Node: racket-keyword-argument-face65723
+Node: racket-selfeval-face65933
+Node: racket-here-string-face66192
+Node: racket-check-syntax-def-face66411
+Node: racket-check-syntax-use-face66694
+Node: racket-logger-config-face66972
+Node: racket-logger-topic-face67229
+Node: racket-logger-fatal-face67473
+Node: racket-logger-error-face67721
+Node: racket-logger-warning-face67971
+Node: racket-logger-info-face68228
+Node: racket-logger-debug-face68476
 
 End Tag Table
 

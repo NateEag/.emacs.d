@@ -184,6 +184,11 @@ Find a file on `recentf-list'.
 
 \(fn)" t nil)
 
+(autoload 'counsel-buffer-or-recentf "counsel" "\
+Find a buffer visiting a file or file on `recentf-list'.
+
+\(fn)" t nil)
+
 (autoload 'counsel-bookmark "counsel" "\
 Forward to `bookmark-jump' or `bookmark-set' if bookmark doesn't exist.
 
@@ -238,7 +243,7 @@ Call the \"rpm\" shell command.
 
 (autoload 'counsel-file-jump "counsel" "\
 Jump to a file below the current directory.
-List all files within the current directory or any of its subdirectories.
+List all files within the current directory or any of its sub-directories.
 INITIAL-INPUT can be given as the initial minibuffer input.
 INITIAL-DIRECTORY, if non-nil, is used as the root directory for search.
 
@@ -246,7 +251,7 @@ INITIAL-DIRECTORY, if non-nil, is used as the root directory for search.
 
 (autoload 'counsel-dired-jump "counsel" "\
 Jump to a directory (see `dired-jump') below the current directory.
-List all subdirectories within the current directory.
+List all sub-directories within the current directory.
 INITIAL-INPUT can be given as the initial minibuffer input.
 INITIAL-DIRECTORY, if non-nil, is used as the root directory for search.
 
@@ -387,7 +392,7 @@ Additional actions:\\<ivy-minibuffer-map>
 \(fn)" t nil)
 
 (autoload 'counsel-tmm "counsel" "\
-Text-mode emulation of looking and choosing from a menubar.
+Text-mode emulation of looking and choosing from a menu bar.
 
 \(fn)" t nil)
 
@@ -545,6 +550,11 @@ Additional actions:\\<ivy-minibuffer-map>
 
   \\[ivy-dispatching-done] d: Go to minor mode definition
   \\[ivy-dispatching-done] h: Describe minor mode
+
+\(fn)" t nil)
+
+(autoload 'counsel-major "counsel" "\
+
 
 \(fn)" t nil)
 

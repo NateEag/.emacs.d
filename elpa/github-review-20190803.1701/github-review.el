@@ -4,7 +4,7 @@
 ;; Keywords: git, tools, vc, github
 ;; Homepage: https://github.com/charignon/github-review
 ;; Package-Requires: ((emacs "25") (s "1.12.0") (ghub "2.0") (dash "2.11.0"))
-;; Package-Version: 20190327.732
+;; Package-Version: 20190803.1701
 ;; Package-X-Original-Version: 0.1
 
 ;; This file is not part of GNU Emacs
@@ -350,7 +350,7 @@ ACC is an alist accumulating parsing state."
     (if (equal nil merged-comments)
         `((body . ,parsed-body))
       `((body . ,parsed-body)
-        (comments . ,(-map #'github-review-normalize-comment merged-comments))))))
+        (comments . ,(reverse (-map #'github-review-normalize-comment merged-comments)))))))
 ;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Buffer interactions ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;

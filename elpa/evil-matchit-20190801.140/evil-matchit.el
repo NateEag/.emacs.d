@@ -4,7 +4,7 @@
 
 ;; Author: Chen Bin <chenbin.sh@gmail.com>
 ;; URL: http://github.com/redguardtoo/evil-matchit
-;; Version: 2.2.9
+;; Version: 2.3.2
 ;; Keywords: matchit vim evil
 ;; Package-Requires: ((evil "1.2.0") (emacs "24.4"))
 ;;
@@ -31,7 +31,16 @@
 ;;
 ;; This program emulates matchit.vim by Benji Fisher.
 ;; Add `(global-evil-matchit-mode 1)' into Emacs setup.
-;; Then press % to match items.
+;; Then press % or `evilmi-jump-items' to jump between then matched pair.
+;; Text object "%" is also provided.
+;;
+;; The shortcut "%" is defined in `evilmi-shortcut'. It's both the name of
+;; text object and shortcut of `evilmi-jump-items'. Some people prefer set it
+;; to "m". Here is sample setup:
+;;
+;;   (setq evilmi-shortcut "m")
+;;   (global-evil-matchit-mode 1)
+;;
 ;; See https://github.com/redguardtoo/evil-matchit/ for help.
 ;;
 ;; This program requires EVIL (http://gitorious.org/evil)
@@ -47,20 +56,24 @@
   "The Matrix to of algorithms.")
 
 (defvar evilmi-may-jump-by-percentage t
-  "Simulate `evil-jump-item' behaviour.
+  "Simulate `evil-jump-item'.
 For example, `50%' jumps to 50 percentage of buffer.
 If nil, `50%' jumps 50 times.")
 
+(defvar evilmi-shortcut "%"
+  "The keybinding of `evilmi-jump-items' and then text object shortcut.
+Some people prefer using \"m\" instead.")
+
 (defvar evilmi-always-simple-jump nil
   "`major-mode' like `python-mode' use optimized algorithm by default.
-Set this flag into `t' to always use simple jump.")
+If it's t, use simple jump.")
 
 (defvar evilmi-forward-chars (string-to-list "[{("))
 (defvar evilmi-backward-chars (string-to-list "]})"))
 (defvar evilmi-quote-chars (string-to-list "'\"/"))
-(defvar evilmi-debug nil)
 
 (defun evilmi--char-is-simple (ch)
+  "Special handling of character CH for `python-mode'."
   (let* (rlt)
     (cond
      ((and (not evilmi-always-simple-jump)
@@ -72,7 +85,7 @@ Set this flag into `t' to always use simple jump.")
       ;; if true:
       ;;     a = "hello world"
       ;;
-      ;; If current cursor is at end of line , rlt should be nil!
+      ;; If current cursor is at end of line, rlt should be nil!
       ;; or else, matching algorithm can't work in above python sample
       (setq rlt nil))
      (t
@@ -83,12 +96,13 @@ Set this flag into `t' to always use simple jump.")
     rlt))
 
 (defun evilmi--get-char-at-position (pos)
+  "Get character at POS."
   (let* ((ch (char-after pos)))
     (if evilmi-debug (message "evilmi--get-char-at-position called. Return: %s" (string ch)))
     ch))
 
 (defun evilmi--get-char-under-cursor ()
-  "Return: (character position)"
+  "Return: (character position)."
   (let* ((ch (following-char))
          (p (point)))
     (if evilmi-debug (message "evilmi--get-char-under-cursor called. Return: (%d %s)" ch p))
@@ -102,16 +116,13 @@ If font-face-under-cursor is NOT nil, the quoted string is being processed."
          (ch (car tmp))
          (p (cadr tmp))
          ff
-         rlt)
+         (rlt t))
     (cond
-     ((memq ch evilmi-forward-chars)
-      (setq rlt t))
      ((memq ch evilmi-backward-chars)
       (setq rlt nil))
      ((memq ch evilmi-quote-chars)
       (setq rlt (eq (setq ff (get-text-property p 'face))
-                    (get-text-property (+ 1 p) 'face))))
-     (t (setq rlt t)))
+                    (get-text-property (+ 1 p) 'face)))))
 
     (if evilmi-debug (message "evilmi--is-jump-forward return (%s %s %s)" rlt ff (string ch)))
     (list rlt ff ch)))
@@ -145,16 +156,15 @@ If IS-FORWARD is t, jump forward; or else jump backward."
         (setq start-pos (point))
         (while (and (not (= start-pos limit))
                     (> lvl 0))
-          (setq start-pos (+ start-pos arg))
-          (goto-char start-pos)
-          (if (evilmi-in-comment-p start-pos)
-              (cond
-               ((= (following-char) b)
-                (setq lvl (1+ lvl)))
-               ((= (following-char) e)
-                (setq lvl (1- lvl))))))
-        (if (= lvl 0)
-            (setq rlt (+ start-pos (if is-forward 1 0))))))
+          (goto-char (setq start-pos (+ start-pos arg)))
+          (when (evilmi-in-comment-p start-pos)
+            (cond
+             ((= (following-char) b)
+              (setq lvl (1+ lvl)))
+             ((= (following-char) e)
+              (setq lvl (1- lvl))))))
+        (when (= lvl 0)
+          (setq rlt (+ start-pos (if is-forward 1 0))))))
      (t
       ;; not comment
       ;; search but ignore comments
@@ -164,29 +174,22 @@ If IS-FORWARD is t, jump forward; or else jump backward."
     (if evilmi-debug (message "evilmi--scan-sexps called => rlt=%s lvl=%s" rlt lvl))
     rlt))
 
-(defun evilmi--adjust-quote-jumpto (is-forward pos)
-  (let* ((rlt (if is-forward pos (+ 1 pos))))
-    (if evilmi-debug (message "evilmi--adjust-quote-jumpto called. Return: %s" rlt))
-    rlt))
-
-(defun evilmi--above-the-other-quote-char (ch pos ff delta)
-  (and (= ch (evilmi--get-char-at-position (- pos delta)))
-       (not (eq ff (get-text-property pos 'face)))))
-
 (defun evilmi--find-the-other-quote-char (ff is-forward ch)
-  "The end character under cursor has different font-face from ff"
+  "The end character under cursor has different font-face from FF."
   (let* (rlt
-         (got nil)
+         got
          (delta (if is-forward 1 -1))
          (pos (+ delta (point)))
          (end (if is-forward (point-max) (point-min))))
     (while (not got)
-      (if (or (= pos end)
-              (evilmi--above-the-other-quote-char ch pos ff delta))
-          (progn
-            (setq rlt (evilmi--adjust-quote-jumpto is-forward pos))
-            (setq got t))
-        (setq pos (+ delta pos))))
+      (cond
+       ((or (= pos end)
+            (and (= ch (evilmi--get-char-at-position (- pos delta)))
+                 (not (eq ff (get-text-property pos 'face)))))
+        (setq rlt (if is-forward pos (+ 1 pos)))
+        (setq got t))
+       (t
+        (setq pos (+ delta pos)))))
     (if evilmi-debug (message "evilmi--find-the-other-quote-char called Return: %s" rlt))
     rlt))
 
@@ -214,7 +217,7 @@ If IS-FORWARD is t, jump forward; or else jump backward."
         (evil-backward-char)))
 
 (defun evilmi--simple-jump ()
-  "Alternative for evil-jump-item."
+  "Alternative for `evil-jump-item'."
   (interactive)
   (if evilmi-debug (message "evilmi--simple-jump called (point)=%d" (point)))
   (let* ((tmp (evilmi--is-jump-forward))
@@ -238,7 +241,7 @@ If IS-FORWARD is t, jump forward; or else jump backward."
     (if plugin
         (mapc
          (lambda (elem)
-           ;; excute evilmi-xxxx-get-tag
+           ;; execute evilmi-xxxx-get-tag
            (setq rlt (funcall (nth 0 elem)))
            (when (and rlt (not jumped))
              ;; before jump, we may need some operation
@@ -282,7 +285,7 @@ If IS-FORWARD is t, jump forward; or else jump backward."
 (defun evilmi-init-plugins ()
   "Load plugins."
   (interactive)
-  ;; simple matching for languages containing "{(["
+  ;; simple matching for languages containing brackets
   (evilmi-load-plugin-rules '(java-mode perl-mode cperl-mode go-mode)
                             '(simple))
 
@@ -293,6 +296,7 @@ If IS-FORWARD is t, jump forward; or else jump backward."
                               js3-mode
                               javascript-mode
                               rjsx-mode
+                              js2-jsx-mode
                               react-mode
                               typescript-mode
                               typescript-tsx-mode)
@@ -398,8 +402,8 @@ If IS-FORWARD is t, jump forward; or else jump backward."
   (let ((selected-region (evilmi--region-to-select-or-delete num)))
     (evil-range (car selected-region) (cadr selected-region) 'line)))
 
-(define-key evil-inner-text-objects-map "%" 'evilmi-inner-text-object)
-(define-key evil-outer-text-objects-map "%" 'evilmi-outer-text-object)
+(define-key evil-inner-text-objects-map evilmi-shortcut 'evilmi-inner-text-object)
+(define-key evil-outer-text-objects-map evilmi-shortcut 'evilmi-outer-text-object)
 
 ;;;###autoload
 (defun evilmi-select-items (&optional num)
@@ -451,7 +455,7 @@ If IS-FORWARD is t, jump forward; or else jump backward."
 ;;;###autoload
 (defun evilmi-version()
   (interactive)
-  (message "2.2.9"))
+  (message "2.3.2"))
 
 ;;;###autoload
 (define-minor-mode evil-matchit-mode
@@ -463,9 +467,9 @@ If IS-FORWARD is t, jump forward; or else jump backward."
   (if (fboundp 'evilmi-customize-keybinding)
       ;; use user's own key bindings
       (evilmi-customize-keybinding)
-    ;; else use default key bindgs
-    (evil-define-key 'normal evil-matchit-mode-map "%" 'evilmi-jump-items)
-    (evil-define-key 'visual evil-matchit-mode-map "%" 'evilmi-jump-items))
+    ;; else use default key bindings
+    (evil-define-key 'normal evil-matchit-mode-map evilmi-shortcut 'evilmi-jump-items)
+    (evil-define-key 'visual evil-matchit-mode-map evilmi-shortcut 'evilmi-jump-items))
 
   (evil-normalize-keymaps))
 

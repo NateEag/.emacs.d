@@ -190,7 +190,6 @@ attention to case differences."
     go-test
     go-errcheck
     go-unconvert
-    go-megacheck
     go-staticcheck
     groovy
     haml
@@ -224,6 +223,7 @@ attention to case differences."
     processing
     proselint
     protobuf-protoc
+    protobuf-prototool
     pug
     puppet-parser
     puppet-lint
@@ -262,6 +262,8 @@ attention to case differences."
     sql-sqlint
     systemd-analyze
     tcl-nagelfar
+    terraform
+    terraform-tflint
     tex-chktex
     tex-lacheck
     texinfo
@@ -312,6 +314,17 @@ respectively."
   :package-version '(flycheck . "0.16")
   :safe #'flycheck-symbol-list-p)
 (make-variable-buffer-local 'flycheck-disabled-checkers)
+
+(defvar-local flycheck--automatically-disabled-checkers nil
+  "List of syntax checkers automatically disabled for this buffer.
+
+A checker can be automatically disabled in two cases:
+
+1. Its `:enabled' predicate returned false.
+2. It returned too many errors (see `flycheck-checker-error-threshold').
+
+To trigger a reverification from Emacs Lisp code, do not modify
+this variable: use `flycheck-reset-enabled-checker'.")
 
 (defvar-local flycheck-checker nil
   "Syntax checker to use for the current buffer.
@@ -467,9 +480,9 @@ path of an executable and shall return the full path to the
 executable, or nil if the executable does not exit.
 
 The default is `flycheck-default-executable-find', which searches
-`exec-path' when given a command name, and resolves paths to
-absolute ones.  You can customize this option to search for
-checkers in other environments such as bundle or NixOS
+variable `exec-path' when given a command name, and resolves
+paths to absolute ones.  You can customize this option to search
+for checkers in other environments such as bundle or NixOS
 sandboxes."
   :group 'flycheck
   :type '(choice
@@ -706,6 +719,13 @@ display all errors from other files."
   :type 'flycheck-minimum-level
   :safe #'flycheck-error-level-p
   :package-version '(flycheck . "32"))
+
+(defcustom flycheck-relevant-error-other-file-show t
+  "Whether to show errors from other files."
+  :group 'flycheck
+  :type 'boolean
+  :package-version '(flycheck . "32")
+  :safe #'booleanp)
 
 (defcustom flycheck-completing-read-function #'completing-read
   "Function to read from minibuffer with completion.
@@ -1097,6 +1117,7 @@ Only has effect when variable `global-flycheck-mode' is non-nil."
       flycheck-mode]
      "---"
      ["Describe syntax checker" flycheck-describe-checker t]
+     ["Verify setup" flycheck-verify-setup t]
      ["Show Flycheck version" flycheck-version t]
      ["Read the Flycheck manual" flycheck-info t]))
   "Menu of command `flycheck-mode'.")
@@ -1563,7 +1584,16 @@ A checker is registered if it is contained in
 
 A checker is disabled if it is contained in
 `flycheck-disabled-checkers'."
-  (memq checker flycheck-disabled-checkers))
+  (or (memq checker flycheck-disabled-checkers)
+      (flycheck-automatically-disabled-checker-p checker)))
+
+(defun flycheck-automatically-disabled-checker-p (checker)
+  "Determine whether CHECKER has been automatically disabled.
+
+A checker has been automatically disabled if it is contained in
+`flycheck--automatically-disabled-checkers'."
+  (memq checker flycheck--automatically-disabled-checkers))
+
 
 
 ;;; Generic syntax checkers
@@ -1746,10 +1776,10 @@ are mandatory.
      current buffer.  Otherwise it shall return nil.
 
      If FUNCTION returns a non-nil value the checker is put in a
-     whitelist in `flycheck-enabled-checkers' to prevent further
-     invocations of `:enabled'.  Otherwise it is disabled via
-     `flycheck-disabled-checkers' to prevent any further use of
-     it.
+     whitelist in `flycheck--automatically-enabled-checkers' to
+     prevent further invocations of `:enabled'.  Otherwise it is
+     disabled via `flycheck--automatically-disabled-checkers' to
+     prevent any further use of it.
 
      If this checker has a `:working-directory' FUNCTION is
      called with `default-directory' bound to the checker's
@@ -1934,11 +1964,14 @@ Return non-nil if CHECKER supports MODE and nil otherwise."
   (let ((mode (or mode major-mode)))
     (memq mode (flycheck-checker-get checker 'modes))))
 
-(defvar-local flycheck-enabled-checkers nil
+(defvar flycheck--automatically-enabled-checkers nil
   "Syntax checkers included in automatic selection.
 
 A list of Flycheck syntax checkers included in automatic
-selection for current buffer.")
+selection for the current buffer.")
+(define-obsolete-variable-alias 'flycheck-enabled-checkers
+  'flycheck--automatically-enabled-checkers "32")
+(make-variable-buffer-local 'flycheck--automatically-enabled-checkers)
 
 (defun flycheck-may-enable-checker (checker)
   "Whether a generic CHECKER may be enabled for current buffer.
@@ -1946,14 +1979,32 @@ selection for current buffer.")
 Return non-nil if CHECKER may be used for the current buffer, and
 nil otherwise."
   (let* ((enabled (flycheck-checker-get checker 'enabled))
-         (shall-enable (and (not (flycheck-disabled-checker-p checker))
-                            (or (memq checker flycheck-enabled-checkers)
-                                (null enabled)
-                                (funcall enabled)))))
+         (shall-enable
+          (and (not (flycheck-disabled-checker-p checker))
+               (or (memq checker flycheck--automatically-enabled-checkers)
+                   (null enabled)
+                   (funcall enabled)))))
     (if shall-enable
-        (cl-pushnew checker flycheck-enabled-checkers)
-      (cl-pushnew checker flycheck-disabled-checkers))
+        (cl-pushnew checker flycheck--automatically-enabled-checkers)
+      (cl-pushnew checker flycheck--automatically-disabled-checkers))
     shall-enable))
+
+(defun flycheck-reset-enabled-checker (checker)
+  "Reset the `:enabled' test of CHECKER.
+
+Forget that CHECKER has been enabled or automatically disabled
+from a previous `:enabled' test.  Once a checker has been enabled
+or automatically disabled, `flycheck-may-enable-checker' will
+always be constant (t or nil respectively).
+
+If you wish to test the `:enabled' predicate again, you must
+first reset its state using this function."
+  (when (memq checker flycheck--automatically-disabled-checkers)
+    (setq flycheck--automatically-disabled-checkers
+          (remq checker flycheck--automatically-disabled-checkers)))
+  (when (memq checker flycheck--automatically-enabled-checkers)
+    (setq flycheck--automatically-enabled-checkers
+          (remq checker flycheck--automatically-enabled-checkers))))
 
 (defun flycheck-may-use-checker (checker)
   "Whether a generic CHECKER may be used.
@@ -2121,7 +2172,7 @@ Return a list of `flycheck-verification-result' objects."
         (enabled (flycheck-checker-get checker 'enabled))
         (verify (flycheck-checker-get checker 'verify)))
     (when enabled
-      (let ((result (funcall enabled)))
+      (let ((result (flycheck-may-enable-checker checker)))
         (push (flycheck-verification-result-new
                :label "may enable"
                :message (if result "yes" "Automatically disabled!")
@@ -2672,7 +2723,10 @@ buffer-local value of `flycheck-disabled-checkers'."
    (interactive-only "Directly set `flycheck-disabled-checkers' instead"))
   (interactive
    (let* ((enable current-prefix-arg)
-          (candidates (if enable flycheck-disabled-checkers flycheck-checkers))
+          (candidates (if enable
+                          (append flycheck-disabled-checkers
+                                  flycheck--automatically-disabled-checkers)
+                        flycheck-checkers))
           (prompt (if enable "Enable syntax checker: "
                     "Disable syntax checker: ")))
      (when (and enable (not candidates))
@@ -2684,10 +2738,15 @@ buffer-local value of `flycheck-disabled-checkers'."
       ;; We must use `remq' instead of `delq', because we must _not_ modify the
       ;; list.  Otherwise we could potentially modify the global default value,
       ;; in case the list is the global default.
-      (when (memq checker flycheck-disabled-checkers)
-        (setq flycheck-disabled-checkers
-              (remq checker flycheck-disabled-checkers))
-        (flycheck-buffer))
+      (progn
+        (when (memq checker flycheck-disabled-checkers)
+          (setq flycheck-disabled-checkers
+                (remq checker flycheck-disabled-checkers))
+          (flycheck-buffer))
+        (when (memq checker flycheck--automatically-disabled-checkers)
+          (setq flycheck--automatically-disabled-checkers
+                (remq checker flycheck--automatically-disabled-checkers))
+          (flycheck-buffer)))
     (unless (memq checker flycheck-disabled-checkers)
       (push checker flycheck-disabled-checkers)
       (flycheck-buffer))))
@@ -2880,17 +2939,22 @@ WORKING-DIR."
   "Disable CHECKER if it reported excessive ERRORS.
 
 If ERRORS has more items than `flycheck-checker-error-threshold',
-add CHECKER to `flycheck-disabled-checkers', and show a warning.
+add CHECKER to `flycheck--automatically-disabled-checkers', and
+show a warning.
 
 Return t when CHECKER was disabled, or nil otherwise."
   (when (and flycheck-checker-error-threshold
              (> (length errors) flycheck-checker-error-threshold))
-    ;; Disable CHECKER for this buffer (`flycheck-disabled-checkers' is a local
-    ;; variable).
+    ;; Disable CHECKER for this buffer
+    ;; (`flycheck--automatically-disabled-checkers' is a local variable).
     (lwarn '(flycheck syntax-checker) :warning
-           "Syntax checker %s reported too many errors (%s) and is disabled."
+           (substitute-command-keys
+            "Syntax checker %s reported too many errors (%s) and is disabled.
+Use `\\[customize-variable] RET flycheck-checker-error-threshold' to
+change the threshold or `\\[universal-argument] \
+\\[flycheck-disable-checker]' to re-enable the checker.")
            checker (length errors))
-    (push checker flycheck-disabled-checkers)
+    (push checker flycheck--automatically-disabled-checkers)
     t))
 
 (defun flycheck-clear (&optional shall-interrupt)
@@ -3481,6 +3545,7 @@ Return ERRORS, modified in-place."
   "Determine whether ERR is a relevant error for another file."
   (let ((file-name (flycheck-error-filename err)))
     (and file-name
+         flycheck-relevant-error-other-file-show
          (or (null buffer-file-name)
              (not (flycheck-same-files-p buffer-file-name file-name)))
          (<= (flycheck-error-level-severity
@@ -3975,7 +4040,7 @@ Return ERRORS."
 
 ;;; Error analysis
 (defun flycheck-count-errors (errors)
-  "Count the number of ERRORS, grouped by level..
+  "Count the number of ERRORS, grouped by level.
 
 Return an alist, where each ITEM is a cons cell whose `car' is an
 error level, and whose `cdr' is the number of errors of that
@@ -4576,7 +4641,9 @@ POS defaults to `point'."
       ;; if necessary.
       (when other-file-error
         (with-current-buffer buffer
-          (unless (seq-contains flycheck-current-errors error-copy 'equal)
+          ;; `seq-contains-p' is only in seq >= 2.21, which isn't in ELPA
+          (unless (with-no-warnings
+                    (seq-contains flycheck-current-errors error-copy 'equal))
             (when flycheck-mode
               (flycheck-buffer))))))))
 
@@ -7928,8 +7995,7 @@ See URL `https://golang.org/cmd/gofmt/'."
                   (warning . go-build) (warning . go-test)
                   (warning . go-errcheck)
                   (warning . go-unconvert)
-                  (warning . go-staticcheck)
-                  (warning . go-megacheck)))
+                  (warning . go-staticcheck)))
 
 (flycheck-define-checker go-golint
   "A Go style checker using Golint.
@@ -7941,7 +8007,7 @@ See URL `https://github.com/golang/lint'."
   :modes go-mode
   :next-checkers (go-vet
                   ;; Fall back, if go-vet doesn't exist
-                  go-build go-test go-errcheck go-unconvert go-megacheck))
+                  go-build go-test go-errcheck go-unconvert))
 
 (flycheck-def-option-var flycheck-go-vet-print-functions nil go-vet
   "A list of print-like functions for `go vet'.
@@ -7958,19 +8024,6 @@ take an io.Writer as their first argument, like Fprintf,
 -printfuncs=Warn:1,Warnf:1 "
   :type '(repeat :tag "print-like functions"
                  (string :tag "function"))
-  :safe #'flycheck-string-list-p)
-
-(flycheck-def-option-var flycheck-go-megacheck-disabled-checkers nil
-                         go-megacheck
-  "A list of checkers to disable when running `megacheck'.
-
-The value of this variable is a list of strings, where each
-string is a checker to be disabled. Valid checkers are `simple',
-`staticcheck' and `unused'. When nil, all checkers will be
-enabled. "
-  :type '(set (const :tag "Disable simple" "simple")
-              (const :tag "Disable staticcheck" "staticcheck")
-              (const :tag "Disable unused" "unused"))
   :safe #'flycheck-string-list-p)
 
 (flycheck-define-checker go-vet
@@ -7990,8 +8043,7 @@ See URL `https://golang.org/cmd/go/' and URL
                   ;; Fall back if `go build' or `go test' can be used
                   go-errcheck
                   go-unconvert
-                  go-staticcheck
-                  go-megacheck)
+                  go-staticcheck)
   :verify (lambda (_)
             (let* ((go (flycheck-checker-executable 'go-vet))
                    (have-vet (member "vet" (ignore-errors
@@ -8012,8 +8064,7 @@ while syntax checking."
   :package-version '(flycheck . "0.25"))
 
 (flycheck-def-option-var flycheck-go-build-tags nil
-                         (go-build go-test go-errcheck
-                                   go-megacheck go-staticcheck)
+                         (go-build go-test go-errcheck go-staticcheck)
   "A list of tags for `go build'.
 
 Each item is a string with a tag to be given to `go build'."
@@ -8070,8 +8121,7 @@ Requires Go 1.6 or newer.  See URL `https://golang.org/cmd/go'."
                     (not (string-suffix-p "_test.go" (buffer-file-name)))))
   :next-checkers ((warning . go-errcheck)
                   (warning . go-unconvert)
-                  (warning . go-staticcheck)
-                  (warning . go-megacheck)))
+                  (warning . go-staticcheck)))
 
 (flycheck-define-checker go-test
   "A Go syntax and type checker using the `go test' command.
@@ -8093,8 +8143,7 @@ Requires Go 1.6 or newer.  See URL `https://golang.org/cmd/go'."
                   (string-suffix-p "_test.go" (buffer-file-name))))
   :next-checkers ((warning . go-errcheck)
                   (warning . go-unconvert)
-                  (warning . go-staticcheck)
-                  (warning . go-megacheck)))
+                  (warning . go-staticcheck)))
 
 (flycheck-define-checker go-errcheck
   "A Go checker for unchecked errors.
@@ -8123,8 +8172,7 @@ See URL `https://github.com/kisielk/errcheck'."
   :modes go-mode
   :predicate (lambda () (flycheck-buffer-saved-p))
   :next-checkers ((warning . go-unconvert)
-                  (warning . go-staticcheck)
-                  (warning . go-megacheck)))
+                  (warning . go-staticcheck)))
 
 (flycheck-define-checker go-unconvert
   "A Go checker looking for unnecessary type conversions.
@@ -8134,32 +8182,11 @@ See URL `https://github.com/mdempsky/unconvert'."
   :error-patterns
   ((warning line-start (file-name) ":" line ":" column ": " (message) line-end))
   :modes go-mode
-  :predicate (lambda () (flycheck-buffer-saved-p))
-  :next-checkers ((warning . go-megacheck)))
-
-(flycheck-define-checker go-megacheck
-  "A Go checker that performs static analysis and linting using the `megacheck'
-command.
-
-Requires Go 1.6 or newer. See URL
-`https://github.com/dominikh/go-tools'."
-  :command ("megacheck"
-            (option-list "-tags=" flycheck-go-build-tags concat)
-            (eval (mapcar (lambda (checker) (concat "-" checker
-                                                    ".enabled=false"))
-                          flycheck-go-megacheck-disabled-checkers))
-            ;; Run in current directory to make megacheck aware of symbols
-            ;; declared in other files.
-            ".")
-  :error-patterns
-  ((warning line-start (file-name) ":" line ":" column ": " (message) line-end))
-  :modes go-mode)
+  :predicate (lambda () (flycheck-buffer-saved-p)))
 
 (flycheck-define-checker go-staticcheck
   "A Go checker that performs static analysis and linting using
-the `staticcheck' command. `staticcheck' is the successor to
-`megacheck'; while the latter isn't fully deprecated yet, it's
-recommended to migrate to `staticcheck'.
+the `staticcheck' command.
 
 `staticcheck' is explicitly fully compatible with \"the last two
 versions of go\". `staticheck' can target earlier versions (with
@@ -8595,8 +8622,10 @@ for more information about the custom directories."
 (defun flycheck-eslint-config-exists-p ()
   "Whether there is a valid eslint config for the current buffer."
   (let* ((executable (flycheck-find-checker-executable 'javascript-eslint))
-         (exitcode (and executable (call-process executable nil nil nil
-                                                 "--print-config" "."))))
+         (exitcode (and executable
+                        (call-process executable nil nil nil
+                                      "--print-config" (or buffer-file-name
+                                                           "index.js")))))
     (eq exitcode 0)))
 
 (defun flycheck-parse-eslint (output checker buffer)
@@ -9095,12 +9124,23 @@ See URL `http://proselint.com/'."
   :error-parser flycheck-proselint-parse-errors
   :modes (text-mode markdown-mode gfm-mode message-mode org-mode))
 
+(flycheck-def-option-var flycheck-protoc-import-path nil protobuf-protoc
+  "A list of directories to resolve import directives.
+
+The value of this variable is a list of strings, where each
+string is a directory to add to the import path.  Relative paths
+are relative to the file being checked."
+  :type '(repeat (directory :tag "Import directory"))
+  :safe #'flycheck-string-list-p
+  :package-version '(flycheck . "32"))
+
 (flycheck-define-checker protobuf-protoc
   "A protobuf syntax checker using the protoc compiler.
 
 See URL `https://developers.google.com/protocol-buffers/'."
   :command ("protoc" "--error_format" "gcc"
             (eval (concat "--java_out=" (flycheck-temp-dir-system)))
+            (option-list "--proto_path=" flycheck-protoc-import-path concat)
             ;; Add the file directory of protobuf path to resolve import
             ;; directives
             (eval (concat "--proto_path="
@@ -9116,6 +9156,22 @@ See URL `https://developers.google.com/protocol-buffers/'."
           column ":" line-end))
   :modes protobuf-mode
   :predicate (lambda () (buffer-file-name)))
+
+(defun flycheck-prototool-project-root (&optional _checker)
+  "Return the nearest directory holding the prototool.yaml configuration."
+  (and buffer-file-name
+       (locate-dominating-file buffer-file-name "prototool.yaml")))
+
+(flycheck-define-checker protobuf-prototool
+  "A protobuf syntax checker using prototool.
+
+See URL `https://github.com/uber/prototool'."
+  :command ("prototool" "lint" source-original)
+  :error-patterns
+  ((warning line-start (file-name) ":" line ":" column ":" (message) line-end))
+  :modes protobuf-mode
+  :enabled flycheck-prototool-project-root
+  :predicate flycheck-buffer-saved-p)
 
 (flycheck-define-checker pug
   "A Pug syntax checker using the pug compiler.
@@ -9254,7 +9310,7 @@ Return nil if CHECKER's executable is not a Python REPL.
 Otherwise, return a list starting with -c (-m is not enough
 because it adds the current directory to Python's path)."
   (when (flycheck-python-needs-module-p checker)
-    `("-c" ,(concat "import sys,runpy;sys.path.pop(0);"
+    `("-c" ,(concat "import sys;sys.path.pop(0);import runpy;"
                     (format "runpy.run_module(%S)" module-name)))))
 
 (flycheck-def-config-file-var flycheck-flake8rc python-flake8 ".flake8rc"
@@ -9747,6 +9803,12 @@ See URL `https://github.com/Synthetica9/nix-linter'."
   :command ("nix-linter" "--json-stream" "-")
   :standard-input t
   :error-parser flycheck-parse-nix-linter
+  :error-explainer
+  (lambda (error)
+    (-when-let (error-code (flycheck-error-id error))
+      (with-output-to-string
+        (call-process "nix-linter" nil standard-output nil "--help-for"
+                      error-code))))
   :modes nix-mode)
 
 (defun flycheck-locate-sphinx-source-directory ()
@@ -10733,6 +10795,66 @@ See URL `http://nagelfar.sourceforge.net/'."
    (warning line-start (file-name) ": " line ": W " (message) line-end)
    (error   line-start (file-name) ": " line ": E " (message) line-end))
   :modes tcl-mode)
+
+(flycheck-define-checker terraform
+  "A Terraform syntax checker with `terraform fmt'.
+
+See URL `https://www.terraform.io/docs/commands/fmt.html'."
+  :command ("terraform" "fmt" "-no-color" "-")
+  :standard-input t
+  :error-patterns
+  ((error line-start "Error: " (one-or-more not-newline)
+          "\n\n  on <stdin> line " line ":\n  (source code not available)\n\n"
+          (message (one-or-more (and (one-or-more (not (any ?\n))) ?\n)))
+          line-end))
+  :next-checkers ((warning . terraform-tflint))
+  :modes terraform-mode)
+
+(flycheck-def-option-var flycheck-tflint-variable-files nil terraform-tflint
+  "A list of files to resolve terraform variables.
+
+The value of this variable is a list of strings, where each
+string is a file to add to the terraform variables files.
+Relative files are relative to the file being checked."
+  :type '(repeat (directory :tag "Variable file"))
+  :safe #'flycheck-string-list-p
+  :package-version '(flycheck . "32"))
+
+(defun flycheck-parse-tflint-linter (output checker buffer)
+  "Parse tflint warnings from JSON OUTPUT.
+
+CHECKER and BUFFER denote the CHECKER that returned OUTPUT and
+the BUFFER that was checked respectively.
+
+See URL `https://github.com/wata727/tflint' for more
+information about tflint."
+  (mapcar (lambda (err)
+            (let-alist err
+              (flycheck-error-new-at
+               .line
+               nil
+               (pcase .type
+                 (`"ERROR"   'error)
+                 (`"WARNING" 'warning)
+                 ;; Default to error
+                 (_          'error))
+               .message
+               :id .detector
+               :checker checker
+               :buffer buffer
+               :filename (buffer-file-name buffer))))
+          (car (flycheck-parse-json output))))
+
+(flycheck-define-checker terraform-tflint
+  "A Terraform checker using tflint.
+
+See URL `https://github.com/wata727/tflint'."
+  :command ("tflint" "--format=json"
+            (option-list "--var-file=" flycheck-tflint-variable-files concat)
+            source-original)
+  :error-parser flycheck-parse-tflint-linter
+  :predicate flycheck-buffer-saved-p
+  :modes terraform-mode)
 
 (flycheck-define-checker tex-chktex
   "A TeX and LaTeX syntax and style checker using chktex.

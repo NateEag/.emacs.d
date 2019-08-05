@@ -5,7 +5,7 @@
 ;; Author: Gunther Hagleitner
 ;; Maintainer: Julien Pagès <j.parkouss@gmail.com>
 ;; Version: 1.0
-;; Package-Version: 20190228.600
+;; Package-Version: 20190526.953
 ;; Keywords: games
 ;; URL: https://github.com/parkouss/speed-type
 ;; Package-Requires: ((emacs "24.3") (cl-lib "0.3"))
@@ -309,7 +309,7 @@ Accuracy is computed as (CORRECT-ENTRIES - CORRECTIONS) / TOTAL-ENTRIES."
     (insert (propertize speed-type--title 'face 'italic))
     (when speed-type--author
       (insert (propertize
-               (format ", by %s" speed-type--title speed-type--author)
+               (format ", by %s" speed-type--author)
                'face 'italic))))
   (insert (speed-type--generate-stats
            speed-type--entries

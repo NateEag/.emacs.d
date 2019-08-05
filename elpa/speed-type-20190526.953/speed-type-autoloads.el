@@ -1,10 +1,12 @@
 ;;; speed-type-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "speed-type" "speed-type.el" (23690 18096 406030
-;;;;;;  409000))
+;;;### (autoloads nil "speed-type" "speed-type.el" (0 0 0 0))
 ;;; Generated autoloads from speed-type.el
 
 (autoload 'speed-type-top-x "speed-type" "\
@@ -40,11 +42,14 @@ Setup a new text sample to practice touch or speed typing.
 
 \(fn)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "speed-type" '("speed-type-")))
+
 ;;;***
 
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; speed-type-autoloads.el ends here

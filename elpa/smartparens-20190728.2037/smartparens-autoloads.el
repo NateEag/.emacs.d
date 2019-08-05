@@ -315,9 +315,9 @@ Turn off `show-smartparens-mode'.
 
 ;;;***
 
-;;;### (autoloads nil nil ("smartparens-javascript.el" "smartparens-ml.el"
-;;;;;;  "smartparens-pkg.el" "smartparens-racket.el" "smartparens-rst.el")
-;;;;;;  (0 0 0 0))
+;;;### (autoloads nil nil ("smartparens-c.el" "smartparens-javascript.el"
+;;;;;;  "smartparens-ml.el" "smartparens-pkg.el" "smartparens-racket.el"
+;;;;;;  "smartparens-rst.el") (0 0 0 0))
 
 ;;;***
 

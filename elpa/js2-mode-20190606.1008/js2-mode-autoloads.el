@@ -46,7 +46,10 @@ Major mode for editing JavaScript code.
 \(fn)" t nil)
 
 (autoload 'js2-jsx-mode "js2-mode" "\
-Major mode for editing JSX code.
+Major mode for editing JSX code in Emacs 26 and earlier.
+
+To edit JSX code in Emacs 27, use `js-mode' as your major mode
+with `js2-minor-mode' enabled.
 
 To customize the indentation for this mode, set the SGML offset
 variables (`sgml-basic-offset' et al) locally, like so:

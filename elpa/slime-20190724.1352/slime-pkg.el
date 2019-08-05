@@ -1,4 +1,4 @@
-(define-package "slime" "20190513.1732" "Superior Lisp Interaction Mode for Emacs"
+(define-package "slime" "20190724.1352" "Superior Lisp Interaction Mode for Emacs"
   '((cl-lib "0.5")
     (macrostep "0.9"))
   :keywords

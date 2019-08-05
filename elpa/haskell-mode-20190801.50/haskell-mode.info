@@ -1027,7 +1027,7 @@ save:
 ----------------------
 
 Now, every time you run ‘save-buffer’ (‘C-x C-s’), there is a hook that
-will run and generate Emacs *Note (emacs)Tags:: for the whole project
+will run and generate Emacs *Note (emacs)Tags::, for the whole project
 directory.  The resulting file will be called ‘TAGS’.
 
    WARNING: You should be careful that your project root isn’t your home
@@ -2437,17 +2437,17 @@ Node: Module templates24363
 Node: Declaration scanning24793
 Node: Compilation28081
 Node: Interactive Haskell31986
-Node: Editing Cabal files63863
-Node: Browsing Haddocks64610
-Node: Spell checking strings and comments67435
-Node: Aligning code68541
-Node: Rectangular commands70286
-Node: REPL71806
-Node: Collapsing Haskell code76584
-Node: Getting Help and Reporting Bugs79192
-Node: Concept index80236
-Node: Function index81494
-Node: Variable index82289
+Node: Editing Cabal files63864
+Node: Browsing Haddocks64611
+Node: Spell checking strings and comments67436
+Node: Aligning code68542
+Node: Rectangular commands70287
+Node: REPL71807
+Node: Collapsing Haskell code76585
+Node: Getting Help and Reporting Bugs79193
+Node: Concept index80237
+Node: Function index81495
+Node: Variable index82290
 
 End Tag Table
 

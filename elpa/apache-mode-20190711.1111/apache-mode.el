@@ -8,7 +8,7 @@
 ;; Homepage: https://github.com/emacs-php/apache-mode
 ;; License: GPL-2.0-or-later
 ;; Keywords: languages, faces
-;; Package-Version: 20190522.313
+;; Package-Version: 20190711.1111
 ;; Version: 2.2.0
 
 ;; apache-mode.el is free software; you can redistribute it and/or modify it
@@ -1034,7 +1034,7 @@
         "SuppressSize"
         "SymLinksIfOwnerMatch"
         "sysvsem"
-        "temporary"
+        "temp"
         "tpfcore"
         "unformatted"
         "unset"

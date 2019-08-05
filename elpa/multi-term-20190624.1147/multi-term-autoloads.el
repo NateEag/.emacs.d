@@ -1,10 +1,12 @@
 ;;; multi-term-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "multi-term" "multi-term.el" (23400 19256 0
-;;;;;;  0))
+;;;### (autoloads nil "multi-term" "multi-term.el" (0 0 0 0))
 ;;; Generated autoloads from multi-term.el
 
 (autoload 'multi-term "multi-term" "\
@@ -41,11 +43,14 @@ Select the `multi-term' dedicated window.
 
 \(fn)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "multi-term" '("multi-term-" "term-")))
+
 ;;;***
 
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; multi-term-autoloads.el ends here

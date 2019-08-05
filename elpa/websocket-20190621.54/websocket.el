@@ -4,8 +4,8 @@
 
 ;; Author: Andrew Hyatt <ahyatt@gmail.com>
 ;; Keywords: Communication, Websocket, Server
-;; Package-Version: 20190408.152
-;; Version: 1.10
+;; Package-Version: 20190621.54
+;; Version: 1.11.1
 ;; Package-Requires: ((cl-lib "0.5"))
 ;;
 ;; This program is free software; you can redistribute it and/or
@@ -47,6 +47,7 @@
 (require 'bindat)
 (require 'url-parse)
 (require 'url-cookie)
+(require 'seq)
 (eval-when-compile (require 'cl-lib))
 
 ;;; Code:
@@ -100,7 +101,7 @@ same for the protocols."
   accept-string
   (inflight-input nil))
 
-(defvar websocket-version "1.10"
+(defvar websocket-version "1.11.1"
   "Version numbers of this version of websocket.el.")
 
 (defvar websocket-debug nil
@@ -218,7 +219,7 @@ approximately 537M long."
                         "websocket-get-bytes: Unknown N: %S" n)))))
           s)
        (args-out-of-range (signal 'websocket-unparseable-frame
-                                  (list (format "Frame unexpectedly shortly: %s" s)))))
+                                  (list (format "Frame unexpectedly short: %s" s)))))
      :val)))
 
 (defun websocket-to-bytes (val nbytes)
@@ -253,7 +254,7 @@ approximately 537M long."
 (defun websocket-get-opcode (s)
   "Retrieve the opcode from first byte of string S."
   (websocket-ensure-length s 1)
-  (let ((opcode (logand #xf (websocket-get-bytes s 1))))
+  (let ((opcode (logand #xf (aref s 0))))
     (cond ((= opcode 0) 'continuation)
           ((= opcode 1) 'text)
           ((= opcode 2) 'binary)
@@ -266,7 +267,7 @@ approximately 537M long."
 We start at position 0, and return a cons of the payload length and how
 many bytes were consumed from the string."
   (websocket-ensure-length s 1)
-  (let* ((initial-val (logand 127 (websocket-get-bytes s 1))))
+  (let* ((initial-val (logand 127 (aref s 0))))
     (cond ((= initial-val 127)
            (websocket-ensure-length s 9)
            (cons (websocket-get-bytes (substring s 1) 8) 9))
@@ -285,17 +286,13 @@ many bytes were consumed from the string."
 (defun websocket-mask (key data)
   "Using string KEY, mask string DATA according to the RFC.
 This is used to both mask and unmask data."
-  ;; If we don't make the string unibyte here, a string of bytes that should be
-  ;; interpreted as a unibyte string will instead be interpreted as a multibyte
-  ;; string of the same length (for example, 6 multibyte chars for 你好 instead
-  ;; of the correct 6 unibyte chars, which would convert into 2 multibyte
-  ;; chars).
-  (apply
-   #'unibyte-string
-   (cl-loop for b across data
-            for i from 0 to (length data)
-            collect
-            (logxor (websocket-get-bytes (substring key (mod i 4)) 1) b))))
+  ;; Returning the string as unibyte is important here. Because we set the
+  ;; string byte by byte, this results in a unibyte string.
+  (cl-loop
+   with result = (make-string (length data) ?x)
+   for i from 0 below (length data)
+   do (setf (seq-elt result i) (logxor (aref key (mod i 4)) (seq-elt data i)))
+   finally return result))
 
 (defun websocket-ensure-length (s n)
   "Ensure the string S has at most N bytes.
@@ -352,13 +349,13 @@ the frame finishes.  If the frame is not completed, return NIL."
   (catch 'websocket-incomplete-frame
     (websocket-ensure-length s 1)
     (let* ((opcode (websocket-get-opcode s))
-           (fin (logand 128 (websocket-get-bytes s 1)))
+           (fin (logand 128 (aref s 0)))
            (payloadp (memq opcode '(continuation text binary ping pong)))
            (payload-len (when payloadp
                           (websocket-get-payload-len (substring s 1))))
            (maskp (and
                    payloadp
-                   (= 128 (logand 128 (websocket-get-bytes (substring s 1) 1)))))
+                   (= 128 (logand 128 (aref s 1)))))
            (payload-start (when payloadp (+ (if maskp 5 1) (cdr payload-len))))
            (payload-end (when payloadp (+ payload-start (car payload-len))))
            (unmasked-payload (when payloadp
@@ -568,9 +565,7 @@ the `websocket-error' condition."
                        (websocket-encode-frame frame (not (websocket-server-p websocket)))))
 
 (defun websocket-openp (websocket)
-  ;; FIXME: "open and either connecting or open"?  I don't understand.  --Stef
-  "Check WEBSOCKET and return non-nil if it is open, and either
-connecting or open."
+  "Check WEBSOCKET and return non-nil if the connection is open."
   (and websocket
        (not (eq 'close (websocket-ready-state websocket)))
        (member (process-status (websocket-conn websocket)) '(open run))))

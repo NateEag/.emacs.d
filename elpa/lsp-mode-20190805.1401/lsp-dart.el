@@ -60,19 +60,29 @@
 (defgroup lsp-dart-analysis nil
   "LSP support for Dart, using dart analysis server."
   :group 'lsp-mode
-  :link '(url-link "https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server"))
+  :link '(url-link "https://github.com/dart-lang/sdk/tree/master/pkg/analysis_server")
+  :package-version '(lsp-mode . "6.1"))
 
-(defcustom lsp-dart-sdk-dir "~/flutter/bin/cache/dart-sdk/"
+(defcustom lsp-dart-analysis-sdk-dir "~/flutter/bin/cache/dart-sdk/"
   "Install directory for dart-sdk."
   :group 'lsp-dart-analysis
   :risky t
-  :type 'directory)
+  :type 'directory
+  :package-version '(lsp-mode . "6.1"))
+
+(defcustom lsp-dart-analysis-server-command nil
+  "The analysis_server executable to use"
+  :type '(repeat string)
+  :group 'lsp-dart-analysis
+  :package-version '(lsp-mode . "6.1"))
 
 (defun lsp-dart--analysis-server-command ()
   "Generate LSP startup command."
-  `(,(expand-file-name (f-join lsp-dart-sdk-dir "bin/dart"))
-    ,(expand-file-name (f-join lsp-dart-sdk-dir "bin/snapshots/analysis_server.dart.snapshot"))
-    "--lsp"))
+  (or
+   lsp-dart-analysis-server-command
+   `(,(expand-file-name (f-join lsp-dart-analysis-sdk-dir "bin/dart"))
+     ,(expand-file-name (f-join lsp-dart-analysis-sdk-dir "bin/snapshots/analysis_server.dart.snapshot"))
+     "--lsp")))
 
 (lsp-register-client
  (make-lsp-client :new-connection

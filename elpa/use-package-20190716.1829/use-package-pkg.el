@@ -1,4 +1,4 @@
-(define-package "use-package" "20190405.2047" "A configuration macro for simplifying your .emacs"
+(define-package "use-package" "20190716.1829" "A configuration macro for simplifying your .emacs"
   '((emacs "24.3")
     (bind-key "2.4"))
   :keywords

@@ -651,7 +651,8 @@ extending any keys already present."
                     ,(when (eq use-package-verbose 'debug)
                        `(message ,(format "Compiling package %s" name-string)))
                     ,(unless (plist-get args :no-require)
-                       `(load ,name-string nil t)))))))))
+                       `(unless (featurep ',name-symbol)
+                          (load ,name-string nil t))))))))))
 
     ;; Certain keywords imply :defer, if :demand was not specified.
     (when (and (not (plist-member args :demand))
@@ -1419,7 +1420,7 @@ no keyword implies `:all'."
 (defun use-package-handler/:custom-face (name _keyword args rest state)
   "Generate use-package custom-face keyword code."
   (use-package-concat
-   (mapcar #'(lambda (def) `(custom-set-faces (quote ,def))) args)
+   (mapcar #'(lambda (def) `(custom-set-faces (backquote ,def))) args)
    (use-package-process-keywords name rest state)))
 
 ;;;; :init

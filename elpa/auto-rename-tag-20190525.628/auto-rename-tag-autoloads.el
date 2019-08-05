@@ -41,10 +41,6 @@ See `auto-rename-tag-mode' for more information on Auto-Rename-Tag mode.
 
 ;;;***
 
-;;;### (autoloads nil nil ("auto-rename-tag-pkg.el") (0 0 0 0))
-
-;;;***
-
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

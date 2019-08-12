@@ -188,6 +188,7 @@
   'watched'. Incident count: 4
 
 - Notify me when a new email comes into a thread I'm writing a response in.
+  Incident count: 1
 
 - Use smtpmail-queue-mail and some network up/down notifier to automatically
   queue mail if offline and to automatically send it when back online.

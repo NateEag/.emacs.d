@@ -65,7 +65,8 @@ aggressive-fill-paragraph."
         (setq comment-start-pos (point))
 
         ;; Finally, we can now use forward-comment to move to the first
-        ;; non-whitespace-or-comment character *after the current comment-block.
+        ;; non-whitespace-or-comment character *after* the current
+        ;; comment-block.
         (forward-comment (buffer-size))
 
         ;; ...which means searching backward for the first non-whitespace
@@ -187,7 +188,10 @@ There may be a better one awaiting discovery."
            (-all? (lambda (x)
                     (< x (- fill-column 10)))
                   ;; Ignore the last line, since it's usually a widow.
-                  (-slice lengths 0 -1))))))
+                  (-slice lengths 0 -1))
+           ;; FIXME Make this logic work in comments. For the moment I'm
+           ;; disabling it because it seems to cause difficulties if I don't.
+           (not (afp-inside-comment?))))))
 
 ;; Org mode tables have their own filling behaviour which results in the
 ;; cursor being moved to the start of the table element, which is no good

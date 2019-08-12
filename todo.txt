@@ -187,6 +187,8 @@
 - Come up with a way to send emails and flag the newly-made thread as
   'watched'. Incident count: 4
 
+- Notify me when a new email comes into a thread I'm writing a response in.
+
 - Use smtpmail-queue-mail and some network up/down notifier to automatically
   queue mail if offline and to automatically send it when back online.
 

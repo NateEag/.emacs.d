@@ -41,7 +41,7 @@ Return non-nil if the current buffer appears to be intended as a package.
 
 \(fn)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "package-lint" '("package-lint--")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "package-lint" '("package-lint-")))
 
 ;;;***
 

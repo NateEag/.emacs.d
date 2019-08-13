@@ -1,4 +1,4 @@
-(define-package "php-mode" "20190801.1149" "Major mode for editing PHP code"
+(define-package "php-mode" "20190812.1711" "Major mode for editing PHP code"
   '((emacs "24.3")
     (cl-lib "0.5"))
   :keywords

@@ -184,6 +184,14 @@ Return path to current PHP project.
 
 ;;;***
 
+;;;### (autoloads nil "php-util-buffer" "php-util-buffer.el" (0 0
+;;;;;;  0 0))
+;;; Generated autoloads from php-util-buffer.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-util-buffer" '("php-util-buffer-")))
+
+;;;***
+
 ;;;### (autoloads nil nil ("php-mode-pkg.el") (0 0 0 0))
 
 ;;;***

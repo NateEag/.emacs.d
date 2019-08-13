@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/avy
-;; Package-Version: 20190514.1551
+;; Package-Version: 20190630.1538
 ;; Version: 0.5.0
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: point, location
@@ -456,7 +456,7 @@ KEYS is the path from the root of `avy-tree' to LEAF."
            (throw 'done 'restart))
           ((memq char '(27 ?\C-g))
            ;; exit silently
-           (throw 'done 'exit))
+           (throw 'done 'abort))
           ((eq char ??)
            (avy-show-dispatch-help)
            (throw 'done 'restart))
@@ -519,13 +519,14 @@ multiple DISPLAY-FN invocations."
         (funcall cleanup-fn)
         (if (setq window (avy-mouse-event-window char))
             (throw 'done (cons char window))
-          ;; Ensure avy-current-path stores the full path prior to
-          ;; exit so other packages can utilize its value.
-          (setq avy-current-path
-                (concat avy-current-path (string (avy--key-to-char char))))
           (if (setq branch (assoc char tree))
-              (if (eq (car (setq tree (cdr branch))) 'leaf)
-                  (throw 'done (cdr tree)))
+              (progn
+                ;; Ensure avy-current-path stores the full path prior to
+                ;; exit so other packages can utilize its value.
+                (setq avy-current-path
+                      (concat avy-current-path (string (avy--key-to-char char))))
+                (if (eq (car (setq tree (cdr branch))) 'leaf)
+                    (throw 'done (cdr tree))))
             (funcall avy-handler-function char)))))))
 
 (defun avy-read-de-bruijn (lst keys)
@@ -666,7 +667,9 @@ Set `avy-style' according to COMMMAND as well."
      (setf (symbol-function 'avy-resume)
            (lambda ()
              (interactive)
-             ,@body))
+             ,@(if (eq command 'avy-goto-char-timer)
+                   (cdr body)
+                 body)))
      ,@body))
 
 (defun avy-action-goto (pt)
@@ -866,6 +869,8 @@ multiple OVERLAY-FN invocations."
        (avy-process original-cands overlay-fn cleanup-fn))
       ;; ignore exit from `avy-handler-function'
       ((eq res 'exit))
+      ((eq res 'abort)
+       nil)
       (t
        (funcall avy-pre-action res)
        (setq res (car res))
@@ -1657,8 +1662,8 @@ The window scope is determined by `avy-all-windows'.
 When ARG is non-nil, do the opposite of `avy-all-windows'.
 BEG and END narrow the scope where candidates are searched.
 When BOTTOM-UP is non-nil, display avy candidates from top to bottom"
-  (let ((avy-action #'identity)
-        (avy-style (if avy-linum-mode
+  (setq avy-action (or avy-action #'identity))
+  (let ((avy-style (if avy-linum-mode
                        (progn
                          (message "Goto line:")
                          'ignore)
@@ -1700,7 +1705,7 @@ Otherwise, forward to `goto-line' with ARG."
                         (forward-line (1- (string-to-number line))))
                       (throw 'done 'exit))))))
              (r (avy--line (eq arg 4))))
-        (unless (eq r t)
+        (when (and (not (eq r t)) (eq avy-action #'identity))
           (avy-action-goto r))))))
 
 ;;;###autoload
@@ -2062,6 +2067,8 @@ Otherwise, the whole regex is highlighted."
         (delete-overlay ov))
       (avy--done))))
 
+(defvar avy--old-cands nil)
+
 ;;;###autoload
 (defun avy-goto-char-timer (&optional arg)
   "Read one or many consecutive chars and jump to the first one.
@@ -2071,8 +2078,8 @@ The window scope is determined by `avy-all-windows' (ARG negates it)."
                              (not avy-all-windows)
                            avy-all-windows)))
     (avy-with avy-goto-char-timer
-      (avy-process
-       (avy--read-candidates)))))
+      (setq avy--old-cands (avy--read-candidates))
+      (avy-process avy--old-cands))))
 
 (defun avy-push-mark ()
   "Store the current point and window."

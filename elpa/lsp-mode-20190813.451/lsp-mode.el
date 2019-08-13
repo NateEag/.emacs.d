@@ -2391,7 +2391,7 @@ disappearing, unset all the variables related to it."
                      (foldingRange . ,(when lsp-enable-folding
                                         `((dynamicRegistration . t)
                                           (rangeLimit . ,lsp-folding-range-limit)
-                                          (lineFoldingOnly . ,lsp-folding-line-folding-only))))))))
+                                          (lineFoldingOnly . ,(or lsp-folding-line-folding-only :json-false)))))))))
 
 (defun lsp-find-roots-for-workspace (workspace session)
   "Get all roots for the WORKSPACE."
@@ -3407,6 +3407,8 @@ https://microsoft.github.io/language-server-protocol/specification#textDocument_
 
 (defun lsp--locations-to-xref-items (locations)
   "Return a list of `xref-item' from Location[] or LocationLink[]."
+  (setq locations (if (sequencep locations) locations (list locations)))
+
   (unless (seq-empty-p locations)
     (cl-labels ((get-xrefs-in-file
                  (file-locs location-link)
@@ -3533,17 +3535,21 @@ MODE is the mode used in the parent frame."
 (defun lsp--buffer-string-visible ()
   "Return visible buffer string.
 Stolen from `org-copy-visible'."
-  (let ((result "")
+  (let ((temp (generate-new-buffer " *temp*"))
         (beg (point-min))
         (end (point-max)))
     (while (/= beg end)
       (when (get-char-property beg 'invisible)
         (setq beg (next-single-char-property-change beg 'invisible nil end)))
-      (let ((next (next-single-char-property-change beg 'invisible nil end)))
-        (setq result (concat result (buffer-substring beg next)))
+      (let* ((next (next-single-char-property-change beg 'invisible nil end))
+             (substring (buffer-substring beg next)))
+        (with-current-buffer temp (insert substring))
+        ;; (setq result (concat result substring))
         (setq beg next)))
     (setq deactivate-mark t)
-    (s-chop-suffix "\n" result)))
+    (prog1 (with-current-buffer temp
+             (s-chop-suffix "\n" (buffer-string)))
+      (kill-buffer temp))))
 
 (defun lsp--render-markdown ()
   "Render markdown."
@@ -4041,7 +4047,7 @@ EXTRA is a plist of extra parameters.
 REFERENCES? t when METHOD returns references."
   (if-let ((loc (lsp-request method
                              (append (lsp--text-document-position-params) extra))))
-      (let ((xrefs (lsp--locations-to-xref-items (if (sequencep loc) loc (list loc)))))
+      (let ((xrefs (lsp--locations-to-xref-items loc)))
         (if (boundp 'xref-show-definitions-function)
             (with-no-warnings
               (funcall (if references? xref-show-xrefs-function xref-show-definitions-function)

@@ -635,7 +635,7 @@
 	   ("João Távora" . "joaotavora@gmail.com"))
 	  (:keywords "convenience" "languages"))])
  (el-search .
-	    [(1 12 6)
+	    [(1 12 6 1)
 	     ((emacs
 	       (25))
 	      (stream
@@ -818,7 +818,7 @@
 	   (:maintainer "Leo Liu" . "sdl.web@gmail.com")
 	   (:url . "https://github.com/leoliu/ggtags"))])
  (gited .
-	[(0 5 3)
+	[(0 5 4)
 	 ((emacs
 	   (24 4))
 	  (cl-lib
@@ -1713,7 +1713,7 @@
 		   ("Bastien Guerry" . "bzg@gnu.org"))
 		  (:maintainer "Bastien Guerry" . "bzg@gnu.org"))])
  (relint .
-	 [(1 9)
+	 [(1 10)
 	  ((xr
 	    (1 13)))
 	  "Elisp regexp mistake finder" single

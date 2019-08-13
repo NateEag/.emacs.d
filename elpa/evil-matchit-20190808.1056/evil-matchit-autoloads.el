@@ -197,7 +197,7 @@ See `evil-matchit-mode' for more information on Evil-Matchit mode.
 \(fn)" nil nil)
 
 (autoload 'evilmi-javascript-jump "evil-matchit-javascript" "\
-
+Jump to the matching tag using RLT and NUM.
 
 \(fn RLT NUM)" nil nil)
 

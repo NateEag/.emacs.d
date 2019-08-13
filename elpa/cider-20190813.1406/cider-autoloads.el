@@ -227,6 +227,32 @@ Open a classpath entry.
 
 ;;;***
 
+;;;### (autoloads nil "cider-clojuredocs" "cider-clojuredocs.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from cider-clojuredocs.el
+
+(autoload 'cider-clojuredocs-web "cider-clojuredocs" "\
+Open ClojureDocs documentation in the default web browser.
+
+Prompts for the symbol to use, or uses the symbol at point, depending on
+the value of `cider-prompt-for-symbol'.  With prefix arg ARG, does the
+opposite of what that option dictates.
+
+\(fn &optional ARG)" t nil)
+
+(autoload 'cider-clojuredocs "cider-clojuredocs" "\
+Open ClojureDocs documentation in a popup buffer.
+
+Prompts for the symbol to use, or uses the symbol at point, depending on
+the value of `cider-prompt-for-symbol'.  With prefix arg ARG, does the
+opposite of what that option dictates.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-clojuredocs" '("cider-")))
+
+;;;***
+
 ;;;### (autoloads nil "cider-common" "cider-common.el" (0 0 0 0))
 ;;; Generated autoloads from cider-common.el
 
@@ -391,32 +417,6 @@ Format the EDN data of the last sexp.
 \(fn)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-format" '("cider--format-")))
-
-;;;***
-
-;;;### (autoloads nil "cider-grimoire" "cider-grimoire.el" (0 0 0
-;;;;;;  0))
-;;; Generated autoloads from cider-grimoire.el
-
-(autoload 'cider-grimoire-web "cider-grimoire" "\
-Open grimoire documentation in the default web browser.
-
-Prompts for the symbol to use, or uses the symbol at point, depending on
-the value of `cider-prompt-for-symbol'.  With prefix arg ARG, does the
-opposite of what that option dictates.
-
-\(fn &optional ARG)" t nil)
-
-(autoload 'cider-grimoire "cider-grimoire" "\
-Open grimoire documentation in a popup buffer.
-
-Prompts for the symbol to use, or uses the symbol at point, depending on
-the value of `cider-prompt-for-symbol'.  With prefix arg ARG, does the
-opposite of what that option dictates.
-
-\(fn &optional ARG)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "cider-grimoire" '("cider-")))
 
 ;;;***
 

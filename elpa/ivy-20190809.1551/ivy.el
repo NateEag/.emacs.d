@@ -179,6 +179,12 @@ Set this to \"(%d/%d) \" to display both the index and the count."
           (const :tag "Count matches and show current match" "(%d/%d) ")
           string))
 
+(defcustom ivy-pre-prompt-function nil
+  "When non-nil, add strings before the `ivy-read' prompt."
+  :type '(choice
+          (const :tag "Do nothing" nil)
+          (function :tag "Custom function")))
+
 (defcustom ivy-add-newline-after-prompt nil
   "When non-nil, add a newline after the `ivy-read' prompt."
   :type 'boolean)
@@ -542,8 +548,7 @@ the restoring themselves.")
      ((thing-at-point 'url))
      ((and (eq (ivy-state-collection ivy-last) #'read-file-name-internal)
            (let ((inhibit-message t))
-             (ignore-errors
-               (ffap-file-at-point)))))
+             (run-hook-with-args-until-success 'file-name-at-point-functions))))
      ((let ((s (thing-at-point 'symbol)))
         (and (stringp s)
              (if (string-match "\\`[`']?\\(.*?\\)'?\\'" s)
@@ -1106,7 +1111,7 @@ If the text hasn't changed as a result, forward to `ivy-alt-done'."
 (defun ivy-partial ()
   "Complete the minibuffer text as much as possible."
   (interactive)
-  (let* ((parts (or (split-string ivy-text " " t) (list "")))
+  (let* ((parts (or (ivy--split-spaces ivy-text) (list "")))
          (tail (last parts))
          (postfix (car tail))
          (case-fold-search (ivy--case-fold-p ivy-text))
@@ -1120,7 +1125,7 @@ If the text hasn't changed as a result, forward to `ivy-alt-done'."
                                         ivy--old-cands)))))
     (cond ((eq new t) nil)
           ((string= new ivy-text) nil)
-          ((string= (car tail) new) nil)
+          ((string= (car tail) (car (ivy--split-spaces new))) nil)
           (new
            (delete-region (minibuffer-prompt-end) (point-max))
            (setcar tail
@@ -2904,6 +2909,8 @@ parts beyond their respective faces `ivy-confirm-face' and
                          (concat n-str d-str "\n"))
                         (t
                          (concat n-str d-str)))))
+          (when ivy-pre-prompt-function
+            (setq n-str (concat (funcall ivy-pre-prompt-function) n-str)))
           (when ivy-add-newline-after-prompt
             (setq n-str (concat n-str "\n")))
           (let ((regex (format "\\([^\n]\\{%d\\}\\)[^\n]" (window-width))))
@@ -4511,7 +4518,8 @@ You can also delete an element from history with \\[ivy-reverse-i-search-kill]."
   (if (ivy-state-dynamic-collection ivy-last)
       (progn
         (setf (ivy-state-dynamic-collection ivy-last) nil)
-        (setq ivy--all-candidates ivy--old-cands))
+        (setf (ivy-state-collection ivy-last)
+              (setq ivy--all-candidates ivy--old-cands)))
     (setq ivy--all-candidates
           (ivy--filter ivy-text ivy--all-candidates))))
 

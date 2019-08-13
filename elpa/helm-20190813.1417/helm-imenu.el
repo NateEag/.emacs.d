@@ -40,11 +40,6 @@
   :group 'helm-imenu
   :type 'function)
 
-(defcustom helm-imenu-lynx-style-map t
-  "Use Arrow keys to jump to occurences."
-  :group 'helm-imenu
-  :type  'boolean)
-
 (defcustom helm-imenu-all-buffer-assoc nil
   "Major mode association alist for `helm-imenu-in-all-buffers'.
 Allow `helm-imenu-in-all-buffers' searching in these associated buffers
@@ -92,28 +87,37 @@ Each car is a regexp match pattern of the imenu type string."
     (set-keymap-parent map helm-map)
     (define-key map (kbd "M-<down>") 'helm-imenu-next-section)
     (define-key map (kbd "M-<up>")   'helm-imenu-previous-section)
-    (when helm-imenu-lynx-style-map
-      (define-key map (kbd "<left>")    'helm-maybe-exit-minibuffer)
-      (define-key map (kbd "<right>")   'helm-execute-persistent-action)
-      (define-key map (kbd "M-<left>")  'helm-previous-source)
-      (define-key map (kbd "M-<right>") 'helm-next-source))
-    (delq nil map)))
+    map))
+
+(defcustom helm-imenu-lynx-style-map nil
+  "Use Arrow keys to jump to occurences."
+  :group 'helm-imenu
+  :type  'boolean
+  :set (lambda (var val)
+         (set var val)
+         (if val
+             (progn
+               (define-key helm-imenu-map (kbd "<right>")  'helm-execute-persistent-action)
+               (define-key helm-imenu-map (kbd "<left>")   'helm-maybe-exit-minibuffer))
+           (define-key helm-imenu-map (kbd "<right>") nil)
+           (define-key helm-imenu-map (kbd "<left>")  nil))))
 
 (defun helm-imenu-next-or-previous-section (n)
-  (with-helm-buffer
+  (with-helm-window
     (let* ((fn (lambda ()
-                 (car (split-string (helm-get-selection nil t)
-                                    helm-imenu-delimiter))))
+                 (car (split-string
+                       (buffer-substring
+                        (point-at-bol) (point-at-eol))
+                       helm-imenu-delimiter))))
            (curtype (funcall fn))
-           (move-fn (if (> n 0) #'helm-next-line #'helm-previous-line))
            (stop-fn (if (> n 0)
                         #'helm-end-of-source-p
-                        #'helm-beginning-of-source-p)))
-      (catch 'break
-        (while (not (funcall stop-fn))
-          (funcall move-fn)
-          (unless (string= curtype (funcall fn))
-            (throw 'break nil)))))))
+                      #'helm-beginning-of-source-p)))
+      (while (and (not (funcall stop-fn))
+                  (string= curtype (funcall fn)))
+        (forward-line n))
+      (helm-mark-current-line)
+      (helm-follow-execute-persistent-action-maybe))))
 
 (defun helm-imenu-next-section ()
   (interactive)
@@ -298,7 +302,7 @@ Each car is a regexp match pattern of the imenu type string."
                                     when (string-match p x) return f
                                     finally return 'default)))
                         types helm-imenu-delimiter)
-           for disp = (propertize disp1 'help-echo bufname)
+           for disp = (propertize disp1 'help-echo bufname 'types types)
            collect
            (cons disp (cons k v))))
 

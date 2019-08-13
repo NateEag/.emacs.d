@@ -41,8 +41,6 @@
     (trace-function-foreground . helm-completing-read-symbols)
     (trace-function-background . helm-completing-read-symbols)
     (find-tag . helm-completing-read-default-find-tag)
-    (org-capture . helm-org-completing-read-tags)
-    (org-set-tags . helm-org-completing-read-tags)
     (ffap-alternate-file . nil)
     (tmm-menubar . nil)
     (find-file . nil)
@@ -212,12 +210,17 @@ know what you are doing."
   :group 'helm-mode
   :type 'boolean)
 
+(defface helm-mode-prefix
+    '((t (:background "red" :foreground "black")))
+  "Face used for prefix completion."
+  :group 'helm-mode)
 
 (defvar helm-comp-read-map
   (let ((map (make-sparse-keymap)))
     (set-keymap-parent map helm-map)
     (define-key map (kbd "<C-return>") 'helm-cr-empty-string)
     (define-key map (kbd "M-RET")      'helm-cr-empty-string)
+    (define-key map (kbd "DEL")        'helm-mode-delete-char-backward-maybe)
     map)
   "Keymap for `helm-comp-read'.")
 
@@ -434,7 +437,8 @@ If COLLECTION is an `obarray', a TEST should be needed. See `obarray'."
                             (alistp t)
                             (candidate-number-limit helm-candidate-number-limit)
                             multiline
-                            allow-nest)
+                            allow-nest
+                            (group 'helm))
   "Read a string in the minibuffer, with helm completion.
 
 It is helm `completing-read' equivalent.
@@ -515,7 +519,7 @@ Keys description:
 
 - NOMARK: When non--nil don't allow marking candidates.
 
-- ALISTP: \(default is non--nil\) See `helm-comp-read-get-candidates'.
+- ALISTP: (default is non--nil) See `helm-comp-read-get-candidates'.
 
 - CANDIDATES-IN-BUFFER: when non--nil use a source build with
   `helm-source-in-buffer' which is much faster.
@@ -528,6 +532,8 @@ Keys description:
   See `helm'.
 
 - MULTILINE: See multiline in `helm-source'.
+
+- GROUP: See group in `helm-source'.
 
 Any prefix args passed during `helm-comp-read' invocation will be recorded
 in `helm-current-prefix-arg', otherwise if prefix args were given before
@@ -596,6 +602,7 @@ that use `helm-comp-read' See `helm-M-x' for example."
                        :persistent-action persistent-action
                        :persistent-help persistent-help
                        :keymap loc-map
+                       :group group
                        :mode-line mode-line
                        :help-message help-message
                        :action action-fn))
@@ -612,6 +619,7 @@ that use `helm-comp-read' See `helm-M-x' for example."
                   :persistent-help persistent-help
                   :fuzzy-match fuzzy
                   :keymap loc-map
+                  :group group
                   :mode-line mode-line
                   :help-message help-message
                   :action action-fn
@@ -628,6 +636,7 @@ that use `helm-comp-read' See `helm-M-x' for example."
                     :persistent-action persistent-action
                     :fuzzy-match fuzzy
                     :keymap loc-map
+                    :group group
                     :persistent-help persistent-help
                     :mode-line mode-line
                     :help-message help-message
@@ -1258,6 +1267,40 @@ The `helm-find-files' history `helm-ff-history' is used here."
   "Default sort function for completion-in-region."
   (sort candidates 'helm-generic-sort-fn))
 
+(defun helm-mode--completion-in-region-initial-input (str)
+  (propertize str 'read-only t 'face 'helm-mode-prefix 'rear-nonsticky t))
+
+(defun helm-mode-delete-char-backward-1 ()
+  (interactive)
+  (condition-case err
+      (call-interactively 'delete-backward-char)
+    (text-read-only
+     (if (with-selected-window (minibuffer-window)
+           (not (string= (minibuffer-contents) "")))
+         (message "Trying to delete prefix completion, next hit will quit")
+       (user-error "%s" (car err))))))
+(put 'helm-mode-delete-char-backward-1 'helm-only t)
+
+(defun helm-mode-delete-char-backward-2 ()
+  (interactive)
+  (condition-case _err
+      (call-interactively 'delete-backward-char)
+    (text-read-only
+     (unless (with-selected-window (minibuffer-window)
+               (string= (minibuffer-contents) ""))
+       (with-helm-current-buffer
+         (run-with-timer 0.1 nil (lambda ()
+                                   (call-interactively 'delete-backward-char))))
+       (helm-keyboard-quit)))))
+(put 'helm-mode-delete-char-backward-2 'helm-only t)
+
+(helm-multi-key-defun helm-mode-delete-char-backward-maybe
+    "Delete char backward when text is not the prefix helm is completing against.
+First call warn user about deleting prefix completion.
+Second call delete backward char in current-buffer and quit helm completion,
+letting user starting a new completion with a new prefix."
+  '(helm-mode-delete-char-backward-1 helm-mode-delete-char-backward-2) 1)
+
 (defun helm--completion-in-region (start end collection &optional predicate)
   "Helm replacement of `completion--in-region'.
 Can be used as value for `completion-in-region-function'."
@@ -1345,13 +1388,15 @@ Can be used as value for `completion-in-region-function'."
                           :initial-input
                           (cond ((and file-comp-p
                                       (not (string-match "/\\'" input)))
-                                 (concat (helm-basename input)
+                                 (concat (helm-mode--completion-in-region-initial-input
+                                          (helm-basename input))
                                          init-space-suffix))
                                 ((string-match "/\\'" input) nil)
                                 ((or (null require-match)
                                      (stringp require-match))
-                                 input)
-                                (t (concat input init-space-suffix)))
+                                 (helm-mode--completion-in-region-initial-input input))
+                                (t (concat (helm-mode--completion-in-region-initial-input input)
+                                           init-space-suffix)))
                           :buffer buf-name
                           :fc-transformer (append '(helm-cr-default-transformer)
                                                   (unless (or helm-completion-in-region-fuzzy-match

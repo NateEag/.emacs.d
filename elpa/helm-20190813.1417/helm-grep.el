@@ -134,11 +134,6 @@ when used matchs will be highlighted according to GREP_COLORS env var."
   :group 'helm-grep
   :type  'string)
 
-(defcustom helm-grep-use-ioccur-style-keys t
-  "Use Arrow keys to jump to occurences."
-  :group 'helm-grep
-  :type  'boolean)
-
 (defcustom helm-pdfgrep-default-read-command nil
   "Default command to read pdf files from pdfgrep.
 Where '%f' format spec is filename and '%p' is page number.
@@ -226,7 +221,7 @@ Here are the commands where you may want to add switches:
 
 You probably don't need to use this unless you know what you are doing."
   :group 'helm-grep
-  :type 'string)
+  :type '(repeat string))
 
 (defcustom helm-grep-ag-pipe-cmd-switches nil
   "A list of additional parameters to pass to grep-ag pipe command.
@@ -235,14 +230,14 @@ Use parameters compatibles with the backend you are using
 
 You probably don't need to use this unless you know what you are doing."
   :group 'helm-grep
-  :type 'string)
+  :type '(repeat string))
 
 (defcustom helm-grep-input-idle-delay 0.6
   "Same as `helm-input-idle-delay' but for grep commands.
 It have a higher value than `helm-input-idle-delay' to avoid
 flickering when updating."
   :group 'helm-grep
-  :type 'integer)
+  :type 'float)
 
 ;;; Faces
 ;;
@@ -294,11 +289,23 @@ Have no effect when grep backend use \"--color=\"."
     (define-key map (kbd "C-c C-o")  'helm-grep-run-other-frame-action)
     (define-key map (kbd "C-x C-s")  'helm-grep-run-save-buffer)
     (define-key map (kbd "DEL")      'helm-delete-backward-no-update)
-    (when helm-grep-use-ioccur-style-keys
-      (define-key map (kbd "<right>")  'helm-execute-persistent-action)
-      (define-key map (kbd "<left>")  'helm-grep-run-default-action))
-    (delq nil map))
+    map)
   "Keymap used in Grep sources.")
+
+(defcustom helm-grep-use-ioccur-style-keys t
+  "Use Arrow keys to jump to occurences.
+Note that if you define this variable with `setq' your change will
+have no effect, use customize instead."
+  :group 'helm-grep
+  :type  'boolean
+  :set (lambda (var val)
+         (set var val)
+         (if val
+             (progn
+               (define-key helm-grep-map (kbd "<right>")  'helm-execute-persistent-action)
+               (define-key helm-grep-map (kbd "<left>")   'helm-grep-run-default-action))
+           (define-key helm-grep-map (kbd "<right>") nil)
+           (define-key helm-grep-map (kbd "<left>")  nil))))
 
 (defvar helm-pdfgrep-map
   (let ((map (make-sparse-keymap)))
@@ -578,7 +585,7 @@ It is intended to use as a let-bound variable, DON'T set this globaly.")
                                        (helm-get-candidate-number))
                                       'face 'helm-grep-finish))))
                       (force-mode-line-update)
-                      (when helm-allow-mouse
+                      (when (and helm-allow-mouse helm-selection-point)
                         (helm--bind-mouse-for-selection helm-selection-point))))
                    ;; Catch error output in log.
                    (t (helm-log
@@ -881,23 +888,25 @@ Special commands:
   (helm-match-line-cleanup-pulse))
 
 (defun helm-grep-mode-jump-other-window-1 (arg)
-  (let ((candidate (buffer-substring (point-at-bol) (point-at-eol))))
-    (condition-case nil
-        (progn
-          (save-selected-window
-            (helm-grep-action candidate 'other-window)
-            (helm-match-line-cleanup-pulse)
-            (recenter))
+  (condition-case nil
+      (progn
+        (when (or (eq last-command 'helm-grep-mode-jump-other-window-forward)
+                  (eq last-command 'helm-grep-mode-jump-other-window-backward))
           (forward-line arg))
-      (error nil))))
+        (save-selected-window
+          (helm-grep-action (buffer-substring (point-at-bol) (point-at-eol))
+                            'other-window)
+          (helm-match-line-cleanup-pulse)
+          (recenter)))
+    (error nil)))
 
-(defun helm-grep-mode-jump-other-window-forward ()
-  (interactive)
-  (helm-grep-mode-jump-other-window-1 1))
+(defun helm-grep-mode-jump-other-window-forward (arg)
+  (interactive "p")
+  (helm-grep-mode-jump-other-window-1 arg))
 
-(defun helm-grep-mode-jump-other-window-backward ()
-  (interactive)
-  (helm-grep-mode-jump-other-window-1 -1))
+(defun helm-grep-mode-jump-other-window-backward (arg)
+  (interactive "p")
+  (helm-grep-mode-jump-other-window-1 (- arg)))
 
 (defun helm-grep-mode-jump-other-window ()
   (interactive)

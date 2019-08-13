@@ -357,7 +357,7 @@ in other window according to the value of `helm-elisp-help-function'."
   (let ((sym (intern-soft candidate)))
     (cl-typecase sym
       ((and fboundp boundp)
-       (if (member name '("describe-function" "describe-variable"))
+       (if (member name `(,helm-describe-function-function ,helm-describe-variable-function))
            (funcall (intern (format "helm-%s" name)) sym)
            ;; When there is no way to know what to describe
            ;; prefer describe-function.
@@ -661,10 +661,10 @@ Filename completion happen if string start after or between a double quote."
     :nomark t
     :persistent-action (lambda (candidate)
                          (helm-elisp--persistent-help
-                          candidate 'helm-describe-function))
+                          candidate 'helm-describe-class))
     :persistent-help "Toggle describe class"
-    :action '(("Describe function" . helm-describe-function)
-              ("Find function" . helm-find-function)
+    :action '(("Describe Class" . helm-describe-class)
+              ("Find Class" . helm-find-function)
               ("Info lookup" . helm-info-lookup-symbol))))
 
 (defun helm-def-source--eieio-generic (&optional default)
@@ -839,13 +839,16 @@ i.e the `symbol-name' of any existing symbol."
         :buffer "*helm locate library*"))
 
 (defun helm-set-variable (var)
-  "Set value to VAR interactively."
+  "Set VAR value interactively."
   (let* ((sym (helm-symbolify var))
          (val (default-value sym)))
-    (set-default sym (eval-minibuffer (format "Set `%s': " var)
-                                      (if (or (stringp val) (memq val '(nil t)))
-                                          (prin1-to-string val)
-                                          (format "'%s" (prin1-to-string val)))))))
+    (set-default sym (eval-minibuffer
+                      (format "Set `%s': " var)
+                      (if (or (stringp val)
+                              (memq val '(nil t))
+                              (numberp val))
+                          (prin1-to-string val)
+                        (format "'%s" (prin1-to-string val)))))))
 
 
 ;;; Elisp Timers.

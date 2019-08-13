@@ -231,7 +231,7 @@ replace with STR as yanked string."
     (with-helm-buffer
       (setq helm-marked-candidates nil
             helm-visible-mark-overlays nil))
-    (helm-force-update (helm-aif (helm-get-selection) (regexp-quote it)))))
+    (helm-force-update (helm-aif (helm-get-selection nil t) (regexp-quote it)))))
 
 (defun helm-kill-ring-run-persistent-delete ()
   "Delete current candidate without quitting."
@@ -239,6 +239,7 @@ replace with STR as yanked string."
   (with-helm-alive-p
     (helm-attrset 'quick-delete '(helm-kill-ring-persistent-delete . never-split))
     (helm-execute-persistent-action 'quick-delete)))
+(put 'helm-kill-ring-run-persistent-delete 'helm-only t)
 
 (defun helm-kill-ring-delete ()
   "Delete marked candidates from `kill-ring'.
@@ -247,6 +248,7 @@ This is a command for `helm-kill-ring-map'."
   (interactive)
   (with-helm-alive-p
     (helm-exit-and-execute-action 'helm-kill-ring-action-delete)))
+(put 'helm-kill-ring-delete 'helm-only t)
 
 
 ;;;; <Mark ring>

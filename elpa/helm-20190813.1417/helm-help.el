@@ -18,9 +18,6 @@
 ;;; Code:
 (require 'helm)
 
-(defvar helm-org-headings--nofilename)
-(declare-function helm-source-org-headings-for-files "helm-org.el")
-
 
 (defgroup helm-help nil
   "Embedded help for `helm'."
@@ -61,8 +58,9 @@ With a prefix arg refresh the documentation.
 
 Find here the documentation of all documented sources."
   (interactive)
-  (require 'helm-org)
-  (with-current-buffer (get-buffer-create helm-documentation-buffer-name)
+  (let ((buf (get-buffer-create helm-documentation-buffer-name)))
+    (switch-to-buffer buf)
+    (set-buffer buf)
     (let ((inhibit-read-only t))
       (erase-buffer)
       (cl-loop for elm in helm-help--string-list
@@ -70,12 +68,8 @@ Find here the documentation of all documented sources."
                do (insert (substitute-command-keys str) "\n\n"))
       (org-mode))
     (setq buffer-read-only t)
-    (view-mode))
-  (let ((helm-org-headings--nofilename t))
-    (helm :sources (helm-source-org-headings-for-files
-                    (list (get-buffer helm-documentation-buffer-name)))
-          :candidate-number-limit 99999
-          :buffer "*helm doc*")))
+    (view-mode)))
+
 
 ;;; Local help messages.
 
@@ -182,6 +176,15 @@ and press \\<helm-buffer-map>\\[helm-buffer-switch-other-window], when called wi
 the buffer will be displayed vertically in other window.
 If you mark more than one buffer, the marked buffers will be displayed in different windows.
 
+*** Saving buffers
+
+If buffer is associated to a file and is modified, it is by default colorized in orange,
+see [[Meaning of colors and prefixes for buffers][Meaning of colors and prefixes for buffers]].
+You can save these buffers with \\<helm-buffer-map>\\[helm-buffer-save-persistent].
+If you want to save all these buffers, you can mark them with \\[helm-buffers-mark-similar-buffers]
+and save them with \\[helm-buffer-save-persistent], you can also do this in one step with
+\\[helm-buffer-run-save-some-buffers], note that you will not be asked for confirmation.
+  
 *** Meaning of colors and prefixes for buffers
 
 Remote buffers are prefixed with '@'.
@@ -205,6 +208,7 @@ Yellow     => Tramp archive buffer.
 \\[helm-buffer-diff-persistent]\t\tToggle Diff-buffer with saved file without leaving Helm.
 \\[helm-buffer-revert-persistent]\t\tRevert buffer without leaving Helm.
 \\[helm-buffer-save-persistent]\t\tSave buffer without leaving Helm.
+\\[helm-buffer-run-save-some-buffers]\t\tSave all unsaved buffers.
 \\[helm-buffer-run-kill-buffers]\t\tDelete marked buffers and leave Helm.
 \\[helm-buffer-run-kill-persistent]\t\tDelete buffer without leaving Helm.
 \\[helm-buffer-run-rename-buffer]\t\tRename buffer.
@@ -228,13 +232,38 @@ For a better experience you can enable auto completion by setting
 `helm-ff-auto-update-initial-value' to non-nil in your init file.  It is not
 enabled by default to not confuse new users.
 
+**** Navigate with arrow keys
+
+You can use <right> and <left> arrows to go down or up one level, to enable
+this customize `helm-ff-lynx-style-map'.
+This is disabled by default.
+Note that using `setq' will NOT work.
+
 **** Use `\\<helm-find-files-map>\\[helm-execute-persistent-action]' (persistent action) on a directory to go down one level
 
 On a symlinked directory a prefix argument expands to its true name.
 
-**** Use `\\<helm-find-files-map>\\[helm-find-files-up-one-level]' on a directory to go up one level
+**** Use `\\<helm-find-files-map>\\[helm-find-files-up-one-level]' or `DEL' on a directory to go up one level
 
-**** Use `\\<helm-find-files-map>\\[helm-find-files-down-last-level]' to walk back the resulting tree of all the `\\<helm-map>\\[helm-execute-persistent-action]' you did
+***** `DEL' behavior
+
+`DEL' by default is deleting char backward.
+
+But when `helm-ff-DEL-up-one-level-maybe' is non nil `DEL' behave
+differently depending of helm-pattern contents, it go up one
+level if pattern is a directory endings with \"/\" or disable HFF
+auto update and delete char backward if pattern is a filename or
+refer to a non existing path.  Going up one level can be disabled
+if necessary by deleting \"/\" at end of pattern using
+\\<helm-map>\\[backward-char] and \\[helm-delete-minibuffer-contents].
+
+Note that when deleting char backward, helm takes care of
+disabling update letting you the time to edit your pattern for
+e.g. renaming a file or creating a new file or directory.
+When `helm-ff-auto-update-initial-value' is non nil you may want to
+disable it temporarily, see [[Toggle auto-completion with `C-c DEL'][Toggle auto-completion with `C-c DEL']] for this.
+
+**** Use `\\<helm-find-files-map>\\[helm-find-files-down-last-level]' to walk back the resulting tree of all the `\\<helm-find-files-map>\\[helm-find-files-up-one-level]' or DEL you did
 
 The tree is reinitialized each time you browse a new tree with
 `\\<helm-map>\\[helm-execute-persistent-action]' or by entering some pattern in the prompt.
@@ -264,6 +293,25 @@ you press `RET'.  If you want the same behavior as in `helm-find-files', bind
 `helm-ff-RET' to the `helm-read-file-map':
 
     (define-key helm-read-file-map (kbd \"RET\") 'helm-ff-RET)
+
+**** `TAB' behavior
+
+Normally `TAB' is bound to `helm-select-action' in helm-map which
+display the action menu.
+
+You can change this behavior by setting in `helm-find-files-map'
+a new command for `TAB':
+
+    (define-key helm-find-files-map (kbd \"C-i\") 'helm-ff-TAB)
+
+It will then behave slighly differently
+depending of `helm-selection':
+
+- candidate basename is \".\"  => open the action menu.
+- candidate is a directory     => expand it (behave as \\<helm-map>\\[helm-execute-persistent-action]).
+- candidate is a file          => open action menu.
+
+Called with a prefix arg open menu unconditionally.
 
 *** Find file at point
 
@@ -1153,7 +1201,6 @@ than 1 megabyte:
 \\[helm-ff-run-switch-other-window]\t\tSwitch to other window.
 \\[helm-ff-properties-persistent]\t\tShow file properties.
 \\[helm-ff-run-etags]\t\tRun etags (`\\[universal-argument]' to use tap, `\\[universal-argument] \\[universal-argument]' to reload the database).
-\\[helm-yank-text-at-point]\t\tYank text at point.
 \\[helm-ff-run-open-file-externally]\t\tOpen file with external program (`\\[universal-argument]' to choose).
 \\[helm-ff-run-open-file-with-default-tool]\t\tOpen file externally with default tool.
 \\[helm-ff-run-insert-org-link]\t\tInsert org link.")
@@ -1624,14 +1671,14 @@ toggled; see the command list below.
 
 As opposed to `yank', numeric prefix arguments are ignored with
 `helm-show-kill-ring': there is no need for them since selection happens within
-Helm.  Moreover Helm has [[Shortcuts for executing Default Action on the nth
-candidate][Shortcuts for executing Default Action on the nth candidate]].
+Helm.  Moreover Helm has [[Shortcuts for executing the default action on the n-th candidate][Shortcuts for executing the default action on the n-th candidate]].
 
 It is recommended to globally bind `M-y' to `helm-show-kill-ring'.  Once in the
 Helm-kill-ring session you can navigate to next/previous line with `M-y' and
 `M-u' for convenience.  Of course `\\[helm-next-line]' and `\\[helm-previous-line]' are still available.
 
-It is possible to delete candidates from the kill ring.
+It is possible to delete candidates from the kill ring with `\\<helm-kill-ring-map>\\[helm-kill-ring-delete]'
+but also persistently with `\\<helm-kill-ring-map>\\[helm-kill-ring-run-persistent-delete]'.
 
 You can concatenate marked candidates and yank them in the current
 buffer, thus creating a new entry in the kill ring.  Candidates are
@@ -1655,56 +1702,6 @@ by using a prefix argument, i.e. `C-u RET', like the regular `yank' command does
 \\[helm-kill-ring-delete]\t\tDelete entry.
 \\[helm-kill-ring-toggle-truncated]\t\tToggle truncated view of candidate.
 \\[helm-kill-ring-kill-selection]\t\tKill non-truncated of selection.")
-
-;;; Org headings
-;;
-;;
-(defvar helm-org-headings-help-message
-  "* Helm Org headings
-
-** Tips
-
-*** Refiling
-
-You can refile one or more headings at a time.
-
-To refile one heading, move the point to the entry you want to refile and run
-\\[helm-org-in-buffer-headings].  Then select the heading you want to refile to
-and press \\<helm-org-headings-map>\\[helm-org-run-refile-heading-to] or select the refile action from the actions menu.
-
-To refile multiple headings, run \\[helm-org-in-buffer-headings] and mark the
-headings you want to refile.  Then select the heading you want to refile to
-\(without marking it) and press \\<helm-org-headings-map>\\[helm-org-run-refile-heading-to] or select the refile action from the
-actions menu.
-
-*** Tags completion
-
-Tags completion use `completing-read-multiple', perhaps have a
-look at its docstring.
-
-**** Single tag
-
-From an org heading hit C-c C-c which provide a
-\"Tags\" prompt, then hit TAB and RET if you want to enter an
-existing tag or write a new tag in prompt.  At this point you end
-up with an entry in your prompt, if you enter RET, the entry is
-added as tag in your org header.
-
-**** Multiple tags
-
-If you want to add more tag to your org header, add a separator[1] after
-your tag and write a new tag or hit TAB to find another existing
-tag, and so on until you have all the tags you want
-e.g \"foo,bar,baz\" then press RET to finally add the tags to your
-org header.
-Note: [1] A separator can be a comma, a colon i.e. [,:] or a space.
-
-** Commands
-\\<helm-org-headings-map>
-\\[helm-org-run-open-heading-in-indirect-buffer]\t\tOpen heading in indirect buffer.
-\\[helm-org-run-refile-heading-to]\t\tRefile current or marked headings to selection.
-\\[helm-org-run-insert-link-to-heading-at-marker]\t\tInsert link at point to selection."
-  )
 
 ;;; Completing-read
 ;;
@@ -1746,7 +1743,8 @@ C/\\[helm-cr-empty-string]:Empty \
 \\[helm-select-action]:Act \
 \\[helm-maybe-exit-minibuffer]/\
 f1/f2/f-n:NthAct \
-\\[helm-toggle-suspend-update]:Tog.suspend")
+\\[helm-toggle-suspend-update]:Tog.suspend \
+\\[helm-customize-group]:Conf")
 
 ;;;###autoload
 (defvar helm-read-file-name-mode-line-string "\
@@ -1757,7 +1755,8 @@ C/\\[helm-cr-empty-string]:Empty \
 \\[helm-select-action]:Act \
 \\[helm-maybe-exit-minibuffer]/\
 f1/f2/f-n:NthAct \
-\\[helm-toggle-suspend-update]:Tog.suspend"
+\\[helm-toggle-suspend-update]:Tog.suspend \
+\\[helm-customize-group]:Conf"
   "String displayed in mode-line in `helm-source-find-files'.")
 
 ;;;###autoload
@@ -1768,7 +1767,8 @@ f1/f2/f-n:NthAct \
 \\[helm-select-action]:Act \
 \\[helm-maybe-exit-minibuffer]/\
 f1/f2/f-n:NthAct \
-\\[helm-toggle-suspend-update]:Tog.suspend")
+\\[helm-toggle-suspend-update]:Tog.suspend \
+\\[helm-customize-group]:Conf")
 
 
 (provide 'helm-help)

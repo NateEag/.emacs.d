@@ -475,7 +475,13 @@ visits the respective file in the working tree.  For the `HEAD'
 commit, the former command used to visit the worktree file too,
 but that made it impossible to visit a blob from `HEAD'.
 
-If you prefer the old behavior, then set this to t."
+When point is on a removed line and that change has not been
+committed yet, then `magit-diff-visit-file' now visits the last
+blob that still had that line, which is a blob from `HEAD'.
+Previously this function used to visit the worktree file not
+only for added lines but also for such removed lines.
+
+If you prefer the old behaviors, then set this to t."
   :package-version '(magit . "2.91.0")
   :group 'magit-diff
   :type 'boolean)
@@ -718,7 +724,7 @@ and `:slant'."
   "Return the current diff arguments."
   (if (memq current-transient-command '(magit-diff magit-diff-refresh))
       (pcase-let ((`(,args ,alist)
-                   (transient-args nil t)))
+                   (-separate #'atom (transient-get-value))))
         (list args (cdr (assoc "--" alist))))
     (magit-diff--get-value (or mode 'magit-diff-mode))))
 
@@ -753,7 +759,7 @@ and `:slant'."
                (mode (or (oref obj major-mode) major-mode))
                (key  (intern (format "magit-diff:%s" mode)))
                (`(,args ,alist)
-                (-separate #'atom (transient-args)))
+                (-separate #'atom (transient-get-value)))
                (files (cdr (assoc "--" alist))))
     (put mode 'magit-diff-current-arguments args)
     (when save
@@ -1478,7 +1484,7 @@ Like `magit-diff-visit-worktree-file' but use
 
 (defun magit-diff-visit-file--internal (file force-worktree fn)
   "From a diff visit the appropriate version of FILE.
-If FORCE-WORKTREE is non-nil, the visit the worktree version of
+If FORCE-WORKTREE is non-nil, then visit the worktree version of
 the file, even if the diff is about a committed change.  USE FN
 to display the buffer in some window."
   (if (magit-file-accessible-directory-p file)
@@ -1530,11 +1536,14 @@ the Magit-Status buffer for DIRECTORY."
          (rev  (if goto-from
                    (magit-diff-visit--range-from spec)
                  (magit-diff-visit--range-to spec)))
-         (buf  (if (and (not goto-worktree)
-                        (stringp rev))
-                   (magit-find-file-noselect rev file)
-                 (or (get-file-buffer file)
-                     (find-file-noselect file)))))
+         (buf  (if (or goto-worktree
+                       (and (not (stringp rev))
+                            (or magit-diff-visit-avoid-head-blob
+                                (not goto-from))))
+                   (or (get-file-buffer file)
+                       (find-file-noselect file))
+                 (magit-find-file-noselect (if (stringp rev) rev "HEAD")
+                                           file))))
     (if line
         (with-current-buffer buf
           (cond ((eq rev 'staged)

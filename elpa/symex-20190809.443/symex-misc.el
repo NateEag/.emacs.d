@@ -220,6 +220,85 @@ If SMOOTH-SCROLL is set, then scroll the view gently to aid in visual tracking."
           (setq result (1+ result)))
         result))))
 
+(defun symex-depth ()  ; TODO: may be better framed as a computation
+  "Get depth (from root) of current symex."
+  (interactive)
+  (save-excursion
+    (symex-select-nearest)
+    (let ((moves (symex-execute-traversal symex--traversal-goto-outermost)))
+      (length moves))))
+
+(defun symex-leap-backward ()
+  "Leap backward to a neighboring branch, preserving the depth and position.
+
+Note: This isn't the most efficient at the moment since it determines
+the depth at every step of the traversal which itself is logarithmic
+in the size of the tree, making the cost O(nlog(n)).
+
+There are at least two possible ways in which we could implement this
+'leap' feature: first, as a \"local\" traversal from the starting
+position, keeping track of changes to the depth while traversing and
+stopping when a suitable destination point is reached.  This would be
+efficient since we would only need to determine the depth once, at the
+start, making it O(n).  However, this approach would require some
+notion of 'memory' to be built into the DSL semantics, which at
+present it lacks (representing a theoretical limitation on the types
+of traversals expressible in the DSL in its present form).
+
+A second way to do it is in \"global\" terms -- rather than keeping
+track of changing depth in the course of the traversal, instead,
+determine always from a common reference point (the root) the current
+depth. This allows us to circumvent the need for 'memory' since this
+information could be computed afresh at each step.  This latter
+approach is the one employed here."
+  (interactive)
+  (let ((depth (symex-depth))
+        (index (symex-index)))
+    (let ((find-neighboring-branch
+           (symex-traversal
+            (circuit (precaution symex--traversal-postorder
+                                 (afterwards (not (lambda ()
+                                                    (= (symex-depth)
+                                                       depth)))))))))
+      (symex-execute-traversal
+       (symex-traversal
+        (maneuver (decision (at first)
+                            find-neighboring-branch
+                            (maneuver symex--traversal-goto-first
+                                      find-neighboring-branch))
+                  symex--traversal-postorder
+                  symex--traversal-goto-first
+                  (circuit (precaution (move forward)
+                                       (beforehand (lambda ()
+                                                     (< (symex-index)
+                                                        index)))))))))))
+
+(defun symex-leap-forward ()
+  "Leap forward to a neighboring branch, preserving the depth and position.
+
+See the documentation on `symex-leap-backward` for details regarding
+the implementation."
+  (interactive)
+  (let ((depth (symex-depth))
+        (index (symex-index)))
+    (let ((find-neighboring-branch
+           (symex-traversal
+            (circuit (precaution symex--traversal-preorder
+                                 (afterwards (not (lambda ()
+                                                    (= (symex-depth)
+                                                       depth)))))))))
+      (symex-execute-traversal
+       (symex-traversal
+        (maneuver (decision (at last)
+                            find-neighboring-branch
+                            (maneuver symex--traversal-goto-last
+                                      find-neighboring-branch))
+                  symex--traversal-preorder
+                  (circuit (precaution (move forward)
+                                       (beforehand (lambda ()
+                                                     (< (symex-index)
+                                                        index)))))))))))
+
 (defun symex--selection-side-effects ()
   "Things to do as part of symex selection, e.g. after navigations."
   (interactive)

@@ -1,3 +1,4 @@
+; -*- geiser-scheme-implementation:chibi; -*-
 (define (all-environment-exports environment prefix)
   (if environment
       (append (filter (lambda (identifier)
@@ -92,3 +93,27 @@
 
 (define (geiser:newline)
   #f)
+
+;;> A chibi implementation of the standard geiser's location-making
+;;> subrouting. \var{file} is a string representing file name with path,
+;;> \var{line} is the line number starting from 0 (scheme way).
+
+(define (make-location file line)
+  (list (cons "file" (if (string? file) file '()))
+        (cons "line" (if (number? line) (+ 1 line) '()))))
+
+
+;TODO: (define (geiser:symbol-location) ; implement this method in order to make
+; xref work better in Chibi. For reference, see [[geiser:module-location]]
+
+
+;;> A function to find the file where the symbol
+;;> \var{symbol-representing-module} is defined.
+
+(define (geiser:module-location symbol-representing-module)
+  (make-location
+   (find-module-file
+    (module-name->file
+     (module-name
+      (find-module symbol-representing-module))))
+   0 ) )

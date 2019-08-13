@@ -1,10 +1,12 @@
 ;;; helm-swoop-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "helm-swoop" "helm-swoop.el" (23400 19197 0
-;;;;;;  0))
+;;;### (autoloads nil "helm-swoop" "helm-swoop.el" (0 0 0 0))
 ;;; Generated autoloads from helm-swoop.el
 
 (autoload 'helm-swoop-back-to-last-point "helm-swoop" "\
@@ -71,11 +73,14 @@ Start helm-swoop without pre input query.
 
 \(fn)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-swoop" '("helm-" "get-buffers-matching-mode")))
+
 ;;;***
 
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; helm-swoop-autoloads.el ends here

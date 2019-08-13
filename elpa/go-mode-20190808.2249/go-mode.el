@@ -8,7 +8,7 @@
 
 ;; Author: The go-mode Authors
 ;; Version: 1.5.0
-;; Package-Version: 20190731.1751
+;; Package-Version: 20190808.2249
 ;; Keywords: languages go
 ;; URL: https://github.com/dominikh/go-mode.el
 ;;
@@ -59,15 +59,17 @@ function."
                         (progn (forward-visible-line arg) (point))))))
 
 (defun go-goto-opening-parenthesis (&optional _legacy-unused)
-  "Move up one level of parentheses."
+  "Move up one level of parentheses.
+
+Return non-nil if there was a paren to move up to."
   ;; The old implementation of go-goto-opening-parenthesis had an
   ;; optional argument to speed up the function.  It didn't change the
   ;; function's outcome.
 
   ;; Silently fail if there's no matching opening parenthesis.
-  (condition-case nil
-      (backward-up-list)
-    (scan-error nil)))
+  (let ((open-char (nth 1 (syntax-ppss))))
+    (when open-char
+      (goto-char open-char))))
 
 
 (defconst go-dangling-operators-regexp "[^-]-\\|[^+]\\+\\|[/*&><.=|^]")
@@ -222,15 +224,13 @@ Set this to nil to upload without prompting.
 
 (defcustom godoc-command "go doc"
   "Which executable to use for `godoc'.
-This can either be 'godoc' or 'go doc', both as an absolute path
-or an executable in PATH."
+This can be either an absolute path or an executable in PATH."
   :type 'string
   :group 'go)
 
-(defcustom godoc-and-godef-command "godoc"
-  "Which executable to use for `godoc' in `godoc-and-godef-command'.
-Must be 'godoc' and not 'go doc' and can be an absolute path or
-an executable in PATH."
+(defcustom godoc-and-godef-command "go doc"
+  "Which executable to use for `godoc-and-godef'.
+This can be either an absolute path or an executable in PATH."
   :type 'string
   :group 'go)
 
@@ -286,7 +286,7 @@ You can install gogetdoc with 'go get -u github.com/zmb3/gogetdoc'."
       ;; TODO: gogetdoc supports unsaved files, but not introducing
       ;; new artifical files, so this limitation will stay for now.
       (error "Cannot use gogetdoc on a buffer without a file name"))
-  (let ((posn (format "%s:#%d" (shell-quote-argument (file-truename buffer-file-name)) (1- (position-bytes point))))
+  (let ((posn (format "%s:#%d" (file-truename buffer-file-name) (1- (position-bytes point))))
         (out (godoc--get-buffer "<at point>")))
   (with-current-buffer (get-buffer-create "*go-gogetdoc-input*")
     (setq buffer-read-only nil)
@@ -547,8 +547,11 @@ The returned value is the beginning of the line with the dangling operator."
       (save-excursion
         (beginning-of-line)
         (go--backward-irrelevant t)
-        (if (looking-back go-dangling-operators-regexp
-                          (- (point) go--max-dangling-operator-length))
+        (if (or
+             (looking-back go-dangling-operators-regexp
+                           (- (point) go--max-dangling-operator-length))
+             ;; treat comma as dangling operator in certain cases
+             (and (eq (char-before) ?,) (go--commas-indent-p)))
             (setq val (line-beginning-position))
           (setq val nil))
 
@@ -596,19 +599,9 @@ current line will be returned."
   "Return non-nil if current dangling line indents the following line."
   (save-excursion
     (let ((line-begin (line-beginning-position))
-          (start-paren-level (go-paren-level)))
+          (open-paren (go--open-paren-position)))
 
-      (go-goto-opening-parenthesis)
-
-      (let ((in-parens (and
-                        ;; opening paren-like character is actually a paren
-                        (eq (char-after) ?\()
-                        ;; point is before the closing paren
-                        (< (go-paren-level) start-paren-level)
-                        ;;  still on starting line
-                        (>= (point) line-begin))))
-
-        (if (not in-parens)
+          (if (not (and open-paren (>= open-paren line-begin)))
             ;; if line doesn't open a paren, check if we are a dangling line under
             ;; a dangling assignment with nothing on RHS of "="
             ;;
@@ -617,29 +610,113 @@ current line will be returned."
             ;;     baz ||
             ;;     qux
             (progn
-              (goto-char line-begin)
               (let ((prev-line (go-previous-line-has-dangling-op-p)))
-                (when prev-line
+                (goto-char line-begin)
+                (when (and
+                       prev-line
+                       (not (looking-at ".*,[[:space:]]*$"))) ;; doesn't apply to dangling commas
                   (goto-char prev-line)
                   (and
                    (not (go-previous-line-has-dangling-op-p))
                    (looking-at ".*=[[:space:]]*$")))))
-          (or
-           ;; previous line is dangling and opens indent
-           (let ((prev-line (go-previous-line-has-dangling-op-p)))
-             (when prev-line
-               (save-excursion
-                 (goto-char prev-line)
-                 (end-of-line)
-                 (go--dangling-line-opens-indent-p))))
 
-           ;; or paren is only preceded by identifier or other parens
-           (string-match-p "^[[:space:]]*[[:word:][:multibyte:]]*(*$" (buffer-substring line-begin (point)))
+            (goto-char open-paren)
 
-           ;; or a preceding paren on this line opens an indent
-           (and
-            (> (point) line-begin)
-            (progn (backward-char) (go--dangling-line-opens-indent-p)))))))))
+            (or
+             ;; previous line is dangling and opens indent
+             (let ((prev-line (go-previous-line-has-dangling-op-p)))
+               (when prev-line
+                 (save-excursion
+                   (goto-char prev-line)
+                   (end-of-line)
+                   (go--dangling-line-opens-indent-p))))
+
+             ;; or paren is only preceded by identifier or other parens
+             (string-match-p "^[[:space:]]*[[:word:][:multibyte:]]*(*$" (buffer-substring line-begin (point)))
+
+             ;; or a preceding paren on this line opens an indent
+             (and
+              (> (point) line-begin)
+              (progn (backward-char) (go--dangling-line-opens-indent-p))))))))
+
+(defun go--commas-indent-p ()
+  "Return non-nil if in a context where dangling commas indent next line."
+  (not (or
+        (go--open-paren-position)
+        (go--in-composite-literal-p)
+        (go--in-case-clause-list-p)
+        (go--in-struct-definition-p))))
+
+(defun go--in-case-clause-list-p ()
+  "Return non-nil if inside a multi-line case cause list.
+
+This function is only concerned with list items on lines after the
+case keyword. It returns nil for the case line itself."
+  (save-excursion
+    (beginning-of-line)
+    (when (not (looking-at go--case-or-default-regexp))
+      (let (saw-colon)
+        ;; optionally skip line with the colon
+        (when (looking-at ".*:[[:space:]]*$")
+          (setq saw-colon t)
+          (forward-line -1))
+
+        ;; go backwards while at a comment or a line ending in comma
+        (while (and
+                (or (go-in-comment-p)
+                    (looking-at "[[:space:]]*\\(//\\|/\\*\\)\\|.*,[[:space:]]*$"))
+                (zerop (forward-line -1))))
+
+        (and
+         (looking-at go--case-regexp)
+         ;; we weren't in case list if first line ended in colon
+         ;; and the "case" line ended in colon
+         (not (and saw-colon (looking-at ".*:[[:space:]]*$"))))))))
+
+(defun go--in-struct-definition-p ()
+  "Return non-nil if inside a struct definition."
+  (save-excursion
+    (and
+     ;; inside curlies
+     (go-goto-opening-parenthesis)
+     (eq (char-after) ?{)
+
+     ;; "struct" appears before opening curly
+     (backward-word)
+     (looking-at "struct[[:space:]]"))))
+
+(defun go--in-composite-literal-p ()
+  "Return non-nil if point is in a composite literal."
+  (save-excursion
+    (and
+     (go-goto-opening-parenthesis)
+
+     ;; opening paren-like character is curly
+     (eq (char-after) ?{)
+
+     (or
+      ;; preceded by non space (e.g. "Foo|{")
+      (not (looking-back "[[:space:]]" (1- (point))))
+
+      ;; or curly itself is in a composite literal (e.g. "Foo{|{")
+      (go--in-composite-literal-p)))))
+
+(defun go--open-paren-position ()
+  "Return non-nil if point is between '(' and ')'.
+
+The return value is the position of the opening paren."
+  (save-excursion
+    (let ((start-paren-level (go-paren-level)))
+      (and
+       (go-goto-opening-parenthesis)
+
+       ;; opening paren-like character is actually a paren
+       (eq (char-after) ?\()
+
+       ;; point is before the closing paren
+       (< (go-paren-level) start-paren-level)
+
+       (point)))))
 
 (defun go-indentation-at-point ()
   (save-excursion
@@ -679,16 +756,75 @@ current line will be returned."
        (t
         (current-indentation))))))
 
+(defconst go--comment-start-regexp "[[:space:]]*\\(/\\*\\|//\\)")
+
+(defun go--case-comment-p (indent)
+  "Return non-nil if looking at a comment attached to a case statement.
+
+INDENT is the normal indent of this line, i.e. that of the case body."
+  (when (looking-at go--comment-start-regexp)
+    (let (switch-before
+          case-after
+          has-case-aligned-preceding-comment)
+
+      (save-excursion
+        ;; Search for previous case-aligned comment.
+        (while (and
+                (zerop (forward-line -1))
+                (cond
+                 ((go-in-comment-p))
+
+                 ((looking-at "^[[:space:]]*$"))
+
+                 ((looking-at go--comment-start-regexp)
+                  (when (= (current-indentation) (- indent tab-width))
+                    (setq has-case-aligned-preceding-comment t))
+                  t))))
+
+        ;; Record if a switch (or select) precedes us.
+        (setq switch-before (looking-at "^[[:space:]]*\\(switch\\|select\\)[[:space:]]")))
+
+      ;; Record if first proceeding non-comment line is a case statement.
+      (save-excursion
+        (while (and
+                (zerop (forward-line 1))
+                (or
+                 (go-in-comment-p)
+                 (looking-at go--comment-start-regexp)
+                 (looking-at "^[[:space:]]*$"))))
+
+        (setq case-after (looking-at go--case-or-default-regexp)))
+
+      (and
+       ;; a "case" statement comes after our comment
+       case-after
+
+       (or
+        ;; "switch" statement precedes us, always align with "case"
+        switch-before
+
+        ;; a preceding comment is aligned with "case", we should too
+        has-case-aligned-preceding-comment
+
+        ;; other cases are ambiguous, so if comment is currently
+        ;; aligned with "case", leave it that way
+        (= (current-indentation) (- indent tab-width)))))))
+
 (defun go--non-dangling-indent ()
   (save-excursion
     (while (go-previous-line-has-dangling-op-p)
       (forward-line -1))
     (current-indentation)))
 
+(defconst go--case-regexp "\\([[:space:]]*case\\([[:space:]]\\|$\\)\\)")
+(defconst go--case-or-default-regexp (concat "\\(" go--case-regexp "\\|"  "[[:space:]]*default:\\)"))
+
 (defun go-mode-indent-line ()
   (interactive)
   (let (indent
         shift-amt
+        ;; case sensitively match "case", "default", etc.
+        (case-fold-search nil)
         (pos (- (point-max) (point)))
         (point (point))
         (beg (line-beginning-position)))
@@ -696,8 +832,16 @@ current line will be returned."
     (if (go-in-string-or-comment-p)
         (goto-char point)
       (setq indent (go-indentation-at-point))
-      (if (looking-at (concat go-label-regexp ":\\([[:space:]]*/.+\\)?$\\|case .+:\\|default:"))
-          (cl-decf indent tab-width))
+      (when (or
+             (and
+              (looking-at (concat go-label-regexp ":\\([[:space:]]*/.+\\)?$\\|" go--case-or-default-regexp))
+              ;; don't think last part of multiline case statement is a label
+              (not (go-previous-line-has-dangling-op-p))
+              (not (go--in-case-clause-list-p)))
+
+             ;; comment attached above a "case" statement
+             (go--case-comment-p indent))
+        (cl-decf indent tab-width))
       (setq shift-amt (- indent (current-column)))
       (if (zerop shift-amt)
           nil
@@ -1508,7 +1652,7 @@ It looks for archive files in /pkg/."
   (reverse (remove nil
                    (mapcar
                     (lambda (line)
-                      (when (string-match "^\\(.+\\):\\([[:digit:]]+\\): imported and not used: \".+\".*$" line)
+                      (when (string-match "^\\(.+\\):\\([[:digit:]]+\\):\\([[:digit:]]+\\): imported and not used: \".+\".*$" line)
                         (let ((error-file-name (match-string 1 line))
                               (error-line-num (match-string 2 line)))
                           (if (string= (file-truename error-file-name) (file-truename buffer-file-name))

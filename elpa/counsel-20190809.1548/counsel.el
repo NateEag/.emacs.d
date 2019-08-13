@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20190803.1121
+;; Package-Version: 20190809.1548
 ;; Version: 0.12.0
 ;; Package-Requires: ((emacs "24.3") (swiper "0.12.0"))
 ;; Keywords: convenience, matching, tools
@@ -5529,7 +5529,7 @@ list is passed to `compilation-environment'."
   "History for `counsel-compile-env'.")
 
 (defvar counsel-compile-env-pattern
-  "[_[:digit:][:upper:]]+=[/[:album:]]*"
+  "[_[:digit:][:upper:]]+=[/[:alnum:]]*"
   "Pattern to match valid environment variables.")
 
 (defcustom counsel-compile-make-pattern "\\`\\(?:GNUm\\|[Mm]\\)akefile\\'"

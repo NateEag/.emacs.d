@@ -2,7 +2,7 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20190721.1032
+;; Package-Version: 20190813.1023
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
@@ -60,7 +60,7 @@
 ;; - Swift (swiftformat)
 ;; - Terraform (terraform fmt)
 ;; - TypeScript/TSX (prettier)
-;; - YAML (yq)
+;; - YAML (prettier)
 ;;
 ;; You will need to install external programs to do the formatting.
 ;; If `format-all-buffer` can't find the right program, it will try to
@@ -558,7 +558,8 @@ Consult the existing formatters for examples of BODY."
                    ((equal en "vue") "vue")
                    ((equal en "none") "html")
                    (t nil)))
-            (t nil)))))
+            (t nil))))
+   (yaml-mode "yaml"))
   (:format
    (let ((parser mode-result))
      (format-all--buffer-easy
@@ -626,12 +627,6 @@ Consult the existing formatters for examples of BODY."
   (:install (macos "brew install terraform"))
   (:modes terraform-mode)
   (:format (format-all--buffer-easy executable "fmt" "-no-color" "-")))
-
-(define-format-all-formatter yq
-  (:executable "yq")
-  (:install (macos "brew install yq"))
-  (:modes yaml-mode)
-  (:format (format-all--buffer-easy executable "read" "-")))
 
 (defun format-all--please-install (executable installer)
   "Internal helper function for error about missing EXECUTABLE and INSTALLER."

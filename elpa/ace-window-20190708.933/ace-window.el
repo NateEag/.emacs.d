@@ -5,7 +5,7 @@
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; Maintainer: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Package-Version: 20190514.830
+;; Package-Version: 20190708.933
 ;; Version: 0.9.0
 ;; Package-Requires: ((avy "0.2.0"))
 ;; Keywords: window, location
@@ -200,6 +200,10 @@ or
     (t (:foreground "gray100" :underline nil)))
   "Face for each window's leading char.")
 
+(defface aw-minibuffer-leading-char-face
+  '((t :inherit aw-leading-char-face))
+  "Face for minibuffer leading char.")
+
 (defface aw-background-face
   '((t (:foreground "gray40")))
   "Face for whole window background during selection.")
@@ -274,6 +278,10 @@ Modify them back eventually.")
   "List of (window . hscroll-columns) items, each listing a window whose
   horizontal scroll will be restored upon ace-window action completion.")
 
+(defvar aw--windows-points nil
+  "List of (window . point) items. The point position had to be
+  moved in order to display the overlay.")
+
 (defun aw--done ()
   "Clean up mode line and overlays."
   ;; mode line
@@ -287,8 +295,12 @@ Modify them back eventually.")
       (when (string= (buffer-string) " ")
         (let ((inhibit-read-only t))
           (delete-region (point-min) (point-max))))))
+  (setq aw-empty-buffers-list nil)
   (aw--restore-windows-hscroll)
-  (setq aw-empty-buffers-list nil))
+  (let (c)
+    (while (setq c (pop aw--windows-points))
+      (with-selected-window (car c)
+        (goto-char (cdr c))))))
 
 (defun aw--restore-windows-hscroll ()
   "Restore horizontal scroll of windows from `aw--windows-hscroll' list."
@@ -360,11 +372,13 @@ LEAF is (PT . WND)."
                   (not (zerop (window-hscroll)))
                   (progn (push (cons (selected-window) (window-hscroll)) aw--windows-hscroll) t)
                   (not (zerop (scroll-right)))))
-      (let* ((prev)
+      (let* ((ws (window-start))
+             (prev nil)
              (vertical-pos (if (eq aw-char-position 'left) -1 0))
              (horizontal-pos (if (zerop (window-hscroll)) 0 (1+ (window-hscroll))))
+             (old-pt (point))
              (pt
-              (save-excursion
+              (progn
                 ;; If leading-char is to be displayed at the top-left, move
                 ;; to the first visible line in the window, otherwise, move
                 ;; to the last visible line.
@@ -373,7 +387,7 @@ LEAF is (PT . WND)."
                 ;; Find a nearby point that is not at the end-of-line but
                 ;; is visible so have space for the overlay.
                 (setq prev (1- (point)))
-                (while (and (/= prev (point)) (eolp))
+                (while (and (>= prev ws) (/= prev (point)) (eolp))
                   (setq prev (point))
                   (unless (bobp)
                     (line-move -1 t)
@@ -381,8 +395,15 @@ LEAF is (PT . WND)."
                 (recenter vertical-pos)
                 (point)))
              (ol (make-overlay pt (1+ pt) (window-buffer wnd))))
+        (if (= (aw--face-rel-height) 1)
+            (goto-char old-pt)
+          (when (/= pt old-pt)
+            (goto-char (+ pt 1))
+            (push (cons wnd old-pt) aw--windows-points)))
         (overlay-put ol 'display (aw--overlay-str wnd pt path))
-        (overlay-put ol 'face 'aw-leading-char-face)
+        (if (window-minibuffer-p wnd)
+            (overlay-put ol 'face 'aw-minibuffer-leading-char-face)
+          (overlay-put ol 'face 'aw-leading-char-face))
         (overlay-put ol 'window wnd)
         (push ol avy--overlays-lead)))))
 
@@ -837,7 +858,7 @@ Modify `aw-fair-aspect-ratio' to tweak behavior."
       ((eq h 'unspecified)
        1)
       ((floatp h)
-       (1+ (floor h)))
+       (max (floor h) 1))
       ((integerp h)
        1)
       (t

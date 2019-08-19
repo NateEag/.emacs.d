@@ -34,6 +34,7 @@
 (require 'eieio)
 
 (eval-when-compile
+  (require 'benchmark)
   (require 'subr-x))
 
 (require 'magit-utils)
@@ -44,6 +45,7 @@
 (declare-function magit-repository-local-set "magit-mode"
                   (key value &optional repository))
 (defvar magit-keep-region-overlay)
+(defvar magit-refresh-verbose)
 
 ;;; Options
 
@@ -70,10 +72,12 @@ That function in turn is used by all section movement commands."
   :type 'hook
   :options '(magit-hunk-set-window-start
              magit-status-maybe-update-revision-buffer
+             magit-status-maybe-update-stash-buffer
              magit-status-maybe-update-blob-buffer
              magit-log-maybe-update-revision-buffer
              magit-log-maybe-update-blob-buffer
-             magit-log-maybe-show-more-commits))
+             magit-log-maybe-show-more-commits
+             magit-stashes-maybe-update-stash-buffer))
 
 (defcustom magit-section-highlight-hook
   '(magit-diff-highlight
@@ -1636,7 +1640,10 @@ again use `remove-hook'."
     (dolist (entry entries)
       (let ((magit--current-section-hook (cons (list hook entry)
                                                magit--current-section-hook)))
-        (apply entry args)))))
+        (if magit-refresh-verbose
+            (message "  %-50s %s" entry
+                     (benchmark-elapse (apply entry args)))
+          (apply entry args))))))
 
 ;;; _
 (provide 'magit-section)

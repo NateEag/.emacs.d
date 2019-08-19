@@ -193,7 +193,7 @@ The shell command lives in my dotfiles repo."
   :init (projectile-mode))
 
 (use-package helm-projectile
-  :commands helm-projectile-find-file)
+  :commands helm-projectile-find-file helm-projectile-switch-project)
 
 (use-package helm
   :diminish helm-mode

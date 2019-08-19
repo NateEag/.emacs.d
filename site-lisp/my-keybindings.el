@@ -57,9 +57,6 @@
 
     ("e" . eval-buffer)
 
-    ;; Change names from snake_case to ALL_CAPS to StudlyCaps to camelCase.
-    ("u" . string-inflection-toggle)
-
     ;; Switch buffers/find likely files via Helm.
     ("b" . helm-for-files)
 

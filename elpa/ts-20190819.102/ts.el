@@ -4,7 +4,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net
 ;; URL: http://github.com/alphapapa/ts.el
-;; Package-Version: 20190812.1655
+;; Package-Version: 20190819.102
 ;; Version: 0.2-pre
 ;; Package-Requires: ((emacs "26.1") (dash "2.14.1") (s "1.12.0"))
 ;; Keywords: date time timestamp
@@ -231,8 +231,10 @@ slot `year' and alias `y' would create an alias `ts-y')."
 
 ;;;; Substs
 
-(defsubst ts-now ()
-  "Return `ts' struct set to now."
+(defun ts-now ()
+  "Return `ts' struct set to now.
+This is a non-inlined function, so it may be rebound, e.g. with
+`cl-letf' for testing."
   (make-ts :unix (float-time)))
 
 (defsubst ts-format (&optional ts-or-format-string ts)

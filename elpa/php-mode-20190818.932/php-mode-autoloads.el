@@ -26,6 +26,11 @@ Insert current namespace if cursor in namespace context.
 
 \(fn)" t nil)
 
+(autoload 'php-copyit-fqsen "php" "\
+Copy/kill class/method FQSEN.
+
+\(fn)" t nil)
+
 (autoload 'php-run-builtin-web-server "php" "\
 Run PHP Built-in web server.
 

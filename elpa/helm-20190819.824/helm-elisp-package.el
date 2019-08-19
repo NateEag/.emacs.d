@@ -180,48 +180,64 @@
   (cl-loop for entry in helm-el-package--tabulated-list
            for pkg-desc = (car entry)
            for status = (package-desc-status pkg-desc)
-           when (member status '("installed" "unsigned"))
-           collect pkg-desc into installed
+           ;; A dependency.
            when (string= status "dependency")
            collect pkg-desc into dependencies
+           ;; An installed package used as dependency (user have
+           ;; installed this package explicitely).
+           when (package--used-elsewhere-p pkg-desc)
+           collect pkg-desc into installed-as-dep
+           ;; An installed package.
+           when (member status '("installed" "unsigned"))
+           collect pkg-desc into installed
            when (member status '("available" "new"))
            collect (cons (package-desc-name pkg-desc) pkg-desc) into available
            finally return
            ;; Always try to upgrade dependencies before installed.
-           (cl-loop with all = (append dependencies installed)
+           (cl-loop with all = (append dependencies installed-as-dep installed)
                     with extra-upgrades
                     for pkg in all
                     for name = (package-desc-name pkg)
                     for avail-pkg = (assq name available)
-                    for avail-is-dep = (and avail-pkg (member pkg dependencies))
-                    when avail-is-dep
-                    ;; Store the installed packages that don't need
-                    ;; upgrade but that have `name' as dependency.
-                    do (cl-loop for p in installed
-                                for pkg = (package-desc-name p)
-                                for deps = (and (package--user-installed-p pkg)
-                                                (package--get-deps pkg))
-                                when (and (memq name deps)
-                                          (not (eq name pkg)))
-                                do (push (cons pkg p) extra-upgrades))
+                    ;; A new version of PKG is available and is a
+                    ;; dependency. Find the installed packages that
+                    ;; have PKG as dependency and add them to
+                    ;; extra-upgrades, they will be recompiled later
+                    ;; after new PKG installation.
+                    when (and avail-pkg (member pkg dependencies))
+                    do (setq extra-upgrades
+                             (append (helm-el-package--get-installed-to-recompile
+                                      (append installed-as-dep installed) name)
+                                     extra-upgrades))
                     when (and avail-pkg
-                              (version-list-< (package-desc-version pkg)
-                                              (package-desc-version
-                                               (cdr avail-pkg))))
+                              (version-list-<
+                               (package-desc-version pkg)
+                               (package-desc-version (cdr avail-pkg))))
                     collect avail-pkg into upgrades
                     finally return
                     ;; Extra-upgrades are packages that need to be
                     ;; recompiled because their dependencies have been upgraded. 
                     (append upgrades
                             (setq helm-el-package--extra-upgrades
-                                  extra-upgrades)))))
+                                  (helm-fast-remove-dups extra-upgrades :test 'equal))))))
+
+(defun helm-el-package--get-installed-to-recompile (seq pkg-name)
+  "Find the installed packages in SEQ that have PKG-NAME as dependency."
+  (cl-loop for p in seq
+           for pkg = (package-desc-name p)
+           for deps = (and (package--user-installed-p pkg)
+                           (package--get-deps pkg))
+           when (and (memq pkg-name deps)
+                     (not (eq pkg-name pkg)))
+           collect (cons pkg p)))
 
 (defun helm-el-package-upgrade-1 (pkg-list)
   (cl-loop for p in pkg-list
            for pkg-desc = (car p)
-           for upgrade = (cdr (assq (package-desc-name pkg-desc)
+           for pkg-name = (package-desc-name pkg-desc)
+           for upgrade = (cdr (assq pkg-name
                                     helm-el-package--upgrades))
-           for extra-upgrade = (cdr (assq (package-desc-name pkg-desc)
+           for extra-upgrade = (cdr (assq pkg-name
                                           helm-el-package--extra-upgrades))
            do
            (cond (;; Recompile.
@@ -229,7 +245,12 @@
                        (equal pkg-desc extra-upgrade))
                   (helm-el-package-recompile-1 pkg-desc))
                  (;; Do nothing.
-                  (null upgrade) (ignore))
+                  (or (null upgrade)
+                      ;; This may happen when a Elpa version of pkg
+                      ;; is installed and need upgrade and pkg is as
+                      ;; well a builtin package.
+                      (package-built-in-p pkg-name))
+                  (ignore))
                  (;; Install.
                   (equal pkg-desc upgrade)
                   (package-install pkg-desc t))

@@ -6,7 +6,7 @@
 ;; Author: Matúš Goljer <matus.goljer@gmail.com>
 ;; Maintainer: Matúš Goljer <matus.goljer@gmail.com>
 ;; Version: 0.1.0
-;; Package-Version: 20190627.1240
+;; Package-Version: 20190814.1402
 ;; Created: 28th May 2017
 ;; Package-requires: ((flow-minor-mode "0") (js2-mode "0") (emacs "25.1"))
 ;; Keywords: languages, extensions
@@ -143,8 +143,8 @@
                             (:constructor ,(intern (format "make-%s" name)) (&key ,@constructor-args)))
          ,docstring
          ,@fields)
-       (put ',attributed-sym 'js2-visitor 'js2-visit-none)
-       (put ',attributed-sym 'js2-printer
+       (js2--struct-put ',name 'js2-visitor 'js2-visit-none)
+       (js2--struct-put ',name 'js2-printer
             (defun ,printer-name (,@print-function-args) ,@print-function-body)))))
 
 ;;; Type-annotated variables or other names --- const a: string

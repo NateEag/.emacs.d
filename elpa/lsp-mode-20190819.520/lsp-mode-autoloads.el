@@ -104,7 +104,7 @@ This avoids overloading the server with many files when starting Emacs.
 
 \(fn)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-mode" '("log--notification-performance" "lsp-" "make-lsp-client" "with-lsp-workspace" "when-lsp-workspace" "seq-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-mode" '("lsp-" "make-lsp-client" "with-lsp-workspace" "when-lsp-workspace" "seq-")))
 
 ;;;***
 

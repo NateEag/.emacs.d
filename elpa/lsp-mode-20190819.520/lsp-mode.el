@@ -1110,8 +1110,8 @@ On other systems, returns path without change."
 (defun lsp--uri-to-path (uri)
   "Convert URI to a file path."
   (if-let (fn (->> (lsp-workspaces)
-                       (-keep (-compose #'lsp--client-uri->path-fn #'lsp--workspace-client))
-                       (cl-first)))
+                   (-keep (-compose #'lsp--client-uri->path-fn #'lsp--workspace-client))
+                   (cl-first)))
       (funcall fn uri)
     (lsp--uri-to-path-1 uri)))
 
@@ -1321,6 +1321,11 @@ PARAMS - the data sent from WORKSPACE."
      :message (if source (format "%s: %s" source message) message)
      :original diag)))
 
+(defalias 'lsp--buffer-for-file (if (eq system-type 'windows-nt)
+                                  #'find-buffer-visiting
+                                #'get-file-buffer))
+
+
 (defun lsp--on-diagnostics (workspace params)
   "Callback for textDocument/publishDiagnostics.
 interface PublishDiagnosticsParams {
@@ -1331,7 +1336,7 @@ PARAMS contains the diagnostics data.
 WORKSPACE is the workspace that contains the diagnostics."
   (let* ((file (lsp--uri-to-path (gethash "uri" params)))
          (diagnostics (gethash "diagnostics" params))
-         (buffer (find-buffer-visiting file))
+         (buffer (lsp--buffer-for-file file))
          (workspace-diagnostics (lsp--workspace-diagnostics workspace)))
 
     (if (seq-empty-p diagnostics)
@@ -2804,7 +2809,7 @@ interface TextDocumentEdit {
     ("rename" (-let* (((&hash "oldUri" "newUri" "options") edit)
                       (old-file-name (lsp--uri-to-path oldUri))
                       (new-file-name (lsp--uri-to-path newUri))
-                      (buf (find-buffer-visiting old-file-name)))
+                      (buf (lsp--buffer-for-file old-file-name)))
                 (when buf
                   (with-current-buffer buf
                     (save-buffer)
@@ -3413,7 +3418,7 @@ https://microsoft.github.io/language-server-protocol/specification#textDocument_
     (cl-labels ((get-xrefs-in-file
                  (file-locs location-link)
                  (let* ((filename (seq-first file-locs))
-                        (visiting (find-buffer-visiting filename))
+                        (visiting (lsp--buffer-for-file filename))
                         (fn (lambda (loc)
                               (lsp--xref-make-item filename
                                                    (if location-link (or (gethash "targetSelectionRange" loc)
@@ -4352,7 +4357,7 @@ WORKSPACE is the active workspace."
                  (format "%.06f" (float-time (time-subtract after-processed-time after-parsed-time)))
                "N/A"))))
 
-(defun log--notification-performance (server-id json-data received-time after-parsed-time before-notification after-processed-time)
+(defun lsp--log-notification-performance (server-id json-data received-time after-parsed-time before-notification after-processed-time)
   (when lsp-print-performance
     (lsp-log "Perf> notification
   ServerId: %s
@@ -4405,7 +4410,7 @@ WORKSPACE is the active workspace."
         ('notification
          (let ((before-notification (current-time)))
            (lsp--on-notification lsp--cur-workspace json-data)
-           (log--notification-performance
+           (lsp--log-notification-performance
             server-id json-data received-time after-parsed-time before-notification (current-time))))
         ('request (lsp--on-request lsp--cur-workspace json-data))))))
 
@@ -4537,7 +4542,7 @@ SYM can be either DocumentSymbol or SymbolInformation."
       (not (eq (->> location
                     (gethash "uri")
                     (lsp--uri-to-path)
-                    (find-buffer-visiting))
+                    (lsp--buffer-for-file))
                (current-buffer)))))
 
 (defun lsp--get-symbol-type (sym)
@@ -5012,51 +5017,51 @@ SESSION is the active session."
                (eq client client-or-list))))))
    lsp-disabled-clients))
 
-(defun lsp--create-matching-clients? (buffer-major-mode remote?)
-  (-lambda (client)
-    (and (and (or (-some-> client lsp--client-activation-fn (funcall buffer-file-name buffer-major-mode))
-                  (and (not (lsp--client-activation-fn client))
-                       (-contains? (lsp--client-major-modes client) buffer-major-mode)
-                       (eq (---truthy? remote?) (---truthy? (lsp--client-remote? client)))))
-              (-some-> client lsp--client-new-connection (plist-get :test?) funcall))
-         (or (null lsp-enabled-clients)
-             (or (member (lsp--client-server-id client) lsp-enabled-clients)
-                 (ignore (lsp--info "Client %s is not in lsp-enabled-clients"
-                                    (lsp--client-server-id client)))))
-         (not (lsp--client-disabled-p buffer-major-mode (lsp--client-server-id client))))))
+(defun lsp--matching-clients? (client)
+  (and (and ;; both file and client remote or both local
+        (eq (---truthy? (file-remote-p buffer-file-name))
+            (---truthy? (lsp--client-remote? client)))
+        (if-let (activation-fn (lsp--client-activation-fn client))
+            (funcall activation-fn buffer-file-name major-mode)
+          (-contains? (lsp--client-major-modes client) major-mode))
+        (-some-> client lsp--client-new-connection (plist-get :test?) funcall))
+       (or (null lsp-enabled-clients)
+           (or (member (lsp--client-server-id client) lsp-enabled-clients)
+               (ignore (lsp--info "Client %s is not in lsp-enabled-clients"
+                                  (lsp--client-server-id client)))))
+       (not (lsp--client-disabled-p major-mode (lsp--client-server-id client)))))
 
-(defun lsp--find-clients (buffer-major-mode file-name)
+(defun lsp--find-clients ()
   "Find clients which can handle BUFFER-MAJOR-MODE.
 SESSION is the currently active session. The function will also
 pick only remote enabled clients in case the FILE-NAME is on
 remote machine and vice versa."
-  (let ((remote? (file-remote-p file-name)))
-    (-when-let (matching-clients (->> lsp-clients
-                                      hash-table-values
-                                      (-filter (lsp--create-matching-clients? buffer-major-mode remote?))))
-      (lsp-log "Found the following clients for %s: %s"
-               file-name
+  (-when-let (matching-clients (->> lsp-clients
+                                    hash-table-values
+                                    (-filter #'lsp--matching-clients?)))
+    (lsp-log "Found the following clients for %s: %s"
+             buffer-file-name
+             (s-join ", "
+                     (-map (lambda (client)
+                             (format "(server-id %s, priority %s)"
+                                     (lsp--client-server-id client)
+                                     (lsp--client-priority client)))
+                           matching-clients)))
+    (-let* (((add-on-clients main-clients) (-separate 'lsp--client-add-on? matching-clients))
+            (selected-clients (if-let (main-client (and main-clients
+                                                        (--max-by (> (lsp--client-priority it)
+                                                                     (lsp--client-priority other))
+                                                                  main-clients)))
+                                  (cons main-client add-on-clients)
+                                add-on-clients)))
+      (lsp-log "The following clients were selected based on priority: %s"
                (s-join ", "
                        (-map (lambda (client)
                                (format "(server-id %s, priority %s)"
                                        (lsp--client-server-id client)
                                        (lsp--client-priority client)))
-                             matching-clients)))
-      (-let* (((add-on-clients main-clients) (-separate 'lsp--client-add-on? matching-clients))
-              (selected-clients (if-let (main-client (and main-clients
-                                                          (--max-by (> (lsp--client-priority it)
-                                                                       (lsp--client-priority other))
-                                                                    main-clients)))
-                                    (cons main-client add-on-clients)
-                                  add-on-clients)))
-        (lsp-log "The following clients were selected based on priority: %s"
-                 (s-join ", "
-                         (-map (lambda (client)
-                                 (format "(server-id %s, priority %s)"
-                                         (lsp--client-server-id client)
-                                         (lsp--client-priority client)))
-                               selected-clients)))
-        selected-clients))))
+                             selected-clients)))
+      selected-clients)))
 
 (defun lsp-register-client (client)
   "Registers LSP client CLIENT."
@@ -5424,7 +5429,7 @@ such."
                           (list (lsp--completing-read "Select server to start: "
                                                       (ht-values lsp-clients)
                                                       (-compose 'symbol-name 'lsp--client-server-id) nil t))
-                        (lsp--find-clients major-mode (buffer-file-name))))
+                        (lsp--find-clients)))
         (-if-let (project-root (lsp--calculate-root session (buffer-file-name)))
             (progn
               ;; update project roots if needed and persit the lsp session

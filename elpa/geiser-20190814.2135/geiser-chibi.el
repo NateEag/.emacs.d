@@ -44,7 +44,8 @@
   "Return a list with all parameters needed to start Chibi Scheme.
 This function uses `geiser-chibi-init-file' if it exists."
   `("-I" ,(expand-file-name "chibi/geiser/" geiser-scheme-dir)
-    "-m" "geiser")
+    "-m" "geiser"
+    ,@(and (listp geiser-chibi-binary) (cdr geiser-chibi-binary)))
   )
 
 (defconst geiser-chibi--prompt-regexp "> ")

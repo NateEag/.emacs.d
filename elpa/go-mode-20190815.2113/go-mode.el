@@ -8,7 +8,7 @@
 
 ;; Author: The go-mode Authors
 ;; Version: 1.5.0
-;; Package-Version: 20190808.2249
+;; Package-Version: 20190815.2113
 ;; Keywords: languages go
 ;; URL: https://github.com/dominikh/go-mode.el
 ;;
@@ -539,105 +539,30 @@ STOP-AT-STRING is not true, over strings."
 
 (defun go-previous-line-has-dangling-op-p ()
   "Return non-nil if the current line is a continuation line.
-
-The returned value is the beginning of the line with the dangling operator."
+The return value is cached based on the current `line-beginning-position'."
   (let* ((line-begin (line-beginning-position))
          (val (gethash line-begin go-dangling-cache 'nope)))
     (when (or (go--buffer-narrowed-p) (equal val 'nope))
       (save-excursion
-        (beginning-of-line)
-        (go--backward-irrelevant t)
-        (if (or
-             (looking-back go-dangling-operators-regexp
-                           (- (point) go--max-dangling-operator-length))
-             ;; treat comma as dangling operator in certain cases
-             (and (eq (char-before) ?,) (go--commas-indent-p)))
-            (setq val (line-beginning-position))
+        (go--forward-line -1)
+        (if (go--current-line-has-dangling-op-p)
+            (setq val (line-end-position))
           (setq val nil))
 
         (if (not (go--buffer-narrowed-p))
             (puthash line-begin val go-dangling-cache))))
     val))
 
-(defun go--at-function-definition ()
-  "Return non-nil if point is on the opening curly brace of a
-function definition.
+(defun go--current-line-has-dangling-op-p ()
+  "Return non-nil if current line ends in a dangling operator.
+The return value is not cached."
+  (or
+   (go--line-suffix-p go-dangling-operators-regexp)
+   ;; treat comma as dangling operator in certain cases
+   (and
+    (go--line-suffix-p ",")
+    (save-excursion (end-of-line) (go--commas-indent-p)))))
 
-We do this by first calling (beginning-of-defun), which will take
-us to the start of *some* function.  We then look for the opening
-curly brace of that function and compare its position against the
-curly brace we are checking.  If they match, we return non-nil."
-  (if (= (char-after) ?\{)
-      (save-excursion
-        (let ((old-point (point))
-              start-nesting)
-          (beginning-of-defun)
-          (when (looking-at "func ")
-            (setq start-nesting (go-paren-level))
-            (skip-chars-forward "^{")
-            (while (> (go-paren-level) start-nesting)
-              (forward-char)
-              (skip-chars-forward "^{") 0)
-            (if (and (= (go-paren-level) start-nesting) (= old-point (point)))
-                t))))))
-
-(defun go--indentation-for-opening-parenthesis ()
-  "Return the semantic indentation for the current opening parenthesis.
-
-If point is on an opening curly brace and said curly brace
-belongs to a function declaration, the indentation of the func
-keyword will be returned.  Otherwise the indentation of the
-current line will be returned."
-  (save-excursion
-    (if (go--at-function-definition)
-        (progn
-          (beginning-of-defun)
-          (current-indentation))
-      (current-indentation))))
-
-(defun go--dangling-line-opens-indent-p ()
-  "Return non-nil if current dangling line indents the following line."
-  (save-excursion
-    (let ((line-begin (line-beginning-position))
-          (open-paren (go--open-paren-position)))
-
-          (if (not (and open-paren (>= open-paren line-begin)))
-            ;; if line doesn't open a paren, check if we are a dangling line under
-            ;; a dangling assignment with nothing on RHS of "="
-            ;;
-            ;; foo :=
-            ;;   bar ||   // check if we are this line (need to open indent)
-            ;;     baz ||
-            ;;     qux
-            (progn
-              (let ((prev-line (go-previous-line-has-dangling-op-p)))
-                (goto-char line-begin)
-                (when (and
-                       prev-line
-                       (not (looking-at ".*,[[:space:]]*$"))) ;; doesn't apply to dangling commas
-                  (goto-char prev-line)
-                  (and
-                   (not (go-previous-line-has-dangling-op-p))
-                   (looking-at ".*=[[:space:]]*$")))))
-
-            (goto-char open-paren)
-
-            (or
-             ;; previous line is dangling and opens indent
-             (let ((prev-line (go-previous-line-has-dangling-op-p)))
-               (when prev-line
-                 (save-excursion
-                   (goto-char prev-line)
-                   (end-of-line)
-                   (go--dangling-line-opens-indent-p))))
-
-             ;; or paren is only preceded by identifier or other parens
-             (string-match-p "^[[:space:]]*[[:word:][:multibyte:]]*(*$" (buffer-substring line-begin (point)))
-
-             ;; or a preceding paren on this line opens an indent
-             (and
-              (> (point) line-begin)
-              (progn (backward-char) (go--dangling-line-opens-indent-p))))))))
 
 (defun go--commas-indent-p ()
   "Return non-nil if in a context where dangling commas indent next line."
@@ -657,15 +582,16 @@ case keyword. It returns nil for the case line itself."
     (when (not (looking-at go--case-or-default-regexp))
       (let (saw-colon)
         ;; optionally skip line with the colon
-        (when (looking-at ".*:[[:space:]]*$")
+        (when (go--line-suffix-p ":")
           (setq saw-colon t)
           (forward-line -1))
 
         ;; go backwards while at a comment or a line ending in comma
         (while (and
-                (or (go-in-comment-p)
-                    (looking-at "[[:space:]]*\\(//\\|/\\*\\)\\|.*,[[:space:]]*$"))
-                (zerop (forward-line -1))))
+                (or
+                 (go--boring-line-p)
+                 (go--line-suffix-p ","))
+                (go--forward-line -1)))
 
         (and
          (looking-at go--case-regexp)
@@ -674,7 +600,7 @@ case keyword. It returns nil for the case line itself."
          (not (and saw-colon (looking-at ".*:[[:space:]]*$"))))))))
 
 (defun go--in-struct-definition-p ()
-  "Return non-nil if inside a struct definition."
+  "Return non-nil if point is inside a struct definition."
   (save-excursion
     (and
      ;; inside curlies
@@ -719,42 +645,248 @@ The return value is the position of the opening paren."
        (point)))))
 
 (defun go-indentation-at-point ()
+  "Return the appropriate indentation for the current line.
+
+This function works by walking a line's characters backwards. When it
+encounters a closing paren or brace it bounces to the corresponding
+opener. If it arrives at the beginning of the line you are indenting,
+it moves to the end of the previous line if the current line is a
+continuation line, else it moves to the containing opening paren or
+brace. If it arrives at the beginning of a line other than the
+starting line, it is done."
   (save-excursion
-    (let (start-nesting dangling-line)
-      (back-to-indentation)
-      (setq start-nesting (go-paren-level))
+    (beginning-of-line)
 
-      (cond
-       ((go-in-string-p)
-        (current-indentation))
-       ((looking-at "[])}]")
-        (go-goto-opening-parenthesis)
-        (if (and
-             (not (eq (char-after) ?\())
-             (go-previous-line-has-dangling-op-p))
-            (go--non-dangling-indent)
-          (go--indentation-for-opening-parenthesis)))
-       ((setq dangling-line (go-previous-line-has-dangling-op-p))
-        (goto-char dangling-line)
-        (end-of-line)
+    (let ((start-line (point))
+          (first t)
+          (indent 0))
 
-        ;; only one nesting for all dangling operators in one operation
-        (if (and
-             (not (go--dangling-line-opens-indent-p))
-             (go-previous-line-has-dangling-op-p))
-            (current-indentation)
-          (+ (current-indentation) tab-width)))
-       ((zerop (go-paren-level))
-        0)
-       ((progn (go-goto-opening-parenthesis) (< (go-paren-level) start-nesting))
-        (if (and
-             (not (eq (char-after) ?\())
-             (go-previous-line-has-dangling-op-p))
-            (+ (go--non-dangling-indent) tab-width)
-          (+ (go--indentation-for-opening-parenthesis) tab-width))
-        )
-       (t
-        (current-indentation))))))
+      ;; Skip leading whitespace.
+      (skip-syntax-forward " ")
+
+      ;; Move after following char if it is a closer. This is so below code
+      ;; sees it and jumps to the corresponding opener.
+      (skip-syntax-forward ")" (1+ (point)))
+
+      (while (or
+              ;; Always run the first iteration so we process empty lines.
+              first
+
+              ;; Otherwise stop if we are at the start of a line.
+              (not (bolp)))
+        (setq first nil)
+
+        (cl-case (char-before)
+
+          ;; We have found a closer (paren or brace).
+          ((?\) ?})
+           (backward-char)
+           (let ((bol (line-beginning-position)))
+
+             ;; Jump back to corresponding opener.
+             (go-goto-opening-parenthesis)
+
+             ;; Here we decrement the indent if we are closing an indented
+             ;; expression. In other words, the closer's line was indented
+             ;; relative to the opener's line, and that indent should not
+             ;; be inherited by our starting line.
+             (when (and
+                    ;; Opener wasn't on our starting line.
+                    (< bol start-line)
+
+                    ;; Opener and closer aren't on same line.
+                    (< (point) bol)
+
+                    (go-previous-line-has-dangling-op-p)
+
+                    ;; Opener is at same paren level as start of line (ignore sub-expressions).
+                    (eq (go-paren-level) (save-excursion (beginning-of-line) (go-paren-level)))
+
+                    ;; This dangling line opened indent relative to previous dangling line.
+                    (go--continuation-line-indents-p))
+               (cl-decf indent tab-width))))
+
+          ;; Brackets don't affect indentation, so just skip them.
+          ((?\])
+           (backward-char)))
+
+        ;; Skip non-closers since we are only interested in closing parens/braces.
+        (skip-syntax-backward "^)" (line-beginning-position))
+
+        (when (go-in-string-or-comment-p)
+          (go-goto-beginning-of-string-or-comment))
+
+        ;; At the beginning of the starting line.
+        (when (= start-line (point))
+
+          ;; We are a continuation line.
+          (if (go-previous-line-has-dangling-op-p)
+              (progn
+                ;; Presume a continuation line always gets an extra indent.
+                ;; We reduce the indent after the loop, if necessary.
+                (cl-incf indent tab-width)
+
+                ;; Go to the end of the dangling line.
+                (goto-char (go-previous-line-has-dangling-op-p)))
+
+            ;; If we aren't a continuation line and we have an enclosing paren
+            ;; or brace, jump to opener and increment our indent.
+            (when (go-goto-opening-parenthesis)
+              (cl-incf indent tab-width)))))
+
+      ;; If our ending line is a continuation line but doesn't open
+      ;; an extra indent, reduce indent. We tentatively gave indents to all
+      ;; dangling lines and all lines inside open parens, so here we take that
+      ;; indent back.
+      ;;
+      ;;                1 +                      1 +
+      ;; ending line      1 + foo(                 1 + foo(
+      ;; starting line      1,        becomes      1,
+      ;;                  )                      )
+      ;;
+      ;;
+      ;;                1 +                     1 +
+      ;; ending line      1 +         becomes     1 +
+      ;; starting line      1                     1
+      (when (and
+             (go-previous-line-has-dangling-op-p)
+             (not (go--continuation-line-indents-p)))
+        (cl-decf indent tab-width))
+
+      ;; Apply our computed indent relative to the indent of the ending line.
+      (+ indent (current-indentation)))))
+
+(defconst go--operator-chars "*/%<>&\\^+\\-|=!,"
+  "Individual characters that appear in operators.
+Comma is included because it is sometimes a dangling operator, so
+needs to be considered by `go--continuation-line-indents-p'")
+
+(defun go--operator-precedence (op)
+  "Go operator precedence (higher binds tighter).
+
+Comma gets the default 0 precedence which is appropriate because commas
+are loose binding expression separators."
+  (cl-case (intern op)
+    (! 6)
+    ((* / % << >> & &^) 5)
+    ((+ - | ^) 4)
+    ((== != < <= > >=) 3)
+    (&& 2)
+    (|| 1)
+    (t 0)))
+
+(defun go--continuation-line-indents-p ()
+  "Return non-nil if the current continuation line opens an additional indent.
+
+This function works by looking at the Go operators used on the current
+line. If all the operators bind tighter than the previous line's
+dangling operator and the current line ends in a dangling operator or
+open paren, the next line will have an additional indent.
+
+For example:
+foo ||
+  foo && // this continuation line opens another indent
+    foo
+"
+  (save-excursion
+    (let (prev-op (all-tighter t))
+
+      ;; Record the dangling operator from previous line.
+      (save-excursion
+        (goto-char (go-previous-line-has-dangling-op-p))
+        (go--end-of-line)
+        (skip-syntax-backward " ")
+        (let ((end (point)))
+          (skip-chars-backward go--operator-chars)
+          (setq prev-op (buffer-substring-no-properties (point) end))))
+
+      (beginning-of-line)
+
+      (when (or
+             ;; We can only open indent if we have a dangling operator, or
+             (go--current-line-has-dangling-op-p)
+             ;; we end in an opening paren/brace or comma.
+             (go--line-suffix-p "[(,]\\|[^[:space:]]{"))
+
+        (let ((prev-precedence (go--operator-precedence prev-op))
+              (start-depth (go-paren-level))
+              (line-start (line-beginning-position)))
+
+          (end-of-line)
+
+          ;; While we haven't found a looser operator and are on the starting line...
+          (while (and all-tighter (> (point) line-start))
+
+            ;; Skip over non-operator characters.
+            (skip-chars-backward (concat "^" go--operator-chars) line-start)
+
+            (let ((end (point)))
+              (cond
+               ;; Ignore sub-expressions at different paren levels.
+               ((/= (go-paren-level) start-depth)
+                (skip-syntax-backward "^()"))
+
+               ((go-in-string-or-comment-p)
+                (go-goto-beginning-of-string-or-comment))
+
+               ;; We found an operator. Check if it has lower precedence.
+               ((/= (skip-chars-backward go--operator-chars) 0)
+                (when (>=
+                       prev-precedence
+                       (go--operator-precedence (buffer-substring (point) end)))
+                  (setq all-tighter nil)))))))
+        all-tighter))))
+
+(defun go--end-of-line ()
+  "Move to the end of the code on the current line.
+Point will be left before any trailing comments. Point will be left
+after the opening backtick of multiline strings."
+  (end-of-line)
+  (skip-syntax-backward " ")
+  (when (looking-back "\\*/" (- (point) 2))
+    ;; back up so we are in the /* comment */
+    (backward-char))
+  (when (go-in-comment-p)
+    (go-goto-beginning-of-string-or-comment)
+    (skip-syntax-backward " "))
+  (when (go-in-string-p)
+    (go-goto-beginning-of-string-or-comment)
+    ;; forward one so point is after the opening "`"
+    (forward-char)))
+
+(defun go--line-suffix-p (re)
+  "Return non-nil if RE matches the end of the line starting from `point'.
+
+Trailing whitespace, trailing comments and trailing multiline strings are
+ignored."
+  (let ((start (point))
+        (end (save-excursion (go--end-of-line) (point))))
+    (when (< start end)
+      (string-match-p
+       (concat "\\(?:" re "\\)$")
+       (buffer-substring-no-properties start end)))))
+
+(defun go--boring-line-p ()
+  "Return non-nil if the current line probably doesn't impact indentation.
+
+A boring line is one that starts with a comment, is empty, is part of a
+multiline comment, or starts and ends in a multiline string."
+  (or
+   (looking-at (concat go--comment-start-regexp "\\|[[:space:]]*$"))
+   (go-in-comment-p)
+   (and (go-in-string-p) (save-excursion (end-of-line) (go-in-string-p)))))
+
+(defun go--forward-line (&optional count)
+  "Like `forward-line' but skip comments and empty lines.
+
+Return non-nil if point changed lines."
+  (let (moved)
+    (while (and
+            (zerop (forward-line count))
+            (setq moved t)
+            (go--boring-line-p))
+      (setq count (if (and count (< count 0 )) -1 1)))
+    moved))
 
 (defconst go--comment-start-regexp "[[:space:]]*\\(/\\*\\|//\\)")
 
@@ -762,7 +894,10 @@ The return value is the position of the opening paren."
   "Return non-nil if looking at a comment attached to a case statement.
 
 INDENT is the normal indent of this line, i.e. that of the case body."
-  (when (looking-at go--comment-start-regexp)
+  (when (and
+         (> (current-indentation) 0)
+         (looking-at go--comment-start-regexp))
+
     (let (switch-before
           case-after
           has-case-aligned-preceding-comment)
@@ -772,14 +907,14 @@ INDENT is the normal indent of this line, i.e. that of the case body."
         (while (and
                 (zerop (forward-line -1))
                 (cond
-                 ((go-in-comment-p))
-
                  ((looking-at "^[[:space:]]*$"))
 
                  ((looking-at go--comment-start-regexp)
                   (when (= (current-indentation) (- indent tab-width))
                     (setq has-case-aligned-preceding-comment t))
-                  t))))
+                  t)
+
+                 ((go-in-comment-p)))))
 
         ;; Record if a switch (or select) precedes us.
         (setq switch-before (looking-at "^[[:space:]]*\\(switch\\|select\\)[[:space:]]")))
@@ -789,9 +924,9 @@ INDENT is the normal indent of this line, i.e. that of the case body."
         (while (and
                 (zerop (forward-line 1))
                 (or
-                 (go-in-comment-p)
                  (looking-at go--comment-start-regexp)
-                 (looking-at "^[[:space:]]*$"))))
+                 (looking-at "^[[:space:]]*$")
+                 (go-in-comment-p))))
 
         (setq case-after (looking-at go--case-or-default-regexp)))
 
@@ -809,12 +944,6 @@ INDENT is the normal indent of this line, i.e. that of the case body."
         ;; other cases are ambiguous, so if comment is currently
         ;; aligned with "case", leave it that way
         (= (current-indentation) (- indent tab-width)))))))
-
-(defun go--non-dangling-indent ()
-  (save-excursion
-    (while (go-previous-line-has-dangling-op-p)
-      (forward-line -1))
-    (current-indentation)))
 
 (defconst go--case-regexp "\\([[:space:]]*case\\([[:space:]]\\|$\\)\\)")
 (defconst go--case-or-default-regexp (concat "\\(" go--case-regexp "\\|"  "[[:space:]]*default:\\)"))
@@ -837,7 +966,8 @@ INDENT is the normal indent of this line, i.e. that of the case body."
               (looking-at (concat go-label-regexp ":\\([[:space:]]*/.+\\)?$\\|" go--case-or-default-regexp))
               ;; don't think last part of multiline case statement is a label
               (not (go-previous-line-has-dangling-op-p))
-              (not (go--in-case-clause-list-p)))
+              (not (go--in-case-clause-list-p))
+              (not (go--in-composite-literal-p)))
 
              ;; comment attached above a "case" statement
              (go--case-comment-p indent))
@@ -1114,6 +1244,21 @@ Function result is a unparenthesized type or a parameter list."
 This is intended to be called from `before-change-functions'."
   (setq go-dangling-cache (make-hash-table :test 'eql)))
 
+(defun go--electric-indent-function (inserted-char)
+  (cond
+   ;; Indent after starting a "//" or "/*" comment.
+   ;; This is handy for comments above "case" statements.
+   ((or (eq inserted-char ?/) (eq inserted-char ?*))
+    (when (eq (char-before (1- (point))) ?/)
+      'do-indent))
+
+   ((eq inserted-char ? )
+    (and
+     (eq (char-before (- (point) 1)) ?e)
+     (eq (char-before (- (point) 2)) ?s)
+     (eq (char-before (- (point) 3)) ?a)
+     (eq (char-before (- (point) 4)) ?c)))))
+
 ;;;###autoload
 (define-derived-mode go-mode prog-mode "Go"
   "Major mode for editing Go source text.
@@ -1197,8 +1342,9 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
   (set (make-local-variable 'parse-sexp-lookup-properties) t)
   (set (make-local-variable 'syntax-propertize-function) #'go-propertize-syntax)
 
-  (if (boundp 'electric-indent-chars)
-      (set (make-local-variable 'electric-indent-chars) '(?\n ?} ?\))))
+  (when (boundp 'electric-indent-chars)
+    (set (make-local-variable 'electric-indent-chars) '(?\n ?} ?\) ?:))
+    (add-hook 'electric-indent-functions #'go--electric-indent-function nil t))
 
   (set (make-local-variable 'compilation-error-screen-columns) nil)
 

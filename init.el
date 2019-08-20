@@ -279,7 +279,7 @@ buffer's file does not exist."
 
   ;; Pressing RET should do newline-then-indent, and continue any comment we
   ;; happen to be in.
-  (local-set-key (kbd "RET") (key-binding (kbd "M-j")))
+  (local-set-key (kbd "RET") 'indent-new-comment-line)
 
   ;; Flycheck does on-the-fly syntax checking, if the appropriate tools are
   ;; installed.

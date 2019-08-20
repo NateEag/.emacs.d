@@ -7,6 +7,12 @@
   to something a package is doing, as they appear to still be loaded. I also
   see similar slowness when sending an email.
 
+  Looks like it must be something Apple put into its Emacs site-lisp file in
+  Mojave, because when I run 'emacs --no-site-file' the problem does not exist.
+  I'm having a hard time figuring out how to make Emacs ignore these no matter
+  how I start it (--no-site-file cannot be set from within elisp). I suppose I
+  could just move them to a backup location and document the need.
+
 - Try integrating web-mode-edit-element into my markup editing style, or else
   figuring out how to get smartparens slurp/barf/etc working in web-mode. If it
   works out, delete my prototypical work on making tagedit work with web-mode

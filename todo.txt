@@ -1,3 +1,12 @@
+- Optimize browse-url on my work laptop. Takes about ten seconds right now from
+  within Emacs, for reasons I do not yet understand. Seems to have started
+  happening when I upgraded to OS X Mojave.
+
+  It does not happen in `emacs -Q` or `emacs -q` instances. It does happen when
+  my entire init file is commented out. That makes me think it probably relates
+  to something a package is doing, as they appear to still be loaded. I also
+  see similar slowness when sending an email.
+
 - Try integrating web-mode-edit-element into my markup editing style, or else
   figuring out how to get smartparens slurp/barf/etc working in web-mode. If it
   works out, delete my prototypical work on making tagedit work with web-mode

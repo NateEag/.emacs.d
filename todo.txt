@@ -13,6 +13,15 @@
   how I start it (--no-site-file cannot be set from within elisp). I suppose I
   could just move them to a backup location and document the need.
 
+  ...no, I can't, because Mojave won't let me move or edit them. Yay SIP. :/ I
+  guess I have to figure out how to have Emacs always boot without system
+  files.
+
+  There seem to be two options - always pass `--no-site-file` whenever you
+  start Emacs, or build an Emacs that sets `site-run-file` to `nil`. I don't
+  see how to do the former reliably in the context of OS X, and I'm having a
+  hard time getting the latter to work.
+
 - Try integrating web-mode-edit-element into my markup editing style, or else
   figuring out how to get smartparens slurp/barf/etc working in web-mode. If it
   works out, delete my prototypical work on making tagedit work with web-mode

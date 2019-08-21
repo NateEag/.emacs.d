@@ -79,7 +79,7 @@
     ("p y" . ne/yank-buffer-project-relative-path)
 
     ;; Look up URLs quickly.
-    ("u" . browse-url)
+    ("u" . browse-url-at-point)
 
     ;; g is for git, which is oh so much fun.
     ("g g" . magit-status)

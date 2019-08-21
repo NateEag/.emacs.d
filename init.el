@@ -18,6 +18,15 @@
 (setq ne/old-gc-cons-threshold gc-cons-threshold)
 (setq gc-cons-threshold 10000000)
 
+;; TODO Ignore site lisp files, as much as we can. Mac OS X Mojave included
+;; some that made make-process take a minimum of five seconds, at least with my
+;; setup. :/
+;;
+;; This change didn't actually fix that, but in principle I want my config to
+;; be as isolated from the host system as possible. I wound up customizing an
+;; Emacs build to do it
+(setq inhibit-default-init t)
+
 ;; Debug if there's an error during setup. We turn this back off at the end of
 ;; the file.
 (setq debug-on-error t)

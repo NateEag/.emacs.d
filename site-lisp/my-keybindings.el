@@ -85,7 +85,7 @@
     ("g g" . magit-status)
     ("g n" . git-gutter:next-hunk)
     ("g p" . git-gutter:previous-hunk)
-    ("g d" . git-gutter:popup-diff)
+    ("g d" . git-gutter:popup-hunk)
     ("g r" . git-gutter:revert-hunk)
     ("g b" . magit-blame)
     ("g l" . magit-log-buffer-file)

@@ -180,6 +180,15 @@ version at https://stackoverflow.com/a/8603158/1128957."
       (save-buffer))
     (delete-region start end)))
 
+(defun ne/list-loaded-elisp-files ()
+  "Return a string listing all Emacs Lisp files that have been loaded.
+
+Yanked from https://stackoverflow.com/a/31449758/1128957."
+
+  (interactive)
+
+  (mapconcat 'car (reverse load-history) "\n"))
+
 (defun shell-command-on-buffer ()
   "Update buffer contents with results of running shell command on it.
 

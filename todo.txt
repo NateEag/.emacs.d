@@ -1,3 +1,39 @@
+- Optimize browse-url on my work laptop. Takes about ten seconds right now from
+  within Emacs, for reasons I do not yet understand. Seems to have started
+  happening when I upgraded to OS X Mojave.
+
+  It does not happen in `emacs -Q` or `emacs -q` instances. It does happen when
+  my entire init file is commented out. That makes me think it probably relates
+  to something a package is doing, as they appear to still be loaded. I also
+  see similar slowness when sending an email.
+
+  Looks like it must be something Apple put into its Emacs site-lisp file in
+  Mojave, because when I run 'emacs --no-site-file' the problem does not exist.
+  I'm having a hard time figuring out how to make Emacs ignore these no matter
+  how I start it (--no-site-file cannot be set from within elisp). I suppose I
+  could just move them to a backup location and document the need.
+
+  ...no, I can't, because Mojave won't let me move or edit them. Yay SIP. :/ I
+  guess I have to figure out how to have Emacs always boot without system
+  files.
+
+  I finally did get a custom build to work, and I thought that had solved it,
+  but it turns out I was wrong about what's happening here.
+
+  If I start emacs from a Terminal prompt, opening a link is instantaneous.
+
+  If I start it via Spotlight or my Hammerspoon binding, they're slow.
+
+  They load the exact same set of elisp files.
+
+  Their environments are different (determined via the `process-environment`
+  variable), but I don't see any immediate smoking guns for causing this
+  difference.
+
+  For the moment I guess I'll start it from a terminal session. :/
+
+  Obviously this didn't happen before Mojave - I wonder what changed?
+
 - Try integrating web-mode-edit-element into my markup editing style, or else
   figuring out how to get smartparens slurp/barf/etc working in web-mode. If it
   works out, delete my prototypical work on making tagedit work with web-mode

@@ -168,6 +168,10 @@
 
 - Submit PR to make flycheck-eslint-rulesdir a list.
 
+- Get flycheck to support opening URLs for more details on errors. Sometimes
+  error messages are confusing or terse but the error ID can be used to map
+  directly to a documentation ID that explains the issue well.
+
 - Add (or find) a flycheck checker for nginx config files using -t.
   https://www.flycheck.org/en/latest/developer/developing.html#writing-the-checker
   explains how to do the job.

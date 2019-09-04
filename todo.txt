@@ -208,6 +208,13 @@
   for getting syntax coloration on static sites for obscure programming
   languages, for instance.
 
+- Make "<leader> g n" support going to the last hunk in a file and "<leader> g
+  p" support going to the first hunk in a file. Feels like an off-by-one error.
+  Some tinkering via debug suggests that in `git-gutter:next-hunk`, the
+  calculation of the local variable real-index is wrong. Going to the previous
+  hunk, it never gets down to 0, and going to the next hunk, it never gets up
+  to 2. Incident count: 2
+
 - Figure out why git-rebase-mode doesn't always have the keybindings it claims
   to. I think it happens the first time I rebase after starting Emacs, so it's
   likely an initialization problem, but I'm not really sure. I believe it's a

@@ -55,6 +55,7 @@ For these purposes, Emacs reigns supreme.
 It has been honed over decades to a razor-sharp edge, it runs almost
 everywhere, and it can be rewritten without restarting it.
 
+
 My Setup
 ========
 
@@ -156,6 +157,7 @@ that makes life better.
 Look in todo.txt and tell me about entries that can be resolved by turning on
 built-in features. I've found a few and would not mind finding more.
 
+
 Layout
 ======
 
@@ -178,6 +180,7 @@ libraries that I never realized are on package.el, too.
 
 snippets/ - my personal yasnippets, augmenting the base yasnippet collection.
 
+
 OS X Setup
 ==========
 
@@ -191,3 +194,18 @@ I eventually solved it by copying the shell script at
 
 I'm not sure why just putting a symlink on `$PATH` didn't work for me, but it
 didn't.
+
+
+Notes On Debugging Emacs Lisp
+=============================
+
+`debug-on-entry` and `cancel-debug-on-entry` are gold for debugging right in
+your current Emacs. Figure out what function's breaking and use
+`debug-on-entry` to jump into debugging when you run your reproduction recipe.
+Press '?' after the debugger starts to see what keys do what.
+
+Don't try to debug compiled functions, because you can't see much useful that
+way. Since I compile everything that means I need to manually eval function
+definitions before I debug - there must be a better way. Maybe I could advise
+`debug-on-entry` so it evals the function before starting debugging, if a
+compiled version is loaded?

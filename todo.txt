@@ -34,6 +34,9 @@
 
   Obviously this didn't happen before Mojave - I wonder what changed?
 
+  Worth noting that this may not be Emacs-specific. Opening a URL from YakYak
+  the other day took a full ten seconds.
+
 - Try integrating web-mode-edit-element into my markup editing style, or else
   figuring out how to get smartparens slurp/barf/etc working in web-mode. If it
   works out, delete my prototypical work on making tagedit work with web-mode
@@ -655,6 +658,11 @@
 - My SQL-in-PHP code does not work with queries that are built using
   concatenation, which some do (especially in crappy legacy codebases). See my
   email inbox for examples.
+
+- Look into using [Tree-sitter](http://tree-sitter.github.io/tree-sitter/) and
+  [tree-sitter.el](https://github.com/karlotness/tree-sitter.el) to get
+  parse-tree-based syntax coloration. If you did it as opt-in extensions to
+  existing modes it could make life a lot better (and easier).
 
 - yaml-mode syntax highlighting breaks if you use possessives, and no one has a
   clear fix. The package itself announces in the readme that it's abandonware,

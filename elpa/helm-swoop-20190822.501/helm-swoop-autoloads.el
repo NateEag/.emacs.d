@@ -22,9 +22,7 @@ List the all lines to another buffer, which is able to squeeze by
 \(fn &key $QUERY $SOURCE ($MULTILINE current-prefix-arg))" t nil)
 
 (autoload 'helm-swoop-from-isearch "helm-swoop" "\
-Invoke `helm-swoop' from isearch.
-
-\(fn)" t nil)
+Invoke `helm-swoop' from isearch." t nil)
 
 (autoload 'helm-multi-swoop "helm-swoop" "\
 Usage:
@@ -59,21 +57,14 @@ Apply all opened buffers of the current project to helm-multi-swoop
 \(fn &optional $QUERY)" t nil)
 
 (autoload 'helm-swoop-without-pre-input "helm-swoop" "\
-Start helm-swoop without pre input query.
-
-\(fn)" t nil)
+Start helm-swoop without pre input query." t nil)
 
 (autoload 'helm-swoop-symble-pre-input "helm-swoop" "\
-Start helm-swoop without pre input query.
+Start helm-swoop without pre input query." t nil)
 
-\(fn)" t nil)
+(autoload 'helm-multi-swoop-edit "helm-swoop" nil t nil)
 
-(autoload 'helm-multi-swoop-edit "helm-swoop" "\
-
-
-\(fn)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-swoop" '("helm-" "get-buffers-matching-mode")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-swoop" '("get-buffers-matching-mode" "helm-")))
 
 ;;;***
 

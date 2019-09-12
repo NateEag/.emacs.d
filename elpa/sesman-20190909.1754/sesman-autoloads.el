@@ -10,9 +10,7 @@
 ;;; Generated autoloads from sesman.el
 
 (autoload 'sesman-start "sesman" "\
-Start a Sesman session.
-
-\(fn)" t nil)
+Start a Sesman session." t nil)
 
 (autoload 'sesman-restart "sesman" "\
 Restart sesman session.
@@ -70,9 +68,7 @@ buffer.
 \(fn &optional SESSION)" t nil)
 
 (autoload 'sesman-unlink "sesman" "\
-Break any of the previously created links.
-
-\(fn)" t nil)
+Break any of the previously created links." t nil)
  (autoload 'sesman-map "sesman" "Session management prefix keymap." t 'keymap)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sesman" '("sesman-")))
@@ -85,9 +81,7 @@ Break any of the previously created links.
 
 (autoload 'sesman-browser "sesman-browser" "\
 Display an interactive session browser.
-See `sesman-browser-mode' for more details.
-
-\(fn)" t nil)
+See `sesman-browser-mode' for more details." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "sesman-browser" '("sesman-")))
 

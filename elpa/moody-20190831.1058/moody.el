@@ -6,7 +6,7 @@
 ;; Homepage: https://github.com/tarsius/moody
 
 ;; Package-Requires: ((emacs "25.3"))
-;; Package-Version: 20190203.1747
+;; Package-Version: 20190831.1058
 
 ;; This file is not part of GNU Emacs.
 
@@ -101,7 +101,7 @@ This should be an even number."
 (defun moody-replace-element (plain wrapped &optional reverse)
   "Replace PLAIN element with WRAPPED element in `mode-line-format'.
 
-Replace every occurance of PLAIN is the complete tree.
+Replace every occurance of PLAIN in the complete tree.
 If optional REVERSE is non-nil, then replace WRAPPED with PLAIN."
   (when reverse
     (cl-rotatef plain wrapped))
@@ -115,9 +115,9 @@ If optional REVERSE is non-nil, then replace WRAPPED with PLAIN."
 (defun moody-tab (string &optional width direction)
   "Return STRING as a tab.
 
-STRING is padded with at least one space on either side.  If
-optional WIDTH is non-nil, then it has to be an integer and
-specifies how much padding is added.
+STRING is padded with at least one space on either side.
+If optional WIDTH is non-nil, then it has to be an integer
+and specifies how much padding is added.
 
 DIRECTION specifies the direction of the slant and defaults
 to `up'.  The other valid value is `down'."
@@ -126,9 +126,9 @@ to `up'.  The other valid value is `down'."
 (defun moody-ribbon (string &optional width direction face-active face-inactive)
   "Return STRING as a ribbon.
 
-STRING is padded with at least one space on either side.  If
-optional WIDTH is non-nil, then it has to be an integer and
-specifies how much padding is added.
+STRING is padded with at least one space on either side.
+If optional WIDTH is non-nil, then it has to be an integer
+and specifies how much padding is added.
 
 DIRECTION specifies the direction of the slant and defaults
 to `up'.  The other valid value is `down'.

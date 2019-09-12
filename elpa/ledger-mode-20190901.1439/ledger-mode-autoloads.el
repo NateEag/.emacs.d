@@ -52,9 +52,7 @@
 Enable `flymake-mode' in `ledger-mode' buffers.
 
 Don't enable flymake if flycheck is on and flycheck-ledger is
-available.
-
-\(fn)" nil nil)
+available." nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ledger-flymake" '("ledger-")))
 

@@ -227,6 +227,7 @@ File: ledger-mode.info,  Node: The Ledger Buffer,  Next: The Reconcile Buffer,  
 
 * Menu:
 
+* Navigating Transactions::
 * Adding Transactions::
 * Copying Transactions::
 * Editing Amounts::
@@ -237,9 +238,23 @@ File: ledger-mode.info,  Node: The Ledger Buffer,  Next: The Reconcile Buffer,  
 * Narrowing Transactions::
 
 
-File: ledger-mode.info,  Node: Adding Transactions,  Next: Copying Transactions,  Prev: The Ledger Buffer,  Up: The Ledger Buffer
+File: ledger-mode.info,  Node: Navigating Transactions,  Next: Adding Transactions,  Prev: The Ledger Buffer,  Up: The Ledger Buffer
 
-2.1 Adding Transactions
+2.1 Navigating Transactions
+===========================
+
+In addition to the usual Emacs navigation commands, ledger-mode offers
+several additional commands to ease navigation.  ‘M-n’ and ‘M-p’
+navigate between next and previous xacts or directives.
+
+   Additionally, M-x ledger-navigate-previous-uncleared and M-x
+ledger-navigate-next-uncleared navigate to the next and precious
+uncleared transactions.
+
+
+File: ledger-mode.info,  Node: Adding Transactions,  Next: Copying Transactions,  Prev: Navigating Transactions,  Up: The Ledger Buffer
+
+2.2 Adding Transactions
 =======================
 
 Beyond the two ways of quickly adding transactions (*note Quick Add::)
@@ -275,7 +290,7 @@ Ledger Post Customization Group::.
 
 File: ledger-mode.info,  Node: Setting a Transactions Effective Date,  Next: Quick Balance Display,  Prev: Adding Transactions,  Up: Adding Transactions
 
-2.1.1 Setting a Transactions Effective Date
+2.2.1 Setting a Transactions Effective Date
 -------------------------------------------
 
 Ledger provides for adding information to a transaction that add details
@@ -292,7 +307,7 @@ the posting.
 
 File: ledger-mode.info,  Node: Quick Balance Display,  Prev: Setting a Transactions Effective Date,  Up: Adding Transactions
 
-2.1.2 Quick Balance Display
+2.2.2 Quick Balance Display
 ---------------------------
 
 You will often want to quickly check the balance of an account.  The
@@ -304,7 +319,7 @@ balance of the account will be displayed in the Minibuffer.
 
 File: ledger-mode.info,  Node: Copying Transactions,  Next: Editing Amounts,  Prev: Adding Transactions,  Up: The Ledger Buffer
 
-2.2 Copying Transactions
+2.3 Copying Transactions
 ========================
 
 An easy way to copy a transaction is to type ‘C-c C-k’ or menu entry
@@ -318,7 +333,7 @@ change the default in ‘ledger-copy-transaction-insert-blank-line-after’.
 
 File: ledger-mode.info,  Node: Editing Amounts,  Next: Marking Transactions,  Prev: Copying Transactions,  Up: The Ledger Buffer
 
-2.3 Editing Amounts
+2.4 Editing Amounts
 ===================
 
 GNU Emacs Calculator, aka ‘Calc’, is a very powerful Reverse Polish
@@ -338,7 +353,7 @@ period with a comma.
 
 File: ledger-mode.info,  Node: Marking Transactions,  Next: Formatting Transactions,  Prev: Editing Amounts,  Up: The Ledger Buffer
 
-2.4 Marking Transactions
+2.5 Marking Transactions
 ========================
 
 Ledger considers transaction or posting to be in one of three states:
@@ -373,7 +388,7 @@ transaction by typing ‘C-c C-e’.
 
 File: ledger-mode.info,  Node: Formatting Transactions,  Next: Deleting Transactions,  Prev: Marking Transactions,  Up: The Ledger Buffer
 
-2.5 Formatting Transactions
+2.6 Formatting Transactions
 ===========================
 
 When editing a transaction, liberal use of the ‘TAB’ key can keep the
@@ -387,7 +402,7 @@ by date, removes extraneous empty lines and aligns every transaction.
 
 File: ledger-mode.info,  Node: Deleting Transactions,  Next: Sorting Transactions,  Prev: Formatting Transactions,  Up: The Ledger Buffer
 
-2.6 Deleting Transactions
+2.7 Deleting Transactions
 =========================
 
 Along with normal buffer editing methods to delete text, Ledger-mode
@@ -398,7 +413,7 @@ operation is in the undo buffer.
 
 File: ledger-mode.info,  Node: Sorting Transactions,  Next: Narrowing Transactions,  Prev: Deleting Transactions,  Up: The Ledger Buffer
 
-2.7 Sorting Transactions
+2.8 Sorting Transactions
 ========================
 
 As you operating on the Ledger files, they may become disorganized.  For
@@ -436,7 +451,7 @@ automatically delete old markers and put new marker at point.
 
 File: ledger-mode.info,  Node: Narrowing Transactions,  Prev: Sorting Transactions,  Up: The Ledger Buffer
 
-2.8 Narrowing Transactions
+2.9 Narrowing Transactions
 ==========================
 
 Often you will want to run Ledger register reports just to look at a
@@ -1233,6 +1248,8 @@ Concept Index
 * transaction, marking:                  Marking Transactions.  (line 6)
 * transaction, narrowing:                Narrowing Transactions.
                                                                 (line 6)
+* transaction, navigation:               Navigating Transactions.
+                                                                (line 6)
 * transaction, sorting:                  Sorting Transactions.  (line 6)
 * uncleared:                             Marking Transactions.  (line 6)
 
@@ -1287,6 +1304,14 @@ Command & Variable Index
                                                                (line 11)
 * ledger-narrow-on-reconcile:            Ledger Reconcile Customization Group.
                                                                (line  9)
+* ledger-navigate-next-uncleared:        Navigating Transactions.
+                                                               (line 10)
+* ledger-navigate-next-xact-or-directive: Navigating Transactions.
+                                                               (line  6)
+* ledger-navigate-prev-xact-or-directive: Navigating Transactions.
+                                                               (line  6)
+* ledger-navigate-previous-uncleared:    Navigating Transactions.
+                                                               (line 10)
 * ledger-occur-narrowed-face:            Ledger Faces Customization Group.
                                                                (line 35)
 * ledger-occur-use-face-shown:           Ledger Customization Group.
@@ -1397,6 +1422,10 @@ Keystroke Index
                                                                (line  6)
 * M-1 C-c C-o C-r:                       Adding and Editing Reports.
                                                                (line  6)
+* M-n:                                   Navigating Transactions.
+                                                               (line  6)
+* M-p:                                   Navigating Transactions.
+                                                               (line  6)
 * q:                                     Reconciliation.       (line  6)
 * q <1>:                                 Finalize Reconciliation.
                                                                (line  6)
@@ -1427,52 +1456,53 @@ Node: Reconciliation5662
 Node: Reports7346
 Node: Narrowing8376
 Node: The Ledger Buffer8960
-Node: Adding Transactions9338
-Node: Setting a Transactions Effective Date10831
-Node: Quick Balance Display11731
-Node: Copying Transactions12263
-Node: Editing Amounts12865
-Node: Marking Transactions13936
-Node: Formatting Transactions15631
-Node: Deleting Transactions16229
-Node: Sorting Transactions16669
-Node: Narrowing Transactions18221
-Node: The Reconcile Buffer20071
-Node: Basics of Reconciliation20536
-Node: Starting a Reconciliation21485
-Node: Mark Transactions Pending23334
-Node: Edit Transactions During Reconciliation24003
-Node: Finalize Reconciliation24646
-Node: Adding and Deleting Transactions during Reconciliation25303
-Node: Changing Reconciliation Account25887
-Node: Changing Reconciliation Target26437
-Node: The Report Buffer26755
-Node: Running Basic Reports27013
-Node: Adding and Editing Reports28446
-Node: Expansion Formats29833
-Node: Make Report Transactions Active31474
-Node: Reversing Report Order32181
-Node: Scheduling Transactions32874
-Node: Specifying Upcoming Transactions33730
-Node: Transactions that occur on specific dates34304
-Node: Transactions that occur on specific days35345
-Node: Customizing Ledger-mode36474
-Node: Ledger-mode Customization36738
-Node: Customization Variables37423
-Node: Ledger Customization Group37903
-Node: Ledger Reconcile Customization Group38543
-Node: Ledger Report Customization Group41486
-Node: Ledger Faces Customization Group42205
-Node: Ledger Post Customization Group43952
-Node: Ledger Exec Customization Group44423
-Node: Ledger Test Customization Group44922
-Node: Ledger Texi Customization Group45324
-Node: Generating Ledger Regression Tests45816
-Node: Embedding Example results in Ledger Documentation46079
-Node: Hacking Ledger-mode46368
-Node: Concept Index46576
-Node: Command & Variable Index51350
-Node: Keystroke Index58609
+Node: Navigating Transactions9366
+Node: Adding Transactions9914
+Node: Setting a Transactions Effective Date11413
+Node: Quick Balance Display12313
+Node: Copying Transactions12845
+Node: Editing Amounts13447
+Node: Marking Transactions14518
+Node: Formatting Transactions16213
+Node: Deleting Transactions16811
+Node: Sorting Transactions17251
+Node: Narrowing Transactions18803
+Node: The Reconcile Buffer20653
+Node: Basics of Reconciliation21118
+Node: Starting a Reconciliation22067
+Node: Mark Transactions Pending23916
+Node: Edit Transactions During Reconciliation24585
+Node: Finalize Reconciliation25228
+Node: Adding and Deleting Transactions during Reconciliation25885
+Node: Changing Reconciliation Account26469
+Node: Changing Reconciliation Target27019
+Node: The Report Buffer27337
+Node: Running Basic Reports27595
+Node: Adding and Editing Reports29028
+Node: Expansion Formats30415
+Node: Make Report Transactions Active32056
+Node: Reversing Report Order32763
+Node: Scheduling Transactions33456
+Node: Specifying Upcoming Transactions34312
+Node: Transactions that occur on specific dates34886
+Node: Transactions that occur on specific days35927
+Node: Customizing Ledger-mode37056
+Node: Ledger-mode Customization37320
+Node: Customization Variables38005
+Node: Ledger Customization Group38485
+Node: Ledger Reconcile Customization Group39125
+Node: Ledger Report Customization Group42068
+Node: Ledger Faces Customization Group42787
+Node: Ledger Post Customization Group44534
+Node: Ledger Exec Customization Group45005
+Node: Ledger Test Customization Group45504
+Node: Ledger Texi Customization Group45906
+Node: Generating Ledger Regression Tests46398
+Node: Embedding Example results in Ledger Documentation46661
+Node: Hacking Ledger-mode46950
+Node: Concept Index47158
+Node: Command & Variable Index52071
+Node: Keystroke Index59888
 
 End Tag Table
 

@@ -1,16 +1,16 @@
 ;;; lorem-ipsum-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "lorem-ipsum" "lorem-ipsum.el" (23400 19232
-;;;;;;  0 0))
+;;;### (autoloads nil "lorem-ipsum" "lorem-ipsum.el" (0 0 0 0))
 ;;; Generated autoloads from lorem-ipsum.el
 
 (autoload 'lorem-ipsum-use-default-bindings "lorem-ipsum" "\
-Use the default keybindings of C-c l [spl].
-
-\(fn)" t nil)
+Use the default keybindings of C-c l [spl]." t nil)
 
 (autoload 'lorem-ipsum-insert-paragraphs "lorem-ipsum" "\
 Insert lorem ipsum paragraphs into buffer.
@@ -36,11 +36,14 @@ If NUM is non-nil, insert NUM list items.
 
 (defalias 'Lorem-ipsum-insert-list 'lorem-ipsum-insert-list)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lorem-ipsum" '("lorem-ipsum-")))
+
 ;;;***
 
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; lorem-ipsum-autoloads.el ends here

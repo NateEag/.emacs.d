@@ -31,17 +31,18 @@ better orientation.
 Keymap used for `smartparens-mode'.")
 
 (autoload 'sp-use-paredit-bindings "smartparens" "\
-Initiate `smartparens-mode-map' with `sp-paredit-bindings'.
-
-\(fn)" t nil)
+Initiate `smartparens-mode-map' with `sp-paredit-bindings'." t nil)
 
 (autoload 'sp-use-smartparens-bindings "smartparens" "\
-Initiate `smartparens-mode-map' with `sp-smartparens-bindings'.
-
-\(fn)" t nil)
+Initiate `smartparens-mode-map' with `sp-smartparens-bindings'." t nil)
 
 (autoload 'smartparens-mode "smartparens" "\
 Toggle smartparens mode.
+
+If called interactively, enable Smartparens mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
 
 You can enable pre-set bindings by customizing
 `sp-base-key-bindings' variable.  The current content of
@@ -53,6 +54,11 @@ You can enable pre-set bindings by customizing
 
 (autoload 'smartparens-strict-mode "smartparens" "\
 Toggle the strict smartparens mode.
+
+If called interactively, enable Smartparens-Strict mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
 
 When strict mode is active, `delete-char', `kill-word' and their
 backward variants will skip over the pair delimiters in order to
@@ -90,14 +96,10 @@ See `smartparens-strict-mode' for more information on Smartparens-Strict mode.
 \(fn &optional ARG)" t nil)
 
 (autoload 'turn-on-smartparens-strict-mode "smartparens" "\
-Turn on `smartparens-strict-mode'.
-
-\(fn)" t nil)
+Turn on `smartparens-strict-mode'." t nil)
 
 (autoload 'turn-off-smartparens-strict-mode "smartparens" "\
-Turn off `smartparens-strict-mode'.
-
-\(fn)" t nil)
+Turn off `smartparens-strict-mode'." t nil)
 
 (defvar smartparens-global-mode nil "\
 Non-nil if Smartparens-Global mode is enabled.
@@ -133,14 +135,10 @@ buffers.
 Additionally, buffers on `sp-ignore-modes-list' are ignored.
 
 You can still turn on smartparens in these mode manually (or
-in mode's startup-hook etc.) by calling `smartparens-mode'.
-
-\(fn)" t nil)
+in mode's startup-hook etc.) by calling `smartparens-mode'." t nil)
 
 (autoload 'turn-off-smartparens-mode "smartparens" "\
-Turn off `smartparens-mode'.
-
-\(fn)" t nil)
+Turn off `smartparens-mode'." t nil)
 
 (autoload 'show-smartparens-mode "smartparens" "\
 Toggle visualization of matching pairs.  When enabled, any
@@ -148,6 +146,11 @@ matching pair is highlighted after `sp-show-pair-delay' seconds
 of Emacs idle time if the point is immediately in front or after
 a pair.  This mode works similarly to `show-paren-mode', but
 support custom pairs.
+
+If called interactively, enable Show-Smartparens mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
@@ -174,14 +177,10 @@ See `show-smartparens-mode' for more information on Show-Smartparens mode.
 \(fn &optional ARG)" t nil)
 
 (autoload 'turn-on-show-smartparens-mode "smartparens" "\
-Turn on `show-smartparens-mode'.
-
-\(fn)" t nil)
+Turn on `show-smartparens-mode'." t nil)
 
 (autoload 'turn-off-show-smartparens-mode "smartparens" "\
-Turn off `show-smartparens-mode'.
-
-\(fn)" t nil)
+Turn off `show-smartparens-mode'." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "smartparens" '("smartparens-" "sp-")))
 

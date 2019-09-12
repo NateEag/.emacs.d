@@ -449,12 +449,12 @@ If `transient-save-history' is nil, then do nothing."
   "Transient prefix command.
 
 Each transient prefix command consists of a command, which is
-stored in a symbols function slot and an object, which is stored
-in the `transient--prefix' property of the same object.
+stored in a symbol's function slot and an object, which is
+stored in the `transient--prefix' property of the same symbol.
 
 When a transient prefix command is invoked, then a clone of that
 object is stored in the global variable `transient--prefix' and
-the prototype is stored in the clones `prototype' slot.")
+the prototype is stored in the clone's `prototype' slot.")
 
 ;;;; Suffix
 
@@ -656,11 +656,8 @@ The `transient-suffix' class is used if the class is not
 specified explicitly.
 
 The BODY must begin with an `interactive' form that matches
-ARGLIST.  Use the function `transient-args' or the low-level
-variable `current-transient-suffixes' if the former does not
-give you all the required details.  This should, but does not
-necessarily have to be, done inside the `interactive' form;
-just like for `prefix-arg' and `current-prefix-arg'.
+ARGLIST.  The infix arguments are usually accessed by using
+`transient-args' inside `interactive'.
 
 \(fn NAME ARGLIST [DOCSTRING] [KEYWORD VALUE]... BODY...)"
   (declare (debug (&define name lambda-list
@@ -2136,14 +2133,13 @@ method.  If you fail to do so, then users might not appreciate
 the lack of history, for example.
 
 Only for very simple classes that toggle or cycle through a very
-limitted number of possible values should you replace this with a
+limited number of possible values should you replace this with a
 simple method that does not handle history.  (E.g. for a command
 line switch the only possible values are \"use it\" and \"don't use
 it\", in which case it is pointless to preserve history.)"
   (with-slots (value multi-value allow-empty choices) obj
     (if (and value
              (not multi-value)
-             (not allow-empty)
              transient--prefix)
         (oset obj value nil)
       (let* ((overriding-terminal-local-map nil)

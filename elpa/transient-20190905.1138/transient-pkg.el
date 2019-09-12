@@ -1,4 +1,4 @@
-(define-package "transient" "20190812.1336" "Transient commands"
+(define-package "transient" "20190905.1138" "Transient commands"
   '((emacs "25.1")
     (dash "2.15.0"))
   :keywords

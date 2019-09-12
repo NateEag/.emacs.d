@@ -9,7 +9,7 @@
 ;;;### (autoloads nil "transient" "transient.el" (0 0 0 0))
 ;;; Generated autoloads from transient.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "transient" '("transient-" "post-transient-hook" "current-transient-" "define-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "transient" '("current-transient-" "define-" "post-transient-hook" "transient-")))
 
 ;;;***
 

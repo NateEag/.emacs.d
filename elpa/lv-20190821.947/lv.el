@@ -1,5 +1,5 @@
 ;;; lv.el --- Other echo area
-;; Package-Version: 20190716.1741
+;; Package-Version: 20190821.947
 
 ;; Copyright (C) 2015  Free Software Foundation, Inc.
 
@@ -56,6 +56,7 @@ Only the background color is significant."
   "Holds the current LV window.")
 
 (defvar display-line-numbers)
+(defvar display-fill-column-indicator)
 
 (defun lv-window ()
   "Ensure that LV window is live and return it."
@@ -77,6 +78,7 @@ Only the background color is significant."
           (setq header-line-format nil)
           (setq cursor-type nil)
           (setq display-line-numbers nil)
+          (setq display-fill-column-indicator nil)
           (set-window-dedicated-p lv-wnd t)
           (set-window-parameter lv-wnd 'no-other-window t))
         (select-window ori)))))

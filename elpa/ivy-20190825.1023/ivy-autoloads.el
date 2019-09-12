@@ -17,9 +17,7 @@
 ;;; Generated autoloads from ivy.el
 
 (autoload 'ivy-resume "ivy" "\
-Resume the last completion session.
-
-\(fn)" t nil)
+Resume the last completion session." t nil)
 
 (autoload 'ivy-read "ivy" "\
 Read a string in the minibuffer, with completion.
@@ -60,7 +58,8 @@ When SORT is non-nil, `ivy-sort-functions-alist' determines how
 to sort candidates before displaying them.
 
 ACTION is a function to call after selecting a candidate.
-It takes the candidate, which is a string, as its only argument.
+It takes one argument, the selected candidate. If COLLECTION is
+an alist, the argument is a cons cell, otherwise it's a string.
 
 MULTI-ACTION, when non-nil, is called instead of ACTION when
 there are marked candidates. It takes the list of candidates as
@@ -127,19 +126,13 @@ Minibuffer bindings:
 \(fn &optional ARG)" t nil)
 
 (autoload 'ivy-switch-buffer "ivy" "\
-Switch to another buffer.
-
-\(fn)" t nil)
+Switch to another buffer." t nil)
 
 (autoload 'ivy-switch-view "ivy" "\
-Switch to one of the window views stored by `ivy-push-view'.
-
-\(fn)" t nil)
+Switch to one of the window views stored by `ivy-push-view'." t nil)
 
 (autoload 'ivy-switch-buffer-other-window "ivy" "\
-Switch to another buffer in another window.
-
-\(fn)" t nil)
+Switch to another buffer in another window." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ivy" '("ivy-" "with-ivy-window")))
 

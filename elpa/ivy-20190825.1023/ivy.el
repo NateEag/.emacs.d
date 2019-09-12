@@ -39,7 +39,6 @@
 ;;; Code:
 
 (require 'cl-lib)
-(require 'ffap)
 (require 'ivy-overlay)
 (require 'colir)
 (require 'ring)
@@ -746,12 +745,13 @@ N is obtained from `ivy-more-chars-alist'."
   "Insert TEXT and exit minibuffer."
   (if (member (ivy-state-prompt ivy-last) '("Create directory: " "Make directory: "))
       (ivy-immediate-done)
-    (insert
-     (setf (ivy-state-current ivy-last)
-           (if (and ivy--directory
-                    (not (eq (ivy-state-history ivy-last) 'grep-files-history)))
-               (expand-file-name text ivy--directory)
-             text)))
+    (if (stringp text)
+        (insert
+         (setf (ivy-state-current ivy-last)
+               (if (and ivy--directory
+                        (not (eq (ivy-state-history ivy-last) 'grep-files-history)))
+                   (expand-file-name text ivy--directory)
+                 text))))
     (setq ivy-exit 'done)
     (exit-minibuffer)))
 
@@ -1009,14 +1009,20 @@ contains a single candidate.")
       (ivy--cd dir)
       (ivy--exhibit))))
 
+(defun ivy--handle-directory (input)
+  "Detect the next directory based on special values of INPUT."
+  (cond ((string= input "/")
+         "/")
+        ((string= input "/sudo::")
+         (concat input ivy--directory))))
+
 (defun ivy--directory-done ()
   "Handle exit from the minibuffer when completing file names."
-  (let (dir)
+  (let ((dir (ivy--handle-directory ivy-text)))
     (cond
-      ((equal ivy-text "/sudo::")
-       (setq dir (concat ivy-text (expand-file-name ivy--directory)))
-       (ivy--cd dir)
-       (ivy--exhibit))
+      (dir
+       (let ((inhibit-message t))
+         (ivy--cd dir)))
       ((ivy--directory-enter))
       ((unless (string= ivy-text "")
          (let ((file (expand-file-name
@@ -1108,6 +1114,16 @@ If the text hasn't changed as a result, forward to `ivy-alt-done'."
       (substring string (length prefix))
     string))
 
+(defun ivy--partial-cd-for-single-directory ()
+  (when (and
+         (eq (ivy-state-collection ivy-last) #'read-file-name-internal)
+         (= 1 (length
+               (ivy--re-filter
+                (funcall ivy--regex-function ivy-text) ivy--all-candidates)))
+         (let ((default-directory ivy--directory))
+           (file-directory-p (ivy-state-current ivy-last))))
+    (ivy--directory-done)))
+
 (defun ivy-partial ()
   "Complete the minibuffer text as much as possible."
   (interactive)
@@ -1137,13 +1153,7 @@ If the text hasn't changed as a result, forward to `ivy-alt-done'."
                   (concat
                    (mapconcat #'identity parts " ")
                    (and ivy-tab-space (not (= (length ivy--old-cands) 1)) " "))))
-           (when (and
-                  (eq (ivy-state-collection ivy-last) #'read-file-name-internal)
-                  (= 1 (length
-                        (all-completions ivy-text ivy--all-candidates)))
-                  (let ((default-directory ivy--directory))
-                    (file-directory-p (ivy-state-current ivy-last))))
-             (ivy--directory-done))
+           (ivy--partial-cd-for-single-directory)
            t))))
 
 (defvar ivy-completion-beg nil
@@ -1164,8 +1174,10 @@ If the text hasn't changed as a result, forward to `ivy-alt-done'."
                     (eq (ivy-state-collection ivy-last)
                         #'read-file-name-internal))
                (if (ivy-state-def ivy-last)
-                   (if (> (length ivy--directory)
-                          (1+ (length (expand-file-name (ivy-state-def ivy-last)))))
+                   (if (and
+                        (file-exists-p (ivy-state-def ivy-last))
+                        (/= (length ivy--directory)
+                            (1+ (length (expand-file-name (ivy-state-def ivy-last))))))
                        ivy--directory
                      (copy-sequence (ivy-state-def ivy-last)))
                  ivy--directory))
@@ -1468,7 +1480,7 @@ Call the permanent action if possible."
   (ivy-call))
 
 (defun ivy-previous-line-and-call (&optional arg)
-  "Move cursor vertically down ARG candidates.
+  "Move cursor vertically up ARG candidates.
 Call the permanent action if possible."
   (interactive "p")
   (ivy-previous-line arg)
@@ -1502,7 +1514,7 @@ Call the permanent action if possible."
         (when (and (with-ivy-window (derived-mode-p 'prog-mode))
                    (eq (ivy-state-caller ivy-last) 'swiper)
                    (not (file-exists-p ivy--default))
-                   (not (ffap-url-p ivy--default))
+                   (not (ivy-ffap-url-p ivy--default))
                    (not (ivy-state-dynamic-collection ivy-last))
                    (> (point) (minibuffer-prompt-end)))
           (ivy--insert-symbol-boundaries)))
@@ -1520,7 +1532,7 @@ If so, move to that directory, while keeping only the file name."
   (when ivy--directory
     (let ((input (ivy--input))
           url)
-      (if (setq url (or (ffap-url-p input)
+      (if (setq url (or (ivy-ffap-url-p input)
                         (with-ivy-window
                           (cl-reduce
                            (lambda (a b)
@@ -1529,7 +1541,7 @@ If so, move to that directory, while keeping only the file name."
                            :initial-value nil))))
           (ivy-exit-with-action
            (lambda (_)
-             (funcall ffap-url-fetcher url)))
+             (ivy-ffap-url-fetcher url)))
         (setq input (expand-file-name input))
         (let ((file (file-name-nondirectory input))
               (dir (expand-file-name (file-name-directory input))))
@@ -1986,7 +1998,8 @@ When SORT is non-nil, `ivy-sort-functions-alist' determines how
 to sort candidates before displaying them.
 
 ACTION is a function to call after selecting a candidate.
-It takes the candidate, which is a string, as its only argument.
+It takes one argument, the selected candidate. If COLLECTION is
+an alist, the argument is a cons cell, otherwise it's a string.
 
 MULTI-ACTION, when non-nil, is called instead of ACTION when
 there are marked candidates. It takes the list of candidates as
@@ -2062,10 +2075,10 @@ customizations apply to the current completion session."
                          (car ivy--all-candidates))
                    (setq ivy-exit 'done))
                (read-from-minibuffer
-                          prompt
-                          (ivy-state-initial-input ivy-last)
-                          (make-composed-keymap keymap ivy-minibuffer-map)
-                          nil
+                prompt
+                (ivy-state-initial-input ivy-last)
+                (make-composed-keymap keymap ivy-minibuffer-map)
+                nil
                 hist))
              (when (eq ivy-exit 'done)
                (let ((item (if ivy--directory
@@ -4302,6 +4315,12 @@ Skip buffers that match `ivy-ignore-buffers'."
             :keymap ivy-switch-buffer-map
             :caller 'ivy-switch-buffer-other-window))
 
+(defun ivy--yank-handle-case-fold (text)
+  (if (and (> (length ivy-text) 0)
+           (string= (downcase ivy-text) ivy-text))
+      (downcase text)
+    text))
+
 (defun ivy--yank-by (fn &rest args)
   "Pull buffer text from current line into search string.
 The region to extract is determined by the respective values of
@@ -4320,7 +4339,10 @@ point before and after applying FN to ARGS."
           (unless text
             (goto-char beg)))))
     (when text
-      (insert (replace-regexp-in-string "  +" " " text t t)))))
+      (insert (replace-regexp-in-string
+               "  +" " "
+               (ivy--yank-handle-case-fold text)
+               t t)))))
 
 (defun ivy-yank-word (&optional arg)
   "Pull next word from buffer into search string.
@@ -4943,6 +4965,19 @@ make decisions based on the whole marked list."
         (pop-to-buffer buf)))
     (view-mode)
     (goto-char (point-min))))
+
+(declare-function ffap-url-p "ffap")
+(defvar ffap-url-fetcher)
+
+(defun ivy-ffap-url-p (string)
+  "Forward to `ffap-url-p'."
+  (require 'ffap)
+  (ffap-url-p string))
+
+(defun ivy-ffap-url-fetcher (url)
+  "Calls `ffap-url-fetcher'."
+  (require 'ffap)
+  (funcall ffap-url-fetcher url))
 
 (provide 'ivy)
 

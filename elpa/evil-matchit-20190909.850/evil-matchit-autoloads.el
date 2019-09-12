@@ -15,9 +15,7 @@ Load MODES's plugin RULES.
 \(fn MODES RULES)" nil nil)
 
 (autoload 'evilmi-init-plugins "evil-matchit" "\
-Load plugins.
-
-\(fn)" t nil)
+Load plugins." t nil)
 
 (autoload 'evilmi-select-items "evil-matchit" "\
 Select items/tags and the region between them.
@@ -35,25 +33,23 @@ Like Vim %.
 \(fn NUM)" t nil)
  (autoload 'evilmi-jump-items "evil-matchit" nil t)
 
-(autoload 'evilmi-version "evil-matchit" "\
-
-
-\(fn)" t nil)
+(autoload 'evilmi-version "evil-matchit" nil t nil)
 
 (autoload 'evil-matchit-mode "evil-matchit" "\
 Buffer-local minor mode to emulate matchit.vim.
 
+If called interactively, enable Evil-Matchit mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
+
 \(fn &optional ARG)" t nil)
 
 (autoload 'turn-on-evil-matchit-mode "evil-matchit" "\
-Enable evil-matchit-mode in the current buffer.
-
-\(fn)" nil nil)
+Enable evil-matchit-mode in the current buffer." nil nil)
 
 (autoload 'turn-off-evil-matchit-mode "evil-matchit" "\
-Disable evil-matchit-mode in the current buffer.
-
-\(fn)" nil nil)
+Disable evil-matchit-mode in the current buffer." nil nil)
 
 (defvar global-evil-matchit-mode nil "\
 Non-nil if Global Evil-Matchit mode is enabled.
@@ -85,10 +81,7 @@ See `evil-matchit-mode' for more information on Evil-Matchit mode.
 ;;;;;;  0))
 ;;; Generated autoloads from evil-matchit-c.el
 
-(autoload 'evilmi-c-get-tag "evil-matchit-c" "\
-
-
-\(fn)" nil nil)
+(autoload 'evilmi-c-get-tag "evil-matchit-c" nil nil nil)
 
 (autoload 'evilmi-c-jump "evil-matchit-c" "\
 
@@ -103,10 +96,7 @@ See `evil-matchit-mode' for more information on Evil-Matchit mode.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-cmake.el
 
-(autoload 'evilmi-cmake-get-tag "evil-matchit-cmake" "\
-
-
-\(fn)" nil nil)
+(autoload 'evilmi-cmake-get-tag "evil-matchit-cmake" nil nil nil)
 
 (autoload 'evilmi-cmake-jump "evil-matchit-cmake" "\
 
@@ -121,10 +111,7 @@ See `evil-matchit-mode' for more information on Evil-Matchit mode.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-diff.el
 
-(autoload 'evilmi-diff-get-tag "evil-matchit-diff" "\
-
-
-\(fn)" nil nil)
+(autoload 'evilmi-diff-get-tag "evil-matchit-diff" nil nil nil)
 
 (autoload 'evilmi-diff-jump "evil-matchit-diff" "\
 
@@ -139,10 +126,7 @@ See `evil-matchit-mode' for more information on Evil-Matchit mode.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-elixir.el
 
-(autoload 'evilmi-elixir-get-tag "evil-matchit-elixir" "\
-
-
-\(fn)" nil nil)
+(autoload 'evilmi-elixir-get-tag "evil-matchit-elixir" nil nil nil)
 
 (autoload 'evilmi-elixir-jump "evil-matchit-elixir" "\
 
@@ -157,10 +141,7 @@ See `evil-matchit-mode' for more information on Evil-Matchit mode.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-fortran.el
 
-(autoload 'evilmi-fortran-get-tag "evil-matchit-fortran" "\
-
-
-\(fn)" nil nil)
+(autoload 'evilmi-fortran-get-tag "evil-matchit-fortran" nil nil nil)
 
 (autoload 'evilmi-fortran-jump "evil-matchit-fortran" "\
 
@@ -175,10 +156,7 @@ See `evil-matchit-mode' for more information on Evil-Matchit mode.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-html.el
 
-(autoload 'evilmi-html-get-tag "evil-matchit-html" "\
-
-
-\(fn)" nil nil)
+(autoload 'evilmi-html-get-tag "evil-matchit-html" nil nil nil)
 
 (autoload 'evilmi-html-jump "evil-matchit-html" "\
 
@@ -191,10 +169,7 @@ See `evil-matchit-mode' for more information on Evil-Matchit mode.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-javascript.el
 
-(autoload 'evilmi-javascript-get-tag "evil-matchit-javascript" "\
-
-
-\(fn)" nil nil)
+(autoload 'evilmi-javascript-get-tag "evil-matchit-javascript" nil nil nil)
 
 (autoload 'evilmi-javascript-jump "evil-matchit-javascript" "\
 Jump to the matching tag using RLT and NUM.
@@ -209,10 +184,7 @@ Jump to the matching tag using RLT and NUM.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-latex.el
 
-(autoload 'evilmi-latex-get-tag "evil-matchit-latex" "\
-
-
-\(fn)" nil nil)
+(autoload 'evilmi-latex-get-tag "evil-matchit-latex" nil nil nil)
 
 (autoload 'evilmi-latex-jump "evil-matchit-latex" "\
 
@@ -229,9 +201,7 @@ Jump to the matching tag using RLT and NUM.
 
 (autoload 'evilmi-markdown-get-tag "evil-matchit-markdown" "\
 Get current tag.
-Return (list start-position tag).
-
-\(fn)" nil nil)
+Return (list start-position tag)." nil nil)
 
 (autoload 'evilmi-markdown-jump "evil-matchit-markdown" "\
 Jump to the next tag.
@@ -245,9 +215,7 @@ Jump to the next tag.
 ;;; Generated autoloads from evil-matchit-ocaml.el
 
 (autoload 'evilmi-ocaml-get-tag "evil-matchit-ocaml" "\
-Return information of current tag: (list position-of-word word).
-
-\(fn)" nil nil)
+Return information of current tag: (list position-of-word word)." nil nil)
 
 (autoload 'evilmi-ocaml-jump "evil-matchit-ocaml" "\
 
@@ -262,10 +230,7 @@ Return information of current tag: (list position-of-word word).
 ;;;;;;  0 0 0))
 ;;; Generated autoloads from evil-matchit-org.el
 
-(autoload 'evilmi-org-get-tag "evil-matchit-org" "\
-
-
-\(fn)" nil nil)
+(autoload 'evilmi-org-get-tag "evil-matchit-org" nil nil nil)
 
 (autoload 'evilmi-org-jump "evil-matchit-org" "\
 
@@ -281,9 +246,7 @@ Return information of current tag: (list position-of-word word).
 ;;; Generated autoloads from evil-matchit-python.el
 
 (autoload 'evilmi-python-get-tag "evil-matchit-python" "\
-Reutrn '(start-position tag-type keyword).
-
-\(fn)" nil nil)
+Reutrn '(start-position tag-type keyword)." nil nil)
 
 (autoload 'evilmi-python-jump "evil-matchit-python" "\
 
@@ -298,10 +261,7 @@ Reutrn '(start-position tag-type keyword).
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-ruby.el
 
-(autoload 'evilmi-ruby-get-tag "evil-matchit-ruby" "\
-
-
-\(fn)" nil nil)
+(autoload 'evilmi-ruby-get-tag "evil-matchit-ruby" nil nil nil)
 
 (autoload 'evilmi-ruby-jump "evil-matchit-ruby" "\
 
@@ -316,10 +276,7 @@ Reutrn '(start-position tag-type keyword).
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-script.el
 
-(autoload 'evilmi-script-get-tag "evil-matchit-script" "\
-
-
-\(fn)" nil nil)
+(autoload 'evilmi-script-get-tag "evil-matchit-script" nil nil nil)
 
 (autoload 'evilmi-script-jump "evil-matchit-script" "\
 
@@ -334,10 +291,7 @@ Reutrn '(start-position tag-type keyword).
 ;;;;;;  0 0 0))
 ;;; Generated autoloads from evil-matchit-sdk.el
 
-(autoload 'evilmi-sdk-curline "evil-matchit-sdk" "\
-
-
-\(fn)" nil nil)
+(autoload 'evilmi-sdk-curline "evil-matchit-sdk" nil nil nil)
 
 (autoload 'evilmi-sdk-member "evil-matchit-sdk" "\
 Check if KEYWORD exist in KEYWORD-LIST.
@@ -391,10 +345,7 @@ Check character at POS is string or document by comparing font face.
 ;;;;;;  0 0))
 ;;; Generated autoloads from evil-matchit-sh.el
 
-(autoload 'evilmi-sh-get-tag "evil-matchit-sh" "\
-
-
-\(fn)" nil nil)
+(autoload 'evilmi-sh-get-tag "evil-matchit-sh" nil nil nil)
 
 (autoload 'evilmi-sh-jump "evil-matchit-sh" "\
 
@@ -410,9 +361,7 @@ Check character at POS is string or document by comparing font face.
 ;;; Generated autoloads from evil-matchit-simple.el
 
 (autoload 'evilmi-simple-get-tag "evil-matchit-simple" "\
-Get current tag in simple language.
-
-\(fn)" nil nil)
+Get current tag in simple language." nil nil)
 
 (autoload 'evilmi-simple-jump "evil-matchit-simple" "\
 Jump from current tag to matching tag in simple language.
@@ -427,10 +376,7 @@ Jump from current tag to matching tag in simple language.
 ;;;;;;  0 0 0))
 ;;; Generated autoloads from evil-matchit-sql.el
 
-(autoload 'evilmi-sql-get-tag "evil-matchit-sql" "\
-
-
-\(fn)" nil nil)
+(autoload 'evilmi-sql-get-tag "evil-matchit-sql" nil nil nil)
 
 (autoload 'evilmi-sql-jump "evil-matchit-sql" "\
 
@@ -445,10 +391,7 @@ Jump from current tag to matching tag in simple language.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-template.el
 
-(autoload 'evilmi-template-get-tag "evil-matchit-template" "\
-
-
-\(fn)" nil nil)
+(autoload 'evilmi-template-get-tag "evil-matchit-template" nil nil nil)
 
 (autoload 'evilmi-template-jump "evil-matchit-template" "\
 
@@ -463,10 +406,7 @@ Jump from current tag to matching tag in simple language.
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-matchit-verilog.el
 
-(autoload 'evilmi-verilog-get-tag "evil-matchit-verilog" "\
-
-
-\(fn)" nil nil)
+(autoload 'evilmi-verilog-get-tag "evil-matchit-verilog" nil nil nil)
 
 (autoload 'evilmi-verilog-jump "evil-matchit-verilog" "\
 

@@ -1073,7 +1073,7 @@ After setting the stylevars run hooks according to STYLENAME
     (modify-syntax-entry ?\" "\""  table)
     (modify-syntax-entry ?#  "< b" table)
     (modify-syntax-entry ?\n "> b" table)
-    (modify-syntax-entry ?$  "'"   table)
+    (modify-syntax-entry ?$  "_"   table)
     table))
 
 ;;;###autoload
@@ -1436,7 +1436,7 @@ a completion list."
         "return" "throws" "var"))
 
 (defconst php-phpdoc-font-lock-doc-comments
-  `(("{@[-[:alpha:]]+\\s-\\([^}]*\\)}" ; "{@foo ...}" markup.
+  `(("{@[-[:alpha:]]+\\s-*\\([^}]*\\)}" ; "{@foo ...}" markup.
      (0 'php-doc-annotation-tag prepend nil)
      (1 'php-string prepend nil))
     (,(rx (group "$") (group (in "A-Za-z_") (* (in "0-9A-Za-z_"))))
@@ -1513,7 +1513,14 @@ a completion list."
      ;; Highlight static method calls as such. This is necessary for method
      ;; names which are identical to keywords to be highlighted correctly.
      ("\\sw+::\\(\\sw+\\)(" 1 'php-static-method-call)
-
+     ;; Multiple catch (FooException | BarException $e)
+     (,(rx symbol-start "catch" symbol-end
+           (* (syntax whitespace)) "(" (* (syntax whitespace))
+           (group (+ (or (syntax word) (syntax symbol)))))
+      (1 font-lock-type-face)
+      (,(rx (* (syntax whitespace)) "|" (* (syntax whitespace))
+            (group (+ (or (syntax word) (syntax symbol))) symbol-end))
+       nil nil (1 font-lock-type-face)))
      ;; While c-opt-cpp-* highlights the <?php opening tags, it is not
      ;; possible to make it highlight short open tags and closing tags
      ;; as well. So we force the correct face on all cases that

@@ -12,24 +12,16 @@
 (let ((loads (get 'php 'custom-loads))) (if (member '"php" loads) nil (put 'php 'custom-loads (cons '"php" loads))))
 
 (autoload 'php-mode-maybe "php" "\
-Select PHP mode or other major mode.
-
-\(fn)" t nil)
+Select PHP mode or other major mode." t nil)
 
 (autoload 'php-current-class "php" "\
-Insert current class name if cursor in class context.
-
-\(fn)" t nil)
+Insert current class name if cursor in class context." t nil)
 
 (autoload 'php-current-namespace "php" "\
-Insert current namespace if cursor in namespace context.
-
-\(fn)" t nil)
+Insert current namespace if cursor in namespace context." t nil)
 
 (autoload 'php-copyit-fqsen "php" "\
-Copy/kill class/method FQSEN.
-
-\(fn)" t nil)
+Copy/kill class/method FQSEN." t nil)
 
 (autoload 'php-run-builtin-web-server "php" "\
 Run PHP Built-in web server.
@@ -176,14 +168,10 @@ Function name or path to server-start script.")
 (put 'php-project-server-start 'safe-local-variable #'(lambda (v) (or (functionp v) (php-project--eval-bootstrap-scripts v))))
 
 (autoload 'php-project-get-bootstrap-scripts "php-project" "\
-Return list of bootstrap script.
-
-\(fn)" nil nil)
+Return list of bootstrap script." nil nil)
 
 (autoload 'php-project-get-root-dir "php-project" "\
-Return path to current PHP project.
-
-\(fn)" nil nil)
+Return path to current PHP project." nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-project" '("php-project-")))
 

@@ -470,7 +470,7 @@ visits the file in the working tree."
   "Whether `magit-diff-visit-file' avoids visiting a blob from `HEAD'.
 
 By default `magit-diff-visit-file' always visits the blob that
-added the current line, while `magit-diff-visit-file-worktree'
+added the current line, while `magit-diff-visit-worktree-file'
 visits the respective file in the working tree.  For the `HEAD'
 commit, the former command used to visit the worktree file too,
 but that made it impossible to visit a blob from `HEAD'.
@@ -1823,8 +1823,8 @@ Staging and applying changes is documented in info node
 (defvar magit-file-section-map
   (let ((map (make-sparse-keymap)))
     (unless (featurep 'jkl)
-      (define-key map (kbd "C-j") 'magit-diff-visit-file-worktree))
-    (define-key map [C-return] 'magit-diff-visit-file-worktree)
+      (define-key map (kbd "C-j") 'magit-diff-visit-worktree-file))
+    (define-key map [C-return] 'magit-diff-visit-worktree-file)
     (define-key map [remap magit-visit-thing]      'magit-diff-visit-file)
     (define-key map [remap magit-delete-thing]     'magit-discard)
     (define-key map [remap magit-revert-no-commit] 'magit-reverse)
@@ -1841,8 +1841,8 @@ Staging and applying changes is documented in info node
 (defvar magit-hunk-section-map
   (let ((map (make-sparse-keymap)))
     (unless (featurep 'jkl)
-      (define-key map (kbd "C-j") 'magit-diff-visit-file-worktree))
-    (define-key map [C-return] 'magit-diff-visit-file-worktree)
+      (define-key map (kbd "C-j") 'magit-diff-visit-worktree-file))
+    (define-key map [C-return] 'magit-diff-visit-worktree-file)
     (define-key map [remap magit-visit-thing]      'magit-diff-visit-file)
     (define-key map [remap magit-delete-thing]     'magit-discard)
     (define-key map [remap magit-revert-no-commit] 'magit-reverse)
@@ -2335,7 +2335,7 @@ or a ref which is not a branch, then it inserts nothing."
                           (goto-char end))))))))))
         (save-excursion
           (forward-line)
-          (add-face-text-property beg (point) 'magit-diff-hunk-heading)
+          (magit--add-face-text-property beg (point) 'magit-diff-hunk-heading)
           (magit-insert-heading))
         (when magit-diff-highlight-keywords
           (save-excursion
@@ -2372,7 +2372,7 @@ or a ref which is not a branch, then it inserts nothing."
                                           ref)
                                         'font-lock-face 'magit-refname)))
             (forward-char)
-            (add-face-text-property beg (point) 'magit-diff-hunk-heading)
+            (magit--add-face-text-property beg (point) 'magit-diff-hunk-heading)
             (magit-insert-heading)
             (goto-char (point-max))
             (insert ?\n)))))))

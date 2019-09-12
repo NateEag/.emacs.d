@@ -423,6 +423,7 @@ the upstream isn't ahead of the current branch) show."
     ("h" "HEAD"           magit-log-head)]
    [""
     ("L" "local branches" magit-log-branches)
+    (7 "B" "matching branches" magit-log-matching-branches)
     ("b" "all branches"   magit-log-all-branches)
     ("a" "all references" magit-log-all)
     (7 "m" "merged"       magit-log-merged)]
@@ -580,6 +581,10 @@ the upstream isn't ahead of the current branch) show."
                                          magit-log-read-revs-map)
          "[, ]" t))))
 
+(defun magit-log-read-pattern ()
+  "Read a string from the user to use as --branches= pattern."
+  (magit-read-string "Type a pattern to pass to --branches"))
+
 ;;;###autoload
 (defun magit-log-current (revs &optional args files)
   "Show log for the current branch.
@@ -614,6 +619,14 @@ completion candidates."
                               (list "--branches")
                             (list "HEAD" "--branches"))
                           args files))
+
+;;;###autoload
+(defun magit-log-matching-branches (pattern &optional args files)
+  "Show log for all branches matching PATTERN and `HEAD'."
+  (interactive (cons (magit-log-read-pattern) (magit-log-arguments)))
+  (magit-log-setup-buffer
+   (list "HEAD" (format "--branches=%s" pattern))
+   args files))
 
 ;;;###autoload
 (defun magit-log-all-branches (&optional args files)
@@ -1483,7 +1496,8 @@ Type \\[magit-log-select-quit] to abort without selecting a commit."
                    "Type %p to select commit at point, or %q to abort")
                  `((?p . ,pick)
                    (?q . ,quit)))))
-    (add-face-text-property 0 (length msg) 'magit-header-line-log-select t msg)
+    (magit--add-face-text-property
+     0 (length msg) 'magit-header-line-log-select t msg)
     (when (memq magit-log-select-show-usage '(both header-line))
       (magit-set-header-line-format msg))
     (when (memq magit-log-select-show-usage '(both echo-area))

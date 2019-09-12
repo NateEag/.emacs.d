@@ -11,9 +11,7 @@
 ;;; Generated autoloads from racket-bug-report.el
 
 (autoload 'racket-bug-report "racket-bug-report" "\
-Fill a buffer with data to make a Racket Mode bug report.
-
-\(fn)" t nil)
+Fill a buffer with data to make a Racket Mode bug report." t nil)
 
 ;;;***
 
@@ -43,7 +41,7 @@ Fill a buffer with data to make a Racket Mode bug report.
 ;;;### (autoloads nil "racket-custom" "racket-custom.el" (0 0 0 0))
 ;;; Generated autoloads from racket-custom.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-custom" '("racket-" "defface-racket")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-custom" '("defface-racket" "racket-")))
 
 ;;;***
 
@@ -146,9 +144,7 @@ If you run this command, ever, you should run it again after:
 
 - Installing a new version of Racket and/or changing the value of
   the variable `racket-program'. Otherwise, you might get an
-  error message due to the bytecode being different versions.
-
-\(fn)" t nil)
+  error message due to the bytecode being different versions." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-mode" '("racket-")))
 
@@ -264,9 +260,7 @@ Emacs init file:
 #+END_SRC
 
 If you don’t like the highlighting of partially matching tokens you
-can turn it off by setting `input-method-highlight-flag' to nil.
-
-\(fn)" t nil)
+can turn it off by setting `input-method-highlight-flag' to nil." t nil)
 
 ;;;***
 

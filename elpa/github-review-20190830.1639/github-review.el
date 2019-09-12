@@ -4,7 +4,7 @@
 ;; Keywords: git, tools, vc, github
 ;; Homepage: https://github.com/charignon/github-review
 ;; Package-Requires: ((emacs "25") (s "1.12.0") (ghub "2.0") (dash "2.11.0"))
-;; Package-Version: 20190803.1701
+;; Package-Version: 20190830.1639
 ;; Package-X-Original-Version: 0.1
 
 ;; This file is not part of GNU Emacs
@@ -324,7 +324,10 @@ ACC is an alist accumulating parsing state."
        'comments
        (cons
         (-> (github-review-a-empty)
-            (github-review-a-assoc 'position pos)
+            ;; `max` here is to deal with comments at the top of a file (zeroth line), intended to give feedback
+            ;; on a file overall and not any particular line
+            ;; For such comments we report it on on the first line
+            (github-review-a-assoc 'position (max pos 1))
             (github-review-a-assoc 'path path)
             (github-review-a-assoc 'body (github-review-comment-text l)))
         comments)))

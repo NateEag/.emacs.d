@@ -10,9 +10,7 @@
 ;;; Generated autoloads from github-review.el
 
 (autoload 'github-review-forge-pr-at-point "github-review" "\
-Review the forge pull request at point.
-
-\(fn)" t nil)
+Review the forge pull request at point." t nil)
 
 (autoload 'github-review-start "github-review" "\
 Start review given PR URL.
@@ -20,19 +18,13 @@ Start review given PR URL.
 \(fn URL)" t nil)
 
 (autoload 'github-review-approve "github-review" "\
-Approve a PR (to be run from a buffer corresponding to a review).
-
-\(fn)" t nil)
+Approve a PR (to be run from a buffer corresponding to a review)." t nil)
 
 (autoload 'github-review-reject "github-review" "\
-Reject a PR (to be run from a buffer corresponding to a review).
-
-\(fn)" t nil)
+Reject a PR (to be run from a buffer corresponding to a review)." t nil)
 
 (autoload 'github-review-comment "github-review" "\
-Comment on a PR (to be run from a buffer corresponding to a review).
-
-\(fn)" t nil)
+Comment on a PR (to be run from a buffer corresponding to a review)." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "github-review" '("github-review-")))
 

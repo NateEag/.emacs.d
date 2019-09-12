@@ -4,7 +4,7 @@
 
 ;; Author: Artur Malabarba <emacs@endlessparentheses.com>
 ;; URL: https://github.com/Malabarba/aggressive-indent-mode
-;; Package-Version: 20190218.2331
+;; Package-Version: 20190828.1828
 ;; Version: 1.8.4
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: indent lisp maint tools
@@ -395,7 +395,7 @@ or messages."
   "Indent the regions in `aggressive-indent--changed-list'."
   (unless (or (run-hook-wrapped 'aggressive-indent--internal-dont-indent-if #'eval)
               (aggressive-indent--run-user-hooks))
-    (let ((inhibit-modification-hooks t)
+    (let ((after-change-functions (remove 'aggressive-indent--keep-track-of-changes after-change-functions))
           (inhibit-point-motion-hooks t)
           (indent-function
            (if (cl-member-if #'derived-mode-p aggressive-indent-modes-to-prefer-defun)

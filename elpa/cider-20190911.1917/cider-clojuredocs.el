@@ -43,7 +43,7 @@
   "Perform nREPL \"resource\" op with NS and SYM."
   (thread-first `("op" "clojuredocs-lookup"
                   "ns" ,ns
-                  "symbol" ,sym)
+                  "sym" ,sym)
     (cider-nrepl-send-sync-request)
     (nrepl-dict-get "clojuredocs")))
 
@@ -61,13 +61,13 @@ We need to handle \"?\", \".\", \"..\" and \"/\"."
     (when (and name ns)
       (concat base-url ns "/" (cider-clojuredocs-replace-special name)))))
 
-(defun cider-clojuredocs-web-lookup (symbol)
-  "Open the ClojureDocs documentation for SYMBOL in a web browser."
-  (if-let* ((var-info (cider-var-info symbol)))
+(defun cider-clojuredocs-web-lookup (sym)
+  "Open the ClojureDocs documentation for SYM in a web browser."
+  (if-let* ((var-info (cider-var-info sym)))
       (let ((name (nrepl-dict-get var-info "name"))
             (ns (nrepl-dict-get var-info "ns")))
         (browse-url (cider-clojuredocs-url name ns)))
-    (error "Symbol %s not resolved" symbol)))
+    (error "Symbol %s not resolved" sym)))
 
 ;;;###autoload
 (defun cider-clojuredocs-web (&optional arg)
@@ -94,23 +94,37 @@ opposite of what that option dictates."
 (defun cider-clojuredocs--content (dict)
   "Generate a nice string from DICT."
   (with-temp-buffer
-    (insert "= " (nrepl-dict-get dict "ns") "/" (nrepl-dict-get dict "name") "\n")
-    (insert "== See Also\n")
-    (insert "== Examples\n")
-    (insert "== Notes\n")
+    (insert "= " (nrepl-dict-get dict "ns") "/" (nrepl-dict-get dict "name") "\n\n")
+    (let ((arglists (nrepl-dict-get dict "arglists")))
+      (dolist (arglist arglists)
+        (insert (format " [%s]\n" arglist)))
+      (insert "\n")
+      (insert (nrepl-dict-get dict "doc"))
+      (insert "\n"))
+    (insert "\n== See Also\n\n")
+    (if-let ((see-alsos (nrepl-dict-get dict "see-alsos")))
+        (dolist (see-also see-alsos)
+          (insert (format "* %s\n" see-also)))
+      (insert "Not available\n"))
+    (insert "\n== Examples\n\n")
+    (if-let ((examples (nrepl-dict-get dict "examples")))
+        (dolist (example examples)
+          (insert (cider-font-lock-as-clojure example))
+          (insert "\n-------------------------------------------------\n"))
+      (insert "Not available\n"))
+    (insert "\n== Notes\n\n")
+    (if-let ((notes (nrepl-dict-get dict "notes")))
+        (dolist (note notes)
+          (insert note)
+          (insert "\n-------------------------------------------------\n"))
+      (insert "Not available\n"))
     (buffer-string)))
 
-(defun cider-clojuredocs-lookup (symbol)
-  "Look up the ClojureDocs documentation for SYMBOL.
-
-If SYMBOL is a special form, the clojure.core ns is used, as is
-ClojureDocs's convention."
-  (if-let* ((var-info (cider-var-info symbol)))
-      (let* ((name (nrepl-dict-get var-info "name"))
-             (ns (nrepl-dict-get var-info "ns" "clojure.core"))
-             (docs (cider-sync-request:clojuredocs-lookup ns name)))
-        (pop-to-buffer (cider-create-clojuredocs-buffer (cider-clojuredocs--content docs))))
-    (error "Symbol %s not resolved" symbol)))
+(defun cider-clojuredocs-lookup (sym)
+  "Look up the ClojureDocs documentation for SYM."
+  (let ((docs (cider-sync-request:clojuredocs-lookup (cider-current-ns) sym)))
+    (pop-to-buffer (cider-create-clojuredocs-buffer (cider-clojuredocs--content docs))))
+  (error "Symbol %s not resolved" sym))
 
 ;;;###autoload
 (defun cider-clojuredocs (&optional arg)

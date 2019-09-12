@@ -66,7 +66,7 @@ available) and the matching REPL buffer."
   :safe #'booleanp
   :package-version '(cider . "0.9.0"))
 
-(defconst cider-required-nrepl-version "0.4.4"
+(defconst cider-required-nrepl-version "0.6.0"
   "The minimum nREPL version that's known to work properly with CIDER.")
 
 
@@ -83,6 +83,10 @@ PARAMS is a plist containing :host, :port, :server and other parameters for
     (plist-get params :server)
     (lambda (_)
       (cider-repl-create params)))))
+
+(defun cider-sessions ()
+  "Return a list of all active CIDER sessions."
+  (sesman-sessions 'CIDER))
 
 (defun cider-connected-p ()
   "Return t if CIDER is currently connected, nil otherwise."
@@ -187,11 +191,11 @@ FORMAT is a format string to compile with ARGS and display on the REPL."
   "Check whether we're using a compatible nREPL version."
   (if-let* ((nrepl-version (cider--nrepl-version)))
       (when (version< nrepl-version cider-required-nrepl-version)
-        (cider-emit-manual-warning "troubleshooting/#warning-saying-you-have-to-use-nrepl-0212"
+        (cider-emit-manual-warning "troubleshooting.html#_warning_saying_you_have_to_use_newer_nrepl"
                                    "CIDER requires nREPL %s (or newer) to work properly"
                                    cider-required-nrepl-version))
-    (cider-emit-manual-warning "troubleshooting/#warning-saying-you-have-to-use-nrepl-0212"
-                               "Can't determine nREPL's version.\nPlease, update nREPL to %s."
+    (cider-emit-manual-warning "troubleshooting.html#_warning_saying_you_have_to_use_newer_nrepl"
+                               "Can't determine nREPL's version.\nPlease, update nREPL to %s (or newer)."
                                cider-required-nrepl-version)))
 
 (defvar cider-minimum-clojure-version)
@@ -199,10 +203,10 @@ FORMAT is a format string to compile with ARGS and display on the REPL."
   "Ensure that we are meeting the minimum supported version of Clojure."
   (if-let* ((clojure-version (cider--clojure-version)))
       (when (version< clojure-version cider-minimum-clojure-version)
-        (cider-emit-manual-warning "installation/#prerequisites"
+        (cider-emit-manual-warning "installation.html#_prerequisites"
                                    "Clojure version (%s) is not supported (minimum %s). CIDER will not work."
                                    clojure-version cider-minimum-clojure-version))
-    (cider-emit-manual-warning "installation/#prerequisites"
+    (cider-emit-manual-warning "installation.html#_prerequisites"
                                "Can't determine Clojure's version. CIDER requires Clojure %s (or newer)."
                                cider-minimum-clojure-version)))
 
@@ -216,10 +220,10 @@ message in the REPL area."
          (middleware-version  (nrepl-dict-get version-dict "version-string")))
     (cond
      ((null middleware-version)
-      (cider-emit-manual-warning "troubleshooting/#cider-complains-of-the-cider-nrepl-version"
+      (cider-emit-manual-warning "troubleshooting.html#_cider_complains_of_the_cider_nrepl_version"
                                  "CIDER requires cider-nrepl to be fully functional. Some features will not be available without it!"))
      ((not (string= middleware-version cider-required-middleware-version))
-      (cider-emit-manual-warning "troubleshooting/#cider-complains-of-the-cider-nrepl-version"
+      (cider-emit-manual-warning "troubleshooting.html#_cider_complains_of_the_cider_nrepl_version"
                                  "CIDER %s requires cider-nrepl %s, but you're currently using cider-nrepl %s. The version mismatch might break some functionality!"
                                  cider-version cider-required-middleware-version middleware-version)))))
 
@@ -248,8 +252,8 @@ See command `cider-mode'."
       (cider-mode -1))))
 
 (defun cider-possibly-disable-on-existing-clojure-buffers ()
-  "If not connected, disable command `cider-mode' on existing Clojure buffers."
-  (unless (cider-connected-p)
+  "Disable command `cider-mode' on existing Clojure buffers when all CIDER sessions are closed."
+  (unless (cider-sessions)
     (cider-disable-on-existing-clojure-buffers)))
 
 (declare-function cider--debug-init-connection "cider-debug")
@@ -345,8 +349,8 @@ REPL defaults to the current REPL."
                   (sesman-browser-get 'object)
                   (cider-current-repl nil 'ensure))))
     (cider--close-connection repl))
-  ;; if there are no more connections we can kill all ancillary buffers
-  (unless (cider-connected-p)
+  ;; if there are no more sessions we can kill all ancillary buffers
+  (unless (cider-sessions)
     (cider-close-ancillary-buffers))
   ;; need this to refresh sesman browser
   (run-hooks 'sesman-post-command-hook))
@@ -475,8 +479,8 @@ Fallback on `cider' command."
 
 (cl-defmethod sesman-quit-session ((_system (eql CIDER)) session)
   (mapc #'cider--close-connection (cdr session))
-  ;; if there are no more connections we can kill all ancillary buffers
-  (unless (cider-connected-p)
+  ;; if there are no more session we can kill all ancillary buffers
+  (unless (cider-sessions)
     (cider-close-ancillary-buffers)))
 
 (cl-defmethod sesman-restart-session ((_system (eql CIDER)) session)

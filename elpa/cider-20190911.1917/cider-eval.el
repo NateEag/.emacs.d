@@ -491,8 +491,9 @@ or it can be a list with (START END) of the evaluated region."
                                    (cider-handle-compilation-errors err eval-buffer))
                                  '())))
 
-(defun cider-load-file-handler (&optional buffer)
-  "Make a load file handler for BUFFER."
+(defun cider-load-file-handler (&optional buffer done-handler)
+  "Make a load file handler for BUFFER.
+Optional argument DONE-HANDLER lambda will be run once load is complete."
   (let ((eval-buffer (current-buffer)))
     (nrepl-make-response-handler (or buffer eval-buffer)
                                  (lambda (buffer value)
@@ -506,7 +507,7 @@ or it can be a list with (START END) of the evaluated region."
                                  (lambda (_buffer err)
                                    (cider-emit-interactive-eval-err-output err)
                                    (cider-handle-compilation-errors err eval-buffer))
-                                 '()
+                                 (or done-handler '())
                                  (lambda ()
                                    (funcall nrepl-err-handler)))))
 
@@ -1079,11 +1080,12 @@ passing arguments."
       (widen)
       (substring-no-properties (buffer-string)))))
 
-(defun cider-load-buffer (&optional buffer)
+(defun cider-load-buffer (&optional buffer callback)
   "Load (eval) BUFFER's file in nREPL.
 If no buffer is provided the command acts on the current buffer.  If the
 buffer is for a cljc file, and both a Clojure and ClojureScript REPL exists
-for the project, it is evaluated in both REPLs."
+for the project, it is evaluated in both REPLs.
+Optional argument CALLBACK will override the default ‘cider-load-file-handler’."
   (interactive)
   (setq buffer (or buffer (current-buffer)))
   ;; When cider-load-buffer or cider-load-file are called in programs the
@@ -1114,7 +1116,8 @@ for the project, it is evaluated in both REPLs."
                                        (funcall cider-to-nrepl-filename-function
                                                 (cider--server-filename filename))
                                        (file-name-nondirectory filename)
-                                       repl)))
+                                       repl
+                                       callback)))
           (message "Loading %s..." filename))))))
 
 (defun cider-load-file (filename)

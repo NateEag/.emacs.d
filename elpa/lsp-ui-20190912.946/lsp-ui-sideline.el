@@ -58,7 +58,7 @@
   :type 'boolean
   :group 'lsp-ui-sideline)
 
-(defcustom lsp-ui-sideline-show-hover t
+(defcustom lsp-ui-sideline-show-hover nil
   "Whether to show hover messages in sideline."
   :type 'boolean
   :group 'lsp-ui-sideline)
@@ -73,7 +73,7 @@
   :type 'boolean
   :group 'lsp-ui-sideline)
 
-(defcustom lsp-ui-sideline-update-mode 'line
+(defcustom lsp-ui-sideline-update-mode 'point
   "Define the mode for updating sideline information.
 
 When set to `line' the information will be updated when user
@@ -91,6 +91,11 @@ when user changes current point."
 (defcustom lsp-ui-sideline-diagnostic-max-lines 20
   "Maximum number of lines to show of diagnostics in sideline."
   :type 'integer
+  :group 'lsp-ui-sideline)
+
+(defcustom lsp-ui-sideline-actions-kind-regex "quickfix.*\\|refactor.*"
+  "Regex for the code actions kinds to show in the sideline."
+  :type 'string
   :group 'lsp-ui-sideline)
 
 (defvar lsp-ui-sideline-code-actions-prefix ""
@@ -351,6 +356,11 @@ CURRENT is non-nil when the point is on the symbol."
 
 (defun lsp-ui-sideline--code-actions (actions bol eol)
   "Show code ACTIONS."
+  (when lsp-ui-sideline-actions-kind-regex
+    (setq actions (seq-filter (-lambda ((&hash "kind"))
+                                (or (not kind)
+                                    (s-match lsp-ui-sideline-actions-kind-regex kind)))
+                             actions)))
   (setq lsp-ui-sideline--code-actions actions)
   (dolist (ov lsp-ui-sideline--ovs)
     (when (eq (overlay-get ov 'kind) 'actions)

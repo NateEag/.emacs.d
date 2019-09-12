@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; URL: https://github.com/purcell/package-lint
-;; Package-Version: 20190807.1837
+;; Package-Version: 20190908.2158
 ;; Keywords: lisp
 ;; Version: 0
 ;; Package-Requires: ((cl-lib "0.5") (emacs "24"))
@@ -283,7 +283,8 @@ This is bound dynamically while the checks run.")
           (let ((desc (package-lint--check-package-el-can-parse)))
             (when desc
               (package-lint--check-package-summary desc)
-              (package-lint--check-provide-form desc)))
+              (package-lint--check-provide-form desc)
+              (package-lint--check-no-emacs-in-package-name desc)))
           (package-lint--check-no-use-of-cl)
           (package-lint--check-no-use-of-cl-lib-sublibraries)
           (package-lint--check-eval-after-load)
@@ -735,6 +736,16 @@ DESC is a struct as returned by `package-buffer-info'."
        'error
        (format "There is no (provide '%s) form." name)))))
 
+(defun package-lint--check-no-emacs-in-package-name (desc)
+  "Check that the package name doesn't contain \"emacs\".
+DESC is a struct as returned by `package-buffer-info'."
+  (let ((name (package-lint--package-desc-name desc)))
+    (when (string-match-p "emacs" (symbol-name name))
+      (package-lint--error
+       1 1
+       'warning
+       "The word \"emacs\" is redundant in Emacs package names."))))
+
 (defun package-lint--check-symbol-separators (definitions)
   "Check that symbol DEFINITIONS don't contain non-standard separators."
   (pcase-dolist (`(,name . ,position) definitions)
@@ -825,7 +836,7 @@ Valid definition names are:
   (let ((prefix (package-lint--get-package-prefix)))
     (when prefix
       (pcase (cadr def)
-        (`(quote ,alias)
+        ((and `(quote ,alias) (guard (symbolp alias)))
          (unless (package-lint--valid-definition-name-p (symbol-name alias) prefix)
            (package-lint--error-at-point
             'error

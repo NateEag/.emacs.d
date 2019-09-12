@@ -23,23 +23,17 @@ Current buffer is used if none is specified.
 \(fn &optional BUFFER)" nil nil)
 
 (autoload 'package-lint-current-buffer "package-lint" "\
-Display lint errors and warnings for the current buffer.
-
-\(fn)" t nil)
+Display lint errors and warnings for the current buffer." t nil)
 
 (autoload 'package-lint-batch-and-exit "package-lint" "\
 Run `package-lint-buffer' on the files remaining on the command line.
 Use this only with -batch, it won't work interactively.
 
 When done, exit Emacs with status 0 if there were no errors nor warnings or 1
-otherwise.
-
-\(fn)" nil nil)
+otherwise." nil nil)
 
 (autoload 'package-lint-looks-like-a-package-p "package-lint" "\
-Return non-nil if the current buffer appears to be intended as a package.
-
-\(fn)" nil nil)
+Return non-nil if the current buffer appears to be intended as a package." nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "package-lint" '("package-lint-")))
 

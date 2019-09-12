@@ -78,9 +78,7 @@ vectors, so don't use strings to define them.
 (function-put 'helm-define-key-with-subkeys 'lisp-indent-function '1)
 
 (autoload 'helm-debug-open-last-log "helm" "\
-Open helm log file or buffer of last helm session.
-
-\(fn)" t nil)
+Open helm log file or buffer of last helm session." t nil)
 
 (autoload 'helm "helm" "\
 Main function to execute helm sources.
@@ -212,9 +210,7 @@ However, the use of non-keyword args is deprecated.
 \(fn &key SOURCES INPUT PROMPT RESUME PRESELECT BUFFER KEYMAP DEFAULT HISTORY ALLOW-NEST OTHER-LOCAL-VARS)" nil nil)
 
 (autoload 'helm-cycle-resume "helm" "\
-Cycle in `helm-buffers' list and resume when waiting more than 1.2s.
-
-\(fn)" t nil)
+Cycle in `helm-buffers' list and resume when waiting more than 1.2s." t nil)
 
 (autoload 'helm-other-buffer "helm" "\
 Simplified `helm' interface with other `helm-buffer'.

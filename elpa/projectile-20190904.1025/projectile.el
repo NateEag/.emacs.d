@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20190626.1315
+;; Package-Version: 20190904.1025
 ;; Keywords: project, convenience
 ;; Version: 2.1.0-snapshot
 ;; Package-Requires: ((emacs "25.1") (pkg-info "0.4"))
@@ -299,6 +299,7 @@ If variable `projectile-project-name' is non-nil, this function will not be used
     "Gemfile"            ; Bundler file
     "requirements.txt"   ; Pip file
     "setup.py"           ; Setuptools file
+    "pyproject.toml"     ; Python project file
     "tox.ini"            ; Tox file
     "composer.json"      ; Composer project file
     "Cargo.toml"         ; Cargo project file

@@ -169,6 +169,7 @@
 (defvar lispy-map-target-len 1
   "The target end for mapping transformations.")
 
+;; TODO: Should this be suspect to comment-char handling as well?
 (defvar-local lispy-outline-header ";;"
   "Store the buffer-local outline start.")
 
@@ -383,6 +384,12 @@ This applies to the commands that use `lispy-pair'."
           (const :tag "Clojure" "->>")
           (string :tag "Custom")))
 
+(defun lispy-comment-char (&optional level postfix)
+  "Get the `comment-start' character, or `;' if nil, repeated LEVEL times concated with POSTFIX."
+  (concat
+   (apply #'concat (make-list (or level 1) (or comment-start ";")))
+   (or postfix "")))
+
 (defun lispy-dir-string< (a b)
   (if (string-match "/$" a)
       (if (string-match "/$" b)
@@ -482,10 +489,10 @@ backward through lists, which is useful to move into special.
                (setq lispy-outline-header "%")
                (setq-local outline-regexp "\\(?:%\\*+\\|\\\\\\(?:sub\\)?section{\\)"))
               ((eq major-mode 'clojure-mode)
-               (require 'le-clojure)
-               (setq completion-at-point-functions
-                     '(lispy-clojure-complete-at-point
-                       cider-complete-at-point))
+               (eval-after-load 'le-clojure
+                 '(setq completion-at-point-functions
+                   '(lispy-clojure-complete-at-point
+                     cider-complete-at-point)))
                (setq-local outline-regexp (substring lispy-outline 1)))
               ((eq major-mode 'python-mode)
                (setq-local lispy-outline "^#\\*+")
@@ -830,7 +837,7 @@ Return nil if can't move."
         r)
     (cond
       ((and (lispy-bolp)
-            (looking-at ";"))
+            (looking-at (lispy-comment-char)))
        (setq r (lispy--re-search-in-code lispy-left 'forward arg)))
       ((lispy-left-p)
        (setq r (lispy--re-search-in-code lispy-left 'forward arg)))
@@ -895,7 +902,7 @@ Return nil if can't move."
              (goto-char pt))))
 
         ((or (looking-at lispy-outline)
-             (and (bolp) (looking-at ";")))
+             (and (bolp) (looking-at (lispy-comment-char))))
          (let ((pt (point)))
            (lispy-dotimes arg
              (outline-next-visible-heading 1)
@@ -963,7 +970,7 @@ Return nil if can't move."
              (lispy-different))))
 
         ((or (looking-at lispy-outline)
-             (and (bolp) (looking-at ";")))
+             (and (bolp) (looking-at (lispy-comment-char))))
          (let ((pt (point)))
            (lispy-dotimes arg
              (outline-previous-visible-heading 1)
@@ -1143,7 +1150,7 @@ If position isn't special, move to previous or error."
                               '(?w ?_))))
           (forward-char 1))
         (when (or (lispy-looking-back (concat lispy-left " +"))
-                  (lispy-looking-back "; +"))
+                  (lispy-looking-back (lispy-comment-char 1 " +")))
           (delete-horizontal-space))
         (if (setq bnd (lispy--bounds-string))
             (save-restriction
@@ -1164,7 +1171,7 @@ If position isn't special, move to previous or error."
       (when (lispy--in-comment-p)
         (skip-chars-backward " \n"))
       (if (memq (char-syntax (char-before))
-                '(?w ?_ 32))
+                '(?w ?_ ?\s))
           (if (lispy-looking-back "\\_<\\s_+")
               (delete-region (match-beginning 0)
                              (match-end 0))
@@ -1379,7 +1386,7 @@ Otherwise (`backward-delete-char-untabify' ARG)."
                                       (point-min))
                                  (match-end 0))
                   (lispy--indent-for-tab))
-                 ((and (looking-at "$") (lispy-looking-back "; +"))
+                 ((and (looking-at "$") (lispy-looking-back (lispy-comment-char 1 " +")))
                   (let ((pt (point)))
                     (skip-chars-backward " ;")
                     (delete-region (point) pt)
@@ -1532,7 +1539,7 @@ When ARG is more than 1, mark ARGth element."
          (lispy--mark
           (lispy--bounds-dwim))
          (lispy-different))
-        ((and (lispy-bolp) (looking-at ";"))
+        ((and (lispy-bolp) (looking-at (lispy-comment-char)))
          (lispy--mark (lispy--bounds-comment))))
   (setq this-command 'lispy-mark-list))
 
@@ -1744,6 +1751,7 @@ When this function is called:
     (clojurec-mode . ("[`'~@]+" "#" "#\\?@?"))
     (cider-repl-mode . ("[`'~@]+" "#" "#\\?@?"))
     (cider-clojure-interaction-mode . ("[`'~@]+" "#" "#\\?@?"))
+    (janet-mode . ("[@;]"))
     (scheme-mode . ("[#`',@]+" "#hash"))
     (t . ("[`',@]+")))
   "An alist of `major-mode' to a list of regexps.
@@ -1757,6 +1765,7 @@ major mode. These regexps are used to determine whether to insert a space for
     (clojurec-mode . ("[`']" "#[A-z.]*"))
     (cider-repl-mode . ("[`']" "#[A-z.]*"))
     (cider-clojure-interaction-mode . ("[`']" "#[A-z.]*"))
+    (janet-mode . ("[@;]"))
     (scheme-mode . ("[#`',@]+" "#hash"))
     (t . nil))
   "An alist of `major-mode' to a list of regexps.
@@ -1770,6 +1779,7 @@ major mode. These regexps are used to determine whether to insert a space for
     (clojurec-mode . ("[`'^]" "#[:]*[A-z.:]*"))
     (cider-repl-mode . ("[`'^]" "#[:]*[A-z.:]*"))
     (cider-clojure-interaction-mode . ("[`'^]" "#[:]*[A-z.:]*"))
+    (janet-mode . ("[@;]"))
     (t . nil))
   "An alist of `major-mode' to a list of regexps.
 Each regexp describes valid syntax that can precede an opening brace in that
@@ -3492,7 +3502,7 @@ Comments will be moved ahead of sexp."
       (let* ((bnd (lispy--bounds-comment))
              (str (lispy--string-dwim bnd)))
         (delete-region (car bnd) (cdr bnd))
-        (insert ";; "
+        (insert (lispy-comment-char 2 " ")
                 (mapconcat #'identity
                            (split-string str "[ \n]*;;[ \n]*" t)
                            " "))
@@ -3854,18 +3864,18 @@ When SILENT is non-nil, don't issue messages."
                       (delete-char -1)
                       (insert "###autoload")
                       (forward-char 1))
-                     ((lispy-after-string-p ";; ")
+                     ((lispy-after-string-p (lispy-comment-char 2 " "))
                       (backward-char 1)
-                      (insert ";")
+                      (insert (lispy-comment-char))
                       (forward-char 1))
                      ((and lispy-comment-use-single-semicolon
-                           (lispy-after-string-p "; "))
+                           (lispy-after-string-p (lispy-comment-char 1 " ")))
                       (delete-region
                        (point)
                        (progn
-                         (skip-chars-backward "; \n")
+                         (skip-chars-backward (lispy-comment-char 1 " \n"))
                          (point)))
-                      (insert " ;; "))
+                      (insert (concat " " (lispy-comment-char 2 " "))))
                      (t
                       (self-insert-command 1))))
               ((memq (char-before) '(?\\ ?\#))
@@ -3877,7 +3887,7 @@ When SILENT is non-nil, don't issue messages."
                (comment-region (car bnd) (cdr bnd))
                (when lispy-move-after-commenting
                  (when (or (lispy--in-string-or-comment-p)
-                           (looking-at ";"))
+                           (looking-at (lispy-comment-char)))
                    (lispy--out-backward 1))))
               ((lispy-right-p)
                (if lispy-comment-use-single-semicolon
@@ -3889,7 +3899,7 @@ When SILENT is non-nil, don't issue messages."
                      (just-one-space))
                  (progn
                    (newline-and-indent)
-                   (insert ";; ")
+                   (insert (lispy-comment-char 2 " "))
                    (unless (eolp)
                      (newline)
                      (lispy--reindent 1)
@@ -3902,12 +3912,12 @@ When SILENT is non-nil, don't issue messages."
               ((looking-at " *[])}]")
                (if lispy-comment-use-single-semicolon
                    (if (lispy-bolp)
-                       (insert ";;\n")
-                     (insert ";\n"))
+                       (insert (lispy-comment-char 2 "\n"))
+                     (insert (lispy-comment-char 1 "\n")))
                  (progn
                    (unless (lispy-bolp)
                      (insert "\n"))
-                   (insert ";;\n")))
+                   (insert (lispy-comment-char 2 "\n"))))
                (when (lispy--out-forward 1)
                  (lispy--normalize-1))
                (move-end-of-line 0)
@@ -4192,6 +4202,7 @@ Sexp is obtained by exiting list ARG times."
     (scheme-mode lispy-goto-symbol-scheme le-scheme)
     (racket-mode lispy-goto-symbol-racket le-racket)
     (lisp-mode lispy-goto-symbol-lisp le-lisp)
+    (slime-repl-mode lispy-goto-symbol-lisp le-lisp)
     (python-mode lispy-goto-symbol-python le-python))
   "An alist of `major-mode' to function for jumping to symbol.
 
@@ -4332,7 +4343,7 @@ When ARG is 2, insert the result as a comment."
     (lispy-outline-prev 1)
     (let ((comment (if (eq major-mode 'python-mode)
                        "#"
-                     ";;")))
+                     (lispy-comment-char 2))))
       (if (looking-at (format "\\(%s\\*+ ?:$\\)" comment))
           (match-string-no-properties 1)
         (concat comment (make-string (1+ (funcall outline-level)) ?*) " :")))))
@@ -6511,7 +6522,7 @@ Otherwise return cons of current string, symbol or list bounds."
              (goto-char (car bnd))
              (lispy--skip-delimiter-preceding-syntax-backward)
              (cons (point) (cdr bnd))))
-          ((looking-at ";;")
+          ((looking-at (lispy-comment-char 2))
            (lispy--bounds-comment))
           ((and (eq major-mode 'python-mode)
                 (lispy-bolp))
@@ -7281,6 +7292,7 @@ See https://clojure.org/guides/weird_characters#_character_literal.")
                 (match-string subexp)))
        nil t nil subexp))))
 
+;; TODO: Make the read test pass on string with semi-colon
 (defun lispy--read (str)
   "Read STR including comments and newlines."
   (let* ((deactivate-mark nil)
@@ -8245,6 +8257,8 @@ The outer delimiters are stripped."
 (defvar geiser-active-implementations)
 (defvar clojure-align-forms-automatically)
 (declare-function clojure-align "ext:clojure-mode")
+
+;; TODO: Make me work with janet...
 (defun lispy--normalize-1 ()
   "Normalize/prettify current sexp."
   (when (and (looking-at "(")
@@ -8269,7 +8283,7 @@ The outer delimiters are stripped."
                (> (length str) 10000))
            (lispy-from-left
             (indent-sexp)))
-          ((looking-at ";;"))
+          ((looking-at (lispy-comment-char 2)))
           (t
            (let* ((max-lisp-eval-depth 10000)
                   (max-specpdl-size 10000)
@@ -8280,9 +8294,11 @@ The outer delimiters are stripped."
                         (lispy--read str)))
                   (new-str (lispy--prin1-to-string res offset major-mode)))
              (unless (string= str new-str)
-               (delete-region (car bnd)
-                              (cdr bnd))
-               (insert new-str)
+               ;; We should not do this if new-str failed to eval.
+               (unless (string= "nil" new-str)
+                 (delete-region (car bnd)
+                                (cdr bnd))
+                 (insert new-str))
                (when was-left
                  (backward-list))))))
     (when (and (memq major-mode lispy-clojure-modes)

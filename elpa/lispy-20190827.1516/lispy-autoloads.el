@@ -61,6 +61,11 @@
 (autoload 'lispy-mode "lispy" "\
 Minor mode for navigating and editing LISP dialects.
 
+If called interactively, enable Lispy mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
+
 When `lispy-mode' is on, most unprefixed keys,
 i.e. [a-zA-Z+-./<>], conditionally call commands instead of
 self-inserting. The condition (called special further on) is one
@@ -82,7 +87,7 @@ backward through lists, which is useful to move into special.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lispy" '("lh-knight" "lispy-" "mc/cmds-to-run-" "ac-trigger-commands" "unsupported-mode-error" "hydra-lispy-x")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lispy" '("ac-trigger-commands" "hydra-lispy-x" "lh-knight" "lispy-" "mc/cmds-to-run-" "unsupported-mode-error")))
 
 ;;;***
 

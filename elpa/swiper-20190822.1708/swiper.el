@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20190801.1110
+;; Package-Version: 20190822.1708
 ;; Version: 0.12.0
 ;; Package-Requires: ((emacs "24.1") (ivy "0.12.0"))
 ;; Keywords: matching
@@ -1586,6 +1586,7 @@ When not running `swiper-isearch' already, start it."
       (unless (or res swiper-stay-on-quit)
         (goto-char swiper--opoint))
       (isearch-clean-overlays)
+      (swiper--ensure-visible)
       (unless (or res (string= ivy-text ""))
         (cl-pushnew ivy-text swiper-history)))))
 

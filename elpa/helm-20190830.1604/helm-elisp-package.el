@@ -216,20 +216,32 @@
                     collect avail-pkg into upgrades
                     finally return
                     ;; Extra-upgrades are packages that need to be
-                    ;; recompiled because their dependencies have been upgraded. 
-                    (append upgrades
-                            (setq helm-el-package--extra-upgrades
-                                  (helm-fast-remove-dups extra-upgrades :test 'equal))))))
+                    ;; recompiled because their dependencies have been
+                    ;; upgraded.
+                    (cl-loop for p in
+                             (append upgrades
+                                     (setq helm-el-package--extra-upgrades extra-upgrades))
+                             unless (assoc (car p) lst)
+                             collect p into lst
+                             finally return lst))))
 
 (defun helm-el-package--get-installed-to-recompile (seq pkg-name)
   "Find the installed packages in SEQ that have PKG-NAME as dependency."
   (cl-loop for p in seq
            for pkg = (package-desc-name p)
-           for deps = (and (package--user-installed-p pkg)
+           for deps = (and (helm-el-package--user-installed-p pkg)
                            (package--get-deps pkg))
            when (and (memq pkg-name deps)
                      (not (eq pkg-name pkg)))
            collect (cons pkg p)))
+
+(defun helm-el-package--user-installed-p (package)
+  "Return non-nil if PACKAGE is a user-installed package."
+  (let* ((assoc (assq package package-alist))
+         (pkg-desc (and assoc (cadr assoc)))
+         (dir (and pkg-desc (package-desc-dir pkg-desc))))
+    (when dir
+      (file-in-directory-p dir package-user-dir))))
 
 (defun helm-el-package-upgrade-1 (pkg-list)
   (cl-loop for p in pkg-list

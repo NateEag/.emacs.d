@@ -8,7 +8,7 @@
 
 ;; Author: The go-mode Authors
 ;; Version: 1.5.0
-;; Package-Version: 20190815.2113
+;; Package-Version: 20190908.2239
 ;; Keywords: languages go
 ;; URL: https://github.com/dominikh/go-mode.el
 ;;
@@ -237,6 +237,12 @@ This can be either an absolute path or an executable in PATH."
 (defcustom godoc-use-completing-read nil
   "Provide auto-completion for godoc.
 Only really desirable when using `godoc' instead of `go doc'."
+  :type 'boolean
+  :group 'godoc)
+
+(defcustom godoc-reuse-buffer nil
+  "Reuse a single *godoc* buffer to display godoc-at-point calls.
+The default behavior is to open a separate buffer for each call."
   :type 'boolean
   :group 'godoc)
 
@@ -557,7 +563,15 @@ The return value is cached based on the current `line-beginning-position'."
   "Return non-nil if current line ends in a dangling operator.
 The return value is not cached."
   (or
-   (go--line-suffix-p go-dangling-operators-regexp)
+   (and
+    (go--line-suffix-p go-dangling-operators-regexp)
+
+    ;; "=" does not behave like a dangling operator in decl statements.
+    (not (go--line-suffix-p "\\(?:var\\|type\\|const\\)[[:space:]].*="))
+
+    ;; Don't mistake "1234." for a dangling operator.
+    (not (go--line-suffix-p "[[:space:]]-?[[:digit:]][_0-9]*\\.")))
+
    ;; treat comma as dangling operator in certain cases
    (and
     (go--line-suffix-p ",")
@@ -591,6 +605,7 @@ case keyword. It returns nil for the case line itself."
                 (or
                  (go--boring-line-p)
                  (go--line-suffix-p ","))
+                (not (looking-at go--case-regexp))
                 (go--forward-line -1)))
 
         (and
@@ -617,15 +632,134 @@ case keyword. It returns nil for the case line itself."
     (and
      (go-goto-opening-parenthesis)
 
-     ;; opening paren-like character is curly
+     ;; Opening paren-like character is a curly.
      (eq (char-after) ?{)
 
      (or
-      ;; preceded by non space (e.g. "Foo|{")
+      ;; Curly is preceded by non space (e.g. "Foo|{").
       (not (looking-back "[[:space:]]" (1- (point))))
 
-      ;; or curly itself is in a composite literal (e.g. "Foo{|{")
-      (go--in-composite-literal-p)))))
+      (and
+       (progn (skip-syntax-backward " ") t)
+
+       ;; Curly looks like a composite literal with implicit type
+       ;; name. In particular, the curly is the first character on the
+       ;; line or the previous character is a comma or colon.
+       (or (bolp) (looking-back "[,:]" (1- (point)))))))))
+
+(defun go--fill-prefix ()
+  "Return fill prefix for following comment paragraph."
+  (save-excursion
+    (beginning-of-line)
+
+    ;; Skip over empty lines and empty comment openers/closers.
+    (while (and
+            (or (go--empty-line-p) (go--boring-comment-p))
+            (zerop (forward-line 1))))
+
+    ;; If we are in a block comment, set prefix based on first line
+    ;; with content.
+    (if (go-in-comment-p)
+        (progn
+          (looking-at "[[:space:]]*")
+          (match-string-no-properties 0))
+
+      ;; Else if we are looking at the start of an interesting comment, our
+      ;; prefix is the comment opener and any space following.
+      (if (looking-at (concat go--comment-start-regexp "[[:space:]]*"))
+          ;; Replace "/*" opener with spaces so following lines don't
+          ;; get "/*" prefix.
+          (replace-regexp-in-string "/\\*" "  "
+                                    (match-string-no-properties 0))))))
+
+(defun go--fill-paragraph (&rest args)
+  "Wrap fill-paragraph to set custom fill-prefix."
+  (let ((fill-prefix (go--fill-prefix))
+        (fill-paragraph-function nil))
+    (apply 'fill-paragraph args)))
+
+(defun go--empty-line-p ()
+  (looking-at "[[:space:]]*$"))
+
+(defun go--boring-comment-p ()
+  "Return non-nil if we are looking at a boring comment.
+
+A boring comment is a comment with no content. For example:
+
+////////  ; boring
+// hello
+////////  ; boring
+
+/*        ; boring
+  hello
+*/        ; boring
+"
+  (or
+   (looking-at-p "[[:space:]]*//+[[:space:]]*$")
+   (looking-at-p "[[:space:]]*\\(?:/\\*+\\|\\*/+\\)[[:space:]]*$")))
+
+(defun go--interesting-comment-p ()
+  "Return non-nil if we are looking at an interesting comment.
+
+An interesting comment is one that contains content other than
+comment starter/closer characters."
+
+  (if (go-in-comment-p)
+      (and
+       (not (go--empty-line-p))
+       (not (looking-at-p "[[:space:]]*\\*/")))
+    (and
+     (looking-at go--comment-start-regexp)
+     (not (go--boring-comment-p)))))
+
+(defun go--fill-forward-paragraph (&optional arg)
+  "forward-paragraph like function used for fill-paragraph.
+
+This function is key for making fill-paragraph do the right
+thing for comments."
+  (beginning-of-line)
+  (let* ((arg (or arg 1))
+         (single (if (> arg 0) 1 -1))
+         (done nil))
+    (while (and (not done) (not (zerop arg)))
+      ;; If we are moving backwards and aren't currently looking at a
+      ;; comment, move back one line. This is to make sure
+      ;; (go--fill-forward-paragraph -1) always works properly as the
+      ;; inverse of (go--fill-forward-paragraph 1).
+      (when (and
+             (= single -1)
+             (not (go-in-comment-p))
+             (not (looking-at-p go--comment-start-regexp)))
+        (forward-line -1))
+
+      ;; Skip empty lines and comment lines with no content.
+      (while (and
+              (or (go--empty-line-p) (go--boring-comment-p))
+              (zerop (forward-line single))))
+
+      (let (saw-comment)
+        ;; Skip comment lines that have content.
+        (while (and
+                (go--interesting-comment-p)
+                (zerop (forward-line single)))
+          (setq saw-comment t))
+
+        (if (not saw-comment)
+            (progn
+              ;; In fill-region case user may have selected a region
+              ;; with non-comments. fill-region will loop forever
+              ;; until it makes it to the end of the region, so just
+              ;; fall back to `forward-paragraph' so we make progress.
+              (when mark-active
+                (setq arg (forward-paragraph arg)))
+              (setq done t))
+          ;; If we are going backwards, back up one more line so
+          ;; we are on the line before the comment.
+          (when (= single -1)
+            (forward-line 1))
+          (cl-decf arg single))))
+    arg))
+
 
 (defun go--open-paren-position ()
   "Return non-nil if point is between '(' and ')'.
@@ -652,21 +786,33 @@ encounters a closing paren or brace it bounces to the corresponding
 opener. If it arrives at the beginning of the line you are indenting,
 it moves to the end of the previous line if the current line is a
 continuation line, else it moves to the containing opening paren or
-brace. If it arrives at the beginning of a line other than the
-starting line, it is done."
+brace. If it arrives at the beginning of a line other than the line
+you are indenting, it will continue to the previous dangling line if
+the line you are indenting was not a continuation line, otherwise it
+is done."
   (save-excursion
     (beginning-of-line)
 
-    (let ((start-line (point))
+    (let (
+          ;; Beginning of our starting line.
+          (start-line (point))
+
+          ;; Whether this is our first iteration of the outer while loop.
           (first t)
+
+          ;; Whether we start in a block (i.e. our first line is not a
+          ;; continuation line and is in an "if", "for", "func" etc. block).
+          (in-block)
+
+          ;; Our desired indent relative to our ending line's indent.
           (indent 0))
 
       ;; Skip leading whitespace.
       (skip-syntax-forward " ")
 
-      ;; Move after following char if it is a closer. This is so below code
-      ;; sees it and jumps to the corresponding opener.
-      (skip-syntax-forward ")" (1+ (point)))
+      ;; Decrement indent if the first character on the line is a closer.
+      (when (or (eq (char-after) ?\)) (eq (char-after) ?}))
+        (cl-decf indent tab-width))
 
       (while (or
               ;; Always run the first iteration so we process empty lines.
@@ -691,8 +837,8 @@ starting line, it is done."
              ;; relative to the opener's line, and that indent should not
              ;; be inherited by our starting line.
              (when (and
-                    ;; Opener wasn't on our starting line.
-                    (< bol start-line)
+                    ;; We care about dangling expressions, not child blocks.
+                    (not in-block)
 
                     ;; Opener and closer aren't on same line.
                     (< (point) bol)
@@ -732,7 +878,24 @@ starting line, it is done."
             ;; If we aren't a continuation line and we have an enclosing paren
             ;; or brace, jump to opener and increment our indent.
             (when (go-goto-opening-parenthesis)
-              (cl-incf indent tab-width)))))
+              ;; We started in a child block if our opener is a curly brace.
+              (setq in-block (and
+                              (eq (char-after) ?{)
+                              (looking-back "[^[:space:]][[:space:]]" (- (point) 2))))
+              (cl-incf indent tab-width))))
+
+        ;; If we stared in a child block we must follow dangling lines
+        ;; until they don't dangle anymore. This is to handle cases like:
+        ;;
+        ;; if foo ||
+        ;;      foo &&
+        ;;        foo {
+        ;;   X
+        ;;
+        ;; There can be an arbitrary number of indents, so we must go back to
+        ;; the "if" to determine the indent of "X".
+        (when (and in-block (bolp) (go-previous-line-has-dangling-op-p))
+          (goto-char (go-previous-line-has-dangling-op-p))))
 
       ;; If our ending line is a continuation line but doesn't open
       ;; an extra indent, reduce indent. We tentatively gave indents to all
@@ -753,8 +916,13 @@ starting line, it is done."
              (not (go--continuation-line-indents-p)))
         (cl-decf indent tab-width))
 
-      ;; Apply our computed indent relative to the indent of the ending line.
-      (+ indent (current-indentation)))))
+      ;; Apply our computed indent relative to the indent of the
+      ;; ending line, or 0 if we are at the top level.
+      (if (and
+           (= 0 (go-paren-level))
+           (not (go-previous-line-has-dangling-op-p)))
+          indent
+        (+ indent (current-indentation))))))
 
 (defconst go--operator-chars "*/%<>&\\^+\\-|=!,"
   "Individual characters that appear in operators.
@@ -842,13 +1010,15 @@ foo ||
 Point will be left before any trailing comments. Point will be left
 after the opening backtick of multiline strings."
   (end-of-line)
-  (skip-syntax-backward " ")
-  (when (looking-back "\\*/" (- (point) 2))
-    ;; back up so we are in the /* comment */
-    (backward-char))
-  (when (go-in-comment-p)
-    (go-goto-beginning-of-string-or-comment)
-    (skip-syntax-backward " "))
+  (let ((keep-going t))
+    (while keep-going
+      (skip-syntax-backward " ")
+      (when (looking-back "\\*/" (- (point) 2))
+        ;; back up so we are in the /* comment */
+        (backward-char))
+      (if (go-in-comment-p)
+          (go-goto-beginning-of-string-or-comment)
+        (setq keep-going nil))))
   (when (go-in-string-p)
     (go-goto-beginning-of-string-or-comment)
     ;; forward one so point is after the opening "`"
@@ -888,7 +1058,7 @@ Return non-nil if point changed lines."
       (setq count (if (and count (< count 0 )) -1 1)))
     moved))
 
-(defconst go--comment-start-regexp "[[:space:]]*\\(/\\*\\|//\\)")
+(defconst go--comment-start-regexp "[[:space:]]*\\(?:/[/*]\\)")
 
 (defun go--case-comment-p (indent)
   "Return non-nil if looking at a comment attached to a case statement.
@@ -1351,6 +1521,10 @@ with goflymake \(see URL `https://github.com/dougm/goflymake'), gocode
   (set (make-local-variable 'go-dangling-cache) (make-hash-table :test 'eql))
   (add-hook 'before-change-functions #'go--reset-dangling-cache-before-change t t)
 
+  (set (make-local-variable 'adaptive-fill-function) #'go--fill-prefix)
+  (set (make-local-variable 'fill-paragraph-function) #'go--fill-paragraph)
+  (set (make-local-variable 'fill-forward-paragraph-function) #'go--fill-forward-paragraph)
+
   ;; ff-find-other-file
   (setq ff-other-file-alist 'go-other-file-alist)
 
@@ -1541,9 +1715,15 @@ you save any file, kind of defeating the point of autoloading."
                        (go-packages) nil nil nil 'go-godoc-history)
     (read-from-minibuffer "godoc: " nil nil nil 'go-godoc-history)))
 
+(defun godoc--buffer-name (query)
+  "Determine the name to use for the output buffer of a given godoc QUERY."
+  (if godoc-reuse-buffer
+      "*godoc*"
+    (concat "*godoc " query "*")))
+
 (defun godoc--get-buffer (query)
   "Get an empty buffer for a godoc QUERY."
-  (let* ((buffer-name (concat "*godoc " query "*"))
+  (let* ((buffer-name (godoc--buffer-name query))
          (buffer (get-buffer buffer-name)))
     ;; Kill the existing buffer if it already exists.
     (when buffer (kill-buffer buffer))

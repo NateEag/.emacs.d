@@ -270,6 +270,42 @@ repo).  To tell Emacs that an ELPA repo exists, you add it to
 (http://download-mirror.savannah.gnu.org/releases/geiser/packages/geiser-0.10.tar),
 and install from your local disk with 'M-x package-install-file'.
 
+   If you plan to use Gambit, you'll also need to open a terminal and
+configure a couple of awesome Gambit's features:
+
+   SETUP : 1 - clone the last version of gambit and of this repo 2 -
+configure gambit using -enable-rtlib-debug-source to activate autodoc
+         $ cd ~/
+         $ git clone "the gambit repo current address"
+         $ cd gambit
+         $ ./configure --enable-single-host --enable-debug --enable-rtlib-debug-source
+         $ make bootstrap
+         $ make bootclean
+         $ make -j
+         $ make install
+   3 - put a link to geiser/elisp/geiser.el in your init file in your
+init file paste :
+         (load-file "~/geiser/elisp/geiser.el")
+   (the path is your path to geiser.el.)
+
+   # setup REMOTE CONNECT TO A GAMBIT REPL 1 - you need to enable the
+gambit/geiser module ( if you can't, substitute the command below with
+the PS: at the end of the readme )
+         $ mkdir ~/gambit/lib/gambit/geiser
+         $ cp ~/geiser/geiser-module/* ~/gambit/lib/geiser/
+   2 - now that you have the module you start gsi with it and using the
+-:d 
+         $ gsi -:d gambit/geiser -
+   3 - you can now open emacs and write
+         M-x geiser-connect gambit
+   Enjoy !
+
+   By the way, if you are unable to use gambit modules, open gsi with
+the 'gambit.scm' file located in
+'geiser/scheme/gambit/geiser/gambit.scm' something like :
+             gsi -:d ~/geiser/scheme/gambit/geiser/gambit.scm -
+   (Keep in mind that these paths may be a little different for you.)
+
    If you plan to use Chicken, you'll need also to fire a terminal and
 configure a couple of Chicken eggs.  For Chicken 4 that would be:
      $ chicken-install -s apropos chicken-doc
@@ -1685,9 +1721,9 @@ Index
 * byte-compilation:                      From the source's mouth.
                                                               (line  49)
 * Chicken:                               The easy and quick way.
-                                                              (line  37)
+                                                              (line  73)
 * Chicken installation:                  The easy and quick way.
-                                                              (line  37)
+                                                              (line  73)
 * company:                               Friends.             (line   9)
 * completion for module names:           Geiser writes for you.
                                                               (line  33)
@@ -1717,6 +1753,10 @@ Index
                                                               (line  37)
 * external image viewer:                 Seeing is believing. (line  10)
 * faces, in the REPL:                    Starting the REPL.   (line  35)
+* Gambit:                                The easy and quick way.
+                                                              (line  37)
+* Gambit installation:                   The easy and quick way.
+                                                              (line  37)
 * geiser-mode:                           Activating Geiser.   (line   6)
 * geiser-mode commands:                  Activating Geiser.   (line  21)
 * gmane:                                 No hacker is an island.
@@ -1834,39 +1874,39 @@ Node: Showing off5825
 Node: Installation7103
 Node: Must needs7316
 Node: The easy and quick way8349
-Node: From the source's mouth10454
-Node: Friends14163
-Ref: paredit14437
-Node: The REPL15854
-Ref: quick-start15973
-Node: Starting the REPL16364
-Node: First aids20751
-Node: Switching context22584
-Node: Completion and error handling24509
-Ref: completion-caveat26217
-Node: Autodoc and friends28131
-Ref: repl-mod30201
-Node: Seeing is believing31207
-Node: Customization and tips32219
-Ref: choosing-impl32948
-Ref: active-implementations33183
-Ref: impl-binary33565
-Node: Between the parens37921
-Node: Activating Geiser38983
-Node: The source and the REPL41593
-Ref: repl-association42637
-Ref: switching-repl-buff45905
-Node: Documentation helpers47590
-Ref: doc-browser51858
-Node: To eval or not to eval54585
-Node: To err perchance to debug58734
-Node: Jumping around61096
-Node: Geiser writes for you62373
-Node: Cheat sheet64877
-Node: Scheme buffers65261
-Node: REPL69586
-Node: Documentation browser71907
-Node: No hacker is an island72975
-Node: Index76294
+Node: From the source's mouth11941
+Node: Friends15650
+Ref: paredit15924
+Node: The REPL17341
+Ref: quick-start17460
+Node: Starting the REPL17851
+Node: First aids22238
+Node: Switching context24071
+Node: Completion and error handling25996
+Ref: completion-caveat27704
+Node: Autodoc and friends29618
+Ref: repl-mod31688
+Node: Seeing is believing32694
+Node: Customization and tips33706
+Ref: choosing-impl34435
+Ref: active-implementations34670
+Ref: impl-binary35052
+Node: Between the parens39408
+Node: Activating Geiser40470
+Node: The source and the REPL43080
+Ref: repl-association44124
+Ref: switching-repl-buff47392
+Node: Documentation helpers49077
+Ref: doc-browser53345
+Node: To eval or not to eval56072
+Node: To err perchance to debug60221
+Node: Jumping around62583
+Node: Geiser writes for you63860
+Node: Cheat sheet66364
+Node: Scheme buffers66748
+Node: REPL71073
+Node: Documentation browser73394
+Node: No hacker is an island74462
+Node: Index77781
 
 End Tag Table

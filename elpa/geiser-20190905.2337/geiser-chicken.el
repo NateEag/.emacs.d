@@ -295,12 +295,12 @@ This function uses `geiser-chicken-init-file' if it exists."
       (geiser-eval--send/wait load-sequence))))
 
 (defun geiser-chicken5-load ()
-  (let ((source (expand-file-name "chicken/geiser/chicken5.scm" geiser-scheme-dir))
-	(suppression-prefix
-         "(define geiser-stdout (current-output-port))(current-output-port (make-output-port (lambda a #f) (lambda a #f)))")
-        (suppression-postfix
-         "(current-output-port geiser-stdout)"))
-    (geiser-eval--send/wait (format "%s (load \"%s\") (import geiser) %s" suppression-prefix source suppression-postfix))))
+  (let ((source (expand-file-name "chicken/geiser/chicken5.scm"
+                                  geiser-scheme-dir)))
+    (geiser-eval--send/wait
+     (format
+      "(display '((result . t) (output . f))) (load \"%s\") (import geiser)"
+      source))))
 
 (defun geiser-chicken--startup (remote)
   (compilation-setup t)

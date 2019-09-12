@@ -22,6 +22,11 @@
 
 ;;; Customization:
 
+(geiser-custom--defcustom geiser-log-autoscroll-buffer-p nil
+  "Set this so than the buffer *geiser messages* always shows the last message"
+  :group 'geiser
+  :type 'boolean)
+
 (defvar geiser-log--buffer-name "*geiser messages*"
   "Name of the Geiser log buffer.")
 
@@ -33,6 +38,10 @@
 
 (defvar geiser-log-verbose-p nil
   "Log purely informational messages. Useful for debugging.")
+
+(defvar geiser-log-verbose-debug-p nil
+  "Log very verbose informational messages. Useful only for debugging.")
+
 
 (defvar geiser-log--inhibit-p nil
   "Set this to t to inhibit all log messages")
@@ -48,6 +57,14 @@
                (let ((inhibit-read-only t))
                  (when (> b geiser-log--max-buffer-size)
                    (delete-region (point-min) b))))
+            nil t)
+  ;; Maybe this feature would better be implemented as a revert-buffer function?
+  (add-hook 'after-change-functions
+            '(lambda (b e len)
+               (when geiser-log-autoscroll-buffer-p
+		 (let ((my-window (get-buffer-window (geiser-log--buffer) t)))
+		   (when (window-live-p my-window)
+		     (set-window-point my-window (point))))))
             nil t)
   (setq buffer-read-only t))
 
@@ -73,6 +90,10 @@
 (defsubst geiser-log--info (&rest args)
   (when geiser-log-verbose-p
     (apply 'geiser-log--msg 'INFO args) ""))
+
+(defsubst geiser-log--debug (&rest args)
+  (when geiser-log-verbose-debug-p
+    (apply 'geiser-log--msg 'DEBUG args) ""))
 
 
 ;;; User commands:

@@ -2,7 +2,7 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20190815.1959
+;; Package-Version: 20190911.2017
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
@@ -48,6 +48,7 @@
 ;; - Ledger (ledger-mode)
 ;; - Lua (lua-fmt)
 ;; - Markdown (prettier)
+;; - Nix (nixfmt)
 ;; - OCaml (ocp-indent)
 ;; - Perl (perltidy)
 ;; - PHP (prettier plugin-php)
@@ -60,6 +61,7 @@
 ;; - Swift (swiftformat)
 ;; - Terraform (terraform fmt)
 ;; - TypeScript/TSX (prettier)
+;; - Verilog (iStyle)
 ;; - YAML (prettier)
 ;;
 ;; You will need to install external programs to do the formatting.
@@ -387,7 +389,9 @@ Consult the existing formatters for examples of BODY."
 
 (define-format-all-formatter clang-format
   (:executable "clang-format")
-  (:install (macos "brew install clang-format"))
+  (:install
+   (macos "brew install clang-format")
+   (windows "scoop install llvm"))
   (:modes
    (c-mode ".c")
    (c++-mode ".cpp")
@@ -457,13 +461,17 @@ Consult the existing formatters for examples of BODY."
 
 (define-format-all-formatter gofmt
   (:executable "gofmt")
-  (:install (macos "brew install go"))
+  (:install
+   (macos "brew install go")
+   (windows "scoop install go"))
   (:modes go-mode)
   (:format (format-all--buffer-easy executable)))
 
 (define-format-all-formatter html-tidy
   (:executable "tidy")
-  (:install (macos "brew install tidy-html5"))
+  (:install
+   (macos "brew install tidy-html5")
+   (windows "scoop install tidy"))
   (:modes
    html-helper-mode html-mode mhtml-mode nxhtml-mode
    nxml-mode xml-mode
@@ -480,6 +488,12 @@ Consult the existing formatters for examples of BODY."
     "-indent"
     (when (member major-mode '(nxml-mode xml-mode))
       "-xml"))))
+
+(define-format-all-formatter istyle-verilog
+  (:executable "iStyle")
+  (:install)
+  (:modes verilog-mode)
+  (:format (format-all--buffer-easy executable)))
 
 (define-format-all-formatter ktlint
   (:executable "ktlint")
@@ -512,6 +526,12 @@ Consult the existing formatters for examples of BODY."
   (:modes elixir-mode)
   (:format
    (format-all--buffer-hard nil nil '("mix.exs") executable "format" "-")))
+
+(define-format-all-formatter nixfmt
+  (:executable "nixfmt")
+  (:install "nix-env -f https://github.com/serokell/nixfmt/archive/master.tar.gz -i")
+  (:modes nix-mode)
+  (:format (format-all--buffer-easy executable)))
 
 (define-format-all-formatter ocp-indent
   (:executable "ocp-indent")
@@ -589,7 +609,9 @@ Consult the existing formatters for examples of BODY."
 
 (define-format-all-formatter shfmt
   (:executable "shfmt")
-  (:install (macos "brew install shfmt"))
+  (:install
+   (macos "brew install shfmt")
+   (windows "scoop install shfmt"))
   (:modes sh-mode)
   (:format
    (format-all--buffer-easy

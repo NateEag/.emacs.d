@@ -13,46 +13,34 @@
 Go to beginning of ‘class’.
 
 If already at beginning, go one ‘class’ backward.
-Return beginning of form if successful, nil otherwise
-
-\(fn)" t nil)
+Return beginning of form if successful, nil otherwise" t nil)
 
 (autoload 'py-backward-def "python-mode" "\
 Go to beginning of ‘def’.
 
 If already at beginning, go one ‘def’ backward.
-Return beginning of form if successful, nil otherwise
-
-\(fn)" t nil)
+Return beginning of form if successful, nil otherwise" t nil)
 
 (autoload 'py-backward-def-or-class "python-mode" "\
 Go to beginning of ‘def-or-class’.
 
 If already at beginning, go one ‘def-or-class’ backward.
-Return beginning of form if successful, nil otherwise
-
-\(fn)" t nil)
+Return beginning of form if successful, nil otherwise" t nil)
 
 (autoload 'py-backward-class-bol "python-mode" "\
 Go to beginning of ‘class’, go to BOL.
 If already at beginning, go one ‘class’ backward.
-Return beginning of ‘class’ if successful, nil otherwise
-
-\(fn)" t nil)
+Return beginning of ‘class’ if successful, nil otherwise" t nil)
 
 (autoload 'py-backward-def-bol "python-mode" "\
 Go to beginning of ‘def’, go to BOL.
 If already at beginning, go one ‘def’ backward.
-Return beginning of ‘def’ if successful, nil otherwise
-
-\(fn)" t nil)
+Return beginning of ‘def’ if successful, nil otherwise" t nil)
 
 (autoload 'py-backward-def-or-class-bol "python-mode" "\
 Go to beginning of ‘def-or-class’, go to BOL.
 If already at beginning, go one ‘def-or-class’ backward.
-Return beginning of ‘def-or-class’ if successful, nil otherwise
-
-\(fn)" t nil)
+Return beginning of ‘def-or-class’ if successful, nil otherwise" t nil)
 
 (autoload 'py-forward-class "python-mode" "\
 Go to end of class.
@@ -120,7 +108,7 @@ See available customizations listed in files variables-python-mode at directory 
 
 \(fn)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "python-mode" '("pdb-track-stack-from-shell-p" "pep8" "pst-here" "pps-emacs-version" "pios" "autopair-mode" "all-mode-setting" "info-lookup-mode" "ios" "ipy" "iyp" "Python" "IPython" "Ipython" "virtualenv-" "durck" "druck" "empty-line-p" "eva" "force-py-shell-name-p-o" "flake8" "toggle-" "turn-o" "jython-mode-hook" "highlight-indent-active" "hs-hide-comments-when-hiding-all" "strip-chars-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "python-mode" '("IPython" "Ipython" "Python" "all-mode-setting" "autopair-mode" "druck" "durck" "eva" "flake8" "force-py-shell-name-p-o" "highlight-indent-active" "hs-hide-comments-when-hiding-all" "info-lookup-mode" "ios" "ipy" "iyp" "jython" "pdb-track-stack-from-shell-p" "pep8" "pios" "pps-emacs-version" "pst-here" "strip-chars-" "toggle-" "turn-o" "virtualenv-" "with-buffer-prepared-for-jit-lock")))
 
 ;;;***
 

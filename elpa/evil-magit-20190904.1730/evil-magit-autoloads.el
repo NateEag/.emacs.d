@@ -13,14 +13,10 @@
 This function completes the setup of evil-magit. It is called
 automatically when evil-magit is loaded. The only reason to use
 this function is if you've called `evil-magit-revert' and wish to
-go back to evil-magit behavior.
-
-\(fn)" t nil)
+go back to evil-magit behavior." t nil)
 
 (autoload 'evil-magit-revert "evil-magit" "\
-Revert changes by evil-magit that affect default evil+magit behavior.
-
-\(fn)" t nil)
+Revert changes by evil-magit that affect default evil+magit behavior." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-magit" '("evil-magit-")))
 

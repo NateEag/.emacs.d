@@ -41,9 +41,6 @@
 ;; but it does seem to be making forward headway.
 (require 'lsp-mode)
 
-(require 'lsp-php)
-(require 'lsp-clients)
-
 (defun php-mode-init ()
   "Load my particular tweaks for php-mode."
 

@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: remove_prefix
+# key: remove_prefix
+#
+# From StackOverflow, because I always forget how this works.
+#
+# https://stackoverflow.com/a/16623897/1128957
+# --
+${1:varname}=\${$1#"${2:prefix}"}

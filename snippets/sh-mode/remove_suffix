@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: remove_suffix
+# key: remove_suffix
+#
+# I always have to look this up, and automation beats documentation.
+# --
+${1:varname}=\${$1%"${2:prefix}"}

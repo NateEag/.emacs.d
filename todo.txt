@@ -1,53 +1,48 @@
-- Optimize browse-url on my work laptop. Takes about ten seconds right now from
-  within Emacs, for reasons I do not yet understand. Seems to have started
-  happening when I upgraded to OS X Mojave.
-
-  It does not happen in `emacs -Q` or `emacs -q` instances. It does happen when
-  my entire init file is commented out. That makes me think it probably relates
-  to something a package is doing, as they appear to still be loaded. I also
-  see similar slowness when sending an email.
-
-  Looks like it must be something Apple put into its Emacs site-lisp file in
-  Mojave, because when I run 'emacs --no-site-file' the problem does not exist.
-  I'm having a hard time figuring out how to make Emacs ignore these no matter
-  how I start it (--no-site-file cannot be set from within elisp). I suppose I
-  could just move them to a backup location and document the need.
-
-  ...no, I can't, because Mojave won't let me move or edit them. Yay SIP. :/ I
-  guess I have to figure out how to have Emacs always boot without system
-  files.
-
-  I finally did get a custom build to work, and I thought that had solved it,
-  but it turns out I was wrong about what's happening here.
-
-  If I start emacs from a Terminal prompt, opening a link is instantaneous.
-
-  If I start it via Spotlight or my Hammerspoon binding, they're slow.
-
-  They load the exact same set of elisp files.
-
-  Their environments are different (determined via the `process-environment`
-  variable), but I don't see any immediate smoking guns for causing this
-  difference.
-
-  For the moment I guess I'll start it from a terminal session. :/
-
-  Obviously this didn't happen before Mojave - I wonder what changed?
-
-  Worth noting that this may not be Emacs-specific. Opening a URL from YakYak
-  the other day took a full ten seconds.
-
 - Try integrating web-mode-edit-element into my markup editing style, or else
   figuring out how to get smartparens slurp/barf/etc working in web-mode. If it
   works out, delete my prototypical work on making tagedit work with web-mode
   in favor of it, per this comment of mine:
   https://github.com/magnars/tagedit/pull/15#issuecomment-260336539
 
+- Make "<leader> g n" support going to the last hunk in a file and "<leader> g
+  p" support going to the first hunk in a file. Feels like an off-by-one error.
+  Some tinkering via debug suggests that in `git-gutter:next-hunk`, the
+  calculation of the local variable real-index is wrong. Going to the previous
+  hunk, it never gets down to 0, and going to the next hunk, it never gets up
+  to 2. Incident count: 2
+
+- Make git-gutter show staged changes as changed (right now they don't show up
+  at all). Maybe use different colors to indicate the fact that they're staged?
+
 - Make my '<leader> g d' binding put evil-mode into insert-state, as in many
   cases I'll just want to quit after seeing what I wanted to, and being in
   normal-state makes that two keystrokes instead of one.
 
-- Look at using lsp-html with web-mode. See what it might buy me.
+- Get smart-dash-mode usable in CSS. Some styles of class naming involve
+  underscores, so it would be nice to have it do the right thing automatically.
+
+- Make smart-dash-mode aware of it when I'm editing a bash variable.
+
+- Add a customizable variable to smart-dash-mode that lists modes where
+  variables start with a sigil (e.g. '$'), and in those modes no heuristic is
+  necessary - if point is in a string matching \$[a-zA-Z0-9_]+, you *know* you
+  should insert a _. You can maybe do smarter stuff than just that, too.
+
+- Consider upstreaming a cleaned-up version of my smart-dash-mode hacks file?
+  It's handy for bash but not sure how generally applicable it is. Teaching
+  smart-dash-mode to be smarter about languages with variable sigils could be
+  useful, though (especially for languages like PHP and bash where vars can be
+  embedded in strings, since smart-dash-mode just turns itself off in strings).
+
+- Add a workaround to web-mode-init so smart-dash-mode knows when we're in a
+  comment.
+
+- Try setting up dap-mode for debugging PHP, as doing so should get me close to
+  debugging support for a lot of languages out of the gate and an
+  ever-increasing number as time goes by: https://github.com/emacs-lsp/dap-mode
+
+- Start using package-quickstart to speed up start times once Emacs 27.1 is
+  released.
 
 - Figure out how to make smartparens interact nicely with web-mode. '{{' and
   '{%' don't work right when both are on, but I don't see a way to ban
@@ -61,20 +56,22 @@
   markup. Note that it's only really braces I'd want to turn off pairing for -
   most other pairs don't have this issue.
 
-- Try setting up dap-mode for debugging PHP, as doing so should get me close to
-  debugging support for a lot of languages out of the gate and an
-  ever-increasing number as time goes by: https://github.com/emacs-lsp/dap-mode
-
 - Replace my setup for echoing offscreen matching line for parens with this
   one:
     https://with-emacs.com/posts/editing/show-matching-lines-when-parentheses-go-off-screen/
 
 - Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
 
+- Make a PR to auto-complete for supporting smart-dash-mode.
+
 - Add function to spawn an emacs instance with my installed packages but none
   of my customizations looking at exactly the file and location I'm currently
   in. The idea is to make it easy to answer the question "Is a behavior my
   fault or is it a lower-level bug in my dependencies?"
+
+- Try porting the Readable library to Emacs Lisp. I have yet to really
+  internalize reading Emacs Lisp, and it looks promising to me:
+  https://readable.sourceforge.io/
 
 - Go through the tools and techniques described in
   https://alphapapa.github.io/emacs-package-dev-handbook/ and adopt any that
@@ -90,12 +87,10 @@
   can uninstall it once I upgrade.
   https://github.com/DamienCassou/auth-password-store
 
+- Look at using lsp-html with web-mode. See what it might buy me.
+
 - Try out literate-elisp for one of my packages, largely as an experiment in
   literate programming: https://github.com/jingtaozf/literate-elisp
-
-- Try porting the Readable library to Emacs Lisp. I have yet to really
-  internalize reading Emacs Lisp, and it looks promising to me:
-  https://readable.sourceforge.io/
 
 - Write a macro to eval a block of elisp and query for value of any undefined
   variables, then bind it to a key. It would be useful when debugging defuns.
@@ -104,39 +99,15 @@
   writing docs that embed HTML, as many people like to see what things look
   like. https://github.com/nikclayton/ob-html-chrome
 
-- Start using package-quickstart to speed up start times once Emacs 27.1 is
-  released.
-
-- Make smart-dash-mode aware of it when I'm editing a bash variable.
-
-- Consider upstreaming a cleaned-up version of my smart-dash-mode hacks file?
-  It's handy for bash but not sure how generally applicable it is. Teaching
-  smart-dash-mode to be smarter about languages with variable sigils could be
-  useful, though (especially for languages like PHP and bash where vars can be
-  embedded in strings, since smart-dash-mode just turns itself off in strings).
-
-- Get smart-dash-mode usable in CSS. Some styles of class naming involve
-  underscores, so it would be nice to have it do the right thing automatically.
-
 - Report and/or fix bug in rainbow-mode.el - URLs with hashes and hex-like
   characters are vulnerable to false positives. https://localhost/test#debug is
   an example that gets highlighted for me as of time of writing.
-
-- Add a customizable variable to smart-dash-mode that lists modes where
-  variables start with a sigil (e.g. '$'), and in those modes no heuristic is
-  necessary - if point is in a string matching \$[a-zA-Z0-9_]+, you *know* you
-  should insert a _. You can maybe do smarter stuff than just that, too.
 
 - Generate autoloads for my mode configs (and other code I've hacked up myself)
   from autoload cookie comments, rather than maintaining them manually.
   Apparently auto-compile has `auto-compile-update-autoloads' for this purpose.
   As long as you commit those changes along with the others, that would
   probably work pretty well.
-
-- Make a PR to auto-complete for supporting smart-dash-mode.
-
-- Add a workaround to web-mode-init so smart-dash-mode knows when we're in a
-  comment.
 
 - ac-source-css-property and ac-source-css-property-names are missing a bunch of
   bleeding-edge CSS 3 stuff. Get that in there. Ideally, generated from the
@@ -147,133 +118,6 @@
 
 - Emacs 26: Move package config into early-init.el, per recently-landed patch
   in Emacs trunk.
-
-- aggressive-fill-paragraph-mode should auto-fill after breaking a paragraph
-  into two paragraphs (RET RET, basically).
-
-- Suppress aggressive-fill-paragraph-mode while directly above or below markdown
-  code blocks.
-
-- Make aggressive-fill-paragraph-mode fill paragraph in front of point when
-  you've pressed return several times to split a paragraph into two paragraphs.
-
-- Prevent my aggressive-fill-paragraph-mode from filling rst titles when
-  deleting a preceding paragraph (and maybe just prevent it from filling
-  titles in general).
-
-- Prevent aggressive-fill-paragraph-mode from filling paragraphs that look
-  hand-formatted. A decent heuristic might be "if the majority of lines are
-  less than three-quarters the width of fill-column"? A better heuristic is
-  probably 'Are lines other than the last one and the one before / after point
-  less than three-quarters of fill-column?'
-
-- Use gmailieer to sync notmuch tags to gmail: https://github.com/gauteh/gmailieer
-
-- Submit PR to make flycheck-eslint-rulesdir a list.
-
-- Get flycheck to support opening URLs for more details on errors. Sometimes
-  error messages are confusing or terse but the error ID can be used to map
-  directly to a documentation ID that explains the issue well.
-
-- Add (or find) a flycheck checker for nginx config files using -t.
-  https://www.flycheck.org/en/latest/developer/developing.html#writing-the-checker
-  explains how to do the job.
-
-- Make js-doc use Tern (when available) to guess types for function params.
-
-- Try dtrt-indent as an alternative to guess-style, since guess-style does fail
-  to guess what I want fairly often (particularly in package.json files):
-  https://github.com/jscheid/dtrt-indent
-
-- See how hard it would be to be content with shell-pop as my terminal manager.
-  It only supports a single terminal session, and automatically changes
-  directories based on the buffer you spawned it from. If I could figure out
-  how to work within that constraint, it might be reasonably usable.
-
-- I'd like to have a hotkey that brings up my most recent terminal. I'd also
-  like terminal windows to always appear in a bottom window of my current
-  frame, which is probably a need popwin would achieve admirably. I used to
-  think I wanted something more like a tabbed terminal emulator, and maybe I
-  will want some keybindings for flipping between groups of terminal buffers,
-  but that's secondary to just establishing "terminal buffers get and/or create
-  the bottom window". I have just installed term-projectile, which seems to
-  handle the create and swap features - I just need to teach popwin how to
-  force terminals to always display in the bottom half of a split panel
-  properly. N.B.: shackle may be a significantly better alternative to popwin:
-  https://github.com/wasamasa/shackle
-
-- Give kakoune.el a whirl, just to see what it's like:
-  https://github.com/jmorag/kakoune.el . After reading through Kakoune's
-  philosophy document, it does sound like it could be an improvement on the Vim
-  experience. https://kakoune.org/why-kakoune/why-kakoune.html
-
-- Remember that HTMLize exists and I installed it. I could see it being useful
-  for getting syntax coloration on static sites for obscure programming
-  languages, for instance.
-
-- Make "<leader> g n" support going to the last hunk in a file and "<leader> g
-  p" support going to the first hunk in a file. Feels like an off-by-one error.
-  Some tinkering via debug suggests that in `git-gutter:next-hunk`, the
-  calculation of the local variable real-index is wrong. Going to the previous
-  hunk, it never gets down to 0, and going to the next hunk, it never gets up
-  to 2. Incident count: 2
-
-- Figure out why git-rebase-mode doesn't always have the keybindings it claims
-  to. I think it happens the first time I rebase after starting Emacs, so it's
-  likely an initialization problem, but I'm not really sure. I believe it's a
-  question of whether evil-mode is in insert-state or not, because I have the
-  logic that tries (and fails) to pick the right state based on whether a
-  buffer has contents or not.
-
-- Set up a 'Stale questions' saved search in notmuch that shows me all
-  non-response emails I sent including a question mark in the body or subject
-  line that have received no replies and are more than a week old. The goal is
-  to have my email system let me know about threads I need to bump.
-
-- Auto-insert basic email template after exiting "To:" field. If it contains
-  one email address with the name, use first name. If it contains multiples,
-  say "Hi everyone".
-
-- Come up with a way to send emails and flag the newly-made thread as
-  'watched'. Incident count: 4
-
-- Notify me when a new email comes into a thread I'm writing a response in.
-  Incident count: 1
-
-- Use smtpmail-queue-mail and some network up/down notifier to automatically
-  queue mail if offline and to automatically send it when back online.
-
-  Update: I have just installed the 'network-watch' package from MELPA, so this
-  should be just about trivial to do now.
-
-  Incident count: 1
-
-- Figure out what mime-type should be used for emailing bash scripts as an
-  attachment.
-
-- Understand how text/plain email attachments get converted from just LF to
-  CRLF. I suspect it's notmuch's compose mode making sure my attachment conforms
-  to RFC 2046, section 4.1.1, which specifies CRLF *must* be used for text/plain
-  content.
-
-- Make the ansi-term tweaks suggested in this article:
-  http://echosa.github.io/blog/2012/06/06/improving-ansi-term/
-
-- Consider using project-shells for managing shells? I've installed it just so I
-  have it around should I decide to try it.
-
-- Add mechanism for viewing keymaps in readable form via
-  substitute-command-keys. Sample usage:
-  (substitute-command-keys "\\{evil-inner-text-objects-map}")
-
-- Teach js2-mode not to concatenate ES 6 backtick strings. When
-  js2-concat-multiline-strings is t, newlines invoke concatenation which I
-  guess could make sense if you're trying to use template strings and don't
-  want any newlines in it, but what I want is for ES 5 strings to Just Work and
-  for ES 6 strings to Just Work. Not sure if this should be an extension of my
-  own or something that goes in the core. Until I use ES 6 more often, the
-  workaround is to set that var to false when I'm actually using backtick
-  strings.
 
 - Make aggressive-fill-paragraph-mode work better in js2-mode. Right now, if you
   fill a comment of the form
@@ -348,6 +192,145 @@
 
 - Try out prog-fill for (auto?) filling code. I've installed it but haven't
   tried to use it for anything yet.
+
+- aggressive-fill-paragraph-mode should auto-fill after breaking a paragraph
+  into two paragraphs (RET RET, basically).
+
+- Suppress aggressive-fill-paragraph-mode while directly above or below markdown
+  code blocks.
+
+- Prevent my aggressive-fill-paragraph-mode from filling rst titles when
+  deleting a preceding paragraph (and maybe just prevent it from filling
+  titles in general).
+
+- Prevent aggressive-fill-paragraph-mode from filling paragraphs that look
+  hand-formatted. A decent heuristic might be "if the majority of lines are
+  less than three-quarters the width of fill-column"? A better heuristic is
+  probably 'Are lines other than the last one and the one before / after point
+  less than three-quarters of fill-column?'
+
+- Set up a 'Stale questions' saved search in notmuch that shows me all
+  non-response emails I sent including a question mark in the body or subject
+  line that have received no replies and are more than a week old. The goal is
+  to have my email system let me know about threads I need to bump.
+
+- Auto-insert basic email template after exiting "To:" field. If it contains
+  one email address with the name, use first name. If it contains multiples,
+  say "Hi everyone".
+
+- Come up with a way to send emails and flag the newly-made thread as
+  'watched'. Incident count: 4
+
+- Notify me when a new email comes into a thread I'm writing a response in.
+  Incident count: 1
+
+- Use smtpmail-queue-mail and some network up/down notifier to automatically
+  queue mail if offline and to automatically send it when back online.
+
+  Update: I have just installed the 'network-watch' package from MELPA, so this
+  should be just about trivial to do now.
+
+  Incident count: 1
+
+- Try dtrt-indent as an alternative to guess-style, since guess-style does fail
+  to guess what I want fairly often (particularly in package.json files):
+  https://github.com/jscheid/dtrt-indent
+
+- Figure out what mime-type should be used for emailing bash scripts as an
+  attachment.
+
+- Understand how text/plain email attachments get converted from just LF to
+  CRLF. I suspect it's notmuch's compose mode making sure my attachment conforms
+  to RFC 2046, section 4.1.1, which specifies CRLF *must* be used for text/plain
+  content.
+
+- Figure out why git-rebase-mode doesn't always have the keybindings it claims
+  to. I think it happens the first time I rebase after starting Emacs, so it's
+  likely an initialization problem, but I'm not really sure. I believe it's a
+  question of whether evil-mode is in insert-state or not, because I have the
+  logic that tries (and fails) to pick the right state based on whether a
+  buffer has contents or not.
+
+- Add mechanism for viewing keymaps in readable form via
+  substitute-command-keys. Sample usage:
+  (substitute-command-keys "\\{evil-inner-text-objects-map}")
+
+- Use gmailieer to sync notmuch tags to gmail: https://github.com/gauteh/gmailieer
+
+- Submit PR to make flycheck-eslint-rulesdir a list.
+
+- Get flycheck to support opening URLs for more details on errors. Sometimes
+  error messages are confusing or terse but the error ID can be used to map
+  directly to a documentation ID that explains the issue well.
+
+- Add (or find) a flycheck checker for nginx config files using -t.
+  https://www.flycheck.org/en/latest/developer/developing.html#writing-the-checker
+  explains how to do the job.
+
+- Make js-doc use Tern (when available) to guess types for function params.
+
+- Give kakoune.el a whirl, just to see what it's like:
+  https://github.com/jmorag/kakoune.el . After reading through Kakoune's
+  philosophy document, it does sound like it could be an improvement on the Vim
+  experience. https://kakoune.org/why-kakoune/why-kakoune.html
+
+- Remember that HTMLize exists and I installed it. I could see it being useful
+  for getting syntax coloration on static sites for obscure programming
+  languages, for instance.
+
+- Figure out a smarter way than "start Emacs from a terminal" to make
+  browse-url snappy.
+
+  If I start emacs from a Terminal prompt, opening a link is instantaneous.
+
+  If I start it via Spotlight or my Hammerspoon binding, they're slow.
+
+  They load the exact same set of elisp files.
+
+  Their environments are different (determined via the `process-environment`
+  variable), but I don't see any immediate smoking guns for causing this
+  difference.
+
+  For the moment I guess I'll start it from a terminal session. :/
+
+  This didn't happen before Mojave - I wonder what changed?
+
+  Worth noting that this may not be Emacs-specific. Opening a URL from YakYak
+  the other day took a full ten seconds.
+
+  For more verbose analysis, see this file's history.
+
+- Make the ansi-term tweaks suggested in this article:
+  http://echosa.github.io/blog/2012/06/06/improving-ansi-term/
+
+- Consider using project-shells for managing shells? I've installed it just so I
+  have it around should I decide to try it.
+
+- See how hard it would be to be content with shell-pop as my terminal manager.
+  It only supports a single terminal session, and automatically changes
+  directories based on the buffer you spawned it from. If I could figure out
+  how to work within that constraint, it might be reasonably usable.
+
+- I'd like to have a hotkey that brings up my most recent terminal. I'd also
+  like terminal windows to always appear in a bottom window of my current
+  frame, which is probably a need popwin would achieve admirably. I used to
+  think I wanted something more like a tabbed terminal emulator, and maybe I
+  will want some keybindings for flipping between groups of terminal buffers,
+  but that's secondary to just establishing "terminal buffers get and/or create
+  the bottom window". I have just installed term-projectile, which seems to
+  handle the create and swap features - I just need to teach popwin how to
+  force terminals to always display in the bottom half of a split panel
+  properly. N.B.: shackle may be a significantly better alternative to popwin:
+  https://github.com/wasamasa/shackle
+
+- Teach js2-mode not to concatenate ES 6 backtick strings. When
+  js2-concat-multiline-strings is t, newlines invoke concatenation which I
+  guess could make sense if you're trying to use template strings and don't
+  want any newlines in it, but what I want is for ES 5 strings to Just Work and
+  for ES 6 strings to Just Work. Not sure if this should be an extension of my
+  own or something that goes in the core. Until I use ES 6 more often, the
+  workaround is to set that var to false when I'm actually using backtick
+  strings.
 
 - Figure out why entering '/**<RET>' in js2-mode results in a proper comment
   block if you wait a bit before pressing Enter, but a weird string
@@ -776,7 +759,7 @@
 - A mode in which English grammatical rules are automatically applied to
   anything that looks like a sentence. For instance, when I refactor a
   sentence, it ought to know that the first word gets capitalized. That might
-  be the only thing I actually want, come to think of it... Looks like someone
+  be the only thing I actually want, come to think of it... Looks like smeone
   may have built this: https://www.emacswiki.org/emacs/auto-capitalize.el
 
 - I would like multiline comments to be hidden after the first line by default,

@@ -534,6 +534,12 @@
   bite the bullet and switch over...
   https://www.reddit.com/r/emacs/comments/auwzjr/comment/ehb5zxm/
 
+- Figure out how to insert '[ | ]' in bash snippets like if when I type '['
+  (where | indicates cursor position). I constantly do this little weird dance
+  which I only just now realized I've been doing. Since you can escape to elisp
+  easily in yasnippets, this should be perfectly possible - now is just not the
+  time. Incident count: >100
+
 - Add a keybinding for 'rename this git-managed buffer'. Incident count: 3.
   This shouldn't be too bad - ne/yank-buffer-project-relative-path gets exactly
   the argument I want for the first param and the second one should just be the

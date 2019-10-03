@@ -110,7 +110,7 @@ Run each function in the FUNCTIONS list in turn when called within DELAY seconds
 (helm-multi-key-defun helm-toggle-resplit-and-swap-windows
     "Multi key command to re-split and swap helm window.
 First call runs `helm-toggle-resplit-window',
-and second call within 0.5s runs `helm-swap-windows'."
+and second call within 1s runs `helm-swap-windows'."
   '(helm-toggle-resplit-window helm-swap-windows) 1)
 (put 'helm-toggle-resplit-and-swap-windows 'helm-only t)
 
@@ -128,8 +128,9 @@ call COMMAND.
 Arg OTHER-SUBKEYS is an alist specifying other short key-bindings
 to use once started e.g:
 
-    \(helm-define-key-with-subkeys global-map
-       \(kbd \"C-x v n\") ?n 'git-gutter:next-hunk '((?p . git-gutter:previous-hunk))\)
+    (helm-define-key-with-subkeys global-map
+       (kbd \"C-x v n\") ?n 'git-gutter:next-hunk
+       '((?p . git-gutter:previous-hunk))\)
 
 
 In this example, `C-x v n' will run `git-gutter:next-hunk'
@@ -1676,6 +1677,13 @@ Messages are logged to a file named with todays date and time in this directory.
                                     helm-debug-root-directory)))
       (make-directory logdir t)
       (with-current-buffer (get-buffer-create helm-debug-buffer)
+        (goto-char (point-max))
+        (insert "\
+
+
+Local Variables:
+mode: outline
+End:")
         (write-region (point-min) (point-max)
                       (setq helm--last-log-file
                             (expand-file-name
@@ -2653,6 +2661,9 @@ as a string with ARG."
           (progn
             (set-buffer (car it))
             (setq narrow-pos (cdr it))))
+    ;; This happen when calling C-x b within helm.
+    (helm-aif (get-buffer-window helm-marked-buffer-name 'visible)
+        (progn (delete-window it) (kill-buffer helm-marked-buffer-name)))
     (save-restriction
       (when narrow-pos (apply #'narrow-to-region narrow-pos))
       ;; Restart with same `default-directory' value this session
@@ -2671,7 +2682,7 @@ as a string with ARG."
   "Resume previous helm session within a running helm."
   (interactive "p")
   (with-helm-alive-p
-    (if (> (length helm-buffers) arg)
+    (if (>= (length helm-buffers) arg)
         (helm-run-after-exit (lambda () (helm-resume (nth arg helm-buffers))))
       (message "No previous helm sessions available for resuming!"))))
 (put 'helm-resume-previous-session-after-quit 'helm-only t)
@@ -6392,7 +6403,7 @@ If SPLIT-ONEWINDOW is non-`nil' window is split in persistent action."
                    (split-window))
                   ((window-dedicated-p
                     (setq cur-win (get-buffer-window helm-current-buffer)))
-                   (split-window))
+                   (previous-window (selected-window) 1))
                   (cur-win)
                   (t prev-win))))))
 
@@ -6998,6 +7009,7 @@ The global `helm-help-message' is always added after this local help."
         (helm-update (regexp-quote (helm-get-selection nil t)))))))
 (put 'helm-toggle-truncate-line 'helm-only t)
 
+
 (provide 'helm)
 
 ;; Local Variables:

@@ -1,4 +1,4 @@
-(define-package "groovy-mode" "20190407.2314" "Major mode for Groovy source files"
+(define-package "groovy-mode" "20190930.2356" "Major mode for Groovy source files"
   '((s "1.12.0")
     (emacs "24.3")
     (dash "2.13.0"))

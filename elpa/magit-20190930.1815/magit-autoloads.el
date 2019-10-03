@@ -2050,12 +2050,23 @@ prefix arguments:
 
 \(fn &optional DIRECTORY CACHE)" t nil)
 
+(defalias 'magit 'magit-status "\
+An alias for `magit-status' for better discoverability.
+
+Instead of invoking this alias for `magit-status' using
+\"M-x magit RET\", you should bind a key to `magit-status'
+and read the info node `(magit)Getting Started', which
+also contains other useful hints.")
+
+(autoload 'magit-status-here "magit-status" "\
+Like `magit-status' but with non-nil `magit-status-goto-file-position'." t nil)
+
 (autoload 'magit-status-setup-buffer "magit-status" "\
 
 
 \(fn &optional DIRECTORY)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-status" '("magit")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-status" '("magit-")))
 
 ;;;***
 

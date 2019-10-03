@@ -1920,8 +1920,9 @@ When Magit calls ‘git’ it adds a few global arguments including
 ‘--literal-pathspecs’ and the ‘git’ process started by Magit then passes
 that setting on to other ‘git’ process it starts itself.  It does so by
 setting the environment variable ‘GIT_LITERAL_PATHSPECS’, not by calling
-subprocesses with the ‘--literal-pathspecs’.  You can therefore override
-this setting in hook scripts using ‘unset GIT_LITERAL_PATHSPECS’.
+subprocesses with the ‘--literal-pathspecs’ argument.  You can therefore
+override this setting in hook scripts using ‘unset
+GIT_LITERAL_PATHSPECS’.
 
 
 File: magit.info,  Node: git-commit-mode isn't used when committing from the command-line,  Next: Point ends up inside invisible text when jumping to a file-visiting buffer,  Prev: My Git hooks work on the command-line but not inside Magit,  Up: FAQ - Issues and Errors
@@ -2282,19 +2283,19 @@ Appendix C Keystroke Index
 * l:                                     Logging.             (line  29)
 * L:                                     Refreshing Logs.     (line  11)
 * L <1>:                                 Log Buffer.          (line   6)
-* L <2>:                                 Log Margin.          (line  47)
+* L <2>:                                 Log Margin.          (line  57)
 * l <1>:                                 Editing Rebase Sequences.
                                                               (line 115)
 * l a:                                   Logging.             (line  60)
 * l b:                                   Logging.             (line  56)
-* L d:                                   Log Margin.          (line  64)
+* L d:                                   Log Margin.          (line  74)
 * L g:                                   Refreshing Logs.     (line  17)
 * l h:                                   Logging.             (line  48)
 * l H:                                   Reflog.              (line  19)
 * l l:                                   Logging.             (line  35)
 * l L:                                   Logging.             (line  52)
-* L L:                                   Log Margin.          (line  56)
-* L l:                                   Log Margin.          (line  60)
+* L L:                                   Log Margin.          (line  66)
+* L l:                                   Log Margin.          (line  70)
 * l o:                                   Logging.             (line  41)
 * l O:                                   Reflog.              (line  15)
 * l r:                                   Reflog.              (line  11)
@@ -2423,7 +2424,7 @@ Appendix C Keystroke Index
 * r s <1>:                               Rebasing.            (line 114)
 * r u:                                   Rebasing.            (line  37)
 * r w:                                   Rebasing.            (line  95)
-* RET:                                   References Buffer.   (line 179)
+* RET:                                   References Buffer.   (line 181)
 * RET <1>:                               Visiting Files and Blobs from a Diff.
                                                               (line   8)
 * RET <2>:                               Blaming.             (line  78)
@@ -2673,7 +2674,7 @@ Appendix D Command Index
 * magit-commit-squash:                   Initiating a Commit. (line  55)
 * magit-copy-buffer-revision:            Common Commands.     (line  27)
 * magit-copy-section-value:              Common Commands.     (line  10)
-* magit-cycle-margin-style:              Log Margin.          (line  60)
+* magit-cycle-margin-style:              Log Margin.          (line  70)
 * magit-debug-git-executable:            Git Executable.      (line  45)
 * magit-debug-git-executable <1>:        Debugging Tools.     (line  30)
 * magit-describe-section-briefly:        Section Types and Values.
@@ -2805,7 +2806,7 @@ Appendix D Command Index
 * magit-log-toggle-commit-limit:         Log Buffer.          (line  55)
 * magit-log-trace-definition:            Minor Mode for Buffers Visiting Files.
                                                               (line 114)
-* magit-margin-settings:                 Log Margin.          (line  47)
+* magit-margin-settings:                 Log Margin.          (line  57)
 * magit-merge:                           Merging.             (line   9)
 * magit-merge <1>:                       Merging.             (line  89)
 * magit-merge-abort:                     Merging.             (line  95)
@@ -2992,8 +2993,8 @@ Appendix D Command Index
 * magit-tag-release:                     Tagging.             (line  19)
 * magit-toggle-buffer-lock:              Modes and Buffers.   (line  17)
 * magit-toggle-margin:                   Refreshing Logs.     (line  37)
-* magit-toggle-margin <1>:               Log Margin.          (line  56)
-* magit-toggle-margin-details:           Log Margin.          (line  64)
+* magit-toggle-margin <1>:               Log Margin.          (line  66)
+* magit-toggle-margin-details:           Log Margin.          (line  74)
 * magit-unstage:                         Staging and Unstaging.
                                                               (line  43)
 * magit-unstage-all:                     Staging and Unstaging.
@@ -3004,7 +3005,7 @@ Appendix D Command Index
                                                               (line  63)
 * magit-version:                         Git Executable.      (line  17)
 * magit-version <1>:                     Debugging Tools.     (line  10)
-* magit-visit-ref:                       References Buffer.   (line 179)
+* magit-visit-ref:                       References Buffer.   (line 181)
 * magit-wip-commit:                      Wip Modes.           (line  88)
 * magit-wip-log:                         Wip Modes.           (line  48)
 * magit-wip-log-current:                 Wip Modes.           (line  57)
@@ -3390,7 +3391,8 @@ Appendix F Variable Index
 * magit-log-buffer-file-locked:          Minor Mode for Buffers Visiting Files.
                                                               (line 118)
 * magit-log-margin:                      Log Margin.          (line  12)
-* magit-log-section-args:                Status Options.      (line  36)
+* magit-log-margin-show-committer-date:  Log Margin.          (line  49)
+* magit-log-section-args:                Status Options.      (line  38)
 * magit-log-section-commit-count:        Status Sections.     (line 136)
 * magit-log-select-margin:               Select from Log.     (line  30)
 * magit-log-show-refname-after-summary:  Log Buffer.          (line  75)
@@ -3419,10 +3421,10 @@ Appendix F Variable Index
 * magit-refresh-function:                Refreshing Buffers.  (line  49)
 * magit-refresh-status-buffer:           Automatic Refreshing of Magit Buffers.
                                                               (line  48)
-* magit-refs-filter-alist:               References Buffer.   (line 157)
+* magit-refs-filter-alist:               References Buffer.   (line 159)
 * magit-refs-focus-column-width:         References Buffer.   (line  82)
 * magit-refs-margin:                     References Buffer.   (line  97)
-* magit-refs-margin-for-tags:            References Buffer.   (line 123)
+* magit-refs-margin-for-tags:            References Buffer.   (line 125)
 * magit-refs-pad-commit-counts:          References Buffer.   (line  49)
 * magit-refs-primary-column-width:       References Buffer.   (line  69)
 * magit-refs-sections-hook:              References Sections. (line  13)
@@ -3462,7 +3464,7 @@ Appendix F Variable Index
 * magit-unstage-committed:               Staging and Unstaging.
                                                               (line  56)
 * magit-update-other-window-delay:       Section Movement.    (line 101)
-* magit-visit-ref-behavior:              References Buffer.   (line 190)
+* magit-visit-ref-behavior:              References Buffer.   (line 192)
 * magit-wip-after-apply-mode:            Legacy Wip Modes.    (line  19)
 * magit-wip-after-apply-mode-lighter:    Legacy Wip Modes.    (line  59)
 * magit-wip-after-save-local-mode-lighter: Legacy Wip Modes.  (line  55)

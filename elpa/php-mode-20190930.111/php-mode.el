@@ -9,11 +9,11 @@
 ;; Maintainer: USAMI Kenta <tadsan@zonu.me>
 ;; URL: https://github.com/emacs-php/php-mode
 ;; Keywords: languages php
-;; Version: 1.21.4
-;; Package-Requires: ((emacs "24.3") (cl-lib "0.5"))
+;; Version: 1.22.0
+;; Package-Requires: ((emacs "24.3"))
 ;; License: GPL-3.0-or-later
 
-(defconst php-mode-version-number "1.21.4"
+(defconst php-mode-version-number "1.22.0"
   "PHP Mode version number.")
 
 (defconst php-mode-modified "2019-05-29"
@@ -636,7 +636,7 @@ might be to handle switch and goto labels differently."
 (defun php-lineup-cascaded-calls (langelem)
   "Line up chained methods using `c-lineup-cascaded-calls',
 but only if the setting is enabled"
-  (if php-lineup-cascaded-calls
+  (when php-mode-lineup-cascaded-calls
     (c-lineup-cascaded-calls langelem)))
 
 (c-add-style
@@ -661,6 +661,7 @@ but only if the setting is enabled"
    (tab-width . ,(default-value 'tab-width))
    (fill-column . ,(default-value 'fill-column))
    (show-trailing-whitespace . ,(default-value 'show-trailing-whitespace))
+   (php-mode-lineup-cascaded-calls . t)
    (php-style-delete-trailing-whitespace . nil)))
 
 (defun php-enable-default-coding-style ()
@@ -687,6 +688,7 @@ but only if the setting is enabled"
    (tab-width . 2)
    (fill-column . 78)
    (show-trailing-whitespace . t)
+   (php-mode-lineup-cascaded-calls . nil)
    (php-style-delete-trailing-whitespace . t)))
 
 (defun php-enable-drupal-coding-style ()
@@ -713,6 +715,7 @@ but only if the setting is enabled"
   '("php"
     (c-offsets-alist . ((statement-cont . php-lineup-hanging-semicolon)))
     (c-indent-comments-syntactically-p . t)
+    (php-mode-lineup-cascaded-calls . nil)
     (fill-column . 78)))
 
 (defun php-enable-symfony2-coding-style ()
@@ -721,12 +724,13 @@ but only if the setting is enabled"
   (php-set-style "symfony2"))
 
 (c-add-style
-  "psr2"
+ "psr2" ; PSR-2 / PSR-12
   '("php"
     (c-offsets-alist . ((statement-cont . +)))
     (c-indent-comments-syntactically-p . t)
     (fill-column . 78)
     (show-trailing-whitespace . t)
+    (php-mode-lineup-cascaded-calls . nil)
     (php-style-delete-trailing-whitespace . t)))
 
 (defun php-enable-psr2-coding-style ()
@@ -1005,6 +1009,14 @@ this ^ lineup"
 (easy-menu-define php-mode-menu php-mode-map "PHP Mode Commands"
   (cons "PHP" (c-lang-const c-mode-menu php)))
 
+(defun php-mode-get-style-alist ()
+  "Return an alist consisting of `php' style and styles that inherit it."
+  (cl-loop for l in c-style-alist
+           if (or (string= (car l) "php")
+                  (equal (cadr l) "php"))
+           collect l))
+
+(defvar php-mode-set-style-history nil)
 (defvar-local php-mode--delayed-set-style nil)
 (defvar-local php-style-delete-trailing-whitespace nil)
 
@@ -1023,7 +1035,15 @@ After setting the stylevars run hooks according to STYLENAME
   \"wordpress\" `php-mode-wordpress-hook'
   \"symfony2\"  `php-mode-symfony2-hook'
   \"psr2\"      `php-mode-psr2-hook'"
-  (interactive)
+  (interactive
+   (list (let ((completion-ignore-case t)
+	       (prompt (format "Which %s indentation style? "
+			       mode-name)))
+	   (completing-read prompt
+                            (php-mode-get-style-alist)
+                            nil t nil
+			    'php-mode-set-style-history
+			    c-indentation-style))))
   (php-mode--disable-delay-set-style)
 
   ;; Back up manually set variables
@@ -1042,13 +1062,11 @@ After setting the stylevars run hooks according to STYLENAME
   (if (eq (symbol-value 'php-style-delete-trailing-whitespace) t)
       (add-hook 'before-save-hook 'delete-trailing-whitespace nil t)
     (remove-hook 'before-save-hook 'delete-trailing-whitespace t))
-    (cond ((eq stylename "pear")      (run-hooks 'php-mode-pear-hook))
-          ((eq stylename "drupal")    (run-hooks 'php-mode-drupal-hook))
-          ((eq stylename "wordpress") (run-hooks 'php-mode-wordpress-hook))
-          ((eq stylename "symfony2")  (run-hooks 'php-mode-symfony2-hook))
-          ((eq stylename "psr2")      (run-hooks 'php-mode-psr2-hook))))
-
-(put 'php-set-style 'interactive-form (interactive-form 'c-set-style))
+  (cond ((equal stylename "pear")      (run-hooks 'php-mode-pear-hook))
+        ((equal stylename "drupal")    (run-hooks 'php-mode-drupal-hook))
+        ((equal stylename "wordpress") (run-hooks 'php-mode-wordpress-hook))
+        ((equal stylename "symfony2")  (run-hooks 'php-mode-symfony2-hook))
+        ((equal stylename "psr2")      (run-hooks 'php-mode-psr2-hook))))
 
 (defun php-mode--disable-delay-set-style (&rest args)
   "Disable php-mode-set-style-delay on after hook.  `ARGS' be ignore."

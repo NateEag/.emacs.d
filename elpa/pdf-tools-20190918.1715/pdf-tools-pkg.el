@@ -1,4 +1,4 @@
-(define-package "pdf-tools" "20190701.202" "Support library for PDF documents."
+(define-package "pdf-tools" "20190918.1715" "Support library for PDF documents."
   '((emacs "24.3")
     (tablist "1.0")
     (let-alist "1.0.4"))

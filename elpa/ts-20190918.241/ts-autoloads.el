@@ -9,7 +9,7 @@
 ;;;### (autoloads nil "ts" "ts.el" (0 0 0 0))
 ;;; Generated autoloads from ts.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ts" '("ts-" "ts=" "ts<" "ts>")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "ts" '("ts-" "ts<" "ts=" "ts>")))
 
 ;;;***
 

@@ -4,7 +4,7 @@
 
 ;; Author: Adam Porter <adam@alphapapa.net
 ;; URL: http://github.com/alphapapa/ts.el
-;; Package-Version: 20190819.102
+;; Package-Version: 20190918.241
 ;; Version: 0.2-pre
 ;; Package-Requires: ((emacs "26.1") (dash "2.14.1") (s "1.12.0"))
 ;; Keywords: date time timestamp
@@ -329,7 +329,8 @@ range."
 Note that function `org-parse-time-string' is called, which
 should be loaded before calling this function."
   (pcase-let* ((`(,second ,minute ,hour ,day ,month ,year)
-                (org-parse-time-string org-ts-string)))
+                (save-match-data
+                  (org-parse-time-string org-ts-string))))
     (make-ts :second second :minute minute :hour hour :day day :month month :year year)))
 
 (defsubst ts-parse-org-fill (fill org-ts-string)
@@ -420,7 +421,8 @@ to `make-ts'."
        "Return TS having filled all slots from its Unix timestamp.
 This is non-destructive."
        ;; MAYBE: Use `decode-time' instead of `format-time-string'?  It provides most of the values we need.  Should benchmark.
-       (let ((time-values (split-string (format-time-string ,format-string (ts-unix ts)) "\f")))
+       (let ((time-values (save-match-data
+                            (split-string (format-time-string ,format-string (ts-unix ts)) "\f"))))
          (make-ts :unix (ts-unix ts) ,@value-conversions)))))
 (ts-define-fill)
 

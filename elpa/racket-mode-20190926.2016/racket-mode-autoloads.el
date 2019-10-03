@@ -150,6 +150,13 @@ If you run this command, ever, you should run it again after:
 
 ;;;***
 
+;;;### (autoloads nil "racket-parens" "racket-parens.el" (0 0 0 0))
+;;; Generated autoloads from racket-parens.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-parens" '("racket-")))
+
+;;;***
+
 ;;;### (autoloads nil "racket-ppss" "racket-ppss.el" (0 0 0 0))
 ;;; Generated autoloads from racket-ppss.el
 

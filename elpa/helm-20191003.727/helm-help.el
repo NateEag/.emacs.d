@@ -777,6 +777,9 @@ If you add %s to the command line %s will be replaced with the candidate, this m
 add extra argument to your command e.g. command -extra-arg %s or command %s -extra-arg.
 If you want to pass many files inside %s, don't forget to use a prefix arg.
 
+You can also use special placeholders in extra-args,
+see the specific info page once you hit `\\<helm-find-files-map>\\[helm-ff-run-eshell-command-on-file]'.
+
 *** Using TRAMP with `helm-find-files' to read remote directories
 
 `helm-find-files' works fine with TRAMP despite some limitations.
@@ -968,6 +971,13 @@ Emacs function `secure-hash' is used but it is slow and may crash
 Emacs and even the whole system as it eats all memory.  So if
 your system doesn't have the md5 and sha command line tools be
 careful when checking sum of larges files e.g. isos.
+
+*** Ignored or boring files
+
+Helm-find-files can ignore files matching
+`helm-boring-file-regexp-list' or files that are git ignored, you
+can set this with `helm-ff-skip-boring-files' or
+`helm-ff-skip-git-ignored-files'.
 
 ** Commands
 \\<helm-find-files-map>
@@ -1391,6 +1401,35 @@ But you can also pass an argument or more after \"candidate_file\" like this:
 \"candidate_file\" will be added at \"%s\" and the command will look at this:
 
     <command> candidate_file [extra_args]
+
+**** Use placeholders in extra arguments
+
+placeholder for file without extension: \\@ 
+placeholder for incremental number:     \\#
+
+\"candidate_file\" will be added at \"%s\" and \\@ but without extension.
+
+    <command %s \\@>
+
+\"candidate_file\" will be added at \"%s\" and \\# will be replaced by an incremental number.
+
+    <command> %s \\#
+
+Here examples:
+
+Say you want to use the =convert= command to convert all your .png files in a directory to .jpg.
+
+This will convert all your files to jpg keeping the same basename.
+
+    convert %s \\@.jpg
+
+This will convert all your files to foo-001.jpg, foo-002.jpg etc...
+
+    convert %s foo-\\#.jpg
+
+You can of course combine both placeholders if needed.
+
+    convert %s \\@-\\#.jpg
 
 *** Specify marked files as arguments
 

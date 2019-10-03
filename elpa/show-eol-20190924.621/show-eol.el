@@ -6,9 +6,9 @@
 ;; Author: Shen, Jen-Chieh <jcs090218@gmail.com>
 ;; Description: Show end of line symbol in buffer.
 ;; Keyword: end eol line
-;; Version: 0.0.1
-;; Package-Version: 20190517.257
-;; Package-Requires: ((emacs "24.3"))
+;; Version: 0.0.3
+;; Package-Version: 20190924.621
+;; Package-Requires: ((emacs "24.4"))
 ;; URL: https://github.com/jcs090218/show-eol
 
 ;; This file is NOT part of GNU Emacs.
@@ -59,23 +59,25 @@
   :group 'show-eol)
 
 
+(defun show-eol--get-current-system ()
+  "Return the current system name."
+  (let ((bf-cs (symbol-name buffer-file-coding-system)))
+    (cond ((string-match-p "dos" bf-cs) 'dos)
+          ((string-match-p "mac" bf-cs) 'mac)
+          ((string-match-p "unix" bf-cs) 'unix)
+          (t 'unix))))
+
 (defun show-eol-get-eol-mark-by-system ()
   "Return the EOL mark string by system type."
-  (let ((bf-cs (symbol-name buffer-file-coding-system))
-        (sys-mark nil))
-    (cond ((string-match-p "dos" bf-cs)
-           (setq sys-mark show-eol-crlf-mark))
-          ((string-match-p "mac" bf-cs)
-           (setq sys-mark show-eol-cr-mark))
-          ((string-match-p "unix" bf-cs)
-           (setq sys-mark show-eol-lf-mark))
-          (t  ;; Default EOL mark.
-           (setq sys-mark show-eol-lf-mark)))
+  (let ((sys-mark nil))
+    (cl-case (show-eol--get-current-system)
+      ('dos (setq sys-mark show-eol-crlf-mark))
+      ('mac (setq sys-mark show-eol-cr-mark))
+      ('unix (setq sys-mark show-eol-lf-mark)))
     sys-mark))
 
 (defun show-eol-find-mark-in-list (mk-sym)
-  "Return the `mk-sym''s index in the `whitespace-display-mappings' list.
-MK-SYM : Mark symbol name."
+  "Return the MK-SYM index in the `whitespace-display-mappings' list."
   (let ((index 0)
         (mark-name nil)
         (nl-mark-index -1))
@@ -87,9 +89,7 @@ MK-SYM : Mark symbol name."
     nl-mark-index))
 
 (defun show-eol-set-mark-with-string (mk-sym mk-str)
-  "Set the new mark by using string.
-MK-SYM : Mark symbol name.
-MK-STR : Mark string."
+  "Set the new mark, MK-SYM by using string, MK-STR."
   (let* ((sys-mark (vconcat mk-str))
          (nl-mark-index (show-eol-find-mark-in-list mk-sym))
          (nl-mark-code-point-address (caddr (nth nl-mark-index whitespace-display-mappings)))
@@ -108,17 +108,23 @@ MK-STR : Mark string."
   "Show EOL after save hook."
   (show-eol-update-eol-marks))
 
+(defun show-eol--set-buffer-file-coding-system--advice-after (&rest _)
+  "Advice execute after `set-buffer-file-coding-system' function is called."
+  (when show-eol-mode (show-eol-update-eol-marks)))
+
 
 (defun show-eol-enable ()
   "Enable 'show-eol-select' in current buffer."
   (add-hook 'after-save-hook 'show-eol-after-save-hook nil t)
   (setq-local whitespace-display-mappings (mapcar #'copy-sequence whitespace-display-mappings))
+  (advice-add 'set-buffer-file-coding-system :after #'show-eol--set-buffer-file-coding-system--advice-after)
   (show-eol-update-eol-marks))
 
 (defun show-eol-disable ()
   "Disable 'show-eol-mode' in current buffer."
   (remove-hook 'after-save-hook 'show-eol-after-save-hook t)
   (kill-local-variable 'whitespace-display-mappings)
+  (advice-remove 'set-buffer-file-coding-system #'show-eol--set-buffer-file-coding-system--advice-after)
   (whitespace-newline-mode -1))
 
 

@@ -884,7 +884,8 @@ example, sets a variable use `define-infix-command' instead.
      (t
       (when (and (listp suffix)
                  (listp elt))
-        (let ((key (plist-get (nth 2 suf) :key)))
+        (let ((key (or (plist-get elt :key)
+                       (transient--command-key (plist-get elt :command)))))
           (if (equal (transient--kbd key)
                      (transient--kbd (plist-get (nth 2 elt) :key)))
               (setq action 'replace)
@@ -1862,6 +1863,7 @@ to `transient--do-warn'."
 (defun transient-undefined ()
   "Warn the user that the pressed key is not bound to any suffix."
   (interactive)
+  (ding)
   (message "Unbound suffix: `%s' (Use `%s' to abort, `%s' for help)"
            (propertize (key-description (this-single-command-keys))
                        'face 'font-lock-warning-face)
@@ -2778,7 +2780,7 @@ Show the first one that is specified."
 If the manpage is specified, then try to jump to the correct
 location."
   (if-let ((manpage (oref transient--prefix man-page)))
-      (transient--show-manpage manpage (oref obj argument))
+      (transient--show-manpage manpage (ignore-errors (oref obj argument)))
     (transient--describe-function this-original-command)))
 
 ;; `cl-generic-generalizers' doesn't support `command' et al.
@@ -2812,33 +2814,36 @@ location."
         ;; for options such as "--mainline parent-number"
         (others "-\\(?:. \\|-[^[:space:]]+ \\)?[^[:space:]]+"))
     (when (re-search-forward
-           ;; Should start with whitespace and may have
-           ;; any number of options before and/or after.
-           (format
-            "^[\t\s]+\\(?:%s, \\)*?\\(?1:%s\\)%s\\(?:, %s\\)*$"
-            others
-            ;; Options don't necessarily end in an "="
-            ;; (e.g., "--gpg-sign[=<keyid>]")
-            (string-remove-suffix "=" arg)
-            ;; Simple options don't end in an "=".  Splitting this
-            ;; into 2 cases should make getting false positives
-            ;; less likely.
-            (if (string-suffix-p "=" arg)
-                ;; "[^[:space:]]*[^.[:space:]]" matches the option
-                ;; value, which is usually after the option name
-                ;; and either '=' or '[='.  The value can't end in
-                ;; a period, as that means it's being used at the
-                ;; end of a sentence.  The space is for options
-                ;; such as '--mainline parent-number'.
-                "\\(?: \\|\\[?=\\)[^[:space:]]*[^.[:space:]]"
-              ;; Either this doesn't match anything (e.g., "-a"),
-              ;; or the option is followed by a value delimited
-              ;; by a "[", "<", or ":".  A space might appear
-              ;; before this value, as in "-f <file>".  The
-              ;; space alternative is for options such as
-              ;; "-m parent-number".
-              "\\(?:\\(?: \\| ?[\\[<:]\\)[^[:space:]]*[^.[:space:]]\\)?")
-            others)
+           (if (equal arg "--")
+               ;; Special case.
+               "^[\t\s]+\\(--\\(?: \\|$\\)\\|\\[--\\]\\)"
+             ;; Should start with whitespace and may have
+             ;; any number of options before and/or after.
+             (format
+              "^[\t\s]+\\(?:%s, \\)*?\\(?1:%s\\)%s\\(?:, %s\\)*$"
+              others
+              ;; Options don't necessarily end in an "="
+              ;; (e.g., "--gpg-sign[=<keyid>]")
+              (string-remove-suffix "=" arg)
+              ;; Simple options don't end in an "=".  Splitting this
+              ;; into 2 cases should make getting false positives
+              ;; less likely.
+              (if (string-suffix-p "=" arg)
+                  ;; "[^[:space:]]*[^.[:space:]]" matches the option
+                  ;; value, which is usually after the option name
+                  ;; and either '=' or '[='.  The value can't end in
+                  ;; a period, as that means it's being used at the
+                  ;; end of a sentence.  The space is for options
+                  ;; such as '--mainline parent-number'.
+                  "\\(?: \\|\\[?=\\)[^[:space:]]*[^.[:space:]]"
+                ;; Either this doesn't match anything (e.g., "-a"),
+                ;; or the option is followed by a value delimited
+                ;; by a "[", "<", or ":".  A space might appear
+                ;; before this value, as in "-f <file>".  The
+                ;; space alternative is for options such as
+                ;; "-m parent-number".
+                "\\(?:\\(?: \\| ?[\\[<:]\\)[^[:space:]]*[^.[:space:]]\\)?")
+              others))
            nil t)
       (goto-char (match-beginning 1)))))
 

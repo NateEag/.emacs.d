@@ -50,7 +50,10 @@ INTEGER or STRING
      Number of PHPStan rule level.
 
 max
-     The highest of PHPStan rule level.")
+     The highest of PHPStan rule level.
+
+NIL
+     Use rule level specified in `phpstan' configuration file.")
 
 (make-variable-buffer-local 'phpstan-level)
 

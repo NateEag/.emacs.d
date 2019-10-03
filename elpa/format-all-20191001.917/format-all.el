@@ -2,7 +2,7 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20190911.2017
+;; Package-Version: 20191001.917
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
@@ -29,6 +29,7 @@
 ;; - BibTeX (emacs)
 ;; - C/C++/Objective-C (clang-format)
 ;; - Clojure/ClojureScript (node-cljfmt)
+;; - CMake (cmake-format)
 ;; - Crystal (crystal tool format)
 ;; - CSS/Less/SCSS (prettier)
 ;; - D (dfmt)
@@ -409,6 +410,12 @@ Consult the existing formatters for examples of BODY."
   (:install "npm install --global node-cljfmt")
   (:modes clojure-mode clojurec-mode clojurescript-mode)
   (:format (format-all--buffer-easy executable)))
+
+(define-format-all-formatter cmake-format
+  (:executable "cmake-format")
+  (:install "pip install cmake-format")
+  (:modes cmake-mode)
+  (:format (format-all--buffer-easy executable "-")))
 
 (define-format-all-formatter crystal
   (:executable "crystal")

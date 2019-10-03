@@ -13,6 +13,11 @@
 Omnicompletion (intellisense) and more for C# using an OmniSharp
 server backend.
 
+If called interactively, enable Omnisharp mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
+
 \(fn &optional ARG)" t nil)
 
 (autoload 'omnisharp-start-omnisharp-server "omnisharp" "\
@@ -21,14 +26,10 @@ Starts an OmniSharp server for a given path to a project or solution file
 \(fn &optional NO-AUTODETECT)" t nil)
 
 (autoload 'omnisharp-stop-server "omnisharp" "\
-Stops Omnisharp server if running.
-
-\(fn)" t nil)
+Stops Omnisharp server if running." t nil)
 
 (autoload 'omnisharp-reload-solution "omnisharp" "\
-Restarts omnisharp server on solution last loaded
-
-\(fn)" t nil)
+Restarts omnisharp server on solution last loaded" t nil)
 
 (autoload 'omnisharp-check-alive-status "omnisharp" "\
 Shows a message to the user describing whether the
@@ -36,16 +37,12 @@ OmniSharpServer process specified in the current configuration is
 alive.
 \"Alive\" means it is running and not stuck. It also means the connection
 to the server is functional - I.e. The user has the correct host and
-port specified.
-
-\(fn)" t nil)
+port specified." t nil)
 
 (autoload 'omnisharp-check-ready-status "omnisharp" "\
 Shows a message to the user describing whether the
 OmniSharpServer process specified in the current configuration has
-finished loading the solution.
-
-\(fn)" t nil)
+finished loading the solution." t nil)
 
 (autoload 'omnisharp-install-server "omnisharp" "\
 Installs OmniSharp server locally into ~/.emacs/cache/omnisharp/server/$(version)
@@ -65,7 +62,7 @@ Installs OmniSharp server locally into ~/.emacs/cache/omnisharp/server/$(version
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from omnisharp-auto-complete-actions.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "omnisharp-auto-complete-actions" '("omnisharp-" "ac-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "omnisharp-auto-complete-actions" '("ac-" "omnisharp-")))
 
 ;;;***
 
@@ -129,7 +126,7 @@ Installs OmniSharp server locally into ~/.emacs/cache/omnisharp/server/$(version
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from omnisharp-server-management.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "omnisharp-server-management" '("omnisharp-" "comment" "make-omnisharp--server-info")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "omnisharp-server-management" '("comment" "make-omnisharp--server-info" "omnisharp-")))
 
 ;;;***
 

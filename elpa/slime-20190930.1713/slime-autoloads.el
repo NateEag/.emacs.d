@@ -53,7 +53,7 @@
 ;;;### (autoloads nil "slime" "slime.el" (0 0 0 0))
 ;;; Generated autoloads from slime.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "slime" '("sldb-" "slime" "defslimefun" "def-slime-selector-method" "define-sl" "??" "?q" "?i" "?v" "?l" "?d" "?e" "?c" "?n" "?p" "?t" "make-slime-" "inferior-lisp-program")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "slime" '("??" "?c" "?d" "?e" "?i" "?l" "?n" "?p" "?q" "?t" "?v" "def-slime-selector-method" "define-sl" "defslimefun" "inferior-lisp-program" "make-slime-" "sldb-" "slime")))
 
 ;;;***
 
@@ -64,6 +64,6 @@
 ;;;### (autoloads nil "slime-tests" "slime-tests.el" (0 0 0 0))
 ;;; Generated autoloads from slime-tests.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "slime-tests" '("symbol-at-point." "sexp-at-point.1" "sbcl-world-lock" "report-condition-with-circular-list" "read" "traditional-recipe" "def-slime-test" "dis" "find-definition" "flow-control" "inspector" "indentation" "inter" "end-of-file" "loop-interrupt-" "locally-bound-debugger-hook" "break" "macroexpand" "utf-8-source" "unwind-to-previous-sldb-level" "arglist" "async-eval-debugging" "comp" "narrowing")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "slime-tests" '("arglist" "async-eval-debugging" "break" "comp" "def-slime-test" "dis" "end-of-file" "find-definition" "flow-control" "indentation" "inspector" "inter" "locally-bound-debugger-hook" "loop-interrupt-" "macroexpand" "narrowing" "read" "report-condition-with-circular-list" "sbcl-world-lock" "sexp-at-point.1" "symbol-at-point." "traditional-recipe" "unwind-to-previous-sldb-level" "utf-8-source")))
 
 ;;;***

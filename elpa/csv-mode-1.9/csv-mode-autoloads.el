@@ -1,9 +1,12 @@
 ;;; csv-mode-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "csv-mode" "csv-mode.el" (23080 453 0 0))
+;;;### (autoloads nil "csv-mode" "csv-mode.el" (0 0 0 0))
 ;;; Generated autoloads from csv-mode.el
 
 (autoload 'csv-mode "csv-mode" "\
@@ -46,11 +49,21 @@ CSV mode provides the following specific keyboard key bindings:
 
 (add-to-list 'auto-mode-alist '("\\.[Cc][Ss][Vv]\\'" . csv-mode))
 
+(add-to-list 'auto-mode-alist '("\\.tsv\\'" . tsv-mode))
+
+(autoload 'tsv-mode "csv-mode" "\
+Major mode for editing files of tab-separated value type.
+
+\(fn)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "csv-mode" '("csv-" "tsv-")))
+
 ;;;***
 
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; csv-mode-autoloads.el ends here

@@ -62,6 +62,13 @@
 
 ;;;***
 
+;;;### (autoloads nil "lsp-haxe" "lsp-haxe.el" (0 0 0 0))
+;;; Generated autoloads from lsp-haxe.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-haxe" '("lsp-")))
+
+;;;***
+
 ;;;### (autoloads nil "lsp-html" "lsp-html.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-html.el
 
@@ -86,6 +93,8 @@
 
 ;;;### (autoloads nil "lsp-mode" "lsp-mode.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-mode.el
+(put 'lsp-enable-file-watchers 'safe-local-variable #'booleanp)
+(put 'lsp-file-watch-threshold 'safe-local-variable (lambda (i) (or (numberp i) (not i))))
 
 (autoload 'lsp "lsp-mode" "\
 Entry point for the server startup.

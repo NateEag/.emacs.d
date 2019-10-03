@@ -6404,6 +6404,7 @@ Find source of definition of SYMBOL."])))
 
 ;; python-components-extra
 
+;; Stuff merged/adapted from python.el
 (defun py-info-encoding ()
   "Return encoding for file.
 Try `py-info-encoding-from-cookie', if none is found then
@@ -6938,9 +6939,9 @@ goes wrong and syntax highlighting in the shell gets messed up."
 (defun py-font-lock-post-command-hook ()
   "Fontifies current line in shell buffer."
   (let ((prompt-end
-	 (or (cdr (python-util-comint-last-prompt))
+	 (or (cdr (py-util-comint-last-prompt))
 	     (progn (sit-for 0.1)
-		    (cdr (python-util-comint-last-prompt))))))
+		    (cdr (py-util-comint-last-prompt))))))
     (when (and prompt-end (> (point) prompt-end)
                (process-live-p (get-buffer-process (current-buffer))))
       (let* ((input (buffer-substring-no-properties
@@ -15016,22 +15017,21 @@ When `delete-active-region' and (use-region-p), delete region "
          (eq (current-column)(current-indentation))
          (point))))
 
-(defun py--beginning-of-indent-p (&optional pps)
+(defun py--beginning-of-indent-p ()
   "Return position, if cursor is at the beginning of a ‘indent’, nil otherwise."
-  (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
-    (and ;; (not (or (nth 8 pps)(nth 1 pps)))
-         (looking-at py-indent-re)
-         (looking-back "[^ \t]*" (line-beginning-position))
-         (eq (current-column)(current-indentation))
-         (point))))
+  (and ;; (not (or (nth 8 pps)(nth 1 pps)))
+   (looking-at py-indent-re)
+   (looking-back "[^ \t]*" (line-beginning-position))
+   (eq (current-column) (current-indentation))
+   (point)))
 
 (defun py--beginning-of-minor-block-p (&optional pps)
   "Return position, if cursor is at the beginning of a ‘minor-block’, nil otherwise."
   (let ((pps (or pps (parse-partial-sexp (point-min) (point)))))
-    (and (not (or (nth 8 pps)(nth 1 pps)))
+    (and (not (or (nth 8 pps) (nth 1 pps)))
          (looking-at py-minor-block-re)
          (looking-back "[^ \t]*" (line-beginning-position))
-         (eq (current-column)(current-indentation))
+         (eq (current-column) (current-indentation))
          (point))))
 
 (defun py--beginning-of-statement-p (&optional pps)
@@ -16875,7 +16875,7 @@ Keep current buffer. Ignores ‘py-switch-buffers-on-execute-p’ "
   (interactive)
   (let ((py-master-file (or py-master-file (py-fetch-py-master-file)))
         (wholebuf t)
-	(shell (py-choose-shell))
+	(shell (or shell (py-choose-shell)))
         filename buffer)
     (when py-master-file
       (setq filename (expand-file-name py-master-file)
@@ -23142,7 +23142,8 @@ process buffer for a list of commands.)"
 		   (process-buffer (apply 'start-process shell buffer-name shell args))
 		 (apply #'make-comint-in-buffer shell buffer-name
 			shell nil args))))))
-	 (py-output-buffer (buffer-name (if python-mode-v5-behavior-p py-output-buffer buffer))))
+	 (py-output-buffer (buffer-name (if python-mode-v5-behavior-p py-output-buffer buffer)))
+	 erg)
     (unless done
       (with-current-buffer buffer
 	(setq delay (py--which-delay-process-dependent buffer-name))
@@ -23478,7 +23479,6 @@ When interactively called, copy and message it"
   (ignore-errors (with-current-buffer buffer
     (let (kill-buffer-query-functions set-buffer-modified-p)
       (ignore-errors (kill-process (get-buffer-process buffer)))
-      (set-buffer-modified-p 'nil)
       (ignore-errors (kill-buffer buffer))))))
 
 (defun py--line-backward-maybe ()

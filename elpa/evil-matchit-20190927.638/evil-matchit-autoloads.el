@@ -230,7 +230,8 @@ Return information of current tag: (list position-of-word word)." nil nil)
 ;;;;;;  0 0 0))
 ;;; Generated autoloads from evil-matchit-org.el
 
-(autoload 'evilmi-org-get-tag "evil-matchit-org" nil nil nil)
+(autoload 'evilmi-org-get-tag "evil-matchit-org" "\
+Get current tag in org file." nil nil)
 
 (autoload 'evilmi-org-jump "evil-matchit-org" "\
 
@@ -317,20 +318,10 @@ after calling this function.
 
 \(fn RLT NUM MATCH-TAGS HOWTOS)" nil nil)
 
-(autoload 'evilmi-current-font-among-fonts-p "evil-matchit-sdk" "\
+(autoload 'evilmi-among-fonts-p "evil-matchit-sdk" "\
 If current font at POS is among FONTS.
 
 \(fn POS FONTS)" nil nil)
-
-(autoload 'evilmi-in-comment-p "evil-matchit-sdk" "\
-Check character at POS is comment by comparing font face.
-
-\(fn POS)" nil nil)
-
-(autoload 'evilmi-in-string-or-doc-p "evil-matchit-sdk" "\
-Check character at POS is string or document by comparing font face.
-
-\(fn POS)" nil nil)
 
 (autoload 'evilmi-evenp "evil-matchit-sdk" "\
 

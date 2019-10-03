@@ -1,6 +1,6 @@
 ;;; le-python.el --- lispy support for Python. -*- lexical-binding: t -*-
 
-;; Copyright (C) 2016 Oleh Krehel
+;; Copyright (C) 2016-2019 Oleh Krehel
 
 ;; This file is not part of GNU Emacs
 
@@ -114,8 +114,8 @@ Stripping them will produce code that's valid for an eval."
                          (point) end))))))
         (buffer-substring-no-properties (car bnd) (point))))))
 
-(defun lispy-eval-python-str ()
-  (let* ((bnd (lispy-eval-python-bnd))
+(defun lispy-eval-python-str (&optional bnd)
+  (let* ((bnd (or bnd (lispy-eval-python-bnd)))
          (str1 (lispy-trim-python
                 (lispy-extended-eval-str bnd)))
          (str1.5 (replace-regexp-in-string "^ *#[^\n]+\n" "" str1))
@@ -167,14 +167,6 @@ Stripping them will produce code that's valid for an eval."
                     (end-of-line))
                 (end-of-line 2)))
             (point)))))
-
-(defun lispy-eval-python (&optional plain)
-  (let ((res (lispy--eval-python
-              (lispy-eval-python-str)
-              plain)))
-    (if (and res (not (equal res "")))
-        (lispy-message res)
-      (lispy-message lispy-eval-error))))
 
 (defvar-local lispy-python-proc nil)
 
@@ -257,7 +249,13 @@ it at one time."
                  (expand-file-name python-shell-interpreter))
                 (t
                  python-shell-interpreter)))
-             (python-binary-name (python-shell-calculate-command))
+             (python-binary-name
+              (concat
+               (string-trim-right
+                (shell-command-to-string
+                 (concat "which " python-shell-interpreter)))
+               " "
+               python-shell-interpreter-args))
              (buffer
               (let ((python-shell-completion-native-enable nil))
                 (python-shell-make-comint
@@ -307,7 +305,7 @@ If so, return an equivalent of ITEM = ARRAY_LIKE[IDX]; ITEM."
        (lispy--python-print (match-string 1 str)))
       ((and (or (string-match "\\`\\(\\(?:[., ]\\|\\sw\\|\\s_\\|[][]\\)+\\) += " str)
                 (string-match "\\`\\(([^)]+)\\) *=[^=]" str)
-                (string-match "\\`\\(\\(?:\\sw\\|\\s_\\)+ *\\[[^]]+\\]\\) *=" str))
+                (string-match "\\`\\(\\(?:\\sw\\|\\s_\\)+ *\\[[^]]+\\]\\) *=[^=]" str))
             (save-match-data
               (or single-line-p
                   (and (not (string-match-p "lp\\." str))
@@ -722,9 +720,19 @@ Otherwise, fall back to Jedi (static)."
 (defun lispy--python-middleware-load ()
   "Load the custom Python code in \"lispy-python.py\"."
   (unless lispy--python-middleware-loaded-p
-    (let ((r (lispy--eval-python
-              (format "import imp;lp=imp.load_source('lispy-python','%s');__name__='__repl__';pm=lp.Autocall(lp.pm);"
-                      (expand-file-name "lispy-python.py" lispy-site-directory)))))
+    (let* ((module-path (format "'lispy-python','%s'"
+                                (expand-file-name "lispy-python.py" lispy-site-directory)))
+           (r (lispy--eval-python
+               (format
+                (concat
+                 "try:\n"
+                 "    from importlib.machinery import SourceFileLoader\n"
+                 "    lp=SourceFileLoader(%s).load_module()\n"
+                 "except:\n"
+                 "    import imp;lp=imp.load_source(%s)\n"
+                 "__name__='__repl__';"
+                 "pm=lp.Autocall(lp.pm);")
+                module-path module-path))))
       (if r
           (progn
             (when (file-exists-p lispy-python-init-file)

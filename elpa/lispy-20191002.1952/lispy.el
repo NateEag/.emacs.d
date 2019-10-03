@@ -4272,13 +4272,15 @@ SYMBOL is a string."
           (const :tag "message" message)
           (const :tag "overlay" overlay)))
 
-(defvar cider-eval-result-duration)
-
 (defvar lispy-eval-alist
-  '((python-mode lispy-eval-python le-python)
-    (julia-mode lispy-eval-julia le-julia)
-    (clojure-mode lispy-eval-clojure le-clojure)
-    (racket-mode lispy-eval-racket le-racket)))
+  '((python-mode
+     le-python lispy--eval-python lispy-eval-python-str lispy-eval-python-bnd)
+    (julia-mode
+     le-julia lispy-eval-julia nil lispy-eval-julia-str)
+    (clojure-mode
+     le-clojure lispy-eval-clojure nil nil)
+    (racket-mode
+     le-racket lispy-eval-racket nil nil)))
 
 (defvar lispy-eval-error nil
   "The eval function may set this when there's an error.")
@@ -4296,21 +4298,25 @@ When ARG is 2, insert the result as a comment."
          (lispy-eval-outline))
         (t
          (let ((handler (cdr (assoc major-mode lispy-eval-alist)))
-               result)
+               res)
            (if handler
                (progn
-                 (when (cadr handler)
-                   (require (cadr handler)))
-                 (setq result (funcall (car handler) (eq arg 3))))
-             (setq result (lispy--eval-default)))
+                 (require (nth 0 handler))
+                 (setq res (funcall
+                            (nth 1 handler)
+                            (funcall (or (nth 2 handler) #'lispy--string-dwim))
+                            (eq arg 3))))
+             (setq res (lispy--eval-default)))
+           (when (member res '(nil ""))
+             (setq res lispy-eval-error))
            (cond ((eq lispy-eval-display-style 'message)
-                  (lispy-message result))
+                  (lispy-message res))
                  ((or (fboundp 'cider--display-interactive-eval-result)
                       (require 'cider nil t))
-                  (cider--display-interactive-eval-result result
-                                                          (cdr (lispy--bounds-dwim))))
+                  (cider--display-interactive-eval-result
+                   res (cdr (lispy--bounds-dwim))))
                  (t
-                  (error "Please install CIDER 0.10 to display overlay")))))))
+                  (error "Please install CIDER >= 0.10 to display overlay")))))))
 
 (defun lispy--eval-default ()
   (save-excursion
@@ -4341,18 +4347,15 @@ When ARG is 2, insert the result as a comment."
 (defun lispy-add-outline-title ()
   (save-excursion
     (lispy-outline-prev 1)
-    (let ((comment (if (eq major-mode 'python-mode)
-                       "#"
-                     (lispy-comment-char 2))))
-      (if (looking-at (format "\\(%s\\*+ ?:$\\)" comment))
-          (match-string-no-properties 1)
-        (concat comment (make-string (1+ (funcall outline-level)) ?*) " :")))))
+    (if (looking-at (format "\\(%s\\*+ ?:$\\)" lispy-outline-header))
+        (match-string-no-properties 1)
+      (concat lispy-outline-header (make-string (1+ (funcall outline-level)) ?*) " :"))))
 
 (defun lispy-insert-outline-below ()
   (interactive)
   "Add an unnamed notebook outline at point."
+  (outline-back-to-heading)
   (cond
-    ((and (bolp) (eolp)))
     ((lispy-outline-next 1)
      (insert "\n\n")
      (backward-char 2))
@@ -5948,10 +5951,14 @@ An equivalent of `cl-destructuring-bind'."
        (setq hydra-lispy-x/hint lispy-x--old-hint)
        (hydra-set-property 'hydra-lispy-x :verbosity 2)))))
 
+(defcustom lispy-x-default-verbosity 0
+  "Default verbosity of `lispy-x'."
+  :type '(radio (const 0) (const 1)))
+
 (defun lispy-x ()
   "Forward to `hydra-lispy-x/body'"
   (interactive)
-  (hydra-set-property 'hydra-lispy-x :verbosity 0)
+  (hydra-set-property 'hydra-lispy-x :verbosity lispy-x-default-verbosity)
   (hydra-lispy-x/body))
 
 (defun lispy-ert ()
@@ -6356,10 +6363,12 @@ Return start of string it is."
 
 (defun lispy--in-comment-p ()
   "Test if point is inside a comment."
-  (save-excursion
-    (unless (eolp)
-      (forward-char 1))
-    (nth 4 (syntax-ppss))))
+  (or
+   (save-excursion
+     (unless (eolp)
+       (forward-char 1))
+     (nth 4 (syntax-ppss)))
+   (and (bolp) (looking-at lispy-outline-header))))
 
 (defun lispy--in-string-or-comment-p ()
   "Test if point is inside a string or a comment."
@@ -6824,6 +6833,8 @@ The result is a string."
             'oval-ruby-eval)
            ((eq major-mode 'matlab-mode)
             'matlab-eval)
+           ((ignore-errors
+              (nth 2 (assoc major-mode lispy-eval-alist))))
            (t (error "%s isn't supported currently" major-mode)))
      e-str)))
 
@@ -7272,7 +7283,8 @@ Ignore the matches in strings and comments."
                 (forward-list 1)))
             (setq str-mid (buffer-substring-no-properties head-end (1- (point))))
             (delete-region head-beg (point)))
-          (insert "(ly-raw " class " (" str-mid "))"))))))
+          (insert "(ly-raw " class " (" str-mid "))")
+          (backward-char (+ 3 (length str-mid))))))))
 
 (defvar lispy--clojure-char-literal-regex
   (format "\\\\\\(\\(?:\\(?:\\sw\\|%s\\)\\b\\)\\|[.,]\\|u[A-Za-z0-9]+\\)"
@@ -7379,6 +7391,12 @@ See https://clojure.org/guides/weird_characters#_character_literal.")
                   (unless (lispy--in-string-or-comment-p)
                     (replace-match (format "(ly-raw clojure-gensym %S)"
                                            (match-string-no-properties 1)))))
+                ;; ——— Clojure keyword —————————
+                (goto-char (point-min))
+                (while (re-search-forward "\\(:\\.[^][({}) \t\n\r]+\\)" nil t)
+                  (unless (lispy--in-string-or-comment-p)
+                    (replace-match (format "(ly-raw clojure-keyword %S)"
+                                           (match-string-no-properties 1)))))
                 ;; ——— #' —————————————————————
                 (goto-char (point-min))
                 (while (re-search-forward "#'" nil t)
@@ -7402,13 +7420,15 @@ See https://clojure.org/guides/weird_characters#_character_literal.")
                 ;; ——— #_ —————————————————————
                 (goto-char (point-min))
                 (while (re-search-forward "#_[({[]" nil t)
-                  (backward-char 1)
-                  (let ((beg (point)))
-                    (forward-list 1)
-                    (insert ")")
-                    (goto-char beg)
-                    (delete-char -2)
-                    (insert "(ly-raw clojure-reader-comment ")))
+                  (if (setq cbnd (lispy--bounds-string))
+                      (goto-char (cdr cbnd))
+                    (backward-char 1)
+                    (let ((beg (point)))
+                      (forward-list 1)
+                      (insert ")")
+                      (goto-char beg)
+                      (delete-char -2)
+                      (insert "(ly-raw clojure-reader-comment "))))
                 ;; ——— #{ or { or #( or @( or #?( or #?@( ——————————
                 (lispy--read-1)
                 ;; ——— #1 —————————————————————
@@ -8133,7 +8153,7 @@ The outer delimiters are stripped."
           (lisp-macro
            (delete-region beg (point))
            (insert (cl-caddr sxp)))
-          (clojure-gensym
+          ((clojure-gensym clojure-keyword)
            (delete-region beg (point))
            (insert (cl-caddr sxp)))
           (function

@@ -724,8 +724,8 @@ The shell command lives in my dotfiles repo."
         ;; 'once' from cc-mode, php-mode's parent mode.
         (setq yas-key-syntaxes (list "w_" "w" "w_." "w_.()" "^ "))
 
-        (defalias 'yas-visit-snippet-file
-                  'ne/yas-edit-snippet
+        (defalias 'ne/yas-edit-snippet
+                  'yas-visit-snippet-file
                   "I always forget this function's name.
 
 With this alias I hope to not need to remember it.")

@@ -18,6 +18,15 @@
   cases I'll just want to quit after seeing what I wanted to, and being in
   normal-state makes that two keystrokes instead of one.
 
+- Find or create a way to detect my most common typing errors. Bonus points if
+  it automatically generates typing drills to let me focus in on typos it has
+  detected. I asked this question on StackExchange and have gotten only upvotes
+  so far:
+  https://emacs.stackexchange.com/questions/52948/package-to-detect-most-common-typing-mistakes
+
+  Maybe the speed-type package would be a good starting point?
+  https://github.com/parkouss/speed-type/
+
 - Get smart-dash-mode usable in CSS. Some styles of class naming involve
   underscores, so it would be nice to have it do the right thing automatically.
 
@@ -432,6 +441,11 @@
   src="/...". Actually, it might work better if it was just activated for any
   string beginning with '/'. Some hints:
   http://superuser.com/questions/67170/how-do-i-complete-file-paths-in-emacs
+
+- Figure out if the compdef package would buy me anything useful. I think it's
+  for eliminating auto-complete source boilerplate from
+  company-mode/completion-at-point configurations, but I might be
+  misunderstanding. https://gitlab.com/jjzmajic/compdef
 
 - I should have Twig/Django snippets. 'block' is the obvious one, but probably
   snippets for all the major bits of syntax would be handy, and someone out

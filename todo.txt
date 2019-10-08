@@ -122,6 +122,11 @@
   characters are vulnerable to false positives. https://localhost/test#debug is
   an example that gets highlighted for me as of time of writing.
 
+  If I turn the opening character class of the first entry in
+  rainbow-hexademical-colors-font-lock-keywords from '[^&]' to '[[:space:]]',
+  my above URL example no longer causes trouble. No idea if that's a valid fix,
+  but it's a useful data point.
+
 - Generate autoloads for my mode configs (and other code I've hacked up myself)
   from autoload cookie comments, rather than maintaining them manually.
   Apparently auto-compile has `auto-compile-update-autoloads' for this purpose.

@@ -82,6 +82,16 @@
   internalize reading Emacs Lisp, and it looks promising to me:
   https://readable.sourceforge.io/
 
+  Readable is implemented as a reader macro, it seems, and elisp does not
+  support reader macros
+  (https://emacs.stackexchange.com/questions/18003/how-can-i-modify-elisps-reader),
+  so this might be a dead end.
+
+  That said, some enterprising soul *has* implemented a POC elisp reader:
+  https://github.com/mishoo/elisp-reader.el
+
+  so this may yet be achievable without hacking a lot of C.
+
 - Go through the tools and techniques described in
   https://alphapapa.github.io/emacs-package-dev-handbook/ and adopt any that
   seem useful.

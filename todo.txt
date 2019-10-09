@@ -127,6 +127,8 @@
   my above URL example no longer causes trouble. No idea if that's a valid fix,
   but it's a useful data point.
 
+  Bug report filed: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=37681
+
 - Generate autoloads for my mode configs (and other code I've hacked up myself)
   from autoload cookie comments, rather than maintaining them manually.
   Apparently auto-compile has `auto-compile-update-autoloads' for this purpose.

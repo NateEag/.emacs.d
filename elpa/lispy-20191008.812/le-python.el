@@ -206,6 +206,9 @@ Stripping them will produce code that's valid for an eval."
                 (match-string 1 pname)))
             lispy-python-process-regexes)))))
 
+(defvar lispy-override-python-binary nil
+  "When non-nil, override what `lispy--python-proc' uses.")
+
 (defun lispy-set-python-process (&optional arg)
   "Associate a (possibly new) Python process to the current buffer.
 
@@ -219,7 +222,10 @@ it at one time."
                    (let ((name (lispy-short-process-name x)))
                      (when name
                        (cons name x))))
-                 (process-list)))))
+                 (process-list))))
+         (lispy-override-python-binary
+          (when (equal arg '(16))
+            (read-string "python binary: "))))
     (ivy-read (if arg "Restart process: " "Process: ") process-names
               :action #'lispy-set-python-process-action
               :preselect (when (process-live-p lispy-python-proc)
@@ -250,12 +256,13 @@ it at one time."
                 (t
                  python-shell-interpreter)))
              (python-binary-name
-              (concat
-               (string-trim-right
-                (shell-command-to-string
-                 (concat "which " python-shell-interpreter)))
-               " "
-               python-shell-interpreter-args))
+              (or lispy-override-python-binary
+                  (concat
+                   (string-trim-right
+                    (shell-command-to-string
+                     (concat "which " python-shell-interpreter)))
+                   " "
+                   python-shell-interpreter-args)))
              (buffer
               (let ((python-shell-completion-native-enable nil))
                 (python-shell-make-comint
@@ -505,7 +512,7 @@ If so, return an equivalent of ITEM = ARRAY_LIKE[IDX]; ITEM."
                           (lispy--python-proc)
                           nil str)))))))
 
-(defvar lispy--python-arg-key-re "\\`\\(\\(?:\\sw\\|\\s_\\)+\\) ?= ?\\(.*\\)\\'"
+(defvar lispy--python-arg-key-re "\\`\\(\\(?:\\sw\\|\\s_\\)+\\)=\\([^=].*\\)\\'"
   "Constant regexp for matching function keyword spec.")
 
 (defun lispy--python-args (beg end)

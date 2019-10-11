@@ -98,11 +98,13 @@ simply concatenated (no quoting)."
 (defcustom ledger-report-use-native-highlighting t
   "When non-nil, use ledger's native highlighting in reports."
   :type 'boolean
+  :package-version '(ledger-mode . "4.0.0")
   :group 'ledger-report)
 
 (defcustom ledger-report-auto-width t
   "When non-nil, tell ledger about the width of the report window."
   :type 'boolean
+  :package-version '(ledger-mode . "4.0.0")
   :group 'ledger-report)
 
 (defcustom ledger-report-use-header-line nil
@@ -111,29 +113,33 @@ The report name/command won't be printed in the buffer.  See
 `ledger-report-header-line-fn' for how to customize the
 information reported."
   :type 'boolean
+  :package-version '(ledger-mode . "4.0.0")
   :group 'ledger-report)
 
 (defcustom ledger-report-header-line-fn #'ledger-report--header-function
   "Evaluate this function in the `header-line' of the report buffer.
 `ledger-report-use-header-line' must be non-nil for this to have any effect."
   :type 'function
+  :package-version '(ledger-mode . "4.0.0")
   :group 'ledger-report)
 
 (defcustom ledger-report-resize-window t
   "If non-nil, resize the report window.
 Calls `shrink-window-if-larger-than-buffer'."
   :type 'boolean
+  :package-version '(ledger-mode . "4.0.0")
   :group 'ledger-report)
 
 (defcustom ledger-report-use-strict nil
-  "Should Ledger-mode pass --strict as a command line parameter
-when running reports?"
+  "When non-nil, `ledger-mode' will use --strict when running reports?"
   :type 'boolean
+  :package-version '(ledger-mode . "4.0.0")
   :group 'ledger-report)
 
 (defcustom ledger-report-after-report-hook nil
   "Hook run after `ledger-report' has created the buffer and report."
   :type 'boolean
+  :package-version '(ledger-mode . "4.0.0")
   :group 'ledger-report)
 
 (defvar ledger-report-buffer-name "*Ledger Report*")
@@ -180,7 +186,7 @@ See documentation for the function `ledger-master-file'")
     (define-key map [?r] #'ledger-report-redo)
     (define-key map [(shift ?r)] #'ledger-report-reverse-report)
     (define-key map [?s] #'ledger-report-save)
-    (define-key map [(shift ?s)] #'ledger-report-select-report)
+    (define-key map [(shift ?s)] #'ledger-report)
     (define-key map [?e] #'ledger-report-edit-report)
     (define-key map [( shift ?e)] #'ledger-report-edit-reports)
     (define-key map [?q] #'ledger-report-quit)
@@ -201,7 +207,7 @@ See documentation for the function `ledger-master-file'")
 (easy-menu-define ledger-report-mode-menu ledger-report-mode-map
   "Ledger report menu"
   '("Reports"
-    ["Select Report" ledger-report-select-report]
+    ["Select Report" ledger-report]
     ["Save Report" ledger-report-save]
     ["Edit Current Report" ledger-report-edit-report]
     ["Edit All Reports" ledger-report-edit-reports]
@@ -469,7 +475,7 @@ Optionally EDIT the command."
   'action (lambda (_button) (ledger-report-visit-source)))
 
 (defun ledger-report--change-month (shift)
-  "Rebuild report with transactions from current month + shift."
+  "Rebuild report with transactions from current month + SHIFT."
   (let* ((current-month (or ledger-report-current-month (ledger-report--current-month)))
          (previous-month (ledger-report--shift-month current-month shift)))
     (set (make-local-variable 'ledger-report-current-month) previous-month)
@@ -591,12 +597,7 @@ arguments returned by `ledger-report--compute-extra-args'."
   (setq ledger-report-cmd (ledger-report-read-command ledger-report-cmd))
   (ledger-report-redo))
 
-(defun ledger-report-select-report ()
-  "Select and run one of the named reports."
-  (interactive)
-  (setq ledger-report-name (ledger-report-read-name)
-        ledger-report-cmd (ledger-report-cmd ledger-report-name nil))
-  (ledger-report-redo))
+(define-obsolete-function-alias 'ledger-report-select-report #'ledger-report "ledger 4.0.0")
 
 (defun ledger-report-read-new-name ()
   "Read the name for a new report from the minibuffer."

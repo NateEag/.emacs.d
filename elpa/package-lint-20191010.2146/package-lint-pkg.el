@@ -1,4 +1,4 @@
-(define-package "package-lint" "20191002.501" "A linting library for elisp package authors"
+(define-package "package-lint" "20191010.2146" "A linting library for elisp package authors"
   '((cl-lib "0.5")
     (emacs "24.1")
     (let-alist "1.0.6"))

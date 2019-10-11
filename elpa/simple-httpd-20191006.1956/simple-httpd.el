@@ -4,7 +4,7 @@
 
 ;; Author: Christopher Wellons <wellons@nullprogram.com>
 ;; URL: https://github.com/skeeto/emacs-http-server
-;; Package-Version: 20190110.1505
+;; Package-Version: 20191006.1956
 ;; Version: 1.5.1
 ;; Package-Requires: ((cl-lib "0.3"))
 
@@ -206,16 +206,16 @@
     ("tiff" . "image/tiff")
     ("ico"  . "image/x-icon")
     ("svg"  . "image/svg+xml")
-    ("css"  . "text/css")
-    ("htm"  . "text/html")
-    ("html" . "text/html")
-    ("xml"  . "text/xml")
-    ("rss"  . "text/xml")
-    ("atom" . "text/xml")
-    ("txt"  . "text/plain")
-    ("el"   . "text/plain")
-    ("js"   . "text/javascript")
-    ("md"   . "text/x-markdown")
+    ("css"  . "text/css; charset=utf-8")
+    ("htm"  . "text/html; charset=utf-8")
+    ("html" . "text/html; charset=utf-8")
+    ("xml"  . "text/xml; charset=utf-8")
+    ("rss"  . "text/xml; charset=utf-8")
+    ("atom" . "text/xml; charset=utf-8")
+    ("txt"  . "text/plain; charset=utf-8")
+    ("el"   . "text/plain; charset=utf-8")
+    ("js"   . "text/javascript; charset=utf-8")
+    ("md"   . "text/x-markdown; charset=utf-8")
     ("gz"   . "application/octet-stream")
     ("ps"   . "application/postscript")
     ("eps"  . "application/postscript")
@@ -350,7 +350,6 @@ instance per Emacs instance."
    :host     httpd-host
    :family   httpd-ip-family
    :filter   'httpd--filter
-   :filter-multibyte nil
    :coding   'binary
    :log      'httpd--log)
   (run-hooks 'httpd-start-hook))
@@ -433,7 +432,7 @@ emacs -Q -batch -l simple-httpd.elc -f httpd-batch-start"
             (let* ((content (buffer-string))
                    (uri (cl-cadar request))
                    (parsed-uri (httpd-parse-uri (concat uri)))
-                   (uri-path (nth 0 parsed-uri))
+                   (uri-path (httpd-unhex (nth 0 parsed-uri)))
                    (uri-query (append (nth 1 parsed-uri)
                                       (httpd-parse-args content)))
                    (servlet (httpd-get-servlet uri-path)))
@@ -456,7 +455,6 @@ emacs -Q -batch -l simple-httpd.elc -f httpd-batch-start"
 (defun httpd--log (server proc message)
   "Runs each time a new client connects."
   (with-current-buffer (generate-new-buffer " *httpd-client*")
-    (set-buffer-multibyte nil)
     (process-put proc :request-buffer (current-buffer)))
   (set-process-sentinel proc #'httpd--sentinel)
   (httpd-log (list 'connection (car (process-contact proc)))))
@@ -830,7 +828,6 @@ the `httpd-current-proc' as the process."
           (httpd-send-header proc "text/plain" 304))
       (httpd-log `(file ,path))
       (with-temp-buffer
-        (set-buffer-multibyte nil)
         (insert-file-contents path)
         (httpd-send-header proc (httpd-get-mime (file-name-extension path))
                            200 :Last-Modified mtime :ETag etag)))))
@@ -844,7 +841,6 @@ the `httpd-current-proc' as the process."
     (if (equal "/" (substring uri-path -1))
         (with-temp-buffer
           (httpd-log `(directory ,path))
-          (set-buffer-multibyte nil)
           (insert "<!DOCTYPE html>\n")
           (insert "<html>\n<head><title>" title "</title></head>\n")
           (insert "<body>\n<h2>" title "</h2>\n<hr/>\n<ul>")
@@ -857,18 +853,12 @@ the `httpd-current-proc' as the process."
                 (insert (format "<li><a href=\"%s%s\">%s%s</a></li>\n"
                                 l tail f tail)))))
           (insert "</ul>\n<hr/>\n</body>\n</html>")
-          (httpd-send-header proc "text/html" 200))
+          (httpd-send-header proc "text/html; charset=utf-8" 200))
       (httpd-redirect proc (concat uri-path "/")))))
 
 (defun httpd--buffer-size (&optional buffer)
   "Get the buffer size in bytes."
-  (let ((orig enable-multibyte-characters)
-        (size 0))
-    (with-current-buffer (or buffer (current-buffer))
-      (set-buffer-multibyte nil)
-      (setf size (buffer-size))
-      (if orig (set-buffer-multibyte orig)))
-    size))
+  (bufferpos-to-filepos (point-max)))
 
 (defun httpd-error (proc status &optional info)
   "Send an error page appropriate for STATUS to the client,

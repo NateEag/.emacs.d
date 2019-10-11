@@ -301,7 +301,7 @@ Check if KEYWORD exist in KEYWORD-LIST.
 
 (autoload 'evilmi-sdk-get-tag-info "evil-matchit-sdk" "\
 Return (row column is-function-exit-point keyword).
-The row and column marked position in evilmi-mylang-match-tags
+The row and column mark the position in evilmi-mylang-match-tags
 is-function-exit-point could be unknown status
 
 \(fn KEYWORD MATCH-TAGS)" nil nil)
@@ -326,7 +326,7 @@ If current font at POS is among FONTS.
 (autoload 'evilmi-evenp "evil-matchit-sdk" "\
 
 
-\(fn NUM)" nil nil)
+\(fn NUM)" nil t)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-matchit-sdk" '("evilmi-")))
 

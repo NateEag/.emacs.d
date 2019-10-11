@@ -2,10 +2,11 @@
   "Debug flag.")
 
 (defvar evilmi-ignored-fonts
-  '(font-lock-string-face
+  '(web-mode-html-attr-value-face
+    font-lock-string-face
     font-lock-doc-face
     font-lock-comment-face)
-  "Text with ingored fonts has no string keyword.")
+  "Text with ignored fonts has no string keyword.")
 
 (defvar evilmi-sdk-extract-keyword-howtos
   '(("^[ \t]*\\([a-z]+\!?\\)\\( .*\\| *\\)$" 1)
@@ -89,25 +90,24 @@ between '\\(' and '\\)' in regular expression.")
 ;;;###autoload
 (defun evilmi-sdk-get-tag-info (keyword match-tags)
   "Return (row column is-function-exit-point keyword).
-The row and column marked position in evilmi-mylang-match-tags
+The row and column mark the position in evilmi-mylang-match-tags
 is-function-exit-point could be unknown status"
   (let* (rlt
-         elems
-         elem
+         items
+         item
          found
          (i 0)
          j)
 
     (while (and (< i (length match-tags)) (not found))
-      (setq elems (nth i match-tags))
+      (setq items (nth i match-tags))
       (setq j 0)
-      (while (and (not found) (< j (length elems)))
-        (setq elem (nth j elems))
-        (setq found (and (or (stringp elem) (listp elem))
-                         (evilmi-sdk-member keyword elem)))
-        (if (not found)
-            (setq j (1+ j))))
-      (if (not found) (setq i (1+ i))))
+      (while (and (not found) (< j (length items)))
+        (setq item (nth j items))
+        (setq found (and (or (stringp item) (listp item))
+                         (evilmi-sdk-member keyword item)))
+        (unless found (setq j (1+ j))))
+      (unless found (setq i (1+ i))))
     (when found
       ;; function exit point maybe?
       (if (nth 3 (nth i match-tags))
@@ -119,6 +119,17 @@ is-function-exit-point could be unknown status"
   (if evilmi-debug (message "evilmi-sdk-get-tag-info called => %s %s. rlt=%s" keyword match-tags rlt))
     rlt))
 
+(defun evilmi--sdk-check-keyword (keyword begin end)
+  "KEYWORD has valid keyword font space between BEGIN and END."
+  (let* (rlt)
+    (save-excursion
+      (goto-char begin)
+      (while (search-forward keyword end t)
+        (when (not (evilmi-among-fonts-p (point)
+                                         evilmi-ignored-fonts))
+          (setq rlt keyword))))
+    rlt))
+
 (defun evilmi--sdk-extract-keyword (cur-line match-tags howtos)
   "Extract keyword from CUR-LINE.  Keyword is defined in MATCH-TAGS."
   (let* (keyword howto (i 0))
@@ -126,22 +137,16 @@ is-function-exit-point could be unknown status"
       (setq howto (nth i howtos))
       (when (string-match (nth 0 howto) cur-line)
         ;; keyword should be trimmed because FORTRAN use "else if"
-        (setq keyword (evilmi-sdk-trim-string (match-string (nth 1 howto) cur-line) ))
-        ;; (message "keyword=%s" keyword)
-
+        (setq keyword (evilmi-sdk-trim-string (match-string (nth 1 howto)
+                                                            cur-line)))
         ;; keep search keyword by using next howto (regex and match-string index)
-        (if (not (evilmi-sdk-member keyword match-tags)) (setq keyword nil)))
+        (unless (evilmi-sdk-member keyword match-tags) (setq keyword nil)))
       (setq i (1+ i)))
 
-    (when keyword
-      ;; ignore text with specific font
-      (save-excursion
-        (goto-char (line-beginning-position))
-        (when (and (search-forward keyword (line-end-position) t)
-                   (evilmi-among-fonts-p (point)
-                                         evilmi-ignored-fonts))
-          (setq keyword nil))))
-    keyword))
+    (and keyword
+         (evilmi--sdk-check-keyword keyword
+                                    (line-beginning-position)
+                                    (line-end-position)))))
 
 (defun evilmi--is-monogamy (tag-info)
   (and (nth 2 tag-info) (string= (nth 2 tag-info) "MONOGAMY")))
@@ -164,20 +169,18 @@ is-function-exit-point could be unknown status"
 ;;;###autoload
 (defun evilmi-sdk-get-tag (match-tags howtos)
   "Return '(start-point ((row column is-function-exit-point keyword))."
-  (let* (rlt
-         (cur-line (evilmi-sdk-curline))
+  (let* ((cur-line (evilmi-sdk-curline))
          (keyword (evilmi--sdk-extract-keyword cur-line match-tags howtos))
          (tag-info (if keyword (evilmi-sdk-get-tag-info keyword match-tags))))
 
     ;; since we mixed ruby and lua mode here
     ;; maybe we should be strict at the keyword
-    (if tag-info
-        ;; 0 - open tag; 1 - middle tag; 2 - close tag;
-        (setq rlt (list (if (= 2 (nth 1 tag-info))
-                            (line-end-position)
-                          (line-beginning-position))
-                        tag-info)))
-    rlt))
+    (and tag-info
+      ;; 0 - open tag; 1 - middle tag; 2 - close tag;
+         (list (if (= 2 (nth 1 tag-info))
+                   (line-end-position)
+                 (line-beginning-position))
+               tag-info))))
 
 ;;;###autoload
 (defun evilmi-sdk-jump (rlt num match-tags howtos)
@@ -193,7 +196,7 @@ after calling this function."
          keyword
          found
          where-to-jump-in-theory)
-    (if evilmi-debug (message "evilmi-sdk-jump called => rlt=%s (piont)=%s" rlt (point)))
+    (if evilmi-debug (message "evilmi-sdk-jump called => rlt=%s (point)=%s" rlt (point)))
 
     (while (not found)
       (forward-line (if (= orig-tag-type 2) -1 1))
@@ -316,8 +319,8 @@ after calling this function."
     rlt))
 
 ;;;###autoload
-(defun evilmi-evenp (num)
-  (= (% num 2) 0))
+(defmacro evilmi-evenp (num)
+  `(= (% ,num 2) 0))
 
 (defun evilmi-count-matches (regexp str)
   (let* ((count 0)

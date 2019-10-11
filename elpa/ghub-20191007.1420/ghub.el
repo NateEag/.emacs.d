@@ -440,13 +440,21 @@ this function is called with nil for PAYLOAD."
 (cl-defun ghub-repository-id (owner name &key username auth host forge noerror)
   "Return the id of the specified repository.
 Signal an error if the id cannot be determined."
-  (let ((fn (intern (format "%s-repository-id" (or forge 'ghub)))))
-    (or (funcall (if (eq fn 'ghub-repository-id) 'ghub--repository-id fn)
-                 owner name :username username :auth auth :host host)
+  (let ((fn (cl-case forge
+              ((nil ghub github) 'ghub--repository-id)
+              (gitlab            'glab-repository-id)
+              (gittea            'gtea-repository-id)
+              (gogs              'gogs-repository-id)
+              (bitbucket         'buck-repository-id)
+              (t (intern (format "%s-repository-id" forge))))))
+    (unless (fboundp fn)
+      (error "ghub-repository-id: Forge type/abbreviation `%s' is unknown"
+             forge))
+    (or (funcall fn owner name :username username :auth auth :host host)
         (and (not noerror)
              (error "Repository %S does not exist on %S.\n%s%S?"
                     (concat owner "/" name)
-                    (or host (ghub--host host))
+                    (or host (ghub--host forge))
                     "Maybe it was renamed and you have to update "
                     "remote.<remote>.url")))))
 
@@ -750,7 +758,7 @@ and call `auth-source-forget+'."
 
 (defun ghub--auth (host auth &optional username forge)
   (unless username
-    (setq username (ghub--username host)))
+    (setq username (ghub--username host forge)))
   (if (eq auth 'basic)
       (cl-ecase forge
         ((nil github gitea gogs bitbucket)
@@ -762,16 +770,28 @@ and call `auth-source-forget+'."
              "Authorization")
             (gitlab
              "Private-Token"))
-          (concat
-           (and (not (eq forge 'gitlab)) "token ")
-           (encode-coding-string
-            (cl-typecase auth
-              (string auth)
-              (null   (ghub--token host username 'ghub nil forge))
-              (symbol (ghub--token host username auth  nil forge))
-              (t (signal 'wrong-type-argument
-                         `((or stringp symbolp) ,auth))))
-            'utf-8)))))
+          (if (eq forge 'bitbucket)
+              ;; For some undocumented reason Bitbucket supports
+              ;; values of the form "token <token>" only for GET
+              ;; requests.  For PUT requests we have to use basic
+              ;; authentication.  Note that the secret is a token
+              ;; (aka "app password"), not the actual password.
+              ;; The documentation fails to mention this little
+              ;; detail.  See #97.
+              (concat "Basic "
+                      (base64-encode-string
+                       (concat username ":"
+                               (ghub--token host username auth nil forge))))
+            (concat
+             (and (not (eq forge 'gitlab)) "token ")
+             (encode-coding-string
+              (cl-typecase auth
+                (string auth)
+                (null   (ghub--token host username 'ghub nil forge))
+                (symbol (ghub--token host username auth  nil forge))
+                (t (signal 'wrong-type-argument
+                           `((or stringp symbolp) ,auth))))
+              'utf-8))))))
 
 (defun ghub--basic-auth (host username)
   (let ((url (url-generic-parse-url
@@ -826,7 +846,7 @@ See https://magit.vc/manual/ghub/Support-for-Other-Forges.html for instructions.
                                user host))))))))
     (if (functionp token) (funcall token) token)))
 
-(defun ghub--host (&optional forge)
+(cl-defmethod ghub--host (forge)
   (cl-ecase forge
     ((nil github)
      (or (ignore-errors (car (process-lines "git" "config" "github.host")))
@@ -844,7 +864,7 @@ See https://magit.vc/manual/ghub/Support-for-Other-Forges.html for instructions.
      (or (ignore-errors (car (process-lines "git" "config" "bitbucket.host")))
          (bound-and-true-p buck-default-host)))))
 
-(defun ghub--username (host &optional forge)
+(cl-defmethod ghub--username (host &optional forge)
   (let ((var
          (cl-ecase forge
            ((nil github)
@@ -872,10 +892,10 @@ See https://magit.vc/manual/ghub/Support-for-Other-Forges.html for instructions.
       (error
        (let ((user (read-string
                     (format "Git variable `%s' is unset.  Set to: " var))))
-         (or (and user (progn (call-process "git" nil nil nil
-                                            "config" "--global" var user)
-                              user))
-             (user-error "Abort")))))))
+         (if (equal user "")
+             (user-error "The empty string is not a valid username")
+           (call-process "git" nil nil nil "config" "--global" var user)
+           user))))))
 
 (defun ghub--ident (username package)
   (format "%s^%s" username package))

@@ -3,7 +3,7 @@
 ;; Copyright (C) 2013 - 2018 by Shingo Fukuyama
 
 ;; Version: 2.0.0
-;; Package-Version: 20190822.501
+;; Package-Version: 20191008.401
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/ShingoFukuyama/helm-swoop
 ;; Created: Oct 24 2013
@@ -1056,48 +1056,6 @@ If $linum is number, lines are separated by $linum"
 (defvar helm-multi-swoop-projectile-buffers-filter
   #'projectile-buffers-with-file-or-process)
 ;; action -----------------------------------------------------
-
-(defadvice helm-next-line (around helm-multi-swoop-next-line disable)
-  (let ((helm-move-to-line-cycle-in-source nil))
-    ad-do-it
-    (when (called-interactively-p 'any)
-      (helm-multi-swoop--move-line-action))))
-
-(defadvice helm-previous-line (around helm-multi-swoop-previous-line disable)
-  (let ((helm-move-to-line-cycle-in-source nil))
-    ad-do-it
-    (when (called-interactively-p 'any)
-      (helm-multi-swoop--move-line-action))))
-
-(defadvice helm-toggle-visible-mark (around helm-multi-swoop-toggle-visible-mark disable)
-  (let ((helm-move-to-line-cycle-in-source nil))
-    ad-do-it
-    (when (called-interactively-p 'any)
-      (helm-multi-swoop--move-line-action))))
-
-(defadvice helm-move--next-line-fn (around helm-multi-swoop-next-line-cycle disable)
-  (if (not (helm-pos-multiline-p))
-      (if (eq (point-max) (save-excursion (forward-line 1) (point)))
-          (when helm-swoop-move-to-line-cycle
-            (helm-beginning-of-buffer)
-            (helm-swoop--recenter))
-        (forward-line 1))
-    (let ((line-num (line-number-at-pos)))
-      (helm-move--next-multi-line-fn)
-      (when (and helm-swoop-move-to-line-cycle
-                 (eq line-num (line-number-at-pos)))
-        (helm-beginning-of-buffer)))))
-
-(defadvice helm-move--previous-line-fn (around helm-multi-swoop-previous-line-cycle disable)
-  (if (not (helm-pos-multiline-p))
-      (forward-line -1)
-    (helm-move--previous-multi-line-fn))
-  (when (and (helm-pos-header-line-p)
-             (eq (point) (save-excursion (forward-line -1) (point))))
-    (when helm-swoop-move-to-line-cycle
-      (helm-end-of-buffer))
-    (when (helm-pos-multiline-p)
-      (helm-move--previous-multi-line-fn))))
 
 (defun helm-multi-swoop--move-line-action ()
   (with-helm-window

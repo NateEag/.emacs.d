@@ -24,9 +24,7 @@ When FORCE-SUMMARY is non-nil or when called interactively, show a summary messa
 \(fn &optional DIRECTORY FORCE-SUMMARY)" t nil)
 
 (autoload 'direnv-allow "direnv" "\
-Run ‘direnv allow’ and update the environment afterwards.
-
-\(fn)" t nil)
+Run ‘direnv allow’ and update the environment afterwards." t nil)
 
 (defvar direnv-mode nil "\
 Non-nil if Direnv mode is enabled.
@@ -40,6 +38,11 @@ or call the function `direnv-mode'.")
 
 (autoload 'direnv-mode "direnv" "\
 Global minor mode to automatically update the environment using direnv.
+
+If called interactively, enable Direnv mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
 
 When this mode is active, the environment inside Emacs will be
 continuously updated to match the direnv environment for the currently

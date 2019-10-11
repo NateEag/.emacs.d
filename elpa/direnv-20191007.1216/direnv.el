@@ -1,9 +1,9 @@
-;;; direnv.el --- direnv support -*- lexical-binding: t; -*-
+;;; direnv.el --- Support for direnv -*- lexical-binding: t; -*-
 
 ;; Author: wouter bolsterlee <wouter@bolsterl.ee>
 ;; Version: 2.0.0
-;; Package-Version: 20190622.1853
-;; Package-Requires: ((emacs "24.4") (dash "2.12.0"))
+;; Package-Version: 20191007.1216
+;; Package-Requires: ((emacs "25") (dash "2.12.0"))
 ;; Keywords: direnv, environment, processes, unix, tools
 ;; URL: https://github.com/wbolster/emacs-direnv
 ;;
@@ -101,7 +101,7 @@ instead of
                   (goto-char (point-max))
                   (re-search-backward "^{")
                   (json-read-object))
-              (unless (zerop (file-attribute-size (file-attributes stderr-tempfile)))
+              (unless (zerop (direnv--file-size stderr-tempfile))
                 (goto-char (point-max))
                 (unless (zerop (buffer-size))
                   (insert "\n\n"))
@@ -112,6 +112,12 @@ instead of
                   (warn "Error running direnv (exit code %d):\n%s\nOpen buffer ‘%s’ for full output."
                         exit-code (buffer-string) direnv--output-buffer-name))))))
       (delete-file stderr-tempfile))))
+
+(defun direnv--file-size (name)
+  "Get the file size for a file NAME."
+  (let ((attributes (file-attributes name)))
+    ;; Note: file-attribute-size is Emacs 26+
+    (nth 7 attributes)))
 
 (defun direnv--enable ()
   "Enable direnv mode."

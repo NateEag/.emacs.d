@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20191003.1236
+;; Package-Version: 20191011.1030
 ;; Version: 0.12.0
 ;; Package-Requires: ((emacs "24.3") (swiper "0.12.0"))
 ;; Keywords: convenience, matching, tools
@@ -372,11 +372,7 @@ Update the minibuffer with the amount of lines collected every
          ivy-completion-end))
       (setq ivy-completion-beg (point))
       (insert symbol-name)
-      (setq ivy-completion-end (point))
-      (when (equal (get-text-property 0 'symbol symbol-name) "f")
-        (insert "()")
-        (setq ivy-completion-end (point))
-        (backward-char)))))
+      (setq ivy-completion-end (point)))))
 
 ;;** `counsel-clj'
 (declare-function cider-sync-request:complete "ext:cider-client")
@@ -800,6 +796,11 @@ With prefix arg MODE a query for the symbol help mode is offered."
   "Face used by `counsel-M-x' for key bindings."
   :group 'ivy-faces)
 
+(defface counsel-active-mode
+  '((t :inherit font-lock-builtin-face))
+  "Face used by `counsel-M-x' for activated modes."
+  :group 'ivy-faces)
+
 (defcustom counsel-alias-expand t
   "When non-nil, show the expansion of aliases in `counsel-M-x'."
   :type 'boolean
@@ -807,8 +808,15 @@ With prefix arg MODE a query for the symbol help mode is offered."
 
 (defun counsel-M-x-transformer (cmd)
   "Return CMD annotated with its active key binding, if any."
-  (let ((alias (symbol-function (intern cmd)))
-        (key (where-is-internal (intern cmd) nil t)))
+  (let* ((sym (intern cmd))
+         (alias (symbol-function sym))
+         (key (where-is-internal sym nil t)))
+    (when (or (eq sym major-mode)
+              (and
+               (memq sym minor-mode-list)
+               (boundp sym)
+               (buffer-local-value sym (ivy-state-buffer ivy-last))))
+      (setq cmd (propertize cmd 'face 'counsel-active-mode)))
     (concat cmd
             (when (and (symbolp alias) counsel-alias-expand)
               (format " (%s)" alias))
@@ -1312,8 +1320,10 @@ INITIAL-INPUT can be given as the initial minibuffer input."
     (define-key map (kbd "C-l") 'ivy-call-and-recenter)
     (define-key map (kbd "M-q") 'counsel-git-grep-query-replace)
     (define-key map (kbd "C-c C-m") 'counsel-git-grep-switch-cmd)
+    (define-key map (kbd "C-x C-d") 'counsel-cd)
     map))
 
+(counsel-set-async-exit-code 'counsel-git-grep 1 "No matches found")
 (ivy-set-occur 'counsel-git-grep 'counsel-git-grep-occur)
 (ivy-set-display-transformer 'counsel-git-grep 'counsel-git-grep-transformer)
 
@@ -1344,7 +1354,11 @@ Typical value: '(recenter)."
 
 (defun counsel-git-grep-cmd-function-default (str)
   (format counsel-git-grep-cmd
-          (setq ivy--old-re (ivy--regex str t))))
+          (setq ivy--old-re
+                (if (eq ivy--regex-function #'ivy--regex-fuzzy)
+                    (replace-regexp-in-string
+                     "\n" "" (ivy--regex-fuzzy str))
+                  (ivy--regex str t)))))
 
 (defun counsel-git-grep-cmd-function-ignore-order (str)
   (setq ivy--old-re (ivy--regex str t))
@@ -1402,7 +1416,7 @@ files in a project.")
         proj)
     (cond
       ((stringp cmd))
-      (cmd
+      (current-prefix-arg
        (if (setq proj
                  (cl-find-if
                   (lambda (x)
@@ -1462,12 +1476,13 @@ On success, RESULT-FN is called in output buffer with no arguments."
   (counsel--call command))
 
 ;;;###autoload
-(defun counsel-git-grep (&optional cmd initial-input)
+(defun counsel-git-grep (&optional initial-input initial-directory cmd)
   "Grep for a string in the current Git repository.
+INITIAL-INPUT can be given as the initial minibuffer input.
+INITIAL-DIRECTORY, if non-nil, is used as the root directory for search.
 When CMD is a string, use it as a \"git grep\" command.
-When CMD is non-nil, prompt for a specific \"git grep\" command.
-INITIAL-INPUT can be given as the initial minibuffer input."
-  (interactive "P")
+When CMD is non-nil, prompt for a specific \"git grep\" command."
+  (interactive)
   (let ((proj-and-cmd (counsel--git-grep-cmd-and-proj cmd))
         proj)
     (setq proj (car proj-and-cmd))
@@ -1481,9 +1496,10 @@ INITIAL-INPUT can be given as the initial minibuffer input."
            (lambda ()
              (counsel-delete-process)
              (swiper--cleanup)))
-          (default-directory (if proj
-                                 (car proj)
-                               (counsel-locate-git-root))))
+          (default-directory (or initial-directory
+                                 (if proj
+                                     (car proj)
+                                   (counsel-locate-git-root)))))
       (ivy-read "git grep: " collection-function
                 :initial-input initial-input
                 :dynamic-collection t
@@ -1527,16 +1543,11 @@ INITIAL-INPUT can be given as the initial minibuffer input."
       (setq str (replace-match "" t t str 1))))
   str)
 
-(defun counsel-git-grep-occur ()
-  "Generate a custom occur buffer for `counsel-git-grep'.
-When REVERT is non-nil, regenerate the current *ivy-occur* buffer."
-  (unless (eq major-mode 'ivy-occur-grep-mode)
-    (ivy-occur-grep-mode)
-    (setq default-directory (ivy-state-directory ivy-last)))
-  (setq ivy-text
-        (and (string-match "\"\\(.*\\)\"" (buffer-name))
-             (match-string 1 (buffer-name))))
-  (let* ((regex (funcall ivy--regex-function ivy-text))
+(defun counsel--git-grep-occur-cmd (input)
+  (let* ((regex (funcall ivy--regex-function input))
+         (regex (if (eq ivy--regex-function #'ivy--regex-fuzzy)
+                    (replace-regexp-in-string "\n" "" regex)
+                  regex))
          (positive-pattern (replace-regexp-in-string
                             ;; git-grep can't handle .*?
                             "\\.\\*\\?" ".*"
@@ -1547,16 +1558,12 @@ When REVERT is non-nil, regenerate the current *ivy-occur* buffer."
                          (and (null (cdr x))
                               (format "| grep -v %s" (car x))))
                        regex
-                       " ")))
-         (cmd (concat (format counsel-git-grep-cmd positive-pattern) negative-patterns))
-         cands)
-    (setq cands (counsel--split-string (shell-command-to-string cmd)))
-    ;; Need precise number of header lines for `wgrep' to work.
-    (insert (format "-*- mode:grep; default-directory: %S -*-\n\n\n"
-                    default-directory))
-    (insert (format "%d candidates:\n" (length cands)))
-    (ivy--occur-insert-lines
-     (mapcar #'counsel--normalize-grep-match cands))))
+                       " "))))
+    (concat (format counsel-git-grep-cmd positive-pattern) negative-patterns)))
+
+(defun counsel-git-grep-occur ()
+  "Generate a custom occur buffer for `counsel-git-grep'."
+  (counsel-grep-like-occur #'counsel--git-grep-occur-cmd))
 
 (defun counsel-git-grep-query-replace ()
   "Start `query-replace' with string to replace from last search string."
@@ -2453,16 +2460,20 @@ string - the full shell command to run."
   "Location where to put the locatedb in case your home folder is encrypted."
   :type 'file)
 
+(defun counsel-file-stale-p (fname seconds)
+  "Return non-nil if FNAME was modified more than SECONDS ago."
+  (> (time-to-seconds
+      (time-subtract
+       (current-time)
+       (nth 5 (file-attributes fname))))
+     seconds))
+
 (defun counsel--locate-updatedb ()
   (when (file-exists-p "~/.Private")
     (let ((db-fname (expand-file-name counsel-locate-db-path)))
       (setenv "LOCATE_PATH" db-fname)
       (when (or (not (file-exists-p db-fname))
-                (> (time-to-seconds
-                    (time-subtract
-                     (current-time)
-                     (nth 5 (file-attributes db-fname))))
-                   60))
+                (counsel-file-stale-p db-fname 60))
         (message "Updating %s..." db-fname)
         (counsel--command
          "updatedb" "-l" "0" "-o" db-fname "-U" (expand-file-name "~"))))))
@@ -2823,13 +2834,13 @@ CALLER is passed to `ivy-read'."
               :caller (or caller 'counsel-ag))))
 
 (defun counsel-cd ()
-  "Change the directory for the currently running Ivy command."
+  "Change the directory for the currently running Ivy grep-like command.
+Works for `counsel-git-grep', `counsel-ag', etc."
   (interactive)
   (let ((input ivy-text)
         (new-dir (read-directory-name "cd: ")))
     (ivy-quit-and-run
-      (let ((default-directory new-dir))
-        (funcall (ivy-state-caller ivy-last) input)))))
+      (funcall (ivy-state-caller ivy-last) input new-dir))))
 
 (cl-pushnew 'counsel-ag ivy-highlight-grep-commands)
 
@@ -2840,14 +2851,17 @@ CALLER is passed to `ivy-read'."
   (setq ivy-text
         (and (string-match "\"\\(.*\\)\"" (buffer-name))
              (match-string 1 (buffer-name))))
-  (let* ((command-args (counsel--split-command-args ivy-text))
-         (regex (counsel--grep-regex (cdr command-args)))
-         (switches (concat (car command-args)
-                           (counsel--ag-extra-switches regex)))
-         (cmd (format cmd-template
+  (let* ((cmd
+          (if (functionp cmd-template)
+              (funcall cmd-template ivy-text)
+            (let* ((command-args (counsel--split-command-args ivy-text))
+                   (regex (counsel--grep-regex (cdr command-args)))
+                   (switches (concat (car command-args)
+                                     (counsel--ag-extra-switches regex))))
+              (format cmd-template
                       (concat
                        switches
-                       (shell-quote-argument regex))))
+                       (shell-quote-argument regex))))))
          (cands (counsel--split-string (shell-command-to-string cmd))))
     ;; Need precise number of header lines for `wgrep' to work.
     (insert (format "-*- mode:grep; default-directory: %S -*-\n\n\n"
@@ -3809,6 +3823,8 @@ Position of selected mark outside accessible part of buffer")))
 (defvar package--initialized)
 (defvar package-alist)
 (defvar package-archive-contents)
+(defvar package-archives)
+(defvar package-user-dir)
 (declare-function package-installed-p "package")
 (declare-function package-delete "package")
 (declare-function package-desc-extras "package")
@@ -3820,8 +3836,16 @@ Position of selected mark outside accessible part of buffer")))
   "Return completion alist for `counsel-package'."
   (unless package--initialized
     (package-initialize t))
-  (unless package-archive-contents
-    (package-refresh-contents))
+  (if (or (not package-archive-contents)
+          (cl-find-if (lambda (package-archive)
+                        (let ((fname
+                               (format
+                                "%s/archives/%s/archive-contents"
+                                package-user-dir (car package-archive))))
+                          (or (not (file-exists-p fname))
+                              (counsel-file-stale-p fname (* 4 60 60)))))
+                      package-archives))
+      (package-refresh-contents))
   (sort (mapcar (lambda (entry)
                   (cons (let ((pkg (car entry)))
                           (concat (if (package-installed-p pkg) "-" "+")
@@ -4177,10 +4201,6 @@ matching the register's value description against a regexp in
             :caller 'counsel-register))
 
 ;;** `counsel-evil-registers'
-(defcustom counsel-evil-registers-height 5
-  "The `ivy-height' of `counsel-evil-registers'."
-  :type 'integer)
-
 ;;;###autoload
 (defun counsel-evil-registers ()
   "Ivy replacement for `evil-show-registers'."
@@ -4370,6 +4390,15 @@ An extra action allows to switch to the process buffer."
   (interactive)
   (require 'comint)
   (counsel--browse-history comint-input-ring))
+
+(defvar slime-repl-input-history)
+
+;;;###autoload
+(defun counsel-slime-repl-history ()
+  "Browse Slime REPL history."
+  (interactive)
+  (require 'slime-repl)
+  (counsel--browse-history slime-repl-input-history))
 
 ;;** `counsel-hydra-heads'
 (defvar hydra-curr-body-fn)
@@ -5492,6 +5521,11 @@ in the current window."
  'ivy-switch-buffer
  '(("x" counsel-open-buffer-file-externally "open externally")))
 
+(ivy-set-actions
+ 'counsel-switch-buffer
+ '(("x" counsel-open-buffer-file-externally "open externally")
+   ("j" ivy--switch-buffer-other-window-action "other window")))
+
 ;;** `counsel-compile'
 (defvar counsel-compile-history nil
   "History for `counsel-compile'.
@@ -5890,6 +5924,39 @@ Additional actions:\\<ivy-minibuffer-map>
                                   (null (help-function-arglist f)))))
             :action #'counsel-M-x-action
             :caller 'counsel-major))
+
+;;* `counsel-google'
+(declare-function request "ext:request")
+(defun counsel-google-function (input)
+  "Create a request to Google with INPUT.
+Return 0 tells `ivy--exhibit' not to update the minibuffer.
+We update it in the callback with `ivy-update-candidates'."
+  (or
+   (ivy-more-chars)
+   (progn
+     (require 'request)
+     (require 'json)
+     (request
+      "http://suggestqueries.google.com/complete/search"
+      :type "GET"
+      :params (list
+               (cons "client" "firefox")
+               (cons "q" input))
+      :parser 'json-read
+      :success (cl-function
+                (lambda (&key data &allow-other-keys)
+                  (ivy-update-candidates
+                   (mapcar #'identity (aref data 1))))))
+     0)))
+
+(defun counsel-google ()
+  "Ivy interface for Google."
+  (interactive)
+  (ivy-read "search: " #'counsel-google-function
+            :action (lambda (x)
+                      (browse-url (concat "https://www.google.com/search?q=" x)))
+            :dynamic-collection t
+            :caller 'counsel-google))
 
 ;;* `counsel-mode'
 (defvar counsel-mode-map

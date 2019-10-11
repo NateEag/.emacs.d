@@ -224,6 +224,9 @@ opposite of what that option dictates.
 
 \(fn &optional ARG)" t nil)
 
+(autoload 'cider-clojuredocs-refresh-cache "cider-clojuredocs" "\
+Refresh the ClojureDocs cache." t nil)
+
 (autoload 'cider-clojuredocs "cider-clojuredocs" "\
 Open ClojureDocs documentation in a popup buffer.
 

@@ -4,7 +4,7 @@
 
 ;; Author: Justin Burkett <justin@burkett.cc>
 ;; Package-Requires: ((evil "1.2.3") (magit "2.6.0"))
-;; Package-Version: 20190904.1730
+;; Package-Version: 20191007.1744
 ;; Homepage: https://github.com/justbur/evil-magit
 ;; Version: 0.4.1
 
@@ -448,6 +448,13 @@ denotes the original magit key for this command.")
   (kbd "RET") 'magit-repolist-status
   (kbd "gr")  'magit-list-repositories)
 (add-hook 'magit-repolist-mode-hook 'evil-normalize-keymaps)
+
+(evil-set-initial-state 'magit-submodule-list-mode 'motion)
+(evil-define-key 'motion magit-submodule-list-mode-map
+  (kbd "RET") 'magit-repolist-status
+  (kbd "gr")  'magit-list-submodules)
+(add-hook 'magit-submodule-list-mode-hook 'evil-normalize-keymaps)
+
 
 (eval-after-load 'git-rebase
   `(progn

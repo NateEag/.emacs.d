@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; Keywords: lisp
-;; Package-Version: 20161111.2251
+;; Package-Version: 20191007.51
 ;; Version: 0
 ;; Package-Requires: ((flycheck "0.22") (package-lint "0.2"))
 
@@ -44,14 +44,15 @@
   "Flycheck start function for CHECKER, invoking CALLBACK."
   (funcall callback
            'finished
-           (mapcar (lambda (x)
-                     (apply #'flycheck-error-new-at `(,@x :checker ,checker)))
-                   (condition-case err
-                       (when (package-lint-looks-like-a-package-p)
-                         (package-lint-buffer (current-buffer)))
-                     (error
-                      (funcall callback 'errored (error-message-string err))
-                      (signal (car err) (cdr err)))))))
+           (flycheck-increment-error-columns
+            (mapcar (lambda (x)
+                      (apply #'flycheck-error-new-at `(,@x :checker ,checker)))
+                    (condition-case err
+                        (when (package-lint-looks-like-a-package-p)
+                          (package-lint-buffer (current-buffer)))
+                      (error
+                       (funcall callback 'errored (error-message-string err))
+                       (signal (car err) (cdr err))))))))
 
 
 ;;; Checker definition

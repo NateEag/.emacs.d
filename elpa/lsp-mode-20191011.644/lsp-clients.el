@@ -42,6 +42,50 @@
 (require 'lsp-fsharp)
 (require 'lsp-erlang)
 (require 'lsp-haxe)
+(require 'lsp-vhdl)
+
+;;; Ada
+(defgroup lsp-ada nil
+  "Settings for Ada Language Server."
+  :group 'tools
+  :tag "Language Server"
+  :package-version '(lsp-mode . "6.2"))
+
+(defcustom lsp-ada-project-file "default.gpr"
+  "Set the project file full path to configure the language server with.
+  The ~ prefix (for the user home directory) is supported.
+  See https://github.com/AdaCore/ada_language_server for a per-project
+  configuration example."
+  :type 'string
+  :group 'lsp-ada
+  :package-version '(lsp-mode . "6.2"))
+
+(defcustom lsp-ada-option-charset "UTF-8"
+  "The charset to use by the Ada Language server. Defaults to 'UTF-8'."
+  :type 'string
+  :group 'lsp-ada
+  :package-version '(lsp-mode . "6.2"))
+
+(defcustom lsp-ada-enable-diagnostics t
+  "A boolean to disable diagnostics. Defaults to true."
+  :type 'boolean
+  :group 'lsp-ada
+  :package-version '(lsp-mode . "6.2"))
+
+(lsp-register-custom-settings
+ '(("ada.projectFile" lsp-ada-project-file)
+   ("ada.enableDiagnostics" lsp-ada-enable-diagnostics)
+   ("ada.defaultCharset" lsp-ada-option-charset)))
+
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-stdio-connection '("ada_language_server"))
+                  :major-modes '(ada-mode)
+                  :priority -1
+                  :initialized-fn (lambda (workspace)
+                                    (with-lsp-workspace workspace
+                                      (lsp--set-configuration
+                                       (lsp-configuration-section "ada"))))
+                  :server-id 'ada-ls))
 
 ;;; Bash
 (lsp-register-client
@@ -136,7 +180,7 @@ finding the executable with variable `exec-path'."
   :group 'lsp-typescript
   :type 'string)
 
-(defcustom lsp-clients-typescript-plugins nil
+(defcustom lsp-clients-typescript-plugins (vector)
   "The list of plugins to load.
 It should be a vector of plist with keys `:location' and `:name'
 where `:name' is the name of the package and `:location' is the
@@ -144,7 +188,14 @@ directory containing the package. Example:
 \(vector
    \(list :name \"@vsintellicode/typescript-intellicode-plugin\"
          :location \"<path>.vscode/extensions/visualstudioexptteam.vscodeintellicode-1.1.9/\"))"
-  :group 'lsp-typescript)
+  :group 'lsp-typescript
+  :type  '(restricted-sexp :tag "Vector"
+                           :match-alternatives
+                           (lambda (xs)
+                             (and (vectorp xs) (seq-every-p
+                                                (-lambda ((&plist :name :location))
+                                                  (and name location))
+                                                xs)))))
 
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection (lambda ()

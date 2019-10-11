@@ -677,8 +677,7 @@ functionality, e.g. as seen in `isearch'."
   "Store the current overriding `case-fold-search'.")
 
 (defvar ivy-more-chars-alist
-  '((counsel-grep . 2)
-    (t . 3))
+  '((t . 3))
   "Map commands to their minimum required input length.
 That is the number of characters prompted for before fetching
 candidates.  The special key t is used as a fallback.")
@@ -1873,24 +1872,68 @@ like.")
   '((org-refile . "^")
     (org-agenda-refile . "^")
     (org-capture-refile . "^")
-    (counsel-M-x . "^")
-    (counsel-describe-function . "^")
-    (counsel-describe-variable . "^")
-    (counsel-org-capture . "^")
     (Man-completion-table . "^")
     (woman . "^"))
   "An alist associating commands with their initial input.
 
 Each cdr is either a string or a function called in the context
 of a call to `ivy-read'."
-  :type '(alist :key-type (symbol)
-                :value-type (choice (string) (function))))
+  :type '(alist
+          :key-type (symbol)
+          :value-type (choice (string) (function))))
 
 (defcustom ivy-hooks-alist nil
   "An alist associating commands to setup functions.
 Examples: `toggle-input-method', (lambda () (insert \"^\")), etc.
 May supersede `ivy-initial-inputs-alist'."
   :type '(alist :key-type symbol :value-type function))
+
+(defvar ivy--occurs-list nil
+  "A list of custom occur generators per command.")
+
+(defun ivy-set-occur (cmd occur)
+  "Assign CMD a custom OCCUR function."
+  (setq ivy--occurs-list
+        (plist-put ivy--occurs-list cmd occur)))
+
+(defcustom ivy-update-fns-alist nil
+  "An alist associating commands to their :update-fn values."
+  :type '(alist
+          :key-type symbol
+          :value-type
+          (radio
+           (const :tag "Off" nil)
+           (const :tag "Call action on change" auto))))
+
+(defvar ivy-unwind-fns-alist nil
+  "An alist associating commands to their :unwind values.")
+
+(defun ivy--alist-set (alist-sym key val)
+  (let ((cell (assoc key (symbol-value alist-sym))))
+    (if cell
+        (setcdr cell val)
+      (set alist-sym (cons (cons key val)
+                           (symbol-value alist-sym))))))
+
+(cl-defun ivy-configure (caller
+                         &key
+                           initial-input
+                           occur
+                           update-fn
+                           unwind-fn
+                           more-chars)
+  "Configure `ivy-read' params for CALLER."
+  (declare (indent 1))
+  (when initial-input
+    (ivy--alist-set 'ivy-initial-inputs-alist caller initial-input))
+  (when occur
+    (ivy-set-occur caller occur))
+  (when update-fn
+    (ivy--alist-set 'ivy-update-fns-alist caller update-fn))
+  (when unwind-fn
+    (ivy--alist-set 'ivy-unwind-fns-alist caller unwind-fn))
+  (when more-chars
+    (ivy--alist-set 'ivy-more-chars-alist caller more-chars)))
 
 (defcustom ivy-sort-max-size 30000
   "Sorting won't be done for collections larger than this."
@@ -2028,6 +2071,8 @@ customizations apply to the current completion session."
                     (not (window-minibuffer-p)))
             (ivy-alist-setting ivy-display-functions-alist caller)))
          result)
+    (setq update-fn (or update-fn (ivy-alist-setting ivy-update-fns-alist caller)))
+    (setq unwind (or unwind (ivy-alist-setting ivy-unwind-fns-alist caller)))
     (setq ivy-last
           (make-ivy-state
            :prompt prompt
@@ -2400,13 +2445,15 @@ behavior."
    prompt collection predicate require-match initial-input
    history (or def "") inherit-input-method))
 
+(declare-function mc/all-fake-cursors "ext:multiple-cursors-core")
+
 (defun ivy-completion-in-region-action (str)
   "Insert STR, erasing the previous one.
 The previous string is between `ivy-completion-beg' and `ivy-completion-end'."
   (when (consp str)
     (setq str (cdr str)))
   (when (stringp str)
-    (let ((fake-cursors (and (fboundp 'mc/all-fake-cursors)
+    (let ((fake-cursors (and (require 'multiple-cursors-core nil t)
                              (mc/all-fake-cursors)))
           (pt (point))
           (beg ivy-completion-beg)
@@ -2465,6 +2512,8 @@ See `completion-in-region' for further information."
                   (string= str (car comps))))
            (message "Sole match"))
           (t
+           (when (eq collection 'crm--collection-fn)
+             (setq comps (delete-dups comps)))
            (let* ((len (ivy-completion-common-length (car comps)))
                   (initial (cond ((= len 0)
                                   "")
@@ -3014,6 +3063,7 @@ Possible choices are 'ivy-magic-slash-non-match-cd-selected,
                (and (or (> ivy--index 0)
                         (= ivy--length 1)
                         magic)
+                    (not (ivy--prompt-selected-p))
                     (not (equal (ivy-state-current ivy-last) ""))
                     (file-directory-p (ivy-state-current ivy-last))
                     (or (eq ivy-magic-slash-non-match-action
@@ -3104,6 +3154,11 @@ Should be run via minibuffer `post-command-hook'."
          (concat remote "~/")
        "~/"))))
 
+(defun ivy-update-candidates (cands)
+  (ivy--insert-minibuffer
+   (ivy--format
+    (setq ivy--all-candidates cands))))
+
 (defun ivy--exhibit ()
   "Insert Ivy completions display.
 Should be run via minibuffer `post-command-hook'."
@@ -3114,15 +3169,24 @@ Should be run via minibuffer `post-command-hook'."
     (if (ivy-state-dynamic-collection ivy-last)
         ;; while-no-input would cause annoying
         ;; "Waiting for process to die...done" message interruptions
-        (let ((inhibit-message t))
+        (let ((inhibit-message t)
+              coll in-progress)
           (unless (equal ivy--old-text ivy-text)
             (while-no-input
-              (setq ivy--all-candidates
-                    (ivy--sort-maybe
-                     (funcall (ivy-state-collection ivy-last) ivy-text)))
+              (setq coll (funcall (ivy-state-collection ivy-last) ivy-text))
+              (when (eq coll 0)
+                (setq coll nil)
+                (setq ivy--old-re nil)
+                (setq in-progress t))
+              (setq ivy--all-candidates (ivy--sort-maybe coll))
               (setq ivy--old-text ivy-text)))
+          (when (eq ivy--all-candidates 0)
+            (setq ivy--all-candidates nil)
+            (setq ivy--old-re nil)
+            (setq in-progress t))
           (when (or ivy--all-candidates
-                    (not (get-process " *counsel*")))
+                    (and (not (get-process " *counsel*"))
+                         (not in-progress)))
             (ivy--set-index-dynamic-collection)
             (ivy--insert-minibuffer
              (ivy--format ivy--all-candidates))))
@@ -4296,6 +4360,9 @@ Skip buffers that match `ivy-ignore-buffers'."
             :matcher #'ivy--switch-buffer-matcher
             :caller 'ivy-switch-buffer))
 
+(ivy-configure 'ivy-switch-buffer
+  :occur #'ivy-switch-buffer-occur)
+
 ;;;###autoload
 (defun ivy-switch-view ()
   "Switch to one of the window views stored by `ivy-push-view'."
@@ -4314,6 +4381,9 @@ Skip buffers that match `ivy-ignore-buffers'."
             :action #'ivy--switch-buffer-other-window-action
             :keymap ivy-switch-buffer-map
             :caller 'ivy-switch-buffer-other-window))
+
+(ivy-configure 'ivy-switch-buffer-other-window
+  :occur #'ivy-switch-buffer-occur)
 
 (defun ivy--yank-handle-case-fold (text)
   (if (and (> (length ivy-text) 0)
@@ -4491,20 +4561,23 @@ This list can be rotated with `ivy-rotate-preferred-builders'."
     (define-key map (kbd "C-k") 'ivy-reverse-i-search-kill)
     map))
 
-(defun ivy-history-contents (sym-or-ring)
-  "Copy contents of SYM-OR-RING.
+(defun ivy-history-contents (history)
+  "Copy contents of HISTORY.
 A copy is necessary so that we don't clobber any string attributes.
-Also set `ivy--reverse-i-search-symbol' to SYM-OR-RING."
-  (setq ivy--reverse-i-search-symbol sym-or-ring)
-  (cond ((symbolp sym-or-ring)
+Also set `ivy--reverse-i-search-symbol' to HISTORY."
+  (setq ivy--reverse-i-search-symbol history)
+  (cond ((symbolp history)
          (delete-dups
-          (copy-sequence (symbol-value sym-or-ring))))
-        ((ring-p sym-or-ring)
+          (copy-sequence (symbol-value history))))
+        ((ring-p history)
          (delete-dups
-          (when (> (ring-size sym-or-ring) 0)
-            (ring-elements sym-or-ring))))
+          (when (> (ring-size history) 0)
+            (ring-elements history))))
+        ((sequencep history)
+         (delete-dups
+          (copy-sequence history)))
         (t
-         (error "Expected a symbol or a ring: %S" sym-or-ring))))
+         (error "Expected a symbol, ring, or sequence: %S" history))))
 
 (defun ivy-reverse-i-search ()
   "Enter a recursive `ivy-read' session using the current history.
@@ -4636,6 +4709,16 @@ When `ivy-calling' isn't nil, call `ivy-occur-press'."
       (ivy-occur-previous-line arg)
       (ivy-occur-press-and-switch))))
 
+(defun ivy-occur-next-error (n &optional reset)
+  "A `next-error-function' for `ivy-occur-mode'."
+  (interactive "p")
+  (when reset
+    (goto-char (point-min)))
+  (setq n (or n 1))
+  (let ((ivy-calling t))
+    (cond ((< n 0) (ivy-occur-previous-line (- n)))
+          (t (ivy-occur-next-line n)))))
+
 (define-derived-mode ivy-occur-mode fundamental-mode "Ivy-Occur"
   "Major mode for output from \\[ivy-occur].
 
@@ -4662,17 +4745,6 @@ When `ivy-calling' isn't nil, call `ivy-occur-press'."
   (setq-local view-read-only nil)
   (when (fboundp 'wgrep-setup)
     (wgrep-setup)))
-
-(defvar ivy--occurs-list nil
-  "A list of custom occur generators per command.")
-
-(defun ivy-set-occur (cmd occur)
-  "Assign CMD a custom OCCUR function."
-  (setq ivy--occurs-list
-        (plist-put ivy--occurs-list cmd occur)))
-
-(ivy-set-occur 'ivy-switch-buffer 'ivy-switch-buffer-occur)
-(ivy-set-occur 'ivy-switch-buffer-other-window 'ivy-switch-buffer-occur)
 
 (defun ivy--starts-with-dotslash (str)
   (string-match-p "\\`\\.[/\\]" str))
@@ -4732,7 +4804,10 @@ There is no limit on the number of *ivy-occur* buffers."
         (setf (ivy-state-text ivy-last) ivy-text)
         (setq ivy-occur-last ivy-last))
       (ivy-exit-with-action
-       (lambda (_) (pop-to-buffer buffer))))))
+       (lambda (_)
+         (pop-to-buffer buffer)
+         (setq next-error-last-buffer buffer)
+         (setq-local next-error-function #'ivy-occur-next-error))))))
 
 (defun ivy-occur-revert-buffer ()
   "Refresh the buffer making it up-to date with the collection.

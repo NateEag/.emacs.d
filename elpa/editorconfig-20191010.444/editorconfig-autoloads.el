@@ -12,9 +12,7 @@
 (autoload 'editorconfig-apply "editorconfig" "\
 Get and apply EditorConfig properties to current buffer.
 This function ignores `editorconfig-exclude-modes' and
-`editorconfig-exclude-regexps', and always applies available properties.
-
-\(fn)" t nil)
+`editorconfig-exclude-regexps', and always applies available properties." t nil)
 
 (defvar editorconfig-mode nil "\
 Non-nil if Editorconfig mode is enabled.
@@ -29,27 +27,26 @@ or call the function `editorconfig-mode'.")
 (autoload 'editorconfig-mode "editorconfig" "\
 Toggle EditorConfig feature.
 
+If called interactively, enable Editorconfig mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
+
 To disable EditorConfig in some buffers, modify
 `editorconfig-exclude-modes' or `editorconfig-exclude-regexps'.
 
 \(fn &optional ARG)" t nil)
 
 (autoload 'editorconfig-find-current-editorconfig "editorconfig" "\
-Find the closest .editorconfig file for current file.
-
-\(fn)" t nil)
+Find the closest .editorconfig file for current file." t nil)
 
 (autoload 'editorconfig-display-current-properties "editorconfig" "\
-Display EditorConfig properties extracted for current buffer.
-
-\(fn)" t nil)
+Display EditorConfig properties extracted for current buffer." t nil)
 
 (defalias 'describe-editorconfig-properties 'editorconfig-display-current-properties)
 
 (autoload 'editorconfig-format-buffer "editorconfig" "\
-Format buffer according to .editorconfig indent_style and indent_width.
-
-\(fn)" t nil)
+Format buffer according to .editorconfig indent_style and indent_width." t nil)
 
 (autoload 'editorconfig-version "editorconfig" "\
 Get EditorConfig version as string.

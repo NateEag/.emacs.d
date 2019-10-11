@@ -813,6 +813,11 @@ Fallback to 100 when nil."
   :group 'helm
   :type 'boolean)
 
+(defcustom helm-use-frame-when-dedicated-window nil
+  "Display helm buffer in frame when helm is started from a dedicated window."
+  :group 'helm
+  :type 'boolean)
+
 (defcustom helm-default-prompt-display-function
   #'helm-set-default-prompt-display
   "The function to use to set face of fake cursor in header-line."
@@ -2678,13 +2683,14 @@ as a string with ARG."
                 :buffer any-buffer)
             (run-hook-with-args 'helm-resume-after-hook sources))))))
 
-(defun helm-resume-previous-session-after-quit (arg)
+(defun helm-resume-previous-session-after-quit ()
   "Resume previous helm session within a running helm."
-  (interactive "p")
+  (interactive)
   (with-helm-alive-p
-    (if (>= (length helm-buffers) arg)
-        (helm-run-after-exit (lambda () (helm-resume (nth arg helm-buffers))))
-      (message "No previous helm sessions available for resuming!"))))
+    (let ((arg (if (null (member helm-buffer helm-buffers)) 0 1))) 
+      (if (> (length helm-buffers) arg)
+          (helm-run-after-exit (lambda () (helm-resume (nth arg helm-buffers))))
+        (message "No previous helm sessions available for resuming!")))))
 (put 'helm-resume-previous-session-after-quit 'helm-only t)
 
 (defun helm-resume-list-buffers-after-quit ()
@@ -2903,6 +2909,12 @@ frame configuration as per `helm-save-configuration-functions'."
                          ((symbol-function 'x-focus-frame) #'ignore))
                  (select-frame-set-input-focus frame))))))
 
+(defvar helm-persistent-action-window-buffer nil
+  "[INTERNAL] Store the buffer where helm is started.
+It is generally `helm-current-buffer', but when this one is displayed
+in a dedicated buffer, helm can't start in this window and use another
+window handling a buffer, it is this one we store.")
+
 (defun helm-split-window-default-fn (window)
   "Default function to split windows before displaying `helm-buffer'.
 
@@ -2912,34 +2924,36 @@ value of `split-window-preferred-function' in `helm-display-buffer'.
 When `helm-display-function' which default to
 `helm-default-display-buffer' is called from `helm-display-buffer' the
 value of `split-window-preferred-function' will be used by `display-buffer'."
-  (let (split-width-threshold)
-    (if (and (fboundp 'window-in-direction)
-             ;; Don't try to split when starting in a minibuffer
-             ;; e.g M-: and try to use helm-show-kill-ring.
-             (not (minibufferp helm-current-buffer)))
-        (if (or (one-window-p t)
-                helm-split-window-inside-p)
-            (split-window
-             (selected-window) nil (if (eq helm-split-window-default-side 'other)
-                                       'below helm-split-window-default-side))
-          ;; If more than one window reuse one of them.
-          (cl-case helm-split-window-default-side
-            (left  (or (helm-window-in-direction 'left)
-                       (helm-window-in-direction 'above)
-                       (selected-window)))
-            (above (or (helm-window-in-direction 'above)
-                       (helm-window-in-direction 'left)
-                       (selected-window)))
-            (right (or (helm-window-in-direction 'right)
-                       (helm-window-in-direction 'below)
-                       (selected-window)))
-            (below (or (helm-window-in-direction 'below)
-                       (helm-window-in-direction 'right)
-                       (selected-window)))
-            (same  (selected-window))
-            (other (other-window-for-scrolling))
-            (t     (or (window-next-sibling) (selected-window)))))
-      (split-window-sensibly window))))
+  (let* (split-width-threshold
+         (win (if (and (fboundp 'window-in-direction)
+                       ;; Don't try to split when starting in a minibuffer
+                       ;; e.g M-: and try to use helm-show-kill-ring.
+                       (not (minibufferp helm-current-buffer)))
+                  (if (or (one-window-p t)
+                          helm-split-window-inside-p)
+                      (split-window
+                       (selected-window) nil (if (eq helm-split-window-default-side 'other)
+                                                 'below helm-split-window-default-side))
+                    ;; If more than one window reuse one of them.
+                    (cl-case helm-split-window-default-side
+                      (left  (or (helm-window-in-direction 'left)
+                                 (helm-window-in-direction 'above)
+                                 (selected-window)))
+                      (above (or (helm-window-in-direction 'above)
+                                 (helm-window-in-direction 'left)
+                                 (selected-window)))
+                      (right (or (helm-window-in-direction 'right)
+                                 (helm-window-in-direction 'below)
+                                 (selected-window)))
+                      (below (or (helm-window-in-direction 'below)
+                                 (helm-window-in-direction 'right)
+                                 (selected-window)))
+                      (same  (selected-window))
+                      (other (other-window-for-scrolling))
+                      (t     (or (window-next-sibling) (selected-window)))))
+                (split-window-sensibly window))))
+    (setq helm-persistent-action-window-buffer (window-buffer win))
+    win))
 
 (defun helm-window-in-direction (direction)
   "Same as `window-in-direction' but check if window is dedicated."
@@ -2961,6 +2975,8 @@ Fallback to global value of `helm-display-function' when no local
 value found and current command is not in `helm-commands-using-frame'."
   (or (with-helm-buffer helm-display-function)
       (and (or (memq com helm-commands-using-frame)
+               (and helm-use-frame-when-dedicated-window
+                    (window-dedicated-p (get-buffer-window helm-current-buffer)))
                (and helm-use-frame-when-more-than-two-windows
                     (null helm--nested)
                     (> (length (window-list)) 2))
@@ -3014,17 +3030,21 @@ Arg ENABLE is the value of `no-other-window' window property."
 It is the default value of `helm-display-function'
 It uses `switch-to-buffer' or `display-buffer' depending on the
 value of `helm-full-frame' or `helm-split-window-default-side'."
-  (let (pop-up-frames)
-    (if (or (buffer-local-value 'helm-full-frame (get-buffer buffer))
-            (and (eq helm-split-window-default-side 'same)
-                 (one-window-p t)))
+  (let (pop-up-frames
+        (dedicated-p (window-dedicated-p
+                      (get-buffer-window helm-current-buffer))))
+    (if (and (not dedicated-p)
+             (or (buffer-local-value 'helm-full-frame (get-buffer buffer))
+                 (and (eq helm-split-window-default-side 'same)
+                      (one-window-p t))))
         (progn (and (not (minibufferp helm-current-buffer))
                     (delete-other-windows))
                (switch-to-buffer buffer))
       (when (and (or helm-always-two-windows helm-autoresize-mode)
                  (not (eq helm-split-window-default-side 'same))
                  (not (minibufferp helm-current-buffer))
-                 (not helm-split-window-inside-p))
+                 (not helm-split-window-inside-p)
+                 (not dedicated-p))
         (delete-other-windows))
       (display-buffer
        buffer `(,helm-default-display-buffer-functions
@@ -6119,7 +6139,9 @@ when initializing a source with `helm-source-in-buffer' class."
   "Toggle resplit helm window, vertically or horizontally."
   (interactive)
   (with-helm-alive-p
-    (if (= (length (window-list nil 1)) 2)
+    (if (and (= (length (window-list nil 1)) 2)
+             (not (window-dedicated-p
+                   (get-buffer-window helm-current-buffer))))
         (progn
           (when helm-prevent-escaping-from-minibuffer
             (helm-prevent-switching-other-window :enabled nil))

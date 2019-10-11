@@ -12,15 +12,18 @@
 (autoload 'symex-mode "symex" "\
 An evil way to edit Lisp symbolic expressions as trees.
 
+If called interactively, enable Symex mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
+
 \(fn &optional ARG)" t nil)
 
 (autoload 'symex-mode-interface "symex" "\
 The main entry point for editing symbolic expressions using symex mode.
 
 Enter the symex evil state and show a hydra menu for accessing various
-features.
-
-\(fn)" t nil)
+features." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "symex" '("hydra-symex" "symex-")))
 

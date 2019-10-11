@@ -24,14 +24,10 @@ See also: `jedi:server-args'.
 \(fn COMMAND)" t nil)
 
 (autoload 'helm-jedi-related-names "jedi-core" "\
-Find related names of the object at point using `helm' interface.
-
-\(fn)" t nil)
+Find related names of the object at point using `helm' interface." t nil)
 
 (autoload 'anything-jedi-related-names "jedi-core" "\
-Find related names of the object at point using `anything' interface.
-
-\(fn)" t nil)
+Find related names of the object at point using `anything' interface." t nil)
 
 (autoload 'jedi:setup "jedi-core" "\
 Fully setup jedi.el for current buffer.
@@ -44,9 +40,7 @@ like this::
        (add-hook 'python-mode-hook 'jedi:setup)
 
 You can also call this function as a command, to quickly test
-what jedi can do.
-
-\(fn)" t nil)
+what jedi can do." t nil)
 
 (autoload 'jedi:install-server "jedi-core" "\
 This command installs Jedi server script jediepcserver.py in a
@@ -86,19 +80,13 @@ location.
 See also:
 
 - https://github.com/tkf/emacs-jedi/pull/72
-- https://github.com/tkf/emacs-jedi/issues/140#issuecomment-37358527
-
-\(fn)" t nil)
+- https://github.com/tkf/emacs-jedi/issues/140#issuecomment-37358527" t nil)
 
 (autoload 'jedi:reinstall-server "jedi-core" "\
-Reinstall Jedi server script jediepcserver.py.
-
-\(fn)" t nil)
+Reinstall Jedi server script jediepcserver.py." t nil)
 
 (autoload 'jedi:install-server-block "jedi-core" "\
-Blocking version `jedi:install-server'.
-
-\(fn)" nil nil)
+Blocking version `jedi:install-server'." nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "jedi-core" '("jedi")))
 

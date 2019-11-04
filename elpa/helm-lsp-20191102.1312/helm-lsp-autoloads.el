@@ -25,10 +25,6 @@ When called with prefix ARG the default selection will be symbol at point.
 
 ;;;***
 
-;;;### (autoloads nil nil ("helm-lsp-pkg.el") (0 0 0 0))
-
-;;;***
-
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

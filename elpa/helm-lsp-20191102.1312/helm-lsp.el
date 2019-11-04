@@ -17,7 +17,7 @@
 
 ;; Author: Ivan Yonchovski <yyoncho@gmail.com>
 ;; Keywords: languages, debug
-;; Package-Version: 20190423.548
+;; Package-Version: 20191102.1312
 ;; URL: https://github.com/yyoncho/helm-lsp
 ;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (lsp-mode "5.0") (helm "2.0"))
 ;; Version: 0.1
@@ -45,6 +45,11 @@ CANDIDATE is the selected item in the helm menu."
     (goto-char (point-min))
     (forward-line line)
     (forward-char character)))
+
+(defface helm-lsp-container-face
+  '((t :height 0.8 :inherit shadow))
+  "The face used for code lens overlays."
+  :group 'lsp-mode)
 
 (defun helm-lsp--workspace-symbol (workspaces name input)
   "Search against WORKSPACES NAME with default INPUT."
@@ -86,9 +91,9 @@ CANDIDATE is the selected item in the helm menu."
                                                 (cons
                                                  (concat (if (s-blank? container-name)
                                                              name
-                                                           (concat container-name "." name))
+                                                           (concat name " " (propertize container-name 'face 'helm-lsp-container-face) " --" ))
                                                          " "
-                                                         (propertize (concat "(" type ")") 'face 'font-lock-keyword-face))
+                                                         (propertize (concat "(" type ")") 'face 'font-lock-type-face))
                                                  candidate)))
                                             candidates))
                   :candidate-number-limit nil

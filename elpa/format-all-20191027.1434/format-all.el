@@ -1,8 +1,8 @@
-;;; format-all.el --- Auto-format C, C++, JS, Python, Ruby and 30 other languages -*- lexical-binding: t -*-
+;;; format-all.el --- Auto-format C, C++, JS, Python, Ruby and 40 other languages -*- lexical-binding: t -*-
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20191001.917
+;; Package-Version: 20191027.1434
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
@@ -35,6 +35,7 @@
 ;; - D (dfmt)
 ;; - Dart (dartfmt)
 ;; - Dhall (dhall format)
+;; - Dockerfile (dockfmt)
 ;; - Elixir (mix format)
 ;; - Elm (elm-format)
 ;; - Emacs Lisp (emacs)
@@ -55,6 +56,7 @@
 ;; - PHP (prettier plugin-php)
 ;; - Protocol Buffers (clang-format)
 ;; - Python (black)
+;; - R (styler)
 ;; - Ruby (rufo)
 ;; - Rust (rustfmt)
 ;; - Shell script (shfmt)
@@ -446,6 +448,12 @@ Consult the existing formatters for examples of BODY."
   (:modes dhall-mode)
   (:format (format-all--buffer-easy executable "format")))
 
+(define-format-all-formatter dockfmt
+  (:executable "dockfmt")
+  (:install "go get github.com/jessfraz/dockfmt")
+  (:modes dockerfile-mode)
+  (:format (format-all--buffer-easy executable "fmt")))
+
 (define-format-all-formatter elm-format
   (:executable "elm-format")
   (:install (macos "brew install elm"))
@@ -645,6 +653,20 @@ Consult the existing formatters for examples of BODY."
       "--reindent_aligned"
       "--encoding" ienc
       "-"))))
+
+(define-format-all-formatter styler
+  (:executable "Rscript")
+  (:install "Rscript -e 'install.packages(\"styler\")'")
+  (:modes ess-r-mode)
+  (:format
+   (format-all--buffer-easy
+    executable "--vanilla"
+    "-e" (concat
+          "options(styler.colored_print.vertical=FALSE);"
+          " con <- file(\"stdin\");"
+          " out <- styler::style_text(readLines(con));"
+          " close(con);"
+          " out"))))
 
 (define-format-all-formatter swiftformat
   (:executable "swiftformat")

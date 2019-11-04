@@ -1,14 +1,21 @@
 ;;; auto-compile-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "auto-compile" "auto-compile.el" (23613 59661
-;;;;;;  0 0))
+;;;### (autoloads nil "auto-compile" "auto-compile.el" (0 0 0 0))
 ;;; Generated autoloads from auto-compile.el
 
 (autoload 'auto-compile-mode "auto-compile" "\
 Compile Emacs Lisp source files after the visiting buffers are saved.
+
+If called interactively, enable Auto-Compile mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
 
 After a buffer containing Emacs Lisp code is saved to its source
 file update the respective byte code file.  If the latter does
@@ -104,6 +111,11 @@ for a description of this minor mode.")
 (autoload 'auto-compile-on-load-mode "auto-compile" "\
 Before loading a library recompile it if it needs recompilation.
 
+If called interactively, enable Auto-Compile-On-Load mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
+
 A library needs to be recompiled if the source file is newer than
 it's byte-compile destination.  Without this advice the outdated
 byte code file would be loaded instead.
@@ -112,11 +124,14 @@ Also see the related `auto-compile-on-save-mode'.
 
 \(fn &optional ARG)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "auto-compile" '("auto-compile-" "byte-compile-log-warning" "load" "mode-line-" "require" "save-buffers-kill-" "turn-on-auto-compile-mode")))
+
 ;;;***
 
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; auto-compile-autoloads.el ends here

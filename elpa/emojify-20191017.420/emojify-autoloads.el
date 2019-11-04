@@ -19,6 +19,11 @@ STYLES is the styles emoji styles that should be used, see `emojify-emoji-styles
 (autoload 'emojify-mode "emojify" "\
 Emojify mode
 
+If called interactively, enable Emojify mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
+
 \(fn &optional ARG)" t nil)
 
 (defvar global-emojify-mode nil "\
@@ -45,6 +50,11 @@ See `emojify-mode' for more information on Emojify mode.
 
 (autoload 'emojify-mode-line-mode "emojify" "\
 Emojify mode line
+
+If called interactively, enable Emojify-Mode-Line mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
@@ -78,9 +88,7 @@ Show Emojis that match PATTERN.
 (autoload 'emojify-insert-emoji "emojify" "\
 Interactively prompt for Emojis and insert them in the current buffer.
 
-This respects the `emojify-emoji-styles' variable.
-
-\(fn)" t nil)
+This respects the `emojify-emoji-styles' variable." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "emojify" '("emojify-")))
 

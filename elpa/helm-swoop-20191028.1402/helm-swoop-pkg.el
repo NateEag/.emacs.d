@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/helm-swoop-20191028.1402/helm-swoop.el  -*- no-byte-compile: t -*-
+(define-package "helm-swoop" "20191028.1402" "Efficiently hopping squeezed lines powered by helm interface" '((helm "3.2") (emacs "24.4")) :commit "bfb5128712cbceec78cf6bb8eea4459d7de06323" :keywords '("convenience" "helm" "swoop" "inner" "buffer" "search") :authors '(("Shingo Fukuyama - http://fukuyama.co")) :maintainer '("Shingo Fukuyama - http://fukuyama.co") :url "https://github.com/emacsorphanage/helm-swoop")

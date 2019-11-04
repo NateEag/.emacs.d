@@ -2,7 +2,7 @@
 
 ;; Author: wouter bolsterlee <wouter@bolsterl.ee>
 ;; Version: 2.0.0
-;; Package-Version: 20191007.1216
+;; Package-Version: 20191016.1907
 ;; Package-Requires: ((emacs "25") (dash "2.12.0"))
 ;; Keywords: direnv, environment, processes, unix, tools
 ;; URL: https://github.com/wbolster/emacs-direnv
@@ -74,12 +74,17 @@ instead of
   :group 'direnv
   :type '(repeat (symbol :tag "Major mode")))
 
+(defvar eshell-path-env)
+
 (defun direnv--directory ()
   "Return the relevant directory for the current buffer, or nil."
   (let* ((buffer (or (buffer-base-buffer) (current-buffer)))
+         (mode (with-current-buffer buffer major-mode))
          (file-name (buffer-file-name buffer)))
-    (cond (file-name (file-name-directory file-name))
-          ((apply #'derived-mode-p direnv-non-file-modes) default-directory))))
+    (cond (file-name
+           (file-name-directory file-name))
+          ((apply #'provided-mode-derived-p mode direnv-non-file-modes)
+           default-directory))))
 
 (defun direnv--export (directory)
   "Call direnv for DIRECTORY and return the parsed result."
@@ -228,7 +233,10 @@ When FORCE-SUMMARY is non-nil or when called interactively, show a summary messa
             (value (cdr pair)))
         (setenv name value)
         (when (string-equal name "PATH")
-          (setq exec-path (append (parse-colon-path value) (list exec-directory))))))))
+          (setq exec-path (append (parse-colon-path value) (list exec-directory)))
+          ;; Prevent `eshell-path-env` getting out-of-sync with $PATH:
+          (when (derived-mode-p 'eshell-mode)
+            (setq eshell-path-env value)))))))
 
 ;;;###autoload
 (defun direnv-allow ()

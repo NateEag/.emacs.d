@@ -5,7 +5,7 @@
 
 ;; Author: Julian Scheid <julians37@googlemail.com>
 ;; Maintainer: Reuben Thomas <rrt@sc3d.org>
-;; Version: 0.8
+;; Version: 0.9
 ;; Keywords: convenience files languages c
 
 ;; This file is free software; you can redistribute it and/or modify
@@ -342,7 +342,11 @@ quote, for example.")
     (sh-mode         default       sh-basic-offset)      ; Shell Script
     (ruby-mode       ruby          ruby-indent-level)    ; Ruby
     (enh-ruby-mode   ruby          enh-ruby-indent-level); Ruby
+    (crystal-mode    ruby          crystal-indent-level) ; Crystal (Ruby)
     (css-mode        css           css-indent-offset)    ; CSS
+    (rust-mode       c/c++/java    rust-indent-offset)   ; Rust
+    (rustic-mode     c/c++/java    rustic-indent-offset) ; Rust
+    (scala-mode      c/c++/java    scala-indent:step)    ; Scala
 
     (default         default       standard-indent))     ; default fallback
    "A mapping from hook variables to language types.")

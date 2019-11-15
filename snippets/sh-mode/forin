@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: forin
+# key: forin
+# --
+for item in "\${${1:array_name}[@]}"; do
+    $0
+done

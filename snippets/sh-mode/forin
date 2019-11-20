@@ -1,7 +1,6 @@
-# -*- mode: snippet -*-
-# name: forin
 # key: forin
+# name: forin
 # --
-for item in "\${${1:array_name}[@]}"; do
+for ${1:item} in "\${${2:array_name}[@]}"; do
     $0
 done

@@ -185,9 +185,10 @@ snippets/ - my personal yasnippets, augmenting the base yasnippet collection.
 OS X Setup
 ==========
 
-I use the `Emacs for OS X build <https://emacsformacosx.com/>`__, and had a
-hard time making it play nicely with command-line tools that use emacs like
-`Cask <https://github.com/cask/cask>`__.
+I used to use the `Emacs for OS X build <https://emacsformacosx.com/>`__ (I now
+build my own emacs to get support for automatic image resizing via
+ImageMagick), and had a hard time making it play nicely with command-line tools
+that use emacs like `Cask <https://github.com/cask/cask>`__.
 
 I eventually solved it by copying the shell script at
 `Emacs.app/Contents/MacOS/Emacs` to `Emacs.app/Contents/MacOS/emacs`, since

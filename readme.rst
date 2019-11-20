@@ -106,7 +106,8 @@ working in version control repos, and certainly it seems to be more common for
 evil-mode users than others. I have turned off undo in region and undo tree's
 support for saving undo history to see if that helps (as of 2018-11-05). I just
 discovered this bug report that has a plausible-sounding analysis of the bug's
-root cause: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=27214
+root cause: https://debbugs.gnu.org/cgi/bugreport.cgi?bug=27214 I saw the bug
+for the first time in a long while on 2019-11-20.
 
 I use `helm <http://emacs-helm.github.io/helm/>`__ to find files and commands
 quickly and easily. `helm-swoop

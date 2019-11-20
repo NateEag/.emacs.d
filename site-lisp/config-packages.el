@@ -524,7 +524,10 @@ The shell command lives in my dotfiles repo."
   ;; There's nothing that needs to be configured, but don't forget the
   ;; jq-interactively command. It can be very handy when trying to figure out
   ;; how to transform some arbitrary JSON with jq.
-  :config (add-hook 'json-mode-hook 'js-mode-init))
+  :config (add-hook 'json-mode-hook 'js-mode-init)
+          (add-hook 'json-mode-hook '(lambda ()
+                                       (setq-local js2-concat-multiline-strings
+                                                   nil))))
 
 (use-package jedi-force
   :commands jedi-force-set-up-hooks)

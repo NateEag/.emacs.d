@@ -98,6 +98,7 @@
      (:name "Unread Emails In Watched Threads" :query "tag:watched and tag:unread" :key "w")
      (:name "drafts" :query "tag:draft" :key "d" :sort-order nil)
      (:name "all mail" :query "*" :key "a" :sort-order nil)
+     (:name "Recent mail" :query "*" :sort-order newest-first)
      (:name "Bug Reports" :query "tag:bug-reports")
      (:name "Sent" :query "from:neagleson@nxtbookmedia.com" :sort-order newest-first :search-type nil)))
  '(notmuch-search-oldest-first t nil nil "This is the default value, but I wanted to explicitly record that I prefer it, after trying both. If you're running a workflow, you usually want to see the oldest thing first, as all else being equal older emails should get responses sooner than newer ones. When you're just searching, if you get lots of results you can just refine your search to find what you're looking for, so the order isn't really relevant there.")

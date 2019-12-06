@@ -331,6 +331,10 @@
 
   For more verbose analysis, see this file's history.
 
+- Add ne/yas-copy-snippet. I occasionally want to populate then copy / paste a
+  snippet (often for pasting into a prompt in another system, like a bash shell
+  or a browser console). It would be nice to have it be easier than it is.
+
 - Make the ansi-term tweaks suggested in this article:
   http://echosa.github.io/blog/2012/06/06/improving-ansi-term/
 

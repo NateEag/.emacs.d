@@ -762,6 +762,8 @@ With this alias I hope to not need to remember it.")
 (use-package apache-mode
   :hook (apache-mode . conf-mode-init))
 
+(use-package nginx-mode)
+
 (use-package diffview
   :commands diffview-current)
 

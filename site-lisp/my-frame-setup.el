@@ -99,6 +99,12 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
                      (car (display-monitor-attributes-list (selected-frame))))))
          (screen-width-in-chars
           (/ (float current-monitor-width) (default-font-width)))
+         ;; I want as many windows as I can reasonably fit on this display,
+         ;; where "reasonably" means "there is still some space for other
+         ;; applications to be seen."
+         ;;
+         ;; This computation is just a rough stab at that and should not be
+         ;; taken as gospel truth.
          (num-windows (floor (- (/ screen-width-in-chars my-window-width)
                                 0.5))))
     (message "Screen width: %i, num windows: %i" screen-width-in-chars num-windows)

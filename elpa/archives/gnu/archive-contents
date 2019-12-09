@@ -1403,7 +1403,7 @@
 	      (:maintainer "Michael Heerdegen" . "michael_heerdegen@web.de")
 	      (:url . "https://github.com/michael-heerdegen/on-screen.el"))])
  (org .
-      [(9 2 6)
+      [(9 3)
        nil "Outline-based notes management and organizer" tar
        ((:url . "https://orgmode.org")
 	(:maintainer "Carsten Dominik <carsten at orgmode dot org>")
@@ -1509,7 +1509,7 @@
 	     ("Phillip Lord" . "phillip.lord@russet.org.uk"))
 	    (:url . "http://elpa.gnu.org/packages/persist.html"))])
  (phps-mode .
-	    [(0 3 20)
+	    [(0 3 21)
 	     ((emacs
 	       (26)))
 	     "Major mode for PHP with Semantic integration" tar

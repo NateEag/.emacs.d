@@ -29,9 +29,7 @@ Look up the word in the thesaurus specified by
 and replace the original word with that.
 
 If the region is active, replace the region instead of the word
-at point.
-
-\(fn)" t nil)
+at point." t nil)
 
 (autoload 'synosaurus-choose-and-insert "synosaurus" "\
 Look up `WORD' in the thesaurus, choose a synonym for `WORD',

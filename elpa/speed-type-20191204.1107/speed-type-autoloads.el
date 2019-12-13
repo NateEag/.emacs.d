@@ -15,14 +15,10 @@ Speed type the N most common words.
 \(fn N)" t nil)
 
 (autoload 'speed-type-top-100 "speed-type" "\
-Speed type the top 100 most common words.
-
-\(fn)" t nil)
+Speed type the top 100 most common words." t nil)
 
 (autoload 'speed-type-top-1000 "speed-type" "\
-Speed type the top 1000 most common words.
-
-\(fn)" t nil)
+Speed type the top 1000 most common words." t nil)
 
 (autoload 'speed-type-region "speed-type" "\
 Open copy of [START,END] in a new buffer to speed type the text.
@@ -38,9 +34,7 @@ will be used. Else some text will be picked randomly.
 \(fn FULL)" t nil)
 
 (autoload 'speed-type-text "speed-type" "\
-Setup a new text sample to practice touch or speed typing.
-
-\(fn)" t nil)
+Setup a new text sample to practice touch or speed typing." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "speed-type" '("speed-type-")))
 

@@ -4,8 +4,8 @@
 
 ;; Author: Gunther Hagleitner
 ;; Maintainer: Julien Pagès <j.parkouss@gmail.com>
-;; Version: 1.0
-;; Package-Version: 20190526.953
+;; Version: 1.2
+;; Package-Version: 20191204.1107
 ;; Keywords: games
 ;; URL: https://github.com/parkouss/speed-type
 ;; Package-Requires: ((emacs "24.3") (cl-lib "0.3"))
@@ -245,8 +245,6 @@ Accuracy is computed as (CORRECT-ENTRIES - CORRECTIONS) / TOTAL-ENTRIES."
 (defun speed-type--wordlist-retrieve (lang)
   "Return buffer with wordlist for language LANG in it."
   (speed-type--retrieve lang (cdr (assoc lang speed-type-wordlist-urls))))
-
-(speed-type--wordlist-retrieve 'German)
 
 (defun speed-type--elapsed-time ()
   "Return float with the total time since start."

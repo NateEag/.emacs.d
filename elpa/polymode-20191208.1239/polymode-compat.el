@@ -370,4 +370,18 @@ This is done by modifying `uniquify-buffer-base-name' to `pm--core-buffer-name'.
   (add-hook 'yas-after-exit-snippet-hook #'polymode-enable-post-command))
 
 (provide 'polymode-compat)
+
+
+;;; Multiple cursors
+
+(defun polymode-disable-post-command-with-multiple-cursors (orig-fun &rest args)
+  (unless mc--executing-command-for-fake-cursor
+    (polymode-disable-post-command)
+    (apply orig-fun args)
+    (polymode-enable-post-command)))
+
+(with-eval-after-load "multiple-cursors-core"
+  (advice-add #'mc/execute-this-command-for-all-cursors :around
+              #'polymode-disable-post-command-with-multiple-cursors))
+
 ;;; polymode-compat.el ends here

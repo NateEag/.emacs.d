@@ -109,7 +109,7 @@ most frequently used slots are:
 ;;;;;;  0 0))
 ;;; Generated autoloads from polymode-compat.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "polymode-compat" '("pm-" "polymode-" "*span*")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "polymode-compat" '("*span*" "pm-" "polymode-")))
 
 ;;;***
 
@@ -159,7 +159,7 @@ key-value pairs. See the documentation of the class
 
 (function-put 'define-auto-innermode 'doc-string-elt '3)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "polymode-core" '("polymode-" "*span*")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "polymode-core" '("*span*" "polymode-")))
 
 ;;;***
 
@@ -170,15 +170,17 @@ key-value pairs. See the documentation of the class
 (autoload 'pm-debug-minor-mode "polymode-debug" "\
 Turns on/off useful facilities for debugging polymode.
 
+If called interactively, enable Pm-Debug minor mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
+
 Key bindings:
 \\{pm-debug-minor-mode-map}
 
 \(fn &optional ARG)" t nil)
 
-(autoload 'pm-debug-minor-mode-on "polymode-debug" "\
-
-
-\(fn)" nil nil)
+(autoload 'pm-debug-minor-mode-on "polymode-debug" nil nil nil)
 
 (defvar pm-debug-mode nil "\
 Non-nil if Pm-Debug mode is enabled.

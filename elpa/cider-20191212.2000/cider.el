@@ -404,7 +404,7 @@ Elements of the list are artifact name and list of exclusions to apply for the a
 (defconst cider-latest-clojure-version "1.10.0"
   "Latest supported version of Clojure.")
 
-(defconst cider-required-middleware-version "0.22.4"
+(defconst cider-required-middleware-version "0.23.0-SNAPSHOT"
   "The CIDER nREPL version that's known to work properly with CIDER.")
 
 (defcustom cider-jack-in-auto-inject-clojure nil
@@ -746,12 +746,18 @@ not just a string."
   "Generate the init form for a shadow-cljs REPL.
 We have to prompt the user to select a build, that's why
 this is a command, not just a string."
-  (let* ((form "(do (require '[shadow.cljs.devtools.api :as shadow]) (shadow/watch %s) (shadow/nrepl-select %s))")
+  (let* ((shadow-require "(require '[shadow.cljs.devtools.api :as shadow])")
+         ;; form used for user-defined builds
+         (user-build-form "(do %s (shadow/watch %s) (shadow/nrepl-select %s))")
+         ;; form used for built-in builds like :browser-repl and :node-repl
+         (default-build-form "(do %s (shadow/%s))")
          (options (or cider-shadow-default-options
                       (completing-read "Select shadow-cljs build: "
                                        (cider--shadow-get-builds))))
          (build (cider-normalize-cljs-init-options options)))
-    (format form build build)))
+    (if (member build '(":browser-repl" ":node-repl"))
+        (format default-build-form shadow-require (string-remove-prefix ":" build))
+      (format user-build-form shadow-require build build))))
 
 (defcustom cider-figwheel-main-default-options nil
   "Defines the `figwheel.main/start' options.
@@ -1277,20 +1283,23 @@ non-nil, don't start if ClojureScript requirements are not met."
   "Update PARAMS :repl-init-function for cljs connections."
   (with-current-buffer (or (plist-get params :--context-buffer)
                            (current-buffer))
-    (let ((cljs-type (plist-get params :cljs-repl-type)))
-      (plist-put params :repl-init-function
-                 (lambda ()
-                   (cider--check-cljs cljs-type)
-                   ;; FIXME: ideally this should be done in the state handler
-                   (setq-local cider-cljs-repl-type cljs-type)
-                   (cider-nrepl-send-request
-                    (list "op" "eval"
-                          "ns" (cider-current-ns)
-                          "code" (cider-cljs-repl-form cljs-type))
-                    (cider-repl-handler (current-buffer)))
-                   (when (and (buffer-live-p nrepl-server-buffer)
-                              cider-offer-to-open-cljs-app-in-browser)
-                     (cider--offer-to-open-app-in-browser nrepl-server-buffer)))))))
+    (let* ((cljs-type (plist-get params :cljs-repl-type))
+           (repl-init-form (cider-cljs-repl-form cljs-type)))
+      (thread-first params
+        (plist-put :repl-init-function
+                   (lambda ()
+                     (cider--check-cljs cljs-type)
+                     ;; FIXME: ideally this should be done in the state handler
+                     (setq-local cider-cljs-repl-type cljs-type)
+                     (cider-nrepl-send-request
+                      (list "op" "eval"
+                            "ns" (cider-current-ns)
+                            "code" repl-init-form)
+                      (cider-repl-handler (current-buffer)))
+                     (when (and (buffer-live-p nrepl-server-buffer)
+                                cider-offer-to-open-cljs-app-in-browser)
+                       (cider--offer-to-open-app-in-browser nrepl-server-buffer))))
+        (plist-put :repl-init-form repl-init-form)))))
 
 (defun cider--check-existing-session (params)
   "Ask for confirmation if a session with similar PARAMS already exists.

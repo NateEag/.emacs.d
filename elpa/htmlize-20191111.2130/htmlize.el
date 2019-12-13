@@ -3,9 +3,10 @@
 ;; Copyright (C) 1997-2003,2005,2006,2009,2011,2012,2014,2017,2018 Hrvoje Niksic
 
 ;; Author: Hrvoje Niksic <hniksic@gmail.com>
+;; Homepage: https://github.com/hniksic/emacs-htmlize
 ;; Keywords: hypermedia, extensions
-;; Package-Version: 20180923.1829
-;; Version: 1.55
+;; Package-Version: 20191111.2130
+;; Version: 1.56
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -68,6 +69,7 @@
 ;; The latest version is available at:
 ;;
 ;;        <https://github.com/hniksic/emacs-htmlize>
+;;        <https://code.orgmode.org/mirrors/emacs-htmlize>
 ;;
 
 ;; Thanks go to the many people who have sent reports and contributed
@@ -87,7 +89,7 @@
   (defvar font-lock-support-mode)
   (defvar global-font-lock-mode))
 
-(defconst htmlize-version "1.55")
+(defconst htmlize-version "1.56")
 
 (defgroup htmlize nil
   "Convert buffer text and faces to HTML."

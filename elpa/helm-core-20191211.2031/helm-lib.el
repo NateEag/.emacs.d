@@ -49,7 +49,6 @@
 (declare-function helm-interpret-value "helm.el")
 (declare-function helm-get-current-source "helm.el")
 (declare-function helm-source--cl--print-table "helm-source.el")
-
 (defvar helm-sources)
 (defvar helm-initial-frame)
 (defvar helm-current-position)
@@ -58,6 +57,7 @@
 (defvar wdired-allow-to-change-permissions)
 (defvar wdired-allow-to-redirect-links)
 (defvar helm-persistent-action-display-window)
+(defvar completion-flex-nospace)
 
 ;;; User vars.
 ;;
@@ -339,6 +339,16 @@ When only `add-text-properties' is available APPEND is ignored."
          (if val
              (advice-add 'push-mark :override #'helm--advice-push-mark)
            (advice-remove 'push-mark #'helm--advice-push-mark))))
+
+;; This the version of Emacs-27 written by Stefan
+(defun helm-advice--ffap-read-file-or-url (prompt guess)
+  (or guess (setq guess default-directory))
+  (if (ffap-url-p guess)
+      (read-string prompt guess nil nil t)
+    (unless (ffap-file-remote-p guess)
+      (setq guess (abbreviate-file-name (expand-file-name guess))))
+    (read-file-name prompt (file-name-directory guess) nil nil
+                    (file-name-nondirectory guess))))
 
 ;;; Macros helper.
 ;;
@@ -976,9 +986,10 @@ Example:
 ;;
 (defun helm-symbolify (str-or-sym)
   "Get symbol of STR-OR-SYM."
-  (if (symbolp str-or-sym)
-      str-or-sym
-    (intern str-or-sym)))
+  (cond ((symbolp str-or-sym)
+         str-or-sym)
+        ((equal str-or-sym "") nil)
+        (t (intern str-or-sym))))
 
 (defun helm-symbol-name (obj)
   (if (or (and (consp obj) (functionp obj))
@@ -1034,10 +1045,15 @@ See `helm-elisp-show-help'."
                                    ;; helm-current-buffer but it may
                                    ;; be another buffer when helm have
                                    ;; been started from a dedicated window.
-                                   (if helm-use-frame-when-dedicated-window
+                                   (if helm--buffer-in-new-frame-p
                                        helm-current-buffer
                                      helm-persistent-action-window-buffer)))
-              (helm-attrset 'help-running-p nil)))
+              (helm-attrset 'help-running-p nil))
+            ;; Force running update hook to may be delete
+            ;; helm-persistent-action-display-window, this is done in
+            ;; helm-persistent-action-display-window (the function). 
+            (unless helm--buffer-in-new-frame-p
+              (helm-update (regexp-quote (helm-get-selection)))))
            (t
             (if name
                 (funcall fun candidate name)
@@ -1327,6 +1343,105 @@ I.e. when using `helm-next-line' and friends in BODY."
              (lambda (&optional _) nil)))
     (let (helm-follow-mode-persistent)
       (progn ,@body))))
+
+;; Completion styles related functions
+;;
+(defun helm--setup-completion-styles-alist ()
+  (cl-pushnew '(helm helm-completion-try-completion
+                     helm-completion-all-completions
+                     "helm multi completion style.")
+              completion-styles-alist
+              :test 'equal)
+  (unless (assq 'flex completion-styles-alist)
+    ;; Add helm-fuzzy style only if flex is not available.
+    (cl-pushnew '(helm-flex helm-flex-completion-try-completion
+                            helm-flex-completion-all-completions
+                            "helm flex completion style.\nProvide flex matching for emacs-26.")
+                completion-styles-alist
+                :test 'equal)))
+
+(defvar helm-blacklist-completion-styles '(emacs21 emacs22))
+(defun helm--prepare-completion-styles (&optional nomode)
+  "Return a suitable list of styles for `completion-styles'."
+  ;; For `helm-completion-style' and `helm-completion-styles-alist'.
+  (require 'helm-mode)
+  (if (memq helm-completion-style '(helm helm-fuzzy))
+      ;; Keep default settings, but probably nil is fine as well.
+      '(basic partial-completion emacs22)
+    (or
+     (pcase (and (null nomode)
+                 (with-helm-current-buffer
+                   (cdr (assq major-mode helm-completion-styles-alist))))
+       (`(,_l . ,ll) ll))
+     ;; We need to have flex always behind helm, otherwise
+     ;; when matching against e.g. '(foo foobar foao frogo bar
+     ;; baz) with pattern "foo" helm style if before flex will
+     ;; return foo and foobar only defeating flex that would
+     ;; return foo foobar foao and frogo.
+     (let* ((wflex (car (or (assq 'flex completion-styles-alist)
+                            (assq 'helm-flex completion-styles-alist))))
+            (styles (append (and (memq wflex completion-styles)
+                                 (list wflex))
+                            (cl-loop for s in completion-styles
+                                     unless (or (memq s helm-blacklist-completion-styles)
+                                                (memq wflex completion-styles))
+                                     collect s))))
+       (helm-append-at-nth
+        styles '(helm)
+        (if (memq wflex completion-styles)
+            1 0))))))
+
+(defun helm-dynamic-completion (collection predicate &optional point metadata nomode)
+  "Build a function listing the possible completions of `helm-pattern' in COLLECTION.
+
+Only the elements of COLLECTION that satisfy PREDICATE are considered.
+Argument POINT is same as in `completion-all-completions' and is
+meaningful only when using some kind of `completion-at-point'.
+The return value is a list of completions that may be sorted by the
+sort function provided by the completion-style in use (emacs-27 only),
+otherwise (emacs-26) the sort function have to be provided if needed
+either with a FCT function in source or by passing the sort function
+with METADATA e.g. (metadata (display-sort-function . foo)).
+If you don't want the sort fn provided by style to kick in (emacs-27)
+you can use as metadata value the symbol `nosort'.
+
+Example:
+
+    (helm :sources (helm-build-sync-source \"test\"
+                     :candidates (helm-dynamic-completion
+                                  '(foo bar baz foab)
+                                  'symbolp)
+                     :match-dynamic t)
+          :buffer \"*helm test*\")
+
+When argument NOMODE is non nil don't use `completion-styles' as
+specified in `helm-completion-styles-alist'."
+  (lambda ()
+    (let* ((completion-styles
+            (helm--prepare-completion-styles nomode))
+           (completion-flex-nospace t)
+           (nosort (eq metadata 'nosort))
+           (compsfn (lambda (str pred _action)
+                      (let* ((comps (completion-all-completions
+                                     str
+                                     (if (functionp collection)
+                                         (funcall collection str predicate t)
+                                       collection)
+                                     pred
+                                     (or point 0)
+                                     (or (and (listp metadata) metadata)
+                                         (setq metadata '(metadata)))))
+                             (last-data (last comps))
+                             (sort-fn (unless nosort
+                                        (completion-metadata-get
+                                         metadata 'display-sort-function)))
+                             all)
+                        (when (cdr last-data)
+                          (setcdr last-data nil))
+                        (setq all (copy-sequence comps))
+                        (if sort-fn (funcall sort-fn all) all)))))
+      ;; Ensure circular objects are removed.
+      (complete-with-action t compsfn helm-pattern predicate))))
 
 ;; Yank text at point.
 ;;

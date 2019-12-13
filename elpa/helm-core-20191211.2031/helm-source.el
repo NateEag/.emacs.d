@@ -103,6 +103,9 @@
   It can either be a variable name, a function called with no parameters
   or the actual list of candidates.
 
+  Do NOT use this for asynchronous sources, use `candidates-process'
+  instead.
+
   The list must be a list whose members are strings, symbols
   or (DISPLAY . REAL) pairs.
 
@@ -266,7 +269,7 @@
 
    (requires-pattern
     :initarg :requires-pattern
-    :initform nil
+    :initform 0
     :custom integer
     :documentation
     "  If present matches from the source are shown only if the
@@ -450,8 +453,8 @@
   functions, respectively.
 
   This attribute has no effect for asynchronous sources (see
-  attribute `candidates'), since they perform pattern matching
-  themselves.
+  attribute `candidates'), and sources using `match-dynamic'
+  since they perform pattern matching themselves.
 
   Note that FUZZY-MATCH slot will overhide value of this slot.")
 
@@ -644,6 +647,17 @@
     "  This slot have no more effect and is just kept for backward compatibility.
   Please don't use it.")
 
+   (must-match
+    :initarg :must-match
+    :initform nil
+    :custom symbol
+    :documentation
+    "  Prevent exiting with empty helm buffer.
+  For this to work `minibuffer-completion-confirm' must be let-bounded
+  around the helm call.
+  Same as `completing-read' require-match arg, possible values are `t'
+  or `confirm'.")
+
    (group
     :initarg :group
     :initform helm
@@ -708,7 +722,10 @@ Matching is done basically with `string-match' against each candidate.")
     :custom function
     :documentation
     "  This attribute is used to define a process as candidate.
-  The value must be a process.
+  The function called with no arguments must return a process
+  i.e. `processp', it use typically `start-process' or `make-process',
+  see (info \"(elisp) Asynchronous Processes\").
+  
 
   NOTE:
   When building the source at runtime you can give directly a process
@@ -886,7 +903,8 @@ See `helm-candidates-in-buffer' for more infos.")
 (defun helm--create-source (object)
   "[INTERNAL] Build a helm source from OBJECT.
 Where OBJECT is an instance of an eieio class."
-  (cl-loop for s in (object-slots object)
+  (cl-loop for sd in (eieio-class-slots (eieio-object-class object))
+           for s = (eieio-slot-descriptor-name sd)
            for slot-val = (slot-value object s)
            when slot-val
            collect (cons s (unless (eq t slot-val) slot-val))))
@@ -1016,7 +1034,19 @@ an eieio class."
     (warn "Deprecated usage of helm `delayed' slot in `%s'"
           (slot-value source 'name)))
   (helm-aif (slot-value source 'keymap)
-      (and (symbolp it) (setf (slot-value source 'keymap) (symbol-value it))))
+      (let* ((map (if (symbolp it)
+                      (symbol-value it)
+                    it))
+             (must-match-map (when (slot-value source 'must-match)
+                               (let ((map (make-sparse-keymap)))
+                                 (define-key map (kbd "RET")
+                                   'helm-confirm-and-exit-minibuffer)
+                                 map)))
+             (loc-map (if must-match-map
+                          (make-composed-keymap
+                           must-match-map map)
+                        map)))
+        (setf (slot-value source 'keymap) loc-map)))
   (helm-aif (slot-value source 'persistent-help)
       (setf (slot-value source 'header-line)
             (helm-source--persistent-help-string it source))
@@ -1038,7 +1068,12 @@ an eieio class."
           (helm-aif (slot-value source 'filtered-candidate-transformer)
               (append (helm-mklist it)
                       (list #'helm-multiline-transformer))
-            (list #'helm-multiline-transformer)))))
+            (list #'helm-multiline-transformer))))
+  (helm-aif (slot-value source 'requires-pattern)
+      (let ((val (if (symbolp it)
+                     (symbol-value it)
+                   it)))
+        (setf (slot-value source 'requires-pattern) val))))
 
 (defmethod helm-setup-user-source ((_source helm-source)))
 
@@ -1060,6 +1095,7 @@ an eieio class."
                       '(helm-mm-3-migemo-match)))))
   (when (slot-value source 'match-dynamic)
     (setf (slot-value source 'match) 'identity)
+    (setf (slot-value source 'match-part) nil)
     (setf (slot-value source 'multimatch) nil)
     (setf (slot-value source 'fuzzy-match) nil)
     (setf (slot-value source 'volatile) t)))
@@ -1160,7 +1196,7 @@ Args ARGS are keywords provided by `helm-source-dummy'."
 Arg FILE is a filename, the contents of this file will be
 used as candidates in buffer.
 Args ARGS are keywords provided by `helm-source-in-file'."
-  (declare (indent 1))
+  (declare (indent 2))
   `(helm-make-source ,name 'helm-source-in-file
      :candidates-file ,file ,@args))
 

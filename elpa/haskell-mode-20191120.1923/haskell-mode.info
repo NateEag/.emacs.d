@@ -357,7 +357,7 @@ variable for Haskell buffers to combine completion candidates from
 completion-at-point function (‘company-capf’ backend) and dynamic
 abbrevs.  ‘company-mode’ provides special backend for dabbrev code
 completions, namely ‘company-dabbrev-code’.  To combine completions from
-diffrent backends you can create grouped backends, it is very easy — a
+different backends you can create grouped backends, it is very easy — a
 grouped backend is just a list of backends, for example:
 
      (add-hook 'haskell-mode-hook
@@ -839,7 +839,7 @@ just the REPL, it comes with the standard key bindings(like ‘ielm’ or
 
    • Separate sessions per Cabal project ‘haskell-session.el’.
    • A new inferior Haskell process handling code ‘haskell-process.el’.
-   • New REPL implementation similiar to SLIME/IELM
+   • New REPL implementation similar to SLIME/IELM
    • Navigatable error overlays ‘haskell-interactive-mode.el’.
 
    With ‘haskell-interactive-mode’, each Haskell source buffer is
@@ -1549,8 +1549,8 @@ following command can dump the ‘haskell-process’ state:
 
 There a few ways GHCi lets you query information about your code.
 
-13.9.1 Get identifer type
--------------------------
+13.9.1 Get identifier type
+--------------------------
 
 To print the type of the top-level identifier at point in the REPL and
 in the message buffer, run the following command:
@@ -1638,7 +1638,7 @@ command:
 
          M-x haskell-process-cabal-build
 
-   Or ‘C-c C-c’.  When building, it will hide unneccessary output.
+   Or ‘C-c C-c’.  When building, it will hide unnecessary output.
 
    For example, to build the ‘ace‘ package, the output is simply:
 
@@ -2429,25 +2429,25 @@ Node: Installation4173
 Node: Editing Haskell Code6796
 Node: Syntax highlighting10556
 Node: Completion support12816
-Node: Unicode support14859
-Node: Indentation19531
-Node: External indentation23007
-Node: Autoformating23735
-Node: Module templates24363
-Node: Declaration scanning24793
-Node: Compilation28081
-Node: Interactive Haskell31986
-Node: Editing Cabal files63864
-Node: Browsing Haddocks64611
-Node: Spell checking strings and comments67436
-Node: Aligning code68542
-Node: Rectangular commands70287
-Node: REPL71807
-Node: Collapsing Haskell code76585
-Node: Getting Help and Reporting Bugs79193
-Node: Concept index80237
-Node: Function index81495
-Node: Variable index82290
+Node: Unicode support14860
+Node: Indentation19532
+Node: External indentation23008
+Node: Autoformating23736
+Node: Module templates24364
+Node: Declaration scanning24794
+Node: Compilation28082
+Node: Interactive Haskell31987
+Node: Editing Cabal files63865
+Node: Browsing Haddocks64612
+Node: Spell checking strings and comments67437
+Node: Aligning code68543
+Node: Rectangular commands70288
+Node: REPL71808
+Node: Collapsing Haskell code76586
+Node: Getting Help and Reporting Bugs79194
+Node: Concept index80238
+Node: Function index81496
+Node: Variable index82291
 
 End Tag Table
 

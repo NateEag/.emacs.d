@@ -157,7 +157,7 @@ This is the dual operation to `haskell-string-literal-encode'."
 
 (defun haskell-string-ellipsize (string n)
   "Return STRING truncated to (at most) N characters.
-If truncation occured, last character in string is replaced by `…'.
+If truncation occurred, last character in string is replaced by `…'.
 See also `haskell-string-take'."
   (cond
    ((<= (length string) n) string) ;; no truncation needed
@@ -172,7 +172,7 @@ See also `haskell-string-take'."
   str)
 
 (defun haskell-string-split-to-lines (str)
-  "Split STR to lines and return a list of strings with preceeding and
+  "Split STR to lines and return a list of strings with preceding and
 succeding space removed."
   (when (stringp str)
     (cl-mapcar #'haskell-string-chomp (split-string str "\n"))))

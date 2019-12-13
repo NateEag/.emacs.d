@@ -729,12 +729,20 @@ Returns beginning position of qualified part or nil if no qualified part found."
       pos)))
 
 (defun haskell-delete-indentation (&optional arg)
-  "Like `delete-indentation' but ignoring Bird-style \">\"."
+  "Like `delete-indentation' but ignoring Bird-style \">\".
+Prefix ARG is handled as per `delete-indentation'."
   (interactive "*P")
   (let ((fill-prefix (or fill-prefix (if (eq haskell-literate 'bird) ">"))))
     (delete-indentation arg)))
 
 (defvar eldoc-print-current-symbol-info-function)
+
+(defvar electric-pair-inhibit-predicate)
+(declare-function electric-pair-default-inhibit "elec-pair")
+(defun haskell-mode--inhibit-bracket-inside-comment-or-default (ch)
+  "An `electric-pair-mode' inhibit function for character CH."
+  (or (nth 4 (syntax-ppss))
+      (funcall #'electric-pair-default-inhibit ch)))
 
 ;; The main mode functions
 ;;;###autoload
@@ -846,6 +854,11 @@ Minor modes that work well with `haskell-mode':
             'haskell-completions-completion-at-point
             nil
             t)
+
+  ;; Avoid Emacs 25 bug with electric-pair inside comments
+  (when (eq 25 emacs-major-version)
+    (setq-local electric-pair-inhibit-predicate 'haskell-mode--inhibit-bracket-inside-comment-or-default))
+
   (haskell-indentation-mode))
 
 (defcustom haskell-mode-hook '(haskell-indentation-mode interactive-haskell-mode)

@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/project-shells-20191123.914/project-shells.el  -*- no-byte-compile: t -*-
+(define-package "project-shells" "20191123.914" "Manage the shell buffers of each project" '((emacs "24.3") (seq "2.19")) :commit "5aea9ee0de93f2568afb3f18bb7b43a9715a9a2d" :keywords '("processes" "terminals") :authors '(("\"Huang, Ying\"" . "huang.ying.caritas@gmail.com")) :maintainer '("\"Huang, Ying\"" . "huang.ying.caritas@gmail.com") :url "https://github.com/hying-caritas/project-shells")

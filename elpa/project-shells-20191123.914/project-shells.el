@@ -6,7 +6,8 @@
 ;; Maintainer: "Huang, Ying" <huang.ying.caritas@gmail.com>
 ;; URL: https://github.com/hying-caritas/project-shells
 ;; Version: 20170311
-;; Package-Version: 20171107.851
+;; Package-Version: 20191123.914
+;; Package-X-Original-Version: 20171107.851
 ;; Package-X-Original-Version: 20170311
 ;; Package-Type: simple
 ;; Keywords: processes, terminals
@@ -88,7 +89,7 @@ The format of the variable is an alist which maps the project
 name (string) to the project shells configuration.  Which is an
 alist which maps the key (string) to the shell configuration.
 Which is a list of shell name (string), initial
-directory (string), type ('shell or 'term), and intialization
+directory (string), type ('shell, 'term, or 'vterm), and intialization
 function (symbol or lambda)."
   :group 'project-shells
   :type '(alist :key-type (string :tag "Project") :value-type
@@ -206,6 +207,8 @@ should be a subset of poject-shells-keys."
   (cl-defun project-shells--create (name dir &optional (type 'shell))
     (let ((default-directory (expand-file-name (or dir "~/"))))
       (cl-ecase type
+	(vterm (vterm)
+	      (rename-buffer name))
 	(term (ansi-term "/bin/sh")
 	      (rename-buffer name))
 	(shell (pop-to-buffer name)

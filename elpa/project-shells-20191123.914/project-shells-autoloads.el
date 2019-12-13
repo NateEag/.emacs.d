@@ -1,10 +1,13 @@
 ;;; project-shells-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "project-shells" "project-shells.el" (23400
-;;;;;;  19305 0 0))
+;;;### (autoloads nil "project-shells" "project-shells.el" (0 0 0
+;;;;;;  0))
 ;;; Generated autoloads from project-shells.el
 
 (autoload 'project-shells-activate-for-key "project-shells" "\
@@ -27,9 +30,12 @@ project-shells-setup.
 
 (autoload 'project-shells-mode "project-shells" "\
 Toggle Project-Shells mode on or off.
-With a prefix argument ARG, enable Project-Shells mode if ARG is
-positive, and disable it otherwise.  If called from Lisp, enable
-the mode if ARG is omitted or nil, and toggle it if ARG is `toggle'.
+
+If called interactively, enable Project-Shells mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
+
 \\{project-shells-mode-map}
 
 \(fn &optional ARG)" t nil)
@@ -56,11 +62,14 @@ See `project-shells-mode' for more information on Project-Shells mode.
 
 \(fn &optional ARG)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "project-shells" '("project-shells-")))
+
 ;;;***
 
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; project-shells-autoloads.el ends here

@@ -1,4 +1,4 @@
-(define-package "tablist" "20190414.643" "Extended tabulated-list-mode"
+(define-package "tablist" "20191129.1850" "Extended tabulated-list-mode"
   '((emacs "24.3"))
   :keywords
   '("extensions" "lisp")

@@ -11,9 +11,12 @@
 
 (autoload 'tablist-minor-mode "tablist" "\
 Toggle Tablist minor mode on or off.
-With a prefix argument ARG, enable Tablist minor mode if ARG is
-positive, and disable it otherwise.  If called from Lisp, enable
-the mode if ARG is omitted or nil, and toggle it if ARG is `toggle'.
+
+If called interactively, enable Tablist minor mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
+
 \\{tablist-minor-mode-map}
 
 \(fn &optional ARG)" t nil)

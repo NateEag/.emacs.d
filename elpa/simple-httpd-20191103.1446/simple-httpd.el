@@ -4,7 +4,7 @@
 
 ;; Author: Christopher Wellons <wellons@nullprogram.com>
 ;; URL: https://github.com/skeeto/emacs-http-server
-;; Package-Version: 20191006.1956
+;; Package-Version: 20191103.1446
 ;; Version: 1.5.1
 ;; Package-Requires: ((cl-lib "0.3"))
 
@@ -828,7 +828,8 @@ the `httpd-current-proc' as the process."
           (httpd-send-header proc "text/plain" 304))
       (httpd-log `(file ,path))
       (with-temp-buffer
-        (insert-file-contents path)
+        (set-buffer-multibyte nil)
+        (insert-file-contents-literally path)
         (httpd-send-header proc (httpd-get-mime (file-name-extension path))
                            200 :Last-Modified mtime :ETag etag)))))
 
@@ -858,7 +859,13 @@ the `httpd-current-proc' as the process."
 
 (defun httpd--buffer-size (&optional buffer)
   "Get the buffer size in bytes."
-  (bufferpos-to-filepos (point-max)))
+  (let ((orig enable-multibyte-characters)
+        (size 0))
+    (with-current-buffer (or buffer (current-buffer))
+      (set-buffer-multibyte nil)
+      (setf size (buffer-size))
+      (if orig (set-buffer-multibyte orig)))
+    size))
 
 (defun httpd-error (proc status &optional info)
   "Send an error page appropriate for STATUS to the client,

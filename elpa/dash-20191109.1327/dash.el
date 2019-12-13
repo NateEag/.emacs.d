@@ -4,7 +4,6 @@
 
 ;; Author: Magnar Sveen <magnars@gmail.com>
 ;; Version: 2.16.0
-;; Package-Version: 20190920.1035
 ;; Keywords: lists
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -404,7 +403,7 @@ See also: `-remove', `-map-last'"
 (defalias '--reject-last '--remove-last)
 
 (defun -remove-item (item list)
-  "Remove all occurences of ITEM from LIST.
+  "Remove all occurrences of ITEM from LIST.
 
 Comparison is done with `equal'."
   (declare (pure t) (side-effect-free t))
@@ -504,7 +503,7 @@ See also: `-replace-at'"
   (--map-when (equal it old) new list))
 
 (defun -replace-first (old new list)
-  "Replace the first occurence of OLD with NEW in LIST.
+  "Replace the first occurrence of OLD with NEW in LIST.
 
 Elements are compared using `equal'.
 
@@ -513,7 +512,7 @@ See also: `-map-first'"
   (--map-first (equal old it) new list))
 
 (defun -replace-last (old new list)
-  "Replace the last occurence of OLD with NEW in LIST.
+  "Replace the last occurrence of OLD with NEW in LIST.
 
 Elements are compared using `equal'.
 
@@ -1273,7 +1272,10 @@ If two lists are provided as arguments, return the groupings as a list
 of cons cells. Otherwise, return the groupings as a list of lists.
 
 Please note! This distinction is being removed in an upcoming 3.0
-release of Dash. If you rely on this behavior, use -zip-pair instead."
+release of Dash. If you rely on this behavior, use `-zip-pair` instead,
+which will retain that behaviour in future versions.
+
+Alias: `-zip-pair'"
   (declare (pure t) (side-effect-free t))
   (when lists
     (let (results)
@@ -1282,7 +1284,7 @@ release of Dash. If you rely on this behavior, use -zip-pair instead."
         (setq lists (mapcar 'cdr lists)))
       (setq results (nreverse results))
       (if (= (length lists) 2)
-          ;; to support backward compatability, return
+          ;; to support backward compatibility, return
           ;; a cons cell if two lists were provided
           (--map (cons (car it) (cadr it)) results)
         results))))
@@ -1537,7 +1539,8 @@ VARIABLE to the result of the first form, and so forth."
 (defmacro -some-> (x &optional form &rest more)
   "When expr is non-nil, thread it through the first form (via `->'),
 and when that result is non-nil, through the next form, etc."
-  (declare (debug ->))
+  (declare (debug ->)
+           (indent 1))
   (if (null form) x
     (let ((result (make-symbol "result")))
       `(-some-> (-when-let (,result ,x)
@@ -1547,7 +1550,8 @@ and when that result is non-nil, through the next form, etc."
 (defmacro -some->> (x &optional form &rest more)
   "When expr is non-nil, thread it through the first form (via `->>'),
 and when that result is non-nil, through the next form, etc."
-  (declare (debug ->))
+  (declare (debug ->)
+           (indent 1))
   (if (null form) x
     (let ((result (make-symbol "result")))
       `(-some->> (-when-let (,result ,x)
@@ -1557,7 +1561,8 @@ and when that result is non-nil, through the next form, etc."
 (defmacro -some--> (x &optional form &rest more)
   "When expr in non-nil, thread it through the first form (via `-->'),
 and when that result is non-nil, through the next form, etc."
-  (declare (debug ->))
+  (declare (debug ->)
+           (indent 1))
   (if (null form) x
     (let ((result (make-symbol "result")))
       `(-some--> (-when-let (,result ,x)
@@ -1654,7 +1659,7 @@ All returned symbols are guaranteed to be unique."
 
 (defun dash--get-expand-function (type)
   "Get expand function name for TYPE."
-  (intern (format "dash-expand:%s" type)))
+  (intern-soft (format "dash-expand:%s" type)))
 
 (defun dash--match-cons-1 (match-form source &optional props)
   "Match MATCH-FORM against SOURCE.

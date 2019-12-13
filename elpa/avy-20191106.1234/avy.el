@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/avy
-;; Package-Version: 20190925.1054
+;; Package-Version: 20191106.1234
 ;; Version: 0.5.0
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: point, location
@@ -656,7 +656,7 @@ Commands using `avy-with' macro can be resumed."
 
 (defmacro avy-with (command &rest body)
   "Set `avy-keys' according to COMMAND and execute BODY.
-Set `avy-style' according to COMMMAND as well."
+Set `avy-style' according to COMMAND as well."
   (declare (indent 1)
            (debug (form body)))
   `(let ((avy-keys (or (cdr (assq ',command avy-keys-alist))
@@ -1541,13 +1541,15 @@ BEG and END narrow the scope where candidates are searched."
                   (when (or (null predicate)
                             (and predicate (funcall predicate)))
                     (unless (not (avy--visible-p (point)))
-                      (push (cons (point) (selected-window)) window-cands)))
+                      (push (cons (cons (point) (1+ (point)))
+                                  (selected-window)) window-cands)))
                   (subword-backward))
                 (and (= (point) ws)
                      (or (null predicate)
                          (and predicate (funcall predicate)))
                      (not (get-char-property (point) 'invisible))
-                     (push (cons (point) (selected-window)) window-cands)))
+                     (push (cons (cons (point) (1+ (point)))
+                                 (selected-window)) window-cands)))
               (setq candidates (nconc candidates window-cands))))))
       (avy-process candidates))))
 

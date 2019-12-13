@@ -4,13 +4,13 @@
 
 ;; Author: Andrew Hyatt <ahyatt@gmail.com>
 ;; Keywords: Communication, Websocket, Server
-;; Package-Version: 20190621.54
-;; Version: 1.11.1
+;; Package-Version: 20191123.2208
+;; Version: 1.12
 ;; Package-Requires: ((cl-lib "0.5"))
 ;;
 ;; This program is free software; you can redistribute it and/or
 ;; modify it under the terms of the GNU General Public License as
-;; published by the Free Software Foundation; either version 3 of the
+;; published by the Free Software Foundation; either version 2 of the
 ;; License, or (at your option) any later version.
 ;;
 ;; This program is distributed in the hope that it will be useful, but
@@ -101,7 +101,7 @@ same for the protocols."
   accept-string
   (inflight-input nil))
 
-(defvar websocket-version "1.11.1"
+(defvar websocket-version "1.12"
   "Version numbers of this version of websocket.el.")
 
 (defvar websocket-debug nil
@@ -798,10 +798,10 @@ connection is invalid, the connection will be closed."
 The output is assumed to have complete headers.  This function
 will either return t or call `error'.  This has the side-effect
 of populating the list of server extensions to WEBSOCKET."
-  (let ((accept-string
-         (concat "Sec-WebSocket-Accept: " (websocket-accept-string websocket))))
-    (websocket-debug websocket "Checking for accept header: %s" accept-string)
-    (unless (string-match (regexp-quote accept-string) output)
+  (let ((accept-regexp
+         (concat "Sec-Web[Ss]ocket-Accept: " (regexp-quote (websocket-accept-string websocket)))))
+    (websocket-debug websocket "Checking for accept header regexp: %s" accept-regexp)
+    (unless (string-match accept-regexp output)
       (signal 'websocket-invalid-header
               (list "Incorrect handshake from websocket: is this really a websocket connection?"))))
   (let ((case-fold-search t))

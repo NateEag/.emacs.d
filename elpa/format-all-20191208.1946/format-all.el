@@ -2,7 +2,7 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20191027.1434
+;; Package-Version: 20191208.1946
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
@@ -39,6 +39,7 @@
 ;; - Elixir (mix format)
 ;; - Elm (elm-format)
 ;; - Emacs Lisp (emacs)
+;; - Fish Shell (fish_indent)
 ;; - Go (gofmt)
 ;; - GraphQL (prettier)
 ;; - Haskell (brittany)
@@ -474,6 +475,12 @@ Consult the existing formatters for examples of BODY."
     'emacs-lisp-mode
     (lambda () (indent-region (point-min) (point-max))))))
 
+(define-format-all-formatter fish-indent
+  (:executable "fish_indent")
+  (:install (macos "brew install fish OR port install fish"))
+  (:modes fish-mode)
+  (:format (format-all--buffer-easy executable)))
+
 (define-format-all-formatter gofmt
   (:executable "gofmt")
   (:install
@@ -540,7 +547,15 @@ Consult the existing formatters for examples of BODY."
   (:install (macos "brew install elixir"))
   (:modes elixir-mode)
   (:format
-   (format-all--buffer-hard nil nil '("mix.exs") executable "format" "-")))
+   (format-all--buffer-hard
+    nil nil '("mix.exs")
+    executable
+    "format"
+    (let* ((file ".formatter.exs")
+           (dir (and (buffer-file-name)
+                     (locate-dominating-file (buffer-file-name) file))))
+      (when dir (list "--dot-formatter" (concat dir file))))
+    "-")))
 
 (define-format-all-formatter nixfmt
   (:executable "nixfmt")
@@ -592,7 +607,11 @@ Consult the existing formatters for examples of BODY."
             ((equal ct "html")
              (cond ((equal en "angular") "angular")
                    ((equal en "vue") "vue")
-                   ((equal en "none") "html")
+                   ;; TODO: Use html-tidy instead of prettier for
+                   ;; plain HTML. Enable prettier's HTML support once
+                   ;; we have multi-formatter support.
+                   ;;
+                   ;; ((equal en "none") "html")
                    (t nil)))
             (t nil))))
    (yaml-mode "yaml"))
@@ -729,7 +748,7 @@ Consult the existing formatters for examples of BODY."
 
 Relies on FORMATTER and MODE-RESULT from `format-all--probe'."
   (when format-all-debug
-    (message "Format-All: Formatting %s as %S"
+    (message "Format-All: Formatting %s using %S"
              (buffer-name) (list formatter mode-result)))
   (let ((f-function (gethash formatter format-all--format-table))
         (executable (format-all--formatter-executable formatter)))

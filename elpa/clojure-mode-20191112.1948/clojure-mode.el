@@ -9,7 +9,7 @@
 ;;       Bozhidar Batsov <bozhidar@batsov.com>
 ;;       Artur Malabarba <bruce.connor.am@gmail.com>
 ;; URL: http://github.com/clojure-emacs/clojure-mode
-;; Package-Version: 20190914.1029
+;; Package-Version: 20191112.1948
 ;; Keywords: languages clojure clojurescript lisp
 ;; Version: 5.11.0
 ;; Package-Requires: ((emacs "25.1"))
@@ -655,14 +655,16 @@ If JUSTIFY is non-nil, justify as well as fill the paragraph."
 ;; Code heavily borrowed from Slime.
 ;; https://github.com/slime/slime/blob/master/contrib/slime-fontifying-fu.el#L186
 (defvar clojure--comment-macro-regexp
-  (rx "#_" (* " ") (group-n 1 (not (any " "))))
+  (rx (seq (+ (seq "#_" (* " ")))) (group-n 1 (not (any " "))))
   "Regexp matching the start of a comment sexp.
 The beginning of match-group 1 should be before the sexp to be
 marked as a comment.  The end of sexp is found with
 `clojure-forward-logical-sexp'.")
 
 (defvar clojure--reader-and-comment-regexp
-  "#_ *\\(?1:[^ ]\\)\\|\\(?1:(comment\\_>\\)"
+  (rx (or (seq (+ (seq "#_" (* " ")))
+               (group-n 1 (not (any " "))))
+          (seq (group-n 1 "(comment" symbol-end))))
   "Regexp matching both `#_' macro and a comment sexp." )
 
 (defcustom clojure-comment-regexp clojure--comment-macro-regexp
@@ -688,7 +690,11 @@ what is considered a comment (affecting font locking).
               (nth 4 state))
           (clojure--search-comment-macro-internal limit)
         (goto-char start)
-        (clojure-forward-logical-sexp 1)
+        ;; Count how many #_ we got and step by that many sexps
+        ;; For (comment ...), step at least 1 sexp
+        (clojure-forward-logical-sexp
+         (max (count-matches (rx "#_") (elt md 0) (elt md 1))
+              1))
         ;; Data for (match-end 1).
         (setf (elt md 3) (point))
         (set-match-data md)

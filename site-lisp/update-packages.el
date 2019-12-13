@@ -22,12 +22,19 @@
 
 ;;; Code:
 
+;; Looks like this broke again. Maybe when I upgraded to Emacs 27? Been a long
+;; while since I updated packages.
 (defun update-packages-get-package-desc (package src)
   "Return the package-desc for PACKAGE in SRC."
+  (if (eq (assq package src) nil)
+      (error "Package %s is not in package list!
+
+It probably got removed from MELPA - uninstall it manually" package))
+
   (car (cdr (assq package src))))
 
 (defun update-packages-newest-package-installed-p (package)
-  "Return true if the newest available PACKAGE is installed."
+  "Return non-nil if the newest available PACKAGE is installed."
   (when (package-installed-p package)
     (let* ((local-pkg-desc (update-packages-get-package-desc package package-alist))
                             ; original version or'd above with below, but it
@@ -39,10 +46,10 @@
                            (package-desc-version newest-pkg-desc))))))
 
 (defun update-packages-package-incompatible? (package)
-  "Return non-nil if package is not compatible with current environment.
+  "Return non-nil if PACKAGE is not compatible with current environment.
 
-(we're just peeking inside package.el's internals to make sure
-installing this is not guaranteed to fail.)"
+We're just peeking inside package.el's internals to make sure
+installing this is not guaranteed to fail."
 
 (package--incompatible-p (update-packages-get-package-desc package
                                                            package-archive-contents)))

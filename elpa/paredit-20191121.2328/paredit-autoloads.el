@@ -18,14 +18,17 @@ Paredit behaves badly if parentheses are unbalanced, so exercise
   fixing unbalanced parentheses instead.
 \\<paredit-mode-map>
 
+If called interactively, enable Paredit mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
+
 \(fn &optional ARG)" t nil)
 
 (autoload 'enable-paredit-mode "paredit" "\
-Turn on pseudo-structural editing of Lisp code.
+Turn on pseudo-structural editing of Lisp code." t nil)
 
-\(fn)" t nil)
-
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "paredit" '("paredit-" "?\\" "disable-paredit-mode")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "paredit" '("?\\" "disable-paredit-mode" "paredit-")))
 
 ;;;***
 

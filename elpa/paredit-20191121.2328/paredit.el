@@ -1,10 +1,10 @@
 ;;; paredit.el --- minor mode for editing parentheses  -*- Mode: Emacs-Lisp -*-
 
-;; Copyright (C) 2005--2017 Taylor R. Campbell
+;; Copyright (C) 2005--2019 Taylor R. Campbell
 
 ;; Author: Taylor R. Campbell <campbell+paredit@mumble.net>
 ;; Version: 25beta
-;; Package-Version: 20171127.205
+;; Package-Version: 20191121.2328
 ;; Created: 2005-07-31
 ;; Keywords: lisp
 
@@ -200,7 +200,7 @@ If point was on indentation, it stays in indentation."
   "Keymap for the paredit minor mode.")
 
 (defvar paredit-override-check-parens-function
-  (lambda (condition) condition nil)
+  (lambda (condition) (declare ignore condition) nil)
   "Function to tell whether unbalanced text should inhibit Paredit Mode.")
 
 ;;;###autoload
@@ -1108,6 +1108,15 @@ If a list begins on the line after the point but ends on a different
   (defalias 'paredit-initialize-comment-dwim 'comment-normalize-vars)
   (comment-normalize-vars))
 
+(defvar paredit-comment-prefix-toplevel ";;; "
+  "String of prefix for top-level comments aligned at the left margin.")
+
+(defvar paredit-comment-prefix-code ";; "
+  "String of prefix for comments indented at the same depth as code.")
+
+(defvar paredit-comment-prefix-margin ";"
+  "String of prefix for comments on the same line as code in the margin.")
+
 (defun paredit-comment-dwim (&optional argument)
   "Call the Lisp comment command you want (Do What I Mean).
 This is like `comment-dwim', but it is specialized for Lisp editing.
@@ -1169,13 +1178,13 @@ This is expected to be called only in `paredit-comment-dwim'; do not
                   (and indent (zerop indent))))
            ;; Top-level comment
            (if code-after-p (save-excursion (newline)))
-           (insert ";;; "))
+           (insert paredit-comment-prefix-toplevel))
           ((or code-after-p (not code-before-p))
            ;; Code comment
            (if code-before-p
                (newline-and-indent)
                (lisp-indent-line))
-           (insert ";; ")
+           (insert paredit-comment-prefix-code)
            (if code-after-p
                (save-excursion
                  (newline)
@@ -1184,7 +1193,7 @@ This is expected to be called only in `paredit-comment-dwim'; do not
           (t
            ;; Margin comment
            (indent-to comment-column 1) ; 1 -> force one leading space
-           (insert ?\; )))))
+           (insert paredit-comment-prefix-margin)))))
 
 ;;;; Character Deletion
 

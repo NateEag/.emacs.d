@@ -15,9 +15,7 @@ Activate python VIRTUALENV.
 \(fn VIRTUALENV)" t nil)
 
 (autoload 'pythonic-deactivate "pythonic" "\
-Deactivate python virtual environment.
-
-\(fn)" t nil)
+Deactivate python virtual environment." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "pythonic" '("pythonic-")))
 

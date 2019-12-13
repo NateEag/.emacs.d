@@ -98,7 +98,7 @@ Edit
 * racket-trim-requires::
 * racket-base-requires::
 * racket-indent-line::
-* racket-smart-open-bracket::
+* racket-smart-open-bracket-mode::
 * racket-insert-closing::
 * racket-cycle-paren-shapes::
 * racket-backward-up-list::
@@ -201,6 +201,10 @@ variety of Emacs major and minor modes, including:
 
    For code, issues, and pull requests, see the Git repo
 (https://github.com/greghendershott/racket-mode).
+
+   To fund this work, see GitHub Sponsors
+(https://github.com/users/greghendershott/sponsorship) or PayPal
+(https://www.paypal.me/greghendershott).
 
    ---------- Footnotes ----------
 
@@ -1112,7 +1116,7 @@ File: racket-mode.info,  Node: Edit,  Next: Macro expand,  Prev: Learn,  Up: Com
 * racket-trim-requires::
 * racket-base-requires::
 * racket-indent-line::
-* racket-smart-open-bracket::
+* racket-smart-open-bracket-mode::
 * racket-insert-closing::
 * racket-cycle-paren-shapes::
 * racket-backward-up-list::
@@ -1241,7 +1245,7 @@ racket/base”.  It does not help with other similar conversions, such as
 changing “#lang typed/racket” to “#lang typed/racket/base”.
 
 
-File: racket-mode.info,  Node: racket-indent-line,  Next: racket-smart-open-bracket,  Prev: racket-base-requires,  Up: Edit
+File: racket-mode.info,  Node: racket-indent-line,  Next: racket-smart-open-bracket-mode,  Prev: racket-base-requires,  Up: Edit
 
 5.6.7 racket-indent-line
 ------------------------
@@ -1292,17 +1296,18 @@ the form of file or dir local variables.  Otherwise prefer
 ‘racket-indent-function’.
 
 
-File: racket-mode.info,  Node: racket-smart-open-bracket,  Next: racket-insert-closing,  Prev: racket-indent-line,  Up: Edit
+File: racket-mode.info,  Node: racket-smart-open-bracket-mode,  Next: racket-insert-closing,  Prev: racket-indent-line,  Up: Edit
 
-5.6.8 racket-smart-open-bracket
--------------------------------
+5.6.8 racket-smart-open-bracket-mode
+------------------------------------
 
-‘M-x’ ‘racket-smart-open-bracket’ ‘RET’
+‘M-x’ ‘racket-smart-open-bracket-mode’ ‘RET’
 
-   Automatically insert a ‘(’ or a ‘[’ as appropriate.
+   Minor mode to let you always type ‘[’’ to insert ‘(’ or ‘[’
+automatically.
 
    Behaves like the “Automatically adjust opening square brackets”
-feature in Dr.  Racket:
+feature in Dr.  Racket.
 
    By default, inserts a ‘(’.  Inserts a ‘[’ in the following cases:
 
@@ -1319,9 +1324,6 @@ feature in Dr.  Racket:
    When the previous s-expression in a sequence is a compound
 expression, uses the same kind of delimiter.
 
-   To use, bind the ‘[’ key to *note racket-smart-open-bracket:: in
-‘racket-mode-map’ and/or ‘racket-repl-mode-map’.
-
    To force insert ‘[’, use ‘quoted-insert’.
 
    Combined with *note racket-insert-closing:: this means that you can
@@ -1330,20 +1332,22 @@ the Racket conventions for these forms.  When something like
 ‘electric-pair-mode’ or ‘paredit-mode’ is active, you need not even
 press ‘]’.
 
+   Tip: When also using ‘paredit-mode’, enable that first so that the
+binding for the ‘[’’ key in the map for *note
+racket-smart-open-bracket-mode:: has higher priority.  See also the
+variable ‘minor-mode-map-alist’.
+
 
-File: racket-mode.info,  Node: racket-insert-closing,  Next: racket-cycle-paren-shapes,  Prev: racket-smart-open-bracket,  Up: Edit
+File: racket-mode.info,  Node: racket-insert-closing,  Next: racket-cycle-paren-shapes,  Prev: racket-smart-open-bracket-mode,  Up: Edit
 
 5.6.9 racket-insert-closing
 ---------------------------
 
-‘M-x’ ‘racket-insert-closing’ ‘RET’
+‘]’ or ‘)’
 
    Insert a matching closing delimiter.
 
    With a prefix, insert the typed character as-is.
-
-   If you want to use this, in your Emacs init file you can bind ")",
-"]", and “}" keys to *note racket-insert-closing::.
 
    This is handy if you’re not yet using something like ‘paredit-mode’,
 ‘smartparens-mode’, ‘parinfer-mode’, or simply ‘electric-pair-mode’
@@ -2000,8 +2004,8 @@ File: racket-mode.info,  Node: racket-smart-open-bracket-enable,  Next: racket-l
 
 This variable is obsolete and has no effect.
 
-   Instead of using this variable, you may bind the ‘[’ key to the *note
-racket-smart-open-bracket:: command in the ‘racket-mode-map’ and/or
+   Instead of using this variable, you may bind the ‘[’ key to the
+‘racket-smart-open-bracket’ command in the ‘racket-mode-map’ and/or
 ‘racket-repl-mode-map’ keymaps.
 
 
@@ -2182,115 +2186,115 @@ Face for *note racket-logger-mode:: debug level.
 
 Tag Table:
 Node: Top220
-Node: Introduction3104
-Ref: Introduction-Footnote-14012
-Node: Install4407
-Node: Configure Emacs to use MELPA4728
-Node: Install Racket Mode5201
-Node: Minimal Racket5490
-Node: Uninstall6054
-Node: Update6342
-Node: Configure6789
-Node: Key bindings7900
-Node: Font-lock (syntax highlighting)8517
-Node: Completion9801
-Node: paredit11198
-Node: smartparens12195
-Node: eldoc12546
-Node: Start faster13560
-Node: Unicode input method13785
-Node: Reference14481
-Node: Commands14970
-Node: Run15174
-Node: racket-run15422
-Node: racket-repl17374
-Node: racket-racket18487
-Node: racket-profile18691
-Node: racket-profile-mode19406
-Node: racket-logger20465
-Node: racket-logger-mode20876
-Node: racket-debug-mode22244
-Node: Test25719
-Node: racket-test25864
-Node: racket-raco-test26485
-Node: Eval26742
-Node: racket-send-region26928
-Node: racket-send-definition27146
-Node: racket-send-last-sexp27395
-Node: Visit27705
-Node: racket-visit-definition27945
-Node: racket-visit-module29032
-Node: racket-unvisit29481
-Node: racket-open-require-path29746
-Node: racket-find-collection30522
-Node: Learn31473
-Node: racket-describe31621
-Node: racket-doc32789
-Node: Edit33459
-Node: racket-insert-lambda34001
-Node: racket-fold-all-tests34269
-Node: racket-unfold-all-tests34506
-Node: racket-tidy-requires34749
-Node: racket-trim-requires35806
-Node: racket-base-requires36521
-Node: racket-indent-line37776
-Node: racket-smart-open-bracket39578
-Node: racket-insert-closing41082
-Node: racket-cycle-paren-shapes41722
-Node: racket-backward-up-list41973
-Node: racket-check-syntax-mode42523
-Node: racket-unicode-input-method-enable44044
-Node: racket-align46055
-Node: racket-unalign48033
-Node: racket-complete-at-point48376
-Node: Macro expand49179
-Node: racket-stepper-mode49442
-Node: racket-expand-file50490
-Node: racket-expand-region51214
-Node: racket-expand-definition51580
-Node: racket-expand-last-sexp51969
-Node: Other52321
-Node: racket-mode-start-faster52457
-Node: Variables53625
-Node: General variables53842
-Node: racket-program54294
-Node: racket-command-port54474
-Node: racket-command-startup54704
-Node: racket-command-timeout55232
-Node: racket-memory-limit55499
-Node: racket-error-context56102
-Node: racket-retry-as-skeleton57123
-Node: racket-user-command-line-arguments57991
-Node: racket-path-from-emacs-to-racket-function58854
-Node: racket-path-from-racket-to-emacs-function59541
-Node: REPL variables60300
-Node: racket-history-filter-regexp60606
-Node: racket-images-inline60918
-Node: racket-images-keep-last61165
-Node: racket-images-system-viewer61415
-Node: racket-pretty-print61711
-Node: Other variables61919
-Node: racket-indent-curly-as-sequence62255
-Node: racket-indent-sequence-depth62635
-Node: racket-pretty-lambda63322
-Node: racket-smart-open-bracket-enable63725
-Node: racket-logger-config64183
-Node: Experimental debugger variables64978
-Node: racket-debuggable-files65195
-Node: Faces65889
-Node: All65992
-Node: racket-keyword-argument-face66426
-Node: racket-selfeval-face66636
-Node: racket-here-string-face66895
-Node: racket-check-syntax-def-face67114
-Node: racket-check-syntax-use-face67397
-Node: racket-logger-config-face67675
-Node: racket-logger-topic-face67932
-Node: racket-logger-fatal-face68176
-Node: racket-logger-error-face68424
-Node: racket-logger-warning-face68674
-Node: racket-logger-info-face68931
-Node: racket-logger-debug-face69179
+Node: Introduction3109
+Ref: Introduction-Footnote-14166
+Node: Install4561
+Node: Configure Emacs to use MELPA4882
+Node: Install Racket Mode5355
+Node: Minimal Racket5644
+Node: Uninstall6208
+Node: Update6496
+Node: Configure6943
+Node: Key bindings8054
+Node: Font-lock (syntax highlighting)8671
+Node: Completion9955
+Node: paredit11352
+Node: smartparens12349
+Node: eldoc12700
+Node: Start faster13714
+Node: Unicode input method13939
+Node: Reference14635
+Node: Commands15124
+Node: Run15328
+Node: racket-run15576
+Node: racket-repl17528
+Node: racket-racket18641
+Node: racket-profile18845
+Node: racket-profile-mode19560
+Node: racket-logger20619
+Node: racket-logger-mode21030
+Node: racket-debug-mode22398
+Node: Test25873
+Node: racket-test26018
+Node: racket-raco-test26639
+Node: Eval26896
+Node: racket-send-region27082
+Node: racket-send-definition27300
+Node: racket-send-last-sexp27549
+Node: Visit27859
+Node: racket-visit-definition28099
+Node: racket-visit-module29186
+Node: racket-unvisit29635
+Node: racket-open-require-path29900
+Node: racket-find-collection30676
+Node: Learn31627
+Node: racket-describe31775
+Node: racket-doc32943
+Node: Edit33613
+Node: racket-insert-lambda34160
+Node: racket-fold-all-tests34428
+Node: racket-unfold-all-tests34665
+Node: racket-tidy-requires34908
+Node: racket-trim-requires35965
+Node: racket-base-requires36680
+Node: racket-indent-line37935
+Node: racket-smart-open-bracket-mode39742
+Node: racket-insert-closing41397
+Node: racket-cycle-paren-shapes41888
+Node: racket-backward-up-list42139
+Node: racket-check-syntax-mode42689
+Node: racket-unicode-input-method-enable44210
+Node: racket-align46221
+Node: racket-unalign48199
+Node: racket-complete-at-point48542
+Node: Macro expand49345
+Node: racket-stepper-mode49608
+Node: racket-expand-file50656
+Node: racket-expand-region51380
+Node: racket-expand-definition51746
+Node: racket-expand-last-sexp52135
+Node: Other52487
+Node: racket-mode-start-faster52623
+Node: Variables53791
+Node: General variables54008
+Node: racket-program54460
+Node: racket-command-port54640
+Node: racket-command-startup54870
+Node: racket-command-timeout55398
+Node: racket-memory-limit55665
+Node: racket-error-context56268
+Node: racket-retry-as-skeleton57289
+Node: racket-user-command-line-arguments58157
+Node: racket-path-from-emacs-to-racket-function59020
+Node: racket-path-from-racket-to-emacs-function59707
+Node: REPL variables60466
+Node: racket-history-filter-regexp60772
+Node: racket-images-inline61084
+Node: racket-images-keep-last61331
+Node: racket-images-system-viewer61581
+Node: racket-pretty-print61877
+Node: Other variables62085
+Node: racket-indent-curly-as-sequence62421
+Node: racket-indent-sequence-depth62801
+Node: racket-pretty-lambda63488
+Node: racket-smart-open-bracket-enable63891
+Node: racket-logger-config64347
+Node: Experimental debugger variables65142
+Node: racket-debuggable-files65359
+Node: Faces66053
+Node: All66156
+Node: racket-keyword-argument-face66590
+Node: racket-selfeval-face66800
+Node: racket-here-string-face67059
+Node: racket-check-syntax-def-face67278
+Node: racket-check-syntax-use-face67561
+Node: racket-logger-config-face67839
+Node: racket-logger-topic-face68096
+Node: racket-logger-fatal-face68340
+Node: racket-logger-error-face68588
+Node: racket-logger-warning-face68838
+Node: racket-logger-info-face69095
+Node: racket-logger-debug-face69343
 
 End Tag Table
 

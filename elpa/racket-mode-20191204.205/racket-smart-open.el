@@ -1,4 +1,4 @@
-;;; racket-parens.el -*- lexical-binding: t; -*-
+;;; racket-smart-open.el -*- lexical-binding: t; -*-
 
 ;; Copyright (c) 2013-2019 by Greg Hendershott.
 ;; Portions Copyright (C) 1985-1986, 1999-2013 Free Software Foundation, Inc.
@@ -16,73 +16,54 @@
 ;; General Public License for more details. See
 ;; http://www.gnu.org/licenses/ for details.
 
-;; Things related to parens, paredit, electric-pair-mode
+;;; racket-smart-open-bracket-mode
 
 (require 'racket-custom)
+(require 'racket-parens)
 (require 'racket-ppss)
 (require 'racket-util)
 
-;;; racket--self-insert
+;;;###autoload
+(define-minor-mode racket-smart-open-bracket-mode
+  "Minor mode to let you always type `[`' to insert `(` or `[` automatically.
 
-(defun racket--self-insert (event)
-  "Simulate a `self-insert-command' of EVENT.
+Behaves like the \"Automatically adjust opening square brackets\"
+feature in Dr. Racket.
 
-Using this intead of `insert' allows self-insert hooks to run,
-which is important for things like `'electric-pair-mode'.
+By default, inserts a `(`. Inserts a `[` in the following cases:
 
-A command using this should probably set its 'delete-selection
-property to t so that `delete-selection-mode' works:
+  - `let`-like bindings -- forms with `let` in the name as well
+    as things like `parameterize`, `with-handlers`, and
+    `with-syntax`.
 
-  (put 'racket-command 'delete-selection t)
+  - `case`, `cond`, `match`, `syntax-case`, `syntax-parse`, and
+    `syntax-rules` clauses.
 
-If necessary the value of the property can be a function, for
-example `racket--electric-pair-mode-not-active'."
-  (let ((last-command-event event))     ;set this for hooks
-    (self-insert-command (prefix-numeric-value nil))))
+  - `for`-like bindings and `for/fold` accumulators.
 
-(defun racket--electric-pair-mode-not-active ()
-  "A suitable value for the 'delete-selection property of
-commands that insert parens: Inserted text should replace the
-selection unless a mode like `electric-pair-mode' is enabled, in
-which case the selection is to be wrapped in parens."
-  (not (and (boundp 'electric-pair-mode)
-            electric-pair-mode)))
+  - `class` declaration syntax, such as `init` and `inherit`.
 
+When the previous s-expression in a sequence is a compound
+expression, uses the same kind of delimiter.
 
-;;; Automatically insert matching \?) \?] or \?}
+To force insert `[`, use `quoted-insert'.
 
-(defconst racket--matching-parens
-  '(( ?\( . ?\) )
-    ( ?\[ . ?\] )
-    ( ?\{ . ?\} )))
+Combined with `racket-insert-closing' this means that you can
+press the unshifted `[` and `]` keys to get whatever delimiters
+follow the Racket conventions for these forms. When something
+like `electric-pair-mode' or `paredit-mode' is active, you need
+not even press `]`.
 
-(defun racket-insert-closing (&optional prefix)
-  "Insert a matching closing delimiter.
-
-With a prefix, insert the typed character as-is.
-
-If you want to use this, in your Emacs init file you can bind
-\")\", \"]\", and \"}\" keys to `racket-insert-closing'.
-
-This is handy if you're not yet using something like
-`paredit-mode', `smartparens-mode', `parinfer-mode', or simply
-`electric-pair-mode' added in Emacs 24.5."
-  (interactive "P")
-  (let* ((do-it (not (or prefix
-                         (and (string= "#\\"
-                                       (buffer-substring-no-properties
-                                        (- (point) 2) (point) )))
-                         (racket--ppss-string-p (syntax-ppss)))))
-         (open-char  (and do-it        (racket--open-paren #'backward-up-list)))
-         (close-pair (and open-char    (assq open-char racket--matching-parens)))
-         (close-char (and close-pair   (cdr close-pair))))
-    (racket--self-insert (or close-char last-command-event))))
-
-(put 'racket-insert-closing 'delete-selection
-     #'racket--electric-pair-mode-not-active)
-
-
-;;; Smart open bracket
+Tip: When also using `paredit-mode', enable that first so that
+the binding for the `[`' key in the map for
+`racket-smart-open-bracket-mode' has higher priority. See also
+the variable `minor-mode-map-alist'."
+  :lighter " RacketSmartOpen"
+  :keymap (racket--easy-keymap-define
+           '(("[" racket-smart-open-bracket)))
+  (unless (memq major-mode '(racket-mode racket-repl-mode))
+    (setq racket-smart-open-bracket-mode nil)
+    (user-error "racket-smart-open-bracket-mode only works with with Racket Mode buffers")))
 
 (defconst racket--smart-open-bracket-data
   (eval-when-compile
@@ -210,7 +191,7 @@ This is handy if you're not yet using something like
 (defun racket--smart-open-bracket-helper (pre-backward-sexps
                                           post-backward-sexps
                                           regexp)
-  "Is point is a subform (of a known form REGEXP) that should open with '['.
+  "Is point at a subform of a known form REGEXP that should open with '['.
 
 Returns '[' or nil."
 
@@ -227,39 +208,9 @@ Returns '[' or nil."
 (defun racket-smart-open-bracket (&optional prefix)
   "Automatically insert a `(` or a `[` as appropriate.
 
-Behaves like the \"Automatically adjust opening square brackets\"
-feature in Dr. Racket:
-
-By default, inserts a `(`. Inserts a `[` in the following cases:
-
-  - `let`-like bindings -- forms with `let` in the name as well
-    as things like `parameterize`, `with-handlers`, and
-    `with-syntax`.
-
-  - `case`, `cond`, `match`, `syntax-case`, `syntax-parse`, and
-    `syntax-rules` clauses.
-
-  - `for`-like bindings and `for/fold` accumulators.
-
-  - `class` declaration syntax, such as `init` and `inherit`.
-
-When the previous s-expression in a sequence is a compound
-expression, uses the same kind of delimiter.
-
-To use, bind the `[` key to `racket-smart-open-bracket' in
-`racket-mode-map' and/or `racket-repl-mode-map'.
-
-To force insert `[`, use `quoted-insert'.
-
-Combined with `racket-insert-closing' this means that you can
-press the unshifted `[` and `]` keys to get whatever delimiters
-follow the Racket conventions for these forms. When something
-like `electric-pair-mode' or `paredit-mode' is active, you need
-not even press `]`."
+See `racket-smart-open-bracket-mode'."
   (interactive "P")
-  (let ((ch (or (and (not racket-smart-open-bracket-enable)
-                     ?\[)
-                (and (save-excursion
+  (let ((ch (or (and (save-excursion
                        (let ((pt (point)))
                          (beginning-of-defun)
                          (let ((state (parse-partial-sexp (point) pt)))
@@ -297,89 +248,6 @@ paredit is loaded, so check for this function's existence using
                ((eq ch ?\{)          (paredit-open-curly prefix))
                (t                    (racket--self-insert ch)))))))
 
-;;; paredit and reader literals
+(provide 'racket-smart-open)
 
-(defun racket--reader-literal-paredit-space-for-delimiter-predicate (endp _delimiter)
-  "`paredit-mode' shouldn't insert space beteween # and open delimiters.
-
-Examples: #() #2() #fl() #hasheq  etc.
-
-This function is a suitable element for the list variable
-`paredit-space-for-delimiter-predicates'."
-  (if (and (racket--mode-edits-racket-p)
-           (not endp))
-      (not (looking-back (rx ?# (* (or (syntax word) (syntax symbol))))
-                         nil))
-    t))
-
-(eval-after-load 'paredit
-  '(add-hook 'paredit-space-for-delimiter-predicates
-             #'racket--reader-literal-paredit-space-for-delimiter-predicate))
-
-;;; paredit and at-expressions
-
-(defun racket--at-expression-paredit-space-for-delimiter-predicate (endp delimiter)
-  "`paredit-mode' shouldn't insert space before [ or { in Racket at-expressions.
-
-This function is a suitable element for the list variable
-`paredit-space-for-delimiter-predicates'."
-  (if (and (racket--mode-edits-racket-p)
-           (not endp))
-      (not (or
-            ;; @foo[ @foo{
-            (and (memq delimiter '(?\[ ?\{))
-                 (looking-back (rx ?@ (* (or (syntax word) (syntax symbol))))
-                               nil))
-            ;; @foo[]{
-            (and (eq delimiter ?\{)
-                 (looking-back (rx ?@ (* (or (syntax word) (syntax symbol)))
-                                   ?\[
-                                   (* (or (syntax word) (syntax symbol)))
-                                   ?\])
-                               nil))))
-    t))
-
-(eval-after-load 'paredit
-  '(add-hook 'paredit-space-for-delimiter-predicates
-             #'racket--at-expression-paredit-space-for-delimiter-predicate))
-
-
-;;; Cycle paren shapes
-
-(defconst racket--paren-shapes
-  '( (?\( ?\[ ?\] )
-     (?\[ ?\{ ?\} )
-     (?\{ ?\( ?\) ))
-  "This is not user-configurable because we expect them have to
-  have actual ?\( and ?\) char syntax.")
-
-(defun racket-cycle-paren-shapes ()
-  "Cycle the sexpr among () [] {}."
-  (interactive)
-  (save-excursion
-    (unless (eq ?\( (char-syntax (char-after)))
-      (backward-up-list))
-    (pcase (assq (char-after) racket--paren-shapes)
-      (`(,_ ,open ,close)
-       (delete-char 1)
-       (insert open)
-       (backward-char 1)
-       (forward-sexp 1)
-       (backward-delete-char 1)
-       (insert close))
-      (_
-       (user-error "Don't know that paren shape")))))
-
-(defun racket--open-paren (back-func)
-  "Use BACK-FUNC to find an opening ( [ or { if any.
-BACK-FUNC should be something like #'backward-sexp or #'backward-up-list."
-  (save-excursion
-    (ignore-errors
-      (funcall back-func)
-      (let ((ch (char-after)))
-        (and (eq ?\( (char-syntax ch))
-             ch)))))
-
-(provide 'racket-parens)
-
-;; racket-parens.el ends here
+;; racket-smart-open.el ends her

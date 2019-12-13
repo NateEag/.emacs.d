@@ -204,6 +204,56 @@ buffer to run command-line Racket.
 
 ;;;***
 
+;;;### (autoloads nil "racket-smart-open" "racket-smart-open.el"
+;;;;;;  (0 0 0 0))
+;;; Generated autoloads from racket-smart-open.el
+
+(autoload 'racket-smart-open-bracket-mode "racket-smart-open" "\
+Minor mode to let you always type `[`' to insert `(` or `[` automatically.
+
+If called interactively, enable Racket-Smart-Open-Bracket mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
+
+Behaves like the \"Automatically adjust opening square brackets\"
+feature in Dr. Racket.
+
+By default, inserts a `(`. Inserts a `[` in the following cases:
+
+  - `let`-like bindings -- forms with `let` in the name as well
+    as things like `parameterize`, `with-handlers`, and
+    `with-syntax`.
+
+  - `case`, `cond`, `match`, `syntax-case`, `syntax-parse`, and
+    `syntax-rules` clauses.
+
+  - `for`-like bindings and `for/fold` accumulators.
+
+  - `class` declaration syntax, such as `init` and `inherit`.
+
+When the previous s-expression in a sequence is a compound
+expression, uses the same kind of delimiter.
+
+To force insert `[`, use `quoted-insert'.
+
+Combined with `racket-insert-closing' this means that you can
+press the unshifted `[` and `]` keys to get whatever delimiters
+follow the Racket conventions for these forms. When something
+like `electric-pair-mode' or `paredit-mode' is active, you need
+not even press `]`.
+
+Tip: When also using `paredit-mode', enable that first so that
+the binding for the `[`' key in the map for
+`racket-smart-open-bracket-mode' has higher priority. See also
+the variable `minor-mode-map-alist'.
+
+\(fn &optional ARG)" t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "racket-smart-open" '("racket-")))
+
+;;;***
+
 ;;;### (autoloads nil "racket-stepper" "racket-stepper.el" (0 0 0
 ;;;;;;  0))
 ;;; Generated autoloads from racket-stepper.el

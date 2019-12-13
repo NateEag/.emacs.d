@@ -212,7 +212,7 @@ The following values will /not/ work:
   (comint-check-proc racket--repl-buffer-name))
 
 (defvar racket--repl-before-run-hook nil
-  "Thunks to do before each `racket--repl-run' -- except an initial run.")
+  "Thunks to do before each `racket--repl-run'.")
 
 (defun racket--repl-run (&optional what-to-run context-level callback)
   "Do an initial or subsequent run.
@@ -234,10 +234,10 @@ argument whose value should be ignored.
 
 - If the REPL is live, send a 'run command to the backend's TCP
   server."
+  (run-hook-with-args 'racket--repl-before-run-hook)
   (let ((cmd (racket--repl-make-run-command (or what-to-run (racket--what-to-run))
                                             (or context-level racket-error-context))))
     (cond ((racket--repl-live-p)
-           (run-hook-with-args 'racket--repl-before-run-hook)
            (racket--cmd/async cmd callback)
            (racket--repl-show-and-move-to-end))
           (t
@@ -580,7 +580,11 @@ mark so that output goes on a fresh line, not on the same line as
 the prompt.
 
 Afterwards call `racket--repl-show-and-move-to-end'."
-  (when (and start end)
+  (unless (and start end)
+    (error "start and end must not be nil"))
+  ;; Save the current buffer in case something changes it before we
+  ;; call `comint-send-region'; see e.g. issue 407.
+  (let ((source-buffer (current-buffer)))
     (racket-repl t)
     (racket--repl-forget-errors)
     (let ((proc (get-buffer-process racket--repl-buffer-name)))
@@ -589,8 +593,9 @@ Afterwards call `racket--repl-show-and-move-to-end'."
           (goto-char (process-mark proc))
           (insert ?\n)
           (set-marker (process-mark proc) (point))))
-      (comint-send-region proc start end)
-      (comint-send-string proc "\n"))
+      (with-current-buffer source-buffer
+        (comint-send-region proc start end)
+        (comint-send-string proc "\n")))
     (racket--repl-show-and-move-to-end)))
 
 (defun racket-send-region (start end)
@@ -749,7 +754,8 @@ With prefix arg, open the N-th last shown image."
      ("M-,"             racket-unvisit)
      ("C-c C-z"         racket-repl-switch-to-edit)
      ("C-c C-l"         racket-logger)
-     ("C-c C-\\"        racket-repl-exit)))
+     ("C-c C-\\"        racket-repl-exit)
+     ((")" "]" "}")     racket-insert-closing)))
   "Keymap for Racket REPL mode.")
 
 (easy-menu-define racket-repl-mode-menu racket-repl-mode-map

@@ -1250,6 +1250,11 @@ Show log for all branches matching PATTERN and `HEAD'.
 
 \(fn PATTERN &optional ARGS FILES)" t nil)
 
+(autoload 'magit-log-matching-tags "magit-log" "\
+Show log for all tags matching PATTERN and `HEAD'.
+
+\(fn PATTERN &optional ARGS FILES)" t nil)
+
 (autoload 'magit-log-all-branches "magit-log" "\
 Show log for all local and remote branches and `HEAD'.
 
@@ -1444,7 +1449,7 @@ same differences as those shown in the buffer are always used.
 (autoload 'magit-request-pull "magit-patch" "\
 Request upstream to pull from you public repository.
 
-URL is the url of your publically accessible repository.
+URL is the url of your publicly accessible repository.
 START is a commit that already is in the upstream repository.
 END is the last commit, usually a branch name, which upstream
 is asked to pull.  START has to be reachable from that commit.
@@ -2373,6 +2378,11 @@ Checkout BRANCH in a new worktree at PATH.
 Create a new BRANCH and check it out in a new worktree at PATH.
 
 \(fn PATH BRANCH START-POINT &optional FORCE)" t nil)
+
+(autoload 'magit-worktree-move "magit-worktree" "\
+Move WORKTREE to PATH.
+
+\(fn WORKTREE PATH)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "magit-worktree" '("magit-")))
 

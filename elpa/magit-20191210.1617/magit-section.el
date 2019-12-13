@@ -173,7 +173,7 @@ entries of this alist."
 If nil, then don't show any indicators.
 Otherwise the value has to have one of these two forms:
 
-(EXPANDABLE-BITMAP . COLLAPSIBLE-BITMAP)
+\(EXPANDABLE-BITMAP . COLLAPSIBLE-BITMAP)
 
   Both values have to be variables whose values are fringe
   bitmaps.  In this case every section that can be expanded or
@@ -182,7 +182,7 @@ Otherwise the value has to have one of these two forms:
   To provide extra padding around the indicator, set
   `left-fringe-width' in `magit-mode-hook'.
 
-(STRING . BOOLEAN)
+\(STRING . BOOLEAN)
 
   In this case STRING (usually an ellipsis) is shown at the end
   of the heading of every collapsed section.  Expanded sections
@@ -204,7 +204,7 @@ Otherwise the value has to have one of these two forms:
                         (const magit-fringe-bitmap-boldv))
                  (cons  :tag "Use custom fringe indicators"
                         (variable :tag "Expandable bitmap variable")
-                        (variable :tag "Collapsable bitmap variable"))
+                        (variable :tag "Collapsible bitmap variable"))
                  (cons  :tag "Use ellipses at end of headings"
                         (string :tag "Ellipsis" "…")
                         (choice :tag "Use face kludge"
@@ -212,24 +212,40 @@ Otherwise the value has to have one of these two forms:
                                 (const :tag "No (kinda ugly)" nil)))))
 
 (defface magit-section-highlight
-  '((((class color) (background light)) :background "grey95")
-    (((class color) (background  dark)) :background "grey20"))
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
+     :background "grey95")
+    (((class color) (background  dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
+     :background "grey20"))
   "Face for highlighting the current section."
   :group 'magit-faces)
 
 (defface magit-section-heading
-  '((((class color) (background light)) :foreground "DarkGoldenrod4" :weight bold)
-    (((class color) (background  dark)) :foreground "LightGoldenrod2" :weight bold))
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
+     :foreground "DarkGoldenrod4"
+     :weight bold)
+    (((class color) (background  dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
+     :foreground "LightGoldenrod2"
+     :weight bold))
   "Face for section headings."
   :group 'magit-faces)
 
-(defface magit-section-secondary-heading '((t :weight bold))
+(defface magit-section-secondary-heading
+  `((t ,@(and (>= emacs-major-version 27) '(:extend t))
+       :weight bold))
   "Face for section headings of some secondary headings."
   :group 'magit-faces)
 
 (defface magit-section-heading-selection
-  '((((class color) (background light)) :foreground "salmon4")
-    (((class color) (background  dark)) :foreground "LightSalmon3"))
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
+     :foreground "salmon4")
+    (((class color) (background  dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
+     :foreground "LightSalmon3"))
   "Face for selected section headings."
   :group 'magit-faces)
 
@@ -309,7 +325,7 @@ The return value has the form ((TYPE . VALUE)...)."
           (and parent
                (magit-section-ident parent)))))
 
-(cl-defgeneric magit-section-ident-value (VALUE)
+(cl-defgeneric magit-section-ident-value (value)
   "Return a constant representation of VALUE.
 VALUE is the value of a `magit-section' object.  If that is an
 object itself, then that is not suitable to be used to identify
@@ -1596,7 +1612,8 @@ should not be abused for other side-effects.  To remove FUNCTION
 again use `remove-hook'."
   (unless (boundp hook)
     (error "Cannot add function to undefined hook variable %s" hook))
-  (or (default-boundp hook) (set-default hook nil))
+  (unless (default-boundp hook)
+    (set-default hook nil))
   (let ((value (if local
                    (if (local-variable-p hook)
                        (symbol-value hook)

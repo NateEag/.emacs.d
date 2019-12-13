@@ -31,7 +31,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-This manual is for Magit version 2.90.1 (v2.90.1-789-g3add5310b+1).
+This manual is for Magit version 2.90.1 (v2.90.1-810-g8c4e8ed74+1).
 
      Copyright (C) 2015-2019 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -3672,7 +3672,7 @@ Files and Blobs from a Diff:: for more information and the key bindings.
 
  -- User Option: magit-log-trace-definition-function
 
-     The function specfied by this option is used by
+     The function specified by this option is used by
      ‘magit-log-trace-definition’ to determine the function at point.
      For major-modes that have special needs, you could set the local
      value using the mode’s hook.
@@ -3793,8 +3793,8 @@ File: magit.info,  Node: Diff Options,  Next: Revision Buffer,  Prev: Commands A
 
  -- User Option: magit-diff-highlight-indentation
 
-     This option controls whether to highlight the indentaion in case it
-     used the "wrong" indentation style.  Indentation is only
+     This option controls whether to highlight the indentation in case
+     it used the "wrong" indentation style.  Indentation is only
      highlighted if ‘magit-diff-paint-whitespace’ is also non-nil.
 
      The value is an alist of the form ‘((REGEXP . INDENT)...)’.  The
@@ -7718,6 +7718,10 @@ Also see *note (gitman)git-worktree::.
 ‘% c’     (‘magit-worktree-branch’)
 
      Create a new BRANCH and check it out in a new worktree at PATH.
+
+‘% m’     (‘magit-worktree-move’)
+
+     Move an existing worktree to a new PATH.
 
 ‘% k’     (‘magit-worktree-delete’)
 

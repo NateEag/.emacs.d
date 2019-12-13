@@ -161,11 +161,13 @@ Contributors
 - Jesse Alama <jesse.alama@gmail.com>
 - Jim Blandy <jimb@red-bean.com>
 - Joakim Jalap <JOJA@stoneridge.com>
+- Johannes Altmanninger <aclopte@gmail.com>
 - Johann Klähn <kljohann@gmail.com>
 - John Mastro <john.b.mastro@gmail.com>
 - John Morris <john@zultron.com>
 - John Wiegley <johnw@newartisans.com>
 - Jonas Bernoulli <jonas@bernoul.li>
+- Jonathan Arnett <jonathan@scriptdrop.co>
 - Jonathan Leech-Pepin <jonathan.leechpepin@gmail.com>
 - Jonathan Roes <jroes@jroes.net>
 - Jon Vanderwijk <jonathn@github.com>
@@ -182,6 +184,7 @@ Contributors
 - Kenny Ballou <kballou@devnulllabs.io>
 - Keshav Kini <keshav.kini@gmail.com>
 - Kevin Brubeck Unhammer <unhammer@fsfe.org>
+- Kevin J. Foley <kfoley15@gmail.com>
 - Kévin Le Gouguec <kevin.legouguec@gmail.com>
 - Kimberly Wolk <kimwolk@hotmail.com>
 - Knut Olav Bøhmer <bohmer@gmail.com>
@@ -225,6 +228,7 @@ Contributors
 - Miloš Mošić <mosic.milos@gmail.com>
 - Mitchel Humpherys <mitch.special@gmail.com>
 - Moritz Bunkus <moritz@bunkus.org>
+- Naoya Yamashita <conao3@gmail.com>
 - Natalie Weizenbaum <nex342@gmail.com>
 - Nguyễn Tuấn Anh <ubolonton@gmail.com>
 - Nic Ferier <nic@ferrier.me.uk>

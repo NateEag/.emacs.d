@@ -127,7 +127,7 @@ This function should not be removed from the value of this option.
 
 `magit-diff-highlight-hunk-region-using-overlays' and
 `magit-diff-highlight-hunk-region-using-underline' emphasize the
-region by placing delimiting horizonal lines before and after it.
+region by placing delimiting horizontal lines before and after it.
 The underline variant was implemented because Eli said that is
 how we should do it.  However the overlay variant actually works
 better.  Also see https://github.com/magit/magit/issues/2758.
@@ -489,72 +489,96 @@ If you prefer the old behaviors, then set this to t."
 ;;; Faces
 
 (defface magit-diff-file-heading
-  '((t :weight bold))
+  `((t ,@(and (>= emacs-major-version 27) '(:extend t))
+       :weight bold))
   "Face for diff file headings."
   :group 'magit-faces)
 
 (defface magit-diff-file-heading-highlight
-  '((t :inherit (magit-section-highlight)))
+  `((t ,@(and (>= emacs-major-version 27) '(:extend t))
+       :inherit magit-section-highlight))
   "Face for current diff file headings."
   :group 'magit-faces)
 
 (defface magit-diff-file-heading-selection
-  '((((class color) (background light))
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :inherit magit-diff-file-heading-highlight
      :foreground "salmon4")
     (((class color) (background dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :inherit magit-diff-file-heading-highlight
      :foreground "LightSalmon3"))
   "Face for selected diff file headings."
   :group 'magit-faces)
 
 (defface magit-diff-hunk-heading
-  '((((class color) (background light))
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :background "grey80"
      :foreground "grey30")
     (((class color) (background dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :background "grey25"
      :foreground "grey70"))
   "Face for diff hunk headings."
   :group 'magit-faces)
 
 (defface magit-diff-hunk-heading-highlight
-  '((((class color) (background light))
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :background "grey75"
      :foreground "grey30")
     (((class color) (background dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :background "grey35"
      :foreground "grey70"))
   "Face for current diff hunk headings."
   :group 'magit-faces)
 
 (defface magit-diff-hunk-heading-selection
-  '((((class color) (background light))
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :inherit magit-diff-hunk-heading-highlight
      :foreground "salmon4")
     (((class color) (background dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :inherit magit-diff-hunk-heading-highlight
      :foreground "LightSalmon3"))
   "Face for selected diff hunk headings."
   :group 'magit-faces)
 
 (defface magit-diff-hunk-region
-  '((t :inherit bold))
+  `((t :inherit bold
+       ,@(and (>= emacs-major-version 27)
+              (list :extend (ignore-errors (face-attribute 'region :extend))))))
   "Face used by `magit-diff-highlight-hunk-region-using-face'.
 
-This face is overlayed over text that uses other hunk faces,
+This face is overlaid over text that uses other hunk faces,
 and those normally set the foreground and background colors.
 The `:foreground' and especially the `:background' properties
 should be avoided here.  Setting the latter would cause the
-lose of information.  Good properties to set here are `:weight'
+loss of information.  Good properties to set here are `:weight'
 and `:slant'."
   :group 'magit-faces)
 
+(defface magit-diff-revision-summary
+  '((t :inherit magit-diff-hunk-heading))
+  "Face for commit message summaries."
+  :group 'magit-faces)
+
+(defface magit-diff-revision-summary-highlight
+  '((t :inherit magit-diff-hunk-heading-highlight))
+  "Face for highlighted commit message summaries."
+  :group 'magit-faces)
+
 (defface magit-diff-lines-heading
-  '((((class color) (background light))
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :inherit magit-diff-hunk-heading-highlight
      :background "LightSalmon3")
     (((class color) (background dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :inherit magit-diff-hunk-heading-highlight
      :foreground "grey80"
      :background "salmon4"))
@@ -562,7 +586,8 @@ and `:slant'."
   :group 'magit-faces)
 
 (defface magit-diff-lines-boundary
-  '((t :inherit magit-diff-lines-heading))
+  `((t ,@(and (>= emacs-major-version 27) '(:extend t)) ; !important
+       :inherit magit-diff-lines-heading))
   "Face for boundary of marked lines in diff hunk."
   :group 'magit-faces)
 
@@ -572,22 +597,26 @@ and `:slant'."
   :group 'magit-faces)
 
 (defface magit-diff-added
-  '((((class color) (background light))
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :background "#ddffdd"
      :foreground "#22aa22")
     (((class color) (background dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :background "#335533"
      :foreground "#ddffdd"))
   "Face for lines in a diff that have been added."
   :group 'magit-faces)
 
 (defface magit-diff-removed
- '((((class color) (background light))
-    :background "#ffdddd"
-    :foreground "#aa2222")
-   (((class color) (background dark))
-    :background "#553333"
-    :foreground "#ffdddd"))
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
+     :background "#ffdddd"
+     :foreground "#aa2222")
+    (((class color) (background dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
+     :background "#553333"
+     :foreground "#ffdddd"))
   "Face for lines in a diff that have been removed."
   :group 'magit-faces)
 
@@ -597,10 +626,12 @@ and `:slant'."
   :group 'magit-faces)
 
 (defface magit-diff-base
-  '((((class color) (background light))
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :background "#ffffcc"
      :foreground "#aaaa11")
     (((class color) (background dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :background "#555522"
      :foreground "#ffffcc"))
   "Face for lines in a diff for the base side in a conflict."
@@ -612,26 +643,34 @@ and `:slant'."
   :group 'magit-faces)
 
 (defface magit-diff-context
-  '((((class color) (background light)) :foreground "grey50")
-    (((class color) (background  dark)) :foreground "grey70"))
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
+     :foreground "grey50")
+    (((class color) (background  dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
+     :foreground "grey70"))
   "Face for lines in a diff that are unchanged."
   :group 'magit-faces)
 
 (defface magit-diff-added-highlight
-  '((((class color) (background light))
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :background "#cceecc"
      :foreground "#22aa22")
     (((class color) (background dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :background "#336633"
      :foreground "#cceecc"))
   "Face for lines in a diff that have been added."
   :group 'magit-faces)
 
 (defface magit-diff-removed-highlight
-  '((((class color) (background light))
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :background "#eecccc"
      :foreground "#aa2222")
     (((class color) (background dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :background "#663333"
      :foreground "#eecccc"))
   "Face for lines in a diff that have been removed."
@@ -643,10 +682,12 @@ and `:slant'."
   :group 'magit-faces)
 
 (defface magit-diff-base-highlight
-  '((((class color) (background light))
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :background "#eeeebb"
      :foreground "#aaaa11")
     (((class color) (background dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :background "#666622"
      :foreground "#eeeebb"))
   "Face for lines in a diff for the base side in a conflict."
@@ -658,10 +699,12 @@ and `:slant'."
   :group 'magit-faces)
 
 (defface magit-diff-context-highlight
-  '((((class color) (background light))
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :background "grey95"
      :foreground "grey50")
     (((class color) (background dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :background "grey20"
      :foreground "grey70"))
   "Face for lines in the current context in a diff."
@@ -2300,7 +2343,7 @@ or a ref which is not a branch, then it inserts nothing."
 (defun magit-insert-revision-message ()
   "Insert the commit message into a revision buffer."
   (magit-insert-section section (commit-message)
-    (oset section heading-highlight-face 'magit-diff-hunk-heading-highlight)
+    (oset section heading-highlight-face 'magit-diff-revision-summary-highlight)
     (let ((beg (point))
           (rev magit-buffer-revision))
       (insert (with-temp-buffer
@@ -2347,7 +2390,8 @@ or a ref which is not a branch, then it inserts nothing."
                           (goto-char end))))))))))
         (save-excursion
           (forward-line)
-          (magit--add-face-text-property beg (point) 'magit-diff-hunk-heading)
+          (magit--add-face-text-property
+           beg (point) 'magit-diff-revision-summary)
           (magit-insert-heading))
         (when magit-diff-highlight-keywords
           (save-excursion
@@ -2991,7 +3035,8 @@ for added and removed lines as for context lines."
                   'magit-diff-context-highlight
                 'magit-diff-context)))
     (when magit-diff-unmarked-lines-keep-foreground
-      (setq face (list :background (face-attribute face :background))))
+      (setq face `(,@(and (>= emacs-major-version 27) '(:extend t))
+                   :background ,(face-attribute face :background))))
     (magit-diff--make-hunk-overlay (oref section content)
                                    (magit-diff-hunk-region-beginning)
                                    'font-lock-face face

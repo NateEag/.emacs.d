@@ -81,7 +81,7 @@ Also stage the file."
   (magit-with-toplevel
     (let ((file (expand-file-name ".gitignore" directory)))
       (magit--gitignore rule file)
-      (magit-run-git "add" ".gitignore"))))
+      (magit-run-git "add" file))))
 
 ;;;###autoload
 (defun magit-gitignore-in-gitdir (rule)
@@ -116,14 +116,25 @@ Rules that are defined in that file affect all local repositories."
 
 (defun magit-gitignore-read-pattern ()
   (let* ((default (magit-current-file))
+         (base (car magit-buffer-diff-files))
+         (base (and base (file-directory-p base) base))
          (choices
           (delete-dups
            (--mapcat
             (cons (concat "/" it)
                   (when-let ((ext (file-name-extension it)))
-                    (list (concat "/" (file-name-directory "foo") "*." ext)
+                    (list (concat "/" (file-name-directory it) "*." ext)
                           (concat "*." ext))))
-            (magit-untracked-files)))))
+            (sort (nconc
+                   (magit-untracked-files nil base)
+                   ;; The untracked section of the status buffer lists
+                   ;; directories containing only untracked files.
+                   ;; Add those as candidates.
+                   (-filter #'directory-name-p
+                            (magit-list-files
+                             "--other" "--exclude-standard" "--directory"
+                             "--no-empty-directory" "--" base)))
+                  #'string-lessp)))))
     (when default
       (setq default (concat "/" default))
       (unless (member default choices)

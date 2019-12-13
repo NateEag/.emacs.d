@@ -161,10 +161,12 @@ and then turned on again when turning off the latter."
 ;;; Faces
 
 (defface magit-blame-highlight
-  '((((class color) (background light))
+  `((((class color) (background light))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :background "grey80"
      :foreground "black")
     (((class color) (background dark))
+     ,@(and (>= emacs-major-version 27) '(:extend t))
      :background "grey25"
      :foreground "white"))
   "Face used for highlighting when blaming.
@@ -188,7 +190,8 @@ Also see option `magit-blame-styles'."
   :group 'magit-faces)
 
 (defface magit-blame-heading
-  '((t :inherit magit-blame-highlight
+  `((t ,@(and (>= emacs-major-version 27) '(:extend t))
+       :inherit magit-blame-highlight
        :weight normal
        :slant normal))
   "Face used for blame headings by default when blaming.
@@ -324,10 +327,10 @@ in `magit-blame-read-only-mode-map' instead.")
            (user-error
             (concat "Don't call `magit-blame-mode' directly; "
                     "instead use `magit-blame'")))
-         (add-hook 'after-save-hook     'magit-blame--run t t)
+         (add-hook 'after-save-hook     'magit-blame--refresh t t)
          (add-hook 'post-command-hook   'magit-blame-goto-chunk-hook t t)
          (add-hook 'before-revert-hook  'magit-blame--remove-overlays t t)
-         (add-hook 'after-revert-hook   'magit-blame--run t t)
+         (add-hook 'after-revert-hook   'magit-blame--refresh t t)
          (add-hook 'read-only-mode-hook 'magit-blame-toggle-read-only t t)
          (setq magit-blame-buffer-read-only buffer-read-only)
          (when (or magit-blame-read-only magit-buffer-file-name)
@@ -344,11 +347,11 @@ in `magit-blame-read-only-mode-map' instead.")
          (when (process-live-p magit-blame-process)
            (kill-process magit-blame-process)
            (while magit-blame-process
-             (sit-for 0.01))) ; avoid racing the sentinal
-         (remove-hook 'after-save-hook     'magit-blame--run t)
+             (sit-for 0.01))) ; avoid racing the sentinel
+         (remove-hook 'after-save-hook     'magit-blame--refresh t)
          (remove-hook 'post-command-hook   'magit-blame-goto-chunk-hook t)
          (remove-hook 'before-revert-hook  'magit-blame--remove-overlays t)
-         (remove-hook 'after-revert-hook   'magit-blame--run t)
+         (remove-hook 'after-revert-hook   'magit-blame--refresh t)
          (remove-hook 'read-only-mode-hook 'magit-blame-toggle-read-only t)
          (unless magit-blame-buffer-read-only
            (read-only-mode -1))
@@ -360,6 +363,9 @@ in `magit-blame-read-only-mode-map' instead.")
          (kill-local-variable 'magit-blame--style)
          (magit-blame--update-margin)
          (magit-blame--remove-overlays))))
+
+(defun magit-blame--refresh ()
+  (magit-blame--run (magit-blame-arguments)))
 
 (defun magit-blame-goto-chunk-hook ()
   (let ((chunk (magit-blame-chunk-at (point))))
@@ -884,7 +890,7 @@ When the region is active, then save the region's content
 instead of the hash, like `kill-ring-save' would."
   (interactive)
   (if (use-region-p)
-      (copy-region-as-kill nil nil 'region)
+      (call-interactively #'copy-region-as-kill)
     (kill-new (message "%s" (oref (magit-current-blame-chunk) orig-rev)))))
 
 ;;; Popup

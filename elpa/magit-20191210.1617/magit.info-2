@@ -2072,8 +2072,9 @@ Appendix C Keystroke Index
 * %:                                     Worktree.            (line   8)
 * % b:                                   Worktree.            (line  13)
 * % c:                                   Worktree.            (line  17)
-* % g:                                   Worktree.            (line  26)
-* % k:                                   Worktree.            (line  21)
+* % g:                                   Worktree.            (line  30)
+* % k:                                   Worktree.            (line  25)
+* % m:                                   Worktree.            (line  21)
 * +:                                     Log Buffer.          (line  61)
 * + <1>:                                 Refreshing Diffs.    (line  69)
 * -:                                     Log Buffer.          (line  65)
@@ -3012,8 +3013,9 @@ Appendix D Command Index
 * magit-worktree:                        Worktree.            (line   8)
 * magit-worktree-branch:                 Worktree.            (line  17)
 * magit-worktree-checkout:               Worktree.            (line  13)
-* magit-worktree-delete:                 Worktree.            (line  21)
-* magit-worktree-status:                 Worktree.            (line  26)
+* magit-worktree-delete:                 Worktree.            (line  25)
+* magit-worktree-move:                   Worktree.            (line  21)
+* magit-worktree-status:                 Worktree.            (line  30)
 * scroll-down:                           Commands Available in Diffs.
                                                               (line  60)
 * scroll-up:                             Commands Available in Diffs.

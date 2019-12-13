@@ -54,6 +54,8 @@
 (declare-function magit-status-goto-initial-section "magit-status" ())
 ;; For `magit-mode' from `bookmark'
 (defvar bookmark-make-record-function)
+;; For `magit-mode' from third-party `symbol-overlay'
+(defvar symbol-overlay-inhibit-map)
 
 (require 'format-spec)
 (require 'help-mode)
@@ -377,11 +379,11 @@ starts complicating other things, then it will be removed."
 (defcustom magit-disable-line-numbers t
   "In Magit buffers, whether to disable modes that display line numbers.
 
-Some users who turn on `global-disable-line-numbers-mode' (or
+Some users who turn on `global-display-line-numbers-mode' (or
 `global-nlinum-mode' or `global-linum-mode') expect line numbers
-to be displayed everywhere except in Magit buffers.  Other users do
-not expect Magit buffers to be treated differently.  At least in
-theory users in the first group should not use the global mode,
+to be displayed everywhere except in Magit buffers.  Other users
+do not expect Magit buffers to be treated differently.  At least
+in theory users in the first group should not use the global mode,
 but that ship has sailed, thus this option."
   :package-version '(magit . "2.91.0")
   :group 'magit-miscellaneous
@@ -610,6 +612,7 @@ Magit is documented in info node `(magit)'."
   ;; not all magit plugins may be ready for that (see #3950).
   (setq-local font-lock-syntactic-face-function #'ignore)
   (setq show-trailing-whitespace nil)
+  (setq-local symbol-overlay-inhibit-map t)
   (setq list-buffers-directory (abbreviate-file-name default-directory))
   (hack-dir-local-variables-non-file-buffer)
   (make-local-variable 'text-property-default-nonsticky)
@@ -1337,10 +1340,13 @@ argument (the prefix) non-nil means save all with no questions."
        arg (lambda ()
              (and (not magit-inhibit-refresh-save)
                   buffer-file-name
-                  (file-exists-p (file-name-directory buffer-file-name))
                   ;; Avoid needlessly connecting to unrelated remotes.
                   (equal (file-remote-p buffer-file-name)
                          remote)
+                  ;; For remote files this makes network requests and
+                  ;; therefore has to come after the above to avoid
+                  ;; unnecessarily waiting for unrelated hosts.
+                  (file-exists-p (file-name-directory buffer-file-name))
                   (string-prefix-p topdir (file-truename buffer-file-name))
                   (equal (magit-rev-parse-safe "--show-toplevel")
                          topdir)))))))

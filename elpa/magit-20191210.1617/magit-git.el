@@ -187,7 +187,7 @@ know what you are doing.  And think very hard before adding
 something; it will be used every time Magit runs Git for any
 purpose."
   :package-version '(magit . "2.9.0")
-  :group 'magit-git-arguments
+  :group 'magit-commands
   :group 'magit-process
   :type '(repeat string))
 
@@ -1024,9 +1024,11 @@ are considered."
   (not (magit-module-worktree-p module)))
 
 (defun magit-ignore-submodules-p ()
-  (cl-find-if (lambda (arg)
-                (string-prefix-p "--ignore-submodules" arg))
-              magit-buffer-diff-args))
+  (or (cl-find-if (lambda (arg)
+                    (string-prefix-p "--ignore-submodules" arg))
+                  magit-buffer-diff-args)
+      (when-let ((value (magit-get "diff.ignoreSubmodules")))
+        (concat "diff.ignoreSubmodules=" value))))
 
 ;;; Revisions and References
 
@@ -1175,7 +1177,7 @@ Git."
          (substring it 5))))
 
 (defun magit-ref-abbrev (refname)
-  "Return an unambigious abbreviation of REFNAME."
+  "Return an unambiguous abbreviation of REFNAME."
   (magit-rev-parse "--verify" "--abbrev-ref" refname))
 
 (defun magit-ref-fullname (refname)
@@ -1191,7 +1193,7 @@ If REFNAME is ambiguous, return nil."
 
 (defun magit-ref-maybe-qualify (refname &optional prefix)
   "If REFNAME is ambiguous, try to disambiguate it by prepend PREFIX to it.
-Return an unambigious refname, either REFNAME or that prefixed
+Return an unambiguous refname, either REFNAME or that prefixed
 with PREFIX, nil otherwise.  If REFNAME has an offset suffix
 such as \"~1\", then that is preserved.  If optional PREFIX is
 nil, then use \"heads/\".  "
@@ -1587,23 +1589,23 @@ SORTBY is a key or list of keys to pass to the `--sort' flag of
 (defun magit-list-remote-branches (&optional remote)
   (magit-list-refs (concat "refs/remotes/" remote)))
 
-(defun magit-list-related-branches (relation &optional commit arg)
+(defun magit-list-related-branches (relation &optional commit &rest args)
   (--remove (string-match-p "\\(\\`(HEAD\\|HEAD -> \\)" it)
             (--map (substring it 2)
-                   (magit-git-lines "branch" arg relation commit))))
+                   (magit-git-lines "branch" args relation commit))))
 
-(defun magit-list-containing-branches (&optional commit arg)
-  (magit-list-related-branches "--contains" commit arg))
+(defun magit-list-containing-branches (&optional commit &rest args)
+  (magit-list-related-branches "--contains" commit args))
 
 (defun magit-list-publishing-branches (&optional commit)
   (--filter (magit-rev-ancestor-p commit it)
             magit-published-branches))
 
-(defun magit-list-merged-branches (&optional commit arg)
-  (magit-list-related-branches "--merged" commit arg))
+(defun magit-list-merged-branches (&optional commit &rest args)
+  (magit-list-related-branches "--merged" commit args))
 
-(defun magit-list-unmerged-branches (&optional commit arg)
-  (magit-list-related-branches "--no-merged" commit arg))
+(defun magit-list-unmerged-branches (&optional commit &rest args)
+  (magit-list-related-branches "--no-merged" commit args))
 
 (defun magit-list-unmerged-to-upstream-branches ()
   (--filter (when-let ((upstream (magit-get-upstream-branch it)))

@@ -403,6 +403,18 @@ Show a list of all supported font families for a particular frame.
 
 You can insert or kill the name of the selected font." t nil)
 
+(autoload 'counsel-kmacro "counsel" "\
+Interactively choose and run a keyboard macro.
+
+With prefix argument, run macro that many times.
+
+Macros are run using the current value of `kmacro-counter-value-start' their defined format.
+One can use actions to copy the counter format or initial counter value of a command,
+using them for the next defined macro." t nil)
+
+(autoload 'counsel-geiser-doc-look-up-manual "counsel" "\
+Search Scheme documentation." t nil)
+
 (autoload 'counsel-rhythmbox "counsel" "\
 Choose a song from the Rhythmbox library to play or enqueue.
 
@@ -449,6 +461,9 @@ Additional actions:\\<ivy-minibuffer-map>
   \\[ivy-dispatching-done] h: Describe minor mode" t nil)
 
 (autoload 'counsel-major "counsel" nil t nil)
+
+(autoload 'counsel-compilation-errors "counsel" "\
+Compilation errors." t nil)
 
 (defvar counsel-mode nil "\
 Non-nil if Counsel mode is enabled.

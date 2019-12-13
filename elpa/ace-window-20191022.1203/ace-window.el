@@ -5,7 +5,7 @@
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; Maintainer: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Package-Version: 20190708.933
+;; Package-Version: 20191022.1203
 ;; Version: 0.9.0
 ;; Package-Requires: ((avy "0.2.0"))
 ;; Keywords: window, location
@@ -628,6 +628,7 @@ Amend MODE-LINE to the mode line for the duration of the selection."
 Perform an action based on ARG described below.
 
 By default, behaves like extended `other-window'.
+See `aw-scope' which extends it to work with frames.
 
 Prefixed with one \\[universal-argument], does a swap between the
 selected window and the current window, so that the selected

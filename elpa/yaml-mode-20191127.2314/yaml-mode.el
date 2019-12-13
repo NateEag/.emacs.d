@@ -6,7 +6,7 @@
 ;;         Marshall T. Vandegrift <llasram@gmail.com>
 ;; Maintainer: Vasilij Schneidermann <v.schneidermann@gmail.com>
 ;; Package-Requires: ((emacs "24.1"))
-;; Package-Version: 20190625.1740
+;; Package-Version: 20191127.2314
 ;; Keywords: data yaml
 ;; Version: 0.0.14
 
@@ -287,7 +287,7 @@ line in the match data, as consumed by `font-lock-keywords' matcher
 functions.  The function begins by searching backwards to determine
 whether or not the current line is within a block literal.  This could
 be time-consuming in large buffers, so the number of lines searched is
-artificially limitted to the value of
+artificially limited to the value of
 `yaml-block-literal-search-lines'."
   (if (eolp) (goto-char (1+ (point))))
   (unless (or (eobp) (>= (point) bound))

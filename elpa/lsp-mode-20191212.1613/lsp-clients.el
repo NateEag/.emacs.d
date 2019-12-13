@@ -1,4 +1,4 @@
-;;; lsp.el --- LSP mode                              -*- lexical-binding: t; -*-
+;;; lsp-clients.el --- lightweight clients                       -*- lexical-binding: t; -*-
 
 ;; Copyright (C) 2018 Ivan Yonchovski
 
@@ -27,6 +27,7 @@
 (require 'lsp)
 (require 'dash)
 (require 'dash-functional)
+(require 'rx)
 (require 'lsp-pyls)
 (require 'lsp-rust)
 (require 'lsp-solargraph)
@@ -43,6 +44,11 @@
 (require 'lsp-erlang)
 (require 'lsp-haxe)
 (require 'lsp-vhdl)
+(require 'lsp-yaml)
+(require 'lsp-terraform)
+(require 'lsp-pwsh)
+(require 'lsp-csharp)
+(require 'lsp-json)
 
 ;;; Ada
 (defgroup lsp-ada nil
@@ -88,10 +94,33 @@
                   :server-id 'ada-ls))
 
 ;;; Bash
+(defgroup lsp-bash nil
+  "Settings for the Bash Language Server."
+  :group 'tools
+  :tag "Language Server"
+  :package-version '(lsp-mode . "6.2"))
+
+(defcustom lsp-bash-explainshell-endpoint nil
+  "The endpoint to use explainshell.com to answer 'onHover' queries.
+See instructions at https://marketplace.visualstudio.com/items?itemName=mads-hartmann.bash-ide-vscode"
+  :type 'string
+  :risky t
+  :group 'lsp-bash
+  :package-version '(lsp-mode . "6.2"))
+
+(defcustom lsp-bash-highlight-parsing-errors nil
+  "Consider parsing errors in scripts as 'problems'."
+  :type 'boolean
+  :group 'lsp-bash
+  :package-version '(lsp-mode . "6.2"))
+
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection '("bash-language-server" "start"))
                   :major-modes '(sh-mode)
                   :priority -1
+                  :environment-fn (lambda ()
+                                    '(("EXPLAINSHELL_ENDPOINT" . lsp-bash-explainshell-endpoint)
+                                      ("HIGHLIGHT_PARSING_ERRORS" . lsp-bash-highlight-parsing-errors)))
                   :server-id 'bash-ls))
 
 ;;; Groovy
@@ -143,7 +172,8 @@ finding the executable with variable `exec-path'."
 
 (defun lsp-typescript-javascript-tsx-jsx-activate-p (filename &optional _)
   "Check if the javascript-typescript language server should be enabled based on FILENAME."
-  (string-match-p (rx (one-or-more anything) "." (or "ts" "js") (opt "x") string-end) filename))
+  (or (string-match-p (rx (one-or-more anything) "." (or "ts" "js") (opt "x") string-end) filename)
+      (derived-mode-p 'js-mode 'js2-mode 'typescript-mode)))
 
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection (lambda ()
@@ -176,7 +206,7 @@ finding the executable with variable `exec-path'."
   :type '(repeat string))
 
 (defcustom lsp-clients-typescript-log-verbosity "info"
-  "The server log verbocity."
+  "The server log verbosity."
   :group 'lsp-typescript
   :type 'string)
 
@@ -203,6 +233,7 @@ directory containing the package. Example:
                                                                 lsp-clients-typescript-server-args)))
                   :activation-fn 'lsp-typescript-javascript-tsx-jsx-activate-p
                   :priority -2
+                  :completion-in-comments? t
                   :initialization-options (lambda ()
                                             (list :plugins lsp-clients-typescript-plugins
                                                   :logVerbosity lsp-clients-typescript-log-verbosity))
@@ -300,11 +331,26 @@ particular FILE-NAME and MODE."
   `("php" ,(expand-file-name "~/.composer/vendor/felixfbecker/language-server/bin/php-language-server.php"))
   "Install directory for php-language-server."
   :group 'lsp-php
-  :type 'file)
+  :type '(repeat string))
+
+(defun lsp-php--create-connection ()
+  "Create lsp connection."
+  (plist-put
+   (lsp-stdio-connection
+    (lambda () lsp-clients-php-server-command))
+   :test? (lambda ()
+            (if (and (cdr lsp-clients-php-server-command)
+                     (eq (string-match-p "php[0-9.]*\\'" (car lsp-clients-php-server-command)) 0))
+                ;; Start with the php command and the list has more elems. Test the existence of the PHP script.
+                (let ((php-file (nth 1 lsp-clients-php-server-command)))
+                  (or (file-exists-p php-file)
+                      (progn
+                        (lsp-log "%s is not present." php-file)
+                        nil)))
+              t))))
 
 (lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection
-                                   (lambda () lsp-clients-php-server-command))
+ (make-lsp-client :new-connection (lsp-php--create-connection)
                   :major-modes '(php-mode)
                   :priority -2
                   :server-id 'php-ls))
@@ -336,6 +382,28 @@ particular FILE-NAME and MODE."
                   :major-modes '(reason-mode caml-mode tuareg-mode)
                   :priority -1
                   :server-id 'ocaml-ls))
+
+(defgroup lsp-merlin nil
+  "LSP support for OCaml, using merlin."
+  :group 'lsp-mode
+  :link '(url-link "https://github.com/ocaml/merlin"))
+
+(defcustom lsp-merlin-command
+  '("ocamlmerlin-lsp")
+  "Command to start ocaml-language-server."
+  :group 'lsp-ocaml
+  :type '(choice
+          (string :tag "Single string value")
+          (repeat :tag "List of string values"
+                  string)))
+
+(lsp-register-client
+ (make-lsp-client
+  :new-connection
+  (lsp-stdio-connection (lambda () lsp-merlin-command))
+  :major-modes '(caml-mode tuareg-mode)
+  :priority 0
+  :server-id 'merlin))
 
 
 ;; C-family (C, C++, Objective-C, Objective-C++)
@@ -369,13 +437,6 @@ finding the executable with `exec-path'."
                   :major-modes '(c-mode c++-mode objc-mode)
                   :priority -1
                   :server-id 'clangd))
-
-(defun lsp-clients-register-clangd ()
-  (warn "This call is no longer needed. clangd is now automatically registered. Delete lsp-clients-register-clangd call from your config."))
-
-(make-obsolete 'lsp-clients-register-clangd
-               "This function is no longer needed, as clangd is now automatically registered."
-               "lsp-mode 6.1")
 
 ;; Elixir
 (defgroup lsp-elixir nil
@@ -456,7 +517,7 @@ finding the executable with `exec-path'."
   :group 'lsp-kotlin
   :package-version '(lsp-mode . "6.1"))
 
-(defcustom lsp-kotlin-compiler-jvm-target "default"
+(defcustom lsp-kotlin-compiler-jvm-target "1.8"
   "Specifies the JVM target, e.g. \"1.6\" or \"1.8\""
   :type 'string
   :group 'lsp-kotlin
@@ -581,30 +642,6 @@ responsiveness at the cost of possibile stability issues."
                   :add-on? t
                   :server-id 'angular-ls))
 
-;;; C-sharp
-(defgroup lsp-csharp nil
-  "LSP support for C#, using the Omnisharp Language Server. Version 1.34.3 minimum required."
-  :group 'lsp-mode
-  :link '(url-link "https://github.com/OmniSharp/omnisharp-roslyn"))
-
-(defcustom lsp-clients-csharp-language-server-path
-  (expand-file-name "~/.omnisharp/omnisharp/omnisharp/OmniSharp.exe")
-  "The path to the OmnisSharp Roslyn language-server."
-  :group 'lsp-csharp
-  :type '(string :tag "Single string value"))
-
-(defun lsp-clients-csharp-language-server-command ()
-  (if (eq system-type 'windows-nt)
-      (list lsp-clients-csharp-language-server-path "-lsp")
-    (list "mono" lsp-clients-csharp-language-server-path "-lsp")))
-
-(lsp-register-client
- (make-lsp-client :new-connection (lsp-stdio-connection
-                                   #'lsp-clients-csharp-language-server-command)
-                  :major-modes '(csharp-mode)
-                  :server-id 'csharp))
-
-
 
 ;; TeX
 (defgroup lsp-tex nil
@@ -625,13 +662,44 @@ responsiveness at the cost of possibile stability issues."
                   :server-id 'digestif))
 
 
+;; Vim script
+(defgroup lsp-vim nil
+  "LSP support for TeX and friends, using Digestif."
+  :group 'lsp-mode)
+
+(defcustom lsp-clients-vim-executable '("vim-language-server" "--stdio")
+  "Command to start the Digestif language server."
+  :group 'lsp-vim
+  :risky t
+  :type 'file)
+
+(defcustom lsp-clients-vim-initialization-options '((iskeyword . "vim iskeyword option")
+                                                    (vimruntime . "/usr/bin/vim")
+                                                    (runtimepath . "/usr/bin/vim")
+                                                    (diagnostic . ((enable . t)))
+                                                    (indexes . ((runtimepath . t)
+                                                                (gap . 100)
+                                                                (count . 3)))
+                                                    (suggest . ((fromVimruntime . t)
+                                                                (fromRuntimepath . :json-false))))
+  "Initialization options for vim language server."
+  :group 'lsp-vim
+  :type 'alist)
+
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-stdio-connection lsp-clients-vim-executable)
+                  :major-modes '(vimrc-mode)
+                  :priority -1
+                  :server-id 'vimls
+                  :initialization-options (lambda ()
+                                            lsp-clients-vim-initialization-options)))
+
+
 ;; LUA
 (defgroup lsp-emmy-lua nil
   "LSP support for emmy-lua."
   :group 'lsp-mode
   :link '(url-link "https://github.com/EmmyLua/EmmyLua-LanguageServer"))
-
-
 
 (defcustom lsp-clients-emmy-lua-java-path "java"
   "Path to java which will be used for running emmy-lua language server."
@@ -660,6 +728,42 @@ responsiveness at the cost of possibile stability issues."
                   :priority -1
                   :server-id 'emmy-lua
                   :notification-handlers (lsp-ht ("emmy/progressReport" #'ignore))))
+
+
+;; R
+(defgroup lsp-r nil
+  "LSP support for R."
+  :group 'lsp-mode
+  :link '(url-link "https://github.com/REditorSupport/languageserver"))
+
+(defcustom lsp-clients-r-server-command '("R" "--slave" "-e" "languageserver::run()")
+  "Command to start the R language server."
+  :group 'lsp-r
+  :risky t
+  :type '(repeat string))
+
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-stdio-connection lsp-clients-r-server-command)
+                  :major-modes '(ess-r-mode)
+                  :server-id 'lsp-r))
+
+
+;; Crystal
+(defgroup lsp-crystal nil
+  "LSP support for Crystal via scry."
+  :group 'lsp-mode
+  :link '(url-link "https://github.com/crystal-lang-tools/scry"))
+
+(defcustom lsp-clients-crystal-executable '("scry" "--stdio")
+  "Command to start the scry language server."
+  :group 'lsp-crystal
+  :risky t
+  :type 'file)
+
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-stdio-connection lsp-clients-crystal-executable)
+                  :major-modes '(crystal-mode)
+                  :server-id 'scry))
 
 (provide 'lsp-clients)
 ;;; lsp-clients.el ends here

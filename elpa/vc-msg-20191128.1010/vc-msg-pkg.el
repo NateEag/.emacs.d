@@ -1,5 +1,5 @@
-(define-package "vc-msg" "20180605.58" "Show commit information of current line"
-  '((emacs "24.3")
+(define-package "vc-msg" "20191128.1010" "Show commit information of current line"
+  '((emacs "24.4")
     (popup "0.5.0"))
   :keywords
   '("git" "vc" "svn" "hg" "messenger")

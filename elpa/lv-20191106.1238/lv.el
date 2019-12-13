@@ -1,5 +1,5 @@
 ;;; lv.el --- Other echo area
-;; Package-Version: 20190821.947
+;; Package-Version: 20191106.1238
 
 ;; Copyright (C) 2015  Free Software Foundation, Inc.
 
@@ -44,6 +44,11 @@
   :group 'lv
   :type 'boolean)
 
+(defcustom lv-use-padding nil
+  "Whether to use horizontal padding in the LV window."
+  :group 'lv
+  :type 'boolean)
+
 (defface lv-separator
   '((((class color) (background light)) :background "grey80")
     (((class color) (background  dark)) :background "grey30"))
@@ -57,6 +62,7 @@ Only the background color is significant."
 
 (defvar display-line-numbers)
 (defvar display-fill-column-indicator)
+(defvar tab-line-format)
 
 (defun lv-window ()
   "Ensure that LV window is live and return it."
@@ -76,6 +82,7 @@ Only the background color is significant."
           (setq window-size-fixed t)
           (setq mode-line-format nil)
           (setq header-line-format nil)
+          (setq tab-line-format nil)
           (setq cursor-type nil)
           (setq display-line-numbers nil)
           (setq display-fill-column-indicator nil)
@@ -88,6 +95,14 @@ Only the background color is significant."
 (defvar lv-force-update nil
   "When non-nil, `lv-message' will refresh even for the same string.")
 
+(defun lv--pad-to-center (str width)
+  "Pad STR with spaces on the left to be centered to WIDTH."
+  (let* ((strs (split-string str "\n"))
+         (padding (make-string
+                   (/ (- width (length (car strs))) 2)
+                   ?\ )))
+    (mapconcat (lambda (s) (concat padding s)) strs "\n")))
+
 (defun lv-message (format-string &rest args)
   "Set LV window contents to (`format' FORMAT-STRING ARGS)."
   (let* ((str (apply #'format format-string args))
@@ -95,6 +110,8 @@ Only the background color is significant."
          deactivate-mark
          golden-ratio-mode)
     (with-selected-window (lv-window)
+      (when lv-use-padding
+        (setq str (lv--pad-to-center str (window-width))))
       (unless (and (string= (buffer-string) str)
                    (null lv-force-update))
         (delete-region (point-min) (point-max))

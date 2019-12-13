@@ -1,6 +1,6 @@
 This is ivy.info, produced by makeinfo version 6.5 from ivy.texi.
 
-Ivy manual, version 0.12.0
+Ivy manual, version 0.13.0
 
    Ivy is an interactive interface for completion in Emacs.  Emacs uses
 completion mechanism in a variety of contexts: code, menus, commands,
@@ -16,13 +16,9 @@ through powerful regular expressions.
      Permission is granted to copy, distribute and/or modify this
      document under the terms of the GNU Free Documentation License,
      Version 1.3 or any later version published by the Free Software
-     Foundation; with no Invariant Sections, with the Front-Cover Texts
-     being “A GNU Manual,” and with the Back-Cover Texts as in (a)
-     below.  A copy of the license is included in the section entitled
-     “GNU Free Documentation License.”
-
-     (a) The FSF’s Back-Cover Text is: “You have the freedom to copy and
-     modify this GNU manual.”
+     Foundation; with no Invariant Sections, no Front-Cover Texts, and
+     no Back-Cover Texts.  A copy of the license is included in the
+     section entitled "GNU Free Documentation License".
 INFO-DIR-SECTION Emacs
 START-INFO-DIR-ENTRY
 * Ivy: (ivy).           Using Ivy for completion.
@@ -1568,7 +1564,6 @@ argument.
      	    :preselect (ivy-thing-at-point)
      	    :history 'counsel-describe-symbol-history
      	    :require-match t
-     	    :sort t
      	    :action (lambda (x)
      		      (describe-function
      		       (intern x)))
@@ -1590,13 +1585,6 @@ that they appear:
      separate from the common history in ‘ivy-history’.
    • The ‘require-match’ is set to ‘t’ since it doesn’t make sense to
      call ‘describe-function’ on an un-interned symbol.
-   • The ‘sort’ argument is set to ‘t’ so choosing between similar
-     candidates becomes easier.  Sometimes, the collection size will
-     exceed ‘ivy-sort-max-size’, which is 30000 by default.  In that
-     case the sorting will not happen to avoid delays.
-
-     Adjust this variable to choose between sorting time and completion
-     start-up time.
    • The ‘action’ argument calls ‘describe-function’ on the interned
      selected candidate.
    • The ‘caller’ argument identifies this completion session.  This is
@@ -1910,53 +1898,53 @@ Keystroke Index
 
 
 Tag Table:
-Node: Top1361
-Node: Introduction3272
-Node: Installation5795
-Node: Installing from Emacs Package Manager6245
-Node: Installing from the Git repository7359
-Node: Getting started8179
-Node: Basic customization8486
-Node: Key bindings9081
-Node: Global key bindings9273
-Node: Minibuffer key bindings11747
-Node: Key bindings for navigation12979
-Node: Key bindings for single selection action then exit minibuffer14186
-Node: Key bindings for multiple selections and actions keep minibuffer open16833
-Node: Key bindings that alter the minibuffer input19225
-Node: Other key bindings21170
-Node: Hydra in the minibuffer21548
-Node: Saving the current completion session to a buffer23966
-Node: Completion Styles25378
-Node: ivy--regex-plus27129
-Node: ivy--regex-ignore-order28615
-Node: ivy--regex-fuzzy28983
-Node: Customization29480
-Node: Faces29666
-Node: Defcustoms32095
-Node: Actions33389
-Node: What are actions?33715
-Node: How can different actions be called?34533
-Node: How to modify the actions list?35104
-Node: Example - add two actions to each command35764
-Node: How to undo adding the two actions36723
-Node: How to add actions to a specific command37175
-Node: Example - define a new command with several actions37591
-Node: Test the above function with ivy-occur38479
-Node: Packages39321
-Node: Commands40286
-Node: File Name Completion40471
-Node: Using TRAMP42267
-Node: Buffer Name Completion43769
-Node: Counsel commands44384
-Node: API45031
-Node: Required arguments for ivy-read45629
-Node: Optional arguments for ivy-read46148
-Node: Example - counsel-describe-function49574
-Node: Example - counsel-locate52817
-Node: Example - ivy-read-with-extra-properties56567
-Node: Variable Index57775
-Node: Keystroke Index64822
+Node: Top1189
+Node: Introduction3100
+Node: Installation5623
+Node: Installing from Emacs Package Manager6073
+Node: Installing from the Git repository7187
+Node: Getting started8007
+Node: Basic customization8314
+Node: Key bindings8909
+Node: Global key bindings9101
+Node: Minibuffer key bindings11575
+Node: Key bindings for navigation12807
+Node: Key bindings for single selection action then exit minibuffer14014
+Node: Key bindings for multiple selections and actions keep minibuffer open16661
+Node: Key bindings that alter the minibuffer input19053
+Node: Other key bindings20998
+Node: Hydra in the minibuffer21376
+Node: Saving the current completion session to a buffer23794
+Node: Completion Styles25206
+Node: ivy--regex-plus26957
+Node: ivy--regex-ignore-order28443
+Node: ivy--regex-fuzzy28811
+Node: Customization29308
+Node: Faces29494
+Node: Defcustoms31923
+Node: Actions33217
+Node: What are actions?33543
+Node: How can different actions be called?34361
+Node: How to modify the actions list?34932
+Node: Example - add two actions to each command35592
+Node: How to undo adding the two actions36551
+Node: How to add actions to a specific command37003
+Node: Example - define a new command with several actions37419
+Node: Test the above function with ivy-occur38307
+Node: Packages39149
+Node: Commands40114
+Node: File Name Completion40299
+Node: Using TRAMP42095
+Node: Buffer Name Completion43597
+Node: Counsel commands44212
+Node: API44859
+Node: Required arguments for ivy-read45457
+Node: Optional arguments for ivy-read45976
+Node: Example - counsel-describe-function49402
+Node: Example - counsel-locate52260
+Node: Example - ivy-read-with-extra-properties56010
+Node: Variable Index57218
+Node: Keystroke Index64265
 
 End Tag Table
 

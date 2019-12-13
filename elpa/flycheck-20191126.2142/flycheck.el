@@ -277,7 +277,8 @@ attention to case differences."
     xml-xmlstarlet
     xml-xmllint
     yaml-jsyaml
-    yaml-ruby)
+    yaml-ruby
+    yaml-yamllint)
   "Syntax checkers available for automatic selection.
 
 A list of Flycheck syntax checkers to choose from when syntax
@@ -3939,7 +3940,7 @@ Return ERRORS, with in-place modifications."
           (while (not (eobp))
             (back-to-indentation)
             ;; If the current line starts with sufficient whitespace, delete the
-            ;; indendation offset.  Otherwise keep the line intact, as we might
+            ;; indentation offset.  Otherwise keep the line intact, as we might
             ;; loose valuable information
             (when (>= (- (point) (line-beginning-position)) indent-offset)
               (delete-char (- indent-offset)))
@@ -3954,7 +3955,7 @@ Return ERRORS, with in-place modifications."
 
 ERRORS is a list of `flycheck-error' objects.  SENTINEL-MESSAGE
 is a regular expression matched against the error message to
-determine whether the errror denotes errors from an included
+determine whether the error denotes errors from an included
 file.  Alternatively, it is a function that is given an error and
 shall return non-nil, if the error denotes errors from an
 included file."
@@ -4137,7 +4138,7 @@ overlays."
     (with-current-buffer buf
       (-when-let* ((fn flycheck-help-echo-function)
                    (errs (flycheck-overlay-errors-at pos)))
-        (funcall fn errs)))))
+        (propertize (funcall fn errs) 'help-echo-inhibit-substitution t)))))
 
 (defun flycheck-help-echo-all-error-messages (errs)
   "Concatenate error messages and ids from ERRS."
@@ -4162,12 +4163,12 @@ overlays."
   (flycheck-filter-overlays (overlays-in beg end)))
 
 (defun flycheck-overlay-errors-at (pos)
-  "Return a list of all flycheck errors overlayed at POS."
+  "Return a list of all flycheck errors overlaid at POS."
   (seq-map (lambda (o) (overlay-get o 'flycheck-error))
            (flycheck-overlays-at pos)))
 
 (defun flycheck-overlay-errors-in (beg end)
-  "Return a list of all flycheck errors overlayed between BEG and END."
+  "Return a list of all flycheck errors overlaid between BEG and END."
   (seq-map (lambda (o) (overlay-get o 'flycheck-error))
            (flycheck-overlays-in beg end)))
 
@@ -4202,11 +4203,15 @@ overlays."
   (flycheck-error-level-interesting-p (get-char-property pos 'flycheck-error)))
 
 (defun flycheck-error-level-interesting-p (err)
-  "Check if ERR severity is >= `flycheck-navigation-minimum-level'."
+  "Check if ERR severity is >= `flycheck-navigation-minimum-level'.
+
+ERR is also interesting (the function returns true) if there are
+no errors as or more severe than `flycheck-navigation-minimum-level'."
   (when (flycheck-error-p err)
     (-if-let (min-level flycheck-navigation-minimum-level)
-        (<= (flycheck-error-level-severity min-level)
-            (flycheck-error-level-severity (flycheck-error-level err)))
+        (or (<= (flycheck-error-level-severity min-level)
+                (flycheck-error-level-severity (flycheck-error-level err)))
+            (not (flycheck-has-current-errors-p min-level)))
       t)))
 
 (defun flycheck-next-error-pos (n &optional reset)
@@ -4385,7 +4390,7 @@ message to stretch arbitrarily far."
 
 (defun flycheck-error-list-update-source ()
   "Update the source buffer of the error list."
-  (when (not (eq (current-buffer) (get-buffer flycheck-error-list-buffer)))
+  (unless (eq (current-buffer) (get-buffer flycheck-error-list-buffer))
     ;; We must not update the source buffer, if the current buffer is the error
     ;; list itself.
     (flycheck-error-list-set-source (current-buffer))))
@@ -4849,6 +4854,10 @@ The echo area may be used if the cursor is not in the echo area,
 and if the echo area is not occupied by minibuffer input."
   (not (or cursor-in-echo-area (active-minibuffer-window))))
 
+(define-derived-mode flycheck-error-message-mode text-mode
+  "Flycheck error messages"
+  "Major mode for extended error messages.")
+
 (defun flycheck-display-error-messages (errors)
   "Display the messages of ERRORS.
 
@@ -4864,7 +4873,13 @@ variable `flycheck-error-message-buffer'."
     (let ((messages (seq-map #'flycheck-error-format-message-and-id errors)))
       (display-message-or-buffer (string-join messages "\n\n")
                                  flycheck-error-message-buffer
-                                 'not-this-window))))
+                                 'not-this-window)
+      ;; We cannot rely on `display-message-or-buffer' returning the right
+      ;; window. See URL `https://github.com/flycheck/flycheck/issues/1643'.
+      (-when-let ((buf (get-buffer flycheck-error-message-buffer)))
+        (with-current-buffer buf
+          (unless (derived-mode-p 'flycheck-error-message-mode)
+            (flycheck-error-message-mode)))))))
 
 (defun flycheck-display-error-messages-unless-error-list (errors)
   "Show messages of ERRORS unless the error list is visible.
@@ -7645,6 +7660,24 @@ This variable has no effect, if
         (defvar flycheck-emacs-lisp-check-declare)
         (setq flycheck-emacs-lisp-check-declare ,value)))))
 
+(defun flycheck--emacs-lisp-enabled-p ()
+  "Check whether to enable Emacs Lisp checkers in the current buffer."
+  (not
+   (or
+    ;; Do not check buffers used for autoloads generation during package
+    ;; installation.  These buffers are too short-lived for being checked, and
+    ;; doing so causes spurious errors.  See
+    ;; https://github.com/flycheck/flycheck/issues/45 and
+    ;; https://github.com/bbatsov/prelude/issues/248.  We must also not check
+    ;; compilation buffers, but as these are ephemeral, Flycheck won't check
+    ;; them anyway.
+    (flycheck-autoloads-file-p)
+    ;; Cask/Carton and dir-locals files contain data, not code, and don't need
+    ;; to follow Checkdoc conventions either.
+    (and (buffer-file-name)
+         (member (file-name-nondirectory (buffer-file-name))
+                 '("Cask" "Carton" ".dir-locals.el" ".dir-locals-2.el"))))))
+
 (flycheck-define-checker emacs-lisp
   "An Emacs Lisp syntax checker using the Emacs Lisp Byte compiler.
 
@@ -7689,6 +7722,7 @@ See Info Node `(elisp)Byte Compilation'."
      (flycheck-collapse-error-message-whitespace
       (flycheck-sanitize-errors errors))))
   :modes (emacs-lisp-mode lisp-interaction-mode)
+  :enabled flycheck--emacs-lisp-enabled-p
   :predicate
   (lambda ()
     (and
@@ -7702,15 +7736,7 @@ See Info Node `(elisp)Byte Compilation'."
      (buffer-file-name)
      ;; Do not check buffers which should not be byte-compiled.  The checker
      ;; process will refuse to compile these, which would confuse Flycheck
-     (not (bound-and-true-p no-byte-compile))
-     ;; Do not check buffers used for autoloads generation during package
-     ;; installation.  These buffers are too short-lived for being checked, and
-     ;; doing so causes spurious errors.  See
-     ;; https://github.com/flycheck/flycheck/issues/45 and
-     ;; https://github.com/bbatsov/prelude/issues/248.  We must also not check
-     ;; compilation buffers, but as these are ephemeral, Flycheck won't check
-     ;; them anyway.
-     (not (flycheck-autoloads-file-p))))
+     (not (bound-and-true-p no-byte-compile))))
   :next-checkers (emacs-lisp-checkdoc))
 
 (defconst flycheck-emacs-lisp-checkdoc-form
@@ -7777,14 +7803,7 @@ The checker runs `checkdoc-current-buffer'."
   :error-patterns
   ((warning line-start (file-name) ":" line ": " (message) line-end))
   :modes (emacs-lisp-mode)
-  :predicate
-  (lambda ()
-    ;; Do not check Autoloads, Cask/Carton and dir-locals files.  These files
-    ;; really don't need to follow Checkdoc conventions.
-    (not (or (flycheck-autoloads-file-p)
-             (and (buffer-file-name)
-                  (member (file-name-nondirectory (buffer-file-name))
-                          '("Cask" "Carton" ".dir-locals.el")))))))
+  :enabled flycheck--emacs-lisp-enabled-p)
 
 (dolist (checker '(emacs-lisp emacs-lisp-checkdoc))
   (setf (car (flycheck-checker-get checker 'command))
@@ -8807,7 +8826,7 @@ See URL `https://github.com/zaach/jsonlint'."
   "A JSON syntax checker using Python json.tool module.
 
 See URL `https://docs.python.org/3.5/library/json.html#command-line-interface'."
-  :command ("python" "-m" "json.tool" source
+  :command ("python3" "-m" "json.tool" source
             ;; Send the pretty-printed output to the null device
             null-device)
   :error-patterns
@@ -9216,11 +9235,13 @@ are relative to the file being checked."
 See URL `https://developers.google.com/protocol-buffers/'."
   :command ("protoc" "--error_format" "gcc"
             (eval (concat "--java_out=" (flycheck-temp-dir-system)))
-            (option-list "--proto_path=" flycheck-protoc-import-path concat)
-            ;; Add the file directory of protobuf path to resolve import
-            ;; directives
+            ;; Add the current directory to resolve imports
             (eval (concat "--proto_path="
                           (file-name-directory (buffer-file-name))))
+            ;; Add other import paths; this needs to be after the current
+            ;; directory to produce the right output.  See URL
+            ;; `https://github.com/flycheck/flycheck/pull/1655'
+            (option-list "--proto_path=" flycheck-protoc-import-path concat)
             source-inplace)
   :error-patterns
   ((info line-start (file-name) ":" line ":" column
@@ -9468,7 +9489,7 @@ Requires Flake8 3.0 or newer. See URL
 `https://flake8.readthedocs.io/'."
   ;; Not calling flake8 directly makes it easier to switch between different
   ;; Python versions; see https://github.com/flycheck/flycheck/issues/1055.
-  :command ("python"
+  :command ("python3"
             (eval (flycheck-python-module-args 'python-flake8 "flake8"))
             "--format=default"
             (config-file "--config" flycheck-flake8rc)
@@ -9476,6 +9497,8 @@ Requires Flake8 3.0 or newer. See URL
                     flycheck-option-int)
             (option "--max-line-length" flycheck-flake8-maximum-line-length nil
                     flycheck-option-int)
+            (eval (when buffer-file-name
+                    (concat "--stdin-display-name=" buffer-file-name)))
             "-")
   :standard-input t
   :error-filter (lambda (errors)
@@ -9483,7 +9506,7 @@ Requires Flake8 3.0 or newer. See URL
                     (seq-map #'flycheck-flake8-fix-error-level errors)))
   :error-patterns
   ((warning line-start
-            "stdin:" line ":" (optional column ":") " "
+            (file-name) ":" line ":" (optional column ":") " "
             (id (one-or-more (any alpha)) (one-or-more digit)) " "
             (message (one-or-more not-newline))
             line-end))
@@ -9515,7 +9538,7 @@ See URL `https://www.pylint.org/'."
   ;; --reports=n disables the scoring report.
   ;; Not calling pylint directly makes it easier to switch between different
   ;; Python versions; see https://github.com/flycheck/flycheck/issues/1055.
-  :command ("python"
+  :command ("python3"
             (eval (flycheck-python-module-args 'python-pylint "pylint"))
             "--reports=n"
             "--output-format=text"
@@ -9552,7 +9575,7 @@ See URL `https://www.pylint.org/'."
   "A Python syntax checker using Python's builtin compiler.
 
 See URL `https://docs.python.org/3.4/library/py_compile.html'."
-  :command ("python" "-m" "py_compile" source)
+  :command ("python3" "-m" "py_compile" source)
   :error-patterns
   ;; Python 2.7
   ((error line-start "  File \"" (file-name) "\", line " line "\n"
@@ -9775,7 +9798,7 @@ See URL `https://github.com/igorshubovych/markdownlint-cli'."
             source)
   :error-patterns
   ((error line-start
-          (file-name) ": " line ": " (id (one-or-more (not (any space))))
+          (file-name) ":" line " " (id (one-or-more (not (any space))))
           " " (message) line-end))
   :error-filter
   (lambda (errors)
@@ -10984,7 +11007,7 @@ See URL `http://www.gnu.org/software/texinfo/'."
     textlint "textlintrc.json"
   :safe #'stringp)
 
-;; This needs to be set because textlint plugins are installed seperately,
+;; This needs to be set because textlint plugins are installed separately,
 ;; and there is no way to check their installation status -- textlint simply
 ;; prints a backtrace.
 (flycheck-def-option-var flycheck-textlint-plugin-alist
@@ -11233,6 +11256,22 @@ See URL `http://www.ruby-doc.org/stdlib-2.0.0/libdoc/yaml/rdoc/YAML.html'."
           "at line " line " column " column line-end))
   :modes yaml-mode
   :next-checkers ((warning . cwl)))
+
+(flycheck-def-config-file-var flycheck-yamllintrc yaml-yamllint ".yamllint"
+  :safe #'stringp)
+
+(flycheck-define-checker yaml-yamllint
+  "A YAML syntax checker using YAMLLint.
+See URL `https://github.com/adrienverge/yamllint'."
+  :standard-input t
+  :command ("yamllint" "-f" "parsable" "-"
+            (config-file "-c" flycheck-yamllintrc))
+  :error-patterns
+  ((error line-start
+          "stdin:" line ":" column ": [error] " (message) line-end)
+   (warning line-start
+            "stdin:" line ":" column ": [warning] " (message) line-end))
+  :modes yaml-mode)
 
 (provide 'flycheck)
 

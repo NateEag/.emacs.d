@@ -257,6 +257,10 @@ regarding display of the region in the later function.")
   `(unless (pdf-view-active-region-p)
      (error "The region is not active")))
 
+(defconst pdf-view-have-image-mode-pixel-vscroll
+  (>= emacs-major-version 27)
+  "Whether image-mode scrolls vertically by pixels.")
+
 
 ;; * ================================================================== *
 ;; * Major Mode
@@ -503,7 +507,7 @@ operating on a local copy of a remote file."
           (delete-file tempfile))))))
 
 (defun pdf-view-revert-buffer (&optional ignore-auto noconfirm)
-  "Revert buffer while preseving current modes.
+  "Revert buffer while preserving current modes.
 
 Optional parameters IGNORE-AUTO and NOCONFIRM are defined as in
 `revert-buffer'."
@@ -524,7 +528,7 @@ Optional parameters IGNORE-AUTO and NOCONFIRM are defined as in
 (defun pdf-view-close-document ()
   "Return immediately after closing document.
 
-This function always suceeds.  See also `pdf-info-close', which
+This function always succeeds.  See also `pdf-info-close', which
 does not return immediately."
   (when (pdf-info-running-p)
     (let ((pdf-info-asynchronous 'ignore))
@@ -716,7 +720,8 @@ next page only on typing SPC (ARG is nil)."
   (if (or pdf-view-continuous (null arg))
       (let ((hscroll (window-hscroll))
             (cur-page (pdf-view-current-page)))
-        (when (or (= (window-vscroll) (image-scroll-up arg))
+        (when (or (= (window-vscroll nil pdf-view-have-image-mode-pixel-vscroll)
+                     (image-scroll-up arg))
                   ;; Workaround rounding/off-by-one issues.
                   (memq pdf-view-display-size
                         '(fit-height fit-page)))
@@ -737,7 +742,8 @@ to previous page only on typing DEL (ARG is nil)."
   (if (or pdf-view-continuous (null arg))
       (let ((hscroll (window-hscroll))
             (cur-page (pdf-view-current-page)))
-        (when (or (= (window-vscroll) (image-scroll-down arg))
+        (when (or (= (window-vscroll nil pdf-view-have-image-mode-pixel-vscroll)
+                     (image-scroll-down arg))
                   ;; Workaround rounding/off-by-one issues.
                   (memq pdf-view-display-size
                         '(fit-height fit-page)))
@@ -757,7 +763,8 @@ at the bottom edge of the page moves to the next page."
   (if pdf-view-continuous
       (let ((hscroll (window-hscroll))
             (cur-page (pdf-view-current-page)))
-        (when (= (window-vscroll) (image-next-line arg))
+        (when (= (window-vscroll nil pdf-view-have-image-mode-pixel-vscroll)
+                 (image-next-line arg))
           (pdf-view-next-page)
           (when (/= cur-page (pdf-view-current-page))
             (image-bob)
@@ -774,7 +781,8 @@ at the top edge of the page moves to the previous page."
   (if pdf-view-continuous
       (let ((hscroll (window-hscroll))
             (cur-page (pdf-view-current-page)))
-        (when (= (window-vscroll) (image-previous-line arg))
+        (when (= (window-vscroll nil pdf-view-have-image-mode-pixel-vscroll)
+                 (image-previous-line arg))
           (pdf-view-previous-page)
           (when (/= cur-page (pdf-view-current-page))
             (image-eob)
@@ -1021,7 +1029,8 @@ It is equal to \(LEFT . TOP\) of the current slice in pixel."
                (vscroll (image-mode-window-get 'vscroll win)))
           ;; Reset scroll settings, in case they were changed.
           (if hscroll (set-window-hscroll win hscroll))
-          (if vscroll (set-window-vscroll win vscroll)))))))
+          (if vscroll (set-window-vscroll
+                       win vscroll pdf-view-have-image-mode-pixel-vscroll)))))))
 
 (defun pdf-view-redisplay (&optional window)
   "Redisplay page in WINDOW.
@@ -1233,7 +1242,7 @@ image size \(WIDTH . HEIGHT\) as arguments.  It should return a
 list of hotspots applicable to the the :map image-property.
 
 LAYER determines the order: Functions in a higher LAYER will
-supercede hotspots in lower ones."
+supersede hotspots in lower ones."
   (push (cons (or layer 0) fn)
         pdf-view--hotspot-functions))
 
@@ -1329,7 +1338,7 @@ Stores the region in `pdf-view-active-region'."
                 (cond
                  ((and end-inside-image-p
                        (not begin-inside-image-p))
-                  ;; Started selection ouside the image, setup begin.
+                  ;; Started selection outside the image, setup begin.
                   (let* ((xy (posn-x-y pos))
                          (dxy (cons (- (car xy) (car begin))
                                     (- (cdr xy) (cdr begin))))
@@ -1450,7 +1459,7 @@ image*\" and display it, unless NO-DISPLAY-P is non-nil.
 
 In case of multiple regions, the resulting image is constructed
 by joining them horizontally.  For this operation (and this only)
-the `convert' programm is used."
+the `convert' program is used."
 
   (interactive
    (list (if (pdf-view-active-region-p)
@@ -1564,7 +1573,9 @@ See also `pdf-view-bookmark-make-record'."
                              (frame-char-width))))
                   (image-set-window-vscroll
                    (round (/ (* (cdr origin) (cdr size))
-                             (frame-char-height)))))))))
+                             (if pdf-view-have-image-mode-pixel-vscroll
+                                 1
+                               (frame-char-height))))))))))
     (add-hook 'bookmark-after-jump-hook show-fn-sym)
     (set-buffer (or (find-buffer-visiting file)
                     (find-file-noselect file)))))

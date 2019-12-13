@@ -4,7 +4,7 @@
 
 ;; Author: Dewdrops <v_v_4474@126.com>
 ;; URL: http://github.com/Dewdrops/evil-exchange
-;; Package-Version: 20170511.259
+;; Package-Version: 20191105.255
 ;; Version: 0.41
 ;; Keywords: evil, plugin
 ;; Package-Requires: ((evil "1.2.8") (cl-lib "0.3"))
@@ -92,7 +92,8 @@
   (interactive "<R>")
   (let ((beg-marker (copy-marker beg t))
         (end-marker (copy-marker end nil)))
-    (if (null evil-exchange--position)
+    (if (or (null evil-exchange--position)
+            (not (buffer-live-p (car evil-exchange--position))))
         ;; call without evil-exchange--position set: store region
         (progn
           (setq evil-exchange--position (list (current-buffer) beg-marker end-marker type))

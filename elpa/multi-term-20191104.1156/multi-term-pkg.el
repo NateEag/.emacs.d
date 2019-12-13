@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/multi-term-20191104.1156/multi-term.el  -*- no-byte-compile: t -*-
+(define-package "multi-term" "20191104.1156" "Managing multiple terminal buffers in Emacs." 'nil :commit "8deb0f2252399cca2426eb3cc3e9646c5de726b3" :keywords '("term" "terminal" "multiple buffer") :authors '(("Andy Stewart" . "lazycat.manatee@gmail.com")) :maintainer '("Andy Stewart" . "lazycat.manatee@gmail.com") :url "http://www.emacswiki.org/emacs/download/multi-term.el")

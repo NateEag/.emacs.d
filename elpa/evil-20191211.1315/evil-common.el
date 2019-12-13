@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.14
+;; Version: 1.3.0-snapshot
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -28,6 +28,7 @@
 (require 'evil-digraphs)
 (require 'rect)
 (require 'thingatpt)
+(require 'cl-lib)
 
 ;;; Code:
 
@@ -300,6 +301,7 @@ sorting in between."
 
 \(fn COMMAND (ARGS...) DOC [[KEY VALUE]...] BODY...)"
   (declare (indent defun)
+           (doc-string 3)
            (debug (&define name
                            [&optional lambda-list]
                            [&optional stringp]
@@ -766,7 +768,8 @@ filename."
 SPECS may be a cursor type as per `cursor-type', a color
 string as passed to `set-cursor-color', a zero-argument
 function for changing the cursor, or a list of the above."
-  (unless (and (listp specs)
+  (unless (and (not (functionp specs))
+               (listp specs)
                (null (cdr-safe (last specs))))
     (setq specs (list specs)))
   (dolist (spec specs)
@@ -864,9 +867,35 @@ Inhibits echo area messages, mode line updates and cursor changes."
   `(let ((evil-no-display t))
      ,@body))
 
-(defun evil-num-visible-lines ()
-  "Returns the number of currently visible lines."
-  (- (window-height) 1))
+(defvar evil-cached-header-line-height nil
+  "Cached height of the header line.")
+
+(defun evil-header-line-height ()
+  "Return the height of the header line.
+If there is no header line, return nil."
+  (let ((posn (posn-at-x-y 0 0)))
+    (when (eq (posn-area posn) 'header-line)
+      (cdr (posn-object-width-height posn)))))
+
+(defun evil-posn-x-y (position)
+  "Return the x and y coordinates in POSITION.
+This function returns y offset from the top of the buffer area including
+the header line.
+
+On Emacs 24 and later versions, the y-offset returned by
+`posn-at-point' is relative to the text area excluding the header
+line, while y offset taken by `posn-at-x-y' is relative to the buffer
+area including the header line.  This asymmetry is by design according
+to GNU Emacs team.  This function fixes the asymmetry between them.
+
+Learned from mozc.el."
+  (let ((xy (posn-x-y position)))
+    (when header-line-format
+      (setcdr xy (+ (cdr xy)
+                    (or evil-cached-header-line-height
+                        (setq evil-cached-header-line-height (evil-header-line-height))
+                        0))))
+    xy))
 
 (defun evil-count-lines (beg end)
   "Return absolute line-number-difference betweeen `beg` and `end`.
@@ -973,10 +1002,9 @@ Like `move-end-of-line', but retains the goal column."
     (move-end-of-line arg)
     (end-of-line)))
 
-(defun evil-adjust-cursor (&optional force)
+(defun evil-adjust-cursor (&optional _)
   "Move point one character back if at the end of a non-empty line.
-This behavior is contingent on the variable `evil-move-cursor-back';
-use the FORCE parameter to override it."
+This behavior is controled by `evil-move-beyond-eol'."
   (when (and (eolp)
              (not evil-move-beyond-eol)
              (not (bolp))
@@ -984,7 +1012,7 @@ use the FORCE parameter to override it."
                 (save-excursion
                   (evil-move-end-of-line)
                   (point))))
-    (evil-move-cursor-back force)))
+    (evil-move-cursor-back t)))
 
 (defun evil-move-cursor-back (&optional force)
   "Move point one character back within the current line.
@@ -1127,13 +1155,13 @@ This function should be used in forward motions. If `point' is close
 to eob so that no further forward motion is possible the error
 'end-of-buffer is raised. This is the case if `point' is at
 `point-max' or if is one position before `point-max',
-`evil-move-cursor-back' is non-nil and `point' is not at the end
+`evil-move-beyond-eol' is nil and `point' is not at the end
 of a line. The latter is necessary because `point' cannot be
-moved to `point-max' if `evil-move-cursor-back' is non-nil and
+moved to `point-max' if `evil-move-beyond-eol' is nil and
 the last line in the buffer is not empty."
   (when (or (eobp)
             (and (not (eolp))
-                 evil-move-cursor-back
+                 (not evil-move-beyond-eol)
                  (save-excursion (forward-char) (eobp))))
     (signal 'end-of-buffer nil)))
 
@@ -1952,8 +1980,9 @@ or a marker object pointing nowhere."
         (when (and (symbolp marker) (boundp marker))
           (setq marker (symbol-value marker)))
         (when (functionp marker)
-          (funcall marker)
-          (setq marker (point)))
+          (save-window-excursion
+            (funcall marker)
+            (setq marker (move-marker (make-marker) (point)))))
         (when (markerp marker)
           (if (eq (marker-buffer marker) (current-buffer))
               (setq marker (marker-position marker))
@@ -2141,12 +2170,15 @@ register instead of replacing its content."
     (set-register register text))))
 
 (defun evil-register-list ()
-  "Returns an alist of all registers"
+  "Returns an alist of all registers, but only those named
+with number or character. Registers with symbol or string in names are ignored
+to keep Vim compatibility with register jumps."
   (sort (append (mapcar #'(lambda (reg)
                             (cons reg (evil-get-register reg t)))
                         '(?\" ?* ?+ ?% ?# ?/ ?: ?. ?-
                               ?1 ?2 ?3 ?4 ?5 ?6 ?7 ?8 ?9))
-                register-alist nil)
+                (cl-remove-if-not (lambda (reg) (number-or-marker-p (car reg))) register-alist)
+                nil)
         #'(lambda (reg1 reg2) (< (car reg1) (car reg2)))))
 
 (defsubst evil-kbd-macro-suppress-motion-error ()
@@ -3845,7 +3877,11 @@ should be left-aligned for left justification."
            (entry (elt tabulated-list-entries (1- line))))
       (funcall evil-list-view-select-action (nth 1 entry)))))
 
-(define-key evil-list-view-mode-map (kbd "q") #'kill-this-buffer)
+(defun evil-list-view-quit ()
+  (interactive)
+  (quit-window 'kill))
+
+(define-key evil-list-view-mode-map (kbd "q") #'evil-list-view-quit)
 (define-key evil-list-view-mode-map [follow-link] nil) ;; allows mouse-1 to be activated
 (define-key evil-list-view-mode-map [mouse-1] #'evil-list-view-goto-entry)
 (define-key evil-list-view-mode-map [return] #'evil-list-view-goto-entry)

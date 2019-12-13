@@ -3,7 +3,7 @@
 ;; Author: Frank Fischer <frank.fischer at mathematik.tu-chemnitz.de>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.14
+;; Version: 1.3.0-snapshot
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -276,7 +276,8 @@ has :repeat nil."
         ;; called.
         (evil-repeat-abort))
        ;; ignore those commands completely
-       ((null repeat-type))
+       ((or (null repeat-type)
+            (evil-mouse-events-p (this-command-keys))))
        ;; record command
        (t
         ;; In normal-state or visual state, each command is a single

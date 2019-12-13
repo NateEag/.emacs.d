@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.14
+;; Version: 1.3.0-snapshot
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -114,6 +114,7 @@ The return value is a list (BEG END TYPE)."
 
 \(fn MOTION (COUNT ARGS...) DOC [[KEY VALUE]...] BODY...)"
   (declare (indent defun)
+           (doc-string 3)
            (debug (&define name lambda-list
                            [&optional stringp]
                            [&rest keywordp sexp]
@@ -168,8 +169,7 @@ upon reaching the beginning or end of the current line.
      (when (save-excursion (goto-char end) (bolp))
        (setq end (max beg (1- end))))
      ;; don't include the newline in Normal state
-     (when (and evil-move-cursor-back
-                (not evil-move-beyond-eol)
+     (when (and (not evil-move-beyond-eol)
                 (not (evil-visual-state-p))
                 (not (evil-operator-state-p)))
        (setq end (max beg (1- end))))
@@ -296,7 +296,7 @@ of the object; otherwise it is placed at the end of the object."
             (unless (bobp) (backward-char)))
           (when (or (evil-normal-state-p)
                     (evil-motion-state-p))
-            (evil-adjust-cursor t)))))
+            (evil-adjust-cursor)))))
      ((> count 0)
       (when (evil-eobp)
         (signal 'end-of-buffer nil))
@@ -311,7 +311,7 @@ of the object; otherwise it is placed at the end of the object."
             (unless (bobp) (backward-char)))
           (when (or (evil-normal-state-p)
                     (evil-motion-state-p))
-            (evil-adjust-cursor t)))))
+            (evil-adjust-cursor)))))
      (t
       count))))
 
@@ -358,6 +358,7 @@ if COUNT is positive, and to the left of it if negative.
 
 \(fn OBJECT (COUNT) DOC [[KEY VALUE]...] BODY...)"
   (declare (indent defun)
+           (doc-string 3)
            (debug (&define name lambda-list
                            [&optional stringp]
                            [&rest keywordp sexp]
@@ -446,6 +447,7 @@ if COUNT is positive, and to the left of it if negative.
 
 \(fn OPERATOR (BEG END ARGS...) DOC [[KEY VALUE]...] BODY...)"
   (declare (indent defun)
+           (doc-string 3)
            (debug (&define name lambda-list
                            [&optional stringp]
                            [&rest keywordp sexp]
@@ -558,7 +560,7 @@ RETURN-TYPE is non-nil."
               (setq keys (listify-key-sequence keys))
               (dotimes (var (length keys))
                 (define-key evil-operator-shortcut-map
-                  (vconcat (nthcdr var keys)) 'evil-line)))
+                  (vconcat (nthcdr var keys)) 'evil-line-or-visual-line)))
             ;; read motion from keyboard
             (setq command (evil-read-motion motion)
                   motion (nth 0 command)
@@ -633,6 +635,7 @@ be transformations on buffer positions, like :expand and :contract.
 
 \(fn TYPE DOC [[KEY FUNC]...])"
   (declare (indent defun)
+           (doc-string 2)
            (debug (&define name
                            [&optional stringp]
                            [&rest [keywordp function-form]])))

@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.14
+;; Version: 1.3.0-snapshot
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -24,7 +24,6 @@
 ;;
 ;; You should have received a copy of the GNU General Public License
 ;; along with Evil.  If not, see <http://www.gnu.org/licenses/>.
-
 
 ;;; Commentary:
 
@@ -288,9 +287,9 @@ activated."
   (evil-with-state emacs ad-do-it))
 
 ;; ace-jump-mode
-(declare-function 'ace-jump-char-mode "ace-jump-mode")
-(declare-function 'ace-jump-word-mode "ace-jump-mode")
-(declare-function 'ace-jump-line-mode "ace-jump-mode")
+(declare-function ace-jump-char-mode "ext:ace-jump-mode")
+(declare-function ace-jump-word-mode "ext:ace-jump-mode")
+(declare-function ace-jump-line-mode "ext:ace-jump-mode")
 
 (defvar evil-ace-jump-active nil)
 
@@ -398,20 +397,20 @@ the mark and entering `recursive-edit'."
 (define-key evil-motion-state-map [remap ace-jump-word-mode] #'evil-ace-jump-word-mode)
 
 ;;; avy
-(declare-function 'avy-goto-word-or-subword-1 "avy")
-(declare-function 'avy-goto-line "avy")
-(declare-function 'avy-goto-char "avy")
-(declare-function 'avy-goto-char-2 "avy")
-(declare-function 'avy-goto-char-2-above "avy")
-(declare-function 'avy-goto-char-2-below "avy")
-(declare-function 'avy-goto-char-in-line "avy")
-(declare-function 'avy-goto-word-0 "avy")
-(declare-function 'avy-goto-word-1 "avy")
-(declare-function 'avy-goto-word-1-above "avy")
-(declare-function 'avy-goto-word-1-below "avy")
-(declare-function 'avy-goto-subword-0 "avy")
-(declare-function 'avy-goto-subword-1 "avy")
-(declare-function 'avy-goto-char-timer "avy")
+(declare-function avy-goto-word-or-subword-1 "ext:avy")
+(declare-function avy-goto-line "ext:avy")
+(declare-function avy-goto-char "ext:avy")
+(declare-function avy-goto-char-2 "ext:avy")
+(declare-function avy-goto-char-2-above "ext:avy")
+(declare-function avy-goto-char-2-below "ext:avy")
+(declare-function avy-goto-char-in-line "ext:avy")
+(declare-function avy-goto-word-0 "ext:avy")
+(declare-function avy-goto-word-1 "ext:avy")
+(declare-function avy-goto-word-1-above "ext:avy")
+(declare-function avy-goto-word-1-below "ext:avy")
+(declare-function avy-goto-subword-0 "ext:avy")
+(declare-function avy-goto-subword-1 "ext:avy")
+(declare-function avy-goto-char-timer "ext:avy")
 
 (defmacro evil-enclose-avy-for-motion (&rest body)
   "Enclose avy to make it suitable for motions.
@@ -490,13 +489,31 @@ Based on `evil-enclose-ace-jump-for-motion'."
 
 ;; visual-line-mode integration
 (when evil-respect-visual-line-mode
-  (let ((swaps '((evil-next-line . evil-next-visual-line)
-                 (evil-previous-line . evil-previous-visual-line)
-                 (evil-beginning-of-line . evil-beginning-of-visual-line)
-                 (evil-end-of-line . evil-end-of-visual-line))))
-    (dolist (swap swaps)
-      (define-key visual-line-mode-map (vector 'remap (car swap)) (cdr swap))
-      (define-key visual-line-mode-map (vector 'remap (cdr swap)) (car swap)))))
+  (evil-define-command evil-digit-argument-or-evil-beginning-of-visual-line ()
+    :digit-argument-redirection evil-beginning-of-visual-line
+    :keep-visual t
+    :repeat nil
+    (interactive)
+    (cond
+     (current-prefix-arg
+      (setq this-command #'digit-argument)
+      (call-interactively #'digit-argument))
+     (t
+      (let ((target (or (command-remapping #'evil-beginning-of-visual-line)
+                        #'evil-beginning-of-visual-line)))
+        (setq this-command 'evil-beginning-of-visual-line)
+        (call-interactively 'evil-beginning-of-visual-line)))))
+
+  (evil-define-minor-mode-key 'motion 'visual-line-mode
+    "j" 'evil-next-visual-line
+    "gj" 'evil-next-line
+    "k" 'evil-previous-visual-line
+    "gk" 'evil-previous-line
+    "0" 'evil-digit-argument-or-evil-beginning-of-visual-line
+    "g0" 'evil-beginning-of-line
+    "$" 'evil-end-of-visual-line
+    "g$" 'evil-end-of-line
+    "V" 'evil-visual-screen-line))
 
 ;;; abbrev.el
 (when evil-want-abbrev-expand-on-insert-exit

@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.14
+;; Version: 1.3.0-snapshot
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -101,6 +101,10 @@
 (define-key evil-normal-state-map [escape] 'evil-force-normal-state)
 (define-key evil-normal-state-map [remap cua-paste-pop] 'evil-paste-pop)
 (define-key evil-normal-state-map [remap yank-pop] 'evil-paste-pop)
+
+(when (featurep 'tab-bar)
+  (define-key evil-normal-state-map "gt" 'tab-bar-switch-to-next-tab)
+  (define-key evil-normal-state-map "gT" 'tab-bar-switch-to-prev-tab))
 
 ;; go to last change
 (define-key evil-normal-state-map "g;" 'goto-last-change)
@@ -508,6 +512,11 @@ included in `evil-insert-state-bindings' by default."
 (evil-ex-define-cmd "show-digraphs" 'evil-ex-show-digraphs)
 (evil-ex-define-cmd "sor[t]" 'evil-ex-sort)
 (evil-ex-define-cmd "res[ize]" 'evil-ex-resize)
+
+(when (featurep 'tab-bar)
+  (evil-ex-define-cmd "tabnew" 'tab-bar-new-tab)
+  (evil-ex-define-cmd "tabn[ext]" 'tab-bar-switch-to-next-tab)
+  (evil-ex-define-cmd "tabp[revious]" 'tab-bar-switch-to-prev-tab))
 
 ;; search command line
 (define-key evil-ex-search-keymap "\d" #'evil-ex-delete-backward-char)

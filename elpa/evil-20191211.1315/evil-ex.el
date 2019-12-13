@@ -3,7 +3,7 @@
 ;; Author: Frank Fischer <frank fischer at mathematik.tu-chemnitz.de>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.14
+;; Version: 1.3.0-snapshot
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -56,7 +56,7 @@
      number)
     (command #'evil-ex-parse-command)
     (binding
-     "[~&*@<>=:]+\\|[[:alpha:]-]+\\|!")
+     "[~&*@<>=:]+\\|[[:alpha:]_]+\\|!")
     (emacs-binding
      "[[:alpha:]-][[:alnum:][:punct:]-]+")
     (bang
@@ -170,7 +170,7 @@ is appended to the line."
                 (let ((arg (prefix-numeric-value current-prefix-arg)))
                   (cond ((< arg 0) (setq arg (1+ arg)))
                         ((> arg 0) (setq arg (1- arg))))
-                  (if (= arg 0) '(".")
+                  (if (= arg 0) "."
                     (format ".,.%+d" arg)))))
               evil-ex-initial-input)))
       (and (> (length s) 0) s))))
@@ -379,15 +379,10 @@ in case of incomplete or unknown commands."
     (remove-text-properties (minibuffer-prompt-end) (point-max) '(face nil evil))))
 
 (defun evil-ex-command-completion-at-point ()
-  (let ((context (evil-ex-syntactic-context (1- (point)))))
-    (when (memq 'command context)
-      (let ((beg (or (get-text-property 0 'ex-index evil-ex-cmd)
-                     (point)))
-            (end (1+ (or (get-text-property (1- (length evil-ex-cmd))
-                                            'ex-index
-                                            evil-ex-cmd)
-                         (1- (point))))))
-        (list beg end (evil-ex-completion-table))))))
+  (let ((beg (or (get-text-property 0 'ex-index evil-ex-cmd)
+                 (point)))
+        (end (point)))
+    (list beg end (evil-ex-completion-table) :exclusive 'no)))
 
 (defun evil-ex-completion-table ()
   (cond
@@ -541,6 +536,7 @@ keywords and function:
   or 'update then ARG is the current value of this argument. If
   FLAG is 'stop then arg is nil."
   (declare (indent defun)
+           (doc-string 2)
            (debug (&define name
                            [&optional stringp]
                            [&rest [keywordp function-form]])))
@@ -851,13 +847,13 @@ START is the start symbol, which defaults to `expression'."
     (when result
       (setq command (car-safe result)
             string (cdr-safe result))
-      ;; check whether the parsed command is followed by a slash or
-      ;; number and the part before it is not a known ex binding
+      ;; check whether the parsed command is followed by a slash, dash
+      ;; or number and either the part before is NOT known to be a binding,
+      ;; or the complete string IS known to be a binding
       (when (and (> (length string) 0)
-                 (string-match-p "^[/[:digit:]]" string)
-                 (not (evil-ex-binding command t)))
-        ;; if this is the case, assume the slash or number and all
-        ;; following symbol characters form an (Emacs-)command
+                 (string-match-p "^[-/[:digit:]]" string)
+                 (or (evil-ex-binding (concat command string) t)
+                     (not (evil-ex-binding command t))))
         (setq result (evil-parser (concat command string)
                                   'emacs-binding
                                   evil-ex-grammar)

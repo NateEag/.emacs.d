@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.14
+;; Version: 1.3.0-snapshot
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -128,10 +128,10 @@ commands opening a new line."
     (evil-set-marker ?^ nil t)
     (unless (eq evil-want-fine-undo t)
       (evil-end-undo-step))
-    (when evil-move-cursor-back
-      (when (or (evil-normal-state-p evil-next-state)
-                (evil-motion-state-p evil-next-state))
-        (evil-move-cursor-back))))))
+    (when (or (evil-normal-state-p evil-next-state)
+              (evil-motion-state-p evil-next-state))
+      (evil-move-cursor-back
+       (and (eolp) (not evil-move-beyond-eol)))))))
 
 (defun evil-insert-repeat-hook ()
   "Record insertion keys in `evil-insert-repeat-info'."
@@ -211,6 +211,7 @@ the selection is enabled.
 
 \(fn SELECTION DOC [[KEY VAL]...] BODY...)"
   (declare (indent defun)
+           (doc-string 2)
            (debug (&define name stringp
                            [&rest keywordp sexp]
                            def-body)))
@@ -257,6 +258,10 @@ the selection is enabled.
 (evil-define-visual-selection line
   "Linewise selection."
   :message "-- VISUAL LINE --")
+
+(evil-define-visual-selection screen-line
+  "Linewise selection in `visual-line-mode'."
+  :message "-- SCREEN LINE --")
 
 (evil-define-visual-selection block
   "Blockwise selection."
@@ -856,8 +861,7 @@ CORNER defaults to `upper-left'."
     (remove-hook 'pre-command-hook #'evil-replace-pre-command t)
     (unless (eq evil-want-fine-undo t)
       (evil-end-undo-step))
-    (when evil-move-cursor-back
-      (evil-move-cursor-back))))
+    (evil-move-cursor-back)))
   (setq evil-replace-alist nil))
 
 (defun evil-replace-pre-command ()

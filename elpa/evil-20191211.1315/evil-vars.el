@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.14
+;; Version: 1.3.0-snapshot
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -38,6 +38,15 @@
   "Functions to be run when loading of Evil is finished.
 This hook can be used the execute some initialization routines
 when Evil is completely loaded.")
+
+(defcustom evil-goto-definition-functions
+  '(evil-goto-definition-imenu
+    evil-goto-definition-semantic
+    evil-goto-definition-xref
+    evil-goto-definition-search)
+  "List of functions run until success by `evil-goto-definition'."
+  :type 'hook
+  :group 'evil)
 
 ;;; Initialization
 
@@ -218,21 +227,9 @@ a line."
 
 (defcustom evil-respect-visual-line-mode nil
   "Whether movement commands respect `visual-line-mode'.
-This variable must be set before Evil is loaded. When
-`visual-line-mode' is active, the following commands are swapped
-
-`evil-next-line'         <-> `evil-next-visual-line'
-`evil-previous-line'     <-> `evil-previous-visual-line'
-`evil-beginning-of-line' <-> `evil-beginning-of-visual-line'
-`evil-end-of-line'       <-> `evil-end-of-visual-line'
-
-The commands `evil-insert-line', `evil-append-line',
-`evil-find-char', `evil-find-char-backward', `evil-find-char-to'
-and `evil-find-char-to-backward' are also made aware of visual
-lines."
+This variable must be set before Evil is loaded."
   :type 'boolean
   :group 'evil)
-
 
 (defcustom evil-repeat-find-to-skip-next t
   "Whether a repeat of t or T should skip an adjacent character."
@@ -506,7 +503,9 @@ The default behavior is to yank the whole line."
   :set #'(lambda (sym value)
            (evil-add-command-properties
             'evil-yank-line
-            :motion (if value 'evil-end-of-line 'evil-line))))
+            :motion (if value
+                        'evil-end-of-line-or-visual-line
+                      'evil-line-or-visual-line))))
 
 (defcustom evil-disable-insert-state-bindings nil
   "Whether insert state bindings should be used. Excludes
@@ -1229,6 +1228,7 @@ like in Vim. This variable is read only on load."
 The parameters are the same as for `defvar', but the variable
 SYMBOL is made permanent buffer local."
   (declare (indent defun)
+           (doc-string 3)
            (debug (symbolp &optional form stringp)))
   `(progn
      (defvar ,symbol ,initvalue ,docstring)
@@ -1625,12 +1625,12 @@ Elements have the form (NAME . FUNCTION).")
 (defvar evil-visual-x-select-timeout 0.1
   "Time in seconds for the update of the X selection.")
 
-(declare-function origami-open-all-nodes "origami.el")
-(declare-function origami-close-all-nodes "origami.el")
-(declare-function origami-toggle-node "origami.el")
-(declare-function origami-open-node "origami.el")
-(declare-function origami-open-node-recursively "origami.el")
-(declare-function origami-close-node "origami.el")
+(declare-function origami-open-all-nodes "ext:origami.el")
+(declare-function origami-close-all-nodes "ext:origami.el")
+(declare-function origami-toggle-node "ext:origami.el")
+(declare-function origami-open-node "ext:origami.el")
+(declare-function origami-open-node-recursively "ext:origami.el")
+(declare-function origami-close-node "ext:origami.el")
 
 (defvar evil-fold-list
   `(((vdiff-mode)
@@ -1643,7 +1643,7 @@ Elements have the form (NAME . FUNCTION).")
     ((vdiff-3way-mode)
      :open-all   vdiff-open-all-folds
      :close-all  vdiff-close-all-folds
-     :toggle     nil
+     :toggle     ,(lambda () (call-interactively 'vdiff-toggle-fold))
      :open       ,(lambda () (call-interactively 'vdiff-open-fold))
      :open-rec   ,(lambda () (call-interactively 'vdiff-open-fold))
      :close      ,(lambda () (call-interactively 'vdiff-close-fold)))
@@ -1874,7 +1874,7 @@ Otherwise the previous command is assumed as substitute.")
                       (buffer-substring (point-min)
                                         (line-end-position))))
           ;; no repo, use plain version
-          "1.2.14"))))
+          "1.3.0-snapshot"))))
   "The current version of Evil")
 
 (defcustom evil-want-integration t

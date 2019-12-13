@@ -3,7 +3,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.2.14
+;; Version: 1.3.0-snapshot
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -139,6 +139,36 @@ line and `evil-want-visual-char-semi-exclusive', then:
   :string (lambda (beg end)
             (let ((height (count-lines beg end)))
               (format "%s line%s" height
+                      (if (= height 1) "" "s")))))
+
+(evil-define-type screen-line
+  "Include whole lines, being aware of `visual-line-mode'
+when `evil-respect-visual-line-mode' is non-nil."
+  :one-to-one nil
+  :expand (lambda (beg end)
+            (if (or (not evil-respect-visual-line-mode)
+                    (not visual-line-mode))
+                (evil-line-expand beg end)
+              (evil-range
+               (progn
+                 (goto-char beg)
+                 (save-excursion
+                   (beginning-of-visual-line)))
+               (progn
+                 (goto-char end)
+                 (save-excursion
+                   ;; `beginning-of-visual-line' reverts to the beginning of the
+                   ;; last visual line if the end of the last line is the end of
+                   ;; the buffer. This would prevent selecting the last screen
+                   ;; line.
+                   (if (= (line-beginning-position 2) (point-max))
+                       (point-max)
+                     (beginning-of-visual-line 2)))))))
+  :contract (lambda (beg end)
+              (evil-range beg (max beg (1- end))))
+  :string (lambda (beg end)
+            (let ((height (count-screen-lines beg end)))
+              (format "%s screen line%s" height
                       (if (= height 1) "" "s")))))
 
 (evil-define-type block

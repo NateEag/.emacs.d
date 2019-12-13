@@ -25,7 +25,7 @@
 
 ;;; Commentary:
 ;;
-;; Utility to show informations of the current line
+;; Utility to show information for the current line
 
 ;;; Code:
 
@@ -36,7 +36,7 @@
 (require 'subr-x)
 
 (defgroup lsp-ui-sideline nil
-  "Display informations of the current line."
+  "Display information for the current line."
   :group 'tools
   :group 'convenience
   :group 'lsp-ui
@@ -49,7 +49,7 @@
   :group 'lsp-ui)
 
 (defcustom lsp-ui-sideline-ignore-duplicate nil
-  "Control to ignore duplicates when there is a same symbol with the same contents."
+  "Ignore duplicates when there is a same symbol with the same contents."
   :type 'boolean
   :group 'lsp-ui-sideline)
 
@@ -90,6 +90,11 @@ when user changes current point."
 
 (defcustom lsp-ui-sideline-diagnostic-max-lines 20
   "Maximum number of lines to show of diagnostics in sideline."
+  :type 'integer
+  :group 'lsp-ui-sideline)
+
+(defcustom lsp-ui-sideline-diagnostic-max-line-length 100
+  "Maximum line length of diagnostics in sideline."
   :type 'integer
   :group 'lsp-ui-sideline)
 
@@ -181,7 +186,7 @@ BOL & EOL are beginning and ending of the user point line.
 if UP is non-nil, it loops on the previous lines.
 if OFFSET is non-nil, it starts search OFFSET lines from user point line."
   (let ((win-width (lsp-ui-sideline--window-width))
-        (index (if (null offset) 1 (1+ offset)))
+        (index (if (null offset) 1 offset))
         pos)
     (while (and (null pos) (<= (abs index) 30))
       (setq index (if up (1- index) (1+ index)))
@@ -232,9 +237,9 @@ MARKED-STRING is the string returned by `lsp-ui-sideline--extract-info'."
      (if (display-graphic-p) 1 2)))
 
 (defun lsp-ui-sideline--make-display-string (info symbol current)
-  "Make final string to display on buffer.
+  "Make final string to display in buffer.
 INFO is the information to display.
-SYMBOL is the symbol associated to the info.
+SYMBOL is the symbol associated with the info.
 CURRENT is non-nil when the point is on the symbol."
   (let* ((face (if current 'lsp-ui-sideline-current-symbol 'lsp-ui-sideline-symbol))
          (str (if lsp-ui-sideline-show-symbol
@@ -278,9 +283,10 @@ CURRENT is non-nil when the point is on the symbol."
 (defun lsp-ui-sideline--push-info (symbol tag bounds info bol eol)
   (when (and (= tag (lsp-ui-sideline--calculate-tag))
              (not (lsp-ui-sideline--stop-p)))
-    (let* ((info (concat (thread-first (gethash "contents" info)
+    (let* ((info (concat (-some->> (gethash "contents" info)
                            lsp-ui-sideline--extract-info
-                           lsp-ui-sideline--format-info)))
+                           lsp-ui-sideline--format-info
+                           (replace-regexp-in-string "\r" ""))))
            (current (and (>= (point) (car bounds)) (<= (point) (cdr bounds)))))
       (when (and (> (length info) 0)
                  (lsp-ui-sideline--check-duplicate symbol info))
@@ -317,14 +323,27 @@ CURRENT is non-nil when the point is on the symbol."
         (when (overlay-get ov 'current)
           (lsp-ui-sideline--toggle-current ov nil))))))
 
+(defun lsp-ui-sideline--split-long-lines (lines)
+  "Fill LINES so that they are not longer than `lsp-ui-sideline-diagnostic-max-line-length' characters."
+  (mapcan (lambda (line)
+            (if (< (length line) lsp-ui-sideline-diagnostic-max-line-length)
+                (list line)
+              (with-temp-buffer
+                (let ((fill-column lsp-ui-sideline-diagnostic-max-line-length))
+                  (insert line)
+                  (fill-region (point-min) (point-max))
+                  (split-string (buffer-string) "\n")))))
+          lines))
+
 (defun lsp-ui-sideline--diagnostics (bol eol)
   "Show diagnostics on the current line."
   (when (bound-and-true-p flycheck-mode)
       (dolist (e (flycheck-overlay-errors-in bol (1+ eol)))
         (let* ((lines (--> (flycheck-error-format-message-and-id e)
-                           (split-string it "\n")))
+                           (split-string it "\n")
+                           (lsp-ui-sideline--split-long-lines it)))
                (display-lines (butlast lines (- (length lines) lsp-ui-sideline-diagnostic-max-lines)))
-               (offset 0))
+               (offset 1))
           (dolist (line display-lines)
             (let* ((message (string-trim (replace-regexp-in-string "[\t ]+" " " line)))
                    (len (length message))
@@ -393,15 +412,15 @@ CURRENT is non-nil when the point is on the symbol."
         (push ov lsp-ui-sideline--ovs)))))
 
 (defun lsp-ui-sideline--calculate-tag()
-  "Calculate the tag used to determinie whether to update sideline information."
+  "Calculate the tag used to determine whether to update sideline information."
   (if (equal lsp-ui-sideline-update-mode 'line)
       (line-number-at-pos)
     (point)))
 
 (defun lsp-ui-sideline--run ()
-  "Show informations (flycheck + lsp).
-It loops on the symbols of the current line and request information
-to the language server."
+  "Show information (flycheck + lsp).
+It loops on the symbols of the current line and requests information
+from the language server."
   (lsp-ui-sideline--delete-ov)
   (when buffer-file-name
     (let ((eol (line-end-position))
@@ -475,7 +494,7 @@ COMMAND is `company-pseudo-tooltip-frontend' parameter."
     (setq lsp-ui-sideline--tag nil)))
 
 (defun lsp-ui-sideline ()
-  "Show informations of the current line."
+  "Show information for the current line."
   (if (lsp-ui-sideline--stop-p)
       (progn (setq lsp-ui-sideline--tag nil)
              (lsp-ui-sideline--delete-ov))
@@ -495,7 +514,7 @@ COMMAND is `company-pseudo-tooltip-frontend' parameter."
                                        (lsp-ui-sideline--run)))))))))
 
 (defun lsp-ui-sideline-toggle-symbols-info ()
-  "Toggle display of symbols informations.
+  "Toggle display of symbols information.
 This does not toggle display of flycheck diagnostics or code actions."
   (interactive)
   (when (bound-and-true-p lsp-ui-sideline-mode)
@@ -519,7 +538,7 @@ This does not toggle display of flycheck diagnostics or code actions."
   '(kill-region))
 
 (define-minor-mode lsp-ui-sideline-mode
-  "Minor mode for showing information of current line."
+  "Minor mode for showing information for current line."
   :init-value nil
   :group lsp-ui-sideline
   (cond

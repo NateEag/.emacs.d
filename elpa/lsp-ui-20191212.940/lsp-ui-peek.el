@@ -51,6 +51,12 @@
   :type 'boolean
   :group 'lsp-ui)
 
+(defcustom lsp-ui-peek-show-directory t
+  "Whether or not to show the directory of files."
+  :type 'boolean
+  :safe t
+  :group 'lsp-ui-peek)
+
 (defcustom lsp-ui-peek-peek-height 20
   "Height of the peek code."
   :type 'integer
@@ -64,8 +70,9 @@
 (defcustom lsp-ui-peek-fontify 'on-demand
   "Whether to fontify chunks of code (use semantics colors).
 WARNING: 'always can heavily slow the processing when `lsp-ui-peek-expand-function'
-expands more than 1 file.  It is recommended to keeps the default value of
-`lsp-ui-peek-expand-function' when this variable is 'always."
+expands more than 1 file.
+It is recommended to keep the default value of `lsp-ui-peek-expand-function' when
+this variable is set to 'always."
   :type '(choice (const :tag "Never" never)
                  (const :tag "On demand" on-demand)
                  (const :tag "Always" always))
@@ -300,7 +307,9 @@ XREFS is a list of references/definitions."
     (-let* (((&plist :file filename :xrefs xrefs :count count) it)
             (len-str (number-to-string count)))
       (setq lsp-ui-peek--size-list (+ lsp-ui-peek--size-list count))
-      (push (concat (propertize (lsp-ui--workspace-path filename)
+      (push (concat (propertize (if lsp-ui-peek-show-directory
+                                    (lsp-ui--workspace-path filename)
+                                  (file-name-nondirectory filename))
                                 'face 'lsp-ui-peek-filename
                                 'file filename
                                 'xrefs xrefs)
@@ -707,7 +716,7 @@ Returns item(s)."
 ;; FIXME: Remove this cyclic dependency.
 (declare-function lsp-ui--workspace-path "lsp-ui" (path))
 
-(declare-function evil-set-jump "evil-jumps.el" (&optional pos))
+(declare-function evil-set-jump "ext:evil-jumps.el" (&optional pos))
 
 (provide 'lsp-ui-peek)
 ;;; lsp-ui-peek.el ends here

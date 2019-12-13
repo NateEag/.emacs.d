@@ -271,7 +271,7 @@ We don't extract the string that `lps-line' is already displaying."
    ((stringp contents) (lsp-ui-doc--extract-marked-string contents)) ;; MarkedString
    ((sequencep contents) ;; MarkedString[]
     (mapconcat 'lsp-ui-doc--extract-marked-string
-               (lsp-ui-doc--filter-marked-string contents)
+               (lsp-ui-doc--filter-marked-string (seq-filter #'identity contents))
                "\n\n"
                ;; (propertize "\n\n" 'face '(:height 0.4))
                ))
@@ -624,6 +624,7 @@ HEIGHT is the documentation number of lines."
     (set-window-dedicated-p window t)
     (redirect-frame-focus frame (frame-parent frame))
     (set-face-background 'internal-border lsp-ui-doc-border frame)
+    (set-face-background 'fringe nil frame)
     (run-hook-with-args 'lsp-ui-doc-frame-hook frame window)
     (when lsp-ui-doc-use-webkit
       (define-key (current-global-map) [xwidget-event]
@@ -643,7 +644,8 @@ HEIGHT is the documentation number of lines."
 
 (defun lsp-ui-doc--make-request nil
   "Request the documentation to the LS."
-  (when (and (not (bound-and-true-p lsp-ui-peek-mode))
+  (when (and (not (eq this-command 'lsp-ui-doc-hide))
+             (not (bound-and-true-p lsp-ui-peek-mode))
              (lsp--capability "hoverProvider"))
     (-if-let (bounds (or (and (symbol-at-point) (bounds-of-thing-at-point 'symbol))
                          (and (looking-at "[[:graph:]]") (cons (point) (1+ (point))))))
@@ -667,8 +669,12 @@ BUFFER is the buffer where the request has been made."
         (setq lsp-ui-doc--timer
               (run-with-idle-timer
                lsp-ui-doc-delay nil
-               (lambda nil (lsp-ui-doc--display
-                            (thing-at-point 'symbol t) (lsp-ui-doc--extract (gethash "contents" hover)))))))
+               (lambda nil
+                 (lsp-ui-doc--display
+                  (thing-at-point 'symbol t)
+                  (-some->> (gethash "contents" hover)
+                    lsp-ui-doc--extract
+                    (replace-regexp-in-string "\r" "")))))))
     (lsp-ui-doc--hide-frame)))
 
 (defun lsp-ui-doc--delete-frame ()
@@ -730,6 +736,7 @@ before, or if the new window is the minibuffer."
     (add-hook 'post-command-hook 'lsp-ui-doc--make-request nil t)
     (add-hook 'delete-frame-functions 'lsp-ui-doc--on-delete nil t))
    (t
+    (lsp-ui-doc-hide)
     (remove-hook 'post-command-hook 'lsp-ui-doc--make-request t)
     (remove-hook 'delete-frame-functions 'lsp-ui-doc--on-delete t))))
 
@@ -749,6 +756,17 @@ It is supposed to be called from `lsp-ui--toggle'"
   "Hide hover information popup."
   (interactive)
   (lsp-ui-doc--hide-frame))
+
+(defun lsp-ui-doc--glance-hide-frame ()
+  "Hook to hide hover information popup for lsp-ui-doc-glance."
+  (lsp-ui-doc-hide)
+  (remove-hook 'pre-command-hook 'lsp-ui-doc--glance-hide-frame))
+
+(defun lsp-ui-doc-glance ()
+  "Trigger display hover information popup and hide it on next typing."
+  (interactive)
+  (lsp-ui-doc-show)
+  (add-hook 'pre-command-hook 'lsp-ui-doc--glance-hide-frame))
 
 (provide 'lsp-ui-doc)
 ;;; lsp-ui-doc.el ends here

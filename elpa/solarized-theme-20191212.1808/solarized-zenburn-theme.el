@@ -1,6 +1,6 @@
-;;; solarized-light-theme.el --- Solarized Light Theme for Emacs.
+;;; solarized-zenburn-theme.el --- Solarized Theme  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2019 Bozhidar Batsov
+;; Copyright (C) 2019 Thomas Frössman
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -17,17 +17,26 @@
 
 ;;; Commentary:
 ;;
-;; The light variant of the solarized theme.
+;; The dark variant of the solarized theme with a zenburn palette.
 ;;
 ;;; Code:
 
 (require 'solarized)
+(eval-when-compile
+  (require 'solarized-palettes))
 
-(deftheme solarized-light "The light variant of the Solarized colour theme")
+(deftheme solarized-zenburn
+  "The dark variant of the Solarized colour theme with gruvbox color palette")
 
-(create-solarized-theme 'light 'solarized-light)
+(solarized-with-color-variables 'dark 'solarized-zenburn
+  solarized-zenburn-color-palette-alist)
 
-(provide-theme 'solarized-light)
+(provide-theme 'solarized-zenburn)
 
-(provide 'solarized-light-theme)
-;;; solarized-light-theme.el ends here
+(provide 'solarized-zenburn-theme)
+
+;; Local Variables:
+;; indent-tabs-mode: nil
+;; End:
+
+;;; solarized-zenburn-theme.el ends here

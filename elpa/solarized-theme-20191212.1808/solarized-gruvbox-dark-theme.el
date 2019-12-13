@@ -1,6 +1,6 @@
-;;; solarized-dark-theme.el --- Solarized Dark Theme for Emacs.
+;;; solarized-gruvbox-dark-theme.el --- Solarized Theme  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2011-2019 Bozhidar Batsov
+;; Copyright (C) 2019 Thomas Frössman
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -22,12 +22,21 @@
 ;;; Code:
 
 (require 'solarized)
+(eval-when-compile
+  (require 'solarized-palettes))
 
-(deftheme solarized-dark "The dark variant of the Solarized colour theme")
+(deftheme solarized-gruvbox-dark
+  "The dark variant of the Solarized colour theme with gruvbox color palette")
 
-(create-solarized-theme 'dark 'solarized-dark)
+(solarized-with-color-variables 'dark 'solarized-gruvbox-dark
+  solarized-gruvbox-dark-color-palette-alist)
 
-(provide-theme 'solarized-dark)
+(provide-theme 'solarized-gruvbox-dark)
 
-(provide 'solarized-dark-theme)
-;;; solarized-dark-theme.el ends here
+(provide 'solarized-gruvbox-dark-theme)
+
+;; Local Variables:
+;; indent-tabs-mode: nil
+;; End:
+
+;;; solarized-gruvbox-dark-theme.el ends here

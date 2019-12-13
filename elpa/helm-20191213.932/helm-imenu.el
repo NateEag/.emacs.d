@@ -24,6 +24,8 @@
 (require 'helm-utils)
 (require 'helm-help)
 
+(declare-function which-function "which-func")
+
 
 (defgroup helm-imenu nil
   "Imenu related libraries and applications for helm."
@@ -310,17 +312,21 @@ Each car is a regexp match pattern of the imenu type string."
 (defun helm-imenu ()
   "Preconfigured `helm' for `imenu'."
   (interactive)
+  (require 'which-func)
   (unless helm-source-imenu
     (setq helm-source-imenu
           (helm-make-source "Imenu" 'helm-imenu-source
             :fuzzy-match helm-imenu-fuzzy-match)))
-  (let ((imenu-auto-rescan t)
-        (str (thing-at-point 'symbol))
-        (helm-execute-action-at-once-if-one
-         helm-imenu-execute-action-at-once-if-one))
+  (let* ((imenu-auto-rescan t)
+         (str (thing-at-point 'symbol))
+         (init-reg (and str (concat "\\_<" (regexp-quote str) "\\_>")))
+         (helm-execute-action-at-once-if-one
+          helm-imenu-execute-action-at-once-if-one))
     (helm :sources 'helm-source-imenu
-          :default (list (concat "\\_<" (and str (regexp-quote str)) "\\_>") str)
-          :preselect str
+          :default (and str (list init-reg str))
+          :preselect (helm-aif (which-function)
+                         (concat "\\_<" (regexp-quote it) "\\_>")
+                       init-reg)
           :buffer "*helm imenu*")))
 
 ;;;###autoload
@@ -329,6 +335,7 @@ Each car is a regexp match pattern of the imenu type string."
 A mode is similar as current if it is the same, it is derived i.e `derived-mode-p'
 or it have an association in `helm-imenu-all-buffer-assoc'."
   (interactive)
+  (require 'which-func)
   (unless helm-imenu-in-all-buffers-separate-sources
     (unless helm-source-imenu-all
       (setq helm-source-imenu-all
@@ -341,19 +348,22 @@ or it have an association in `helm-imenu-all-buffer-assoc'."
                             (helm-imenu-candidates-in-all-buffers)))
               :candidates 'helm-imenu--in-all-buffers-cache
               :fuzzy-match helm-imenu-fuzzy-match))))
-  (let ((imenu-auto-rescan t)
-        (str (thing-at-point 'symbol))
-        (helm-execute-action-at-once-if-one
-         helm-imenu-execute-action-at-once-if-one)
-        (helm--maybe-use-default-as-input
-         (not (null (memq 'helm-source-imenu-all
-                          helm-sources-using-default-as-input))))
-        (sources (if helm-imenu-in-all-buffers-separate-sources
-                     (helm-imenu-candidates-in-all-buffers 'build-sources)
-                     '(helm-source-imenu-all))))
+  (let* ((imenu-auto-rescan t)
+         (str (thing-at-point 'symbol))
+         (init-reg (and str (concat "\\_<" (regexp-quote str) "\\_>")))
+         (helm-execute-action-at-once-if-one
+          helm-imenu-execute-action-at-once-if-one)
+         (helm--maybe-use-default-as-input
+          (not (null (memq 'helm-source-imenu-all
+                           helm-sources-using-default-as-input))))
+         (sources (if helm-imenu-in-all-buffers-separate-sources
+                      (helm-imenu-candidates-in-all-buffers 'build-sources)
+                    '(helm-source-imenu-all))))
     (helm :sources sources
-          :default (list (concat "\\_<" (and str (regexp-quote str)) "\\_>") str)
-          :preselect (unless helm--maybe-use-default-as-input str)
+          :default (and str (list init-reg str))
+          :preselect (helm-aif (which-function)
+                         (concat "\\_<" (regexp-quote it) "\\_>")
+                       init-reg)
           :buffer "*helm imenu all*")))
 
 (provide 'helm-imenu)

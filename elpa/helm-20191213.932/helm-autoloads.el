@@ -105,7 +105,7 @@ while in `helm-M-x' session will disable it.
 
 You can get help on each command by persistent action.
 
-\(fn ARG &optional COMMAND-NAME)" t nil)
+\(fn ARG)" t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-command" '("helm-")))
 
@@ -616,10 +616,15 @@ Keys description:
 - MATCH-PART: Allow matching only one part of candidate.
   See match-part documentation in `helm-source'.
 
+- MATCH-DYNAMIC: See match-dynamic in `helm-source-sync'
+  It have no effect when used with CANDIDATES-IN-BUFFER.
+
 - ALLOW-NEST: Allow nesting this `helm-comp-read' in a helm session.
   See `helm'.
 
 - MULTILINE: See multiline in `helm-source'.
+
+- COERCE: See coerce in `helm-source'.
 
 - GROUP: See group in `helm-source'.
 
@@ -629,7 +634,7 @@ in `helm-current-prefix-arg', otherwise if prefix args were given before
 That's mean you can pass prefix args before or after calling a command
 that use `helm-comp-read' See `helm-M-x' for example.
 
-\(fn PROMPT COLLECTION &key TEST INITIAL-INPUT DEFAULT PRESELECT (BUFFER \"*Helm Completions*\") MUST-MATCH FUZZY REVERSE-HISTORY (REQUIRES-PATTERN 0) HISTORY INPUT-HISTORY (CASE-FOLD helm-comp-read-case-fold-search) (DEL-INPUT t) (PERSISTENT-ACTION nil) (PERSISTENT-HELP \"DoNothing\") (MODE-LINE helm-comp-read-mode-line) HELP-MESSAGE (KEYMAP helm-comp-read-map) (NAME \"Helm Completions\") HEADER-NAME CANDIDATES-IN-BUFFER MATCH-PART EXEC-WHEN-ONLY-ONE QUIT-WHEN-NO-CAND (VOLATILE t) SORT FC-TRANSFORMER HIST-FC-TRANSFORMER MARKED-CANDIDATES NOMARK (ALISTP t) (CANDIDATE-NUMBER-LIMIT helm-candidate-number-limit) MULTILINE ALLOW-NEST (GROUP \\='helm))" nil nil)
+\(fn PROMPT COLLECTION &key TEST INITIAL-INPUT DEFAULT PRESELECT (BUFFER \"*Helm Completions*\") MUST-MATCH FUZZY REVERSE-HISTORY (REQUIRES-PATTERN 0) HISTORY INPUT-HISTORY (CASE-FOLD helm-comp-read-case-fold-search) (DEL-INPUT t) (PERSISTENT-ACTION nil) (PERSISTENT-HELP \"DoNothing\") (MODE-LINE helm-comp-read-mode-line) HELP-MESSAGE (KEYMAP helm-comp-read-map) (NAME \"Helm Completions\") HEADER-NAME CANDIDATES-IN-BUFFER MATCH-PART MATCH-DYNAMIC EXEC-WHEN-ONLY-ONE QUIT-WHEN-NO-CAND (VOLATILE t) SORT FC-TRANSFORMER HIST-FC-TRANSFORMER MARKED-CANDIDATES NOMARK (ALISTP t) (CANDIDATE-NUMBER-LIMIT helm-candidate-number-limit) MULTILINE ALLOW-NEST COERCE (GROUP \\='helm))" nil nil)
 
 (autoload 'helm-read-file-name "helm-mode" "\
 Read a file name with helm completion.
@@ -687,29 +692,20 @@ or call the function `helm-mode'.")
 (autoload 'helm-mode "helm-mode" "\
 Toggle generic helm completion.
 
-All functions in Emacs that use `completing-read'
-or `read-file-name' and friends will use helm interface
-when this mode is turned on.
+All functions in Emacs that use `completing-read',
+`read-file-name', `completion-in-region' and friends will use helm
+interface when this mode is turned on.
 
 However you can modify this behavior for functions of your choice
 with `helm-completing-read-handlers-alist'.
 
-Also commands using `completion-in-region' will be helmized when
-`helm-mode-handle-completion-in-region' is non nil, you can modify
-this behavior with `helm-mode-no-completion-in-region-in-modes'.
-
 Called with a positive arg, turn on unconditionally, with a
 negative arg turn off.
-You can turn it on with `helm-mode'.
-
-Some crap emacs functions may not be supported,
-e.g `ffap-alternate-file' and maybe others
-You can add such functions to `helm-completing-read-handlers-alist'
-with a nil value.
+You can toggle it with M-x `helm-mode'.
 
 About `ido-mode':
-When you are using `helm-mode', DO NOT use `ido-mode', instead if you
-want some commands use `ido', add these commands to
+DO NOT enable `ido-everywhere' when using `helm-mode' and instead of
+using `ido-mode', add the commands where you want to use ido to
 `helm-completing-read-handlers-alist' with `ido' as value.
 
 Note: This mode is incompatible with Emacs23.

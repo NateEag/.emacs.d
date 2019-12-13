@@ -2256,12 +2256,15 @@ or when `helm-pattern' is equal to \"~/\"."
   ;; so use the root of current Drive. (i.e "C:/")
   (let* ((directory (and (memq system-type '(windows-nt ms-dos))
                          (getenv "SystemDrive")))
+         (subst (helm-substitute-in-filename pattern))
          ;; On Windows use a simple call to `expand-file-name' to
          ;; avoid Issue #2004.
          (expand-fn (if directory
                         #'expand-file-name
                       #'helm-ff--expand-file-name-no-dot)))
-    (funcall expand-fn (helm-substitute-in-filename pattern)
+    ;; Fix issue #2223 with tilde in directory names e.g. "~/tmp/~test/".
+    (funcall expand-fn (if (string-match-p "\\`~[^/]" subst)
+                           pattern subst)
              ;; directory is nil on Nix.
              directory)))
 
@@ -2398,7 +2401,10 @@ purpose."
            (comps (cl-loop for (f . h) in (tramp-get-completion-function method)
                            append (cl-loop for e in (funcall f (car h))
                                            for host = (and (consp e) (cadr e))
-                                           when (and host (not (member host all-methods)))
+                                           ;; On emacs-27 host may be
+                                           ;; ("root" t) in sudo method.
+                                           when (and (stringp host)
+                                                     (not (member host all-methods)))
                                            collect (concat (or (car mh-method) "/")
                                                            method ":" host)))))
       (helm-fast-remove-dups
@@ -3208,8 +3214,9 @@ Return candidates prefixed with basename of `helm-input' first."
                . helm-find-files-byte-compile)
               ("Load File(s) `M-L'" . helm-find-files-load-files))
             2))
-          ((string-match "\\.elc?\\'" (helm-aif (helm-marked-candidates)
-                                          (car it) candidate))
+          ((string-match (concat (regexp-opt load-suffixes) "\\'")
+                         (helm-aif (helm-marked-candidates)
+                             (car it) candidate))
            (helm-append-at-nth
             actions
             '(("Load File(s) `M-L'" . helm-find-files-load-files))
@@ -3878,8 +3885,9 @@ is helm-source-find-files."
       (let* ((beg (and (use-region-p) (region-beginning)))
              (end (and (use-region-p) (region-end)))
              (str (and beg end (buffer-substring-no-properties beg end)))
-             (ffap (or (and helm-ff-guess-ffap-urls ffap-url-regexp
-                            (ffap-fixup-url (ffap-url-at-point)))
+             (ffap (or (helm-aand helm-ff-guess-ffap-urls ffap-url-regexp
+                                  (ffap-fixup-url (ffap-url-at-point))
+                                  (and (string-match ffap-url-regexp it) it))
                        (ffap-file-at-point))))
         ;; Workaround emacs bugs:
         ;; When the region is active and a file is detected

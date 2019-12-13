@@ -51,6 +51,11 @@
 (declare-function async-byte-recompile-directory "ext:async-bytecomp.el")
 
 (defun helm-el-package--init ()
+  ;; In emacs-27 package-show-package-list returns an empty buffer
+  ;; until package-initialize have been called.
+  (unless (or package--initialized
+              (null (boundp 'package-quickstart)))
+    (package-initialize))
   (let (package-menu-async
         (inhibit-read-only t))
     (when (null package-alist)
@@ -250,8 +255,10 @@
 (defun helm-el-package-upgrade-all ()
   (if helm-el-package--upgrades
       (with-helm-display-marked-candidates
-        helm-marked-buffer-name (mapcar (lambda (x) (symbol-name (car x)))
-                                        helm-el-package--upgrades)
+        helm-marked-buffer-name (helm-fast-remove-dups
+                                 (mapcar (lambda (x) (symbol-name (car x)))
+                                         helm-el-package--upgrades)
+                                 :test 'equal)
         (when (y-or-n-p "Upgrade all packages? ")
           (helm-el-package-upgrade-1 helm-el-package--tabulated-list)))
       (message "No packages to upgrade actually!")))

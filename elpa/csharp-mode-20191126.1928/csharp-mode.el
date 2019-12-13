@@ -2,10 +2,10 @@
 
 ;; Author     : Dylan R. E. Moonfire (original)
 ;; Maintainer : Jostein Kjønigsen <jostein@gmail.com>
-;; Created    : Feburary 2005
+;; Created    : February 2005
 ;; Modified   : 2018
 ;; Version    : 0.9.2
-;; Package-Version: 20190717.1024
+;; Package-Version: 20191126.1928
 ;; Keywords   : c# languages oop mode
 ;; X-URL      : https://github.com/josteink/csharp-mode
 ;; Last-saved : 2018-Jul-08
@@ -120,7 +120,7 @@
 ;;
 ;;   Method names with a preceding attribute are not fontified.
 ;;
-;;   The symbol followng #if is not fontified.  It should be treated like
+;;   The symbol following #if is not fontified.  It should be treated like
 ;;   define and get font-lock-variable-name-face .
 ;;
 ;;   This code doesn't seem to work when you compile it, then
@@ -178,7 +178,7 @@
 ;;            compiled.
 ;;    0.6.0 - Added the c-filter-ops patch for 5.31.1 which made that
 ;;            function in cc-langs.el unavailable.
-;;          - Added a csharp-lineup-region for indention #region and
+;;          - Added a csharp-lineup-region for indentation #region and
 ;;            #endregion block differently.
 ;;    0.7.0 - Added autoload so update-directory-autoloads works
 ;;            (Thank you, Nikolaj Schumacher)
@@ -885,7 +885,7 @@ to work properly with code that includes attributes."
                                     (eq (char-after) ?{) ;; open curly
                                     ;; is square parenthesis block? - start
                                     (let* ((start (point)) ;; used to hold our position, so that we know that
-                                           (end))          ;; our code isn't stuck trying to look for a non-existant sexp.
+                                           (end))          ;; our code isn't stuck trying to look for a non-existent sexp.
                                       (and (eq (char-after) 91) ;; open square
                                            (while (and (eq (char-after) 91)
                                                        (not (eq start end)))
@@ -1800,7 +1800,7 @@ to the beginning of the prior namespace."
 (defconst csharp--imenu-expression
   (let* ((single-space                   "[ \t\n\r\f\v]")
          (optional-space                 (concat single-space "*"))
-         (bol                            "^[ \t]*") ;; BOL shouldnt accept lineshift.
+         (bol                            "^[ \t]*") ;; BOL shouldn't accept lineshift.
          (space                          (concat single-space "+"))
          (access-modifier (regexp-opt '( "public" "private" "protected" "internal"
                                          "static" "sealed" "partial" "override" "virtual"
@@ -1934,7 +1934,7 @@ to the beginning of the prior namespace."
                         type
                         "\\)"
                         optional-space "{" optional-space
-                        ;; unless we are super-specific and expect the accesors,
+                        ;; unless we are super-specific and expect the accessors,
                         ;; lots of weird things gets slurped into the name.
                         ;; including the accessors themselves.
                         (regexp-opt '("get" "set"))
@@ -1947,7 +1947,7 @@ to the beginning of the prior namespace."
                         type
                         "\\)"
                         optional-space "{" optional-space
-                        ;; unless we are super-specific and expect the accesors,
+                        ;; unless we are super-specific and expect the accessors,
                         ;; lots of weird things gets slurped into the name.
                         ;; including the accessors themselves.
                         (regexp-opt '("get" "set"))
@@ -1981,7 +1981,7 @@ to the beginning of the prior namespace."
                         "\\]"
                         "\\)"
                         optional-space "{" optional-space
-                        ;; unless we are super-specific and expect the accesors,
+                        ;; unless we are super-specific and expect the accessors,
                         ;; lots of weird things gets slurped into the name.
                         ;; including the accessors themselves.
                         (regexp-opt '("get" "set"))) 1)
@@ -2161,7 +2161,7 @@ This is done by modifying the contents of `RESULT' in place."
         (setf (cdr item) (csharp--imenu-sort (cdr item)))))
 
     ;; sort main list
-    ;; (Enums always sort last though, because they dont have
+    ;; (Enums always sort last though, because they don't have
     ;; sub-menus)
     (csharp--imenu-sort result)))
 

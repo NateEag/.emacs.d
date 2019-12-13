@@ -46,7 +46,7 @@ adoption would make life easier for users and maintainers alike, because
 then all packages that talk to forge APIs could be configured the same
 way.
 
-This manual is for Ghub version 3.2.0 (v3.2.0-35-g9d75d30+1).
+This manual is for Ghub version 3.2.0 (v3.2.0-45-ge19cd86+1).
 
      Copyright (C) 2017-2019 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -699,7 +699,7 @@ File: ghub.info,  Node: Making Requests,  Next: Authentication,  Up: API
           Both callbacks are called with four arguments.
 
              • For ‘CALLBACK’, the combined value of the retrieved
-               pages.  For ‘ERRORBACK’, the error that occured when
+               pages.  For ‘ERRORBACK’, the error that occurred when
                retrieving the last page.
 
              • The headers of the last page as an alist.
@@ -1283,7 +1283,7 @@ File: ghub.info,  Node: Forge Limitations and Notes,  Prev: Forge Functions and 
 
    • The Gitlab API documentation is not always accurate, though I don’t
      have an example at hand.  It also isn’t structured well, making it
-     occationally difficult to find the information one is looking for.
+     occasionally difficult to find the information one is looking for.
 
    • Where one would use ‘user/repo’ when accessing another forge, one
      has to use ‘user%2Frepo’ when accessing Gitlab, e.g.:
@@ -1304,12 +1304,12 @@ Node: Using Ghub in Personal Scripts20484
 Node: Using Ghub in a Package21940
 Node: API24558
 Node: Making Requests25355
-Node: Authentication39454
-Node: Configuration Variables41299
-Node: GraphQL Support45019
-Node: Support for Other Forges51684
-Node: Forge Functions and Variables51901
-Node: Forge Limitations and Notes56420
+Node: Authentication39455
+Node: Configuration Variables41300
+Node: GraphQL Support45020
+Node: Support for Other Forges51685
+Node: Forge Functions and Variables51902
+Node: Forge Limitations and Notes56421
 
 End Tag Table
 

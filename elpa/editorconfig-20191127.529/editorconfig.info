@@ -86,7 +86,7 @@ implementing missing features warmly welcomed!  Typically, you will want
 to tie these to native functionality, or the configuration of existing
 packages handling the feature.
 
-   As several packages have their own handling of, say, indention, we
+   As several packages have their own handling of, say, indentation, we
 might not yet cover some mode you use, but we try to add the ones that
 show up on our radar.  Similarly, we don't yet hook in to all different
 packages for whitespace trimming to inform them about editorconfig
@@ -281,25 +281,25 @@ Node: Installation575
 Ref: #installation709
 Node: Supported properties1613
 Ref: #supported-properties1769
-Node: File Type3113
-Ref: #file-type3218
-Node: Customize3843
-Ref: #customize3972
-Node: editorconfig-after-apply-functions4167
-Ref: #editorconfig-after-apply-functions4387
-Node: editorconfig-hack-properties-functions4986
-Ref: #editorconfig-hack-properties-functions5253
-Node: editorconfig-indentation-alist5879
-Ref: #editorconfig-indentation-alist6118
-Node: editorconfig-exec-path6673
-Ref: #editorconfig-exec-path6894
-Node: editorconfig-get-properties-function6983
-Ref: #editorconfig-get-properties-function7193
-Node: Testing8046
-Ref: #testing8187
-Node: Submitting Bugs and Feature Requests8294
-Ref: #submitting-bugs-and-feature-requests8491
-Node: License8633
-Ref: #license8756
+Node: File Type3115
+Ref: #file-type3220
+Node: Customize3845
+Ref: #customize3974
+Node: editorconfig-after-apply-functions4169
+Ref: #editorconfig-after-apply-functions4389
+Node: editorconfig-hack-properties-functions4988
+Ref: #editorconfig-hack-properties-functions5255
+Node: editorconfig-indentation-alist5881
+Ref: #editorconfig-indentation-alist6120
+Node: editorconfig-exec-path6675
+Ref: #editorconfig-exec-path6896
+Node: editorconfig-get-properties-function6985
+Ref: #editorconfig-get-properties-function7195
+Node: Testing8048
+Ref: #testing8189
+Node: Submitting Bugs and Feature Requests8296
+Ref: #submitting-bugs-and-feature-requests8493
+Node: License8635
+Ref: #license8758
 
 End Tag Table

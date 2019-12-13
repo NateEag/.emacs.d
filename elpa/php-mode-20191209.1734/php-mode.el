@@ -9,15 +9,12 @@
 ;; Maintainer: USAMI Kenta <tadsan@zonu.me>
 ;; URL: https://github.com/emacs-php/php-mode
 ;; Keywords: languages php
-;; Version: 1.22.0
+;; Version: 1.22.1
 ;; Package-Requires: ((emacs "24.3"))
 ;; License: GPL-3.0-or-later
 
-(defconst php-mode-version-number "1.22.0"
+(defconst php-mode-version-number "1.22.1"
   "PHP Mode version number.")
-
-(defconst php-mode-modified "2019-05-29"
-  "PHP Mode build date.")
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -195,7 +192,10 @@ of constants when set."
   :type 'boolean)
 
 (defcustom php-mode-page-delimiter
-  (eval-when-compile (rx symbol-start (or "namespace" "function" "class" "trait" "interface") symbol-end))
+  (eval-when-compile
+    (rx symbol-start
+        (or "namespace" "function" "class" "trait" "interface")
+        symbol-end))
   "Regexp describing line-beginnings that PHP declaration statements."
   :group 'php-mode
   :tag "PHP Mode Page Delimiter"
@@ -307,7 +307,7 @@ This variable can take one of the following symbol values:
 `PSR-2' - use coding styles preferred for working with projects using PSR-2 standards."
   :group 'php-mode
   :tag "PHP Mode Coding Style"
-  :type '(choice (const :tag "Default" default)
+  :type '(choice (const :tag "Default" php)
                  (const :tag "PEAR" pear)
                  (const :tag "Drupal" drupal)
                  (const :tag "WordPress" wordpress)
@@ -340,15 +340,27 @@ In that case set to `NIL'."
   "When set to `T', do not run hooks of parent modes (`java-mode', `c-mode')."
   :group 'php-mode
   :tag "PHP Mode Disable C Mode Hook"
-  :type 'boolean
-  :group 'php-mode)
+  :type 'boolean)
+
+(defcustom php-mode-enable-project-local-variable t
+  "When set to `T', apply project local variable to buffer local variable."
+  :group 'php-mode
+  :tag "PHP Mode Enable Project Local Variable"
+  :type 'boolean)
 
 (defun php-mode-version ()
   "Display string describing the version of PHP Mode."
   (interactive)
-  (funcall
-   (if (called-interactively-p 'interactive) #'message #'format)
-   "PHP Mode %s of %s" php-mode-version-number php-mode-modified))
+  (let ((fmt
+         (eval-when-compile
+           (let ((id "$Id$"))
+             (concat "PHP Mode %s"
+                     (if (string= id (concat [?$ ?I ?d ?$]))
+                         ""
+                       (concat " " id)))))))
+    (funcall
+     (if (called-interactively-p 'interactive) #'message #'format)
+     fmt php-mode-version-number)))
 
 ;;;###autoload
 (define-obsolete-variable-alias 'php-available-project-root-files 'php-project-available-root-files "1.19.0")
@@ -633,6 +645,33 @@ might be to handle switch and goto labels differently."
 (c-lang-defconst c-opt-<>-sexp-key
   php nil)
 
+(defconst php-mode--re-return-typed-closure
+  (eval-when-compile
+    (rx symbol-start "function" symbol-end
+               (* (syntax whitespace))
+               "(" (* (not (any "("))) ")"
+               (* (syntax whitespace))
+               (? symbol-start "use" symbol-end
+                  (* (syntax whitespace))
+                  "(" (* (not (any "("))) ")"
+                  (* (syntax whitespace)))
+               ":" (+ (not (any "{}")))
+               (group "{"))))
+
+(defun php-c-lineup-arglist (langelem)
+  "Line up the current argument line under the first argument using `c-lineup-arglist' LANGELEM."
+  (let (in-return-typed-closure)
+    (when (and (consp langelem)
+               (eq 'arglist-cont-nonempty (car langelem)))
+      (save-excursion
+        (save-match-data
+          (when (re-search-backward php-mode--re-return-typed-closure (cdr langelem) t)
+            (goto-char (match-beginning 1))
+            (when (not (php-in-string-or-comment-p))
+              (setq in-return-typed-closure t))))))
+    (unless in-return-typed-closure
+      (c-lineup-arglist langelem))))
+
 (defun php-lineup-cascaded-calls (langelem)
   "Line up chained methods using `c-lineup-cascaded-calls',
 but only if the setting is enabled"
@@ -644,11 +683,12 @@ but only if the setting is enabled"
  `((c-basic-offset . 4)
    (c-offsets-alist . ((arglist-close . php-lineup-arglist-close)
                        (arglist-cont . (first php-lineup-cascaded-calls 0))
-                       (arglist-cont-nonempty . (first php-lineup-cascaded-calls c-lineup-arglist))
+                       (arglist-cont-nonempty . (first php-lineup-cascaded-calls php-c-lineup-arglist))
                        (arglist-intro . php-lineup-arglist-intro)
                        (case-label . +)
                        (class-open . 0)
                        (comment-intro . 0)
+                       (inexpr-class . 0)
                        (inlambda . 0)
                        (inline-open . 0)
                        (namespace-open . 0)
@@ -1083,6 +1123,11 @@ After setting the stylevars run hooks according to STYLENAME
                (php-set-style (symbol-name coding-style)))
         (remove-hook 'hack-local-variables-hook #'php-mode-set-style-delay)))))
 
+(defun php-mode-set-local-variable-delay ()
+  "Set local variable from php-project."
+  (php-project-apply-local-variables)
+  (remove-hook 'hack-local-variables-hook #'php-mode-set-local-variable-delay))
+
 (defvar php-mode-syntax-table
   (let ((table (make-syntax-table)))
     (c-populate-syntax-table table)
@@ -1135,6 +1180,9 @@ After setting the stylevars run hooks according to STYLENAME
 
   ;; PHP vars are case-sensitive
   (setq case-fold-search t)
+
+  (when php-mode-enable-project-local-variable
+    (add-hook 'hack-local-variables-hook #'php-mode-set-local-variable-delay t t))
 
   ;; When php-mode-enable-project-coding-style is set, it is delayed by hook.
   ;; Since it depends on the timing at which the file local variable is set.
@@ -1496,6 +1544,9 @@ a completion list."
      ("\\(->\\)\\(\\sw+\\)\\s-*(" (1 'php-object-op) (2 'php-method-call))
      ("\\<\\(const\\)\\s-+\\(\\_<.+?\\_>\\)" (1 'php-keyword) (2 'php-constant-assign))
 
+     ;; Logical operator (!)
+     ("\\(![^=]\\)" 1 'php-logical-op)
+
      ;; Highlight special variables
      ("\\(\\$\\)\\(this\\)\\>" (1 'php-$this-sigil) (2 'php-$this))
      ("\\(\\$+\\)\\(\\sw+\\)" (1 'php-variable-sigil) (2 'php-variable-name))
@@ -1563,6 +1614,8 @@ a completion list."
    ;;   is usually overkill.
    `(
      ("\\<\\(@\\)" 1 'php-errorcontrol-op)
+     ;; Highlight function calls
+     ("\\(\\_<\\(?:\\sw\\|\\s_\\)+?\\_>\\)\\s-*(" 1 'php-function-call)
      ;; Highlight all upper-cased symbols as constant
      ("\\<\\([A-Z_][A-Z0-9_]+\\)\\>" 1 'php-constant)
 
@@ -1602,7 +1655,23 @@ a completion list."
      ("\\?\\(\\(:?\\sw\\|\\s_\\)+\\)\\s-+\\$" 1 font-lock-type-face)
      ("function.+:\\s-*\\??\\(\\(?:\\sw\\|\\s_\\)+\\)" 1 font-lock-type-face)
      (")\\s-*:\\s-*\\??\\(\\(?:\\sw\\|\\s_\\)+\\)\\s-*\\(?:\{\\|;\\)" 1 font-lock-type-face)
-     ))
+
+     ;; Assignment operators (=, +=, ...)
+     ("\\([^=<!>]+?\\([\-+./%]?=\\)[^=<!>]+?\\)" 2 'php-assignment-op)
+
+     ;; Comparison operators (==, ===, >=, ...)
+     ("\\([!=]=\\{1,2\\}[>]?\\|[<>]=?\\)" 1 'php-comparison-op)
+
+     ;; Arithmetic operators (+, -, *, **, /, %)
+     ("\\(?:[A-Za-z0-9[:blank:]]\\)\\([\-+*/%]\\*?\\)\\(?:[A-Za-z0-9[:blank:]]\\)" 1 'php-arithmetic-op)
+
+     ;; Increment and Decrement operators (++, --)
+     ("\\(\-\-\\|\+\+\\)\$\\w+" 1 'php-inc-dec-op) ;; pre inc/dec
+     ("\$\\w+\\(\-\-\\|\+\+\\)" 1 'php-inc-dec-op) ;; post inc/dec
+
+     ;; Logical operators (and, or, &&, ...)
+     ;; Not operator (!) is defined in "before cc-mode" section above.
+     ("\\(&&\\|||\\)" 1 'php-logical-op)))
   "Detailed highlighting for PHP Mode.")
 
 (defvar php-font-lock-keywords php-font-lock-keywords-3

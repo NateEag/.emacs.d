@@ -99,6 +99,10 @@ STRING
 
 (put 'php-project-root 'safe-local-variable #'(lambda (v) (or (stringp v) (assq v php-project-available-root-files))))
 
+(defvar-local php-project-etags-file nil)
+
+(put 'php-project-etags-file 'safe-local-variable #'(lambda (v) (or (functionp v) (eq v t) (php-project--eval-bootstrap-scripts v))))
+
 (defvar-local php-project-bootstrap-scripts nil "\
 List of path to bootstrap php script file.
 

@@ -34,26 +34,45 @@
 ;;> \scheme{(chibi show)} and written to both variables in addition
 ;;> to whatever was already there.
 
+(define (get-stack-trace)
+  (let ((err-output (open-output-string)))
+    (parameterize ((current-error-port err-output))
+      (print-stack-trace)
+      (get-output-string err-output))))
+
 (define (geiser:eval module form . rest)
   rest
   (guard (err
 	  (else
-	   (write ; to standard output (to comint)
-	    "Geiser-chibi falure in scheme code.")
-	   (show #t err)))
+	   (show #t ; to standard output (to comint)
+	    "Geiser-chibi falure in scheme code\n")
+	   (show #t "Error: \n" err "\n")
+	   (print-stack-trace)))
     (let* ((output (open-output-string))
 	   (form-analyzed (analyze form))
 	   (result (parameterize ((current-output-port output))
-		     (guard (err
-			     (else (show #t err)
-				   (write-to-string (show #f err))))
-		       (if module
-			   (let ((mod (module-env (find-module module))))
-			     (eval form-analyzed mod))
-			 (eval form-analyzed))))))
+		     (call/cc (lambda (continuation)
+				(with-exception-handler
+				    (lambda (err)
+				      (let ((stack-trace (get-stack-trace)))
+					(show #t
+					      "Output (exception): "
+					      err
+					      " \nStack trace:\n"
+					      stack-trace)
+					(continuation (write-to-string
+						       (show #f
+							     "Result (exception): "
+							     err
+							     "\nStack trace:\n"
+							     stack-trace)))))
+				  (lambda () (if module
+				      (let ((mod (module-env (find-module module))))
+					(eval form-analyzed mod))
+				      (eval form-analyzed)))))))))
       (write ; to standard output (to comint)
        `((result ,(write-to-string result))
-		  (output . ,(get-output-string output))))))
+	 (output . ,(get-output-string output))))))
   (values))
 
 

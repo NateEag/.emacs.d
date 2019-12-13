@@ -210,7 +210,7 @@ performant implementation:
   trap \\\"exit 1\" USR2; \\
   while true; do sleep 1; done'\"
 
-Note that the unit seperator character () right after the file
+Note that the unit separator character () right after the file
 name ($0) is required.
 
 Also note that using this alternative implementation leads to a
@@ -435,13 +435,22 @@ And some tools that do not handle $EDITOR properly also break."
 (put 'with-editor-mode 'permanent-local t)
 
 (defun with-editor-kill-buffer-noop ()
-  (if (memq this-command '(save-buffers-kill-terminal
-                           save-buffers-kill-emacs))
-      (let ((with-editor-cancel-query-functions nil))
-        (with-editor-cancel nil)
-        t)
-    (user-error (substitute-command-keys "\
-Don't kill this buffer.  Instead cancel using \\[with-editor-cancel]"))))
+  ;; We started doing this in response to #64, but it is not safe
+  ;; to do so, because the client has already been killed, causing
+  ;; `with-editor-return' (called by `with-editor-cancel') to delete
+  ;; the file, see #66.  The reason we delete the file in the first
+  ;; place are https://github.com/magit/magit/issues/2258 and
+  ;; https://github.com/magit/magit/issues/2248.
+  ;; (if (memq this-command '(save-buffers-kill-terminal
+  ;;                          save-buffers-kill-emacs))
+  ;;     (let ((with-editor-cancel-query-functions nil))
+  ;;       (with-editor-cancel nil)
+  ;;       t)
+  ;;   ...)
+  ;; So go back to always doing this instead:
+  (user-error (substitute-command-keys (format "\
+Don't kill this buffer %S.  Instead cancel using \\[with-editor-cancel]"
+                                               (current-buffer)))))
 
 (defvar-local with-editor-usage-message "\
 Type \\[with-editor-finish] to finish, \
@@ -573,7 +582,7 @@ the appropriate editor environment variable."
 (defun with-editor-set-process-filter (process filter)
   "Like `set-process-filter' but keep `with-editor-process-filter'.
 Give PROCESS the new FILTER but keep `with-editor-process-filter'
-if that was added earlier by the adviced `start-file-process'.
+if that was added earlier by the advised `start-file-process'.
 
 Do so by wrapping the two filter functions using a lambda, which
 becomes the actual filter.  It calls `with-editor-process-filter'

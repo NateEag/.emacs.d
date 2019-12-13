@@ -1,9 +1,12 @@
 ;;; gnuplot-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "gnuplot" "gnuplot.el" (23428 512 0 0))
+;;;### (autoloads nil "gnuplot" "gnuplot.el" (0 0 0 0))
 ;;; Generated autoloads from gnuplot.el
 
 (autoload 'gnuplot-mode "gnuplot" "\
@@ -11,7 +14,7 @@ Major mode for editing and executing GNUPLOT scripts.
 This was written with version 4.6 of gnuplot in mind, but should
 work with newer and older versions.
 
-Report bugs in `gnuplot-mode' using \\[gnuplot-bug-report].
+Report bugs at https://github.com/emacsorphanage/gnuplot/issues
 
 			    ------O------
 
@@ -25,7 +28,7 @@ to make a list of keywords.
 
 The info file should be installed by default with the Gnuplot
 distribution, or is available at the `gnuplot-mode' web page:
-http://github.com/bruceravel/gnuplot-mode/
+https://github.com/emacsorphanage/gnuplot/
 
 With the new context-sensitive mode active, gnuplot-mode can also
 provide `eldoc-mode' syntax hints as you type.  This requires a
@@ -57,9 +60,7 @@ a list:
 			    ------O------
 
  Key bindings:
- \\{gnuplot-mode-map}
-
-\(fn)" t nil)
+ \\{gnuplot-mode-map}" t nil)
 
 (autoload 'gnuplot-make-buffer "gnuplot" "\
 Open a new buffer in `gnuplot-mode'.
@@ -71,19 +72,31 @@ example, to make the F10 key open a gnuplot script buffer, put the
 following in your .emacs file:
      (autoload 'gnuplot-make-buffer \"gnuplot\"
                \"open a buffer in gnuplot mode\" t)
-     (global-set-key [(f10)] 'gnuplot-make-buffer)
-
-\(fn)" t nil)
+     (global-set-key [(f10)] 'gnuplot-make-buffer)" t nil)
 
 (autoload 'run-gnuplot "gnuplot" "\
-Run an inferior Gnuplot process.
+Run an inferior Gnuplot process." t nil)
 
-\(fn)" t nil)
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "gnuplot" '("gnuplot-")))
 
 ;;;***
 
-;;;### (autoloads nil nil ("gnuplot-context.el" "gnuplot-gui.el"
-;;;;;;  "gnuplot-pkg.el") (23428 512 0 0))
+;;;### (autoloads nil "gnuplot-context" "gnuplot-context.el" (0 0
+;;;;;;  0 0))
+;;; Generated autoloads from gnuplot-context.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "gnuplot-context" '("gnuplot-")))
+
+;;;***
+
+;;;### (autoloads nil "gnuplot-gui" "gnuplot-gui.el" (0 0 0 0))
+;;; Generated autoloads from gnuplot-gui.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "gnuplot-gui" '("gnuplot-")))
+
+;;;***
+
+;;;### (autoloads nil nil ("gnuplot-pkg.el") (0 0 0 0))
 
 ;;;***
 
@@ -91,5 +104,6 @@ Run an inferior Gnuplot process.
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; gnuplot-autoloads.el ends here

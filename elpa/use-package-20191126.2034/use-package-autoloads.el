@@ -206,9 +206,7 @@ instead.
 (autoload 'use-package-lint "use-package-lint" "\
 Check for errors in use-package declarations.
 For example, if the module's `:if' condition is met, but even
-with the specified `:load-path' the module cannot be found.
-
-\(fn)" t nil)
+with the specified `:load-path' the module cannot be found." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "use-package-lint" '("use-package-lint-declaration")))
 

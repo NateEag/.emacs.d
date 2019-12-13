@@ -5,7 +5,7 @@
 ;; Author: Johan Andersson <johan.rejeep@gmail.com>
 ;; Maintainer: Johan Andersson <johan.rejeep@gmail.com>
 ;; Version: 0.20.0
-;; Package-Version: 20190109.906
+;; Package-Version: 20191110.1357
 ;; Keywords: files, directories
 ;; URL: http://github.com/rejeep/f.el
 ;; Package-Requires: ((s "1.7.0") (dash "2.2.0"))
@@ -609,7 +609,7 @@ returned."
   (f-traverse-upwards 'f-root?))
 
 (defmacro f-with-sandbox (path-or-paths &rest body)
-  "Only allow PATH-OR-PATHS and decendants to be modified in BODY."
+  "Only allow PATH-OR-PATHS and descendants to be modified in BODY."
   (declare (indent 1))
   `(let ((paths (if (listp ,path-or-paths)
                     ,path-or-paths

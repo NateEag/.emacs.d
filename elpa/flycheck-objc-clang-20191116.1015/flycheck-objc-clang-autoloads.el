@@ -11,9 +11,7 @@
 ;;; Generated autoloads from flycheck-objc-clang.el
 
 (autoload 'flycheck-objc-clang-setup "flycheck-objc-clang" "\
-Set up Flycheck for Objective-C using Clang.
-
-\(fn)" nil nil)
+Set up Flycheck for Objective-C using Clang." nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "flycheck-objc-clang" '("flycheck-objc-clang--syntax-checking-command")))
 

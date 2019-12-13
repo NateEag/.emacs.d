@@ -1,4 +1,4 @@
-(define-package "md-readme" "20160811.1646" "Markdown-formatted READMEs for your ELisp" 'nil :keywords
+(define-package "md-readme" "20191112.1943" "Markdown-formatted READMEs for your ELisp" 'nil :keywords
   '("lisp" "help" "readme" "markdown" "header" "documentation" "github")
   :authors
   '(("Thomas Kappler" . "tkappler@gmail.com"))

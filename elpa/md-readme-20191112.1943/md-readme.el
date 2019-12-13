@@ -79,6 +79,11 @@
       (insert header)
       (mdr-convert-header))))
 
+(defun mdr-replace-regexp (regexp replacement)
+  (save-match-data
+    (while (re-search-forward regexp nil :noerror)
+      (replace-match replacement))))
+
 (defun mdr-generate-batch ()
   "Generate README.md from elisp files on the command line.
 Takes two command line arguments: the elisp filename, and the target
@@ -97,12 +102,12 @@ extract the header first with mdr-extract-header and call it on
 the copy."
   (goto-char (point-min))
   ;; Replace "separator" lines of just semicolons
-  (replace-regexp "
+  (mdr-replace-regexp "
 ;;;;* *
 " "\n")
   (goto-char (point-min))
   ;; Collapse multiple blank comment lines to just one
-  (replace-regexp "
+  (mdr-replace-regexp "
 \\(;; *\n\\)\\{2,\\}" "
 \\1")
   (goto-char (point-min))
@@ -166,7 +171,7 @@ Thus, this escaping is necessary."
 
   (save-excursion
     (goto-char (point-min))
-    (replace-regexp "`\\(\\_<.*\\_>\\)'" "`` `\\1' ``")))
+    (mdr-replace-regexp "`\\(\\_<.*\\_>\\)'" "`` `\\1' ``")))
 
 (provide 'md-readme)
 ;;; md-readme.el ends here

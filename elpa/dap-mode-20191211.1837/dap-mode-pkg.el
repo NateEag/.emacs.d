@@ -1,4 +1,4 @@
-(define-package "dap-mode" "20191103.1843" "Debug Adapter Protocol mode"
+(define-package "dap-mode" "20191211.1837" "Debug Adapter Protocol mode"
   '((emacs "25.1")
     (dash "2.14.1")
     (lsp-mode "6.0")
@@ -6,7 +6,8 @@
     (tree-mode "1.1.1.1")
     (bui "1.1.0")
     (f "0.20.0")
-    (s "1.12.0"))
+    (s "1.12.0")
+    (treemacs "2.5"))
   :keywords
   '("languages" "debug")
   :authors

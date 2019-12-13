@@ -41,6 +41,13 @@ If the port is taken, DAP will try the next port."
   :risky t
   :type 'file)
 
+(defcustom dap-python-terminal nil
+  "The terminal to use when running the debug process.
+For example you may set it to `xterm -e' which will pop xterm console when you are debugging."
+  :group 'dap-python
+  :risky t
+  :type 'string)
+
 (defun dap-python--pyenv-executable-find (command)
   "Find executable taking pyenv shims into account.
 If the executable is a system executable and not in the same path
@@ -69,16 +76,21 @@ as the pyenv version then also return nil. This works around https://github.com/
          (debug-port (dap--find-available-port host dap-python-default-debug-port))
          (python-executable (dap-python--pyenv-executable-find dap-python-executable))
          (python-args (or (plist-get conf :args) ""))
-         (python-target-module (if-let (module (plist-get conf :target-module))
-                                   (if (f-exists? module)
-                                       module
-                                     (format "-m %s" module))
-                                 buffer-file-name)))
+         (program (or (plist-get conf :target-module)
+                      (plist-get conf :program)
+                      (buffer-file-name)))
+         (module (plist-get conf :module)))
 
     (dap--put-if-absent conf :program-to-start
-                        (format "%s -m ptvsd --wait --host %s --port %s %s %s"
-                                python-executable host debug-port python-target-module python-args))
-    (plist-put conf :target-module python-target-module)
+                        (format "%s%s -m ptvsd --wait --host %s --port %s %s %s %s"
+                                (or dap-python-terminal "")
+                                (shell-quote-argument python-executable)
+                                host
+                                debug-port
+                                (if module (concat "-m " (shell-quote-argument module)) "")
+                                (shell-quote-argument program)
+                                python-args))
+    (plist-put conf :program program)
     (plist-put conf :debugServer debug-port)
     (plist-put conf :port debug-port)
     (plist-put conf :wait-for-port t)
@@ -91,7 +103,8 @@ as the pyenv version then also return nil. This works around https://github.com/
                              (list :type "python"
                                    :args ""
                                    :cwd nil
-                                   :target-module nil
+                                   :module nil
+                                   :program nil
                                    :request "launch"
                                    :name "Python :: Run Configuration"))
 
@@ -99,7 +112,8 @@ as the pyenv version then also return nil. This works around https://github.com/
                              (list :type "python"
                                    :args ""
                                    :cwd nil
-                                   :target-module "pytest"
+                                   :program nil
+                                   :module "pytest"
                                    :request "launch"
                                    :name "Python :: Run Configuration"))
 

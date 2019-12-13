@@ -147,6 +147,13 @@ if ARG is `toggle'; disable the mode otherwise.
 
 ;;;***
 
+;;;### (autoloads nil "dap-pwsh" "dap-pwsh.el" (0 0 0 0))
+;;; Generated autoloads from dap-pwsh.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-pwsh" '("dap-pwsh-")))
+
+;;;***
+
 ;;;### (autoloads nil "dap-python" "dap-python.el" (0 0 0 0))
 ;;; Generated autoloads from dap-python.el
 
@@ -222,6 +229,15 @@ Start a JavaScript REPL to be evaluated in the visiting browser." t nil)
 ;;; Generated autoloads from dap-utils.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-utils" '("dap-utils-")))
+
+;;;***
+
+;;;### (autoloads nil "dapui" "dapui.el" (0 0 0 0))
+;;; Generated autoloads from dapui.el
+
+(autoload 'dapui-loaded-sources "dapui" nil t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dapui" '("dapui-")))
 
 ;;;***
 

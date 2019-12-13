@@ -18,7 +18,7 @@
 ;; Author: Ivan Yonchovski <yyoncho@gmail.com>
 ;; Keywords: languages, debug
 ;; URL: https://github.com/yyoncho/dap-mode
-;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (lsp-mode "6.0") (dash-functional "1.2.0") (tree-mode "1.1.1.1") (bui "1.1.0") (f "0.20.0") (s "1.12.0"))
+;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (lsp-mode "6.0") (dash-functional "1.2.0") (tree-mode "1.1.1.1") (bui "1.1.0") (f "0.20.0") (s "1.12.0") (treemacs "2.5"))
 ;; Version: 0.3
 
 ;;; Commentary:
@@ -88,6 +88,11 @@ has been terminated."
 
 (defcustom dap-session-changed-hook nil
   "List of functions to be called after sessions have changed."
+  :type 'hook
+  :group 'dap-mode)
+
+(defcustom dap-loaded-sources-changed-hook nil
+  "List of functions to be called after loaded sources have changed for the session."
   :type 'hook
   :group 'dap-mode)
 
@@ -170,7 +175,8 @@ The hook will be called with the session file and the new set of breakpoint loca
   (launch-args nil)
   ;; The result of initialize request. It holds the server capabilities.
   (initialize-result nil)
-  (error-message nil))
+  (error-message nil)
+  (loaded-sources nil))
 
 (cl-defstruct dap--parser
   (waiting-for-response nil)
@@ -347,6 +353,7 @@ FILE-NAME the file name.
 WORKSPACE will be used to calculate root folder."
   (with-demoted-errors
       "Failed to persist file: %S"
+    (make-directory (file-name-directory file-name) t)
     (with-temp-file file-name
       (erase-buffer)
       (insert (prin1-to-string to-persist)))))
@@ -802,7 +809,11 @@ thread exection but the server will log message."
         debug-session
         (dap--get-breakpoints)
         (apply-partially #'dap--send-configuration-done debug-session)))
-      (_ (message (format "No messages handler for %s" event-type))))))
+      ("loadedSource"
+       (-let [(&hash "body" (&hash "source")) event]
+         (cl-pushnew source (dap--debug-session-loaded-sources debug-session))
+         (run-hook-with-args 'dap-loaded-sources-changed-hook debug-session)))
+      (_ (message "No message handler for %s" event-type)))))
 
 (defun dap--create-filter-function (debug-session)
   "Create filter function for DEBUG-SESSION."
@@ -892,8 +903,7 @@ ADAPTER-ID the id of the adapter."
                           :launch-args launch-args
                           :proc proc
                           :name session-name
-                          :output-buffer (dap--create-output-buffer session-name)
-                          :workspace lsp--cur-workspace)))
+                          :output-buffer (dap--create-output-buffer session-name))))
     (set-process-sentinel proc
                           (lambda (_process exit-str)
                             (message "Debug session process exited with status: %s" exit-str)
@@ -1068,7 +1078,9 @@ before starting the debug process."
     (when program-to-start
       (compilation-start program-to-start 'dap-server-log-mode
                          (lambda (_) (concat "*" session-name " server log*"))))
-    (when wait-for-port (dap--wait-for-port host port))
+    (when wait-for-port (dap--wait-for-port host port
+                                            dap-default-connect-retry-count
+                                            dap-default-connect-retry-interval))
 
     (unless skip-debug-session
       (let ((debug-session (dap--create-session launch-args)))
@@ -1271,8 +1283,9 @@ after selecting configuration template."
   (dap-start-debugging (or (-some-> (plist-get debug-args :type)
                                     (gethash dap--debug-providers)
                                     (funcall debug-args))
-                           (error "There is no debug provider for language %s"
-                                  (or (plist-get debug-args :type) "'Not specified'")))))
+                           (user-error "Have you loaded the `%s' specific dap package?"
+                                  (or (plist-get debug-args :type)
+                                      (user-error "%s does not specify :type" debug-args))))))
 
 (defun dap-debug-edit-template (&optional parg debug-args)
   "Edit registered template DEBUG-ARGS.
@@ -1400,6 +1413,12 @@ If the current session it will be terminated."
          (gethash buffer-file-name)
          (dap--set-breakpoints-in-file buffer-file-name))
     (add-hook 'kill-buffer-hook 'dap--buffer-killed nil t)))
+
+(defvar dap-default-connect-retry-count 1000
+  "Retry count for dap connect.")
+
+(defvar dap-default-connect-retry-interval 0.02
+  "Retry interval for dap connect.")
 
 (defun dap-mode-mouse-set-clear-breakpoint (event)
   "Set or remove a breakpoint at the position represented by an

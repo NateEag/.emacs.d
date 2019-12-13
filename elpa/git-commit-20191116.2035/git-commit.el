@@ -12,7 +12,7 @@
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 
 ;; Package-Requires: ((emacs "25.1") (dash "20180910") (with-editor "20181103"))
-;; Package-Version: 20190928.1746
+;; Package-Version: 20191116.2035
 ;; Keywords: git tools vc
 ;; Homepage: https://github.com/magit/magit
 
@@ -121,7 +121,9 @@
 (require 'server)
 (require 'with-editor)
 
-(eval-when-compile (require 'recentf))
+(eval-when-compile
+  (require 'recentf)
+  (require 'subr-x))
 
 ;;;; Declarations
 
@@ -674,9 +676,10 @@ With a numeric prefix ARG, go forward ARG comments."
 (defun git-commit-save-message ()
   "Save current message to `log-edit-comment-ring'."
   (interactive)
-  (--when-let (git-commit-buffer-message)
-    (unless (ring-member log-edit-comment-ring it)
-      (ring-insert log-edit-comment-ring it))))
+  (when-let ((message (git-commit-buffer-message)))
+    (when-let ((index (ring-member log-edit-comment-ring message)))
+      (ring-remove log-edit-comment-ring index))
+    (ring-insert log-edit-comment-ring message)))
 
 (defun git-commit-buffer-message ()
   (let ((flush (concat "^" comment-start))
@@ -741,7 +744,7 @@ With a numeric prefix ARG, go forward ARG comments."
   (interactive (git-commit-read-ident))
   (git-commit-insert-header "Suggested-by" name mail))
 
-(defun git-commit-co-authored-by (name mail)
+(defun git-commit-co-authored (name mail)
   "Insert a header mentioning the person who co-authored the commit."
   (interactive (git-commit-read-ident))
   (git-commit-insert-header "Co-authored-by" name mail))

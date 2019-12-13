@@ -335,6 +335,11 @@ Switch to the project specific term buffer if it already exists.
 
 \(fn PROGRAM)" t nil)
 
+(autoload 'projectile-run-vterm "projectile" "\
+Invoke `vterm' in the project's root.
+
+Switch to the project specific term buffer if it already exists." t nil)
+
 (autoload 'projectile-replace "projectile" "\
 Replace literal string in project using non-regexp `tags-query-replace'.
 
@@ -471,6 +476,11 @@ Remove PROJECT from the list of known projects.
 
 (autoload 'projectile-remove-current-project-from-known-projects "projectile" "\
 Remove the current project from the list of known projects." t nil)
+
+(autoload 'projectile-add-known-project "projectile" "\
+Add PROJECT-ROOT to the list of known projects.
+
+\(fn PROJECT-ROOT)" t nil)
 
 (autoload 'projectile-ibuffer "projectile" "\
 Open an IBuffer window showing all buffers in the current project.

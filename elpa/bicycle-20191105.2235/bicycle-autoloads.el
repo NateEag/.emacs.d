@@ -1,9 +1,12 @@
 ;;; bicycle-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "bicycle" "bicycle.el" (23460 59968 0 0))
+;;;### (autoloads nil "bicycle" "bicycle.el" (0 0 0 0))
 ;;; Generated autoloads from bicycle.el
 
 (autoload 'bicycle-cycle "bicycle" "\
@@ -25,9 +28,9 @@ Cycle visibility of all sections.
              a heading).
 4. ALL:      Show everything, except code blocks that have been
              collapsed individually (using a `hideshow' command
-             or function).
+             or function)." t nil)
 
-\(fn)" t nil)
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "bicycle" '("bicycle-" "outline-")))
 
 ;;;***
 
@@ -35,5 +38,6 @@ Cycle visibility of all sections.
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; bicycle-autoloads.el ends here

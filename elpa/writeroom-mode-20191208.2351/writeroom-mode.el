@@ -6,7 +6,7 @@
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
 ;; Created: 11 July 2012
 ;; Package-Requires: ((emacs "24.1") (visual-fill-column "1.9"))
-;; Version: 3.8
+;; Version: 3.9
 ;; Keywords: text
 
 ;; Redistribution and use in source and binary forms, with or without
@@ -53,8 +53,8 @@ The global effects only apply to this frame.")
   "List of buffers in which `writeroom-mode' is activated.")
 
 (defvar writeroom--local-variables '(mode-line-format
-                            header-line-format
-                            line-spacing)
+                                     header-line-format
+                                     line-spacing)
   "Local variables whose values need to be saved when `writeroom-mode' is activated.")
 
 (defvar writeroom--saved-data nil
@@ -97,9 +97,24 @@ this option, it may be more visually pleasing to set
 `writeroom-bottom-divider-width' to 0."
   :group 'writeroom
   :type '(choice (const :tag "Disable the mode line" nil)
-                 (const :tag "Use default mode line" t)
+                 (const :tag "Use standard mode line" t)
                  (sexp :tag "Customize mode line"
                        :value ("   " mode-line-modified "   " mode-line-buffer-identification))))
+
+(defcustom writeroom-header-line nil
+  "The header line used with `writeroom-mode'.
+Possible values are nil (the default), which disables the header
+line; t, which retains the standard header line; the symbol
+`mode-line', which means to display the standard mode line in the
+header line (this value makes most sense when
+`writeroom-mode-line' is set to nil); or a sexp, which should be
+a valid mode line construct."
+  :group 'writeroom
+  :type '(choice (const :tag "Do not show the header line" nil)
+                 (const :tag "Use standard header line" t)
+                 (const :tag "Show standard mode line in header line" mode-line)
+                 (sexp :tag "Customize header line"
+                       :value nil)))
 
 (defcustom writeroom-mode-line-toggle-position 'header-line-format
   "Position to temporarily show the mode line.
@@ -346,12 +361,13 @@ line, its original format is saved here.")
 (defun writeroom-toggle-mode-line ()
   "Toggle display of the original mode."
   (interactive)
-  (unless (eq writeroom-mode-line t) ; This means the original mode-line is displayed already.
+  (unless (or (eq writeroom-mode-line t)
+              (eq writeroom-header-line 'mode-line)) ; This means the original mode-line is displayed already.
     (cond
      ((not writeroom--mode-line-showing)
       (setq writeroom--orig-header-line header-line-format)
       (set writeroom-mode-line-toggle-position (or (cdr (assq 'mode-line-format writeroom--saved-data))
-                                          (default-value 'mode-line-format)))
+                                                   (default-value 'mode-line-format)))
       (setq writeroom--mode-line-showing t))
      (writeroom--mode-line-showing
       (if (eq writeroom-mode-line-toggle-position 'header-line-format)
@@ -408,6 +424,11 @@ activated."
 
   (when writeroom-extra-line-spacing
     (setq line-spacing writeroom-extra-line-spacing))
+
+  (unless (eq writeroom-header-line t) ; If t, use standard header line.
+    (if (eq writeroom-header-line 'mode-line)
+        (setq header-line-format mode-line-format)
+      (setq header-line-format writeroom-header-line)))
 
   (unless (eq writeroom-mode-line t) ; If t, use standard mode line.
     (setq mode-line-format writeroom-mode-line))

@@ -7,7 +7,7 @@
 ;; Created: 16 Jun 2012
 ;; Modified: 29 Nov 2017
 ;; Version: 2.4
-;; Package-Version: 20180513.430
+;; Package-Version: 20191110.416
 ;; Keywords: keys keybinding config dotemacs
 ;; URL: https://github.com/jwiegley/use-package
 
@@ -95,7 +95,7 @@
 ;;
 ;;   M-x describe-personal-keybindings
 ;;
-;; This display will tell you if you've overriden a default keybinding, and
+;; This display will tell you if you've overridden a default keybinding, and
 ;; what the default was.  Also, it will tell you if the key was rebound after
 ;; your binding it with `bind-key', and what it was rebound it to.
 

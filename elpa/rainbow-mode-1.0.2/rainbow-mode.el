@@ -4,7 +4,7 @@
 
 ;; Author: Julien Danjou <julien@danjou.info>
 ;; Keywords: faces
-;; Version: 1.0.1
+;; Version: 1.0.2
 
 ;; This file is part of GNU Emacs.
 
@@ -1116,12 +1116,12 @@ If the percentage value is above 100, it's converted to 100."
       (rainbow-colorize-match color))))
 
 (defun rainbow-color-luminance (red green blue)
-  "Calculate the luminance of color composed of RED, GREEN and BLUE.
+  "Calculate the relative luminance of color composed of RED, GREEN and BLUE.
 Return a value between 0 and 1."
-  (/ (+ (* .2126 red) (* .7152 green) (* .0722 blue)) 256))
+  (/ (+ (* .2126 red) (* .7152 green) (* .0722 blue)) 255))
 
 (defun rainbow-x-color-luminance (color)
-  "Calculate the luminance of a color string (e.g. \"#ffaa00\", \"blue\").
+  "Calculate the relative luminance of a color string (e.g. \"#ffaa00\", \"blue\").
 Return a value between 0 and 1."
   (let* ((values (x-color-values color))
          (r (/ (car values) 256.0))
@@ -1204,114 +1204,128 @@ This will fontify with colors the string like \"#aabbcc\" or \"blue\"."
 
 ;;;; ChangeLog:
 
+;; 2019-11-25  Julien Danjou  <julien@danjou.info>
+;; 
+;; 	Release rainbow-mode 1.0.2
+;; 
+;; 2019-11-25  Julien Danjou  <julien@danjou.info>
+;; 
+;; 	Fix a off-by-one error and some wording in rainbow-mode
+;; 
+;; 	* packages/rainbow-mode/rainbow-mode.el (rainbow-color-luminance): Fix a 
+;; 	off-by-one error and wording.
+;; 	(rainbow-x-color-luminance): Fix wording.
+;; 
+;; 	Thanks Peder Stray.
+;; 
 ;; 2018-05-21  Julien Danjou  <julien@danjou.info>
-;;
+;; 
 ;; 	* rainbow-mode/rainbow-mode.el: do not fail if face-property is a symbol
-;;
+;; 
 ;; 	It turns out there are cases when `face-property' can be just a symbol
 ;; 	and we need to protect our selves from that, i.e. `car' should not fail.
 ;; 	Hence,
 ;; 	`car-safe' is there and if it's `nil', then fall back to `face-property'
 ;; 	as is.
-;;
+;; 
 ;; 	See https://github.com/tarsius/hl-todo/issues/17
-;;
+;; 
 ;; 2018-03-26  Julien Danjou  <julien@danjou.info>
-;;
+;; 
 ;; 	rainbow-mode: release 1.0
-;;
+;; 
 ;; 2018-03-26  Jonas Bernoulli  <jonas@bernoul.li>
-;;
+;; 
 ;; 	Allow outline-minor-mode to find section headings
-;;
+;; 
 ;; 2018-03-26  Jonas Bernoulli  <jonas@bernoul.li>
-;;
+;; 
 ;; 	Set type of customizable options
-;;
+;; 
 ;; 2018-03-26  Jonas Bernoulli  <jonas@bernoul.li>
-;;
+;; 
 ;; 	Enforce use of spaces for indentation
-;;
+;; 
 ;; 	Also untabify some code added by a contributor who, unlike you, has not
 ;; 	globally set `indent-tabs-mode' to nil.
-;;
+;; 
 ;; 2017-05-29  Julien Danjou  <julien@danjou.info>
-;;
+;; 
 ;; 	Fix `rainbow-color-luminance' docstring
-;;
+;; 
 ;; 2015-10-12  Julien Danjou  <julien@danjou.info>
-;;
+;; 
 ;; 	rainbow: add font-lock at the end
-;;
+;; 
 ;; 	See https://github.com/fxbois/web-mode/issues/612
-;;
+;; 
 ;; 2015-03-06  Julien Danjou  <julien@danjou.info>
-;;
+;; 
 ;; 	rainbow: fix font-lock-mode refresh
-;;
+;; 
 ;; 2014-10-15  Stefan Monnier  <monnier@iro.umontreal.ca>
-;;
+;; 
 ;; 	* packages/rainbow-mode/rainbow-mode.el (ansi-color-context)
 ;; 	(xterm-color-current): Declare.
-;;
+;; 
 ;; 2014-09-07  Julien Danjou  <julien@danjou.info>
-;;
+;; 
 ;; 	rainbow-mode: support float in CSS and limit to 100%
-;;
+;; 
 ;; 2013-08-05  Julien Danjou  <julien@danjou.info>
-;;
+;; 
 ;; 	rainbow-mode: 0.9, allow spaces in LaTeX colors
-;;
+;; 
 ;; 2013-05-03  Julien Danjou  <julien@danjou.info>
-;;
+;; 
 ;; 	rainbow-mode: add support for R, bump version to 0.8
-;;
+;; 
 ;; 	Signed-off-by: Julien Danjou <julien@danjou.info>
-;;
+;; 
 ;; 2013-02-26  Julien Danjou  <julien@danjou.info>
-;;
+;; 
 ;; 	rainbow-mode: version 0.7
-;;
+;; 
 ;; 	* rainbow-mode.el: don't activate font-lock-mode
-;;
+;; 
 ;; 2012-12-11  Julien Danjou  <julien@danjou.info>
-;;
+;; 
 ;; 	* rainbow-mode: update to 0.6, add support for ANSI coloring
-;;
+;; 
 ;; 2012-11-26  Julien Danjou  <julien@danjou.info>
-;;
+;; 
 ;; 	rainbow-mode: fix some LaTex docstrings
-;;
+;; 
 ;; 2012-11-14  Julien Danjou  <julien@danjou.info>
-;;
+;; 
 ;; 	rainbow-mode: version 0.5
-;;
+;; 
 ;; 	* rainbow-mode.el: fix syntax error on
 ;; 	 `rainbow-hexadecimal-colors-font-lock-keywords'.
-;;
+;; 
 ;; 2012-11-09  Julien Danjou  <julien@danjou.info>
-;;
+;; 
 ;; 	rainbow-mode: version 0.4
-;;
+;; 
 ;; 	* rainbow-mode.el: Use functions from color package to colorize HSL
 ;; 	rather
 ;; 	 than our own copy.
-;;
+;; 
 ;; 2012-11-09  Julien Danjou  <julien@danjou.info>
-;;
+;; 
 ;; 	rainbow-mode 0.3
-;;
+;; 
 ;; 	* rainbow-mode.el: avoid colorizing HTML entities
-;;
+;; 
 ;; 2011-09-23  Julien Danjou  <julien@danjou.info>
-;;
+;; 
 ;; 	Update rainbow-mode to version 0.2
-;;
+;; 
 ;; 2011-07-01  Chong Yidong  <cyd@stupidchicken.com>
-;;
+;; 
 ;; 	Give every package its own directory in packages/ including single-file
 ;; 	packages.
-;;
+;; 
 
 
 (provide 'rainbow-mode)

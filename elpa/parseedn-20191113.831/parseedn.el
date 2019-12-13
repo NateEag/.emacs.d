@@ -4,7 +4,7 @@
 
 ;; Author: Arne Brasseur <arne@arnebrasseur.net>
 ;; Keywords: lisp clojure edn parser
-;; Package-Version: 20190331.1058
+;; Package-Version: 20191113.831
 ;; Package-Requires: ((emacs "25") (a "0.1.0alpha4") (parseclj "0.1.0"))
 ;; Version: 0.1.0
 
@@ -142,16 +142,16 @@ TAG-READERS is an optional association list.  For more information, see
       (insert " ")
       (parseedn-print-seq next))))
 
-(defun parseedn-print-kvs (map)
+(defun parseedn-print-kvs (map &optional ks)
   "Insert hash table MAP as an EDN map into the current buffer."
-  (let ((keys (a-keys map)))
+  (let ((keys (or ks (a-keys map))))
     (parseedn-print (car keys))
     (insert " ")
     (parseedn-print (a-get map (car keys)))
     (let ((next (cdr keys)))
       (when (not (seq-empty-p next))
         (insert ", ")
-        (parseedn-print-kvs next)))))
+        (parseedn-print-kvs map next)))))
 
 (defun parseedn-print (datum)
   "Insert DATUM as EDN into the current buffer.

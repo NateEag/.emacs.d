@@ -3,7 +3,7 @@
 ;; Copyright (C) 2012 ~ 2015 Thierry Volpiatto <thierry.volpiatto@gmail.com>
 
 ;; Package-Requires: ((helm "1.7.8"))
-;; Package-Version: 20190630.737
+;; Package-Version: 20191127.510
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -39,15 +39,15 @@
 ;; Define the sources.
 (defvar helm-source-ls-git-status nil
   "This source will built at runtime.
-It can be build explicitely with function
+It can be build explicitly with function
 `helm-ls-git-build-git-status-source'.")
 (defvar helm-source-ls-git nil
   "This source will built at runtime.
-It can be build explicitely with function
+It can be build explicitly with function
 `helm-ls-git-build-ls-git-source'.")
 (defvar helm-source-ls-git-buffers nil
   "This source will built at runtime.
-It can be build explicitely with function
+It can be build explicitly with function
 `helm-ls-git-build-buffers-source'.")
 
 

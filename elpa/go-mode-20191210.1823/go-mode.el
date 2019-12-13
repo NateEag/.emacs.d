@@ -8,7 +8,7 @@
 
 ;; Author: The go-mode Authors
 ;; Version: 1.5.0
-;; Package-Version: 20191103.2343
+;; Package-Version: 20191210.1823
 ;; Keywords: languages go
 ;; URL: https://github.com/dominikh/go-mode.el
 ;;
@@ -417,7 +417,8 @@ For mode=set, all covered lines will have this weight."
       (go--fontify-param
        ;; Pre-match form that runs before the first sub-match.
        (go--fontify-param-pre)
-       nil ;; We don't use the post-match form.
+       ;; Post-match form that runs after last sub-match.
+       (go--fontify-param-post)
        ;; Subexp 1 is the param variable name, if any.
        (1 font-lock-variable-name-face)
        ;; Subexp 2 is the param type name, if any. We set the LAXMATCH
@@ -426,7 +427,7 @@ For mode=set, all covered lines will have this weight."
 
      ;; Special case to match non-parenthesized function results. For
      ;; example, "func(i int) string".
-     (,(concat ")[[:space:]]+" go-type-name-regexp "\\([[:space:]]\\|$\\)") 1 font-lock-type-face)
+     (go--match-single-func-result 1 font-lock-type-face)
 
      ;; Match name+type pairs, such as "foo bar" in "var foo bar".
      (go--match-ident-type-pair 2 font-lock-type-face)
@@ -1267,8 +1268,13 @@ INDENT is the normal indent of this line, i.e. that of the case body."
 
 This is used during fontification of function signatures.")
 
+(defvar go--fontify-param-beg nil
+  "Position of \"(\" starting param list.
+
+This is used during fontification of function signatures.")
+
 (defun go--fontify-param-pre ()
-  "Set `go--fontify-param-has-name' appropriately.
+  "Set `go--fontify-param-has-name' and `go--fontify-param-beg' appropriately.
 
 This is used as an anchored font lock keyword PRE-MATCH-FORM. We
 must set `go--fontify-param-has-name' ahead of time because you
@@ -1284,14 +1290,28 @@ func foo(i, j int) {}
   (setq go--fontify-param-has-name (eq
                                     (go--parameter-list-type (point-max))
                                     'present))
+
+  ;; Remember where our match started so we can continue our serach
+  ;; from here.
+  (setq go--fontify-param-beg (point))
+
   ;; Return position of closing paren so we process the entire
   ;; multiline param list.
   (save-excursion
     (let ((depth (go-paren-level)))
       (while (and
               (re-search-forward ")" nil t)
-              (> (go-paren-level) depth))))
+              (>= (go-paren-level) depth))))
     (point)))
+
+(defun go--fontify-param-post ()
+  "Move point back to opening paren.
+
+This is used as an anchored font lock keyword POST-MATCH-FORM. We
+move point back to the opening \"(\" so we find nested param
+lists.
+"
+  (goto-char go--fontify-param-beg))
 
 (defun go--match-param-start (end)
   "Search for the starting of param lists.
@@ -1302,7 +1322,8 @@ declarations are also included."
   (let (found-match)
     (while (and
             (not found-match)
-            (re-search-forward (concat "\\(\\_<" go-identifier-regexp "\\)?(") end t))
+            (re-search-forward (concat "\\(\\_<" go-identifier-regexp "\\)?(") end t)
+            (not (go-in-string-or-comment-p)))
       (save-excursion
         (goto-char (match-beginning 0))
 
@@ -1454,27 +1475,19 @@ gets highlighted by the font lock keyword."
            ;; We aren't on right side of equals sign.
            (not (go--looking-back-p "=")))
 
-           (or
-            ;; We are followed directly by comma.
-            (looking-at-p "[[:space:]]*,")
+          (setq found-match t)
 
-            ;; Or we are followed by a space and non-space (non-space
-            ;; might be a type name or "=").
-            (looking-at-p "[[:space:]]+[^[:space:]]"))
-
-           (setq found-match t)
-
-           ;; Unset match data subexpressions that don't apply based on
-           ;; the decl kind.
-           (let ((md (match-data)))
-             (cond
-              ((string= decl "var")
-               (setf (nth 4 md) nil (nth 5 md) nil (nth 6 md) nil (nth 7 md) nil))
-              ((string= decl "const")
-               (setf (nth 2 md) nil (nth 3 md) nil (nth 6 md) nil (nth 7 md) nil))
-              ((string= decl "type")
-               (setf (nth 2 md) nil (nth 3 md) nil (nth 4 md) nil (nth 5 md) nil)))
-             (set-match-data md)))
+          ;; Unset match data subexpressions that don't apply based on
+          ;; the decl kind.
+          (let ((md (match-data)))
+            (cond
+             ((string= decl "var")
+              (setf (nth 4 md) nil (nth 5 md) nil (nth 6 md) nil (nth 7 md) nil))
+             ((string= decl "const")
+              (setf (nth 2 md) nil (nth 3 md) nil (nth 6 md) nil (nth 7 md) nil))
+             ((string= decl "type")
+              (setf (nth 2 md) nil (nth 3 md) nil (nth 4 md) nil (nth 5 md) nil)))
+            (set-match-data md)))
 
          (t
           (save-match-data
@@ -1519,6 +1532,25 @@ succeeds."
             (goto-char (match-end 1))
           (setq found-match t))))
 
+    found-match))
+
+(defconst go--single-func-result-re (concat ")[[:space:]]+" go-type-name-regexp "\\(?:$\\|[[:space:]),]\\)"))
+
+(defun go--match-single-func-result (end)
+  "Match single result types.
+
+Parenthetical result lists are handled by the param list keyword,
+so we need a separate keyword to handle singular reuslt types
+such as \"string\" in:
+
+func foo(i int) string"
+  (let (found-match)
+    (while (and
+            (not found-match)
+            (re-search-forward go--single-func-result-re end t))
+      (when (not (member (match-string 1) go-mode-keywords))
+        (setq found-match t)
+        (goto-char (match-end 1))))
     found-match))
 
 (defconst go--type-alias-re
@@ -1977,11 +2009,11 @@ code to the Playground. You can disable the confirmation by setting
 "
   (interactive "r")
   (if (and go-confirm-playground-uploads
-           (not (yes-or-no-p "Upload to public Go Playground?")))
+           (not (yes-or-no-p "Upload to public Go Playground? ")))
       (message "Upload aborted")
     (let* ((url-request-method "POST")
            (url-request-extra-headers
-            '(("Content-Type" . "application/x-www-form-urlencoded")))
+            '(("Content-Type" . "text/plain; charset=UTF-8")))
            (url-request-data
             (encode-coding-string
              (buffer-substring-no-properties start end)
@@ -2746,9 +2778,27 @@ If BUFFER, return the number of characters in that buffer instead."
   '("module" "go" "require" "replace" "exclude")
   "All keywords for go.mod files.  Used for font locking.")
 
+(defgroup go-dot-mod nil
+  "Options specific to `go-dot-mod-mode`."
+  :group 'go)
+
+(defface go-dot-mod-module-name '((t :inherit default))
+  "Face for module name in \"require\" list."
+  :group 'go-dot-mod)
+
+(defface go-dot-mod-module-version '((t :inherit default))
+  "Face for module version in \"require\" list."
+  :group 'go-dot-mod)
+
+(defface go-dot-mod-module-semver '((t :inherit go-dot-mod-module-version))
+  "Face for module semver in \"require\" list."
+  :group 'go-dot-mod)
+
+
 (defvar go-dot-mod-font-lock-keywords
   `(
-    (,(concat "^\\s-*" (regexp-opt go-dot-mod-mode-keywords t) "\\s-") . font-lock-keyword-face))
+    (,(concat "^\\s-*\\(" (regexp-opt go-dot-mod-mode-keywords t) "\\)\\s-") 1 font-lock-keyword-face)
+    ("^\\s-*\\([^[:space:]]+\\)\\s-+\\(v[0-9]+\\.[0-9]+\\.[0-9]+\\)\\([^[:space:]\n]*\\)" (1 'go-dot-mod-module-name) (2 'go-dot-mod-module-semver) (3 'go-dot-mod-module-version)))
   "Keyword highlighting specification for `go-dot-mod-mode'.")
 
 ;;;###autoload

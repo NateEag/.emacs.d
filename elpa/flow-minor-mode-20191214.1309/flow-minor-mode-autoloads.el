@@ -13,12 +13,15 @@
 (autoload 'flow-minor-mode "flow-minor-mode" "\
 Flow mode
 
+If called interactively, enable Flow minor mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
+
 \(fn &optional ARG)" t nil)
 
 (autoload 'flow-minor-enable-automatically "flow-minor-mode" "\
-Search for a flow marker and enable flow-minor-mode.
-
-\(fn)" nil nil)
+Search for a flow marker and enable flow-minor-mode." nil nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "flow-minor-mode" '("flow-")))
 

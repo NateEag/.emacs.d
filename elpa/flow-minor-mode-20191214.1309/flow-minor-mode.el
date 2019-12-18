@@ -4,7 +4,7 @@
 ;; the LICENSE file in the root directory of this source tree.
 
 ;; Version: 0.3
-;; Package-Version: 20180315.1824
+;; Package-Version: 20191214.1309
 ;; URL: https://github.com/an-sh/flow-minor-mode
 
 ;; Package-Requires: ((emacs "25.1"))
@@ -312,7 +312,7 @@ BODY progn"
 (defun flow-status ()
   "Invoke flow to check types"
   (interactive)
-  (let ((cmd "flow status")
+  (let ((cmd (concat (flow-minor-binary) " status"))
         (regexp '(flow "^\\(Error:\\)[ \t]+\\(\\(.+\\):\\([[:digit:]]+\\)\\)"
                        3 4 nil (1) 2 (1 compilation-error-face))))
     (add-to-list 'compilation-error-regexp-alist 'flow)

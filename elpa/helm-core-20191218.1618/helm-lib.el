@@ -1361,14 +1361,22 @@ I.e. when using `helm-next-line' and friends in BODY."
                 :test 'equal)))
 
 (defvar helm-blacklist-completion-styles '(emacs21 emacs22))
-(defun helm--prepare-completion-styles (&optional nomode)
-  "Return a suitable list of styles for `completion-styles'."
+(defun helm--prepare-completion-styles (&optional nomode styles)
+  "Return a suitable list of styles for `completion-styles'.
+
+If styles are specified in `helm-completion-styles-alist' for a
+particular mode, use these styles unless NOMODE is non nil.
+If STYLES is specified as a list of styles suitable for
+`completion-styles' these styles are used in the given order.
+Otherwise helm style is added to `completion-styles' always after flex
+or helm-flex completion style if present."
   ;; For `helm-completion-style' and `helm-completion-styles-alist'.
   (require 'helm-mode)
   (if (memq helm-completion-style '(helm helm-fuzzy))
       ;; Keep default settings, but probably nil is fine as well.
       '(basic partial-completion emacs22)
     (or
+     styles
      (pcase (and (null nomode)
                  (with-helm-current-buffer
                    (cdr (assq major-mode helm-completion-styles-alist))))
@@ -1391,7 +1399,7 @@ I.e. when using `helm-next-line' and friends in BODY."
         (if (memq wflex completion-styles)
             1 0))))))
 
-(defun helm-dynamic-completion (collection predicate &optional point metadata nomode)
+(defun helm-dynamic-completion (collection predicate &optional point metadata nomode styles)
   "Build a function listing the possible completions of `helm-pattern' in COLLECTION.
 
 Only the elements of COLLECTION that satisfy PREDICATE are considered.
@@ -1415,17 +1423,19 @@ Example:
           :buffer \"*helm test*\")
 
 When argument NOMODE is non nil don't use `completion-styles' as
-specified in `helm-completion-styles-alist'."
+specified in `helm-completion-styles-alist' for specific modes.
+When STYLES is specified use these `completion-styles', see
+`helm--prepare-completion-styles'."
   (lambda ()
     (let* ((completion-styles
-            (helm--prepare-completion-styles nomode))
+            (helm--prepare-completion-styles nomode styles))
            (completion-flex-nospace t)
            (nosort (eq metadata 'nosort))
            (compsfn (lambda (str pred _action)
                       (let* ((comps (completion-all-completions
                                      str
                                      (if (functionp collection)
-                                         (funcall collection str predicate t)
+                                         (funcall collection str pred t)
                                        collection)
                                      pred
                                      (or point 0)
@@ -1439,7 +1449,9 @@ specified in `helm-completion-styles-alist'."
                         (when (cdr last-data)
                           (setcdr last-data nil))
                         (setq all (copy-sequence comps))
-                        (if sort-fn (funcall sort-fn all) all)))))
+                        (if (and sort-fn (> (length str) 0))
+                            (funcall sort-fn all)
+                          all)))))
       ;; Ensure circular objects are removed.
       (complete-with-action t compsfn helm-pattern predicate))))
 

@@ -1,5 +1,5 @@
 ;;; lv.el --- Other echo area
-;; Package-Version: 20191106.1238
+;; Package-Version: 20191214.1357
 
 ;; Copyright (C) 2015  Free Software Foundation, Inc.
 
@@ -64,6 +64,9 @@ Only the background color is significant."
 (defvar display-fill-column-indicator)
 (defvar tab-line-format)
 
+(defvar lv-window-hook nil
+  "Hook to run by `lv-window' when a new window is created.")
+
 (defun lv-window ()
   "Ensure that LV window is live and return it."
   (if (window-live-p lv-wnd)
@@ -87,7 +90,8 @@ Only the background color is significant."
           (setq display-line-numbers nil)
           (setq display-fill-column-indicator nil)
           (set-window-dedicated-p lv-wnd t)
-          (set-window-parameter lv-wnd 'no-other-window t))
+          (set-window-parameter lv-wnd 'no-other-window t)
+          (run-hooks 'lv-window-hook))
         (select-window ori)))))
 
 (defvar golden-ratio-mode)

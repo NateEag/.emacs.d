@@ -18,6 +18,90 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: magit.info,  Node: Worktree,  Next: Common Commands,  Prev: Subtree,  Up: Miscellaneous
+
+8.5 Worktree
+============
+
+Also see *note (gitman)git-worktree::.
+
+‘%’     (‘magit-worktree’)
+
+     This transient prefix command binds the following suffix commands
+     and displays them in a temporary buffer until a suffix is invoked.
+
+‘% b’     (‘magit-worktree-checkout’)
+
+     Checkout BRANCH in a new worktree at PATH.
+
+‘% c’     (‘magit-worktree-branch’)
+
+     Create a new BRANCH and check it out in a new worktree at PATH.
+
+‘% m’     (‘magit-worktree-move’)
+
+     Move an existing worktree to a new PATH.
+
+‘% k’     (‘magit-worktree-delete’)
+
+     Delete a worktree, defaulting to the worktree at point.  The
+     primary worktree cannot be deleted.
+
+‘% g’     (‘magit-worktree-status’)
+
+     Show the status for the worktree at point.
+
+     If there is no worktree at point, then read one in the minibuffer.
+     If the worktree at point is the one whose status is already being
+     displayed in the current buffer, then show it in Dired instead.
+
+
+File: magit.info,  Node: Common Commands,  Next: Wip Modes,  Prev: Worktree,  Up: Miscellaneous
+
+8.6 Common Commands
+===================
+
+These are some of the commands that can be used in all buffers whose
+major-modes derive from ‘magit-mode’.  There are other common commands
+beside the ones below, but these didn’t fit well anywhere else.
+
+‘M-w’     (‘magit-copy-section-value’)
+
+     This command saves the value of the current section to the
+     ‘kill-ring’, and, provided that the current section is a commit,
+     branch, or tag section, it also pushes the (referenced) revision to
+     the ‘magit-revision-stack’.
+
+     When the current section is a branch or a tag, and a prefix
+     argument is used, then it saves the revision at its tip to the
+     ‘kill-ring’ instead of the reference name.
+
+     When the region is active, this command saves that to the
+     ‘kill-ring’, like ‘kill-ring-save’ would, instead of behaving as
+     described above.  If a prefix argument is used and the region is
+     within a hunk, it strips the outer diff marker column before saving
+     the text.
+
+‘C-w’     (‘magit-copy-buffer-revision’)
+
+     This command saves the revision being displayed in the current
+     buffer to the ‘kill-ring’ and also pushes it to the
+     ‘magit-revision-stack’.  It is mainly intended for use in
+     ‘magit-revision-mode’ buffers, the only buffers where it is always
+     unambiguous exactly which revision should be saved.
+
+     Most other Magit buffers usually show more than one revision, in
+     some way or another, so this command has to select one of them, and
+     that choice might not always be the one you think would have been
+     the best pick.
+
+   Outside of Magit ‘M-w’ and ‘C-w’ are usually bound to
+‘kill-ring-save’ and ‘kill-region’, and these commands would also be
+useful in Magit buffers.  Therefore when the region is active, then both
+of these commands behave like ‘kill-ring-save’ instead of as described
+above.
+
+
 File: magit.info,  Node: Wip Modes,  Next: Minor Mode for Buffers Visiting Files,  Prev: Common Commands,  Up: Miscellaneous
 
 8.7 Wip Modes
@@ -521,6 +605,21 @@ file-visiting buffers in just one huge repository use this:
 
           ((nil . ((magit-refresh-buffers . nil))))
 
+   It might only be costly to insert certain information into Magit
+buffers for repositories that are exceptionally large, in which case you
+can disable the respective section inserters just for that repository:
+
+   • ‘/path/to/tag/invested/repo/.dir-locals.el’
+
+          ((magit-status-mode
+            . ((eval . (magit-disable-section-inserter 'magit-insert-tags-header)))))
+
+ -- Function: magit-disable-section-inserter fn
+
+     This function disables the section inserter FN in the current
+     repository.  It is only intended for use in ‘.dir-locals.el’ and
+     ‘.dir-locals-2.el’.
+
    If you want to apply the same settings to several, but not all,
 repositories then keeping the repository-local config files in sync
 would quickly become annoying.  To avoid that you can create config
@@ -587,7 +686,7 @@ should add ‘safe-with-wip’ to this list.
 
    Similarly it isn’t necessary to require confirmation before moving a
 file to the system trash - if you trashed a file by mistake then you can
-recover it from the there.  Option ‘magit-delete-by-moving-to-trash’
+recover it from there.  Option ‘magit-delete-by-moving-to-trash’
 controls whether the system trash is used, which is the case by default.
 Nevertheless, ‘trash’ isn’t a member of ‘magit-no-confirm’ - you might
 want to change that.
@@ -626,9 +725,12 @@ buffer.
    You should also check whether any third-party packages have added
 anything to ‘magit-refresh-buffer-hook’, ‘magit-status-refresh-hook’,
 ‘magit-pre-refresh-hook’, and ‘magit-post-refresh-hook’.  If so, then
-check whether those additions impact performance significantly.  Setting
-‘magit-refresh-verbose’ and then inspecting the output in the
-‘*Messages*’ buffer, should help doing so.
+check whether those additions impact performance significantly.
+
+   Magit can be told to refresh buffers verbosely using ‘M-x
+magit-toggle-verbose-refresh’.  Enabling this helps figuring out which
+sections are bottlenecks.  The additional output can be found in the
+‘*Messages*’ buffer.
 
    Magit also reverts buffers for visited files located inside the
 current repository when the visited file changes on disk.  That is
@@ -652,7 +754,10 @@ they reduce performance at least in large repositories.
    If performance is only slow inside certain unusually large
 repositories, then you might want to disable certain features on a
 per-repository or per-repository-class basis only.  See *note
-Per-Repository Configuration::.
+Per-Repository Configuration::.  For example it takes a long time to
+determine the next and current tag in repository with exceptional
+numbers of tags.  It would therefore be a good idea to disable
+‘magit-insert-tags-headers’, as explained at the mentioned node.
 
 * Menu:
 
@@ -2022,6 +2127,12 @@ issue.  Please include all relevant output when reporting an issue.
      If you run Magit from its Git repository, then you should be able
      to use ‘make emacs-Q’ instead of the output of this command.
 
+‘M-x magit-toggle-verbose-refresh’     (‘magit-toggle-verbose-refresh’)
+
+     This command toggles whether Magit refreshes buffers verbosely.
+     Enabling this helps figuring out which sections are bottlenecks.
+     The additional output can be found in the ‘*Messages*’ buffer.
+
 ‘M-x magit-debug-git-executable’     (‘magit-debug-git-executable’)
 
      This command displays a buffer containing information about the
@@ -2033,7 +2144,7 @@ issue.  Please include all relevant output when reporting an issue.
 ‘M-x with-editor-debug’     (‘with-editor-debug’)
 
      This command displays a buffer containing information about the
-     available and used ‘~emacsclient’ executable(s), and can be useful
+     available and used ‘emacsclient’ executable(s), and can be useful
      when investigating why Magit (or rather ‘with-editor’) cannot find
      an appropriate ‘emacsclient’ executable.
 
@@ -2141,45 +2252,45 @@ Appendix C Keystroke Index
 * C-<return>:                            Visiting Files and Blobs from a Diff.
                                                               (line  51)
 * C-<tab>:                               Section Visibility.  (line  13)
-* C-c C-a:                               Editing Commit Messages.
-                                                              (line 128)
+* C-c C-a:                               Commit Pseudo Headers.
+                                                              (line  13)
 * C-c C-b:                               Log Buffer.          (line  21)
 * C-c C-b <1>:                           Refreshing Diffs.    (line  91)
 * C-c C-c:                               Transient Commands.  (line  18)
 * C-c C-c <1>:                           Select from Log.     (line  20)
 * C-c C-c <2>:                           Editing Commit Messages.
-                                                              (line  19)
+                                                              (line  17)
 * C-c C-c <3>:                           Editing Rebase Sequences.
                                                               (line   6)
 * C-c C-d:                               Refreshing Diffs.    (line  81)
 * C-c C-d <1>:                           Editing Commit Messages.
-                                                              (line  57)
+                                                              (line  58)
 * C-c C-e:                               Commands Available in Diffs.
                                                               (line  25)
 * C-c C-f:                               Log Buffer.          (line  25)
 * C-c C-f <1>:                           Refreshing Diffs.    (line  95)
-* C-c C-i:                               Editing Commit Messages.
-                                                              (line 153)
+* C-c C-i:                               Commit Pseudo Headers.
+                                                              (line  38)
 * C-c C-k:                               Select from Log.     (line  26)
 * C-c C-k <1>:                           Editing Commit Messages.
-                                                              (line  24)
+                                                              (line  22)
 * C-c C-k <2>:                           Editing Rebase Sequences.
                                                               (line  11)
 * C-c C-n:                               Log Buffer.          (line  29)
-* C-c C-o:                               Editing Commit Messages.
-                                                              (line 144)
-* C-c C-p:                               Editing Commit Messages.
-                                                              (line 148)
-* C-c C-r:                               Editing Commit Messages.
-                                                              (line 132)
-* C-c C-s:                               Editing Commit Messages.
-                                                              (line 136)
+* C-c C-o:                               Commit Pseudo Headers.
+                                                              (line  29)
+* C-c C-p:                               Commit Pseudo Headers.
+                                                              (line  33)
+* C-c C-r:                               Commit Pseudo Headers.
+                                                              (line  17)
+* C-c C-s:                               Commit Pseudo Headers.
+                                                              (line  21)
 * C-c C-t:                               Commands Available in Diffs.
                                                               (line  14)
-* C-c C-t <1>:                           Editing Commit Messages.
-                                                              (line 140)
-* C-c C-w:                               Editing Commit Messages.
-                                                              (line  63)
+* C-c C-t <1>:                           Commit Pseudo Headers.
+                                                              (line  25)
+* C-c C-w:                               Using the Revision Stack.
+                                                              (line   6)
 * C-c M-g:                               Minor Mode for Buffers Visiting Files.
                                                               (line  54)
 * C-c M-g B:                             Blaming.             (line  21)
@@ -2214,7 +2325,7 @@ Appendix C Keystroke Index
 * C-c M-g u:                             Minor Mode for Buffers Visiting Files.
                                                               (line  63)
 * C-c M-s:                               Editing Commit Messages.
-                                                              (line  35)
+                                                              (line  34)
 * C-w:                                   Common Commands.     (line  27)
 * C-x g:                                 Status Buffer.       (line  22)
 * C-x u:                                 Editing Rebase Sequences.
@@ -2328,18 +2439,18 @@ Appendix C Keystroke Index
 * M-<tab>:                               Section Visibility.  (line  17)
 * M-n:                                   Section Movement.    (line  26)
 * M-n <1>:                               Editing Commit Messages.
-                                                              (line  45)
+                                                              (line  44)
 * M-n <2>:                               Editing Rebase Sequences.
                                                               (line  47)
 * M-p:                                   Section Movement.    (line  20)
 * M-p <1>:                               Editing Commit Messages.
-                                                              (line  39)
+                                                              (line  38)
 * M-p <2>:                               Editing Rebase Sequences.
                                                               (line  43)
 * M-w:                                   Blaming.             (line 130)
 * M-w <1>:                               Common Commands.     (line  10)
 * M-x magit-debug-git-executable:        Git Executable.      (line  45)
-* M-x magit-debug-git-executable <1>:    Debugging Tools.     (line  30)
+* M-x magit-debug-git-executable <1>:    Debugging Tools.     (line  36)
 * M-x magit-describe-section-briefly:    Section Types and Values.
                                                               (line  13)
 * M-x magit-describe-section-briefly <1>: Matching Sections.  (line   6)
@@ -2352,12 +2463,13 @@ Appendix C Keystroke Index
 * M-x magit-stage-file:                  Staging from File-Visiting Buffers.
                                                               (line  10)
 * M-x magit-toggle-buffer-lock:          Modes and Buffers.   (line  17)
+* M-x magit-toggle-verbose-refresh:      Debugging Tools.     (line  30)
 * M-x magit-unstage-file:                Staging from File-Visiting Buffers.
                                                               (line  18)
 * M-x magit-version:                     Git Executable.      (line  17)
 * M-x magit-version <1>:                 Debugging Tools.     (line  10)
 * M-x magit-wip-commit:                  Wip Modes.           (line  88)
-* M-x with-editor-debug:                 Debugging Tools.     (line  38)
+* M-x with-editor-debug:                 Debugging Tools.     (line  44)
 * MM:                                    Editing Rebase Sequences.
                                                               (line 125)
 * Mt:                                    Editing Rebase Sequences.
@@ -2526,26 +2638,26 @@ Appendix D Command Index
 
 * forward-line:                          Editing Rebase Sequences.
                                                               (line  39)
-* git-commit-ack:                        Editing Commit Messages.
-                                                              (line 128)
-* git-commit-cc:                         Editing Commit Messages.
-                                                              (line 144)
+* git-commit-ack:                        Commit Pseudo Headers.
+                                                              (line  13)
+* git-commit-cc:                         Commit Pseudo Headers.
+                                                              (line  29)
 * git-commit-next-message:               Editing Commit Messages.
-                                                              (line  45)
+                                                              (line  44)
 * git-commit-prev-message:               Editing Commit Messages.
-                                                              (line  39)
-* git-commit-reported:                   Editing Commit Messages.
-                                                              (line 148)
-* git-commit-review:                     Editing Commit Messages.
-                                                              (line 132)
+                                                              (line  38)
+* git-commit-reported:                   Commit Pseudo Headers.
+                                                              (line  33)
+* git-commit-review:                     Commit Pseudo Headers.
+                                                              (line  17)
 * git-commit-save-message:               Editing Commit Messages.
-                                                              (line  35)
-* git-commit-signoff:                    Editing Commit Messages.
-                                                              (line 136)
-* git-commit-suggested:                  Editing Commit Messages.
-                                                              (line 153)
-* git-commit-test:                       Editing Commit Messages.
-                                                              (line 140)
+                                                              (line  34)
+* git-commit-signoff:                    Commit Pseudo Headers.
+                                                              (line  21)
+* git-commit-suggested:                  Commit Pseudo Headers.
+                                                              (line  38)
+* git-commit-test:                       Commit Pseudo Headers.
+                                                              (line  25)
 * git-rebase-backward-line:              Editing Rebase Sequences.
                                                               (line  35)
 * git-rebase-break:                      Editing Rebase Sequences.
@@ -2677,7 +2789,7 @@ Appendix D Command Index
 * magit-copy-section-value:              Common Commands.     (line  10)
 * magit-cycle-margin-style:              Log Margin.          (line  70)
 * magit-debug-git-executable:            Git Executable.      (line  45)
-* magit-debug-git-executable <1>:        Debugging Tools.     (line  30)
+* magit-debug-git-executable <1>:        Debugging Tools.     (line  36)
 * magit-describe-section-briefly:        Section Types and Values.
                                                               (line  13)
 * magit-describe-section-briefly <1>:    Matching Sections.   (line   6)
@@ -2724,7 +2836,7 @@ Appendix D Command Index
                                                               (line  75)
 * magit-diff-while-committing:           Refreshing Diffs.    (line  81)
 * magit-diff-while-committing <1>:       Editing Commit Messages.
-                                                              (line  57)
+                                                              (line  58)
 * magit-diff-working-tree:               Diffing.             (line  45)
 * magit-discard:                         Applying.            (line  40)
 * magit-dispatch:                        Transient Commands.  (line  18)
@@ -2831,8 +2943,8 @@ Appendix D Command Index
 * magit-patch-apply <1>:                 Maildir Patches.     (line  25)
 * magit-patch-create:                    Plain Patches.       (line  12)
 * magit-patch-save:                      Plain Patches.       (line  28)
-* magit-pop-revision-stack:              Editing Commit Messages.
-                                                              (line  63)
+* magit-pop-revision-stack:              Using the Revision Stack.
+                                                              (line   6)
 * magit-process:                         Viewing Git Output.  (line  16)
 * magit-process-kill:                    Viewing Git Output.  (line  24)
 * magit-pull:                            Pulling.             (line   9)
@@ -2996,6 +3108,7 @@ Appendix D Command Index
 * magit-toggle-margin:                   Refreshing Logs.     (line  37)
 * magit-toggle-margin <1>:               Log Margin.          (line  66)
 * magit-toggle-margin-details:           Log Margin.          (line  74)
+* magit-toggle-verbose-refresh:          Debugging Tools.     (line  30)
 * magit-unstage:                         Staging and Unstaging.
                                                               (line  43)
 * magit-unstage-all:                     Staging and Unstaging.
@@ -3021,12 +3134,12 @@ Appendix D Command Index
 * scroll-up:                             Commands Available in Diffs.
                                                               (line  56)
 * with-editor-cancel:                    Editing Commit Messages.
-                                                              (line  24)
+                                                              (line  22)
 * with-editor-cancel <1>:                Editing Rebase Sequences.
                                                               (line  11)
-* with-editor-debug:                     Debugging Tools.     (line  38)
+* with-editor-debug:                     Debugging Tools.     (line  44)
 * with-editor-finish:                    Editing Commit Messages.
-                                                              (line  19)
+                                                              (line  17)
 * with-editor-finish <1>:                Editing Rebase Sequences.
                                                               (line   6)
 
@@ -3039,18 +3152,20 @@ Appendix E Function Index
  [index ]
 * Menu:
 
-* git-commit-check-style-conventions:    Editing Commit Messages.
-                                                              (line 247)
-* git-commit-propertize-diff:            Editing Commit Messages.
-                                                              (line 206)
-* git-commit-save-message:               Editing Commit Messages.
-                                                              (line 187)
-* git-commit-setup-changelog-support:    Editing Commit Messages.
-                                                              (line 191)
-* git-commit-turn-on-auto-fill:          Editing Commit Messages.
-                                                              (line 196)
-* git-commit-turn-on-flyspell:           Editing Commit Messages.
-                                                              (line 201)
+* bug-reference-mode:                    Commit Mode and Hooks.
+                                                              (line  56)
+* git-commit-check-style-conventions:    Commit Message Conventions.
+                                                              (line  40)
+* git-commit-propertize-diff:            Commit Mode and Hooks.
+                                                              (line  47)
+* git-commit-save-message:               Commit Mode and Hooks.
+                                                              (line  28)
+* git-commit-setup-changelog-support:    Commit Mode and Hooks.
+                                                              (line  32)
+* git-commit-turn-on-auto-fill:          Commit Mode and Hooks.
+                                                              (line  37)
+* git-commit-turn-on-flyspell:           Commit Mode and Hooks.
+                                                              (line  42)
 * ido-enter-magit-status:                Status Buffer.       (line  72)
 * magit-add-section-hook:                Section Hooks.       (line  20)
 * magit-after-save-refresh-status:       Automatic Refreshing of Magit Buffers.
@@ -3082,6 +3197,8 @@ Appendix E Function Index
                                                               (line  76)
 * magit-diff-visit-worktree-file-other-window: Visiting Files and Blobs from a Diff.
                                                               (line  75)
+* magit-disable-section-inserter:        Per-Repository Configuration.
+                                                              (line  31)
 * magit-display-buffer:                  Switching Buffers.   (line   6)
 * magit-display-buffer-fullcolumn-most-v1: Switching Buffers. (line  76)
 * magit-display-buffer-fullframe-status-topleft-v1: Switching Buffers.
@@ -3226,8 +3343,6 @@ Appendix E Function Index
 * magit-repolist-column-upstream:        Repository List.     (line  48)
 * magit-repolist-column-version:         Repository List.     (line  39)
 * magit-restore-window-configuration:    Quitting Windows.    (line  23)
-* magit-revert-buffers:                  Editing Commit Messages.
-                                                              (line 178)
 * magit-run-git:                         Calling Git for Effect.
                                                               (line  36)
 * magit-run-git-async:                   Calling Git for Effect.
@@ -3261,8 +3376,8 @@ Appendix E Function Index
 * magit-status-maybe-update-stash-buffer: Section Movement.   (line  83)
 * magit-wip-log:                         Wip Modes.           (line  48)
 * magit-wip-log-current:                 Wip Modes.           (line  57)
-* with-editor-usage-message:             Editing Commit Messages.
-                                                              (line 215)
+* with-editor-usage-message:             Commit Mode and Hooks.
+                                                              (line  60)
 
 
 File: magit.info,  Node: Variable Index,  Prev: Function Index,  Up: Top
@@ -3300,18 +3415,22 @@ Appendix F Variable Index
 * branch.NAME.remote:                    Branch Git Variables.
                                                               (line  16)
 * core.notesRef:                         Notes.               (line  60)
-* git-commit-fill-column:                Editing Commit Messages.
-                                                              (line 228)
-* git-commit-finish-query-functions:     Editing Commit Messages.
-                                                              (line 233)
-* git-commit-known-pseudo-headers:       Editing Commit Messages.
-                                                              (line 124)
-* git-commit-major-mode:                 Editing Commit Messages.
-                                                              (line 163)
-* git-commit-setup-hook:                 Editing Commit Messages.
-                                                              (line 174)
-* git-commit-summary-max-length:         Editing Commit Messages.
-                                                              (line 222)
+* git-commit-fill-column:                Commit Message Conventions.
+                                                              (line  19)
+* git-commit-finish-query-functions:     Commit Message Conventions.
+                                                              (line  24)
+* git-commit-known-pseudo-headers:       Commit Pseudo Headers.
+                                                              (line   9)
+* git-commit-major-mode:                 Commit Mode and Hooks.
+                                                              (line  12)
+* git-commit-setup-hook:                 Commit Mode and Hooks.
+                                                              (line  22)
+* git-commit-setup-hook <1>:             Commit Mode and Hooks.
+                                                              (line  64)
+* git-commit-style-convention-checks:    Commit Message Conventions.
+                                                              (line  46)
+* git-commit-summary-max-length:         Commit Message Conventions.
+                                                              (line  13)
 * git-rebase-auto-advance:               Editing Rebase Sequences.
                                                               (line  99)
 * git-rebase-confirm-cancel:             Editing Rebase Sequences.
@@ -3405,8 +3524,8 @@ Appendix F Variable Index
 * magit-module-sections-nested:          Status Module Sections.
                                                               (line  24)
 * magit-no-confirm:                      Action Confirmation. (line  18)
-* magit-pop-revision-stack-format:       Editing Commit Messages.
-                                                              (line  92)
+* magit-pop-revision-stack-format:       Using the Revision Stack.
+                                                              (line  35)
 * magit-post-display-buffer-hook:        Switching Buffers.   (line  96)
 * magit-pre-display-buffer-hook:         Switching Buffers.   (line  85)
 * magit-prefer-remote-upstream:          Branch Git Variables.

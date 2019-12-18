@@ -37,7 +37,7 @@
 ;;;### (autoloads nil "lsp-dart" "lsp-dart.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-dart.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-dart" '("lsp-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-dart" '("lsp-dart-")))
 
 ;;;***
 
@@ -167,6 +167,13 @@ This avoids overloading the server with many files when starting Emacs." nil nil
 ;;; Generated autoloads from lsp-terraform.el
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-terraform" '("lsp-terraform-")))
+
+;;;***
+
+;;;### (autoloads nil "lsp-verilog" "lsp-verilog.el" (0 0 0 0))
+;;; Generated autoloads from lsp-verilog.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-verilog" '("lsp-clients-verilog-executable")))
 
 ;;;***
 

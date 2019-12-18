@@ -11,7 +11,7 @@
 ;; Current Maintainer: ninrod (github.com/ninrod)
 ;; Created: July 23 2011
 ;; Version: 1.0.3
-;; Package-Version: 20191013.1656
+;; Package-Version: 20191217.1131
 ;; Package-Requires: ((evil "1.2.12"))
 ;; Mailing list: <implementations-list at lists.ourproject.org>
 ;;      Subscribe: http://tinyurl.com/implementations-list
@@ -91,12 +91,8 @@ Each item is of the form (OPERATOR . OPERATION)."
   (let ((map (copy-keymap minibuffer-local-map)))
     (define-key map ">" (lambda ()
                           (interactive)
-                          (call-interactively 'self-insert-command)
-                          (run-at-time nil nil
-                                       (lambda ()
-                                         (when (active-minibuffer-window)
-                                           (select-window (active-minibuffer-window))
-                                           (exit-minibuffer))))))
+                          (call-interactively #'self-insert-command)
+                          (exit-minibuffer)))
     map)
   "Keymap used by `evil-surround-read-tag'.")
 
@@ -107,10 +103,12 @@ Each item is of the form (OPERATOR . OPERATION)."
   "The previously deleted LEFT region.")
 
 (defun evil-surround-read-from-minibuffer (&rest args)
-  (when evil-surround-record-repeat
+  (when (or evil-surround-record-repeat
+            (evil-repeat-recording-p))
     (evil-repeat-keystrokes 'post))
   (let ((res (apply #'read-from-minibuffer args)))
-    (when evil-surround-record-repeat
+    (when (or evil-surround-record-repeat
+              (evil-repeat-recording-p))
       (evil-repeat-record res))
     res))
 

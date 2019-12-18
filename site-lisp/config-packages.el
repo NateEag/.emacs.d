@@ -669,13 +669,12 @@ The shell command lives in my dotfiles repo."
   ;; https://github.com/ejmr/php-mode/issues/407
   :hook ((c-mode . (lambda ()
                       (when (equal major-mode 'c-mode)
-                        (lsp-cquery-enable))))))
+                        (lsp-cquery-enable))))
+         (java-mode . lsp)))
 
 (use-package lsp-java
   :after lsp-mode
-  :config (add-hook 'java-mode-hook 'lsp)
-          ;; This is not ideal, but lsp-java generates SO many errors messages.
-          (setq lsp-inhibit-message t))
+  :config (add-hook 'java-mode-hook 'lsp))
 
 (use-package csharp-mode
   :config

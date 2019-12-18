@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20191204.1451
+;; Package-Version: 20191216.2105
 ;; Keywords: project, convenience
 ;; Version: 2.1.0-snapshot
 ;; Package-Requires: ((emacs "25.1") (pkg-info "0.4"))
@@ -64,6 +64,8 @@
 (declare-function vc-dir "vc-dir")
 (declare-function vc-dir-busy "vc-dir")
 (declare-function string-trim "subr-x")
+(declare-function fileloop-continue "fileloop")
+(declare-function fileloop-initialize-replace "fileloop")
 
 (declare-function ggtags-ensure-project "ext:ggtags")
 (declare-function ggtags-update-tags "ext:ggtags")

@@ -96,7 +96,7 @@ This interface conforms to `completing-read' and can be used for
 PROMPT is a string that normally ends in a colon and a space.
 COLLECTION is either a list of strings, an alist, an obarray, or a hash table.
 PREDICATE limits completion to a subset of COLLECTION.
-REQUIRE-MATCH is a boolean value.  See `completing-read'.
+REQUIRE-MATCH is a boolean value or a symbol.  See `completing-read'.
 INITIAL-INPUT is a string inserted into the minibuffer initially.
 HISTORY is a list of previously selected inputs.
 DEF is the default value.

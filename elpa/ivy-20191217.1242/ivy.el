@@ -787,7 +787,10 @@ candidate, not the prompt."
       (ivy-immediate-done)
     (setq ivy-current-prefix-arg current-prefix-arg)
     (delete-minibuffer-contents)
-    (cond ((or (> ivy--length 0)
+    (cond ((and (= ivy--length 0)
+                (eq this-command 'ivy-dispatching-done))
+           (ivy--done ivy-text))
+          ((or (> ivy--length 0)
                ;; the action from `ivy-dispatching-done' may not need a
                ;; candidate at all
                (eq this-command 'ivy-dispatching-done))
@@ -1032,6 +1035,12 @@ contains a single candidate.")
   "Handle exit from the minibuffer when completing file names."
   (let ((dir (ivy--handle-directory ivy-text)))
     (cond
+      ((equal (ivy-state-current ivy-last) (ivy-state-def ivy-last))
+       (ivy-done))
+      ((and (ivy-state-require-match ivy-last)
+            (equal ivy-text "")
+            (null ivy--old-cands))
+       (ivy-immediate-done))
       (dir
        (let ((inhibit-message t))
          (ivy--cd dir)))
@@ -2327,11 +2336,6 @@ This is useful for recursive `ivy-read'."
              (setq coll (all-completions "" collection predicate))))
       (unless (ivy-state-dynamic-collection ivy-last)
         (setq coll (delete "" coll)))
-      (when def
-        (cond ((stringp (car-safe def))
-               (setq coll (cl-union def coll :test #'equal)))
-              ((and (stringp def) (not (member def coll)))
-               (push def coll))))
       (when (and sort
                  (or (functionp collection)
                      (not (eq history 'org-refile-history)))
@@ -2340,6 +2344,13 @@ This is useful for recursive `ivy-read'."
                  (listp coll)
                  (null (nthcdr ivy-sort-max-size coll)))
         (setq coll (sort (copy-sequence coll) sort-fn)))
+      (when def
+        (cond ((stringp (car-safe def))
+               (setq coll
+                     (delete-dups
+                      (append def coll))))
+              ((and (stringp def) (not (member def coll)))
+               (push def coll))))
       (setq coll (ivy--set-candidates coll))
       (setq ivy--old-re nil)
       (setq ivy--old-cands nil)
@@ -2410,7 +2421,7 @@ This interface conforms to `completing-read' and can be used for
 PROMPT is a string that normally ends in a colon and a space.
 COLLECTION is either a list of strings, an alist, an obarray, or a hash table.
 PREDICATE limits completion to a subset of COLLECTION.
-REQUIRE-MATCH is a boolean value.  See `completing-read'.
+REQUIRE-MATCH is a boolean value or a symbol.  See `completing-read'.
 INITIAL-INPUT is a string inserted into the minibuffer initially.
 HISTORY is a list of previously selected inputs.
 DEF is the default value.
@@ -2437,7 +2448,8 @@ INHERIT-INPUT-METHOD is currently ignored."
       (let ((str (ivy-read
                   prompt collection
                   :predicate predicate
-                  :require-match (and collection require-match)
+                  :require-match (when (and collection require-match)
+                                   require-match)
                   :initial-input (cond ((consp initial-input)
                                         (car initial-input))
                                        ((and (stringp initial-input)

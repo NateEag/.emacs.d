@@ -6,7 +6,7 @@
 ;;          Noam Postavsky <npostavs@gmail.com>
 ;; Maintainer: Noam Postavsky <npostavs@gmail.com>
 ;; Version: 0.13.0
-;; Package-Version: 20191030.1331
+;; Package-Version: 20191213.2101
 ;; X-URL: http://github.com/joaotavora/yasnippet
 ;; Keywords: convenience, emulation
 ;; URL: http://github.com/joaotavora/yasnippet
@@ -387,7 +387,7 @@ It must be set to nil before loading yasnippet to take effect."
 ;; Only two faces, and one of them shouldn't even be used...
 ;;
 (defface yas-field-highlight-face
-  '((t (:inherit 'region)))
+  '((t (:inherit region)))
   "The face used to highlight the currently active field of a snippet")
 
 (defface yas--field-debug-face

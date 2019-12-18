@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20191127.1747
+;; Package-Version: 20191218.1002
 ;; Version: 0.13.0
 ;; Package-Requires: ((emacs "24.5") (swiper "0.13.0"))
 ;; Keywords: convenience, matching, tools
@@ -719,7 +719,7 @@ With a prefix arg, restrict list to variables defined using
              (unless (boundp sym)
                (set sym nil))
              (let ((expr (counsel-read-setq-expression sym)))
-               (kill-new (prin1-char expr))
+               (kill-new (format "%S" expr))
                (eval-expression expr))))
       (when doc
         (lv-delete-window)))))
@@ -1234,7 +1234,7 @@ selected face."
 
 ;;* Git
 ;;** `counsel-git'
-(defvar counsel-git-cmd "git ls-files --full-name --"
+(defvar counsel-git-cmd "git ls-files -z --full-name --"
   "Command for `counsel-git'.")
 
 (ivy-set-actions
@@ -1258,7 +1258,7 @@ Like `locate-dominating-file', but DIR defaults to
   (let ((default-directory (counsel-locate-git-root)))
     (split-string
      (shell-command-to-string counsel-git-cmd)
-     "\n"
+     "\0"
      t)))
 
 ;;;###autoload
@@ -1288,7 +1288,7 @@ INITIAL-INPUT can be given as the initial minibuffer input."
   (counsel-cmd-to-dired
    (counsel--expand-ls
     (format "%s | %s | xargs ls"
-            counsel-git-cmd
+            (replace-regexp-in-string "\\(-0\\)\\|\\(-z\\)" "" counsel-git-cmd)
             (counsel--file-name-filter)))))
 
 (defvar counsel-dired-listing-switches "-alh"
@@ -4207,14 +4207,14 @@ Note: Duplicate elements of `kill-ring' are always deleted."
 
 ;;** `counsel-register'
 (defvar counsel-register-actions
-  '(("\\`buffer position" . jump-to-register)
+  '(("\\`buffer" . jump-to-register)
     ("\\`text" . insert-register)
     ("\\`rectangle" . insert-register)
-    ("\\`window configuration" . jump-to-register)
-    ("\\`frame configuration" . jump-to-register)
+    ("\\`window" . jump-to-register)
+    ("\\`frame" . jump-to-register)
     ("\\`[-+]?[0-9]+\\(?:\\.[0-9]\\)?\\'" . insert-register)
-    ("\\`the file" . jump-to-register)
-    ("\\`keyboard macro" . jump-to-register)
+    ("\\`\\(?:the \\)?file " . jump-to-register)
+    ("\\`keyboard" . jump-to-register)
     ("\\`file-query" . jump-to-register))
   "Alist of (REGEXP . FUNCTION) pairs for `counsel-register'.
 Selecting a register whose description matches REGEXP specifies

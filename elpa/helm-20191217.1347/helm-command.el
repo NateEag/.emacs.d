@@ -38,12 +38,6 @@
   :group 'helm-command
   :type 'boolean)
 
-(defcustom helm-M-x-default-sort-fn #'helm-M-x-fuzzy-sort-candidates
-  "Default sort function for `helm-M-x' with fuzzy matching.
-
-It should sort against REAL value of candidates."
-  :group 'helm-command
-  :type 'function)
 
 ;;; Faces
 ;;
@@ -178,9 +172,6 @@ fuzzy matching is running its own sort function with a different algorithm."
     (universal-argument--mode)))
 (put 'helm-M-x-universal-argument 'helm-only t)
 
-(defun helm-M-x-fuzzy-sort-candidates (candidates _source)
-  (helm-fuzzy-matching-default-sort-fn-1 candidates t))
-
 (defun helm-M-x-persistent-action (candidate)
   (helm-elisp--persistent-help
    candidate 'helm-describe-function))
@@ -215,8 +206,7 @@ Arg COLLECTION should be an `obarray' but can be any object suitable
 for `try-completion'.  Arg PREDICATE is a function that default to
 `commandp' see also `try-completion'.
 Arg HISTORY default to `extended-command-history'."
-  (let* ((helm-fuzzy-sort-fn helm-M-x-default-sort-fn)
-         (helm--mode-line-display-prefarg t)
+  (let* ((helm--mode-line-display-prefarg t)
          (tm (run-at-time 1 0.1 'helm-M-x--notify-prefix-arg))
          (minibuffer-completion-confirm t)
          (pred (or predicate #'commandp))
@@ -227,8 +217,10 @@ Arg HISTORY default to `extended-command-history'."
                                    (sort candidates #'helm-generic-sort-fn))))))
          (sources `(,(helm-make-source "Emacs Commands history" 'helm-M-x-class
                        :candidates (helm-dynamic-completion
+                                    ;; A list of strings.
                                     (or history extended-command-history)
-                                    pred nil 'nosort t))
+                                    (lambda (str) (funcall pred (intern-soft str)))
+                                    nil 'nosort t))
                     ,(helm-make-source "Emacs Commands" 'helm-M-x-class
                        :candidates (helm-dynamic-completion
                                     collection pred

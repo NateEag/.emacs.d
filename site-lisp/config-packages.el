@@ -669,23 +669,13 @@ The shell command lives in my dotfiles repo."
   ;; https://github.com/ejmr/php-mode/issues/407
   :hook ((c-mode . (lambda ()
                       (when (equal major-mode 'c-mode)
-                        (lsp-cquery-enable)))))
-  :config
-  (progn
-    ;; java-mode setup
-    (add-hook 'java-mode-hook
-              '(lambda ()
-                 ;; If eclimd is running, use it.
-                 (when (eclimd--running-p)
-                   (eclim-mode)
-                   (require 'ac-emacs-eclim-source)
+                        (lsp-cquery-enable))))))
 
-                   ;; Set up eclim-mode-specific keybindings.
-                   ;; TODO This jumps to def in a different window, and I don't
-                   ;; see an equivalent command for returning that I can map to
-                   ;; "M-,". Fix that if I start doing more Java stuff.
-                   (define-key java-mode-map (kbd "M-.") 'eclim-java-find-declaration)
-                   )))))
+(use-package lsp-java
+  :after lsp-mode
+  :config (add-hook 'java-mode-hook 'lsp)
+          ;; This is not ideal, but lsp-java generates SO many errors messages.
+          (setq lsp-inhibit-message t))
 
 (use-package csharp-mode
   :config

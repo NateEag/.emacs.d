@@ -252,11 +252,32 @@ Note that `delete-region' will have no effect if entered here - see
 ;; The main functions
 
 
+;; TODO Rework this to be afp-only-fill-strings-and-comments. Some languages
+;; support multi-line strings, and even in ones that don't, you could write a
+;; fill function that handles concatenation for you, making the writing
+;; experience a lot more streamlined...
 (defun afp-only-fill-comments (&optional justify)
   "Replacement fill-paragraph function which only fills comments
 and leaves everything else alone."
-  (if (afp-inside-comment?)
-      (fill-comment-paragraph justify))
+  (when (afp-inside-comment?)
+    ;; Some major-modes have fill logic that can fill outside of comments even
+    ;; when triggered inside a comment, which is unbelievably inconvenient for
+    ;; aggressive-fill-mode.
+    ;;
+    ;; So, we're narrowing the buffer to just the actual comment, to prevent
+    ;; such modes from mangling our code.
+    ;;
+    ;; Narrowing is a bit subtle, so per the docs we first save-excursion then
+    ;; save-restriction:
+    ;;
+    ;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Narrowing.html
+    (save-excursion
+      (save-restriction
+        (let* ((comment-region (afp-get-comment-bounds))
+               (start (first comment-region))
+               (end (second comment-region)))
+          (narrow-to-region start end)
+          (fill-comment-paragraph justify)))))
 
   ;; returning true says we are done with filling, don't fill anymore
   t)

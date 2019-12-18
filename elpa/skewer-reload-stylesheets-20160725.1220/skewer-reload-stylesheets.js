@@ -1,4 +1,7 @@
 
+/**
+ * Wow. The fill logic in js2-mode is seriously crappy.
+ */
 skewer.reloadStylesheets = (function () {
     'use strict';
 
@@ -46,6 +49,9 @@ skewer.reloadStylesheets = (function () {
 
     // Reload any stylesheet imported from `path` by adding (or updating) a
     // skewer_timestamp query param to its href attribute.
+    //
+    // If I start a lengthy diatribe here in this code, I believe it's not going to get filled at all. I guess that must be due to fill suppression logic?
+    //
     // Return false if no stylesheet was found, or true if it was.
     var reloadStylesheet = function (path) {
         // Find the <link> tag importing the stylesheet at `path` (if any).

@@ -515,7 +515,7 @@
 	     (:keywords "files" "unix" "convenience")
 	     (:url . "http://elpa.gnu.org/packages/dired-du.html"))])
  (dired-git-info .
-		 [(0 3)
+		 [(0 3 1)
 		  ((emacs
 		    (25)))
 		  "Show git info in dired" single
@@ -1069,7 +1069,7 @@
 	       ("Simen Heggestøyl" . "simenheg@gmail.com"))
 	      (:maintainer "Simen Heggestøyl" . "simenheg@gmail.com"))])
  (jsonrpc .
-	  [(1 0 8)
+	  [(1 0 9)
 	   ((emacs
 	     (25 2)))
 	   "JSON-RPC library" single
@@ -1440,8 +1440,8 @@
        ((:url . "http://elpa.gnu.org/packages/osc.html")
 	(:keywords "comm" "processes" "multimedia")
 	(:authors
-	 ("Mario Lang" . "mlang@delysid.org"))
-	(:maintainer "Mario Lang" . "mlang@delysid.org"))])
+	 ("Mario Lang" . "mlang@blind.guru"))
+	(:maintainer "Mario Lang" . "mlang@blind.guru"))])
  (other-frame-window .
 		     [(1 0 6)
 		      ((emacs
@@ -1509,7 +1509,7 @@
 	     ("Phillip Lord" . "phillip.lord@russet.org.uk"))
 	    (:url . "http://elpa.gnu.org/packages/persist.html"))])
  (phps-mode .
-	    [(0 3 24)
+	    [(0 3 25)
 	     ((emacs
 	       (26)))
 	     "Major mode for PHP with Semantic integration" tar
@@ -2111,7 +2111,7 @@
 	  (:maintainer "Justin Burkett" . "justin@burkett.cc")
 	  (:url . "https://github.com/justbur/emacs-vdiff"))])
  (verilog-mode .
-	       [(2019 11 21 248091482)
+	       [(2019 12 17 268053413)
 		nil "major mode for editing verilog source in Emacs" single
 		((:keywords "languages")
 		 (:authors

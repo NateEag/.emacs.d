@@ -47,38 +47,34 @@
 
   (define (geiser:eval module form . rest)
     rest
-    (let* ((body (lambda ()
-		   (if module
-		       (eval form (environment module))
-		       (eval form))))
-	   (gen-result (lambda (result-mid is-error?)
-			 (if is-error?
-			     `((result "")
-			       (output . "")
-			       (error . ,(list
-					(cons 'key
-					      (with-output-to-string
-						(lambda ()
-						  (display-condition result-mid)))))))
-			     `((result ,(with-output-to-string
-					  (lambda ()
-					    (pretty-print result-mid))))
-			       (output . "")))))
-	   (result (call/cc
-		    (lambda (k)
-		      (with-exception-handler
-			  (lambda (e)
-			    (k (gen-result e #t)))
-			(lambda ()
-			  (call-with-values
-			      (lambda ()
-				(body))
-			    (lambda (x . y)
-			      (if (null? y)
-				  (k (gen-result x #f))
-				  (k (gen-result (cons x y) #f)))))))))))
-      (write result)
-      (newline)))
+    (let ((output-string (open-output-string)))
+      (write
+       (call/cc
+        (lambda (k)
+          (with-exception-handler
+              (lambda (e)
+                (k `((result "")
+                     (output . ,(get-output-string output-string))
+                     (error (key . ,(with-output-to-string
+                                     (lambda ()
+                                       (display-condition e))))))))
+            (lambda ()
+              (call-with-values
+                  ;; evaluate form, allow for multiple return values,
+                  ;; and capture output in output-string.
+                  (lambda ()
+                    (parameterize ((current-output-port output-string))
+                      (if module
+                          (eval form (environment module))
+                          (eval form))))
+                (lambda result
+                  `((result ,(with-output-to-string
+                              (lambda ()
+                                (pretty-print
+                                 (if (null? (cdr result)) (car result) result)))))
+                    (output . ,(get-output-string output-string))))))))))
+      (newline)
+      (close-output-port output-string)))
 
   (define (geiser:module-completions prefix . rest)
     (define (substring? s1 s2)

@@ -11,6 +11,10 @@
   hunk, it never gets down to 0, and going to the next hunk, it never gets up
   to 2. Incident count: 2
 
+- Add function to send a "refresh browser" request to Skewer. It's handy when
+  you get a document's markup mangled, and if you have sites auto-skewering
+  then it's almost no friction to actually do that.
+
 - Make git-gutter show staged changes as changed (right now they don't show up
   at all). Maybe use different colors to indicate the fact that they're staged?
 

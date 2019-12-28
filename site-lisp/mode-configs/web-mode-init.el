@@ -36,6 +36,9 @@
   (setq web-mode-script-padding 0)
   (setq web-mode-block-padding 0)
 
+  ;; I want this for at least HTML comments, but generally I prefer it.
+  (setq-local comment-multi-line t)
+
   ;; Start with the usual prog-mode setup. Things'll get bumpier, though,
   ;; because web-mode is an odd beast.
   (my-prog-mode-init)

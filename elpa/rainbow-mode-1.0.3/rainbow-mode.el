@@ -1,10 +1,10 @@
 ;;; rainbow-mode.el --- Colorize color names in buffers
 
-;; Copyright (C) 2010-2018 Free Software Foundation, Inc
+;; Copyright (C) 2010-2019 Free Software Foundation, Inc
 
 ;; Author: Julien Danjou <julien@danjou.info>
 ;; Keywords: faces
-;; Version: 1.0.2
+;; Version: 1.0.3
 
 ;; This file is part of GNU Emacs.
 
@@ -29,9 +29,7 @@
 
 ;;; Code:
 
-(eval-when-compile
-  (require 'cl))
-
+(require 'cl-lib)
 (require 'regexp-opt)
 (require 'faces)
 (require 'color)
@@ -1060,7 +1058,7 @@ If the percentage value is above 100, it's converted to 100."
         (s (/ (string-to-number (match-string-no-properties 2)) 100.0))
         (l (/ (string-to-number (match-string-no-properties 3)) 100.0)))
     (rainbow-colorize-match
-     (multiple-value-bind (r g b)
+     (cl-destructuring-bind (r g b)
          (color-hsl-to-rgb h s l)
        (format "#%02X%02X%02X" (* r 255) (* g 255) (* b 255))))))
 
@@ -1190,20 +1188,53 @@ Return a value between 0 and 1."
      ,@rainbow-html-colors-font-lock-keywords
      ,@rainbow-html-rgb-colors-font-lock-keywords)))
 
+(defvar rainbow-keywords-hook nil
+  "Hook used to add additional font-lock keywords.
+This hook is called by `rainbow-mode' before it re-enables
+`font-lock-mode'.  Hook functions must only add additional
+keywords when `rainbow-mode' is non-nil.  When that is nil,
+then they must remove those additional keywords again.")
+
 ;;;###autoload
 (define-minor-mode rainbow-mode
   "Colorize strings that represent colors.
 This will fontify with colors the string like \"#aabbcc\" or \"blue\"."
   :lighter " Rbow"
-  (progn
-    (if rainbow-mode
-        (rainbow-turn-on)
-      (rainbow-turn-off))
-    ;; Call font-lock-mode to refresh the buffer when used e.g. interactively
-    (font-lock-mode 1)))
+  (if rainbow-mode
+      (rainbow-turn-on)
+    (rainbow-turn-off))
+  ;; We cannot use `rainbow-mode-hook' because this has
+  ;; to be done before `font-lock-mode' is re-enabled.
+  (run-hooks 'rainbow-keywords-hook)
+  ;; Call `font-lock-mode' to refresh the buffer when used
+  ;; e.g. interactively.
+  (font-lock-mode 1))
 
 ;;;; ChangeLog:
 
+;; 2019-12-23  Julien Danjou  <julien@danjou.info>
+;; 
+;; 	Release rainbow-mode 1.0.3
+;; 
+;; 	* Use cl-lib instead of cl
+;; 
+;; 	  As of Emacs 27.1 `cl' is officially deprecated.
+;; 
+;; 	  `cl' was only required for `multiple-value-bind' and using that was
+;; 	 conceptually wrong to begin with: `color-hsl-to-rgb' does NOT return
+;; 	three
+;; 	 values; it returns one value which happens to consist of three
+;; 	components and
+;; 	 any one of these components by itself is meaningless. Now we use
+;; 	 `cl-destructuring-bind', which does not have the same connotation.
+;; 
+;; 	* rainbow-keywords-hook: New hook run by rainbow-mode
+;; 
+;; 	* rainbow-mode: Remove unnecessary progn
+;; 	 Also improve a contained comment.
+;; 
+;; 	Thanks Jonas Bernoulli <jonas@bernoul.li>
+;; 
 ;; 2019-11-25  Julien Danjou  <julien@danjou.info>
 ;; 
 ;; 	Release rainbow-mode 1.0.2

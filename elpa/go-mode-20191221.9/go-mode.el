@@ -8,7 +8,7 @@
 
 ;; Author: The go-mode Authors
 ;; Version: 1.5.0
-;; Package-Version: 20191210.1823
+;; Package-Version: 20191221.9
 ;; Keywords: languages go
 ;; URL: https://github.com/dominikh/go-mode.el
 ;;
@@ -1322,24 +1322,24 @@ declarations are also included."
   (let (found-match)
     (while (and
             (not found-match)
-            (re-search-forward (concat "\\(\\_<" go-identifier-regexp "\\)?(") end t)
-            (not (go-in-string-or-comment-p)))
-      (save-excursion
-        (goto-char (match-beginning 0))
+            (re-search-forward (concat "\\(\\_<" go-identifier-regexp "\\)?(") end t))
+      (when (not (go-in-string-or-comment-p))
+        (save-excursion
+          (goto-char (match-beginning 0))
 
-        (let ((name (match-string 1)))
-          (when name
-            ;; We are in a param list if "func" preceded the "(" (i.e.
-            ;; func literal), or if we are in an interface
-            ;; declaration, e.g. "interface { foo(i int) }".
-            (setq found-match (or (string= name "func") (go--in-interface-p))))
+          (let ((name (match-string 1)))
+            (when name
+              ;; We are in a param list if "func" preceded the "(" (i.e.
+              ;; func literal), or if we are in an interface
+              ;; declaration, e.g. "interface { foo(i int) }".
+              (setq found-match (or (string= name "func") (go--in-interface-p))))
 
-          ;; Otherwise we are in a param list if our "(" is preceded
-          ;; by ") " or "func ".
-          (when (and (not found-match) (not (zerop (skip-syntax-backward " "))))
+            ;; Otherwise we are in a param list if our "(" is preceded
+            ;; by ") " or "func ".
+            (when (and (not found-match) (not (zerop (skip-syntax-backward " "))))
               (setq found-match (or
                                  (eq (char-before) ?\))
-                                 (looking-back "\\_<func" (- (point) 4))))))))
+                                 (looking-back "\\_<func" (- (point) 4)))))))))
     found-match))
 
 
@@ -1423,7 +1423,8 @@ comma, it stops at it. Return non-nil if comma was found."
     (while (and (not found-match) (not done))
       (when (looking-at (concat "[[:space:]\n]*" go-type-name-regexp "[[:space:]]*[,:]"))
         (goto-char (match-end 1))
-        (setq found-match t))
+        (unless (member (match-string 1) go-constants)
+          (setq found-match t)))
       (setq done (not (go--search-next-comma end))))
     found-match))
 

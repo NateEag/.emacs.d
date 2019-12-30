@@ -786,14 +786,6 @@ This is the helm implementation that collect lines matching pattern
 like vanilla emacs `occur' but have nothing to do with it, the search
 engine beeing completely different and also much faster." t nil)
 
-(autoload 'helm-occur-mode "helm-occur" "\
-Major mode to provide actions in helm moccur saved buffer.
-
-Special commands:
-\\{helm-occur-mode-map}
-
-\(fn)" t nil)
-
 (autoload 'helm-occur-from-isearch "helm-occur" "\
 Invoke `helm-occur' from isearch.
 

@@ -9,11 +9,11 @@
 ;; Maintainer: USAMI Kenta <tadsan@zonu.me>
 ;; URL: https://github.com/emacs-php/php-mode
 ;; Keywords: languages php
-;; Version: 1.22.1
+;; Version: 1.22.2
 ;; Package-Requires: ((emacs "24.3"))
 ;; License: GPL-3.0-or-later
 
-(defconst php-mode-version-number "1.22.1"
+(defconst php-mode-version-number "1.22.2"
   "PHP Mode version number.")
 
 ;; This program is free software; you can redistribute it and/or modify
@@ -1657,7 +1657,7 @@ a completion list."
      (")\\s-*:\\s-*\\??\\(\\(?:\\sw\\|\\s_\\)+\\)\\s-*\\(?:\{\\|;\\)" 1 font-lock-type-face)
 
      ;; Assignment operators (=, +=, ...)
-     ("\\([^=<!>]+?\\([\-+./%]?=\\)[^=<!>]+?\\)" 2 'php-assignment-op)
+     ("\\([^=<!>]+?\\([\-+./%]?=\\)[^=<!]+?\\)" 2 'php-assignment-op)
 
      ;; Comparison operators (==, ===, >=, ...)
      ("\\([!=]=\\{1,2\\}[>]?\\|[<>]=?\\)" 1 'php-comparison-op)

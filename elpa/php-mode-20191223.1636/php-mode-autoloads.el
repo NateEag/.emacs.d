@@ -35,6 +35,11 @@ When `DOCUMENT-ROOT' is NIL, the document root is obtained from `ROUTER-OR-DIR'.
 
 \(fn ROUTER-OR-DIR HOSTNAME PORT &optional DOCUMENT-ROOT)" t nil)
 
+(autoload 'php-find-system-php-ini-file "php" "\
+Find php.ini FILE by `php --ini'.
+
+\(fn &optional FILE)" t nil)
+
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php" '("php-")))
 
 ;;;***

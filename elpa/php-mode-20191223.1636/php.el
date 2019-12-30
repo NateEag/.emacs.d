@@ -4,7 +4,7 @@
 
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 5 Dec 2018
-;; Version: 1.22.1
+;; Version: 1.22.2
 ;; Keywords: languages, php
 ;; Homepage: https://github.com/emacs-php/php-mode
 ;; Package-Requires: ((emacs "24.3"))
@@ -427,6 +427,7 @@ When `DOCUMENT-ROOT' is NIL, the document root is obtained from `ROUTER-OR-DIR'.
         (pop-to-buffer buffer)
       buffer)))
 
+;;;###autoload
 (defun php-find-system-php-ini-file (&optional file)
   "Find php.ini FILE by `php --ini'."
   (interactive

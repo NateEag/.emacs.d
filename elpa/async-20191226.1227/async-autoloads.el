@@ -10,7 +10,7 @@
 ;;; Generated autoloads from async.el
 
 (autoload 'async-start-process "async" "\
-Start the executable PROGRAM asynchronously.  See `async-start'.
+Start the executable PROGRAM asynchronously named NAME.  See `async-start'.
 PROGRAM is passed PROGRAM-ARGS, calling FINISH-FUNC with the
 process object when done.  If FINISH-FUNC is nil, the future
 object will return the process object when the program is

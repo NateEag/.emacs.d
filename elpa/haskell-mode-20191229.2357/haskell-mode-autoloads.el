@@ -163,7 +163,7 @@ Mode for editing *.chs files of the c2hs haskell tool.
 ;;;### (autoloads nil "haskell-cabal" "haskell-cabal.el" (0 0 0 0))
 ;;; Generated autoloads from haskell-cabal.el
 
-(add-to-list 'auto-mode-alist '("\\.cabal\\'" . haskell-cabal-mode))
+(add-to-list 'auto-mode-alist '("\\.cabal\\'\\|/cabal\\.project\\|/\\.cabal/config\\'" . haskell-cabal-mode))
 
 (autoload 'haskell-cabal-mode "haskell-cabal" "\
 Major mode for Cabal package description files.
@@ -662,8 +662,10 @@ Turn on the haskell-indentation minor mode." t nil)
 (defface haskell-interactive-face-prompt '((t :inherit font-lock-function-name-face)) "\
 Face for the prompt." :group 'haskell-interactive)
 
-(defface haskell-interactive-face-prompt2 '((t :inherit font-lock-keyword-face)) "\
-Face for the prompt2 in multi-line mode." :group 'haskell-interactive)
+(defface haskell-interactive-face-prompt-cont '((t :inherit font-lock-keyword-face)) "\
+Face for GHCi's prompt-cont in multi-line mode." :group 'haskell-interactive)
+
+(define-obsolete-face-alias 'haskell-interactive-face-prompt2 'haskell-interactive-face-prompt-cont "16.2")
 
 (defface haskell-interactive-face-compile-error '((t :inherit compilation-error)) "\
 Face for compile errors." :group 'haskell-interactive)
@@ -1069,8 +1071,7 @@ Face for quarantines." :group 'haskell)
 
 ;;;***
 
-;;;### (autoloads nil nil ("haskell-compat.el" "haskell-mode-pkg.el")
-;;;;;;  (0 0 0 0))
+;;;### (autoloads nil nil ("haskell-mode-pkg.el") (0 0 0 0))
 
 ;;;***
 

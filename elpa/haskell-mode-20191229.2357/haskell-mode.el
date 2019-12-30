@@ -12,7 +12,6 @@
 ;;          2003      Dave Love <fx@gnu.org>
 ;;          2016      Arthur Fayzrakhmanov
 ;; Keywords: faces files Haskell
-;; Version: 16.2-git
 ;; URL: https://github.com/haskell/haskell-mode
 
 ;; This file is not part of GNU Emacs.
@@ -138,7 +137,6 @@
 (require 'cl-lib)
 (require 'haskell-ghc-support)
 (require 'haskell-complete-module)
-(require 'haskell-compat)
 (require 'haskell-align-imports)
 (require 'haskell-lexeme)
 (require 'haskell-sort-imports)
@@ -797,16 +795,16 @@ Minor modes that work well with `haskell-mode':
 - `smerge-mode': show and work with diff3 conflict markers used
   by git, svn and other version control systems."
   :group 'haskell
-  (when (version< emacs-version "24.3")
-    (error "haskell-mode requires at least Emacs 24.3"))
+  (when (version< emacs-version "25.1")
+    (error "haskell-mode requires at least Emacs 25.1"))
 
   ;; paragraph-{start,separate} should treat comments as paragraphs as well.
   (setq-local paragraph-start (concat " *{-\\| *-- |\\|" page-delimiter))
   (setq-local paragraph-separate (concat " *$\\| *\\({-\\|-}\\) *$\\|" page-delimiter))
   (setq-local fill-paragraph-function 'haskell-fill-paragraph)
   ;; (setq-local adaptive-fill-function 'haskell-adaptive-fill)
-  (setq-local comment-start "-- ")
-  (setq-local comment-padding 0)
+  (setq-local comment-start "--")
+  (setq-local comment-padding 1)
   (setq-local comment-start-skip "[-{]-[ \t]*")
   (setq-local comment-end "")
   (setq-local comment-end-skip "[ \t]*\\(-}\\|\\s>\\)")

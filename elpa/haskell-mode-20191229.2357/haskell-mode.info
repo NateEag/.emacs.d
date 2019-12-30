@@ -1,7 +1,7 @@
 This is haskell-mode.info, produced by makeinfo version 6.5 from
 haskell-mode.texi.
 
-This manual is for Haskell mode, version 16.1-git
+This manual is for Haskell mode, version 17.2-git
 
    Copyright © 2013-2017 Haskell Mode contributors.
 
@@ -22,7 +22,7 @@ Haskell Mode
 ************
 
 Haskell Mode is an Haskell development Environment for GNU Emacs version
-24.3 or later.  It provides syntax-based indentation, font locking,
+25.1 or later.  It provides syntax-based indentation, font locking,
 editing cabal files, and supports running an inferior Haskell
 interpreter (e.g.  GHCi).
 
@@ -130,9 +130,6 @@ Haskell source code in color now.
          (("gnu" . "http://elpa.gnu.org/packages/")
           ("melpa-stable" . "http://stable.melpa.org/packages/")))))
 
-   Haskell Mode supports GNU Emacs versions 24.3+, including 25
-(snapshot).
-
    Haskell Mode is available from melpa-stable (releases)
 (http://stable.melpa.org) and melpa (git snapshots) (http://melpa.org).
 
@@ -140,10 +137,6 @@ Haskell source code in color now.
 (https://github.com/dimitri/el-get), Emacs Prelude
 (https://github.com/bbatsov/prelude) and Debian package
 (https://packages.debian.org/search?keywords=haskell-mode).
-
-   Last version of ‘haskell-mode’ that supported Emacs 23, 24.1, and
-24.2 is ‘haskell-mode’ 13.16 available at
-<https://github.com/haskell/haskell-mode/releases/tag/v13.16>.
 
 2.1 Customizing
 ===============
@@ -1458,6 +1451,10 @@ haskell-svg-toggle-render-images’, if you load the above code and type
 ‘circle’ at the REPL, you will see the rendered circle instead of the
 XML representation of the image.
 
+   For this feature to work, it is required that the variable
+‘haskell-interactive-mode-eval-mode’ be set to a value different from
+‘nil’, *note printing mode::.
+
    This feature can be enabled by default by setting the customization
 variable ‘haskell-svg-render-images’ to a non-nil value.
 
@@ -2350,7 +2347,7 @@ Concept index
 
 * benchmarking:                          Interactive Haskell. (line 472)
 * CUA mode:                              Indentation.         (line  49)
-* customizing:                           Installation.        (line  55)
+* customizing:                           Installation.        (line  48)
 * customizing <1>:                       Interactive Haskell. (line  53)
 * haskell-mode:                          Editing Haskell Code.
                                                               (line   6)
@@ -2405,7 +2402,7 @@ Variable index
 * haskell-interactive-mode-hook:         Interactive Haskell. (line 463)
 * haskell-keyword-face:                  Syntax highlighting. (line  28)
 * haskell-literate-comment-face:         Syntax highlighting. (line  35)
-* haskell-mode-hook:                     Installation.        (line  60)
+* haskell-mode-hook:                     Installation.        (line  53)
 * haskell-operator-face:                 Syntax highlighting. (line  33)
 * haskell-pragma-face:                   Syntax highlighting. (line  34)
 * haskell-process-args-cabal-new-repl:   Interactive Haskell. (line  76)
@@ -2426,28 +2423,29 @@ Tag Table:
 Node: Top683
 Node: Introduction2588
 Node: Installation4173
-Node: Editing Haskell Code6796
-Node: Syntax highlighting10556
-Node: Completion support12816
-Node: Unicode support14860
-Node: Indentation19532
-Node: External indentation23008
-Node: Autoformating23736
-Node: Module templates24364
-Node: Declaration scanning24794
-Node: Compilation28082
-Node: Interactive Haskell31987
-Node: Editing Cabal files63865
-Node: Browsing Haddocks64612
-Node: Spell checking strings and comments67437
-Node: Aligning code68543
-Node: Rectangular commands70288
-Node: REPL71808
-Node: Collapsing Haskell code76586
-Node: Getting Help and Reporting Bugs79194
-Node: Concept index80238
-Node: Function index81496
-Node: Variable index82291
+Node: Editing Haskell Code6536
+Node: Syntax highlighting10296
+Node: Completion support12556
+Node: Unicode support14600
+Node: Indentation19272
+Node: External indentation22748
+Node: Autoformating23476
+Node: Module templates24104
+Node: Declaration scanning24534
+Node: Compilation27822
+Node: Interactive Haskell31727
+Ref: printing mode51012
+Node: Editing Cabal files63776
+Node: Browsing Haddocks64523
+Node: Spell checking strings and comments67348
+Node: Aligning code68454
+Node: Rectangular commands70199
+Node: REPL71719
+Node: Collapsing Haskell code76497
+Node: Getting Help and Reporting Bugs79105
+Node: Concept index80149
+Node: Function index81407
+Node: Variable index82202
 
 End Tag Table
 

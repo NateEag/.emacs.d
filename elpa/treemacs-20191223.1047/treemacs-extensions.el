@@ -13,7 +13,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;; API required for writing extensions for/with treemacs.
@@ -547,8 +547,6 @@ rules apply for QUERY-FUNCTION, RENDER-ACTION and ROOT-KEY-FORM."
   (let ((treemacs-fringe-indicator-mode nil)
         (treemacs--in-this-buffer t))
     (treemacs-mode))
-  (when treemacs-fringe-indicator-mode
-    (treemacs--enable-fringe-indicator))
   (setq-local treemacs--in-this-buffer :extension))
 
 (provide 'treemacs-extensions)

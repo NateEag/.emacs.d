@@ -13,7 +13,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;; General purpose macros, and those used in, but defined outside of
@@ -30,7 +30,7 @@
 (eval-when-compile
   (require 'gv))
 
-(declare-function treemacs--all-scopes-and-buffers "treemacs-scope")
+(declare-function treemacs--scope-store "treemacs-scope")
 
 (defmacro treemacs-import-functions-from (file &rest functions)
   "Import FILE's FUNCTIONS.
@@ -324,11 +324,22 @@ not work keep it on the same line."
       ,@final-form)))
 
 (defmacro treemacs-run-in-every-buffer (&rest body)
-  "Run BODY once locally in every treemacs buffer (and its frame)."
+  "Run BODY once locally in every treemacs buffer.
+Only includes treemacs filetree buffers, not extensions."
   (declare (debug t))
-  `(pcase-dolist (`(,_ . ,--buffer--) (treemacs--all-scopes-and-buffers))
-     (when (buffer-live-p --buffer--)
-       (with-current-buffer --buffer--
+  `(pcase-dolist (`(,_ . ,shelf) (treemacs--scope-store))
+     (-let [buffer (treemacs-scope-shelf->buffer shelf)]
+       (when (buffer-live-p buffer)
+         (with-current-buffer buffer
+           ,@body)))))
+
+(defmacro treemacs-run-in-all-derived-buffers (&rest body)
+  "Run BODY once locally in every treemacs buffer.
+Inluceds *all* treemacs-mode-derived buffers, including extensions."
+  (declare (debug t))
+  `(dolist (buffer (buffer-list))
+     (when (buffer-local-value 'treemacs--in-this-buffer buffer)
+       (with-current-buffer buffer
          ,@body))))
 
 (defmacro treemacs--defstruct (name &rest properties)

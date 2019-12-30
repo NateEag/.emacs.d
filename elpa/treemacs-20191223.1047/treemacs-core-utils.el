@@ -13,7 +13,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;; General implementation details.
@@ -49,10 +49,11 @@
   treemacs-get-local-window
   treemacs-get-local-buffer
   treemacs-get-local-buffer-create
+  treemacs-scope-shelf->buffer
   treemacs-current-visibility
   treemacs--select-visible-window
   treemacs--remove-buffer-after-kill
-  treemacs--all-scopes-and-buffers)
+  treemacs--scope-store)
 
 (treemacs-import-functions-from "treemacs-rendering"
   treemacs-do-delete-single-node

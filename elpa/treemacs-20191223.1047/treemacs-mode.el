@@ -13,7 +13,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;; Major mode definition.
@@ -418,7 +418,7 @@ Will simply return `treemacs--eldoc-msg'."
   ;; fringe indicator must be set up right here, before hl-line-mode, since activating hl-line-mode will
   ;; invoke the movement of the fringe overlay that would otherwise be nil
   (when treemacs-fringe-indicator-mode
-    (treemacs--setup-fringe-indicator-mode))
+    (treemacs--enable-fringe-indicator))
   (hl-line-mode t)
 
   ;; needs to run manually the first time treemacs is loaded, since the hook is only added *after*

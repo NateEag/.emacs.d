@@ -13,7 +13,7 @@
 ;; GNU General Public License for more details.
 
 ;; You should have received a copy of the GNU General Public License
-;; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+;; along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 ;;; Commentary:
 ;;; Handling of visuals in general and icons in particular.
@@ -64,7 +64,7 @@
 
 (defun treemacs--update-icon-selection ()
   "Highlight current icon, unhighlight `treemacs--last-highlight'."
-  (when (eq major-mode 'treemacs-mode)
+  (when treemacs--in-this-buffer
     (condition-case e
         (progn
           (when treemacs-fringe-indicator-mode

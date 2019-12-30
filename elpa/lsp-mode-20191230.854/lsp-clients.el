@@ -50,6 +50,7 @@
 (require 'lsp-csharp)
 (require 'lsp-json)
 (require 'lsp-verilog)
+(require 'lsp-eslint)
 
 ;;; Ada
 (defgroup lsp-ada nil
@@ -182,6 +183,7 @@ finding the executable with variable `exec-path'."
                                                                 lsp-clients-typescript-javascript-server-args)))
                   :activation-fn 'lsp-typescript-javascript-tsx-jsx-activate-p
                   :priority -3
+                  :completion-in-comments? t
                   :ignore-messages '("readFile .*? requested by TypeScript but content not available")
                   :server-id 'jsts-ls))
 
@@ -384,27 +386,29 @@ particular FILE-NAME and MODE."
                   :priority -1
                   :server-id 'ocaml-ls))
 
-(defgroup lsp-merlin nil
-  "LSP support for OCaml, using merlin."
+(defgroup lsp-ocaml-lsp-server nil
+  "LSP support for OCaml, using ocaml-lsp-server."
   :group 'lsp-mode
-  :link '(url-link "https://github.com/ocaml/merlin"))
+  :link '(url-link "https://github.com/ocaml/ocaml-lsp"))
+(define-obsolete-variable-alias 'lsp-merlin 'lsp-ocaml-lsp-server)
 
-(defcustom lsp-merlin-command
-  '("ocamlmerlin-lsp")
+(defcustom lsp-ocaml-lsp-server-command
+  '("ocamllsp")
   "Command to start ocaml-language-server."
   :group 'lsp-ocaml
   :type '(choice
           (string :tag "Single string value")
           (repeat :tag "List of string values"
                   string)))
+(define-obsolete-variable-alias 'lsp-merlin-command 'lsp-ocaml-lsp-server-command)
 
 (lsp-register-client
  (make-lsp-client
   :new-connection
-  (lsp-stdio-connection (lambda () lsp-merlin-command))
+  (lsp-stdio-connection (lambda () lsp-ocaml-lsp-server-command))
   :major-modes '(caml-mode tuareg-mode)
   :priority 0
-  :server-id 'merlin))
+  :server-id 'ocaml-lsp-server))
 
 
 ;; C-family (C, C++, Objective-C, Objective-C++)
@@ -638,10 +642,10 @@ responsiveness at the cost of possibile stability issues."
           (repeat :tag "List of string values"
                   string)))
 
-(defun lsp-client--angular-start-loading (workspace params)
+(defun lsp-client--angular-start-loading (_workspace params)
   (lsp--info "Started loading project %s" params))
 
-(defun lsp-client--angular-finished-loading (workspace params)
+(defun lsp-client--angular-finished-loading (_workspace params)
   (lsp--info "Finished loading project %s" params))
 
 (lsp-register-client

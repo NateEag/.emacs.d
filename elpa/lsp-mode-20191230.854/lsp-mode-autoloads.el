@@ -55,6 +55,13 @@
 
 ;;;***
 
+;;;### (autoloads nil "lsp-eslint" "lsp-eslint.el" (0 0 0 0))
+;;; Generated autoloads from lsp-eslint.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-eslint" '("lsp-")))
+
+;;;***
+
 ;;;### (autoloads nil "lsp-fsharp" "lsp-fsharp.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-fsharp.el
 

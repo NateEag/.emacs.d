@@ -31,7 +31,7 @@ to perform almost all of their daily version control tasks directly from
 within Emacs.  While many fine Git clients exist, only Magit and Git
 itself deserve to be called porcelains.
 
-This manual is for Magit version 2.90.1 (v2.90.1-850-g6b0d1af12+1).
+This manual is for Magit version 2.90.1 (v2.90.1-873-ge88242679+1).
 
      Copyright (C) 2015-2019 Jonas Bernoulli <jonas@bernoul.li>
 
@@ -5260,7 +5260,7 @@ Using the Revision Stack
      determined in the previous step.
 
      Both formats, if non-nil and after removing %N, are then expanded
-     using ‘git show –format=FORMAT ...’ inside TOPLEVEL.
+     using ‘git show --format=FORMAT ...’ inside TOPLEVEL.
 
      The expansion of POINT-FORMAT is inserted at point, and the
      expansion of EOB-FORMAT is inserted at the end of the buffer (if
@@ -5279,6 +5279,10 @@ such headers and provides some commands to insert such headers.
  -- User Option: git-commit-known-pseudo-headers
 
      A list of Git pseudo headers to be highlighted.
+
+‘C-c C-i’     (‘git-commit-insert-pseudo-header’)
+
+     Insert a commit message pseudo header.
 
 ‘C-c C-a’     (‘git-commit-ack’)
 
@@ -5305,7 +5309,7 @@ such headers and provides some commands to insert such headers.
      Insert a header mentioning the person who reported the issue being
      fixed by the commit.
 
-‘C-c C-i’     (‘git-commit-suggested’)
+‘C-c M-i’     (‘git-commit-suggested’)
 
      Insert a header mentioning the person who suggested the change.
 
@@ -5700,8 +5704,8 @@ them.  Those features are available from separate transient command.
      trigger interpretation as a regexp are "*" and "^".  Some other
      characters which you might expect to be invalid, actually are not,
      e.g.  ".+$" are all perfectly valid.  More precisely, if ‘git
-     check-ref-format –branch STRING’ exits with a non-zero status, then
-     treat STRING as a regexp.
+     check-ref-format --branch STRING’ exits with a non-zero status,
+     then treat STRING as a regexp.
 
      Assuming the chosen branch matches these conditions you would end
      up with with e.g.:

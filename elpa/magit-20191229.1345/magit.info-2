@@ -2253,7 +2253,7 @@ Appendix C Keystroke Index
                                                               (line  51)
 * C-<tab>:                               Section Visibility.  (line  13)
 * C-c C-a:                               Commit Pseudo Headers.
-                                                              (line  13)
+                                                              (line  17)
 * C-c C-b:                               Log Buffer.          (line  21)
 * C-c C-b <1>:                           Refreshing Diffs.    (line  91)
 * C-c C-c:                               Transient Commands.  (line  18)
@@ -2270,7 +2270,7 @@ Appendix C Keystroke Index
 * C-c C-f:                               Log Buffer.          (line  25)
 * C-c C-f <1>:                           Refreshing Diffs.    (line  95)
 * C-c C-i:                               Commit Pseudo Headers.
-                                                              (line  38)
+                                                              (line  13)
 * C-c C-k:                               Select from Log.     (line  26)
 * C-c C-k <1>:                           Editing Commit Messages.
                                                               (line  22)
@@ -2278,17 +2278,17 @@ Appendix C Keystroke Index
                                                               (line  11)
 * C-c C-n:                               Log Buffer.          (line  29)
 * C-c C-o:                               Commit Pseudo Headers.
-                                                              (line  29)
-* C-c C-p:                               Commit Pseudo Headers.
                                                               (line  33)
+* C-c C-p:                               Commit Pseudo Headers.
+                                                              (line  37)
 * C-c C-r:                               Commit Pseudo Headers.
-                                                              (line  17)
-* C-c C-s:                               Commit Pseudo Headers.
                                                               (line  21)
+* C-c C-s:                               Commit Pseudo Headers.
+                                                              (line  25)
 * C-c C-t:                               Commands Available in Diffs.
                                                               (line  14)
 * C-c C-t <1>:                           Commit Pseudo Headers.
-                                                              (line  25)
+                                                              (line  29)
 * C-c C-w:                               Using the Revision Stack.
                                                               (line   6)
 * C-c M-g:                               Minor Mode for Buffers Visiting Files.
@@ -2324,6 +2324,8 @@ Appendix C Keystroke Index
                                                               (line 114)
 * C-c M-g u:                             Minor Mode for Buffers Visiting Files.
                                                               (line  63)
+* C-c M-i:                               Commit Pseudo Headers.
+                                                              (line  42)
 * C-c M-s:                               Editing Commit Messages.
                                                               (line  34)
 * C-w:                                   Common Commands.     (line  27)
@@ -2639,25 +2641,27 @@ Appendix D Command Index
 * forward-line:                          Editing Rebase Sequences.
                                                               (line  39)
 * git-commit-ack:                        Commit Pseudo Headers.
-                                                              (line  13)
+                                                              (line  17)
 * git-commit-cc:                         Commit Pseudo Headers.
-                                                              (line  29)
+                                                              (line  33)
+* git-commit-insert-pseudo-header:       Commit Pseudo Headers.
+                                                              (line  13)
 * git-commit-next-message:               Editing Commit Messages.
                                                               (line  44)
 * git-commit-prev-message:               Editing Commit Messages.
                                                               (line  38)
 * git-commit-reported:                   Commit Pseudo Headers.
-                                                              (line  33)
+                                                              (line  37)
 * git-commit-review:                     Commit Pseudo Headers.
-                                                              (line  17)
+                                                              (line  21)
 * git-commit-save-message:               Editing Commit Messages.
                                                               (line  34)
 * git-commit-signoff:                    Commit Pseudo Headers.
-                                                              (line  21)
-* git-commit-suggested:                  Commit Pseudo Headers.
-                                                              (line  38)
-* git-commit-test:                       Commit Pseudo Headers.
                                                               (line  25)
+* git-commit-suggested:                  Commit Pseudo Headers.
+                                                              (line  42)
+* git-commit-test:                       Commit Pseudo Headers.
+                                                              (line  29)
 * git-rebase-backward-line:              Editing Rebase Sequences.
                                                               (line  35)
 * git-rebase-break:                      Editing Rebase Sequences.

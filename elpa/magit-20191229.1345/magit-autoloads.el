@@ -907,6 +907,10 @@ the current section is a commit, branch, or tag section, push
 the (referenced) revision to the `magit-revision-stack' for use
 with `magit-pop-revision-stack'.
 
+When `magit-copy-revision-abbreviated' is non-nil, save the
+abbreviated revision to the `kill-ring' and the
+`magit-revision-stack'.
+
 When the current section is a branch or a tag, and a prefix
 argument is used, then save the revision at its tip to the
 `kill-ring' instead of the reference name.
@@ -936,7 +940,11 @@ the current section instead, using `magit-copy-section-value'.
 
 When the region is active, then save that to the `kill-ring',
 like `kill-ring-save' would, instead of behaving as described
-above." t nil)
+above.
+
+When `magit-copy-revision-abbreviated' is non-nil, save the
+abbreviated revision to the `kill-ring' and the
+`magit-revision-stack'." t nil)
 
 (autoload 'magit-abort-dwim "magit-extras" "\
 Abort current operation.
@@ -1527,6 +1535,11 @@ branch as default.
 Push a tag to another repository.
 
 \(fn TAG REMOTE &optional ARGS)" t nil)
+
+(autoload 'magit-push-notes-ref "magit-push" "\
+Push a notes ref to another repository.
+
+\(fn REF REMOTE &optional ARGS)" t nil)
 
 (autoload 'magit-push-implicitly "magit-push" "\
 Push somewhere without using an explicit refspec.

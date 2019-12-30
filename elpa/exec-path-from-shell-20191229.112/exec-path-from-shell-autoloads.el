@@ -33,16 +33,9 @@ Initialize environment from the user's shell.
 
 The values of all the environment variables named in
 `exec-path-from-shell-variables' are set from the corresponding
-values used in the user's shell.
-
-\(fn)" t nil)
+values used in the user's shell." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "exec-path-from-shell" '("exec-path-from-shell-")))
-
-;;;***
-
-;;;### (autoloads nil nil ("exec-path-from-shell-pkg.el") (0 0 0
-;;;;;;  0))
 
 ;;;***
 

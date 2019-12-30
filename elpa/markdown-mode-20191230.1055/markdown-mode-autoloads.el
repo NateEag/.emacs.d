@@ -36,9 +36,14 @@ Major mode for viewing GitHub Flavored Markdown content.
 (autoload 'markdown-live-preview-mode "markdown-mode" "\
 Toggle native previewing on save for a specific markdown file.
 
+If called interactively, enable Markdown-Live-Preview mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
+
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "markdown-mode" '("gfm-" "markdown" "defun-markdown-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "markdown-mode" '("defun-markdown-" "gfm-" "markdown")))
 
 ;;;***
 

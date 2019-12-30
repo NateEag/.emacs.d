@@ -10,7 +10,8 @@
 ;;; Generated autoloads from helm-swoop.el
 
 (autoload 'helm-swoop-back-to-last-point "helm-swoop" "\
-Go back to last position where `helm-swoop' was called
+Go back to last position where `helm-swoop' was called.
+If $CANSEL is non-nil, store `helm-swoop-last-point'.
 
 \(fn &optional $CANCEL)" t nil)
 
@@ -25,34 +26,36 @@ List the all lines to another buffer, which is able to squeeze by
 Invoke `helm-swoop' from isearch." t nil)
 
 (autoload 'helm-multi-swoop "helm-swoop" "\
-Usage:
-M-x helm-multi-swoop
-1. Select any buffers by [C-SPC] or [M-SPC]
-2. Press [RET] to start helm-multi-swoop
+Multi swoop for $QUERY in $BUFLIST.
 
-C-u M-x helm-multi-swoop
+Usage:
+  \\[execute-extended-command] helm-multi-swoop
+  1. Select any buffers by [C-SPC] or [M-SPC]
+  2. Press [RET] to start `helm-multi-swoop'
+
+\\[universal-argument] \\[execute-extended-command] helm-multi-swoop
 If you have done helm-multi-swoop before, you can skip select buffers step.
 Last selected buffers will be applied to helm-multi-swoop.
 
 \(fn &optional $QUERY $BUFLIST)" t nil)
 
 (autoload 'helm-multi-swoop-all "helm-swoop" "\
-Apply all buffers to helm-multi-swoop
+Apply all buffers to helm-multi-swoop for $QUERY.
 
 \(fn &optional $QUERY)" t nil)
 
 (autoload 'helm-multi-swoop-org "helm-swoop" "\
-Applies all org-mode buffers to helm-multi-swoop
+Applie all `org-mode' buffers to helm-multi-swoop for $QUERY.
 
 \(fn &optional $QUERY)" t nil)
 
 (autoload 'helm-multi-swoop-current-mode "helm-swoop" "\
-Applies all buffers of the same mode as the current buffer to helm-multi-swoop
+Applie all buffers of the same mode as the current buffer to helm-multi-swoop for $QUERY.
 
 \(fn &optional $QUERY)" t nil)
 
 (autoload 'helm-multi-swoop-projectile "helm-swoop" "\
-Apply all opened buffers of the current project to helm-multi-swoop
+Apply all opened buffers of the current project to helm-multi-swoop for $QUERY.
 
 \(fn &optional $QUERY)" t nil)
 
@@ -62,7 +65,8 @@ Start helm-swoop without pre input query." t nil)
 (autoload 'helm-swoop-symble-pre-input "helm-swoop" "\
 Start helm-swoop without pre input query." t nil)
 
-(autoload 'helm-multi-swoop-edit "helm-swoop" nil t nil)
+(autoload 'helm-multi-swoop-edit "helm-swoop" "\
+Multi swoop edit." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "helm-swoop" '("get-buffers-matching-mode" "helm-")))
 

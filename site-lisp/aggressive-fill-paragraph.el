@@ -239,6 +239,11 @@ Note that `delete-region' will have no effect if entered here - see
 
 (defcustom afp-fill-comments-only-mode-list
   (list 'emacs-lisp-mode 'sh-mode 'python-mode 'js-mode)
+  ;; TODO Maybe throw prog-mode in as a default? Not all modes need this, but a
+  ;; whole lot do, and I don't know that it would hurt any of them.
+  ;;
+  ;; ...other than ones that have slow fill logic, I guess. I think I've seen
+  ;; the approach I'm taking slag php-mode.
   "List of major modes in which only comments should be filled."
   :group 'aggressive-fill-paragraph)
 

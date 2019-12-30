@@ -12,7 +12,7 @@
  '(afp-fill-after-functions
    '(evil-delete backward-delete-char backward-delete-char-untabify kill-region evil-change yank yank-pop evil-paste-after))
  '(afp-fill-comments-only-mode-list
-   '(emacs-lisp-mode sh-mode python-mode js-mode php-mode xml-mode nxml-mode diff-mode gitconfig-mode))
+   '(emacs-lisp-mode sh-mode python-mode js-mode php-mode xml-mode nxml-mode diff-mode gitconfig-mode lua-mode))
  '(afp-fill-keys
    '(32 46 97 98 99 100 101 102 103 104 105 106 107 108 109 110 111 112 113 114 115 116 117 118 119 120 121 122 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90) nil nil "A very stupid way to make paragraphs fill fluidly both while writing and editing - make sure the hook runs after all letters. It would be smarter to submit a PR to bypass the filter var in the first place, probably, maybe with support for filling after deletion (if that is feasible).")
  '(afp-fill-on-self-insert t)

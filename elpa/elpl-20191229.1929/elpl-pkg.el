@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/elpl-20191229.1929/elpl.el  -*- no-byte-compile: t -*-
+(define-package "elpl" "20191229.1929" "Emacs Lisp REPL" '((emacs "24.4")) :commit "48ecee2aa7b3d085a3deff809fb3ae31ae4ef9dd" :keywords '("lisp" "tool") :authors '(("Gong Qijian" . "gongqijian@gmail.com")) :maintainer '("Gong Qijian" . "gongqijian@gmail.com") :url "https://github.com/twlz0ne/elpl")

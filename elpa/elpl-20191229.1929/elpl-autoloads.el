@@ -10,9 +10,7 @@
 ;;; Generated autoloads from elpl.el
 
 (autoload 'elpl "elpl" "\
-Run an inferior instance of `elpl-cli' inside Emacs.
-
-\(fn)" t nil)
+Run an inferior instance of `elpl-cli' inside Emacs." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "elpl" '("elpl-")))
 

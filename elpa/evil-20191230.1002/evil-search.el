@@ -191,10 +191,16 @@ of the buffer."
            result)
        (setq result (funcall search-fun string bound
                              ,(if wrap t 'noerror) count))
-       (when (and ,wrap (null result))
+       ;; Wrap the search only if a result was not found, and a bound not set
+       (when (and ,wrap (null result) (null bound))
          (goto-char ,(if forward '(point-min) '(point-max)))
          (unwind-protect
-             (setq result (funcall search-fun string bound noerror count))
+             ;; The wrapped search is bounded by the original starting point
+             (setq result (funcall search-fun string
+                                   ,(if forward
+                                        '(max (point-min) (1- start))
+                                      '(min (point-max) (1+ start)))
+                                   noerror count))
            (unless result
              (goto-char start))))
        result)))
@@ -604,12 +610,13 @@ The following properties are supported:
                                  'all-windows)
                              (get-buffer-window-list (current-buffer) nil t)
                            (list (evil-ex-hl-window hl))))
-              (let ((beg (max (window-start win)
-                              (or (evil-ex-hl-min hl) (point-min))))
-                    (end (min (window-end win)
-                              (or (evil-ex-hl-max hl) (point-max)))))
-                (when (< beg end)
-                  (push (cons beg end) ranges))))
+              (when (window-live-p win)
+                (let ((beg (max (window-start win)
+                                (or (evil-ex-hl-min hl) (point-min))))
+                      (end (min (window-end win)
+                                (or (evil-ex-hl-max hl) (point-max)))))
+                  (when (< beg end)
+                    (push (cons beg end) ranges)))))
             (setq ranges
                   (sort ranges #'(lambda (r1 r2) (< (car r1) (car r2)))))
             (while ranges

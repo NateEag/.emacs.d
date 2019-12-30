@@ -1477,7 +1477,7 @@ be joined with the previous line if and only if
 `evil-backspace-join-lines'."
   (interactive "p")
   (if (or evil-backspace-join-lines (not (bolp)))
-      (call-interactively 'delete-backward-char)
+      (delete-char -1)
     (user-error "Beginning of line")))
 
 (evil-define-command evil-delete-backward-word ()
@@ -1491,6 +1491,21 @@ be joined with the previous line if and only if
                       (evil-backward-word-begin)
                       (point))
                     (line-beginning-position))
+                   (point))))
+
+(evil-define-command evil-delete-back-to-indentation ()
+  "Delete back to the first non-whitespace character.
+If point is before the first non-whitespace character of a
+current line then delete from the point to the beginning of the
+current line.  If point is on the beginning of the line, behave
+according to `evil-backspace-join-lines'."
+  (if (bolp)
+      (evil-delete-backward-char-and-join 1)
+    (delete-region (if (<= (current-column) (current-indentation))
+                       (line-beginning-position)
+                     (save-excursion
+                       (evil-first-non-blank)
+                       (point)))
                    (point))))
 
 (defun evil-ex-delete-or-yank (should-delete beg end type register count yank-handler)
@@ -1818,10 +1833,11 @@ See also `evil-shift-left'."
           (setq first-shift 0)
         (setq first-shift (* count evil-shift-width))
         (indent-to first-shift)))
-    ;; assuming that point is in the first line, adjust its position
-    (if (called-interactively-p 'any)
-        (evil-first-non-blank)
-      (move-to-column (max 0 (+ pnt-indent first-shift))))))
+    ;; When called from insert state (C-t or C-d) the cursor should shift with the line,
+    ;; otherwise (normal state) it should end up on the first non-whitespace character
+    (if (evil-insert-state-p)
+        (move-to-column (max 0 (+ pnt-indent first-shift)))
+      (evil-first-non-blank))))
 
 (evil-define-command evil-shift-right-line (count)
   "Shift the current line COUNT times to the right.
@@ -1911,7 +1927,7 @@ The default for width is the value of `fill-column'."
   "Pastes the latest yanked text before the cursor position.
 The return value is the yanked text."
   :suppress-operator t
-  (interactive "P<x>")
+  (interactive "p<x>")
   (if (evil-visual-state-p)
       (evil-visual-paste count register)
     (evil-with-undo
@@ -1958,7 +1974,7 @@ The return value is the yanked text."
   "Pastes the latest yanked text behind point.
 The return value is the yanked text."
   :suppress-operator t
-  (interactive "P<x>")
+  (interactive "p<x>")
   (if (evil-visual-state-p)
       (evil-visual-paste count register)
     (evil-with-undo
@@ -2006,7 +2022,7 @@ The return value is the yanked text."
 (evil-define-command evil-visual-paste (count &optional register)
   "Paste over Visual selection."
   :suppress-operator t
-  (interactive "P<x>")
+  (interactive "p<x>")
   ;; evil-visual-paste is typically called from evil-paste-before or
   ;; evil-paste-after, but we have to mark that the paste was from
   ;; visual state
@@ -3819,6 +3835,19 @@ The 'bang' argument means to sort in reverse order."
 
 ;;; Window navigation
 
+(defmacro evil-save-side-windows (&rest body)
+  "Toggle side windows, evaluate BODY, restore side windows."
+  (declare (indent defun) (debug (&rest form)))
+  (let ((sides (make-symbol "sidesvar")))
+    `(let ((,sides (and (functionp 'window-toggle-side-windows)
+                        (window-with-parameter 'window-side))))
+       (when ,sides
+         (window-toggle-side-windows))
+       (unwind-protect
+           (progn ,@body)
+         (when ,sides
+           (window-toggle-side-windows))))))
+
 (defun evil-resize-window (new-size &optional horizontal)
   "Set the current window's width or height to NEW-SIZE.
 If HORIZONTAL is non-nil the width of the window is changed,
@@ -3826,28 +3855,35 @@ otherwise its height is changed."
   (let ((count (- new-size (if horizontal (window-width) (window-height)))))
     (enlarge-window count horizontal)))
 
-(defun evil-get-buffer-tree (wintree)
-  "Extracts the buffer tree from a given window tree WINTREE."
-  (if (consp wintree)
-      (cons (car wintree) (mapcar #'evil-get-buffer-tree (cddr wintree)))
-    (window-buffer wintree)))
+(defun evil-move-window (side)
+  "Move the `selected-window' to SIDE.
+The state of the `selected-window' is saved along with the state
+of the window tree consisting of all the other windows. Then, all
+windows are deleted, the remaining window is split according to
+SIDE, the state of the window at SIDE is replaced with the saved
+state of the `selected-window', and, finally, the state of the
+saved window tree is reconstructed on the opposite side.
 
-(defun evil-restore-window-tree (win tree)
-  "Restore the given buffer-tree layout as subwindows of WIN.
-TREE is the tree layout to be restored.
-A tree layout is either a buffer or a list of the form (DIR TREE ...),
-where DIR is t for horizontal split and nil otherwise. All other
-elements of the list are tree layouts itself."
-  (if (bufferp tree)
-      (set-window-buffer win tree)
-    ;; if tree is buffer list with one buffer only, do not split
-    ;; anymore
-    (if (not (cddr tree))
-        (evil-restore-window-tree win (cadr tree))
-      ;; tree is a regular list, split recursively
-      (let ((newwin (split-window win nil (not (car tree)))))
-        (evil-restore-window-tree win (cadr tree))
-        (evil-restore-window-tree newwin (cons (car tree) (cddr tree)))))))
+SIDE has the same meaning as in `split-window'.
+
+Note, this function only operates on the window tree rooted in
+the frame's main window and effectively preserves any side
+windows \(i.e. windows with a valid window-side window
+parameter\)."
+  (evil-save-side-windows
+    (unless (one-window-p)
+      (save-excursion
+        (let ((w (window-state-get (selected-window))))
+          (delete-window)
+          (let ((wtree (window-state-get)))
+            (delete-other-windows)
+            (let ((subwin (selected-window))
+                  ;; NOTE: SIDE is new in Emacs 24
+                  (newwin (split-window nil nil side)))
+              (window-state-put wtree subwin)
+              (window-state-put w newwin)
+              (select-window newwin)))))
+      (balance-windows))))
 
 (defun evil-alternate-buffer (&optional window)
   "Return the last buffer WINDOW has displayed other than the
@@ -4126,98 +4162,54 @@ If ARG is empty, maximize the current window height."
         (evil-window-decrease-height (- n))))))
 
 (evil-define-command evil-window-rotate-upwards ()
-  "Rotates the windows according to the currenty cyclic ordering."
+  "Rotates the windows according to the current cyclic ordering."
   :repeat nil
-  (let ((wlist (window-list))
-        (blist (mapcar #'(lambda (w) (window-buffer w))
-                       (window-list))))
-    (setq blist (append (cdr blist) (list (car blist))))
-    (while (and wlist blist)
-      (set-window-buffer (car wlist) (car blist))
-      (setq wlist (cdr wlist)
-            blist (cdr blist)))
-    (select-window (car (last (window-list))))))
+  (evil-save-side-windows
+    (let ((wlist (window-list))
+          (slist (mapcar #'window-state-get (window-list))))
+      (setq slist (append (cdr slist) (list (car slist))))
+      (while (and wlist slist)
+        (window-state-put (car slist) (car wlist))
+        (setq wlist (cdr wlist)
+              slist (cdr slist)))
+      (select-window (car (last (window-list)))))))
 
 (evil-define-command evil-window-rotate-downwards ()
-  "Rotates the windows according to the currenty cyclic ordering."
+  "Rotates the windows according to the current cyclic ordering."
   :repeat nil
-  (let ((wlist (window-list))
-        (blist (mapcar #'(lambda (w) (window-buffer w))
-                       (window-list))))
-    (setq blist (append (last blist) blist))
-    (while (and wlist blist)
-      (set-window-buffer (car wlist) (car blist))
-      (setq wlist (cdr wlist)
-            blist (cdr blist)))
-    (select-window (cadr (window-list)))))
+  (evil-save-side-windows
+    (let ((wlist (window-list))
+          (slist (mapcar #'window-state-get (window-list))))
+      (setq slist (append (last slist) slist))
+      (while (and wlist slist)
+        (window-state-put (car slist) (car wlist))
+        (setq wlist (cdr wlist)
+              slist (cdr slist)))
+      (select-window (cadr (window-list))))))
 
 (evil-define-command evil-window-move-very-top ()
   "Closes the current window, splits the upper-left one horizontally
 and redisplays the current buffer there."
   :repeat nil
-  (unless (one-window-p)
-    (save-excursion
-      (let ((b (current-buffer)))
-        (delete-window)
-        (let ((btree (evil-get-buffer-tree (car (window-tree)))))
-          (delete-other-windows)
-          (let ((newwin (selected-window))
-                (subwin (split-window)))
-            (evil-restore-window-tree subwin btree)
-            (set-window-buffer newwin b)
-            (select-window newwin)))))
-    (balance-windows)))
+  (evil-move-window 'above))
 
 (evil-define-command evil-window-move-far-left ()
   "Closes the current window, splits the upper-left one vertically
 and redisplays the current buffer there."
   :repeat nil
-  (unless (one-window-p)
-    (save-excursion
-      (let ((b (current-buffer)))
-        (delete-window)
-        (let ((btree (evil-get-buffer-tree (car (window-tree)))))
-          (delete-other-windows)
-          (let ((newwin (selected-window))
-                (subwin (split-window-horizontally)))
-            (evil-restore-window-tree subwin btree)
-            (set-window-buffer newwin b)
-            (select-window newwin)))))
-    (balance-windows)))
+  (evil-move-window 'left))
 
 (evil-define-command evil-window-move-far-right ()
   "Closes the current window, splits the lower-right one vertically
 and redisplays the current buffer there."
   :repeat nil
-  (unless (one-window-p)
-    (save-excursion
-      (let ((b (current-buffer)))
-        (delete-window)
-        (let ((btree (evil-get-buffer-tree (car (window-tree)))))
-          (delete-other-windows)
-          (let ((subwin (selected-window))
-                (newwin (split-window-horizontally)))
-            (evil-restore-window-tree subwin btree)
-            (set-window-buffer newwin b)
-            (select-window newwin)))))
-    (balance-windows)))
+  (evil-move-window 'right))
 
 (evil-define-command evil-window-move-very-bottom ()
   "Closes the current window, splits the lower-right one horizontally
 and redisplays the current buffer there."
   :repeat nil
-  (unless (one-window-p)
-    (save-excursion
-      (let ((b (current-buffer)))
-        (delete-window)
-        (let ((btree (evil-get-buffer-tree (car (window-tree)))))
-          (delete-other-windows)
-          (let ((subwin (selected-window))
-                (newwin (split-window)))
-            (evil-restore-window-tree subwin btree)
-            (set-window-buffer newwin b)
-            (select-window newwin)))))
-    (balance-windows)))
+  (evil-move-window 'below))
 
 ;;; Mouse handling
 

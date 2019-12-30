@@ -1,11 +1,11 @@
 ;;; bicycle.el --- cycle outline and code visibility  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2018 Jonas Bernoulli
+;; Copyright (C) 2018-2019 Jonas Bernoulli
 
 ;; Author: Jonas Bernoulli <jonas@bernoul.li>
 ;; Homepage: https://github.com/tarsius/bicycle
 ;; Keywords: outlines
-;; Package-Version: 20191105.2235
+;; Package-Version: 20191228.1314
 
 ;; Package-Requires: ((emacs "25.1"))
 
@@ -105,6 +105,8 @@ Without a prefix argument call `bicycle-cycle-local'."
   (setq deactivate-mark t)
   (save-excursion
     (goto-char (point-min))
+    (unless (re-search-forward outline-regexp nil t)
+      (user-error "Found no heading"))
     (cond
      ((eq last-command 'outline-cycle-overview)
       (outline-map-region
@@ -186,8 +188,7 @@ has no subsections but it contains code, then skip BRANCHES."
              (progn
                (hs-show-block)
                (outline-show-entry))
-           (hs-hide-block)
-           (outline-hide-entry)))
+           (hs-hide-block)))
         (backward-char))))
      ((save-excursion
         (beginning-of-line 1)
@@ -273,8 +274,8 @@ The assumptions this function does not make are
 those mentioned in `outline-level's doc-string."
   (save-excursion
     (beginning-of-line)
-    (looking-at outline-regexp)
-    (funcall outline-level)))
+    (and (looking-at outline-regexp)
+         (funcall outline-level))))
 
 (defun bicycle--top-level ()
   "Return the number identifying the top-level in this buffer.

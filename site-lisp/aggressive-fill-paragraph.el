@@ -276,13 +276,33 @@ and leaves everything else alone."
     ;; save-restriction:
     ;;
     ;; https://www.gnu.org/software/emacs/manual/html_node/elisp/Narrowing.html
+    ;;
+    ;; ...on further review it looks like fill-comment-paragraph is probably
+    ;; supposed to be doing this narrowing itself, and is just buggy. Read its
+    ;; code and see the relevant comments (more notes on this in todo.txt).
+    ;;
+    ;; If I get that fixed, I can probably ditch all this clever logic I've
+    ;; written myself. That's what I get for not actually reading
+    ;; fill-comment-paragraph.
+    ;;
+    ;; Note to self: just because it doesn't do what you want does not mean it
+    ;; was not intended to.
     (save-excursion
       (save-restriction
         (let* ((comment-region (afp-get-comment-bounds))
                (start (first comment-region))
                (end (second comment-region)))
           (narrow-to-region start end)
-          (fill-comment-paragraph justify)))))
+          (fill-comment-paragraph justify))))
+    ;; Having to indent region for the comment we're currently editing feels
+    ;; stupid, but without it wraps triggered in the first line of a comment
+    ;; get indented wrongly (at least when the comment does not begin in column
+    ;; 0).
+    ;;
+    ;; There's probably a smarter way to deal with it, but I'm not worrying
+    ;; about it for now as I've discovered that fill-comment-paragraph should
+    ;; probably be taking care of all of this for us regardless.
+    (apply #'indent-region (afp-get-comment-bounds)))
 
   ;; returning true says we are done with filling, don't fill anymore
   t)
@@ -332,8 +352,8 @@ taking care with special cases for documentation comments."
    ;; fill function that fills both the comment and the code immediately
    ;; following it.
    ;;
-   ;; ((apply #'derived-mode-p afp-fill-comments-only-mode-list)
-   ;; #'afp-only-fill-comments)
+   ((apply #'derived-mode-p afp-fill-comments-only-mode-list)
+    #'afp-only-fill-comments)
 
    ;; For python we could also do something with let-binding
    ;; python-fill-paren-function so that code is left alone. This would

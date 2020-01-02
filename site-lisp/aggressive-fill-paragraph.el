@@ -447,6 +447,23 @@ smart thing to do."
   (add-hook 'prog-mode-hook #'aggressive-fill-paragraph-mode))
 
 
+;; FIXME Remove this. Just here for debugging some issues with js2-mode.
+;;
+;; So far it doesn't reproduce the problem, but if you manually type each
+;; character in the (insert) call in an empty js2-mode buffer, you'll see the
+;; first leading space get swallowed. I don't know why and I would very much
+;; like to.
+(defun afp-js-comment-fill-suckage-test-case ()
+  (interactive)
+  (switch-to-buffer "testing.js")
+  (js2-mode)
+  (delete-region (point-min) (point-max))
+  (insert "var foo;
+// This is a function and it does not work so well.")
+  (self-insert-command 1 " ")
+  (fill-paragraph))
+
+
 (provide 'aggressive-fill-paragraph)
 
 ;;; aggressive-fill-paragraph.el ends here

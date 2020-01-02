@@ -189,6 +189,26 @@ Yanked from https://stackoverflow.com/a/31449758/1128957."
 
   (mapconcat 'car (reverse load-history) "\n"))
 
+(defun ne/switch-window-then-helm-projectile-find-file ()
+"Open a file from the current project in the next window.
+
+I usually have just two windows in a frame, so this just Does
+What I Mean. If you use more than that it may not be so useful to
+you."
+  
+  (interactive)
+  ;; Switching the other window to the current buffer is a dumb way of ensuring
+  ;; we trigger the UI for opening files from the same project.
+  ;;
+  ;; This has the infuriating attribute that closing a buffer no longer
+  ;; restores the one that had been immediately behind it.
+  ;;
+  ;; FIXME Stop misordering buffer stack for target window when this is called.
+  (let ((trigger-buffer) (current-buffer))
+    (other-window 1)
+    (switch-to-buffer trigger-buffer t)
+    (helm-projectile-find-file)))
+
 (defun shell-command-on-buffer ()
   "Update buffer contents with results of running shell command on it.
 

@@ -73,6 +73,7 @@
     ;; all open buffers. Basically, I don't want to have to think about where
     ;; files live or whether I've opened it unless necessary.
     ("p f" . helm-projectile-find-file)
+    ("p o f" . ne/switch-window-then-helm-projectile-find-file)
     ("p s" . helm-projectile-ag)
     ("p b" . helm-projectile-switch-to-buffer)
     ("p p" . helm-projectile-switch-project)

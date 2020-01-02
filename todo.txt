@@ -377,6 +377,8 @@
   properly. N.B.: shackle may be a significantly better alternative to popwin:
   https://github.com/wasamasa/shackle
 
+- Fix my '<leader> p o f' binding. At present it doesn't really work.
+
 - Teach js2-mode not to concatenate ES 6 backtick strings. When
   js2-concat-multiline-strings is t, newlines invoke concatenation which I
   guess could make sense if you're trying to use template strings and don't

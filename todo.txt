@@ -212,6 +212,21 @@
   I hacked this up a few weeks ago so in theory I just need to tell my copy of
   aggressive-fill-paragraph mode to use it in restricting fill operations.
 
+  ...holy crap. I just discovered evidence that fill-comment-paragraph is
+  supposed to narrow to the comment, and just fails to. Conceptually, it
+  certainly seems like it ought to.
+
+  Line 932 of fill.el.gz in my build of Emacs has a comment declaring that as
+  the intent, while line 1026 says explicitly "Don't fill with narrowing".
+
+  I guess I should ask about this on emacs-devel (if git blame doesn't shed any
+  light).
+
+  If this is actually the case, then I wasted a ton of my life duplicating
+  logic that was already supposed to be in comment-fill-paragraph. :/
+
+  Ah well, I did learn a fair bit from it.
+
 - Consider using suppression functions to implement afp's fill-comments-only
   feature? I feel like it would be more robust than the current approach, but
   perhaps I'm mistaken. I also think it might solve some of my js2-mode issues,

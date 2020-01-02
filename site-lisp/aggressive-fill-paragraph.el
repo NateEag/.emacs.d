@@ -296,12 +296,14 @@ and leaves everything else alone."
           (fill-comment-paragraph justify))))
     ;; Having to indent region for the comment we're currently editing feels
     ;; stupid, but without it wraps triggered in the first line of a comment
-    ;; get indented wrongly (at least when the comment does not begin in column
-    ;; 0).
+    ;; get indented wrongly if the comment does not begin in column 0, because
+    ;; in the narrowed region the first line *does* begin in column 0, even
+    ;; though the following lines don't.
     ;;
     ;; There's probably a smarter way to deal with it, but I'm not worrying
     ;; about it for now as I've discovered that fill-comment-paragraph should
-    ;; probably be taking care of all of this for us regardless.
+    ;; probably be taking care of all of this for us regardless, so there's no
+    ;; point in trying to fix this fine detail.
     (apply #'indent-region (afp-get-comment-bounds)))
 
   ;; returning true says we are done with filling, don't fill anymore

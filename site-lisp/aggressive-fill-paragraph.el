@@ -437,11 +437,15 @@ elisp:
 
 http://nullprogram.com/blog/2013/01/22
 
-The only workaround I can think of for this is re-implementing
+The obvious workaround I for this is re-implementing
 `delete-region' in Emacs Lisp, as it would then be an advisable
 function even in byte-compiled code.
 
-However, that sounds like crazy talk."
+However, that sounds like crazy talk.
+
+A smarter workaround would be to prevent byte-compilation of
+`delete-region', or more generally functions in
+`afp-fill-after-functions', as we know we want to advise them."
 
   (dolist (target-function afp-fill-after-functions)
     (advice-add target-function :after #'afp-fill-paragraph)))

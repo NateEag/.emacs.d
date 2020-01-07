@@ -155,8 +155,11 @@ Used to define keyboard shortcuts.")
   (global-unset-key (kbd "s-g"))
 
   (dolist (elt nateeag/command-mnemonics)
-    (let ((mnemonic (car elt))
-          (command (cdr elt)))
+    (let* ((mnemonic (car elt))
+          (command (cdr elt))
+          (super-shortcut (s-join " "
+                                  (-map (-partial #'s-concat "s-")
+                                        (s-split " " mnemonic)))))
 
       ;; Use Super for my personal keybindings. The Emacs manual says that C-c
       ;; <key> is reserved for user keybindings, but in practice there's not a
@@ -167,12 +170,12 @@ Used to define keyboard shortcuts.")
       ;; key.
       ;;
       ;; I should probably look into hydra, too, if it comes to that...
-      (global-set-key (kbd (concat "s-" mnemonic)) command)
+      (global-set-key (kbd super-shortcut) command)
 
       ;; Tell evil-leader-mode to use the mnemonic for this command.
       ;; Note that evil-leader expects key sequences to have no separating
       ;; whitespace.
-      (evil-leader/set-key (s-replace " " "" mnemonic) command))) )
+      (evil-leader/set-key (s-replace " " "" mnemonic) command))))
 
 (nateeag/create-keybindings)
 

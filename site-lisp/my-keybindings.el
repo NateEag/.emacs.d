@@ -58,7 +58,10 @@
     ("e" . eval-buffer)
 
     ;; Switch buffers/find likely files via Helm.
-    ("b" . helm-for-files)
+    ("b b" . helm-for-files)
+
+    ;; Copy current buffer's name.
+    ("b y" . ne/yank-buffer-name)
 
     ;; TODO Make this just toggle between snake_case and camelCase. They're
     ;; what I usually use.

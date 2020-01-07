@@ -195,7 +195,7 @@ Yanked from https://stackoverflow.com/a/31449758/1128957."
 I usually have just two windows in a frame, so this just Does
 What I Mean. If you use more than that it may not be so useful to
 you."
-  
+
   (interactive)
   ;; FIXME Make this work. It does not at present.
   ;;
@@ -204,6 +204,14 @@ you."
     (other-window 1)
     (switch-to-buffer trigger-buffer t)
     (helm-projectile-find-file)))
+
+(defun ne/yank-buffer-name ()
+  "Put the current buffer's name in the kill ring.
+
+Also gets it in the OS clipboard, which is usually what I actually want."
+
+  (interactive)
+  (kill-new (buffer-name)))
 
 (defun shell-command-on-buffer ()
   "Update buffer contents with results of running shell command on it.

@@ -22,6 +22,8 @@
 ;; belong in jstoolkit since it's my own tooling, and it doesn't belong here
 ;; because it's project-specific.
 
+(require 'dash)
+
 ;;;###autoload
 (defun hit-servlet ()
   "Update JS for current buffer in jstoolkit sandbox."

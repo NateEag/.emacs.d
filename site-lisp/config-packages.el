@@ -879,7 +879,4 @@ With this alias I hope to not need to remember it.")
 (use-package ascii
   :commands ascii-on ascii-off ascii-display ascii-customize)
 
-(use-package frame-cmds
-  :commands maximize-frame-vertically)
-
 ;;; config-packages.el ends here

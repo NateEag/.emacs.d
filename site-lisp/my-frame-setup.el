@@ -78,9 +78,6 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
 
   (my-set-default-font)
 
-  ;; N.B.: This depends on frame-cmds.el, which I installed via MELPA.
-  (maximize-frame-vertically)
-
   (delete-other-windows)
 
   ;; When I just have one smaller display, I want my emacs frame to take up at
@@ -99,6 +96,17 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
                      (car (display-monitor-attributes-list (selected-frame))))))
          (screen-width-in-chars
           (/ (float current-monitor-width) (default-font-width)))
+         (current-monitor-height
+          ;; I hate alists. They're hard to read, both when inspecting
+          ;; variables and when writing code... :P
+          (nth 4
+               (assq 'workarea
+                     (car (display-monitor-attributes-list (selected-frame))))))
+         (screen-height-in-chars (floor
+                                   (/ (float current-monitor-height)
+                                    (my-get-default-font-size))))
+         (screen-height-less-menubar-in-chars (- screen-height-in-chars 2))
+
          ;; I want as many windows as I can reasonably fit on this display,
          ;; where "reasonably" means "there is still some space for other
          ;; applications to be seen."
@@ -107,8 +115,9 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
          ;; taken as gospel truth.
          (num-windows (floor (- (/ screen-width-in-chars my-window-width)
                                 0.5))))
-    (message "Screen width: %i, num windows: %i" screen-width-in-chars num-windows)
-    (my-set-frame-width-by-window-count num-windows)
+
+    (set-frame-height (selected-frame)
+                      screen-height-less-menubar-in-chars)
     ))
 
 (defun my-set-frame-width-by-window-count (num-windows)

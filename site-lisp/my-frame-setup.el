@@ -104,7 +104,7 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
                      (car (display-monitor-attributes-list (selected-frame))))))
          (screen-height-in-chars (floor
                                    (/ (float current-monitor-height)
-                                    (my-get-default-font-size))))
+                                    (default-font-height))))
          (screen-height-less-menubar-in-chars (- screen-height-in-chars 2))
 
          ;; I want as many windows as I can reasonably fit on this display,

@@ -19,6 +19,9 @@
 ;; prone to stomp on keybindings from core or third-party packages (usually on
 ;; purpose).
 
+(require 'dash)
+(require 's)
+
 ;; I'd much rather have a sane way to goto-line than be able to easily change
 ;; my font settings.
 (global-set-key "\M-g" 'goto-line-preview)

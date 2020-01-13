@@ -116,9 +116,10 @@ Yanked from https://emacs.stackexchange.com/a/5511/351."
          (num-windows (floor (- (/ screen-width-in-chars my-window-width)
                                 0.5))))
 
+    (my-set-frame-width-by-window-count num-windows)
+
     (set-frame-height (selected-frame)
-                      screen-height-less-menubar-in-chars)
-    ))
+                      screen-height-less-menubar-in-chars)))
 
 (defun my-set-frame-width-by-window-count (num-windows)
   "Set frame width by number of desired 80-char windows."

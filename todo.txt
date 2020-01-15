@@ -601,6 +601,12 @@
   easily in yasnippets, this should be perfectly possible - now is just not the
   time. Incident count: >100
 
+- Add a command to rename a file in a project. I don't care about refactoring
+  smarts (though it might be nice to offer a hook to support that), I just want
+  to query/replace throughout the project for
+  s/$old_relative_pathname/$new_relative_pathname/. Incident date list:
+  2020-01-15
+
 - Add a keybinding for 'rename this git-managed buffer'. Incident count: 3.
   This shouldn't be too bad - ne/yank-buffer-project-relative-path gets exactly
   the argument I want for the first param and the second one should just be the

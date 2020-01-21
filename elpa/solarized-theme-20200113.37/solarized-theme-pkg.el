@@ -1,4 +1,4 @@
-(define-package "solarized-theme" "20191212.1808" "The Solarized color theme"
+(define-package "solarized-theme" "20200113.37" "The Solarized color theme"
   '((emacs "24.1")
     (dash "2.16"))
   :keywords

@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20191128.1126
+;; Package-Version: 20200116.1013
 ;; Version: 0.13.0
 ;; Package-Requires: ((emacs "24.5") (ivy "0.13.0"))
 ;; Keywords: matching
@@ -169,7 +169,7 @@ Treated as non-nil when searching backwards."
 (defun swiper--query-replace-setup ()
   (with-ivy-window
     (let ((end (window-end (selected-window) t))
-          (re ivy--old-re))
+          (re (ivy-re-to-str ivy-regex)))
       (save-excursion
         (beginning-of-line)
         (while (re-search-forward re end t)
@@ -197,7 +197,7 @@ Treated as non-nil when searching backwards."
          (swiper--query-replace-setup)
          (unwind-protect
               (let* ((enable-recursive-minibuffers t)
-                     (from ivy--old-re)
+                     (from (ivy-re-to-str ivy-regex))
                      (groups (number-sequence 1 ivy--subexps))
                      (default
                       (list
@@ -671,18 +671,20 @@ When capture groups are present in the input, print them instead of lines."
                      (buffer-name buffer)))
                  'face
                  'ivy-grep-info))
-         (ivy-text (progn (string-match "\"\\(.*\\)\"" (buffer-name))
-                          (match-string 1 (buffer-name))))
-         (re (mapconcat #'identity (ivy--split ivy-text) ".*?"))
+         (re
+          (progn
+            (string-match "\"\\(.*\\)\"" (buffer-name))
+            (ivy-set-text (match-string 1 (buffer-name)))
+            (mapconcat #'identity (ivy--split ivy-text) ".*?")))
          (cands
           (swiper--occur-cands
            fname
            (or cands
                (save-window-excursion
-                 (setq ivy--old-re nil)
                  (switch-to-buffer buffer)
                  (if (eq (ivy-state-caller ivy-last) 'swiper)
                      (let ((ivy--regex-function 'swiper--re-builder))
+                       (setq ivy--old-re nil)
                        (ivy--filter re (swiper--candidates)))
                    (swiper-isearch-function ivy-text)))))))
     (if (string-match-p "\\\\(" re)
@@ -746,7 +748,9 @@ line numbers.  For the buffer, use `ivy--regex' instead."
                              re)))
                   (cond
                     ((string= re "$")
-                     "^$")
+                     (if (eq (ivy-state-caller ivy-last) 'swiper)
+                         "^ $"
+                       "^$"))
                     ((zerop ivy--subexps)
                      (prog1 (format "^ ?\\(%s\\)" re)
                        (setq ivy--subexps 1)))
@@ -924,19 +928,17 @@ the face, window and priority of the overlay."
   (or (display-graphic-p)
       (not recenter-redisplay)))
 
-(defun swiper--positive-regexps (str)
-  (let ((regexp-or-regexps
-         (funcall ivy--regex-function str)))
-    (if (listp regexp-or-regexps)
-        (mapcar #'car (cl-remove-if-not #'cdr regexp-or-regexps))
-      (list regexp-or-regexps))))
+(defun swiper--positive-regexps ()
+  (if (listp ivy-regex)
+      (mapcar #'car (cl-remove-if-not #'cdr ivy-regex))
+    (list ivy-regex)))
 
 (defun swiper--update-input-ivy ()
   "Called when `ivy' input is updated."
   (with-ivy-window
     (swiper--cleanup)
     (when (> (length (ivy-state-current ivy-last)) 0)
-      (let ((regexps (swiper--positive-regexps ivy-text))
+      (let ((regexps (swiper--positive-regexps))
             (re-idx -1)
             (case-fold-search (ivy--case-fold-p ivy-text)))
         (dolist (re regexps)
@@ -1235,7 +1237,7 @@ otherwise continue prompting for buffers."
   (or
    (ivy-more-chars)
    (let* ((buffers (cl-remove-if-not #'swiper-all-buffer-p (buffer-list)))
-          (re-full (funcall ivy--regex-function str))
+          (re-full ivy-regex)
           re re-tail
           cands match
           (case-fold-search (ivy--case-fold-p str)))
@@ -1421,7 +1423,7 @@ See `ivy-format-functions-alist' for further information."
       (setq filtered-cands nil))))
 
 (defun swiper--isearch-function (str)
-  (let ((re-full (funcall ivy--regex-function str)))
+  (let ((re-full ivy-regex))
     (unless (equal re-full "")
       (let* ((case-fold-search (ivy--case-fold-p str))
              (re
@@ -1459,7 +1461,7 @@ that we search only for one character."
              (lambda ()
                (with-ivy-window
                  (swiper--add-overlays (ivy--regex ivy-text))))))
-    (dolist (re (swiper--positive-regexps ivy-text))
+    (dolist (re (swiper--positive-regexps))
       (swiper--add-overlays re))))
 
 (defun swiper-isearch-action (x)
@@ -1472,7 +1474,7 @@ that we search only for one character."
         (when (and (or (eq this-command 'ivy-previous-line-or-history)
                        (and (eq this-command 'ivy-done)
                             (eq last-command 'ivy-previous-line-or-history)))
-                   (looking-back ivy--old-re (line-beginning-position)))
+                   (looking-back ivy-regex (line-beginning-position)))
           (goto-char (match-beginning 0)))
         (isearch-range-invisible (point) (1+ (point)))
         (swiper--maybe-recenter)
@@ -1540,16 +1542,17 @@ When not running `swiper-isearch' already, start it."
 
 (defun swiper-isearch-format-function (cands)
   (if (numberp (car-safe cands))
-      (if (string= ivy--old-re "^$")
-          ""
-        (mapconcat
-         #'identity
-         (swiper--isearch-format
-          ivy--index ivy--length ivy--old-cands
-          ivy--old-re
-          (ivy-state-current ivy-last)
-          (ivy-state-buffer ivy-last))
-         "\n"))
+      (let ((re (ivy-re-to-str ivy-regex)))
+        (if (string= re "^$")
+            ""
+          (mapconcat
+           #'identity
+           (swiper--isearch-format
+            ivy--index ivy--length ivy--old-cands
+            re
+            (ivy-state-current ivy-last)
+            (ivy-state-buffer ivy-last))
+           "\n")))
     (funcall
      (ivy-alist-setting ivy-format-functions-alist t)
      cands)))
@@ -1567,9 +1570,10 @@ When not running `swiper-isearch' already, start it."
 
 (defun swiper--isearch-highlight (str &optional current)
   (let ((start 0)
-        (i 0))
+        (i 0)
+        (re (ivy-re-to-str ivy-regex)))
     (catch 'done
-      (while (string-match ivy--old-re str start)
+      (while (string-match re str start)
         (if (= (match-beginning 0) (match-end 0))
             (throw 'done t)
           (setq start (match-end 0)))
@@ -1692,7 +1696,7 @@ Intended to be bound in `isearch-mode-map' and `swiper-map'."
         (swiper-isearch query))
     (ivy-exit-with-action
      (lambda (_)
-       (when (looking-back ivy--old-re (line-beginning-position))
+       (when (looking-back ivy-regex (line-beginning-position))
          (goto-char (match-beginning 0)))
        (isearch-mode t)
        (unless (string= ivy-text "")

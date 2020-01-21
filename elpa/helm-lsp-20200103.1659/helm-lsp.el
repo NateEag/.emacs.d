@@ -17,7 +17,7 @@
 
 ;; Author: Ivan Yonchovski <yyoncho@gmail.com>
 ;; Keywords: languages, debug
-;; Package-Version: 20191210.1828
+;; Package-Version: 20200103.1659
 ;; URL: https://github.com/yyoncho/helm-lsp
 ;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (lsp-mode "5.0") (helm "2.0"))
 ;; Version: 0.1
@@ -129,6 +129,29 @@ When called with prefix ARG the default selection will be symbol at point."
   (helm-lsp--workspace-symbol (-uniq (-flatten (ht-values (lsp-session-folder->servers (lsp-session)))))
                               "Global workspace symbols"
                               (when arg (thing-at-point 'symbol))))
+
+;;;###autoload
+(defun helm-lsp-code-actions()
+  "Show lsp code actions using helm."
+  (interactive)
+  (let ((actions (lsp-code-actions-at-point)))
+    (cond
+     ((seq-empty-p actions) (signal 'lsp-no-code-actions nil))
+     ((and (eq (seq-length actions) 1) lsp-auto-execute-action)
+      (lsp-execute-code-action (lsp-seq-first actions)))
+     (t (helm :sources
+              (helm-build-sync-source "Code Actions"
+                :candidates actions
+                :candidate-transformer
+                (lambda (candidates)
+                  (-map
+                   (-lambda ((candidate &as
+                                        &hash "title" title))
+                     (list title
+                           :data candidate))
+                   candidates))
+                :action '(("Execute code action" . (lambda(candidate)
+                                                     (lsp-execute-code-action (plist-get candidate :data)))))))))))
 
 (provide 'helm-lsp)
 ;;; helm-lsp.el ends here

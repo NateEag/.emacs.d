@@ -17,6 +17,11 @@ Major mode for editing JSX files.
 (autoload 'rjsx-minor-mode "rjsx-mode" "\
 Minor mode for parsing JSX syntax into an AST.
 
+If called interactively, enable Rjsx minor mode if ARG is positive, and
+disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it
+if ARG is `toggle'; disable the mode otherwise.
+
 \(fn &optional ARG)" t nil)
 
 (add-to-list 'auto-mode-alist '("\\.jsx\\'" . rjsx-mode))

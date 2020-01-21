@@ -4,7 +4,7 @@
 
 ;; Author: Felipe Ochoa <felipe@fov.space>
 ;; URL: https://github.com/felipeochoa/rjsx-mode/
-;; Package-Version: 20190614.2215
+;; Package-Version: 20200120.1446
 ;; Package-Requires: ((emacs "24.4") (js2-mode "20170504"))
 ;; Version: 1.1
 ;; Keywords: languages
@@ -287,7 +287,10 @@ Sets KID's parent to N."
 
 (defun rjsx-member-full-name (n)
   "Return the string with N's combined names together."
-  (mapconcat 'rjsx-identifier-full-name (rjsx-member-idents n) "."))
+  (mapconcat #'rjsx-identifier-full-name
+             ;; Fix #89. There could be an error node here
+             (cl-remove-if-not #'rjsx-identifier-p (rjsx-member-idents n))
+             "."))
 
 (cl-defstruct (rjsx-attr
                (:include js2-node (type rjsx-JSX-ATTR))

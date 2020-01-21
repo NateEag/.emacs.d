@@ -39,7 +39,10 @@ will occur if the length of candidates is <= than
 
 Higher this number is, slower the computation of candidates will be.
 You can use safely a higher value with emacs-26+.
-Note that this have nothing to do with `helm-candidate-number-limit'."
+Note that this have nothing to do with `helm-candidate-number-limit',
+this mean that computation of candidates stop when this value is
+reached but only `helm-candidate-number-limit' candidates are
+displayed in helm buffer."
   :group 'helm-dabbrev
   :type 'integer)
 
@@ -186,6 +189,17 @@ Do nothing when non nil.")
     (nreverse results)))
 
 (defun helm-dabbrev--search-and-store (pattern direction limit results)
+  "Search words or symbols matching PATTERN in DIRECTION up to LIMIT.
+Finally returns all matched candidates appended to RESULTS.
+Argument DIRECTION can be:
+    -  (1):  Search forward from point.
+    - (-1):  Search backward from point.
+    -  (2):  Search forward from the
+             `helm-dabbrev-lineno-around'
+             lines after point.
+    -  (2):  Search backward from the
+             `helm-dabbrev-lineno-around'
+             lines before point."
   (let ((res results)
          after before)
     (while (and (<= (length res) limit)
@@ -319,10 +333,7 @@ removed."
           (let* ((old-dabbrev (if (helm-dabbrev-info-p helm-dabbrev--data)
                                   (helm-dabbrev-info-dabbrev helm-dabbrev--data)
                                 dabbrev))
-                 (only-one (and helm-dabbrev--already-tried
-                                (null (cdr (all-completions
-                                            old-dabbrev
-                                            helm-dabbrev--already-tried))))))
+                 (only-one (eq (length helm-dabbrev--already-tried) 1)))
             (unless helm-dabbrev--cache ; Already computed when
                                         ; cycling is disabled.
               (message "Waiting for helm-dabbrev candidates...")
@@ -343,6 +354,9 @@ removed."
               (delete-region (car limits) (point))
               (insert dabbrev))
             (when (and (null cycling-disabled-p) only-one)
+              (setq helm-dabbrev--cache nil
+                    helm-dabbrev--already-tried nil
+                    helm-dabbrev--computing-cache nil)
               (cl-return-from helm-dabbrev
                 (message "[Helm-dabbrev: No expansion found]")))
             (with-helm-show-completion (car limits) (cdr limits)

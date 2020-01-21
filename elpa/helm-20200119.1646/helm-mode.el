@@ -36,6 +36,7 @@
   '((find-tag . helm-completing-read-default-find-tag)
     (xref-find-definitions . helm-completing-read-default-find-tag)
     (xref-find-references . helm-completing-read-default-find-tag)
+    (ggtags-find-tag-dwim . helm-completing-read-default-find-tag)
     (tmm-menubar . nil)
     (find-file . nil)
     (execute-extended-command . nil)
@@ -408,8 +409,12 @@ If COLLECTION is an `obarray', a TEST should be needed. See `obarray'."
                  ;; but special cases like `find-file-at-point' do it.
                  ;; Handle here specially such cases.
                  ((and (functionp collection) (not (string= input ""))
-                       minibuffer-completing-file-name)
-                  (cl-loop for f in (funcall collection input test)
+                       (or minibuffer-completing-file-name
+                           (eq (completion-metadata-get
+                                (completion-metadata input collection test)
+                                'category)
+                               'file)))
+                  (cl-loop for f in (funcall collection input test t)
                            unless (member f '("./" "../"))
                            if (string-match helm--url-regexp input)
                            collect f
@@ -895,7 +900,8 @@ This handler use dynamic matching which allow honouring `completion-styles'."
                    (completion-metadata-get metadata 'annotation-function)))
          (file-comp-p (eq (completion-metadata-get metadata 'category) 'file))
          (compfn (lambda (str _predicate _action)
-                   (let* ((comps
+                   (let* ((completion-ignore-case (helm-set-case-fold-search))
+                          (comps
                            (completion-all-completions
                             str         ; This is helm-pattern
                             collection
@@ -1515,10 +1521,21 @@ Actually do nothing."
   "Allow `all-completions' multi matching on its candidates."
   ;; Doing an initial call of all-completions on the first element of
   ;; STRING speedup completion and fix file completion when CAPF
-  ;; returns relative paths to initial pattern (eshell).
+  ;; returns relative paths to initial pattern (eshell and shell).
   (let* ((split (helm-mm-split-pattern string))
          (fpat (or (car split) ""))
-         (all (and (or (cdr split) (string-match " \\'" string)
+         (file-comp-p (or minibuffer-completing-file-name
+                          (eq
+                           (completion-metadata-get
+                            (completion-metadata string collection predicate)
+                            'category)
+                           'file)))
+         (all (and file-comp-p
+                   (or (cdr split)
+                       (and (not (cdr split))
+                            ;; Kickin when STRING is a simple string.
+                            ;; Handle as well "foo " (space at end).
+                            (not (string= fpat "")))
                        (string= string ""))
                    (not (string-match "\\`!" fpat))
                    ;; all-completions should return nil if FPAT is a
@@ -1531,7 +1548,8 @@ Actually do nothing."
                              ;; Returns the part of STRING after space
                              ;; e.g. "foo bar baz" => "bar baz".
                              (substring string (1+ it)))))
-    (if (equal pattern "") ; e.g. STRING == "foo ".
+    (if (or (and all (not (cdr split)))
+            (equal pattern "")) ; e.g. STRING == "foo ".
         all
       (all-completions "" (or all collection)
                        (lambda (x &optional _y)
@@ -1549,8 +1567,11 @@ Actually do nothing."
                            ;; PREDICATE (e.g. symbols vs strings).
                            (if (and predicate (null all))
                                (and (funcall predicate elm)
-                                    (helm-mm-match (helm-stringify elm) (or pattern string)))
-                             (helm-mm-match (helm-stringify elm) (or pattern string)))))))))
+                                    ;; ALL is nil so use whole STRING
+                                    ;; against COLLECTION.
+                                    (helm-mm-match (helm-stringify elm) string))
+                             (helm-mm-match (helm-stringify elm)
+                                            (or (and all pattern) string)))))))))
 
 (defun helm-completion--multi-all-completions (string table pred point)
   "Collect completions from TABLE for helm completion style."
@@ -1604,7 +1625,8 @@ Actually do nothing."
                          (length prefix)))))))
 
 (defun helm-flex-add-score-as-prop (candidates regexp)
-  (cl-loop for cand in candidates
+  (cl-loop with case-fold-search = (helm-set-case-fold-search) 
+           for cand in candidates
            collect (helm-flex--style-score cand regexp)))
 
 (defun helm-completion--flex-transform-pattern (pattern)
@@ -1700,7 +1722,8 @@ Can be used for `completion-in-region-function' by advicing it with an
                  ;; so data looks like this: '(a b c d . 0) and (last data) == (d . 0).
                  base-size
                  (compfn (lambda (str _predicate _action)
-                           (let* ((comps
+                           (let* ((completion-ignore-case (helm-set-case-fold-search))
+                                  (comps
                                    (completion-all-completions
                                     str ; This is helm-pattern
                                     collection

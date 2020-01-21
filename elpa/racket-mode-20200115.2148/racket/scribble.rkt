@@ -3,8 +3,10 @@
 (require (only-in html
                   read-html-as-xml)
          racket/file
+         racket/format
          racket/function
          racket/match
+         racket/path
          scribble/xref
          setup/xref
          (only-in xml
@@ -23,12 +25,14 @@
   (and xexpr (xexpr->string xexpr)))
 
 (define (scribble-doc/xexpr stx)
-  (define xexpr (scribble-doc/xexpr-raw stx))
-  (and xexpr (massage-xexpr xexpr)))
+  (define-values (path xexpr) (scribble-doc/xexpr-raw stx))
+  (and path xexpr (massage-xexpr path xexpr)))
 
 (define (scribble-doc/xexpr-raw stx)
   (define-values (path anchor) (binding->path+anchor stx))
-  (and path anchor (scribble-get-xexpr path anchor)))
+  (cond [(and path anchor)
+         (values path (scribble-get-xexpr path anchor))]
+        [else (values #f #f)]))
 
 (define (binding->path+anchor stx)
   (define xref (load-collections-xref))
@@ -38,15 +42,21 @@
         [else (values #f #f)]))
 
 (define (scribble-get-xexpr path anchor)
+  (define (heading-element? x)
+    (match x
+      [(cons (or 'h1 'h2 'h3 'h4 'h5 'h6) _) #t]
+      [_ #f]))
   (match (let loop ([es (main-elements (html-file->xexpr path))])
            (match es
              [(list) (list)]
              [(cons (? (curryr anchored-element anchor) this) more)
-              ;; Accumulate until another intrapara with an anchor
+              ;; Accumulate until another intrapara with an anchor, or
+              ;; until a heading element indicating a new subsection.
               (cons this
                     (let get ([es more])
                       (match es
                         [(list) (list)]
+                        [(cons (? heading-element?) _) (list)] ;stop
                         [(cons (? anchored-element) _) (list)] ;stop
                         [(cons this more) (cons this (get more))])))]
              [(cons _ more) (loop more)]))
@@ -125,7 +135,13 @@
 ;; including contracts. But actually, the best place to address that
 ;; is up in Elisp, not here -- replace &nbsp; in the HTML with some
 ;; temporary character, then replace that character in the shr output.
-(define (massage-xexpr x)
+(define (massage-xexpr html-pathname xexpr)
+  ;; In addition to the main x-expression value handled by `walk`, we
+  ;; have a couple annoying side values. Rather than "thread" them
+  ;; through `walk` as additional values -- literally or using some
+  ;; monadic hand-wavery -- I'm just going to set! them. Won't even
+  ;; try to hide my sin by using make-parameter. I hereby accept the
+  ;; deduction of Functional Experience Points.
   (define kind-xexprs '())
   (define provide-xexprs '())
   (define (walk x)
@@ -140,7 +156,7 @@
       ;; later.
       [`(div ([class "RBackgroundLabel SIEHidden"])
          (div ([class "RBackgroundLabelInner"]) (p () . ,xs)))
-       (set! kind-xexprs xs)
+       (set! kind-xexprs `((i () ,@xs)))
        ""]
       ;; Bold RktValDef, which is the name of the thing.
       [`(a ([class ,(pregexp "RktValDef|RktStxDef")] . ,_) . ,xs)
@@ -162,15 +178,25 @@
       ;; Let's italicize all RktXXX classes except RktPn.
       [`(span ([class ,(pregexp "^Rkt(?!Pn)")]) . ,xs)
        `(i () ,@(map walk xs))]
+      ;; Image sources need path prepended.
+      [`(img ,(list-no-order `[src ,src] more ...))
+       `(img ([src ,(~a "file://" (path-only html-pathname) src)] . ,more))]
       ;; Misc element: Just walk kids.
       [`(,tag ,attrs . ,xs)
        `(,tag ,attrs ,@(map walk xs))]
       [x x]))
-  (match (walk x)
+  (match (walk xexpr)
     [`(div () . ,xs)
-     `(div ()
-       (span ([style "color: #C0C0C0"])
-             (i () ,@kind-xexprs)
-             'nbsp
-             ,@provide-xexprs)
-       ,@xs)]))
+     (define hs
+       (match* [kind-xexprs provide-xexprs]
+         [[`() `()] `()]
+         [[ks   ps] `((span ([style "color: #C0C0C0"]) ,@ks 'nbsp ,@ps))]))
+     `(div () ,@hs ,@xs)]))
+
+(module+ test
+  (check-equal? ;issue 410
+   (massage-xexpr (string->path "/path/to/file.html")
+                  `(div ()
+                    (img ([x "x"] [src "foo.png"] [y "y"]))))
+   `(div ()
+     (img ([src "file:///path/to/foo.png"] [x "x"] [y "y"])))))

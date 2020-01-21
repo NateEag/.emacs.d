@@ -4,7 +4,7 @@
 
 ;; Author: Justin Burkett <justin@burkett.cc>
 ;; Package-Requires: ((evil "1.2.3") (magit "2.6.0"))
-;; Package-Version: 20191007.1744
+;; Package-Version: 20200102.1856
 ;; Homepage: https://github.com/justbur/evil-magit
 ;; Version: 0.4.1
 
@@ -302,6 +302,7 @@ moment.")
        (,states magit-mode-map "C-f"   evil-scroll-page-down)
        (,states magit-mode-map "C-b"   evil-scroll-page-up)
        (,states magit-mode-map ":"     evil-ex)
+       (,states magit-mode-map "q"     magit-mode-bury-buffer)
 
        ;; these are to fix the priority of the log mode map and the magit mode map
        ;; FIXME: Conflict between this and revert. Revert seems more important here

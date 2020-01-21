@@ -2,7 +2,7 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20191208.1946
+;; Package-Version: 20200111.1216
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
@@ -40,6 +40,7 @@
 ;; - Elm (elm-format)
 ;; - Emacs Lisp (emacs)
 ;; - Fish Shell (fish_indent)
+;; - Fortran 90 (fprettify)
 ;; - Go (gofmt)
 ;; - GraphQL (prettier)
 ;; - Haskell (brittany)
@@ -60,6 +61,7 @@
 ;; - R (styler)
 ;; - Ruby (rufo)
 ;; - Rust (rustfmt)
+;; - Scala (scalafmt)
 ;; - Shell script (shfmt)
 ;; - SQL (sqlformat)
 ;; - Swift (swiftformat)
@@ -156,8 +158,8 @@ STATUS is :reformatted.")
 
 (defun format-all--flatten-once (list)
   "Internal helper function to remove nested lists in LIST."
-  (mapcan (lambda (x) (if (listp x) x (list x)))
-          list))
+  (cl-mapcan (lambda (x) (if (listp x) x (list x)))
+             list))
 
 (defun format-all--buffer-extension-p (&rest extensions)
   "Internal helper function to test file name EXTENSIONS."
@@ -331,7 +333,7 @@ Consult the existing formatters for examples of BODY."
          (setq install (format-all--resolve-system (cdr part))))
         (:modes
          (setq modes
-               (mapcan
+               (cl-mapcan
                 (lambda (modex)
                   (let ((modex (if (listp modex) modex (list modex))))
                     (cl-destructuring-bind (mmodes &optional probex) modex
@@ -377,18 +379,18 @@ Consult the existing formatters for examples of BODY."
             (when (format-all--buffer-extension-p "pyi") "--pyi")
             "-")))
 
+(define-format-all-formatter brittany
+  (:executable "brittany")
+  (:install "stack install brittany")
+  (:modes haskell-mode literate-haskell-mode)
+  (:format (format-all--buffer-easy executable)))
+
 (define-format-all-formatter buildifier
   (:executable "buildifier")
   (:install
    (macos "brew install buildifier")
    "go get github.com/bazelbuild/buildtools/buildifier")
   (:modes bazel-mode)
-  (:format (format-all--buffer-easy executable)))
-
-(define-format-all-formatter brittany
-  (:executable "brittany")
-  (:install "stack install brittany")
-  (:modes haskell-mode literate-haskell-mode)
   (:format (format-all--buffer-easy executable)))
 
 (define-format-all-formatter clang-format
@@ -480,6 +482,12 @@ Consult the existing formatters for examples of BODY."
   (:install (macos "brew install fish OR port install fish"))
   (:modes fish-mode)
   (:format (format-all--buffer-easy executable)))
+
+(define-format-all-formatter fprettify
+  (:executable "fprettify")
+  (:install "pip install fprettify")
+  (:modes f90-mode)
+  (:format (format-all--buffer-easy executable "--silent")))
 
 (define-format-all-formatter gofmt
   (:executable "gofmt")
@@ -585,7 +593,7 @@ Consult the existing formatters for examples of BODY."
              (not (null (symbol-value 'flow-minor-mode))))
         "flow"
       "babel"))
-   ((js2-jsx-mode jsx-mode rjsx-mode) "babel")
+   ((js2-jsx-mode jsx-mode rjsx-mode react-mode) "babel")
    ((typescript-mode typescript-tsx-mode) "typescript")
    (json-mode "json")
    (vue-mode "vue")
@@ -641,6 +649,12 @@ Consult the existing formatters for examples of BODY."
   (:modes rust-mode rustic-mode)
   (:format (format-all--buffer-easy executable)))
 
+(define-format-all-formatter scalafmt
+  (:executable "scalafmt")
+  (:install (macos "brew install --HEAD olafurpg/scalafmt/scalafmt"))
+  (:modes scala-mode)
+  (:format (format-all--buffer-easy executable "--stdin" "--non-interactive")))
+
 (define-format-all-formatter shfmt
   (:executable "shfmt")
   (:install
@@ -691,7 +705,7 @@ Consult the existing formatters for examples of BODY."
   (:executable "swiftformat")
   (:install (macos "brew install swiftformat"))
   (:modes swift-mode swift3-mode)
-  (:format (format-all--buffer-easy executable)))
+  (:format (format-all--buffer-easy executable "--quiet")))
 
 (define-format-all-formatter terraform-fmt
   (:executable "terraform")

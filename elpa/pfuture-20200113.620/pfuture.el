@@ -5,8 +5,8 @@
 ;; Author: Alexander Miller <alexanderm@web.de>
 ;; Homepage: https://github.com/Alexander-Miller/pfuture
 ;; Package-Requires: ((emacs "25.2"))
-;; Package-Version: 20190505.1006
-;; Version: 1.6
+;; Package-Version: 20200113.620
+;; Version: 1.8
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -63,7 +63,6 @@ this is wrong: (pfuture-new \"git status\")
 this is right: (pfuture-new \"git\" \"status\")"
   (let ((stderr (make-pipe-process
                  :name "Process Future stderr"
-                 :coding 'no-conversion
                  ;; Use a dummy buffer for the stderr process. make-pipe-process creates a
                  ;; buffer unless one is specified, even when :filter is specified and the
                  ;; buffer is not used at all.
@@ -80,7 +79,6 @@ this is right: (pfuture-new \"git\" \"status\")"
                (make-process
                 :name "Process Future"
                 :stderr stderr
-                :coding 'no-conversion
                 :sentinel #'pfuture--sentinel
                 :filter #'pfuture--append-stdout
                 :command cmd

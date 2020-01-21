@@ -1,6 +1,6 @@
 ;;; git-commit.el --- Edit Git commit messages  -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2010-2019  The Magit Project Contributors
+;; Copyright (C) 2010-2020  The Magit Project Contributors
 ;;
 ;; You should have received a copy of the AUTHORS.md file which
 ;; lists all contributors.  If not, see http://magit.vc/authors.
@@ -12,7 +12,7 @@
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 
 ;; Package-Requires: ((emacs "25.1") (dash "20180910") (transient "20190812") (with-editor "20181103"))
-;; Package-Version: 20191227.1317
+;; Package-Version: 20200119.1646
 ;; Keywords: git tools vc
 ;; Homepage: https://github.com/magit/magit
 
@@ -314,7 +314,7 @@ In this context a \"keyword\" is text surrounded be brackets."
   :group 'git-commit-faces)
 
 (define-obsolete-face-alias 'git-commit-note
-  'git-commit-keyword "Git-Commit 2.91.0")
+  'git-commit-keyword "Git-Commit 3.0.0")
 
 (defface git-commit-pseudo-header
   '((t :inherit font-lock-string-face))
@@ -782,7 +782,7 @@ With a numeric prefix ARG, go forward ARG comments."
                   nil nil nil 'git-commit-read-ident-history)))
         (save-match-data
           (if (string-match "\\`\\([^<]+\\) *<\\([^>]+\\)>\\'" str)
-              (list (string-trim (match-string 1 str))
+              (list (save-match-data (string-trim (match-string 1 str)))
                     (string-trim (match-string 2 str)))
             (user-error "Invalid input"))))
     (list (read-string "Name: ")

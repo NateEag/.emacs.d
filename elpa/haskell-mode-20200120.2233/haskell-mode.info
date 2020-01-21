@@ -846,14 +846,10 @@ associate with.
 
 In a Haskell source buffer associated with a GHCi session, errors that
 prevent the file from loading are highlighted with ‘haskell-error-face’.
-You can move between these error lines with
-
-‘M-n’
-     is bound to ‘haskell-goto-next-error’
-‘M-p’
-     is bound to ‘haskell-goto-prev-error’
-‘C-c M-p’
-     is bound to ‘haskell-goto-first-error’
+You can move between these error lines with with the commands
+‘haskell-goto-next-error’, ‘haskell-goto-prev-error’ and
+‘haskell-goto-first-error’, which you might like to bind to convenient
+keys in ‘interactive-haskell-mode-map’.
 
 13.2 Using GHCi 8+ or GHCi-ng
 =============================
@@ -2345,20 +2341,20 @@ Concept index
  [index ]
 * Menu:
 
-* benchmarking:                          Interactive Haskell. (line 472)
+* benchmarking:                          Interactive Haskell. (line 468)
 * CUA mode:                              Indentation.         (line  49)
 * customizing:                           Installation.        (line  48)
-* customizing <1>:                       Interactive Haskell. (line  53)
+* customizing <1>:                       Interactive Haskell. (line  49)
 * haskell-mode:                          Editing Haskell Code.
                                                               (line   6)
-* Images, rendering SVG images:          Interactive Haskell. (line 614)
+* Images, rendering SVG images:          Interactive Haskell. (line 610)
 * indentation:                           Indentation.         (line   6)
 * layout rule:                           Indentation.         (line   6)
 * off-side rule:                         Indentation.         (line   6)
 * rectangle:                             Indentation.         (line  49)
-* Rendering SVG images:                  Interactive Haskell. (line 614)
-* SVG images, rendering:                 Interactive Haskell. (line 614)
-* testing:                               Interactive Haskell. (line 470)
+* Rendering SVG images:                  Interactive Haskell. (line 610)
+* SVG images, rendering:                 Interactive Haskell. (line 610)
+* testing:                               Interactive Haskell. (line 466)
 * Unicode:                               Unicode support.     (line   6)
 
 
@@ -2377,8 +2373,8 @@ Function index
                                                               (line   6)
 * haskell-mode:                          Editing Haskell Code.
                                                               (line   6)
-* haskell-session-change-target:         Interactive Haskell. (line 463)
-* haskell-svg-toggle-render-images:      Interactive Haskell. (line 630)
+* haskell-session-change-target:         Interactive Haskell. (line 459)
+* haskell-svg-toggle-render-images:      Interactive Haskell. (line 626)
 
 
 File: haskell-mode.info,  Node: Variable index,  Prev: Function index,  Up: Top
@@ -2399,22 +2395,22 @@ Variable index
 * haskell-decl-scan-mode-hook:           Declaration scanning.
                                                               (line   6)
 * haskell-definition-face:               Syntax highlighting. (line  31)
-* haskell-interactive-mode-hook:         Interactive Haskell. (line 463)
+* haskell-interactive-mode-hook:         Interactive Haskell. (line 459)
 * haskell-keyword-face:                  Syntax highlighting. (line  28)
 * haskell-literate-comment-face:         Syntax highlighting. (line  35)
 * haskell-mode-hook:                     Installation.        (line  53)
 * haskell-operator-face:                 Syntax highlighting. (line  33)
 * haskell-pragma-face:                   Syntax highlighting. (line  34)
-* haskell-process-args-cabal-new-repl:   Interactive Haskell. (line  76)
-* haskell-process-args-cabal-repl:       Interactive Haskell. (line  76)
-* haskell-process-args-ghci:             Interactive Haskell. (line  76)
-* haskell-process-args-stack-ghci:       Interactive Haskell. (line  75)
-* haskell-process-path-cabal:            Interactive Haskell. (line  76)
-* haskell-process-path-ghci:             Interactive Haskell. (line  76)
-* haskell-process-path-stack:            Interactive Haskell. (line  76)
-* haskell-process-type:                  Interactive Haskell. (line  76)
+* haskell-process-args-cabal-new-repl:   Interactive Haskell. (line  72)
+* haskell-process-args-cabal-repl:       Interactive Haskell. (line  72)
+* haskell-process-args-ghci:             Interactive Haskell. (line  72)
+* haskell-process-args-stack-ghci:       Interactive Haskell. (line  71)
+* haskell-process-path-cabal:            Interactive Haskell. (line  72)
+* haskell-process-path-ghci:             Interactive Haskell. (line  72)
+* haskell-process-path-stack:            Interactive Haskell. (line  72)
+* haskell-process-type:                  Interactive Haskell. (line  72)
 * haskell-quasi-quote-face:              Syntax highlighting. (line  36)
-* haskell-svg-render-images:             Interactive Haskell. (line 635)
+* haskell-svg-render-images:             Interactive Haskell. (line 631)
 * haskell-type-face:                     Syntax highlighting. (line  29)
 
 
@@ -2434,18 +2430,18 @@ Node: Module templates24104
 Node: Declaration scanning24534
 Node: Compilation27822
 Node: Interactive Haskell31727
-Ref: printing mode51012
-Node: Editing Cabal files63776
-Node: Browsing Haddocks64523
-Node: Spell checking strings and comments67348
-Node: Aligning code68454
-Node: Rectangular commands70199
-Node: REPL71719
-Node: Collapsing Haskell code76497
-Node: Getting Help and Reporting Bugs79105
-Node: Concept index80149
-Node: Function index81407
-Node: Variable index82202
+Ref: printing mode51037
+Node: Editing Cabal files63801
+Node: Browsing Haddocks64548
+Node: Spell checking strings and comments67373
+Node: Aligning code68479
+Node: Rectangular commands70224
+Node: REPL71744
+Node: Collapsing Haskell code76522
+Node: Getting Help and Reporting Bugs79130
+Node: Concept index80174
+Node: Function index81432
+Node: Variable index82227
 
 End Tag Table
 

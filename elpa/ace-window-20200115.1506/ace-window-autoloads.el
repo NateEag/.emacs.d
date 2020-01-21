@@ -21,6 +21,13 @@ Ace swap window." t nil)
 (autoload 'ace-delete-other-windows "ace-window" "\
 Ace delete other windows." t nil)
 
+(autoload 'ace-display-buffer "ace-window" "\
+Make `display-buffer' and `pop-to-buffer' select using `ace-window'.
+See sample config for `display-buffer-base-action' and `display-buffer-alist':
+https://github.com/abo-abo/ace-window/wiki/display-buffer.
+
+\(fn BUFFER ALIST)" nil nil)
+
 (autoload 'ace-window "ace-window" "\
 Select a window.
 Perform an action based on ARG described below.

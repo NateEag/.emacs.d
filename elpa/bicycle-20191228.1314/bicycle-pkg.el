@@ -1,2 +1,0 @@
-;;; Generated package description from /Users/neagleson/.emacs.d/elpa/bicycle-20191228.1314/bicycle.el  -*- no-byte-compile: t -*-
-(define-package "bicycle" "20191228.1314" "cycle outline and code visibility" '((emacs "25.1")) :commit "e976af1e6d53de67a64d369c2243f9ba7bfccf95" :keywords '("outlines") :authors '(("Jonas Bernoulli" . "jonas@bernoul.li")) :maintainer '("Jonas Bernoulli" . "jonas@bernoul.li") :url "https://github.com/tarsius/bicycle")

@@ -4,7 +4,7 @@
 
 ;; Author: Andrew Hyatt <ahyatt@gmail.com>
 ;; Keywords: Communication, Websocket, Server
-;; Package-Version: 20191123.2208
+;; Package-Version: 20200102.637
 ;; Version: 1.12
 ;; Package-Requires: ((cl-lib "0.5"))
 ;;
@@ -723,7 +723,7 @@ to the websocket protocol.
      conn
      (websocket-sentinel url conn key protocols extensions custom-header-alist nowait))
     (set-process-query-on-exit-flag conn nil)
-    (websocket-ensure-handshake url conn key protocols extensions custom-header-alist)
+    (websocket-ensure-handshake url conn key protocols extensions custom-header-alist nowait)
     websocket))
 
 (defun websocket-sentinel (url conn key protocols extensions custom-header-alist nowait)
@@ -732,17 +732,18 @@ to the websocket protocol.
         (websocket-debug websocket "State change to %s" change)
         (let ((status (process-status process)))
           (when (and nowait (eq status 'open))
-            (websocket-ensure-handshake url conn key protocols extensions custom-header-alist))
+            (websocket-ensure-handshake url conn key protocols extensions custom-header-alist nowait))
 
           (when (and (member status '(closed failed exit signal))
                      (not (eq 'closed (websocket-ready-state websocket))))
             (websocket-try-callback 'websocket-on-close 'on-close websocket))))))
 
-(defun websocket-ensure-handshake (url conn key protocols extensions custom-header-alist)
+(defun websocket-ensure-handshake (url conn key protocols extensions custom-header-alist nowait)
   (let ((url-struct (url-generic-parse-url url))
         (websocket (process-get conn :websocket)))
     (when (and (eq 'connecting (websocket-ready-state websocket))
-               (eq 'open (process-status conn)))
+               (memq (process-status conn)
+                     (list 'run (if nowait 'connect 'open))))
       (process-send-string conn
                            (format "GET %s HTTP/1.1\r\n"
                                    (let ((path (url-filename url-struct)))

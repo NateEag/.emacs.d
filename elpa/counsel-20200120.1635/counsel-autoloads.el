@@ -465,6 +465,9 @@ Additional actions:\\<ivy-minibuffer-map>
 (autoload 'counsel-compilation-errors "counsel" "\
 Compilation errors." t nil)
 
+(autoload 'counsel-flycheck "counsel" "\
+Flycheck errors." t nil)
+
 (defvar counsel-mode nil "\
 Non-nil if Counsel mode is enabled.
 See the `counsel-mode' command

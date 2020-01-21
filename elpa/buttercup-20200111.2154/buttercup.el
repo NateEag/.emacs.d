@@ -2,7 +2,7 @@
 
 ;; Copyright (C) 2015-2017  Jorgen Schaefer <contact@jorgenschaefer.de>
 
-;; Version: 1.18
+;; Version: 1.19
 ;; Author: Jorgen Schaefer <contact@jorgenschaefer.de>
 ;; Package-Requires: ((emacs "24.3"))
 ;; URL: https://github.com/jorgenschaefer/emacs-buttercup
@@ -205,11 +205,13 @@ failed."
           ,@body)))
 
 (defun buttercup--function-as-matcher (fun)
+  "Wrap FUN in code to unpack function-wrapped arguments."
   (cl-assert (functionp fun) t)
   (lambda (&rest args)
     (apply fun (mapcar #'funcall args))))
 
 (defun buttercup--find-matcher-function (matcher)
+  "Return the matcher function for MATCHER."
   (let ((matcher-prop
          (when (symbolp matcher)
            (get matcher 'buttercup-matcher))))
@@ -647,7 +649,7 @@ See also `buttercup-define-matcher'."
   (setq spy (funcall spy)
         number (funcall number))
   (cl-assert (symbolp spy))
-  (let* ((call-count (length (spy-calls-all spy))))
+  (let* ((call-count (spy-calls-count spy)))
     (cond
      ((= number call-count)
       t)
@@ -1022,10 +1024,49 @@ DESCRIPTION has the same meaning as in `xit'. FUNCTION is ignored."
                                                  :weakness 'key)
   "A mapping of currently-defined spies to their contexts.")
 
-(cl-defstruct spy-context
-  args
-  return-value
-  current-buffer)
+;; The base struct has no constructor so a factory function
+;; `make-spy-context' masquerading as a constructor can be defined
+;; later.
+(cl-defstruct (spy-context (:constructor nil))
+  args current-buffer)
+(cl-defstruct (spy-context-return (:include spy-context)
+                                  (:conc-name spy-context--return-))
+  value)
+(cl-defstruct (spy-context-thrown (:include spy-context)
+                                  (:conc-name spy-context--thrown-))
+  signal)
+
+(cl-defun make-spy-context (&key args current-buffer
+                                 (return-value nil has-return-value)
+                                 (thrown-signal nil has-thrown-signal))
+  "Constructor for objects of type spy-context.
+ARGS is the argument list of the called function.
+CURRENT-BUFFER is the buffer that was current when the spy was called.
+RETURN-VALUE is the returned value, if any.
+THROWN-SIGNAL is the signal raised by the function, if any.
+Only one of RETURN-VALUE and THROWN-SIGNAL may be given. Giving
+none of them is equivalent to `:return-value nil'."
+  (cond
+   ((and has-return-value has-thrown-signal)
+    (error "Only one of :return-value and :thrown-signal may be given"))
+   (has-thrown-signal (make-spy-context-thrown :args args
+                                               :current-buffer current-buffer
+                                               :signal thrown-signal))
+   (t (make-spy-context-return :args args
+                               :current-buffer current-buffer
+                               :value return-value))))
+
+(defun spy-context-return-value (context)
+  "Access slot \"return-value\" of `spy-context' struct CONTEXT."
+  (unless (spy-context-return-p context)
+    (error "Not a returning context"))
+  (spy-context--return-value context))
+
+(defun spy-context-thrown-signal (context)
+  "Access slot \"thrown-signal\" of `spy-context' struct CONTEXT."
+  (unless (spy-context-thrown-p context)
+    (error "Not a signal-raising context"))
+  (spy-context--thrown-signal context))
 
 (defun spy-on (symbol &optional keyword arg)
   "Create a spy (mock) for the function SYMBOL.
@@ -1094,32 +1135,50 @@ responsibility to ensure ARG is a command."
                 nil))
             (_
              (error "Invalid `spy-on' keyword: `%S'" keyword)))))
-    (buttercup--spy-on-and-call-fake symbol replacement)))
+    (buttercup--spy-on-and-call-replacement symbol replacement)))
 
-(defun buttercup--spy-on-and-call-fake (spy fake-function)
-  "Replace the function in symbol SPY with a spy calling FAKE-FUNCTION."
+(defun buttercup--spy-on-and-call-replacement (spy fun)
+  "Replace the function in symbol SPY with a spy calling FUN."
   (let ((orig-function (symbol-function spy)))
-    (fset spy (buttercup--make-spy fake-function))
+    (fset spy (buttercup--make-spy fun))
     (buttercup--add-cleanup (lambda ()
                               (fset spy orig-function)))))
 
-(defun buttercup--make-spy (fake-function)
-  "Create a new spy function wrapping FAKE-FUNCTION and tracking calls to itself."
+(defun buttercup--make-spy (fun)
+  "Create a new spy function wrapping FUN and tracking calls to itself."
   (let (this-spy-function)
-    (setq this-spy-function
-          (lambda (&rest args)
-            (let ((return-value (apply fake-function args)))
+    (setq
+     this-spy-function
+     (lambda (&rest args)
+       (let ((returned nil)
+             (return-value nil))
+         (condition-case err
+             (progn
+               (setq return-value (apply fun args)
+                     returned t)
+               (buttercup--spy-calls-add
+                this-spy-function
+                (make-spy-context :args args
+                                  :return-value return-value
+                                  :current-buffer (current-buffer)))
+               return-value)
+           (error
+            ;; If returned is non-nil, then the error we caught
+            ;; didn't come from FUN, so we shouldn't record it.
+            (unless returned
               (buttercup--spy-calls-add
                this-spy-function
                (make-spy-context :args args
-                                 :return-value return-value
-                                 :current-buffer (current-buffer)))
-              return-value)))
-    ;; Add the interactive form from `fake-function', if any
-    (when (interactive-form fake-function)
+                                 :thrown-signal err
+                                 :current-buffer (current-buffer))))
+            ;; Regardless, we only caught this error in order to
+            ;; record it, so we need to re-throw it.
+            (signal (car err) (cdr err)))))))
+    ;; Add the interactive form from `fun', if any
+    (when (interactive-form fun)
       (setq this-spy-function
             `(lambda (&rest args)
-               ,(interactive-form fake-function)
+               ,(interactive-form fun)
                (apply ',this-spy-function args))))
     this-spy-function))
 
@@ -1144,7 +1203,7 @@ responsibility to ensure ARG is a command."
            buttercup--spy-contexts))
 
 (defun buttercup--spy-calls-add (spy-function context)
-  "Add CONTEXT to the recorded calls to SPY."
+  "Add CONTEXT to the recorded calls to SPY-FUNCTION."
   (puthash spy-function
            (append (gethash spy-function
                             buttercup--spy-contexts)
@@ -1171,6 +1230,14 @@ responsibility to ensure ARG is a command."
 (defun spy-calls-count (spy)
   "Return the number of times SPY has been called so far."
   (length (spy-calls-all spy)))
+
+(defun spy-calls-count-returned (spy)
+  "Return the number of times SPY has been called successfully so far."
+  (cl-count-if 'spy-context-return-p (spy-calls-all spy)))
+
+(defun spy-calls-count-errors (spy)
+  "Return the number of times SPY has been called and thrown errors so far."
+  (cl-count-if 'spy-context-thrown-p (spy-calls-all spy)))
 
 (defun spy-calls-args-for (spy index)
   "Return the context of the INDEXth call to SPY."
@@ -1645,7 +1712,7 @@ FMT and ARGS are passed to `format'."
 
 
 (defadvice display-warning (around buttercup-defer-warnings activate)
-  "Log all warnings to a special buffer while running buttercup tests.
+  "Log all warnings to a special buffer while running buttercup specs.
 
 Emacs' normal display logic for warnings doesn't mix well with
 buttercup, for several reasons. So instead, while a buttercup

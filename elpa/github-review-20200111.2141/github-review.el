@@ -4,7 +4,7 @@
 ;; Keywords: git, tools, vc, github
 ;; Homepage: https://github.com/charignon/github-review
 ;; Package-Requires: ((emacs "25") (s "1.12.0") (ghub "2.0") (dash "2.11.0"))
-;; Package-Version: 20190830.1639
+;; Package-Version: 20200111.2141
 ;; Package-X-Original-Version: 0.1
 
 ;; This file is not part of GNU Emacs
@@ -115,6 +115,9 @@ PR-ALIST is an alist represenging the PR"
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;; Communication with GitHub ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(defun github-review-api-host (pr-alist)
+  "Return the api host for a PR-ALIST."
+  (or (github-review-a-get pr-alist 'apihost) github-review-host))
 
 (defun github-review-get-pr (pr-alist needs-diff callback)
   "Get a pull request or its diff.
@@ -126,7 +129,7 @@ CALLBACK to call back when done."
              :unpaginate t
              :headers (if needs-diff github-review-diffheader '())
              :auth 'github-review
-             :host github-review-host
+             :host (github-review-api-host pr-alist)
              :callback callback
              :errorback (lambda (&rest _) (message "Error talking to GitHub"))))
 
@@ -149,7 +152,7 @@ CALLBACK will be called back when done"
              nil
              :auth 'github-review
              :payload review
-             :host github-review-host
+             :host (github-review-api-host pr-alist)
              :errorback (lambda (&rest _) (message "Error talking to GitHub"))
              :callback callback))
 
@@ -160,7 +163,7 @@ CALLBACK will be called back when done"
   (ghub-get (github-review-format-pr-url 'get-inline-comments pr-alist)
             nil
             :auth 'github-review
-            :host github-review-host
+            :host (github-review-api-host pr-alist)
             :errorback (lambda (&rest _) (message "Error talking to GitHub"))
             :callback callback))
 
@@ -171,7 +174,7 @@ CALLBACK will be called back when done"
   (ghub-get (github-review-format-pr-url 'get-review-comments pr-alist)
             nil
             :auth 'github-review
-            :host github-review-host
+            :host (github-review-api-host pr-alist)
             :errorback (lambda (&rest _) (message "Error talking to GitHub"))
             :callback callback))
 
@@ -182,7 +185,7 @@ CALLBACK will be called back when done"
   (ghub-get (github-review-format-pr-url 'get-issue-comments pr-alist)
             nil
             :auth 'github-review
-            :host github-review-host
+            :host (github-review-api-host pr-alist)
             :errorback (lambda (&rest _) (message "Error talking to GitHub"))
             :callback callback))
 
@@ -243,6 +246,10 @@ For an example of how to use it, look at the tests"
 (defun github-review-previous-comment? (l)
   "Return t if L, a string, is a comment from previous review."
   (string-prefix-p "~ " l))
+
+(defun github-review-is-start-of-file-hunk? (l)
+  "Return t if L, a string that start with 'diff' marking the start of a file hunk."
+  (string-prefix-p "diff" l))
 
 (defun github-review-file-path (l)
   "Extract the file path in L, a string.
@@ -310,8 +317,8 @@ ACC is an alist accumulating parsing state."
       (github-review-a-assoc acc 'pos 0))
 
      ;; Start of file
-     ((github-review-non-null-filename-hunk-line? l)
-      (github-review-a-assoc (github-review-a-assoc acc 'pos nil) 'path (github-review-file-path l)))
+     ((and top-level? (github-review-non-null-filename-hunk-line? l)
+      (github-review-a-assoc (github-review-a-assoc acc 'pos nil) 'path (github-review-file-path l))))
 
      ;; Global Comments
      ((and top-level? (github-review-comment? l))
@@ -331,6 +338,9 @@ ACC is an alist accumulating parsing state."
             (github-review-a-assoc 'path path)
             (github-review-a-assoc 'body (github-review-comment-text l)))
         comments)))
+
+     ;; Header before the filenames, restart the position
+     ((github-review-is-start-of-file-hunk? l) (github-review-a-assoc acc 'pos nil))
 
      ;; Any other line in a file
      (in-file? (github-review-a-assoc acc 'pos (+ 1 pos)))
@@ -522,14 +532,16 @@ Gets the PR diff, object, top level comments, and code reviews."
 (defun github-review-forge-pr-at-point ()
   "Review the forge pull request at point."
   (interactive)
-  (let* ((pullreq (forge-pullreq-at-point))
+  (let* ((pullreq (or (forge-pullreq-at-point) (forge-current-topic)))
          (repo (forge-get-repository pullreq))
          (owner (oref repo owner))
          (name (oref repo name))
+         (apihost (oref repo apihost))
          (number (oref pullreq number))
          (pr-alist (-> (github-review-a-empty)
                        (github-review-a-assoc 'owner owner)
                        (github-review-a-assoc 'repo  name)
+                       (github-review-a-assoc 'apihost apihost)
                        (github-review-a-assoc 'num   number))))
          (github-review-start-internal pr-alist)))
 

@@ -5,7 +5,8 @@
           geiser:autodoc
           geiser:no-values
 	  geiser:load-file
-          geiser:newline)
+          geiser:newline
+          geiser:macroexpand)
   (import (chezscheme))
 
   (define (last-index-of str-list char idx last-idx)
@@ -56,8 +57,8 @@
                 (k `((result "")
                      (output . ,(get-output-string output-string))
                      (error (key . ,(with-output-to-string
-                                     (lambda ()
-                                       (display-condition e))))))))
+                                      (lambda ()
+                                        (display-condition e))))))))
             (lambda ()
               (call-with-values
                   ;; evaluate form, allow for multiple return values,
@@ -69,9 +70,9 @@
                           (eval form))))
                 (lambda result
                   `((result ,(with-output-to-string
-                              (lambda ()
-                                (pretty-print
-                                 (if (null? (cdr result)) (car result) result)))))
+                               (lambda ()
+                                 (pretty-print
+                                  (if (null? (cdr result)) (car result) result)))))
                     (output . ,(get-output-string output-string))))))))))
       (newline)
       (close-output-port output-string)))
@@ -145,4 +146,7 @@
     #f)
 
   (define (geiser:newline)
-    #f))
+    #f)
+
+  (define (geiser:macroexpand form . rest)
+    (syntax->datum (expand form))))

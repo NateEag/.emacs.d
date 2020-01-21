@@ -1,13 +1,21 @@
 (import (geiser)
 	(chezscheme))
 
+(define-syntax assert-equal
+  (syntax-rules ()
+    ((_ a b)
+     (if (equal? a b)
+         #t
+         (begin
+           (display (format "failed assertion `~a' == `~a'" a b))
+           (assert (equal? a b)))))))
 
 (define-syntax get-result
   (syntax-rules ()
     ((_ form)
      (with-output-to-string
        (lambda ()
-	 (geiser:eval #f form))))))
+         (geiser:eval #f form))))))
 
 (define-syntax do-test
   (syntax-rules ()
@@ -16,6 +24,29 @@
       (equal?
        (get-result form)
        result)))))
+
+(define-syntax do-test-macroexpand
+  (syntax-rules ()
+    ((_ form result)
+     (assert
+      (equal? (geiser:macroexpand form)
+              result)))))
+
+(define-syntax test-or
+  (syntax-rules ()
+    ((_ x) x)
+    ((_ x xs ...)
+     (if x
+         x
+         (test-or xs ...)))))
+
+(do-test-macroexpand
+ '(test-or 1)
+ '1)
+
+(do-test-macroexpand
+ '(test-or 1 2)
+ '(if 1 1 2))
 
 ;; (something-doesnot-exist)
 ;;=> Error: Exception: variable something-doesnot-exist is not bound

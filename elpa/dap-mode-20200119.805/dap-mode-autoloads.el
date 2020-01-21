@@ -95,7 +95,7 @@ if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-mode" '("dap-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-mode" '("dap-" "dash-expand:&dap-session")))
 
 ;;;***
 
@@ -191,6 +191,9 @@ if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
+(autoload 'dap-ui-breakpoints-list "dap-ui" "\
+List breakpoints." t nil)
+
 (defvar dap-ui-controls-mode nil "\
 Non-nil if Dap-Ui-Controls mode is enabled.
 See the `dap-ui-controls-mode' command
@@ -211,7 +214,12 @@ if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-ui" '("dap-ui-")))
+(autoload 'dap-ui-sessions "dap-ui" "\
+Show currently active sessions." t nil)
+
+(autoload 'dap-ui-locals "dap-ui" nil t nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "dap-ui" '("dap-")))
 
 ;;;***
 

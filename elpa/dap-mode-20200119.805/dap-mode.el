@@ -18,7 +18,7 @@
 ;; Author: Ivan Yonchovski <yyoncho@gmail.com>
 ;; Keywords: languages, debug
 ;; URL: https://github.com/yyoncho/dap-mode
-;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (lsp-mode "6.0") (dash-functional "1.2.0") (tree-mode "1.1.1.1") (bui "1.1.0") (f "0.20.0") (s "1.12.0") (treemacs "2.5"))
+;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (lsp-mode "6.0") (dash-functional "1.2.0") (bui "1.1.0") (f "0.20.0") (s "1.12.0") (lsp-treemacs "0.1"))
 ;; Version: 0.3
 
 ;;; Commentary:
@@ -138,8 +138,11 @@ The hook will be called with the session file and the new set of breakpoint loca
   :safe #'listp
   :type '(plist))
 
-(defvar dap--debug-configuration ()
+(defvar dap--debug-configuration nil
   "List of the previous configuration that have been executed.")
+
+(defun dash-expand:&dap-session (key source)
+  `(,(intern-soft (format "dap--debug-session-%s" (eval key) )) ,source))
 
 (cl-defstruct dap--debug-session
   (name nil)
@@ -163,8 +166,6 @@ The hook will be called with the session file and the new set of breakpoint loca
   (active-frame-id nil)
   (active-frame nil)
   (cursor-marker nil)
-  ;; The session breakpoints;
-  (session-breakpoints (make-hash-table :test 'equal) :read-only t)
   ;; one of 'pending 'running 'terminated 'failed
   (state 'pending)
   ;; hash table containing mapping file -> active breakpoints.
@@ -204,28 +205,6 @@ The hook will be called with the session file and the new set of breakpoint loca
   "Get sessions for WORKSPACE."
   (lsp-workspace-get-metadata "debug-sessions"))
 
-(defun dap--wait-for-port (host port &optional retry-count sleep-interval)
-  "Wait for PORT to be open on HOST.
-
-RETRY-COUNT is the number of the retries.
-SLEEP-INTERVAL is the sleep interval between each retry."
-  (let ((success nil)
-        (retries 0))
-    (while (and (not success) (< retries (or retry-count 100)))
-      (condition-case err
-          (progn
-            (delete-process (open-network-stream "*connection-test*" nil host port :type 'plain))
-            (setq success t))
-        (file-error
-         (let ((inhibit-message t))
-           (message "Failed to connect to %s:%s with error message %s"
-                    host
-                    port
-                    (error-message-string err))
-           (sit-for (or sleep-interval 0.02))
-           (setq retries (1+ retries))))))
-    success))
-
 (defun dap--cur-session ()
   "Get currently active `dap--debug-session'."
   (lsp-workspace-get-metadata "default-session"))
@@ -238,7 +217,7 @@ SUCCESS-CALLBACK will be called if it is provided and if the call
 has succeeded."
   (-lambda ((result &as &hash "success" "message"))
     (if success
-        (when success-callback (funcall  success-callback result))
+        (when success-callback (funcall success-callback result))
       (error message))))
 
 (defun dap--session-init-resp-handler (debug-session &optional success-callback)
@@ -417,42 +396,49 @@ FILE-NAME is the filename in which the breakpoints have been udpated."
   "Toggle breakpoint on the current line."
   (interactive)
   (let ((file-breakpoints (gethash buffer-file-name (dap--get-breakpoints))))
-    (dap--breakpoints-changed (if-let (existing-breakpoint (dap--get-breakpoint-at-point file-breakpoints) )
-                                  ;; delete if already exists
-                                  (progn
-                                    (-some-> existing-breakpoint
-                                             (plist-get :marker)
-                                             (set-marker nil))
-                                    (cl-remove existing-breakpoint file-breakpoints))
-                                ;; add if does not exist
-                                (push (list :marker (point-marker)
-                                            :point (point))
-                                      file-breakpoints)))))
+    (dap--breakpoints-changed
+     (if-let (existing-breakpoint (dap--get-breakpoint-at-point file-breakpoints))
+         ;; delete if already exists
+         (progn
+           (-some-> existing-breakpoint
+             (plist-get :marker)
+             (set-marker nil))
+           (cl-remove existing-breakpoint file-breakpoints))
+       ;; add if does not exist
+       (push (list :marker (point-marker)
+                   :point (point))
+             file-breakpoints)))))
 
 (defun dap--get-breakpoint-at-point (file-breakpoints)
   "Get breakpoint on the current point.
 FILE-BREAKPOINTS is the list of breakpoints in the current file."
   (let ((current-line (line-number-at-pos (point))))
     (-first
-     (-lambda ((&plist :marker :point))
-       (= current-line (line-number-at-pos (or (and marker (marker-position marker))
-                                               point))))
+     (-lambda (bp)
+       (= current-line (line-number-at-pos (dap-breakpoint-get-point bp))))
      file-breakpoints)))
 
-(defun dap-breakpoint-delete ()
+(defun dap-breakpoint-delete (breakpoint file-name)
   "Delete breakpoint on the current line."
-  (interactive)
-  (let ((file-breakpoints (gethash buffer-file-name (dap--get-breakpoints))))
-    (when-let (existing-breakpoint (dap--get-breakpoint-at-point file-breakpoints))
-      (-some-> existing-breakpoint (plist-get :marker) (set-marker nil))
-      (dap--breakpoints-changed (cl-remove existing-breakpoint file-breakpoints)))))
+  (interactive (list (-some->> (dap--get-breakpoints)
+                       (gethash buffer-file-name)
+                       dap--get-breakpoint-at-point)
+                     buffer-file-name))
+  (when breakpoint
+    (-some-> breakpoint (plist-get :marker) (set-marker nil))
+    (dap--breakpoints-changed (-remove
+                               (-lambda (bp)
+                                 (eq (dap-breakpoint-get-point bp)
+                                     (dap-breakpoint-get-point breakpoint)))
+                               (gethash file-name (dap--get-breakpoints)))
+                              file-name)))
 
-(defun dap--breakpoint-update (property message)
+(defun dap--breakpoint-update (property message file-name existing-breakpoint)
   "Common code for updating breakpoint.
 MESSAGE to be displayed to the user.
 PROPERTY is the breakpoint property that will be udpated."
-  (let ((file-breakpoints (gethash buffer-file-name (dap--get-breakpoints))))
-    (if-let (existing-breakpoint (dap--get-breakpoint-at-point file-breakpoints))
+  (let ((file-breakpoints (gethash file-name (dap--get-breakpoints))))
+    (if existing-breakpoint
         (let ((value (read-string message
                                   (plist-get existing-breakpoint property))))
           (if (s-blank? value)
@@ -462,26 +448,26 @@ PROPERTY is the breakpoint property that will be udpated."
                                                (dap--plist-delete :log-message))
                                            (delete existing-breakpoint file-breakpoints)))
             (plist-put existing-breakpoint property value))
-          (dap--breakpoints-changed file-breakpoints))
-      (error "No breakpoint at current line"))))
+          (dap--breakpoints-changed file-breakpoints file-name))
+      (error "No breakpoint found."))))
 
-(defun dap-breakpoint-condition ()
+(defun dap-breakpoint-condition (file-name breakpoint)
   "Set breakpoint condition for the breakpoint at point."
-  (interactive)
-  (dap--breakpoint-update :condition "Enter breakpoint condition: "))
+  (interactive (list buffer-file-name (dap--get-breakpoint-at-point)))
+  (dap--breakpoint-update :condition "Enter breakpoint condition: " file-name breakpoint))
 
-(defun dap-breakpoint-hit-condition ()
+(defun dap-breakpoint-hit-condition (file-name breakpoint)
   "Set breakpoint hit condition for the breakpoint at point."
-  (interactive)
-  (dap--breakpoint-update :hit-condition "Enter hit condition: "))
+  (interactive (list buffer-file-name (dap--get-breakpoint-at-point)))
+  (dap--breakpoint-update :hit-condition "Enter hit condition: " file-name breakpoint))
 
-(defun dap-breakpoint-log-message ()
+(defun dap-breakpoint-log-message (file-name breakpoint)
   "Set breakpoint log message for the breakpoint at point.
 
 If log message for the breakpoint is specified it won't stop
 thread exection but the server will log message."
-  (interactive)
-  (dap--breakpoint-update :log-message "Enter log message: "))
+  (interactive (list buffer-file-name (dap--get-breakpoint-at-point)))
+  (dap--breakpoint-update :log-message "Enter log message: " file-name breakpoint))
 
 (defun dap-breakpoint-add ()
   "Add breakpoint on the current line."
@@ -576,25 +562,24 @@ thread exection but the server will log message."
         (dap--debug-session-thread-id debug-session) nil)
   (run-hook-with-args 'dap-continue-hook debug-session))
 
-(defun dap-continue ()
+(defun dap-continue (debug-session thread-id)
   "Call continue for the currently active session and thread."
-  (interactive)
-  (let* ((debug-session (dap--cur-active-session-or-die))
-         (thread-id (dap--debug-session-thread-id debug-session)))
-    (dap--send-message (dap--make-request "continue"
-                                          (list :threadId thread-id))
-                       (dap--resp-handler)
-                       debug-session)
-    (dap--resume-application debug-session)))
+  (interactive (list (dap--cur-active-session-or-die)
+                     (dap--debug-session-thread-id (dap--cur-active-session-or-die))))
+  (dap--send-message (dap--make-request "continue"
+                                        (list :threadId thread-id))
+                     (dap--resp-handler)
+                     debug-session)
+  (dap--resume-application debug-session))
 
-(defun dap-disconnect ()
+(defun dap-disconnect (session)
   "Disconnect from the currently active session."
-  (interactive)
+  (interactive (list (dap--cur-active-session-or-die)))
   (dap--send-message (dap--make-request "disconnect"
                                         (list :restart :json-false))
                      (dap--resp-handler)
-                     (dap--cur-active-session-or-die))
-  (dap--resume-application (dap--cur-active-session-or-die)))
+                     session)
+  (dap--resume-application session))
 
 (defun dap-next ()
   "Debug next."
@@ -627,16 +612,16 @@ thread exection but the server will log message."
                      (dap--cur-active-session-or-die))
   (dap--resume-application (dap--cur-active-session-or-die)))
 
-(defun dap-restart-frame ()
+(defun dap-restart-frame (debug-session frame-id)
   "Restarts current frame."
-  (interactive)
-  (let* ((debug-session (dap--cur-active-session-or-die))
-         (frame-id (-some->> debug-session dap--debug-session-active-frame (gethash "id"))))
-    (dap--send-message (dap--make-request "restartFrame"
-                                          (list :frameId frame-id))
-                       (dap--resp-handler)
-                       debug-session)
-    (dap--resume-application debug-session)))
+  (interactive (let ((debug-session (dap--cur-active-session-or-die)))
+                 (list debug-session
+                       (-some->> debug-session dap--debug-session-active-frame (gethash "id")))))
+  (dap--send-message (dap--make-request "restartFrame"
+                                        (list :frameId frame-id))
+                     (dap--resp-handler)
+                     debug-session)
+  (dap--resume-application debug-session))
 
 (defun dap-debug-restart ()
   "Restarts current frame."
@@ -706,7 +691,7 @@ thread exection but the server will log message."
 (defun dap--refresh-breakpoints ()
   "Refresh breakpoints for DEBUG-SESSION."
   (--each (dap--buffer-list)
-    (when buffer-file-name
+    (when (buffer-live-p it)
       (with-current-buffer it
         (dap--set-breakpoints-in-file
          buffer-file-name
@@ -780,9 +765,8 @@ thread exection but the server will log message."
                                                             breakpoints)))
                                                  (cl-first))))
                       (when (eq debug-session (dap--cur-session))
-                        (-when-let (buffer (find-buffer-visiting file-name))
-                          (with-current-buffer buffer
-                            (run-hooks 'dap-breakpoints-changed-hook))))))
+                        (with-current-buffer (find-file file-name)
+                          (run-hooks 'dap-breakpoints-changed-hook)))))
       ("thread" (-let [(&hash "threadId" id "reason") body]
                   (puthash id reason (dap--debug-session-thread-states debug-session))
                   (run-hooks 'dap-session-changed-hook)
@@ -793,13 +777,19 @@ thread exection but the server will log message."
                            (when body (gethash "threads" body)))
                      (run-hooks 'dap-session-changed-hook))
                    debug-session)))
-      ("exited" (with-current-buffer (dap--debug-session-output-buffer debug-session)
-                  ;; (insert (gethash "body" (gethash "body" event)))
-                  ))
+      ("exited" (dap--mark-session-as-terminated debug-session))
       ("stopped"
-       (-let [(&hash "threadId" thread-id "type" reason) body]
-         (puthash thread-id reason (dap--debug-session-thread-states debug-session))
-         (dap--select-thread-id debug-session thread-id)))
+       (-let [(&hash "threadId" thread-id "type" "reason") body]
+         (puthash thread-id type (dap--debug-session-thread-states debug-session))
+         (dap--select-thread-id debug-session thread-id)
+         (when (string= "exception" reason)
+           (dap--send-message
+            (dap--make-request "exceptionInfo" (list :threadId thread-id))
+            (-lambda ((&hash "body" (&hash? "description" "exceptionId" exception-id)))
+              (lsp--error "Exception has occurred: %s\n%s"
+                          exception-id description))
+            debug-session))
+         (run-hooks 'dap-session-changed-hook)))
       ("terminated"
        (dap--mark-session-as-terminated debug-session))
       ("usernotification"
@@ -836,7 +826,13 @@ thread exection but the server will log message."
                                     (run-hook-with-args 'dap-executed-hook
                                                         debug-session
                                                         (gethash "command" parsed-msg)))
-                                (message "Unable to find handler for %s." (pp parsed-msg)))))))
+                                (message "Unable to find handler for %s." (pp parsed-msg))))
+                  ("request" (-let* (((&hash "arguments" (&hash? "args" "cwd" "title") "command" "seq") parsed-msg)
+                                     (default-directory cwd))
+                               (async-shell-command (s-join " " args))
+                               (dap--send-message (dap--make-response seq)
+                                                  (dap--resp-handler)
+                                                  debug-session))))))
             (dap--parser-read parser msg)))))
 
 (defun dap--create-output-buffer (session-name)
@@ -853,6 +849,12 @@ thread exection but the server will log message."
             :type "request")
     (list :command command
           :type "request")))
+
+(defun dap--make-response (id &optional args)
+  "Make request for COMMAND with arguments ARGS."
+  (list :request_seq id
+        :success t
+        :type "response"))
 
 (defun dap--initialize-message (adapter-id)
   "Create initialize message.
@@ -888,9 +890,43 @@ ADAPTER-ID the id of the adapter."
                              (dap--make-message message)))
     (error "Session %s is already terminated" (dap--debug-session-name debug-session))))
 
+(defun dap-request (session method &rest args)
+  "Sync request."
+  (let (result)
+    (dap--send-message
+     (dap--make-request method args)
+     (lambda (res) (setf result (or res :finished)))
+     session)
+
+    (while (not result)
+      (accept-process-output nil 0.001))
+
+    (cond
+     ((eq result :finished) nil)
+     ((and (ht? result) (not (gethash "success" result))) (error (gethash "message" result)))
+     (t (gethash "body" result)))))
+
+(defun dap--open-network-stream (session-name host port)
+  (let ((retries 0)
+        result)
+    (while (and (not result)
+                (< retries dap-connect-retry-count))
+      (condition-case err
+          (setq result (open-network-stream session-name nil
+                                            host port :type 'plain))
+        (file-error
+         (let ((inhibit-message t))
+           (message "Failed to connect to %s:%s with error message %s"
+                    host
+                    port
+                    (error-message-string err))
+           (sit-for dap-connect-retry-interval)
+           (setq retries (1+ retries))))))
+    (or result (error "Failed to connect to port %s" port))))
+
 (defun dap--create-session (launch-args)
   "Create debug session from LAUNCH-ARGS."
-  (-let* (((&plist :host :dap-server-path :name session-name :debugServer port ) launch-args)
+  (-let* (((&plist :host :dap-server-path :name session-name :debugServer port) launch-args)
           (proc (if dap-server-path
                     (make-process
                      :name session-name
@@ -899,7 +935,7 @@ ADAPTER-ID the id of the adapter."
                      :command dap-server-path
                      :stderr (concat "*" session-name " stderr*")
                      :noquery t)
-                  (open-network-stream session-name nil host port :type 'plain)))
+                  (dap--open-network-stream session-name host port)))
           (debug-session (make-dap--debug-session
                           :launch-args launch-args
                           :proc proc
@@ -958,9 +994,31 @@ DEBUG-SESSION is the active debug session."
       (with-current-buffer buffer
         (run-hooks 'dap-breakpoints-changed-hook)))))
 
+(defun dap--breakpoint-filter-enabled (filter type default)
+  (alist-get filter
+             (alist-get type dap-exception-breakpoints nil nil #'string=)
+             default
+             nil
+             #'string=))
+
+(defun dap--set-exception-breakpoints (debug-session callback)
+  (-let [(&dap-session 'initialize-result 'launch-args (&plist :type)) debug-session]
+    (dap--send-message
+     (dap--make-request "setExceptionBreakpoints"
+                        (list :filters
+                              (or (-some->> initialize-result
+                                    (gethash "body")
+                                    (gethash "exceptionBreakpointFilters")
+                                    (-keep (-lambda ((&hash "default" "filter"))
+                                             (when (dap--breakpoint-filter-enabled filter type default)
+                                               filter))))
+                                  [])))
+     (lambda (result)
+       (funcall callback))
+     debug-session)))
+
 (defun dap--configure-breakpoints (debug-session breakpoints callback)
   "Configure breakpoints for DEBUG-SESSION.
-
 BREAKPOINTS is the list of breakpoints to set.
 CALLBACK will be called once configure is finished.
 RESULT to use for the callback."
@@ -978,7 +1036,8 @@ RESULT to use for the callback."
                (lambda (resp)
                  (setf finished (1+ finished))
                  (dap--update-breakpoints debug-session resp file-name)
-                 (when (= finished breakpoint-count) (funcall callback))))
+                 (when (= finished breakpoint-count)
+                   (dap--set-exception-breakpoints debug-session callback))))
               debug-session)
            (file-missing
             (setf finished (1+ finished))
@@ -992,8 +1051,8 @@ RESULT to use for the callback."
   (interactive "sEval: ")
   (let ((debug-session (dap--cur-active-session-or-die)))
     (if-let ((active-frame-id (-some->> debug-session
-                                        dap--debug-session-active-frame
-                                        (gethash "id"))))
+                                dap--debug-session-active-frame
+                                (gethash "id"))))
         (dap--send-message
          (dap--make-request "evaluate"
                             (list :expression expression
@@ -1039,14 +1098,16 @@ RESULT to use for the callback."
 (defun dap--calculate-unique-name (debug-session-name debug-sessions)
   "Calculate unique name with prefix DEBUG-SESSION-NAME.
 DEBUG-SESSIONS - list of the currently active sessions."
-  (let ((session-name debug-session-name)
-        (counter 1))
+  (let* ((base-name (or (cl-second (s-match "\\(.*\\)<.*>" debug-session-name))
+                        debug-session-name))
+         (counter 1)
+         (session-name base-name))
     (while (--first (string= session-name (dap--debug-session-name it)) debug-sessions)
-      (setq session-name (format "%s<%s>" debug-session-name counter))
+      (setq session-name (format "%s<%s>" base-name counter))
       (setq counter (1+ counter)))
     session-name))
 
-(define-derived-mode dap-server-log-mode fundamental-mode "Debug Adapter"
+(define-derived-mode dap-server-log-mode compilation-mode "Debug Adapter"
   (read-only-mode 1)
   (setq-local window-point-insertion-type t)
   ;; we need to move window point to the end of the buffer once because
@@ -1079,9 +1140,8 @@ before starting the debug process."
     (when program-to-start
       (compilation-start program-to-start 'dap-server-log-mode
                          (lambda (_) (concat "*" session-name " server log*"))))
-    (when wait-for-port (dap--wait-for-port host port
-                                            dap-default-connect-retry-count
-                                            dap-default-connect-retry-interval))
+    (when wait-for-port
+      (dap--wait-for-port host port dap-connect-retry-count dap-connect-retry-interval))
 
     (unless skip-debug-session
       (let ((debug-session (dap--create-session launch-args)))
@@ -1095,9 +1155,10 @@ before starting the debug process."
               (setf (dap--debug-session-initialize-result debug-session) initialize-result)
 
               (dap--set-sessions (cons debug-session debug-sessions)))
-            (dap--send-message (dap--make-request request launch-args)
-                               (dap--session-init-resp-handler debug-session)
-                               debug-session)))
+            (dap--send-message
+             (dap--make-request request launch-args)
+             (dap--session-init-resp-handler debug-session)
+             debug-session)))
          debug-session)
 
         (dap--set-cur-session debug-session)
@@ -1169,6 +1230,14 @@ before starting the debug process."
          (dap--select-thread-id debug-session thread-id t)))
      debug-session)))
 
+(defun dap-stop-thread-1 (debug-session thread-id)
+  (dap--send-message
+   (dap--make-request
+    "pause"
+    (list :threadId thread-id))
+   (dap--resp-handler)
+   debug-session))
+
 (defun dap-stop-thread ()
   "Stop selected thread."
   (interactive)
@@ -1181,12 +1250,7 @@ before starting the debug process."
                                       "Select active thread: "
                                       threads
                                       (apply-partially 'gethash "name"))]
-         (dap--send-message
-          (dap--make-request
-           "pause"
-           (list :threadId thread-id))
-          (dap--resp-handler)
-          debug-session)))
+         (dap-stop-thread-1 debug-session thread-id)))
      debug-session)))
 
 (defun dap--switch-to-session (new-session)
@@ -1203,26 +1267,24 @@ before starting the debug process."
   (run-hook-with-args 'dap-session-changed-hook lsp--cur-workspace)
 
   (-some->> new-session
-            dap--debug-session-active-frame
-            (dap--go-to-stack-frame new-session)))
+    dap--debug-session-active-frame
+    (dap--go-to-stack-frame new-session)))
 
 (defun dap-switch-session ()
   "Switch current session interactively."
   (interactive)
   (lsp--cur-workspace-check)
-  (let* ((current-session (dap--cur-session))
-         (target-debug-sessions (reverse
-                                 (--remove
-                                  (or (not (dap--session-running it))
-                                      (eq it current-session))
-                                  (dap--get-sessions)))))
-    (pcase target-debug-sessions
-      ('() (error "No active session to switch to"))
-      (`(,debug-session) (dap--switch-to-session debug-session))
-      (_ (dap--switch-to-session
-          (dap--completing-read "Select session: "
-                                target-debug-sessions
-                                'dap--debug-session-name))))))
+  (pcase (reverse
+          (--remove
+           (or (not (dap--session-running it))
+               (eq it (dap--cur-session)))
+           (dap--get-sessions)))
+    ('() (error "No active session to switch to"))
+    (`(,debug-session) (dap--switch-to-session debug-session))
+    (target-debug-sessions (dap--switch-to-session
+                            (dap--completing-read "Select session: "
+                                                  target-debug-sessions
+                                                  #'dap--debug-session-name)))))
 
 (defun dap-register-debug-provider (language-id provide-configuration-fn)
   "Register debug configuration provider for LANGUAGE-ID.
@@ -1244,17 +1306,36 @@ CONFIGURATION-SETTINGS - plist containing the preset settings for the configurat
    'dap-debug-template-configurations
    (cons configuration-name configuration-settings)))
 
-(defun dap--find-available-port (host starting-port)
+(defun dap--find-available-port ()
   "Find available port on HOST starting from STARTING-PORT."
+  (let ((process (make-network-process :name " *dap test-connection*"
+                                       :family 'ipv4
+                                       :service 0
+                                       :server 't)))
+    (prog1 (process-contact process :service)
+      (delete-process process))))
+
+(defun dap--wait-for-port (host port &optional retry-count sleep-interval)
+  "Wait for PORT to be open on HOST.
+
+RETRY-COUNT is the number of the retries.
+SLEEP-INTERVAL is the sleep interval between each retry."
   (let ((success nil)
-        (port starting-port))
-    (while (and (not success))
-      (condition-case _err
+        (retries 0))
+    (while (and (not success) (< retries (or retry-count 100)))
+      (condition-case err
           (progn
             (delete-process (open-network-stream "*connection-test*" nil host port :type 'plain))
-            (setq port (1+ port)))
-        (file-error (setq success t))))
-    port))
+            (setq success t))
+        (file-error
+         (let ((inhibit-message t))
+           (message "Failed to connect to %s:%s with error message %s"
+                    host
+                    port
+                    (error-message-string err))
+           (sit-for (or sleep-interval 0.02))
+           (setq retries (1+ retries))))))
+    success))
 
 (defun dap--select-template (&optional origin)
   "Select the configuration to launch.
@@ -1266,8 +1347,8 @@ If ORIGIN is t, return the original configuration without prepopulation"
                         copy-tree)))
     (if origin debug-args
       (or (-some-> (plist-get debug-args :type)
-                   (gethash dap--debug-providers)
-                   (funcall debug-args))
+            (gethash dap--debug-providers)
+            (funcall debug-args))
           (error "There is no debug provider for language %s"
                  (or (plist-get debug-args :type) "'Not specified'"))))))
 
@@ -1282,11 +1363,11 @@ after selecting configuration template."
                          cl-rest
                          copy-tree)))
   (dap-start-debugging (or (-some-> (plist-get debug-args :type)
-                                    (gethash dap--debug-providers)
-                                    (funcall debug-args))
+                             (gethash dap--debug-providers)
+                             (funcall debug-args))
                            (user-error "Have you loaded the `%s' specific dap package?"
-                                  (or (plist-get debug-args :type)
-                                      (user-error "%s does not specify :type" debug-args))))))
+                                       (or (plist-get debug-args :type)
+                                           (user-error "%s does not specify :type" debug-args))))))
 
 (defun dap-debug-edit-template (&optional parg debug-args)
   "Edit registered template DEBUG-ARGS.
@@ -1295,15 +1376,17 @@ Otherwise, return its original version. After registration, the new template can
 normally with dap-debug"
 
   (interactive "P")
-  (let ((debug-args (dap--select-template(not parg))))
+  (let ((debug-args (dap--select-template (not parg))))
     (progn
       (with-current-buffer (or (get-buffer "*DAP Templates*")
                                (with-current-buffer (get-buffer-create "*DAP Templates*")
                                  (emacs-lisp-mode)
                                  (current-buffer)))
         (goto-char (point-max))
+        (when (s-blank? (buffer-string))
+          (insert ";; Eval Buffer with `M-x eval-buffer' to register the newly created template."))
         (insert
-         (format "\n\n(dap-register-debug-template \"%s%s\"\n"
+         (format "\n\n(dap-register-debug-template\n  \"%s%s\"\n"
                  (plist-get debug-args :name)
                  (if parg " - Copy" "")))
         (insert "  (list ")
@@ -1357,7 +1440,8 @@ If the current session it will be terminated."
                        (when (eq (dap--cur-session) debug-session)
                          (dap--switch-to-session nil))
                        (-when-let (buffer (dap--debug-session-output-buffer debug-session))
-                         (kill-buffer buffer)))))
+                         (kill-buffer buffer))
+                       (dap--refresh-breakpoints))))
     (if (not (dap--session-running debug-session))
         (funcall cleanup-fn)
       (dap--send-message (dap--make-request "disconnect"
@@ -1379,7 +1463,8 @@ If the current session it will be terminated."
         (error))))
 
   (dap--set-sessions ())
-  (dap--switch-to-session nil))
+  (dap--switch-to-session nil)
+  (dap--refresh-breakpoints))
 
 (defun dap-breakpoint-delete-all ()
   "Delete all breakpoints."
@@ -1415,10 +1500,10 @@ If the current session it will be terminated."
          (dap--set-breakpoints-in-file buffer-file-name))
     (add-hook 'kill-buffer-hook 'dap--buffer-killed nil t)))
 
-(defvar dap-default-connect-retry-count 1000
+(defvar dap-connect-retry-count 1000
   "Retry count for dap connect.")
 
-(defvar dap-default-connect-retry-interval 0.02
+(defvar dap-connect-retry-interval 0.02
   "Retry interval for dap connect.")
 
 (defun dap-mode-mouse-set-clear-breakpoint (event)
@@ -1463,3 +1548,7 @@ point is set."
 
 (provide 'dap-mode)
 ;;; dap-mode.el ends here
+
+;; Local Variables:
+;; flycheck-disabled-checkers: (emacs-lisp-checkdoc)
+;; End:

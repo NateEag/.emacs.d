@@ -6,7 +6,7 @@
 
 ;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
 ;; URL: https://github.com/tkf/emacs-request
-;; Package-Version: 20191211.2051
+;; Package-Version: 20200117.410
 ;; Package-Requires: ((emacs "24.4"))
 ;; Version: 0.3.2
 
@@ -1211,11 +1211,9 @@ START-URL is the URL requested."
       (let ((proc (get-buffer-process (request-response--buffer response))))
         (auto-revert-set-timer)
         (when auto-revert-use-notify
-          (if noninteractive
-              (dolist (buf (buffer-list))
-                (with-current-buffer buf
-                  (request-auto-revert-notify-rm-watch)))
-            (request-auto-revert-notify-rm-watch)))
+          (dolist (buf (buffer-list))
+            (with-current-buffer buf
+              (request-auto-revert-notify-rm-watch))))
         (with-local-quit
           (cl-loop with iter = 0
                    until (or (>= iter 10) finished)

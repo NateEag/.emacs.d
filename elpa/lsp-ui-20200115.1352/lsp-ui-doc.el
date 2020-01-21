@@ -239,7 +239,7 @@ Because some variables are buffer local.")
   "Formats STRING for inline rendering."
   (mapconcat (lambda (line)
                (lsp-ui-doc--inline-wrapped-line (string-trim-right line)))
-             (split-string string "[\n\v\f\r]+")
+             (split-string string "[\n\v\f\r]")
              "\n"))
 
 (defun lsp-ui-doc--extract-marked-string (marked-string &optional language)
@@ -487,8 +487,7 @@ FN is the function to call on click."
      (erase-buffer)
      (let ((inline-p (lsp-ui-doc--inline-p)))
        (insert (concat (unless inline-p (propertize "\n" 'face '(:height 0.2)))
-                       (-> (replace-regexp-in-string "`\\([\n]+\\)" "" string)
-                           (string-trim-right))
+                       (s-trim string)
                        (unless inline-p (propertize "\n\n" 'face '(:height 0.3))))))
      (lsp-ui-doc--make-clickable-link))
    (setq-local face-remapping-alist `((header-line lsp-ui-doc-header)))

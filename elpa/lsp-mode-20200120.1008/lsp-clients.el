@@ -129,22 +129,18 @@ See instructions at https://marketplace.visualstudio.com/items?itemName=mads-har
 (defgroup lsp-groovy nil
   "LSP support for Groovy, using groovy-language-server"
   :group 'lsp-mode
-  :link '(url-link "https://github.com/palantir/language-servers"))
+  :link '(url-link "https://github.com/prominic/groovy-language-server"))
 
-(defcustom lsp-groovy-server-install-dir
-  (locate-user-emacs-file "groovy-language-server/")
-  "Install directory for groovy-language-server.
-A slash is expected at the end.
-This directory shoud contain a file matching groovy-language-server-*.jar"
+(defcustom lsp-groovy-server-file
+  (locate-user-emacs-file "groovy-language-server/groovy-language-server-all.jar")
+  "JAR file path for groovy-language-server-all.jar."
   :group 'lsp-groovy
   :risky t
-  :type 'directory)
+  :type 'file)
 
 (defun lsp-groovy--lsp-command ()
   "Generate LSP startup command."
-  `("java"
-    "-cp" ,(concat (file-truename lsp-groovy-server-install-dir) "*")
-    "com.palantir.ls.groovy.GroovyLanguageServer"))
+  `("java" "-jar" ,(expand-file-name lsp-groovy-server-file)))
 
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection 'lsp-groovy--lsp-command)
@@ -153,18 +149,16 @@ This directory shoud contain a file matching groovy-language-server-*.jar"
                   :server-id 'groovy-ls))
 
 ;;; TypeScript/JavaScript
+
+(lsp-dependency javascript-typescript-langserver
+  (:system "javascript-typescript-stdio")
+  (:npm :package "javascript-typescript-langserver"
+        :path "javascript-typescript-stdio"))
+
 (defgroup lsp-typescript-javascript nil
   "Support for TypeScript/JavaScript, using Sourcegraph's JavaScript/TypeScript language server."
   :group 'lsp-mode
   :link '(url-link "https://github.com/sourcegraph/javascript-typescript-langserver"))
-
-(defcustom lsp-clients-javascript-typescript-server "javascript-typescript-stdio"
-  "The javascript-typescript-stdio executable to use.
-Leave as just the executable name to use the default behavior of
-finding the executable with variable `exec-path'."
-  :group 'lsp-typescript-javascript
-  :risky t
-  :type 'file)
 
 (defcustom lsp-clients-typescript-javascript-server-args '()
   "Extra arguments for the typescript-language-server language server."
@@ -175,17 +169,22 @@ finding the executable with variable `exec-path'."
 (defun lsp-typescript-javascript-tsx-jsx-activate-p (filename &optional _)
   "Check if the javascript-typescript language server should be enabled based on FILENAME."
   (or (string-match-p (rx (one-or-more anything) "." (or "ts" "js") (opt "x") string-end) filename)
-      (derived-mode-p 'js-mode 'js2-mode 'typescript-mode)))
+      (and (derived-mode-p 'js-mode 'js2-mode 'typescript-mode)
+           (not (derived-mode-p 'json-mode)))))
 
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection (lambda ()
-                                                          (cons lsp-clients-javascript-typescript-server
+                                                          (cons (lsp-package-path 'javascript-typescript-langserver)
                                                                 lsp-clients-typescript-javascript-server-args)))
                   :activation-fn 'lsp-typescript-javascript-tsx-jsx-activate-p
                   :priority -3
                   :completion-in-comments? t
-                  :ignore-messages '("readFile .*? requested by TypeScript but content not available")
-                  :server-id 'jsts-ls))
+                  :server-id 'jsts-ls
+                  :download-server-fn (lambda (_client callback error-callback _update?)
+                                        (lsp-package-ensure
+                                         'javascript-typescript-langserver
+                                         callback
+                                         error-callback))))
 
 
 ;;; TypeScript
@@ -193,14 +192,6 @@ finding the executable with variable `exec-path'."
   "LSP support for TypeScript, using Theia/Typefox's TypeScript Language Server."
   :group 'lsp-mode
   :link '(url-link "https://github.com/theia-ide/typescript-language-server"))
-
-(defcustom lsp-clients-typescript-server "typescript-language-server"
-  "The typescript-language-server executable to use.
-Leave as just the executable name to use the default behavior of
-finding the executable with variable `exec-path'."
-  :group 'lsp-typescript
-  :risky t
-  :type 'file)
 
 (defcustom lsp-clients-typescript-server-args '("--stdio")
   "Extra arguments for the typescript-language-server language server."
@@ -230,18 +221,39 @@ directory containing the package. Example:
                                                   (and name location))
                                                 xs)))))
 
+(lsp-dependency typescript-language-server
+  (:system "typescript-language-server")
+  (:npm :package "typescript-language-server"
+        :path "typescript-language-server"))
+
+(lsp-dependency typescript
+  (:system "tsserver")
+  (:npm :package "typescript"
+        :path "tsserver"))
+
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection (lambda ()
-                                                          (cons lsp-clients-typescript-server
-                                                                lsp-clients-typescript-server-args)))
+                                                          `(,(lsp-package-path 'typescript-language-server)
+                                                            "--tsserver-path"
+                                                            ,(lsp-package-path 'typescript)
+                                                            ,@lsp-clients-typescript-server-args)))
                   :activation-fn 'lsp-typescript-javascript-tsx-jsx-activate-p
                   :priority -2
                   :completion-in-comments? t
                   :initialization-options (lambda ()
                                             (list :plugins lsp-clients-typescript-plugins
-                                                  :logVerbosity lsp-clients-typescript-log-verbosity))
+                                                  :logVerbosity lsp-clients-typescript-log-verbosity
+                                                  :tsServerPath (lsp-package-path 'typescript)))
                   :ignore-messages '("readFile .*? requested by TypeScript but content not available")
-                  :server-id 'ts-ls))
+                  :server-id 'ts-ls
+                  :download-server-fn (lambda (_client callback error-callback _update?)
+                                        (lsp-package-ensure
+                                         'typescript
+                                         (-partial #'lsp-package-ensure
+                                                   'typescript-language-server
+                                                   callback
+                                                   error-callback)
+                                         error-callback))))
 
 
 
@@ -338,19 +350,18 @@ particular FILE-NAME and MODE."
 
 (defun lsp-php--create-connection ()
   "Create lsp connection."
-  (plist-put
-   (lsp-stdio-connection
-    (lambda () lsp-clients-php-server-command))
-   :test? (lambda ()
-            (if (and (cdr lsp-clients-php-server-command)
-                     (eq (string-match-p "php[0-9.]*\\'" (car lsp-clients-php-server-command)) 0))
-                ;; Start with the php command and the list has more elems. Test the existence of the PHP script.
-                (let ((php-file (nth 1 lsp-clients-php-server-command)))
-                  (or (file-exists-p php-file)
-                      (progn
-                        (lsp-log "%s is not present." php-file)
-                        nil)))
-              t))))
+  (lsp-stdio-connection
+   (lambda () lsp-clients-php-server-command)
+   (lambda ()
+     (if (and (cdr lsp-clients-php-server-command)
+              (eq (string-match-p "php[0-9.]*\\'" (car lsp-clients-php-server-command)) 0))
+         ;; Start with the php command and the list has more elems. Test the existence of the PHP script.
+         (let ((php-file (nth 1 lsp-clients-php-server-command)))
+           (or (file-exists-p php-file)
+               (progn
+                 (lsp-log "%s is not present." php-file)
+                 nil)))
+       t))))
 
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-php--create-connection)
@@ -390,7 +401,9 @@ particular FILE-NAME and MODE."
   "LSP support for OCaml, using ocaml-lsp-server."
   :group 'lsp-mode
   :link '(url-link "https://github.com/ocaml/ocaml-lsp"))
+
 (define-obsolete-variable-alias 'lsp-merlin 'lsp-ocaml-lsp-server)
+(define-obsolete-variable-alias 'lsp-merlin-command 'lsp-ocaml-lsp-server-command)
 
 (defcustom lsp-ocaml-lsp-server-command
   '("ocamllsp")
@@ -400,7 +413,6 @@ particular FILE-NAME and MODE."
           (string :tag "Single string value")
           (repeat :tag "List of string values"
                   string)))
-(define-obsolete-variable-alias 'lsp-merlin-command 'lsp-ocaml-lsp-server-command)
 
 (lsp-register-client
  (make-lsp-client
@@ -734,12 +746,11 @@ responsiveness at the cost of possibile stability issues."
 
 (defun lsp-clients-emmy-lua--create-connection ()
   "Create connection to emmy lua language server."
-  (plist-put
-   (lsp-stdio-connection
-    (lambda ()
-      (list lsp-clients-emmy-lua-java-path "-jar" lsp-clients-emmy-lua-jar-path)))
-   :test? (lambda ()
-            (f-exists? lsp-clients-emmy-lua-jar-path))))
+  (lsp-stdio-connection
+   (lambda ()
+     (list lsp-clients-emmy-lua-java-path "-jar" lsp-clients-emmy-lua-jar-path))
+   (lambda ()
+     (f-exists? lsp-clients-emmy-lua-jar-path))))
 
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-clients-emmy-lua--create-connection)
@@ -784,5 +795,18 @@ responsiveness at the cost of possibile stability issues."
                   :major-modes '(crystal-mode)
                   :server-id 'scry))
 
+
+;; Nim
+(defgroup lsp-nim nil
+  "LSP support for Nim, using nimlsp."
+  :group 'lsp-mode
+  :link '(url-link "https://github.com/PMunch/nimlsp"))
+
+(lsp-register-client
+ (make-lsp-client :new-connection (lsp-stdio-connection "nimlsp")
+                  :major-modes '(nim-mode)
+                  :priority -1
+                  :server-id 'nimls))
+
 (provide 'lsp-clients)
 ;;; lsp-clients.el ends here

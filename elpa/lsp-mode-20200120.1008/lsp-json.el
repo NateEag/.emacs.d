@@ -65,24 +65,6 @@
    ("http.proxy" lsp-http-proxy)
    ("http.proxyStrictSSL" lsp-http-proxyStrictSSL)))
 
-(defcustom lsp-json-server "vscode-json-languageserver"
-  "Json language server executable."
-  :type 'string
-  :group 'lsp-json
-  :package-version '(lsp-mode . "6.3"))
-
-(defun lsp-json--command ()
-  "Return the command to start server."
-  ;; Install language server
-  (unless (and lsp-json-server (executable-find lsp-json-server))
-    (cond
-     ((eq system-type 'windows-nt)
-      (unless (executable-find "npm")
-        (user-error "`npm' is not available in your PATH, please install it"))
-      (shell-command "npm install -g vscode-json-languageserver"))
-     (t (user-error (format "Cannot find `%s', please install it" lsp-json-server)))))
-  `(,lsp-json-server "--stdio"))
-
 (defvar lsp-json--extra-init-params
   `(:handledSchemaProtocols ["file" "http" "https"]))
 
@@ -110,18 +92,26 @@
 
 (defun lsp-json--get-content (_workspace uri callback)
   "Get content from URI."
-  (url-retrieve uri (lambda (_status callback)
-                      (goto-char (point-min))
-                      (re-search-forward "\n\n" nil 'noerror)
-                      (funcall
-                       callback
-                       (decode-coding-string (buffer-substring (point) (point-max))
-                                             'utf-8-unix)))
-                (list callback)))
+  (ignore-errors
+    (url-retrieve uri (lambda (_status callback)
+                        (goto-char (point-min))
+                        (re-search-forward "\n\n" nil 'noerror)
+                        (funcall
+                         callback
+                         (decode-coding-string (buffer-substring (point) (point-max))
+                                               'utf-8-unix)))
+                  (list callback))))
+
+(lsp-dependency vscode-json-languageserver
+  (:system "vscode-json-languageserver")
+  (:npm :package "vscode-json-languageserver"
+        :path "vscode-json-languageserver"))
 
 (lsp-register-client
  (make-lsp-client
-  :new-connection (lsp-stdio-connection #'lsp-json--command)
+  :new-connection (lsp-stdio-connection (lambda ()
+                                          (list (lsp-package-path 'vscode-json-languageserver)
+                                                "--stdio")))
   :major-modes lsp-json--major-modes
   :server-id 'json-ls
   :priority -1
@@ -132,7 +122,9 @@
   :initialized-fn (lambda (w)
                     (with-lsp-workspace w
                       (lsp--set-configuration (lsp-configuration-section "json"))
-                      (lsp-notify "json/schemaAssociations" lsp-json--schema-associations)))))
+                      (lsp-notify "json/schemaAssociations" lsp-json--schema-associations)))
+  :download-server-fn (lambda (_client callback error-callback _update?)
+                        (lsp-package-ensure 'vscode-json-languageserver callback error-callback))))
 
 ;; Compatibility
 (with-eval-after-load 'company-lsp

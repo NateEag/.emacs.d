@@ -137,7 +137,7 @@ Entry point that defers server startup until buffer is visible.
 `lsp-deferred' will wait until the buffer is visible before invoking `lsp'.
 This avoids overloading the server with many files when starting Emacs." nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-mode" '("dash-expand:&lsp-wks" "lsp-" "make-lsp-client" "when-lsp-workspace" "with-lsp-workspace")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-mode" '("dash-expand:&lsp-" "lsp-" "make-lsp-client" "when-lsp-workspace" "with-lsp-workspace")))
 
 ;;;***
 
@@ -194,7 +194,7 @@ This avoids overloading the server with many files when starting Emacs." nil nil
 ;;;### (autoloads nil "lsp-vhdl" "lsp-vhdl.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-vhdl.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-vhdl" '("hdl-checker-" "lsp-vhdl-" "vhdl-tool-")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-vhdl" '("hdl-checker-bin-name" "lsp-vhdl-" "vhdl-")))
 
 ;;;***
 

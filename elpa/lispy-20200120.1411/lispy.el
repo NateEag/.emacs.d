@@ -3087,9 +3087,12 @@ Useful for propagating `let' bindings."
              (indent-sexp))))))
 
 (defun lispy-split-let-binding ()
-  (when (save-excursion
-          (lispy--out-backward 2)
-          (looking-at "(let"))
+  (when (and
+         (or (lispy-left-p)
+             (lispy-right-p))
+         (save-excursion
+           (lispy--out-backward 2)
+           (looking-at "(let")))
     (save-excursion
       (lispy--out-forward 2)
       (insert ")"))
@@ -3688,11 +3691,19 @@ When QUOTED is not nil, assume that EXPR is quoted and ignore some rules."
                           expr 0 'emacs-lisp-mode))
                  lispy-multiline-threshold))
          expr)
+        ((and (eq (car-safe expr) 'ly-raw)
+              (memq (cadr expr) '(clojure-map clojure-set)))
+         (list 'ly-raw (cadr expr)
+               (lispy-interleave '(ly-raw newline)
+                                 (mapcar #'lispy--multiline-1 (cl-caddr expr))
+                                 2)))
         (t
          (let ((res nil)
                elt)
            (while expr
              (setq elt (pop expr))
+             (when (equal elt '(ly-raw clojure-symbol "let"))
+               (setq elt 'let))
              (cond
                ((eq elt 'ly-raw)
                 (cl-case (car expr)
@@ -4938,7 +4949,7 @@ Sexp is obtained by exiting list ARG times."
         (skip-chars-forward "-([{ `'#")
         (mark-word)))))
 
-(defun lispy--avy-do (regex bnd filter style)
+(defun lispy--avy-do (regex bnd filter style &optional group)
   "Visually select a match to REGEX within BND.
 Filter out the matches that don't match FILTER.
 Use STYLE function to update the overlays."
@@ -4947,7 +4958,8 @@ Use STYLE function to update the overlays."
          (cands (avy--regex-candidates
                  regex
                  (car bnd) (cdr bnd)
-                 filter)))
+                 filter
+                 group)))
     (dolist (x cands)
       (when (> (- (cdar x) (caar x)) 1)
         (cl-incf (caar x))))
@@ -6017,31 +6029,6 @@ X is an item of a radio- or choice-type defcustom."
             (if (symbolp x)
                 (list 'quote x)
               x)))))
-
-(defun lispy-setq ()
-  "Set variable at point, with completion."
-  (interactive)
-  (let ((sym (intern-soft (thing-at-point 'symbol)))
-        sym-type
-        cands)
-    (when (and (boundp sym)
-               (setq sym-type (get sym 'custom-type)))
-      (cond
-        ((and (consp sym-type)
-              (memq (car sym-type) '(choice radio)))
-         (setq cands (mapcar #'lispy--setq-doconst (cdr sym-type))))
-        ((eq sym-type 'boolean)
-         (setq cands
-               '(("nil" . nil) ("t" . t))))
-        (t
-         (error "Unrecognized custom type")))
-      (let ((res (ivy-read (format "Set (%S): " sym) cands)))
-        (when res
-          (setq res
-                (if (assoc res cands)
-                    (cdr (assoc res cands))
-                  (read res)))
-          (eval `(setq ,sym ,res)))))))
 
 (unless (fboundp 'macrop)
   (defun macrop (object)
@@ -7277,7 +7264,6 @@ Ignore the matches in strings and comments."
 (defvar lispy--insert-replace-alist-elisp
   '(("#object[" "clojure-object")
     ("#?@(" "clojure-reader-conditional-splice")
-    ("@(" "clojure-deref-list")
     ("#(" "clojure-lambda")
     ("#::{" "clojure-namespaced-map")
     ("#?(" "clojure-reader-conditional")))
@@ -7318,13 +7304,16 @@ See https://clojure.org/guides/weird_characters#_character_literal.")
   (setq subexp (or subexp 0))
   (goto-char (point-min))
   (while (re-search-forward regex nil t)
-    (unless (lispy--in-string-or-comment-p)
-      (replace-match
-       (format "(ly-raw %s %S)"
-               class
-               (substring-no-properties
-                (match-string subexp)))
-       nil t nil subexp))))
+    (cond ((string= (match-string 0) "ly-raw")
+           (up-list))
+          ((lispy--in-string-or-comment-p))
+          (t
+           (replace-match
+            (format "(ly-raw %s %S)"
+                    class
+                    (substring-no-properties
+                     (match-string subexp)))
+            t t nil subexp)))))
 
 ;; TODO: Make the read test pass on string with semi-colon
 (defun lispy--read (str)
@@ -7385,20 +7374,25 @@ See https://clojure.org/guides/weird_characters#_character_literal.")
                 (while (re-search-forward "\\(?:[^\\]\\|^\\)\\(()\\)" nil t)
                   (unless (lispy--in-string-or-comment-p)
                     (replace-match "(ly-raw empty)" nil nil nil 1)))
+                ;; ——— \ char syntax (Clojure)—
+                (when (eq major-mode 'clojure-mode)
+                  (lispy--read-replace lispy--clojure-char-literal-regex "clojure-char"))
+                ;; ——— #{ or { or #( or @( or #?( or #?@( ——————————
+                (lispy--read-1)
                 ;; ——— ? char syntax ——————————
                 (goto-char (point-min))
-                (while (re-search-forward "\\(?:\\s-\\|\\s(\\)\\?" nil t)
-                  (unless (lispy--in-string-or-comment-p)
-                    (let ((pt (point))
-                          sexp)
-                      (lispy--skip-elisp-char)
-                      (setq sexp (buffer-substring-no-properties pt (point)))
-                      (delete-region (1- pt) (point))
-                      (insert (format "(ly-raw char %S)" sexp)))))
-                ;; ——— \ char syntax (Clojure)—
-                (lispy--read-replace lispy--clojure-char-literal-regex "clojure-char")
-                ;; ——— (.method ) calls (Clojure)
-                (lispy--read-replace "(\\(\\.\\(?:\\sw\\|\\s_\\)+\\)" "clojure-symbol" 1)
+                (if (eq major-mode 'clojure-mode)
+                    (lispy--read-replace "[[:alnum:]-/*<>_?.\\\\:!@]+" "clojure-symbol")
+                  (while (re-search-forward "\\(?:\\s-\\|\\s(\\)\\?" nil t)
+                    (unless (lispy--in-string-or-comment-p)
+                      (let ((pt (point))
+                            sexp)
+                        (lispy--skip-elisp-char)
+                        (setq sexp (buffer-substring-no-properties pt (point)))
+                        (delete-region (1- pt) (point))
+                        (insert (format "(ly-raw char %S)" sexp))))))
+                (when (eq major-mode 'clojure-mode)
+                  (lispy--read-replace " *,+" "clojure-commas"))
                 ;; ——— \ char syntax (LISP)————
                 (goto-char (point-min))
                 (while (re-search-forward "#\\\\\\(.\\)" nil t)
@@ -7451,8 +7445,6 @@ See https://clojure.org/guides/weird_characters#_character_literal.")
                       (goto-char beg)
                       (delete-char -2)
                       (insert "(ly-raw clojure-reader-comment "))))
-                ;; ——— #{ or { or #( or @( or #?( or #?@( ——————————
-                (lispy--read-1)
                 ;; ——— #1 —————————————————————
                 ;; Elisp syntax for circular lists
                 (goto-char (point-min))
@@ -8163,8 +8155,11 @@ The outer delimiters are stripped."
           (char
            (delete-region beg (point))
            (insert "?" (cl-caddr sxp)))
-          (clojure-char
+          ((clojure-char)
            (delete-region beg (point))
+           (insert (cl-caddr sxp)))
+          ((clojure-commas)
+           (delete-region (1- beg) (point))
            (insert (cl-caddr sxp)))
           (clojure-symbol
            (delete-region beg (point))
@@ -8729,10 +8724,13 @@ Return an appropriate `setq' expression when in `let', `dolist',
           ((looking-at
             "(cond\\b")
            (let ((re tsexp))
-             `(if ,(car re)
-                  (progn
-                    ,@(cdr re))
-                lispy--eval-cond-msg)))
+             (if (cdr re)
+                 `(if ,(car re)
+                      (progn
+                        ,@(cdr re))
+                    lispy--eval-cond-msg)
+               `(or ,(car re)
+                    lispy--eval-cond-msg))))
           ((looking-at "(pcase\\s-*")
            (goto-char (match-end 0))
            (if (eval (pcase--expand (lispy--read (lispy--string-dwim))

@@ -1,4 +1,4 @@
-(define-package "lsp-java" "20191210.801" "Java support for lsp-mode"
+(define-package "lsp-java" "20200114.2313" "Java support for lsp-mode"
   '((emacs "25.1")
     (lsp-mode "6.0")
     (markdown-mode "2.3")

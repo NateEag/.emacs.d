@@ -556,6 +556,8 @@ Translates it according to the input method."
             (progn
               (define-key new-global-map [menu-bar]
                 (lookup-key global-map [menu-bar]))
+              (define-key new-global-map [tab-bar]
+                (lookup-key global-map [tab-bar]))
               (define-key new-global-map [tool-bar]
                 (lookup-key global-map [tool-bar]))
               (add-to-list 'new-global-map
@@ -869,14 +871,18 @@ Inhibits echo area messages, mode line updates and cursor changes."
      ,@body))
 
 (defvar evil-cached-header-line-height nil
-  "Cached height of the header line.")
+  "Cached height of the header line.
+Used for fallback implementation on older Emacsen.")
 
 (defun evil-header-line-height ()
   "Return the height of the header line.
-If there is no header line, return nil."
+If there is no header line, return 0.
+Used as a fallback implementation of `window-header-line-height' on
+older Emacsen."
   (let ((posn (posn-at-x-y 0 0)))
-    (when (eq (posn-area posn) 'header-line)
-      (cdr (posn-object-width-height posn)))))
+    (or (when (eq (posn-area posn) 'header-line)
+          (cdr (posn-object-width-height posn)))
+        0)))
 
 (defun evil-posn-x-y (position)
   "Return the x and y coordinates in POSITION.
@@ -893,9 +899,10 @@ Learned from mozc.el."
   (let ((xy (posn-x-y position)))
     (when header-line-format
       (setcdr xy (+ (cdr xy)
-                    (or evil-cached-header-line-height
-                        (setq evil-cached-header-line-height (evil-header-line-height))
-                        0))))
+                    (or (and (fboundp 'window-header-line-height)
+                             (window-header-line-height))
+                        evil-cached-header-line-height
+                        (setq evil-cached-header-line-height (evil-header-line-height))))))
     xy))
 
 (defun evil-count-lines (beg end)

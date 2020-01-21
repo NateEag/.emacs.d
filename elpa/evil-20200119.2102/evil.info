@@ -1,6 +1,6 @@
 This is evil.info, produced by makeinfo version 6.5 from evil.texi.
 
-     Evil 1.13.0, Dec 21, 2019
+     Evil 1.13.0, Dec 31, 2019
 
      Eivind Fonn, Frank Fischer, Vegard Øye
 
@@ -20,7 +20,7 @@ File: evil.info,  Node: Top,  Next: Overview,  Up: (dir)
 Evil documentation
 ******************
 
-     Evil 1.13.0, Dec 21, 2019
+     Evil 1.13.0, Dec 31, 2019
 
      Eivind Fonn, Frank Fischer, Vegard Øye
 
@@ -383,7 +383,7 @@ File: evil.info,  Node: Search,  Next: Indentation,  Prev: Keybindings and other
  -- Emacs Lisp Autovariable: evil-search-wrap
 
      Whether search with ‘/’ and ‘?’ wraps around the buffer.  If this
-     is non-nil, search stops at the buffer boundaries.
+     is non-nil,search stops at the buffer boundaries.
 
      Default: ‘t’
 
@@ -483,7 +483,7 @@ can be tweaked using the following variables.
      Whether horizontal motions may move to other lines.  If non-nil,
      certain motions that conventionally operate in a single line may
      move the cursor to other lines.  Otherwise, they are restricted to
-     the current line.  This applies to ‘h’, ‘l’, ‘f’, ‘F’, ‘t’, ‘T’,
+     the current line.  This applies to ‘h’, ‘SPC’, ‘f’, ‘F’, ‘t’, ‘T’,
      ‘~’.
 
      Default: ‘nil’
@@ -494,8 +494,7 @@ can be tweaked using the following variables.
      ‘visual-line-mode’ is generally respected when it is on.  In this
      case, motions such as ‘j’ and ‘k’ navigate by visual lines (on the
      screen) rather than “physical” lines (defined by newline
-     characters).  If ‘nil’, the setting of ‘visual-line-mode’ is
-     ignored.
+     characters).  If nil, the setting of ‘visual-line-mode’ is ignored.
 
      This variable must be set before Evil is loaded.
 
@@ -544,14 +543,13 @@ File: evil.info,  Node: Window management,  Next: Parenthesis highlighting,  Pre
 
  -- Emacs Lisp Autovariable: evil-split-window-below
 
-     If non-nil split windows ‘:split’ are created below.
+     If non-nil split windows are created below.
 
      Default: ‘nil’
 
  -- Emacs Lisp Autovariable: evil-vsplit-window-right
 
-     If non-nil vertically split windows with ‘:vsplit’ are created to
-     the right.
+     If non-nil vertically split windows with are created to the right.
 
      Default: ‘nil’
 
@@ -592,12 +590,12 @@ File: evil.info,  Node: Miscellaneous,  Prev: Parenthesis highlighting,  Up: Set
 
  -- Emacs Lisp Autovariable: evil-want-fine-undo
 
-     Whether actions like ‘cw’ are undone in several steps.  There are
-     two possible choices.  ‘nil’ (“no”) means that all changes made
-     during insert state, including a possible delete after a change
-     operation, are collected in a single undo step.  Non-nil (“yes”)
-     means that undo steps are determined according to Emacs heuristics,
-     and no attempt is made to aggregate changes.
+     Whether actions are undone in several steps.  There are two
+     possible choices: nil (“no”) means that all changes made during
+     insert state, including a possible delete after a change operation,
+     are collected in a single undo step.  Non-nil (“yes”) means that
+     undo steps are determined according to Emacs heuristics, and no
+     attempt is made to aggregate changes.
 
      For backward compatibility purposes, the value ‘fine’ is
      interpreted as ‘nil’.  This option was removed because it did not
@@ -615,7 +613,7 @@ File: evil.info,  Node: Miscellaneous,  Prev: Parenthesis highlighting,  Up: Set
 
      Whether left/right motions signal errors in keyboard macros.  This
      variable only affects beginning-of-line or end-of-line errors
-     regarding the motions ‘h’ and ‘l’ respectively.  This may be
+     regarding the motions ‘h’ and ‘SPC’ respectively.  This may be
      desired since such errors cause macro definition or execution to be
      terminated.  There are four possibilities:
 
@@ -635,7 +633,7 @@ File: evil.info,  Node: Miscellaneous,  Prev: Parenthesis highlighting,  Up: Set
 
      The position of the state tag in the mode line.  If set to ‘before’
      or ‘after’, the tag is placed at the beginning or the end of the
-     mode-line, respectively.  If ‘nil’, there is no tag.  Otherwise it
+     mode-line, respectively.  If nil, there is no tag.  Otherwise it
      should be a cons cell ‘(WHERE . WHICH)’, where `WHERE' is either
      ‘before’ or ‘after’, and `WHICH' is a symbol in ‘mode-line-format’.
      The tag is then placed before or after that symbol, respectively.
@@ -671,14 +669,14 @@ File: evil.info,  Node: Miscellaneous,  Prev: Parenthesis highlighting,  Up: Set
 
  -- Emacs Lisp Autovariable: evil-intercept-esc
 
-     Whether Evil should intercept the ‘ESC’ key.  In the terminal,
+     Whether Evil should intercept the escape key.  In the terminal,
      escape and a meta key sequence both generate the same event.  In
      order to distingush these, Evil uses ‘input-decode-map’.  It is not
      necessary to do this in a graphical Emacs session.  However, if you
      prefer to use ‘C-[’ as escape (which is identical to the terminal
      escape key code), this interception must also happen in graphical
-     Emacs sessions.  Set this variable to ‘always’, ‘t’ (only in the
-     terminal) or ‘nil’ (never intercept).
+     Emacs sessions.  Set this variable to ‘always’, t (only in the
+     terminal) or nil (never intercept).
 
      Default: ‘always’
 
@@ -790,8 +788,8 @@ circumstances.
           (evil-define-key 'normal foo-map "a" 'bar)
 
      This creates a binding from ‘a’ to ‘bar’ in normal state, which is
-     active whenever ‘foo-map’ is active.  Using ‘nil’ for the state,
-     the following lead to identical bindings:
+     active whenever ‘foo-map’ is active.  Using nil for the state, the
+     following lead to identical bindings:
 
           (evil-define-key nil foo-map "a" 'bar)
           (define-key foo-map "a" 'bar)
@@ -874,7 +872,7 @@ Likewise, you can use the expression ‘<localleader>’ to mimic Vim’s
 local leader, which is designed for mode-specific key bindings.
 
 You can use the function *note evil-set-leader: 30. to designate which
-function as the leader and the local leader.
+key acts as the leader and the local leader.
 
  -- Emacs Lisp Autofunction: (evil-set-leader STATE KEY [LOCALLEADER])
 
@@ -1977,190 +1975,190 @@ Ref: settings elispobj-evil-regexp-search10444
 Ref: 2710444
 Ref: settings elispobj-evil-search-wrap10595
 Ref: 2a10595
-Ref: settings elispobj-evil-flash-delay10801
-Ref: 1910801
-Ref: settings elispobj-evil-ex-hl-update-delay10944
-Ref: 1810944
-Node: Indentation11217
-Ref: settings indentation11310
-Ref: 4d11310
-Ref: settings elispobj-evil-auto-indent11343
-Ref: 211343
-Ref: settings elispobj-evil-shift-width11501
-Ref: 3211501
-Ref: settings elispobj-evil-shift-round11707
-Ref: 3111707
-Ref: settings elispobj-evil-indent-convert-tabs11968
-Ref: 1e11968
-Node: Cursor movement12237
-Ref: settings cursor-movement12338
-Ref: 4e12338
-Ref: settings elispobj-evil-repeat-move-cursor12917
-Ref: 2812917
-Ref: settings elispobj-evil-move-cursor-back13181
-Ref: 2613181
-Ref: settings elispobj-evil-move-beyond-eol13526
-Ref: 2513526
-Ref: settings elispobj-evil-cross-lines13768
-Ref: 713768
-Ref: settings elispobj-evil-respect-visual-line-mode14161
-Ref: 2914161
-Ref: settings elispobj-evil-track-eol14687
-Ref: 3614687
-Node: Cursor display15055
-Ref: settings cursor-display15162
-Ref: 4f15162
-Ref: settings elispobj-evil-default-cursor15506
-Ref: c15506
-Node: Window management15789
-Ref: settings window-management15905
-Ref: 5015905
-Ref: settings elispobj-evil-auto-balance-windows15950
-Ref: 115950
-Ref: settings elispobj-evil-split-window-below16096
-Ref: 3416096
-Ref: settings elispobj-evil-vsplit-window-right16238
-Ref: 3716238
-Node: Parenthesis highlighting16410
-Ref: settings parenthesis-highlighting16525
-Ref: 5116525
-Ref: settings elispobj-evil-show-paren-range16714
-Ref: 3316714
-Ref: settings elispobj-evil-highlight-closing-paren-at-point-states16901
-Ref: 1d16901
-Node: Miscellaneous17487
-Ref: settings miscellaneous17576
-Ref: 5217576
-Ref: settings elispobj-evil-want-fine-undo17613
-Ref: 3e17613
-Ref: settings elispobj-evil-backspace-join-lines18273
-Ref: 318273
-Ref: settings elispobj-evil-kbd-macro-suppress-motion-error18414
-Ref: 2018414
-Ref: settings elispobj-evil-mode-line-format19167
-Ref: 2319167
-Ref: settings elispobj-evil-mouse-word19705
-Ref: 2419705
-Ref: settings elispobj-evil-bigword20046
-Ref: 420046
-Ref: settings elispobj-evil-esc-delay20350
-Ref: 1720350
-Ref: settings elispobj-evil-intercept-esc20756
-Ref: 1f20756
-Ref: settings elispobj-evil-kill-on-visual-paste21397
-Ref: 2121397
-Ref: settings elispobj-evil-echo-state21658
-Ref: 1621658
-Ref: settings elispobj-evil-complete-all-buffers21787
-Ref: 621787
-Node: Keymaps21988
-Ref: keymaps doc22064
-Ref: 5322064
-Ref: keymaps chapter-keymaps22064
-Ref: 4b22064
-Ref: keymaps keymaps22064
-Ref: 5422064
-Ref: keymaps elispobj-evil-global-set-key23716
-Ref: 1c23716
-Ref: keymaps elispobj-evil-local-set-key23820
-Ref: 2223820
-Node: evil-define-key24249
-Ref: keymaps evil-define-key24326
-Ref: 5524326
-Ref: keymaps elispobj-evil-define-key24580
-Ref: f24580
-Node: Leader keys27784
-Ref: keymaps leader-keys27861
-Ref: 5627861
-Ref: keymaps elispobj-evil-set-leader28388
-Ref: 3028388
-Node: Hooks28841
-Ref: hooks doc28918
-Ref: 5728918
-Ref: hooks hooks28918
-Ref: 5828918
-Node: Extension29570
-Ref: extension doc29666
-Ref: 5929666
-Ref: extension extension29666
-Ref: 5a29666
-Node: Motions29902
-Ref: extension motions29971
-Ref: 5b29971
-Ref: extension elispobj-evil-declare-motion30224
-Ref: 930224
-Ref: extension elispobj-evil-define-motion30397
-Ref: 1030397
-Node: Operators31788
-Ref: extension operators31878
-Ref: 5c31878
-Ref: extension elispobj-evil-define-operator32126
-Ref: 1132126
-Node: Text objects33731
-Ref: extension text-objects33825
-Ref: 5d33825
-Ref: extension elispobj-evil-define-text-object34365
-Ref: 1334365
-Ref: extension elispobj-evil-select-inner-object35869
-Ref: 2c35869
-Ref: extension elispobj-evil-select-an-object36439
-Ref: 2b36439
-Ref: extension elispobj-evil-select-paren37006
-Ref: 2d37006
-Ref: Text objects-Footnote-137928
-Node: Range types38094
-Ref: extension range-types38185
-Ref: 5e38185
-Ref: extension elispobj-evil-define-type38488
-Ref: 1438488
-Node: States39657
-Ref: extension states39727
-Ref: 5f39727
-Ref: extension elispobj-evil-define-state40027
-Ref: 1240027
-Node: Frequently Asked Questions41456
-Ref: faq doc41556
-Ref: 6041556
-Ref: faq frequently-asked-questions41556
-Ref: 6141556
-Node: Problems with the escape key in the terminal41713
-Ref: faq problems-with-the-escape-key-in-the-terminal41861
-Ref: 6241861
-Node: Underscore is not a word character44355
-Ref: faq underscore-is-not-a-word-character44503
-Ref: 6344503
-Ref: Underscore is not a word character-Footnote-146271
-Node: Internals46582
-Ref: internals doc46707
-Ref: 6446707
-Ref: internals internals46707
-Ref: 6546707
-Node: Command properties46765
-Ref: internals command-properties46827
-Ref: 6646827
-Ref: internals elispobj-evil-add-command-properties47082
-Ref: 047082
-Ref: internals elispobj-evil-set-command-properties47342
-Ref: 2e47342
-Ref: internals elispobj-evil-get-command-properties47655
-Ref: 1a47655
-Ref: internals elispobj-evil-get-command-property47821
-Ref: 1b47821
-Ref: internals elispobj-evil-define-command48091
-Ref: e48091
-Ref: internals elispobj-evil-declare-repeat48295
-Ref: b48295
-Ref: internals elispobj-evil-declare-not-repeat48397
-Ref: a48397
-Ref: internals elispobj-evil-declare-change-repeat48506
-Ref: 848506
-Ref: Command properties-Footnote-148697
-Node: The GNU Free Documentation License48874
-Ref: license doc49007
-Ref: 6749007
-Ref: license the-gnu-free-documentation-license49007
-Ref: 6849007
-Node: Emacs lisp functions and variables72815
+Ref: settings elispobj-evil-flash-delay10800
+Ref: 1910800
+Ref: settings elispobj-evil-ex-hl-update-delay10943
+Ref: 1810943
+Node: Indentation11216
+Ref: settings indentation11309
+Ref: 4d11309
+Ref: settings elispobj-evil-auto-indent11342
+Ref: 211342
+Ref: settings elispobj-evil-shift-width11500
+Ref: 3211500
+Ref: settings elispobj-evil-shift-round11706
+Ref: 3111706
+Ref: settings elispobj-evil-indent-convert-tabs11967
+Ref: 1e11967
+Node: Cursor movement12236
+Ref: settings cursor-movement12337
+Ref: 4e12337
+Ref: settings elispobj-evil-repeat-move-cursor12916
+Ref: 2812916
+Ref: settings elispobj-evil-move-cursor-back13180
+Ref: 2613180
+Ref: settings elispobj-evil-move-beyond-eol13525
+Ref: 2513525
+Ref: settings elispobj-evil-cross-lines13767
+Ref: 713767
+Ref: settings elispobj-evil-respect-visual-line-mode14162
+Ref: 2914162
+Ref: settings elispobj-evil-track-eol14677
+Ref: 3614677
+Node: Cursor display15045
+Ref: settings cursor-display15152
+Ref: 4f15152
+Ref: settings elispobj-evil-default-cursor15496
+Ref: c15496
+Node: Window management15779
+Ref: settings window-management15895
+Ref: 5015895
+Ref: settings elispobj-evil-auto-balance-windows15940
+Ref: 115940
+Ref: settings elispobj-evil-split-window-below16086
+Ref: 3416086
+Ref: settings elispobj-evil-vsplit-window-right16215
+Ref: 3716215
+Node: Parenthesis highlighting16368
+Ref: settings parenthesis-highlighting16483
+Ref: 5116483
+Ref: settings elispobj-evil-show-paren-range16672
+Ref: 3316672
+Ref: settings elispobj-evil-highlight-closing-paren-at-point-states16859
+Ref: 1d16859
+Node: Miscellaneous17445
+Ref: settings miscellaneous17534
+Ref: 5217534
+Ref: settings elispobj-evil-want-fine-undo17571
+Ref: 3e17571
+Ref: settings elispobj-evil-backspace-join-lines18210
+Ref: 318210
+Ref: settings elispobj-evil-kbd-macro-suppress-motion-error18351
+Ref: 2018351
+Ref: settings elispobj-evil-mode-line-format19106
+Ref: 2319106
+Ref: settings elispobj-evil-mouse-word19638
+Ref: 2419638
+Ref: settings elispobj-evil-bigword19979
+Ref: 419979
+Ref: settings elispobj-evil-esc-delay20283
+Ref: 1720283
+Ref: settings elispobj-evil-intercept-esc20689
+Ref: 1f20689
+Ref: settings elispobj-evil-kill-on-visual-paste21315
+Ref: 2121315
+Ref: settings elispobj-evil-echo-state21576
+Ref: 1621576
+Ref: settings elispobj-evil-complete-all-buffers21705
+Ref: 621705
+Node: Keymaps21906
+Ref: keymaps doc21982
+Ref: 5321982
+Ref: keymaps chapter-keymaps21982
+Ref: 4b21982
+Ref: keymaps keymaps21982
+Ref: 5421982
+Ref: keymaps elispobj-evil-global-set-key23634
+Ref: 1c23634
+Ref: keymaps elispobj-evil-local-set-key23738
+Ref: 2223738
+Node: evil-define-key24167
+Ref: keymaps evil-define-key24244
+Ref: 5524244
+Ref: keymaps elispobj-evil-define-key24498
+Ref: f24498
+Node: Leader keys27696
+Ref: keymaps leader-keys27773
+Ref: 5627773
+Ref: keymaps elispobj-evil-set-leader28300
+Ref: 3028300
+Node: Hooks28753
+Ref: hooks doc28830
+Ref: 5728830
+Ref: hooks hooks28830
+Ref: 5828830
+Node: Extension29482
+Ref: extension doc29578
+Ref: 5929578
+Ref: extension extension29578
+Ref: 5a29578
+Node: Motions29814
+Ref: extension motions29883
+Ref: 5b29883
+Ref: extension elispobj-evil-declare-motion30136
+Ref: 930136
+Ref: extension elispobj-evil-define-motion30309
+Ref: 1030309
+Node: Operators31700
+Ref: extension operators31790
+Ref: 5c31790
+Ref: extension elispobj-evil-define-operator32038
+Ref: 1132038
+Node: Text objects33643
+Ref: extension text-objects33737
+Ref: 5d33737
+Ref: extension elispobj-evil-define-text-object34277
+Ref: 1334277
+Ref: extension elispobj-evil-select-inner-object35781
+Ref: 2c35781
+Ref: extension elispobj-evil-select-an-object36351
+Ref: 2b36351
+Ref: extension elispobj-evil-select-paren36918
+Ref: 2d36918
+Ref: Text objects-Footnote-137840
+Node: Range types38006
+Ref: extension range-types38097
+Ref: 5e38097
+Ref: extension elispobj-evil-define-type38400
+Ref: 1438400
+Node: States39569
+Ref: extension states39639
+Ref: 5f39639
+Ref: extension elispobj-evil-define-state39939
+Ref: 1239939
+Node: Frequently Asked Questions41368
+Ref: faq doc41468
+Ref: 6041468
+Ref: faq frequently-asked-questions41468
+Ref: 6141468
+Node: Problems with the escape key in the terminal41625
+Ref: faq problems-with-the-escape-key-in-the-terminal41773
+Ref: 6241773
+Node: Underscore is not a word character44267
+Ref: faq underscore-is-not-a-word-character44415
+Ref: 6344415
+Ref: Underscore is not a word character-Footnote-146183
+Node: Internals46494
+Ref: internals doc46619
+Ref: 6446619
+Ref: internals internals46619
+Ref: 6546619
+Node: Command properties46677
+Ref: internals command-properties46739
+Ref: 6646739
+Ref: internals elispobj-evil-add-command-properties46994
+Ref: 046994
+Ref: internals elispobj-evil-set-command-properties47254
+Ref: 2e47254
+Ref: internals elispobj-evil-get-command-properties47567
+Ref: 1a47567
+Ref: internals elispobj-evil-get-command-property47733
+Ref: 1b47733
+Ref: internals elispobj-evil-define-command48003
+Ref: e48003
+Ref: internals elispobj-evil-declare-repeat48207
+Ref: b48207
+Ref: internals elispobj-evil-declare-not-repeat48309
+Ref: a48309
+Ref: internals elispobj-evil-declare-change-repeat48418
+Ref: 848418
+Ref: Command properties-Footnote-148609
+Node: The GNU Free Documentation License48786
+Ref: license doc48919
+Ref: 6748919
+Ref: license the-gnu-free-documentation-license48919
+Ref: 6848919
+Node: Emacs lisp functions and variables72727
 
 End Tag Table
 

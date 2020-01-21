@@ -35,6 +35,8 @@
 (require 'cl-lib)
 (require 'reveal)
 
+(declare-function imenu--in-alist "imenu")
+
 ;;; Motions
 
 ;; Movement commands, or motions, are defined with the macro
@@ -2737,7 +2739,7 @@ The search is unbounded, i.e., the pattern is not wrapped in
   (let (ientry ipos)
     (when (fboundp 'imenu--make-index-alist)
       (ignore-errors (setq ientry (imenu--make-index-alist)))
-      (setq ientry (assoc string ientry))
+      (setq ientry (imenu--in-alist string ientry))
       (setq ipos (cdr ientry))
       (when (and (markerp ipos)
                  (eq (marker-buffer ipos) (current-buffer)))

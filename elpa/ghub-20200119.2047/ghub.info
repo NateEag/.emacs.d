@@ -1,6 +1,6 @@
 This is ghub.info, produced by makeinfo version 6.5 from ghub.texi.
 
-     Copyright (C) 2017-2019 Jonas Bernoulli <jonas@bernoul.li>
+     Copyright (C) 2017-2020 Jonas Bernoulli <jonas@bernoul.li>
 
      You can redistribute this document and/or modify it under the terms
      of the GNU General Public License as published by the Free Software
@@ -46,9 +46,9 @@ adoption would make life easier for users and maintainers alike, because
 then all packages that talk to forge APIs could be configured the same
 way.
 
-This manual is for Ghub version 3.2.0 (v3.2.0-45-ge19cd86+1).
+This manual is for Ghub version 3.3.0.
 
-     Copyright (C) 2017-2019 Jonas Bernoulli <jonas@bernoul.li>
+     Copyright (C) 2017-2020 Jonas Bernoulli <jonas@bernoul.li>
 
      You can redistribute this document and/or modify it under the terms
      of the GNU General Public License as published by the Free Software
@@ -1294,22 +1294,22 @@ File: ghub.info,  Node: Forge Limitations and Notes,  Prev: Forge Functions and 
 
 Tag Table:
 Node: Top764
-Node: Introduction3280
-Node: Getting Started6322
-Node: Setting the Username10250
-Node: Interactively Creating and Storing a Token11675
-Node: Manually Creating and Storing a Token17326
-Node: How Ghub uses Auth-Source18551
-Node: Using Ghub in Personal Scripts20484
-Node: Using Ghub in a Package21940
-Node: API24558
-Node: Making Requests25355
-Node: Authentication39455
-Node: Configuration Variables41300
-Node: GraphQL Support45020
-Node: Support for Other Forges51685
-Node: Forge Functions and Variables51902
-Node: Forge Limitations and Notes56421
+Node: Introduction3257
+Node: Getting Started6299
+Node: Setting the Username10227
+Node: Interactively Creating and Storing a Token11652
+Node: Manually Creating and Storing a Token17303
+Node: How Ghub uses Auth-Source18528
+Node: Using Ghub in Personal Scripts20461
+Node: Using Ghub in a Package21917
+Node: API24535
+Node: Making Requests25332
+Node: Authentication39432
+Node: Configuration Variables41277
+Node: GraphQL Support44997
+Node: Support for Other Forges51662
+Node: Forge Functions and Variables51879
+Node: Forge Limitations and Notes56398
 
 End Tag Table
 

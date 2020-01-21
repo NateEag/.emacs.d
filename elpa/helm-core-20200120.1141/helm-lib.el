@@ -1370,6 +1370,10 @@ I.e. when using `helm-next-line' and friends in BODY."
 (defun helm--prepare-completion-styles (&optional nomode styles)
   "Return a suitable list of styles for `completion-styles'.
 
+When `helm-completion-style' is not `emacs' the Emacs vanilla default
+`completion-styles' is used except for `helm-dynamic-completion' which
+use inconditionally `emacs' as value for `helm-completion-style'.
+ 
 If styles are specified in `helm-completion-styles-alist' for a
 particular mode, use these styles unless NOMODE is non nil.
 If STYLES is specified as a list of styles suitable for
@@ -1431,14 +1435,22 @@ Example:
 When argument NOMODE is non nil don't use `completion-styles' as
 specified in `helm-completion-styles-alist' for specific modes.
 When STYLES is specified use these `completion-styles', see
-`helm--prepare-completion-styles'."
+`helm--prepare-completion-styles'.
+Also `helm-completion-style' settings have no effect here, `emacs'
+being used inconditionally as value."
   (lambda ()
-    (let* ((completion-styles
+    (let* (;; Force usage of emacs style otherwise
+           ;; helm--prepare-completion-styles will reset
+           ;; completion-styles to default value i.e. (basic partial
+           ;; emacs22).
+           (helm-completion-style 'emacs)
+           (completion-styles
             (helm--prepare-completion-styles nomode styles))
            (completion-flex-nospace t)
            (nosort (eq metadata 'nosort))
            (compsfn (lambda (str pred _action)
-                      (let* ((comps (completion-all-completions
+                      (let* ((completion-ignore-case (helm-set-case-fold-search))
+                             (comps (completion-all-completions
                                      str
                                      (if (functionp collection)
                                          (funcall collection str pred t)

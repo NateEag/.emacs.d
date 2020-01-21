@@ -4158,7 +4158,9 @@ to the matching method in use."
            (count   0)
            beg-str end-str)
       ;; Extract all parts of display keeping original properties.
-      (when (and mp (string-match (regexp-quote mp) display))
+      (when (and mp (ignore-errors
+                      ;; Avoid error when candidate is a huge line.
+                      (string-match (regexp-quote mp) display)))
         (setq beg-str (substring display 0 (match-beginning 0))
               end-str (substring display (match-end 0) (length display))
               mp (substring display (match-beginning 0) (match-end 0))))
@@ -4344,10 +4346,11 @@ It is used for narrowing list of candidates to the
       ;; the candidates being processed directly in `helm-output-filter'
       ;; process-filter.
       (helm-process-filtered-candidate-transformer
-       ;; Using in-buffer method or helm-pattern is empty
-       ;; in this case compute all candidates.
+       ;; When using in-buffer method or helm-pattern is empty or
+       ;; using dynamic completion always compute all candidates.
        (if (or (equal helm-pattern "")
-               (helm--candidates-in-buffer-p matchfns))
+               (assq 'match-dynamic source)
+               (helm--candidates-in-buffer-p source))
            ;; Compute all candidates up to LIMIT.
            ;; one-by-one are computed here only for sources that
            ;; display a list of  candidates even with an empty
@@ -4364,8 +4367,8 @@ It is used for narrowing list of candidates to the
             (helm-get-cached-candidates source) matchfns matchpartfn limit source))
        source))))
 
-(defun helm--candidates-in-buffer-p (matchfns)
-  (equal matchfns '(identity)))
+(defun helm--candidates-in-buffer-p (source)
+  (assq 'search source))
 
 (defun helm-render-source (source matches)
   "Display MATCHES from SOURCE according to its settings."

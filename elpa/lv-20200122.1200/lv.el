@@ -1,5 +1,5 @@
 ;;; lv.el --- Other echo area
-;; Package-Version: 20191214.1357
+;; Package-Version: 20200122.1200
 
 ;; Copyright (C) 2015  Free Software Foundation, Inc.
 
@@ -77,10 +77,11 @@ Only the background color is significant."
                    (select-window
                     (let ((ignore-window-parameters t))
                       (split-window
-                       (frame-root-window) -1 'below))))
+                       (frame-root-window) -1 'below))
+                    'norecord))
         (if (setq buf (get-buffer " *LV*"))
-            (switch-to-buffer buf)
-          (switch-to-buffer " *LV*")
+            (switch-to-buffer buf 'norecord)
+          (switch-to-buffer " *LV*" 'norecord)
           (set-window-hscroll lv-wnd 0)
           (setq window-size-fixed t)
           (setq mode-line-format nil)
@@ -92,7 +93,7 @@ Only the background color is significant."
           (set-window-dedicated-p lv-wnd t)
           (set-window-parameter lv-wnd 'no-other-window t)
           (run-hooks 'lv-window-hook))
-        (select-window ori)))))
+        (select-window ori 'norecord)))))
 
 (defvar golden-ratio-mode)
 

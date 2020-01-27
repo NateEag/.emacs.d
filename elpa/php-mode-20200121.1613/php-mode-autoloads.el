@@ -71,6 +71,8 @@ Major mode for editing PHP code.
 
 (add-to-list 'auto-mode-alist '("/\\.php_cs\\(?:\\.dist\\)?\\'" . php-mode))
 
+(add-to-list 'auto-mode-alist '("\\.\\(?:php\\.inc\\|stub\\)\\'" . php-mode))
+
 (add-to-list 'auto-mode-alist '("\\.\\(?:php[s345]?\\|phtml\\)\\'" . php-mode-maybe))
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "php-mode" '("php-")))

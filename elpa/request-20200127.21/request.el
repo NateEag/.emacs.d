@@ -6,7 +6,7 @@
 
 ;; Author: Takafumi Arakaki <aka.tkf at gmail.com>
 ;; URL: https://github.com/tkf/emacs-request
-;; Package-Version: 20200117.410
+;; Package-Version: 20200127.21
 ;; Package-Requires: ((emacs "24.4"))
 ;; Version: 0.3.2
 
@@ -50,7 +50,7 @@
 (require 'url)
 (require 'mail-utils)
 (require 'autorevert)
-
+(require 'auth-source)
 
 (defgroup request nil
   "Compatible layer for URL request in Emacs."
@@ -902,7 +902,7 @@ Currently it is used only for testing.")
     (make-directory (file-name-directory (request--curl-cookie-jar)) t)))
 
 (cl-defun request--curl-command
-    (url &key type data headers response files* unix-socket encoding
+    (url &key type data headers response files* unix-socket encoding auth
          &allow-other-keys
          &aux (cookie-jar (convert-standard-filename
                            (expand-file-name (request--curl-cookie-jar)))))
@@ -911,6 +911,19 @@ Currently it is used only for testing.")
    (list request-curl
          "--silent" "--location"
          "--cookie" cookie-jar "--cookie-jar" cookie-jar)
+   (when auth
+     (let* ((host (url-host (url-generic-parse-url url)))
+            (auth-source-creation-prompts `((user . ,(format "%s user: " host))
+                                            (secret . "Password for %u: ")))
+            (cred (car (auth-source-search
+                        :host host :require '(:user :secret) :create t :max 1))))
+       (split-string (format "--%s --user %s:%s"
+                             auth
+                             (plist-get cred :user)
+                             (let ((secret (plist-get cred :secret)))
+                               (if (functionp secret)
+                                   (funcall secret)
+                                 secret))))))
    (unless (request-url-file-p url)
      (list "--include" "--write-out" request--curl-write-out-template))
    request-curl-options
@@ -1022,6 +1035,14 @@ temporary file paths."
           (run-at-time timeout nil
                        #'request-response--timeout-callback response))))
 
+(defun request--curl-occlude-secret (command)
+  "Simple regex filter on anything looking like a secret."
+  (let ((matched
+         (string-match (concat (regexp-quote "--user") "\\s-*\\(\\S-+\\)") command)))
+    (if matched
+        (replace-match "elided" nil nil command 1)
+      command)))
+
 (cl-defun request--curl (url &rest settings
                              &key files timeout response encoding semaphore
                              &allow-other-keys)
@@ -1055,7 +1076,8 @@ removed from the buffer before it is shown to the parser function.
                            :response response :encoding encoding settings)))
          (proc (apply #'start-process "request curl" buffer command)))
     (request--install-timeout timeout response)
-    (request-log 'debug "request--curl: %s" (mapconcat 'identity command " "))
+    (request-log 'debug "request--curl: %s"
+                 (request--curl-occlude-secret (mapconcat 'identity command " ")))
     (setf (request-response--buffer response) buffer)
     (process-put proc :request-response response)
     (set-process-coding-system proc 'no-conversion 'no-conversion)
@@ -1151,7 +1173,8 @@ START-URL is the URL requested."
   (cl-loop for url in (request--curl-absolutify-redirects
                        start-url
                        (mapcar (lambda (response)
-                                 (request-response-header response "location"))
+                                 (or (request-response-header response "location")
+                                     (request-response-url response)))
                                history))
            for response in (cdr history)
            do (setf (request-response-url response) url)))

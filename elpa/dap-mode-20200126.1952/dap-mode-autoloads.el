@@ -89,9 +89,9 @@ or call the function `dap-mode'.")
 Global minor mode for DAP mode.
 
 If called interactively, enable Dap mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+disable it if ARG is zero or negative.  If called from Lisp, also
+enable the mode if ARG is omitted or nil, and toggle it if ARG is
+`toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
@@ -115,10 +115,10 @@ or call the function `dap-tooltip-mode'.")
 (autoload 'dap-tooltip-mode "dap-mouse" "\
 Toggle the display of GUD tooltips.
 
-If called interactively, enable Dap-Tooltip mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Dap-Tooltip mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
@@ -184,10 +184,10 @@ or call the function `dap-ui-mode'.")
 (autoload 'dap-ui-mode "dap-ui" "\
 Displaying DAP visuals.
 
-If called interactively, enable Dap-Ui mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Dap-Ui mode if ARG is positive,
+and disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it if
+ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
@@ -207,10 +207,10 @@ or call the function `dap-ui-controls-mode'.")
 (autoload 'dap-ui-controls-mode "dap-ui" "\
 Displaying DAP visuals.
 
-If called interactively, enable Dap-Ui-Controls mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Dap-Ui-Controls mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 

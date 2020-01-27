@@ -4,7 +4,7 @@
 ;; Copyright (C) 2013-2018  Shingo Fukuyama
 
 ;; Version: 2.0.0
-;; Package-Version: 20191225.959
+;; Package-Version: 20200121.1859
 ;; Author: Shingo Fukuyama - http://fukuyama.co
 ;; URL: https://github.com/emacsorphanage/helm-swoop
 ;; Created: Oct 24 2013
@@ -655,7 +655,8 @@ If $LINUM is number, lines are separated by $LINUM."
               (> helm-swoop-last-prefix-number 1))
          '(multiline))
     (match . ,(helm-swoop-match-functions))
-    (search . ,(helm-swoop-search-functions))))
+    ;; (search . ,(helm-swoop-search-functions))
+    ))
 
 (defun helm-c-source-multi-swoop ($buf $func $action $multiline)
   "C source multi swoop in $BUF for $FUNC, $ACTION, $MULTILINE."
@@ -671,7 +672,8 @@ If $LINUM is number, lines are separated by $LINUM."
               (> $multiline 1))
          '(multiline))
     (match . ,(helm-swoop-match-functions))
-    (search . ,(helm-swoop-search-functions))))
+    ;; (search . ,(helm-swoop-search-functions))
+    ))
 
 (defun helm-swoop--set-prefix ($multiline)
   "Set prefix $MULTILINE."
@@ -1261,7 +1263,8 @@ If $LINUM is number, lines are separated by $LINUM."
     (header-line . "[C-SPC]/[M-SPC] select, [RET] next step")
     (keymap . ,helm-multi-swoop-buffers-map)
     (match . ,(helm-swoop-match-functions))
-    (search . ,(helm-swoop-search-functions))))
+    ;; (search . ,(helm-swoop-search-functions))
+    ))
 
 (defun helm-multi-swoop--get-query ($query)
   "Get query from $QUERY."

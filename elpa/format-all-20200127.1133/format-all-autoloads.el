@@ -65,7 +65,7 @@ or zero, and enabled otherwise.
 
 \(fn &optional ARG)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "format-all" '("asmfmt" "bibtex-mode" "black" "brittany" "buildifier" "cmake-format" "crystal" "dartfmt" "define-format-all-formatter" "dfmt" "dhall" "dockfmt" "elm-format" "emacs-lisp" "fish-indent" "format-all-" "fprettify" "gofmt" "html-tidy" "istyle-verilog" "ktlint" "latexindent" "ledger-mode" "lua-fmt" "mix-format" "nixfmt" "ocp-indent" "perltidy" "prettier" "rufo" "rustfmt" "scalafmt" "shfmt" "sqlformat" "styler" "swiftformat" "terraform-fmt")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "format-all" '("asmfmt" "bibtex-mode" "black" "brittany" "buildifier" "cmake-format" "crystal" "dartfmt" "define-format-all-formatter" "dfmt" "dhall" "dockfmt" "elm-format" "emacs-lisp" "fish-indent" "format-all-" "fprettify" "gofmt" "html-tidy" "istyle-verilog" "ktlint" "latexindent" "ledger-mode" "lua-fmt" "mix-format" "nixfmt" "ocp-indent" "perltidy" "prettier" "purty" "rufo" "rustfmt" "scalafmt" "shfmt" "sqlformat" "styler" "swiftformat" "terraform-fmt")))
 
 ;;;***
 

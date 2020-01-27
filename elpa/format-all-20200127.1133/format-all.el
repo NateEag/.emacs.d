@@ -2,7 +2,7 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20200111.1216
+;; Package-Version: 20200127.1133
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
@@ -57,6 +57,7 @@
 ;; - Perl (perltidy)
 ;; - PHP (prettier plugin-php)
 ;; - Protocol Buffers (clang-format)
+;; - PureScript (purty)
 ;; - Python (black)
 ;; - R (styler)
 ;; - Ruby (rufo)
@@ -631,6 +632,12 @@ Consult the existing formatters for examples of BODY."
         (list "--parser" parser))
       (when (buffer-file-name)
         (list "--stdin-filepath" (buffer-file-name)))))))
+
+(define-format-all-formatter purty
+  (:executable "purty")
+  (:install "npm install --global purty")
+  (:modes purescript-mode)
+  (:format (format-all--buffer-easy executable "-")))
 
 (define-format-all-formatter rufo
   (:executable "rufo")

@@ -149,6 +149,30 @@ Should be ignored if there is no open doctor window."
   (with-lsp-workspace workspace
     (lsp-send-execute-command command)))
 
+(defvar-local lsp-metals--decorations nil
+  "Overlays used by `metals/publishDecorations' handler.")
+
+(defun lsp-metals--publish-decorations (workspace params)
+  "Handle the metals/publishDecorations extension notification."
+  (with-lsp-workspace workspace
+    (let* ((file (lsp--uri-to-path (ht-get params "uri")))
+            (buffer (lsp--buffer-for-file file)))
+      (when buffer
+        (with-current-buffer buffer
+          (seq-do #'delete-overlay lsp-metals--decorations)
+          (setq lsp-metals--decorations nil)
+          (mapc #'lsp-metals--make-overlay (ht-get params "options")))))))
+
+(defun lsp-metals--make-overlay (decoration)
+  "Create overlay from metals decoration."
+  (let* ((region (lsp--range-to-region (ht-get decoration "range")))
+          (content (ht-get (ht-get (ht-get decoration "renderOptions") "after") "contentText"))
+          (hover (ht-get (ht-get decoration "hoverMessage") "value"))
+          (ov (make-overlay (car region) (cdr region) nil t t)))
+    (overlay-put ov 'after-string (propertize content 'cursor t 'font-lock-face 'font-lock-comment-face))
+    (overlay-put ov 'help-echo hover)
+    (push ov lsp-metals--decorations)))
+
 (defun lsp-metals--execute-client-command (workspace params)
   "Handle the metals/executeClientCommand extension notification."
   (when-let ((command (pcase (ht-get params "command")
@@ -159,17 +183,30 @@ Should be ignored if there is no open doctor window."
                         (c (ignore (lsp-warn "Unknown metals client command: %s" c))))))
     (apply command (append (list workspace) (ht-get params "arguments") nil))))
 
+(defvar lsp-metals--current-buffer nil
+  "Current buffer used to send `metals/didFocusTextDocument' notification.")
+
+(defun lsp-metals--did-focus ()
+  "Send `metals/didFocusTextDocument' when current buffer changes."
+  (unless (eq lsp-metals--current-buffer (current-buffer))
+    (setq lsp-metals--current-buffer (current-buffer))
+    (lsp-notify "metals/didFocusTextDocument" (lsp--buffer-uri))))
+
 (lsp-register-client
  (make-lsp-client :new-connection (lsp-stdio-connection 'lsp-metals--server-command)
                   :major-modes '(scala-mode)
                   :priority -1
+                  :custom-capabilities '((experimental (decorationProvider . t)))
                   :notification-handlers (ht ("metals/executeClientCommand" #'lsp-metals--execute-client-command)
+                                             ("metals/publishDecorations" #'lsp-metals--publish-decorations)
                                              ("metals/treeViewDidChange" #'ignore))
 		  :server-id 'metals
                   :initialized-fn (lambda (workspace)
                                     (with-lsp-workspace workspace
                                       (lsp--set-configuration
-                                       (lsp-configuration-section "metals"))))))
+                                       (lsp-configuration-section "metals"))))
+                  :after-open-fn (lambda ()
+                                   (add-hook 'lsp-on-idle-hook #'lsp-metals--did-focus nil t))))
 
 (provide 'lsp-metals)
 ;;; lsp-metals.el ends here

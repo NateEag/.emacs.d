@@ -48,10 +48,10 @@ or call the function `lsp-treemacs-sync-mode'.")
 (autoload 'lsp-treemacs-sync-mode "lsp-treemacs" "\
 Global minor mode for synchronizing lsp-mode workspace folders and treemacs projects.
 
-If called interactively, enable Lsp-Treemacs-Sync mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Lsp-Treemacs-Sync mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 

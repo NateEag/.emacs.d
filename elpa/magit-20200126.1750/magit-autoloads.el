@@ -128,6 +128,8 @@ Remove all changes from the staging area." t nil)
 ;;;;;;  0 0 0))
 ;;; Generated autoloads from magit-autorevert.el
 
+(put 'magit-auto-revert-mode 'globalized-minor-mode t)
+
 (defvar magit-auto-revert-mode (not (or global-auto-revert-mode noninteractive)) "\
 Non-nil if Magit-Auto-Revert mode is enabled.
 See the `magit-auto-revert-mode' command
@@ -1033,6 +1035,8 @@ the line and column corresponding to that location.
 
 \(fn REV FILE)" t nil)
  (autoload 'magit-file-dispatch "magit" nil t)
+
+(put 'global-magit-file-mode 'globalized-minor-mode t)
 
 (defvar global-magit-file-mode t "\
 Non-nil if Global Magit-File mode is enabled.
@@ -2284,6 +2288,8 @@ See info node `(magit)Debugging Tools' for more information." t nil)
 ;;;### (autoloads nil "magit-wip" "magit-wip.el" (0 0 0 0))
 ;;; Generated autoloads from magit-wip.el
 
+(put 'magit-wip-after-save-mode 'globalized-minor-mode t)
+
 (defvar magit-wip-after-save-mode nil "\
 Non-nil if Magit-Wip-After-Save mode is enabled.
 See the `magit-wip-after-save-mode' command
@@ -2316,10 +2322,10 @@ for a description of this minor mode.")
 (autoload 'magit-wip-after-apply-mode "magit-wip" "\
 Commit to work-in-progress refs.
 
-If called interactively, enable Magit-Wip-After-Apply mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Magit-Wip-After-Apply mode if ARG
+is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 After applying a change using any \"apply variant\"
 command (apply, stage, unstage, discard, and reverse) commit the
@@ -2340,10 +2346,10 @@ for a description of this minor mode.")
 (autoload 'magit-wip-before-change-mode "magit-wip" "\
 Commit to work-in-progress refs before certain destructive changes.
 
-If called interactively, enable Magit-Wip-Before-Change mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Magit-Wip-Before-Change mode if
+ARG is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 Before invoking a revert command or an \"apply variant\"
 command (apply, stage, unstage, discard, and reverse) commit the

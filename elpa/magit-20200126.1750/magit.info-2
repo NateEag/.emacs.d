@@ -18,6 +18,52 @@ START-INFO-DIR-ENTRY
 END-INFO-DIR-ENTRY
 
 
+File: magit.info,  Node: Common Commands,  Next: Wip Modes,  Prev: Worktree,  Up: Miscellaneous
+
+8.6 Common Commands
+===================
+
+These are some of the commands that can be used in all buffers whose
+major-modes derive from ‘magit-mode’.  There are other common commands
+beside the ones below, but these didn’t fit well anywhere else.
+
+‘M-w’     (‘magit-copy-section-value’)
+
+     This command saves the value of the current section to the
+     ‘kill-ring’, and, provided that the current section is a commit,
+     branch, or tag section, it also pushes the (referenced) revision to
+     the ‘magit-revision-stack’.
+
+     When the current section is a branch or a tag, and a prefix
+     argument is used, then it saves the revision at its tip to the
+     ‘kill-ring’ instead of the reference name.
+
+     When the region is active, this command saves that to the
+     ‘kill-ring’, like ‘kill-ring-save’ would, instead of behaving as
+     described above.  If a prefix argument is used and the region is
+     within a hunk, it strips the outer diff marker column before saving
+     the text.
+
+‘C-w’     (‘magit-copy-buffer-revision’)
+
+     This command saves the revision being displayed in the current
+     buffer to the ‘kill-ring’ and also pushes it to the
+     ‘magit-revision-stack’.  It is mainly intended for use in
+     ‘magit-revision-mode’ buffers, the only buffers where it is always
+     unambiguous exactly which revision should be saved.
+
+     Most other Magit buffers usually show more than one revision, in
+     some way or another, so this command has to select one of them, and
+     that choice might not always be the one you think would have been
+     the best pick.
+
+   Outside of Magit ‘M-w’ and ‘C-w’ are usually bound to
+‘kill-ring-save’ and ‘kill-region’, and these commands would also be
+useful in Magit buffers.  Therefore when the region is active, then both
+of these commands behave like ‘kill-ring-save’ instead of as described
+above.
+
+
 File: magit.info,  Node: Wip Modes,  Next: Minor Mode for Buffers Visiting Files,  Prev: Common Commands,  Up: Miscellaneous
 
 8.7 Wip Modes
@@ -3169,7 +3215,7 @@ Appendix E Function Index
                                                               (line  24)
 * magit-git-wash:                        Calling Git for Effect.
                                                               (line  70)
-* magit-hunk-set-window-start:           Section Movement.    (line  43)
+* magit-hunk-set-window-start:           Section Movement.    (line  51)
 * magit-ido-completing-read:             Support for Completion Frameworks.
                                                               (line  48)
 * magit-insert-am-sequence:              Status Sections.     (line  28)
@@ -3235,9 +3281,9 @@ Appendix E Function Index
                                                               (line  75)
 * magit-list-repositories:               Repository List.     (line   6)
 * magit-list-submodules:                 Listing Submodules.  (line  13)
-* magit-log-maybe-show-more-commits:     Section Movement.    (line  57)
-* magit-log-maybe-update-blob-buffer:    Section Movement.    (line  71)
-* magit-log-maybe-update-revision-buffer: Section Movement.   (line  64)
+* magit-log-maybe-show-more-commits:     Section Movement.    (line  66)
+* magit-log-maybe-update-blob-buffer:    Section Movement.    (line  82)
+* magit-log-maybe-update-revision-buffer: Section Movement.   (line  74)
 * magit-maybe-set-dedicated:             Switching Buffers.   (line 100)
 * magit-mode-display-buffer:             Refreshing Buffers.  (line  33)
 * magit-mode-quit-window:                Quitting Windows.    (line  34)
@@ -3279,7 +3325,7 @@ Appendix E Function Index
 * magit-section-hide-children:           Section Visibility.  (line  64)
 * magit-section-ident:                   Matching Sections.   (line  11)
 * magit-section-match:                   Matching Sections.   (line  21)
-* magit-section-set-window-start:        Section Movement.    (line  50)
+* magit-section-set-window-start:        Section Movement.    (line  59)
 * magit-section-show:                    Section Visibility.  (line  45)
 * magit-section-show-children:           Section Visibility.  (line  58)
 * magit-section-show-headings:           Section Visibility.  (line  53)
@@ -3289,11 +3335,11 @@ Appendix E Function Index
                                                               (line 105)
 * magit-start-process:                   Calling Git for Effect.
                                                               (line 124)
-* magit-stashes-maybe-update-stash-buffer: Section Movement.  (line  95)
-* magit-status-maybe-update-blob-buffer: Section Movement.    (line  89)
+* magit-stashes-maybe-update-stash-buffer: Section Movement.  (line 106)
+* magit-status-maybe-update-blob-buffer: Section Movement.    (line 100)
 * magit-status-maybe-update-revision-buffer: Section Movement.
-                                                              (line  77)
-* magit-status-maybe-update-stash-buffer: Section Movement.   (line  83)
+                                                              (line  88)
+* magit-status-maybe-update-stash-buffer: Section Movement.   (line  94)
 * magit-wip-log:                         Wip Modes.           (line  48)
 * magit-wip-log-current:                 Wip Modes.           (line  57)
 * with-editor-usage-message:             Commit Mode and Hooks.
@@ -3484,7 +3530,7 @@ Appendix F Variable Index
                                                               (line  13)
 * magit-section-cache-visibility:        Section Visibility.  (line  95)
 * magit-section-initial-visibility-alist: Section Visibility. (line  78)
-* magit-section-movement-hook:           Section Movement.    (line  38)
+* magit-section-movement-hook:           Section Movement.    (line  46)
 * magit-section-set-visibility-hook:     Section Visibility.  (line 106)
 * magit-section-show-child-count:        Section Options.     (line   9)
 * magit-section-visibility-indicator:    Section Visibility.  (line 124)
@@ -3502,7 +3548,7 @@ Appendix F Variable Index
 * magit-uniquify-buffer-names:           Naming Buffers.      (line  74)
 * magit-unstage-committed:               Staging and Unstaging.
                                                               (line  56)
-* magit-update-other-window-delay:       Section Movement.    (line 101)
+* magit-update-other-window-delay:       Section Movement.    (line 112)
 * magit-visit-ref-behavior:              References Buffer.   (line 192)
 * magit-wip-after-apply-mode:            Legacy Wip Modes.    (line  19)
 * magit-wip-after-apply-mode-lighter:    Legacy Wip Modes.    (line  59)

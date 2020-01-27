@@ -4,7 +4,7 @@
 ;; Keywords: git, tools, vc, github
 ;; Homepage: https://github.com/charignon/github-review
 ;; Package-Requires: ((emacs "25") (s "1.12.0") (ghub "2.0") (dash "2.11.0"))
-;; Package-Version: 20200111.2141
+;; Package-Version: 20200123.523
 ;; Package-X-Original-Version: 0.1
 
 ;; This file is not part of GNU Emacs
@@ -57,7 +57,7 @@
   :group 'github-review
   :type 'string)
 
-(defcustom github-review-fetch-top-level-and-review-comments nil
+(defcustom github-review-fetch-top-level-and-review-comments t
   "If t, fetch the top level and review comments."
   :group 'github-review
   :type 'boolean)

@@ -1,2 +1,0 @@
-;;; Generated package description from /Users/neagleson/.emacs.d/elpa/github-review-20200111.2141/github-review.el  -*- no-byte-compile: t -*-
-(define-package "github-review" "20200111.2141" "GitHub based code review" '((emacs "25") (s "1.12.0") (ghub "2.0") (dash "2.11.0")) :commit "e8a275939e1a774c84b71ab3df2ce1599445dab0" :keywords '("git" "tools" "vc" "github") :authors '(("Laurent Charignon" . "l.charignon@gmail.com")) :maintainer '("Laurent Charignon" . "l.charignon@gmail.com") :url "https://github.com/charignon/github-review")

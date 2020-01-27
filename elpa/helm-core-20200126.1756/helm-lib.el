@@ -723,7 +723,7 @@ end a printable representation of hashtable itself."
   "Return a regexp which matches any of the regexps in REGEXP-LIST."
   (if regexp-list
       (concat "\\(?:" (helm--string-join regexp-list "\\)\\|\\(?:") "\\)")
-    "\\<\\>"))                          ; Match nothing
+    "\\`\\'"))                          ; Match nothing
 
 (defun helm-skip-entries (seq black-regexp-list &optional white-regexp-list)
   "Remove entries which matches one of REGEXP-LIST from SEQ."
@@ -1538,6 +1538,7 @@ that match whole STRING.
 
 This is needed to provide compatibility for both emacs-25 and emacs-24.5
 as emacs-25 version of `ansi-color-apply' is partially broken."
+  (require 'ansi-color)
   (let ((start 0)
         codes end escape-sequence
         result colorized-substring)

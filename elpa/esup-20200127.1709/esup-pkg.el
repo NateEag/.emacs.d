@@ -1,6 +1,6 @@
-(define-package "esup" "20200120.740" "the Emacs StartUp Profiler (ESUP)"
+(define-package "esup" "20200127.1709" "the Emacs StartUp Profiler (ESUP)"
   '((cl-lib "0.5")
-    (emacs "24"))
+    (emacs "25"))
   :keywords
   '("convenience" "processes")
   :authors

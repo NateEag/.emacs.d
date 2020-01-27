@@ -16,7 +16,7 @@ ARGS is a list of extra command line arguments to pass to Emacs.
 
 \(fn &optional INIT-FILE &rest ARGS)" t nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "esup" '("esup-" "render")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "esup" '("esup-")))
 
 ;;;***
 

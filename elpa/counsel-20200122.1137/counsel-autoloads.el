@@ -306,6 +306,13 @@ Choose from headers of `org-mode' files in the agenda." t nil)
 Browse `mark-ring' interactively.
 Obeys `widen-automatically', which see." t nil)
 
+(autoload 'counsel-evil-marks "counsel" "\
+Ivy replacement for `evil-show-marks'.
+By default, this function respects `counsel-evil-marks-exclude-registers'.
+When ARG is non-nil, display all active evil registers.
+
+\(fn &optional ARG)" t nil)
+
 (autoload 'counsel-package "counsel" "\
 Install or delete packages.
 
@@ -408,9 +415,12 @@ Interactively choose and run a keyboard macro.
 
 With prefix argument, run macro that many times.
 
-Macros are run using the current value of `kmacro-counter-value-start' their defined format.
-One can use actions to copy the counter format or initial counter value of a command,
-using them for the next defined macro." t nil)
+Macros are run using the current value of `kmacro-counter-value'
+and their respective counter format. Displayed next to each macro is
+the counter's format and initial value.
+
+One can use actions to copy the counter format or initial counter
+value of a macro, using them for a new macro." t nil)
 
 (autoload 'counsel-geiser-doc-look-up-manual "counsel" "\
 Search Scheme documentation." t nil)

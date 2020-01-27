@@ -1411,10 +1411,10 @@
 	      (:maintainer "Michael Heerdegen" . "michael_heerdegen@web.de")
 	      (:url . "https://github.com/michael-heerdegen/on-screen.el"))])
  (org .
-      [(9 3 1)
+      [(9 3 2)
        nil "Outline-based notes management and organizer" tar
        ((:url . "https://orgmode.org")
-	(:maintainer "Carsten Dominik <carsten at orgmode dot org>")
+	(:maintainer "Bastien Guerry <bzg at gnu dot org>")
 	(:authors
 	 ("Carsten Dominik <carsten at orgmode dot org>"))
 	(:keywords "outlines" "hypermedia" "calendar" "wp"))])
@@ -1735,9 +1735,9 @@
 		   ("Bastien Guerry" . "bzg@gnu.org"))
 		  (:maintainer "Bastien Guerry" . "bzg@gnu.org"))])
  (relint .
-	 [(1 11)
+	 [(1 12)
 	  ((xr
-	    (1 13)))
+	    (1 14)))
 	  "Elisp regexp mistake finder" tar
 	  ((:url . "https://github.com/mattiase/relint")
 	   (:maintainer "Mattias Engdegård" . "mattiase@acm.org")
@@ -1944,9 +1944,9 @@
  (svg-clock .
 	    [(1 1)
 	     ((svg
-	       (0 1))
+	       (1 0))
 	      (emacs
-	       (25 0)))
+	       (27 0)))
 	     "Analog clock using Scalable Vector Graphics" single
 	     ((:url . "http://elpa.gnu.org/packages/svg-clock.html")
 	      (:keywords "demo" "svg" "clock")
@@ -2050,7 +2050,7 @@
 	 (:maintainer "Toby Cubitt" . "toby-predictive@dr-qubit.org")
 	 (:url . "http://www.dr-qubit.org/emacs.php"))])
  (undo-tree .
-	    [(0 7 2)
+	    [(0 7 3)
 	     nil "Treat undo history as a tree" single
 	     ((:keywords "convenience" "files" "undo" "redo" "history" "tree")
 	      (:authors
@@ -2160,14 +2160,6 @@
        ((:url . "https://github.com/m00natic/vlfi")
 	(:maintainer "Andrey Kotlarski" . "m00naticus@gmail.com")
 	(:keywords "large files" "utilities"))])
- (w3 .
-     [(4 0 49)
-      nil "Fully customizable, largely undocumented web browser for Emacs" tar
-      ((:maintainer "William Perry and many more")
-       (:authors
-	("William Perry and many more"))
-       (:keywords "faces" "help" "comm" "news" "mail" "processes" "mouse" "hypermedia")
-       (:url . "http://elpa.gnu.org/packages/w3.html"))])
  (wcheck-mode .
 	      [(2019 6 17)
 	       nil "General interface for text checkers" single
@@ -2305,7 +2297,7 @@
 	 ("Thien-Thi Nguyen" . "ttn@gnu.org"))
 	(:keywords "multimedia" "xpm"))])
  (xr .
-     [(1 13)
+     [(1 14)
       nil "Convert string regexp to rx notation" tar
       ((:url . "https://github.com/mattiase/xr")
        (:maintainer "Mattias Engdegård" . "mattiase@acm.org")

@@ -1,11 +1,11 @@
-;;; phpstan.el --- Interface to PHPStan.             -*- lexical-binding: t; -*-
+;;; phpstan.el --- Interface to PHPStan              -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019  Friends of Emacs-PHP development
+;; Copyright (C) 2020  Friends of Emacs-PHP development
 
 ;; Author: USAMI Kenta <tadsan@zonu.me>
 ;; Created: 15 Mar 2018
-;; Version: 0.3.1
-;; Package-Version: 20190929.612
+;; Version: 0.3.3
+;; Package-Version: 20200122.1256
 ;; Keywords: tools, php
 ;; Homepage: https://github.com/emacs-php/phpstan.el
 ;; Package-Requires: ((emacs "24.3"))

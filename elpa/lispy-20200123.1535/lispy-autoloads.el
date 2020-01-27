@@ -61,10 +61,10 @@
 (autoload 'lispy-mode "lispy" "\
 Minor mode for navigating and editing LISP dialects.
 
-If called interactively, enable Lispy mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Lispy mode if ARG is positive,
+and disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it if
+ARG is `toggle'; disable the mode otherwise.
 
 When `lispy-mode' is on, most unprefixed keys,
 i.e. [a-zA-Z+-./<>], conditionally call commands instead of

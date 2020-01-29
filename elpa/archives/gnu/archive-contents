@@ -2010,7 +2010,7 @@
 	  ("Oleh Krehel" . "ohwoeowho@gmail.com"))
 	 (:keywords "convenience"))])
  (tramp .
-	[(2 4 3)
+	[(2 4 3 1)
 	 ((emacs
 	   (24 4)))
 	 "Transparent Remote Access, Multiple Protocol" tar
@@ -2050,7 +2050,7 @@
 	 (:maintainer "Toby Cubitt" . "toby-predictive@dr-qubit.org")
 	 (:url . "http://www.dr-qubit.org/emacs.php"))])
  (undo-tree .
-	    [(0 7 3)
+	    [(0 7 4)
 	     nil "Treat undo history as a tree" single
 	     ((:keywords "convenience" "files" "undo" "redo" "history" "tree")
 	      (:authors

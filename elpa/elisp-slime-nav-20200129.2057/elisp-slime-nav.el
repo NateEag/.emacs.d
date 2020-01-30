@@ -5,7 +5,7 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;; Keywords: navigation slime elisp emacs-lisp
 ;; URL: https://github.com/purcell/elisp-slime-nav
-;; Package-Version: 20160128.1909
+;; Package-Version: 20200129.2057
 ;; Package-X-Original-Version: 0
 ;; Package-Requires: ((cl-lib "0.2"))
 
@@ -63,9 +63,8 @@
   nil " SliNav" elisp-slime-nav-mode-map)
 
 ;;;###autoload
-(defun turn-on-elisp-slime-nav-mode ()
-  "Explicitly enable `elisp-slime-nav-mode'."
-  (elisp-slime-nav-mode 1))
+(define-obsolete-function-alias 'turn-on-elisp-slime-nav-mode 'elisp-slime-nav-mode
+  "2020-01-30")
 
 (defun elisp-slime-nav--all-navigable-symbol-names ()
   "Return a list of strings for the symbols to which navigation is possible."

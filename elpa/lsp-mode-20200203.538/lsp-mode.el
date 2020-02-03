@@ -633,7 +633,8 @@ Changes take effect only when a new session is started."
                                         (ess-r-mode . "r")
                                         (crystal-mode . "crystal")
                                         (nim-mode . "nim")
-                                        (dhall-mode . "dhall"))
+                                        (dhall-mode . "dhall")
+                                        (cmake-mode . "cmake"))
   "Language id configuration.")
 
 (defvar lsp--last-active-workspaces nil
@@ -1647,9 +1648,9 @@ WORKSPACE is the workspace that contains the diagnostics."
       (cl-block top
         (dolist (tree-node (reverse trees))
           (when (lsp--range-inside-p range tree-node)
-            (setf (lsp--folding-range-children tree-node)
-                  (nconc (lsp--folding-range-children tree-node)
-                         (list range)))
+            (-if-let (children (lsp--folding-range-children tree-node))
+              (lsp--folding-range-insert-into-trees children range)
+              (setf (lsp--folding-range-children tree-node) (list range)))
             (cl-return-from top t))))
     (nconc trees (list range))))
 
@@ -1844,7 +1845,8 @@ BUFFER-MODIFIED? determines whether the buffer is modified or not."
               (run-with-timer lsp-lens-debounce-interval
                               nil
                               #'lsp-lens-refresh
-                              (or lsp--lens-modified? buffer-modified?))))
+                              (or lsp--lens-modified? buffer-modified?)
+                              (current-buffer))))
 
 (defun lsp--lens-keymap (command)
   (-doto (make-sparse-keymap)
@@ -1899,16 +1901,17 @@ BUFFER-MODIFIED? determines whether the buffer is modified or not."
           (delete-overlay it)))
       (setq-local lsp--lens-overlays overlays))))
 
-(defun lsp-lens-refresh (buffer-modified?)
+(defun lsp-lens-refresh (buffer-modified? &optional buffer)
   "Refresh lenses using lenses backend.
 BUFFER-MODIFIED? determines whether the buffer is modified or not."
-  (let ((buffer (current-buffer)))
-    (dolist (backend lsp-lens-backends)
-      (funcall backend buffer-modified?
-               (lambda (lenses version)
-                 (when (buffer-live-p buffer)
-                   (with-current-buffer buffer
-                     (lsp--process-lenses backend lenses version))))))))
+  (let ((buffer (or buffer (current-buffer))))
+    (with-current-buffer buffer
+      (dolist (backend lsp-lens-backends)
+        (funcall backend buffer-modified?
+                 (lambda (lenses version)
+                   (when (buffer-live-p buffer)
+                     (with-current-buffer buffer
+                       (lsp--process-lenses backend lenses version)))))))))
 
 (defun lsp--process-lenses (backend lenses version)
   "Process LENSES originated from BACKEND.
@@ -5646,10 +5649,9 @@ an alist
   (let* ((start-point (lsp--symbol-get-start-point sym))
          (name (gethash "name" sym)))
     (if (seq-empty-p (gethash "children" sym))
-        (cons (format "%s (%s)" name (lsp--get-symbol-type sym)) start-point)
+        (cons name start-point)
       (cons name
-            (cons (cons (format "(%s)" (lsp--get-symbol-type sym)) start-point)
-                  (lsp--imenu-create-hierarchical-index (gethash "children" sym)))))))
+            (lsp--imenu-create-hierarchical-index (gethash "children" sym))))))
 
 (defun lsp--symbol-get-start-point (sym)
   "Get the start point of the name of SYM.
@@ -5698,7 +5700,7 @@ SYM can be either DocumentSymbol or SymbolInformation."
 
 (defun lsp--imenu-hierarchical-p (symbols)
   "Determine whether any element in SYMBOLS has children."
-  (seq-some (-partial 'gethash "children") symbols))
+  (seq-some (-partial #'gethash "children") symbols))
 
 (defun lsp--imenu-create-hierarchical-index (symbols)
   "Create imenu index for hierarchical SYMBOLS.

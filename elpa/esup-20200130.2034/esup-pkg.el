@@ -1,4 +1,4 @@
-(define-package "esup" "20200129.1533" "the Emacs StartUp Profiler (ESUP)"
+(define-package "esup" "20200130.2034" "the Emacs StartUp Profiler (ESUP)"
   '((cl-lib "0.5")
     (emacs "25"))
   :keywords

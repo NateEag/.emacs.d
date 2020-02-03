@@ -1,10 +1,12 @@
 ;;; quick-peek-autoloads.el --- automatically extracted autoloads
 ;;
 ;;; Code:
-(add-to-list 'load-path (directory-file-name (or (file-name-directory #$) (car load-path))))
+
+(add-to-list 'load-path (directory-file-name
+                         (or (file-name-directory #$) (car load-path))))
+
 
-;;;### (autoloads nil "quick-peek" "quick-peek.el" (23649 39719 918845
-;;;;;;  307000))
+;;;### (autoloads nil "quick-peek" "quick-peek.el" (0 0 0 0))
 ;;; Generated autoloads from quick-peek.el
 
 (autoload 'quick-peek-overlay-at "quick-peek" "\
@@ -27,11 +29,14 @@ Return the number of overlays hidden.
 
 \(fn &optional POS)" t nil)
 
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "quick-peek" '("quick-peek-")))
+
 ;;;***
 
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t
 ;; no-update-autoloads: t
+;; coding: utf-8
 ;; End:
 ;;; quick-peek-autoloads.el ends here

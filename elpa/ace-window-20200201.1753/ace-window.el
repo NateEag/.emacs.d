@@ -5,7 +5,7 @@
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; Maintainer: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/ace-window
-;; Package-Version: 20200115.1506
+;; Package-Version: 20200201.1753
 ;; Version: 0.9.0
 ;; Package-Requires: ((avy "0.2.0"))
 ;; Keywords: window, location
@@ -169,6 +169,7 @@ Consider changing this if the overlay tends to overlap with other things."
     (?b aw-split-window-horz "Split Horz Window")
     (?o delete-other-windows "Delete Other Windows")
     (?T aw-transpose-frame "Transpose Frame")
+    ;; ?i ?r ?t are used by hyperbole.el
     (?? aw-show-dispatch-help))
   "List of actions for `aw-dispatch-default'.
 Each action is a list of either:

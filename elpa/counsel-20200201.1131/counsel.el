@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20200122.1137
+;; Package-Version: 20200201.1131
 ;; Version: 0.13.0
 ;; Package-Requires: ((emacs "24.5") (swiper "0.13.0"))
 ;; Keywords: convenience, matching, tools
@@ -2244,7 +2244,9 @@ https://www.freedesktop.org/wiki/Specifications/desktop-bookmark-spec/."
  'counsel-recentf
  '(("j" find-file-other-window "other window")
    ("f" find-file-other-frame "other frame")
-   ("x" counsel-find-file-extern "open externally")))
+   ("x" counsel-find-file-extern "open externally")
+   ("d" (lambda (file) (setq recentf-list (delete file recentf-list)))
+    "delete from recentf")))
 
 (defun counsel-recentf-candidates ()
   "Return candidates for `counsel-recentf'.
@@ -2258,8 +2260,13 @@ time."
        (sort (append (mapcar #'substring-no-properties recentf-list)
                      (counsel--recentf-get-xdg-recent-files))
              (lambda (file1 file2)
-               (> (time-to-seconds (file-attribute-access-time (file-attributes file1)))
-                  (time-to-seconds (file-attribute-access-time (file-attributes file2)))))))
+               (cond ((file-remote-p file1)
+                      nil)
+                     ((file-remote-p file2)
+                      t)
+                     (t
+                      (> (time-to-seconds (file-attribute-access-time (file-attributes file1)))
+                         (time-to-seconds (file-attribute-access-time (file-attributes file2)))))))))
     (mapcar #'substring-no-properties recentf-list)))
 
 (defun counsel--strip-prefix (prefix str)

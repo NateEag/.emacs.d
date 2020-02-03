@@ -1,10 +1,10 @@
 ;;; csv-mode.el --- Major mode for editing comma/char separated values  -*- lexical-binding: t -*-
 
-;; Copyright (C) 2003, 2004, 2012-2019  Free Software Foundation, Inc
+;; Copyright (C) 2003, 2004, 2012-2020  Free Software Foundation, Inc
 
 ;; Author: "Francis J. Wright" <F.J.Wright@qmul.ac.uk>
 ;; Maintainer: emacs-devel@gnu.org
-;; Version: 1.10
+;; Version: 1.11
 ;; Package-Requires: ((emacs "24.1") (cl-lib "0.5"))
 ;; Keywords: convenience
 
@@ -273,6 +273,8 @@ Number of spaces used by `csv-align-mode' and `csv-align-fields' after separator
     (define-key map [(control ?c) (control ?r)] 'csv-reverse-region)
     (define-key map [(control ?c) (control ?n)] 'csv-sort-numeric-fields)
     (define-key map [(control ?c) (control ?s)] 'csv-sort-fields)
+    (define-key map "\t" #'csv-tab-command)
+    (define-key map [backtab] #'csv-backtab-command)
     map))
 
 ;;;###autoload
@@ -657,17 +659,17 @@ point or marker arguments, BEG and END, delimiting the region."
 ;;;  Moving by field
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(defsubst csv-end-of-field ()
+(defun csv-end-of-field ()
   "Skip forward over one field."
   (skip-chars-forward " ")
-  (if (eq (char-syntax (following-char)) ?\")
+  (if (memq (char-syntax (following-char)) csv-field-quotes)
       (goto-char (scan-sexps (point) 1)))
   (skip-chars-forward csv--skip-chars))
 
-(defsubst csv-beginning-of-field ()
+(defun csv-beginning-of-field ()
   "Skip backward over one field."
   (skip-syntax-backward " ")
-  (if (eq (char-syntax (preceding-char)) ?\")
+  (if (memq (char-syntax (preceding-char)) csv-field-quotes)
       (goto-char (scan-sexps (point) -1)))
   (skip-chars-backward csv--skip-chars))
 
@@ -704,9 +706,25 @@ move forward across N fields."
       (if (memq (preceding-char) csv-separator-chars) (backward-char))
       (csv-beginning-of-field))))
 
+(defun csv-tab-command ()
+  "Skip to the next field on the same line.
+Create a new field at end of line, if needed."
+  (interactive)
+  (skip-chars-forward csv--skip-chars)
+  (if (eolp)
+      (insert (car csv-separators))
+    (forward-char 1)))
+
+(defun csv-backtab-command ()
+  "Skip to the beginning of the previous field."
+  (interactive)
+  (skip-chars-backward csv--skip-chars)
+  (forward-char -1)
+  (skip-chars-backward csv--skip-chars))
+
 (defun csv-sort-skip-fields (n &optional yank)
   "Position point at the beginning of field N on the current line.
-Fields are separated by `csv-separators'\; null terminal field allowed.
+Fields are separated by `csv-separators'; null terminal field allowed.
 Assumes point is initially at the beginning of the line.
 YANK non-nil allows N to be greater than the number of fields, in
 which case extend the record as necessary."
@@ -1715,6 +1733,14 @@ setting works better)."
 
 ;;;; ChangeLog:
 
+;; 2020-01-30  Stefan Monnier  <monnier@iro.umontreal.ca>
+;; 
+;; 	* packages/csv-mode/csv-mode.el: New TAB/backtab commands
+;; 
+;; 	(csv-tab-command, csv-backtab-command): New commands.
+;; 	(csv-mode-map): Bind them.
+;; 	(csv-end-of-field, csv-beginning-of-field): Obey csv-field-quotes.
+;; 
 ;; 2019-10-22  Stefan Monnier  <monnier@iro.umontreal.ca>
 ;; 
 ;; 	* packages/csv-mode/csv-mode.el (csv-align--cursor-truncated): Fix C-e

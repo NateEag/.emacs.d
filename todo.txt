@@ -73,6 +73,10 @@
   one:
     https://with-emacs.com/posts/editing/show-matching-lines-when-parentheses-go-off-screen/
 
+- Figure out why aggressive-fill-paragraph-mode breaks lsp-mode in PHP badly. I
+  can't enter spaces due to errors getting thrown saying "lsp-request: Method
+  LanguageServer\Server\TextDocument::rangeFormatting() does not exist"
+
 - Finish tweaks/submit PR for aggressive-fill-paragraph-mode.
 
 - Make a PR to auto-complete for supporting smart-dash-mode.

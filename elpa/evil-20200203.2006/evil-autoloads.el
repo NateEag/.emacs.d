@@ -10,7 +10,7 @@
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from evil-command-window.el
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-command-window" '("evil-command-window")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "evil-command-window" '("evil-")))
 
 ;;;***
 

@@ -334,7 +334,7 @@
 		       (:maintainer "Clément Pit-Claudel" . "clement.pitclaudel@live.com")
 		       (:url . "https://github.com/cpitclaudel/compact-docstrings"))])
  (company .
-	  [(0 9 11)
+	  [(0 9 12)
 	   ((emacs
 	     (24 3)))
 	   "Modular text completion framework" tar
@@ -869,7 +869,7 @@
 		  (:keywords "gnome" "c" "coding style")
 		  (:url . "http://elpa.gnu.org/packages/gnome-c-style.html"))])
  (gnorb .
-	[(1 6 4)
+	[(1 6 5)
 	 ((cl-lib
 	   (0 5)))
 	 "Glue code between Gnus, Org, and BBDB" tar
@@ -1173,7 +1173,7 @@
 	   (:maintainer "Alexey Veretennikov" . "alexey.veretennikov@gmail.com")
 	   (:url . "https://github.com/fourier/loccur"))])
  (map .
-      [(2 0)
+      [(2 1)
        ((emacs
 	 (25)))
        "Map manipulation functions" single
@@ -1411,7 +1411,7 @@
 	      (:maintainer "Michael Heerdegen" . "michael_heerdegen@web.de")
 	      (:url . "https://github.com/michael-heerdegen/on-screen.el"))])
  (org .
-      [(9 3 2)
+      [(9 3 3)
        nil "Outline-based notes management and organizer" tar
        ((:url . "https://orgmode.org")
 	(:maintainer "Bastien Guerry" . "bzg@gnu.org")
@@ -1543,11 +1543,11 @@
 	   ("Mario Lang" . "mlang@delysid.org"))
 	  (:maintainer "Mario Lang" . "mlang@delysid.org"))])
  (posframe .
-	   [(0 5 0)
+	   [(0 6 0)
 	    ((emacs
 	      (26)))
 	    "Pop a posframe (just a frame) at point" single
-	    ((:keywords "tooltip")
+	    ((:keywords "convenience" "tooltip")
 	     (:authors
 	      ("Feng Shu" . "tumashu@163.com"))
 	     (:maintainer "Feng Shu" . "tumashu@163.com")
@@ -1923,7 +1923,7 @@
 		("Christian Johansson" . "christian@cvj.se"))
 	       (:keywords "tools" "convenience"))])
  (stream .
-	 [(2 2 4)
+	 [(2 2 5)
 	  ((emacs
 	    (25)))
 	  "Implementation of streams" tar

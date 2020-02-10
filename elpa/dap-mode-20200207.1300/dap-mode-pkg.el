@@ -1,4 +1,4 @@
-(define-package "dap-mode" "20200201.1612" "Debug Adapter Protocol mode"
+(define-package "dap-mode" "20200207.1300" "Debug Adapter Protocol mode"
   '((emacs "25.1")
     (dash "2.14.1")
     (lsp-mode "6.0")

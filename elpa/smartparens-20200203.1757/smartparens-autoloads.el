@@ -39,10 +39,10 @@ Initiate `smartparens-mode-map' with `sp-smartparens-bindings'." t nil)
 (autoload 'smartparens-mode "smartparens" "\
 Toggle smartparens mode.
 
-If called interactively, enable Smartparens mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Smartparens mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 You can enable pre-set bindings by customizing
 `sp-base-key-bindings' variable.  The current content of
@@ -55,10 +55,10 @@ You can enable pre-set bindings by customizing
 (autoload 'smartparens-strict-mode "smartparens" "\
 Toggle the strict smartparens mode.
 
-If called interactively, enable Smartparens-Strict mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Smartparens-Strict mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 When strict mode is active, `delete-char', `kill-word' and their
 backward variants will skip over the pair delimiters in order to
@@ -72,6 +72,8 @@ When strict mode is active, this is indicated with \"/s\"
 after the smartparens indicator in the mode list.
 
 \(fn &optional ARG)" t nil)
+
+(put 'smartparens-global-strict-mode 'globalized-minor-mode t)
 
 (defvar smartparens-global-strict-mode nil "\
 Non-nil if Smartparens-Global-Strict mode is enabled.
@@ -100,6 +102,8 @@ Turn on `smartparens-strict-mode'." t nil)
 
 (autoload 'turn-off-smartparens-strict-mode "smartparens" "\
 Turn off `smartparens-strict-mode'." t nil)
+
+(put 'smartparens-global-mode 'globalized-minor-mode t)
 
 (defvar smartparens-global-mode nil "\
 Non-nil if Smartparens-Global mode is enabled.
@@ -147,12 +151,14 @@ of Emacs idle time if the point is immediately in front or after
 a pair.  This mode works similarly to `show-paren-mode', but
 support custom pairs.
 
-If called interactively, enable Show-Smartparens mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Show-Smartparens mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
+
+(put 'show-smartparens-global-mode 'globalized-minor-mode t)
 
 (defvar show-smartparens-global-mode nil "\
 Non-nil if Show-Smartparens-Global mode is enabled.

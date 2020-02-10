@@ -2,7 +2,7 @@
 ;;
 ;; Author: Lassi Kortela <lassi@lassi.io>
 ;; URL: https://github.com/lassik/emacs-format-all-the-code
-;; Package-Version: 20200127.1133
+;; Package-Version: 20200206.1440
 ;; Version: 0.1.0
 ;; Package-Requires: ((emacs "24") (cl-lib "0.5"))
 ;; Keywords: languages util
@@ -64,6 +64,7 @@
 ;; - Rust (rustfmt)
 ;; - Scala (scalafmt)
 ;; - Shell script (shfmt)
+;; - Solidity (prettier prettier-plugin-solidity)
 ;; - SQL (sqlformat)
 ;; - Swift (swiftformat)
 ;; - Terraform (terraform fmt)
@@ -586,7 +587,7 @@ Consult the existing formatters for examples of BODY."
 
 (define-format-all-formatter prettier
   (:executable "prettier")
-  (:install "npm install --global prettier @prettier/plugin-php")
+  (:install "npm install --global prettier @prettier/plugin-php prettier-plugin-solidity")
   (:modes
    (angular-html-mode "angular")
    ((js-mode js2-mode js3-mode)
@@ -604,6 +605,7 @@ Consult the existing formatters for examples of BODY."
    (graphql-mode "graphql")
    ((gfm-mode markdown-mode) "markdown")
    (php-mode "php")
+   (solidity-mode "solidity-parse")
    (web-mode
     (let ((ct (symbol-value 'web-mode-content-type))
           (en (symbol-value 'web-mode-engine)))
@@ -658,9 +660,11 @@ Consult the existing formatters for examples of BODY."
 
 (define-format-all-formatter scalafmt
   (:executable "scalafmt")
-  (:install (macos "brew install --HEAD olafurpg/scalafmt/scalafmt"))
+  (:install "coursier bootstrap org.scalameta:scalafmt-cli_2.12:2.4.0-RC1 -r sonatype:snapshots -o /usr/local/bin/scalafmt --standalone --main org.scalafmt.cli.Cli")
   (:modes scala-mode)
-  (:format (format-all--buffer-easy executable "--stdin" "--non-interactive")))
+  (:format
+   (format-all--buffer-easy
+    executable "--stdin" "--non-interactive" "--quiet")))
 
 (define-format-all-formatter shfmt
   (:executable "shfmt")

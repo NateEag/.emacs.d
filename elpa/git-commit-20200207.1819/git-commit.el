@@ -12,7 +12,7 @@
 ;; Maintainer: Jonas Bernoulli <jonas@bernoul.li>
 
 ;; Package-Requires: ((emacs "25.1") (dash "20180910") (transient "20190812") (with-editor "20181103"))
-;; Package-Version: 20200123.1706
+;; Package-Version: 20200207.1819
 ;; Keywords: git tools vc
 ;; Homepage: https://github.com/magit/magit
 
@@ -768,6 +768,8 @@ With a numeric prefix ARG, go forward ARG comments."
             (ignore-errors (car (process-lines "git" "config" "user.email")))
             (read-string "Email: "))))
 
+(defvar git-commit-read-ident-history nil)
+
 (defun git-commit-read-ident (prompt)
   (if (require 'magit-git nil t)
       (let ((str (magit-completing-read
@@ -876,7 +878,7 @@ Added to `font-lock-extend-region-functions'."
   `(,@git-commit-font-lock-keywords-1
     ;; Comments
     (eval . `(,(format "^%s.*" comment-start)
-              (0 'font-lock-comment-face)))
+              (0 'font-lock-comment-face append)))
     (eval . `(,(format "^%s On branch \\(.*\\)" comment-start)
               (1 'git-commit-comment-branch-local t)))
     (eval . `(,(format "^%s \\(HEAD\\) detached at" comment-start)

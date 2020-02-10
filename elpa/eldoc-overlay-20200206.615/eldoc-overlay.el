@@ -4,7 +4,7 @@
 ;; Author: Robert Weiner <rsw@gnu.org>
 ;; Maintainer: stardiviner <numbchild@gmail.com>
 ;; Keywords: documentation, eldoc, overlay
-;; Package-Version: 20200131.1421
+;; Package-Version: 20200206.615
 ;; URL: https://github.com/stardiviner/eldoc-overlay
 ;; Created:  14th Jan 2017
 ;; Modified: 18th Dec 2017
@@ -19,22 +19,10 @@
 ;; This package modifies Eldoc to display this documentation inline
 ;; using a buffer text overlay.
 ;;
-;;  `eldoc-overlay-mode' is a per-buffer minor mode.
-;;    A call to `eldoc-overlay-enable' turns it on.
-;;    A call to `eldoc-overlay-disable' turns it off
-;;
-;;    {C-x C-h} interactively calls `eldoc-overlay-toggle' and tells
-;;    you the mode's new state.
-;;
-;;  `global-eldoc-overlay-mode' can be used to toggle this for all buffers.
-;;    A call to `global-eldoc-overlay-enable' turns it on.
-;;    A call to `global-eldoc-overlay-disable' turns it off
-;;
-;;    {C-u C-x C-h} interactively calls `global-eldoc-overlay-toggle' and tells
-;;    you the mode's new state.
+;;  `eldoc-overlay-mode' is a per-buffer local minor mode.
 ;;
 ;; By default, the overlay is not used in the minibuffer, eldoc is shown in the modeline
-;; in this case.  Set the option `eldoc-overlay-in-minibuffer-flag' non-nil if you want
+;; in this case.  Set the option `eldoc-overlay-enable-in-minibuffer' non-nil if you want
 ;; to enable overlay use in the minibuffer.
 ;;
 ;; Finally, see the documentation for `eldoc-overlay-backend' if you want to try
@@ -51,7 +39,7 @@
   :prefix "eldoc-overlay-"
   :group 'eldoc)
 
-(defcustom eldoc-overlay-in-minibuffer-flag nil
+(defcustom eldoc-overlay-enable-in-minibuffer nil
   "Non-nil (default: nil) means enable `eldoc-overlay-mode' in the minibuffer.
 When nil and in the minibuffer, if standard `eldoc-mode' is
 enabled, it displays function signatures in the modeline."
@@ -79,14 +67,33 @@ Two backends are supported: `inline-docs' and `quick-peek'.")
 
 (defun eldoc-overlay-display (format-string &rest args)
   "Display eldoc for the minibuffer when there or call the function indexed by `eldoc-overlay-backend'."
-  (unless (company-tooltip-visible-p)
-    (if (and (minibufferp) (not eldoc-overlay-in-minibuffer-flag))
+  (unless (or (company-tooltip-visible-p)
+              (when (company-box--get-frame)
+                (frame-visible-p (company-box--get-frame))))
+    (if (and (minibufferp) (not eldoc-overlay-enable-in-minibuffer))
         (apply #'eldoc-minibuffer-message format-string args)
-      (funcall
-       (pcase eldoc-overlay-backend
-	       (`inline-docs 'eldoc-overlay-inline-docs)
-         (`quick-peek 'eldoc-overlay-quick-peek))
-	     (funcall eldoc-documentation-function)))))
+      (funcall (pcase eldoc-overlay-backend
+                 (`inline-docs 'eldoc-overlay-inline-docs)
+                 (`quick-peek 'eldoc-overlay-quick-peek))
+               (funcall eldoc-documentation-function)))))
+
+(defun eldoc-overlay-enable ()
+  (unless eldoc-mode
+    (eldoc-mode 1)) ; make sure `eldoc-mode' enabled.
+  (setq-local eldoc-message-function #'eldoc-overlay-display)
+  (when (eq eldoc-overlay-backend 'quick-peek)
+    (add-hook 'post-command-hook #'quick-peek-hide)))
+
+(defun eldoc-overlay-disable ()
+  (pcase eldoc-overlay-backend
+    ('quick-peek
+     (quick-peek-hide)
+     ;; Remove hook when no buffers have any peek overlays
+     (unless (delq nil (mapcar (lambda (buf) (buffer-local-value 'quick-peek--overlays buf)) (buffer-list)))
+       (remove-hook 'post-command-hook #'quick-peek-hide)))
+    ('inline-docs
+     ))
+  (setq-local eldoc-message-function #'eldoc-minibuffer-message))
 
 ;;;###autoload
 (define-minor-mode eldoc-overlay-mode
@@ -94,19 +101,14 @@ Two backends are supported: `inline-docs' and `quick-peek'.")
   :require 'eldoc-overlay-mode
   :group 'eldoc-overlay
   :init-value nil
-  :global t
-  :lighter " ElDocOver"
+  :global nil
+  :lighter " ElDoc/overlay"
   (if eldoc-overlay-mode
-      (progn
-        (eldoc-mode 1)
-        (setq eldoc-message-function #'eldoc-overlay-display)
-        (when (eq eldoc-overlay-backend 'quick-peek)
-          (add-hook 'post-command-hook #'quick-peek-hide)))
-    (quick-peek-hide)
-    ;; Remove hook when no buffers have any peek overlays
-    (unless (delq nil (mapcar (lambda (buf) (buffer-local-value 'quick-peek--overlays buf)) (buffer-list)))
-      (remove-hook 'post-command-hook #'quick-peek-hide))
-    (setq eldoc-message-function #'eldoc-minibuffer-message)))
+      (eldoc-overlay-enable)
+    (eldoc-overlay-disable)))
+
+;;;###autoload
+(add-hook 'eldoc-mode-hook #'eldoc-overlay-mode)
 
 ;;; ----------------------------------------------------------------------------
 

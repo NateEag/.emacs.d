@@ -4354,8 +4354,12 @@ When ARG is 2, insert the result as a comment."
                       (require 'cider nil t))
                   (cider--display-interactive-eval-result
                    res (cdr (lispy--bounds-dwim))))
+                 ((or (fboundp 'eros--eval-overlay)
+                      (require 'eros nil t))
+                  (eros--eval-overlay
+                   res (cdr (lispy--bounds-dwim))))
                  (t
-                  (error "Please install CIDER >= 0.10 to display overlay")))))))
+                  (error "Please install CIDER >= 0.10 or eros to display overlay")))))))
 
 (defun lispy--eval-default ()
   (save-excursion
@@ -7433,10 +7437,12 @@ See https://clojure.org/guides/weird_characters#_character_literal.")
                                    nil t)))
                 ;; ——— Clojure gensym —————————
                 (goto-char (point-min))
-                (while (re-search-forward "\\([a-zA-Z][a-zA-z-/_0-9]*#\\)" nil t)
+                (while (re-search-forward "\\([a-zA-Z][a-zA-z-/_0-9]*#\\)[ \t\n\r]" nil t)
                   (unless (lispy--in-string-or-comment-p)
-                    (replace-match (format "(ly-raw clojure-gensym %S)"
-                                           (match-string-no-properties 1)))))
+                    (replace-match
+                     (format "(ly-raw clojure-gensym %S)"
+                             (match-string-no-properties 1))
+                     t nil nil 1)))
                 ;; ——— Clojure keyword —————————
                 (goto-char (point-min))
                 (while (re-search-forward "\\(:\\.[^][({}) \t\n\r\"]+\\)" nil t)

@@ -313,6 +313,9 @@ Invoke `shell-command' in the project's root." t nil)
 (autoload 'projectile-run-async-shell-command-in-root "projectile" "\
 Invoke `async-shell-command' in the project's root." t nil)
 
+(autoload 'projectile-run-gdb "projectile" "\
+Invoke `gdb' in the project's root." t nil)
+
 (autoload 'projectile-run-shell "projectile" "\
 Invoke `shell' in the project's root.
 

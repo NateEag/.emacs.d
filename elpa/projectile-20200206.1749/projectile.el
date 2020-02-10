@@ -4,9 +4,9 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20200128.1155
+;; Package-Version: 20200206.1749
 ;; Keywords: project, convenience
-;; Version: 2.1.0-snapshot
+;; Version: 2.2.0-snapshot
 ;; Package-Requires: ((emacs "25.1") (pkg-info "0.4"))
 
 ;; This file is NOT part of GNU Emacs.
@@ -3374,6 +3374,13 @@ regular expression."
     (call-interactively #'async-shell-command)))
 
 ;;;###autoload
+(defun projectile-run-gdb ()
+  "Invoke `gdb' in the project's root."
+  (interactive)
+  (projectile-with-default-dir (projectile-ensure-project (projectile-project-root))
+    (call-interactively 'gdb)))
+
+;;;###autoload
 (defun projectile-run-shell (arg)
   "Invoke `shell' in the project's root.
 
@@ -4625,6 +4632,7 @@ thing shown in the mode line otherwise."
     (define-key map (kbd "x i") #'projectile-run-ielm)
     (define-key map (kbd "x t") #'projectile-run-term)
     (define-key map (kbd "x s") #'projectile-run-shell)
+    (define-key map (kbd "x g") #'projectile-run-gdb)
     (define-key map (kbd "x v") #'projectile-run-vterm)
     (define-key map (kbd "z") #'projectile-cache-current-file)
     (define-key map (kbd "<left>") #'projectile-previous-project-buffer)
@@ -4668,6 +4676,8 @@ thing shown in the mode line otherwise."
         ["Search in project (ag)" projectile-ag]
         ["Replace in project" projectile-replace]
         ["Multi-occur in project" projectile-multi-occur]
+        "--"
+        ["Run GDB" projectile-run-gdb]
         "--"
         ["Run shell" projectile-run-shell]
         ["Run eshell" projectile-run-eshell]

@@ -48,10 +48,10 @@ Major mode for working with .ghci files.
 (autoload 'interactive-haskell-mode "haskell" "\
 Minor mode for enabling haskell-process interaction.
 
-If called interactively, enable Interactive-Haskell mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Interactive-Haskell mode if ARG
+is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
@@ -208,10 +208,10 @@ OTHER-WINDOW use `find-file-other-window'.
 (autoload 'haskell-collapse-mode "haskell-collapse" "\
 Minor mode to collapse and expand haskell expressions
 
-If called interactively, enable Haskell-Collapse mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Haskell-Collapse mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
@@ -641,10 +641,10 @@ Haskell indentation mode that deals with the layout rule.
 It rebinds RET, DEL and BACKSPACE, so that indentations can be
 set and deleted as if they were real tabs.
 
-If called interactively, enable Haskell-Indentation mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Haskell-Indentation mode if ARG
+is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
@@ -1036,10 +1036,10 @@ Set input method `haskell-unicode'." t nil)
 (autoload 'highlight-uses-mode "highlight-uses-mode" "\
 Minor mode for highlighting and jumping between uses.
 
-If called interactively, enable Highlight-Uses mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Highlight-Uses mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 

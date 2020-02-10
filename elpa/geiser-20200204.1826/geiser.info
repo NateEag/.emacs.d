@@ -99,15 +99,15 @@ alive.  It draws inspiration (and a bit more) from environments such as
 Common Lisp's Slime, Factor's FUEL, Squeak or Emacs itself, and does its
 best to make Scheme hacking inside Emacs (even more) fun.
 
-   Or, to be precise, what i (http://hacks-galore.org/jao) consider fun.
-Geiser is thus my humble contribution to the dynamic school of
-expression, and a reaction against what i perceive as a derailment, in
-modern times, of standard Scheme towards the static camp.  Because i
-prefer growing and healing to poking at corpses, the continuously
-running Scheme interpreter takes the center of the stage in Geiser.  A
-bundle of Elisp shims orchestrates the dialog between the Scheme
-interpreter, Emacs and, ultimately, the schemer, giving her access to
-live metadata.  Here's how.
+   Or, to be precise, what i (https://jao.io) consider fun.  Geiser is
+thus my humble contribution to the dynamic school of expression, and a
+reaction against what i perceive as a derailment, in modern times, of
+standard Scheme towards the static camp.  Because i prefer growing and
+healing to poking at corpses, the continuously running Scheme
+interpreter takes the center of the stage in Geiser.  A bundle of Elisp
+shims orchestrates the dialog between the Scheme interpreter, Emacs and,
+ultimately, the schemer, giving her access to live metadata.  Here's
+how.
 
 
 File: geiser.info,  Node: Introduction,  Next: Installation,  Prev: Top,  Up: Top
@@ -214,16 +214,18 @@ File: geiser.info,  Node: Must needs,  Next: The easy and quick way,  Prev: Inst
 ==============
 
 If Geiser came with any guarantees, you'd break all of them by not using
-GNU Emacs 23.2 (or better: i regularly use it with a recent Emacs
+GNU Emacs 24 (or better: i regularly use it with a recent Emacs
 snapshot) and at least one of the supported Schemes, namely:
 
-   * Racket (http://www.racket-lang.org) 6.0 or better
-   * Guile (http://www.gnu.org/software/guile) 2.2.0 or better
+   * Guile (http://www.gnu.org/software/guile) 2.2 or better
    * Chicken (http://call-cc.org) 4.8.0 or better
-   * MIT/GNU Scheme (https://www.gnu.org/software/mit-scheme/) 9.1.1 or
+   * MIT/GNU Scheme (https://www.gnu.org/software/mit-scheme/) 9.1 or
      better
-   * Chibi Scheme (http://synthcode.com/scheme/chibi/) 0.7.3 or better
+   * Chibi Scheme (http://synthcode.com/scheme/chibi/) 0.7 or better
    * Chez Scheme (http://www.scheme.com) 9.4 or better
+   * Gambit (http://gambitscheme.org/wiki/index.php/Main_Page) 4.9 or
+     better
+   * Racket (http://www.racket-lang.org) 6.0 or better
 
    Since Geiser supports multiple REPLs, having all of them will just
 add to the fun.
@@ -267,10 +269,32 @@ repo).  To tell Emacs that an ELPA repo exists, you add it to
      M-x package-install RET geiser RET
 
    Alternatively, you can manually download the package file
-(http://download-mirror.savannah.gnu.org/releases/geiser/packages/geiser-0.10.tar),
+(http://download-mirror.savannah.gnu.org/releases/geiser/packages/geiser-0.11.tar),
 and install from your local disk with 'M-x package-install-file'.
 
-   If you plan to use Gambit, you'll also need to open a terminal and
+Chicken installation
+....................
+
+If you plan to use Chicken, you'll need also to fire a terminal and
+configure a couple of Chicken eggs.  For Chicken 4 that would be:
+     $ chicken-install -s apropos chicken-doc
+     $ cd `csi -p '(chicken-home)'`
+     $ curl http://3e8.org/pub/chicken-doc/chicken-doc-repo.tgz | sudo tar zx
+
+   while Chicken 5 prefers:
+     $ chicken-install -s apropos chicken-doc srfi-18 srfi-1
+     $ cd `csi -R chicken.platform -p '(chicken-home)'`
+     $ curl https://3e8.org/pub/chicken-doc/chicken-doc-repo-5.tgz | sudo tar zx
+
+   (see also Chicken's wiki (https://wiki.call-cc.org/emacs#geiser)).
+
+   With that, you are pretty much all set up.  See *note The REPL:: to
+start using Geiser.
+
+Gambit installation
+...................
+
+If you plan to use Gambit, you'll also need to open a terminal and
 configure a couple of awesome Gambit's features:
 
    SETUP : 1 - clone the last version of gambit and of this repo 2 -
@@ -306,22 +330,6 @@ the 'gambit.scm' file located in
              gsi -:d ~/geiser/scheme/gambit/geiser/gambit.scm -
    (Keep in mind that these paths may be a little different for you.)
 
-   If you plan to use Chicken, you'll need also to fire a terminal and
-configure a couple of Chicken eggs.  For Chicken 4 that would be:
-     $ chicken-install -s apropos chicken-doc
-     $ cd `csi -p '(chicken-home)'`
-     $ curl http://3e8.org/pub/chicken-doc/chicken-doc-repo.tgz | sudo tar zx
-
-   while Chicken 5 prefers:
-     $ chicken-install -s apropos chicken-doc srfi-18 srfi-1
-     $ cd `csi -R chicken.platform -p '(chicken-home)'`
-     $ curl https://3e8.org/pub/chicken-doc/chicken-doc-repo-5.tgz | sudo tar zx
-
-   (see also Chicken's wiki (https://wiki.call-cc.org/emacs#geiser)).
-
-   With that, you are pretty much all set up.  See *note The REPL:: to
-start using Geiser.
-
 
 File: geiser.info,  Node: From the source's mouth,  Next: Friends,  Prev: The easy and quick way,  Up: Installation
 
@@ -331,11 +339,8 @@ File: geiser.info,  Node: From the source's mouth,  Next: Friends,  Prev: The ea
 Downloading Geiser
 ..................
 
-The latest release tarball can be found here
-(http://download-mirror.savannah.gnu.org/releases/geiser/0.10/).  Just
-download geiser-0.10.tar.gz
-(http://download-mirror.savannah.gnu.org/releases/geiser/0.10/geiser-0.10.tar.gz)
-and untar it in a directory of your choice.
+The latest release tarballs can be found here
+(https://gitlab.com/jaor/geiser/-/releases).
 
    If you feel like living on the bleeding edge, just grab Geiser from
 its Git repository over at Savannah
@@ -441,14 +446,7 @@ by) the following Emacs packages:
      which provides a Geiser plugin for the popular Emacs Auto
      Completion Mode (https://www.emacswiki.org/emacs/AutoComplete), is
      the package for you.  Like Geiser, 'ac-geiser' is available in
-     Marmalade and MELPA, and also as an 'el-get' package.
-   * Quack (http://www.neilvandyke.org/quack/).  You can still use the
-     many goodies provided by Neil van Dyke's 'quack-mode', since most
-     of them are not (yet) available in Geiser.  The only caveat might
-     be a conflict between Quack's and Geiser's default key bindings,
-     which i'm sure you'll manage to tackle just fine.  It's also
-     probably a good idea to require 'quack' after loading 'geiser.el'
-     (or requiring a compiled version).
+     MELPA, and also as an 'el-get' package.
 
 You just need to install and setup them as usual, for every package's
 definition of usual.  Geiser will notice their presence and react
@@ -1723,11 +1721,11 @@ Index
 * bug tracker:                           No hacker is an island.
                                                               (line  68)
 * byte-compilation:                      From the source's mouth.
-                                                              (line  49)
+                                                              (line  46)
 * Chicken:                               The easy and quick way.
-                                                              (line  73)
+                                                              (line  37)
 * Chicken installation:                  The easy and quick way.
-                                                              (line  73)
+                                                              (line  37)
 * company:                               Friends.             (line   9)
 * completion for module names:           Geiser writes for you.
                                                               (line  33)
@@ -1758,9 +1756,9 @@ Index
 * external image viewer:                 Seeing is believing. (line  10)
 * faces, in the REPL:                    Starting the REPL.   (line  35)
 * Gambit:                                The easy and quick way.
-                                                              (line  37)
+                                                              (line  56)
 * Gambit installation:                   The easy and quick way.
-                                                              (line  37)
+                                                              (line  56)
 * geiser-mode:                           Activating Geiser.   (line   6)
 * geiser-mode commands:                  Activating Geiser.   (line  21)
 * gmane:                                 No hacker is an island.
@@ -1871,46 +1869,46 @@ Index
 
 Tag Table:
 Node: Top895
-Node: Introduction3363
-Node: Modus operandi3697
-Ref: current-module4352
-Node: Showing off5825
-Node: Installation7103
-Node: Must needs7316
-Node: The easy and quick way8349
-Node: From the source's mouth11941
-Node: Friends15650
-Ref: paredit15924
-Node: The REPL17341
-Ref: quick-start17460
-Node: Starting the REPL17851
-Node: First aids22238
-Node: Switching context24071
-Node: Completion and error handling25996
-Ref: completion-caveat27704
-Node: Autodoc and friends29618
-Ref: repl-mod31688
-Node: Seeing is believing32694
-Node: Customization and tips33706
-Ref: choosing-impl34435
-Ref: active-implementations34670
-Ref: impl-binary35052
-Node: Between the parens39408
-Node: Activating Geiser40470
-Node: The source and the REPL43080
-Ref: repl-association44124
-Ref: switching-repl-buff47392
-Node: Documentation helpers49077
-Ref: doc-browser53345
-Node: To eval or not to eval56072
-Node: To err perchance to debug60221
-Node: Jumping around62583
-Node: Geiser writes for you63860
-Node: Cheat sheet66364
-Node: Scheme buffers66748
-Node: REPL71073
-Node: Documentation browser73667
-Node: No hacker is an island74735
-Node: Index78054
+Node: Introduction3351
+Node: Modus operandi3685
+Ref: current-module4340
+Node: Showing off5813
+Node: Installation7091
+Node: Must needs7304
+Node: The easy and quick way8411
+Node: From the source's mouth12081
+Node: Friends15611
+Ref: paredit15885
+Node: The REPL16828
+Ref: quick-start16947
+Node: Starting the REPL17338
+Node: First aids21725
+Node: Switching context23558
+Node: Completion and error handling25483
+Ref: completion-caveat27191
+Node: Autodoc and friends29105
+Ref: repl-mod31175
+Node: Seeing is believing32181
+Node: Customization and tips33193
+Ref: choosing-impl33922
+Ref: active-implementations34157
+Ref: impl-binary34539
+Node: Between the parens38895
+Node: Activating Geiser39957
+Node: The source and the REPL42567
+Ref: repl-association43611
+Ref: switching-repl-buff46879
+Node: Documentation helpers48564
+Ref: doc-browser52832
+Node: To eval or not to eval55559
+Node: To err perchance to debug59708
+Node: Jumping around62070
+Node: Geiser writes for you63347
+Node: Cheat sheet65851
+Node: Scheme buffers66235
+Node: REPL70560
+Node: Documentation browser73154
+Node: No hacker is an island74222
+Node: Index77541
 
 End Tag Table

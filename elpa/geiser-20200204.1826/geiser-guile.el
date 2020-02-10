@@ -402,7 +402,7 @@ it spawn a server thread."
 (defun guile--manual-look-up (id mod)
   (let ((info-lookup-other-window-flag
          geiser-guile-manual-lookup-other-window-p))
-    (info-lookup-symbol (symbol-name id) 'scheme-mode))
+    (info-lookup-symbol (symbol-name id) 'geiser-guile-mode))
   (when geiser-guile-manual-lookup-other-window-p
     (switch-to-buffer-other-window "*info*"))
   (search-forward (format "%s" id) nil t))

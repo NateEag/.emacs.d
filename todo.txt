@@ -118,6 +118,16 @@
   can uninstall it once I upgrade.
   https://github.com/DamienCassou/auth-password-store
 
+- When I'm working in a NodeJS script (detectable by '#! /usr/bin/env node',
+  among other approaches), js2-mode should auto-execute
+
+  `(setq-local js2-concat-multiline-strings nil)`
+
+  Life would be better that way.
+
+  More generally I guess that should happen whenever it sees any JS features
+  that imply backtick-strings are available. Is that ES 6?
+
 - I just typed "element.style.display = 'hidden'" when obviously it should have
   been 'none' and wish my editor had warned me. A quick way to get this would
   be to start using TypeScript or Flow to do static checking of JS and install

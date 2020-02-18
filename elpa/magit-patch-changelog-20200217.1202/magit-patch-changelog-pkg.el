@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/magit-patch-changelog-20200217.1202/magit-patch-changelog.el  -*- no-byte-compile: t -*-
+(define-package "magit-patch-changelog" "20200217.1202" "Generate a patch according to emacs-mirror/CONTRIBUTE" '((emacs "25.1") (magit "2.91.0")) :commit "876c780bdb676b6ece64861704e199b94f33cf71" :keywords '("git" "tools" "vc") :url "https://github.com/dickmao/magit-patch-changelog")

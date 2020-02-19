@@ -504,11 +504,6 @@ Add a project for ROOT and NAME if they are non-nil."
       ('none
        (treemacs--setup-buffer)
        (treemacs-mode)
-       (unless current-workspace
-         (treemacs--find-workspace (buffer-file-name origin-buffer))
-         (setq current-workspace (treemacs-current-workspace))
-         (run-hook-with-args treemacs-workspace-first-found-functions
-                             current-workspace (selected-frame)))
        ;; Render the projects even if there are none. This ensures that top-level
        ;; extensions are always rendered, and the project markers are initialized.
        (treemacs--render-projects (treemacs-workspace->projects current-workspace))
@@ -1018,7 +1013,7 @@ It needs to be moved aside in a way that works for all indent depths and
 `treemacs-indentation' settings."
   (when (eq major-mode 'treemacs-mode)
     (beginning-of-line)
-    (when (eq 'image (car (get-text-property (point) 'display)))
+    (when (eq 'image (car-safe (get-text-property (point) 'display)))
       (forward-char 1))))
 
 (defun treemacs--read-first-project-path ()

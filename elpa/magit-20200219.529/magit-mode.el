@@ -222,7 +222,7 @@ Valid values are:
 `always': Always use the set of arguments that is currently
   active in the respective buffer, provided that buffer exists
   of course.
-`selected' or t: Use the set of arguments from the respective
+`selected': Use the set of arguments from the respective
   buffer, but only if it is displayed in a window of the current
   frame.  This is the default.
 `current': Use the set of arguments from the respective buffer,
@@ -235,9 +235,11 @@ and Buffer Arguments'."
   :package-version '(magit . "3.0.0")
   :group 'magit-buffers
   :group 'magit-commands
-  :type '(choice (const :tag "always use args from buffer" always)
-                 (const :tag "use args from buffer if it is current" current)
-                 (const :tag "never use args from buffer" never)))
+  :type '(choice
+          (const :tag "always use args from buffer" always)
+          (const :tag "use args from buffer if displayed in frame" selected)
+          (const :tag "use args from buffer if it is current" current)
+          (const :tag "never use args from buffer" never)))
 
 (defcustom magit-direct-use-buffer-arguments 'selected
   "Whether certain commands reuse arguments active in relevant buffer.
@@ -251,7 +253,7 @@ Valid values are:
 `always': Always use the set of arguments that is currently
   active in the respective buffer, provided that buffer exists
   of course.
-`selected' or t: Use the set of arguments from the respective
+`selected': Use the set of arguments from the respective
   buffer, but only if it is displayed in a window of the current
   frame.  This is the default.
 `current': Use the set of arguments from the respective buffer,
@@ -264,9 +266,11 @@ and Buffer Arguments'."
   :package-version '(magit . "3.0.0")
   :group 'magit-buffers
   :group 'magit-commands
-  :type '(choice (const :tag "always use args from buffer" always)
-                 (const :tag "use args from buffer if it is current" current)
-                 (const :tag "never use args from buffer" never)))
+  :type '(choice
+          (const :tag "always use args from buffer" always)
+          (const :tag "use args from buffer if displayed in frame" selected)
+          (const :tag "use args from buffer if it is current" current)
+          (const :tag "never use args from buffer" never)))
 
 (defcustom magit-region-highlight-hook '(magit-diff-update-hunk-region)
   "Functions used to highlight the region.
@@ -540,6 +544,10 @@ Magit is documented in info node `(magit)'."
 (put 'magit-buffer-refname 'permanent-local t)
 (put 'magit-buffer-revision 'permanent-local t)
 (put 'magit-buffer-revision-hash 'permanent-local t)
+
+;; `magit-status' re-enables mode function but its refresher
+;; function does not reinstate this.
+(put 'magit-buffer-diff-files-suspended 'permanent-local t)
 
 (defvar-local magit-refresh-args nil
   "Obsolete.  Possibly the arguments used to refresh the current buffer.

@@ -9,6 +9,16 @@
 ;;;### (autoloads nil "eldoc-overlay" "eldoc-overlay.el" (0 0 0 0))
 ;;; Generated autoloads from eldoc-overlay.el
 
+(defvar eldoc-overlay-mode nil "\
+Non-nil if Eldoc-Overlay mode is enabled.
+See the `eldoc-overlay-mode' command
+for a description of this minor mode.
+Setting this variable directly does not take effect;
+either customize it (see the info node `Easy Customization')
+or call the function `eldoc-overlay-mode'.")
+
+(custom-autoload 'eldoc-overlay-mode "eldoc-overlay" nil)
+
 (autoload 'eldoc-overlay-mode "eldoc-overlay" "\
 Minor mode for displaying eldoc contextual documentation using a text overlay.
 
@@ -18,8 +28,6 @@ from Lisp, also enable the mode if ARG is omitted or nil, and
 toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
-
-(add-hook 'eldoc-mode-hook #'eldoc-overlay-mode)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "eldoc-overlay" '("eldoc-overlay-")))
 

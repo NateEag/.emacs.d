@@ -1128,11 +1128,13 @@ contains a single candidate.")
            (cond ((string-match
                    "\\`\\([^/]+?\\):\\(?:\\(.*\\)@\\)?\\(.*\\)\\'"
                    ivy-text)
-                  (ivy-set-text (ivy-state-current ivy-last)))
+                  (save-match-data
+                    (ivy-set-text (ivy-state-current ivy-last))))
                  ((string-match
                    "\\`\\([^/]+?\\):\\(?:\\(.*\\)@\\)?\\(.*\\)\\'"
                    (ivy-state-current ivy-last))
-                  (ivy-set-text (ivy-state-current ivy-last)))))
+                  (save-match-data
+                    (ivy-set-text (ivy-state-current ivy-last))))))
       (string-match
        "\\`/\\([^/]+?\\):\\(?:\\(.*\\)@\\)?\\(.*\\)\\'"
        ivy-text)))
@@ -1349,9 +1351,10 @@ If the text hasn't changed as a result, forward to `ivy-alt-done'."
   "Move cursor vertically down ARG candidates.
 If the input is empty, select the previous history element instead."
   (interactive "p")
-  (if (string= ivy-text "")
-      (ivy-previous-history-element 1)
-    (ivy-next-line arg)))
+  (let ((orig-index ivy--index))
+    (ivy-next-line arg)
+    (when (and (string= ivy-text "") (eq ivy--index orig-index))
+      (ivy-previous-history-element 1))))
 
 (defun ivy-previous-line (&optional arg)
   "Move cursor vertically up ARG candidates."
@@ -1369,9 +1372,10 @@ If the input is empty, select the previous history element instead."
   "Move cursor vertically up ARG candidates.
 If the input is empty, select the previous history element instead."
   (interactive "p")
-  (when (string= ivy-text "")
-    (ivy-previous-history-element 1))
-  (ivy-previous-line arg))
+  (let ((orig-index ivy--index))
+    (ivy-previous-line arg)
+    (when (and (string= ivy-text "") (eq ivy--index orig-index))
+      (ivy-previous-history-element 1))))
 
 (defun ivy-toggle-calling ()
   "Flip `ivy-calling'."
@@ -4453,13 +4457,20 @@ BUFFER may be a string or nil."
   (let ((ivy--recompute-index-inhibit t))
     (ivy--exhibit)))
 
+(defun ivy--kill-current-candidate-buffer ()
+  (setf (ivy-state-preselect ivy-last) ivy--index)
+  (setq ivy--old-re nil)
+  (setq ivy--all-candidates (ivy--buffer-list "" ivy-use-virtual-buffers nil))
+  (let ((ivy--recompute-index-inhibit t))
+    (ivy--exhibit)))
+
 (defun ivy--kill-buffer-action (buffer)
   "Kill BUFFER."
   (ivy--kill-buffer-or-virtual buffer)
   (unless (buffer-live-p (ivy-state-buffer ivy-last))
     (setf (ivy-state-buffer ivy-last)
           (with-ivy-window (current-buffer))))
-  (ivy--kill-current-candidate))
+  (ivy--kill-current-candidate-buffer))
 
 (defvar ivy-switch-buffer-map
   (let ((map (make-sparse-keymap)))

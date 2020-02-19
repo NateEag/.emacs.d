@@ -12,10 +12,10 @@
 (autoload 'pdf-annot-minor-mode "pdf-annot" "\
 Support for PDF Annotations.
 
-If called interactively, enable Pdf-Annot minor mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Pdf-Annot minor mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \\{pdf-annot-minor-mode-map}
 
@@ -45,10 +45,10 @@ if ARG is `toggle'; disable the mode otherwise.
 (autoload 'pdf-history-minor-mode "pdf-history" "\
 Keep a history of previously visited pages.
 
-If called interactively, enable Pdf-History minor mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Pdf-History minor mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 This is a simple stack-based history.  Turning the page or
 following a link pushes the left-behind page on the stack, which
@@ -75,10 +75,10 @@ may be navigated with the following keys.
 (autoload 'pdf-isearch-minor-mode "pdf-isearch" "\
 Isearch mode for PDF buffer.
 
-If called interactively, enable Pdf-Isearch minor mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Pdf-Isearch minor mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 When this mode is enabled \\[isearch-forward], among other keys,
 starts an incremental search in this PDF document.  Since this mode
@@ -120,10 +120,10 @@ that not every isearch command work as expected.
 (autoload 'pdf-links-minor-mode "pdf-links" "\
 Handle links in PDF documents.\\<pdf-links-minor-mode-map>
 
-If called interactively, enable Pdf-Links minor mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Pdf-Links minor mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 If this mode is enabled, most links in the document may be
 activated by clicking on them or by pressing \\[pdf-links-action-perform] and selecting
@@ -178,40 +178,42 @@ see.
 (autoload 'pdf-misc-minor-mode "pdf-misc" "\
 FIXME:  Not documented.
 
-If called interactively, enable Pdf-Misc minor mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Pdf-Misc minor mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
 (autoload 'pdf-misc-size-indication-minor-mode "pdf-misc" "\
 Provide a working size indication in the mode-line.
 
-If called interactively, enable Pdf-Misc-Size-Indication minor mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Pdf-Misc-Size-Indication minor
+mode if ARG is positive, and disable it if ARG is zero or
+negative.  If called from Lisp, also enable the mode if ARG is
+omitted or nil, and toggle it if ARG is `toggle'; disable the
+mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
 (autoload 'pdf-misc-menu-bar-minor-mode "pdf-misc" "\
 Display a PDF Tools menu in the menu-bar.
 
-If called interactively, enable Pdf-Misc-Menu-Bar minor mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Pdf-Misc-Menu-Bar minor mode if
+ARG is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
 (autoload 'pdf-misc-context-menu-minor-mode "pdf-misc" "\
 Provide a right-click context menu in PDF buffers.
 
-If called interactively, enable Pdf-Misc-Context-Menu minor mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Pdf-Misc-Context-Menu minor mode
+if ARG is positive, and disable it if ARG is zero or negative.
+If called from Lisp, also enable the mode if ARG is omitted or
+nil, and toggle it if ARG is `toggle'; disable the mode
+otherwise.
 
 \\{pdf-misc-context-menu-minor-mode-map}
 
@@ -254,10 +256,10 @@ or call the function `pdf-occur-global-minor-mode'.")
 (autoload 'pdf-occur-global-minor-mode "pdf-occur" "\
 Enable integration of Pdf Occur with other modes.
 
-If called interactively, enable Pdf-Occur-Global minor mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Pdf-Occur-Global minor mode if
+ARG is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 This global minor mode enables (or disables)
 `pdf-occur-ibuffer-minor-mode' and `pdf-occur-dired-minor-mode'
@@ -268,10 +270,10 @@ in all current and future ibuffer/dired buffer.
 (autoload 'pdf-occur-ibuffer-minor-mode "pdf-occur" "\
 Hack into ibuffer's do-occur binding.
 
-If called interactively, enable Pdf-Occur-Ibuffer minor mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Pdf-Occur-Ibuffer minor mode if
+ARG is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 This mode remaps `ibuffer-do-occur' to
 `pdf-occur-ibuffer-do-occur', which will start the PDF Tools
@@ -283,10 +285,10 @@ and otherwise fallback to `ibuffer-do-occur'.
 (autoload 'pdf-occur-dired-minor-mode "pdf-occur" "\
 Hack into dired's `dired-do-search' binding.
 
-If called interactively, enable Pdf-Occur-Dired minor mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Pdf-Occur-Dired minor mode if ARG
+is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 This mode remaps `dired-do-search' to
 `pdf-occur-dired-do-search', which will start the PDF Tools
@@ -305,10 +307,10 @@ and otherwise fallback to `dired-do-search'.
 (autoload 'pdf-outline-minor-mode "pdf-outline" "\
 Display an outline of a PDF document.
 
-If called interactively, enable Pdf-Outline minor mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Pdf-Outline minor mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 This provides a PDF's outline on the menu bar via imenu.
 Additionally the same outline may be viewed in a designated
@@ -344,10 +346,10 @@ been compiled with `--synctex=1'.  In AUCTeX this can be done by
 setting `TeX-source-correlate-method' to 'synctex (before AUCTeX
 is loaded) and enabling `TeX-source-correlate-mode'.
 
-If called interactively, enable Pdf-Sync minor mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Pdf-Sync minor mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 Then \\[pdf-sync-backward-search-mouse] in the PDF buffer will open the
 corresponding TeX location.
@@ -464,10 +466,10 @@ or call the function `pdf-virtual-global-minor-mode'.")
 (autoload 'pdf-virtual-global-minor-mode "pdf-virtual" "\
 Enable recognition and handling of VPDF files.
 
-If called interactively, enable Pdf-Virtual-Global minor mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Pdf-Virtual-Global minor mode if
+ARG is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 

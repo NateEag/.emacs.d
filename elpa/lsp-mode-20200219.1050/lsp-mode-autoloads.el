@@ -20,6 +20,18 @@
 
 ;;;***
 
+;;;### (autoloads nil "lsp-cpp" "lsp-cpp.el" (0 0 0 0))
+;;; Generated autoloads from lsp-cpp.el
+
+(autoload 'lsp-cpp-flycheck-clang-tidy-error-explainer "lsp-cpp" "\
+Explain a clang-tidy ERROR by scraping documentation from llvm.org.
+
+\(fn ERROR)" nil nil)
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-cpp" '("lsp-cpp-flycheck-clang-tidy--")))
+
+;;;***
+
 ;;;### (autoloads nil "lsp-csharp" "lsp-csharp.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-csharp.el
 

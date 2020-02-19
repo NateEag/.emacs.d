@@ -2,8 +2,8 @@
 
 ;; Author: Nicolas Martyanoff <khaelin@gmail.com>
 ;; URL: https://github.com/galdor/rfc-mode
-;; Package-Version: 20190525.1910
-;; Version: 1.0.0
+;; Package-Version: 20200215.1357
+;; Version: 1.2.0
 ;; Package-Requires: ((emacs "25.1") (helm "3.2"))
 
 ;; Copyright 2019 Nicolas Martyanoff <khaelin@gmail.com>
@@ -26,10 +26,11 @@
 
 ;;; Code:
 
-(require 'helm)
+(require 'helm nil t)
 (require 'seq)
 
-;;; Configuration
+;;; Configuration:
+
 (defgroup rfc-mode-group nil
   "Tools to browse and read RFC documents."
   :prefix "rfc-mode-"
@@ -65,29 +66,29 @@
 
 (defcustom rfc-mode-directory (expand-file-name "~/rfc/")
   "The directory where RFC documents are stored."
-  :type 'directory
-  :group 'rfc-mode)
+  :type 'directory)
 
 (defcustom rfc-mode-document-url
   "https://www.rfc-editor.org/rfc/rfc%s.txt"
   "A `format'able URL for fetching arbitrary RFC documents.
 Assume RFC documents are named as e.g. rfc21.txt, rfc-index.txt."
-  :type 'string
-  :group 'rfc-mode)
+  :type 'string)
+
+(defcustom rfc-mode-use-original-buffer-names nil
+  "Whether RFC document buffers should keep their original name or not."
+  :type 'boolean)
 
 (defcustom rfc-mode-browser-entry-title-width 60
   "The width of the column containing RFC titles in the browser."
-  :type 'integer
-  :group 'rfc-mode)
+  :type 'integer)
 
-;;; Misc variables
-(defvar rfc-mode-index-path (concat rfc-mode-directory "rfc-index.txt")
-  "The path of the file containing the index of all RFC documents.")
+;;; Misc variables:
 
 (defvar rfc-mode-index-entries nil
   "The list of entries in the RFC index.")
 
-;;; Keys
+;;; Keys:
+
 (defvar rfc-mode-map
   (let ((map (make-keymap)))
     (define-key map (kbd "q") 'rfc-mode-quit)
@@ -96,7 +97,8 @@ Assume RFC documents are named as e.g. rfc21.txt, rfc-index.txt."
     map)
   "The keymap for `rfc-mode'.")
 
-;;; Main
+;;; Main:
+
 (defun rfc-mode-init ()
   "Initialize the current buffer for `rfc-mode'."
   (setq-local buffer-read-only t)
@@ -122,6 +124,7 @@ Assume RFC documents are named as e.g. rfc21.txt, rfc-index.txt."
   (rfc-mode-previous-header)
   (recenter 0))
 
+;;;###autoload
 (defun rfc-mode-read (number)
   "Read the RFC document NUMBER."
   (interactive "nRFC number: ")
@@ -131,29 +134,28 @@ Assume RFC documents are named as e.g. rfc21.txt, rfc-index.txt."
   "Reload the RFC document index from its original file."
   (interactive)
   (setq rfc-mode-index-entries
-        (rfc-mode-read-index-file rfc-mode-index-path)))
+        (rfc-mode-read-index-file (rfc-mode-index-path))))
 
 (defun rfc-mode-browse ()
   "Browse through all RFC documents referenced in the index using Helm."
   (interactive)
-  (rfc-mode--fetch-document "-index" rfc-mode-index-path)
+  (rfc-mode--fetch-document "-index" (rfc-mode-index-path))
   (unless rfc-mode-index-entries
     (setq rfc-mode-index-entries
-          (rfc-mode-read-index-file rfc-mode-index-path)))
+          (rfc-mode-read-index-file (rfc-mode-index-path))))
   (helm :buffer "*helm rfc browser*"
         :sources (rfc-mode-browser-helm-sources rfc-mode-index-entries)))
 
 ;;;###autoload
-(define-derived-mode rfc-mode fundamental-mode "rfc-mode"
+(define-derived-mode rfc-mode text-mode "rfc-mode"
   "Major mode to browse and read RFC documents."
-  :syntax-table text-mode-syntax-table
-  :mode-map rfc-mode-map
   (rfc-mode-init))
 
 ;;;###autoload
-(add-to-list 'auto-mode-alist '("rfc[0-9]+\\.txt\\'" . rfc-mode))
+(add-to-list 'auto-mode-alist '("/rfc[0-9]+\\.txt\\'" . rfc-mode))
 
-;;; Syntax utils
+;;; Syntax utils:
+
 (defun rfc-mode-highlight ()
   "Highlight the current buffer."
   (with-silent-modifications
@@ -172,7 +174,7 @@ Assume RFC documents are named as e.g. rfc21.txt, rfc-index.txt."
       ;; Section titles
       (save-excursion
         (goto-char (point-min))
-        (while (search-forward-regexp "^\\([0-9]+\\.\\)+ .*$" nil t)
+        (while (search-forward-regexp "^\\(?:[0-9]+\\.\\)+\\(?:[0-9]+\\)? .*$" nil t)
           (let ((start (match-beginning 0))
                 (end (match-end 0)))
             (put-text-property start end
@@ -223,7 +225,8 @@ no next header is found."
     (goto-char (match-beginning 0))
     (rfc-mode-header-start)))
 
-;;; Browser utils
+;;; Browser utils:
+
 (defun rfc-mode-browser-helm-sources (entries)
   "Create a Helm source for ENTRIES.
 
@@ -261,7 +264,12 @@ ENTRY is a RFC index entry in the browser."
   (let ((number (plist-get entry :number)))
     (rfc-mode-read number)))
 
-;;; Index utils
+;;; Index utils:
+
+(defun rfc-mode-index-path ()
+  "Return he path of the file containing the index of all RFC documents."
+  (concat rfc-mode-directory "rfc-index.txt"))
+
 (defun rfc-mode-read-index-file (path)
   "Read an RFC index file at PATH and return a list of entries."
   (with-temp-buffer
@@ -310,14 +318,15 @@ ENTRY is a RFC index entry in the browser."
                    (rfc-mode--parse-rfc-refs (match-string 1 string))))
       entry)))
 
-;;; Document utils
+;;; Document utils:
+
 (defun rfc-mode--document-buffer-name (number)
   "Return the buffer name for the RFC document NUMBER."
   (concat "*rfc" (number-to-string number) "*"))
 
 (defun rfc-mode--document-path (number)
   "Return the absolute path of the RFC document NUMBER."
-  (concat rfc-mode-directory "rfc" (number-to-string number) ".txt"))
+  (expand-file-name (format "rfc%s.txt" number) rfc-mode-directory))
 
 (defun rfc-mode--document-buffer (number)
   "Return a buffer visiting the RFC document NUMBER.
@@ -327,21 +336,22 @@ The buffer is created if it does not exist."
          (document-path (rfc-mode--document-path number)))
     (rfc-mode--fetch-document number document-path)
     (find-file document-path)
-    (rename-buffer buffer-name)
+    (unless rfc-mode-use-original-buffer-names
+      (rename-buffer buffer-name))
     (rfc-mode)
     (current-buffer)))
 
-;;; Misc utils
+;;; Misc utils:
 
 (defun rfc-mode--fetch-document (suffix document-path)
   "Ensure an RFC document with SUFFIX exists at DOCUMENT-PATH.
 If no such file exists, fetch it from `rfc-document-url'."
-  (rfc-mode--check-directory)
+  (rfc-mode--ensure-directory-exists)
   (unless (file-exists-p document-path)
     (url-copy-file (format rfc-mode-document-url suffix) document-path)))
 
-(defun rfc-mode--check-directory ()
-  "Check that `rfc-mode-directory' exists -- create if not."
+(defun rfc-mode--ensure-directory-exists ()
+  "Check that `rfc-mode-directory' exists, creating it if it does not."
   (when (and (not (file-exists-p rfc-mode-directory))
              (y-or-n-p (format "Create directory %s? " rfc-mode-directory)))
     (make-directory rfc-mode-directory t)))

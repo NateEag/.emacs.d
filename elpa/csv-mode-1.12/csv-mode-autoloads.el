@@ -60,6 +60,18 @@ Major mode for editing files of tab-separated value type.
 
 ;;;***
 
+;;;### (autoloads nil "csv-mode-tests" "csv-mode-tests.el" (0 0 0
+;;;;;;  0))
+;;; Generated autoloads from csv-mode-tests.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "csv-mode-tests" '("csv-mode-tests--align-fields")))
+
+;;;***
+
+;;;### (autoloads nil nil ("csv-mode-pkg.el") (0 0 0 0))
+
+;;;***
+
 ;; Local Variables:
 ;; version-control: never
 ;; no-byte-compile: t

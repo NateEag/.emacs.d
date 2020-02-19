@@ -1,6 +1,6 @@
 ;; geiser-guile.el -- guile's implementation of the geiser protocols
 
-;; Copyright (C) 2009-2018 Jose Antonio Ortega Ruiz
+;; Copyright (C) 2009-2018, 2020 Jose Antonio Ortega Ruiz
 ;; Copyright (C) 2017 Jan Nieuwenhuizen <janneke@gnu.org>
 
 ;; This program is free software; you can redistribute it and/or
@@ -370,10 +370,13 @@ it spawn a server thread."
   (compilation-setup t)
   (font-lock-add-keywords nil `((,geiser-guile--path-rx
                                  1 compilation-error-face)))
-  (let ((geiser-log-verbose-p t))
+  (let ((geiser-log-verbose-p t)
+        (g-load-path (buffer-local-value 'geiser-guile-load-path
+                                         (or geiser-repl--last-scm-buffer
+                                             (current-buffer)))))
     (when remote (geiser-guile--set-geiser-load-path))
     (geiser-eval--send/wait ",use (geiser emacs)\n'done")
-    (dolist (dir geiser-guile-load-path)
+    (dolist (dir g-load-path)
       (let ((dir (expand-file-name dir)))
         (geiser-eval--send/wait `(:eval (:ge add-to-load-path ,dir)))))
     (geiser-guile-update-warning-level)))

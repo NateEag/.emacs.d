@@ -45,6 +45,10 @@
   necessary - if point is in a string matching \$[a-zA-Z0-9_]+, you *know* you
   should insert a _. You can maybe do smarter stuff than just that, too.
 
+- Teach auto-compile to not get in the way when bisecting. I sometimes wind up
+  in states that won't yield a working Emacs, which is kind of a pain. I might
+  be able to just update/extend my `githooks/` dir and get what I need here.
+
 - Consider upstreaming a cleaned-up version of my smart-dash-mode hacks file?
   It's handy for bash but not sure how generally applicable it is. Teaching
   smart-dash-mode to be smarter about languages with variable sigils could be

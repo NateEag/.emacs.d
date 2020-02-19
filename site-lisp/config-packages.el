@@ -180,7 +180,7 @@ The shell command lives in my dotfiles repo."
     ;; TODO Get address completion to work correctly. I can trigger it now, but
     ;; it assumes I want the first result, which is not often true and thus
     ;; forces me to type more than I want to.
-    (define-key notmuch-message-mode-map
+    (define-key message-mode-map
                 (kbd "<backtab>")
                 '(lambda () (interactive) (notmuch-address-expand-name)))))
 

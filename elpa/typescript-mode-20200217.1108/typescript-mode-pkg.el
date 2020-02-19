@@ -1,4 +1,4 @@
-(define-package "typescript-mode" "20200117.1708" "Major mode for editing typescript"
+(define-package "typescript-mode" "20200217.1108" "Major mode for editing typescript"
   '((emacs "24.3"))
   :keywords
   '("typescript" "languages")

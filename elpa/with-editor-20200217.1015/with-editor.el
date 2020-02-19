@@ -101,6 +101,7 @@
 (declare-function dired-get-filename 'dired)
 (declare-function term-emulate-terminal 'term)
 (defvar eshell-preoutput-filter-functions)
+(defvar git-commit-post-finish-hook)
 
 ;;; Options
 
@@ -176,7 +177,7 @@ please see https://github.com/magit/magit/wiki/Emacsclient."))))
 
 (defcustom with-editor-sleeping-editor "\
 sh -c '\
-echo -e \"WITH-EDITOR: $$ OPEN $0\\037 IN $(pwd)\"; \
+printf \"WITH-EDITOR: $$ OPEN $0\\037 IN $(pwd)\\n\"; \
 sleep 604800 & sleep=$!; \
 trap \"kill $sleep; exit 0\" USR1; \
 trap \"kill $sleep; exit 1\" USR2; \

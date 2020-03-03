@@ -86,6 +86,13 @@ Load all of the provided PROJECTS.
 
 ;;;***
 
+;;;### (autoloads nil "lsp-gdscript" "lsp-gdscript.el" (0 0 0 0))
+;;; Generated autoloads from lsp-gdscript.el
+
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "lsp-gdscript" '("lsp-gdscript-")))
+
+;;;***
+
 ;;;### (autoloads nil "lsp-go" "lsp-go.el" (0 0 0 0))
 ;;; Generated autoloads from lsp-go.el
 

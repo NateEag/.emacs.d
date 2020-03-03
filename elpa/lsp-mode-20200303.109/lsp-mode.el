@@ -113,6 +113,8 @@
    "Operator"
    "TypeParameter"])
 
+(defconst lsp--empty-ht (make-hash-table))
+
 (define-obsolete-variable-alias 'lsp-print-io 'lsp-log-io "lsp-mode 6.1")
 
 (defcustom lsp-log-io nil
@@ -187,7 +189,7 @@ occasionally break as language servers are updated."
 
 (defcustom lsp-client-packages
   '(ccls cquery lsp-clients lsp-clojure lsp-csharp lsp-css lsp-dart lsp-elm
-    lsp-erlang lsp-eslint lsp-fsharp lsp-go lsp-haskell lsp-haxe
+    lsp-erlang lsp-eslint lsp-fsharp lsp-gdscript lsp-go lsp-haskell lsp-haxe
     lsp-intelephense lsp-java lsp-json lsp-metals lsp-pwsh lsp-pyls
     lsp-python-ms lsp-rust lsp-solargraph lsp-terraform lsp-verilog lsp-vetur
     lsp-vhdl lsp-xml lsp-yaml)
@@ -503,7 +505,7 @@ The hook will receive two parameters list of added and removed folders."
 (defcustom lsp-imenu-sort-methods '(kind name)
   "How to sort the imenu items.
 
-The value is a list of `kind' `name' or `position'. Priorities
+The value is a list of `kind' `name' or `position'.  Priorities
 are determined by the index of the element."
   :type '(repeat (choice (const name)
                          (const position)
@@ -529,7 +531,7 @@ are determined by the index of the element."
 METHOD is one of the symbols accepted by
 `lsp-imenu-sort-methods'.
 
-FUNCTION takes two hash tables representing DocumentSymbol. It
+FUNCTION takes two hash tables representing DocumentSymbol.  It
 returns a negative number, 0, or a positive number indicating
 whether the first parameter is less than, equal to, or greater
 than the second parameter.")
@@ -644,7 +646,8 @@ Changes take effect only when a new session is started."
                                         (crystal-mode . "crystal")
                                         (nim-mode . "nim")
                                         (dhall-mode . "dhall")
-                                        (cmake-mode . "cmake"))
+                                        (cmake-mode . "cmake")
+                                        (gdscript-mode . "gdscript"))
   "Language id configuration.")
 
 (defvar lsp--last-active-workspaces nil
@@ -679,7 +682,7 @@ directory")
     ("textDocument/rangeFormatting" :capability "documentRangeFormattingProvider")
     ("textDocument/references" :capability "referencesProvider")
     ("textDocument/selectionRange" :capability "selectionRangeProvider")
-    ("textDocument/signatureHelp" "signatureHelpProvider")
+    ("textDocument/signatureHelp" :capability "signatureHelpProvider")
     ("textDocument/typeDefinition" :capability "typeDefinitionProvider")
     ("workspace/executeCommand" :capability "executeCommandProvider")
     ("workspace/symbol" :capability "workspaceSymbolProvider"))
@@ -1142,7 +1145,7 @@ INHERIT-INPUT-METHOD will be proxied to `completing-read' without changes."
       ;; server may send character position beyond the current line and we
       ;; should fallback to line end.
       (let ((line-end (line-end-position)))
-        (if (> character (- line-end (point)))
+        (if (or (not character) (> character (- line-end (point))))
             line-end
           (forward-char character)
           (point))))))
@@ -1461,17 +1464,19 @@ PARAMS - the data sent from WORKSPACE."
         (completing-read (concat message " ") (seq-into choices 'list) nil t)
       (lsp-log message))))
 
-(defun lsp-diagnostics ()
+(defun lsp-diagnostics (&optional current-workspace?)
   "Return the diagnostics from all workspaces."
   (let ((result (make-hash-table :test 'equal)))
-    (-> (lsp-session)
-        (lsp--session-workspaces)
-        (--each (maphash
-                 (lambda (file-name diagnostics)
-                   (puthash file-name
-                            (append (gethash file-name result) diagnostics)
-                            result))
-                 (lsp--workspace-diagnostics it))))
+    (mapc (lambda (workspace)
+            (maphash
+             (lambda (file-name diagnostics)
+               (puthash file-name
+                        (append (gethash file-name result) diagnostics)
+                        result))
+             (lsp--workspace-diagnostics workspace)))
+          (if current-workspace?
+              (lsp-workspaces)
+            (lsp--session-workspaces (lsp-session))))
     result))
 
 (cl-defstruct lsp-diagnostic
@@ -1486,6 +1491,61 @@ PARAMS - the data sent from WORKSPACE."
   (message nil) ;; diagnostics message
   (original nil))
 
+
+;; diagnostic modeline
+(defun lsp--severity-code->severity (severity-code)
+  (cl-case severity-code
+    (1 'error)
+    (2 'warning)
+    (3 'info)
+    (4 'hint)))
+
+(defcustom lsp-diagnostics-modeline-scope :workspace
+  "The scope "
+  :group 'lsp-mode
+  :type '(choice (const :tag "File" :file)
+                 (const :tag "Current workspace" :workspace)
+                 (const :tag "All" :global))
+  :package-version '(lsp-mode . "6.3"))
+
+(defun lsp--diagnostics-modeline-statistics ()
+  "Caculate diagnostics statistics based on `lsp-diagnostics-modeline-scope'"
+  (let ((diagnostics (cond
+                      ((equal :file lsp-diagnostics-modeline-scope)
+                       (lsp--get-buffer-diagnostics))
+                      (t (->> (eq :workspace lsp-diagnostics-modeline-scope)
+                              (lsp-diagnostics)
+                              (ht-values)
+                              (-flatten))))))
+    (->> diagnostics
+         (-group-by #'lsp-diagnostic-severity)
+         (-sort (-lambda ((left) (right))
+                  (> right left)))
+         (-map (-juxt (-compose #'lsp--severity-code->severity #'cl-first)
+                      (-compose #'length #'cl-rest)))
+         (-map (-lambda ((code count))
+                 (propertize (format "%s" count)
+                             'face (cl-case code
+                                     ('error 'error)
+                                     ('warning 'warning)
+                                     ('info 'success)
+                                     ('hint 'success)))))
+         (s-join "/")
+         (format "%s"))))
+
+(define-minor-mode lsp-diagnostics-modeline-mode
+  "Toggle diagnostics modeline."
+  :group 'lsp-mode
+  :global nil
+  :lighter ""
+  (let ((status '(t (:eval (concat " " (lsp--diagnostics-modeline-statistics) " ")))))
+    (setq-local global-mode-string
+                (cond ((and lsp-diagnostics-modeline-mode
+                            (not (-contains? global-mode-string status)))
+                       (cons status global-mode-string))
+                      (t (remove status global-mode-string))))))
+
+
 (defun lsp--make-diag (diag)
   "Make a `lsp-diagnostic' from DIAG."
   (-let* (((&hash "message" "code" "source" "severity"
@@ -1507,7 +1567,6 @@ PARAMS - the data sent from WORKSPACE."
 (defalias 'lsp--buffer-for-file (if (eq system-type 'windows-nt)
                                     #'find-buffer-visiting
                                   #'get-file-buffer))
-
 
 (defun lsp--on-diagnostics (workspace params)
   "Callback for textDocument/publishDiagnostics.
@@ -2035,12 +2094,14 @@ CALLBACK - callback for the lenses."
     (add-hook 'lsp-on-idle-hook #'lsp--lens-idle-function nil t)
     (add-hook 'lsp-on-change-hook (lambda () (lsp--lens-schedule-refresh t)) nil t)
     (add-hook 'after-save-hook (lambda () (lsp--lens-schedule-refresh t)) nil t)
+    (add-hook 'before-revert-hook #'lsp-lens-hide nil t)
     (lsp-lens-refresh t))
    (t
     (lsp-lens-hide)
     (remove-hook 'lsp-on-idle-hook #'lsp--lens-idle-function t)
     (remove-hook 'lsp-on-change-hook (lambda () (lsp--lens-schedule-refresh nil)) t)
     (remove-hook 'after-save-hook (lambda () (lsp--lens-schedule-refresh t)) t)
+    (remove-hook 'before-revert-hook #'lsp-lens-hide t)
     (setq lsp--lens-last-count nil)
     (setq lsp--lens-backend-cache nil))))
 
@@ -2167,6 +2228,7 @@ BINDINGS is a list of (key def cond)."
       "gh" lsp-treemacs-call-hierarchy (and (lsp-feature? "callHierarchy/incomingCalls")
                                             (fboundp 'lsp-treemacs-call-hierarchy))
       "ga" xref-find-apropos (lsp-feature? "workspace/symbol")
+      "ge" lsp-treemacs-errors-list (fboundp 'lsp-treemacs-errors-list)
 
       ;; help
       "hh" lsp-describe-thing-at-point (lsp-feature? "textDocument/hover")
@@ -2242,6 +2304,7 @@ BINDINGS is a list of (key def cond)."
      "g h" "call hierarchy"
      "g a" "find symbol in workspace"
      "g A" "find symbol in all workspaces"
+     "g e" "show errors"
 
      "h"   "help"
      "h h" "describe symbol at point"
@@ -2753,7 +2816,6 @@ callback will be executed only if the buffer was not modified.
 
 ERROR-CALLBACK will be called in case the request has failed.
 If NO-MERGE is non-nil, don't merge the results but return alist workspace->result."
-  (lsp--flush-delayed-changes)
 
   (when cancel-token
     (lsp-cancel-request-by-token cancel-token))
@@ -2816,8 +2878,8 @@ To find out what capabilities support your server use `M-x lsp-describe-session'
   (with-demoted-errors "LSP error: %S"
     (let ((lsp-response-timeout 0.5))
       (condition-case _err
-          (lsp-request "shutdown" (make-hash-table))
-        (error (lsp--error "Timeout while sending shutdown request."))))
+          (lsp-request "shutdown" lsp--empty-ht)
+        (error (lsp--error "Timeout while sending shutdown request"))))
     (lsp-notify "exit" nil))
   (setf (lsp--workspace-shutdown-action lsp--cur-workspace) (or (and restart 'restart) 'shutdown))
   (lsp--uninitialize-workspace))
@@ -2882,7 +2944,10 @@ disappearing, unset all the variables related to it."
                                          `((dynamicRegistration . t)
                                            (rangeLimit . ,lsp-folding-range-limit)
                                            (lineFoldingOnly . ,(or lsp-folding-line-folding-only :json-false)))))
-                      (callHierarchy . ((dynamicRegistration . :json-false)))))
+                      (callHierarchy . ((dynamicRegistration . :json-false)))
+                      (publishDiagnostics . ((relatedInformation . t)
+	                                           (tagSupport . ((valueSet . [1 2])))
+	                                           (versionSupport . t)))))
      (window . ((workDoneProgress . t))))
    custom-capabilities))
 
@@ -3218,7 +3283,7 @@ in that particular folder."
       (setq-local global-mode-string (remove status global-mode-string))))))
 
 (defun lsp--text-document-did-open ()
-  "'document/didOpen event."
+  "'document/didOpen' event."
   (run-hooks 'lsp-before-open-hook)
   (setq lsp--cur-version (or lsp--cur-version 0))
   (cl-pushnew (current-buffer) (lsp--workspace-buffers lsp--cur-workspace))
@@ -3491,7 +3556,7 @@ The method uses `replace-buffer-contents'."
   "Get the value of capability CAP.  If CAPABILITIES is non-nil, use them instead."
   (gethash cap (or capabilities
                    (lsp--server-capabilities)
-                   (make-hash-table))))
+                   lsp--empty-ht)))
 
 (defun lsp--registered-capability (method)
   "Check whether there is workspace providing METHOD."
@@ -3658,18 +3723,30 @@ Added to `after-change-functions'."
          (lambda (workspace)
            (pcase (or lsp-document-sync-method
                       (lsp--workspace-sync-method workspace))
-             (1 (cl-pushnew (list lsp--cur-workspace
-                                  (current-buffer)
-                                  (lsp--versioned-text-document-identifier)
-                                  (lsp--full-change-event))
-                            lsp--delayed-requests
-                            :test 'equal))
-             (2 (push (list lsp--cur-workspace
-                            (current-buffer)
-                            (lsp--versioned-text-document-identifier)
-                            (lsp--text-document-content-change-event
-                             start end length))
-                      lsp--delayed-requests))))
+             (1
+              (setq lsp--delayed-requests
+                    (->> lsp--delayed-requests
+                         (-remove (-lambda ((_ buffer))
+                                    (equal (current-buffer) buffer)))
+                         (cons (list workspace
+                                     (current-buffer)
+                                     (lsp--versioned-text-document-identifier)
+                                     (lsp--full-change-event))))))
+             (2
+              (with-lsp-workspace workspace
+                (lsp-notify
+                 "textDocument/didChange"
+                 (list :textDocument (lsp--versioned-text-document-identifier)
+                       :contentChanges (vector (lsp--text-document-content-change-event
+                                                start end length)))))
+              ;; TODO investigate why this does not work
+              ;; (push (list workspace
+              ;;             (current-buffer)
+              ;;
+              ;;             (lsp--text-document-content-change-event
+              ;;              start end length))
+              ;;       lsp--delayed-requests)
+              )))
          (lsp-workspaces))
         (when lsp--delay-timer (cancel-timer lsp--delay-timer))
         (setq lsp--delay-timer (run-with-idle-timer
@@ -3703,7 +3780,7 @@ Added to `after-change-functions'."
   :group 'lsp-mode)
 
 (defcustom lsp-on-idle-hook nil
-  "Hooks to run "
+  "Hooks to run after `lsp-idle-delay'."
   :type 'hook
   :group 'lsp-mode)
 
@@ -3940,40 +4017,125 @@ and the position respectively."
 
 (defvar lsp--capf-cache nil
   "Cached candidates for completion at point function.
-In the form of (prefix items args).")
+In the form of (prefix items :lsp-items ...).")
 
 (defun lsp--capf-clear-cache (&rest _)
   "Clear completion caches."
   (setq lsp--capf-cache nil))
 
-(defun lsp--capf-filter-candidates (pred string items &rest plist)
-  "List the possible completion of STRING in candidates ITEMS.
-Only the elements that satisfy predicate PRED are considered.
-PLIST is the additional data to attach to each candidate."
+(defun lsp--capf-guess-prefix (item &optional default)
+  "Guess ITEM's prefix start point according to following heuristics:
+- If `textEdit' exists, use insertion range start as prefix start point.
+- Else, find the point before current point that's longest prefix match of
+`insertText' or `label'.
+When the heuristic fails to find the prefix start point, return DEFAULT value."
+  (-let [(&hash "label"
+                "insertText" insert-text
+                "textEdit" text-edit)
+         item]
+    (or (cond
+         (text-edit
+          (car (-some->> text-edit
+                 (gethash "range")
+                 lsp--range-to-region)))
+         ((or insert-text label)
+          (let* ((text (or insert-text label))
+                 (start (max 1 (- (point) (length text))))
+                 start-point)
+            (while (and (< start (point)) (not start-point))
+              (when (s-prefix? (buffer-substring-no-properties start (point)) text)
+                (setq start-point start))
+              (cl-incf start))
+            start-point)))
+        default)))
+
+(defun lsp--capf-cached-items (items)
+  "Convert ITEMS into `lsp--capf-cache-items' form."
   (--> items
        (-map (-lambda ((item &as &hash
                              "label"
-                             "filterText" filter-text))
-               (propertize (or filter-text label) 'lsp-completion-item item))
+                             "filterText" filter-text
+                             "emacsStartPoint_" start-point))
+               (propertize (or filter-text label)
+                           'lsp-completion-item item
+                           'lsp-completion-start-point start-point))
              it)
        (seq-into it 'list)
-       (completion-all-completions string it pred (length string))
-       ;; completion-all-completions may return a list in form (a b . x)
-       ;; the last cdr is not important and need to be removed
-       (let ((tail (last it)))
-         (if (consp tail) (setcdr tail nil))
-         it)
-       (-map (-partial #'get-text-property 0 'lsp-completion-item) it)
-       (-map (-lambda ((item &as &hash
-                             "label"
-                             "insertText" insert-text
-                             "sortText" sort-text))
-               (propertize (or label insert-text)
-                           'lsp-completion-item item
-                           'lsp-completion-start-point (plist-get plist :start-point)
-                           'lsp-completion-prefix-line (plist-get plist :prefix-line)
-                           'lsp-sort-text sort-text))
-             it)))
+       (-group-by (-partial #'get-text-property 0 'lsp-completion-start-point) it)
+       (sort it (-on #'< (lambda (o) (or (car o) most-positive-fixnum))))))
+
+(cl-defun lsp--capf-filter-candidates (items
+                                       &optional
+                                       &rest plist
+                                       &key lsp-items
+                                       &allow-other-keys)
+  "List all possible completions in cached ITEMS with their prefixes.
+We can pass LSP-ITEMS, which will be used when there's no cache.
+Also, additional data to attached to each candidate can be passed via PLIST."
+  (let ((filtered-items
+         (if items
+             (->> items
+                  (-map (lambda (item)
+                          (--> (buffer-substring-no-properties (car item) (point))
+                               ;; TODO: roll-out our own matcher if needed.
+                               ;; https://github.com/rustify-emacs/fuz.el seems to be good candidate.
+                               (completion-all-completions it (cdr item) nil (length it))
+                               ;; completion-all-completions may return a list in form (a b . x)
+                               ;; the last cdr is not important and need to be removed
+                               (let ((tail (last it)))
+                                 (if (consp tail) (setcdr tail nil))
+                                 it))))
+                  (-flatten-n 1)
+                  ;; TODO: pass additional function to sort the candidates
+                  (-map (-partial #'get-text-property 0 'lsp-completion-item)))
+           lsp-items)))
+    (-map (lambda (item)
+            (-let (((&hash "label"
+                           "insertText" insert-text
+                           "sortText" sort-text
+                           "emacsStartPoint_" start-point)
+                    item)
+                   ((&plist :prefix-line) plist))
+              (propertize (or label insert-text)
+                          'lsp-completion-item item
+                          'lsp-sort-text sort-text
+                          'lsp-completion-start-point start-point
+                          'lsp-completion-prefix-line prefix-line)))
+          filtered-items)))
+
+(defun lsp--capf-company-match (candidate)
+  "Return highlights of typed prefix inside CANDIDATE."
+  (let* ((prefix (downcase
+                  (buffer-substring-no-properties
+                   (plist-get (text-properties-at 0 candidate) 'lsp-completion-start-point)
+                   (point))))
+         (prefix-len (length prefix))
+         (prefix-pos 0)
+         (label (downcase candidate))
+         (label-len (length label))
+         (label-pos 0)
+         matches start)
+    (while (and (not matches)
+                (< prefix-pos prefix-len))
+      (while (and (< prefix-pos prefix-len)
+                  (< label-pos label-len))
+        (if (equal (aref prefix prefix-pos) (aref label label-pos))
+            (progn
+              (unless start (setq start label-pos))
+              (cl-incf prefix-pos))
+          (when start
+            (setq matches (nconc matches `((,start . ,label-pos))))
+            (setq start nil)))
+        (cl-incf label-pos))
+      (when start (setq matches (nconc matches `((,start . ,label-pos)))))
+      ;; Search again when the whole prefix is not matched
+      (when (< prefix-pos prefix-len)
+        (setq matches nil))
+      ;; Start search from next offset of prefix to find a match with label
+      (unless matches
+        (cl-incf prefix-pos)
+        (setq label-pos 0)))
+    matches))
 
 (defun lsp-completion-at-point ()
   "Get lsp completions."
@@ -3988,7 +4150,7 @@ PLIST is the additional data to attach to each candidate."
       (list
        bounds-start
        (point)
-       (lambda (_probe pred action)
+       (lambda (_probe _pred action)
          (cond
           ((eq action 'metadata)
            `(metadata . ((display-sort-function
@@ -4003,34 +4165,29 @@ PLIST is the additional data to attach to each candidate."
           ((and lsp--capf-cache
                 (s-prefix? (car lsp--capf-cache)
                            (buffer-substring-no-properties bounds-start (point))))
-           (-let [(&plist :start-point) (cddr lsp--capf-cache)]
-             (unless (and start-point (> start-point (point-max)))
-               (apply #'lsp--capf-filter-candidates
-                      pred
-                      (buffer-substring-no-properties (or start-point (point)) (point))
-                      (cdr lsp--capf-cache)))))
+           (apply #'lsp--capf-filter-candidates (cdr lsp--capf-cache)))
           (t
            (-let* ((resp (lsp-request-while-no-input "textDocument/completion"
                                                      (plist-put (lsp--text-document-position-params)
                                                                 :context (ht ("triggerKind" 1)))))
-                   (items (lsp--sort-completions (cond
-                                                  ((seqp resp) resp)
-                                                  ((hash-table-p resp) (gethash "items" resp)))))
-                   (start (or (car (-some-> (lsp-elt items 0)
-                                     (lsp--ht-get "textEdit" "range")
-                                     lsp--range-to-region))
-                              bounds-start))
-                   (prefix (buffer-substring-no-properties start (point)))
+                   (items (->> (lsp--sort-completions (cond
+                                                       ((seqp resp) resp)
+                                                       ((hash-table-p resp) (gethash "items" resp))))
+                               (-map (lambda (item)
+                                       (puthash "emacsStartPoint_"
+                                                (lsp--capf-guess-prefix item bounds-start)
+                                                item)
+                                       item))))
                    (prefix-line (buffer-substring-no-properties (point-at-bol) (point))))
              (setf done? (or (seqp resp)
                              (not (gethash "isIncomplete" resp)))
                    lsp--capf-cache (when (and done? (not (seq-empty-p items)))
                                      (list (buffer-substring-no-properties bounds-start (point))
-                                           items
-                                           :start-point start
+                                           (lsp--capf-cached-items items)
+                                           :lsp-items nil
                                            :prefix-line prefix-line))
-                   result (lsp--capf-filter-candidates pred prefix items
-                                                       :start-point start
+                   result (lsp--capf-filter-candidates (if done? (cadr lsp--capf-cache))
+                                                       :lsp-items items
                                                        :prefix-line prefix-line))))))
        :annotation-function #'lsp--annotate
        :company-require-match 'never
@@ -4038,37 +4195,15 @@ PLIST is the additional data to attach to each candidate."
        (save-excursion
          (goto-char bounds-start)
          (lsp--looking-back-trigger-characters-p trigger-chars))
-       :company-match
-       (lambda (candidate)
-         (let* ((prefix (downcase
-                         (buffer-substring-no-properties
-                          (plist-get (text-properties-at 0 candidate) 'lsp-completion-start-point)
-                          (point))))
-                (prefix-len (length prefix))
-                (prefix-pos 0)
-                (label (downcase candidate))
-                (label-len (length label))
-                (label-pos 0)
-                matches start)
-           (while (and (< prefix-pos prefix-len)
-                       (< label-pos label-len))
-             (if (equal (aref prefix prefix-pos) (aref label label-pos))
-                 (progn
-                   (unless start (setq start label-pos))
-                   (cl-incf prefix-pos))
-               (when start
-                 (setq matches (nconc matches `((,start . ,label-pos))))
-                 (setq start nil)))
-             (cl-incf label-pos))
-           (when start (setq matches (nconc matches `((,start . ,label-pos)))))
-           matches))
+       :company-match #'lsp--capf-company-match
        :exit-function
        (lambda (candidate _status)
          (-let* (((&plist 'lsp-completion-item item
                           'lsp-completion-start-point start-point
                           'lsp-completion-prefix-line prefix-line)
                   (text-properties-at 0 candidate))
-                 ((&hash "insertText" insert-text
+                 ((&hash "label"
+                         "insertText" insert-text
                          "textEdit" text-edit
                          "insertTextFormat" insert-text-format
                          "additionalTextEdits" additional-text-edits)
@@ -4078,18 +4213,22 @@ PLIST is the additional data to attach to each candidate."
              (delete-region (point-at-bol) (point))
              (insert prefix-line)
              (lsp--apply-text-edit text-edit))
-            (insert-text
-             (delete-region (- (point) (length candidate)) (point))
-             (insert insert-text)))
+            ((or insert-text label)
+             (delete-region (point-at-bol) (point))
+             (insert prefix-line)
+             (delete-region start-point (point))
+             (insert (or insert-text label))))
 
            (when (eq insert-text-format 2)
-             (yas-expand-snippet (buffer-substring start-point (point))
-                                 start-point
-                                 (point)))
+             (yas-expand-snippet
+              (lsp--to-yasnippet-snippet (buffer-substring start-point (point)))
+              start-point
+              (point)))
            (when additional-text-edits
              (lsp--apply-text-edits additional-text-edits)))
          (lsp--capf-clear-cache)
-         (when lsp-signature-auto-activate
+         (when (and lsp-signature-auto-activate
+                    (lsp-feature? "textDocument/signatureHelp"))
            (lsp-signature-activate))
 
          (setq-local lsp-inhibit-lsp-hooks nil)
@@ -4100,21 +4239,12 @@ PLIST is the additional data to attach to each candidate."
 (advice-add #'completion-at-point :before #'lsp--capf-clear-cache)
 
 (defun lsp--to-yasnippet-snippet (text)
-  "Convert VS code snippet TEXT to yasnippet snippet."
-  ;; VS code snippet doesn't escape "{", but yasnippet requires escaping it.
-  (let (parts
-        (start 0))
-    (dolist (range (s-matched-positions-all (regexp-quote "{") text))
-      (let ((match-start (car range)))
-        (unless (and (> match-start 0) (= (aref text (1- match-start)) ?$))
-          ;; Not a start of field. Escape it.
-          (when (< start match-start)
-            (push (substring text start match-start) parts))
-          (push "\\{" parts)
-          (setq start (1+ match-start)))))
-    (when (< start (length text))
-      (push (substring text start) parts))
-    (apply #'concat (reverse parts))))
+  "Convert LSP snippet TEXT to yasnippet snippet."
+  ;; LSP snippet doesn't escape "{", but yasnippet requires escaping it.
+  (s-replace-regexp (rx (or bos (not (any "$" "\\"))) (group "{"))
+                    (rx "\\" (backref 1))
+                    text
+                    nil nil 1))
 
 (defun lsp--sort-completions (completions)
   "Sort COMPLETIONS."
@@ -4925,6 +5055,12 @@ unless overridden by a more specific face association."
 unless overridden by a more specific face association."
   :group 'lsp-faces)
 
+(defface lsp-face-semhl-disable
+  '((t :inherit font-lock-comment-face))
+  "Face used for semantic highlighting scopes matching meta.disabled,
+unless overridden by a more specific face association."
+  :group 'lsp-faces)
+
 (defface lsp-face-semhl-deprecated
   '((t (:underline (:color "yellow" :style wave))))
   "Face used for semantic highlighting scopes matching storage.type.primitive.*,
@@ -4957,13 +5093,15 @@ unless overridden by a more specific face association."
     ((("entity.name.type.enum")) . lsp-face-semhl-type-enum)
     ((("entity.name.type.typedef")
       ("entity.name.type.dependent")
-      ("entity.name.other.dependent")) . lsp-face-semhl-type-typedef)
+      ("entity.name.other.dependent")
+      ("entity.name.type.concept.cpp")) . lsp-face-semhl-type-typedef)
     ((("entity.name.namespace")) . lsp-face-semhl-namespace)
     ((("entity.name.function.preprocessor")) . lsp-face-semhl-preprocessor)
     ((("entity.name.type.template")) . lsp-face-semhl-type-template)
     ((("storage.type.primitive")) . lsp-face-semhl-type-primitive)
     ((("constant.other.key")) . lsp-face-semhl-constant)
     ((("constant.numeric.decimal")) . lsp-face-semhl-constant)
+    ((("meta.disabled")) . lsp-face-semhl-disabled)
     ((("invalid.deprecated")) .  lsp-face-semhl-deprecated))
   "Each element of this list should be of the form
  ((SCOPES-1 ... SCOPES-N) . FACE), where SCOPES-1, ..., SCOPES-N are lists of
@@ -5304,8 +5442,15 @@ textDocument/didOpen for the new file."
 
 (advice-add 'set-visited-file-name :around #'lsp--on-set-visited-file-name)
 
+(defvar lsp--flushing-delayed-changes nil)
+
 (defun lsp--send-no-wait (message proc)
   "Send MESSAGE to PROC without waiting for further output."
+
+  (unless lsp--flushing-delayed-changes
+    (let ((lsp--flushing-delayed-changes t))
+      (lsp--flush-delayed-changes)))
+
   (condition-case err
       (process-send-string proc message)
     ('error (lsp--error "Sending to process failed with the following error: %s"
@@ -6184,7 +6329,7 @@ SESSION is the active session."
                (lsp--workspace-status workspace) 'initialized)
 
          (with-lsp-workspace workspace
-           (lsp-notify "initialized" (make-hash-table)))
+           (lsp-notify "initialized" lsp--empty-ht))
 
          (when-let (initialize-fn (lsp--client-initialized-fn client))
            (funcall initialize-fn workspace))
@@ -7096,6 +7241,7 @@ This avoids overloading the server with many files when starting Emacs."
 (declare-function flycheck-define-generic-checker
                   "ext:flycheck" (symbol docstring &rest properties))
 (declare-function flycheck-error-message "ext:flycheck" (err))
+(declare-function flycheck-define-error-level "ext:flycheck" (level &rest properties))
 (declare-function flycheck-mode "ext:flycheck")
 (declare-function flycheck-checker-supports-major-mode-p "ext:flycheck")
 (declare-function flycheck-error-new "ext:flycheck")
@@ -7113,14 +7259,35 @@ reported according to `flycheck-check-syntax-automatically'."
   :type 'boolean
   :group 'lsp-mode)
 
+(defun lsp--get-buffer-diagnostics ()
+  (or (gethash (lsp--fix-path-casing buffer-file-name)
+               (lsp-diagnostics))
+      (gethash (lsp--fix-path-casing (file-truename buffer-file-name))
+               (lsp-diagnostics))))
+
+(defun lsp--flycheck-calculate-level (diag)
+  (let ((level (pcase (lsp-diagnostic-severity diag)
+                 (1 'error)
+                 (2 'warning)
+                 (3 'info)
+                 (4 'info)))
+        ;; materialize only first tag.
+        (tags (->> diag
+                   (lsp-diagnostic-original)
+                   (gethash "tags")
+                   (-map (lambda (tag)
+                           (pcase tag
+                             (1 'unnecessary)
+                             (2 'deprecated)))))))
+    (if tags
+        (lsp--flycheck-level level tags)
+      level)))
+
 (defun lsp--flycheck-start (checker callback)
   "Start an LSP syntax check with CHECKER.
 
 CALLBACK is the status callback passed by Flycheck."
-  (->> (or (gethash (lsp--fix-path-casing buffer-file-name)
-                    (lsp-diagnostics))
-           (gethash (lsp--fix-path-casing (file-truename buffer-file-name))
-                    (lsp-diagnostics)))
+  (->> (lsp--get-buffer-diagnostics)
        (-map (-lambda (diag)
                (flycheck-error-new
                 :buffer (current-buffer)
@@ -7129,22 +7296,18 @@ CALLBACK is the status callback passed by Flycheck."
                 :line (1+ (lsp-diagnostic-line diag))
                 :column (1+ (lsp-diagnostic-column diag))
                 :message (lsp-diagnostic-message diag)
-                :level (pcase (lsp-diagnostic-severity diag)
-                         (1 'error)
-                         (2 'warning)
-                         (_ 'info))
+                :level (lsp--flycheck-calculate-level diag)
                 :id (lsp-diagnostic-code diag)
-                ;; see https://github.com/flycheck/flycheck/pull/1674
-                ;; :end-column (-> diag
-                ;;                 lsp-diagnostic-range
-                ;;                 (plist-get :end)
-                ;;                 (plist-get :column))
-                ;; :end-line (-> diag
-                ;;               lsp-diagnostic-range
-                ;;               (plist-get :end)
-                ;;               (plist-get :line)
-                ;;               (1+))
-                )))
+                :end-column (-> diag
+                                lsp-diagnostic-range
+                                (plist-get :end)
+                                (plist-get :column)
+                                (1+))
+                :end-line (-> diag
+                              lsp-diagnostic-range
+                              (plist-get :end)
+                              (plist-get :line)
+                              (1+)))))
        (funcall callback 'finished)))
 
 (defun lsp--flycheck-buffer ()
@@ -7174,9 +7337,46 @@ reporting or we are in save-mode and the buffer is not modified."
 
 (declare-function lsp-cpp-flycheck-clang-tidy-error-explainer "lsp-cpp")
 
+(defvar lsp-diagnostics-attributes
+  `((unnecessary :background "dim gray")
+    (deprecated  :strike-through t) )
+  "List containing (tag attributes) where tag is the LSP
+  diagnostic tag and attributes is a `plist' containing face
+  attributes which will be applied on top the flycheck face for
+  that error level.")
+
+(defun lsp--flycheck-level (flycheck-level tags)
+  "Generate flycheck level from the original FLYCHECK-LEVEL (e.
+g. `error', `warning') and list of LSP TAGS."
+  (let ((name (format "lsp-flycheck-%s-%s"
+                      flycheck-level
+                      (mapconcat #'symbol-name tags "-"))))
+    (or (intern-soft name)
+        (let* ((face (--doto (intern (format "lsp-%s-face" name))
+                       (copy-face (-> flycheck-level
+                                      (get 'flycheck-overlay-category)
+                                      (get 'face))
+                                  it)
+                       (mapc (lambda (tag)
+                               (apply #'set-face-attribute it nil
+                                      (cl-rest (assoc tag lsp-diagnostics-attributes))))
+                             tags)))
+               (category (--doto (intern (format "lsp-%s-category" name))
+                           (setf (get it 'face) face
+                                 (get it 'priority) 100)))
+               (new-level (intern name)))
+          (flycheck-define-error-level new-level
+            :severity (get flycheck-level 'flycheck-error-severity)
+            :compilation-level (get flycheck-level 'flycheck-compilation-level)
+            :overlay-category category
+            :fringe-bitmap (get flycheck-level 'flycheck-fringe-bitmap-double-arrow)
+            :fringe-face (get flycheck-level 'flycheck-fringe-face)
+            :error-list-face face)
+          new-level))))
+
 (with-eval-after-load 'flycheck
   (flycheck-define-generic-checker 'lsp
-   "A syntax checker using the Language Server Protocol (LSP)
+    "A syntax checker using the Language Server Protocol (LSP)
 provided by lsp-mode.
 See https://github.com/emacs-lsp/lsp-mode."
     :start #'lsp--flycheck-start

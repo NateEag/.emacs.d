@@ -57,13 +57,13 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 (autoload 'lsp-treemacs-references "lsp-treemacs" "\
 Show the references for the symbol at point.
-With a prefix argument, expand the tree of references automatically.
+With a prefix argument, select the new window and expand the tree of references automatically.
 
 \(fn ARG)" t nil)
 
 (autoload 'lsp-treemacs-implementations "lsp-treemacs" "\
 Show the implementations for the symbol at point.
-With a prefix argument, expand the tree of implementations automatically.
+With a prefix argument, select the new window expand the tree of implementations automatically.
 
 \(fn ARG)" t nil)
 

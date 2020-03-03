@@ -227,6 +227,14 @@ command which is about to be called are committed."
       (add-hook  'before-save-hook 'magit-wip-commit-initial-backup)
     (remove-hook 'before-save-hook 'magit-wip-commit-initial-backup)))
 
+(defun magit--any-wip-mode-enabled-p ()
+  "Return non-nil if any global wip mode is enabled."
+  (or magit-wip-mode
+      magit-wip-after-save-mode
+      magit-wip-after-apply-mode
+      magit-wip-before-change-mode
+      magit-wip-initial-backup-mode))
+
 (defvar-local magit-wip-buffer-backed-up nil)
 (put 'magit-wip-buffer-backed-up 'permanent-local t)
 
@@ -281,13 +289,24 @@ commit message."
 (defun magit-wip-commit-worktree (ref files msg)
   (let* ((wipref (magit--wip-wtree-ref ref))
          (parent (magit-wip-get-parent ref wipref))
-         (tree (magit-with-temp-index parent "--reset"
+         (tree (magit-with-temp-index parent (list "--reset" "-i")
                  (if files
                      ;; Note: `update-index' is used instead of `add'
                      ;; because `add' will fail if a file is already
                      ;; deleted in the temporary index.
-                     (magit-call-git "update-index" "--add" "--remove"
-                                     "--" files)
+                     (magit-call-git
+                      "update-index" "--add" "--remove"
+                      (and (pcase (magit-repository-local-get
+                                   'update-index-has-ignore-sw-p 'unset)
+                             (`unset
+                              (let ((val (version<= "2.25.0"
+                                                    (magit-git-version))))
+                                (magit-repository-local-set
+                                 'update-index-has-ignore-sw-p val)
+                                val))
+                             (val val))
+                           "--ignore-skip-worktree-entries")
+                      "--" files)
                    (magit-with-toplevel
                      (magit-call-git "add" "-u" ".")))
                  (magit-git-string "write-tree"))))

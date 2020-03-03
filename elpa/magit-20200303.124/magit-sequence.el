@@ -502,11 +502,13 @@ This discards all changes made since the sequence started."
    :if-not magit-rebase-in-progress-p
    ("-k" "Keep empty commits"       "--keep-empty")
    ("-p" "Preserve merges"          ("-p" "--preserve-merges"))
+   (7 magit-merge:--strategy)
    ("-d" "Lie about committer date" "--committer-date-is-author-date")
    ("-a" "Autosquash"               "--autosquash")
    ("-A" "Autostash"                "--autostash")
    ("-i" "Interactive"              ("-i" "--interactive"))
    ("-h" "Disable hooks"            "--no-verify")
+   (7 magit-rebase:--exec)
    (5 magit:--gpg-sign)
    (5 "-r" "Rebase merges" "--rebase-merges=" magit-rebase-merges-select-mode)]
   [:if-not magit-rebase-in-progress-p
@@ -532,6 +534,13 @@ This discards all changes made since the sequence started."
    ("s" "Skip"     magit-rebase-skip)
    ("e" "Edit"     magit-rebase-edit)
    ("a" "Abort"    magit-rebase-abort)])
+
+(define-infix-argument magit-rebase:--exec ()
+  :description "Run command after commits"
+  :class 'transient-option
+  :shortarg "-x"
+  :argument "--exec="
+  :reader #'read-shell-command)
 
 (defun magit-rebase-merges-select-mode (&rest _ignore)
   (magit-read-char-case nil t

@@ -625,7 +625,7 @@
 	      (:maintainer "Markus Triska" . "triska@metalevel.at")
 	      (:url . "https://www.metalevel.at/ediprolog/"))])
  (eev .
-      [(20191105)
+      [(20200224)
        ((emacs
 	 (24 1)))
        "Support for e-scripts (eepitch blocks, elisp hyperlinks, etc)" tar
@@ -677,7 +677,7 @@
 		      ("William Xu" . "william.xwl@gmail.com"))
 		     (:maintainer "William Xu" . "william.xwl@gmail.com"))])
  (elisp-benchmarks .
-		   [(1 1)
+		   [(1 2)
 		    nil "elisp benchamrks collection" tar
 		    ((:maintainer "Andrea Corallo" . "akrl@sdf.org")
 		     (:authors
@@ -736,6 +736,14 @@
 		(:authors
 		 ("Thomas Fitzsimmons" . "fitzsim@fitzsim.org"))
 		(:keywords "calendar"))])
+ (expand-region .
+		[(0 11 0)
+		 nil "Increase selected region by semantic units." tar
+		 ((:url . "https://github.com/magnars/expand-region.el")
+		  (:maintainer "Magnar Sveen" . "magnars@gmail.com")
+		  (:authors
+		   ("Magnar Sveen" . "magnars@gmail.com"))
+		  (:keywords "marking" "region"))])
  (exwm .
        [(0 23)
 	((xelb
@@ -1517,7 +1525,7 @@
 	     ("Phillip Lord" . "phillip.lord@russet.org.uk"))
 	    (:url . "http://elpa.gnu.org/packages/persist.html"))])
  (phps-mode .
-	    [(0 3 35)
+	    [(0 3 38)
 	     ((emacs
 	       (26)))
 	     "Major mode for PHP with Semantic integration" tar
@@ -1735,9 +1743,9 @@
 		   ("Bastien Guerry" . "bzg@gnu.org"))
 		  (:maintainer "Bastien Guerry" . "bzg@gnu.org"))])
  (relint .
-	 [(1 13)
+	 [(1 14)
 	  ((xr
-	    (1 15))
+	    (1 16))
 	   (emacs
 	    (26 1)))
 	  "Elisp regexp mistake finder" tar
@@ -2012,7 +2020,7 @@
 	  ("Oleh Krehel" . "ohwoeowho@gmail.com"))
 	 (:keywords "convenience"))])
  (tramp .
-	[(2 4 3 1)
+	[(2 4 3 2)
 	 ((emacs
 	   (24 4)))
 	 "Transparent Remote Access, Multiple Protocol" tar
@@ -2121,7 +2129,7 @@
 	  (:maintainer "Justin Burkett" . "justin@burkett.cc")
 	  (:url . "https://github.com/justbur/emacs-vdiff"))])
  (verilog-mode .
-	       [(2019 12 17 268053413)
+	       [(2020 2 23 232634261)
 		nil "major mode for editing verilog source in Emacs" single
 		((:keywords "languages")
 		 (:authors
@@ -2299,7 +2307,7 @@
 	 ("Thien-Thi Nguyen" . "ttn@gnu.org"))
 	(:keywords "multimedia" "xpm"))])
  (xr .
-     [(1 15)
+     [(1 16)
       ((emacs
 	(26 1)))
       "Convert string regexp to rx notation" tar

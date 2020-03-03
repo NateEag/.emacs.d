@@ -36,7 +36,7 @@ interpreter (e.g.  GHCi).
 * Unicode support::                      How to use Unicode
 * Indentation::                          Notes about indentation
 * External indentation::                 Other ways to indent code
-* Autoformating::                        Using external formatters
+* Autoformatting::                       Using external formatters
 * Module templates::                     Module templates
 * Declaration scanning::                 How to navigate in a source file
 * Compilation::                          How to compile
@@ -525,7 +525,7 @@ require time travel.
 in ‘haskell-mode’.
 
 
-File: haskell-mode.info,  Node: External indentation,  Next: Autoformating,  Prev: Indentation,  Up: Top
+File: haskell-mode.info,  Node: External indentation,  Next: Autoformatting,  Prev: Indentation,  Up: Top
 
 8 Other ways to indent code
 ***************************
@@ -547,7 +547,7 @@ code by parsing the code with a full Haskell parser and deciding where
 to indent based on that.
 
 
-File: haskell-mode.info,  Node: Autoformating,  Next: Module templates,  Prev: External indentation,  Up: Top
+File: haskell-mode.info,  Node: Autoformatting,  Next: Module templates,  Prev: External indentation,  Up: Top
 
 9 Using external formatters
 ***************************
@@ -569,7 +569,7 @@ automatically formatted.
 ‘haskell-mode-stylish-buffer’.
 
 
-File: haskell-mode.info,  Node: Module templates,  Next: Declaration scanning,  Prev: Autoformating,  Up: Top
+File: haskell-mode.info,  Node: Module templates,  Next: Declaration scanning,  Prev: Autoformatting,  Up: Top
 
 10 Module templates
 *******************
@@ -2425,23 +2425,23 @@ Node: Completion support12556
 Node: Unicode support14600
 Node: Indentation19272
 Node: External indentation22748
-Node: Autoformating23476
-Node: Module templates24104
-Node: Declaration scanning24534
-Node: Compilation27822
-Node: Interactive Haskell31727
-Ref: printing mode51037
-Node: Editing Cabal files63801
-Node: Browsing Haddocks64548
-Node: Spell checking strings and comments67373
-Node: Aligning code68479
-Node: Rectangular commands70224
-Node: REPL71744
-Node: Collapsing Haskell code76522
-Node: Getting Help and Reporting Bugs79130
-Node: Concept index80174
-Node: Function index81432
-Node: Variable index82227
+Node: Autoformatting23477
+Node: Module templates24106
+Node: Declaration scanning24537
+Node: Compilation27825
+Node: Interactive Haskell31730
+Ref: printing mode51040
+Node: Editing Cabal files63804
+Node: Browsing Haddocks64551
+Node: Spell checking strings and comments67376
+Node: Aligning code68482
+Node: Rectangular commands70227
+Node: REPL71747
+Node: Collapsing Haskell code76525
+Node: Getting Help and Reporting Bugs79133
+Node: Concept index80177
+Node: Function index81435
+Node: Variable index82230
 
 End Tag Table
 

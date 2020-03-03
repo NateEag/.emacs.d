@@ -5,8 +5,9 @@
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; Keywords: lisp
-;; Package-Version: 20191007.51
+;; Package-Version: 20200222.512
 ;; Version: 0
+;; URL: https://github.com/purcell/flycheck-package
 ;; Package-Requires: ((flycheck "0.22") (package-lint "0.2"))
 
 ;; This program is free software; you can redistribute it and/or modify

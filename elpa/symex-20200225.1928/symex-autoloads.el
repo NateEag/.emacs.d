@@ -12,10 +12,10 @@
 (autoload 'symex-mode "symex" "\
 An evil way to edit Lisp symbolic expressions as trees.
 
-If called interactively, enable Symex mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Symex mode if ARG is positive,
+and disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it if
+ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 

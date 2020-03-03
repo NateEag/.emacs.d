@@ -86,7 +86,7 @@
   "Symex state."
   :tag " <λ> "
   :message "-- SYMEX --"
-  :entry-hook (symex--adjust-point hydra-symex/body symex--ensure-minor-mode)
+  :entry-hook (symex--ensure-minor-mode hydra-symex/body symex--adjust-point)
   :enable (normal))
 
 (defvar symex-elisp-modes (list 'lisp-interaction-mode
@@ -157,7 +157,10 @@ symex 'under' point is indicated.  We want to make sure to select the
 right symex when we enter Symex mode."
   (interactive)
   (when (member evil-previous-state '(insert emacs))
-    (backward-char)))
+    (let ((just-inside-symex-p (save-excursion (backward-char)
+                                               (lispy-left-p))))
+      (unless just-inside-symex-p
+        (backward-char)))))
 
 (defun symex--toggle-highlight ()
   "Toggle highlighting of selected symex."
@@ -248,7 +251,7 @@ to enter, and any of the standard exits to exit."
   ("r" symex-repl "go to REPL" :exit t)
   ("|" lispy-split "split")
   ("m" symex-join "merge (join)")
-  ("\\" lispy-splice "clip/splice")
+  ("\\" symex-splice "clip/splice")
   (")" symex-wrap-round "wrap with ()")
   ("]" symex-wrap-square "wrap with []")
   ("}" symex-wrap-curly "wrap with {}")

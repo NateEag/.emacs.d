@@ -117,14 +117,6 @@ a call to `save-match-data', as `format-spec' modifies that."
 (define-error 'buttercup-pending
   "Buttercup test is pending")
 
-(define-error 'buttercup-abort
-  "Abort Buttercup testing")
-
-(defvar buttercup-abort-message nil
-  "The message explaining why Buttercup testing is aborted.
-Reporters may want to print it if non-nil when handling
-`buttercup-done' event.")
-
 (defmacro expect (arg &optional matcher &rest args)
   "Expect a condition to be true.
 
@@ -245,7 +237,6 @@ failed."
 
 ARGS is a list of functions that must be `funcall'ed to get their
 values.
-
 MATCHER is either a matcher keyword defined with
 `buttercup-define-matcher', or a function."
   (cl-assert (cl-every #'buttercup--wrapper-fun-p args) t)
@@ -254,19 +245,20 @@ MATCHER is either a matcher keyword defined with
     (apply function args)))
 
 (cl-defmacro buttercup--test-expectation
-    (expr &key expect-match-phrase expect-mismatch-phrase)
+    (expression &key expect-match-phrase expect-mismatch-phrase)
   "Wrapper for the common matcher case of two possible messages.
 
 The logic for the return values of buttercup matchers can be
 unintuitive, since the return value is a cons cell whose first
 element is t for a mismatch and nil for a match. In the simple
-case where there are only two possible messages (one for a match
-and one for a mismatch), this macro allows you to simply specify
-those two phrases and the expression to test."
+case where there are only two possible
+messages (EXPECT-MATCH-PHRASE for a match and
+EXPECT-MISMATCH-PHRASE for a mismatch), this macro allows you to
+simply specify those two phrases and the EXPRESSION to test."
   (declare (indent 1))
   (cl-assert expect-match-phrase)
   (cl-assert expect-mismatch-phrase)
-  `(let ((value ,expr))
+  `(let ((value ,expression))
      (if value
          (cons t ,expect-mismatch-phrase)
        (cons nil ,expect-match-phrase))))
@@ -274,7 +266,7 @@ those two phrases and the expression to test."
 (cl-defmacro buttercup-define-matcher-for-unary-function
     (matcher function &key
              expect-match-phrase expect-mismatch-phrase function-name)
-  "Shortcut to define a macther for a 1-argument function.
+  "Shortcut to define a MATCHER for a 1-argument FUNCTION.
 
 When the matcher is used, keyword arguments EXPECT-MATCH-PHRASE
 and EXPECT-MISMATCH-PHRASE are used to construct the return
@@ -348,7 +340,7 @@ See also `buttercup-define-matcher'."
 (cl-defmacro buttercup-define-matcher-for-binary-function
     (matcher function &key
              expect-match-phrase expect-mismatch-phrase function-name)
-  "Shortcut to define a macther for a 2-argument function.
+  "Shortcut to define a MATCHER for a 2-argument FUNCTION.
 
 When the matcher is used, keyword arguments EXPECT-MATCH-PHRASE
 and EXPECT-MISMATCH-PHRASE are used to construct the return
@@ -671,9 +663,6 @@ See also `buttercup-define-matcher'."
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; Suite and spec data structures
 
-(defvar buttercup-stop-on-first-failure nil
-  "Abort Buttercup testing if any spec fails.")
-
 (cl-defstruct buttercup-suite-or-spec
   ;; The name of this specific suite
   description
@@ -702,11 +691,13 @@ See also `buttercup-define-matcher'."
   function)
 
 (defun buttercup-suite-add-child (parent child)
-  "Add a CHILD suite to a PARENT suite."
+  "Add a CHILD suite to a PARENT suite.
+Return CHILD."
   (setf (buttercup-suite-children parent)
         (append (buttercup-suite-children parent)
                 (list child)))
-  (setf (buttercup-suite-or-spec-parent child) parent))
+  (setf (buttercup-suite-or-spec-parent child) parent)
+  child)
 
 (defun buttercup-suite-or-spec-parents (suite-or-spec)
   "Return a list of parents of SUITE-OR-SPEC."
@@ -856,7 +847,8 @@ is a function containing the body instructions passed to
            (format "Found duplicate spec names in suite: %S"
                    (delete-dups dups)))))
       (setq buttercup-suites (append buttercup-suites
-                                     (list buttercup--current-suite))))))
+                                     (list buttercup--current-suite)))
+      buttercup--current-suite)))
 
 ;;;;;;;;;;;;;
 ;;; Specs: it
@@ -878,7 +870,8 @@ most probably including one or more calls to `expect'."
   "Function to handle an `it' form.
 
 DESCRIPTION has the same meaning as in `it'. BODY-FUNCTION is a
-function containing the body instructions passed to `it'."
+function containing the body instructions passed to `it'. Return
+the created spec object."
   (declare (indent 1))
   (when (not buttercup--current-suite)
     (error "`it' has to be called from within a `describe' form"))
@@ -1016,17 +1009,18 @@ DESCRIPTION is a string. BODY is ignored."
   "Like `buttercup-it', but mark the spec as disabled.
 A disabled spec is not run.
 
-DESCRIPTION has the same meaning as in `xit'. FUNCTION is ignored."
+DESCRIPTION has the same meaning as in `xit'. FUNCTION is
+ignored. Return the created spec object."
   (declare (indent 1))
   (ignore function)
-  (buttercup-it description (lambda ()
-                              (signal 'buttercup-pending "PENDING")))
-  (let ((spec (car (last (buttercup-suite-children
-                          buttercup--current-suite)))))
+  (let ((spec (buttercup-it description
+                (lambda ()
+                  (signal 'buttercup-pending "PENDING")))))
     (setf (buttercup-spec-status spec)
           'pending
           (buttercup-spec-failure-description spec)
-          "")))
+          "")
+    spec))
 
 ;;;;;;;;;
 ;;; Spies
@@ -1158,7 +1152,7 @@ responsibility to ensure ARG is a command."
       (fset spy (buttercup--make-spy fun)))))
 
 (defun buttercup--make-spy (fun)
-  "Create a new spy function wrapping FUN and tracking calls to itself."
+  "Create a new spy function wrapping FUN and tracking every call to itself."
   (let (this-spy-function)
     (setq
      this-spy-function
@@ -1215,12 +1209,12 @@ in a `buttercup-with-cleanup' environment.")
           (cons function buttercup--cleanup-functions))))
 
 (defun spy-calls-all (spy)
-  "Return the contexts of calls to SPY."
+  "Return all call contexts for SPY."
   (gethash (symbol-function spy)
            buttercup--spy-contexts))
 
 (defun buttercup--spy-calls-add (spy-function context)
-  "Add CONTEXT to the recorded calls to SPY-FUNCTION."
+  "Add CONTEXT to the call records for SPY-FUNCTION."
   (puthash spy-function
            (append (gethash spy-function
                             buttercup--spy-contexts)
@@ -1228,7 +1222,7 @@ in a `buttercup-with-cleanup' environment.")
            buttercup--spy-contexts))
 
 (defun spy-calls-reset (spy)
-  "Reset SPY, removing all recorded calls."
+  "Reset SPY, removing all stored contexts."
   (puthash (symbol-function spy)
            nil
            buttercup--spy-contexts))
@@ -1265,7 +1259,7 @@ in a `buttercup-with-cleanup' environment.")
       nil)))
 
 (defun spy-calls-all-args (spy)
-  "Return the arguments to all calls to SPY."
+  "Return the arguments for every recorded call to SPY."
   (mapcar 'spy-context-args (spy-calls-all spy)))
 
 (defun spy-calls-most-recent (spy)
@@ -1364,9 +1358,6 @@ current directory."
        ((member (car args) '("-c" "--no-color"))
         (setq buttercup-color nil)
         (setq args (cdr args)))
-       ((member (car args) '("-a" "--abort-on-failure"))
-        (setq buttercup-stop-on-first-failure t)
-        (setq args (cdr args)))
        (t
         (push (car args) dirs)
         (setq args (cdr args)))))
@@ -1377,14 +1368,20 @@ current directory."
         (when (not (string-match "\\(^\\|/\\)\\." (file-relative-name file)))
           (load file nil t))))
     (when patterns
-      (dolist (spec (buttercup--specs buttercup-suites))
-        (let ((spec-full-name (buttercup-spec-full-name spec)))
-          (unless (cl-dolist (p patterns)
-                    (when (string-match p spec-full-name)
-                      (cl-return t)))
-            (setf (buttercup-spec-function spec)
-                  (lambda () (signal 'buttercup-pending "SKIPPED")))))))
+      (buttercup--mark-skipped buttercup-suites patterns))
     (buttercup-run)))
+
+(defun buttercup--mark-skipped (suites patterns)
+  "Mark any spec in SUITES not matching PATTERNS as skipped.
+SUITES is a list of suites. PATTERNS is a list of regexps."
+  (dolist (spec (buttercup--specs suites))
+    (let ((spec-full-name (buttercup-spec-full-name spec)))
+      (unless (cl-dolist (p patterns)
+                (when (string-match p spec-full-name)
+                  (cl-return t)))
+        (setf (buttercup-spec-function spec)
+              (lambda () (signal 'buttercup-pending "SKIPPED"))
+              (buttercup-spec-status spec) 'pending)))))
 
 ;;;###autoload
 (defun buttercup-run-markdown-buffer (&rest markdown-buffers)
@@ -1436,15 +1433,12 @@ A suite must be defined within a Markdown \"lisp\" code block."
 (defun buttercup-run ()
   "Run all described suites."
   (if buttercup-suites
-      (let (buttercup-abort-message)
+      (progn
         (funcall buttercup-reporter 'buttercup-started buttercup-suites)
-        (unwind-protect
-            (condition-case error
-                (mapc #'buttercup--run-suite buttercup-suites)
-              (buttercup-abort (setf buttercup-abort-message (cdr error))))
-          (funcall buttercup-reporter 'buttercup-done buttercup-suites)
-          (when (> (buttercup-suites-total-specs-failed buttercup-suites) 0)
-            (error ""))))
+        (mapc #'buttercup--run-suite buttercup-suites)
+        (funcall buttercup-reporter 'buttercup-done buttercup-suites)
+        (when (> (buttercup-suites-total-specs-failed buttercup-suites) 0)
+          (error "")))
     (error "No suites defined")))
 
 (defvar buttercup--before-each nil
@@ -1465,20 +1459,18 @@ Do not change the global value.")
          (buttercup--after-each (append (buttercup-suite-after-each suite)
                                         buttercup--after-each)))
     (funcall buttercup-reporter 'suite-started suite)
-    (unwind-protect
-        (progn
-          (dolist (f (buttercup-suite-before-all suite))
-            (buttercup--update-with-funcall suite f))
-          (dolist (sub (buttercup-suite-children suite))
-            (cond
-             ((buttercup-suite-p sub)
-              (buttercup--run-suite sub))
-             ((buttercup-spec-p sub)
-              (buttercup--run-spec sub))))
-          (dolist (f (buttercup-suite-after-all suite))
-            (buttercup--update-with-funcall suite f)))
-      (buttercup--set-end-time suite)
-      (funcall buttercup-reporter 'suite-done suite))))
+    (dolist (f (buttercup-suite-before-all suite))
+      (buttercup--update-with-funcall suite f))
+    (dolist (sub (buttercup-suite-children suite))
+      (cond
+       ((buttercup-suite-p sub)
+        (buttercup--run-suite sub))
+       ((buttercup-spec-p sub)
+        (buttercup--run-spec sub))))
+    (dolist (f (buttercup-suite-after-all suite))
+      (buttercup--update-with-funcall suite f))
+    (buttercup--set-end-time suite)
+    (funcall buttercup-reporter 'suite-done suite)))
 
 (defun buttercup--run-spec (spec)
   (buttercup--set-start-time spec)
@@ -1490,14 +1482,13 @@ Do not change the global value.")
         (get-buffer-create buttercup-warning-buffer-name)
 
         (funcall buttercup-reporter 'spec-started spec)
-        (unwind-protect
-            (buttercup-with-cleanup
-             (dolist (f buttercup--before-each)
-               (buttercup--update-with-funcall spec f))
-             (buttercup--update-with-funcall spec (buttercup-spec-function spec))
-             (dolist (f buttercup--after-each)
-               (buttercup--update-with-funcall spec f)))
-          (funcall buttercup-reporter 'spec-done spec))
+        (buttercup-with-cleanup
+         (dolist (f buttercup--before-each)
+           (buttercup--update-with-funcall spec f))
+         (buttercup--update-with-funcall spec (buttercup-spec-function spec))
+         (dolist (f buttercup--after-each)
+           (buttercup--update-with-funcall spec f)))
+        (funcall buttercup-reporter 'spec-done spec)
         ;; Display warnings that were issued while running the the
         ;; spec, if any
         (with-current-buffer buttercup-warning-buffer-name
@@ -1525,13 +1516,16 @@ failed and pending specs."
         (`(error (buttercup-pending . ,pending-description))
          (setq status 'pending
                description pending-description))))
-    (when (memq (buttercup-suite-or-spec-status suite-or-spec)
-                '(passed pending))
+    ;; Only change state when the new state is 'worse' than or same as
+    ;; the current state. The constant list is the prioritized list of
+    ;; states. The new state is worse if it is in the tail of the
+    ;; current state.
+    (when (memq status
+                (memq (buttercup-suite-or-spec-status suite-or-spec)
+                      '(passed pending failed)))
       (setf (buttercup-suite-or-spec-status suite-or-spec) status
             (buttercup-suite-or-spec-failure-description suite-or-spec) description
-            (buttercup-suite-or-spec-failure-stack suite-or-spec) stack)
-      (when (and buttercup-stop-on-first-failure (eq status 'failed))
-        (signal 'buttercup-abort "Aborting early because of the failure")))))
+            (buttercup-suite-or-spec-failure-stack suite-or-spec) stack))))
 
 ;;;;;;;;;;;;;
 ;;; Reporters
@@ -1563,7 +1557,7 @@ EVENT and ARG are described in `buttercup-reporter'."
         (print-escape-nonascii t))
     (pcase event
       (`buttercup-started
-       (setq buttercup-reporter-batch--start-time (float-time)
+       (setq buttercup-reporter-batch--start-time (current-time)
              buttercup-reporter-batch--failures nil)
        (let ((defined (buttercup-suites-total-specs-defined arg))
              (pending (buttercup-suites-total-specs-pending arg)))
@@ -1609,8 +1603,6 @@ EVENT and ARG are described in `buttercup-reporter'."
        (dolist (failed buttercup-reporter-batch--failures)
          (let ((description (buttercup-spec-failure-description failed))
                (stack (buttercup-spec-failure-stack failed)))
-           (when buttercup-abort-message
-             (buttercup--print "%s\n" (if (stringp buttercup-abort-message) buttercup-abort-message (prin1-to-string buttercup-abort-message))))
            (buttercup--print "%s\n" (make-string 40 ?=))
            (buttercup--print "%s\n" (buttercup-spec-full-name failed))
            (when stack
@@ -1631,8 +1623,9 @@ EVENT and ARG are described in `buttercup-reporter'."
        (let ((defined (buttercup-suites-total-specs-defined arg))
              (pending (buttercup-suites-total-specs-pending arg))
              (failed (buttercup-suites-total-specs-failed arg))
-             (duration (- (float-time)
-                          buttercup-reporter-batch--start-time)))
+             (duration (float-time (time-subtract
+                                    (current-time)
+                                    buttercup-reporter-batch--start-time))))
          (if (> pending 0)
              (buttercup--print
               "Ran %s out of %s specs, %s failed, in %.1f seconds.\n"
@@ -1687,8 +1680,6 @@ EVENT and ARG are described in `buttercup-reporter'."
      (dolist (failed buttercup-reporter-batch--failures)
        (let ((description (buttercup-spec-failure-description failed))
              (stack (buttercup-spec-failure-stack failed)))
-         (when (stringp buttercup-abort-message)
-           (buttercup--print "%s\n" (buttercup-colorize buttercup-abort-message 'red)))
          (buttercup--print "%s\n" (make-string 40 ?=))
          (buttercup--print (buttercup-colorize "%s\n" 'red) (buttercup-spec-full-name failed))
          (when stack
@@ -1710,26 +1701,26 @@ EVENT and ARG are described in `buttercup-reporter'."
      (let ((defined (buttercup-suites-total-specs-defined arg))
            (pending (buttercup-suites-total-specs-pending arg))
            (failed (buttercup-suites-total-specs-failed arg))
-           (duration (- (float-time)
-                        buttercup-reporter-batch--start-time)))
+           (duration (float-time (time-subtract (current-time)
+                                                buttercup-reporter-batch--start-time))))
        (if (> pending 0)
            (buttercup--print
             (concat
              "Ran %s out of %s specs,"
              (buttercup-colorize " %s failed" (if (eq 0 failed) 'green 'red))
-             ", in %.1f seconds.\n")
+             ", in %s.\n")
             (- defined pending)
             defined
             failed
-            duration)
+            (seconds-to-string duration))
          (buttercup--print
           (concat
            "Ran %s specs,"
            (buttercup-colorize " %s failed" (if (eq 0 failed) 'green 'red))
-           ", in %.1f seconds.\n")
+           ", in %s.\n")
           defined
           failed
-          duration))))
+          (seconds-to-string duration)))))
 
     (_
      ;; Fall through to buttercup-reporter-batch implementation.

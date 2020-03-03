@@ -120,7 +120,13 @@ published in ELPA for use by older Emacsen.")
                       (removed-functions (let-alist (cdr version-data) .functions.removed)))
                   (cons version (package-lint--match-symbols removed-functions))))
               stdlib-changes)
-      "An alist of function/macro names and when they were removed from Emacs.")))
+      "An alist of function/macro names and when they were removed from Emacs.")
+
+    (defun package-lint--added-or-removed-function-p (sym)
+      "Predicate that returns t if SYM is a function added/removed in any known emacs version."
+      (cl-some (lambda (x) (funcall (cdr x) sym))
+               (append package-lint--functions-and-macros-added-alist
+                       package-lint--functions-and-macros-removed-alist)))))
 
 (defconst package-lint--sane-prefixes
   (rx
@@ -204,7 +210,7 @@ POS defaults to `point'."
   (save-excursion
     (when pos
       (goto-char pos))
-    (package-lint--error (line-number-at-pos) (current-column) type message)))
+    (package-lint--error (line-number-at-pos) (- (point) (line-beginning-position)) type message)))
 
 (defun package-lint--error-at-bol (type message)
   "Construct a datum for error at the beginning of the current line with TYPE and MESSAGE."
@@ -230,7 +236,7 @@ POS defaults to `point'."
           (when seq
             (let ((message (package-lint--test-keyseq seq)))
               (when message
-                (package-lint--error-at-point 'warning message)))))))))
+                (package-lint--error-at-point 'error message)))))))))
 
 (defun package-lint--check-commentary-existence ()
   "Warn about nonexistent or empty commentary section."
@@ -669,7 +675,7 @@ DESC is a struct as returned by `package-buffer-info'."
     (cond
      ((string= summary "")
       (package-lint--error-at-bob
-       'warning
+       'error
        "Package should have a non-empty summary."))
      (t
       (unless (let ((case-fold-search nil))
@@ -753,11 +759,17 @@ Valid definition names are:
   "Verify that symbol DEFINITIONS start with package PREFIX."
   (pcase-dolist (`(,name . ,position) definitions)
     (unless (package-lint--valid-definition-name-p name prefix position)
-      (package-lint--error-at-point
-       'error
-       (format "\"%s\" doesn't start with package's prefix \"%s\"."
-               name prefix)
-       position))))
+      (if (package-lint--added-or-removed-function-p (intern name))
+          (package-lint--error-at-point
+           'error
+           (format "Define compatibility functions with a prefix, e.g. \"%s--%s\", and use `defalias' where they exist."
+                   prefix name)
+           position)
+        (package-lint--error-at-point
+         'error
+         (format "\"%s\" doesn't start with package's prefix \"%s\"."
+                 name prefix)
+         position)))))
 
 (defun package-lint--check-minor-mode (def)
   "Offer up concerns about the minor mode definition DEF."
@@ -1039,6 +1051,15 @@ Current buffer is used if none is specified."
       (view-mode 1))
     (display-buffer buf)))
 
+(defgroup package-lint nil
+  "A linting library for elisp package authors"
+  :group 'development)
+
+(defcustom package-lint-batch-fail-on-warnings t
+  "When non-nil, make warnings fatal for `package-lint-batch-and-exit'."
+  :group 'package-lint
+  :type 'boolean)
+
 (defun package-lint-batch-and-exit-1 (filenames)
   "Internal helper function for `package-lint-batch-and-exit'.
 
@@ -1055,8 +1076,9 @@ The main loop is this separate function so it's easier to test."
         (with-temp-buffer
           (insert-file-contents file t)
           (emacs-lisp-mode)
-          (let ((checking-result (package-lint-buffer)))
-            (when checking-result
+          (let ((checking-result (package-lint-buffer))
+                (fail-on (cons 'error (when package-lint-batch-fail-on-warnings '(warning)))))
+            (when (cl-some (lambda (err) (memq (nth 2 err) fail-on)) checking-result)
               (setq success nil)
               (unless (equal last-directory file-directory)
                 (setq last-directory file-directory)
@@ -1070,8 +1092,9 @@ The main loop is this separate function so it's easier to test."
   "Run `package-lint-buffer' on the files remaining on the command line.
 Use this only with -batch, it won't work interactively.
 
-When done, exit Emacs with status 0 if there were no errors nor warnings or 1
-otherwise."
+When done, exit Emacs with status 1 in case of any errors, otherwise exit
+with status 0.  The variable `package-lint-batch-fail-on-warnings' controls
+whether or not warnings alone produce a non-zero exit code."
   (unless noninteractive
     (error "`package-lint-batch-and-exit' is to be used only with -batch"))
   (let ((success (package-lint-batch-and-exit-1 command-line-args-left)))

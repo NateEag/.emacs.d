@@ -53,7 +53,7 @@
   "^[0-9]+[-/][-/.=0-9]+\\(\\s-+\\*\\)?\\(\\s-+(.*?)\\)?\\s-+\\(.+?\\)\\s-*\\(;\\|$\\)")
 
 (defconst ledger-payee-pending-regex
-  "^[0-9]+[-/][-/.=0-9]+\\s-\\!\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\s-*\\(;\\|$\\)")
+  "^[0-9]+[-/][-/.=0-9]+\\s-!\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\s-*\\(;\\|$\\)")
 
 (defconst ledger-payee-cleared-regex
   "^[0-9]+[-/][-/.=0-9]+\\s-\\*\\s-+\\(([^)]+)\\s-+\\)?\\([^*].+?\\)\\s-*\\(;\\|$\\)")
@@ -179,7 +179,7 @@
                                           "-group--count"))
                  ,(length args)))))
 
-    (cons 'progn defs)))
+    (cons 'eval-and-compile defs)))
 
 (put 'ledger-define-regexp 'lisp-indent-function 1)
 
@@ -295,9 +295,8 @@
 
 (ledger-define-regexp amount-no-group
                       (rx (and (? ?-)
-                               (and (+ digit)
-                                    (*? (and (any ?. ?,) (+ digit))))
-                               (? (and (any ?. ?,) (+ digit)))))
+                               (+ digit)
+                               (*? (and (any ?. ?,) (+ digit)))))
                       "")
 
 (ledger-define-regexp amount

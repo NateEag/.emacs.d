@@ -211,10 +211,10 @@ buffer to run command-line Racket.
 (autoload 'racket-smart-open-bracket-mode "racket-smart-open" "\
 Minor mode to let you always type `[`' to insert `(` or `[` automatically.
 
-If called interactively, enable Racket-Smart-Open-Bracket mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Racket-Smart-Open-Bracket mode if
+ARG is positive, and disable it if ARG is zero or negative.  If
+called from Lisp, also enable the mode if ARG is omitted or nil,
+and toggle it if ARG is `toggle'; disable the mode otherwise.
 
 Behaves like the \"Automatically adjust opening square brackets\"
 feature in Dr. Racket.

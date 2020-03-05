@@ -856,7 +856,7 @@ general window selection commands like `other-window'."
 (defcustom treemacs-workspace-first-found-functions nil
   "Hooks that run when treemacs finds a workspace for the first time.
 Hooks are expected to take 2 arguments: the workspace that was found and the
-frame it was found for."
+current scope (frame or perspective) it was found for."
   :type 'hook
   :group 'treemacs-hooks)
 
@@ -873,6 +873,17 @@ ast the *first* period of the file name
   :group 'treemacs
   :type `(choice (const :tag "Text after first period" ,treemacs-first-period-regex-value)
                  (const :tag "Text after last period" ,treemacs-last-period-regex-value)))
+
+(defcustom treemacs-user-mode-line-format nil
+  "Custom mode line format to be used in `treemacs-mode'.
+
+If nil treemacs will look for default value provided by `spaceline', `moody'
+or `doom-modeline' in that order. Finally, if none of these packages is
+available \"Treemacs\" text will be displayed.
+
+For more specific information about formatting mode line check `mode-line-format'."
+  :type 'sexp
+  :group 'treemacs)
 
 (provide 'treemacs-customization)
 

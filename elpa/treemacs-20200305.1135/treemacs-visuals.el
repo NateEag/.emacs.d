@@ -57,7 +57,7 @@
 (defun treemacs--tear-down-icon-highlight ()
   "Tear down highlighting advice when no treemacs buffer exists anymore."
   (treemacs--forget-last-highlight)
-  (unless treemacs--buffer-storage
+  (unless treemacs--scope-storage
     (advice-remove #'hl-line-highlight #'treemacs--update-icon-selection)
     (advice-remove #'enable-theme      #'treemacs--setup-icon-background-colors)
     (advice-remove #'disable-theme     #'treemacs--setup-icon-background-colors)))
@@ -95,7 +95,7 @@
               (cp (copy-sequence img)))
          ;; Icons may not always be images, as extensions may use text and e.g.
          ;; all-the-icons font icons as the icon.
-         (when (eq (car cp) 'image)
+         (when (eq (car-safe cp) 'image)
            (treemacs--set-img-property cp :background
                                        (face-attribute
                                         (overlay-get pulse-momentary-overlay 'face)

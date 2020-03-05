@@ -100,6 +100,9 @@ The return value can be overriden by let-binding `treemacs-override-workspace'.
 This will happen when using `treemacs-run-in-every-buffer' to make sure that
 this function returns the right workspace for the iterated-over buffers.
 
+If no workspace is assigned to the current scope the persisted workspaces will
+be loaded and a workspace will be found based on the `currebt-buffer'.
+
 This function can be used with `setf'."
   (declare (side-effect-free t))
   (inline-quote
@@ -111,14 +114,14 @@ This function can be used with `setf'."
                 (new-shelf (make-treemacs-scope-shelf :workspace workspace)))
            (setf (treemacs-current-scope-shelf) new-shelf)
            (run-hook-with-args treemacs-workspace-first-found-functions
-                               workspace (selected-frame))
+                               workspace (treemacs-current-scope))
            workspace)))))
 
 (gv-define-setter treemacs-current-workspace (val)
   `(let ((shelf (treemacs-current-scope-shelf)))
      (unless shelf
        (setf shelf (make-treemacs-scope-shelf))
-       (push (cons (treemacs-current-scope) shelf) treemacs--buffer-storage))
+       (push (cons (treemacs-current-scope) shelf) treemacs--scope-storage))
      (setf (treemacs-scope-shelf->workspace shelf) ,val)))
 
 (define-inline treemacs--find-workspace (&optional path)
@@ -274,8 +277,8 @@ Does not preserve the current position in the buffer."
          (next-single-property-change :project)
          (null)))))
 
-(defun treemacs-do-create-workspace ()
-  "Create a new workspace.
+(defun treemacs-do-create-workspace (&optional name)
+  "Create a new workspace with optional NAME.
 Return values may be as follows:
 
 * If a workspace for the given name already exists:
@@ -288,7 +291,7 @@ Return values may be as follows:
   - the symbol `success'
   - the created workspace"
   (treemacs-block
-   (-let [name (read-string "Workspace name: ")]
+   (-let [name (or name (read-string "Workspace name: "))]
      (treemacs-return-if (treemacs--is-name-invalid? name)
        `(invalid-name ,name))
      (-when-let (ws (--first (string= name (treemacs-workspace->name it))

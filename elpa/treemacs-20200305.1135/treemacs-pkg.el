@@ -1,4 +1,4 @@
-(define-package "treemacs" "20200219.606" "A tree style file explorer package"
+(define-package "treemacs" "20200305.1135" "A tree style file explorer package"
   '((emacs "25.2")
     (cl-lib "0.5")
     (dash "2.11.0")

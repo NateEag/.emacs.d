@@ -186,7 +186,7 @@ Resizing the icons only works if Emacs was built with ImageMagick support. If
 this is not the case this function will report an error.
 
 Custom icons are not taken into account, only the size of treemacs' own icons
-is changed.
+png are changed.
 
 \(fn SIZE)" t nil)
 

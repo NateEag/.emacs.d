@@ -32,6 +32,8 @@ buffer manually.
 
 \(fn &optional ARG)" t nil)
 
+(put 'global-flycheck-mode 'globalized-minor-mode t)
+
 (defvar global-flycheck-mode nil "\
 Non-nil if Global Flycheck mode is enabled.
 See the `global-flycheck-mode' command

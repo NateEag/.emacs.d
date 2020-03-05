@@ -141,7 +141,7 @@ want to change the value of `transient-mode-line-format'."
   :type '(cons (choice function (repeat :tag "Functions" function))
                alist))
 
-(defcustom transient-mode-line-format (and window-system 'line)
+(defcustom transient-mode-line-format 'line
   "The mode-line format for the transient popup buffer.
 
 If nil, then the buffer has no mode-line.  If the buffer is not
@@ -150,7 +150,8 @@ a good value.
 
 If `line' (the default), then the buffer also has no mode-line,
 but a thin line is drawn instead, using the background color of
-the face `transient-separator'.
+the face `transient-separator'.  Termcap frames cannot display
+thin lines and therefore fallback to treating `line' like nil.
 
 Otherwise this can be any mode-line format.
 See `mode-line-format' for details."
@@ -1081,7 +1082,7 @@ variable instead.")
 (defvar transient--layout nil)
 (defvar transient--suffixes nil)
 
-(defconst transient--stay t   "Do not exist the transient.")
+(defconst transient--stay t   "Do not exit the transient.")
 (defconst transient--exit nil "Do exit the transient.")
 
 (defvar transient--exitp nil "Whether to exit the transient.")
@@ -1993,10 +1994,13 @@ transient is active."
                 (let ((keys (this-single-command-raw-keys)))
                   (and (lookup-key transient--transient-map keys)
                        (string-to-number
-                        (transient--read-number-N
-                         (format "Set level for `%s': "
-                                 (transient--suffix-command command))
-                         nil nil (not (eq command prefix))))))))))
+                        (let ((transient--active-infix
+                               (transient-suffix-object)))
+                          (transient--show)
+                          (transient--read-number-N
+                           (format "Set level for `%s': "
+                                   (transient--suffix-command command))
+                           nil nil (not (eq command prefix)))))))))))
   (cond
    ((not command)
     (setq transient--editp t)
@@ -2116,15 +2120,17 @@ Non-infix suffix commands usually don't have a value."
   nil)
 
 (cl-defmethod transient-init-value ((obj transient-prefix))
-  (oset obj value
-        (if-let ((saved (assq (oref obj command) transient-values)))
-            (cdr saved)
-          (if-let ((default (and (slot-boundp obj 'default-value)
-                                 (oref obj default-value))))
-              (if (functionp default)
-                  (funcall default)
-                default)
-            nil))))
+  (if (slot-boundp obj 'value)
+      (oref obj value)
+    (oset obj value
+          (if-let ((saved (assq (oref obj command) transient-values)))
+              (cdr saved)
+            (if-let ((default (and (slot-boundp obj 'default-value)
+                                   (oref obj default-value))))
+                (if (functionp default)
+                    (funcall default)
+                  default)
+              nil)))))
 
 (cl-defmethod transient-init-value ((obj transient-switch))
   (oset obj value
@@ -2541,7 +2547,8 @@ have a history of their own.")
       (transient--insert-groups)
       (when (or transient--helpp transient--editp)
         (transient--insert-help))
-      (when (eq transient-mode-line-format 'line)
+      (when (and (eq transient-mode-line-format 'line)
+                 window-system)
         (insert (propertize "__" 'face 'transient-separator
                             'display '(space :height (1))))
         (insert (propertize "\n" 'face 'transient-separator 'line-height t)))
@@ -2643,8 +2650,10 @@ making `transient--original-buffer' current.")
   (let ((str (cl-call-next-method obj)))
     (when (eq obj transient--active-infix)
       (setq str (concat str "\n"))
-      (add-face-text-property 0 (length str)
-                              'transient-active-infix nil str))
+      (add-face-text-property
+       (if (eq this-command 'transient-set-level) 3 0)
+       (length str)
+       'transient-active-infix nil str))
     str))
 
 (cl-defmethod transient-format :around ((obj transient-suffix))

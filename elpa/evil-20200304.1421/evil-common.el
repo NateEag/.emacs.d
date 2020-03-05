@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.13.0
+;; Version: 1.14.0
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -91,6 +91,28 @@ the buffer-local value of HOOK is modified."
 
 ;;; List functions
 
+(defmacro evil--add-to-alist (list-var &rest elements)
+  "Add the assocation of KEY and VAL to the value of LIST-VAR.
+If the list already contains an entry for KEY, update that entry;
+otherwise add at the end of the list.
+
+\(fn LIST-VAR KEY VAL &rest ELEMENTS)"
+  (when (eq (car-safe list-var) 'quote)
+    (setq list-var (cadr list-var)))
+  `(progn
+     ,@(if (version< emacs-version "26")
+           ;; TODO: Remove this path when support for Emacs 25 is dropped
+           (cl-loop for (key val) on elements by #'cddr
+                    collect `(let* ((key ,key)
+                                    (val ,val)
+                                    (cell (assoc key ,list-var)))
+                               (if cell
+                                   (setcdr cell val)
+                                 (push (cons key val) ,list-var))))
+         (cl-loop for (key val) on elements by #'cddr
+                  collect `(setf (alist-get ,key ,list-var nil nil #'equal) ,val)))
+     ,list-var))
+
 (defun evil-add-to-alist (list-var key val &rest elements)
   "Add the assocation of KEY and VAL to the value of LIST-VAR.
 If the list already contains an entry for KEY, update that entry;
@@ -105,6 +127,10 @@ otherwise add at the end of the list."
     (if elements
         (apply #'evil-add-to-alist list-var elements)
       (symbol-value list-var))))
+
+(make-obsolete 'evil-add-to-alist
+               "use `evil--add-to-alist' instead. You may need to recompile code with evil macros."
+               "1.13.1")
 
 ;; custom version of `delete-if'
 (defun evil-filter-list (predicate list &optional pointer)
@@ -341,7 +367,7 @@ sorting in between."
           `(defun ,command ,args
              ,@(when doc `(,doc))
              ,interactive
-             (ignore ,@(remq '&optional args))
+             (ignore ,@(cl-set-difference args '(&optional &rest)))
              ,@body))
        ,(when (and command doc-form)
           `(put ',command 'function-documentation ,doc-form))
@@ -1960,11 +1986,11 @@ otherwise, it stays behind."
          ((evil-global-marker-p char)
           (setq alist (default-value 'evil-markers-alist)
                 marker (make-marker))
-          (evil-add-to-alist 'alist char marker)
+          (evil--add-to-alist 'alist char marker)
           (setq-default evil-markers-alist alist))
          (t
           (setq marker (make-marker))
-          (evil-add-to-alist 'evil-markers-alist char marker))))
+          (evil--add-to-alist 'evil-markers-alist char marker))))
       (add-hook 'kill-buffer-hook #'evil-swap-out-markers nil t)
       (set-marker-insertion-type marker advance)
       (set-marker marker (or pos (point))))))
@@ -2045,7 +2071,7 @@ The following special registers are supported.
               (let ((what (if (eq register ?*) 'PRIMARY 'CLIPBOARD))
                     (request-type (or (and (boundp 'x-select-request-type)
                                            x-select-request-type)
-                                      '(UTF8_STRING COMPOUNT_TEXT STRING)))
+                                      '(UTF8_STRING COMPOUND_TEXT STRING)))
                     text)
                 (unless (consp request-type)
                   (setq request-type (list request-type)))

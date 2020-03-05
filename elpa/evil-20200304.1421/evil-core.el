@@ -2,7 +2,7 @@
 ;; Author: Vegard Øye <vegard_oye at hotmail.com>
 ;; Maintainer: Vegard Øye <vegard_oye at hotmail.com>
 
-;; Version: 1.13.0
+;; Version: 1.14.0
 
 ;;
 ;; This file is NOT part of GNU Emacs.
@@ -569,11 +569,11 @@ may be specified before the body code:
        ,@(if local
              `((make-variable-buffer-local ',keymap)
                (put ',keymap 'permanent-local t)
-               (evil-add-to-alist 'evil-local-keymaps-alist
+               (evil--add-to-alist 'evil-local-keymaps-alist
                                   ',mode ',keymap))
-           `((evil-add-to-alist 'evil-global-keymaps-alist
+           `((evil--add-to-alist 'evil-global-keymaps-alist
                                 ',mode ',keymap)
-             (evil-add-to-alist 'evil-mode-map-alist
+             (evil--add-to-alist 'evil-mode-map-alist
                                 ',mode ,keymap)))
        ,(when (or body func)
           `(defun ,mode (&optional arg)
@@ -1259,7 +1259,7 @@ the local keymap will be `evil-test-state-local-map', and so on.
        ((eq key :exit-hook)
         (setq exit-hook-value arg)
         (unless (listp exit-hook-value)
-          (setq exit-hook-value (list entry-hook-value))))
+          (setq exit-hook-value (list exit-hook-value))))
        ((eq key :enable)
         (setq enable arg))
        ((eq key :input-method)
@@ -1347,7 +1347,7 @@ If ARG is nil, don't display a message in the echo area.%s" name doc)
                  input-method-deactivate-hook)
              (evil-change-state nil)
              (setq evil-state ',state)
-             (evil-add-to-alist 'evil-previous-state-alist
+             (evil--add-to-alist 'evil-previous-state-alist
                                 ',state evil-previous-state)
              (let ((evil-state ',state))
                (evil-normalize-keymaps)

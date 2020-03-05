@@ -13,7 +13,14 @@
 (autoload 'visual-fill-column-mode "visual-fill-column" "\
 Wrap lines according to `fill-column' in `visual-line-mode'.
 
+If called interactively, enable Visual-Fill-Column mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
+
 \(fn &optional ARG)" t nil)
+
+(put 'global-visual-fill-column-mode 'globalized-minor-mode t)
 
 (defvar global-visual-fill-column-mode nil "\
 Non-nil if Global Visual-Fill-Column mode is enabled.
@@ -50,7 +57,7 @@ windows with wide margins.
 
 \(fn &optional WINDOW)" nil nil)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "visual-fill-column" '("visual-fill-column-" "turn-on-visual-fill-column-mode")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "visual-fill-column" '("turn-on-visual-fill-column-mode" "visual-fill-column-")))
 
 ;;;***
 

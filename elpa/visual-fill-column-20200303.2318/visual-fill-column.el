@@ -6,9 +6,10 @@
 
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
+;; URL: https://github.com/joostkremers/visual-fill-column
+;; Package-Version: 20200303.2318
 ;; Created: 2015
-;; Version: 1.9
-;; Package-Version: 20190422.2154
+;; Version: 1.11
 ;; Package-Requires: ((emacs "24.3"))
 
 ;; This file is NOT part of GNU Emacs.

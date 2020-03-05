@@ -34,10 +34,10 @@ Dynamically load a library from bower into the current page.
 (autoload 'skewer-css-mode "skewer-css" "\
 Minor mode for interactively loading new CSS rules.
 
-If called interactively, enable Skewer-Css mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Skewer-Css mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
@@ -51,10 +51,10 @@ if ARG is `toggle'; disable the mode otherwise.
 (autoload 'skewer-html-mode "skewer-html" "\
 Minor mode for interactively loading new HTML.
 
-If called interactively, enable Skewer-Html mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Skewer-Html mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
@@ -71,10 +71,10 @@ List the attached browsers in a buffer." t nil)
 (autoload 'skewer-mode "skewer-mode" "\
 Minor mode for interacting with a browser.
 
-If called interactively, enable Skewer mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Skewer mode if ARG is positive,
+and disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it if
+ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 

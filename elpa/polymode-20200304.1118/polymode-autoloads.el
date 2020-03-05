@@ -170,10 +170,10 @@ key-value pairs. See the documentation of the class
 (autoload 'pm-debug-minor-mode "polymode-debug" "\
 Turns on/off useful facilities for debugging polymode.
 
-If called interactively, enable Pm-Debug minor mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Pm-Debug minor mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 Key bindings:
 \\{pm-debug-minor-mode-map}
@@ -181,6 +181,8 @@ Key bindings:
 \(fn &optional ARG)" t nil)
 
 (autoload 'pm-debug-minor-mode-on "polymode-debug" nil nil nil)
+
+(put 'pm-debug-mode 'globalized-minor-mode t)
 
 (defvar pm-debug-mode nil "\
 Non-nil if Pm-Debug mode is enabled.

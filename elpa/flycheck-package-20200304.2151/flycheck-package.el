@@ -1,14 +1,14 @@
-;;; flycheck-package.el --- A Flycheck checker for elisp package authors
+;;; flycheck-package.el --- A Flycheck checker for elisp package authors  -*- lexical-binding: t -*-
 
 ;; Copyright (C) 2014-2016  Steve Purcell, Fanael Linithien
 
 ;; Author: Steve Purcell <steve@sanityinc.com>
 ;;         Fanael Linithien <fanael4@gmail.com>
 ;; Keywords: lisp
-;; Package-Version: 20200222.512
+;; Package-Version: 20200304.2151
 ;; Version: 0
 ;; URL: https://github.com/purcell/flycheck-package
-;; Package-Requires: ((flycheck "0.22") (package-lint "0.2"))
+;; Package-Requires: ((emacs "24.1") (flycheck "0.22") (package-lint "0.2"))
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by

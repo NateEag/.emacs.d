@@ -206,7 +206,7 @@
 	      (:maintainer "Raffael Stocker" . "r.stocker@mnet-mail.de")
 	      (:url . "https://gitlab.com/rstocker/emacs-bluetooth"))])
  (bnf-mode .
-	   [(0 4 3)
+	   [(0 4 4)
 	    ((cl-lib
 	      (0 5))
 	     (emacs
@@ -2005,7 +2005,9 @@
  (timerfunctions .
 		 [(1 4 2)
 		  ((cl-lib
-		    (0 5)))
+		    (0 5))
+		   (emacs
+		    (24)))
 		  "Enhanced versions of some timer.el functions" single
 		  ((:url . "http://elpa.gnu.org/packages/timerfunctions.html")
 		   (:authors

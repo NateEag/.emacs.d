@@ -4,7 +4,7 @@
 
 ;; Author: Oleh Krehel <ohwoeowho@gmail.com>
 ;; URL: https://github.com/abo-abo/swiper
-;; Package-Version: 20200215.1418
+;; Package-Version: 20200224.2036
 ;; Version: 0.13.0
 ;; Package-Requires: ((emacs "24.5") (swiper "0.13.0"))
 ;; Keywords: convenience, matching, tools
@@ -1876,6 +1876,7 @@ choose between `yes-or-no-p' and `y-or-n-p'; otherwise default to
    ("x" counsel-find-file-extern "open externally")
    ("r" counsel-find-file-as-root "open as root")
    ("R" find-file-read-only "read only")
+   ("l" find-file-literally "open literally")
    ("k" counsel-find-file-delete "delete")
    ("c" counsel-find-file-copy "copy file")
    ("m" counsel-find-file-move "move or rename")
@@ -2936,12 +2937,13 @@ CALLER is passed to `ivy-read'."
   :grep-p t
   :exit-codes '(1 "No matches found"))
 
-(defun counsel-read-directory-name (prompt)
+(defun counsel-read-directory-name (prompt &optional default)
   "Read a directory name from user, a (partial) replacement of `read-directory-name'."
   (let ((counsel--find-file-predicate #'file-directory-p))
     (ivy-read prompt
               #'read-file-name-internal
               :matcher #'counsel--find-file-matcher
+              :def default
               :history 'file-name-history
               :keymap counsel-find-file-map
               :caller 'counsel-read-directory-name)))
@@ -2954,8 +2956,10 @@ CALLER is passed to `ivy-read'."
 Works for `counsel-git-grep', `counsel-ag', etc."
   (interactive)
   (counsel-delete-process)
-  (let ((input ivy-text)
-        (new-dir (counsel-read-directory-name "cd: ")))
+  (let* ((input ivy-text)
+         (def-dir (buffer-file-name (ivy-state-buffer ivy-last)))
+         (def-dir (and def-dir (file-name-directory def-dir)))
+         (new-dir (counsel-read-directory-name "cd: " def-dir)))
     (ivy-quit-and-run
       (funcall (ivy-state-caller ivy-last) input new-dir))))
 

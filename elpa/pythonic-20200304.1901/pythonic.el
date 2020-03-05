@@ -4,7 +4,7 @@
 
 ;; Author: Artem Malyshev <proofit404@gmail.com>
 ;; URL: https://github.com/proofit404/pythonic
-;; Package-Version: 20191021.811
+;; Package-Version: 20200304.1901
 ;; Version: 0.1.1
 ;; Package-Requires: ((emacs "25.1") (s "1.9") (f "0.17.2"))
 
@@ -133,7 +133,7 @@ Take FILENAME from the perspective of the localhost and translate
 it to the FILENAME Python process can read.  Python can be
 running locally or remotely.  FILENAME can have local or tramp
 format.  Result will have local format."
-  (let ((alias (pythonic-aliased-path filename)))
+  (let ((alias (pythonic-aliased-path (expand-file-name filename))))
     (if (tramp-tramp-file-p alias)
         (tramp-file-name-localname (tramp-dissect-file-name alias))
       alias)))

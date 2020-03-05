@@ -13,12 +13,14 @@
 (autoload 'writeroom-mode "writeroom-mode" "\
 Minor mode for distraction-free writing.
 
-If called interactively, enable Writeroom mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Writeroom mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
+
+(put 'global-writeroom-mode 'globalized-minor-mode t)
 
 (defvar global-writeroom-mode nil "\
 Non-nil if Global Writeroom mode is enabled.

@@ -1,6 +1,6 @@
 ;;; writeroom-mode.el --- Minor mode for distraction-free writing  -*- lexical-binding: t -*-
 
-;; Copyright (c) 2012-2019 Joost Kremers
+;; Copyright (c) 2012-2020 Joost Kremers
 
 ;; Author: Joost Kremers <joostkremers@fastmail.fm>
 ;; Maintainer: Joost Kremers <joostkremers@fastmail.fm>
@@ -8,6 +8,7 @@
 ;; Package-Requires: ((emacs "24.1") (visual-fill-column "1.9"))
 ;; Version: 3.9
 ;; Keywords: text
+;; URL: https://github.com/joostkremers/writeroom-mode
 
 ;; Redistribution and use in source and binary forms, with or without
 ;; modification, are permitted provided that the following conditions
@@ -214,12 +215,24 @@ buffer."
                  (integer :tag "Absolute height" :value 5)
                  (float :tag "Relative height" :value 0.8)))
 
+(defcustom writeroom-mode-disable-hook nil
+  "Hook run when `writeroom-mode' is disabled.
+This hook is run after all `writeroom-mode'-specific effects have
+been disabled and the buffer state before enabling
+`writeroom-mode' has been restored.  It can be used for restoring
+effects that were specifically disabled in `writeroom-mode-hook'
+and that cannot be enabled otherwise."
+  :group 'writeroom
+  :type '(repeat function))
+
+(define-obsolete-variable-alias 'writeroom-global-functions 'writeroom-global-effects "`writeroom-mode' version 2.0")
+
 (defcustom writeroom-global-effects '(writeroom-set-fullscreen
-                             writeroom-set-alpha
-                             writeroom-set-menu-bar-lines
-                             writeroom-set-tool-bar-lines
-                             writeroom-set-vertical-scroll-bars
-                             writeroom-set-bottom-divider-width)
+                                      writeroom-set-alpha
+                                      writeroom-set-menu-bar-lines
+                                      writeroom-set-tool-bar-lines
+                                      writeroom-set-vertical-scroll-bars
+                                      writeroom-set-bottom-divider-width)
   "List of global effects for `writeroom-mode'.
 These effects are enabled when `writeroom-mode' is activated in
 the first buffer and disabled when it is deactivated in the last
@@ -234,8 +247,6 @@ buffer."
               (const :tag "Add border" writeroom-set-internal-border-width)
               (const :tag "Display frame on all workspaces" writeroom-set-sticky)
               (repeat :inline t :tag "Custom effects" function)))
-
-(define-obsolete-variable-alias 'writeroom-global-functions 'writeroom-global-effects "`writeroom-mode' version 2.0")
 
 (defmacro define-writeroom-global-effect (fp value)
   "Define a global effect for `writeroom-mode'.
@@ -482,7 +493,10 @@ buffer in which it was active."
   ;; Reenable `visual-fill-colummn-mode' with original settings if it was
   ;; active before activating `writeroom-mode'.
   (if writeroom--saved-visual-fill-column
-      (visual-fill-column-mode 1)))
+      (visual-fill-column-mode 1))
+
+  ;; Run hook on disabling `writeroom-mode'.
+  (run-hooks 'writeroom-mode-disable-hook))
 
 (provide 'writeroom-mode)
 

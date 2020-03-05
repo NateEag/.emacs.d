@@ -150,7 +150,7 @@ Whether expand-region should use subword expansions.")
 
 (custom-autoload 'expand-region-subword-enabled "expand-region-custom" t)
 
-(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "expand-region-custom" '("expand-region-guess-python-mode")))
+(if (fboundp 'register-definition-prefixes) (register-definition-prefixes "expand-region-custom" '("expand-region-")))
 
 ;;;***
 

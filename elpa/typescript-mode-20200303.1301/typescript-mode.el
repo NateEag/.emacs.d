@@ -2244,19 +2244,31 @@ Searches specifically for any of \"=\", \"}\", and \"type\"."
   "Return non-nil if the current line continues an expression."
   (save-excursion
     (back-to-indentation)
-    (and
-     ;; Don't identify the spread syntax or rest operator as a
-     ;; "continuation".
-     (not (looking-at "\\.\\.\\."))
-     (or (typescript--looking-at-operator-p)
-         (and (progn
-                (typescript--backward-syntactic-ws)
-                (or (bobp) (backward-char))
-                (and (> (point) (point-min))
-                     (save-excursion (backward-char) (not (looking-at "[/*]/")))
-                     (typescript--looking-at-operator-p)
-                     (and (progn (backward-char)
-                                 (not (looking-at "++\\|--\\|/[/*]")))))))))))
+    (let ((list-start (nth 1 (syntax-ppss))))
+      (and
+       ;; This not clause is there to eliminate degenerate cases where we have
+       ;; something that looks like a continued expression but we are in fact at
+       ;; the beginning of the expression. Example: in `if (a) { .q(1)` when the
+       ;; point is on the dot, the expression that follows looks like a member
+       ;; expression but the object on which it is a member is missing. If we
+       ;; naively treat this as a continued expression, we run into trouble
+       ;; later. (An infinite loop.)
+       (not (and list-start
+                 (save-excursion
+                   (typescript--backward-syntactic-ws)
+                   (backward-char)
+                   (eq (point) list-start))))
+       ;; Don't identify the spread syntax or rest operator as a "continuation".
+       (not (looking-at "\\.\\.\\."))
+       (or (typescript--looking-at-operator-p)
+           (and (progn
+                  (typescript--backward-syntactic-ws)
+                  (or (bobp) (backward-char))
+                  (and (> (point) (point-min))
+                       (save-excursion (backward-char) (not (looking-at "[/*]/")))
+                       (typescript--looking-at-operator-p)
+                       (and (progn (backward-char)
+                                   (not (looking-at "++\\|--\\|/[/*]"))))))))))))
 
 (cl-defun typescript--compute-member-expression-indent ()
   "Determine the indent of a member expression.
@@ -2268,8 +2280,13 @@ starts the member expression.
   ;; And set an indent relative to that.
   (while (looking-at "\\.")
     (typescript--backward-syntactic-ws)
-    (while (memq (char-before) '(?\] ?} ?\)))
-      (backward-list)
+    (while (eq (char-before) ?\;)
+      (backward-char))
+    (while (memq (char-before) '(?\] ?} ?\) ?>))
+      (if (not (eq (char-before) ?>))
+          (backward-list)
+        (backward-char)
+        (typescript--backward-over-generic-parameter-list))
       (typescript--backward-syntactic-ws))
     (if (looking-back typescript--dotted-name-re nil)
         (back-to-indentation)
@@ -2420,7 +2437,7 @@ moved on success."
                                  (looking-at "\\_<\\(switch\\|if\\|while\\|until\\|for\\)\\_>\\(?:\\s-\\|\n\\)*(")))))
                     (condition-case nil
                         (backward-sexp)
-                      (scan-error nil)))
+                      (scan-error (cl-return-from search-loop nil))))
                    ((looking-back typescript--number-literal-re
                                   ;; We limit the search back to the previous space or end of line (if possible)
                                   ;; to prevent the search from going over the whole buffer.
@@ -2466,7 +2483,9 @@ moved on success."
                        ;; In that case, we want the code that follows to see the indentation
                        ;; that was in effect at the beginning of the function declaration, and thus
                        ;; we want to move back over the list of function parameters.
-                       (backward-list))
+                       (condition-case nil
+                           (backward-list)
+                         (error nil)))
                       ((looking-back "," nil)
                        ;; If we get here, we have a comma, spaces and an opening curly brace. (And
                        ;; (point) is just after the comma.) We don't want to move from the current position

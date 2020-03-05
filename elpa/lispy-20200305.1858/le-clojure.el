@@ -67,10 +67,9 @@
   (let (c-str)
     (unless (stringp e-str)
       (setq e-str (lispy--string-dwim)))
-    (setq c-str (let ((deactivate-mark nil)
-                      (lispy-ignore-whitespace t))
+    (setq c-str (let ((deactivate-mark nil))
                   (save-mark-and-excursion
-                    (lispy--out-backward 1)
+                    (lispy--out-backward 1 t)
                     (deactivate-mark)
                     (lispy--string-dwim))))
     (let ((f-str
@@ -215,7 +214,8 @@ When ADD-OUTPUT is non-nil, add the standard output to the result."
 (defun lispy--eval-nrepl-clojure (str &optional namespace)
   (nrepl-sync-request:eval
    str
-   (cider-current-connection)
+   (or (cider-current-connection)
+       (car (cider-connections)))
    namespace))
 
 (defvar spiral-conn-id)
@@ -489,12 +489,11 @@ Besides functions, handles specials, keywords, maps, vectors and sets."
         ((car (cider-connections))
          (ignore-errors
            (lispy--clojure-detect-ns)
-           (let* ((lispy-ignore-whitespace t)
-                  (bnd (or (bounds-of-thing-at-point 'symbol)
+           (let* ((bnd (or (bounds-of-thing-at-point 'symbol)
                            (cons (point) (point))))
                   (obj (cond
                          ((save-excursion
-                            (lispy--out-backward 1)
+                            (lispy--out-backward 1 t)
                             (looking-at "(\\.\\."))
                           (concat
                            (buffer-substring-no-properties (match-beginning 0) (car bnd))
@@ -516,10 +515,10 @@ Besides functions, handles specials, keywords, maps, vectors and sets."
                         (setq cands (all-completions (lispy--string-dwim bnd) cands)))
                       (list (car bnd) (cdr bnd) cands)))
                    ((save-excursion
-                      (lispy--out-backward 2)
+                      (lispy--out-backward 2 t)
                       (looking-at "(import"))
                     (let* ((prefix (save-excursion
-                                     (lispy--out-backward 1)
+                                     (lispy--out-backward 1 t)
                                      (forward-char)
                                      (thing-at-point 'symbol t)))
                            (cands (read (lispy--eval-clojure

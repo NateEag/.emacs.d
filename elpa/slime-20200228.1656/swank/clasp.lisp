@@ -337,8 +337,6 @@
         (function-quoted-forms '()))
     (format t "In collect-macro-forms~%")
     (cmp:code-walk
-     form environment
-     :code-walker-function
      (lambda (form environment)
        (when (and (consp form)
                   (symbolp (car form)))
@@ -350,7 +348,8 @@
                 (push form macro-forms))
                ((not (eq form (core:compiler-macroexpand-1 form environment)))
                 (push form compiler-macro-forms))))
-       form))
+       form)
+     form environment)
     (values macro-forms compiler-macro-forms)))
 
 
@@ -515,7 +514,7 @@
 (defimplementation frame-source-location (frame-number)
   (let* ((address (core::backtrace-frame-return-address (elt *backtrace* frame-number)))
          (code-source-location (ext::code-source-position address)))
-    (format t "code-source-location ~s~%" code-source-location)
+    (format t "address: ~a   code-source-location ~s~%" address code-source-location)
     ;; (core::source-info-backtrace *backtrace*)
     (if (ext::code-source-line-source-pathname code-source-location)
         (make-location (list :file (namestring (ext::code-source-line-source-pathname code-source-location)))
@@ -707,7 +706,7 @@
         "STOPPED"))
 
   (defimplementation make-lock (&key name)
-    (mp:make-lock :name name :recursive t))
+    (mp:make-lock :name name))
 
   (defimplementation call-with-lock-held (lock function)
     (declare (type function function))

@@ -359,7 +359,7 @@ buffer's file does not exist."
 (add-hook 'sql-mode-hook 'load-sql-mode-accessories)
 (add-auto-mode 'sql-mode "\\.sql$")
 
-(add-auto-mode 'svn-msg-mode "svn-commit.tmp")
+(add-auto-mode 'svn-msg-mode "svn-commit\(.[[:digit]]+\).tmp")
 
 ;; Text-editing modes of various stripes.
 (defun text-mode-init ()

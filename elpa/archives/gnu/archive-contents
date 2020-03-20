@@ -677,8 +677,8 @@
 		      ("William Xu" . "william.xwl@gmail.com"))
 		     (:maintainer "William Xu" . "william.xwl@gmail.com"))])
  (elisp-benchmarks .
-		   [(1 2)
-		    nil "elisp benchamrks collection" tar
+		   [(1 4)
+		    nil "elisp benchmarks collection" tar
 		    ((:maintainer "Andrea Corallo" . "akrl@sdf.org")
 		     (:authors
 		      ("Andrea Corallo" . "akrl@sdf.org"))
@@ -1269,6 +1269,26 @@
 	     (:authors
 	      ("Michael Abraham Shulman" . "viritrilbia@gmail.com"))
 	     (:keywords "convenience" "faces" "languages" "tools"))])
+ (modus-operandi-theme .
+		       [(0 6 0)
+			((emacs
+			  (26 1)))
+			"Accessible light theme (WCAG AAA)" single
+			((:keywords "faces" "theme" "accessibility")
+			 (:authors
+			  ("Protesilaos Stavrou" . "info@protesilaos.com"))
+			 (:maintainer "Protesilaos Stavrou" . "info@protesilaos.com")
+			 (:url . "https://gitlab.com/protesilaos/modus-themes"))])
+ (modus-vivendi-theme .
+		      [(0 6 0)
+		       ((emacs
+			 (26 1)))
+		       "Accessible dark theme (WCAG AAA)" single
+		       ((:keywords "faces" "theme" "accessibility")
+			(:authors
+			 ("Protesilaos Stavrou" . "info@protesilaos.com"))
+			(:maintainer "Protesilaos Stavrou" . "info@protesilaos.com")
+			(:url . "https://gitlab.com/protesilaos/modus-themes"))])
  (multishell .
 	     [(1 1 5)
 	      ((cl-lib
@@ -1743,9 +1763,9 @@
 		   ("Bastien Guerry" . "bzg@gnu.org"))
 		  (:maintainer "Bastien Guerry" . "bzg@gnu.org"))])
  (relint .
-	 [(1 14)
+	 [(1 15)
 	  ((xr
-	    (1 16))
+	    (1 17))
 	   (emacs
 	    (26 1)))
 	  "Elisp regexp mistake finder" tar
@@ -1921,7 +1941,7 @@
 		("Alex Harsanyi" . "AlexHarsanyi@gmail.com"))
 	       (:keywords "languages" "sql"))])
  (ssh-deploy .
-	     [(3 1 10)
+	     [(3 1 11)
 	      ((emacs
 		(25)))
 	      "Deployment via Tramp, global or per directory." tar
@@ -2110,6 +2130,15 @@
 	     (:authors
 	      ("Artur Malabarba" . "emacs@endlessparentheses.com"))
 	     (:maintainer "Artur Malabarba" . "emacs@endlessparentheses.com"))])
+ (vcard .
+	[(0 1)
+	 ((emacs
+	   (27 1)))
+	 "Package for handling vCard files" tar
+	 ((:maintainer "Eric Abrahamsen" . "eric@ericabrahamsen.net")
+	  (:authors
+	   ("Eric Abrahamsen" . "eric@ericabrahamsen.net"))
+	  (:url . "http://elpa.gnu.org/packages/vcard.html"))])
  (vcl-mode .
 	   [(1 1)
 	    nil "Major mode for Varnish Configuration Language" single
@@ -2309,7 +2338,7 @@
 	 ("Thien-Thi Nguyen" . "ttn@gnu.org"))
 	(:keywords "multimedia" "xpm"))])
  (xr .
-     [(1 16)
+     [(1 18)
       ((emacs
 	(26 1)))
       "Convert string regexp to rx notation" tar

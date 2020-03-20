@@ -1,0 +1,2 @@
+;;; Generated package description from /Users/neagleson/.emacs.d/elpa/sexp-diff-20200314.2018/sexp-diff.el  -*- no-byte-compile: t -*-
+(define-package "sexp-diff" "20200314.2018" "Diff sexps based on Levenshtein-like edit distance" '((emacs "25")) :commit "4fea80f7b04c64b160a95bdc9d6de68c71096706" :keywords '("lisp") :authors '(("Xu Chunyang")) :maintainer '("Xu Chunyang") :url "https://github.com/xuchunyang/sexp-diff.el")

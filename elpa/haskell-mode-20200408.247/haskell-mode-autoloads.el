@@ -60,7 +60,6 @@ Handle the return key." t nil)
 
 (autoload 'haskell-session-kill "haskell" "\
 Kill the session process and buffer, delete the session.
-0. Prompt to kill all associated buffers.
 1. Kill the process.
 2. Kill the interactive buffer unless LEAVE-INTERACTIVE-BUFFER is not given.
 3. Walk through all the related buffers and set their haskell-session to nil.
@@ -473,7 +472,7 @@ declaration.  Therefore, using Haskell font locking with comments
 coloured in `font-lock-comment-face' improves declaration scanning.
 
 Literate Haskell scripts are supported: If the value of
-`haskell-literate' (set automatically by `literate-haskell-mode')
+`haskell-literate' (set automatically by `haskell-literate-mode')
 is `bird', a Bird-style literate script is assumed.  If it is nil
 or `tex', a non-literate or LaTeX-style literate script is
 assumed, respectively.
@@ -761,7 +760,7 @@ Major mode for editing Haskell programs.
 
 \\<haskell-mode-map>
 
-Literate Haskell scripts are supported via `literate-haskell-mode'.
+Literate Haskell scripts are supported via `haskell-literate-mode'.
 The variable `haskell-literate' indicates the style of the script in the
 current buffer.  See the documentation on this variable for more details.
 
@@ -823,16 +822,18 @@ list marker of some kind), and end of the obstacle.
 
 \(fn &optional ARG)" t nil)
 
-(autoload 'literate-haskell-mode "haskell-mode" "\
+(autoload 'haskell-literate-mode "haskell-mode" "\
 As `haskell-mode' but for literate scripts.
 
 \(fn)" t nil)
+
+(define-obsolete-function-alias 'literate-haskell-mode 'haskell-literate-mode "2020-04")
 
 (add-to-list 'auto-mode-alist '("\\.[gh]s\\'" . haskell-mode))
 
 (add-to-list 'auto-mode-alist '("\\.hsig\\'" . haskell-mode))
 
-(add-to-list 'auto-mode-alist '("\\.l[gh]s\\'" . literate-haskell-mode))
+(add-to-list 'auto-mode-alist '("\\.l[gh]s\\'" . haskell-literate-mode))
 
 (add-to-list 'auto-mode-alist '("\\.hsc\\'" . haskell-mode))
 
@@ -1017,8 +1018,10 @@ within that region." t nil)
 ;;;;;;  (0 0 0 0))
 ;;; Generated autoloads from haskell-unicode-input-method.el
 
-(autoload 'turn-on-haskell-unicode-input-method "haskell-unicode-input-method" "\
+(autoload 'haskell-unicode-input-method-enable "haskell-unicode-input-method" "\
 Set input method `haskell-unicode'." t nil)
+
+(define-obsolete-function-alias 'turn-on-haskell-unicode-input-method 'haskell-unicode-input-method-enable "2020-04")
 
 ;;;***
 
@@ -1052,9 +1055,7 @@ toggle it if ARG is `toggle'; disable the mode otherwise.
 
 (let ((loads (get 'inferior-haskell 'custom-loads))) (if (member '"inf-haskell" loads) nil (put 'inferior-haskell 'custom-loads (cons '"inf-haskell" loads))))
 
-(defalias 'run-haskell 'switch-to-haskell)
-
-(autoload 'switch-to-haskell "inf-haskell" "\
+(autoload 'run-haskell "inf-haskell" "\
 Show the inferior-haskell buffer.  Start the process if needed." t nil)
 
 (if (fboundp 'register-definition-prefixes) (register-definition-prefixes "inf-haskell" '("haskell-" "inf")))

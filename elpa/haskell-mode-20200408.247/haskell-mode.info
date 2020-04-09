@@ -165,7 +165,7 @@ File: haskell-mode.info,  Node: Editing Haskell Code,  Next: Syntax highlighting
 Haskell Mode as one of its components provides a major mode for editing
 Haskell source code called ‘haskell-mode’, which gave the name to the
 whole project.  There is a derived mode provided called
-‘literate-haskell-mode’ that support Literate Haskell source code both
+‘haskell-literate-mode’ that support Literate Haskell source code both
 in Bird and in Latex forms.
 
    Haskell Mode supports files with the following extensions:
@@ -1091,9 +1091,6 @@ To kill a session you can run
 
          M-x haskell-session-kill
 
-   Which will prompt to kill all associated buffers, too.  Hit ‘n‘ to
-retain them.
-
    Alternatively, you can switch to the REPL and just kill the buffer
 normally with ‘C-x k RET’.  It will prompt
 
@@ -1102,6 +1099,9 @@ normally with ‘C-x k RET’.  It will prompt
    You can choose ‘y’ to kill the session itself, or ‘n’ to just kill
 the REPL buffer.  You can bring it back with ‘M-x’
 ‘haskell-interactive-bring’.
+
+   If you would like to be prompted to kill the associated buffers, you
+can add ‘projectile-kill-buffers’ to ‘haskell-kill-session-hook’.
 
 13.6.4 Menu
 -----------
@@ -2025,19 +2025,19 @@ aligner about Haskell.  Once you evaluate this, you can just use ‘M-x’
      (add-to-list 'align-rules-list
                   '(haskell-types
                     (regexp . "\\(\\s-+\\)\\(::\\|∷\\)\\s-+")
-                    (modes quote (haskell-mode literate-haskell-mode))))
+                    (modes quote (haskell-mode haskell-literate-mode))))
      (add-to-list 'align-rules-list
                   '(haskell-assignment
                     (regexp . "\\(\\s-+\\)=\\s-+")
-                    (modes quote (haskell-mode literate-haskell-mode))))
+                    (modes quote (haskell-mode haskell-literate-mode))))
      (add-to-list 'align-rules-list
                   '(haskell-arrows
                     (regexp . "\\(\\s-+\\)\\(->\\|→\\)\\s-+")
-                    (modes quote (haskell-mode literate-haskell-mode))))
+                    (modes quote (haskell-mode haskell-literate-mode))))
      (add-to-list 'align-rules-list
                   '(haskell-left-arrows
                     (regexp . "\\(\\s-+\\)\\(<-\\|←\\)\\s-+")
-                    (modes quote (haskell-mode literate-haskell-mode))))
+                    (modes quote (haskell-mode haskell-literate-mode))))
 
 
 File: haskell-mode.info,  Node: Rectangular commands,  Next: REPL,  Prev: Aligning code,  Up: Top
@@ -2092,10 +2092,9 @@ File: haskell-mode.info,  Node: REPL,  Next: Collapsing Haskell code,  Prev: Rec
 19 Using GHCi REPL within Emacs
 *******************************
 
-To start the REPL you can run one of the following:
+To start the REPL you can run the following:
 
    • ‘M-x run-haskell’
-   • ‘M-x switch-to-haskell’
 
    This repl works with Comint
 (https://www.emacswiki.org/emacs/ComintMode).  So you will feel at home
@@ -2430,18 +2429,18 @@ Node: Module templates24106
 Node: Declaration scanning24537
 Node: Compilation27825
 Node: Interactive Haskell31730
-Ref: printing mode51040
-Node: Editing Cabal files63804
-Node: Browsing Haddocks64551
-Node: Spell checking strings and comments67376
-Node: Aligning code68482
-Node: Rectangular commands70227
-Node: REPL71747
-Node: Collapsing Haskell code76525
-Node: Getting Help and Reporting Bugs79133
-Node: Concept index80177
-Node: Function index81435
-Node: Variable index82230
+Ref: printing mode51099
+Node: Editing Cabal files63863
+Node: Browsing Haddocks64610
+Node: Spell checking strings and comments67435
+Node: Aligning code68541
+Node: Rectangular commands70286
+Node: REPL71806
+Node: Collapsing Haskell code76542
+Node: Getting Help and Reporting Bugs79150
+Node: Concept index80194
+Node: Function index81452
+Node: Variable index82247
 
 End Tag Table
 

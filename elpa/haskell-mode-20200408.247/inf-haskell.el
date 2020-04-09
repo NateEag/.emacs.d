@@ -4,7 +4,7 @@
 ;; Copyright (C) 2017 Vasantha Ganesh Kanniappan <vasanthaganesh.k@tuta.io>
 
 ;; Author: Stefan Monnier <monnier@iro.umontreal.ca>
-;; Keywords: Haskell
+;; Keywords: languages, Haskell
 
 ;; This file is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
@@ -188,9 +188,7 @@ setting up the inferior-haskell buffer."
            (inferior-haskell-process))))
 
 ;;;###autoload
-(defalias 'run-haskell 'switch-to-haskell)
-;;;###autoload
-(defun switch-to-haskell ()
+(defun run-haskell ()
   "Show the inferior-haskell buffer.  Start the process if needed."
   (interactive)
   (let ((proc (inferior-haskell-process)))

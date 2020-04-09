@@ -19,12 +19,14 @@ STYLES is the styles emoji styles that should be used, see `emojify-emoji-styles
 (autoload 'emojify-mode "emojify" "\
 Emojify mode
 
-If called interactively, enable Emojify mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Emojify mode if ARG is positive,
+and disable it if ARG is zero or negative.  If called from Lisp,
+also enable the mode if ARG is omitted or nil, and toggle it if
+ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
+
+(put 'global-emojify-mode 'globalized-minor-mode t)
 
 (defvar global-emojify-mode nil "\
 Non-nil if Global Emojify mode is enabled.
@@ -51,12 +53,14 @@ See `emojify-mode' for more information on Emojify mode.
 (autoload 'emojify-mode-line-mode "emojify" "\
 Emojify mode line
 
-If called interactively, enable Emojify-Mode-Line mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Emojify-Mode-Line mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
+
+(put 'global-emojify-mode-line-mode 'globalized-minor-mode t)
 
 (defvar global-emojify-mode-line-mode nil "\
 Non-nil if Global Emojify-Mode-Line mode is enabled.

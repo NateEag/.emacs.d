@@ -24,7 +24,7 @@
 
 ;;; Code:
 (require 'cc-mode)
-(require 'lsp)
+(require 'lsp-mode)
 (require 'markdown-mode)
 (require 'dash)
 (require 'ht)
@@ -1205,18 +1205,18 @@ current symbol."
                     ("chelib" #'lsp-java--resolve-uri))
   :initialization-options (lambda ()
                             (list :settings (lsp-configuration-section "java")
-                                  :extendedClientCapabilities (list :progressReportProvider t
-                                                                    :classFileContentsSupport t
-                                                                    :progressReportProvider t
-                                                                    :classFileContentsSupport t
-                                                                    :overrideMethodsPromptSupport t
-                                                                    :hashCodeEqualsPromptSupport t
-                                                                    :advancedOrganizeImportsSupport t
-                                                                    :generateConstructorsPromptSupport t
-                                                                    :generateToStringPromptSupport t
-                                                                    :advancedGenerateAccessorsSupport t
-                                                                    :advancedExtractRefactoringSupport t
-                                                                    :moveRefactoringSupport t)
+                                  :extendedClientCapabilities
+                                  (list :progressReportProvider (lsp-json-bool lsp-java-progress-reports-enabled)
+                                        :classFileContentsSupport t
+                                        :classFileContentsSupport t
+                                        :overrideMethodsPromptSupport t
+                                        :hashCodeEqualsPromptSupport t
+                                        :advancedOrganizeImportsSupport t
+                                        :generateConstructorsPromptSupport t
+                                        :generateToStringPromptSupport t
+                                        :advancedGenerateAccessorsSupport t
+                                        :advancedExtractRefactoringSupport t
+                                        :moveRefactoringSupport t)
                                   :bundles (lsp-java--bundles)
                                   :workspaceFolders (->> (lsp-session)
                                                          lsp-session-server-id->folders

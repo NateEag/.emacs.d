@@ -12,10 +12,10 @@
 (autoload 'lsp-java-lens-mode "lsp-java" "\
 Toggle run/debug overlays.
 
-If called interactively, enable Lsp-Java-Lens mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Lsp-Java-Lens mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 (with-eval-after-load 'lsp-mode (require 'lsp-java))
@@ -30,10 +30,10 @@ if ARG is `toggle'; disable the mode otherwise.
 (autoload 'lsp-java-boot-lens-mode "lsp-java-boot" "\
 Toggle code-lens overlays.
 
-If called interactively, enable Lsp-Java-Boot-Lens mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Lsp-Java-Boot-Lens mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 
@@ -47,10 +47,10 @@ if ARG is `toggle'; disable the mode otherwise.
 (autoload 'lsp-jt-lens-mode "lsp-jt" "\
 Toggle code-lens overlays.
 
-If called interactively, enable Lsp-Jt-Lens mode if ARG is positive, and
-disable it if ARG is zero or negative.  If called from Lisp,
-also enable the mode if ARG is omitted or nil, and toggle it
-if ARG is `toggle'; disable the mode otherwise.
+If called interactively, enable Lsp-Jt-Lens mode if ARG is
+positive, and disable it if ARG is zero or negative.  If called
+from Lisp, also enable the mode if ARG is omitted or nil, and
+toggle it if ARG is `toggle'; disable the mode otherwise.
 
 \(fn &optional ARG)" t nil)
 

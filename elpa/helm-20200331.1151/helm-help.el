@@ -47,7 +47,9 @@
                                  helm-imenu-help-message
                                  helm-colors-help-message
                                  helm-semantic-help-message
-                                 helm-kmacro-help-message))
+                                 helm-kmacro-help-message
+                                 helm-kill-ring-help-message)
+  "A list of help messages (strings) used by `helm-documentation'.")
 
 (defvar helm-documentation-buffer-name "*helm documentation*")
 
@@ -321,6 +323,15 @@ depending of `helm-selection':
 - candidate is a file          => open action menu.
 
 Called with a prefix arg open menu unconditionally.
+
+*** Sort directory contents
+
+When listing a directory without narrowing its contents, i.e. when pattern ends with \"/\",
+you can sort alphabetically, by newest or by size by using respectively
+\\<helm-find-files-map>\\[helm-ff-sort-alpha], \\[helm-ff-sort-by-newest] or \\[helm-ff-sort-by-size].
+NOTE:
+When starting back narrowing i.e. entering something in minibuffer after \"/\" sorting is done
+again with fuzzy sorting and no more with sorting methods previously selected.
 
 *** Find file at point
 
@@ -721,7 +732,7 @@ See [[Use the wildcard to select multiple files]] for details.
 
 You can bookmark the `helm-find-files' session with `\\[helm-ff-bookmark-set]'.
 You can later retrieve these bookmarks by calling `helm-filtered-bookmarks'
-or, from the current `helm-find-files' session, by hitting `\\[helm-find-files-toggle-to-bookmark]'.
+or, from the current `helm-find-files' session, by hitting `\\[helm-find-files-switch-to-bookmark]'.
 
 *** Grep files from `helm-find-files'
 

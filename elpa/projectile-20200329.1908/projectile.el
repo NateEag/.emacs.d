@@ -4,7 +4,7 @@
 
 ;; Author: Bozhidar Batsov <bozhidar@batsov.com>
 ;; URL: https://github.com/bbatsov/projectile
-;; Package-Version: 20200206.1749
+;; Package-Version: 20200329.1908
 ;; Keywords: project, convenience
 ;; Version: 2.2.0-snapshot
 ;; Package-Requires: ((emacs "25.1") (pkg-info "0.4"))
@@ -1078,6 +1078,11 @@ If DIR is not supplied its set to the current directory by default."
   ;; cl-subst to replace this 'none value with nil so a nil value is used
   ;; instead
   (let ((dir (or dir default-directory)))
+    ;; Back out of any archives, the project will live on the outside and
+    ;; searching them is slow.
+    (when (and (fboundp 'tramp-archive-file-name-archive)
+               (tramp-archive-file-name-p dir))
+      (setq dir (file-name-directory (tramp-archive-file-name-archive dir))))
     (cl-subst nil 'none
               ;; The `is-local' and `is-connected' variables are
               ;; used to fix the behavior where Emacs hangs
@@ -2551,6 +2556,7 @@ test/impl/other files as below:
 (projectile-register-project-type 'haskell-cabal #'projectile-cabal-project-p
                                   :compile "cabal build"
                                   :test "cabal test"
+                                  :run "cabal run"
                                   :test-suffix "Spec")
 (projectile-register-project-type 'dotnet #'projectile-dotnet-project-p
                                   :compile "dotnet build"
@@ -2580,7 +2586,8 @@ test/impl/other files as below:
                                   :compile "make"
                                   :test "make test")
 (projectile-register-project-type 'cmake '("CMakeLists.txt")
-                                  :configure "cmake %s"
+                                  :compilation-dir "build"
+                                  :configure "cmake %s -B %s"
                                   :compile "cmake --build ."
                                   :test "ctest")
 ;; PHP
@@ -3456,9 +3463,8 @@ Use a prefix argument ARG to indicate creation of a new process instead."
     (unless (buffer-live-p (get-buffer buffer))
       (unless (require 'vterm nil 'noerror)
         (error "Package 'vterm' is not available"))
-      (vterm buffer)
-      (vterm-send-string (concat "cd " project))
-      (vterm-send-return))
+      (projectile-with-default-dir project
+        (vterm buffer)))
     (switch-to-buffer buffer)))
 
 (defun projectile-files-in-project-directory (directory)
@@ -3792,7 +3798,7 @@ project of that type"
       projectile-project-configure-cmd
       (let ((cmd-format-string (projectile-default-configure-command (projectile-project-type))))
         (when cmd-format-string
-          (format cmd-format-string (projectile-project-root))))))
+          (format cmd-format-string (projectile-project-root) compile-dir)))))
 
 (defun projectile-compilation-command (compile-dir)
   "Retrieve the compilation command for COMPILE-DIR.
